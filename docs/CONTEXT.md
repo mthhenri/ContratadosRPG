@@ -39,8 +39,9 @@ milestone). Nenhum código foi escrito ainda.
 
 ## Próxima Task
 
-Quebrar `docs/specs/backlog/m0-fundacao.spec.md` em tasks numeradas
-(`m0-01-*.spec.md`, `m0-02-*.spec.md`, …) e iniciar a implementação pela primeira.
+M0 já quebrado em 7 tasks numeradas em `docs/specs/backlog/` (`m0-01-workspaces-npm` até
+`m0-07-cd-deploy`). Iniciar pela `m0-01-workspaces-npm.spec.md`: mover para
+`docs/specs/active/` e implementar.
 
 ## Decisões Pendentes
 

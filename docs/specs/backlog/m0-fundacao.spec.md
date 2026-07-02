@@ -1,7 +1,16 @@
 # m0-fundacao.spec.md
 
-> **Milestone M0 — Fundação.** Este spec de milestone deve ser quebrado em tasks
-> numeradas (`m0-01-*.spec.md`, `m0-02-*.spec.md`, …) antes da implementação.
+> **Milestone M0 — Fundação.** Já quebrado nas tasks numeradas abaixo — implementar uma de
+> cada vez, na ordem, movendo cada spec para `active/` e depois `done/` conforme
+> `CLAUDE.md`. Este arquivo permanece como referência do milestone completo.
+>
+> 1. `m0-01-workspaces-npm.spec.md`
+> 2. `m0-02-docker-banco.spec.md`
+> 3. `m0-03-backend-core.spec.md`
+> 4. `m0-04-healthcheck-endpoint.spec.md`
+> 5. `m0-05-frontend-shell.spec.md`
+> 6. `m0-06-ci-lint-teste.spec.md`
+> 7. `m0-07-cd-deploy.spec.md`
 
 ## Objetivo
 
