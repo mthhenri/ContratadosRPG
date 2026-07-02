@@ -1,0 +1,27 @@
+# Dependências
+node_modules/
+
+# Builds
+dist/
+build/
+.angular/
+*.tsbuildinfo
+
+# Ambiente
+.env
+.env.*
+!.env.example
+
+# Testes e cobertura
+coverage/
+
+# IDE / SO
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.log
+Thumbs.db
+.DS_Store
+
+# Claude Code — configuração local/pessoal (a skill do projeto fica versionada)
+.claude/settings.local.json
