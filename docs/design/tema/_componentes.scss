@@ -1,0 +1,143 @@
+// _componentes.scss
+// Padrões de componente do tema, em SCSS + BEM (português). Exemplos canônicos —
+// copie o bloco que precisar para o SCSS do seu componente standalone.
+// Regra: sem inline, sem seletor de ID. Consome os tokens de _tokens.scss.
+
+// === Card ===
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--pad-card);
+
+  // Cabeçalho de seção: índice em badge mono + título UPPERCASE + régua fina.
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 18px;
+  }
+  &__indice {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  &__titulo {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  &__regua {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+}
+
+// === Stat box ===
+.stat {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  padding: 13px 14px;
+
+  &__rotulo {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+    margin-bottom: 7px;
+  }
+  &__valor {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  // Destaque com cor semântica.
+  &--vida { border-color: var(--accent-border);  .stat__valor { color: var(--accent); } }
+  &--energia { border-color: color-mix(in srgb, var(--energy) 35%, transparent); .stat__valor { color: var(--energy); } }
+}
+
+// === Stepper / input numérico ===
+.stepper {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  overflow: hidden;
+  background: var(--surface-2);
+
+  &__botao {
+    width: 30px;
+    border: 0;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 18px;
+    font-family: var(--font-mono);
+    cursor: pointer;
+    &:hover { background: rgba(255, 255, 255, 0.05); color: var(--text); }
+  }
+  &__valor {
+    flex: 1;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--text);
+    padding: 9px 0;
+    border-inline: 1px solid rgba(255, 255, 255, 0.08);
+  }
+}
+
+// === Botões ===
+.botao {
+  border-radius: var(--radius-control);
+  font-family: var(--font-mono);
+  cursor: pointer;
+
+  &--primario {
+    background: var(--accent);
+    color: var(--bg);
+    border: 0;
+  }
+  &--secundario {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+  }
+}
+
+// === Chip de classificação (ex.: CLASSE-E // CONFIDENCIAL) ===
+.chip-classificacao {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  padding: 6px 10px;
+}
+
+// === Estado ativo (tab / seleção) ===
+.selecionavel--ativo {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}

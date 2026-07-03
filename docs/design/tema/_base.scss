@@ -1,0 +1,28 @@
+// _base.scss
+// Reset de corpo, fontes e textura de fundo do tema "Terminal de Contenção".
+// Importe DEPOIS de _tokens.scss, nos estilos globais.
+
+// --- Fontes ---
+// Opção A (recomendada, sem rede): pacotes @fontsource
+//   npm i @fontsource/ibm-plex-mono @fontsource/ibm-plex-sans
+//   e importe no main.ts / styles.scss os pesos usados:
+//   @use '@fontsource/ibm-plex-mono/400.css'; (400,500,600,700)
+//   @use '@fontsource/ibm-plex-sans/400.css'; (400,500,600)
+//
+// Opção B (rede): no index.html
+//   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+
+  // Grid de fundo de 1px muito discreto (textura sutil da Fundação).
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: var(--grid-cell) var(--grid-cell);
+}
