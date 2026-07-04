@@ -66,6 +66,67 @@ Monorepo with three npm workspace packages:
 
 DTOs and enums are **never** redefined inside `backend/` or `frontend/`.
 
+## TEMA VISUAL — "Terminal de Contenção" (fonte da verdade de design)
+
+Dark-first. Estética de terminal institucional da Fundação: técnica, sóbria, fria, com
+textura discreta. Sem gradientes chamativos, sem emoji decorativo, sem cantos muito
+arredondados.
+
+### Cor (dark base)
+
+| Token | Hex | Uso |
+|---|---|---|
+| `--bg` | `#0a0c0f` | fundo da aplicação |
+| `--surface` | `#13161b` | cards / painéis |
+| `--surface-2` | `#1a1e24` | caixas internas, stat boxes, inputs |
+| `--border` | `rgba(255,255,255,.07)` | divisórias / bordas hairline |
+| `--border-strong` | `rgba(255,255,255,.12)` | bordas de controle (input/stepper) |
+| `--text` | `#e6e8eb` | texto primário |
+| `--text-dim` | `#969ba3` | texto secundário |
+| `--text-mute` | `#656a72` | rótulos / legendas |
+| `--accent` | `#e5484d` | ação primária, estado ativo, classificação, stat Vida |
+| `--energy` | `#4c8dd0` | semântico: Energia |
+| `--positive` | `#4a9d6b` | semântico: dano furtivo / ganho |
+| `--warning` | `#d9a441` | semântico: aviso / prestígio |
+
+Accent-dim = `color-mix(in srgb, var(--accent) 12%, transparent)`. Accents adicionais
+compartilham chroma/lightness próximos; variar só o matiz. Não inventar cores fora desta lista.
+
+### Tipografia
+
+- **Dados / títulos / rótulos / números:** `IBM Plex Mono` (600/700). Rótulos em
+  UPPERCASE com `letter-spacing: .12em`.
+- **Corpo / textos longos:** `IBM Plex Sans` (400/500).
+- Escala mínima em tela: rótulo 11–12px, corpo 14px, valor de stat 22–32px, título 13–15px.
+
+### Forma & espaço
+
+- Raio: **6px** em cards, **4px** em controles/inputs/botões. (levemente arredondado)
+- Densidade **confortável**: padding de card ~20px, gap de grid ~16px.
+- Bordas hairline de 1px; nunca sombras pesadas.
+
+### Textura (sutil)
+
+- Grid de fundo de 1px muito discreto (`rgba(255,255,255,.02)`, célula ~32px).
+- Cabeçalho de seção: número em badge mono + título UPPERCASE + régua fina.
+- Chip de classificação (ex.: `CLASSE-E // CONFIDENCIAL`) em mono, borda accent.
+- Detalhes de canto / ticks discretos. Nada de scanlines agressivas.
+
+### Componentes (padrões)
+
+- **Card:** `--surface`, borda `--border`, raio 6px, cabeçalho com índice+título+régua.
+- **Stat box:** `--surface-2`, rótulo mono uppercase `--text-mute`, valor mono grande.
+  Stat primária de destaque usa cor semântica (Vida = accent, Energia = `--energy`).
+- **Stepper / input numérico:** borda `--border-strong`, botões − / +, valor mono central.
+- **Botão primário:** fundo accent, texto escuro; secundário: borda `--border-strong`.
+- **Estado ativo (tab/seleção):** accent em texto + borda; fundo accent-dim.
+
+### Direção para PrimeNG
+
+Reconstruir o tema sobre as CSS vars de preset do PrimeNG 21, mapeando os tokens acima.
+A spec M1 exige sistema de temas com presets + color picker com trava de contraste — o
+accent é trocável, mas o **dark base e a família tipográfica são a identidade**.
+
 ## Language Rule
 
 **Test:** "Would this concept exist in any software project?"
