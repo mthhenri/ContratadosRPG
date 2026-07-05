@@ -112,6 +112,10 @@ contratados-rpg/
     CONVENTIONS.md              → referência rápida de convenções
     SCHEMA.md                   → schema SQL alvo + forma dos documentos JSONB
     CONTEXT.md                  → estado atual do projeto (atualizado após cada sessão)
+    design/                     → fonte da verdade VISUAL (tema "Terminal de Contenção")
+      DESIGN.md                 → guia do tema + mapa de tokens + como ligar
+      tema/                     → _tokens/_base/_componentes.scss + contencao.preset.ts
+      examples/                 → protótipos aprovados (fidelidade visual 1:1)
     core/
       sistema-v4.1.0.md         → fonte da verdade do jogo (jogador)
       guia_de_mestre-v4.0.0.md  → fonte da verdade do jogo (ameaças)
@@ -254,9 +258,12 @@ Idênticos ao padrão de referência do autor (ver `CONVENTIONS.md`):
   customizadas. Sem `style=""` inline, sem seletor de ID.
 - **Calculadora** (`modules/calculadora/`): páginas públicas, 100% client-side, consumindo
   `shared/regras` diretamente — funcionam sem backend.
-- **Identidade visual:** ainda não definida — decisão adiada (ver CONTEXT.md). Até lá,
-  tema base PrimeNG. A spec de M1 exige paridade **funcional** do sistema de temas
-  (presets + color picker com trava de contraste), não paridade pixel a pixel.
+- **Identidade visual:** **definida** — tema "Terminal de Contenção" (dark-first, IBM Plex),
+  com handoff completo em `docs/design/` (tokens, base, preset PrimeNG, componentes, exemplos).
+  **Leia `docs/design/DESIGN.md` antes de qualquer trabalho de UI**; estilos de componente
+  consomem os tokens de `docs/design/tema/_tokens.scss` (nunca hex solto). A spec de M1 cobre
+  a troca de tema em **runtime** (presets + color picker com trava de contraste), não a
+  definição da identidade — essa já está feita.
 
 ---
 
@@ -506,7 +513,8 @@ implementação. M2+ recebem design detalhado quando chegar a vez.
 
 ### Fora de escopo / decisões adiadas
 
-- **Identidade visual do site** — a definir (ver CONTEXT.md); M1 exige paridade funcional
+- **Troca de tema em runtime** — presets + color picker com trava de contraste são M1; a
+  identidade visual em si já está **definida** em `docs/design/` (tema "Terminal de Contenção")
 - **Escrita via WebSocket** — v1 é broadcast-only
 - **Histórico/versão de ficha** — soft delete + `updated_date` bastam no v1
 - **Recuperação de senha por e-mail** — reset manual; sem infra de e-mail
@@ -549,3 +557,4 @@ Inegociáveis independente do contexto:
 | 26 | **Nunca colocar I/O, estado ou dependências** em `shared/src/regras/` — só funções puras e dados tipados |
 | 27 | **Nunca alterar fórmula de jogo** sem consultar `docs/core/sistema-v4.1.0.md` / `docs/core/guia_de_mestre-v4.0.0.md` e atualizar os testes — o documento vence o código |
 | 28 | **Nunca duplicar regra de permissão** — a service do módulo dono é o único árbitro; REST e WS consomem a mesma verificação |
+| 29 | **Nunca hardcodar** cor, fonte ou raio em SCSS/template — todo estilo consome os tokens do tema em `docs/design/tema/` (`var(--surface)`, `var(--accent)`, `var(--font-mono)`…); leia `docs/design/DESIGN.md` antes de qualquer UI |

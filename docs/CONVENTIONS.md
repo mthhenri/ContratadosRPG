@@ -340,7 +340,11 @@ DTOs e enums **nunca** são redefinidos dentro de `backend/` ou `frontend/`.
 **Classes customizadas:** BEM em português — `.ficha-cartao__atributo--destacado`
 **Escopo:** estilo de componente no `.scss` do componente; `styles.scss` só o global
 **Proibido:** `style=""` inline, seletor de ID
-**Identidade visual:** a definir (ver CONTEXT.md) — até lá, tema base PrimeNG
+**Identidade visual:** tema "Terminal de Contenção" — **fonte da verdade em `docs/design/`**
+(tokens em `docs/design/tema/_tokens.scss`). Estilos de componente **consomem os tokens**
+(`var(--surface)`, `var(--accent)`, `var(--font-mono)`, `var(--positive)`…) — **nunca hex
+solto**. Copie o bloco BEM necessário de `docs/design/tema/_componentes.scss` para o `.scss`
+scoped do componente. **Leia `docs/design/DESIGN.md` antes de qualquer trabalho de UI.**
 
 ---
 
@@ -366,6 +370,7 @@ DTOs e enums **nunca** são redefinidos dentro de `backend/` ou `frontend/`.
 | Extrapolar escopo da task | Implementar exatamente o que a spec define |
 | DTO dentro de `backend/` ou `frontend/` | Sempre em `shared/src/dtos/` |
 | NgModule / `.css` / `style=""` / seletor de ID | standalone / `.scss` / Tailwind+BEM |
+| Hex/cor/fonte/raio hardcoded em SCSS | Consumir tokens do tema (`var(--accent)`, `var(--font-mono)`… de `docs/design/`) |
 | Primitivo em service/repository | DTO, mesmo com um único campo |
 | `existe*` em método | `validar*` |
 | `Atualizar`/`Atualizado` | `Alterar`/`Alterado` |

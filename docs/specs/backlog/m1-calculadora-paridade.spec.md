@@ -56,8 +56,9 @@ com o código antigo, **o documento vence** (registrar divergências encontradas
 ## Fora de Escopo
 
 - Login, campanhas, fichas, tempo real
-- Redesign visual (identidade visual é decisão pendente — paridade é **funcional**;
-  usar tema base PrimeNG + sistema de temas do entregável 4)
+- Redesign visual da identidade (a identidade já está **definida** — tema "Terminal de
+  Contenção" em `docs/design/`; aqui a paridade com o site antigo é **funcional**, aplicando
+  os tokens do tema. A troca de tema em runtime é o entregável 4)
 - Novas features que não existem no site antigo
 
 ## Dependências

@@ -9,12 +9,37 @@ Before any implementation, read these files in order:
 2. `docs/CONVENTIONS.md` — quick reference for code conventions
 3. `docs/CONTEXT.md` — current project state and next task
 
+**Before ANY frontend / UI / styling work, additionally read `docs/design/DESIGN.md` and
+consume the theme handoff in `docs/design/tema/`** (see "Visual Design Source of Truth"
+below). The visual identity is already defined — never build UI against a blank or default
+PrimeNG theme. This is easy to forget because the three files above don't point at it.
+
 ## Game Rules Source of Truth
 
 All game rules live in `docs/core/sistema-v4.1.0.md` (player-facing rules) and
 `docs/core/guia_de_mestre-v4.0.0.md` (threat/creature creation). Consult them before changing
 any formula, progression table, or domain rule. If code and document conflict, **the
 document wins**.
+
+## Visual Design Source of Truth
+
+All visual/design decisions derive from the **"Terminal de Contenção"** theme, handed off in
+`docs/design/` (this is the design counterpart to the game-rules source above):
+
+- `docs/design/DESIGN.md` — theme guide, token map, and wiring instructions
+- `docs/design/tema/_tokens.scss` — CSS custom properties, the **runtime source of truth**
+  (`--bg`, `--surface`, `--accent`, `--text`, `--font-mono`, `--positive`, …)
+- `docs/design/tema/_base.scss` — body reset, IBM Plex fonts, background grid texture
+- `docs/design/tema/_componentes.scss` — canonical BEM component patterns (card, stat, stepper, chip…)
+- `docs/design/tema/contencao.preset.ts` — PrimeNG 21 preset (base Aura). **In this repo the
+  imports use `@primeuix/themes`**, not the handoff's `@primeng/themes` (that package isn't installed)
+- `docs/design/examples/*.html` — approved prototypes; 1:1 visual-fidelity targets
+
+Rules: component styles **consume these tokens** (`var(--surface)`, `var(--accent)`,
+`var(--font-mono)`…) — **never hardcode a hex/font/radius**. Copy the BEM block you need from
+`_componentes.scss` into the component's scoped `.scss`. The dark base + IBM Plex are the fixed
+identity; only `--accent` is swappable, and runtime theming (presets + color picker) is M1.
+The `TEMA VISUAL` block below is the human-readable summary of this same theme.
 
 ## Development Commands
 
@@ -67,6 +92,10 @@ Monorepo with three npm workspace packages:
 DTOs and enums are **never** redefined inside `backend/` or `frontend/`.
 
 ## TEMA VISUAL — "Terminal de Contenção" (fonte da verdade de design)
+
+> **Implementação e handoff canônico:** `docs/design/` (tokens, base, componentes, preset
+> PrimeNG e exemplos). Os `docs/design/tema/_tokens.scss` são a fonte da verdade em runtime;
+> este bloco é o resumo legível. Ver "Visual Design Source of Truth" acima antes de qualquer UI.
 
 Dark-first. Estética de terminal institucional da Fundação: técnica, sóbria, fria, com
 textura discreta. Sem gradientes chamativos, sem emoji decorativo, sem cantos muito
