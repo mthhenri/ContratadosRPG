@@ -1,7 +1,7 @@
 # Blueprint (Infrastructure as Code) do backend no Render — SYSTEM.SPEC §2 (produção: API → Render).
-# Cria o web service NestJS a partir do monorepo. O deploy NÃO é automático no push: quem dispara
-# é o job deploy-backend do workflow de CD (.github/workflows/cd.yml), já depois do gate lint/testes.
-# Runbook completo (provisionamento, segredos, variáveis) em docs/DEPLOY.md.
+# Cria o web service NestJS a partir do monorepo. O deploy é NATIVO: o Render puxa do Git e
+# reimplanta sozinho a cada push na master (autoDeploy). Sem GitHub Actions no caminho do deploy.
+# Runbook completo (Supabase, Cloudflare, variáveis) em docs/DEPLOY.md.
 services:
   - type: web
     name: contratados-rpg-api
@@ -12,8 +12,8 @@ services:
     buildCommand: npm install && npm run build --workspace=backend
     startCommand: npm run start:prod --workspace=backend
     healthCheckPath: /health
-    # Deploy só pelo hook disparado pela CD (após lint/testes) — nunca no push cru, que burlaria o gate.
-    autoDeploy: false
+    # Auto-deploy nativo no push à master (padrão do Render; explícito aqui por clareza).
+    autoDeploy: true
     envVars:
       # APP_PORTA precisa casar com a porta que o Render expõe (PORT, default 10000). O backend
       # lê APP_PORTA via ConfigService (nunca process.env direto — Proibição #10).
@@ -25,13 +25,13 @@ services:
       # Pages — sync:false mantém o valor fora do repositório.
       - key: APP_FRONTEND_ORIGEM
         sync: false
-      # JWT_SECRETO de produção DEVE ser diferente do exemplo do .env (m0-07, entregável 3).
+      # JWT_SECRETO de produção DEVE ser diferente do exemplo do .env.
       - key: JWT_SECRETO
         sync: false
       - key: JWT_EXPIRACAO
         value: 8h
       # Conexão do Postgres de produção (Supabase). Preenchidas no dashboard a partir das
-      # credenciais do projeto Supabase — nunca hardcodadas.
+      # credenciais do projeto Supabase — nunca hardcodadas. (SSL + queries: a partir do M2.)
       - key: DB_HOST
         sync: false
       - key: DB_PORT

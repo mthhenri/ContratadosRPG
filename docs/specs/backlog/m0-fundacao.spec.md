@@ -34,16 +34,18 @@ consumindo um healthcheck da API no Render.
    já nasce) retornando `StandardResponse`.
 5. **Frontend shell**: layout mínimo (topbar + router-outlet), interceptors `error-handler`
    e `loading` registrados, proxy de dev para o backend, página inicial consumindo `/health`.
-6. **CI/CD**: GitHub Actions — lint + testes em todo PR; no merge para master, deploy
-   automático do front (Cloudflare) e do back (Render); banco de produção no Supabase
-   com connection string via env do Render.
+6. **CI + Deploy**: **CI** via GitHub Actions — lint + testes em todo PR. **Deploy** por
+   integração nativa das plataformas — no push para master, Render (backend) e Cloudflare
+   Pages (frontend) puxam do Git e reimplantam sozinhos (sem GitHub Actions no deploy);
+   banco de produção no Supabase com credenciais via env do Render.
 
 ## Critérios de Aceite
 
 - `npm install` na raiz instala os três workspaces
 - `npm run db:up && npm run db:migrate --workspace=backend` sobe banco e migra sem erro
 - `backend:dev` + `frontend:dev` rodando: a home local exibe a resposta do `/health`
-- Pipeline verde no PR; após merge, a URL de produção do front exibe o `/health` do Render
+- CI verde no PR (lint/testes); após push para master, as plataformas auto-atualizam e a URL
+  de produção do front exibe o `/health` do Render
 - Estrutura de pastas e nomenclaturas conforme SYSTEM.SPEC §3–§5
 
 ## Fora de Escopo

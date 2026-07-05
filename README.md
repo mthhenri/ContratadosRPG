@@ -51,6 +51,6 @@ APP_PORTA  APP_AMBIENTE  APP_FRONTEND_ORIGEM
 
 ## Deploy (produção)
 
-No merge para `master`, o workflow de CD roda lint+testes e — se passarem — implanta o backend no
-Render e o frontend na Cloudflare Pages (banco no Supabase). O provisionamento das plataformas e os
-segredos necessários estão no runbook [docs/DEPLOY.md](docs/DEPLOY.md).
+Deploy por integração nativa das plataformas: no push para `master`, o Render (backend) e a
+Cloudflare Pages (frontend) puxam do Git e reimplantam sozinhos (banco no Supabase) — sem GitHub
+Actions no deploy. O provisionamento das plataformas está no runbook [docs/DEPLOY.md](docs/DEPLOY.md).

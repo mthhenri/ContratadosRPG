@@ -54,7 +54,9 @@ Consulte-os antes de alterar qualquer fórmula, tabela de progressão ou regra d
 ### Infraestrutura
 - **Local:** Docker + Docker Compose (PostgreSQL 16)
 - **Produção:** frontend → Cloudflare; API → Render; banco → Supabase (Postgres)
-- **CI:** GitHub Actions — lint + testes em todo PR; deploy automático no merge para master
+- **CI:** GitHub Actions — lint + testes em todo PR
+- **Deploy:** integração nativa das plataformas — Render (backend) e Cloudflare Pages
+  (frontend) reimplantam automaticamente no push para master (sem GitHub Actions no deploy)
 
 ---
 
