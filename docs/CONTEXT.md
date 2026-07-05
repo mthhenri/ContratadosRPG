@@ -82,7 +82,7 @@ color picker) e a instalação/merge do Tailwind.
 
 ## Implementado
 
-- **m0-07-cd-deploy** (2026-07-05): deploy de produção — última task do M0. **Decisão final:
+- **m0-07-deploy** (2026-07-05): deploy de produção — última task do M0. **Decisão final:
   integração nativa das plataformas, sem GitHub Actions no deploy.** (A 1ª rodada chegou a montar
   um `.github/workflows/cd.yml` com gate de CI + Render deploy hook + `wrangler pages deploy`,
   validado verde de ponta a ponta em produção; foi revertido a pedido do autor por complexidade

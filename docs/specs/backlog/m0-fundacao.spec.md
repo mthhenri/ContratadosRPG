@@ -10,7 +10,7 @@
 > 4. `m0-04-healthcheck-endpoint.spec.md`
 > 5. `m0-05-frontend-shell.spec.md`
 > 6. `m0-06-ci-lint-teste.spec.md`
-> 7. `m0-07-cd-deploy.spec.md`
+> 7. `m0-07-deploy.spec.md`
 
 ## Objetivo
 
