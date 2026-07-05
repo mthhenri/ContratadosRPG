@@ -1,6 +1,6 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-02 — fórmulas do agente).
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-03 — regras de dt, novo-agente e patente).
 
 ---
 
@@ -36,7 +36,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | # | Milestone | Status |
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, core/, pipelines, deploy) | **concluído** (deploy nativo Render+Cloudflare; setup das plataformas em `docs/DEPLOY.md`) |
-| M1 | Calculadora com paridade | **em andamento** (2/14 tasks — `m1-01`, `m1-02` concluídas) |
+| M1 | Calculadora com paridade | **em andamento** (3/14 tasks — `m1-01`, `m1-02`, `m1-03` concluídas) |
 | M2 | Auth + Campanhas | backlog |
 | M3 | Ficha de Jogador | backlog |
 | M4 | Ficha de Criatura/NPC | backlog |
@@ -46,8 +46,8 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 
 | Módulo | Status |
 |---|---|
-| shared (estrutura) | **`interfaces/`** (`StandardResponse`/`PaginatedResult`) + **`enums/`** (`ClasseEnum`, `PatenteEnum`, `ItemCategoriaEnum`, `TipoDescansoEnum`, `QualidadeDescansoEnum`); `dtos/`/`validators/` ainda esqueleto |
-| shared/regras | **`agente/` completo** (m1-02): 15 fórmulas puras da aba agente com testes Vitest conferidos contra o sistema (vida, energia, limite de energia, defesa/esquiva/bloqueio, proficiência, deslocamento, dano de corpo, dano furtivo, inventário, percepção, sanidade, limite hab./turno, benefícios por nível, progressão acumulada, limites por classe). `dt/`, `novo-agente/`, `patente/`, `descanso/`, `compras/` seguem barrels vazios (m1-03+); `dados/` com `dadosAgente`, `dadosCivil` e `PATENTES` (m1-01) |
+| shared (estrutura) | **`interfaces/`** (`StandardResponse`/`PaginatedResult`) + **`enums/`** (`ClasseEnum`, `PatenteEnum`, `ItemCategoriaEnum`, `TipoDescansoEnum`, `QualidadeDescansoEnum`, `MotivoEntradaAgenteEnum`); `dtos/`/`validators/` ainda esqueleto |
+| shared/regras | **`agente/` completo** (m1-02): 15 fórmulas puras da aba agente com testes Vitest conferidos contra o sistema (vida, energia, limite de energia, defesa/esquiva/bloqueio, proficiência, deslocamento, dano de corpo, dano furtivo, inventário, percepção, sanidade, limite hab./turno, benefícios por nível, progressão acumulada, limites por classe). **`dt/`, `novo-agente/`, `patente/` completos** (m1-03): DT de atributo (`10 + Nível + Atributo×2`); nível/prestígio iniciais + bônus monetário por motivo de entrada; lookup de patente por prestígio + recorte da aba, consumindo `PATENTES`. `descanso/`, `compras/` seguem barrels vazios (m1-04+); `dados/` com `dadosAgente`, `dadosCivil` e `PATENTES` (m1-01) |
 | backend/core | **pronto** (`BaseEntity`, `BaseRepository`, exceções, filtro, interceptor) |
 | backend/config | **pronto** (`ConfigService`/`ConfigModule`, lê `DB_*`/`JWT_*`/`APP_*`) |
 | backend/database | **pronto** (`DatabaseModule`/`database.provider.ts` — conexão Knex em runtime via DI) |
@@ -69,10 +69,11 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 
 ## Próxima Task
 
-**m1-03-regras-dt-novo-agente-patente** (`docs/specs/backlog/m1-03-regras-dt-novo-agente-patente.spec.md`).
-Extrair para `shared/regras/` as fórmulas das abas `dt` (DT de atributo `10 + Nível + Atributo×2`),
-`novo-agente` (nível/prestígio iniciais, bônus monetário) e `patente` (faixas de prestígio, salário,
-multiplicador, limite de mods — consumindo `PATENTES` da m1-01), com testes Vitest contra
+**m1-04-regras-descanso** (`docs/specs/backlog/m1-04-regras-descanso.spec.md`).
+Extrair para `shared/regras/descanso/` as fórmulas da aba `descanso` (dados de recuperação de
+Energia/Vida por tipo de descanso — curto/médio/longo — modulados pela qualidade —
+insalubre/adequado/confortável — e remoção de sequelas em descanso longo confortável), consumindo
+`TipoDescansoEnum`/`QualidadeDescansoEnum` da m1-01, com testes Vitest contra
 `docs/core/sistema-v4.1.0.md`. Milestone completo (`docs/specs/backlog/m1-calculadora-paridade.spec.md`):
 extrai as regras do jogo do site antigo (`contratados-calculadora/src/script.js`) para `shared/regras`
 e entrega as 6 páginas públicas client-side da calculadora, além do sistema de troca de tema em
@@ -84,6 +85,32 @@ runtime (presets + color picker) e a instalação/merge do Tailwind.
 
 ## Implementado
 
+- **m1-03-regras-dt-novo-agente-patente** (2026-07-05): três domínios leves de `shared/regras/`
+  extraídos do site antigo (`contratados-calculadora/src/script.js`) e conferidos contra
+  `docs/core/sistema-v4.1.0.md` (22 testes novos; workspace shared 79/79 verde). **`regras/dt/`**:
+  `calcularDtAtributo` = `10 + Nível + Atributo×2` (doc "DTs de Atributos"; sem divergência vs
+  `calcDT`). **`regras/patente/`**: `obterPatente({prestigio})` (faixa de `PATENTES` da m1-01; a
+  última patente cobre 66+ via `prestigioMaximo` infinito) e `calcularPatente` (recorte da aba =
+  `{patenteAtual, tabela}`). **`regras/novo-agente/`**: `calcularNivelInicial`
+  (`max(0, round(médiaNível) − 1)`; `Math.round` arredonda 0,5 para cima = regra do doc para médias
+  não-negativas), `calcularPrestigioInicial` (dedução `⌊média÷divisor⌋` e piso na patente do grupo —
+  ou uma abaixo quando o motivo permite), `calcularBonusMonetario`
+  (`Prestígio × (500 × multiplicador)`), e o orquestrador `calcularNovoAgente`. Todos os exemplos
+  numéricos do documento replicados em teste (Morte ÷7 → 24; Aposentadoria ÷10 → 26; Contido/Exterminado
+  sucessor convencional ÷5 → 24 e sucessor Experimento ÷3 → 20; bônus 24×(500×3)=36.000). **Novo enum
+  de conteúdo de jogo** `MotivoEntradaAgenteEnum` em `shared/src/enums/` (input da calculadora, não é
+  JSONB `ficha.dados` — §10.3; análogo a `TipoDescansoEnum`): 6 motivos que mapeiam os divisores do
+  documento (o site antigo os chamava "Experimento/Contido → Regular/Experimento"). **Decisões de
+  representação (não são divergências de regra):** os divisores ÷5 (sucessor convencional) e ÷3
+  (sucessor Experimento) do documento vêm do capítulo "Aposentadoria" > "Contido ou Exterminado" — o
+  documento defere esses valores àquele capítulo; a flag `recebeAmaldicoadoPeloPassado` é verdadeira só
+  para os motivos de Contenção/Extermínio (doc + fidelidade ao site); `obterPatente` preserva o fallback
+  do site (`find(...) ?? última patente`) para Prestígio fora do domínio (negativo), caminho não esperado
+  — Prestígio válido é sempre ≥ 0. DTOs de entrada (`<Conceito>CalcularDto`) e value-objects de saída
+  co-locados em `<domínio>.dtos.ts` (dados tipados do motor — §6.6). Barrels `dt/`, `novo-agente/`,
+  `patente/` preenchidos; os subpaths `@contratados-rpg/shared/regras/{dt,novo-agente,patente}`
+  (pré-registrados na m1-01) agora resolvem conteúdo real. Validado: `npm run test --workspace=shared`
+  79/79; `lint`/`typecheck`/`build` verdes; `build` não vaza `*.spec.js` para `dist/`.
 - **m1-02-regras-agente** (2026-07-05): `shared/regras/agente/` completo — as 15 fórmulas puras da
   aba `agente` do site antigo (`calc()` + auxiliares), com testes Vitest conferidos contra
   `docs/core/sistema-v4.1.0.md` (57 testes no workspace shared, todos verdes). Organização por arquivo
