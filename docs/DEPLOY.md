@@ -34,8 +34,10 @@ origem da Cloudflare via `APP_FRONTEND_ORIGEM` (CORS, `main.ts`). Não há proxy
 desenvolvimento a chamada é relativa (`apiBase` vazio) e passa pelo `proxy.conf.json`.
 
 Há uma dependência circular de URLs (o frontend precisa da URL do Render; o Render precisa da URL
-da Cloudflare para o CORS). Resolva na ordem: **Supabase → Render → Cloudflare → volte no Render e
-preencha `APP_FRONTEND_ORIGEM`**.
+da Cloudflare para o CORS — e **o backend não sobe sem `APP_FRONTEND_ORIGEM`**). A URL da Cloudflare
+Pages é determinística (`https://<nome-do-projeto>.pages.dev`), então quebra a circularidade:
+**escolha o nome do projeto Pages primeiro → Supabase → Render (já com `APP_FRONTEND_ORIGEM` =
+`https://<nome>.pages.dev`) → Cloudflare Pages com esse nome**.
 
 ---
 
@@ -65,7 +67,12 @@ preencha `APP_FRONTEND_ORIGEM`**.
    - `DB_HOST`, `DB_PORT`, `DB_NOME`, `DB_USUARIO`, `DB_SENHA` — do Supabase (passo 1).
    - `JWT_SECRETO` — **valor de produção, diferente** do `troque-em-producao` do `.env.example`
      (entregável 3 da spec). Gere um segredo forte.
-   - `APP_FRONTEND_ORIGEM` — deixe em branco por ora; volte aqui depois do passo 3.
+   - `APP_FRONTEND_ORIGEM` — **preencha já** (não deixe em branco): o backend lê essa var no
+     boot (`obterConfiguracaoAplicacao`, obrigatória — SYSTEM.SPEC §10.6) e **não sobe sem ela**.
+     A URL da Cloudflare Pages é determinística a partir do nome do projeto que você escolher no
+     passo 3 (`https://<nome-do-projeto>.pages.dev`), então já dá para colocar o valor final. Se
+     ainda não decidiu o nome, use um placeholder (ex.: `https://placeholder.pages.dev`) só para
+     subir e ajuste depois — o CORS só vale de verdade quando bater com a origem real do frontend.
    - `APP_PORTA` (`10000`), `APP_AMBIENTE` (`production`) e `JWT_EXPIRACAO` (`8h`) já vêm do
      blueprint.
 3. Copie a **URL pública** do serviço (ex.: `https://contratados-rpg-api.onrender.com`) e o
