@@ -8,20 +8,22 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "deploy": "npm run build && wrangler deploy",
+    "preview": "npm run build && wrangler dev"
   },
   "private": true,
   "packageManager": "npm@11.6.1",
   "dependencies": {
-    "@contratados-rpg/shared": "*",
-    "@primeuix/themes": "^1.1.1",
-    "primeng": "^21.1.9",
     "@angular/common": "^21.2.0",
     "@angular/compiler": "^21.2.0",
     "@angular/core": "^21.2.0",
     "@angular/forms": "^21.2.0",
     "@angular/platform-browser": "^21.2.0",
     "@angular/router": "^21.2.0",
+    "@contratados-rpg/shared": "*",
+    "@primeuix/themes": "^1.1.1",
+    "primeng": "^21.1.9",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
@@ -35,6 +37,7 @@
     "jsdom": "^28.0.0",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.20.0",
-    "vitest": "^4.0.8"
+    "vitest": "^4.0.8",
+    "wrangler": "^4.107.0"
   }
 }
