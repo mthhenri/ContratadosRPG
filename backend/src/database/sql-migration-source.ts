@@ -56,17 +56,18 @@ export class SqlMigrationSource implements Knex.MigrationSource<string> {
     private readonly diretorioMigrations: string = resolve(__dirname, 'migrations'),
   ) {}
 
-  async getMigrations(): Promise<string[]> {
-    return readdirSync(this.diretorioMigrations)
+  getMigrations(): Promise<string[]> {
+    const arquivosDeMigration = readdirSync(this.diretorioMigrations)
       .filter((arquivo) => arquivo.endsWith('.sql'))
       .sort();
+    return Promise.resolve(arquivosDeMigration);
   }
 
   getMigrationName(arquivo: string): string {
     return arquivo;
   }
 
-  async getMigration(arquivo: string): Promise<Knex.Migration> {
+  getMigration(arquivo: string): Promise<Knex.Migration> {
     const conteudo = readFileSync(resolve(this.diretorioMigrations, arquivo), 'utf8');
     const { up, down, semTransacao } = separarSecoes(conteudo);
 
@@ -85,6 +86,6 @@ export class SqlMigrationSource implements Knex.MigrationSource<string> {
       migration.config = { transaction: false };
     }
 
-    return migration;
+    return Promise.resolve(migration);
   }
 }
