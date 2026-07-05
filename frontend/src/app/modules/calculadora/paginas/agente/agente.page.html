@@ -1,8 +1,156 @@
-<article class="stub-pagina">
-  <header class="stub-pagina__cabecalho">
-    <span class="stub-pagina__indice">01</span>
-    <h2 class="stub-pagina__titulo">Agente / Civil</h2>
-    <span class="stub-pagina__regua"></span>
-  </header>
-  <p class="stub-pagina__nota">Página em construção. O cálculo desta aba entra em uma task posterior do M1.</p>
-</article>
+<form class="agente" [formGroup]="formulario">
+  <!-- CARD 1: CLASSE & NÍVEL -->
+  <section class="agente-cartao">
+    <header class="agente-cartao__cabecalho">
+      <span class="agente-cartao__indice">1</span>
+      <h2 class="agente-cartao__titulo">Classe &amp; Nível</h2>
+      <span class="agente-cartao__regua"></span>
+    </header>
+
+    <div class="agente-config">
+      <div class="agente-campo">
+        <label class="agente-campo__rotulo" for="agente-classe">Classe / Registro</label>
+        <select id="agente-classe" class="agente-select" formControlName="classe">
+          @for (grupo of gruposClasse; track grupo.rotulo) {
+            <optgroup [label]="grupo.rotulo">
+              @for (opcao of grupo.opcoes; track opcao.valor) {
+                <option [value]="opcao.valor">{{ opcao.rotulo }}</option>
+              }
+            </optgroup>
+          }
+        </select>
+      </div>
+
+      <div class="agente-campo">
+        <div class="agente-campo__linha">
+          <label class="agente-campo__rotulo" for="agente-nivel">{{ rotuloNivel() }}</label>
+          <span class="agente-campo__nivel">{{ nivelAtual() }}</span>
+        </div>
+        <input
+          id="agente-nivel"
+          class="agente-slider"
+          type="range"
+          step="1"
+          formControlName="nivel"
+          [min]="limites().nivelMinimo"
+          [max]="limites().nivelMaximo"
+        />
+        <div class="agente-campo__escala">
+          <span>{{ limites().nivelMinimo }}</span>
+          <span>{{ limites().nivelMaximo }}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CARD 2: ATRIBUTOS -->
+  <section class="agente-cartao">
+    <header class="agente-cartao__cabecalho">
+      <span class="agente-cartao__indice">2</span>
+      <h2 class="agente-cartao__titulo">Atributos</h2>
+      <span class="agente-cartao__regua"></span>
+      <span class="agente-cartao__meta">máx {{ limites().atributoMaximo }}</span>
+    </header>
+
+    <div class="agente-atributos">
+      @for (campo of campos; track campo.chave) {
+        <div class="agente-atributo">
+          <span class="agente-atributo__rotulo">{{ campo.rotulo }}</span>
+          <app-step-input
+            [formControlName]="campo.chave"
+            [min]="limites().atributoMinimo"
+            [max]="limites().atributoMaximo"
+            [ariaRotulo]="campo.rotulo"
+          />
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- CARD 3: STATUS DO PERSONAGEM -->
+  <section class="agente-cartao">
+    <header class="agente-cartao__cabecalho">
+      <span class="agente-cartao__indice">3</span>
+      <h2 class="agente-cartao__titulo">Status do Personagem</h2>
+      <span class="agente-cartao__regua"></span>
+    </header>
+
+    <div class="agente-hero">
+      <div class="agente-stat agente-stat--hero agente-stat--vida">
+        <div class="agente-stat__rotulo">Vida</div>
+        <div class="agente-stat__valor">{{ vida() }}</div>
+      </div>
+      <div class="agente-stat agente-stat--hero agente-stat--energia">
+        <div class="agente-stat__rotulo">Energia</div>
+        <div class="agente-stat__valor">{{ energia() }}</div>
+      </div>
+      <div class="agente-stat agente-stat--hero agente-stat--defesa">
+        <div class="agente-stat__rotulo">Defesa Base</div>
+        <div class="agente-stat__valor">{{ defesaBaseTexto() }}</div>
+      </div>
+      <div class="agente-stat agente-stat--hero agente-stat--proficiencia">
+        <div class="agente-stat__rotulo">Proficiência</div>
+        <div class="agente-stat__valor">{{ proficienciaTexto() }}</div>
+      </div>
+    </div>
+
+    <div class="agente-secundarios">
+      @for (stat of secundarios(); track stat.rotulo) {
+        <div
+          class="agente-stat"
+          [class.agente-stat--energia]="stat.tom === 'energia'"
+          [class.agente-stat--furtivo]="stat.tom === 'furtivo'"
+        >
+          <div class="agente-stat__rotulo">{{ stat.rotulo }}</div>
+          <div class="agente-stat__valor agente-stat__valor--medio">{{ stat.valor }}</div>
+          <div class="agente-stat__detalhe">{{ stat.detalhe }}</div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- CARD 4: BENEFÍCIOS -->
+  <section class="agente-cartao">
+    <header class="agente-cartao__cabecalho">
+      <span class="agente-cartao__indice">4</span>
+      <h2 class="agente-cartao__titulo">{{ tituloBeneficios() }}</h2>
+      <span class="agente-cartao__regua"></span>
+    </header>
+
+    @if (beneficios().length > 0) {
+      <div class="agente-lista">
+        @for (beneficio of beneficios(); track beneficio) {
+          <div class="agente-lista__item">
+            <span class="agente-lista__marcador">›</span>
+            <span>{{ beneficio }}</span>
+          </div>
+        }
+      </div>
+    } @else {
+      <p class="agente-nota">Nível inicial — sem ganhos além do setup base.</p>
+    }
+  </section>
+
+  <!-- CARD 5: PROGRESSÃO ACUMULADA -->
+  <section class="agente-cartao">
+    <header class="agente-cartao__cabecalho">
+      <span class="agente-cartao__indice">5</span>
+      <h2 class="agente-cartao__titulo">Progressão Acumulada</h2>
+      <span class="agente-cartao__regua"></span>
+      <span class="agente-cartao__meta">até o {{ rotuloProgressao() }} {{ nivelAtual() }}</span>
+    </header>
+
+    @if (progressaoAcumulada().length > 0) {
+      <div class="agente-secundarios">
+        @for (item of progressaoAcumulada(); track item.rotulo) {
+          <div class="agente-stat">
+            <div class="agente-stat__rotulo">{{ item.rotulo }}</div>
+            <div class="agente-stat__valor agente-stat__valor--medio">{{ item.valor }}</div>
+          </div>
+        }
+      </div>
+    } @else {
+      <p class="agente-nota">Sem ganhos acumulados até aqui.</p>
+    }
+  </section>
+</form>

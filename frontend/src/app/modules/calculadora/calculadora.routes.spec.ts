@@ -10,8 +10,8 @@ import { calculadoraRoutes } from './calculadora.routes';
  * antigo, agora dirigido pela URL em vez do hash).
  */
 describe('Calculadora — roteamento', () => {
-  const abas = [
-    { url: '/agente', titulo: 'Agente / Civil' },
+  // Abas ainda em stub (a página real do agente é a m1-07; as demais chegam em m1-08+).
+  const abasStub = [
     { url: '/dt', titulo: 'DT' },
     { url: '/novo-agente', titulo: 'Novo Agente' },
     { url: '/patente', titulo: 'Patentes' },
@@ -26,12 +26,19 @@ describe('Calculadora — roteamento', () => {
     return harness.routeNativeElement as HTMLElement;
   }
 
-  it('redireciona a base para a aba agente', async () => {
+  it('redireciona a base para a aba agente (página real)', async () => {
     const raiz = await navegar('/');
-    expect(raiz.querySelector('.stub-pagina__titulo')?.textContent).toContain('Agente / Civil');
+    expect(raiz.querySelector('.agente')).not.toBeNull();
+    expect(raiz.querySelector('.abas__item--ativo')?.textContent).toContain('Agente / Civil');
   });
 
-  for (const aba of abas) {
+  it('carrega a página real do agente e ativa sua aba', async () => {
+    const raiz = await navegar('/agente');
+    expect(raiz.querySelector('.agente')).not.toBeNull();
+    expect(raiz.querySelector('.abas__item--ativo')?.textContent).toContain('Agente / Civil');
+  });
+
+  for (const aba of abasStub) {
     it(`carrega a página lazy e ativa a aba de ${aba.url}`, async () => {
       const raiz = await navegar(aba.url);
       expect(raiz.querySelector('.stub-pagina__titulo')?.textContent).toContain(aba.titulo);

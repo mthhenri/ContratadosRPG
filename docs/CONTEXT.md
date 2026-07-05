@@ -1,6 +1,6 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-06 — fundação do frontend da calculadora).
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-07 — página do agente).
 
 ---
 
@@ -36,7 +36,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | # | Milestone | Status |
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, core/, pipelines, deploy) | **concluído** (deploy nativo Render+Cloudflare; setup das plataformas em `docs/DEPLOY.md`) |
-| M1 | Calculadora com paridade | **em andamento** (6/14 tasks — `m1-01` a `m1-06` concluídas) |
+| M1 | Calculadora com paridade | **em andamento** (7/14 tasks — `m1-01` a `m1-07` concluídas) |
 | M2 | Auth + Campanhas | backlog |
 | M3 | Ficha de Jogador | backlog |
 | M4 | Ficha de Criatura/NPC | backlog |
@@ -60,7 +60,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | frontend (shell) | **pronto** (topbar + `router-outlet` via `shared/layout`, home consumindo `/health`, tema "Terminal de Contenção" dark-first via `docs/design`) |
 | frontend/tema | **pronto** (tokens + base + `ContencaoPreset` PrimeNG em `src/styles/tema/`; troca de accent em runtime é M1). **Tailwind instalado e integrado ao build** (m1-06): `frontend/tailwind.config.ts` mescla o `theme.extend` do handoff (`docs/design/tema/tailwind.config.ts`) apontando cores/fontes/raios utilitários para as CSS custom properties dos tokens; diretivas `@tailwind` no fim de `styles.scss`, coexistindo com SCSS + tokens (preflight não sobrescreve a identidade — só reset) |
 | frontend/core (interceptors + services) | **pronto** (`loading`/`error-handler` interceptors, `LoadingService`, `HealthService`) |
-| frontend/calculadora | **fundação pronta** (m1-06): módulo `modules/calculadora/` com 6 rotas públicas **lazy** (stubs) — `agente`/`dt`/`novo-agente`/`patente`/`descanso`/`compras` — sob o `CalculadoraShell` (navegação de abas + deep-link por rota via `routerLink`/`routerLinkActive`, paridade com o `switchTab`/`VALID_TABS` por hash do site antigo) e o `StepInput` (stepper/input numérico reutilizável, `ControlValueAccessor` + Reactive Forms, sem `ngModel`). Cálculo de cada aba é m1-07+ |
+| frontend/calculadora | **fundação + aba `agente` prontas**. Fundação (m1-06): módulo `modules/calculadora/` com 6 rotas públicas **lazy** — `agente`/`dt`/`novo-agente`/`patente`/`descanso`/`compras` — sob o `CalculadoraShell` (navegação de abas + deep-link por rota via `routerLink`/`routerLinkActive`, paridade com o `switchTab`/`VALID_TABS` por hash do site antigo) e o `StepInput` (stepper/input numérico reutilizável, `ControlValueAccessor` + Reactive Forms, sem `ngModel`). **Aba `agente` (m1-07):** primeira página real — `AgentePage` (Reactive Forms + Signals) consumindo `shared/regras/agente` para **todas** as stats; abas `dt`/`novo-agente`/`patente`/`descanso`/`compras` seguem stubs (m1-08+) |
 | frontend/campanha | não iniciado |
 | frontend/ficha | não iniciado |
 | Infra — banco local (Docker + Knex) | **pronto** (Postgres 16 + migrations) |
@@ -69,16 +69,14 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 
 ## Próxima Task
 
-**m1-07-pagina-agente** (`docs/specs/backlog/m1-07-pagina-agente.spec.md`).
-Primeira página real da calculadora (a fundação — módulo, rotas, abas e `StepInput` — já está de pé pela
-m1-06; a camada de regras `shared/regras/agente` está completa desde a m1-02). Entregar a aba `agente`
-(carro-chefe) com paridade funcional à `calc()` do site antigo: **formulário reativo** (atributos, classe,
-nível, civil/agente) em Reactive Forms reusando os **steppers da m1-06**, estado em **Signals**, e a
-exibição de **todas** as stats derivadas consumindo `shared/regras/agente` (vida, energia, limite de
-energia, defesa, proficiência, deslocamento, dano de corpo, inventário, percepção, dano furtivo,
-traumas/sequelas, limite de habilidades/turno, benefícios por nível e progressão acumulada). **Zero regra
-de jogo no front** — tudo vem do motor. **Ler `docs/design/DESIGN.md` antes de qualquer UI**; alvo de
-fidelidade visual 1:1 é `docs/design/examples/calculadora-de-atributos.html`. Milestone completo
+**m1-08-pagina-dt-novo-agente-patente** (`docs/specs/backlog/m1-08-pagina-dt-novo-agente-patente.spec.md`).
+As três páginas leves da calculadora, agrupadas por serem pequenas: **`dt`** (DT de atributo via
+`shared/regras/dt`), **`novo-agente`** (nível/prestígio iniciais + bônus monetário + motivos via
+`shared/regras/novo-agente`) e **`patente`** (lookup de patente por prestígio via `shared/regras/patente`).
+Todas em Reactive Forms + Signals reusando o `StepInput` da m1-06 e os tokens/padrões BEM do tema
+"Terminal de Contenção" — mesmo molde da `AgentePage` (m1-07). Zero regra de jogo no front; paridade com
+as abas antigas; funcionam offline do backend. **Ler `docs/design/DESIGN.md` antes de qualquer UI.**
+As camadas de regras já estão completas desde a m1-03. Milestone completo
 (`docs/specs/backlog/m1-calculadora-paridade.spec.md`): extrai as regras do jogo do site antigo
 (`contratados-calculadora/src/script.js`) para `shared/regras` e entrega as 6 páginas públicas client-side
 da calculadora, além do sistema de troca de tema em runtime (presets + color picker).
@@ -89,6 +87,42 @@ da calculadora, além do sistema de troca de tema em runtime (presets + color pi
 
 ## Implementado
 
+- **m1-07-pagina-agente** (2026-07-05): primeira página real da calculadora — a aba `agente` (carro-chefe),
+  com paridade funcional à `calc()` do site antigo consumindo `shared/regras/agente`. **Zero regra de jogo no
+  front** — toda stat vem do motor (proibição de duplicar fórmula respeitada). `AgentePage`
+  (`paginas/agente/`) é um **formulário reativo** (`FormGroup` tipado `nonNullable`: `classe` num `<select>`
+  agrupado, os cinco atributos nos **steppers da m1-06** e o Nível num **slider** `<input type="range">`
+  — fiel ao protótipo, com o valor atual em accent — todos via `[formControlName]`, sem `ngModel`)
+  cujo **estado deriva em Signals**: `bruto` (`toSignal` do `valueChanges` + `getRawValue`) → `entrada`
+  (`computed` que normaliza tudo por `aplicarLimitesPorClasse` antes de alimentar as fórmulas) → um `computed`
+  por stat. Exibe **todas** as stats derivadas da spec: Vida/Energia (hero, com tons semânticos accent/energy),
+  Defesa Base, Proficiência, e o grid secundário Esquiva/Bloqueio/Deslocamento/Inventário/Dano de Corpo/Dano
+  Furtivo (verde `--positive`)/Limite de Energia (azul `--energy`)/Traumas/**Sequelas por Missão**/Hab. por
+  Turno/Percepção, mais **Benefícios do Nível** e **Progressão Acumulada** (grid de ganhos > 0). Stats que a
+  classe não possui (Civil sem defesa/proficiência/dano furtivo/traumas → `null` do motor) são mapeadas para
+  `"N/A"` **no front** (formatação de UI, como previsto na m1-02). Ao trocar de classe, um `subscribe` a
+  `classe.valueChanges` (`takeUntilDestroyed`) reclampa Nível e atributos via `aplicarLimitesPorClasse`
+  (paridade com o clamp de input do site ao mudar de registro); os `[min]/[max]` dos steppers vêm de
+  `obterLimitesClasse`. **Layout fiel ao protótipo** `docs/design/examples/calculadora-de-atributos.html`:
+  cards numerados (índice mono + título UPPERCASE + régua), stat boxes e stepper adaptados dos padrões de
+  `docs/design/tema/_componentes.scss`, consumindo **só tokens** do tema (nenhum hex/fonte/raio solto —
+  proibição #29). O Nível usa o **slider** `<input type="range">` do protótipo (a pedido do autor), integrado a
+  Reactive Forms pelo `RangeValueAccessor` nativo; os atributos usam os steppers da m1-06. **Adaptações
+  conscientes (não divergem de regra):** o
+  cabeçalho "Terminal de Agente" do protótipo não é repetido (o `CalculadoraShell` já dá o chrome da
+  calculadora); Sequelas e Progressão Acumulada foram **acrescentadas** ao protótipo por serem entregáveis da
+  spec; **Limite de Energia mostra `Destreza × 2` (agente) / `Destreza` (civil)** — o valor do motor, que
+  corrige a fórmula `(Vig+Des)×2` do site antigo (divergência já registrada e resolvida na m1-02, documento
+  vence), então este é o único stat que **intencionalmente** diverge do site (o front nunca reintroduz a
+  fórmula antiga). Rótulos e títulos alternam Agente/Civil ("Nível"↔"Treinamentos", "Benefícios deste
+  Nível"↔"Treinamento"). Os rótulos sobre os steppers de atributo são `<span>` (o nome acessível vem do
+  `ariaRotulo`/`aria-label` do `StepInput`, componente custom sem controle nativo p/ associar); os controles
+  nativos usam `<label for>` real (classe e o slider de Nível). `calculadora.routes.spec.ts` atualizado (a aba `agente` deixou de ser stub: agora checa
+  `.agente` + aba ativa; as outras 5 seguem em `.stub-pagina__titulo`) e novo `agente.page.spec.ts` prova a
+  ligação motor→DOM (Combatente Nível 3 → Vida **71**/Energia **43**; Civil → Defesa/Proficiência **N/A**).
+  **Validado:** `lint --workspace=frontend` limpo; `test --workspace=frontend` **16/16** (os 14 anteriores + 2
+  novos); `build --workspace=frontend` verde (chunk lazy `agente-page` carregando `shared/regras/agente`). As
+  6 rotas continuam servidas client-side (funcionam sem backend).
 - **m1-06-frontend-calculadora-base** (2026-07-05): fundação do frontend da calculadora — primeira task de
   UI do M1, esqueleto sobre o qual as páginas de cada aba são construídas (m1-07+). **Tailwind instalado e
   integrado** (`tailwindcss@^3` no workspace `frontend`): `frontend/tailwind.config.ts` mescla o
