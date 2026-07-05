@@ -17,7 +17,7 @@ com o código antigo, **o documento vence** (registrar divergências encontradas
 
 ## Entregáveis
 
-1. **`shared/regras`** — extração completa, com testes unitários Jest validados contra as
+1. **`shared/regras`** — extração completa, com testes unitários Vitest validados contra as
    tabelas do `docs/core/sistema-v4.1.0.md` **antes de qualquer UI**:
    - `dados/`: `dadosAgente`, `dadosCivil`, `PATENTES`, tabelas de descanso, catálogo de
      itens, modificações e amplificadores — como dados tipados

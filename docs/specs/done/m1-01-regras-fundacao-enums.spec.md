@@ -2,6 +2,11 @@
 
 > Task 1/14 do milestone `m1-calculadora-paridade.spec.md`.
 
+> **Nota pós-implementação:** os entregáveis 1 e 5 abaixo pedem Jest, mas na revisão desta
+> task o harness foi trocado para **Vitest** (a pedido do autor, para não ter dois test
+> runners no monorepo — `frontend` já usa Vitest). Detalhes em `docs/CONTEXT.md`
+> ("Implementado" — `m1-01-regras-fundacao-enums`). Texto original preservado abaixo.
+
 ## Objetivo
 
 Estabelecer a fundação do motor de regras no `shared/` **antes de qualquer fórmula de

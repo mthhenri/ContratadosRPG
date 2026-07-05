@@ -1,6 +1,6 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m0-07 revisto — deploy nativo).
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-01 — fundação de regras e enums).
 
 ---
 
@@ -36,7 +36,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | # | Milestone | Status |
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, core/, pipelines, deploy) | **concluído** (deploy nativo Render+Cloudflare; setup das plataformas em `docs/DEPLOY.md`) |
-| M1 | Calculadora com paridade | backlog |
+| M1 | Calculadora com paridade | **em andamento** (1/14 tasks — `m1-01` concluída) |
 | M2 | Auth + Campanhas | backlog |
 | M3 | Ficha de Jogador | backlog |
 | M4 | Ficha de Criatura/NPC | backlog |
@@ -46,8 +46,8 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 
 | Módulo | Status |
 |---|---|
-| shared (estrutura) | **`interfaces/` com `StandardResponse`/`PaginatedResult`**; demais pastas ainda esqueleto |
-| shared/regras | não iniciado |
+| shared (estrutura) | **`interfaces/`** (`StandardResponse`/`PaginatedResult`) + **`enums/`** (`ClasseEnum`, `PatenteEnum`, `ItemCategoriaEnum`, `TipoDescansoEnum`, `QualidadeDescansoEnum`); `dtos/`/`validators/` ainda esqueleto |
+| shared/regras | **fundação pronta** (m1-01): harness Vitest configurado (`npm run test --workspace=shared`); estrutura `agente/`, `dt/`, `novo-agente/`, `patente/`, `descanso/`, `compras/` com barrels vazios (fórmulas nascem m1-02+); `dados/` com `dadosAgente`, `dadosCivil` e `PATENTES` tipados e conferidos contra o sistema |
 | backend/core | **pronto** (`BaseEntity`, `BaseRepository`, exceções, filtro, interceptor) |
 | backend/config | **pronto** (`ConfigService`/`ConfigModule`, lê `DB_*`/`JWT_*`/`APP_*`) |
 | backend/database | **pronto** (`DatabaseModule`/`database.provider.ts` — conexão Knex em runtime via DI) |
@@ -69,12 +69,15 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 
 ## Próxima Task
 
-**M1 — Calculadora com paridade** (primeiro milestone de produto). Antes de implementar, quebrar
-`docs/specs/backlog/m1-calculadora-paridade.spec.md` em tasks numeradas (`m1-01-<nome>.spec.md`…)
-no backlog. O M1 extrai as regras do jogo do site antigo (`contratados-calculadora/src/script.js`)
-para `shared/regras` (com testes validados contra `docs/core/sistema-v4.1.0.md`) e entrega as 6
-páginas públicas client-side da calculadora, além do sistema de troca de tema em runtime (presets +
-color picker) e a instalação/merge do Tailwind.
+**m1-02-regras-agente** (`docs/specs/backlog/m1-02-regras-agente.spec.md`). Extrair para
+`shared/regras/agente/` todas as fórmulas da aba `agente` do site antigo (vida, energia, limite de
+energia, defesa, proficiência, deslocamento, dano corpo a corpo, inventário, traumas/sequelas, área
+de percepção, dano furtivo, limite de habilidades/turno, benefícios por nível e limites por classe),
+com testes Vitest contra `docs/core/sistema-v4.1.0.md`, consumindo `dadosAgente`/`dadosCivil` já
+migrados na m1-01. Milestone completo (`docs/specs/backlog/m1-calculadora-paridade.spec.md`): extrai
+as regras do jogo do site antigo (`contratados-calculadora/src/script.js`) para `shared/regras` e
+entrega as 6 páginas públicas client-side da calculadora, além do sistema de troca de tema em
+runtime (presets + color picker) e a instalação/merge do Tailwind.
 
 > **Pendência operacional do M0 (não bloqueia o M1):** o backend em produção (Render) já responde
 > `/health`. Falta o front ficar live: conectar a Cloudflare Pages ao Git com **branch de produção
@@ -82,6 +85,45 @@ color picker) e a instalação/merge do Tailwind.
 
 ## Implementado
 
+- **m1-01-regras-fundacao-enums** (2026-07-05): fundação do motor de regras no `shared/`, antes de
+  qualquer fórmula de domínio ou UI — primeira task do M1. **Harness de teste configurado** no
+  workspace `shared`: a spec pedia Jest, mas trocado por **Vitest** na revisão (a pedido do autor)
+  para não ter dois test runners no monorepo — o `frontend` já usa Vitest desde a m0-06. `vitest`
+  como devDependency, `shared/vitest.config.ts` (`test.environment: 'node'`) e script
+  `test: vitest run`; specs importam `describe`/`it`/`expect` explicitamente de `'vitest'` (sem
+  globals ambíguos, diferente do `frontend`, que usa `vitest/globals`). Para não vazar `*.spec.ts`
+  compilado para `dist/` (consumido por `backend`/`frontend`), o script `build` passou a rodar
+  contra um novo `shared/tsconfig.build.json` (estende o `tsconfig.json` base excluindo
+  `src/**/*.spec.ts`), enquanto `tsconfig.json`/`typecheck` continuam cobrindo tudo — mesmo padrão já
+  usado em `backend/tsconfig.build.json` (essa parte independe do runner escolhido).
+  **Estrutura `regras/`**
+  conforme SYSTEM.SPEC §3: `agente/`, `dt/`, `novo-agente/`, `patente/`, `descanso/`, `compras/`
+  nasceram como barrels vazios (`export {}` + comentário apontando a task que os preenche —
+  m1-02 a m1-05); `criatura/` fica para o M4, fora desta task. **Enums de conteúdo de jogo** em
+  `shared/src/enums/` (conteúdo de JSONB `ficha.dados`, sem tabela `tipo_*` — §10.3):
+  `ClasseEnum`, `PatenteEnum`, `ItemCategoriaEnum`, `TipoDescansoEnum`, `QualidadeDescansoEnum`.
+  **`regras/dados/`** com `dadosAgente`/`dadosCivil` (`BeneficiosPorNivel`, mapa nível→benefícios) e
+  `PATENTES` (`PatenteDados[]`, com `prestigioMaximo: Number.POSITIVE_INFINITY` na última faixa),
+  migrados de `contratados-calculadora/src/script.js` e conferidos contra
+  `docs/core/sistema-v4.1.0.md` (documento vence — proibição #27). **Divergências encontradas e
+  corrigidas** (documentadas em JSDoc no próprio arquivo de dados): (a) `dadosAgente` níveis 5, 10,
+  15, 20 — o site antigo omitia a palavra "outro" em "outra classe/**outro** arquétipo da sua
+  classe"; (b) níveis 7, 14 — o site antigo omitia "sua" em "Fortificação de **sua** Personalidade";
+  (c) `PatenteEnum` usa os nomes completos do documento (`FORCA_TAREFA_ESPECIAL`,
+  `OPERACOES_ESPECIAIS`) em vez das abreviações do site antigo ("FT Especial", "Op. Especiais") —
+  sem divergência numérica em `PATENTES` (faixas de prestígio, salário e multiplicador batem com o
+  documento e com o site antigo). `shared/package.json` ganhou os subpaths `./enums`,
+  `./regras/dados` e, preventivamente, um subpath por domínio ainda vazio (`./regras/agente`,
+  `./regras/dt`, `./regras/novo-agente`, `./regras/patente`, `./regras/descanso`,
+  `./regras/compras` — todos já apontam para os barrels `export {}` que existem em `dist/`), mesmo
+  padrão de `./interfaces` da m0-03. Registrar os seis já evita que uma task futura esqueça de
+  adicionar o subpath ao preencher o domínio — o `backend` resolve `exports` estritamente
+  (`moduleResolution: nodenext`) e falharia silenciosamente sem sinal de CI, enquanto o `frontend`
+  (path-mapping curinga no tsconfig) não notaria o esquecimento.
+  **Prova de harness**: `regras/dados/patente.dados.spec.ts` (2 testes triviais sobre `PATENTES`).
+  Validado: `npm run test --workspace=shared` verde (2/2); `CI=true npm run test` (raiz) roda
+  shared + frontend verde (backend segue sem testes, pulado por `--if-present`); `npm run lint`
+  verde nos 3 workspaces; `npm run build --workspace=shared` não gera `.spec.js` em `dist/`.
 - **m0-07-deploy** (2026-07-05): deploy de produção — última task do M0. **Decisão final:
   integração nativa das plataformas, sem GitHub Actions no deploy.** (A 1ª rodada chegou a montar
   um `.github/workflows/cd.yml` com gate de CI + Render deploy hook + `wrangler pages deploy`,

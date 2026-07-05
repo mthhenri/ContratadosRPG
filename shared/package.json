@@ -15,22 +15,56 @@
     "./interfaces": {
       "types": "./dist/interfaces/index.d.ts",
       "default": "./dist/interfaces/index.js"
+    },
+    "./enums": {
+      "types": "./dist/enums/index.d.ts",
+      "default": "./dist/enums/index.js"
+    },
+    "./regras/dados": {
+      "types": "./dist/regras/dados/index.d.ts",
+      "default": "./dist/regras/dados/index.js"
+    },
+    "./regras/agente": {
+      "types": "./dist/regras/agente/index.d.ts",
+      "default": "./dist/regras/agente/index.js"
+    },
+    "./regras/dt": {
+      "types": "./dist/regras/dt/index.d.ts",
+      "default": "./dist/regras/dt/index.js"
+    },
+    "./regras/novo-agente": {
+      "types": "./dist/regras/novo-agente/index.d.ts",
+      "default": "./dist/regras/novo-agente/index.js"
+    },
+    "./regras/patente": {
+      "types": "./dist/regras/patente/index.d.ts",
+      "default": "./dist/regras/patente/index.js"
+    },
+    "./regras/descanso": {
+      "types": "./dist/regras/descanso/index.d.ts",
+      "default": "./dist/regras/descanso/index.js"
+    },
+    "./regras/compras": {
+      "types": "./dist/regras/compras/index.d.ts",
+      "default": "./dist/regras/compras/index.js"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc --project tsconfig.json",
+    "build": "tsc --project tsconfig.build.json",
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "lint": "eslint \"src/**/*.ts\"",
-    "lint:fix": "eslint \"src/**/*.ts\" --fix"
+    "lint:fix": "eslint \"src/**/*.ts\" --fix",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
     "eslint": "^9.18.0",
     "globals": "^17.0.0",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0"
+    "typescript-eslint": "^8.20.0",
+    "vitest": "^4.0.8"
   }
 }

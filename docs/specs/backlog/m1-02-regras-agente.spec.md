@@ -5,7 +5,7 @@
 ## Objetivo
 
 Extrair para `shared/regras/agente/` **todas** as fórmulas do agente (aba `agente` do site
-antigo — função `calc()` e auxiliares), com testes Jest validados contra
+antigo — função `calc()` e auxiliares), com testes Vitest validados contra
 `docs/core/sistema-v4.1.0.md`.
 
 ## Entregáveis
