@@ -36,8 +36,8 @@ Monorepo npm workspaces:
 npm install                              # instala os 3 workspaces
 npm run db:up                            # Postgres via Docker Compose
 npm run db:migrate --workspace=backend   # migrations
-npm run backend:dev                      # API em http://localhost:3000
-npm run frontend:dev                     # SPA em http://localhost:4200
+npm run backend:dev                      # API em http://localhost:3100
+npm run frontend:dev                     # SPA em http://localhost:4300
 ```
 
 ### Variáveis de ambiente (backend)

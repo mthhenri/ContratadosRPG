@@ -29,8 +29,8 @@ npm run db:migrate --workspace=backend   # run pending migrations
 npm run db:rollback --workspace=backend  # rollback last migration
 
 # Development servers (run in separate terminals)
-npm run backend:dev         # NestJS API on http://localhost:3000
-npm run frontend:dev        # Angular SPA on http://localhost:4200 (with proxy to backend)
+npm run backend:dev         # NestJS API on http://localhost:3100
+npm run frontend:dev        # Angular SPA on http://localhost:4300 (with proxy to backend)
 
 # Tests
 npm run test --workspace=shared     # game rules engine — run before touching any formula

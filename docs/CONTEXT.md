@@ -1,13 +1,15 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-02 (bootstrap).
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-04 (m0-01).
 
 ---
 
 ## Estado Geral
 
-**Fase:** pré-M0. O repositório contém apenas a base documental (constituição + specs de
-milestone). Nenhum código foi escrito ainda.
+**Fase:** M0 em andamento. O esqueleto do monorepo npm workspaces está de pé
+(`shared/`, `backend/`, `frontend/`) com os pacotes se importando corretamente. Ainda sem
+conteúdo de negócio, core do backend, Docker ou shell visual — esses nascem nas tasks
+seguintes do M0.
 
 ## Status dos Milestones
 
@@ -24,14 +26,14 @@ milestone). Nenhum código foi escrito ainda.
 
 | Módulo | Status |
 |---|---|
-| shared (estrutura) | não iniciado |
+| shared (estrutura) | **esqueleto pronto** (pastas + barrel `index.ts`; sem conteúdo de negócio) |
 | shared/regras | não iniciado |
 | backend/core | não iniciado |
 | backend/autenticacao | não iniciado |
 | backend/usuario | não iniciado |
 | backend/campanha | não iniciado |
 | backend/ficha | não iniciado |
-| frontend (shell) | não iniciado |
+| frontend (shell) | **esqueleto Angular 21 + PrimeNG 21** (sem shell visual — nasce na m0-05) |
 | frontend/calculadora | não iniciado |
 | frontend/campanha | não iniciado |
 | frontend/ficha | não iniciado |
@@ -39,9 +41,19 @@ milestone). Nenhum código foi escrito ainda.
 
 ## Próxima Task
 
-M0 já quebrado em 7 tasks numeradas em `docs/specs/backlog/` (`m0-01-workspaces-npm` até
-`m0-07-cd-deploy`). Iniciar pela `m0-01-workspaces-npm.spec.md`: mover para
-`docs/specs/active/` e implementar.
+`m0-02-docker-banco.spec.md` (Docker Compose PostgreSQL 16 + Knex + migrations). Mover de
+`docs/specs/backlog/` para `docs/specs/active/` e implementar. As tasks `m0-03` a `m0-07`
+seguem em ordem.
+
+## Implementado
+
+- **m0-01-workspaces-npm** (2026-07-04): monorepo npm workspaces com `shared/`, `backend/`
+  (NestJS 11) e `frontend/` (Angular 21 + PrimeNG 21). `npm install` na raiz instala os três
+  workspaces; `postinstall` compila `shared` para `dist/`. Import de `@contratados-rpg/shared`
+  validado nos dois lados — backend via referência de workspace (dist), frontend via path
+  mapping do `tsconfig` para a fonte. `npm run build` passa em backend e frontend.
+  Constante trivial `SHARED_PACKAGE_NAME` valida a ligação (será substituída por conteúdo
+  real nas tasks seguintes).
 
 ## Decisões Pendentes
 

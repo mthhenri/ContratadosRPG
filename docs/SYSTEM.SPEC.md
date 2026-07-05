@@ -346,9 +346,9 @@ JWT_SECRETO=troque-em-producao
 JWT_EXPIRACAO=8h
 
 # Aplicação
-APP_PORTA=3000
+APP_PORTA=3100
 APP_AMBIENTE=development
-APP_FRONTEND_ORIGEM=http://localhost:4200   # CORS + origem permitida do Socket.IO
+APP_FRONTEND_ORIGEM=http://localhost:4300   # CORS + origem permitida do Socket.IO
 ```
 
 Backend lê tudo via `ConfigService` injetado — nunca `process.env` direto.

@@ -1,0 +1,26 @@
+{
+  "name": "contratados-rpg",
+  "version": "0.0.1",
+  "description": "Site completo do RPG \"Contratados\" (SCP Foundation RPG v4).",
+  "private": true,
+  "license": "UNLICENSED",
+  "workspaces": [
+    "shared",
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "postinstall": "npm run build --workspace=shared",
+    "build:shared": "npm run build --workspace=shared",
+    "dev": "concurrently -k -n backend,frontend -c red,gray \"npm:backend:dev\" \"npm:frontend:dev\"",
+    "backend:dev": "npm run start:dev --workspace=backend",
+    "frontend:dev": "npm run start --workspace=frontend",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:migrate": "npm run db:migrate --workspace=backend",
+    "db:rollback": "npm run db:rollback --workspace=backend"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3"
+  }
+}
