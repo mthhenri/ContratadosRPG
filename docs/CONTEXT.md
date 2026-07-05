@@ -1,6 +1,6 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-04 — regras de descanso).
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-05 — regras de compras).
 
 ---
 
@@ -36,7 +36,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | # | Milestone | Status |
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, core/, pipelines, deploy) | **concluído** (deploy nativo Render+Cloudflare; setup das plataformas em `docs/DEPLOY.md`) |
-| M1 | Calculadora com paridade | **em andamento** (4/14 tasks — `m1-01` a `m1-04` concluídas) |
+| M1 | Calculadora com paridade | **em andamento** (5/14 tasks — `m1-01` a `m1-05` concluídas) |
 | M2 | Auth + Campanhas | backlog |
 | M3 | Ficha de Jogador | backlog |
 | M4 | Ficha de Criatura/NPC | backlog |
@@ -47,7 +47,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | Módulo | Status |
 |---|---|
 | shared (estrutura) | **`interfaces/`** (`StandardResponse`/`PaginatedResult`) + **`enums/`** (`ClasseEnum`, `PatenteEnum`, `ItemCategoriaEnum`, `TipoDescansoEnum`, `QualidadeDescansoEnum`, `MotivoEntradaAgenteEnum`); `dtos/`/`validators/` ainda esqueleto |
-| shared/regras | **`agente/` completo** (m1-02): 15 fórmulas puras da aba agente com testes Vitest conferidos contra o sistema (vida, energia, limite de energia, defesa/esquiva/bloqueio, proficiência, deslocamento, dano de corpo, dano furtivo, inventário, percepção, sanidade, limite hab./turno, benefícios por nível, progressão acumulada, limites por classe). **`dt/`, `novo-agente/`, `patente/` completos** (m1-03): DT de atributo (`10 + Nível + Atributo×2`); nível/prestígio iniciais + bônus monetário por motivo de entrada; lookup de patente por prestígio + recorte da aba, consumindo `PATENTES`. **`descanso/` completo** (m1-04): escada de dados (`ESCADA_DADOS` + `ajustarDado`/`elevarDado`/`descreverDado`), tabelas `DADOS_DESCANSO`/`QUALIDADE_MOD`, faixa de recuperação (`calcularDescanso`), interpretação de dados extras (`interpretarDadosExtras`), resultado a partir de valores rolados (`calcularResultadoDescanso`) + a utilidade de rolagem `rolarDados` (única brecha a `Math.random` — §6.6). `compras/` segue barrel vazio (m1-05); `dados/` com `dadosAgente`, `dadosCivil` e `PATENTES` (m1-01) |
+| shared/regras | **`agente/` completo** (m1-02): 15 fórmulas puras da aba agente com testes Vitest conferidos contra o sistema (vida, energia, limite de energia, defesa/esquiva/bloqueio, proficiência, deslocamento, dano de corpo, dano furtivo, inventário, percepção, sanidade, limite hab./turno, benefícios por nível, progressão acumulada, limites por classe). **`dt/`, `novo-agente/`, `patente/` completos** (m1-03): DT de atributo (`10 + Nível + Atributo×2`); nível/prestígio iniciais + bônus monetário por motivo de entrada; lookup de patente por prestígio + recorte da aba, consumindo `PATENTES`. **`descanso/` completo** (m1-04): escada de dados (`ESCADA_DADOS` + `ajustarDado`/`elevarDado`/`descreverDado`), tabelas `DADOS_DESCANSO`/`QUALIDADE_MOD`, faixa de recuperação (`calcularDescanso`), interpretação de dados extras (`interpretarDadosExtras`), resultado a partir de valores rolados (`calcularResultadoDescanso`) + a utilidade de rolagem `rolarDados` (única brecha a `Math.random` — §6.6). **`compras/` completo** (m1-05): catálogo (`CATALOGO_CATEGORIAS`/`CATALOGO_ITENS`), modificações por categoria (`MODIFICACOES`) + custos (`CUSTO_MODIFICACAO`), amplificadores (`AMPLIFICADORES`) e limites por patente (`LIMITES_MODIFICACAO`); fórmulas `obterLimiteModificacoes`/`obterCustoModificacao`/`obterPesoModificacao`/`contarComprasModificacao`/`verificarConflitoModificacao`/`calcularStatItem` (reusa `elevarDado`)/`calcularCustoAmplificador`/`calcularTotaisCarrinho`/`calcularResumoCompras`, reusando `obterPatente` (m1-03). `dados/` com `dadosAgente`, `dadosCivil` e `PATENTES` (m1-01) |
 | backend/core | **pronto** (`BaseEntity`, `BaseRepository`, exceções, filtro, interceptor) |
 | backend/config | **pronto** (`ConfigService`/`ConfigModule`, lê `DB_*`/`JWT_*`/`APP_*`) |
 | backend/database | **pronto** (`DatabaseModule`/`database.provider.ts` — conexão Knex em runtime via DI) |
@@ -69,16 +69,18 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 
 ## Próxima Task
 
-**m1-05-regras-compras** (`docs/specs/backlog/m1-05-regras-compras.spec.md`).
-Extrair para `shared/regras/compras/` o domínio mais pesado da calculadora: catálogo e categorias
-(`CATALOGO_CATS`/`CATALOGO_ITENS`), modificações/amplificadores e custos (`MODIFICACOES`/`MOD_CUSTO`),
-limites por patente (`PATENTES_MOD`/`getPatenteMod`), conflitos entre modificações, stat computado de
-item (`computeItemStat` — que reusa `elevarDado`/`ESCADA_DADOS` do domínio descanso), peso e totais do
-carrinho (`getCmpTotals`), com testes Vitest contra `docs/core/sistema-v4.1.0.md`. Milestone completo
-(`docs/specs/backlog/m1-calculadora-paridade.spec.md`):
-extrai as regras do jogo do site antigo (`contratados-calculadora/src/script.js`) para `shared/regras`
-e entrega as 6 páginas públicas client-side da calculadora, além do sistema de troca de tema em
-runtime (presets + color picker) e a instalação/merge do Tailwind.
+**m1-06-frontend-calculadora-base** (`docs/specs/backlog/m1-06-frontend-calculadora-base.spec.md`).
+Primeira task de frontend do M1 (a camada de regras `shared/regras` está completa — m1-01 a m1-05).
+Montar a fundação do frontend da calculadora: **Tailwind** instalado/integrado ao build (a partir de
+`docs/design/tema/tailwind.config.ts`, convivendo com SCSS + tokens), o módulo `modules/calculadora/`
+com as **6 rotas públicas lazy** (`agente`, `dt`, `novo-agente`, `patente`, `descanso`, `compras`) como
+stubs, a **navegação de abas** com deep-link por rota (paridade com o `switchTab`/`VALID_TABS` por hash
+do site antigo) e o **stepper / input numérico reutilizável** em Reactive Forms (sem `ngModel`),
+consumindo o BEM de `docs/design/tema/_componentes.scss`. **Ler `docs/design/DESIGN.md` antes de qualquer
+UI.** Milestone completo (`docs/specs/backlog/m1-calculadora-paridade.spec.md`): extrai as regras do
+jogo do site antigo (`contratados-calculadora/src/script.js`) para `shared/regras` e entrega as 6 páginas
+públicas client-side da calculadora, além do sistema de troca de tema em runtime (presets + color picker)
+e a instalação/merge do Tailwind.
 
 > **Pendência operacional do M0 (não bloqueia o M1):** o backend em produção (Render) já responde
 > `/health`. Falta o front ficar live: conectar a Cloudflare Pages ao Git com **branch de produção
@@ -86,6 +88,39 @@ runtime (presets + color picker) e a instalação/merge do Tailwind.
 
 ## Implementado
 
+- **m1-05-regras-compras** (2026-07-05): `shared/regras/compras/` completo — o domínio mais pesado da
+  calculadora (aba `compras` do site antigo, `contratados-calculadora/src/script.js`) extraído e conferido
+  contra `docs/core/sistema-v4.1.0.md` — "Equipamentos", "Prestígio e Patentes" e "Amplificadores"
+  (34 testes novos; workspace shared 143/143 verde). **Dados** — `catalogo.dados.ts`: `CATALOGO_ITENS`
+  (catálogo completo por categoria) + `ItemCatalogo`; `compras.dados.ts`: `CATALOGO_CATEGORIAS`,
+  `CUSTO_MODIFICACAO` (exceções ao padrão $750: Explosivos/Munições $250, Armazenamento $300),
+  `LIMITES_MODIFICACAO` (empilhamentos/mods por patente), `MODIFICACOES` (mods por categoria com
+  `bloqueia`), `AMPLIFICADORES` e as constantes de regra (peso padrão 0,2; amp $3000/$1000; penalidade
+  −2 Vontade/empilhamento; limite Vontade×3). Tudo indexado por `ItemCategoriaEnum`/`PatenteEnum` (não
+  pelas strings de UI do site). **Fórmulas** (`compras.ts`): `obterLimiteModificacoes` (= antigo
+  `getPatenteMod`, **reusa `obterPatente` da m1-03** para não duplicar as faixas de Prestígio),
+  `obterCustoModificacao`/`obterPesoModificacao`/`contarComprasModificacao` (custo/peso/cobranças de mod,
+  com empréstimo de categoria via "Faz Parte"/"Combativo" — `obterCategoriaEmprestada`/
+  `listarModificacoesDisponiveis`), `verificarConflitoModificacao` (conflitos nas duas direções a partir
+  da coluna "Bloqueia"), `calcularStatItem` (= antigo `computeItemStat`; **reusa `elevarDado` da m1-04**
+  para o degrau da mod Pesada, teto D10), `interpretarBonusArmazenamento`, `calcularCustoAmplificador`,
+  `calcularTotaisCarrinho` (= antigo `getCmpTotals`) e o orquestrador `calcularResumoCompras`
+  (= `renderCmpSummary`). Exemplos do documento replicados em teste (limite Veterano 3/9; Pesada 3D8→3D10;
+  amplificador 1º=$3000 / 3 empilh.=$5000; penalidade Vontade −2). **Divergência encontrada e corrigida
+  (documento vence — proibição #27), documentada em JSDoc e teste:** as **modificações de Armazenamento
+  não agregam peso** (doc — "não agregam nenhum peso ao item"), mas o site antigo somava o padrão 0,2/stack;
+  implementado `peso: 0` nessas mods. Sem outras divergências numéricas vs `script.js`. **Decisões de
+  representação (não são divergências de regra):** `calcularStatItem` devolve um value-object estruturado
+  (`StatItemDto` com `dano`/`resistencia`/`bonusArmazenamento` em notação de jogo) em vez da string com
+  ícone `⚔`/`🛡`/`📦` do site — o ícone/rótulo é formatação de UI (m1-10), como o `null`→"N/A" da m1-02;
+  o antigo `PATENTES_MOD` (que duplicava as faixas de Prestígio) virou `LIMITES_MODIFICACAO` indexada por
+  `PatenteEnum`, com a tradução Prestígio→patente delegada a `obterPatente` (mesma disciplina anti-duplicação
+  da escada de dados na m1-04); estado do carrinho (adicionar/remover, `localStorage`, export/import) fica
+  para m1-10/m1-11 — aqui só se calcula a partir de um estado dado. DTOs de entrada e value-objects de saída
+  co-locados em `compras.dtos.ts` (dados tipados do motor — §6.6). Barrel `compras/` preenchido; o subpath
+  `@contratados-rpg/shared/regras/compras` (pré-registrado na m1-01) agora resolve conteúdo real. Validado:
+  `npm run test --workspace=shared` 143/143; `lint`/`typecheck`/`build` verdes; `build` não vaza `*.spec.js`
+  para `dist/`.
 - **m1-04-regras-descanso** (2026-07-05): `shared/regras/descanso/` completo — as regras da aba
   `descanso` do site antigo (`contratados-calculadora/src/script.js`) extraídas e conferidas contra
   `docs/core/sistema-v4.1.0.md` — "Descanso" (30 testes novos; workspace shared 109/109 verde).
