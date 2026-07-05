@@ -1,5 +1,5 @@
 ---
-name: project20-dto-conventions
+name: dto-conventions
 description: >
   Convenções completas de nomenclatura, estrutura e localização de DTOs do Project 2.0.
   Use esta skill sempre que for criar, nomear, revisar, listar ou validar DTOs do projeto —
