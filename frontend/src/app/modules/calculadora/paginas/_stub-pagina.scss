@@ -1,0 +1,54 @@
+// Estilo compartilhado das páginas-stub da calculadora (m1-06 — fundação). Cada página real
+// substitui seu próprio template/estilo quando implementada (m1-07..m1-10); até lá todas
+// reusam este cartão. Copiado do padrão .card de docs/design/tema/_componentes.scss —
+// consome apenas os tokens do tema (nenhum hex/fonte/raio solto).
+.stub-pagina {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--pad-card);
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 18px;
+  }
+
+  &__indice {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__titulo {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+  }
+
+  &__regua {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  &__nota {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--text-dim);
+    margin: 0;
+  }
+}

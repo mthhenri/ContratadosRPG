@@ -1,0 +1,16 @@
+<section class="calculadora">
+  <header class="calculadora__cabecalho">
+    <h1 class="calculadora__titulo">Calculadora</h1>
+    <span class="chip-classificacao">Acesso Livre</span>
+  </header>
+
+  <nav class="abas" aria-label="Abas da calculadora">
+    @for (aba of abas; track aba.caminho) {
+      <a class="abas__item" [routerLink]="aba.caminho" routerLinkActive="abas__item--ativo">
+        {{ aba.rotulo }}
+      </a>
+    }
+  </nav>
+
+  <router-outlet />
+</section>

@@ -1,6 +1,6 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-05 — regras de compras).
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-06 — fundação do frontend da calculadora).
 
 ---
 
@@ -36,7 +36,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | # | Milestone | Status |
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, core/, pipelines, deploy) | **concluído** (deploy nativo Render+Cloudflare; setup das plataformas em `docs/DEPLOY.md`) |
-| M1 | Calculadora com paridade | **em andamento** (5/14 tasks — `m1-01` a `m1-05` concluídas) |
+| M1 | Calculadora com paridade | **em andamento** (6/14 tasks — `m1-01` a `m1-06` concluídas) |
 | M2 | Auth + Campanhas | backlog |
 | M3 | Ficha de Jogador | backlog |
 | M4 | Ficha de Criatura/NPC | backlog |
@@ -58,9 +58,9 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | backend/campanha | não iniciado |
 | backend/ficha | não iniciado |
 | frontend (shell) | **pronto** (topbar + `router-outlet` via `shared/layout`, home consumindo `/health`, tema "Terminal de Contenção" dark-first via `docs/design`) |
-| frontend/tema | **pronto** (tokens + base + `ContencaoPreset` PrimeNG em `src/styles/tema/`; troca de accent em runtime é M1) |
+| frontend/tema | **pronto** (tokens + base + `ContencaoPreset` PrimeNG em `src/styles/tema/`; troca de accent em runtime é M1). **Tailwind instalado e integrado ao build** (m1-06): `frontend/tailwind.config.ts` mescla o `theme.extend` do handoff (`docs/design/tema/tailwind.config.ts`) apontando cores/fontes/raios utilitários para as CSS custom properties dos tokens; diretivas `@tailwind` no fim de `styles.scss`, coexistindo com SCSS + tokens (preflight não sobrescreve a identidade — só reset) |
 | frontend/core (interceptors + services) | **pronto** (`loading`/`error-handler` interceptors, `LoadingService`, `HealthService`) |
-| frontend/calculadora | não iniciado |
+| frontend/calculadora | **fundação pronta** (m1-06): módulo `modules/calculadora/` com 6 rotas públicas **lazy** (stubs) — `agente`/`dt`/`novo-agente`/`patente`/`descanso`/`compras` — sob o `CalculadoraShell` (navegação de abas + deep-link por rota via `routerLink`/`routerLinkActive`, paridade com o `switchTab`/`VALID_TABS` por hash do site antigo) e o `StepInput` (stepper/input numérico reutilizável, `ControlValueAccessor` + Reactive Forms, sem `ngModel`). Cálculo de cada aba é m1-07+ |
 | frontend/campanha | não iniciado |
 | frontend/ficha | não iniciado |
 | Infra — banco local (Docker + Knex) | **pronto** (Postgres 16 + migrations) |
@@ -69,18 +69,19 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 
 ## Próxima Task
 
-**m1-06-frontend-calculadora-base** (`docs/specs/backlog/m1-06-frontend-calculadora-base.spec.md`).
-Primeira task de frontend do M1 (a camada de regras `shared/regras` está completa — m1-01 a m1-05).
-Montar a fundação do frontend da calculadora: **Tailwind** instalado/integrado ao build (a partir de
-`docs/design/tema/tailwind.config.ts`, convivendo com SCSS + tokens), o módulo `modules/calculadora/`
-com as **6 rotas públicas lazy** (`agente`, `dt`, `novo-agente`, `patente`, `descanso`, `compras`) como
-stubs, a **navegação de abas** com deep-link por rota (paridade com o `switchTab`/`VALID_TABS` por hash
-do site antigo) e o **stepper / input numérico reutilizável** em Reactive Forms (sem `ngModel`),
-consumindo o BEM de `docs/design/tema/_componentes.scss`. **Ler `docs/design/DESIGN.md` antes de qualquer
-UI.** Milestone completo (`docs/specs/backlog/m1-calculadora-paridade.spec.md`): extrai as regras do
-jogo do site antigo (`contratados-calculadora/src/script.js`) para `shared/regras` e entrega as 6 páginas
-públicas client-side da calculadora, além do sistema de troca de tema em runtime (presets + color picker)
-e a instalação/merge do Tailwind.
+**m1-07-pagina-agente** (`docs/specs/backlog/m1-07-pagina-agente.spec.md`).
+Primeira página real da calculadora (a fundação — módulo, rotas, abas e `StepInput` — já está de pé pela
+m1-06; a camada de regras `shared/regras/agente` está completa desde a m1-02). Entregar a aba `agente`
+(carro-chefe) com paridade funcional à `calc()` do site antigo: **formulário reativo** (atributos, classe,
+nível, civil/agente) em Reactive Forms reusando os **steppers da m1-06**, estado em **Signals**, e a
+exibição de **todas** as stats derivadas consumindo `shared/regras/agente` (vida, energia, limite de
+energia, defesa, proficiência, deslocamento, dano de corpo, inventário, percepção, dano furtivo,
+traumas/sequelas, limite de habilidades/turno, benefícios por nível e progressão acumulada). **Zero regra
+de jogo no front** — tudo vem do motor. **Ler `docs/design/DESIGN.md` antes de qualquer UI**; alvo de
+fidelidade visual 1:1 é `docs/design/examples/calculadora-de-atributos.html`. Milestone completo
+(`docs/specs/backlog/m1-calculadora-paridade.spec.md`): extrai as regras do jogo do site antigo
+(`contratados-calculadora/src/script.js`) para `shared/regras` e entrega as 6 páginas públicas client-side
+da calculadora, além do sistema de troca de tema em runtime (presets + color picker).
 
 > **Pendência operacional do M0 (não bloqueia o M1):** o backend em produção (Render) já responde
 > `/health`. Falta o front ficar live: conectar a Cloudflare Pages ao Git com **branch de produção
@@ -88,6 +89,41 @@ e a instalação/merge do Tailwind.
 
 ## Implementado
 
+- **m1-06-frontend-calculadora-base** (2026-07-05): fundação do frontend da calculadora — primeira task de
+  UI do M1, esqueleto sobre o qual as páginas de cada aba são construídas (m1-07+). **Tailwind instalado e
+  integrado** (`tailwindcss@^3` no workspace `frontend`): `frontend/tailwind.config.ts` mescla o
+  `theme.extend` do handoff (`docs/design/tema/tailwind.config.ts`) — cores/fontes/raios utilitários
+  apontam para as **mesmas CSS custom properties** dos tokens (`--bg`, `--accent`, `--font-mono`, …), então
+  utilitário Tailwind e SCSS/BEM nunca divergem (proibições #17/#29 preservadas — nenhum hex/fonte/raio
+  solto). As diretivas `@tailwind base/components/utilities` entram **no fim** de `styles.scss` (o Sass
+  exige `@use` — tokens/base — antes de qualquer regra CSS): o preflight carrega depois do `tema/base`, mas
+  **não** sobrescreve a identidade (não toca em background/fonte/grid do `body`), só adiciona reset;
+  confirmado `box-sizing:border-box` do preflight no CSS compilado. Angular 21 autodetecta o
+  `tailwind.config.ts`. **Módulo `modules/calculadora/`** com 6 rotas públicas **lazy** (`loadComponent`,
+  sem guard — client-side): `calculadora.routes.ts` monta o `CalculadoraShell` (path `''` com `children`,
+  base redireciona para `agente`) e cada aba (`agente`/`dt`/`novo-agente`/`patente`/`descanso`/`compras`)
+  carrega sua página stub em chunk próprio; `app.routes.ts` liga `calculadora` via `loadChildren`. **Shell +
+  navegação de abas com deep-link por rota**: `CalculadoraShell` renderiza cabeçalho + `nav.abas`
+  (`@for` sobre as abas, cada uma um `routerLink` relativo com `routerLinkActive="abas__item--ativo"`) + o
+  `router-outlet` aninhado — paridade com o `switchTab`/`VALID_TABS` do site antigo, agora dirigido pela URL
+  (`/calculadora/<aba>`) em vez do `#hash` (a aba `novo` do site vira a rota `novo-agente`, conforme a spec).
+  **`StepInput`** (`componentes/step-input/`): stepper/input numérico reutilizável, **`ControlValueAccessor`**
+  (integra a Reactive Forms via `[formControl]`/`formControlName`, **sem `ngModel`**) com botões − / +,
+  clamp em `[min, max]`, `passo` configurável e arredondamento a 2 casas — unifica os antigos
+  `stepInput` (inteiro, `passo=1`) e `stepInputFloat` (fracionário) num só componente; o valor central é um
+  `<input type="number">` que também aceita digitação direta. **Estilos**: cada componente consome só os
+  tokens do tema — o `.stepper` foi copiado de `docs/design/tema/_componentes.scss` (valor central adaptado
+  de `<div>` para `<input>`), o estado ativo das abas reusa o padrão `.selecionavel--ativo`, e os 6 stubs
+  compartilham o cartão via o parcial `paginas/_stub-pagina.scss` (`@use`), copiado do padrão `.card`. Tudo
+  standalone, `.scss`, sem `style=""`/seletor de ID/hex solto (proibições #16–18/#29). **Decisões de
+  representação:** sem emojis nos rótulos das abas (o site antigo usava `⚔ 🎯 🔄 🏅 💤 🛒` — o tema
+  "Terminal de Contenção" proíbe emoji decorativo), rótulos em mono UPPERCASE; a página `home` do M0 ficou
+  intocada (redesenho de home é fora do escopo desta task). **Verificado:** `build --workspace=frontend`
+  verde (6 chunks lazy de página + shell + rotas); `test --workspace=frontend` 14/14 (7 do `StepInput` via
+  host com `FormControl` — writeValue, incremento/decremento com clamp, passo fracionário, digitação; 7 de
+  roteamento via `RouterTestingHarness` — redirect da base + navegação a cada uma das 6 rotas com a aba
+  ativa correta, provando o carregamento lazy e o deep-link); `lint --workspace=frontend` limpo. As 6 rotas
+  são servidas pelo `frontend:dev` (SPA client-side, funcionam sem backend).
 - **m1-05-regras-compras** (2026-07-05): `shared/regras/compras/` completo — o domínio mais pesado da
   calculadora (aba `compras` do site antigo, `contratados-calculadora/src/script.js`) extraído e conferido
   contra `docs/core/sistema-v4.1.0.md` — "Equipamentos", "Prestígio e Patentes" e "Amplificadores"
@@ -390,8 +426,9 @@ e a instalação/merge do Tailwind.
 - **Identidade visual do site** — **definida**: tema "Terminal de Contenção" (dark-first,
   IBM Plex), com handoff completo em `docs/design/` (tokens, base, preset PrimeNG, exemplos,
   trecho Tailwind). Aplicado ao shell na m0-05. Resta para o M1: sistema de troca de tema em
-  runtime (presets + color picker com trava de contraste) e a instalação/merge do Tailwind.
-  Nota: na 1ª rodada da m0-05 o `docs/design/` passou batido (não estava no Session Start) e o
+  runtime (presets + color picker com trava de contraste). A instalação/merge do Tailwind foi **concluída
+  na m1-06** (config apontando para os tokens; ver "Implementado"). Nota: na 1ª rodada da m0-05 o
+  `docs/design/` passou batido (não estava no Session Start) e o
   shell nasceu com preset Aura base + hex hardcoded, corrigido na revisão. Documentação já
   ajustada para não repetir: `CLAUDE.md` agora manda ler `docs/design/DESIGN.md` antes de UI e
   ganhou a seção "Visual Design Source of Truth"; SYSTEM.SPEC §3/§8/§15 e a proibição #29

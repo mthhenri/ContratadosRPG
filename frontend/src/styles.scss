@@ -2,3 +2,11 @@
 // Ordem obrigatória: tokens (CSS custom properties) primeiro, depois o reset/base.
 @use './styles/tema/tokens';
 @use './styles/tema/base';
+
+// Tailwind — utilitários de layout/espaçamento, coexistindo com SCSS + tokens do tema.
+// A configuração (frontend/tailwind.config.ts) aponta as cores/fontes/raios utilitários para
+// as CSS custom properties dos tokens: utilitário e BEM nunca divergem. `base`/`components`
+// ficam enxutos porque o reset e a identidade vêm de tema/tokens + tema/base + PrimeNG.
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

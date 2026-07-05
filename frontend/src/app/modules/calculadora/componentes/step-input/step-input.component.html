@@ -1,0 +1,34 @@
+<div class="stepper" [class.stepper--desabilitado]="desabilitado()">
+  <button
+    type="button"
+    class="stepper__botao"
+    aria-label="Diminuir"
+    [disabled]="desabilitado()"
+    (click)="decrementar()"
+  >
+    −
+  </button>
+
+  <input
+    class="stepper__valor"
+    type="number"
+    [value]="valor()"
+    [attr.min]="minAtributo"
+    [attr.max]="maxAtributo"
+    [step]="passo()"
+    [attr.aria-label]="ariaRotulo() || null"
+    [disabled]="desabilitado()"
+    (input)="aoDigitar($event)"
+    (blur)="aoSair()"
+  />
+
+  <button
+    type="button"
+    class="stepper__botao"
+    aria-label="Aumentar"
+    [disabled]="desabilitado()"
+    (click)="incrementar()"
+  >
+    +
+  </button>
+</div>

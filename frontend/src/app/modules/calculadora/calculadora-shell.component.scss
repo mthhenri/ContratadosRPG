@@ -1,0 +1,68 @@
+.calculadora {
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  &__titulo {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text);
+    margin: 0;
+  }
+}
+
+// Chip de classificação — copiado de docs/design/tema/_componentes.scss (só tokens do tema).
+.chip-classificacao {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  padding: 6px 10px;
+}
+
+// Navegação de abas com deep-link por rota. O estado ativo reusa o padrão .selecionavel--ativo
+// de docs/design/tema/_componentes.scss (accent no texto + borda + fundo accent-dim).
+.abas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+
+  &__item {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid transparent;
+    border-bottom: 0;
+    border-radius: var(--radius-control) var(--radius-control) 0 0;
+    padding: 10px 14px;
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--text);
+    }
+
+    &--ativo {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--accent-dim);
+    }
+  }
+}

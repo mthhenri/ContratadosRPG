@@ -1,0 +1,61 @@
+// Stepper / input numérico. Copiado do padrão .stepper de docs/design/tema/_componentes.scss,
+// com o valor central adaptado de <div> para <input type="number"> (digitação direta) —
+// spinners nativos removidos, fundo/borda transparentes para herdar o visual do bloco.
+// Consome apenas tokens do tema; as sobreposições rgba(255,255,255,…) vêm do bloco canônico.
+.stepper {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  overflow: hidden;
+  background: var(--surface-2);
+
+  &__botao {
+    width: 30px;
+    border: 0;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 18px;
+    font-family: var(--font-mono);
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.4;
+    }
+  }
+
+  &__valor {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--text);
+    padding: 9px 0;
+    background: transparent;
+    border: 0;
+    border-inline: 1px solid rgba(255, 255, 255, 0.08);
+    outline: none;
+    appearance: textfield;
+    -moz-appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    &:disabled {
+      color: var(--text-mute);
+    }
+  }
+}
