@@ -10,11 +10,16 @@ import { calculadoraRoutes } from './calculadora.routes';
  * antigo, agora dirigido pela URL em vez do hash).
  */
 describe('Calculadora — roteamento', () => {
-  // Abas ainda em stub (a página real do agente é a m1-07; as demais chegam em m1-08+).
+  // Abas com página real: agente (m1-07); dt, novo-agente e patente (m1-08). Todas montam a raiz
+  // `.calc` e ativam sua aba. `agente` é validada à parte por ser o redirect da base.
+  const abasReais = [
+    { url: '/dt', tituloAba: 'DT' },
+    { url: '/novo-agente', tituloAba: 'Novo Agente' },
+    { url: '/patente', tituloAba: 'Patentes' },
+  ];
+
+  // Abas ainda em stub (as páginas reais chegam em tasks posteriores do M1).
   const abasStub = [
-    { url: '/dt', titulo: 'DT' },
-    { url: '/novo-agente', titulo: 'Novo Agente' },
-    { url: '/patente', titulo: 'Patentes' },
     { url: '/descanso', titulo: 'Descanso' },
     { url: '/compras', titulo: 'Compras' },
   ];
@@ -37,6 +42,14 @@ describe('Calculadora — roteamento', () => {
     expect(raiz.querySelector('.agente')).not.toBeNull();
     expect(raiz.querySelector('.abas__item--ativo')?.textContent).toContain('Agente / Civil');
   });
+
+  for (const aba of abasReais) {
+    it(`carrega a página real e ativa a aba de ${aba.url}`, async () => {
+      const raiz = await navegar(aba.url);
+      expect(raiz.querySelector('.calc')).not.toBeNull();
+      expect(raiz.querySelector('.abas__item--ativo')?.textContent).toContain(aba.tituloAba);
+    });
+  }
 
   for (const aba of abasStub) {
     it(`carrega a página lazy e ativa a aba de ${aba.url}`, async () => {

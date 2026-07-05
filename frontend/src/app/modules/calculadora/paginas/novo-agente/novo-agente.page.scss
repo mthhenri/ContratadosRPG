@@ -1,1 +1,236 @@
-@use '../stub-pagina';
+// Aba "Novo Agente" da calculadora (m1-08). Consome apenas os tokens do tema "Terminal de
+// Contenção" — nenhum hex/fonte/raio solto (proibição #29). Blocos .calc-cartao (card) e
+// .calc-stat (stat box) adaptados de docs/design/tema/_componentes.scss, copiados para o
+// scoped scss (mesmo padrão da aba `agente`).
+
+.calc {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-grid);
+}
+
+// === Card ===
+.calc-cartao {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--pad-card);
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 18px;
+  }
+
+  &__indice {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+
+  &__titulo {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+  }
+
+  &__regua {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+}
+
+// === Configuração ===
+.calc-config {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--gap-grid);
+}
+
+.calc-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__rotulo {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+  }
+
+  &__auxiliar {
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+}
+
+.calc-select {
+  width: 100%;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  padding: 11px 12px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  outline: none;
+
+  &:focus {
+    border-color: var(--accent-border);
+  }
+}
+
+// === Stats ===
+.calc-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.calc-stat {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  padding: 14px;
+
+  &__rotulo {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+    margin-bottom: 7px;
+  }
+
+  &__valor {
+    font-family: var(--font-mono);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.05;
+
+    &--texto {
+      font-size: 17px;
+    }
+  }
+
+  &__detalhe {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-mute);
+    margin-top: 6px;
+  }
+
+  &--destaque {
+    border-color: var(--accent-border);
+    .calc-stat__valor {
+      color: var(--accent);
+    }
+  }
+
+  &--energia {
+    border-color: color-mix(in srgb, var(--energy) 35%, transparent);
+    .calc-stat__valor {
+      color: var(--energy);
+    }
+  }
+
+  &--positivo {
+    border-color: color-mix(in srgb, var(--positive) 35%, transparent);
+    .calc-stat__valor {
+      color: var(--positive);
+    }
+  }
+}
+
+// === Lista (memória de cálculo) ===
+.calc-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 16px;
+
+  &__item {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+
+  &__marcador {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    flex: 0 0 auto;
+  }
+}
+
+// === Aviso (condição destacada) ===
+.calc-aviso {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  margin-top: 14px;
+  padding: 11px 13px;
+  border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
+  border-radius: var(--radius-control);
+  background: color-mix(in srgb, var(--warning) 6%, transparent);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--warning);
+
+  &__marcador {
+    font-family: var(--font-mono);
+    flex: 0 0 auto;
+  }
+}
+
+// === Resultado do bônus (dinheiro) ===
+.calc-resultado {
+  margin-top: 16px;
+  padding: 18px 16px;
+  border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
+  border-radius: var(--radius-control);
+  background: color-mix(in srgb, var(--warning) 6%, transparent);
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--warning);
+  line-height: 1;
+}
+
+.calc-formula {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-mute);
+  text-align: center;
+  margin: 10px 0 0;
+}
+
+.calc-nota {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--text-mute);
+  margin: 10px 0 0;
+}

@@ -1,6 +1,6 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-07 — página do agente).
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-08 — páginas dt / novo-agente / patente).
 
 ---
 
@@ -36,7 +36,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | # | Milestone | Status |
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, core/, pipelines, deploy) | **concluído** (deploy nativo Render+Cloudflare; setup das plataformas em `docs/DEPLOY.md`) |
-| M1 | Calculadora com paridade | **em andamento** (7/14 tasks — `m1-01` a `m1-07` concluídas) |
+| M1 | Calculadora com paridade | **em andamento** (8/14 tasks — `m1-01` a `m1-08` concluídas) |
 | M2 | Auth + Campanhas | backlog |
 | M3 | Ficha de Jogador | backlog |
 | M4 | Ficha de Criatura/NPC | backlog |
@@ -60,7 +60,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | frontend (shell) | **pronto** (topbar + `router-outlet` via `shared/layout`, home consumindo `/health`, tema "Terminal de Contenção" dark-first via `docs/design`) |
 | frontend/tema | **pronto** (tokens + base + `ContencaoPreset` PrimeNG em `src/styles/tema/`; troca de accent em runtime é M1). **Tailwind instalado e integrado ao build** (m1-06): `frontend/tailwind.config.ts` mescla o `theme.extend` do handoff (`docs/design/tema/tailwind.config.ts`) apontando cores/fontes/raios utilitários para as CSS custom properties dos tokens; diretivas `@tailwind` no fim de `styles.scss`, coexistindo com SCSS + tokens (preflight não sobrescreve a identidade — só reset) |
 | frontend/core (interceptors + services) | **pronto** (`loading`/`error-handler` interceptors, `LoadingService`, `HealthService`) |
-| frontend/calculadora | **fundação + aba `agente` prontas**. Fundação (m1-06): módulo `modules/calculadora/` com 6 rotas públicas **lazy** — `agente`/`dt`/`novo-agente`/`patente`/`descanso`/`compras` — sob o `CalculadoraShell` (navegação de abas + deep-link por rota via `routerLink`/`routerLinkActive`, paridade com o `switchTab`/`VALID_TABS` por hash do site antigo) e o `StepInput` (stepper/input numérico reutilizável, `ControlValueAccessor` + Reactive Forms, sem `ngModel`). **Aba `agente` (m1-07):** primeira página real — `AgentePage` (Reactive Forms + Signals) consumindo `shared/regras/agente` para **todas** as stats; abas `dt`/`novo-agente`/`patente`/`descanso`/`compras` seguem stubs (m1-08+) |
+| frontend/calculadora | **fundação + abas `agente`/`dt`/`novo-agente`/`patente` prontas**. Fundação (m1-06): módulo `modules/calculadora/` com 6 rotas públicas **lazy** — `agente`/`dt`/`novo-agente`/`patente`/`descanso`/`compras` — sob o `CalculadoraShell` (navegação de abas + deep-link por rota via `routerLink`/`routerLinkActive`, paridade com o `switchTab`/`VALID_TABS` por hash do site antigo) e o `StepInput` (stepper/input numérico reutilizável, `ControlValueAccessor` + Reactive Forms, sem `ngModel`). **Aba `agente` (m1-07):** carro-chefe — `AgentePage` (Reactive Forms + Signals) consumindo `shared/regras/agente` para **todas** as stats. **Abas leves `dt`/`novo-agente`/`patente` (m1-08):** três páginas Reactive Forms + Signals consumindo `shared/regras/{dt,novo-agente,patente}`, reusando o `StepInput` e os tokens/BEM do tema; rótulos de `PatenteEnum`/`MotivoEntradaAgenteEnum`→pt-BR em `modules/calculadora/rotulos.ts` (formatação de UI). Abas `descanso`/`compras` seguem stubs (m1-09+) |
 | frontend/campanha | não iniciado |
 | frontend/ficha | não iniciado |
 | Infra — banco local (Docker + Knex) | **pronto** (Postgres 16 + migrations) |
@@ -69,14 +69,15 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 
 ## Próxima Task
 
-**m1-08-pagina-dt-novo-agente-patente** (`docs/specs/backlog/m1-08-pagina-dt-novo-agente-patente.spec.md`).
-As três páginas leves da calculadora, agrupadas por serem pequenas: **`dt`** (DT de atributo via
-`shared/regras/dt`), **`novo-agente`** (nível/prestígio iniciais + bônus monetário + motivos via
-`shared/regras/novo-agente`) e **`patente`** (lookup de patente por prestígio via `shared/regras/patente`).
-Todas em Reactive Forms + Signals reusando o `StepInput` da m1-06 e os tokens/padrões BEM do tema
-"Terminal de Contenção" — mesmo molde da `AgentePage` (m1-07). Zero regra de jogo no front; paridade com
-as abas antigas; funcionam offline do backend. **Ler `docs/design/DESIGN.md` antes de qualquer UI.**
-As camadas de regras já estão completas desde a m1-03. Milestone completo
+**m1-09-pagina-descanso** (`docs/specs/backlog/m1-09-pagina-descanso.spec.md`).
+A página `descanso` com paridade, **incluindo a rolagem de descanso com animação** (entregável 5 da
+milestone). Formulário reativo (tipo de descanso, qualidade, atributo, dados extras, bônus) + exibição do
+resultado, consumindo `shared/regras/descanso` (regras determinísticas prontas desde a m1-04); a
+**rolagem animada** (efeito de embaralhamento/scramble em paridade com `rollDescanso`/`scramble` do site
+antigo) e o gatilho visual vivem na página — o RNG usa a utilidade `rolarDados` do domínio (única brecha a
+`Math.random`, §6.6). Reactive Forms + Signals, `StepInput` da m1-06, tokens/BEM do tema. Zero regra de
+jogo no front; funciona offline do backend. **Ler `docs/design/DESIGN.md` antes de qualquer UI.**
+Milestone completo
 (`docs/specs/backlog/m1-calculadora-paridade.spec.md`): extrai as regras do jogo do site antigo
 (`contratados-calculadora/src/script.js`) para `shared/regras` e entrega as 6 páginas públicas client-side
 da calculadora, além do sistema de troca de tema em runtime (presets + color picker).
@@ -87,6 +88,43 @@ da calculadora, além do sistema de troca de tema em runtime (presets + color pi
 
 ## Implementado
 
+- **m1-08-pagina-dt-novo-agente-patente** (2026-07-05): as três páginas leves da calculadora, agrupadas por
+  serem pequenas, cada uma consumindo seu domínio de `shared/regras` (regras prontas desde a m1-03) —
+  **zero fórmula duplicada no front** (proibição de duplicar regra de jogo respeitada). Mesmo molde da
+  `AgentePage` (Reactive Forms + Signals, `StepInput` da m1-06, tokens/BEM do tema "Terminal de Contenção",
+  layout fiel aos protótipos). **Aba `dt`** (`paginas/dt/`): `DtPage` — steppers Nível (0–20) e Atributo
+  (0–12) → `calcularDtAtributo` (`10 + Nível + Atributo×2`) num resultado em destaque + a tabela de
+  referência rápida (Atributo 1–6 × Nível 0/5/10/15/20, **cada célula também vinda do motor**, não recalculada
+  no front). **Aba `novo-agente`** (`paginas/novo-agente/`): `NovoAgentePage` — `<select>` de motivo de
+  entrada + steppers de média de Nível (passo 0,1) e média de Prestígio → `calcularNovoAgente` (Nível/Prestígio
+  iniciais, patente resultante, memória de cálculo e aviso de Amaldiçoado pelo Passado). O card de bônus tem um
+  campo de Prestígio **auto-preenchido** com o inicial calculado e **editável** (paridade com o `bonus-prest` do
+  site antigo, via `merge` dos `valueChanges` da configuração re-sincronizando o campo), computando
+  `calcularBonusMonetario`. O re-sync lê de `getRawValue()` (não do Signal `bruto`): como o `valueChanges` do
+  controle-filho emite **antes** do form-pai, ler o Signal dentro do subscriber pegaria o valor defasado um passo
+  — o modelo do form já está atualizado (bug pego na revisão, com teste de interação que o trava). **Aba `patente`** (`paginas/patente/`): `PatentePage` — stepper de Prestígio →
+  `calcularPatente` (patente atual em destaque + tabela completa com a linha atual marcada); a faixa da última
+  patente exibe `∞` (o motor entrega `prestigioMaximo` infinito). **Rótulos de UI** (`modules/calculadora/rotulos.ts`):
+  `ROTULOS_PATENTE` (`PatenteEnum`→pt-BR, nomes completos do documento — "Força Tarefa Especial"/"Operações
+  Especiais") e `ROTULOS_MOTIVO_ENTRADA` (`MotivoEntradaAgenteEnum`→pt-BR) — **formatação de UI**, como o
+  `null`→"N/A" da m1-07; a fonte da verdade dos valores segue nos enums do `shared`. **Decisões de representação
+  (não divergem de regra):** o cabeçalho de cada aba do protótipo não é repetido (o `CalculadoraShell` já dá o
+  chrome); os textos do `<select>` de motivo usam "sucessor convencional / sucessor Experimento" (nomes do
+  documento) no lugar de "Regular/Experimento" do site antigo; moeda formatada com `toLocaleString('pt-BR')` e
+  prefixo `$` (paridade com o site). **O multiplicador monetário da patente foi omitido da UI** (a pedido do
+  autor — confundia mais que ajudava): sai do stat box e da coluna "Mult." da aba `patente` e da linha de info do
+  bônus; a fórmula do bônus segue usando-o por baixo (`calcularBonusMonetario`), só não o expõe. **Estilo:** cada página tem seu `.scss` **scoped auto-contido** copiando só
+  os blocos BEM que usa (`.calc-cartao`/`.calc-stat`/`.calc-tabela`… de `docs/design/tema/_componentes.scss`) —
+  mesmo padrão da `agente` (uma tentativa inicial de parcial `@use` compartilhado foi revertida por estourar o
+  budget de 4kB de estilo por componente do Angular, que o `@use` inflava ao inlinar tudo em cada página).
+  `calculadora.routes.spec.ts` atualizado (dt/novo-agente/patente deixaram de ser stubs → agora checam `.calc` +
+  aba ativa; só `descanso`/`compras` seguem stub) e três novos specs provam a ligação motor→DOM (DT Nível 0/Atr 1
+  → **12** + linha ATR 1 = 12/17/22/27/32; Novo Agente preset Morte média 5/10 → Nível **4**/Prestígio **9**/patente
+  **Experiente**/bônus **$ 9.000**; Patente Prestígio 0 → **Agente** 0–2 e Prestígio 70 → **Líder Operacional** 66–∞).
+  **Validado:** `lint --workspace=frontend` limpo; `test --workspace=frontend` **23/23** (16 anteriores + 7 novos,
+  incluindo o teste de re-sync do bônus);
+  `build --workspace=frontend` verde **sem avisos de budget** (chunks lazy `dt-page`/`novo-agente-page`/`patente-page`).
+  As 6 rotas seguem client-side (funcionam sem backend).
 - **m1-07-pagina-agente** (2026-07-05): primeira página real da calculadora — a aba `agente` (carro-chefe),
   com paridade funcional à `calc()` do site antigo consumindo `shared/regras/agente`. **Zero regra de jogo no
   front** — toda stat vem do motor (proibição de duplicar fórmula respeitada). `AgentePage`

@@ -1,1 +1,191 @@
-@use '../stub-pagina';
+// Aba "Patentes" da calculadora (m1-08). Consome apenas os tokens do tema "Terminal de
+// Contenção" — nenhum hex/fonte/raio solto (proibição #29). Blocos .calc-cartao (card),
+// .calc-stat (stat box) e .calc-tabela adaptados de docs/design/tema/_componentes.scss,
+// copiados para o scoped scss (mesmo padrão da aba `agente`).
+
+.calc {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-grid);
+}
+
+// === Card ===
+.calc-cartao {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--pad-card);
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 18px;
+  }
+
+  &__indice {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+
+  &__titulo {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+  }
+
+  &__regua {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+}
+
+// === Configuração ===
+.calc-config {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--gap-grid);
+}
+
+.calc-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__rotulo {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+  }
+}
+
+// === Destaque da patente atual ===
+.patente-destaque {
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-control);
+  background: var(--accent-dim);
+
+  &__nome {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1.1;
+  }
+
+  &__faixa {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+}
+
+// === Stats ===
+.calc-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.calc-stat {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  padding: 14px;
+
+  &__rotulo {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+    margin-bottom: 7px;
+  }
+
+  &__valor {
+    font-family: var(--font-mono);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.05;
+
+    &--texto {
+      font-size: 15px;
+      line-height: 1.3;
+    }
+  }
+
+  &--positivo {
+    border-color: color-mix(in srgb, var(--positive) 35%, transparent);
+    .calc-stat__valor {
+      color: var(--positive);
+    }
+  }
+}
+
+// === Tabela de referência ===
+.calc-tabela-wrap {
+  overflow-x: auto;
+}
+
+.calc-tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 13px;
+
+  th,
+  td {
+    padding: 10px 8px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+
+  thead th {
+    color: var(--text-mute);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 10px;
+  }
+
+  &__celula-rotulo {
+    text-align: left;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  &__celula-valor {
+    color: var(--positive);
+  }
+
+  &__linha--atual {
+    background: var(--accent-dim);
+
+    td,
+    th {
+      color: var(--accent);
+      font-weight: 700;
+    }
+  }
+}

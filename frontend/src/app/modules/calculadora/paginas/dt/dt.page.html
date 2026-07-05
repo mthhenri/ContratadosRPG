@@ -1,8 +1,71 @@
-<article class="stub-pagina">
-  <header class="stub-pagina__cabecalho">
-    <span class="stub-pagina__indice">02</span>
-    <h2 class="stub-pagina__titulo">DT</h2>
-    <span class="stub-pagina__regua"></span>
-  </header>
-  <p class="stub-pagina__nota">Página em construção. O cálculo desta aba entra em uma task posterior do M1.</p>
-</article>
+<form class="calc dt" [formGroup]="formulario">
+  <!-- CARD 1: CÁLCULO -->
+  <section class="calc-cartao">
+    <header class="calc-cartao__cabecalho">
+      <span class="calc-cartao__indice">1</span>
+      <h2 class="calc-cartao__titulo">Calculadora de DT</h2>
+      <span class="calc-cartao__regua"></span>
+    </header>
+
+    <p class="calc-descricao">
+      Calcula a DT que aliados e inimigos precisam superar para resistir às suas ações.
+    </p>
+
+    <div class="calc-config">
+      <div class="calc-campo">
+        <span class="calc-campo__rotulo">Nível do personagem</span>
+        <app-step-input
+          formControlName="nivel"
+          [min]="0"
+          [max]="20"
+          ariaRotulo="Nível do personagem"
+        />
+      </div>
+
+      <div class="calc-campo">
+        <span class="calc-campo__rotulo">Atributo usado</span>
+        <app-step-input
+          formControlName="atributo"
+          [min]="0"
+          [max]="12"
+          ariaRotulo="Atributo usado"
+        />
+      </div>
+    </div>
+
+    <div class="calc-resultado calc-resultado--positivo">{{ dt() }}</div>
+    <p class="calc-formula">Fórmula: 10 + Nível + (Atributo × 2)</p>
+  </section>
+
+  <!-- CARD 2: TABELA DE REFERÊNCIA -->
+  <section class="calc-cartao">
+    <header class="calc-cartao__cabecalho">
+      <span class="calc-cartao__indice">2</span>
+      <h2 class="calc-cartao__titulo">Tabela de Referência Rápida</h2>
+      <span class="calc-cartao__regua"></span>
+    </header>
+
+    <div class="calc-tabela-wrap">
+      <table class="calc-tabela">
+        <thead>
+          <tr>
+            <th class="calc-tabela__celula-rotulo">Attr \ Nível</th>
+            @for (nivel of niveisReferencia; track nivel) {
+              <th>{{ nivel }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (linha of linhasReferencia; track linha.atributo) {
+            <tr>
+              <th class="calc-tabela__celula-rotulo">ATR {{ linha.atributo }}</th>
+              @for (valor of linha.valores; track $index) {
+                <td class="calc-tabela__celula-valor">{{ valor }}</td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</form>

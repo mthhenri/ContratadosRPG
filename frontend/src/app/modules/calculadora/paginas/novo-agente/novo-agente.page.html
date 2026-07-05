@@ -1,8 +1,118 @@
-<article class="stub-pagina">
-  <header class="stub-pagina__cabecalho">
-    <span class="stub-pagina__indice">03</span>
-    <h2 class="stub-pagina__titulo">Novo Agente</h2>
-    <span class="stub-pagina__regua"></span>
-  </header>
-  <p class="stub-pagina__nota">Página em construção. O cálculo desta aba entra em uma task posterior do M1.</p>
-</article>
+<form class="calc novo-agente" [formGroup]="formulario">
+  <!-- CARD 1: CONFIGURAÇÃO -->
+  <section class="calc-cartao">
+    <header class="calc-cartao__cabecalho">
+      <span class="calc-cartao__indice">1</span>
+      <h2 class="calc-cartao__titulo">Configuração</h2>
+      <span class="calc-cartao__regua"></span>
+    </header>
+
+    <div class="calc-config">
+      <div class="calc-campo">
+        <label class="calc-campo__rotulo" for="novo-motivo">Motivo de entrada</label>
+        <select id="novo-motivo" class="calc-select" formControlName="motivo">
+          @for (opcao of motivos; track opcao.valor) {
+            <option [value]="opcao.valor">{{ opcao.rotulo }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="calc-campo">
+        <span class="calc-campo__rotulo">
+          Média de Nível do grupo <span class="calc-campo__auxiliar">(excl. quem sai)</span>
+        </span>
+        <app-step-input
+          formControlName="mediaNivel"
+          [min]="0"
+          [max]="20"
+          [passo]="0.1"
+          ariaRotulo="Média de Nível do grupo"
+        />
+      </div>
+
+      <div class="calc-campo">
+        <span class="calc-campo__rotulo">
+          Média de Prestígio do grupo <span class="calc-campo__auxiliar">(excl. quem sai)</span>
+        </span>
+        <app-step-input
+          formControlName="mediaPrestigio"
+          [min]="0"
+          ariaRotulo="Média de Prestígio do grupo"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- CARD 2: RESULTADO -->
+  <section class="calc-cartao">
+    <header class="calc-cartao__cabecalho">
+      <span class="calc-cartao__indice">2</span>
+      <h2 class="calc-cartao__titulo">Resultado</h2>
+      <span class="calc-cartao__regua"></span>
+    </header>
+
+    <div class="calc-stats">
+      <div class="calc-stat calc-stat--destaque">
+        <div class="calc-stat__rotulo">Nível Inicial</div>
+        <div class="calc-stat__valor">{{ nivelInicial() }}</div>
+        <div class="calc-stat__detalhe">{{ subNivel() }}</div>
+      </div>
+      <div class="calc-stat calc-stat--energia">
+        <div class="calc-stat__rotulo">Prestígio Inicial</div>
+        <div class="calc-stat__valor">{{ prestigioInicial() }}</div>
+        <div class="calc-stat__detalhe">{{ subPrestigio() }}</div>
+      </div>
+      <div class="calc-stat calc-stat--positivo">
+        <div class="calc-stat__rotulo">Patente Resultante</div>
+        <div class="calc-stat__valor calc-stat__valor--texto">{{ patenteResultante() }}</div>
+        <div class="calc-stat__detalhe">{{ subPatente() }}</div>
+      </div>
+    </div>
+
+    <div class="calc-lista">
+      @for (detalhe of detalhes(); track $index) {
+        <div class="calc-lista__item">
+          <span class="calc-lista__marcador">›</span>
+          <span>{{ detalhe }}</span>
+        </div>
+      }
+    </div>
+
+    @if (recebeAmaldicoado()) {
+      <p class="calc-aviso">
+        <span class="calc-aviso__marcador">!</span>
+        <span>Recebe permanentemente a condição <strong>Amaldiçoado pelo Passado</strong>.</span>
+      </p>
+    }
+  </section>
+
+  <!-- CARD 3: BÔNUS MONETÁRIO -->
+  <section class="calc-cartao">
+    <header class="calc-cartao__cabecalho">
+      <span class="calc-cartao__indice">3</span>
+      <h2 class="calc-cartao__titulo">Bônus Monetário Inicial</h2>
+      <span class="calc-cartao__regua"></span>
+    </header>
+
+    <div class="calc-config">
+      <div class="calc-campo">
+        <span class="calc-campo__rotulo">
+          Prestígio Inicial <span class="calc-campo__auxiliar">(calculado acima ou manual)</span>
+        </span>
+        <app-step-input
+          formControlName="prestigioBonus"
+          [min]="0"
+          ariaRotulo="Prestígio Inicial para o bônus"
+        />
+      </div>
+    </div>
+
+    <div class="calc-resultado calc-resultado--dinheiro">{{ bonusFormatado() }}</div>
+    <p class="calc-formula">Fórmula: Prestígio × (500 × Multiplicador da Patente)</p>
+    <p class="calc-nota">{{ bonusInfo() }}</p>
+    <p class="calc-nota">
+      Some ao total o dinheiro inicial padrão (1.000 + 4D4 × 250), calculado à parte por ser
+      aleatório.
+    </p>
+  </section>
+</form>
