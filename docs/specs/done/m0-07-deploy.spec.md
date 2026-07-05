@@ -1,4 +1,4 @@
-# m0-07-cd-deploy.spec.md
+# m0-07-deploy.spec.md
 
 > Task 7/7 do milestone `m0-fundacao.spec.md`.
 >
