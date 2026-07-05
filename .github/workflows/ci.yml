@@ -1,0 +1,42 @@
+name: CI
+
+# Integração contínua: lint + testes em todo Pull Request, cobrindo os três workspaces
+# (shared, backend, frontend). Deploy é responsabilidade do workflow de CD (task m0-07).
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Cancela execuções anteriores ainda em andamento para o mesmo ref (economia de runners).
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test:
+    name: Lint e testes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # postinstall compila o pacote shared (backend/frontend dependem dele).
+      - name: Install dependencies
+        run: npm install
+
+      # Roda o lint dos três workspaces em sequência; falha em qualquer um quebra o job.
+      - name: Lint (shared, backend, frontend)
+        run: npm run lint
+
+      # Roda os testes de cada workspace que tiver o script (--if-present); antes do M1 só o
+      # frontend tem testes. CI=true no runner faz o vitest rodar uma vez (sem watch).
+      - name: Test (shared, backend, frontend)
+        run: npm run test

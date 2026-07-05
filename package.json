@@ -12,6 +12,8 @@
   "scripts": {
     "postinstall": "npm run build --workspace=shared",
     "build:shared": "npm run build --workspace=shared",
+    "lint": "npm run lint --workspaces",
+    "test": "npm run test --workspaces --if-present",
     "dev": "concurrently -k -n backend,frontend -c red,gray \"npm:backend:dev\" \"npm:frontend:dev\"",
     "backend:dev": "npm run start:dev --workspace=backend",
     "frontend:dev": "npm run start --workspace=frontend",

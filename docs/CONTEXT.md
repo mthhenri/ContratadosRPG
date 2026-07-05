@@ -1,6 +1,6 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m0-05).
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m0-06).
 
 ---
 
@@ -17,8 +17,11 @@ frontend agora tem shell mínimo de pé: topbar + `router-outlet`, interceptors 
 `error-handler`, proxy de dev para o backend e uma home que consome `GET /health` — a
 integração HTTP frontend → backend → `StandardResponse` está provada de ponta a ponta. O
 shell já usa o tema "Terminal de Contenção" (dark-first) a partir do handoff em
-`docs/design/` — tokens, base e preset PrimeNG `ContencaoPreset` ligados. Ainda sem módulo
-de negócio — esses nascem a partir do M1.
+`docs/design/` — tokens, base e preset PrimeNG `ContencaoPreset` ligados. A integração
+contínua está ativa: um workflow do GitHub Actions (`.github/workflows/ci.yml`) roda lint +
+testes nos três workspaces em todo Pull Request — lint configurado nos três (backend já
+tinha; shared e frontend ganharam eslint agora), testes via `--if-present` (só o frontend
+tem testes antes do M1). Ainda sem módulo de negócio — esses nascem a partir do M1.
 
 ## Status dos Milestones
 
@@ -53,16 +56,36 @@ de negócio — esses nascem a partir do M1.
 | frontend/campanha | não iniciado |
 | frontend/ficha | não iniciado |
 | Infra — banco local (Docker + Knex) | **pronto** (Postgres 16 + migrations) |
-| Infra — CI, deploy | não iniciado |
+| Infra — CI (lint + testes em PR) | **pronto** (GitHub Actions; lint nos 3 workspaces, testes via `--if-present`) |
+| Infra — CD (deploy) | não iniciado (m0-07) |
 
 ## Próxima Task
 
-`m0-06` (CI: lint + testes em todo PR via GitHub Actions). Em seguida `m0-07` (CD: deploy
-automático no merge para master). Mover a spec de `docs/specs/backlog/` para
+`m0-07` (CD: deploy automático no merge para master — frontend → Cloudflare, API → Render,
+banco → Supabase). É a última task do M0. Mover a spec de `docs/specs/backlog/` para
 `docs/specs/active/` e implementar.
 
 ## Implementado
 
+- **m0-06-ci-lint-teste** (2026-07-05): integração contínua ativa via GitHub Actions.
+  `.github/workflows/ci.yml` dispara em todo `pull_request` (+ `workflow_dispatch` manual),
+  em `ubuntu-latest` com Node 22 (`actions/setup-node` + cache npm): `npm install` (o
+  `postinstall` compila o shared), depois `npm run lint` e `npm run test`. Lint agora
+  configurado nos **três** workspaces (deliverable 2): o backend já tinha `eslint.config.mjs`
+  (typescript-eslint `recommendedTypeChecked`); **shared** ganhou `eslint.config.mjs` espelhando
+  o do backend (CommonJS, `globals.node`) + devDeps (`eslint`, `typescript-eslint`, `@eslint/js`,
+  `globals`); **frontend** ganhou `eslint.config.mjs` com `angular-eslint` (flat config: TS
+  `recommended` + `angular.configs.tsRecommended` com regras de seletor prefixo `app`; HTML
+  `templateRecommended` + `templateAccessibility`) + devDeps (`angular-eslint`,
+  `typescript-eslint`, `@eslint/js`, `eslint`). O `lint` do backend perdeu o `--fix` (rodar com
+  `--fix` na CI mascararia violações auto-corrigíveis, ferindo o critério "sem etapa mascarando
+  falha"); cada workspace tem `lint` (checagem, CI-safe) e `lint:fix` (dev). Scripts agregados na
+  raiz: `lint` = `npm run lint --workspaces` (roda os 3; qualquer falha → exit ≠ 0), `test` =
+  `npm run test --workspaces --if-present` (só o frontend tem teste por ora — shared/backend são
+  pulados, não mascarados). Validado: `npm run lint` verde nos 3; `CI=true npm run test` roda o
+  vitest do frontend uma vez (sem watch) → 2/2 verde; sonda de erro de lint confirmou `exit 1`
+  agregado na raiz (pipeline quebra). Testes de regra de jogo (`shared/regras`) nascem no M1;
+  deploy é a `m0-07`.
 - **m0-05-frontend-shell** (2026-07-05): shell mínimo do frontend e prova de integração
   ponta a ponta com o backend. `shared/layout/layout.component.ts` (standalone `Layout`,
   seletor `app-layout`) é o shell: topbar institucional, indicador de carregamento global
