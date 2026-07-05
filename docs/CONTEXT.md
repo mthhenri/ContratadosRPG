@@ -1,12 +1,12 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m0-06).
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m0-07).
 
 ---
 
 ## Estado Geral
 
-**Fase:** M0 em andamento. O esqueleto do monorepo npm workspaces está de pé
+**Fase:** M0 concluído (implementação em repositório). O esqueleto do monorepo npm workspaces está de pé
 (`shared/`, `backend/`, `frontend/`) com os pacotes se importando corretamente. A
 infraestrutura de banco local está pronta: PostgreSQL 16 via Docker Compose e Knex
 configurado com migrations. O `core/` do backend está implementado (`ConfigService`,
@@ -21,13 +21,20 @@ shell já usa o tema "Terminal de Contenção" (dark-first) a partir do handoff 
 contínua está ativa: um workflow do GitHub Actions (`.github/workflows/ci.yml`) roda lint +
 testes nos três workspaces em todo Pull Request — lint configurado nos três (backend já
 tinha; shared e frontend ganharam eslint agora), testes via `--if-present` (só o frontend
-tem testes antes do M1). Ainda sem módulo de negócio — esses nascem a partir do M1.
+tem testes antes do M1). A entrega contínua fecha o M0: `.github/workflows/cd.yml` dispara no
+merge para `master`, roda lint+testes como gate e — só se passarem — implanta o backend no Render
+(deploy hook, blueprint `render.yaml`) e o frontend na Cloudflare Pages (`wrangler pages deploy`),
+com banco de produção no Supabase. A ligação frontend→backend em produção é cross-origin: o
+backend habilita CORS a partir de `APP_FRONTEND_ORIGEM` (`main.ts`) e o frontend chama a URL
+absoluta do Render via `environment.apiBase` (dev fica vazio → chamada relativa pelo proxy;
+produção é injetada no build). O provisionamento das plataformas e os segredos são setup manual
+único, documentados em `docs/DEPLOY.md`. Ainda sem módulo de negócio — esses nascem a partir do M1.
 
 ## Status dos Milestones
 
 | # | Milestone | Status |
 |---|---|---|
-| M0 | Fundação (workspaces, docs, Docker, core/, pipelines) | **em andamento** |
+| M0 | Fundação (workspaces, docs, Docker, core/, pipelines, CD) | **concluído** (infra em repo; go-live manual via `docs/DEPLOY.md`) |
 | M1 | Calculadora com paridade | backlog |
 | M2 | Auth + Campanhas | backlog |
 | M3 | Ficha de Jogador | backlog |
@@ -57,16 +64,50 @@ tem testes antes do M1). Ainda sem módulo de negócio — esses nascem a partir
 | frontend/ficha | não iniciado |
 | Infra — banco local (Docker + Knex) | **pronto** (Postgres 16 + migrations) |
 | Infra — CI (lint + testes em PR) | **pronto** (GitHub Actions; lint nos 3 workspaces, testes via `--if-present`) |
-| Infra — CD (deploy) | não iniciado (m0-07) |
+| Infra — CD (deploy) | **pronto (repo)** (`cd.yml` gated em lint+testes → Render + Cloudflare Pages; `render.yaml`; CORS + `apiBase`. Provisionamento das plataformas é manual — `docs/DEPLOY.md`) |
 
 ## Próxima Task
 
-`m0-07` (CD: deploy automático no merge para master — frontend → Cloudflare, API → Render,
-banco → Supabase). É a última task do M0. Mover a spec de `docs/specs/backlog/` para
-`docs/specs/active/` e implementar.
+**M1 — Calculadora com paridade** (primeiro milestone de produto). Antes de implementar, quebrar
+`docs/specs/backlog/m1-calculadora-paridade.spec.md` em tasks numeradas (`m1-01-<nome>.spec.md`…)
+no backlog. O M1 extrai as regras do jogo do site antigo (`contratados-calculadora/src/script.js`)
+para `shared/regras` (com testes validados contra `docs/core/sistema-v4.1.0.md`) e entrega as 6
+páginas públicas client-side da calculadora, além do sistema de troca de tema em runtime (presets +
+color picker) e a instalação/merge do Tailwind.
+
+> **Pendência operacional do M0 (não bloqueia o M1):** o go-live de produção exige o setup manual
+> único das plataformas descrito em `docs/DEPLOY.md` (Supabase + Render + Cloudflare + segredos do
+> GitHub). O código/infra em repositório já está pronto; falta só provisionar e preencher segredos.
 
 ## Implementado
 
+- **m0-07-cd-deploy** (2026-07-05): entrega contínua no merge para `master` — última task do M0.
+  `.github/workflows/cd.yml` dispara em `push` para `master` (+ `workflow_dispatch`): job `verificar`
+  roda `npm install` + `npm run lint` + `npm run test` (mesmo gate da CI) e **os dois jobs de deploy
+  dependem dele** (`needs: verificar`) — deploy só ocorre depois de lint/testes passarem (critério de
+  aceite). `deploy-backend` faz `POST` no **Render deploy hook** (`secrets.RENDER_DEPLOY_HOOK_URL`);
+  `deploy-frontend` injeta a URL da API (`vars.RENDER_API_URL`) em `environment.production.ts`, roda
+  `ng build` (produção) e publica via `cloudflare/wrangler-action` (`pages deploy
+  frontend/dist/frontend/browser --project-name=${vars.CLOUDFLARE_PAGES_PROJECT} --branch=master`,
+  `secrets.CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID`). Blueprint IaC do backend em `render.yaml`
+  (web service `contratados-rpg-api`, build `npm install && npm run build --workspace=backend`, start
+  `npm run start:prod --workspace=backend`, `healthCheckPath: /health`, `autoDeploy: false` para que o
+  único gatilho de produção seja a CD já após o gate; `APP_PORTA=10000`/`APP_AMBIENTE=production`/
+  `JWT_EXPIRACAO=8h` no blueprint, `DB_*`/`JWT_SECRETO`/`APP_FRONTEND_ORIGEM` como `sync: false`).
+  **Ligação frontend→backend em produção (opção CORS + URL absoluta):** `backend/src/main.ts` agora
+  chama `app.enableCors({ origin: frontendOrigem })` lendo `APP_FRONTEND_ORIGEM` do `ConfigService`
+  (campo já existia p/ "CORS + Socket.IO", SYSTEM.SPEC §10.6); criados `frontend/src/environments/`
+  (`environment.ts` dev `apiBase:''` → chamada relativa pelo proxy; `environment.production.ts` com
+  `apiBase` injetado no build via `RENDER_API_URL`) com `fileReplacements` no `angular.json`
+  (produção); `HealthService.verificar()` passou de `/health` para `` `${environment.apiBase}/health` ``.
+  `frontend/public/_redirects` (`/* /index.html 200`) dá o fallback de SPA na Cloudflare Pages (o
+  `assets` glob copia p/ a raiz do build). Runbook do provisionamento manual (Supabase → Render →
+  Cloudflare → segredos do GitHub, com a ordem que resolve a dependência circular de URLs e o
+  heads-up de SSL do Supabase p/ o M2) em `docs/DEPLOY.md`, linkado no `README.md`. Validado local:
+  `npm run build` verde em backend e frontend (produção — bundle em `dist/frontend/browser` com
+  `_redirects` e `index.html`); `npm run lint` verde nos 3 workspaces; `CI=true npm run test
+  --workspace=frontend` 2/2 verde. O deploy de produção em si depende do setup manual das plataformas
+  (não exercitável localmente).
 - **m0-06-ci-lint-teste** (2026-07-05): integração contínua ativa via GitHub Actions.
   `.github/workflows/ci.yml` dispara em todo `pull_request` (+ `workflow_dispatch` manual),
   em `ubuntu-latest` com Node 22 (`actions/setup-node` + cache npm): `npm install` (o

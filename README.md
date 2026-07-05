@@ -14,6 +14,7 @@ Sucessor da [contratados-calculadora](https://github.com/mthhenri/contratados-ca
 | [docs/CONVENTIONS.md](docs/CONVENTIONS.md) | Referência rápida de convenções de código |
 | [docs/CONTEXT.md](docs/CONTEXT.md) | Estado atual e próxima task |
 | [docs/SCHEMA.md](docs/SCHEMA.md) | Schema SQL alvo + forma dos documentos JSONB |
+| [docs/DEPLOY.md](docs/DEPLOY.md) | Runbook de deploy em produção (Cloudflare + Render + Supabase) |
 | [docs/core/sistema-v4.1.0.md](docs/core/sistema-v4.1.0.md) | Fonte da verdade das regras do jogo |
 | [docs/core/guia_de_mestre-v4.0.0.md](docs/core/guia_de_mestre-v4.0.0.md) | Fonte da verdade de criação de ameaças |
 | [docs/specs/](docs/specs/) | Workflow spec-driven: backlog → active → done |
@@ -47,3 +48,9 @@ DB_HOST  DB_PORT  DB_NOME  DB_USUARIO  DB_SENHA
 JWT_SECRETO  JWT_EXPIRACAO
 APP_PORTA  APP_AMBIENTE  APP_FRONTEND_ORIGEM
 ```
+
+## Deploy (produção)
+
+No merge para `master`, o workflow de CD roda lint+testes e — se passarem — implanta o backend no
+Render e o frontend na Cloudflare Pages (banco no Supabase). O provisionamento das plataformas e os
+segredos necessários estão no runbook [docs/DEPLOY.md](docs/DEPLOY.md).

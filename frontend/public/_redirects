@@ -1,0 +1,6 @@
+# Cloudflare Pages: fallback de SPA. Toda rota não correspondente a um asset estático é
+# servida pelo index.html (200), deixando o roteamento client-side do Angular assumir.
+# O `assets` glob do angular.json (input: public) copia este arquivo para a raiz do build,
+# onde a Cloudflare Pages o lê. Chamadas à API não passam por aqui: vão direto à URL do
+# backend no Render (environment.apiBase), com CORS liberado.
+/*    /index.html   200

@@ -1,0 +1,44 @@
+# Blueprint (Infrastructure as Code) do backend no Render — SYSTEM.SPEC §2 (produção: API → Render).
+# Cria o web service NestJS a partir do monorepo. O deploy NÃO é automático no push: quem dispara
+# é o job deploy-backend do workflow de CD (.github/workflows/cd.yml), já depois do gate lint/testes.
+# Runbook completo (provisionamento, segredos, variáveis) em docs/DEPLOY.md.
+services:
+  - type: web
+    name: contratados-rpg-api
+    runtime: node
+    plan: free
+    # rootDir é a raiz do repositório: `npm install` instala os 3 workspaces (o postinstall
+    # compila o shared, do qual o backend depende) antes de compilar o backend.
+    buildCommand: npm install && npm run build --workspace=backend
+    startCommand: npm run start:prod --workspace=backend
+    healthCheckPath: /health
+    # Deploy só pelo hook disparado pela CD (após lint/testes) — nunca no push cru, que burlaria o gate.
+    autoDeploy: false
+    envVars:
+      # APP_PORTA precisa casar com a porta que o Render expõe (PORT, default 10000). O backend
+      # lê APP_PORTA via ConfigService (nunca process.env direto — Proibição #10).
+      - key: APP_PORTA
+        value: 10000
+      - key: APP_AMBIENTE
+        value: production
+      # Origem do frontend na Cloudflare (usada no CORS). Preenchida no dashboard após criar as
+      # Pages — sync:false mantém o valor fora do repositório.
+      - key: APP_FRONTEND_ORIGEM
+        sync: false
+      # JWT_SECRETO de produção DEVE ser diferente do exemplo do .env (m0-07, entregável 3).
+      - key: JWT_SECRETO
+        sync: false
+      - key: JWT_EXPIRACAO
+        value: 8h
+      # Conexão do Postgres de produção (Supabase). Preenchidas no dashboard a partir das
+      # credenciais do projeto Supabase — nunca hardcodadas.
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_NOME
+        sync: false
+      - key: DB_USUARIO
+        sync: false
+      - key: DB_SENHA
+        sync: false

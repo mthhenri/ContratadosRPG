@@ -1,0 +1,94 @@
+name: CD
+
+# Entrega contínua: no merge para master, roda lint + testes (mesma verificação da CI) e,
+# somente se passarem, dispara o deploy do backend no Render e do frontend na Cloudflare Pages.
+# O gate lint/testes é o job `verificar`, do qual os dois jobs de deploy dependem (needs) —
+# assim "o merge só dispara deploy após lint/testes passarem" (critério de aceite da m0-07).
+# O runbook com o provisionamento das plataformas e os segredos está em docs/DEPLOY.md.
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Não cancela um deploy em andamento; enfileira o próximo para não deixar produção pela metade.
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verificar:
+    name: Lint e testes (gate do deploy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # postinstall compila o pacote shared (backend/frontend dependem dele).
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint (shared, backend, frontend)
+        run: npm run lint
+
+      - name: Test (shared, backend, frontend)
+        run: npm run test
+
+  deploy-backend:
+    name: Deploy do backend (Render)
+    needs: verificar
+    runs-on: ubuntu-latest
+    steps:
+      # O Render constrói a partir do repositório (blueprint em render.yaml) ao receber o hook.
+      # O deploy hook é uma URL secreta; autoDeploy está desligado no render.yaml para que o
+      # único gatilho de produção seja este job, já depois do gate lint/testes.
+      - name: Disparar deploy no Render
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: curl --fail --silent --show-error --request POST "$RENDER_DEPLOY_HOOK_URL"
+
+  deploy-frontend:
+    name: Deploy do frontend (Cloudflare Pages)
+    needs: verificar
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      # Injeta a URL pública do backend no Render como apiBase de produção, consumida pelo
+      # fileReplacements do angular.json (environment.production.ts). Fora do build o valor
+      # nunca é hardcodado no repositório — vem da variável RENDER_API_URL.
+      - name: Injetar URL da API de produção
+        working-directory: frontend
+        env:
+          RENDER_API_URL: ${{ vars.RENDER_API_URL }}
+        run: |
+          printf "export const environment = {\n  producao: true,\n  apiBase: '%s',\n};\n" "$RENDER_API_URL" > src/environments/environment.production.ts
+
+      - name: Build do frontend (produção)
+        run: npm run build --workspace=frontend
+
+      - name: Deploy na Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy frontend/dist/frontend/browser --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT }} --branch=master
