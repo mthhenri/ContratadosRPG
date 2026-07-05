@@ -1,6 +1,6 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m0-04).
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m0-05).
 
 ---
 
@@ -12,8 +12,13 @@ infraestrutura de banco local está pronta: PostgreSQL 16 via Docker Compose e K
 configurado com migrations. O `core/` do backend está implementado (`ConfigService`,
 `BaseEntity`, `BaseRepository`, exceções, filtro global e interceptor de resposta), com o
 Nest app subindo de ponta a ponta sem erros. A API já expõe seu primeiro endpoint real,
-`GET /health` (público, `StandardResponse`), validando o `core/` de ponta a ponta. Ainda
-sem módulo de negócio nem shell visual — esses nascem nas tasks seguintes do M0/M2+.
+`GET /health` (público, `StandardResponse`), validando o `core/` de ponta a ponta. O
+frontend agora tem shell mínimo de pé: topbar + `router-outlet`, interceptors `loading` e
+`error-handler`, proxy de dev para o backend e uma home que consome `GET /health` — a
+integração HTTP frontend → backend → `StandardResponse` está provada de ponta a ponta. O
+shell já usa o tema "Terminal de Contenção" (dark-first) a partir do handoff em
+`docs/design/` — tokens, base e preset PrimeNG `ContencaoPreset` ligados. Ainda sem módulo
+de negócio — esses nascem a partir do M1.
 
 ## Status dos Milestones
 
@@ -41,7 +46,9 @@ sem módulo de negócio nem shell visual — esses nascem nas tasks seguintes do
 | backend/usuario | não iniciado |
 | backend/campanha | não iniciado |
 | backend/ficha | não iniciado |
-| frontend (shell) | **esqueleto Angular 21 + PrimeNG 21** (sem shell visual — nasce na m0-05) |
+| frontend (shell) | **pronto** (topbar + `router-outlet` via `shared/layout`, home consumindo `/health`, tema "Terminal de Contenção" dark-first via `docs/design`) |
+| frontend/tema | **pronto** (tokens + base + `ContencaoPreset` PrimeNG em `src/styles/tema/`; troca de accent em runtime é M1) |
+| frontend/core (interceptors + services) | **pronto** (`loading`/`error-handler` interceptors, `LoadingService`, `HealthService`) |
 | frontend/calculadora | não iniciado |
 | frontend/campanha | não iniciado |
 | frontend/ficha | não iniciado |
@@ -50,13 +57,48 @@ sem módulo de negócio nem shell visual — esses nascem nas tasks seguintes do
 
 ## Próxima Task
 
-`m0-05-frontend-shell.spec.md` (layout mínimo topbar + `router-outlet`, interceptors
-`error-handler` e `loading`, proxy de dev para o backend, home consumindo `GET /health`).
-Mover de `docs/specs/backlog/` para `docs/specs/active/` e implementar. As tasks `m0-06`
-(CI lint+teste) e `m0-07` (CD deploy) seguem em ordem.
+`m0-06` (CI: lint + testes em todo PR via GitHub Actions). Em seguida `m0-07` (CD: deploy
+automático no merge para master). Mover a spec de `docs/specs/backlog/` para
+`docs/specs/active/` e implementar.
 
 ## Implementado
 
+- **m0-05-frontend-shell** (2026-07-05): shell mínimo do frontend e prova de integração
+  ponta a ponta com o backend. `shared/layout/layout.component.ts` (standalone `Layout`,
+  seletor `app-layout`) é o shell: topbar institucional, indicador de carregamento global
+  (lê `LoadingService.isLoading()`), `<p-toast/>` e o `<router-outlet/>`; o root `App` só
+  renderiza `<app-layout/>`. `core/interceptors/` traz dois interceptors funcionais
+  registrados em `app.config.ts` via `withInterceptors`: `loading.interceptor` (conta
+  requisições em voo no `LoadingService` — signal `isLoading`) e `error-handler.interceptor`
+  (exibe toast PrimeNG com a `StandardResponse.mensagem` do backend e reencaminha o erro).
+  `core/services/health.service.ts` (`HealthService.verificar()`) consome `GET /health`
+  tipado como `StandardResponse<{ status: string }>` (sem DTO de negócio — payload inline,
+  conforme m0-04). `pages/home/home.page.ts` (standalone `Home`, lazy via `loadComponent`
+  na rota `''`) chama o health no `ngOnInit`, guarda o resultado em signals e exibe o status
+  (`ok`) + mensagem — prova visual do pipeline HTTP frontend → backend → `StandardResponse`.
+  `proxy.conf.json` encaminha `/health` para `http://localhost:3100` e foi ligado ao
+  `serve.options.proxyConfig` do `angular.json` (dev-server em `:4300`). PrimeNG configurado
+  com `providePrimeNG` + `MessageService` no root; **sem `@angular/animations`** — o PrimeNG 21
+  usa animações CSS próprias, então `provideAnimationsAsync()` foi descartado (o pacote nem
+  está instalado). **Tema "Terminal de Contenção" aplicado** a partir do handoff em
+  `docs/design/` (revisão pós-implementação): `src/styles/tema/` recebeu `_tokens.scss`
+  (CSS custom properties — fonte da verdade em runtime), `_base.scss` (reset, corpo dark,
+  grid de textura) e `contencao.preset.ts` (preset PrimeNG base Aura; único ajuste ao repo:
+  imports `@primeng/themes` → `@primeuix/themes`). `styles.scss` importa tokens + base nessa
+  ordem; `index.html` é dark-first (`<html lang="pt-BR" class="dark">`) e carrega IBM Plex
+  Mono/Sans via `<link>` do Google Fonts (Opção B do handoff — `@fontsource` fica p/ quando
+  quiserem offline). `app.config.ts` usa `providePrimeNG({ theme: { preset: ContencaoPreset,
+  options: { darkModeSelector: '.dark' } } })`. Topbar e home consomem os tokens (`--surface`,
+  `--border`, `--accent`, `--font-mono`, `--positive`…) e a home reusa o padrão canônico de
+  card + cabeçalho de seção (índice em badge mono + título UPPERCASE + régua) de
+  `_componentes.scss`. Tailwind ainda não está instalado, então utilitários Tailwind ficam
+  para depois — SCSS + BEM + tokens cobrem o shell. `app.spec.ts` atualizado (provê
+  `provideRouter([])` + `MessageService`; verifica a marca da topbar). Validado:
+  `npm run build --workspace=frontend` e `--workspace=backend` passam; `npm run test
+  --workspace=frontend` 2/2 verde; com backend (`node dist/main.js`) + `frontend:dev` no ar,
+  `curl http://localhost:4300/health` (via proxy) retorna
+  `200 {"sucesso":true,"dados":{"status":"ok"},"mensagem":"Operação realizada com sucesso."}`
+  e `:4300/` serve o `index.html` do SPA.
 - **m0-04-healthcheck-endpoint** (2026-07-05): primeiro endpoint real da API.
   `backend/src/core/decorators/public.decorator.ts` traz o decorator `@Public()` (grava o
   metadado `IS_PUBLIC_KEY = 'isPublic'` via `SetMetadata`) com barrel `index.ts` no padrão
@@ -123,8 +165,15 @@ Mover de `docs/specs/backlog/` para `docs/specs/active/` e implementar. As tasks
 
 ## Decisões Pendentes
 
-- **Identidade visual do site** — a definir em conversa própria antes/durante o M1.
-  A paridade do M1 é funcional; até a definição, tema base PrimeNG.
+- **Identidade visual do site** — **definida**: tema "Terminal de Contenção" (dark-first,
+  IBM Plex), com handoff completo em `docs/design/` (tokens, base, preset PrimeNG, exemplos,
+  trecho Tailwind). Aplicado ao shell na m0-05. Resta para o M1: sistema de troca de tema em
+  runtime (presets + color picker com trava de contraste) e a instalação/merge do Tailwind.
+  Nota: na 1ª rodada da m0-05 o `docs/design/` passou batido (não estava no Session Start) e o
+  shell nasceu com preset Aura base + hex hardcoded, corrigido na revisão. Documentação já
+  ajustada para não repetir: `CLAUDE.md` agora manda ler `docs/design/DESIGN.md` antes de UI e
+  ganhou a seção "Visual Design Source of Truth"; SYSTEM.SPEC §3/§8/§15 e a proibição #29
+  (nunca hardcodar cor/fonte) + CONVENTIONS (Estilos e tabela) reforçam o consumo dos tokens.
 
 ## Referências
 

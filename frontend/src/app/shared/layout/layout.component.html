@@ -1,0 +1,13 @@
+<p-toast />
+
+<header class="topbar">
+  <span class="topbar__marca">Contratados<span class="topbar__marca-sufixo">RPG</span></span>
+
+  @if (loadingService.isLoading()) {
+    <span class="topbar__carregando" role="status" aria-label="Carregando"></span>
+  }
+</header>
+
+<main class="conteudo">
+  <router-outlet />
+</main>

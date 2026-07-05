@@ -1,0 +1,48 @@
+// _tokens.scss
+// Fonte da verdade de design em runtime — "Terminal de Contenção" (Contratados RPG).
+// Espelha docs/design/tema/_tokens.scss. Regra do projeto: NADA de style="" inline e NADA
+// de seletor de ID. Estes tokens são CSS custom properties consumidas por SCSS (BEM em
+// português). Importado UMA vez, no topo de styles.scss.
+
+:root {
+  /* --- Superfícies (dark base — identidade, não trocar) --- */
+  --bg: #0a0c0f;
+  --surface: #13161b;
+  --surface-2: #1a1e24;
+
+  /* --- Bordas (hairline; nunca sombras pesadas) --- */
+  --border: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.12);
+
+  /* --- Texto --- */
+  --text: #e6e8eb;
+  --text-dim: #969ba3;
+  --text-mute: #656a72;
+
+  /* --- Accent (TROCÁVEL via preset/color-picker — spec M1) --- */
+  --accent: #e5484d;
+  --accent-dim: color-mix(in srgb, var(--accent) 12%, transparent);
+  --accent-border: color-mix(in srgb, var(--accent) 40%, transparent);
+
+  /* --- Cores semânticas de domínio (mesma chroma/lightness, só varia o matiz) --- */
+  --energy: #4c8dd0;    /* Energia */
+  --positive: #4a9d6b;  /* dano furtivo / ganho */
+  --warning: #d9a441;   /* aviso / prestígio */
+
+  /* --- Tipografia --- */
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace; /* dados, títulos, rótulos, números */
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;    /* corpo, textos longos */
+  --tracking-label: 0.12em; /* rótulos UPPERCASE */
+
+  /* --- Forma (levemente arredondado) --- */
+  --radius-card: 6px;
+  --radius-control: 4px;
+
+  /* --- Espaço (densidade confortável) --- */
+  --pad-card: 20px;
+  --gap-grid: 16px;
+
+  /* --- Textura sutil --- */
+  --grid-line: rgba(255, 255, 255, 0.02);
+  --grid-cell: 32px;
+}

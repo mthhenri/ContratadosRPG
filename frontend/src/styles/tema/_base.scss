@@ -1,0 +1,25 @@
+// _base.scss
+// Reset de corpo, fontes e textura de fundo do tema "Terminal de Contenção".
+// Espelha docs/design/tema/_base.scss. Importado DEPOIS de _tokens.scss em styles.scss.
+//
+// As famílias IBM Plex Mono / IBM Plex Sans são carregadas via <link> do Google Fonts no
+// index.html (Opção B do handoff). Para trocar por pacotes offline @fontsource (Opção A,
+// recomendada), instale @fontsource/ibm-plex-mono e @fontsource/ibm-plex-sans e importe os
+// pesos aqui.
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+
+  // Grid de fundo de 1px muito discreto (textura sutil da Fundação).
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: var(--grid-cell) var(--grid-cell);
+}
