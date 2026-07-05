@@ -1,6 +1,6 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-03 — regras de dt, novo-agente e patente).
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-04 — regras de descanso).
 
 ---
 
@@ -36,7 +36,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | # | Milestone | Status |
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, core/, pipelines, deploy) | **concluído** (deploy nativo Render+Cloudflare; setup das plataformas em `docs/DEPLOY.md`) |
-| M1 | Calculadora com paridade | **em andamento** (3/14 tasks — `m1-01`, `m1-02`, `m1-03` concluídas) |
+| M1 | Calculadora com paridade | **em andamento** (4/14 tasks — `m1-01` a `m1-04` concluídas) |
 | M2 | Auth + Campanhas | backlog |
 | M3 | Ficha de Jogador | backlog |
 | M4 | Ficha de Criatura/NPC | backlog |
@@ -47,7 +47,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | Módulo | Status |
 |---|---|
 | shared (estrutura) | **`interfaces/`** (`StandardResponse`/`PaginatedResult`) + **`enums/`** (`ClasseEnum`, `PatenteEnum`, `ItemCategoriaEnum`, `TipoDescansoEnum`, `QualidadeDescansoEnum`, `MotivoEntradaAgenteEnum`); `dtos/`/`validators/` ainda esqueleto |
-| shared/regras | **`agente/` completo** (m1-02): 15 fórmulas puras da aba agente com testes Vitest conferidos contra o sistema (vida, energia, limite de energia, defesa/esquiva/bloqueio, proficiência, deslocamento, dano de corpo, dano furtivo, inventário, percepção, sanidade, limite hab./turno, benefícios por nível, progressão acumulada, limites por classe). **`dt/`, `novo-agente/`, `patente/` completos** (m1-03): DT de atributo (`10 + Nível + Atributo×2`); nível/prestígio iniciais + bônus monetário por motivo de entrada; lookup de patente por prestígio + recorte da aba, consumindo `PATENTES`. `descanso/`, `compras/` seguem barrels vazios (m1-04+); `dados/` com `dadosAgente`, `dadosCivil` e `PATENTES` (m1-01) |
+| shared/regras | **`agente/` completo** (m1-02): 15 fórmulas puras da aba agente com testes Vitest conferidos contra o sistema (vida, energia, limite de energia, defesa/esquiva/bloqueio, proficiência, deslocamento, dano de corpo, dano furtivo, inventário, percepção, sanidade, limite hab./turno, benefícios por nível, progressão acumulada, limites por classe). **`dt/`, `novo-agente/`, `patente/` completos** (m1-03): DT de atributo (`10 + Nível + Atributo×2`); nível/prestígio iniciais + bônus monetário por motivo de entrada; lookup de patente por prestígio + recorte da aba, consumindo `PATENTES`. **`descanso/` completo** (m1-04): escada de dados (`ESCADA_DADOS` + `ajustarDado`/`elevarDado`/`descreverDado`), tabelas `DADOS_DESCANSO`/`QUALIDADE_MOD`, faixa de recuperação (`calcularDescanso`), interpretação de dados extras (`interpretarDadosExtras`), resultado a partir de valores rolados (`calcularResultadoDescanso`) + a utilidade de rolagem `rolarDados` (única brecha a `Math.random` — §6.6). `compras/` segue barrel vazio (m1-05); `dados/` com `dadosAgente`, `dadosCivil` e `PATENTES` (m1-01) |
 | backend/core | **pronto** (`BaseEntity`, `BaseRepository`, exceções, filtro, interceptor) |
 | backend/config | **pronto** (`ConfigService`/`ConfigModule`, lê `DB_*`/`JWT_*`/`APP_*`) |
 | backend/database | **pronto** (`DatabaseModule`/`database.provider.ts` — conexão Knex em runtime via DI) |
@@ -69,12 +69,13 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 
 ## Próxima Task
 
-**m1-04-regras-descanso** (`docs/specs/backlog/m1-04-regras-descanso.spec.md`).
-Extrair para `shared/regras/descanso/` as fórmulas da aba `descanso` (dados de recuperação de
-Energia/Vida por tipo de descanso — curto/médio/longo — modulados pela qualidade —
-insalubre/adequado/confortável — e remoção de sequelas em descanso longo confortável), consumindo
-`TipoDescansoEnum`/`QualidadeDescansoEnum` da m1-01, com testes Vitest contra
-`docs/core/sistema-v4.1.0.md`. Milestone completo (`docs/specs/backlog/m1-calculadora-paridade.spec.md`):
+**m1-05-regras-compras** (`docs/specs/backlog/m1-05-regras-compras.spec.md`).
+Extrair para `shared/regras/compras/` o domínio mais pesado da calculadora: catálogo e categorias
+(`CATALOGO_CATS`/`CATALOGO_ITENS`), modificações/amplificadores e custos (`MODIFICACOES`/`MOD_CUSTO`),
+limites por patente (`PATENTES_MOD`/`getPatenteMod`), conflitos entre modificações, stat computado de
+item (`computeItemStat` — que reusa `elevarDado`/`ESCADA_DADOS` do domínio descanso), peso e totais do
+carrinho (`getCmpTotals`), com testes Vitest contra `docs/core/sistema-v4.1.0.md`. Milestone completo
+(`docs/specs/backlog/m1-calculadora-paridade.spec.md`):
 extrai as regras do jogo do site antigo (`contratados-calculadora/src/script.js`) para `shared/regras`
 e entrega as 6 páginas públicas client-side da calculadora, além do sistema de troca de tema em
 runtime (presets + color picker) e a instalação/merge do Tailwind.
@@ -85,6 +86,36 @@ runtime (presets + color picker) e a instalação/merge do Tailwind.
 
 ## Implementado
 
+- **m1-04-regras-descanso** (2026-07-05): `shared/regras/descanso/` completo — as regras da aba
+  `descanso` do site antigo (`contratados-calculadora/src/script.js`) extraídas e conferidas contra
+  `docs/core/sistema-v4.1.0.md` — "Descanso" (30 testes novos; workspace shared 109/109 verde).
+  **Dados** (`descanso.dados.ts`): `ESCADA_DADOS` (escada de tipos de dado `[3,4,6,8,10,12,20]`),
+  `DADOS_DESCANSO` (keyed por `TipoDescansoEnum` — Curto 1D4/—, Médio 1D6/1D4, Longo 1D8/1D6),
+  `QUALIDADE_MOD` (Insalubre −1 / Adequado 0 / Confortável +1) e `REFEICAO_MOD` (+1). **Escada de
+  dados** (`dado.ts`): `ajustarDado` (move na escada com trava nos dois extremos = antigo `tipoDado`),
+  `elevarDado` (sobe com teto = antigo `_upgradeDie`, primitiva **compartilhada** que a aba compras
+  m1-05 reusa para o dado de dano) e `descreverDado` (notação `"D8"`/`"—"` = antigo `descDado`).
+  **Fórmulas** (`descanso.ts`): `calcularDescanso` (faixa mín/média/máx de Energia = Destreza dados e
+  Vida = Vigor dados, fórmula `ATRIBUTO dados + Nível×2`, Curto sem Vida, interrupção = `⌊valor÷2⌋` =
+  antigo `calcDescanso`), `interpretarDadosExtras` (parse puro de `NdM`/bônus fixo, sem rolar =
+  `parseExtraDice` menos a rolagem), `calcularResultadoDescanso` (total a partir de valores **já
+  rolados**, puro e determinístico = núcleo de `buildResult`) e `rolarDados` (utilidade de rolagem
+  explícita — a única brecha a `Math.random` no motor, §6.6). O documento foi replicado em teste
+  (Nível 3, Destreza 4, Curto insalubre → **4D3+6** de Energia — dado D4 reduzido a D3 pelo ambiente
+  insalubre, confirmando o degrau D3 da escada). **Decisões de representação (não são divergências de
+  regra):** parse e rolagem foram **separados** (o antigo `parseExtraDice` já rolava dentro; aqui o
+  parse é puro e a rolagem fica em `rolarDados`) para manter `regras/` determinístico e testável — o
+  `Math.random` do site antigo era testável só por faixa, e agora só `rolarDados` o usa (testado por
+  limites, não por valor); `descreverDado(0)` devolve `"—"` (o ramo `faces === 0 → "0"` do site era
+  código morto — o `if (!faces)` já capturava o 0), preservado por paridade; `media` é exposta (fórmula
+  `enMed` que o site calculava mas não exibia) além do mín/máx; a escada `ESCADA_DADOS` vive no domínio
+  descanso (por decisão da spec) como primitiva compartilhada — compras (m1-05) importará
+  `elevarDado`/`ESCADA_DADOS` daqui, evitando duplicar a escada. DTOs de entrada
+  (`<Conceito>CalcularDto`/`<Conceito>InterpretarDto`) e value-objects de saída co-locados em
+  `descanso.dtos.ts` (dados tipados do motor — §6.6). Barrel `descanso/` preenchido; o subpath
+  `@contratados-rpg/shared/regras/descanso` (pré-registrado na m1-01) agora resolve conteúdo real.
+  Validado: `npm run test --workspace=shared` 109/109; `lint`/`typecheck`/`build` verdes; `build` não
+  vaza `*.spec.js` para `dist/`.
 - **m1-03-regras-dt-novo-agente-patente** (2026-07-05): três domínios leves de `shared/regras/`
   extraídos do site antigo (`contratados-calculadora/src/script.js`) e conferidos contra
   `docs/core/sistema-v4.1.0.md` (22 testes novos; workspace shared 79/79 verde). **`regras/dt/`**:
