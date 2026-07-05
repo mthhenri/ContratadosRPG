@@ -1,6 +1,6 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-01 — fundação de regras e enums).
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-02 — fórmulas do agente).
 
 ---
 
@@ -36,7 +36,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | # | Milestone | Status |
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, core/, pipelines, deploy) | **concluído** (deploy nativo Render+Cloudflare; setup das plataformas em `docs/DEPLOY.md`) |
-| M1 | Calculadora com paridade | **em andamento** (1/14 tasks — `m1-01` concluída) |
+| M1 | Calculadora com paridade | **em andamento** (2/14 tasks — `m1-01`, `m1-02` concluídas) |
 | M2 | Auth + Campanhas | backlog |
 | M3 | Ficha de Jogador | backlog |
 | M4 | Ficha de Criatura/NPC | backlog |
@@ -47,7 +47,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | Módulo | Status |
 |---|---|
 | shared (estrutura) | **`interfaces/`** (`StandardResponse`/`PaginatedResult`) + **`enums/`** (`ClasseEnum`, `PatenteEnum`, `ItemCategoriaEnum`, `TipoDescansoEnum`, `QualidadeDescansoEnum`); `dtos/`/`validators/` ainda esqueleto |
-| shared/regras | **fundação pronta** (m1-01): harness Vitest configurado (`npm run test --workspace=shared`); estrutura `agente/`, `dt/`, `novo-agente/`, `patente/`, `descanso/`, `compras/` com barrels vazios (fórmulas nascem m1-02+); `dados/` com `dadosAgente`, `dadosCivil` e `PATENTES` tipados e conferidos contra o sistema |
+| shared/regras | **`agente/` completo** (m1-02): 15 fórmulas puras da aba agente com testes Vitest conferidos contra o sistema (vida, energia, limite de energia, defesa/esquiva/bloqueio, proficiência, deslocamento, dano de corpo, dano furtivo, inventário, percepção, sanidade, limite hab./turno, benefícios por nível, progressão acumulada, limites por classe). `dt/`, `novo-agente/`, `patente/`, `descanso/`, `compras/` seguem barrels vazios (m1-03+); `dados/` com `dadosAgente`, `dadosCivil` e `PATENTES` (m1-01) |
 | backend/core | **pronto** (`BaseEntity`, `BaseRepository`, exceções, filtro, interceptor) |
 | backend/config | **pronto** (`ConfigService`/`ConfigModule`, lê `DB_*`/`JWT_*`/`APP_*`) |
 | backend/database | **pronto** (`DatabaseModule`/`database.provider.ts` — conexão Knex em runtime via DI) |
@@ -69,14 +69,13 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 
 ## Próxima Task
 
-**m1-02-regras-agente** (`docs/specs/backlog/m1-02-regras-agente.spec.md`). Extrair para
-`shared/regras/agente/` todas as fórmulas da aba `agente` do site antigo (vida, energia, limite de
-energia, defesa, proficiência, deslocamento, dano corpo a corpo, inventário, traumas/sequelas, área
-de percepção, dano furtivo, limite de habilidades/turno, benefícios por nível e limites por classe),
-com testes Vitest contra `docs/core/sistema-v4.1.0.md`, consumindo `dadosAgente`/`dadosCivil` já
-migrados na m1-01. Milestone completo (`docs/specs/backlog/m1-calculadora-paridade.spec.md`): extrai
-as regras do jogo do site antigo (`contratados-calculadora/src/script.js`) para `shared/regras` e
-entrega as 6 páginas públicas client-side da calculadora, além do sistema de troca de tema em
+**m1-03-regras-dt-novo-agente-patente** (`docs/specs/backlog/m1-03-regras-dt-novo-agente-patente.spec.md`).
+Extrair para `shared/regras/` as fórmulas das abas `dt` (DT de atributo `10 + Nível + Atributo×2`),
+`novo-agente` (nível/prestígio iniciais, bônus monetário) e `patente` (faixas de prestígio, salário,
+multiplicador, limite de mods — consumindo `PATENTES` da m1-01), com testes Vitest contra
+`docs/core/sistema-v4.1.0.md`. Milestone completo (`docs/specs/backlog/m1-calculadora-paridade.spec.md`):
+extrai as regras do jogo do site antigo (`contratados-calculadora/src/script.js`) para `shared/regras`
+e entrega as 6 páginas públicas client-side da calculadora, além do sistema de troca de tema em
 runtime (presets + color picker) e a instalação/merge do Tailwind.
 
 > **Pendência operacional do M0 (não bloqueia o M1):** o backend em produção (Render) já responde
@@ -85,6 +84,33 @@ runtime (presets + color picker) e a instalação/merge do Tailwind.
 
 ## Implementado
 
+- **m1-02-regras-agente** (2026-07-05): `shared/regras/agente/` completo — as 15 fórmulas puras da
+  aba `agente` do site antigo (`calc()` + auxiliares), com testes Vitest conferidos contra
+  `docs/core/sistema-v4.1.0.md` (57 testes no workspace shared, todos verdes). Organização por arquivo
+  coeso: `saude.ts` (`calcularVida`/`calcularEnergia`/`calcularLimiteEnergia`), `defesa.ts`
+  (`calcularDefesa` → `{defesa,esquiva,bloqueio}` | `null` civil; `calcularProficiencia`),
+  `movimento.ts` (`calcularDeslocamento` em metros), `dano.ts` (`calcularDanoCorpo` tabela de
+  Pontuação Corporal; `calcularDanoFurtivo` marcos 3/6/9/12/15/18), `inventario.ts`, `percepcao.ts`,
+  `sanidade.ts` (`calcularSanidade` → limite de traumas `VON+1` / `null` civil + sequelas por missão
+  `VON`), `habilidades.ts` (`calcularLimiteHabilidadesPorTurno` base 4 + ganhos lidos de `dadosAgente`;
+  civil 3), `progressao.ts` (`calcularBeneficiosNivel` + `calcularProgressaoAcumulada` categorizando
+  ganhos), `limites.ts` (`obterLimitesClasse` + `aplicarLimitesPorClasse` — contraparte pura do clamp
+  de DOM do script). DTOs de entrada (`<Conceito>CalcularDto`) e value-objects de saída co-locados em
+  `agente.dtos.ts` (dados tipados do motor — SYSTEM.SPEC §6.6; não são DTOs de API, ficam no `regras/`,
+  não em `dtos/`). Fórmulas keyed por `ClasseEnum` (não pela string de UI). **Divergência encontrada e
+  corrigida (documento vence — proibição #27), documentada em JSDoc e no teste:** o **Limite de
+  Energia** era `(Vigor + Destreza) × 2` no `script.js`, mas o documento
+  (`sistema-v4.1.0.md` — "Limites de Energia" e "Jogando como um Civil") define **`Destreza × 2`**
+  (agente) e **`Destreza`** (civil) — implementado conforme o documento. Sem outras divergências
+  numéricas vs `script.js`. **Decisões de representação (não são divergências de regra):** stats que a
+  calculadora exibia como "N/A" para civil viram `null` tipado (defesa, proficiência, dano furtivo,
+  limite de traumas) — o UI (m1-07) mapeia `null`→"N/A"; deslocamento/percepção retornam número em
+  metros (o "m" é formatação de UI); os bounds de atributo de `aplicarLimitesPorClasse` (−5 a 7; 8 p/
+  Experimento Artificial; 3 p/ Civil) são clamps de input da calculadora, não fórmula do documento
+  (o que o documento fixa é Nível 0–20 / civil 0–5). Barrel `regras/agente/index.ts` preenchido; o
+  subpath `@contratados-rpg/shared/regras/agente` (pré-registrado na m1-01) agora resolve conteúdo
+  real. Validado: `npm run test --workspace=shared` 57/57 verde; `npm run lint`/`typecheck`/`build`
+  verdes; `build` não vaza `*.spec.js` para `dist/`.
 - **m1-01-regras-fundacao-enums** (2026-07-05): fundação do motor de regras no `shared/`, antes de
   qualquer fórmula de domínio ou UI — primeira task do M1. **Harness de teste configurado** no
   workspace `shared`: a spec pedia Jest, mas trocado por **Vitest** na revisão (a pedido do autor)
