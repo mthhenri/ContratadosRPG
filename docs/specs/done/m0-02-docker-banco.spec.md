@@ -34,7 +34,7 @@ padrão do projeto, incluindo a migration inicial de infraestrutura.
   usam (M2+)
 - `BaseRepository` e `ConfigService` (código TypeScript que consome essa configuração) —
   task `m0-03`
-- Banco de produção (Supabase) — task `m0-07` (CD)
+- Banco de produção (Supabase) — task `m0-07` (deploy)
 
 ## Dependências
 

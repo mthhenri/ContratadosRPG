@@ -15,7 +15,7 @@
 ## Objetivo
 
 "Hello world" de ponta a ponta em produção: monorepo funcionando, padrões de código
-implantados, banco local via Docker, pipelines de CI/deploy ativos, frontend na Cloudflare
+implantados, banco local via Docker, CI e deploy nativo de produção ativos, frontend na Cloudflare
 consumindo um healthcheck da API no Render.
 
 ## Entregáveis
