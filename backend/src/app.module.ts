@@ -1,13 +1,21 @@
 import { Module } from '@nestjs/common';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { ConfigModule } from './config/config.module';
+import { DatabaseModule } from './database/database.module';
+import { GlobalExceptionFilter } from './core/filters/global-exception.filter';
+import { ResponseFormatInterceptor } from './core/interceptors/response-format.interceptor';
 
 /**
- * Módulo raiz da aplicação. Mínimo por enquanto — os módulos de infraestrutura
- * (`core/`) nascem na task `m0-03` e os módulos de negócio (`usuario`, `campanha`,
- * `ficha`) nos milestones seguintes.
+ * Módulo raiz da aplicação. Registra a infraestrutura genérica (`core/`) global — os
+ * módulos de negócio (`autenticacao`, `usuario`, `campanha`, `ficha`) nascem a partir
+ * do M2.
  */
 @Module({
-  imports: [],
+  imports: [ConfigModule, DatabaseModule],
   controllers: [],
-  providers: [],
+  providers: [
+    { provide: APP_FILTER, useClass: GlobalExceptionFilter },
+    { provide: APP_INTERCEPTOR, useClass: ResponseFormatInterceptor },
+  ],
 })
 export class AppModule {}

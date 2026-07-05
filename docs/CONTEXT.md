@@ -1,6 +1,6 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-04 (m0-02).
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-04 (m0-03).
 
 ---
 
@@ -9,14 +9,16 @@
 **Fase:** M0 em andamento. O esqueleto do monorepo npm workspaces está de pé
 (`shared/`, `backend/`, `frontend/`) com os pacotes se importando corretamente. A
 infraestrutura de banco local está pronta: PostgreSQL 16 via Docker Compose e Knex
-configurado com migrations. Ainda sem conteúdo de negócio, core do backend (ConfigService,
-BaseRepository) ou shell visual — esses nascem nas tasks seguintes do M0.
+configurado com migrations. O `core/` do backend está implementado (`ConfigService`,
+`BaseEntity`, `BaseRepository`, exceções, filtro global e interceptor de resposta), com o
+Nest app subindo de ponta a ponta sem erros. Ainda sem módulo de negócio nem shell visual
+— esses nascem nas tasks seguintes do M0/M2+.
 
 ## Status dos Milestones
 
 | # | Milestone | Status |
 |---|---|---|
-| M0 | Fundação (workspaces, docs, Docker, core/, pipelines) | **backlog — próximo** |
+| M0 | Fundação (workspaces, docs, Docker, core/, pipelines) | **em andamento** |
 | M1 | Calculadora com paridade | backlog |
 | M2 | Auth + Campanhas | backlog |
 | M3 | Ficha de Jogador | backlog |
@@ -27,9 +29,11 @@ BaseRepository) ou shell visual — esses nascem nas tasks seguintes do M0.
 
 | Módulo | Status |
 |---|---|
-| shared (estrutura) | **esqueleto pronto** (pastas + barrel `index.ts`; sem conteúdo de negócio) |
+| shared (estrutura) | **`interfaces/` com `StandardResponse`/`PaginatedResult`**; demais pastas ainda esqueleto |
 | shared/regras | não iniciado |
-| backend/core | não iniciado |
+| backend/core | **pronto** (`BaseEntity`, `BaseRepository`, exceções, filtro, interceptor) |
+| backend/config | **pronto** (`ConfigService`/`ConfigModule`, lê `DB_*`/`JWT_*`/`APP_*`) |
+| backend/database | **pronto** (`DatabaseModule`/`database.provider.ts` — conexão Knex em runtime via DI) |
 | backend/autenticacao | não iniciado |
 | backend/usuario | não iniciado |
 | backend/campanha | não iniciado |
@@ -43,12 +47,40 @@ BaseRepository) ou shell visual — esses nascem nas tasks seguintes do M0.
 
 ## Próxima Task
 
-`m0-03-backend-core.spec.md` (core do backend: `ConfigService`, `BaseRepository`,
-`BaseEntity`, exceções, filtros e interceptors). Mover de `docs/specs/backlog/` para
-`docs/specs/active/` e implementar. As tasks `m0-04` a `m0-07` seguem em ordem.
+`m0-04-healthcheck-endpoint.spec.md` (decorator `@Public()` sem efeito de bloqueio ainda,
+`HealthController` com `GET /health`, validando de ponta a ponta o `core/` da m0-03). Mover
+de `docs/specs/backlog/` para `docs/specs/active/` e implementar. As tasks `m0-05` a
+`m0-07` seguem em ordem.
 
 ## Implementado
 
+- **m0-03-backend-core** (2026-07-04): `core/` do backend completo.
+  `shared/src/interfaces/` ganhou `StandardResponse<TData>` (interface — envelope de
+  sucesso/erro) e `PaginatedResult<TItem>` (classe — herdada por DTOs de listagem), com
+  subpath `@contratados-rpg/shared/interfaces` adicionado ao `exports` do
+  `shared/package.json`. Em `backend/src/core/`: `BaseEntity` (campos de infraestrutura);
+  `base/base.repository.ts` com `executarConsulta<T>()`/`executarComando()`/
+  `executarSoftDelete(id)`/`executarConsultaPaginada<T>()` (SQL bruto via `knex.raw`,
+  paginação com `allRows` conforme §10.5 — nota: `ordenarPor` chega como identificador de
+  coluna interpolado diretamente na query, então a service chamadora deve validá-lo contra
+  uma lista permitida antes de repassar, já que identificador não aceita parâmetro
+  nomeado); `exceptions/` com `BusinessException` (400), `ResourceNotFoundException` (404)
+  e `UnauthorizedAccessException` (403); `filters/global-exception.filter.ts` e
+  `interceptors/response-format.interceptor.ts`, ambos registrados globalmente via
+  `APP_FILTER`/`APP_INTERCEPTOR` em `app.module.ts`. Novo `backend/src/config/` expõe
+  `ConfigService` (carrega o `.env` da raiz via `dotenv` — movido de devDependencies para
+  dependencies do `backend/package.json` — e expõe getters tipados
+  `obterConfiguracaoBanco()`/`obterConfiguracaoJwt()`/`obterConfiguracaoAplicacao()`; nenhum
+  `process.env` direto fora dele) num `ConfigModule` global. Novo
+  `backend/src/database/database.provider.ts`/`database.module.ts` registra a conexão Knex
+  de runtime (token `KNEX_CONNECTION`) lendo a config via `ConfigService` — o `knexfile.ts`
+  continua a única exceção autorizada a ler `process.env` direto, por ser ferramenta de CLI
+  fora do ciclo do Nest. `main.ts` agora lê a porta via `ConfigService` em vez do antigo
+  placeholder `process.env.PORT`. Extensibilidade do `BaseRepository` validada com um
+  repositório descartável (compilou e foi removido — nenhum módulo de negócio o reaproveita
+  ainda, já que a `m0-04` não usa repository). `npm run build` passa em `shared` e
+  `backend`; app sobe com `node dist/main.js` sem erros de DI mesmo sem o Postgres local
+  ativo (Knex conecta sob demanda).
 - **m0-02-docker-banco** (2026-07-04): PostgreSQL 16 local via `docker-compose.yml` na raiz
   (variáveis interpoladas do `.env`, ver `.env.example` / SYSTEM.SPEC §10.6) e Knex
   configurado em `backend/knexfile.ts` (client `pg`). Scripts de banco funcionais: `db:up` /
