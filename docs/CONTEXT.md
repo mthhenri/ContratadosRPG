@@ -1,6 +1,6 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-04 (m0-03).
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m0-04).
 
 ---
 
@@ -11,8 +11,9 @@
 infraestrutura de banco local está pronta: PostgreSQL 16 via Docker Compose e Knex
 configurado com migrations. O `core/` do backend está implementado (`ConfigService`,
 `BaseEntity`, `BaseRepository`, exceções, filtro global e interceptor de resposta), com o
-Nest app subindo de ponta a ponta sem erros. Ainda sem módulo de negócio nem shell visual
-— esses nascem nas tasks seguintes do M0/M2+.
+Nest app subindo de ponta a ponta sem erros. A API já expõe seu primeiro endpoint real,
+`GET /health` (público, `StandardResponse`), validando o `core/` de ponta a ponta. Ainda
+sem módulo de negócio nem shell visual — esses nascem nas tasks seguintes do M0/M2+.
 
 ## Status dos Milestones
 
@@ -34,6 +35,8 @@ Nest app subindo de ponta a ponta sem erros. Ainda sem módulo de negócio nem s
 | backend/core | **pronto** (`BaseEntity`, `BaseRepository`, exceções, filtro, interceptor) |
 | backend/config | **pronto** (`ConfigService`/`ConfigModule`, lê `DB_*`/`JWT_*`/`APP_*`) |
 | backend/database | **pronto** (`DatabaseModule`/`database.provider.ts` — conexão Knex em runtime via DI) |
+| backend/health | **pronto** (`HealthController` `GET /health` público; sem service/repository) |
+| backend/core/decorators | **`@Public()`** (metadado `isPublic`; guard interpretador nasce no M2) |
 | backend/autenticacao | não iniciado |
 | backend/usuario | não iniciado |
 | backend/campanha | não iniciado |
@@ -47,13 +50,26 @@ Nest app subindo de ponta a ponta sem erros. Ainda sem módulo de negócio nem s
 
 ## Próxima Task
 
-`m0-04-healthcheck-endpoint.spec.md` (decorator `@Public()` sem efeito de bloqueio ainda,
-`HealthController` com `GET /health`, validando de ponta a ponta o `core/` da m0-03). Mover
-de `docs/specs/backlog/` para `docs/specs/active/` e implementar. As tasks `m0-05` a
-`m0-07` seguem em ordem.
+`m0-05-frontend-shell.spec.md` (layout mínimo topbar + `router-outlet`, interceptors
+`error-handler` e `loading`, proxy de dev para o backend, home consumindo `GET /health`).
+Mover de `docs/specs/backlog/` para `docs/specs/active/` e implementar. As tasks `m0-06`
+(CI lint+teste) e `m0-07` (CD deploy) seguem em ordem.
 
 ## Implementado
 
+- **m0-04-healthcheck-endpoint** (2026-07-05): primeiro endpoint real da API.
+  `backend/src/core/decorators/public.decorator.ts` traz o decorator `@Public()` (grava o
+  metadado `IS_PUBLIC_KEY = 'isPublic'` via `SetMetadata`) com barrel `index.ts` no padrão
+  da pasta `exceptions/` — sem efeito de bloqueio ainda, pois o guard global que o
+  interpreta só nasce no M2 (nenhuma rota está protegida). `backend/src/health/health.controller.ts`
+  expõe `GET /health` (`@Public()`, método `verificar()`), sem service/repository próprios
+  (não há regra de negócio nem persistência — só confirma que o processo Nest responde);
+  retorna o literal `{ status: 'ok' }`, que o `response-format.interceptor` da m0-03
+  embrulha em `StandardResponse<T>`. Health é conceito operacional genérico → sem DTO de
+  negócio no `shared/` (payload inline). `HealthController` registrado direto no array
+  `controllers` do `AppModule` (não há módulo de negócio para ele). `npm run build --workspace=backend`
+  passa; endpoint validado de ponta a ponta com `node dist/main.js` + `curl` →
+  `200 {"sucesso":true,"dados":{"status":"ok"},"mensagem":"Operação realizada com sucesso."}`.
 - **m0-03-backend-core** (2026-07-04): `core/` do backend completo.
   `shared/src/interfaces/` ganhou `StandardResponse<TData>` (interface — envelope de
   sucesso/erro) e `PaginatedResult<TItem>` (classe — herdada por DTOs de listagem), com
