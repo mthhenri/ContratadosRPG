@@ -1,6 +1,6 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-11 — persistência e exportar/importar do carrinho de compras).
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-12 — conteúdo de ajuda por aba: modal reutilizável nas 6 páginas).
 
 ---
 
@@ -36,7 +36,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | # | Milestone | Status |
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, core/, pipelines, deploy) | **concluído** (deploy nativo Render+Cloudflare; setup das plataformas em `docs/DEPLOY.md`) |
-| M1 | Calculadora com paridade | **em andamento** (11/14 tasks — `m1-01` a `m1-11` concluídas) |
+| M1 | Calculadora com paridade | **em andamento** (12/14 tasks — `m1-01` a `m1-12` concluídas) |
 | M2 | Auth + Campanhas | backlog |
 | M3 | Ficha de Jogador | backlog |
 | M4 | Ficha de Criatura/NPC | backlog |
@@ -60,7 +60,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | frontend (shell) | **pronto** (topbar + `router-outlet` via `shared/layout`, home consumindo `/health`, tema "Terminal de Contenção" dark-first via `docs/design`) |
 | frontend/tema | **pronto** (tokens + base + `ContencaoPreset` PrimeNG em `src/styles/tema/`; troca de accent em runtime é M1). **Tailwind instalado e integrado ao build** (m1-06): `frontend/tailwind.config.ts` mescla o `theme.extend` do handoff (`docs/design/tema/tailwind.config.ts`) apontando cores/fontes/raios utilitários para as CSS custom properties dos tokens; diretivas `@tailwind` no fim de `styles.scss`, coexistindo com SCSS + tokens (preflight não sobrescreve a identidade — só reset) |
 | frontend/core (interceptors + services) | **pronto** (`loading`/`error-handler` interceptors, `LoadingService`, `HealthService`) |
-| frontend/calculadora | **6 abas prontas (paridade da calculadora completa)**. Fundação (m1-06): módulo `modules/calculadora/` com 6 rotas públicas **lazy** — `agente`/`dt`/`novo-agente`/`patente`/`descanso`/`compras` — sob o `CalculadoraShell` (navegação de abas + deep-link por rota via `routerLink`/`routerLinkActive`, paridade com o `switchTab`/`VALID_TABS` por hash do site antigo) e o `StepInput` (stepper/input numérico reutilizável, `ControlValueAccessor` + Reactive Forms, sem `ngModel`). **Aba `agente` (m1-07):** carro-chefe — `AgentePage` (Reactive Forms + Signals) consumindo `shared/regras/agente` para **todas** as stats. **Abas leves `dt`/`novo-agente`/`patente` (m1-08):** três páginas Reactive Forms + Signals consumindo `shared/regras/{dt,novo-agente,patente}`, reusando o `StepInput` e os tokens/BEM do tema; rótulos de `PatenteEnum`/`MotivoEntradaAgenteEnum`→pt-BR em `modules/calculadora/rotulos.ts` (formatação de UI). **Aba `descanso` (m1-09):** `DescansoPage` (Reactive Forms + Signals) consumindo `shared/regras/descanso` — faixa determinística + **rolagem animada** (scramble via `requestAnimationFrame`, RNG por `rolarDados`). **Aba `compras` (m1-10):** `ComprasPage` — a mais pesada: configuração do agente (4 steppers), resumo de limites/gastos, catálogo com busca/categorias e o carrinho com itens, modificações (painel + empilhamentos) e amplificadores; estado em **Signals**, todos os números vindos de `shared/regras/compras` (`calcularResumoCompras`/`calcularStatItem`/custos). **Persistência e exportar/importar (m1-11):** `effect()` salva carrinho/amplificadores/recursos em `localStorage` a cada mudança e recarrega na construção da página; modais de exportar (código `CRPG-COMPRAS-V1:<base64>`) e importar, com aviso de incompatibilidade com códigos do site antigo. Todas as 6 abas concluídas com paridade completa |
+| frontend/calculadora | **6 abas prontas (paridade da calculadora completa)**. Fundação (m1-06): módulo `modules/calculadora/` com 6 rotas públicas **lazy** — `agente`/`dt`/`novo-agente`/`patente`/`descanso`/`compras` — sob o `CalculadoraShell` (navegação de abas + deep-link por rota via `routerLink`/`routerLinkActive`, paridade com o `switchTab`/`VALID_TABS` por hash do site antigo) e o `StepInput` (stepper/input numérico reutilizável, `ControlValueAccessor` + Reactive Forms, sem `ngModel`). **Aba `agente` (m1-07):** carro-chefe — `AgentePage` (Reactive Forms + Signals) consumindo `shared/regras/agente` para **todas** as stats. **Abas leves `dt`/`novo-agente`/`patente` (m1-08):** três páginas Reactive Forms + Signals consumindo `shared/regras/{dt,novo-agente,patente}`, reusando o `StepInput` e os tokens/BEM do tema; rótulos de `PatenteEnum`/`MotivoEntradaAgenteEnum`→pt-BR em `modules/calculadora/rotulos.ts` (formatação de UI). **Aba `descanso` (m1-09):** `DescansoPage` (Reactive Forms + Signals) consumindo `shared/regras/descanso` — faixa determinística + **rolagem animada** (scramble via `requestAnimationFrame`, RNG por `rolarDados`). **Aba `compras` (m1-10):** `ComprasPage` — a mais pesada: configuração do agente (4 steppers), resumo de limites/gastos, catálogo com busca/categorias e o carrinho com itens, modificações (painel + empilhamentos) e amplificadores; estado em **Signals**, todos os números vindos de `shared/regras/compras` (`calcularResumoCompras`/`calcularStatItem`/custos). **Persistência e exportar/importar (m1-11):** `effect()` salva carrinho/amplificadores/recursos em `localStorage` a cada mudança e recarrega na construção da página; modais de exportar (código `CRPG-COMPRAS-V1:<base64>`) e importar, com aviso de incompatibilidade com códigos do site antigo. **Ajuda por aba (m1-12):** componente único `AjudaCalculadora` (`componentes/ajuda-calculadora/`) — gatilho "? Ajuda" + modal — embutido nas 6 páginas via input signal `aba`; o texto (guia de "como usar cada página") vive em `CONTEUDO_AJUDA`, keyed por aba, sem duplicação. Todas as 6 abas concluídas com paridade completa |
 | frontend/campanha | não iniciado |
 | frontend/ficha | não iniciado |
 | Infra — banco local (Docker + Knex) | **pronto** (Postgres 16 + migrations) |
@@ -69,11 +69,12 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 
 ## Próxima Task
 
-**m1-12-conteudo-ajuda** (`docs/specs/backlog/m1-12-conteudo-ajuda.spec.md`).
-Milestone completo
-(`docs/specs/backlog/m1-calculadora-paridade.spec.md`): extrai as regras do jogo do site antigo
-(`contratados-calculadora/src/script.js`) para `shared/regras` e entrega as 6 páginas públicas client-side
-da calculadora, além do sistema de troca de tema em runtime (presets + color picker).
+**m1-13-sistema-temas-runtime** (`docs/specs/backlog/m1-13-sistema-temas-runtime.spec.md`).
+Restam 2 tasks do milestone
+(`docs/specs/backlog/m1-calculadora-paridade.spec.md`): o sistema de troca de tema em runtime
+(presets + color picker com trava de contraste — m1-13) e a paridade de deploy + arquivamento do
+site antigo (`m1-14-paridade-deploy-arquivamento`). As 6 páginas client-side da calculadora e o
+conteúdo de ajuda por aba já estão entregues.
 
 > **Pendência operacional do M0 (não bloqueia o M1):** o backend em produção (Render) já responde
 > `/health`. Falta o front ficar live: conectar a Cloudflare Pages ao Git com **branch de produção
@@ -81,6 +82,31 @@ da calculadora, além do sistema de troca de tema em runtime (presets + color pi
 
 ## Implementado
 
+- **m1-12-conteudo-ajuda** (2026-07-05): conteúdo de ajuda por aba — parte do entregável 4 do
+  milestone (as 6 páginas ganham um modal de ajuda). **Componente único reutilizável**
+  `AjudaCalculadora` (`modules/calculadora/componentes/ajuda-calculadora/`) consumido pelas **6
+  páginas** (`agente`/`dt`/`novo-agente`/`patente`/`descanso`/`compras`): um gatilho "? Ajuda" + o
+  modal com o guia de uso, parametrizado só pelo input signal `aba` — **um só componente, sem
+  duplicação por aba** (critério de aceite). Estado de abertura em Signal; **fecha apenas por botão**
+  ("×" do cabeçalho ou "Fechar"), sem clique-fora — mesmo padrão de acessibilidade dos modais de
+  exportar/importar da m1-11 (não aciona `click-events-have-key-events`/`interactive-supports-focus`
+  do lint). Modal adaptado do `.compras-modal`, consumindo **só tokens** do tema "Terminal de
+  Contenção" (nenhum hex/fonte/raio solto — proibição #29); embutido como nó-raiz acima do `<form>`
+  de cada página, com o host em flex alinhando o gatilho à direita. **Conteúdo** em
+  `conteudo-ajuda.ts` (`CONTEUDO_AJUDA` keyed por `AbaAjuda` = equivalente ao `HELP_CONTENT` do site
+  antigo): cada entrada tem título, resumo, passos e nota. **Origem do texto — quebra de paridade
+  documentada (como na m1-11):** o `HELP_CONTENT` original não está neste repositório (a SPA
+  `contratados-calculadora` é projeto à parte, arquivada só após o M1 — SYSTEM.SPEC §1; confirmado no
+  git e no grep), então a paridade textual literal é impossível. A pedido do autor, cada entrada é um
+  **guia de "como usar esta página"** (instruções de uso da aba), redigido a partir do comportamento
+  já implementado (m1-07..m1-11) e conferido contra `docs/core/sistema-v4.1.0.md` — é texto de
+  interface, **sem regra de jogo nova** (`shared/regras` e `shared` intocados). Novo
+  `ajuda-calculadora.component.spec.ts` prova o componente (gatilho abre o modal; título e nº de
+  passos batem com `CONTEUDO_AJUDA`; seleção de conteúdo por aba; fecha por botão); os specs das 6
+  páginas seguem passando (o gatilho usa classes `.ajuda-*` próprias, não colide com as queries por
+  classe dos testes existentes). **Validado:** `lint --workspace=frontend` limpo; `test
+  --workspace=frontend` **36/36** (32 anteriores + 4 novos); `build --workspace=frontend` verde **sem
+  avisos de budget**. As 6 abas seguem client-side (funcionam sem backend).
 - **m1-11-compras-persistencia-carrinho** (2026-07-05): fecha a paridade da aba `compras` —
   persistência e exportar/importar por código, últimos entregáveis do milestone antes de
   `m1-12`/`m1-13`/`m1-14`. **Persistência em `localStorage`:** um `effect()` no construtor da

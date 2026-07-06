@@ -10,6 +10,7 @@ import {
   calcularPrestigioInicial,
 } from '@contratados-rpg/shared/regras/novo-agente';
 
+import { AjudaCalculadora } from '../../componentes/ajuda-calculadora/ajuda-calculadora.component';
 import { StepInput } from '../../componentes/step-input/step-input.component';
 import { ROTULOS_MOTIVO_ENTRADA, ROTULOS_PATENTE } from '../../rotulos';
 
@@ -30,7 +31,7 @@ interface OpcaoMotivo {
  */
 @Component({
   selector: 'app-novo-agente-page',
-  imports: [ReactiveFormsModule, StepInput],
+  imports: [ReactiveFormsModule, StepInput, AjudaCalculadora],
   templateUrl: './novo-agente.page.html',
   styleUrl: './novo-agente.page.scss',
 })

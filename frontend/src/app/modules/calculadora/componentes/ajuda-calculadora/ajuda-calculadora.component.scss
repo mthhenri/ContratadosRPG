@@ -1,0 +1,172 @@
+// Modal de ajuda da calculadora (m1-12). Consome apenas os tokens do tema "Terminal de
+// Contenção" (docs/design/tema/_tokens.scss) — nenhum hex/fonte/raio solto (proibição #29).
+// O modal é adaptado do padrão .compras-modal da aba `compras` (m1-11); o gatilho reusa a
+// linguagem de botão secundário (.botao--secundario de docs/design/tema/_componentes.scss).
+
+// O componente ocupa uma linha própria acima do formulário da página, alinhando o gatilho à
+// direita (as páginas são flex-column; esta linha separa-se do primeiro card pelo gap do form).
+:host {
+  display: flex;
+  justify-content: flex-end;
+}
+
+// === Gatilho ("? Ajuda") ===
+.ajuda-gatilho {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  padding: 7px 12px;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text);
+    border-color: var(--accent-border);
+  }
+
+  &__marca {
+    color: var(--accent);
+    font-weight: 700;
+    border: 1px solid var(--accent-border);
+    border-radius: 2px;
+    padding: 0 5px;
+  }
+}
+
+// === Modal (fundo + caixa) — adaptado de .compras-modal (m1-11) ===
+.ajuda-modal-fundo {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 20;
+}
+
+.ajuda-modal {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-card);
+  padding: var(--pad-card);
+  max-width: 480px;
+  width: 100%;
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  &__titulo {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text);
+    margin: 0;
+  }
+
+  &__fechar {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 18px;
+    line-height: 1;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+
+    &:hover {
+      color: var(--text);
+      border-color: var(--accent-border);
+    }
+  }
+
+  &__resumo {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text-dim);
+    margin: 0 0 14px;
+  }
+
+  &__lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__item {
+    position: relative;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text);
+    padding-left: 18px;
+
+    &::before {
+      content: '›';
+      position: absolute;
+      left: 0;
+      top: 0;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--accent);
+    }
+  }
+
+  &__nota {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--text-mute);
+    border-top: 1px solid var(--border);
+    margin: 14px 0 0;
+    padding-top: 12px;
+  }
+
+  &__acoes {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+  }
+}
+
+// Botão "Fechar" — linguagem do botão secundário do tema.
+.ajuda-btn {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  padding: 8px 16px;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--accent-border);
+  }
+}

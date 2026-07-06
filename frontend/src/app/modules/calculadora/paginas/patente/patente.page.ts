@@ -6,6 +6,7 @@ import { map } from 'rxjs';
 import { PatenteEnum } from '@contratados-rpg/shared/enums';
 import { calcularPatente } from '@contratados-rpg/shared/regras/patente';
 
+import { AjudaCalculadora } from '../../componentes/ajuda-calculadora/ajuda-calculadora.component';
 import { StepInput } from '../../componentes/step-input/step-input.component';
 import { ROTULOS_PATENTE } from '../../rotulos';
 
@@ -34,7 +35,7 @@ function formatarFaixa(prestigioMinimo: number, prestigioMaximo: number): string
  */
 @Component({
   selector: 'app-patente-page',
-  imports: [ReactiveFormsModule, StepInput],
+  imports: [ReactiveFormsModule, StepInput, AjudaCalculadora],
   templateUrl: './patente.page.html',
   styleUrl: './patente.page.scss',
 })

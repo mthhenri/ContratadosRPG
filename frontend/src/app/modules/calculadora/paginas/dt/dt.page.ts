@@ -5,6 +5,7 @@ import { map } from 'rxjs';
 
 import { calcularDtAtributo } from '@contratados-rpg/shared/regras/dt';
 
+import { AjudaCalculadora } from '../../componentes/ajuda-calculadora/ajuda-calculadora.component';
 import { StepInput } from '../../componentes/step-input/step-input.component';
 
 /** Uma linha da tabela de referência: um valor de atributo e a DT para cada nível de coluna. */
@@ -27,7 +28,7 @@ const ATRIBUTOS_REFERENCIA: readonly number[] = [1, 2, 3, 4, 5, 6];
  */
 @Component({
   selector: 'app-dt-page',
-  imports: [ReactiveFormsModule, StepInput],
+  imports: [ReactiveFormsModule, StepInput, AjudaCalculadora],
   templateUrl: './dt.page.html',
   styleUrl: './dt.page.scss',
 })

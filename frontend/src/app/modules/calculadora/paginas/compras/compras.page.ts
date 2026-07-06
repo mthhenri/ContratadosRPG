@@ -21,6 +21,7 @@ import {
   verificarConflitoModificacao,
 } from '@contratados-rpg/shared/regras/compras';
 
+import { AjudaCalculadora } from '../../componentes/ajuda-calculadora/ajuda-calculadora.component';
 import { StepInput } from '../../componentes/step-input/step-input.component';
 import { ROTULOS_PATENTE } from '../../rotulos';
 
@@ -181,7 +182,7 @@ const PREFIXO_CODIGO_EXPORTACAO = 'CRPG-COMPRAS-V1:';
  */
 @Component({
   selector: 'app-compras-page',
-  imports: [ReactiveFormsModule, StepInput],
+  imports: [ReactiveFormsModule, StepInput, AjudaCalculadora],
   templateUrl: './compras.page.html',
   styleUrl: './compras.page.scss',
 })

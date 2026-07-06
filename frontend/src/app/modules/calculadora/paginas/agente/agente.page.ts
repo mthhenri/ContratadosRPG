@@ -23,6 +23,7 @@ import {
   obterLimitesClasse,
 } from '@contratados-rpg/shared/regras/agente';
 
+import { AjudaCalculadora } from '../../componentes/ajuda-calculadora/ajuda-calculadora.component';
 import { StepInput } from '../../componentes/step-input/step-input.component';
 
 /** Nome de cada `FormControl` numérico de atributo (chave do `FormGroup`). */
@@ -71,7 +72,7 @@ const INDISPONIVEL = 'N/A';
  */
 @Component({
   selector: 'app-agente-page',
-  imports: [ReactiveFormsModule, StepInput],
+  imports: [ReactiveFormsModule, StepInput, AjudaCalculadora],
   templateUrl: './agente.page.html',
   styleUrl: './agente.page.scss',
 })

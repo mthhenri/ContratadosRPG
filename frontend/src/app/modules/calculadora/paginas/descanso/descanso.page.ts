@@ -13,6 +13,7 @@ import {
   rolarDados,
 } from '@contratados-rpg/shared/regras/descanso';
 
+import { AjudaCalculadora } from '../../componentes/ajuda-calculadora/ajuda-calculadora.component';
 import { StepInput } from '../../componentes/step-input/step-input.component';
 
 /** Opção de um `<select>` da configuração (o rótulo carrega texto descritivo de UI). */
@@ -47,7 +48,7 @@ const DURACAO_SCRAMBLE_MS = 650;
  */
 @Component({
   selector: 'app-descanso-page',
-  imports: [ReactiveFormsModule, StepInput],
+  imports: [ReactiveFormsModule, StepInput, AjudaCalculadora],
   templateUrl: './descanso.page.html',
   styleUrl: './descanso.page.scss',
 })
