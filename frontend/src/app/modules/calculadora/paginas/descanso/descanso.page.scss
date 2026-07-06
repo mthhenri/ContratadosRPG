@@ -1,1 +1,213 @@
-@use '../stub-pagina';
+// Aba "Descanso" da calculadora (m1-09). Consome apenas os tokens do tema "Terminal de
+// Contenção" — nenhum hex/fonte/raio solto (proibição #29). Blocos .calc-cartao (card),
+// .calc-config/.calc-campo e .calc-stat (stat box) adaptados de docs/design/tema/_componentes.scss,
+// copiados para o scoped scss (mesmo padrão das abas `agente`/`novo-agente`).
+
+.calc {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-grid);
+}
+
+// === Card ===
+.calc-cartao {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--pad-card);
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 18px;
+  }
+
+  &__indice {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+
+  &__titulo {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+  }
+
+  &__regua {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+}
+
+// === Configuração ===
+.calc-config {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--gap-grid);
+}
+
+.calc-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__rotulo {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+  }
+
+  &__auxiliar {
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+}
+
+.calc-select,
+.calc-texto {
+  width: 100%;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  padding: 11px 12px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  outline: none;
+
+  &:focus {
+    border-color: var(--accent-border);
+  }
+}
+
+.calc-texto {
+  font-family: var(--font-mono);
+}
+
+// === Stats (faixa determinística e rolagem) ===
+.calc-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.calc-stat {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  padding: 14px;
+
+  &__rotulo {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+    margin-bottom: 7px;
+  }
+
+  &__valor {
+    font-family: var(--font-mono);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.05;
+
+    &--texto {
+      font-size: 22px;
+    }
+
+    &--grande {
+      font-size: 32px;
+    }
+  }
+
+  &__detalhe {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-mute);
+    margin-top: 8px;
+  }
+
+  &--destaque {
+    border-color: var(--accent-border);
+    .calc-stat__valor {
+      color: var(--accent);
+    }
+  }
+
+  &--energia {
+    border-color: color-mix(in srgb, var(--energy) 35%, transparent);
+    .calc-stat__valor {
+      color: var(--energy);
+    }
+  }
+}
+
+// === Notas (memória contextual) ===
+.calc-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 16px;
+
+  &__item {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+
+  &__marcador {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    flex: 0 0 auto;
+  }
+}
+
+// === Botão de rolagem ===
+.descanso-rolar {
+  margin: 16px 0;
+  padding: 12px 24px;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius-control);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+
+  &--rolando {
+    cursor: progress;
+    opacity: 0.75;
+  }
+}

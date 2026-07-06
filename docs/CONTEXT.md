@@ -1,6 +1,6 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-08 — páginas dt / novo-agente / patente).
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-09 — página descanso com rolagem animada).
 
 ---
 
@@ -36,7 +36,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | # | Milestone | Status |
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, core/, pipelines, deploy) | **concluído** (deploy nativo Render+Cloudflare; setup das plataformas em `docs/DEPLOY.md`) |
-| M1 | Calculadora com paridade | **em andamento** (8/14 tasks — `m1-01` a `m1-08` concluídas) |
+| M1 | Calculadora com paridade | **em andamento** (9/14 tasks — `m1-01` a `m1-09` concluídas) |
 | M2 | Auth + Campanhas | backlog |
 | M3 | Ficha de Jogador | backlog |
 | M4 | Ficha de Criatura/NPC | backlog |
@@ -60,7 +60,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | frontend (shell) | **pronto** (topbar + `router-outlet` via `shared/layout`, home consumindo `/health`, tema "Terminal de Contenção" dark-first via `docs/design`) |
 | frontend/tema | **pronto** (tokens + base + `ContencaoPreset` PrimeNG em `src/styles/tema/`; troca de accent em runtime é M1). **Tailwind instalado e integrado ao build** (m1-06): `frontend/tailwind.config.ts` mescla o `theme.extend` do handoff (`docs/design/tema/tailwind.config.ts`) apontando cores/fontes/raios utilitários para as CSS custom properties dos tokens; diretivas `@tailwind` no fim de `styles.scss`, coexistindo com SCSS + tokens (preflight não sobrescreve a identidade — só reset) |
 | frontend/core (interceptors + services) | **pronto** (`loading`/`error-handler` interceptors, `LoadingService`, `HealthService`) |
-| frontend/calculadora | **fundação + abas `agente`/`dt`/`novo-agente`/`patente` prontas**. Fundação (m1-06): módulo `modules/calculadora/` com 6 rotas públicas **lazy** — `agente`/`dt`/`novo-agente`/`patente`/`descanso`/`compras` — sob o `CalculadoraShell` (navegação de abas + deep-link por rota via `routerLink`/`routerLinkActive`, paridade com o `switchTab`/`VALID_TABS` por hash do site antigo) e o `StepInput` (stepper/input numérico reutilizável, `ControlValueAccessor` + Reactive Forms, sem `ngModel`). **Aba `agente` (m1-07):** carro-chefe — `AgentePage` (Reactive Forms + Signals) consumindo `shared/regras/agente` para **todas** as stats. **Abas leves `dt`/`novo-agente`/`patente` (m1-08):** três páginas Reactive Forms + Signals consumindo `shared/regras/{dt,novo-agente,patente}`, reusando o `StepInput` e os tokens/BEM do tema; rótulos de `PatenteEnum`/`MotivoEntradaAgenteEnum`→pt-BR em `modules/calculadora/rotulos.ts` (formatação de UI). Abas `descanso`/`compras` seguem stubs (m1-09+) |
+| frontend/calculadora | **fundação + abas `agente`/`dt`/`novo-agente`/`patente`/`descanso` prontas**. Fundação (m1-06): módulo `modules/calculadora/` com 6 rotas públicas **lazy** — `agente`/`dt`/`novo-agente`/`patente`/`descanso`/`compras` — sob o `CalculadoraShell` (navegação de abas + deep-link por rota via `routerLink`/`routerLinkActive`, paridade com o `switchTab`/`VALID_TABS` por hash do site antigo) e o `StepInput` (stepper/input numérico reutilizável, `ControlValueAccessor` + Reactive Forms, sem `ngModel`). **Aba `agente` (m1-07):** carro-chefe — `AgentePage` (Reactive Forms + Signals) consumindo `shared/regras/agente` para **todas** as stats. **Abas leves `dt`/`novo-agente`/`patente` (m1-08):** três páginas Reactive Forms + Signals consumindo `shared/regras/{dt,novo-agente,patente}`, reusando o `StepInput` e os tokens/BEM do tema; rótulos de `PatenteEnum`/`MotivoEntradaAgenteEnum`→pt-BR em `modules/calculadora/rotulos.ts` (formatação de UI). **Aba `descanso` (m1-09):** `DescansoPage` (Reactive Forms + Signals) consumindo `shared/regras/descanso` — faixa determinística + **rolagem animada** (scramble via `requestAnimationFrame`, RNG por `rolarDados`). Só a aba `compras` segue stub (m1-10) |
 | frontend/campanha | não iniciado |
 | frontend/ficha | não iniciado |
 | Infra — banco local (Docker + Knex) | **pronto** (Postgres 16 + migrations) |
@@ -69,14 +69,12 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 
 ## Próxima Task
 
-**m1-09-pagina-descanso** (`docs/specs/backlog/m1-09-pagina-descanso.spec.md`).
-A página `descanso` com paridade, **incluindo a rolagem de descanso com animação** (entregável 5 da
-milestone). Formulário reativo (tipo de descanso, qualidade, atributo, dados extras, bônus) + exibição do
-resultado, consumindo `shared/regras/descanso` (regras determinísticas prontas desde a m1-04); a
-**rolagem animada** (efeito de embaralhamento/scramble em paridade com `rollDescanso`/`scramble` do site
-antigo) e o gatilho visual vivem na página — o RNG usa a utilidade `rolarDados` do domínio (única brecha a
-`Math.random`, §6.6). Reactive Forms + Signals, `StepInput` da m1-06, tokens/BEM do tema. Zero regra de
-jogo no front; funciona offline do backend. **Ler `docs/design/DESIGN.md` antes de qualquer UI.**
+**m1-10-pagina-compras** (`docs/specs/backlog/m1-10-pagina-compras.spec.md`).
+A página `compras` com paridade — o domínio mais pesado da calculadora — consumindo
+`shared/regras/compras` (regras prontas desde a m1-05): catálogo por categoria, modificações,
+amplificadores e limites por patente, com o carrinho e o resumo de totais. Reactive Forms + Signals,
+`StepInput` da m1-06, tokens/BEM do tema. Zero regra de jogo no front; funciona offline do backend.
+**Ler `docs/design/DESIGN.md` antes de qualquer UI.**
 Milestone completo
 (`docs/specs/backlog/m1-calculadora-paridade.spec.md`): extrai as regras do jogo do site antigo
 (`contratados-calculadora/src/script.js`) para `shared/regras` e entrega as 6 páginas públicas client-side
@@ -88,6 +86,32 @@ da calculadora, além do sistema de troca de tema em runtime (presets + color pi
 
 ## Implementado
 
+- **m1-09-pagina-descanso** (2026-07-05): a aba `descanso` da calculadora com paridade funcional à
+  `calcDescanso`/`rollDescanso` do site antigo, **incluindo a rolagem animada** (entregável 5 do milestone).
+  **Zero regra de jogo no front** — faixa de recuperação, interpretação dos dados extras, rolagem e resultado
+  final vêm de `shared/regras/descanso` (regras prontas desde a m1-04). Mesmo molde das abas anteriores
+  (Reactive Forms + Signals, `StepInput` da m1-06, tokens/BEM do tema "Terminal de Contenção"). `DescansoPage`
+  (`paginas/descanso/`) tem 3 cards: **(1) Configuração** — `<select>` de tipo/qualidade/refeição/interrupção +
+  steppers Vigor/Destreza (0–12) e Nível (0–20); **(2) Resultado determinístico** — faixa mín–máx de Vida
+  (accent) e Energia (`--energy`) + fórmula e notas contextuais, tudo de `calcularDescanso`; **(3) Rolar Dados** —
+  dois campos de texto para dados extras (`interpretarDadosExtras`), botão de rolagem e o resultado por track
+  com memória de cálculo. **Estado em Signals**: `bruto` (`toSignal` do `valueChanges`) → `entrada` (`computed`
+  que normaliza os `<select>` Sim/Não em boolean) → um `computed` por saída. **Rolagem animada** (efeito
+  scramble): `rolar()` embaralha números aleatórios por ~650ms via `requestAnimationFrame` antes de assentar no
+  valor final (paridade com o `scramble` do site), com um pulso de escala via `Element.animate` (WAAPI —
+  **sem `@angular/animations`**, que o projeto não instala); o **único não-determinismo vive na página** e usa a
+  utilidade `rolarDados` do domínio (§6.6), delegando o total a `calcularResultadoDescanso`. Editar os dados
+  extras re-rola sem animação se já houver resultado visível, e mudar a configuração esconde a rolagem antiga
+  (paridade com `rollDescansoIfVisible`/`calcDescanso`). **Decisões de representação (não divergem de regra):**
+  refeição e interrupção são `<select>` com valores string `'nao'`/`'sim'` (não boolean) porque o value accessor
+  nativo do `<select>` escreve string — um controle boolean viraria a string `'sim'`, sempre truthy; a conversão
+  para boolean acontece no `computed` `entrada`. `calculadora.routes.spec.ts` atualizado (`descanso` deixou de
+  ser stub → agora checa `.calc` + aba ativa; só `compras` segue stub) e novo `descanso.page.spec.ts` prova a
+  ligação motor→DOM (preset Curto/Adequado → Energia **1–4** / Vida "Não recupera"; Longo+Confortável+Refeição →
+  Energia **1–12** / Vida **1–10**; rolagem Médio Nível 3 com `Math.random` fixo → **7** por track com breakdown
+  `[1] + 6 = 7`). **Validado:** `lint --workspace=frontend` limpo; `test --workspace=frontend` **26/26** (23
+  anteriores + 3 novos); `build --workspace=frontend` verde **sem avisos de budget** (chunk lazy `descanso-page`).
+  As 6 rotas seguem client-side (funcionam sem backend).
 - **m1-08-pagina-dt-novo-agente-patente** (2026-07-05): as três páginas leves da calculadora, agrupadas por
   serem pequenas, cada uma consumindo seu domínio de `shared/regras` (regras prontas desde a m1-03) —
   **zero fórmula duplicada no front** (proibição de duplicar regra de jogo respeitada). Mesmo molde da

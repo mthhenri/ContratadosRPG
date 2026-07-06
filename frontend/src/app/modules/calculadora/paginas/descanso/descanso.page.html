@@ -1,8 +1,160 @@
-<article class="stub-pagina">
-  <header class="stub-pagina__cabecalho">
-    <span class="stub-pagina__indice">05</span>
-    <h2 class="stub-pagina__titulo">Descanso</h2>
-    <span class="stub-pagina__regua"></span>
-  </header>
-  <p class="stub-pagina__nota">Página em construção. O cálculo desta aba entra em uma task posterior do M1.</p>
-</article>
+<form class="calc descanso" [formGroup]="formulario">
+  <!-- CARD 1: CONFIGURAÇÃO -->
+  <section class="calc-cartao">
+    <header class="calc-cartao__cabecalho">
+      <span class="calc-cartao__indice">1</span>
+      <h2 class="calc-cartao__titulo">Configuração do Descanso</h2>
+      <span class="calc-cartao__regua"></span>
+    </header>
+
+    <div class="calc-config">
+      <div class="calc-campo">
+        <label class="calc-campo__rotulo" for="desc-tipo">Tipo de Descanso</label>
+        <select id="desc-tipo" class="calc-select" formControlName="tipo">
+          @for (opcao of tipos; track opcao.valor) {
+            <option [value]="opcao.valor">{{ opcao.rotulo }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="calc-campo">
+        <label class="calc-campo__rotulo" for="desc-qualidade">Qualidade do Ambiente</label>
+        <select id="desc-qualidade" class="calc-select" formControlName="qualidade">
+          @for (opcao of qualidades; track opcao.valor) {
+            <option [value]="opcao.valor">{{ opcao.rotulo }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="calc-campo">
+        <span class="calc-campo__rotulo">Vigor <span class="calc-campo__auxiliar">(para Vida)</span></span>
+        <app-step-input formControlName="vigor" [min]="0" [max]="12" ariaRotulo="Vigor" />
+      </div>
+
+      <div class="calc-campo">
+        <span class="calc-campo__rotulo">Destreza <span class="calc-campo__auxiliar">(para Energia)</span></span>
+        <app-step-input formControlName="destreza" [min]="0" [max]="12" ariaRotulo="Destreza" />
+      </div>
+
+      <div class="calc-campo">
+        <span class="calc-campo__rotulo">Nível</span>
+        <app-step-input formControlName="nivel" [min]="0" [max]="20" ariaRotulo="Nível" />
+      </div>
+
+      <div class="calc-campo">
+        <label class="calc-campo__rotulo" for="desc-refeicao">Refeição consumida?</label>
+        <select id="desc-refeicao" class="calc-select" formControlName="refeicao">
+          @for (opcao of opcoesSimNao; track opcao.valor) {
+            <option [value]="opcao.valor">{{ opcao.rotulo }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="calc-campo">
+        <label class="calc-campo__rotulo" for="desc-interrupcao">Foi interrompido?</label>
+        <select id="desc-interrupcao" class="calc-select" formControlName="interrompido">
+          @for (opcao of opcoesInterrupcao; track opcao.valor) {
+            <option [value]="opcao.valor">{{ opcao.rotulo }}</option>
+          }
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- CARD 2: RESULTADO DETERMINÍSTICO -->
+  <section class="calc-cartao">
+    <header class="calc-cartao__cabecalho">
+      <span class="calc-cartao__indice">2</span>
+      <h2 class="calc-cartao__titulo">Resultado</h2>
+      <span class="calc-cartao__regua"></span>
+    </header>
+
+    <div class="calc-stats descanso-faixas">
+      <div class="calc-stat calc-stat--destaque">
+        <div class="calc-stat__rotulo">Recuperação de Vida</div>
+        <div class="calc-stat__valor calc-stat__valor--texto">{{ vidaFaixa() }}</div>
+        <div class="calc-stat__detalhe">{{ vidaFormula() }}</div>
+      </div>
+      <div class="calc-stat calc-stat--energia">
+        <div class="calc-stat__rotulo">Recuperação de Energia</div>
+        <div class="calc-stat__valor calc-stat__valor--texto">{{ energiaFaixa() }}</div>
+        <div class="calc-stat__detalhe">{{ energiaFormula() }}</div>
+      </div>
+    </div>
+
+    <div class="calc-lista">
+      @for (nota of notas(); track $index) {
+        <div class="calc-lista__item">
+          <span class="calc-lista__marcador">›</span>
+          <span>{{ nota }}</span>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- CARD 3: ROLAR DADOS -->
+  <section class="calc-cartao">
+    <header class="calc-cartao__cabecalho">
+      <span class="calc-cartao__indice">3</span>
+      <h2 class="calc-cartao__titulo">Rolar Dados</h2>
+      <span class="calc-cartao__regua"></span>
+    </header>
+
+    <div class="calc-config">
+      <div class="calc-campo">
+        <label class="calc-campo__rotulo" for="desc-extra-vida">
+          Dados Extras de Vida <span class="calc-campo__auxiliar">(ex.: 2d6, 1d8)</span>
+        </label>
+        <input
+          id="desc-extra-vida"
+          class="calc-texto"
+          type="text"
+          placeholder="0"
+          formControlName="extraVida"
+        />
+      </div>
+
+      <div class="calc-campo">
+        <label class="calc-campo__rotulo" for="desc-extra-energia">
+          Dados Extras de Energia <span class="calc-campo__auxiliar">(ex.: 2d6, 1d8)</span>
+        </label>
+        <input
+          id="desc-extra-energia"
+          class="calc-texto"
+          type="text"
+          placeholder="0"
+          formControlName="extraEnergia"
+        />
+      </div>
+    </div>
+
+    <button
+      type="button"
+      class="descanso-rolar"
+      [class.descanso-rolar--rolando]="rolando()"
+      [disabled]="rolando()"
+      (click)="rolar()"
+    >
+      {{ rolando() ? 'Rolando…' : 'Rolar' }}
+    </button>
+
+    @if (rolagemVisivel()) {
+      <div class="calc-stats descanso-rolagem">
+        <div class="calc-stat calc-stat--destaque">
+          <div class="calc-stat__rotulo">Vida Recuperada</div>
+          <div #valorVidaRolada class="calc-stat__valor calc-stat__valor--grande">
+            {{ vidaRolada() }}
+          </div>
+          <div class="calc-stat__detalhe">{{ vidaBreakdown() }}</div>
+        </div>
+        <div class="calc-stat calc-stat--energia">
+          <div class="calc-stat__rotulo">Energia Recuperada</div>
+          <div #valorEnergiaRolada class="calc-stat__valor calc-stat__valor--grande">
+            {{ energiaRolada() }}
+          </div>
+          <div class="calc-stat__detalhe">{{ energiaBreakdown() }}</div>
+        </div>
+      </div>
+    }
+  </section>
+</form>
