@@ -106,7 +106,7 @@
     }
 
     @if (itensCatalogo().length > 0) {
-      <div class="compras-grade">
+      <div class="compras-grade" appOverflowFade>
         @for (cartao of itensCatalogo(); track cartao.categoria + '/' + cartao.item.nome) {
           <article class="compras-item">
             <div class="compras-item__nome">
@@ -139,7 +139,7 @@
         máx. <strong>{{ resumo().limiteModificacoes.maxEmpilhamentos }} stack/amp</strong>
         ({{ patenteTexto() }}) · Primeiro empilhamento: $3.000 · Adicionais: $1.000
       </div>
-      <div class="compras-grade">
+      <div class="compras-grade" appOverflowFade>
         @for (amp of amplificadoresCatalogo(); track amp.nome) {
           <article class="compras-item">
             <div class="compras-item__nome">{{ amp.nome }}</div>
