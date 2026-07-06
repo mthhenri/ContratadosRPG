@@ -69,7 +69,13 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 
 ## Próxima Task
 
-**M1 concluído no código** (paridade + refinamento mobile + refino do tema em runtime — 16 tasks). A próxima frente
+**M1 concluído no código** (paridade + refinamento mobile + refino do tema em runtime — 16 tasks).
+Há uma nova task de refinamento no **backlog**, ainda não iniciada:
+**`m1-17-singleton-estado-abas-calculadora.spec.md`** — singleton em memória (sem
+`localStorage`) que preserva o estado do formulário de cada uma das 5 abas
+(`agente`/`dt`/`novo-agente`/`patente`/`descanso`) ao trocar de aba na calculadora; um F5 continua
+zerando essas 5 abas — só `compras` mantém sua peculiaridade de sobreviver a F5 (mecanismo próprio
+de `localStorage` da m1-11, intocado). A próxima frente
 maior é o **M2 — Auth + Campanhas** (`docs/specs/backlog/m2-auth-campanhas.spec.md`), ainda a
 ser quebrado em tasks numeradas (`m2-01-*.spec.md`, …) antes da implementação — os milestones
 M2–M5 já trazem uma task de refinamento mobile no escopo. Os specs de milestone concluídos
