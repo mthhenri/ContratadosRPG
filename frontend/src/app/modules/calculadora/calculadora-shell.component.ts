@@ -1,9 +1,12 @@
 import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
+import { Icone, IconeNome } from '../../shared/icone/icone.component';
+
 interface AbaCalculadora {
   readonly caminho: string;
   readonly rotulo: string;
+  readonly icone: IconeNome;
 }
 
 /**
@@ -15,17 +18,17 @@ interface AbaCalculadora {
  */
 @Component({
   selector: 'app-calculadora-shell',
-  imports: [RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, Icone],
   templateUrl: './calculadora-shell.component.html',
   styleUrl: './calculadora-shell.component.scss',
 })
 export class CalculadoraShell {
   protected readonly abas: readonly AbaCalculadora[] = [
-    { caminho: 'agente', rotulo: 'Agente / Civil' },
-    { caminho: 'dt', rotulo: 'DT' },
-    { caminho: 'novo-agente', rotulo: 'Novo Agente' },
-    { caminho: 'patente', rotulo: 'Patentes' },
-    { caminho: 'descanso', rotulo: 'Descanso' },
-    { caminho: 'compras', rotulo: 'Compras' },
+    { caminho: 'agente', rotulo: 'Agente / Civil', icone: 'agente' },
+    { caminho: 'dt', rotulo: 'DT', icone: 'dt' },
+    { caminho: 'novo-agente', rotulo: 'Novo Agente', icone: 'novo-agente' },
+    { caminho: 'patente', rotulo: 'Patentes', icone: 'patente' },
+    { caminho: 'descanso', rotulo: 'Descanso', icone: 'descanso' },
+    { caminho: 'compras', rotulo: 'Compras', icone: 'compras' },
   ];
 }

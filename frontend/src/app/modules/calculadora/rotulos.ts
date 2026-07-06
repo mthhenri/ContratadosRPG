@@ -1,4 +1,10 @@
-import { MotivoEntradaAgenteEnum, PatenteEnum } from '@contratados-rpg/shared/enums';
+import {
+  ItemCategoriaEnum,
+  MotivoEntradaAgenteEnum,
+  PatenteEnum,
+} from '@contratados-rpg/shared/enums';
+
+import { IconeNome } from '../../shared/icone/icone.component';
 
 /**
  * Rótulos humanos (pt-BR) para os enums de conteúdo de jogo consumidos pelas páginas
@@ -35,4 +41,22 @@ export const ROTULOS_MOTIVO_ENTRADA: Readonly<Record<MotivoEntradaAgenteEnum, st
     'Contido / Exterminado — sucessor convencional',
   [MotivoEntradaAgenteEnum.CONTIDO_OU_EXTERMINADO_SUCESSOR_EXPERIMENTO]:
     'Contido / Exterminado — sucessor Experimento',
+};
+
+/**
+ * Ícone de linha de cada categoria do catálogo de compras. **Formatação de UI** — substitui os
+ * emojis do `CATALOGO_CATEGORIAS` do site antigo (`⚔ 🎯 …`), proibidos pelo tema "Terminal de
+ * Contenção", por glifos monocromáticos do componente `Icone`.
+ */
+export const ICONES_CATEGORIA: Readonly<Record<ItemCategoriaEnum, IconeNome>> = {
+  [ItemCategoriaEnum.CORPO_A_CORPO]: 'corpo-a-corpo',
+  [ItemCategoriaEnum.EXPLOSIVOS]: 'explosivos',
+  [ItemCategoriaEnum.ARMAS_DE_FOGO]: 'armas-de-fogo',
+  [ItemCategoriaEnum.MUNICOES]: 'municoes',
+  [ItemCategoriaEnum.PROTECOES]: 'protecoes',
+  [ItemCategoriaEnum.EXOTICOS]: 'exoticos',
+  [ItemCategoriaEnum.ARMAZENAMENTO]: 'armazenamento',
+  [ItemCategoriaEnum.OPERACIONAL]: 'operacional',
+  [ItemCategoriaEnum.MEDICINAL]: 'medicinal',
+  [ItemCategoriaEnum.AMPLIFICADOR]: 'amplificador',
 };

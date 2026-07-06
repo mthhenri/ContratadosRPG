@@ -95,7 +95,8 @@
           [disabled]="!!busca()"
           (click)="definirCategoria(categoria.categoria)"
         >
-          {{ categoria.rotulo }}
+          <app-icone [nome]="iconesCategoria[categoria.categoria]" />
+          <span>{{ categoria.rotulo }}</span>
         </button>
       }
     </nav>

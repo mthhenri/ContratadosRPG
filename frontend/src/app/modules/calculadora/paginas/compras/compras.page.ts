@@ -21,9 +21,10 @@ import {
   verificarConflitoModificacao,
 } from '@contratados-rpg/shared/regras/compras';
 
+import { Icone } from '../../../../shared/icone/icone.component';
 import { AjudaCalculadora } from '../../componentes/ajuda-calculadora/ajuda-calculadora.component';
 import { StepInput } from '../../componentes/step-input/step-input.component';
-import { ROTULOS_PATENTE } from '../../rotulos';
+import { ICONES_CATEGORIA, ROTULOS_PATENTE } from '../../rotulos';
 
 /** Uma modificação aplicada a um item do carrinho (estado da página). */
 interface ModificacaoCarrinho {
@@ -182,12 +183,13 @@ const PREFIXO_CODIGO_EXPORTACAO = 'CRPG-COMPRAS-V1:';
  */
 @Component({
   selector: 'app-compras-page',
-  imports: [ReactiveFormsModule, StepInput, AjudaCalculadora],
+  imports: [ReactiveFormsModule, StepInput, AjudaCalculadora, Icone],
   templateUrl: './compras.page.html',
   styleUrl: './compras.page.scss',
 })
 export class ComprasPage {
   protected readonly categorias = CATALOGO_CATEGORIAS;
+  protected readonly iconesCategoria = ICONES_CATEGORIA;
 
   protected readonly formulario = new FormGroup({
     dinheiro: new FormControl(1000, { nonNullable: true }),

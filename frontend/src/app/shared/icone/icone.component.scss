@@ -1,0 +1,13 @@
+// Ícone de linha reutilizável (m1-13+). Herda a cor via currentColor e escala com a fonte do
+// controle que o contém — nenhum token de cor/fonte é fixado aqui (proibição #29).
+:host {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  line-height: 0;
+}
+
+svg {
+  width: 1.15em;
+  height: 1.15em;
+}

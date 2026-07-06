@@ -165,6 +165,9 @@
   margin-bottom: 16px;
 }
 .compras-categoria {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -238,7 +241,7 @@
   &__acoes {
     display: flex;
     gap: 6px;
-    margin-top: 4px;
+    margin-top: auto;
   }
 }
 
@@ -265,7 +268,6 @@
   cursor: pointer;
 
   &--adicionar {
-    flex: 1;
     background: var(--accent);
     color: var(--bg);
     border: 0;
@@ -285,6 +287,20 @@
   &:hover:not(:disabled) {
     filter: brightness(1.08);
   }
+}
+
+// Em cards de coluna (catálogo e modificações) o botão "Adicionar" ocupa a largura toda e é
+// empurrado ao rodapé — assim todos ficam do mesmo tamanho e alinhados entre os cards (que a
+// grade já estica à mesma altura). Em contextos de linha (ações de amplificador e dos modais)
+// ele divide a linha com o botão vizinho via flex.
+.compras-item > .compras-btn--adicionar,
+.compras-mod-entrada > .compras-btn--adicionar {
+  width: 100%;
+  margin-top: auto;
+}
+.compras-item__acoes .compras-btn--adicionar,
+.compras-modal__acoes .compras-btn--adicionar {
+  flex: 1;
 }
 .compras-limpar {
   font-size: 11px;
