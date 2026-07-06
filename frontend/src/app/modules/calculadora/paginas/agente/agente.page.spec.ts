@@ -27,11 +27,17 @@ describe('AgentePage', () => {
     select.dispatchEvent(new Event('change'));
   }
 
-  it('calcula Vida e Energia do preset padrão (Combatente Nível 3)', async () => {
+  function ajustarAtributo(raiz: HTMLElement, indice: number, valorAtributo: number): void {
+    const campo = raiz.querySelectorAll('.stepper__valor')[indice] as HTMLInputElement;
+    campo.value = String(valorAtributo);
+    campo.dispatchEvent(new Event('input'));
+  }
+
+  it('calcula Vida e Energia do preset padrão (Combatente Nível 0, atributos 1)', async () => {
     const { raiz } = await montar();
-    // Vida = (30 + 2×4) + 3×(7 + 2×2) = 71; Energia = (15 + 2×2) + 3×(4 + 2×2) = 43.
-    expect(valor(raiz, 'vida')).toBe('71');
-    expect(valor(raiz, 'energia')).toBe('43');
+    // Vida = (30 + 1×4) + 0×(…) = 34; Energia = (15 + 1×2) + 0×(…) = 17.
+    expect(valor(raiz, 'vida')).toBe('34');
+    expect(valor(raiz, 'energia')).toBe('17');
   });
 
   it('mapeia stats indisponíveis do Civil para N/A', async () => {
@@ -41,5 +47,24 @@ describe('AgentePage', () => {
     // Civil não possui Defesa nem Proficiência (doc — "Jogando como um Civil").
     expect(valor(raiz, 'defesa')).toBe('N/A');
     expect(valor(raiz, 'proficiencia')).toBe('N/A');
+  });
+
+  it('preserva o estado ao trocar de aba e voltar (singleton em memória — m1-17)', async () => {
+    await TestBed.configureTestingModule({ imports: [AgentePage] }).compileComponents();
+
+    // Primeira visita: preenche (Vigor é o 1º stepper de atributo — ver ordem de `campos`).
+    const primeira = TestBed.createComponent(AgentePage);
+    primeira.detectChanges();
+    ajustarAtributo(primeira.nativeElement as HTMLElement, 0, 5);
+    primeira.detectChanges();
+    primeira.destroy(); // sai da aba: a rota lazy desmonta o componente.
+
+    // Volta à aba: mesmo injector root → mesmo singleton → o valor digitado é restaurado.
+    const segunda = TestBed.createComponent(AgentePage);
+    segunda.detectChanges();
+    const vigor = (segunda.nativeElement as HTMLElement).querySelectorAll(
+      '.stepper__valor',
+    )[0] as HTMLInputElement;
+    expect(vigor.value).toBe('5');
   });
 });

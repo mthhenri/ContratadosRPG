@@ -1,4 +1,4 @@
-import { Component, computed } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { map, merge } from 'rxjs';
@@ -12,12 +12,21 @@ import {
 
 import { AjudaCalculadora } from '../../componentes/ajuda-calculadora/ajuda-calculadora.component';
 import { StepInput } from '../../componentes/step-input/step-input.component';
+import { EstadoAbasCalculadoraService } from '../../estado-abas-calculadora.service';
 import { ROTULOS_MOTIVO_ENTRADA, ROTULOS_PATENTE } from '../../rotulos';
 
 /** Opção do `<select>` de motivo de entrada. */
 interface OpcaoMotivo {
   readonly valor: MotivoEntradaAgenteEnum;
   readonly rotulo: string;
+}
+
+/** Valor bruto do formulário da aba — o que o singleton preserva entre navegações (m1-17). */
+interface NovoAgenteEstadoBruto {
+  motivo: MotivoEntradaAgenteEnum;
+  mediaNivel: number;
+  mediaPrestigio: number;
+  prestigioBonus: number;
 }
 
 /**
@@ -39,6 +48,8 @@ export class NovoAgentePage {
   protected readonly motivos: readonly OpcaoMotivo[] = (
     Object.values(MotivoEntradaAgenteEnum) as MotivoEntradaAgenteEnum[]
   ).map((valor) => ({ valor, rotulo: ROTULOS_MOTIVO_ENTRADA[valor] }));
+
+  private readonly estadoAbas = inject(EstadoAbasCalculadoraService);
 
   protected readonly formulario = new FormGroup({
     motivo: new FormControl<MotivoEntradaAgenteEnum>(MotivoEntradaAgenteEnum.MORTE_OU_INICIO_DO_ZERO, {
@@ -108,6 +119,14 @@ export class NovoAgentePage {
   });
 
   constructor() {
+    // Restaura o estado preservado entre navegações (m1-17), antes de armar as inscrições — assim
+    // o `patchValue` de restauração não dispara o auto-sync (que sobrescreveria o Prestígio do
+    // bônus restaurado) nem grava redundantemente no singleton.
+    const salvo = this.estadoAbas.obterEstado<NovoAgenteEstadoBruto>('novo-agente');
+    if (salvo) {
+      this.formulario.patchValue(salvo);
+    }
+
     // Auto-preenche o Prestígio do bônus com o inicial calculado sempre que a configuração muda —
     // paridade com o site antigo, que repopulava o campo (e sobrescrevia edição manual) a cada
     // mudança, deixando-o editável no restante.
@@ -119,8 +138,21 @@ export class NovoAgentePage {
       .pipe(takeUntilDestroyed())
       .subscribe(() => this.sincronizarPrestigioBonus());
 
-    // Preenchimento inicial (o site antigo chamava calcNovoAgente no load).
-    this.sincronizarPrestigioBonus();
+    // Grava o valor bruto de volta no singleton a cada mudança (só memória — sem I/O).
+    this.formulario.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(() =>
+        this.estadoAbas.definirEstado<NovoAgenteEstadoBruto>(
+          'novo-agente',
+          this.formulario.getRawValue(),
+        ),
+      );
+
+    // Preenchimento inicial (o site antigo chamava calcNovoAgente no load). Só quando não há
+    // estado restaurado — senão sobrescreveria o Prestígio do bônus preservado.
+    if (!salvo) {
+      this.sincronizarPrestigioBonus();
+    }
   }
 
   /**

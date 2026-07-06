@@ -1,4 +1,4 @@
-import { Component, computed, ElementRef, signal, viewChild } from '@angular/core';
+import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { map, merge } from 'rxjs';
@@ -15,11 +15,25 @@ import {
 
 import { AjudaCalculadora } from '../../componentes/ajuda-calculadora/ajuda-calculadora.component';
 import { StepInput } from '../../componentes/step-input/step-input.component';
+import { EstadoAbasCalculadoraService } from '../../estado-abas-calculadora.service';
 
 /** Opção de um `<select>` da configuração (o rótulo carrega texto descritivo de UI). */
 interface OpcaoDescanso<TValor> {
   readonly valor: TValor;
   readonly rotulo: string;
+}
+
+/** Valor bruto do formulário da aba — o que o singleton preserva entre navegações (m1-17). */
+interface DescansoEstadoBruto {
+  tipo: TipoDescansoEnum;
+  qualidade: QualidadeDescansoEnum;
+  vigor: number;
+  destreza: number;
+  nivel: number;
+  refeicao: 'nao' | 'sim';
+  interrompido: 'nao' | 'sim';
+  extraVida: string;
+  extraEnergia: string;
 }
 
 /** Resultado de rolar uma track (Energia ou Vida): total final + memória de cálculo. */
@@ -74,6 +88,8 @@ export class DescansoPage {
     { valor: 'nao', rotulo: 'Não' },
     { valor: 'sim', rotulo: 'Sim (÷2 no resultado)' },
   ];
+
+  private readonly estadoAbas = inject(EstadoAbasCalculadoraService);
 
   protected readonly formulario = new FormGroup({
     tipo: new FormControl<TipoDescansoEnum>(TipoDescansoEnum.CURTO, { nonNullable: true }),
@@ -170,6 +186,13 @@ export class DescansoPage {
   private handleAnimacao = 0;
 
   constructor() {
+    // Restaura o estado preservado entre navegações (m1-17), antes de armar as inscrições — a
+    // rolagem já nasce oculta, então restaurar a configuração não precisa disparar nada.
+    const salvo = this.estadoAbas.obterEstado<DescansoEstadoBruto>('descanso');
+    if (salvo) {
+      this.formulario.patchValue(salvo);
+    }
+
     // Mudança na configuração determinística esconde a última rolagem (o site chamava
     // `calcDescanso`, que ocultava o container de rolagem).
     merge(
@@ -196,6 +219,13 @@ export class DescansoPage {
           this.rolar(false);
         }
       });
+
+    // Grava o valor bruto de volta no singleton a cada mudança (só memória — sem I/O).
+    this.formulario.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(() =>
+        this.estadoAbas.definirEstado<DescansoEstadoBruto>('descanso', this.formulario.getRawValue()),
+      );
   }
 
   /**

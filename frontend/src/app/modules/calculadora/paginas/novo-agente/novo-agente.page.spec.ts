@@ -48,4 +48,29 @@ describe('NovoAgentePage', () => {
     // não fica um passo atrás da média de Prestígio.
     expect(raiz.querySelector('.calc-resultado--dinheiro')?.textContent?.trim()).toBe('$ 61.250');
   });
+
+  it('preserva o estado (inclusive o Prestígio do bônus editado) ao trocar de aba e voltar (m1-17)', async () => {
+    await TestBed.configureTestingModule({ imports: [NovoAgentePage] }).compileComponents();
+
+    // Primeira visita: sobrescreve manualmente o Prestígio do bônus (3º stepper) para um valor que
+    // difere do auto-preenchido — o restore não pode reintroduzir o auto-sync que o zeraria.
+    const primeira = TestBed.createComponent(NovoAgentePage);
+    primeira.detectChanges();
+    const prestigioBonus = (primeira.nativeElement as HTMLElement).querySelectorAll(
+      '.calc-config .stepper__valor',
+    )[2] as HTMLInputElement;
+    prestigioBonus.value = '99';
+    prestigioBonus.dispatchEvent(new Event('input'));
+    primeira.detectChanges();
+    primeira.destroy(); // sai da aba: a rota lazy desmonta o componente.
+
+    // Volta à aba: mesmo injector root → mesmo singleton → o Prestígio manual é restaurado (o
+    // auto-sync inicial não roda quando há estado salvo).
+    const segunda = TestBed.createComponent(NovoAgentePage);
+    segunda.detectChanges();
+    const prestigioRestaurado = (segunda.nativeElement as HTMLElement).querySelectorAll(
+      '.calc-config .stepper__valor',
+    )[2] as HTMLInputElement;
+    expect(prestigioRestaurado.value).toBe('99');
+  });
 });

@@ -38,4 +38,23 @@ describe('PatentePage', () => {
     );
     expect(raiz.querySelector('.patente-destaque__faixa')?.textContent?.trim()).toBe('66–∞ Prestígio');
   });
+
+  it('preserva o estado ao trocar de aba e voltar (singleton em memória — m1-17)', async () => {
+    await TestBed.configureTestingModule({ imports: [PatentePage] }).compileComponents();
+
+    // Primeira visita: muda o Prestígio.
+    const primeira = TestBed.createComponent(PatentePage);
+    primeira.detectChanges();
+    ajustarPrestigio(primeira.nativeElement as HTMLElement, 40);
+    primeira.detectChanges();
+    primeira.destroy(); // sai da aba: a rota lazy desmonta o componente.
+
+    // Volta à aba: mesmo injector root → mesmo singleton → o Prestígio digitado é restaurado.
+    const segunda = TestBed.createComponent(PatentePage);
+    segunda.detectChanges();
+    const prestigio = (segunda.nativeElement as HTMLElement).querySelector(
+      '.stepper__valor',
+    ) as HTMLInputElement;
+    expect(prestigio.value).toBe('40');
+  });
 });

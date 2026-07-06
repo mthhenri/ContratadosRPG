@@ -72,4 +72,23 @@ describe('DescansoPage', () => {
       raiz.querySelector('.descanso-rolagem .calc-stat--energia .calc-stat__detalhe')?.textContent,
     ).toContain('[1] + 6 = 7');
   });
+
+  it('preserva o estado ao trocar de aba e voltar (singleton em memória — m1-17)', async () => {
+    await TestBed.configureTestingModule({ imports: [DescansoPage] }).compileComponents();
+
+    // Primeira visita: muda o tipo de descanso.
+    const primeira = TestBed.createComponent(DescansoPage);
+    primeira.detectChanges();
+    selecionar(primeira.nativeElement as HTMLElement, 'desc-tipo', 'LONGO');
+    primeira.detectChanges();
+    primeira.destroy(); // sai da aba: a rota lazy desmonta o componente.
+
+    // Volta à aba: mesmo injector root → mesmo singleton → o tipo escolhido é restaurado.
+    const segunda = TestBed.createComponent(DescansoPage);
+    segunda.detectChanges();
+    const tipo = (segunda.nativeElement as HTMLElement).querySelector(
+      '#desc-tipo',
+    ) as HTMLSelectElement;
+    expect(tipo.value).toBe('LONGO');
+  });
 });

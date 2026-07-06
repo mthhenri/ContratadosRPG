@@ -29,4 +29,27 @@ describe('DtPage', () => {
     // 10 + nível + 1×2 → 12, 17, 22, 27, 32.
     expect(valores).toEqual(['12', '17', '22', '27', '32']);
   });
+
+  it('preserva o estado ao trocar de aba e voltar (singleton em memória — m1-17)', async () => {
+    await TestBed.configureTestingModule({ imports: [DtPage] }).compileComponents();
+
+    // Primeira visita: muda o Nível (1º stepper).
+    const primeira = TestBed.createComponent(DtPage);
+    primeira.detectChanges();
+    const nivel = (primeira.nativeElement as HTMLElement).querySelectorAll(
+      '.stepper__valor',
+    )[0] as HTMLInputElement;
+    nivel.value = '15';
+    nivel.dispatchEvent(new Event('input'));
+    primeira.detectChanges();
+    primeira.destroy(); // sai da aba: a rota lazy desmonta o componente.
+
+    // Volta à aba: mesmo injector root → mesmo singleton → o Nível digitado é restaurado.
+    const segunda = TestBed.createComponent(DtPage);
+    segunda.detectChanges();
+    const nivelRestaurado = (segunda.nativeElement as HTMLElement).querySelectorAll(
+      '.stepper__valor',
+    )[0] as HTMLInputElement;
+    expect(nivelRestaurado.value).toBe('15');
+  });
 });

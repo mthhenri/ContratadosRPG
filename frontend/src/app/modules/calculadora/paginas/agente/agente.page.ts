@@ -1,4 +1,4 @@
-import { Component, computed } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { map } from 'rxjs';
@@ -25,9 +25,21 @@ import {
 
 import { AjudaCalculadora } from '../../componentes/ajuda-calculadora/ajuda-calculadora.component';
 import { StepInput } from '../../componentes/step-input/step-input.component';
+import { EstadoAbasCalculadoraService } from '../../estado-abas-calculadora.service';
 
 /** Nome de cada `FormControl` numérico de atributo (chave do `FormGroup`). */
 type ChaveAtributo = 'vigor' | 'destreza' | 'forca' | 'sentidos' | 'vontade';
+
+/** Valor bruto do formulário da aba — o que o singleton preserva entre navegações (m1-17). */
+interface AgenteEstadoBruto {
+  classe: ClasseEnum;
+  nivel: number;
+  vigor: number;
+  destreza: number;
+  forca: number;
+  vontade: number;
+  sentidos: number;
+}
 
 /** Opção de classe/registro do `<select>`, agrupada por família. */
 interface GrupoClasse {
@@ -108,13 +120,15 @@ export class AgentePage {
     { chave: 'sentidos', rotulo: 'Sentidos' },
   ];
 
-  /** Preset inicial idêntico ao protótipo aprovado (Combatente, Nível 3, atributos 2/2/2/1/1). */
+  private readonly estadoAbas = inject(EstadoAbasCalculadoraService);
+
+  /** Preset inicial "de fábrica" (Combatente, Nível 0, atributos 1/1/1/1/1). */
   protected readonly formulario = new FormGroup({
     classe: new FormControl<ClasseEnum>(ClasseEnum.COMBATENTE, { nonNullable: true }),
-    nivel: new FormControl(3, { nonNullable: true }),
-    vigor: new FormControl(2, { nonNullable: true }),
-    destreza: new FormControl(2, { nonNullable: true }),
-    forca: new FormControl(2, { nonNullable: true }),
+    nivel: new FormControl(0, { nonNullable: true }),
+    vigor: new FormControl(1, { nonNullable: true }),
+    destreza: new FormControl(1, { nonNullable: true }),
+    forca: new FormControl(1, { nonNullable: true }),
     vontade: new FormControl(1, { nonNullable: true }),
     sentidos: new FormControl(1, { nonNullable: true }),
   });
@@ -224,6 +238,13 @@ export class AgentePage {
   });
 
   constructor() {
+    // Restaura o estado preservado entre navegações (m1-17), antes de armar o reclamp de classe —
+    // o valor salvo já está normalizado, então não precisa reclampar de novo ao restaurar.
+    const salvo = this.estadoAbas.obterEstado<AgenteEstadoBruto>('agente');
+    if (salvo) {
+      this.formulario.patchValue(salvo);
+    }
+
     // Ao trocar de classe, reclampa Nível e atributos aos novos limites (paridade
     // com o clamp de input do site antigo ao mudar de registro).
     this.formulario.controls.classe.valueChanges
@@ -231,5 +252,11 @@ export class AgentePage {
       .subscribe(() => {
         this.formulario.patchValue(aplicarLimitesPorClasse(this.formulario.getRawValue()));
       });
+
+    // Grava o valor bruto de volta no singleton a cada mudança (só memória — sem I/O). Escrever
+    // não muta o formulário, então não realimenta o reclamp acima.
+    this.formulario.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.estadoAbas.definirEstado<AgenteEstadoBruto>('agente', this.formulario.getRawValue()));
   }
 }

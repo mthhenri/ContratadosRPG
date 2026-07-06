@@ -1,5 +1,5 @@
-import { Component, computed } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { Component, computed, inject } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { map } from 'rxjs';
 
@@ -7,6 +7,13 @@ import { calcularDtAtributo } from '@contratados-rpg/shared/regras/dt';
 
 import { AjudaCalculadora } from '../../componentes/ajuda-calculadora/ajuda-calculadora.component';
 import { StepInput } from '../../componentes/step-input/step-input.component';
+import { EstadoAbasCalculadoraService } from '../../estado-abas-calculadora.service';
+
+/** Valor bruto do formulário da aba — o que o singleton preserva entre navegações (m1-17). */
+interface DtEstadoBruto {
+  nivel: number;
+  atributo: number;
+}
 
 /** Uma linha da tabela de referência: um valor de atributo e a DT para cada nível de coluna. */
 interface LinhaReferencia {
@@ -33,6 +40,8 @@ const ATRIBUTOS_REFERENCIA: readonly number[] = [1, 2, 3, 4, 5, 6];
   styleUrl: './dt.page.scss',
 })
 export class DtPage {
+  private readonly estadoAbas = inject(EstadoAbasCalculadoraService);
+
   protected readonly formulario = new FormGroup({
     nivel: new FormControl(0, { nonNullable: true }),
     atributo: new FormControl(1, { nonNullable: true }),
@@ -42,6 +51,18 @@ export class DtPage {
     this.formulario.valueChanges.pipe(map(() => this.formulario.getRawValue())),
     { initialValue: this.formulario.getRawValue() },
   );
+
+  constructor() {
+    // Preserva o estado do formulário entre navegações (m1-17): restaura ao montar (senão usa o
+    // preset inicial) e grava de volta a cada mudança — só memória, sem I/O.
+    const salvo = this.estadoAbas.obterEstado<DtEstadoBruto>('dt');
+    if (salvo) {
+      this.formulario.patchValue(salvo);
+    }
+    this.formulario.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.estadoAbas.definirEstado<DtEstadoBruto>('dt', this.formulario.getRawValue()));
+  }
 
   /** DT do atributo informado = 10 + Nível + (Atributo × 2). */
   protected readonly dt = computed(() => calcularDtAtributo(this.bruto()));
