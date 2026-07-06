@@ -21,12 +21,19 @@ roteiro de criação do `docs/core/guia_de_mestre-v4.0.0.md`.
   `usuario_ficha_acesso`); eventos WS reusados.
 - **Frontend**: assistente de criação de ameaça guiado pelo roteiro do guia; listagem no
   painel do mestre; revelação seletiva a jogadores.
+- **Refinamento de UI/UX mobile** (task numerada dedicada no fim do milestone): o assistente
+  de criação de ameaça (multi-etapas) e a listagem/revelação no painel do mestre otimizados
+  para tela pequena (~360px, sem scroll horizontal, alvos de toque adequados, navegação de
+  etapas confortável no polegar), reusando o padrão responsivo por tokens de `m1-15` e a
+  identidade `docs/design/` (protótipo `docs/design/examples/ficha-de-criatura.html` é alvo
+  desktop). Ver `m1-15-*`.
 
 ## Critérios de Aceite (mínimos)
 
 - Mestre monta a ficha de exemplo do guia e o sistema reproduz os valores do documento
 - Jogador não vê criatura/NPC sem concessão; passa a ver após revelação
 - Nenhuma regra de criação duplicada fora de `shared/regras/criatura`
+- Assistente de criação e listagem do mestre usáveis no mobile (~360px) sem scroll horizontal
 
 ## Dependências
 

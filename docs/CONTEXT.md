@@ -36,7 +36,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | # | Milestone | Status |
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, core/, pipelines, deploy) | **concluído** (deploy nativo Render+Cloudflare; setup das plataformas em `docs/DEPLOY.md`) |
-| M1 | Calculadora com paridade | **concluído no código** (14/14 tasks — `m1-01` a `m1-14`); restam 2 passos operacionais de plataforma: publicar a Cloudflare Pages e arquivar o repo antigo no GitHub (ver `docs/PARIDADE-M1.md`) |
+| M1 | Calculadora com paridade | **paridade concluída no código** (14/14 tasks — `m1-01` a `m1-14`); 1 task de refinamento **no backlog**: `m1-15-refinamento-mobile-calculadora` (UI/UX mobile). Restam 2 passos operacionais de plataforma: publicar a Cloudflare Pages e arquivar o repo antigo no GitHub (ver `docs/PARIDADE-M1.md`) |
 | M2 | Auth + Campanhas | backlog |
 | M3 | Ficha de Jogador | backlog |
 | M4 | Ficha de Criatura/NPC | backlog |
@@ -69,10 +69,13 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 
 ## Próxima Task
 
-**M1 concluído no código.** A próxima frente é o **M2 — Auth + Campanhas**
-(`docs/specs/backlog/m2-auth-campanhas.spec.md`), ainda a ser quebrado em tasks numeradas
-(`m2-01-*.spec.md`, …) antes da implementação. Os specs de milestone concluídos (`m0-fundacao`,
-`m1-calculadora-paridade`) e todas as tasks `m0-*`/`m1-*` estão em `docs/specs/done/`.
+**Paridade do M1 concluída no código.** Há uma task de refinamento no backlog,
+`m1-15-refinamento-mobile-calculadora.spec.md` (otimização de UI/UX mobile das 6 abas + shell
++ painéis) — pode ser feita antes ou em paralelo à próxima frente. A próxima frente maior é o
+**M2 — Auth + Campanhas** (`docs/specs/backlog/m2-auth-campanhas.spec.md`), ainda a ser quebrado
+em tasks numeradas (`m2-01-*.spec.md`, …) antes da implementação — os milestones M2–M5 já trazem
+uma task de refinamento mobile no escopo. Os specs de milestone concluídos (`m0-fundacao`,
+`m1-calculadora-paridade`) e todas as tasks `m0-*`/`m1-*` já entregues estão em `docs/specs/done/`.
 
 > **Passos operacionais pendentes (plataforma, não bloqueiam código — ver `docs/PARIDADE-M1.md`):**
 > 1. **Cloudflare Pages no ar:** conectar a Pages ao Git com **branch de produção `master`**

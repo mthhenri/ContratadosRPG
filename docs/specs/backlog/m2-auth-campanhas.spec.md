@@ -20,6 +20,11 @@ Contas de usuário e campanhas com papéis — a base de permissões de todo o r
 - **Frontend**: telas de login/registro, guard de rota, signal de usuário autenticado,
   interceptor `auth-token`, telas de campanha (criar, entrar por código, listar, membros).
 - Migrations de `usuario`, `campanha`, `campanha_membro` e tabelas de referência.
+- **Refinamento de UI/UX mobile** (task numerada dedicada no fim do milestone): telas de
+  auth (login/registro), criação/entrada por código e listas de campanha/membros otimizadas
+  para tela pequena (~360px, sem scroll horizontal do body, alvos de toque confortáveis),
+  seguindo o mesmo padrão responsivo por tokens estabelecido em `m1-15` e a identidade
+  "Terminal de Contenção" (`docs/design/`). Ver `m1-15-refinamento-mobile-calculadora.spec.md`.
 
 ## Critérios de Aceite (mínimos)
 
@@ -27,6 +32,7 @@ Contas de usuário e campanhas com papéis — a base de permissões de todo o r
   mestre vê lista de membros
 - Matriz de permissões de campanha (SYSTEM.SPEC §14) coberta por testes de service
 - Calculadora continua pública e funcional sem login
+- Todas as telas novas (auth + campanha) usáveis no mobile (~360px) sem scroll horizontal
 
 ## Dependências
 

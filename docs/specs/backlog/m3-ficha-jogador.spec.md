@@ -25,6 +25,12 @@ em tempo real — o coração do sistema.
   agente), visualização/edição com stats derivados ao vivo via `shared/regras`,
   lista de fichas da campanha (respeitando permissões), tela do mestre com fichas
   atualizando em tempo real.
+- **Refinamento de UI/UX mobile** (task numerada dedicada no fim do milestone): a ficha de
+  jogador é o ecrã mais denso do sistema — criação/edição, ficha completa com stats
+  derivados e a lista/painel do mestre precisam ser confortáveis no mobile (~360px, sem
+  scroll horizontal do body, alvos de toque adequados, seções colapsáveis onde fizer sentido),
+  reusando o padrão responsivo por tokens de `m1-15` e a identidade `docs/design/` (o protótipo
+  `docs/design/examples/ficha-de-jogador.html` é alvo desktop). Ver `m1-15-*`.
 
 ## Critérios de Aceite (mínimos)
 
@@ -32,6 +38,7 @@ em tempo real — o coração do sistema.
   concedido — matriz coberta por testes de service (REST e entrada em sala WS)
 - Backend rejeita ficha salva com dados incoerentes com o motor de regras
 - Mestre com a ficha aberta vê alterações do jogador sem recarregar
+- Ficha (criação/edição/visualização) e lista usáveis no mobile (~360px) sem scroll horizontal
 
 ## Dependências
 
