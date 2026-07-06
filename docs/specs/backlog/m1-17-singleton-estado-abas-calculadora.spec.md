@@ -23,7 +23,7 @@ continua sendo `compras` (não mexer no mecanismo dela).
   página (`AgentePage`, `DtPage`, `NovoAgentePage`, `PatentePage`, `DescansoPage`, `ComprasPage`)
   é standalone e monta seu próprio `FormGroup` no construtor/inicialização de campo, sempre com o
   mesmo preset inicial hardcoded (ex.: `AgentePage` sempre nasce em Combatente/Nível 3/atributos
-  2-2-2-1-1 — ver `agente.page.ts:112`).
+  2-2-2-1-1 — ver `agente.page.ts:112`; esta task muda Nível e atributos desse preset — itens 4 e 5).
 - Nenhuma das 5 abas fora `compras` guarda estado em serviço externo — o `FormGroup` vive só no
   componente e morre com ele quando o `router-outlet` desmonta a rota.
 - `compras.page.ts` é a única exceção: um `effect()` grava `carrinho`/`amplificadores`/`recursos`
@@ -51,8 +51,14 @@ continua sendo `compras` (não mexer no mecanismo dela).
    singleton, pedido junto nesta task: o `FormControl` `nivel` do `AgentePage` (hoje
    `new FormControl(3, { nonNullable: true })` em `agente.page.ts:114`) nasce em **0** — tanto no
    preset "de fábrica" (primeira visita, singleton ainda vazio) quanto em qualquer lugar que hoje
-   assume Nível 3 como valor inicial. Classe (`Combatente`) e atributos (`2/2/2/1/1`) do preset
-   permanecem como estão — só o Nível muda.
+   assume Nível 3 como valor inicial. Classe (`Combatente`) permanece como está — só o Nível muda
+   (os atributos são ajustados separadamente pelo item 5).
+5. **Preset inicial dos 5 atributos na aba `agente`/civil passa a ser 1 em todos.** Os
+   `FormControl`s `vigor`/`destreza`/`forca`/`vontade`/`sentidos` (hoje `2/2/2/1/1` em
+   `agente.page.ts:115-119`) nascem todos em **1** — tanto no preset "de fábrica" quanto em
+   qualquer lugar que hoje assume `2/2/2/1/1`. Vale igualmente para o registro Civil (mesmos
+   `FormControl`s, só o rótulo/limite muda por classe). Classe e Nível seguem os itens 4 e o
+   valor de classe atual — não mudam por causa deste item.
 
 ## Critérios de Aceite
 
@@ -65,7 +71,8 @@ continua sendo `compras` (não mexer no mecanismo dela).
 - `compras` continua se comportando exatamente como hoje: sobrevive tanto à troca de aba quanto
   a F5 (via seu `localStorage` já existente) — mecanismo dela **intocado**.
 - Uma primeira visita à aba `agente` (singleton vazio, sem reload) nasce com o slider de Nível em
-  **0** (não mais 3); os demais campos do preset (classe/atributos) não mudam.
+  **0** (não mais 3) e os 5 atributos (Vigor/Destreza/Força/Vontade/Sentidos) todos em **1** (não
+  mais `2/2/2/1/1`); a classe (`Combatente`) não muda.
 - **Zero alteração de regra de jogo** — `shared/regras` intocado.
 - Suítes `shared` e `frontend` verdes (specs das 5 páginas cobertas ganham teste de
   ida-e-volta: preencher → trocar de aba → voltar → valor preservado); build dentro do budget.
