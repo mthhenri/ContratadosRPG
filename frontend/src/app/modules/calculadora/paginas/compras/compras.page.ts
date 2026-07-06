@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, effect, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { map } from 'rxjs';
@@ -137,6 +137,34 @@ const CATEGORIAS_EMPILHAVEIS: readonly ItemCategoriaEnum[] = [
   ItemCategoriaEnum.MEDICINAL,
 ];
 
+/** Recursos de configuração do agente (valores brutos do formulário). */
+interface RecursosCarrinho {
+  readonly dinheiro: number;
+  readonly prestigio: number;
+  readonly inventario: number;
+  readonly vontade: number;
+}
+
+/** Estado completo do carrinho, serializado no localStorage e no código de exportação. */
+interface EstadoCarrinhoPersistidoV1 {
+  readonly versao: 1;
+  readonly recursos: RecursosCarrinho;
+  readonly carrinho: readonly ItemCarrinho[];
+  readonly amplificadores: readonly AmplificadorCarrinho[];
+}
+
+/** Chave do localStorage (m1-11) — o carrinho sobrevive a reload/reabertura da página. */
+const CHAVE_LOCALSTORAGE = 'contratados-rpg:calculadora-compras';
+
+/**
+ * Prefixo do código de exportação (m1-11). **Formato novo, incompatível com os códigos do
+ * site antigo** (`contratados-calculadora`): o script original não foi migrado para este
+ * repositório e seu formato de serialização não pôde ser conferido — a quebra é documentada
+ * aqui e avisada na UI de importação (critério de aceite da spec permite documentar em vez
+ * de garantir compatibilidade).
+ */
+const PREFIXO_CODIGO_EXPORTACAO = 'CRPG-COMPRAS-V1:';
+
 /**
  * Aba "Compras" da calculadora (m1-10) — a mais pesada: configuração do agente, resumo de
  * limites/gastos, catálogo com busca e o carrinho com itens, modificações e amplificadores.
@@ -144,8 +172,12 @@ const CATEGORIAS_EMPILHAVEIS: readonly ItemCategoriaEnum[] = [
  * stat computado de item, custo de amplificador e todos os totais vêm de `shared/regras/compras`
  * (fonte única — SYSTEM.SPEC §6.6, regras prontas desde a m1-05). A página só orquestra o estado
  * do carrinho em Signals e traduz os value-objects do motor para a UI. Paridade de saída com a aba
- * `compras` do site antigo (`renderCmpSummary`/`renderCmpCatalog`/`renderCmpCart`). Persistência e
- * export/import ficam para a m1-11.
+ * `compras` do site antigo (`renderCmpSummary`/`renderCmpCatalog`/`renderCmpCart`). **Persistência e
+ * export/import (m1-11):** o carrinho é salvo em `localStorage` a cada mudança (`effect()` sobre
+ * `carrinho`/`amplificadores`/`recursos`) e recarregado na construção da página; exportar gera um
+ * código `CRPG-COMPRAS-V1:<base64>` copiável, importar reconstrói o mesmo estado a partir dele —
+ * formato novo, **incompatível com os códigos do site antigo** (script original não migrado para
+ * este repositório; quebra documentada e avisada na UI de importação).
  */
 @Component({
   selector: 'app-compras-page',
@@ -175,6 +207,22 @@ export class ComprasPage {
   protected readonly busca = signal('');
   private readonly painelAbertos = signal<ReadonlySet<number>>(new Set());
   private uidContador = 0;
+
+  // === Exportar/importar por código (m1-11) ===
+  protected readonly modalExportarAberto = signal(false);
+  protected readonly modalImportarAberto = signal(false);
+  protected readonly codigoExportado = signal('');
+  protected readonly codigoImportarTexto = signal('');
+  protected readonly erroImportar = signal<string | null>(null);
+  protected readonly copiadoComSucesso = signal(false);
+
+  constructor() {
+    const estadoPersistido = this.carregarEstado();
+    if (estadoPersistido) {
+      this.aplicarEstado(estadoPersistido);
+    }
+    effect(() => this.salvarEstado());
+  }
 
   private readonly termoBusca = computed(() => this.busca().trim().toLowerCase());
 
@@ -492,6 +540,138 @@ export class ComprasPage {
     this.carrinho.set([]);
     this.amplificadores.set([]);
     this.painelAbertos.set(new Set());
+  }
+
+  // === Exportar/importar por código e persistência (m1-11) ===
+  protected abrirModalExportarCodigo(): void {
+    this.codigoExportado.set(this.exportarCarrinho());
+    this.copiadoComSucesso.set(false);
+    this.modalExportarAberto.set(true);
+  }
+
+  protected fecharModalExportar(): void {
+    this.modalExportarAberto.set(false);
+  }
+
+  protected async copiarCodigoCarrinho(): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(this.codigoExportado());
+      this.copiadoComSucesso.set(true);
+    } catch {
+      this.copiadoComSucesso.set(false);
+    }
+  }
+
+  protected abrirModalImportar(): void {
+    this.codigoImportarTexto.set('');
+    this.erroImportar.set(null);
+    this.modalImportarAberto.set(true);
+  }
+
+  protected fecharModalImportar(): void {
+    this.modalImportarAberto.set(false);
+  }
+
+  protected aoDigitarCodigoImportar(evento: Event): void {
+    this.codigoImportarTexto.set((evento.target as HTMLTextAreaElement).value);
+  }
+
+  protected confirmarImportarCarrinho(): void {
+    const importado = this.importarCarrinho(this.codigoImportarTexto());
+    if (!importado) {
+      this.erroImportar.set(
+        'Código inválido ou incompatível. Confira se copiou o código completo.',
+      );
+      return;
+    }
+    this.modalImportarAberto.set(false);
+  }
+
+  /** Serializa o estado atual num código copiável (`CRPG-COMPRAS-V1:<base64>`). */
+  private exportarCarrinho(): string {
+    const estado: EstadoCarrinhoPersistidoV1 = {
+      versao: 1,
+      recursos: this.formulario.getRawValue(),
+      carrinho: this.carrinho(),
+      amplificadores: this.amplificadores(),
+    };
+    return PREFIXO_CODIGO_EXPORTACAO + btoa(encodeURIComponent(JSON.stringify(estado)));
+  }
+
+  /** Reconstrói o carrinho a partir de um código exportado. `false` se inválido/incompatível. */
+  private importarCarrinho(codigo: string): boolean {
+    const texto = codigo.trim();
+    if (!texto.startsWith(PREFIXO_CODIGO_EXPORTACAO)) {
+      return false;
+    }
+    const estado = this.decodificarEstado(texto.slice(PREFIXO_CODIGO_EXPORTACAO.length));
+    if (!estado) {
+      return false;
+    }
+    this.aplicarEstado(estado);
+    return true;
+  }
+
+  private decodificarEstado(base64: string): EstadoCarrinhoPersistidoV1 | null {
+    try {
+      const estado = JSON.parse(decodeURIComponent(atob(base64))) as EstadoCarrinhoPersistidoV1;
+      return this.validarEstado(estado) ? estado : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private validarEstado(estado: unknown): estado is EstadoCarrinhoPersistidoV1 {
+    if (typeof estado !== 'object' || estado === null) {
+      return false;
+    }
+    const candidato = estado as Partial<EstadoCarrinhoPersistidoV1>;
+    return (
+      candidato.versao === 1 &&
+      typeof candidato.recursos?.dinheiro === 'number' &&
+      typeof candidato.recursos?.prestigio === 'number' &&
+      typeof candidato.recursos?.inventario === 'number' &&
+      typeof candidato.recursos?.vontade === 'number' &&
+      Array.isArray(candidato.carrinho) &&
+      Array.isArray(candidato.amplificadores)
+    );
+  }
+
+  private aplicarEstado(estado: EstadoCarrinhoPersistidoV1): void {
+    this.formulario.patchValue(estado.recursos);
+    this.carrinho.set(estado.carrinho);
+    this.amplificadores.set(estado.amplificadores);
+    this.painelAbertos.set(new Set());
+    this.uidContador = estado.carrinho.reduce((maximo, item) => Math.max(maximo, item.uid + 1), 0);
+  }
+
+  private carregarEstado(): EstadoCarrinhoPersistidoV1 | null {
+    if (typeof localStorage === 'undefined') {
+      return null;
+    }
+    const bruto = localStorage.getItem(CHAVE_LOCALSTORAGE);
+    if (!bruto) {
+      return null;
+    }
+    try {
+      const estado = JSON.parse(bruto) as EstadoCarrinhoPersistidoV1;
+      return this.validarEstado(estado) ? estado : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private salvarEstado(): void {
+    if (typeof localStorage === 'undefined') {
+      return;
+    }
+    const estado: EstadoCarrinhoPersistidoV1 = {
+      versao: 1,
+      recursos: this.recursos(),
+      carrinho: this.carrinho(),
+      amplificadores: this.amplificadores(),
+    };
+    localStorage.setItem(CHAVE_LOCALSTORAGE, JSON.stringify(estado));
   }
 
   // === Construção de view-models ===

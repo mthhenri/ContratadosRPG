@@ -180,6 +180,15 @@
       <span class="calc-cartao__indice">4</span>
       <h2 class="calc-cartao__titulo">Carrinho</h2>
       <span class="calc-cartao__regua"></span>
+      <button type="button" class="compras-limpar" (click)="abrirModalImportar()">Importar</button>
+      <button
+        type="button"
+        class="compras-limpar"
+        [disabled]="carrinhoVazio()"
+        (click)="abrirModalExportarCodigo()"
+      >
+        Exportar
+      </button>
       <button type="button" class="compras-limpar" [disabled]="carrinhoVazio()" (click)="esvaziarCarrinho()">
         Esvaziar
       </button>
@@ -348,4 +357,60 @@
       </div>
     }
   </section>
+
+  <!-- MODAL: EXPORTAR CÓDIGO -->
+  @if (modalExportarAberto()) {
+    <div class="compras-modal-fundo">
+      <div class="compras-modal">
+        <h3 class="compras-modal__titulo">Exportar Carrinho</h3>
+        <p class="compras-modal__texto">
+          Copie o código abaixo para importar este carrinho depois ou em outro dispositivo.
+        </p>
+        <textarea
+          class="compras-modal__codigo"
+          readonly
+          aria-label="Código do carrinho exportado"
+          [value]="codigoExportado()"
+        ></textarea>
+        <div class="compras-modal__acoes">
+          <button type="button" class="compras-btn compras-btn--adicionar" (click)="copiarCodigoCarrinho()">
+            {{ copiadoComSucesso() ? 'Copiado!' : 'Copiar Código' }}
+          </button>
+          <button type="button" class="compras-btn compras-btn--remover" (click)="fecharModalExportar()">
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: IMPORTAR CÓDIGO -->
+  @if (modalImportarAberto()) {
+    <div class="compras-modal-fundo">
+      <div class="compras-modal">
+        <h3 class="compras-modal__titulo">Importar Carrinho</h3>
+        <p class="compras-modal__texto">
+          Cole abaixo um código exportado por esta calculadora. Códigos do site antigo
+          (contratados-calculadora) não são compatíveis com este formato.
+        </p>
+        <textarea
+          class="compras-modal__codigo"
+          placeholder="Cole o código aqui…"
+          [value]="codigoImportarTexto()"
+          (input)="aoDigitarCodigoImportar($event)"
+        ></textarea>
+        @if (erroImportar()) {
+          <p class="compras-modal__erro">{{ erroImportar() }}</p>
+        }
+        <div class="compras-modal__acoes">
+          <button type="button" class="compras-btn compras-btn--adicionar" (click)="confirmarImportarCarrinho()">
+            Importar
+          </button>
+          <button type="button" class="compras-btn compras-btn--remover" (click)="fecharModalImportar()">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 </div>

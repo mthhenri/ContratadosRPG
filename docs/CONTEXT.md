@@ -1,6 +1,6 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-10 — página compras: catálogo, carrinho, mods e amplificadores).
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-11 — persistência e exportar/importar do carrinho de compras).
 
 ---
 
@@ -36,7 +36,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | # | Milestone | Status |
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, core/, pipelines, deploy) | **concluído** (deploy nativo Render+Cloudflare; setup das plataformas em `docs/DEPLOY.md`) |
-| M1 | Calculadora com paridade | **em andamento** (10/14 tasks — `m1-01` a `m1-10` concluídas) |
+| M1 | Calculadora com paridade | **em andamento** (11/14 tasks — `m1-01` a `m1-11` concluídas) |
 | M2 | Auth + Campanhas | backlog |
 | M3 | Ficha de Jogador | backlog |
 | M4 | Ficha de Criatura/NPC | backlog |
@@ -60,7 +60,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | frontend (shell) | **pronto** (topbar + `router-outlet` via `shared/layout`, home consumindo `/health`, tema "Terminal de Contenção" dark-first via `docs/design`) |
 | frontend/tema | **pronto** (tokens + base + `ContencaoPreset` PrimeNG em `src/styles/tema/`; troca de accent em runtime é M1). **Tailwind instalado e integrado ao build** (m1-06): `frontend/tailwind.config.ts` mescla o `theme.extend` do handoff (`docs/design/tema/tailwind.config.ts`) apontando cores/fontes/raios utilitários para as CSS custom properties dos tokens; diretivas `@tailwind` no fim de `styles.scss`, coexistindo com SCSS + tokens (preflight não sobrescreve a identidade — só reset) |
 | frontend/core (interceptors + services) | **pronto** (`loading`/`error-handler` interceptors, `LoadingService`, `HealthService`) |
-| frontend/calculadora | **6 abas prontas (paridade da calculadora completa)**. Fundação (m1-06): módulo `modules/calculadora/` com 6 rotas públicas **lazy** — `agente`/`dt`/`novo-agente`/`patente`/`descanso`/`compras` — sob o `CalculadoraShell` (navegação de abas + deep-link por rota via `routerLink`/`routerLinkActive`, paridade com o `switchTab`/`VALID_TABS` por hash do site antigo) e o `StepInput` (stepper/input numérico reutilizável, `ControlValueAccessor` + Reactive Forms, sem `ngModel`). **Aba `agente` (m1-07):** carro-chefe — `AgentePage` (Reactive Forms + Signals) consumindo `shared/regras/agente` para **todas** as stats. **Abas leves `dt`/`novo-agente`/`patente` (m1-08):** três páginas Reactive Forms + Signals consumindo `shared/regras/{dt,novo-agente,patente}`, reusando o `StepInput` e os tokens/BEM do tema; rótulos de `PatenteEnum`/`MotivoEntradaAgenteEnum`→pt-BR em `modules/calculadora/rotulos.ts` (formatação de UI). **Aba `descanso` (m1-09):** `DescansoPage` (Reactive Forms + Signals) consumindo `shared/regras/descanso` — faixa determinística + **rolagem animada** (scramble via `requestAnimationFrame`, RNG por `rolarDados`). **Aba `compras` (m1-10):** `ComprasPage` — a mais pesada: configuração do agente (4 steppers), resumo de limites/gastos, catálogo com busca/categorias e o carrinho com itens, modificações (painel + empilhamentos) e amplificadores; estado em **Signals**, todos os números vindos de `shared/regras/compras` (`calcularResumoCompras`/`calcularStatItem`/custos). Todas as 6 abas concluídas (persistência/export do carrinho fica p/ m1-11) |
+| frontend/calculadora | **6 abas prontas (paridade da calculadora completa)**. Fundação (m1-06): módulo `modules/calculadora/` com 6 rotas públicas **lazy** — `agente`/`dt`/`novo-agente`/`patente`/`descanso`/`compras` — sob o `CalculadoraShell` (navegação de abas + deep-link por rota via `routerLink`/`routerLinkActive`, paridade com o `switchTab`/`VALID_TABS` por hash do site antigo) e o `StepInput` (stepper/input numérico reutilizável, `ControlValueAccessor` + Reactive Forms, sem `ngModel`). **Aba `agente` (m1-07):** carro-chefe — `AgentePage` (Reactive Forms + Signals) consumindo `shared/regras/agente` para **todas** as stats. **Abas leves `dt`/`novo-agente`/`patente` (m1-08):** três páginas Reactive Forms + Signals consumindo `shared/regras/{dt,novo-agente,patente}`, reusando o `StepInput` e os tokens/BEM do tema; rótulos de `PatenteEnum`/`MotivoEntradaAgenteEnum`→pt-BR em `modules/calculadora/rotulos.ts` (formatação de UI). **Aba `descanso` (m1-09):** `DescansoPage` (Reactive Forms + Signals) consumindo `shared/regras/descanso` — faixa determinística + **rolagem animada** (scramble via `requestAnimationFrame`, RNG por `rolarDados`). **Aba `compras` (m1-10):** `ComprasPage` — a mais pesada: configuração do agente (4 steppers), resumo de limites/gastos, catálogo com busca/categorias e o carrinho com itens, modificações (painel + empilhamentos) e amplificadores; estado em **Signals**, todos os números vindos de `shared/regras/compras` (`calcularResumoCompras`/`calcularStatItem`/custos). **Persistência e exportar/importar (m1-11):** `effect()` salva carrinho/amplificadores/recursos em `localStorage` a cada mudança e recarrega na construção da página; modais de exportar (código `CRPG-COMPRAS-V1:<base64>`) e importar, com aviso de incompatibilidade com códigos do site antigo. Todas as 6 abas concluídas com paridade completa |
 | frontend/campanha | não iniciado |
 | frontend/ficha | não iniciado |
 | Infra — banco local (Docker + Knex) | **pronto** (Postgres 16 + migrations) |
@@ -69,10 +69,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 
 ## Próxima Task
 
-**m1-11-compras-persistencia-carrinho** (`docs/specs/backlog/m1-11-compras-persistencia-carrinho.spec.md`).
-Persistência do carrinho da aba `compras` em `localStorage` + export/import por código compartilhável
-(o estado do carrinho já existe em Signals na `ComprasPage` desde a m1-10; aqui só se adiciona
-persistir/serializar). **Ler `docs/design/DESIGN.md` antes de qualquer UI.**
+**m1-12-conteudo-ajuda** (`docs/specs/backlog/m1-12-conteudo-ajuda.spec.md`).
 Milestone completo
 (`docs/specs/backlog/m1-calculadora-paridade.spec.md`): extrai as regras do jogo do site antigo
 (`contratados-calculadora/src/script.js`) para `shared/regras` e entrega as 6 páginas públicas client-side
@@ -84,6 +81,41 @@ da calculadora, além do sistema de troca de tema em runtime (presets + color pi
 
 ## Implementado
 
+- **m1-11-compras-persistencia-carrinho** (2026-07-05): fecha a paridade da aba `compras` —
+  persistência e exportar/importar por código, últimos entregáveis do milestone antes de
+  `m1-12`/`m1-13`/`m1-14`. **Persistência em `localStorage`:** um `effect()` no construtor da
+  `ComprasPage` observa `carrinho`/`amplificadores`/`recursos` (form) e grava o estado a cada
+  mudança na chave `contratados-rpg:calculadora-compras`; o construtor tenta carregar esse
+  estado antes de qualquer outra inicialização — o carrinho sobrevive a reload/reabertura sem
+  nenhuma ação do usuário. **Exportar/importar por código compartilhável:** dois modais novos
+  (`abrirModalExportarCodigo`/`abrirModalImportar`, fechados por botão — sem clique-fora, para
+  não acionar `click-events-have-key-events`/`interactive-supports-focus` do lint de
+  acessibilidade) — exportar serializa `{ versao: 1, recursos, carrinho, amplificadores }` em
+  `JSON.stringify` → `encodeURIComponent` → `btoa`, prefixado `CRPG-COMPRAS-V1:`
+  (`copiarCodigoCarrinho` usa `navigator.clipboard`); importar reverte a decodificação,
+  valida a forma do objeto (`versao === 1` + tipos dos 4 campos de `recursos` + `carrinho`/
+  `amplificadores` como array) e só então aplica via `aplicarEstado` (também usado pelo load
+  do `localStorage`), recalculando `uidContador` a partir do maior `uid` importado para não
+  colidir com itens adicionados depois. **Compatibilidade com códigos do site antigo —
+  quebra documentada (critério de aceite cumprido pela via da exceção):** o
+  `contratados-calculadora/src/script.js` não está neste repositório (não foi migrado nem
+  está disponível para inspeção), então o formato de serialização original não pôde ser
+  conferido nem replicado; o novo formato (`CRPG-COMPRAS-V1:`) é uma serialização própria,
+  incompatível por construção, e a UI de importação avisa isso explicitamente no texto do
+  modal ("Códigos do site antigo... não são compatíveis com este formato"). **Sem lógica de
+  jogo nova** — só serialização de estado da página, fora do escopo de `shared/regras`
+  (que continua intocado desde a m1-05/m1-10). `compras.page.spec.ts` ganhou 2 testes: um
+  round-trip de persistência (adicionar item → remontar a página → item e gasto
+  preservados) e um round-trip de exportar/importar (exportar em uma instância, limpar o
+  `localStorage`, importar o código numa segunda instância, mesmo gasto/item reproduzidos);
+  os testes existentes ganharam `beforeEach`/`afterEach` limpando o `localStorage` (evita
+  vazamento de estado entre `it`s) e a função `montar()` ganhou `TestBed.resetTestingModule()`
+  + `await fixture.whenStable()` (necessário porque agora há dois `montar()` no mesmo teste e
+  porque o `effect()` de salvar é assíncrono — sem o `whenStable()` o segundo `montar()` podia
+  ler o `localStorage` antes do `effect()` gravar). **Validado:** `lint --workspace=frontend`
+  limpo; `test --workspace=frontend` **32/32** (30 anteriores + 2 novos); `build
+  --workspace=frontend` verde sem avisos de budget de estilo (SCSS do modal ficou dentro do
+  budget elevado de 8/12 kB definido na m1-10).
 - **m1-10-pagina-compras** (2026-07-05): a aba `compras` da calculadora — **a mais pesada** — com paridade
   funcional à aba `compras` do site antigo (`renderCmpSummary`/`renderCmpCatalog`/`renderCmpCart`/
   `computeItemStat`/`getCmpTotals`). **Zero regra de jogo no front**: limites de patente, custo/peso de

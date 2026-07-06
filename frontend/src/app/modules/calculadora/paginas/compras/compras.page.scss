@@ -461,3 +461,61 @@
     margin-top: 8px;
   }
 }
+
+// === Modais de exportar/importar (m1-11) ===
+.compras-modal-fundo {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 20;
+}
+.compras-modal {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-card);
+  padding: var(--pad-card);
+  max-width: 460px;
+  width: 100%;
+
+  &__titulo {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text);
+    margin: 0 0 10px;
+  }
+  &__texto {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--text-dim);
+    margin: 0 0 12px;
+  }
+  &__codigo {
+    width: 100%;
+    min-height: 90px;
+    resize: vertical;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 10px;
+    outline: none;
+  }
+  &__erro {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    color: var(--accent);
+    margin: 8px 0 0;
+  }
+  &__acoes {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+}

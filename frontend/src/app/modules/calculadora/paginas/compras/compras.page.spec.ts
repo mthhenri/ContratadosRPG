@@ -8,10 +8,15 @@ import { ComprasPage } from './compras.page';
  * (`calcularResumoCompras`/`calcularStatItem`/custos). Os números conferem com a m1-05.
  */
 describe('ComprasPage', () => {
+  beforeEach(() => localStorage.clear());
+  afterEach(() => localStorage.clear());
+
   async function montar() {
+    TestBed.resetTestingModule();
     await TestBed.configureTestingModule({ imports: [ComprasPage] }).compileComponents();
     const fixture = TestBed.createComponent(ComprasPage);
     fixture.detectChanges();
+    await fixture.whenStable();
     return { fixture, raiz: fixture.nativeElement as HTMLElement };
   }
 
@@ -95,5 +100,48 @@ describe('ComprasPage', () => {
     expect(statResumo(raiz, 'Gasto Total')).toBe('$3.000');
     expect(statResumo(raiz, 'Amplificadores')).toBe('1 / 3');
     expect(raiz.querySelector('.compras-amps-carrinho__cabecalho')?.textContent).toContain('1/3');
+  });
+
+  it('persiste o carrinho no localStorage e recarrega ao remontar a página (m1-11)', async () => {
+    const primeira = await montar();
+    adicionarItem(primeira.raiz, 'Leve');
+    primeira.fixture.detectChanges();
+    await primeira.fixture.whenStable();
+    expect(statResumo(primeira.raiz, 'Gasto Total')).toBe('$500');
+
+    const segunda = await montar();
+    expect(statResumo(segunda.raiz, 'Gasto Total')).toBe('$500');
+    const item = segunda.raiz.querySelector('.compras-carrinho-item');
+    expect(item?.querySelector('.compras-carrinho-item__nome')?.textContent).toContain('Leve');
+  });
+
+  it('exporta um código e importa em outra instância reproduzindo o mesmo carrinho (m1-11)', async () => {
+    const origem = await montar();
+    adicionarItem(origem.raiz, 'Leve');
+    origem.fixture.detectChanges();
+
+    clicarPorTexto(origem.raiz, '.compras-limpar', 'Exportar');
+    origem.fixture.detectChanges();
+    const codigo = (
+      origem.raiz.querySelector('.compras-modal__codigo[readonly]') as HTMLTextAreaElement
+    ).value;
+    expect(codigo.startsWith('CRPG-COMPRAS-V1:')).toBe(true);
+
+    localStorage.clear();
+    const destino = await montar();
+    clicarPorTexto(destino.raiz, '.compras-limpar', 'Importar');
+    destino.fixture.detectChanges();
+    const textareaImportar = destino.raiz.querySelector(
+      '.compras-modal__codigo:not([readonly])',
+    ) as HTMLTextAreaElement;
+    textareaImportar.value = codigo;
+    textareaImportar.dispatchEvent(new Event('input'));
+    destino.fixture.detectChanges();
+    clicarPorTexto(destino.raiz, '.compras-btn--adicionar', 'Importar');
+    destino.fixture.detectChanges();
+
+    expect(statResumo(destino.raiz, 'Gasto Total')).toBe('$500');
+    const item = destino.raiz.querySelector('.compras-carrinho-item');
+    expect(item?.querySelector('.compras-carrinho-item__nome')?.textContent).toContain('Leve');
   });
 });
