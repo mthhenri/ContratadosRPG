@@ -84,17 +84,18 @@
 }
 
 // === Resultado em destaque ===
+// Cor do tema (accent trocável em runtime) — acompanha a identidade selecionada.
 .calc-resultado {
   margin-top: 16px;
   padding: 18px 16px;
-  border: 1px solid color-mix(in srgb, var(--positive) 30%, transparent);
+  border: 1px solid var(--accent-border);
   border-radius: var(--radius-control);
-  background: color-mix(in srgb, var(--positive) 6%, transparent);
+  background: var(--accent-dim);
   text-align: center;
   font-family: var(--font-mono);
   font-size: 34px;
   font-weight: 700;
-  color: var(--positive);
+  color: var(--accent);
   line-height: 1;
 }
 
@@ -139,6 +140,7 @@
   }
 
   &__celula-valor {
-    color: var(--positive);
+    // Valores da tabela na cor do tema (accent trocável), como o resultado da fórmula.
+    color: var(--accent);
   }
 }

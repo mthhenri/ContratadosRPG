@@ -2,6 +2,8 @@
 // com o valor central adaptado de <div> para <input type="number"> (digitação direta) —
 // spinners nativos removidos, fundo/borda transparentes para herdar o visual do bloco.
 // Consome apenas tokens do tema; as sobreposições rgba(255,255,255,…) vêm do bloco canônico.
+@use 'tema/breakpoints' as bp;
+
 .stepper {
   display: flex;
   align-items: stretch;
@@ -19,6 +21,12 @@
     font-family: var(--font-mono);
     line-height: 1;
     cursor: pointer;
+
+    // Alvo de toque confortável no mobile sem inchar a densidade do desktop.
+    @include bp.mobile {
+      width: bp.$alvo-toque;
+      font-size: 20px;
+    }
 
     &:hover:not(:disabled) {
       background: rgba(255, 255, 255, 0.05);
@@ -44,6 +52,11 @@
     background: transparent;
     border: 0;
     border-inline: 1px solid rgba(255, 255, 255, 0.08);
+
+    @include bp.mobile {
+      padding: 12px 0;
+      font-size: 20px;
+    }
     outline: none;
     appearance: textfield;
     -moz-appearance: textfield;

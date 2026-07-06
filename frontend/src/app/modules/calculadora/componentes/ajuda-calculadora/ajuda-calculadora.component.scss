@@ -60,6 +60,9 @@
   padding: var(--pad-card);
   max-width: 480px;
   width: 100%;
+  // O guia pode ser longo: nunca ultrapassar a viewport — rolar por dentro da caixa.
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
 
   &__cabecalho {
     display: flex;

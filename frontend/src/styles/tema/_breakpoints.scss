@@ -1,0 +1,23 @@
+// _breakpoints.scss
+// Estratégia responsiva do tema "Terminal de Contenção" (m1-15) — fonte única dos
+// breakpoints da calculadora. Componentes fazem `@use 'tema/breakpoints' as bp;` (resolvido
+// via stylePreprocessorOptions.includePaths em angular.json) e chamam `@include bp.mobile`.
+//
+// Por que Sass e não CSS custom property: media queries são avaliadas em tempo de
+// compilação e NÃO conseguem ler `var(--…)` na condição. Logo o breakpoint é um token
+// Sass ($bp-mobile), garantindo "nenhum valor mágico de largura duplicado por arquivo"
+// sem violar a proibição #29 (que trata de cor/fonte/raio, não de breakpoint estrutural).
+//
+// Alvo: telas ~360–430px em retrato. 560px cobre celulares e tablets pequenos em uma faixa
+// só, mantendo o layout de desktop intacto acima disso.
+
+$bp-mobile: 560px;
+
+// Alvo de toque confortável (WCAG 2.5.5 / diretrizes de mobile): 44px.
+$alvo-toque: 44px;
+
+@mixin mobile {
+  @media (max-width: $bp-mobile) {
+    @content;
+  }
+}

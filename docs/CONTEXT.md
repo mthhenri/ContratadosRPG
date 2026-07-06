@@ -1,6 +1,6 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-06 (m1-14 — verificação de paridade da calculadora, checagem de "sem duplicação" e fechamento de código do M1; deploy Cloudflare + arquivamento do repo antigo restam como passos operacionais de plataforma).
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-06 (m1-15 — refinamento mobile das 6 abas + shell + painéis da calculadora, estratégia responsiva dirigida por token, sem tocar em regra de jogo). Sessão anterior no mesmo dia: m1-14 — verificação de paridade e fechamento de código do M1; deploy Cloudflare + arquivamento do repo antigo restam como passos operacionais de plataforma.
 
 ---
 
@@ -36,7 +36,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | # | Milestone | Status |
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, core/, pipelines, deploy) | **concluído** (deploy nativo Render+Cloudflare; setup das plataformas em `docs/DEPLOY.md`) |
-| M1 | Calculadora com paridade | **paridade concluída no código** (14/14 tasks — `m1-01` a `m1-14`); 1 task de refinamento **no backlog**: `m1-15-refinamento-mobile-calculadora` (UI/UX mobile). Restam 2 passos operacionais de plataforma: publicar a Cloudflare Pages e arquivar o repo antigo no GitHub (ver `docs/PARIDADE-M1.md`) |
+| M1 | Calculadora com paridade | **concluído no código** (15/15 tasks — `m1-01` a `m1-15`, incluindo o refinamento mobile). Restam 2 passos operacionais de plataforma: publicar a Cloudflare Pages e arquivar o repo antigo no GitHub (ver `docs/PARIDADE-M1.md`) |
 | M2 | Auth + Campanhas | backlog |
 | M3 | Ficha de Jogador | backlog |
 | M4 | Ficha de Criatura/NPC | backlog |
@@ -60,7 +60,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | frontend (shell) | **pronto** (topbar + `router-outlet` via `shared/layout`, home consumindo `/health`, tema "Terminal de Contenção" dark-first via `docs/design`). Em **dev** a aba do navegador recebe sufixo "- DEV" (`provideAppInitializer` no `app.config.ts`, gated por `!environment.producao`; produção mantém o `<title>` do `index.html`) |
 | frontend/tema | **pronto + troca em runtime (m1-13)** (tokens + base + `ContencaoPreset` PrimeNG em `src/styles/tema/`). **Sistema de tema em runtime (m1-13):** `TemaService` (`core/services/tema.service.ts`) é a contraparte em runtime de `_tokens.scss` para a parte trocável — escreve `--accent` (e overrides de base clara) em `<html>`, alterna a classe `.dark` e regenera a paleta primária do PrimeNG (`updatePrimaryPalette`/`palette`); 4 presets de accent (só cores da paleta do tema — vermelho/azul/verde/âmbar), base clara/escura e color picker custom com **trava de contraste WCAG** (`razaoContraste`/`luminanciaRelativa`, piso 3:1 vs superfície); persiste em `localStorage` e restaura no boot via `provideAppInitializer`. Painel `ConfiguracoesTema` (`shared/configuracoes-tema/`) na topbar (gatilho + modal, fecha por botão). Budget inicial elevado p/ 560 kB (o motor de paleta do `@primeuix/themes` entra no bundle inicial). **Tailwind instalado e integrado ao build** (m1-06): `frontend/tailwind.config.ts` mescla o `theme.extend` do handoff (`docs/design/tema/tailwind.config.ts`) apontando cores/fontes/raios utilitários para as CSS custom properties dos tokens; diretivas `@tailwind` no fim de `styles.scss`, coexistindo com SCSS + tokens (preflight não sobrescreve a identidade — só reset) |
 | frontend/core (interceptors + services) | **pronto** (`loading`/`error-handler` interceptors, `LoadingService`, `HealthService`) |
-| frontend/calculadora | **6 abas prontas (paridade da calculadora completa)**. Fundação (m1-06): módulo `modules/calculadora/` com 6 rotas públicas **lazy** — `agente`/`dt`/`novo-agente`/`patente`/`descanso`/`compras` — sob o `CalculadoraShell` (navegação de abas + deep-link por rota via `routerLink`/`routerLinkActive`, paridade com o `switchTab`/`VALID_TABS` por hash do site antigo) e o `StepInput` (stepper/input numérico reutilizável, `ControlValueAccessor` + Reactive Forms, sem `ngModel`). **Aba `agente` (m1-07):** carro-chefe — `AgentePage` (Reactive Forms + Signals) consumindo `shared/regras/agente` para **todas** as stats. **Abas leves `dt`/`novo-agente`/`patente` (m1-08):** três páginas Reactive Forms + Signals consumindo `shared/regras/{dt,novo-agente,patente}`, reusando o `StepInput` e os tokens/BEM do tema; rótulos de `PatenteEnum`/`MotivoEntradaAgenteEnum`→pt-BR em `modules/calculadora/rotulos.ts` (formatação de UI). **Aba `descanso` (m1-09):** `DescansoPage` (Reactive Forms + Signals) consumindo `shared/regras/descanso` — faixa determinística + **rolagem animada** (scramble via `requestAnimationFrame`, RNG por `rolarDados`). **Aba `compras` (m1-10):** `ComprasPage` — a mais pesada: configuração do agente (4 steppers), resumo de limites/gastos, catálogo com busca/categorias e o carrinho com itens, modificações (painel + empilhamentos) e amplificadores; estado em **Signals**, todos os números vindos de `shared/regras/compras` (`calcularResumoCompras`/`calcularStatItem`/custos). **Persistência e exportar/importar (m1-11):** `effect()` salva carrinho/amplificadores/recursos em `localStorage` a cada mudança e recarrega na construção da página; modais de exportar (código `CRPG-COMPRAS-V1:<base64>`) e importar, com aviso de incompatibilidade com códigos do site antigo. **Ajuda por aba (m1-12):** componente único `AjudaCalculadora` (`componentes/ajuda-calculadora/`) — gatilho "? Ajuda" + modal — embutido nas 6 páginas via input signal `aba`; o texto (guia de "como usar cada página") vive em `CONTEUDO_AJUDA`, keyed por aba, sem duplicação. Todas as 6 abas concluídas com paridade completa. **Verificação de paridade + "sem duplicação" (m1-14):** achado corrigido — `compras.page.ts` recalculava custo/penalidade de amplificador com constantes de regra embutidas (`3000/1000/2`) → passou a consumir `calcularCustoAmplificador` + `PENALIDADE_VONTADE_POR_EMPILHAMENTO` de `shared/regras/compras` (zero constante de regra no front). **Cor da stat Vida** (abas agente/descanso) desacoplada do `--accent` trocável: novo token fixo `--vida`/`--vida-border` (vermelho da identidade) em `_tokens.scss` (front + `docs/design/tema/`) — Vida permanece vermelha mesmo com accent trocado no tema em runtime |
+| frontend/calculadora | **6 abas prontas (paridade da calculadora completa)**. Fundação (m1-06): módulo `modules/calculadora/` com 6 rotas públicas **lazy** — `agente`/`dt`/`novo-agente`/`patente`/`descanso`/`compras` — sob o `CalculadoraShell` (navegação de abas + deep-link por rota via `routerLink`/`routerLinkActive`, paridade com o `switchTab`/`VALID_TABS` por hash do site antigo) e o `StepInput` (stepper/input numérico reutilizável, `ControlValueAccessor` + Reactive Forms, sem `ngModel`). **Aba `agente` (m1-07):** carro-chefe — `AgentePage` (Reactive Forms + Signals) consumindo `shared/regras/agente` para **todas** as stats. **Abas leves `dt`/`novo-agente`/`patente` (m1-08):** três páginas Reactive Forms + Signals consumindo `shared/regras/{dt,novo-agente,patente}`, reusando o `StepInput` e os tokens/BEM do tema; rótulos de `PatenteEnum`/`MotivoEntradaAgenteEnum`→pt-BR em `modules/calculadora/rotulos.ts` (formatação de UI). **Aba `descanso` (m1-09):** `DescansoPage` (Reactive Forms + Signals) consumindo `shared/regras/descanso` — faixa determinística + **rolagem animada** (scramble via `requestAnimationFrame`, RNG por `rolarDados`). **Aba `compras` (m1-10):** `ComprasPage` — a mais pesada: configuração do agente (4 steppers), resumo de limites/gastos, catálogo com busca/categorias e o carrinho com itens, modificações (painel + empilhamentos) e amplificadores; estado em **Signals**, todos os números vindos de `shared/regras/compras` (`calcularResumoCompras`/`calcularStatItem`/custos). **Persistência e exportar/importar (m1-11):** `effect()` salva carrinho/amplificadores/recursos em `localStorage` a cada mudança e recarrega na construção da página; modais de exportar (código `CRPG-COMPRAS-V1:<base64>`) e importar, com aviso de incompatibilidade com códigos do site antigo. **Ajuda por aba (m1-12):** componente único `AjudaCalculadora` (`componentes/ajuda-calculadora/`) — gatilho "? Ajuda" + modal — embutido nas 6 páginas via input signal `aba`; o texto (guia de "como usar cada página") vive em `CONTEUDO_AJUDA`, keyed por aba, sem duplicação. Todas as 6 abas concluídas com paridade completa. **Verificação de paridade + "sem duplicação" (m1-14):** achado corrigido — `compras.page.ts` recalculava custo/penalidade de amplificador com constantes de regra embutidas (`3000/1000/2`) → passou a consumir `calcularCustoAmplificador` + `PENALIDADE_VONTADE_POR_EMPILHAMENTO` de `shared/regras/compras` (zero constante de regra no front). **Cor da stat Vida** (abas agente/descanso) desacoplada do `--accent` trocável: novo token fixo `--vida`/`--vida-border` (vermelho da identidade) em `_tokens.scss` (front + `docs/design/tema/`) — Vida permanece vermelha mesmo com accent trocado no tema em runtime. **Refinamento mobile (m1-15):** estratégia responsiva dirigida por token — `src/styles/tema/_breakpoints.scss` (`$bp-mobile: 560px` + mixin `mobile` + `$alvo-toque: 44px`, resolvido via `stylePreprocessorOptions.includePaths` em `angular.json`); a densidade mobile vem de **override dos tokens** `--pad-card`/`--gap-grid` num `@media` no `styles.scss` (reflui todos os cards/grids de uma vez, sem valor mágico por arquivo); trava de scroll horizontal via `overflow-x: clip` em `html`/`.conteudo`. Abas do shell viram **barra flutuante fixa no rodapé** no mobile (ícone sobre rótulo, 6 itens distribuídos, deep-link preservado, área segura do iOS + espaço reservado no conteúdo); alvos de toque de 44px no `StepInput`, chips de categoria, mini-botões e controles do painel de tema; os 3 modais (ajuda/tema/exportar-importar) ganham `max-height` + rolagem interna. As 6 grades já refluem por `auto-fit`/`auto-fill minmax`. Verificação responsiva (360/390/430px) na §6 de `docs/PARIDADE-M1.md`. **Sem regra de jogo** (`shared`/`shared/regras` intocados) |
 | frontend/campanha | não iniciado |
 | frontend/ficha | não iniciado |
 | Infra — banco local (Docker + Knex) | **pronto** (Postgres 16 + migrations) |
@@ -69,13 +69,12 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 
 ## Próxima Task
 
-**Paridade do M1 concluída no código.** Há uma task de refinamento no backlog,
-`m1-15-refinamento-mobile-calculadora.spec.md` (otimização de UI/UX mobile das 6 abas + shell
-+ painéis) — pode ser feita antes ou em paralelo à próxima frente. A próxima frente maior é o
-**M2 — Auth + Campanhas** (`docs/specs/backlog/m2-auth-campanhas.spec.md`), ainda a ser quebrado
-em tasks numeradas (`m2-01-*.spec.md`, …) antes da implementação — os milestones M2–M5 já trazem
-uma task de refinamento mobile no escopo. Os specs de milestone concluídos (`m0-fundacao`,
-`m1-calculadora-paridade`) e todas as tasks `m0-*`/`m1-*` já entregues estão em `docs/specs/done/`.
+**M1 concluído no código** (paridade + refinamento mobile — 15/15 tasks). A próxima frente
+maior é o **M2 — Auth + Campanhas** (`docs/specs/backlog/m2-auth-campanhas.spec.md`), ainda a
+ser quebrado em tasks numeradas (`m2-01-*.spec.md`, …) antes da implementação — os milestones
+M2–M5 já trazem uma task de refinamento mobile no escopo. Os specs de milestone concluídos
+(`m0-fundacao`, `m1-calculadora-paridade`) e todas as tasks `m0-*`/`m1-*` já entregues estão em
+`docs/specs/done/`.
 
 > **Passos operacionais pendentes (plataforma, não bloqueiam código — ver `docs/PARIDADE-M1.md`):**
 > 1. **Cloudflare Pages no ar:** conectar a Pages ao Git com **branch de produção `master`**
@@ -85,6 +84,48 @@ uma task de refinamento mobile no escopo. Os specs de milestone concluídos (`m0
 
 ## Implementado
 
+- **m1-15-refinamento-mobile-calculadora** (2026-07-06): task de refinamento do M1 —
+  otimização da UI/UX **mobile** das 6 abas, do shell e dos painéis, sem tocar em regra de
+  jogo (`shared`/`shared/regras` intocados; nenhuma mudança de DOM/TS, só SCSS + `angular.json`,
+  então os 54 testes de front seguem verdes sem edição). **Estratégia responsiva de fonte
+  única:** novo `frontend/src/styles/tema/_breakpoints.scss` (`$bp-mobile: 560px`, mixin
+  `mobile`, `$alvo-toque: 44px`) — media queries são compile-time e não leem `var(--…)`, por
+  isso o breakpoint é token **Sass**, não CSS custom property; resolvido por bare import
+  (`@use 'tema/breakpoints'`) via `stylePreprocessorOptions.includePaths: ["src/styles"]`
+  adicionado ao `angular.json`. Nenhuma largura mágica repetida por arquivo. **Densidade mobile
+  por override de token:** um `@media (max-width: 560px)` no `styles.scss` reduz `--pad-card`
+  15px e `--gap-grid` 12px no `:root` — como todos os cards/grids consomem esses tokens, o
+  reflow acontece de uma vez, sem editar cada componente. **Zero scroll horizontal do body:**
+  `overflow-x: clip` em `html` e `.conteudo` (conteúdo largo — tabelas de DT/Patente, textarea
+  de código — já rola no próprio container via `overflow-x: auto`); `img/svg/video/canvas`
+  com `max-width: 100%`. **Reflow das 6 abas:** as grades já eram `auto-fit`/`auto-fill minmax`,
+  então colapsam para 1–2 colunas no mobile sem mudança estrutural (tabela de colunas por
+  largura de referência na §6 de `docs/PARIDADE-M1.md`); a redução de padding/gap por token
+  ajusta a densidade. **Alvos de toque (44px):** botões −/+ do `StepInput` (30px→44px só no
+  mobile, desktop intacto), abas do shell (que no mobile viram uma **barra flutuante fixa no
+  rodapé** — `position: fixed` destacada das bordas, ícone sobre rótulo, 6 itens `flex: 1`
+  distribuídos, deep-link por rota preservado, `env(safe-area-inset-bottom)` do iOS +
+  `padding-bottom` reservado no conteúdo; `z-index` abaixo dos modais, que a cobrem),
+  chips de categoria e mini-botões −/+ do carrinho (aba `compras`), e opções/swatches/**color
+  picker** do painel de tema. **Modais mobile-first:** ajuda (`AjudaCalculadora`), config de
+  tema (`ConfiguracoesTema`) e exportar/importar do carrinho ganham `max-height:
+  calc(100dvh - 32px)` + `overflow-y: auto`, permanecendo operáveis com o polegar. **Identidade
+  preservada** (dark base + IBM Plex + grid + cards), **tudo via tokens** — nenhum hex/fonte/raio
+  solto, nenhum `style=""`, nenhum `.css` (proibições #17/#18/#29). **Budget:** o SCSS responsivo
+  da aba `compras` (a mais pesada) levou o `anyComponentStyle` a 8,28 kB; o `maximumWarning` subiu
+  **8→10 kB** (erro mantido em 12 kB) em `angular.json`, mesmo precedente das elevações de budget
+  em `m1-10`/`m1-13`. **Acabamentos pedidos na mesma sessão** (mobile + polimento): (1) a
+  **categoria de equipamento selecionada** ganhou estado ativo com **glow** de accent — a classe
+  `.selecionavel--ativo` era usada no template mas não existia no SCSS scoped da `compras` (só no
+  shell), então a seleção não tinha destaque; agora `accent` + `accent-dim` + `box-shadow` suave;
+  (2) os botões **Importar/Exportar/Esvaziar** do carrinho foram embrulhados em
+  `.compras-carrinho-acoes` (desktop: agrupados à direita; mobile: caem para a própria linha em
+  terços iguais, corrigindo a quebra visual); (3) botões de item/**amplificador** com alvo de
+  toque ≥40px e `flex-wrap` no mobile; (4) na aba **DT**, o resultado da fórmula e os valores da
+  tabela passaram de verde `--positive` para a **cor do tema** (`--accent` trocável em runtime).
+  **Validado:** `lint --workspace=frontend` limpo; `test --workspace=frontend` **54/54**; `test
+  --workspace=shared` **143/143**; `build --workspace=frontend` verde, inicial **533,27 kB** <
+  560 kB, **sem avisos de budget**. Verificação responsiva registrada em `docs/PARIDADE-M1.md` §6.
 - **m1-14-paridade-deploy-arquivamento** (2026-07-06): última task do M1 — verificação de
   paridade das 6 abas, checagem de "sem duplicação" e fechamento **de código** do milestone
   (o deploy Cloudflare e o toggle de arquivamento do repo antigo são passos operacionais de

@@ -2,7 +2,8 @@
 
 > Fecha o milestone **M1 — Calculadora com paridade** (task `m1-14`). Registra a
 > verificação lado a lado das 6 abas, a checagem de "sem duplicação de regra" e o estado
-> de deploy/arquivamento. Última atualização: 2026-07-05.
+> de deploy/arquivamento (e, na §6, o refinamento mobile — task `m1-15`).
+Última atualização: 2026-07-06.
 
 ## Método de verificação
 
@@ -90,3 +91,48 @@ Estes dois itens dependem de ação nas plataformas (fora do que o código contr
 Enquanto esses dois passos de plataforma não forem executados pelo autor, o M1 está
 **completo no código** (paridade funcional das 6 abas, regras extraídas e testadas, sem
 duplicação); resta apenas a publicação e o toggle de arquivamento.
+
+## 6. Refinamento mobile (task `m1-15`) — verificação responsiva
+
+Task de refinamento adicionada após o fechamento da paridade: otimização da UI/UX **mobile**
+das 6 abas, do shell e dos painéis (ajuda/tema/carrinho), sem tocar em regra de jogo
+(`shared/regras` intocado). **Fonte única de breakpoint:** `frontend/src/styles/tema/_breakpoints.scss`
+(`$bp-mobile: 560px` + mixin `mobile` + `$alvo-toque: 44px`) — media queries são resolvidas
+em tempo de compilação e não leem CSS custom properties, por isso o breakpoint é token Sass,
+não `var(--…)`; nenhuma largura mágica é repetida por arquivo. A densidade mobile vem de
+**override de token** (`--pad-card`/`--gap-grid` reduzidos em `@media` no `styles.scss`),
+refluindo todos os cards/grids de uma vez. Trava de scroll horizontal: `overflow-x: clip` em
+`html`/`.conteudo`; conteúdo largo (tabelas de DT/Patente, textarea de código) já rola no
+próprio container (`overflow-x: auto`).
+
+**Método:** verificação analítica do layout compilado nas larguras de referência (o layout é
+dirigido por grids `auto-fit`/`auto-fill minmax`, cujo nº de colunas é determinístico), somada
+à evidência de `lint`/`test`/`build` verdes. Não foram capturados screenshots de dispositivo.
+
+Colunas por grade nas larguras de referência (corpo → conteúdo −24px de padding → card −30px):
+
+| Grade (aba) | `minmax` | 360px | 390px | 430px |
+|---|---|---|---|---|
+| Config (todas) | 220–240px | 1 | 1 | 1 |
+| Atributos (agente) | 120px | 2 | 2 | 2 |
+| Hero Vida/Energia (agente) | 140px | 2 | 2 | 2 |
+| Stats secundárias (agente) | 150px | 1 | 2 | 2 |
+| Stats (novo-agente/patente) | 150px | 1 | 2 | 2 |
+| Faixa (descanso) | 180px | 1 | 1 | 2 |
+| Resumo/catálogo/mods (compras) | 160–220px | 1 | 1–2 | 2 |
+
+Nenhuma grade excede a largura do container em ~360px → **zero scroll horizontal do body**.
+Alvos de toque de 44px aplicados no mobile: botões −/+ do `StepInput`, abas do shell (que no
+mobile viram uma **barra flutuante fixa no rodapé** — ícone sobre rótulo, 6 itens distribuídos
+por igual, deep-link por rota preservado, respeitando a área segura do iOS e reservando espaço
+no fim do conteúdo para não sobrepor), chips de categoria e mini-botões do carrinho,
+opções/swatches/color-picker do painel de tema. Os três modais (ajuda, tema, exportar/importar)
+ganham `max-height: calc(100dvh - 32px)` + `overflow-y: auto` e largura fluida dentro do overlay
+de 16px, ficando operáveis com o polegar. Identidade preservada (dark base + IBM Plex + grid +
+cards), tudo via tokens (nenhum hex/fonte/raio solto).
+
+**Validado:** `lint --workspace=frontend` limpo; `test --workspace=frontend` **54/54**; `test
+--workspace=shared` **143/143**; `build --workspace=frontend` verde, inicial **533,27 kB** <
+560 kB, sem avisos de budget (o `anyComponentStyle` `maximumWarning` subiu 8→**10 kB**, erro
+mantido em 12 kB, para acomodar o SCSS responsivo da aba `compras` — a mais pesada; mesmo
+precedente das elevações de budget em `m1-10`/`m1-13`).

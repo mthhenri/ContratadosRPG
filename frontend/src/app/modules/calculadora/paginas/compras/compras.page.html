@@ -183,18 +183,20 @@
       <span class="calc-cartao__indice">4</span>
       <h2 class="calc-cartao__titulo">Carrinho</h2>
       <span class="calc-cartao__regua"></span>
-      <button type="button" class="compras-limpar" (click)="abrirModalImportar()">Importar</button>
-      <button
-        type="button"
-        class="compras-limpar"
-        [disabled]="carrinhoVazio()"
-        (click)="abrirModalExportarCodigo()"
-      >
-        Exportar
-      </button>
-      <button type="button" class="compras-limpar" [disabled]="carrinhoVazio()" (click)="esvaziarCarrinho()">
-        Esvaziar
-      </button>
+      <div class="compras-carrinho-acoes">
+        <button type="button" class="compras-limpar" (click)="abrirModalImportar()">Importar</button>
+        <button
+          type="button"
+          class="compras-limpar"
+          [disabled]="carrinhoVazio()"
+          (click)="abrirModalExportarCodigo()"
+        >
+          Exportar
+        </button>
+        <button type="button" class="compras-limpar" [disabled]="carrinhoVazio()" (click)="esvaziarCarrinho()">
+          Esvaziar
+        </button>
+      </div>
     </header>
 
     @if (carrinhoVazio()) {

@@ -2,6 +2,8 @@
 // Contenção" (docs/design/tema/_tokens.scss) — nenhum hex/fonte/raio solto (proibição #29). O
 // modal reusa o padrão .ajuda-modal (m1-12); o gatilho reusa a linguagem de botão secundário.
 
+@use 'tema/breakpoints' as bp;
+
 :host {
   display: inline-flex;
 }
@@ -57,6 +59,9 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
+  // Base + presets + color picker podem passar da altura da tela no mobile — rolar por dentro.
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
 
   &__cabecalho {
     display: flex;
@@ -233,6 +238,17 @@
     line-height: 1.5;
     color: var(--accent);
     margin: 4px 0 0;
+  }
+}
+
+// === Refinamento mobile (m1-15) — alvos de toque do painel de tema ===
+@include bp.mobile {
+  .config-opcao,
+  .config-swatch {
+    min-height: bp.$alvo-toque;
+  }
+  .config-custom__picker {
+    height: bp.$alvo-toque;
   }
 }
 

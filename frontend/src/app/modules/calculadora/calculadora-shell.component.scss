@@ -1,4 +1,13 @@
+@use 'tema/breakpoints' as bp;
+
 .calculadora {
+  // No mobile o menu de abas vira uma barra flutuante fixa no rodapé (removida do fluxo):
+  // reservar espaço para o conteúdo não ficar escondido atrás dela (altura da barra + folga +
+  // área segura do iOS). Ver o bloco `.abas` mobile abaixo.
+  @include bp.mobile {
+    padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+  }
+
   &__cabecalho {
     display: flex;
     align-items: center;
@@ -40,6 +49,26 @@
   border-bottom: 1px solid var(--border);
   margin-bottom: 24px;
 
+  // No mobile o menu vira uma barra FLUTUANTE FIXA no rodapé (padrão de navegação móvel):
+  // destacada das bordas (float), cantos de card, borda de controle e uma elevação suave para
+  // ler como "acima do conteúdo". Área segura do iOS respeitada. Fica abaixo dos modais
+  // (ajuda z-index 20, tema 30), então eles a cobrem.
+  @include bp.mobile {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    z-index: 15;
+    flex-wrap: nowrap;
+    gap: 4px;
+    margin: 0;
+    padding: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+  }
+
   &__item {
     display: inline-flex;
     align-items: center;
@@ -57,6 +86,28 @@
     padding: 10px 14px;
     text-decoration: none;
     cursor: pointer;
+
+    // Na barra do rodapé: ícone sobre rótulo, itens distribuídos por igual, alvo de toque
+    // confortável. O ícone tem tamanho próprio (independe do rótulo miúdo) e o rótulo pode
+    // quebrar em 2 linhas ("Novo Agente", "Agente / Civil") sem estourar a célula.
+    @include bp.mobile {
+      flex: 1 1 0;
+      min-width: 0;
+      flex-direction: column;
+      gap: 3px;
+      min-height: bp.$alvo-toque;
+      padding: 8px 4px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-control);
+      font-size: 9px;
+      letter-spacing: 0.03em;
+      line-height: 1.15;
+      text-align: center;
+
+      app-icone {
+        font-size: 18px;
+      }
+    }
 
     &:hover {
       color: var(--text);

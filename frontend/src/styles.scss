@@ -2,6 +2,7 @@
 // Ordem obrigatória: tokens (CSS custom properties) primeiro, depois o reset/base.
 @use './styles/tema/tokens';
 @use './styles/tema/base';
+@use './styles/tema/breakpoints' as bp;
 
 // Tailwind — utilitários de layout/espaçamento, coexistindo com SCSS + tokens do tema.
 // A configuração (frontend/tailwind.config.ts) aponta as cores/fontes/raios utilitários para
@@ -10,3 +11,29 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+// === Refinamento mobile (m1-15) — ajustes globais dirigidos por token ===
+// No mobile a densidade "confortável" aperta um pouco: reduzir o padding de card e o gap de
+// grid nos próprios tokens reflui TODOS os cards/grids da calculadora de uma vez (eles
+// consomem var(--pad-card)/var(--gap-grid)), sem tocar em cada componente nem repetir valores.
+@include bp.mobile {
+  :root {
+    --pad-card: 15px;
+    --gap-grid: 12px;
+  }
+}
+
+// Trava de segurança contra scroll horizontal do body: conteúdo largo (tabelas, código de
+// exportar) rola no próprio container (overflow-x: auto local); aqui só impedimos que algo
+// estoure a largura da página. `clip` não cria contexto de rolagem no eixo vertical.
+html {
+  overflow-x: clip;
+}
+
+// Mídia nunca estoura a largura do container.
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}

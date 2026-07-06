@@ -5,6 +5,8 @@
 // --font-sans) e os padrões repetidos (caixa em surface-2, controle com borda forte, estado
 // desabilitado) são agrupados em listas de seletores em vez de redeclarados por bloco.
 
+@use 'tema/breakpoints' as bp;
+
 .compras {
   display: flex;
   flex-direction: column;
@@ -178,6 +180,14 @@
   &:hover:not(:disabled) {
     color: var(--text);
   }
+
+  // Categoria selecionada: estado ativo (accent) + um leve glow para destaque extra da seleção.
+  &.selecionavel--ativo {
+    color: var(--accent);
+    border-color: var(--accent-border);
+    background: var(--accent-dim);
+    box-shadow: 0 0 12px -2px color-mix(in srgb, var(--accent) 55%, transparent);
+  }
 }
 .compras-info {
   font-size: 12px;
@@ -200,6 +210,12 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 12px;
+  // Mostra ~2 linhas de itens e rola o resto por dentro — o catálogo (que pode ser longo) não
+  // domina a página nem empurra o carrinho para muito abaixo. O respiro à direita evita que a
+  // barra de rolagem cole nos cards.
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 .compras-item {
   display: flex;
@@ -246,6 +262,10 @@
 }
 
 .compras-tag {
+  // inline-block + nowrap: o chip nunca quebra a borda no meio (ia partir "−2 Vontade total"
+  // em duas linhas com a caixa cortada); se não couber, desce inteiro para a linha seguinte.
+  display: inline-block;
+  white-space: nowrap;
   font-size: 10px;
   color: var(--positive);
   border: 1px solid color-mix(in srgb, var(--positive) 45%, transparent);
@@ -301,6 +321,12 @@
 .compras-item__acoes .compras-btn--adicionar,
 .compras-modal__acoes .compras-btn--adicionar {
   flex: 1;
+}
+// Ações do carrinho (Importar / Exportar / Esvaziar). No desktop ficam agrupadas à direita do
+// cabeçalho (a régua as empurra); no mobile o grupo cai para a própria linha (ver bloco mobile).
+.compras-carrinho-acoes {
+  display: flex;
+  gap: 8px;
 }
 .compras-limpar {
   font-size: 11px;
@@ -533,5 +559,63 @@
     display: flex;
     gap: 8px;
     margin-top: 12px;
+  }
+
+  // No mobile o modal cabe na tela e rola por dentro se o conteúdo for alto.
+  @include bp.mobile {
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+  }
+}
+
+// === Refinamento mobile (m1-15) — alvos de toque e reflow da aba mais pesada ===
+@include bp.mobile {
+  // Chips de categoria e mini-botões de −/+ com área de toque confortável.
+  .compras-categoria {
+    min-height: bp.$alvo-toque;
+    padding: 9px 14px;
+  }
+  .compras-mini-btn {
+    width: bp.$alvo-toque;
+    height: bp.$alvo-toque;
+    font-size: 16px;
+  }
+  // Cabeçalho do item do carrinho reflui em vez de espremer nome × custo/remover.
+  .compras-carrinho-item__cabecalho {
+    flex-wrap: wrap;
+  }
+  // A tag de mod ativa não deve empurrar os botões −/+ para fora da caixa.
+  .compras-mod-tag {
+    flex-wrap: wrap;
+  }
+
+  // Cabeçalho do card do carrinho: as ações (Importar/Exportar/Esvaziar) caem para a própria
+  // linha, abaixo do título/régua, e se distribuem por igual (antes quebravam espremidas).
+  .calc-cartao__cabecalho {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+  .compras-carrinho-acoes {
+    flex-basis: 100%;
+
+    .compras-limpar {
+      flex: 1;
+      min-height: 38px;
+      padding: 8px 6px;
+      text-align: center;
+    }
+  }
+
+  // Botões de ação de item/amplificador (catálogo e carrinho) com alvo de toque confortável.
+  // O − fica compacto e o "+ Adquirir/Stack" cresce (regra .compras-btn--adicionar já existente);
+  // a linha reflui se os rótulos longos não couberem lado a lado.
+  .compras-btn {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .compras-item__acoes {
+    flex-wrap: wrap;
   }
 }
