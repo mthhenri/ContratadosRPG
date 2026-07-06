@@ -206,7 +206,7 @@ validados via `@IsEnum`. A fonte da verdade deles é `docs/core/sistema-v4.1.0.m
 
 Arquivo `.sql` puro em `backend/src/database/migrations/`, nome `NNNN - Nome descritivo.sql`
 (4 dígitos + `" - "` + frase em português). Duas seções por marcador sozinho na linha: `-- UP`
-(obrigatória) e `-- DOWN` (obrigatória, salvo justificativa no arquivo). Próxima migration: `0002`.
+(obrigatória) e `-- DOWN` (obrigatória, salvo justificativa no arquivo). Próxima migration: `0006`.
 Detalhes completos no `SYSTEM.SPEC.md` §10.7.
 
 ```sql

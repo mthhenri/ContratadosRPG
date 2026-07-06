@@ -1,6 +1,6 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-06 (m1-18 — scrollbar customizada global do tema "Terminal de Contenção": thumb fino em `--surface-2`/`--border-strong`, track transparente, `hover` com `--accent-border`, via `::-webkit-scrollbar-*` + `scrollbar-color`/`scrollbar-width`, definida uma vez em `_base.scss` e documentada no `docs/design/DESIGN.md` — só CSS global, sem tocar template/TS/regra de jogo; **fecha o M1 no código, 18 tasks**). Sessão anterior no mesmo dia: m1-17 — singleton em memória `EstadoAbasCalculadoraService` que preserva o formulário das 5 abas ao trocar de aba; preset da aba `agente` passa a Nível 0 e atributos 1/1/1/1/1.
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-06 (m2-01 — fundação de dados do M2: migrations `0002`–`0005` criando `usuario`/`tipo_campanha_membro_papel`/`campanha`/`campanha_membro` conforme `SCHEMA.md` + enum espelho `TipoCampanhaMembroPapelEnum`; round-trip `db:migrate`/`db:rollback` validado no Postgres local — **abre o M2**). Sessão anterior: m1-18 — scrollbar customizada global do tema "Terminal de Contenção": thumb fino em `--surface-2`/`--border-strong`, track transparente, `hover` com `--accent-border`, via `::-webkit-scrollbar-*` + `scrollbar-color`/`scrollbar-width`, definida uma vez em `_base.scss` e documentada no `docs/design/DESIGN.md` — só CSS global, sem tocar template/TS/regra de jogo; **fecha o M1 no código, 18 tasks**). Sessão anterior no mesmo dia: m1-17 — singleton em memória `EstadoAbasCalculadoraService` que preserva o formulário das 5 abas ao trocar de aba; preset da aba `agente` passa a Nível 0 e atributos 1/1/1/1/1.
 
 ---
 
@@ -37,7 +37,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, core/, pipelines, deploy) | **concluído** (deploy nativo Render+Cloudflare; setup das plataformas em `docs/DEPLOY.md`) |
 | M1 | Calculadora com paridade | **concluído no código** (`m1-01` a `m1-18`, incluindo os refinamentos pós-paridade: mobile `m1-15`, tema em runtime `m1-16`, singleton de estado das abas `m1-17` e scrollbar customizada `m1-18`). Restam 2 passos operacionais de plataforma: publicar a Cloudflare Pages e arquivar o repo antigo no GitHub (ver `docs/PARIDADE-M1.md`) |
-| M2 | Auth + Campanhas | backlog |
+| M2 | Auth + Campanhas | **em andamento** (quebrado em 8 tasks `m2-01`…`m2-08`; **m2-01 concluída** — migrations + tabelas + enum espelho) |
 | M3 | Ficha de Jogador | backlog |
 | M4 | Ficha de Criatura/NPC | backlog |
 | M5 | Guia de Missão | backlog |
@@ -46,16 +46,16 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 
 | Módulo | Status |
 |---|---|
-| shared (estrutura) | **`interfaces/`** (`StandardResponse`/`PaginatedResult`) + **`enums/`** (`ClasseEnum`, `PatenteEnum`, `ItemCategoriaEnum`, `TipoDescansoEnum`, `QualidadeDescansoEnum`, `MotivoEntradaAgenteEnum`); `dtos/`/`validators/` ainda esqueleto |
+| shared (estrutura) | **`interfaces/`** (`StandardResponse`/`PaginatedResult`) + **`enums/`** (`ClasseEnum`, `PatenteEnum`, `ItemCategoriaEnum`, `TipoDescansoEnum`, `QualidadeDescansoEnum`, `MotivoEntradaAgenteEnum` + `TipoCampanhaMembroPapelEnum` — m2-01, **1º enum de coluna**, espelho da tabela `tipo_*`); `dtos/`/`validators/` ainda esqueleto |
 | shared/regras | **`agente/` completo** (m1-02): 15 fórmulas puras da aba agente com testes Vitest conferidos contra o sistema (vida, energia, limite de energia, defesa/esquiva/bloqueio, proficiência, deslocamento, dano de corpo, dano furtivo, inventário, percepção, sanidade, limite hab./turno, benefícios por nível, progressão acumulada, limites por classe). **`dt/`, `novo-agente/`, `patente/` completos** (m1-03): DT de atributo (`10 + Nível + Atributo×2`); nível/prestígio iniciais + bônus monetário por motivo de entrada; lookup de patente por prestígio + recorte da aba, consumindo `PATENTES`. **`descanso/` completo** (m1-04): escada de dados (`ESCADA_DADOS` + `ajustarDado`/`elevarDado`/`descreverDado`), tabelas `DADOS_DESCANSO`/`QUALIDADE_MOD`, faixa de recuperação (`calcularDescanso`), interpretação de dados extras (`interpretarDadosExtras`), resultado a partir de valores rolados (`calcularResultadoDescanso`) + a utilidade de rolagem `rolarDados` (única brecha a `Math.random` — §6.6). **`compras/` completo** (m1-05): catálogo (`CATALOGO_CATEGORIAS`/`CATALOGO_ITENS`), modificações por categoria (`MODIFICACOES`) + custos (`CUSTO_MODIFICACAO`), amplificadores (`AMPLIFICADORES`) e limites por patente (`LIMITES_MODIFICACAO`); fórmulas `obterLimiteModificacoes`/`obterCustoModificacao`/`obterPesoModificacao`/`contarComprasModificacao`/`verificarConflitoModificacao`/`calcularStatItem` (reusa `elevarDado`)/`calcularCustoAmplificador`/`calcularTotaisCarrinho`/`calcularResumoCompras`, reusando `obterPatente` (m1-03). `dados/` com `dadosAgente`, `dadosCivil` e `PATENTES` (m1-01) |
 | backend/core | **pronto** (`BaseEntity`, `BaseRepository`, exceções, filtro, interceptor) |
 | backend/config | **pronto** (`ConfigService`/`ConfigModule`, lê `DB_*`/`JWT_*`/`APP_*`) |
 | backend/database | **pronto** (`DatabaseModule`/`database.provider.ts` — conexão Knex em runtime via DI) |
 | backend/health | **pronto** (`HealthController` `GET /health` público; sem service/repository) |
 | backend/core/decorators | **`@Public()`** (metadado `isPublic`; guard interpretador nasce no M2) |
-| backend/autenticacao | não iniciado |
-| backend/usuario | não iniciado |
-| backend/campanha | não iniciado |
+| backend/autenticacao | não iniciado (nasce na m2-02) |
+| backend/usuario | não iniciado (tabela `usuario` criada em m2-01) |
+| backend/campanha | não iniciado (tabelas `campanha`/`campanha_membro`/`tipo_campanha_membro_papel` criadas em m2-01) |
 | backend/ficha | não iniciado |
 | frontend (shell) | **pronto** (topbar + `router-outlet` via `shared/layout`, home consumindo `/health`, tema "Terminal de Contenção" dark-first via `docs/design`). Em **dev** a aba do navegador recebe sufixo "- DEV" (`provideAppInitializer` no `app.config.ts`, gated por `!environment.producao`; produção mantém o `<title>` do `index.html`) |
 | frontend/tema | **pronto + troca em runtime (m1-13)** (tokens + base + `ContencaoPreset` PrimeNG em `src/styles/tema/`). **Sistema de tema em runtime (m1-13):** `TemaService` (`core/services/tema.service.ts`) é a contraparte em runtime de `_tokens.scss` para a parte trocável — escreve `--accent` (e overrides de base clara) em `<html>`, alterna a classe `.dark` e regenera a paleta primária do PrimeNG (`updatePrimaryPalette`/`palette`); 4 presets de accent (só cores da paleta do tema — vermelho/azul/verde/âmbar), base clara/escura e color picker custom com **trava de contraste WCAG** (`razaoContraste`/`luminanciaRelativa`, piso 3:1 vs superfície); persiste em `localStorage` e restaura no boot via `provideAppInitializer`. Painel `ConfiguracoesTema` (`shared/configuracoes-tema/`) na topbar (gatilho + modal, fecha por botão). **Refino m1-16:** (a) **slot de cor custom salvo** — `salvarAccentCustom`/`selecionarAccentSalvo`/`accentCustomSalvo` no `TemaService` + swatch "Salva" no painel: guarda **um** slot (sobrescreve o anterior), persistido em `accentCustomSalvo` (distinto do `accentCustom` ativo), re-selecionável com um clique sem reabrir o picker; (b) **inversão visual por incompatibilidade de base** — `accentAplicado`/`accentAdaptado` + `variantePorContraste` (complemento RGB → ajuste de luminância até cruzar `CONTRASTE_MINIMO`): quando a cor salva/ativa fica ilegível na base ativa, o `--accent` exibido é uma variante legível **preservando o valor salvo**; ao voltar à base compatível a cor original é reaplicada (substitui o descarte antigo em `definirBase`, que agora só troca **presets fixos** travados). Nota discreta no painel quando a cor está adaptada. Paleta de presets expandida de 4 p/ **9** (as 4 oficiais + roxo/rosa/dourado/turquesa/cinza, a pedido do autor), todas sujeitas à mesma trava de contraste por base. Budget inicial elevado p/ 560 kB (o motor de paleta do `@primeuix/themes` entra no bundle inicial). **Tailwind instalado e integrado ao build** (m1-06): `frontend/tailwind.config.ts` mescla o `theme.extend` do handoff (`docs/design/tema/tailwind.config.ts`) apontando cores/fontes/raios utilitários para as CSS custom properties dos tokens; diretivas `@tailwind` no fim de `styles.scss`, coexistindo com SCSS + tokens (preflight não sobrescreve a identidade — só reset). **Scrollbar customizada global (m1-18):** padrão próprio da barra de rolagem definido **uma vez** em `styles/tema/_base.scss` (espelhado no handoff `docs/design/tema/_base.scss`) — thumb fino (`10px`) em `--surface-2` com contorno `--border-strong` e raio `--radius-control`, track/corner transparentes, `:hover` realça o contorno com `--accent-border` (nunca `--accent` sólido); cross-browser via `::-webkit-scrollbar-*` (Chrome/Edge/Safari) + `scrollbar-width: thin`/`scrollbar-color` (Firefox). Só tokens → segue legível/discreto nas duas bases (clara/escura) do tema em runtime, que sobrescrevem `--surface-2`/`--border-strong`. Vale globalmente (scroll geral, os 3 modais, tabelas/textarea) sem repetição por componente; documentado em `docs/design/DESIGN.md` para as telas futuras (M2+) não reintroduzirem a barra nativa |
@@ -63,20 +63,24 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | frontend/calculadora | **6 abas prontas (paridade da calculadora completa)**. Fundação (m1-06): módulo `modules/calculadora/` com 6 rotas públicas **lazy** — `agente`/`dt`/`novo-agente`/`patente`/`descanso`/`compras` — sob o `CalculadoraShell` (navegação de abas + deep-link por rota via `routerLink`/`routerLinkActive`, paridade com o `switchTab`/`VALID_TABS` por hash do site antigo) e o `StepInput` (stepper/input numérico reutilizável, `ControlValueAccessor` + Reactive Forms, sem `ngModel`). **Aba `agente` (m1-07):** carro-chefe — `AgentePage` (Reactive Forms + Signals) consumindo `shared/regras/agente` para **todas** as stats. **Abas leves `dt`/`novo-agente`/`patente` (m1-08):** três páginas Reactive Forms + Signals consumindo `shared/regras/{dt,novo-agente,patente}`, reusando o `StepInput` e os tokens/BEM do tema; rótulos de `PatenteEnum`/`MotivoEntradaAgenteEnum`→pt-BR em `modules/calculadora/rotulos.ts` (formatação de UI). **Aba `descanso` (m1-09):** `DescansoPage` (Reactive Forms + Signals) consumindo `shared/regras/descanso` — faixa determinística + **rolagem animada** (scramble via `requestAnimationFrame`, RNG por `rolarDados`). **Aba `compras` (m1-10):** `ComprasPage` — a mais pesada: configuração do agente (4 steppers), resumo de limites/gastos, catálogo com busca/categorias e o carrinho com itens, modificações (painel + empilhamentos) e amplificadores; estado em **Signals**, todos os números vindos de `shared/regras/compras` (`calcularResumoCompras`/`calcularStatItem`/custos). **Persistência e exportar/importar (m1-11):** `effect()` salva carrinho/amplificadores/recursos em `localStorage` a cada mudança e recarrega na construção da página; modais de exportar (código `CRPG-COMPRAS-V1:<base64>`) e importar, com aviso de incompatibilidade com códigos do site antigo. **Ajuda por aba (m1-12):** componente único `AjudaCalculadora` (`componentes/ajuda-calculadora/`) — gatilho "? Ajuda" + modal — embutido nas 6 páginas via input signal `aba`; o texto (guia de "como usar cada página") vive em `CONTEUDO_AJUDA`, keyed por aba, sem duplicação. Todas as 6 abas concluídas com paridade completa. **Verificação de paridade + "sem duplicação" (m1-14):** achado corrigido — `compras.page.ts` recalculava custo/penalidade de amplificador com constantes de regra embutidas (`3000/1000/2`) → passou a consumir `calcularCustoAmplificador` + `PENALIDADE_VONTADE_POR_EMPILHAMENTO` de `shared/regras/compras` (zero constante de regra no front). **Cor da stat Vida** (abas agente/descanso) desacoplada do `--accent` trocável: novo token fixo `--vida`/`--vida-border` (vermelho da identidade) em `_tokens.scss` (front + `docs/design/tema/`) — Vida permanece vermelha mesmo com accent trocado no tema em runtime. **Refinamento mobile (m1-15):** estratégia responsiva dirigida por token — `src/styles/tema/_breakpoints.scss` (`$bp-mobile: 560px` + mixin `mobile` + `$alvo-toque: 44px`, resolvido via `stylePreprocessorOptions.includePaths` em `angular.json`); a densidade mobile vem de **override dos tokens** `--pad-card`/`--gap-grid` num `@media` no `styles.scss` (reflui todos os cards/grids de uma vez, sem valor mágico por arquivo); trava de scroll horizontal via `overflow-x: clip` em `html`/`.conteudo`. Abas do shell viram **barra flutuante fixa no rodapé** no mobile (ícone sobre rótulo, 6 itens distribuídos, deep-link preservado, área segura do iOS + espaço reservado no conteúdo); alvos de toque de 44px no `StepInput`, chips de categoria, mini-botões e controles do painel de tema; os 3 modais (ajuda/tema/exportar-importar) ganham `max-height` + rolagem interna. As 6 grades já refluem por `auto-fit`/`auto-fill minmax`. Verificação responsiva (360/390/430px) na §6 de `docs/PARIDADE-M1.md`. **Estado entre-abas em memória (m1-17):** singleton `providedIn: 'root'` `EstadoAbasCalculadoraService` (`modules/calculadora/estado-abas-calculadora.service.ts`, mapa `aba → valor bruto` em Signal, sem I/O) preserva o formulário das 5 abas `agente`/`dt`/`novo-agente`/`patente`/`descanso` ao trocar de aba (cada página restaura no construtor via `patchValue` e grava em cada `valueChanges`); F5 recria o service vazio → volta ao preset (só `compras` sobrevive a F5, pelo seu `localStorage` da m1-11, intocado). Preset da aba `agente` passou a **Nível 0** e atributos **1/1/1/1/1** (era Nível 3 / 2/2/2/1/1). **Sem regra de jogo** (`shared`/`shared/regras` intocados) |
 | frontend/campanha | não iniciado |
 | frontend/ficha | não iniciado |
-| Infra — banco local (Docker + Knex) | **pronto** (Postgres 16 + migrations) |
+| Infra — banco local (Docker + Knex) | **pronto** (Postgres 16 + migrations). Migrations `0001` (`fn_set_updated_date`) + **`0002`–`0005` (m2-01)**: `tipo_campanha_membro_papel` (seed `MESTRE`/`JOGADOR`), `usuario`, `campanha`, `campanha_membro` — round-trip `db:migrate`/`db:rollback` validado |
 | Infra — CI (lint + testes em PR) | **pronto** (GitHub Actions; lint nos 3 workspaces, testes via `--if-present`) |
 | Infra — Deploy (produção) | **pronto** (integração nativa: Render auto-deploy via `render.yaml` + Cloudflare Pages via Git; CORS + `apiBase` fixo. Sem GitHub Actions no deploy — `docs/DEPLOY.md`) |
 
 ## Próxima Task
 
-**M1 concluído no código** (paridade + refinamento mobile + refino do tema em runtime + singleton de
-estado das abas + scrollbar customizada — **18 tasks, backlog do M1 vazio**). Nenhuma task de
-refinamento do M1 pendente.
+**M2 em andamento.** O milestone **M2 — Auth + Campanhas**
+(`docs/specs/backlog/m2-auth-campanhas.spec.md`) foi quebrado em **8 tasks numeradas**
+(`m2-01`…`m2-08`, em `docs/specs/backlog/`); a task de refinamento mobile é a `m2-08`. A
+**m2-01** (fundação de dados: migrations + tabelas + enum espelho) está **concluída** (spec em
+`docs/specs/done/`).
 
-A próxima frente
-maior é o **M2 — Auth + Campanhas** (`docs/specs/backlog/m2-auth-campanhas.spec.md`), ainda a
-ser quebrado em tasks numeradas (`m2-01-*.spec.md`, …) antes da implementação — os milestones
-M2–M5 já trazem uma task de refinamento mobile no escopo. Os specs de milestone concluídos
+**Próxima task: `m2-02-autenticacao-jwt-guard`** — módulo `autenticacao` (registro `@Public()`,
+login JWT via Passport, `JwtAuthGuard` global via `APP_GUARD` ativando o `@Public()` do M0,
+`@ActiveUser()`, bcrypt) + persistência mínima de usuário (repository do módulo `usuario`).
+Depende só da m2-01 (tabela `usuario`, já criada).
+
+**M1 concluído no código** (18 tasks, backlog do M1 vazio). Os specs de milestone concluídos
 (`m0-fundacao`, `m1-calculadora-paridade`) e todas as tasks `m0-*`/`m1-*` já entregues estão em
 `docs/specs/done/`.
 
@@ -88,6 +92,28 @@ M2–M5 já trazem uma task de refinamento mobile no escopo. Os specs de milesto
 
 ## Implementado
 
+- **m2-01-migrations-tabelas-contas-campanha** (2026-07-06): **primeira task do M2** e fundação de
+  dados de Auth + Campanhas — cria as tabelas relacionais e o enum de papel, **sem lógica de
+  negócio, service, controller ou frontend** (o backbone de auth nasce na m2-02). **Entregável 1 —
+  enum espelho:** `TipoCampanhaMembroPapelEnum` (`MESTRE`/`JOGADOR`) em
+  `shared/src/enums/tipo-campanha-membro-papel.enum.ts` (+ barrel `index.ts`) — o **primeiro enum
+  de coluna** do projeto (materializado como tabela `tipo_*`, ao contrário dos enums de conteúdo de
+  jogo do JSONB — §10.3). **Entregável 2 — migrations `.sql`:** quatro arquivos novos em
+  `backend/src/database/migrations/`, em ordem de dependência de FK — `0002` tabela de referência
+  `tipo_campanha_membro_papel` (com **seed** `MESTRE`/`JOGADOR` por literais SQL — exceção sancionada
+  de migration §10.7), `0003` `usuario`, `0004` `campanha`, `0005` `campanha_membro` — cada uma com
+  BaseEntity completa (**sem DEFAULT**), PK/FK/índices nomeados por prefixo (§10.2.11), índices
+  únicos **parciais** `WHERE is_deleted = false` (login, código de papel, código de convite, par
+  campanha+usuário) + `ix_campanha_membro_usuario`, e trigger `trg_<tabela>_updated_date` usando a
+  `fn_set_updated_date()` do M0; seções `-- UP`/`-- DOWN`, sem `BEGIN/COMMIT` (o Knex gerencia a
+  transação — §10.7). **Entregável 3/4 — docs:** `SCHEMA.md` já descrevia a forma alvo (conferido
+  1:1, sem divergência); `CONVENTIONS.md` "Próxima migration" atualizado `0002` → `0006`.
+  **Validado no Postgres local:** `db:up` + `db:migrate` (batch 1 = 5 migrations) cria as 4 tabelas;
+  conferidos por `psql` as 4 tabelas, o seed (`MESTRE`/`JOGADOR`), os 9 índices (`pk_`/`uix_`/`ix_`),
+  as 3 FKs de `campanha_membro` e os 4 triggers; **round-trip** `db:rollback` (batch revertido, só
+  `knex_*` sobra) + `db:migrate` de novo reconstrói tudo — `-- DOWN` limpo e `-- UP` re-aplicável.
+  `lint` **shared** e **backend** limpos; `test --workspace=shared` **143/143** (intocado — enum novo
+  não quebra nada). Nenhuma UI, nenhum service.
 - **m1-18-scrollbar-customizada** (2026-07-06): última task de refinamento do M1 (mesmo padrão de
   m1-15/m1-16 — acabamento após o fechamento da paridade em m1-14) — **fecha o M1 no código (18
   tasks, backlog do M1 vazio)**. Substitui a barra de rolagem **nativa** do navegador por um padrão
