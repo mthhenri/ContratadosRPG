@@ -150,9 +150,10 @@
   }
 
   &--destaque {
-    border-color: var(--accent-border);
+    // Recuperação/Vida Recuperada = stat Vida → vermelho fixo (não acompanha o accent).
+    border-color: var(--vida-border);
     .calc-stat__valor {
-      color: var(--accent);
+      color: var(--vida);
     }
   }
 

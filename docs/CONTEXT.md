@@ -1,6 +1,6 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-13 — sistema de troca de tema em runtime: presets, claro/escuro e color picker com trava de contraste).
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-06 (m1-14 — verificação de paridade da calculadora, checagem de "sem duplicação" e fechamento de código do M1; deploy Cloudflare + arquivamento do repo antigo restam como passos operacionais de plataforma).
 
 ---
 
@@ -36,7 +36,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | # | Milestone | Status |
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, core/, pipelines, deploy) | **concluído** (deploy nativo Render+Cloudflare; setup das plataformas em `docs/DEPLOY.md`) |
-| M1 | Calculadora com paridade | **em andamento** (13/14 tasks — `m1-01` a `m1-13` concluídas) |
+| M1 | Calculadora com paridade | **concluído no código** (14/14 tasks — `m1-01` a `m1-14`); restam 2 passos operacionais de plataforma: publicar a Cloudflare Pages e arquivar o repo antigo no GitHub (ver `docs/PARIDADE-M1.md`) |
 | M2 | Auth + Campanhas | backlog |
 | M3 | Ficha de Jogador | backlog |
 | M4 | Ficha de Criatura/NPC | backlog |
@@ -57,10 +57,10 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | backend/usuario | não iniciado |
 | backend/campanha | não iniciado |
 | backend/ficha | não iniciado |
-| frontend (shell) | **pronto** (topbar + `router-outlet` via `shared/layout`, home consumindo `/health`, tema "Terminal de Contenção" dark-first via `docs/design`) |
+| frontend (shell) | **pronto** (topbar + `router-outlet` via `shared/layout`, home consumindo `/health`, tema "Terminal de Contenção" dark-first via `docs/design`). Em **dev** a aba do navegador recebe sufixo "- DEV" (`provideAppInitializer` no `app.config.ts`, gated por `!environment.producao`; produção mantém o `<title>` do `index.html`) |
 | frontend/tema | **pronto + troca em runtime (m1-13)** (tokens + base + `ContencaoPreset` PrimeNG em `src/styles/tema/`). **Sistema de tema em runtime (m1-13):** `TemaService` (`core/services/tema.service.ts`) é a contraparte em runtime de `_tokens.scss` para a parte trocável — escreve `--accent` (e overrides de base clara) em `<html>`, alterna a classe `.dark` e regenera a paleta primária do PrimeNG (`updatePrimaryPalette`/`palette`); 4 presets de accent (só cores da paleta do tema — vermelho/azul/verde/âmbar), base clara/escura e color picker custom com **trava de contraste WCAG** (`razaoContraste`/`luminanciaRelativa`, piso 3:1 vs superfície); persiste em `localStorage` e restaura no boot via `provideAppInitializer`. Painel `ConfiguracoesTema` (`shared/configuracoes-tema/`) na topbar (gatilho + modal, fecha por botão). Budget inicial elevado p/ 560 kB (o motor de paleta do `@primeuix/themes` entra no bundle inicial). **Tailwind instalado e integrado ao build** (m1-06): `frontend/tailwind.config.ts` mescla o `theme.extend` do handoff (`docs/design/tema/tailwind.config.ts`) apontando cores/fontes/raios utilitários para as CSS custom properties dos tokens; diretivas `@tailwind` no fim de `styles.scss`, coexistindo com SCSS + tokens (preflight não sobrescreve a identidade — só reset) |
 | frontend/core (interceptors + services) | **pronto** (`loading`/`error-handler` interceptors, `LoadingService`, `HealthService`) |
-| frontend/calculadora | **6 abas prontas (paridade da calculadora completa)**. Fundação (m1-06): módulo `modules/calculadora/` com 6 rotas públicas **lazy** — `agente`/`dt`/`novo-agente`/`patente`/`descanso`/`compras` — sob o `CalculadoraShell` (navegação de abas + deep-link por rota via `routerLink`/`routerLinkActive`, paridade com o `switchTab`/`VALID_TABS` por hash do site antigo) e o `StepInput` (stepper/input numérico reutilizável, `ControlValueAccessor` + Reactive Forms, sem `ngModel`). **Aba `agente` (m1-07):** carro-chefe — `AgentePage` (Reactive Forms + Signals) consumindo `shared/regras/agente` para **todas** as stats. **Abas leves `dt`/`novo-agente`/`patente` (m1-08):** três páginas Reactive Forms + Signals consumindo `shared/regras/{dt,novo-agente,patente}`, reusando o `StepInput` e os tokens/BEM do tema; rótulos de `PatenteEnum`/`MotivoEntradaAgenteEnum`→pt-BR em `modules/calculadora/rotulos.ts` (formatação de UI). **Aba `descanso` (m1-09):** `DescansoPage` (Reactive Forms + Signals) consumindo `shared/regras/descanso` — faixa determinística + **rolagem animada** (scramble via `requestAnimationFrame`, RNG por `rolarDados`). **Aba `compras` (m1-10):** `ComprasPage` — a mais pesada: configuração do agente (4 steppers), resumo de limites/gastos, catálogo com busca/categorias e o carrinho com itens, modificações (painel + empilhamentos) e amplificadores; estado em **Signals**, todos os números vindos de `shared/regras/compras` (`calcularResumoCompras`/`calcularStatItem`/custos). **Persistência e exportar/importar (m1-11):** `effect()` salva carrinho/amplificadores/recursos em `localStorage` a cada mudança e recarrega na construção da página; modais de exportar (código `CRPG-COMPRAS-V1:<base64>`) e importar, com aviso de incompatibilidade com códigos do site antigo. **Ajuda por aba (m1-12):** componente único `AjudaCalculadora` (`componentes/ajuda-calculadora/`) — gatilho "? Ajuda" + modal — embutido nas 6 páginas via input signal `aba`; o texto (guia de "como usar cada página") vive em `CONTEUDO_AJUDA`, keyed por aba, sem duplicação. Todas as 6 abas concluídas com paridade completa |
+| frontend/calculadora | **6 abas prontas (paridade da calculadora completa)**. Fundação (m1-06): módulo `modules/calculadora/` com 6 rotas públicas **lazy** — `agente`/`dt`/`novo-agente`/`patente`/`descanso`/`compras` — sob o `CalculadoraShell` (navegação de abas + deep-link por rota via `routerLink`/`routerLinkActive`, paridade com o `switchTab`/`VALID_TABS` por hash do site antigo) e o `StepInput` (stepper/input numérico reutilizável, `ControlValueAccessor` + Reactive Forms, sem `ngModel`). **Aba `agente` (m1-07):** carro-chefe — `AgentePage` (Reactive Forms + Signals) consumindo `shared/regras/agente` para **todas** as stats. **Abas leves `dt`/`novo-agente`/`patente` (m1-08):** três páginas Reactive Forms + Signals consumindo `shared/regras/{dt,novo-agente,patente}`, reusando o `StepInput` e os tokens/BEM do tema; rótulos de `PatenteEnum`/`MotivoEntradaAgenteEnum`→pt-BR em `modules/calculadora/rotulos.ts` (formatação de UI). **Aba `descanso` (m1-09):** `DescansoPage` (Reactive Forms + Signals) consumindo `shared/regras/descanso` — faixa determinística + **rolagem animada** (scramble via `requestAnimationFrame`, RNG por `rolarDados`). **Aba `compras` (m1-10):** `ComprasPage` — a mais pesada: configuração do agente (4 steppers), resumo de limites/gastos, catálogo com busca/categorias e o carrinho com itens, modificações (painel + empilhamentos) e amplificadores; estado em **Signals**, todos os números vindos de `shared/regras/compras` (`calcularResumoCompras`/`calcularStatItem`/custos). **Persistência e exportar/importar (m1-11):** `effect()` salva carrinho/amplificadores/recursos em `localStorage` a cada mudança e recarrega na construção da página; modais de exportar (código `CRPG-COMPRAS-V1:<base64>`) e importar, com aviso de incompatibilidade com códigos do site antigo. **Ajuda por aba (m1-12):** componente único `AjudaCalculadora` (`componentes/ajuda-calculadora/`) — gatilho "? Ajuda" + modal — embutido nas 6 páginas via input signal `aba`; o texto (guia de "como usar cada página") vive em `CONTEUDO_AJUDA`, keyed por aba, sem duplicação. Todas as 6 abas concluídas com paridade completa. **Verificação de paridade + "sem duplicação" (m1-14):** achado corrigido — `compras.page.ts` recalculava custo/penalidade de amplificador com constantes de regra embutidas (`3000/1000/2`) → passou a consumir `calcularCustoAmplificador` + `PENALIDADE_VONTADE_POR_EMPILHAMENTO` de `shared/regras/compras` (zero constante de regra no front). **Cor da stat Vida** (abas agente/descanso) desacoplada do `--accent` trocável: novo token fixo `--vida`/`--vida-border` (vermelho da identidade) em `_tokens.scss` (front + `docs/design/tema/`) — Vida permanece vermelha mesmo com accent trocado no tema em runtime |
 | frontend/campanha | não iniciado |
 | frontend/ficha | não iniciado |
 | Infra — banco local (Docker + Knex) | **pronto** (Postgres 16 + migrations) |
@@ -69,18 +69,47 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 
 ## Próxima Task
 
-**m1-14-paridade-deploy-arquivamento** (`docs/specs/backlog/m1-14-paridade-deploy-arquivamento.spec.md`).
-Resta 1 task do milestone
-(`docs/specs/backlog/m1-calculadora-paridade.spec.md`): a paridade de deploy + arquivamento do
-site antigo — última task do M1. As 6 páginas client-side da calculadora, o conteúdo de ajuda por
-aba e o sistema de troca de tema em runtime (m1-13) já estão entregues.
+**M1 concluído no código.** A próxima frente é o **M2 — Auth + Campanhas**
+(`docs/specs/backlog/m2-auth-campanhas.spec.md`), ainda a ser quebrado em tasks numeradas
+(`m2-01-*.spec.md`, …) antes da implementação. Os specs de milestone concluídos (`m0-fundacao`,
+`m1-calculadora-paridade`) e todas as tasks `m0-*`/`m1-*` estão em `docs/specs/done/`.
 
-> **Pendência operacional do M0 (não bloqueia o M1):** o backend em produção (Render) já responde
-> `/health`. Falta o front ficar live: conectar a Cloudflare Pages ao Git com **branch de produção
-> `master`** (e garantir o Auto-Deploy do Render ligado). Passo a passo em `docs/DEPLOY.md`.
+> **Passos operacionais pendentes (plataforma, não bloqueiam código — ver `docs/PARIDADE-M1.md`):**
+> 1. **Cloudflare Pages no ar:** conectar a Pages ao Git com **branch de produção `master`**
+>    (Auto-Deploy) e validar a calculadora funcionando com o Render dormindo. Runbook em `docs/DEPLOY.md`.
+> 2. **Arquivar `contratados-calculadora`:** marcar o repo antigo como *Archived* no GitHub
+>    (a documentação deste repo já o descreve como arquivado após o M1).
 
 ## Implementado
 
+- **m1-14-paridade-deploy-arquivamento** (2026-07-06): última task do M1 — verificação de
+  paridade das 6 abas, checagem de "sem duplicação" e fechamento **de código** do milestone
+  (o deploy Cloudflare e o toggle de arquivamento do repo antigo são passos operacionais de
+  plataforma, documentados como pendências). Task de verificação + documentação, sem regra de
+  jogo nova (`shared`/`shared/regras` intocados na lógica). **Método de paridade:** o repo antigo
+  `contratados-calculadora` **não está neste monorepo nem no histórico Git** (confirmado por
+  `find`/`git log`) — é projeto à parte. Como a milestone autoriza, a paridade é verificada
+  contra a **fonte da verdade** `docs/core/sistema-v4.1.0.md` (que vence o código antigo), já
+  conferida por domínio nas m1-02..m1-05 com os exemplos numéricos replicados em teste; as 4
+  divergências resolvidas a favor do documento (Limite de Energia `Destreza×2`; peso 0 das mods
+  de Armazenamento; quebra de formato do export/import; texto de ajuda reescrito) estão
+  catalogadas no novo **`docs/PARIDADE-M1.md`** (checklist por aba + tabela de divergências +
+  resultado da checagem de duplicação + estado de deploy/arquivamento). **Achado de duplicação
+  corrigido:** `compras.page.ts` recalculava o custo do amplificador (`3000 + (stacks−1)×1000`)
+  e a penalidade de Vontade (`(stacks−1)×2`) com constantes de regra embutidas — repontado para
+  `calcularCustoAmplificador()` + `PENALIDADE_VONTADE_POR_EMPILHAMENTO` de `shared/regras/compras`,
+  satisfazendo o critério "nenhuma regra de jogo duplicada no frontend". Confirmado: nenhuma outra
+  fórmula/tabela do jogo vive no front/back (backend não importa `shared/regras`); aritmética
+  remanescente nas páginas é de UI. **100% das fórmulas testadas:** shared **143/143**; frontend
+  **54/54**; `build --workspace=frontend` verde (inicial 532,77 kB < 560 kB, sem avisos) — bundle
+  estático servível offline do backend. **Ajustes de acabamento pedidos na mesma sessão** (fora do
+  escopo estrito da spec, a pedido do autor): (1) aba do navegador com sufixo **"- DEV"** em
+  desenvolvimento (`provideAppInitializer` gated por `!environment.producao`); (2) **stat Vida
+  fixada em vermelho** nas abas agente/descanso via novo token `--vida`/`--vida-border` (identidade),
+  desacoplada do `--accent` trocável do tema em runtime; (3) housekeeping — specs de milestone
+  `m0-fundacao`/`m1-calculadora-paridade` movidos para `done/` e `.gitkeep` removidos das pastas
+  que já têm conteúdo (`backend/src/config`, `docs/specs/done`, `frontend/src/app/modules`,
+  `shared/src/interfaces`). **Validado:** `lint`/`test`/`build` do frontend verdes; `test` do shared verde.
 - **m1-13-sistema-temas-runtime** (2026-07-05): entregável 4 do milestone e item adiado do M1
   (SYSTEM.SPEC §15) — **sistema de troca de tema em runtime** reconstruído sobre o
   `ContencaoPreset`/CSS vars do PrimeNG 21 e os tokens de `docs/design/tema/`. Identidade fixa

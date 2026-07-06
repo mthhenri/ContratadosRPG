@@ -6,6 +6,7 @@ import {
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { Title } from '@angular/platform-browser';
 import { providePrimeNG } from 'primeng/config';
 import { MessageService } from 'primeng/api';
 
@@ -14,6 +15,7 @@ import { loadingInterceptor } from './core/interceptors/loading.interceptor';
 import { errorHandlerInterceptor } from './core/interceptors/error-handler.interceptor';
 import { ContencaoPreset } from '../styles/tema/contencao.preset';
 import { TemaService } from './core/services/tema.service';
+import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -25,6 +27,13 @@ export const appConfig: ApplicationConfig = {
     providePrimeNG({ theme: { preset: ContencaoPreset, options: { darkModeSelector: '.dark' } } }),
     // Restaura e aplica a escolha de tema persistida antes da primeira renderização (sem flash).
     provideAppInitializer(() => inject(TemaService).iniciar()),
+    // Em desenvolvimento, marca a aba do navegador com sufixo "- DEV" (produção mantém o
+    // título do index.html). `environment.producao` é falso no build de dev.
+    provideAppInitializer(() => {
+      if (!environment.producao) {
+        inject(Title).setTitle('Contratados RPG - DEV');
+      }
+    }),
     MessageService,
   ],
 };

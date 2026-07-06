@@ -217,9 +217,9 @@
 
   // Tons semânticos.
   &--vida {
-    border-color: var(--accent-border);
+    border-color: var(--vida-border);
     .agente-stat__valor {
-      color: var(--accent);
+      color: var(--vida);
     }
   }
 

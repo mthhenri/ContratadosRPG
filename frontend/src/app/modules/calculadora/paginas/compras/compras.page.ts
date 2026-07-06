@@ -6,6 +6,7 @@ import { map } from 'rxjs';
 import { ItemCategoriaEnum } from '@contratados-rpg/shared/enums';
 import {
   AMPLIFICADORES,
+  calcularCustoAmplificador,
   calcularResumoCompras,
   calcularStatItem,
   CATALOGO_CATEGORIAS,
@@ -17,6 +18,7 @@ import {
   obterCategoriaEmprestada,
   obterCustoModificacao,
   obterLimiteModificacoes,
+  PENALIDADE_VONTADE_POR_EMPILHAMENTO,
   StatItemDto,
   verificarConflitoModificacao,
 } from '@contratados-rpg/shared/regras/compras';
@@ -360,8 +362,11 @@ export class ComprasPage {
         efeito: definicao?.efeito ?? '',
         empilhamentos: amplificador.empilhamentos,
         maximoEfetivo,
-        custoTexto: this.formatarDinheiro(3000 + Math.max(0, amplificador.empilhamentos - 1) * 1000),
-        penalidade: Math.max(0, amplificador.empilhamentos - 1) * 2,
+        custoTexto: this.formatarDinheiro(
+          calcularCustoAmplificador({ empilhamentos: amplificador.empilhamentos }),
+        ),
+        penalidade:
+          Math.max(0, amplificador.empilhamentos - 1) * PENALIDADE_VONTADE_POR_EMPILHAMENTO,
         podeAumentar: totalStacks < limite && amplificador.empilhamentos < maximoEfetivo,
       };
     });

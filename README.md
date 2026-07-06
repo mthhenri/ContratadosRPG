@@ -15,6 +15,7 @@ Sucessor da [contratados-calculadora](https://github.com/mthhenri/contratados-ca
 | [docs/CONTEXT.md](docs/CONTEXT.md) | Estado atual e próxima task |
 | [docs/SCHEMA.md](docs/SCHEMA.md) | Schema SQL alvo + forma dos documentos JSONB |
 | [docs/DEPLOY.md](docs/DEPLOY.md) | Runbook de deploy em produção (Cloudflare + Render + Supabase) |
+| [docs/PARIDADE-M1.md](docs/PARIDADE-M1.md) | Verificação de paridade da calculadora (fecha o M1) |
 | [docs/core/sistema-v4.1.0.md](docs/core/sistema-v4.1.0.md) | Fonte da verdade das regras do jogo |
 | [docs/core/guia_de_mestre-v4.0.0.md](docs/core/guia_de_mestre-v4.0.0.md) | Fonte da verdade de criação de ameaças |
 | [docs/specs/](docs/specs/) | Workflow spec-driven: backlog → active → done |
