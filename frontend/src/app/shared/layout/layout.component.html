@@ -3,9 +3,12 @@
 <header class="topbar">
   <span class="topbar__marca">Contratados<span class="topbar__marca-sufixo">RPG</span></span>
 
-  @if (loadingService.isLoading()) {
-    <span class="topbar__carregando" role="status" aria-label="Carregando"></span>
-  }
+  <div class="topbar__acoes">
+    @if (loadingService.isLoading()) {
+      <span class="topbar__carregando" role="status" aria-label="Carregando"></span>
+    }
+    <app-configuracoes-tema />
+  </div>
 </header>
 
 <main class="conteudo">

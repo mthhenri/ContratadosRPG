@@ -1,6 +1,6 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-12 — conteúdo de ajuda por aba: modal reutilizável nas 6 páginas).
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-13 — sistema de troca de tema em runtime: presets, claro/escuro e color picker com trava de contraste).
 
 ---
 
@@ -36,7 +36,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | # | Milestone | Status |
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, core/, pipelines, deploy) | **concluído** (deploy nativo Render+Cloudflare; setup das plataformas em `docs/DEPLOY.md`) |
-| M1 | Calculadora com paridade | **em andamento** (12/14 tasks — `m1-01` a `m1-12` concluídas) |
+| M1 | Calculadora com paridade | **em andamento** (13/14 tasks — `m1-01` a `m1-13` concluídas) |
 | M2 | Auth + Campanhas | backlog |
 | M3 | Ficha de Jogador | backlog |
 | M4 | Ficha de Criatura/NPC | backlog |
@@ -58,7 +58,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | backend/campanha | não iniciado |
 | backend/ficha | não iniciado |
 | frontend (shell) | **pronto** (topbar + `router-outlet` via `shared/layout`, home consumindo `/health`, tema "Terminal de Contenção" dark-first via `docs/design`) |
-| frontend/tema | **pronto** (tokens + base + `ContencaoPreset` PrimeNG em `src/styles/tema/`; troca de accent em runtime é M1). **Tailwind instalado e integrado ao build** (m1-06): `frontend/tailwind.config.ts` mescla o `theme.extend` do handoff (`docs/design/tema/tailwind.config.ts`) apontando cores/fontes/raios utilitários para as CSS custom properties dos tokens; diretivas `@tailwind` no fim de `styles.scss`, coexistindo com SCSS + tokens (preflight não sobrescreve a identidade — só reset) |
+| frontend/tema | **pronto + troca em runtime (m1-13)** (tokens + base + `ContencaoPreset` PrimeNG em `src/styles/tema/`). **Sistema de tema em runtime (m1-13):** `TemaService` (`core/services/tema.service.ts`) é a contraparte em runtime de `_tokens.scss` para a parte trocável — escreve `--accent` (e overrides de base clara) em `<html>`, alterna a classe `.dark` e regenera a paleta primária do PrimeNG (`updatePrimaryPalette`/`palette`); 4 presets de accent (só cores da paleta do tema — vermelho/azul/verde/âmbar), base clara/escura e color picker custom com **trava de contraste WCAG** (`razaoContraste`/`luminanciaRelativa`, piso 3:1 vs superfície); persiste em `localStorage` e restaura no boot via `provideAppInitializer`. Painel `ConfiguracoesTema` (`shared/configuracoes-tema/`) na topbar (gatilho + modal, fecha por botão). Budget inicial elevado p/ 560 kB (o motor de paleta do `@primeuix/themes` entra no bundle inicial). **Tailwind instalado e integrado ao build** (m1-06): `frontend/tailwind.config.ts` mescla o `theme.extend` do handoff (`docs/design/tema/tailwind.config.ts`) apontando cores/fontes/raios utilitários para as CSS custom properties dos tokens; diretivas `@tailwind` no fim de `styles.scss`, coexistindo com SCSS + tokens (preflight não sobrescreve a identidade — só reset) |
 | frontend/core (interceptors + services) | **pronto** (`loading`/`error-handler` interceptors, `LoadingService`, `HealthService`) |
 | frontend/calculadora | **6 abas prontas (paridade da calculadora completa)**. Fundação (m1-06): módulo `modules/calculadora/` com 6 rotas públicas **lazy** — `agente`/`dt`/`novo-agente`/`patente`/`descanso`/`compras` — sob o `CalculadoraShell` (navegação de abas + deep-link por rota via `routerLink`/`routerLinkActive`, paridade com o `switchTab`/`VALID_TABS` por hash do site antigo) e o `StepInput` (stepper/input numérico reutilizável, `ControlValueAccessor` + Reactive Forms, sem `ngModel`). **Aba `agente` (m1-07):** carro-chefe — `AgentePage` (Reactive Forms + Signals) consumindo `shared/regras/agente` para **todas** as stats. **Abas leves `dt`/`novo-agente`/`patente` (m1-08):** três páginas Reactive Forms + Signals consumindo `shared/regras/{dt,novo-agente,patente}`, reusando o `StepInput` e os tokens/BEM do tema; rótulos de `PatenteEnum`/`MotivoEntradaAgenteEnum`→pt-BR em `modules/calculadora/rotulos.ts` (formatação de UI). **Aba `descanso` (m1-09):** `DescansoPage` (Reactive Forms + Signals) consumindo `shared/regras/descanso` — faixa determinística + **rolagem animada** (scramble via `requestAnimationFrame`, RNG por `rolarDados`). **Aba `compras` (m1-10):** `ComprasPage` — a mais pesada: configuração do agente (4 steppers), resumo de limites/gastos, catálogo com busca/categorias e o carrinho com itens, modificações (painel + empilhamentos) e amplificadores; estado em **Signals**, todos os números vindos de `shared/regras/compras` (`calcularResumoCompras`/`calcularStatItem`/custos). **Persistência e exportar/importar (m1-11):** `effect()` salva carrinho/amplificadores/recursos em `localStorage` a cada mudança e recarrega na construção da página; modais de exportar (código `CRPG-COMPRAS-V1:<base64>`) e importar, com aviso de incompatibilidade com códigos do site antigo. **Ajuda por aba (m1-12):** componente único `AjudaCalculadora` (`componentes/ajuda-calculadora/`) — gatilho "? Ajuda" + modal — embutido nas 6 páginas via input signal `aba`; o texto (guia de "como usar cada página") vive em `CONTEUDO_AJUDA`, keyed por aba, sem duplicação. Todas as 6 abas concluídas com paridade completa |
 | frontend/campanha | não iniciado |
@@ -69,12 +69,11 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 
 ## Próxima Task
 
-**m1-13-sistema-temas-runtime** (`docs/specs/backlog/m1-13-sistema-temas-runtime.spec.md`).
-Restam 2 tasks do milestone
-(`docs/specs/backlog/m1-calculadora-paridade.spec.md`): o sistema de troca de tema em runtime
-(presets + color picker com trava de contraste — m1-13) e a paridade de deploy + arquivamento do
-site antigo (`m1-14-paridade-deploy-arquivamento`). As 6 páginas client-side da calculadora e o
-conteúdo de ajuda por aba já estão entregues.
+**m1-14-paridade-deploy-arquivamento** (`docs/specs/backlog/m1-14-paridade-deploy-arquivamento.spec.md`).
+Resta 1 task do milestone
+(`docs/specs/backlog/m1-calculadora-paridade.spec.md`): a paridade de deploy + arquivamento do
+site antigo — última task do M1. As 6 páginas client-side da calculadora, o conteúdo de ajuda por
+aba e o sistema de troca de tema em runtime (m1-13) já estão entregues.
 
 > **Pendência operacional do M0 (não bloqueia o M1):** o backend em produção (Render) já responde
 > `/health`. Falta o front ficar live: conectar a Cloudflare Pages ao Git com **branch de produção
@@ -82,6 +81,46 @@ conteúdo de ajuda por aba já estão entregues.
 
 ## Implementado
 
+- **m1-13-sistema-temas-runtime** (2026-07-05): entregável 4 do milestone e item adiado do M1
+  (SYSTEM.SPEC §15) — **sistema de troca de tema em runtime** reconstruído sobre o
+  `ContencaoPreset`/CSS vars do PrimeNG 21 e os tokens de `docs/design/tema/`. Identidade fixa
+  preservada (dark base + IBM Plex); só o `--accent` e a base clara/escura são trocáveis (spec).
+  **`TemaService`** (`core/services/tema.service.ts`) é a contraparte em runtime de `_tokens.scss`
+  para a parte trocável — o único lugar (fora do SCSS de tokens) sancionado a conhecer valores de
+  cor. Estado em Signals (`base`/`presetId`/`accentCustom` → `accentEfetivo`/`presetsExibicao`
+  computados). `aplicar()` escreve o token `--accent` em `<html>` (dispara `--accent-dim`/
+  `--accent-border` via `color-mix`), na base clara aplica overrides de superfície/texto (na
+  escura os remove, deixando o `:root` de `_tokens.scss` valer — sem duplicar os hexes dark),
+  alterna a classe `.dark` do PrimeNG e regenera a paleta primária do preset
+  (`updatePrimaryPalette(palette(accent))`) para os componentes PrimeNG seguirem o accent.
+  **Presets de accent (4):** só cores da paleta do tema (vermelho `--accent` / azul `--energy` /
+  verde `--positive` / âmbar `--warning`) — "não inventar cores fora desta lista" (CLAUDE.md).
+  **Trava de contraste (WCAG):** `luminanciaRelativa` (≈`relativeLuminance` do site antigo) +
+  `razaoContraste` (≈`contrastRatio`) puras; `CONTRASTE_MINIMO = 3` (piso WCAG AA de UI, paridade
+  do `SIMILAR_THRESHOLD`); `presetsExibicao` marca os travados p/ a base atual
+  (≈`updateSwatchLocks`), `definirAccentCustom` bloqueia (retorna `false`) cores ilegíveis, e
+  `definirBase` cai em `accentAlternativoParaBase` (≈`fallbackAccentForBase`) se o accent atual
+  ficar travado na nova base. Ex. conferido em teste: **âmbar** trava na base clara (contraste
+  ~2,25 vs branco) e libera na escura. **Persistência:** `salvar`/`restaurar` em `localStorage`
+  (`contratados-rpg:tema`), restaurados no boot por **`provideAppInitializer`** (aplica antes da
+  primeira renderização — sem flash). **UI:** painel `ConfiguracoesTema`
+  (`shared/configuracoes-tema/`) — gatilho na topbar (`Layout` ganhou `.topbar__acoes`) + modal
+  (base escuro/claro, swatches de preset com os travados desabilitados, `<input type="color">`
+  via Reactive Forms — sem `ngModel` — com aviso de contraste bloqueado); **fecha só por botão**
+  (padrão de acessibilidade dos modais de ajuda/compras). Consome **só tokens** do tema (nenhum
+  hex/fonte/raio solto no SCSS/template — proibição #29; os valores de cor vivem no `TemaService`,
+  a fonte em runtime, como no `_tokens.scss`). **Sem regra de jogo** (`shared`/`shared/regras`
+  intocados). **Budget:** o motor de paleta do `@primeuix/themes` (`palette`/`updatePrimaryPalette`)
+  entra no bundle inicial (~48 kB; import dinâmico não separa porque `@primeuix/themes` já é inicial
+  via `contencao.preset.ts`) — o budget `initial` `maximumWarning` foi elevado de 500 kB para
+  **560 kB** em `angular.json` (mantendo o erro em 1 MB; decisão do autor, mesmo precedente do
+  budget de estilo elevado na m1-10). Novos `tema.service.spec.ts` (contraste WCAG; trava por
+  base; aplicação das CSS vars em `<html>`; bloqueio do accent custom ilegível; fallback ao trocar
+  de base; round-trip de persistência) e `configuracoes-tema.component.spec.ts` (gatilho abre o
+  painel; 4 presets; base clara desabilita o âmbar; picker de baixo contraste sinaliza bloqueio).
+  **Validado:** `lint --workspace=frontend` limpo; `test --workspace=frontend` **52/52** (36
+  anteriores + 16 novos); `build --workspace=frontend` verde **sem avisos de budget** (inicial
+  532,49 kB < 560 kB). A troca reflete em runtime em todas as páginas (as pages são token-driven).
 - **m1-12-conteudo-ajuda** (2026-07-05): conteúdo de ajuda por aba — parte do entregável 4 do
   milestone (as 6 páginas ganham um modal de ajuda). **Componente único reutilizável**
   `AjudaCalculadora` (`modules/calculadora/componentes/ajuda-calculadora/`) consumido pelas **6

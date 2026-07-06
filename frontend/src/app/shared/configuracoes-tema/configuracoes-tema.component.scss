@@ -1,0 +1,256 @@
+// Painel de configurações de tema (m1-13). Consome apenas os tokens do tema "Terminal de
+// Contenção" (docs/design/tema/_tokens.scss) — nenhum hex/fonte/raio solto (proibição #29). O
+// modal reusa o padrão .ajuda-modal (m1-12); o gatilho reusa a linguagem de botão secundário.
+
+:host {
+  display: inline-flex;
+}
+
+// === Gatilho (engrenagem na topbar) ===
+.config-gatilho {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  padding: 6px 12px;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text);
+    border-color: var(--accent-border);
+  }
+
+  &__marca {
+    color: var(--accent);
+    font-size: 13px;
+    line-height: 1;
+  }
+}
+
+// === Modal (fundo + caixa) — adaptado de .ajuda-modal (m1-12) ===
+.config-modal-fundo {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 30;
+}
+
+.config-modal {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-card);
+  padding: var(--pad-card);
+  max-width: 420px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__titulo {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text);
+    margin: 0;
+  }
+
+  &__fechar {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 18px;
+    line-height: 1;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+
+    &:hover {
+      color: var(--text);
+      border-color: var(--accent-border);
+    }
+  }
+
+  &__acoes {
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+
+// === Seções ===
+.config-secao {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &__rotulo {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-mute);
+  }
+}
+
+// === Base (escuro/claro) ===
+.config-opcoes {
+  display: flex;
+  gap: 8px;
+}
+
+.config-opcao {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--text-dim);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  padding: 8px 12px;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text);
+    border-color: var(--accent-border);
+  }
+
+  &--ativa {
+    color: var(--accent);
+    border-color: var(--accent-border);
+    background: var(--accent-dim);
+  }
+}
+
+// === Presets de accent ===
+.config-swatches {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.config-swatch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  padding: 8px 12px;
+  cursor: pointer;
+  text-align: left;
+
+  &:hover {
+    color: var(--text);
+    border-color: var(--accent-border);
+  }
+
+  &__amostra {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    background: var(--swatch-cor);
+    border: 1px solid var(--border-strong);
+  }
+
+  &--ativo {
+    color: var(--text);
+    border-color: var(--accent-border);
+    background: var(--accent-dim);
+  }
+
+  &--travado {
+    opacity: 0.4;
+    cursor: not-allowed;
+
+    &:hover {
+      color: var(--text-dim);
+      border-color: var(--border-strong);
+    }
+  }
+}
+
+// === Cor personalizada (color picker) ===
+.config-custom {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  &__picker {
+    width: 44px;
+    height: 32px;
+    padding: 0;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+  }
+
+  &__valor {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  &__aviso {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--accent);
+    margin: 4px 0 0;
+  }
+}
+
+// === Botão "Fechar" — linguagem do botão secundário do tema ===
+.config-btn {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  padding: 8px 16px;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--accent-border);
+  }
+}

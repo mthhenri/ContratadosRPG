@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { Toast } from 'primeng/toast';
 
 import { LoadingService } from '../../core/services/loading.service';
+import { ConfiguracoesTema } from '../configuracoes-tema/configuracoes-tema.component';
 
 /**
  * Shell visual da aplicação: topbar institucional, indicador de carregamento global
@@ -13,7 +14,7 @@ import { LoadingService } from '../../core/services/loading.service';
  */
 @Component({
   selector: 'app-layout',
-  imports: [RouterOutlet, Toast],
+  imports: [RouterOutlet, Toast, ConfiguracoesTema],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',
 })

@@ -1,0 +1,97 @@
+<button
+  type="button"
+  class="config-gatilho"
+  aria-label="Configurações de tema"
+  (click)="abrir()"
+>
+  <span class="config-gatilho__marca" aria-hidden="true">◐</span>
+  <span>Tema</span>
+</button>
+
+@if (aberto()) {
+  <div class="config-modal-fundo">
+    <div class="config-modal" role="dialog" aria-modal="true" aria-label="Configurações de tema">
+      <header class="config-modal__cabecalho">
+        <h3 class="config-modal__titulo">Tema</h3>
+        <button
+          type="button"
+          class="config-modal__fechar"
+          aria-label="Fechar configurações"
+          (click)="fechar()"
+        >
+          ×
+        </button>
+      </header>
+
+      <section class="config-secao">
+        <span class="config-secao__rotulo">Base</span>
+        <div class="config-opcoes" role="group" aria-label="Base do tema">
+          <button
+            type="button"
+            class="config-opcao"
+            [class.config-opcao--ativa]="tema.base() === 'escuro'"
+            [attr.aria-pressed]="tema.base() === 'escuro'"
+            (click)="selecionarBase('escuro')"
+          >
+            Escuro
+          </button>
+          <button
+            type="button"
+            class="config-opcao"
+            [class.config-opcao--ativa]="tema.base() === 'claro'"
+            [attr.aria-pressed]="tema.base() === 'claro'"
+            (click)="selecionarBase('claro')"
+          >
+            Claro
+          </button>
+        </div>
+      </section>
+
+      <section class="config-secao">
+        <span class="config-secao__rotulo">Cor de destaque</span>
+        <div class="config-swatches" role="group" aria-label="Preset de cor">
+          @for (preset of tema.presetsExibicao(); track preset.id) {
+            <button
+              type="button"
+              class="config-swatch"
+              [class.config-swatch--ativo]="tema.presetId() === preset.id && !tema.accentCustom()"
+              [class.config-swatch--travado]="preset.travado"
+              [style.--swatch-cor]="preset.cor"
+              [disabled]="preset.travado"
+              [attr.aria-pressed]="tema.presetId() === preset.id && !tema.accentCustom()"
+              [attr.aria-label]="
+                preset.rotulo + (preset.travado ? ' (contraste insuficiente nesta base)' : '')
+              "
+              (click)="selecionarPreset(preset.id)"
+            >
+              <span class="config-swatch__amostra" aria-hidden="true"></span>
+              <span class="config-swatch__nome">{{ preset.rotulo }}</span>
+            </button>
+          }
+        </div>
+      </section>
+
+      <section class="config-secao">
+        <label class="config-secao__rotulo" for="config-cor-custom">Cor personalizada</label>
+        <div class="config-custom">
+          <input
+            id="config-cor-custom"
+            type="color"
+            class="config-custom__picker"
+            [formControl]="corCustom"
+          />
+          <span class="config-custom__valor">{{ corCustom.value }}</span>
+        </div>
+        @if (contrasteBloqueado()) {
+          <p class="config-custom__aviso" role="alert">
+            Contraste insuficiente com o fundo — cor bloqueada. Escolha um tom mais legível.
+          </p>
+        }
+      </section>
+
+      <div class="config-modal__acoes">
+        <button type="button" class="config-btn" (click)="fechar()">Fechar</button>
+      </div>
+    </div>
+  </div>
+}

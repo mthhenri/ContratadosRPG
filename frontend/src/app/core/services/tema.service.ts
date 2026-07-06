@@ -1,0 +1,316 @@
+import { DOCUMENT, Injectable, computed, inject, signal } from '@angular/core';
+import { palette, updatePrimaryPalette } from '@primeuix/themes';
+
+/**
+ * Base do tema — claro ou escuro. O dark base é a identidade do tema "Terminal de Contenção"
+ * (SYSTEM.SPEC §8 / docs/design/DESIGN.md); o claro é a variante alternável em runtime desta
+ * task (m1-13). A família tipográfica IBM Plex nunca muda (identidade fixa).
+ */
+export type BaseTema = 'escuro' | 'claro';
+
+/** Preset de accent selecionável em runtime. `cor` é o valor aplicado ao token `--accent`. */
+export interface PresetAccent {
+  readonly id: string;
+  readonly rotulo: string;
+  readonly cor: string;
+}
+
+/** Preset com a trava de contraste já resolvida para a base atual (ver `updateSwatchLocks`). */
+export interface PresetAccentExibicao extends PresetAccent {
+  readonly travado: boolean;
+}
+
+/**
+ * Presets de accent. As cores saem exclusivamente da paleta do tema (accent/energia/positivo/
+ * aviso de `docs/design/tema/_tokens.scss`) — "não inventar cores fora desta lista" (CLAUDE.md,
+ * TEMA VISUAL). Só o matiz varia; chroma/lightness são próximos.
+ */
+export const PRESETS_ACCENT: readonly PresetAccent[] = [
+  { id: 'vermelho', rotulo: 'Vermelho', cor: '#e5484d' }, // --accent (padrão / identidade)
+  { id: 'azul', rotulo: 'Azul', cor: '#4c8dd0' }, // --energy
+  { id: 'verde', rotulo: 'Verde', cor: '#4a9d6b' }, // --positive
+  { id: 'ambar', rotulo: 'Âmbar', cor: '#d9a441' }, // --warning
+];
+
+/** Preset aplicado quando nada foi salvo (o vermelho da identidade). */
+const PRESET_PADRAO = PRESETS_ACCENT[0];
+
+/**
+ * Overrides de token para a base **clara**. A base escura é a fonte da verdade em
+ * `_tokens.scss` (`:root`) — na base escura estes overrides são removidos e o `:root` volta a
+ * valer. Este service é a contraparte em runtime de `_tokens.scss` para a parte trocável do
+ * tema (accent + base), o único lugar sancionado a conhecer valores de cor fora do SCSS
+ * (mesmo racional dos tokens; proibição #29 vale para SCSS/template).
+ */
+const TOKENS_CLARO: Readonly<Record<string, string>> = {
+  '--bg': '#eef0f3',
+  '--surface': '#ffffff',
+  '--surface-2': '#e7eaee',
+  '--border': 'rgba(0, 0, 0, 0.09)',
+  '--border-strong': 'rgba(0, 0, 0, 0.16)',
+  '--text': '#12151a',
+  '--text-dim': '#4a4f57',
+  '--text-mute': '#767c85',
+  '--grid-line': 'rgba(0, 0, 0, 0.03)',
+};
+
+/** Superfície de conteúdo (`--surface`) de cada base — referência da trava de contraste. */
+const SUPERFICIE_BASE: Readonly<Record<BaseTema, string>> = {
+  escuro: '#13161b',
+  claro: '#ffffff',
+};
+
+/**
+ * Razão de contraste mínima (WCAG) entre o accent e a superfície de conteúdo. Abaixo disso o
+ * accent é considerado ilegível e é **travado** (equivalente ao `SIMILAR_THRESHOLD` do site
+ * antigo). 3:1 é o piso WCAG AA para componentes de interface / texto grande — o accent é usado
+ * como texto de estado ativo e detalhe sobre a superfície.
+ */
+export const CONTRASTE_MINIMO = 3;
+
+/** Chave de persistência da escolha de tema. */
+const CHAVE_PERSISTENCIA = 'contratados-rpg:tema';
+
+interface TemaPersistido {
+  base: BaseTema;
+  presetId: string;
+  accentCustom: string | null;
+}
+
+/**
+ * Converte `#rgb`/`#rrggbb` em `[r, g, b]` (0–255). Entradas inesperadas caem em preto — a
+ * origem real é sempre um preset do tema ou o `<input type="color">` (`#rrggbb`).
+ */
+function hexParaRgb(hex: string): [number, number, number] {
+  let corpo = hex.replace('#', '').trim();
+  if (corpo.length === 3) {
+    corpo = corpo
+      .split('')
+      .map((caractere) => caractere + caractere)
+      .join('');
+  }
+  if (corpo.length !== 6) {
+    return [0, 0, 0];
+  }
+  const vermelho = Number.parseInt(corpo.slice(0, 2), 16);
+  const verde = Number.parseInt(corpo.slice(2, 4), 16);
+  const azul = Number.parseInt(corpo.slice(4, 6), 16);
+  return [vermelho, verde, azul];
+}
+
+/**
+ * Luminância relativa de uma cor (algoritmo WCAG 2.x) — equivalente ao `relativeLuminance` do
+ * site antigo. Função pura; base do cálculo de contraste.
+ */
+export function luminanciaRelativa(hex: string): number {
+  const canais = hexParaRgb(hex).map((valor) => {
+    const proporcao = valor / 255;
+    return proporcao <= 0.03928 ? proporcao / 12.92 : ((proporcao + 0.055) / 1.055) ** 2.4;
+  });
+  const [vermelho, verde, azul] = canais;
+  return 0.2126 * vermelho + 0.7152 * verde + 0.0722 * azul;
+}
+
+/**
+ * Razão de contraste entre duas cores (WCAG 2.x, de 1 a 21) — equivalente ao `contrastRatio` do
+ * site antigo. Função pura.
+ */
+export function razaoContraste(corA: string, corB: string): number {
+  const luminanciaA = luminanciaRelativa(corA);
+  const luminanciaB = luminanciaRelativa(corB);
+  const maisClara = Math.max(luminanciaA, luminanciaB);
+  const maisEscura = Math.min(luminanciaA, luminanciaB);
+  return (maisClara + 0.05) / (maisEscura + 0.05);
+}
+
+/**
+ * Sistema de troca de tema em runtime (m1-13) — a contraparte em runtime de `_tokens.scss` para
+ * a parte trocável do tema. Aplica preset de accent, base clara/escura e accent custom (com
+ * **trava de contraste**) escrevendo as CSS custom properties do tema em `<html>`, alternando a
+ * classe `.dark` do PrimeNG e regenerando a paleta primária do `ContencaoPreset`. A escolha é
+ * persistida (localStorage) e restaurada no boot (`iniciar`).
+ *
+ * Mapa de paridade com o site antigo (`applyTheme`): `selecionarPreset`≈`setAccent`,
+ * `definirBase`≈`setBase`, `definirAccentCustom`≈`setCustomAccent`, `presetsExibicao`≈
+ * `updateSwatchLocks`, `accentAlternativoParaBase`≈`fallbackAccentForBase`, `salvar`≈`saveTheme`.
+ */
+@Injectable({ providedIn: 'root' })
+export class TemaService {
+  private readonly documento = inject(DOCUMENT);
+
+  private readonly _base = signal<BaseTema>('escuro');
+  private readonly _presetId = signal<string>(PRESET_PADRAO.id);
+  private readonly _accentCustom = signal<string | null>(null);
+
+  /** Base atual do tema (claro/escuro). */
+  readonly base = this._base.asReadonly();
+
+  /** Id do preset de accent selecionado. */
+  readonly presetId = this._presetId.asReadonly();
+
+  /** Accent custom escolhido no color picker, ou `null` quando um preset está ativo. */
+  readonly accentCustom = this._accentCustom.asReadonly();
+
+  /** Accent efetivamente aplicado: o custom quando definido, senão a cor do preset ativo. */
+  readonly accentEfetivo = computed(() => {
+    const custom = this._accentCustom();
+    if (custom) {
+      return custom;
+    }
+    const preset = PRESETS_ACCENT.find((item) => item.id === this._presetId());
+    return (preset ?? PRESET_PADRAO).cor;
+  });
+
+  /**
+   * Presets com a trava de contraste resolvida para a base atual (`updateSwatchLocks` do site
+   * antigo): a UI desabilita os `travado === true`.
+   */
+  readonly presetsExibicao = computed<readonly PresetAccentExibicao[]>(() => {
+    const base = this._base();
+    return PRESETS_ACCENT.map((preset) => ({
+      ...preset,
+      travado: this.travadoParaBase(preset.cor, base),
+    }));
+  });
+
+  /**
+   * Restaura a escolha persistida e aplica o tema. Chamado no boot (via `provideAppInitializer`),
+   * antes da primeira renderização, para evitar flash da base padrão.
+   */
+  iniciar(): void {
+    this.restaurar();
+    this.aplicar();
+  }
+
+  /**
+   * Seleciona um preset de accent. Presets travados pela base atual são ignorados (a UI já os
+   * desabilita, mas o guard evita aplicar uma combinação ilegível por outra via).
+   */
+  selecionarPreset(id: string): void {
+    const preset = PRESETS_ACCENT.find((item) => item.id === id);
+    if (!preset || this.travadoParaBase(preset.cor, this._base())) {
+      return;
+    }
+    this._accentCustom.set(null);
+    this._presetId.set(id);
+    this.aplicar();
+    this.salvar();
+  }
+
+  /**
+   * Alterna a base clara/escura. Se o accent atual ficar ilegível na nova base, cai no accent
+   * alternativo seguro (`accentAlternativoParaBase`) para nunca deixar uma combinação travada.
+   */
+  definirBase(base: BaseTema): void {
+    this._base.set(base);
+    if (this.travadoParaBase(this.accentEfetivo(), base)) {
+      this._accentCustom.set(null);
+      this._presetId.set(this.accentAlternativoParaBase(base).id);
+    }
+    this.aplicar();
+    this.salvar();
+  }
+
+  /**
+   * Define um accent custom (color picker). **Trava de contraste**: se o contraste contra a
+   * superfície da base atual for insuficiente, não aplica e devolve `false` (combinação
+   * ilegível bloqueada — critério de aceite). Devolve `true` quando aplicado.
+   */
+  definirAccentCustom(hex: string): boolean {
+    if (this.estaTravado(hex)) {
+      return false;
+    }
+    this._accentCustom.set(hex);
+    this.aplicar();
+    this.salvar();
+    return true;
+  }
+
+  /** Se um accent seria travado (contraste insuficiente) na base atual — usado pelo picker. */
+  estaTravado(hex: string): boolean {
+    return this.travadoParaBase(hex, this._base());
+  }
+
+  /** Accent seguro para uma base: o primeiro preset legível, senão o padrão. */
+  accentAlternativoParaBase(base: BaseTema): PresetAccent {
+    return PRESETS_ACCENT.find((preset) => !this.travadoParaBase(preset.cor, base)) ?? PRESET_PADRAO;
+  }
+
+  private travadoParaBase(hex: string, base: BaseTema): boolean {
+    return razaoContraste(hex, SUPERFICIE_BASE[base]) < CONTRASTE_MINIMO;
+  }
+
+  /**
+   * Escreve o tema no DOM: overrides de base (só na base clara), o token `--accent` (dispara
+   * `--accent-dim`/`--accent-border` via `color-mix`), a classe `.dark` do PrimeNG e a paleta
+   * primária do preset PrimeNG regenerada a partir do accent.
+   */
+  private aplicar(): void {
+    const raiz = this.documento.documentElement;
+    const base = this._base();
+    const accent = this.accentEfetivo();
+
+    for (const [propriedade, valor] of Object.entries(TOKENS_CLARO)) {
+      if (base === 'claro') {
+        raiz.style.setProperty(propriedade, valor);
+      } else {
+        raiz.style.removeProperty(propriedade);
+      }
+    }
+
+    raiz.style.setProperty('--accent', accent);
+    raiz.classList.toggle('dark', base === 'escuro');
+
+    // Mantém a paleta primária do preset PrimeNG (`ContencaoPreset`) em sincronia com o accent —
+    // é o que faz os componentes PrimeNG seguirem o preset trocado (deliverable 1). Isolado: uma
+    // falha aqui não impede o tema, que já vale pelas CSS custom properties escritas acima.
+    try {
+      // `palette` gera a escala 50–950 a partir do hex; o retorno é uma união larga, daí o cast.
+      updatePrimaryPalette(palette(accent) as Parameters<typeof updatePrimaryPalette>[0]);
+    } catch {
+      /* paleta PrimeNG é sincronização opcional — o tema já vale pelas CSS custom properties */
+    }
+  }
+
+  private restaurar(): void {
+    let bruto: string | null = null;
+    try {
+      bruto = this.documento.defaultView?.localStorage.getItem(CHAVE_PERSISTENCIA) ?? null;
+    } catch {
+      bruto = null;
+    }
+    if (!bruto) {
+      return;
+    }
+
+    let persistido: Partial<TemaPersistido>;
+    try {
+      persistido = JSON.parse(bruto) as Partial<TemaPersistido>;
+    } catch {
+      return;
+    }
+
+    if (persistido.base === 'claro' || persistido.base === 'escuro') {
+      this._base.set(persistido.base);
+    }
+    if (typeof persistido.presetId === 'string' && PRESETS_ACCENT.some((preset) => preset.id === persistido.presetId)) {
+      this._presetId.set(persistido.presetId);
+    }
+    if (typeof persistido.accentCustom === 'string' && !this.estaTravado(persistido.accentCustom)) {
+      this._accentCustom.set(persistido.accentCustom);
+    }
+  }
+
+  private salvar(): void {
+    const dados: TemaPersistido = {
+      base: this._base(),
+      presetId: this._presetId(),
+      accentCustom: this._accentCustom(),
+    };
+    try {
+      this.documento.defaultView?.localStorage.setItem(CHAVE_PERSISTENCIA, JSON.stringify(dados));
+    } catch {
+      /* persistência é best-effort; o tema continua aplicado na sessão mesmo sem storage */
+    }
+  }
+}
