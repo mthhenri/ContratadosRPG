@@ -148,7 +148,7 @@ contratados-rpg/
 | Pastas: `controllers/`, `services/`, `repositories/`, `dtos/`, `core/`, `shared/`, `regras/`… | Arquivos de entidade: `ficha.service.ts`, `campanha.repository.ts` |
 | Classes genéricas: `BaseEntity`, `BaseRepository`, `StandardResponse`, `PaginatedResult` | Métodos: `criarFicha()`, `listarCampanhas()`, `regenerarConvite()` |
 | Campos BaseEntity: `id`, `isDeleted`, `createdDate`, `updatedDate`, `deletedDate` | DTOs: `FichaCriarDto`, `CampanhaAlterarDto` |
-| Colunas BaseEntity SQL: `is_deleted`, `created_date`, `updated_date`, `deleted_date` | Tabelas/colunas: `ficha`, `campanha`, `codigo_convite`, `senha_encriptada` |
+| Colunas BaseEntity SQL: `is_deleted`, `created_date`, `updated_date`, `deleted_date` | Tabelas/colunas: `ficha`, `campanha`, `codigo_convite`, `senha` |
 | Exceptions: `BusinessException`, `ResourceNotFoundException`, `UnauthorizedAccessException` | Valores de enum: `MESTRE`, `JOGADOR`, `COMBATENTE`, `CRIATURA` |
 | Decorators: `@Public()`, `@ActiveUser()` | Módulos de negócio (pasta): `usuario/`, `campanha/`, `ficha/` |
 | Padrões técnicos: `auth-token.interceptor.ts`, `global-exception.filter.ts` | Comportamento de negócio: `autenticacao.guard.ts` |
@@ -463,7 +463,7 @@ forma do documento (`@IsEnum`, `@IsInt`, ranges).
 > Todas as tabelas incluem BaseEntity. Schema SQL completo e comentado em `SCHEMA.md`.
 
 ```
-usuario                     login UNIQUE, senha_encriptada (bcrypt), nome_completo
+usuario                     login UNIQUE, senha (hash bcrypt), nome
 
 campanha                    nome, descricao, codigo_convite UNIQUE
 campanha_membro             campanha_id FK, usuario_id FK, tipo_campanha_membro_papel_id FK

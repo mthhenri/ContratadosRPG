@@ -101,13 +101,20 @@ Depende só da m2-01 (tabela `usuario`, já criada).
   jogo do JSONB — §10.3). **Entregável 2 — migrations `.sql`:** quatro arquivos novos em
   `backend/src/database/migrations/`, em ordem de dependência de FK — `0002` tabela de referência
   `tipo_campanha_membro_papel` (com **seed** `MESTRE`/`JOGADOR` por literais SQL — exceção sancionada
-  de migration §10.7), `0003` `usuario`, `0004` `campanha`, `0005` `campanha_membro` — cada uma com
-  BaseEntity completa (**sem DEFAULT**), PK/FK/índices nomeados por prefixo (§10.2.11), índices
+  de migration §10.7), `0003` `usuario` (colunas `login`/`senha`/`nome` — hash bcrypt na `senha`, sem os sufixos
+  `_encriptada`/`_completo`; inclui **seed da conta do autor** `senhor.contratados`/`Matheus`
+  com a senha como hash bcrypt literal), `0004` `campanha`, `0005` `campanha_membro` — cada uma
+  com BaseEntity completa (**sem DEFAULT**), PK/FK/índices nomeados por prefixo (§10.2.11), índices
   únicos **parciais** `WHERE is_deleted = false` (login, código de papel, código de convite, par
   campanha+usuário) + `ix_campanha_membro_usuario`, e trigger `trg_<tabela>_updated_date` usando a
   `fn_set_updated_date()` do M0; seções `-- UP`/`-- DOWN`, sem `BEGIN/COMMIT` (o Knex gerencia a
-  transação — §10.7). **Entregável 3/4 — docs:** `SCHEMA.md` já descrevia a forma alvo (conferido
-  1:1, sem divergência); `CONVENTIONS.md` "Próxima migration" atualizado `0002` → `0006`.
+  transação — §10.7). **Seed da conta inicial** do autor em `usuario` (login `senhor.contratados`,
+  nome `Matheus`) com a `senha` como **hash bcrypt** literal (cost 10; validável por
+  `bcrypt.compare` na m2-02). **Entregável docs:** `SCHEMA.md` sincronizado (colunas de `usuario`
+  renomeadas para `login`/`senha`/`nome` + nota do seed); ajuste de nomenclatura propagado à
+  constituição — os exemplos de coluna de negócio da SYSTEM.SPEC §4/§14 e da CONVENTIONS passaram
+  de `senha_encriptada`/`nome_completo` para `senha`/`nome`; `CONVENTIONS.md` "Próxima migration"
+  atualizado `0002` → `0006`.
   **Validado no Postgres local:** `db:up` + `db:migrate` (batch 1 = 5 migrations) cria as 4 tabelas;
   conferidos por `psql` as 4 tabelas, o seed (`MESTRE`/`JOGADOR`), os 9 índices (`pk_`/`uix_`/`ix_`),
   as 3 FKs de `campanha_membro` e os 4 triggers; **round-trip** `db:rollback` (batch revertido, só

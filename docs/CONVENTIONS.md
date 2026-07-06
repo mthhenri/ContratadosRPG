@@ -14,7 +14,7 @@
 |---|---|
 | `controllers/` `services/` `repositories/` `core/` `shared/` `regras/` | `ficha.service.ts` `campanha.repository.ts` |
 | `BaseEntity` `BaseRepository` `StandardResponse` `PaginatedResult` | `criarFicha()` `regenerarConvite()` |
-| `isDeleted` `createdDate` `updatedDate` `deletedDate` (TS e SQL) | `nomeCompleto` `codigoConvite` `senhaEncriptada` |
+| `isDeleted` `createdDate` `updatedDate` `deletedDate` (TS e SQL) | `nome` `codigoConvite` `senha` |
 | `BusinessException` `ResourceNotFoundException` `UnauthorizedAccessException` | `FichaCriarDto` `TipoFichaEnum` |
 | `@Public()` `@ActiveUser()` | `MESTRE` `JOGADOR` `COMBATENTE` |
 | `auth-token.interceptor.ts` `global-exception.filter.ts` | `autenticacao.guard.ts` |

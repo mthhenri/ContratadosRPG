@@ -67,11 +67,12 @@ Enums TS espelhos: `TipoCampanhaMembroPapelEnum`, `TipoFichaEnum` (em `shared/sr
 ```sql
 CREATE TABLE usuario (
   -- BaseEntity...
-  login             VARCHAR NOT NULL,
-  senha_encriptada  VARCHAR NOT NULL,   -- bcrypt
-  nome_completo     VARCHAR NOT NULL
+  login   VARCHAR NOT NULL,
+  senha   VARCHAR NOT NULL,   -- hash bcrypt
+  nome    VARCHAR NOT NULL
 );
 -- uix_usuario_login_ativo: UNIQUE (login) WHERE is_deleted = false
+-- Seed da conta inicial do autor ('senhor.contratados') criado na migration (senha como hash bcrypt).
 ```
 
 ## campanha (M2)

@@ -12,11 +12,11 @@ módulo `usuario` (proibição #23), consumida pelo módulo `autenticacao`.
 ## Entregáveis
 
 1. **DTOs** em `shared/src/dtos/usuario/` seguindo CONVENTIONS/skill `dto-conventions`
-   (nomes finais decididos na implementação): registro (`login`, `senha`, `nomeCompleto`) e
+   (nomes finais decididos na implementação): registro (`login`, `senha`, `nome`) e
    sua saída; login (`login`, `senha`) e sua saída (token + dados básicos, **sem senha**).
    Zero primitivos em service/repository — sempre DTO (§5).
 2. **Módulo `autenticacao`** (`backend/src/modules/autenticacao/`):
-   - **registro** — rota `@Public()`; cria `usuario` com `senha_encriptada` via **bcrypt**;
+   - **registro** — rota `@Public()`; cria `usuario` com a `senha` gravada como hash **bcrypt**;
      login duplicado → `BusinessException('Login já está em uso')` (§11), checado por
      `validarLogin` (nunca `existe*` — proibição #20);
    - **login** — rota `@Public()`; valida login + senha (`bcrypt.compare`); gera **JWT** via

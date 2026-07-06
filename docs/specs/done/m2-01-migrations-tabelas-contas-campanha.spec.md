@@ -29,11 +29,19 @@ negócio, sem service, sem endpoint.
      `ix_campanha_membro_usuario`);
    - seções `-- UP` e `-- DOWN` (ambas obrigatórias), sem `BEGIN/COMMIT/ROLLBACK` no arquivo
      (o Knex gerencia a transação — §10.7).
+   - a tabela `usuario` usa as colunas de negócio `login` / `senha` (hash bcrypt) / `nome`
+     (nomes simples, sem os sufixos `_encriptada`/`_completo` — decisão do autor).
 3. **Seed da tabela de referência** `tipo_campanha_membro_papel` (`MESTRE`, `JOGADOR`) na
    própria migration, via **literais SQL** (`'MESTRE'`, `'JOGADOR'`) — a exceção sancionada a
    parâmetros nomeados vale só dentro de `migrations/` (§10.7).
-4. **`SCHEMA.md` sincronizado** (já descreve a forma alvo; conferir 1:1 e ajustar se divergir)
-   e **`CONVENTIONS.md`** "Próxima migration" atualizado para o próximo número livre.
+4. **Seed da conta inicial do autor** na tabela `usuario` (na migration `0003`): `login`
+   `'senhor.contratados'`, `nome` `'Matheus'`, `senha` como **hash bcrypt** (cost 10) do valor
+   escolhido — literal (§10.7); o backend valida via `bcrypt.compare` na m2-02. A senha nunca é
+   gravada em claro; recomendável trocá-la após o primeiro acesso em produção.
+5. **`SCHEMA.md` sincronizado** (forma alvo + colunas `login`/`senha`/`nome` + nota do seed) e
+   **`CONVENTIONS.md`** "Próxima migration" atualizado para o próximo número livre. Ajuste de
+   nomenclatura propagado à constituição (SYSTEM.SPEC §4/§14 e CONVENTIONS): os exemplos de
+   coluna de negócio passaram de `senha_encriptada`/`nome_completo` para `senha`/`nome`.
 
 ## Critérios de Aceite
 
@@ -41,6 +49,8 @@ negócio, sem service, sem endpoint.
   cada migration de forma limpa (idempotente no `-- DOWN`).
 - Tabelas, colunas, tipos, constraints e índices batem com `SCHEMA.md`.
 - Reference rows `MESTRE`/`JOGADOR` presentes após o migrate.
+- Conta inicial `senhor.contratados` (`nome` `Matheus`) presente em `usuario` após o migrate, com
+  a `senha` gravada como hash bcrypt verificável (`bcrypt.compare` retorna `true` para o valor).
 - **Nenhum** service, controller, repository de negócio, DTO de operação ou frontend nesta task.
 
 ## Fora de Escopo

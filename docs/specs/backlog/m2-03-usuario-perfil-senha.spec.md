@@ -11,14 +11,14 @@ na m2-02.
 ## Entregáveis
 
 1. **DTOs** em `shared/src/dtos/usuario/` (CONVENTIONS/`dto-conventions`): recuperação de
-   perfil (saída **sem** `senha_encriptada`) e troca de senha
+   perfil (saída **sem** a `senha`) e troca de senha
    (complemento `Senha` inteiro antes do verbo → `UsuarioSenhaAlterarDto`, com `senhaAtual` e
    `novaSenha`) e sua saída.
 2. **Perfil** — endpoint que retorna os dados do usuário autenticado (`@ActiveUser()`), nunca
    a senha.
 3. **Troca de senha** — service valida a `senhaAtual` (`bcrypt.compare`); se incorreta →
    `BusinessException`; grava a `novaSenha` encriptada (bcrypt). Repository só faz o SQL de
-   alteração de `senha_encriptada` (soft-delete-safe, `WHERE is_deleted = false`).
+   alteração da coluna `senha` (soft-delete-safe, `WHERE is_deleted = false`).
 4. Controller burra; service com a regra; repository só SQL — camadas conforme §7.
 
 ## Critérios de Aceite
