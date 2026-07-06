@@ -216,6 +216,25 @@
   max-height: 380px;
   overflow-y: auto;
   padding-right: 4px;
+
+  // Fade-out suave no topo e na base da lista rolável, evitando o "corte seco". A máscara fica
+  // presa às bordas da janela de scroll (não ao conteúdo), então os itens desvanecem ao se
+  // aproximar do limite. Banda curta para não apagar os botões "+ Adicionar".
+  $fade-lista: 26px;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 #{$fade-lista},
+    #000 calc(100% - #{$fade-lista}),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 #{$fade-lista},
+    #000 calc(100% - #{$fade-lista}),
+    transparent 100%
+  );
 }
 .compras-item {
   display: flex;
