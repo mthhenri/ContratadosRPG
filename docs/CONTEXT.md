@@ -70,12 +70,12 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 ## Próxima Task
 
 **M1 concluído no código** (paridade + refinamento mobile + refino do tema em runtime — 16 tasks), com
-mais uma task de refinamento no backlog: **`m1-18-slider-customizado.spec.md`** — substituir a
-aparência **nativa do navegador** do `<input type="range">` (hoje só o campo Nível da aba
-`agente`, `.agente-slider`) por um padrão visual próprio do tema "Terminal de Contenção"
-(track/thumb no raio de controle, preenchimento em `--accent`), registrado como bloco canônico
-`.slider` em `docs/design/tema/_componentes.scss` para reuso futuro (ficha de jogador/criatura
-em M3/M4 também usam slider nos protótipos). A próxima frente
+mais uma task de refinamento no backlog: **`m1-18-scrollbar-customizada.spec.md`** — substituir a
+barra de rolagem **nativa do navegador** (scroll geral, os 3 modais e tabelas/textarea com
+overflow) por um padrão visual próprio do tema "Terminal de Contenção" (thumb fino em
+`--surface-2`/`--border-strong`, `::-webkit-scrollbar-*` + `scrollbar-color`/`scrollbar-width`
+para Firefox), definido uma vez num parcial de tema global e documentado em
+`docs/design/DESIGN.md` para reuso futuro. A próxima frente
 maior é o **M2 — Auth + Campanhas** (`docs/specs/backlog/m2-auth-campanhas.spec.md`), ainda a
 ser quebrado em tasks numeradas (`m2-01-*.spec.md`, …) antes da implementação — os milestones
 M2–M5 já trazem uma task de refinamento mobile no escopo. Os specs de milestone concluídos
