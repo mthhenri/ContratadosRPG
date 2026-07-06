@@ -1,6 +1,6 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-09 — página descanso com rolagem animada).
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-05 (m1-10 — página compras: catálogo, carrinho, mods e amplificadores).
 
 ---
 
@@ -36,7 +36,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | # | Milestone | Status |
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, core/, pipelines, deploy) | **concluído** (deploy nativo Render+Cloudflare; setup das plataformas em `docs/DEPLOY.md`) |
-| M1 | Calculadora com paridade | **em andamento** (9/14 tasks — `m1-01` a `m1-09` concluídas) |
+| M1 | Calculadora com paridade | **em andamento** (10/14 tasks — `m1-01` a `m1-10` concluídas) |
 | M2 | Auth + Campanhas | backlog |
 | M3 | Ficha de Jogador | backlog |
 | M4 | Ficha de Criatura/NPC | backlog |
@@ -60,7 +60,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | frontend (shell) | **pronto** (topbar + `router-outlet` via `shared/layout`, home consumindo `/health`, tema "Terminal de Contenção" dark-first via `docs/design`) |
 | frontend/tema | **pronto** (tokens + base + `ContencaoPreset` PrimeNG em `src/styles/tema/`; troca de accent em runtime é M1). **Tailwind instalado e integrado ao build** (m1-06): `frontend/tailwind.config.ts` mescla o `theme.extend` do handoff (`docs/design/tema/tailwind.config.ts`) apontando cores/fontes/raios utilitários para as CSS custom properties dos tokens; diretivas `@tailwind` no fim de `styles.scss`, coexistindo com SCSS + tokens (preflight não sobrescreve a identidade — só reset) |
 | frontend/core (interceptors + services) | **pronto** (`loading`/`error-handler` interceptors, `LoadingService`, `HealthService`) |
-| frontend/calculadora | **fundação + abas `agente`/`dt`/`novo-agente`/`patente`/`descanso` prontas**. Fundação (m1-06): módulo `modules/calculadora/` com 6 rotas públicas **lazy** — `agente`/`dt`/`novo-agente`/`patente`/`descanso`/`compras` — sob o `CalculadoraShell` (navegação de abas + deep-link por rota via `routerLink`/`routerLinkActive`, paridade com o `switchTab`/`VALID_TABS` por hash do site antigo) e o `StepInput` (stepper/input numérico reutilizável, `ControlValueAccessor` + Reactive Forms, sem `ngModel`). **Aba `agente` (m1-07):** carro-chefe — `AgentePage` (Reactive Forms + Signals) consumindo `shared/regras/agente` para **todas** as stats. **Abas leves `dt`/`novo-agente`/`patente` (m1-08):** três páginas Reactive Forms + Signals consumindo `shared/regras/{dt,novo-agente,patente}`, reusando o `StepInput` e os tokens/BEM do tema; rótulos de `PatenteEnum`/`MotivoEntradaAgenteEnum`→pt-BR em `modules/calculadora/rotulos.ts` (formatação de UI). **Aba `descanso` (m1-09):** `DescansoPage` (Reactive Forms + Signals) consumindo `shared/regras/descanso` — faixa determinística + **rolagem animada** (scramble via `requestAnimationFrame`, RNG por `rolarDados`). Só a aba `compras` segue stub (m1-10) |
+| frontend/calculadora | **6 abas prontas (paridade da calculadora completa)**. Fundação (m1-06): módulo `modules/calculadora/` com 6 rotas públicas **lazy** — `agente`/`dt`/`novo-agente`/`patente`/`descanso`/`compras` — sob o `CalculadoraShell` (navegação de abas + deep-link por rota via `routerLink`/`routerLinkActive`, paridade com o `switchTab`/`VALID_TABS` por hash do site antigo) e o `StepInput` (stepper/input numérico reutilizável, `ControlValueAccessor` + Reactive Forms, sem `ngModel`). **Aba `agente` (m1-07):** carro-chefe — `AgentePage` (Reactive Forms + Signals) consumindo `shared/regras/agente` para **todas** as stats. **Abas leves `dt`/`novo-agente`/`patente` (m1-08):** três páginas Reactive Forms + Signals consumindo `shared/regras/{dt,novo-agente,patente}`, reusando o `StepInput` e os tokens/BEM do tema; rótulos de `PatenteEnum`/`MotivoEntradaAgenteEnum`→pt-BR em `modules/calculadora/rotulos.ts` (formatação de UI). **Aba `descanso` (m1-09):** `DescansoPage` (Reactive Forms + Signals) consumindo `shared/regras/descanso` — faixa determinística + **rolagem animada** (scramble via `requestAnimationFrame`, RNG por `rolarDados`). **Aba `compras` (m1-10):** `ComprasPage` — a mais pesada: configuração do agente (4 steppers), resumo de limites/gastos, catálogo com busca/categorias e o carrinho com itens, modificações (painel + empilhamentos) e amplificadores; estado em **Signals**, todos os números vindos de `shared/regras/compras` (`calcularResumoCompras`/`calcularStatItem`/custos). Todas as 6 abas concluídas (persistência/export do carrinho fica p/ m1-11) |
 | frontend/campanha | não iniciado |
 | frontend/ficha | não iniciado |
 | Infra — banco local (Docker + Knex) | **pronto** (Postgres 16 + migrations) |
@@ -69,12 +69,10 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 
 ## Próxima Task
 
-**m1-10-pagina-compras** (`docs/specs/backlog/m1-10-pagina-compras.spec.md`).
-A página `compras` com paridade — o domínio mais pesado da calculadora — consumindo
-`shared/regras/compras` (regras prontas desde a m1-05): catálogo por categoria, modificações,
-amplificadores e limites por patente, com o carrinho e o resumo de totais. Reactive Forms + Signals,
-`StepInput` da m1-06, tokens/BEM do tema. Zero regra de jogo no front; funciona offline do backend.
-**Ler `docs/design/DESIGN.md` antes de qualquer UI.**
+**m1-11-compras-persistencia-carrinho** (`docs/specs/backlog/m1-11-compras-persistencia-carrinho.spec.md`).
+Persistência do carrinho da aba `compras` em `localStorage` + export/import por código compartilhável
+(o estado do carrinho já existe em Signals na `ComprasPage` desde a m1-10; aqui só se adiciona
+persistir/serializar). **Ler `docs/design/DESIGN.md` antes de qualquer UI.**
 Milestone completo
 (`docs/specs/backlog/m1-calculadora-paridade.spec.md`): extrai as regras do jogo do site antigo
 (`contratados-calculadora/src/script.js`) para `shared/regras` e entrega as 6 páginas públicas client-side
@@ -86,6 +84,45 @@ da calculadora, além do sistema de troca de tema em runtime (presets + color pi
 
 ## Implementado
 
+- **m1-10-pagina-compras** (2026-07-05): a aba `compras` da calculadora — **a mais pesada** — com paridade
+  funcional à aba `compras` do site antigo (`renderCmpSummary`/`renderCmpCatalog`/`renderCmpCart`/
+  `computeItemStat`/`getCmpTotals`). **Zero regra de jogo no front**: limites de patente, custo/peso de
+  modificação, conflitos, stat computado de item, custo de amplificador e todos os totais vêm de
+  `shared/regras/compras` (regras prontas desde a m1-05); a página só orquestra o estado do carrinho em
+  Signals e traduz os value-objects do motor para a UI. Mesmo molde das abas anteriores (Reactive Forms +
+  Signals, `StepInput` da m1-06, tokens/BEM do tema "Terminal de Contenção"). `ComprasPage`
+  (`paginas/compras/`) tem 4 cards: **(1) Configuração** — 4 steppers (Dinheiro passo 100, Prestígio,
+  Inventário passo 0,5, Vontade 0–12); **(2) Resumo** — patente (via `ROTULOS_PATENTE`), dinheiro
+  restante/gasto, inventário usado vs efetivo, amplificadores vs limite (Vontade×3), limite de mods e
+  penalidade de Vontade, com cores semânticas (accent quando estoura, `--positive` quando sobra dinheiro),
+  tudo de `calcularResumoCompras`; **(3) Catálogo** — busca (`<input type=search>`) + abas de categoria
+  (`CATALOGO_CATEGORIAS`, texto mono sem os emojis do site — proibição de emoji decorativo do tema) e grade
+  de cartões (item base com dano/resist/bônus/descrição, ou amplificadores com faixa de stack e info de
+  limite); **(4) Carrinho** — itens com stat computado (`calcularStatItem`), toggle Guardada/Vestida para
+  armazenamento, chips de mods ativas com −/+, painel de modificações (próprias + emprestadas via "Faz
+  Parte"/"Combativo", com pontos de empilhamento, custo/stack, motivo de bloqueio e gate de adição) e
+  seção de amplificadores (stacks, custo, penalidade). **Estado em Signals**: `carrinho`/`amplificadores`
+  (arrays imutáveis atualizados por `signal.set`), `categoriaAtiva`, `busca`, `painelAbertos` (Set de uids
+  abertos), `recursos` (`toSignal` do form) → um `computed` por recorte de UI (`resumo`, `itensCatalogo`,
+  `amplificadoresCatalogo`, `itensCarrinho`, `amplificadoresCarrinho`) que remontam view-models a partir do
+  motor. **Gate de adição de mod/amp na página** (habilitar/desabilitar botão + travar a mutação) lê os
+  limites do motor (`obterLimiteModificacoes`, `verificarConflitoModificacao`, `empilhamentosIniciais`/
+  `empilhamentoMaximo` das `ModificacaoDados`) — não reimplementa fórmula, só orquestra a UI (mesma
+  disciplina da rolagem animada viver na `DescansoPage`). **Decisões de representação (não divergem de
+  regra):** ícones de stat do site (`⚔`/`🛡`/`📦`) viram rótulos de texto ("Dano …"/"Resist. …"/"+N inv."),
+  como previsto na m1-05; categorias sem emoji; patente exibida pelo nome pt-BR (`ROTULOS_PATENTE`, m1-08),
+  não o código do enum. **Persistência (`localStorage`) e export/import por código ficam para a m1-11**
+  (fora de escopo da spec). `calculadora.routes.spec.ts` atualizado (`compras` deixou de ser stub → agora
+  checa `.calc` + aba ativa; **não há mais stub**) e novo `compras.page.spec.ts` prova a ligação motor→DOM
+  (resumo padrão Prestígio 0 → **Agente** / **$1.000** / gasto **$0**; adicionar "Leve" → gasto/restante
+  **$500** e stat **Dano 1D6+DES [Físico]**; aplicar "Balanceada" → gasto **$1.250** (+$750 do motor);
+  adquirir amplificador "Defesa" → gasto **$3.000** e amps **1/3**). **Budget de estilo:** a página é grande
+  e seu SCSS scoped compila **6,75 kB** (reduzido de 8,46 kB com herança de `--font-mono` no container e
+  agrupamento dos padrões repetidos de caixa/controle); o budget global `anyComponentStyle` foi elevado de
+  4/8 kB para **8/12 kB** (aviso/erro) em `angular.json` para acomodar a página mais pesada (decisão do
+  autor — as demais páginas seguem folgadas). **Validado:** `lint --workspace=frontend` limpo; `test
+  --workspace=frontend` **30/30** (26 anteriores + 4 novos); `build --workspace=frontend` verde **sem
+  avisos de budget**. As 6 rotas seguem client-side (funcionam sem backend).
 - **m1-09-pagina-descanso** (2026-07-05): a aba `descanso` da calculadora com paridade funcional à
   `calcDescanso`/`rollDescanso` do site antigo, **incluindo a rolagem animada** (entregável 5 do milestone).
   **Zero regra de jogo no front** — faixa de recuperação, interpretação dos dados extras, rolagem e resultado

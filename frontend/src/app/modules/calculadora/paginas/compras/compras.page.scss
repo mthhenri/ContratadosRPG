@@ -1,1 +1,463 @@
-@use '../stub-pagina';
+// Aba "Compras" da calculadora (m1-10). Consome só os tokens do tema "Terminal de Contenção"
+// (proibição #29). Blocos .calc-cartao/.calc-config/.calc-campo/.calc-stat adaptados de
+// docs/design/tema/_componentes.scss. Para caber no budget de estilo por componente, o SCSS é
+// enxuto: a fonte mono é herdada do container (a maioria dos textos é mono; só o corpo reabre
+// --font-sans) e os padrões repetidos (caixa em surface-2, controle com borda forte, estado
+// desabilitado) são agrupados em listas de seletores em vez de redeclarados por bloco.
+
+.compras {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-grid);
+  font-family: var(--font-mono);
+}
+
+// Padrão "caixa": fundo surface-2, borda hairline, raio de controle.
+.calc-stat,
+.compras-info,
+.compras-item,
+.compras-mod-tag,
+.compras-mod-entrada {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+}
+
+// Padrão "controle": fundo surface-2, borda forte, raio de controle.
+.calc-texto,
+.compras-categoria,
+.compras-guardada,
+.compras-mods-toggle {
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+}
+
+// Rótulos mono uppercase reutilizados.
+.calc-campo__rotulo,
+.calc-stat__rotulo,
+.compras-carrinho-item__categoria,
+.compras-mod-secao {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-mute);
+}
+
+// Estado desabilitado comum a todo controle clicável.
+.compras-btn:disabled,
+.compras-categoria:disabled,
+.compras-limpar:disabled,
+.compras-mini-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+// === Card ===
+.calc-cartao {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--pad-card);
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 18px;
+  }
+  &__indice {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+  &__titulo {
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+  }
+  &__regua {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+}
+
+// === Configuração ===
+.calc-config {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--gap-grid);
+}
+.calc-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__rotulo {
+    font-size: 11px;
+  }
+  &__auxiliar {
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+}
+
+.calc-texto {
+  width: 100%;
+  color: var(--text);
+  padding: 11px 12px;
+  font-size: 14px;
+  outline: none;
+
+  &:focus {
+    border-color: var(--accent-border);
+  }
+}
+
+// === Stats do resumo ===
+.calc-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+.calc-stat {
+  padding: 13px 14px;
+
+  &__rotulo {
+    font-size: 10px;
+    margin-bottom: 7px;
+  }
+  &__valor {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+  }
+}
+.compras-negativo .calc-stat__valor {
+  color: var(--accent);
+}
+.compras-positivo .calc-stat__valor {
+  color: var(--positive);
+}
+
+// === Catálogo ===
+.compras-busca {
+  margin-bottom: 14px;
+}
+.compras-categorias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.compras-categoria {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  padding: 7px 12px;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    color: var(--text);
+  }
+}
+.compras-info {
+  font-size: 12px;
+  color: var(--text-dim);
+  padding: 10px 12px;
+  margin: 16px 0 12px;
+
+  strong {
+    color: var(--text);
+  }
+}
+.compras-vazio {
+  font-family: var(--font-sans);
+  color: var(--text-mute);
+  text-align: center;
+  padding: 18px 0;
+}
+
+.compras-grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+.compras-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+
+  &__nome {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  &__stat {
+    font-size: 11px;
+    color: var(--energy);
+  }
+  &__desc {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  &__ativo {
+    font-size: 11px;
+    color: var(--positive);
+  }
+  &__meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-top: 2px;
+  }
+  &__custo {
+    color: var(--warning);
+    font-weight: 700;
+  }
+  &__peso {
+    color: var(--text-mute);
+  }
+  &__acoes {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+  }
+}
+
+.compras-tag {
+  font-size: 10px;
+  color: var(--positive);
+  border: 1px solid color-mix(in srgb, var(--positive) 45%, transparent);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-left: 4px;
+
+  &--penalidade {
+    color: var(--accent);
+    border-color: var(--accent-border);
+  }
+}
+
+// === Botões ===
+.compras-btn {
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius-control);
+  padding: 7px 10px;
+  cursor: pointer;
+
+  &--adicionar {
+    flex: 1;
+    background: var(--accent);
+    color: var(--bg);
+    border: 0;
+  }
+  &--remover {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border-strong);
+  }
+  &--icone {
+    padding: 4px 8px;
+  }
+  &--pequeno {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+  &:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+}
+.compras-limpar {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+// === Carrinho ===
+.compras-carrinho-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  padding: 12px;
+  margin-top: 12px;
+
+  &--amp {
+    background: var(--surface-2);
+  }
+  &__cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  &__nome {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  &__categoria {
+    font-size: 10px;
+    margin-left: 8px;
+  }
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+  }
+  &__stat {
+    font-size: 12px;
+    color: var(--energy);
+    margin-top: 8px;
+  }
+}
+
+.compras-guardada,
+.compras-mods-toggle {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-size: 12px;
+  color: var(--text-dim);
+  padding: 8px 10px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+.compras-mods-ativas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.compras-mod-tag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  font-size: 11px;
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    color: var(--text);
+  }
+  &__custo {
+    color: var(--warning);
+  }
+  &__botoes {
+    display: flex;
+    gap: 4px;
+  }
+}
+.compras-mini-btn {
+  font-size: 13px;
+  width: 24px;
+  height: 24px;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+
+.compras-mod-painel {
+  margin-top: 10px;
+}
+.compras-mod-secao {
+  font-size: 10px;
+  color: var(--accent);
+  margin: 12px 0 8px;
+}
+.compras-mod-grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+.compras-mod-entrada {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px;
+  font-size: 10px;
+
+  &--ativa {
+    border-color: var(--accent-border);
+  }
+  &--bloqueada {
+    opacity: 0.55;
+  }
+  &__topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  &__nome {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  &__pontos {
+    display: flex;
+    gap: 3px;
+  }
+  &__desc {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  &__motivo,
+  &__custo {
+    color: var(--warning);
+  }
+  &__bloqueia {
+    color: var(--text-mute);
+  }
+}
+.compras-ponto {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+
+  &--cheio {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+}
+
+.compras-amps-carrinho {
+  margin-top: 16px;
+
+  &__cabecalho {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin-top: 8px;
+  }
+}

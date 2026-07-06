@@ -1,8 +1,351 @@
-<article class="stub-pagina">
-  <header class="stub-pagina__cabecalho">
-    <span class="stub-pagina__indice">06</span>
-    <h2 class="stub-pagina__titulo">Compras</h2>
-    <span class="stub-pagina__regua"></span>
-  </header>
-  <p class="stub-pagina__nota">Página em construção. O cálculo desta aba entra em uma task posterior do M1.</p>
-</article>
+<div class="calc compras">
+  <!-- CARD 1: CONFIGURAÇÃO -->
+  <section class="calc-cartao">
+    <header class="calc-cartao__cabecalho">
+      <span class="calc-cartao__indice">1</span>
+      <h2 class="calc-cartao__titulo">Configuração do Agente</h2>
+      <span class="calc-cartao__regua"></span>
+    </header>
+
+    <div class="calc-config" [formGroup]="formulario">
+      <div class="calc-campo">
+        <span class="calc-campo__rotulo">Dinheiro Disponível <span class="calc-campo__auxiliar">($)</span></span>
+        <app-step-input formControlName="dinheiro" [min]="0" [passo]="100" ariaRotulo="Dinheiro disponível" />
+      </div>
+      <div class="calc-campo">
+        <span class="calc-campo__rotulo">Prestígio Atual</span>
+        <app-step-input formControlName="prestigio" [min]="0" ariaRotulo="Prestígio atual" />
+      </div>
+      <div class="calc-campo">
+        <span class="calc-campo__rotulo">Inventário Máximo <span class="calc-campo__auxiliar">(slots)</span></span>
+        <app-step-input formControlName="inventario" [min]="0" [passo]="0.5" ariaRotulo="Inventário máximo" />
+      </div>
+      <div class="calc-campo">
+        <span class="calc-campo__rotulo">Vontade <span class="calc-campo__auxiliar">(limite de amplificadores)</span></span>
+        <app-step-input formControlName="vontade" [min]="0" [max]="12" ariaRotulo="Vontade" />
+      </div>
+    </div>
+  </section>
+
+  <!-- CARD 2: RESUMO -->
+  <section class="calc-cartao">
+    <header class="calc-cartao__cabecalho">
+      <span class="calc-cartao__indice">2</span>
+      <h2 class="calc-cartao__titulo">Resumo de Limites e Gastos</h2>
+      <span class="calc-cartao__regua"></span>
+    </header>
+
+    <div class="calc-stats compras-resumo">
+      <div class="calc-stat">
+        <div class="calc-stat__rotulo">Patente</div>
+        <div class="calc-stat__valor calc-stat__valor--texto">{{ patenteTexto() }}</div>
+      </div>
+      <div class="calc-stat" [class.compras-negativo]="semDinheiro()" [class.compras-positivo]="!semDinheiro()">
+        <div class="calc-stat__rotulo">Dinheiro Restante</div>
+        <div class="calc-stat__valor calc-stat__valor--texto">{{ dinheiroRestanteTexto() }}</div>
+      </div>
+      <div class="calc-stat compras-negativo">
+        <div class="calc-stat__rotulo">Gasto Total</div>
+        <div class="calc-stat__valor calc-stat__valor--texto">{{ gastoTexto() }}</div>
+      </div>
+      <div class="calc-stat" [class.compras-negativo]="excedeInventario()">
+        <div class="calc-stat__rotulo">Inventário Usado</div>
+        <div class="calc-stat__valor calc-stat__valor--texto">{{ inventarioTexto() }}</div>
+      </div>
+      <div class="calc-stat" [class.compras-negativo]="excedeAmplificadores()">
+        <div class="calc-stat__rotulo">Amplificadores</div>
+        <div class="calc-stat__valor calc-stat__valor--texto">{{ amplificadoresTexto() }}</div>
+      </div>
+      <div class="calc-stat">
+        <div class="calc-stat__rotulo">Mods por Item</div>
+        <div class="calc-stat__valor calc-stat__valor--texto">{{ limiteModsTexto() }}</div>
+      </div>
+      <div class="calc-stat" [class.compras-negativo]="resumo().penalidadeVontade > 0">
+        <div class="calc-stat__rotulo">Penalidade Amps</div>
+        <div class="calc-stat__valor calc-stat__valor--texto">{{ penalidadeVontadeTexto() }}</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CARD 3: CATÁLOGO -->
+  <section class="calc-cartao">
+    <header class="calc-cartao__cabecalho">
+      <span class="calc-cartao__indice">3</span>
+      <h2 class="calc-cartao__titulo">Catálogo de Equipamentos</h2>
+      <span class="calc-cartao__regua"></span>
+    </header>
+
+    <input
+      class="calc-texto compras-busca"
+      type="search"
+      placeholder="Pesquisar item…"
+      autocomplete="off"
+      [value]="busca()"
+      (input)="aoBuscar($event)"
+    />
+
+    <nav class="compras-categorias" aria-label="Categorias do catálogo">
+      @for (categoria of categorias; track categoria.categoria) {
+        <button
+          type="button"
+          class="compras-categoria"
+          [class.selecionavel--ativo]="!busca() && categoriaAtiva() === categoria.categoria"
+          [disabled]="!!busca()"
+          (click)="definirCategoria(categoria.categoria)"
+        >
+          {{ categoria.rotulo }}
+        </button>
+      }
+    </nav>
+
+    @if (catalogoVazio()) {
+      <p class="compras-vazio">Nenhum item encontrado.</p>
+    }
+
+    @if (itensCatalogo().length > 0) {
+      <div class="compras-grade">
+        @for (cartao of itensCatalogo(); track cartao.categoria + '/' + cartao.item.nome) {
+          <article class="compras-item">
+            <div class="compras-item__nome">
+              {{ cartao.item.nome }}
+              @if (cartao.bonus) {
+                <span class="compras-tag">{{ cartao.bonus }}</span>
+              }
+            </div>
+            @if (cartao.stat) {
+              <div class="compras-item__stat">{{ cartao.stat }}</div>
+            }
+            @if (cartao.descricao) {
+              <div class="compras-item__desc">{{ cartao.descricao }}</div>
+            }
+            <div class="compras-item__meta">
+              <span class="compras-item__custo">{{ cartao.custoTexto }}</span>
+              <span class="compras-item__peso">{{ cartao.pesoTexto }}</span>
+            </div>
+            <button type="button" class="compras-btn compras-btn--adicionar" (click)="adicionarItem(cartao)">
+              + Adicionar
+            </button>
+          </article>
+        }
+      </div>
+    }
+
+    @if (mostrarAmplificadores()) {
+      <div class="compras-info">
+        Limite: <strong>Vontade × 3 = {{ resumo().limiteAmplificadores }} stacks</strong> totais ·
+        máx. <strong>{{ resumo().limiteModificacoes.maxEmpilhamentos }} stack/amp</strong>
+        ({{ patenteTexto() }}) · Primeiro empilhamento: $3.000 · Adicionais: $1.000
+      </div>
+      <div class="compras-grade">
+        @for (amp of amplificadoresCatalogo(); track amp.nome) {
+          <article class="compras-item">
+            <div class="compras-item__nome">{{ amp.nome }}</div>
+            <div class="compras-item__desc">{{ amp.efeito }}</div>
+            <div class="compras-item__meta">
+              <span class="compras-item__custo">{{ amp.custoTexto }}</span>
+              <span class="compras-item__peso">máx. {{ amp.maximoEfetivo }} stacks</span>
+            </div>
+            @if (amp.empilhamentosAtuais > 0) {
+              <div class="compras-item__ativo">
+                Ativo: {{ amp.empilhamentosAtuais }}/{{ amp.maximoEfetivo }} stack{{ amp.empilhamentosAtuais > 1 ? 's' : '' }}
+                @if (amp.empilhamentosAtuais >= 2) {
+                  <span class="compras-tag compras-tag--penalidade">−2 Vontade</span>
+                }
+              </div>
+            }
+            <div class="compras-item__acoes">
+              @if (amp.empilhamentosAtuais > 0) {
+                <button type="button" class="compras-btn compras-btn--remover" (click)="removerAmplificador(amp.nome)">
+                  −
+                </button>
+              }
+              <button
+                type="button"
+                class="compras-btn compras-btn--adicionar"
+                [disabled]="!amp.podeAdicionar"
+                (click)="adicionarAmplificador(amp.nome)"
+              >
+                {{ amp.empilhamentosAtuais === 0 ? '+ Adquirir ($3.000)' : '+ Stack ($1.000)' }}
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </section>
+
+  <!-- CARD 4: CARRINHO -->
+  <section class="calc-cartao">
+    <header class="calc-cartao__cabecalho">
+      <span class="calc-cartao__indice">4</span>
+      <h2 class="calc-cartao__titulo">Carrinho</h2>
+      <span class="calc-cartao__regua"></span>
+      <button type="button" class="compras-limpar" [disabled]="carrinhoVazio()" (click)="esvaziarCarrinho()">
+        Esvaziar
+      </button>
+    </header>
+
+    @if (carrinhoVazio()) {
+      <p class="compras-vazio">Nenhum item adicionado ainda.</p>
+    }
+
+    @for (item of itensCarrinho(); track item.uid) {
+      <div class="compras-carrinho-item">
+        <div class="compras-carrinho-item__cabecalho">
+          <div>
+            <span class="compras-carrinho-item__nome">
+              {{ item.nome }}
+              @if (item.quantidade > 1) {
+                <span class="compras-tag">×{{ item.quantidade }}</span>
+              }
+            </span>
+            <span class="compras-carrinho-item__categoria">{{ item.categoriaRotulo }}</span>
+          </div>
+          <div class="compras-carrinho-item__meta">
+            <span class="compras-item__custo">{{ item.custoTotalTexto }}</span>
+            <span class="compras-item__peso">{{ item.pesoTexto }}</span>
+            <button
+              type="button"
+              class="compras-btn compras-btn--remover compras-btn--icone"
+              title="Remover −1"
+              (click)="removerItem(item.uid)"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        @if (item.stat) {
+          <div class="compras-carrinho-item__stat">{{ item.stat }}</div>
+        }
+
+        @if (item.ehArmazenamento) {
+          <button
+            type="button"
+            class="compras-guardada"
+            [class.selecionavel--ativo]="item.guardada"
+            (click)="alternarGuardada(item.uid)"
+          >
+            {{ item.guardada ? 'Guardada (ocupa slots, não amplia inv.)' : 'Vestida (amplia inv., não ocupa slots)' }}
+          </button>
+        }
+
+        @if (item.modsAtivas.length > 0) {
+          <div class="compras-mods-ativas">
+            @for (mod of item.modsAtivas; track mod.nome) {
+              <div class="compras-mod-tag">
+                <div class="compras-mod-tag__info">
+                  <span>{{ mod.nome }} ×{{ mod.empilhamentos }}</span>
+                  <span class="compras-mod-tag__custo">{{ mod.custoTexto }}</span>
+                </div>
+                <div class="compras-mod-tag__botoes">
+                  <button type="button" class="compras-mini-btn" (click)="removerModificacao(item.uid, mod.nome)">−</button>
+                  <button
+                    type="button"
+                    class="compras-mini-btn"
+                    [disabled]="!mod.podeAumentar"
+                    (click)="adicionarModificacao(item.uid, mod.nome)"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        @if (item.temMods) {
+          <button type="button" class="compras-mods-toggle" (click)="alternarPainel(item.uid)">
+            Modificações ({{ item.modsUsados }}/{{ item.maxModificacoes }} slots usados)
+            {{ item.painelAberto ? '▴' : '▾' }}
+          </button>
+
+          @if (item.painelAberto) {
+            <div class="compras-mod-painel">
+              @for (secao of item.secoes; track secao.titulo) {
+                @if (secao.titulo) {
+                  <div class="compras-mod-secao">{{ secao.titulo }}</div>
+                }
+                <div class="compras-mod-grade">
+                  @for (entrada of secao.entradas; track entrada.nome) {
+                    <div
+                      class="compras-mod-entrada"
+                      [class.compras-mod-entrada--bloqueada]="entrada.bloqueada"
+                      [class.compras-mod-entrada--ativa]="entrada.ativa"
+                    >
+                      <div class="compras-mod-entrada__topo">
+                        <span class="compras-mod-entrada__nome">{{ entrada.nome }}</span>
+                        <div class="compras-mod-entrada__pontos">
+                          @for (preenchido of entrada.pontos; track $index) {
+                            <span class="compras-ponto" [class.compras-ponto--cheio]="preenchido"></span>
+                          }
+                        </div>
+                      </div>
+                      <div class="compras-mod-entrada__desc">{{ entrada.descricao }}</div>
+                      @if (entrada.motivo) {
+                        <div class="compras-mod-entrada__motivo">{{ entrada.motivo }}</div>
+                      }
+                      @if (entrada.bloqueia.length > 0) {
+                        <div class="compras-mod-entrada__bloqueia">Bloqueia: {{ entrada.bloqueia.join(', ') }}</div>
+                      }
+                      <div class="compras-mod-entrada__custo">{{ entrada.custoTexto }}</div>
+                      <button
+                        type="button"
+                        class="compras-btn compras-btn--adicionar compras-btn--pequeno"
+                        [disabled]="!entrada.podeAdicionar"
+                        (click)="adicionarModificacao(item.uid, entrada.nome)"
+                      >
+                        {{ entrada.ativa ? '+ Stack' : '+ Aplicar' }}
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+    }
+
+    @if (amplificadoresCarrinho().length > 0) {
+      <div class="compras-amps-carrinho">
+        <div class="compras-amps-carrinho__cabecalho">
+          Amplificadores ({{ resumo().empilhamentosAmplificador }}/{{ resumo().limiteAmplificadores }} stacks)
+          @if (resumo().penalidadeVontade > 0) {
+            <span class="compras-tag compras-tag--penalidade">−{{ resumo().penalidadeVontade }} Vontade total</span>
+          }
+        </div>
+        @for (amp of amplificadoresCarrinho(); track amp.nome) {
+          <div class="compras-carrinho-item compras-carrinho-item--amp">
+            <div class="compras-carrinho-item__cabecalho">
+              <div>
+                <span class="compras-carrinho-item__nome">{{ amp.nome }}</span>
+                @if (amp.penalidade > 0) {
+                  <span class="compras-tag compras-tag--penalidade">−{{ amp.penalidade }} Vontade</span>
+                }
+              </div>
+              <div class="compras-carrinho-item__meta">
+                <span class="compras-item__custo">{{ amp.custoTexto }}</span>
+                <span class="compras-item__peso">{{ amp.empilhamentos }}/{{ amp.maximoEfetivo }} stacks</span>
+              </div>
+            </div>
+            <div class="compras-carrinho-item__stat">{{ amp.efeito }}</div>
+            <div class="compras-item__acoes">
+              <button type="button" class="compras-btn compras-btn--remover" (click)="removerAmplificador(amp.nome)">
+                − Stack
+              </button>
+              <button
+                type="button"
+                class="compras-btn compras-btn--adicionar"
+                [disabled]="!amp.podeAumentar"
+                (click)="adicionarAmplificador(amp.nome)"
+              >
+                + Stack ($1.000)
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </section>
+</div>

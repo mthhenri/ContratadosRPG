@@ -1,0 +1,99 @@
+import { TestBed } from '@angular/core/testing';
+
+import { ComprasPage } from './compras.page';
+
+/**
+ * Prova que a aba Compras liga `shared/regras/compras` ao DOM (nenhuma regra duplicada no
+ * front): o resumo, o custo de item/modificação e o custo de amplificador vêm do motor
+ * (`calcularResumoCompras`/`calcularStatItem`/custos). Os números conferem com a m1-05.
+ */
+describe('ComprasPage', () => {
+  async function montar() {
+    await TestBed.configureTestingModule({ imports: [ComprasPage] }).compileComponents();
+    const fixture = TestBed.createComponent(ComprasPage);
+    fixture.detectChanges();
+    return { fixture, raiz: fixture.nativeElement as HTMLElement };
+  }
+
+  function statResumo(raiz: HTMLElement, rotulo: string): string {
+    const cartoes = Array.from(raiz.querySelectorAll('.compras-resumo .calc-stat'));
+    const alvo = cartoes.find(
+      (cartao) => cartao.querySelector('.calc-stat__rotulo')?.textContent?.trim() === rotulo,
+    );
+    return alvo?.querySelector('.calc-stat__valor')?.textContent?.trim() ?? '';
+  }
+
+  function clicarPorTexto(raiz: HTMLElement, seletor: string, texto: string): void {
+    const alvo = Array.from(raiz.querySelectorAll(seletor)).find((elemento) =>
+      elemento.textContent?.trim().startsWith(texto),
+    ) as HTMLButtonElement | undefined;
+    alvo?.click();
+  }
+
+  /** Clica o botão "+ Adicionar" do cartão de catálogo cujo nome é exatamente `nome`. */
+  function adicionarItem(raiz: HTMLElement, nome: string): void {
+    const cartao = Array.from(raiz.querySelectorAll('.compras-grade .compras-item')).find(
+      (item) => item.querySelector('.compras-item__nome')?.textContent?.trim() === nome,
+    );
+    (cartao?.querySelector('.compras-btn--adicionar') as HTMLButtonElement | undefined)?.click();
+  }
+
+  it('exibe o resumo padrão (Prestígio 0 → Agente, $1.000, carrinho vazio)', async () => {
+    const { raiz } = await montar();
+    expect(statResumo(raiz, 'Patente')).toBe('Agente');
+    expect(statResumo(raiz, 'Dinheiro Restante')).toBe('$1.000');
+    expect(statResumo(raiz, 'Gasto Total')).toBe('$0');
+    expect(raiz.querySelector('.compras-carrinho-item')).toBeNull();
+  });
+
+  it('adiciona um item e recalcula gasto/restante e o stat de dano pelo motor', async () => {
+    const { fixture, raiz } = await montar();
+    adicionarItem(raiz, 'Leve');
+    fixture.detectChanges();
+
+    expect(statResumo(raiz, 'Gasto Total')).toBe('$500');
+    expect(statResumo(raiz, 'Dinheiro Restante')).toBe('$500');
+
+    const item = raiz.querySelector('.compras-carrinho-item');
+    expect(item?.querySelector('.compras-carrinho-item__nome')?.textContent).toContain('Leve');
+    expect(item?.querySelector('.compras-carrinho-item__stat')?.textContent).toContain(
+      'Dano 1D6+DES [Físico]',
+    );
+  });
+
+  it('aplica uma modificação e soma o custo do motor ($750) ao gasto', async () => {
+    const { fixture, raiz } = await montar();
+    adicionarItem(raiz, 'Leve');
+    fixture.detectChanges();
+
+    // Abre o painel de modificações e aplica "Balanceada" (custo padrão $750 em Corpo a Corpo).
+    (raiz.querySelector('.compras-mods-toggle') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    const entrada = Array.from(raiz.querySelectorAll('.compras-mod-entrada')).find(
+      (elemento) =>
+        elemento.querySelector('.compras-mod-entrada__nome')?.textContent?.trim() === 'Balanceada',
+    );
+    (entrada?.querySelector('.compras-btn--adicionar') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    // 500 (item) + 750 (mod) = 1.250.
+    expect(statResumo(raiz, 'Gasto Total')).toBe('$1.250');
+    expect(raiz.querySelector('.compras-mod-tag__info')?.textContent).toContain('Balanceada ×1');
+  });
+
+  it('adquire um amplificador ($3.000, 1/3) pelo custo do motor', async () => {
+    const { fixture, raiz } = await montar();
+    // Vai à categoria de amplificadores e adquire o "Defesa".
+    clicarPorTexto(raiz, '.compras-categoria', 'Amplificadores');
+    fixture.detectChanges();
+    const cartao = Array.from(raiz.querySelectorAll('.compras-grade .compras-item')).find(
+      (item) => item.querySelector('.compras-item__nome')?.textContent?.trim() === 'Defesa',
+    );
+    (cartao?.querySelector('.compras-btn--adicionar') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(statResumo(raiz, 'Gasto Total')).toBe('$3.000');
+    expect(statResumo(raiz, 'Amplificadores')).toBe('1 / 3');
+    expect(raiz.querySelector('.compras-amps-carrinho__cabecalho')?.textContent).toContain('1/3');
+  });
+});

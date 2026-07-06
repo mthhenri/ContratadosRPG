@@ -10,18 +10,16 @@ import { calculadoraRoutes } from './calculadora.routes';
  * antigo, agora dirigido pela URL em vez do hash).
  */
 describe('Calculadora — roteamento', () => {
-  // Abas com página real: agente (m1-07); dt, novo-agente e patente (m1-08); descanso (m1-09).
-  // Todas montam a raiz `.calc` e ativam sua aba. `agente` é validada à parte por ser o redirect
-  // da base.
+  // Abas com página real: agente (m1-07); dt, novo-agente e patente (m1-08); descanso (m1-09);
+  // compras (m1-10). Todas montam a raiz `.calc` e ativam sua aba. `agente` é validada à parte
+  // por ser o redirect da base.
   const abasReais = [
     { url: '/dt', tituloAba: 'DT' },
     { url: '/novo-agente', tituloAba: 'Novo Agente' },
     { url: '/patente', tituloAba: 'Patentes' },
     { url: '/descanso', tituloAba: 'Descanso' },
+    { url: '/compras', tituloAba: 'Compras' },
   ];
-
-  // Abas ainda em stub (as páginas reais chegam em tasks posteriores do M1).
-  const abasStub = [{ url: '/compras', titulo: 'Compras' }];
 
   async function navegar(url: string): Promise<HTMLElement> {
     TestBed.configureTestingModule({ providers: [provideRouter(calculadoraRoutes)] });
@@ -47,14 +45,6 @@ describe('Calculadora — roteamento', () => {
       const raiz = await navegar(aba.url);
       expect(raiz.querySelector('.calc')).not.toBeNull();
       expect(raiz.querySelector('.abas__item--ativo')?.textContent).toContain(aba.tituloAba);
-    });
-  }
-
-  for (const aba of abasStub) {
-    it(`carrega a página lazy e ativa a aba de ${aba.url}`, async () => {
-      const raiz = await navegar(aba.url);
-      expect(raiz.querySelector('.stub-pagina__titulo')?.textContent).toContain(aba.titulo);
-      expect(raiz.querySelector('.abas__item--ativo')?.textContent).toContain(aba.titulo);
     });
   }
 });
