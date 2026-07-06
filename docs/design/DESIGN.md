@@ -22,7 +22,8 @@ Assumindo o app Angular em `apps/web/` (ajuste ao seu layout de monorepo):
   `@use 'tema/tokens';`
 
 - **`tema/_base.scss`** → `apps/web/src/styles/tema/_base.scss`
-  Reset de body, fontes IBM Plex e o grid de textura. Importe DEPOIS dos tokens.
+  Reset de body, fontes IBM Plex, o grid de textura e a **scrollbar customizada global**
+  (ver "Scrollbar" abaixo). Importe DEPOIS dos tokens.
   Instale as fontes: `npm i @fontsource/ibm-plex-mono @fontsource/ibm-plex-sans`
   (ou use o `<link>` do Google Fonts — instruções no topo do arquivo).
 
@@ -60,6 +61,27 @@ Assumindo o app Angular em `apps/web/` (ajuste ao seu layout de monorepo):
 - Tipografia: `--font-mono` (dados/títulos/rótulos) · `--font-sans` (corpo)
 - Forma: `--radius-card` 6px · `--radius-control` 4px
 - Densidade confortável: `--pad-card` 20px · `--gap-grid` 16px
+
+## Scrollbar (padrão global)
+
+O tema **não usa a barra de rolagem nativa** do navegador em lugar nenhum — ela destoa da
+estética "técnica, sóbria, fria". O padrão canônico vive em **`tema/_base.scss`** (não em
+`_componentes.scss`, porque é regra **global**, não um bloco para copiar por componente) e vale
+para todo container com overflow — scroll geral, os modais, tabelas e o textarea de código — sem
+precisar ser repetido por componente.
+
+- **Thumb:** `--surface-2` com contorno `--border-strong`, raio `--radius-control`. Fino
+  (`width`/`height: 10px`). No `:hover`, o contorno passa a `--accent-border` (realce sutil —
+  **nunca** `--accent` sólido, reservado para ação/estado ativo).
+- **Track / corner:** transparentes.
+- **Cross-browser:** `::-webkit-scrollbar-*` (Chrome/Edge/Safari) + `scrollbar-width: thin` e
+  `scrollbar-color: var(--border-strong) transparent` (Firefox e a spec padrão).
+- **Só tokens** (`--surface-2`/`--border-strong`/`--accent-border`) → segue legível e discreto nas
+  duas bases (clara/escura) do tema em runtime, que sobrescrevem esses tokens. Nenhum hex solto
+  (proibição #29).
+
+Telas futuras (ficha de jogador/criatura, guia de missão) herdam esse padrão automaticamente —
+**não reintroduzir a scrollbar nativa** nem restilizá-la localmente por componente.
 
 ## Referência visual
 

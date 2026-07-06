@@ -23,3 +23,44 @@ body {
     linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: var(--grid-cell) var(--grid-cell);
 }
+
+// === Scrollbar customizada (tema "Terminal de Contenção") — m1-18 ===
+// Restiliza a barra de rolagem NATIVA do navegador em todo container com overflow: scroll geral
+// (html/.conteudo), os 3 modais (ajuda/tema/exportar-importar), tabelas de referência e o
+// textarea de código. Fina e discreta: thumb em --surface-2 com contorno --border-strong; track
+// transparente; hover realça o contorno com --accent-border (sem virar --accent sólido, que é
+// reservado para ação/estado ativo). Consome SÓ tokens → segue legível nas duas bases
+// (clara/escura) do tema em runtime (m1-13), que sobrescrevem --surface-2/--border-strong.
+// Definida UMA vez, globalmente — nenhum componente repete a regra. Padrão canônico documentado
+// em docs/design/DESIGN.md e espelhado em docs/design/tema/_base.scss.
+
+// Firefox (e a spec padrão de scrollbar): mesmas cores, via os dois tokens; herda p/ os modais.
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+// Chrome / Edge / Safari (WebKit/Blink): `*` cobre body, modais e qualquer container com overflow.
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  border-color: var(--accent-border);
+}
+
+// Canto onde as barras vertical e horizontal se cruzam (tabelas/textarea largos).
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
