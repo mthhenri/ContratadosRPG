@@ -47,6 +47,12 @@ continua sendo `compras` (não mexer no mecanismo dela).
 3. **Escopo de vida = sessão do app**: como o singleton é `providedIn: 'root'`, ele sobrevive à
    navegação entre rotas (SPA), mas é recriado do zero a cada carregamento de página (F5/nova
    aba) — não há nenhum mecanismo de persistência entre reloads para as 5 abas cobertas.
+4. **Preset inicial do Nível na aba `agente` passa de 3 para 0.** Ajuste independente do
+   singleton, pedido junto nesta task: o `FormControl` `nivel` do `AgentePage` (hoje
+   `new FormControl(3, { nonNullable: true })` em `agente.page.ts:114`) nasce em **0** — tanto no
+   preset "de fábrica" (primeira visita, singleton ainda vazio) quanto em qualquer lugar que hoje
+   assume Nível 3 como valor inicial. Classe (`Combatente`) e atributos (`2/2/2/1/1`) do preset
+   permanecem como estão — só o Nível muda.
 
 ## Critérios de Aceite
 
@@ -58,6 +64,8 @@ continua sendo `compras` (não mexer no mecanismo dela).
   dessas abas ganha sobrevida a reload nesta task.
 - `compras` continua se comportando exatamente como hoje: sobrevive tanto à troca de aba quanto
   a F5 (via seu `localStorage` já existente) — mecanismo dela **intocado**.
+- Uma primeira visita à aba `agente` (singleton vazio, sem reload) nasce com o slider de Nível em
+  **0** (não mais 3); os demais campos do preset (classe/atributos) não mudam.
 - **Zero alteração de regra de jogo** — `shared/regras` intocado.
 - Suítes `shared` e `frontend` verdes (specs das 5 páginas cobertas ganham teste de
   ida-e-volta: preencher → trocar de aba → voltar → valor preservado); build dentro do budget.
