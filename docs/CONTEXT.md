@@ -70,12 +70,21 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 ## Próxima Task
 
 **M1 concluído no código** (paridade + refinamento mobile + refino do tema em runtime — 16 tasks).
-Há uma nova task de refinamento no **backlog**, ainda não iniciada:
-**`m1-17-singleton-estado-abas-calculadora.spec.md`** — singleton em memória (sem
-`localStorage`) que preserva o estado do formulário de cada uma das 5 abas
-(`agente`/`dt`/`novo-agente`/`patente`/`descanso`) ao trocar de aba na calculadora; um F5 continua
-zerando essas 5 abas — só `compras` mantém sua peculiaridade de sobreviver a F5 (mecanismo próprio
-de `localStorage` da m1-11, intocado). A próxima frente
+Há duas novas tasks de refinamento no **backlog**, ainda não iniciadas:
+
+- **`m1-17-singleton-estado-abas-calculadora.spec.md`** — singleton em memória (sem
+  `localStorage`) que preserva o estado do formulário de cada uma das 5 abas
+  (`agente`/`dt`/`novo-agente`/`patente`/`descanso`) ao trocar de aba na calculadora; um F5 continua
+  zerando essas 5 abas — só `compras` mantém sua peculiaridade de sobreviver a F5 (mecanismo próprio
+  de `localStorage` da m1-11, intocado).
+- **`m1-18-scrollbar-customizada.spec.md`** — substituir a
+  barra de rolagem **nativa do navegador** (scroll geral, os 3 modais e tabelas/textarea com
+  overflow) por um padrão visual próprio do tema "Terminal de Contenção" (thumb fino em
+  `--surface-2`/`--border-strong`, `::-webkit-scrollbar-*` + `scrollbar-color`/`scrollbar-width`
+  para Firefox), definido uma vez num parcial de tema global e documentado em
+  `docs/design/DESIGN.md` para reuso futuro.
+
+A próxima frente
 maior é o **M2 — Auth + Campanhas** (`docs/specs/backlog/m2-auth-campanhas.spec.md`), ainda a
 ser quebrado em tasks numeradas (`m2-01-*.spec.md`, …) antes da implementação — os milestones
 M2–M5 já trazem uma task de refinamento mobile no escopo. Os specs de milestone concluídos
