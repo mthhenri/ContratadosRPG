@@ -207,6 +207,23 @@
       border-color: var(--border-strong);
     }
   }
+
+  // Swatch do slot custom salvo (m1-16) — o "S" de canto distingue-o dos presets fixos.
+  &--salvo {
+    position: relative;
+
+    &::after {
+      content: 'S';
+      position: absolute;
+      top: 4px;
+      right: 6px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: var(--tracking-label);
+      color: var(--text-mute);
+    }
+  }
 }
 
 // === Cor personalizada (color picker) ===
@@ -232,11 +249,40 @@
     color: var(--text);
   }
 
+  &__salvar {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-dim);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 8px 12px;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--text);
+      border-color: var(--accent-border);
+    }
+  }
+
   &__aviso {
     font-family: var(--font-sans);
     font-size: 12px;
     line-height: 1.5;
     color: var(--accent);
+    margin: 4px 0 0;
+  }
+
+  // Nota discreta (m1-16): a cor está sendo exibida adaptada, mas a original segue guardada.
+  &__nota {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-mute);
     margin: 4px 0 0;
   }
 }
@@ -247,8 +293,9 @@
   .config-swatch {
     min-height: bp.$alvo-toque;
   }
-  .config-custom__picker {
-    height: bp.$alvo-toque;
+  .config-custom__picker,
+  .config-custom__salvar {
+    min-height: bp.$alvo-toque;
   }
 }
 

@@ -6,7 +6,9 @@ import {
   PRESETS_ACCENT,
   TemaService,
   luminanciaRelativa,
+  nomearCor,
   razaoContraste,
+  variantePorContraste,
 } from './tema.service';
 
 /**
@@ -141,9 +143,100 @@ describe('TemaService', () => {
       expect(raiz.style.getPropertyValue('--accent').trim()).toBe('#4a9d6b');
     });
 
-    it('presets são apenas cores da paleta do tema', () => {
-      const cores = PRESETS_ACCENT.map((preset) => preset.cor);
-      expect(cores).toEqual(['#e5484d', '#4c8dd0', '#4a9d6b', '#d9a441']);
+    it('mantém as quatro cores oficiais do tema no início da lista de presets', () => {
+      const primeirasQuatro = PRESETS_ACCENT.slice(0, 4).map((preset) => preset.cor);
+      expect(primeirasQuatro).toEqual(['#e5484d', '#4c8dd0', '#4a9d6b', '#d9a441']);
+    });
+
+    it('inclui as cores principais adicionais pedidas (m1-16)', () => {
+      const ids = PRESETS_ACCENT.map((preset) => preset.id);
+      expect(ids).toEqual(
+        expect.arrayContaining(['roxo', 'rosa', 'dourado', 'turquesa', 'cinza']),
+      );
+    });
+  });
+
+  describe('slot custom salvo (m1-16)', () => {
+    it('salva a cor do picker como um slot re-selecionável e a torna o accent ativo', () => {
+      const tema = criar();
+      tema.salvarAccentCustom('#7ab4f0');
+
+      expect(tema.accentCustomSalvo()).toBe('#7ab4f0');
+      expect(tema.accentCustom()).toBe('#7ab4f0');
+      expect(tema.salvoAtivo()).toBe(true);
+      expect(raiz.style.getPropertyValue('--accent').trim()).toBe('#7ab4f0');
+    });
+
+    it('sobrescreve o slot anterior (nunca acumula mais de um)', () => {
+      const tema = criar();
+      tema.salvarAccentCustom('#7ab4f0');
+      tema.salvarAccentCustom('#4a9d6b');
+      expect(tema.accentCustomSalvo()).toBe('#4a9d6b');
+    });
+
+    it('re-seleciona o slot salvo mesmo ilegível na base atual, exibindo variante adaptada', () => {
+      const tema = criar();
+      // Branco é legível no escuro; salvamos e trocamos para a base clara (onde fica ilegível).
+      tema.salvarAccentCustom('#ffffff');
+      tema.definirBase('claro');
+
+      // Valor salvo/selecionado permanece o original...
+      expect(tema.accentCustomSalvo()).toBe('#ffffff');
+      expect(tema.accentEfetivo()).toBe('#ffffff');
+      expect(tema.accentAdaptado()).toBe(true);
+      // ...mas o --accent aplicado é uma variante legível na base clara.
+      const aplicado = raiz.style.getPropertyValue('--accent').trim();
+      expect(aplicado).not.toBe('#ffffff');
+      expect(razaoContraste(aplicado, '#ffffff')).toBeGreaterThanOrEqual(CONTRASTE_MINIMO);
+
+      // Ao voltar para a base compatível, a cor original é reaplicada tal como salva.
+      tema.definirBase('escuro');
+      expect(tema.accentAdaptado()).toBe(false);
+      expect(raiz.style.getPropertyValue('--accent').trim()).toBe('#ffffff');
+    });
+
+    it('persiste e restaura o slot salvo (independente do custom ativo)', () => {
+      const primeiro = criar();
+      primeiro.salvarAccentCustom('#7ab4f0');
+      primeiro.selecionarPreset('azul');
+
+      TestBed.resetTestingModule();
+      const restaurado = criar();
+      restaurado.iniciar();
+
+      expect(restaurado.accentCustomSalvo()).toBe('#7ab4f0');
+      expect(restaurado.presetId()).toBe('azul');
+      expect(restaurado.salvoAtivo()).toBe(false);
+    });
+  });
+
+  describe('variantePorContraste (inversão legível, pura)', () => {
+    it('branco na base clara vira preto (complemento legível)', () => {
+      expect(variantePorContraste('#ffffff', '#ffffff', 'claro')).toBe('#000000');
+    });
+
+    it('a variante sempre atinge o piso de contraste na superfície', () => {
+      // Um azul-claro ilegível no branco: a variante retornada precisa passar o piso.
+      const variante = variantePorContraste('#7ab4f0', '#ffffff', 'claro');
+      expect(variante).not.toBeNull();
+      expect(razaoContraste(variante!, '#ffffff')).toBeGreaterThanOrEqual(CONTRASTE_MINIMO);
+    });
+  });
+
+  describe('nomearCor (nome aproximado, m1-16)', () => {
+    it('nomeia as faixas de matiz principais', () => {
+      expect(nomearCor('#e5484d')).toBe('Vermelho');
+      expect(nomearCor('#4c8dd0')).toBe('Azul');
+      expect(nomearCor('#4a9d6b')).toBe('Verde');
+      expect(nomearCor('#9a6dd7')).toBe('Roxo');
+      expect(nomearCor('#d95a9d')).toBe('Rosa');
+      expect(nomearCor('#3bb9b3')).toBe('Turquesa');
+    });
+
+    it('reconhece tons de cinza (baixa saturação) e os extremos preto/branco', () => {
+      expect(nomearCor('#8b929b')).toBe('Cinza');
+      expect(nomearCor('#000000')).toBe('Preto');
+      expect(nomearCor('#ffffff')).toBe('Branco');
     });
   });
 });

@@ -43,10 +43,23 @@ describe('ConfiguracoesTema', () => {
     expect(raiz.querySelector('.config-modal')).not.toBeNull();
   });
 
-  it('exibe os quatro presets de accent', () => {
-    const { raiz, abrir } = montar();
+  it('exibe todos os presets de accent, sem swatch salvo enquanto nada foi salvo', () => {
+    const { raiz, tema, abrir } = montar();
     abrir();
-    expect(raiz.querySelectorAll('.config-swatch').length).toBe(4);
+    expect(raiz.querySelectorAll('.config-swatch').length).toBe(tema.presetsExibicao().length);
+    expect(raiz.querySelector('.config-swatch--salvo')).toBeNull();
+  });
+
+  it('salvar a cor do picker cria um swatch salvo re-selecionável', () => {
+    const { raiz, fixture, tema, abrir } = montar();
+    abrir();
+
+    raiz.querySelector<HTMLButtonElement>('.config-custom__salvar')!.click();
+    fixture.detectChanges();
+
+    const swatchSalvo = raiz.querySelector<HTMLButtonElement>('.config-swatch--salvo');
+    expect(swatchSalvo).not.toBeNull();
+    expect(tema.accentCustomSalvo()).toBe(tema.accentEfetivo());
   });
 
   it('troca a base para clara e desabilita o preset âmbar (travado no claro)', () => {

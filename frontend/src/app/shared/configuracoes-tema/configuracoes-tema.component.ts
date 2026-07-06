@@ -67,4 +67,16 @@ export class ConfiguracoesTema {
     this.contrasteBloqueado.set(false);
     this.tema.selecionarPreset(id);
   }
+
+  /** Salva a cor atual do picker como o slot custom re-selecionável (m1-16). */
+  protected salvarCor(): void {
+    this.contrasteBloqueado.set(false);
+    this.tema.salvarAccentCustom(this.corCustom.value);
+  }
+
+  /** Re-seleciona o slot custom salvo (m1-16). */
+  protected selecionarSalvo(): void {
+    this.contrasteBloqueado.set(false);
+    this.tema.selecionarAccentSalvo();
+  }
 }

@@ -21,15 +21,22 @@ export interface PresetAccentExibicao extends PresetAccent {
 }
 
 /**
- * Presets de accent. As cores saem exclusivamente da paleta do tema (accent/energia/positivo/
- * aviso de `docs/design/tema/_tokens.scss`) — "não inventar cores fora desta lista" (CLAUDE.md,
- * TEMA VISUAL). Só o matiz varia; chroma/lightness são próximos.
+ * Presets de accent. As quatro primeiras cores são as da paleta do tema (accent/energia/positivo/
+ * aviso de `docs/design/tema/_tokens.scss`); as demais são cores principais adicionais pedidas
+ * pelo autor (m1-16), mantendo chroma/lightness próximos das oficiais (só o matiz varia) para não
+ * destoar da identidade. Todas passam pela mesma trava de contraste por base (`presetsExibicao`) —
+ * as ilegíveis na base atual ficam desabilitadas, sem exceção.
  */
 export const PRESETS_ACCENT: readonly PresetAccent[] = [
   { id: 'vermelho', rotulo: 'Vermelho', cor: '#e5484d' }, // --accent (padrão / identidade)
   { id: 'azul', rotulo: 'Azul', cor: '#4c8dd0' }, // --energy
   { id: 'verde', rotulo: 'Verde', cor: '#4a9d6b' }, // --positive
   { id: 'ambar', rotulo: 'Âmbar', cor: '#d9a441' }, // --warning
+  { id: 'roxo', rotulo: 'Roxo', cor: '#9a6dd7' },
+  { id: 'rosa', rotulo: 'Rosa', cor: '#d95a9d' },
+  { id: 'dourado', rotulo: 'Dourado', cor: '#c9a227' },
+  { id: 'turquesa', rotulo: 'Turquesa', cor: '#3bb9b3' },
+  { id: 'cinza', rotulo: 'Cinza', cor: '#8b929b' },
 ];
 
 /** Preset aplicado quando nada foi salvo (o vermelho da identidade). */
@@ -75,6 +82,7 @@ interface TemaPersistido {
   base: BaseTema;
   presetId: string;
   accentCustom: string | null;
+  accentCustomSalvo: string | null;
 }
 
 /**
@@ -123,6 +131,126 @@ export function razaoContraste(corA: string, corB: string): number {
   return (maisClara + 0.05) / (maisEscura + 0.05);
 }
 
+/** Converte `[r, g, b]` (0–255) em `#rrggbb`, saturando cada canal ao intervalo válido. */
+function rgbParaHex([vermelho, verde, azul]: [number, number, number]): string {
+  const canal = (valor: number): string =>
+    Math.max(0, Math.min(255, Math.round(valor)))
+      .toString(16)
+      .padStart(2, '0');
+  return `#${canal(vermelho)}${canal(verde)}${canal(azul)}`;
+}
+
+/** Complemento RGB (`255 − canal`) — a "inversão" que resolve o caso branco↔preto. */
+function complementoRgb(hex: string): string {
+  const [vermelho, verde, azul] = hexParaRgb(hex);
+  return rgbParaHex([255 - vermelho, 255 - verde, 255 - azul]);
+}
+
+/** Mistura linear entre `hex` e uma cor-alvo (`0` = cor original, `1` = alvo). */
+function misturarRgb(hex: string, alvo: [number, number, number], proporcao: number): string {
+  const [vermelho, verde, azul] = hexParaRgb(hex);
+  const misturar = (canal: number, canalAlvo: number): number =>
+    canal + (canalAlvo - canal) * proporcao;
+  return rgbParaHex([
+    misturar(vermelho, alvo[0]),
+    misturar(verde, alvo[1]),
+    misturar(azul, alvo[2]),
+  ]);
+}
+
+/**
+ * Variante **legível** de uma cor contra uma superfície (m1-16 — inversão por incompatibilidade
+ * de base). Primeiro tenta o **complemento RGB** (resolve branco↔preto, honrando a "inversão" da
+ * spec); se ainda não atingir `CONTRASTE_MINIMO`, empurra a luminância da cor original rumo ao
+ * extremo que a base pede (preto na base clara, branco na escura) até cruzar o piso. Função pura;
+ * mantém `razaoContraste` como base do teste. Como as superfícies das bases são quase-extremas, o
+ * passo final (preto/branco puro) sempre passa — `null` só sobra como salvaguarda teórica.
+ */
+export function variantePorContraste(
+  hex: string,
+  superficie: string,
+  base: BaseTema,
+): string | null {
+  const complemento = complementoRgb(hex);
+  if (razaoContraste(complemento, superficie) >= CONTRASTE_MINIMO) {
+    return complemento;
+  }
+  const alvo: [number, number, number] = base === 'claro' ? [0, 0, 0] : [255, 255, 255];
+  for (let passo = 1; passo <= 10; passo += 1) {
+    const variante = misturarRgb(hex, alvo, passo / 10);
+    if (razaoContraste(variante, superficie) >= CONTRASTE_MINIMO) {
+      return variante;
+    }
+  }
+  return null;
+}
+
+/** Converte `#rrggbb` em HSL (`matiz` 0–360, `saturacao`/`luminosidade` 0–1). */
+function hexParaHsl(hex: string): [number, number, number] {
+  const [vermelho255, verde255, azul255] = hexParaRgb(hex);
+  const vermelho = vermelho255 / 255;
+  const verde = verde255 / 255;
+  const azul = azul255 / 255;
+  const maximo = Math.max(vermelho, verde, azul);
+  const minimo = Math.min(vermelho, verde, azul);
+  const luminosidade = (maximo + minimo) / 2;
+  const delta = maximo - minimo;
+  if (delta === 0) {
+    return [0, 0, luminosidade];
+  }
+  const saturacao = delta / (1 - Math.abs(2 * luminosidade - 1));
+  let matiz: number;
+  if (maximo === vermelho) {
+    matiz = ((verde - azul) / delta) % 6;
+  } else if (maximo === verde) {
+    matiz = (azul - vermelho) / delta + 2;
+  } else {
+    matiz = (vermelho - verde) / delta + 4;
+  }
+  matiz *= 60;
+  if (matiz < 0) {
+    matiz += 360;
+  }
+  return [matiz, saturacao, luminosidade];
+}
+
+/** Faixas de matiz → nome pt-BR (o limite superior `ate` é exclusivo). */
+const FAIXAS_MATIZ: readonly { readonly ate: number; readonly nome: string }[] = [
+  { ate: 15, nome: 'Vermelho' },
+  { ate: 40, nome: 'Laranja' },
+  { ate: 55, nome: 'Dourado' },
+  { ate: 70, nome: 'Amarelo' },
+  { ate: 90, nome: 'Lima' },
+  { ate: 150, nome: 'Verde' },
+  { ate: 185, nome: 'Turquesa' },
+  { ate: 200, nome: 'Ciano' },
+  { ate: 255, nome: 'Azul' },
+  { ate: 285, nome: 'Roxo' },
+  { ate: 320, nome: 'Magenta' },
+  { ate: 345, nome: 'Rosa' },
+  { ate: 360, nome: 'Vermelho' },
+];
+
+/**
+ * Nome **aproximado** (pt-BR) de uma cor a partir de matiz/saturação/luminosidade — rótulo do slot
+ * custom salvo (m1-16). Não é classificação exata: cores dessaturadas viram tons de cinza; as
+ * demais recebem o nome da faixa de matiz, com qualificador claro/escuro pela luminosidade.
+ */
+export function nomearCor(hex: string): string {
+  const [matiz, saturacao, luminosidade] = hexParaHsl(hex);
+  if (saturacao < 0.12) {
+    if (luminosidade < 0.12) return 'Preto';
+    if (luminosidade > 0.9) return 'Branco';
+    if (luminosidade < 0.4) return 'Cinza escuro';
+    if (luminosidade > 0.65) return 'Cinza claro';
+    return 'Cinza';
+  }
+  const base = FAIXAS_MATIZ.find((faixa) => matiz < faixa.ate)?.nome ?? 'Vermelho';
+  if (luminosidade < 0.28) return `${base} escuro`;
+  if (luminosidade > 0.72) return `${base} claro`;
+  return base;
+}
+
 /**
  * Sistema de troca de tema em runtime (m1-13) — a contraparte em runtime de `_tokens.scss` para
  * a parte trocável do tema. Aplica preset de accent, base clara/escura e accent custom (com
@@ -133,6 +261,11 @@ export function razaoContraste(corA: string, corB: string): number {
  * Mapa de paridade com o site antigo (`applyTheme`): `selecionarPreset`≈`setAccent`,
  * `definirBase`≈`setBase`, `definirAccentCustom`≈`setCustomAccent`, `presetsExibicao`≈
  * `updateSwatchLocks`, `accentAlternativoParaBase`≈`fallbackAccentForBase`, `salvar`≈`saveTheme`.
+ *
+ * m1-16 estende: **slot custom salvo** re-selecionável e persistente (`accentCustomSalvo`/
+ * `salvarAccentCustom`/`selecionarAccentSalvo`) e **inversão visual por incompatibilidade de base**
+ * (`accentAplicado`/`accentAdaptado`/`variantePorContraste`) — a cor salva é preservada e apenas
+ * exibida adaptada quando fica ilegível na base ativa.
  */
 @Injectable({ providedIn: 'root' })
 export class TemaService {
@@ -141,6 +274,7 @@ export class TemaService {
   private readonly _base = signal<BaseTema>('escuro');
   private readonly _presetId = signal<string>(PRESET_PADRAO.id);
   private readonly _accentCustom = signal<string | null>(null);
+  private readonly _accentCustomSalvo = signal<string | null>(null);
 
   /** Base atual do tema (claro/escuro). */
   readonly base = this._base.asReadonly();
@@ -151,7 +285,18 @@ export class TemaService {
   /** Accent custom escolhido no color picker, ou `null` quando um preset está ativo. */
   readonly accentCustom = this._accentCustom.asReadonly();
 
-  /** Accent efetivamente aplicado: o custom quando definido, senão a cor do preset ativo. */
+  /**
+   * Cor custom **salva** como preset re-selecionável (m1-16) — um único slot por vez, persistido
+   * junto do estado de tema. Distinto do `accentCustom` "ativo": é a cor guardada, exibida como
+   * swatch e reaplicável com um clique.
+   */
+  readonly accentCustomSalvo = this._accentCustomSalvo.asReadonly();
+
+  /**
+   * Accent **selecionado** (valor lógico): o custom quando definido, senão a cor do preset ativo.
+   * É a cor que o usuário escolheu/salvou — não necessariamente a exibida (ver `accentAplicado`,
+   * que a adapta quando ilegível na base atual).
+   */
   readonly accentEfetivo = computed(() => {
     const custom = this._accentCustom();
     if (custom) {
@@ -159,6 +304,37 @@ export class TemaService {
     }
     const preset = PRESETS_ACCENT.find((item) => item.id === this._presetId());
     return (preset ?? PRESET_PADRAO).cor;
+  });
+
+  /**
+   * Accent efetivamente **escrito** em `--accent` (m1-16): igual ao selecionado quando legível na
+   * base atual; senão, uma **variante adaptada e legível** (`variantePorContraste`), sem alterar o
+   * valor selecionado/salvo. Ao voltar para a base compatível, o selecionado é reaplicado tal como
+   * salvo.
+   */
+  readonly accentAplicado = computed(() => {
+    const selecionado = this.accentEfetivo();
+    const base = this._base();
+    return this.travadoParaBase(selecionado, base)
+      ? this.adaptarParaLegibilidade(selecionado, base)
+      : selecionado;
+  });
+
+  /** `true` quando o accent selecionado está sendo exibido como variante adaptada (invertida). */
+  readonly accentAdaptado = computed(() =>
+    this.travadoParaBase(this.accentEfetivo(), this._base()),
+  );
+
+  /** `true` quando o slot custom salvo é o accent ativo (swatch salvo selecionado). */
+  readonly salvoAtivo = computed(() => {
+    const salvo = this._accentCustomSalvo();
+    return salvo !== null && this._accentCustom() === salvo;
+  });
+
+  /** Nome aproximado (pt-BR) da cor salva, para rotular o swatch — `null` se nada salvo. */
+  readonly nomeAccentSalvo = computed(() => {
+    const salvo = this._accentCustomSalvo();
+    return salvo === null ? null : nomearCor(salvo);
   });
 
   /**
@@ -198,15 +374,43 @@ export class TemaService {
   }
 
   /**
-   * Alterna a base clara/escura. Se o accent atual ficar ilegível na nova base, cai no accent
-   * alternativo seguro (`accentAlternativoParaBase`) para nunca deixar uma combinação travada.
+   * Alterna a base clara/escura. Um **preset fixo** que fica ilegível na nova base cai no accent
+   * alternativo seguro (`accentAlternativoParaBase`). Já uma **cor custom** (ativa/salva) é
+   * **preservada** e apenas exibida como variante adaptada (`accentAplicado`) — a cor original
+   * volta a valer ao retornar para a base compatível (m1-16, substitui o descarte antigo).
    */
   definirBase(base: BaseTema): void {
     this._base.set(base);
-    if (this.travadoParaBase(this.accentEfetivo(), base)) {
-      this._accentCustom.set(null);
+    if (!this._accentCustom() && this.travadoParaBase(this.accentEfetivo(), base)) {
       this._presetId.set(this.accentAlternativoParaBase(base).id);
     }
+    this.aplicar();
+    this.salvar();
+  }
+
+  /**
+   * Salva a cor informada no **slot custom** (m1-16) e a torna o accent ativo (swatch salvo
+   * selecionado). Único por vez: sobrescreve o slot anterior. A cor vem do accent já aplicado
+   * (legível na base atual); a legibilidade em outra base é resolvida por `accentAplicado`.
+   */
+  salvarAccentCustom(hex: string): void {
+    this._accentCustomSalvo.set(hex);
+    this._accentCustom.set(hex);
+    this.aplicar();
+    this.salvar();
+  }
+
+  /**
+   * Re-seleciona o slot custom salvo como accent ativo, **sem** a trava de contraste (diferente de
+   * `definirAccentCustom`): se estiver ilegível na base atual, é exibido adaptado, preservando o
+   * valor salvo. Sem efeito se nada estiver salvo.
+   */
+  selecionarAccentSalvo(): void {
+    const salvo = this._accentCustomSalvo();
+    if (salvo === null) {
+      return;
+    }
+    this._accentCustom.set(salvo);
     this.aplicar();
     this.salvar();
   }
@@ -241,6 +445,16 @@ export class TemaService {
   }
 
   /**
+   * Variante legível de uma cor selecionada na base atual (m1-16): adapta a própria cor
+   * (`variantePorContraste` — complemento/luminância até o piso de contraste); só cai no preset
+   * alternativo seguro se nenhuma variante atingir o piso.
+   */
+  private adaptarParaLegibilidade(hex: string, base: BaseTema): string {
+    const variante = variantePorContraste(hex, SUPERFICIE_BASE[base], base);
+    return variante ?? this.accentAlternativoParaBase(base).cor;
+  }
+
+  /**
    * Escreve o tema no DOM: overrides de base (só na base clara), o token `--accent` (dispara
    * `--accent-dim`/`--accent-border` via `color-mix`), a classe `.dark` do PrimeNG e a paleta
    * primária do preset PrimeNG regenerada a partir do accent.
@@ -248,7 +462,7 @@ export class TemaService {
   private aplicar(): void {
     const raiz = this.documento.documentElement;
     const base = this._base();
-    const accent = this.accentEfetivo();
+    const accent = this.accentAplicado();
 
     for (const [propriedade, valor] of Object.entries(TOKENS_CLARO)) {
       if (base === 'claro') {
@@ -296,7 +510,13 @@ export class TemaService {
     if (typeof persistido.presetId === 'string' && PRESETS_ACCENT.some((preset) => preset.id === persistido.presetId)) {
       this._presetId.set(persistido.presetId);
     }
-    if (typeof persistido.accentCustom === 'string' && !this.estaTravado(persistido.accentCustom)) {
+    // O slot salvo e o custom ativo são restaurados **sem** a trava de contraste: uma cor que era
+    // legível na base em que foi salva pode ficar ilegível na base restaurada — nesse caso ela é
+    // exibida adaptada (`accentAplicado`) preservando o valor original (m1-16), não descartada.
+    if (typeof persistido.accentCustomSalvo === 'string') {
+      this._accentCustomSalvo.set(persistido.accentCustomSalvo);
+    }
+    if (typeof persistido.accentCustom === 'string') {
       this._accentCustom.set(persistido.accentCustom);
     }
   }
@@ -306,6 +526,7 @@ export class TemaService {
       base: this._base(),
       presetId: this._presetId(),
       accentCustom: this._accentCustom(),
+      accentCustomSalvo: this._accentCustomSalvo(),
     };
     try {
       this.documento.defaultView?.localStorage.setItem(CHAVE_PERSISTENCIA, JSON.stringify(dados));

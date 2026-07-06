@@ -68,6 +68,20 @@
               <span class="config-swatch__nome">{{ preset.rotulo }}</span>
             </button>
           }
+          @if (tema.accentCustomSalvo(); as corSalva) {
+            <button
+              type="button"
+              class="config-swatch config-swatch--salvo"
+              [class.config-swatch--ativo]="tema.salvoAtivo()"
+              [style.--swatch-cor]="corSalva"
+              [attr.aria-pressed]="tema.salvoAtivo()"
+              [attr.aria-label]="'Cor salva: ' + tema.nomeAccentSalvo() + ' (' + corSalva + ')'"
+              (click)="selecionarSalvo()"
+            >
+              <span class="config-swatch__amostra" aria-hidden="true"></span>
+              <span class="config-swatch__nome">{{ tema.nomeAccentSalvo() }}</span>
+            </button>
+          }
         </div>
       </section>
 
@@ -81,10 +95,18 @@
             [formControl]="corCustom"
           />
           <span class="config-custom__valor">{{ corCustom.value }}</span>
+          <button type="button" class="config-custom__salvar" (click)="salvarCor()">
+            Salvar cor
+          </button>
         </div>
         @if (contrasteBloqueado()) {
           <p class="config-custom__aviso" role="alert">
             Contraste insuficiente com o fundo — cor bloqueada. Escolha um tom mais legível.
+          </p>
+        }
+        @if (tema.accentAdaptado() && tema.accentCustom()) {
+          <p class="config-custom__nota">
+            Cor adaptada para manter a legibilidade nesta base; a cor original permanece guardada.
           </p>
         }
       </section>
