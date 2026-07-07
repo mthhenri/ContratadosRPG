@@ -112,6 +112,16 @@
     border-radius: var(--radius-control);
   }
 
+  // Avatar decorativo (placeholder de imagem — sem foto real no domínio ainda).
+  &__avatar {
+    width: 32px;
+    height: 32px;
+    flex: none;
+    border-radius: var(--radius-control);
+    background: repeating-linear-gradient(135deg, var(--surface) 0 5px, var(--surface-2) 5px 10px);
+    border: 1px solid var(--border-strong);
+  }
+
   &__membro-nome {
     flex: 1;
     min-width: 0;

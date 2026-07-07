@@ -1,7 +1,13 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-07 (ajuste pós-m2-09, a pedido
-> do autor: (1) **rota raiz redireciona a `/painel`** — `app.routes.ts` trocou o `path: ''` que carregava
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-07 (2 achados de UI/UX
+> corrigidos, a pedido do autor, ao revisar os prints da m2-09: (1) o `card__indice` de `campanhas`
+> lista/detalhe mostrava literalmente **"M2"** (nome do milestone interno) pro usuário final — trocado
+> por `//`, o mesmo neutro já usado em `criar`/`entrar`; (2) itens da lista de campanhas e da lista de
+> membros do detalhe ganharam o **avatar decorativo** (quadrado com listras diagonais, mesmo padrão do
+> botão de perfil da topbar) que faltava — antes era só texto+chip, sem o ícone que ancora cada linha
+> nos protótipos. `lint`/`test` (91/91)/`build` verdes, conferido visualmente. Sessão anterior no mesmo
+> dia (ajuste pós-m2-09): (1) **rota raiz redireciona a `/painel`** — `app.routes.ts` trocou o `path: ''` que carregava
 > a `Home` do M0 por `redirectTo: '/painel'` (`pathMatch: 'full'`); sem sessão, o `autenticacaoGuard` de
 > `/painel` encadeia o redirect até `/login?retorno=%2Fpainel` — a `Calculadora` continua pública (sem
 > guard, inalterada). A `Home`/`HealthService` do M0 (`pages/home/`, `core/services/health.service.ts`)
@@ -221,6 +227,14 @@ tokens de `docs/design/tema/`** — o tema "Terminal de Contenção" é a fonte 
 
 ## Implementado
 
+- **achados de UI/UX pós-m2-09** (2026-07-07, sem spec numerada): dois ajustes visuais apontados ao
+  revisar os prints com o autor. (1) `card__indice` de `campanhas` `lista`/`detalhe` mostrava
+  literalmente `"M2"` (nome do milestone, vazado da m2-07) em vez do neutro `//` que `criar`/`entrar`
+  já usavam — corrigido nos dois `.html`. (2) Faltava o **avatar decorativo** (quadrado
+  `repeating-linear-gradient` diagonal, mesmo tratamento do `.topbar__avatar`) nos itens da lista de
+  campanhas (`campanhas__avatar`, 40px) e da lista de membros do detalhe (`detalhe__avatar`, 32px) —
+  placeholder de imagem, sem foto real no domínio ainda. `lint`/`test` (91/91)/`build` verdes,
+  conferido visualmente via Playwright.
 - **ajuste pós-m2-09** (2026-07-07, pedido direto do autor, sem spec numerada): (1) rota raiz `/`
   redireciona a `/painel` (`app.routes.ts`) em vez de carregar a `Home` do M0 — sem sessão, o
   `autenticacaoGuard` encadeia até `/login?retorno=%2Fpainel`; a `Calculadora` continua pública.

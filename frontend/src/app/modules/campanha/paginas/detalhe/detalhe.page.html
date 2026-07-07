@@ -6,7 +6,7 @@
   } @else if (campanha(); as campanhaAtual) {
     <article class="card">
       <header class="card__cabecalho">
-        <span class="card__indice">M2</span>
+        <span class="card__indice">//</span>
         <h1 class="card__titulo">{{ campanhaAtual.nome }}</h1>
         <span class="card__regua"></span>
       </header>
@@ -45,6 +45,7 @@
       <ul class="detalhe__membros">
         @for (membro of membros(); track membro.usuarioId) {
           <li class="detalhe__membro">
+            <span class="detalhe__avatar" aria-hidden="true"></span>
             <span class="detalhe__membro-nome">{{ membro.nome }}</span>
             <span class="chip-papel">
               <app-icone [nome]="membro.papel === TipoCampanhaMembroPapelEnum.MESTRE ? 'coroa' : 'protecoes'" />

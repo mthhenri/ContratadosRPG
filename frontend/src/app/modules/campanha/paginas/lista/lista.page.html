@@ -1,7 +1,7 @@
 <section class="campanhas">
   <article class="card">
     <header class="card__cabecalho">
-      <span class="card__indice">M2</span>
+      <span class="card__indice">//</span>
       <h1 class="card__titulo">Campanhas</h1>
       <span class="card__regua"></span>
     </header>
@@ -28,6 +28,7 @@
       <ul class="campanhas__lista">
         @for (campanha of campanhas(); track campanha.id) {
           <li class="campanhas__item">
+            <span class="campanhas__avatar" aria-hidden="true"></span>
             <a class="campanhas__ligacao" [routerLink]="['/painel', campanha.id]">
               <span class="campanhas__nome">{{ campanha.nome }}</span>
               @if (campanha.descricao) {
