@@ -1,6 +1,15 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-06 (m2-03 — perfil e
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-06 (m2-04 — módulo
+> `campanha` (backend): **CRUD completo de campanha** — criar (o criador vira `MESTRE`, gerando o
+> `campanha_membro` com papel e um `codigo_convite` aleatório único), listar só as campanhas de que o
+> usuário autenticado é membro (com o papel dele), recuperar (exige ser membro), alterar e excluir
+> (soft delete) restritos ao **mestre** (`UnauthorizedAccessException`; a service é o único árbitro —
+> proibição #28). `CampanhaController` burra (5 rotas protegidas) + `CampanhaService` (permissões +
+> geração de convite) + `CampanhaRepository` (dono de `campanha`/`campanha_membro`, traduz `codigo ↔
+> id` do papel no SQL); **1º pacote de DTOs de campanha** no shared + subpath `./dtos/campanha`; 10
+> testes de service (Vitest, 19/19 no backend); CRUD + matriz de permissões validado ao vivo contra o
+> Postgres). Sessão anterior no mesmo dia: m2-03 — perfil e
 > troca de senha self-service do módulo `usuario`: **1ª rota protegida da API** consumindo o
 > `@ActiveUser()`/`JwtAuthGuard` da m2-02 — `GET /usuario/perfil` (dados do usuário logado, **sem**
 > senha) e `PATCH /usuario/senha` (valida `senhaAtual` por `bcrypt.compare` → `BusinessException` se
@@ -54,7 +63,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, core/, pipelines, deploy) | **concluído** (deploy nativo Render+Cloudflare; setup das plataformas em `docs/DEPLOY.md`) |
 | M1 | Calculadora com paridade | **concluído no código** (`m1-01` a `m1-18`, incluindo os refinamentos pós-paridade: mobile `m1-15`, tema em runtime `m1-16`, singleton de estado das abas `m1-17` e scrollbar customizada `m1-18`). Restam 2 passos operacionais de plataforma: publicar a Cloudflare Pages e arquivar o repo antigo no GitHub (ver `docs/PARIDADE-M1.md`) |
-| M2 | Auth + Campanhas | **em andamento** (quebrado em 8 tasks `m2-01`…`m2-08`; **m2-01, m2-02 e m2-03 concluídas** — dados + backbone de autenticação JWT com guard global + perfil/troca de senha self-service) |
+| M2 | Auth + Campanhas | **em andamento** (quebrado em 8 tasks `m2-01`…`m2-08`; **m2-01, m2-02, m2-03 e m2-04 concluídas** — dados + backbone de autenticação JWT com guard global + perfil/troca de senha self-service + CRUD de campanha com papéis) |
 | M3 | Ficha de Jogador | backlog |
 | M4 | Ficha de Criatura/NPC | backlog |
 | M5 | Guia de Missão | backlog |
@@ -63,7 +72,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 
 | Módulo | Status |
 |---|---|
-| shared (estrutura) | **`interfaces/`** (`StandardResponse`/`PaginatedResult`) + **`enums/`** (`ClasseEnum`, `PatenteEnum`, `ItemCategoriaEnum`, `TipoDescansoEnum`, `QualidadeDescansoEnum`, `MotivoEntradaAgenteEnum` + `TipoCampanhaMembroPapelEnum` — m2-01, **1º enum de coluna**, espelho da tabela `tipo_*`) + **`dtos/usuario/`** (m2-02, **1º pacote de DTOs de negócio**: `UsuarioCriarDto`/`UsuarioCriadoDto`, `UsuarioAutenticarDto`/`UsuarioAutenticadoDto` — saída sem `senha` — e os internos `UsuarioInternoCriarDto`/`UsuarioLoginRecuperarDto`/`UsuarioInternoRecuperadoDto`; **+ m2-03:** `UsuarioRecuperarDto {id}`/`UsuarioRecuperadoDto {id,login,nome}` (perfil, saída sem senha), `UsuarioSenhaAlterarDto {senhaAtual,novaSenha}`/`UsuarioSenhaAlteradaDto {id,login,nome}` (troca de senha) e o interno `UsuarioSenhaInternoAlterarDto {id,senha}` (repositório, senha = hash); export subpath `./dtos/usuario` no `package.json`); `validators/` ainda esqueleto |
+| shared (estrutura) | **`interfaces/`** (`StandardResponse`/`PaginatedResult`) + **`enums/`** (`ClasseEnum`, `PatenteEnum`, `ItemCategoriaEnum`, `TipoDescansoEnum`, `QualidadeDescansoEnum`, `MotivoEntradaAgenteEnum` + `TipoCampanhaMembroPapelEnum` — m2-01, **1º enum de coluna**, espelho da tabela `tipo_*`) + **`dtos/usuario/`** (m2-02, **1º pacote de DTOs de negócio**: `UsuarioCriarDto`/`UsuarioCriadoDto`, `UsuarioAutenticarDto`/`UsuarioAutenticadoDto` — saída sem `senha` — e os internos `UsuarioInternoCriarDto`/`UsuarioLoginRecuperarDto`/`UsuarioInternoRecuperadoDto`; **+ m2-03:** `UsuarioRecuperarDto {id}`/`UsuarioRecuperadoDto {id,login,nome}` (perfil, saída sem senha), `UsuarioSenhaAlterarDto {senhaAtual,novaSenha}`/`UsuarioSenhaAlteradaDto {id,login,nome}` (troca de senha) e o interno `UsuarioSenhaInternoAlterarDto {id,senha}` (repositório, senha = hash); export subpath `./dtos/usuario` no `package.json`) **+ `dtos/campanha/`** (m2-04, **1º pacote de DTOs de campanha**: públicos `CampanhaCriarDto`/`CampanhaCriadaDto`, `CampanhaListarDto {usuarioId}`/`CampanhaResumoDto {id,nome,descricao,papel}`, `CampanhaRecuperarDto {id}`/`CampanhaRecuperadaDto`, `CampanhaAlterarDto`/`CampanhaAlteradaDto`, `CampanhaExcluirDto {id}`; internos `CampanhaInternoCriarDto`/`CampanhaInternoAlterarDto` e os do vínculo `CampanhaMembroInternoCriarDto`/`CampanhaMembroInternoRecuperarDto`/`CampanhaMembroInternoRecuperadoDto` — `papel` como `TipoCampanhaMembroPapelEnum`; subpath `./dtos/campanha` no `package.json`); `validators/` ainda esqueleto |
 | shared/regras | **`agente/` completo** (m1-02): 15 fórmulas puras da aba agente com testes Vitest conferidos contra o sistema (vida, energia, limite de energia, defesa/esquiva/bloqueio, proficiência, deslocamento, dano de corpo, dano furtivo, inventário, percepção, sanidade, limite hab./turno, benefícios por nível, progressão acumulada, limites por classe). **`dt/`, `novo-agente/`, `patente/` completos** (m1-03): DT de atributo (`10 + Nível + Atributo×2`); nível/prestígio iniciais + bônus monetário por motivo de entrada; lookup de patente por prestígio + recorte da aba, consumindo `PATENTES`. **`descanso/` completo** (m1-04): escada de dados (`ESCADA_DADOS` + `ajustarDado`/`elevarDado`/`descreverDado`), tabelas `DADOS_DESCANSO`/`QUALIDADE_MOD`, faixa de recuperação (`calcularDescanso`), interpretação de dados extras (`interpretarDadosExtras`), resultado a partir de valores rolados (`calcularResultadoDescanso`) + a utilidade de rolagem `rolarDados` (única brecha a `Math.random` — §6.6). **`compras/` completo** (m1-05): catálogo (`CATALOGO_CATEGORIAS`/`CATALOGO_ITENS`), modificações por categoria (`MODIFICACOES`) + custos (`CUSTO_MODIFICACAO`), amplificadores (`AMPLIFICADORES`) e limites por patente (`LIMITES_MODIFICACAO`); fórmulas `obterLimiteModificacoes`/`obterCustoModificacao`/`obterPesoModificacao`/`contarComprasModificacao`/`verificarConflitoModificacao`/`calcularStatItem` (reusa `elevarDado`)/`calcularCustoAmplificador`/`calcularTotaisCarrinho`/`calcularResumoCompras`, reusando `obterPatente` (m1-03). `dados/` com `dadosAgente`, `dadosCivil` e `PATENTES` (m1-01) |
 | backend/core | **pronto** (`BaseEntity`, `BaseRepository`, exceções, filtro, interceptor) |
 | backend/config | **pronto** (`ConfigService`/`ConfigModule`, lê `DB_*`/`JWT_*`/`APP_*`) |
@@ -72,7 +81,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | backend/core/decorators | **`@Public()`** (metadado `isPublic`, agora interpretado pelo `JwtAuthGuard` da m2-02) + **`@ActiveUser()`** (m2-02 — injeta o payload do JWT em `request.user`; validado ao vivo) |
 | backend/autenticacao | **pronto (m2-02)** — `AutenticacaoController` (`POST /autenticacao/registro` e `/login`, ambas `@Public()`), `AutenticacaoService` (registro com `bcrypt.hash`; `validarLogin` recusa duplicado com `BusinessException`; login com `bcrypt.compare` + emissão de JWT; mesma mensagem p/ login inexistente e senha errada), `JwtStrategy` (Passport, segredo do `ConfigService`), `JwtAuthGuard` global via `APP_GUARD` (exige JWT salvo `@Public()`), `JwtModule.registerAsync` lendo `JWT_SECRETO`/`JWT_EXPIRACAO`. `JwtPayload { sub, login }`. 5 testes de service (Vitest) |
 | backend/usuario | **completo (m2-03)** — perfil e troca de senha self-service, **1ª rota protegida da API** (sem `@Public()`; guard global + `@ActiveUser()` da m2-02). `UsuarioController` burra: `GET /usuario/perfil` (monta `{ id: usuarioAtivo.sub }`) e `PATCH /usuario/senha` (repassa o body + `@ActiveUser()`). `UsuarioService`: `recuperarPerfil` (projeta os dados públicos, **sem** senha; `ResourceNotFoundException` se a conta sumiu) e `alterarSenha` (valida `senhaAtual` por `bcrypt.compare` → `BusinessException('Senha atual incorreta')`; encripta `novaSenha` com bcrypt cost 10 e persiste). `UsuarioRepository` (estende `BaseRepository`) ganhou `recuperarPorId` (`SELECT ... WHERE id = :id AND is_deleted = false`, carrega o hash) e `alterarSenha` (`UPDATE usuario SET senha = :senha, updated_date = NOW() WHERE id = :id AND is_deleted = false`), somando aos herdados da m2-02 `criarUsuario` (`INSERT ... SELECT ... RETURNING id, login, nome`) e `recuperarPorLogin`; dona das queries da tabela `usuario` (proibição #23). `UsuarioModule` registra controller + service e exporta o repositório; importado direto no `AppModule`. 4 testes de service (Vitest) |
-| backend/campanha | não iniciado (tabelas `campanha`/`campanha_membro`/`tipo_campanha_membro_papel` criadas em m2-01) |
+| backend/campanha | **completo (m2-04)** — CRUD de campanha com papéis. `CampanhaController` burra: 5 rotas protegidas (`POST /campanha`, `GET /campanha`, `GET /campanha/:id`, `PUT /campanha/:id`, `DELETE /campanha/:id`), montando o DTO com o `id` do `@Param` ou o `usuarioId` do token. `CampanhaService`: `criarCampanha` (gera `codigo_convite` aleatório — alfabeto sem caracteres ambíguos, unicidade garantida pelo índice parcial `uix_campanha_codigo_convite_ativo` — insere a campanha e o `campanha_membro` do criador com papel `MESTRE`), `listarCampanhas` (só campanhas de que o usuário é membro, com o papel dele), `recuperarCampanha` (exige ser membro → `UnauthorizedAccessException`; `ResourceNotFoundException` se não existe), `alterarCampanha`/`excluirCampanha` (gate `validarMestre` — só o mestre; soft delete via `executarSoftDelete`); permissões validadas na service, único árbitro (proibição #28). `CampanhaRepository` (estende `BaseRepository`, dona das queries de `campanha`/`campanha_membro` — proibição #23): `criarCampanha` (`INSERT ... SELECT ... RETURNING`, alias `codigo_convite AS "codigoConvite"`), `criarMembro` (traduz `codigo → id` do papel via subconsulta em `tipo_campanha_membro_papel` — §10.2.12), `listarPorUsuario` (JOIN membro→campanha→tipo, todas com `is_deleted = false`), `recuperarPorId`, `recuperarMembro` (papel do vínculo p/ as permissões), `alterarCampanha` (`UPDATE ... RETURNING`), `excluirCampanha`. `CampanhaModule` registra controller + service e exporta o repositório; importado no `AppModule`. 10 testes de service (Vitest) |
 | backend/ficha | não iniciado |
 | frontend (shell) | **pronto** (topbar + `router-outlet` via `shared/layout`, home consumindo `/health`, tema "Terminal de Contenção" dark-first via `docs/design`). Em **dev** a aba do navegador recebe sufixo "- DEV" (`provideAppInitializer` no `app.config.ts`, gated por `!environment.producao`; produção mantém o `<title>` do `index.html`) |
 | frontend/tema | **pronto + troca em runtime (m1-13)** (tokens + base + `ContencaoPreset` PrimeNG em `src/styles/tema/`). **Sistema de tema em runtime (m1-13):** `TemaService` (`core/services/tema.service.ts`) é a contraparte em runtime de `_tokens.scss` para a parte trocável — escreve `--accent` (e overrides de base clara) em `<html>`, alterna a classe `.dark` e regenera a paleta primária do PrimeNG (`updatePrimaryPalette`/`palette`); 4 presets de accent (só cores da paleta do tema — vermelho/azul/verde/âmbar), base clara/escura e color picker custom com **trava de contraste WCAG** (`razaoContraste`/`luminanciaRelativa`, piso 3:1 vs superfície); persiste em `localStorage` e restaura no boot via `provideAppInitializer`. Painel `ConfiguracoesTema` (`shared/configuracoes-tema/`) na topbar (gatilho + modal, fecha por botão). **Refino m1-16:** (a) **slot de cor custom salvo** — `salvarAccentCustom`/`selecionarAccentSalvo`/`accentCustomSalvo` no `TemaService` + swatch "Salva" no painel: guarda **um** slot (sobrescreve o anterior), persistido em `accentCustomSalvo` (distinto do `accentCustom` ativo), re-selecionável com um clique sem reabrir o picker; (b) **inversão visual por incompatibilidade de base** — `accentAplicado`/`accentAdaptado` + `variantePorContraste` (complemento RGB → ajuste de luminância até cruzar `CONTRASTE_MINIMO`): quando a cor salva/ativa fica ilegível na base ativa, o `--accent` exibido é uma variante legível **preservando o valor salvo**; ao voltar à base compatível a cor original é reaplicada (substitui o descarte antigo em `definirBase`, que agora só troca **presets fixos** travados). Nota discreta no painel quando a cor está adaptada. Paleta de presets expandida de 4 p/ **9** (as 4 oficiais + roxo/rosa/dourado/turquesa/cinza, a pedido do autor), todas sujeitas à mesma trava de contraste por base. Budget inicial elevado p/ 560 kB (o motor de paleta do `@primeuix/themes` entra no bundle inicial). **Tailwind instalado e integrado ao build** (m1-06): `frontend/tailwind.config.ts` mescla o `theme.extend` do handoff (`docs/design/tema/tailwind.config.ts`) apontando cores/fontes/raios utilitários para as CSS custom properties dos tokens; diretivas `@tailwind` no fim de `styles.scss`, coexistindo com SCSS + tokens (preflight não sobrescreve a identidade — só reset). **Scrollbar customizada global (m1-18):** padrão próprio da barra de rolagem definido **uma vez** em `styles/tema/_base.scss` (espelhado no handoff `docs/design/tema/_base.scss`) — thumb fino (`10px`) em `--surface-2` com contorno `--border-strong` e raio `--radius-control`, track/corner transparentes, `:hover` realça o contorno com `--accent-border` (nunca `--accent` sólido); cross-browser via `::-webkit-scrollbar-*` (Chrome/Edge/Safari) + `scrollbar-width: thin`/`scrollbar-color` (Firefox). Só tokens → segue legível/discreto nas duas bases (clara/escura) do tema em runtime, que sobrescrevem `--surface-2`/`--border-strong`. Vale globalmente (scroll geral, os 3 modais, tabelas/textarea) sem repetição por componente; documentado em `docs/design/DESIGN.md` para as telas futuras (M2+) não reintroduzirem a barra nativa |
@@ -89,12 +98,13 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 **M2 em andamento.** O milestone **M2 — Auth + Campanhas**
 (`docs/specs/backlog/m2-auth-campanhas.spec.md`) foi quebrado em **8 tasks numeradas**
 (`m2-01`…`m2-08`, em `docs/specs/backlog/`); a task de refinamento mobile é a `m2-08`. A
-**m2-01** (fundação de dados), a **m2-02** (backbone de autenticação JWT) e a **m2-03** (perfil e
-troca de senha) estão **concluídas** (specs em `docs/specs/done/`).
+**m2-01** (fundação de dados), a **m2-02** (backbone de autenticação JWT), a **m2-03** (perfil e
+troca de senha) e a **m2-04** (CRUD de campanha) estão **concluídas** (specs em `docs/specs/done/`).
 
-**Próxima task: `m2-04`** — CRUD de campanhas (o frontend de auth/campanhas fica em `m2-06`/`m2-07`;
-a matriz de permissões acompanha as tasks de campanha/ficha). A m2-03 já provou o padrão de rota
-**protegida** (guard global + `@ActiveUser()`) que as próximas tasks de negócio reusam.
+**Próxima task: `m2-05`** — entrada por código de convite, regeneração do código e listagem de
+membros da campanha (o frontend de auth/campanhas fica em `m2-06`/`m2-07`). A m2-04 já deixou o
+`CampanhaRepository` (dono de `campanha`/`campanha_membro`) e o gate de mestre (`validarMestre`)
+prontos para a regeneração do convite e a gestão de membros.
 
 **M1 concluído no código** (18 tasks, backlog do M1 vazio). Os specs de milestone concluídos
 (`m0-fundacao`, `m1-calculadora-paridade`) e todas as tasks `m0-*`/`m1-*` já entregues estão em
@@ -108,6 +118,48 @@ a matriz de permissões acompanha as tasks de campanha/ficha). A m2-03 já provo
 
 ## Implementado
 
+- **m2-04-campanha-crud** (2026-07-06): **módulo `campanha` (backend)** — CRUD de campanha com o
+  criador virando `MESTRE` e a gestão restrita ao mestre, sobre as tabelas criadas em m2-01. Reusa o
+  padrão de rota **protegida** (guard global + `@ActiveUser()`) provado na m2-03. **Entregável 1 —
+  DTOs** (`shared/src/dtos/campanha/`, seguindo `dto-conventions`, **1º pacote de campanha**):
+  públicos `CampanhaCriarDto {nome,descricao?}`/`CampanhaCriadaDto {id,nome,descricao,codigoConvite}`,
+  `CampanhaListarDto {usuarioId}` (o `usuarioId` vem do JWT, injetado pela controller) /
+  `CampanhaResumoDto {id,nome,descricao,papel}` (item de listagem com o papel do usuário),
+  `CampanhaRecuperarDto {id}`/`CampanhaRecuperadaDto {...,codigoConvite}`, `CampanhaAlterarDto
+  {nome,descricao?}`/`CampanhaAlteradaDto`, `CampanhaExcluirDto {id}`; internos service↔repositório
+  `CampanhaInternoCriarDto` (carrega o `codigoConvite` já gerado), `CampanhaInternoAlterarDto` (id no
+  DTO — nunca `alterar(id,dados)`) e os do vínculo `CampanhaMembroInternoCriarDto`
+  (`{campanhaId,usuarioId,papel}`), `CampanhaMembroInternoRecuperarDto`/`...RecuperadoDto {papel}`
+  (base das permissões). Subpath `./dtos/campanha` no `shared/package.json` (+ `shared` rebuildado).
+  **Entregável 2 — `criarCampanha`** (service): gera um `codigo_convite` aleatório (alfabeto sem
+  caracteres ambíguos, via `crypto.randomBytes`; unicidade garantida pelo índice único parcial
+  `uix_campanha_codigo_convite_ativo`), insere a `campanha` e cria o `campanha_membro` do criador com
+  papel `MESTRE` (exatamente **um** mestre no v1 — §14). O repositório traduz `codigo → id` do papel
+  via subconsulta em `tipo_campanha_membro_papel` no SQL (§10.2.12) — service/DTO só veem o `codigo`.
+  **Entregável 3 — `listarCampanhas`**: só as campanhas de que o usuário autenticado é membro (JOIN
+  `campanha_membro`→`campanha`→`tipo_campanha_membro_papel`, todas com `is_deleted = false`), com o
+  `papel` dele em cada uma; ordenado por nome. **Entregável 4 — `recuperarCampanha`** (exige ser
+  membro → `UnauthorizedAccessException`; `ResourceNotFoundException` se não existe),
+  **`alterarCampanha`** (nome/descrição) e **`excluirCampanha`** (soft delete via
+  `executarSoftDelete`). **Entregável 5 — permissões** (§14): gestão (alterar/excluir) só pelo mestre,
+  validada na service via `validarMestre` (`recuperarMembro` + checagem de papel `MESTRE`); a service
+  é o **único árbitro** (proibição #28). **Entregável 6 — camadas (§7):** `CampanhaController` burra
+  (5 rotas, só monta o DTO e repassa); `CampanhaService` com toda a regra/permissão; `CampanhaRepository`
+  (estende `BaseRepository`) dona das queries de `campanha`/`campanha_membro` (proibição #23) — SELECT
+  sempre com `is_deleted = false`, INSERT `... SELECT ... RETURNING` (sem `VALUES`/`DEFAULT`),
+  parâmetros nomeados, alias `codigo_convite AS "codigoConvite"`. `CampanhaModule` registra controller
+  + service e exporta o repositório; importado no `AppModule`. **Testes:** novo `campanha.service.spec.ts`
+  com **10 testes** (criação cria o `campanha_membro` MESTRE + gera o código; listar delega ao
+  repositório; recuperar de membro ↔ 403 de não-membro ↔ 404 inexistente; alterar de mestre ↔ 403 de
+  não-mestre ↔ 404 inexistente; excluir de mestre ↔ 403 de não-mestre), `randomBytes` dublado para o
+  código determinístico, repositório dublado. **Validado:** `build` do **shared** verde; `lint`/`build`
+  do **backend** limpos; `test` do **backend** **19/19** (5 autenticação + 4 usuário + 10 campanha).
+  **Verificação ao vivo contra o Postgres:** registro+login de um mestre e de outro
+  usuário descartáveis; criar campanha → devolve `{id,nome,descricao,codigoConvite}` e a listagem do
+  mestre traz `papel: MESTRE`; a listagem do outro usuário vem **vazia**; recuperar do mestre ok,
+  recuperar do não-membro → **403**; alterar do mestre ok, alterar/excluir do não-mestre → **403**;
+  excluir do mestre → **200**; recuperar após excluir → **404** (soft delete); sem token → **401**.
+  Nenhuma UI, nenhuma regra de jogo (`shared/regras` intocado).
 - **m2-03-usuario-perfil-senha** (2026-07-06): completa o módulo `usuario` com os endpoints
   **self-service** do usuário autenticado — **1ª rota protegida da API** (consome o
   `@ActiveUser()`/`JwtAuthGuard` da m2-02; até aqui só o `/health` e as rotas `@Public()` de auth

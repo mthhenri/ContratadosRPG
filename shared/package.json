@@ -24,6 +24,10 @@
       "types": "./dist/dtos/usuario/index.d.ts",
       "default": "./dist/dtos/usuario/index.js"
     },
+    "./dtos/campanha": {
+      "types": "./dist/dtos/campanha/index.d.ts",
+      "default": "./dist/dtos/campanha/index.js"
+    },
     "./regras/dados": {
       "types": "./dist/regras/dados/index.d.ts",
       "default": "./dist/regras/dados/index.js"
