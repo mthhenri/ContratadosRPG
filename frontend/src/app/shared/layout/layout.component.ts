@@ -7,6 +7,7 @@ import { SessaoService } from '../../core/services/sessao.service';
 import { CampanhaContextoService } from '../../modules/campanha/campanha-contexto.service';
 import { ConfiguracoesTema } from '../configuracoes-tema/configuracoes-tema.component';
 import { Icone } from '../icone/icone.component';
+import { Marca } from '../marca/marca.component';
 
 /**
  * Shell visual da aplicação: topbar institucional (direção "Barra de Comando" do handoff —
@@ -20,7 +21,7 @@ import { Icone } from '../icone/icone.component';
  */
 @Component({
   selector: 'app-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Toast, ConfiguracoesTema, Icone],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Toast, ConfiguracoesTema, Icone, Marca],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',
 })

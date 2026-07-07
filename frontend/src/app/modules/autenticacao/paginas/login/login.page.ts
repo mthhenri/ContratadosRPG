@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { Icone } from '../../../../shared/icone/icone.component';
+import { Marca } from '../../../../shared/marca/marca.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
 
 /**
@@ -14,7 +15,7 @@ import { SessaoService } from '../../../../core/services/sessao.service';
  */
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink, Icone],
+  imports: [ReactiveFormsModule, RouterLink, Icone, Marca],
   templateUrl: './login.page.html',
   styleUrl: './login.page.scss',
 })

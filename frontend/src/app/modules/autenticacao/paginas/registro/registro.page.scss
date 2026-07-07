@@ -47,6 +47,16 @@
     }
   }
 
+  &__marca-linha {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__logo {
+    font-size: 26px;
+  }
+
   &__marca-texto {
     font-family: var(--font-mono);
     font-weight: 700;

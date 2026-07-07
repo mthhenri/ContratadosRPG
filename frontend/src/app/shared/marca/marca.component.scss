@@ -1,0 +1,13 @@
+// Escala com a fonte do controle que a contém — mesmo padrão do app-icone.
+:host {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  line-height: 0;
+}
+
+img {
+  width: 1.4em;
+  height: 1.4em;
+  object-fit: contain;
+}
