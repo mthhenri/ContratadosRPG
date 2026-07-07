@@ -28,7 +28,7 @@ export interface PresetAccentExibicao extends PresetAccent {
  * as ilegíveis na base atual ficam desabilitadas, sem exceção.
  */
 export const PRESETS_ACCENT: readonly PresetAccent[] = [
-  { id: 'vermelho', rotulo: 'Vermelho', cor: '#e5484d' }, // --accent (padrão / identidade)
+  { id: 'vermelho', rotulo: 'Vermelho', cor: '#d53030' }, // --accent (padrão / identidade)
   { id: 'azul', rotulo: 'Azul', cor: '#4c8dd0' }, // --energy
   { id: 'verde', rotulo: 'Verde', cor: '#4a9d6b' }, // --positive
   { id: 'ambar', rotulo: 'Âmbar', cor: '#d9a441' }, // --warning

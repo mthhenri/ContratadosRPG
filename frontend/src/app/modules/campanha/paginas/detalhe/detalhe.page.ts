@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
@@ -7,7 +7,9 @@ import {
   CampanhaRecuperadaDto,
 } from '@contratados-rpg/shared/dtos/campanha';
 
+import { Icone } from '../../../../shared/icone/icone.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
+import { CampanhaContextoService } from '../../campanha-contexto.service';
 import { CampanhaService } from '../../campanha.service';
 
 /**
@@ -15,26 +17,32 @@ import { CampanhaService } from '../../campanha.service';
  * mestre — o `codigoConvite` com o botão de regenerar. O papel do usuário atual é derivado da
  * lista de membros (não é regra de segurança, só apresentação: a autoridade é sempre o backend,
  * §14 — a regeneração por um jogador seria barrada com 403 e tratada pelo `error-handler`).
- * Estado em Signals; o `id` da campanha é lido do parâmetro de rota.
+ * Estado em Signals; o `id` da campanha é lido do parâmetro de rota. Preenche o
+ * `CampanhaContextoService` (m2-09) para o seletor da topbar e o limpa ao desmontar.
  */
 @Component({
   selector: 'app-campanha-detalhe',
-  imports: [RouterLink],
+  imports: [RouterLink, Icone],
   templateUrl: './detalhe.page.html',
   styleUrl: './detalhe.page.scss',
 })
 export class CampanhaDetalhe {
   private readonly campanhaService = inject(CampanhaService);
   private readonly sessaoService = inject(SessaoService);
+  private readonly campanhaContextoService = inject(CampanhaContextoService);
   private readonly rotaAtiva = inject(ActivatedRoute);
 
   /** `id` da campanha, lido do parâmetro de rota (`/painel/:id`). */
   private readonly id = Number(this.rotaAtiva.snapshot.paramMap.get('id'));
 
+  /** Exposto ao template só para escolher o ícone do `chip-papel` (coroa/protecoes). */
+  protected readonly TipoCampanhaMembroPapelEnum = TipoCampanhaMembroPapelEnum;
+
   protected readonly campanha = signal<CampanhaRecuperadaDto | null>(null);
   protected readonly membros = signal<CampanhaMembroResumoDto[]>([]);
   protected readonly carregando = signal(true);
   protected readonly regenerando = signal(false);
+  protected readonly copiado = signal(false);
 
   /** `true` quando o usuário autenticado é o `MESTRE` desta campanha (deriva dos membros). */
   protected readonly ehMestre = computed(() => {
@@ -55,8 +63,14 @@ export class CampanhaDetalhe {
         next: ({ campanha, membros }) => {
           this.campanha.set(campanha);
           this.membros.set(membros);
+          this.campanhaContextoService.definir({
+            id: campanha.id,
+            nome: campanha.nome,
+            codigoConvite: campanha.codigoConvite,
+          });
         },
       });
+    inject(DestroyRef).onDestroy(() => this.campanhaContextoService.limpar());
   }
 
   protected regenerarConvite(): void {
@@ -74,7 +88,27 @@ export class CampanhaDetalhe {
               ? { ...campanhaAtual, codigoConvite: conviteRegenerado.codigoConvite }
               : campanhaAtual,
           );
+          const campanhaAtual = this.campanha();
+          if (campanhaAtual) {
+            this.campanhaContextoService.definir({
+              id: campanhaAtual.id,
+              nome: campanhaAtual.nome,
+              codigoConvite: conviteRegenerado.codigoConvite,
+            });
+          }
         },
       });
+  }
+
+  /** Copia o código de convite para a área de transferência — puramente apresentação. */
+  protected copiarConvite(): void {
+    const codigoConvite = this.campanha()?.codigoConvite;
+    if (!codigoConvite) {
+      return;
+    }
+    void navigator.clipboard.writeText(codigoConvite).then(() => {
+      this.copiado.set(true);
+      setTimeout(() => this.copiado.set(false), 1500);
+    });
   }
 }

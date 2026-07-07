@@ -20,6 +20,10 @@
     gap: 0.5rem;
   }
 
+  &__logo {
+    font-size: 20px;
+  }
+
   &__marca {
     font-family: var(--font-mono);
     font-size: 15px;
@@ -27,11 +31,116 @@
     text-transform: uppercase;
     letter-spacing: var(--tracking-label);
     color: var(--text);
+    white-space: nowrap;
   }
 
   &__marca-sufixo {
     margin-left: 0.35em;
     color: var(--accent);
+  }
+
+  &__separador {
+    width: 1px;
+    height: 20px;
+    background: var(--border-strong);
+    flex: none;
+
+    @include bp.mobile {
+      display: none;
+    }
+  }
+
+  // Chip da campanha ativa (m2-09) — link de volta ao painel, aparece só dentro de /painel/:id.
+  &__campanha {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    color: var(--text);
+    text-decoration: none;
+    min-width: 0;
+
+    app-icone {
+      color: var(--accent);
+    }
+
+    &:hover {
+      border-color: var(--accent-border);
+    }
+  }
+
+  &__campanha-texto {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.2;
+
+    @include bp.mobile {
+      display: none;
+    }
+  }
+
+  &__campanha-nome {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__campanha-codigo {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+    margin-top: 2px;
+  }
+
+  // Nav central (Painel/Calculadora) — mesmo padrão de routerLinkActive do CalculadoraShell.
+  &__nav {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 11px;
+    border-radius: var(--radius-control);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: var(--text-dim);
+    text-decoration: none;
+    white-space: nowrap;
+
+    app-icone {
+      font-size: 15px;
+    }
+
+    &:hover {
+      color: var(--text);
+    }
+
+    &--ativo {
+      color: var(--text);
+      background: var(--surface-2);
+    }
+
+    @include bp.mobile {
+      span {
+        display: none;
+      }
+    }
   }
 
   &__acoes {
@@ -51,7 +160,100 @@
     }
   }
 
+  // Perfil (m2-09) — botão-gatilho com avatar decorativo + dropdown que fecha só por
+  // ação (mesmo padrão de acessibilidade do painel de tema: sem clique-fora).
+  &__perfil {
+    position: relative;
+  }
+
+  &__perfil-gatilho {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px 4px 10px;
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    color: var(--text-dim);
+    cursor: pointer;
+
+    app-icone {
+      color: var(--text-mute);
+    }
+
+    &:hover {
+      color: var(--text);
+      border-color: var(--accent-border);
+    }
+  }
+
+  // Avatar decorativo (placeholder de imagem). As listras usam --border-strong (não
+  // --surface/--surface-2) porque esse par já é calibrado pra ficar visível sobre --surface-2
+  // nas duas bases do tema em runtime (m1-13) — direto com --surface/--surface-2 o contraste
+  // ficava alto demais na base escura e quase invisível na clara.
+  &__avatar {
+    width: 20px;
+    height: 20px;
+    flex: none;
+    border-radius: 3px;
+    background-color: var(--surface-2);
+    background-image: repeating-linear-gradient(135deg, var(--border-strong) 0 2px, transparent 2px 6px);
+    border: 1px solid var(--border-strong);
+  }
+
+  &__perfil-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    width: 200px;
+    padding: 5px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+    box-shadow: 0 20px 50px -18px rgba(0, 0, 0, 0.6);
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__perfil-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 4px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text);
+    background: transparent;
+    border: 0;
+    text-decoration: none;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+
+    app-icone {
+      color: var(--text-mute);
+    }
+
+    &:hover {
+      background: var(--surface-2);
+    }
+
+    &--sair {
+      color: var(--accent);
+
+      app-icone {
+        color: var(--accent);
+      }
+    }
+  }
+
   &__sessao {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-family: var(--font-mono);
     font-size: 12px;
     text-transform: uppercase;
@@ -62,6 +264,12 @@
     padding: 4px 6px;
     cursor: pointer;
     text-decoration: none;
+
+    @include bp.mobile {
+      span {
+        display: none;
+      }
+    }
 
     &:hover {
       color: var(--text);

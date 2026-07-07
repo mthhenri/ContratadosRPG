@@ -65,3 +65,13 @@ html {
 *::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+// === Foco de teclado (acessibilidade) ===
+// Outline com o accent do tema pra todo link/botão, definido UMA vez globalmente — nenhum
+// componente repete a regra. Inputs/textarea ficam de fora: já têm o próprio tratamento de
+// :focus (borda --accent-border) por página, então um outline extra aqui só duplicaria.
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent-border);
+  outline-offset: 2px;
+}

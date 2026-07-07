@@ -1,12 +1,184 @@
-.autenticacao {
-  max-width: 420px;
-  margin: 0 auto;
+@use 'tema/breakpoints' as bp;
 
-  &__cartao {
-    margin-top: 6vh;
+.autenticacao {
+  display: flex;
+  justify-content: center;
+  padding: 6vh 0;
+
+  &__moldura {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    flex-wrap: wrap;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+  }
+
+  // Painel de marca — mesma identidade dos protótipos (docs/design/examples/login.html):
+  // detalhes de canto, eyebrow em accent, slogan mono e destaques com ícone ancorados embaixo.
+  &__marca {
+    position: relative;
+    flex: 1 1 320px;
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    padding: 34px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  // Marca d'água — mesmo tratamento do painel de marca dos protótipos (opacity .04, canto
+  // inferior direito, atrás do conteúdo).
+  &__marca-agua {
+    position: absolute;
+    right: -50px;
+    bottom: -40px;
+    z-index: 0;
+    font-size: 220px;
+    opacity: 0.04;
+    pointer-events: none;
+  }
+
+  &__canto {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-top: 1px solid var(--border-strong);
+
+    &--esquerda {
+      top: 14px;
+      left: 14px;
+      border-left: 1px solid var(--border-strong);
+    }
+
+    &--direita {
+      top: 14px;
+      right: 14px;
+      border-right: 1px solid var(--border-strong);
+    }
+  }
+
+  &__marca-linha {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__logo {
+    font-size: 26px;
+  }
+
+  &__marca-texto {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 0.02em;
+    color: var(--text);
+  }
+
+  &__marca-sufixo {
+    margin-left: 0.35em;
+    color: var(--accent);
+  }
+
+  &__eyebrow {
+    margin-top: 30px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  &__slogan {
+    margin: 12px 0 0;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 1.25;
+    color: var(--text);
+    max-width: 30ch;
+  }
+
+  &__descricao {
+    margin: 12px 0 0;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    max-width: 34ch;
+  }
+
+  &__destaques {
+    list-style: none;
+    margin: auto 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__destaque {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    font-size: 12.5px;
+    color: var(--text-dim);
+
+    app-icone {
+      flex: none;
+      width: 26px;
+      height: 26px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      border: 1px solid var(--accent-border);
+      border-radius: var(--radius-control);
+    }
+  }
+
+  &__nota {
+    margin-top: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 13px 15px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--text-dim);
+
+    app-icone {
+      flex: none;
+      margin-top: 1px;
+      color: var(--text-mute);
+    }
+  }
+
+  &__painel {
+    flex: 1 1 340px;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  &__titulo {
+    margin: 8px 0 0;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 24px;
+    color: var(--text);
   }
 
   &__formulario {
+    margin-top: 22px;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -42,8 +214,18 @@
     }
   }
 
+  &__erro {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+  }
+
   &__enviar {
     margin-top: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     padding: 11px 16px;
     font-size: 13px;
     font-weight: 700;
@@ -72,50 +254,14 @@
       text-decoration: underline;
     }
   }
-}
 
-// Card + cabeçalho de seção — bloco sancionado copiado de docs/design/tema/_componentes.scss.
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  padding: var(--pad-card);
+  @include bp.mobile {
+    padding: 0;
 
-  &__cabecalho {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    margin-bottom: 18px;
-  }
-
-  &__indice {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    height: 22px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-    border-radius: 3px;
-  }
-
-  &__titulo {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text);
-  }
-
-  &__regua {
-    flex: 1;
-    height: 1px;
-    background: var(--border);
+    &__marca {
+      border-right: 0;
+      border-bottom: 1px solid var(--border);
+    }
   }
 }
 
@@ -124,10 +270,16 @@
   border-radius: var(--radius-control);
   font-family: var(--font-mono);
   cursor: pointer;
+  transition: filter 0.15s ease;
 
   &--primario {
     background: var(--accent);
     color: var(--bg);
     border: 0;
+
+    &:hover:not(:disabled) {
+      // filter (não uma 2ª cor fixa) pra funcionar com qualquer accent escolhido em runtime.
+      filter: brightness(1.08);
+    }
   }
 }

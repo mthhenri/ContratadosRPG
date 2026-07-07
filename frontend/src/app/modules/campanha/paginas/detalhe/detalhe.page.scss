@@ -2,10 +2,12 @@
   max-width: 680px;
   margin: 0 auto;
 
-  &__estado {
-    margin: 0;
-    font-family: var(--font-sans);
-    color: var(--text-dim);
+  // Esqueleto de carregamento — mimetiza título + caixa de convite + linhas de membro, evitando
+  // o "flash" seco de texto "Carregando…" antes do conteúdo real.
+  &__esqueleto {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
 
   &__descricao {
@@ -49,7 +51,31 @@
     color: var(--accent);
   }
 
+  &__copiar {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      color: var(--text);
+      background: var(--surface-2);
+      border-color: var(--accent-border);
+    }
+  }
+
   &__regenerar {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
     padding: 8px 14px;
     font-size: 11px;
     font-weight: 700;
@@ -91,6 +117,20 @@
     border-radius: var(--radius-control);
   }
 
+  // Avatar decorativo (placeholder de imagem — sem foto real no domínio ainda). Listras em
+  // --border-strong (não --surface/--surface-2) — esse par é calibrado pra ficar visível sobre
+  // --surface-2 nas duas bases do tema em runtime (m1-13); direto com --surface/--surface-2 o
+  // contraste ficava quase invisível na base clara.
+  &__avatar {
+    width: 32px;
+    height: 32px;
+    flex: none;
+    border-radius: var(--radius-control);
+    background-color: var(--surface-2);
+    background-image: repeating-linear-gradient(135deg, var(--border-strong) 0 3px, transparent 3px 9px);
+    border: 1px solid var(--border-strong);
+  }
+
   &__membro-nome {
     flex: 1;
     min-width: 0;
@@ -107,6 +147,9 @@
   }
 
   &__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     color: var(--accent);
     text-decoration: none;
 
@@ -119,6 +162,9 @@
 // Chip de papel (MESTRE / JOGADOR) — variação do chip de classificação do tema.
 .chip-papel {
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 600;
@@ -128,6 +174,10 @@
   border: 1px solid var(--accent-border);
   border-radius: 3px;
   padding: 4px 8px;
+
+  app-icone {
+    font-size: 11px;
+  }
 }
 
 // Card + cabeçalho de seção — bloco sancionado copiado de docs/design/tema/_componentes.scss.
@@ -180,10 +230,53 @@
   border-radius: var(--radius-control);
   font-family: var(--font-mono);
   cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 
   &--secundario {
     background: transparent;
     color: var(--text);
     border: 1px solid var(--border-strong);
+
+    &:hover:not(:disabled) {
+      background: var(--surface-2);
+      border-color: var(--accent-border);
+    }
+  }
+}
+
+// Blocos de esqueleto — reusados por qualquer estado de carregamento (proibição #29: só tokens).
+.esqueleto-bloco {
+  display: block;
+  border-radius: var(--radius-control);
+  background: var(--border-strong);
+  animation: esqueleto-pulso 1.4s ease-in-out infinite;
+
+  &--titulo {
+    width: 240px;
+    height: 20px;
+  }
+
+  &--convite {
+    height: 64px;
+  }
+
+  &--linha {
+    height: 44px;
+  }
+}
+
+@keyframes esqueleto-pulso {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .esqueleto-bloco {
+    animation: none;
   }
 }

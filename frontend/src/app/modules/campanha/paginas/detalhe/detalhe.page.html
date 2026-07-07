@@ -1,12 +1,17 @@
 <section class="detalhe">
   @if (carregando()) {
-    <article class="card">
-      <p class="detalhe__estado">Carregando campanha…</p>
+    <article class="card" role="status" aria-label="Carregando campanha">
+      <div class="detalhe__esqueleto">
+        <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
+        <span class="esqueleto-bloco esqueleto-bloco--convite"></span>
+        <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+        <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+      </div>
     </article>
   } @else if (campanha(); as campanhaAtual) {
     <article class="card">
       <header class="card__cabecalho">
-        <span class="card__indice">M2</span>
+        <span class="card__indice">//</span>
         <h1 class="card__titulo">{{ campanhaAtual.nome }}</h1>
         <span class="card__regua"></span>
       </header>
@@ -21,11 +26,20 @@
           <div class="detalhe__convite-linha">
             <code class="detalhe__codigo">{{ campanhaAtual.codigoConvite }}</code>
             <button
+              class="detalhe__copiar"
+              type="button"
+              [attr.aria-label]="copiado() ? 'Código copiado' : 'Copiar código de convite'"
+              (click)="copiarConvite()"
+            >
+              <app-icone nome="copiar" />
+            </button>
+            <button
               class="botao botao--secundario detalhe__regenerar"
               type="button"
               [disabled]="regenerando()"
               (click)="regenerarConvite()"
             >
+              <app-icone nome="atualizar" />
               {{ regenerando() ? 'Regenerando…' : 'Regenerar' }}
             </button>
           </div>
@@ -36,8 +50,12 @@
       <ul class="detalhe__membros">
         @for (membro of membros(); track membro.usuarioId) {
           <li class="detalhe__membro">
+            <span class="detalhe__avatar" aria-hidden="true"></span>
             <span class="detalhe__membro-nome">{{ membro.nome }}</span>
-            <span class="chip-papel">{{ membro.papel }}</span>
+            <span class="chip-papel">
+              <app-icone [nome]="membro.papel === TipoCampanhaMembroPapelEnum.MESTRE ? 'coroa' : 'protecoes'" />
+              {{ membro.papel }}
+            </span>
           </li>
         }
       </ul>
@@ -45,6 +63,9 @@
   }
 
   <p class="detalhe__voltar">
-    <a class="detalhe__link" routerLink="/painel">Voltar às campanhas</a>
+    <a class="detalhe__link" routerLink="/painel">
+      <app-icone nome="voltar" />
+      Voltar às campanhas
+    </a>
   </p>
 </section>

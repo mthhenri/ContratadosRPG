@@ -1,72 +1,94 @@
 <section class="autenticacao">
-  <article class="card autenticacao__cartao">
-    <header class="card__cabecalho">
-      <span class="card__indice">//</span>
-      <h1 class="card__titulo">Novo cadastro</h1>
-      <span class="card__regua"></span>
-    </header>
+  <div class="autenticacao__moldura">
+    <div class="autenticacao__marca">
+      <app-marca class="autenticacao__marca-agua" />
+      <span class="autenticacao__canto autenticacao__canto--esquerda" aria-hidden="true"></span>
+      <span class="autenticacao__canto autenticacao__canto--direita" aria-hidden="true"></span>
 
-    <form class="autenticacao__formulario" [formGroup]="formulario" (ngSubmit)="enviar()">
-      <label class="autenticacao__campo">
-        <span class="autenticacao__rotulo">Nome</span>
-        <input
-          class="autenticacao__entrada"
-          type="text"
-          formControlName="nome"
-          autocomplete="name"
-        />
-      </label>
+      <div class="autenticacao__marca-linha">
+        <app-marca class="autenticacao__logo" />
+        <span class="autenticacao__marca-texto">CONTRATADOS<span class="autenticacao__marca-sufixo">RPG</span></span>
+      </div>
+      <span class="autenticacao__eyebrow">Solicitação de credencial</span>
+      <h2 class="autenticacao__slogan">Registre-se como agente.</h2>
+      <p class="autenticacao__descricao">
+        Uma conta serve para todas as suas campanhas — como jogador ou como mestre.
+      </p>
 
-      <label class="autenticacao__campo">
-        <span class="autenticacao__rotulo">Login</span>
-        <input
-          class="autenticacao__entrada"
-          type="text"
-          formControlName="login"
-          autocomplete="username"
-          autocapitalize="none"
-          spellcheck="false"
-        />
-      </label>
+      <div class="autenticacao__nota">
+        <app-icone nome="protecoes" />
+        <span>Seus dados de identificação ficam restritos aos membros da sua campanha.</span>
+      </div>
+    </div>
 
-      <label class="autenticacao__campo">
-        <span class="autenticacao__rotulo">Senha</span>
-        <input
-          class="autenticacao__entrada"
-          type="password"
-          formControlName="senha"
-          autocomplete="new-password"
-        />
-        @if (formulario.controls.senha.touched && formulario.controls.senha.hasError('minlength')) {
-          <span class="autenticacao__erro">Mínimo de 6 caracteres.</span>
-        }
-      </label>
+    <div class="autenticacao__painel">
+      <span class="autenticacao__eyebrow">Novo registro</span>
+      <h1 class="autenticacao__titulo">Criar conta</h1>
+      <p class="autenticacao__descricao">Leva menos de um minuto.</p>
 
-      <label class="autenticacao__campo">
-        <span class="autenticacao__rotulo">Confirmar senha</span>
-        <input
-          class="autenticacao__entrada"
-          type="password"
-          formControlName="confirmacaoSenha"
-          autocomplete="new-password"
-        />
-        @if (formulario.controls.confirmacaoSenha.touched && formulario.hasError('senhasDivergentes')) {
-          <span class="autenticacao__erro">As senhas não coincidem.</span>
-        }
-      </label>
+      <form class="autenticacao__formulario" [formGroup]="formulario" (ngSubmit)="enviar()">
+        <label class="autenticacao__campo">
+          <span class="autenticacao__rotulo">Nome</span>
+          <input
+            class="autenticacao__entrada"
+            type="text"
+            formControlName="nome"
+            autocomplete="name"
+          />
+        </label>
 
-      <button
-        class="botao botao--primario autenticacao__enviar"
-        type="submit"
-        [disabled]="enviando()"
-      >
-        {{ enviando() ? 'Registrando…' : 'Registrar' }}
-      </button>
-    </form>
+        <label class="autenticacao__campo">
+          <span class="autenticacao__rotulo">Login</span>
+          <input
+            class="autenticacao__entrada"
+            type="text"
+            formControlName="login"
+            autocomplete="username"
+            autocapitalize="none"
+            spellcheck="false"
+          />
+        </label>
 
-    <p class="autenticacao__alternativa">
-      Já tem credenciais?
-      <a class="autenticacao__link" routerLink="/login">Entrar</a>
-    </p>
-  </article>
+        <label class="autenticacao__campo">
+          <span class="autenticacao__rotulo">Senha</span>
+          <input
+            class="autenticacao__entrada"
+            type="password"
+            formControlName="senha"
+            autocomplete="new-password"
+          />
+          @if (formulario.controls.senha.touched && formulario.controls.senha.hasError('minlength')) {
+            <span class="autenticacao__erro">Mínimo de 6 caracteres.</span>
+          }
+        </label>
+
+        <label class="autenticacao__campo">
+          <span class="autenticacao__rotulo">Confirmar senha</span>
+          <input
+            class="autenticacao__entrada"
+            type="password"
+            formControlName="confirmacaoSenha"
+            autocomplete="new-password"
+          />
+          @if (formulario.controls.confirmacaoSenha.touched && formulario.hasError('senhasDivergentes')) {
+            <span class="autenticacao__erro">As senhas não coincidem.</span>
+          }
+        </label>
+
+        <button
+          class="botao botao--primario autenticacao__enviar"
+          type="submit"
+          [disabled]="enviando()"
+        >
+          <app-icone nome="mais" />
+          {{ enviando() ? 'Registrando…' : 'Registrar' }}
+        </button>
+      </form>
+
+      <p class="autenticacao__alternativa">
+        Já tem credenciais?
+        <a class="autenticacao__link" routerLink="/login">Entrar</a>
+      </p>
+    </div>
+  </div>
 </section>

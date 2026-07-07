@@ -10,6 +10,9 @@
   }
 
   &__acao {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     padding: 10px 16px;
     font-size: 12px;
     font-weight: 700;
@@ -19,9 +22,16 @@
   }
 
   &__estado {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     margin: 0;
     font-family: var(--font-sans);
     color: var(--text-dim);
+
+    app-icone {
+      color: var(--text-mute);
+    }
   }
 
   &__lista {
@@ -33,7 +43,9 @@
     gap: 10px;
   }
 
-  &__item {
+  // O item inteiro é clicável (o `<a>` cobre avatar + texto + chip) — o hover tinge a linha
+  // toda, então precisa ser genuinamente clicável em qualquer ponto (não só o nome/descrição).
+  &__ligacao {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -41,19 +53,35 @@
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-control);
+    text-decoration: none;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
 
     &:hover {
+      background: var(--accent-dim);
       border-color: var(--border-strong);
     }
   }
 
-  &__ligacao {
+  // Avatar decorativo (placeholder de imagem — sem foto real no domínio ainda). Listras em
+  // --border-strong (não --surface/--surface-2) — esse par é calibrado pra ficar visível sobre
+  // --surface-2 nas duas bases do tema em runtime (m1-13); direto com --surface/--surface-2 o
+  // contraste ficava quase invisível na base clara.
+  &__avatar {
+    width: 40px;
+    height: 40px;
+    flex: none;
+    border-radius: var(--radius-control);
+    background-color: var(--surface-2);
+    background-image: repeating-linear-gradient(135deg, var(--border-strong) 0 3px, transparent 3px 9px);
+    border: 1px solid var(--border-strong);
+  }
+
+  &__texto {
     flex: 1;
     display: flex;
     flex-direction: column;
     gap: 4px;
     min-width: 0;
-    text-decoration: none;
   }
 
   &__nome {
@@ -68,11 +96,67 @@
     font-size: 13px;
     color: var(--text-dim);
   }
+
+  // Esqueleto de carregamento — mesma silhueta do `__item` real (avatar + linha), evitando o
+  // "flash" seco de texto "Carregando…" antes da lista chegar.
+  &__esqueleto {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__esqueleto-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+  }
+}
+
+// Blocos de esqueleto — reusados por qualquer estado de carregamento (proibição #29: só tokens).
+.esqueleto-bloco {
+  border-radius: var(--radius-control);
+  background: var(--border-strong);
+  animation: esqueleto-pulso 1.4s ease-in-out infinite;
+
+  &--avatar {
+    width: 40px;
+    height: 40px;
+    flex: none;
+  }
+
+  &--linha {
+    flex: 1;
+    height: 14px;
+    max-width: 220px;
+  }
+}
+
+@keyframes esqueleto-pulso {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .esqueleto-bloco {
+    animation: none;
+  }
 }
 
 // Chip de papel (MESTRE / JOGADOR) — variação do chip de classificação do tema.
 .chip-papel {
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 600;
@@ -82,6 +166,10 @@
   border: 1px solid var(--accent-border);
   border-radius: 3px;
   padding: 4px 8px;
+
+  app-icone {
+    font-size: 11px;
+  }
 }
 
 // Card + cabeçalho de seção — bloco sancionado copiado de docs/design/tema/_componentes.scss.
@@ -134,16 +222,27 @@
   border-radius: var(--radius-control);
   font-family: var(--font-mono);
   cursor: pointer;
+  transition: filter 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
 
   &--primario {
     background: var(--accent);
     color: var(--bg);
     border: 0;
+
+    &:hover:not(:disabled) {
+      // filter (não uma 2ª cor fixa) pra funcionar com qualquer accent escolhido em runtime.
+      filter: brightness(1.08);
+    }
   }
 
   &--secundario {
     background: transparent;
     color: var(--text);
     border: 1px solid var(--border-strong);
+
+    &:hover:not(:disabled) {
+      background: var(--surface-2);
+      border-color: var(--accent-border);
+    }
   }
 }

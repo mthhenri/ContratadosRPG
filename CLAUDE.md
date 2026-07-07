@@ -113,7 +113,7 @@ arredondados.
 | `--text` | `#e6e8eb` | texto primário |
 | `--text-dim` | `#969ba3` | texto secundário |
 | `--text-mute` | `#656a72` | rótulos / legendas |
-| `--accent` | `#e5484d` | ação primária, estado ativo, classificação, stat Vida |
+| `--accent` | `#d53030` | ação primária, estado ativo, classificação, stat Vida |
 | `--energy` | `#4c8dd0` | semântico: Energia |
 | `--positive` | `#4a9d6b` | semântico: dano furtivo / ganho |
 | `--warning` | `#d9a441` | semântico: aviso / prestígio |

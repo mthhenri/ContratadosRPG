@@ -3,9 +3,12 @@ import { Routes } from '@angular/router';
 import { autenticacaoGuard } from './core/guards/autenticacao.guard';
 
 export const routes: Routes = [
+  // Rota raiz leva direto ao painel (destino padrão pós-login); sem sessão, o
+  // `autenticacaoGuard` de `/painel` redireciona ao `/login` guardando o retorno.
   {
     path: '',
-    loadComponent: () => import('./pages/home/home.page').then((modulo) => modulo.Home),
+    pathMatch: 'full',
+    redirectTo: '/painel',
   },
   {
     path: 'calculadora',

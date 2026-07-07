@@ -9,6 +9,8 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { finalize, switchMap } from 'rxjs';
 
+import { Icone } from '../../../../shared/icone/icone.component';
+import { Marca } from '../../../../shared/marca/marca.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
 
 /**
@@ -29,7 +31,7 @@ function senhasCoincidem(grupo: AbstractControl): ValidationErrors | null {
  */
 @Component({
   selector: 'app-registro',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, Icone, Marca],
   templateUrl: './registro.page.html',
   styleUrl: './registro.page.scss',
 })
