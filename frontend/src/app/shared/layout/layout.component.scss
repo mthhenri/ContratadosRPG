@@ -41,6 +41,42 @@
     margin-left: auto;
   }
 
+  &__identidade {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+
+    @include bp.mobile {
+      display: none;
+    }
+  }
+
+  &__sessao {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-dim);
+    background: transparent;
+    border: 0;
+    padding: 4px 6px;
+    cursor: pointer;
+    text-decoration: none;
+
+    &:hover {
+      color: var(--text);
+    }
+
+    &--destaque {
+      color: var(--accent);
+
+      &:hover {
+        color: var(--accent);
+        text-decoration: underline;
+      }
+    }
+  }
+
   &__carregando {
     position: relative;
     width: 6rem;

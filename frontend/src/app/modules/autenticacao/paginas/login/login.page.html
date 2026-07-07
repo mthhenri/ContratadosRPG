@@ -1,0 +1,46 @@
+<section class="autenticacao">
+  <article class="card autenticacao__cartao">
+    <header class="card__cabecalho">
+      <span class="card__indice">//</span>
+      <h1 class="card__titulo">Acesso</h1>
+      <span class="card__regua"></span>
+    </header>
+
+    <form class="autenticacao__formulario" [formGroup]="formulario" (ngSubmit)="enviar()">
+      <label class="autenticacao__campo">
+        <span class="autenticacao__rotulo">Login</span>
+        <input
+          class="autenticacao__entrada"
+          type="text"
+          formControlName="login"
+          autocomplete="username"
+          autocapitalize="none"
+          spellcheck="false"
+        />
+      </label>
+
+      <label class="autenticacao__campo">
+        <span class="autenticacao__rotulo">Senha</span>
+        <input
+          class="autenticacao__entrada"
+          type="password"
+          formControlName="senha"
+          autocomplete="current-password"
+        />
+      </label>
+
+      <button
+        class="botao botao--primario autenticacao__enviar"
+        type="submit"
+        [disabled]="enviando()"
+      >
+        {{ enviando() ? 'Autenticando…' : 'Entrar' }}
+      </button>
+    </form>
+
+    <p class="autenticacao__alternativa">
+      Sem credenciais?
+      <a class="autenticacao__link" routerLink="/registro">Registrar</a>
+    </p>
+  </article>
+</section>

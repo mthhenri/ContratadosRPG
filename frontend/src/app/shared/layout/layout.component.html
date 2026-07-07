@@ -7,6 +7,15 @@
     @if (loadingService.isLoading()) {
       <span class="topbar__carregando" role="status" aria-label="Carregando"></span>
     }
+
+    @if (sessaoService.usuario(); as usuarioAtual) {
+      <span class="topbar__identidade">{{ usuarioAtual.nome }}</span>
+      <button class="topbar__sessao" type="button" (click)="sair()">Sair</button>
+    } @else {
+      <a class="topbar__sessao" routerLink="/login">Entrar</a>
+      <a class="topbar__sessao topbar__sessao--destaque" routerLink="/registro">Registrar</a>
+    }
+
     <app-configuracoes-tema />
   </div>
 </header>

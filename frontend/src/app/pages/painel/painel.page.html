@@ -1,0 +1,16 @@
+<section class="painel">
+  <article class="card">
+    <header class="card__cabecalho">
+      <span class="card__indice">M2</span>
+      <h1 class="card__titulo">Painel</h1>
+      <span class="card__regua"></span>
+    </header>
+
+    @if (sessaoService.usuario(); as usuarioAtual) {
+      <p class="painel__saudacao">
+        Sessão ativa como <strong class="painel__identidade">{{ usuarioAtual.nome }}</strong>.
+      </p>
+    }
+    <p class="painel__aviso">A gestão de campanhas chega na próxima entrega.</p>
+  </article>
+</section>
