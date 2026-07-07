@@ -32,7 +32,10 @@ Cloudflare Pages           Render (Web Service)          Supabase
   Render fica commitada em `frontend/src/environments/environment.production.ts` (`apiBase`) —
   não é segredo. O `fileReplacements` do `angular.json` a injeta no build de produção.
 - **CORS por variável de ambiente.** O backend libera a origem da Cloudflare via
-  `APP_FRONTEND_ORIGEM` (`main.ts`) — mudar essa var é só reinício, sem rebuild.
+  `APP_FRONTEND_ORIGEM` (`main.ts`) — mudar essa var é só reinício, sem rebuild. Além da origem
+  de produção, o `main.ts` libera automaticamente qualquer subdomínio do mesmo projeto Pages
+  (`https://<hash-ou-branch>.<projeto>.pages.dev`), então os deploys de **preview** (PRs e
+  branches que não são `master`) também conseguem chamar a API sem precisar mexer em env var.
 
 ---
 
