@@ -1,6 +1,11 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-07 (2 achados de UI/UX
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-07 (grade de fundo mais
+> visível, a pedido do autor: `--grid-line` de `_tokens.scss` (frontend + mirror
+> `docs/design/tema/`) foi de `rgba(255,255,255,.02)` pra `rgba(255,255,255,.045)` — mesmo
+> `--grid-cell` de 32px, token único e global (`body` em `_base.scss`), nada de valor solto por
+> componente. `lint`/`test` (91/91) verdes, conferido visualmente (grade perceptível a olho nu sem
+> virar poluição visual). Sessão anterior no mesmo dia: 2 achados de UI/UX
 > corrigidos, a pedido do autor, ao revisar os prints da m2-09: (1) o `card__indice` de `campanhas`
 > lista/detalhe mostrava literalmente **"M2"** (nome do milestone interno) pro usuário final — trocado
 > por `//`, o mesmo neutro já usado em `criar`/`entrar`; (2) itens da lista de campanhas e da lista de
