@@ -15,18 +15,18 @@
     </a>
   }
 
-  @if (sessaoService.autenticado()) {
-    <nav class="topbar__nav" aria-label="Navegação principal">
+  <nav class="topbar__nav" aria-label="Navegação principal">
+    @if (sessaoService.autenticado()) {
       <a class="topbar__item" routerLink="/painel" routerLinkActive="topbar__item--ativo">
         <app-icone nome="campanhas" />
         <span>Painel</span>
       </a>
-      <a class="topbar__item" routerLink="/calculadora" routerLinkActive="topbar__item--ativo">
-        <app-icone nome="calculadora" />
-        <span>Calculadora</span>
-      </a>
-    </nav>
-  }
+    }
+    <a class="topbar__item" routerLink="/calculadora" routerLinkActive="topbar__item--ativo">
+      <app-icone nome="calculadora" />
+      <span>Calculadora</span>
+    </a>
+  </nav>
 
   <div class="topbar__acoes">
     @if (loadingService.isLoading()) {

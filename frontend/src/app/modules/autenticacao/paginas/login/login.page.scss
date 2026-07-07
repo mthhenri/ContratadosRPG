@@ -26,6 +26,19 @@
     padding: 34px;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+  }
+
+  // Marca d'água — mesmo tratamento do painel de marca dos protótipos (opacity .04, canto
+  // inferior direito, atrás do conteúdo).
+  &__marca-agua {
+    position: absolute;
+    right: -50px;
+    bottom: -40px;
+    z-index: 0;
+    font-size: 220px;
+    opacity: 0.04;
+    pointer-events: none;
   }
 
   &__canto {

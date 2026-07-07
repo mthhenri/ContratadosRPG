@@ -16,8 +16,11 @@
 > existe esse fluxo no domínio). **Marca do projeto** (`frontend/public/logo-{white,black}.{png,svg}`,
 > assets do autor do design): novo componente `shared/marca/` troca a variante branca/preta conforme a
 > base ativa do tema (`TemaService.base`) e substitui o wordmark só-texto na topbar e no painel de marca
-> de login/registro; budget de bundle inicial ajustado de 560→565 kB no `angular.json`. **`campanhas`
-> lista**: ícones nos botões de ação e no `chip-papel`
+> de login/registro, que ganhou também a marca d'água (`opacity: .04`, canto inferior direito, mesmo
+> tratamento dos protótipos) no painel de marca; budget de bundle inicial ajustado de 560→565 kB no
+> `angular.json`. **Correção:** a nav da topbar escondia "Calculadora" (rota pública, sem guard) junto
+> com "Painel" quando deslogado — agora só "Painel" fica condicionado à sessão, "Calculadora" sempre
+> visível. **`campanhas` lista**: ícones nos botões de ação e no `chip-papel`
 > (coroa mestre / escudo jogador). **`campanha` detalhe**: botão de copiar o código de convite
 > (clipboard, só apresentação), ícone no botão "Regenerar", `chip-papel` dos membros com ícone, link
 > "Voltar" com seta. Conteúdo decorativo dos protótipos sem dado real (chips de status ao vivo/agendada/
@@ -224,9 +227,16 @@ tokens de `docs/design/tema/`** — o tema "Terminal de Contenção" é a fonte 
   frontend/public") e pediu para aplicá-los; novo `shared/marca/` (`Marca`, componente padrão
   `app-icone` — escala com a fonte via `1.4em`) troca a variante branca/preta conforme
   `TemaService.base()` (branca sobre a base escura, identidade padrão; preta sobre a base clara) e
-  substitui o wordmark só-texto na topbar e no painel de marca de `login`/`registro`; budget de bundle
-  inicial ajustado 560→565 kB no `angular.json` (poucos bytes a mais do novo componente). **Entregável
-  4 — `campanhas` lista:** ícones nos botões "Criar campanha"/"Entrar por código" e no `chip-papel`
+  substitui o wordmark só-texto na topbar e no painel de marca de `login`/`registro`, que ganhou também
+  a **marca d'água** no canto inferior direito do painel de marca (`opacity: .04`, `font-size` grande
+  no `app-marca` pra ampliar a imagem, `overflow: hidden` no painel pra conter o transbordo) — mesmo
+  tratamento visual de `docs/design/examples/login.html`/`cadastro.html`; budget de bundle inicial
+  ajustado 560→565 kB no `angular.json` (poucos bytes a mais do novo componente). **Correção (achado do
+  autor):** a nav da topbar (entregável 2) tinha ficado incorreta — escondia **"Calculadora" também**
+  quando deslogado, mas essa rota é pública (sem guard, `calculadora.routes.ts`); só "Painel" deveria
+  depender de sessão. Corrigido: "Calculadora" sempre visível na nav, "Painel" continua condicionado a
+  `sessaoService.autenticado()`. **Entregável 4 — `campanhas` lista:** ícones nos botões "Criar
+  campanha"/"Entrar por código" e no `chip-papel`
   (coroa para `MESTRE`, `protecoes`/escudo para `JOGADOR`), estado vazio com ícone. **Entregável 5 —
   `campanha` detalhe:** botão de copiar o código de convite (`navigator.clipboard`, puramente
   apresentação), ícone de atualizar no "Regenerar", `chip-papel` dos membros com ícone, link "Voltar às
