@@ -42,10 +42,10 @@ export class Layout {
     this.perfilAberto.set(false);
   }
 
-  /** Encerra a sessão e leva o usuário de volta à home pública. */
+  /** Encerra a sessão e leva o usuário de volta à tela de login. */
   protected sair(): void {
     this.fecharPerfil();
     this.sessaoService.sair();
-    void this.router.navigateByUrl('/');
+    void this.router.navigateByUrl('/login');
   }
 }
