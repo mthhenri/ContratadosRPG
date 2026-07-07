@@ -1,6 +1,10 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-07 (contraste do avatar
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-07 (`--grid-line` subiu
+> de novo, a pedido do autor: de `rgba(255,255,255,.045)` pra `.3` — grade de fundo agora bem
+> marcada (efeito "papel quadriculado"), não mais discreta. Mesmo token único e global
+> (`_tokens.scss` + mirror `docs/design/tema/`, `--grid-cell` 32px intocado). `lint`/`test` (91/91)
+> verdes, conferido visualmente. Sessão anterior no mesmo dia: contraste do avatar
 > decorativo reforçado, achado ao conferir a base clara: as listras diagonais (`.topbar__avatar`,
 > `.campanhas__avatar`, `.detalhe__avatar`) usavam `--surface`/`--surface-2` — par calibrado pra
 > diferença sutil de superfície, quase invisível na base clara (`#ffffff`/`#e7eaee`, m1-13). Trocado
