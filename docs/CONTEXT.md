@@ -1,6 +1,12 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-07 (3 melhorias de
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-07 (glifo do ícone
+> "tema" trocado por "ajustes/sliders" — o autor escolheu essa opção entre 6 comparadas num
+> artifact; path final `M5 21v-8M5 9V3M12 21v-7M12 10V3M19 21v-4M19 13V3` +
+> `M3 13h4M10 10h4M17 13h4` no `@case ('tema')` de `shared/icone`. Comunica "3 controles
+> ajustáveis" (base + preset + cor custom), mais fiel ao que o painel faz do que uma metáfora
+> literal de sol/lua. `lint`/`test` (91/91) verdes, conferido visualmente. Sessão anterior no
+> mesmo dia: 3 melhorias de
 > UI/UX sugeridas e aplicadas a pedido do autor). **(1) Ícone do gatilho de tema:** trocou o glifo
 > unicode cru `◐` (`config-gatilho__marca`) por `<app-icone nome="tema">` — novo glifo (`shared/
 > icone`, círculo bissectado por uma linha) alinhado ao resto do sistema de ícones, único lugar que
