@@ -180,6 +180,11 @@
     app-icone {
       color: var(--text-mute);
     }
+
+    &:hover {
+      color: var(--text);
+      border-color: var(--accent-border);
+    }
   }
 
   // Avatar decorativo (placeholder de imagem). As listras usam --border-strong (não

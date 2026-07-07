@@ -83,6 +83,18 @@ precisar ser repetido por componente.
 Telas futuras (ficha de jogador/criatura, guia de missão) herdam esse padrão automaticamente —
 **não reintroduzir a scrollbar nativa** nem restilizá-la localmente por componente.
 
+## Foco de teclado (padrão global)
+
+Mesmo racional da scrollbar: definido **uma vez** em `tema/_base.scss`, não repetido por
+componente. Todo `a`/`button` ganha um `outline: 2px solid var(--accent-border)` (com
+`outline-offset: 2px`) em `:focus-visible` — navegação por teclado consistente com a identidade,
+em vez do outline padrão (inconsistente) do navegador. Inputs/textarea ficam de fora dessa regra
+global porque já têm o próprio tratamento de `:focus` (borda `--accent-border`) definido por
+página — um outline extra ali duplicaria o sinal.
+
+Telas futuras herdam esse padrão automaticamente — não reintroduzir `outline: none` sem repor um
+tratamento de foco equivalente.
+
 ## Referência visual
 
 Os protótipos aprovados (mesmos tokens) servem de referência 1:1 para o dev reproduzir:

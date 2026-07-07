@@ -1,6 +1,21 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-07 (glifo do ícone
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-07 (3 ajustes de
+> UI/UX a pedido do autor, achados numa revisão de hover/foco do sistema). **(1) Ícone "tema"
+> maior:** `font-size` do `app-icone` no gatilho subiu de 13px pra 17px — o glifo de sliders tem
+> mais traço que o círculo antigo e ficava espremido/difícil de reconhecer. **(2) Foco de teclado
+> brandado (acessibilidade):** regra global nova em `_base.scss` (+ mirror `docs/design/tema/`,
+> documentada em `docs/design/DESIGN.md`) — `a:focus-visible, button:focus-visible { outline: 2px
+> solid var(--accent-border); outline-offset: 2px; }`, definida **uma vez**, nenhum componente
+> repete; inputs ficam de fora (já têm `:focus` próprio). **(3) Hover dos botões do sistema
+> auditado:** achado que `.botao--primario`/`.botao--secundario` (bloco sancionado, duplicado em
+> 6 páginas + o canônico `docs/design/tema/_componentes.scss`) **nunca tiveram hover** desde que
+> foram criados — corrigido nos 7 lugares: primário ganha `filter: brightness(1.08)` (funciona com
+> qualquer accent trocado em runtime, não uma 2ª cor fixa), secundário ganha
+> `background: var(--surface-2)` + `border-color: var(--accent-border)`. Também reforçado:
+> `.topbar__perfil-gatilho` (não tinha hover) e `.detalhe__copiar` (só trocava a cor do texto,
+> agora também fundo+borda, consistente com o secundário). `lint`/`test` (91/91)/`build` verdes,
+> conferido visualmente (hover + foco por Tab). Sessão anterior no mesmo dia: glifo do ícone
 > "tema" trocado por "ajustes/sliders" — o autor escolheu essa opção entre 6 comparadas num
 > artifact; path final `M5 21v-8M5 9V3M12 21v-7M12 10V3M19 21v-4M19 13V3` +
 > `M3 13h4M10 10h4M17 13h4` no `@case ('tema')` de `shared/icone`. Comunica "3 controles
