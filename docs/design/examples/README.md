@@ -29,6 +29,15 @@ Foque nos **padrões visuais** listados — não nos campos/dados específicos, 
 | `calculadora-de-atributos.html` | Calculadora de agente | Steppers, stat grid, cabeçalho de seção com índice + régua |
 | `ficha-de-jogador.html` | Ficha de Jogador | Barras Vida/Energia, chips de habilidade, tabela de inventário |
 | `ficha-de-criatura.html` | Ficha de Ameaça (SCP) | Layout denso, atributos + modificadores, resistências/fraquezas |
+| `login.html` | Login / acesso | Painel split marca+form, campos com rótulo mono, entrada por código de convite |
+| `cadastro.html` | Cadastro de conta | Formulário em duas colunas, checkbox, nota de contenção de dados |
+| `campanhas.html` | Campanhas (adapta ao papel) | Cards de campanha, chips de status (ao vivo/agendada/pausada), painel "entrar por código", grid de mesas do mestre, menu de perfil |
+| `lobby-de-campanha.html` | Lobby / detalhe de campanha | Cabeçalho com classificação + código de convite copiável, briefing, lista de esquadrão, seletor de campanha ativa na topbar |
+| `topbar.html` | Topbar — 3 direções | Barra de comando (1a), rail lateral (1b), dossiê de duas linhas (1c); seletor de campanha, status ao vivo, dropdown de perfil |
+
+> `topbar.html` é uma **exploração de opções** (1a/1b/1c lado a lado), não uma tela final —
+> serve para escolher a direção do chrome de navegação. As telas `campanhas` e
+> `lobby-de-campanha` já usam a direção **1a (Barra de Comando)**.
 
 ## Relação com o resto do handoff
 
