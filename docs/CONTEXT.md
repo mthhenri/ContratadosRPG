@@ -111,7 +111,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, core/, pipelines, deploy) | **concluído** (deploy nativo Render+Cloudflare; setup das plataformas em `docs/DEPLOY.md`) |
 | M1 | Calculadora com paridade | **concluído no código** (`m1-01` a `m1-18`, incluindo os refinamentos pós-paridade: mobile `m1-15`, tema em runtime `m1-16`, singleton de estado das abas `m1-17` e scrollbar customizada `m1-18`). Restam 2 passos operacionais de plataforma: publicar a Cloudflare Pages e arquivar o repo antigo no GitHub (ver `docs/PARIDADE-M1.md`) |
-| M2 | Auth + Campanhas | **em andamento** (quebrado em 8 tasks `m2-01`…`m2-08`; **m2-01…m2-07 concluídas** — dados + backbone de autenticação JWT com guard global + perfil/troca de senha self-service + CRUD de campanha com papéis + convite/membros + **frontend de autenticação** (login/registro, sessão, interceptor JWT, guard de rota) + **frontend de campanhas** (listar/criar/entrar por código/detalhe com membros + convite/regenerar do mestre); **backend de campanhas fechado** e **fluxo do M2 completo ponta a ponta na UI**. Resta só o refino mobile `m2-08`) |
+| M2 | Auth + Campanhas | **em andamento** (quebrado em 9 tasks `m2-01`…`m2-09`; **m2-01…m2-07 concluídas** — dados + backbone de autenticação JWT com guard global + perfil/troca de senha self-service + CRUD de campanha com papéis + convite/membros + **frontend de autenticação** (login/registro, sessão, interceptor JWT, guard de rota) + **frontend de campanhas** (listar/criar/entrar por código/detalhe com membros + convite/regenerar do mestre); **backend de campanhas fechado** e **fluxo do M2 completo ponta a ponta na UI**. Restam o refino mobile `m2-08` e a revisão geral de estilização `m2-09` — esta última bloqueada até a chegada de novos arquivos de design em `docs/design/`) |
 | M3 | Ficha de Jogador | backlog |
 | M4 | Ficha de Criatura/NPC | backlog |
 | M5 | Guia de Missão | backlog |
@@ -145,8 +145,9 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 ## Próxima Task
 
 **M2 em andamento.** O milestone **M2 — Auth + Campanhas**
-(`docs/specs/backlog/m2-auth-campanhas.spec.md`) foi quebrado em **8 tasks numeradas**
-(`m2-01`…`m2-08`, em `docs/specs/backlog/`); a task de refinamento mobile é a `m2-08`. A
+(`docs/specs/backlog/m2-auth-campanhas.spec.md`) foi quebrado em **9 tasks numeradas**
+(`m2-01`…`m2-09`, em `docs/specs/backlog/`); a task de refinamento mobile é a `m2-08` e a task de
+revisão geral de estilização é a `m2-09`. A
 **m2-01** (fundação de dados), a **m2-02** (backbone de autenticação JWT), a **m2-03** (perfil e
 troca de senha), a **m2-04** (CRUD de campanha), a **m2-05** (convite/membros), a **m2-06**
 (frontend de autenticação) e a **m2-07** (frontend de campanhas) estão **concluídas** (specs em
@@ -155,6 +156,10 @@ troca de senha), a **m2-04** (CRUD de campanha), a **m2-05** (convite/membros), 
 (login/registro, sessão persistida, interceptor JWT, guard de rota) e a m2-07 fecha o **fluxo do M2
 ponta a ponta na UI** — sob `/painel` (guardado): listar campanhas, criar, entrar por código e o
 detalhe com membros + convite/regenerar do mestre.
+
+**`m2-09` (revisão geral de estilização) está bloqueada**: depende de novos arquivos de design
+ainda não entregues em `docs/design/` (ver `docs/specs/backlog/m2-09-revisao-estilizacao-geral.spec.md`).
+Não iniciar essa task antes da chegada desses arquivos.
 
 **Próxima task: `m2-08`** — refinamento de UI/UX mobile do M2 (autenticação + campanhas), na linha do
 que a m1-15 fez para a calculadora. **Antes de qualquer UI, ler `docs/design/DESIGN.md` e consumir os
