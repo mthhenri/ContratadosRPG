@@ -8,5 +8,10 @@
     "target": "http://localhost:3100",
     "secure": false,
     "changeOrigin": true
+  },
+  "/campanha": {
+    "target": "http://localhost:3100",
+    "secure": false,
+    "changeOrigin": true
   }
 }

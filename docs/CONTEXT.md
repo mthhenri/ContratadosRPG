@@ -1,6 +1,23 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-07 (m2-06 — **primeira UI
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-07 (m2-07 — **frontend de
+> campanhas**: fecha o fluxo do M2 na UI sobre o backend das m2-04/m2-05 e a sessão/guard da m2-06. Módulo
+> `modules/campanha/` com `CampanhaService` (`providedIn:'root'`, transporte HTTP puro — extrai o `dados`
+> do `StandardResponse`, DTOs do shared `./dtos/campanha`, JWT via `auth-token.interceptor`) e **4 telas
+> standalone lazy** montadas sob `/painel` (guard `autenticacaoGuard`, `loadChildren`): `lista` (`/painel`)
+> — campanhas do usuário com o papel (chip `MESTRE`/`JOGADOR`), links p/ criar/entrar/detalhe; `criar`
+> (`/painel/criar`) e `entrar` (`/painel/entrar`) — Reactive Forms, ao concluir navegam ao detalhe da
+> campanha criada/ingressada; `detalhe` (`/painel/:id`, id do `ActivatedRoute.snapshot`) — nome/descrição,
+> membros com papel, e **só para o mestre** o `codigo_convite` + botão **regenerar** (o `ehMestre` é
+> derivado da lista de membros vs `sessao.usuario().id` — apenas apresentação; a autoridade é o backend §14,
+> um jogador regenerando levaria 403 via `error-handler`). Estado em Signals; `.scss`/BEM/tokens do tema
+> "Terminal de Contenção" (proibição #29 — card/botão/chip copiados de `_componentes.scss`, zero hex solto).
+> A casca semente `pages/painel/` da m2-06 foi **substituída** por este módulo; proxy dev passou a encaminhar
+> `/campanha` ao backend. DTOs consumidos do shared, nunca redefinidos no front. **18 arquivos de teste /
+> 91 testes** no frontend (novo `campanha.service.spec` 6 — cada método atinge rota/verbo certo e mapeia o
+> `dados`; `app.routes.spec` ajustado: `/painel` agora resolve a lista de campanhas `.campanhas`);
+> `lint`/`build`/`test` do frontend verdes. Nenhuma regra de jogo (`shared/regras` intocado), nenhuma
+> alteração de backend. Sessão anterior no mesmo dia: m2-06 — **primeira UI
 > do M2**: frontend de autenticação sobre o backbone JWT da m2-02/m2-03. `SessaoService` (`core/services`)
 > é o dono do estado de sessão em runtime — Signal do `UsuarioAutenticadoDto` (token + `{id,login,nome}`),
 > ações `registrar`/`logar`/`sair`, token persistido em `localStorage` (`contratados-rpg.sessao`) e
@@ -94,7 +111,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, core/, pipelines, deploy) | **concluído** (deploy nativo Render+Cloudflare; setup das plataformas em `docs/DEPLOY.md`) |
 | M1 | Calculadora com paridade | **concluído no código** (`m1-01` a `m1-18`, incluindo os refinamentos pós-paridade: mobile `m1-15`, tema em runtime `m1-16`, singleton de estado das abas `m1-17` e scrollbar customizada `m1-18`). Restam 2 passos operacionais de plataforma: publicar a Cloudflare Pages e arquivar o repo antigo no GitHub (ver `docs/PARIDADE-M1.md`) |
-| M2 | Auth + Campanhas | **em andamento** (quebrado em 8 tasks `m2-01`…`m2-08`; **m2-01…m2-06 concluídas** — dados + backbone de autenticação JWT com guard global + perfil/troca de senha self-service + CRUD de campanha com papéis + convite/membros + **frontend de autenticação** (login/registro, sessão, interceptor JWT, guard de rota); **backend de campanhas fechado** e **primeira UI do M2 no ar**. Resta o frontend de campanhas `m2-07` + refino mobile `m2-08`) |
+| M2 | Auth + Campanhas | **em andamento** (quebrado em 8 tasks `m2-01`…`m2-08`; **m2-01…m2-07 concluídas** — dados + backbone de autenticação JWT com guard global + perfil/troca de senha self-service + CRUD de campanha com papéis + convite/membros + **frontend de autenticação** (login/registro, sessão, interceptor JWT, guard de rota) + **frontend de campanhas** (listar/criar/entrar por código/detalhe com membros + convite/regenerar do mestre); **backend de campanhas fechado** e **fluxo do M2 completo ponta a ponta na UI**. Resta só o refino mobile `m2-08`) |
 | M3 | Ficha de Jogador | backlog |
 | M4 | Ficha de Criatura/NPC | backlog |
 | M5 | Guia de Missão | backlog |
@@ -117,9 +134,9 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | frontend (shell) | **pronto** (topbar + `router-outlet` via `shared/layout`, home consumindo `/health`, tema "Terminal de Contenção" dark-first via `docs/design`). Em **dev** a aba do navegador recebe sufixo "- DEV" (`provideAppInitializer` no `app.config.ts`, gated por `!environment.producao`; produção mantém o `<title>` do `index.html`) |
 | frontend/tema | **pronto + troca em runtime (m1-13)** (tokens + base + `ContencaoPreset` PrimeNG em `src/styles/tema/`). **Sistema de tema em runtime (m1-13):** `TemaService` (`core/services/tema.service.ts`) é a contraparte em runtime de `_tokens.scss` para a parte trocável — escreve `--accent` (e overrides de base clara) em `<html>`, alterna a classe `.dark` e regenera a paleta primária do PrimeNG (`updatePrimaryPalette`/`palette`); 4 presets de accent (só cores da paleta do tema — vermelho/azul/verde/âmbar), base clara/escura e color picker custom com **trava de contraste WCAG** (`razaoContraste`/`luminanciaRelativa`, piso 3:1 vs superfície); persiste em `localStorage` e restaura no boot via `provideAppInitializer`. Painel `ConfiguracoesTema` (`shared/configuracoes-tema/`) na topbar (gatilho + modal, fecha por botão). **Refino m1-16:** (a) **slot de cor custom salvo** — `salvarAccentCustom`/`selecionarAccentSalvo`/`accentCustomSalvo` no `TemaService` + swatch "Salva" no painel: guarda **um** slot (sobrescreve o anterior), persistido em `accentCustomSalvo` (distinto do `accentCustom` ativo), re-selecionável com um clique sem reabrir o picker; (b) **inversão visual por incompatibilidade de base** — `accentAplicado`/`accentAdaptado` + `variantePorContraste` (complemento RGB → ajuste de luminância até cruzar `CONTRASTE_MINIMO`): quando a cor salva/ativa fica ilegível na base ativa, o `--accent` exibido é uma variante legível **preservando o valor salvo**; ao voltar à base compatível a cor original é reaplicada (substitui o descarte antigo em `definirBase`, que agora só troca **presets fixos** travados). Nota discreta no painel quando a cor está adaptada. Paleta de presets expandida de 4 p/ **9** (as 4 oficiais + roxo/rosa/dourado/turquesa/cinza, a pedido do autor), todas sujeitas à mesma trava de contraste por base. Budget inicial elevado p/ 560 kB (o motor de paleta do `@primeuix/themes` entra no bundle inicial). **Tailwind instalado e integrado ao build** (m1-06): `frontend/tailwind.config.ts` mescla o `theme.extend` do handoff (`docs/design/tema/tailwind.config.ts`) apontando cores/fontes/raios utilitários para as CSS custom properties dos tokens; diretivas `@tailwind` no fim de `styles.scss`, coexistindo com SCSS + tokens (preflight não sobrescreve a identidade — só reset). **Scrollbar customizada global (m1-18):** padrão próprio da barra de rolagem definido **uma vez** em `styles/tema/_base.scss` (espelhado no handoff `docs/design/tema/_base.scss`) — thumb fino (`10px`) em `--surface-2` com contorno `--border-strong` e raio `--radius-control`, track/corner transparentes, `:hover` realça o contorno com `--accent-border` (nunca `--accent` sólido); cross-browser via `::-webkit-scrollbar-*` (Chrome/Edge/Safari) + `scrollbar-width: thin`/`scrollbar-color` (Firefox). Só tokens → segue legível/discreto nas duas bases (clara/escura) do tema em runtime, que sobrescrevem `--surface-2`/`--border-strong`. Vale globalmente (scroll geral, os 3 modais, tabelas/textarea) sem repetição por componente; documentado em `docs/design/DESIGN.md` para as telas futuras (M2+) não reintroduzirem a barra nativa |
 | frontend/core (interceptors + services) | **pronto** (`loading`/`error-handler` interceptors, `LoadingService`, `HealthService`). **m2-06:** `SessaoService` (Signal do `UsuarioAutenticadoDto`, `registrar`/`logar`/`sair`, token em `localStorage` restaurado no boot), `auth-token.interceptor` (injeta `Bearer` quando há sessão; registrado entre `loading` e `error-handler` no `app.config`), `error-handler` passou a tratar `401` (com sessão → `sair()` + `/login?retorno=`), `autenticacaoGuard` (`core/guards`, protege rotas privadas) |
-| frontend/autenticacao | **pronto (m2-06)** — módulo `modules/autenticacao/` com telas standalone **lazy** `login` (`/login`) e `registro` (`/registro`), Reactive Forms + Signals, BEM/tokens do tema; login retoma o `retorno` ou vai ao `/painel`; registro encadeia `registrar → logar`. Rotas públicas montadas em `app.routes` (coexistindo com a `''` da home). Rota privada semente `/painel` (`pages/painel/`, guardada) — casca mínima que confirma a sessão, expandida pela m2-07. Topbar (`shared/layout`) reflete a sessão (entrar/registrar ↔ nome + sair) |
+| frontend/autenticacao | **pronto (m2-06)** — módulo `modules/autenticacao/` com telas standalone **lazy** `login` (`/login`) e `registro` (`/registro`), Reactive Forms + Signals, BEM/tokens do tema; login retoma o `retorno` ou vai ao `/painel`; registro encadeia `registrar → logar`. Rotas públicas montadas em `app.routes` (coexistindo com a `''` da home). Topbar (`shared/layout`) reflete a sessão (entrar/registrar ↔ nome + sair). A rota privada `/painel` (guardada pelo `autenticacaoGuard`) passou na m2-07 de casca semente para o **módulo de campanhas** (a `pages/painel/` foi removida) |
+| frontend/campanha | **pronto (m2-07)** — módulo `modules/campanha/` (área privada sob `/painel`, `loadChildren` guardado): `CampanhaService` (`providedIn:'root'`, cliente HTTP dos endpoints das m2-04/m2-05 — `listarCampanhas`/`criarCampanha`/`entrarCampanha`/`recuperarCampanha`/`listarMembros`/`regenerarConvite`, extrai o `dados` do `StandardResponse`, DTOs do shared `./dtos/campanha`) e **4 telas standalone lazy**: `lista` (`/painel`, campanhas do usuário + papel, links criar/entrar/detalhe), `criar` (`/painel/criar`) e `entrar` (`/painel/entrar`) — Reactive Forms que ao concluir navegam ao `/painel/:id` —, `detalhe` (`/painel/:id`) — nome/descrição, membros com papel e, **só para o mestre** (derivado da lista de membros vs `sessao.usuario().id` — apresentação, não regra: autoridade é o backend §14), o `codigo_convite` + botão **regenerar**. Estado em Signals; `.scss`/BEM/tokens do tema (card/botão/chip de `_componentes.scss`, sem hex solto — proibição #29). Proxy dev encaminha `/campanha`. **6 testes** (`campanha.service.spec`) |
 | frontend/calculadora | **6 abas prontas (paridade da calculadora completa)**. Fundação (m1-06): módulo `modules/calculadora/` com 6 rotas públicas **lazy** — `agente`/`dt`/`novo-agente`/`patente`/`descanso`/`compras` — sob o `CalculadoraShell` (navegação de abas + deep-link por rota via `routerLink`/`routerLinkActive`, paridade com o `switchTab`/`VALID_TABS` por hash do site antigo) e o `StepInput` (stepper/input numérico reutilizável, `ControlValueAccessor` + Reactive Forms, sem `ngModel`). **Aba `agente` (m1-07):** carro-chefe — `AgentePage` (Reactive Forms + Signals) consumindo `shared/regras/agente` para **todas** as stats. **Abas leves `dt`/`novo-agente`/`patente` (m1-08):** três páginas Reactive Forms + Signals consumindo `shared/regras/{dt,novo-agente,patente}`, reusando o `StepInput` e os tokens/BEM do tema; rótulos de `PatenteEnum`/`MotivoEntradaAgenteEnum`→pt-BR em `modules/calculadora/rotulos.ts` (formatação de UI). **Aba `descanso` (m1-09):** `DescansoPage` (Reactive Forms + Signals) consumindo `shared/regras/descanso` — faixa determinística + **rolagem animada** (scramble via `requestAnimationFrame`, RNG por `rolarDados`). **Aba `compras` (m1-10):** `ComprasPage` — a mais pesada: configuração do agente (4 steppers), resumo de limites/gastos, catálogo com busca/categorias e o carrinho com itens, modificações (painel + empilhamentos) e amplificadores; estado em **Signals**, todos os números vindos de `shared/regras/compras` (`calcularResumoCompras`/`calcularStatItem`/custos). **Persistência e exportar/importar (m1-11):** `effect()` salva carrinho/amplificadores/recursos em `localStorage` a cada mudança e recarrega na construção da página; modais de exportar (código `CRPG-COMPRAS-V1:<base64>`) e importar, com aviso de incompatibilidade com códigos do site antigo. **Ajuda por aba (m1-12):** componente único `AjudaCalculadora` (`componentes/ajuda-calculadora/`) — gatilho "? Ajuda" + modal — embutido nas 6 páginas via input signal `aba`; o texto (guia de "como usar cada página") vive em `CONTEUDO_AJUDA`, keyed por aba, sem duplicação. Todas as 6 abas concluídas com paridade completa. **Verificação de paridade + "sem duplicação" (m1-14):** achado corrigido — `compras.page.ts` recalculava custo/penalidade de amplificador com constantes de regra embutidas (`3000/1000/2`) → passou a consumir `calcularCustoAmplificador` + `PENALIDADE_VONTADE_POR_EMPILHAMENTO` de `shared/regras/compras` (zero constante de regra no front). **Cor da stat Vida** (abas agente/descanso) desacoplada do `--accent` trocável: novo token fixo `--vida`/`--vida-border` (vermelho da identidade) em `_tokens.scss` (front + `docs/design/tema/`) — Vida permanece vermelha mesmo com accent trocado no tema em runtime. **Refinamento mobile (m1-15):** estratégia responsiva dirigida por token — `src/styles/tema/_breakpoints.scss` (`$bp-mobile: 560px` + mixin `mobile` + `$alvo-toque: 44px`, resolvido via `stylePreprocessorOptions.includePaths` em `angular.json`); a densidade mobile vem de **override dos tokens** `--pad-card`/`--gap-grid` num `@media` no `styles.scss` (reflui todos os cards/grids de uma vez, sem valor mágico por arquivo); trava de scroll horizontal via `overflow-x: clip` em `html`/`.conteudo`. Abas do shell viram **barra flutuante fixa no rodapé** no mobile (ícone sobre rótulo, 6 itens distribuídos, deep-link preservado, área segura do iOS + espaço reservado no conteúdo); alvos de toque de 44px no `StepInput`, chips de categoria, mini-botões e controles do painel de tema; os 3 modais (ajuda/tema/exportar-importar) ganham `max-height` + rolagem interna. As 6 grades já refluem por `auto-fit`/`auto-fill minmax`. Verificação responsiva (360/390/430px) na §6 de `docs/PARIDADE-M1.md`. **Estado entre-abas em memória (m1-17):** singleton `providedIn: 'root'` `EstadoAbasCalculadoraService` (`modules/calculadora/estado-abas-calculadora.service.ts`, mapa `aba → valor bruto` em Signal, sem I/O) preserva o formulário das 5 abas `agente`/`dt`/`novo-agente`/`patente`/`descanso` ao trocar de aba (cada página restaura no construtor via `patchValue` e grava em cada `valueChanges`); F5 recria o service vazio → volta ao preset (só `compras` sobrevive a F5, pelo seu `localStorage` da m1-11, intocado). Preset da aba `agente` passou a **Nível 0** e atributos **1/1/1/1/1** (era Nível 3 / 2/2/2/1/1). **Sem regra de jogo** (`shared`/`shared/regras` intocados) |
-| frontend/campanha | não iniciado |
 | frontend/ficha | não iniciado |
 | Infra — banco local (Docker + Knex) | **pronto** (Postgres 16 + migrations). Migrations `0001` (`fn_set_updated_date`) + **`0002`–`0005` (m2-01)**: `tipo_campanha_membro_papel` (seed `MESTRE`/`JOGADOR`), `usuario`, `campanha`, `campanha_membro` — round-trip `db:migrate`/`db:rollback` validado |
 | Infra — CI (lint + testes em PR) | **pronto** (GitHub Actions; lint nos 3 workspaces, testes via `--if-present`). **m2-02:** o backend ganhou seu 1º test-runner — **Vitest** (`backend/vitest.config.ts`, script `test`), então o CI agora roda também os testes de backend |
@@ -131,17 +148,17 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 (`docs/specs/backlog/m2-auth-campanhas.spec.md`) foi quebrado em **8 tasks numeradas**
 (`m2-01`…`m2-08`, em `docs/specs/backlog/`); a task de refinamento mobile é a `m2-08`. A
 **m2-01** (fundação de dados), a **m2-02** (backbone de autenticação JWT), a **m2-03** (perfil e
-troca de senha), a **m2-04** (CRUD de campanha), a **m2-05** (convite/membros) e a **m2-06**
-(frontend de autenticação) estão **concluídas** (specs em `docs/specs/done/`). Com a m2-05 o
-**backend de campanhas está fechado** (CRUD + entrada por convite + regeneração + listagem de
-membros + matriz de permissões §14); com a m2-06 nasceu a **primeira UI do M2** — login/registro,
-sessão persistida, interceptor JWT e guard de rota — com a rota privada semente `/painel`.
+troca de senha), a **m2-04** (CRUD de campanha), a **m2-05** (convite/membros), a **m2-06**
+(frontend de autenticação) e a **m2-07** (frontend de campanhas) estão **concluídas** (specs em
+`docs/specs/done/`). Com a m2-05 o **backend de campanhas está fechado** (CRUD + entrada por convite
++ regeneração + listagem de membros + matriz de permissões §14); a m2-06 trouxe a UI de autenticação
+(login/registro, sessão persistida, interceptor JWT, guard de rota) e a m2-07 fecha o **fluxo do M2
+ponta a ponta na UI** — sob `/painel` (guardado): listar campanhas, criar, entrar por código e o
+detalhe com membros + convite/regenerar do mestre.
 
-**Próxima task: `m2-07`** — frontend de campanhas (listar/criar/entrar por convite/gerenciar
-membros e convite), consumindo o backend fechado nas m2-04/m2-05 e preenchendo o `/painel` privado
-que a m2-06 deixou pronto (guard + sessão + interceptor JWT já de pé). Em seguida `m2-08` (refino
-mobile). **Antes de qualquer UI, ler `docs/design/DESIGN.md` e consumir os tokens de
-`docs/design/tema/`** — o tema "Terminal de Contenção" é a fonte da verdade visual (proibição #29).
+**Próxima task: `m2-08`** — refinamento de UI/UX mobile do M2 (autenticação + campanhas), na linha do
+que a m1-15 fez para a calculadora. **Antes de qualquer UI, ler `docs/design/DESIGN.md` e consumir os
+tokens de `docs/design/tema/`** — o tema "Terminal de Contenção" é a fonte da verdade visual (proibição #29).
 
 **M1 concluído no código** (18 tasks, backlog do M1 vazio). Os specs de milestone concluídos
 (`m0-fundacao`, `m1-calculadora-paridade`) e todas as tasks `m0-*`/`m1-*` já entregues estão em
@@ -155,6 +172,31 @@ mobile). **Antes de qualquer UI, ler `docs/design/DESIGN.md` e consumir os token
 
 ## Implementado
 
+- **m2-07-frontend-campanhas** (2026-07-07): **fecha o fluxo do M2 na UI** — frontend de campanhas sobre o
+  backend das m2-04/m2-05 e a sessão/guard/interceptor da m2-06. **Entregável 1 — telas standalone lazy
+  (área privada):** módulo `modules/campanha/` montado sob `/painel` via `loadChildren` atrás do
+  `autenticacaoGuard` — 4 telas: `lista` (`/painel`) lista as campanhas do usuário com o papel (chip
+  `MESTRE`/`JOGADOR`) e liga a criar/entrar/detalhe; `criar` (`/painel/criar`) e `entrar` (`/painel/entrar`)
+  são **Reactive Forms** (sem `ngModel`) que, ao concluir, navegam ao `/painel/:id` da campanha criada/
+  ingressada; `detalhe` (`/painel/:id`, `id` do `ActivatedRoute.snapshot`) mostra nome/descrição e os
+  membros com papel. **Entregável 2 — detalhe + permissão de apresentação:** só o mestre vê o
+  `codigo_convite` e o botão **regenerar** — `ehMestre` é um `computed` que cruza a lista de membros com
+  `sessao.usuario().id`; **é só apresentação**, a autoridade é sempre o backend (§14): um jogador que
+  tentasse regenerar levaria 403, tratado como toast pelo `error-handler.interceptor` (o front não duplica
+  regra — proibição #28). **Entregável 3 — service HTTP + estado:** `CampanhaService`
+  (`modules/campanha/campanha.service.ts`, `providedIn:'root'`) é transporte puro — `listarCampanhas`/
+  `criarCampanha`/`entrarCampanha`/`recuperarCampanha`/`listarMembros`/`regenerarConvite`, cada um extraindo
+  o `dados` do `StandardResponse`; o JWT entra pelo `auth-token.interceptor`; DTOs consumidos do shared
+  (`@contratados-rpg/shared/dtos/campanha`), **nunca** redefinidos no front; estado das telas em **Signals**.
+  **Entregável 4 — estilos:** `.scss` + BEM + tokens do tema "Terminal de Contenção" (card/botão/chip de
+  papel copiados de `docs/design/tema/_componentes.scss`, zero hex/fonte/raio solto — proibição #29).
+  **Infra:** a casca semente `pages/painel/` da m2-06 foi **removida** e substituída por este módulo;
+  `proxy.conf.json` passou a encaminhar `/campanha` ao backend (`:3100`). **Testes (novos, Vitest/TestBed):**
+  `campanha.service.spec` (6 — cada método atinge a rota/verbo certo e mapeia o `dados`); `app.routes.spec`
+  ajustado (o teste de `/painel` liberado agora casa a lista de campanhas `.campanhas`). **Validado:**
+  `lint`/`build`/`test` do **frontend** verdes — **18 arquivos / 91 testes** (era 17/85; +1 arquivo, +6
+  testes) e `build` de produção sem estouro de budget (4 novos chunks lazy: lista/criar/entrar/detalhe).
+  Nenhuma regra de jogo (`shared/regras` intocado); nenhuma alteração de backend.
 - **m2-06-frontend-autenticacao** (2026-07-07): **primeira UI do M2** — frontend de autenticação sobre
   o backbone JWT da m2-02/m2-03, mantendo a calculadora pública. **Entregável 1 — telas standalone lazy:**
   módulo `modules/autenticacao/` com `login` (`/login`) e `registro` (`/registro`), **Reactive Forms** (sem

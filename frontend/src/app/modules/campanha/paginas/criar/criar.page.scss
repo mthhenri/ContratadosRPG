@@ -1,0 +1,133 @@
+.campanha-formulario {
+  max-width: 480px;
+  margin: 0 auto;
+
+  &__corpo {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__campo {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  &__rotulo {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-mute);
+  }
+
+  &__entrada {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text);
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent-border);
+    }
+
+    &--area {
+      resize: vertical;
+      font-family: var(--font-sans);
+    }
+  }
+
+  &__enviar {
+    margin-top: 4px;
+    padding: 11px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+  }
+
+  &__alternativa {
+    margin: 18px 0 0;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    text-align: center;
+  }
+
+  &__link {
+    color: var(--accent);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+// Card + cabeçalho de seção — bloco sancionado copiado de docs/design/tema/_componentes.scss.
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--pad-card);
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 18px;
+  }
+
+  &__indice {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+  }
+
+  &__titulo {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text);
+  }
+
+  &__regua {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+}
+
+// Botão — bloco sancionado copiado de docs/design/tema/_componentes.scss.
+.botao {
+  border-radius: var(--radius-control);
+  font-family: var(--font-mono);
+  cursor: pointer;
+
+  &--primario {
+    background: var(--accent);
+    color: var(--bg);
+    border: 0;
+  }
+}

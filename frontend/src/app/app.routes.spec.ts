@@ -50,13 +50,13 @@ describe('Rotas — autenticação', () => {
     expect(urlFinal).toBe('/login?retorno=%2Fpainel');
   });
 
-  it('libera /painel com sessão aberta', async () => {
+  it('libera /painel com sessão aberta (lista de campanhas)', async () => {
     localStorage.setItem(
       CHAVE_SESSAO,
       JSON.stringify({ token: 't', id: 1, login: 'a', nome: 'Agente A' }),
     );
     const { elemento, urlFinal } = await navegar('/painel');
     expect(urlFinal).toBe('/painel');
-    expect(elemento.querySelector('.painel')).not.toBeNull();
+    expect(elemento.querySelector('.campanhas')).not.toBeNull();
   });
 });

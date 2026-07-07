@@ -1,0 +1,50 @@
+<section class="detalhe">
+  @if (carregando()) {
+    <article class="card">
+      <p class="detalhe__estado">Carregando campanha…</p>
+    </article>
+  } @else if (campanha(); as campanhaAtual) {
+    <article class="card">
+      <header class="card__cabecalho">
+        <span class="card__indice">M2</span>
+        <h1 class="card__titulo">{{ campanhaAtual.nome }}</h1>
+        <span class="card__regua"></span>
+      </header>
+
+      @if (campanhaAtual.descricao) {
+        <p class="detalhe__descricao">{{ campanhaAtual.descricao }}</p>
+      }
+
+      @if (ehMestre()) {
+        <div class="detalhe__convite">
+          <span class="detalhe__rotulo">Código de convite</span>
+          <div class="detalhe__convite-linha">
+            <code class="detalhe__codigo">{{ campanhaAtual.codigoConvite }}</code>
+            <button
+              class="botao botao--secundario detalhe__regenerar"
+              type="button"
+              [disabled]="regenerando()"
+              (click)="regenerarConvite()"
+            >
+              {{ regenerando() ? 'Regenerando…' : 'Regenerar' }}
+            </button>
+          </div>
+        </div>
+      }
+
+      <h2 class="detalhe__subtitulo">Membros</h2>
+      <ul class="detalhe__membros">
+        @for (membro of membros(); track membro.usuarioId) {
+          <li class="detalhe__membro">
+            <span class="detalhe__membro-nome">{{ membro.nome }}</span>
+            <span class="chip-papel">{{ membro.papel }}</span>
+          </li>
+        }
+      </ul>
+    </article>
+  }
+
+  <p class="detalhe__voltar">
+    <a class="detalhe__link" routerLink="/painel">Voltar às campanhas</a>
+  </p>
+</section>

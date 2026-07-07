@@ -20,10 +20,12 @@ export const routes: Routes = [
         (modulo) => modulo.autenticacaoRoutes,
       ),
   },
-  // Primeira rota privada (guardada) — destino padrão pós-login; a m2-07 preenche o painel.
+  // Área privada de campanhas (guardada) — destino padrão pós-login. Montada sob `/painel`
+  // (listar/criar/entrar/detalhe), consumindo o backend fechado nas m2-04/m2-05 — m2-07.
   {
     path: 'painel',
     canActivate: [autenticacaoGuard],
-    loadComponent: () => import('./pages/painel/painel.page').then((modulo) => modulo.Painel),
+    loadChildren: () =>
+      import('./modules/campanha/campanha.routes').then((modulo) => modulo.campanhaRoutes),
   },
 ];

@@ -1,0 +1,34 @@
+<section class="campanha-formulario">
+  <article class="card">
+    <header class="card__cabecalho">
+      <span class="card__indice">//</span>
+      <h1 class="card__titulo">Entrar por código</h1>
+      <span class="card__regua"></span>
+    </header>
+
+    <form class="campanha-formulario__corpo" [formGroup]="formulario" (ngSubmit)="enviar()">
+      <label class="campanha-formulario__campo">
+        <span class="campanha-formulario__rotulo">Código de convite</span>
+        <input
+          class="campanha-formulario__entrada"
+          type="text"
+          formControlName="codigoConvite"
+          autocapitalize="characters"
+          spellcheck="false"
+        />
+      </label>
+
+      <button
+        class="botao botao--primario campanha-formulario__enviar"
+        type="submit"
+        [disabled]="enviando()"
+      >
+        {{ enviando() ? 'Entrando…' : 'Entrar' }}
+      </button>
+    </form>
+
+    <p class="campanha-formulario__alternativa">
+      <a class="campanha-formulario__link" routerLink="/painel">Voltar às campanhas</a>
+    </p>
+  </article>
+</section>

@@ -1,0 +1,189 @@
+.detalhe {
+  max-width: 680px;
+  margin: 0 auto;
+
+  &__estado {
+    margin: 0;
+    font-family: var(--font-sans);
+    color: var(--text-dim);
+  }
+
+  &__descricao {
+    margin: 0 0 20px;
+    font-family: var(--font-sans);
+    color: var(--text-dim);
+  }
+
+  &__convite {
+    margin-bottom: 24px;
+    padding: 14px 16px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+  }
+
+  &__rotulo {
+    display: block;
+    margin-bottom: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+  }
+
+  &__convite-linha {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__codigo {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+  }
+
+  &__regenerar {
+    padding: 8px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+  }
+
+  &__subtitulo {
+    margin: 0 0 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-mute);
+  }
+
+  &__membros {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__membro {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+  }
+
+  &__membro-nome {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text);
+  }
+
+  &__voltar {
+    margin: 18px 0 0;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    text-align: center;
+  }
+
+  &__link {
+    color: var(--accent);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+// Chip de papel (MESTRE / JOGADOR) — variação do chip de classificação do tema.
+.chip-papel {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+  border-radius: 3px;
+  padding: 4px 8px;
+}
+
+// Card + cabeçalho de seção — bloco sancionado copiado de docs/design/tema/_componentes.scss.
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--pad-card);
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 18px;
+  }
+
+  &__indice {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+  }
+
+  &__titulo {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text);
+  }
+
+  &__regua {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+}
+
+// Botões — bloco sancionado copiado de docs/design/tema/_componentes.scss.
+.botao {
+  border-radius: var(--radius-control);
+  font-family: var(--font-mono);
+  cursor: pointer;
+
+  &--secundario {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+  }
+}
