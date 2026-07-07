@@ -1,6 +1,10 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-07 (`--grid-line` subiu
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-07 (correção: o `.3` da
+> `--grid-line` foi engano do autor — achava que o valor inicial já era `.2` (era `.02`) e pediu
+> `.3` achando que seria um ajuste pequeno. Corrigido pra `.03`, mantendo a mesma proporção de
+> aumento (~1,5×) que o autor pretendia sobre o valor real de origem. `lint`/`test` (91/91) verdes.
+> Sessão anterior no mesmo dia: `--grid-line` subiu
 > de novo, a pedido do autor: de `rgba(255,255,255,.045)` pra `.3` — grade de fundo agora bem
 > marcada (efeito "papel quadriculado"), não mais discreta. Mesmo token único e global
 > (`_tokens.scss` + mirror `docs/design/tema/`, `--grid-cell` 32px intocado). `lint`/`test` (91/91)
