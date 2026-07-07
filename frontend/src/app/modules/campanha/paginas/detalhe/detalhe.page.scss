@@ -2,10 +2,12 @@
   max-width: 680px;
   margin: 0 auto;
 
-  &__estado {
-    margin: 0;
-    font-family: var(--font-sans);
-    color: var(--text-dim);
+  // Esqueleto de carregamento — mimetiza título + caixa de convite + linhas de membro, evitando
+  // o "flash" seco de texto "Carregando…" antes do conteúdo real.
+  &__esqueleto {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
 
   &__descricao {
@@ -230,5 +232,42 @@
     background: transparent;
     color: var(--text);
     border: 1px solid var(--border-strong);
+  }
+}
+
+// Blocos de esqueleto — reusados por qualquer estado de carregamento (proibição #29: só tokens).
+.esqueleto-bloco {
+  display: block;
+  border-radius: var(--radius-control);
+  background: var(--border-strong);
+  animation: esqueleto-pulso 1.4s ease-in-out infinite;
+
+  &--titulo {
+    width: 240px;
+    height: 20px;
+  }
+
+  &--convite {
+    height: 64px;
+  }
+
+  &--linha {
+    height: 44px;
+  }
+}
+
+@keyframes esqueleto-pulso {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .esqueleto-bloco {
+    animation: none;
   }
 }

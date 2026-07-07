@@ -33,7 +33,8 @@ export type IconeNome =
   | 'convite'
   | 'coroa'
   | 'atualizar'
-  | 'voltar';
+  | 'voltar'
+  | 'tema';
 
 /**
  * Ícone monocromático de linha (SVG inline, `stroke: currentColor`) — reutilizado nos menus de

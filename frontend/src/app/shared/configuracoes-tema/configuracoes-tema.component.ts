@@ -1,6 +1,7 @@
 import { Component, effect, inject, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
+import { Icone } from '../icone/icone.component';
 import { BaseTema, TemaService } from '../../core/services/tema.service';
 
 /**
@@ -16,7 +17,7 @@ import { BaseTema, TemaService } from '../../core/services/tema.service';
  */
 @Component({
   selector: 'app-configuracoes-tema',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, Icone],
   templateUrl: './configuracoes-tema.component.html',
   styleUrl: './configuracoes-tema.component.scss',
 })

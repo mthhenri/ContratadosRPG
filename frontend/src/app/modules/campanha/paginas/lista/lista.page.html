@@ -18,7 +18,14 @@
     </div>
 
     @if (carregando()) {
-      <p class="campanhas__estado">Carregando campanhas…</p>
+      <div class="campanhas__esqueleto" role="status" aria-label="Carregando campanhas">
+        @for (i of [0, 1]; track i) {
+          <div class="campanhas__esqueleto-item">
+            <span class="esqueleto-bloco esqueleto-bloco--avatar"></span>
+            <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+          </div>
+        }
+      </div>
     } @else if (campanhas().length === 0) {
       <p class="campanhas__estado">
         <app-icone nome="campanhas" />
@@ -28,17 +35,19 @@
       <ul class="campanhas__lista">
         @for (campanha of campanhas(); track campanha.id) {
           <li class="campanhas__item">
-            <span class="campanhas__avatar" aria-hidden="true"></span>
             <a class="campanhas__ligacao" [routerLink]="['/painel', campanha.id]">
-              <span class="campanhas__nome">{{ campanha.nome }}</span>
-              @if (campanha.descricao) {
-                <span class="campanhas__descricao">{{ campanha.descricao }}</span>
-              }
+              <span class="campanhas__avatar" aria-hidden="true"></span>
+              <span class="campanhas__texto">
+                <span class="campanhas__nome">{{ campanha.nome }}</span>
+                @if (campanha.descricao) {
+                  <span class="campanhas__descricao">{{ campanha.descricao }}</span>
+                }
+              </span>
+              <span class="chip-papel">
+                <app-icone [nome]="campanha.papel === TipoCampanhaMembroPapelEnum.MESTRE ? 'coroa' : 'protecoes'" />
+                {{ campanha.papel }}
+              </span>
             </a>
-            <span class="chip-papel">
-              <app-icone [nome]="campanha.papel === TipoCampanhaMembroPapelEnum.MESTRE ? 'coroa' : 'protecoes'" />
-              {{ campanha.papel }}
-            </span>
           </li>
         }
       </ul>

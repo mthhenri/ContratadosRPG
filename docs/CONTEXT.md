@@ -1,6 +1,19 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-07 (correção: o `.3` da
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-07 (3 melhorias de
+> UI/UX sugeridas e aplicadas a pedido do autor). **(1) Ícone do gatilho de tema:** trocou o glifo
+> unicode cru `◐` (`config-gatilho__marca`) por `<app-icone nome="tema">` — novo glifo (`shared/
+> icone`, círculo bissectado por uma linha) alinhado ao resto do sistema de ícones, único lugar que
+> ainda fugia do padrão. **(2) Esqueletos de carregamento:** `campanhas` lista/detalhe trocaram o
+> texto seco "Carregando…" por blocos `.esqueleto-bloco` pulsantes (`@keyframes esqueleto-pulso`,
+> respeita `prefers-reduced-motion`, só token `--border-strong`) mimetizando a silhueta do conteúdo
+> real (avatar+linha na lista; título+convite+linhas no detalhe) — `role="status"` mantém o
+> anúncio pra leitor de tela. **(3) Hover das linhas de campanha:** o `<a class="campanhas__ligacao">`
+> passou a envolver avatar+texto+chip (a linha inteira, que antes só a área de nome/descrição era
+> clicável) e ganhou fundo `--accent-dim` no hover — antes só a borda escurecia; a lista de membros
+> do detalhe **não** ganhou o mesmo hover porque não é clicável (interativo deve parecer
+> interativo, e vice-versa). `lint`/`test` (91/91)/`build` verdes, conferido visualmente. Sessão
+> anterior no mesmo dia: correção: o `.3` da
 > `--grid-line` foi engano do autor — achava que o valor inicial já era `.2` (era `.02`) e pediu
 > `.3` achando que seria um ajuste pequeno. Corrigido pra `.03`, mantendo a mesma proporção de
 > aumento (~1,5×) que o autor pretendia sobre o valor real de origem. `lint`/`test` (91/91) verdes.

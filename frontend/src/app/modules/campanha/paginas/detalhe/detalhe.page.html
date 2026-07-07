@@ -1,7 +1,12 @@
 <section class="detalhe">
   @if (carregando()) {
-    <article class="card">
-      <p class="detalhe__estado">Carregando campanha…</p>
+    <article class="card" role="status" aria-label="Carregando campanha">
+      <div class="detalhe__esqueleto">
+        <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
+        <span class="esqueleto-bloco esqueleto-bloco--convite"></span>
+        <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+        <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+      </div>
     </article>
   } @else if (campanha(); as campanhaAtual) {
     <article class="card">
