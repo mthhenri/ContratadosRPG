@@ -182,12 +182,17 @@
     }
   }
 
+  // Avatar decorativo (placeholder de imagem). As listras usam --border-strong (não
+  // --surface/--surface-2) porque esse par já é calibrado pra ficar visível sobre --surface-2
+  // nas duas bases do tema em runtime (m1-13) — direto com --surface/--surface-2 o contraste
+  // ficava alto demais na base escura e quase invisível na clara.
   &__avatar {
     width: 20px;
     height: 20px;
     flex: none;
     border-radius: 3px;
-    background: repeating-linear-gradient(135deg, var(--surface-2) 0 4px, var(--surface) 4px 8px);
+    background-color: var(--surface-2);
+    background-image: repeating-linear-gradient(135deg, var(--border-strong) 0 2px, transparent 2px 6px);
     border: 1px solid var(--border-strong);
   }
 

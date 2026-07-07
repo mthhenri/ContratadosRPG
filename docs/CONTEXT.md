@@ -1,6 +1,12 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-07 (grade de fundo mais
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-07 (contraste do avatar
+> decorativo reforçado, achado ao conferir a base clara: as listras diagonais (`.topbar__avatar`,
+> `.campanhas__avatar`, `.detalhe__avatar`) usavam `--surface`/`--surface-2` — par calibrado pra
+> diferença sutil de superfície, quase invisível na base clara (`#ffffff`/`#e7eaee`, m1-13). Trocado
+> por `background-color: var(--surface-2)` + listras em `var(--border-strong)` (alpha já calibrado
+> pra ler em cima de superfícies nas duas bases), mesmo raciocínio nos 3 lugares. `lint`/`test`
+> (91/91) verdes, conferido visualmente nas duas bases. Sessão anterior no mesmo dia: grade de fundo mais
 > visível, a pedido do autor: `--grid-line` de `_tokens.scss` (frontend + mirror
 > `docs/design/tema/`) foi de `rgba(255,255,255,.02)` pra `rgba(255,255,255,.045)` — mesmo
 > `--grid-cell` de 32px, token único e global (`body` em `_base.scss`), nada de valor solto por
