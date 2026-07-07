@@ -65,3 +65,47 @@ export interface UsuarioInternoRecuperadoDto {
   readonly senha: string;
   readonly nome: string;
 }
+
+/**
+ * Entrada de recuperação individual do usuário (m2-03 — perfil self-service). O `id` vem do
+ * JWT (`@ActiveUser().sub`), injetado no DTO pela controller — nunca primitivo solto.
+ */
+export interface UsuarioRecuperarDto {
+  readonly id: number;
+}
+
+/**
+ * Saída do perfil do usuário autenticado (m2-03) — os dados públicos, **sem** a senha.
+ */
+export interface UsuarioRecuperadoDto {
+  readonly id: number;
+  readonly login: string;
+  readonly nome: string;
+}
+
+/**
+ * Entrada pública da troca da própria senha (m2-03): a `senhaAtual` (validada por
+ * `bcrypt.compare` na service) e a `novaSenha` (encriptada antes de persistir). Complemento
+ * `Senha` inteiro antes do verbo (CONVENTIONS / skill `dto-conventions`).
+ */
+export interface UsuarioSenhaAlterarDto {
+  readonly senhaAtual: string;
+  readonly novaSenha: string;
+}
+
+/** Saída da troca de senha — os dados públicos do usuário, **sem** a senha. */
+export interface UsuarioSenhaAlteradaDto {
+  readonly id: number;
+  readonly login: string;
+  readonly nome: string;
+}
+
+/**
+ * Entrada interna do `UsuarioRepository.alterarSenha` — o `id` do usuário e a `senha` já
+ * como **hash bcrypt** (a encriptação acontece na service, nunca no repositório). `Interno`
+ * porque carrega o hash e nunca trafega ao frontend.
+ */
+export interface UsuarioSenhaInternoAlterarDto {
+  readonly id: number;
+  readonly senha: string;
+}

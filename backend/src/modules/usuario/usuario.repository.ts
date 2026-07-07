@@ -5,6 +5,8 @@ import type {
   UsuarioInternoCriarDto,
   UsuarioInternoRecuperadoDto,
   UsuarioLoginRecuperarDto,
+  UsuarioRecuperarDto,
+  UsuarioSenhaInternoAlterarDto,
 } from '@contratados-rpg/shared/dtos/usuario';
 import { BaseRepository } from '../../core/base/base.repository';
 import { KNEX_CONNECTION } from '../../database/database.provider';
@@ -50,5 +52,34 @@ export class UsuarioRepository extends BaseRepository {
       { login: dto.login },
     );
     return usuarioEncontrado ?? null;
+  }
+
+  /**
+   * Recupera o usuário ativo pelo `id` (ou `null`). Carrega o **hash** da senha — a service
+   * o usa para projetar o perfil (sem senha) e para o `bcrypt.compare` da troca de senha.
+   */
+  async recuperarPorId(
+    dto: UsuarioRecuperarDto,
+  ): Promise<UsuarioInternoRecuperadoDto | null> {
+    const [usuarioEncontrado] = await this.executarConsulta<UsuarioInternoRecuperadoDto>(
+      `SELECT id, login, senha, nome
+       FROM usuario
+       WHERE id = :id AND is_deleted = false`,
+      { id: dto.id },
+    );
+    return usuarioEncontrado ?? null;
+  }
+
+  /**
+   * Altera a coluna `senha` do usuário. A `senha` recebida já é o **hash bcrypt** (encriptado
+   * na service). Só toca usuário ativo (`WHERE is_deleted = false`), sem `DEFAULT`.
+   */
+  async alterarSenha(dto: UsuarioSenhaInternoAlterarDto): Promise<void> {
+    await this.executarComando(
+      `UPDATE usuario
+       SET senha = :senha, updated_date = NOW()
+       WHERE id = :id AND is_deleted = false`,
+      { id: dto.id, senha: dto.senha },
+    );
   }
 }

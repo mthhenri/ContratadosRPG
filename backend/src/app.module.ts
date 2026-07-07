@@ -7,16 +7,18 @@ import { ResponseFormatInterceptor } from './core/interceptors/response-format.i
 import { HealthController } from './health/health.controller';
 import { AutenticacaoModule } from './modules/autenticacao/autenticacao.module';
 import { JwtAuthGuard } from './modules/autenticacao/autenticacao.guard';
+import { UsuarioModule } from './modules/usuario/usuario.module';
 
 /**
  * Módulo raiz da aplicação. Registra a infraestrutura genérica (`core/`) global, o
- * `HealthController` (endpoint operacional `GET /health`) e o módulo de negócio
- * `autenticacao` (M2). O `JwtAuthGuard` global (`APP_GUARD`) passa a exigir JWT em todas as
- * rotas, exceto as `@Public()`. Os demais módulos de negócio (`campanha`, `ficha`) nascem
- * nas próximas tasks/milestones.
+ * `HealthController` (endpoint operacional `GET /health`) e os módulos de negócio
+ * `autenticacao` (registro/login) e `usuario` (perfil e troca de senha) do M2. O
+ * `JwtAuthGuard` global (`APP_GUARD`) passa a exigir JWT em todas as rotas, exceto as
+ * `@Public()`. Os demais módulos de negócio (`campanha`, `ficha`) nascem nas próximas
+ * tasks/milestones.
  */
 @Module({
-  imports: [ConfigModule, DatabaseModule, AutenticacaoModule],
+  imports: [ConfigModule, DatabaseModule, AutenticacaoModule, UsuarioModule],
   controllers: [HealthController],
   providers: [
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },

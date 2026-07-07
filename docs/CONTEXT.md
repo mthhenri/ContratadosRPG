@@ -1,12 +1,19 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-06 (m2-02 — backbone de
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-06 (m2-03 — perfil e
+> troca de senha self-service do módulo `usuario`: **1ª rota protegida da API** consumindo o
+> `@ActiveUser()`/`JwtAuthGuard` da m2-02 — `GET /usuario/perfil` (dados do usuário logado, **sem**
+> senha) e `PATCH /usuario/senha` (valida `senhaAtual` por `bcrypt.compare` → `BusinessException` se
+> incorreta; grava `novaSenha` como hash bcrypt); `UsuarioService` + `UsuarioController` burra +
+> métodos `recuperarPorId`/`alterarSenha` no `UsuarioRepository`; 4 novos DTOs no shared; 4 testes de
+> service (Vitest, 9/9 no backend); fluxo perfil + troca de senha validado ao vivo contra o Postgres).
+> Sessão anterior no mesmo dia: m2-02 — backbone de
 > autenticação do M2: módulo `autenticacao` (registro `@Public()` com senha bcrypt; login JWT via
 > Passport `JwtStrategy` lendo `JWT_*` do `ConfigService`), `JwtAuthGuard` global via `APP_GUARD`
 > ativando o `@Public()` do M0, decorator `@ActiveUser()`, e a persistência mínima do módulo `usuario`
 > (`UsuarioRepository`); primeiro test-runner do backend (Vitest) com 5 testes de service; fluxo
 > `registrar → logar → rota protegida` validado ao vivo contra o Postgres — **1ª camada de negócio da
-> API**). Sessão anterior no mesmo dia: m2-01 — fundação de dados do M2: migrations `0002`–`0005`
+> API**. Sessão anterior no mesmo dia: m2-01 — fundação de dados do M2: migrations `0002`–`0005`
 > criando `usuario`/`tipo_campanha_membro_papel`/`campanha`/`campanha_membro` conforme `SCHEMA.md` +
 > enum espelho `TipoCampanhaMembroPapelEnum`; round-trip `db:migrate`/`db:rollback` validado no
 > Postgres local — **abre o M2**. Sessão anterior: m1-18 — scrollbar customizada global do tema
@@ -47,7 +54,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, core/, pipelines, deploy) | **concluído** (deploy nativo Render+Cloudflare; setup das plataformas em `docs/DEPLOY.md`) |
 | M1 | Calculadora com paridade | **concluído no código** (`m1-01` a `m1-18`, incluindo os refinamentos pós-paridade: mobile `m1-15`, tema em runtime `m1-16`, singleton de estado das abas `m1-17` e scrollbar customizada `m1-18`). Restam 2 passos operacionais de plataforma: publicar a Cloudflare Pages e arquivar o repo antigo no GitHub (ver `docs/PARIDADE-M1.md`) |
-| M2 | Auth + Campanhas | **em andamento** (quebrado em 8 tasks `m2-01`…`m2-08`; **m2-01 e m2-02 concluídas** — dados + backbone de autenticação JWT com guard global) |
+| M2 | Auth + Campanhas | **em andamento** (quebrado em 8 tasks `m2-01`…`m2-08`; **m2-01, m2-02 e m2-03 concluídas** — dados + backbone de autenticação JWT com guard global + perfil/troca de senha self-service) |
 | M3 | Ficha de Jogador | backlog |
 | M4 | Ficha de Criatura/NPC | backlog |
 | M5 | Guia de Missão | backlog |
@@ -56,7 +63,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 
 | Módulo | Status |
 |---|---|
-| shared (estrutura) | **`interfaces/`** (`StandardResponse`/`PaginatedResult`) + **`enums/`** (`ClasseEnum`, `PatenteEnum`, `ItemCategoriaEnum`, `TipoDescansoEnum`, `QualidadeDescansoEnum`, `MotivoEntradaAgenteEnum` + `TipoCampanhaMembroPapelEnum` — m2-01, **1º enum de coluna**, espelho da tabela `tipo_*`) + **`dtos/usuario/`** (m2-02, **1º pacote de DTOs de negócio**: `UsuarioCriarDto`/`UsuarioCriadoDto`, `UsuarioAutenticarDto`/`UsuarioAutenticadoDto` — saída sem `senha` — e os internos `UsuarioInternoCriarDto`/`UsuarioLoginRecuperarDto`/`UsuarioInternoRecuperadoDto`; export subpath `./dtos/usuario` no `package.json`); `validators/` ainda esqueleto |
+| shared (estrutura) | **`interfaces/`** (`StandardResponse`/`PaginatedResult`) + **`enums/`** (`ClasseEnum`, `PatenteEnum`, `ItemCategoriaEnum`, `TipoDescansoEnum`, `QualidadeDescansoEnum`, `MotivoEntradaAgenteEnum` + `TipoCampanhaMembroPapelEnum` — m2-01, **1º enum de coluna**, espelho da tabela `tipo_*`) + **`dtos/usuario/`** (m2-02, **1º pacote de DTOs de negócio**: `UsuarioCriarDto`/`UsuarioCriadoDto`, `UsuarioAutenticarDto`/`UsuarioAutenticadoDto` — saída sem `senha` — e os internos `UsuarioInternoCriarDto`/`UsuarioLoginRecuperarDto`/`UsuarioInternoRecuperadoDto`; **+ m2-03:** `UsuarioRecuperarDto {id}`/`UsuarioRecuperadoDto {id,login,nome}` (perfil, saída sem senha), `UsuarioSenhaAlterarDto {senhaAtual,novaSenha}`/`UsuarioSenhaAlteradaDto {id,login,nome}` (troca de senha) e o interno `UsuarioSenhaInternoAlterarDto {id,senha}` (repositório, senha = hash); export subpath `./dtos/usuario` no `package.json`); `validators/` ainda esqueleto |
 | shared/regras | **`agente/` completo** (m1-02): 15 fórmulas puras da aba agente com testes Vitest conferidos contra o sistema (vida, energia, limite de energia, defesa/esquiva/bloqueio, proficiência, deslocamento, dano de corpo, dano furtivo, inventário, percepção, sanidade, limite hab./turno, benefícios por nível, progressão acumulada, limites por classe). **`dt/`, `novo-agente/`, `patente/` completos** (m1-03): DT de atributo (`10 + Nível + Atributo×2`); nível/prestígio iniciais + bônus monetário por motivo de entrada; lookup de patente por prestígio + recorte da aba, consumindo `PATENTES`. **`descanso/` completo** (m1-04): escada de dados (`ESCADA_DADOS` + `ajustarDado`/`elevarDado`/`descreverDado`), tabelas `DADOS_DESCANSO`/`QUALIDADE_MOD`, faixa de recuperação (`calcularDescanso`), interpretação de dados extras (`interpretarDadosExtras`), resultado a partir de valores rolados (`calcularResultadoDescanso`) + a utilidade de rolagem `rolarDados` (única brecha a `Math.random` — §6.6). **`compras/` completo** (m1-05): catálogo (`CATALOGO_CATEGORIAS`/`CATALOGO_ITENS`), modificações por categoria (`MODIFICACOES`) + custos (`CUSTO_MODIFICACAO`), amplificadores (`AMPLIFICADORES`) e limites por patente (`LIMITES_MODIFICACAO`); fórmulas `obterLimiteModificacoes`/`obterCustoModificacao`/`obterPesoModificacao`/`contarComprasModificacao`/`verificarConflitoModificacao`/`calcularStatItem` (reusa `elevarDado`)/`calcularCustoAmplificador`/`calcularTotaisCarrinho`/`calcularResumoCompras`, reusando `obterPatente` (m1-03). `dados/` com `dadosAgente`, `dadosCivil` e `PATENTES` (m1-01) |
 | backend/core | **pronto** (`BaseEntity`, `BaseRepository`, exceções, filtro, interceptor) |
 | backend/config | **pronto** (`ConfigService`/`ConfigModule`, lê `DB_*`/`JWT_*`/`APP_*`) |
@@ -64,7 +71,7 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 | backend/health | **pronto** (`HealthController` `GET /health` público; sem service/repository) |
 | backend/core/decorators | **`@Public()`** (metadado `isPublic`, agora interpretado pelo `JwtAuthGuard` da m2-02) + **`@ActiveUser()`** (m2-02 — injeta o payload do JWT em `request.user`; validado ao vivo) |
 | backend/autenticacao | **pronto (m2-02)** — `AutenticacaoController` (`POST /autenticacao/registro` e `/login`, ambas `@Public()`), `AutenticacaoService` (registro com `bcrypt.hash`; `validarLogin` recusa duplicado com `BusinessException`; login com `bcrypt.compare` + emissão de JWT; mesma mensagem p/ login inexistente e senha errada), `JwtStrategy` (Passport, segredo do `ConfigService`), `JwtAuthGuard` global via `APP_GUARD` (exige JWT salvo `@Public()`), `JwtModule.registerAsync` lendo `JWT_SECRETO`/`JWT_EXPIRACAO`. `JwtPayload { sub, login }`. 5 testes de service (Vitest) |
-| backend/usuario | **persistência pronta (m2-02)** — `UsuarioRepository` (estende `BaseRepository`): `criarUsuario` (`INSERT ... SELECT ... RETURNING id, login, nome`, sem `VALUES`/`DEFAULT`) e `recuperarPorLogin` (`SELECT ... WHERE login = :login AND is_deleted = false`), consumido pelo `autenticacao` (proibição #23). `UsuarioModule` exporta o repositório. Perfil/troca de senha na m2-03 |
+| backend/usuario | **completo (m2-03)** — perfil e troca de senha self-service, **1ª rota protegida da API** (sem `@Public()`; guard global + `@ActiveUser()` da m2-02). `UsuarioController` burra: `GET /usuario/perfil` (monta `{ id: usuarioAtivo.sub }`) e `PATCH /usuario/senha` (repassa o body + `@ActiveUser()`). `UsuarioService`: `recuperarPerfil` (projeta os dados públicos, **sem** senha; `ResourceNotFoundException` se a conta sumiu) e `alterarSenha` (valida `senhaAtual` por `bcrypt.compare` → `BusinessException('Senha atual incorreta')`; encripta `novaSenha` com bcrypt cost 10 e persiste). `UsuarioRepository` (estende `BaseRepository`) ganhou `recuperarPorId` (`SELECT ... WHERE id = :id AND is_deleted = false`, carrega o hash) e `alterarSenha` (`UPDATE usuario SET senha = :senha, updated_date = NOW() WHERE id = :id AND is_deleted = false`), somando aos herdados da m2-02 `criarUsuario` (`INSERT ... SELECT ... RETURNING id, login, nome`) e `recuperarPorLogin`; dona das queries da tabela `usuario` (proibição #23). `UsuarioModule` registra controller + service e exporta o repositório; importado direto no `AppModule`. 4 testes de service (Vitest) |
 | backend/campanha | não iniciado (tabelas `campanha`/`campanha_membro`/`tipo_campanha_membro_papel` criadas em m2-01) |
 | backend/ficha | não iniciado |
 | frontend (shell) | **pronto** (topbar + `router-outlet` via `shared/layout`, home consumindo `/health`, tema "Terminal de Contenção" dark-first via `docs/design`). Em **dev** a aba do navegador recebe sufixo "- DEV" (`provideAppInitializer` no `app.config.ts`, gated por `!environment.producao`; produção mantém o `<title>` do `index.html`) |
@@ -82,13 +89,12 @@ produção `master`. Ainda sem módulo de negócio — esses nascem a partir do 
 **M2 em andamento.** O milestone **M2 — Auth + Campanhas**
 (`docs/specs/backlog/m2-auth-campanhas.spec.md`) foi quebrado em **8 tasks numeradas**
 (`m2-01`…`m2-08`, em `docs/specs/backlog/`); a task de refinamento mobile é a `m2-08`. A
-**m2-01** (fundação de dados) e a **m2-02** (backbone de autenticação JWT) estão **concluídas**
-(specs em `docs/specs/done/`).
+**m2-01** (fundação de dados), a **m2-02** (backbone de autenticação JWT) e a **m2-03** (perfil e
+troca de senha) estão **concluídas** (specs em `docs/specs/done/`).
 
-**Próxima task: `m2-03-usuario-perfil-senha`** — perfil e troca de senha do módulo `usuario`.
-Será a 1ª task a consumir o `@ActiveUser()`/`JwtAuthGuard` da m2-02 numa rota **protegida** (o
-CRUD de campanhas e a matriz de permissões seguem em `m2-04`/`m2-05`; o frontend de auth/campanhas
-em `m2-06`/`m2-07`). Depende da m2-02 (guard global + `UsuarioRepository`).
+**Próxima task: `m2-04`** — CRUD de campanhas (o frontend de auth/campanhas fica em `m2-06`/`m2-07`;
+a matriz de permissões acompanha as tasks de campanha/ficha). A m2-03 já provou o padrão de rota
+**protegida** (guard global + `@ActiveUser()`) que as próximas tasks de negócio reusam.
 
 **M1 concluído no código** (18 tasks, backlog do M1 vazio). Os specs de milestone concluídos
 (`m0-fundacao`, `m1-calculadora-paridade`) e todas as tasks `m0-*`/`m1-*` já entregues estão em
@@ -102,6 +108,39 @@ em `m2-06`/`m2-07`). Depende da m2-02 (guard global + `UsuarioRepository`).
 
 ## Implementado
 
+- **m2-03-usuario-perfil-senha** (2026-07-06): completa o módulo `usuario` com os endpoints
+  **self-service** do usuário autenticado — **1ª rota protegida da API** (consome o
+  `@ActiveUser()`/`JwtAuthGuard` da m2-02; até aqui só o `/health` e as rotas `@Public()` de auth
+  existiam). **Entregável 1 — DTOs** (`shared/src/dtos/usuario/`, seguindo `dto-conventions`):
+  `UsuarioRecuperarDto {id}` (entrada de perfil — o `id` vem do JWT, injetado pela controller) e
+  `UsuarioRecuperadoDto {id,login,nome}` (perfil, **sem** senha); `UsuarioSenhaAlterarDto
+  {senhaAtual,novaSenha}` (body público, complemento `Senha` inteiro antes do verbo) e
+  `UsuarioSenhaAlteradaDto {id,login,nome}` (saída, sem senha); interno
+  `UsuarioSenhaInternoAlterarDto {id,senha}` (repositório, `senha` = hash — mesmo padrão de
+  `UsuarioInternoCriarDto`). `shared` rebuildado (o subpath `./dtos/usuario` já existia da m2-02).
+  **Entregável 2 — perfil:** `GET /usuario/perfil` → `UsuarioService.recuperarPerfil` projeta os
+  dados públicos do usuário logado (`ResourceNotFoundException` se a conta do token sumiu, ex.:
+  soft-delete), **nunca** a senha. **Entregável 3 — troca de senha:** `PATCH /usuario/senha` →
+  `alterarSenha` valida a `senhaAtual` por `bcrypt.compare` (incorreta → `BusinessException('Senha
+  atual incorreta')`, sem persistir), encripta a `novaSenha` (bcrypt cost 10, igual ao registro) e
+  grava; recebe o body + `@ActiveUser()` (precedente Ficha `alterar(dto, usuarioAtivo)` — sem
+  `@Param`, o id é o próprio ator). **Entregável 4 — camadas (§7):** `UsuarioController` burra (só
+  monta o DTO com o id do token e repassa); `UsuarioService` com toda a regra; `UsuarioRepository`
+  ganhou `recuperarPorId` (`SELECT ... WHERE id = :id AND is_deleted = false`, param nomeado, carrega
+  o hash) e `alterarSenha` (`UPDATE ... SET senha = :senha, updated_date = NOW() WHERE id = :id AND
+  is_deleted = false` — soft-delete-safe, sem `DEFAULT`), dona das queries de `usuario` (proibição
+  #23). `UsuarioModule` passou a registrar controller + service (mantendo o export do repositório) e
+  foi importado direto no `AppModule`. **Testes:** novo `usuario.service.spec.ts` com **4 testes**
+  (perfil sem senha; perfil de conta inexistente → `ResourceNotFoundException`; troca de senha caminho
+  feliz — compara, encripta, persiste, retorna sem senha; `senhaAtual` incorreta → `BusinessException`
+  sem hashear nem persistir), repositório dublado + `bcrypt` mockado. **Validado:** `build` do
+  **shared** verde; `lint`/`build` do **backend** limpos; `test` do **backend** **9/9** (5 de
+  autenticação + 4 novos). **Verificação ao vivo contra o Postgres:** `perfil` sem token / com token
+  inválido → **401**; registro + login de um usuário descartável → `perfil` com token devolve
+  `{id,login,nome}` **sem** senha; `PATCH senha` com `senhaAtual` errada → **400 'Senha atual
+  incorreta'**; com a correta → **200**; em seguida login com a senha **antiga → 400** e com a
+  **nova → 201** (prova persistência + encriptação corretas). Nenhuma UI, nenhuma regra de jogo
+  (`shared/regras` intocado).
 - **m2-02-autenticacao-jwt-guard** (2026-07-06): **backbone de autenticação do M2** — registro,
   login com JWT, guard global e `@ActiveUser()`; **primeira camada de negócio da API** (até aqui só
   o `/health` operacional). **Entregável 1 — DTOs** (`shared/src/dtos/usuario/`, 1º pacote de DTOs de
