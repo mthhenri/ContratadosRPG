@@ -68,8 +68,8 @@ describe('TemaService', () => {
     it('vermelho (padrão) permanece legível nas duas bases', () => {
       const superficieEscura = '#13161b';
       const superficieClara = '#ffffff';
-      expect(razaoContraste('#e5484d', superficieEscura)).toBeGreaterThanOrEqual(CONTRASTE_MINIMO);
-      expect(razaoContraste('#e5484d', superficieClara)).toBeGreaterThanOrEqual(CONTRASTE_MINIMO);
+      expect(razaoContraste('#d53030', superficieEscura)).toBeGreaterThanOrEqual(CONTRASTE_MINIMO);
+      expect(razaoContraste('#d53030', superficieClara)).toBeGreaterThanOrEqual(CONTRASTE_MINIMO);
     });
   });
 
@@ -145,7 +145,7 @@ describe('TemaService', () => {
 
     it('mantém as quatro cores oficiais do tema no início da lista de presets', () => {
       const primeirasQuatro = PRESETS_ACCENT.slice(0, 4).map((preset) => preset.cor);
-      expect(primeirasQuatro).toEqual(['#e5484d', '#4c8dd0', '#4a9d6b', '#d9a441']);
+      expect(primeirasQuatro).toEqual(['#d53030', '#4c8dd0', '#4a9d6b', '#d9a441']);
     });
 
     it('inclui as cores principais adicionais pedidas (m1-16)', () => {
@@ -225,7 +225,7 @@ describe('TemaService', () => {
 
   describe('nomearCor (nome aproximado, m1-16)', () => {
     it('nomeia as faixas de matiz principais', () => {
-      expect(nomearCor('#e5484d')).toBe('Vermelho');
+      expect(nomearCor('#d53030')).toBe('Vermelho');
       expect(nomearCor('#4c8dd0')).toBe('Azul');
       expect(nomearCor('#4a9d6b')).toBe('Verde');
       expect(nomearCor('#9a6dd7')).toBe('Roxo');

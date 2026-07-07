@@ -131,8 +131,10 @@ conecta ao Git e reimplanta no push.
 
 ## 4. Pós-deploy
 
-- Abra `https://<seu-projeto>.pages.dev`: a home consome `GET {apiBase}/health` no Render e
-  exibe o status `ok` — provando a cadeia **Cloudflare → Render → Supabase**.
+- Abra `https://<seu-projeto>.pages.dev`: a rota raiz redireciona ao `/login` (destino padrão
+  é o `/painel`, guardado). Registre uma conta de teste — completar sem erro de CORS prova a
+  cadeia **Cloudflare → Render → Supabase**. Para checar só o backend, `GET
+  https://<seu-servico>.onrender.com/health` deve responder `ok` isoladamente.
 - A partir daqui, todo push para `master` reimplanta as duas plataformas automaticamente.
 
 ---
@@ -144,4 +146,4 @@ conecta ao Git e reimplanta no push.
 - [ ] Render: envs preenchidas; `JWT_SECRETO` forte; **sem** `NODE_ENV=production`; `APP_FRONTEND_ORIGEM` = URL das Pages
 - [ ] `environment.production.ts` com o `apiBase` da URL do Render (commitado)
 - [ ] Cloudflare Pages conectado ao Git; **Production branch = `master`**; output `frontend/dist/frontend/browser`
-- [ ] URL das Pages abre a home exibindo o `/health` (sem erro de CORS)
+- [ ] URL das Pages redireciona a `/login` e um registro de teste completa sem erro de CORS

@@ -14,7 +14,7 @@
 import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
 
-// Paleta accent gerada a partir de --accent (#e5484d). Ao trocar o accent via color picker,
+// Paleta accent gerada a partir de --accent (#d53030). Ao trocar o accent via color picker,
 // regenere estes tons (a spec M1 exige trava de contraste — validar 50/500/900).
 export const ContencaoPreset = definePreset(Aura, {
   primitive: {
@@ -47,9 +47,9 @@ export const ContencaoPreset = definePreset(Aura, {
 
     // --- Accent como primary ---
     primary: {
-      50: '#fdecec', 100: '#f9cccd', 200: '#f3a3a5', 300: '#ee7a7d',
-      400: '#ea5f63', 500: '#e5484d', 600: '#cf3f44', 700: '#b23539',
-      800: '#8f2b2e', 900: '#6b2022', 950: '#451415',
+      50: '#fdf5f5', 100: '#f5cdcd', 200: '#eda6a6', 300: '#e57f7f',
+      400: '#dd5757', 500: '#d53030', 600: '#b52929', 700: '#952222',
+      800: '#751a1a', 900: '#551313', 950: '#350c0c',
     },
 
     colorScheme: {
@@ -60,10 +60,10 @@ export const ContencaoPreset = definePreset(Aura, {
           700: '#0f1216', 800: '#0a0c0f', 900: '#07090b', 950: '#050607',
         },
         primary: {
-          color: '#e5484d',
+          color: '#d53030',
           contrastColor: '#0a0c0f',   // texto escuro sobre botão accent
-          hoverColor: '#ea5f63',
-          activeColor: '#cf3f44',
+          hoverColor: '#dd5757',
+          activeColor: '#b52929',
         },
         // Superfícies e texto do conteúdo mapeando os tokens do tema.
         content: {
@@ -81,7 +81,7 @@ export const ContencaoPreset = definePreset(Aura, {
           background: '#1a1e24',
           borderColor: 'rgba(255,255,255,.12)',
           hoverBorderColor: 'rgba(255,255,255,.2)',
-          focusBorderColor: '#e5484d',
+          focusBorderColor: '#d53030',
           color: '#e6e8eb',
           placeholderColor: '#656a72',
           borderRadius: '4px',
