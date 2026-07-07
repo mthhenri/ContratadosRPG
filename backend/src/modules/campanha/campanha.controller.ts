@@ -2,8 +2,12 @@ import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put } from '@
 import type {
   CampanhaAlteradaDto,
   CampanhaAlterarDto,
+  CampanhaConviteRegeneradoDto,
   CampanhaCriadaDto,
   CampanhaCriarDto,
+  CampanhaEntradaDto,
+  CampanhaEntrarDto,
+  CampanhaMembroResumoDto,
   CampanhaRecuperadaDto,
   CampanhaResumoDto,
 } from '@contratados-rpg/shared/dtos/campanha';
@@ -34,12 +38,36 @@ export class CampanhaController {
     return this.campanhaService.listarCampanhas({ usuarioId: usuarioAtivo.sub });
   }
 
+  @Post('entrar')
+  entrar(
+    @Body() dto: CampanhaEntrarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaEntradaDto> {
+    return this.campanhaService.entrarCampanha(dto, usuarioAtivo);
+  }
+
   @Get(':id')
   recuperar(
     @Param('id', ParseIntPipe) id: number,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<CampanhaRecuperadaDto> {
     return this.campanhaService.recuperarCampanha({ id }, usuarioAtivo);
+  }
+
+  @Get(':id/membros')
+  listarMembros(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaMembroResumoDto[]> {
+    return this.campanhaService.listarMembros({ campanhaId: id }, usuarioAtivo);
+  }
+
+  @Post(':id/convite/regenerar')
+  regenerarConvite(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaConviteRegeneradoDto> {
+    return this.campanhaService.regenerarConvite({ id }, usuarioAtivo);
   }
 
   @Put(':id')

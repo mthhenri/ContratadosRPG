@@ -3,17 +3,27 @@ import { Injectable } from '@nestjs/common';
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type {
   CampanhaAlteradaDto,
+  CampanhaConviteRegeneradoDto,
+  CampanhaConviteRegenerarDto,
   CampanhaCriadaDto,
   CampanhaCriarDto,
+  CampanhaEntradaDto,
+  CampanhaEntrarDto,
   CampanhaExcluirDto,
   CampanhaInternoAlterarDto,
   CampanhaListarDto,
   CampanhaMembroInternoRecuperarDto,
+  CampanhaMembroResumoDto,
+  CampanhaMembrosListarDto,
   CampanhaRecuperadaDto,
   CampanhaRecuperarDto,
   CampanhaResumoDto,
 } from '@contratados-rpg/shared/dtos/campanha';
-import { ResourceNotFoundException, UnauthorizedAccessException } from '../../core/exceptions';
+import {
+  BusinessException,
+  ResourceNotFoundException,
+  UnauthorizedAccessException,
+} from '../../core/exceptions';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { CampanhaRepository } from './campanha.repository';
 
@@ -25,10 +35,11 @@ const TAMANHO_CONVITE = 8;
 
 /**
  * Regras de campanha (SYSTEM.SPEC §13/§14): CRUD com o criador virando `MESTRE`, listagem
- * das campanhas de que o usuário é membro e gestão (alterar/excluir) restrita ao mestre.
- * Toda a inteligência — incluindo as **permissões** — vive aqui; a service é o único árbitro
- * (proibição #28) e a controller apenas repassa (proibição #2). As queries vêm do
- * `CampanhaRepository` (módulo dono — proibição #23).
+ * das campanhas de que o usuário é membro, gestão (alterar/excluir) restrita ao mestre,
+ * entrada por código de convite (papel `JOGADOR`), regeneração do convite (só mestre) e
+ * listagem de membros. Toda a inteligência — incluindo as **permissões** — vive aqui; a
+ * service é o único árbitro (proibição #28) e a controller apenas repassa (proibição #2). As
+ * queries vêm do `CampanhaRepository` (módulo dono — proibição #23).
  */
 @Injectable()
 export class CampanhaService {
@@ -115,6 +126,87 @@ export class CampanhaService {
 
     await this.validarMestre({ campanhaId: dto.id, usuarioId: usuarioAtivo.sub });
     await this.campanhaRepositorio.excluirCampanha(dto);
+  }
+
+  /**
+   * Faz o usuário autenticado ingressar numa campanha pelo `codigoConvite`, com papel
+   * `JOGADOR` (SYSTEM.SPEC §14). Código inexistente/inválido → `ResourceNotFoundException`;
+   * usuário que já é membro → `BusinessException` (respeitando o índice único
+   * `uix_campanha_membro_campanha_usuario_ativo`).
+   */
+  async entrarCampanha(
+    dto: CampanhaEntrarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaEntradaDto> {
+    const campanhaEncontrada = await this.campanhaRepositorio.recuperarPorCodigoConvite({
+      codigoConvite: dto.codigoConvite,
+    });
+    if (!campanhaEncontrada) {
+      throw new ResourceNotFoundException('Campanha');
+    }
+
+    const membroExistente = await this.campanhaRepositorio.recuperarMembro({
+      campanhaId: campanhaEncontrada.id,
+      usuarioId: usuarioAtivo.sub,
+    });
+    if (membroExistente) {
+      throw new BusinessException('Você já é membro desta campanha');
+    }
+
+    await this.campanhaRepositorio.criarMembro({
+      campanhaId: campanhaEncontrada.id,
+      usuarioId: usuarioAtivo.sub,
+      papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+    });
+
+    return {
+      id: campanhaEncontrada.id,
+      nome: campanhaEncontrada.nome,
+      descricao: campanhaEncontrada.descricao,
+      papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+    };
+  }
+
+  /**
+   * Regenera o `codigoConvite` da campanha — só o mestre pode (SYSTEM.SPEC §14). Gera um novo
+   * código único e invalida o anterior (o antigo deixa de resolver para a campanha). O `id`
+   * vem no DTO (montado pela controller com o `@Param`). `ResourceNotFoundException` se a
+   * campanha não existir; `UnauthorizedAccessException` se o autor não for o mestre.
+   */
+  async regenerarConvite(
+    dto: CampanhaConviteRegenerarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaConviteRegeneradoDto> {
+    const campanhaEncontrada = await this.campanhaRepositorio.recuperarPorId({ id: dto.id });
+    if (!campanhaEncontrada) {
+      throw new ResourceNotFoundException('Campanha');
+    }
+
+    await this.validarMestre({ campanhaId: dto.id, usuarioId: usuarioAtivo.sub });
+    return this.campanhaRepositorio.alterarConvite({
+      id: dto.id,
+      codigoConvite: this.gerarCodigoConvite(),
+    });
+  }
+
+  /**
+   * Lista os membros da campanha (nome do usuário + papel). Visível a qualquer membro da
+   * campanha (§14). `ResourceNotFoundException` se a campanha não existir;
+   * `UnauthorizedAccessException` se o autor não for membro.
+   */
+  async listarMembros(
+    dto: CampanhaMembrosListarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaMembroResumoDto[]> {
+    const campanhaEncontrada = await this.campanhaRepositorio.recuperarPorId({
+      id: dto.campanhaId,
+    });
+    if (!campanhaEncontrada) {
+      throw new ResourceNotFoundException('Campanha');
+    }
+
+    await this.validarMembro({ campanhaId: dto.campanhaId, usuarioId: usuarioAtivo.sub });
+    return this.campanhaRepositorio.listarMembros(dto);
   }
 
   /**

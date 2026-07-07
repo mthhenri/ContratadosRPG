@@ -2,6 +2,9 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { Knex } from 'knex';
 import type {
   CampanhaAlteradaDto,
+  CampanhaConviteInternoAlterarDto,
+  CampanhaConviteRecuperarDto,
+  CampanhaConviteRegeneradoDto,
   CampanhaCriadaDto,
   CampanhaExcluirDto,
   CampanhaInternoAlterarDto,
@@ -10,6 +13,8 @@ import type {
   CampanhaMembroInternoCriarDto,
   CampanhaMembroInternoRecuperadoDto,
   CampanhaMembroInternoRecuperarDto,
+  CampanhaMembroResumoDto,
+  CampanhaMembrosListarDto,
   CampanhaRecuperadaDto,
   CampanhaRecuperarDto,
   CampanhaResumoDto,
@@ -81,6 +86,23 @@ export class CampanhaRepository extends BaseRepository {
     );
   }
 
+  /**
+   * Recupera a campanha ativa pelo `codigoConvite` (ou `null`) — alimenta o `entrarCampanha`.
+   * Como o índice único `uix_campanha_codigo_convite_ativo` é parcial (`WHERE is_deleted =
+   * false`), um código só resolve para uma campanha ativa; após regeneração, o antigo some.
+   */
+  async recuperarPorCodigoConvite(
+    dto: CampanhaConviteRecuperarDto,
+  ): Promise<CampanhaRecuperadaDto | null> {
+    const [campanhaEncontrada] = await this.executarConsulta<CampanhaRecuperadaDto>(
+      `SELECT id, nome, descricao, codigo_convite AS "codigoConvite"
+       FROM campanha
+       WHERE codigo_convite = :codigoConvite AND is_deleted = false`,
+      { codigoConvite: dto.codigoConvite },
+    );
+    return campanhaEncontrada ?? null;
+  }
+
   /** Recupera a campanha ativa pelo `id` (ou `null`). */
   async recuperarPorId(dto: CampanhaRecuperarDto): Promise<CampanhaRecuperadaDto | null> {
     const [campanhaEncontrada] = await this.executarConsulta<CampanhaRecuperadaDto>(
@@ -133,5 +155,43 @@ export class CampanhaRepository extends BaseRepository {
   /** Exclui a campanha via soft delete (nunca `DELETE` físico — proibição #14). */
   async excluirCampanha(dto: CampanhaExcluirDto): Promise<void> {
     await this.executarSoftDelete(dto.id);
+  }
+
+  /**
+   * Substitui o `codigoConvite` da campanha pelo novo (já gerado na service), invalidando o
+   * anterior. Só toca campanha ativa (`WHERE is_deleted = false`), sem `DEFAULT`.
+   */
+  async alterarConvite(
+    dto: CampanhaConviteInternoAlterarDto,
+  ): Promise<CampanhaConviteRegeneradoDto> {
+    const [conviteRegenerado] = await this.executarConsulta<CampanhaConviteRegeneradoDto>(
+      `UPDATE campanha
+       SET codigo_convite = :codigoConvite, updated_date = NOW()
+       WHERE id = :id AND is_deleted = false
+       RETURNING id, codigo_convite AS "codigoConvite"`,
+      { id: dto.id, codigoConvite: dto.codigoConvite },
+    );
+    return conviteRegenerado;
+  }
+
+  /**
+   * Lista os membros da campanha com o `nome` do usuário e o `papel` dele
+   * (`MESTRE`/`JOGADOR`). Junta `campanha_membro` → `usuario` (nome) →
+   * `tipo_campanha_membro_papel` (papel), todas filtrando `is_deleted = false`. Ordena por nome.
+   */
+  async listarMembros(dto: CampanhaMembrosListarDto): Promise<CampanhaMembroResumoDto[]> {
+    return this.executarConsulta<CampanhaMembroResumoDto>(
+      `SELECT usuario.id AS "usuarioId", usuario.nome,
+              tipo_campanha_membro_papel.codigo AS papel
+       FROM campanha_membro
+       INNER JOIN usuario
+         ON usuario.id = campanha_membro.usuario_id AND usuario.is_deleted = false
+       INNER JOIN tipo_campanha_membro_papel
+         ON tipo_campanha_membro_papel.id = campanha_membro.tipo_campanha_membro_papel_id
+        AND tipo_campanha_membro_papel.is_deleted = false
+       WHERE campanha_membro.campanha_id = :campanhaId AND campanha_membro.is_deleted = false
+       ORDER BY usuario.nome ASC`,
+      { campanhaId: dto.campanhaId },
+    );
   }
 }
