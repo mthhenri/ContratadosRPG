@@ -10,6 +10,9 @@
   }
 
   &__acao {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     padding: 10px 16px;
     font-size: 12px;
     font-weight: 700;
@@ -19,9 +22,16 @@
   }
 
   &__estado {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     margin: 0;
     font-family: var(--font-sans);
     color: var(--text-dim);
+
+    app-icone {
+      color: var(--text-mute);
+    }
   }
 
   &__lista {
@@ -73,6 +83,9 @@
 // Chip de papel (MESTRE / JOGADOR) — variação do chip de classificação do tema.
 .chip-papel {
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 600;
@@ -82,6 +95,10 @@
   border: 1px solid var(--accent-border);
   border-radius: 3px;
   padding: 4px 8px;
+
+  app-icone {
+    font-size: 11px;
+  }
 }
 
 // Card + cabeçalho de seção — bloco sancionado copiado de docs/design/tema/_componentes.scss.

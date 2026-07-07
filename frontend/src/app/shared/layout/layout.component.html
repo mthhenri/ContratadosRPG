@@ -3,17 +3,80 @@
 <header class="topbar">
   <span class="topbar__marca">Contratados<span class="topbar__marca-sufixo">RPG</span></span>
 
+  @if (campanhaContextoService.campanhaAtual(); as campanhaAtual) {
+    <span class="topbar__separador" aria-hidden="true"></span>
+    <a class="topbar__campanha" routerLink="/painel">
+      <app-icone nome="campanhas" />
+      <span class="topbar__campanha-texto">
+        <span class="topbar__campanha-nome">{{ campanhaAtual.nome }}</span>
+        <span class="topbar__campanha-codigo">{{ campanhaAtual.codigoConvite }}</span>
+      </span>
+    </a>
+  }
+
+  @if (sessaoService.autenticado()) {
+    <nav class="topbar__nav" aria-label="Navegação principal">
+      <a class="topbar__item" routerLink="/painel" routerLinkActive="topbar__item--ativo">
+        <app-icone nome="campanhas" />
+        <span>Painel</span>
+      </a>
+      <a class="topbar__item" routerLink="/calculadora" routerLinkActive="topbar__item--ativo">
+        <app-icone nome="calculadora" />
+        <span>Calculadora</span>
+      </a>
+    </nav>
+  }
+
   <div class="topbar__acoes">
     @if (loadingService.isLoading()) {
       <span class="topbar__carregando" role="status" aria-label="Carregando"></span>
     }
 
     @if (sessaoService.usuario(); as usuarioAtual) {
-      <span class="topbar__identidade">{{ usuarioAtual.nome }}</span>
-      <button class="topbar__sessao" type="button" (click)="sair()">Sair</button>
+      <div class="topbar__perfil">
+        <button
+          class="topbar__perfil-gatilho"
+          type="button"
+          [attr.aria-expanded]="perfilAberto()"
+          (click)="alternarPerfil()"
+        >
+          <span class="topbar__identidade">{{ usuarioAtual.nome }}</span>
+          <span class="topbar__avatar" aria-hidden="true"></span>
+          <app-icone nome="chevron" />
+        </button>
+
+        @if (perfilAberto()) {
+          <div class="topbar__perfil-menu" role="menu">
+            <a
+              class="topbar__perfil-item"
+              routerLink="/painel"
+              role="menuitem"
+              (click)="fecharPerfil()"
+            >
+              <app-icone nome="campanhas" />
+              <span>Campanhas</span>
+            </a>
+            <button
+              class="topbar__perfil-item topbar__perfil-item--sair"
+              type="button"
+              role="menuitem"
+              (click)="sair()"
+            >
+              <app-icone nome="sair" />
+              <span>Encerrar sessão</span>
+            </button>
+          </div>
+        }
+      </div>
     } @else {
-      <a class="topbar__sessao" routerLink="/login">Entrar</a>
-      <a class="topbar__sessao topbar__sessao--destaque" routerLink="/registro">Registrar</a>
+      <a class="topbar__sessao" routerLink="/login">
+        <app-icone nome="entrar" />
+        <span>Entrar</span>
+      </a>
+      <a class="topbar__sessao topbar__sessao--destaque" routerLink="/registro">
+        <app-icone nome="mais" />
+        <span>Registrar</span>
+      </a>
     }
 
     <app-configuracoes-tema />

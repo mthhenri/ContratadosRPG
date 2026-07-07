@@ -2,7 +2,9 @@ import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { CampanhaResumoDto } from '@contratados-rpg/shared/dtos/campanha';
+import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 
+import { Icone } from '../../../../shared/icone/icone.component';
 import { CampanhaService } from '../../campanha.service';
 
 /**
@@ -13,12 +15,15 @@ import { CampanhaService } from '../../campanha.service';
  */
 @Component({
   selector: 'app-campanha-lista',
-  imports: [RouterLink],
+  imports: [RouterLink, Icone],
   templateUrl: './lista.page.html',
   styleUrl: './lista.page.scss',
 })
 export class CampanhaLista {
   private readonly campanhaService = inject(CampanhaService);
+
+  /** Exposto ao template só para escolher o ícone do `chip-papel` (coroa/protecoes). */
+  protected readonly TipoCampanhaMembroPapelEnum = TipoCampanhaMembroPapelEnum;
 
   protected readonly campanhas = signal<CampanhaResumoDto[]>([]);
   protected readonly carregando = signal(true);

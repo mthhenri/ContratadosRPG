@@ -1,46 +1,70 @@
 <section class="autenticacao">
-  <article class="card autenticacao__cartao">
-    <header class="card__cabecalho">
-      <span class="card__indice">//</span>
-      <h1 class="card__titulo">Acesso</h1>
-      <span class="card__regua"></span>
-    </header>
+  <div class="autenticacao__moldura">
+    <div class="autenticacao__marca">
+      <span class="autenticacao__canto autenticacao__canto--esquerda" aria-hidden="true"></span>
+      <span class="autenticacao__canto autenticacao__canto--direita" aria-hidden="true"></span>
 
-    <form class="autenticacao__formulario" [formGroup]="formulario" (ngSubmit)="enviar()">
-      <label class="autenticacao__campo">
-        <span class="autenticacao__rotulo">Login</span>
-        <input
-          class="autenticacao__entrada"
-          type="text"
-          formControlName="login"
-          autocomplete="username"
-          autocapitalize="none"
-          spellcheck="false"
-        />
-      </label>
+      <span class="autenticacao__marca-texto">CONTRATADOS<span class="autenticacao__marca-sufixo">RPG</span></span>
+      <span class="autenticacao__eyebrow">Acesso ao terminal</span>
+      <h2 class="autenticacao__slogan">Fichas, campanhas e cálculos em tempo real.</h2>
+      <p class="autenticacao__descricao">
+        Entre com sua conta de agente para acompanhar suas fichas e campanhas.
+      </p>
 
-      <label class="autenticacao__campo">
-        <span class="autenticacao__rotulo">Senha</span>
-        <input
-          class="autenticacao__entrada"
-          type="password"
-          formControlName="senha"
-          autocomplete="current-password"
-        />
-      </label>
+      <ul class="autenticacao__destaques">
+        <li class="autenticacao__destaque">
+          <app-icone nome="calculadora" />
+          <span>Stats calculados pelas regras oficiais</span>
+        </li>
+        <li class="autenticacao__destaque">
+          <app-icone nome="campanhas" />
+          <span>Ficha sincronizada com a campanha do mestre</span>
+        </li>
+      </ul>
+    </div>
 
-      <button
-        class="botao botao--primario autenticacao__enviar"
-        type="submit"
-        [disabled]="enviando()"
-      >
-        {{ enviando() ? 'Autenticando…' : 'Entrar' }}
-      </button>
-    </form>
+    <div class="autenticacao__painel">
+      <span class="autenticacao__eyebrow">Novo acesso</span>
+      <h1 class="autenticacao__titulo">Entrar</h1>
+      <p class="autenticacao__descricao">Autentique-se com sua conta de agente.</p>
 
-    <p class="autenticacao__alternativa">
-      Sem credenciais?
-      <a class="autenticacao__link" routerLink="/registro">Registrar</a>
-    </p>
-  </article>
+      <form class="autenticacao__formulario" [formGroup]="formulario" (ngSubmit)="enviar()">
+        <label class="autenticacao__campo">
+          <span class="autenticacao__rotulo">Login</span>
+          <input
+            class="autenticacao__entrada"
+            type="text"
+            formControlName="login"
+            autocomplete="username"
+            autocapitalize="none"
+            spellcheck="false"
+          />
+        </label>
+
+        <label class="autenticacao__campo">
+          <span class="autenticacao__rotulo">Senha</span>
+          <input
+            class="autenticacao__entrada"
+            type="password"
+            formControlName="senha"
+            autocomplete="current-password"
+          />
+        </label>
+
+        <button
+          class="botao botao--primario autenticacao__enviar"
+          type="submit"
+          [disabled]="enviando()"
+        >
+          <app-icone nome="entrar" />
+          {{ enviando() ? 'Autenticando…' : 'Entrar' }}
+        </button>
+      </form>
+
+      <p class="autenticacao__alternativa">
+        Sem credenciais?
+        <a class="autenticacao__link" routerLink="/registro">Criar agora</a>
+      </p>
+    </div>
+  </div>
 </section>

@@ -2,7 +2,9 @@ import { Component, input } from '@angular/core';
 
 /**
  * Nomes de ícone suportados. Os seis primeiros são as abas da calculadora (batem com o
- * `caminho` da rota); os demais são as categorias do catálogo de compras.
+ * `caminho` da rota); os dez seguintes são as categorias do catálogo de compras + amplificador;
+ * os últimos (m2-09) cobrem topbar, autenticação e campanhas (nav, dropdown de perfil, chips de
+ * papel, ações).
  */
 export type IconeNome =
   | 'agente'
@@ -20,7 +22,18 @@ export type IconeNome =
   | 'armazenamento'
   | 'operacional'
   | 'medicinal'
-  | 'amplificador';
+  | 'amplificador'
+  | 'campanhas'
+  | 'calculadora'
+  | 'sair'
+  | 'entrar'
+  | 'chevron'
+  | 'copiar'
+  | 'mais'
+  | 'convite'
+  | 'coroa'
+  | 'atualizar'
+  | 'voltar';
 
 /**
  * Ícone monocromático de linha (SVG inline, `stroke: currentColor`) — reutilizado nos menus de

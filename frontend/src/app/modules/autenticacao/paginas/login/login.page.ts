@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
+import { Icone } from '../../../../shared/icone/icone.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
 
 /**
@@ -13,7 +14,7 @@ import { SessaoService } from '../../../../core/services/sessao.service';
  */
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, Icone],
   templateUrl: './login.page.html',
   styleUrl: './login.page.scss',
 })

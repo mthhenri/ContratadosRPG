@@ -7,8 +7,12 @@
     </header>
 
     <div class="campanhas__acoes">
-      <a class="botao botao--primario campanhas__acao" routerLink="/painel/criar">Criar campanha</a>
+      <a class="botao botao--primario campanhas__acao" routerLink="/painel/criar">
+        <app-icone nome="mais" />
+        Criar campanha
+      </a>
       <a class="botao botao--secundario campanhas__acao" routerLink="/painel/entrar">
+        <app-icone nome="convite" />
         Entrar por código
       </a>
     </div>
@@ -17,6 +21,7 @@
       <p class="campanhas__estado">Carregando campanhas…</p>
     } @else if (campanhas().length === 0) {
       <p class="campanhas__estado">
+        <app-icone nome="campanhas" />
         Nenhuma campanha ainda. Crie uma nova ou entre em uma com o código de convite.
       </p>
     } @else {
@@ -29,7 +34,10 @@
                 <span class="campanhas__descricao">{{ campanha.descricao }}</span>
               }
             </a>
-            <span class="chip-papel">{{ campanha.papel }}</span>
+            <span class="chip-papel">
+              <app-icone [nome]="campanha.papel === TipoCampanhaMembroPapelEnum.MESTRE ? 'coroa' : 'protecoes'" />
+              {{ campanha.papel }}
+            </span>
           </li>
         }
       </ul>

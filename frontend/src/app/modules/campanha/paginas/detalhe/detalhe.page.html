@@ -21,11 +21,20 @@
           <div class="detalhe__convite-linha">
             <code class="detalhe__codigo">{{ campanhaAtual.codigoConvite }}</code>
             <button
+              class="detalhe__copiar"
+              type="button"
+              [attr.aria-label]="copiado() ? 'Código copiado' : 'Copiar código de convite'"
+              (click)="copiarConvite()"
+            >
+              <app-icone nome="copiar" />
+            </button>
+            <button
               class="botao botao--secundario detalhe__regenerar"
               type="button"
               [disabled]="regenerando()"
               (click)="regenerarConvite()"
             >
+              <app-icone nome="atualizar" />
               {{ regenerando() ? 'Regenerando…' : 'Regenerar' }}
             </button>
           </div>
@@ -37,7 +46,10 @@
         @for (membro of membros(); track membro.usuarioId) {
           <li class="detalhe__membro">
             <span class="detalhe__membro-nome">{{ membro.nome }}</span>
-            <span class="chip-papel">{{ membro.papel }}</span>
+            <span class="chip-papel">
+              <app-icone [nome]="membro.papel === TipoCampanhaMembroPapelEnum.MESTRE ? 'coroa' : 'protecoes'" />
+              {{ membro.papel }}
+            </span>
           </li>
         }
       </ul>
@@ -45,6 +57,9 @@
   }
 
   <p class="detalhe__voltar">
-    <a class="detalhe__link" routerLink="/painel">Voltar às campanhas</a>
+    <a class="detalhe__link" routerLink="/painel">
+      <app-icone nome="voltar" />
+      Voltar às campanhas
+    </a>
   </p>
 </section>
