@@ -4,6 +4,9 @@
       <span class="card__indice">//</span>
       <h1 class="card__titulo">Campanhas</h1>
       <span class="card__regua"></span>
+      @if (!carregando() && campanhas().length) {
+        <span class="card__contagem" aria-hidden="true">{{ campanhas().length }}</span>
+      }
     </header>
 
     <div class="campanhas__acoes">

@@ -63,8 +63,8 @@
   &__ligacao {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
+    gap: 14px;
+    padding: 16px 18px;
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-control);
@@ -82,8 +82,8 @@
   // --surface-2 nas duas bases do tema em runtime (m1-13); direto com --surface/--surface-2 o
   // contraste ficava quase invisível na base clara.
   &__avatar {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     flex: none;
     border-radius: var(--radius-control);
     background-color: var(--surface-2);
@@ -101,8 +101,8 @@
 
   &__nome {
     font-family: var(--font-mono);
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 15px;
+    font-weight: 700;
     color: var(--text);
   }
 
@@ -123,8 +123,8 @@
   &__esqueleto-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
+    gap: 14px;
+    padding: 16px 18px;
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-control);
@@ -138,8 +138,8 @@
   animation: esqueleto-pulso 1.4s ease-in-out infinite;
 
   &--avatar {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     flex: none;
   }
 
@@ -229,6 +229,15 @@
     flex: 1;
     height: 1px;
     background: var(--border);
+  }
+
+  // Contagem à direita do cabeçalho (nº de campanhas) — mesmo tratamento do contador de seção
+  // dos protótipos ("ESQUADRÃO 4"). Só apresentação de dado já em tela (a lista carregada).
+  &__contagem {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-mute);
   }
 }
 
