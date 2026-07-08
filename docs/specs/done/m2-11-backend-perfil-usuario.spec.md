@@ -11,8 +11,9 @@ módulo `usuario`. Sem frontend.
 ## Entregáveis
 
 1. **DTOs** em `shared/src/dtos/usuario/` (CONVENTIONS / `dto-conventions`):
-   `UsuarioPerfilAlterarDto` (`{ nome, login }`) / `UsuarioPerfilAlteradaDto`
-   (`{ id, login, nome }` — **sem** senha); `UsuarioExcluirDto` (`{ id }`, interno).
+   `UsuarioPerfilAlterarDto` (`{ nome, login }`) / `UsuarioPerfilAlteradoDto`
+   (`{ id, login, nome }` — **sem** senha; particípio masculino concordando com o complemento
+   `Perfil`, como `CampanhaConviteRegeneradoDto`); `UsuarioExcluirDto` (`{ id }`, interno).
 2. **`alterarPerfil`** (service): altera `nome` e `login` do usuário autenticado
    (`@ActiveUser()`). **Valida unicidade do `login`** (respeitando
    `uix_usuario_login_ativo`) — login em uso por **outra** conta → `BusinessException('Login

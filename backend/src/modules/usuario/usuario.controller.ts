@@ -1,5 +1,7 @@
-import { Body, Controller, Get, Patch } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Patch } from '@nestjs/common';
 import type {
+  UsuarioPerfilAlterarDto,
+  UsuarioPerfilAlteradoDto,
   UsuarioRecuperadoDto,
   UsuarioSenhaAlterarDto,
   UsuarioSenhaAlteradaDto,
@@ -29,5 +31,18 @@ export class UsuarioController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<UsuarioSenhaAlteradaDto> {
     return this.usuarioService.alterarSenha(dto, usuarioAtivo);
+  }
+
+  @Patch('perfil')
+  alterarPerfil(
+    @Body() dto: UsuarioPerfilAlterarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<UsuarioPerfilAlteradoDto> {
+    return this.usuarioService.alterarPerfil(dto, usuarioAtivo);
+  }
+
+  @Delete()
+  excluirConta(@ActiveUser() usuarioAtivo: JwtPayload): Promise<void> {
+    return this.usuarioService.excluirConta({ id: usuarioAtivo.sub });
   }
 }

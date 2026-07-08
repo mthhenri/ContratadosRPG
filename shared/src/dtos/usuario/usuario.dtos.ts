@@ -109,3 +109,39 @@ export interface UsuarioSenhaInternoAlterarDto {
   readonly id: number;
   readonly senha: string;
 }
+
+/**
+ * Entrada pública da alteração dos dados de perfil do próprio usuário autenticado (m2-11):
+ * `nome` e `login`. Complemento `Perfil` inteiro antes do verbo (CONVENTIONS / skill
+ * `dto-conventions`). O `id` vem do JWT (`@ActiveUser().sub`), nunca do corpo.
+ */
+export interface UsuarioPerfilAlterarDto {
+  readonly nome: string;
+  readonly login: string;
+}
+
+/** Saída da alteração de perfil — os dados públicos do usuário, **sem** a senha. */
+export interface UsuarioPerfilAlteradoDto {
+  readonly id: number;
+  readonly login: string;
+  readonly nome: string;
+}
+
+/**
+ * Entrada interna do `UsuarioRepository.alterarPerfil` (m2-11) — o `id` do usuário (do
+ * token) e os campos alterados (`nome`, `login`). `Interno` porque o `id` é injetado pela
+ * service a partir do JWT, nunca chega no corpo da requisição.
+ */
+export interface UsuarioPerfilInternoAlterarDto {
+  readonly id: number;
+  readonly nome: string;
+  readonly login: string;
+}
+
+/**
+ * Entrada da exclusão (soft delete) da própria conta (m2-11). O `id` vem do JWT
+ * (`@ActiveUser().sub`), injetado no DTO pela controller — nunca primitivo solto.
+ */
+export interface UsuarioExcluirDto {
+  readonly id: number;
+}

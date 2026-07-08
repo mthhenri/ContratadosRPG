@@ -2,9 +2,12 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { Knex } from 'knex';
 import type {
   UsuarioCriadoDto,
+  UsuarioExcluirDto,
   UsuarioInternoCriarDto,
   UsuarioInternoRecuperadoDto,
   UsuarioLoginRecuperarDto,
+  UsuarioPerfilAlteradoDto,
+  UsuarioPerfilInternoAlterarDto,
   UsuarioRecuperarDto,
   UsuarioSenhaInternoAlterarDto,
 } from '@contratados-rpg/shared/dtos/usuario';
@@ -81,5 +84,26 @@ export class UsuarioRepository extends BaseRepository {
        WHERE id = :id AND is_deleted = false`,
       { id: dto.id, senha: dto.senha },
     );
+  }
+
+  /**
+   * Altera os dados de perfil (`nome`, `login`) do usuário e retorna os dados públicos —
+   * **sem** a senha. A unicidade do `login` é validada na service (via `recuperarPorLogin`)
+   * antes de chamar. Só toca usuário ativo (`WHERE is_deleted = false`), sem `DEFAULT`.
+   */
+  async alterarPerfil(dto: UsuarioPerfilInternoAlterarDto): Promise<UsuarioPerfilAlteradoDto> {
+    const [usuarioAlterado] = await this.executarConsulta<UsuarioPerfilAlteradoDto>(
+      `UPDATE usuario
+       SET nome = :nome, login = :login, updated_date = NOW()
+       WHERE id = :id AND is_deleted = false
+       RETURNING id, login, nome`,
+      { id: dto.id, nome: dto.nome, login: dto.login },
+    );
+    return usuarioAlterado;
+  }
+
+  /** Exclui a própria conta via soft delete (nunca `DELETE` físico — proibição #14). */
+  async excluirConta(dto: UsuarioExcluirDto): Promise<void> {
+    await this.executarSoftDelete(dto.id);
   }
 }

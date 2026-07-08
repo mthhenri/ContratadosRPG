@@ -17,7 +17,10 @@ const compareDublado = vi.mocked(bcrypt.compare);
 
 interface RepositorioDublado {
   recuperarPorId: ReturnType<typeof vi.fn>;
+  recuperarPorLogin: ReturnType<typeof vi.fn>;
   alterarSenha: ReturnType<typeof vi.fn>;
+  alterarPerfil: ReturnType<typeof vi.fn>;
+  excluirConta: ReturnType<typeof vi.fn>;
 }
 
 describe('UsuarioService', () => {
@@ -34,7 +37,13 @@ describe('UsuarioService', () => {
   const usuarioAtivo: JwtPayload = { sub: 7, login: 'agente.zero' };
 
   beforeEach(() => {
-    repositorio = { recuperarPorId: vi.fn(), alterarSenha: vi.fn() };
+    repositorio = {
+      recuperarPorId: vi.fn(),
+      recuperarPorLogin: vi.fn(),
+      alterarSenha: vi.fn(),
+      alterarPerfil: vi.fn(),
+      excluirConta: vi.fn(),
+    };
     service = new UsuarioService(repositorio as unknown as UsuarioRepository);
     hashDublado.mockReset();
     compareDublado.mockReset();
@@ -96,6 +105,97 @@ describe('UsuarioService', () => {
 
       expect(hashDublado).not.toHaveBeenCalled();
       expect(repositorio.alterarSenha).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('alterarPerfil', () => {
+    it('altera nome e login do usuário logado e retorna sem a senha', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(usuarioPersistido);
+      repositorio.recuperarPorLogin.mockResolvedValue(null);
+      repositorio.alterarPerfil.mockResolvedValue({
+        id: 7,
+        login: 'agente.um',
+        nome: 'Agente Um',
+      });
+
+      const resultado = await service.alterarPerfil(
+        { nome: 'Agente Um', login: 'agente.um' },
+        usuarioAtivo,
+      );
+
+      expect(repositorio.recuperarPorId).toHaveBeenCalledWith({ id: 7 });
+      expect(repositorio.recuperarPorLogin).toHaveBeenCalledWith({ login: 'agente.um' });
+      expect(repositorio.alterarPerfil).toHaveBeenCalledWith({
+        id: 7,
+        nome: 'Agente Um',
+        login: 'agente.um',
+      });
+      expect(resultado).toEqual({ id: 7, login: 'agente.um', nome: 'Agente Um' });
+      expect(resultado).not.toHaveProperty('senha');
+    });
+
+    it('permite reinformar o próprio login (mesma conta não é duplicidade)', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(usuarioPersistido);
+      repositorio.recuperarPorLogin.mockResolvedValue(usuarioPersistido);
+      repositorio.alterarPerfil.mockResolvedValue({
+        id: 7,
+        login: 'agente.zero',
+        nome: 'Agente Zero Renomeado',
+      });
+
+      const resultado = await service.alterarPerfil(
+        { nome: 'Agente Zero Renomeado', login: 'agente.zero' },
+        usuarioAtivo,
+      );
+
+      expect(repositorio.alterarPerfil).toHaveBeenCalledWith({
+        id: 7,
+        nome: 'Agente Zero Renomeado',
+        login: 'agente.zero',
+      });
+      expect(resultado).toEqual({
+        id: 7,
+        login: 'agente.zero',
+        nome: 'Agente Zero Renomeado',
+      });
+    });
+
+    it('rejeita login já usado por outra conta com BusinessException, sem persistir', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(usuarioPersistido);
+      repositorio.recuperarPorLogin.mockResolvedValue({
+        id: 99,
+        login: 'agente.um',
+        senha: '$2b$10$outrohash',
+        nome: 'Outro Agente',
+      });
+
+      await expect(
+        service.alterarPerfil({ nome: 'Agente Um', login: 'agente.um' }, usuarioAtivo),
+      ).rejects.toThrow(new BusinessException('Login já está em uso'));
+
+      expect(repositorio.alterarPerfil).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('excluirConta', () => {
+    it('faz soft delete da própria conta do usuário logado', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(usuarioPersistido);
+      repositorio.excluirConta.mockResolvedValue(undefined);
+
+      await service.excluirConta({ id: 7 });
+
+      expect(repositorio.recuperarPorId).toHaveBeenCalledWith({ id: 7 });
+      expect(repositorio.excluirConta).toHaveBeenCalledWith({ id: 7 });
+    });
+
+    it('lança ResourceNotFoundException quando a conta do token não existe mais', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(null);
+
+      await expect(service.excluirConta({ id: 99 })).rejects.toThrow(
+        ResourceNotFoundException,
+      );
+
+      expect(repositorio.excluirConta).not.toHaveBeenCalled();
     });
   });
 });
