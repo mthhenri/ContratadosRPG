@@ -35,6 +35,14 @@ describe('ComprasPage', () => {
     alvo?.click();
   }
 
+  /** Lê o valor de um stat pelo rótulo, procurando em qualquer `.calc-stat` da página. */
+  function statPorRotulo(raiz: HTMLElement, rotulo: string): string {
+    const alvo = Array.from(raiz.querySelectorAll('.calc-stat')).find(
+      (cartao) => cartao.querySelector('.calc-stat__rotulo')?.textContent?.trim() === rotulo,
+    );
+    return alvo?.querySelector('.calc-stat__valor')?.textContent?.trim() ?? '';
+  }
+
   /** Clica o botão "+ Adicionar" do cartão de catálogo cujo nome é exatamente `nome`. */
   function adicionarItem(raiz: HTMLElement, nome: string): void {
     const cartao = Array.from(raiz.querySelectorAll('.compras-grade .compras-item')).find(
@@ -169,5 +177,119 @@ describe('ComprasPage', () => {
     expect(statResumo(destino.raiz, 'Gasto Total')).toBe('$500');
     const item = destino.raiz.querySelector('.compras-carrinho-item');
     expect(item?.querySelector('.compras-carrinho-item__nome')?.textContent).toContain('Leve');
+  });
+
+  // === Modo Venda (m1-20) ===
+
+  /** Alterna para o modo Vender clicando no segmento do alternador. */
+  function irParaVender(raiz: HTMLElement): void {
+    clicarPorTexto(raiz, '.compras-modo__opcao', 'Vender');
+  }
+
+  it('aplica a taxa de venda sobre o carrinho pelo motor (50% / 75% / 25%)', async () => {
+    const { fixture, raiz } = await montar();
+    irParaVender(raiz);
+    fixture.detectChanges();
+
+    // Adiciona um item de $500 ao carrinho de venda (mesmo catálogo do modo Comprar).
+    adicionarItem(raiz, 'Leve');
+    fixture.detectChanges();
+
+    // Taxa padrão Normal = 50% → $250.
+    expect(statPorRotulo(raiz, 'Valor de Venda dos Itens')).toBe('$250');
+
+    // Check-in = 75% → $375.
+    clicarPorTexto(raiz, '.compras-taxa__opcao', 'Check-in');
+    fixture.detectChanges();
+    expect(statPorRotulo(raiz, 'Valor de Venda dos Itens')).toBe('$375');
+
+    // Fora de patente = 25% → $125.
+    clicarPorTexto(raiz, '.compras-taxa__opcao', 'Fora de patente');
+    fixture.detectChanges();
+    expect(statPorRotulo(raiz, 'Valor de Venda dos Itens')).toBe('$125');
+  });
+
+  it('soma fragmentos pela tabela do documento e compõe o total de venda', async () => {
+    const { fixture, raiz } = await montar();
+    irParaVender(raiz);
+    fixture.detectChanges();
+
+    // Um fragmento Construtor de Módulo I = $15.000 (célula do documento).
+    const linhaModuloI = Array.from(raiz.querySelectorAll('.compras-fragmentos__linha')).find(
+      (linha) => linha.querySelector('.compras-fragmentos__modulo')?.textContent?.trim() === 'Módulo I',
+    ) as HTMLElement;
+    const botaoAdicionarConstrutor = linhaModuloI.querySelector(
+      '[aria-label="Adicionar Construtor Módulo I"]',
+    ) as HTMLButtonElement;
+    botaoAdicionarConstrutor.click();
+    fixture.detectChanges();
+
+    expect(statPorRotulo(raiz, 'Total de Fragmentos')).toBe('$15.000');
+    // Sem itens no carrinho, o total de venda = só os fragmentos.
+    expect(statPorRotulo(raiz, 'Total de Venda')).toBe('$15.000');
+
+    // Some um item ($500 × 50% = $250) → total combinado $15.250.
+    adicionarItem(raiz, 'Leve');
+    fixture.detectChanges();
+    expect(statPorRotulo(raiz, 'Total de Venda')).toBe('$15.250');
+  });
+
+  it('mantém os carrinhos de compra e de venda independentes ao alternar', async () => {
+    const { fixture, raiz } = await montar();
+
+    // Modo Comprar (padrão): adiciona um item ao carrinho de compra.
+    adicionarItem(raiz, 'Leve');
+    fixture.detectChanges();
+    expect(raiz.querySelectorAll('.compras-carrinho-item').length).toBe(1);
+
+    // Vai para Vender: o carrinho de venda começa vazio (não herda o de compra).
+    irParaVender(raiz);
+    fixture.detectChanges();
+    expect(raiz.querySelector('.compras-carrinho-item')).toBeNull();
+
+    // Adiciona ao carrinho de venda e volta para Comprar: o de compra segue intacto.
+    adicionarItem(raiz, 'Leve');
+    fixture.detectChanges();
+    expect(raiz.querySelectorAll('.compras-carrinho-item').length).toBe(1);
+
+    clicarPorTexto(raiz, '.compras-modo__opcao', 'Comprar');
+    fixture.detectChanges();
+    expect(raiz.querySelectorAll('.compras-carrinho-item').length).toBe(1);
+    expect(statResumo(raiz, 'Gasto Total')).toBe('$500');
+    // O card de Venda não aparece no modo Comprar.
+    expect(statPorRotulo(raiz, 'Total de Venda')).toBe('');
+  });
+
+  it('Limpar zera o modo Venda (volta a Comprar, taxa e fragmentos ao padrão)', async () => {
+    const { fixture, raiz } = await montar();
+    irParaVender(raiz);
+    fixture.detectChanges();
+
+    // Muda a taxa e adiciona um fragmento.
+    clicarPorTexto(raiz, '.compras-taxa__opcao', 'Check-in');
+    const botaoPotV = raiz.querySelector(
+      '[aria-label="Adicionar Potencializador Módulo V"]',
+    ) as HTMLButtonElement;
+    botaoPotV.click();
+    fixture.detectChanges();
+    expect(statPorRotulo(raiz, 'Total de Fragmentos')).toBe('$500');
+
+    // Limpar em duas etapas.
+    const limpar = raiz.querySelector('.ajuda-limpar') as HTMLButtonElement;
+    limpar.click();
+    fixture.detectChanges();
+    limpar.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    // Voltou ao modo Comprar (card de Venda some) e os fragmentos foram zerados.
+    expect(statPorRotulo(raiz, 'Total de Venda')).toBe('');
+    irParaVender(raiz);
+    fixture.detectChanges();
+    expect(statPorRotulo(raiz, 'Total de Fragmentos')).toBe('$0');
+    // Taxa de volta ao padrão Normal (50%): item de $500 → $250.
+    adicionarItem(raiz, 'Leve');
+    fixture.detectChanges();
+    expect(statPorRotulo(raiz, 'Valor de Venda dos Itens')).toBe('$250');
   });
 });

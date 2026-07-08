@@ -39,7 +39,8 @@
 .calc-campo__rotulo,
 .calc-stat__rotulo,
 .compras-carrinho-item__categoria,
-.compras-mod-secao {
+.compras-mod-secao,
+.compras-fragmentos__tipo-rotulo {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--text-mute);
@@ -601,6 +602,113 @@
   }
 }
 
+// === Modo Venda (m1-20) ===
+// Alternador Comprar / Vender e seletor de taxa: reusam o chip .compras-categoria (padrão de tab,
+// estado ativo accent + alvo de toque no mobile já vêm de lá). Só o layout dos wrappers é novo.
+.compras-modo,
+.compras-taxa {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.compras-modo .compras-categoria {
+  flex: 1;
+  justify-content: center;
+}
+
+// Blocos do card de venda (itens / fragmentos): cabeçalho com título e controle/nota à direita.
+.compras-venda-bloco {
+  margin-bottom: 18px;
+
+  &:last-of-type {
+    margin-bottom: 0;
+  }
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  &__titulo {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text);
+  }
+  &__nota {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    color: var(--text-mute);
+  }
+}
+
+// Grade de contadores de fragmentos: Módulo × [Potencializador, Construtor] + Subtotal.
+// Cada célula carrega o rótulo do seu tipo (sem cabeçalho de colunas), então empilha limpo no mobile.
+.compras-fragmentos {
+  margin-bottom: 12px;
+
+  &__linha {
+    display: grid;
+    grid-template-columns: 1.1fr 1.4fr 1.4fr 1fr;
+    gap: 10px;
+    align-items: center;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    padding: 10px;
+    margin-top: 8px;
+  }
+  // __tipo-rotulo herda uppercase/spacing/mute do grupo de rótulos; só falta o tamanho.
+  &__tipo-rotulo,
+  &__valor-unit {
+    font-size: 10px;
+    color: var(--text-mute);
+  }
+  &__celula {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  &__contador {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  &__modulo,
+  &__qtde,
+  &__subtotal {
+    font-weight: 700;
+    color: var(--text);
+  }
+  &__modulo {
+    font-size: 12px;
+  }
+  &__qtde {
+    min-width: 22px;
+    text-align: center;
+    font-size: 14px;
+  }
+  &__subtotal {
+    text-align: right;
+    font-size: 13px;
+  }
+}
+
+// Stat box de destaque do total de venda (borda accent, como uma credencial de valor).
+.compras-venda-total {
+  border-color: var(--accent-border);
+  background: var(--accent-dim);
+
+  .calc-stat__valor {
+    color: var(--accent);
+    font-size: 22px;
+  }
+}
+
 // === Refinamento mobile (m1-15) — alvos de toque e reflow da aba mais pesada ===
 @include bp.mobile {
   // Chips de categoria e mini-botões de −/+ com área de toque confortável.
@@ -650,5 +758,16 @@
   }
   .compras-item__acoes {
     flex-wrap: wrap;
+  }
+
+  // Grade de fragmentos empilha em uma coluna; contadores e subtotal confortáveis num toque só.
+  .compras-fragmentos__linha {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    text-align: center;
+  }
+  .compras-fragmentos__subtotal {
+    text-align: center;
+    padding-top: 10px;
   }
 }

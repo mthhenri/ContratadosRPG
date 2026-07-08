@@ -8,3 +8,6 @@ export * from './compras.dtos';
 export * from './compras.dados';
 export * from './catalogo.dados';
 export * from './compras';
+export * from './venda.dtos';
+export * from './venda.dados';
+export * from './venda';

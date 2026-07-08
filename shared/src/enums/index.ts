@@ -7,5 +7,8 @@ export * from './habilidade-categoria.enum';
 export * from './tipo-descanso.enum';
 export * from './qualidade-descanso.enum';
 export * from './motivo-entrada-agente.enum';
+export * from './taxa-venda.enum';
+export * from './fragmento-tipo.enum';
+export * from './fragmento-modulo.enum';
 export * from './tipo-campanha-membro-papel.enum';
 export * from './tipo-ficha.enum';
