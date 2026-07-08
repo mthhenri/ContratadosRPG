@@ -1,23 +1,32 @@
-import { Component, computed, effect, signal } from '@angular/core';
+import { Component, computed, effect, input, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { map } from 'rxjs';
 
-import { ItemCategoriaEnum } from '@contratados-rpg/shared/enums';
+import {
+  FragmentoModuloEnum,
+  FragmentoTipoEnum,
+  ItemCategoriaEnum,
+  TaxaVendaEnum,
+} from '@contratados-rpg/shared/enums';
 import {
   AMPLIFICADORES,
   calcularCustoAmplificador,
   calcularResumoCompras,
   calcularStatItem,
+  calcularValorVendaCarrinho,
+  calcularVendaFragmentos,
   CATALOGO_CATEGORIAS,
   CATALOGO_ITENS,
   contarComprasModificacao,
+  ContadorFragmentoDto,
   ItemCatalogo,
   MODIFICACOES,
   ModificacaoDados,
   obterCategoriaEmprestada,
   obterCustoModificacao,
   obterLimiteModificacoes,
+  obterValorFragmento,
   PENALIDADE_VONTADE_POR_EMPILHAMENTO,
   StatItemDto,
   verificarConflitoModificacao,
@@ -170,6 +179,40 @@ const CHAVE_LOCALSTORAGE = 'contratados-rpg:calculadora-compras';
  */
 const PREFIXO_CODIGO_EXPORTACAO = 'CRPG-COMPRAS-V1:';
 
+/** Modo da aba: montar carrinho para comprar ou avaliar quanto renderia a venda (m1-20). */
+type ModoCompras = 'comprar' | 'vender';
+
+/** Grade de contadores de fragmentos por módulo × tipo (estado do bloco de venda de fragmentos). */
+type GradeFragmentos = Record<FragmentoModuloEnum, Record<FragmentoTipoEnum, number>>;
+
+/** Ordem de exibição dos módulos no bloco de fragmentos: do mais fraco (V) ao mais forte (I). */
+const MODULOS_ORDEM: readonly FragmentoModuloEnum[] = [
+  FragmentoModuloEnum.V,
+  FragmentoModuloEnum.IV,
+  FragmentoModuloEnum.III,
+  FragmentoModuloEnum.II,
+  FragmentoModuloEnum.I,
+];
+
+/** Opções do seletor de taxa de venda de itens (rótulo de UI). */
+const OPCOES_TAXA: readonly { readonly taxa: TaxaVendaEnum; readonly rotulo: string }[] = [
+  { taxa: TaxaVendaEnum.NORMAL, rotulo: 'Normal · 50%' },
+  { taxa: TaxaVendaEnum.CHECKIN, rotulo: 'Check-in · 75%' },
+  { taxa: TaxaVendaEnum.FORA_PATENTE, rotulo: 'Fora de patente · 25%' },
+];
+
+/** Grade de fragmentos zerada (todos os contadores em 0) — estado inicial e alvo do "Limpar". */
+function fragmentosZerados(): GradeFragmentos {
+  const grade = {} as GradeFragmentos;
+  for (const modulo of MODULOS_ORDEM) {
+    grade[modulo] = {
+      [FragmentoTipoEnum.POTENCIALIZADOR]: 0,
+      [FragmentoTipoEnum.CONSTRUTOR]: 0,
+    };
+  }
+  return grade;
+}
+
 /**
  * Aba "Compras" da calculadora (m1-10) — a mais pesada: configuração do agente, resumo de
  * limites/gastos, catálogo com busca e o carrinho com itens, modificações e amplificadores.
@@ -207,12 +250,24 @@ export class ComprasPage {
   );
 
   // === Estado do carrinho (Signals) ===
+  // O carrinho de compra (persistido — m1-11) e o de venda (m1-20) são independentes;
+  // o modo ativo roteia leituras/escritas para um ou outro sem misturar as listas.
   private readonly carrinho = signal<readonly ItemCarrinho[]>([]);
   private readonly amplificadores = signal<readonly AmplificadorCarrinho[]>([]);
+  private readonly carrinhoVenda = signal<readonly ItemCarrinho[]>([]);
+  private readonly amplificadoresVenda = signal<readonly AmplificadorCarrinho[]>([]);
   protected readonly categoriaAtiva = signal<ItemCategoriaEnum>(ItemCategoriaEnum.CORPO_A_CORPO);
   protected readonly busca = signal('');
   private readonly painelAbertos = signal<ReadonlySet<number>>(new Set());
   private uidContador = 0;
+
+  // === Modo Venda (m1-20) ===
+  // O modo (`comprar`/`vender`) vem da rota: Compras e Vendas são abas distintas do shell, cada uma
+  // sua URL (`data: { modo }` → este input via `withComponentInputBinding`). Comprar é o padrão.
+  readonly modo = input<ModoCompras>('comprar');
+  protected readonly taxaVenda = signal<TaxaVendaEnum>(TaxaVendaEnum.NORMAL);
+  private readonly fragmentos = signal<GradeFragmentos>(fragmentosZerados());
+  protected readonly opcoesTaxa = OPCOES_TAXA;
 
   // === Exportar/importar por código (m1-11) ===
   protected readonly modalExportarAberto = signal(false);
@@ -236,8 +291,8 @@ export class ComprasPage {
   protected readonly resumo = computed(() => {
     const recursos = this.recursos();
     return calcularResumoCompras({
-      itens: this.carrinho(),
-      amplificadores: this.amplificadores(),
+      itens: this.lerCarrinho(),
+      amplificadores: this.lerAmplificadores(),
       dinheiro: recursos.dinheiro,
       prestigio: recursos.prestigio,
       inventario: recursos.inventario,
@@ -343,11 +398,11 @@ export class ComprasPage {
 
   // === Carrinho (passo 3) ===
   protected readonly carrinhoVazio = computed(
-    () => this.carrinho().length === 0 && this.amplificadores().length === 0,
+    () => this.lerCarrinho().length === 0 && this.lerAmplificadores().length === 0,
   );
 
   protected readonly itensCarrinho = computed<readonly ItemCarrinhoVM[]>(() =>
-    this.carrinho().map((item) => this.montarItemCarrinho(item)),
+    this.lerCarrinho().map((item) => this.montarItemCarrinho(item)),
   );
 
   protected readonly amplificadoresCarrinho = computed<readonly AmpCarrinhoVM[]>(() => {
@@ -355,7 +410,7 @@ export class ComprasPage {
     const maxEmpilhamentos = resumo.limiteModificacoes.maxEmpilhamentos;
     const totalStacks = resumo.empilhamentosAmplificador;
     const limite = resumo.limiteAmplificadores;
-    return this.amplificadores().map((amplificador) => {
+    return this.lerAmplificadores().map((amplificador) => {
       const definicao = AMPLIFICADORES.find((atual) => atual.nome === amplificador.nome);
       const maximoEfetivo = Math.min(definicao?.empilhamentoMaximo ?? 5, maxEmpilhamentos);
       return {
@@ -385,20 +440,20 @@ export class ComprasPage {
   protected adicionarItem(vm: CartaoItemVM): void {
     const empilhavel = CATEGORIAS_EMPILHAVEIS.includes(vm.categoria);
     const existente = empilhavel
-      ? this.carrinho().find(
+      ? this.lerCarrinho().find(
           (item) => item.categoria === vm.categoria && item.nome === vm.item.nome,
         )
       : undefined;
     if (existente) {
-      this.carrinho.set(
-        this.carrinho().map((item) =>
+      this.definirCarrinho(
+        this.lerCarrinho().map((item) =>
           item.uid === existente.uid ? { ...item, quantidade: item.quantidade + 1 } : item,
         ),
       );
       return;
     }
-    this.carrinho.set([
-      ...this.carrinho(),
+    this.definirCarrinho([
+      ...this.lerCarrinho(),
       {
         uid: this.uidContador++,
         nome: vm.item.nome,
@@ -414,25 +469,25 @@ export class ComprasPage {
 
   // === Ações do carrinho ===
   protected removerItem(uid: number): void {
-    const item = this.carrinho().find((atual) => atual.uid === uid);
+    const item = this.lerCarrinho().find((atual) => atual.uid === uid);
     if (!item) {
       return;
     }
     if (item.quantidade > 1) {
-      this.carrinho.set(
-        this.carrinho().map((atual) =>
+      this.definirCarrinho(
+        this.lerCarrinho().map((atual) =>
           atual.uid === uid ? { ...atual, quantidade: atual.quantidade - 1 } : atual,
         ),
       );
       return;
     }
-    this.carrinho.set(this.carrinho().filter((atual) => atual.uid !== uid));
+    this.definirCarrinho(this.lerCarrinho().filter((atual) => atual.uid !== uid));
     this.fecharPainel(uid);
   }
 
   protected alternarGuardada(uid: number): void {
-    this.carrinho.set(
-      this.carrinho().map((item) =>
+    this.definirCarrinho(
+      this.lerCarrinho().map((item) =>
         item.uid === uid ? { ...item, guardada: !item.guardada } : item,
       ),
     );
@@ -449,7 +504,7 @@ export class ComprasPage {
   }
 
   protected adicionarModificacao(uid: number, modNome: string): void {
-    const item = this.carrinho().find((atual) => atual.uid === uid);
+    const item = this.lerCarrinho().find((atual) => atual.uid === uid);
     if (!item) {
       return;
     }
@@ -479,7 +534,7 @@ export class ComprasPage {
   }
 
   protected removerModificacao(uid: number, modNome: string): void {
-    const item = this.carrinho().find((atual) => atual.uid === uid);
+    const item = this.lerCarrinho().find((atual) => atual.uid === uid);
     if (!item) {
       return;
     }
@@ -504,11 +559,11 @@ export class ComprasPage {
     );
     const totalStacks = resumo.empilhamentosAmplificador;
     const limite = resumo.limiteAmplificadores;
-    const existente = this.amplificadores().find((amplificador) => amplificador.nome === nome);
+    const existente = this.lerAmplificadores().find((amplificador) => amplificador.nome === nome);
     if (existente) {
       if (existente.empilhamentos < maximoEfetivo && totalStacks < limite) {
-        this.amplificadores.set(
-          this.amplificadores().map((amplificador) =>
+        this.definirAmplificadores(
+          this.lerAmplificadores().map((amplificador) =>
             amplificador.nome === nome
               ? { ...amplificador, empilhamentos: amplificador.empilhamentos + 1 }
               : amplificador,
@@ -518,26 +573,26 @@ export class ComprasPage {
       return;
     }
     if (totalStacks + 1 <= limite) {
-      this.amplificadores.set([
-        ...this.amplificadores(),
+      this.definirAmplificadores([
+        ...this.lerAmplificadores(),
         { nome, empilhamentos: definicao.empilhamentosIniciais },
       ]);
     }
   }
 
   protected removerAmplificador(nome: string): void {
-    const existente = this.amplificadores().find((amplificador) => amplificador.nome === nome);
+    const existente = this.lerAmplificadores().find((amplificador) => amplificador.nome === nome);
     if (!existente) {
       return;
     }
     if (existente.empilhamentos <= 1) {
-      this.amplificadores.set(
-        this.amplificadores().filter((amplificador) => amplificador.nome !== nome),
+      this.definirAmplificadores(
+        this.lerAmplificadores().filter((amplificador) => amplificador.nome !== nome),
       );
       return;
     }
-    this.amplificadores.set(
-      this.amplificadores().map((amplificador) =>
+    this.definirAmplificadores(
+      this.lerAmplificadores().map((amplificador) =>
         amplificador.nome === nome
           ? { ...amplificador, empilhamentos: amplificador.empilhamentos - 1 }
           : amplificador,
@@ -546,27 +601,108 @@ export class ComprasPage {
   }
 
   protected esvaziarCarrinho(): void {
-    this.carrinho.set([]);
-    this.amplificadores.set([]);
+    this.definirCarrinho([]);
+    this.definirAmplificadores([]);
     this.painelAbertos.set(new Set());
   }
 
   /**
    * Volta a aba ao estado padrão: recursos ao preset de fábrica (`reset()` — Dinheiro 1000,
    * Prestígio 0, Inventário 5, Vontade 1), carrinho/amplificadores/painéis vazios, busca limpa e
-   * catálogo na primeira categoria. O `effect` de persistência regrava esse estado no
-   * `localStorage` (m1-11), então recarregar a página segue no padrão — **descarta um carrinho
-   * salvo**, que é justamente o que "Limpar" faz aqui.
+   * catálogo na primeira categoria. **Zera também o estado de Venda (m1-20)** — carrinho de
+   * venda/taxa/contadores de fragmentos ao padrão (o modo em si vem da rota, não se reseta aqui).
+   * O `effect` de persistência regrava o estado (só do carrinho de compra) no `localStorage`
+   * (m1-11), então recarregar a página segue no padrão — **descarta um carrinho salvo**, que é
+   * justamente o que "Limpar" faz aqui.
    */
   protected limpar(): void {
     this.formulario.reset();
     this.carrinho.set([]);
     this.amplificadores.set([]);
+    this.carrinhoVenda.set([]);
+    this.amplificadoresVenda.set([]);
     this.painelAbertos.set(new Set());
     this.busca.set('');
     this.categoriaAtiva.set(ItemCategoriaEnum.CORPO_A_CORPO);
     this.uidContador = 0;
+    this.taxaVenda.set(TaxaVendaEnum.NORMAL);
+    this.fragmentos.set(fragmentosZerados());
   }
+
+  // === Modo Venda (m1-20) — ações e cálculos ===
+  protected definirTaxa(taxa: TaxaVendaEnum): void {
+    this.taxaVenda.set(taxa);
+  }
+
+  protected incrementarFragmento(modulo: FragmentoModuloEnum, tipo: FragmentoTipoEnum): void {
+    this.ajustarFragmento(modulo, tipo, 1);
+  }
+
+  protected decrementarFragmento(modulo: FragmentoModuloEnum, tipo: FragmentoTipoEnum): void {
+    this.ajustarFragmento(modulo, tipo, -1);
+  }
+
+  private ajustarFragmento(modulo: FragmentoModuloEnum, tipo: FragmentoTipoEnum, delta: number): void {
+    this.fragmentos.update((grade) => ({
+      ...grade,
+      [modulo]: { ...grade[modulo], [tipo]: Math.max(0, grade[modulo][tipo] + delta) },
+    }));
+  }
+
+  /** Contadores de fragmentos achatados (módulo × tipo) — entrada do motor de venda de fragmentos. */
+  private readonly contadoresFragmentos = computed<readonly ContadorFragmentoDto[]>(() => {
+    const grade = this.fragmentos();
+    return MODULOS_ORDEM.flatMap((modulo) => [
+      { modulo, tipo: FragmentoTipoEnum.POTENCIALIZADOR, quantidade: grade[modulo][FragmentoTipoEnum.POTENCIALIZADOR] },
+      { modulo, tipo: FragmentoTipoEnum.CONSTRUTOR, quantidade: grade[modulo][FragmentoTipoEnum.CONSTRUTOR] },
+    ]);
+  });
+
+  /** Valor de venda dos itens do carrinho de venda na taxa escolhida (do motor). */
+  protected readonly valorVendaItens = computed(() =>
+    calcularValorVendaCarrinho({
+      itens: this.lerCarrinho(),
+      amplificadores: this.lerAmplificadores(),
+      taxa: this.taxaVenda(),
+    }),
+  );
+
+  /** Valor total da venda de fragmentos (do motor). */
+  protected readonly totalFragmentos = computed(() =>
+    calcularVendaFragmentos({ contadores: this.contadoresFragmentos() }),
+  );
+
+  /** Total de venda = itens (na taxa) + fragmentos. */
+  protected readonly totalVenda = computed(() => this.valorVendaItens() + this.totalFragmentos());
+
+  protected readonly valorVendaItensTexto = computed(() => this.formatarDinheiro(this.valorVendaItens()));
+  protected readonly totalFragmentosTexto = computed(() => this.formatarDinheiro(this.totalFragmentos()));
+  protected readonly totalVendaTexto = computed(() => this.formatarDinheiro(this.totalVenda()));
+
+  /** Linhas do bloco de fragmentos (uma por módulo V→I), com contadores, valores unitários e subtotal. */
+  protected readonly linhasFragmentos = computed(() => {
+    const grade = this.fragmentos();
+    return MODULOS_ORDEM.map((modulo) => {
+      const qtdePotencializador = grade[modulo][FragmentoTipoEnum.POTENCIALIZADOR];
+      const qtdeConstrutor = grade[modulo][FragmentoTipoEnum.CONSTRUTOR];
+      const valorPotencializador = obterValorFragmento({ modulo, tipo: FragmentoTipoEnum.POTENCIALIZADOR });
+      const valorConstrutor = obterValorFragmento({ modulo, tipo: FragmentoTipoEnum.CONSTRUTOR });
+      const subtotal = qtdePotencializador * valorPotencializador + qtdeConstrutor * valorConstrutor;
+      return {
+        modulo,
+        rotulo: `Módulo ${modulo}`,
+        qtdePotencializador,
+        qtdeConstrutor,
+        valorPotencializadorTexto: this.formatarDinheiro(valorPotencializador),
+        valorConstrutorTexto: this.formatarDinheiro(valorConstrutor),
+        subtotalTexto: this.formatarDinheiro(subtotal),
+      };
+    });
+  });
+
+  /** Expostos ao template para iterar as colunas de tipo de fragmento. */
+  protected readonly tipoPotencializador = FragmentoTipoEnum.POTENCIALIZADOR;
+  protected readonly tipoConstrutor = FragmentoTipoEnum.CONSTRUTOR;
 
   // === Exportar/importar por código e persistência (m1-11) ===
   protected abrirModalExportarCodigo(): void {
@@ -859,9 +995,27 @@ export class ComprasPage {
   }
 
   // === Helpers de estado ===
+  /** O carrinho ativo (itens) conforme o modo — compra ou venda. */
+  private lerCarrinho(): readonly ItemCarrinho[] {
+    return this.modo() === 'vender' ? this.carrinhoVenda() : this.carrinho();
+  }
+
+  private definirCarrinho(valor: readonly ItemCarrinho[]): void {
+    (this.modo() === 'vender' ? this.carrinhoVenda : this.carrinho).set(valor);
+  }
+
+  /** Os amplificadores do carrinho ativo conforme o modo — compra ou venda. */
+  private lerAmplificadores(): readonly AmplificadorCarrinho[] {
+    return this.modo() === 'vender' ? this.amplificadoresVenda() : this.amplificadores();
+  }
+
+  private definirAmplificadores(valor: readonly AmplificadorCarrinho[]): void {
+    (this.modo() === 'vender' ? this.amplificadoresVenda : this.amplificadores).set(valor);
+  }
+
   private definirModificacao(uid: number, modNome: string, empilhamentos: number): void {
-    this.carrinho.set(
-      this.carrinho().map((item) => {
+    this.definirCarrinho(
+      this.lerCarrinho().map((item) => {
         if (item.uid !== uid) {
           return item;
         }
@@ -896,7 +1050,7 @@ export class ComprasPage {
   }
 
   private empilhamentosDoAmplificador(nome: string): number {
-    return this.amplificadores().find((amplificador) => amplificador.nome === nome)?.empilhamentos ?? 0;
+    return this.lerAmplificadores().find((amplificador) => amplificador.nome === nome)?.empilhamentos ?? 0;
   }
 
   private modsUsados(item: ItemCarrinho): number {

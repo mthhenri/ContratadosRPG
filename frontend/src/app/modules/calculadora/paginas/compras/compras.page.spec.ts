@@ -11,10 +11,12 @@ describe('ComprasPage', () => {
   beforeEach(() => localStorage.clear());
   afterEach(() => localStorage.clear());
 
-  async function montar() {
+  async function montar(modo: 'comprar' | 'vender' = 'comprar') {
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({ imports: [ComprasPage] }).compileComponents();
     const fixture = TestBed.createComponent(ComprasPage);
+    // O modo chega por rota → input `modo` (withComponentInputBinding). Nos testes, setInput.
+    fixture.componentRef.setInput('modo', modo);
     fixture.detectChanges();
     await fixture.whenStable();
     return { fixture, raiz: fixture.nativeElement as HTMLElement };
@@ -33,6 +35,14 @@ describe('ComprasPage', () => {
       elemento.textContent?.trim().startsWith(texto),
     ) as HTMLButtonElement | undefined;
     alvo?.click();
+  }
+
+  /** Lê o valor de um stat pelo rótulo, procurando em qualquer `.calc-stat` da página. */
+  function statPorRotulo(raiz: HTMLElement, rotulo: string): string {
+    const alvo = Array.from(raiz.querySelectorAll('.calc-stat')).find(
+      (cartao) => cartao.querySelector('.calc-stat__rotulo')?.textContent?.trim() === rotulo,
+    );
+    return alvo?.querySelector('.calc-stat__valor')?.textContent?.trim() ?? '';
   }
 
   /** Clica o botão "+ Adicionar" do cartão de catálogo cujo nome é exatamente `nome`. */
@@ -169,5 +179,114 @@ describe('ComprasPage', () => {
     expect(statResumo(destino.raiz, 'Gasto Total')).toBe('$500');
     const item = destino.raiz.querySelector('.compras-carrinho-item');
     expect(item?.querySelector('.compras-carrinho-item__nome')?.textContent).toContain('Leve');
+  });
+
+  // === Modo Venda (m1-20) ===
+
+  it('aba Vendas oculta os cards de Configuração e Resumo (só Compras usa)', async () => {
+    const compras = await montar('comprar');
+    expect(compras.raiz.querySelector('.compras-resumo')).not.toBeNull();
+    expect(compras.raiz.querySelector('.calc-config')).not.toBeNull();
+
+    const vendas = await montar('vender');
+    expect(vendas.raiz.querySelector('.compras-resumo')).toBeNull();
+    expect(vendas.raiz.querySelector('.calc-config')).toBeNull();
+    // O card de Venda (taxa/fragmentos/totais) aparece só em Vendas.
+    expect(statPorRotulo(vendas.raiz, 'Total de Venda')).not.toBe('');
+  });
+
+  it('aplica a taxa de venda sobre o carrinho pelo motor (50% / 75% / 25%)', async () => {
+    const { fixture, raiz } = await montar('vender');
+
+    // Adiciona um item de $500 ao carrinho de venda (mesmo catálogo do modo Comprar).
+    adicionarItem(raiz, 'Leve');
+    fixture.detectChanges();
+
+    // Taxa padrão Normal = 50% → $250.
+    expect(statPorRotulo(raiz, 'Valor de Venda dos Itens')).toBe('$250');
+
+    // Check-in = 75% → $375.
+    clicarPorTexto(raiz, '.compras-taxa__opcao', 'Check-in');
+    fixture.detectChanges();
+    expect(statPorRotulo(raiz, 'Valor de Venda dos Itens')).toBe('$375');
+
+    // Fora de patente = 25% → $125.
+    clicarPorTexto(raiz, '.compras-taxa__opcao', 'Fora de patente');
+    fixture.detectChanges();
+    expect(statPorRotulo(raiz, 'Valor de Venda dos Itens')).toBe('$125');
+  });
+
+  it('soma fragmentos pela tabela do documento e compõe o total de venda', async () => {
+    const { fixture, raiz } = await montar('vender');
+
+    // Um fragmento Construtor de Módulo I = $15.000 (célula do documento).
+    const linhaModuloI = Array.from(raiz.querySelectorAll('.compras-fragmentos__linha')).find(
+      (linha) => linha.querySelector('.compras-fragmentos__modulo')?.textContent?.trim() === 'Módulo I',
+    ) as HTMLElement;
+    const botaoAdicionarConstrutor = linhaModuloI.querySelector(
+      '[aria-label="Adicionar Construtor Módulo I"]',
+    ) as HTMLButtonElement;
+    botaoAdicionarConstrutor.click();
+    fixture.detectChanges();
+
+    expect(statPorRotulo(raiz, 'Total de Fragmentos')).toBe('$15.000');
+    // Sem itens no carrinho, o total de venda = só os fragmentos.
+    expect(statPorRotulo(raiz, 'Total de Venda')).toBe('$15.000');
+
+    // Some um item ($500 × 50% = $250) → total combinado $15.250.
+    adicionarItem(raiz, 'Leve');
+    fixture.detectChanges();
+    expect(statPorRotulo(raiz, 'Total de Venda')).toBe('$15.250');
+  });
+
+  it('carrinho de venda é independente do de compra (não herda nem persiste)', async () => {
+    // Compra: adiciona um item; ele persiste no localStorage (m1-11).
+    const compra = await montar('comprar');
+    adicionarItem(compra.raiz, 'Leve');
+    compra.fixture.detectChanges();
+    await compra.fixture.whenStable();
+    expect(compra.raiz.querySelectorAll('.compras-carrinho-item').length).toBe(1);
+
+    // Vendas (instância separada, como a rota própria): começa vazio, não herda o carrinho de compra.
+    const venda = await montar('vender');
+    expect(venda.raiz.querySelector('.compras-carrinho-item')).toBeNull();
+
+    // Adiciona ao carrinho de venda; isso não é persistido (só o de compra é).
+    adicionarItem(venda.raiz, 'Leve');
+    venda.fixture.detectChanges();
+    await venda.fixture.whenStable();
+    expect(venda.raiz.querySelectorAll('.compras-carrinho-item').length).toBe(1);
+
+    // Remontar em Compras recupera o item de compra do localStorage — intacto, sem o de venda.
+    const recompra = await montar('comprar');
+    expect(recompra.raiz.querySelectorAll('.compras-carrinho-item').length).toBe(1);
+    expect(statResumo(recompra.raiz, 'Gasto Total')).toBe('$500');
+  });
+
+  it('Limpar zera taxa e fragmentos da venda (o modo continua vindo da rota)', async () => {
+    const { fixture, raiz } = await montar('vender');
+
+    // Muda a taxa e adiciona um fragmento.
+    clicarPorTexto(raiz, '.compras-taxa__opcao', 'Check-in');
+    const botaoPotV = raiz.querySelector(
+      '[aria-label="Adicionar Potencializador Módulo V"]',
+    ) as HTMLButtonElement;
+    botaoPotV.click();
+    fixture.detectChanges();
+    expect(statPorRotulo(raiz, 'Total de Fragmentos')).toBe('$500');
+
+    // Limpar em duas etapas.
+    const limpar = raiz.querySelector('.ajuda-limpar') as HTMLButtonElement;
+    limpar.click();
+    fixture.detectChanges();
+    limpar.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    // Segue na aba Vendas (modo vem da rota), mas fragmentos zerados e taxa de volta ao Normal.
+    expect(statPorRotulo(raiz, 'Total de Fragmentos')).toBe('$0');
+    adicionarItem(raiz, 'Leve');
+    fixture.detectChanges();
+    expect(statPorRotulo(raiz, 'Valor de Venda dos Itens')).toBe('$250');
   });
 });

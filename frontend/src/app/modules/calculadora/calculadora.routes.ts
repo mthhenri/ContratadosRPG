@@ -39,7 +39,16 @@ export const calculadoraRoutes: Routes = [
           import('./paginas/descanso/descanso.page').then((modulo) => modulo.DescansoPage),
       },
       {
+        // Compras e Vendas são a mesma página (`ComprasPage`) em dois modos, cada um sua URL/aba
+        // (m1-20). O `modo` chega por `data` → `input()` via `withComponentInputBinding`.
         path: 'compras',
+        data: { modo: 'comprar' },
+        loadComponent: () =>
+          import('./paginas/compras/compras.page').then((modulo) => modulo.ComprasPage),
+      },
+      {
+        path: 'vendas',
+        data: { modo: 'vender' },
         loadComponent: () =>
           import('./paginas/compras/compras.page').then((modulo) => modulo.ComprasPage),
       },

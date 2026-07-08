@@ -13,6 +13,7 @@ export type IconeNome =
   | 'patente'
   | 'descanso'
   | 'compras'
+  | 'vendas'
   | 'corpo-a-corpo'
   | 'explosivos'
   | 'armas-de-fogo'

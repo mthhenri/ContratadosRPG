@@ -39,7 +39,8 @@
 .calc-campo__rotulo,
 .calc-stat__rotulo,
 .compras-carrinho-item__categoria,
-.compras-mod-secao {
+.compras-mod-secao,
+.compras-fragmentos__tipo-rotulo {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--text-mute);
@@ -206,22 +207,13 @@
   padding: 18px 0;
 }
 
-.compras-grade {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 12px;
-  // Mostra ~2 linhas de itens e rola o resto por dentro — o catálogo (que pode ser longo) não
-  // domina a página nem empurra o carrinho para muito abaixo. O respiro à direita evita que a
-  // barra de rolagem cole nos cards.
-  max-height: 380px;
-  overflow-y: auto;
-  padding-right: 4px;
-
-  // Fade-out suave só na borda que está de fato cortando conteúdo, evitando o "corte seco". A
-  // diretiva [appOverflowFade] liga `--topo`/`--base` conforme a posição do scroll: no topo da
-  // lista não há fade superior, no fim não há inferior, no meio há os dois; lista sem overflow
-  // fica sem máscara. As larguras de banda vivem em variáveis (0 = sem fade naquela borda) para
-  // uma única declaração de máscara. Banda curta para não apagar os botões "+ Adicionar".
+// Fade-out vertical compartilhado pelas listas roláveis (catálogo de itens e painel de mods): só na
+// borda que está de fato cortando conteúdo (evita o "corte seco"). A diretiva [appOverflowFade] liga
+// `--topo`/`--base` conforme a posição do scroll: no topo não há fade superior, no fim não há
+// inferior, no meio há os dois; sem overflow, nenhuma máscara. As bandas vivem em variáveis (0 = sem
+// fade naquela borda) para uma única declaração de máscara.
+.compras-grade,
+.compras-mod-grade {
   --fade-topo: 0px;
   --fade-base: 0px;
 
@@ -242,13 +234,24 @@
       transparent 100%
     );
   }
-
   &.overflow-fade--topo {
-    --fade-topo: 26px;
+    --fade-topo: 24px;
   }
   &.overflow-fade--base {
-    --fade-base: 26px;
+    --fade-base: 24px;
   }
+}
+
+.compras-grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  // Mostra ~2 linhas de itens e rola o resto por dentro — o catálogo (que pode ser longo) não
+  // domina a página nem empurra o carrinho para muito abaixo. O respiro à direita evita que a
+  // barra de rolagem cole nos cards.
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 .compras-item {
   display: flex;
@@ -472,6 +475,11 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 8px;
+  // Mesmo esquema de scroll dos itens do catálogo (m1-20): mostra ~2 linhas de modificações e rola
+  // o resto por dentro. O fade-out vertical vem do grupo `.compras-grade, .compras-mod-grade` acima.
+  max-height: 230px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 .compras-mod-entrada {
   display: flex;
@@ -601,6 +609,107 @@
   }
 }
 
+// === Modo Venda (m1-20) ===
+// Seletor de taxa de venda: reusa o chip .compras-categoria (padrão de tab, estado ativo accent +
+// alvo de toque mobile já vêm de lá). Só o layout do wrapper é novo.
+.compras-taxa {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+// Blocos do card de venda (itens / fragmentos): cabeçalho com título e controle/nota à direita.
+.compras-venda-bloco {
+  margin-bottom: 18px;
+
+  &:last-of-type {
+    margin-bottom: 0;
+  }
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  &__titulo {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text);
+  }
+  &__nota {
+    font-size: 11px;
+    color: var(--text-mute);
+  }
+}
+
+// Grade de contadores de fragmentos: Módulo × [Potencializador, Construtor] + Subtotal.
+// Cada célula carrega o rótulo do seu tipo (sem cabeçalho de colunas), então empilha limpo no mobile.
+.compras-fragmentos {
+  margin-bottom: 12px;
+
+  &__linha {
+    display: grid;
+    grid-template-columns: 1.1fr 1.4fr 1.4fr 1fr;
+    gap: 10px;
+    align-items: center;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    padding: 10px;
+    margin-top: 8px;
+  }
+  // __tipo-rotulo herda uppercase/spacing/mute do grupo de rótulos; só falta o tamanho.
+  &__tipo-rotulo,
+  &__valor-unit {
+    font-size: 10px;
+    color: var(--text-mute);
+  }
+  &__celula {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  &__contador {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  &__modulo,
+  &__qtde,
+  &__subtotal {
+    font-weight: 700;
+    color: var(--text);
+  }
+  &__modulo {
+    font-size: 12px;
+  }
+  &__qtde {
+    min-width: 22px;
+    text-align: center;
+    font-size: 14px;
+  }
+  &__subtotal {
+    text-align: right;
+    font-size: 13px;
+  }
+}
+
+// Stat box de destaque do total de venda (borda accent, como uma credencial de valor).
+.compras-venda-total {
+  border-color: var(--accent-border);
+  background: var(--accent-dim);
+
+  .calc-stat__valor {
+    color: var(--accent);
+    font-size: 22px;
+  }
+}
+
 // === Refinamento mobile (m1-15) — alvos de toque e reflow da aba mais pesada ===
 @include bp.mobile {
   // Chips de categoria e mini-botões de −/+ com área de toque confortável.
@@ -650,5 +759,59 @@
   }
   .compras-item__acoes {
     flex-wrap: wrap;
+  }
+
+  // Fragmentos rolam lateralmente no mobile: os 5 módulos viram cartões lado a lado num scroller
+  // horizontal contido (o body não rola de lado), encurtando bastante a tela vertical. O fade segue
+  // a mesma regra dos itens, mas no eixo horizontal (via [appOverflowFade] → --esquerda/--direita):
+  // no início não há fade à esquerda, no fim não há à direita, no meio há os dois.
+  .compras-fragmentos {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+
+    --fade-esquerda: 0px;
+    --fade-direita: 0px;
+
+    &.overflow-fade--esquerda,
+    &.overflow-fade--direita {
+      -webkit-mask-image: linear-gradient(
+        to right,
+        transparent 0,
+        #000 var(--fade-esquerda),
+        #000 calc(100% - var(--fade-direita)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to right,
+        transparent 0,
+        #000 var(--fade-esquerda),
+        #000 calc(100% - var(--fade-direita)),
+        transparent 100%
+      );
+    }
+    &.overflow-fade--esquerda {
+      --fade-esquerda: 24px;
+    }
+    &.overflow-fade--direita {
+      --fade-direita: 24px;
+    }
+  }
+  .compras-fragmentos__linha {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    flex: 0 0 auto;
+    min-width: 150px;
+    margin-top: 0;
+    text-align: center;
+  }
+  .compras-fragmentos__subtotal {
+    width: 100%;
+    text-align: center;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
   }
 }

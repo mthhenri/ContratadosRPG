@@ -30,5 +30,6 @@ export class CalculadoraShell {
     { caminho: 'patente', rotulo: 'Patentes', icone: 'patente' },
     { caminho: 'descanso', rotulo: 'Descanso', icone: 'descanso' },
     { caminho: 'compras', rotulo: 'Compras', icone: 'compras' },
+    { caminho: 'vendas', rotulo: 'Vendas', icone: 'vendas' },
   ];
 }

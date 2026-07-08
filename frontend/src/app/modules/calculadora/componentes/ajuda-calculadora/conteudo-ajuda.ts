@@ -95,7 +95,8 @@ export const CONTEUDO_AJUDA: Readonly<Record<AbaAjuda, ConteudoAjuda>> = {
       'O Resumo acompanha em tempo real o dinheiro gasto e restante, o inventário usado e os limites de modificações e amplificadores.',
       'No Catálogo, navegue pelas categorias ou use a busca e clique num item para adicioná-lo ao carrinho.',
       'No Carrinho, ajuste quantidades, alterne entre Guardada e Vestida, e abra o painel de modificações de cada item; amplificadores aparecem na própria seção.',
+      'A aba Vendas (na barra da calculadora) monta um carrinho de venda separado (mesmo catálogo e modificações) e mostra quanto renderia — escolha a taxa (Normal 50%, Check-in 75% ou Fora de patente 25%). O bloco de Fragmentos soma módulos I–V por Potencializador / Construtor, e o Total de Venda combina itens + fragmentos.',
     ],
-    nota: 'O carrinho é salvo automaticamente neste navegador. Use Exportar / Importar para transferi-lo — o código é próprio desta calculadora e não é compatível com o do site antigo.',
+    nota: 'O carrinho de compra é salvo automaticamente neste navegador (o de venda não). Use Exportar / Importar para transferi-lo — o código é próprio desta calculadora e não é compatível com o do site antigo. Ressalvas de venda que a calculadora não modela: o equipamento inicial só pode ser vendido ao atingir Operador, um item inutilizável não tem valor, e o Módulo ∅ de fragmento é negociado com o Mestre (fora da tabela).',
   },
 };

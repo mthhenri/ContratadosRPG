@@ -2,12 +2,15 @@ import { afterNextRender, DestroyRef, Directive, ElementRef, inject, signal } fr
 
 /**
  * Esmaece as bordas de uma lista rolável **só onde o conteúdo está de fato cortado**, marcando o
- * elemento hospedeiro com `overflow-fade--topo` e/ou `overflow-fade--base` conforme a posição do
- * scroll:
- * - no topo da lista → sem fade superior (nada cortado acima);
- * - no fim da lista → sem fade inferior (nada cortado abaixo);
- * - no meio → os dois;
- * - sem overflow → nenhum (corte reto).
+ * elemento hospedeiro com classes conforme a posição do scroll — nos dois eixos:
+ * - vertical: `overflow-fade--topo` (rolou para baixo) / `overflow-fade--base` (há mais abaixo);
+ * - horizontal: `overflow-fade--esquerda` (rolou para a direita) / `overflow-fade--direita` (há
+ *   mais à direita).
+ *
+ * A regra é a mesma em cada eixo: no início da lista não há fade na borda inicial (nada cortado
+ * antes), no fim não há fade na borda final, no meio há os dois, e sem overflow naquele eixo →
+ * nenhuma classe (corte reto). Um consumidor de lista vertical só estiliza topo/base; um de lista
+ * horizontal, esquerda/direita — o mesmo elemento pode até rolar nos dois eixos.
  *
  * O estilo do esmaecimento (máscara em gradiente) fica no SCSS do consumidor, que consome essas
  * classes. Reavalia em scroll, mudança de tamanho (`ResizeObserver`) e de conteúdo
@@ -19,12 +22,16 @@ import { afterNextRender, DestroyRef, Directive, ElementRef, inject, signal } fr
   host: {
     '[class.overflow-fade--topo]': 'fadeTopo()',
     '[class.overflow-fade--base]': 'fadeBase()',
+    '[class.overflow-fade--esquerda]': 'fadeEsquerda()',
+    '[class.overflow-fade--direita]': 'fadeDireita()',
   },
 })
 export class OverflowFade {
   private readonly elemento: ElementRef<HTMLElement> = inject(ElementRef);
   protected readonly fadeTopo = signal(false);
   protected readonly fadeBase = signal(false);
+  protected readonly fadeEsquerda = signal(false);
+  protected readonly fadeDireita = signal(false);
 
   constructor() {
     const destroyRef = inject(DestroyRef);
@@ -37,9 +44,12 @@ export class OverflowFade {
         cancelAnimationFrame(frameAgendado);
         frameAgendado = requestAnimationFrame(() => {
           const restanteAbaixo = alvo.scrollHeight - alvo.clientHeight - alvo.scrollTop;
+          const restanteDireita = alvo.scrollWidth - alvo.clientWidth - alvo.scrollLeft;
           // Epsilon de 1px absorve arredondamentos sub-pixel.
           this.fadeTopo.set(alvo.scrollTop > 1);
           this.fadeBase.set(restanteAbaixo > 1);
+          this.fadeEsquerda.set(alvo.scrollLeft > 1);
+          this.fadeDireita.set(restanteDireita > 1);
         });
       };
 

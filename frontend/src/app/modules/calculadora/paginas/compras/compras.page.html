@@ -1,7 +1,8 @@
 <app-ajuda-calculadora aba="compras" (limpar)="limpar()" />
 
 <div class="calc compras">
-  <!-- CARD 1: CONFIGURAÇÃO -->
+  <!-- CARD 1: CONFIGURAÇÃO — só em Compras (o modo Vender não usa dinheiro/limites) -->
+  @if (modo() === 'comprar') {
   <section class="calc-cartao">
     <header class="calc-cartao__cabecalho">
       <span class="calc-cartao__indice">1</span>
@@ -68,11 +69,12 @@
       </div>
     </div>
   </section>
+  }
 
   <!-- CARD 3: CATÁLOGO -->
   <section class="calc-cartao">
     <header class="calc-cartao__cabecalho">
-      <span class="calc-cartao__indice">3</span>
+      <span class="calc-cartao__indice">{{ modo() === 'vender' ? 1 : 3 }}</span>
       <h2 class="calc-cartao__titulo">Catálogo de Equipamentos</h2>
       <span class="calc-cartao__regua"></span>
     </header>
@@ -180,19 +182,21 @@
   <!-- CARD 4: CARRINHO -->
   <section class="calc-cartao">
     <header class="calc-cartao__cabecalho">
-      <span class="calc-cartao__indice">4</span>
-      <h2 class="calc-cartao__titulo">Carrinho</h2>
+      <span class="calc-cartao__indice">{{ modo() === 'vender' ? 2 : 4 }}</span>
+      <h2 class="calc-cartao__titulo">{{ modo() === 'vender' ? 'Carrinho de Venda' : 'Carrinho' }}</h2>
       <span class="calc-cartao__regua"></span>
       <div class="compras-carrinho-acoes">
-        <button type="button" class="compras-limpar" (click)="abrirModalImportar()">Importar</button>
-        <button
-          type="button"
-          class="compras-limpar"
-          [disabled]="carrinhoVazio()"
-          (click)="abrirModalExportarCodigo()"
-        >
-          Exportar
-        </button>
+        @if (modo() === 'comprar') {
+          <button type="button" class="compras-limpar" (click)="abrirModalImportar()">Importar</button>
+          <button
+            type="button"
+            class="compras-limpar"
+            [disabled]="carrinhoVazio()"
+            (click)="abrirModalExportarCodigo()"
+          >
+            Exportar
+          </button>
+        }
         <button type="button" class="compras-limpar" [disabled]="carrinhoVazio()" (click)="esvaziarCarrinho()">
           Esvaziar
         </button>
@@ -280,7 +284,7 @@
                 @if (secao.titulo) {
                   <div class="compras-mod-secao">{{ secao.titulo }}</div>
                 }
-                <div class="compras-mod-grade">
+                <div class="compras-mod-grade" appOverflowFade>
                   @for (entrada of secao.entradas; track entrada.nome) {
                     <div
                       class="compras-mod-entrada"
@@ -362,6 +366,123 @@
       </div>
     }
   </section>
+
+  <!-- CARD 3: VENDA (m1-20) — só na aba Vendas -->
+  @if (modo() === 'vender') {
+    <section class="calc-cartao">
+      <header class="calc-cartao__cabecalho">
+        <span class="calc-cartao__indice">3</span>
+        <h2 class="calc-cartao__titulo">Venda</h2>
+        <span class="calc-cartao__regua"></span>
+      </header>
+
+      <!-- Fragmentos: grade de contadores por módulo × tipo -->
+      <div class="compras-venda-bloco">
+        <div class="compras-venda-bloco__cabecalho">
+          <span class="compras-venda-bloco__titulo">Fragmentos</span>
+          <span class="compras-venda-bloco__nota">Módulo ∅ é negociado com o Mestre — fora da tabela.</span>
+        </div>
+
+        <div class="compras-fragmentos" appOverflowFade>
+          @for (linha of linhasFragmentos(); track linha.modulo) {
+            <div class="compras-fragmentos__linha">
+              <span class="compras-fragmentos__modulo">{{ linha.rotulo }}</span>
+
+              <div class="compras-fragmentos__celula">
+                <span class="compras-fragmentos__tipo-rotulo">Potencializador</span>
+                <span class="compras-fragmentos__valor-unit">{{ linha.valorPotencializadorTexto }}</span>
+                <div class="compras-fragmentos__contador">
+                  <button
+                    type="button"
+                    class="compras-mini-btn"
+                    [disabled]="linha.qtdePotencializador === 0"
+                    [attr.aria-label]="'Remover Potencializador ' + linha.rotulo"
+                    (click)="decrementarFragmento(linha.modulo, tipoPotencializador)"
+                  >
+                    −
+                  </button>
+                  <span class="compras-fragmentos__qtde">{{ linha.qtdePotencializador }}</span>
+                  <button
+                    type="button"
+                    class="compras-mini-btn"
+                    [attr.aria-label]="'Adicionar Potencializador ' + linha.rotulo"
+                    (click)="incrementarFragmento(linha.modulo, tipoPotencializador)"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <div class="compras-fragmentos__celula">
+                <span class="compras-fragmentos__tipo-rotulo">Construtor</span>
+                <span class="compras-fragmentos__valor-unit">{{ linha.valorConstrutorTexto }}</span>
+                <div class="compras-fragmentos__contador">
+                  <button
+                    type="button"
+                    class="compras-mini-btn"
+                    [disabled]="linha.qtdeConstrutor === 0"
+                    [attr.aria-label]="'Remover Construtor ' + linha.rotulo"
+                    (click)="decrementarFragmento(linha.modulo, tipoConstrutor)"
+                  >
+                    −
+                  </button>
+                  <span class="compras-fragmentos__qtde">{{ linha.qtdeConstrutor }}</span>
+                  <button
+                    type="button"
+                    class="compras-mini-btn"
+                    [attr.aria-label]="'Adicionar Construtor ' + linha.rotulo"
+                    (click)="incrementarFragmento(linha.modulo, tipoConstrutor)"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <span class="compras-fragmentos__subtotal">{{ linha.subtotalTexto }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Valores da venda (no fim, abaixo dos fragmentos): taxa + totais -->
+      <div class="compras-venda-bloco">
+        <div class="compras-venda-bloco__cabecalho">
+          <span class="compras-venda-bloco__titulo">Valores da venda</span>
+          <div class="compras-taxa" role="group" aria-label="Taxa de venda dos itens">
+            @for (opcao of opcoesTaxa; track opcao.taxa) {
+              <button
+                type="button"
+                class="compras-categoria compras-taxa__opcao"
+                [class.selecionavel--ativo]="taxaVenda() === opcao.taxa"
+                [attr.aria-pressed]="taxaVenda() === opcao.taxa"
+                (click)="definirTaxa(opcao.taxa)"
+              >
+                {{ opcao.rotulo }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="calc-stats">
+          <div class="calc-stat compras-positivo">
+            <div class="calc-stat__rotulo">Valor de Venda dos Itens</div>
+            <div class="calc-stat__valor calc-stat__valor--texto">{{ valorVendaItensTexto() }}</div>
+          </div>
+          <div class="calc-stat compras-positivo">
+            <div class="calc-stat__rotulo">Total de Fragmentos</div>
+            <div class="calc-stat__valor calc-stat__valor--texto">{{ totalFragmentosTexto() }}</div>
+          </div>
+        </div>
+
+        <div class="calc-stats">
+          <div class="calc-stat compras-venda-total">
+            <div class="calc-stat__rotulo">Total de Venda</div>
+            <div class="calc-stat__valor calc-stat__valor--texto">{{ totalVendaTexto() }}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  }
 
   <!-- MODAL: EXPORTAR CÓDIGO -->
   @if (modalExportarAberto()) {
