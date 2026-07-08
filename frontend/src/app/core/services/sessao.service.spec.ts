@@ -79,6 +79,26 @@ describe('SessaoService', () => {
     expect(localStorage.getItem(CHAVE_SESSAO)).toBeNull();
   });
 
+  it('reflete nome/login alterados no perfil mantendo token e id', () => {
+    localStorage.setItem(CHAVE_SESSAO, JSON.stringify(usuarioAutenticado));
+    const { servico } = criar();
+
+    servico.atualizarPerfil({ nome: 'Agente Renomeado', login: 'agente.renomeado' });
+
+    expect(servico.usuario()).toEqual({
+      token: 'jwt-de-teste',
+      id: 7,
+      login: 'agente.renomeado',
+      nome: 'Agente Renomeado',
+    });
+    expect(JSON.parse(localStorage.getItem(CHAVE_SESSAO) ?? 'null')).toEqual({
+      token: 'jwt-de-teste',
+      id: 7,
+      login: 'agente.renomeado',
+      nome: 'Agente Renomeado',
+    });
+  });
+
   it('registra sem abrir sessão', () => {
     const { servico, http } = criar();
     const usuarioCriado: UsuarioCriadoDto = { id: 9, login: 'novo.agente', nome: 'Novo Agente' };

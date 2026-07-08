@@ -1,0 +1,167 @@
+<section class="perfil">
+  @if (carregando()) {
+    <article class="card" role="status" aria-label="Carregando perfil">
+      <div class="perfil__esqueleto">
+        <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
+        <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+        <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+      </div>
+    </article>
+  } @else {
+    <article class="card">
+      <header class="card__cabecalho">
+        <span class="card__indice">//</span>
+        <h1 class="card__titulo">Perfil</h1>
+        <span class="card__regua"></span>
+      </header>
+
+      <form class="perfil__formulario" [formGroup]="formularioPerfil" (ngSubmit)="salvarPerfil()">
+        <label class="perfil__campo">
+          <span class="perfil__rotulo">Nome</span>
+          <input class="perfil__entrada" type="text" formControlName="nome" autocomplete="name" />
+        </label>
+
+        <label class="perfil__campo">
+          <span class="perfil__rotulo">Login</span>
+          <input
+            class="perfil__entrada"
+            type="text"
+            formControlName="login"
+            autocomplete="username"
+            autocapitalize="none"
+            spellcheck="false"
+          />
+        </label>
+
+        <div class="perfil__acoes">
+          <button
+            class="botao botao--primario perfil__acao"
+            type="submit"
+            [disabled]="salvandoPerfil()"
+          >
+            <app-icone nome="editar" />
+            {{ salvandoPerfil() ? 'Salvando…' : 'Salvar perfil' }}
+          </button>
+          @if (perfilSalvo()) {
+            <span class="perfil__sucesso" role="status">Perfil atualizado.</span>
+          }
+        </div>
+      </form>
+    </article>
+
+    <article class="card">
+      <header class="card__cabecalho">
+        <span class="card__indice">//</span>
+        <h2 class="card__titulo">Senha</h2>
+        <span class="card__regua"></span>
+      </header>
+
+      <form class="perfil__formulario" [formGroup]="formularioSenha" (ngSubmit)="salvarSenha()">
+        <label class="perfil__campo">
+          <span class="perfil__rotulo">Senha atual</span>
+          <div class="perfil__campo-senha">
+            <input
+              class="perfil__entrada perfil__entrada--senha"
+              [type]="senhaAtualVisivel() ? 'text' : 'password'"
+              formControlName="senhaAtual"
+              autocomplete="current-password"
+            />
+            <button
+              class="perfil__olho"
+              type="button"
+              [attr.aria-label]="senhaAtualVisivel() ? 'Ocultar senha' : 'Mostrar senha'"
+              [attr.aria-pressed]="senhaAtualVisivel()"
+              (click)="alternarSenhaAtual()"
+            >
+              <app-icone [nome]="senhaAtualVisivel() ? 'olho-fechado' : 'olho'" />
+            </button>
+          </div>
+        </label>
+
+        <label class="perfil__campo">
+          <span class="perfil__rotulo">Nova senha</span>
+          <div class="perfil__campo-senha">
+            <input
+              class="perfil__entrada perfil__entrada--senha"
+              [type]="novaSenhaVisivel() ? 'text' : 'password'"
+              formControlName="novaSenha"
+              autocomplete="new-password"
+            />
+            <button
+              class="perfil__olho"
+              type="button"
+              [attr.aria-label]="novaSenhaVisivel() ? 'Ocultar senha' : 'Mostrar senha'"
+              [attr.aria-pressed]="novaSenhaVisivel()"
+              (click)="alternarNovaSenha()"
+            >
+              <app-icone [nome]="novaSenhaVisivel() ? 'olho-fechado' : 'olho'" />
+            </button>
+          </div>
+          @if (formularioSenha.controls.novaSenha.touched && formularioSenha.controls.novaSenha.hasError('minlength')) {
+            <span class="perfil__erro">Mínimo de 6 caracteres.</span>
+          }
+        </label>
+
+        <div class="perfil__acoes">
+          <button
+            class="botao botao--primario perfil__acao"
+            type="submit"
+            [disabled]="salvandoSenha()"
+          >
+            <app-icone nome="patente" />
+            {{ salvandoSenha() ? 'Salvando…' : 'Trocar senha' }}
+          </button>
+          @if (senhaAlterada()) {
+            <span class="perfil__sucesso" role="status">Senha alterada.</span>
+          }
+        </div>
+      </form>
+    </article>
+
+    <article class="card">
+      <header class="card__cabecalho">
+        <span class="card__indice">//</span>
+        <h2 class="card__titulo">Excluir conta</h2>
+        <span class="card__regua"></span>
+      </header>
+
+      <p class="perfil__descricao">
+        Ao excluir, sua conta é desativada e sua sessão encerrada. Esta ação não pode ser desfeita.
+      </p>
+
+      @if (confirmandoExclusao()) {
+        <div class="perfil__exclusao" role="alertdialog" aria-label="Confirmar exclusão da conta">
+          <p class="perfil__exclusao-aviso">
+            Excluir sua conta permanentemente? Você será desconectado imediatamente.
+          </p>
+          <div class="perfil__acoes">
+            <button
+              class="botao botao--primario perfil__acao"
+              type="button"
+              [disabled]="excluindo()"
+              (click)="confirmarExclusao()"
+            >
+              <app-icone nome="excluir" />
+              {{ excluindo() ? 'Excluindo…' : 'Confirmar exclusão' }}
+            </button>
+            <button
+              class="botao botao--secundario perfil__acao"
+              type="button"
+              [disabled]="excluindo()"
+              (click)="cancelarExclusao()"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      } @else {
+        <div class="perfil__acoes">
+          <button class="botao botao--secundario perfil__acao" type="button" (click)="pedirExclusao()">
+            <app-icone nome="excluir" />
+            Excluir conta
+          </button>
+        </div>
+      }
+    </article>
+  }
+</section>

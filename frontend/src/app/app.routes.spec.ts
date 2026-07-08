@@ -59,4 +59,19 @@ describe('Rotas — autenticação', () => {
     expect(urlFinal).toBe('/painel');
     expect(elemento.querySelector('.campanhas')).not.toBeNull();
   });
+
+  it('redireciona /perfil ao login quando sem sessão', async () => {
+    const { urlFinal } = await navegar('/perfil');
+    expect(urlFinal).toBe('/login?retorno=%2Fperfil');
+  });
+
+  it('libera /perfil com sessão aberta (tela de perfil)', async () => {
+    localStorage.setItem(
+      CHAVE_SESSAO,
+      JSON.stringify({ token: 't', id: 1, login: 'a', nome: 'Agente A' }),
+    );
+    const { elemento, urlFinal } = await navegar('/perfil');
+    expect(urlFinal).toBe('/perfil');
+    expect(elemento.querySelector('.perfil')).not.toBeNull();
+  });
 });

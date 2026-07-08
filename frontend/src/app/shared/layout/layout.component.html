@@ -50,6 +50,15 @@
           <div class="topbar__perfil-menu" role="menu">
             <a
               class="topbar__perfil-item"
+              routerLink="/perfil"
+              role="menuitem"
+              (click)="fecharPerfil()"
+            >
+              <app-icone nome="agente" />
+              <span>Perfil</span>
+            </a>
+            <a
+              class="topbar__perfil-item"
               routerLink="/painel"
               role="menuitem"
               (click)="fecharPerfil()"

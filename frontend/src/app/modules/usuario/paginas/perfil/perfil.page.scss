@@ -1,0 +1,262 @@
+@use 'tema/breakpoints' as bp;
+
+.perfil {
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  // Esqueleto de carregamento — título + duas linhas de campo, evitando o "flash" seco de texto.
+  &__esqueleto {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__descricao {
+    margin: 0 0 16px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  &__formulario {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__campo {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  &__rotulo {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-mute);
+  }
+
+  &__entrada {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text);
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent-border);
+    }
+
+    // Abre espaço à direita para o botão de revelar a senha não cobrir o texto digitado.
+    &--senha {
+      padding-right: 44px;
+    }
+
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
+    }
+  }
+
+  // Campo de senha com o botão "olhinho" (revelar/ocultar) sobreposto à direita.
+  &__campo-senha {
+    position: relative;
+  }
+
+  &__olho {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-control);
+    color: var(--text-mute);
+    cursor: pointer;
+
+    app-icone {
+      font-size: 17px;
+    }
+
+    &:hover {
+      color: var(--text);
+    }
+  }
+
+  &__erro {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+  }
+
+  &__acoes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__acao {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
+    }
+  }
+
+  &__sucesso {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--positive);
+  }
+
+  // Caixa de confirmação da exclusão da conta — realce com a borda accent (ação destrutiva
+  // pendente), mesmo tratamento das confirmações de campanha (m2-12).
+  &__exclusao {
+    padding: 14px 16px;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-control);
+  }
+
+  &__exclusao-aviso {
+    margin: 0 0 12px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text);
+  }
+}
+
+// Card + cabeçalho de seção — bloco sancionado copiado de docs/design/tema/_componentes.scss.
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--pad-card);
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 18px;
+  }
+
+  &__indice {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+  }
+
+  &__titulo {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text);
+  }
+
+  &__regua {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+}
+
+// Botões — bloco sancionado copiado de docs/design/tema/_componentes.scss.
+.botao {
+  border-radius: var(--radius-control);
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, filter 0.15s ease;
+
+  &--primario {
+    background: var(--accent);
+    color: var(--bg);
+    border: 0;
+
+    &:hover:not(:disabled) {
+      // filter (não uma 2ª cor fixa) pra funcionar com qualquer accent escolhido em runtime.
+      filter: brightness(1.08);
+    }
+  }
+
+  &--secundario {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+
+    &:hover:not(:disabled) {
+      background: var(--surface-2);
+      border-color: var(--accent-border);
+    }
+  }
+}
+
+// Blocos de esqueleto — reusados por qualquer estado de carregamento (proibição #29: só tokens).
+.esqueleto-bloco {
+  display: block;
+  border-radius: var(--radius-control);
+  background: var(--border-strong);
+  animation: esqueleto-pulso 1.4s ease-in-out infinite;
+
+  &--titulo {
+    width: 200px;
+    height: 20px;
+  }
+
+  &--linha {
+    height: 44px;
+  }
+}
+
+@keyframes esqueleto-pulso {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .esqueleto-bloco {
+    animation: none;
+  }
+}

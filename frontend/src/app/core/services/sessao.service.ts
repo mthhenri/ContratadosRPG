@@ -64,6 +64,21 @@ export class SessaoService {
       );
   }
 
+  /**
+   * Reflete no estado de sessão os dados de perfil alterados (`nome`/`login`) — mantendo o token
+   * e o `id`. Chamado pela tela de perfil (m2-14) após um `alterarPerfil` bem-sucedido, para que
+   * a identidade exibida na topbar acompanhe a alteração sem novo login.
+   */
+  atualizarPerfil(dados: { nome: string; login: string }): void {
+    this.sessaoAtual.update((sessao) =>
+      sessao ? { ...sessao, nome: dados.nome, login: dados.login } : sessao,
+    );
+    const sessaoAtual = this.sessaoAtual();
+    if (sessaoAtual) {
+      localStorage.setItem(CHAVE_SESSAO, JSON.stringify(sessaoAtual));
+    }
+  }
+
   /** Encerra a sessão: limpa o Signal e o `localStorage`. */
   sair(): void {
     this.sessaoAtual.set(null);

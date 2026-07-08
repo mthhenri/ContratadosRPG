@@ -31,4 +31,12 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./modules/campanha/campanha.routes').then((modulo) => modulo.campanhaRoutes),
   },
+  // Perfil self-service do usuário autenticado (editar nome/login, trocar senha, excluir a
+  // conta), acessível pelo dropdown de perfil da topbar — m2-14.
+  {
+    path: 'perfil',
+    canActivate: [autenticacaoGuard],
+    loadChildren: () =>
+      import('./modules/usuario/usuario.routes').then((modulo) => modulo.usuarioRoutes),
+  },
 ];
