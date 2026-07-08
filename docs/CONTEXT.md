@@ -1,6 +1,25 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-08 (**correção: código de
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-08 (**refino mobile da
+> lista de campanhas: chip de papel desce para a própria linha em ~360px**, aprovado pelo autor numa
+> re-revisão geral do mobile do M2. **Achado da re-revisão** (auditoria Playwright das 6 telas ×
+> 360/390/430px — as 18 combinações agora rodando **sem erro** graças a browser relançado por largura
+> + retry, contornando o esgotamento de processo do Chromium que derrubava o passe de 430px antes):
+> zero scroll horizontal e zero alvo de toque < 44px em todas — mobile **aprovado**. O único ponto
+> cosmético era a **lista de campanhas** (`lista.page`): o chip MESTRE/JOGADOR dividia a linha flex
+> com o nome, espremendo a coluna de texto a ~114px em 360px, então nomes de várias palavras quebravam
+> uma palavra por linha (até "Protocolo Cinza" virava 2 linhas; medido via `getBoundingClientRect`).
+> **Correção (SCSS-only, escopada a `@include bp.mobile`):** `.campanhas__ligacao` ganhou
+> `flex-wrap: wrap` + `align-items: flex-start` (avatar topo-alinha com o nome); `.campanhas__texto`
+> ganhou `flex-basis: 75%` — grande o bastante para que avatar + texto ocupem a 1ª linha e a soma com
+> o chip passe de 100%, **empurrando o chip para a linha de baixo**; `.chip-papel` ganhou
+> `margin-left: auto` (alinha à direita, pill colado ao rótulo — a borda não estica). Resultado
+> (medido): coluna de texto **114px → 208px**, "Protocolo Cinza" volta a 1 linha, "Operação Sentinela
+> Vermelha" (nome realista) cai de ~4 para 2 linhas. **Desktop intocado** (bloco `@media
+> max-width: 560px`): o chip continua inline à direita na mesma linha do nome (`sameRow` confirmado a
+> 900px). Sem mudança de DOM/TS, nenhum seletor usado por teste renomeado. Reauditoria das 18
+> combinações confirmou zero overflow / zero alvo < 44px; `lint`/`test` (**frontend 126/126, shared
+> 143/143**)/`build` verdes. Sessão anterior no mesmo dia (**correção: código de
 > convite sobrepondo o botão de copiar no mobile ao apertar "Regenerar"**, reportado pelo autor ao
 > usar a tela de detalhe da campanha num aparelho real). **Causa raiz:** `.detalhe__convite-linha`
 > (`detalhe.page.scss`) é um `flex; flex-wrap: wrap` com três filhos — `.detalhe__codigo` (`flex: 1;
