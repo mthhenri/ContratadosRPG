@@ -28,6 +28,10 @@
       "types": "./dist/dtos/campanha/index.d.ts",
       "default": "./dist/dtos/campanha/index.js"
     },
+    "./dtos/ficha": {
+      "types": "./dist/dtos/ficha/index.d.ts",
+      "default": "./dist/dtos/ficha/index.js"
+    },
     "./regras/dados": {
       "types": "./dist/regras/dados/index.d.ts",
       "default": "./dist/regras/dados/index.js"

@@ -136,35 +136,61 @@ CREATE TABLE usuario_ficha_acesso (
 
 ## Forma dos documentos JSONB (`ficha.dados`)
 
-> **Rascunho direcional.** A forma final de cada documento é definida nas specs de M3
-> (jogador) e M4 (criatura/NPC), derivada de `docs/core/sistema-v4.1.0.md` e
-> `docs/core/guia_de_mestre-v4.0.0.md`. O contrato tipado vive em
-> `shared/src/dtos/ficha/` (`FichaJogadorDadosDto`, `FichaCriaturaDadosDto`) e o backend
-> valida via class-validator + `shared/regras`. Campos de jogo nunca viram colunas —
-> listagens usam `dados->>'campo'`.
+> A forma final de cada documento é definida nas specs de M3 (jogador) e M4 (criatura/NPC),
+> derivada de `docs/core/sistema-v4.1.0.md` e `docs/core/guia_de_mestre-v4.0.0.md`. O
+> contrato tipado vive em `shared/src/dtos/ficha/` (`FichaJogadorDadosDto` — **final**,
+> m3-01; `FichaCriaturaDadosDto` — esboço, fechar no M4) e o backend valida via `shared/regras`
+> (coerência de domínio) + validação estrutural quando o `ValidationPipe` for ligado (m3-02/03).
+> Campos de jogo nunca viram colunas — listagens usam `dados->>'campo'`.
 
-### FichaJogadorDadosDto (esboço — fechar no M3)
+### FichaJogadorDadosDto (final — m3-01)
+
+Contrato: `shared/src/dtos/ficha/ficha.dtos.ts`. Forma 1:1 com `sistema-v4.1.0.md`
+(classe/atributos/estado/inventário). O documento vence o código (proibição #27).
 
 ```jsonc
 {
-  "classe": "COMBATENTE",            // ClasseEnum
-  "arquetipo": "...",
-  "subclasse": "...",
-  "nivel": 5,
-  "prestigio": 12,
-  "atributos": { "vigor": 3, "destreza": 2, "forca": 4, "vontade": 1 },
-  "sentidos": 2,
-  "estado": { "vidaAtual": 34, "energiaAtual": 18, "traumas": [], "lesoes": [] },
-  "habilidades": [ /* gerais, de classe, arquétipo, outra classe */ ],
-  "inventario": [ /* itens + modificações + amplificadores (formato do carrinho M1) */ ],
+  "classe": "COMBATENTE",             // ClasseEnum — codifica classe base, subclasses
+                                      // (EXPERIMENTO_*) e CIVIL; NÃO há campo "subclasse" à parte
+  "arquetipo": "LUTADOR",             // ArquetipoEnum | null — null p/ Experimento ou Civil
+  "nivel": 5,                         // 0–20 inteiro
+  "prestigio": 12,                    // inteiro; pode ser negativo; a Patente é DERIVADA daqui
+  "atributos": {                      // os 10 atributos (Sentidos é um deles, não campo à parte)
+    "destreza": 2, "forca": 4, "luta": 3, "pontaria": 1, "vigor": 3,
+    "intelecto": 1, "medicina": 0, "sentidos": 2, "social": 1, "vontade": 2
+  },
+  "estado": {
+    "vidaAtual": 34,                  // máximo é derivado
+    "energiaAtual": 18,               // pode negativar
+    "sequelas": [ { "nome": "Paranoia", "descricao": "..." } ],          // temporárias
+    "traumas":  [ { "nome": "...", "descricao": "...", "tratado": false } ], // permanentes, tratáveis
+    "lesoes":   [ { "atributo": "forca", "pontos": 1,
+                    "severidade": "LEVE", "permanente": false } ]        // remove ponto de atributo
+  },
+  "habilidades": [
+    { "nome": "6º Sentido", "categoria": "GERAL", "custoEnergia": 0, "descricao": "..." }
+    // custoEnergia: número ([N E]), 0 ([0 E]) ou null (custo variável [X E])
+    // categoria: HabilidadeCategoriaEnum (GERAL/CLASSE/ARQUETIPO/SUBCLASSE/OUTRA_CLASSE/…)
+  ],
+  "inventario": {                     // reusa o formato do carrinho da calculadora M1 (sem tipo duplicado)
+    "itens": [ /* CarrinhoItemDto de shared/regras/compras — item + modificações */ ],
+    "amplificadores": [ /* AmplificadorAplicadoDto de shared/regras/compras */ ]
+  },
   "anotacoes": "..."
 }
 ```
 
-Derivados (vida máxima, energia máxima, defesa, deslocamento, dano corpo a corpo, limite
-de inventário, área de percepção…) **não são persistidos** — são calculados por
-`shared/regras` a partir de classe/nível/atributos, no front (exibição) e no back
-(validação de coerência do estado salvo).
+**Nada de derivado é persistido** (entregável #4). Vida máxima, Energia máxima, limite de
+Energia negativa, Defesa/Esquiva/Bloqueio, Deslocamento, Dano de Corpo, Dano Furtivo,
+Inventário máximo, Área de Percepção (`5 + Sentidos × 5`), DT de atributo, Proficiência,
+Sanidade (não é barra — são as listas sequelas/traumas), **Patente** (da faixa de Prestígio),
+Salário e Limite de Modificações **não entram** no documento — são calculados por
+`shared/regras` a partir de classe/nível/atributos, no front (exibição) e no back (coerência).
+
+**Fora do contrato inicial (m3-01):** domínios que o documento define mas que a spec não
+listou no casamento 1:1 — Identidade (Personalidade, Origem: Formação/Especialidade/Saber de
+Campo), Dinheiro corrente, Maestrias e Peculiaridade de Experimento — entram quando as tasks
+de formulário/ficha do M3 os exigirem.
 
 ### FichaCriaturaDadosDto / NPC (esboço — fechar no M4)
 

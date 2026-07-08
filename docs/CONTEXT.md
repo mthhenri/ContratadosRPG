@@ -26,7 +26,38 @@
 > (**126/126**)/`build` (562,78 kB inicial, dentro do budget de 565 kB, sem warning; AOT type-checou os
 > templates) verdes; botão conferido por render (estado normal outlined + "Tem certeza?" filled). Spec
 > `m1-19` redigida após a implementação e colocada direto em `done/`, a pedido do autor. Sessão anterior
-> no mesmo dia (**m2-15 —
+> (**m3-01 —
+> contrato `FichaJogadorDadosDto` (abre o M3)**: fecha a **forma final do documento JSONB
+> `ficha.dados`** da ficha de jogador — pura camada `shared/`, sem migration/service/endpoint/
+> frontend. Novo pacote `dtos/ficha/` (`FichaJogadorDadosDto` + sub-DTOs `FichaAtributosDto`/
+> `FichaEstadoDto`/`FichaSequelaDto`/`FichaTraumaDto`/`FichaLesaoDto`/`FichaHabilidadeDto`/
+> `FichaInventarioDto`), `interface readonly` puras como todo DTO do shared (o autor escolheu
+> manter o padrão de interfaces; a validação estrutural class-validator da §11 fica documentada
+> campo a campo e adiada para quando o backend ligar o `ValidationPipe` — m3-02/03), novo subpath
+> `./dtos/ficha` no `package.json`. **Forma derivada 1:1 de `docs/core/sistema-v4.1.0.md`** (o
+> documento vence — proibição #27), o que corrigiu o rascunho do `SCHEMA.md`: **10 atributos**
+> (Destreza/Força/Luta/Pontaria/Vigor/Intelecto/Medicina/Sentidos/Social/Vontade), não 4 —
+> **`sentidos` é um atributo**, não campo à parte (a Área de Percepção `5 + Sentidos×5` é
+> derivada); **subclasse não é campo** — `ClasseEnum` já codifica as três Experimento e `CIVIL`,
+> então guarda-se só `classe` + `arquetipo` (`ArquetipoEnum | null`, null p/ Experimento/Civil);
+> **`nivel` 0–20**, **`prestigio`** inteiro que pode negativar e do qual a **Patente é derivada**
+> (não persistida); **`estado`** com `vidaAtual`/`energiaAtual` (pode negativar) + listas
+> `sequelas` (temporárias) / `traumas` (permanentes, `tratado`) / `lesoes` (estruturadas:
+> `atributo`/`pontos`/`severidade`/`permanente`); **`habilidades`** com `categoria` +
+> `custoEnergia` (número/0/`null` variável); **`inventario` reusa o carrinho da calculadora M1**
+> (`{ itens: CarrinhoItemDto[], amplificadores: AmplificadorAplicadoDto[] }` de
+> `shared/regras/compras` — **sem duplicar tipo**, `regras/` segue zero-dep). **Nenhum derivado
+> persistido** (vida/energia máx, defesa, deslocamento, dano de corpo/furtivo, limite de
+> inventário, DT, proficiência, patente/salário/limite de modificações). 3 enums novos de
+> conteúdo de jogo em `shared/src/enums/` (§10.3, sem tabela `tipo_*`): `ArquetipoEnum` (9),
+> `SeveridadeLesaoEnum` (LEVE/GRAVE/MORTAL), `HabilidadeCategoriaEnum` (8). **Escopo consciente:**
+> a spec fixou o 1:1 em classe/atributos/estado/inventário; domínios do documento **não listados**
+> (Identidade — Personalidade/Origem —, Dinheiro, Maestrias, Peculiaridade) ficaram **de fora** do
+> contrato inicial e entram nas tasks de formulário do M3 (registrado no `SCHEMA.md`). `SCHEMA.md`
+> passado de rascunho para a forma final do jogador. `build`/`lint`/`test` do shared verdes
+> (**143/143**; interfaces não emitem runtime, os 3 enums resolvem 9/3/8); subpath compila e
+> resolve em `dist/dtos/ficha`. Fora de escopo: migrations/tabelas (m3-02), validação via motor de
+> regras no service (m3-03), `FichaCriaturaDadosDto`/NPC (M4). Sessão anterior (**m2-15 —
 > refino visual da tela de campanhas**: passe de acabamento **SCSS-first** (com marcação mínima,
 > sem tocar em TS/lógica/regra de negócio) aproximando a **lista** (`/painel`) e o **detalhe**
 > (`/painel/:id`) dos protótipos `docs/design/examples/campanhas.html` e `lobby-de-campanha.html`,
