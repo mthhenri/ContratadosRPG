@@ -35,7 +35,16 @@ As duas dimensões não se substituem nem se derivam.
 
 - **Enum de coluna** `TipoUsuarioEnum` (`NORMAL | ADMIN | TESTER`) no `shared/`, com tabela de
   referência `tipo_usuario` (`codigo` + `descricao`) e coluna `usuario.tipo_usuario_id`
-  INTEGER FK (§10.2.12). É **coluna** (identidade/permissão), nunca JSONB.
+  INTEGER FK (§10.2.12). É **coluna** (identidade/permissão), nunca JSONB. O **nome da coluna**
+  segue a convenção (`descricao`, Proibição #24), mas o **conteúdo é um rótulo/título curto**
+  ("Administrador", "Normal", "Testador") — é ele que o frontend exibe como label do tipo, nunca
+  o `codigo` cru.
+- **Compatibilidade com o que já existe (M2)** — obrigatório para não quebrar o cadastro atual:
+  - O **registro público** (m2-02) passa a gravar `tipo = NORMAL` explicitamente no `INSERT`
+    (assim que a coluna vira `NOT NULL`, o insert que existe hoje quebraria sem isso).
+  - A **exclusão da própria conta** (self-service, m2-11 — `DELETE /usuario`) passa a respeitar a
+    **invariante de ≥1 `ADMIN` ativo**: o último admin não pode se autoexcluir pela tela de
+    Perfil (a regra não pode viver só nas rotas de admin-sobre-terceiros).
 - **Migration** que cria `tipo_usuario` (com seed dos 3 códigos), adiciona a FK
   `usuario.tipo_usuario_id` e a coluna `usuario.token_versao` (contador de invalidação de
   sessão), e faz o **backfill**: `senhor.contratados` = `ADMIN`, restante = `NORMAL`,
@@ -55,8 +64,31 @@ As duas dimensões não se substituem nem se derivam.
 - **Frontend de gestão de usuários**: tela do admin (lista com busca/filtro, criar, alterar,
   resetar senha, trocar tipo, excluir, reativar), rota protegida por `adminGuard`, item de menu
   visível só para admin.
-- **Mecânica de tester documentada e pronta para uso** (o decorator acima + guia de como
-  aplicar/remover num módulo novo), **sem aplicar** em nenhum módulo atual.
+- **Mecânica de tester documentada e pronta para uso** (backend + frontend), **sem aplicar** em
+  nenhum módulo atual:
+  - *Backend:* o decorator `@TiposPermitidos(ADMIN, TESTER)` + guia de como aplicar/remover num
+    módulo novo.
+  - *Frontend:* um `tipoGuard` genérico (irmão do `adminGuard`) para as rotas dos módulos "em
+    testes" e a ocultação do item de menu para quem não tem acesso — para um `NORMAL` nunca ver
+    um link que responderia 403.
+- **Tela de "acesso negado"** (rota padrão do frontend) para onde o `tipoGuard` redireciona quem
+  não tem acesso a um módulo restrito. Estética **institucional SCP "Terminal de Contenção"**
+  (identidade `docs/design/`): texto corporativo/frio da Fundação, blocos de censura (quadrados
+  pretos) e `[DADOS EXPURGADOS]`/`REDACTED` sobre parte do conteúdo, chip de classificação no
+  padrão `CLASSE-_ // CONFIDENCIAL`. Só tokens do tema (Proibição #29); reaproveitável por
+  qualquer negação de acesso futura, não só a de tester.
+
+## Extensão: adicionar um novo tipo de usuário (futuro)
+
+O conjunto `NORMAL | ADMIN | TESTER` é o inicial; a modelagem é aberta a novos tipos. Para
+adicionar um (ex.: `MODERADOR`), no futuro, bastam dois passos, sem refatorar o mecanismo:
+
+1. **Migration**: `INSERT` de uma linha em `tipo_usuario` (`codigo` + `descricao`/rótulo), por
+   literal SQL (§10.7) — a tabela de referência é a fonte da verdade da coluna.
+2. **Shared**: novo membro no `TipoUsuarioEnum` (string enum, valor = nome).
+
+A partir daí o tipo já pode ser atribuído pelo admin e usado em `@TiposPermitidos(...)` /
+`tipoGuard`. Nenhuma mudança no guard, na tela de gestão nem no fluxo de sessão é necessária.
 
 ## Quebra em tasks (proposta — a redigir quando o milestone entrar)
 
@@ -66,10 +98,10 @@ As duas dimensões não se substituem nem se derivam.
 
 | Task | Conteúdo |
 |---|---|
-| `m6-01` | Migration `tipo_usuario` + `usuario.tipo_usuario_id` (FK/backfill) + `usuario.token_versao` + `TipoUsuarioEnum` (shared). Só banco + shared. |
+| `m6-01` | Migration `tipo_usuario` (com rótulos em `descricao`) + `usuario.tipo_usuario_id` (FK/backfill) + `usuario.token_versao` + `TipoUsuarioEnum` (shared). Ajusta o `INSERT` do registro (m2-02) para gravar `NORMAL`. Só banco + shared. |
 | `m6-02` | Autorização global: `autorizacao.guard.ts` com leitura leve de sessão (tipo fresco + versão de token = invalidação imediata), `@TiposPermitidos(...)`, tipo no login/JWT, mecânica de acesso limitado a tester documentada. |
-| `m6-03` | Backend de gestão pelo admin: criar/alterar/resetar senha/trocar tipo/excluir/reativar + busca/filtro + invariante de ≥1 admin + proteções de auto-ação + bump de versão de token + tratamento de exclusão de mestre. |
-| `m6-04` | Frontend da tela de gestão de usuários (admin) + `adminGuard` + item de menu. |
+| `m6-03` | Backend de gestão pelo admin: criar/alterar/resetar senha/trocar tipo/excluir/reativar + busca/filtro + invariante de ≥1 admin (inclui o self-service `DELETE /usuario` da m2-11) + proteções de auto-ação + bump de versão de token + tratamento de exclusão de mestre. |
+| `m6-04` | Frontend da tela de gestão de usuários (admin) + `adminGuard` + item de menu + `tipoGuard` genérico + tela de "acesso negado" SCP. |
 
 ## Decisões em aberto (padrões assumidos — reversíveis)
 
@@ -100,13 +132,17 @@ coletada; ajustar aqui propaga para as tasks:
   todas as demais contas são `NORMAL`.
 - Rota anotada com `@TiposPermitidos(ADMIN)` responde 403 para não-admin e 200 para admin.
 - Admin cria/altera/reseta senha/exclui/reativa usuários e troca o tipo de qualquer conta;
-  **não** consegue deixar o sistema sem nenhum `ADMIN` ativo nem se auto-excluir/rebaixar.
+  **não** consegue deixar o sistema sem nenhum `ADMIN` ativo nem se auto-excluir/rebaixar — nem
+  pela gestão nem pela **exclusão da própria conta** (self-service, m2-11).
+- O registro público continua funcionando após a coluna virar `NOT NULL` (grava `NORMAL`).
 - Após resetar senha, rebaixar ou excluir uma conta, a sessão dela cai **no request seguinte**
   (versão de token), sem esperar o login expirar.
 - A listagem tem busca/filtro por login/nome/tipo.
-- Tela de gestão só acessível/visível para admin.
+- Tela de gestão só acessível/visível para admin; o tipo aparece pelo **rótulo** (`descricao`),
+  não pelo `codigo`.
 - Decorator de acesso limitado a tester existe, testado, e há guia de como aplicá-lo num módulo
-  novo — sem travar módulo atual.
+  novo — sem travar módulo atual; no frontend, o `tipoGuard` redireciona quem não tem acesso para
+  a **tela de "acesso negado"** (estética SCP), e o item de menu some para esse usuário.
 
 ## Dependências
 
