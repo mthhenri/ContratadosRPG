@@ -36,8 +36,10 @@ As duas dimensões não se substituem nem se derivam.
 - **Enum de coluna** `TipoUsuarioEnum` (`NORMAL | ADMIN | TESTER`) no `shared/`, com tabela de
   referência `tipo_usuario` (`codigo` + `descricao`) e coluna `usuario.tipo_usuario_id`
   INTEGER FK (§10.2.12). É **coluna** (identidade/permissão), nunca JSONB.
-- **Migration** que cria `tipo_usuario` (com seed dos 3 códigos), adiciona a FK em `usuario`, e
-  faz o **backfill**: `senhor.contratados` = `ADMIN`, restante = `NORMAL`.
+- **Migration** que cria `tipo_usuario` (com seed dos 3 códigos), adiciona a FK
+  `usuario.tipo_usuario_id` e a coluna `usuario.token_versao` (contador de invalidação de
+  sessão), e faz o **backfill**: `senhor.contratados` = `ADMIN`, restante = `NORMAL`,
+  `token_versao` = 1 em todas as contas.
 - **Autorização global** (infra reutilizável): guard `autorizacao.guard.ts` + decorator
   `@TiposPermitidos(...tipos)` que barra quem não tiver um dos tipos exigidos →
   `UnauthorizedAccessException`. O guard faz uma **leitura leve de sessão** (PK em `usuario`)
@@ -56,7 +58,11 @@ As duas dimensões não se substituem nem se derivam.
 - **Mecânica de tester documentada e pronta para uso** (o decorator acima + guia de como
   aplicar/remover num módulo novo), **sem aplicar** em nenhum módulo atual.
 
-## Tasks
+## Quebra em tasks (proposta — a redigir quando o milestone entrar)
+
+> Ainda **não** redigidas como specs próprias. Seguindo o fluxo do projeto, o milestone é
+> quebrado em tasks numeradas (`m6-01`…) só quando chega a vez. Esta tabela é o plano de
+> intenção; cada linha vira uma `m6-NN-*.spec.md` na hora.
 
 | Task | Conteúdo |
 |---|---|
