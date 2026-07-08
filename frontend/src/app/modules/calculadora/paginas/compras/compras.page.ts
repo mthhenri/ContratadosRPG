@@ -1,4 +1,4 @@
-import { Component, computed, effect, signal } from '@angular/core';
+import { Component, computed, effect, input, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { map } from 'rxjs';
@@ -261,8 +261,10 @@ export class ComprasPage {
   private readonly painelAbertos = signal<ReadonlySet<number>>(new Set());
   private uidContador = 0;
 
-  // === Estado do modo Venda (m1-20) ===
-  protected readonly modo = signal<ModoCompras>('comprar');
+  // === Modo Venda (m1-20) ===
+  // O modo (`comprar`/`vender`) vem da rota: Compras e Vendas são abas distintas do shell, cada uma
+  // sua URL (`data: { modo }` → este input via `withComponentInputBinding`). Comprar é o padrão.
+  readonly modo = input<ModoCompras>('comprar');
   protected readonly taxaVenda = signal<TaxaVendaEnum>(TaxaVendaEnum.NORMAL);
   private readonly fragmentos = signal<GradeFragmentos>(fragmentosZerados());
   protected readonly opcoesTaxa = OPCOES_TAXA;
@@ -607,10 +609,11 @@ export class ComprasPage {
   /**
    * Volta a aba ao estado padrão: recursos ao preset de fábrica (`reset()` — Dinheiro 1000,
    * Prestígio 0, Inventário 5, Vontade 1), carrinho/amplificadores/painéis vazios, busca limpa e
-   * catálogo na primeira categoria. **Também zera o modo Venda (m1-20)** — modo volta a Comprar,
-   * carrinho de venda/taxa/contadores de fragmentos ao padrão. O `effect` de persistência regrava
-   * o estado (só do carrinho de compra) no `localStorage` (m1-11), então recarregar a página segue
-   * no padrão — **descarta um carrinho salvo**, que é justamente o que "Limpar" faz aqui.
+   * catálogo na primeira categoria. **Zera também o estado de Venda (m1-20)** — carrinho de
+   * venda/taxa/contadores de fragmentos ao padrão (o modo em si vem da rota, não se reseta aqui).
+   * O `effect` de persistência regrava o estado (só do carrinho de compra) no `localStorage`
+   * (m1-11), então recarregar a página segue no padrão — **descarta um carrinho salvo**, que é
+   * justamente o que "Limpar" faz aqui.
    */
   protected limpar(): void {
     this.formulario.reset();
@@ -622,16 +625,11 @@ export class ComprasPage {
     this.busca.set('');
     this.categoriaAtiva.set(ItemCategoriaEnum.CORPO_A_CORPO);
     this.uidContador = 0;
-    this.modo.set('comprar');
     this.taxaVenda.set(TaxaVendaEnum.NORMAL);
     this.fragmentos.set(fragmentosZerados());
   }
 
   // === Modo Venda (m1-20) — ações e cálculos ===
-  protected definirModo(modo: ModoCompras): void {
-    this.modo.set(modo);
-  }
-
   protected definirTaxa(taxa: TaxaVendaEnum): void {
     this.taxaVenda.set(taxa);
   }

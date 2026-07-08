@@ -4,7 +4,7 @@ import {
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { Title } from '@angular/platform-browser';
 import { providePrimeNG } from 'primeng/config';
@@ -21,7 +21,9 @@ import { environment } from '../environments/environment';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes),
+    // withComponentInputBinding: liga `data`/`params`/`query` da rota a `input()`s de mesmo nome
+    // do componente — usado para passar o modo (`comprar`/`vender`) à `ComprasPage` por rota (m1-20).
+    provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(
       withInterceptors([loadingInterceptor, authTokenInterceptor, errorHandlerInterceptor]),
     ),

@@ -1,29 +1,8 @@
 <app-ajuda-calculadora aba="compras" (limpar)="limpar()" />
 
 <div class="calc compras">
-  <!-- ALTERNADOR COMPRAR / VENDER (m1-20) — reusa o chip selecionável .compras-categoria -->
-  <div class="compras-modo" role="group" aria-label="Modo da aba">
-    <button
-      type="button"
-      class="compras-categoria compras-modo__opcao"
-      [class.selecionavel--ativo]="modo() === 'comprar'"
-      [attr.aria-pressed]="modo() === 'comprar'"
-      (click)="definirModo('comprar')"
-    >
-      Comprar
-    </button>
-    <button
-      type="button"
-      class="compras-categoria compras-modo__opcao"
-      [class.selecionavel--ativo]="modo() === 'vender'"
-      [attr.aria-pressed]="modo() === 'vender'"
-      (click)="definirModo('vender')"
-    >
-      Vender
-    </button>
-  </div>
-
-  <!-- CARD 1: CONFIGURAÇÃO -->
+  <!-- CARD 1: CONFIGURAÇÃO — só em Compras (o modo Vender não usa dinheiro/limites) -->
+  @if (modo() === 'comprar') {
   <section class="calc-cartao">
     <header class="calc-cartao__cabecalho">
       <span class="calc-cartao__indice">1</span>
@@ -64,12 +43,10 @@
         <div class="calc-stat__rotulo">Patente</div>
         <div class="calc-stat__valor calc-stat__valor--texto">{{ patenteTexto() }}</div>
       </div>
-      @if (modo() === 'comprar') {
-        <div class="calc-stat" [class.compras-negativo]="semDinheiro()" [class.compras-positivo]="!semDinheiro()">
-          <div class="calc-stat__rotulo">Dinheiro Restante</div>
-          <div class="calc-stat__valor calc-stat__valor--texto">{{ dinheiroRestanteTexto() }}</div>
-        </div>
-      }
+      <div class="calc-stat" [class.compras-negativo]="semDinheiro()" [class.compras-positivo]="!semDinheiro()">
+        <div class="calc-stat__rotulo">Dinheiro Restante</div>
+        <div class="calc-stat__valor calc-stat__valor--texto">{{ dinheiroRestanteTexto() }}</div>
+      </div>
       <div class="calc-stat compras-negativo">
         <div class="calc-stat__rotulo">Gasto Total</div>
         <div class="calc-stat__valor calc-stat__valor--texto">{{ gastoTexto() }}</div>
@@ -92,11 +69,12 @@
       </div>
     </div>
   </section>
+  }
 
   <!-- CARD 3: CATÁLOGO -->
   <section class="calc-cartao">
     <header class="calc-cartao__cabecalho">
-      <span class="calc-cartao__indice">3</span>
+      <span class="calc-cartao__indice">{{ modo() === 'vender' ? 1 : 3 }}</span>
       <h2 class="calc-cartao__titulo">Catálogo de Equipamentos</h2>
       <span class="calc-cartao__regua"></span>
     </header>
@@ -204,7 +182,7 @@
   <!-- CARD 4: CARRINHO -->
   <section class="calc-cartao">
     <header class="calc-cartao__cabecalho">
-      <span class="calc-cartao__indice">4</span>
+      <span class="calc-cartao__indice">{{ modo() === 'vender' ? 2 : 4 }}</span>
       <h2 class="calc-cartao__titulo">{{ modo() === 'vender' ? 'Carrinho de Venda' : 'Carrinho' }}</h2>
       <span class="calc-cartao__regua"></span>
       <div class="compras-carrinho-acoes">
@@ -306,7 +284,7 @@
                 @if (secao.titulo) {
                   <div class="compras-mod-secao">{{ secao.titulo }}</div>
                 }
-                <div class="compras-mod-grade">
+                <div class="compras-mod-grade" appOverflowFade>
                   @for (entrada of secao.entradas; track entrada.nome) {
                     <div
                       class="compras-mod-entrada"
@@ -389,40 +367,14 @@
     }
   </section>
 
-  <!-- CARD 5: VENDA (m1-20) — só no modo Vender -->
+  <!-- CARD 3: VENDA (m1-20) — só na aba Vendas -->
   @if (modo() === 'vender') {
     <section class="calc-cartao">
       <header class="calc-cartao__cabecalho">
-        <span class="calc-cartao__indice">5</span>
+        <span class="calc-cartao__indice">3</span>
         <h2 class="calc-cartao__titulo">Venda</h2>
         <span class="calc-cartao__regua"></span>
       </header>
-
-      <!-- Itens: seletor de taxa + valor de venda -->
-      <div class="compras-venda-bloco">
-        <div class="compras-venda-bloco__cabecalho">
-          <span class="compras-venda-bloco__titulo">Itens do carrinho</span>
-          <div class="compras-taxa" role="group" aria-label="Taxa de venda">
-            @for (opcao of opcoesTaxa; track opcao.taxa) {
-              <button
-                type="button"
-                class="compras-categoria compras-taxa__opcao"
-                [class.selecionavel--ativo]="taxaVenda() === opcao.taxa"
-                [attr.aria-pressed]="taxaVenda() === opcao.taxa"
-                (click)="definirTaxa(opcao.taxa)"
-              >
-                {{ opcao.rotulo }}
-              </button>
-            }
-          </div>
-        </div>
-        <div class="calc-stats">
-          <div class="calc-stat compras-positivo">
-            <div class="calc-stat__rotulo">Valor de Venda dos Itens</div>
-            <div class="calc-stat__valor calc-stat__valor--texto">{{ valorVendaItensTexto() }}</div>
-          </div>
-        </div>
-      </div>
 
       <!-- Fragmentos: grade de contadores por módulo × tipo -->
       <div class="compras-venda-bloco">
@@ -490,20 +442,43 @@
             </div>
           }
         </div>
+      </div>
+
+      <!-- Valores da venda (no fim, abaixo dos fragmentos): taxa + totais -->
+      <div class="compras-venda-bloco">
+        <div class="compras-venda-bloco__cabecalho">
+          <span class="compras-venda-bloco__titulo">Valores da venda</span>
+          <div class="compras-taxa" role="group" aria-label="Taxa de venda dos itens">
+            @for (opcao of opcoesTaxa; track opcao.taxa) {
+              <button
+                type="button"
+                class="compras-categoria compras-taxa__opcao"
+                [class.selecionavel--ativo]="taxaVenda() === opcao.taxa"
+                [attr.aria-pressed]="taxaVenda() === opcao.taxa"
+                (click)="definirTaxa(opcao.taxa)"
+              >
+                {{ opcao.rotulo }}
+              </button>
+            }
+          </div>
+        </div>
 
         <div class="calc-stats">
+          <div class="calc-stat compras-positivo">
+            <div class="calc-stat__rotulo">Valor de Venda dos Itens</div>
+            <div class="calc-stat__valor calc-stat__valor--texto">{{ valorVendaItensTexto() }}</div>
+          </div>
           <div class="calc-stat compras-positivo">
             <div class="calc-stat__rotulo">Total de Fragmentos</div>
             <div class="calc-stat__valor calc-stat__valor--texto">{{ totalFragmentosTexto() }}</div>
           </div>
         </div>
-      </div>
 
-      <!-- Total de venda (destaque) -->
-      <div class="calc-stats">
-        <div class="calc-stat compras-venda-total">
-          <div class="calc-stat__rotulo">Total de Venda</div>
-          <div class="calc-stat__valor calc-stat__valor--texto">{{ totalVendaTexto() }}</div>
+        <div class="calc-stats">
+          <div class="calc-stat compras-venda-total">
+            <div class="calc-stat__rotulo">Total de Venda</div>
+            <div class="calc-stat__valor calc-stat__valor--texto">{{ totalVendaTexto() }}</div>
+          </div>
         </div>
       </div>
     </section>

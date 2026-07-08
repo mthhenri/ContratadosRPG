@@ -473,6 +473,39 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 8px;
+  // Mesmo esquema de scroll dos itens do catálogo (m1-20): mostra ~2 linhas de modificações e rola
+  // o resto por dentro, com fade-out só na borda que corta conteúdo (via [appOverflowFade] →
+  // --topo/--base). No topo não há fade superior; no fim, não há inferior. Vale nos dois modos.
+  max-height: 230px;
+  overflow-y: auto;
+  padding-right: 4px;
+
+  --fade-topo: 0px;
+  --fade-base: 0px;
+
+  &.overflow-fade--topo,
+  &.overflow-fade--base {
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      #000 var(--fade-topo),
+      #000 calc(100% - var(--fade-base)),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      #000 var(--fade-topo),
+      #000 calc(100% - var(--fade-base)),
+      transparent 100%
+    );
+  }
+  &.overflow-fade--topo {
+    --fade-topo: 22px;
+  }
+  &.overflow-fade--base {
+    --fade-base: 22px;
+  }
 }
 .compras-mod-entrada {
   display: flex;
@@ -603,17 +636,12 @@
 }
 
 // === Modo Venda (m1-20) ===
-// Alternador Comprar / Vender e seletor de taxa: reusam o chip .compras-categoria (padrão de tab,
-// estado ativo accent + alvo de toque no mobile já vêm de lá). Só o layout dos wrappers é novo.
-.compras-modo,
+// Seletor de taxa de venda: reusa o chip .compras-categoria (padrão de tab, estado ativo accent +
+// alvo de toque mobile já vêm de lá). Só o layout do wrapper é novo.
 .compras-taxa {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-.compras-modo .compras-categoria {
-  flex: 1;
-  justify-content: center;
 }
 
 // Blocos do card de venda (itens / fragmentos): cabeçalho com título e controle/nota à direita.
@@ -760,14 +788,28 @@
     flex-wrap: wrap;
   }
 
-  // Grade de fragmentos empilha em uma coluna; contadores e subtotal confortáveis num toque só.
+  // Fragmentos rolam lateralmente no mobile: os 5 módulos viram cartões lado a lado num scroller
+  // horizontal contido (o body não rola de lado), encurtando bastante a tela vertical.
+  .compras-fragmentos {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
   .compras-fragmentos__linha {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     gap: 12px;
+    flex: 0 0 auto;
+    min-width: 150px;
+    margin-top: 0;
     text-align: center;
   }
   .compras-fragmentos__subtotal {
+    width: 100%;
     text-align: center;
+    border-top: 1px solid var(--border);
     padding-top: 10px;
   }
 }
