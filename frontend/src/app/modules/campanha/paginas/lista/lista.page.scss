@@ -71,6 +71,14 @@
     text-decoration: none;
     transition: background-color 0.15s ease, border-color 0.15s ease;
 
+    // No mobile, o chip de papel desce para a própria linha (ver `&__texto`/`.chip-papel`
+    // abaixo): a linha precisa permitir quebra e o avatar topo-alinha com o nome (que pode ter
+    // várias linhas), em vez de centralizar contra o bloco de texto alto.
+    @include bp.mobile {
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
     &:hover {
       background: var(--accent-dim);
       border-color: var(--border-strong);
@@ -97,6 +105,14 @@
     flex-direction: column;
     gap: 4px;
     min-width: 0;
+
+    // Base do flex grande o bastante para que avatar + texto ocupem a 1ª linha e empurrem o
+    // chip para a linha de baixo (a soma avatar + texto + chip passa de 100%), devolvendo a
+    // largura cheia ao nome — que, dividindo a linha com o chip, quebrava uma palavra por
+    // linha em ~360px. Fica entre "sobra espaço p/ o avatar" e "não cabe o chip junto".
+    @include bp.mobile {
+      flex-basis: 75%;
+    }
   }
 
   &__nome {
@@ -184,6 +200,12 @@
 
   app-icone {
     font-size: 11px;
+  }
+
+  // No mobile o chip cai para a própria linha (empurrado pelo `flex-basis` do texto): alinha à
+  // direita, colado ao conteúdo (o pill continua abraçando o rótulo, sem esticar a borda).
+  @include bp.mobile {
+    margin-left: auto;
   }
 }
 

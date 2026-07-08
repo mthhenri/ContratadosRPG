@@ -57,6 +57,11 @@
     font-weight: 700;
     letter-spacing: 0.08em;
     color: var(--accent);
+    // Nunca deixa o código vazar por cima dos botões vizinhos quando o rótulo do "Regenerar"
+    // cresce (Regenerar → Regenerando… → Regenerado) e aperta o espaço da linha (achado ao vivo).
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   &__copiar {
@@ -368,6 +373,13 @@
 
   // Alvos de toque confortáveis (m1-15 / WCAG 2.5.5) nas ações do mestre e no link de voltar.
   @include bp.mobile {
+    // Código sempre na sua própria linha (flex-basis 100% força a quebra) — o rótulo do
+    // "Regenerar" muda de tamanho (Regenerar → Regenerando… → Regenerado) e, na mesma linha,
+    // apertava o código a ponto de vazar por cima do botão de copiar (achado ao vivo no mobile).
+    &__codigo {
+      flex: 1 1 100%;
+    }
+
     &__copiar {
       width: bp.$alvo-toque;
       height: bp.$alvo-toque;

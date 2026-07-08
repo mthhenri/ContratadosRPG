@@ -1,6 +1,81 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-08 (**m3-04 —
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-08 (**refino mobile da
+> lista de campanhas: chip de papel desce para a própria linha em ~360px**, aprovado pelo autor numa
+> re-revisão geral do mobile do M2. **Achado da re-revisão** (auditoria Playwright das 6 telas ×
+> 360/390/430px — as 18 combinações agora rodando **sem erro** graças a browser relançado por largura
+> + retry, contornando o esgotamento de processo do Chromium que derrubava o passe de 430px antes):
+> zero scroll horizontal e zero alvo de toque < 44px em todas — mobile **aprovado**. O único ponto
+> cosmético era a **lista de campanhas** (`lista.page`): o chip MESTRE/JOGADOR dividia a linha flex
+> com o nome, espremendo a coluna de texto a ~114px em 360px, então nomes de várias palavras quebravam
+> uma palavra por linha (até "Protocolo Cinza" virava 2 linhas; medido via `getBoundingClientRect`).
+> **Correção (SCSS-only, escopada a `@include bp.mobile`):** `.campanhas__ligacao` ganhou
+> `flex-wrap: wrap` + `align-items: flex-start` (avatar topo-alinha com o nome); `.campanhas__texto`
+> ganhou `flex-basis: 75%` — grande o bastante para que avatar + texto ocupem a 1ª linha e a soma com
+> o chip passe de 100%, **empurrando o chip para a linha de baixo**; `.chip-papel` ganhou
+> `margin-left: auto` (alinha à direita, pill colado ao rótulo — a borda não estica). Resultado
+> (medido): coluna de texto **114px → 208px**, "Protocolo Cinza" volta a 1 linha, "Operação Sentinela
+> Vermelha" (nome realista) cai de ~4 para 2 linhas. **Desktop intocado** (bloco `@media
+> max-width: 560px`): o chip continua inline à direita na mesma linha do nome (`sameRow` confirmado a
+> 900px). Sem mudança de DOM/TS, nenhum seletor usado por teste renomeado. Reauditoria das 18
+> combinações confirmou zero overflow / zero alvo < 44px; `lint`/`test` (**frontend 126/126, shared
+> 143/143**)/`build` verdes. Sessão anterior no mesmo dia (**correção: código de
+> convite sobrepondo o botão de copiar no mobile ao apertar "Regenerar"**, reportado pelo autor ao
+> usar a tela de detalhe da campanha num aparelho real). **Causa raiz:** `.detalhe__convite-linha`
+> (`detalhe.page.scss`) é um `flex; flex-wrap: wrap` com três filhos — `.detalhe__codigo` (`flex: 1;
+> min-width: 0`), `.detalhe__copiar` e `.detalhe__regenerar` — e o rótulo do botão regenerar **muda de
+> tamanho** durante o ciclo (`Regenerar` → `Regenerando…` → `Regenerado`, `detalhe.page.ts`); o
+> crescimento do rótulo aperta o espaço da linha, e como `.detalhe__codigo` não tinha nenhuma trava de
+> overflow, o texto do código (que não tem espaço/hífen para quebrar) **vazava visualmente por cima**
+> do botão de copiar em vez de encolher — reproduzido ao vivo via Playwright (mock do endpoint de
+> regenerar com atraso) nos 3 estados, screenshot confirmou a sobreposição inclusive no estado normal,
+> pior no estado "Regenerado" (rótulo mais largo). **Correção (SCSS-only, `detalhe.page.scss`):
+> (1)** `.detalhe__codigo` ganhou `overflow: hidden; white-space: nowrap; text-overflow: ellipsis`
+> como rede de segurança (nunca mais vaza por cima de um vizinho, mesmo que o espaço aperte de novo);
+> **(2)** dentro de `@include bp.mobile`, `.detalhe__codigo` ganhou `flex: 1 1 100%` — com
+> `flex-wrap: wrap`, isso força o código a ocupar sozinho a própria linha (largura cheia,
+> independente do tamanho do rótulo do regenerar), empurrando copiar+regenerar para a linha de baixo;
+> o código nunca mais compete por espaço com um botão de rótulo variável. Reproduzido e confirmado via
+> `getBoundingClientRect` antes/depois (código 270px de largura fixa nos 3 estados vs. 74,9px
+> espremido antes da correção) e por screenshot nos 3 estados (normal/regenerando/regenerado) em
+> 360px — sem sobreposição em nenhum. Reauditoria das 6 telas do M2 × 360/390px (12/18 combinações;
+> as 6 de 430px falharam por esgotamento do Chromium headless após uso pesado do navegador na sessão —
+> falha de ambiente, não de layout, já que o breakpoint mobile é um único `@media max-width: 560px`
+> sem distinção entre as 3 larguras) confirmou **zero** overflow e **zero** alvo de toque abaixo de
+> 44px. `lint`/`test` (**frontend 126/126, shared 143/143**)/`build` (562,92 kB inicial, dentro do
+> budget de 565 kB, sem warning) verdes. Sem mudança de DOM/TS — só SCSS; nenhuma tela/feature nova.
+> Sessão anterior no mesmo dia (**re-execução do
+> refinamento visual mobile do M2 (m2-08)**: a pedido do autor, nova auditoria completa das 6 telas
+> do M2 (login, registro, painel/lista, criar, entrar, detalhe) via Playwright/Chromium headless nas
+> 3 larguras de referência da §6 do `PARIDADE-M1.md` (360/390/430px), sessão + API de campanha
+> mockadas (mesmo método das revisões anteriores da m2-08). **Achado de partida:** zero scroll
+> horizontal nas 6 telas (confirma o passe original), mas **5 alvos de toque abaixo de 44px** que a
+> m2-08 e as 2 auditorias seguintes não haviam coberto — presentes nas 3 larguras (não eram regra de
+> breakpoint faltante, e sim controles nunca tocados): **(1)** o **gatilho "Tema"** da topbar
+> (`shared/configuracoes-tema` — presente em todas as telas, inclusive as públicas de auth; a m1-15
+> só havia tratado os controles *dentro* do modal, nunca o próprio botão de abrir), 85×34px; **(2)**
+> os **links de navegação entre telas** — "Criar agora"/"Entrar" (login/registro) e "Voltar às
+> campanhas" (criar/entrar) — texto solto de ~15px de altura dentro de um `<p>`, sem nenhum
+> tratamento de toque, mobile ou desktop. O critério de aceite #3 da própria m2-08 já listava "links
+> de navegação entre telas" entre os controles exigidos — gap real, não extrapolação. **Correção**
+> (SCSS-only, escopada a `@include bp.mobile`): `.config-gatilho` ganhou `min-height:
+> bp.$alvo-toque`; os 4 `__link` (login/registro/criar/entrar) ganharam `display: inline-flex;
+> align-items: center; justify-content: center; min-height: bp.$alvo-toque; padding: 4px 6px` —
+> mesma técnica dos outros controles de toque da m2-08, sem alterar DOM/TS. Reauditoria confirmou os
+> 18 casos (6 telas × 3 larguras) com **zero** overflow e **zero** alvo abaixo de 44px.
+> **Verificação adicional** com dados realistas de borda (nome/descrição de campanha bem longos,
+> código de convite no tamanho real gerado pelo backend — 8 caracteres, `TAMANHO_CONVITE` em
+> `campanha.service.ts`): sem overflow horizontal em `lista`/`detalhe`; a caixa de código de convite
+> e o botão de copiar, medidos via `getBoundingClientRect`, mantêm os 12px de gap do design (a
+> impressão de sobreposição num screenshot de baixa resolução não se confirmou — falso alarme
+> descartado antes de "corrigir" algo que não estava quebrado). Um nome de membro artificialmente
+> extremo (49 caracteres) produz quebra de uma palavra por linha e um chip de papel centralizado no
+> meio do bloco — cosmeticamente não ideal, mas sem sobreposição real de caixas nem scroll
+> horizontal, e fora do padrão de nomes reais do domínio; registrado como observação, não corrigido
+> (evita extrapolar escopo sobre um edge case sintético). `lint`/`test` (**frontend 126/126, shared
+> 143/143**)/`build` (562,92 kB inicial, dentro do budget de 565 kB, sem warning) verdes. Spec
+> `m2-08` permanece em `done/` (nenhuma regra nova — só acabamento sobre o que ela já definia);
+> nenhuma tela/feature nova, nenhuma mudança de DOM/TS. Sessão anterior no mesmo dia (**m3-04 —
 > concessão/revogação de acesso de visualização da ficha (backend)**: fecha a **matriz §14** ("outro
 > membro vê só com linha em `usuario_ficha_acesso`") estendendo o módulo `ficha` da m3-03 — sem
 > frontend, sem WebSocket. **6 DTOs novos** em `shared/src/dtos/ficha/ficha-operacao.dtos.ts`:
