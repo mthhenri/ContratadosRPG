@@ -183,8 +183,14 @@
   }
 
   &__acoes,
-  &__exclusao {
+  &__exclusao,
+  &__ficha {
     margin-bottom: 24px;
+  }
+
+  // Ação "Nova ficha" (m3-06) — link para a criação da ficha do jogador nesta campanha.
+  &__ficha-acao {
+    text-decoration: none;
   }
 
   &__acao {

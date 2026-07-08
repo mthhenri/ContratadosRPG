@@ -1,6 +1,68 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-08 (**m3-05 — gateway de
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-08 (**m3-06 — frontend da
+> ficha de jogador (criação e edição)**: abre o módulo `modules/ficha/` no frontend — as telas de
+> **criação** e **edição** da própria ficha, reusando os controles e cálculos da calculadora de agente
+> (M1) com **status derivados ao vivo** via `shared/regras` (proibições #26/#27 — nenhuma fórmula
+> duplicada no front). **`FichaService`** (`providedIn:'root'`, transporte HTTP puro — extrai `dados`
+> do `StandardResponse`, DTOs do shared `./dtos/ficha`, JWT via `auth-token.interceptor`): `criarFicha`
+> (`POST /ficha`), `recuperarFicha` (`GET /ficha/:id`), `alterarFicha` (`PUT /ficha/:id`) — as três do
+> CRUD m3-03 que criar/editar exigem (listagem/visualização por terceiros e UI de concessão são m3-07).
+> **`/ficha` adicionado ao `proxy.conf.json`**. **Componente reutilizável `FichaFormulario`**
+> (`componentes/ficha-formulario/`, o `ficha-formulario.component.ts` que o CONVENTIONS já citava) —
+> onde vive o reuso da calculadora: **Reactive Forms** (`FormGroup` plano + subgrupo `atributos`),
+> `input` `valorInicial` (null na criação, o documento na edição) / `salvando` / `rotuloAcao`, `output`
+> `salvar<{nome,dados}>`. Reusa o **`StepInput`** (m1-06) e **todas** as fórmulas de
+> `shared/regras/agente` (Vida/Energia máximas, Defesa/Esquiva/Bloqueio, Proficiência, Deslocamento,
+> Dano Corpo/Furtivo, Inventário, Limite de Energia, Sanidade/Traumas, Hab./Turno, Percepção) em
+> Signals `computed`, **idêntico à aba `agente`**. **Dez atributos** (`FichaAtributosDto`, m3-01)
+> agrupados Físicos/Mentais; as fórmulas consomem os cinco que `regras/agente` usa
+> (Vigor/Destreza/Força/Vontade/Sentidos, via `aplicarLimitesPorClasse`) — os outros cinco são
+> guardados, sem alimentar derivado (nenhuma fórmula os usa hoje). O **protótipo** mostrava 5 atributos,
+> mas o **contrato m3-01 fixa 10** — o contrato vence. **Coerência que o backend revalida
+> (`validarDadosContraRegras`) espelhada no front:** ao trocar de classe, reclampa Nível e os 10
+> atributos aos limites (`obterLimitesClasse`) e descarta o arquétipo inválido (Experimento/Civil não
+> têm — `arquetipo: null`); um `effect` mantém Vida/Energia atuais ≤ máximo derivado ao vivo (e clampa
+> de novo no submit — Energia pode negativar, só o teto é limitado). **Sub-coleções que esta tela ainda
+> não edita** (sequelas, traumas, lesões, habilidades, **inventário**) são **preservadas** no round-trip
+> da edição (Signal `preservado`, mescladas de volta no submit) e nascem vazias na criação — nunca
+> zeradas; editores ricos delas ficam para tasks futuras (não é extrapolação — a spec fixa o reuso da
+> calculadora, não CRUD de coleções). **Telas** (`paginas/criar` + `paginas/editar`, standalone lazy):
+> `FichaCriar` lê `campanhaId` da rota, `criarFicha` e navega à **edição** da ficha nova (recarrega
+> íntegra — critério de aceite); `FichaEditar` lê `campanhaId`+`id`, `recuperarFicha` → entrega ao
+> formulário, `alterarFicha` com confirmação "Salvo ✓" efêmera. **Rotas** em novo
+> `modules/ficha/ficha.routes.ts` (`nova`, `:id/editar`) montadas em `app.routes.ts` sob
+> **`painel/:campanhaId/ficha`** atrás do `autenticacaoGuard` — colocada **antes** da rota `painel`
+> genérica para casar o prefixo mais longo (o router não volta à irmã após consumir só `painel`); o
+> `campanhaId` mora na rota-pai, lido por um helper `lerParamRota` que sobe a cadeia de rotas
+> (herança `emptyOnly` não propaga a filhas de caminho não-vazio). **Ponto de entrada:** um botão mínimo
+> **"Nova ficha"** (`.detalhe__ficha-acao`) foi adicionado ao **detalhe da campanha** (`/painel/:id`),
+> visível a **qualquer membro** (a matriz §14 deixa cada membro criar a própria ficha; o backend é o
+> árbitro), ligando a `['/painel', campanhaId, 'ficha', 'nova']`; a **lista de fichas** propriamente
+> (edição/visualização por ficha) continua sendo m3-07. `.scss`/BEM só com tokens do tema (proibição #29): card/stat/stepper/slider
+> copiados dos padrões da aba `agente`; cores semânticas (Vida `--vida`, Energia `--energy`, Furtivo
+> `--positive`), N/A onde a classe não possui a stat (Civil sem defesa). **+13 testes** (Vitest,
+> **frontend 144/144**): `ficha.service.spec` (3 — rota/verbo/corpo de cada método), `ficha-formulario`
+> (5 — nome obrigatório, criação com Vida/Energia cheias e sub-coleções vazias, semeadura da edição,
+> **preservação** de habilidades/inventário/sequelas no round-trip, reclampe Civil zerando Vigor 6→3 e
+> limpando arquétipo), `criar.page` (1 — cria e navega à edição), `editar.page` (2 — carrega e salva) e
+> `app.routes.spec` (+2 — guard redireciona a criação sem sessão; libera com sessão). `lint`/`test`/
+> `build` (AOT type-checou os templates) verdes. **Ajuste de budget:** o novo módulo lazy dividiu
+> módulos compartilhados (StepInput + `regras/agente`, usados pela calculadora **e** pela ficha) e
+> empurrou o bundle inicial de 564,88 → **566,80 kB**, acima do budget de 565 kB; seguindo o precedente
+> aprovado pelo autor (mesmo caso do bump de estilos da m1-20), o `maximumWarning` de `initial` subiu
+> **565→575 kB** no `angular.json` — build **sem warning**. **Verificado ao vivo:** (1) **REST contra o
+> Postgres** com um payload **exatamente na forma que o formulário produz** — registro→login→campanha→
+> `POST /ficha` 201 → `GET` recupera íntegro (nome/nível/vigor/vida/anotações) → `PUT` (nível 3→5,
+> prestígio 0→1, vida 10→12) 200 → `GET` confirma persistido íntegro; dados incoerentes (vida 9999) →
+> **400** (validação `shared/regras` do backend, confirmando que o clamp do front é necessário); (2)
+> **render (Playwright/Chromium)** da tela de criação com sessão injetada — 5 cards, **Vida Máxima
+> reage ao vivo 34→54** ao subir Vigor 1→6 (mesma fonte da calculadora), troca para Civil reclampa
+> atributos a **máx 3**, oculta o arquétipo e auto-limita Vida Atual a 13/13 quando o máximo cai, **zero
+> erros de console**. Fora de escopo (mantido): lista de fichas da campanha e visualização por terceiros
+> (m3-07), tempo real/tela do mestre ao vivo (m3-08), refino mobile dedicado (m3-09), editores das
+> sub-coleções (sequelas/traumas/lesões/habilidades/inventário). Spec `m3-06` → `done/`. **M3 avança:
+> criação/edição da ficha no ar (front + back integrados).** Sessão anterior no mesmo dia (**m3-05 — gateway de
 > tempo real (WebSocket) broadcast-only**: fecha o §9 — o tempo real das fichas — **sem frontend, sem
 > escrita pelo gateway** (proibição #25). **Dependências novas** no backend: `@nestjs/websockets`,
 > `@nestjs/platform-socket.io`, `socket.io` (o `README` já anunciava "Socket.IO broadcast-only").

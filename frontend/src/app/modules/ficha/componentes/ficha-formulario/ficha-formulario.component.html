@@ -1,0 +1,204 @@
+<form class="ficha-form" [formGroup]="formulario" (ngSubmit)="submeter()">
+  <!-- CARD 1: IDENTIDADE & CLASSE -->
+  <section class="ficha-cartao">
+    <header class="ficha-cartao__cabecalho">
+      <span class="ficha-cartao__indice">1</span>
+      <h2 class="ficha-cartao__titulo">Identidade &amp; Classe</h2>
+      <span class="ficha-cartao__regua"></span>
+    </header>
+
+    <div class="ficha-config">
+      <div class="ficha-campo ficha-campo--largo">
+        <label class="ficha-campo__rotulo" for="ficha-nome">Nome do Agente</label>
+        <input
+          id="ficha-nome"
+          class="ficha-input"
+          type="text"
+          formControlName="nome"
+          autocomplete="off"
+          placeholder="Ex.: Kane Marlowe"
+        />
+        @if (formulario.controls.nome.touched && formulario.controls.nome.invalid) {
+          <span class="ficha-campo__erro">Informe um nome para a ficha.</span>
+        }
+      </div>
+
+      <div class="ficha-campo">
+        <label class="ficha-campo__rotulo" for="ficha-classe">Classe / Registro</label>
+        <select id="ficha-classe" class="ficha-select" formControlName="classe">
+          @for (grupo of gruposClasse; track grupo.rotulo) {
+            <optgroup [label]="grupo.rotulo">
+              @for (opcao of grupo.opcoes; track opcao.valor) {
+                <option [value]="opcao.valor">{{ opcao.rotulo }}</option>
+              }
+            </optgroup>
+          }
+        </select>
+      </div>
+
+      @if (ehClasseBase()) {
+        <div class="ficha-campo">
+          <label class="ficha-campo__rotulo" for="ficha-arquetipo">Arquétipo</label>
+          <select id="ficha-arquetipo" class="ficha-select" formControlName="arquetipo">
+            <option [ngValue]="null">— Nenhum —</option>
+            @for (opcao of arquetipos(); track opcao.valor) {
+              <option [ngValue]="opcao.valor">{{ opcao.rotulo }}</option>
+            }
+          </select>
+        </div>
+      }
+
+      <div class="ficha-campo">
+        <div class="ficha-campo__linha">
+          <label class="ficha-campo__rotulo" for="ficha-nivel">{{ rotuloNivel() }}</label>
+          <span class="ficha-campo__nivel">{{ formulario.controls.nivel.value }}</span>
+        </div>
+        <input
+          id="ficha-nivel"
+          class="ficha-slider"
+          type="range"
+          step="1"
+          formControlName="nivel"
+          [min]="limites().nivelMinimo"
+          [max]="limites().nivelMaximo"
+        />
+        <div class="ficha-campo__escala">
+          <span>{{ limites().nivelMinimo }}</span>
+          <span>{{ limites().nivelMaximo }}</span>
+        </div>
+      </div>
+
+      <div class="ficha-campo">
+        <span class="ficha-campo__rotulo">Prestígio</span>
+        <app-step-input formControlName="prestigio" ariaRotulo="Prestígio" />
+      </div>
+    </div>
+  </section>
+
+  <!-- CARD 2: ATRIBUTOS -->
+  <section class="ficha-cartao">
+    <header class="ficha-cartao__cabecalho">
+      <span class="ficha-cartao__indice">2</span>
+      <h2 class="ficha-cartao__titulo">Atributos</h2>
+      <span class="ficha-cartao__regua"></span>
+      <span class="ficha-cartao__meta">máx {{ limites().atributoMaximo }}</span>
+    </header>
+
+    <div formGroupName="atributos" class="ficha-atributos">
+      @for (grupo of gruposAtributos; track grupo.rotulo) {
+        <div class="ficha-atributos__grupo">
+          <span class="ficha-atributos__rotulo-grupo">{{ grupo.rotulo }}</span>
+          <div class="ficha-atributos__grade">
+            @for (campo of grupo.campos; track campo.chave) {
+              <div class="ficha-atributo">
+                <span class="ficha-atributo__rotulo">{{ campo.rotulo }}</span>
+                <app-step-input
+                  [formControlName]="campo.chave"
+                  [min]="limites().atributoMinimo"
+                  [max]="limites().atributoMaximo"
+                  [ariaRotulo]="campo.rotulo"
+                />
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- CARD 3: ESTADO ATUAL -->
+  <section class="ficha-cartao">
+    <header class="ficha-cartao__cabecalho">
+      <span class="ficha-cartao__indice">3</span>
+      <h2 class="ficha-cartao__titulo">Estado Atual</h2>
+      <span class="ficha-cartao__regua"></span>
+    </header>
+
+    <div class="ficha-estado">
+      <div class="ficha-campo">
+        <div class="ficha-campo__linha">
+          <span class="ficha-campo__rotulo">Vida Atual</span>
+          <span class="ficha-campo__maximo">/ {{ vidaMaxima() }} máx</span>
+        </div>
+        <app-step-input formControlName="vidaAtual" [max]="vidaMaxima()" ariaRotulo="Vida atual" />
+      </div>
+
+      <div class="ficha-campo">
+        <div class="ficha-campo__linha">
+          <span class="ficha-campo__rotulo">Energia Atual</span>
+          <span class="ficha-campo__maximo">/ {{ energiaMaxima() }} máx</span>
+        </div>
+        <app-step-input
+          formControlName="energiaAtual"
+          [max]="energiaMaxima()"
+          ariaRotulo="Energia atual"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- CARD 4: STATUS DERIVADO (ao vivo, via shared/regras) -->
+  <section class="ficha-cartao">
+    <header class="ficha-cartao__cabecalho">
+      <span class="ficha-cartao__indice">4</span>
+      <h2 class="ficha-cartao__titulo">Status Derivado</h2>
+      <span class="ficha-cartao__regua"></span>
+      <span class="ficha-cartao__meta">calculado</span>
+    </header>
+
+    <div class="ficha-hero">
+      <div class="ficha-stat ficha-stat--hero ficha-stat--vida">
+        <div class="ficha-stat__rotulo">Vida Máxima</div>
+        <div class="ficha-stat__valor">{{ vidaMaxima() }}</div>
+      </div>
+      <div class="ficha-stat ficha-stat--hero ficha-stat--energia">
+        <div class="ficha-stat__rotulo">Energia Máxima</div>
+        <div class="ficha-stat__valor">{{ energiaMaxima() }}</div>
+      </div>
+      <div class="ficha-stat ficha-stat--hero">
+        <div class="ficha-stat__rotulo">Defesa Base</div>
+        <div class="ficha-stat__valor">{{ defesaBaseTexto() }}</div>
+      </div>
+      <div class="ficha-stat ficha-stat--hero">
+        <div class="ficha-stat__rotulo">Proficiência</div>
+        <div class="ficha-stat__valor">{{ proficienciaTexto() }}</div>
+      </div>
+    </div>
+
+    <div class="ficha-secundarios">
+      @for (stat of secundarios(); track stat.rotulo) {
+        <div
+          class="ficha-stat"
+          [class.ficha-stat--energia]="stat.tom === 'energia'"
+          [class.ficha-stat--furtivo]="stat.tom === 'furtivo'"
+        >
+          <div class="ficha-stat__rotulo">{{ stat.rotulo }}</div>
+          <div class="ficha-stat__valor ficha-stat__valor--medio">{{ stat.valor }}</div>
+          <div class="ficha-stat__detalhe">{{ stat.detalhe }}</div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- CARD 5: ANOTAÇÕES -->
+  <section class="ficha-cartao">
+    <header class="ficha-cartao__cabecalho">
+      <span class="ficha-cartao__indice">5</span>
+      <h2 class="ficha-cartao__titulo">Anotações</h2>
+      <span class="ficha-cartao__regua"></span>
+    </header>
+
+    <textarea
+      class="ficha-textarea"
+      formControlName="anotacoes"
+      rows="4"
+      placeholder="Personalidade, origem, objetivos, observações do mestre…"
+    ></textarea>
+  </section>
+
+  <div class="ficha-form__acoes">
+    <button class="ficha-botao ficha-botao--primario" type="submit" [disabled]="salvando()">
+      {{ salvando() ? 'Salvando…' : rotuloAcao() }}
+    </button>
+  </div>
+</form>

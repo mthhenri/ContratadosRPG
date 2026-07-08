@@ -74,4 +74,19 @@ describe('Rotas — autenticação', () => {
     expect(urlFinal).toBe('/perfil');
     expect(elemento.querySelector('.perfil')).not.toBeNull();
   });
+
+  it('redireciona a criação de ficha ao login quando sem sessão', async () => {
+    const { urlFinal } = await navegar('/painel/1/ficha/nova');
+    expect(urlFinal).toBe('/login?retorno=%2Fpainel%2F1%2Fficha%2Fnova');
+  });
+
+  it('libera a criação de ficha com sessão aberta', async () => {
+    localStorage.setItem(
+      CHAVE_SESSAO,
+      JSON.stringify({ token: 't', id: 1, login: 'a', nome: 'Agente A' }),
+    );
+    const { elemento, urlFinal } = await navegar('/painel/1/ficha/nova');
+    expect(urlFinal).toBe('/painel/1/ficha/nova');
+    expect(elemento.querySelector('.ficha-pagina')).not.toBeNull();
+  });
 });

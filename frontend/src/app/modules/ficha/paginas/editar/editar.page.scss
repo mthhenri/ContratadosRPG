@@ -1,0 +1,74 @@
+// Casca da tela de edição de ficha (m3-06) — cabeçalho + o `FichaFormulario`. Só tokens do tema
+// "Terminal de Contenção" (proibição #29).
+
+.ficha-pagina {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 20px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-grid);
+
+  &__topo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__voltar {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    align-self: flex-start;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--accent);
+    }
+  }
+
+  &__linha-titulo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__titulo {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+  }
+
+  &__salvo {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--positive);
+  }
+
+  &__legenda {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--text-dim);
+    margin: 0;
+  }
+
+  &__carregando {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-style: italic;
+    color: var(--text-mute);
+    margin: 0;
+  }
+}

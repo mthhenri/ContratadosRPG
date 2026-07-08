@@ -124,6 +124,16 @@
         }
       }
 
+      <div class="detalhe__ficha">
+        <a
+          class="botao botao--primario detalhe__acao detalhe__ficha-acao"
+          [routerLink]="['/painel', campanhaAtual.id, 'ficha', 'nova']"
+        >
+          <app-icone nome="novo-agente" />
+          Nova ficha
+        </a>
+      </div>
+
       <header class="detalhe__secao">
         <h2 class="detalhe__secao-titulo">Membros</h2>
         <span class="detalhe__secao-regua"></span>

@@ -23,6 +23,14 @@ export const routes: Routes = [
         (modulo) => modulo.autenticacaoRoutes,
       ),
   },
+  // Criação/edição de ficha de jogador (guardada) — m3-06. Montada sob
+  // `/painel/:campanhaId/ficha` (nova / :id/editar). Precede a rota `painel` genérica para ser
+  // casada antes do prefixo mais curto (o router não voltaria à irmã após consumir só `painel`).
+  {
+    path: 'painel/:campanhaId/ficha',
+    canActivate: [autenticacaoGuard],
+    loadChildren: () => import('./modules/ficha/ficha.routes').then((modulo) => modulo.fichaRoutes),
+  },
   // Área privada de campanhas (guardada) — destino padrão pós-login. Montada sob `/painel`
   // (listar/criar/entrar/detalhe), consumindo o backend fechado nas m2-04/m2-05 — m2-07.
   {

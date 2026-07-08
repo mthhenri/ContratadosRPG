@@ -1,0 +1,33 @@
+<section class="ficha-pagina">
+  <header class="ficha-pagina__topo">
+    <a class="ficha-pagina__voltar" [routerLink]="['/painel', campanhaId]">
+      <app-icone nome="voltar" />
+      <span>Voltar à campanha</span>
+    </a>
+    <div class="ficha-pagina__linha-titulo">
+      <h1 class="ficha-pagina__titulo">Editar Ficha</h1>
+      @if (salvo()) {
+        <span class="ficha-pagina__salvo">
+          <app-icone nome="check" />
+          Salvo
+        </span>
+      }
+    </div>
+    @if (ficha(); as fichaAtual) {
+      <p class="ficha-pagina__legenda">{{ fichaAtual.nome }}</p>
+    }
+  </header>
+
+  @if (carregando()) {
+    <p class="ficha-pagina__carregando">Carregando ficha…</p>
+  } @else if (ficha(); as fichaAtual) {
+    <app-ficha-formulario
+      [valorInicial]="fichaAtual"
+      rotuloAcao="Salvar alterações"
+      [salvando]="salvando()"
+      (salvar)="salvar($event)"
+    />
+  } @else {
+    <p class="ficha-pagina__carregando">Ficha não encontrada.</p>
+  }
+</section>

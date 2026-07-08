@@ -1,0 +1,325 @@
+// Formulário da ficha de jogador (m3-06). Consome apenas os tokens do tema "Terminal de
+// Contenção" (docs/design/tema/_tokens.scss) — nenhum hex/fonte/raio solto (proibição #29). Os
+// blocos .ficha-cartao (card), .ficha-stat (stat box), o slider e o stepper são adaptados dos
+// padrões canônicos de docs/design/tema/_componentes.scss e da aba `agente` da calculadora.
+
+.ficha-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-grid);
+
+  &__acoes {
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+
+// === Card (copiado de _componentes.scss .card) ===
+.ficha-cartao {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--pad-card);
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 18px;
+  }
+
+  &__indice {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+
+  &__titulo {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+  }
+
+  &__regua {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  &__meta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-mute);
+    flex: 0 0 auto;
+  }
+}
+
+// === Card 1: configuração (identidade + classe) ===
+.ficha-config {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--gap-grid);
+}
+
+.ficha-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  // Ocupa a linha inteira do grid (nome do agente).
+  &--largo {
+    grid-column: 1 / -1;
+  }
+
+  &__linha {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__rotulo {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+  }
+
+  &__nivel {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  &__maximo {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-mute);
+  }
+
+  &__escala {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-mute);
+  }
+
+  &__erro {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--accent);
+  }
+}
+
+.ficha-input,
+.ficha-select {
+  width: 100%;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  padding: 11px 12px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  outline: none;
+
+  &:focus {
+    border-color: var(--accent-border);
+  }
+}
+
+.ficha-slider {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.ficha-textarea {
+  width: 100%;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  padding: 11px 12px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+
+  &:focus {
+    border-color: var(--accent-border);
+  }
+}
+
+// === Card 2: atributos (dois grupos: Físicos / Mentais) ===
+.ficha-atributos {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  &__grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__rotulo-grupo {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-dim);
+  }
+
+  &__grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 12px;
+  }
+}
+
+.ficha-atributo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__rotulo {
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+  }
+}
+
+// === Card 3: estado atual ===
+.ficha-estado {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--gap-grid);
+}
+
+// === Card 4: stats derivadas (copiado de _componentes.scss .stat) ===
+.ficha-hero {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.ficha-secundarios {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.ficha-stat {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  padding: 13px 14px;
+
+  &__rotulo {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+    margin-bottom: 7px;
+  }
+
+  &__valor {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.1;
+
+    &--medio {
+      font-size: 18px;
+    }
+  }
+
+  &__detalhe {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-mute);
+    margin-top: 5px;
+  }
+
+  &--hero {
+    padding: 16px 14px;
+
+    .ficha-stat__valor {
+      font-size: 30px;
+      line-height: 1;
+    }
+  }
+
+  &--vida {
+    border-color: var(--vida-border);
+    .ficha-stat__valor {
+      color: var(--vida);
+    }
+  }
+
+  &--energia {
+    border-color: color-mix(in srgb, var(--energy) 35%, transparent);
+    .ficha-stat__valor {
+      color: var(--energy);
+    }
+  }
+
+  &--furtivo {
+    .ficha-stat__valor {
+      color: var(--positive);
+    }
+  }
+}
+
+// === Botão primário (copiado de _componentes.scss .botao) ===
+.ficha-botao {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-radius: var(--radius-control);
+  padding: 12px 22px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: opacity 0.15s ease;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+
+  &--primario {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+}
