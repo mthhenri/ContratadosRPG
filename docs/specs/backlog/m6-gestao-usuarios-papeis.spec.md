@@ -1,7 +1,7 @@
 # m6-gestao-usuarios-papeis.spec.md
 
 > **Milestone M6 — Gestão de Usuários & Papéis Globais.** Este spec fixa o escopo acordado.
-> Quebrar nas tasks numeradas `m6-01`…`m6-04`. Milestone novo (não existia no plano original
+> Quebrar nas tasks numeradas `m6-01`…`m6-07`. Milestone novo (não existia no plano original
 > M0–M5); registrado em `SYSTEM.SPEC.md §15`.
 
 ## Objetivo
@@ -94,14 +94,30 @@ A partir daí o tipo já pode ser atribuído pelo admin e usado em `@TiposPermit
 
 > Ainda **não** redigidas como specs próprias. Seguindo o fluxo do projeto, o milestone é
 > quebrado em tasks numeradas (`m6-01`…) só quando chega a vez. Esta tabela é o plano de
-> intenção; cada linha vira uma `m6-NN-*.spec.md` na hora.
+> intenção; cada linha vira uma `m6-NN-*.spec.md` na hora. **Todas as 7 são obrigatórias** —
+> nenhuma é opcional, incluindo a `m6-07` (validação mobile, ver abaixo).
 
-| Task | Conteúdo |
-|---|---|
-| `m6-01` | Migration `tipo_usuario` (com rótulos em `descricao`) + `usuario.tipo_usuario_id` (FK/backfill) + `usuario.token_versao` + `TipoUsuarioEnum` (shared). Ajusta o `INSERT` do registro (m2-02) para gravar `NORMAL`. Só banco + shared. |
-| `m6-02` | Autorização global: `autorizacao.guard.ts` com leitura leve de sessão (tipo fresco + versão de token = invalidação imediata), `@TiposPermitidos(...)`, tipo no login/JWT, mecânica de acesso limitado a tester documentada. |
-| `m6-03` | Backend de gestão pelo admin: criar/alterar/resetar senha/trocar tipo/excluir/reativar + busca/filtro + invariante de ≥1 admin (inclui o self-service `DELETE /usuario` da m2-11) + proteções de auto-ação + bump de versão de token + tratamento de exclusão de mestre. |
-| `m6-04` | Frontend da tela de gestão de usuários (admin) + `adminGuard` + item de menu + `tipoGuard` genérico + tela de "acesso negado" SCP. |
+| Task | Camada | Conteúdo | Depende de |
+|---|---|---|---|
+| `m6-01` | banco + shared | Migration `tipo_usuario` (com rótulos em `descricao`) + `usuario.tipo_usuario_id` (FK/backfill) + `usuario.token_versao` + `TipoUsuarioEnum` (shared). Ajusta o `INSERT` do registro (m2-02) para gravar `NORMAL`. `SCHEMA.md`. Sem lógica. | — |
+| `m6-02` | backend | Autorização global: `tipo`+`tokenVersao` no JWT/login, `recuperarSessao`, `autorizacao.guard.ts` (leitura leve + validade de sessão + invalidação imediata), `@TiposPermitidos(...)`, guia da mecânica de tester. | m6-01 |
+| `m6-03` | backend | Gestão admin — **CRUD**: listar (busca/filtro/lixeira), criar, alterar nome/login, excluir, reativar. Rotas `@TiposPermitidos(ADMIN)`. | m6-02 |
+| `m6-04` | backend | Gestão admin — **operações sensíveis + invariantes**: trocar tipo, resetar senha, bump de `token_versao`; ≥1 admin (inclui o self-service `DELETE /usuario` da m2-11), proteções de auto-ação, bloqueio de exclusão de mestre. | m6-03 |
+| `m6-05` | frontend | Tela de gestão de usuários (service, `adminGuard`, lista+busca/filtro, criar/alterar/reset senha/trocar tipo/excluir/reativar, item de menu), reação a 401. | m6-04 |
+| `m6-06` | frontend | Gate de tester: `tipoGuard` genérico + tela de "acesso negado" SCP (censura/REDACTED/chip). Independente da tela de gestão. | m6-02 |
+| `m6-07` | frontend | **Validação/refinamento mobile (obrigatória)** de toda a UI nova do M6 — tela de gestão (m6-05) e tela de "acesso negado" (m6-06). | m6-05, m6-06 |
+
+**Ordem:** `m6-01 → m6-02 →` então em paralelo `m6-03 → m6-04 → m6-05` e `m6-06`; `m6-07` fecha
+o milestone depois que as duas frentes de frontend estiverem prontas.
+
+### m6-07 é obrigatória — validação mobile não é opcional
+
+O fechamento de todo milestone com UI **exige** um passe de validação mobile, seguindo o padrão
+já estabelecido (`m1-15`, `m2-08`, `m3-09`). A UI nova do M6 (gestão de usuários e a tela de
+"acesso negado") **só é considerada pronta** depois de verificada em ~360px: sem scroll
+horizontal do `body`, alvos de toque ≥44px, tabela/lista de usuários e formulários confortáveis
+no mobile, reusando o padrão responsivo por tokens da `m1-15` e a identidade `docs/design/`.
+Nenhuma task de frontend do M6 encerra o milestone sem essa validação.
 
 ## Decisões em aberto (padrões assumidos — reversíveis)
 
@@ -143,6 +159,9 @@ coletada; ajustar aqui propaga para as tasks:
 - Decorator de acesso limitado a tester existe, testado, e há guia de como aplicá-lo num módulo
   novo — sem travar módulo atual; no frontend, o `tipoGuard` redireciona quem não tem acesso para
   a **tela de "acesso negado"** (estética SCP), e o item de menu some para esse usuário.
+- **Toda a UI nova do M6 validada no mobile (~360px)** — sem scroll horizontal do `body`, alvos
+  de toque ≥44px, lista/formulários de gestão e tela de "acesso negado" confortáveis. É a `m6-07`,
+  **obrigatória**; o milestone não fecha sem ela (padrão `m1-15`/`m2-08`/`m3-09`).
 
 ## Dependências
 
