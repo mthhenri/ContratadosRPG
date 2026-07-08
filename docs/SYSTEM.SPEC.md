@@ -513,6 +513,7 @@ usuario_ficha_acesso        ficha_id FK, usuario_id FK
 | M3 | Ficha de Jogador | CRUD + cálculo automático + permissões + tempo real | backlog |
 | M4 | Ficha de Criatura/NPC | Ferramenta do mestre conforme guia de criação de ameaças | backlog |
 | M5 | Guia de Missão | Assistente de criação de missão | backlog |
+| M6 | Gestão de Usuários & Papéis | Tipo de usuário global (NORMAL/ADMIN/TESTER), autorização por papel, tela de gestão do admin, mecânica de acesso limitado a testers | backlog |
 
 Specs em `docs/specs/backlog/`. Milestones são quebrados em tasks numeradas antes da
 implementação. M2+ recebem design detalhado quando chegar a vez.
