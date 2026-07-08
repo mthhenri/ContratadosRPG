@@ -120,7 +120,11 @@
         }
       }
 
-      <h2 class="detalhe__subtitulo">Membros</h2>
+      <header class="detalhe__secao">
+        <h2 class="detalhe__secao-titulo">Membros</h2>
+        <span class="detalhe__secao-regua"></span>
+        <span class="detalhe__secao-contagem" aria-hidden="true">{{ membros().length }}</span>
+      </header>
       <ul class="detalhe__membros">
         @for (membro of membros(); track membro.usuarioId) {
           <li class="detalhe__membro">

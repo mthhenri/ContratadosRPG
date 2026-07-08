@@ -43,9 +43,15 @@
     gap: 12px;
   }
 
+  // Código de convite emoldurado como campo próprio (protótipo lobby): caixa --surface com
+  // borda, o código em mono accent. Dá hierarquia de "credencial" em vez de texto solto.
   &__codigo {
     flex: 1;
     min-width: 0;
+    padding: 8px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
     font-family: var(--font-mono);
     font-size: 18px;
     font-weight: 700;
@@ -169,13 +175,35 @@
     color: var(--text);
   }
 
-  &__subtitulo {
+  // Cabeçalho da seção de membros — mesmo tratamento do contador de seção dos protótipos
+  // ("ESQUADRÃO 4"): rótulo mono uppercase + régua fina + contagem à direita. Só apresentação.
+  &__secao {
+    display: flex;
+    align-items: center;
+    gap: 11px;
     margin: 0 0 12px;
+  }
+
+  &__secao-titulo {
+    margin: 0;
     font-family: var(--font-mono);
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: var(--tracking-label);
+    color: var(--text-mute);
+  }
+
+  &__secao-regua {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  &__secao-contagem {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
     color: var(--text-mute);
   }
 

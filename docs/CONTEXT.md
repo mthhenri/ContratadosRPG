@@ -1,6 +1,28 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-08 (**m2-14 —
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-08 (**m2-15 —
+> refino visual da tela de campanhas**: passe de acabamento **SCSS-first** (com marcação mínima,
+> sem tocar em TS/lógica/regra de negócio) aproximando a **lista** (`/painel`) e o **detalhe**
+> (`/painel/:id`) dos protótipos `docs/design/examples/campanhas.html` e `lobby-de-campanha.html`,
+> só apresentação e só com tokens do tema (proibição #29). Conteúdo decorativo dos protótipos **sem
+> backing no schema** (status ao vivo/agendada/pausada, briefing, log de atividade, indicador online,
+> níveis de esquadrão, "meu agente") ficou **de fora**, como a m2-09 já registrara. **Lista:** itens
+> ganharam presença de "card de campanha" — avatar 40→44px, nome mono 14/600→15/700, padding
+> 14/16→16/18px, gap 12→14px (esqueleto e bloco de avatar acompanham a nova silhueta); o cabeçalho do
+> card ganhou **contagem à direita** (`card__contagem`, nº de campanhas — dado já em tela, mono mute),
+> no padrão do contador de seção dos protótipos. **Detalhe:** o subtítulo seco "Membros" virou
+> **cabeçalho de seção temático** (`detalhe__secao` — rótulo mono uppercase + régua fina +
+> **contagem de membros** à direita), espelhando o painel "ESQUADRÃO 4" do lobby; e o **código de
+> convite** passou a ser **emoldurado como campo próprio** (`detalhe__codigo` com caixa `--surface` +
+> borda + raio), dando hierarquia de "credencial" como no protótipo, em vez de texto solto. Nenhum
+> seletor usado pelos testes foi renomeado (`.detalhe__acoes`/`__exclusao`/`__membro-*`/`__entrada`,
+> `.card__titulo`, `.campanhas`); comportamento das m2-12/m2-13 intacto (editar/excluir campanha,
+> remover jogador, transferir mestre só se acomodaram melhor no layout). Responsividade da m2-08
+> preservada (alvos de toque ≥44px, sem scroll horizontal ~384px). `lint`/`test` (**118/118**)/`build`
+> (562,78 kB inicial, dentro do budget de 565 kB, sem warning; AOT type-checou os templates) verdes;
+> conferido visualmente por render (desktop + 384px) contra os dois protótipos. **Fecha as tasks de
+> polimento do M2.** Fora de escopo: qualquer dado/campo/seção novo, features funcionais e backend.
+> Sessão anterior no mesmo dia (**m2-14 —
 > frontend de perfil do usuário**: fecha o self-service do usuário na UI sobre o backend das
 > m2-11 (perfil) e m2-03 (senha) — só camada de frontend. Novo módulo `modules/usuario/` com
 > `UsuarioService` (`providedIn:'root'`, transporte HTTP puro — extrai o `dados` do
@@ -429,9 +451,12 @@ lacunas de gerência do M2 antes de abrir o M3. Backend **m2-10** (gestão de me
 mestre), backend **m2-11** (perfil do usuário — alterar nome/login + excluir conta), frontend **m2-12**
 (edição/exclusão de campanha — consome os endpoints `PUT`/`DELETE` da m2-04), frontend **m2-13** (gestão
 de membros — remover jogador / transferir mestre, consome a m2-10) e frontend **m2-14** (perfil do
-usuário — alterar nome/login, trocar senha e excluir a própria conta, consome as m2-11/m2-03)
-**concluídos** (specs em `docs/specs/done/`). Resta: **m2-15** (refino visual da tela de campanhas).
-**Próxima task: `m2-15` — refino visual da tela de campanhas.**
+usuário — alterar nome/login, trocar senha e excluir a própria conta, consome as m2-11/m2-03) e
+frontend **m2-15** (refino visual da tela de campanhas — passe SCSS-first aproximando lista/detalhe dos
+protótipos, só apresentação e só com tokens) **concluídos** (specs em `docs/specs/done/`). **Lote de
+extensão `m2-10`…`m2-15` fechado — M2 encerrado ponta a ponta.**
+
+**Próxima task: abrir o `M3` — Ficha de Jogador** (`m3-01`, contrato da ficha + JSONB `dados`).
 
 Depois do lote, **`M3` — Ficha de Jogador** (CRUD + cálculo automático via `shared/regras` + permissões +
 tempo real): o milestone já foi quebrado em tasks numeradas (`m3-01`…`m3-09`, specs no backlog).
