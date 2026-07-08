@@ -8,7 +8,7 @@
     @for (aba of abas; track aba.caminho) {
       <a class="abas__item" [routerLink]="aba.caminho" routerLinkActive="abas__item--ativo">
         <app-icone [nome]="aba.icone" />
-        <span>{{ aba.rotulo }}</span>
+        <span class="abas__rotulo">{{ aba.rotulo }}</span>
       </a>
     }
   </nav>

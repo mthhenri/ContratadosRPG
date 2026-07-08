@@ -87,25 +87,22 @@
     text-decoration: none;
     cursor: pointer;
 
-    // Na barra do rodapé: ícone sobre rótulo, itens distribuídos por igual, alvo de toque
-    // confortável. O ícone tem tamanho próprio (independe do rótulo miúdo) e o rótulo pode
-    // quebrar em 2 linhas ("Novo Agente", "Agente / Civil") sem estourar a célula.
+    // Na barra do rodapé (m1-20): navegação **só de ícones** — os 7 cabem folgados e todos visíveis
+    // ao mesmo tempo, com alvo de toque confortável. O rótulo aparece **só na aba ativa** (que ganha
+    // um pouco mais de largura), dando contexto de onde se está sem espremer os 9px em 2 linhas.
     @include bp.mobile {
       flex: 1 1 0;
       min-width: 0;
       flex-direction: column;
-      gap: 3px;
+      gap: 4px;
       min-height: bp.$alvo-toque;
       padding: 8px 4px;
       border: 1px solid transparent;
       border-radius: var(--radius-control);
-      font-size: 9px;
-      letter-spacing: 0.03em;
-      line-height: 1.15;
       text-align: center;
 
       app-icone {
-        font-size: 18px;
+        font-size: 20px;
       }
     }
 
@@ -117,6 +114,26 @@
       color: var(--accent);
       border-color: var(--accent-border);
       background: var(--accent-dim);
+
+      // A aba ativa mostra o rótulo e ganha mais largura para acomodá-lo.
+      @include bp.mobile {
+        flex: 2 1 0;
+
+        .abas__rotulo {
+          display: block;
+        }
+      }
+    }
+  }
+
+  // Rótulo da aba: no desktop segue ao lado do ícone; no mobile é escondido (barra só de ícones) e
+  // reaparece só na aba ativa (regra em `&__item--ativo` acima).
+  &__rotulo {
+    @include bp.mobile {
+      display: none;
+      font-size: 9px;
+      letter-spacing: 0.04em;
+      line-height: 1.15;
     }
   }
 }
