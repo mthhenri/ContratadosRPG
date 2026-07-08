@@ -258,9 +258,38 @@
   @include bp.mobile {
     padding: 0;
 
+    // Painel de marca empilha inteiro acima do formulário — apertar o padding evita empurrar o
+    // formulário pra muito abaixo da dobra em ~360px.
     &__marca {
       border-right: 0;
       border-bottom: 1px solid var(--border);
+      padding: 22px;
+
+      // Enxugar a marca no mobile: mantém logo + eyebrow + slogan (identidade) e esconde o
+      // conteúdo decorativo secundário, trazendo o formulário pra cima da dobra. Escopado ao
+      // painel de marca porque --descricao também existe no painel do formulário.
+      .autenticacao__descricao,
+      .autenticacao__destaques,
+      .autenticacao__nota {
+        display: none;
+      }
+    }
+
+    &__painel {
+      padding: 26px 20px;
+    }
+
+    &__slogan {
+      font-size: 19px;
+    }
+
+    // Alvo de toque confortável (m1-15 / WCAG 2.5.5) nos controles do formulário.
+    &__entrada {
+      min-height: bp.$alvo-toque;
+    }
+
+    &__enviar {
+      min-height: bp.$alvo-toque;
     }
   }
 }

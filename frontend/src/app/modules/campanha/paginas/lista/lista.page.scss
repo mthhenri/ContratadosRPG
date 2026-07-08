@@ -1,3 +1,5 @@
+@use 'tema/breakpoints' as bp;
+
 .campanhas {
   max-width: 680px;
   margin: 0 auto;
@@ -7,6 +9,12 @@
     flex-wrap: wrap;
     gap: 10px;
     margin-bottom: 20px;
+
+    // No mobile, Criar/Entrar empilham em coluna (largura total) — cada rótulo numa linha só,
+    // sem a quebra apertada de duas colunas em ~360px.
+    @include bp.mobile {
+      flex-direction: column;
+    }
   }
 
   &__acao {
@@ -19,6 +27,13 @@
     text-transform: uppercase;
     letter-spacing: var(--tracking-label);
     text-decoration: none;
+
+    // Empilhadas em coluna no mobile: largura total; alvo de toque confortável (m1-15).
+    @include bp.mobile {
+      width: 100%;
+      justify-content: center;
+      min-height: bp.$alvo-toque;
+    }
   }
 
   &__estado {

@@ -32,6 +32,13 @@
     letter-spacing: var(--tracking-label);
     color: var(--text);
     white-space: nowrap;
+
+    // No mobile o logo (app-marca) já ancora a identidade — esconder o wordmark textual libera a
+    // largura que a nav (agora com alvo de toque de 44px), o perfil e o tema disputam em ~360px,
+    // evitando que a topbar estoure/seja cortada.
+    @include bp.mobile {
+      display: none;
+    }
   }
 
   &__marca-sufixo {
@@ -69,6 +76,13 @@
 
     &:hover {
       border-color: var(--accent-border);
+    }
+
+    // Escondido no mobile: colapsado a só o ícone (texto abaixo some), ele duplicava o glifo
+    // "campanhas" do nav Painel logo ao lado — sem valor e confuso. A tela já diz a campanha
+    // ativa e o Painel já volta à lista.
+    @include bp.mobile {
+      display: none;
     }
   }
 
@@ -137,6 +151,10 @@
     }
 
     @include bp.mobile {
+      min-width: bp.$alvo-toque;
+      min-height: bp.$alvo-toque;
+      justify-content: center;
+
       span {
         display: none;
       }
@@ -184,6 +202,10 @@
     &:hover {
       color: var(--text);
       border-color: var(--accent-border);
+    }
+
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
     }
   }
 
@@ -241,6 +263,10 @@
       background: var(--surface-2);
     }
 
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
+    }
+
     &--sair {
       color: var(--accent);
 
@@ -266,6 +292,10 @@
     text-decoration: none;
 
     @include bp.mobile {
+      min-width: bp.$alvo-toque;
+      min-height: bp.$alvo-toque;
+      justify-content: center;
+
       span {
         display: none;
       }

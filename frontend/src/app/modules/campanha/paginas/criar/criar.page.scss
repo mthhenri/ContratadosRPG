@@ -1,3 +1,5 @@
+@use 'tema/breakpoints' as bp;
+
 .campanha-formulario {
   max-width: 480px;
   margin: 0 auto;
@@ -70,6 +72,17 @@
 
     &:hover {
       text-decoration: underline;
+    }
+  }
+
+  // Alvo de toque confortável (m1-15 / WCAG 2.5.5) nos controles do formulário.
+  @include bp.mobile {
+    &__entrada {
+      min-height: bp.$alvo-toque;
+    }
+
+    &__enviar {
+      min-height: bp.$alvo-toque;
     }
   }
 }

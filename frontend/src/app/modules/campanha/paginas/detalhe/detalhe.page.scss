@@ -1,3 +1,5 @@
+@use 'tema/breakpoints' as bp;
+
 .detalhe {
   max-width: 680px;
   margin: 0 auto;
@@ -155,6 +157,22 @@
 
     &:hover {
       text-decoration: underline;
+    }
+  }
+
+  // Alvos de toque confortáveis (m1-15 / WCAG 2.5.5) nas ações do mestre e no link de voltar.
+  @include bp.mobile {
+    &__copiar {
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
+    }
+
+    &__regenerar {
+      min-height: bp.$alvo-toque;
+    }
+
+    &__link {
+      min-height: bp.$alvo-toque;
     }
   }
 }
