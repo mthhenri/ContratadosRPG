@@ -60,6 +60,7 @@
   }
 
   &__copiar {
+    position: relative;
     flex: none;
     display: inline-flex;
     align-items: center;
@@ -78,6 +79,42 @@
       background: var(--surface-2);
       border-color: var(--accent-border);
     }
+
+    // Confirmação de cópia: o botão vira "preenchido" no accent do tema com o check (m3, feedback
+    // visual). Usa --accent (trocável em runtime), não uma cor semântica fixa.
+    &--copiado,
+    &--copiado:hover {
+      color: var(--bg);
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+  }
+
+  // Tooltip efêmero "COPIADO" acima do botão de copiar — surge só no estado copiado.
+  &__copiado-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    padding: 4px 8px;
+    background: var(--surface-2);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-control);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--accent);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+
+  &__copiar--copiado &__copiado-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
   }
 
   &__regenerar {
@@ -89,6 +126,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: var(--tracking-label);
+    transition: color 0.15s ease, border-color 0.15s ease;
 
     &:disabled {
       opacity: 0.6;

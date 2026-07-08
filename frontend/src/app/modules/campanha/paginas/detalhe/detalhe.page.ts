@@ -50,6 +50,8 @@ export class CampanhaDetalhe {
   protected readonly membros = signal<CampanhaMembroResumoDto[]>([]);
   protected readonly carregando = signal(true);
   protected readonly regenerando = signal(false);
+  /** Confirmação efêmera pós-regeneração — o botão vira "Regenerado ✓" por ~1,5 s. */
+  protected readonly regenerado = signal(false);
   protected readonly copiado = signal(false);
 
   /** Edição inline de nome/descrição (só mestre) — alterna o card entre exibição e formulário. */
@@ -129,6 +131,9 @@ export class CampanhaDetalhe {
               codigoConvite: conviteRegenerado.codigoConvite,
             });
           }
+          // Confirmação visual: o botão vira "Regenerado ✓" e volta ao normal após 1,5 s.
+          this.regenerado.set(true);
+          setTimeout(() => this.regenerado.set(false), 1500);
         },
       });
   }

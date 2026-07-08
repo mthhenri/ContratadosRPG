@@ -62,19 +62,23 @@
             <button
               class="detalhe__copiar"
               type="button"
+              [class.detalhe__copiar--copiado]="copiado()"
               [attr.aria-label]="copiado() ? 'Código copiado' : 'Copiar código de convite'"
               (click)="copiarConvite()"
             >
-              <app-icone nome="copiar" />
+              <app-icone [nome]="copiado() ? 'check' : 'copiar'" />
+              <span class="detalhe__copiado-tooltip" role="status">Copiado</span>
             </button>
             <button
-              class="botao botao--secundario detalhe__regenerar"
+              class="botao detalhe__regenerar"
               type="button"
+              [class.botao--secundario]="!regenerado()"
+              [class.botao--primario]="regenerado()"
               [disabled]="regenerando()"
               (click)="regenerarConvite()"
             >
-              <app-icone nome="atualizar" />
-              {{ regenerando() ? 'Regenerando…' : 'Regenerar' }}
+              <app-icone [nome]="regenerado() ? 'check' : 'atualizar'" />
+              {{ regenerando() ? 'Regenerando…' : regenerado() ? 'Regenerado' : 'Regenerar' }}
             </button>
           </div>
         </div>

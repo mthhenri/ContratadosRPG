@@ -29,6 +29,7 @@ export type IconeNome =
   | 'entrar'
   | 'chevron'
   | 'copiar'
+  | 'check'
   | 'mais'
   | 'convite'
   | 'coroa'
