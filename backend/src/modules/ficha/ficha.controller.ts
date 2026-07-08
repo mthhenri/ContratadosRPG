@@ -10,6 +10,10 @@ import {
   Query,
 } from '@nestjs/common';
 import type {
+  FichaAcessoConcederDto,
+  FichaAcessoConcedidoDto,
+  FichaAcessoResumoDto,
+  FichaAcessoRevogadoDto,
   FichaAlteradaDto,
   FichaAlterarDto,
   FichaCriadaDto,
@@ -70,5 +74,31 @@ export class FichaController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<void> {
     return this.fichaService.excluirFicha({ id }, usuarioAtivo);
+  }
+
+  @Get(':id/acesso')
+  listarAcessos(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<FichaAcessoResumoDto[]> {
+    return this.fichaService.listarAcessos({ fichaId: id }, usuarioAtivo);
+  }
+
+  @Post(':id/acesso')
+  concederAcesso(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: FichaAcessoConcederDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<FichaAcessoConcedidoDto> {
+    return this.fichaService.concederAcesso({ ...dto, fichaId: id }, usuarioAtivo);
+  }
+
+  @Delete(':id/acesso/:usuarioId')
+  revogarAcesso(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('usuarioId', ParseIntPipe) usuarioId: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<FichaAcessoRevogadoDto> {
+    return this.fichaService.revogarAcesso({ fichaId: id, usuarioId }, usuarioAtivo);
   }
 }

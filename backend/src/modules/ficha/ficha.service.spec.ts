@@ -24,6 +24,9 @@ interface FichaRepositorioDublado {
   listarPorCampanha: ReturnType<typeof vi.fn>;
   listarVisiveisParaUsuario: ReturnType<typeof vi.fn>;
   recuperarAcesso: ReturnType<typeof vi.fn>;
+  concederAcesso: ReturnType<typeof vi.fn>;
+  revogarAcesso: ReturnType<typeof vi.fn>;
+  listarAcessos: ReturnType<typeof vi.fn>;
   alterarFicha: ReturnType<typeof vi.fn>;
   excluirFicha: ReturnType<typeof vi.fn>;
 }
@@ -93,6 +96,9 @@ describe('FichaService', () => {
       listarPorCampanha: vi.fn(),
       listarVisiveisParaUsuario: vi.fn(),
       recuperarAcesso: vi.fn(),
+      concederAcesso: vi.fn(),
+      revogarAcesso: vi.fn(),
+      listarAcessos: vi.fn(),
       alterarFicha: vi.fn(),
       excluirFicha: vi.fn(),
     };
@@ -414,6 +420,172 @@ describe('FichaService', () => {
       );
 
       expect(fichaRepositorio.excluirFicha).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('concederAcesso', () => {
+    it('concede o acesso quando o autor é o dono e o alvo é membro da campanha', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      fichaRepositorio.recuperarAcesso.mockResolvedValue(null);
+      const acessoConcedido = { id: 1, fichaId: 5, usuarioId: usuarioMembro.sub };
+      fichaRepositorio.concederAcesso.mockResolvedValue(acessoConcedido);
+
+      const resultado = await service.concederAcesso(
+        { fichaId: 5, usuarioId: usuarioMembro.sub },
+        usuarioDono,
+      );
+
+      expect(fichaRepositorio.concederAcesso).toHaveBeenCalledWith({
+        fichaId: 5,
+        usuarioId: usuarioMembro.sub,
+      });
+      expect(resultado).toBe(acessoConcedido);
+    });
+
+    it('concede o acesso quando o autor é o mestre da campanha', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.MESTRE,
+      });
+      fichaRepositorio.recuperarAcesso.mockResolvedValue(null);
+      fichaRepositorio.concederAcesso.mockResolvedValue({ id: 1, fichaId: 5, usuarioId: usuarioMembro.sub });
+
+      await service.concederAcesso({ fichaId: 5, usuarioId: usuarioMembro.sub }, usuarioMestre);
+
+      expect(fichaRepositorio.concederAcesso).toHaveBeenCalled();
+    });
+
+    it('lança UnauthorizedAccessException quando o autor não é dono nem mestre', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+
+      await expect(
+        service.concederAcesso({ fichaId: 5, usuarioId: 99 }, usuarioMembro),
+      ).rejects.toThrow(UnauthorizedAccessException);
+
+      expect(fichaRepositorio.concederAcesso).not.toHaveBeenCalled();
+    });
+
+    it('lança ResourceNotFoundException quando o alvo não é membro da campanha', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue(null);
+
+      await expect(
+        service.concederAcesso({ fichaId: 5, usuarioId: 99 }, usuarioDono),
+      ).rejects.toThrow(ResourceNotFoundException);
+
+      expect(fichaRepositorio.concederAcesso).not.toHaveBeenCalled();
+    });
+
+    it('é idempotente — devolve a concessão existente sem inserir de novo', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      fichaRepositorio.recuperarAcesso.mockResolvedValue({ id: 77 });
+
+      const resultado = await service.concederAcesso(
+        { fichaId: 5, usuarioId: usuarioMembro.sub },
+        usuarioDono,
+      );
+
+      expect(resultado).toEqual({ id: 77, fichaId: 5, usuarioId: usuarioMembro.sub });
+      expect(fichaRepositorio.concederAcesso).not.toHaveBeenCalled();
+    });
+
+    it('lança ResourceNotFoundException quando a ficha não existe', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(null);
+
+      await expect(
+        service.concederAcesso({ fichaId: 99, usuarioId: usuarioMembro.sub }, usuarioDono),
+      ).rejects.toThrow(ResourceNotFoundException);
+
+      expect(fichaRepositorio.concederAcesso).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('revogarAcesso', () => {
+    it('revoga o acesso quando o autor é o dono', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      fichaRepositorio.revogarAcesso.mockResolvedValue(undefined);
+
+      const resultado = await service.revogarAcesso(
+        { fichaId: 5, usuarioId: usuarioMembro.sub },
+        usuarioDono,
+      );
+
+      expect(fichaRepositorio.revogarAcesso).toHaveBeenCalledWith({
+        fichaId: 5,
+        usuarioId: usuarioMembro.sub,
+      });
+      expect(resultado).toEqual({ fichaId: 5, usuarioId: usuarioMembro.sub });
+    });
+
+    it('lança UnauthorizedAccessException quando o autor não é dono nem mestre', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+
+      await expect(
+        service.revogarAcesso({ fichaId: 5, usuarioId: usuarioMembro.sub }, usuarioMembro),
+      ).rejects.toThrow(UnauthorizedAccessException);
+
+      expect(fichaRepositorio.revogarAcesso).not.toHaveBeenCalled();
+    });
+
+    it('lança ResourceNotFoundException quando a ficha não existe', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(null);
+
+      await expect(
+        service.revogarAcesso({ fichaId: 99, usuarioId: usuarioMembro.sub }, usuarioDono),
+      ).rejects.toThrow(ResourceNotFoundException);
+
+      expect(fichaRepositorio.revogarAcesso).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('listarAcessos', () => {
+    it('lista as concessões quando o autor é o dono', async () => {
+      const acessos = [{ usuarioId: usuarioMembro.sub, nome: 'Agente Novato' }];
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      fichaRepositorio.listarAcessos.mockResolvedValue(acessos);
+
+      const resultado = await service.listarAcessos({ fichaId: 5 }, usuarioDono);
+
+      expect(fichaRepositorio.listarAcessos).toHaveBeenCalledWith({ fichaId: 5 });
+      expect(resultado).toBe(acessos);
+    });
+
+    it('lista as concessões quando o autor é o mestre da campanha', async () => {
+      const acessos = [{ usuarioId: usuarioMembro.sub, nome: 'Agente Novato' }];
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.MESTRE,
+      });
+      fichaRepositorio.listarAcessos.mockResolvedValue(acessos);
+
+      const resultado = await service.listarAcessos({ fichaId: 5 }, usuarioMestre);
+
+      expect(resultado).toBe(acessos);
+    });
+
+    it('lança UnauthorizedAccessException quando o autor não é dono nem mestre', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+
+      await expect(service.listarAcessos({ fichaId: 5 }, usuarioMembro)).rejects.toThrow(
+        UnauthorizedAccessException,
+      );
+
+      expect(fichaRepositorio.listarAcessos).not.toHaveBeenCalled();
     });
   });
 });

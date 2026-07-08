@@ -1,8 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { Knex } from 'knex';
 import type {
+  FichaAcessoConcederDto,
+  FichaAcessoConcedidoDto,
   FichaAcessoInternoRecuperadoDto,
   FichaAcessoInternoRecuperarDto,
+  FichaAcessoResumoDto,
+  FichaAcessoRevogarDto,
+  FichaAcessosListarDto,
   FichaCriadaDto,
   FichaExcluirDto,
   FichaInternoAlterarDto,
@@ -122,6 +127,57 @@ export class FichaRepository extends BaseRepository {
       { fichaId: dto.fichaId, usuarioId: dto.usuarioId },
     );
     return acessoEncontrado ?? null;
+  }
+
+  /**
+   * Concede acesso de visualização de uma ficha a um usuário — insere a linha em
+   * `usuario_ficha_acesso` e retorna a concessão (m3-04). Segue o padrão
+   * `INSERT ... SELECT ... RETURNING` com BaseEntity explícita, sem `VALUES` e sem `DEFAULT`
+   * (§10.2.6/§10.2.8). A unicidade do par (ficha, usuário) entre ativos é garantida pelo índice
+   * `uix_usuario_ficha_acesso_ficha_usuario_ativo` — a service confere a concessão existente antes
+   * de inserir (idempotência), então este método só é chamado quando ainda não há linha ativa.
+   */
+  async concederAcesso(dto: FichaAcessoConcederDto): Promise<FichaAcessoConcedidoDto> {
+    const [acessoConcedido] = await this.executarConsulta<FichaAcessoConcedidoDto>(
+      `INSERT INTO usuario_ficha_acesso (ficha_id, usuario_id, created_date, updated_date, is_deleted)
+       SELECT :fichaId, :usuarioId, NOW(), NOW(), false
+       RETURNING id, ficha_id AS "fichaId", usuario_id AS "usuarioId"`,
+      { fichaId: dto.fichaId, usuarioId: dto.usuarioId },
+    );
+    return acessoConcedido;
+  }
+
+  /**
+   * Revoga o acesso de visualização de uma ficha a um usuário via soft delete da linha ativa de
+   * `usuario_ficha_acesso` (chave composta `ficha_id`/`usuario_id`; nunca `DELETE` físico —
+   * proibição #14). Idempotente: se não houver concessão ativa, nenhuma linha é afetada.
+   */
+  async revogarAcesso(dto: FichaAcessoRevogarDto): Promise<void> {
+    await this.executarComando(
+      `UPDATE usuario_ficha_acesso
+       SET is_deleted = true, deleted_date = NOW(), updated_date = NOW()
+       WHERE ficha_id = :fichaId AND usuario_id = :usuarioId AND is_deleted = false`,
+      { fichaId: dto.fichaId, usuarioId: dto.usuarioId },
+    );
+  }
+
+  /**
+   * Lista as concessões de visualização **ativas** de uma ficha (m3-04): cada membro que recebeu
+   * acesso, com o `nome` lido de `usuario`. Todo SELECT filtra `is_deleted = false` (nos dois
+   * lados do `JOIN`). Ordena por nome.
+   */
+  async listarAcessos(dto: FichaAcessosListarDto): Promise<FichaAcessoResumoDto[]> {
+    return this.executarConsulta<FichaAcessoResumoDto>(
+      `SELECT usuario_ficha_acesso.usuario_id AS "usuarioId", usuario.nome
+       FROM usuario_ficha_acesso
+       INNER JOIN usuario
+         ON usuario.id = usuario_ficha_acesso.usuario_id
+        AND usuario.is_deleted = false
+       WHERE usuario_ficha_acesso.ficha_id = :fichaId
+         AND usuario_ficha_acesso.is_deleted = false
+       ORDER BY usuario.nome ASC`,
+      { fichaId: dto.fichaId },
+    );
   }
 
   /**

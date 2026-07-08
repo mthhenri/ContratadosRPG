@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import type {
+  FichaAcessoConcederDto,
+  FichaAcessoConcedidoDto,
+  FichaAcessoResumoDto,
+  FichaAcessoRevogadoDto,
+  FichaAcessoRevogarDto,
+  FichaAcessosListarDto,
   FichaAlteradaDto,
   FichaCriadaDto,
   FichaCriarDto,
@@ -145,6 +151,80 @@ export class FichaService {
   }
 
   /**
+   * Concede acesso de **visualização** de uma ficha a outro membro da campanha
+   * (`usuario_ficha_acesso`, §14) — m3-04. Só o **dono** ou o **mestre** concedem
+   * (`validarPermissaoEdicao`, reusando a mesma regra de permissão — proibição #28); o alvo precisa
+   * ser membro da campanha (`ResourceNotFoundException('Membro')` caso contrário). Idempotente: se já
+   * houver concessão ativa, devolve a existente sem inserir de novo (a unicidade do par é garantida
+   * pelo índice `uix_usuario_ficha_acesso_ficha_usuario_ativo`). `ResourceNotFoundException` se a
+   * ficha não existir; `UnauthorizedAccessException` se o autor não puder conceder.
+   */
+  async concederAcesso(
+    dto: FichaAcessoConcederDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<FichaAcessoConcedidoDto> {
+    const fichaEncontrada = await this.fichaRepositorio.recuperarPorId({ id: dto.fichaId });
+    if (!fichaEncontrada) {
+      throw new ResourceNotFoundException('Ficha');
+    }
+
+    await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
+    await this.validarMembroAlvo({
+      campanhaId: fichaEncontrada.campanhaId,
+      usuarioId: dto.usuarioId,
+    });
+
+    const acessoExistente = await this.fichaRepositorio.recuperarAcesso({
+      fichaId: dto.fichaId,
+      usuarioId: dto.usuarioId,
+    });
+    if (acessoExistente) {
+      return { id: acessoExistente.id, fichaId: dto.fichaId, usuarioId: dto.usuarioId };
+    }
+
+    return this.fichaRepositorio.concederAcesso(dto);
+  }
+
+  /**
+   * Revoga o acesso de visualização de uma ficha a um membro (soft delete de `usuario_ficha_acesso`,
+   * §14) — m3-04. Só o **dono** ou o **mestre** revogam (`validarPermissaoEdicao` — proibição #28).
+   * Idempotente: revogar uma concessão inexistente é um no-op. `ResourceNotFoundException` se a ficha
+   * não existir; `UnauthorizedAccessException` se o autor não puder revogar.
+   */
+  async revogarAcesso(
+    dto: FichaAcessoRevogarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<FichaAcessoRevogadoDto> {
+    const fichaEncontrada = await this.fichaRepositorio.recuperarPorId({ id: dto.fichaId });
+    if (!fichaEncontrada) {
+      throw new ResourceNotFoundException('Ficha');
+    }
+
+    await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
+    await this.fichaRepositorio.revogarAcesso(dto);
+
+    return { fichaId: dto.fichaId, usuarioId: dto.usuarioId };
+  }
+
+  /**
+   * Lista as concessões de visualização ativas de uma ficha (§14) — m3-04. Só o **dono** ou o
+   * **mestre** enxergam a lista de acessos (`validarPermissaoEdicao` — quem gere as concessões).
+   * `ResourceNotFoundException` se a ficha não existir; `UnauthorizedAccessException` caso contrário.
+   */
+  async listarAcessos(
+    dto: FichaAcessosListarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<FichaAcessoResumoDto[]> {
+    const fichaEncontrada = await this.fichaRepositorio.recuperarPorId({ id: dto.fichaId });
+    if (!fichaEncontrada) {
+      throw new ResourceNotFoundException('Ficha');
+    }
+
+    await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
+    return this.fichaRepositorio.listarAcessos(dto);
+  }
+
+  /**
    * Garante permissão de **visualização** da ficha (§14): dono (posse), mestre da campanha (papel)
    * ou membro com concessão ativa em `usuario_ficha_acesso`. Do contrário lança
    * `UnauthorizedAccessException`.
@@ -204,6 +284,18 @@ export class FichaService {
     const membroEncontrado = await this.campanhaRepositorio.recuperarMembro(dto);
     if (!membroEncontrado) {
       throw new UnauthorizedAccessException();
+    }
+  }
+
+  /**
+   * Garante que o **alvo** de uma concessão de acesso é membro da campanha da ficha (§14 — a
+   * concessão revela a ficha a "outro membro da campanha"). Alvo não-membro →
+   * `ResourceNotFoundException('Membro')` (mesmo tratamento da transferência de mestre em m2-10).
+   */
+  private async validarMembroAlvo(dto: { campanhaId: number; usuarioId: number }): Promise<void> {
+    const membroEncontrado = await this.campanhaRepositorio.recuperarMembro(dto);
+    if (!membroEncontrado) {
+      throw new ResourceNotFoundException('Membro');
     }
   }
 

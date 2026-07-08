@@ -154,3 +154,63 @@ export interface FichaAcessoInternoRecuperarDto {
 export interface FichaAcessoInternoRecuperadoDto {
   readonly id: number;
 }
+
+/**
+ * ── Concessão de visualização (m3-04) ────────────────────────────────────────
+ * DTOs de operação de `usuario_ficha_acesso` — a concessão/revogação de **acesso de
+ * visualização** de uma ficha a outro membro da campanha, fechando a matriz §14 ("outro
+ * membro vê só com linha em `usuario_ficha_acesso`"). Só o dono ou o mestre concedem/revogam
+ * (arbitrado na service — proibição #28). Edição por terceiros **nunca** existe — só leitura.
+ * Complemento `Acesso` (uma palavra) inteiro antes do verbo (CONVENTIONS / proibição de
+ * complemento partido): `FichaAcessoConcederDto`, nunca `FichaConcederAcessoDto`.
+ */
+
+/**
+ * Entrada da concessão de acesso de visualização — o `fichaId` vem do `@Param`, injetado no DTO
+ * pela controller; o `usuarioId` (membro alvo da concessão) vem do corpo. Só o dono ou o mestre
+ * concedem (§14); a permissão é arbitrada na service.
+ */
+export interface FichaAcessoConcederDto {
+  readonly fichaId: number;
+  readonly usuarioId: number;
+}
+
+/** Saída da concessão — a linha de `usuario_ficha_acesso` criada (ou a já existente, idempotente). */
+export interface FichaAcessoConcedidoDto {
+  readonly id: number;
+  readonly fichaId: number;
+  readonly usuarioId: number;
+}
+
+/**
+ * Entrada da revogação de acesso — `fichaId` e `usuarioId` vêm do `@Param`, injetados no DTO pela
+ * controller. Revogação é soft delete (proibição #14); só o dono ou o mestre revogam (§14).
+ */
+export interface FichaAcessoRevogarDto {
+  readonly fichaId: number;
+  readonly usuarioId: number;
+}
+
+/** Saída da revogação — confirmação do par (ficha, usuário) cuja concessão foi revogada. */
+export interface FichaAcessoRevogadoDto {
+  readonly fichaId: number;
+  readonly usuarioId: number;
+}
+
+/**
+ * Entrada da listagem das concessões ativas de uma ficha — o `fichaId` vem do `@Param`, injetado
+ * no DTO pela controller. Só o dono ou o mestre listam (§14). A saída é sempre resumida
+ * (`FichaAcessoResumoDto`).
+ */
+export interface FichaAcessosListarDto {
+  readonly fichaId: number;
+}
+
+/**
+ * Item de listagem das concessões — o membro que recebeu acesso de visualização (`usuarioId` +
+ * `nome`, lido de `usuario`). Recorte enxuto, para a UI de gestão de acessos (m3-07).
+ */
+export interface FichaAcessoResumoDto {
+  readonly usuarioId: number;
+  readonly nome: string;
+}
