@@ -1,6 +1,31 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-08 (**re-execução do
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-08 (**correção: código de
+> convite sobrepondo o botão de copiar no mobile ao apertar "Regenerar"**, reportado pelo autor ao
+> usar a tela de detalhe da campanha num aparelho real). **Causa raiz:** `.detalhe__convite-linha`
+> (`detalhe.page.scss`) é um `flex; flex-wrap: wrap` com três filhos — `.detalhe__codigo` (`flex: 1;
+> min-width: 0`), `.detalhe__copiar` e `.detalhe__regenerar` — e o rótulo do botão regenerar **muda de
+> tamanho** durante o ciclo (`Regenerar` → `Regenerando…` → `Regenerado`, `detalhe.page.ts`); o
+> crescimento do rótulo aperta o espaço da linha, e como `.detalhe__codigo` não tinha nenhuma trava de
+> overflow, o texto do código (que não tem espaço/hífen para quebrar) **vazava visualmente por cima**
+> do botão de copiar em vez de encolher — reproduzido ao vivo via Playwright (mock do endpoint de
+> regenerar com atraso) nos 3 estados, screenshot confirmou a sobreposição inclusive no estado normal,
+> pior no estado "Regenerado" (rótulo mais largo). **Correção (SCSS-only, `detalhe.page.scss`):
+> (1)** `.detalhe__codigo` ganhou `overflow: hidden; white-space: nowrap; text-overflow: ellipsis`
+> como rede de segurança (nunca mais vaza por cima de um vizinho, mesmo que o espaço aperte de novo);
+> **(2)** dentro de `@include bp.mobile`, `.detalhe__codigo` ganhou `flex: 1 1 100%` — com
+> `flex-wrap: wrap`, isso força o código a ocupar sozinho a própria linha (largura cheia,
+> independente do tamanho do rótulo do regenerar), empurrando copiar+regenerar para a linha de baixo;
+> o código nunca mais compete por espaço com um botão de rótulo variável. Reproduzido e confirmado via
+> `getBoundingClientRect` antes/depois (código 270px de largura fixa nos 3 estados vs. 74,9px
+> espremido antes da correção) e por screenshot nos 3 estados (normal/regenerando/regenerado) em
+> 360px — sem sobreposição em nenhum. Reauditoria das 6 telas do M2 × 360/390px (12/18 combinações;
+> as 6 de 430px falharam por esgotamento do Chromium headless após uso pesado do navegador na sessão —
+> falha de ambiente, não de layout, já que o breakpoint mobile é um único `@media max-width: 560px`
+> sem distinção entre as 3 larguras) confirmou **zero** overflow e **zero** alvo de toque abaixo de
+> 44px. `lint`/`test` (**frontend 126/126, shared 143/143**)/`build` (562,92 kB inicial, dentro do
+> budget de 565 kB, sem warning) verdes. Sem mudança de DOM/TS — só SCSS; nenhuma tela/feature nova.
+> Sessão anterior no mesmo dia (**re-execução do
 > refinamento visual mobile do M2 (m2-08)**: a pedido do autor, nova auditoria completa das 6 telas
 > do M2 (login, registro, painel/lista, criar, entrar, detalhe) via Playwright/Chromium headless nas
 > 3 larguras de referência da §6 do `PARIDADE-M1.md` (360/390/430px), sessão + API de campanha
