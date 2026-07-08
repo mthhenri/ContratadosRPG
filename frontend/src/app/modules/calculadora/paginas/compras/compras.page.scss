@@ -207,22 +207,13 @@
   padding: 18px 0;
 }
 
-.compras-grade {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 12px;
-  // Mostra ~2 linhas de itens e rola o resto por dentro — o catálogo (que pode ser longo) não
-  // domina a página nem empurra o carrinho para muito abaixo. O respiro à direita evita que a
-  // barra de rolagem cole nos cards.
-  max-height: 380px;
-  overflow-y: auto;
-  padding-right: 4px;
-
-  // Fade-out suave só na borda que está de fato cortando conteúdo, evitando o "corte seco". A
-  // diretiva [appOverflowFade] liga `--topo`/`--base` conforme a posição do scroll: no topo da
-  // lista não há fade superior, no fim não há inferior, no meio há os dois; lista sem overflow
-  // fica sem máscara. As larguras de banda vivem em variáveis (0 = sem fade naquela borda) para
-  // uma única declaração de máscara. Banda curta para não apagar os botões "+ Adicionar".
+// Fade-out vertical compartilhado pelas listas roláveis (catálogo de itens e painel de mods): só na
+// borda que está de fato cortando conteúdo (evita o "corte seco"). A diretiva [appOverflowFade] liga
+// `--topo`/`--base` conforme a posição do scroll: no topo não há fade superior, no fim não há
+// inferior, no meio há os dois; sem overflow, nenhuma máscara. As bandas vivem em variáveis (0 = sem
+// fade naquela borda) para uma única declaração de máscara.
+.compras-grade,
+.compras-mod-grade {
   --fade-topo: 0px;
   --fade-base: 0px;
 
@@ -243,13 +234,24 @@
       transparent 100%
     );
   }
-
   &.overflow-fade--topo {
-    --fade-topo: 26px;
+    --fade-topo: 24px;
   }
   &.overflow-fade--base {
-    --fade-base: 26px;
+    --fade-base: 24px;
   }
+}
+
+.compras-grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  // Mostra ~2 linhas de itens e rola o resto por dentro — o catálogo (que pode ser longo) não
+  // domina a página nem empurra o carrinho para muito abaixo. O respiro à direita evita que a
+  // barra de rolagem cole nos cards.
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 .compras-item {
   display: flex;
@@ -474,38 +476,10 @@
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 8px;
   // Mesmo esquema de scroll dos itens do catálogo (m1-20): mostra ~2 linhas de modificações e rola
-  // o resto por dentro, com fade-out só na borda que corta conteúdo (via [appOverflowFade] →
-  // --topo/--base). No topo não há fade superior; no fim, não há inferior. Vale nos dois modos.
+  // o resto por dentro. O fade-out vertical vem do grupo `.compras-grade, .compras-mod-grade` acima.
   max-height: 230px;
   overflow-y: auto;
   padding-right: 4px;
-
-  --fade-topo: 0px;
-  --fade-base: 0px;
-
-  &.overflow-fade--topo,
-  &.overflow-fade--base {
-    -webkit-mask-image: linear-gradient(
-      to bottom,
-      transparent 0,
-      #000 var(--fade-topo),
-      #000 calc(100% - var(--fade-base)),
-      transparent 100%
-    );
-    mask-image: linear-gradient(
-      to bottom,
-      transparent 0,
-      #000 var(--fade-topo),
-      #000 calc(100% - var(--fade-base)),
-      transparent 100%
-    );
-  }
-  &.overflow-fade--topo {
-    --fade-topo: 22px;
-  }
-  &.overflow-fade--base {
-    --fade-base: 22px;
-  }
 }
 .compras-mod-entrada {
   display: flex;
@@ -667,7 +641,6 @@
     color: var(--text);
   }
   &__nota {
-    font-family: var(--font-sans);
     font-size: 11px;
     color: var(--text-mute);
   }
@@ -789,12 +762,41 @@
   }
 
   // Fragmentos rolam lateralmente no mobile: os 5 módulos viram cartões lado a lado num scroller
-  // horizontal contido (o body não rola de lado), encurtando bastante a tela vertical.
+  // horizontal contido (o body não rola de lado), encurtando bastante a tela vertical. O fade segue
+  // a mesma regra dos itens, mas no eixo horizontal (via [appOverflowFade] → --esquerda/--direita):
+  // no início não há fade à esquerda, no fim não há à direita, no meio há os dois.
   .compras-fragmentos {
     display: flex;
     gap: 10px;
     overflow-x: auto;
     padding-bottom: 6px;
+
+    --fade-esquerda: 0px;
+    --fade-direita: 0px;
+
+    &.overflow-fade--esquerda,
+    &.overflow-fade--direita {
+      -webkit-mask-image: linear-gradient(
+        to right,
+        transparent 0,
+        #000 var(--fade-esquerda),
+        #000 calc(100% - var(--fade-direita)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to right,
+        transparent 0,
+        #000 var(--fade-esquerda),
+        #000 calc(100% - var(--fade-direita)),
+        transparent 100%
+      );
+    }
+    &.overflow-fade--esquerda {
+      --fade-esquerda: 24px;
+    }
+    &.overflow-fade--direita {
+      --fade-direita: 24px;
+    }
   }
   .compras-fragmentos__linha {
     display: flex;

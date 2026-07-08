@@ -383,7 +383,7 @@
           <span class="compras-venda-bloco__nota">Módulo ∅ é negociado com o Mestre — fora da tabela.</span>
         </div>
 
-        <div class="compras-fragmentos">
+        <div class="compras-fragmentos" appOverflowFade>
           @for (linha of linhasFragmentos(); track linha.modulo) {
             <div class="compras-fragmentos__linha">
               <span class="compras-fragmentos__modulo">{{ linha.rotulo }}</span>

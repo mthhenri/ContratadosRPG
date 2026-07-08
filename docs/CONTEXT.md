@@ -29,10 +29,13 @@
 > "Valores da venda" com **seletor de taxa** (Normal 50 / Check-in 75 / Fora de patente 25), **valor de
 > venda dos itens**, **total de fragmentos** e **Total de Venda** = itens (na taxa) + fragmentos em
 > **stat box de destaque accent**. **Fragmentos no mobile viram scroll lateral** (cartões por módulo lado
-> a lado num scroller horizontal contido — encurta a tela; body não rola de lado). Exportar/Importar só
-> em Compras. **Painel de modificações do item** (Compras e Vendas) ganhou o **mesmo esquema de scroll
-> dos itens** (`[appOverflowFade]` + `max-height`: mostra ~2 linhas e rola o resto, fade só na borda que
-> corta — sem fade no topo no início da lista, sem fade na base no fim). **Limpar (m1-19)** zera taxa e
+> a lado num scroller horizontal contido — encurta a tela; body não rola de lado), com **fade nas
+> bordas esquerda/direita** pela mesma regra (sem fade na ponta onde a lista começa/termina); para isso
+> a diretiva **`OverflowFade` passou a detectar os dois eixos** (`--esquerda`/`--direita` além de
+> `--topo`/`--base`). Exportar/Importar só em Compras. **Painel de modificações do item** (Compras e
+> Vendas) ganhou o **mesmo esquema de scroll dos itens** (`[appOverflowFade]` + `max-height`: mostra ~2
+> linhas e rola o resto, fade vertical só na borda que corta; o gradiente vertical foi unificado num
+> seletor `.compras-grade, .compras-mod-grade`). **Limpar (m1-19)** zera taxa e
 > fragmentos da venda (o modo vem da rota). **+5 testes** de página (Vitest, frontend **131/131**): taxa
 > pelo motor (50/75/25), fragmentos + total combinado, aba Vendas ocultando Config/Resumo, independência
 > dos carrinhos e Limpar zerando venda. Fora de escopo (viraram **nota na Ajuda m1-12**, não trava de
