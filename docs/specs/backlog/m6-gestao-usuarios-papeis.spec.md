@@ -99,7 +99,7 @@ A partir daí o tipo já pode ser atribuído pelo admin e usado em `@TiposPermit
 
 | Task | Camada | Conteúdo | Depende de |
 |---|---|---|---|
-| `m6-01` | banco + shared | Migration `tipo_usuario` (com rótulos em `descricao`) + `usuario.tipo_usuario_id` (FK/backfill) + `usuario.token_versao` + `TipoUsuarioEnum` (shared). Ajusta o `INSERT` do registro (m2-02) para gravar `NORMAL`. `SCHEMA.md`. Sem lógica. | — |
+| `m6-01` | banco + shared + backend (compat) | Migration `tipo_usuario` (com rótulos em `descricao`) + `usuario.tipo_usuario_id` (FK/backfill) + `usuario.token_versao` + `TipoUsuarioEnum` (shared). Ajusta o `INSERT` de registro (m2-02, repository) para gravar `NORMAL` — **na mesma task**, senão o cadastro quebra assim que a coluna vira `NOT NULL`. `SCHEMA.md`. Sem regra de negócio nova. | — |
 | `m6-02` | backend | Autorização global: `tipo`+`tokenVersao` no JWT/login, `recuperarSessao`, `autorizacao.guard.ts` (leitura leve + validade de sessão + invalidação imediata), `@TiposPermitidos(...)`, guia da mecânica de tester. | m6-01 |
 | `m6-03` | backend | Gestão admin — **CRUD**: listar (busca/filtro/lixeira), criar, alterar nome/login, excluir, reativar. Rotas `@TiposPermitidos(ADMIN)`. | m6-02 |
 | `m6-04` | backend | Gestão admin — **operações sensíveis + invariantes**: trocar tipo, resetar senha, bump de `token_versao`; ≥1 admin (inclui o self-service `DELETE /usuario` da m2-11), proteções de auto-ação, bloqueio de exclusão de mestre. | m6-03 |
