@@ -29,14 +29,18 @@ ou frontend.
      `fk_usuario_tipo_usuario` e índice `ix_usuario_tipo_usuario`. Como §10.1 proíbe `DEFAULT`,
      adicionar a coluna **nullable**, executar o backfill (abaixo), e só então aplicar
      `SET NOT NULL` — tudo dentro da mesma migration (o Knex mantém atômico).
+   - **Adiciona a coluna** `usuario.token_versao INTEGER` (contador de invalidação de sessão,
+     usado pelo guard da m6-02). Mesmo padrão sem `DEFAULT`: adicionar nullable, **backfill = 1**
+     em todas as contas, depois `SET NOT NULL`. Nome de negócio em português (§10.2.3); não é
+     data, então **não** leva sufixo `_data`.
    - **Backfill** (literais SQL): `usuario.tipo_usuario_id` = id do `ADMIN` **onde**
      `login = 'senhor.contratados'`; = id do `NORMAL` para **todas as demais** contas
      (`is_deleted = false` respeitado onde aplicável). Referenciar o id via subconsulta em
      `tipo_usuario` pelo `codigo` (tradução `codigo → id`, §10.2.12) — nunca id mágico.
-   - `-- DOWN` idempotente (`DROP ... IF EXISTS`): remove a FK/índice/coluna de `usuario` e
-     dropa `tipo_usuario`.
-3. **`SCHEMA.md` sincronizado**: seção `usuario` ganha `tipo_usuario_id`; nova seção
-   `tipo_usuario (M6)` documentando a tabela de referência e o backfill; nota do enum de coluna.
+   - `-- DOWN` idempotente (`DROP ... IF EXISTS`): remove FK/índice/coluna `tipo_usuario_id` e a
+     coluna `token_versao` de `usuario`, e dropa `tipo_usuario`.
+3. **`SCHEMA.md` sincronizado**: seção `usuario` ganha `tipo_usuario_id` e `token_versao`; nova
+   seção `tipo_usuario (M6)` documentando a tabela de referência e o backfill; nota do enum de coluna.
 4. **`CONVENTIONS.md`** "Próxima migration" atualizado `0009` → `0010`.
 
 ## Critérios de Aceite
@@ -46,6 +50,7 @@ ou frontend.
   forma limpa (idempotente no `-- DOWN`), e re-migrate volta ao estado.
 - `senhor.contratados` fica com `tipo_usuario_id` = `ADMIN`; toda outra conta = `NORMAL`
   (verificar por `SELECT` com JOIN em `tipo_usuario`).
+- Toda conta fica com `token_versao = 1` (coluna `NOT NULL` após o backfill).
 - Tabela, colunas, tipos, constraints, índices parciais e trigger batem com `SCHEMA.md`.
 - `build`/`test` do shared verdes (o enum não emite runtime além dos 3 membros).
 - **Nenhum** service, controller, repository de negócio, DTO de operação ou frontend nesta task.
