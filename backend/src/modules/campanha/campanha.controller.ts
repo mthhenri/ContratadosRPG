@@ -7,7 +7,10 @@ import type {
   CampanhaCriarDto,
   CampanhaEntradaDto,
   CampanhaEntrarDto,
+  CampanhaMembroRemovidoDto,
   CampanhaMembroResumoDto,
+  CampanhaMestreTransferidoDto,
+  CampanhaMestreTransferirDto,
   CampanhaRecuperadaDto,
   CampanhaResumoDto,
 } from '@contratados-rpg/shared/dtos/campanha';
@@ -68,6 +71,24 @@ export class CampanhaController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<CampanhaConviteRegeneradoDto> {
     return this.campanhaService.regenerarConvite({ id }, usuarioAtivo);
+  }
+
+  @Delete(':id/membro/:usuarioId')
+  removerMembro(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('usuarioId', ParseIntPipe) usuarioId: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaMembroRemovidoDto> {
+    return this.campanhaService.removerMembro({ id, usuarioId }, usuarioAtivo);
+  }
+
+  @Post(':id/mestre/transferir')
+  transferirMestre(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CampanhaMestreTransferirDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaMestreTransferidoDto> {
+    return this.campanhaService.transferirMestre({ ...dto, id }, usuarioAtivo);
   }
 
   @Put(':id')

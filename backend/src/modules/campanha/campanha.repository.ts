@@ -13,12 +13,15 @@ import type {
   CampanhaMembroInternoCriarDto,
   CampanhaMembroInternoRecuperadoDto,
   CampanhaMembroInternoRecuperarDto,
+  CampanhaMembroInternoRemoverDto,
   CampanhaMembroResumoDto,
   CampanhaMembrosListarDto,
+  CampanhaMestreInternoTransferirDto,
   CampanhaRecuperadaDto,
   CampanhaRecuperarDto,
   CampanhaResumoDto,
 } from '@contratados-rpg/shared/dtos/campanha';
+import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import { BaseRepository } from '../../core/base/base.repository';
 import { KNEX_CONNECTION } from '../../database/database.provider';
 
@@ -192,6 +195,51 @@ export class CampanhaRepository extends BaseRepository {
        WHERE campanha_membro.campanha_id = :campanhaId AND campanha_membro.is_deleted = false
        ORDER BY usuario.nome ASC`,
       { campanhaId: dto.campanhaId },
+    );
+  }
+
+  /**
+   * Remove (soft delete) o vínculo `campanha_membro` de um usuário numa campanha, pela chave
+   * composta campanha+usuário. Espelha o `executarSoftDelete` da base — que atua por `id` da
+   * tabela dona (`campanha`) — para a tabela `campanha_membro` (proibição #14: nunca `DELETE`
+   * físico). Só toca vínculo ativo (`is_deleted = false`), sem `DEFAULT`.
+   */
+  async removerMembro(dto: CampanhaMembroInternoRemoverDto): Promise<void> {
+    await this.executarComando(
+      `UPDATE campanha_membro
+       SET is_deleted = true, deleted_date = NOW(), updated_date = NOW()
+       WHERE campanha_id = :campanhaId AND usuario_id = :usuarioId AND is_deleted = false`,
+      { campanhaId: dto.campanhaId, usuarioId: dto.usuarioId },
+    );
+  }
+
+  /**
+   * Transfere o papel de mestre **atomicamente** num único `UPDATE`: o `novoMestreUsuarioId`
+   * passa a `MESTRE` e o `mestreAtualUsuarioId` a `JOGADOR`, via `CASE` sobre os dois vínculos
+   * ativos da campanha. Um só comando mantém a invariante de exatamente um mestre (§14) sem
+   * janela intermediária. Traduz `codigo → id` do papel por subconsulta (§10.2.12); só toca
+   * vínculo ativo (`is_deleted = false`), sem `DEFAULT`.
+   */
+  async transferirMestre(dto: CampanhaMestreInternoTransferirDto): Promise<void> {
+    await this.executarComando(
+      `UPDATE campanha_membro
+       SET tipo_campanha_membro_papel_id = CASE
+             WHEN usuario_id = :novoMestreUsuarioId
+               THEN (SELECT id FROM tipo_campanha_membro_papel WHERE codigo = :papelMestre AND is_deleted = false)
+             WHEN usuario_id = :mestreAtualUsuarioId
+               THEN (SELECT id FROM tipo_campanha_membro_papel WHERE codigo = :papelJogador AND is_deleted = false)
+           END,
+           updated_date = NOW()
+       WHERE campanha_id = :campanhaId
+         AND usuario_id IN (:novoMestreUsuarioId, :mestreAtualUsuarioId)
+         AND is_deleted = false`,
+      {
+        campanhaId: dto.campanhaId,
+        novoMestreUsuarioId: dto.novoMestreUsuarioId,
+        mestreAtualUsuarioId: dto.mestreAtualUsuarioId,
+        papelMestre: TipoCampanhaMembroPapelEnum.MESTRE,
+        papelJogador: TipoCampanhaMembroPapelEnum.JOGADOR,
+      },
     );
   }
 }

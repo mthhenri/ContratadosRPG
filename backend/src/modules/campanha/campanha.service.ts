@@ -13,8 +13,12 @@ import type {
   CampanhaInternoAlterarDto,
   CampanhaListarDto,
   CampanhaMembroInternoRecuperarDto,
+  CampanhaMembroRemoverDto,
+  CampanhaMembroRemovidoDto,
   CampanhaMembroResumoDto,
   CampanhaMembrosListarDto,
+  CampanhaMestreTransferidoDto,
+  CampanhaMestreTransferirDto,
   CampanhaRecuperadaDto,
   CampanhaRecuperarDto,
   CampanhaResumoDto,
@@ -207,6 +211,91 @@ export class CampanhaService {
 
     await this.validarMembro({ campanhaId: dto.campanhaId, usuarioId: usuarioAtivo.sub });
     return this.campanhaRepositorio.listarMembros(dto);
+  }
+
+  /**
+   * Remove um jogador da campanha (soft delete do `campanha_membro`) — só o mestre pode (§14,
+   * gate `validarMestre`, único árbitro — proibição #28). O mestre **não** pode remover a si
+   * mesmo (deixaria a campanha sem mestre) → `BusinessException` (transfira o papel ou exclua a
+   * campanha). Campanha inexistente ou membro-alvo inexistente → `ResourceNotFoundException`.
+   */
+  async removerMembro(
+    dto: CampanhaMembroRemoverDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaMembroRemovidoDto> {
+    const campanhaEncontrada = await this.campanhaRepositorio.recuperarPorId({ id: dto.id });
+    if (!campanhaEncontrada) {
+      throw new ResourceNotFoundException('Campanha');
+    }
+
+    await this.validarMestre({ campanhaId: dto.id, usuarioId: usuarioAtivo.sub });
+
+    if (dto.usuarioId === usuarioAtivo.sub) {
+      throw new BusinessException(
+        'O mestre não pode remover a si mesmo; transfira o papel de mestre ou exclua a campanha',
+      );
+    }
+
+    const membroAlvo = await this.campanhaRepositorio.recuperarMembro({
+      campanhaId: dto.id,
+      usuarioId: dto.usuarioId,
+    });
+    if (!membroAlvo) {
+      throw new ResourceNotFoundException('Membro da campanha');
+    }
+
+    await this.campanhaRepositorio.removerMembro({
+      campanhaId: dto.id,
+      usuarioId: dto.usuarioId,
+    });
+
+    return { campanhaId: dto.id, usuarioId: dto.usuarioId };
+  }
+
+  /**
+   * Transfere o papel de mestre para outro membro — só o mestre atual pode (§14, gate
+   * `validarMestre`). Promove o `novoMestreUsuarioId` (que deve ser membro `JOGADOR`) a
+   * `MESTRE` e rebaixa o mestre atual a `JOGADOR`, **atomicamente**, mantendo exatamente um
+   * mestre. Campanha inexistente / alvo não-membro → `ResourceNotFoundException`; alvo = o
+   * próprio mestre ou alvo já `MESTRE` → `BusinessException`.
+   */
+  async transferirMestre(
+    dto: CampanhaMestreTransferirDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaMestreTransferidoDto> {
+    const campanhaEncontrada = await this.campanhaRepositorio.recuperarPorId({ id: dto.id });
+    if (!campanhaEncontrada) {
+      throw new ResourceNotFoundException('Campanha');
+    }
+
+    await this.validarMestre({ campanhaId: dto.id, usuarioId: usuarioAtivo.sub });
+
+    if (dto.novoMestreUsuarioId === usuarioAtivo.sub) {
+      throw new BusinessException('Você já é o mestre desta campanha');
+    }
+
+    const membroAlvo = await this.campanhaRepositorio.recuperarMembro({
+      campanhaId: dto.id,
+      usuarioId: dto.novoMestreUsuarioId,
+    });
+    if (!membroAlvo) {
+      throw new ResourceNotFoundException('Membro da campanha');
+    }
+    if (membroAlvo.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
+      throw new BusinessException('O usuário indicado já é o mestre desta campanha');
+    }
+
+    await this.campanhaRepositorio.transferirMestre({
+      campanhaId: dto.id,
+      mestreAtualUsuarioId: usuarioAtivo.sub,
+      novoMestreUsuarioId: dto.novoMestreUsuarioId,
+    });
+
+    return {
+      campanhaId: dto.id,
+      mestreAnteriorUsuarioId: usuarioAtivo.sub,
+      novoMestreUsuarioId: dto.novoMestreUsuarioId,
+    };
   }
 
   /**

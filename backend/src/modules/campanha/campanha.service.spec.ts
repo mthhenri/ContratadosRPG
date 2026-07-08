@@ -27,6 +27,8 @@ interface RepositorioDublado {
   alterarConvite: ReturnType<typeof vi.fn>;
   listarMembros: ReturnType<typeof vi.fn>;
   excluirCampanha: ReturnType<typeof vi.fn>;
+  removerMembro: ReturnType<typeof vi.fn>;
+  transferirMestre: ReturnType<typeof vi.fn>;
 }
 
 describe('CampanhaService', () => {
@@ -55,6 +57,8 @@ describe('CampanhaService', () => {
       alterarConvite: vi.fn(),
       listarMembros: vi.fn(),
       excluirCampanha: vi.fn(),
+      removerMembro: vi.fn(),
+      transferirMestre: vi.fn(),
     };
     service = new CampanhaService(repositorio as unknown as CampanhaRepository);
   });
@@ -351,6 +355,154 @@ describe('CampanhaService', () => {
       await expect(service.listarMembros({ campanhaId: 99 }, usuarioMestre)).rejects.toThrow(
         ResourceNotFoundException,
       );
+
+      expect(repositorio.recuperarMembro).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('removerMembro', () => {
+    it('remove o membro quando o autor é o mestre e o alvo é outro membro', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro
+        .mockResolvedValueOnce({ papel: TipoCampanhaMembroPapelEnum.MESTRE }) // validarMestre (autor)
+        .mockResolvedValueOnce({ papel: TipoCampanhaMembroPapelEnum.JOGADOR }); // membro-alvo
+      repositorio.removerMembro.mockResolvedValue(undefined);
+
+      const resultado = await service.removerMembro(
+        { id: 3, usuarioId: usuarioNaoMestre.sub },
+        usuarioMestre,
+      );
+
+      expect(repositorio.removerMembro).toHaveBeenCalledWith({
+        campanhaId: 3,
+        usuarioId: usuarioNaoMestre.sub,
+      });
+      expect(resultado).toEqual({ campanhaId: 3, usuarioId: usuarioNaoMestre.sub });
+    });
+
+    it('lança UnauthorizedAccessException quando o autor não é o mestre', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+
+      await expect(
+        service.removerMembro({ id: 3, usuarioId: 99 }, usuarioNaoMestre),
+      ).rejects.toThrow(UnauthorizedAccessException);
+
+      expect(repositorio.removerMembro).not.toHaveBeenCalled();
+    });
+
+    it('lança BusinessException quando o mestre tenta remover a si mesmo', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.MESTRE,
+      });
+
+      await expect(
+        service.removerMembro({ id: 3, usuarioId: usuarioMestre.sub }, usuarioMestre),
+      ).rejects.toThrow(BusinessException);
+
+      expect(repositorio.removerMembro).not.toHaveBeenCalled();
+    });
+
+    it('lança ResourceNotFoundException quando o membro-alvo não existe', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro
+        .mockResolvedValueOnce({ papel: TipoCampanhaMembroPapelEnum.MESTRE }) // validarMestre (autor)
+        .mockResolvedValueOnce(null); // membro-alvo inexistente
+
+      await expect(
+        service.removerMembro({ id: 3, usuarioId: 99 }, usuarioMestre),
+      ).rejects.toThrow(ResourceNotFoundException);
+
+      expect(repositorio.removerMembro).not.toHaveBeenCalled();
+    });
+
+    it('lança ResourceNotFoundException quando a campanha não existe', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(null);
+
+      await expect(
+        service.removerMembro({ id: 99, usuarioId: 42 }, usuarioMestre),
+      ).rejects.toThrow(ResourceNotFoundException);
+
+      expect(repositorio.recuperarMembro).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('transferirMestre', () => {
+    it('troca os papéis: o alvo vira MESTRE e o mestre atual vira JOGADOR', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro
+        .mockResolvedValueOnce({ papel: TipoCampanhaMembroPapelEnum.MESTRE }) // validarMestre (autor)
+        .mockResolvedValueOnce({ papel: TipoCampanhaMembroPapelEnum.JOGADOR }); // alvo é jogador
+      repositorio.transferirMestre.mockResolvedValue(undefined);
+
+      const resultado = await service.transferirMestre(
+        { id: 3, novoMestreUsuarioId: usuarioNaoMestre.sub },
+        usuarioMestre,
+      );
+
+      expect(repositorio.transferirMestre).toHaveBeenCalledWith({
+        campanhaId: 3,
+        mestreAtualUsuarioId: usuarioMestre.sub,
+        novoMestreUsuarioId: usuarioNaoMestre.sub,
+      });
+      expect(resultado).toEqual({
+        campanhaId: 3,
+        mestreAnteriorUsuarioId: usuarioMestre.sub,
+        novoMestreUsuarioId: usuarioNaoMestre.sub,
+      });
+    });
+
+    it('lança UnauthorizedAccessException quando o autor não é o mestre', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+
+      await expect(
+        service.transferirMestre({ id: 3, novoMestreUsuarioId: 99 }, usuarioNaoMestre),
+      ).rejects.toThrow(UnauthorizedAccessException);
+
+      expect(repositorio.transferirMestre).not.toHaveBeenCalled();
+    });
+
+    it('lança BusinessException quando o alvo é o próprio mestre', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.MESTRE,
+      });
+
+      await expect(
+        service.transferirMestre(
+          { id: 3, novoMestreUsuarioId: usuarioMestre.sub },
+          usuarioMestre,
+        ),
+      ).rejects.toThrow(BusinessException);
+
+      expect(repositorio.transferirMestre).not.toHaveBeenCalled();
+    });
+
+    it('lança ResourceNotFoundException quando o alvo não é membro', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro
+        .mockResolvedValueOnce({ papel: TipoCampanhaMembroPapelEnum.MESTRE }) // validarMestre (autor)
+        .mockResolvedValueOnce(null); // alvo não é membro
+
+      await expect(
+        service.transferirMestre({ id: 3, novoMestreUsuarioId: 99 }, usuarioMestre),
+      ).rejects.toThrow(ResourceNotFoundException);
+
+      expect(repositorio.transferirMestre).not.toHaveBeenCalled();
+    });
+
+    it('lança ResourceNotFoundException quando a campanha não existe', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(null);
+
+      await expect(
+        service.transferirMestre({ id: 99, novoMestreUsuarioId: 42 }, usuarioMestre),
+      ).rejects.toThrow(ResourceNotFoundException);
 
       expect(repositorio.recuperarMembro).not.toHaveBeenCalled();
     });

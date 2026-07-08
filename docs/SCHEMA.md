@@ -100,8 +100,8 @@ CREATE TABLE campanha_membro (
 -- ix_campanha_membro_usuario: (usuario_id)
 ```
 
-Regras: uma campanha tem exatamente um membro `MESTRE` (o criador) no v1; jogador entra
-via `codigo_convite` com papel `JOGADOR`.
+Regras: uma campanha tem exatamente um membro `MESTRE` no v1 (inicialmente o criador; o papel
+é transferível pelo mestre atual — §14); jogador entra via `codigo_convite` com papel `JOGADOR`.
 
 ## ficha (M3 jogador; M4 criatura/NPC)
 

@@ -201,3 +201,62 @@ export interface CampanhaConviteInternoAlterarDto {
   readonly id: number;
   readonly codigoConvite: string;
 }
+
+/*
+ * ── m2-10: gestão de membros pelo mestre — remoção de jogador e transferência de mestre ──
+ */
+
+/**
+ * Entrada da remoção de um membro pelo mestre (complemento `Membro` antes do verbo) — o `id`
+ * é o da campanha (`@Param(':id')`) e o `usuarioId` é o membro a remover
+ * (`@Param(':usuarioId')`), ambos injetados no DTO pela controller. Só o mestre remove (§14);
+ * o mestre não pode remover a si mesmo.
+ */
+export interface CampanhaMembroRemoverDto {
+  readonly id: number;
+  readonly usuarioId: number;
+}
+
+/** Saída da remoção — confirmação do membro removido da campanha. */
+export interface CampanhaMembroRemovidoDto {
+  readonly campanhaId: number;
+  readonly usuarioId: number;
+}
+
+/**
+ * Entrada da transferência do papel de mestre (complemento `Mestre` antes do verbo) — o `id`
+ * é o da campanha (`@Param`) e o `novoMestreUsuarioId` (corpo) é o jogador a ser promovido a
+ * `MESTRE`. O mestre atual é o usuário autenticado; a transferência é **atômica** (promove o
+ * alvo e rebaixa o atual a `JOGADOR`, mantendo exatamente um mestre — §14).
+ */
+export interface CampanhaMestreTransferirDto {
+  readonly id: number;
+  readonly novoMestreUsuarioId: number;
+}
+
+/** Saída da transferência — confirmação de quem deixou e quem assumiu o papel de mestre. */
+export interface CampanhaMestreTransferidoDto {
+  readonly campanhaId: number;
+  readonly mestreAnteriorUsuarioId: number;
+  readonly novoMestreUsuarioId: number;
+}
+
+/**
+ * Entrada interna da remoção do vínculo `campanha_membro` (soft delete pela chave composta
+ * campanha+usuário). Só service ↔ repository.
+ */
+export interface CampanhaMembroInternoRemoverDto {
+  readonly campanhaId: number;
+  readonly usuarioId: number;
+}
+
+/**
+ * Entrada interna da transferência de mestre — troca atômica dos papéis dos dois membros num
+ * único `UPDATE`: `mestreAtualUsuarioId` vira `JOGADOR` e `novoMestreUsuarioId` vira `MESTRE`.
+ * Só service ↔ repository.
+ */
+export interface CampanhaMestreInternoTransferirDto {
+  readonly campanhaId: number;
+  readonly mestreAtualUsuarioId: number;
+  readonly novoMestreUsuarioId: number;
+}

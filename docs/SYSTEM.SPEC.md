@@ -493,7 +493,11 @@ usuario_ficha_acesso        ficha_id FK, usuario_id FK
   jogadores por padrão; reveláveis via `usuario_ficha_acesso`. Sem caso especial.
 - Jogador entra na campanha informando `codigo_convite`; entra com papel `JOGADOR`.
   O mestre pode regenerar o código a qualquer momento (invalida o anterior).
-- Uma campanha tem exatamente **um** mestre (o criador) no v1.
+- Uma campanha tem exatamente **um** mestre no v1 — inicialmente o criador, mas o papel é
+  **transferível** pelo mestre atual a outro membro (o alvo vira `MESTRE` e o mestre atual é
+  rebaixado a `JOGADOR`, **atomicamente**; a invariante de exatamente um mestre se mantém).
+  O mestre também **remove** jogadores da campanha, mas não pode remover a si mesmo (deixaria
+  a campanha sem mestre — transfere o papel ou exclui a campanha).
 - Toda mutação de ficha é validada contra o motor de regras antes de persistir.
 - Soft delete em tudo; nunca DELETE físico.
 
