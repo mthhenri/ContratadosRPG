@@ -212,6 +212,40 @@
       outline: none;
       border-color: var(--accent-border);
     }
+
+    // Abre espaço à direita para o botão de revelar a senha não cobrir o texto digitado.
+    &--senha {
+      padding-right: 44px;
+    }
+  }
+
+  // Campo de senha com o botão "olhinho" (revelar/ocultar) sobreposto à direita.
+  &__campo-senha {
+    position: relative;
+  }
+
+  &__olho {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-control);
+    color: var(--text-mute);
+    cursor: pointer;
+
+    app-icone {
+      font-size: 17px;
+    }
+
+    &:hover {
+      color: var(--text);
+    }
   }
 
   &__erro {

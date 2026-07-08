@@ -27,10 +27,17 @@ export class Login {
 
   protected readonly enviando = signal(false);
 
+  /** Alterna entre esconder (`password`) e revelar (`text`) o campo de senha. */
+  protected readonly senhaVisivel = signal(false);
+
   protected readonly formulario = this.formBuilder.nonNullable.group({
     login: ['', [Validators.required]],
     senha: ['', [Validators.required]],
   });
+
+  protected alternarSenha(): void {
+    this.senhaVisivel.update((visivel) => !visivel);
+  }
 
   protected enviar(): void {
     if (this.formulario.invalid || this.enviando()) {

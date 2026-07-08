@@ -51,12 +51,23 @@
 
         <label class="autenticacao__campo">
           <span class="autenticacao__rotulo">Senha</span>
-          <input
-            class="autenticacao__entrada"
-            type="password"
-            formControlName="senha"
-            autocomplete="new-password"
-          />
+          <div class="autenticacao__campo-senha">
+            <input
+              class="autenticacao__entrada autenticacao__entrada--senha"
+              [type]="senhaVisivel() ? 'text' : 'password'"
+              formControlName="senha"
+              autocomplete="new-password"
+            />
+            <button
+              class="autenticacao__olho"
+              type="button"
+              [attr.aria-label]="senhaVisivel() ? 'Ocultar senha' : 'Mostrar senha'"
+              [attr.aria-pressed]="senhaVisivel()"
+              (click)="alternarSenha()"
+            >
+              <app-icone [nome]="senhaVisivel() ? 'olho-fechado' : 'olho'" />
+            </button>
+          </div>
           @if (formulario.controls.senha.touched && formulario.controls.senha.hasError('minlength')) {
             <span class="autenticacao__erro">Mínimo de 6 caracteres.</span>
           }
@@ -64,12 +75,23 @@
 
         <label class="autenticacao__campo">
           <span class="autenticacao__rotulo">Confirmar senha</span>
-          <input
-            class="autenticacao__entrada"
-            type="password"
-            formControlName="confirmacaoSenha"
-            autocomplete="new-password"
-          />
+          <div class="autenticacao__campo-senha">
+            <input
+              class="autenticacao__entrada autenticacao__entrada--senha"
+              [type]="confirmacaoVisivel() ? 'text' : 'password'"
+              formControlName="confirmacaoSenha"
+              autocomplete="new-password"
+            />
+            <button
+              class="autenticacao__olho"
+              type="button"
+              [attr.aria-label]="confirmacaoVisivel() ? 'Ocultar senha' : 'Mostrar senha'"
+              [attr.aria-pressed]="confirmacaoVisivel()"
+              (click)="alternarConfirmacao()"
+            >
+              <app-icone [nome]="confirmacaoVisivel() ? 'olho-fechado' : 'olho'" />
+            </button>
+          </div>
           @if (formulario.controls.confirmacaoSenha.touched && formulario.hasError('senhasDivergentes')) {
             <span class="autenticacao__erro">As senhas não coincidem.</span>
           }

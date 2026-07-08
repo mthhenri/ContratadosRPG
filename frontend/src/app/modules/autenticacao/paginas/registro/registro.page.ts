@@ -42,6 +42,10 @@ export class Registro {
 
   protected readonly enviando = signal(false);
 
+  /** Alterna esconder/revelar cada campo de senha (a senha e a confirmação, independentes). */
+  protected readonly senhaVisivel = signal(false);
+  protected readonly confirmacaoVisivel = signal(false);
+
   protected readonly formulario = this.formBuilder.nonNullable.group(
     {
       nome: ['', [Validators.required]],
@@ -51,6 +55,14 @@ export class Registro {
     },
     { validators: senhasCoincidem },
   );
+
+  protected alternarSenha(): void {
+    this.senhaVisivel.update((visivel) => !visivel);
+  }
+
+  protected alternarConfirmacao(): void {
+    this.confirmacaoVisivel.update((visivel) => !visivel);
+  }
 
   protected enviar(): void {
     if (this.formulario.invalid || this.enviando()) {
