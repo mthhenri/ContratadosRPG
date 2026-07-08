@@ -1,6 +1,37 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-08 (**m3-04 —
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-08 (**re-execução do
+> refinamento visual mobile do M2 (m2-08)**: a pedido do autor, nova auditoria completa das 6 telas
+> do M2 (login, registro, painel/lista, criar, entrar, detalhe) via Playwright/Chromium headless nas
+> 3 larguras de referência da §6 do `PARIDADE-M1.md` (360/390/430px), sessão + API de campanha
+> mockadas (mesmo método das revisões anteriores da m2-08). **Achado de partida:** zero scroll
+> horizontal nas 6 telas (confirma o passe original), mas **5 alvos de toque abaixo de 44px** que a
+> m2-08 e as 2 auditorias seguintes não haviam coberto — presentes nas 3 larguras (não eram regra de
+> breakpoint faltante, e sim controles nunca tocados): **(1)** o **gatilho "Tema"** da topbar
+> (`shared/configuracoes-tema` — presente em todas as telas, inclusive as públicas de auth; a m1-15
+> só havia tratado os controles *dentro* do modal, nunca o próprio botão de abrir), 85×34px; **(2)**
+> os **links de navegação entre telas** — "Criar agora"/"Entrar" (login/registro) e "Voltar às
+> campanhas" (criar/entrar) — texto solto de ~15px de altura dentro de um `<p>`, sem nenhum
+> tratamento de toque, mobile ou desktop. O critério de aceite #3 da própria m2-08 já listava "links
+> de navegação entre telas" entre os controles exigidos — gap real, não extrapolação. **Correção**
+> (SCSS-only, escopada a `@include bp.mobile`): `.config-gatilho` ganhou `min-height:
+> bp.$alvo-toque`; os 4 `__link` (login/registro/criar/entrar) ganharam `display: inline-flex;
+> align-items: center; justify-content: center; min-height: bp.$alvo-toque; padding: 4px 6px` —
+> mesma técnica dos outros controles de toque da m2-08, sem alterar DOM/TS. Reauditoria confirmou os
+> 18 casos (6 telas × 3 larguras) com **zero** overflow e **zero** alvo abaixo de 44px.
+> **Verificação adicional** com dados realistas de borda (nome/descrição de campanha bem longos,
+> código de convite no tamanho real gerado pelo backend — 8 caracteres, `TAMANHO_CONVITE` em
+> `campanha.service.ts`): sem overflow horizontal em `lista`/`detalhe`; a caixa de código de convite
+> e o botão de copiar, medidos via `getBoundingClientRect`, mantêm os 12px de gap do design (a
+> impressão de sobreposição num screenshot de baixa resolução não se confirmou — falso alarme
+> descartado antes de "corrigir" algo que não estava quebrado). Um nome de membro artificialmente
+> extremo (49 caracteres) produz quebra de uma palavra por linha e um chip de papel centralizado no
+> meio do bloco — cosmeticamente não ideal, mas sem sobreposição real de caixas nem scroll
+> horizontal, e fora do padrão de nomes reais do domínio; registrado como observação, não corrigido
+> (evita extrapolar escopo sobre um edge case sintético). `lint`/`test` (**frontend 126/126, shared
+> 143/143**)/`build` (562,92 kB inicial, dentro do budget de 565 kB, sem warning) verdes. Spec
+> `m2-08` permanece em `done/` (nenhuma regra nova — só acabamento sobre o que ela já definia);
+> nenhuma tela/feature nova, nenhuma mudança de DOM/TS. Sessão anterior no mesmo dia (**m3-04 —
 > concessão/revogação de acesso de visualização da ficha (backend)**: fecha a **matriz §14** ("outro
 > membro vê só com linha em `usuario_ficha_acesso`") estendendo o módulo `ficha` da m3-03 — sem
 > frontend, sem WebSocket. **6 DTOs novos** em `shared/src/dtos/ficha/ficha-operacao.dtos.ts`:

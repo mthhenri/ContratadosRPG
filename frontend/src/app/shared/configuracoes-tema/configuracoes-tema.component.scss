@@ -286,8 +286,11 @@
   }
 }
 
-// === Refinamento mobile (m1-15) — alvos de toque do painel de tema ===
+// === Refinamento mobile (m1-15/m2-08) — alvos de toque do painel de tema ===
 @include bp.mobile {
+  .config-gatilho {
+    min-height: bp.$alvo-toque;
+  }
   .config-opcao,
   .config-swatch {
     min-height: bp.$alvo-toque;

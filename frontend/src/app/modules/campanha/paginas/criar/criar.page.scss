@@ -84,6 +84,15 @@
     &__enviar {
       min-height: bp.$alvo-toque;
     }
+
+    // Link de navegação entre telas (voltar às campanhas) — mesma trava de 44px (m2-08).
+    &__link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: bp.$alvo-toque;
+      padding: 4px 6px;
+    }
   }
 }
 
