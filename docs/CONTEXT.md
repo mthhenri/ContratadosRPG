@@ -51,8 +51,33 @@
 > ícones cabem folgados e todos visíveis, e o **rótulo aparece só na aba ativa** (que ganha `flex: 2`),
 > substituindo os rótulos de 9px que quebravam em 2–3 linhas; ícone de 18→20px. No desktop os rótulos
 > seguem ao lado do ícone (a regra `display:none` do `.abas__rotulo` é só `@include bp.mobile`). Spec
-> `m1-20` em `done/`. **M1 fecha com 20 tasks.** Sessão anterior no mesmo dia: **refino mobile da
-> lista de campanhas: chip de papel desce para a própria linha em ~360px**, aprovado pelo autor numa
+> `m1-20` em `done/`. **M1 fecha com 20 tasks.** Sessão anterior no mesmo dia (**ux-loading —
+> refino visual do indicador de carregamento global do shell**. Antes qualquer requisição HTTP
+> acendia um `<span class="topbar__carregando">` **dentro de** `.topbar__acoes` (barra indeterminada
+> de 6rem × 2px): por estar **no fluxo**, acender/apagar empurrava os itens ao lado (*layout shift*) e
+> no mobile (~360px), com a topbar já apertada, chegava a **quebrar** a barra; ainda piscava em
+> requests instantâneos. **Correção — SCSS-first + marcação mínima, sem tocar na lógica** (o
+> `LoadingService`/`loadingInterceptor` e a semântica de contagem de requests ficaram **intactos** —
+> só apresentação): o indicador saiu de `.topbar__acoes` e virou uma **linha fina fixa no topo do
+> viewport** (`.carregando-global`, `position: fixed; top/left/right: 0; height: 2px; z-index: 50`,
+> largura total, `pointer-events: none`), **fora do fluxo** — montar/desmontar via `@if
+> isLoading()` **nunca** desloca nenhum item da topbar. Segmento deslizante no `--accent` (identidade
+> "Terminal de Contenção" — traço fino/discreto, sem spinner/gradiente, **só tokens**, proibição #29).
+> **Debounce visual SCSS-only** (sem tocar na contagem): `opacity: 0` + `animation ... 0.18s forwards`
+> — a barra só surge após ~180ms, então requests instantâneos desmontam antes de aparecer (não pisca).
+> `@media (prefers-reduced-motion: reduce)` (padrão do tema, como os skeletons): sem deslize nem fade
+> atrasado — linha accent estática a `opacity .65`, aparecendo de imediato. Acessibilidade preservada
+> (`role="status"` + `aria-label="Carregando"`). Nenhum seletor usado por teste renomeado (não havia
+> spec referenciando o indicador). `lint`/`test` (**frontend 126/126**)/`build` (563,28 kB inicial,
+> dentro do budget de 565 kB, sem warning; AOT type-checou os templates) verdes. **Verificado ao vivo**
+> (Playwright/Chromium sobre o build servido) em **desktop 1280px** e **mobile 360px**: barra medida
+> `position: fixed`, largura total (1280/360px), 2px, `z-index 50`; **deslocamento dos 4 itens da
+> topbar** (logo/nav/ações/tema) medido antes×depois de acender = **0/0/0** em ambas as larguras;
+> **zero scroll horizontal**; screenshot confirma a linha accent fina no topo com a topbar intacta.
+> Spec `ux-loading-indicador-conciso` → `done/` (o slot `mN-NN` definitivo fica a critério do autor,
+> como a própria spec registra — nasce como refino de UX do shell). Fora de escopo (mantido): lógica de
+> contagem do `LoadingService`/interceptor, loaders inline/por-componente. Sessão anterior no mesmo dia
+> (**refino mobile da
 > lista de campanhas: chip de papel desce para a própria linha em ~360px**, aprovado pelo autor numa
 > re-revisão geral do mobile do M2. **Achado da re-revisão** (auditoria Playwright das 6 telas ×
 > 360/390/430px — as 18 combinações agora rodando **sem erro** graças a browser relançado por largura
