@@ -10,7 +10,9 @@ import {
   CampanhaCriarDto,
   CampanhaEntradaDto,
   CampanhaEntrarDto,
+  CampanhaMembroRemovidoDto,
   CampanhaMembroResumoDto,
+  CampanhaMestreTransferidoDto,
   CampanhaRecuperadaDto,
   CampanhaResumoDto,
 } from '@contratados-rpg/shared/dtos/campanha';
@@ -84,5 +86,21 @@ export class CampanhaService {
     return this.httpClient
       .post<StandardResponse<CampanhaConviteRegeneradoDto>>(`${this.base}/${id}/convite/regenerar`, {})
       .pipe(map((resposta) => resposta.dados as CampanhaConviteRegeneradoDto));
+  }
+
+  /** Remove um jogador da campanha — soft delete (só mestre — o backend barra o jogador com 403). */
+  removerMembro(id: number, usuarioId: number): Observable<CampanhaMembroRemovidoDto> {
+    return this.httpClient
+      .delete<StandardResponse<CampanhaMembroRemovidoDto>>(`${this.base}/${id}/membro/${usuarioId}`)
+      .pipe(map((resposta) => resposta.dados as CampanhaMembroRemovidoDto));
+  }
+
+  /** Transfere o papel de mestre a um jogador; o mestre atual passa a jogador (só mestre — §14). */
+  transferirMestre(id: number, novoMestreUsuarioId: number): Observable<CampanhaMestreTransferidoDto> {
+    return this.httpClient
+      .post<StandardResponse<CampanhaMestreTransferidoDto>>(`${this.base}/${id}/mestre/transferir`, {
+        novoMestreUsuarioId,
+      })
+      .pipe(map((resposta) => resposta.dados as CampanhaMestreTransferidoDto));
   }
 }

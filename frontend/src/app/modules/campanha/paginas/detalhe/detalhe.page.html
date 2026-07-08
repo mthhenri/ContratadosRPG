@@ -124,12 +124,98 @@
       <ul class="detalhe__membros">
         @for (membro of membros(); track membro.usuarioId) {
           <li class="detalhe__membro">
-            <span class="detalhe__avatar" aria-hidden="true"></span>
-            <span class="detalhe__membro-nome">{{ membro.nome }}</span>
-            <span class="chip-papel">
-              <app-icone [nome]="membro.papel === TipoCampanhaMembroPapelEnum.MESTRE ? 'coroa' : 'protecoes'" />
-              {{ membro.papel }}
-            </span>
+            <div class="detalhe__membro-linha">
+              <span class="detalhe__avatar" aria-hidden="true"></span>
+              <span class="detalhe__membro-nome">{{ membro.nome }}</span>
+              <span class="chip-papel">
+                <app-icone [nome]="membro.papel === TipoCampanhaMembroPapelEnum.MESTRE ? 'coroa' : 'protecoes'" />
+                {{ membro.papel }}
+              </span>
+
+              @if (podeGerenciarMembro(membro) && acaoMembro()?.usuarioId !== membro.usuarioId) {
+                <div class="detalhe__membro-acoes">
+                  <button
+                    class="detalhe__membro-acao"
+                    type="button"
+                    [attr.aria-label]="'Transferir o papel de mestre para ' + membro.nome"
+                    title="Transferir mestre"
+                    (click)="pedirTransferenciaMestre(membro)"
+                  >
+                    <app-icone nome="coroa" />
+                  </button>
+                  <button
+                    class="detalhe__membro-acao"
+                    type="button"
+                    [attr.aria-label]="'Remover ' + membro.nome + ' da campanha'"
+                    title="Remover"
+                    (click)="pedirRemocaoMembro(membro)"
+                  >
+                    <app-icone nome="excluir" />
+                  </button>
+                </div>
+              }
+            </div>
+
+            @if (acaoMembro()?.usuarioId === membro.usuarioId) {
+              <div
+                class="detalhe__membro-confirmacao"
+                role="alertdialog"
+                [attr.aria-label]="
+                  acaoMembro()?.tipo === 'transferir'
+                    ? 'Confirmar transferência do papel de mestre'
+                    : 'Confirmar remoção do membro'
+                "
+              >
+                @if (acaoMembro()?.tipo === 'transferir') {
+                  <p class="detalhe__membro-aviso">
+                    Passar o papel de mestre para <strong>{{ membro.nome }}</strong>? Você deixará de
+                    ser o mestre e passará a jogador.
+                  </p>
+                  <div class="detalhe__membro-confirmacao-acoes">
+                    <button
+                      class="botao botao--primario detalhe__acao"
+                      type="button"
+                      [disabled]="processandoMembro()"
+                      (click)="confirmarTransferenciaMestre(membro.usuarioId)"
+                    >
+                      <app-icone nome="coroa" />
+                      {{ processandoMembro() ? 'Transferindo…' : 'Confirmar transferência' }}
+                    </button>
+                    <button
+                      class="botao botao--secundario detalhe__acao"
+                      type="button"
+                      [disabled]="processandoMembro()"
+                      (click)="cancelarAcaoMembro()"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                } @else {
+                  <p class="detalhe__membro-aviso">
+                    Remover <strong>{{ membro.nome }}</strong> da campanha?
+                  </p>
+                  <div class="detalhe__membro-confirmacao-acoes">
+                    <button
+                      class="botao botao--primario detalhe__acao"
+                      type="button"
+                      [disabled]="processandoMembro()"
+                      (click)="confirmarRemocaoMembro(membro.usuarioId)"
+                    >
+                      <app-icone nome="excluir" />
+                      {{ processandoMembro() ? 'Removendo…' : 'Confirmar remoção' }}
+                    </button>
+                    <button
+                      class="botao botao--secundario detalhe__acao"
+                      type="button"
+                      [disabled]="processandoMembro()"
+                      (click)="cancelarAcaoMembro()"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                }
+              </div>
+            }
           </li>
         }
       </ul>

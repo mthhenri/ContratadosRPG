@@ -60,6 +60,18 @@ export class CampanhaDetalhe {
   protected readonly confirmandoExclusao = signal(false);
   protected readonly excluindo = signal(false);
 
+  /**
+   * Gestão de membros (só mestre, m2-13): qual membro tem confirmação pendente e qual ação
+   * (`remover` o jogador ou `transferir` o mestre a ele). `null` quando nada está pendente.
+   */
+  protected readonly acaoMembro = signal<{
+    usuarioId: number;
+    tipo: 'remover' | 'transferir';
+  } | null>(null);
+
+  /** Bloqueia os botões enquanto a remoção/transferência do membro está em voo. */
+  protected readonly processandoMembro = signal(false);
+
   protected readonly formularioEdicao = this.formBuilder.nonNullable.group({
     nome: ['', [Validators.required]],
     descricao: [''],
@@ -193,6 +205,70 @@ export class CampanhaDetalhe {
           void this.router.navigate(['/painel']);
         },
       });
+  }
+
+  /** `true` quando o mestre pode gerir este membro — só jogadores (nunca a própria linha). */
+  protected podeGerenciarMembro(membro: CampanhaMembroResumoDto): boolean {
+    return this.ehMestre() && membro.papel === TipoCampanhaMembroPapelEnum.JOGADOR;
+  }
+
+  /** Abre a confirmação de remoção do jogador. */
+  protected pedirRemocaoMembro(membro: CampanhaMembroResumoDto): void {
+    this.acaoMembro.set({ usuarioId: membro.usuarioId, tipo: 'remover' });
+  }
+
+  /** Abre a confirmação de transferência do papel de mestre a este jogador. */
+  protected pedirTransferenciaMestre(membro: CampanhaMembroResumoDto): void {
+    this.acaoMembro.set({ usuarioId: membro.usuarioId, tipo: 'transferir' });
+  }
+
+  /** Cancela a ação de membro pendente. */
+  protected cancelarAcaoMembro(): void {
+    this.acaoMembro.set(null);
+  }
+
+  /** Remove o jogador (soft delete) e o tira da lista exibida. */
+  protected confirmarRemocaoMembro(usuarioId: number): void {
+    if (this.processandoMembro()) {
+      return;
+    }
+    this.processandoMembro.set(true);
+    this.campanhaService
+      .removerMembro(this.id, usuarioId)
+      .pipe(finalize(() => this.processandoMembro.set(false)))
+      .subscribe({
+        next: () => {
+          this.membros.update((lista) => lista.filter((membro) => membro.usuarioId !== usuarioId));
+          this.acaoMembro.set(null);
+        },
+      });
+  }
+
+  /**
+   * Transfere o papel de mestre ao jogador e recarrega os membros — o `ehMestre` recomputa para
+   * `false` e as ações de mestre (editar/excluir/convite/gestão) somem imediatamente da UI.
+   */
+  protected confirmarTransferenciaMestre(usuarioId: number): void {
+    if (this.processandoMembro()) {
+      return;
+    }
+    this.processandoMembro.set(true);
+    this.campanhaService
+      .transferirMestre(this.id, usuarioId)
+      .pipe(finalize(() => this.processandoMembro.set(false)))
+      .subscribe({
+        next: () => {
+          this.acaoMembro.set(null);
+          this.recarregarMembros();
+        },
+      });
+  }
+
+  /** Recarrega a lista de membros (após transferir o mestre) para refletir os novos papéis. */
+  private recarregarMembros(): void {
+    this.campanhaService
+      .listarMembros(this.id)
+      .subscribe({ next: (membros) => this.membros.set(membros) });
   }
 
   /** Copia o código de convite para a área de transferência — puramente apresentação. */

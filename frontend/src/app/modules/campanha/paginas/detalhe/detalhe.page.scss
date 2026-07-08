@@ -190,12 +190,73 @@
 
   &__membro {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 12px;
     padding: 12px 14px;
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-control);
+  }
+
+  &__membro-linha {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  // Ações de gestão do mestre sobre um jogador (transferir mestre / remover) — botões-ícone
+  // discretos, mesmo tratamento do &__copiar (aqui sobre --surface-2, hover pra --surface).
+  &__membro-acoes {
+    flex: none;
+    display: inline-flex;
+    gap: 8px;
+  }
+
+  &__membro-acao {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      color: var(--text);
+      background: var(--surface);
+      border-color: var(--accent-border);
+    }
+
+    app-icone {
+      font-size: 13px;
+    }
+  }
+
+  // Caixa de confirmação da ação de membro — realce com a borda accent (ação pendente), mesmo
+  // tratamento da confirmação de exclusão da campanha.
+  &__membro-confirmacao {
+    padding: 12px 14px;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-control);
+  }
+
+  &__membro-aviso {
+    margin: 0 0 12px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  &__membro-confirmacao-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
   }
 
   // Avatar decorativo (placeholder de imagem — sem foto real no domínio ainda). Listras em
@@ -256,6 +317,11 @@
 
     &__acao {
       min-height: bp.$alvo-toque;
+    }
+
+    &__membro-acao {
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
     }
 
     &__link {

@@ -8,7 +8,9 @@ import {
   CampanhaConviteRegeneradoDto,
   CampanhaCriadaDto,
   CampanhaEntradaDto,
+  CampanhaMembroRemovidoDto,
   CampanhaMembroResumoDto,
+  CampanhaMestreTransferidoDto,
   CampanhaRecuperadaDto,
   CampanhaResumoDto,
 } from '@contratados-rpg/shared/dtos/campanha';
@@ -166,5 +168,36 @@ describe('CampanhaService', () => {
     requisicao.flush(envelope(regenerado));
 
     expect(recebido).toEqual(regenerado);
+  });
+
+  it('remove um membro da campanha', () => {
+    const { servico, http } = criar();
+    const removido: CampanhaMembroRemovidoDto = { campanhaId: 8, usuarioId: 2 };
+
+    let recebido: CampanhaMembroRemovidoDto | undefined;
+    servico.removerMembro(8, 2).subscribe((dados) => (recebido = dados));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/campanha/8/membro/2'));
+    expect(requisicao.request.method).toBe('DELETE');
+    requisicao.flush(envelope(removido));
+
+    expect(recebido).toEqual(removido);
+  });
+
+  it('transfere o papel de mestre a outro membro', () => {
+    const { servico, http } = criar();
+    const transferido: CampanhaMestreTransferidoDto = {
+      campanhaId: 8,
+      mestreAnteriorUsuarioId: 1,
+      novoMestreUsuarioId: 2,
+    };
+
+    let recebido: CampanhaMestreTransferidoDto | undefined;
+    servico.transferirMestre(8, 2).subscribe((dados) => (recebido = dados));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/campanha/8/mestre/transferir'));
+    expect(requisicao.request.method).toBe('POST');
+    expect(requisicao.request.body).toEqual({ novoMestreUsuarioId: 2 });
+    requisicao.flush(envelope(transferido));
+
+    expect(recebido).toEqual(transferido);
   });
 });
