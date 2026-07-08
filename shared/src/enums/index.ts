@@ -8,3 +8,4 @@ export * from './tipo-descanso.enum';
 export * from './qualidade-descanso.enum';
 export * from './motivo-entrada-agente.enum';
 export * from './tipo-campanha-membro-papel.enum';
+export * from './tipo-ficha.enum';
