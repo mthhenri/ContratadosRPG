@@ -3,6 +3,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { StandardResponse } from '@contratados-rpg/shared/interfaces';
 import {
+  CampanhaAlteradaDto,
+  CampanhaAlterarDto,
   CampanhaConviteRegeneradoDto,
   CampanhaCriadaDto,
   CampanhaCriarDto,
@@ -61,6 +63,20 @@ export class CampanhaService {
     return this.httpClient
       .get<StandardResponse<CampanhaMembroResumoDto[]>>(`${this.base}/${id}/membros`)
       .pipe(map((resposta) => resposta.dados as CampanhaMembroResumoDto[]));
+  }
+
+  /** Altera nome/descrição da campanha (só mestre — o backend barra o jogador com 403). */
+  alterarCampanha(id: number, dto: CampanhaAlterarDto): Observable<CampanhaAlteradaDto> {
+    return this.httpClient
+      .put<StandardResponse<CampanhaAlteradaDto>>(`${this.base}/${id}`, dto)
+      .pipe(map((resposta) => resposta.dados as CampanhaAlteradaDto));
+  }
+
+  /** Exclui a campanha — soft delete (só mestre — o backend barra o jogador com 403). */
+  excluirCampanha(id: number): Observable<void> {
+    return this.httpClient
+      .delete<StandardResponse<null>>(`${this.base}/${id}`)
+      .pipe(map(() => undefined));
   }
 
   /** Regenera o convite (só mestre — o backend barra o jogador com 403). Invalida o anterior. */

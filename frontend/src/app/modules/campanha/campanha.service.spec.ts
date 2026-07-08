@@ -4,6 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { StandardResponse } from '@contratados-rpg/shared/interfaces';
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import {
+  CampanhaAlteradaDto,
   CampanhaConviteRegeneradoDto,
   CampanhaCriadaDto,
   CampanhaEntradaDto,
@@ -119,6 +120,39 @@ describe('CampanhaService', () => {
     requisicao.flush(envelope(membros));
 
     expect(recebido).toEqual(membros);
+  });
+
+  it('altera nome/descrição de uma campanha', () => {
+    const { servico, http } = criar();
+    const alterada: CampanhaAlteradaDto = {
+      id: 8,
+      nome: 'Contenção Épsilon',
+      descricao: 'Nova diretriz',
+      codigoConvite: 'DEF456',
+    };
+
+    let recebido: CampanhaAlteradaDto | undefined;
+    servico
+      .alterarCampanha(8, { nome: 'Contenção Épsilon', descricao: 'Nova diretriz' })
+      .subscribe((dados) => (recebido = dados));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/campanha/8'));
+    expect(requisicao.request.method).toBe('PUT');
+    expect(requisicao.request.body).toEqual({ nome: 'Contenção Épsilon', descricao: 'Nova diretriz' });
+    requisicao.flush(envelope(alterada));
+
+    expect(recebido).toEqual(alterada);
+  });
+
+  it('exclui uma campanha', () => {
+    const { servico, http } = criar();
+
+    let concluiu = false;
+    servico.excluirCampanha(8).subscribe(() => (concluiu = true));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/campanha/8'));
+    expect(requisicao.request.method).toBe('DELETE');
+    requisicao.flush(envelope(null));
+
+    expect(concluiu).toBe(true);
   });
 
   it('regenera o convite de uma campanha', () => {

@@ -1,6 +1,30 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-07 (**m2-11 —
+> Atualizado após cada sessão de implementação. Última atualização: 2026-07-07 (**m2-12 —
+> frontend de edição e exclusão de campanha**: fecha o CRUD de campanha na UI sobre os endpoints
+> `PUT`/`DELETE /campanha/:id` da m2-04 (backend já pronto — só camada de frontend). O
+> `CampanhaService` (frontend) ganhou `alterarCampanha(id, dto)` (`PUT`, retorna
+> `CampanhaAlteradaDto`) e `excluirCampanha(id)` (`DELETE`, mapeia a resposta a `void`) — só
+> transporte, DTOs do shared, autoridade no backend (§14). Na tela de **detalhe** (`/painel/:id`),
+> **só para o mestre** (`ehMestre` já derivado dos membros): **edição inline** de nome/descrição via
+> **Reactive Forms** (Signal `editando` alterna o card entre exibição e formulário; ao salvar,
+> reflete o resultado no Signal `campanha` **e** no `CampanhaContextoService` — o seletor da topbar
+> atualiza junto) e **exclusão com confirmação inline** (Signals `confirmandoExclusao`/`excluindo`;
+> **sem `confirm()` nativo** — fora do tema; ao confirmar, `excluirCampanha` → navega de volta a
+> `/painel`). Dois glifos novos de linha no `shared/icone` (`editar` lápis / `excluir` lixeira, mesmo
+> SVG `stroke: currentColor`, sem emoji) para os botões do mestre. O jogador **não vê** as ações;
+> tentativa direta seria barrada com 403 pelo backend e tratada pelo `error-handler`. Confirmar
+> exclusão reusa `.botao--primario` (accent = vermelho já é a cor de perigo do tema, sem inventar
+> variante); caixa de confirmação com `--accent-dim`/`--accent-border`. `.scss`/BEM só com tokens
+> (proibição #29), standalone, alvos de toque 44px no mobile. **+7 testes** (Vitest): **2** no
+> `campanha.service.spec` (PUT/DELETE atingem rota/verbo/corpo certos e mapeiam o `dados`) e **5**
+> no novo `detalhe.page.spec` (só o mestre vê editar/excluir; a edição chama `alterarCampanha` e
+> reflete nome no card **e** no `CampanhaContextoService`; a exclusão exige confirmação, chama
+> `excluirCampanha` e navega a `/painel`; cancelar não toca o backend) — `lint`/`test`
+> (**98/98**)/`build` (562 kB inicial, dentro do budget de 565 kB, sem warning) verdes; o `build`
+> de produção (AOT) type-checou os bindings do template. Fora de escopo: gestão de
+> membros/transferência de mestre no front (m2-13) e refino visual geral (m2-15). Sessão anterior no
+> mesmo dia (**m2-11 —
 > perfil do usuário (backend)**: completa o self-service do módulo `usuario` (m2-03) com
 > **alteração de perfil (nome + login)** e **exclusão da própria conta** (soft delete), sem
 > frontend nem WebSocket. `alterarPerfil` (`PATCH /usuario/perfil`): altera `nome`/`login` do
@@ -344,10 +368,11 @@ aos protótipos de `docs/design/examples/` (topbar "Barra de Comando", split-pan
 
 **Lote de extensão `m2-10`…`m2-15`** (CRUD restante de campanha/usuário, specs no backlog): fecha as
 lacunas de gerência do M2 antes de abrir o M3. Backend **m2-10** (gestão de membros — remover/transferir
-mestre) e **m2-11** (perfil do usuário — alterar nome/login + excluir conta) **concluídos** (specs em
-`docs/specs/done/`). Restam: **m2-12** (frontend de edição/exclusão de campanha), **m2-13** (frontend de
-gestão de membros), **m2-14** (frontend de perfil/exclusão de conta — consome a m2-11) e **m2-15** (refino
-visual da tela de campanhas). **Próxima task: `m2-12` — frontend de edição/exclusão de campanha.**
+mestre), backend **m2-11** (perfil do usuário — alterar nome/login + excluir conta) e frontend **m2-12**
+(edição/exclusão de campanha — consome os endpoints `PUT`/`DELETE` da m2-04) **concluídos** (specs em
+`docs/specs/done/`). Restam: **m2-13** (frontend de gestão de membros — consome a m2-10), **m2-14**
+(frontend de perfil/exclusão de conta — consome a m2-11) e **m2-15** (refino visual da tela de campanhas).
+**Próxima task: `m2-13` — frontend de gestão de membros (remover jogador / transferir mestre).**
 
 Depois do lote, **`M3` — Ficha de Jogador** (CRUD + cálculo automático via `shared/regras` + permissões +
 tempo real): o milestone já foi quebrado em tasks numeradas (`m3-01`…`m3-09`, specs no backlog).

@@ -90,6 +90,85 @@
     }
   }
 
+  // Formulário de edição inline (nome/descrição) — mesmo padrão de campo das telas criar/entrar.
+  &__edicao {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  &__campo {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  &__entrada {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text);
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent-border);
+    }
+
+    &--area {
+      resize: vertical;
+      font-family: var(--font-sans);
+    }
+  }
+
+  &__edicao-acoes,
+  &__acoes,
+  &__exclusao-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  &__acoes,
+  &__exclusao {
+    margin-bottom: 24px;
+  }
+
+  &__acao {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+  }
+
+  // Caixa de confirmação de exclusão — realce com a borda accent (ação destrutiva pendente).
+  &__exclusao {
+    padding: 14px 16px;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-control);
+  }
+
+  &__exclusao-aviso {
+    margin: 0 0 12px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text);
+  }
+
   &__subtitulo {
     margin: 0 0 12px;
     font-family: var(--font-mono);
@@ -171,6 +250,14 @@
       min-height: bp.$alvo-toque;
     }
 
+    &__entrada {
+      min-height: bp.$alvo-toque;
+    }
+
+    &__acao {
+      min-height: bp.$alvo-toque;
+    }
+
     &__link {
       min-height: bp.$alvo-toque;
     }
@@ -248,7 +335,18 @@
   border-radius: var(--radius-control);
   font-family: var(--font-mono);
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, filter 0.15s ease;
+
+  &--primario {
+    background: var(--accent);
+    color: var(--bg);
+    border: 0;
+
+    &:hover:not(:disabled) {
+      // filter (não uma 2ª cor fixa) pra funcionar com qualquer accent escolhido em runtime.
+      filter: brightness(1.08);
+    }
+  }
 
   &--secundario {
     background: transparent;

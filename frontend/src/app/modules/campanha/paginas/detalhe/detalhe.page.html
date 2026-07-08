@@ -16,7 +16,41 @@
         <span class="card__regua"></span>
       </header>
 
-      @if (campanhaAtual.descricao) {
+      @if (editando()) {
+        <form class="detalhe__edicao" [formGroup]="formularioEdicao" (ngSubmit)="salvarEdicao()">
+          <label class="detalhe__campo">
+            <span class="detalhe__rotulo">Nome</span>
+            <input class="detalhe__entrada" type="text" formControlName="nome" />
+          </label>
+
+          <label class="detalhe__campo">
+            <span class="detalhe__rotulo">Descrição (opcional)</span>
+            <textarea
+              class="detalhe__entrada detalhe__entrada--area"
+              formControlName="descricao"
+              rows="3"
+            ></textarea>
+          </label>
+
+          <div class="detalhe__edicao-acoes">
+            <button
+              class="botao botao--primario detalhe__acao"
+              type="submit"
+              [disabled]="salvando()"
+            >
+              {{ salvando() ? 'Salvando…' : 'Salvar' }}
+            </button>
+            <button
+              class="botao botao--secundario detalhe__acao"
+              type="button"
+              [disabled]="salvando()"
+              (click)="cancelarEdicao()"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      } @else if (campanhaAtual.descricao) {
         <p class="detalhe__descricao">{{ campanhaAtual.descricao }}</p>
       }
 
@@ -44,6 +78,46 @@
             </button>
           </div>
         </div>
+      }
+
+      @if (ehMestre() && !editando()) {
+        @if (confirmandoExclusao()) {
+          <div class="detalhe__exclusao" role="alertdialog" aria-label="Confirmar exclusão da campanha">
+            <p class="detalhe__exclusao-aviso">
+              Excluir <strong>{{ campanhaAtual.nome }}</strong>? Esta ação não pode ser desfeita.
+            </p>
+            <div class="detalhe__exclusao-acoes">
+              <button
+                class="botao botao--primario detalhe__acao"
+                type="button"
+                [disabled]="excluindo()"
+                (click)="confirmarExclusao()"
+              >
+                <app-icone nome="excluir" />
+                {{ excluindo() ? 'Excluindo…' : 'Confirmar exclusão' }}
+              </button>
+              <button
+                class="botao botao--secundario detalhe__acao"
+                type="button"
+                [disabled]="excluindo()"
+                (click)="cancelarExclusao()"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        } @else {
+          <div class="detalhe__acoes">
+            <button class="botao botao--secundario detalhe__acao" type="button" (click)="abrirEdicao()">
+              <app-icone nome="editar" />
+              Editar
+            </button>
+            <button class="botao botao--secundario detalhe__acao" type="button" (click)="pedirExclusao()">
+              <app-icone nome="excluir" />
+              Excluir
+            </button>
+          </div>
+        }
       }
 
       <h2 class="detalhe__subtitulo">Membros</h2>
