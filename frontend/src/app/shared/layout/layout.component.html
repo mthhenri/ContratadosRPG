@@ -1,5 +1,9 @@
 <p-toast position="bottom-center" />
 
+@if (loadingService.isLoading()) {
+  <span class="carregando-global" role="status" aria-label="Carregando"></span>
+}
+
 <header class="topbar">
   <app-marca class="topbar__logo" />
   <span class="topbar__marca">Contratados<span class="topbar__marca-sufixo">RPG</span></span>
@@ -29,10 +33,6 @@
   </nav>
 
   <div class="topbar__acoes">
-    @if (loadingService.isLoading()) {
-      <span class="topbar__carregando" role="status" aria-label="Carregando"></span>
-    }
-
     @if (sessaoService.usuario(); as usuarioAtual) {
       <div class="topbar__perfil">
         <button
