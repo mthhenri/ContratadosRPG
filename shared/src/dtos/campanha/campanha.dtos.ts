@@ -249,10 +249,11 @@ export interface CampanhaMestreTransferidoDto {
  * Payload do evento de tempo real `membro:entrou`, emitido na sala `campanha:<id>` pela
  * `CampanhaService.entrarCampanha` após a mutação (SYSTEM.SPEC §9 — broadcast-only). Avisa os
  * membros já conectados de que um novo `usuarioId` ingressou na campanha. É a notificação para a
- * sala (recorte `campanhaId` + `usuarioId`), distinta da `CampanhaEntradaDto`, que é a resposta
- * REST devolvida ao próprio ingressante.
+ * sala (recorte `campanhaId` + `usuarioId`); o verbo vai no particípio (CONVENTIONS — saída), na
+ * mesma forma de `CampanhaEntradaDto` (a resposta REST devolvida ao próprio ingressante), da qual
+ * este DTO é distinto (o complemento `Membro` marca a notificação da sala).
  */
-export interface CampanhaMembroEntrouDto {
+export interface CampanhaMembroEntradaDto {
   readonly campanhaId: number;
   readonly usuarioId: number;
 }

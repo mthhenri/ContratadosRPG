@@ -172,13 +172,28 @@ describe('CampanhaGateway', () => {
       expect(emitir).toHaveBeenCalledWith('ficha:alterada', ficha);
     });
 
-    it('emite ficha:criada na sala campanha:<id>', () => {
-      const ficha = { id: 5, campanhaId: 3, usuarioId: 10, nome: 'Agente Alfa', dados: {} };
+    it('emite ficha:criada na sala campanha:<id> só com o resumo (sem o dados — §14)', () => {
+      const ficha = {
+        id: 5,
+        campanhaId: 3,
+        usuarioId: 10,
+        nome: 'Agente Alfa',
+        dados: { classe: 'COMBATENTE', nivel: 1, segredo: 'não vaza' },
+      };
 
       gateway.emitirFichaCriada(ficha as never);
 
       expect(paraSala).toHaveBeenCalledWith('campanha:3');
-      expect(emitir).toHaveBeenCalledWith('ficha:criada', ficha);
+      expect(emitir).toHaveBeenCalledWith('ficha:criada', {
+        id: 5,
+        usuarioId: 10,
+        nome: 'Agente Alfa',
+        classe: 'COMBATENTE',
+        nivel: 1,
+      });
+      // o payload emitido não carrega o `dados` completo da ficha
+      const payloadEmitido = emitir.mock.calls[0][1] as Record<string, unknown>;
+      expect(payloadEmitido).not.toHaveProperty('dados');
     });
 
     it('emite membro:entrou na sala campanha:<id>', () => {

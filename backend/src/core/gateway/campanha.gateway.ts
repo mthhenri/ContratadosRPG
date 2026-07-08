@@ -9,13 +9,14 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import type {
-  CampanhaMembroEntrouDto,
+  CampanhaMembroEntradaDto,
   CampanhaRecuperarDto,
 } from '@contratados-rpg/shared/dtos/campanha';
 import type {
   FichaAlteradaDto,
   FichaCriadaDto,
   FichaRecuperarDto,
+  FichaResumoDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import type { Server, Socket } from 'socket.io';
 import type { JwtPayload } from '../../modules/autenticacao/jwt-payload.interface';
@@ -132,16 +133,29 @@ export class CampanhaGateway implements OnGatewayConnection {
   /**
    * Emite `ficha:criada` na sala `campanha:<id>` (§9). Chamado por `FichaService.criarFicha` após a
    * ficha ser persistida — os membros conectados à campanha veem a nova ficha aparecer.
+   *
+   * O payload é só o **resumo** (`FichaResumoDto` — o mesmo recorte da listagem, §10.4), **nunca o
+   * `dados`**: a sala `campanha:<id>` inclui qualquer membro, mas a visualização do documento da ficha
+   * é mais restrita (§14 — dono/mestre/concessão). Emitir o `dados` completo aqui vazaria a ficha a
+   * um membro que o REST (`recuperarFicha`) negaria — o conteúdo continua atrás do endpoint gateado
+   * pela §14. (o gateway não relaxa a permissão — proibição #28.)
    */
   emitirFichaCriada(ficha: FichaCriadaDto): void {
-    this.servidor.to(this.salaCampanha(ficha.campanhaId)).emit('ficha:criada', ficha);
+    const resumo: FichaResumoDto = {
+      id: ficha.id,
+      usuarioId: ficha.usuarioId,
+      nome: ficha.nome,
+      classe: ficha.dados.classe,
+      nivel: ficha.dados.nivel,
+    };
+    this.servidor.to(this.salaCampanha(ficha.campanhaId)).emit('ficha:criada', resumo);
   }
 
   /**
    * Emite `membro:entrou` na sala `campanha:<id>` (§9). Chamado por `CampanhaService.entrarCampanha`
    * após o vínculo ser criado — os membros conectados veem o novo integrante entrar.
    */
-  emitirMembroEntrou(evento: CampanhaMembroEntrouDto): void {
+  emitirMembroEntrou(evento: CampanhaMembroEntradaDto): void {
     this.servidor.to(this.salaCampanha(evento.campanhaId)).emit('membro:entrou', evento);
   }
 
