@@ -156,6 +156,16 @@ export class NovoAgentePage {
   }
 
   /**
+   * Volta a aba ao estado padrão: `reset()` restaura o preset de fábrica dos campos, e então
+   * re-executa o auto-preenchimento do Prestígio do bônus — como no primeiro load, onde o campo
+   * nasce preenchido com o inicial calculado (não zerado). O `valueChanges` regrava o singleton.
+   */
+  protected limpar(): void {
+    this.formulario.reset();
+    this.sincronizarPrestigioBonus();
+  }
+
+  /**
    * Copia o Prestígio inicial calculado para o campo editável do bônus. Lê de `getRawValue()`
    * (não do Signal `bruto`): quando um controle-filho emite, o `valueChanges` do form-pai — que
    * alimenta `bruto` — ainda não emitiu, então o Signal estaria defasado dentro do subscriber;

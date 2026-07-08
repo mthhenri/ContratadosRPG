@@ -49,6 +49,26 @@ describe('AgentePage', () => {
     expect(valor(raiz, 'proficiencia')).toBe('N/A');
   });
 
+  it('Limpar volta a aba ao preset padrão (m1-19)', async () => {
+    const { fixture, raiz } = await montar();
+    ajustarAtributo(raiz, 0, 5); // Vigor 1 → 5
+    fixture.detectChanges();
+    expect(valor(raiz, 'vida')).not.toBe('34');
+
+    // Limpar é em duas etapas: 1º clique arma "Tem certeza?", 2º confirma.
+    const limpar = raiz.querySelector('.ajuda-limpar') as HTMLButtonElement;
+    limpar.click();
+    fixture.detectChanges();
+    limpar.click();
+    fixture.detectChanges();
+
+    // De volta ao preset (Combatente Nível 0, atributos 1): Vida 34, Energia 17, Vigor 1.
+    expect(valor(raiz, 'vida')).toBe('34');
+    expect(valor(raiz, 'energia')).toBe('17');
+    const vigor = raiz.querySelectorAll('.stepper__valor')[0] as HTMLInputElement;
+    expect(vigor.value).toBe('1');
+  });
+
   it('preserva o estado ao trocar de aba e voltar (singleton em memória — m1-17)', async () => {
     await TestBed.configureTestingModule({ imports: [AgentePage] }).compileComponents();
 

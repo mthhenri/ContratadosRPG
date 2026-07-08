@@ -259,4 +259,14 @@ export class AgentePage {
       .pipe(takeUntilDestroyed())
       .subscribe(() => this.estadoAbas.definirEstado<AgenteEstadoBruto>('agente', this.formulario.getRawValue()));
   }
+
+  /**
+   * Volta a aba ao estado padrão: `reset()` restaura o preset de fábrica (controles
+   * `nonNullable` voltam ao valor de construção — Combatente, Nível 0, atributos 1). O
+   * `valueChanges` acima regrava o preset no singleton, então navegar e voltar não ressuscita
+   * o estado antigo.
+   */
+  protected limpar(): void {
+    this.formulario.reset();
+  }
 }

@@ -52,6 +52,51 @@ describe('AjudaCalculadora', () => {
     );
   });
 
+  it('Limpar pede confirmação: 1º clique vira "Tem certeza?", 2º clique emite `limpar`', async () => {
+    const { fixture, raiz } = await montar('agente');
+    let emitido = 0;
+    fixture.componentInstance.limpar.subscribe(() => (emitido += 1));
+
+    const botao = raiz.querySelector<HTMLButtonElement>('.ajuda-limpar')!;
+    expect(botao.textContent?.trim()).toContain('Limpar');
+
+    // 1º clique: só arma a confirmação — não emite e não abre o modal de ajuda.
+    botao.click();
+    fixture.detectChanges();
+    expect(emitido).toBe(0);
+    expect(botao.textContent?.trim()).toContain('Tem certeza?');
+    expect(botao.classList.contains('ajuda-limpar--confirmando')).toBe(true);
+    expect(raiz.querySelector('.ajuda-modal')).toBeNull();
+
+    // 2º clique: confirma, emite e o rótulo volta a "Limpar".
+    botao.click();
+    fixture.detectChanges();
+    expect(emitido).toBe(1);
+    expect(botao.textContent?.trim()).toContain('Limpar');
+    expect(botao.classList.contains('ajuda-limpar--confirmando')).toBe(false);
+  });
+
+  it('reverte o Limpar de "Tem certeza?" para "Limpar" após 3s sem 2º clique', async () => {
+    const { fixture, raiz } = await montar('agente');
+    let emitido = 0;
+    fixture.componentInstance.limpar.subscribe(() => (emitido += 1));
+    const botao = raiz.querySelector<HTMLButtonElement>('.ajuda-limpar')!;
+
+    vi.useFakeTimers();
+    try {
+      botao.click();
+      fixture.detectChanges();
+      expect(botao.textContent?.trim()).toContain('Tem certeza?');
+
+      vi.advanceTimersByTime(3000);
+      fixture.detectChanges();
+      expect(botao.textContent?.trim()).toContain('Limpar');
+      expect(emitido).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('fecha o modal ao clicar em Fechar', async () => {
     const { fixture, raiz, abrir } = await montar('descanso');
     abrir();

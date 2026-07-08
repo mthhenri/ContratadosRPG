@@ -58,7 +58,7 @@ const TOKENS_CLARO: Readonly<Record<string, string>> = {
   '--text': '#12151a',
   '--text-dim': '#4a4f57',
   '--text-mute': '#767c85',
-  '--grid-line': 'rgba(0, 0, 0, 0.03)',
+  '--grid-line': 'rgba(0, 0, 0, 0.02)',
 };
 
 /** Superfície de conteúdo (`--surface`) de cada base — referência da trava de contraste. */

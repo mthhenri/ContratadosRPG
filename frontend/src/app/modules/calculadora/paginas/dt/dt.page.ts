@@ -64,6 +64,14 @@ export class DtPage {
       .subscribe(() => this.estadoAbas.definirEstado<DtEstadoBruto>('dt', this.formulario.getRawValue()));
   }
 
+  /**
+   * Volta a aba ao estado padrão: `reset()` restaura o preset de fábrica (Nível 0, Atributo 1),
+   * e o `valueChanges` acima regrava o preset no singleton.
+   */
+  protected limpar(): void {
+    this.formulario.reset();
+  }
+
   /** DT do atributo informado = 10 + Nível + (Atributo × 2). */
   protected readonly dt = computed(() => calcularDtAtributo(this.bruto()));
 

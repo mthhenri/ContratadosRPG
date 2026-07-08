@@ -1,5 +1,20 @@
 <button
   type="button"
+  class="ajuda-limpar"
+  [class.ajuda-limpar--confirmando]="confirmandoLimpeza()"
+  [attr.aria-label]="
+    confirmandoLimpeza()
+      ? 'Confirmar: voltar esta aba ao estado padrão'
+      : 'Limpar: voltar esta aba ao estado padrão'
+  "
+  (click)="aoClicarLimpar()"
+>
+  <span class="ajuda-limpar__marca" aria-hidden="true">{{ confirmandoLimpeza() ? '!' : '↺' }}</span>
+  <span>{{ confirmandoLimpeza() ? 'Tem certeza?' : 'Limpar' }}</span>
+</button>
+
+<button
+  type="button"
   class="ajuda-gatilho"
   [attr.aria-label]="'Ajuda: como usar ' + conteudo().titulo"
   (click)="abrir()"

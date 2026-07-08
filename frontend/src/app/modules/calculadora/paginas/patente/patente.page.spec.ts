@@ -39,6 +39,24 @@ describe('PatentePage', () => {
     expect(raiz.querySelector('.patente-destaque__faixa')?.textContent?.trim()).toBe('66–∞ Prestígio');
   });
 
+  it('Limpar volta a aba ao preset padrão (m1-19)', async () => {
+    const { fixture, raiz } = await montar();
+    ajustarPrestigio(raiz, 40);
+    fixture.detectChanges();
+    expect(raiz.querySelector('.patente-destaque__nome')?.textContent?.trim()).not.toBe('Agente');
+
+    // Limpar em duas etapas: 1º clique arma "Tem certeza?", 2º confirma.
+    const limpar = raiz.querySelector('.ajuda-limpar') as HTMLButtonElement;
+    limpar.click();
+    fixture.detectChanges();
+    limpar.click();
+    fixture.detectChanges();
+
+    // De volta ao preset (Prestígio 0 → Agente).
+    expect(raiz.querySelector('.patente-destaque__nome')?.textContent?.trim()).toBe('Agente');
+    expect((raiz.querySelector('.stepper__valor') as HTMLInputElement).value).toBe('0');
+  });
+
   it('preserva o estado ao trocar de aba e voltar (singleton em memória — m1-17)', async () => {
     await TestBed.configureTestingModule({ imports: [PatentePage] }).compileComponents();
 

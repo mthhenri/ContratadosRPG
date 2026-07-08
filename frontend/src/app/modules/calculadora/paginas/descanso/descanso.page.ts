@@ -229,6 +229,18 @@ export class DescansoPage {
   }
 
   /**
+   * Volta a aba ao estado padrão: cancela uma rolagem animada em curso, esconde a última
+   * rolagem e `reset()` restaura o preset de fábrica da configuração. O `valueChanges` regrava
+   * o singleton; o preset já nasce com a rolagem oculta, então o resultado bate com o load.
+   */
+  protected limpar(): void {
+    cancelAnimationFrame(this.handleAnimacao);
+    this.rolando.set(false);
+    this.rolagemVisivel.set(false);
+    this.formulario.reset();
+  }
+
+  /**
    * Rola a recuperação de Energia (e Vida, quando o tipo recupera). Com `animar`, embaralha
    * números aleatórios por ~650ms antes de assentar no valor final (efeito de scramble do site
    * antigo); sem `animar`, aplica o resultado direto (re-rolagem ao editar os dados extras).

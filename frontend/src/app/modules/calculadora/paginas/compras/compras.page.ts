@@ -551,6 +551,23 @@ export class ComprasPage {
     this.painelAbertos.set(new Set());
   }
 
+  /**
+   * Volta a aba ao estado padrão: recursos ao preset de fábrica (`reset()` — Dinheiro 1000,
+   * Prestígio 0, Inventário 5, Vontade 1), carrinho/amplificadores/painéis vazios, busca limpa e
+   * catálogo na primeira categoria. O `effect` de persistência regrava esse estado no
+   * `localStorage` (m1-11), então recarregar a página segue no padrão — **descarta um carrinho
+   * salvo**, que é justamente o que "Limpar" faz aqui.
+   */
+  protected limpar(): void {
+    this.formulario.reset();
+    this.carrinho.set([]);
+    this.amplificadores.set([]);
+    this.painelAbertos.set(new Set());
+    this.busca.set('');
+    this.categoriaAtiva.set(ItemCategoriaEnum.CORPO_A_CORPO);
+    this.uidContador = 0;
+  }
+
   // === Exportar/importar por código e persistência (m1-11) ===
   protected abrirModalExportarCodigo(): void {
     this.codigoExportado.set(this.exportarCarrinho());

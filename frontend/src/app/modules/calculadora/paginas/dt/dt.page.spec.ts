@@ -30,6 +30,26 @@ describe('DtPage', () => {
     expect(valores).toEqual(['12', '17', '22', '27', '32']);
   });
 
+  it('Limpar volta a aba ao preset padrão (m1-19)', async () => {
+    const { fixture, raiz } = await montar();
+    const nivel = raiz.querySelectorAll('.stepper__valor')[0] as HTMLInputElement;
+    nivel.value = '15';
+    nivel.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(raiz.querySelector('.calc-resultado')?.textContent?.trim()).not.toBe('12');
+
+    // Limpar em duas etapas: 1º clique arma "Tem certeza?", 2º confirma.
+    const limpar = raiz.querySelector('.ajuda-limpar') as HTMLButtonElement;
+    limpar.click();
+    fixture.detectChanges();
+    limpar.click();
+    fixture.detectChanges();
+
+    // De volta ao preset (Nível 0, Atributo 1): DT 12 e o Nível zerado.
+    expect(raiz.querySelector('.calc-resultado')?.textContent?.trim()).toBe('12');
+    expect((raiz.querySelectorAll('.stepper__valor')[0] as HTMLInputElement).value).toBe('0');
+  });
+
   it('preserva o estado ao trocar de aba e voltar (singleton em memória — m1-17)', async () => {
     await TestBed.configureTestingModule({ imports: [DtPage] }).compileComponents();
 

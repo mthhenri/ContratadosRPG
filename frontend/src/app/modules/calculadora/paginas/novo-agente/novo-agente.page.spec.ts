@@ -49,6 +49,27 @@ describe('NovoAgentePage', () => {
     expect(raiz.querySelector('.calc-resultado--dinheiro')?.textContent?.trim()).toBe('$ 61.250');
   });
 
+  it('Limpar volta a aba ao preset padrão e re-preenche o bônus (não zera — m1-19)', async () => {
+    const { fixture, raiz } = await montar();
+    const mediaPrestigio = raiz.querySelectorAll('.calc-config .stepper__valor')[1] as HTMLInputElement;
+    mediaPrestigio.value = '40';
+    mediaPrestigio.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(raiz.querySelector('.calc-resultado--dinheiro')?.textContent?.trim()).not.toBe('$ 9.000');
+
+    // Limpar em duas etapas: 1º clique arma "Tem certeza?", 2º confirma.
+    const limpar = raiz.querySelector('.ajuda-limpar') as HTMLButtonElement;
+    limpar.click();
+    fixture.detectChanges();
+    limpar.click();
+    fixture.detectChanges();
+
+    // De volta ao preset (Morte, média Nível 5, média Prestígio 10): bônus re-preenchido em
+    // $ 9.000 (o auto-sync roda de novo após o reset — não fica $ 0), e a média de Prestígio em 10.
+    expect(raiz.querySelector('.calc-resultado--dinheiro')?.textContent?.trim()).toBe('$ 9.000');
+    expect((raiz.querySelectorAll('.calc-config .stepper__valor')[1] as HTMLInputElement).value).toBe('10');
+  });
+
   it('preserva o estado (inclusive o Prestígio do bônus editado) ao trocar de aba e voltar (m1-17)', async () => {
     await TestBed.configureTestingModule({ imports: [NovoAgentePage] }).compileComponents();
 

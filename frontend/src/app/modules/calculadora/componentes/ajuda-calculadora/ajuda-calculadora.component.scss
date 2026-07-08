@@ -3,11 +3,60 @@
 // O modal é adaptado do padrão .compras-modal da aba `compras` (m1-11); o gatilho reusa a
 // linguagem de botão secundário (.botao--secundario de docs/design/tema/_componentes.scss).
 
-// O componente ocupa uma linha própria acima do formulário da página, alinhando o gatilho à
+// O componente ocupa uma linha própria acima do formulário da página, alinhando as ações à
 // direita (as páginas são flex-column; esta linha separa-se do primeiro card pelo gap do form).
+// Dois botões lado a lado: "Limpar" (reset da aba, à esquerda) e "? Ajuda" (à direita).
 :host {
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
+}
+
+// === Botão "Limpar" (reset da aba) — mesma linguagem do gatilho de ajuda ===
+.ajuda-limpar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  padding: 7px 12px;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text);
+    border-color: var(--accent-border);
+  }
+
+  // Passo de confirmação ("Tem certeza?"): botão invertido/filled (fundo accent, texto escuro),
+  // mesma linguagem do `.botao--primario` do tema — sinaliza a ação destrutiva iminente.
+  &--confirmando {
+    color: var(--bg);
+    background: var(--accent);
+    border-color: var(--accent);
+
+    &:hover {
+      color: var(--bg);
+      // filter (não uma 2ª cor fixa) pra funcionar com qualquer accent escolhido em runtime.
+      filter: brightness(1.08);
+    }
+
+    .ajuda-limpar__marca {
+      color: var(--bg);
+    }
+  }
+
+  &__marca {
+    color: var(--accent);
+    font-weight: 700;
+    line-height: 1;
+  }
 }
 
 // === Gatilho ("? Ajuda") ===

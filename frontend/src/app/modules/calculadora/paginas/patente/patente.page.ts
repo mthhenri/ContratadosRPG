@@ -71,6 +71,14 @@ export class PatentePage {
       );
   }
 
+  /**
+   * Volta a aba ao estado padrão: `reset()` restaura o preset de fábrica (Prestígio 0), e o
+   * `valueChanges` acima regrava o preset no singleton.
+   */
+  protected limpar(): void {
+    this.formulario.reset();
+  }
+
   private readonly consulta = computed(() => calcularPatente({ prestigio: this.bruto().prestigio }));
 
   /** Patente correspondente ao Prestígio informado, formatada para o card de destaque. */

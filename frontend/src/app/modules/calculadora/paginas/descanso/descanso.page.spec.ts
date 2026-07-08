@@ -73,6 +73,29 @@ describe('DescansoPage', () => {
     ).toContain('[1] + 6 = 7');
   });
 
+  it('Limpar volta a aba ao preset padrão e esconde a rolagem (m1-19)', async () => {
+    const { fixture, raiz } = await montar();
+    selecionar(raiz, 'desc-tipo', 'LONGO');
+    fixture.detectChanges();
+    // Torna uma rolagem visível para provar que Limpar a esconde.
+    (fixture.componentInstance as unknown as { rolar(animar?: boolean): void }).rolar(false);
+    fixture.detectChanges();
+    expect(raiz.querySelector('.descanso-rolagem')).not.toBeNull();
+    expect(valorFaixa(raiz, 'energia')).not.toBe('1–4');
+
+    // Limpar em duas etapas: 1º clique arma "Tem certeza?", 2º confirma.
+    const limpar = raiz.querySelector('.ajuda-limpar') as HTMLButtonElement;
+    limpar.click();
+    fixture.detectChanges();
+    limpar.click();
+    fixture.detectChanges();
+
+    // De volta ao preset (Curto, Adequado, atributos 1, Nível 0): faixa 1–4, tipo Curto, sem rolagem.
+    expect(valorFaixa(raiz, 'energia')).toBe('1–4');
+    expect((raiz.querySelector('#desc-tipo') as HTMLSelectElement).value).toBe('CURTO');
+    expect(raiz.querySelector('.descanso-rolagem')).toBeNull();
+  });
+
   it('preserva o estado ao trocar de aba e voltar (singleton em memória — m1-17)', async () => {
     await TestBed.configureTestingModule({ imports: [DescansoPage] }).compileComponents();
 

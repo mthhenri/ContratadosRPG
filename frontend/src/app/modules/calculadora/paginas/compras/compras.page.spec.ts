@@ -115,6 +115,32 @@ describe('ComprasPage', () => {
     expect(item?.querySelector('.compras-carrinho-item__nome')?.textContent).toContain('Leve');
   });
 
+  it('Limpar volta a aba ao estado padrão e descarta o carrinho salvo (m1-19)', async () => {
+    const primeira = await montar();
+    adicionarItem(primeira.raiz, 'Leve');
+    primeira.fixture.detectChanges();
+    await primeira.fixture.whenStable();
+    expect(statResumo(primeira.raiz, 'Gasto Total')).toBe('$500');
+
+    // Limpar em duas etapas: 1º clique arma "Tem certeza?", 2º confirma.
+    const limpar = primeira.raiz.querySelector('.ajuda-limpar') as HTMLButtonElement;
+    limpar.click();
+    primeira.fixture.detectChanges();
+    limpar.click();
+    primeira.fixture.detectChanges();
+    await primeira.fixture.whenStable();
+
+    // Carrinho vazio e resumo de volta ao padrão (Agente, $1.000, gasto $0).
+    expect(primeira.raiz.querySelector('.compras-carrinho-item')).toBeNull();
+    expect(statResumo(primeira.raiz, 'Gasto Total')).toBe('$0');
+    expect(statResumo(primeira.raiz, 'Dinheiro Restante')).toBe('$1.000');
+
+    // A limpeza foi persistida: remontar a página (recarrega do localStorage) segue no padrão.
+    const segunda = await montar();
+    expect(segunda.raiz.querySelector('.compras-carrinho-item')).toBeNull();
+    expect(statResumo(segunda.raiz, 'Gasto Total')).toBe('$0');
+  });
+
   it('exporta um código e importa em outra instância reproduzindo o mesmo carrinho (m1-11)', async () => {
     const origem = await montar();
     adicionarItem(origem.raiz, 'Leve');
