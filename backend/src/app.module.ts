@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from './config/config.module';
+import { GatewayModule } from './core/gateway/gateway.module';
 import { DatabaseModule } from './database/database.module';
 import { GlobalExceptionFilter } from './core/filters/global-exception.filter';
 import { ResponseFormatInterceptor } from './core/interceptors/response-format.interceptor';
@@ -16,8 +17,8 @@ import { FichaModule } from './modules/ficha/ficha.module';
  * `HealthController` (endpoint operacional `GET /health`) e os módulos de negócio
  * `autenticacao` (registro/login), `usuario` (perfil e troca de senha), `campanha` (CRUD de
  * campanha, m2-04) e `ficha` (CRUD da ficha de jogador com permissões e validação via motor de
- * regras, m3-03). O `JwtAuthGuard` global (`APP_GUARD`) exige JWT em todas as rotas, exceto as
- * `@Public()`.
+ * regras, m3-03). O `GatewayModule` provê o gateway de tempo real broadcast-only (§9, m3-05). O
+ * `JwtAuthGuard` global (`APP_GUARD`) exige JWT em todas as rotas, exceto as `@Public()`.
  */
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { FichaModule } from './modules/ficha/ficha.module';
     UsuarioModule,
     CampanhaModule,
     FichaModule,
+    GatewayModule,
   ],
   controllers: [HealthController],
   providers: [

@@ -29,5 +29,8 @@ import { JwtStrategy } from './jwt.strategy';
   ],
   controllers: [AutenticacaoController],
   providers: [AutenticacaoService, JwtStrategy],
+  // Exporta o `JwtModule` para o `GatewayModule` validar o JWT do handshake WebSocket com o mesmo
+  // mecanismo/segredo do REST (m3-05), sem reconfigurar um segundo validador.
+  exports: [JwtModule],
 })
 export class AutenticacaoModule {}

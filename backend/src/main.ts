@@ -1,11 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from './config/config.service';
+import { WsIoAdapter } from './core/gateway/ws-io.adapter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   const { porta, frontendOrigem } = configService.obterConfiguracaoAplicacao();
+  // Gateway de tempo real (SYSTEM.SPEC §9): a origem do Socket.IO é travada em
+  // APP_FRONTEND_ORIGEM pelo adaptador, espelhando o CORS HTTP abaixo (§10.6).
+  app.useWebSocketAdapter(new WsIoAdapter(app, frontendOrigem));
   // Em produção o frontend (Cloudflare Pages) e a API (Render) ficam em origens distintas, então a
   // origem permitida vem de APP_FRONTEND_ORIGEM (SYSTEM.SPEC §10.6). Em desenvolvimento a
   // chamada passa pelo proxy do dev-server, mas manter o CORS ligado não atrapalha.

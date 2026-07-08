@@ -12,6 +12,7 @@ import {
   ResourceNotFoundException,
   UnauthorizedAccessException,
 } from '../../core/exceptions';
+import type { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import type { CampanhaRepository } from './campanha.repository';
 import { CampanhaService } from './campanha.service';
@@ -31,8 +32,13 @@ interface RepositorioDublado {
   transferirMestre: ReturnType<typeof vi.fn>;
 }
 
+interface CampanhaGatewayDublado {
+  emitirMembroEntrou: ReturnType<typeof vi.fn>;
+}
+
 describe('CampanhaService', () => {
   let repositorio: RepositorioDublado;
+  let campanhaGateway: CampanhaGatewayDublado;
   let service: CampanhaService;
 
   const usuarioMestre: JwtPayload = { sub: 7, login: 'senhor.contratados' };
@@ -60,7 +66,11 @@ describe('CampanhaService', () => {
       removerMembro: vi.fn(),
       transferirMestre: vi.fn(),
     };
-    service = new CampanhaService(repositorio as unknown as CampanhaRepository);
+    campanhaGateway = { emitirMembroEntrou: vi.fn() };
+    service = new CampanhaService(
+      repositorio as unknown as CampanhaRepository,
+      campanhaGateway as unknown as CampanhaGateway,
+    );
   });
 
   describe('criarCampanha', () => {
@@ -242,6 +252,10 @@ describe('CampanhaService', () => {
         campanhaId: campanhaPersistida.id,
         usuarioId: usuarioNaoMestre.sub,
         papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      expect(campanhaGateway.emitirMembroEntrou).toHaveBeenCalledWith({
+        campanhaId: campanhaPersistida.id,
+        usuarioId: usuarioNaoMestre.sub,
       });
       expect(resultado).toEqual({
         id: campanhaPersistida.id,

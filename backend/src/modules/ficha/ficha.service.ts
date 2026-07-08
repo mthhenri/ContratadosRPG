@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import type {
   FichaAcessoConcederDto,
   FichaAcessoConcedidoDto,
@@ -28,6 +28,7 @@ import {
   ResourceNotFoundException,
   UnauthorizedAccessException,
 } from '../../core/exceptions';
+import { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { CampanhaRepository } from '../campanha/campanha.repository';
 import { FichaRepository } from './ficha.repository';
@@ -42,14 +43,17 @@ import { FichaRepository } from './ficha.repository';
  *
  * Escopo m3-03: a ficha criada aqui é sempre do tipo `JOGADOR`, com dono = usuário autenticado
  * (`@ActiveUser().sub`). A concessão de visualização a outro membro (`usuario_ficha_acesso`) é
- * criada em m3-04; aqui só se **lê** essa concessão para arbitrar a visualização. A emissão de
- * eventos WebSocket pós-mutação é cabeada em m3-05.
+ * criada em m3-04; aqui só se **lê** essa concessão para arbitrar a visualização. A criação e a
+ * alteração emitem, após persistir, `ficha:criada`/`ficha:alterada` pelo `CampanhaGateway`
+ * (broadcast-only — m3-05).
  */
 @Injectable()
 export class FichaService {
   constructor(
     private readonly fichaRepositorio: FichaRepository,
     private readonly campanhaRepositorio: CampanhaRepository,
+    @Inject(forwardRef(() => CampanhaGateway))
+    private readonly campanhaGateway: CampanhaGateway,
   ) {}
 
   /**
@@ -62,13 +66,16 @@ export class FichaService {
     await this.validarMembro({ campanhaId: dto.campanhaId, usuarioId: usuarioAtivo.sub });
     this.validarDadosContraRegras(dto.dados);
 
-    return this.fichaRepositorio.criarFicha({
+    const fichaCriada = await this.fichaRepositorio.criarFicha({
       campanhaId: dto.campanhaId,
       usuarioId: usuarioAtivo.sub,
       tipo: TipoFichaEnum.JOGADOR,
       nome: dto.nome,
       dados: dto.dados,
     });
+
+    this.campanhaGateway.emitirFichaCriada(fichaCriada);
+    return fichaCriada;
   }
 
   /**
@@ -132,7 +139,9 @@ export class FichaService {
     await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
     this.validarDadosContraRegras(dto.dados);
 
-    return this.fichaRepositorio.alterarFicha(dto);
+    const fichaAlterada = await this.fichaRepositorio.alterarFicha(dto);
+    this.campanhaGateway.emitirFichaAlterada(fichaAlterada);
+    return fichaAlterada;
   }
 
   /**

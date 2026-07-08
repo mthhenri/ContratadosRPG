@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
+import { GatewayModule } from '../../core/gateway/gateway.module';
 import { CampanhaController } from './campanha.controller';
 import { CampanhaRepository } from './campanha.repository';
 import { CampanhaService } from './campanha.service';
@@ -10,8 +11,9 @@ import { CampanhaService } from './campanha.service';
  * (ex.: `ficha`, nas próximas tasks).
  */
 @Module({
+  imports: [forwardRef(() => GatewayModule)],
   controllers: [CampanhaController],
   providers: [CampanhaRepository, CampanhaService],
-  exports: [CampanhaRepository],
+  exports: [CampanhaRepository, CampanhaService],
 })
 export class CampanhaModule {}
