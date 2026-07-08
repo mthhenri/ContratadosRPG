@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
+import { GatewayModule } from '../../core/gateway/gateway.module';
 import { CampanhaModule } from '../campanha/campanha.module';
 import { FichaController } from './ficha.controller';
 import { FichaRepository } from './ficha.repository';
@@ -12,9 +13,9 @@ import { FichaService } from './ficha.service';
  * (proibição #28).
  */
 @Module({
-  imports: [CampanhaModule],
+  imports: [CampanhaModule, forwardRef(() => GatewayModule)],
   controllers: [FichaController],
   providers: [FichaRepository, FichaService],
-  exports: [FichaRepository],
+  exports: [FichaRepository, FichaService],
 })
 export class FichaModule {}

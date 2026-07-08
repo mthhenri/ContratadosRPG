@@ -241,6 +241,22 @@ export interface CampanhaMestreTransferidoDto {
   readonly novoMestreUsuarioId: number;
 }
 
+/*
+ * ── m3-05: payload do evento WebSocket `membro:entrou` (gateway broadcast-only, §9) ──────
+ */
+
+/**
+ * Payload do evento de tempo real `membro:entrou`, emitido na sala `campanha:<id>` pela
+ * `CampanhaService.entrarCampanha` após a mutação (SYSTEM.SPEC §9 — broadcast-only). Avisa os
+ * membros já conectados de que um novo `usuarioId` ingressou na campanha. É a notificação para a
+ * sala (recorte `campanhaId` + `usuarioId`), distinta da `CampanhaEntradaDto`, que é a resposta
+ * REST devolvida ao próprio ingressante.
+ */
+export interface CampanhaMembroEntrouDto {
+  readonly campanhaId: number;
+  readonly usuarioId: number;
+}
+
 /**
  * Entrada interna da remoção do vínculo `campanha_membro` (soft delete pela chave composta
  * campanha+usuário). Só service ↔ repository.

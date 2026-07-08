@@ -13,6 +13,7 @@ import {
   ResourceNotFoundException,
   UnauthorizedAccessException,
 } from '../../core/exceptions';
+import type { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import type { CampanhaRepository } from '../campanha/campanha.repository';
 import type { FichaRepository } from './ficha.repository';
@@ -33,6 +34,11 @@ interface FichaRepositorioDublado {
 
 interface CampanhaRepositorioDublado {
   recuperarMembro: ReturnType<typeof vi.fn>;
+}
+
+interface CampanhaGatewayDublado {
+  emitirFichaCriada: ReturnType<typeof vi.fn>;
+  emitirFichaAlterada: ReturnType<typeof vi.fn>;
 }
 
 /**
@@ -75,6 +81,7 @@ function criarDados(overrides: Partial<FichaJogadorDadosDto> = {}): FichaJogador
 describe('FichaService', () => {
   let fichaRepositorio: FichaRepositorioDublado;
   let campanhaRepositorio: CampanhaRepositorioDublado;
+  let campanhaGateway: CampanhaGatewayDublado;
   let service: FichaService;
 
   const usuarioDono: JwtPayload = { sub: 10, login: 'agente.dono' };
@@ -103,9 +110,11 @@ describe('FichaService', () => {
       excluirFicha: vi.fn(),
     };
     campanhaRepositorio = { recuperarMembro: vi.fn() };
+    campanhaGateway = { emitirFichaCriada: vi.fn(), emitirFichaAlterada: vi.fn() };
     service = new FichaService(
       fichaRepositorio as unknown as FichaRepository,
       campanhaRepositorio as unknown as CampanhaRepository,
+      campanhaGateway as unknown as CampanhaGateway,
     );
   });
 
@@ -129,6 +138,7 @@ describe('FichaService', () => {
         nome: 'Agente Alfa',
         dados: criarDados(),
       });
+      expect(campanhaGateway.emitirFichaCriada).toHaveBeenCalledWith(fichaCriada);
       expect(resultado).toBe(fichaCriada);
     });
 
@@ -330,6 +340,7 @@ describe('FichaService', () => {
         nome: 'Agente Alfa Prime',
         dados: criarDados(),
       });
+      expect(campanhaGateway.emitirFichaAlterada).toHaveBeenCalledWith(fichaAlterada);
       expect(resultado).toBe(fichaAlterada);
     });
 

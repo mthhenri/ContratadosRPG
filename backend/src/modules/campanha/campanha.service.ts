@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type {
   CampanhaAlteradaDto,
@@ -28,6 +28,7 @@ import {
   ResourceNotFoundException,
   UnauthorizedAccessException,
 } from '../../core/exceptions';
+import { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { CampanhaRepository } from './campanha.repository';
 
@@ -47,7 +48,11 @@ const TAMANHO_CONVITE = 8;
  */
 @Injectable()
 export class CampanhaService {
-  constructor(private readonly campanhaRepositorio: CampanhaRepository) {}
+  constructor(
+    private readonly campanhaRepositorio: CampanhaRepository,
+    @Inject(forwardRef(() => CampanhaGateway))
+    private readonly campanhaGateway: CampanhaGateway,
+  ) {}
 
   /**
    * Cria uma campanha: gera um `codigoConvite` único, persiste a `campanha` e cria o
@@ -161,6 +166,11 @@ export class CampanhaService {
       campanhaId: campanhaEncontrada.id,
       usuarioId: usuarioAtivo.sub,
       papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+    });
+
+    this.campanhaGateway.emitirMembroEntrou({
+      campanhaId: campanhaEncontrada.id,
+      usuarioId: usuarioAtivo.sub,
     });
 
     return {
