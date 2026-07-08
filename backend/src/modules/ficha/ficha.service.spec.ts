@@ -1,0 +1,419 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type {
+  FichaJogadorDadosDto,
+  FichaRecuperadaDto,
+} from '@contratados-rpg/shared/dtos/ficha';
+import {
+  ClasseEnum,
+  TipoCampanhaMembroPapelEnum,
+  TipoFichaEnum,
+} from '@contratados-rpg/shared/enums';
+import {
+  BusinessException,
+  ResourceNotFoundException,
+  UnauthorizedAccessException,
+} from '../../core/exceptions';
+import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
+import type { CampanhaRepository } from '../campanha/campanha.repository';
+import type { FichaRepository } from './ficha.repository';
+import { FichaService } from './ficha.service';
+
+interface FichaRepositorioDublado {
+  criarFicha: ReturnType<typeof vi.fn>;
+  recuperarPorId: ReturnType<typeof vi.fn>;
+  listarPorCampanha: ReturnType<typeof vi.fn>;
+  listarVisiveisParaUsuario: ReturnType<typeof vi.fn>;
+  recuperarAcesso: ReturnType<typeof vi.fn>;
+  alterarFicha: ReturnType<typeof vi.fn>;
+  excluirFicha: ReturnType<typeof vi.fn>;
+}
+
+interface CampanhaRepositorioDublado {
+  recuperarMembro: ReturnType<typeof vi.fn>;
+}
+
+/**
+ * Documento de jogo coerente com `shared/regras` para a classe COMBATENTE nível 1: atributos
+ * dentro do intervalo (−5..7), Vida/Energia atuais abaixo dos máximos calculados. Ponto de partida
+ * dos testes; cada caso sobrescreve o necessário.
+ */
+function criarDados(overrides: Partial<FichaJogadorDadosDto> = {}): FichaJogadorDadosDto {
+  return {
+    classe: ClasseEnum.COMBATENTE,
+    arquetipo: null,
+    nivel: 1,
+    prestigio: 0,
+    atributos: {
+      destreza: 2,
+      forca: 1,
+      luta: 1,
+      pontaria: 1,
+      vigor: 2,
+      intelecto: 1,
+      medicina: 1,
+      sentidos: 1,
+      social: 1,
+      vontade: 1,
+    },
+    estado: {
+      vidaAtual: 40,
+      energiaAtual: 10,
+      sequelas: [],
+      traumas: [],
+      lesoes: [],
+    },
+    habilidades: [],
+    inventario: { itens: [], amplificadores: [] },
+    anotacoes: '',
+    ...overrides,
+  };
+}
+
+describe('FichaService', () => {
+  let fichaRepositorio: FichaRepositorioDublado;
+  let campanhaRepositorio: CampanhaRepositorioDublado;
+  let service: FichaService;
+
+  const usuarioDono: JwtPayload = { sub: 10, login: 'agente.dono' };
+  const usuarioMestre: JwtPayload = { sub: 7, login: 'mestre.contratados' };
+  const usuarioMembro: JwtPayload = { sub: 42, login: 'agente.novato' };
+
+  const fichaPersistida: FichaRecuperadaDto = {
+    id: 5,
+    campanhaId: 3,
+    usuarioId: usuarioDono.sub,
+    nome: 'Agente Alfa',
+    dados: criarDados(),
+  };
+
+  beforeEach(() => {
+    fichaRepositorio = {
+      criarFicha: vi.fn(),
+      recuperarPorId: vi.fn(),
+      listarPorCampanha: vi.fn(),
+      listarVisiveisParaUsuario: vi.fn(),
+      recuperarAcesso: vi.fn(),
+      alterarFicha: vi.fn(),
+      excluirFicha: vi.fn(),
+    };
+    campanhaRepositorio = { recuperarMembro: vi.fn() };
+    service = new FichaService(
+      fichaRepositorio as unknown as FichaRepository,
+      campanhaRepositorio as unknown as CampanhaRepository,
+    );
+  });
+
+  describe('criarFicha', () => {
+    it('cria a ficha do tipo JOGADOR com dono = usuário autenticado quando ele é membro', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      const fichaCriada = { id: 5, campanhaId: 3, usuarioId: usuarioDono.sub, nome: 'Agente Alfa', dados: criarDados() };
+      fichaRepositorio.criarFicha.mockResolvedValue(fichaCriada);
+
+      const resultado = await service.criarFicha(
+        { campanhaId: 3, nome: 'Agente Alfa', dados: criarDados() },
+        usuarioDono,
+      );
+
+      expect(fichaRepositorio.criarFicha).toHaveBeenCalledWith({
+        campanhaId: 3,
+        usuarioId: usuarioDono.sub,
+        tipo: TipoFichaEnum.JOGADOR,
+        nome: 'Agente Alfa',
+        dados: criarDados(),
+      });
+      expect(resultado).toBe(fichaCriada);
+    });
+
+    it('lança UnauthorizedAccessException quando o autor não é membro da campanha', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue(null);
+
+      await expect(
+        service.criarFicha({ campanhaId: 3, nome: 'Agente Alfa', dados: criarDados() }, usuarioMembro),
+      ).rejects.toThrow(UnauthorizedAccessException);
+
+      expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+    });
+
+    it('lança BusinessException quando a Vida atual excede o máximo calculado', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+
+      await expect(
+        service.criarFicha(
+          {
+            campanhaId: 3,
+            nome: 'Agente Alfa',
+            dados: criarDados({
+              estado: { vidaAtual: 9999, energiaAtual: 10, sequelas: [], traumas: [], lesoes: [] },
+            }),
+          },
+          usuarioDono,
+        ),
+      ).rejects.toThrow(BusinessException);
+
+      expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+    });
+
+    it('lança BusinessException quando um atributo está fora do intervalo da classe', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+
+      await expect(
+        service.criarFicha(
+          {
+            campanhaId: 3,
+            nome: 'Agente Alfa',
+            dados: criarDados({
+              atributos: {
+                destreza: 99,
+                forca: 1,
+                luta: 1,
+                pontaria: 1,
+                vigor: 2,
+                intelecto: 1,
+                medicina: 1,
+                sentidos: 1,
+                social: 1,
+                vontade: 1,
+              },
+            }),
+          },
+          usuarioDono,
+        ),
+      ).rejects.toThrow(BusinessException);
+
+      expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+    });
+
+    it('lança BusinessException quando o nível está fora do intervalo da classe', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+
+      await expect(
+        service.criarFicha(
+          { campanhaId: 3, nome: 'Agente Alfa', dados: criarDados({ nivel: 99 }) },
+          usuarioDono,
+        ),
+      ).rejects.toThrow(BusinessException);
+
+      expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('listarFichas', () => {
+    it('devolve todas as fichas da campanha quando o autor é o mestre', async () => {
+      const fichas = [{ id: 5, usuarioId: usuarioDono.sub, nome: 'Agente Alfa', classe: ClasseEnum.COMBATENTE, nivel: 1 }];
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.MESTRE,
+      });
+      fichaRepositorio.listarPorCampanha.mockResolvedValue(fichas);
+
+      const resultado = await service.listarFichas({ campanhaId: 3 }, usuarioMestre);
+
+      expect(fichaRepositorio.listarPorCampanha).toHaveBeenCalledWith({ campanhaId: 3 });
+      expect(fichaRepositorio.listarVisiveisParaUsuario).not.toHaveBeenCalled();
+      expect(resultado).toBe(fichas);
+    });
+
+    it('devolve só as fichas visíveis quando o autor é um membro comum', async () => {
+      const fichas = [{ id: 5, usuarioId: usuarioMembro.sub, nome: 'Agente Beta', classe: ClasseEnum.SUPORTE, nivel: 2 }];
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      fichaRepositorio.listarVisiveisParaUsuario.mockResolvedValue(fichas);
+
+      const resultado = await service.listarFichas({ campanhaId: 3 }, usuarioMembro);
+
+      expect(fichaRepositorio.listarVisiveisParaUsuario).toHaveBeenCalledWith({
+        campanhaId: 3,
+        usuarioId: usuarioMembro.sub,
+      });
+      expect(fichaRepositorio.listarPorCampanha).not.toHaveBeenCalled();
+      expect(resultado).toBe(fichas);
+    });
+
+    it('lança UnauthorizedAccessException quando o autor não é membro da campanha', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue(null);
+
+      await expect(service.listarFichas({ campanhaId: 3 }, usuarioMembro)).rejects.toThrow(
+        UnauthorizedAccessException,
+      );
+
+      expect(fichaRepositorio.listarPorCampanha).not.toHaveBeenCalled();
+      expect(fichaRepositorio.listarVisiveisParaUsuario).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('recuperarFicha', () => {
+    it('devolve a ficha para o dono sem consultar papel/concessão', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+
+      const resultado = await service.recuperarFicha({ id: 5 }, usuarioDono);
+
+      expect(resultado).toBe(fichaPersistida);
+      expect(campanhaRepositorio.recuperarMembro).not.toHaveBeenCalled();
+    });
+
+    it('devolve a ficha para o mestre da campanha', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.MESTRE,
+      });
+
+      const resultado = await service.recuperarFicha({ id: 5 }, usuarioMestre);
+
+      expect(resultado).toBe(fichaPersistida);
+      expect(fichaRepositorio.recuperarAcesso).not.toHaveBeenCalled();
+    });
+
+    it('devolve a ficha para um membro com concessão em usuario_ficha_acesso', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      fichaRepositorio.recuperarAcesso.mockResolvedValue({ id: 1 });
+
+      const resultado = await service.recuperarFicha({ id: 5 }, usuarioMembro);
+
+      expect(fichaRepositorio.recuperarAcesso).toHaveBeenCalledWith({
+        fichaId: 5,
+        usuarioId: usuarioMembro.sub,
+      });
+      expect(resultado).toBe(fichaPersistida);
+    });
+
+    it('lança UnauthorizedAccessException para um membro sem concessão', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      fichaRepositorio.recuperarAcesso.mockResolvedValue(null);
+
+      await expect(service.recuperarFicha({ id: 5 }, usuarioMembro)).rejects.toThrow(
+        UnauthorizedAccessException,
+      );
+    });
+
+    it('lança ResourceNotFoundException quando a ficha não existe', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(null);
+
+      await expect(service.recuperarFicha({ id: 99 }, usuarioDono)).rejects.toThrow(
+        ResourceNotFoundException,
+      );
+    });
+  });
+
+  describe('alterarFicha', () => {
+    it('altera a ficha quando o autor é o dono', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      const fichaAlterada = { ...fichaPersistida, nome: 'Agente Alfa Prime' };
+      fichaRepositorio.alterarFicha.mockResolvedValue(fichaAlterada);
+
+      const resultado = await service.alterarFicha(
+        { id: 5, nome: 'Agente Alfa Prime', dados: criarDados() },
+        usuarioDono,
+      );
+
+      expect(fichaRepositorio.alterarFicha).toHaveBeenCalledWith({
+        id: 5,
+        nome: 'Agente Alfa Prime',
+        dados: criarDados(),
+      });
+      expect(resultado).toBe(fichaAlterada);
+    });
+
+    it('altera a ficha quando o autor é o mestre da campanha', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.MESTRE,
+      });
+      fichaRepositorio.alterarFicha.mockResolvedValue(fichaPersistida);
+
+      await service.alterarFicha({ id: 5, nome: 'Agente Alfa', dados: criarDados() }, usuarioMestre);
+
+      expect(fichaRepositorio.alterarFicha).toHaveBeenCalled();
+    });
+
+    it('lança UnauthorizedAccessException para um membro com concessão de visualização (nunca edita)', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+
+      await expect(
+        service.alterarFicha({ id: 5, nome: 'Invasor', dados: criarDados() }, usuarioMembro),
+      ).rejects.toThrow(UnauthorizedAccessException);
+
+      expect(fichaRepositorio.recuperarAcesso).not.toHaveBeenCalled();
+      expect(fichaRepositorio.alterarFicha).not.toHaveBeenCalled();
+    });
+
+    it('lança BusinessException quando os dados são incoerentes com o motor de regras', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+
+      await expect(
+        service.alterarFicha(
+          {
+            id: 5,
+            nome: 'Agente Alfa',
+            dados: criarDados({
+              estado: { vidaAtual: 9999, energiaAtual: 10, sequelas: [], traumas: [], lesoes: [] },
+            }),
+          },
+          usuarioDono,
+        ),
+      ).rejects.toThrow(BusinessException);
+
+      expect(fichaRepositorio.alterarFicha).not.toHaveBeenCalled();
+    });
+
+    it('lança ResourceNotFoundException quando a ficha não existe', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(null);
+
+      await expect(
+        service.alterarFicha({ id: 99, nome: 'Agente Alfa', dados: criarDados() }, usuarioDono),
+      ).rejects.toThrow(ResourceNotFoundException);
+
+      expect(fichaRepositorio.alterarFicha).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('excluirFicha', () => {
+    it('exclui a ficha quando o autor é o dono', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      fichaRepositorio.excluirFicha.mockResolvedValue(undefined);
+
+      await service.excluirFicha({ id: 5 }, usuarioDono);
+
+      expect(fichaRepositorio.excluirFicha).toHaveBeenCalledWith({ id: 5 });
+    });
+
+    it('lança UnauthorizedAccessException quando o autor não é dono nem mestre', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+
+      await expect(service.excluirFicha({ id: 5 }, usuarioMembro)).rejects.toThrow(
+        UnauthorizedAccessException,
+      );
+
+      expect(fichaRepositorio.excluirFicha).not.toHaveBeenCalled();
+    });
+
+    it('lança ResourceNotFoundException quando a ficha não existe', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(null);
+
+      await expect(service.excluirFicha({ id: 99 }, usuarioDono)).rejects.toThrow(
+        ResourceNotFoundException,
+      );
+
+      expect(fichaRepositorio.excluirFicha).not.toHaveBeenCalled();
+    });
+  });
+});

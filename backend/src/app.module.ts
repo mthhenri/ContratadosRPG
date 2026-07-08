@@ -9,16 +9,25 @@ import { AutenticacaoModule } from './modules/autenticacao/autenticacao.module';
 import { JwtAuthGuard } from './modules/autenticacao/autenticacao.guard';
 import { UsuarioModule } from './modules/usuario/usuario.module';
 import { CampanhaModule } from './modules/campanha/campanha.module';
+import { FichaModule } from './modules/ficha/ficha.module';
 
 /**
  * Módulo raiz da aplicação. Registra a infraestrutura genérica (`core/`) global, o
  * `HealthController` (endpoint operacional `GET /health`) e os módulos de negócio
- * `autenticacao` (registro/login), `usuario` (perfil e troca de senha) e `campanha` (CRUD de
- * campanha, m2-04) do M2. O `JwtAuthGuard` global (`APP_GUARD`) exige JWT em todas as rotas,
- * exceto as `@Public()`. O módulo `ficha` nasce nas próximas milestones.
+ * `autenticacao` (registro/login), `usuario` (perfil e troca de senha), `campanha` (CRUD de
+ * campanha, m2-04) e `ficha` (CRUD da ficha de jogador com permissões e validação via motor de
+ * regras, m3-03). O `JwtAuthGuard` global (`APP_GUARD`) exige JWT em todas as rotas, exceto as
+ * `@Public()`.
  */
 @Module({
-  imports: [ConfigModule, DatabaseModule, AutenticacaoModule, UsuarioModule, CampanhaModule],
+  imports: [
+    ConfigModule,
+    DatabaseModule,
+    AutenticacaoModule,
+    UsuarioModule,
+    CampanhaModule,
+    FichaModule,
+  ],
   controllers: [HealthController],
   providers: [
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },
