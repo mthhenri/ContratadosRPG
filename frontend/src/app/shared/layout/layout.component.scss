@@ -315,31 +315,67 @@
     }
   }
 
-  &__carregando {
-    position: relative;
-    width: 6rem;
-    height: 2px;
-    border-radius: 2px;
-    overflow: hidden;
+}
 
-    &::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      width: 40%;
-      border-radius: 2px;
-      background: var(--accent);
-      animation: topbar-carregando 1s infinite linear;
-    }
+// Indicador de carregamento global (ux-loading). Antes vivia dentro de `.topbar__acoes`, no
+// fluxo — acender/apagar empurrava os itens ao lado (layout shift) e no mobile chegava a quebrar
+// a topbar. Agora é uma linha fina FIXA no topo do viewport, largura total, fora do fluxo: montar
+// ou desmontar nunca desloca nenhum item (desktop e mobile). Traço fino no --accent, identidade
+// "Terminal de Contenção" (sem spinner/gradiente). Só apresentação — a contagem de requests
+// (`LoadingService`) segue intacta.
+.carregando-global {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 50; // acima da topbar e do dropdown de perfil (z-index 30)
+  overflow: hidden;
+  pointer-events: none;
+
+  // Fade-in atrasado = debounce visual: fica invisível nos primeiros ~180ms, então requisições
+  // instantâneas desmontam a barra antes de ela sequer aparecer (não pisca), sem tocar na
+  // semântica de contagem do LoadingService.
+  opacity: 0;
+  animation: carregando-global-surgir 0.24s ease-out 0.18s forwards;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    width: 35%;
+    background: var(--accent);
+    animation: carregando-global-desliza 1s infinite linear;
   }
 }
 
-@keyframes topbar-carregando {
+@keyframes carregando-global-surgir {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes carregando-global-desliza {
   0% {
     transform: translateX(-120%);
   }
   100% {
-    transform: translateX(300%);
+    transform: translateX(400%);
+  }
+}
+
+// Movimento reduzido: sem deslize nem fade atrasado — a barra aparece de imediato como uma linha
+// accent estática (o estado de carregamento continua sinalizado, só que sem animação).
+@media (prefers-reduced-motion: reduce) {
+  .carregando-global {
+    opacity: 1;
+    animation: none;
+
+    &::after {
+      width: 100%;
+      opacity: 0.65;
+      animation: none;
+    }
   }
 }
 
