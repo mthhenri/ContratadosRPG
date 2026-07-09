@@ -32,11 +32,16 @@
 > arquetipo` (tabela conferida contra o `sistema-v4.1.0.md`; os pontos "à escolha" de Engenheiro/
 > Assassino/Acadêmico/Híbrido **não** são auto-aplicados — decisão do autor —, só o fixo). O
 > `ajustarClasse` remove o bônus do arquétipo anterior e soma o do novo (preservando ajustes manuais)
-> e, como os atributos mudaram, roda a `aplicarProgressao` — os derivados dependentes acompanham
-> (Força → Inventário/Dano C.a.C. etc.). **+8 testes** (shared `dano.spec` +3 e `arquetipo.spec` +4;
-> frontend `visualizar.page` +3 — atributos→derivados, Dano C.a.C. recalcula/preserva, Dano Furtivo por
-> marco, troca Lutador→Mercenário, entrar em arquétipo propaga aos derivados). **Dependência nova** no
-> frontend: `socket.io-client`
+> e então bifurca: **troca de arquétipo (mesma classe)** roda a `aplicarProgressao` (delta, os
+> derivados dependentes acompanham — Força → Inventário/Dano C.a.C. etc.); **troca de classe** (a
+> pedido do autor) **recalcula do zero** Vida/Energia máximas e o bloco de derivados para a classe
+> nova (as fórmulas de saúde e os campos disponíveis mudam), via `recalcularSaude`
+> (`calcularVida/Energia/Derivados`, a mesma fonte do snapshot de criação) — descarta ajustes manuais
+> de saúde no reset, clampa a Vida/Energia **atuais** ao novo teto, e conserta o caso Civil (Defesa/
+> Furtivo voltam a N/A). **+9 testes** (shared `dano.spec` +3 e `arquetipo.spec` +4; frontend
+> `visualizar.page` +4 — atributos→derivados, Dano C.a.C. recalcula/preserva, Dano Furtivo por marco,
+> troca Lutador→Mercenário, entrar em arquétipo propaga aos derivados, troca de classe recalcula
+> saúde/derivados do zero). **Dependência nova** no frontend: `socket.io-client`
 > `^4.8.3` (mesma major do `socket.io` do backend). Novo proxy `/socket.io` (`ws: true`) no
 > `proxy.conf.json` para o dev-server encaminhar o handshake ao backend. **Novo `TempoRealService`**
 > (`core/services/tempo-real.service.ts`, `providedIn: 'root'`): mantém **uma** conexão Socket.IO
@@ -60,7 +65,7 @@
 > o recorte visível (§14) e o nome do dono continuam **arbitrados pelo backend**, sem o front duplicar
 > a regra a partir do payload do broadcast (o resumo chega a todos os membros da sala, mas a listagem
 > REST filtra por §14); o refetch ao vivo não pisca o esqueleto. **Testes** (Vitest, **frontend
-> 203/203**, **shared 168/168**): `tempo-real.service.spec` (9 — fake do socket injetado por `SOCKET_FACTORY`: não conecta
+> 204/204**, **shared 168/168**): `tempo-real.service.spec` (9 — fake do socket injetado por `SOCKET_FACTORY`: não conecta
 > sem sessão, conecta uma vez com o token, **reconecta ao trocar de token / desconecta ao sair a
 > sessão**, entra nas salas só com `*:entrar`, repassa os 3 eventos aos Observables, reingresso+bump
 > só a partir da 2ª conexão, esquece sala ao sair, desconecta limpo), `visualizar.page.spec` (+6 —

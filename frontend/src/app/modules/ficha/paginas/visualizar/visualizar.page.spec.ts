@@ -7,6 +7,7 @@ import {
   calcularAreaPercepcao,
   calcularDanoCorpo,
   calcularDefesa,
+  calcularDerivados,
   calcularDeslocamento,
   calcularEnergia,
   calcularInventario,
@@ -408,6 +409,49 @@ describe('FichaVisualizar', () => {
     expect(d.atributos.forca).toBe(2);
     // Força 1 → 2 faz o Inventário (stored) acompanhar via a progressão.
     expect(d.derivados!.inventarioMaximo).toBe(calcularInventario({ classe, forca: 2 }));
+  });
+
+  it('trocar de classe recalcula Vida/Energia e derivados do zero (descarta ajuste; clampa a atual)', () => {
+    const { fixture } = montar({ usuarioLogadoId: 7 });
+    const componente = fixture.componentInstance;
+    const carregada = componente['ficha']()!; // Combatente, nível 2, atributos 1
+    const nivel = carregada.dados.nivel;
+
+    // Máximas e um derivado CUSTOMIZADOS (divergentes do cálculo) + atuais infladas.
+    componente['ficha'].set({
+      ...carregada,
+      dados: {
+        ...carregada.dados,
+        arquetipo: null,
+        estado: {
+          ...carregada.dados.estado,
+          vidaMaxima: 999,
+          energiaMaxima: 999,
+          vidaAtual: 999,
+          energiaAtual: 999,
+        },
+        derivados: { defesa: 50 },
+      },
+    });
+
+    componente['ajustarClasse']({
+      classe: ClasseEnum.ESPECIALISTA,
+      arquetipo: ArquetipoEnum.ENGENHEIRO,
+    });
+
+    const d = componente['ficha']()!.dados;
+    // Recalculado do zero para Especialista (não 999 + delta).
+    expect(d.estado.vidaMaxima).toBe(
+      calcularVida({ classe: ClasseEnum.ESPECIALISTA, nivel, vigor: d.atributos.vigor }),
+    );
+    expect(d.estado.energiaMaxima).toBe(
+      calcularEnergia({ classe: ClasseEnum.ESPECIALISTA, nivel, destreza: d.atributos.destreza }),
+    );
+    // A atual (999) foi clampada ao novo teto.
+    expect(d.estado.vidaAtual).toBe(d.estado.vidaMaxima);
+    expect(d.estado.energiaAtual).toBe(d.estado.energiaMaxima);
+    // Derivados recalculados do zero (não o defesa 50 customizado).
+    expect(d.derivados).toEqual(calcularDerivados(ClasseEnum.ESPECIALISTA, nivel, d.atributos));
   });
 
   it('concede acesso ao membro selecionado e recarrega os acessos', () => {

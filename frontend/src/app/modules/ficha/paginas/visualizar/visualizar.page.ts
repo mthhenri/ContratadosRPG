@@ -9,6 +9,7 @@ import {
   calcularAreaPercepcao,
   calcularDanoCorpo,
   calcularDefesa,
+  calcularDerivados,
   calcularDeslocamento,
   calcularEnergia,
   calcularInventario,
@@ -291,11 +292,16 @@ export class FichaVisualizar {
   }
 
   /**
-   * Edita Classe/Arquétipo (arquétipo já coerente com a classe). Ao trocar de arquétipo/subclasse,
-   * aplica o **delta dos Atributos Bônus fixos** (doc — "Classes e Arquétipos"): remove o bônus do
-   * anterior e soma o do novo (ex.: Lutador → Mercenário tira +1 Força/+1 Luta e põe +1 Pontaria/+1
-   * Destreza). Preserva ajustes manuais (só o delta entra/sai). Como os atributos mudaram, a
-   * **progressão** propaga a variação aos derivados/máximas dependentes. Otimista + em lote.
+   * Edita Classe/Arquétipo (arquétipo já coerente com a classe). Sempre aplica o **delta dos Atributos
+   * Bônus fixos** (doc — "Classes e Arquétipos"): remove o bônus do arquétipo/subclasse anterior e
+   * soma o do novo (ex.: Lutador → Mercenário tira +1 Força/+1 Luta e põe +1 Pontaria/+1 Destreza),
+   * preservando ajustes manuais. Depois:
+   * - **Troca de arquétipo (mesma classe)** → `aplicarProgressao`: os derivados/máximas acompanham a
+   *   variação de atributo por **delta**, preservando ajustes.
+   * - **Troca de classe** → **recalcula** Vida/Energia máximas e o bloco de derivados **do zero** para
+   *   a classe nova (as fórmulas de saúde e os campos disponíveis mudam) — ajustes manuais de saúde
+   *   são descartados no reset, e a Vida/Energia atuais são clampadas ao novo teto.
+   * Otimista + em lote.
    */
   protected ajustarClasse(ajuste: AjusteClasse): void {
     const fichaAtual = this.ficha();
@@ -313,8 +319,35 @@ export class FichaVisualizar {
       arquetipo: ajuste.arquetipo,
       atributos: this.aplicarDeltaBonus(fichaAtual.dados.atributos, bonusAntes, bonusDepois),
     };
-    this.ficha.set({ ...fichaAtual, dados: this.aplicarProgressao(fichaAtual.dados, dadosNovos) });
+    const dados =
+      ajuste.classe === fichaAtual.dados.classe
+        ? this.aplicarProgressao(fichaAtual.dados, dadosNovos)
+        : this.recalcularSaude(dadosNovos);
+    this.ficha.set({ ...fichaAtual, dados });
     this.agendarPersistencia();
+  }
+
+  /**
+   * Recomputa Vida/Energia máximas e o bloco de derivados **do zero** para a classe/nível/atributos
+   * atuais — usado na **troca de classe**, onde as fórmulas de saúde e os campos disponíveis mudam
+   * (ex.: Civil perde Defesa/Furtivo). Reusa `calcularVida/Energia/Derivados` (a mesma fonte do
+   * snapshot de criação — proibições #26/#27); a Vida/Energia **atuais** são clampadas ao novo teto.
+   */
+  private recalcularSaude(dados: FichaJogadorDadosDto): FichaJogadorDadosDto {
+    const entrada = normalizarEntrada(dados.classe, dados.nivel, dados.atributos);
+    const vidaMaxima = calcularVida(entrada);
+    const energiaMaxima = calcularEnergia(entrada);
+    return {
+      ...dados,
+      estado: {
+        ...dados.estado,
+        vidaMaxima,
+        energiaMaxima,
+        vidaAtual: Math.min(dados.estado.vidaAtual, vidaMaxima),
+        energiaAtual: Math.min(dados.estado.energiaAtual, energiaMaxima),
+      },
+      derivados: calcularDerivados(dados.classe, dados.nivel, dados.atributos),
+    };
   }
 
   /** Atributos com o delta de Atributos Bônus do arquétipo/subclasse (remove o antigo, soma o novo). */
