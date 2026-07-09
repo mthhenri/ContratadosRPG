@@ -3,6 +3,19 @@
 > **Milestone M3 — Ficha de Jogador.** Receberá design detalhado (brainstorming próprio)
 > quando chegar a vez; este spec fixa o escopo acordado. Quebrar em tasks numeradas.
 
+> **Revisado por `m3-10` (edição no próprio lugar + máximos editáveis + Maestria).** Dois pontos
+> deste umbrella foram deliberadamente revistos: (1) o critério "**HP ≤ máximo calculado**" e o
+> modelo "**stats derivados ao vivo**" **deixam de valer** — agora **nada é exclusivamente calculado**:
+> todo derivado é snapshot na criação e depois **stored/editável** (bloco `derivados`; atual pode
+> exceder o máximo); (2) o backend **não rejeita mais** ficha por faixa de estado, só por forma e pela
+> regra de **Maestria**.
+>
+> **Escopo expandido em tasks (edição granular + abas + sub-coleções):** `m3-10` (edição por pedaço,
+> Maestria, `derivados` editáveis), `m3-11` (abas: Visão Geral/Combate/Inventário/Habilidades/Sanidade/
+> Rolagens), `m3-12` (editor de Sanidade), `m3-13` (editor de Habilidades), `m3-14` (editor de
+> Inventário — reusa carrinho M1), `m3-15` (presets de rolagem + motor de dados em `shared/regras`).
+> Acesso de visualização vira **menu → dialog** (em `m3-10`). Ver as specs em `docs/specs/`.
+
 ## Objetivo
 
 Fichas de jogador persistentes com cálculo automático de stats, permissões e atualização

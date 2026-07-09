@@ -9,6 +9,11 @@ import {
   TipoFichaEnum,
 } from '@contratados-rpg/shared/enums';
 import {
+  calcularDerivados,
+  calcularEnergia,
+  calcularVida,
+} from '@contratados-rpg/shared/regras/agente';
+import {
   BusinessException,
   ResourceNotFoundException,
   UnauthorizedAccessException,
@@ -42,9 +47,9 @@ interface CampanhaGatewayDublado {
 }
 
 /**
- * Documento de jogo coerente com `shared/regras` para a classe COMBATENTE nível 1: atributos
- * dentro do intervalo (−5..7), Vida/Energia atuais abaixo dos máximos calculados. Ponto de partida
- * dos testes; cada caso sobrescreve o necessário.
+ * Documento de jogo base para a classe COMBATENTE nível 1, sem Maestria (`maestria: null`). Após
+ * m3-10 o backend não trava mais faixas do estado — só a regra de Maestria; os máximos são snapshot
+ * na criação. Ponto de partida dos testes; cada caso sobrescreve o necessário.
  */
 function criarDados(overrides: Partial<FichaJogadorDadosDto> = {}): FichaJogadorDadosDto {
   return {
@@ -64,6 +69,7 @@ function criarDados(overrides: Partial<FichaJogadorDadosDto> = {}): FichaJogador
       social: 1,
       vontade: 1,
     },
+    maestria: null,
     estado: {
       vidaAtual: 40,
       energiaAtual: 10,
@@ -75,6 +81,23 @@ function criarDados(overrides: Partial<FichaJogadorDadosDto> = {}): FichaJogador
     inventario: { itens: [], amplificadores: [] },
     anotacoes: '',
     ...overrides,
+  };
+}
+
+/** Snapshot que o backend grava na criação (m3-10): Vida/Energia máximas + bloco `derivados`. */
+function comSnapshot(dados: FichaJogadorDadosDto): FichaJogadorDadosDto {
+  return {
+    ...dados,
+    estado: {
+      ...dados.estado,
+      vidaMaxima: calcularVida({ classe: dados.classe, nivel: dados.nivel, vigor: dados.atributos.vigor }),
+      energiaMaxima: calcularEnergia({
+        classe: dados.classe,
+        nivel: dados.nivel,
+        destreza: dados.atributos.destreza,
+      }),
+    },
+    derivados: calcularDerivados(dados.classe, dados.nivel, dados.atributos),
   };
 }
 
@@ -136,10 +159,31 @@ describe('FichaService', () => {
         usuarioId: usuarioDono.sub,
         tipo: TipoFichaEnum.JOGADOR,
         nome: 'Agente Alfa',
-        dados: criarDados(),
+        // m3-10: o backend grava o snapshot de Vida/Energia máximas na criação.
+        dados: comSnapshot(criarDados()),
       });
       expect(campanhaGateway.emitirFichaCriada).toHaveBeenCalledWith(fichaCriada);
       expect(resultado).toBe(fichaCriada);
+    });
+
+    it('grava o snapshot de Vida/Energia máximas no documento ao criar (m3-10)', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      fichaRepositorio.criarFicha.mockResolvedValue({ id: 5 });
+
+      await service.criarFicha(
+        { campanhaId: 3, nome: 'Agente Alfa', dados: criarDados() },
+        usuarioDono,
+      );
+
+      const dadosPersistidos = fichaRepositorio.criarFicha.mock.calls[0][0].dados;
+      expect(dadosPersistidos.estado.vidaMaxima).toBe(
+        calcularVida({ classe: ClasseEnum.COMBATENTE, nivel: 1, vigor: 2 }),
+      );
+      expect(dadosPersistidos.estado.energiaMaxima).toBe(
+        calcularEnergia({ classe: ClasseEnum.COMBATENTE, nivel: 1, destreza: 2 }),
+      );
     });
 
     it('lança UnauthorizedAccessException quando o autor não é membro da campanha', async () => {
@@ -152,38 +196,20 @@ describe('FichaService', () => {
       expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
     });
 
-    it('lança BusinessException quando a Vida atual excede o máximo calculado', async () => {
+    it('permite Vida atual acima da máxima e valores fora das faixas antigas (liberdade total, m3-10)', async () => {
       campanhaRepositorio.recuperarMembro.mockResolvedValue({
         papel: TipoCampanhaMembroPapelEnum.JOGADOR,
       });
+      fichaRepositorio.criarFicha.mockResolvedValue({ id: 5 });
 
+      // Vida atual altíssima, atributo fora do teto antigo e nível "impossível": o backend não trava.
       await expect(
         service.criarFicha(
           {
             campanhaId: 3,
             nome: 'Agente Alfa',
             dados: criarDados({
-              estado: { vidaAtual: 9999, energiaAtual: 10, sequelas: [], traumas: [], lesoes: [] },
-            }),
-          },
-          usuarioDono,
-        ),
-      ).rejects.toThrow(BusinessException);
-
-      expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
-    });
-
-    it('lança BusinessException quando um atributo está fora do intervalo da classe', async () => {
-      campanhaRepositorio.recuperarMembro.mockResolvedValue({
-        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
-      });
-
-      await expect(
-        service.criarFicha(
-          {
-            campanhaId: 3,
-            nome: 'Agente Alfa',
-            dados: criarDados({
+              nivel: 99,
               atributos: {
                 destreza: 99,
                 forca: 1,
@@ -196,23 +222,24 @@ describe('FichaService', () => {
                 social: 1,
                 vontade: 1,
               },
+              estado: { vidaAtual: 9999, energiaAtual: 10, sequelas: [], traumas: [], lesoes: [] },
             }),
           },
           usuarioDono,
         ),
-      ).rejects.toThrow(BusinessException);
+      ).resolves.toBeDefined();
 
-      expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+      expect(fichaRepositorio.criarFicha).toHaveBeenCalled();
     });
 
-    it('lança BusinessException quando o nível está fora do intervalo da classe', async () => {
+    it('lança BusinessException para Maestria inválida (atributo com menos de 6 pontos)', async () => {
       campanhaRepositorio.recuperarMembro.mockResolvedValue({
         papel: TipoCampanhaMembroPapelEnum.JOGADOR,
       });
 
       await expect(
         service.criarFicha(
-          { campanhaId: 3, nome: 'Agente Alfa', dados: criarDados({ nivel: 99 }) },
+          { campanhaId: 3, nome: 'Agente Alfa', dados: criarDados({ maestria: 'forca' }) },
           usuarioDono,
         ),
       ).rejects.toThrow(BusinessException);
@@ -370,18 +397,37 @@ describe('FichaService', () => {
       expect(fichaRepositorio.alterarFicha).not.toHaveBeenCalled();
     });
 
-    it('lança BusinessException quando os dados são incoerentes com o motor de regras', async () => {
+    it('permite editar a Vida atual acima da máxima — sem recalcular nem travar (m3-10)', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      fichaRepositorio.alterarFicha.mockResolvedValue(fichaPersistida);
+
+      const dadosEditados = criarDados({
+        estado: {
+          vidaAtual: 9999,
+          energiaAtual: 10,
+          vidaMaxima: 40,
+          energiaMaxima: 12,
+          sequelas: [],
+          traumas: [],
+          lesoes: [],
+        },
+      });
+      await service.alterarFicha({ id: 5, nome: 'Agente Alfa', dados: dadosEditados }, usuarioDono);
+
+      // Persiste como veio — a máxima editada é preservada (alterarFicha não faz snapshot).
+      expect(fichaRepositorio.alterarFicha).toHaveBeenCalledWith({
+        id: 5,
+        nome: 'Agente Alfa',
+        dados: dadosEditados,
+      });
+    });
+
+    it('lança BusinessException para Maestria inválida ao alterar (atributo < 6)', async () => {
       fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
 
       await expect(
         service.alterarFicha(
-          {
-            id: 5,
-            nome: 'Agente Alfa',
-            dados: criarDados({
-              estado: { vidaAtual: 9999, energiaAtual: 10, sequelas: [], traumas: [], lesoes: [] },
-            }),
-          },
+          { id: 5, nome: 'Agente Alfa', dados: criarDados({ maestria: 'forca' }) },
           usuarioDono,
         ),
       ).rejects.toThrow(BusinessException);

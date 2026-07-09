@@ -1,0 +1,901 @@
+// Exibição read-only da ficha de jogador (m3-07) — layout de três colunas, alvo de fidelidade
+// docs/design/examples/ficha-de-jogador.html. Só tokens do tema "Terminal de Contenção"
+// (docs/design/tema/_tokens.scss) — nenhum hex/fonte/raio solto (proibição #29). Os blocos
+// .ficha-cartao (card) e o chip de classificação são os padrões canônicos de
+// docs/design/tema/_componentes.scss.
+
+@use 'tema/breakpoints' as bp;
+
+.ficha-visao {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-grid);
+
+  &__topo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__rotulo-secao {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-mute);
+    flex: 0 0 auto;
+  }
+
+  &__regua {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  // Três colunas no desktop; empilha no mobile. A central cresce, as laterais têm largura base.
+  &__grade {
+    display: grid;
+    grid-template-columns: minmax(0, 300px) minmax(0, 1fr) minmax(0, 280px);
+    gap: var(--gap-grid);
+    align-items: start;
+
+    @media (max-width: 1080px) {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    @include bp.mobile {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  &__coluna {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-grid);
+    min-width: 0;
+
+    // No layout de 2 colunas, a coluna central ocupa a linha inteira acima das laterais.
+    @media (max-width: 1080px) {
+      &--central {
+        grid-column: 1 / -1;
+        order: -1;
+      }
+    }
+  }
+
+  &__vazio {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-style: italic;
+    color: var(--text-mute);
+    margin: 0;
+  }
+
+  &__anotacoes {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    white-space: pre-wrap;
+    margin: 0;
+  }
+}
+
+// === Card (copiado de _componentes.scss .card) ===
+.ficha-cartao {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--pad-card);
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 16px;
+  }
+
+  &__titulo {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+
+    &--forte {
+      text-transform: none;
+      letter-spacing: 0;
+    }
+  }
+
+  &__regua {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  &__meta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-mute);
+    flex: 0 0 auto;
+  }
+
+  // Lápis de "editar esta seção" no cabeçalho do card (edição no próprio lugar — m3-10).
+  &__lapis {
+    flex: 0 0 auto;
+    font-size: 12px;
+    line-height: 1;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 4px 7px;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+    &:hover {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--surface-2);
+    }
+  }
+
+  // Salvar/Cancelar da seção em edição, no próprio cabeçalho (nunca no fim da página).
+  &__acao {
+    flex: 0 0 auto;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: filter 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      background: var(--surface-2);
+      border-color: var(--accent-border);
+    }
+
+    &--confirmar {
+      color: var(--bg);
+      background: var(--accent);
+      border-color: var(--accent);
+
+      &:hover {
+        filter: brightness(1.08);
+        background: var(--accent);
+      }
+    }
+  }
+}
+
+// === Card de identidade ===
+.ficha-ident {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+
+  &__avatar {
+    width: 52px;
+    height: 52px;
+    flex: none;
+    border-radius: var(--radius-control);
+    background-color: var(--surface-2);
+    background-image: repeating-linear-gradient(135deg, var(--border-strong) 0 3px, transparent 3px 9px);
+    border: 1px solid var(--border-strong);
+  }
+
+  &__texto {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  &__rotulo {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-mute);
+  }
+
+  &__nome {
+    font-family: var(--font-mono);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.1;
+    margin: 0;
+
+    // Codinome clicável (edição no lugar): mesmo visual, com alvo de clique discreto.
+    &--editavel {
+      display: inline-block;
+      text-align: left;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--radius-control);
+      padding: 1px 6px;
+      margin-left: -6px;
+      cursor: text;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+
+      &:hover {
+        border-color: var(--border-strong);
+        background: var(--surface-2);
+      }
+    }
+  }
+
+  &__entrada {
+    width: 100%;
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 2px 6px;
+    outline: none;
+
+    &:focus {
+      border-color: var(--accent-border);
+    }
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  // Lápis para editar classe/arquétipo, ao lado dos chips.
+  &__chip-lapis {
+    font-size: 11px;
+    line-height: 1;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 3px 6px;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+    &:hover {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--surface-2);
+    }
+  }
+
+  // Mini-editor de Classe/Arquétipo (dois selects + Salvar/Cancelar).
+  &__classe-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  &__select {
+    width: 100%;
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 8px 10px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    outline: none;
+
+    &:focus {
+      border-color: var(--accent-border);
+    }
+  }
+
+  &__classe-acoes {
+    display: flex;
+    gap: 8px;
+  }
+
+  // Nível e Prestígio são números curtos (largura mínima); Patente é textual e ocupa o meio
+  // flexível — como no protótipo, evitando que um nome longo (ex.: "Operações Especiais") vaze.
+  &__stats {
+    display: grid;
+    // Nível e Prestígio (números curtos) dividem a 1ª linha; a Patente (texto, pode ser longa —
+    // "Força Tarefa Especial") ocupa a linha inteira abaixo, sem nunca quebrar no meio da palavra.
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+}
+
+// Mini stat box (Nível / Patente / Prestígio) no card de identidade.
+.ficha-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 11px 10px;
+  min-width: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+
+  // Patente ocupa a linha inteira (texto largo).
+  &--largo {
+    grid-column: 1 / -1;
+  }
+
+  &__rotulo {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+  }
+
+  &__valor {
+    font-family: var(--font-mono);
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+
+    &--accent {
+      color: var(--accent);
+    }
+
+    &--warning {
+      color: var(--warning);
+    }
+
+    // Valor clicável (Nível/Prestígio no lugar): mesmo visual, alvo de clique discreto.
+    &--editavel {
+      align-self: flex-start;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--radius-control);
+      padding: 0 5px;
+      margin-left: -5px;
+      cursor: text;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+
+      &:hover {
+        border-color: var(--border-strong);
+        background: var(--surface);
+      }
+    }
+  }
+
+  &__entrada {
+    width: 100%;
+    font-family: var(--font-mono);
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 1px 5px;
+    outline: none;
+    -moz-appearance: textfield;
+    -webkit-appearance: textfield;
+    appearance: textfield;
+
+    &:focus {
+      border-color: var(--accent-border);
+    }
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  }
+}
+
+// === Chips ===
+.chip {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  padding: 5px 10px;
+
+  &--accent {
+    color: var(--accent);
+    border-color: var(--accent-border);
+    background: var(--accent-dim);
+  }
+}
+
+// Chip de classificação (mono, borda accent) — padrão do tema "CLASSE-E // CONFIDENCIAL".
+.chip-classificacao {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--text-mute);
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  padding: 4px 9px;
+  flex: 0 0 auto;
+}
+
+// Chip informativo da fórmula da DT (no cabeçalho de Atributos).
+.chip-formula {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 4px 9px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+// === Barras de Vida/Energia ===
+.ficha-barra {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  & + & {
+    margin-top: 16px;
+  }
+
+  &__topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  // Valor + passos − / + (quando ajustável): agrupa à direita, alinhado à barra.
+  &__medidor {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__rotulo {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+
+    // Sinaliza a dica (progressão da classe no hover/title).
+    &--dica {
+      cursor: help;
+      text-decoration: underline dotted var(--text-mute);
+      text-underline-offset: 3px;
+    }
+  }
+
+  // Atual / máxima lado a lado (cada um clicável para digitar; m3-10).
+  &__valor {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-mute);
+
+    strong {
+      font-size: 15px;
+      font-weight: 700;
+    }
+  }
+
+  &__sep {
+    color: var(--text-mute);
+  }
+
+  // Valor clicável (digitação direta): parece o texto do valor, mas com alvo de clique discreto.
+  &__valor--editavel {
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-control);
+    padding: 1px 5px;
+    cursor: text;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+
+    &:hover {
+      border-color: var(--border-strong);
+      background: var(--surface-2);
+    }
+  }
+
+  // Campo de digitação direta do valor atual (clicou no número) — sem as setinhas do number nativo.
+  &__entrada {
+    width: 48px;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 2px 4px;
+    outline: none;
+    -moz-appearance: textfield;
+    -webkit-appearance: textfield;
+    appearance: textfield;
+
+    &:focus {
+      border-color: var(--accent-border);
+    }
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  }
+
+  &__max {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-mute);
+  }
+
+  &__trilho {
+    height: 8px;
+    border-radius: var(--radius-control);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  &__preenchimento {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    transition: width 0.2s ease;
+  }
+
+  &--vida {
+    .ficha-barra__valor strong {
+      color: var(--vida);
+    }
+    .ficha-barra__preenchimento {
+      background: var(--vida);
+    }
+  }
+
+  &--energia {
+    .ficha-barra__valor strong {
+      color: var(--energy);
+    }
+    .ficha-barra__preenchimento {
+      background: var(--energy);
+    }
+  }
+}
+
+// Passo − / + de ajuste rápido de Vida/Energia na leitura (dono/mestre), sem entrar em edição.
+// Segue o padrão de stepper do tema: quadradinho mono, borda de controle, hover no accent.
+.ficha-passo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-dim);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  // Segurar para repetir (appHoldRepeat): sem seleção de texto nem scroll/zoom de toque no gesto.
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    color: var(--accent);
+    border-color: var(--accent-border);
+    background: var(--surface);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+// === Sanidade: marcas com borda colorida à esquerda ===
+.ficha-marcas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ficha-marca {
+  padding: 9px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-radius: var(--radius-control);
+
+  &__linha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__tag {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+    flex: 0 0 auto;
+  }
+
+  &__nome {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  &__descricao {
+    display: block;
+    margin-top: 4px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  &--trauma {
+    border-left-color: var(--warning);
+  }
+
+  &--sequela {
+    border-left-color: var(--text-mute);
+  }
+
+  &--lesao {
+    border-left-color: var(--accent);
+  }
+}
+
+// === Atributos: box com abreviação em cima, valor grande, nome embaixo ===
+.ficha-atributos {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  &__grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__rotulo-grupo {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-dim);
+  }
+
+  &__grade {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+
+    @include bp.mobile {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+}
+
+.ficha-atributo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 12px 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+
+  &__abrev {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+  }
+
+  &__valor {
+    font-family: var(--font-mono);
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  &__nome {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  // Box em edição: valor menor (dá lugar ao stepper) + estrela de Maestria.
+  &--edicao {
+    gap: 7px;
+    .ficha-atributo__valor {
+      font-size: 18px;
+      min-width: 22px;
+      text-align: center;
+    }
+  }
+
+  // Box do atributo com Maestria: borda accent discreta.
+  &--maestria {
+    border-color: var(--accent-border);
+  }
+
+  &__stepper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  // Estrelas de Maestria flanqueando a abreviação do atributo (★ PON ★).
+  &__estrela {
+    font-size: 10px;
+    line-height: 1;
+    color: var(--accent);
+  }
+
+  // Alvo de Maestria (edição): estrela togglável, só habilitada com 6+.
+  &__maestria {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1;
+    padding: 2px 6px;
+    color: var(--text-mute);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+    &:hover:not(:disabled) {
+      color: var(--accent);
+      border-color: var(--accent-border);
+    }
+
+    &--ativa {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    &:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+  }
+}
+
+// === Informações Extras: rótulo à esquerda, valor derivado à direita ===
+.ficha-info {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+
+  &__linha {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+
+    &:last-child {
+      border-bottom: 0;
+    }
+  }
+
+  &__rotulo {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--text-dim);
+    margin: 0;
+  }
+
+  &__valor {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+    text-align: right;
+  }
+
+  // Valor clicável (edição no próprio lugar do derivado): parece o valor, com alvo de clique discreto.
+  &__editavel {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-control);
+    padding: 1px 6px;
+    cursor: text;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+
+    &:hover {
+      border-color: var(--border-strong);
+      background: var(--surface-2);
+    }
+  }
+
+  &__entrada {
+    width: 84px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    text-align: right;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 2px 6px;
+    outline: none;
+    -moz-appearance: textfield;
+    -webkit-appearance: textfield;
+    appearance: textfield;
+
+    &:focus {
+      border-color: var(--accent-border);
+    }
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  }
+}

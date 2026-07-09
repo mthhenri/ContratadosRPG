@@ -1,0 +1,267 @@
+// Lista de fichas da campanha (m3-07). Só tokens do tema "Terminal de Contenção" (proibição #29).
+// Reusa os padrões de card/lista/chip da lista de campanhas (m2-07) — mesma linguagem visual.
+
+.fichas {
+  max-width: 680px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-grid);
+
+  &__voltar {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    align-self: flex-start;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--accent);
+    }
+  }
+
+  &__acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  &__acao {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    text-decoration: none;
+  }
+
+  &__estado {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-family: var(--font-sans);
+    color: var(--text-dim);
+
+    app-icone {
+      color: var(--text-mute);
+    }
+  }
+
+  &__lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  // O item inteiro é clicável (o `<a>` cobre avatar + texto + chip) — mesmo padrão da lista de
+  // campanhas: o hover tinge a linha toda.
+  &__ligacao {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    text-decoration: none;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      background: var(--accent-dim);
+      border-color: var(--border-strong);
+    }
+  }
+
+  // Avatar decorativo (placeholder — sem retrato real no domínio). Listras em --border-strong,
+  // calibradas para aparecer sobre --surface-2 nas duas bases do tema (mesmo do avatar de campanha).
+  &__avatar {
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border-radius: var(--radius-control);
+    background-color: var(--surface-2);
+    background-image: repeating-linear-gradient(135deg, var(--border-strong) 0 3px, transparent 3px 9px);
+    border: 1px solid var(--border-strong);
+  }
+
+  &__texto {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  &__nome {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  &__meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  &__esqueleto {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__esqueleto-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+  }
+}
+
+// Chip de dono — variação neutra do chip de classificação do tema; a própria ficha ganha accent.
+.chip-dono {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  padding: 4px 8px;
+
+  app-icone {
+    font-size: 11px;
+  }
+
+  &--minha {
+    color: var(--accent);
+    border-color: var(--accent-border);
+  }
+}
+
+// Blocos de esqueleto — mesma silhueta da lista de campanhas (proibição #29: só tokens).
+.esqueleto-bloco {
+  border-radius: var(--radius-control);
+  background: var(--border-strong);
+  animation: esqueleto-pulso 1.4s ease-in-out infinite;
+
+  &--avatar {
+    width: 44px;
+    height: 44px;
+    flex: none;
+  }
+
+  &--linha {
+    flex: 1;
+    height: 14px;
+    max-width: 220px;
+  }
+}
+
+@keyframes esqueleto-pulso {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .esqueleto-bloco {
+    animation: none;
+  }
+}
+
+// Card + cabeçalho de seção — bloco sancionado copiado de docs/design/tema/_componentes.scss.
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--pad-card);
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 18px;
+  }
+
+  &__indice {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+  }
+
+  &__titulo {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text);
+  }
+
+  &__regua {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  &__contagem {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-mute);
+  }
+}
+
+// Botões — bloco sancionado copiado de docs/design/tema/_componentes.scss.
+.botao {
+  border-radius: var(--radius-control);
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: filter 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+
+  &--primario {
+    background: var(--accent);
+    color: var(--bg);
+    border: 0;
+
+    &:hover:not(:disabled) {
+      filter: brightness(1.08);
+    }
+  }
+}

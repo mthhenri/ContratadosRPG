@@ -12,3 +12,5 @@ export * from './sanidade';
 export * from './habilidades';
 export * from './progressao';
 export * from './limites';
+export * from './maestria';
+export * from './derivados';

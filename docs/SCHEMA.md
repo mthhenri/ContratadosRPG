@@ -159,14 +159,29 @@ Contrato: `shared/src/dtos/ficha/ficha.dtos.ts`. Forma 1:1 com `sistema-v4.1.0.m
     "destreza": 2, "forca": 4, "luta": 3, "pontaria": 1, "vigor": 3,
     "intelecto": 1, "medicina": 0, "sentidos": 2, "social": 1, "vontade": 2
   },
+  "maestria": "forca",                // keyof atributos | null — atributo com Maestria (m3-10);
+                                      // único na ficha, só em atributo com 6+ (sistema-v4.1.0.md)
   "estado": {
-    "vidaAtual": 34,                  // máximo é derivado
-    "energiaAtual": 18,               // pode negativar
+    "vidaAtual": 34,                  // atual PODE exceder a máxima (m3-10)
+    "energiaAtual": 18,               // pode negativar; PODE exceder a máxima (m3-10)
+    "vidaMaxima": 34,                 // m3-10: snapshot na criação, depois editável (opcional;
+    "energiaMaxima": 18,              //        ausente em fichas antigas → cai no derivado)
     "sequelas": [ { "nome": "Paranoia", "descricao": "..." } ],          // temporárias
     "traumas":  [ { "nome": "...", "descricao": "...", "tratado": false } ], // permanentes, tratáveis
     "lesoes":   [ { "atributo": "forca", "pontos": 1,
                     "severidade": "LEVE", "permanente": false } ]        // remove ponto de atributo
   },
+  "derivados": {                      // m3-10: TODO derivado é snapshot na criação e depois EDITÁVEL
+    "defesa": 14, "esquiva": 12, "bloqueio": 16,   // "nada exclusivamente calculado" — tudo no banco
+    "deslocamento": 9, "proficiencia": 2,
+    "danoCorpoACorpo": 3, "danoFurtivo": 6,
+    "percepcao": 15, "inventarioMaximo": 20,
+    "habilidadesPorTurno": 2, "dtAtributo": 16
+    // opcionais/retrocompat: ausentes → fallback ao cálculo de shared/regras (fichas antigas)
+  },
+  "rolagens": [                       // m3-15: presets de rolagem de dados salvos na ficha
+    { "nome": "Ataque (Luta)", "formula": "1d20+LUT", "descricao": "..." }
+  ],
   "habilidades": [
     { "nome": "6º Sentido", "categoria": "GERAL", "custoEnergia": 0, "descricao": "..." }
     // custoEnergia: número ([N E]), 0 ([0 E]) ou null (custo variável [X E])
@@ -180,17 +195,22 @@ Contrato: `shared/src/dtos/ficha/ficha.dtos.ts`. Forma 1:1 com `sistema-v4.1.0.m
 }
 ```
 
-**Nada de derivado é persistido** (entregável #4). Vida máxima, Energia máxima, limite de
-Energia negativa, Defesa/Esquiva/Bloqueio, Deslocamento, Dano de Corpo, Dano Furtivo,
-Inventário máximo, Área de Percepção (`5 + Sentidos × 5`), DT de atributo, Proficiência,
-Sanidade (não é barra — são as listas sequelas/traumas), **Patente** (da faixa de Prestígio),
-Salário e Limite de Modificações **não entram** no documento — são calculados por
-`shared/regras` a partir de classe/nível/atributos, no front (exibição) e no back (coerência).
+**Nada é exclusivamente calculado — todo derivado é persistido (revisto em `m3-10`).** O princípio
+antigo ("nenhum derivado persistido") foi **invertido**: **tudo o que aparece na ficha existe no
+banco**. Na **criação**, `shared/regras` calcula os derivados uma vez e eles são **gravados** no bloco
+`derivados` (Vida/Energia máximas ficam em `estado`; Defesa/Esquiva/Bloqueio, Deslocamento,
+Proficiência, Dano de Corpo/Furtivo, Percepção, Inventário máximo, Habilidades/turno, DT de atributo,
+Patente… ficam em `derivados`). A partir daí são **stored e editáveis** — o motor **não os recalcula**
+sobre as edições; a **atual pode exceder a máxima**; subir de nível **soma** o delta de progressão aos
+máximos stored. Campos `derivados` **opcionais** — ausentes em fichas anteriores a `m3-10` caem no
+cálculo de `shared/regras` como fallback. (A Patente segue derivada do Prestígio como rótulo; se
+editada, mora em `derivados`.)
 
-**Fora do contrato inicial (m3-01):** domínios que o documento define mas que a spec não
-listou no casamento 1:1 — Identidade (Personalidade, Origem: Formação/Especialidade/Saber de
-Campo), Dinheiro corrente, Maestrias e Peculiaridade de Experimento — entram quando as tasks
-de formulário/ficha do M3 os exigirem.
+**Ainda fora do contrato:** Identidade (Personalidade, Origem: Formação/Especialidade/Saber de Campo),
+Dinheiro corrente e Peculiaridade de Experimento — entram quando as tasks de ficha os exigirem.
+**Maestrias** entraram em **m3-10** (`maestria`, campo único `keyof atributos | null`). As
+sub-coleções de jogo — **sequelas/traumas/lesões** (Sanidade), **habilidades**, **inventário** e
+**presets de rolagem** (`rolagens`) — moram no `dados` e ganham editores/abas nas tasks `m3-11`…`m3-15`.
 
 ### FichaCriaturaDadosDto / NPC (esboço — fechar no M4)
 

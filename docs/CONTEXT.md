@@ -1,6 +1,126 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Atualizado após cada sessão de implementação. Última atualização: 2026-07-08 (**m3-06 — frontend da
+> Última atualização: 2026-07-09 (**m3-10 — edição da ficha no próprio lugar + Maestria + "nada é
+> exclusivamente calculado"**). **Revisão constitucional** (SYSTEM.SPEC §10.4/§11, SCHEMA.md, JSDoc
+> do contrato): o princípio "nenhum derivado é persistido" foi **invertido** — na **criação**,
+> `shared/regras` calcula tudo uma vez e **grava** no `dados` (Vida/Energia máximas em `estado`; o
+> bloco **`derivados`**: Defesa/Esquiva/Bloqueio, Deslocamento, Proficiência, Dano C.a.C./Furtivo,
+> Percepção, Inventário máx., Hab./turno); a partir daí são **stored e editáveis** e o motor **não
+> recalcula** sobre as edições. A **atual pode exceder a máxima**; subir de nível **soma** o delta de
+> progressão às máximas stored. O backend **deixou de travar faixas** do estado salvo — só valida
+> **forma** (camada 1) e a regra de **Maestria** (`maestria`, novo campo `keyof atributos | null`:
+> único, só em atributo com 6+). **Contrato (`shared/`):** `FichaDerivadosDto` + `FichaRolagemDto`
+> (`rolagens`, para m3-15) + `estado.vidaMaxima/energiaMaxima` — todos **opcionais** (fallback ao
+> cálculo em fichas antigas); novo `shared/regras/agente/derivados.calcularDerivados` (snapshot) e
+> `maestria` (`maestriaAtingivel`/`maestriaValida`). **Backend:** `criarFicha` grava o snapshot
+> (máximas + `derivados`); `validarDadosContraRegras` afrouxado à Maestria. **Frontend — a ficha
+> virou um editor no próprio lugar, campo a campo:** o `FichaVisualizacao` ganhou **lápis por trecho**
+> (Codinome; Classe/Arquétipo em mini-editor com dois `<select>`; Nível — que aplica o delta de
+> progressão às máximas — e Prestígio; **atributos em grupo** com marcação de **Maestria** ★ 6+/única;
+> Vida/Energia **atual e máxima** e cada **derivado** clicáveis para digitar). Cada confirmação é
+> **otimista** e persistida **em lote** (`alterarFicha` debounced). **Não há mais botão global de
+> editar nem `FichaFormulario`** — o componente e a rota `nova` foram **removidos**; **"Nova ficha"
+> cria uma ficha padrão** (`ficha-padrao.ts`) e abre-a para edição (default-then-edit). O **acesso de
+> visualização** saiu do corpo da tela: virou **menu (kebab) → dialog**. Opções de classe/arquétipo
+> extraídas para `opcoes-ficha.ts`; status derivado editável em `status-derivado.ts`. **Verde:**
+> shared **159**, backend **88**, frontend **177**; `lint`/`build` ok (bundle inicial **567 kB**;
+> budget de estilo por componente subiu p/ 16/18 kB — o editor é rico). **Abas da ficha (m3-11)** e
+> os editores de sub-coleções (**m3-12** Sanidade, **m3-13** Habilidades, **m3-14** Inventário,
+> **m3-15** Rolagens) ficam **fora** desta task (specs já escritas em `docs/specs/`). Sessão anterior
+> (2026-07-08, **m3-07 — frontend da
+> lista e visualização read-only da ficha + UI de concessão de acesso**: fecha o consumo do CRUD de
+> ficha (m3-03) e da concessão de acesso (m3-04) na UI, exceto o tempo real (m3-08). **`FichaService`
+> estendido** (só transporte — o backend é o árbitro §14, o front só apresenta): `listarFichas`
+> (`GET /ficha?campanhaId=`), `listarAcessos` (`GET /ficha/:id/acesso`), `concederAcesso`
+> (`POST /ficha/:id/acesso` com `{ usuarioId }` no corpo, `fichaId` na rota), `revogarAcesso`
+> (`DELETE /ficha/:id/acesso/:usuarioId`). **Componente read-only `FichaVisualizacao`**
+> (`componentes/ficha-visualizacao/`): exibe identidade, atributos, estado (barras Vida/Energia
+> atual÷máximo) e status derivado **reusando as fórmulas de `shared/regras/agente`** (mesma fonte da
+> edição m3-06 — nenhuma fórmula duplicada, proibições #26/#27), **sem controle de formulário** (é só
+> leitura); `N/A` onde a classe não possui a stat. **Helper `rotulos-ficha.ts`** (rótulos legíveis de
+> classe/arquétipo, mesma grafia dos `<select>` do formulário) compartilhado pela lista e pela
+> visualização, sem redefinir. **`FichaLista`** (`paginas/lista/`, rota **índice `''`**): `forkJoin`
+> de `listarFichas` + `listarMembros` (para resolver o nome do dono), chip de dono ("Você" com realce
+> accent para a própria, o nome do membro para as demais) + classe/nível; cada item liga à
+> visualização (`:id`); botão "Nova ficha". **O recorte visível (dono vê a própria, mestre vê todas,
+> outro membro só as concedidas) é filtrado pelo backend — o front não duplica regra.** **`FichaVisualizar`**
+> (`paginas/visualizar/`, rota **`:id`**): `recuperarFicha` + `listarMembros`; deriva `ehDono`
+> (`ficha.usuarioId === sessão.id`) e `ehMestre` (papel na lista de membros) → `podeGerenciar`. Todos
+> com acesso veem a ficha read-only via `FichaVisualizacao`; **para o dono ou o mestre** aparecem o
+> botão **Editar** (→ tela de edição m3-06) e o **painel de gestão de acesso** (m3-04): `<select>`
+> Reactive Forms de **membros elegíveis** (exclui o dono — já vê —, o mestre — já vê tudo — e quem já
+> tem concessão ativa) + "Conceder", e a lista de acessos ativos com "Revogar"; conceder/revogar
+> chamam a service e **recarregam `listarAcessos`**. A autoridade é sempre o backend (§14) — a UI só
+> reflete; `listarAcessos` só é buscado quando o usuário pode geri-los. **Rotas** em `ficha.routes.ts`:
+> `''` (lista), `nova` (m3-06), `:id/editar` (m3-06), `:id` (visualização) — `nova` **precede** `:id`
+> para não ser capturada como um `id`. **Ponto de entrada:** o detalhe da campanha ganhou um botão
+> **"Fichas"** (→ `['/painel', id, 'ficha']`) ao lado do "Nova ficha" (rebaixado a secundário).
+> `.scss`/BEM só com tokens do tema (proibição #29): card/stat/chip/lista copiados dos padrões da
+> ficha (m3-06) e da lista de campanhas (m2-07); cores semânticas (Vida `--vida`, Energia `--energy`,
+> Furtivo `--positive`). **+15 testes** (Vitest, **frontend 159/159**): `ficha.service.spec` (+4 —
+> rota/verbo/corpo de listar/listarAcessos/conceder/revogar), `ficha-visualizacao` (4 — rótulo de
+> classe, read-only sem controles, Vida Máxima derivada por `shared/regras`, N/A e omissão do card de
+> anotações), `lista.page` (2 — lista o recorte da rota e resolve dono "Você"/nome + realce da própria),
+> `visualizar.page` (5 — membro comum só vê / dono e mestre veem editar+painel com elegíveis corretos /
+> conceder e revogar disparam a service e recarregam). `lint`/`test`/`build` verdes; bundle inicial
+> **566,80 kB** dentro do budget de 575 kB (m3-06). **Verificado por render** (Playwright/Chromium
+> sobre o **build de produção**, sessão + API mockadas): lista com 2 fichas e chips VOCÊ/nome do membro
+> e botão Nova ficha; visualização read-only com **Vida 5/91 derivada por `shared/regras`** (bate com
+> `calcularVida` Combatente nível 3 vigor 4), botão Editar, painel de acesso com 1 concessão (Vera
+> Cruz), **zero inputs** (confirma read-only) e Vida Máxima 91 — **zero erros de console** nas duas
+> telas. **Ajuste de design pós-entrega** (o autor atualizou o protótipo
+> `docs/design/examples/ficha-de-jogador.html`): o `FichaVisualizacao` foi **realinhado ao novo
+> alvo de fidelidade** — de cards empilhados para um **layout de três colunas** (identidade +
+> Vida/Energia + Sanidade · Atributos · Informações Extras). Ganhou: **card de identidade** (avatar,
+> CODINOME, chips classe+arquétipo, mini-boxes Nível / **Patente** — derivada do Prestígio via
+> `shared/regras/patente`, `ROTULOS_PATENTE` reusado da calculadora — / Prestígio em `--warning`);
+> **barras Vida/Energia** atual÷máximo; **card Sanidade** listando traumas/sequelas/lesões (do
+> `estado`, read-only) com borda colorida por tipo e contagem de marcas; **Atributos** em stat-boxes
+> (abrev. em cima, valor grande, nome embaixo) com chip da fórmula da DT; **coluna Informações Extras**
+> (Defesa, Deslocamento, Proficiência, Dano C.a.C., Dano Furtivo, Percepção, Inventário, Hab./Turno);
+> chip de **classificação `FICHA-JGD-NNNN`**. Inputs do componente agora `fichaId`/`nome`/`dados`; a
+> página de visualização passou a **largura 1160px** (as três colunas) e o cabeçalho ficou enxuto
+> (voltar + Editar). Nada de dado inventado — os domínios **fora do contrato m3-01** (Identidade —
+> Personalidade/Origem/Saber de campo —, Dinheiro, Maestrias) que o protótipo ilustra **não** foram
+> exibidos (não há campo no `FichaJogadorDadosDto`); as "abas" COMBATE/INVENTÁRIO/HABILIDADES do
+> protótipo ficam para quando seus editores/campos existirem. Testes do `ficha-visualizacao` ajustados
+> (6, cobrindo identidade/patente/chips/sanidade/read-only) — **frontend 161/161**; `lint`/`build`
+> verdes (bundle inicial **566,80 kB**, o novo layout mora na chunk lazy `visualizar-page`).
+> **Verificado por render** (Playwright/Chromium sobre o build de produção): as três colunas batem com
+> o protótipo, todos os 10 atributos cabem, a Patente longa ("Força Tarefa Especial") quebra dentro do
+> box sem vazar, **zero erros de console**. **Edição no próprio lugar** (a pedido do autor — a edição
+> em página separada era "muito complexa e confusa"; o foco passou a ser usabilidade/praticidade,
+> `/frontend-design`): a **ficha virou uma tela só** (`/painel/:campanhaId/ficha/:id`) — leitura por
+> padrão (`FichaVisualizacao`) e **edição ativada por um clique em "Editar"** que troca a mesma tela
+> pelo `FichaFormulario` (mesmo layout de três colunas, campos viram controles no lugar) com
+> **Salvar/Cancelar**, **sem navegar** para outra página; durante a edição o painel de acesso sai de
+> cena. A **rota `:id/editar` e a `FichaEditar` foram removidas**; o `FichaFormulario` ganhou
+> `mostrarCancelar`/`cancelar` e input `fichaId` (chip de classificação; `FICHA-JGD-NOVA` na criação).
+> A **criação** (`FichaCriar`) agora navega para a **ficha** criada (`:id`, que abre em leitura), não
+> mais para `/editar`, e ganhou Cancelar (volta à lista). O status derivado (coluna "Informações
+> Extras") e a Patente foram **extraídos para `status-derivado.ts`** (`montarInformacoesExtras`,
+> `normalizarEntrada`, `rotuloPatente`) — **fonte única compartilhada** por visualização e formulário,
+> para que leitura e edição mostrem exatamente as mesmas stats. **162 testes** (Vitest, frontend) —
+> `visualizar.page.spec` cobre o toggle leitura↔edição no próprio lugar e o `salvarEdicao` via
+> `alterarFicha`; `criar.page.spec` cobre a navegação à ficha e o Cancelar; spec da edição em página
+> apagado com a página. **Verificado por render** (build de produção): em `:id` como dono, "Editar"
+> troca a leitura pelo formulário na **mesma tela** (mesmas colunas, 13 steppers, Salvar Alterações +
+> Cancelar, Informações Extras recalculando), **zero erros de console**. **Ajuste rápido de Vida/Energia
+> na leitura** (a pedido do autor — usabilidade em jogo, `/frontend-design`): a `FichaVisualizacao`
+> ganhou passos **− / +** ao lado do valor de Vida e Energia atuais, **fora da edição** (input
+> `ajustavel`, output `ajusteVitalidade`; a página liga só para dono/mestre — `podeGerenciar`). Os
+> passos clampam a **[0, máximo]** (− trava em 0, + no teto derivado por `shared/regras`) e a página
+> aplica o novo valor **na hora (otimista)** e persiste **em lote** — cliques seguidos viram um único
+> `alterarFicha` (`Subject` + `debounceTime(500)` + `switchMap`, `takeUntilDestroyed`); o backend
+> revalida o teto e a resposta reconcilia a tela. Botão de estilo `.ficha-passo` (mesmo padrão de
+> stepper do tema, só tokens). **166 testes** (Vitest, frontend): `ficha-visualizacao.spec` (+3 —
+> passos ocultos sem `ajustavel`, emissão do valor clampado, trava nos limites) e `visualizar.page.spec`
+> (+1 — ajuste otimista + persistência em lote coalescida). **Verificado por render** (build de
+> produção, dono): "− 7 / 106 +" (Vida) e "− 5 / 51 +" (Energia) compactos e alinhados à barra, sobre
+> o tema, **zero erros de console**. Fora de escopo (mantido): tempo real / tela do mestre ao vivo (m3-08), refino mobile dedicado
+> (m3-09), editores das sub-coleções (sequelas/traumas/lesões/habilidades/inventário). Spec `m3-07` →
+> `done/`. **M3 avança: lista + visualização + concessão de acesso no ar (front consumindo o CRUD e a
+> matriz §14 do backend).** Sessão anterior no mesmo dia (**m3-06 — frontend da
 > ficha de jogador (criação e edição)**: abre o módulo `modules/ficha/` no frontend — as telas de
 > **criação** e **edição** da própria ficha, reusando os controles e cálculos da calculadora de agente
 > (M1) com **status derivados ao vivo** via `shared/regras` (proibições #26/#27 — nenhuma fórmula

@@ -7,6 +7,12 @@
 > override de tokens de densidade (`--pad-card`/`--gap-grid`) da `m1-15`. Nada de largura
 > mágica por arquivo nem hex/fonte/raio solto (proibição #29).
 
+> **Impacto do `m3-10`:** o split "criação / edição / visualização" **deixou de existir** — virou uma
+> **tela única editável no próprio lugar** (com máximos editáveis, ajuste rápido de Vida/Energia e
+> marcação de Maestria). Reenquadrar os entregáveis mobile para essa tela única (alvos de toque dos
+> passos − / +, campos inline, ações Salvar/Cancelar no topo), não para telas separadas de
+> criação/edição.
+
 ## Objetivo
 
 Refinamento de UI/UX **mobile** das telas de ficha — o **ecrã mais denso do sistema**:

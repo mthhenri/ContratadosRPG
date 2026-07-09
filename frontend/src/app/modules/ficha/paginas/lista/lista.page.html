@@ -1,0 +1,63 @@
+<section class="fichas">
+  <a class="fichas__voltar" [routerLink]="['/painel', campanhaId]">
+    <app-icone nome="voltar" />
+    <span>Voltar à campanha</span>
+  </a>
+
+  <article class="card">
+    <header class="card__cabecalho">
+      <span class="card__indice">//</span>
+      <h1 class="card__titulo">Fichas</h1>
+      <span class="card__regua"></span>
+      @if (!carregando() && itens().length) {
+        <span class="card__contagem" aria-hidden="true">{{ itens().length }}</span>
+      }
+    </header>
+
+    <div class="fichas__acoes">
+      <button
+        class="botao botao--primario fichas__acao"
+        type="button"
+        [disabled]="criando()"
+        (click)="criarFicha()"
+      >
+        <app-icone nome="novo-agente" />
+        {{ criando() ? 'Criando…' : 'Nova ficha' }}
+      </button>
+    </div>
+
+    @if (carregando()) {
+      <div class="fichas__esqueleto" role="status" aria-label="Carregando fichas">
+        @for (i of [0, 1]; track i) {
+          <div class="fichas__esqueleto-item">
+            <span class="esqueleto-bloco esqueleto-bloco--avatar"></span>
+            <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+          </div>
+        }
+      </div>
+    } @else if (itens().length === 0) {
+      <p class="fichas__estado">
+        <app-icone nome="novo-agente" />
+        Nenhuma ficha visível nesta campanha ainda.
+      </p>
+    } @else {
+      <ul class="fichas__lista">
+        @for (ficha of itens(); track ficha.id) {
+          <li class="fichas__item">
+            <a class="fichas__ligacao" [routerLink]="['/painel', campanhaId, 'ficha', ficha.id]">
+              <span class="fichas__avatar" aria-hidden="true"></span>
+              <span class="fichas__texto">
+                <span class="fichas__nome">{{ ficha.nome }}</span>
+                <span class="fichas__meta">{{ ficha.classeTexto }} · Nível {{ ficha.nivel }}</span>
+              </span>
+              <span class="chip-dono" [class.chip-dono--minha]="ficha.ehMinha">
+                <app-icone nome="olho" />
+                {{ ficha.dono }}
+              </span>
+            </a>
+          </li>
+        }
+      </ul>
+    }
+  </article>
+</section>

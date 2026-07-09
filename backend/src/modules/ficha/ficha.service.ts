@@ -19,9 +19,11 @@ import type {
 } from '@contratados-rpg/shared/dtos/ficha';
 import { TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import {
+  MAESTRIA_PONTOS_MINIMO,
+  calcularDerivados,
   calcularEnergia,
   calcularVida,
-  obterLimitesClasse,
+  maestriaValida,
 } from '@contratados-rpg/shared/regras/agente';
 import {
   BusinessException,
@@ -71,7 +73,7 @@ export class FichaService {
       usuarioId: usuarioAtivo.sub,
       tipo: TipoFichaEnum.JOGADOR,
       nome: dto.nome,
-      dados: dto.dados,
+      dados: this.aplicarSnapshotDeMaximos(dto.dados),
     });
 
     this.campanhaGateway.emitirFichaCriada(fichaCriada);
@@ -310,53 +312,44 @@ export class FichaService {
 
   /**
    * Valida o documento de jogo salvo contra o motor de regras (`shared/regras`, §11 camada 2) — o
-   * documento vence (proibição #27), reusando as fórmulas do M1 sem reimplementar regra:
+   * documento vence (proibição #27).
    *
-   * - Nível dentro do intervalo da classe (`obterLimitesClasse`);
-   * - cada atributo dentro do intervalo da classe (`obterLimitesClasse`);
-   * - Vida atual ≤ Vida máxima calculada para classe/nível/Vigor (`calcularVida`);
-   * - Energia atual ≤ Energia máxima calculada para classe/nível/Destreza (`calcularEnergia`) — a
-   *   Energia pode negativar (penalidades), então só o teto superior é limitado.
-   *
-   * Incoerência → `BusinessException`.
+   * **Revisto em m3-10 — liberdade total de edição.** O backend **não trava mais faixas do estado
+   * salvo**: caíram as coerções "Nível/atributo dentro do limite de classe" e "Vida/Energia atual ≤
+   * máximo" (o mestre/jogador reflete eventos de campanha; a atual pode exceder a máxima, que é
+   * stored/editável — §10.4/§11). A única regra de domínio que permanece na ficha é a **Maestria**:
+   * `null` ou um atributo com `MAESTRIA_PONTOS_MINIMO`+ pontos (`maestriaValida`, única por
+   * construção). Incoerência → `BusinessException`.
    */
   private validarDadosContraRegras(dados: FichaJogadorDadosDto): void {
-    const limites = obterLimitesClasse({ classe: dados.classe });
-
-    if (dados.nivel < limites.nivelMinimo || dados.nivel > limites.nivelMaximo) {
+    if (!maestriaValida(dados.atributos, dados.maestria)) {
       throw new BusinessException(
-        `Nível ${dados.nivel} fora do intervalo permitido para a classe (${limites.nivelMinimo}–${limites.nivelMaximo})`,
+        `Maestria inválida: o atributo "${dados.maestria}" precisa existir e ter ${MAESTRIA_PONTOS_MINIMO}+ pontos`,
       );
     }
+  }
 
-    for (const [nomeAtributo, valorAtributo] of Object.entries(dados.atributos)) {
-      if (valorAtributo < limites.atributoMinimo || valorAtributo > limites.atributoMaximo) {
-        throw new BusinessException(
-          `Atributo ${nomeAtributo} (${valorAtributo}) fora do intervalo permitido para a classe (${limites.atributoMinimo}–${limites.atributoMaximo})`,
-        );
-      }
-    }
+  /**
+   * Preenche o **snapshot** de derivados no `dados` **na criação** (m3-10 — "nada é exclusivamente
+   * calculado"): calcula uma vez por `shared/regras` e grava Vida/Energia máximas (`estado`) e o
+   * bloco `derivados` (Defesa, Deslocamento, Dano, Percepção, Inventário, Hab./turno…), que a partir
+   * daí são editáveis e nunca recalculados. Respeita valores já enviados pelo cliente (só preenche os
+   * ausentes) — a `alterarFicha` **não** passa por aqui, preservando o que foi editado.
+   */
+  private aplicarSnapshotDeMaximos(dados: FichaJogadorDadosDto): FichaJogadorDadosDto {
+    const vidaMaxima =
+      dados.estado.vidaMaxima ??
+      calcularVida({ classe: dados.classe, nivel: dados.nivel, vigor: dados.atributos.vigor });
+    const energiaMaxima =
+      dados.estado.energiaMaxima ??
+      calcularEnergia({
+        classe: dados.classe,
+        nivel: dados.nivel,
+        destreza: dados.atributos.destreza,
+      });
+    const derivados =
+      dados.derivados ?? calcularDerivados(dados.classe, dados.nivel, dados.atributos);
 
-    const vidaMaxima = calcularVida({
-      classe: dados.classe,
-      nivel: dados.nivel,
-      vigor: dados.atributos.vigor,
-    });
-    if (dados.estado.vidaAtual > vidaMaxima) {
-      throw new BusinessException(
-        `Vida atual (${dados.estado.vidaAtual}) acima do máximo calculado (${vidaMaxima})`,
-      );
-    }
-
-    const energiaMaxima = calcularEnergia({
-      classe: dados.classe,
-      nivel: dados.nivel,
-      destreza: dados.atributos.destreza,
-    });
-    if (dados.estado.energiaAtual > energiaMaxima) {
-      throw new BusinessException(
-        `Energia atual (${dados.estado.energiaAtual}) acima do máximo calculado (${energiaMaxima})`,
-      );
-    }
+    return { ...dados, estado: { ...dados.estado, vidaMaxima, energiaMaxima }, derivados };
   }
 }

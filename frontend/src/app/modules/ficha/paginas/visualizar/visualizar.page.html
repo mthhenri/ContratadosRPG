@@ -1,0 +1,134 @@
+<section class="ficha-pagina">
+  <header class="ficha-pagina__topo">
+    <a class="ficha-pagina__voltar" [routerLink]="['/painel', campanhaId, 'ficha']">
+      <app-icone nome="voltar" />
+      <span>Voltar às fichas</span>
+    </a>
+
+    @if (ficha() && podeGerenciar()) {
+      <div class="ficha-pagina__menu-container">
+        <button
+          class="ficha-pagina__menu-botao"
+          type="button"
+          aria-label="Ações da ficha"
+          aria-haspopup="menu"
+          [attr.aria-expanded]="menuAberto()"
+          (click)="alternarMenu()"
+        >
+          ⋯
+        </button>
+        @if (menuAberto()) {
+          <button
+            class="ficha-pagina__menu-fundo"
+            type="button"
+            aria-label="Fechar menu"
+            (click)="fecharMenu()"
+          ></button>
+          <div class="ficha-pagina__menu" role="menu">
+            <button
+              class="ficha-pagina__menu-item"
+              type="button"
+              role="menuitem"
+              (click)="abrirAcesso()"
+            >
+              <app-icone nome="olho" />
+              <span>Acesso de visualização</span>
+              @if (acessos().length) {
+                <span class="ficha-pagina__menu-contagem">{{ acessos().length }}</span>
+              }
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </header>
+
+  @if (carregando()) {
+    <p class="ficha-pagina__carregando">Carregando ficha…</p>
+  } @else if (ficha(); as fichaAtual) {
+    <!-- Edição no próprio lugar (m3-10): cada campo tem seu lápis; não há mais botão global. -->
+    <app-ficha-visualizacao
+      [fichaId]="fichaAtual.id"
+      [nome]="fichaAtual.nome"
+      [dados]="fichaAtual.dados"
+      [ajustavel]="podeGerenciar()"
+      (ajusteVitalidade)="ajustarVitalidade($event)"
+      (ajusteDerivado)="ajustarDerivado($event)"
+      (ajusteAtributos)="ajustarAtributos($event)"
+      (ajusteNome)="ajustarNome($event)"
+      (ajusteCampoDados)="ajustarCampoDados($event)"
+      (ajusteClasse)="ajustarClasse($event)"
+    />
+  } @else {
+    <p class="ficha-pagina__carregando">Ficha não encontrada.</p>
+  }
+</section>
+
+@if (dialogAcesso()) {
+  <div class="dialogo" role="dialog" aria-modal="true" aria-label="Acesso de visualização">
+    <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="fecharAcesso()"></button>
+    <div class="dialogo__painel acesso">
+      <header class="dialogo__cabecalho">
+        <span class="ficha-cartao__indice"><app-icone nome="olho" /></span>
+        <h2 class="dialogo__titulo">Acesso de Visualização</h2>
+        <span class="ficha-cartao__regua"></span>
+        <button class="dialogo__fechar" type="button" aria-label="Fechar" (click)="fecharAcesso()">
+          ✕
+        </button>
+      </header>
+
+      <p class="acesso__ajuda">
+        Conceda a visualização desta ficha a outros membros da campanha. Eles poderão vê-la, mas não
+        editá-la; você pode revogar a qualquer momento.
+      </p>
+
+      <div class="acesso__conceder">
+        <select
+          class="acesso__select"
+          aria-label="Membro para conceder acesso"
+          [formControl]="membroParaConceder"
+        >
+          <option [ngValue]="null" disabled>Selecione um membro…</option>
+          @for (membro of membrosElegiveis(); track membro.usuarioId) {
+            <option [ngValue]="membro.usuarioId">{{ membro.nome }}</option>
+          }
+        </select>
+        <button
+          class="botao botao--primario acesso__acao"
+          type="button"
+          [disabled]="membroParaConceder.value === null || concedendo()"
+          (click)="conceder()"
+        >
+          <app-icone nome="mais" />
+          {{ concedendo() ? 'Concedendo…' : 'Conceder' }}
+        </button>
+      </div>
+
+      @if (membrosElegiveis().length === 0) {
+        <p class="acesso__vazio-elegiveis">Nenhum outro membro disponível para conceder acesso.</p>
+      }
+
+      @if (acessos().length) {
+        <ul class="acesso__lista">
+          @for (acesso of acessos(); track acesso.usuarioId) {
+            <li class="acesso__item">
+              <span class="acesso__avatar" aria-hidden="true"></span>
+              <span class="acesso__nome">{{ acesso.nome }}</span>
+              <button
+                class="botao botao--secundario acesso__revogar"
+                type="button"
+                [disabled]="revogando() !== null"
+                (click)="revogar(acesso.usuarioId)"
+              >
+                <app-icone nome="excluir" />
+                {{ revogando() === acesso.usuarioId ? 'Revogando…' : 'Revogar' }}
+              </button>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="acesso__vazio">Nenhum acesso concedido ainda.</p>
+      }
+    </div>
+  </div>
+}

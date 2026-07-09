@@ -3,6 +3,12 @@
 > **Milestone M4 — Ficha de Criatura/NPC.** Receberá design detalhado quando chegar a vez;
 > este spec fixa o escopo acordado. Quebrar em tasks numeradas.
 
+> **A decidir por causa do `m3-10`:** a ficha de jogador adotou "**snapshot na criação + máximos
+> editáveis** (não recalcula depois), edição no próprio lugar, atual pode exceder o máximo". Avaliar
+> se a criatura/NPC segue a mesma convenção (provável, por consistência — o `SCHEMA.md` já esboça
+> stats **stored** para criatura). A **Maestria** é mecânica de atributo de **jogador** e **não** se
+> aplica a criaturas.
+
 ## Objetivo
 
 Ferramenta do mestre para criar e gerenciar ameaças (criaturas) e NPCs, seguindo o

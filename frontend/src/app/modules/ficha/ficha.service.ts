@@ -3,11 +3,15 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { StandardResponse } from '@contratados-rpg/shared/interfaces';
 import {
+  FichaAcessoConcedidoDto,
+  FichaAcessoResumoDto,
+  FichaAcessoRevogadoDto,
   FichaAlteradaDto,
   FichaAlterarDto,
   FichaCriadaDto,
   FichaCriarDto,
   FichaRecuperadaDto,
+  FichaResumoDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 
 import { environment } from '../../../environments/environment';
@@ -20,9 +24,10 @@ import { environment } from '../../../environments/environment';
  * front. Em dev `apiBase` é vazio e a chamada relativa passa pelo proxy até
  * `http://localhost:3100`; em produção aponta ao Render.
  *
- * Escopo m3-06: criação, recuperação e alteração da própria ficha (a tela de criação/edição). A
- * listagem de fichas da campanha e a visualização por terceiros são m3-07; a concessão de acesso
- * (m3-04) ganha UI em m3-07.
+ * Escopo m3-06: criação, recuperação e alteração da própria ficha (a tela de criação/edição).
+ * m3-07 acrescenta a listagem de fichas da campanha, a visualização por terceiros e a UI de
+ * concessão/revogação de acesso (m3-04) — cada método só transporta; o recorte visível e a
+ * permissão continuam sendo arbitrados pelo backend (§14).
  */
 @Injectable({ providedIn: 'root' })
 export class FichaService {
@@ -40,6 +45,17 @@ export class FichaService {
       .pipe(map((resposta) => resposta.dados as FichaCriadaDto));
   }
 
+  /**
+   * Lista as fichas de uma campanha visíveis ao usuário autenticado. O recorte (dono vê a própria,
+   * mestre vê todas, outro membro só as concedidas) é filtrado pelo backend (§14) — o front só
+   * apresenta, sem duplicar regra.
+   */
+  listarFichas(campanhaId: number): Observable<FichaResumoDto[]> {
+    return this.httpClient
+      .get<StandardResponse<FichaResumoDto[]>>(this.base, { params: { campanhaId } })
+      .pipe(map((resposta) => resposta.dados as FichaResumoDto[]));
+  }
+
   /** Recupera uma ficha pelo `id` (exige permissão de visualização — §14; barrado com 403 no back). */
   recuperarFicha(id: number): Observable<FichaRecuperadaDto> {
     return this.httpClient
@@ -55,5 +71,36 @@ export class FichaService {
     return this.httpClient
       .put<StandardResponse<FichaAlteradaDto>>(`${this.base}/${id}`, dto)
       .pipe(map((resposta) => resposta.dados as FichaAlteradaDto));
+  }
+
+  /**
+   * Lista as concessões de visualização ativas de uma ficha (membro + `nome`). Só o dono ou o
+   * mestre listam (§14) — o backend barra os demais com 403. Base da UI de gestão de acesso (m3-04).
+   */
+  listarAcessos(fichaId: number): Observable<FichaAcessoResumoDto[]> {
+    return this.httpClient
+      .get<StandardResponse<FichaAcessoResumoDto[]>>(`${this.base}/${fichaId}/acesso`)
+      .pipe(map((resposta) => resposta.dados as FichaAcessoResumoDto[]));
+  }
+
+  /**
+   * Concede a visualização de uma ficha a outro membro da campanha (só o dono ou o mestre — §14).
+   * Idempotente no backend (uma concessão ativa por par ficha/usuário). O `fichaId` vai na rota; o
+   * `usuarioId` (membro alvo) no corpo.
+   */
+  concederAcesso(fichaId: number, usuarioId: number): Observable<FichaAcessoConcedidoDto> {
+    return this.httpClient
+      .post<StandardResponse<FichaAcessoConcedidoDto>>(`${this.base}/${fichaId}/acesso`, { usuarioId })
+      .pipe(map((resposta) => resposta.dados as FichaAcessoConcedidoDto));
+  }
+
+  /**
+   * Revoga a visualização de uma ficha de um membro — soft delete no backend (só o dono ou o
+   * mestre — §14). Após revogar, o membro deixa de ver a ficha (some da listagem/recuperação dele).
+   */
+  revogarAcesso(fichaId: number, usuarioId: number): Observable<FichaAcessoRevogadoDto> {
+    return this.httpClient
+      .delete<StandardResponse<FichaAcessoRevogadoDto>>(`${this.base}/${fichaId}/acesso/${usuarioId}`)
+      .pipe(map((resposta) => resposta.dados as FichaAcessoRevogadoDto));
   }
 }

@@ -12,30 +12,31 @@ import type { AmplificadorAplicadoDto, CarrinhoItemDto } from '../../regras/comp
  * Identidade, posse e permissão são colunas de `ficha` (campanha, dono, tipo,
  * nome). Tudo abaixo é **conteúdo de jogo** e vive só no JSONB `dados`.
  *
- * ── Nada de derivado é persistido (entregável #4) ────────────────────────────
- * Vida máxima, Energia máxima, limite de Energia negativa, Defesa/Esquiva/
- * Bloqueio, Deslocamento, Dano de Corpo, Dano Furtivo, Inventário máximo, Área
- * de Percepção, DT de atributo, Proficiência, Sanidade (não é barra), Patente,
- * Salário e Limite de Modificações **não entram** neste documento — são funções
- * de classe/nível/atributos calculadas por `shared/regras` no front (exibição) e
- * no back (coerência do estado salvo). Ex.: a Patente é derivada do Prestígio; a
- * Área de Percepção é `5 + Sentidos × 5`.
+ * ── Derivado: calculado ao vivo, salvo Vida/Energia máximas (revisto m3-10) ──
+ * A maioria dos derivados **não entra** neste documento — limite de Energia
+ * negativa, Defesa/Esquiva/Bloqueio, Deslocamento, Dano de Corpo/Furtivo,
+ * Inventário máximo, Área de Percepção (`5 + Sentidos × 5`), DT de atributo,
+ * Proficiência, Sanidade (não é barra), Patente (do Prestígio), Salário e Limite
+ * de Modificações — são funções de classe/nível/atributos calculadas por
+ * `shared/regras` no front (exibição) e no back. **Exceção (m3-10):** Vida máxima
+ * e Energia máxima **são persistidas** (`estado.vidaMaxima`/`energiaMaxima`):
+ * snapshot na criação, depois **editáveis** (o motor não as recalcula). Opcionais
+ * — ausentes em fichas antigas, caem no derivado.
  *
- * ── Validação estrutural (SYSTEM.SPEC §11, camada 1) ─────────────────────────
+ * ── Validação estrutural + liberdade de edição (SYSTEM.SPEC §11, revisto m3-10) ─
  * Este contrato é um `interface readonly` puro, como todos os DTOs do shared. A
- * validação estrutural com class-validator (`@IsEnum`/`@IsInt`/ranges) da forma
- * do documento é aplicada quando o backend liga o `ValidationPipe` (m3-02/m3-03);
- * as faixas válidas ficam documentadas campo a campo abaixo. A coerência de
- * domínio (HP ≤ máximo, atributo dentro do limite de classe/nível, stacks de
- * modificação dentro da patente…) é a camada 2, via `shared/regras` (m3-03).
+ * validação **estrutural** (class-validator: `@IsEnum`/`@IsInt`) da forma do
+ * documento é a camada 1. A camada 2 (`shared/regras`) **deixou de travar faixas
+ * do estado salvo** (m3-10 — liberdade total do usuário): **não** há mais coerção
+ * "HP ≤ máximo" nem "atributo dentro do limite de classe". A única regra de
+ * domínio que permanece na ficha é a **Maestria** (atributo com 6+; única).
  *
- * ── Escopo desta task ────────────────────────────────────────────────────────
- * A spec fixa o casamento 1:1 com o documento em **classe / atributos / estado /
- * inventário** (+ arquétipo, nível, prestígio, habilidades, anotações). Domínios
- * que o documento define mas que a spec não listou — Identidade (Personalidade,
- * Origem), Dinheiro, Maestrias, Peculiaridade de Experimento — ficam **de fora**
- * deste contrato inicial e entram quando as tasks de formulário/ficha do M3 os
- * exigirem. Ver SCHEMA.md.
+ * ── Escopo ───────────────────────────────────────────────────────────────────
+ * Casamento 1:1 com o documento em **classe / atributos / maestria / estado /
+ * inventário** (+ arquétipo, nível, prestígio, habilidades, anotações). Ainda
+ * **fora**: Identidade (Personalidade, Origem), Dinheiro e Peculiaridade de
+ * Experimento — entram quando as tasks de ficha os exigirem. A **Maestria** entrou
+ * no contrato em m3-10. Ver SCHEMA.md.
  */
 
 /**
@@ -140,18 +141,66 @@ export interface FichaInventarioDto {
  * (temporárias) e traumas (permanentes). As lesões físicas removem atributos.
  */
 export interface FichaEstadoDto {
-  /** Vida corrente. O máximo é derivado (classe + Vigor + progressão); zerá-la dispara "Morrendo". */
+  /**
+   * Vida corrente. **Pode exceder a máxima** (m3-10 — o mestre reflete eventos de campanha);
+   * zerá-la dispara "Morrendo".
+   */
   readonly vidaAtual: number;
-  /** Energia corrente. Pode **negativar** (o documento permite gastar além de 0, com penalidades). */
+  /**
+   * Energia corrente. Pode **negativar** (o documento permite gastar além de 0) e **pode exceder a
+   * máxima** (m3-10).
+   */
   readonly energiaAtual: number;
+  /**
+   * Vida **máxima** — snapshot calculado por `shared/regras` **na criação** e depois **editável**
+   * (m3-10): o motor não a recalcula automaticamente. **Opcional** por retrocompatibilidade — quando
+   * ausente (fichas anteriores a m3-10), cai no derivado `calcularVida(classe, nível, vigor)`. Subir
+   * de nível **soma** o delta de progressão a este valor stored (não recalcula do zero).
+   */
+  readonly vidaMaxima?: number;
+  /** Energia **máxima** — mesmo modelo de `vidaMaxima` (snapshot na criação, depois editável; m3-10). */
+  readonly energiaMaxima?: number;
   readonly sequelas: readonly FichaSequelaDto[];
   readonly traumas: readonly FichaTraumaDto[];
   readonly lesoes: readonly FichaLesaoDto[];
 }
 
 /**
+ * Bloco de **derivados persistidos** (m3-10 — "nada é exclusivamente calculado"). São calculados
+ * **uma vez na criação** por `shared/regras` (`calcularDerivados`) e a partir daí **stored e
+ * editáveis**; o motor não os recalcula sobre as edições. Todos **opcionais**: ausentes (fichas
+ * anteriores a m3-10) caem no cálculo ao vivo como fallback. `undefined` numa stat que a classe não
+ * possui (ex.: Civil sem `defesa`/`proficiencia`/`danoFurtivo`). Vida/Energia máximas moram em
+ * `FichaEstadoDto` (mais perto de vida/energia atuais), não aqui.
+ */
+export interface FichaDerivadosDto {
+  readonly defesa?: number;
+  readonly esquiva?: number;
+  readonly bloqueio?: number;
+  readonly deslocamento?: number;
+  readonly proficiencia?: number;
+  /** Dano de Corpo a Corpo em notação de dados (ex.: `"1d6+3"`) — `calcularDanoCorpo`. */
+  readonly danoCorpoACorpo?: string;
+  /** Dano Furtivo em notação de dados; `undefined` na classe que não o possui. */
+  readonly danoFurtivo?: string;
+  readonly percepcao?: number;
+  readonly inventarioMaximo?: number;
+  readonly habilidadesPorTurno?: number;
+}
+
+/**
+ * Preset de rolagem de dados salvo na ficha (m3-15). Atalho nomeado para uma fórmula (ex.:
+ * `1d20+LUT`); o motor de avaliação vive em `shared/regras/dados` (m3-15).
+ */
+export interface FichaRolagemDto {
+  readonly nome: string;
+  readonly formula: string;
+  readonly descricao?: string;
+}
+
+/**
  * Documento completo `ficha.dados` de uma ficha de jogador — a forma final do
- * JSONB (m3-01). Consumível por backend e frontend sem redefinição.
+ * JSONB (m3-01, estendido em m3-10). Consumível por backend e frontend sem redefinição.
  */
 export interface FichaJogadorDadosDto {
   /**
@@ -176,9 +225,24 @@ export interface FichaJogadorDadosDto {
    */
   readonly prestigio: number;
   readonly atributos: FichaAtributosDto;
+  /**
+   * Atributo que carrega a **Maestria** (o ápice único da ficha), ou `null` (m3-10). Segue
+   * `sistema-v4.1.0.md` ("⬥ Maestrias"): **única na ficha** (por isso um só campo, não um por
+   * atributo) e só marcável em atributo com **6+ pontos** (`shared/regras/agente`
+   * `maestriaAtingivel`). A ficha guarda apenas **qual** atributo tem a Maestria; o bônus permanente
+   * (distinto por atributo, tabela do documento) é exibição derivada, não persistido.
+   */
+  readonly maestria: keyof FichaAtributosDto | null;
   readonly estado: FichaEstadoDto;
+  /**
+   * Derivados persistidos (m3-10). **Opcional** por retrocompatibilidade — ausente em fichas
+   * anteriores; uma ficha salva por m3-10 grava o snapshot. Ver `FichaDerivadosDto`.
+   */
+  readonly derivados?: FichaDerivadosDto;
   readonly habilidades: readonly FichaHabilidadeDto[];
   readonly inventario: FichaInventarioDto;
+  /** Presets de rolagem de dados salvos na ficha (m3-15). Opcional; ausente = sem presets. */
+  readonly rolagens?: readonly FichaRolagemDto[];
   /** Anotações livres do jogador/mestre sobre a ficha. */
   readonly anotacoes: string;
 }

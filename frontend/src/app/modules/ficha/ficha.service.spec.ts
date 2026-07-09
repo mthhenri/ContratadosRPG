@@ -4,17 +4,22 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { StandardResponse } from '@contratados-rpg/shared/interfaces';
 import { ClasseEnum } from '@contratados-rpg/shared/enums';
 import {
+  FichaAcessoConcedidoDto,
+  FichaAcessoResumoDto,
+  FichaAcessoRevogadoDto,
   FichaAlteradaDto,
   FichaCriadaDto,
   FichaJogadorDadosDto,
   FichaRecuperadaDto,
+  FichaResumoDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 
 import { FichaService } from './ficha.service';
 
 /**
- * Prova o cliente HTTP de ficha (m3-06): cada método atinge a rota/verbo/corpo correto dos
- * endpoints do CRUD de ficha (m3-03) e devolve o `dados` extraído do `StandardResponse`.
+ * Prova o cliente HTTP de ficha (m3-06/m3-07): cada método atinge a rota/verbo/corpo correto dos
+ * endpoints do CRUD de ficha (m3-03) e da concessão de acesso (m3-04), e devolve o `dados`
+ * extraído do `StandardResponse`.
  */
 describe('FichaService', () => {
   const dados: FichaJogadorDadosDto = {
@@ -34,6 +39,7 @@ describe('FichaService', () => {
       social: 1,
       vontade: 1,
     },
+    maestria: null,
     estado: { vidaAtual: 5, energiaAtual: 5, sequelas: [], traumas: [], lesoes: [] },
     habilidades: [],
     inventario: { itens: [], amplificadores: [] },
@@ -95,5 +101,61 @@ describe('FichaService', () => {
     requisicao.flush(envelope(alterada));
 
     expect(recebido).toEqual(alterada);
+  });
+
+  it('lista as fichas da campanha pelo campanhaId', () => {
+    const { servico, http } = criar();
+    const fichas: FichaResumoDto[] = [
+      { id: 3, usuarioId: 7, nome: 'Kane', classe: ClasseEnum.COMBATENTE, nivel: 2 },
+    ];
+
+    let recebido: FichaResumoDto[] | undefined;
+    servico.listarFichas(9).subscribe((r) => (recebido = r));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/ficha'));
+    expect(requisicao.request.method).toBe('GET');
+    expect(requisicao.request.params.get('campanhaId')).toBe('9');
+    requisicao.flush(envelope(fichas));
+
+    expect(recebido).toEqual(fichas);
+  });
+
+  it('lista as concessões de acesso de uma ficha', () => {
+    const { servico, http } = criar();
+    const acessos: FichaAcessoResumoDto[] = [{ usuarioId: 11, nome: 'Vera' }];
+
+    let recebido: FichaAcessoResumoDto[] | undefined;
+    servico.listarAcessos(3).subscribe((r) => (recebido = r));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/ficha/3/acesso'));
+    expect(requisicao.request.method).toBe('GET');
+    requisicao.flush(envelope(acessos));
+
+    expect(recebido).toEqual(acessos);
+  });
+
+  it('concede acesso enviando o usuarioId no corpo', () => {
+    const { servico, http } = criar();
+    const concedido: FichaAcessoConcedidoDto = { id: 5, fichaId: 3, usuarioId: 11 };
+
+    let recebido: FichaAcessoConcedidoDto | undefined;
+    servico.concederAcesso(3, 11).subscribe((r) => (recebido = r));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/ficha/3/acesso'));
+    expect(requisicao.request.method).toBe('POST');
+    expect(requisicao.request.body).toEqual({ usuarioId: 11 });
+    requisicao.flush(envelope(concedido));
+
+    expect(recebido).toEqual(concedido);
+  });
+
+  it('revoga acesso pela rota ficha/usuario', () => {
+    const { servico, http } = criar();
+    const revogado: FichaAcessoRevogadoDto = { fichaId: 3, usuarioId: 11 };
+
+    let recebido: FichaAcessoRevogadoDto | undefined;
+    servico.revogarAcesso(3, 11).subscribe((r) => (recebido = r));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/ficha/3/acesso/11'));
+    expect(requisicao.request.method).toBe('DELETE');
+    requisicao.flush(envelope(revogado));
+
+    expect(recebido).toEqual(revogado);
   });
 });

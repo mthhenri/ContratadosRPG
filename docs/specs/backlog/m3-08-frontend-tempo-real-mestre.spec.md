@@ -5,6 +5,12 @@
 > **Antes de qualquer UI:** ler `docs/design/DESIGN.md` e consumir os tokens do tema
 > "Terminal de Contenção" (`docs/design/tema/`). Nada de hex/fonte/raio solto (proibição #29).
 
+> **Impacto do `m3-10`:** a tela de ficha virou **editável no próprio lugar** (não mais read-only).
+> O `ficha:alterada` recebido por WebSocket precisa **reconciliar com edição local em andamento** —
+> não sobrescrever campos que o usuário está editando (ex.: preservar o formulário aberto, aplicar o
+> patch remoto só ao sair da edição, ou sinalizar conflito). Registrar essa regra ao integrar o
+> live-update com a tela única de `m3-07`/`m3-10`.
+
 ## Objetivo
 
 **Cliente Socket.IO** e a **tela do mestre** com as fichas da campanha atualizando em tempo

@@ -1,0 +1,385 @@
+// Casca da visualização read-only da ficha (m3-07) — cabeçalho + `FichaVisualizacao` + o painel de
+// gestão de acesso (dono/mestre). Só tokens do tema "Terminal de Contenção" (proibição #29). O
+// cabeçalho reusa o padrão `.ficha-pagina` da tela de edição (m3-06).
+
+.ficha-pagina {
+  // Mais largo que as telas de criação/edição (960): a visualização é um layout de três colunas
+  // (identidade+vitalidade | atributos | status derivado), como o protótipo de fidelidade.
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 24px 20px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-grid);
+
+  &__topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__voltar {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--accent);
+    }
+  }
+
+  // Menu de ações do cabeçalho (kebab) — abre um dropdown com "Acesso de visualização" (m3-10).
+  &__menu-container {
+    position: relative;
+    flex: 0 0 auto;
+  }
+
+  &__menu-botao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 30px;
+    font-size: 18px;
+    line-height: 1;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+    &:hover {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--surface-2);
+    }
+  }
+
+  // Camada invisível que fecha o menu ao clicar fora.
+  &__menu-fundo {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    background: transparent;
+    border: 0;
+    cursor: default;
+  }
+
+  &__menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 21;
+    min-width: 220px;
+    padding: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+  }
+
+  &__menu-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 9px 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      background: var(--surface-2);
+      color: var(--accent);
+    }
+  }
+
+  &__menu-contagem {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--text-mute);
+  }
+
+  &__carregando {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-style: italic;
+    color: var(--text-mute);
+    margin: 0;
+  }
+}
+
+// === Card (copiado de _componentes.scss .card) — o painel de acesso ===
+.ficha-cartao {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--pad-card);
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 18px;
+  }
+
+  &__indice {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+
+  &__titulo {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+  }
+
+  &__regua {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  &__meta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-mute);
+    flex: 0 0 auto;
+  }
+}
+
+.acesso {
+  &__ajuda {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-dim);
+    margin: 0 0 16px;
+  }
+
+  &__conceder {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  &__select {
+    flex: 1;
+    min-width: 200px;
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 11px 12px;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    outline: none;
+
+    &:focus {
+      border-color: var(--accent-border);
+    }
+  }
+
+  &__acao {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 11px 18px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  &__vazio-elegiveis,
+  &__vazio {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-style: italic;
+    color: var(--text-mute);
+    margin: 12px 0 0;
+  }
+
+  &__lista {
+    list-style: none;
+    margin: 16px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+  }
+
+  &__avatar {
+    width: 30px;
+    height: 30px;
+    flex: none;
+    border-radius: var(--radius-control);
+    background-color: var(--surface-2);
+    background-image: repeating-linear-gradient(135deg, var(--border-strong) 0 3px, transparent 3px 9px);
+    border: 1px solid var(--border-strong);
+  }
+
+  &__nome {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  &__revogar {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    flex: none;
+  }
+}
+
+// Botões — bloco sancionado copiado de docs/design/tema/_componentes.scss.
+.botao {
+  border-radius: var(--radius-control);
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: filter 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+
+  &--primario {
+    background: var(--accent);
+    color: var(--bg);
+    border: 0;
+
+    &:hover:not(:disabled) {
+      filter: brightness(1.08);
+    }
+  }
+
+  &--secundario {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+
+    &:hover:not(:disabled) {
+      background: var(--surface-2);
+      border-color: var(--accent-border);
+    }
+  }
+}
+
+// === Dialog de gestão de acesso (m3-10) — overlay + painel centralizado, só tokens do tema. ===
+.dialogo {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 60px 20px;
+  overflow-y: auto;
+
+  &__fundo {
+    position: fixed;
+    inset: 0;
+    background: rgb(0 0 0 / 55%);
+    border: 0;
+    cursor: default;
+  }
+
+  &__painel {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 460px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+    padding: var(--pad-card);
+    box-shadow: 0 16px 48px rgb(0 0 0 / 45%);
+  }
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 16px;
+  }
+
+  &__titulo {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+  }
+
+  &__fechar {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    font-size: 13px;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+    &:hover {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--surface-2);
+    }
+  }
+}

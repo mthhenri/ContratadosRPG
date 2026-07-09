@@ -126,6 +126,13 @@
 
       <div class="detalhe__ficha">
         <a
+          class="botao botao--secundario detalhe__acao detalhe__ficha-acao"
+          [routerLink]="['/painel', campanhaAtual.id, 'ficha']"
+        >
+          <app-icone nome="olho" />
+          Fichas
+        </a>
+        <a
           class="botao botao--primario detalhe__acao detalhe__ficha-acao"
           [routerLink]="['/painel', campanhaAtual.id, 'ficha', 'nova']"
         >

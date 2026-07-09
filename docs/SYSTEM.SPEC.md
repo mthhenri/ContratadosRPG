@@ -334,6 +334,17 @@ Campos de jogo (classe, nível, atributos…) **não** viram colunas — listage
 `dados->>'campo'`. A forma dos documentos é contrato tipado no shared
 (`FichaJogadorDadosDto`, `FichaCriaturaDadosDto`) e está documentada no `SCHEMA.md`.
 
+**Nada é exclusivamente calculado — todo derivado é snapshot na criação e persistido/editável
+(revisto em `m3-10`).** O princípio original "nenhum derivado é persistido" foi **invertido**: **tudo
+o que aparece na ficha existe no banco**. Na **criação**, `shared/regras` calcula os derivados uma vez
+e eles são **gravados** no `dados` (bloco `derivados`: Vida/Energia máximas, Defesa/Esquiva/Bloqueio,
+Deslocamento, Proficiência, Dano de Corpo/Furtivo, Percepção, Inventário máximo, Habilidades/turno,
+DT de atributo, Patente…). A partir daí são **stored e editáveis** — o motor **não os recalcula**
+sobre as edições (o mestre/jogador reflete eventos de campanha). Subir de nível **soma** o delta de
+progressão aos máximos stored, não recalcula. O motor de regras passa a ser **gerador de valores
+iniciais** (e ajuda de progressão), **não** trava do estado salvo. Valores stored ausentes (fichas
+anteriores a `m3-10`) caem no derivado como fallback. Ver `m3-10`.
+
 ### 10.5 Paginação padrão
 
 Query params: `pagina`, `itensPorPagina`, `ordenarPor`, `direcao`; DTOs de filtro de
@@ -422,9 +433,15 @@ forma do documento (`@IsEnum`, `@IsInt`, ranges).
 **Camada 2 — negócio (service):** regras que exigem banco ou domínio:
 - Login duplicado → `BusinessException('Login já está em uso')`
 - Sem permissão na ficha/campanha → `UnauthorizedAccessException()`
-- Dados de ficha incoerentes com o motor de regras (ex.: HP atual acima do máximo
-  calculado para classe/nível/atributos; atributo acima do limite da classe/nível;
-  stacks de modificação acima do permitido pela patente) → `BusinessException`
+- **Maestria inválida** na ficha de jogador (atributo inexistente ou com menos de 6 pontos) →
+  `BusinessException` (`m3-10`; segue `sistema-v4.1.0.md`).
+
+> **Revisto em `m3-10`:** o backend **não trava mais faixas do estado salvo** da ficha de jogador —
+> **cai** a coerência "HP atual ≤ máximo calculado" e "atributo/nível dentro do limite da classe":
+> o usuário tem **liberdade total** para editar (o mestre reflete eventos de campanha). A Vida/Energia
+> **atual pode exceder a máxima**; a máxima é **stored/editável** (§10.4). Permanecem: a validação
+> **estrutural** (camada 1) e a regra de **Maestria** acima. (Stacks de modificação por patente nunca
+> foram implementados — ver `CONTEXT`.)
 
 **Formato de erro padronizado:** `{ sucesso: false, dados: null, mensagem, erros[] }`.
 
