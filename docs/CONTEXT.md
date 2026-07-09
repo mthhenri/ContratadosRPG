@@ -1,6 +1,127 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-09 (**m3-10 — edição da ficha no próprio lugar + Maestria + "nada é
+> Última atualização: 2026-07-09 (**Assistente de criação de ficha (a pedido do autor)**: "Nova ficha"
+> deixou de despejar uma ficha padrão para edição no lugar — agora abre um **dialog de registro
+> inicial** sobre a lista, coletando as escolhas cruciais **antes de criar**: Codinome, Classe/
+> Subclasse/Arquétipo, Nível, Prestígio, **atributos base** e **Maestria** (★, única, só no total 6+).
+> Novo componente standalone `FichaCriarDialog` (`componentes/ficha-criar-dialog/`) — steppers e boxes
+> de atributo copiados dos padrões do editor no lugar; classe muda → **reclampa** Nível e atributos
+> aos limites da classe (`obterLimitesClasse`) e some o arquétipo se a classe não o comporta; o **bônus
+> fixo de arquétipo/subclasse** (doc, mesma `obterBonusAtributos` do editor) aparece num resumo verde e
+> num badge `+n` por atributo, e a Maestria só habilita pelo **total** (base + bônus); **prévia ao vivo**
+> de Vida/Energia máximas. A montagem foi centralizada em `ficha-padrao.construirFichaInicial(opcoes)`
+> (fonte única — `construirFichaPadrao` agora delega): normaliza aos limites, soma o bônus fixo, valida a
+> Maestria e grava o **snapshot** de Vida/Energia máximas + `derivados` de `shared/regras` (proibições
+> #26/#27 — nenhuma fórmula nova; o backend revalida forma/Maestria/§14). A lista abre o assistente
+> (`dialogCriar`), monta via `construirFichaInicial` no `criarFicha(opcoes)` e navega à ficha criada. Só
+> tokens do tema (proibição #29). **+14 testes** (frontend **218/218**): `ficha-padrao.spec` (7 —
+> snapshot, bônus somado ao base, reclampe Civil + arquétipo descartado, Maestria validada/habilitada
+> pelo bônus, nome aparado), `ficha-criar-dialog.spec` (5 — emite base ao confirmar, reclampe Civil +
+> arquétipo oculto, bônus + Maestria pelo total, Maestria some ao cair abaixo de 6, cancelar) e
+> `lista.page.spec` (+2 líquidos — abre o assistente sem criar / confirma monta+navega / cancelar fecha).
+> `lint`/`build` verdes (bundle inicial **567,56 kB**; o dialog mora na chunk lazy `lista-page`, 14→21 kB).
+> **Verificado por render** (Playwright/Chromium sobre o build de desenvolvimento, sessão + REST
+> mockados): "Nova ficha" abre o dialog fiel ao tema, escolher Lutador mostra "Bônus de arquétipo: +1
+> LUT · +1 FOR" e badges `+1` em FOR/LUT, a Maestria em Força habilita com o total 6, a prévia Vida
+> reage 34→52 ao subir o Nível, e confirmar faz **POST** com `forca 6`/`luta 2`/`nivel 2`/`vidaMaxima
+> 52`/`derivados` presentes e **navega** para `/painel/9/ficha/42`; zero erros no fluxo do assistente.
+> Sessão anterior no mesmo dia (**m3-08 — cliente Socket.IO + tela do mestre ao vivo**: fecha o §9
+> no frontend — o tempo real das fichas —, consumindo o gateway broadcast-only da **m3-05** sem
+> nenhuma escrita por WebSocket (proibição #25). **Revisão pós-implementação** endureceu três pontos:
+> (1) **troca de conta na mesma aba** — `conectar` rastreia o `tokenConectado` e **reconecta** se a
+> sessão trocar (logout→login) ou **desconecta** se some, para o socket não carregar a identidade
+> anterior no gateway; (2) **erro de save não congela o tempo real** — o pipe de persistência do
+> `visualizar` ganhou `catchError` que libera `edicaoPendente` e mantém o stream vivo (sem ele, um
+> 400/403 prenderia a flag e travaria persistência **e** live-updates); (3) **join único** —
+> `entrarSala*` só emite se já conectado, senão confia no reingresso do `connect` (elimina o join
+> dobrado com o buffer offline do socket.io). A **fábrica do socket** virou um seam de DI
+> (`SOCKET_FACTORY`, default `io`) para os testes injetarem um fake **sem `vi.mock` do
+> `socket.io-client`** — o mock de módulo contaminava entre specs (os de página importam o serviço
+> real pelo token de DI e carregavam o `socket.io-client` de verdade), deixando o spec do serviço
+> **flaky** (io "0 vezes" de forma intermitente); com o token, determinístico. **Correção de
+> progressão (a pedido do autor):** editar **Nível** e **atributos** passou a propagar a variação a
+> **todos os derivados/máximas stored dependentes**, preservando ajustes manuais (m3-10). A lógica foi
+> unificada em `visualizar.page`.`aplicarProgressao(antigos, novos)` (usada por Nível e por atributos):
+> números somam `calcular(novo) − calcular(antigo)` das fórmulas de `shared/regras` — Vida (Vigor×
+> Nível), Energia (Destreza×Nível), Defesa/Esquiva/Bloqueio, Deslocamento (Destreza), Proficiência,
+> Percepção (Sentidos), Inventário (Força), Hab./Turno; o **Dano Furtivo** soma os marcos de Nível
+> cruzados juntando **D6 com D6 e fixo com fixo** (cada marco = +1D6+1) via as novas
+> `contarMarcosDanoFurtivo`/`incrementarDanoFurtivo` em `shared/regras/agente/dano` (fail-safe fora do
+> formato, clamp ≥0); o **Dano C.a.C.** (tabela não-linear de Força+Vigor, sem delta somável)
+> **recalcula só quando não foi customizado** (stored = calculado do estado anterior), senão preserva
+> o valor editado. Campo/`derivados` ausente fica ausente (fallback ao cálculo). Assim aumentar Vigor
+> sobe a Vida máxima conforme o Nível, aumentar Sentidos sobe a Percepção etc. **Atributos Bônus de
+> arquétipo/subclasse (a pedido do autor):** escolher/trocar de arquétipo (ou subclasse Experimento)
+> aplica o **delta dos Atributos Bônus fixos** do documento (ex.: Lutador → Mercenário tira +1 Força/
+> +1 Luta e põe +1 Pontaria/+1 Destreza) — nova `obterBonusAtributos` em `shared/regras/agente/
+> arquetipo` (tabela conferida contra o `sistema-v4.1.0.md`; os pontos "à escolha" de Engenheiro/
+> Assassino/Acadêmico/Híbrido **não** são auto-aplicados — decisão do autor —, só o fixo). O
+> `ajustarClasse` remove o bônus do arquétipo anterior e soma o do novo (preservando ajustes manuais)
+> e então bifurca: **troca de arquétipo (mesma classe)** roda a `aplicarProgressao` (delta, os
+> derivados dependentes acompanham — Força → Inventário/Dano C.a.C. etc.); **troca de classe** (a
+> pedido do autor) **recalcula do zero** Vida/Energia máximas e o bloco de derivados para a classe
+> nova (as fórmulas de saúde e os campos disponíveis mudam), via `recalcularSaude`
+> (`calcularVida/Energia/Derivados`, a mesma fonte do snapshot de criação) — descarta ajustes manuais
+> de saúde no reset, clampa a Vida/Energia **atuais** ao novo teto, e conserta o caso Civil (Defesa/
+> Furtivo voltam a N/A). **+9 testes** (shared `dano.spec` +3 e `arquetipo.spec` +4; frontend
+> `visualizar.page` +4 — atributos→derivados, Dano C.a.C. recalcula/preserva, Dano Furtivo por marco,
+> troca Lutador→Mercenário, entrar em arquétipo propaga aos derivados, troca de classe recalcula
+> saúde/derivados do zero). **Dependência nova** no frontend: `socket.io-client`
+> `^4.8.3` (mesma major do `socket.io` do backend). Novo proxy `/socket.io` (`ws: true`) no
+> `proxy.conf.json` para o dev-server encaminhar o handshake ao backend. **Novo `TempoRealService`**
+> (`core/services/tempo-real.service.ts`, `providedIn: 'root'`): mantém **uma** conexão Socket.IO
+> autenticada pelo JWT da sessão (m2-06) — `io(apiBase || undefined, { auth: { token } })`; em dev
+> `apiBase` é `''` → **`undefined`** (mesma origem — passar `''` a `io` geraria uma URL inválida). O
+> estado de conexão fica em **Signals** (`conectado`, `reconexao`); os três eventos de negócio
+> (`ficha:alterada`, `ficha:criada`, `membro:entrou`) são **`Observable`s** (cada evento é um
+> instante, não um estado). Métodos `entrarSalaFicha`/`entrarSalaCampanha` só emitem `*:entrar`
+> (**nunca** mutação); `sairSala*` esquece a sala (o gateway m3-05 não tem handler de "leave", então
+> só remove do rastreio local — a desinscrição por `takeUntilDestroyed` impede agir em evento de sala
+> antiga). **Ressincronização (§9 — o Render free tier dorme e derruba a conexão):** a cada `connect`
+> o serviço **reingressa** nas salas rastreadas (o servidor as perde ao cair o socket) e, se **não**
+> for a primeira conexão, incrementa `reconexao` — as telas refazem o fetch. **Visualizar (a ficha
+> aberta)** entra na sala `ficha:<id>` e, ao receber `ficha:alterada` **desta** ficha, **reconcilia o
+> Signal local sem recarregar** (critério de aceite: o mestre com a ficha aberta vê a edição do
+> jogador ao vivo) — **com a regra de m3-10:** enquanto há **edição local pendente** (`edicaoPendente`,
+> do disparo do ajuste até a resposta do `alterarFicha`) o evento remoto é **descartado** para não
+> sobrescrever o que o usuário edita; a resposta do próprio save reconcilia com o backend. Ao
+> reconectar, refaz `recuperarFicha` (salvo edição pendente). **Lista (o painel da campanha)** entra
+> na sala `campanha:<id>` e, a cada `ficha:criada`/`membro:entrou`/reconexão, **refaz o fetch REST** —
+> o recorte visível (§14) e o nome do dono continuam **arbitrados pelo backend**, sem o front duplicar
+> a regra a partir do payload do broadcast (o resumo chega a todos os membros da sala, mas a listagem
+> REST filtra por §14); o refetch ao vivo não pisca o esqueleto. **Testes** (Vitest, **frontend
+> 204/204**, **shared 168/168**): `tempo-real.service.spec` (9 — fake do socket injetado por `SOCKET_FACTORY`: não conecta
+> sem sessão, conecta uma vez com o token, **reconecta ao trocar de token / desconecta ao sair a
+> sessão**, entra nas salas só com `*:entrar`, repassa os 3 eventos aos Observables, reingresso+bump
+> só a partir da 2ª conexão, esquece sala ao sair, desconecta limpo), `visualizar.page.spec` (+6 —
+> entra/esquece a sala, aplica o `ficha:alterada` sem novo GET, ignora outra ficha + descarta remoto
+> durante edição pendente, **erro de save libera a edição pendente**, **delta de Nível nos derivados
+> stored**, ressincroniza ao reconectar) e
+> `lista.page.spec` (+3 — entra/esquece a sala, refetch §14 em ficha:criada/membro:entrou,
+> ressincroniza ao reconectar). **Indicador de reconexão na UI (§9, a pedido do autor):** componente
+> standalone `IndicadorTempoReal` (`shared/tempo-real/`) consome o Signal `conectado` — **silêncio
+> quando conectado**, e um chip `TEMPO REAL OFFLINE` em `--warning` quando a conexão cai; escopado às
+> telas de ficha (cabeçalho da `lista` e da `visualizar`), onde a conexão está aberta. O **debounce**
+> é 100% SCSS (mesmo padrão do `.carregando-global`): o selo só surge após ~1,5s desconectado — as
+> micro-quedas (o socket reconecta sozinho) o desmontam antes de aparecer, sem piscar; o atraso é
+> preservado em `prefers-reduced-motion` (só o fade/pulsar são removidos). `role="status"` +
+> `aria-live="polite"`; só tokens do tema (proibição #29). **+3 testes** de componente (silêncio
+> conectado / aviso com `role=status` desconectado / reage ao Signal); os stubs de `TempoRealService`
+> nas páginas ganharam `conectado`. `lint`/`test`/`build` verdes (bundle inicial **567,56 kB** dentro do
+> budget de 575 kB — o `socket.io-client` divide na chunk core compartilhada; o indicador mora nas
+> chunks lazy de ficha). **Verificado por
+> render** (Playwright/Chromium sobre o **build de desenvolvimento** — `apiBase` `''` = mesma origem —
+> servido por um http+socket.io server local, REST mockado por rota exata para a navegação SPA cair no
+> app): como **mestre (id 99)** abrindo a ficha do **jogador (id 7)**, o socket **conecta com o JWT no
+> handshake** (`auth token? true`), ingressa em `ficha:42`, e um `ficha:alterada` emitido pelo servidor
+> atualiza a tela de **"Kane" → "Kane Ferido" ao vivo, sem recarregar**; **zero erros de app** (só a
+> fonte Google externa falha no sandbox sem rede). O **indicador offline** foi verificado por render
+> contra um servidor **sem gateway** (o socket cai em `connect_error`): na tela real da ficha, antes de
+> 1,5s o chip fica invisível (opacity 0 — não pisca) e após o debounce surge **"TEMPO REAL OFFLINE"**
+> (opacity 1, `role=status`). Fora de escopo (mantido): refino mobile dedicado
+> (m3-09), editores de sub-coleções (m3-11..m3-15). Spec `m3-08` → `done/`. **M3 avança: tempo real
+> das fichas no ar — o mestre vê as edições dos jogadores ao vivo.** Sessão anterior no mesmo dia
+> (**m3-10 — edição da ficha no próprio lugar + Maestria + "nada é
 > exclusivamente calculado"**). **Revisão constitucional** (SYSTEM.SPEC §10.4/§11, SCHEMA.md, JSDoc
 > do contrato): o princípio "nenhum derivado é persistido" foi **invertido** — na **criação**,
 > `shared/regras` calcula tudo uma vez e **grava** no `dados` (Vida/Energia máximas em `estado`; o

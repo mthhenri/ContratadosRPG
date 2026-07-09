@@ -1,23 +1,43 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Subject, debounceTime, finalize, forkJoin, switchMap } from 'rxjs';
+import { EMPTY, Subject, catchError, debounceTime, filter, finalize, forkJoin, switchMap } from 'rxjs';
 
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
-import { calcularEnergia, calcularVida } from '@contratados-rpg/shared/regras/agente';
+import {
+  calcularAreaPercepcao,
+  calcularDanoCorpo,
+  calcularDefesa,
+  calcularDerivados,
+  calcularDeslocamento,
+  calcularEnergia,
+  calcularInventario,
+  calcularLimiteHabilidadesPorTurno,
+  calcularProficiencia,
+  calcularVida,
+  contarMarcosDanoFurtivo,
+  incrementarDanoFurtivo,
+  obterBonusAtributos,
+  type BonusAtributos,
+} from '@contratados-rpg/shared/regras/agente';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type {
   FichaAcessoResumoDto,
+  FichaAtributosDto,
+  FichaDerivadosDto,
   FichaJogadorDadosDto,
   FichaRecuperadaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 
 import { Icone } from '../../../../shared/icone/icone.component';
+import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
+import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { FichaService } from '../../ficha.service';
 import { lerParamRota } from '../../ler-param-rota';
+import { normalizarEntrada, type EntradaAgente } from '../../status-derivado';
 
 import {
   AjusteAtributos,
@@ -43,7 +63,7 @@ import {
  */
 @Component({
   selector: 'app-ficha-visualizar',
-  imports: [RouterLink, ReactiveFormsModule, Icone, FichaVisualizacao],
+  imports: [RouterLink, ReactiveFormsModule, Icone, FichaVisualizacao, IndicadorTempoReal],
   templateUrl: './visualizar.page.html',
   styleUrl: './visualizar.page.scss',
 })
@@ -51,7 +71,9 @@ export class FichaVisualizar {
   private readonly fichaService = inject(FichaService);
   private readonly campanhaService = inject(CampanhaService);
   private readonly sessaoService = inject(SessaoService);
+  private readonly tempoRealService = inject(TempoRealService);
   private readonly rotaAtiva = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly campanhaId = Number(lerParamRota(this.rotaAtiva, 'campanhaId'));
   protected readonly fichaId = Number(lerParamRota(this.rotaAtiva, 'id'));
@@ -63,6 +85,13 @@ export class FichaVisualizar {
 
   /** Dispara a persistência (debounced) de cada edição no próprio lugar. */
   private readonly ajustePendente = new Subject<void>();
+  /**
+   * `true` enquanto há uma edição local não persistida (do disparo até a resposta do `alterarFicha`).
+   * Enquanto verdadeiro, um `ficha:alterada` recebido por WebSocket é **descartado** para não
+   * sobrescrever o que o usuário está editando (m3-08 × m3-10) — a resposta do próprio save
+   * reconcilia com o estado autoritativo do backend.
+   */
+  private readonly edicaoPendente = signal(false);
 
   /** Menu de ações no cabeçalho (kebab) aberto. */
   protected readonly menuAberto = signal(false);
@@ -131,14 +160,55 @@ export class FichaVisualizar {
         debounceTime(500),
         switchMap(() => {
           const fichaAtual = this.ficha()!;
-          return this.fichaService.alterarFicha(this.fichaId, {
-            nome: fichaAtual.nome,
-            dados: fichaAtual.dados,
-          });
+          return this.fichaService
+            .alterarFicha(this.fichaId, { nome: fichaAtual.nome, dados: fichaAtual.dados })
+            .pipe(
+              // Um erro de save (403/400) não pode matar o stream nem prender `edicaoPendente` — isso
+              // congelaria a persistência e os live-updates. Libera a flag e segue ouvindo.
+              catchError(() => {
+                this.edicaoPendente.set(false);
+                return EMPTY;
+              }),
+            );
         }),
         takeUntilDestroyed(),
       )
+      .subscribe({
+        next: (fichaAlterada) => {
+          this.ficha.set(fichaAlterada);
+          this.edicaoPendente.set(false);
+        },
+      });
+
+    // Tempo real (m3-08): entra na sala `ficha:<id>` e reage a `ficha:alterada`. O mestre com a ficha
+    // aberta vê a edição do jogador **sem recarregar** (critério de aceite). A permissão da sala é
+    // arbitrada pelo gateway (§14) — o front só apresenta. Ao sair da tela, esquece a sala.
+    this.tempoRealService.conectar();
+    this.tempoRealService.entrarSalaFicha(this.fichaId);
+    this.destroyRef.onDestroy(() => this.tempoRealService.sairSalaFicha(this.fichaId));
+
+    this.tempoRealService.fichaAlterada$
+      .pipe(
+        filter((ficha) => ficha.id === this.fichaId && !this.edicaoPendente()),
+        takeUntilDestroyed(),
+      )
       .subscribe({ next: (fichaAlterada) => this.ficha.set(fichaAlterada) });
+
+    // Ressincronização ao reconectar (§9 — o Render dorme e derruba a conexão): refaz o fetch da
+    // ficha aberta, exceto se houver edição local pendente (o save em voo já reconcilia).
+    effect(() => {
+      if (this.tempoRealService.reconexao() > 0 && !this.edicaoPendente()) {
+        this.fichaService
+          .recuperarFicha(this.fichaId)
+          .subscribe({ next: (ficha) => this.ficha.set(ficha) });
+      }
+    });
+  }
+
+  /** Marca uma edição local pendente e agenda a persistência em lote (debounced). */
+  private agendarPersistencia(): void {
+    this.edicaoPendente.set(true);
+    this.ajustePendente.next();
   }
 
   /** Abre/fecha o menu de ações do cabeçalho. */
@@ -182,7 +252,7 @@ export class FichaVisualizar {
     }
     const estado = { ...fichaAtual.dados.estado, [ajuste.campo]: ajuste.valor };
     this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, estado } });
-    this.ajustePendente.next();
+    this.agendarPersistencia();
   }
 
   /**
@@ -197,36 +267,100 @@ export class FichaVisualizar {
     }
     const derivados = { ...(fichaAtual.dados.derivados ?? {}), [ajuste.chave]: ajuste.valor };
     this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, derivados } });
-    this.ajustePendente.next();
+    this.agendarPersistencia();
   }
 
   /**
    * Edição em grupo dos atributos + Maestria (m3-10): reflete na hora (otimista) e persiste em lote.
-   * Só dono/mestre chega aqui; o backend valida a Maestria (6+, única) e não trava faixa.
+   * Aplica a **progressão** — os derivados que dependem de atributo acompanham a mudança: Vigor →
+   * Vida máxima e Bloqueio; Destreza → Energia máxima, Esquiva e Deslocamento; Sentidos → Percepção;
+   * Força → Inventário e Dano C.a.C. Só dono/mestre chega aqui; o backend valida a Maestria e não
+   * trava faixa.
    */
   protected ajustarAtributos(ajuste: AjusteAtributos): void {
     const fichaAtual = this.ficha();
     if (!fichaAtual) {
       return;
     }
-    this.ficha.set({
-      ...fichaAtual,
-      dados: { ...fichaAtual.dados, atributos: ajuste.atributos, maestria: ajuste.maestria },
-    });
-    this.ajustePendente.next();
+    const dadosNovos: FichaJogadorDadosDto = {
+      ...fichaAtual.dados,
+      atributos: ajuste.atributos,
+      maestria: ajuste.maestria,
+    };
+    this.ficha.set({ ...fichaAtual, dados: this.aplicarProgressao(fichaAtual.dados, dadosNovos) });
+    this.agendarPersistencia();
   }
 
-  /** Edita Classe/Arquétipo — otimista + persistência em lote (arquétipo já coerente com a classe). */
+  /**
+   * Edita Classe/Arquétipo (arquétipo já coerente com a classe). Sempre aplica o **delta dos Atributos
+   * Bônus fixos** (doc — "Classes e Arquétipos"): remove o bônus do arquétipo/subclasse anterior e
+   * soma o do novo (ex.: Lutador → Mercenário tira +1 Força/+1 Luta e põe +1 Pontaria/+1 Destreza),
+   * preservando ajustes manuais. Depois:
+   * - **Troca de arquétipo (mesma classe)** → `aplicarProgressao`: os derivados/máximas acompanham a
+   *   variação de atributo por **delta**, preservando ajustes.
+   * - **Troca de classe** → **recalcula** Vida/Energia máximas e o bloco de derivados **do zero** para
+   *   a classe nova (as fórmulas de saúde e os campos disponíveis mudam) — ajustes manuais de saúde
+   *   são descartados no reset, e a Vida/Energia atuais são clampadas ao novo teto.
+   * Otimista + em lote.
+   */
   protected ajustarClasse(ajuste: AjusteClasse): void {
     const fichaAtual = this.ficha();
     if (!fichaAtual) {
       return;
     }
-    this.ficha.set({
-      ...fichaAtual,
-      dados: { ...fichaAtual.dados, classe: ajuste.classe, arquetipo: ajuste.arquetipo },
+    const bonusAntes = obterBonusAtributos({
+      classe: fichaAtual.dados.classe,
+      arquetipo: fichaAtual.dados.arquetipo,
     });
-    this.ajustePendente.next();
+    const bonusDepois = obterBonusAtributos({ classe: ajuste.classe, arquetipo: ajuste.arquetipo });
+    const dadosNovos: FichaJogadorDadosDto = {
+      ...fichaAtual.dados,
+      classe: ajuste.classe,
+      arquetipo: ajuste.arquetipo,
+      atributos: this.aplicarDeltaBonus(fichaAtual.dados.atributos, bonusAntes, bonusDepois),
+    };
+    const dados =
+      ajuste.classe === fichaAtual.dados.classe
+        ? this.aplicarProgressao(fichaAtual.dados, dadosNovos)
+        : this.recalcularSaude(dadosNovos);
+    this.ficha.set({ ...fichaAtual, dados });
+    this.agendarPersistencia();
+  }
+
+  /**
+   * Recomputa Vida/Energia máximas e o bloco de derivados **do zero** para a classe/nível/atributos
+   * atuais — usado na **troca de classe**, onde as fórmulas de saúde e os campos disponíveis mudam
+   * (ex.: Civil perde Defesa/Furtivo). Reusa `calcularVida/Energia/Derivados` (a mesma fonte do
+   * snapshot de criação — proibições #26/#27); a Vida/Energia **atuais** são clampadas ao novo teto.
+   */
+  private recalcularSaude(dados: FichaJogadorDadosDto): FichaJogadorDadosDto {
+    const entrada = normalizarEntrada(dados.classe, dados.nivel, dados.atributos);
+    const vidaMaxima = calcularVida(entrada);
+    const energiaMaxima = calcularEnergia(entrada);
+    return {
+      ...dados,
+      estado: {
+        ...dados.estado,
+        vidaMaxima,
+        energiaMaxima,
+        vidaAtual: Math.min(dados.estado.vidaAtual, vidaMaxima),
+        energiaAtual: Math.min(dados.estado.energiaAtual, energiaMaxima),
+      },
+      derivados: calcularDerivados(dados.classe, dados.nivel, dados.atributos),
+    };
+  }
+
+  /** Atributos com o delta de Atributos Bônus do arquétipo/subclasse (remove o antigo, soma o novo). */
+  private aplicarDeltaBonus(
+    atributos: FichaAtributosDto,
+    bonusAntes: BonusAtributos,
+    bonusDepois: BonusAtributos,
+  ): FichaAtributosDto {
+    const resultado = { ...atributos };
+    (Object.keys(resultado) as (keyof FichaAtributosDto)[]).forEach((chave) => {
+      resultado[chave] = resultado[chave] - (bonusAntes[chave] ?? 0) + (bonusDepois[chave] ?? 0);
+    });
+    return resultado;
   }
 
   /** Edita o Codinome (relacional) — otimista + persistência em lote. */
@@ -236,13 +370,13 @@ export class FichaVisualizar {
       return;
     }
     this.ficha.set({ ...fichaAtual, nome });
-    this.ajustePendente.next();
+    this.agendarPersistencia();
   }
 
   /**
-   * Edita Nível/Prestígio. **Nível** aplica o **delta de progressão** (m3-10): soma
-   * `calcularVida/Energia(novo) − (antigo)` às **máximas stored** — preservando ajustes manuais, sem
-   * recalcular do zero (máximas ausentes ficam ausentes → fallback derivado). Otimista + em lote.
+   * Edita Nível/Prestígio. **Nível** aplica a **progressão** (m3-10): as máximas (Vida/Energia) e os
+   * derivados stored que dependem do Nível — Defesa/Esquiva/Bloqueio, Proficiência, Hab./Turno e Dano
+   * Furtivo (+1D6+1 por marco cruzado) — acompanham a mudança. Otimista + em lote.
    */
   protected ajustarCampoDados(ajuste: AjusteCampoDados): void {
     const fichaAtual = this.ficha();
@@ -251,30 +385,125 @@ export class FichaVisualizar {
     }
     let dados: FichaJogadorDadosDto = { ...fichaAtual.dados, [ajuste.campo]: ajuste.valor };
     if (ajuste.campo === 'nivel') {
-      dados = { ...dados, estado: this.aplicarDeltaNivel(fichaAtual.dados, ajuste.valor) };
+      dados = this.aplicarProgressao(fichaAtual.dados, dados);
     }
     this.ficha.set({ ...fichaAtual, dados });
-    this.ajustePendente.next();
+    this.agendarPersistencia();
   }
 
-  /** Novo `estado` com as máximas stored somadas do delta de progressão entre o nível antigo e o novo. */
-  private aplicarDeltaNivel(
-    dados: FichaJogadorDadosDto,
-    nivelNovo: number,
+  /**
+   * Recalcula estado (máximas) e derivados aplicando a **variação de progressão** entre `antigos` e
+   * `novos` (Nível e/ou atributos mudaram). Cada campo **stored** acompanha a mudança preservando
+   * ajustes manuais (m3-10): números somam `calcular(novo) − calcular(antigo)`; o Dano Furtivo soma
+   * os marcos de Nível cruzados (D6 com D6, fixo com fixo); o Dano C.a.C. (tabela não-linear)
+   * recalcula só quando não foi customizado. Campo ausente fica ausente (fallback ao cálculo). Fonte
+   * única: fórmulas de `shared/regras` sobre a entrada já normalizada à classe (base da exibição).
+   */
+  private aplicarProgressao(
+    antigos: FichaJogadorDadosDto,
+    novos: FichaJogadorDadosDto,
+  ): FichaJogadorDadosDto {
+    const antes = normalizarEntrada(antigos.classe, antigos.nivel, antigos.atributos);
+    const depois = normalizarEntrada(novos.classe, novos.nivel, novos.atributos);
+    return {
+      ...novos,
+      estado: this.progredirEstado(novos.estado, antes, depois),
+      derivados: this.progredirDerivados(novos.derivados, antes, depois),
+    };
+  }
+
+  /** Máximas de Vida/Energia stored somadas do delta de progressão (Vigor/Destreza × Nível). */
+  private progredirEstado(
+    estado: FichaJogadorDadosDto['estado'],
+    antes: EntradaAgente,
+    depois: EntradaAgente,
   ): FichaJogadorDadosDto['estado'] {
-    const { classe, atributos, estado } = dados;
-    const deltaVida =
-      calcularVida({ classe, nivel: nivelNovo, vigor: atributos.vigor }) -
-      calcularVida({ classe, nivel: dados.nivel, vigor: atributos.vigor });
-    const deltaEnergia =
-      calcularEnergia({ classe, nivel: nivelNovo, destreza: atributos.destreza }) -
-      calcularEnergia({ classe, nivel: dados.nivel, destreza: atributos.destreza });
+    const deltaVida = calcularVida(depois) - calcularVida(antes);
+    const deltaEnergia = calcularEnergia(depois) - calcularEnergia(antes);
     return {
       ...estado,
       vidaMaxima: estado.vidaMaxima === undefined ? undefined : estado.vidaMaxima + deltaVida,
       energiaMaxima:
         estado.energiaMaxima === undefined ? undefined : estado.energiaMaxima + deltaEnergia,
     };
+  }
+
+  /**
+   * Derivados stored acompanhando a progressão: números por delta (Defesa/Esquiva/Bloqueio,
+   * Deslocamento, Proficiência, Percepção, Inventário, Hab./Turno); Dano Furtivo e Dano C.a.C. por
+   * regra própria. `derivados` ausente → mantém ausente; cada campo ausente idem.
+   */
+  private progredirDerivados(
+    derivados: FichaDerivadosDto | undefined,
+    antes: EntradaAgente,
+    depois: EntradaAgente,
+  ): FichaDerivadosDto | undefined {
+    if (!derivados) {
+      return undefined;
+    }
+    const defesaAntes = calcularDefesa(antes);
+    const defesaDepois = calcularDefesa(depois);
+    const somar = (valor: number | undefined, delta: number): number | undefined =>
+      valor === undefined ? undefined : valor + delta;
+    return {
+      ...derivados,
+      defesa: somar(derivados.defesa, (defesaDepois?.defesa ?? 0) - (defesaAntes?.defesa ?? 0)),
+      esquiva: somar(derivados.esquiva, (defesaDepois?.esquiva ?? 0) - (defesaAntes?.esquiva ?? 0)),
+      bloqueio: somar(
+        derivados.bloqueio,
+        (defesaDepois?.bloqueio ?? 0) - (defesaAntes?.bloqueio ?? 0),
+      ),
+      deslocamento: somar(
+        derivados.deslocamento,
+        calcularDeslocamento(depois) - calcularDeslocamento(antes),
+      ),
+      proficiencia: somar(
+        derivados.proficiencia,
+        (calcularProficiencia(depois) ?? 0) - (calcularProficiencia(antes) ?? 0),
+      ),
+      percepcao: somar(
+        derivados.percepcao,
+        calcularAreaPercepcao(depois) - calcularAreaPercepcao(antes),
+      ),
+      inventarioMaximo: somar(
+        derivados.inventarioMaximo,
+        calcularInventario(depois) - calcularInventario(antes),
+      ),
+      habilidadesPorTurno: somar(
+        derivados.habilidadesPorTurno,
+        calcularLimiteHabilidadesPorTurno(depois) - calcularLimiteHabilidadesPorTurno(antes),
+      ),
+      danoFurtivo: this.progredirDanoFurtivo(derivados.danoFurtivo, antes, depois),
+      danoCorpoACorpo: this.progredirDanoCorpo(derivados.danoCorpoACorpo, antes, depois),
+    };
+  }
+
+  /** Dano Furtivo stored + os marcos de Nível cruzados (cada marco = +1D6+1; só depende do Nível). */
+  private progredirDanoFurtivo(
+    stored: string | undefined,
+    antes: EntradaAgente,
+    depois: EntradaAgente,
+  ): string | undefined {
+    if (stored === undefined) {
+      return undefined;
+    }
+    const marcos = contarMarcosDanoFurtivo(depois.nivel) - contarMarcosDanoFurtivo(antes.nivel);
+    return marcos === 0 ? stored : incrementarDanoFurtivo(stored, marcos);
+  }
+
+  /**
+   * Dano C.a.C. (tabela não-linear de Força+Vigor): sem delta somável, recalcula **só quando não foi
+   * customizado** (stored igual ao calculado do estado anterior); um valor editado à mão é preservado.
+   */
+  private progredirDanoCorpo(
+    stored: string | undefined,
+    antes: EntradaAgente,
+    depois: EntradaAgente,
+  ): string | undefined {
+    if (stored === undefined) {
+      return undefined;
+    }
+    return stored === calcularDanoCorpo(antes) ? calcularDanoCorpo(depois) : stored;
   }
 
   /** Concede a visualização ao membro selecionado e recarrega a lista de acessos. */

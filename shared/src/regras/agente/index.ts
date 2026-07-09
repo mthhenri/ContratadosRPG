@@ -14,3 +14,4 @@ export * from './progressao';
 export * from './limites';
 export * from './maestria';
 export * from './derivados';
+export * from './arquetipo';
