@@ -29,6 +29,8 @@ export class TempoRealService {
 
   private socket: Socket | null = null;
   private jaConectou = false;
+  /** Token com que o socket atual foi aberto — reconecta se a sessão trocar (logout+login). */
+  private tokenConectado: string | null = null;
 
   /** Salas já ingressadas — reingressadas a cada reconexão (o servidor as perde ao cair o socket). */
   private readonly salasFicha = new Set<number>();
@@ -52,21 +54,28 @@ export class TempoRealService {
     this.membroEntrouSubject.asObservable();
 
   /**
-   * Abre a conexão Socket.IO com o JWT da sessão (idempotente — só conecta uma vez). Sem sessão,
-   * não conecta (o handshake do gateway exige o token). Em dev `apiBase` é vazio → `io(undefined)`
-   * conecta na **mesma origem** (o `/socket.io` é encaminhado ao backend pelo `proxy.conf.json`); em
-   * produção `apiBase` aponta ao Render. (Passar `''` a `io` geraria uma URL inválida — só
-   * `undefined` cai no default de mesma origem.)
+   * Abre a conexão Socket.IO com o JWT da sessão. **Idempotente** enquanto a sessão não muda (chamável
+   * por toda tela ao montar). Sem sessão, encerra qualquer conexão aberta e não reconecta (o handshake
+   * do gateway exige o token). Se o token trocou (logout → login como outro usuário, sem reload da
+   * SPA), **reconecta** com o novo token — senão o socket antigo carregaria a identidade anterior no
+   * gateway. Em dev `apiBase` é vazio → `io(undefined)` conecta na **mesma origem** (o `/socket.io` é
+   * encaminhado ao backend pelo `proxy.conf.json`); em produção `apiBase` aponta ao Render. (Passar
+   * `''` a `io` geraria uma URL inválida — só `undefined` cai no default de mesma origem.)
    */
   conectar(): void {
-    if (this.socket) {
-      return;
-    }
     const token = this.sessaoService.obterToken();
     if (!token) {
+      this.desconectar();
       return;
     }
+    if (this.socket && token === this.tokenConectado) {
+      return;
+    }
+    if (this.socket) {
+      this.desconectar();
+    }
 
+    this.tokenConectado = token;
     this.socket = io(environment.apiBase || undefined, { auth: { token } });
 
     this.socket.on('connect', () => {
@@ -90,16 +99,24 @@ export class TempoRealService {
     );
   }
 
-  /** Ingressa na sala `ficha:<id>` (permissão de visualização §14 é checada pelo gateway). */
+  /**
+   * Ingressa na sala `ficha:<id>` (permissão de visualização §14 é checada pelo gateway). Só emite se
+   * já conectado; se ainda não, o `reingressarSalas` do `connect` cobre a sala (evita o join dobrado
+   * entre o buffer offline do socket.io e o reingresso).
+   */
   entrarSalaFicha(fichaId: number): void {
     this.salasFicha.add(fichaId);
-    this.socket?.emit('ficha:entrar', { id: fichaId });
+    if (this.conectado()) {
+      this.socket?.emit('ficha:entrar', { id: fichaId });
+    }
   }
 
-  /** Ingressa na sala `campanha:<id>` (só membros — checado pelo gateway). */
+  /** Ingressa na sala `campanha:<id>` (só membros — checado pelo gateway). Ver `entrarSalaFicha`. */
   entrarSalaCampanha(campanhaId: number): void {
     this.salasCampanha.add(campanhaId);
-    this.socket?.emit('campanha:entrar', { id: campanhaId });
+    if (this.conectado()) {
+      this.socket?.emit('campanha:entrar', { id: campanhaId });
+    }
   }
 
   /** Esquece a sala `ficha:<id>` (ao sair da tela) — para não reingressar nela numa reconexão. */
@@ -116,6 +133,7 @@ export class TempoRealService {
   desconectar(): void {
     this.socket?.disconnect();
     this.socket = null;
+    this.tokenConectado = null;
     this.jaConectou = false;
     this.conectado.set(false);
     this.salasFicha.clear();

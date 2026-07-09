@@ -2,7 +2,14 @@
 
 > Última atualização: 2026-07-09 (**m3-08 — cliente Socket.IO + tela do mestre ao vivo**: fecha o §9
 > no frontend — o tempo real das fichas —, consumindo o gateway broadcast-only da **m3-05** sem
-> nenhuma escrita por WebSocket (proibição #25). **Dependência nova** no frontend: `socket.io-client`
+> nenhuma escrita por WebSocket (proibição #25). **Revisão pós-implementação** endureceu três pontos:
+> (1) **troca de conta na mesma aba** — `conectar` rastreia o `tokenConectado` e **reconecta** se a
+> sessão trocar (logout→login) ou **desconecta** se some, para o socket não carregar a identidade
+> anterior no gateway; (2) **erro de save não congela o tempo real** — o pipe de persistência do
+> `visualizar` ganhou `catchError` que libera `edicaoPendente` e mantém o stream vivo (sem ele, um
+> 400/403 prenderia a flag e travaria persistência **e** live-updates); (3) **join único** —
+> `entrarSala*` só emite se já conectado, senão confia no reingresso do `connect` (elimina o join
+> dobrado com o buffer offline do socket.io). **Dependência nova** no frontend: `socket.io-client`
 > `^4.8.3` (mesma major do `socket.io` do backend). Novo proxy `/socket.io` (`ws: true`) no
 > `proxy.conf.json` para o dev-server encaminhar o handshake ao backend. **Novo `TempoRealService`**
 > (`core/services/tempo-real.service.ts`, `providedIn: 'root'`): mantém **uma** conexão Socket.IO
@@ -25,12 +32,13 @@
 > na sala `campanha:<id>` e, a cada `ficha:criada`/`membro:entrou`/reconexão, **refaz o fetch REST** —
 > o recorte visível (§14) e o nome do dono continuam **arbitrados pelo backend**, sem o front duplicar
 > a regra a partir do payload do broadcast (o resumo chega a todos os membros da sala, mas a listagem
-> REST filtra por §14); o refetch ao vivo não pisca o esqueleto. **+15 testes** (Vitest, **frontend
-> 192/192**): `tempo-real.service.spec` (8 — mock de `socket.io-client` via `vi.hoisted`: não conecta
-> sem sessão, conecta uma vez com o token, entra nas salas só com `*:entrar`, repassa os 3 eventos aos
-> Observables, reingresso+bump só a partir da 2ª conexão, esquece sala ao sair, desconecta limpo),
-> `visualizar.page.spec` (+4 — entra/esquece a sala, aplica o `ficha:alterada` sem novo GET, ignora
-> outra ficha + descarta remoto durante edição pendente, ressincroniza ao reconectar) e
+> REST filtra por §14); o refetch ao vivo não pisca o esqueleto. **+18 testes** (Vitest, **frontend
+> 195/195**): `tempo-real.service.spec` (9 — mock de `socket.io-client` via `vi.hoisted`: não conecta
+> sem sessão, conecta uma vez com o token, **reconecta ao trocar de token / desconecta ao sair a
+> sessão**, entra nas salas só com `*:entrar`, repassa os 3 eventos aos Observables, reingresso+bump
+> só a partir da 2ª conexão, esquece sala ao sair, desconecta limpo), `visualizar.page.spec` (+5 —
+> entra/esquece a sala, aplica o `ficha:alterada` sem novo GET, ignora outra ficha + descarta remoto
+> durante edição pendente, **erro de save libera a edição pendente**, ressincroniza ao reconectar) e
 > `lista.page.spec` (+3 — entra/esquece a sala, refetch §14 em ficha:criada/membro:entrou,
 > ressincroniza ao reconectar). `lint`/`test`/`build` verdes (bundle inicial **567,56 kB** dentro do
 > budget de 575 kB — o `socket.io-client` divide na chunk core compartilhada). **Verificado por

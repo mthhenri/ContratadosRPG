@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
-import { Subject, of } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { ClasseEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import { calcularVida } from '@contratados-rpg/shared/regras/agente';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
@@ -302,6 +302,31 @@ describe('FichaVisualizar', () => {
         dados,
       } as FichaAlteradaDto);
       expect(componente['ficha']()?.nome).toBe('Remoto Pós-Save');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('um erro de save libera a edição pendente — não congela os live-updates', () => {
+    vi.useFakeTimers();
+    try {
+      const { fixture, fichaService, fichaAlterada$ } = montar({ usuarioLogadoId: 99 });
+      const componente = fixture.componentInstance;
+
+      // O próximo save falha (ex.: 400/403 revalidado pelo backend).
+      fichaService.alterarFicha.mockReturnValueOnce(throwError(() => new Error('400')));
+      componente['ajustarNome']('Tentativa');
+      vi.advanceTimersByTime(500); // dispara o save → erro → catchError libera a flag
+
+      // Com a flag liberada, um ficha:alterada remoto volta a ser aplicado (não fica congelado).
+      fichaAlterada$.next({
+        id: 42,
+        campanhaId: 9,
+        usuarioId: 7,
+        nome: 'Remoto',
+        dados,
+      } as FichaAlteradaDto);
+      expect(componente['ficha']()?.nome).toBe('Remoto');
     } finally {
       vi.useRealTimers();
     }

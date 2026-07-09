@@ -2,7 +2,7 @@ import { Component, DestroyRef, computed, effect, inject, signal } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Subject, debounceTime, filter, finalize, forkJoin, switchMap } from 'rxjs';
+import { EMPTY, Subject, catchError, debounceTime, filter, finalize, forkJoin, switchMap } from 'rxjs';
 
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import { calcularEnergia, calcularVida } from '@contratados-rpg/shared/regras/agente';
@@ -141,10 +141,16 @@ export class FichaVisualizar {
         debounceTime(500),
         switchMap(() => {
           const fichaAtual = this.ficha()!;
-          return this.fichaService.alterarFicha(this.fichaId, {
-            nome: fichaAtual.nome,
-            dados: fichaAtual.dados,
-          });
+          return this.fichaService
+            .alterarFicha(this.fichaId, { nome: fichaAtual.nome, dados: fichaAtual.dados })
+            .pipe(
+              // Um erro de save (403/400) não pode matar o stream nem prender `edicaoPendente` — isso
+              // congelaria a persistência e os live-updates. Libera a flag e segue ouvindo.
+              catchError(() => {
+                this.edicaoPendente.set(false);
+                return EMPTY;
+              }),
+            );
         }),
         takeUntilDestroyed(),
       )

@@ -40,12 +40,12 @@ vi.mock('socket.io-client', () => ({ io: ioMock }));
 
 /**
  * Prova o cliente Socket.IO do tempo real (m3-08): conecta com o JWT da sessão, entra nas salas,
- * repassa os eventos aos `Observable`s, **nunca emite mutação**, e ao reconectar reingressa nas
- * salas conhecidas e bumpa o Signal de ressincronização (§9).
+ * repassa os eventos aos `Observable`s, **nunca emite mutação**, reconecta ao trocar de sessão e, ao
+ * reconectar, reingressa nas salas conhecidas e bumpa o Signal de ressincronização (§9).
  */
 describe('TempoRealService', () => {
-  function criar(token: string | null): { servico: TempoRealService } {
-    const sessaoService = { obterToken: () => token };
+  function criar(obterToken: () => string | null): { servico: TempoRealService } {
+    const sessaoService = { obterToken };
     TestBed.configureTestingModule({
       providers: [{ provide: SessaoService, useValue: sessaoService }],
     });
@@ -59,14 +59,14 @@ describe('TempoRealService', () => {
   });
 
   it('não conecta sem sessão (o handshake do gateway exige o token)', () => {
-    const { servico } = criar(null);
+    const { servico } = criar(() => null);
     servico.conectar();
     expect(ioMock).not.toHaveBeenCalled();
     expect(servico.conectado()).toBe(false);
   });
 
   it('conecta uma única vez com o token no auth do handshake (idempotente)', () => {
-    const { servico } = criar('jwt-123');
+    const { servico } = criar(() => 'jwt-123');
     servico.conectar();
     servico.conectar();
     expect(ioMock).toHaveBeenCalledTimes(1);
@@ -77,9 +77,43 @@ describe('TempoRealService', () => {
     expect(servico.conectado()).toBe(true);
   });
 
-  it('entra nas salas emitindo *:entrar (nunca uma mutação — proibição #25)', () => {
-    const { servico } = criar('jwt');
+  it('reconecta quando a sessão troca de token (logout → login como outro usuário)', () => {
+    let token = 'jwt-A';
+    const fakeA = new SocketFake();
+    const fakeB = new SocketFake();
+    ioMock.mockReset();
+    ioMock.mockReturnValueOnce(fakeA).mockReturnValueOnce(fakeB);
+
+    const { servico } = criar(() => token);
     servico.conectar();
+    expect(ioMock).toHaveBeenCalledTimes(1);
+
+    token = 'jwt-B';
+    servico.conectar();
+    // O socket antigo foi encerrado e um novo aberto com o token novo — senão carregaria a
+    // identidade anterior no gateway.
+    expect(fakeA.desconectado).toBe(true);
+    expect(ioMock).toHaveBeenCalledTimes(2);
+    expect(ioMock).toHaveBeenLastCalledWith(undefined, { auth: { token: 'jwt-B' } });
+  });
+
+  it('desconecta quando a sessão some (logout)', () => {
+    let token: string | null = 'jwt';
+    const { servico } = criar(() => token);
+    servico.conectar();
+    socketFake.disparar('connect');
+    expect(servico.conectado()).toBe(true);
+
+    token = null;
+    servico.conectar();
+    expect(socketFake.desconectado).toBe(true);
+    expect(servico.conectado()).toBe(false);
+  });
+
+  it('entra nas salas emitindo *:entrar (nunca uma mutação — proibição #25)', () => {
+    const { servico } = criar(() => 'jwt');
+    servico.conectar();
+    socketFake.disparar('connect');
     servico.entrarSalaFicha(42);
     servico.entrarSalaCampanha(9);
 
@@ -92,7 +126,7 @@ describe('TempoRealService', () => {
   });
 
   it('repassa ficha:alterada / ficha:criada / membro:entrou aos Observables', () => {
-    const { servico } = criar('jwt');
+    const { servico } = criar(() => 'jwt');
     servico.conectar();
 
     const recebidos: string[] = [];
@@ -108,14 +142,20 @@ describe('TempoRealService', () => {
   });
 
   it('reingressa nas salas e bumpa a reconexão a cada reconexão (§9)', () => {
-    const { servico } = criar('jwt');
+    const { servico } = criar(() => 'jwt');
     servico.conectar();
+    // Salas marcadas antes do connect: o reingresso as ingressa (sem join dobrado com o buffer).
     servico.entrarSalaFicha(42);
     servico.entrarSalaCampanha(9);
+    expect(socketFake.emitidos).toEqual([]);
 
     // Primeira conexão: reingressa, mas NÃO conta como reconexão (a tela já carregou normal).
     socketFake.disparar('connect');
     expect(servico.reconexao()).toBe(0);
+    expect(socketFake.emitidos).toEqual([
+      { evento: 'ficha:entrar', payload: { id: 42 } },
+      { evento: 'campanha:entrar', payload: { id: 9 } },
+    ]);
 
     socketFake.emitidos.length = 0;
     // Reconexão: reingressa nas salas conhecidas e bumpa o Signal.
@@ -128,18 +168,17 @@ describe('TempoRealService', () => {
   });
 
   it('esquece a sala ao sair — não reingressa nela numa reconexão', () => {
-    const { servico } = criar('jwt');
+    const { servico } = criar(() => 'jwt');
     servico.conectar();
     servico.entrarSalaFicha(42);
     servico.sairSalaFicha(42);
 
-    socketFake.emitidos.length = 0;
     socketFake.disparar('connect');
     expect(socketFake.emitidos).toEqual([]);
   });
 
   it('marca desconectado no disconnect e desliga tudo no desconectar()', () => {
-    const { servico } = criar('jwt');
+    const { servico } = criar(() => 'jwt');
     servico.conectar();
     socketFake.disparar('connect');
     expect(servico.conectado()).toBe(true);
@@ -153,4 +192,5 @@ describe('TempoRealService', () => {
     servico.conectar();
     expect(ioMock).toHaveBeenCalledTimes(2);
   });
+
 });
