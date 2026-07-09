@@ -1,45 +1,88 @@
-import { ClasseEnum } from '@contratados-rpg/shared/enums';
+import { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
 import type { FichaAtributosDto, FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 import {
   calcularDerivados,
   calcularEnergia,
   calcularVida,
+  maestriaAtingivel,
+  obterBonusAtributos,
+  obterLimitesClasse,
 } from '@contratados-rpg/shared/regras/agente';
 
+import { ehClasseBase } from './opcoes-ficha';
+
+/** Atributos base de fábrica (1 em cada) — ponto de partida do assistente de criação. */
+export const ATRIBUTOS_BASE_PADRAO: FichaAtributosDto = {
+  destreza: 1,
+  forca: 1,
+  luta: 1,
+  pontaria: 1,
+  vigor: 1,
+  intelecto: 1,
+  medicina: 1,
+  sentidos: 1,
+  social: 1,
+  vontade: 1,
+};
+
+/** Escolhas cruciais coletadas no assistente de criação, antes de montar a ficha. */
+export interface OpcoesFichaInicial {
+  readonly nome: string;
+  readonly classe: ClasseEnum;
+  readonly arquetipo: ArquetipoEnum | null;
+  readonly nivel: number;
+  readonly prestigio: number;
+  /** Atributos **base** (antes do bônus fixo de arquétipo/subclasse). */
+  readonly atributos: FichaAtributosDto;
+  readonly maestria: keyof FichaAtributosDto | null;
+}
+
+/** Restringe `valor` ao intervalo [minimo, maximo]. */
+function restringir(valor: number, minimo: number, maximo: number): number {
+  return Math.min(maximo, Math.max(minimo, valor));
+}
+
 /**
- * Ficha **padrão de fábrica** (m3-10): "Nova ficha" cria esta e abre a tela para edição no próprio
- * lugar — o autor ajusta cada campo com seu lápis, sem formulário separado. Classe base default,
- * atributos base (1 cada), nível 0; Vida/Energia atuais nascem cheias e as **máximas** + o bloco
- * `derivados` já são o **snapshot** de `shared/regras` (o backend também os grava; aqui só antecipa
- * para a tela abrir coerente). Nenhuma regra nova — só orquestra `shared/regras`.
+ * Monta a ficha inicial a partir das escolhas do assistente de criação (m3-16): normaliza Nível e
+ * atributos aos limites da classe, aplica o **bônus fixo de Atributos** do arquétipo/subclasse (doc —
+ * "Classes e Arquétipos", mesma tabela do editor no lugar), valida a Maestria (só em atributo 6+) e
+ * grava o **snapshot** de Vida/Energia máximas + `derivados` de `shared/regras` (proibições #26/#27 —
+ * nenhuma fórmula nova aqui; o backend também revalida forma e Maestria). Vida/Energia atuais nascem
+ * cheias. Só orquestra `shared/regras`.
  */
-export function construirFichaPadrao(): { readonly nome: string; readonly dados: FichaJogadorDadosDto } {
-  const classe = ClasseEnum.COMBATENTE;
-  const nivel = 0;
-  const atributos: FichaAtributosDto = {
-    destreza: 1,
-    forca: 1,
-    luta: 1,
-    pontaria: 1,
-    vigor: 1,
-    intelecto: 1,
-    medicina: 1,
-    sentidos: 1,
-    social: 1,
-    vontade: 1,
-  };
+export function construirFichaInicial(
+  opcoes: OpcoesFichaInicial,
+): { readonly nome: string; readonly dados: FichaJogadorDadosDto } {
+  const classe = opcoes.classe;
+  const limites = obterLimitesClasse({ classe });
+  const arquetipo = ehClasseBase(classe) ? opcoes.arquetipo : null;
+
+  // Atributos = base + bônus fixo do arquétipo/subclasse, cada um clampado aos limites da classe.
+  const bonus = obterBonusAtributos({ classe, arquetipo });
+  const atributos = { ...opcoes.atributos };
+  (Object.keys(atributos) as (keyof FichaAtributosDto)[]).forEach((chave) => {
+    const bruto = opcoes.atributos[chave] + (bonus[chave] ?? 0);
+    atributos[chave] = restringir(bruto, limites.atributoMinimo, limites.atributoMaximo);
+  });
+
+  const nivel = restringir(opcoes.nivel, limites.nivelMinimo, limites.nivelMaximo);
+  const prestigio = Math.max(0, opcoes.prestigio);
+  // Maestria só vale no atributo final que atinge o mínimo (após o bônus e o clamp).
+  const maestria =
+    opcoes.maestria && maestriaAtingivel(atributos[opcoes.maestria]) ? opcoes.maestria : null;
+
   const vidaMaxima = calcularVida({ classe, nivel, vigor: atributos.vigor });
   const energiaMaxima = calcularEnergia({ classe, nivel, destreza: atributos.destreza });
 
   return {
-    nome: 'Novo agente',
+    nome: opcoes.nome.trim() || 'Novo agente',
     dados: {
       classe,
-      arquetipo: null,
+      arquetipo,
       nivel,
-      prestigio: 0,
+      prestigio,
       atributos,
-      maestria: null,
+      maestria,
       estado: {
         vidaAtual: vidaMaxima,
         energiaAtual: energiaMaxima,
@@ -56,4 +99,20 @@ export function construirFichaPadrao(): { readonly nome: string; readonly dados:
       anotacoes: '',
     },
   };
+}
+
+/**
+ * Ficha **padrão de fábrica**: Combatente sem arquétipo, nível 0, atributos base (1 cada). Semente do
+ * assistente de criação (m3-16) e fallback direto. Delega ao `construirFichaInicial` — fonte única.
+ */
+export function construirFichaPadrao(): { readonly nome: string; readonly dados: FichaJogadorDadosDto } {
+  return construirFichaInicial({
+    nome: 'Novo agente',
+    classe: ClasseEnum.COMBATENTE,
+    arquetipo: null,
+    nivel: 0,
+    prestigio: 0,
+    atributos: ATRIBUTOS_BASE_PADRAO,
+    maestria: null,
+  });
 }

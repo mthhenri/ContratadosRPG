@@ -1,6 +1,31 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-09 (**m3-08 — cliente Socket.IO + tela do mestre ao vivo**: fecha o §9
+> Última atualização: 2026-07-09 (**Assistente de criação de ficha (a pedido do autor)**: "Nova ficha"
+> deixou de despejar uma ficha padrão para edição no lugar — agora abre um **dialog de registro
+> inicial** sobre a lista, coletando as escolhas cruciais **antes de criar**: Codinome, Classe/
+> Subclasse/Arquétipo, Nível, Prestígio, **atributos base** e **Maestria** (★, única, só no total 6+).
+> Novo componente standalone `FichaCriarDialog` (`componentes/ficha-criar-dialog/`) — steppers e boxes
+> de atributo copiados dos padrões do editor no lugar; classe muda → **reclampa** Nível e atributos
+> aos limites da classe (`obterLimitesClasse`) e some o arquétipo se a classe não o comporta; o **bônus
+> fixo de arquétipo/subclasse** (doc, mesma `obterBonusAtributos` do editor) aparece num resumo verde e
+> num badge `+n` por atributo, e a Maestria só habilita pelo **total** (base + bônus); **prévia ao vivo**
+> de Vida/Energia máximas. A montagem foi centralizada em `ficha-padrao.construirFichaInicial(opcoes)`
+> (fonte única — `construirFichaPadrao` agora delega): normaliza aos limites, soma o bônus fixo, valida a
+> Maestria e grava o **snapshot** de Vida/Energia máximas + `derivados` de `shared/regras` (proibições
+> #26/#27 — nenhuma fórmula nova; o backend revalida forma/Maestria/§14). A lista abre o assistente
+> (`dialogCriar`), monta via `construirFichaInicial` no `criarFicha(opcoes)` e navega à ficha criada. Só
+> tokens do tema (proibição #29). **+14 testes** (frontend **218/218**): `ficha-padrao.spec` (7 —
+> snapshot, bônus somado ao base, reclampe Civil + arquétipo descartado, Maestria validada/habilitada
+> pelo bônus, nome aparado), `ficha-criar-dialog.spec` (5 — emite base ao confirmar, reclampe Civil +
+> arquétipo oculto, bônus + Maestria pelo total, Maestria some ao cair abaixo de 6, cancelar) e
+> `lista.page.spec` (+2 líquidos — abre o assistente sem criar / confirma monta+navega / cancelar fecha).
+> `lint`/`build` verdes (bundle inicial **567,56 kB**; o dialog mora na chunk lazy `lista-page`, 14→21 kB).
+> **Verificado por render** (Playwright/Chromium sobre o build de desenvolvimento, sessão + REST
+> mockados): "Nova ficha" abre o dialog fiel ao tema, escolher Lutador mostra "Bônus de arquétipo: +1
+> LUT · +1 FOR" e badges `+1` em FOR/LUT, a Maestria em Força habilita com o total 6, a prévia Vida
+> reage 34→52 ao subir o Nível, e confirmar faz **POST** com `forca 6`/`luta 2`/`nivel 2`/`vidaMaxima
+> 52`/`derivados` presentes e **navega** para `/painel/9/ficha/42`; zero erros no fluxo do assistente.
+> Sessão anterior no mesmo dia (**m3-08 — cliente Socket.IO + tela do mestre ao vivo**: fecha o §9
 > no frontend — o tempo real das fichas —, consumindo o gateway broadcast-only da **m3-05** sem
 > nenhuma escrita por WebSocket (proibição #25). **Revisão pós-implementação** endureceu três pontos:
 > (1) **troca de conta na mesma aba** — `conectar` rastreia o `tokenConectado` e **reconecta** se a

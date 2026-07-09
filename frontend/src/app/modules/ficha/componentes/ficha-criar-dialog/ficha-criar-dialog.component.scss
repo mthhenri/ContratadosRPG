@@ -1,0 +1,431 @@
+// Assistente de criação de ficha (m3-16) — dialog sobre a lista. Só tokens do tema "Terminal de
+// Contenção" (proibição #29); overlay + steppers + boxes de atributo copiados dos padrões canônicos
+// (dialog da gestão de acesso e o editor de atributos do FichaVisualizacao).
+
+@use 'tema/breakpoints' as bp;
+
+// === Overlay + painel (mesmo padrão do dialog de acesso) ===
+.dialogo {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 48px 20px;
+  overflow-y: auto;
+
+  &__fundo {
+    position: fixed;
+    inset: 0;
+    background: rgb(0 0 0 / 55%);
+    border: 0;
+    cursor: default;
+  }
+
+  &__painel {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 560px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+    padding: var(--pad-card);
+    box-shadow: 0 16px 48px rgb(0 0 0 / 45%);
+  }
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 6px;
+  }
+
+  &__indice {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  &__titulo {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+  }
+
+  &__regua {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  &__fechar {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    font-size: 13px;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+    &:hover {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--surface-2);
+    }
+  }
+}
+
+// === Corpo do assistente ===
+.criar {
+  &__ajuda {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text-dim);
+    margin: 0 0 18px;
+  }
+
+  &__campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    margin-bottom: 14px;
+  }
+
+  &__dupla {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+
+    @include bp.mobile {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__rotulo {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-mute);
+  }
+
+  &__entrada,
+  &__select {
+    width: 100%;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 8px 10px;
+    outline: none;
+    transition: border-color 0.15s ease;
+
+    &:focus {
+      border-color: var(--accent-border);
+    }
+  }
+
+  &__bonus {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--positive);
+    margin: -4px 0 16px;
+  }
+
+  &__stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 6px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    align-self: flex-start;
+  }
+
+  &__stepper-valor {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    min-width: 28px;
+    text-align: center;
+
+    &--warning {
+      color: var(--warning);
+    }
+  }
+
+  // Cabeçalho de seção "Atributos base": rótulo + régua + dica.
+  &__secao {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0 12px;
+  }
+
+  &__rotulo-secao {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-dim);
+    flex: 0 0 auto;
+  }
+
+  &__regua-secao {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  &__dica {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-mute);
+    flex: 0 0 auto;
+  }
+
+  // Prévia de Vida/Energia máximas derivadas.
+  &__previa {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 20px 0 4px;
+  }
+
+  &__previa-box {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+  }
+
+  &__previa-rotulo {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+  }
+
+  &__previa-valor {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text);
+
+    &--vida {
+      color: var(--vida);
+    }
+
+    &--energia {
+      color: var(--energy);
+    }
+  }
+
+  &__acoes {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 22px;
+  }
+}
+
+// === Steppers (copiado de _componentes / FichaVisualizacao) ===
+.ficha-passo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-dim);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    color: var(--accent);
+    border-color: var(--accent-border);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+// === Boxes de atributo (copiado do editor do FichaVisualizacao) ===
+.ficha-atributos {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  &__grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__rotulo-grupo {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-dim);
+  }
+
+  &__grade {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+
+    @include bp.mobile {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
+.ficha-atributo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+
+  &__abrev {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+  }
+
+  &__bonus {
+    color: var(--positive);
+    font-weight: 700;
+  }
+
+  &__valor {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+    min-width: 22px;
+    text-align: center;
+  }
+
+  &__nome {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  &--maestria {
+    border-color: var(--accent-border);
+  }
+
+  &__stepper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__maestria {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1;
+    padding: 2px 6px;
+    color: var(--text-mute);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+    &:hover:not(:disabled) {
+      color: var(--accent);
+      border-color: var(--accent-border);
+    }
+
+    &--ativa {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    &:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+  }
+}
+
+// === Botões (bloco sancionado de _componentes) ===
+.botao {
+  border-radius: var(--radius-control);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 9px 16px;
+  cursor: pointer;
+  transition: filter 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+
+  &--primario {
+    background: var(--accent);
+    color: var(--bg);
+    border: 0;
+
+    &:hover:not(:disabled) {
+      filter: brightness(1.08);
+    }
+  }
+
+  &--secundario {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+
+    &:hover:not(:disabled) {
+      background: var(--surface-2);
+      border-color: var(--accent-border);
+    }
+  }
+}

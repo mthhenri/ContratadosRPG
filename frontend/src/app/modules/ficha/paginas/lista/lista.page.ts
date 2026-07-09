@@ -12,7 +12,8 @@ import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { FichaService } from '../../ficha.service';
-import { construirFichaPadrao } from '../../ficha-padrao';
+import { construirFichaInicial, type OpcoesFichaInicial } from '../../ficha-padrao';
+import { FichaCriarDialog } from '../../componentes/ficha-criar-dialog/ficha-criar-dialog.component';
 import { lerParamRota } from '../../ler-param-rota';
 import { rotuloClasse } from '../../rotulos-ficha';
 
@@ -37,7 +38,7 @@ interface ItemFicha {
  */
 @Component({
   selector: 'app-ficha-lista',
-  imports: [RouterLink, Icone, IndicadorTempoReal],
+  imports: [RouterLink, Icone, IndicadorTempoReal, FichaCriarDialog],
   templateUrl: './lista.page.html',
   styleUrl: './lista.page.scss',
 })
@@ -56,6 +57,8 @@ export class FichaLista {
   protected readonly carregando = signal(true);
   /** `true` enquanto a criação da nova ficha está em voo (desabilita o botão). */
   protected readonly criando = signal(false);
+  /** Assistente de criação (m3-16) aberto — coleta os dados de registro antes de criar. */
+  protected readonly dialogCriar = signal(false);
   private readonly fichas = signal<FichaResumoDto[]>([]);
   private readonly membros = signal<CampanhaMembroResumoDto[]>([]);
 
@@ -123,22 +126,37 @@ export class FichaLista {
       });
   }
 
+  /** Abre o assistente de criação (m3-16). */
+  protected abrirCriar(): void {
+    this.dialogCriar.set(true);
+  }
+
+  /** Fecha o assistente de criação (Cancelar/✕) — inócuo enquanto uma criação está em voo. */
+  protected fecharCriar(): void {
+    if (!this.criando()) {
+      this.dialogCriar.set(false);
+    }
+  }
+
   /**
-   * "Nova ficha" (m3-10 — default-then-edit): cria uma ficha **padrão** e abre a tela dela para
-   * **edição no próprio lugar** (sem formulário de criação). O backend valida a autoria/permissão
-   * (§14) e faz o snapshot; um erro chega pelo `error-handler.interceptor`.
+   * "Nova ficha" (m3-16): o assistente coleta os dados de registro (classe/arquétipo, nível,
+   * prestígio, atributos base, Maestria) e aqui montamos a ficha via `construirFichaInicial`
+   * (`shared/regras` — snapshot + bônus de arquétipo) e criamos, abrindo a tela dela em seguida. O
+   * backend valida a autoria/permissão (§14) e revalida forma/Maestria; um erro chega pelo
+   * `error-handler.interceptor`.
    */
-  protected criarFicha(): void {
+  protected criarFicha(opcoes: OpcoesFichaInicial): void {
     if (this.criando()) {
       return;
     }
     this.criando.set(true);
-    const padrao = construirFichaPadrao();
+    const ficha = construirFichaInicial(opcoes);
     this.fichaService
-      .criarFicha({ campanhaId: this.campanhaId, nome: padrao.nome, dados: padrao.dados })
+      .criarFicha({ campanhaId: this.campanhaId, nome: ficha.nome, dados: ficha.dados })
       .pipe(finalize(() => this.criando.set(false)))
       .subscribe({
         next: (fichaCriada) => {
+          this.dialogCriar.set(false);
           void this.router.navigate(['/painel', this.campanhaId, 'ficha', fichaCriada.id]);
         },
       });

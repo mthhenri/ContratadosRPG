@@ -20,7 +20,7 @@
         class="botao botao--primario fichas__acao"
         type="button"
         [disabled]="criando()"
-        (click)="criarFicha()"
+        (click)="abrirCriar()"
       >
         <app-icone nome="novo-agente" />
         {{ criando() ? 'Criando…' : 'Nova ficha' }}
@@ -62,3 +62,11 @@
     }
   </article>
 </section>
+
+@if (dialogCriar()) {
+  <app-ficha-criar-dialog
+    [criando]="criando()"
+    (criar)="criarFicha($event)"
+    (cancelar)="fecharCriar()"
+  />
+}

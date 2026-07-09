@@ -1,0 +1,207 @@
+<div class="dialogo" role="dialog" aria-modal="true" aria-label="Nova ficha">
+  <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="fechar()"></button>
+  <div class="dialogo__painel criar">
+    <header class="dialogo__cabecalho">
+      <span class="dialogo__indice">//</span>
+      <h2 class="dialogo__titulo">Nova Ficha — Registro Inicial</h2>
+      <span class="dialogo__regua"></span>
+      <button class="dialogo__fechar" type="button" aria-label="Fechar" (click)="fechar()">✕</button>
+    </header>
+
+    <p class="criar__ajuda">
+      Informe os dados de registro do agente. Você poderá ajustar cada campo depois, na ficha.
+    </p>
+
+    <!-- Identidade: Codinome + Classe/Arquétipo -->
+    <div class="criar__campo">
+      <label class="criar__rotulo" for="criar-nome">Codinome</label>
+      <input
+        id="criar-nome"
+        class="criar__entrada"
+        type="text"
+        [value]="nome()"
+        (input)="atualizarNome($any($event.target).value)"
+      />
+    </div>
+
+    <div class="criar__dupla">
+      <div class="criar__campo">
+        <label class="criar__rotulo" for="criar-classe">Classe / Subclasse</label>
+        <select id="criar-classe" class="criar__select" (change)="mudarClasse($event)">
+          @for (grupo of gruposClasse; track grupo.rotulo) {
+            <optgroup [label]="grupo.rotulo">
+              @for (opcao of grupo.opcoes; track opcao.valor) {
+                <option [value]="opcao.valor" [selected]="opcao.valor === classe()">
+                  {{ opcao.rotulo }}
+                </option>
+              }
+            </optgroup>
+          }
+        </select>
+      </div>
+
+      @if (ehClasseBaseAtual()) {
+        <div class="criar__campo">
+          <label class="criar__rotulo" for="criar-arquetipo">Arquétipo</label>
+          <select id="criar-arquetipo" class="criar__select" (change)="mudarArquetipo($event)">
+            <option value="" [selected]="arquetipo() === null">— Nenhum —</option>
+            @for (opcao of arquetipos(); track opcao.valor) {
+              <option [value]="opcao.valor" [selected]="opcao.valor === arquetipo()">
+                {{ opcao.rotulo }}
+              </option>
+            }
+          </select>
+        </div>
+      }
+    </div>
+
+    @if (bonusResumo()) {
+      <p class="criar__bonus">Bônus de arquétipo: {{ bonusResumo() }} (somados aos atributos base)</p>
+    }
+
+    <!-- Nível + Prestígio -->
+    <div class="criar__dupla">
+      <div class="criar__campo">
+        <span class="criar__rotulo">{{ rotuloNivel() }}</span>
+        <div class="criar__stepper">
+          <button
+            class="ficha-passo"
+            type="button"
+            appHoldRepeat
+            [disabled]="nivel() <= limites().nivelMinimo"
+            aria-label="Reduzir nível"
+            (passo)="passoNivel(-1)"
+          >
+            −
+          </button>
+          <span class="criar__stepper-valor">{{ nivel() }}</span>
+          <button
+            class="ficha-passo"
+            type="button"
+            appHoldRepeat
+            [disabled]="nivel() >= limites().nivelMaximo"
+            aria-label="Aumentar nível"
+            (passo)="passoNivel(1)"
+          >
+            +
+          </button>
+        </div>
+      </div>
+
+      <div class="criar__campo">
+        <span class="criar__rotulo">Prestígio</span>
+        <div class="criar__stepper">
+          <button
+            class="ficha-passo"
+            type="button"
+            appHoldRepeat
+            [disabled]="prestigio() <= 0"
+            aria-label="Reduzir prestígio"
+            (passo)="passoPrestigio(-1)"
+          >
+            −
+          </button>
+          <span class="criar__stepper-valor criar__stepper-valor--warning">{{ prestigio() }}</span>
+          <button
+            class="ficha-passo"
+            type="button"
+            appHoldRepeat
+            aria-label="Aumentar prestígio"
+            (passo)="passoPrestigio(1)"
+          >
+            +
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Atributos base + Maestria -->
+    <div class="criar__secao">
+      <span class="criar__rotulo-secao">Atributos base</span>
+      <span class="criar__regua-secao"></span>
+      <span class="criar__dica">★ = Maestria ({{ limiteMaestria }}+)</span>
+    </div>
+
+    <div class="ficha-atributos">
+      @for (grupo of gruposAtributos; track grupo.rotulo) {
+        <div class="ficha-atributos__grupo">
+          <span class="ficha-atributos__rotulo-grupo">{{ grupo.rotulo }}</span>
+          <div class="ficha-atributos__grade">
+            @for (campo of grupo.campos; track campo.chave) {
+              <div
+                class="ficha-atributo ficha-atributo--edicao"
+                [class.ficha-atributo--maestria]="maestria() === campo.chave"
+              >
+                <span class="ficha-atributo__abrev">
+                  {{ campo.abrev }}
+                  @if (bonusAtributo(campo.chave) > 0) {
+                    <span class="ficha-atributo__bonus" [attr.title]="'Bônus de arquétipo'">
+                      +{{ bonusAtributo(campo.chave) }}
+                    </span>
+                  }
+                </span>
+                <div class="ficha-atributo__stepper">
+                  <button
+                    class="ficha-passo"
+                    type="button"
+                    appHoldRepeat
+                    [attr.aria-label]="'Reduzir ' + campo.nome"
+                    (passo)="passoAtributo(campo.chave, -1)"
+                  >
+                    −
+                  </button>
+                  <span class="ficha-atributo__valor">{{ atributos()[campo.chave] }}</span>
+                  <button
+                    class="ficha-passo"
+                    type="button"
+                    appHoldRepeat
+                    [attr.aria-label]="'Aumentar ' + campo.nome"
+                    (passo)="passoAtributo(campo.chave, 1)"
+                  >
+                    +
+                  </button>
+                </div>
+                <button
+                  class="ficha-atributo__maestria"
+                  type="button"
+                  [class.ficha-atributo__maestria--ativa]="maestria() === campo.chave"
+                  [disabled]="!maestriaHabilitada(campo.chave)"
+                  [attr.aria-label]="'Maestria em ' + campo.nome"
+                  [attr.title]="'Maestria em ' + campo.nome + ' — requer total ' + limiteMaestria + '+'"
+                  (click)="alternarMaestria(campo.chave)"
+                >
+                  ★
+                </button>
+                <span class="ficha-atributo__nome">{{ campo.nome }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Prévia derivada -->
+    <div class="criar__previa">
+      <div class="criar__previa-box">
+        <span class="criar__previa-rotulo">Vida máx.</span>
+        <span class="criar__previa-valor criar__previa-valor--vida">{{ vidaPrevia() }}</span>
+      </div>
+      <div class="criar__previa-box">
+        <span class="criar__previa-rotulo">Energia máx.</span>
+        <span class="criar__previa-valor criar__previa-valor--energia">{{ energiaPrevia() }}</span>
+      </div>
+    </div>
+
+    <footer class="criar__acoes">
+      <button class="botao botao--secundario" type="button" (click)="fechar()">Cancelar</button>
+      <button
+        class="botao botao--primario"
+        type="button"
+        [disabled]="criando()"
+        (click)="confirmar()"
+      >
+        {{ criando() ? 'Criando…' : 'Criar ficha' }}
+      </button>
+    </footer>
+  </div>
+</div>

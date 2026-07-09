@@ -102,22 +102,56 @@ describe('FichaLista', () => {
     expect(raiz.querySelector('.chip-dono--minha')).not.toBeNull();
   });
 
-  it('"Nova ficha" cria uma ficha padrão e navega direto para ela (default-then-edit, m3-10)', () => {
-    const { raiz, fichaService } = montar();
+  it('"Nova ficha" abre o assistente de criação (m3-16), sem criar de imediato', () => {
+    const { fixture, raiz, fichaService } = montar();
+
+    expect(raiz.querySelector('app-ficha-criar-dialog')).toBeNull();
+
+    (raiz.querySelector('.fichas__acao') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(raiz.querySelector('app-ficha-criar-dialog')).not.toBeNull();
+    // Abrir o assistente não dispara nenhuma criação.
+    expect(fichaService.criarFicha).not.toHaveBeenCalled();
+  });
+
+  it('confirmar no assistente monta a ficha (snapshot) e navega para ela (m3-16)', () => {
+    const { fixture, raiz, fichaService } = montar();
     const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
 
     (raiz.querySelector('.fichas__acao') as HTMLButtonElement).click();
+    fixture.detectChanges();
 
-    // Cria na campanha da rota com um documento padrão coerente (classe base, sem Maestria).
+    // Confirma o assistente com os padrões (Combatente, nível 0, atributos base, sem Maestria).
+    (raiz.querySelector('app-ficha-criar-dialog .botao--primario') as HTMLButtonElement).click();
+
     expect(fichaService.criarFicha).toHaveBeenCalledTimes(1);
     expect(fichaService.criarFicha).toHaveBeenCalledWith(
       expect.objectContaining({
         campanhaId: 9,
-        dados: expect.objectContaining({ classe: ClasseEnum.COMBATENTE, maestria: null }),
+        dados: expect.objectContaining({
+          classe: ClasseEnum.COMBATENTE,
+          maestria: null,
+          estado: expect.objectContaining({ vidaMaxima: expect.any(Number) }),
+        }),
       }),
     );
-    // Navega para a ficha recém-criada (edição no próprio lugar).
+    // Navega para a ficha recém-criada (edição no próprio lugar) e fecha o assistente.
     expect(navegar).toHaveBeenCalledWith(['/painel', 9, 'ficha', 42]);
+    fixture.detectChanges();
+    expect(raiz.querySelector('app-ficha-criar-dialog')).toBeNull();
+  });
+
+  it('cancelar fecha o assistente sem criar (m3-16)', () => {
+    const { fixture, raiz, fichaService } = montar();
+
+    (raiz.querySelector('.fichas__acao') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (raiz.querySelector('app-ficha-criar-dialog .botao--secundario') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(raiz.querySelector('app-ficha-criar-dialog')).toBeNull();
+    expect(fichaService.criarFicha).not.toHaveBeenCalled();
   });
 
   it('entra na sala da campanha ao abrir e a esquece ao destruir (m3-08)', () => {
