@@ -6,11 +6,17 @@ import { EMPTY, Subject, catchError, debounceTime, filter, finalize, forkJoin, s
 
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import {
+  calcularAreaPercepcao,
+  calcularDanoCorpo,
   calcularDefesa,
+  calcularDeslocamento,
   calcularEnergia,
+  calcularInventario,
   calcularLimiteHabilidadesPorTurno,
   calcularProficiencia,
   calcularVida,
+  contarMarcosDanoFurtivo,
+  incrementarDanoFurtivo,
 } from '@contratados-rpg/shared/regras/agente';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type {
@@ -26,7 +32,7 @@ import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { FichaService } from '../../ficha.service';
 import { lerParamRota } from '../../ler-param-rota';
-import { normalizarEntrada } from '../../status-derivado';
+import { normalizarEntrada, type EntradaAgente } from '../../status-derivado';
 
 import {
   AjusteAtributos,
@@ -261,17 +267,22 @@ export class FichaVisualizar {
 
   /**
    * Edição em grupo dos atributos + Maestria (m3-10): reflete na hora (otimista) e persiste em lote.
-   * Só dono/mestre chega aqui; o backend valida a Maestria (6+, única) e não trava faixa.
+   * Aplica a **progressão** — os derivados que dependem de atributo acompanham a mudança: Vigor →
+   * Vida máxima e Bloqueio; Destreza → Energia máxima, Esquiva e Deslocamento; Sentidos → Percepção;
+   * Força → Inventário e Dano C.a.C. Só dono/mestre chega aqui; o backend valida a Maestria e não
+   * trava faixa.
    */
   protected ajustarAtributos(ajuste: AjusteAtributos): void {
     const fichaAtual = this.ficha();
     if (!fichaAtual) {
       return;
     }
-    this.ficha.set({
-      ...fichaAtual,
-      dados: { ...fichaAtual.dados, atributos: ajuste.atributos, maestria: ajuste.maestria },
-    });
+    const dadosNovos: FichaJogadorDadosDto = {
+      ...fichaAtual.dados,
+      atributos: ajuste.atributos,
+      maestria: ajuste.maestria,
+    };
+    this.ficha.set({ ...fichaAtual, dados: this.aplicarProgressao(fichaAtual.dados, dadosNovos) });
     this.agendarPersistencia();
   }
 
@@ -299,11 +310,9 @@ export class FichaVisualizar {
   }
 
   /**
-   * Edita Nível/Prestígio. **Nível** aplica o **delta de progressão** (m3-10) aos derivados que
-   * dependem dele: soma `calcular(novo) − (antigo)` às **máximas stored** (Vida/Energia) e aos
-   * **derivados stored** que crescem com o Nível — Defesa/Esquiva/Bloqueio (`10 + Nível`),
-   * Proficiência (`= Nível`) e Hab./Turno (base + ganhos por Nível). Preserva ajustes manuais, sem
-   * recalcular do zero (campo ausente fica ausente → fallback derivado). Otimista + em lote.
+   * Edita Nível/Prestígio. **Nível** aplica a **progressão** (m3-10): as máximas (Vida/Energia) e os
+   * derivados stored que dependem do Nível — Defesa/Esquiva/Bloqueio, Proficiência, Hab./Turno e Dano
+   * Furtivo (+1D6+1 por marco cruzado) — acompanham a mudança. Otimista + em lote.
    */
   protected ajustarCampoDados(ajuste: AjusteCampoDados): void {
     const fichaAtual = this.ficha();
@@ -312,28 +321,41 @@ export class FichaVisualizar {
     }
     let dados: FichaJogadorDadosDto = { ...fichaAtual.dados, [ajuste.campo]: ajuste.valor };
     if (ajuste.campo === 'nivel') {
-      dados = {
-        ...dados,
-        estado: this.aplicarDeltaNivel(fichaAtual.dados, ajuste.valor),
-        derivados: this.aplicarDeltaDerivados(fichaAtual.dados, ajuste.valor),
-      };
+      dados = this.aplicarProgressao(fichaAtual.dados, dados);
     }
     this.ficha.set({ ...fichaAtual, dados });
     this.agendarPersistencia();
   }
 
-  /** Novo `estado` com as máximas stored somadas do delta de progressão entre o nível antigo e o novo. */
-  private aplicarDeltaNivel(
-    dados: FichaJogadorDadosDto,
-    nivelNovo: number,
+  /**
+   * Recalcula estado (máximas) e derivados aplicando a **variação de progressão** entre `antigos` e
+   * `novos` (Nível e/ou atributos mudaram). Cada campo **stored** acompanha a mudança preservando
+   * ajustes manuais (m3-10): números somam `calcular(novo) − calcular(antigo)`; o Dano Furtivo soma
+   * os marcos de Nível cruzados (D6 com D6, fixo com fixo); o Dano C.a.C. (tabela não-linear)
+   * recalcula só quando não foi customizado. Campo ausente fica ausente (fallback ao cálculo). Fonte
+   * única: fórmulas de `shared/regras` sobre a entrada já normalizada à classe (base da exibição).
+   */
+  private aplicarProgressao(
+    antigos: FichaJogadorDadosDto,
+    novos: FichaJogadorDadosDto,
+  ): FichaJogadorDadosDto {
+    const antes = normalizarEntrada(antigos.classe, antigos.nivel, antigos.atributos);
+    const depois = normalizarEntrada(novos.classe, novos.nivel, novos.atributos);
+    return {
+      ...novos,
+      estado: this.progredirEstado(novos.estado, antes, depois),
+      derivados: this.progredirDerivados(novos.derivados, antes, depois),
+    };
+  }
+
+  /** Máximas de Vida/Energia stored somadas do delta de progressão (Vigor/Destreza × Nível). */
+  private progredirEstado(
+    estado: FichaJogadorDadosDto['estado'],
+    antes: EntradaAgente,
+    depois: EntradaAgente,
   ): FichaJogadorDadosDto['estado'] {
-    const { classe, atributos, estado } = dados;
-    const deltaVida =
-      calcularVida({ classe, nivel: nivelNovo, vigor: atributos.vigor }) -
-      calcularVida({ classe, nivel: dados.nivel, vigor: atributos.vigor });
-    const deltaEnergia =
-      calcularEnergia({ classe, nivel: nivelNovo, destreza: atributos.destreza }) -
-      calcularEnergia({ classe, nivel: dados.nivel, destreza: atributos.destreza });
+    const deltaVida = calcularVida(depois) - calcularVida(antes);
+    const deltaEnergia = calcularEnergia(depois) - calcularEnergia(antes);
     return {
       ...estado,
       vidaMaxima: estado.vidaMaxima === undefined ? undefined : estado.vidaMaxima + deltaVida,
@@ -343,25 +365,18 @@ export class FichaVisualizar {
   }
 
   /**
-   * Novo bloco `derivados` com os campos que dependem do Nível somados do delta de progressão —
-   * Defesa/Esquiva/Bloqueio (`10 + Nível` + atributo), Proficiência (`= Nível`) e Hab./Turno (base +
-   * ganhos por Nível). Mesma política das máximas (m3-10): soma ao **stored**, preservando ajustes
-   * manuais; campo ausente fica ausente (fallback ao cálculo). Os demais derivados (deslocamento,
-   * dano, percepção, inventário — que não dependem do Nível) passam intactos. Reusa as fórmulas de
-   * `shared/regras` (fonte única — proibições #26/#27), sobre o Nível já normalizado à classe (mesma
-   * base da exibição). `derivados` ausente → mantém ausente.
+   * Derivados stored acompanhando a progressão: números por delta (Defesa/Esquiva/Bloqueio,
+   * Deslocamento, Proficiência, Percepção, Inventário, Hab./Turno); Dano Furtivo e Dano C.a.C. por
+   * regra própria. `derivados` ausente → mantém ausente; cada campo ausente idem.
    */
-  private aplicarDeltaDerivados(
-    dados: FichaJogadorDadosDto,
-    nivelNovo: number,
+  private progredirDerivados(
+    derivados: FichaDerivadosDto | undefined,
+    antes: EntradaAgente,
+    depois: EntradaAgente,
   ): FichaDerivadosDto | undefined {
-    const derivados = dados.derivados;
     if (!derivados) {
       return undefined;
     }
-    const { classe, atributos } = dados;
-    const antes = normalizarEntrada(classe, dados.nivel, atributos);
-    const depois = normalizarEntrada(classe, nivelNovo, atributos);
     const defesaAntes = calcularDefesa(antes);
     const defesaDepois = calcularDefesa(depois);
     const somar = (valor: number | undefined, delta: number): number | undefined =>
@@ -374,15 +389,57 @@ export class FichaVisualizar {
         derivados.bloqueio,
         (defesaDepois?.bloqueio ?? 0) - (defesaAntes?.bloqueio ?? 0),
       ),
+      deslocamento: somar(
+        derivados.deslocamento,
+        calcularDeslocamento(depois) - calcularDeslocamento(antes),
+      ),
       proficiencia: somar(
         derivados.proficiencia,
         (calcularProficiencia(depois) ?? 0) - (calcularProficiencia(antes) ?? 0),
+      ),
+      percepcao: somar(
+        derivados.percepcao,
+        calcularAreaPercepcao(depois) - calcularAreaPercepcao(antes),
+      ),
+      inventarioMaximo: somar(
+        derivados.inventarioMaximo,
+        calcularInventario(depois) - calcularInventario(antes),
       ),
       habilidadesPorTurno: somar(
         derivados.habilidadesPorTurno,
         calcularLimiteHabilidadesPorTurno(depois) - calcularLimiteHabilidadesPorTurno(antes),
       ),
+      danoFurtivo: this.progredirDanoFurtivo(derivados.danoFurtivo, antes, depois),
+      danoCorpoACorpo: this.progredirDanoCorpo(derivados.danoCorpoACorpo, antes, depois),
     };
+  }
+
+  /** Dano Furtivo stored + os marcos de Nível cruzados (cada marco = +1D6+1; só depende do Nível). */
+  private progredirDanoFurtivo(
+    stored: string | undefined,
+    antes: EntradaAgente,
+    depois: EntradaAgente,
+  ): string | undefined {
+    if (stored === undefined) {
+      return undefined;
+    }
+    const marcos = contarMarcosDanoFurtivo(depois.nivel) - contarMarcosDanoFurtivo(antes.nivel);
+    return marcos === 0 ? stored : incrementarDanoFurtivo(stored, marcos);
+  }
+
+  /**
+   * Dano C.a.C. (tabela não-linear de Força+Vigor): sem delta somável, recalcula **só quando não foi
+   * customizado** (stored igual ao calculado do estado anterior); um valor editado à mão é preservado.
+   */
+  private progredirDanoCorpo(
+    stored: string | undefined,
+    antes: EntradaAgente,
+    depois: EntradaAgente,
+  ): string | undefined {
+    if (stored === undefined) {
+      return undefined;
+    }
+    return stored === calcularDanoCorpo(antes) ? calcularDanoCorpo(depois) : stored;
   }
 
   /** Concede a visualização ao membro selecionado e recarrega a lista de acessos. */

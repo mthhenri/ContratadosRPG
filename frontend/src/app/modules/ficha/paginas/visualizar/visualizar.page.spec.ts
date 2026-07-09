@@ -3,7 +3,15 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 import { ClasseEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
-import { calcularVida } from '@contratados-rpg/shared/regras/agente';
+import {
+  calcularAreaPercepcao,
+  calcularDanoCorpo,
+  calcularDefesa,
+  calcularDeslocamento,
+  calcularEnergia,
+  calcularInventario,
+  calcularVida,
+} from '@contratados-rpg/shared/regras/agente';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type {
   FichaAcessoResumoDto,
@@ -213,7 +221,7 @@ describe('FichaVisualizar', () => {
     const { fixture } = montar({ usuarioLogadoId: 7 });
     const componente = fixture.componentInstance;
 
-    // Semeia derivados stored (Combatente, atributos 1). Nível 2 → 4.
+    // Semeia derivados stored (Combatente, atributos 1). Nível 2 → 4 (cruza o marco 3 do furtivo).
     const carregada = componente['ficha']()!;
     componente['ficha'].set({
       ...carregada,
@@ -228,6 +236,8 @@ describe('FichaVisualizar', () => {
           deslocamento: 9,
           percepcao: 10,
           inventarioMaximo: 5,
+          danoFurtivo: '1D6+1',
+          danoCorpoACorpo: '1D3 [Físico]',
         },
       },
     });
@@ -243,10 +253,106 @@ describe('FichaVisualizar', () => {
     expect(novos.proficiencia).toBe(7);
     // Hab./Turno: os Níveis 2 e 4 dão +1 cada → +1 ao subir 2→4.
     expect(novos.habilidadesPorTurno).toBe(10);
-    // Derivados que não dependem do Nível passam intactos.
+    // Dano Furtivo: cruza 1 marco (Nível 3) → +1D6+1.
+    expect(novos.danoFurtivo).toBe('2D6+2');
+    // Derivados que não dependem do Nível passam intactos (Dano C.a.C. depende de atributo, não Nível).
     expect(novos.deslocamento).toBe(9);
     expect(novos.percepcao).toBe(10);
     expect(novos.inventarioMaximo).toBe(5);
+    expect(novos.danoCorpoACorpo).toBe('1D3 [Físico]');
+  });
+
+  it('editar atributos impacta os derivados dependentes (Sentidos→Percepção, Vigor→Vida, …)', () => {
+    const { fixture } = montar({ usuarioLogadoId: 7 });
+    const componente = fixture.componentInstance;
+
+    // Combatente, Nível 2, atributos 1. Dano C.a.C. semeado = calculado (não customizado).
+    const carregada = componente['ficha']()!;
+    const classe = carregada.dados.classe;
+    const nivel = carregada.dados.nivel; // 2
+    componente['ficha'].set({
+      ...carregada,
+      dados: {
+        ...carregada.dados,
+        estado: { ...carregada.dados.estado, vidaMaxima: 100, energiaMaxima: 50 },
+        derivados: {
+          defesa: 12,
+          esquiva: 13,
+          bloqueio: 13,
+          deslocamento: 9,
+          proficiencia: 2,
+          percepcao: 10,
+          inventarioMaximo: 5,
+          habilidadesPorTurno: 5,
+          danoFurtivo: '1D6+1',
+          danoCorpoACorpo: calcularDanoCorpo({ classe, forca: 1, vigor: 1 }),
+        },
+      },
+    });
+
+    const novosAtributos = {
+      ...carregada.dados.atributos,
+      sentidos: 3,
+      vigor: 4,
+      destreza: 5,
+      forca: 6,
+    };
+    componente['ajustarAtributos']({ atributos: novosAtributos, maestria: null });
+    const d = componente['ficha']()!.dados;
+
+    // Máximas somam o delta do atributo (no Nível atual), sem recalcular do zero.
+    const deltaVida =
+      calcularVida({ classe, nivel, vigor: 4 }) - calcularVida({ classe, nivel, vigor: 1 });
+    expect(d.estado.vidaMaxima).toBe(100 + deltaVida);
+    const deltaEnergia =
+      calcularEnergia({ classe, nivel, destreza: 5 }) - calcularEnergia({ classe, nivel, destreza: 1 });
+    expect(d.estado.energiaMaxima).toBe(50 + deltaEnergia);
+
+    // Percepção (Sentidos), Inventário (Força), Deslocamento (Destreza).
+    expect(d.derivados!.percepcao).toBe(
+      10 + (calcularAreaPercepcao({ sentidos: 3 }) - calcularAreaPercepcao({ sentidos: 1 })),
+    );
+    expect(d.derivados!.inventarioMaximo).toBe(
+      5 + (calcularInventario({ classe, forca: 6 }) - calcularInventario({ classe, forca: 1 })),
+    );
+    expect(d.derivados!.deslocamento).toBe(
+      9 + (calcularDeslocamento({ classe, destreza: 5 }) - calcularDeslocamento({ classe, destreza: 1 })),
+    );
+
+    // Esquiva soma Destreza, Bloqueio soma Vigor; Defesa base (Nível) não muda com atributo.
+    const defAntes = calcularDefesa({ classe, nivel, destreza: 1, vigor: 1 })!;
+    const defDepois = calcularDefesa({ classe, nivel, destreza: 5, vigor: 4 })!;
+    expect(d.derivados!.esquiva).toBe(13 + (defDepois.esquiva - defAntes.esquiva));
+    expect(d.derivados!.bloqueio).toBe(13 + (defDepois.bloqueio - defAntes.bloqueio));
+    expect(d.derivados!.defesa).toBe(12);
+
+    // Dano C.a.C. recalcula (não foi customizado): Força+Vigor 2 → 10.
+    expect(d.derivados!.danoCorpoACorpo).toBe(calcularDanoCorpo({ classe, forca: 6, vigor: 4 }));
+    // O que não depende de atributo fica intacto (Dano Furtivo, Proficiência, Hab./Turno).
+    expect(d.derivados!.danoFurtivo).toBe('1D6+1');
+    expect(d.derivados!.proficiencia).toBe(2);
+    expect(d.derivados!.habilidadesPorTurno).toBe(5);
+  });
+
+  it('preserva o Dano C.a.C. customizado ao mudar atributos (só recalcula se não foi editado)', () => {
+    const { fixture } = montar({ usuarioLogadoId: 7 });
+    const componente = fixture.componentInstance;
+    const carregada = componente['ficha']()!;
+    componente['ficha'].set({
+      ...carregada,
+      dados: {
+        ...carregada.dados,
+        derivados: { danoCorpoACorpo: '9D6+9 [Custom]' },
+      },
+    });
+
+    componente['ajustarAtributos']({
+      atributos: { ...carregada.dados.atributos, forca: 6, vigor: 4 },
+      maestria: null,
+    });
+
+    // Valor editado à mão diverge do calculado → preservado.
+    expect(componente['ficha']()!.dados.derivados!.danoCorpoACorpo).toBe('9D6+9 [Custom]');
   });
 
   it('concede acesso ao membro selecionado e recarrega os acessos', () => {

@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { ClasseEnum } from '../../enums';
-import { calcularDanoCorpo, calcularDanoFurtivo } from './dano';
+import {
+  calcularDanoCorpo,
+  calcularDanoFurtivo,
+  contarMarcosDanoFurtivo,
+  incrementarDanoFurtivo,
+} from './dano';
 
 /**
  * Dano de Corpo e Dano Furtivo conferidos contra docs/core/sistema-v4.1.0.md —
@@ -38,5 +43,40 @@ describe('calcularDanoFurtivo', () => {
 
   it('civil não possui dano furtivo (retorna null)', () => {
     expect(calcularDanoFurtivo({ classe: ClasseEnum.CIVIL, nivel: 5 })).toBeNull();
+  });
+});
+
+describe('contarMarcosDanoFurtivo', () => {
+  it('conta os marcos (3/6/9/12/15/18) já atingidos por um Nível', () => {
+    expect(contarMarcosDanoFurtivo(0)).toBe(0);
+    expect(contarMarcosDanoFurtivo(2)).toBe(0);
+    expect(contarMarcosDanoFurtivo(3)).toBe(1);
+    expect(contarMarcosDanoFurtivo(5)).toBe(1);
+    expect(contarMarcosDanoFurtivo(12)).toBe(4);
+    expect(contarMarcosDanoFurtivo(20)).toBe(6);
+  });
+});
+
+describe('incrementarDanoFurtivo', () => {
+  it('soma marcos juntando D6 com D6 e fixo com fixo', () => {
+    expect(incrementarDanoFurtivo('1D6+1', 1)).toBe('2D6+2');
+    expect(incrementarDanoFurtivo('1D6+1', 2)).toBe('3D6+3');
+    // Preserva o ajuste manual: 2D6+5 + 1 marco → 3D6+6.
+    expect(incrementarDanoFurtivo('2D6+5', 1)).toBe('3D6+6');
+    // Incremento zero é no-op.
+    expect(incrementarDanoFurtivo('3D6+3', 0)).toBe('3D6+3');
+  });
+
+  it('tolera caixa e espaços na notação', () => {
+    expect(incrementarDanoFurtivo('2d6 + 2', 1)).toBe('3D6+3');
+  });
+
+  it('decrementa com clamp em 0 (descer de Nível não gera componente negativo)', () => {
+    expect(incrementarDanoFurtivo('2D6+2', -1)).toBe('1D6+1');
+    expect(incrementarDanoFurtivo('1D6+1', -5)).toBe('0D6');
+  });
+
+  it('devolve a expressão intacta fora do formato esperado (fail-safe)', () => {
+    expect(incrementarDanoFurtivo('4D6+7 [Físico]', 1)).toBe('4D6+7 [Físico]');
   });
 });

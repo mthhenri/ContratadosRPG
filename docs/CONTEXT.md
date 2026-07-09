@@ -14,12 +14,20 @@
 > `socket.io-client`** — o mock de módulo contaminava entre specs (os de página importam o serviço
 > real pelo token de DI e carregavam o `socket.io-client` de verdade), deixando o spec do serviço
 > **flaky** (io "0 vezes" de forma intermitente); com o token, determinístico. **Correção de
-> progressão (a pedido do autor):** editar o **Nível** passou a aplicar o delta também aos
-> **derivados stored que dependem do Nível** — Defesa/Esquiva/Bloqueio (`10 + Nível` + atributo),
-> Proficiência (`= Nível`) e Hab./Turno (base + ganhos por Nível) —, igual já fazia com Vida/Energia
-> máximas (m3-10): `visualizar.page` ganhou `aplicarDeltaDerivados` (soma `calcular(novo) − (antigo)`
-> das fórmulas de `shared/regras` ao stored, preservando ajustes manuais; campo ausente fica ausente;
-> derivados sem dependência de Nível — deslocamento/dano/percepção/inventário — passam intactos).
+> progressão (a pedido do autor):** editar **Nível** e **atributos** passou a propagar a variação a
+> **todos os derivados/máximas stored dependentes**, preservando ajustes manuais (m3-10). A lógica foi
+> unificada em `visualizar.page`.`aplicarProgressao(antigos, novos)` (usada por Nível e por atributos):
+> números somam `calcular(novo) − calcular(antigo)` das fórmulas de `shared/regras` — Vida (Vigor×
+> Nível), Energia (Destreza×Nível), Defesa/Esquiva/Bloqueio, Deslocamento (Destreza), Proficiência,
+> Percepção (Sentidos), Inventário (Força), Hab./Turno; o **Dano Furtivo** soma os marcos de Nível
+> cruzados juntando **D6 com D6 e fixo com fixo** (cada marco = +1D6+1) via as novas
+> `contarMarcosDanoFurtivo`/`incrementarDanoFurtivo` em `shared/regras/agente/dano` (fail-safe fora do
+> formato, clamp ≥0); o **Dano C.a.C.** (tabela não-linear de Força+Vigor, sem delta somável)
+> **recalcula só quando não foi customizado** (stored = calculado do estado anterior), senão preserva
+> o valor editado. Campo/`derivados` ausente fica ausente (fallback ao cálculo). Assim aumentar Vigor
+> sobe a Vida máxima conforme o Nível, aumentar Sentidos sobe a Percepção etc. **+7 testes** (shared
+> `dano.spec` +3: marcos, incremento juntando D6/fixo, fail-safe/clamp; frontend `visualizar.page` +2 e
+> o de Nível estendido: atributos→derivados, Dano C.a.C. recalcula/preserva, Dano Furtivo por marco).
 > **Dependência nova** no frontend: `socket.io-client`
 > `^4.8.3` (mesma major do `socket.io` do backend). Novo proxy `/socket.io` (`ws: true`) no
 > `proxy.conf.json` para o dev-server encaminhar o handshake ao backend. **Novo `TempoRealService`**
@@ -43,8 +51,8 @@
 > na sala `campanha:<id>` e, a cada `ficha:criada`/`membro:entrou`/reconexão, **refaz o fetch REST** —
 > o recorte visível (§14) e o nome do dono continuam **arbitrados pelo backend**, sem o front duplicar
 > a regra a partir do payload do broadcast (o resumo chega a todos os membros da sala, mas a listagem
-> REST filtra por §14); o refetch ao vivo não pisca o esqueleto. **+19 testes** (Vitest, **frontend
-> 196/196**): `tempo-real.service.spec` (9 — fake do socket injetado por `SOCKET_FACTORY`: não conecta
+> REST filtra por §14); o refetch ao vivo não pisca o esqueleto. **Testes** (Vitest, **frontend
+> 198/198**, **shared 164/164**): `tempo-real.service.spec` (9 — fake do socket injetado por `SOCKET_FACTORY`: não conecta
 > sem sessão, conecta uma vez com o token, **reconecta ao trocar de token / desconecta ao sair a
 > sessão**, entra nas salas só com `*:entrar`, repassa os 3 eventos aos Observables, reingresso+bump
 > só a partir da 2ª conexão, esquece sala ao sair, desconecta limpo), `visualizar.page.spec` (+6 —
