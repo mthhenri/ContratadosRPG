@@ -1,12 +1,14 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { finalize, forkJoin } from 'rxjs';
+import { finalize, forkJoin, merge } from 'rxjs';
 
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
+import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { FichaService } from '../../ficha.service';
 import { construirFichaPadrao } from '../../ficha-padrao';
@@ -42,8 +44,10 @@ export class FichaLista {
   private readonly fichaService = inject(FichaService);
   private readonly campanhaService = inject(CampanhaService);
   private readonly sessaoService = inject(SessaoService);
+  private readonly tempoRealService = inject(TempoRealService);
   private readonly rotaAtiva = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   /** `id` da campanha, lido do parâmetro da rota-pai (`/painel/:campanhaId/ficha`). */
   protected readonly campanhaId = Number(lerParamRota(this.rotaAtiva, 'campanhaId'));
@@ -74,6 +78,37 @@ export class FichaLista {
   });
 
   constructor() {
+    this.carregar(true);
+
+    // Tempo real (m3-08): entra na sala `campanha:<id>` para ver a campanha atualizar ao vivo. Uma
+    // ficha criada (`ficha:criada`) ou um membro que entra (`membro:entrou`) refazem o fetch via
+    // REST — o recorte visível (§14) e o nome do dono continuam **arbitrados pelo backend**, sem o
+    // front duplicar a regra a partir do payload do broadcast (o resumo chega a todos os membros da
+    // sala, mas a listagem REST filtra por §14). Ao sair da tela, esquece a sala.
+    this.tempoRealService.conectar();
+    this.tempoRealService.entrarSalaCampanha(this.campanhaId);
+    this.destroyRef.onDestroy(() => this.tempoRealService.sairSalaCampanha(this.campanhaId));
+
+    merge(this.tempoRealService.fichaCriada$, this.tempoRealService.membroEntrou$)
+      .pipe(takeUntilDestroyed())
+      .subscribe({ next: () => this.carregar(false) });
+
+    // Ressincronização ao reconectar (§9 — o Render dorme e derruba a conexão): refaz o fetch.
+    effect(() => {
+      if (this.tempoRealService.reconexao() > 0) {
+        this.carregar(false);
+      }
+    });
+  }
+
+  /**
+   * (Re)carrega as fichas visíveis e os membros da campanha. `mostrarEsqueleto` liga o esqueleto só
+   * no primeiro carregamento; as ressincronizações ao vivo atualizam sem piscar a tela.
+   */
+  private carregar(mostrarEsqueleto: boolean): void {
+    if (mostrarEsqueleto) {
+      this.carregando.set(true);
+    }
     forkJoin({
       fichas: this.fichaService.listarFichas(this.campanhaId),
       membros: this.campanhaService.listarMembros(this.campanhaId),

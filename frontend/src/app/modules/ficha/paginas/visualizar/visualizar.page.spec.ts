@@ -1,6 +1,7 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { Subject, of } from 'rxjs';
 import { ClasseEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import { calcularVida } from '@contratados-rpg/shared/regras/agente';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
@@ -15,6 +16,7 @@ import { FichaVisualizar } from './visualizar.page';
 import { FichaService } from '../../ficha.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { SessaoService } from '../../../../core/services/sessao.service';
+import { TempoRealService } from '../../../../core/services/tempo-real.service';
 
 /**
  * Prova a ficha numa tela só (m3-07): leitura por padrão e **edição no próprio lugar** para
@@ -69,6 +71,17 @@ describe('FichaVisualizar', () => {
       usuario: () => ({ id: opcoes.usuarioLogadoId, login: 'u', nome: 'U', token: 't' }),
     };
 
+    // Stub do tempo real: um `Subject` controlável para `ficha:alterada` e um Signal de reconexão.
+    const fichaAlterada$ = new Subject<FichaAlteradaDto>();
+    const reconexao = signal(0);
+    const tempoRealService = {
+      conectar: vi.fn(),
+      entrarSalaFicha: vi.fn(),
+      sairSalaFicha: vi.fn(),
+      fichaAlterada$: fichaAlterada$.asObservable(),
+      reconexao,
+    };
+
     TestBed.configureTestingModule({
       imports: [FichaVisualizar],
       providers: [
@@ -76,6 +89,7 @@ describe('FichaVisualizar', () => {
         { provide: FichaService, useValue: fichaService },
         { provide: CampanhaService, useValue: campanhaService },
         { provide: SessaoService, useValue: sessaoService },
+        { provide: TempoRealService, useValue: tempoRealService },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -93,7 +107,14 @@ describe('FichaVisualizar', () => {
 
     const fixture = TestBed.createComponent(FichaVisualizar);
     fixture.detectChanges();
-    return { fixture, raiz: fixture.nativeElement as HTMLElement, fichaService };
+    return {
+      fixture,
+      raiz: fixture.nativeElement as HTMLElement,
+      fichaService,
+      tempoRealService,
+      fichaAlterada$,
+      reconexao,
+    };
   }
 
   it('exibe a ficha para um membro comum sem edição inline nem painel de acesso', () => {
@@ -212,5 +233,88 @@ describe('FichaVisualizar', () => {
     fixture.componentInstance['revogar'](11);
 
     expect(fichaService.revogarAcesso).toHaveBeenCalledWith(42, 11);
+  });
+
+  it('entra na sala da ficha ao abrir e a esquece ao destruir (m3-08)', () => {
+    const { fixture, tempoRealService } = montar({ usuarioLogadoId: 99 });
+    expect(tempoRealService.conectar).toHaveBeenCalled();
+    expect(tempoRealService.entrarSalaFicha).toHaveBeenCalledWith(42);
+    expect(tempoRealService.sairSalaFicha).not.toHaveBeenCalled();
+    fixture.destroy();
+    expect(tempoRealService.sairSalaFicha).toHaveBeenCalledWith(42);
+  });
+
+  it('aplica o ficha:alterada recebido por WebSocket sem recarregar (critério de aceite)', () => {
+    // O mestre (99) vê a ficha aberta; um ficha:alterada do jogador chega pela sala e atualiza a tela.
+    const { fixture, fichaAlterada$, fichaService } = montar({ usuarioLogadoId: 99 });
+    const componente = fixture.componentInstance;
+    expect(componente['ficha']()?.nome).toBe('Kane');
+
+    const remota: FichaAlteradaDto = {
+      id: 42,
+      campanhaId: 9,
+      usuarioId: 7,
+      nome: 'Kane Ferido',
+      dados: { ...dados, estado: { ...dados.estado, vidaAtual: 1 } },
+    };
+    fichaAlterada$.next(remota);
+
+    // Atualizou o estado local — sem novo GET (recuperarFicha só no boot).
+    expect(componente['ficha']()?.nome).toBe('Kane Ferido');
+    expect(componente['ficha']()?.dados.estado.vidaAtual).toBe(1);
+    expect(fichaService.recuperarFicha).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignora eventos de outra ficha e descarta o remoto enquanto há edição local pendente', () => {
+    vi.useFakeTimers();
+    try {
+      const { fixture, fichaAlterada$ } = montar({ usuarioLogadoId: 99 });
+      const componente = fixture.componentInstance;
+
+      // Evento de outra ficha (id 7) é ignorado.
+      fichaAlterada$.next({
+        id: 7,
+        campanhaId: 9,
+        usuarioId: 7,
+        nome: 'Outra',
+        dados,
+      } as FichaAlteradaDto);
+      expect(componente['ficha']()?.nome).toBe('Kane');
+
+      // Edição local em voo: o remoto não sobrescreve o que o usuário está editando (m3-08 × m3-10).
+      componente['ajustarNome']('Editando');
+      fichaAlterada$.next({
+        id: 42,
+        campanhaId: 9,
+        usuarioId: 7,
+        nome: 'Remoto',
+        dados,
+      } as FichaAlteradaDto);
+      expect(componente['ficha']()?.nome).toBe('Editando');
+
+      // Ao concluir o save (debounced), a resposta autoritativa reconcilia e libera novos remotos.
+      vi.advanceTimersByTime(500);
+      fichaAlterada$.next({
+        id: 42,
+        campanhaId: 9,
+        usuarioId: 7,
+        nome: 'Remoto Pós-Save',
+        dados,
+      } as FichaAlteradaDto);
+      expect(componente['ficha']()?.nome).toBe('Remoto Pós-Save');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('ressincroniza a ficha aberta ao reconectar (§9)', () => {
+    const { fixture, reconexao, fichaService } = montar({ usuarioLogadoId: 99 });
+    expect(fichaService.recuperarFicha).toHaveBeenCalledTimes(1);
+
+    // Uma reconexão bumpa o Signal → refetch da ficha aberta.
+    reconexao.set(1);
+    fixture.detectChanges();
+
+    expect(fichaService.recuperarFicha).toHaveBeenCalledTimes(2);
   });
 });

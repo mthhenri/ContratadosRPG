@@ -1,6 +1,48 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-09 (**m3-10 — edição da ficha no próprio lugar + Maestria + "nada é
+> Última atualização: 2026-07-09 (**m3-08 — cliente Socket.IO + tela do mestre ao vivo**: fecha o §9
+> no frontend — o tempo real das fichas —, consumindo o gateway broadcast-only da **m3-05** sem
+> nenhuma escrita por WebSocket (proibição #25). **Dependência nova** no frontend: `socket.io-client`
+> `^4.8.3` (mesma major do `socket.io` do backend). Novo proxy `/socket.io` (`ws: true`) no
+> `proxy.conf.json` para o dev-server encaminhar o handshake ao backend. **Novo `TempoRealService`**
+> (`core/services/tempo-real.service.ts`, `providedIn: 'root'`): mantém **uma** conexão Socket.IO
+> autenticada pelo JWT da sessão (m2-06) — `io(apiBase || undefined, { auth: { token } })`; em dev
+> `apiBase` é `''` → **`undefined`** (mesma origem — passar `''` a `io` geraria uma URL inválida). O
+> estado de conexão fica em **Signals** (`conectado`, `reconexao`); os três eventos de negócio
+> (`ficha:alterada`, `ficha:criada`, `membro:entrou`) são **`Observable`s** (cada evento é um
+> instante, não um estado). Métodos `entrarSalaFicha`/`entrarSalaCampanha` só emitem `*:entrar`
+> (**nunca** mutação); `sairSala*` esquece a sala (o gateway m3-05 não tem handler de "leave", então
+> só remove do rastreio local — a desinscrição por `takeUntilDestroyed` impede agir em evento de sala
+> antiga). **Ressincronização (§9 — o Render free tier dorme e derruba a conexão):** a cada `connect`
+> o serviço **reingressa** nas salas rastreadas (o servidor as perde ao cair o socket) e, se **não**
+> for a primeira conexão, incrementa `reconexao` — as telas refazem o fetch. **Visualizar (a ficha
+> aberta)** entra na sala `ficha:<id>` e, ao receber `ficha:alterada` **desta** ficha, **reconcilia o
+> Signal local sem recarregar** (critério de aceite: o mestre com a ficha aberta vê a edição do
+> jogador ao vivo) — **com a regra de m3-10:** enquanto há **edição local pendente** (`edicaoPendente`,
+> do disparo do ajuste até a resposta do `alterarFicha`) o evento remoto é **descartado** para não
+> sobrescrever o que o usuário edita; a resposta do próprio save reconcilia com o backend. Ao
+> reconectar, refaz `recuperarFicha` (salvo edição pendente). **Lista (o painel da campanha)** entra
+> na sala `campanha:<id>` e, a cada `ficha:criada`/`membro:entrou`/reconexão, **refaz o fetch REST** —
+> o recorte visível (§14) e o nome do dono continuam **arbitrados pelo backend**, sem o front duplicar
+> a regra a partir do payload do broadcast (o resumo chega a todos os membros da sala, mas a listagem
+> REST filtra por §14); o refetch ao vivo não pisca o esqueleto. **+15 testes** (Vitest, **frontend
+> 192/192**): `tempo-real.service.spec` (8 — mock de `socket.io-client` via `vi.hoisted`: não conecta
+> sem sessão, conecta uma vez com o token, entra nas salas só com `*:entrar`, repassa os 3 eventos aos
+> Observables, reingresso+bump só a partir da 2ª conexão, esquece sala ao sair, desconecta limpo),
+> `visualizar.page.spec` (+4 — entra/esquece a sala, aplica o `ficha:alterada` sem novo GET, ignora
+> outra ficha + descarta remoto durante edição pendente, ressincroniza ao reconectar) e
+> `lista.page.spec` (+3 — entra/esquece a sala, refetch §14 em ficha:criada/membro:entrou,
+> ressincroniza ao reconectar). `lint`/`test`/`build` verdes (bundle inicial **567,56 kB** dentro do
+> budget de 575 kB — o `socket.io-client` divide na chunk core compartilhada). **Verificado por
+> render** (Playwright/Chromium sobre o **build de desenvolvimento** — `apiBase` `''` = mesma origem —
+> servido por um http+socket.io server local, REST mockado por rota exata para a navegação SPA cair no
+> app): como **mestre (id 99)** abrindo a ficha do **jogador (id 7)**, o socket **conecta com o JWT no
+> handshake** (`auth token? true`), ingressa em `ficha:42`, e um `ficha:alterada` emitido pelo servidor
+> atualiza a tela de **"Kane" → "Kane Ferido" ao vivo, sem recarregar**; **zero erros de app** (só a
+> fonte Google externa falha no sandbox sem rede). Fora de escopo (mantido): refino mobile dedicado
+> (m3-09), editores de sub-coleções (m3-11..m3-15). Spec `m3-08` → `done/`. **M3 avança: tempo real
+> das fichas no ar — o mestre vê as edições dos jogadores ao vivo.** Sessão anterior no mesmo dia
+> (**m3-10 — edição da ficha no próprio lugar + Maestria + "nada é
 > exclusivamente calculado"**). **Revisão constitucional** (SYSTEM.SPEC §10.4/§11, SCHEMA.md, JSDoc
 > do contrato): o princípio "nenhum derivado é persistido" foi **invertido** — na **criação**,
 > `shared/regras` calcula tudo uma vez e **grava** no `dados` (Vida/Energia máximas em `estado`; o

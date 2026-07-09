@@ -1,8 +1,8 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Subject, debounceTime, finalize, forkJoin, switchMap } from 'rxjs';
+import { Subject, debounceTime, filter, finalize, forkJoin, switchMap } from 'rxjs';
 
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import { calcularEnergia, calcularVida } from '@contratados-rpg/shared/regras/agente';
@@ -15,6 +15,7 @@ import type {
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
+import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { FichaService } from '../../ficha.service';
 import { lerParamRota } from '../../ler-param-rota';
@@ -51,7 +52,9 @@ export class FichaVisualizar {
   private readonly fichaService = inject(FichaService);
   private readonly campanhaService = inject(CampanhaService);
   private readonly sessaoService = inject(SessaoService);
+  private readonly tempoRealService = inject(TempoRealService);
   private readonly rotaAtiva = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly campanhaId = Number(lerParamRota(this.rotaAtiva, 'campanhaId'));
   protected readonly fichaId = Number(lerParamRota(this.rotaAtiva, 'id'));
@@ -63,6 +66,13 @@ export class FichaVisualizar {
 
   /** Dispara a persistência (debounced) de cada edição no próprio lugar. */
   private readonly ajustePendente = new Subject<void>();
+  /**
+   * `true` enquanto há uma edição local não persistida (do disparo até a resposta do `alterarFicha`).
+   * Enquanto verdadeiro, um `ficha:alterada` recebido por WebSocket é **descartado** para não
+   * sobrescrever o que o usuário está editando (m3-08 × m3-10) — a resposta do próprio save
+   * reconcilia com o estado autoritativo do backend.
+   */
+  private readonly edicaoPendente = signal(false);
 
   /** Menu de ações no cabeçalho (kebab) aberto. */
   protected readonly menuAberto = signal(false);
@@ -138,7 +148,42 @@ export class FichaVisualizar {
         }),
         takeUntilDestroyed(),
       )
+      .subscribe({
+        next: (fichaAlterada) => {
+          this.ficha.set(fichaAlterada);
+          this.edicaoPendente.set(false);
+        },
+      });
+
+    // Tempo real (m3-08): entra na sala `ficha:<id>` e reage a `ficha:alterada`. O mestre com a ficha
+    // aberta vê a edição do jogador **sem recarregar** (critério de aceite). A permissão da sala é
+    // arbitrada pelo gateway (§14) — o front só apresenta. Ao sair da tela, esquece a sala.
+    this.tempoRealService.conectar();
+    this.tempoRealService.entrarSalaFicha(this.fichaId);
+    this.destroyRef.onDestroy(() => this.tempoRealService.sairSalaFicha(this.fichaId));
+
+    this.tempoRealService.fichaAlterada$
+      .pipe(
+        filter((ficha) => ficha.id === this.fichaId && !this.edicaoPendente()),
+        takeUntilDestroyed(),
+      )
       .subscribe({ next: (fichaAlterada) => this.ficha.set(fichaAlterada) });
+
+    // Ressincronização ao reconectar (§9 — o Render dorme e derruba a conexão): refaz o fetch da
+    // ficha aberta, exceto se houver edição local pendente (o save em voo já reconcilia).
+    effect(() => {
+      if (this.tempoRealService.reconexao() > 0 && !this.edicaoPendente()) {
+        this.fichaService
+          .recuperarFicha(this.fichaId)
+          .subscribe({ next: (ficha) => this.ficha.set(ficha) });
+      }
+    });
+  }
+
+  /** Marca uma edição local pendente e agenda a persistência em lote (debounced). */
+  private agendarPersistencia(): void {
+    this.edicaoPendente.set(true);
+    this.ajustePendente.next();
   }
 
   /** Abre/fecha o menu de ações do cabeçalho. */
@@ -182,7 +227,7 @@ export class FichaVisualizar {
     }
     const estado = { ...fichaAtual.dados.estado, [ajuste.campo]: ajuste.valor };
     this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, estado } });
-    this.ajustePendente.next();
+    this.agendarPersistencia();
   }
 
   /**
@@ -197,7 +242,7 @@ export class FichaVisualizar {
     }
     const derivados = { ...(fichaAtual.dados.derivados ?? {}), [ajuste.chave]: ajuste.valor };
     this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, derivados } });
-    this.ajustePendente.next();
+    this.agendarPersistencia();
   }
 
   /**
@@ -213,7 +258,7 @@ export class FichaVisualizar {
       ...fichaAtual,
       dados: { ...fichaAtual.dados, atributos: ajuste.atributos, maestria: ajuste.maestria },
     });
-    this.ajustePendente.next();
+    this.agendarPersistencia();
   }
 
   /** Edita Classe/Arquétipo — otimista + persistência em lote (arquétipo já coerente com a classe). */
@@ -226,7 +271,7 @@ export class FichaVisualizar {
       ...fichaAtual,
       dados: { ...fichaAtual.dados, classe: ajuste.classe, arquetipo: ajuste.arquetipo },
     });
-    this.ajustePendente.next();
+    this.agendarPersistencia();
   }
 
   /** Edita o Codinome (relacional) — otimista + persistência em lote. */
@@ -236,7 +281,7 @@ export class FichaVisualizar {
       return;
     }
     this.ficha.set({ ...fichaAtual, nome });
-    this.ajustePendente.next();
+    this.agendarPersistencia();
   }
 
   /**
@@ -254,7 +299,7 @@ export class FichaVisualizar {
       dados = { ...dados, estado: this.aplicarDeltaNivel(fichaAtual.dados, ajuste.valor) };
     }
     this.ficha.set({ ...fichaAtual, dados });
-    this.ajustePendente.next();
+    this.agendarPersistencia();
   }
 
   /** Novo `estado` com as máximas stored somadas do delta de progressão entre o nível antigo e o novo. */
