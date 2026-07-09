@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
+  FichaInternoCriarDto,
   FichaJogadorDadosDto,
   FichaRecuperadaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
@@ -177,7 +178,8 @@ describe('FichaService', () => {
         usuarioDono,
       );
 
-      const dadosPersistidos = fichaRepositorio.criarFicha.mock.calls[0][0].dados;
+      const [argumentoCriacao] = fichaRepositorio.criarFicha.mock.calls[0] as [FichaInternoCriarDto];
+      const dadosPersistidos = argumentoCriacao.dados;
       expect(dadosPersistidos.estado.vidaMaxima).toBe(
         calcularVida({ classe: ClasseEnum.COMBATENTE, nivel: 1, vigor: 2 }),
       );
