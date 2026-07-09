@@ -9,7 +9,18 @@
 > `visualizar` ganhou `catchError` que libera `edicaoPendente` e mantém o stream vivo (sem ele, um
 > 400/403 prenderia a flag e travaria persistência **e** live-updates); (3) **join único** —
 > `entrarSala*` só emite se já conectado, senão confia no reingresso do `connect` (elimina o join
-> dobrado com o buffer offline do socket.io). **Dependência nova** no frontend: `socket.io-client`
+> dobrado com o buffer offline do socket.io). A **fábrica do socket** virou um seam de DI
+> (`SOCKET_FACTORY`, default `io`) para os testes injetarem um fake **sem `vi.mock` do
+> `socket.io-client`** — o mock de módulo contaminava entre specs (os de página importam o serviço
+> real pelo token de DI e carregavam o `socket.io-client` de verdade), deixando o spec do serviço
+> **flaky** (io "0 vezes" de forma intermitente); com o token, determinístico. **Correção de
+> progressão (a pedido do autor):** editar o **Nível** passou a aplicar o delta também aos
+> **derivados stored que dependem do Nível** — Defesa/Esquiva/Bloqueio (`10 + Nível` + atributo),
+> Proficiência (`= Nível`) e Hab./Turno (base + ganhos por Nível) —, igual já fazia com Vida/Energia
+> máximas (m3-10): `visualizar.page` ganhou `aplicarDeltaDerivados` (soma `calcular(novo) − (antigo)`
+> das fórmulas de `shared/regras` ao stored, preservando ajustes manuais; campo ausente fica ausente;
+> derivados sem dependência de Nível — deslocamento/dano/percepção/inventário — passam intactos).
+> **Dependência nova** no frontend: `socket.io-client`
 > `^4.8.3` (mesma major do `socket.io` do backend). Novo proxy `/socket.io` (`ws: true`) no
 > `proxy.conf.json` para o dev-server encaminhar o handshake ao backend. **Novo `TempoRealService`**
 > (`core/services/tempo-real.service.ts`, `providedIn: 'root'`): mantém **uma** conexão Socket.IO
@@ -32,13 +43,14 @@
 > na sala `campanha:<id>` e, a cada `ficha:criada`/`membro:entrou`/reconexão, **refaz o fetch REST** —
 > o recorte visível (§14) e o nome do dono continuam **arbitrados pelo backend**, sem o front duplicar
 > a regra a partir do payload do broadcast (o resumo chega a todos os membros da sala, mas a listagem
-> REST filtra por §14); o refetch ao vivo não pisca o esqueleto. **+18 testes** (Vitest, **frontend
-> 195/195**): `tempo-real.service.spec` (9 — mock de `socket.io-client` via `vi.hoisted`: não conecta
+> REST filtra por §14); o refetch ao vivo não pisca o esqueleto. **+19 testes** (Vitest, **frontend
+> 196/196**): `tempo-real.service.spec` (9 — fake do socket injetado por `SOCKET_FACTORY`: não conecta
 > sem sessão, conecta uma vez com o token, **reconecta ao trocar de token / desconecta ao sair a
 > sessão**, entra nas salas só com `*:entrar`, repassa os 3 eventos aos Observables, reingresso+bump
-> só a partir da 2ª conexão, esquece sala ao sair, desconecta limpo), `visualizar.page.spec` (+5 —
+> só a partir da 2ª conexão, esquece sala ao sair, desconecta limpo), `visualizar.page.spec` (+6 —
 > entra/esquece a sala, aplica o `ficha:alterada` sem novo GET, ignora outra ficha + descarta remoto
-> durante edição pendente, **erro de save libera a edição pendente**, ressincroniza ao reconectar) e
+> durante edição pendente, **erro de save libera a edição pendente**, **delta de Nível nos derivados
+> stored**, ressincroniza ao reconectar) e
 > `lista.page.spec` (+3 — entra/esquece a sala, refetch §14 em ficha:criada/membro:entrou,
 > ressincroniza ao reconectar). `lint`/`test`/`build` verdes (bundle inicial **567,56 kB** dentro do
 > budget de 575 kB — o `socket.io-client` divide na chunk core compartilhada). **Verificado por

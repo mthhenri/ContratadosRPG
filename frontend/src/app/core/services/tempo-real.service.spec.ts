@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 
 import { SessaoService } from './sessao.service';
-import { TempoRealService } from './tempo-real.service';
+import { SOCKET_FACTORY, TempoRealService } from './tempo-real.service';
 
 /**
  * Fake do socket do `socket.io-client`: captura os handlers registrados por `on` e as chamadas de
@@ -32,30 +32,32 @@ class SocketFake {
   }
 }
 
-let socketFake: SocketFake;
-// `vi.hoisted` garante que o mock exista antes do `vi.mock` (içado ao topo do módulo).
-const ioMock = vi.hoisted(() => vi.fn());
-
-vi.mock('socket.io-client', () => ({ io: ioMock }));
-
 /**
  * Prova o cliente Socket.IO do tempo real (m3-08): conecta com o JWT da sessão, entra nas salas,
  * repassa os eventos aos `Observable`s, **nunca emite mutação**, reconecta ao trocar de sessão e, ao
  * reconectar, reingressa nas salas conhecidas e bumpa o Signal de ressincronização (§9).
+ *
+ * A fábrica do socket é injetada pelo token `SOCKET_FACTORY` (seam de teste) — nada de `vi.mock` do
+ * `socket.io-client`, que contaminaria os specs de página que importam o serviço real.
  */
 describe('TempoRealService', () => {
+  let socketFake: SocketFake;
+  let ioMock: ReturnType<typeof vi.fn>;
+
   function criar(obterToken: () => string | null): { servico: TempoRealService } {
     const sessaoService = { obterToken };
     TestBed.configureTestingModule({
-      providers: [{ provide: SessaoService, useValue: sessaoService }],
+      providers: [
+        { provide: SessaoService, useValue: sessaoService },
+        { provide: SOCKET_FACTORY, useValue: ioMock },
+      ],
     });
     return { servico: TestBed.inject(TempoRealService) };
   }
 
   beforeEach(() => {
     socketFake = new SocketFake();
-    ioMock.mockReset();
-    ioMock.mockImplementation(() => socketFake);
+    ioMock = vi.fn(() => socketFake);
   });
 
   it('não conecta sem sessão (o handshake do gateway exige o token)', () => {

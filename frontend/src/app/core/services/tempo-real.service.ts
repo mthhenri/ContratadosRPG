@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { InjectionToken, Injectable, inject, signal } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
 
@@ -7,6 +7,16 @@ import type { FichaAlteradaDto, FichaResumoDto } from '@contratados-rpg/shared/d
 
 import { environment } from '../../../environments/environment';
 import { SessaoService } from './sessao.service';
+
+/**
+ * Fábrica do socket (seam de teste). O padrão é o `io` do `socket.io-client`; nos testes um fake é
+ * injetado por este token — evita `vi.mock` do módulo (que contamina entre specs que importam o
+ * serviço real).
+ */
+export const SOCKET_FACTORY = new InjectionToken<typeof io>('SOCKET_FACTORY', {
+  providedIn: 'root',
+  factory: () => io,
+});
 
 /**
  * Cliente Socket.IO do tempo real (m3-08) — consome o gateway **broadcast-only** da m3-05. Mantém
@@ -26,6 +36,7 @@ import { SessaoService } from './sessao.service';
 @Injectable({ providedIn: 'root' })
 export class TempoRealService {
   private readonly sessaoService = inject(SessaoService);
+  private readonly criarSocket = inject(SOCKET_FACTORY);
 
   private socket: Socket | null = null;
   private jaConectou = false;
@@ -76,7 +87,7 @@ export class TempoRealService {
     }
 
     this.tokenConectado = token;
-    this.socket = io(environment.apiBase || undefined, { auth: { token } });
+    this.socket = this.criarSocket(environment.apiBase || undefined, { auth: { token } });
 
     this.socket.on('connect', () => {
       this.conectado.set(true);

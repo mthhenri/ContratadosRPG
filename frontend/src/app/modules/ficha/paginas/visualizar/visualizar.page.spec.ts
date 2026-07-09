@@ -209,6 +209,46 @@ describe('FichaVisualizar', () => {
     expect(novo.estado.vidaMaxima).toBe(100 + deltaVida);
   });
 
+  it('editar o Nível soma o delta aos derivados stored que dependem do Nível', () => {
+    const { fixture } = montar({ usuarioLogadoId: 7 });
+    const componente = fixture.componentInstance;
+
+    // Semeia derivados stored (Combatente, atributos 1). Nível 2 → 4.
+    const carregada = componente['ficha']()!;
+    componente['ficha'].set({
+      ...carregada,
+      dados: {
+        ...carregada.dados,
+        derivados: {
+          defesa: 20,
+          esquiva: 22,
+          bloqueio: 25,
+          proficiencia: 5,
+          habilidadesPorTurno: 9,
+          deslocamento: 9,
+          percepcao: 10,
+          inventarioMaximo: 5,
+        },
+      },
+    });
+
+    componente['ajustarCampoDados']({ campo: 'nivel', valor: 4 });
+
+    const novos = componente['ficha']()!.dados.derivados!;
+    // Defesa 10+Nível: +2 ao subir 2→4; Esquiva/Bloqueio idem (10+Nível+atributo).
+    expect(novos.defesa).toBe(22);
+    expect(novos.esquiva).toBe(24);
+    expect(novos.bloqueio).toBe(27);
+    // Proficiência = Nível: +2.
+    expect(novos.proficiencia).toBe(7);
+    // Hab./Turno: os Níveis 2 e 4 dão +1 cada → +1 ao subir 2→4.
+    expect(novos.habilidadesPorTurno).toBe(10);
+    // Derivados que não dependem do Nível passam intactos.
+    expect(novos.deslocamento).toBe(9);
+    expect(novos.percepcao).toBe(10);
+    expect(novos.inventarioMaximo).toBe(5);
+  });
+
   it('concede acesso ao membro selecionado e recarrega os acessos', () => {
     const { fixture, fichaService } = montar({ usuarioLogadoId: 7 });
     const componente = fixture.componentInstance;

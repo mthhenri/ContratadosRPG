@@ -5,10 +5,17 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { EMPTY, Subject, catchError, debounceTime, filter, finalize, forkJoin, switchMap } from 'rxjs';
 
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
-import { calcularEnergia, calcularVida } from '@contratados-rpg/shared/regras/agente';
+import {
+  calcularDefesa,
+  calcularEnergia,
+  calcularLimiteHabilidadesPorTurno,
+  calcularProficiencia,
+  calcularVida,
+} from '@contratados-rpg/shared/regras/agente';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type {
   FichaAcessoResumoDto,
+  FichaDerivadosDto,
   FichaJogadorDadosDto,
   FichaRecuperadaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
@@ -19,6 +26,7 @@ import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { FichaService } from '../../ficha.service';
 import { lerParamRota } from '../../ler-param-rota';
+import { normalizarEntrada } from '../../status-derivado';
 
 import {
   AjusteAtributos,
@@ -291,9 +299,11 @@ export class FichaVisualizar {
   }
 
   /**
-   * Edita Nível/Prestígio. **Nível** aplica o **delta de progressão** (m3-10): soma
-   * `calcularVida/Energia(novo) − (antigo)` às **máximas stored** — preservando ajustes manuais, sem
-   * recalcular do zero (máximas ausentes ficam ausentes → fallback derivado). Otimista + em lote.
+   * Edita Nível/Prestígio. **Nível** aplica o **delta de progressão** (m3-10) aos derivados que
+   * dependem dele: soma `calcular(novo) − (antigo)` às **máximas stored** (Vida/Energia) e aos
+   * **derivados stored** que crescem com o Nível — Defesa/Esquiva/Bloqueio (`10 + Nível`),
+   * Proficiência (`= Nível`) e Hab./Turno (base + ganhos por Nível). Preserva ajustes manuais, sem
+   * recalcular do zero (campo ausente fica ausente → fallback derivado). Otimista + em lote.
    */
   protected ajustarCampoDados(ajuste: AjusteCampoDados): void {
     const fichaAtual = this.ficha();
@@ -302,7 +312,11 @@ export class FichaVisualizar {
     }
     let dados: FichaJogadorDadosDto = { ...fichaAtual.dados, [ajuste.campo]: ajuste.valor };
     if (ajuste.campo === 'nivel') {
-      dados = { ...dados, estado: this.aplicarDeltaNivel(fichaAtual.dados, ajuste.valor) };
+      dados = {
+        ...dados,
+        estado: this.aplicarDeltaNivel(fichaAtual.dados, ajuste.valor),
+        derivados: this.aplicarDeltaDerivados(fichaAtual.dados, ajuste.valor),
+      };
     }
     this.ficha.set({ ...fichaAtual, dados });
     this.agendarPersistencia();
@@ -325,6 +339,49 @@ export class FichaVisualizar {
       vidaMaxima: estado.vidaMaxima === undefined ? undefined : estado.vidaMaxima + deltaVida,
       energiaMaxima:
         estado.energiaMaxima === undefined ? undefined : estado.energiaMaxima + deltaEnergia,
+    };
+  }
+
+  /**
+   * Novo bloco `derivados` com os campos que dependem do Nível somados do delta de progressão —
+   * Defesa/Esquiva/Bloqueio (`10 + Nível` + atributo), Proficiência (`= Nível`) e Hab./Turno (base +
+   * ganhos por Nível). Mesma política das máximas (m3-10): soma ao **stored**, preservando ajustes
+   * manuais; campo ausente fica ausente (fallback ao cálculo). Os demais derivados (deslocamento,
+   * dano, percepção, inventário — que não dependem do Nível) passam intactos. Reusa as fórmulas de
+   * `shared/regras` (fonte única — proibições #26/#27), sobre o Nível já normalizado à classe (mesma
+   * base da exibição). `derivados` ausente → mantém ausente.
+   */
+  private aplicarDeltaDerivados(
+    dados: FichaJogadorDadosDto,
+    nivelNovo: number,
+  ): FichaDerivadosDto | undefined {
+    const derivados = dados.derivados;
+    if (!derivados) {
+      return undefined;
+    }
+    const { classe, atributos } = dados;
+    const antes = normalizarEntrada(classe, dados.nivel, atributos);
+    const depois = normalizarEntrada(classe, nivelNovo, atributos);
+    const defesaAntes = calcularDefesa(antes);
+    const defesaDepois = calcularDefesa(depois);
+    const somar = (valor: number | undefined, delta: number): number | undefined =>
+      valor === undefined ? undefined : valor + delta;
+    return {
+      ...derivados,
+      defesa: somar(derivados.defesa, (defesaDepois?.defesa ?? 0) - (defesaAntes?.defesa ?? 0)),
+      esquiva: somar(derivados.esquiva, (defesaDepois?.esquiva ?? 0) - (defesaAntes?.esquiva ?? 0)),
+      bloqueio: somar(
+        derivados.bloqueio,
+        (defesaDepois?.bloqueio ?? 0) - (defesaAntes?.bloqueio ?? 0),
+      ),
+      proficiencia: somar(
+        derivados.proficiencia,
+        (calcularProficiencia(depois) ?? 0) - (calcularProficiencia(antes) ?? 0),
+      ),
+      habilidadesPorTurno: somar(
+        derivados.habilidadesPorTurno,
+        calcularLimiteHabilidadesPorTurno(depois) - calcularLimiteHabilidadesPorTurno(antes),
+      ),
     };
   }
 
