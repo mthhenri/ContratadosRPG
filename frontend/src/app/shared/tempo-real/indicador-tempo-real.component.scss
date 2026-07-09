@@ -1,0 +1,62 @@
+// Selo de tempo real offline (m3-08). Só tokens do tema "Terminal de Contenção" (proibição #29):
+// chip mono UPPERCASE em --warning (semântica de aviso), borda/fundo derivados por color-mix.
+.indicador-tempo-real {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px;
+  border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
+  border-radius: var(--radius-control);
+  background: color-mix(in srgb, var(--warning) 12%, transparent);
+  color: var(--warning);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+
+  // Debounce visual: só aparece após ~1,5s desconectado — micro-quedas (o socket reconecta sozinho)
+  // desmontam o elemento antes de ele surgir, sem piscar. O atraso é comportamento (não decoração),
+  // então é preservado mesmo com movimento reduzido; só o fade/pulsar é removido lá embaixo.
+  opacity: 0;
+  animation: indicador-tempo-real-surgir 0.2s ease-out 1.5s forwards;
+
+  &__ponto {
+    width: 7px;
+    height: 7px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--warning);
+    animation: indicador-tempo-real-pulsar 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes indicador-tempo-real-surgir {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes indicador-tempo-real-pulsar {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+// Movimento reduzido: mantém o debounce de 1,5s (funcional), sem o fade nem o pulsar do ponto.
+@media (prefers-reduced-motion: reduce) {
+  .indicador-tempo-real {
+    animation: indicador-tempo-real-surgir 0.01s linear 1.5s forwards;
+
+    &__ponto {
+      animation: none;
+      opacity: 1;
+    }
+  }
+}

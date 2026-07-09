@@ -52,7 +52,7 @@
 > o recorte visível (§14) e o nome do dono continuam **arbitrados pelo backend**, sem o front duplicar
 > a regra a partir do payload do broadcast (o resumo chega a todos os membros da sala, mas a listagem
 > REST filtra por §14); o refetch ao vivo não pisca o esqueleto. **Testes** (Vitest, **frontend
-> 198/198**, **shared 164/164**): `tempo-real.service.spec` (9 — fake do socket injetado por `SOCKET_FACTORY`: não conecta
+> 201/201**, **shared 164/164**): `tempo-real.service.spec` (9 — fake do socket injetado por `SOCKET_FACTORY`: não conecta
 > sem sessão, conecta uma vez com o token, **reconecta ao trocar de token / desconecta ao sair a
 > sessão**, entra nas salas só com `*:entrar`, repassa os 3 eventos aos Observables, reingresso+bump
 > só a partir da 2ª conexão, esquece sala ao sair, desconecta limpo), `visualizar.page.spec` (+6 —
@@ -60,14 +60,27 @@
 > durante edição pendente, **erro de save libera a edição pendente**, **delta de Nível nos derivados
 > stored**, ressincroniza ao reconectar) e
 > `lista.page.spec` (+3 — entra/esquece a sala, refetch §14 em ficha:criada/membro:entrou,
-> ressincroniza ao reconectar). `lint`/`test`/`build` verdes (bundle inicial **567,56 kB** dentro do
-> budget de 575 kB — o `socket.io-client` divide na chunk core compartilhada). **Verificado por
+> ressincroniza ao reconectar). **Indicador de reconexão na UI (§9, a pedido do autor):** componente
+> standalone `IndicadorTempoReal` (`shared/tempo-real/`) consome o Signal `conectado` — **silêncio
+> quando conectado**, e um chip `TEMPO REAL OFFLINE` em `--warning` quando a conexão cai; escopado às
+> telas de ficha (cabeçalho da `lista` e da `visualizar`), onde a conexão está aberta. O **debounce**
+> é 100% SCSS (mesmo padrão do `.carregando-global`): o selo só surge após ~1,5s desconectado — as
+> micro-quedas (o socket reconecta sozinho) o desmontam antes de aparecer, sem piscar; o atraso é
+> preservado em `prefers-reduced-motion` (só o fade/pulsar são removidos). `role="status"` +
+> `aria-live="polite"`; só tokens do tema (proibição #29). **+3 testes** de componente (silêncio
+> conectado / aviso com `role=status` desconectado / reage ao Signal); os stubs de `TempoRealService`
+> nas páginas ganharam `conectado`. `lint`/`test`/`build` verdes (bundle inicial **567,56 kB** dentro do
+> budget de 575 kB — o `socket.io-client` divide na chunk core compartilhada; o indicador mora nas
+> chunks lazy de ficha). **Verificado por
 > render** (Playwright/Chromium sobre o **build de desenvolvimento** — `apiBase` `''` = mesma origem —
 > servido por um http+socket.io server local, REST mockado por rota exata para a navegação SPA cair no
 > app): como **mestre (id 99)** abrindo a ficha do **jogador (id 7)**, o socket **conecta com o JWT no
 > handshake** (`auth token? true`), ingressa em `ficha:42`, e um `ficha:alterada` emitido pelo servidor
 > atualiza a tela de **"Kane" → "Kane Ferido" ao vivo, sem recarregar**; **zero erros de app** (só a
-> fonte Google externa falha no sandbox sem rede). Fora de escopo (mantido): refino mobile dedicado
+> fonte Google externa falha no sandbox sem rede). O **indicador offline** foi verificado por render
+> contra um servidor **sem gateway** (o socket cai em `connect_error`): na tela real da ficha, antes de
+> 1,5s o chip fica invisível (opacity 0 — não pisca) e após o debounce surge **"TEMPO REAL OFFLINE"**
+> (opacity 1, `role=status`). Fora de escopo (mantido): refino mobile dedicado
 > (m3-09), editores de sub-coleções (m3-11..m3-15). Spec `m3-08` → `done/`. **M3 avança: tempo real
 > das fichas no ar — o mestre vê as edições dos jogadores ao vivo.** Sessão anterior no mesmo dia
 > (**m3-10 — edição da ficha no próprio lugar + Maestria + "nada é

@@ -49,6 +49,7 @@ describe('FichaLista', () => {
       fichaCriada$: fichaCriada$.asObservable(),
       membroEntrou$: membroEntrou$.asObservable(),
       reconexao,
+      conectado: signal(true),
     };
 
     TestBed.configureTestingModule({

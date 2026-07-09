@@ -12,6 +12,7 @@
       @if (!carregando() && itens().length) {
         <span class="card__contagem" aria-hidden="true">{{ itens().length }}</span>
       }
+      <app-indicador-tempo-real />
     </header>
 
     <div class="fichas__acoes">

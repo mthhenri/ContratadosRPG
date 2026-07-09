@@ -7,6 +7,7 @@ import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campa
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { Icone } from '../../../../shared/icone/icone.component';
+import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
@@ -36,7 +37,7 @@ interface ItemFicha {
  */
 @Component({
   selector: 'app-ficha-lista',
-  imports: [RouterLink, Icone],
+  imports: [RouterLink, Icone, IndicadorTempoReal],
   templateUrl: './lista.page.html',
   styleUrl: './lista.page.scss',
 })

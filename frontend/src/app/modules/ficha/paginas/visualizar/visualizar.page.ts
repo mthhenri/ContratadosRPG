@@ -27,6 +27,7 @@ import type {
 } from '@contratados-rpg/shared/dtos/ficha';
 
 import { Icone } from '../../../../shared/icone/icone.component';
+import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
@@ -58,7 +59,7 @@ import {
  */
 @Component({
   selector: 'app-ficha-visualizar',
-  imports: [RouterLink, ReactiveFormsModule, Icone, FichaVisualizacao],
+  imports: [RouterLink, ReactiveFormsModule, Icone, FichaVisualizacao, IndicadorTempoReal],
   templateUrl: './visualizar.page.html',
   styleUrl: './visualizar.page.scss',
 })

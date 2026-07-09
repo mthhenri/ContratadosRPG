@@ -88,6 +88,7 @@ describe('FichaVisualizar', () => {
       sairSalaFicha: vi.fn(),
       fichaAlterada$: fichaAlterada$.asObservable(),
       reconexao,
+      conectado: signal(true),
     };
 
     TestBed.configureTestingModule({
