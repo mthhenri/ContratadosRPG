@@ -25,10 +25,18 @@
 > formato, clamp ≥0); o **Dano C.a.C.** (tabela não-linear de Força+Vigor, sem delta somável)
 > **recalcula só quando não foi customizado** (stored = calculado do estado anterior), senão preserva
 > o valor editado. Campo/`derivados` ausente fica ausente (fallback ao cálculo). Assim aumentar Vigor
-> sobe a Vida máxima conforme o Nível, aumentar Sentidos sobe a Percepção etc. **+7 testes** (shared
-> `dano.spec` +3: marcos, incremento juntando D6/fixo, fail-safe/clamp; frontend `visualizar.page` +2 e
-> o de Nível estendido: atributos→derivados, Dano C.a.C. recalcula/preserva, Dano Furtivo por marco).
-> **Dependência nova** no frontend: `socket.io-client`
+> sobe a Vida máxima conforme o Nível, aumentar Sentidos sobe a Percepção etc. **Atributos Bônus de
+> arquétipo/subclasse (a pedido do autor):** escolher/trocar de arquétipo (ou subclasse Experimento)
+> aplica o **delta dos Atributos Bônus fixos** do documento (ex.: Lutador → Mercenário tira +1 Força/
+> +1 Luta e põe +1 Pontaria/+1 Destreza) — nova `obterBonusAtributos` em `shared/regras/agente/
+> arquetipo` (tabela conferida contra o `sistema-v4.1.0.md`; os pontos "à escolha" de Engenheiro/
+> Assassino/Acadêmico/Híbrido **não** são auto-aplicados — decisão do autor —, só o fixo). O
+> `ajustarClasse` remove o bônus do arquétipo anterior e soma o do novo (preservando ajustes manuais)
+> e, como os atributos mudaram, roda a `aplicarProgressao` — os derivados dependentes acompanham
+> (Força → Inventário/Dano C.a.C. etc.). **+8 testes** (shared `dano.spec` +3 e `arquetipo.spec` +4;
+> frontend `visualizar.page` +3 — atributos→derivados, Dano C.a.C. recalcula/preserva, Dano Furtivo por
+> marco, troca Lutador→Mercenário, entrar em arquétipo propaga aos derivados). **Dependência nova** no
+> frontend: `socket.io-client`
 > `^4.8.3` (mesma major do `socket.io` do backend). Novo proxy `/socket.io` (`ws: true`) no
 > `proxy.conf.json` para o dev-server encaminhar o handshake ao backend. **Novo `TempoRealService`**
 > (`core/services/tempo-real.service.ts`, `providedIn: 'root'`): mantém **uma** conexão Socket.IO
@@ -52,7 +60,7 @@
 > o recorte visível (§14) e o nome do dono continuam **arbitrados pelo backend**, sem o front duplicar
 > a regra a partir do payload do broadcast (o resumo chega a todos os membros da sala, mas a listagem
 > REST filtra por §14); o refetch ao vivo não pisca o esqueleto. **Testes** (Vitest, **frontend
-> 201/201**, **shared 164/164**): `tempo-real.service.spec` (9 — fake do socket injetado por `SOCKET_FACTORY`: não conecta
+> 203/203**, **shared 168/168**): `tempo-real.service.spec` (9 — fake do socket injetado por `SOCKET_FACTORY`: não conecta
 > sem sessão, conecta uma vez com o token, **reconecta ao trocar de token / desconecta ao sair a
 > sessão**, entra nas salas só com `*:entrar`, repassa os 3 eventos aos Observables, reingresso+bump
 > só a partir da 2ª conexão, esquece sala ao sair, desconecta limpo), `visualizar.page.spec` (+6 —

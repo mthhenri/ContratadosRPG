@@ -17,10 +17,13 @@ import {
   calcularVida,
   contarMarcosDanoFurtivo,
   incrementarDanoFurtivo,
+  obterBonusAtributos,
+  type BonusAtributos,
 } from '@contratados-rpg/shared/regras/agente';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type {
   FichaAcessoResumoDto,
+  FichaAtributosDto,
   FichaDerivadosDto,
   FichaJogadorDadosDto,
   FichaRecuperadaDto,
@@ -287,17 +290,44 @@ export class FichaVisualizar {
     this.agendarPersistencia();
   }
 
-  /** Edita Classe/Arquétipo — otimista + persistência em lote (arquétipo já coerente com a classe). */
+  /**
+   * Edita Classe/Arquétipo (arquétipo já coerente com a classe). Ao trocar de arquétipo/subclasse,
+   * aplica o **delta dos Atributos Bônus fixos** (doc — "Classes e Arquétipos"): remove o bônus do
+   * anterior e soma o do novo (ex.: Lutador → Mercenário tira +1 Força/+1 Luta e põe +1 Pontaria/+1
+   * Destreza). Preserva ajustes manuais (só o delta entra/sai). Como os atributos mudaram, a
+   * **progressão** propaga a variação aos derivados/máximas dependentes. Otimista + em lote.
+   */
   protected ajustarClasse(ajuste: AjusteClasse): void {
     const fichaAtual = this.ficha();
     if (!fichaAtual) {
       return;
     }
-    this.ficha.set({
-      ...fichaAtual,
-      dados: { ...fichaAtual.dados, classe: ajuste.classe, arquetipo: ajuste.arquetipo },
+    const bonusAntes = obterBonusAtributos({
+      classe: fichaAtual.dados.classe,
+      arquetipo: fichaAtual.dados.arquetipo,
     });
+    const bonusDepois = obterBonusAtributos({ classe: ajuste.classe, arquetipo: ajuste.arquetipo });
+    const dadosNovos: FichaJogadorDadosDto = {
+      ...fichaAtual.dados,
+      classe: ajuste.classe,
+      arquetipo: ajuste.arquetipo,
+      atributos: this.aplicarDeltaBonus(fichaAtual.dados.atributos, bonusAntes, bonusDepois),
+    };
+    this.ficha.set({ ...fichaAtual, dados: this.aplicarProgressao(fichaAtual.dados, dadosNovos) });
     this.agendarPersistencia();
+  }
+
+  /** Atributos com o delta de Atributos Bônus do arquétipo/subclasse (remove o antigo, soma o novo). */
+  private aplicarDeltaBonus(
+    atributos: FichaAtributosDto,
+    bonusAntes: BonusAtributos,
+    bonusDepois: BonusAtributos,
+  ): FichaAtributosDto {
+    const resultado = { ...atributos };
+    (Object.keys(resultado) as (keyof FichaAtributosDto)[]).forEach((chave) => {
+      resultado[chave] = resultado[chave] - (bonusAntes[chave] ?? 0) + (bonusDepois[chave] ?? 0);
+    });
+    return resultado;
   }
 
   /** Edita o Codinome (relacional) — otimista + persistência em lote. */

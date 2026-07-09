@@ -2,7 +2,7 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
-import { ClasseEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { ArquetipoEnum, ClasseEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import {
   calcularAreaPercepcao,
   calcularDanoCorpo,
@@ -354,6 +354,60 @@ describe('FichaVisualizar', () => {
 
     // Valor editado à mão diverge do calculado → preservado.
     expect(componente['ficha']()!.dados.derivados!.danoCorpoACorpo).toBe('9D6+9 [Custom]');
+  });
+
+  it('trocar de arquétipo aplica o delta dos Atributos Bônus fixos (Lutador → Mercenário)', () => {
+    const { fixture } = montar({ usuarioLogadoId: 7 });
+    const componente = fixture.componentInstance;
+    const carregada = componente['ficha']()!;
+
+    // Ficha como Lutador, com o bônus (+1 Luta, +1 Força) já embutido nos atributos.
+    componente['ficha'].set({
+      ...carregada,
+      dados: {
+        ...carregada.dados,
+        classe: ClasseEnum.COMBATENTE,
+        arquetipo: ArquetipoEnum.LUTADOR,
+        atributos: { ...carregada.dados.atributos, luta: 3, forca: 4, pontaria: 1, destreza: 2 },
+      },
+    });
+
+    componente['ajustarClasse']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.MERCENARIO });
+
+    const a = componente['ficha']()!.dados.atributos;
+    // Sai +1 Luta / +1 Força (Lutador); entra +1 Pontaria / +1 Destreza (Mercenário).
+    expect(a.luta).toBe(2);
+    expect(a.forca).toBe(3);
+    expect(a.pontaria).toBe(2);
+    expect(a.destreza).toBe(3);
+    // Os demais atributos ficam intactos.
+    expect(a.vigor).toBe(carregada.dados.atributos.vigor);
+    expect(componente['ficha']()!.dados.arquetipo).toBe(ArquetipoEnum.MERCENARIO);
+  });
+
+  it('entrar num arquétipo adiciona os bônus e a progressão propaga aos derivados', () => {
+    const { fixture } = montar({ usuarioLogadoId: 7 });
+    const componente = fixture.componentInstance;
+    const carregada = componente['ficha']()!; // Combatente, arquétipo null, atributos 1
+    const classe = carregada.dados.classe;
+
+    componente['ficha'].set({
+      ...carregada,
+      dados: {
+        ...carregada.dados,
+        arquetipo: null,
+        derivados: { inventarioMaximo: calcularInventario({ classe, forca: 1 }) },
+      },
+    });
+
+    componente['ajustarClasse']({ classe, arquetipo: ArquetipoEnum.LUTADOR });
+
+    const d = componente['ficha']()!.dados;
+    // Lutador: +1 Luta, +1 Força.
+    expect(d.atributos.luta).toBe(2);
+    expect(d.atributos.forca).toBe(2);
+    // Força 1 → 2 faz o Inventário (stored) acompanhar via a progressão.
+    expect(d.derivados!.inventarioMaximo).toBe(calcularInventario({ classe, forca: 2 }));
   });
 
   it('concede acesso ao membro selecionado e recarrega os acessos', () => {
