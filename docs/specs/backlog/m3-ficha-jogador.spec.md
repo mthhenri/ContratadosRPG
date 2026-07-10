@@ -15,6 +15,19 @@
 > Rolagens), `m3-12` (editor de Sanidade), `m3-13` (editor de Habilidades), `m3-14` (editor de
 > Inventário — reusa carrinho M1), `m3-15` (presets de rolagem + motor de dados em `shared/regras`).
 > Acesso de visualização vira **menu → dialog** (em `m3-10`). Ver as specs em `docs/specs/`.
+>
+> **Assistente de criação** (`m3-16`, entregue fora de spec): "Nova ficha" coleta as escolhas cruciais
+> antes de criar. **Merge de edição concorrente** (`m3-17`, concluída): o `ficha:alterada` remoto é
+> mesclado com a edição local em vez de descartado — fechava uma perda de dados silenciosa.
+>
+> **Identidade — pacote de três tasks** (`sistema-v4.1.0.md` §⬡ Identidade), hoje **fora do contrato**
+> (`SCHEMA.md`): `m3-18` (contrato `FichaIdentidadeDto` + motor `shared/regras/identidade` com as 21
+> linhas da tabela de Formação), `m3-19` (backend: validação de forma + imutabilidade — trava para o
+> dono, mestre passa) e `m3-20` (frontend, **aguardando a aba Identidade da `m3-11`**). Personalidade
+> é a palavra; a **habilidade** de Personalidade já tem casa em `habilidades[]`
+> (`HabilidadeCategoriaEnum.PERSONALIDADE`, m3-01) e as Fortificações (níveis 7/14) são o Mestre
+> reescrevendo-a. Só **5 das 21** linhas de Formação têm campo na ficha hoje; as outras 16 nascem
+> modeladas e **sem consumidor**, por decisão do autor — ver o aviso na `m3-18`.
 
 ## Objetivo
 
