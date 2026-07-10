@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -37,6 +37,7 @@ import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { FichaService } from '../../ficha.service';
 import { lerParamRota } from '../../ler-param-rota';
+import { mesclarFicha } from '../../mesclar-ficha';
 import { normalizarEntrada, type EntradaAgente } from '../../status-derivado';
 
 import {
@@ -87,11 +88,16 @@ export class FichaVisualizar {
   private readonly ajustePendente = new Subject<void>();
   /**
    * `true` enquanto há uma edição local não persistida (do disparo até a resposta do `alterarFicha`).
-   * Enquanto verdadeiro, um `ficha:alterada` recebido por WebSocket é **descartado** para não
-   * sobrescrever o que o usuário está editando (m3-08 × m3-10) — a resposta do próprio save
-   * reconcilia com o estado autoritativo do backend.
+   * Enquanto verdadeiro, um `ficha:alterada` recebido por WebSocket é **mesclado** com a edição em
+   * curso (m3-17) — nunca descartado, ou o `PUT` de documento inteiro apagaria a edição concorrente.
    */
   private readonly edicaoPendente = signal(false);
+  /**
+   * Último documento **vindo do servidor** (carga, resposta de save, refetch, evento remoto sem
+   * edição pendente). É a `base` do merge de três vias: um campo em que `ficha()` divergiu dela é,
+   * por definição, um campo que o usuário editou.
+   */
+  private readonly fichaBase = signal<FichaRecuperadaDto | null>(null);
 
   /** Menu de ações no cabeçalho (kebab) aberto. */
   protected readonly menuAberto = signal(false);
@@ -145,6 +151,7 @@ export class FichaVisualizar {
       .subscribe({
         next: ({ ficha, membros }) => {
           this.ficha.set(ficha);
+          this.fichaBase.set(ficha);
           this.membros.set(membros);
           if (this.podeGerenciar()) {
             this.carregarAcessos();
@@ -176,6 +183,7 @@ export class FichaVisualizar {
       .subscribe({
         next: (fichaAlterada) => {
           this.ficha.set(fichaAlterada);
+          this.fichaBase.set(fichaAlterada);
           this.edicaoPendente.set(false);
         },
       });
@@ -189,20 +197,42 @@ export class FichaVisualizar {
 
     this.tempoRealService.fichaAlterada$
       .pipe(
-        filter((ficha) => ficha.id === this.fichaId && !this.edicaoPendente()),
+        filter((ficha) => ficha.id === this.fichaId),
         takeUntilDestroyed(),
       )
-      .subscribe({ next: (fichaAlterada) => this.ficha.set(fichaAlterada) });
+      .subscribe({ next: (fichaAlterada) => this.absorverRemoto(fichaAlterada) });
 
     // Ressincronização ao reconectar (§9 — o Render dorme e derruba a conexão): refaz o fetch da
-    // ficha aberta, exceto se houver edição local pendente (o save em voo já reconcilia).
+    // ficha aberta. O documento buscado entra pelo mesmo merge, então uma edição local pendente
+    // sobrevive ao refetch em vez de bloqueá-lo.
     effect(() => {
-      if (this.tempoRealService.reconexao() > 0 && !this.edicaoPendente()) {
-        this.fichaService
-          .recuperarFicha(this.fichaId)
-          .subscribe({ next: (ficha) => this.ficha.set(ficha) });
+      if (this.tempoRealService.reconexao() > 0) {
+        this.fichaService.recuperarFicha(this.fichaId).subscribe({
+          // `untracked`: o `absorverRemoto` lê e escreve `ficha`/`fichaBase`. Sem isso, uma resposta
+          // **síncrona** entregaria essas leituras dentro do contexto reativo do `effect`, que
+          // passaria a depender do que ele mesmo escreve — laço infinito.
+          next: (ficha) => untracked(() => this.absorverRemoto(ficha)),
+        });
       }
     });
+  }
+
+  /**
+   * Absorve um documento vindo do servidor (broadcast `ficha:alterada` ou refetch de reconexão).
+   *
+   * Sem edição local pendente ele simplesmente substitui o estado. Com edição pendente, é
+   * **mesclado** campo a campo: o que o usuário editou prevalece, o resto do documento remoto entra.
+   * O `alterarFicha` debounced serializa o resultado — é isso que impede o `PUT` de sobrescrever a
+   * edição concorrente de outro usuário (m3-17). Descartar o remoto, como se fazia antes, apagava-a.
+   */
+  private absorverRemoto(remoto: FichaRecuperadaDto): void {
+    const base = this.fichaBase();
+    const local = this.ficha();
+
+    this.ficha.set(
+      this.edicaoPendente() && base && local ? mesclarFicha(base, local, remoto) : remoto,
+    );
+    this.fichaBase.set(remoto);
   }
 
   /** Marca uma edição local pendente e agenda a persistência em lote (debounced). */

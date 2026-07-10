@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
-import { Subject, of, throwError } from 'rxjs';
+import { NEVER, Subject, of, throwError } from 'rxjs';
 import { ArquetipoEnum, ClasseEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import {
   calcularAreaPercepcao,
@@ -16,6 +16,7 @@ import {
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type {
   FichaAcessoResumoDto,
+  FichaAlterarDto,
   FichaAlteradaDto,
   FichaJogadorDadosDto,
   FichaRecuperadaDto,
@@ -510,7 +511,64 @@ describe('FichaVisualizar', () => {
     expect(fichaService.recuperarFicha).toHaveBeenCalledTimes(1);
   });
 
-  it('ignora eventos de outra ficha e descarta o remoto enquanto há edição local pendente', () => {
+  it('mescla o remoto com a edição local pendente: o campo remoto entra e o local sobrevive (m3-17)', () => {
+    vi.useFakeTimers();
+    try {
+      const { fixture, fichaAlterada$ } = montar({ usuarioLogadoId: 99 });
+      const componente = fixture.componentInstance;
+
+      // O mestre ajusta a Vida (edição local pendente, debounce de 500ms em voo).
+      componente['ajustarVitalidade']({ campo: 'vidaAtual', valor: 4 });
+      expect(componente['ficha']()?.dados.estado.vidaAtual).toBe(4);
+
+      // Dentro da janela, o jogador renomeia a ficha — campo que o mestre NÃO está editando.
+      fichaAlterada$.next({
+        id: 42,
+        campanhaId: 9,
+        usuarioId: 7,
+        nome: 'Kane Renomeado',
+        dados,
+      } as FichaAlteradaDto);
+
+      // O nome remoto entra; o ajuste local de Vida não é perdido.
+      expect(componente['ficha']()?.nome).toBe('Kane Renomeado');
+      expect(componente['ficha']()?.dados.estado.vidaAtual).toBe(4);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('o PUT em lote carrega o campo remoto mesclado — não sobrescreve a edição concorrente (m3-17)', () => {
+    vi.useFakeTimers();
+    try {
+      const { fixture, fichaAlterada$, fichaService } = montar({ usuarioLogadoId: 99 });
+      const componente = fixture.componentInstance;
+
+      componente['ajustarVitalidade']({ campo: 'vidaAtual', valor: 4 });
+      fichaAlterada$.next({
+        id: 42,
+        campanhaId: 9,
+        usuarioId: 7,
+        nome: 'Kane Renomeado',
+        dados,
+      } as FichaAlteradaDto);
+
+      vi.advanceTimersByTime(500); // dispara o save debounced
+
+      // É esta asserção que fecha a perda de dados: o payload leva o nome do jogador.
+      expect(fichaService.alterarFicha).toHaveBeenCalledTimes(1);
+      const [, corpo] = fichaService.alterarFicha.mock.calls[0] as unknown as [
+        number,
+        FichaAlterarDto,
+      ];
+      expect(corpo.nome).toBe('Kane Renomeado');
+      expect(corpo.dados.estado.vidaAtual).toBe(4);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('ignora eventos de outra ficha; no MESMO campo a edição local vence até salvar', () => {
     vi.useFakeTimers();
     try {
       const { fixture, fichaAlterada$ } = montar({ usuarioLogadoId: 99 });
@@ -526,7 +584,7 @@ describe('FichaVisualizar', () => {
       } as FichaAlteradaDto);
       expect(componente['ficha']()?.nome).toBe('Kane');
 
-      // Edição local em voo: o remoto não sobrescreve o que o usuário está editando (m3-08 × m3-10).
+      // Mesmo campo (`nome`) editado nos dois lados: o local vence até salvar (m3-17).
       componente['ajustarNome']('Editando');
       fichaAlterada$.next({
         id: 42,
@@ -575,6 +633,26 @@ describe('FichaVisualizar', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('o refetch da reconexão mescla em vez de engolir a edição local pendente (m3-17)', () => {
+    const { fixture, reconexao, fichaService } = montar({ usuarioLogadoId: 99 });
+    const componente = fixture.componentInstance;
+
+    // Um save que nunca resolve mantém `edicaoPendente` verdadeiro (PUT em voo).
+    fichaService.alterarFicha.mockReturnValueOnce(NEVER);
+    componente['ajustarVitalidade']({ campo: 'vidaAtual', valor: 4 });
+
+    // A reconexão traz um documento com o nome mudado por outro usuário.
+    fichaService.recuperarFicha.mockReturnValueOnce(
+      of({ id: 42, campanhaId: 9, usuarioId: 7, nome: 'Kane Remoto', dados } as FichaRecuperadaDto),
+    );
+    reconexao.set(1);
+    fixture.detectChanges();
+
+    // O nome remoto entra; o ajuste local em voo não é descartado pelo refetch.
+    expect(componente['ficha']()?.nome).toBe('Kane Remoto');
+    expect(componente['ficha']()?.dados.estado.vidaAtual).toBe(4);
   });
 
   it('ressincroniza a ficha aberta ao reconectar (§9)', () => {
