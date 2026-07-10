@@ -1,6 +1,6 @@
-# m3-16-ficha-merge-edicao-concorrente.spec.md
+# m3-17-ficha-merge-edicao-concorrente.spec.md
 
-> Task 16 do milestone `m3-ficha-jogador.spec.md`. Correção de defeito, não feature nova.
+> Task 17 do milestone `m3-ficha-jogador.spec.md`. Correção de defeito, não feature nova.
 
 > **Origem:** verificação ao vivo da `m3-08` (stack real: Postgres + NestJS + Angular, dois
 > usuários). Os três critérios de aceite da `m3-08` passaram, mas o cenário de **edição
