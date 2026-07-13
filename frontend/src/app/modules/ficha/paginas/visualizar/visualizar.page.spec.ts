@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, provideRouter } from '@angular/router';
 import { NEVER, Subject, of, throwError } from 'rxjs';
 import { ArquetipoEnum, ClasseEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import {
@@ -65,7 +65,11 @@ describe('FichaVisualizar', () => {
     { usuarioId: 99, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.MESTRE },
   ];
 
-  function montar(opcoes: { usuarioLogadoId: number; acessos?: FichaAcessoResumoDto[] }) {
+  function montar(opcoes: {
+    usuarioLogadoId: number;
+    acessos?: FichaAcessoResumoDto[];
+    abaUrl?: string;
+  }) {
     const recuperada: FichaRecuperadaDto = { id: 42, campanhaId: 9, usuarioId: 7, nome: 'Kane', dados };
     const fichaService = {
       recuperarFicha: vi.fn(() => of(recuperada)),
@@ -109,6 +113,9 @@ describe('FichaVisualizar', () => {
                 ['campanhaId', '9'],
                 ['id', '42'],
               ]),
+              queryParamMap: new Map<string, string>(
+                opcoes.abaUrl ? [['aba', opcoes.abaUrl]] : [],
+              ),
             },
             parent: null,
           },
@@ -664,5 +671,36 @@ describe('FichaVisualizar', () => {
     fixture.detectChanges();
 
     expect(fichaService.recuperarFicha).toHaveBeenCalledTimes(2);
+  });
+
+  // === Deep-link das abas (m3-11) ===
+
+  it('deep-link: o ?aba= válido da URL semeia a aba ativa da ficha (refresh preserva)', () => {
+    const { raiz } = montar({ usuarioLogadoId: 99, abaUrl: 'combate' });
+    // O painel de Combate está montado (não a Visão Geral) — a aba veio da URL.
+    expect(raiz.querySelector('#painel-combate')).not.toBeNull();
+    expect(raiz.querySelector('#painel-visao-geral')).toBeNull();
+  });
+
+  it('deep-link: um ?aba= inválido cai na Visão Geral', () => {
+    const { raiz } = montar({ usuarioLogadoId: 99, abaUrl: 'inexistente' });
+    expect(raiz.querySelector('#painel-visao-geral')).not.toBeNull();
+  });
+
+  it('reflete a aba escolhida no ?aba= da URL sem empilhar histórico (replaceUrl)', () => {
+    const { fixture } = montar({ usuarioLogadoId: 99 });
+    const router = TestBed.inject(Router);
+    const navegar = vi.spyOn(router, 'navigate');
+
+    fixture.componentInstance['mudarAba']('sanidade');
+
+    expect(navegar).toHaveBeenCalledWith(
+      [],
+      expect.objectContaining({
+        queryParams: { aba: 'sanidade' },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      }),
+    );
   });
 });

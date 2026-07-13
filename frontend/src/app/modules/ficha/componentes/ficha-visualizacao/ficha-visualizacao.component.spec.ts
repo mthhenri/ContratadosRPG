@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
+import { ArquetipoEnum, ClasseEnum, HabilidadeCategoriaEnum } from '@contratados-rpg/shared/enums';
 import type { FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 import { calcularVida } from '@contratados-rpg/shared/regras/agente';
 
@@ -98,10 +98,20 @@ describe('FichaVisualizacao', () => {
     expect(chips.length).toBe(1);
   });
 
-  it('lista as marcas de Sanidade (traumas/sequelas) do documento', () => {
-    const { raiz } = montar(dados);
-    expect(raiz.querySelector('.ficha-cartao__meta')?.textContent).toContain('2 marcas');
-    const marcas = Array.from(raiz.querySelectorAll('.ficha-marca__nome')).map((m) => m.textContent?.trim());
+  /** Ativa uma aba clicando no seu `role="tab"` (m3-11). */
+  function trocarAba(fixture: ReturnType<typeof montar>['fixture'], aba: string): void {
+    const raiz = fixture.nativeElement as HTMLElement;
+    raiz.querySelector<HTMLButtonElement>(`#aba-${aba}`)!.click();
+    fixture.detectChanges();
+  }
+
+  it('lista as marcas de Sanidade (traumas/sequelas) na aba Sanidade', () => {
+    const alvo = montar(dados);
+    trocarAba(alvo.fixture, 'sanidade');
+    expect(alvo.raiz.querySelector('.ficha-cartao__meta')?.textContent).toContain('2 marcas');
+    const marcas = Array.from(alvo.raiz.querySelectorAll('.ficha-marca__nome')).map((m) =>
+      m.textContent?.trim(),
+    );
     expect(marcas).toContain('Pânico');
     expect(marcas).toContain('Insônia');
   });
@@ -333,5 +343,96 @@ describe('FichaVisualizacao', () => {
     expect(ajustes).toEqual([]);
     // Volta ao modo leitura do valor (botão editável), sem input aberto.
     expect(raiz.querySelector('.ficha-barra--energia .ficha-barra__entrada')).toBeNull();
+  });
+
+  // === Navegação por abas (m3-11) ===
+
+  it('renderiza as seis abas com a Visão Geral ativa por padrão', () => {
+    const { raiz } = montar(dados);
+    const abas = Array.from(raiz.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+    expect(abas.map((a) => a.textContent?.trim())).toEqual([
+      'Visão Geral',
+      'Combate',
+      'Inventário',
+      'Habilidades',
+      'Sanidade',
+      'Rolagens',
+    ]);
+    const ativa = raiz.querySelector('[role="tab"][aria-selected="true"]');
+    expect(ativa?.textContent?.trim()).toBe('Visão Geral');
+    // O painel da Visão Geral está montado (identidade visível).
+    expect(raiz.querySelector('#painel-visao-geral')).not.toBeNull();
+    expect(raiz.querySelector('.ficha-ident__nome')?.textContent?.trim()).toBe('Corvo');
+  });
+
+  it('troca de aba sem recarregar: a Visão Geral some e o painel de Combate aparece', () => {
+    const alvo = montar(dados);
+    trocarAba(alvo.fixture, 'combate');
+    expect(alvo.raiz.querySelector('#painel-visao-geral')).toBeNull();
+    const combate = alvo.raiz.querySelector('#painel-combate');
+    expect(combate).not.toBeNull();
+    // Combate mostra Defesa/Esquiva/Bloqueio (derivados de combate reorganizados).
+    const rotulos = Array.from(combate!.querySelectorAll('.ficha-info__rotulo')).map((r) =>
+      r.textContent?.trim(),
+    );
+    expect(rotulos).toEqual(
+      expect.arrayContaining(['Defesa', 'Esquiva', 'Bloqueio', 'Deslocamento', 'Proficiência']),
+    );
+  });
+
+  it('emite abaMudou ao clicar numa aba (a página reflete no ?aba= da URL)', () => {
+    const { fixture, raiz } = montar(dados);
+    const emitidas: string[] = [];
+    fixture.componentInstance.abaMudou.subscribe((aba) => emitidas.push(aba));
+    raiz.querySelector<HTMLButtonElement>('#aba-habilidades')!.click();
+    expect(emitidas).toEqual(['habilidades']);
+  });
+
+  it('deep-link: abaInicial semeia a aba ativa (refresh preserva a aba)', () => {
+    TestBed.configureTestingModule({ imports: [FichaVisualizacao] });
+    const fixture = TestBed.createComponent(FichaVisualizacao);
+    fixture.componentRef.setInput('fichaId', 42);
+    fixture.componentRef.setInput('nome', 'Corvo');
+    fixture.componentRef.setInput('dados', dados);
+    fixture.componentRef.setInput('ajustavel', false);
+    fixture.componentRef.setInput('abaInicial', 'inventario');
+    fixture.detectChanges();
+    const raiz = fixture.nativeElement as HTMLElement;
+    expect(raiz.querySelector('#painel-inventario')).not.toBeNull();
+    expect(raiz.querySelector('[role="tab"][aria-selected="true"]')?.textContent?.trim()).toBe(
+      'Inventário',
+    );
+  });
+
+  it('as abas sem editor mostram aviso "em construção" e o resumo read-only', () => {
+    const documento: FichaJogadorDadosDto = {
+      ...dados,
+      habilidades: [
+        {
+          nome: 'Tiro Certeiro',
+          categoria: HabilidadeCategoriaEnum.CLASSE,
+          custoEnergia: 2,
+          descricao: '',
+        },
+      ],
+      rolagens: [{ nome: 'Ataque', formula: '1d20+PON' }],
+    };
+    const alvo = montar(documento);
+
+    trocarAba(alvo.fixture, 'habilidades');
+    expect(alvo.raiz.querySelector('.ficha-visao__construcao')).not.toBeNull();
+    expect(alvo.raiz.querySelector('.ficha-cartao__meta')?.textContent).toContain('1 habilidade');
+    expect(alvo.raiz.textContent).toContain('Tiro Certeiro');
+
+    trocarAba(alvo.fixture, 'rolagens');
+    expect(alvo.raiz.querySelector('.ficha-cartao__meta')?.textContent).toContain('1 preset');
+    expect(alvo.raiz.textContent).toContain('1d20+PON');
+  });
+
+  it('mostra o derivado STORED de combate (Esquiva) quando presente', () => {
+    const alvo = montar({ ...dados, derivados: { esquiva: 77 } });
+    trocarAba(alvo.fixture, 'combate');
+    const combate = alvo.raiz.querySelector('#painel-combate');
+    expect(combate?.textContent).toContain('77');
   });
 });

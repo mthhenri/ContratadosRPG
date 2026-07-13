@@ -4,6 +4,7 @@ import {
   computed,
   effect,
   input,
+  linkedSignal,
   output,
   signal,
   viewChild,
@@ -13,6 +14,7 @@ import { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
 import type { FichaAtributosDto, FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 import {
   MAESTRIA_PONTOS_MINIMO,
+  calcularDefesa,
   calcularEnergia,
   calcularVida,
   maestriaAtingivel,
@@ -56,6 +58,50 @@ interface MarcaSanidade {
 /** Lembrete da fórmula da DT — exibido como chip informativo no card de Atributos (como no protótipo). */
 const FORMULA_DT = 'DT = 10 + NÍVEL + ATR×2';
 
+/** Texto no lugar de uma stat que a classe não possui (ex.: Civil sem defesa) — espelha `status-derivado`. */
+const INDISPONIVEL = 'N/A';
+
+/** Aba da ficha (m3-11) — o scaffold navegável. `Visão Geral`/`Combate` têm conteúdo; as demais, resumo. */
+export type AbaFicha =
+  | 'visao-geral'
+  | 'combate'
+  | 'inventario'
+  | 'habilidades'
+  | 'sanidade'
+  | 'rolagens';
+
+/** Descritor de uma aba na barra (id semântico p/ deep-link + rótulo legível). */
+interface DescritorAba {
+  readonly id: AbaFicha;
+  readonly rotulo: string;
+}
+
+/** Todas as abas, na ordem de exibição da barra (`docs/design/examples/ficha-de-jogador.html`). */
+export const ABAS_FICHA: readonly DescritorAba[] = [
+  { id: 'visao-geral', rotulo: 'Visão Geral' },
+  { id: 'combate', rotulo: 'Combate' },
+  { id: 'inventario', rotulo: 'Inventário' },
+  { id: 'habilidades', rotulo: 'Habilidades' },
+  { id: 'sanidade', rotulo: 'Sanidade' },
+  { id: 'rolagens', rotulo: 'Rolagens' },
+];
+
+/** `true` quando a string é uma aba conhecida — valida o `?aba=` da URL (deep-link). */
+export function ehAbaFicha(valor: string | null | undefined): valor is AbaFicha {
+  return ABAS_FICHA.some((aba) => aba.id === valor);
+}
+
+/**
+ * Linha do painel Combate: um derivado defensivo/ofensivo. Quando `info` está presente a linha é
+ * **editável** (reusa a máquina de `Informações Extras` — m3-10); `null` = read-only (Esquiva/Bloqueio,
+ * que não têm edição no próprio lugar hoje).
+ */
+interface LinhaCombate {
+  readonly rotulo: string;
+  readonly display: string;
+  readonly info: InfoExtra | null;
+}
+
 /** Campo de vitalidade atual (recebe passos − / + e digitação). */
 export type CampoVitalidadeAtual = 'vidaAtual' | 'energiaAtual';
 
@@ -96,13 +142,17 @@ export interface AjusteClasse {
 }
 
 /**
- * Exibição **read-only** da ficha de jogador (m3-07) — alvo de fidelidade
- * `docs/design/examples/ficha-de-jogador.html`. Layout de três colunas: identidade + Vida/Energia +
- * Sanidade à esquerda, Atributos ao centro, Informações Extras (status derivado) à direita. Para
- * quem tem acesso concedido mas não é dono/mestre (não edita). **Nenhuma regra de jogo vive aqui**:
- * toda stat derivada (Vida/Energia máximas, Defesa, Deslocamento, Dano, Percepção, Inventário,
- * Patente…) vem de `shared/regras` (fonte única — SYSTEM.SPEC §6.6, proibições #26/#27). Estilos só
- * com os tokens do tema "Terminal de Contenção" (proibição #29).
+ * A **ficha** de jogador (m3-07/m3-10) — alvo de fidelidade `docs/design/examples/ficha-de-jogador.html`.
+ * Edição no próprio lugar para dono/mestre (`ajustavel`), read-only para quem só tem acesso concedido.
+ *
+ * **Navegação por abas** (m3-11): **Visão Geral** (identidade + Vida/Energia + Atributos + Informações
+ * Extras editáveis), **Combate** (derivados de combate reorganizados), **Sanidade** (marcas do estado,
+ * read-only) e os placeholders **Inventário/Habilidades/Rolagens** com resumo até os editores chegarem
+ * (m3-12…m3-15). A aba ativa é `?aba=` na URL (deep-link/refresh).
+ *
+ * **Nenhuma regra de jogo vive aqui**: toda stat derivada (Vida/Energia máximas, Defesa, Deslocamento,
+ * Dano, Percepção, Inventário, Patente…) vem de `shared/regras` (fonte única — SYSTEM.SPEC §6.6,
+ * proibições #26/#27). Estilos só com os tokens do tema "Terminal de Contenção" (proibição #29).
  */
 @Component({
   selector: 'app-ficha-visualizacao',
@@ -141,6 +191,24 @@ export class FichaVisualizacao {
 
   /** Nova Classe/Arquétipo — a página persiste. */
   readonly ajusteClasse = output<AjusteClasse>();
+
+  /**
+   * Aba inicialmente ativa — semeia a barra a partir do `?aba=` da URL (deep-link/refresh, m3-11). A
+   * página valida o parâmetro (`ehAbaFicha`) e o repassa; alterá-lo re-deriva a aba ativa.
+   */
+  readonly abaInicial = input<AbaFicha>('visao-geral');
+
+  /** Barra de abas (m3-11), na ordem de exibição. */
+  protected readonly abas = ABAS_FICHA;
+
+  /**
+   * Aba ativa. `linkedSignal` re-deriva do `abaInicial` (navegação por URL) mas permanece gravável —
+   * um clique numa aba a sobrescreve localmente sem esperar a volta pela rota.
+   */
+  protected readonly abaAtiva = linkedSignal<AbaFicha>(() => this.abaInicial());
+
+  /** Emite a aba escolhida — a página reflete no `?aba=` da URL (deep-link/refresh). */
+  readonly abaMudou = output<AbaFicha>();
 
   /** Campo de vitalidade em digitação direta (clicou no valor), ou `null` fora de edição. */
   protected readonly editandoVitalidade = signal<CampoVitalidade | null>(null);
@@ -539,4 +607,89 @@ export class FichaVisualizacao {
   });
 
   protected readonly totalMarcas = computed(() => this.marcasSanidade().length);
+
+  /** Seleciona uma aba (clique/teclado) e notifica a página para atualizar o `?aba=` da URL. */
+  protected selecionarAba(aba: AbaFicha): void {
+    this.abaAtiva.set(aba);
+    this.abaMudou.emit(aba);
+  }
+
+  /**
+   * Navegação por teclado na barra de abas (WAI-ARIA `tablist`): ←/→ movem entre abas com wrap,
+   * Home/End vão à primeira/última. Ativa a aba focada (padrão "seleção segue foco").
+   */
+  protected navegarAbas(evento: KeyboardEvent, indice: number): void {
+    const total = this.abas.length;
+    let destino = indice;
+    switch (evento.key) {
+      case 'ArrowRight':
+        destino = (indice + 1) % total;
+        break;
+      case 'ArrowLeft':
+        destino = (indice - 1 + total) % total;
+        break;
+      case 'Home':
+        destino = 0;
+        break;
+      case 'End':
+        destino = total - 1;
+        break;
+      default:
+        return;
+    }
+    evento.preventDefault();
+    this.selecionarAba(this.abas[destino].id);
+    this.focarAba(destino);
+  }
+
+  private readonly botoesAba = viewChild<ElementRef<HTMLElement>>('barraAbas');
+
+  /** Move o foco para o botão da aba de índice `destino` (acompanha a navegação por setas). */
+  private focarAba(destino: number): void {
+    const botoes = this.botoesAba()?.nativeElement.querySelectorAll<HTMLButtonElement>(
+      '[role="tab"]',
+    );
+    botoes?.[destino]?.focus();
+  }
+
+  /**
+   * Linhas do painel **Combate** (m3-11) — organiza, não recalcula: Defesa/Deslocamento/Proficiência/
+   * Dano C.a.C./Furtivo reusam as linhas **editáveis** de `Informações Extras` (m3-10, mesma persistência);
+   * Esquiva/Bloqueio são read-only (sem edição no próprio lugar hoje), resolvendo stored (`derivados`)
+   * antes do calculado (`shared/regras`).
+   */
+  protected readonly combateLinhas = computed<readonly LinhaCombate[]>(() => {
+    const mapa = new Map(this.informacoesExtras().map((info) => [info.chave, info] as const));
+    const defesaCalc = calcularDefesa(this.entrada());
+    const derivados = this.dados().derivados;
+    const editavel = (chave: ChaveInfoExtra): LinhaCombate => {
+      const info = mapa.get(chave)!;
+      return { rotulo: info.rotulo, display: info.display, info };
+    };
+    const somenteLeitura = (
+      rotulo: string,
+      stored: number | undefined,
+      calculado: number | undefined,
+    ): LinhaCombate => {
+      const valor = typeof stored === 'number' ? stored : (calculado ?? null);
+      return { rotulo, display: valor === null ? INDISPONIVEL : String(valor), info: null };
+    };
+    return [
+      editavel('defesa'),
+      somenteLeitura('Esquiva', derivados?.esquiva, defesaCalc?.esquiva),
+      somenteLeitura('Bloqueio', derivados?.bloqueio, defesaCalc?.bloqueio),
+      editavel('deslocamento'),
+      editavel('proficiencia'),
+      editavel('danoCorpoACorpo'),
+      editavel('danoFurtivo'),
+    ];
+  });
+
+  /** Resumo read-only das sub-coleções (contagem exibida nas abas ainda sem editor — m3-12…m3-15). */
+  protected readonly totalHabilidades = computed(() => this.dados().habilidades.length);
+  protected readonly totalItens = computed(() => this.dados().inventario.itens.length);
+  protected readonly totalAmplificadores = computed(
+    () => this.dados().inventario.amplificadores.length,
+  );
+  protected readonly totalRolagens = computed(() => this.dados().rolagens?.length ?? 0);
 }

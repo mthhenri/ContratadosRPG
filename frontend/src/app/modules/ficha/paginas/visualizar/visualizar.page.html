@@ -54,6 +54,8 @@
       [nome]="fichaAtual.nome"
       [dados]="fichaAtual.dados"
       [ajustavel]="podeGerenciar()"
+      [abaInicial]="abaInicial"
+      (abaMudou)="mudarAba($event)"
       (ajusteVitalidade)="ajustarVitalidade($event)"
       (ajusteDerivado)="ajustarDerivado($event)"
       (ajusteAtributos)="ajustarAtributos($event)"

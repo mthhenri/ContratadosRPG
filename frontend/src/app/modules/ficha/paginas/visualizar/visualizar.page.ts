@@ -1,7 +1,7 @@
 import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EMPTY, Subject, catchError, debounceTime, filter, finalize, forkJoin, switchMap } from 'rxjs';
 
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
@@ -41,12 +41,14 @@ import { mesclarFicha } from '../../mesclar-ficha';
 import { normalizarEntrada, type EntradaAgente } from '../../status-derivado';
 
 import {
+  AbaFicha,
   AjusteAtributos,
   AjusteCampoDados,
   AjusteClasse,
   AjusteDerivado,
   AjusteVitalidade,
   FichaVisualizacao,
+  ehAbaFicha,
 } from '../../componentes/ficha-visualizacao/ficha-visualizacao.component';
 
 /**
@@ -74,10 +76,21 @@ export class FichaVisualizar {
   private readonly sessaoService = inject(SessaoService);
   private readonly tempoRealService = inject(TempoRealService);
   private readonly rotaAtiva = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly campanhaId = Number(lerParamRota(this.rotaAtiva, 'campanhaId'));
   protected readonly fichaId = Number(lerParamRota(this.rotaAtiva, 'id'));
+
+  /**
+   * Aba inicialmente ativa (m3-11): lida do `?aba=` da URL para deep-link/refresh. Parâmetro inválido
+   * ou ausente cai em "Visão Geral". A aba ativa vive no `FichaVisualizacao` (`linkedSignal`); esta
+   * página só semeia o valor inicial e reflete as trocas de volta na URL (`mudarAba`).
+   */
+  protected readonly abaInicial: AbaFicha = (() => {
+    const parametro = this.rotaAtiva.snapshot.queryParamMap.get('aba');
+    return ehAbaFicha(parametro) ? parametro : 'visao-geral';
+  })();
 
   protected readonly carregando = signal(true);
   protected readonly ficha = signal<FichaRecuperadaDto | null>(null);
@@ -260,6 +273,19 @@ export class FichaVisualizar {
   /** Fecha a dialog de gestão de acesso. */
   protected fecharAcesso(): void {
     this.dialogAcesso.set(false);
+  }
+
+  /**
+   * Reflete a aba escolhida no `?aba=` da URL (deep-link/refresh, m3-11) sem recarregar a ficha:
+   * `replaceUrl` não empilha histórico e `queryParamsHandling: 'merge'` preserva outros parâmetros.
+   */
+  protected mudarAba(aba: AbaFicha): void {
+    this.router.navigate([], {
+      relativeTo: this.rotaAtiva,
+      queryParams: { aba },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   /** (Re)carrega as concessões ativas da ficha — usado no boot e após conceder/revogar. */
