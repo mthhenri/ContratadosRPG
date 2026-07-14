@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { SeveridadeLesaoEnum } from '../../enums';
+import { ClasseEnum, SeveridadeLesaoEnum } from '../../enums';
 import type { FichaAtributosDto, FichaLesaoDto } from '../../dtos/ficha';
 import {
   calcularAtributoEfetivo,
@@ -8,11 +8,12 @@ import {
   somarLesoesAtributo,
 } from './lesao';
 import { maestriaValida } from './maestria';
+import { calcularVida } from './saude';
 
 /**
  * Prova o efeito mecânico das lesões nos atributos (`sistema-v4.1.0.md` — "⬡ Lesões"): removem pontos
- * do atributo afetado (efetivo = base − pontos, piso 0), **sem mutar o base** — de modo que a Maestria,
- * ligada ao base, sobrevive à lesão.
+ * do atributo afetado (efetivo = base − pontos, **sem piso — pode negativar**), **sem mutar o base** —
+ * de modo que a Maestria, ligada ao base, sobrevive à lesão.
  */
 describe('lesão → atributo efetivo', () => {
   const base: FichaAtributosDto = {
@@ -40,10 +41,11 @@ describe('lesão → atributo efetivo', () => {
     expect(somarLesoesAtributo(lesoes, 'luta')).toBe(0);
   });
 
-  it('atributo efetivo = base − pontos, com piso 0', () => {
+  it('atributo efetivo = base − pontos, sem piso (negativa)', () => {
     expect(calcularAtributoEfetivo(6, [lesao('forca', 1)], 'forca')).toBe(5);
-    // Piso 0: lesões maiores que o base não negativam.
-    expect(calcularAtributoEfetivo(2, [lesao('forca', 5)], 'forca')).toBe(0);
+    // Sem piso: lesão maior que o base negativa o atributo.
+    expect(calcularAtributoEfetivo(2, [lesao('forca', 5)], 'forca')).toBe(-3);
+    expect(calcularAtributoEfetivo(0, [lesao('forca', 1)], 'forca')).toBe(-1);
     // Sem lesão no atributo → base intacto.
     expect(calcularAtributoEfetivo(4, [lesao('vigor', 3)], 'forca')).toBe(4);
   });
@@ -55,6 +57,26 @@ describe('lesão → atributo efetivo', () => {
     expect(efetivos.destreza).toBe(2);
     // O base não é mutado.
     expect(base.forca).toBe(6);
+  });
+
+  it('o mapa efetivo negativa o atributo quando a lesão excede o base', () => {
+    const efetivos = calcularAtributosEfetivos(base, [lesao('vigor', 7)]);
+    expect(efetivos.vigor).toBe(-3);
+    expect(base.vigor).toBe(4);
+  });
+
+  it('Vigor negativado por lesão permanente derruba a Vida máxima (cascata do doc)', () => {
+    // Combatente nível 2, Vigor base 4 → o efetivo cai a −1 com 5 pontos de lesão permanente.
+    const permanentes = [
+      { ...lesao('vigor', 5), permanente: true, severidade: SeveridadeLesaoEnum.MORTAL },
+    ];
+    const efetivos = calcularAtributosEfetivos(base, permanentes);
+    expect(efetivos.vigor).toBe(-1);
+
+    const entrada = { classe: ClasseEnum.COMBATENTE, nivel: 2 };
+    // Vida = 30 + Vigor×4 + Nível×(7 + Vigor×2) → o Vigor negativo entra na conta.
+    expect(calcularVida({ ...entrada, vigor: base.vigor })).toBe(76);
+    expect(calcularVida({ ...entrada, vigor: efetivos.vigor })).toBe(36);
   });
 
   it('a Maestria (ligada ao base) sobrevive à lesão — 6 com Maestria e −1 continua válida', () => {

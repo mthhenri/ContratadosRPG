@@ -39,7 +39,8 @@
 > card idem). As **lesões passaram a impactar o atributo efetivo** — nova regra pura
 > `shared/regras/agente/lesao.ts` (`somarLesoesAtributo`/`calcularAtributoEfetivo`/
 > `calcularAtributosEfetivos`), conferida contra `sistema-v4.1.0.md` ("⬡ Lesões": cada ponto de lesão
-> remove 1 do atributo; Leve 1 / Grave 3 / Mortal 5), **piso 0**. **Princípio-chave: o valor base
+> remove 1 do atributo; Leve 1 / Grave 3 / Mortal 5), **sem piso — o efetivo pode negativar** (ver 3ª
+> rodada do refino, abaixo). **Princípio-chave: o valor base
 > (`atributos`) nunca é mutado — o efetivo é derivado.** Consequência (concern explícito do autor): a
 > **Maestria sobrevive à lesão** — ela é validada sobre o **base** (`maestriaValida`), então FOR 6 com
 > Maestria que toma −1 mostra **5** mas **mantém a estrela** (o backend segue aceitando a Maestria; nada
@@ -60,7 +61,7 @@
 > mostra o efetivo por **todas** as lesões (perm + temp); os derivados refletem **só** as permanentes —
 > coerente com o documento. Limpeza: os estilos mortos `.ficha-marca*` (migraram para o `FichaSanidade` na
 > extração) saíram do `ficha-visualizacao.scss` — o budget de estilo por componente voltou a passar sem
-> bump. **+6 testes** (**shared 172/172** — `lesao.spec`: soma por atributo, efetivo com piso 0, mapa
+> bump. **+6 testes** (**shared 172/172** — `lesao.spec`: soma por atributo, efetivo sem piso, mapa
 > preservando o resto, **Maestria válida no base e não no efetivo**; **frontend 254/254** —
 > `ficha-visualizacao.spec`: lesão reduz o efetivo "−1" e a estrela sobrevive; `visualizar.page.spec`: a
 > **permanente cascateia a Vida máxima pelo delta** e a temporária não, com base/Maestria intactos; a
@@ -69,6 +70,17 @@
 > adicionar uma lesão **permanente** de −2 Vigor e −1 Força na aba fez a **Vida máxima cair 52 → 32**, o
 > **Inventário máx 30 → 25** (Força 6→5 ×5) e o box de **Força** virar **"5 −1"** — mas o base seguiu 6 e a
 > **Maestria (★) permaneceu**; a redução sobreviveu ao PUT debounced + reconciliação; **zero erros de app**.
+>
+> **Atributo lesionado pode NEGATIVAR (3ª rodada do refino, a pedido do autor).** Caiu o **piso 0** de
+> `calcularAtributoEfetivo`: `efetivo = base − pontos`, ponto final — lesão maior que o base leva o
+> atributo a **valor negativo**, inclusive nas **permanentes**, que cascateiam. Atributo negativo já era
+> um estado legítimo do sistema (os bounds de classe vão a **−5**, `limites.ts`) e as fórmulas o aceitam
+> — então **Vigor negativado derruba a Vida máxima** (ex.: Combatente nv. 2, Vigor 4 → −1 com uma lesão
+> permanente Mortal: Vida 76 → 36), Força negativa zera o inventário (doc — "Inventário") etc. Quem
+> consome o efetivo num cálculo passa por `aplicarLimitesPorClasse`, que aplica o **−5** como piso do
+> *cálculo* (não da ficha). O stepper de **pontos da lesão** mantém o piso 0 (pontos não negativam; o
+> que negativa é o atributo). **+2 testes** (**shared 174/174** — `lesao.spec`: efetivo negativo no
+> escalar e no mapa, e a **cascata do Vigor negativado na Vida**); frontend 254/254 sem mudança.
 > Spec `m3-12` → `done/`. **M3 avança: a aba Sanidade virou um editor completo — e as lesões agora
 > mordem o atributo (e, se permanentes, todos os cálculos), mas nunca a Maestria.** Sessão anterior
 > (2026-07-13, **m3-11 — navegação por abas da ficha**: fecha o scaffold navegável
