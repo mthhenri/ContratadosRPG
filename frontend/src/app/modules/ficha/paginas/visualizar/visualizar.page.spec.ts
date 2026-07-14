@@ -2,7 +2,12 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, provideRouter } from '@angular/router';
 import { NEVER, Subject, of, throwError } from 'rxjs';
-import { ArquetipoEnum, ClasseEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import {
+  ArquetipoEnum,
+  ClasseEnum,
+  SeveridadeLesaoEnum,
+  TipoCampanhaMembroPapelEnum,
+} from '@contratados-rpg/shared/enums';
 import {
   calcularAreaPercepcao,
   calcularDanoCorpo,
@@ -226,6 +231,60 @@ describe('FichaVisualizar', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('lesão PERMANENTE cascateia às máximas/derivados; temporária não; base e Maestria intactos', () => {
+    const classe = ClasseEnum.COMBATENTE;
+    const nivel = 2;
+    const atributos = { ...dados.atributos, vigor: 4, forca: 6 };
+    const vidaMaxima = calcularVida({ classe, nivel, vigor: 4 });
+    const rico: FichaRecuperadaDto = {
+      id: 42,
+      campanhaId: 9,
+      usuarioId: 7,
+      nome: 'Kane',
+      dados: {
+        ...dados,
+        classe,
+        nivel,
+        atributos,
+        maestria: 'forca',
+        estado: {
+          ...dados.estado,
+          vidaMaxima,
+          energiaMaxima: calcularEnergia({ classe, nivel, destreza: atributos.destreza }),
+        },
+        derivados: calcularDerivados(classe, nivel, atributos),
+      },
+    };
+    const { fixture } = montar({ usuarioLogadoId: 99 });
+    const componente = fixture.componentInstance;
+
+    // Lesão PERMANENTE de −1 Vigor → Vida máxima cai pelo delta de progressão.
+    componente['ficha'].set(rico);
+    const lesao = {
+      atributo: 'vigor' as const,
+      pontos: 1,
+      severidade: SeveridadeLesaoEnum.LEVE,
+      permanente: true,
+    };
+    componente['ajustarSanidade']({ sequelas: [], traumas: [], lesoes: [lesao] });
+
+    const esperado =
+      vidaMaxima + (calcularVida({ classe, nivel, vigor: 3 }) - calcularVida({ classe, nivel, vigor: 4 }));
+    expect(componente['ficha']()?.dados.estado.vidaMaxima).toBe(esperado);
+    // Base e Maestria intactos (a permanente afeta os cálculos, não o valor base).
+    expect(componente['ficha']()?.dados.atributos.vigor).toBe(4);
+    expect(componente['ficha']()?.dados.maestria).toBe('forca');
+
+    // A MESMA lesão como TEMPORÁRIA não mexe nas máximas (documento: não reduz Vida/Energia).
+    componente['ficha'].set(rico);
+    componente['ajustarSanidade']({
+      sequelas: [],
+      traumas: [],
+      lesoes: [{ ...lesao, permanente: false }],
+    });
+    expect(componente['ficha']()?.dados.estado.vidaMaxima).toBe(vidaMaxima);
   });
 
   it('editar o Nível soma o delta de progressão às máximas stored (m3-10)', () => {

@@ -44,19 +44,33 @@
 > **Maestria sobrevive à lesão** — ela é validada sobre o **base** (`maestriaValida`), então FOR 6 com
 > Maestria que toma −1 mostra **5** mas **mantém a estrela** (o backend segue aceitando a Maestria; nada
 > a revalidar). Os **Atributos (leitura)** exibem o **efetivo + badge "−N"** (accent) + leve tinta no box
-> lesionado; **edição/rascunho e a Maestria seguem no base**. Fiel ao documento (linha "lesão em atributos
-> de cálculo de saúde não afeta os mesmos"), o efetivo é **leitura à parte** e **não** entra nos cálculos
-> de Vida/Energia; a **cascata mecânica** nos demais derivados (inventário/deslocamento) segue **fora**
-> (o autor edita os `derivados` à mão — m3-10). Limpeza: os estilos mortos `.ficha-marca*` (migraram para
-> o `FichaSanidade` na extração) saíram do `ficha-visualizacao.scss` — o budget de estilo por componente
-> voltou a passar sem bump. **+5 testes** (**shared 172/172** — `lesao.spec`: soma por atributo, efetivo
-> com piso 0, mapa preservando o resto, **Maestria válida no base e não no efetivo**; **frontend 253/253**
-> — `ficha-visualizacao.spec`: lesão reduz o efetivo exibido "−1" e a estrela de Maestria sobrevive; a
-> lista de abas passou a esperar "Sanidade & Lesões"). `lint`/`build` verdes (bundle **568,16 kB**, sem
-> warning de budget). **Verificado por render**: a aba lê "Sanidade & Lesões"; o box de **Força** mostra
-> **★ FOR ★ / 5 / −1** (Maestria mantida, efetivo 5 do base 6) e a lista de Sanidade traz "−1 Força".
+> lesionado; **edição/rascunho e a Maestria seguem no base**.
+>
+> **Lesões PERMANENTES cascateiam para todos os cálculos (2ª rodada do refino, a pedido do autor).** O
+> documento ("⬥ Lesões Permanentes") é explícito: *"ter uma lesão permanente irá afetar qualquer cálculo
+> que utilize este atributo — Vigor removeria vida e inventário; Destreza, deslocamento e energia."* — ao
+> contrário da temporária, que (linha "lesão em atributo de cálculo de saúde não afeta os mesmos") **não**
+> reduz Vida/Energia. Implementado assim: no `ajustarSanidade` da `visualizar.page`, calcula-se o atributo
+> efetivo **só pelas lesões permanentes** (`calcularAtributosEfetivos(base, lesões.filter(permanente))`)
+> **antes vs. depois** da edição; se mudou, roda a **mesma progressão por delta de m3-10**
+> (`aplicarProgressao`) usando esses efetivos como entrada — máximas (Vida/Energia) **e** todos os
+> derivados stored acompanham a variação, preservando ajustes manuais. O valor **base** continua
+> intocado, então a **Maestria sobrevive** mesmo à permanente. A **temporária** segue só reduzindo o
+> atributo efetivo exibido (badge "−N"); os `derivados` dela seguem manuais (m3-10). O box de Atributos
+> mostra o efetivo por **todas** as lesões (perm + temp); os derivados refletem **só** as permanentes —
+> coerente com o documento. Limpeza: os estilos mortos `.ficha-marca*` (migraram para o `FichaSanidade` na
+> extração) saíram do `ficha-visualizacao.scss` — o budget de estilo por componente voltou a passar sem
+> bump. **+6 testes** (**shared 172/172** — `lesao.spec`: soma por atributo, efetivo com piso 0, mapa
+> preservando o resto, **Maestria válida no base e não no efetivo**; **frontend 254/254** —
+> `ficha-visualizacao.spec`: lesão reduz o efetivo "−1" e a estrela sobrevive; `visualizar.page.spec`: a
+> **permanente cascateia a Vida máxima pelo delta** e a temporária não, com base/Maestria intactos; a
+> lista de abas espera "Sanidade & Lesões"). `lint`/`build` verdes (bundle **568,16 kB**, sem warning de
+> budget). **Verificado por render (ponta a ponta, editando no navegador com PUT ecoando o corpo):**
+> adicionar uma lesão **permanente** de −2 Vigor e −1 Força na aba fez a **Vida máxima cair 52 → 32**, o
+> **Inventário máx 30 → 25** (Força 6→5 ×5) e o box de **Força** virar **"5 −1"** — mas o base seguiu 6 e a
+> **Maestria (★) permaneceu**; a redução sobreviveu ao PUT debounced + reconciliação; **zero erros de app**.
 > Spec `m3-12` → `done/`. **M3 avança: a aba Sanidade virou um editor completo — e as lesões agora
-> mordem o atributo (mas não a Maestria).** Sessão anterior
+> mordem o atributo (e, se permanentes, todos os cálculos), mas nunca a Maestria.** Sessão anterior
 > (2026-07-13, **m3-11 — navegação por abas da ficha**: fecha o scaffold navegável
 > que destrava o resto do M3 (os editores de sub-coleções m3-12…m3-15 e o frontend de Identidade m3-20,
 > que aguardava a aba). A **ficha virou uma tela com abas** — barra mono/uppercase fiel ao protótipo

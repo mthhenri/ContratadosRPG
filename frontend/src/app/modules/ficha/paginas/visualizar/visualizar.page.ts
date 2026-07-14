@@ -7,6 +7,7 @@ import { EMPTY, Subject, catchError, debounceTime, filter, finalize, forkJoin, s
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import {
   calcularAreaPercepcao,
+  calcularAtributosEfetivos,
   calcularDanoCorpo,
   calcularDefesa,
   calcularDerivados,
@@ -424,20 +425,50 @@ export class FichaVisualizar {
    * Edita as listas de Sanidade (sequelas/traumas/lesões, m3-12): substitui os três blocos em `estado`
    * de uma vez (o editor emite o trio inteiro), otimista na tela + persistência em lote. Só dono/mestre
    * chega aqui; o backend valida forma (camada 1) — sem trava de faixa (m3-10).
+   *
+   * **Lesões permanentes** afetam **todos** os cálculos que usam o atributo (`sistema-v4.1.0.md` —
+   * "⬥ Lesões Permanentes": Vigor removeria vida e inventário; Destreza, deslocamento e energia). A
+   * cascata usa a **mesma progressão por delta** de m3-10 (`aplicarProgressao`), tomando como entrada
+   * os atributos **efetivos apenas pelas lesões permanentes** — antes vs. depois da edição —, então as
+   * máximas e os derivados stored acompanham a variação preservando ajustes manuais. O valor **base**
+   * (`atributos`) **nunca** é mutado — a Maestria (ligada ao base) sobrevive. Lesões **não** permanentes
+   * só reduzem o atributo efetivo exibido (documento: lesão em atributo de saúde não reduz Vida/Energia).
    */
   protected ajustarSanidade(sanidade: EstadoSanidade): void {
     const fichaAtual = this.ficha();
     if (!fichaAtual) {
       return;
     }
+    const dadosAtuais = fichaAtual.dados;
     const estado = {
-      ...fichaAtual.dados.estado,
+      ...dadosAtuais.estado,
       sequelas: sanidade.sequelas,
       traumas: sanidade.traumas,
       lesoes: sanidade.lesoes,
     };
-    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, estado } });
+    let dados: FichaJogadorDadosDto = { ...dadosAtuais, estado };
+
+    // Cascata das lesões PERMANENTES: base − pontos permanentes, antes e depois; se mudou, progride.
+    const permanentesAntes = dadosAtuais.estado.lesoes.filter((lesao) => lesao.permanente);
+    const permanentesDepois = sanidade.lesoes.filter((lesao) => lesao.permanente);
+    const efetivoAntes = calcularAtributosEfetivos(dadosAtuais.atributos, permanentesAntes);
+    const efetivoDepois = calcularAtributosEfetivos(dadosAtuais.atributos, permanentesDepois);
+    if (!this.mesmoMapaAtributos(efetivoAntes, efetivoDepois)) {
+      const progredido = this.aplicarProgressao(
+        { ...dadosAtuais, atributos: efetivoAntes },
+        { ...dados, atributos: efetivoDepois },
+      );
+      // `aplicarProgressao` já traz o estado (listas novas + máximas) e os derivados; só devolve o base.
+      dados = { ...progredido, atributos: dadosAtuais.atributos };
+    }
+
+    this.ficha.set({ ...fichaAtual, dados });
     this.agendarPersistencia();
+  }
+
+  /** `true` se dois mapas de atributos são iguais em todas as chaves. */
+  private mesmoMapaAtributos(a: FichaAtributosDto, b: FichaAtributosDto): boolean {
+    return (Object.keys(a) as (keyof FichaAtributosDto)[]).every((chave) => a[chave] === b[chave]);
   }
 
   /** Edita o Codinome (relacional) — otimista + persistência em lote. */
