@@ -30,6 +30,8 @@ const INDISPONIVEL = 'N/A';
 export type ChaveInfoExtra = Extract<
   keyof FichaDerivadosDto,
   | 'defesa'
+  | 'esquiva'
+  | 'bloqueio'
   | 'deslocamento'
   | 'proficiencia'
   | 'danoCorpoACorpo'
@@ -114,6 +116,8 @@ export function montarInformacoesExtras(
 
   return [
     linhaNumero('defesa', 'Defesa', defesaCalc?.defesa ?? null, (valor) => String(valor)),
+    linhaNumero('esquiva', 'Esquiva', defesaCalc?.esquiva ?? null, (valor) => String(valor)),
+    linhaNumero('bloqueio', 'Bloqueio', defesaCalc?.bloqueio ?? null, (valor) => String(valor)),
     linhaNumero('deslocamento', 'Deslocamento', calcularDeslocamento(entrada), (valor) => `${valor}m`),
     linhaNumero('proficiencia', 'Proficiência', proficienciaCalc, (valor) => `+${valor}`),
     linhaTexto('danoCorpoACorpo', 'Dano C. a C.', calcularDanoCorpo(entrada)),

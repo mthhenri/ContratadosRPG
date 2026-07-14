@@ -512,4 +512,34 @@ describe('FichaVisualizacao', () => {
     const combate = alvo.raiz.querySelector('#painel-combate');
     expect(combate?.textContent).toContain('77');
   });
+
+  it('edita Esquiva e Bloqueio no próprio lugar na aba Combate e emite o override', () => {
+    const alvo = montar(dados, 'Corvo', 42, true);
+    const ajustes: { chave: string; valor: number | string }[] = [];
+    alvo.fixture.componentInstance.ajusteDerivado.subscribe((a) => ajustes.push(a));
+    trocarAba(alvo.fixture, 'combate');
+
+    /** Abre o editor da linha de Combate com esse rótulo e confirma o valor digitado. */
+    const editarLinha = (rotulo: string, valor: string): void => {
+      const linha = Array.from(
+        alvo.raiz.querySelectorAll<HTMLElement>('#painel-combate .ficha-info__linha'),
+      ).find((item) => item.querySelector('.ficha-info__rotulo')?.textContent?.trim() === rotulo)!;
+      linha.querySelector<HTMLButtonElement>('.ficha-info__editavel')!.click();
+      alvo.fixture.detectChanges();
+      const entrada = alvo.raiz.querySelector<HTMLInputElement>(
+        '#painel-combate .ficha-info__entrada',
+      )!;
+      entrada.value = valor;
+      entrada.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+      alvo.fixture.detectChanges();
+    };
+
+    editarLinha('Esquiva', '19');
+    editarLinha('Bloqueio', '21');
+
+    expect(ajustes).toEqual([
+      { chave: 'esquiva', valor: 19 },
+      { chave: 'bloqueio', valor: 21 },
+    ]);
+  });
 });

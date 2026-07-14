@@ -581,10 +581,10 @@
         </header>
 
         <dl class="ficha-info ficha-info--combate">
-          @for (linha of combateLinhas(); track linha.rotulo) {
+          @for (info of combateLinhas(); track info.chave) {
             <div class="ficha-info__linha">
-              <dt class="ficha-info__rotulo">{{ linha.rotulo }}</dt>
-              @if (ajustavel() && linha.info; as info) {
+              <dt class="ficha-info__rotulo">{{ info.rotulo }}</dt>
+              @if (ajustavel()) {
                 @if (editandoDerivado() === info.chave) {
                   <dd class="ficha-info__valor">
                     <input
@@ -614,7 +614,7 @@
                   <dd class="ficha-info__valor">{{ info.display }}</dd>
                 }
               } @else {
-                <dd class="ficha-info__valor">{{ linha.display }}</dd>
+                <dd class="ficha-info__valor">{{ info.display }}</dd>
               }
             </div>
           }

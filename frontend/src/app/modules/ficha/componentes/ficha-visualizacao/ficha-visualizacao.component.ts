@@ -15,7 +15,6 @@ import type { FichaAtributosDto, FichaJogadorDadosDto } from '@contratados-rpg/s
 import {
   MAESTRIA_PONTOS_MINIMO,
   calcularAtributosEfetivos,
-  calcularDefesa,
   calcularEnergia,
   calcularVida,
   maestriaAtingivel,
@@ -53,9 +52,6 @@ interface GrupoAtributos {
 /** Lembrete da fórmula da DT — exibido como chip informativo no card de Atributos (como no protótipo). */
 const FORMULA_DT = 'DT = 10 + NÍVEL + ATR×2';
 
-/** Texto no lugar de uma stat que a classe não possui (ex.: Civil sem defesa) — espelha `status-derivado`. */
-const INDISPONIVEL = 'N/A';
-
 /** Aba da ficha (m3-11) — o scaffold navegável. `Visão Geral`/`Combate` têm conteúdo; as demais, resumo. */
 export type AbaFicha =
   | 'visao-geral'
@@ -86,16 +82,17 @@ export function ehAbaFicha(valor: string | null | undefined): valor is AbaFicha 
   return ABAS_FICHA.some((aba) => aba.id === valor);
 }
 
-/**
- * Linha do painel Combate: um derivado defensivo/ofensivo. Quando `info` está presente a linha é
- * **editável** (reusa a máquina de `Informações Extras` — m3-10); `null` = read-only (Esquiva/Bloqueio,
- * que não têm edição no próprio lugar hoje).
- */
-interface LinhaCombate {
-  readonly rotulo: string;
-  readonly display: string;
-  readonly info: InfoExtra | null;
-}
+/** Derivados do painel **Combate**, na ordem de exibição — todos editáveis no próprio lugar (m3-10). */
+const CHAVES_COMBATE: readonly ChaveInfoExtra[] = [
+  'defesa',
+  'esquiva',
+  'bloqueio',
+  'deslocamento',
+  'proficiencia',
+  'danoCorpoACorpo',
+  'danoFurtivo',
+  'habilidadesPorTurno',
+];
 
 /** Campo de vitalidade atual (recebe passos − / + e digitação). */
 export type CampoVitalidadeAtual = 'vidaAtual' | 'energiaAtual';
@@ -443,11 +440,14 @@ export class FichaVisualizacao {
 
   /**
    * Derivados **realocados** para abas temáticas (a pedido do autor) — saem de "Informações Extras":
-   * `inventarioMaximo` vai para a aba Inventário e `habilidadesPorTurno` para a aba Combate.
+   * `inventarioMaximo` vai para a aba Inventário; `habilidadesPorTurno`, `esquiva` e `bloqueio` para a
+   * aba Combate (Esquiva/Bloqueio nunca estiveram na Visão Geral — moram só no painel de Combate).
    */
   private readonly CHAVES_REALOCADAS: ReadonlySet<ChaveInfoExtra> = new Set([
     'inventarioMaximo',
     'habilidadesPorTurno',
+    'esquiva',
+    'bloqueio',
   ]);
 
   /** Linhas exibidas em "Informações Extras" (Visão Geral) — sem os derivados realocados às abas. */
@@ -669,37 +669,15 @@ export class FichaVisualizacao {
   }
 
   /**
-   * Linhas do painel **Combate** (m3-11) — organiza, não recalcula: Defesa/Deslocamento/Proficiência/
-   * Dano C.a.C./Furtivo reusam as linhas **editáveis** de `Informações Extras` (m3-10, mesma persistência);
-   * Esquiva/Bloqueio são read-only (sem edição no próprio lugar hoje), resolvendo stored (`derivados`)
-   * antes do calculado (`shared/regras`).
+   * Linhas do painel **Combate** (m3-11) — organiza, não recalcula: todas reusam as linhas **editáveis**
+   * de `Informações Extras` (m3-10, mesma persistência via `ajusteDerivado`), resolvendo o stored
+   * (`derivados`) antes do calculado (`shared/regras`). **Esquiva/Bloqueio entraram na edição no próprio
+   * lugar** (antes read-only) — já eram campos stored de `derivados` e já acompanhavam a progressão por
+   * delta (Destreza → Esquiva, Vigor → Bloqueio); só faltava a UI.
    */
-  protected readonly combateLinhas = computed<readonly LinhaCombate[]>(() => {
+  protected readonly combateLinhas = computed<readonly InfoExtra[]>(() => {
     const mapa = new Map(this.informacoesExtras().map((info) => [info.chave, info] as const));
-    const defesaCalc = calcularDefesa(this.entrada());
-    const derivados = this.dados().derivados;
-    const editavel = (chave: ChaveInfoExtra): LinhaCombate => {
-      const info = mapa.get(chave)!;
-      return { rotulo: info.rotulo, display: info.display, info };
-    };
-    const somenteLeitura = (
-      rotulo: string,
-      stored: number | undefined,
-      calculado: number | undefined,
-    ): LinhaCombate => {
-      const valor = typeof stored === 'number' ? stored : (calculado ?? null);
-      return { rotulo, display: valor === null ? INDISPONIVEL : String(valor), info: null };
-    };
-    return [
-      editavel('defesa'),
-      somenteLeitura('Esquiva', derivados?.esquiva, defesaCalc?.esquiva),
-      somenteLeitura('Bloqueio', derivados?.bloqueio, defesaCalc?.bloqueio),
-      editavel('deslocamento'),
-      editavel('proficiencia'),
-      editavel('danoCorpoACorpo'),
-      editavel('danoFurtivo'),
-      editavel('habilidadesPorTurno'),
-    ];
+    return CHAVES_COMBATE.map((chave) => mapa.get(chave)!);
   });
 
   /** Resumo read-only das sub-coleções (contagem exibida nas abas ainda sem editor — m3-12…m3-15). */

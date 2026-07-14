@@ -81,6 +81,18 @@
 > *cálculo* (não da ficha). O stepper de **pontos da lesão** mantém o piso 0 (pontos não negativam; o
 > que negativa é o atributo). **+2 testes** (**shared 174/174** — `lesao.spec`: efetivo negativo no
 > escalar e no mapa, e a **cascata do Vigor negativado na Vida**); frontend 254/254 sem mudança.
+>
+> **Esquiva e Bloqueio viraram editáveis no próprio lugar (aba Combate, a pedido do autor).** Eram as
+> duas únicas linhas read-only do painel (m3-11); já eram **campos stored** de `derivados`
+> (`FichaDerivadosDto.esquiva/bloqueio`) e já acompanhavam a **progressão por delta** (Nível e Destreza →
+> Esquiva; Nível e Vigor → Bloqueio) — só faltava a UI. Entraram em `ChaveInfoExtra` +
+> `montarInformacoesExtras` (`status-derivado.ts`), reusando **a mesma máquina** de edição/persistência
+> de m3-10 (`ajusteDerivado` → override em `derivados[chave]`, otimista + PUT em lote); e entraram nas
+> **`CHAVES_REALOCADAS`**, para seguirem aparecendo **só** na aba Combate (nunca estiveram em
+> "Informações Extras"). Com isso **todas as 8 linhas de Combate são editáveis** — a `LinhaCombate`
+> (wrapper com `info: InfoExtra | null`) e o `somenteLeitura` morreram; `combateLinhas` virou um
+> `InfoExtra[]` ordenado por `CHAVES_COMBATE`. **+1 teste** (**frontend 255/255** — editar Esquiva e
+> Bloqueio na aba emite `{chave, valor}`); `lint`/`build` verdes (bundle **568,16 kB**, sem bump).
 > Spec `m3-12` → `done/`. **M3 avança: a aba Sanidade virou um editor completo — e as lesões agora
 > mordem o atributo (e, se permanentes, todos os cálculos), mas nunca a Maestria.** Sessão anterior
 > (2026-07-13, **m3-11 — navegação por abas da ficha**: fecha o scaffold navegável
