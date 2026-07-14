@@ -1,5 +1,10 @@
 import { TestBed } from '@angular/core/testing';
-import { ArquetipoEnum, ClasseEnum, HabilidadeCategoriaEnum } from '@contratados-rpg/shared/enums';
+import {
+  ArquetipoEnum,
+  ClasseEnum,
+  HabilidadeCategoriaEnum,
+  SeveridadeLesaoEnum,
+} from '@contratados-rpg/shared/enums';
 import type { FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 import { calcularVida } from '@contratados-rpg/shared/regras/agente';
 
@@ -285,6 +290,27 @@ describe('FichaVisualizacao', () => {
     expect(raiz.querySelector('.ficha-atributo--maestria .ficha-atributo__estrela')).not.toBeNull();
   });
 
+  it('lesão reduz o atributo efetivo exibido (−N) e a Maestria sobrevive (base intacto)', () => {
+    const documento = {
+      ...dados,
+      atributos: { ...dados.atributos, forca: 6 },
+      maestria: 'forca' as const,
+      estado: {
+        ...dados.estado,
+        lesoes: [
+          { atributo: 'forca' as const, pontos: 1, severidade: SeveridadeLesaoEnum.LEVE, permanente: false },
+        ],
+      },
+    };
+    const { raiz } = montar(documento, 'Corvo', 42, false);
+    // O box de Força tem Maestria (estrela) E está lesionado; mostra o efetivo 5 e a penalidade −1.
+    const box = raiz.querySelector('.ficha-atributo--maestria')!;
+    expect(box.classList.contains('ficha-atributo--lesionado')).toBe(true);
+    expect(box.querySelector('.ficha-atributo__estrela')).not.toBeNull();
+    expect(box.querySelector('.ficha-atributo__valor')?.textContent).toContain('5');
+    expect(box.querySelector('.ficha-atributo__lesao')?.textContent?.trim()).toBe('−1');
+  });
+
   it('edita Classe/Arquétipo: trocar para Civil limpa o arquétipo e emite classe + null', () => {
     const documento = { ...dados, classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.MERCENARIO };
     const componente = montar(documento, 'Corvo', 42, true).fixture.componentInstance;
@@ -356,7 +382,7 @@ describe('FichaVisualizacao', () => {
       'Combate',
       'Inventário',
       'Habilidades',
-      'Sanidade',
+      'Sanidade & Lesões',
       'Rolagens',
     ]);
     const ativa = raiz.querySelector('[role="tab"][aria-selected="true"]');

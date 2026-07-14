@@ -14,10 +14,12 @@ import { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
 import type { FichaAtributosDto, FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 import {
   MAESTRIA_PONTOS_MINIMO,
+  calcularAtributosEfetivos,
   calcularDefesa,
   calcularEnergia,
   calcularVida,
   maestriaAtingivel,
+  somarLesoesAtributo,
 } from '@contratados-rpg/shared/regras/agente';
 
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
@@ -75,7 +77,7 @@ export const ABAS_FICHA: readonly DescritorAba[] = [
   { id: 'combate', rotulo: 'Combate' },
   { id: 'inventario', rotulo: 'Inventário' },
   { id: 'habilidades', rotulo: 'Habilidades' },
-  { id: 'sanidade', rotulo: 'Sanidade' },
+  { id: 'sanidade', rotulo: 'Sanidade & Lesões' },
   { id: 'rolagens', rotulo: 'Rolagens' },
 ];
 
@@ -316,6 +318,26 @@ export class FichaVisualizacao {
 
   protected readonly atributos = computed(() => this.dados().atributos);
   protected readonly estado = computed(() => this.dados().estado);
+
+  /**
+   * Atributos **efetivos** = base − pontos de lesão (`shared/regras`, `sistema-v4.1.0.md` — "⬡ Lesões").
+   * O valor **base** (`atributos()`) nunca é mutado; por isso a **Maestria** (ligada ao base) sobrevive à
+   * lesão — um atributo 6 com Maestria que toma −1 mostra 5 mas mantém a estrela. A leitura usa o efetivo;
+   * a edição (rascunho) e a Maestria seguem no base.
+   */
+  protected readonly atributosEfetivos = computed(() =>
+    calcularAtributosEfetivos(this.atributos(), this.estado().lesoes),
+  );
+
+  /** Penalidade de lesão por atributo (0 quando não lesionado) — badge "−N" na leitura. */
+  protected readonly penalidadesLesao = computed<Record<ChaveAtributo, number>>(() => {
+    const lesoes = this.estado().lesoes;
+    const mapa = {} as Record<ChaveAtributo, number>;
+    (Object.keys(this.atributos()) as ChaveAtributo[]).forEach((chave) => {
+      mapa[chave] = somarLesoesAtributo(lesoes, chave);
+    });
+    return mapa;
+  });
   protected readonly anotacoes = computed(() => this.dados().anotacoes.trim());
 
   // m3-10: máxima é stored (snapshot na criação, editável); cai no derivado só em fichas antigas.

@@ -465,6 +465,7 @@
                         <div
                           class="ficha-atributo"
                           [class.ficha-atributo--maestria]="maestriaAtual() === campo.chave"
+                          [class.ficha-atributo--lesionado]="penalidadesLesao()[campo.chave] > 0"
                         >
                           <span
                             class="ficha-atributo__abrev"
@@ -478,7 +479,22 @@
                               <span class="ficha-atributo__estrela" aria-hidden="true">★</span>
                             }
                           </span>
-                          <span class="ficha-atributo__valor">{{ atributos()[campo.chave] }}</span>
+                          <span class="ficha-atributo__valor">
+                            {{ atributosEfetivos()[campo.chave] }}
+                            @if (penalidadesLesao()[campo.chave] > 0) {
+                              <span
+                                class="ficha-atributo__lesao"
+                                [attr.title]="
+                                  'Base ' +
+                                  atributos()[campo.chave] +
+                                  ' · lesão −' +
+                                  penalidadesLesao()[campo.chave]
+                                "
+                              >
+                                −{{ penalidadesLesao()[campo.chave] }}
+                              </span>
+                            }
+                          </span>
                           <span class="ficha-atributo__nome">{{ campo.nome }}</span>
                         </div>
                       }
@@ -710,7 +726,7 @@
     >
       <section class="ficha-cartao ficha-visao__painel-cartao">
         <header class="ficha-cartao__cabecalho">
-          <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Sanidade</h3>
+          <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Sanidade &amp; Lesões</h3>
           <span class="ficha-cartao__regua"></span>
           <span class="ficha-cartao__meta">{{ totalMarcas() }} {{ totalMarcas() === 1 ? 'marca' : 'marcas' }}</span>
         </header>

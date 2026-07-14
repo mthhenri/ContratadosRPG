@@ -13,5 +13,6 @@ export * from './habilidades';
 export * from './progressao';
 export * from './limites';
 export * from './maestria';
+export * from './lesao';
 export * from './derivados';
 export * from './arquetipo';

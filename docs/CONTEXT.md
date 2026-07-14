@@ -34,7 +34,29 @@
 > TRATADO), o **editor de lesão** com selects de Atributo/Severidade + stepper de Pontos + Permanente, e
 > **adicionar "Vertigem" aparece na hora** (otimista) na lista de sequelas; a barra de abas confirma **uma
 > só aba ativa** (aria-selected único); **zero erros de app** (só o socket sem gateway → selo offline).
-> Spec `m3-12` → `done/`. **M3 avança: a aba Sanidade virou um editor completo.** Sessão anterior
+> **Refino pós-entrega (a pedido do autor): efeito mecânico das lesões no atributo + aba renomeada.** A
+> aba **Sanidade** virou **"Sanidade & Lesões"** (id `sanidade` mantido — deep-link estável; título do
+> card idem). As **lesões passaram a impactar o atributo efetivo** — nova regra pura
+> `shared/regras/agente/lesao.ts` (`somarLesoesAtributo`/`calcularAtributoEfetivo`/
+> `calcularAtributosEfetivos`), conferida contra `sistema-v4.1.0.md` ("⬡ Lesões": cada ponto de lesão
+> remove 1 do atributo; Leve 1 / Grave 3 / Mortal 5), **piso 0**. **Princípio-chave: o valor base
+> (`atributos`) nunca é mutado — o efetivo é derivado.** Consequência (concern explícito do autor): a
+> **Maestria sobrevive à lesão** — ela é validada sobre o **base** (`maestriaValida`), então FOR 6 com
+> Maestria que toma −1 mostra **5** mas **mantém a estrela** (o backend segue aceitando a Maestria; nada
+> a revalidar). Os **Atributos (leitura)** exibem o **efetivo + badge "−N"** (accent) + leve tinta no box
+> lesionado; **edição/rascunho e a Maestria seguem no base**. Fiel ao documento (linha "lesão em atributos
+> de cálculo de saúde não afeta os mesmos"), o efetivo é **leitura à parte** e **não** entra nos cálculos
+> de Vida/Energia; a **cascata mecânica** nos demais derivados (inventário/deslocamento) segue **fora**
+> (o autor edita os `derivados` à mão — m3-10). Limpeza: os estilos mortos `.ficha-marca*` (migraram para
+> o `FichaSanidade` na extração) saíram do `ficha-visualizacao.scss` — o budget de estilo por componente
+> voltou a passar sem bump. **+5 testes** (**shared 172/172** — `lesao.spec`: soma por atributo, efetivo
+> com piso 0, mapa preservando o resto, **Maestria válida no base e não no efetivo**; **frontend 253/253**
+> — `ficha-visualizacao.spec`: lesão reduz o efetivo exibido "−1" e a estrela de Maestria sobrevive; a
+> lista de abas passou a esperar "Sanidade & Lesões"). `lint`/`build` verdes (bundle **568,16 kB**, sem
+> warning de budget). **Verificado por render**: a aba lê "Sanidade & Lesões"; o box de **Força** mostra
+> **★ FOR ★ / 5 / −1** (Maestria mantida, efetivo 5 do base 6) e a lista de Sanidade traz "−1 Força".
+> Spec `m3-12` → `done/`. **M3 avança: a aba Sanidade virou um editor completo — e as lesões agora
+> mordem o atributo (mas não a Maestria).** Sessão anterior
 > (2026-07-13, **m3-11 — navegação por abas da ficha**: fecha o scaffold navegável
 > que destrava o resto do M3 (os editores de sub-coleções m3-12…m3-15 e o frontend de Identidade m3-20,
 > que aguardava a aba). A **ficha virou uma tela com abas** — barra mono/uppercase fiel ao protótipo

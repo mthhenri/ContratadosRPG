@@ -757,67 +757,6 @@
   }
 }
 
-// === Sanidade: marcas com borda colorida à esquerda ===
-.ficha-marcas {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.ficha-marca {
-  padding: 9px 12px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-left-width: 3px;
-  border-radius: var(--radius-control);
-
-  &__linha {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  &__tag {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-mute);
-    flex: 0 0 auto;
-  }
-
-  &__nome {
-    font-family: var(--font-sans);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text);
-  }
-
-  &__descricao {
-    display: block;
-    margin-top: 4px;
-    font-family: var(--font-sans);
-    font-size: 12px;
-    color: var(--text-dim);
-  }
-
-  &--trauma {
-    border-left-color: var(--warning);
-  }
-
-  &--sequela {
-    border-left-color: var(--text-mute);
-  }
-
-  &--lesao {
-    border-left-color: var(--accent);
-  }
-}
-
 // === Atributos: box com abreviação em cima, valor grande, nome embaixo ===
 .ficha-atributos {
   display: flex;
@@ -871,10 +810,23 @@
   }
 
   &__valor {
+    display: inline-flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 4px;
     font-family: var(--font-mono);
     font-size: 26px;
     font-weight: 700;
     color: var(--text);
+    line-height: 1;
+  }
+
+  // Penalidade de lesão sobre o atributo ("−N"): sinal em accent ao lado do valor efetivo.
+  &__lesao {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
     line-height: 1;
   }
 
@@ -897,6 +849,11 @@
   // Box do atributo com Maestria: borda accent discreta.
   &--maestria {
     border-color: var(--accent-border);
+  }
+
+  // Box lesionado (efetivo < base): leve tinta accent para sinalizar a penalidade em jogo.
+  &--lesionado {
+    background: color-mix(in srgb, var(--accent) 6%, var(--surface-2));
   }
 
   &__stepper {
