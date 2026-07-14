@@ -14,10 +14,11 @@
     "build:shared": "npm run build --workspace=shared",
     "lint": "npm run lint --workspaces",
     "test": "npm run test --workspaces --if-present",
+    "predev": "npm run db:up",
     "dev": "concurrently -k -n backend,frontend -c red,gray \"npm:backend:dev\" \"npm:frontend:dev\"",
     "backend:dev": "npm run start:dev --workspace=backend",
     "frontend:dev": "npm run start --workspace=frontend",
-    "db:up": "docker compose up -d",
+    "db:up": "node scripts/db-up.mjs",
     "db:down": "docker compose down",
     "db:migrate": "npm run db:migrate --workspace=backend",
     "db:rollback": "npm run db:rollback --workspace=backend"
