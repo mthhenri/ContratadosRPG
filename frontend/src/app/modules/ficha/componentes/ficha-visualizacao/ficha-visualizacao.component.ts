@@ -417,10 +417,29 @@ export class FichaVisualizacao {
     return Math.max(0, Math.min(100, (atual / maximo) * 100));
   }
 
-  /** Status derivado da coluna "Informações Extras" (mesma seleção da edição — `status-derivado`). */
-  // Informações Extras: stored (`derivados`) vence o calculado; cada linha é editável no lugar.
+  /** Status derivado (mesma seleção da edição — `status-derivado`); stored vence o calculado. */
+  // Fonte única das linhas editáveis; as abas Visão Geral/Combate/Inventário consomem recortes daqui.
   protected readonly informacoesExtras = computed(() =>
     montarInformacoesExtras(this.entrada(), this.dados().derivados),
+  );
+
+  /**
+   * Derivados **realocados** para abas temáticas (a pedido do autor) — saem de "Informações Extras":
+   * `inventarioMaximo` vai para a aba Inventário e `habilidadesPorTurno` para a aba Combate.
+   */
+  private readonly CHAVES_REALOCADAS: ReadonlySet<ChaveInfoExtra> = new Set([
+    'inventarioMaximo',
+    'habilidadesPorTurno',
+  ]);
+
+  /** Linhas exibidas em "Informações Extras" (Visão Geral) — sem os derivados realocados às abas. */
+  protected readonly informacoesGerais = computed(() =>
+    this.informacoesExtras().filter((info) => !this.CHAVES_REALOCADAS.has(info.chave)),
+  );
+
+  /** Linha editável do Inventário máximo (exibida na aba Inventário junto do total atual de itens). */
+  protected readonly inventarioMaximoLinha = computed<InfoExtra>(
+    () => this.informacoesExtras().find((info) => info.chave === 'inventarioMaximo')!,
   );
 
   /** Abre a digitação direta de um derivado (clique no valor). */
@@ -682,6 +701,7 @@ export class FichaVisualizacao {
       editavel('proficiencia'),
       editavel('danoCorpoACorpo'),
       editavel('danoFurtivo'),
+      editavel('habilidadesPorTurno'),
     ];
   });
 

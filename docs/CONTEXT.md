@@ -9,13 +9,17 @@
 > (**deep-link/refresh** preservam a seção). **Conteúdo por aba:** **Visão Geral** = o que já existia
 > (identidade + Vida/Energia + Atributos + Informações Extras editáveis, m3-10); **Combate** = os derivados
 > de combate **reorganizados** (Defesa/Esquiva/Bloqueio + Deslocamento/Proficiência/Dano C.a.C./Furtivo +
-> chip da DT) — **organiza, não recalcula**: Defesa/Deslocamento/Proficiência/Danos reusam as linhas
-> **editáveis** de `Informações Extras` (mesma persistência de m3-10, `ajusteDerivado`), Esquiva/Bloqueio
-> read-only (stored `derivados` ?? `calcularDefesa` de `shared/regras`, sem edição no lugar hoje);
-> **Sanidade** = a lista de marcas (traumas/sequelas/lesões) do `estado`, read-only (**movida** da coluna
-> esquerda da Visão Geral para cá); **Inventário/Habilidades/Rolagens** = **placeholder** "em construção"
-> + **resumo read-only** lido do `dados` (contagem de itens/amplificadores, nomes de habilidades, nome+
-> fórmula dos presets) até os editores m3-12…m3-15. **Acessibilidade:** `role="tablist"/"tab"/"tabpanel"`,
+> **Hab./Turno** + chip da DT) — **organiza, não recalcula**: Defesa/Deslocamento/Proficiência/Danos/Hab.
+> reusam as linhas **editáveis** de `Informações Extras` (mesma persistência de m3-10, `ajusteDerivado`),
+> Esquiva/Bloqueio read-only (stored `derivados` ?? `calcularDefesa` de `shared/regras`, sem edição no
+> lugar hoje); **Sanidade** = a lista de marcas (traumas/sequelas/lesões) do `estado`, read-only (**movida**
+> da coluna esquerda da Visão Geral para cá); **Inventário** = **Máximo** (o derivado `inventarioMaximo`,
+> editável — realocado de Informações Extras) + **Itens (atual)** + Amplificadores, com placeholder "em
+> construção"; **Habilidades/Rolagens** = **placeholder** + **resumo read-only** lido do `dados` (nomes de
+> habilidades, nome+fórmula dos presets) até os editores m3-12…m3-15. **Realocação de derivados (a pedido
+> do autor):** `inventarioMaximo` saiu de "Informações Extras" (Visão Geral) para a aba **Inventário** e
+> `habilidadesPorTurno` para a aba **Combate** — a Visão Geral usa um recorte `informacoesGerais` (exclui
+> os realocados); a persistência editável (m3-10) é a mesma nas três abas. **Acessibilidade:** `role="tablist"/"tab"/"tabpanel"`,
 > `aria-selected`/`aria-controls`, **roving tabindex** e navegação por teclado (←/→ com wrap, Home/End) que
 > ativa a aba focada. **Responsivo:** as abas rolam na horizontal no mobile sem esticar o body
 > (`overflow-x`, scrollbar oculta). **Wiring de deep-link:** o `FichaVisualizacao` expõe `abaInicial`
@@ -23,18 +27,20 @@
 > `abaMudou` (output); a `visualizar.page` lê o `?aba=` do snapshot (validado por `ehAbaFicha`, inválido →
 > Visão Geral) e reflete a troca com `router.navigate` (`queryParamsHandling: 'merge'`, `replaceUrl` — não
 > empilha histórico nem recarrega a ficha). Só tokens do tema (proibição #29 — raio via `--radius-card`/
-> `--radius-control`); nenhuma fórmula nova (proibições #26/#27). **+10 testes** (Vitest, **frontend
-> 241/241**): `ficha-visualizacao.spec` (+7 — as 6 abas na ordem certa com Visão Geral ativa, troca sem
-> recarregar mostrando Combate com Defesa/Esquiva/Bloqueio, `abaMudou` emite no clique, deep-link semeia a
-> aba, placeholder + resumo read-only, Esquiva stored; o teste de Sanidade agora ativa a aba) e
-> `visualizar.page.spec` (+3 — `?aba=` válido semeia / inválido cai na Visão Geral / `mudarAba` navega com
-> `replaceUrl`). `lint`/`test`/`build` verdes (bundle inicial **567,56 kB** dentro do budget de 575 kB; as
+> `--radius-control`); nenhuma fórmula nova (proibições #26/#27). **+12 testes** (Vitest, **frontend
+> 243/243**): `ficha-visualizacao.spec` (+9 — as 6 abas na ordem certa com Visão Geral ativa, troca sem
+> recarregar mostrando Combate com Defesa/Esquiva/Bloqueio/Hab., `abaMudou` emite no clique, deep-link
+> semeia a aba, placeholder + resumo read-only, Esquiva stored, **a realocação Inventário máx→Inventário /
+> Hab.→Combate fora de Informações Extras**, **edição do Inventário máximo na aba Inventário**; o teste de
+> Sanidade agora ativa a aba) e `visualizar.page.spec` (+3 — `?aba=` válido semeia / inválido cai na Visão
+> Geral / `mudarAba` navega com `replaceUrl`). `lint`/`test`/`build` verdes (bundle inicial **567,56 kB** dentro do budget de 575 kB; as
 > abas moram na chunk lazy `visualizar-page`). **Verificado por render** (Playwright/Chromium sobre o build
 > de desenvolvimento, sessão + REST mockados): como **mestre** abrindo a ficha de "Kane", as **6 abas**
 > aparecem com Visão Geral ativa (identidade/atributos/Informações Extras + estrela de Maestria em Força),
 > **Combate** mostra Defesa 13 / Esquiva 15 / Bloqueio 17 / Deslocamento 9m / Proficiência +3 / Dano C.a.C.
-> 1D6 / Dano Furtivo 2D6+2 com o chip da DT, **Inventário** o aviso "em construção" + "2 itens" e
-> **Sanidade** as marcas Pânico/Insônia; **zero erros de app** (só o socket sem gateway cai em 400 → selo
+> 1D6 / Dano Furtivo 2D6+2 / **Hab. / Turno** com o chip da DT, **Inventário** o aviso "em construção" +
+> **Máximo 15 máx / Itens (atual) 2 / Amplificadores 0** (a Visão Geral já **não** lista mais Inventário
+> nem Hab./Turno) e **Sanidade** as marcas Pânico/Insônia; **zero erros de app** (só o socket sem gateway cai em 400 → selo
 > offline, esperado). Fora de escopo (mantido): os **editores** das sub-coleções (m3-12…m3-15) e o refino
 > mobile dedicado (m3-09). Spec `m3-11` → `done/`. **M3 avança: a ficha ganhou suas abas — o esqueleto que
 > os editores de sub-coleção vão preencher.** Sessão anterior (2026-07-09, **Assistente de criação de ficha

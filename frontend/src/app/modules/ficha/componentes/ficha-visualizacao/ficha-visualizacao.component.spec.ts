@@ -376,8 +376,58 @@ describe('FichaVisualizacao', () => {
       r.textContent?.trim(),
     );
     expect(rotulos).toEqual(
-      expect.arrayContaining(['Defesa', 'Esquiva', 'Bloqueio', 'Deslocamento', 'Proficiência']),
+      expect.arrayContaining([
+        'Defesa',
+        'Esquiva',
+        'Bloqueio',
+        'Deslocamento',
+        'Proficiência',
+        'Hab. / Turno',
+      ]),
     );
+  });
+
+  it('realoca Inventário para a aba Inventário e Hab./Turno para Combate (fora de Informações Extras)', () => {
+    const alvo = montar(dados);
+
+    // Visão Geral: "Informações Extras" não traz mais Inventário nem Hab. / Turno.
+    const gerais = Array.from(
+      alvo.raiz.querySelectorAll('#painel-visao-geral .ficha-info__rotulo'),
+    ).map((r) => r.textContent?.trim());
+    expect(gerais).not.toContain('Inventário');
+    expect(gerais).not.toContain('Hab. / Turno');
+    // As demais seguem lá (ex.: Percepção).
+    expect(gerais).toContain('Percepção');
+
+    // Combate ganhou Hab. / Turno.
+    trocarAba(alvo.fixture, 'combate');
+    const combate = Array.from(
+      alvo.raiz.querySelectorAll('#painel-combate .ficha-info__rotulo'),
+    ).map((r) => r.textContent?.trim());
+    expect(combate).toContain('Hab. / Turno');
+
+    // Inventário mostra o máximo (derivado realocado) junto do total atual de itens.
+    trocarAba(alvo.fixture, 'inventario');
+    const inventario = Array.from(
+      alvo.raiz.querySelectorAll('#painel-inventario .ficha-info__rotulo'),
+    ).map((r) => r.textContent?.trim());
+    expect(inventario).toEqual(expect.arrayContaining(['Máximo', 'Itens (atual)', 'Amplificadores']));
+  });
+
+  it('edita o Inventário máximo na aba Inventário e emite o override (persistência de m3-10)', () => {
+    const alvo = montar(dados, 'Corvo', 42, true);
+    const ajustes: { chave: string; valor: number | string }[] = [];
+    alvo.fixture.componentInstance.ajusteDerivado.subscribe((a) => ajustes.push(a));
+
+    trocarAba(alvo.fixture, 'inventario');
+    alvo.raiz.querySelector<HTMLButtonElement>('#painel-inventario .ficha-info__editavel')!.click();
+    alvo.fixture.detectChanges();
+
+    const entrada = alvo.raiz.querySelector<HTMLInputElement>('#painel-inventario .ficha-info__entrada')!;
+    entrada.value = '30';
+    entrada.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+
+    expect(ajustes).toEqual([{ chave: 'inventarioMaximo', valor: 30 }]);
   });
 
   it('emite abaMudou ao clicar numa aba (a página reflete no ?aba= da URL)', () => {

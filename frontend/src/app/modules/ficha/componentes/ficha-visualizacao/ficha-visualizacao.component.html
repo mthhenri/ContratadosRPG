@@ -509,7 +509,7 @@
             </header>
 
             <dl class="ficha-info">
-              @for (info of informacoesExtras(); track info.chave) {
+              @for (info of informacoesGerais(); track info.chave) {
                 <div class="ficha-info__linha">
                   <dt class="ficha-info__rotulo">{{ info.rotulo }}</dt>
                   @if (ajustavel() && editandoDerivado() === info.chave) {
@@ -623,8 +623,42 @@
         </header>
         <p class="ficha-visao__construcao">Editor de inventário em construção.</p>
         <dl class="ficha-info">
+          <!-- Inventário máximo (editável, reusa a persistência de m3-10) — realocado da Visão Geral. -->
+          @if (inventarioMaximoLinha(); as invMax) {
+            <div class="ficha-info__linha">
+              <dt class="ficha-info__rotulo">Máximo</dt>
+              @if (ajustavel() && editandoDerivado() === invMax.chave) {
+                <dd class="ficha-info__valor">
+                  <input
+                    #entradaDerivado
+                    class="ficha-info__entrada"
+                    type="number"
+                    [value]="invMax.bruto"
+                    aria-label="Editar Inventário máximo"
+                    title="Editar Inventário máximo"
+                    (keydown.enter)="confirmarDerivado(invMax, entradaDerivado.value)"
+                    (keydown.escape)="cancelarDerivado()"
+                    (blur)="confirmarDerivado(invMax, entradaDerivado.value)"
+                  />
+                </dd>
+              } @else if (ajustavel() && invMax.bruto !== null) {
+                <dd class="ficha-info__valor">
+                  <button
+                    type="button"
+                    class="ficha-info__editavel"
+                    aria-label="Editar Inventário máximo"
+                    (click)="editarDerivado(invMax.chave)"
+                  >
+                    {{ invMax.display }}
+                  </button>
+                </dd>
+              } @else {
+                <dd class="ficha-info__valor">{{ invMax.display }}</dd>
+              }
+            </div>
+          }
           <div class="ficha-info__linha">
-            <dt class="ficha-info__rotulo">Itens</dt>
+            <dt class="ficha-info__rotulo">Itens (atual)</dt>
             <dd class="ficha-info__valor">{{ totalItens() }}</dd>
           </div>
           <div class="ficha-info__linha">
