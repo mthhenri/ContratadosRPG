@@ -1,8 +1,15 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, effect, inject, input, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 import { Icone } from '../icone/icone.component';
 import { BaseTema, TemaService } from '../../core/services/tema.service';
+
+/**
+ * Onde o gatilho está montado — só muda a **forma** do botão, nunca o painel:
+ * `topbar` = botão secundário da barra; `menu` = linha do dropdown de perfil (usada no mobile,
+ * onde o tema mora dentro do menu para liberar largura da topbar).
+ */
+export type VarianteGatilhoTema = 'topbar' | 'menu';
 
 /**
  * Painel de configurações de tema (m1-13): o gatilho (engrenagem) na topbar abre um painel que
@@ -23,6 +30,9 @@ import { BaseTema, TemaService } from '../../core/services/tema.service';
 })
 export class ConfiguracoesTema {
   protected readonly tema = inject(TemaService);
+
+  /** Forma do gatilho (o painel é o mesmo nas duas): botão da topbar ou linha do menu de perfil. */
+  readonly variante = input<VarianteGatilhoTema>('topbar');
 
   /** Se o painel está aberto. */
   protected readonly aberto = signal(false);

@@ -93,6 +93,21 @@
 > (wrapper com `info: InfoExtra | null`) e o `somenteLeitura` morreram; `combateLinhas` virou um
 > `InfoExtra[]` ordenado por `CHAVES_COMBATE`. **+1 teste** (**frontend 255/255** — editar Esquiva e
 > Bloqueio na aba emite `{chave, valor}`); `lint`/`build` verdes (bundle **568,16 kB**, sem bump).
+>
+> **Topbar: Tema no menu de perfil (mobile) + logo maior (a pedido do autor).** O `ConfiguracoesTema`
+> ganhou o input **`variante: 'topbar' | 'menu'`** — só muda a **forma do gatilho** (na variante `menu`
+> ele veste a linguagem das linhas do dropdown: linha inteira, sans, sem borda, `role="menuitem"`), o
+> painel é idêntico e o estado segue todo no `TemaService`. O `layout` monta **duas instâncias** do mesmo
+> componente e alterna por CSS: a do **menu de perfil** (junto de Perfil/Campanhas/Encerrar sessão) só
+> aparece no **mobile**; a da **barra** some no mobile **apenas quando autenticado** (deslogado não há
+> menu, então o gatilho fica na barra em qualquer largura) — a topbar de ~360px deixa de disputar largura
+> entre nav, perfil e tema. A **logo** (`app-marca`, dimensionada em `em`) subiu de 20px para **28px** no
+> desktop e **30px** no mobile (~39px / ~42px de imagem), dentro da topbar de 52px. O menu de perfil
+> ganhou ainda um **cabeçalho com o nome do usuário** (`topbar__perfil-usuario`, mono/uppercase +
+> régua hairline), **só no mobile** — é onde o `topbar__identidade` da barra é escondido, então o
+> menu reapresenta de quem é a sessão antes das ações. **+1 teste** (**frontend 256/256** — variante
+> `menu`: classe + `role="menuitem"` e abre o mesmo painel); `lint`/`build` verdes (bundle
+> **569,77 kB**, budget 575 kB).
 > Spec `m3-12` → `done/`. **M3 avança: a aba Sanidade virou um editor completo — e as lesões agora
 > mordem o atributo (e, se permanentes, todos os cálculos), mas nunca a Maestria.** Sessão anterior
 > (2026-07-13, **m3-11 — navegação por abas da ficha**: fecha o scaffold navegável

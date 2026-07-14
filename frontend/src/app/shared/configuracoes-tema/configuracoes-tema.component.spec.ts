@@ -10,13 +10,14 @@ import { TemaService } from '../../core/services/tema.service';
  * verifica a ligação da UI.
  */
 describe('ConfiguracoesTema', () => {
-  function montar() {
+  function montar(variante: 'topbar' | 'menu' = 'topbar') {
     localStorage.clear();
     document.documentElement.removeAttribute('style');
     document.documentElement.classList.add('dark');
 
     TestBed.configureTestingModule({ imports: [ConfiguracoesTema] });
     const fixture = TestBed.createComponent(ConfiguracoesTema);
+    fixture.componentRef.setInput('variante', variante);
     fixture.detectChanges();
     const raiz = fixture.nativeElement as HTMLElement;
     const tema = TestBed.inject(TemaService);
@@ -39,6 +40,16 @@ describe('ConfiguracoesTema', () => {
   it('mantém o painel fechado até o gatilho ser clicado', () => {
     const { raiz, abrir } = montar();
     expect(raiz.querySelector('.config-modal')).toBeNull();
+    abrir();
+    expect(raiz.querySelector('.config-modal')).not.toBeNull();
+  });
+
+  it('variante "menu" (tema dentro do menu de perfil, mobile): o gatilho vira item de menu e abre o mesmo painel', () => {
+    const { raiz, abrir } = montar('menu');
+    const gatilho = raiz.querySelector('.config-gatilho')!;
+    expect(gatilho.classList).toContain('config-gatilho--menu');
+    expect(gatilho.getAttribute('role')).toBe('menuitem');
+
     abrir();
     expect(raiz.querySelector('.config-modal')).not.toBeNull();
   });

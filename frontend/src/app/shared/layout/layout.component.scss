@@ -20,8 +20,16 @@
     gap: 0.5rem;
   }
 
+  // O `app-marca` dimensiona a imagem em `em` (1.4em), então a escala da logo é o font-size do host.
+  // Ampliada (a pedido do autor) nas duas larguras: ~39px de imagem no desktop e ~42px no mobile,
+  // onde o wordmark textual não aparece e a logo carrega sozinha a identidade. A topbar
+  // (3.25rem = 52px) comporta as duas sem esticar.
   &__logo {
-    font-size: 20px;
+    font-size: 28px;
+
+    @include bp.mobile {
+      font-size: 30px;
+    }
   }
 
   &__marca {
@@ -239,6 +247,28 @@
     gap: 2px;
   }
 
+  // Cabeçalho do dropdown com o nome do usuário — só no mobile, onde `__identidade` sai da barra.
+  // Rótulo mono/uppercase da identidade "Terminal de Contenção", com régua hairline separando as ações.
+  &__perfil-usuario {
+    display: none;
+
+    @include bp.mobile {
+      display: block;
+      padding: 8px 10px 10px;
+      margin-bottom: 3px;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: var(--tracking-label);
+      color: var(--text-dim);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
   &__perfil-item {
     display: flex;
     align-items: center;
@@ -273,6 +303,23 @@
       app-icone {
         color: var(--accent);
       }
+    }
+  }
+
+  // Tema — duas montagens do MESMO componente: a da barra (desktop) e a de dentro do menu de perfil
+  // (mobile). Só uma está visível por vez; cada uma abre o mesmo painel (o estado vive no TemaService).
+  &__tema--so-desktop {
+    @include bp.mobile {
+      display: none;
+    }
+  }
+
+  &__perfil-tema {
+    display: none;
+
+    @include bp.mobile {
+      display: block;
+      width: 100%;
     }
   }
 

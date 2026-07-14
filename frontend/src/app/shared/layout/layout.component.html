@@ -48,6 +48,9 @@
 
         @if (perfilAberto()) {
           <div class="topbar__perfil-menu" role="menu">
+            <!-- No mobile o nome sai da barra (`topbar__identidade` some) — o menu o reapresenta
+                 como cabeçalho, dizendo de quem é a sessão antes das ações. -->
+            <span class="topbar__perfil-usuario" role="presentation">{{ usuarioAtual.nome }}</span>
             <a
               class="topbar__perfil-item"
               routerLink="/perfil"
@@ -66,6 +69,9 @@
               <app-icone nome="campanhas" />
               <span>Campanhas</span>
             </a>
+            <!-- No mobile o Tema mora aqui dentro (libera a largura da topbar); no desktop ele fica
+                 na barra, ao lado do perfil. -->
+            <app-configuracoes-tema class="topbar__perfil-tema" variante="menu" role="none" />
             <button
               class="topbar__perfil-item topbar__perfil-item--sair"
               type="button"
@@ -89,7 +95,12 @@
       </a>
     }
 
-    <app-configuracoes-tema />
+    <!-- Autenticado no mobile: o gatilho da barra sai (o Tema está no menu de perfil). Deslogado
+         não há menu, então ele permanece na barra em qualquer largura. -->
+    <app-configuracoes-tema
+      class="topbar__tema"
+      [class.topbar__tema--so-desktop]="sessaoService.autenticado()"
+    />
   </div>
 </header>
 

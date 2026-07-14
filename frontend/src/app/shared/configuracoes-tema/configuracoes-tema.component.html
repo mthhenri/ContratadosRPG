@@ -1,6 +1,8 @@
 <button
   type="button"
   class="config-gatilho"
+  [class.config-gatilho--menu]="variante() === 'menu'"
+  [attr.role]="variante() === 'menu' ? 'menuitem' : null"
   aria-label="Configurações de tema"
   (click)="abrir()"
 >
