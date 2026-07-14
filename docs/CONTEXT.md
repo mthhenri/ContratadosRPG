@@ -1,6 +1,41 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-13 (**m3-11 — navegação por abas da ficha**: fecha o scaffold navegável
+> Última atualização: 2026-07-14 (**m3-12 — editor de Sanidade no próprio lugar**: preenche a aba
+> **Sanidade** (m3-11) com o CRUD das três listas de `estado` — **sequelas** (temporárias), **traumas**
+> (permanentes, tratáveis) e **lesões** (removem pontos de atributo) —, antes só read-only (m3-07).
+> **Novo componente standalone `FichaSanidade`** (`componentes/ficha-sanidade/`): inputs
+> `sequelas`/`traumas`/`lesoes`/`editavel`, output **`sanidadeMudou`** que emite o **trio inteiro** a cada
+> mutação. **Controlado** — as listas vêm sempre dos inputs; o componente só guarda o **rascunho
+> transitório** do formulário (Reactive Forms, sem `ngModel`), nunca uma cópia das listas: assim a
+> persistência otimista + reconciliação do backend fluem sem dessincronizar. **Um editor por vez**
+> (`listaEmEdicao`/`indiceEmEdicao`, `-1` = adicionar); um `<ng-template>` por lista é reusado entre
+> **adicionar** e **editar** (`ngTemplateOutlet`). **Sequelas/Traumas** = `{nome, descricao?}` (+ `tratado`
+> no trauma, com **toggle "Tratado" in loco** — o trauma permanece, só a penalidade cai, `sistema-v4.1.0`);
+> **Lesões** = `{atributo (select das 10 chaves), severidade (SeveridadeLesaoEnum), pontos (stepper −/+
+> com piso 0), permanente (checkbox)}`, exibindo o **efeito derivado** "−N Atributo (permanente)" (não
+> persistido). Trocar a severidade **sugere** os pontos de origem (LEVE 1 / GRAVE 3 / MORTAL 5) — sugestão,
+> **não trava** (liberdade total, m3-10; nome obrigatório é a única validação de forma). Cada mutação sobe
+> pela nova saída **`ajusteSanidade`** do `FichaVisualizacao` (que agora embute o `FichaSanidade` na aba,
+> substituindo a lista read-only; a antiga `marcasSanidade` saiu e o contador `totalMarcas` passou a somar
+> os três `length`) e a `visualizar.page` (`ajustarSanidade`) troca os três blocos em `estado` de uma vez,
+> **otimista** + persistência **em lote** (mesmo `alterarFicha` debounced de m3-10). Só tokens do tema
+> (proibição #29 — o padrão de "marca" com borda colorida à esquerda espelha o read-only de m3-11; stepper
+> `.ficha-passo` copiado); nenhuma fórmula de jogo nova. Fora de escopo (mantido): **aplicar
+> mecanicamente** o efeito de lesão/trauma nos derivados (o autor edita os `derivados` direto — m3-10) e o
+> **limite por Vontade** como trava (só o documento; aqui nem aviso). **+10 testes** (Vitest, **frontend
+> 252/252**): `ficha-sanidade.spec` (8 — read-only sem botões, adicionar sequela emitindo o trio, nome
+> vazio não emite, editar trauma, alternar tratado in loco, remover lesão, sugestão de pontos por
+> severidade + stepper com piso + efeito derivado, adicionar lesão), `visualizar.page.spec` (+1 — edição de
+> Sanidade otimista + PUT em lote) e `ficha-visualizacao.spec` (o teste da aba Sanidade passou a ler
+> `.sanidade__nome`). `lint`/`build` verdes (bundle inicial **568,16 kB** dentro do budget de 575 kB — o
+> editor mora na chunk lazy `visualizar-page`). **Verificado por render** (Playwright/Chromium sobre o build
+> de desenvolvimento, sessão + REST mockados): como **mestre**, a aba Sanidade mostra os três grupos
+> (Sequelas/Traumas/Lesões) com "＋ Adicionar", a sequela "Insônia" e o trauma "Pânico" (com toggle
+> TRATADO), o **editor de lesão** com selects de Atributo/Severidade + stepper de Pontos + Permanente, e
+> **adicionar "Vertigem" aparece na hora** (otimista) na lista de sequelas; a barra de abas confirma **uma
+> só aba ativa** (aria-selected único); **zero erros de app** (só o socket sem gateway → selo offline).
+> Spec `m3-12` → `done/`. **M3 avança: a aba Sanidade virou um editor completo.** Sessão anterior
+> (2026-07-13, **m3-11 — navegação por abas da ficha**: fecha o scaffold navegável
 > que destrava o resto do M3 (os editores de sub-coleções m3-12…m3-15 e o frontend de Identidade m3-20,
 > que aguardava a aba). A **ficha virou uma tela com abas** — barra mono/uppercase fiel ao protótipo
 > (`docs/design/examples/ficha-de-jogador.html`), aba ativa em **accent sólido + texto escuro**, as demais

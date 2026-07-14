@@ -1,0 +1,353 @@
+// Editor no próprio lugar da aba Sanidade (m3-12): sequelas/traumas/lesões. Só tokens do tema
+// "Terminal de Contenção" — nenhum hex/fonte/raio solto (proibição #29). O padrão de "marca"
+// (borda colorida à esquerda por tipo) espelha o read-only de m3-11.
+
+.sanidade {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  &__grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__titulo {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text);
+  }
+
+  &__contagem {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-mute);
+  }
+
+  &__regua {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  &__add {
+    flex: 0 0 auto;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-control);
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--accent) 22%, transparent);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+  }
+
+  &__lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__item {
+    padding: 9px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-left-width: 3px;
+    border-radius: var(--radius-control);
+
+    &--sequela {
+      border-left-color: var(--text-mute);
+    }
+
+    &--trauma {
+      border-left-color: var(--warning);
+    }
+
+    &--lesao {
+      border-left-color: var(--accent);
+    }
+
+    &--edicao {
+      border-left-color: var(--accent);
+      background: var(--surface);
+    }
+  }
+
+  &__linha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__tag {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+    flex: 0 0 auto;
+  }
+
+  &__nome {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  &__acoes {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+  }
+
+  &__acao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    font-size: 12px;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      color: var(--text);
+      border-color: var(--accent-border);
+    }
+
+    &--remover:hover {
+      color: var(--accent);
+    }
+  }
+
+  &__toggle {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-mute);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+    &--ativo {
+      color: var(--positive);
+      border-color: var(--positive);
+      background: color-mix(in srgb, var(--positive) 12%, transparent);
+    }
+  }
+
+  &__descricao {
+    display: block;
+    margin-top: 4px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  &__vazio {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-style: italic;
+    color: var(--text-mute);
+  }
+
+  // === Formulário inline (adicionar/editar) ===
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__form-linha {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px;
+  }
+
+  &__rotulo-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1 1 120px;
+
+    > span {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-mute);
+    }
+  }
+
+  &__campo {
+    width: 100%;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 7px 10px;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+  }
+
+  &__stepper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__rotulo-inline {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-mute);
+  }
+
+  &__pontos {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    min-width: 20px;
+    text-align: center;
+  }
+
+  &__checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text-dim);
+    cursor: pointer;
+    accent-color: var(--accent);
+  }
+
+  &__form-acoes {
+    display: flex;
+    gap: 8px;
+    margin-top: 2px;
+  }
+
+  &__salvar {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--bg);
+    background: var(--accent);
+    border: 0;
+    border-radius: var(--radius-control);
+    padding: 7px 14px;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+  }
+
+  &__cancelar {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 7px 14px;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--text);
+    }
+  }
+}
+
+// Stepper de pontos (mesmo padrão do tema — copiado dos steppers da ficha).
+.ficha-passo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-dim);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    color: var(--accent);
+    border-color: var(--accent-border);
+    background: var(--surface);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}

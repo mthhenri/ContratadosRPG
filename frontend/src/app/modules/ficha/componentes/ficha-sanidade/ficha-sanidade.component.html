@@ -1,0 +1,328 @@
+<div class="sanidade">
+  <!-- ===== SEQUELAS ===== -->
+  <section class="sanidade__grupo">
+    <header class="sanidade__cabecalho">
+      <h4 class="sanidade__titulo">Sequelas</h4>
+      <span class="sanidade__contagem">{{ sequelas().length }}</span>
+      <span class="sanidade__regua"></span>
+      @if (editavel()) {
+        <button
+          class="sanidade__add"
+          type="button"
+          (click)="adicionar('sequela')"
+          [disabled]="editando('sequela', -1)"
+        >
+          ＋ Adicionar
+        </button>
+      }
+    </header>
+
+    <ul class="sanidade__lista">
+      @for (sequela of sequelas(); track $index) {
+        @if (editando('sequela', $index)) {
+          <li class="sanidade__item sanidade__item--edicao">
+            <ng-container [ngTemplateOutlet]="editorSequela" />
+          </li>
+        } @else {
+          <li class="sanidade__item sanidade__item--sequela">
+            <div class="sanidade__linha">
+              <span class="sanidade__tag">Sequela</span>
+              <span class="sanidade__nome">{{ sequela.nome }}</span>
+              @if (editavel()) {
+                <div class="sanidade__acoes">
+                  <button
+                    class="sanidade__acao"
+                    type="button"
+                    aria-label="Editar sequela"
+                    (click)="editar('sequela', $index)"
+                  >
+                    ✎
+                  </button>
+                  <button
+                    class="sanidade__acao sanidade__acao--remover"
+                    type="button"
+                    aria-label="Remover sequela"
+                    (click)="remover('sequela', $index)"
+                  >
+                    ✕
+                  </button>
+                </div>
+              }
+            </div>
+            @if (sequela.descricao) {
+              <span class="sanidade__descricao">{{ sequela.descricao }}</span>
+            }
+          </li>
+        }
+      }
+      @if (editando('sequela', -1)) {
+        <li class="sanidade__item sanidade__item--edicao">
+          <ng-container [ngTemplateOutlet]="editorSequela" />
+        </li>
+      }
+    </ul>
+    @if (!sequelas().length && !editando('sequela', -1)) {
+      <p class="sanidade__vazio">Sem sequelas.</p>
+    }
+  </section>
+
+  <!-- ===== TRAUMAS ===== -->
+  <section class="sanidade__grupo">
+    <header class="sanidade__cabecalho">
+      <h4 class="sanidade__titulo">Traumas</h4>
+      <span class="sanidade__contagem">{{ traumas().length }}</span>
+      <span class="sanidade__regua"></span>
+      @if (editavel()) {
+        <button
+          class="sanidade__add"
+          type="button"
+          (click)="adicionar('trauma')"
+          [disabled]="editando('trauma', -1)"
+        >
+          ＋ Adicionar
+        </button>
+      }
+    </header>
+
+    <ul class="sanidade__lista">
+      @for (trauma of traumas(); track $index) {
+        @if (editando('trauma', $index)) {
+          <li class="sanidade__item sanidade__item--edicao">
+            <ng-container [ngTemplateOutlet]="editorTrauma" />
+          </li>
+        } @else {
+          <li class="sanidade__item sanidade__item--trauma">
+            <div class="sanidade__linha">
+              <span class="sanidade__tag">{{ trauma.tratado ? 'Trauma tratado' : 'Trauma' }}</span>
+              <span class="sanidade__nome">{{ trauma.nome }}</span>
+              @if (editavel()) {
+                <div class="sanidade__acoes">
+                  <button
+                    class="sanidade__toggle"
+                    type="button"
+                    [class.sanidade__toggle--ativo]="trauma.tratado"
+                    [attr.aria-pressed]="trauma.tratado"
+                    aria-label="Alternar tratado"
+                    title="Alternar tratado (reduz a penalidade; o trauma permanece)"
+                    (click)="alternarTratado($index)"
+                  >
+                    Tratado
+                  </button>
+                  <button
+                    class="sanidade__acao"
+                    type="button"
+                    aria-label="Editar trauma"
+                    (click)="editar('trauma', $index)"
+                  >
+                    ✎
+                  </button>
+                  <button
+                    class="sanidade__acao sanidade__acao--remover"
+                    type="button"
+                    aria-label="Remover trauma"
+                    (click)="remover('trauma', $index)"
+                  >
+                    ✕
+                  </button>
+                </div>
+              }
+            </div>
+            @if (trauma.descricao) {
+              <span class="sanidade__descricao">{{ trauma.descricao }}</span>
+            }
+          </li>
+        }
+      }
+      @if (editando('trauma', -1)) {
+        <li class="sanidade__item sanidade__item--edicao">
+          <ng-container [ngTemplateOutlet]="editorTrauma" />
+        </li>
+      }
+    </ul>
+    @if (!traumas().length && !editando('trauma', -1)) {
+      <p class="sanidade__vazio">Sem traumas.</p>
+    }
+  </section>
+
+  <!-- ===== LESÕES ===== -->
+  <section class="sanidade__grupo">
+    <header class="sanidade__cabecalho">
+      <h4 class="sanidade__titulo">Lesões</h4>
+      <span class="sanidade__contagem">{{ lesoes().length }}</span>
+      <span class="sanidade__regua"></span>
+      @if (editavel()) {
+        <button
+          class="sanidade__add"
+          type="button"
+          (click)="adicionar('lesao')"
+          [disabled]="editando('lesao', -1)"
+        >
+          ＋ Adicionar
+        </button>
+      }
+    </header>
+
+    <ul class="sanidade__lista">
+      @for (lesao of lesoes(); track $index) {
+        @if (editando('lesao', $index)) {
+          <li class="sanidade__item sanidade__item--edicao">
+            <ng-container [ngTemplateOutlet]="editorLesao" />
+          </li>
+        } @else {
+          <li class="sanidade__item sanidade__item--lesao">
+            <div class="sanidade__linha">
+              <span class="sanidade__tag">Lesão · {{ rotuloSeveridade(lesao.severidade) }}</span>
+              <span class="sanidade__nome">{{ efeitoLesao(lesao) }}</span>
+              @if (editavel()) {
+                <div class="sanidade__acoes">
+                  <button
+                    class="sanidade__acao"
+                    type="button"
+                    aria-label="Editar lesão"
+                    (click)="editar('lesao', $index)"
+                  >
+                    ✎
+                  </button>
+                  <button
+                    class="sanidade__acao sanidade__acao--remover"
+                    type="button"
+                    aria-label="Remover lesão"
+                    (click)="remover('lesao', $index)"
+                  >
+                    ✕
+                  </button>
+                </div>
+              }
+            </div>
+          </li>
+        }
+      }
+      @if (editando('lesao', -1)) {
+        <li class="sanidade__item sanidade__item--edicao">
+          <ng-container [ngTemplateOutlet]="editorLesao" />
+        </li>
+      }
+    </ul>
+    @if (!lesoes().length && !editando('lesao', -1)) {
+      <p class="sanidade__vazio">Sem lesões.</p>
+    }
+  </section>
+</div>
+
+<!-- ===== Editores (compartilhados entre adicionar e editar) ===== -->
+<ng-template #editorSequela>
+  <form class="sanidade__form" [formGroup]="sequelaForm" (ngSubmit)="confirmar()">
+    <input
+      class="sanidade__campo"
+      type="text"
+      formControlName="nome"
+      placeholder="Nome da sequela"
+      aria-label="Nome da sequela"
+    />
+    <input
+      class="sanidade__campo"
+      type="text"
+      formControlName="descricao"
+      placeholder="Descrição (opcional)"
+      aria-label="Descrição da sequela"
+    />
+    <div class="sanidade__form-acoes">
+      <button
+        class="sanidade__salvar"
+        type="submit"
+        [disabled]="sequelaForm.invalid"
+      >
+        Salvar
+      </button>
+      <button class="sanidade__cancelar" type="button" (click)="cancelar()">Cancelar</button>
+    </div>
+  </form>
+</ng-template>
+
+<ng-template #editorTrauma>
+  <form class="sanidade__form" [formGroup]="traumaForm" (ngSubmit)="confirmar()">
+    <input
+      class="sanidade__campo"
+      type="text"
+      formControlName="nome"
+      placeholder="Nome do trauma"
+      aria-label="Nome do trauma"
+    />
+    <input
+      class="sanidade__campo"
+      type="text"
+      formControlName="descricao"
+      placeholder="Descrição (opcional)"
+      aria-label="Descrição do trauma"
+    />
+    <label class="sanidade__checkbox">
+      <input type="checkbox" formControlName="tratado" />
+      <span>Tratado</span>
+    </label>
+    <div class="sanidade__form-acoes">
+      <button class="sanidade__salvar" type="submit" [disabled]="traumaForm.invalid">Salvar</button>
+      <button class="sanidade__cancelar" type="button" (click)="cancelar()">Cancelar</button>
+    </div>
+  </form>
+</ng-template>
+
+<ng-template #editorLesao>
+  <form class="sanidade__form" [formGroup]="lesaoForm" (ngSubmit)="confirmar()">
+    <div class="sanidade__form-linha">
+      <label class="sanidade__rotulo-campo">
+        <span>Atributo</span>
+        <select class="sanidade__campo" formControlName="atributo" aria-label="Atributo afetado">
+          @for (opcao of atributos; track opcao.chave) {
+            <option [value]="opcao.chave">{{ opcao.nome }}</option>
+          }
+        </select>
+      </label>
+      <label class="sanidade__rotulo-campo">
+        <span>Severidade</span>
+        <select
+          class="sanidade__campo"
+          formControlName="severidade"
+          aria-label="Severidade"
+          (change)="sugerirPontos()"
+        >
+          @for (opcao of severidades; track opcao.valor) {
+            <option [value]="opcao.valor">{{ opcao.rotulo }}</option>
+          }
+        </select>
+      </label>
+    </div>
+    <div class="sanidade__form-linha">
+      <div class="sanidade__stepper">
+        <span class="sanidade__rotulo-inline">Pontos</span>
+        <button
+          class="ficha-passo"
+          type="button"
+          appHoldRepeat
+          aria-label="Reduzir pontos"
+          [disabled]="lesaoForm.controls.pontos.value <= 0"
+          (passo)="ajustarPontos(-1)"
+        >
+          −
+        </button>
+        <span class="sanidade__pontos">{{ lesaoForm.controls.pontos.value }}</span>
+        <button
+          class="ficha-passo"
+          type="button"
+          appHoldRepeat
+          aria-label="Aumentar pontos"
+          (passo)="ajustarPontos(1)"
+        >
+          +
+        </button>
+      </div>
+      <label class="sanidade__checkbox">
+        <input type="checkbox" formControlName="permanente" />
+        <span>Permanente</span>
+      </label>
+    </div>
+    <div class="sanidade__form-acoes">
+      <button class="sanidade__salvar" type="submit">Salvar</button>
+      <button class="sanidade__cancelar" type="button" (click)="cancelar()">Cancelar</button>
+    </div>
+  </form>
+</ng-template>

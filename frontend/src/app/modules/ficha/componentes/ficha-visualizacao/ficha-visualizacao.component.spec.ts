@@ -109,7 +109,8 @@ describe('FichaVisualizacao', () => {
     const alvo = montar(dados);
     trocarAba(alvo.fixture, 'sanidade');
     expect(alvo.raiz.querySelector('.ficha-cartao__meta')?.textContent).toContain('2 marcas');
-    const marcas = Array.from(alvo.raiz.querySelectorAll('.ficha-marca__nome')).map((m) =>
+    // O editor de Sanidade (m3-12) renderiza as listas; leitura pura (não ajustável) sem controles.
+    const marcas = Array.from(alvo.raiz.querySelectorAll('.sanidade__nome')).map((m) =>
       m.textContent?.trim(),
     );
     expect(marcas).toContain('Pânico');

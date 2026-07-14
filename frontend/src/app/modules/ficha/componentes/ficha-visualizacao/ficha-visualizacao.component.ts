@@ -21,6 +21,7 @@ import {
 } from '@contratados-rpg/shared/regras/agente';
 
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
+import { EstadoSanidade, FichaSanidade } from '../ficha-sanidade/ficha-sanidade.component';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
 import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
 import {
@@ -45,14 +46,6 @@ interface CampoAtributo {
 interface GrupoAtributos {
   readonly rotulo: string;
   readonly campos: readonly CampoAtributo[];
-}
-
-/** Marca de Sanidade (trauma/sequela/lesão) já formatada para a lista com borda colorida. */
-interface MarcaSanidade {
-  readonly tipo: string;
-  readonly nome: string;
-  readonly descricao: string;
-  readonly tom: 'trauma' | 'sequela' | 'lesao';
 }
 
 /** Lembrete da fórmula da DT — exibido como chip informativo no card de Atributos (como no protótipo). */
@@ -156,7 +149,7 @@ export interface AjusteClasse {
  */
 @Component({
   selector: 'app-ficha-visualizacao',
-  imports: [HoldRepeat],
+  imports: [HoldRepeat, FichaSanidade],
   templateUrl: './ficha-visualizacao.component.html',
   styleUrl: './ficha-visualizacao.component.scss',
 })
@@ -191,6 +184,9 @@ export class FichaVisualizacao {
 
   /** Nova Classe/Arquétipo — a página persiste. */
   readonly ajusteClasse = output<AjusteClasse>();
+
+  /** Listas de Sanidade (sequelas/traumas/lesões) editadas — a página persiste em `estado` (m3-12). */
+  readonly ajusteSanidade = output<EstadoSanidade>();
 
   /**
    * Aba inicialmente ativa — semeia a barra a partir do `?aba=` da URL (deep-link/refresh, m3-11). A
@@ -598,34 +594,13 @@ export class FichaVisualizacao {
   }
 
   /**
-   * Marcas de Sanidade — traumas (permanentes), sequelas (temporárias) e lesões (físicas) reunidos
-   * numa lista com borda colorida por tipo. As listas moram no documento (`estado`); esta tela só
-   * as exibe (editá-las é task futura).
+   * Total de marcas de Sanidade (sequelas + traumas + lesões) — alimenta o contador da aba. As listas
+   * moram no `estado` e são editadas pelo `FichaSanidade` embutido na aba Sanidade (m3-12).
    */
-  protected readonly marcasSanidade = computed<readonly MarcaSanidade[]>(() => {
+  protected readonly totalMarcas = computed(() => {
     const estado = this.estado();
-    const traumas: MarcaSanidade[] = estado.traumas.map((trauma) => ({
-      tipo: trauma.tratado ? 'Trauma tratado' : 'Trauma',
-      nome: trauma.nome,
-      descricao: trauma.descricao ?? '',
-      tom: 'trauma',
-    }));
-    const sequelas: MarcaSanidade[] = estado.sequelas.map((sequela) => ({
-      tipo: 'Sequela',
-      nome: sequela.nome,
-      descricao: sequela.descricao ?? '',
-      tom: 'sequela',
-    }));
-    const lesoes: MarcaSanidade[] = estado.lesoes.map((lesao) => ({
-      tipo: 'Lesão',
-      nome: lesao.atributo,
-      descricao: `−${lesao.pontos} ${lesao.atributo}${lesao.permanente ? ' (permanente)' : ''}`,
-      tom: 'lesao',
-    }));
-    return [...traumas, ...sequelas, ...lesoes];
+    return estado.sequelas.length + estado.traumas.length + estado.lesoes.length;
   });
-
-  protected readonly totalMarcas = computed(() => this.marcasSanidade().length);
 
   /** Seleciona uma aba (clique/teclado) e notifica a página para atualizar o `?aba=` da URL. */
   protected selecionarAba(aba: AbaFicha): void {

@@ -715,23 +715,13 @@
           <span class="ficha-cartao__meta">{{ totalMarcas() }} {{ totalMarcas() === 1 ? 'marca' : 'marcas' }}</span>
         </header>
 
-        @if (marcasSanidade().length) {
-          <ul class="ficha-marcas">
-            @for (marca of marcasSanidade(); track $index) {
-              <li class="ficha-marca" [class]="'ficha-marca--' + marca.tom">
-                <div class="ficha-marca__linha">
-                  <span class="ficha-marca__tag">{{ marca.tipo }}</span>
-                  <span class="ficha-marca__nome">{{ marca.nome }}</span>
-                </div>
-                @if (marca.descricao) {
-                  <span class="ficha-marca__descricao">{{ marca.descricao }}</span>
-                }
-              </li>
-            }
-          </ul>
-        } @else {
-          <p class="ficha-visao__vazio">Sem marcas de sanidade.</p>
-        }
+        <app-ficha-sanidade
+          [sequelas]="estado().sequelas"
+          [traumas]="estado().traumas"
+          [lesoes]="estado().lesoes"
+          [editavel]="ajustavel()"
+          (sanidadeMudou)="ajusteSanidade.emit($event)"
+        />
       </section>
     </div>
   }

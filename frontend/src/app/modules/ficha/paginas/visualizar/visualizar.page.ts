@@ -50,6 +50,7 @@ import {
   FichaVisualizacao,
   ehAbaFicha,
 } from '../../componentes/ficha-visualizacao/ficha-visualizacao.component';
+import type { EstadoSanidade } from '../../componentes/ficha-sanidade/ficha-sanidade.component';
 
 /**
  * A **ficha** de jogador numa tela só (`/painel/:campanhaId/ficha/:id`, m3-10): **edição no próprio
@@ -417,6 +418,26 @@ export class FichaVisualizar {
       resultado[chave] = resultado[chave] - (bonusAntes[chave] ?? 0) + (bonusDepois[chave] ?? 0);
     });
     return resultado;
+  }
+
+  /**
+   * Edita as listas de Sanidade (sequelas/traumas/lesões, m3-12): substitui os três blocos em `estado`
+   * de uma vez (o editor emite o trio inteiro), otimista na tela + persistência em lote. Só dono/mestre
+   * chega aqui; o backend valida forma (camada 1) — sem trava de faixa (m3-10).
+   */
+  protected ajustarSanidade(sanidade: EstadoSanidade): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) {
+      return;
+    }
+    const estado = {
+      ...fichaAtual.dados.estado,
+      sequelas: sanidade.sequelas,
+      traumas: sanidade.traumas,
+      lesoes: sanidade.lesoes,
+    };
+    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, estado } });
+    this.agendarPersistencia();
   }
 
   /** Edita o Codinome (relacional) — otimista + persistência em lote. */

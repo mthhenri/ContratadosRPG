@@ -201,6 +201,33 @@ describe('FichaVisualizar', () => {
     }
   });
 
+  it('edita as listas de Sanidade otimista e persiste em lote (m3-12)', () => {
+    vi.useFakeTimers();
+    try {
+      const { fixture, fichaService } = montar({ usuarioLogadoId: 99 });
+      const componente = fixture.componentInstance;
+
+      const novasSequelas = [{ nome: 'Vertigem' }];
+      componente['ajustarSanidade']({
+        sequelas: novasSequelas,
+        traumas: dados.estado.traumas,
+        lesoes: dados.estado.lesoes,
+      });
+
+      // Otimista: os três blocos entram no estado sem esperar o backend.
+      expect(componente['ficha']()?.dados.estado.sequelas).toEqual(novasSequelas);
+      vi.advanceTimersByTime(500);
+
+      expect(fichaService.alterarFicha).toHaveBeenCalledTimes(1);
+      expect(fichaService.alterarFicha).toHaveBeenCalledWith(42, {
+        nome: 'Kane',
+        dados: { ...dados, estado: { ...dados.estado, sequelas: novasSequelas } },
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('editar o Nível soma o delta de progressão às máximas stored (m3-10)', () => {
     const { fixture } = montar({ usuarioLogadoId: 7 });
     const componente = fixture.componentInstance;
