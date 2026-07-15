@@ -13,6 +13,9 @@ import { ItemCategoriaEnum } from '../../enums';
  * `dano`/`informacao` (armas), `resistencia` (proteções), `bonus`
  * (armazenamento). `categoriaEmprestada` marca itens exóticos que, com a
  * modificação "Faz Parte", passam a aceitar modificações de outra categoria.
+ * `ehEscudo` distingue os escudos dentro da categoria `PROTECOES` (que também
+ * abriga coletes/armaduras): só escudos aceitam as modificações "Apenas para
+ * escudos" (Combativo, Arremesso). Fonte: docs/core/sistema-v4.1.0.md — Proteções.
  */
 export interface ItemCatalogo {
   readonly nome: string;
@@ -24,6 +27,7 @@ export interface ItemCatalogo {
   readonly bonus?: string;
   readonly descricao?: string;
   readonly categoriaEmprestada?: ItemCategoriaEnum;
+  readonly ehEscudo?: boolean;
 }
 
 export const CATALOGO_ITENS: Readonly<Record<ItemCategoriaEnum, readonly ItemCatalogo[]>> = {
@@ -71,10 +75,10 @@ export const CATALOGO_ITENS: Readonly<Record<ItemCategoriaEnum, readonly ItemCat
     { nome: 'Colete de Kevlar', custo: 1500, peso: 2, resistencia: '5 [Físico], 3 [Balístico]', descricao: 'Proteção contra projéteis e impactos' },
     { nome: 'Roupa Anti-Químico', custo: 2500, peso: 2, resistencia: '6 [Químico]', descricao: 'Proteção total contra agentes químicos e gases' },
     { nome: 'Armadura Pesada', custo: 3000, peso: 4, resistencia: '10 [Físico], 6 [Balístico]', descricao: 'Máxima proteção. Penalidade: −1 dado DES' },
-    { nome: 'Escudo Leve', custo: 300, peso: 1, resistencia: '1 [Físico/Balístico]', descricao: 'Escudo compacto para bloqueio rápido — 1 mão' },
-    { nome: 'Escudo Médio', custo: 750, peso: 2, resistencia: '3 [Físico/Balístico]', descricao: 'Equilíbrio entre proteção e mobilidade — 1 mão' },
-    { nome: 'Escudo Pesado', custo: 1250, peso: 3, resistencia: '5 [Físico/Balístico]', descricao: 'Proteção robusta — 2 mãos' },
-    { nome: 'Escudo-Barreira Móvel', custo: 1750, peso: 4, resistencia: '7 [Físico/Balístico]', descricao: 'Barreira de combate. Penalidade: −1 dado DES — 2 mãos' },
+    { nome: 'Escudo Leve', custo: 300, peso: 1, resistencia: '1 [Físico/Balístico]', ehEscudo: true, descricao: 'Escudo compacto para bloqueio rápido — 1 mão' },
+    { nome: 'Escudo Médio', custo: 750, peso: 2, resistencia: '3 [Físico/Balístico]', ehEscudo: true, descricao: 'Equilíbrio entre proteção e mobilidade — 1 mão' },
+    { nome: 'Escudo Pesado', custo: 1250, peso: 3, resistencia: '5 [Físico/Balístico]', ehEscudo: true, descricao: 'Proteção robusta — 2 mãos' },
+    { nome: 'Escudo-Barreira Móvel', custo: 1750, peso: 4, resistencia: '7 [Físico/Balístico]', ehEscudo: true, descricao: 'Barreira de combate. Penalidade: −1 dado DES — 2 mãos' },
   ],
   [ItemCategoriaEnum.EXOTICOS]: [
     { nome: 'Lança-Granada', custo: 3000, peso: 3, dano: '4D8 [Explosão]', informacao: 'Médio · 3m · Mun: Granadas', descricao: 'Lança granadas explosivas em área — 2 mãos', categoriaEmprestada: ItemCategoriaEnum.ARMAS_DE_FOGO },

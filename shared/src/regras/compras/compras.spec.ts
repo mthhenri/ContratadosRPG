@@ -12,6 +12,7 @@ import {
   descreverEfeitoModificacao,
   descreverEfeitosModificacao,
   interpretarBonusArmazenamento,
+  listarModificacoesDisponiveis,
   obterCategoriaEmprestada,
   obterCustoModificacao,
   obterLimiteModificacoes,
@@ -41,6 +42,47 @@ function montarItem(parcial: Partial<CarrinhoItemDto> & Pick<CarrinhoItemDto, 'n
 }
 
 const mod = (nome: string, empilhamentos: number): ModificacaoAplicadaDto => ({ nome, empilhamentos });
+
+describe('listarModificacoesDisponiveis — "Apenas escudos" (Combativo/Arremesso)', () => {
+  // docs/core/sistema-v4.1.0.md — Proteções: "Combativo" e "Arremesso" são "Apenas para escudos".
+  // A categoria PROTECOES mistura proteções (coletes/armaduras) e escudos: as mods de escudo só
+  // podem ser oferecidas aos escudos.
+  it('não oferece as mods exclusivas de escudo para proteções que não são escudo', () => {
+    const colete = montarItem({ nome: 'Colete Leve', categoria: ItemCategoriaEnum.PROTECOES });
+    const nomes = listarModificacoesDisponiveis(colete).map((modificacao) => modificacao.nome);
+    expect(nomes).not.toContain('Combativo');
+    expect(nomes).not.toContain('Arremesso');
+    // As demais modificações de proteção continuam disponíveis.
+    expect(nomes).toContain('Blindada');
+    expect(nomes).toContain('Reforçada');
+  });
+
+  it('oferece as mods exclusivas de escudo para escudos', () => {
+    const escudo = montarItem({ nome: 'Escudo Médio', categoria: ItemCategoriaEnum.PROTECOES });
+    const nomes = listarModificacoesDisponiveis(escudo).map((modificacao) => modificacao.nome);
+    expect(nomes).toContain('Combativo');
+    expect(nomes).toContain('Arremesso');
+  });
+
+  it('só o escudo com Combativo empresta as modificações de Corpo a Corpo', () => {
+    const escudoCombativo = montarItem({
+      nome: 'Escudo Médio',
+      categoria: ItemCategoriaEnum.PROTECOES,
+      modificacoes: [mod('Combativo', 1)],
+    });
+    expect(obterCategoriaEmprestada(escudoCombativo)).toBe(ItemCategoriaEnum.CORPO_A_CORPO);
+    const nomes = listarModificacoesDisponiveis(escudoCombativo).map((modificacao) => modificacao.nome);
+    expect(nomes).toContain('Letal'); // modificação de Corpo a Corpo emprestada
+
+    // Uma proteção comum com o mesmo dado não vira "combativa" nem empresta Corpo a Corpo.
+    const coleteCombativo = montarItem({
+      nome: 'Colete Leve',
+      categoria: ItemCategoriaEnum.PROTECOES,
+      modificacoes: [mod('Combativo', 1)],
+    });
+    expect(obterCategoriaEmprestada(coleteCombativo)).toBeNull();
+  });
+});
 
 describe('obterLimiteModificacoes', () => {
   it('reproduz a tabela de Limite de Modificações do documento por patente', () => {

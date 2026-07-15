@@ -23,7 +23,7 @@ import {
   ContadorFragmentoDto,
   descreverEfeitosModificacao,
   ItemCatalogo,
-  MODIFICACOES,
+  listarModificacoesCategoria,
   ModificacaoDados,
   ModificacaoEfeitoDto,
   obterCategoriaEmprestada,
@@ -1437,7 +1437,8 @@ export class ComprasPage {
     limite: { maxEmpilhamentos: number; maxModificacoes: number },
   ): SecaoModVM[] {
     const secoes: SecaoModVM[] = [];
-    const proprias = MODIFICACOES[item.categoria] ?? [];
+    // `listarModificacoesCategoria` recorta as mods "Apenas para escudos" quando o item não é escudo.
+    const proprias = listarModificacoesCategoria(item, item.categoria);
     if (proprias.length > 0) {
       secoes.push({
         titulo: null,
@@ -1445,7 +1446,7 @@ export class ComprasPage {
       });
     }
     const categoriaEmprestada = obterCategoriaEmprestada(item);
-    const emprestadas = categoriaEmprestada ? (MODIFICACOES[categoriaEmprestada] ?? []) : [];
+    const emprestadas = categoriaEmprestada ? listarModificacoesCategoria(item, categoriaEmprestada) : [];
     if (categoriaEmprestada && emprestadas.length > 0) {
       const via =
         item.categoria === ItemCategoriaEnum.PROTECOES &&
@@ -1559,12 +1560,13 @@ export class ComprasPage {
   }
 
   private definicoesModificacao(item: ItemCarrinho): readonly ModificacaoDados[] {
-    const proprias = MODIFICACOES[item.categoria] ?? [];
+    // Recorta as mods "Apenas para escudos" quando o item não é escudo (fonte única em `shared/regras`).
+    const proprias = listarModificacoesCategoria(item, item.categoria);
     const categoriaEmprestada = obterCategoriaEmprestada(item);
     if (!categoriaEmprestada) {
       return proprias;
     }
-    return [...proprias, ...(MODIFICACOES[categoriaEmprestada] ?? [])];
+    return [...proprias, ...listarModificacoesCategoria(item, categoriaEmprestada)];
   }
 
   private empilhamentosDaMod(item: ItemCarrinho, modNome: string): number {

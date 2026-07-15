@@ -103,7 +103,8 @@ export const LIMITES_MODIFICACAO: Readonly<Record<PatenteEnum, LimiteModificacoe
  * (■ preenchidos) é quanto a primeira compra concede; `empilhamentoMaximo` (□
  * totais) é o teto próprio da modificação. `bloqueia` lista as modificações cujo
  * uso simultâneo é impedido (doc — coluna "Bloqueia"). `peso` sobrescreve o
- * `PESO_MODIFICACAO_PADRAO` quando informado.
+ * `PESO_MODIFICACAO_PADRAO` quando informado. `apenasEscudos` marca as mods de
+ * proteção que só valem para escudos (doc — "Apenas para escudos").
  */
 export interface ModificacaoDados {
   readonly nome: string;
@@ -112,6 +113,7 @@ export interface ModificacaoDados {
   readonly bloqueia: readonly string[];
   readonly descricao: string;
   readonly peso?: number;
+  readonly apenasEscudos?: boolean;
 }
 
 /**
@@ -178,10 +180,10 @@ export const MODIFICACOES: Partial<Record<ItemCategoriaEnum, readonly Modificaca
   ],
   [ItemCategoriaEnum.PROTECOES]: [
     { nome: 'Antibombas', empilhamentosIniciais: 1, empilhamentoMaximo: 5, bloqueia: ['Camuflada', 'Espinhos', 'Hazmat', 'Flexível'], descricao: '+2 resist. [Explosão] por stack' },
-    { nome: 'Arremesso', empilhamentosIniciais: 2, empilhamentoMaximo: 5, bloqueia: ['Flexível'], descricao: '(Apenas escudos) Arremessa o escudo em alcance curto (FOR). Dano: (Peso)D4+FOR [Físico] máx 6 dados. 3º: retorno automático; 4º e 5º: +1 dado. Recuperar: ação padrão' },
+    { nome: 'Arremesso', empilhamentosIniciais: 2, empilhamentoMaximo: 5, bloqueia: ['Flexível'], apenasEscudos: true, descricao: '(Apenas escudos) Arremessa o escudo em alcance curto (FOR). Dano: (Peso)D4+FOR [Físico] máx 6 dados. 3º: retorno automático; 4º e 5º: +1 dado. Recuperar: ação padrão' },
     { nome: 'Blindada', empilhamentosIniciais: 1, empilhamentoMaximo: 5, bloqueia: ['Camuflada', 'Flexível', 'Reforçada'], descricao: '+2 na resist. principal, +0,5 peso/stack', peso: 0.5 },
     { nome: 'Camuflada', empilhamentosIniciais: 1, empilhamentoMaximo: 5, bloqueia: ['Antibombas', 'Blindada', 'Espinhos'], descricao: '−1 peso (mín. 1), −1 resist. por stack' },
-    { nome: 'Combativo', empilhamentosIniciais: 1, empilhamentoMaximo: 5, bloqueia: ['Flexível'], descricao: '(Apenas escudos) Usa o escudo como arma CaC. Dano: (Peso)D3+FOR [Físico] máx 5 dados. Sem resist. ao atacar. +1 dado/stack extra' },
+    { nome: 'Combativo', empilhamentosIniciais: 1, empilhamentoMaximo: 5, bloqueia: ['Flexível'], apenasEscudos: true, descricao: '(Apenas escudos) Usa o escudo como arma CaC. Dano: (Peso)D3+FOR [Físico] máx 5 dados. Sem resist. ao atacar. +1 dado/stack extra' },
     { nome: 'Espinhos', empilhamentosIniciais: 1, empilhamentoMaximo: 5, bloqueia: ['Antibombas', 'Camuflada', 'Hazmat'], descricao: '1D6+VIG [Físico] ao atacante. +1 dado/stack' },
     { nome: 'Flexível', empilhamentosIniciais: 2, empilhamentoMaximo: 5, bloqueia: ['Antibombas', 'Arremesso', 'Blindada', 'Combativo', 'Resistente'], descricao: '+1 ao Esquivar por stack' },
     { nome: 'Hazmat', empilhamentosIniciais: 1, empilhamentoMaximo: 5, bloqueia: ['Antibombas', 'Espinhos'], descricao: '+2 resist. [Químico] por stack' },

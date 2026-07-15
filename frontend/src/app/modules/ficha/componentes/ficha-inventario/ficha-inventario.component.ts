@@ -16,8 +16,8 @@ import {
   contarComprasModificacao,
   descreverEfeitosModificacao,
   ItemCatalogo,
+  listarModificacoesCategoria,
   listarModificacoesDisponiveis,
-  MODIFICACOES,
   ModificacaoDados,
   ModificacaoEfeitoDto,
   obterCategoriaEmprestada,
@@ -1106,7 +1106,8 @@ export class FichaInventario {
     limite: { maxEmpilhamentos: number; maxModificacoes: number },
   ): SecaoModVM[] {
     const secoes: SecaoModVM[] = [];
-    const proprias = MODIFICACOES[item.categoria] ?? [];
+    // `listarModificacoesCategoria` recorta as mods "Apenas para escudos" quando o item não é escudo.
+    const proprias = listarModificacoesCategoria(item, item.categoria);
     if (proprias.length > 0) {
       secoes.push({
         titulo: null,
@@ -1114,7 +1115,7 @@ export class FichaInventario {
       });
     }
     const categoriaEmprestada = obterCategoriaEmprestada(item);
-    const emprestadas = categoriaEmprestada ? (MODIFICACOES[categoriaEmprestada] ?? []) : [];
+    const emprestadas = categoriaEmprestada ? listarModificacoesCategoria(item, categoriaEmprestada) : [];
     if (categoriaEmprestada && emprestadas.length > 0) {
       const via =
         item.categoria === ItemCategoriaEnum.PROTECOES &&

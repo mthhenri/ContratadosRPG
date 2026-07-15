@@ -161,6 +161,18 @@ export function resolverDadosItem(item: CarrinhoItemDto): ItemCatalogo | null {
 }
 
 /**
+ * Se o item é um **escudo** (dentro da categoria `PROTECOES`, que mistura escudos
+ * e coletes/armaduras). Só escudos aceitam as modificações "Apenas para escudos"
+ * (Combativo, Arremesso). A distinção vem do catálogo (`ehEscudo`); item custom
+ * não é escudo (o formulário de item não declara escudo). Fonte:
+ * docs/core/sistema-v4.1.0.md — Proteções.
+ */
+export function ehEscudo(item: CarrinhoItemDto): boolean {
+  const doCatalogo = CATALOGO_ITENS[item.categoria]?.find((catalogo) => catalogo.nome === item.nome);
+  return doCatalogo?.ehEscudo === true;
+}
+
+/**
  * Categoria de modificações "emprestada" a um item: exóticos com a modificação
  * "Faz Parte" passam a aceitar as modificações da categoria indicada no catálogo
  * (`categoriaEmprestada`); escudos (proteções) com "Combativo" aceitam as de
@@ -183,7 +195,8 @@ export function obterCategoriaEmprestada(item: CarrinhoItemDto): ItemCategoriaEn
     const itemCatalogo = CATALOGO_ITENS[ItemCategoriaEnum.EXOTICOS].find((catalogo) => catalogo.nome === item.nome);
     return itemCatalogo?.categoriaEmprestada ?? null;
   }
-  if (item.categoria === ItemCategoriaEnum.PROTECOES) {
+  // "Combativo" é uma mod exclusiva de escudo: só escudo empresta as mods de Corpo a Corpo.
+  if (item.categoria === ItemCategoriaEnum.PROTECOES && ehEscudo(item)) {
     if (item.modificacoes.some((modificacao) => modificacao.nome === 'Combativo')) {
       return ItemCategoriaEnum.CORPO_A_CORPO;
     }
@@ -192,17 +205,34 @@ export function obterCategoriaEmprestada(item: CarrinhoItemDto): ItemCategoriaEn
 }
 
 /**
+ * Modificações de uma categoria aplicáveis a **este** item: as da categoria, menos
+ * as "Apenas para escudos" (Combativo, Arremesso) quando o item não é escudo. As
+ * demais categorias não têm mods de escudo, então o filtro só recorta `PROTECOES`.
+ */
+export function listarModificacoesCategoria(
+  item: CarrinhoItemDto,
+  categoria: ItemCategoriaEnum,
+): readonly ModificacaoDados[] {
+  const modificacoes = MODIFICACOES[categoria] ?? [];
+  if (ehEscudo(item)) {
+    return modificacoes;
+  }
+  return modificacoes.filter((modificacao) => !modificacao.apenasEscudos);
+}
+
+/**
  * Modificações disponíveis para um item: as da própria categoria mais as da
- * categoria emprestada (via "Faz Parte" / "Combativo"), quando houver. Espelha
- * `getAllModDefs` do site antigo.
+ * categoria emprestada (via "Faz Parte" / "Combativo"), quando houver — já sem as
+ * mods "Apenas para escudos" quando o item não é escudo. Espelha `getAllModDefs`
+ * do site antigo.
  */
 export function listarModificacoesDisponiveis(item: CarrinhoItemDto): readonly ModificacaoDados[] {
-  const base = MODIFICACOES[item.categoria] ?? [];
+  const base = listarModificacoesCategoria(item, item.categoria);
   const categoriaEmprestada = obterCategoriaEmprestada(item);
   if (!categoriaEmprestada) {
     return base;
   }
-  return [...base, ...(MODIFICACOES[categoriaEmprestada] ?? [])];
+  return [...base, ...listarModificacoesCategoria(item, categoriaEmprestada)];
 }
 
 /**
