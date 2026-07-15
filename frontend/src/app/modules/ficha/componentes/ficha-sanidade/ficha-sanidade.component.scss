@@ -13,25 +13,28 @@
     grid-template-columns: 1fr;
   }
 
-  // Cada categoria é um painel com um filete de cor no topo (identidade visual da marca).
+  // Cada categoria é um painel com um filete de cor no topo (identidade visual da marca). A cor da
+  // marca vive em `--marca` e é herdada por tudo que representa a categoria (topo, botão adicionar,
+  // borda do editor) — assim adicionar a uma seção usa a mesma cor da seção.
   &__grupo {
+    --marca: var(--border-strong);
     display: flex;
     flex-direction: column;
     gap: 10px;
     padding: 12px 12px 14px;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-top: 2px solid var(--border-strong);
+    border-top: 2px solid var(--marca);
     border-radius: var(--radius-card);
 
     &--sequela {
-      border-top-color: var(--text-mute);
+      --marca: var(--text-mute);
     }
     &--trauma {
-      border-top-color: var(--warning);
+      --marca: var(--warning);
     }
     &--lesao {
-      border-top-color: var(--accent);
+      --marca: var(--accent);
     }
   }
 
@@ -63,6 +66,8 @@
     background: var(--border);
   }
 
+  // Botão adicionar: veste a cor da própria seção (herdada via `--marca`) — adicionar a Sequelas
+  // fica cinza, a Traumas âmbar, a Lesões vermelho, casando com o filete do topo.
   &__add {
     flex: 0 0 auto;
     font-family: var(--font-mono);
@@ -70,16 +75,16 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--accent);
-    background: var(--accent-dim);
-    border: 1px solid var(--accent-border);
+    color: var(--marca);
+    background: color-mix(in srgb, var(--marca) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--marca) 40%, transparent);
     border-radius: var(--radius-control);
     padding: 5px 10px;
     cursor: pointer;
     transition: background-color 0.15s ease;
 
     &:hover:not(:disabled) {
-      background: color-mix(in srgb, var(--accent) 22%, transparent);
+      background: color-mix(in srgb, var(--marca) 24%, transparent);
     }
 
     &:disabled {
@@ -146,7 +151,7 @@
     }
 
     &--edicao {
-      border-left-color: var(--accent);
+      border-left-color: var(--marca);
       background: var(--surface);
     }
   }
