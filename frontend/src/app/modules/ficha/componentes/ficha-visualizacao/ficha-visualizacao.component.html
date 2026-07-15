@@ -21,7 +21,8 @@
         (click)="selecionarAba(aba.id)"
         (keydown)="navegarAbas($event, i)"
       >
-        {{ aba.rotulo }}
+        <app-icone class="ficha-abas__icone" [nome]="aba.icone" />
+        <span class="ficha-abas__rotulo">{{ aba.rotulo }}</span>
       </button>
     }
   </div>

@@ -159,6 +159,9 @@
 
   &__aba {
     flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
     font-family: var(--font-mono);
     font-size: 11px;
     font-weight: 500;
@@ -196,6 +199,18 @@
 
     @media (prefers-reduced-motion: reduce) {
       transition: none;
+    }
+  }
+
+  // Ícone da aba: um pouco maior que o rótulo p/ presença; herda a cor via currentColor
+  // (dim → text no hover → --bg quando a aba está ativa). Some no mobile estreito p/ caber.
+  &__icone {
+    font-size: 14px;
+  }
+
+  @media (max-width: 420px) {
+    &__icone {
+      display: none;
     }
   }
 }

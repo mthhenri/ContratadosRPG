@@ -26,6 +26,7 @@ import {
 } from '@contratados-rpg/shared/regras/agente';
 
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
+import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
 import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
 import { EstadoSanidade, FichaSanidade } from '../ficha-sanidade/ficha-sanidade.component';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
@@ -66,20 +67,21 @@ export type AbaFicha =
   | 'sanidade'
   | 'rolagens';
 
-/** Descritor de uma aba na barra (id semântico p/ deep-link + rótulo legível). */
+/** Descritor de uma aba na barra (id semântico p/ deep-link + rótulo legível + ícone de linha). */
 interface DescritorAba {
   readonly id: AbaFicha;
   readonly rotulo: string;
+  readonly icone: IconeNome;
 }
 
 /** Todas as abas, na ordem de exibição da barra (`docs/design/examples/ficha-de-jogador.html`). */
 export const ABAS_FICHA: readonly DescritorAba[] = [
-  { id: 'visao-geral', rotulo: 'Visão Geral' },
-  { id: 'combate', rotulo: 'Combate' },
-  { id: 'inventario', rotulo: 'Inventário' },
-  { id: 'habilidades', rotulo: 'Habilidades' },
-  { id: 'sanidade', rotulo: 'Sanidade & Lesões' },
-  { id: 'rolagens', rotulo: 'Rolagens' },
+  { id: 'visao-geral', rotulo: 'Visão Geral', icone: 'visao-geral' },
+  { id: 'combate', rotulo: 'Combate', icone: 'combate' },
+  { id: 'inventario', rotulo: 'Inventário', icone: 'inventario' },
+  { id: 'habilidades', rotulo: 'Habilidades', icone: 'habilidades' },
+  { id: 'sanidade', rotulo: 'Sanidade & Lesões', icone: 'sanidade' },
+  { id: 'rolagens', rotulo: 'Rolagens', icone: 'rolagens' },
 ];
 
 /** `true` quando a string é uma aba conhecida — valida o `?aba=` da URL (deep-link). */
@@ -153,7 +155,7 @@ export interface AjusteClasse {
  */
 @Component({
   selector: 'app-ficha-visualizacao',
-  imports: [HoldRepeat, FichaSanidade, FichaHabilidades],
+  imports: [HoldRepeat, Icone, FichaSanidade, FichaHabilidades],
   templateUrl: './ficha-visualizacao.component.html',
   styleUrl: './ficha-visualizacao.component.scss',
 })

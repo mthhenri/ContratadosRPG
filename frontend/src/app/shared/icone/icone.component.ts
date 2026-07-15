@@ -3,8 +3,9 @@ import { Component, input } from '@angular/core';
 /**
  * Nomes de ícone suportados. Os seis primeiros são as abas da calculadora (batem com o
  * `caminho` da rota); os dez seguintes são as categorias do catálogo de compras + amplificador;
- * os últimos (m2-09) cobrem topbar, autenticação e campanhas (nav, dropdown de perfil, chips de
- * papel, ações).
+ * depois (m2-09) topbar, autenticação e campanhas (nav, dropdown de perfil, chips de papel,
+ * ações); e por fim as seis abas da ficha (batem com o `id` da aba — Visão Geral, Combate,
+ * Inventário, Habilidades, Sanidade, Rolagens).
  */
 export type IconeNome =
   | 'agente'
@@ -40,7 +41,13 @@ export type IconeNome =
   | 'excluir'
   | 'olho'
   | 'olho-fechado'
-  | 'tema';
+  | 'tema'
+  | 'visao-geral'
+  | 'combate'
+  | 'inventario'
+  | 'habilidades'
+  | 'sanidade'
+  | 'rolagens';
 
 /**
  * Ícone monocromático de linha (SVG inline, `stroke: currentColor`) — reutilizado nos menus de
