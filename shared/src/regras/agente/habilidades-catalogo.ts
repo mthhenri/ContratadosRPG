@@ -19,8 +19,11 @@ import {
  * - **Classe**: as três classes-base (a sua em `ehDaFicha`), para o pick de "outra classe".
  * - **Arquétipo**: **só os arquétipos da classe da ficha** (o pick de "outro arquétipo da sua
  *   classe"); nunca os de outra classe. As **Gerais Melhoradas** aparecem só no subgrupo do
- *   **próprio** arquétipo. Se a ficha é um **Experimento**, a aba inclui a **própria subclasse**
- *   (nível de arquétipo) + os arquétipos da classe-base, e **nunca** outras subclasses.
+ *   **próprio** arquétipo. A **Habilidade Inicial** (1º item de cada arquétipo/subclasse) só
+ *   aparece no subgrupo do **próprio** arquétipo — em qualquer outro ela **some da lista**, pois
+ *   "não é possível obtê-la fora a seleção do próprio arquétipo" (doc). Se a ficha é um
+ *   **Experimento**, a aba inclui a **própria subclasse** (nível de arquétipo) + os arquétipos da
+ *   classe-base, e **nunca** outras subclasses.
  */
 
 /** Uma habilidade do catálogo já com categoria e origem resolvidas (pronta p/ virar `FichaHabilidadeDto`). */
@@ -128,7 +131,8 @@ function grupoClasse(classe: ClasseEnum): GrupoHabilidades {
 
 /**
  * Grupo **Arquétipo** — só os arquétipos da classe da ficha; a subclasse Experimento entra como um
- * subgrupo próprio. As Gerais Melhoradas só entram no subgrupo do arquétipo da ficha.
+ * subgrupo próprio. As Gerais Melhoradas e a **Habilidade Inicial** (1º item) só entram no subgrupo
+ * do arquétipo da ficha — nos demais, a inicial é removida (obtível só pelo próprio arquétipo).
  */
 function grupoArquetipo(
   classe: ClasseEnum,
@@ -158,11 +162,16 @@ function grupoArquetipo(
             arq,
           )
         : [];
+      // A Habilidade Inicial (1º item) só existe para o próprio arquétipo: "não é possível obtê-la
+      // fora a seleção do próprio arquétipo" (doc). Em outro arquétipo, ela sequer entra na lista.
+      const habilidadesArquetipo = ehDaFicha
+        ? HABILIDADES_ARQUETIPO[arq]
+        : HABILIDADES_ARQUETIPO[arq].slice(1);
       subgrupos.push({
         chave: arq,
         ehDaFicha,
         habilidades: [
-          ...comCategoria(HABILIDADES_ARQUETIPO[arq], HabilidadeCategoriaEnum.ARQUETIPO, arq),
+          ...comCategoria(habilidadesArquetipo, HabilidadeCategoriaEnum.ARQUETIPO, arq),
           ...melhoradas,
         ],
       });
@@ -219,4 +228,22 @@ export function habilidadesIniciais(
     return [{ ...doArquetipo[0], categoria: HabilidadeCategoriaEnum.ARQUETIPO, origem: arquetipo }];
   }
   return [];
+}
+
+/**
+ * `true` se a habilidade (identificada por `origem` + `nome`) é a **Habilidade Inicial** do seu
+ * arquétipo/subclasse — o **1º item** da lista no catálogo, o mesmo que `habilidadesIniciais` concede
+ * de graça (doc — "Habilidade Inicial de Arquétipo"). Serve só para **rotular/realçar** a inicial na
+ * UI ("Arquétipo - Inicial"); não é regra de jogo. `origem` ausente (Geral/Personalidade) → nunca.
+ */
+export function ehHabilidadeInicial(
+  origem: ClasseEnum | ArquetipoEnum | undefined,
+  nome: string,
+): boolean {
+  if (origem === undefined) {
+    return false;
+  }
+  const lista =
+    HABILIDADES_SUBCLASSE[origem as ClasseEnum] ?? HABILIDADES_ARQUETIPO[origem as ArquetipoEnum];
+  return lista !== undefined && lista.length > 0 && lista[0].nome === nome;
 }

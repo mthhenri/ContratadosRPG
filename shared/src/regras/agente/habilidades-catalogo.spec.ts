@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { ArquetipoEnum, ClasseEnum, HabilidadeCategoriaEnum } from '../../enums';
 import {
   catalogoHabilidades,
+  ehHabilidadeInicial,
   habilidadesIniciais,
   type GrupoHabilidades,
   type SubgrupoHabilidades,
@@ -74,6 +75,33 @@ describe('catálogo de habilidades → grupos de filtro', () => {
     expect(melhoradas.every((h) => h.origem === ArquetipoEnum.LUTADOR)).toBe(true);
   });
 
+  it('Habilidade Inicial (1º item) só aparece no arquétipo da ficha; nos outros ela some da lista', () => {
+    const grupos = catalogoHabilidades(ClasseEnum.COMBATENTE, ArquetipoEnum.LUTADOR);
+    const arquetipo = grupo(grupos, 'arquetipo');
+    const lutador = arquetipo.subgrupos.find((s) => s.chave === ArquetipoEnum.LUTADOR)!;
+    const mercenario = arquetipo.subgrupos.find((s) => s.chave === ArquetipoEnum.MERCENARIO)!;
+
+    const inicialLutador = HABILIDADES_ARQUETIPO[ArquetipoEnum.LUTADOR][0].nome;
+    const inicialMercenario = HABILIDADES_ARQUETIPO[ArquetipoEnum.MERCENARIO][0].nome;
+
+    // A do próprio arquétipo mantém a inicial; a de outro arquétipo não a lista.
+    expect(lutador.habilidades.some((h) => h.nome === inicialLutador)).toBe(true);
+    expect(mercenario.habilidades.some((h) => h.nome === inicialMercenario)).toBe(false);
+    // O resto das habilidades do Mercenário continua disponível (só a inicial some).
+    expect(mercenario.habilidades).toHaveLength(HABILIDADES_ARQUETIPO[ArquetipoEnum.MERCENARIO].length - 1);
+    expect(mercenario.habilidades.some((h) => h.nome === HABILIDADES_ARQUETIPO[ArquetipoEnum.MERCENARIO][1].nome)).toBe(true);
+  });
+
+  it('sem arquétipo selecionado: nenhum arquétipo é da ficha, então nenhuma inicial aparece', () => {
+    const grupos = catalogoHabilidades(ClasseEnum.COMBATENTE, null);
+    const arquetipo = grupo(grupos, 'arquetipo');
+    for (const arq of [ArquetipoEnum.LUTADOR, ArquetipoEnum.MERCENARIO, ArquetipoEnum.VANGUARDA]) {
+      const sub = arquetipo.subgrupos.find((s) => s.chave === arq)!;
+      const inicial = HABILIDADES_ARQUETIPO[arq][0].nome;
+      expect(sub.habilidades.some((h) => h.nome === inicial)).toBe(false);
+    }
+  });
+
   it('Experimento: Classe traz a classe-base marcada; Arquétipo traz a subclasse + arquétipos da base, sem outras subclasses e sem melhoradas', () => {
     const grupos = catalogoHabilidades(ClasseEnum.EXPERIMENTO_BESTIAL, null);
 
@@ -143,5 +171,32 @@ describe('habilidadesIniciais', () => {
   it('classe-base sem arquétipo, e Civil: nenhuma inicial', () => {
     expect(habilidadesIniciais(ClasseEnum.COMBATENTE, null)).toEqual([]);
     expect(habilidadesIniciais(ClasseEnum.CIVIL, null)).toEqual([]);
+  });
+});
+
+/**
+ * `ehHabilidadeInicial` identifica a inicial (1º item do arquétipo/subclasse) por origem + nome — a
+ * mesma que `habilidadesIniciais` concede; usada só para rotular/realçar a inicial na UI.
+ */
+describe('ehHabilidadeInicial', () => {
+  it('reconhece a inicial de um arquétipo (1º item) pela dupla origem + nome', () => {
+    const inicial = HABILIDADES_ARQUETIPO[ArquetipoEnum.LUTADOR][0].nome;
+    expect(ehHabilidadeInicial(ArquetipoEnum.LUTADOR, inicial)).toBe(true);
+    // 2º item do mesmo arquétipo não é inicial.
+    expect(ehHabilidadeInicial(ArquetipoEnum.LUTADOR, HABILIDADES_ARQUETIPO[ArquetipoEnum.LUTADOR][1].nome)).toBe(false);
+  });
+
+  it('reconhece a inicial de uma subclasse Experimento (origem = a classe)', () => {
+    const inicial = HABILIDADES_SUBCLASSE[ClasseEnum.EXPERIMENTO_BESTIAL]![0].nome;
+    expect(ehHabilidadeInicial(ClasseEnum.EXPERIMENTO_BESTIAL, inicial)).toBe(true);
+  });
+
+  it('nome certo mas origem de outro arquétipo → não é a inicial daquele', () => {
+    const inicialLutador = HABILIDADES_ARQUETIPO[ArquetipoEnum.LUTADOR][0].nome;
+    expect(ehHabilidadeInicial(ArquetipoEnum.MERCENARIO, inicialLutador)).toBe(false);
+  });
+
+  it('origem ausente (Geral/Personalidade) nunca é inicial', () => {
+    expect(ehHabilidadeInicial(undefined, HABILIDADES_ARQUETIPO[ArquetipoEnum.LUTADOR][0].nome)).toBe(false);
   });
 });
