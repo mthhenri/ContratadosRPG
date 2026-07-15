@@ -1,13 +1,14 @@
 import { Component, computed, input, linkedSignal, output, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
-import { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
+import { ArquetipoEnum, ClasseEnum, HabilidadeCategoriaEnum } from '@contratados-rpg/shared/enums';
 import type {
   GrupoHabilidades,
   HabilidadeCatalogoItemDto,
   SubgrupoHabilidades,
 } from '@contratados-rpg/shared/regras/agente';
 
+import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
 
 /** Rótulo de cada aba (grupo) do seletor. */
@@ -22,14 +23,17 @@ const VALORES_CLASSE = new Set<string>(Object.values(ClasseEnum));
 /**
  * Seletor **do sistema** (m3-13): navega o catálogo de habilidades (`shared/regras`) por aba
  * (Gerais / Classe / Arquétipo) + **sub-filtro inline** (chips), com o subgrupo da própria ficha
- * destacado e ativo por padrão. Escolher um item o emite para o pai pré-preencher o editor inline.
+ * destacado e ativo por padrão. O "＋" **adiciona a habilidade direto na ficha** (o seletor
+ * permanece aberto) e a marca como "Na ficha"; o "✕" ali mesmo a remove — dá para montar a lista
+ * sem fechar o diálogo. Habilidades gerais melhoradas ganham um selo, pois convivem com as do
+ * arquétipo na mesma lista.
  *
  * **Sem regra de jogo aqui**: os grupos e a visibilidade (melhoradas só do próprio arquétipo;
  * subclasses nunca cruzam) vêm prontos de `catalogoHabilidades`. Só tokens do tema (proibição #29).
  */
 @Component({
   selector: 'app-ficha-habilidade-seletor',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, OverflowFade],
   templateUrl: './ficha-habilidade-seletor.component.html',
   styleUrl: './ficha-habilidade-seletor.component.scss',
 })
@@ -39,9 +43,11 @@ export class FichaHabilidadeSeletor {
   /** Nomes das habilidades já na ficha — marca os itens como "Na ficha". */
   readonly nomesNaFicha = input<ReadonlySet<string>>(new Set());
 
-  /** Habilidade escolhida do catálogo — o pai pré-preenche o editor. */
-  readonly escolher = output<HabilidadeCatalogoItemDto>();
-  /** Fecha o seletor sem escolher. */
+  /** Adiciona a habilidade direto na ficha — o seletor permanece aberto. */
+  readonly adicionar = output<HabilidadeCatalogoItemDto>();
+  /** Remove da ficha (por nome) a habilidade já adicionada. */
+  readonly remover = output<string>();
+  /** Fecha o seletor. */
   readonly fechar = output<void>();
 
   /** Aba (grupo) ativa — re-deriva para a primeira aba disponível, gravável no clique. */
@@ -123,7 +129,16 @@ export class FichaHabilidadeSeletor {
     return this.nomesNaFicha().has(nome);
   }
 
-  protected escolherHabilidade(habilidade: HabilidadeCatalogoItemDto): void {
-    this.escolher.emit(habilidade);
+  /** `true` para uma habilidade geral melhorada — ganha selo por conviver com as do arquétipo. */
+  protected ehGeralMelhorada(habilidade: HabilidadeCatalogoItemDto): boolean {
+    return habilidade.categoria === HabilidadeCategoriaEnum.GERAL_MELHORADA;
+  }
+
+  protected adicionarHabilidade(habilidade: HabilidadeCatalogoItemDto): void {
+    this.adicionar.emit(habilidade);
+  }
+
+  protected removerHabilidade(nome: string): void {
+    this.remover.emit(nome);
   }
 }

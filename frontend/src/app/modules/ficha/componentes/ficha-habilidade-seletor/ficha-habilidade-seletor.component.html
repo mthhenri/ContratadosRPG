@@ -52,8 +52,8 @@
       />
     </div>
 
-    <!-- Lista do catálogo -->
-    <ul class="seletor__lista">
+    <!-- Lista do catálogo (2 colunas, fade nas bordas roláveis) -->
+    <ul class="seletor__lista" appOverflowFade>
       @for (habilidade of habilidades(); track habilidade.nome + habilidade.categoria) {
         <li class="seletor__opcao" [class.seletor__opcao--adicionada]="estaNaFicha(habilidade.nome)">
           <div class="seletor__opcao-corpo">
@@ -63,18 +63,30 @@
                 [{{ habilidade.custoEnergia === null ? 'X' : habilidade.custoEnergia }} E]
               </span>
             </div>
+            @if (ehGeralMelhorada(habilidade)) {
+              <span class="seletor__opcao-selo">Geral melhorada</span>
+            }
             @if (habilidade.descricao) {
               <span class="seletor__opcao-desc">{{ habilidade.descricao }}</span>
             }
           </div>
           @if (estaNaFicha(habilidade.nome)) {
-            <span class="seletor__opcao-marca">Na ficha</span>
+            <button
+              class="seletor__opcao-remover"
+              type="button"
+              [attr.aria-label]="'Remover ' + habilidade.nome + ' da ficha'"
+              title="Na ficha — clique para remover"
+              (click)="removerHabilidade(habilidade.nome)"
+            >
+              <span class="seletor__opcao-marca">Na ficha</span>
+              <span class="seletor__opcao-remover-x" aria-hidden="true">✕</span>
+            </button>
           } @else {
             <button
               class="seletor__opcao-add"
               type="button"
               [attr.aria-label]="'Adicionar ' + habilidade.nome"
-              (click)="escolherHabilidade(habilidade)"
+              (click)="adicionarHabilidade(habilidade)"
             >
               ＋
             </button>

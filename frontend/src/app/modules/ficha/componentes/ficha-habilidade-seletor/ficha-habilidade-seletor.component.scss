@@ -16,8 +16,9 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 520px;
-  max-height: calc(100dvh - 32px);
+  max-width: 700px;
+  // Menos comprida: teto fixo confortável, sem esticar até a altura toda da viewport.
+  max-height: min(600px, calc(100dvh - 32px));
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-card);
@@ -170,35 +171,85 @@
     }
   }
 
-  // === Lista ===
+  // === Lista (2 colunas + fade nas bordas roláveis) ===
   &__lista {
     list-style: none;
     margin: 0;
     padding: 0 8px 8px;
     overflow-y: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 8px;
+    align-content: start;
+
+    // Fade-out vertical só na borda que corta conteúdo (diretiva [appOverflowFade]) — mesmo
+    // recurso das listas da calculadora. As bandas vivem em variáveis (0 = sem fade naquela borda).
+    --fade-topo: 0px;
+    --fade-base: 0px;
+
+    &.overflow-fade--topo,
+    &.overflow-fade--base {
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+    }
+    &.overflow-fade--topo {
+      --fade-topo: 20px;
+    }
+    &.overflow-fade--base {
+      --fade-base: 20px;
+    }
   }
 
   &__opcao {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
-    padding: 11px 12px;
-    border: 1px solid transparent;
+    gap: 10px;
+    padding: 10px 11px;
+    border: 1px solid var(--border);
     border-radius: var(--radius-control);
+    background: var(--surface-2);
 
     &:hover {
-      background: var(--surface-2);
-      border-color: var(--border);
+      border-color: var(--border-strong);
     }
 
     &--adicionada {
-      opacity: 0.55;
+      opacity: 0.6;
     }
   }
 
   &__opcao-corpo {
     flex: 1;
     min-width: 0;
+  }
+
+  // Selo da habilidade geral melhorada — destaca-a entre as do arquétipo na mesma lista.
+  &__opcao-selo {
+    display: inline-block;
+    margin-top: 5px;
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--warning);
+    border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
+    border-radius: 3px;
+    padding: 1px 6px;
   }
 
   &__opcao-cab {
@@ -223,16 +274,38 @@
   }
 
   &__opcao-desc {
-    display: block;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
     margin-top: 4px;
     font-family: var(--font-sans);
     font-size: 12px;
     color: var(--text-dim);
-    line-height: 1.45;
+    line-height: 1.4;
+  }
+
+  // Botão "Na ficha ✕": marca de que já está na ficha e, no clique, remove dali mesmo.
+  &__opcao-remover {
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+
+    &:hover .seletor__opcao-marca {
+      color: var(--accent);
+      border-color: var(--accent-border);
+    }
+    &:hover .seletor__opcao-remover-x {
+      color: var(--accent);
+    }
   }
 
   &__opcao-marca {
-    align-self: center;
     font-family: var(--font-mono);
     font-size: 9px;
     text-transform: uppercase;
@@ -242,6 +315,14 @@
     border-radius: 3px;
     padding: 2px 6px;
     white-space: nowrap;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+
+  &__opcao-remover-x {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-mute);
+    transition: color 0.15s ease;
   }
 
   &__opcao-add {
@@ -255,6 +336,7 @@
   }
 
   &__vazio {
+    grid-column: 1 / -1;
     padding: 18px 12px;
     font-family: var(--font-sans);
     font-size: 13px;
