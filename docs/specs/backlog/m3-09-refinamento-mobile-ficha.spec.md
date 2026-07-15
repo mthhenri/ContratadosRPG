@@ -1,5 +1,11 @@
 # m3-09-refinamento-mobile-ficha.spec.md
 
+> ⚠️ **SUPERSEDED — não implementar isolada.** Absorvida pela `m3-21-otimizacao-espaco-ficha.spec.md`
+> (decisão do autor, 2026-07-15): o passe mobile virou parte de um redesenho **desktop + mobile**
+> único. Todos os entregáveis abaixo (≈360px sem scroll horizontal, alvos ≥ 44px, seções
+> colapsáveis, densidade por tokens) foram reenquadrados na **m3-21**. Mantida aqui só como
+> histórico/rastreabilidade.
+
 > Task 9/9 do milestone `m3-ficha-jogador.spec.md`.
 
 > **Antes de qualquer UI:** ler `docs/design/DESIGN.md`; reusar
