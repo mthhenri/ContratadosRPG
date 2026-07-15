@@ -390,7 +390,22 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 10px;
+    gap: 10px 16px;
+    flex-wrap: wrap;
+  }
+  // Nome + categoria (encolhe para dar espaço aos controles).
+  &__identidade {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  // Ações (Modificar / Vestida / X) + meta ($ e peso), juntos à direita.
+  &__controles {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px 12px;
+    margin-left: auto;
   }
   &__nome {
     font-size: 14px;
@@ -800,16 +815,14 @@
   }
 }
 
-// Ações do item (Modificar / Vestir-Guardar antes do X de remover).
+// Ações do item (Modificar / Vestir-Guardar antes do X) — no cabeçalho, ao lado de dinheiro e peso.
 .compras-item-acoes {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 10px;
 }
 .compras-item-remover {
-  margin-left: auto;
   display: inline-flex;
   align-items: center;
   gap: 6px;

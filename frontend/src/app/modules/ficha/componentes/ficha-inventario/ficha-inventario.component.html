@@ -280,7 +280,7 @@
   @for (item of itensInventario(); track item.indice) {
     <div class="ficha-inv__item">
       <div class="ficha-inv__item-cabecalho">
-        <div>
+        <div class="ficha-inv__item-identidade">
           <span class="ficha-inv__item-nome">
             {{ item.nome }}
             @if (item.quantidade > 1) {
@@ -289,9 +289,80 @@
           </span>
           <span class="ficha-inv__item-categoria">{{ item.categoriaRotulo }}</span>
         </div>
-        <div class="ficha-inv__item-meta">
-          <span class="ficha-inv__custo">{{ item.custoTotalTexto }}</span>
-          <span class="ficha-inv__peso">{{ item.pesoTexto }}</span>
+        <div class="ficha-inv__item-controles">
+          <!-- Ações: Modificar e Vestir/Guardar antes do X de remover — ao lado de dinheiro e peso. -->
+          @if (editavel()) {
+            <div class="ficha-inv__item-acoes">
+              @if (item.modificavel) {
+                <button
+                  type="button"
+                  class="ficha-inv__modificar"
+                  [class.ficha-inv__modificar--aberto]="item.painelAberto"
+                  [attr.aria-expanded]="item.painelAberto"
+                  (click)="alternarPainel(item.indice)"
+                >
+                  <app-icone nome="editar" />
+                  <span>Modificar</span>
+                  @if (item.modsUsados > 0) {
+                    <span class="ficha-inv__modificar-contagem">{{ item.modsUsados }}/{{ item.maxModificacoes }}</span>
+                  }
+                  <span class="ficha-inv__modificar-chevron">{{ item.painelAberto ? '▴' : '▾' }}</span>
+                </button>
+              }
+
+              @if (item.ehArmazenamento) {
+                <button
+                  type="button"
+                  class="ficha-inv__porte"
+                  [class.ficha-inv__porte--vestida]="!item.guardada"
+                  [title]="item.guardada ? 'Guardada: ocupa slots, não amplia o inventário' : 'Vestida: amplia o inventário, não ocupa slots'"
+                  (click)="alternarGuardada(item.indice)"
+                >
+                  <app-icone [nome]="item.guardada ? 'guardada' : 'vestida'" />
+                  <span>{{ item.guardada ? 'Guardada' : 'Vestida' }}</span>
+                </button>
+              }
+
+              <!-- Remover: a confirmação acontece no próprio X (troca in-place), sem crescer a UI. -->
+              <span class="ficha-inv__item-remover">
+                @if (indiceConfirmandoRemocao() === item.indice) {
+                  <span class="ficha-inv__remover-texto">Remover item?</span>
+                  <button
+                    type="button"
+                    class="ficha-inv__btn ficha-inv__btn--perigo ficha-inv__btn--icone"
+                    title="Confirmar remoção"
+                    aria-label="Confirmar remoção"
+                    (click)="confirmarRemocaoItem(item.indice)"
+                  >
+                    <app-icone nome="check" />
+                  </button>
+                  <button
+                    type="button"
+                    class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
+                    title="Cancelar"
+                    aria-label="Cancelar remoção"
+                    (click)="cancelarRemocao()"
+                  >
+                    ✕
+                  </button>
+                } @else {
+                  <button
+                    type="button"
+                    class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
+                    title="Remover"
+                    aria-label="Remover item"
+                    (click)="removerItem(item.indice)"
+                  >
+                    ✕
+                  </button>
+                }
+              </span>
+            </div>
+          }
+          <div class="ficha-inv__item-meta">
+            <span class="ficha-inv__custo">{{ item.custoTotalTexto }}</span>
+            <span class="ficha-inv__peso">{{ item.pesoTexto }}</span>
+          </div>
         </div>
       </div>
 
@@ -332,75 +403,7 @@
         </div>
       }
 
-      <!-- Ações do item: Modificar e Vestir/Guardar ANTES do X de remover. -->
       @if (editavel()) {
-        <div class="ficha-inv__item-acoes">
-          @if (item.modificavel) {
-            <button
-              type="button"
-              class="ficha-inv__modificar"
-              [class.ficha-inv__modificar--aberto]="item.painelAberto"
-              [attr.aria-expanded]="item.painelAberto"
-              (click)="alternarPainel(item.indice)"
-            >
-              <app-icone nome="editar" />
-              <span>Modificar</span>
-              @if (item.modsUsados > 0) {
-                <span class="ficha-inv__modificar-contagem">{{ item.modsUsados }}/{{ item.maxModificacoes }}</span>
-              }
-              <span class="ficha-inv__modificar-chevron">{{ item.painelAberto ? '▴' : '▾' }}</span>
-            </button>
-          }
-
-          @if (item.ehArmazenamento) {
-            <button
-              type="button"
-              class="ficha-inv__porte"
-              [class.ficha-inv__porte--vestida]="!item.guardada"
-              [title]="item.guardada ? 'Guardada: ocupa slots, não amplia o inventário' : 'Vestida: amplia o inventário, não ocupa slots'"
-              (click)="alternarGuardada(item.indice)"
-            >
-              <app-icone [nome]="item.guardada ? 'guardada' : 'vestida'" />
-              <span>{{ item.guardada ? 'Guardada' : 'Vestida' }}</span>
-            </button>
-          }
-
-          <!-- Remover: a confirmação acontece no próprio X (troca in-place), sem crescer a UI. -->
-          <span class="ficha-inv__item-remover">
-            @if (indiceConfirmandoRemocao() === item.indice) {
-              <span class="ficha-inv__remover-texto">Remover item?</span>
-              <button
-                type="button"
-                class="ficha-inv__btn ficha-inv__btn--perigo ficha-inv__btn--icone"
-                title="Confirmar remoção"
-                aria-label="Confirmar remoção"
-                (click)="confirmarRemocaoItem(item.indice)"
-              >
-                <app-icone nome="check" />
-              </button>
-              <button
-                type="button"
-                class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
-                title="Cancelar"
-                aria-label="Cancelar remoção"
-                (click)="cancelarRemocao()"
-              >
-                ✕
-              </button>
-            } @else {
-              <button
-                type="button"
-                class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
-                title="Remover"
-                aria-label="Remover item"
-                (click)="removerItem(item.indice)"
-              >
-                ✕
-              </button>
-            }
-          </span>
-        </div>
-
         @if (item.modificavel && item.painelAberto) {
           <div class="ficha-inv__mod-painel">
             <!-- Modificação custom -->

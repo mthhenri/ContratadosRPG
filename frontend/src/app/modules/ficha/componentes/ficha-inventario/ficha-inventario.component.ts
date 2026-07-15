@@ -1012,10 +1012,8 @@ export class FichaInventario {
       0,
     );
     const pesoBruto = (item.peso + pesoMods) * item.quantidade;
-    const pesoTexto =
-      ehArmazenamento && !item.guardada
-        ? `${this.formatarPeso(pesoBruto)} slots se guardada`
-        : `${this.formatarPeso(contaPeso ? pesoBruto : 0)} slots`;
+    // Armazenamento vestido (não guardado) não ocupa slots → "0 slots"; guardado/demais usam o peso real.
+    const pesoTexto = `${this.formatarPeso(contaPeso ? pesoBruto : 0)} slots`;
 
     const definicoes = listarModificacoesDisponiveis(item);
     const modsAtivas: ModAtivaVM[] = item.modificacoes.map((modificacao) => {
