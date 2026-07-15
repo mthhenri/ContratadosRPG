@@ -502,23 +502,50 @@
   margin-top: 4px;
 }
 .compras-mod-flag {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.04em;
-  color: var(--text-mute);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--text-dim);
   background: var(--surface-2);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-control);
-  padding: 2px 7px;
+  padding: 3px 8px;
   cursor: pointer;
 
   &:hover {
-    color: var(--text-dim);
+    color: var(--text);
   }
   &--ativo {
     color: var(--accent);
     border-color: var(--accent-border);
     background: var(--accent-dim);
+  }
+  // Caixinha de checkbox: vazia por padrão, accent com "✓" quando marcada.
+  &__caixa {
+    flex: none;
+    width: 13px;
+    height: 13px;
+    border: 1px solid var(--border-strong);
+    border-radius: 3px;
+    position: relative;
+  }
+  &--ativo &__caixa {
+    background: var(--accent);
+    border-color: var(--accent);
+
+    &::after {
+      content: '✓';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--bg);
+    }
   }
 }
 // Checkboxes do form de mod custom.

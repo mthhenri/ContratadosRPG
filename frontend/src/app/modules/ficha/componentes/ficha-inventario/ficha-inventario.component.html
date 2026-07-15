@@ -398,22 +398,26 @@
                     <button
                       type="button"
                       class="ficha-inv__mod-flag"
+                      role="checkbox"
                       [class.ficha-inv__mod-flag--ativo]="mod.ignoraTotal"
-                      [attr.aria-pressed]="mod.ignoraTotal"
-                      title="Não conta no limite total de empilhamentos da arma"
+                      [attr.aria-checked]="mod.ignoraTotal"
+                      title="Quando marcada, esta mod não conta no limite total de empilhamentos da arma"
                       (click)="alternarIgnoraTotal(item.indice, mod.nome)"
                     >
-                      ∉ total
+                      <span class="ficha-inv__mod-flag-caixa" aria-hidden="true"></span>
+                      <span>Não conta no total</span>
                     </button>
                     <button
                       type="button"
                       class="ficha-inv__mod-flag"
+                      role="checkbox"
                       [class.ficha-inv__mod-flag--ativo]="mod.ignoraProprio"
-                      [attr.aria-pressed]="mod.ignoraProprio"
-                      title="Não conta no próprio teto: pode empilhar além do limite da mod"
+                      [attr.aria-checked]="mod.ignoraProprio"
+                      title="Quando marcada, esta mod pode empilhar além do próprio teto"
                       (click)="alternarIgnoraProprio(item.indice, mod.nome)"
                     >
-                      ∉ teto
+                      <span class="ficha-inv__mod-flag-caixa" aria-hidden="true"></span>
+                      <span>Não conta no teto</span>
                     </button>
                   </div>
                 }
