@@ -50,9 +50,10 @@ describe('FichaSanidade', () => {
     alvo.fixture.componentInstance['confirmar']();
 
     expect(alvo.emitidos).toHaveLength(1);
+    // O mais recente entra no topo (Vertigem antes de Insônia).
     expect(alvo.emitidos[0].sequelas).toEqual([
-      { nome: 'Insônia', descricao: '−1m' },
       { nome: 'Vertigem' }, // aparado; sem descrição vazia
+      { nome: 'Insônia', descricao: '−1m' },
     ]);
     // Os outros dois blocos seguem intactos.
     expect(alvo.emitidos[0].traumas).toBe(traumas);
@@ -82,10 +83,26 @@ describe('FichaSanidade', () => {
     expect(alvo.emitidos[0].traumas).toEqual([{ nome: 'Pânico', tratado: true }]);
   });
 
-  it('remove uma lesão e emite o trio sem ela', () => {
+  it('remove uma lesão só após a confirmação inline', () => {
     const alvo = montar(true);
-    alvo.fixture.componentInstance['remover']('lesao', 0);
+    const componente = alvo.fixture.componentInstance;
+    // Pedir a remoção abre a confirmação, mas ainda não emite nada.
+    componente['pedirRemocao']('lesao', 0);
+    expect(componente['removendo']('lesao', 0)).toBe(true);
+    expect(alvo.emitidos).toHaveLength(0);
+    // Confirmar remove, emite o trio sem a lesão e fecha a confirmação.
+    componente['remover']('lesao', 0);
     expect(alvo.emitidos[0].lesoes).toEqual([]);
+    expect(componente['removendo']('lesao', 0)).toBe(false);
+  });
+
+  it('cancelar a remoção fecha a confirmação sem emitir', () => {
+    const alvo = montar(true);
+    const componente = alvo.fixture.componentInstance;
+    componente['pedirRemocao']('trauma', 0);
+    componente['cancelarRemocao']();
+    expect(componente['removendo']('trauma', 0)).toBe(false);
+    expect(alvo.emitidos).toHaveLength(0);
   });
 
   it('lesão: sugere pontos por severidade (documento) e ajusta com o stepper; efeito derivado', () => {
@@ -120,12 +137,20 @@ describe('FichaSanidade', () => {
       pontos: 1,
       severidade: SeveridadeLesaoEnum.LEVE,
       permanente: false,
+      descricao: '  Corte profundo  ',
     });
     componente['confirmar']();
 
+    // O mais recente entra no topo.
     expect(alvo.emitidos[0].lesoes).toEqual([
+      {
+        atributo: 'destreza',
+        pontos: 1,
+        severidade: SeveridadeLesaoEnum.LEVE,
+        permanente: false,
+        descricao: 'Corte profundo', // aparada; só incluída quando há texto
+      },
       { atributo: 'vigor', pontos: 3, severidade: SeveridadeLesaoEnum.GRAVE, permanente: false },
-      { atributo: 'destreza', pontos: 1, severidade: SeveridadeLesaoEnum.LEVE, permanente: false },
     ]);
   });
 });

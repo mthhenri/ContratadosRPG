@@ -11,6 +11,7 @@ import type {
 } from '@contratados-rpg/shared/dtos/ficha';
 
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
+import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 
 /** As três listas de Sanidade do `estado`, emitidas juntas a cada mutação (a página persiste o trio). */
 export interface EstadoSanidade {
@@ -66,7 +67,7 @@ const SEVERIDADES: readonly OpcaoSeveridade[] = [
  */
 @Component({
   selector: 'app-ficha-sanidade',
-  imports: [NgTemplateOutlet, ReactiveFormsModule, HoldRepeat],
+  imports: [NgTemplateOutlet, ReactiveFormsModule, HoldRepeat, OverflowFade],
   templateUrl: './ficha-sanidade.component.html',
   styleUrl: './ficha-sanidade.component.scss',
 })
@@ -88,6 +89,11 @@ export class FichaSanidade {
   /** Índice em edição: `-1` = adicionando um novo item. */
   protected readonly indiceEmEdicao = signal<number>(-1);
 
+  /** Lista com a confirmação de remoção aberta (inline), ou `null`. */
+  protected readonly listaRemovendo = signal<ListaSanidade | null>(null);
+  /** Índice com a confirmação de remoção aberta. */
+  protected readonly indiceRemovendo = signal<number>(-1);
+
   protected readonly sequelaForm = new FormGroup({
     nome: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     descricao: new FormControl('', { nonNullable: true }),
@@ -102,6 +108,7 @@ export class FichaSanidade {
     pontos: new FormControl(1, { nonNullable: true }),
     severidade: new FormControl(SeveridadeLesaoEnum.LEVE, { nonNullable: true }),
     permanente: new FormControl(false, { nonNullable: true }),
+    descricao: new FormControl('', { nonNullable: true }),
   });
 
   protected readonly totalMarcas = computed(
@@ -124,6 +131,7 @@ export class FichaSanidade {
   }
 
   private abrirEditor(lista: ListaSanidade, indice: number): void {
+    this.cancelarRemocao();
     this.listaEmEdicao.set(lista);
     this.indiceEmEdicao.set(indice);
     if (lista === 'sequela') {
@@ -143,6 +151,7 @@ export class FichaSanidade {
         pontos: item?.pontos ?? 1,
         severidade: item?.severidade ?? SeveridadeLesaoEnum.LEVE,
         permanente: item?.permanente ?? false,
+        descricao: item?.descricao ?? '',
       });
     }
   }
@@ -200,13 +209,32 @@ export class FichaSanidade {
         pontos: bruto.pontos,
         severidade: bruto.severidade,
         permanente: bruto.permanente,
+        ...this.opcionalDescricao(bruto.descricao),
       };
       this.emitir({ lesoes: this.substituir(this.lesoes(), indice, item) });
     }
     this.cancelar();
   }
 
-  /** Remove um item de uma lista e emite o trio. */
+  /** `true` quando a confirmação de remoção aberta é desta lista e deste índice. */
+  protected removendo(lista: ListaSanidade, indice: number): boolean {
+    return this.listaRemovendo() === lista && this.indiceRemovendo() === indice;
+  }
+
+  /** Pede confirmação antes de remover — abre a área de confirmação inline (fecha editor aberto). */
+  protected pedirRemocao(lista: ListaSanidade, indice: number): void {
+    this.cancelar();
+    this.listaRemovendo.set(lista);
+    this.indiceRemovendo.set(indice);
+  }
+
+  /** Fecha a confirmação de remoção sem remover. */
+  protected cancelarRemocao(): void {
+    this.listaRemovendo.set(null);
+    this.indiceRemovendo.set(-1);
+  }
+
+  /** Confirma a remoção: remove o item da lista e emite o trio. */
   protected remover(lista: ListaSanidade, indice: number): void {
     if (lista === 'sequela') {
       this.emitir({ sequelas: this.sequelas().filter((_, i) => i !== indice) });
@@ -215,6 +243,7 @@ export class FichaSanidade {
     } else {
       this.emitir({ lesoes: this.lesoes().filter((_, i) => i !== indice) });
     }
+    this.cancelarRemocao();
     // Se o item removido estava em edição, fecha o editor.
     if (this.listaEmEdicao() === lista) {
       this.cancelar();
@@ -246,10 +275,13 @@ export class FichaSanidade {
     return aparado ? { descricao: aparado } : {};
   }
 
-  /** Substitui o item no índice, ou anexa quando `indice < 0` (adição). */
+  /**
+   * Substitui o item no índice, ou **insere no topo** quando `indice < 0` (adição): o mais recente
+   * fica sempre acima — sequelas/traumas/lesões antigas descem. Editar (índice ≥ 0) mantém a posição.
+   */
   private substituir<T>(lista: readonly T[], indice: number, item: T): T[] {
     if (indice < 0) {
-      return [...lista, item];
+      return [item, ...lista];
     }
     return lista.map((atual, i) => (i === indice ? item : atual));
   }

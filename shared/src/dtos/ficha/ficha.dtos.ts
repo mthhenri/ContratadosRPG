@@ -102,6 +102,8 @@ export interface FichaLesaoDto {
   readonly severidade: SeveridadeLesaoEnum;
   /** `true` quando a lesão se tornou irreversível (afeta todo cálculo que usa o atributo). */
   readonly permanente: boolean;
+  /** Descrição livre da lesão (o quê/como) — opcional, só exibição. */
+  readonly descricao?: string;
 }
 
 /**

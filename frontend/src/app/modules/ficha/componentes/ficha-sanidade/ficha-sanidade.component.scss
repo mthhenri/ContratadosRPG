@@ -3,14 +3,36 @@
 // (borda colorida à esquerda por tipo) espelha o read-only de m3-11.
 
 .sanidade {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  // Três colunas (Sequelas / Traumas / Lesões) lado a lado; empilha em 1 coluna no estreito.
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
 
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+
+  // Cada categoria é um painel com um filete de cor no topo (identidade visual da marca).
   &__grupo {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    padding: 12px 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--border-strong);
+    border-radius: var(--radius-card);
+
+    &--sequela {
+      border-top-color: var(--text-mute);
+    }
+    &--trauma {
+      border-top-color: var(--warning);
+    }
+    &--lesao {
+      border-top-color: var(--accent);
+    }
   }
 
   &__cabecalho {
@@ -66,6 +88,7 @@
     }
   }
 
+  // Lista rolável por dentro (altura limitada) com fade nas bordas — não estica a coluna.
   &__lista {
     list-style: none;
     margin: 0;
@@ -73,6 +96,34 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    max-height: 360px;
+    overflow-y: auto;
+
+    --fade-topo: 0px;
+    --fade-base: 0px;
+    &.overflow-fade--topo,
+    &.overflow-fade--base {
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+    }
+    &.overflow-fade--topo {
+      --fade-topo: 20px;
+    }
+    &.overflow-fade--base {
+      --fade-base: 20px;
+    }
   }
 
   &__item {
@@ -103,6 +154,7 @@
   &__linha {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
   }
 
@@ -117,6 +169,7 @@
   }
 
   &__nome {
+    flex: 1 1 auto;
     font-family: var(--font-sans);
     font-size: 14px;
     font-weight: 600;
@@ -193,6 +246,29 @@
     font-size: 13px;
     font-style: italic;
     color: var(--text-mute);
+  }
+
+  // === Confirmação de remoção (inline) ===
+  &__confirmar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+
+  &__confirmar-texto {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  &__confirmar-acoes {
+    display: flex;
+    gap: 8px;
   }
 
   // === Formulário inline (adicionar/editar) ===
