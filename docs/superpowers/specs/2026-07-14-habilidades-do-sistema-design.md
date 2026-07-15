@@ -41,16 +41,23 @@ Artificial → Especialista, Híbrido → Suporte.
 
 ## Regras de visibilidade (o que o seletor mostra)
 
-O catálogo é **totalmente navegável** — não se limita à classe/arquétipo da ficha, porque nos
-**níveis 5/10/15/20** o agente ganha habilidade de **outra classe** ou de **outro arquétipo da sua
-classe**. Duas exceções:
+Nos **níveis 5/10/15/20** o agente ganha habilidade de **outra classe** ou de **outro arquétipo da
+sua classe**. Isso define o alcance de cada aba:
+
+- **Classe** — navegável entre **todas** as classes-base (o pick de "outra classe"). Sua classe
+  em destaque; as demais acessíveis pelo sub-filtro.
+- **Arquétipo** — **só os arquétipos da classe da ficha** (o pick de "outro arquétipo da sua
+  classe"). **Não** lista arquétipos de outras classes. Se a ficha é um **Experimento**, a aba
+  inclui também a **própria subclasse** (ela ocupa o nível de arquétipo).
+
+Exceções de visibilidade:
 
 1. **Gerais Melhoradas**: só as do **próprio arquétipo** da ficha aparecem. As de outros
    arquétipos **nunca** são exibidas. (Experimentos não têm melhoradas.)
 2. **Subclasse (Experimento)**: as habilidades de subclasse **só** aparecem para a **própria**
-   subclasse da ficha. Outras subclasses **nunca** aparecem — nem entre si, nem para uma ficha de
-   classe-base. Uma ficha Experimento **pode** ver os arquétipos regulares (picks de nível), mas
-   **não** as outras subclasses.
+   subclasse. Outras subclasses **nunca** aparecem (nem entre si, nem para classe-base). Uma ficha
+   Experimento vê os arquétipos regulares **da sua classe-base** + a sua subclasse, e nunca outras
+   subclasses.
 
 ## Arquitetura
 
@@ -96,11 +103,13 @@ function catalogoHabilidades(classe: ClasseEnum, arquetipo: ArquetipoEnum | null
 Comportamento:
 - Grupo **Gerais**: um subgrupo único (as ~59).
 - Grupo **Classe**: um subgrupo por classe-base; o da ficha com `ehDaFicha=true`.
-- Grupo **Arquétipo**:
-  - Se a ficha é **classe-base**: um subgrupo por arquétipo (todos os 9). No subgrupo do
-    **arquétipo da ficha**, anexa as **Gerais Melhoradas daquele arquétipo**; `ehDaFicha=true` nele.
+- Grupo **Arquétipo** (limitado à classe da ficha):
+  - Se a ficha é **classe-base**: um subgrupo por arquétipo **daquela classe** (ex.: Combatente →
+    Lutador/Mercenário/Vanguarda). No subgrupo do **arquétipo da ficha**, anexa as **Gerais
+    Melhoradas daquele arquétipo**; `ehDaFicha=true` nele.
   - Se a ficha é **Experimento**: um subgrupo para a **própria subclasse** (`ehDaFicha=true`) +
-    os subgrupos dos arquétipos regulares. **Sem** as outras subclasses. **Sem** melhoradas.
+    os subgrupos dos arquétipos **da classe-base** (ex.: Bestial → Combatente:
+    Lutador/Mercenário/Vanguarda). **Sem** as outras subclasses. **Sem** melhoradas.
   - Se a ficha é **Civil / sem arquétipo**: grupo Arquétipo pode vir vazio (omitido na UI).
 - Grupos/subgrupos vazios são omitidos.
 
@@ -160,12 +169,13 @@ Utilizar → habilidadeUtilizada(custo) → energiaAtual -= custo → ajusteVita
 ## Testes
 
 **`shared` (`habilidades-catalogo.spec`):**
-- `catalogoHabilidades` para Combatente/Lutador: grupo Arquétipo traz o subgrupo Lutador com
-  `ehDaFicha=true` **incluindo** as Gerais Melhoradas do Lutador, e os demais arquétipos **sem**
-  suas melhoradas; Mercenário não traz melhoradas de ninguém.
-- Para Experimento Bestial: grupo Classe traz Combatente como `ehDaFicha`; grupo Arquétipo traz o
-  subgrupo Bestial (`ehDaFicha`) + arquétipos regulares, e **nenhuma** outra subclasse
-  (Artificial/Híbrido ausentes).
+- `catalogoHabilidades` para Combatente/Lutador: grupo Arquétipo traz **apenas** os arquétipos de
+  Combatente (Lutador/Mercenário/Vanguarda) — nenhum de outra classe; o subgrupo Lutador com
+  `ehDaFicha=true` **incluindo** as Gerais Melhoradas do Lutador, e Mercenário/Vanguarda **sem**
+  melhoradas.
+- Para Experimento Bestial: grupo Classe traz Combatente como `ehDaFicha` (+ demais classes); grupo
+  Arquétipo traz o subgrupo Bestial (`ehDaFicha`) + os arquétipos da classe-base Combatente, e
+  **nenhuma** outra subclasse (Artificial/Híbrido ausentes) nem arquétipo de outra classe.
 - Contagens conferem com o documento (nº de Gerais, de habilidades por classe/arquétipo).
 - Toda entrada do catálogo tem `nome` não vazio e `custoEnergia` `number>=0` ou `null`.
 
