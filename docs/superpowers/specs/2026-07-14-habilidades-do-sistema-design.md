@@ -14,8 +14,10 @@ quer **utilizar** uma habilidade gastando a Energia automaticamente.
 
 - **Fonte única de regras**: o catálogo vem do `sistema-v4.1.0.md`; se código e documento
   divergirem, o documento vence (proibições #26/#27).
-- **Sem mudança de schema**: a ficha guarda a habilidade **desnormalizada** (`FichaHabilidadeDto`
-  — contrato m3-01). O catálogo apenas **preenche** esse formato; nada de FK/tabela nova.
+- **Sem mudança de schema relacional**: a ficha guarda a habilidade **desnormalizada**
+  (`FichaHabilidadeDto` — contrato m3-01), agora acrescida de um campo **opcional** `origem`
+  (classe/arquétipo/subclasse de origem, para o rótulo "Classe - NOME"). Continua tudo no JSONB
+  `dados` — nenhuma coluna/tabela/FK nova. O catálogo apenas **preenche** esse formato.
 - **Edição no próprio lugar** e persistência otimista em lote (m3-10) — reusar, não recriar.
 - **Só tokens do tema** nos estilos (proibição #29).
 - **Regras puras em `shared/regras`** (frontend e backend consomem a mesma fonte).
@@ -35,6 +37,39 @@ O catálogo cobre **todas** as habilidades **ativas** enumeradas no documento:
 **Fora do catálogo (só criadas):** `PERSONALIDADE` e `ESPECIALIDADE` — não existe lista delas
 no sistema; aparecem apenas no dropdown da adição **Personalizada**. `ESPECIALIDADE` **não existe
 ainda** no enum e será adicionada.
+
+### Campo `origem` no `FichaHabilidadeDto`
+
+```ts
+interface FichaHabilidadeDto {
+  readonly nome: string;
+  readonly categoria: HabilidadeCategoriaEnum;
+  readonly custoEnergia: number | null;
+  readonly descricao: string;
+  readonly origem?: ClasseEnum | ArquetipoEnum;  // NOVO — só para CLASSE/ARQUETIPO/SUBCLASSE do catálogo
+}
+```
+
+`origem` é preenchida ao escolher do catálogo (a classe/arquétipo/subclasse-fonte) e fica
+**indefinida** nas personalizadas e nas Gerais. Retrocompatível: habilidades antigas sem `origem`
+exibem só o rótulo da categoria.
+
+### Rótulo do chip (na lista da aba Habilidades)
+
+| Categoria | Rótulo |
+|---|---|
+| `GERAL` | `Geral` |
+| `GERAL_MELHORADA` | `Geral melhorada` |
+| `CLASSE` | `Classe` se `origem` = classe da ficha (ou ausente); senão `Classe - <nome>` |
+| `ARQUETIPO` | `Arquétipo` se `origem` = arquétipo da ficha (ou ausente); senão `Arquétipo - <nome>` |
+| `SUBCLASSE` | `Subclasse` (opcional `Subclasse - <nome>`) |
+| `PERSONALIDADE` | `Personalidade` |
+| `ESPECIALIDADE` | `Especialidade` |
+| `CIVIL` | `Civil` |
+
+Cores do chip (só tokens do tema): Classe = `--warning`, Arquétipo = `--positive`,
+Subclasse = `--energy`, **Personalidade = `--accent`** (segue a cor de tema do usuário),
+demais = neutro (`--text-dim`).
 
 Mapeamento Experimento → classe-base (as habilidades de classe acessíveis): Bestial → Combatente,
 Artificial → Especialista, Híbrido → Suporte.
@@ -138,7 +173,8 @@ Adicionar `ESPECIALIDADE = 'ESPECIALIDADE'` a `HabilidadeCategoriaEnum` e o rót
 - **Busca** por nome, no escopo ativo (aba + sub-filtro).
 - Escolher uma habilidade **fecha o seletor e pré-preenche o editor inline** existente
   (nome/categoria/custo/descrição), **editável antes de salvar** — reusa `habilidadeForm` e a
-  persistência. Item já presente na ficha aparece esmaecido com selo "Na ficha".
+  persistência. A **`origem`** (chave do subgrupo — classe/arquétipo/subclasse) viaja junto e é
+  gravada na habilidade. Item já presente na ficha aparece esmaecido com selo "Na ficha".
 
 **Botão ⚡ Utilizar** em cada habilidade da lista (dono/mestre — mesma audiência da edição):
 - Custo **fixo** (`custoEnergia` número): emite `habilidadeUtilizada(custo)`; a página faz
