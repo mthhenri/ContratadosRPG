@@ -195,3 +195,28 @@ export function catalogoHabilidades(
     (grupo) => grupo.subgrupos.length > 0,
   );
 }
+
+/**
+ * A **Habilidade Inicial** do arquétipo/subclasse da ficha (`sistema-v4.1.0.md` — "Habilidade
+ * Inicial de Arquétipo"; cada Experimento também tem a sua). O agente já nasce com ela — não é
+ * escolhida, vem de graça com o arquétipo/subclasse. Nos dados do catálogo a inicial é sempre o
+ * **primeiro item** da lista do arquétipo/subclasse.
+ *
+ * Uma ficha Experimento identifica a subclasse pela **própria classe** (a subclasse ocupa o lugar
+ * do arquétipo, então `arquetipo` é `null`); uma ficha de classe-base, pelo `arquetipo`. Civil ou
+ * base sem arquétipo não têm inicial → `[]`.
+ */
+export function habilidadesIniciais(
+  classe: ClasseEnum,
+  arquetipo: ArquetipoEnum | null,
+): HabilidadeCatalogoItemDto[] {
+  const subclasse = HABILIDADES_SUBCLASSE[classe];
+  if (subclasse && subclasse.length > 0) {
+    return [{ ...subclasse[0], categoria: HabilidadeCategoriaEnum.SUBCLASSE, origem: classe }];
+  }
+  const doArquetipo = arquetipo ? HABILIDADES_ARQUETIPO[arquetipo] : undefined;
+  if (doArquetipo && doArquetipo.length > 0 && arquetipo) {
+    return [{ ...doArquetipo[0], categoria: HabilidadeCategoriaEnum.ARQUETIPO, origem: arquetipo }];
+  }
+  return [];
+}

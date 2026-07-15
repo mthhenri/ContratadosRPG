@@ -3,10 +3,15 @@ import { describe, expect, it } from 'vitest';
 import { ArquetipoEnum, ClasseEnum, HabilidadeCategoriaEnum } from '../../enums';
 import {
   catalogoHabilidades,
+  habilidadesIniciais,
   type GrupoHabilidades,
   type SubgrupoHabilidades,
 } from './habilidades-catalogo';
-import { HABILIDADES_GERAIS } from './habilidades-catalogo.dados';
+import {
+  HABILIDADES_ARQUETIPO,
+  HABILIDADES_GERAIS,
+  HABILIDADES_SUBCLASSE,
+} from './habilidades-catalogo.dados';
 
 /**
  * Prova as regras de visibilidade do seletor de habilidades do sistema (`sistema-v4.1.0.md` —
@@ -111,5 +116,32 @@ describe('catálogo de habilidades → grupos de filtro', () => {
       s.habilidades.some((h) => h.categoria === HabilidadeCategoriaEnum.GERAL_MELHORADA),
     );
     expect(temMelhorada).toBe(false);
+  });
+});
+
+/**
+ * Prova a Habilidade Inicial que o agente já ganha do arquétipo/subclasse (`sistema-v4.1.0.md` —
+ * "Habilidade Inicial de Arquétipo"): é sempre o primeiro item da lista, com categoria/origem.
+ */
+describe('habilidadesIniciais', () => {
+  it('arquétipo: a primeira habilidade do arquétipo, categoria ARQUETIPO e origem = o arquétipo', () => {
+    const iniciais = habilidadesIniciais(ClasseEnum.COMBATENTE, ArquetipoEnum.LUTADOR);
+    expect(iniciais).toHaveLength(1);
+    expect(iniciais[0].nome).toBe(HABILIDADES_ARQUETIPO[ArquetipoEnum.LUTADOR][0].nome);
+    expect(iniciais[0].categoria).toBe(HabilidadeCategoriaEnum.ARQUETIPO);
+    expect(iniciais[0].origem).toBe(ArquetipoEnum.LUTADOR);
+  });
+
+  it('subclasse Experimento: a primeira de subclasse (arquetipo null), categoria SUBCLASSE e origem = a classe', () => {
+    const iniciais = habilidadesIniciais(ClasseEnum.EXPERIMENTO_BESTIAL, null);
+    expect(iniciais).toHaveLength(1);
+    expect(iniciais[0].nome).toBe(HABILIDADES_SUBCLASSE[ClasseEnum.EXPERIMENTO_BESTIAL]![0].nome);
+    expect(iniciais[0].categoria).toBe(HabilidadeCategoriaEnum.SUBCLASSE);
+    expect(iniciais[0].origem).toBe(ClasseEnum.EXPERIMENTO_BESTIAL);
+  });
+
+  it('classe-base sem arquétipo, e Civil: nenhuma inicial', () => {
+    expect(habilidadesIniciais(ClasseEnum.COMBATENTE, null)).toEqual([]);
+    expect(habilidadesIniciais(ClasseEnum.CIVIL, null)).toEqual([]);
   });
 });
