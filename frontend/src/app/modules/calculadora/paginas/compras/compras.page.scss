@@ -466,6 +466,33 @@
     display: flex;
     gap: 4px;
   }
+  // Mod além do limite da patente: destaque âmbar discreto.
+  &--excede {
+    border-left: 2px solid color-mix(in srgb, var(--warning) 55%, transparent);
+    background: color-mix(in srgb, var(--warning) 7%, transparent);
+    border-radius: var(--radius-control);
+  }
+}
+// Marca de "excedente" (além do limite da patente — permitido, mas sinalizado).
+.compras-excede-tag {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--warning);
+  border: 1px solid color-mix(in srgb, var(--warning) 45%, transparent);
+  border-radius: 3px;
+  padding: 0 4px;
+  vertical-align: middle;
+}
+.compras-modificar__contagem--excede {
+  color: var(--warning);
+  font-weight: 700;
+}
+.compras-mod-entrada__motivo--excede {
+  color: var(--warning);
 }
 .compras-mini-btn {
   font-size: 13px;

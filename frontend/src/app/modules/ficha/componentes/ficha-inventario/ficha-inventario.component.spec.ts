@@ -209,7 +209,7 @@ describe('FichaInventario', () => {
   it('modificação custom com efeito mecânico (dano fixo) grava o efeito no item', () => {
     const alvo = montar({ itens: [itemLeve], amplificadores: [] });
     alvo.componentInstance['alternarCriarMod'](0);
-    alvo.componentInstance['modCustomForm'].patchValue({ nome: 'Afiada', empilhamentos: 1, descricao: '' });
+    alvo.componentInstance['modCustomForm'].patchValue({ nome: 'Afiada', descricao: '' });
     alvo.componentInstance['adicionarEfeitoMod']();
     alvo.componentInstance['efeitosMod'].at(0).patchValue({ tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: 3 });
     alvo.componentInstance['confirmarCriarMod'](0);
@@ -221,7 +221,7 @@ describe('FichaInventario', () => {
   it('modificação custom pode combinar efeitos (dados de dano + condição)', () => {
     const alvo = montar({ itens: [itemLeve], amplificadores: [] });
     alvo.componentInstance['alternarCriarMod'](0);
-    alvo.componentInstance['modCustomForm'].patchValue({ nome: 'Ígnea', empilhamentos: 1, descricao: '' });
+    alvo.componentInstance['modCustomForm'].patchValue({ nome: 'Ígnea', descricao: '' });
     alvo.componentInstance['adicionarEfeitoMod']();
     alvo.componentInstance['efeitosMod'].at(0).patchValue({
       tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS,
@@ -242,18 +242,39 @@ describe('FichaInventario', () => {
     ]);
   });
 
-  it('aplica uma modificação custom (nome + empilhamentos, sem efeito) a um item', () => {
+  it('aplica uma mod custom começando em 1× com o limite (empilhamentoMaximo) informado', () => {
     const alvo = montar({ itens: [itemLeve], amplificadores: [] });
     alvo.componentInstance['alternarCriarMod'](0);
     alvo.componentInstance['modCustomForm'].patchValue({
       nome: '  Amaldiçoada  ',
-      empilhamentos: 2,
+      empilhamentoMaximo: 3,
       descricao: '  −1 na resistência do alvo  ',
     });
     alvo.componentInstance['confirmarCriarMod'](0);
+    // O campo é o TETO: a mod entra em 1× e pode subir até 3×.
     expect(alvo.emitidos[0].itens[0].modificacoes).toEqual([
-      { nome: 'Amaldiçoada', empilhamentos: 2, descricao: '−1 na resistência do alvo' },
+      { nome: 'Amaldiçoada', empilhamentos: 1, empilhamentoMaximo: 3, descricao: '−1 na resistência do alvo' },
     ]);
+  });
+
+  it('aumentar os empilhamentos de uma mod custom preserva seus efeitos', () => {
+    const alvo = montar({ itens: [itemLeve], amplificadores: [] });
+    alvo.componentInstance['alternarCriarMod'](0);
+    alvo.componentInstance['modCustomForm'].patchValue({ nome: 'Ígnea', empilhamentoMaximo: 3 });
+    alvo.componentInstance['adicionarEfeitoMod']();
+    alvo.componentInstance['efeitosMod'].at(0).patchValue({
+      tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO,
+      valor: 2,
+    });
+    alvo.componentInstance['confirmarCriarMod'](0);
+    // Reflete de volta (componente controlado) e sobe de 1× para 2×.
+    alvo.fixture.componentRef.setInput('inventario', alvo.emitidos.at(-1));
+    alvo.fixture.detectChanges();
+    alvo.componentInstance['adicionarModificacao'](0, 'Ígnea');
+    const mod = alvo.emitidos.at(-1)!.itens[0].modificacoes[0];
+    expect(mod.empilhamentos).toBe(2);
+    expect(mod.efeitos).toEqual([{ tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: 2 }]);
+    expect(mod.empilhamentoMaximo).toBe(3);
   });
 
   it('alterna o porte (guardada/vestida) de um armazenamento e emite', () => {

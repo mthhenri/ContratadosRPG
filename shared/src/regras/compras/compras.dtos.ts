@@ -59,6 +59,11 @@ export interface ModificacaoAplicadaDto {
    * Ver `ModificacaoEfeitoDto`.
    */
   readonly efeitos?: readonly ModificacaoEfeitoDto[];
+  /**
+   * Teto de empilhamentos da modificação **custom** (as do catálogo têm o seu em `MODIFICACOES`).
+   * Definido por quem cria a mod: quantas vezes ela pode empilhar (a mod entra em 1× e sobe até aqui).
+   */
+  readonly empilhamentoMaximo?: number;
 }
 
 /** Um amplificador acoplado ao agente, com sua quantidade de empilhamentos. */

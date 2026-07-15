@@ -338,7 +338,7 @@
             <span class="compras-carrinho-item__categoria">{{ item.categoriaRotulo }}</span>
           </div>
           <div class="compras-carrinho-item__controles">
-            <!-- Ações: Modificar e Vestir/Guardar antes do X — ao lado de dinheiro e peso. -->
+            <!-- Ações (Modificar / Vestir-Guardar) → meta ($ e peso) → X de remover, por último. -->
             <div class="compras-item-acoes">
               @if (item.modificavel) {
                 <button
@@ -351,7 +351,11 @@
                   <app-icone nome="editar" />
                   <span>Modificar</span>
                   @if (item.modsUsados > 0) {
-                    <span class="compras-modificar__contagem">{{ item.modsUsados }}/{{ item.maxModificacoes }}</span>
+                    <span
+                      class="compras-modificar__contagem"
+                      [class.compras-modificar__contagem--excede]="item.excedeModsLimite"
+                      [title]="item.excedeModsLimite ? 'Além do limite da patente (excedente)' : ''"
+                    >{{ item.modsUsados }}/{{ item.maxModificacoes }}</span>
                   }
                   <span class="compras-modificar__chevron">{{ item.painelAberto ? '▴' : '▾' }}</span>
                 </button>
@@ -369,46 +373,45 @@
                   <span>{{ item.guardada ? 'Guardada' : 'Vestida' }}</span>
                 </button>
               }
-
-              <!-- Remover: a confirmação acontece no próprio X (troca in-place), sem crescer a UI. -->
-              <span class="compras-item-remover">
-                @if (uidConfirmandoRemocao() === item.uid) {
-                  <span class="compras-remover-texto">Remover item?</span>
-                  <button
-                    type="button"
-                    class="compras-btn compras-btn--adicionar compras-btn--icone"
-                    title="Confirmar remoção"
-                    aria-label="Confirmar remoção"
-                    (click)="confirmarRemocaoItem(item.uid)"
-                  >
-                    <app-icone nome="check" />
-                  </button>
-                  <button
-                    type="button"
-                    class="compras-btn compras-btn--remover compras-btn--icone"
-                    title="Cancelar"
-                    aria-label="Cancelar remoção"
-                    (click)="cancelarRemocao()"
-                  >
-                    ✕
-                  </button>
-                } @else {
-                  <button
-                    type="button"
-                    class="compras-btn compras-btn--remover compras-btn--icone"
-                    title="Remover"
-                    aria-label="Remover item"
-                    (click)="removerItem(item.uid)"
-                  >
-                    ✕
-                  </button>
-                }
-              </span>
             </div>
             <div class="compras-carrinho-item__meta">
               <span class="compras-item__custo">{{ item.custoTotalTexto }}</span>
               <span class="compras-item__peso">{{ item.pesoTexto }}</span>
             </div>
+            <!-- Remover por último: a confirmação acontece no próprio X (troca in-place). -->
+            <span class="compras-item-remover">
+              @if (uidConfirmandoRemocao() === item.uid) {
+                <span class="compras-remover-texto">Remover item?</span>
+                <button
+                  type="button"
+                  class="compras-btn compras-btn--adicionar compras-btn--icone"
+                  title="Confirmar remoção"
+                  aria-label="Confirmar remoção"
+                  (click)="confirmarRemocaoItem(item.uid)"
+                >
+                  <app-icone nome="check" />
+                </button>
+                <button
+                  type="button"
+                  class="compras-btn compras-btn--remover compras-btn--icone"
+                  title="Cancelar"
+                  aria-label="Cancelar remoção"
+                  (click)="cancelarRemocao()"
+                >
+                  ✕
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  class="compras-btn compras-btn--remover compras-btn--icone"
+                  title="Remover"
+                  aria-label="Remover item"
+                  (click)="removerItem(item.uid)"
+                >
+                  ✕
+                </button>
+              }
+            </span>
           </div>
         </div>
 
@@ -422,9 +425,14 @@
         @if (item.modsAtivas.length > 0) {
           <div class="compras-mods-ativas">
             @for (mod of item.modsAtivas; track mod.nome) {
-              <div class="compras-mod-tag">
+              <div class="compras-mod-tag" [class.compras-mod-tag--excede]="mod.excedente">
                 <div class="compras-mod-tag__info">
-                  <span>{{ mod.nome }} ×{{ mod.empilhamentos }}</span>
+                  <span>
+                    {{ mod.nome }} ×{{ mod.empilhamentos }}
+                    @if (mod.excedente) {
+                      <span class="compras-excede-tag" title="Além do limite da patente">Excedente</span>
+                    }
+                  </span>
                   <span class="compras-mod-tag__custo">{{ mod.custoTexto }}</span>
                   @if (mod.descricao) {
                     <span class="compras-mod-tag__desc">{{ mod.descricao }}</span>
@@ -459,8 +467,8 @@
                       <input class="calc-texto" type="text" formControlName="nome" placeholder="Ex.: Encantada" />
                     </div>
                     <div class="calc-campo">
-                      <span class="calc-campo__rotulo">Empilhamentos</span>
-                      <app-step-input formControlName="empilhamentos" [min]="1" ariaRotulo="Empilhamentos da modificação custom" />
+                      <span class="calc-campo__rotulo">Limite de empilhamentos</span>
+                      <app-step-input formControlName="empilhamentoMaximo" [min]="1" ariaRotulo="Limite de empilhamentos da modificação custom" />
                     </div>
                   </div>
                   <div class="compras-efeito">
@@ -589,7 +597,10 @@
                       </div>
                       <div class="compras-mod-entrada__desc">{{ entrada.descricao }}</div>
                       @if (entrada.motivo) {
-                        <div class="compras-mod-entrada__motivo">{{ entrada.motivo }}</div>
+                        <div
+                          class="compras-mod-entrada__motivo"
+                          [class.compras-mod-entrada__motivo--excede]="entrada.excedente"
+                        >{{ entrada.motivo }}</div>
                       }
                       @if (entrada.bloqueia.length > 0) {
                         <div class="compras-mod-entrada__bloqueia">Bloqueia: {{ entrada.bloqueia.join(', ') }}</div>

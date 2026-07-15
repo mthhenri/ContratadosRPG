@@ -382,11 +382,13 @@ describe('ComprasPage', () => {
     fixture.detectChanges();
     const uid = pagina['itensCarrinho']()[0].uid;
     pagina['alternarCriarMod'](uid);
-    pagina['modCustomForm'].patchValue({ nome: 'Amaldiçoada', empilhamentos: 2, descricao: '' });
+    pagina['modCustomForm'].patchValue({ nome: 'Amaldiçoada', empilhamentoMaximo: 2, descricao: '' });
     pagina['confirmarCriarMod'](uid);
     fixture.detectChanges();
+    // Entra em 1× e pode subir até o teto (2×).
     expect(pagina['itensCarrinho']()[0].modsAtivas[0].nome).toBe('Amaldiçoada');
-    expect(pagina['itensCarrinho']()[0].modsAtivas[0].empilhamentos).toBe(2);
+    expect(pagina['itensCarrinho']()[0].modsAtivas[0].empilhamentos).toBe(1);
+    expect(pagina['itensCarrinho']()[0].modsAtivas[0].podeAumentar).toBe(true);
   });
 
   it('modificação custom com efeito mecânico (dados de dano) grava o efeito e o descreve no chip', async () => {
@@ -396,7 +398,7 @@ describe('ComprasPage', () => {
     fixture.detectChanges();
     const uid = pagina['itensCarrinho']()[0].uid;
     pagina['alternarCriarMod'](uid);
-    pagina['modCustomForm'].patchValue({ nome: 'Ígnea', empilhamentos: 1, descricao: '' });
+    pagina['modCustomForm'].patchValue({ nome: 'Ígnea', descricao: '' });
     pagina['adicionarEfeitoMod']();
     pagina['efeitosMod'].at(0).patchValue({
       tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS,

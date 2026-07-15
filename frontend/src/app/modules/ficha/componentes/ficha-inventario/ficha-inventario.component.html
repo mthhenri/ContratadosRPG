@@ -290,7 +290,7 @@
           <span class="ficha-inv__item-categoria">{{ item.categoriaRotulo }}</span>
         </div>
         <div class="ficha-inv__item-controles">
-          <!-- Ações: Modificar e Vestir/Guardar antes do X de remover — ao lado de dinheiro e peso. -->
+          <!-- Ações (Modificar / Vestir-Guardar) → meta ($ e peso) → X de remover, por último. -->
           @if (editavel()) {
             <div class="ficha-inv__item-acoes">
               @if (item.modificavel) {
@@ -304,7 +304,11 @@
                   <app-icone nome="editar" />
                   <span>Modificar</span>
                   @if (item.modsUsados > 0) {
-                    <span class="ficha-inv__modificar-contagem">{{ item.modsUsados }}/{{ item.maxModificacoes }}</span>
+                    <span
+                      class="ficha-inv__modificar-contagem"
+                      [class.ficha-inv__modificar-contagem--excede]="item.excedeModsLimite"
+                      [title]="item.excedeModsLimite ? 'Além do limite da patente (excedente)' : ''"
+                    >{{ item.modsUsados }}/{{ item.maxModificacoes }}</span>
                   }
                   <span class="ficha-inv__modificar-chevron">{{ item.painelAberto ? '▴' : '▾' }}</span>
                 </button>
@@ -322,47 +326,48 @@
                   <span>{{ item.guardada ? 'Guardada' : 'Vestida' }}</span>
                 </button>
               }
-
-              <!-- Remover: a confirmação acontece no próprio X (troca in-place), sem crescer a UI. -->
-              <span class="ficha-inv__item-remover">
-                @if (indiceConfirmandoRemocao() === item.indice) {
-                  <span class="ficha-inv__remover-texto">Remover item?</span>
-                  <button
-                    type="button"
-                    class="ficha-inv__btn ficha-inv__btn--perigo ficha-inv__btn--icone"
-                    title="Confirmar remoção"
-                    aria-label="Confirmar remoção"
-                    (click)="confirmarRemocaoItem(item.indice)"
-                  >
-                    <app-icone nome="check" />
-                  </button>
-                  <button
-                    type="button"
-                    class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
-                    title="Cancelar"
-                    aria-label="Cancelar remoção"
-                    (click)="cancelarRemocao()"
-                  >
-                    ✕
-                  </button>
-                } @else {
-                  <button
-                    type="button"
-                    class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
-                    title="Remover"
-                    aria-label="Remover item"
-                    (click)="removerItem(item.indice)"
-                  >
-                    ✕
-                  </button>
-                }
-              </span>
             </div>
           }
           <div class="ficha-inv__item-meta">
             <span class="ficha-inv__custo">{{ item.custoTotalTexto }}</span>
             <span class="ficha-inv__peso">{{ item.pesoTexto }}</span>
           </div>
+          <!-- Remover por último: a confirmação acontece no próprio X (troca in-place). -->
+          @if (editavel()) {
+            <span class="ficha-inv__item-remover">
+              @if (indiceConfirmandoRemocao() === item.indice) {
+                <span class="ficha-inv__remover-texto">Remover item?</span>
+                <button
+                  type="button"
+                  class="ficha-inv__btn ficha-inv__btn--perigo ficha-inv__btn--icone"
+                  title="Confirmar remoção"
+                  aria-label="Confirmar remoção"
+                  (click)="confirmarRemocaoItem(item.indice)"
+                >
+                  <app-icone nome="check" />
+                </button>
+                <button
+                  type="button"
+                  class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
+                  title="Cancelar"
+                  aria-label="Cancelar remoção"
+                  (click)="cancelarRemocao()"
+                >
+                  ✕
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
+                  title="Remover"
+                  aria-label="Remover item"
+                  (click)="removerItem(item.indice)"
+                >
+                  ✕
+                </button>
+              }
+            </span>
+          }
         </div>
       </div>
 
@@ -376,9 +381,14 @@
       @if (item.modsAtivas.length > 0) {
         <div class="ficha-inv__mods-ativas">
           @for (mod of item.modsAtivas; track mod.nome) {
-            <div class="ficha-inv__mod-tag">
+            <div class="ficha-inv__mod-tag" [class.ficha-inv__mod-tag--excede]="mod.excedente">
               <div class="ficha-inv__mod-tag-info">
-                <span>{{ mod.nome }} ×{{ mod.empilhamentos }}</span>
+                <span>
+                  {{ mod.nome }} ×{{ mod.empilhamentos }}
+                  @if (mod.excedente) {
+                    <span class="ficha-inv__excede-tag" title="Além do limite da patente">Excedente</span>
+                  }
+                </span>
                 <span class="ficha-inv__mod-tag-custo">{{ mod.custoTexto }}</span>
                 @if (mod.descricao) {
                   <span class="ficha-inv__mod-tag-desc">{{ mod.descricao }}</span>
@@ -416,11 +426,11 @@
                       <input class="ficha-inv__entrada" type="text" formControlName="nome" placeholder="Ex.: Encantada" />
                     </label>
                     <div class="ficha-inv__campo">
-                      <span class="ficha-inv__campo-rotulo">Empilhamentos</span>
+                      <span class="ficha-inv__campo-rotulo">Limite de empilhamentos</span>
                       <div class="ficha-inv__stepper">
-                        <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir empilhamentos" (click)="ajustarEmpilhamentosMod(-1)">−</button>
-                        <input class="ficha-inv__entrada ficha-inv__entrada--num" type="number" formControlName="empilhamentos" />
-                        <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar empilhamentos" (click)="ajustarEmpilhamentosMod(1)">+</button>
+                        <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir limite" (click)="ajustarLimiteMod(-1)">−</button>
+                        <input class="ficha-inv__entrada ficha-inv__entrada--num" type="number" formControlName="empilhamentoMaximo" />
+                        <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar limite" (click)="ajustarLimiteMod(1)">+</button>
                       </div>
                     </div>
                   </div>
@@ -567,7 +577,10 @@
                     </div>
                     <div class="ficha-inv__mod-entrada-desc">{{ entrada.descricao }}</div>
                     @if (entrada.motivo) {
-                      <div class="ficha-inv__mod-entrada-motivo">{{ entrada.motivo }}</div>
+                      <div
+                        class="ficha-inv__mod-entrada-motivo"
+                        [class.ficha-inv__mod-entrada-motivo--excede]="entrada.excedente"
+                      >{{ entrada.motivo }}</div>
                     }
                     @if (entrada.bloqueia.length > 0) {
                       <div class="ficha-inv__mod-entrada-bloqueia">Bloqueia: {{ entrada.bloqueia.join(', ') }}</div>

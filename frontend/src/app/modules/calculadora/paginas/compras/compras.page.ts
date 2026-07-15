@@ -50,6 +50,8 @@ interface ModificacaoCarrinho {
   readonly descricao?: string;
   /** Efeitos mecânicos da mod custom — ausente nas mods do catálogo. */
   readonly efeitos?: readonly ModificacaoEfeitoDto[];
+  /** Teto de empilhamentos da mod custom (definido por quem a cria; a mod entra em 1× e sobe até aqui). */
+  readonly empilhamentoMaximo?: number;
 }
 
 /**
@@ -104,6 +106,8 @@ interface ModAtivaVM {
   readonly empilhamentos: number;
   readonly custoTexto: string;
   readonly podeAumentar: boolean;
+  /** `true` quando esta mod está além do limite da patente (permitida, mas marcada). */
+  readonly excedente: boolean;
   /** Efeito da mod custom (texto livre), ou `null` para mods do catálogo. */
   readonly descricao: string | null;
 }
@@ -119,6 +123,8 @@ interface EntradaModVM {
   readonly podeAdicionar: boolean;
   readonly bloqueada: boolean;
   readonly ativa: boolean;
+  /** `true` quando adicionar/empilhar esta mod passaria do limite da patente (permitido, marcado). */
+  readonly excedente: boolean;
 }
 
 /** Uma seção do painel de modificações (própria da categoria ou emprestada via "Faz Parte"/"Combativo"). */
@@ -144,6 +150,8 @@ interface ItemCarrinhoVM {
   readonly guardada: boolean;
   readonly modsUsados: number;
   readonly maxModificacoes: number;
+  /** `true` quando o total de empilhamentos passou do limite da patente (contador vira aviso). */
+  readonly excedeModsLimite: boolean;
   readonly temMods: boolean;
   readonly painelAberto: boolean;
   readonly modsAtivas: readonly ModAtivaVM[];
@@ -405,7 +413,8 @@ export class ComprasPage {
   protected readonly criandoModUid = signal<number | null>(null);
   protected readonly modCustomForm = new FormGroup({
     nome: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    empilhamentos: new FormControl(1, { nonNullable: true }),
+    /** Teto de empilhamentos que a mod poderá ter (ela entra em 1× e sobe até aqui). */
+    empilhamentoMaximo: new FormControl(1, { nonNullable: true }),
     descricao: new FormControl('', { nonNullable: true }),
     /** Lista de efeitos **mecânicos** (por empilhamento) — faz a mod custom "funcionar de verdade". */
     efeitos: new FormArray<ReturnType<ComprasPage['criarEfeitoGrupo']>>([]),
@@ -800,27 +809,21 @@ export class ComprasPage {
     }
     const definicao = this.definicoesModificacao(item).find((mod) => mod.nome === modNome);
     const atuais = this.empilhamentosDaMod(item, modNome);
-    // Modificação custom (sem definição de catálogo): incrementa livre quando já aplicada.
+    // Modificação custom (sem definição de catálogo): sobe até o teto próprio da mod.
     if (!definicao) {
-      if (atuais > 0) {
+      const teto = item.modificacoes.find((mod) => mod.nome === modNome)?.empilhamentoMaximo ?? atuais;
+      if (atuais > 0 && atuais < teto) {
         this.definirModificacao(uid, modNome, atuais + 1);
       }
       return;
     }
-    const limite = obterLimiteModificacoes({ prestigio: this.recursos().prestigio });
+    // Conflito e teto próprio da mod são travas DURAS; os limites da PATENTE são brandos —
+    // exceder é permitido e apenas marcado como "excedente" (não bloqueia).
     const conflito = verificarConflitoModificacao({ item, modificacao: modNome });
     if (conflito.bloqueadaPor.length > 0) {
       return;
     }
     const novos = atuais === 0 ? definicao.empilhamentosIniciais : atuais + 1;
-    const aAdicionar = atuais === 0 ? definicao.empilhamentosIniciais : 1;
-    const usados = this.modsUsados(item);
-    if (novos > limite.maxEmpilhamentos) {
-      return;
-    }
-    if (usados + aAdicionar > limite.maxModificacoes) {
-      return;
-    }
     if (novos > definicao.empilhamentoMaximo) {
       return;
     }
@@ -849,7 +852,7 @@ export class ComprasPage {
       this.criandoModUid.set(null);
       return;
     }
-    this.modCustomForm.reset({ nome: '', empilhamentos: 1, descricao: '' });
+    this.modCustomForm.reset({ nome: '', empilhamentoMaximo: 1, descricao: '' });
     this.efeitosMod.clear();
     this.criandoModUid.set(uid);
   }
@@ -915,12 +918,14 @@ export class ComprasPage {
     }
     const bruto = this.modCustomForm.getRawValue();
     const nome = bruto.nome.trim();
-    const empilhamentos = Math.max(1, bruto.empilhamentos);
+    // O campo do form é o TETO da mod; ela entra sempre em 1× e sobe até esse teto.
+    const empilhamentoMaximo = Math.max(1, bruto.empilhamentoMaximo);
     const descricao = bruto.descricao.trim();
     const efeitos = this.montarEfeitosMod();
     const modificacao = {
       nome,
-      empilhamentos,
+      empilhamentos: 1,
+      empilhamentoMaximo,
       ...(descricao ? { descricao } : {}),
       ...(efeitos.length > 0 ? { efeitos } : {}),
     };
@@ -1344,6 +1349,8 @@ export class ComprasPage {
     const pesoTexto = `${this.formatarPeso(contaPeso ? pesoBruto : 0)} slots`;
 
     const definicoes = this.definicoesModificacao(item);
+    // Acumula os empilhamentos na ordem para marcar como "excedente" o que passa do limite da patente.
+    let acumuladoStacks = 0;
     const modsAtivas: ModAtivaVM[] = item.modificacoes.map((modificacao) => {
       const definicao = definicoes.find((mod) => mod.nome === modificacao.nome);
       const custo =
@@ -1352,16 +1359,19 @@ export class ComprasPage {
           modificacao: modificacao.nome,
           empilhamentos: modificacao.empilhamentos,
         }) * obterCustoModificacao({ item, modificacao: modificacao.nome });
+      const tetoProprio = definicao
+        ? definicao.empilhamentoMaximo
+        : modificacao.empilhamentoMaximo ?? modificacao.empilhamentos;
+      acumuladoStacks += modificacao.empilhamentos;
+      const excedente =
+        acumuladoStacks > limite.maxModificacoes || modificacao.empilhamentos > limite.maxEmpilhamentos;
       return {
         nome: modificacao.nome,
         empilhamentos: modificacao.empilhamentos,
         custoTexto: this.formatarDinheiro(custo),
-        // Custom (sem definição): o "+" incrementa livre; de catálogo: respeita os limites da patente.
-        podeAumentar: definicao
-          ? modificacao.empilhamentos < definicao.empilhamentoMaximo &&
-            modificacao.empilhamentos < limite.maxEmpilhamentos &&
-            modsUsados < limite.maxModificacoes
-          : true,
+        // Sobe só até o teto PRÓPRIO da mod; a patente não trava (excedente é permitido).
+        podeAumentar: modificacao.empilhamentos < tetoProprio,
+        excedente,
         // Chip da mod custom: os efeitos mecânicos gerados + a nota livre (o que houver).
         descricao:
           [descreverEfeitosModificacao(modificacao.efeitos), modificacao.descricao?.trim()]
@@ -1384,6 +1394,7 @@ export class ComprasPage {
       guardada: item.guardada,
       modsUsados,
       maxModificacoes: limite.maxModificacoes,
+      excedeModsLimite: modsUsados > limite.maxModificacoes,
       temMods: definicoes.length > 0,
       painelAberto: this.painelAbertos().has(item.uid),
       modsAtivas,
@@ -1432,23 +1443,23 @@ export class ComprasPage {
     const bloqueiaAtiva = atuais > 0 ? false : conflito.bloqueia.length > 0;
     const aAdicionar = atuais === 0 ? definicao.empilhamentosIniciais : 1;
     const proximos = atuais === 0 ? definicao.empilhamentosIniciais : atuais + 1;
+    // Limites da PATENTE são brandos: adicionar além deles é permitido (só marca "excedente").
     const excedeStack = proximos > limite.maxEmpilhamentos;
     const excedeMods = modsUsados + aAdicionar > limite.maxModificacoes;
+    // Teto próprio da mod e conflitos são travas DURAS (bloqueiam de fato).
     const excedeMaximo = atuais >= definicao.empilhamentoMaximo;
-    const podeAdicionar =
-      !bloqueadaPorAtiva && !bloqueiaAtiva && !excedeMods && !excedeStack && !excedeMaximo;
+    const podeAdicionar = !bloqueadaPorAtiva && !bloqueiaAtiva && !excedeMaximo;
+    const excedente = podeAdicionar && (excedeStack || excedeMods);
 
     let motivo = '';
     if (bloqueadaPorAtiva) {
       motivo = 'Bloqueado';
     } else if (bloqueiaAtiva) {
       motivo = 'Bloqueia mod ativa';
-    } else if (excedeStack) {
-      motivo = `Limite patente (${limite.maxEmpilhamentos})`;
-    } else if (excedeMods) {
-      motivo = `Slots cheios (${limite.maxModificacoes})`;
     } else if (excedeMaximo) {
       motivo = 'Máx. empilhamento';
+    } else if (excedente) {
+      motivo = 'Excede patente';
     }
 
     const custo = obterCustoModificacao({ item, modificacao: definicao.nome });
@@ -1463,6 +1474,7 @@ export class ComprasPage {
       podeAdicionar,
       bloqueada: bloqueadaPorAtiva,
       ativa: atuais > 0,
+      excedente,
     };
   }
 
@@ -1491,9 +1503,18 @@ export class ComprasPage {
         if (item.uid !== uid) {
           return item;
         }
-        const semMod = item.modificacoes.filter((modificacao) => modificacao.nome !== modNome);
-        const modificacoes =
-          empilhamentos <= 0 ? semMod : [...semMod, { nome: modNome, empilhamentos }];
+        const existente = item.modificacoes.find((modificacao) => modificacao.nome === modNome);
+        let modificacoes: readonly ModificacaoCarrinho[];
+        if (empilhamentos <= 0) {
+          modificacoes = item.modificacoes.filter((modificacao) => modificacao.nome !== modNome);
+        } else if (existente) {
+          // Preserva descrição/efeitos/teto da mod ao só mudar os empilhamentos (na ordem original).
+          modificacoes = item.modificacoes.map((modificacao) =>
+            modificacao.nome === modNome ? { ...modificacao, empilhamentos } : modificacao,
+          );
+        } else {
+          modificacoes = [...item.modificacoes, { nome: modNome, empilhamentos }];
+        }
         return { ...item, modificacoes };
       }),
     );
