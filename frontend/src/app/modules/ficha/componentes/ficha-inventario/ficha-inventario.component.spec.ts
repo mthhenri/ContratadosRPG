@@ -277,6 +277,50 @@ describe('FichaInventario', () => {
     expect(mod.empilhamentoMaximo).toBe(3);
   });
 
+  it('mod marcada "não conta no total" fica fora do contador; com "não conta no teto" também não fica excedente', () => {
+    // Prestígio 0 → Agente: máx 2 mods, 1 stack/mod. Uma mod de 3× normalmente excederia os dois.
+    const item: CarrinhoItemDto = {
+      nome: 'Faca',
+      categoria: ItemCategoriaEnum.CORPO_A_CORPO,
+      custo: 100,
+      peso: 1,
+      quantidade: 1,
+      guardada: false,
+      modificacoes: [
+        { nome: 'Bônus grátis', empilhamentos: 3, empilhamentoMaximo: 5, ignoraLimiteTotal: true, ignoraLimiteProprio: true },
+      ],
+    };
+    const alvo = montar({ itens: [item], amplificadores: [] }, true, 0);
+    const vm = alvo.componentInstance['itensInventario']()[0];
+    expect(vm.modsUsados).toBe(0); // não conta no total da arma
+    expect(vm.excedeModsLimite).toBe(false);
+    expect(vm.modsAtivas[0].excedente).toBe(false); // isenta do total e do stack por-mod
+    expect(vm.modsAtivas[0].ignoraTotal).toBe(true);
+    expect(vm.modsAtivas[0].ignoraProprio).toBe(true);
+  });
+
+  it('alternarIgnoraProprio libera empilhar além do teto próprio da mod', () => {
+    const item: CarrinhoItemDto = {
+      nome: 'Faca',
+      categoria: ItemCategoriaEnum.CORPO_A_CORPO,
+      custo: 100,
+      peso: 1,
+      quantidade: 1,
+      guardada: false,
+      modificacoes: [{ nome: 'Custom', empilhamentos: 2, empilhamentoMaximo: 2 }],
+    };
+    const alvo = montar({ itens: [item], amplificadores: [] });
+    // No teto (2/2): não pode aumentar.
+    expect(alvo.componentInstance['itensInventario']()[0].modsAtivas[0].podeAumentar).toBe(false);
+    // Marca "não conta no próprio teto" e agora pode passar do limite.
+    alvo.componentInstance['alternarIgnoraProprio'](0, 'Custom');
+    alvo.fixture.componentRef.setInput('inventario', alvo.emitidos.at(-1));
+    alvo.fixture.detectChanges();
+    expect(alvo.componentInstance['itensInventario']()[0].modsAtivas[0].podeAumentar).toBe(true);
+    alvo.componentInstance['adicionarModificacao'](0, 'Custom');
+    expect(alvo.emitidos.at(-1)!.itens[0].modificacoes[0].empilhamentos).toBe(3);
+  });
+
   it('alterna o porte (guardada/vestida) de um armazenamento e emite', () => {
     const mochila: CarrinhoItemDto = {
       nome: 'Mochila',

@@ -393,6 +393,30 @@
                 @if (mod.descricao) {
                   <span class="ficha-inv__mod-tag-desc">{{ mod.descricao }}</span>
                 }
+                @if (editavel()) {
+                  <div class="ficha-inv__mod-flags">
+                    <button
+                      type="button"
+                      class="ficha-inv__mod-flag"
+                      [class.ficha-inv__mod-flag--ativo]="mod.ignoraTotal"
+                      [attr.aria-pressed]="mod.ignoraTotal"
+                      title="Não conta no limite total de empilhamentos da arma"
+                      (click)="alternarIgnoraTotal(item.indice, mod.nome)"
+                    >
+                      ∉ total
+                    </button>
+                    <button
+                      type="button"
+                      class="ficha-inv__mod-flag"
+                      [class.ficha-inv__mod-flag--ativo]="mod.ignoraProprio"
+                      [attr.aria-pressed]="mod.ignoraProprio"
+                      title="Não conta no próprio teto: pode empilhar além do limite da mod"
+                      (click)="alternarIgnoraProprio(item.indice, mod.nome)"
+                    >
+                      ∉ teto
+                    </button>
+                  </div>
+                }
               </div>
               @if (editavel()) {
                 <div class="ficha-inv__mod-tag-botoes">
@@ -433,6 +457,16 @@
                         <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar limite" (click)="ajustarLimiteMod(1)">+</button>
                       </div>
                     </div>
+                  </div>
+                  <div class="ficha-inv__form-linha">
+                    <label class="ficha-inv__check">
+                      <input type="checkbox" formControlName="ignoraLimiteTotal" />
+                      <span>Não conta no limite total de empilhamentos da arma</span>
+                    </label>
+                    <label class="ficha-inv__check">
+                      <input type="checkbox" formControlName="ignoraLimiteProprio" />
+                      <span>Não conta no próprio teto (pode passar do limite da mod)</span>
+                    </label>
                   </div>
                   <div class="ficha-inv__efeito">
                     <span class="ficha-inv__efeito-titulo">Efeitos mecânicos (por empilhamento)</span>

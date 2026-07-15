@@ -52,6 +52,10 @@ interface ModificacaoCarrinho {
   readonly efeitos?: readonly ModificacaoEfeitoDto[];
   /** Teto de empilhamentos da mod custom (definido por quem a cria; a mod entra em 1× e sobe até aqui). */
   readonly empilhamentoMaximo?: number;
+  /** Não conta no limite total de empilhamentos da arma. */
+  readonly ignoraLimiteTotal?: boolean;
+  /** Pode passar do próprio teto de empilhamentos. */
+  readonly ignoraLimiteProprio?: boolean;
 }
 
 /**
@@ -108,6 +112,10 @@ interface ModAtivaVM {
   readonly podeAumentar: boolean;
   /** `true` quando esta mod está além do limite da patente (permitida, mas marcada). */
   readonly excedente: boolean;
+  /** Marcada para não contar no limite total de empilhamentos da arma. */
+  readonly ignoraTotal: boolean;
+  /** Marcada para poder passar do próprio teto de empilhamentos. */
+  readonly ignoraProprio: boolean;
   /** Efeito da mod custom (texto livre), ou `null` para mods do catálogo. */
   readonly descricao: string | null;
 }
@@ -415,6 +423,10 @@ export class ComprasPage {
     nome: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     /** Teto de empilhamentos que a mod poderá ter (ela entra em 1× e sobe até aqui). */
     empilhamentoMaximo: new FormControl(1, { nonNullable: true }),
+    /** Não conta no limite total de empilhamentos da arma. */
+    ignoraLimiteTotal: new FormControl(false, { nonNullable: true }),
+    /** Pode passar do próprio teto de empilhamentos. */
+    ignoraLimiteProprio: new FormControl(false, { nonNullable: true }),
     descricao: new FormControl('', { nonNullable: true }),
     /** Lista de efeitos **mecânicos** (por empilhamento) — faz a mod custom "funcionar de verdade". */
     efeitos: new FormArray<ReturnType<ComprasPage['criarEfeitoGrupo']>>([]),
@@ -809,10 +821,13 @@ export class ComprasPage {
     }
     const definicao = this.definicoesModificacao(item).find((mod) => mod.nome === modNome);
     const atuais = this.empilhamentosDaMod(item, modNome);
-    // Modificação custom (sem definição de catálogo): sobe até o teto próprio da mod.
+    const aplicada = item.modificacoes.find((mod) => mod.nome === modNome);
+    // `ignoraLimiteProprio` libera o teto próprio da mod (catálogo ou custom).
+    const ignoraProprio = aplicada?.ignoraLimiteProprio ?? false;
+    // Modificação custom (sem definição de catálogo): sobe até o teto próprio da mod (salvo se liberado).
     if (!definicao) {
-      const teto = item.modificacoes.find((mod) => mod.nome === modNome)?.empilhamentoMaximo ?? atuais;
-      if (atuais > 0 && atuais < teto) {
+      const teto = aplicada?.empilhamentoMaximo ?? atuais;
+      if (atuais > 0 && (ignoraProprio || atuais < teto)) {
         this.definirModificacao(uid, modNome, atuais + 1);
       }
       return;
@@ -824,7 +839,7 @@ export class ComprasPage {
       return;
     }
     const novos = atuais === 0 ? definicao.empilhamentosIniciais : atuais + 1;
-    if (novos > definicao.empilhamentoMaximo) {
+    if (!ignoraProprio && novos > definicao.empilhamentoMaximo) {
       return;
     }
     this.definirModificacao(uid, modNome, novos);
@@ -852,7 +867,13 @@ export class ComprasPage {
       this.criandoModUid.set(null);
       return;
     }
-    this.modCustomForm.reset({ nome: '', empilhamentoMaximo: 1, descricao: '' });
+    this.modCustomForm.reset({
+      nome: '',
+      empilhamentoMaximo: 1,
+      ignoraLimiteTotal: false,
+      ignoraLimiteProprio: false,
+      descricao: '',
+    });
     this.efeitosMod.clear();
     this.criandoModUid.set(uid);
   }
@@ -928,6 +949,8 @@ export class ComprasPage {
       empilhamentoMaximo,
       ...(descricao ? { descricao } : {}),
       ...(efeitos.length > 0 ? { efeitos } : {}),
+      ...(bruto.ignoraLimiteTotal ? { ignoraLimiteTotal: true } : {}),
+      ...(bruto.ignoraLimiteProprio ? { ignoraLimiteProprio: true } : {}),
     };
     const semMod = item.modificacoes.filter((atual) => atual.nome !== nome);
     this.definirCarrinho(
@@ -1362,16 +1385,22 @@ export class ComprasPage {
       const tetoProprio = definicao
         ? definicao.empilhamentoMaximo
         : modificacao.empilhamentoMaximo ?? modificacao.empilhamentos;
-      acumuladoStacks += modificacao.empilhamentos;
-      const excedente =
-        acumuladoStacks > limite.maxModificacoes || modificacao.empilhamentos > limite.maxEmpilhamentos;
+      const ignoraTotal = modificacao.ignoraLimiteTotal ?? false;
+      const ignoraProprio = modificacao.ignoraLimiteProprio ?? false;
+      if (!ignoraTotal) {
+        acumuladoStacks += modificacao.empilhamentos;
+      }
+      const excedeTotal = !ignoraTotal && acumuladoStacks > limite.maxModificacoes;
+      const excedeStack = !ignoraProprio && modificacao.empilhamentos > limite.maxEmpilhamentos;
       return {
         nome: modificacao.nome,
         empilhamentos: modificacao.empilhamentos,
         custoTexto: this.formatarDinheiro(custo),
-        // Sobe só até o teto PRÓPRIO da mod; a patente não trava (excedente é permitido).
-        podeAumentar: modificacao.empilhamentos < tetoProprio,
-        excedente,
+        // Sobe até o teto PRÓPRIO (ou livre, se `ignoraProprio`); a patente não trava (excedente é permitido).
+        podeAumentar: ignoraProprio || modificacao.empilhamentos < tetoProprio,
+        excedente: excedeTotal || excedeStack,
+        ignoraTotal,
+        ignoraProprio,
         // Chip da mod custom: os efeitos mecânicos gerados + a nota livre (o que houver).
         descricao:
           [descreverEfeitosModificacao(modificacao.efeitos), modificacao.descricao?.trim()]
@@ -1546,8 +1575,40 @@ export class ComprasPage {
     return this.lerAmplificadores().find((amplificador) => amplificador.nome === nome)?.empilhamentos ?? 0;
   }
 
+  /** Total de empilhamentos que contam no limite da arma — mods marcadas `ignoraLimiteTotal` ficam de fora. */
   private modsUsados(item: ItemCarrinho): number {
-    return item.modificacoes.reduce((soma, modificacao) => soma + modificacao.empilhamentos, 0);
+    return item.modificacoes.reduce(
+      (soma, modificacao) => soma + (modificacao.ignoraLimiteTotal ? 0 : modificacao.empilhamentos),
+      0,
+    );
+  }
+
+  /** Alterna uma flag booleana (`ignoraLimiteTotal`/`ignoraLimiteProprio`) de uma mod, preservando o resto. */
+  private alternarFlagMod(
+    uid: number,
+    modNome: string,
+    flag: 'ignoraLimiteTotal' | 'ignoraLimiteProprio',
+  ): void {
+    this.definirCarrinho(
+      this.lerCarrinho().map((item) =>
+        item.uid !== uid
+          ? item
+          : {
+              ...item,
+              modificacoes: item.modificacoes.map((modificacao) =>
+                modificacao.nome === modNome ? { ...modificacao, [flag]: !modificacao[flag] } : modificacao,
+              ),
+            },
+      ),
+    );
+  }
+
+  protected alternarIgnoraTotal(uid: number, modNome: string): void {
+    this.alternarFlagMod(uid, modNome, 'ignoraLimiteTotal');
+  }
+
+  protected alternarIgnoraProprio(uid: number, modNome: string): void {
+    this.alternarFlagMod(uid, modNome, 'ignoraLimiteProprio');
   }
 
   private pesoModificacao(item: ItemCarrinho, modNome: string): number {

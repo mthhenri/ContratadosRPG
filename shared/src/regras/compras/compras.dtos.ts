@@ -64,6 +64,16 @@ export interface ModificacaoAplicadaDto {
    * Definido por quem cria a mod: quantas vezes ela pode empilhar (a mod entra em 1× e sobe até aqui).
    */
   readonly empilhamentoMaximo?: number;
+  /**
+   * Marca a mod como **fora do limite total** da arma: seus empilhamentos não contam no total de
+   * modificações permitido pela patente (não somam no contador nem marcam a arma como excedente).
+   */
+  readonly ignoraLimiteTotal?: boolean;
+  /**
+   * Marca a mod como **fora do próprio teto**: pode empilhar além do `empilhamentoMaximo` (catálogo ou
+   * custom) e do limite de stack por mod da patente, sem ser barrada nem marcada como excedente por isso.
+   */
+  readonly ignoraLimiteProprio?: boolean;
 }
 
 /** Um amplificador acoplado ao agente, com sua quantidade de empilhamentos. */

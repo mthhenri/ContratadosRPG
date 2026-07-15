@@ -437,6 +437,28 @@
                   @if (mod.descricao) {
                     <span class="compras-mod-tag__desc">{{ mod.descricao }}</span>
                   }
+                  <div class="compras-mod-flags">
+                    <button
+                      type="button"
+                      class="compras-mod-flag"
+                      [class.compras-mod-flag--ativo]="mod.ignoraTotal"
+                      [attr.aria-pressed]="mod.ignoraTotal"
+                      title="Não conta no limite total de empilhamentos da arma"
+                      (click)="alternarIgnoraTotal(item.uid, mod.nome)"
+                    >
+                      ∉ total
+                    </button>
+                    <button
+                      type="button"
+                      class="compras-mod-flag"
+                      [class.compras-mod-flag--ativo]="mod.ignoraProprio"
+                      [attr.aria-pressed]="mod.ignoraProprio"
+                      title="Não conta no próprio teto: pode empilhar além do limite da mod"
+                      (click)="alternarIgnoraProprio(item.uid, mod.nome)"
+                    >
+                      ∉ teto
+                    </button>
+                  </div>
                 </div>
                 <div class="compras-mod-tag__botoes">
                   <button type="button" class="compras-mini-btn" aria-label="Remover empilhamento" (click)="removerModificacao(item.uid, mod.nome)">−</button>
@@ -470,6 +492,16 @@
                       <span class="calc-campo__rotulo">Limite de empilhamentos</span>
                       <app-step-input formControlName="empilhamentoMaximo" [min]="1" ariaRotulo="Limite de empilhamentos da modificação custom" />
                     </div>
+                  </div>
+                  <div class="compras-custom-checks">
+                    <label class="compras-check">
+                      <input type="checkbox" formControlName="ignoraLimiteTotal" />
+                      <span>Não conta no limite total de empilhamentos da arma</span>
+                    </label>
+                    <label class="compras-check">
+                      <input type="checkbox" formControlName="ignoraLimiteProprio" />
+                      <span>Não conta no próprio teto (pode passar do limite da mod)</span>
+                    </label>
                   </div>
                   <div class="compras-efeito">
                     <span class="compras-efeito__titulo">Efeitos mecânicos (por empilhamento)</span>
