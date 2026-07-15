@@ -24,9 +24,24 @@
     }
   </header>
 
-  <ul class="habilidades__lista">
-    @for (habilidade of habilidades(); track $index) {
-      @if (editando($index)) {
+  @if (mostrarBusca()) {
+    <div class="habilidades__busca">
+      <span class="habilidades__busca-icone" aria-hidden="true">⌕</span>
+      <input
+        class="habilidades__busca-campo"
+        type="text"
+        [formControl]="busca"
+        placeholder="Buscar nas suas habilidades…"
+        aria-label="Buscar habilidade adicionada"
+      />
+    </div>
+  }
+
+  <ul class="habilidades__lista" appOverflowFade>
+    @for (item of habilidadesFiltradas(); track item.indice) {
+      @let habilidade = item.habilidade;
+      @let idx = item.indice;
+      @if (editando(idx)) {
         <li class="habilidades__item habilidades__item--edicao">
           <ng-container [ngTemplateOutlet]="editor" />
         </li>
@@ -48,17 +63,24 @@
               <div class="habilidades__acoes">
                 <button
                   class="habilidades__utilizar"
+                  [class.habilidades__utilizar--gasto]="gastoRecente()?.indice === idx"
                   type="button"
                   [attr.aria-label]="'Utilizar ' + habilidade.nome"
-                  (click)="utilizar($index, habilidade)"
+                  (pointerdown)="aoPressionarUtilizar(idx, habilidade, $event)"
+                  (click)="aoClicarUtilizar(idx, habilidade, $event)"
                 >
                   ⚡ Utilizar
+                  @if (gastoRecente()?.indice === idx) {
+                    <span class="habilidades__gasto-flash" aria-hidden="true">
+                      −{{ gastoRecente()!.valor }} E
+                    </span>
+                  }
                 </button>
                 <button
                   class="habilidades__acao"
                   type="button"
                   aria-label="Editar habilidade"
-                  (click)="editar($index)"
+                  (click)="editar(idx)"
                 >
                   ✎
                 </button>
@@ -66,7 +88,7 @@
                   class="habilidades__acao habilidades__acao--remover"
                   type="button"
                   aria-label="Remover habilidade"
-                  (click)="pedirRemocao($index)"
+                  (click)="pedirRemocao(idx)"
                 >
                   ✕
                 </button>
@@ -76,7 +98,7 @@
           @if (habilidade.descricao) {
             <span class="habilidades__descricao">{{ habilidade.descricao }}</span>
           }
-          @if (indiceUtilizando() === $index) {
+          @if (indiceUtilizando() === idx) {
             <div class="habilidades__utilizar-variavel">
               <span class="habilidades__rotulo-inline">Gastar quanto de Energia?</span>
               <div class="habilidades__stepper">
@@ -111,7 +133,7 @@
               </div>
             </div>
           }
-          @if (indiceRemovendo() === $index) {
+          @if (indiceRemovendo() === idx) {
             <div class="habilidades__confirmar">
               <span class="habilidades__confirmar-texto">
                 Remover <strong>{{ habilidade.nome }}</strong>?
@@ -120,7 +142,7 @@
                 <button
                   class="habilidades__salvar habilidades__salvar--remover"
                   type="button"
-                  (click)="remover($index)"
+                  (click)="remover(idx)"
                 >
                   Remover
                 </button>
@@ -133,22 +155,45 @@
         </li>
       }
     }
-    @if (editando(-1)) {
-      <li class="habilidades__item habilidades__item--edicao">
-        <ng-container [ngTemplateOutlet]="editor" />
-      </li>
-    }
   </ul>
   @if (!habilidades().length && !editando(-1)) {
     <p class="habilidades__vazio">Nenhuma habilidade cadastrada.</p>
+  } @else if (habilidades().length && !habilidadesFiltradas().length) {
+    <p class="habilidades__vazio">Nenhuma habilidade encontrada para “{{ busca.value }}”.</p>
   }
 </div>
+
+<!-- Adição personalizada em diálogo (o editar existente segue no próprio lugar). -->
+@if (editando(-1)) {
+  <div class="habilidades__dialog-fundo">
+    <div
+      class="habilidades__dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Nova habilidade personalizada"
+    >
+      <header class="habilidades__dialog-topo">
+        <h3 class="habilidades__dialog-titulo">Nova habilidade</h3>
+        <button
+          class="habilidades__dialog-fechar"
+          type="button"
+          aria-label="Fechar"
+          (click)="cancelar()"
+        >
+          ×
+        </button>
+      </header>
+      <ng-container [ngTemplateOutlet]="editor" />
+    </div>
+  </div>
+}
 
 @if (seletorAberto()) {
   <app-ficha-habilidade-seletor
     [grupos]="grupos()"
     [nomesNaFicha]="nomesNaFicha()"
-    (escolher)="aoEscolherDoCatalogo($event)"
+    (adicionar)="aoAdicionarDoCatalogo($event)"
+    (remover)="aoRemoverDoCatalogo($event)"
     (fechar)="fecharSeletor()"
   />
 }

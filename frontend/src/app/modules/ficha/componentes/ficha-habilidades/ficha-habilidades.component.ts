@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, input, output, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import {
@@ -16,8 +16,15 @@ import {
 } from '@contratados-rpg/shared/regras/agente';
 
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
+import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { FichaHabilidadeSeletor } from '../ficha-habilidade-seletor/ficha-habilidade-seletor.component';
 import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
+
+/** Uma habilidade da ficha com o índice original (preservado ao filtrar pela busca). */
+interface HabilidadeIndexada {
+  readonly habilidade: FichaHabilidadeDto;
+  readonly indice: number;
+}
 
 /** Categoria + rótulo legível para o `<select>` e o chip (rótulos vêm do shared). */
 interface OpcaoCategoria {
@@ -42,7 +49,7 @@ const CATEGORIAS: readonly OpcaoCategoria[] = (
  */
 @Component({
   selector: 'app-ficha-habilidades',
-  imports: [NgTemplateOutlet, ReactiveFormsModule, HoldRepeat, FichaHabilidadeSeletor],
+  imports: [NgTemplateOutlet, ReactiveFormsModule, HoldRepeat, OverflowFade, FichaHabilidadeSeletor],
   templateUrl: './ficha-habilidades.component.html',
   styleUrl: './ficha-habilidades.component.scss',
 })
@@ -75,6 +82,50 @@ export class FichaHabilidades {
   /** `true` quando o seletor "Do sistema" está aberto. */
   protected readonly seletorAberto = signal(false);
 
+  /** Gasto recém-confirmado (índice + valor) — acende o feedback no botão Utilizar por ~1s. */
+  protected readonly gastoRecente = signal<{ indice: number; valor: number } | null>(null);
+  private temporizadorGasto: ReturnType<typeof setTimeout> | null = null;
+
+  /** Cadência do hold (segurar) e intervalo mínimo entre cliques repetidos (spam), em ms. */
+  private static readonly HOLD_MS = 100;
+  private static readonly SPAM_MIN_MS = 50;
+
+  /** Repetição enquanto segura o Utilizar (hold); e o instante do último gasto (trava anti-spam). */
+  private holdIntervalo: ReturnType<typeof setInterval> | null = null;
+  private ultimoGastoMs = Number.NEGATIVE_INFINITY;
+  /** Listener global de soltura enquanto o hold roda (no lugar do pointer capture). */
+  private soltarNoDocumento: (() => void) | null = null;
+
+  constructor() {
+    this.busca.valueChanges.subscribe((valor) => this.buscaTexto.set(valor));
+    inject(DestroyRef).onDestroy(() => {
+      if (this.temporizadorGasto !== null) {
+        clearTimeout(this.temporizadorGasto);
+      }
+      this.pararHold();
+    });
+  }
+
+  /** Só oferece a busca quando a lista já é grande o bastante para valer a pena procurar. */
+  protected readonly mostrarBusca = computed(() => this.habilidades().length > 4);
+
+  /**
+   * Habilidades a exibir, com o índice **original** preservado (o editor/remover/utilizar operam
+   * sobre a lista real). Filtra por nome/descrição quando há busca.
+   */
+  protected readonly habilidadesFiltradas = computed<HabilidadeIndexada[]>(() => {
+    const indexadas = this.habilidades().map((habilidade, indice) => ({ habilidade, indice }));
+    const termo = this.buscaTexto().trim().toLowerCase();
+    if (!termo) {
+      return indexadas;
+    }
+    return indexadas.filter(
+      ({ habilidade }) =>
+        habilidade.nome.toLowerCase().includes(termo) ||
+        habilidade.descricao.toLowerCase().includes(termo),
+    );
+  });
+
   /** Origem (classe/arquétipo/subclasse) do item em edição — preservada do catálogo/edição. */
   private readonly origemRascunho = signal<ClasseEnum | ArquetipoEnum | undefined>(undefined);
 
@@ -89,6 +140,10 @@ export class FichaHabilidades {
 
   /** Custo digitado ao Utilizar uma habilidade de custo variável. */
   protected readonly custoVariavel = new FormControl(0, { nonNullable: true });
+
+  /** Busca sobre as habilidades já adicionadas (por nome/descrição) — para achá-las rápido. */
+  protected readonly busca = new FormControl('', { nonNullable: true });
+  private readonly buscaTexto = signal('');
 
   /** Grupos de filtro do catálogo para a ficha (`shared/regras`). */
   protected readonly grupos = computed(() =>
@@ -114,18 +169,24 @@ export class FichaHabilidades {
     this.seletorAberto.set(false);
   }
 
-  /** Escolha do catálogo: pré-preenche o editor inline (com a origem) para revisão antes de salvar. */
-  protected aoEscolherDoCatalogo(item: HabilidadeCatalogoItemDto): void {
-    this.origemRascunho.set(item.origem);
-    this.habilidadeForm.reset({
+  /**
+   * Adiciona uma habilidade do catálogo **direto na ficha** (com a origem), sem abrir o editor nem
+   * fechar o seletor — o usuário segue montando a lista. Editar depois é pelo ✎ da própria lista.
+   */
+  protected aoAdicionarDoCatalogo(item: HabilidadeCatalogoItemDto): void {
+    const nova: FichaHabilidadeDto = {
       nome: item.nome,
       categoria: item.categoria,
-      custoEnergia: item.custoEnergia ?? 0,
-      variavel: item.custoEnergia === null,
+      custoEnergia: item.custoEnergia,
       descricao: item.descricao,
-    });
-    this.seletorAberto.set(false);
-    this.indiceEmEdicao.set(-1);
+      ...(item.origem === undefined ? {} : { origem: item.origem }),
+    };
+    this.emitir([...this.habilidades(), nova]);
+  }
+
+  /** Remove da ficha (por nome) uma habilidade adicionada pelo seletor — o "✕" do "Na ficha". */
+  protected aoRemoverDoCatalogo(nome: string): void {
+    this.emitir(this.habilidades().filter((habilidade) => habilidade.nome !== nome));
   }
 
   /** Abre o formulário de **adição personalizada** (texto livre, sem origem). */
@@ -212,12 +273,104 @@ export class FichaHabilidades {
       return;
     }
     this.habilidadeUtilizada.emit(habilidade.custoEnergia);
+    this.sinalizarGasto(indice, habilidade.custoEnergia);
+  }
+
+  /**
+   * Pressiona o Utilizar (`pointerdown`). Custo variável abre o mini-campo (um toque). Custo fixo
+   * **gasta uma vez na hora** (limitado a 1 a cada `SPAM_MIN_MS` para cliques repetidos) e, enquanto
+   * **segurar**, repete o gasto a cada `HOLD_MS`. O `setInterval` roda independentemente da posição
+   * do mouse, então segurar continua mesmo com o cursor fora do botão; a parada vem de soltar em
+   * qualquer lugar (`pointerup` no `window`).
+   *
+   * **Sem `setPointerCapture` de propósito**: no app real ela conflitava com o re-render do Angular a
+   * cada gasto (o `lostpointercapture` disparado pelo re-render parava o hold no 1º gasto, e recapturar
+   * a cada clique rápido "engasgava" o botão).
+   */
+  protected aoPressionarUtilizar(
+    indice: number,
+    habilidade: FichaHabilidadeDto,
+    evento: PointerEvent,
+  ): void {
+    if (evento.button !== 0) {
+      return;
+    }
+    if (habilidade.custoEnergia === null) {
+      this.utilizar(indice, habilidade);
+      return;
+    }
+    const custo = habilidade.custoEnergia;
+    this.gastarComLimite(indice, custo);
+    this.pararHold();
+    this.holdIntervalo = setInterval(() => this.gastar(indice, custo), FichaHabilidades.HOLD_MS);
+    this.soltarNoDocumento = () => this.pararHold();
+    window.addEventListener('pointerup', this.soltarNoDocumento);
+    window.addEventListener('pointercancel', this.soltarNoDocumento);
+  }
+
+  /** Gasto de clique com trava anti-spam: no máximo 1 a cada `SPAM_MIN_MS`. */
+  private gastarComLimite(indice: number, custo: number): void {
+    if (performance.now() - this.ultimoGastoMs < FichaHabilidades.SPAM_MIN_MS) {
+      return;
+    }
+    this.gastar(indice, custo);
+  }
+
+  /**
+   * Ativação por **teclado** (Enter/Espaço geram um `click` com `detail === 0`) — um uso. Cliques de
+   * mouse (`detail > 0`) já foram tratados no `pointerdown`, então são ignorados aqui (sem duplicar).
+   */
+  protected aoClicarUtilizar(indice: number, habilidade: FichaHabilidadeDto, evento: MouseEvent): void {
+    if (evento.detail !== 0) {
+      return;
+    }
+    this.utilizar(indice, habilidade);
+  }
+
+  /** Efetua o gasto (debita a Energia via `habilidadeUtilizada`) e acende o feedback. */
+  private gastar(indice: number, custo: number): void {
+    this.ultimoGastoMs = performance.now();
+    this.habilidadeUtilizada.emit(custo);
+    this.sinalizarGasto(indice, custo);
+  }
+
+  private pararHold(): void {
+    if (this.holdIntervalo !== null) {
+      clearInterval(this.holdIntervalo);
+      this.holdIntervalo = null;
+    }
+    if (this.soltarNoDocumento !== null) {
+      window.removeEventListener('pointerup', this.soltarNoDocumento);
+      window.removeEventListener('pointercancel', this.soltarNoDocumento);
+      this.soltarNoDocumento = null;
+    }
   }
 
   /** Confirma o gasto de custo variável e fecha o mini-campo. */
   protected confirmarUtilizarVariavel(): void {
-    this.habilidadeUtilizada.emit(this.custoVariavel.value);
+    const indice = this.indiceUtilizando();
+    const valor = this.custoVariavel.value;
+    this.habilidadeUtilizada.emit(valor);
     this.indiceUtilizando.set(null);
+    if (indice !== null) {
+      this.sinalizarGasto(indice, valor);
+    }
+  }
+
+  /**
+   * Acende o feedback visual de gasto no botão Utilizar (pulso + "−N E" flutuante) por ~1s.
+   * O `habilidadeUtilizada` já debitou a Energia; isto é só o retorno na tela. Reinicia o timer a
+   * cada gasto.
+   */
+  private sinalizarGasto(indice: number, valor: number): void {
+    if (this.temporizadorGasto !== null) {
+      clearTimeout(this.temporizadorGasto);
+    }
+    this.gastoRecente.set({ indice, valor });
+    this.temporizadorGasto = setTimeout(() => {
+      this.gastoRecente.set(null);
+      this.temporizadorGasto = null;
+    }, 1100);
   }
 
   /** Fecha o mini-campo de custo variável sem gastar. */

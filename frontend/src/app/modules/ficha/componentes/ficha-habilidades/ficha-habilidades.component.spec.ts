@@ -129,20 +129,18 @@ describe('FichaHabilidades', () => {
     expect(alvo.emitidos[0]).toEqual([habilidades[1]]);
   });
 
-  it('escolher do catálogo pré-preenche o editor com a origem e grava-a ao salvar', () => {
+  it('adicionar do catálogo grava direto na ficha (com a origem), sem abrir o editor', () => {
     const alvo = montar(true);
     // Simula a escolha de uma habilidade de classe de OUTRA classe (Especialista).
-    alvo.fixture.componentInstance['aoEscolherDoCatalogo']({
+    alvo.fixture.componentInstance['aoAdicionarDoCatalogo']({
       nome: 'Hacker',
       categoria: HabilidadeCategoriaEnum.CLASSE,
       custoEnergia: 0,
       descricao: 'Acessa sistemas.',
       origem: ClasseEnum.ESPECIALISTA,
     });
-    // O editor abriu pré-preenchido (índice de adição).
-    expect(alvo.fixture.componentInstance['habilidadeForm'].controls.nome.value).toBe('Hacker');
-    alvo.fixture.componentInstance['confirmar']();
-
+    // Emitiu direto — nada de editor aberto.
+    expect(alvo.fixture.componentInstance['indiceEmEdicao']()).toBeNull();
     expect(alvo.emitidos[0].at(-1)).toEqual({
       nome: 'Hacker',
       categoria: HabilidadeCategoriaEnum.CLASSE,
@@ -150,6 +148,28 @@ describe('FichaHabilidades', () => {
       descricao: 'Acessa sistemas.',
       origem: ClasseEnum.ESPECIALISTA,
     });
+  });
+
+  it('preserva o custo variável (null) ao adicionar do catálogo', () => {
+    const alvo = montar(true);
+    alvo.fixture.componentInstance['aoAdicionarDoCatalogo']({
+      nome: 'Adaptação',
+      categoria: HabilidadeCategoriaEnum.GERAL,
+      custoEnergia: null,
+      descricao: '',
+    });
+    expect(alvo.emitidos[0].at(-1)).toEqual({
+      nome: 'Adaptação',
+      categoria: HabilidadeCategoriaEnum.GERAL,
+      custoEnergia: null,
+      descricao: '',
+    });
+  });
+
+  it('remover do catálogo (o "✕" do "Na ficha") tira a habilidade pelo nome', () => {
+    const alvo = montar(true);
+    alvo.fixture.componentInstance['aoRemoverDoCatalogo']('Tiro Certeiro');
+    expect(alvo.emitidos[0]).toEqual([habilidades[1]]);
   });
 
   it('o chip nomeia a origem quando é de outra classe/arquétipo; a própria fica sem nome', () => {
@@ -182,5 +202,60 @@ describe('FichaHabilidades', () => {
     alvo.fixture.componentInstance['custoVariavel'].setValue(5);
     alvo.fixture.componentInstance['confirmarUtilizarVariavel']();
     expect(alvo.utilizados).toEqual([5]);
+  });
+
+  /**
+   * Prova o HOLD no **botão renderizado de verdade** (não no método): dispara `pointerdown` no
+   * elemento `.habilidades__utilizar` e avança o relógio — o gasto deve se repetir a cada 300ms e
+   * parar no `pointerup`. Pega quebras de fiação (binding do evento) que o teste de método não pega.
+   */
+  it('segurar o botão Utilizar repete o gasto a cada 100ms e para ao soltar', () => {
+    vi.useFakeTimers();
+    try {
+      const alvo = montar(true);
+      const botao = alvo.raiz.querySelector('.habilidades__utilizar') as HTMLElement;
+      expect(botao).not.toBeNull();
+      const disparar = (tipo: string): void => {
+        const evento = new Event(tipo, { bubbles: true }) as Event & { button: number; pointerId: number };
+        evento.button = 0;
+        evento.pointerId = 1;
+        botao.dispatchEvent(evento);
+      };
+
+      disparar('pointerdown'); // gasto imediato + inicia o hold
+      expect(alvo.utilizados).toEqual([2]);
+      vi.advanceTimersByTime(100);
+      expect(alvo.utilizados).toEqual([2, 2]); // 1º repeat
+      vi.advanceTimersByTime(100);
+      expect(alvo.utilizados).toEqual([2, 2, 2]); // 2º repeat
+
+      disparar('pointerup'); // solta: para a repetição
+      vi.advanceTimersByTime(1200);
+      expect(alvo.utilizados).toEqual([2, 2, 2]); // nada mais gasta
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('um clique de mouse (pointerdown+pointerup+click) gasta uma única vez', () => {
+    vi.useFakeTimers();
+    try {
+      const alvo = montar(true);
+      const botao = alvo.raiz.querySelector('.habilidades__utilizar') as HTMLElement;
+      const disparar = (tipo: string, detail = 0): void => {
+        const evento = new Event(tipo, { bubbles: true }) as Event & { button: number; pointerId: number; detail: number };
+        evento.button = 0;
+        evento.pointerId = 1;
+        evento.detail = detail;
+        botao.dispatchEvent(evento);
+      };
+      disparar('pointerdown'); // gasta
+      disparar('pointerup'); // para o hold
+      disparar('click', 1); // clique de mouse (detail>0) — ignorado, sem duplicar
+      vi.advanceTimersByTime(600);
+      expect(alvo.utilizados).toEqual([2]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

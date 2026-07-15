@@ -94,6 +94,11 @@
   // Cartão único das abas não-grade (Combate/Inventário/Habilidades/Sanidade/Rolagens): largura contida.
   &__painel-cartao {
     max-width: 640px;
+
+    // Abas com listas multi-coluna (Habilidades, Sanidade) ganham mais largura de tela.
+    &--largo {
+      max-width: 1040px;
+    }
   }
 
   // Aviso "em construção" das abas cujo editor ainda não chegou (m3-12…m3-15).
