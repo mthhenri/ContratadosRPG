@@ -42,6 +42,22 @@ describe('FichaInventario', () => {
     };
   }
 
+  it('não oferece "Modificar" em itens Operacional/Medicinal (consumíveis)', () => {
+    const operacional: CarrinhoItemDto = {
+      nome: 'Kit Médico',
+      categoria: ItemCategoriaEnum.MEDICINAL,
+      custo: 100,
+      peso: 1,
+      quantidade: 1,
+      guardada: false,
+      modificacoes: [],
+    };
+    const { raiz } = montar({ itens: [operacional, itemLeve], amplificadores: [] }, true);
+    const modificares = raiz.querySelectorAll('.ficha-inv__modificar');
+    // Só o item "Leve" (Corpo a Corpo) tem "Modificar"; o consumível não.
+    expect(modificares.length).toBe(1);
+  });
+
   it('é só leitura quando não editável: lista os itens sem botões de ação nem catálogo', () => {
     const { raiz } = montar({ itens: [itemLeve], amplificadores: [] }, false);
     const nomes = Array.from(raiz.querySelectorAll('.ficha-inv__item-nome')).map((n) =>

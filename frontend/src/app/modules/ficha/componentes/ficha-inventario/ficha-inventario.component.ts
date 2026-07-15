@@ -55,6 +55,12 @@ const CATEGORIAS_EMPILHAVEIS: readonly ItemCategoriaEnum[] = [
   ItemCategoriaEnum.MEDICINAL,
 ];
 
+/** Categorias que **não aceitam modificação** alguma (nem do catálogo, nem custom): consumíveis. */
+const CATEGORIAS_NAO_MODIFICAVEIS: readonly ItemCategoriaEnum[] = [
+  ItemCategoriaEnum.OPERACIONAL,
+  ItemCategoriaEnum.MEDICINAL,
+];
+
 /** Cartão de item do catálogo (view-model do passo "adicionar"). */
 interface CartaoItemVM {
   readonly item: ItemCatalogo;
@@ -116,6 +122,8 @@ interface ItemInventarioVM {
   readonly stat: string | null;
   /** Descrição do item custom (texto livre), ou `null` para itens do catálogo. */
   readonly descricao: string | null;
+  /** `false` para consumíveis (Operacional/Medicinal): sem "Modificar" (nem custom). */
+  readonly modificavel: boolean;
   readonly ehArmazenamento: boolean;
   readonly guardada: boolean;
   readonly modsUsados: number;
@@ -801,6 +809,7 @@ export class FichaInventario {
       pesoTexto,
       stat: this.formatarStat(calcularStatItem({ item })),
       descricao: item.descricao ?? null,
+      modificavel: !CATEGORIAS_NAO_MODIFICAVEIS.includes(item.categoria),
       ehArmazenamento,
       guardada: item.guardada,
       modsUsados,

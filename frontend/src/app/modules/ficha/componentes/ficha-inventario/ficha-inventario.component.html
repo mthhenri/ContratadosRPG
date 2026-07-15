@@ -289,20 +289,22 @@
       <!-- Ações do item: Modificar e Vestir/Guardar ANTES do X de remover. -->
       @if (editavel()) {
         <div class="ficha-inv__item-acoes">
-          <button
-            type="button"
-            class="ficha-inv__modificar"
-            [class.ficha-inv__modificar--aberto]="item.painelAberto"
-            [attr.aria-expanded]="item.painelAberto"
-            (click)="alternarPainel(item.indice)"
-          >
-            <app-icone nome="editar" />
-            <span>Modificar</span>
-            @if (item.modsUsados > 0) {
-              <span class="ficha-inv__modificar-contagem">{{ item.modsUsados }}/{{ item.maxModificacoes }}</span>
-            }
-            <span class="ficha-inv__modificar-chevron">{{ item.painelAberto ? '▴' : '▾' }}</span>
-          </button>
+          @if (item.modificavel) {
+            <button
+              type="button"
+              class="ficha-inv__modificar"
+              [class.ficha-inv__modificar--aberto]="item.painelAberto"
+              [attr.aria-expanded]="item.painelAberto"
+              (click)="alternarPainel(item.indice)"
+            >
+              <app-icone nome="editar" />
+              <span>Modificar</span>
+              @if (item.modsUsados > 0) {
+                <span class="ficha-inv__modificar-contagem">{{ item.modsUsados }}/{{ item.maxModificacoes }}</span>
+              }
+              <span class="ficha-inv__modificar-chevron">{{ item.painelAberto ? '▴' : '▾' }}</span>
+            </button>
+          }
 
           @if (item.ehArmazenamento) {
             <button
@@ -320,6 +322,7 @@
           <!-- Remover: a confirmação acontece no próprio X (troca in-place), sem crescer a UI. -->
           <span class="ficha-inv__item-remover">
             @if (indiceConfirmandoRemocao() === item.indice) {
+              <span class="ficha-inv__remover-texto">Remover item?</span>
               <button
                 type="button"
                 class="ficha-inv__btn ficha-inv__btn--perigo ficha-inv__btn--icone"
@@ -352,7 +355,7 @@
           </span>
         </div>
 
-        @if (item.painelAberto) {
+        @if (item.modificavel && item.painelAberto) {
           <div class="ficha-inv__mod-painel">
             <!-- Modificação custom -->
             <div class="ficha-inv__mod-custom">
