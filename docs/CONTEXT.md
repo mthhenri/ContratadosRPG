@@ -1353,7 +1353,16 @@ Passou a existir **item custom** (nome/categoria/custo/peso) e **modificação c
 sem definição de catálogo, o motor cobra custo/peso padrão da categoria (fonte única mantida — proibição #26).
 As modificações deixaram de aparecer sempre: um botão **"Modificar"** revela a caixa de mods. Armazenamento
 ganhou um botão **menor e simples** de vestir/guardar. As mesmas mudanças valem na calculadora M1 de compras
-(`ComprasPage`), usando o `app-step-input` nativo da calculadora. Frontend 293/293.
+(`ComprasPage`), usando o `app-step-input` nativo da calculadora.
+
+**2ª rodada de refino (ficha + calculadora):** o card do item ganhou um **rodapé de ações** com
+**Modificar** e o botão de porte **antes do X** de remover (X à direita). A **remoção confirma no próprio
+X** (ele troca in-place por ✓/✕, sem abrir linha extra); stack ainda usa o dialog. O botão de porte agora
+tem **ícone próprio** (novos ícones `vestida`/`guardada` no `Icone`): **Vestida = cor do tema (accent)**,
+**Guardada = cinza claro**. E os custom ficaram **funcionais de fato**: `CarrinhoItemDto`/
+`ModificacaoAplicadaDto` (shared) ganharam um `descricao?` opcional (ignorado pelo motor — proibição #26
+intacta), então item custom e modificação custom carregam uma **descrição/efeito** em texto livre, exibida
+na lista/chip. Verificado ao vivo (stack real) nos dois lados. Frontend 293/293, shared 190/190.
 
 **Próxima task: `m3-15`** — **presets de rolagem** da ficha (aba Rolagens): atalhos nomeados para fórmulas
 (ex.: `1d20+LUT`) salvos em `dados.rolagens` (`FichaRolagemDto`, já no contrato m3-01), com o motor de

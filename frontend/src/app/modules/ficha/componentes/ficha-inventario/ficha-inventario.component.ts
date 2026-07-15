@@ -82,6 +82,8 @@ interface ModAtivaVM {
   readonly empilhamentos: number;
   readonly custoTexto: string;
   readonly podeAumentar: boolean;
+  /** Efeito da mod custom (texto livre), ou `null` para mods do catálogo. */
+  readonly descricao: string | null;
 }
 
 /** Uma entrada do painel de modificações (mod disponível para o item). */
@@ -112,6 +114,8 @@ interface ItemInventarioVM {
   readonly custoTotalTexto: string;
   readonly pesoTexto: string;
   readonly stat: string | null;
+  /** Descrição do item custom (texto livre), ou `null` para itens do catálogo. */
+  readonly descricao: string | null;
   readonly ehArmazenamento: boolean;
   readonly guardada: boolean;
   readonly modsUsados: number;
@@ -209,6 +213,7 @@ export class FichaInventario {
     categoria: new FormControl(ItemCategoriaEnum.OPERACIONAL, { nonNullable: true }),
     custo: new FormControl(0, { nonNullable: true }),
     peso: new FormControl(1, { nonNullable: true }),
+    descricao: new FormControl('', { nonNullable: true }),
   });
 
   /** Índice do item cujo formulário de modificação custom está aberto, ou `null`. */
@@ -216,6 +221,7 @@ export class FichaInventario {
   protected readonly modCustomForm = new FormGroup({
     nome: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     empilhamentos: new FormControl(1, { nonNullable: true }),
+    descricao: new FormControl('', { nonNullable: true }),
   });
 
   constructor() {
@@ -382,6 +388,7 @@ export class FichaInventario {
       categoria: ItemCategoriaEnum.OPERACIONAL,
       custo: 0,
       peso: 1,
+      descricao: '',
     });
     this.criandoItem.set(true);
   }
@@ -400,6 +407,7 @@ export class FichaInventario {
       return;
     }
     const bruto = this.itemCustomForm.getRawValue();
+    const descricao = bruto.descricao.trim();
     this.inserirItem({
       nome: bruto.nome.trim(),
       categoria: bruto.categoria,
@@ -408,6 +416,7 @@ export class FichaInventario {
       quantidade: 1,
       guardada: false,
       modificacoes: [],
+      ...(descricao ? { descricao } : {}),
     });
     this.sinalizarAdicao(this.chaveCartao(bruto.categoria, bruto.nome.trim()));
     this.criandoItem.set(false);
@@ -603,7 +612,7 @@ export class FichaInventario {
       this.criandoModIndice.set(null);
       return;
     }
-    this.modCustomForm.reset({ nome: '', empilhamentos: 1 });
+    this.modCustomForm.reset({ nome: '', empilhamentos: 1, descricao: '' });
     this.criandoModIndice.set(indice);
   }
 
@@ -627,10 +636,12 @@ export class FichaInventario {
     const bruto = this.modCustomForm.getRawValue();
     const nome = bruto.nome.trim();
     const empilhamentos = Math.max(1, bruto.empilhamentos);
-    const semMod = item.modificacoes.filter((modificacao) => modificacao.nome !== nome);
+    const descricao = bruto.descricao.trim();
+    const modificacao = { nome, empilhamentos, ...(descricao ? { descricao } : {}) };
+    const semMod = item.modificacoes.filter((atual) => atual.nome !== nome);
     this.emitirItens(
       this.inventario().itens.map((atual, i) =>
-        i === indice ? { ...atual, modificacoes: [...semMod, { nome, empilhamentos }] } : atual,
+        i === indice ? { ...atual, modificacoes: [...semMod, modificacao] } : atual,
       ),
     );
     this.criandoModIndice.set(null);
@@ -777,6 +788,7 @@ export class FichaInventario {
             modificacao.empilhamentos < limite.maxEmpilhamentos &&
             modsUsados < limite.maxModificacoes
           : true,
+        descricao: modificacao.descricao ?? null,
       };
     });
 
@@ -788,6 +800,7 @@ export class FichaInventario {
       custoTotalTexto: this.formatarDinheiro(custoTotal),
       pesoTexto,
       stat: this.formatarStat(calcularStatItem({ item })),
+      descricao: item.descricao ?? null,
       ehArmazenamento,
       guardada: item.guardada,
       modsUsados,

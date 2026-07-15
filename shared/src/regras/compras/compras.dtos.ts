@@ -19,6 +19,12 @@ export interface ModificacaoAplicadaDto {
   readonly nome: string;
   /** Empilhamentos aplicados (o antigo `stacks`). O primeiro adquire `empilhamentosIniciais`. */
   readonly empilhamentos: number;
+  /**
+   * Efeito da modificação em texto livre — **só nas modificações custom** (as do catálogo têm a
+   * descrição em `MODIFICACOES`). Opcional e ignorado pelo motor de cálculo (o custo/peso de uma mod
+   * custom segue o padrão da categoria); é apenas o registro de "o que essa mod faz" para a UI.
+   */
+  readonly descricao?: string;
 }
 
 /** Um amplificador acoplado ao agente, com sua quantidade de empilhamentos. */
@@ -48,6 +54,12 @@ export interface CarrinhoItemDto {
    */
   readonly guardada: boolean;
   readonly modificacoes: readonly ModificacaoAplicadaDto[];
+  /**
+   * Descrição em texto livre — **só nos itens custom** (os do catálogo têm a descrição em
+   * `CATALOGO_ITENS`, resolvida na exibição). Opcional e ignorada pelo motor de cálculo; registra
+   * "o que é/faz" o item que o jogador inventou, já que ele não existe no catálogo.
+   */
+  readonly descricao?: string;
 }
 
 // ── Entradas das funções ─────────────────────────────────────────────────────

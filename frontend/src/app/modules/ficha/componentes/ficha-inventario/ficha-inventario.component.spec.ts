@@ -141,6 +141,7 @@ describe('FichaInventario', () => {
       categoria: ItemCategoriaEnum.EXOTICOS,
       custo: 300,
       peso: 2,
+      descricao: '  Brilha no escuro  ',
     });
     alvo.componentInstance['confirmarCriarItem']();
     expect(alvo.emitidos[0].itens).toEqual([
@@ -152,6 +153,7 @@ describe('FichaInventario', () => {
         quantidade: 1,
         guardada: false,
         modificacoes: [],
+        descricao: 'Brilha no escuro',
       },
     ]);
   });
@@ -159,10 +161,14 @@ describe('FichaInventario', () => {
   it('aplica uma modificação custom (nome + empilhamentos) a um item', () => {
     const alvo = montar({ itens: [itemLeve], amplificadores: [] });
     alvo.componentInstance['alternarCriarMod'](0);
-    alvo.componentInstance['modCustomForm'].setValue({ nome: '  Amaldiçoada  ', empilhamentos: 2 });
+    alvo.componentInstance['modCustomForm'].setValue({
+      nome: '  Amaldiçoada  ',
+      empilhamentos: 2,
+      descricao: '  −1 na resistência do alvo  ',
+    });
     alvo.componentInstance['confirmarCriarMod'](0);
     expect(alvo.emitidos[0].itens[0].modificacoes).toEqual([
-      { nome: 'Amaldiçoada', empilhamentos: 2 },
+      { nome: 'Amaldiçoada', empilhamentos: 2, descricao: '−1 na resistência do alvo' },
     ]);
   });
 

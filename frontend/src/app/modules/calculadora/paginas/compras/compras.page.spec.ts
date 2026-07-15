@@ -298,17 +298,20 @@ describe('ComprasPage', () => {
 
   // === m3-14: confirmações, dialog de stack, item/mod custom ===
 
-  it('remover a última unidade pede confirmação inline e só some ao confirmar', async () => {
+  it('remover a última unidade confirma no próprio X (troca in-place) e só some ao confirmar', async () => {
     const { fixture, raiz } = await montar();
     adicionarItem(raiz, 'Leve');
     fixture.detectChanges();
-    (raiz.querySelector('.compras-btn--icone') as HTMLButtonElement).click();
+    // O X vira confirmar/cancelar no mesmo lugar (sem crescer a UI).
+    (raiz.querySelector('.compras-item-remover .compras-btn--icone') as HTMLButtonElement).click();
     fixture.detectChanges();
-    // Abriu a confirmação, mas o item continua no carrinho.
-    expect(raiz.querySelector('.compras-confirmar')).not.toBeNull();
+    // Item continua no carrinho; agora há um botão de confirmar (accent) no lugar do X.
     expect(raiz.querySelector('.compras-carrinho-item')).not.toBeNull();
-    // Confirma: some do carrinho.
-    (raiz.querySelector('.compras-confirmar .compras-btn--adicionar') as HTMLButtonElement).click();
+    const confirmar = raiz.querySelector(
+      '.compras-item-remover .compras-btn--adicionar',
+    ) as HTMLButtonElement;
+    expect(confirmar).not.toBeNull();
+    confirmar.click();
     fixture.detectChanges();
     expect(raiz.querySelector('.compras-carrinho-item')).toBeNull();
   });
@@ -356,6 +359,7 @@ describe('ComprasPage', () => {
       categoria: ItemCategoriaEnum.EXOTICOS,
       custo: 300,
       peso: 2,
+      descricao: '',
     });
     pagina['confirmarCriarItem']();
     fixture.detectChanges();
@@ -372,7 +376,7 @@ describe('ComprasPage', () => {
     fixture.detectChanges();
     const uid = pagina['itensCarrinho']()[0].uid;
     pagina['alternarCriarMod'](uid);
-    pagina['modCustomForm'].setValue({ nome: 'Amaldiçoada', empilhamentos: 2 });
+    pagina['modCustomForm'].setValue({ nome: 'Amaldiçoada', empilhamentos: 2, descricao: '' });
     pagina['confirmarCriarMod'](uid);
     fixture.detectChanges();
     expect(pagina['itensCarrinho']()[0].modsAtivas[0].nome).toBe('Amaldiçoada');

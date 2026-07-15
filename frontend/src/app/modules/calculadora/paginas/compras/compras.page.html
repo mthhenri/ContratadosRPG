@@ -124,6 +124,10 @@
             <app-step-input formControlName="peso" [min]="0" [passo]="0.5" ariaRotulo="Peso do item custom" />
           </div>
         </div>
+        <div class="calc-campo compras-custom-desc">
+          <span class="calc-campo__rotulo">Descrição / efeito <span class="calc-campo__auxiliar">(opcional)</span></span>
+          <textarea class="calc-texto compras-textarea" rows="2" formControlName="descricao" placeholder="O que o item é ou faz…"></textarea>
+        </div>
         <div class="compras-custom-acoes">
           <button type="submit" class="compras-btn compras-btn--adicionar" [disabled]="itemCustomForm.invalid">
             Adicionar item
@@ -286,46 +290,14 @@
           <div class="compras-carrinho-item__meta">
             <span class="compras-item__custo">{{ item.custoTotalTexto }}</span>
             <span class="compras-item__peso">{{ item.pesoTexto }}</span>
-            <button
-              type="button"
-              class="compras-btn compras-btn--remover compras-btn--icone"
-              title="Remover"
-              aria-label="Remover item"
-              (click)="removerItem(item.uid)"
-            >
-              ✕
-            </button>
           </div>
         </div>
-
-        <!-- Confirmação inline de remoção da última unidade. -->
-        @if (uidConfirmandoRemocao() === item.uid) {
-          <div class="compras-confirmar">
-            <span class="compras-confirmar__texto">Remover "{{ item.nome }}"?</span>
-            <button type="button" class="compras-btn compras-btn--adicionar compras-btn--pequeno" (click)="confirmarRemocaoItem(item.uid)">
-              Remover
-            </button>
-            <button type="button" class="compras-btn compras-btn--remover compras-btn--pequeno" (click)="cancelarRemocao()">
-              Cancelar
-            </button>
-          </div>
-        }
 
         @if (item.stat) {
           <div class="compras-carrinho-item__stat">{{ item.stat }}</div>
         }
-
-        <!-- Armazenamento: botão pequeno e simples de vestir/guardar. -->
-        @if (item.ehArmazenamento) {
-          <button
-            type="button"
-            class="compras-porte"
-            [class.compras-porte--vestida]="!item.guardada"
-            [title]="item.guardada ? 'Guardada: ocupa slots, não amplia o inventário' : 'Vestida: amplia o inventário, não ocupa slots'"
-            (click)="alternarGuardada(item.uid)"
-          >
-            {{ item.guardada ? 'Guardada' : 'Vestida' }}
-          </button>
+        @if (item.descricao) {
+          <div class="compras-carrinho-item__desc">{{ item.descricao }}</div>
         }
 
         @if (item.modsAtivas.length > 0) {
@@ -335,6 +307,9 @@
                 <div class="compras-mod-tag__info">
                   <span>{{ mod.nome }} ×{{ mod.empilhamentos }}</span>
                   <span class="compras-mod-tag__custo">{{ mod.custoTexto }}</span>
+                  @if (mod.descricao) {
+                    <span class="compras-mod-tag__desc">{{ mod.descricao }}</span>
+                  }
                 </div>
                 <div class="compras-mod-tag__botoes">
                   <button type="button" class="compras-mini-btn" aria-label="Remover empilhamento" (click)="removerModificacao(item.uid, mod.nome)">−</button>
@@ -353,21 +328,70 @@
           </div>
         }
 
-        <!-- Botão "Modificar": revela a caixa de modificações (catálogo + custom). -->
-        <button
-          type="button"
-          class="compras-modificar"
-          [class.selecionavel--ativo]="item.painelAberto"
-          [attr.aria-expanded]="item.painelAberto"
-          (click)="alternarPainel(item.uid)"
-        >
-          <app-icone nome="editar" />
-          <span>Modificar</span>
-          @if (item.modsUsados > 0) {
-            <span class="compras-modificar__contagem">{{ item.modsUsados }}/{{ item.maxModificacoes }}</span>
+        <!-- Ações do item: Modificar e Vestir/Guardar ANTES do X de remover. -->
+        <div class="compras-item-acoes">
+          <button
+            type="button"
+            class="compras-modificar"
+            [class.selecionavel--ativo]="item.painelAberto"
+            [attr.aria-expanded]="item.painelAberto"
+            (click)="alternarPainel(item.uid)"
+          >
+            <app-icone nome="editar" />
+            <span>Modificar</span>
+            @if (item.modsUsados > 0) {
+              <span class="compras-modificar__contagem">{{ item.modsUsados }}/{{ item.maxModificacoes }}</span>
+            }
+            <span class="compras-modificar__chevron">{{ item.painelAberto ? '▴' : '▾' }}</span>
+          </button>
+
+          @if (item.ehArmazenamento) {
+            <button
+              type="button"
+              class="compras-porte"
+              [class.compras-porte--vestida]="!item.guardada"
+              [title]="item.guardada ? 'Guardada: ocupa slots, não amplia o inventário' : 'Vestida: amplia o inventário, não ocupa slots'"
+              (click)="alternarGuardada(item.uid)"
+            >
+              <app-icone [nome]="item.guardada ? 'guardada' : 'vestida'" />
+              <span>{{ item.guardada ? 'Guardada' : 'Vestida' }}</span>
+            </button>
           }
-          <span class="compras-modificar__chevron">{{ item.painelAberto ? '▴' : '▾' }}</span>
-        </button>
+
+          <!-- Remover: a confirmação acontece no próprio X (troca in-place), sem crescer a UI. -->
+          <span class="compras-item-remover">
+            @if (uidConfirmandoRemocao() === item.uid) {
+              <button
+                type="button"
+                class="compras-btn compras-btn--adicionar compras-btn--icone"
+                title="Confirmar remoção"
+                aria-label="Confirmar remoção"
+                (click)="confirmarRemocaoItem(item.uid)"
+              >
+                <app-icone nome="check" />
+              </button>
+              <button
+                type="button"
+                class="compras-btn compras-btn--remover compras-btn--icone"
+                title="Cancelar"
+                aria-label="Cancelar remoção"
+                (click)="cancelarRemocao()"
+              >
+                ✕
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="compras-btn compras-btn--remover compras-btn--icone"
+                title="Remover"
+                aria-label="Remover item"
+                (click)="removerItem(item.uid)"
+              >
+                ✕
+              </button>
+            }
+          </span>
+        </div>
 
         @if (item.painelAberto) {
           <div class="compras-mod-painel">
@@ -384,6 +408,10 @@
                       <span class="calc-campo__rotulo">Empilhamentos</span>
                       <app-step-input formControlName="empilhamentos" [min]="1" ariaRotulo="Empilhamentos da modificação custom" />
                     </div>
+                  </div>
+                  <div class="calc-campo compras-custom-desc">
+                    <span class="calc-campo__rotulo">Efeito <span class="calc-campo__auxiliar">(opcional)</span></span>
+                    <textarea class="calc-texto compras-textarea" rows="2" formControlName="descricao" placeholder="O que essa modificação faz…"></textarea>
                   </div>
                   <div class="compras-custom-acoes">
                     <button type="submit" class="compras-btn compras-btn--adicionar" [disabled]="modCustomForm.invalid">

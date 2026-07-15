@@ -42,6 +42,8 @@ import { ICONES_CATEGORIA, ROTULOS_PATENTE } from '../../rotulos';
 interface ModificacaoCarrinho {
   readonly nome: string;
   readonly empilhamentos: number;
+  /** Efeito da mod custom (texto livre) — ausente nas mods do catálogo. */
+  readonly descricao?: string;
 }
 
 /**
@@ -58,6 +60,8 @@ interface ItemCarrinho {
   readonly quantidade: number;
   readonly guardada: boolean;
   readonly modificacoes: readonly ModificacaoCarrinho[];
+  /** Descrição do item custom (texto livre) — ausente nos itens do catálogo. */
+  readonly descricao?: string;
 }
 
 /** Um amplificador acoplado ao agente (estado da página). */
@@ -94,6 +98,8 @@ interface ModAtivaVM {
   readonly empilhamentos: number;
   readonly custoTexto: string;
   readonly podeAumentar: boolean;
+  /** Efeito da mod custom (texto livre), ou `null` para mods do catálogo. */
+  readonly descricao: string | null;
 }
 
 /** Uma entrada do painel de modificações (mod disponível para o item). */
@@ -124,6 +130,8 @@ interface ItemCarrinhoVM {
   readonly custoTotalTexto: string;
   readonly pesoTexto: string;
   readonly stat: string | null;
+  /** Descrição do item custom (texto livre), ou `null` para itens do catálogo. */
+  readonly descricao: string | null;
   readonly ehArmazenamento: boolean;
   readonly guardada: boolean;
   readonly modsUsados: number;
@@ -298,6 +306,7 @@ export class ComprasPage {
     categoria: new FormControl(ItemCategoriaEnum.OPERACIONAL, { nonNullable: true }),
     custo: new FormControl(0, { nonNullable: true }),
     peso: new FormControl(1, { nonNullable: true }),
+    descricao: new FormControl('', { nonNullable: true }),
   });
   /** Categorias disponíveis para um item custom (todas menos Amplificador, que não é item). */
   protected readonly categoriasItem = CATALOGO_CATEGORIAS.filter(
@@ -309,6 +318,7 @@ export class ComprasPage {
   protected readonly modCustomForm = new FormGroup({
     nome: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     empilhamentos: new FormControl(1, { nonNullable: true }),
+    descricao: new FormControl('', { nonNullable: true }),
   });
 
   constructor() {
@@ -500,6 +510,7 @@ export class ComprasPage {
       categoria: ItemCategoriaEnum.OPERACIONAL,
       custo: 0,
       peso: 1,
+      descricao: '',
     });
     this.criandoItem.set(true);
   }
@@ -518,6 +529,7 @@ export class ComprasPage {
       return;
     }
     const bruto = this.itemCustomForm.getRawValue();
+    const descricao = bruto.descricao.trim();
     this.inserirItemCarrinho({
       nome: bruto.nome.trim(),
       categoria: bruto.categoria,
@@ -526,6 +538,7 @@ export class ComprasPage {
       quantidade: 1,
       guardada: false,
       modificacoes: [],
+      ...(descricao ? { descricao } : {}),
     });
     this.sinalizarAdicao(this.chaveCartao(bruto.categoria, bruto.nome.trim()));
     this.criandoItem.set(false);
@@ -714,7 +727,7 @@ export class ComprasPage {
       this.criandoModUid.set(null);
       return;
     }
-    this.modCustomForm.reset({ nome: '', empilhamentos: 1 });
+    this.modCustomForm.reset({ nome: '', empilhamentos: 1, descricao: '' });
     this.criandoModUid.set(uid);
   }
 
@@ -738,10 +751,12 @@ export class ComprasPage {
     const bruto = this.modCustomForm.getRawValue();
     const nome = bruto.nome.trim();
     const empilhamentos = Math.max(1, bruto.empilhamentos);
-    const semMod = item.modificacoes.filter((modificacao) => modificacao.nome !== nome);
+    const descricao = bruto.descricao.trim();
+    const modificacao = { nome, empilhamentos, ...(descricao ? { descricao } : {}) };
+    const semMod = item.modificacoes.filter((atual) => atual.nome !== nome);
     this.definirCarrinho(
       this.lerCarrinho().map((atual) =>
-        atual.uid === uid ? { ...atual, modificacoes: [...semMod, { nome, empilhamentos }] } : atual,
+        atual.uid === uid ? { ...atual, modificacoes: [...semMod, modificacao] } : atual,
       ),
     );
     this.criandoModUid.set(null);
@@ -1116,6 +1131,7 @@ export class ComprasPage {
             modificacao.empilhamentos < limite.maxEmpilhamentos &&
             modsUsados < limite.maxModificacoes
           : true,
+        descricao: modificacao.descricao ?? null,
       };
     });
 
@@ -1127,6 +1143,7 @@ export class ComprasPage {
       custoTotalTexto: this.formatarDinheiro(custoTotal),
       pesoTexto,
       stat: this.formatarStat(calcularStatItem({ item })),
+      descricao: item.descricao ?? null,
       ehArmazenamento,
       guardada: item.guardada,
       modsUsados,
