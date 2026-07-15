@@ -1,9 +1,14 @@
 import { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
-import type { FichaAtributosDto, FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
+import type {
+  FichaAtributosDto,
+  FichaHabilidadeDto,
+  FichaJogadorDadosDto,
+} from '@contratados-rpg/shared/dtos/ficha';
 import {
   calcularDerivados,
   calcularEnergia,
   calcularVida,
+  habilidadesIniciais,
   maestriaAtingivel,
   obterBonusAtributos,
   obterLimitesClasse,
@@ -74,6 +79,16 @@ export function construirFichaInicial(
   const vidaMaxima = calcularVida({ classe, nivel, vigor: atributos.vigor });
   const energiaMaxima = calcularEnergia({ classe, nivel, destreza: atributos.destreza });
 
+  // O agente já nasce com a Habilidade Inicial do seu arquétipo/subclasse (doc — vem de graça, não
+  // é escolhida). `habilidadesIniciais` devolve os itens do catálogo já com categoria/origem.
+  const habilidades: FichaHabilidadeDto[] = habilidadesIniciais(classe, arquetipo).map((item) => ({
+    nome: item.nome,
+    categoria: item.categoria,
+    custoEnergia: item.custoEnergia,
+    descricao: item.descricao,
+    ...(item.origem === undefined ? {} : { origem: item.origem }),
+  }));
+
   return {
     nome: opcoes.nome.trim() || 'Novo agente',
     dados: {
@@ -93,7 +108,7 @@ export function construirFichaInicial(
         lesoes: [],
       },
       derivados: calcularDerivados(classe, nivel, atributos),
-      habilidades: [],
+      habilidades,
       inventario: { itens: [], amplificadores: [] },
       rolagens: [],
       anotacoes: '',
