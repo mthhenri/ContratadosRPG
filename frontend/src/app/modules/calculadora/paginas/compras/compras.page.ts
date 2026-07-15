@@ -23,6 +23,7 @@ import {
   ItemCatalogo,
   MODIFICACOES,
   ModificacaoDados,
+  ModificacaoEfeitoDto,
   obterCategoriaEmprestada,
   obterCustoModificacao,
   obterLimiteModificacoes,
@@ -167,6 +168,51 @@ const CATEGORIAS_NAO_MODIFICAVEIS: readonly ItemCategoriaEnum[] = [
   ItemCategoriaEnum.MEDICINAL,
 ];
 
+/** Categorias que possuem **dano** (o form custom mostra Dano + Informação). */
+const CATEGORIAS_COM_DANO: readonly ItemCategoriaEnum[] = [
+  ItemCategoriaEnum.CORPO_A_CORPO,
+  ItemCategoriaEnum.EXPLOSIVOS,
+  ItemCategoriaEnum.ARMAS_DE_FOGO,
+  ItemCategoriaEnum.EXOTICOS,
+  ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+];
+
+/** Categorias que possuem **resistência** (o form custom mostra Resistência). */
+const CATEGORIAS_COM_RESISTENCIA: readonly ItemCategoriaEnum[] = [
+  ItemCategoriaEnum.PROTECOES,
+  ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+];
+
+/** Categorias que declaram "encaixa em" (categoria emprestada): exótico e fragmento construtor. */
+const CATEGORIAS_COM_EMPRESTIMO: readonly ItemCategoriaEnum[] = [
+  ItemCategoriaEnum.EXOTICOS,
+  ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+];
+
+/** Categorias de Fragmento (o form custom mostra o Módulo; ficam fora das abas do catálogo). */
+const CATEGORIAS_FRAGMENTO: readonly ItemCategoriaEnum[] = [
+  ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+  ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+];
+
+/** Categorias oferecidas no seletor "encaixa em" (as que têm modificações de arma/proteção). */
+const CATEGORIAS_EMPRESTAVEIS: readonly ItemCategoriaEnum[] = [
+  ItemCategoriaEnum.CORPO_A_CORPO,
+  ItemCategoriaEnum.EXPLOSIVOS,
+  ItemCategoriaEnum.ARMAS_DE_FOGO,
+  ItemCategoriaEnum.MUNICOES,
+  ItemCategoriaEnum.PROTECOES,
+];
+
+/** Módulos de fragmento (I–V), na ordem do sistema (I é o mais forte). */
+const MODULOS_FRAGMENTO: readonly FragmentoModuloEnum[] = [
+  FragmentoModuloEnum.I,
+  FragmentoModuloEnum.II,
+  FragmentoModuloEnum.III,
+  FragmentoModuloEnum.IV,
+  FragmentoModuloEnum.V,
+];
+
 /** Recursos de configuração do agente (valores brutos do formulário). */
 interface RecursosCarrinho {
   readonly dinheiro: number;
@@ -250,7 +296,10 @@ function fragmentosZerados(): GradeFragmentos {
   styleUrl: './compras.page.scss',
 })
 export class ComprasPage {
-  protected readonly categorias = CATALOGO_CATEGORIAS;
+  /** Abas do catálogo comprável — sem os Fragmentos (achados, montados como item custom). */
+  protected readonly categorias = CATALOGO_CATEGORIAS.filter(
+    (categoria) => !CATEGORIAS_FRAGMENTO.includes(categoria.categoria),
+  );
   protected readonly iconesCategoria = ICONES_CATEGORIA;
 
   protected readonly formulario = new FormGroup({
@@ -315,10 +364,36 @@ export class ComprasPage {
     custo: new FormControl(0, { nonNullable: true }),
     peso: new FormControl(1, { nonNullable: true }),
     descricao: new FormControl('', { nonNullable: true }),
+    // Stats reais (aparecem conforme a categoria) — fazem o item custom "funcionar de verdade".
+    dano: new FormControl('', { nonNullable: true }),
+    informacao: new FormControl('', { nonNullable: true }),
+    resistencia: new FormControl('', { nonNullable: true }),
+    bonus: new FormControl('', { nonNullable: true }),
+    categoriaEmprestada: new FormControl('', { nonNullable: true }),
+    modulo: new FormControl('', { nonNullable: true }),
   });
   /** Categorias disponíveis para um item custom (todas menos Amplificador, que não é item). */
   protected readonly categoriasItem = CATALOGO_CATEGORIAS.filter(
     (categoria) => categoria.categoria !== ItemCategoriaEnum.AMPLIFICADOR,
+  );
+  protected readonly categoriasEmprestaveis = CATEGORIAS_EMPRESTAVEIS;
+  protected readonly modulosFragmento = MODULOS_FRAGMENTO;
+
+  private readonly categoriaCustom = toSignal(this.itemCustomForm.controls.categoria.valueChanges, {
+    initialValue: this.itemCustomForm.controls.categoria.value,
+  });
+  protected readonly mostraDano = computed(() => CATEGORIAS_COM_DANO.includes(this.categoriaCustom()));
+  protected readonly mostraResistencia = computed(() =>
+    CATEGORIAS_COM_RESISTENCIA.includes(this.categoriaCustom()),
+  );
+  protected readonly mostraBonus = computed(
+    () => this.categoriaCustom() === ItemCategoriaEnum.ARMAZENAMENTO,
+  );
+  protected readonly mostraEmprestimo = computed(() =>
+    CATEGORIAS_COM_EMPRESTIMO.includes(this.categoriaCustom()),
+  );
+  protected readonly mostraModulo = computed(() =>
+    CATEGORIAS_FRAGMENTO.includes(this.categoriaCustom()),
   );
 
   /** UID do item cujo formulário de modificação custom está aberto, ou `null`. */
@@ -327,6 +402,12 @@ export class ComprasPage {
     nome: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     empilhamentos: new FormControl(1, { nonNullable: true }),
     descricao: new FormControl('', { nonNullable: true }),
+    // Efeito mecânico (por empilhamento) — faz a mod custom "funcionar de verdade".
+    danoFixo: new FormControl(0, { nonNullable: true }),
+    dadosQuantidade: new FormControl(0, { nonNullable: true }),
+    dadosFaces: new FormControl(0, { nonNullable: true }),
+    dadosTipo: new FormControl('', { nonNullable: true }),
+    resistencia: new FormControl(0, { nonNullable: true }),
   });
 
   constructor() {
@@ -519,6 +600,12 @@ export class ComprasPage {
       custo: 0,
       peso: 1,
       descricao: '',
+      dano: '',
+      informacao: '',
+      resistencia: '',
+      bonus: '',
+      categoriaEmprestada: '',
+      modulo: '',
     });
     this.criandoItem.set(true);
   }
@@ -536,20 +623,45 @@ export class ComprasPage {
     if (this.itemCustomForm.invalid) {
       return;
     }
+    const dados = this.montarItemCustom();
+    this.inserirItemCarrinho(dados);
+    this.sinalizarAdicao(this.chaveCartao(dados.categoria, dados.nome));
+    this.criandoItem.set(false);
+  }
+
+  /**
+   * Monta o `ItemCarrinho` (sem `uid`) do form custom, incluindo só os **stats reais** pertinentes à
+   * categoria — assim o item inventado calcula dano/resistência/bônus de verdade (`calcularStatItem`
+   * lê estes campos; o cálculo continua no motor — proibição #26).
+   */
+  private montarItemCustom(): Omit<ItemCarrinho, 'uid'> {
     const bruto = this.itemCustomForm.getRawValue();
+    const categoria = bruto.categoria;
+    const dano = bruto.dano.trim();
+    const informacao = bruto.informacao.trim();
+    const resistencia = bruto.resistencia.trim();
+    const bonus = bruto.bonus.trim();
     const descricao = bruto.descricao.trim();
-    this.inserirItemCarrinho({
+    return {
       nome: bruto.nome.trim(),
-      categoria: bruto.categoria,
+      categoria,
       custo: Math.max(0, bruto.custo),
       peso: Math.max(0, bruto.peso),
       quantidade: 1,
       guardada: false,
       modificacoes: [],
       ...(descricao ? { descricao } : {}),
-    });
-    this.sinalizarAdicao(this.chaveCartao(bruto.categoria, bruto.nome.trim()));
-    this.criandoItem.set(false);
+      ...(dano && CATEGORIAS_COM_DANO.includes(categoria) ? { dano } : {}),
+      ...(informacao && CATEGORIAS_COM_DANO.includes(categoria) ? { informacao } : {}),
+      ...(resistencia && CATEGORIAS_COM_RESISTENCIA.includes(categoria) ? { resistencia } : {}),
+      ...(bonus && categoria === ItemCategoriaEnum.ARMAZENAMENTO ? { bonus } : {}),
+      ...(bruto.categoriaEmprestada && CATEGORIAS_COM_EMPRESTIMO.includes(categoria)
+        ? { categoriaEmprestada: bruto.categoriaEmprestada as ItemCategoriaEnum }
+        : {}),
+      ...(bruto.modulo && CATEGORIAS_FRAGMENTO.includes(categoria)
+        ? { modulo: bruto.modulo as FragmentoModuloEnum }
+        : {}),
+    };
   }
 
   /** Adiciona um item ao carrinho ativo, empilhando quando a categoria é empilhável e o item já existe. */
@@ -735,7 +847,16 @@ export class ComprasPage {
       this.criandoModUid.set(null);
       return;
     }
-    this.modCustomForm.reset({ nome: '', empilhamentos: 1, descricao: '' });
+    this.modCustomForm.reset({
+      nome: '',
+      empilhamentos: 1,
+      descricao: '',
+      danoFixo: 0,
+      dadosQuantidade: 0,
+      dadosFaces: 0,
+      dadosTipo: '',
+      resistencia: 0,
+    });
     this.criandoModUid.set(uid);
   }
 
@@ -760,7 +881,13 @@ export class ComprasPage {
     const nome = bruto.nome.trim();
     const empilhamentos = Math.max(1, bruto.empilhamentos);
     const descricao = bruto.descricao.trim();
-    const modificacao = { nome, empilhamentos, ...(descricao ? { descricao } : {}) };
+    const efeito = this.montarEfeitoMod(bruto);
+    const modificacao = {
+      nome,
+      empilhamentos,
+      ...(descricao ? { descricao } : {}),
+      ...(efeito ? { efeito } : {}),
+    };
     const semMod = item.modificacoes.filter((atual) => atual.nome !== nome);
     this.definirCarrinho(
       this.lerCarrinho().map((atual) =>
@@ -768,6 +895,42 @@ export class ComprasPage {
       ),
     );
     this.criandoModUid.set(null);
+  }
+
+  /** Passo − / + num campo numérico do efeito da mod custom (piso 0). */
+  protected ajustarEfeitoMod(
+    campo: 'danoFixo' | 'dadosQuantidade' | 'dadosFaces' | 'resistencia',
+    delta: number,
+  ): void {
+    const controle = this.modCustomForm.controls[campo];
+    controle.setValue(Math.max(0, controle.value + delta));
+  }
+
+  /**
+   * Monta o efeito **mecânico** da mod custom (dano fixo, dados extras, resistência) — só os campos
+   * preenchidos. `null` quando nenhum efeito foi informado (a mod fica só descritiva).
+   */
+  private montarEfeitoMod(bruto: {
+    danoFixo: number;
+    dadosQuantidade: number;
+    dadosFaces: number;
+    dadosTipo: string;
+    resistencia: number;
+  }): ModificacaoEfeitoDto | null {
+    const danoDados =
+      bruto.dadosQuantidade > 0 && bruto.dadosFaces > 0
+        ? {
+            quantidade: bruto.dadosQuantidade,
+            faces: bruto.dadosFaces,
+            tipo: bruto.dadosTipo.trim() || 'Físico',
+          }
+        : undefined;
+    const efeito: ModificacaoEfeitoDto = {
+      ...(bruto.danoFixo > 0 ? { danoFixo: bruto.danoFixo } : {}),
+      ...(danoDados ? { danoDados } : {}),
+      ...(bruto.resistencia > 0 ? { resistencia: bruto.resistencia } : {}),
+    };
+    return Object.keys(efeito).length > 0 ? efeito : null;
   }
 
   protected adicionarAmplificador(nome: string): void {
@@ -1307,7 +1470,7 @@ export class ComprasPage {
     return definicao && definicao.peso !== undefined ? definicao.peso : 0.2;
   }
 
-  private rotuloCategoria(categoria: ItemCategoriaEnum): string {
+  protected rotuloCategoria(categoria: ItemCategoriaEnum): string {
     return CATALOGO_CATEGORIAS.find((atual) => atual.categoria === categoria)?.rotulo ?? '';
   }
 

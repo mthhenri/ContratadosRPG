@@ -319,10 +319,17 @@ describe('coerência do catálogo e das tabelas', () => {
     });
   });
 
-  it('tem itens com custo e peso não negativos em toda categoria (exceto Amplificador)', () => {
+  it('tem itens com custo e peso não negativos em toda categoria (exceto Amplificador/Fragmentos)', () => {
+    // Amplificadores e Fragmentos não têm catálogo comprável: amps vivem em AMPLIFICADORES; fragmentos
+    // são achados e montados como itens custom (módulo + forma base + stats próprios).
+    const semCatalogo: readonly ItemCategoriaEnum[] = [
+      ItemCategoriaEnum.AMPLIFICADOR,
+      ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+      ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+    ];
     Object.values(ItemCategoriaEnum).forEach((categoria) => {
       const itens = CATALOGO_ITENS[categoria];
-      if (categoria === ItemCategoriaEnum.AMPLIFICADOR) {
+      if (semCatalogo.includes(categoria)) {
         expect(itens).toHaveLength(0);
         return;
       }
@@ -350,6 +357,74 @@ describe('coerência do catálogo e das tabelas', () => {
     AMPLIFICADORES.forEach((amplificador) => {
       expect(amplificador.empilhamentosIniciais).toBeGreaterThanOrEqual(1);
       expect(amplificador.empilhamentosIniciais).toBeLessThanOrEqual(amplificador.empilhamentoMaximo);
+    });
+  });
+
+  describe('itens e modificações custom "de verdade"', () => {
+    function itemCustom(parcial: Partial<CarrinhoItemDto>): CarrinhoItemDto {
+      return {
+        nome: 'Custom',
+        categoria: ItemCategoriaEnum.CORPO_A_CORPO,
+        custo: 0,
+        peso: 1,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        ...parcial,
+      };
+    }
+
+    it('calcula o dano de um item custom a partir do stat embutido nele', () => {
+      const item = itemCustom({ dano: '3D6+FOR [Físico]' });
+      expect(calcularStatItem({ item })?.dano).toBe('3D6+FOR [Físico]');
+    });
+
+    it('calcula a resistência de uma proteção custom pelo stat embutido', () => {
+      const item = itemCustom({ categoria: ItemCategoriaEnum.PROTECOES, resistencia: '10 [Físico]' });
+      expect(calcularStatItem({ item })?.resistencia).toBe('10 [Físico]');
+    });
+
+    it('conta o bônus de inventário de um armazenamento custom vestido nos totais', () => {
+      const item = itemCustom({ categoria: ItemCategoriaEnum.ARMAZENAMENTO, bonus: '+6 inv.', guardada: false });
+      expect(calcularTotaisCarrinho({ itens: [item], amplificadores: [] }).bonusInventario).toBe(6);
+    });
+
+    it('exótico custom que declara categoria emprestada se encaixa nela sem "Faz Parte"', () => {
+      const item = itemCustom({
+        categoria: ItemCategoriaEnum.EXOTICOS,
+        categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+      });
+      expect(obterCategoriaEmprestada(item)).toBe(ItemCategoriaEnum.CORPO_A_CORPO);
+    });
+
+    it('modificação custom com efeito de dano fixo soma ao dano do item', () => {
+      const item = itemCustom({
+        dano: '1D6 [Físico]',
+        modificacoes: [{ nome: 'Encantada', empilhamentos: 2, efeito: { danoFixo: 2 } }],
+      });
+      // +2 por empilhamento × 2 = +4.
+      expect(calcularStatItem({ item })?.dano).toBe('1D6+4 [Físico]');
+    });
+
+    it('modificação custom com dados extras acrescenta um grupo de dano do tipo informado', () => {
+      const item = itemCustom({
+        dano: '1D6 [Físico]',
+        modificacoes: [
+          { nome: 'Flamejante', empilhamentos: 2, efeito: { danoDados: { quantidade: 1, faces: 4, tipo: 'Químico' } } },
+        ],
+      });
+      const dano = calcularStatItem({ item })?.dano;
+      expect(dano).toContain('1D6 [Físico]');
+      expect(dano).toContain('2D4 [Químico]');
+    });
+
+    it('modificação custom com efeito de resistência soma à proteção custom', () => {
+      const item = itemCustom({
+        categoria: ItemCategoriaEnum.PROTECOES,
+        resistencia: '10 [Físico]',
+        modificacoes: [{ nome: 'Blindagem', empilhamentos: 1, efeito: { resistencia: 5 } }],
+      });
+      expect(calcularStatItem({ item })?.resistencia).toBe('15 [Físico]');
     });
   });
 });

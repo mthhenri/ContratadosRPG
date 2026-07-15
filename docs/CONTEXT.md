@@ -1364,6 +1364,19 @@ tem **ícone próprio** (novos ícones `vestida`/`guardada` no `Icone`): **Vesti
 intacta), então item custom e modificação custom carregam uma **descrição/efeito** em texto livre, exibida
 na lista/chip. Verificado ao vivo (stack real) nos dois lados. Frontend 293/293, shared 190/190.
 
+**3ª rodada (item/mod custom REALMENTE funcionais + Fragmentos):** o texto "Remover item?" acompanha o
+✓/✕ da confirmação; **Operacional/Medicinal não aceitam modificação** (nem custom). O motor
+(`shared/regras/compras`) passou a **resolver os stats do item pelo próprio item** quando ele é custom
+(`resolverDadosItem`): `CarrinhoItemDto` ganhou `dano`/`informacao`/`resistencia`/`bonus`/
+`categoriaEmprestada`/`modulo`, então uma **arma/explosivo/proteção/armazenamento custom calcula
+dano/resistência/bônus de verdade** como um do catálogo. **Exótico custom** informa em qual categoria "se
+encaixa" (recebe mods dela, ex.: manopla que aceita mods de Corpo a Corpo). **Modificação custom** ganhou
+efeito **mecânico** (`ModificacaoAplicadaDto.efeito`: dano fixo, dados extras `NDx [tipo]`, resistência)
+aplicado por `calcularStatItem`. Duas novas **categorias de item — Fragmento Construtor e Fragmento
+Potencializador** (achados, montados como item custom com módulo I–V + forma base). Formulários de item/mod
+custom (ficha e calculadora) ganharam os campos por categoria. Tudo com testes no motor (`compras.spec`
++7) e nos componentes. Frontend 296/296, shared 190/190.
+
 **Próxima task: `m3-15`** — **presets de rolagem** da ficha (aba Rolagens): atalhos nomeados para fórmulas
 (ex.: `1d20+LUT`) salvos em `dados.rolagens` (`FichaRolagemDto`, já no contrato m3-01), com o motor de
 avaliação em `shared/regras/dados`. **Antes de qualquer UI, ler `docs/design/DESIGN.md` e consumir os tokens

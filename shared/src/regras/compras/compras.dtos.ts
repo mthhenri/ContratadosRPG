@@ -1,4 +1,4 @@
-import { ItemCategoriaEnum, PatenteEnum } from '../../enums';
+import { FragmentoModuloEnum, ItemCategoriaEnum, PatenteEnum } from '../../enums';
 
 /**
  * DTOs de entrada e value-objects de saída do domínio de compras
@@ -14,6 +14,24 @@ import { ItemCategoriaEnum, PatenteEnum } from '../../enums';
 
 // ── Estado do carrinho (value-objects de entrada) ────────────────────────────
 
+/**
+ * Efeito **mecânico** de uma modificação custom (as do catálogo têm efeito próprio, embutido no
+ * motor). Cada empilhamento aplica o efeito uma vez, então o total escala com os empilhamentos.
+ * Só os campos preenchidos entram no cálculo do stat do item (`calcularStatItem`).
+ */
+export interface ModificacaoEfeitoDto {
+  /** Soma fixa ao dano (ex.: +2 por empilhamento). */
+  readonly danoFixo?: number;
+  /** Dados de dano extras por empilhamento (ex.: `2` D`6` do tipo `Físico`). */
+  readonly danoDados?: {
+    readonly quantidade: number;
+    readonly faces: number;
+    readonly tipo: string;
+  };
+  /** Soma à resistência (proteções), aplicada a todos os tipos existentes, por empilhamento. */
+  readonly resistencia?: number;
+}
+
 /** Uma modificação aplicada a um item do carrinho, com sua quantidade de empilhamentos. */
 export interface ModificacaoAplicadaDto {
   readonly nome: string;
@@ -21,10 +39,14 @@ export interface ModificacaoAplicadaDto {
   readonly empilhamentos: number;
   /**
    * Efeito da modificação em texto livre — **só nas modificações custom** (as do catálogo têm a
-   * descrição em `MODIFICACOES`). Opcional e ignorado pelo motor de cálculo (o custo/peso de uma mod
-   * custom segue o padrão da categoria); é apenas o registro de "o que essa mod faz" para a UI.
+   * descrição em `MODIFICACOES`). Opcional; é o registro de "o que essa mod faz" para a UI.
    */
   readonly descricao?: string;
+  /**
+   * Efeito **mecânico** da modificação custom, aplicado de fato pelo motor ao stat do item
+   * (dano/resistência). Ausente = a mod é só rótulo/descrição. Ver `ModificacaoEfeitoDto`.
+   */
+  readonly efeito?: ModificacaoEfeitoDto;
 }
 
 /** Um amplificador acoplado ao agente, com sua quantidade de empilhamentos. */
@@ -60,6 +82,26 @@ export interface CarrinhoItemDto {
    * "o que é/faz" o item que o jogador inventou, já que ele não existe no catálogo.
    */
   readonly descricao?: string;
+  // ── Stats do item custom (espelham `ItemCatalogo`) — só nos itens custom ──────
+  // O motor (`calcularStatItem`/`calcularTotaisCarrinho`) resolve os dados do item pelo catálogo
+  // quando ele existe lá; para um item custom (fora do catálogo) usa estes campos, então o dano /
+  // resistência / bônus do item inventado **funcionam de verdade** como os do catálogo.
+  /** Notação de dano base (armas/explosivos/exóticos/fragmento-arma), ex.: `"3D6+FOR [Físico]"`. */
+  readonly dano?: string;
+  /** Informação auxiliar da arma/explosivo: alcance, área, munição, etc. */
+  readonly informacao?: string;
+  /** Resistências base (proteções), ex.: `"14 [Físico], 3 [Balístico]"`. */
+  readonly resistencia?: string;
+  /** Bônus de inventário base (armazenamento), ex.: `"+6 inv."`. */
+  readonly bonus?: string;
+  /**
+   * Categoria cujas modificações o item aceita, além das próprias. Exóticos custom informam aqui a
+   * categoria em que "se encaixam" (ex.: uma manopla exótica que recebe mods de Corpo a Corpo); um
+   * Fragmento Construtor informa aqui a **forma base** que tomou.
+   */
+  readonly categoriaEmprestada?: ItemCategoriaEnum;
+  /** Módulo do fragmento (I–V) — só nas categorias de Fragmento. */
+  readonly modulo?: FragmentoModuloEnum;
 }
 
 // ── Entradas das funções ─────────────────────────────────────────────────────

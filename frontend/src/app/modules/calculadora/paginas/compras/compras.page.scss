@@ -833,6 +833,21 @@
 .compras-custom-desc {
   margin-top: 12px;
 }
+.compras-efeito {
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  padding: 12px;
+
+  &__titulo {
+    display: block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+    margin-bottom: 10px;
+  }
+}
 .compras-textarea {
   resize: vertical;
   min-height: 40px;

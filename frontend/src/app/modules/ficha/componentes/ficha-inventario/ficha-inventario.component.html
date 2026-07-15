@@ -90,6 +90,50 @@
             </div>
           </div>
         </div>
+        @if (mostraEmprestimo()) {
+          <label class="ficha-inv__campo ficha-inv__campo--largo">
+            <span class="ficha-inv__campo-rotulo">Encaixa em (recebe modificações de)</span>
+            <select class="ficha-inv__entrada" formControlName="categoriaEmprestada">
+              <option value="">— nenhuma —</option>
+              @for (cat of categoriasEmprestaveis; track cat) {
+                <option [value]="cat">{{ rotuloCategoria(cat) }}</option>
+              }
+            </select>
+          </label>
+        }
+        @if (mostraModulo()) {
+          <label class="ficha-inv__campo">
+            <span class="ficha-inv__campo-rotulo">Módulo do fragmento</span>
+            <select class="ficha-inv__entrada" formControlName="modulo">
+              <option value="">—</option>
+              @for (m of modulosFragmento; track m) {
+                <option [value]="m">Módulo {{ m }}</option>
+              }
+            </select>
+          </label>
+        }
+        @if (mostraDano()) {
+          <label class="ficha-inv__campo ficha-inv__campo--largo">
+            <span class="ficha-inv__campo-rotulo">Dano</span>
+            <input class="ficha-inv__entrada" type="text" formControlName="dano" placeholder="Ex.: 3D6+FOR [Físico]" />
+          </label>
+          <label class="ficha-inv__campo ficha-inv__campo--largo">
+            <span class="ficha-inv__campo-rotulo">Informação (alcance / área / munição)</span>
+            <input class="ficha-inv__entrada" type="text" formControlName="informacao" placeholder="Ex.: Médio · 3m" />
+          </label>
+        }
+        @if (mostraResistencia()) {
+          <label class="ficha-inv__campo ficha-inv__campo--largo">
+            <span class="ficha-inv__campo-rotulo">Resistência</span>
+            <input class="ficha-inv__entrada" type="text" formControlName="resistencia" placeholder="Ex.: 14 [Físico], 3 [Balístico]" />
+          </label>
+        }
+        @if (mostraBonus()) {
+          <label class="ficha-inv__campo ficha-inv__campo--largo">
+            <span class="ficha-inv__campo-rotulo">Bônus de inventário</span>
+            <input class="ficha-inv__entrada" type="text" formControlName="bonus" placeholder="Ex.: +6 inv." />
+          </label>
+        }
         <label class="ficha-inv__campo">
           <span class="ficha-inv__campo-rotulo">Descrição / efeito (opcional)</span>
           <textarea
@@ -375,13 +419,56 @@
                       </div>
                     </div>
                   </div>
+                  <div class="ficha-inv__efeito">
+                    <span class="ficha-inv__efeito-titulo">Efeito mecânico (por empilhamento)</span>
+                    <div class="ficha-inv__form-linha">
+                      <div class="ficha-inv__campo">
+                        <span class="ficha-inv__campo-rotulo">+ Dano fixo</span>
+                        <div class="ficha-inv__stepper">
+                          <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir dano fixo" (click)="ajustarEfeitoMod('danoFixo', -1)">−</button>
+                          <input class="ficha-inv__entrada ficha-inv__entrada--num" type="number" formControlName="danoFixo" />
+                          <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar dano fixo" (click)="ajustarEfeitoMod('danoFixo', 1)">+</button>
+                        </div>
+                      </div>
+                      <div class="ficha-inv__campo">
+                        <span class="ficha-inv__campo-rotulo">+ Resistência</span>
+                        <div class="ficha-inv__stepper">
+                          <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir resistência" (click)="ajustarEfeitoMod('resistencia', -1)">−</button>
+                          <input class="ficha-inv__entrada ficha-inv__entrada--num" type="number" formControlName="resistencia" />
+                          <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar resistência" (click)="ajustarEfeitoMod('resistencia', 1)">+</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="ficha-inv__form-linha">
+                      <div class="ficha-inv__campo">
+                        <span class="ficha-inv__campo-rotulo">+ Dados (qtd)</span>
+                        <div class="ficha-inv__stepper">
+                          <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir dados" (click)="ajustarEfeitoMod('dadosQuantidade', -1)">−</button>
+                          <input class="ficha-inv__entrada ficha-inv__entrada--num" type="number" formControlName="dadosQuantidade" />
+                          <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar dados" (click)="ajustarEfeitoMod('dadosQuantidade', 1)">+</button>
+                        </div>
+                      </div>
+                      <div class="ficha-inv__campo">
+                        <span class="ficha-inv__campo-rotulo">Faces (D)</span>
+                        <div class="ficha-inv__stepper">
+                          <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir faces" (click)="ajustarEfeitoMod('dadosFaces', -1)">−</button>
+                          <input class="ficha-inv__entrada ficha-inv__entrada--num" type="number" formControlName="dadosFaces" />
+                          <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar faces" (click)="ajustarEfeitoMod('dadosFaces', 1)">+</button>
+                        </div>
+                      </div>
+                      <label class="ficha-inv__campo">
+                        <span class="ficha-inv__campo-rotulo">Tipo do dano</span>
+                        <input class="ficha-inv__entrada" type="text" formControlName="dadosTipo" placeholder="Ex.: Químico" />
+                      </label>
+                    </div>
+                  </div>
                   <label class="ficha-inv__campo">
-                    <span class="ficha-inv__campo-rotulo">Efeito (opcional)</span>
+                    <span class="ficha-inv__campo-rotulo">Descrição (opcional)</span>
                     <textarea
                       class="ficha-inv__entrada ficha-inv__entrada--area"
                       rows="2"
                       formControlName="descricao"
-                      placeholder="O que essa modificação faz…"
+                      placeholder="Notas sobre a modificação…"
                     ></textarea>
                   </label>
                   <div class="ficha-inv__form-acoes">

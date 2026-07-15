@@ -360,6 +360,12 @@ describe('ComprasPage', () => {
       custo: 300,
       peso: 2,
       descricao: '',
+      dano: '',
+      informacao: '',
+      resistencia: '',
+      bonus: '',
+      categoriaEmprestada: '',
+      modulo: '',
     });
     pagina['confirmarCriarItem']();
     fixture.detectChanges();
@@ -376,7 +382,16 @@ describe('ComprasPage', () => {
     fixture.detectChanges();
     const uid = pagina['itensCarrinho']()[0].uid;
     pagina['alternarCriarMod'](uid);
-    pagina['modCustomForm'].setValue({ nome: 'Amaldiçoada', empilhamentos: 2, descricao: '' });
+    pagina['modCustomForm'].setValue({
+      nome: 'Amaldiçoada',
+      empilhamentos: 2,
+      descricao: '',
+      danoFixo: 0,
+      dadosQuantidade: 0,
+      dadosFaces: 0,
+      dadosTipo: '',
+      resistencia: 0,
+    });
     pagina['confirmarCriarMod'](uid);
     fixture.detectChanges();
     expect(pagina['itensCarrinho']()[0].modsAtivas[0].nome).toBe('Amaldiçoada');

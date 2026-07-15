@@ -158,6 +158,12 @@ describe('FichaInventario', () => {
       custo: 300,
       peso: 2,
       descricao: '  Brilha no escuro  ',
+      dano: '',
+      informacao: '',
+      resistencia: '',
+      bonus: '',
+      categoriaEmprestada: '',
+      modulo: '',
     });
     alvo.componentInstance['confirmarCriarItem']();
     expect(alvo.emitidos[0].itens).toEqual([
@@ -174,6 +180,49 @@ describe('FichaInventario', () => {
     ]);
   });
 
+  it('item custom de arma guarda o dano/informação e o motor calcula o stat de verdade', () => {
+    const alvo = montar({ itens: [], amplificadores: [] });
+    alvo.componentInstance['alternarCriarItem']();
+    alvo.componentInstance['itemCustomForm'].setValue({
+      nome: 'Manopla de Sangue',
+      categoria: ItemCategoriaEnum.EXOTICOS,
+      custo: 400,
+      peso: 2,
+      descricao: '',
+      dano: '3D6+FOR [Físico]',
+      informacao: 'Corpo',
+      resistencia: '',
+      bonus: '',
+      categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+      modulo: '',
+    });
+    alvo.componentInstance['confirmarCriarItem']();
+    const item = alvo.emitidos[0].itens[0];
+    expect(item.dano).toBe('3D6+FOR [Físico]');
+    expect(item.categoriaEmprestada).toBe(ItemCategoriaEnum.CORPO_A_CORPO);
+    // O stat exibido do item é calculado pelo motor a partir do dano embutido.
+    alvo.fixture.componentRef.setInput('inventario', alvo.emitidos[0]);
+    alvo.fixture.detectChanges();
+    expect(alvo.componentInstance['itensInventario']()[0].stat).toContain('3D6+FOR');
+  });
+
+  it('modificação custom com efeito mecânico (dano fixo) grava o efeito no item', () => {
+    const alvo = montar({ itens: [itemLeve], amplificadores: [] });
+    alvo.componentInstance['alternarCriarMod'](0);
+    alvo.componentInstance['modCustomForm'].setValue({
+      nome: 'Afiada',
+      empilhamentos: 1,
+      descricao: '',
+      danoFixo: 3,
+      dadosQuantidade: 0,
+      dadosFaces: 0,
+      dadosTipo: '',
+      resistencia: 0,
+    });
+    alvo.componentInstance['confirmarCriarMod'](0);
+    expect(alvo.emitidos[0].itens[0].modificacoes[0].efeito).toEqual({ danoFixo: 3 });
+  });
+
   it('aplica uma modificação custom (nome + empilhamentos) a um item', () => {
     const alvo = montar({ itens: [itemLeve], amplificadores: [] });
     alvo.componentInstance['alternarCriarMod'](0);
@@ -181,6 +230,11 @@ describe('FichaInventario', () => {
       nome: '  Amaldiçoada  ',
       empilhamentos: 2,
       descricao: '  −1 na resistência do alvo  ',
+      danoFixo: 0,
+      dadosQuantidade: 0,
+      dadosFaces: 0,
+      dadosTipo: '',
+      resistencia: 0,
     });
     alvo.componentInstance['confirmarCriarMod'](0);
     expect(alvo.emitidos[0].itens[0].modificacoes).toEqual([

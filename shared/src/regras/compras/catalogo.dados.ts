@@ -146,4 +146,8 @@ export const CATALOGO_ITENS: Readonly<Record<ItemCategoriaEnum, readonly ItemCat
   ],
   // Amplificadores vivem em `compras.dados` (`AMPLIFICADORES`) — não têm custo/peso de item.
   [ItemCategoriaEnum.AMPLIFICADOR]: [],
+  // Fragmentos não são comprados no catálogo: são achados e montados como itens custom
+  // (módulo + forma base + stats próprios). Sem itens fixos aqui.
+  [ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR]: [],
+  [ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR]: [],
 };

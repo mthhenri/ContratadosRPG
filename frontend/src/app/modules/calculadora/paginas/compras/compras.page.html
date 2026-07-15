@@ -124,6 +124,54 @@
             <app-step-input formControlName="peso" [min]="0" [passo]="0.5" ariaRotulo="Peso do item custom" />
           </div>
         </div>
+        @if (mostraEmprestimo() || mostraModulo()) {
+          <div class="calc-config">
+            @if (mostraEmprestimo()) {
+              <div class="calc-campo">
+                <span class="calc-campo__rotulo">Encaixa em (recebe mods de)</span>
+                <select class="calc-texto" formControlName="categoriaEmprestada">
+                  <option value="">— nenhuma —</option>
+                  @for (cat of categoriasEmprestaveis; track cat) {
+                    <option [value]="cat">{{ rotuloCategoria(cat) }}</option>
+                  }
+                </select>
+              </div>
+            }
+            @if (mostraModulo()) {
+              <div class="calc-campo">
+                <span class="calc-campo__rotulo">Módulo do fragmento</span>
+                <select class="calc-texto" formControlName="modulo">
+                  <option value="">—</option>
+                  @for (m of modulosFragmento; track m) {
+                    <option [value]="m">Módulo {{ m }}</option>
+                  }
+                </select>
+              </div>
+            }
+          </div>
+        }
+        @if (mostraDano()) {
+          <div class="calc-campo compras-custom-desc">
+            <span class="calc-campo__rotulo">Dano</span>
+            <input class="calc-texto" type="text" formControlName="dano" placeholder="Ex.: 3D6+FOR [Físico]" />
+          </div>
+          <div class="calc-campo compras-custom-desc">
+            <span class="calc-campo__rotulo">Informação <span class="calc-campo__auxiliar">(alcance / área / munição)</span></span>
+            <input class="calc-texto" type="text" formControlName="informacao" placeholder="Ex.: Médio · 3m" />
+          </div>
+        }
+        @if (mostraResistencia()) {
+          <div class="calc-campo compras-custom-desc">
+            <span class="calc-campo__rotulo">Resistência</span>
+            <input class="calc-texto" type="text" formControlName="resistencia" placeholder="Ex.: 14 [Físico], 3 [Balístico]" />
+          </div>
+        }
+        @if (mostraBonus()) {
+          <div class="calc-campo compras-custom-desc">
+            <span class="calc-campo__rotulo">Bônus de inventário</span>
+            <input class="calc-texto" type="text" formControlName="bonus" placeholder="Ex.: +6 inv." />
+          </div>
+        }
         <div class="calc-campo compras-custom-desc">
           <span class="calc-campo__rotulo">Descrição / efeito <span class="calc-campo__auxiliar">(opcional)</span></span>
           <textarea class="calc-texto compras-textarea" rows="2" formControlName="descricao" placeholder="O que o item é ou faz…"></textarea>
@@ -412,9 +460,34 @@
                       <app-step-input formControlName="empilhamentos" [min]="1" ariaRotulo="Empilhamentos da modificação custom" />
                     </div>
                   </div>
+                  <div class="compras-efeito">
+                    <span class="compras-efeito__titulo">Efeito mecânico (por empilhamento)</span>
+                    <div class="calc-config">
+                      <div class="calc-campo">
+                        <span class="calc-campo__rotulo">+ Dano fixo</span>
+                        <app-step-input formControlName="danoFixo" [min]="0" ariaRotulo="Dano fixo da modificação custom" />
+                      </div>
+                      <div class="calc-campo">
+                        <span class="calc-campo__rotulo">+ Resistência</span>
+                        <app-step-input formControlName="resistencia" [min]="0" ariaRotulo="Resistência da modificação custom" />
+                      </div>
+                      <div class="calc-campo">
+                        <span class="calc-campo__rotulo">+ Dados (qtd)</span>
+                        <app-step-input formControlName="dadosQuantidade" [min]="0" ariaRotulo="Quantidade de dados extras" />
+                      </div>
+                      <div class="calc-campo">
+                        <span class="calc-campo__rotulo">Faces (D)</span>
+                        <app-step-input formControlName="dadosFaces" [min]="0" ariaRotulo="Faces dos dados extras" />
+                      </div>
+                      <div class="calc-campo">
+                        <span class="calc-campo__rotulo">Tipo do dano</span>
+                        <input class="calc-texto" type="text" formControlName="dadosTipo" placeholder="Ex.: Químico" />
+                      </div>
+                    </div>
+                  </div>
                   <div class="calc-campo compras-custom-desc">
-                    <span class="calc-campo__rotulo">Efeito <span class="calc-campo__auxiliar">(opcional)</span></span>
-                    <textarea class="calc-texto compras-textarea" rows="2" formControlName="descricao" placeholder="O que essa modificação faz…"></textarea>
+                    <span class="calc-campo__rotulo">Descrição <span class="calc-campo__auxiliar">(opcional)</span></span>
+                    <textarea class="calc-texto compras-textarea" rows="2" formControlName="descricao" placeholder="Notas sobre a modificação…"></textarea>
                   </div>
                   <div class="compras-custom-acoes">
                     <button type="submit" class="compras-btn compras-btn--adicionar" [disabled]="modCustomForm.invalid">
