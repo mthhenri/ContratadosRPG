@@ -1,6 +1,57 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-14 (**m3-12 — editor de Sanidade no próprio lugar**: preenche a aba
+> Última atualização: 2026-07-14 (**m3-13+ — habilidades do sistema na ficha**: a aba **Habilidades**
+> passou a permitir **adicionar habilidades do catálogo do sistema**, não só texto livre. Novo dado
+> puro em `shared/regras/agente`: `habilidades-catalogo.dados.ts` (as ~224 habilidades do
+> `sistema-v4.1.0.md` — Gerais, Classe, Arquétipo, Gerais Melhoradas e Subclasses de Experimento,
+> desnormalizadas) + `habilidades-catalogo.ts` com a função pura **`catalogoHabilidades(classe,
+> arquetipo)`** que resolve os grupos de filtro do seletor: **Gerais** sempre; **Classe** entre as três
+> classes-base (a da ficha em `ehDaFicha`, omitida p/ Civil); **Arquétipo** só os arquétipos da classe
+> da ficha (o Experimento entra como **subclasse**; Gerais Melhoradas só do **próprio** arquétipo;
+> outras subclasses **nunca** aparecem). +7 testes shared (181). Enum `HabilidadeCategoriaEnum` ganhou
+> **`ESPECIALIDADE`** (categoria só-criada, como Personalidade); `FichaHabilidadeDto` ganhou o campo
+> opcional **`origem`** (classe/arquétipo-fonte, dentro do JSONB — sem schema relacional novo). UI: novo
+> **`FichaHabilidadeSeletor`** (modal com abas + **sub-filtro inline** de chips, o da ficha destacado
+> com ponto accent e ativo por padrão, + busca; item já na ficha esmaecido "Na ficha"); escolher
+> pré-preenche o editor inline (com a `origem`) para revisar antes de salvar. `FichaHabilidades` ganhou
+> os botões **"＋ Do sistema"** / **"＋ Personalizada"**, o botão **⚡ Utilizar** por habilidade (custo
+> fixo gasta a Energia direto; custo variável `[X E]` abre mini-campo perguntando quanto — a Energia
+> **pode negativar**, reusa o `ajusteVitalidade` de m3-10) e o **chip com origem** ("Classe -
+> Especialista" quando é de outra classe/arquétipo; cor por categoria, **Personalidade = accent do
+> tema**). +6 testes frontend (270). `lint`/`build` verdes (bundle **569,77 kB**). Design em
+> `docs/superpowers/specs/2026-07-14-habilidades-do-sistema-design.md`; stub visual conferido.
+> **Verificação de render pendente** — validado por testes/build, não dirigido no navegador ainda.)
+>
+> (**m3-13 — editor de Habilidades no próprio lugar**: preenche a aba
+> **Habilidades** (m3-11), antes um placeholder "em construção", com o CRUD da lista `habilidades` do
+> `dados` (`FichaHabilidadeDto` — `{ nome, categoria (HabilidadeCategoriaEnum), custoEnergia (número|0|null),
+> descricao }`). **Novo componente standalone `FichaHabilidades`** (`componentes/ficha-habilidades/`):
+> input `habilidades`/`editavel`, output **`habilidadesMudou`** que emite a **lista inteira** a cada
+> mutação. **Controlado** — a lista vem sempre do input; o componente só guarda o **rascunho transitório**
+> do formulário (Reactive Forms, sem `ngModel`). **Um editor por vez** (`indiceEmEdicao`, `-1` = adicionar);
+> um `<ng-template>` reusado entre **adicionar** e **editar** (`ngTemplateOutlet`). Campos: `nome`
+> (obrigatório — única validação de forma), `<select>` de **categoria** (as 8 chaves do enum, com rótulos
+> legíveis vindos do **shared** — novo `ROTULOS_HABILIDADE_CATEGORIA` ao lado do enum, fonte única), custo
+> de Energia (stepper −/+ com piso 0 + checkbox **"Variável"** → persiste `custoEnergia: null`), `descricao`
+> (textarea). Cada card exibe chip da categoria, o custo em notação do documento (`[N E]`/`[0 E]`/`[X E]`
+> para `null`) e a descrição. **Remover com confirmação inline** (padrão do projeto — `indiceRemovendo`,
+> área "Remover X?" Sim/Não; não usa `window.confirm`). Sem catálogo tipado (a ficha guarda a habilidade
+> desnormalizada, contrato m3-01) e sem trava de regra (liberdade total, m3-10). Cada mutação sobe pela
+> nova saída **`ajusteHabilidades`** do `FichaVisualizacao` (que agora embute o `FichaHabilidades` na aba,
+> substituindo o placeholder + resumo read-only) e a `visualizar.page` (`ajustarHabilidades`) troca
+> `dados.habilidades` inteira — **otimista** + persistência **em lote** (mesmo `alterarFicha` debounced de
+> m3-10). Handler **trivial**, sem cascata/progressão: o custo de Energia é só registro (fora de escopo o
+> efeito mecânico em play, como pré-requisitos/catálogo por classe). Só tokens do tema (proibição #29 — card
+> e stepper `.ficha-passo` espelham o `FichaSanidade` de m3-12); nenhuma fórmula de jogo nova. **+10 testes**
+> (Vitest, **frontend 266/266**): `ficha-habilidades.spec` (8 — read-only sem botões com chip/custo `[X E]`,
+> adicionar aparando nome/descrição, nome vazio não emite, editar, custo variável persiste `null`, editar
+> variável semeia a caixa marcada, stepper piso 0, remover só após confirmação), `ficha-visualizacao.spec`
+> (aba Habilidades embute o editor e propaga `ajusteHabilidades`; o teste antigo de "em construção" passou a
+> cobrir só Rolagens) e `visualizar.page.spec` (+1 — habilidades otimista + PUT em lote). `lint`/`build`
+> verdes (bundle inicial **569,77 kB** dentro do budget de 575 kB — o editor mora na chunk lazy
+> `visualizar-page`, agora 112,63 kB). Spec `m3-13` → `done/`. **M3 avança: 3 das 4 sub-coleções da ficha
+> agora têm editor (Sanidade m3-12, Habilidades m3-13); faltam Inventário (m3-14) e presets de Rolagem
+> (m3-15).** Sessão anterior (2026-07-14, **m3-12 — editor de Sanidade no próprio lugar**: preenche a aba
 > **Sanidade** (m3-11) com o CRUD das três listas de `estado` — **sequelas** (temporárias), **traumas**
 > (permanentes, tratáveis) e **lesões** (removem pontos de atributo) —, antes só read-only (m3-07).
 > **Novo componente standalone `FichaSanidade`** (`componentes/ficha-sanidade/`): inputs
@@ -1264,10 +1315,18 @@ eventos `ficha:alterada`/`ficha:criada`/`membro:entrou` emitidos pelas services 
 `forwardRef` nos dois lados; verificado ao vivo com `socket.io-client`; backend 87/87) **concluídos**
 (specs em `docs/specs/done/`).
 
-**Próxima task: `m3-06`** — frontend de criação/edição da ficha de jogador (formulário sobre o CRUD da
-m3-03, cálculo automático via `shared/regras`). **Antes de qualquer UI, ler `docs/design/DESIGN.md` e
-consumir os tokens de `docs/design/tema/`** — o tema "Terminal de Contenção" é a fonte da verdade
-visual (proibição #29).
+O frontend da ficha avançou muito além do CRUD inicial: **m3-06** (criação/edição), **m3-07**
+(lista + visualização), **m3-08** (tempo real do mestre), **m3-10** (edição inline + Maestria + stats
+editáveis), **m3-11** (navegação por abas), **m3-12** (editor de Sanidade & Lesões), **m3-13** (editor de
+Habilidades) e **m3-17** (merge de edição concorrente) — todos em `docs/specs/done/`. As abas da ficha já
+editam Visão Geral, Combate, Sanidade e Habilidades no próprio lugar.
+
+**Próxima task: `m3-14`** — editor de **Inventário** da ficha no próprio lugar (aba Inventário), reusando
+o formato do carrinho da calculadora M1 (`FichaInventarioDto` = `CarrinhoItemDto[]` + amplificadores) e a
+mesma máquina de persistência otimista + PUT em lote de m3-10/m3-12/m3-13. **Antes de qualquer UI, ler
+`docs/design/DESIGN.md` e consumir os tokens de `docs/design/tema/`** — o tema "Terminal de Contenção" é a
+fonte da verdade visual (proibição #29). No backlog seguem ainda `m3-15` (presets de rolagem), `m3-09`
+(refino mobile da ficha) e o trio de Identidade `m3-18`→`m3-20`.
 
 **`M3` — Ficha de Jogador** (CRUD + cálculo automático via `shared/regras` + permissões +
 tempo real): o milestone já foi quebrado em tasks numeradas (`m3-01`…`m3-09`, specs no backlog).
