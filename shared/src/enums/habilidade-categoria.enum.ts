@@ -24,6 +24,25 @@ export enum HabilidadeCategoriaEnum {
   OUTRA_CLASSE = 'OUTRA_CLASSE',
   /** Habilidade derivada da Personalidade escolhida na Identidade. */
   PERSONALIDADE = 'PERSONALIDADE',
+  /** Habilidade de uma Especialidade do agente — só criada (não há lista no sistema). */
+  ESPECIALIDADE = 'ESPECIALIDADE',
   /** Habilidade exclusiva de agentes Civis. */
   CIVIL = 'CIVIL',
 }
+
+/**
+ * Rótulos legíveis (pt-BR) de cada categoria de habilidade, para exibição em selects e chips.
+ * Mora aqui, ao lado do enum, para ser reusável por qualquer tela que liste habilidades — a
+ * fonte da verdade dos rótulos é única. Não é uma tabela `tipo_*` (conteúdo de JSONB, §10.3).
+ */
+export const ROTULOS_HABILIDADE_CATEGORIA: Readonly<Record<HabilidadeCategoriaEnum, string>> = {
+  [HabilidadeCategoriaEnum.GERAL]: 'Geral',
+  [HabilidadeCategoriaEnum.GERAL_MELHORADA]: 'Geral melhorada',
+  [HabilidadeCategoriaEnum.CLASSE]: 'Classe',
+  [HabilidadeCategoriaEnum.ARQUETIPO]: 'Arquétipo',
+  [HabilidadeCategoriaEnum.SUBCLASSE]: 'Subclasse',
+  [HabilidadeCategoriaEnum.OUTRA_CLASSE]: 'Outra classe',
+  [HabilidadeCategoriaEnum.PERSONALIDADE]: 'Personalidade',
+  [HabilidadeCategoriaEnum.ESPECIALIDADE]: 'Especialidade',
+  [HabilidadeCategoriaEnum.CIVIL]: 'Civil',
+};

@@ -16,3 +16,5 @@ export * from './maestria';
 export * from './lesao';
 export * from './derivados';
 export * from './arquetipo';
+export * from './habilidades-catalogo.dados';
+export * from './habilidades-catalogo';

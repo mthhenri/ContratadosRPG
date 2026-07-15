@@ -119,6 +119,13 @@ export interface FichaHabilidadeDto {
    */
   readonly custoEnergia: number | null;
   readonly descricao: string;
+  /**
+   * Classe/arquétipo/subclasse **de origem** quando a habilidade veio do catálogo do
+   * sistema (para o chip nomear a fonte — "Classe - Especialista" quando é de outra classe).
+   * Indefinida em habilidades personalizadas e nas Gerais. Retrocompatível: fichas antigas
+   * sem o campo exibem só o rótulo da categoria.
+   */
+  readonly origem?: ClasseEnum | ArquetipoEnum;
 }
 
 /**
