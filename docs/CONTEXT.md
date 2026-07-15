@@ -1331,15 +1331,27 @@ eventos `ficha:alterada`/`ficha:criada`/`membro:entrou` emitidos pelas services 
 O frontend da ficha avançou muito além do CRUD inicial: **m3-06** (criação/edição), **m3-07**
 (lista + visualização), **m3-08** (tempo real do mestre), **m3-10** (edição inline + Maestria + stats
 editáveis), **m3-11** (navegação por abas), **m3-12** (editor de Sanidade & Lesões), **m3-13** (editor de
-Habilidades) e **m3-17** (merge de edição concorrente) — todos em `docs/specs/done/`. As abas da ficha já
-editam Visão Geral, Combate, Sanidade e Habilidades no próprio lugar.
+Habilidades), **m3-14** (editor de Inventário) e **m3-17** (merge de edição concorrente) — todos em
+`docs/specs/done/`. As abas da ficha já editam Visão Geral, Combate, Sanidade, Habilidades e Inventário no
+próprio lugar.
 
-**Próxima task: `m3-14`** — editor de **Inventário** da ficha no próprio lugar (aba Inventário), reusando
-o formato do carrinho da calculadora M1 (`FichaInventarioDto` = `CarrinhoItemDto[]` + amplificadores) e a
-mesma máquina de persistência otimista + PUT em lote de m3-10/m3-12/m3-13. **Antes de qualquer UI, ler
-`docs/design/DESIGN.md` e consumir os tokens de `docs/design/tema/`** — o tema "Terminal de Contenção" é a
-fonte da verdade visual (proibição #29). No backlog seguem ainda `m3-15` (presets de rolagem), `m3-09`
-(refino mobile da ficha) e o trio de Identidade `m3-18`→`m3-20`.
+**m3-14 concluído** — editor de **Inventário** no próprio lugar (aba Inventário): componente controlado
+`FichaInventario` (`componentes/ficha-inventario/`) que **reusa 100% de `shared/regras/compras`** (catálogo,
+limites por patente, custo/peso de modificação, conflitos, stat de item, custo de amplificador e totais —
+proibições #26/#27, nenhuma regra reimplementada). Monta/edita itens (com modificações) + amplificadores no
+formato do carrinho da M1 (`FichaInventarioDto` = `CarrinhoItemDto[]` + `AmplificadorAplicadoDto[]`, sem tipo
+duplicado — m3-01); catálogo recolhível com busca + categorias, painel de modificações por item, alternância
+guardada/vestida e stacks de amplificador. Cada mutação emite o `FichaInventarioDto` inteiro e a página
+(`FichaVisualizar.ajustarInventario`) persiste **otimista + em lote** (mesma máquina de m3-10/m3-12/m3-13). O
+**Inventário máximo** (`Força × 5`, stored/derivado, editável em m3-10) entra como **referência** do peso
+usado — exceder é **aviso**, não trava (liberdade total). SCSS-first só com tokens do tema (proibição #29);
+frontend 284/284.
+
+**Próxima task: `m3-15`** — **presets de rolagem** da ficha (aba Rolagens): atalhos nomeados para fórmulas
+(ex.: `1d20+LUT`) salvos em `dados.rolagens` (`FichaRolagemDto`, já no contrato m3-01), com o motor de
+avaliação em `shared/regras/dados`. **Antes de qualquer UI, ler `docs/design/DESIGN.md` e consumir os tokens
+de `docs/design/tema/`** — o tema "Terminal de Contenção" é a fonte da verdade visual (proibição #29). No
+backlog seguem ainda `m3-09` (refino mobile da ficha) e o trio de Identidade `m3-18`→`m3-20`.
 
 **`M3` — Ficha de Jogador** (CRUD + cálculo automático via `shared/regras` + permissões +
 tempo real): o milestone já foi quebrado em tasks numeradas (`m3-01`…`m3-09`, specs no backlog).

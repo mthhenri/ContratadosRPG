@@ -28,6 +28,7 @@ import type {
   FichaAtributosDto,
   FichaDerivadosDto,
   FichaHabilidadeDto,
+  FichaInventarioDto,
   FichaJogadorDadosDto,
   FichaRecuperadaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
@@ -483,6 +484,21 @@ export class FichaVisualizar {
       return;
     }
     this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, habilidades } });
+    this.agendarPersistencia();
+  }
+
+  /**
+   * Edita o inventário (itens + amplificadores, m3-14): substitui `dados.inventario` inteiro (o editor
+   * emite o `FichaInventarioDto` completo), otimista na tela + persistência em lote. Só dono/mestre
+   * chega aqui; o backend valida forma. Sem cascata/progressão — o inventário não altera derivados; o
+   * Inventário máximo (`Força × 5`) é referência editável à parte (m3-10) e exceder o peso é só aviso.
+   */
+  protected ajustarInventario(inventario: FichaInventarioDto): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) {
+      return;
+    }
+    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, inventario } });
     this.agendarPersistencia();
   }
 

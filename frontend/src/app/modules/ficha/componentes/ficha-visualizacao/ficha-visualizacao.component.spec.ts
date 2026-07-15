@@ -433,12 +433,13 @@ describe('FichaVisualizacao', () => {
     ).map((r) => r.textContent?.trim());
     expect(combate).toContain('Hab. / Turno');
 
-    // Inventário mostra o máximo (derivado realocado) junto do total atual de itens.
+    // Inventário mostra o máximo (derivado realocado) e embute o editor de inventário (m3-14).
     trocarAba(alvo.fixture, 'inventario');
     const inventario = Array.from(
       alvo.raiz.querySelectorAll('#painel-inventario .ficha-info__rotulo'),
     ).map((r) => r.textContent?.trim());
-    expect(inventario).toEqual(expect.arrayContaining(['Máximo', 'Itens (atual)', 'Amplificadores']));
+    expect(inventario).toEqual(['Máximo']);
+    expect(alvo.raiz.querySelector('#painel-inventario app-ficha-inventario')).not.toBeNull();
   });
 
   it('edita o Inventário máximo na aba Inventário e emite o override (persistência de m3-10)', () => {

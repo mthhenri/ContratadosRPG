@@ -632,16 +632,16 @@
       id="painel-inventario"
       aria-labelledby="aba-inventario"
     >
-      <section class="ficha-cartao ficha-visao__painel-cartao">
+      <section class="ficha-cartao ficha-visao__painel-cartao ficha-visao__painel-cartao--largo">
         <header class="ficha-cartao__cabecalho">
           <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Inventário</h3>
           <span class="ficha-cartao__regua"></span>
           <span class="ficha-cartao__meta">{{ totalItens() }} {{ totalItens() === 1 ? 'item' : 'itens' }}</span>
         </header>
-        <p class="ficha-visao__construcao">Editor de inventário em construção.</p>
-        <dl class="ficha-info">
-          <!-- Inventário máximo (editável, reusa a persistência de m3-10) — realocado da Visão Geral. -->
-          @if (inventarioMaximoLinha(); as invMax) {
+
+        <!-- Inventário máximo (editável, reusa a persistência de m3-10) — realocado da Visão Geral. -->
+        @if (inventarioMaximoLinha(); as invMax) {
+          <dl class="ficha-info ficha-visao__inv-maximo">
             <div class="ficha-info__linha">
               <dt class="ficha-info__rotulo">Máximo</dt>
               @if (ajustavel() && editandoDerivado() === invMax.chave) {
@@ -673,16 +673,17 @@
                 <dd class="ficha-info__valor">{{ invMax.display }}</dd>
               }
             </div>
-          }
-          <div class="ficha-info__linha">
-            <dt class="ficha-info__rotulo">Itens (atual)</dt>
-            <dd class="ficha-info__valor">{{ totalItens() }}</dd>
-          </div>
-          <div class="ficha-info__linha">
-            <dt class="ficha-info__rotulo">Amplificadores</dt>
-            <dd class="ficha-info__valor">{{ totalAmplificadores() }}</dd>
-          </div>
-        </dl>
+          </dl>
+        }
+
+        <app-ficha-inventario
+          [inventario]="dados().inventario"
+          [editavel]="ajustavel()"
+          [prestigio]="dados().prestigio"
+          [inventarioMaximo]="inventarioMaximoValor()"
+          [vontade]="dados().atributos.vontade"
+          (inventarioMudou)="ajusteInventario.emit($event)"
+        />
       </section>
     </div>
   }

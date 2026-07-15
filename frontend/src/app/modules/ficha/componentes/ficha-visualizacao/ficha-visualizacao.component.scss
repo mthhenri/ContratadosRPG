@@ -101,7 +101,12 @@
     }
   }
 
-  // Aviso "em construção" das abas cujo editor ainda não chegou (m3-12…m3-15).
+  // Linha "Máximo" (Inventário máximo editável, m3-10) acima do editor de inventário (m3-14).
+  &__inv-maximo {
+    margin: 0 0 14px;
+  }
+
+  // Aviso "em construção" das abas cujo editor ainda não chegou (m3-15).
   &__construcao {
     font-family: var(--font-mono);
     font-size: 12px;

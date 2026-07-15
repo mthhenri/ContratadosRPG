@@ -1,0 +1,497 @@
+// Editor no próprio lugar da aba Inventário (m3-14): lista de itens (com modificações) + amplificadores,
+// reusando o catálogo e as regras das compras (m1). Só tokens do tema "Terminal de Contenção" — nenhum
+// hex/fonte/raio solto (proibição #29). O padrão de card/controle/botão espelha a aba Compras (m1-10).
+
+@use 'tema/breakpoints' as bp;
+
+.ficha-inv {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-family: var(--font-mono);
+
+  // Padrão "caixa": fundo surface-2, borda hairline, raio de controle.
+  &__ref-box,
+  &__cartao,
+  &__mod-tag,
+  &__mod-entrada,
+  &__info {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+  }
+
+  // === Referência (peso/limites) ===
+  &__referencia {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+  }
+  &__ref-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 14px;
+
+    &--aviso {
+      border-color: var(--accent-border);
+    }
+  }
+  &__ref-rotulo {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+  }
+  &__ref-valor {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+
+    .ficha-inv__ref-box--aviso & {
+      color: var(--accent);
+    }
+  }
+  &__aviso {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--warning);
+  }
+
+  // === Ações ===
+  &__acoes {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  // === Botões ===
+  &__btn {
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: var(--radius-control);
+    padding: 7px 12px;
+    cursor: pointer;
+
+    &--principal {
+      background: var(--accent);
+      color: var(--bg);
+      border: 0;
+    }
+    &--secundario {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--border-strong);
+    }
+    &--largo {
+      width: 100%;
+      margin-top: auto;
+    }
+    &--flex {
+      flex: 1;
+    }
+    &--icone {
+      padding: 4px 8px;
+    }
+    &--pequeno {
+      padding: 5px 8px;
+      font-size: 11px;
+    }
+    &:hover:not(:disabled) {
+      filter: brightness(1.08);
+    }
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  // === Catálogo ===
+  &__catalogo {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    padding: 12px;
+  }
+  &__busca {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    color: var(--text);
+    font-family: var(--font-mono);
+    padding: 10px 12px;
+    font-size: 14px;
+    outline: none;
+
+    &:focus {
+      border-color: var(--accent-border);
+    }
+  }
+  &__categorias {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  &__categoria {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 7px 12px;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      color: var(--text);
+    }
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    &--ativa {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--accent-dim);
+    }
+  }
+  &__info {
+    font-size: 12px;
+    color: var(--text-dim);
+    padding: 10px 12px;
+
+    strong {
+      color: var(--text);
+    }
+  }
+  &__vazio {
+    font-family: var(--font-sans);
+    color: var(--text-mute);
+    text-align: center;
+    padding: 16px 0;
+  }
+
+  // === Grades roláveis (catálogo/mods) + fade-out vertical (via [appOverflowFade]) ===
+  &__grade,
+  &__mod-grade {
+    --fade-topo: 0px;
+    --fade-base: 0px;
+
+    &.overflow-fade--topo,
+    &.overflow-fade--base {
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+    }
+    &.overflow-fade--topo {
+      --fade-topo: 24px;
+    }
+    &.overflow-fade--base {
+      --fade-base: 24px;
+    }
+  }
+  &__grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 12px;
+    max-height: 360px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  &__cartao {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px;
+
+    &-nome {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    &-stat {
+      font-size: 11px;
+      color: var(--energy);
+    }
+    &-desc {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+    &-ativo {
+      font-size: 11px;
+      color: var(--positive);
+    }
+    &-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+    &-acoes {
+      display: flex;
+      gap: 6px;
+      margin-top: auto;
+    }
+  }
+
+  &__custo {
+    color: var(--warning);
+    font-weight: 700;
+  }
+  &__peso {
+    color: var(--text-mute);
+  }
+
+  &__tag {
+    display: inline-block;
+    white-space: nowrap;
+    font-size: 10px;
+    color: var(--positive);
+    border: 1px solid color-mix(in srgb, var(--positive) 45%, transparent);
+    border-radius: 3px;
+    padding: 1px 5px;
+    margin-left: 4px;
+
+    &--penalidade {
+      color: var(--accent);
+      border-color: var(--accent-border);
+    }
+  }
+
+  // === Itens da lista ===
+  &__item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    padding: 12px;
+
+    &--amp {
+      background: var(--surface-2);
+    }
+    &-cabecalho {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    &-nome {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    &-categoria {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-mute);
+      margin-left: 8px;
+    }
+    &-porte {
+      display: block;
+      margin: 8px 0 0;
+    }
+    &-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+    }
+    &-stat {
+      font-size: 12px;
+      color: var(--energy);
+      margin-top: 8px;
+    }
+  }
+
+  &__alternar {
+    display: block;
+    width: 100%;
+    text-align: left;
+    font-size: 12px;
+    color: var(--text-dim);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 8px 10px;
+    margin-top: 10px;
+    cursor: pointer;
+
+    &--ativo {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--accent-dim);
+    }
+  }
+
+  // === Modificações ativas (chips) ===
+  &__mods-ativas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  &__mod-tag {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    font-size: 11px;
+
+    &-info {
+      display: flex;
+      flex-direction: column;
+      color: var(--text);
+    }
+    &-custo {
+      color: var(--warning);
+    }
+    &-botoes {
+      display: flex;
+      gap: 4px;
+    }
+  }
+  &__mini-btn {
+    font-size: 13px;
+    width: 24px;
+    height: 24px;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  // === Painel de modificações ===
+  &__mod-painel {
+    margin-top: 10px;
+  }
+  &__mod-secao {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin: 12px 0 8px;
+  }
+  &__mod-grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+    max-height: 230px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  &__mod-entrada {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 10px;
+    font-size: 10px;
+
+    &--ativa {
+      border-color: var(--accent-border);
+    }
+    &--bloqueada {
+      opacity: 0.55;
+    }
+    &-topo {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    &-nome {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    &-pontos {
+      display: flex;
+      gap: 3px;
+    }
+    &-desc {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+    &-motivo,
+    &-custo {
+      color: var(--warning);
+    }
+    &-bloqueia {
+      color: var(--text-mute);
+    }
+  }
+  &__ponto {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    border: 1px solid var(--border-strong);
+
+    &--cheio {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+  }
+
+  // === Amplificadores ===
+  &__amps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    &-cabecalho {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+    }
+  }
+
+  // === Refinamento mobile (alvos de toque; refino dedicado é m3-09) ===
+  @include bp.mobile {
+    &__categoria {
+      min-height: bp.$alvo-toque;
+      padding: 9px 14px;
+    }
+    &__mini-btn {
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
+      font-size: 16px;
+    }
+    &__btn {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    &__item-cabecalho,
+    &__mod-tag,
+    &__cartao-acoes {
+      flex-wrap: wrap;
+    }
+  }
+}

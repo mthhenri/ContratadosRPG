@@ -1,0 +1,323 @@
+<div class="ficha-inv">
+  <!-- Referência: peso usado / inventário máximo (Força × 5) + limite de modificações. Aviso, não trava. -->
+  <div class="ficha-inv__referencia">
+    <div class="ficha-inv__ref-box" [class.ficha-inv__ref-box--aviso]="excedeInventario()">
+      <span class="ficha-inv__ref-rotulo">Inventário usado</span>
+      <span class="ficha-inv__ref-valor">{{ inventarioTexto() }}</span>
+    </div>
+    <div class="ficha-inv__ref-box">
+      <span class="ficha-inv__ref-rotulo">Modificações</span>
+      <span class="ficha-inv__ref-valor">{{ limiteModsTexto() }}</span>
+    </div>
+  </div>
+
+  @if (excedeInventario()) {
+    <p class="ficha-inv__aviso">
+      Peso acima do inventário máximo — apenas um aviso; o inventário é salvo assim mesmo.
+    </p>
+  }
+
+  <!-- Montar/adicionar itens: catálogo recolhível (só para quem edita). -->
+  @if (editavel()) {
+    <div class="ficha-inv__acoes">
+      <button
+        type="button"
+        class="ficha-inv__btn ficha-inv__btn--principal"
+        [attr.aria-expanded]="catalogoAberto()"
+        (click)="alternarCatalogo()"
+      >
+        {{ catalogoAberto() ? 'Fechar catálogo' : '+ Adicionar itens' }}
+      </button>
+      @if (!inventarioVazio()) {
+        <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="esvaziar()">
+          Esvaziar
+        </button>
+      }
+    </div>
+
+    @if (catalogoAberto()) {
+      <section class="ficha-inv__catalogo">
+        <input
+          class="ficha-inv__busca"
+          type="search"
+          placeholder="Pesquisar item…"
+          autocomplete="off"
+          aria-label="Pesquisar item do catálogo"
+          [formControl]="busca"
+        />
+
+        <nav class="ficha-inv__categorias" aria-label="Categorias do catálogo">
+          @for (categoria of categorias; track categoria.categoria) {
+            <button
+              type="button"
+              class="ficha-inv__categoria"
+              [class.ficha-inv__categoria--ativa]="!busca.value && categoriaAtiva() === categoria.categoria"
+              [disabled]="!!busca.value"
+              (click)="definirCategoria(categoria.categoria)"
+            >
+              <app-icone [nome]="iconesCategoria[categoria.categoria]" />
+              <span>{{ categoria.rotulo }}</span>
+            </button>
+          }
+        </nav>
+
+        @if (catalogoVazio()) {
+          <p class="ficha-inv__vazio">Nenhum item encontrado.</p>
+        }
+
+        @if (itensCatalogo().length > 0) {
+          <div class="ficha-inv__grade" appOverflowFade>
+            @for (cartao of itensCatalogo(); track cartao.categoria + '/' + cartao.item.nome) {
+              <article class="ficha-inv__cartao">
+                <div class="ficha-inv__cartao-nome">
+                  {{ cartao.item.nome }}
+                  @if (cartao.bonus) {
+                    <span class="ficha-inv__tag">{{ cartao.bonus }}</span>
+                  }
+                </div>
+                @if (cartao.stat) {
+                  <div class="ficha-inv__cartao-stat">{{ cartao.stat }}</div>
+                }
+                @if (cartao.descricao) {
+                  <div class="ficha-inv__cartao-desc">{{ cartao.descricao }}</div>
+                }
+                <div class="ficha-inv__cartao-meta">
+                  <span class="ficha-inv__custo">{{ cartao.custoTexto }}</span>
+                  <span class="ficha-inv__peso">{{ cartao.pesoTexto }}</span>
+                </div>
+                <button
+                  type="button"
+                  class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--largo"
+                  (click)="adicionarItem(cartao)"
+                >
+                  + Adicionar
+                </button>
+              </article>
+            }
+          </div>
+        }
+
+        @if (mostrarAmplificadores()) {
+          <div class="ficha-inv__info">
+            Limite: <strong>Vontade × 3 = {{ resumo().limiteAmplificadores }} stacks</strong> totais ·
+            máx. <strong>{{ resumo().limiteModificacoes.maxEmpilhamentos }} stack/amp</strong>
+          </div>
+          <div class="ficha-inv__grade" appOverflowFade>
+            @for (amp of amplificadoresCatalogo(); track amp.nome) {
+              <article class="ficha-inv__cartao">
+                <div class="ficha-inv__cartao-nome">{{ amp.nome }}</div>
+                <div class="ficha-inv__cartao-desc">{{ amp.efeito }}</div>
+                <div class="ficha-inv__cartao-meta">
+                  <span class="ficha-inv__custo">{{ amp.custoTexto }}</span>
+                  <span class="ficha-inv__peso">máx. {{ amp.maximoEfetivo }} stacks</span>
+                </div>
+                @if (amp.empilhamentosAtuais > 0) {
+                  <div class="ficha-inv__cartao-ativo">
+                    Ativo: {{ amp.empilhamentosAtuais }}/{{ amp.maximoEfetivo }} stack{{ amp.empilhamentosAtuais > 1 ? 's' : '' }}
+                  </div>
+                }
+                <div class="ficha-inv__cartao-acoes">
+                  @if (amp.empilhamentosAtuais > 0) {
+                    <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="removerAmplificador(amp.nome)">
+                      −
+                    </button>
+                  }
+                  <button
+                    type="button"
+                    class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--flex"
+                    [disabled]="!amp.podeAdicionar"
+                    (click)="adicionarAmplificador(amp.nome)"
+                  >
+                    {{ amp.empilhamentosAtuais === 0 ? '+ Adquirir' : '+ Stack' }}
+                  </button>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </section>
+    }
+  }
+
+  <!-- Lista do inventário: itens (com modificações) + amplificadores. -->
+  @if (inventarioVazio()) {
+    <p class="ficha-inv__vazio">
+      @if (editavel()) {
+        Nenhum item no inventário. Use "Adicionar itens" para montá-lo.
+      } @else {
+        Inventário vazio.
+      }
+    </p>
+  }
+
+  @for (item of itensInventario(); track item.indice) {
+    <div class="ficha-inv__item">
+      <div class="ficha-inv__item-cabecalho">
+        <div>
+          <span class="ficha-inv__item-nome">
+            {{ item.nome }}
+            @if (item.quantidade > 1) {
+              <span class="ficha-inv__tag">×{{ item.quantidade }}</span>
+            }
+          </span>
+          <span class="ficha-inv__item-categoria">{{ item.categoriaRotulo }}</span>
+        </div>
+        <div class="ficha-inv__item-meta">
+          <span class="ficha-inv__custo">{{ item.custoTotalTexto }}</span>
+          <span class="ficha-inv__peso">{{ item.pesoTexto }}</span>
+          @if (editavel()) {
+            <button
+              type="button"
+              class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
+              title="Remover −1"
+              aria-label="Remover item"
+              (click)="removerItem(item.indice)"
+            >
+              ✕
+            </button>
+          }
+        </div>
+      </div>
+
+      @if (item.stat) {
+        <div class="ficha-inv__item-stat">{{ item.stat }}</div>
+      }
+
+      @if (item.ehArmazenamento && editavel()) {
+        <button
+          type="button"
+          class="ficha-inv__alternar"
+          [class.ficha-inv__alternar--ativo]="item.guardada"
+          (click)="alternarGuardada(item.indice)"
+        >
+          {{ item.guardada ? 'Guardada (ocupa slots, não amplia inv.)' : 'Vestida (amplia inv., não ocupa slots)' }}
+        </button>
+      } @else if (item.ehArmazenamento) {
+        <div class="ficha-inv__item-categoria ficha-inv__item-porte">
+          {{ item.guardada ? 'Guardada' : 'Vestida' }}
+        </div>
+      }
+
+      @if (item.modsAtivas.length > 0) {
+        <div class="ficha-inv__mods-ativas">
+          @for (mod of item.modsAtivas; track mod.nome) {
+            <div class="ficha-inv__mod-tag">
+              <div class="ficha-inv__mod-tag-info">
+                <span>{{ mod.nome }} ×{{ mod.empilhamentos }}</span>
+                <span class="ficha-inv__mod-tag-custo">{{ mod.custoTexto }}</span>
+              </div>
+              @if (editavel()) {
+                <div class="ficha-inv__mod-tag-botoes">
+                  <button type="button" class="ficha-inv__mini-btn" aria-label="Remover empilhamento" (click)="removerModificacao(item.indice, mod.nome)">−</button>
+                  <button
+                    type="button"
+                    class="ficha-inv__mini-btn"
+                    aria-label="Adicionar empilhamento"
+                    [disabled]="!mod.podeAumentar"
+                    (click)="adicionarModificacao(item.indice, mod.nome)"
+                  >
+                    +
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      @if (item.temMods && editavel()) {
+        <button type="button" class="ficha-inv__alternar" (click)="alternarPainel(item.indice)">
+          Modificações ({{ item.modsUsados }}/{{ item.maxModificacoes }} slots usados)
+          {{ item.painelAberto ? '▴' : '▾' }}
+        </button>
+
+        @if (item.painelAberto) {
+          <div class="ficha-inv__mod-painel">
+            @for (secao of item.secoes; track secao.titulo) {
+              @if (secao.titulo) {
+                <div class="ficha-inv__mod-secao">{{ secao.titulo }}</div>
+              }
+              <div class="ficha-inv__mod-grade" appOverflowFade>
+                @for (entrada of secao.entradas; track entrada.nome) {
+                  <div
+                    class="ficha-inv__mod-entrada"
+                    [class.ficha-inv__mod-entrada--bloqueada]="entrada.bloqueada"
+                    [class.ficha-inv__mod-entrada--ativa]="entrada.ativa"
+                  >
+                    <div class="ficha-inv__mod-entrada-topo">
+                      <span class="ficha-inv__mod-entrada-nome">{{ entrada.nome }}</span>
+                      <div class="ficha-inv__mod-entrada-pontos">
+                        @for (preenchido of entrada.pontos; track $index) {
+                          <span class="ficha-inv__ponto" [class.ficha-inv__ponto--cheio]="preenchido"></span>
+                        }
+                      </div>
+                    </div>
+                    <div class="ficha-inv__mod-entrada-desc">{{ entrada.descricao }}</div>
+                    @if (entrada.motivo) {
+                      <div class="ficha-inv__mod-entrada-motivo">{{ entrada.motivo }}</div>
+                    }
+                    @if (entrada.bloqueia.length > 0) {
+                      <div class="ficha-inv__mod-entrada-bloqueia">Bloqueia: {{ entrada.bloqueia.join(', ') }}</div>
+                    }
+                    <div class="ficha-inv__mod-entrada-custo">{{ entrada.custoTexto }}</div>
+                    <button
+                      type="button"
+                      class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--largo ficha-inv__btn--pequeno"
+                      [disabled]="!entrada.podeAdicionar"
+                      (click)="adicionarModificacao(item.indice, entrada.nome)"
+                    >
+                      {{ entrada.ativa ? '+ Stack' : '+ Aplicar' }}
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+  }
+
+  @if (amplificadoresInventario().length > 0) {
+    <div class="ficha-inv__amps">
+      <div class="ficha-inv__amps-cabecalho">
+        Amplificadores ({{ resumo().empilhamentosAmplificador }}/{{ resumo().limiteAmplificadores }} stacks)
+        @if (resumo().penalidadeVontade > 0) {
+          <span class="ficha-inv__tag ficha-inv__tag--penalidade">−{{ resumo().penalidadeVontade }} Vontade total</span>
+        }
+      </div>
+      @for (amp of amplificadoresInventario(); track amp.nome) {
+        <div class="ficha-inv__item ficha-inv__item--amp">
+          <div class="ficha-inv__item-cabecalho">
+            <div>
+              <span class="ficha-inv__item-nome">{{ amp.nome }}</span>
+              @if (amp.penalidade > 0) {
+                <span class="ficha-inv__tag ficha-inv__tag--penalidade">−{{ amp.penalidade }} Vontade</span>
+              }
+            </div>
+            <div class="ficha-inv__item-meta">
+              <span class="ficha-inv__custo">{{ amp.custoTexto }}</span>
+              <span class="ficha-inv__peso">{{ amp.empilhamentos }}/{{ amp.maximoEfetivo }} stacks</span>
+            </div>
+          </div>
+          <div class="ficha-inv__item-stat">{{ amp.efeito }}</div>
+          @if (editavel()) {
+            <div class="ficha-inv__cartao-acoes">
+              <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="removerAmplificador(amp.nome)">
+                − Stack
+              </button>
+              <button
+                type="button"
+                class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--flex"
+                [disabled]="!amp.podeAumentar"
+                (click)="adicionarAmplificador(amp.nome)"
+              >
+                + Stack
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
