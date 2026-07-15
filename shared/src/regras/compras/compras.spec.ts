@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ItemCategoriaEnum, PatenteEnum } from '../../enums';
+import { ItemCategoriaEnum, ModificacaoEfeitoTipoEnum, PatenteEnum } from '../../enums';
 import { AMPLIFICADORES, CATALOGO_CATEGORIAS, MODIFICACOES } from './compras.dados';
 import { CATALOGO_ITENS } from './catalogo.dados';
 import { CarrinhoItemDto, ModificacaoAplicadaDto } from './compras.dtos';
@@ -9,6 +9,8 @@ import {
   calcularStatItem,
   calcularTotaisCarrinho,
   contarComprasModificacao,
+  descreverEfeitoModificacao,
+  descreverEfeitosModificacao,
   interpretarBonusArmazenamento,
   obterCategoriaEmprestada,
   obterCustoModificacao,
@@ -319,10 +321,17 @@ describe('coerência do catálogo e das tabelas', () => {
     });
   });
 
-  it('tem itens com custo e peso não negativos em toda categoria (exceto Amplificador)', () => {
+  it('tem itens com custo e peso não negativos em toda categoria (exceto Amplificador/Fragmentos)', () => {
+    // Amplificadores e Fragmentos não têm catálogo comprável: amps vivem em AMPLIFICADORES; fragmentos
+    // são achados e montados como itens custom (módulo + forma base + stats próprios).
+    const semCatalogo: readonly ItemCategoriaEnum[] = [
+      ItemCategoriaEnum.AMPLIFICADOR,
+      ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+      ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+    ];
     Object.values(ItemCategoriaEnum).forEach((categoria) => {
       const itens = CATALOGO_ITENS[categoria];
-      if (categoria === ItemCategoriaEnum.AMPLIFICADOR) {
+      if (semCatalogo.includes(categoria)) {
         expect(itens).toHaveLength(0);
         return;
       }
@@ -350,6 +359,182 @@ describe('coerência do catálogo e das tabelas', () => {
     AMPLIFICADORES.forEach((amplificador) => {
       expect(amplificador.empilhamentosIniciais).toBeGreaterThanOrEqual(1);
       expect(amplificador.empilhamentosIniciais).toBeLessThanOrEqual(amplificador.empilhamentoMaximo);
+    });
+  });
+
+  describe('itens e modificações custom "de verdade"', () => {
+    function itemCustom(parcial: Partial<CarrinhoItemDto>): CarrinhoItemDto {
+      return {
+        nome: 'Custom',
+        categoria: ItemCategoriaEnum.CORPO_A_CORPO,
+        custo: 0,
+        peso: 1,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        ...parcial,
+      };
+    }
+
+    it('calcula o dano de um item custom a partir do stat embutido nele', () => {
+      const item = itemCustom({ dano: '3D6+FOR [Físico]' });
+      expect(calcularStatItem({ item })?.dano).toBe('3D6+FOR [Físico]');
+    });
+
+    it('calcula a resistência de uma proteção custom pelo stat embutido', () => {
+      const item = itemCustom({ categoria: ItemCategoriaEnum.PROTECOES, resistencia: '10 [Físico]' });
+      expect(calcularStatItem({ item })?.resistencia).toBe('10 [Físico]');
+    });
+
+    it('conta o bônus de inventário de um armazenamento custom vestido nos totais', () => {
+      const item = itemCustom({ categoria: ItemCategoriaEnum.ARMAZENAMENTO, bonus: '+6 inv.', guardada: false });
+      expect(calcularTotaisCarrinho({ itens: [item], amplificadores: [] }).bonusInventario).toBe(6);
+    });
+
+    it('exótico custom que declara categoria emprestada se encaixa nela sem "Faz Parte"', () => {
+      const item = itemCustom({
+        categoria: ItemCategoriaEnum.EXOTICOS,
+        categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+      });
+      expect(obterCategoriaEmprestada(item)).toBe(ItemCategoriaEnum.CORPO_A_CORPO);
+    });
+
+    it('mod custom DANO_FIXO soma ao dano do item, escalando com os empilhamentos', () => {
+      const item = itemCustom({
+        dano: '1D6 [Físico]',
+        modificacoes: [
+          { nome: 'Encantada', empilhamentos: 2, efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: 2 }] },
+        ],
+      });
+      // +2 por empilhamento × 2 = +4.
+      expect(calcularStatItem({ item })?.dano).toBe('1D6+4 [Físico]');
+    });
+
+    it('mod custom DANO_DADOS acrescenta um grupo de dano do tipo informado', () => {
+      const item = itemCustom({
+        dano: '1D6 [Físico]',
+        modificacoes: [
+          {
+            nome: 'Flamejante',
+            empilhamentos: 2,
+            efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS, valor: 1, faces: 4, tipoDano: 'Químico' }],
+          },
+        ],
+      });
+      const dano = calcularStatItem({ item })?.dano;
+      expect(dano).toContain('1D6 [Físico]');
+      expect(dano).toContain('2D4 [Químico]');
+    });
+
+    it('mod custom DANO_DADOS_BASE soma dados ao dado base da arma', () => {
+      const item = itemCustom({
+        dano: '2D6+FOR [Físico]',
+        modificacoes: [
+          { nome: 'Reforço', empilhamentos: 2, efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: 1 }] },
+        ],
+      });
+      // +1 dado base por empilhamento × 2 = 2D6 → 4D6.
+      expect(calcularStatItem({ item })?.dano).toBe('4D6+FOR [Físico]');
+    });
+
+    it('mod custom ELEVAR_DADO sobe o tipo do dado de dano (máx D12)', () => {
+      const item = itemCustom({
+        dano: '2D6 [Físico]',
+        modificacoes: [
+          { nome: 'Peso', empilhamentos: 1, efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.ELEVAR_DADO, valor: 1 }] },
+        ],
+      });
+      // D6 → D8.
+      expect(calcularStatItem({ item })?.dano).toBe('2D8 [Físico]');
+    });
+
+    it('mod custom RESISTENCIA (todas) soma à proteção custom', () => {
+      const item = itemCustom({
+        categoria: ItemCategoriaEnum.PROTECOES,
+        resistencia: '10 [Físico], 4 [Balístico]',
+        modificacoes: [
+          { nome: 'Blindagem', empilhamentos: 1, efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: 5 }] },
+        ],
+      });
+      expect(calcularStatItem({ item })?.resistencia).toBe('15 [Físico], 9 [Balístico]');
+    });
+
+    it('mod custom RESISTENCIA de um tipo específico cria/soma só nesse tipo', () => {
+      const item = itemCustom({
+        categoria: ItemCategoriaEnum.PROTECOES,
+        resistencia: '10 [Físico]',
+        modificacoes: [
+          {
+            nome: 'Hazmat caseiro',
+            empilhamentos: 2,
+            efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: 2, tipoDano: 'Químico' }],
+          },
+        ],
+      });
+      const resistencia = calcularStatItem({ item })?.resistencia;
+      expect(resistencia).toContain('10 [Físico]');
+      expect(resistencia).toContain('4 [Químico]');
+    });
+
+    it('mod custom INVENTARIO amplia o bônus de um armazenamento vestido nos totais', () => {
+      const item = itemCustom({
+        categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+        bonus: '+6 inv.',
+        guardada: false,
+        modificacoes: [
+          { nome: 'Bolsos', empilhamentos: 3, efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.INVENTARIO, valor: 1 }] },
+        ],
+      });
+      // 6 base + 1 × 3 empilhamentos = 9.
+      expect(calcularTotaisCarrinho({ itens: [item], amplificadores: [] }).bonusInventario).toBe(9);
+      expect(calcularStatItem({ item })?.bonusArmazenamento).toBe(9);
+    });
+
+    it('uma mod custom pode combinar efeitos (dano + condição), como Incendiária', () => {
+      const item = itemCustom({
+        dano: '1D8 [Balístico]',
+        categoria: ItemCategoriaEnum.ARMAS_DE_FOGO,
+        modificacoes: [
+          {
+            nome: 'Incandescente',
+            empilhamentos: 1,
+            efeitos: [
+              { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS, valor: 1, faces: 6, tipoDano: 'Químico' },
+              { tipo: ModificacaoEfeitoTipoEnum.CONDICAO, condicao: 'Em Chamas', duracaoTurnos: 2 },
+            ],
+          },
+        ],
+      });
+      const dano = calcularStatItem({ item })?.dano;
+      expect(dano).toContain('1D8 [Balístico]');
+      expect(dano).toContain('1D6 [Químico]');
+    });
+
+    it('descreverEfeitoModificacao gera o texto de chip de cada arquétipo', () => {
+      expect(descreverEfeitoModificacao({ tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: 2 })).toBe('+2 de dano');
+      expect(
+        descreverEfeitoModificacao({ tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS, valor: 1, faces: 6, tipoDano: 'Químico' }),
+      ).toBe('+1D6 [Químico]');
+      expect(descreverEfeitoModificacao({ tipo: ModificacaoEfeitoTipoEnum.PERFURACAO, valor: 5, tipoDano: 'Balístico' })).toBe(
+        'ignora 5 de resist. [Balístico]',
+      );
+      expect(descreverEfeitoModificacao({ tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: 2, variante: 'FIXO' })).toBe(
+        '+2 nos testes',
+      );
+      expect(descreverEfeitoModificacao({ tipo: ModificacaoEfeitoTipoEnum.ALCANCE, valor: 1 })).toBe('+1 nível de alcance');
+      expect(
+        descreverEfeitoModificacao({ tipo: ModificacaoEfeitoTipoEnum.CONDICAO, condicao: 'Sangramento', duracaoTurnos: 2, atributoDt: 'Força' }),
+      ).toBe('aplica Sangramento por 2t (DT Força)');
+    });
+
+    it('descreverEfeitosModificacao junta os efeitos de uma mod com " · "', () => {
+      expect(
+        descreverEfeitosModificacao([
+          { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS, valor: 1, faces: 6, tipoDano: 'Químico' },
+          { tipo: ModificacaoEfeitoTipoEnum.CONDICAO, condicao: 'Em Chamas' },
+        ]),
+      ).toBe('+1D6 [Químico] · aplica Em Chamas');
+      expect(descreverEfeitosModificacao(undefined)).toBe('');
     });
   });
 });

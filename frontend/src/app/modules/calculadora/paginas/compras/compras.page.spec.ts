@@ -1,5 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 
+import { ItemCategoriaEnum, ModificacaoEfeitoTipoEnum } from '@contratados-rpg/shared/enums';
+
 import { ComprasPage } from './compras.page';
 
 /**
@@ -19,7 +21,11 @@ describe('ComprasPage', () => {
     fixture.componentRef.setInput('modo', modo);
     fixture.detectChanges();
     await fixture.whenStable();
-    return { fixture, raiz: fixture.nativeElement as HTMLElement };
+    return {
+      fixture,
+      componentInstance: fixture.componentInstance,
+      raiz: fixture.nativeElement as HTMLElement,
+    };
   }
 
   function statResumo(raiz: HTMLElement, rotulo: string): string {
@@ -81,8 +87,8 @@ describe('ComprasPage', () => {
     adicionarItem(raiz, 'Leve');
     fixture.detectChanges();
 
-    // Abre o painel de modificações e aplica "Balanceada" (custo padrão $750 em Corpo a Corpo).
-    (raiz.querySelector('.compras-mods-toggle') as HTMLButtonElement).click();
+    // Abre o painel de modificações ("Modificar") e aplica "Balanceada" (custo padrão $750 em Corpo a Corpo).
+    (raiz.querySelector('.compras-modificar') as HTMLButtonElement).click();
     fixture.detectChanges();
     const entrada = Array.from(raiz.querySelectorAll('.compras-mod-entrada')).find(
       (elemento) =>
@@ -288,5 +294,120 @@ describe('ComprasPage', () => {
     adicionarItem(raiz, 'Leve');
     fixture.detectChanges();
     expect(statPorRotulo(raiz, 'Valor de Venda dos Itens')).toBe('$250');
+  });
+
+  // === m3-14: confirmações, dialog de stack, item/mod custom ===
+
+  it('remover a última unidade confirma no próprio X (troca in-place) e só some ao confirmar', async () => {
+    const { fixture, raiz } = await montar();
+    adicionarItem(raiz, 'Leve');
+    fixture.detectChanges();
+    // O X vira confirmar/cancelar no mesmo lugar (sem crescer a UI).
+    (raiz.querySelector('.compras-item-remover .compras-btn--icone') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    // Item continua no carrinho; agora há um botão de confirmar (accent) no lugar do X.
+    expect(raiz.querySelector('.compras-carrinho-item')).not.toBeNull();
+    const confirmar = raiz.querySelector(
+      '.compras-item-remover .compras-btn--adicionar',
+    ) as HTMLButtonElement;
+    expect(confirmar).not.toBeNull();
+    confirmar.click();
+    fixture.detectChanges();
+    expect(raiz.querySelector('.compras-carrinho-item')).toBeNull();
+  });
+
+  it('remover um stack abre o dialog e remove a quantidade escolhida', async () => {
+    const { fixture, componentInstance: pagina } = await montar();
+    // Item empilhável (Operacional): adiciona o mesmo três vezes → quantidade 3.
+    pagina['categoriaAtiva'].set(ItemCategoriaEnum.OPERACIONAL);
+    fixture.detectChanges();
+    const empilhavel = pagina['itensCatalogo']()[0];
+    pagina['adicionarItem'](empilhavel);
+    pagina['adicionarItem'](empilhavel);
+    pagina['adicionarItem'](empilhavel);
+    fixture.detectChanges();
+    expect(pagina['itensCarrinho']()[0].quantidade).toBe(3);
+    // Pede remoção → abre o dialog (quantidade > 1); nada removido ainda.
+    const uid = pagina['itensCarrinho']()[0].uid;
+    pagina['removerItem'](uid);
+    expect(pagina['uidRemovendoStack']()).toBe(uid);
+    // Remove 2 das 3 unidades.
+    pagina['quantidadeRemover'].setValue(2);
+    pagina['confirmarRemoverStack']();
+    fixture.detectChanges();
+    expect(pagina['itensCarrinho']()[0].quantidade).toBe(1);
+  });
+
+  it('esvaziar pede confirmação e só limpa ao confirmar', async () => {
+    const { fixture, raiz } = await montar();
+    adicionarItem(raiz, 'Leve');
+    fixture.detectChanges();
+    clicarPorTexto(raiz, '.compras-limpar', 'Esvaziar');
+    fixture.detectChanges();
+    expect(raiz.querySelector('.compras-limpar--perigo')).not.toBeNull();
+    expect(raiz.querySelector('.compras-carrinho-item')).not.toBeNull();
+    clicarPorTexto(raiz, '.compras-limpar--perigo', 'Confirmar');
+    fixture.detectChanges();
+    expect(raiz.querySelector('.compras-carrinho-item')).toBeNull();
+  });
+
+  it('cria um item custom e o adiciona ao carrinho', async () => {
+    const { fixture, raiz, componentInstance: pagina } = await montar();
+    pagina['alternarCriarItem']();
+    pagina['itemCustomForm'].setValue({
+      nome: 'Amuleto',
+      categoria: ItemCategoriaEnum.EXOTICOS,
+      custo: 300,
+      peso: 2,
+      descricao: '',
+      dano: '',
+      informacao: '',
+      resistencia: '',
+      bonus: '',
+      categoriaEmprestada: '',
+      modulo: '',
+    });
+    pagina['confirmarCriarItem']();
+    fixture.detectChanges();
+    const item = raiz.querySelector('.compras-carrinho-item');
+    expect(item?.querySelector('.compras-carrinho-item__nome')?.textContent).toContain('Amuleto');
+    expect(statResumo(raiz, 'Gasto Total')).toBe('$300');
+  });
+
+  it('aplica uma modificação custom a um item do carrinho', async () => {
+    const { fixture, componentInstance: pagina } = await montar();
+    // Adiciona "Leve" pela API de catálogo.
+    const cartaoLeve = pagina['itensCatalogo']().find((c) => c.item.nome === 'Leve')!;
+    pagina['adicionarItem'](cartaoLeve);
+    fixture.detectChanges();
+    const uid = pagina['itensCarrinho']()[0].uid;
+    pagina['alternarCriarMod'](uid);
+    pagina['modCustomForm'].patchValue({ nome: 'Amaldiçoada', empilhamentoMaximo: 2, descricao: '' });
+    pagina['confirmarCriarMod'](uid);
+    fixture.detectChanges();
+    // Entra em 1× e pode subir até o teto (2×).
+    expect(pagina['itensCarrinho']()[0].modsAtivas[0].nome).toBe('Amaldiçoada');
+    expect(pagina['itensCarrinho']()[0].modsAtivas[0].empilhamentos).toBe(1);
+    expect(pagina['itensCarrinho']()[0].modsAtivas[0].podeAumentar).toBe(true);
+  });
+
+  it('modificação custom com efeito mecânico (dados de dano) grava o efeito e o descreve no chip', async () => {
+    const { fixture, componentInstance: pagina } = await montar();
+    const cartaoLeve = pagina['itensCatalogo']().find((c) => c.item.nome === 'Leve')!;
+    pagina['adicionarItem'](cartaoLeve);
+    fixture.detectChanges();
+    const uid = pagina['itensCarrinho']()[0].uid;
+    pagina['alternarCriarMod'](uid);
+    pagina['modCustomForm'].patchValue({ nome: 'Ígnea', descricao: '' });
+    pagina['adicionarEfeitoMod']();
+    pagina['efeitosMod'].at(0).patchValue({
+      tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS,
+      valor: 1,
+      faces: 6,
+      tipoDano: 'Químico',
+    });
+    pagina['confirmarCriarMod'](uid);
+    fixture.detectChanges();
+    expect(pagina['itensCarrinho']()[0].modsAtivas[0].descricao).toContain('+1D6 [Químico]');
   });
 });

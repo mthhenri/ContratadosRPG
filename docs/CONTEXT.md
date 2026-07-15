@@ -1331,15 +1331,94 @@ eventos `ficha:alterada`/`ficha:criada`/`membro:entrou` emitidos pelas services 
 O frontend da ficha avançou muito além do CRUD inicial: **m3-06** (criação/edição), **m3-07**
 (lista + visualização), **m3-08** (tempo real do mestre), **m3-10** (edição inline + Maestria + stats
 editáveis), **m3-11** (navegação por abas), **m3-12** (editor de Sanidade & Lesões), **m3-13** (editor de
-Habilidades) e **m3-17** (merge de edição concorrente) — todos em `docs/specs/done/`. As abas da ficha já
-editam Visão Geral, Combate, Sanidade e Habilidades no próprio lugar.
+Habilidades), **m3-14** (editor de Inventário) e **m3-17** (merge de edição concorrente) — todos em
+`docs/specs/done/`. As abas da ficha já editam Visão Geral, Combate, Sanidade, Habilidades e Inventário no
+próprio lugar.
 
-**Próxima task: `m3-14`** — editor de **Inventário** da ficha no próprio lugar (aba Inventário), reusando
-o formato do carrinho da calculadora M1 (`FichaInventarioDto` = `CarrinhoItemDto[]` + amplificadores) e a
-mesma máquina de persistência otimista + PUT em lote de m3-10/m3-12/m3-13. **Antes de qualquer UI, ler
-`docs/design/DESIGN.md` e consumir os tokens de `docs/design/tema/`** — o tema "Terminal de Contenção" é a
-fonte da verdade visual (proibição #29). No backlog seguem ainda `m3-15` (presets de rolagem), `m3-09`
-(refino mobile da ficha) e o trio de Identidade `m3-18`→`m3-20`.
+**m3-14 concluído** — editor de **Inventário** no próprio lugar (aba Inventário): componente controlado
+`FichaInventario` (`componentes/ficha-inventario/`) que **reusa 100% de `shared/regras/compras`** (catálogo,
+limites por patente, custo/peso de modificação, conflitos, stat de item, custo de amplificador e totais —
+proibições #26/#27, nenhuma regra reimplementada). Monta/edita itens (com modificações) + amplificadores no
+formato do carrinho da M1 (`FichaInventarioDto` = `CarrinhoItemDto[]` + `AmplificadorAplicadoDto[]`, sem tipo
+duplicado — m3-01); catálogo recolhível com busca + categorias, painel de modificações por item, alternância
+guardada/vestida e stacks de amplificador. Cada mutação emite o `FichaInventarioDto` inteiro e a página
+(`FichaVisualizar.ajustarInventario`) persiste **otimista + em lote** (mesma máquina de m3-10/m3-12/m3-13). O
+**Inventário máximo** (`Força × 5`, stored/derivado, editável em m3-10) entra como **referência** do peso
+usado — exceder é **aviso**, não trava (liberdade total). SCSS-first só com tokens do tema (proibição #29).
+
+**Refino de UX do inventário (ficha + calculadora de compras, em paridade)**: remover a última unidade pede
+**confirmação inline**; remover um **stack** (quantidade > 1) abre um **dialog** perguntando quantas unidades
+tirar; **Esvaziar** pede confirmação. Botão de adicionar dá **feedback visual** ("✓ Adicionado", pulso).
+Passou a existir **item custom** (nome/categoria/custo/peso) e **modificação custom** (nome/empilhamentos) —
+sem definição de catálogo, o motor cobra custo/peso padrão da categoria (fonte única mantida — proibição #26).
+As modificações deixaram de aparecer sempre: um botão **"Modificar"** revela a caixa de mods. Armazenamento
+ganhou um botão **menor e simples** de vestir/guardar. As mesmas mudanças valem na calculadora M1 de compras
+(`ComprasPage`), usando o `app-step-input` nativo da calculadora.
+
+**2ª rodada de refino (ficha + calculadora):** o card do item ganhou um **rodapé de ações** com
+**Modificar** e o botão de porte **antes do X** de remover (X à direita). A **remoção confirma no próprio
+X** (ele troca in-place por ✓/✕, sem abrir linha extra); stack ainda usa o dialog. O botão de porte agora
+tem **ícone próprio** (novos ícones `vestida`/`guardada` no `Icone`): **Vestida = cor do tema (accent)**,
+**Guardada = cinza claro**. E os custom ficaram **funcionais de fato**: `CarrinhoItemDto`/
+`ModificacaoAplicadaDto` (shared) ganharam um `descricao?` opcional (ignorado pelo motor — proibição #26
+intacta), então item custom e modificação custom carregam uma **descrição/efeito** em texto livre, exibida
+na lista/chip. Verificado ao vivo (stack real) nos dois lados. Frontend 293/293, shared 190/190.
+
+**3ª rodada (item/mod custom REALMENTE funcionais + Fragmentos):** o texto "Remover item?" acompanha o
+✓/✕ da confirmação; **Operacional/Medicinal não aceitam modificação** (nem custom). O motor
+(`shared/regras/compras`) passou a **resolver os stats do item pelo próprio item** quando ele é custom
+(`resolverDadosItem`): `CarrinhoItemDto` ganhou `dano`/`informacao`/`resistencia`/`bonus`/
+`categoriaEmprestada`/`modulo`, então uma **arma/explosivo/proteção/armazenamento custom calcula
+dano/resistência/bônus de verdade** como um do catálogo. **Exótico custom** informa em qual categoria "se
+encaixa" (recebe mods dela, ex.: manopla que aceita mods de Corpo a Corpo). **Modificação custom** ganhou
+efeito **mecânico** (`ModificacaoAplicadaDto.efeito`: dano fixo, dados extras `NDx [tipo]`, resistência)
+aplicado por `calcularStatItem`. Duas novas **categorias de item — Fragmento Construtor e Fragmento
+Potencializador** (achados, montados como item custom com módulo I–V + forma base). Formulários de item/mod
+custom (ficha e calculadora) ganharam os campos por categoria. Tudo com testes no motor (`compras.spec`
++7) e nos componentes. Frontend 296/296, shared 190/190.
+
+**4ª rodada (mod custom cobrindo todos os casos + cadastro melhorado):** o efeito da mod custom deixou de
+ser três campos fixos e virou uma **lista de efeitos** (`ModificacaoAplicadaDto.efeitos[]`) discriminada por
+`ModificacaoEfeitoTipoEnum` (enum novo), cobrindo **todos os arquétipos** das tabelas de modificação de todas
+as categorias: `DANO_FIXO`, `DANO_DADOS`, `DANO_DADOS_BASE`, `ELEVAR_DADO`, `PERFURACAO`, `BONUS_TESTE`,
+`RESISTENCIA` (todas ou por tipo, aceita negativo), `DEFESA`, `ALCANCE`, `RAIO`, `DURACAO`, `CONDICAO`,
+`INVENTARIO`. O motor **funde no stat computado** os efeitos de dano/resistência/inventário (como as mods do
+catálogo) e os demais viram **descrição do chip** via `descreverEfeitoModificacao`/`descreverEfeitosModificacao`
+(novos helpers puros). Uma mod pode **combinar efeitos** (ex.: dados + condição, estilo Incendiária). O
+**cadastro** foi redesenhado: `FormArray` de efeitos com **seletor de tipo por linha** + campos condicionais do
+tipo (add/remover efeito), espelhado em `FichaInventario` e `ComprasPage`, com os metadados de UI em
+`app/shared/inventario/efeito-modificacao.ui.ts` (sem acoplar `ficha`↔`calculadora`). Verificado ao vivo:
+uma mod multi-efeito num rifle exibe `Dano 2D8+PON [Balístico] + 1D6 [Químico]` e o chip
+`+1D6 [Químico] · aplica Em Chamas por 2t (DT Vigor) · ignora 5 de resist. [Balístico]`. Shared 204/204,
+frontend 298/298, lint limpo, build AOT ok.
+
+**5ª/6ª rodadas (layout + limites flexíveis + marcadores):** o **X** de remover foi para o fim do cabeçalho
+(`[Modificar] [Vestir] $custo peso [X]`); armazenamento **vestido ocupa "0 slots"**. O campo da mod custom
+virou o **teto** dela (`empilhamentoMaximo`; entra em 1×) e **corrigiu** o bug de perder efeitos ao empilhar.
+Os limites da **patente** deixaram de travar: exceder é permitido e marcado **"Excedente"** (âmbar). Cada mod
+(catálogo ou custom) pode ser marcada, via checkbox no chip, para **não contar** no limite total da arma
+(`ignoraLimiteTotal`) ou no próprio teto (`ignoraLimiteProprio`) — `modsUsados`/`podeAumentar`/`excedente`
+respeitam as flags. Contrato: `ModificacaoAplicadaDto` ganhou `empilhamentoMaximo`/`ignoraLimiteTotal`/
+`ignoraLimiteProprio`. Espelhado ficha+calculadora. Shared 204/204, frontend 301/301, lint limpo, build AOT ok.
+m3-14 **concluída** (spec em `done/`, com a seção "Refinamentos entregues").
+
+**m3-15 concluída** — **presets de rolagem** da ficha (aba Rolagens). Novo motor puro
+**`shared/regras/rolagem`** (não `regras/dados`, que já é a pasta de dados/tabelas de jogo):
+`interpretarFormula`/`validarFormula` (parser de `NdM`, inteiros e atributos por abreviação `LUT`/`FOR`/…
+ou nome, com `+`/`−` e teto de dados) + `rolarFormula` (RNG **injetável** — a brecha a `Math.random` no
+`rolarDadoPadrao`, §6.6; testes determinísticos). Tabela de abreviações em `rolagem.dados`, DTOs em
+`rolagem.dtos`, export em `package.json`. **Editor `ficha-rolagens`** (controlado, Signals + Reactive
+Forms): add/editar/remover preset com **validação de fórmula ao vivo** (inválida = aviso) e **Rolar**
+mostrando o total em destaque + detalhamento (`18 · 1D20 [15] + LUT 3`); embutido na aba Rolagens da
+`ficha-visualizacao`, persiste `dados.rolagens` via `alterarFicha` (otimista). Comentário do
+`FichaRolagemDto` corrigido para apontar `regras/rolagem`. Spec em `done/` (com "Notas de implementação").
+Shared 213/213, frontend 306/306, lint limpo, build AOT ok, verificado ao vivo. **Com m3-15, todas as abas
+da ficha têm editor** (m3-12 Sanidade, m3-13 Habilidades, m3-14 Inventário, m3-15 Rolagens).
+
+**Próxima task:** backlog do M3 restante — `m3-18`→`m3-20` (trio de **Identidade**: contrato/motor,
+backend de imutabilidade, frontend), `m3-09` (refino **mobile** da ficha) e `m3-21` (otimização de
+**espaço** da ficha). **Antes de qualquer UI, ler `docs/design/DESIGN.md` e consumir os tokens de
+`docs/design/tema/`** — tema "Terminal de Contenção" é a fonte da verdade visual (proibição #29).
 
 **`M3` — Ficha de Jogador** (CRUD + cálculo automático via `shared/regras` + permissões +
 tempo real): o milestone já foi quebrado em tasks numeradas (`m3-01`…`m3-09`, specs no backlog).

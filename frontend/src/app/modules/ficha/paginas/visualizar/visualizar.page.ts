@@ -28,8 +28,10 @@ import type {
   FichaAtributosDto,
   FichaDerivadosDto,
   FichaHabilidadeDto,
+  FichaInventarioDto,
   FichaJogadorDadosDto,
   FichaRecuperadaDto,
+  FichaRolagemDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 
 import { Icone } from '../../../../shared/icone/icone.component';
@@ -483,6 +485,35 @@ export class FichaVisualizar {
       return;
     }
     this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, habilidades } });
+    this.agendarPersistencia();
+  }
+
+  /**
+   * Edita o inventário (itens + amplificadores, m3-14): substitui `dados.inventario` inteiro (o editor
+   * emite o `FichaInventarioDto` completo), otimista na tela + persistência em lote. Só dono/mestre
+   * chega aqui; o backend valida forma. Sem cascata/progressão — o inventário não altera derivados; o
+   * Inventário máximo (`Força × 5`) é referência editável à parte (m3-10) e exceder o peso é só aviso.
+   */
+  protected ajustarInventario(inventario: FichaInventarioDto): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) {
+      return;
+    }
+    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, inventario } });
+    this.agendarPersistencia();
+  }
+
+  /**
+   * Edita os presets de rolagem (m3-15): substitui `dados.rolagens` inteiro (o editor emite a lista
+   * completa), otimista na tela + persistência em lote. Só dono/mestre chega aqui; sem cascata/derivados
+   * (presets não alteram nada calculado).
+   */
+  protected ajustarRolagens(rolagens: readonly FichaRolagemDto[]): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) {
+      return;
+    }
+    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, rolagens } });
     this.agendarPersistencia();
   }
 

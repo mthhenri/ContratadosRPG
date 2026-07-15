@@ -36,6 +36,10 @@
       "types": "./dist/regras/dados/index.d.ts",
       "default": "./dist/regras/dados/index.js"
     },
+    "./regras/rolagem": {
+      "types": "./dist/regras/rolagem/index.d.ts",
+      "default": "./dist/regras/rolagem/index.js"
+    },
     "./regras/agente": {
       "types": "./dist/regras/agente/index.d.ts",
       "default": "./dist/regras/agente/index.js"

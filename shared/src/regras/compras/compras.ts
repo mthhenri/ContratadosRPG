@@ -1,7 +1,7 @@
-import { ItemCategoriaEnum } from '../../enums';
+import { ItemCategoriaEnum, ModificacaoEfeitoTipoEnum } from '../../enums';
 import { elevarDado } from '../descanso';
 import { obterPatente } from '../patente';
-import { CATALOGO_ITENS } from './catalogo.dados';
+import { CATALOGO_ITENS, ItemCatalogo } from './catalogo.dados';
 import {
   CUSTO_EMPILHAMENTO_AMPLIFICADOR,
   CUSTO_MODIFICACAO,
@@ -23,6 +23,7 @@ import {
   CustoAmplificadorCalcularDto,
   LimiteModificacoesDto,
   LimiteModificacoesObterDto,
+  ModificacaoEfeitoDto,
   ModificacaoItemDto,
   ResumoComprasCalcularDto,
   ResumoComprasDto,
@@ -75,12 +76,105 @@ export function interpretarBonusArmazenamento(dto: BonusArmazenamentoInterpretar
 }
 
 /**
+ * Texto legível de um efeito de modificação custom (para o chip da mod), no mesmo
+ * estilo da coluna de efeito das tabelas do catálogo. Não computa nada — é
+ * formatação de dado (as somas ao stat ficam em `calcularStatItem`). `plural`
+ * evita repetir a regrinha de "s" em cada caso.
+ */
+export function descreverEfeitoModificacao(efeito: ModificacaoEfeitoDto): string {
+  const valor = efeito.valor ?? 0;
+  const plural = (quantidade: number, singular: string, muitos: string): string =>
+    Math.abs(quantidade) === 1 ? singular : muitos;
+  const comSinal = (numero: number): string => (numero >= 0 ? `+${numero}` : `${numero}`);
+  const tipoEntre = efeito.tipoDano ? ` [${efeito.tipoDano}]` : '';
+  switch (efeito.tipo) {
+    case ModificacaoEfeitoTipoEnum.DANO_FIXO:
+      return `+${valor} de dano`;
+    case ModificacaoEfeitoTipoEnum.DANO_DADOS:
+      return `+${valor}D${efeito.faces ?? 0} [${efeito.tipoDano || 'Físico'}]`;
+    case ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE:
+      return `+${valor} ${plural(valor, 'dado', 'dados')} de dano`;
+    case ModificacaoEfeitoTipoEnum.ELEVAR_DADO:
+      return `+${valor} ${plural(valor, 'tipo', 'tipos')} de dado`;
+    case ModificacaoEfeitoTipoEnum.PERFURACAO:
+      return `ignora ${valor} de resist.${tipoEntre}`;
+    case ModificacaoEfeitoTipoEnum.BONUS_TESTE:
+      return efeito.variante === 'FIXO'
+        ? `+${valor} nos testes`
+        : `+${valor} ${plural(valor, 'dado', 'dados')} nos testes`;
+    case ModificacaoEfeitoTipoEnum.RESISTENCIA:
+      return `${comSinal(valor)} de resist.${tipoEntre || ' (todas)'}`;
+    case ModificacaoEfeitoTipoEnum.DEFESA:
+      return `+${valor} em ${efeito.variante || 'Defesa'}`;
+    case ModificacaoEfeitoTipoEnum.ALCANCE:
+      return `+${valor} ${plural(valor, 'nível', 'níveis')} de alcance`;
+    case ModificacaoEfeitoTipoEnum.RAIO:
+      return `+${valor}m de raio`;
+    case ModificacaoEfeitoTipoEnum.DURACAO:
+      return `+${valor} ${plural(valor, 'turno', 'turnos')} de duração`;
+    case ModificacaoEfeitoTipoEnum.CONDICAO: {
+      const duracao = efeito.duracaoTurnos ? ` por ${efeito.duracaoTurnos}t` : '';
+      const dt = efeito.atributoDt ? ` (DT ${efeito.atributoDt})` : '';
+      return `aplica ${efeito.condicao || 'condição'}${duracao}${dt}`;
+    }
+    case ModificacaoEfeitoTipoEnum.INVENTARIO:
+      return `+${valor} de inventário`;
+    default:
+      return '';
+  }
+}
+
+/** Junta os efeitos de uma modificação custom em uma linha (` · ` entre eles), para a UI. */
+export function descreverEfeitosModificacao(efeitos: readonly ModificacaoEfeitoDto[] | undefined): string {
+  return (efeitos ?? [])
+    .map((efeito) => descreverEfeitoModificacao(efeito))
+    .filter((texto) => texto.length > 0)
+    .join(' · ');
+}
+
+/**
+ * Dados de catálogo (nome/custo/peso + stats) de um item do carrinho. Item do **catálogo** resolve
+ * pela tabela (`CATALOGO_ITENS`, por nome); item **custom** (fora do catálogo — inclusive fragmentos)
+ * usa os **stats embutidos no próprio item** (`dano`/`informacao`/`resistencia`/`bonus`/
+ * `categoriaEmprestada`), fazendo o item inventado calcular seu stat **de verdade** como um do
+ * catálogo. `null` quando não há dados de catálogo nem stats no item.
+ */
+export function resolverDadosItem(item: CarrinhoItemDto): ItemCatalogo | null {
+  const doCatalogo = CATALOGO_ITENS[item.categoria]?.find((catalogo) => catalogo.nome === item.nome);
+  if (doCatalogo) {
+    return doCatalogo;
+  }
+  if (item.dano || item.informacao || item.resistencia || item.bonus || item.categoriaEmprestada) {
+    return {
+      nome: item.nome,
+      custo: item.custo,
+      peso: item.peso,
+      dano: item.dano,
+      informacao: item.informacao,
+      resistencia: item.resistencia,
+      bonus: item.bonus,
+      descricao: item.descricao,
+      categoriaEmprestada: item.categoriaEmprestada,
+    };
+  }
+  return null;
+}
+
+/**
  * Categoria de modificações "emprestada" a um item: exóticos com a modificação
  * "Faz Parte" passam a aceitar as modificações da categoria indicada no catálogo
  * (`categoriaEmprestada`); escudos (proteções) com "Combativo" aceitam as de
- * Corpo a Corpo. Sem empréstimo, devolve `null`. Espelha `getFazParteBorrowedCat`.
+ * Corpo a Corpo. Item **custom** (exótico ou Fragmento Construtor) que declara a
+ * `categoriaEmprestada` no próprio item **se encaixa direto** naquela categoria
+ * (ex.: manopla exótica que recebe mods de Corpo a Corpo; fragmento construtor que
+ * tomou a forma de uma arma). Sem empréstimo, devolve `null`.
  */
 export function obterCategoriaEmprestada(item: CarrinhoItemDto): ItemCategoriaEnum | null {
+  // Item custom fora do catálogo que declara em qual categoria se encaixa: vale direto.
+  const doCatalogo = CATALOGO_ITENS[item.categoria]?.find((catalogo) => catalogo.nome === item.nome);
+  if (!doCatalogo && item.categoriaEmprestada) {
+    return item.categoriaEmprestada;
+  }
   if (item.categoria === ItemCategoriaEnum.EXOTICOS) {
     const temFazParte = item.modificacoes.some((modificacao) => modificacao.nome === 'Faz Parte');
     if (!temFazParte) {
@@ -209,7 +303,7 @@ interface DadoExtra {
  */
 export function calcularStatItem(dto: StatItemCalcularDto): StatItemDto | null {
   const item = dto.item;
-  const itemCatalogo = CATALOGO_ITENS[item.categoria].find((catalogo) => catalogo.nome === item.nome);
+  const itemCatalogo = resolverDadosItem(item);
   if (!itemCatalogo) {
     return null;
   }
@@ -264,6 +358,33 @@ export function calcularStatItem(dto: StatItemCalcularDto): StatItemDto | null {
     } else if (item.categoria === ItemCategoriaEnum.EXPLOSIVOS) {
       if (empilhamentosDe('Potente') > 0) quantidade += empilhamentosDe('Potente') * 2;
     }
+
+    // Efeitos mecânicos das modificações CUSTOM que mexem no dano (independe da categoria),
+    // escalando com os empilhamentos: faz uma mod inventada "funcionar de verdade" no dano.
+    // Perfuração/condição/alcance/etc. são descritivos (chip da mod), como no catálogo.
+    item.modificacoes.forEach((modificacao) => {
+      (modificacao.efeitos ?? []).forEach((efeito) => {
+        const escala = (efeito.valor ?? 0) * modificacao.empilhamentos;
+        switch (efeito.tipo) {
+          case ModificacaoEfeitoTipoEnum.DANO_FIXO:
+            fixo += escala;
+            break;
+          case ModificacaoEfeitoTipoEnum.DANO_DADOS:
+            if (escala > 0 && (efeito.faces ?? 0) > 0) {
+              extras.push({ quantidade: escala, faces: efeito.faces as number, tipo: efeito.tipoDano || tipo });
+            }
+            break;
+          case ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE:
+            if (escala > 0) quantidade += escala;
+            break;
+          case ModificacaoEfeitoTipoEnum.ELEVAR_DADO:
+            if (escala > 0) faces = elevarDado({ faces, passos: escala, limite: 12 });
+            break;
+          default:
+            break;
+        }
+      });
+    });
 
     // Agrupa os dados por tipo de dano: o grupo do tipo base carrega o modificador de atributo e o fixo.
     const grupos: GrupoDano[] = [];
@@ -323,6 +444,26 @@ export function calcularStatItem(dto: StatItemCalcularDto): StatItemDto | null {
       }
     }
 
+    // Efeitos RESISTENCIA das modificações CUSTOM: `tipoDano` vazio soma a todos os tipos; senão soma
+    // (ou cria) o tipo informado. Escala com os empilhamentos e pode ser negativo (Camuflada-like).
+    item.modificacoes.forEach((modificacao) => {
+      (modificacao.efeitos ?? []).forEach((efeito) => {
+        if (efeito.tipo !== ModificacaoEfeitoTipoEnum.RESISTENCIA) {
+          return;
+        }
+        const total = (efeito.valor ?? 0) * modificacao.empilhamentos;
+        if (total === 0) {
+          return;
+        }
+        if (efeito.tipoDano) {
+          const alvo = obterOuAdicionar(efeito.tipoDano);
+          alvo.valor = Math.max(0, alvo.valor + total);
+        } else {
+          entradas.forEach((entrada) => (entrada.valor = Math.max(0, entrada.valor + total)));
+        }
+      });
+    });
+
     const notacao = entradas
       .filter((entrada) => entrada.valor > 0)
       .map((entrada) => `${entrada.valor} [${entrada.tipos}]`)
@@ -336,6 +477,14 @@ export function calcularStatItem(dto: StatItemCalcularDto): StatItemDto | null {
     if (empilhamentosDe('Compartimentos Extras') > 0) {
       slots += empilhamentosDe('Compartimentos Extras');
     }
+    // Efeitos INVENTARIO das modificações CUSTOM: somam slots ao bônus do armazenamento.
+    item.modificacoes.forEach((modificacao) => {
+      (modificacao.efeitos ?? []).forEach((efeito) => {
+        if (efeito.tipo === ModificacaoEfeitoTipoEnum.INVENTARIO) {
+          slots += (efeito.valor ?? 0) * modificacao.empilhamentos;
+        }
+      });
+    });
     return { bonusArmazenamento: slots };
   }
 
@@ -375,7 +524,9 @@ export function calcularTotaisCarrinho(dto: TotaisCarrinhoCalcularDto): TotaisCa
       pesoUsado += item.peso * quantidade;
     }
     if (ehArmazenamento && !item.guardada) {
-      const itemCatalogo = CATALOGO_ITENS[ItemCategoriaEnum.ARMAZENAMENTO].find((catalogo) => catalogo.nome === item.nome);
+      // Custom (fora do catálogo) usa o bônus embutido no próprio item — o armazenamento inventado
+      // amplia o inventário de verdade, como um do catálogo.
+      const itemCatalogo = resolverDadosItem(item);
       bonusInventario += interpretarBonusArmazenamento({ texto: itemCatalogo?.bonus }) * quantidade;
     }
 
@@ -393,6 +544,11 @@ export function calcularTotaisCarrinho(dto: TotaisCarrinhoCalcularDto): TotaisCa
         } else if (modificacao.nome === 'Camadas Extras') {
           bonusInventario += modificacao.empilhamentos * 0.5 * quantidade;
         }
+        (modificacao.efeitos ?? []).forEach((efeito) => {
+          if (efeito.tipo === ModificacaoEfeitoTipoEnum.INVENTARIO) {
+            bonusInventario += (efeito.valor ?? 0) * modificacao.empilhamentos * quantidade;
+          }
+        });
       }
     });
   });

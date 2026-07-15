@@ -16,4 +16,17 @@ export enum ItemCategoriaEnum {
   OPERACIONAL = 'OPERACIONAL',
   MEDICINAL = 'MEDICINAL',
   AMPLIFICADOR = 'AMPLIFICADOR',
+  /**
+   * Fragmento Construtor: resto mortal materializado que **é** o próprio item
+   * (Arma Corpo a Corpo / Fogo / Exótica, Munição ou Proteção), definido por
+   * módulo + forma base; aceita modificações como a arma base. Fonte:
+   * docs/core/sistema-v4.1.0.md — "⬡ Fragmentos → ⬦ Construtor".
+   */
+  FRAGMENTO_CONSTRUTOR = 'FRAGMENTO_CONSTRUTOR',
+  /**
+   * Fragmento Potencializador: melhoria anômala acoplada a um item ou ser,
+   * definida por módulo e pela função que amplia. Fonte:
+   * docs/core/sistema-v4.1.0.md — "⬡ Fragmentos → ⬦ Potencializador".
+   */
+  FRAGMENTO_POTENCIALIZADOR = 'FRAGMENTO_POTENCIALIZADOR',
 }

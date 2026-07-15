@@ -14,12 +14,15 @@ import { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
 import type {
   FichaAtributosDto,
   FichaHabilidadeDto,
+  FichaInventarioDto,
   FichaJogadorDadosDto,
+  FichaRolagemDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
   MAESTRIA_PONTOS_MINIMO,
   calcularAtributosEfetivos,
   calcularEnergia,
+  calcularInventario,
   calcularVida,
   maestriaAtingivel,
   somarLesoesAtributo,
@@ -28,6 +31,8 @@ import {
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
 import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
 import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
+import { FichaInventario } from '../ficha-inventario/ficha-inventario.component';
+import { FichaRolagens } from '../ficha-rolagens/ficha-rolagens.component';
 import { EstadoSanidade, FichaSanidade } from '../ficha-sanidade/ficha-sanidade.component';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
 import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
@@ -155,7 +160,7 @@ export interface AjusteClasse {
  */
 @Component({
   selector: 'app-ficha-visualizacao',
-  imports: [HoldRepeat, Icone, FichaSanidade, FichaHabilidades],
+  imports: [HoldRepeat, Icone, FichaSanidade, FichaHabilidades, FichaInventario, FichaRolagens],
   templateUrl: './ficha-visualizacao.component.html',
   styleUrl: './ficha-visualizacao.component.scss',
 })
@@ -196,6 +201,12 @@ export class FichaVisualizacao {
 
   /** Lista de habilidades editada — a página persiste em `dados.habilidades` (m3-13). */
   readonly ajusteHabilidades = output<readonly FichaHabilidadeDto[]>();
+
+  /** Inventário (itens + amplificadores) editado — a página persiste em `dados.inventario` (m3-14). */
+  readonly ajusteInventario = output<FichaInventarioDto>();
+
+  /** Presets de rolagem editados — a página persiste em `dados.rolagens` (m3-15). */
+  readonly ajusteRolagens = output<readonly FichaRolagemDto[]>();
 
   /**
    * Utilizar uma habilidade gasta o custo da Energia atual (pode **negativar** — regra do documento).
@@ -701,11 +712,17 @@ export class FichaVisualizacao {
     return CHAVES_COMBATE.map((chave) => mapa.get(chave)!);
   });
 
-  /** Resumo read-only das sub-coleções (contagem exibida nas abas ainda sem editor — m3-12…m3-15). */
+  /** Resumo read-only das sub-coleções (contagem exibida nas abas ainda sem editor — m3-15). */
   protected readonly totalHabilidades = computed(() => this.dados().habilidades.length);
   protected readonly totalItens = computed(() => this.dados().inventario.itens.length);
-  protected readonly totalAmplificadores = computed(
-    () => this.dados().inventario.amplificadores.length,
-  );
   protected readonly totalRolagens = computed(() => this.dados().rolagens?.length ?? 0);
+
+  /**
+   * Inventário máximo resolvido (`Força × 5`) para o editor de Inventário (m3-14): o stored
+   * (`derivados.inventarioMaximo`, editável em m3-10) vence; ausente cai no cálculo ao vivo
+   * (`shared/regras` — fonte única). Referência do peso usado; exceder é aviso, não trava.
+   */
+  protected readonly inventarioMaximoValor = computed(
+    () => this.dados().derivados?.inventarioMaximo ?? calcularInventario(this.entrada()),
+  );
 }

@@ -47,7 +47,10 @@ export type IconeNome =
   | 'inventario'
   | 'habilidades'
   | 'sanidade'
-  | 'rolagens';
+  | 'rolagens'
+  | 'vestida'
+  | 'guardada'
+  | 'fragmento';
 
 /**
  * Ícone monocromático de linha (SVG inline, `stroke: currentColor`) — reutilizado nos menus de

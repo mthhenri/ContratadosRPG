@@ -433,12 +433,13 @@ describe('FichaVisualizacao', () => {
     ).map((r) => r.textContent?.trim());
     expect(combate).toContain('Hab. / Turno');
 
-    // Inventário mostra o máximo (derivado realocado) junto do total atual de itens.
+    // Inventário mostra o máximo (derivado realocado) e embute o editor de inventário (m3-14).
     trocarAba(alvo.fixture, 'inventario');
     const inventario = Array.from(
       alvo.raiz.querySelectorAll('#painel-inventario .ficha-info__rotulo'),
     ).map((r) => r.textContent?.trim());
-    expect(inventario).toEqual(expect.arrayContaining(['Máximo', 'Itens (atual)', 'Amplificadores']));
+    expect(inventario).toEqual(['Máximo']);
+    expect(alvo.raiz.querySelector('#painel-inventario app-ficha-inventario')).not.toBeNull();
   });
 
   it('edita o Inventário máximo na aba Inventário e emite o override (persistência de m3-10)', () => {
@@ -510,7 +511,7 @@ describe('FichaVisualizacao', () => {
     expect(emitidas).toEqual([[]]);
   });
 
-  it('as abas sem editor mostram aviso "em construção" e o resumo read-only', () => {
+  it('embute o editor de Rolagens (m3-15) com os presets da ficha', () => {
     const documento: FichaJogadorDadosDto = {
       ...dados,
       rolagens: [{ nome: 'Ataque', formula: '1d20+PON' }],
@@ -519,7 +520,10 @@ describe('FichaVisualizacao', () => {
 
     trocarAba(alvo.fixture, 'rolagens');
     expect(alvo.raiz.querySelector('.ficha-cartao__meta')?.textContent).toContain('1 preset');
+    expect(alvo.raiz.querySelector('app-ficha-rolagens')).not.toBeNull();
+    // O preset aparece no editor (nome + fórmula), não num placeholder "em construção".
     expect(alvo.raiz.textContent).toContain('1d20+PON');
+    expect(alvo.raiz.textContent).not.toContain('em construção');
   });
 
   it('mostra o derivado STORED de combate (Esquiva) quando presente', () => {

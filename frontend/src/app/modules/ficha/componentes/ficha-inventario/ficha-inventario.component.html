@@ -1,0 +1,729 @@
+<div class="ficha-inv">
+  <!-- Referência: peso usado / inventário máximo (Força × 5) + limite de modificações. Aviso, não trava. -->
+  <div class="ficha-inv__referencia">
+    <div class="ficha-inv__ref-box" [class.ficha-inv__ref-box--aviso]="excedeInventario()">
+      <span class="ficha-inv__ref-rotulo">Inventário usado</span>
+      <span class="ficha-inv__ref-valor">{{ inventarioTexto() }}</span>
+    </div>
+    <div class="ficha-inv__ref-box">
+      <span class="ficha-inv__ref-rotulo">Modificações</span>
+      <span class="ficha-inv__ref-valor">{{ limiteModsTexto() }}</span>
+    </div>
+  </div>
+
+  @if (excedeInventario()) {
+    <p class="ficha-inv__aviso">
+      Peso acima do inventário máximo — apenas um aviso; o inventário é salvo assim mesmo.
+    </p>
+  }
+
+  <!-- Montar/adicionar itens: catálogo recolhível + item custom (só para quem edita). -->
+  @if (editavel()) {
+    <div class="ficha-inv__acoes">
+      <button
+        type="button"
+        class="ficha-inv__btn ficha-inv__btn--principal"
+        [attr.aria-expanded]="catalogoAberto()"
+        (click)="alternarCatalogo()"
+      >
+        {{ catalogoAberto() ? 'Fechar catálogo' : '+ Adicionar itens' }}
+      </button>
+      <button
+        type="button"
+        class="ficha-inv__btn ficha-inv__btn--secundario"
+        [class.ficha-inv__btn--ativo]="criandoItem()"
+        [attr.aria-expanded]="criandoItem()"
+        (click)="alternarCriarItem()"
+      >
+        + Item custom
+      </button>
+      @if (!inventarioVazio() && !confirmandoEsvaziar()) {
+        <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="esvaziar()">
+          Esvaziar
+        </button>
+      }
+      @if (confirmandoEsvaziar()) {
+        <span class="ficha-inv__confirmar">
+          <span class="ficha-inv__confirmar-texto">Esvaziar tudo?</span>
+          <button type="button" class="ficha-inv__btn ficha-inv__btn--perigo" (click)="confirmarEsvaziar()">
+            Esvaziar
+          </button>
+          <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="cancelarEsvaziar()">
+            Cancelar
+          </button>
+        </span>
+      }
+    </div>
+
+    <!-- Formulário de item custom (nome obrigatório; categoria/custo/peso). -->
+    @if (criandoItem()) {
+      <form class="ficha-inv__form" [formGroup]="itemCustomForm" (ngSubmit)="confirmarCriarItem()">
+        <label class="ficha-inv__campo">
+          <span class="ficha-inv__campo-rotulo">Nome</span>
+          <input class="ficha-inv__entrada" type="text" formControlName="nome" placeholder="Nome do item" />
+        </label>
+        <label class="ficha-inv__campo">
+          <span class="ficha-inv__campo-rotulo">Categoria</span>
+          <select class="ficha-inv__entrada" formControlName="categoria">
+            @for (categoria of categoriasItem; track categoria.categoria) {
+              <option [value]="categoria.categoria">{{ categoria.rotulo }}</option>
+            }
+          </select>
+        </label>
+        <div class="ficha-inv__form-linha">
+          <div class="ficha-inv__campo">
+            <span class="ficha-inv__campo-rotulo">Custo ($)</span>
+            <div class="ficha-inv__stepper">
+              <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir custo" (click)="ajustarCampoItem('custo', -100)">−</button>
+              <input class="ficha-inv__entrada ficha-inv__entrada--num" type="number" formControlName="custo" />
+              <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar custo" (click)="ajustarCampoItem('custo', 100)">+</button>
+            </div>
+          </div>
+          <div class="ficha-inv__campo">
+            <span class="ficha-inv__campo-rotulo">Peso (slots)</span>
+            <div class="ficha-inv__stepper">
+              <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir peso" (click)="ajustarCampoItem('peso', -1)">−</button>
+              <input class="ficha-inv__entrada ficha-inv__entrada--num" type="number" formControlName="peso" />
+              <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar peso" (click)="ajustarCampoItem('peso', 1)">+</button>
+            </div>
+          </div>
+        </div>
+        @if (mostraEmprestimo() || mostraModulo()) {
+          <div class="ficha-inv__form-linha">
+            @if (mostraEmprestimo()) {
+              <label class="ficha-inv__campo">
+                <span class="ficha-inv__campo-rotulo">Encaixa em (recebe modificações de)</span>
+                <select class="ficha-inv__entrada" formControlName="categoriaEmprestada">
+                  <option value="">— nenhuma —</option>
+                  @for (cat of categoriasEmprestaveis; track cat) {
+                    <option [value]="cat">{{ rotuloCategoria(cat) }}</option>
+                  }
+                </select>
+              </label>
+            }
+            @if (mostraModulo()) {
+              <label class="ficha-inv__campo">
+                <span class="ficha-inv__campo-rotulo">Módulo do fragmento</span>
+                <select class="ficha-inv__entrada" formControlName="modulo">
+                  <option value="">—</option>
+                  @for (m of modulosFragmento; track m) {
+                    <option [value]="m">Módulo {{ m }}</option>
+                  }
+                </select>
+              </label>
+            }
+          </div>
+        }
+        @if (mostraDano()) {
+          <label class="ficha-inv__campo ficha-inv__campo--largo">
+            <span class="ficha-inv__campo-rotulo">Dano</span>
+            <input class="ficha-inv__entrada" type="text" formControlName="dano" placeholder="Ex.: 3D6+FOR [Físico]" />
+          </label>
+          <label class="ficha-inv__campo ficha-inv__campo--largo">
+            <span class="ficha-inv__campo-rotulo">Informação (alcance / área / munição)</span>
+            <input class="ficha-inv__entrada" type="text" formControlName="informacao" placeholder="Ex.: Médio · 3m" />
+          </label>
+        }
+        @if (mostraResistencia()) {
+          <label class="ficha-inv__campo ficha-inv__campo--largo">
+            <span class="ficha-inv__campo-rotulo">Resistência</span>
+            <input class="ficha-inv__entrada" type="text" formControlName="resistencia" placeholder="Ex.: 14 [Físico], 3 [Balístico]" />
+          </label>
+        }
+        @if (mostraBonus()) {
+          <label class="ficha-inv__campo ficha-inv__campo--largo">
+            <span class="ficha-inv__campo-rotulo">Bônus de inventário</span>
+            <input class="ficha-inv__entrada" type="text" formControlName="bonus" placeholder="Ex.: +6 inv." />
+          </label>
+        }
+        <label class="ficha-inv__campo">
+          <span class="ficha-inv__campo-rotulo">Descrição / efeito (opcional)</span>
+          <textarea
+            class="ficha-inv__entrada ficha-inv__entrada--area"
+            rows="2"
+            formControlName="descricao"
+            placeholder="O que o item é ou faz…"
+          ></textarea>
+        </label>
+        <div class="ficha-inv__form-acoes">
+          <button type="submit" class="ficha-inv__btn ficha-inv__btn--principal" [disabled]="itemCustomForm.invalid">
+            Adicionar item
+          </button>
+          <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="cancelarCriarItem()">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    }
+
+    @if (catalogoAberto()) {
+      <section class="ficha-inv__catalogo">
+        <input
+          class="ficha-inv__busca"
+          type="search"
+          placeholder="Pesquisar item…"
+          autocomplete="off"
+          aria-label="Pesquisar item do catálogo"
+          [formControl]="busca"
+        />
+
+        <nav class="ficha-inv__categorias" aria-label="Categorias do catálogo">
+          @for (categoria of categorias; track categoria.categoria) {
+            <button
+              type="button"
+              class="ficha-inv__categoria"
+              [class.ficha-inv__categoria--ativa]="!busca.value && categoriaAtiva() === categoria.categoria"
+              [disabled]="!!busca.value"
+              (click)="definirCategoria(categoria.categoria)"
+            >
+              <app-icone [nome]="iconesCategoria[categoria.categoria]" />
+              <span>{{ categoria.rotulo }}</span>
+            </button>
+          }
+        </nav>
+
+        @if (catalogoVazio()) {
+          <p class="ficha-inv__vazio">Nenhum item encontrado.</p>
+        }
+
+        @if (itensCatalogo().length > 0) {
+          <div class="ficha-inv__grade" appOverflowFade>
+            @for (cartao of itensCatalogo(); track cartao.categoria + '/' + cartao.item.nome) {
+              <article class="ficha-inv__cartao">
+                <div class="ficha-inv__cartao-nome">
+                  {{ cartao.item.nome }}
+                  @if (cartao.bonus) {
+                    <span class="ficha-inv__tag">{{ cartao.bonus }}</span>
+                  }
+                </div>
+                @if (cartao.stat) {
+                  <div class="ficha-inv__cartao-stat">{{ cartao.stat }}</div>
+                }
+                @if (cartao.descricao) {
+                  <div class="ficha-inv__cartao-desc">{{ cartao.descricao }}</div>
+                }
+                <div class="ficha-inv__cartao-meta">
+                  <span class="ficha-inv__custo">{{ cartao.custoTexto }}</span>
+                  <span class="ficha-inv__peso">{{ cartao.pesoTexto }}</span>
+                </div>
+                <button
+                  type="button"
+                  class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--largo"
+                  [class.ficha-inv__btn--feito]="adicionadoRecente() === chaveCartao(cartao.categoria, cartao.item.nome)"
+                  (click)="adicionarItem(cartao)"
+                >
+                  {{ adicionadoRecente() === chaveCartao(cartao.categoria, cartao.item.nome) ? '✓ Adicionado' : '+ Adicionar' }}
+                </button>
+              </article>
+            }
+          </div>
+        }
+
+        @if (mostrarAmplificadores()) {
+          <div class="ficha-inv__info">
+            Limite: <strong>Vontade × 3 = {{ resumo().limiteAmplificadores }} stacks</strong> totais ·
+            máx. <strong>{{ resumo().limiteModificacoes.maxEmpilhamentos }} stack/amp</strong>
+          </div>
+          <div class="ficha-inv__grade" appOverflowFade>
+            @for (amp of amplificadoresCatalogo(); track amp.nome) {
+              <article class="ficha-inv__cartao">
+                <div class="ficha-inv__cartao-nome">{{ amp.nome }}</div>
+                <div class="ficha-inv__cartao-desc">{{ amp.efeito }}</div>
+                <div class="ficha-inv__cartao-meta">
+                  <span class="ficha-inv__custo">{{ amp.custoTexto }}</span>
+                  <span class="ficha-inv__peso">máx. {{ amp.maximoEfetivo }} stacks</span>
+                </div>
+                @if (amp.empilhamentosAtuais > 0) {
+                  <div class="ficha-inv__cartao-ativo">
+                    Ativo: {{ amp.empilhamentosAtuais }}/{{ amp.maximoEfetivo }} stack{{ amp.empilhamentosAtuais > 1 ? 's' : '' }}
+                  </div>
+                }
+                <div class="ficha-inv__cartao-acoes">
+                  @if (amp.empilhamentosAtuais > 0) {
+                    <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="removerAmplificador(amp.nome)">
+                      −
+                    </button>
+                  }
+                  <button
+                    type="button"
+                    class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--flex"
+                    [class.ficha-inv__btn--feito]="adicionadoRecente() === 'amp:' + amp.nome"
+                    [disabled]="!amp.podeAdicionar"
+                    (click)="adicionarAmplificador(amp.nome)"
+                  >
+                    @if (adicionadoRecente() === 'amp:' + amp.nome) {
+                      ✓
+                    } @else {
+                      {{ amp.empilhamentosAtuais === 0 ? '+ Adquirir' : '+ Stack' }}
+                    }
+                  </button>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </section>
+    }
+  }
+
+  <!-- Lista do inventário: itens (com modificações) + amplificadores. -->
+  @if (inventarioVazio()) {
+    <p class="ficha-inv__vazio">
+      @if (editavel()) {
+        Nenhum item no inventário. Use "Adicionar itens" para montá-lo.
+      } @else {
+        Inventário vazio.
+      }
+    </p>
+  }
+
+  @for (item of itensInventario(); track item.indice) {
+    <div class="ficha-inv__item">
+      <div class="ficha-inv__item-cabecalho">
+        <div class="ficha-inv__item-identidade">
+          <span class="ficha-inv__item-nome">
+            {{ item.nome }}
+            @if (item.quantidade > 1) {
+              <span class="ficha-inv__tag">×{{ item.quantidade }}</span>
+            }
+          </span>
+          <span class="ficha-inv__item-categoria">{{ item.categoriaRotulo }}</span>
+        </div>
+        <div class="ficha-inv__item-controles">
+          <!-- Ações (Modificar / Vestir-Guardar) → meta ($ e peso) → X de remover, por último. -->
+          @if (editavel()) {
+            <div class="ficha-inv__item-acoes">
+              @if (item.modificavel) {
+                <button
+                  type="button"
+                  class="ficha-inv__modificar"
+                  [class.ficha-inv__modificar--aberto]="item.painelAberto"
+                  [attr.aria-expanded]="item.painelAberto"
+                  (click)="alternarPainel(item.indice)"
+                >
+                  <app-icone nome="editar" />
+                  <span>Modificar</span>
+                  @if (item.modsUsados > 0) {
+                    <span
+                      class="ficha-inv__modificar-contagem"
+                      [class.ficha-inv__modificar-contagem--excede]="item.excedeModsLimite"
+                      [title]="item.excedeModsLimite ? 'Além do limite da patente (excedente)' : ''"
+                    >{{ item.modsUsados }}/{{ item.maxModificacoes }}</span>
+                  }
+                  <span class="ficha-inv__modificar-chevron">{{ item.painelAberto ? '▴' : '▾' }}</span>
+                </button>
+              }
+
+              @if (item.ehArmazenamento) {
+                <button
+                  type="button"
+                  class="ficha-inv__porte"
+                  [class.ficha-inv__porte--vestida]="!item.guardada"
+                  [title]="item.guardada ? 'Guardada: ocupa slots, não amplia o inventário' : 'Vestida: amplia o inventário, não ocupa slots'"
+                  (click)="alternarGuardada(item.indice)"
+                >
+                  <app-icone [nome]="item.guardada ? 'guardada' : 'vestida'" />
+                  <span>{{ item.guardada ? 'Guardada' : 'Vestida' }}</span>
+                </button>
+              }
+            </div>
+          }
+          <div class="ficha-inv__item-meta">
+            <span class="ficha-inv__custo">{{ item.custoTotalTexto }}</span>
+            <span class="ficha-inv__peso">{{ item.pesoTexto }}</span>
+          </div>
+          <!-- Remover por último: a confirmação acontece no próprio X (troca in-place). -->
+          @if (editavel()) {
+            <span class="ficha-inv__item-remover">
+              @if (indiceConfirmandoRemocao() === item.indice) {
+                <span class="ficha-inv__remover-texto">Remover item?</span>
+                <button
+                  type="button"
+                  class="ficha-inv__btn ficha-inv__btn--perigo ficha-inv__btn--icone"
+                  title="Confirmar remoção"
+                  aria-label="Confirmar remoção"
+                  (click)="confirmarRemocaoItem(item.indice)"
+                >
+                  <app-icone nome="check" />
+                </button>
+                <button
+                  type="button"
+                  class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
+                  title="Cancelar"
+                  aria-label="Cancelar remoção"
+                  (click)="cancelarRemocao()"
+                >
+                  ✕
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
+                  title="Remover"
+                  aria-label="Remover item"
+                  (click)="removerItem(item.indice)"
+                >
+                  ✕
+                </button>
+              }
+            </span>
+          }
+        </div>
+      </div>
+
+      @if (item.stat) {
+        <div class="ficha-inv__item-stat">{{ item.stat }}</div>
+      }
+      @if (item.descricao) {
+        <div class="ficha-inv__item-desc">{{ item.descricao }}</div>
+      }
+
+      @if (item.modsAtivas.length > 0) {
+        <div class="ficha-inv__mods-ativas">
+          @for (mod of item.modsAtivas; track mod.nome) {
+            <div class="ficha-inv__mod-tag" [class.ficha-inv__mod-tag--excede]="mod.excedente">
+              <div class="ficha-inv__mod-tag-info">
+                <span>
+                  {{ mod.nome }} ×{{ mod.empilhamentos }}
+                  @if (mod.excedente) {
+                    <span class="ficha-inv__excede-tag" title="Além do limite da patente">Excedente</span>
+                  }
+                </span>
+                <span class="ficha-inv__mod-tag-custo">{{ mod.custoTexto }}</span>
+                @if (mod.descricao) {
+                  <span class="ficha-inv__mod-tag-desc">{{ mod.descricao }}</span>
+                }
+                @if (editavel()) {
+                  <div class="ficha-inv__mod-flags">
+                    <button
+                      type="button"
+                      class="ficha-inv__mod-flag"
+                      role="checkbox"
+                      [class.ficha-inv__mod-flag--ativo]="mod.ignoraTotal"
+                      [attr.aria-checked]="mod.ignoraTotal"
+                      title="Quando marcada, esta mod não conta no limite total de empilhamentos da arma"
+                      (click)="alternarIgnoraTotal(item.indice, mod.nome)"
+                    >
+                      <span class="ficha-inv__mod-flag-caixa" aria-hidden="true"></span>
+                      <span>Não conta no total</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="ficha-inv__mod-flag"
+                      role="checkbox"
+                      [class.ficha-inv__mod-flag--ativo]="mod.ignoraProprio"
+                      [attr.aria-checked]="mod.ignoraProprio"
+                      title="Quando marcada, esta mod pode empilhar além do próprio teto"
+                      (click)="alternarIgnoraProprio(item.indice, mod.nome)"
+                    >
+                      <span class="ficha-inv__mod-flag-caixa" aria-hidden="true"></span>
+                      <span>Não conta no teto</span>
+                    </button>
+                  </div>
+                }
+              </div>
+              @if (editavel()) {
+                <div class="ficha-inv__mod-tag-botoes">
+                  <button type="button" class="ficha-inv__mini-btn" aria-label="Remover empilhamento" (click)="removerModificacao(item.indice, mod.nome)">−</button>
+                  <button
+                    type="button"
+                    class="ficha-inv__mini-btn"
+                    aria-label="Adicionar empilhamento"
+                    [disabled]="!mod.podeAumentar"
+                    (click)="adicionarModificacao(item.indice, mod.nome)"
+                  >
+                    +
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      @if (editavel()) {
+        @if (item.modificavel && item.painelAberto) {
+          <div class="ficha-inv__mod-painel">
+            <!-- Modificação custom -->
+            <div class="ficha-inv__mod-custom">
+              @if (criandoModIndice() === item.indice) {
+                <form class="ficha-inv__form" [formGroup]="modCustomForm" (ngSubmit)="confirmarCriarMod(item.indice)">
+                  <div class="ficha-inv__form-linha">
+                    <label class="ficha-inv__campo ficha-inv__campo--largo">
+                      <span class="ficha-inv__campo-rotulo">Nome da modificação</span>
+                      <input class="ficha-inv__entrada" type="text" formControlName="nome" placeholder="Ex.: Encantada" />
+                    </label>
+                    <div class="ficha-inv__campo">
+                      <span class="ficha-inv__campo-rotulo">Limite de empilhamentos</span>
+                      <div class="ficha-inv__stepper">
+                        <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir limite" (click)="ajustarLimiteMod(-1)">−</button>
+                        <input class="ficha-inv__entrada ficha-inv__entrada--num" type="number" formControlName="empilhamentoMaximo" />
+                        <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar limite" (click)="ajustarLimiteMod(1)">+</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ficha-inv__form-linha">
+                    <label class="ficha-inv__check">
+                      <input type="checkbox" formControlName="ignoraLimiteTotal" />
+                      <span>Não conta no limite total de empilhamentos da arma</span>
+                    </label>
+                    <label class="ficha-inv__check">
+                      <input type="checkbox" formControlName="ignoraLimiteProprio" />
+                      <span>Não conta no próprio teto (pode passar do limite da mod)</span>
+                    </label>
+                  </div>
+                  <div class="ficha-inv__efeito">
+                    <span class="ficha-inv__efeito-titulo">Efeitos mecânicos (por empilhamento)</span>
+                    @if (efeitosMod.length === 0) {
+                      <p class="ficha-inv__efeito-vazio">
+                        Sem efeito mecânico — a mod fica só descritiva. Adicione um efeito para ela funcionar (dano, resistência,
+                        perfuração, condição, alcance…).
+                      </p>
+                    }
+                    <div formArrayName="efeitos" class="ficha-inv__efeito-lista">
+                      @for (grupo of efeitosMod.controls; track $index) {
+                        <div class="ficha-inv__efeito-linha" [formGroupName]="$index">
+                          @let meta = metaEfeito(grupo.controls.tipo.value);
+                          <div class="ficha-inv__efeito-topo">
+                            <span class="ficha-inv__efeito-indice" aria-hidden="true">{{ $index + 1 }}</span>
+                            <select
+                              class="ficha-inv__entrada ficha-inv__efeito-tipo"
+                              formControlName="tipo"
+                              (change)="aoTrocarTipoEfeito($index)"
+                              aria-label="Tipo de efeito"
+                            >
+                              @for (tipoMeta of efeitoTipos; track tipoMeta.tipo) {
+                                <option [value]="tipoMeta.tipo">{{ tipoMeta.rotulo }}</option>
+                              }
+                            </select>
+                            <button
+                              type="button"
+                              class="ficha-inv__efeito-remover"
+                              aria-label="Remover efeito"
+                              title="Remover efeito"
+                              (click)="removerEfeitoMod($index)"
+                            >
+                              ×
+                            </button>
+                          </div>
+                          <div class="ficha-inv__efeito-campos">
+                            @if (meta.valorRotulo) {
+                              <div class="ficha-inv__campo">
+                                <span class="ficha-inv__campo-rotulo">{{ meta.valorRotulo }}</span>
+                                <div class="ficha-inv__stepper">
+                                  <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir" (click)="ajustarCampoEfeito($index, 'valor', -1, meta.valorNegativo)">−</button>
+                                  <input class="ficha-inv__entrada ficha-inv__entrada--num" type="number" formControlName="valor" />
+                                  <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar" (click)="ajustarCampoEfeito($index, 'valor', 1, meta.valorNegativo)">+</button>
+                                </div>
+                              </div>
+                            }
+                            @if (meta.faces) {
+                              <div class="ficha-inv__campo">
+                                <span class="ficha-inv__campo-rotulo">Faces (D)</span>
+                                <div class="ficha-inv__stepper">
+                                  <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir faces" (click)="ajustarCampoEfeito($index, 'faces', -1)">−</button>
+                                  <input class="ficha-inv__entrada ficha-inv__entrada--num" type="number" formControlName="faces" />
+                                  <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar faces" (click)="ajustarCampoEfeito($index, 'faces', 1)">+</button>
+                                </div>
+                              </div>
+                            }
+                            @if (meta.variantes) {
+                              <label class="ficha-inv__campo">
+                                <span class="ficha-inv__campo-rotulo">{{ meta.varianteRotulo }}</span>
+                                <select class="ficha-inv__entrada" formControlName="variante">
+                                  @for (variante of meta.variantes; track variante.valor) {
+                                    <option [value]="variante.valor">{{ variante.rotulo }}</option>
+                                  }
+                                </select>
+                              </label>
+                            }
+                            @if (meta.tipoDano) {
+                              <label class="ficha-inv__campo ficha-inv__campo--largo">
+                                <span class="ficha-inv__campo-rotulo">{{ meta.tipoDanoRotulo }}</span>
+                                <input class="ficha-inv__entrada" type="text" formControlName="tipoDano" [placeholder]="meta.tipoDanoPlaceholder" />
+                              </label>
+                            }
+                            @if (meta.condicao) {
+                              <label class="ficha-inv__campo ficha-inv__campo--largo">
+                                <span class="ficha-inv__campo-rotulo">Condição</span>
+                                <input class="ficha-inv__entrada" type="text" formControlName="condicao" placeholder="Ex.: Sangramento" />
+                              </label>
+                              <label class="ficha-inv__campo">
+                                <span class="ficha-inv__campo-rotulo">DT (atributo)</span>
+                                <input class="ficha-inv__entrada" type="text" formControlName="atributoDt" placeholder="Ex.: Força" />
+                              </label>
+                              <div class="ficha-inv__campo">
+                                <span class="ficha-inv__campo-rotulo">Turnos</span>
+                                <div class="ficha-inv__stepper">
+                                  <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir turnos" (click)="ajustarCampoEfeito($index, 'duracaoTurnos', -1)">−</button>
+                                  <input class="ficha-inv__entrada ficha-inv__entrada--num" type="number" formControlName="duracaoTurnos" />
+                                  <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar turnos" (click)="ajustarCampoEfeito($index, 'duracaoTurnos', 1)">+</button>
+                                </div>
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                    <button type="button" class="ficha-inv__efeito-adicionar" (click)="adicionarEfeitoMod()">
+                      + Adicionar efeito
+                    </button>
+                  </div>
+                  <label class="ficha-inv__campo">
+                    <span class="ficha-inv__campo-rotulo">Descrição (opcional)</span>
+                    <textarea
+                      class="ficha-inv__entrada ficha-inv__entrada--area"
+                      rows="2"
+                      formControlName="descricao"
+                      placeholder="Notas sobre a modificação…"
+                    ></textarea>
+                  </label>
+                  <div class="ficha-inv__form-acoes">
+                    <button type="submit" class="ficha-inv__btn ficha-inv__btn--principal" [disabled]="modCustomForm.invalid">
+                      Aplicar modificação
+                    </button>
+                    <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="cancelarCriarMod()">
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              } @else {
+                <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="alternarCriarMod(item.indice)">
+                  + Modificação custom
+                </button>
+              }
+            </div>
+
+            @for (secao of item.secoes; track secao.titulo) {
+              @if (secao.titulo) {
+                <div class="ficha-inv__mod-secao">{{ secao.titulo }}</div>
+              }
+              <div class="ficha-inv__mod-grade" appOverflowFade>
+                @for (entrada of secao.entradas; track entrada.nome) {
+                  <div
+                    class="ficha-inv__mod-entrada"
+                    [class.ficha-inv__mod-entrada--bloqueada]="entrada.bloqueada"
+                    [class.ficha-inv__mod-entrada--ativa]="entrada.ativa"
+                  >
+                    <div class="ficha-inv__mod-entrada-topo">
+                      <span class="ficha-inv__mod-entrada-nome">{{ entrada.nome }}</span>
+                      <div class="ficha-inv__mod-entrada-pontos">
+                        @for (preenchido of entrada.pontos; track $index) {
+                          <span class="ficha-inv__ponto" [class.ficha-inv__ponto--cheio]="preenchido"></span>
+                        }
+                      </div>
+                    </div>
+                    <div class="ficha-inv__mod-entrada-desc">{{ entrada.descricao }}</div>
+                    @if (entrada.motivo) {
+                      <div
+                        class="ficha-inv__mod-entrada-motivo"
+                        [class.ficha-inv__mod-entrada-motivo--excede]="entrada.excedente"
+                      >{{ entrada.motivo }}</div>
+                    }
+                    @if (entrada.bloqueia.length > 0) {
+                      <div class="ficha-inv__mod-entrada-bloqueia">Bloqueia: {{ entrada.bloqueia.join(', ') }}</div>
+                    }
+                    <div class="ficha-inv__mod-entrada-custo">{{ entrada.custoTexto }}</div>
+                    <button
+                      type="button"
+                      class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--largo ficha-inv__btn--pequeno"
+                      [disabled]="!entrada.podeAdicionar"
+                      (click)="adicionarModificacao(item.indice, entrada.nome)"
+                    >
+                      {{ entrada.ativa ? '+ Stack' : '+ Aplicar' }}
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      } @else if (item.ehArmazenamento) {
+        <span class="ficha-inv__porte ficha-inv__porte--leitura" [class.ficha-inv__porte--vestida]="!item.guardada">
+          <app-icone [nome]="item.guardada ? 'guardada' : 'vestida'" />
+          <span>{{ item.guardada ? 'Guardada' : 'Vestida' }}</span>
+        </span>
+      }
+    </div>
+  }
+
+  @if (amplificadoresInventario().length > 0) {
+    <div class="ficha-inv__amps">
+      <div class="ficha-inv__amps-cabecalho">
+        Amplificadores ({{ resumo().empilhamentosAmplificador }}/{{ resumo().limiteAmplificadores }} stacks)
+        @if (resumo().penalidadeVontade > 0) {
+          <span class="ficha-inv__tag ficha-inv__tag--penalidade">−{{ resumo().penalidadeVontade }} Vontade total</span>
+        }
+      </div>
+      @for (amp of amplificadoresInventario(); track amp.nome) {
+        <div class="ficha-inv__item ficha-inv__item--amp">
+          <div class="ficha-inv__item-cabecalho">
+            <div>
+              <span class="ficha-inv__item-nome">{{ amp.nome }}</span>
+              @if (amp.penalidade > 0) {
+                <span class="ficha-inv__tag ficha-inv__tag--penalidade">−{{ amp.penalidade }} Vontade</span>
+              }
+            </div>
+            <div class="ficha-inv__item-meta">
+              <span class="ficha-inv__custo">{{ amp.custoTexto }}</span>
+              <span class="ficha-inv__peso">{{ amp.empilhamentos }}/{{ amp.maximoEfetivo }} stacks</span>
+            </div>
+          </div>
+          <div class="ficha-inv__item-stat">{{ amp.efeito }}</div>
+          @if (editavel()) {
+            <div class="ficha-inv__cartao-acoes">
+              <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="removerAmplificador(amp.nome)">
+                − Stack
+              </button>
+              <button
+                type="button"
+                class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--flex"
+                [class.ficha-inv__btn--feito]="adicionadoRecente() === 'amp:' + amp.nome"
+                [disabled]="!amp.podeAumentar"
+                (click)="adicionarAmplificador(amp.nome)"
+              >
+                {{ adicionadoRecente() === 'amp:' + amp.nome ? '✓' : '+ Stack' }}
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Dialog "quantos remover" para stacks (quantidade > 1). -->
+  @if (indiceRemovendoStack() !== null) {
+    @let stackIndice = indiceRemovendoStack()!;
+    @let stackItem = itensInventario()[stackIndice];
+    @if (stackItem) {
+      <div class="ficha-inv__modal-fundo">
+        <div class="ficha-inv__modal">
+          <h4 class="ficha-inv__modal-titulo">Remover "{{ stackItem.nome }}"</h4>
+          <p class="ficha-inv__modal-texto">
+            Quantas unidades remover? (1–{{ stackItem.quantidade }})
+          </p>
+          <div class="ficha-inv__stepper ficha-inv__stepper--modal">
+            <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir quantidade" (click)="ajustarQuantidadeRemover(-1)">−</button>
+            <input
+              class="ficha-inv__entrada ficha-inv__entrada--num"
+              type="number"
+              aria-label="Quantidade a remover"
+              [min]="1"
+              [max]="stackItem.quantidade"
+              [formControl]="quantidadeRemover"
+            />
+            <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar quantidade" (click)="ajustarQuantidadeRemover(1)">+</button>
+          </div>
+          <div class="ficha-inv__modal-acoes">
+            <button type="button" class="ficha-inv__btn ficha-inv__btn--perigo ficha-inv__btn--flex" (click)="confirmarRemoverStack()">
+              Remover
+            </button>
+            <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--flex" (click)="cancelarRemocao()">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

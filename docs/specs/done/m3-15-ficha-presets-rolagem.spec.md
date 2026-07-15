@@ -42,3 +42,18 @@ resultado (motor de dados puro em `shared/regras`).
 ## Dependências
 
 - `m3-10` (edição granular), `m3-11` (aba Rolagens), M1 (padrão de `shared/regras` puro e testado).
+
+## Notas de implementação
+
+- **Nome do módulo:** o motor foi criado em **`shared/regras/rolagem`** (não `regras/dados` como o
+  rascunho sugeria) porque `regras/dados` já é a **pasta de dados/tabelas de jogo** (progressão,
+  patentes). O comentário do `FichaRolagemDto` foi corrigido para apontar a `regras/rolagem`.
+- **Motor (`shared/regras/rolagem`):** `interpretarFormula`/`validarFormula` (parser: `NdM`, inteiros,
+  atributos por abreviação `LUT`/`FOR`/… ou nome completo, combinados por `+`/`−`, com teto de dados) e
+  `rolarFormula` (RNG **injetável** — a brecha a `Math.random` fica no `rolarDadoPadrao`, §6.6, e os
+  testes passam um `rolarDado` determinístico). `ResultadoRolagemDto` traz os valores individuais dos
+  dados + o total. 9 testes Vitest.
+- **Editor `ficha-rolagens`** (controlado, Signals + Reactive Forms): add/editar/remover preset com
+  **validação de fórmula ao vivo** (inválida = aviso, não trava) e botão **Rolar** que mostra o total
+  em destaque + o detalhamento (`18 · 1D20 [15] + LUT 3`). Embutido na aba Rolagens da
+  `ficha-visualizacao`; persiste `dados.rolagens` via `alterarFicha` (otimista). Verificado ao vivo.

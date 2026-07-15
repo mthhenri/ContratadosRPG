@@ -174,5 +174,20 @@
       <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none" />
       <circle cx="15" cy="15" r="1.2" fill="currentColor" stroke="none" />
     }
+    @case ('vestida') {
+      <!-- Camiseta/colete: armazenamento "vestido" (equipado no corpo). -->
+      <path d="M8.5 4 4 6.5 6 10l2-1v11h8V9l2 1 2-3.5L15.5 4c-.4 1.8-6.6 1.8-7 0Z" />
+    }
+    @case ('guardada') {
+      <!-- Caixa/arquivo: item "guardado" (ocupa espaço no inventário). -->
+      <rect x="4" y="7.5" width="16" height="12.5" rx="1" />
+      <path d="M3 4h18v3.5H3z" />
+      <path d="M10 11.5h4" />
+    }
+    @case ('fragmento') {
+      <!-- Estilhaço/cristal: resto mortal anômalo (Fragmento). -->
+      <path d="M12 2 5 9l3 11 8-2 3-11z" />
+      <path d="M12 2 9 12l3 8 3-8z" />
+    }
   }
 </svg>
