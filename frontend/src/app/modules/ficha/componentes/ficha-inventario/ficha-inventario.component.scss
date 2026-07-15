@@ -98,6 +98,24 @@
       padding: 5px 8px;
       font-size: 11px;
     }
+    &--ativo {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--accent-dim);
+    }
+    // Feedback de adição: pisca positivo por ~900ms (fonte do "✓ Adicionado").
+    &--feito {
+      background: var(--positive);
+      color: var(--bg);
+      border: 0;
+      animation: ficha-inv-pulso 0.9s ease-out;
+    }
+    // Ação destrutiva confirmada (remover/esvaziar).
+    &--perigo {
+      background: var(--accent);
+      color: var(--bg);
+      border: 0;
+    }
     &:hover:not(:disabled) {
       filter: brightness(1.08);
     }
@@ -105,6 +123,229 @@
       opacity: 0.4;
       cursor: not-allowed;
     }
+  }
+
+  @keyframes ficha-inv-pulso {
+    0% {
+      transform: scale(1);
+    }
+    35% {
+      transform: scale(1.05);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  // === Confirmações inline (remover última unidade / esvaziar) ===
+  &__confirmar {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    &--linha {
+      display: flex;
+      margin-top: 10px;
+    }
+  }
+  &__confirmar-texto {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  // === Formulários (item custom / modificação custom) ===
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 14px;
+    background: var(--surface-2);
+  }
+  &__form-linha {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
+  &__form-acoes {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  &__campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    &--largo {
+      grid-column: 1 / -1;
+    }
+  }
+  &__campo-rotulo {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+  }
+  &__entrada {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    color: var(--text);
+    font-family: var(--font-mono);
+    padding: 9px 10px;
+    font-size: 13px;
+    outline: none;
+
+    &:focus {
+      border-color: var(--accent-border);
+    }
+    &--num {
+      text-align: center;
+      // Remove as setas nativas do number para casar com o stepper − / +.
+      -moz-appearance: textfield;
+      appearance: textfield;
+
+      &::-webkit-outer-spin-button,
+      &::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+    }
+  }
+  &__stepper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    .ficha-inv__entrada--num {
+      flex: 1;
+      min-width: 0;
+    }
+    &--modal {
+      justify-content: center;
+      margin: 4px 0 12px;
+
+      .ficha-inv__entrada--num {
+        max-width: 90px;
+      }
+    }
+  }
+
+  // === Porte de armazenamento (botão menor e simples vestir/guardar) ===
+  &__porte {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 5px 12px;
+    cursor: pointer;
+
+    &::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-mute);
+    }
+    &--vestida {
+      color: var(--positive);
+      border-color: color-mix(in srgb, var(--positive) 45%, transparent);
+
+      &::before {
+        background: var(--positive);
+      }
+    }
+    &--leitura {
+      cursor: default;
+    }
+  }
+
+  // === Botão "Modificar" (revela a caixa de mods) ===
+  &__modificar {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 7px 12px;
+    cursor: pointer;
+
+    app-icone {
+      display: inline-flex;
+      width: 14px;
+      height: 14px;
+    }
+    &:hover {
+      color: var(--text);
+    }
+    &--aberto {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--accent-dim);
+    }
+  }
+  &__modificar-contagem {
+    color: var(--text-mute);
+  }
+  &__modificar-chevron {
+    margin-left: auto;
+  }
+  &__mod-custom {
+    margin-bottom: 12px;
+  }
+
+  // === Modal (dialog "quantos remover") ===
+  &__modal-fundo {
+    position: fixed;
+    inset: 0;
+    background: color-mix(in srgb, var(--bg) 70%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 20;
+  }
+  &__modal {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+    padding: var(--pad-card);
+    max-width: 360px;
+    width: 100%;
+  }
+  &__modal-titulo {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text);
+    margin: 0 0 8px;
+  }
+  &__modal-texto {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--text-dim);
+    margin: 0 0 10px;
+  }
+  &__modal-acoes {
+    display: flex;
+    gap: 8px;
   }
 
   // === Catálogo ===

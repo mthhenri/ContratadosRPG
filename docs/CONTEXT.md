@@ -1344,8 +1344,16 @@ duplicado — m3-01); catálogo recolhível com busca + categorias, painel de mo
 guardada/vestida e stacks de amplificador. Cada mutação emite o `FichaInventarioDto` inteiro e a página
 (`FichaVisualizar.ajustarInventario`) persiste **otimista + em lote** (mesma máquina de m3-10/m3-12/m3-13). O
 **Inventário máximo** (`Força × 5`, stored/derivado, editável em m3-10) entra como **referência** do peso
-usado — exceder é **aviso**, não trava (liberdade total). SCSS-first só com tokens do tema (proibição #29);
-frontend 284/284.
+usado — exceder é **aviso**, não trava (liberdade total). SCSS-first só com tokens do tema (proibição #29).
+
+**Refino de UX do inventário (ficha + calculadora de compras, em paridade)**: remover a última unidade pede
+**confirmação inline**; remover um **stack** (quantidade > 1) abre um **dialog** perguntando quantas unidades
+tirar; **Esvaziar** pede confirmação. Botão de adicionar dá **feedback visual** ("✓ Adicionado", pulso).
+Passou a existir **item custom** (nome/categoria/custo/peso) e **modificação custom** (nome/empilhamentos) —
+sem definição de catálogo, o motor cobra custo/peso padrão da categoria (fonte única mantida — proibição #26).
+As modificações deixaram de aparecer sempre: um botão **"Modificar"** revela a caixa de mods. Armazenamento
+ganhou um botão **menor e simples** de vestir/guardar. As mesmas mudanças valem na calculadora M1 de compras
+(`ComprasPage`), usando o `app-step-input` nativo da calculadora. Frontend 293/293.
 
 **Próxima task: `m3-15`** — **presets de rolagem** da ficha (aba Rolagens): atalhos nomeados para fórmulas
 (ex.: `1d20+LUT`) salvos em `dados.rolagens` (`FichaRolagemDto`, já no contrato m3-01), com o motor de

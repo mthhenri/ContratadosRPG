@@ -17,7 +17,7 @@
     </p>
   }
 
-  <!-- Montar/adicionar itens: catálogo recolhível (só para quem edita). -->
+  <!-- Montar/adicionar itens: catálogo recolhível + item custom (só para quem edita). -->
   @if (editavel()) {
     <div class="ficha-inv__acoes">
       <button
@@ -28,12 +28,78 @@
       >
         {{ catalogoAberto() ? 'Fechar catálogo' : '+ Adicionar itens' }}
       </button>
-      @if (!inventarioVazio()) {
+      <button
+        type="button"
+        class="ficha-inv__btn ficha-inv__btn--secundario"
+        [class.ficha-inv__btn--ativo]="criandoItem()"
+        [attr.aria-expanded]="criandoItem()"
+        (click)="alternarCriarItem()"
+      >
+        + Item custom
+      </button>
+      @if (!inventarioVazio() && !confirmandoEsvaziar()) {
         <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="esvaziar()">
           Esvaziar
         </button>
       }
+      @if (confirmandoEsvaziar()) {
+        <span class="ficha-inv__confirmar">
+          <span class="ficha-inv__confirmar-texto">Esvaziar tudo?</span>
+          <button type="button" class="ficha-inv__btn ficha-inv__btn--perigo" (click)="confirmarEsvaziar()">
+            Esvaziar
+          </button>
+          <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="cancelarEsvaziar()">
+            Cancelar
+          </button>
+        </span>
+      }
     </div>
+
+    <!-- Formulário de item custom (nome obrigatório; categoria/custo/peso). -->
+    @if (criandoItem()) {
+      <form class="ficha-inv__form" [formGroup]="itemCustomForm" (ngSubmit)="confirmarCriarItem()">
+        <div class="ficha-inv__form-linha">
+          <label class="ficha-inv__campo ficha-inv__campo--largo">
+            <span class="ficha-inv__campo-rotulo">Nome</span>
+            <input class="ficha-inv__entrada" type="text" formControlName="nome" placeholder="Nome do item" />
+          </label>
+          <label class="ficha-inv__campo">
+            <span class="ficha-inv__campo-rotulo">Categoria</span>
+            <select class="ficha-inv__entrada" formControlName="categoria">
+              @for (categoria of categoriasItem; track categoria.categoria) {
+                <option [value]="categoria.categoria">{{ categoria.rotulo }}</option>
+              }
+            </select>
+          </label>
+        </div>
+        <div class="ficha-inv__form-linha">
+          <div class="ficha-inv__campo">
+            <span class="ficha-inv__campo-rotulo">Custo ($)</span>
+            <div class="ficha-inv__stepper">
+              <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir custo" (click)="ajustarCampoItem('custo', -100)">−</button>
+              <input class="ficha-inv__entrada ficha-inv__entrada--num" type="number" formControlName="custo" />
+              <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar custo" (click)="ajustarCampoItem('custo', 100)">+</button>
+            </div>
+          </div>
+          <div class="ficha-inv__campo">
+            <span class="ficha-inv__campo-rotulo">Peso (slots)</span>
+            <div class="ficha-inv__stepper">
+              <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir peso" (click)="ajustarCampoItem('peso', -1)">−</button>
+              <input class="ficha-inv__entrada ficha-inv__entrada--num" type="number" formControlName="peso" />
+              <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar peso" (click)="ajustarCampoItem('peso', 1)">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="ficha-inv__form-acoes">
+          <button type="submit" class="ficha-inv__btn ficha-inv__btn--principal" [disabled]="itemCustomForm.invalid">
+            Adicionar item
+          </button>
+          <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="cancelarCriarItem()">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    }
 
     @if (catalogoAberto()) {
       <section class="ficha-inv__catalogo">
@@ -88,9 +154,10 @@
                 <button
                   type="button"
                   class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--largo"
+                  [class.ficha-inv__btn--feito]="adicionadoRecente() === chaveCartao(cartao.categoria, cartao.item.nome)"
                   (click)="adicionarItem(cartao)"
                 >
-                  + Adicionar
+                  {{ adicionadoRecente() === chaveCartao(cartao.categoria, cartao.item.nome) ? '✓ Adicionado' : '+ Adicionar' }}
                 </button>
               </article>
             }
@@ -125,10 +192,15 @@
                   <button
                     type="button"
                     class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--flex"
+                    [class.ficha-inv__btn--feito]="adicionadoRecente() === 'amp:' + amp.nome"
                     [disabled]="!amp.podeAdicionar"
                     (click)="adicionarAmplificador(amp.nome)"
                   >
-                    {{ amp.empilhamentosAtuais === 0 ? '+ Adquirir' : '+ Stack' }}
+                    @if (adicionadoRecente() === 'amp:' + amp.nome) {
+                      ✓
+                    } @else {
+                      {{ amp.empilhamentosAtuais === 0 ? '+ Adquirir' : '+ Stack' }}
+                    }
                   </button>
                 </div>
               </article>
@@ -169,7 +241,7 @@
             <button
               type="button"
               class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
-              title="Remover −1"
+              title="Remover"
               aria-label="Remover item"
               (click)="removerItem(item.indice)"
             >
@@ -179,23 +251,40 @@
         </div>
       </div>
 
+      <!-- Confirmação inline de remoção da última unidade. -->
+      @if (indiceConfirmandoRemocao() === item.indice) {
+        <div class="ficha-inv__confirmar ficha-inv__confirmar--linha">
+          <span class="ficha-inv__confirmar-texto">Remover "{{ item.nome }}"?</span>
+          <button type="button" class="ficha-inv__btn ficha-inv__btn--perigo" (click)="confirmarRemocaoItem(item.indice)">
+            Remover
+          </button>
+          <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="cancelarRemocao()">
+            Cancelar
+          </button>
+        </div>
+      }
+
       @if (item.stat) {
         <div class="ficha-inv__item-stat">{{ item.stat }}</div>
       }
 
-      @if (item.ehArmazenamento && editavel()) {
-        <button
-          type="button"
-          class="ficha-inv__alternar"
-          [class.ficha-inv__alternar--ativo]="item.guardada"
-          (click)="alternarGuardada(item.indice)"
-        >
-          {{ item.guardada ? 'Guardada (ocupa slots, não amplia inv.)' : 'Vestida (amplia inv., não ocupa slots)' }}
-        </button>
-      } @else if (item.ehArmazenamento) {
-        <div class="ficha-inv__item-categoria ficha-inv__item-porte">
-          {{ item.guardada ? 'Guardada' : 'Vestida' }}
-        </div>
+      <!-- Armazenamento: botão pequeno e simples de vestir/guardar. -->
+      @if (item.ehArmazenamento) {
+        @if (editavel()) {
+          <button
+            type="button"
+            class="ficha-inv__porte"
+            [class.ficha-inv__porte--vestida]="!item.guardada"
+            [title]="item.guardada ? 'Guardada: ocupa slots, não amplia o inventário' : 'Vestida: amplia o inventário, não ocupa slots'"
+            (click)="alternarGuardada(item.indice)"
+          >
+            {{ item.guardada ? 'Guardada' : 'Vestida' }}
+          </button>
+        } @else {
+          <span class="ficha-inv__porte ficha-inv__porte--leitura" [class.ficha-inv__porte--vestida]="!item.guardada">
+            {{ item.guardada ? 'Guardada' : 'Vestida' }}
+          </span>
+        }
       }
 
       @if (item.modsAtivas.length > 0) {
@@ -225,14 +314,59 @@
         </div>
       }
 
-      @if (item.temMods && editavel()) {
-        <button type="button" class="ficha-inv__alternar" (click)="alternarPainel(item.indice)">
-          Modificações ({{ item.modsUsados }}/{{ item.maxModificacoes }} slots usados)
-          {{ item.painelAberto ? '▴' : '▾' }}
+      <!-- Botão "Modificar": revela a caixa de modificações (catálogo + custom). -->
+      @if (editavel()) {
+        <button
+          type="button"
+          class="ficha-inv__modificar"
+          [class.ficha-inv__modificar--aberto]="item.painelAberto"
+          [attr.aria-expanded]="item.painelAberto"
+          (click)="alternarPainel(item.indice)"
+        >
+          <app-icone nome="editar" />
+          <span>Modificar</span>
+          @if (item.modsUsados > 0) {
+            <span class="ficha-inv__modificar-contagem">{{ item.modsUsados }}/{{ item.maxModificacoes }}</span>
+          }
+          <span class="ficha-inv__modificar-chevron">{{ item.painelAberto ? '▴' : '▾' }}</span>
         </button>
 
         @if (item.painelAberto) {
           <div class="ficha-inv__mod-painel">
+            <!-- Modificação custom -->
+            <div class="ficha-inv__mod-custom">
+              @if (criandoModIndice() === item.indice) {
+                <form class="ficha-inv__form" [formGroup]="modCustomForm" (ngSubmit)="confirmarCriarMod(item.indice)">
+                  <div class="ficha-inv__form-linha">
+                    <label class="ficha-inv__campo ficha-inv__campo--largo">
+                      <span class="ficha-inv__campo-rotulo">Nome da modificação</span>
+                      <input class="ficha-inv__entrada" type="text" formControlName="nome" placeholder="Ex.: Encantada" />
+                    </label>
+                    <div class="ficha-inv__campo">
+                      <span class="ficha-inv__campo-rotulo">Empilhamentos</span>
+                      <div class="ficha-inv__stepper">
+                        <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir empilhamentos" (click)="ajustarEmpilhamentosMod(-1)">−</button>
+                        <input class="ficha-inv__entrada ficha-inv__entrada--num" type="number" formControlName="empilhamentos" />
+                        <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar empilhamentos" (click)="ajustarEmpilhamentosMod(1)">+</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ficha-inv__form-acoes">
+                    <button type="submit" class="ficha-inv__btn ficha-inv__btn--principal" [disabled]="modCustomForm.invalid">
+                      Aplicar modificação
+                    </button>
+                    <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="cancelarCriarMod()">
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              } @else {
+                <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="alternarCriarMod(item.indice)">
+                  + Modificação custom
+                </button>
+              }
+            </div>
+
             @for (secao of item.secoes; track secao.titulo) {
               @if (secao.titulo) {
                 <div class="ficha-inv__mod-secao">{{ secao.titulo }}</div>
@@ -309,15 +443,52 @@
               <button
                 type="button"
                 class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--flex"
+                [class.ficha-inv__btn--feito]="adicionadoRecente() === 'amp:' + amp.nome"
                 [disabled]="!amp.podeAumentar"
                 (click)="adicionarAmplificador(amp.nome)"
               >
-                + Stack
+                {{ adicionadoRecente() === 'amp:' + amp.nome ? '✓' : '+ Stack' }}
               </button>
             </div>
           }
         </div>
       }
     </div>
+  }
+
+  <!-- Dialog "quantos remover" para stacks (quantidade > 1). -->
+  @if (indiceRemovendoStack() !== null) {
+    @let stackIndice = indiceRemovendoStack()!;
+    @let stackItem = itensInventario()[stackIndice];
+    @if (stackItem) {
+      <div class="ficha-inv__modal-fundo">
+        <div class="ficha-inv__modal">
+          <h4 class="ficha-inv__modal-titulo">Remover "{{ stackItem.nome }}"</h4>
+          <p class="ficha-inv__modal-texto">
+            Quantas unidades remover? (1–{{ stackItem.quantidade }})
+          </p>
+          <div class="ficha-inv__stepper ficha-inv__stepper--modal">
+            <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir quantidade" (click)="ajustarQuantidadeRemover(-1)">−</button>
+            <input
+              class="ficha-inv__entrada ficha-inv__entrada--num"
+              type="number"
+              aria-label="Quantidade a remover"
+              [min]="1"
+              [max]="stackItem.quantidade"
+              [formControl]="quantidadeRemover"
+            />
+            <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar quantidade" (click)="ajustarQuantidadeRemover(1)">+</button>
+          </div>
+          <div class="ficha-inv__modal-acoes">
+            <button type="button" class="ficha-inv__btn ficha-inv__btn--perigo ficha-inv__btn--flex" (click)="confirmarRemoverStack()">
+              Remover
+            </button>
+            <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--flex" (click)="cancelarRemocao()">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   }
 </div>

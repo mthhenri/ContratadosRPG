@@ -710,6 +710,151 @@
   }
 }
 
+// === m3-14: feedback de adição, confirmações, item/mod custom, porte, Modificar ===
+// Feedback de adição: pisca positivo por ~900ms (fonte do "✓ Adicionado"). Definido após
+// `.compras-btn--adicionar` para vencer o fundo accent quando ambos estão na mesma classe.
+.compras-btn--feito {
+  background: var(--positive);
+  color: var(--bg);
+  border: 0;
+  animation: compras-pulso 0.9s ease-out;
+}
+@keyframes compras-pulso {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+// Confirmar destrutivo (esvaziar/remover) reusa o chip .compras-limpar, só troca a cor para accent.
+.compras-limpar--perigo {
+  color: var(--accent);
+  border-color: var(--accent-border);
+}
+
+// Barra e formulário de item/modificação custom.
+.compras-custom-barra {
+  margin: 12px 0;
+}
+.compras-custom-form {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  padding: 14px;
+  margin-bottom: 14px;
+  background: var(--surface-2);
+
+  .calc-config {
+    margin-bottom: 12px;
+  }
+}
+.compras-custom-acoes {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+// Confirmação inline de remoção da última unidade.
+.compras-confirmar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+
+  &__texto {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+}
+
+// Porte de armazenamento (botão menor e simples vestir/guardar).
+.compras-porte {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  padding: 5px 12px;
+  cursor: pointer;
+
+  &::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--text-mute);
+  }
+  &--vestida {
+    color: var(--positive);
+    border-color: color-mix(in srgb, var(--positive) 45%, transparent);
+
+    &::before {
+      background: var(--positive);
+    }
+  }
+}
+
+// Botão "Modificar" (revela a caixa de mods).
+.compras-modificar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  padding: 7px 12px;
+  cursor: pointer;
+
+  app-icone {
+    display: inline-flex;
+    width: 14px;
+    height: 14px;
+  }
+  &:hover {
+    color: var(--text);
+  }
+  &.selecionavel--ativo {
+    color: var(--accent);
+    border-color: var(--accent-border);
+    background: var(--accent-dim);
+  }
+  &__contagem {
+    color: var(--text-mute);
+  }
+  &__chevron {
+    margin-left: auto;
+  }
+}
+.compras-mod-custom {
+  margin-bottom: 12px;
+}
+
+// Dialog "quantos remover".
+.compras-modal--estreito {
+  max-width: 340px;
+}
+.compras-remover-stack {
+  display: flex;
+  justify-content: center;
+  margin: 4px 0 12px;
+}
+
 // === Refinamento mobile (m1-15) — alvos de toque e reflow da aba mais pesada ===
 @include bp.mobile {
   // Chips de categoria e mini-botões de −/+ com área de toque confortável.

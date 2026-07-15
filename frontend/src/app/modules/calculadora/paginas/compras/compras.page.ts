@@ -1,6 +1,6 @@
-import { Component, computed, effect, input, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, input, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { map } from 'rxjs';
 
 import {
@@ -277,12 +277,51 @@ export class ComprasPage {
   protected readonly erroImportar = signal<string | null>(null);
   protected readonly copiadoComSucesso = signal(false);
 
+  // === Feedback de adição / confirmações / item e modificação custom ===
+  /** Chave do cartão recém-adicionado — acende o feedback "✓" no botão por ~900ms. */
+  protected readonly adicionadoRecente = signal<string | null>(null);
+  private temporizadorAdicionado: ReturnType<typeof setTimeout> | null = null;
+
+  /** UID do item com a confirmação inline de remoção (última unidade), ou `null`. */
+  protected readonly uidConfirmandoRemocao = signal<number | null>(null);
+  /** UID do item com o dialog "quantos remover" aberto (stack, quantidade > 1), ou `null`. */
+  protected readonly uidRemovendoStack = signal<number | null>(null);
+  /** Quantas unidades remover no dialog de stack (Reactive Forms). */
+  protected readonly quantidadeRemover = new FormControl(1, { nonNullable: true });
+  /** `true` quando a confirmação de "Esvaziar" está aberta. */
+  protected readonly confirmandoEsvaziar = signal(false);
+
+  /** `true` quando o formulário de item custom está aberto. */
+  protected readonly criandoItem = signal(false);
+  protected readonly itemCustomForm = new FormGroup({
+    nome: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    categoria: new FormControl(ItemCategoriaEnum.OPERACIONAL, { nonNullable: true }),
+    custo: new FormControl(0, { nonNullable: true }),
+    peso: new FormControl(1, { nonNullable: true }),
+  });
+  /** Categorias disponíveis para um item custom (todas menos Amplificador, que não é item). */
+  protected readonly categoriasItem = CATALOGO_CATEGORIAS.filter(
+    (categoria) => categoria.categoria !== ItemCategoriaEnum.AMPLIFICADOR,
+  );
+
+  /** UID do item cujo formulário de modificação custom está aberto, ou `null`. */
+  protected readonly criandoModUid = signal<number | null>(null);
+  protected readonly modCustomForm = new FormGroup({
+    nome: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    empilhamentos: new FormControl(1, { nonNullable: true }),
+  });
+
   constructor() {
     const estadoPersistido = this.carregarEstado();
     if (estadoPersistido) {
       this.aplicarEstado(estadoPersistido);
     }
     effect(() => this.salvarEstado());
+    inject(DestroyRef).onDestroy(() => {
+      if (this.temporizadorAdicionado !== null) {
+        clearTimeout(this.temporizadorAdicionado);
+      }
+    });
   }
 
   private readonly termoBusca = computed(() => this.busca().trim().toLowerCase());
@@ -438,10 +477,66 @@ export class ComprasPage {
   }
 
   protected adicionarItem(vm: CartaoItemVM): void {
-    const empilhavel = CATEGORIAS_EMPILHAVEIS.includes(vm.categoria);
+    this.inserirItemCarrinho({
+      nome: vm.item.nome,
+      categoria: vm.categoria,
+      custo: vm.item.custo,
+      peso: vm.item.peso,
+      quantidade: 1,
+      guardada: false,
+      modificacoes: [],
+    });
+    this.sinalizarAdicao(this.chaveCartao(vm.categoria, vm.item.nome));
+  }
+
+  /** Abre/fecha o formulário de item custom. */
+  protected alternarCriarItem(): void {
+    if (this.criandoItem()) {
+      this.criandoItem.set(false);
+      return;
+    }
+    this.itemCustomForm.reset({
+      nome: '',
+      categoria: ItemCategoriaEnum.OPERACIONAL,
+      custo: 0,
+      peso: 1,
+    });
+    this.criandoItem.set(true);
+  }
+
+  protected cancelarCriarItem(): void {
+    this.criandoItem.set(false);
+  }
+
+  /**
+   * Confirma o item custom (nome obrigatório): adiciona um `ItemCarrinho` com categoria/custo/peso
+   * informados. Sem stat computável (não está no catálogo — `calcularStatItem` devolve `null`), mas
+   * participa dos totais de peso/custo pelo motor normalmente.
+   */
+  protected confirmarCriarItem(): void {
+    if (this.itemCustomForm.invalid) {
+      return;
+    }
+    const bruto = this.itemCustomForm.getRawValue();
+    this.inserirItemCarrinho({
+      nome: bruto.nome.trim(),
+      categoria: bruto.categoria,
+      custo: Math.max(0, bruto.custo),
+      peso: Math.max(0, bruto.peso),
+      quantidade: 1,
+      guardada: false,
+      modificacoes: [],
+    });
+    this.sinalizarAdicao(this.chaveCartao(bruto.categoria, bruto.nome.trim()));
+    this.criandoItem.set(false);
+  }
+
+  /** Adiciona um item ao carrinho ativo, empilhando quando a categoria é empilhável e o item já existe. */
+  private inserirItemCarrinho(dados: Omit<ItemCarrinho, 'uid'>): void {
+    const empilhavel = CATEGORIAS_EMPILHAVEIS.includes(dados.categoria);
     const existente = empilhavel
       ? this.lerCarrinho().find(
-          (item) => item.categoria === vm.categoria && item.nome === vm.item.nome,
+          (item) => item.categoria === dados.categoria && item.nome === dados.nome,
         )
       : undefined;
     if (existente) {
@@ -452,37 +547,97 @@ export class ComprasPage {
       );
       return;
     }
-    this.definirCarrinho([
-      ...this.lerCarrinho(),
-      {
-        uid: this.uidContador++,
-        nome: vm.item.nome,
-        categoria: vm.categoria,
-        custo: vm.item.custo,
-        peso: vm.item.peso,
-        quantidade: 1,
-        guardada: false,
-        modificacoes: [],
-      },
-    ]);
+    this.definirCarrinho([...this.lerCarrinho(), { uid: this.uidContador++, ...dados }]);
+  }
+
+  /** Chave estável de um cartão do catálogo (mesma do `track` do template) — indexa o feedback "✓". */
+  protected chaveCartao(categoria: ItemCategoriaEnum, nome: string): string {
+    return `${categoria}/${nome}`;
+  }
+
+  /** Acende o feedback "✓ Adicionado" no botão do cartão por ~900ms (reinicia o timer a cada adição). */
+  private sinalizarAdicao(chave: string): void {
+    if (this.temporizadorAdicionado !== null) {
+      clearTimeout(this.temporizadorAdicionado);
+    }
+    this.adicionadoRecente.set(chave);
+    this.temporizadorAdicionado = setTimeout(() => {
+      this.adicionadoRecente.set(null);
+      this.temporizadorAdicionado = null;
+    }, 900);
   }
 
   // === Ações do carrinho ===
+  /**
+   * Pedido de remoção: última unidade (quantidade 1) abre a **confirmação inline**; um **stack**
+   * (quantidade > 1) abre o **dialog** perguntando quantas unidades remover.
+   */
   protected removerItem(uid: number): void {
     const item = this.lerCarrinho().find((atual) => atual.uid === uid);
     if (!item) {
       return;
     }
     if (item.quantidade > 1) {
-      this.definirCarrinho(
-        this.lerCarrinho().map((atual) =>
-          atual.uid === uid ? { ...atual, quantidade: atual.quantidade - 1 } : atual,
-        ),
-      );
+      this.quantidadeRemover.setValue(1);
+      this.uidConfirmandoRemocao.set(null);
+      this.uidRemovendoStack.set(uid);
       return;
     }
+    this.uidRemovendoStack.set(null);
+    this.uidConfirmandoRemocao.set(uid);
+  }
+
+  /** Cancela a confirmação de remoção (inline ou dialog de stack). */
+  protected cancelarRemocao(): void {
+    this.uidConfirmandoRemocao.set(null);
+    this.uidRemovendoStack.set(null);
+  }
+
+  /** Confirma a remoção da última unidade: retira o item do carrinho. */
+  protected confirmarRemocaoItem(uid: number): void {
     this.definirCarrinho(this.lerCarrinho().filter((atual) => atual.uid !== uid));
+    this.uidConfirmandoRemocao.set(null);
     this.fecharPainel(uid);
+  }
+
+  /** Quantidade do item cujo dialog de stack está aberto (para o rótulo/limite do template). */
+  protected readonly quantidadeMaximaRemover = computed(() => {
+    const uid = this.uidRemovendoStack();
+    return uid === null ? 0 : (this.lerCarrinho().find((item) => item.uid === uid)?.quantidade ?? 0);
+  });
+
+  /** Nome do item cujo dialog de stack está aberto (para o título do dialog). */
+  protected readonly nomeRemovendoStack = computed(() => {
+    const uid = this.uidRemovendoStack();
+    return uid === null ? '' : (this.lerCarrinho().find((item) => item.uid === uid)?.nome ?? '');
+  });
+
+  /**
+   * Confirma o dialog de stack: remove a quantidade escolhida (clampada a 1..quantidade). Removê-la
+   * toda tira o item do carrinho; caso contrário decrementa a quantidade.
+   */
+  protected confirmarRemoverStack(): void {
+    const uid = this.uidRemovendoStack();
+    if (uid === null) {
+      return;
+    }
+    const item = this.lerCarrinho().find((atual) => atual.uid === uid);
+    if (!item) {
+      this.uidRemovendoStack.set(null);
+      return;
+    }
+    const quantidade = Math.min(item.quantidade, Math.max(1, this.quantidadeRemover.value));
+    if (quantidade >= item.quantidade) {
+      this.definirCarrinho(this.lerCarrinho().filter((atual) => atual.uid !== uid));
+      this.fecharPainel(uid);
+    } else {
+      this.definirCarrinho(
+        this.lerCarrinho().map((atual) =>
+          atual.uid === uid ? { ...atual, quantidade: atual.quantidade - quantidade } : atual,
+        ),
+      );
+    }
+    this.uidRemovendoStack.set(null);
   }
 
   protected alternarGuardada(uid: number): void {
@@ -509,7 +664,12 @@ export class ComprasPage {
       return;
     }
     const definicao = this.definicoesModificacao(item).find((mod) => mod.nome === modNome);
+    const atuais = this.empilhamentosDaMod(item, modNome);
+    // Modificação custom (sem definição de catálogo): incrementa livre quando já aplicada.
     if (!definicao) {
+      if (atuais > 0) {
+        this.definirModificacao(uid, modNome, atuais + 1);
+      }
       return;
     }
     const limite = obterLimiteModificacoes({ prestigio: this.recursos().prestigio });
@@ -517,7 +677,6 @@ export class ComprasPage {
     if (conflito.bloqueadaPor.length > 0) {
       return;
     }
-    const atuais = this.empilhamentosDaMod(item, modNome);
     const novos = atuais === 0 ? definicao.empilhamentosIniciais : atuais + 1;
     const aAdicionar = atuais === 0 ? definicao.empilhamentosIniciais : 1;
     const usados = this.modsUsados(item);
@@ -538,13 +697,54 @@ export class ComprasPage {
     if (!item) {
       return;
     }
-    const definicao = this.definicoesModificacao(item).find((mod) => mod.nome === modNome);
     const atuais = this.empilhamentosDaMod(item, modNome);
-    if (!definicao || atuais === 0) {
+    if (atuais === 0) {
       return;
     }
-    const novos = atuais <= definicao.empilhamentosIniciais ? 0 : atuais - 1;
+    const definicao = this.definicoesModificacao(item).find((mod) => mod.nome === modNome);
+    // Custom (sem definição): decrementa de 1 em 1 até sumir; de catálogo: piso nos iniciais.
+    const minInicial = definicao ? definicao.empilhamentosIniciais : 1;
+    const novos = atuais <= minInicial ? 0 : atuais - 1;
     this.definirModificacao(uid, modNome, novos);
+  }
+
+  /** Abre/fecha o formulário de modificação custom de um item do carrinho. */
+  protected alternarCriarMod(uid: number): void {
+    if (this.criandoModUid() === uid) {
+      this.criandoModUid.set(null);
+      return;
+    }
+    this.modCustomForm.reset({ nome: '', empilhamentos: 1 });
+    this.criandoModUid.set(uid);
+  }
+
+  protected cancelarCriarMod(): void {
+    this.criandoModUid.set(null);
+  }
+
+  /**
+   * Confirma a modificação custom (nome obrigatório): acrescenta `{ nome, empilhamentos }` ao item.
+   * Sem definição de catálogo, o motor cobra o custo/peso padrão da categoria (fonte única — proibição
+   * #26); aqui só se acopla a mod livre que o usuário descreveu.
+   */
+  protected confirmarCriarMod(uid: number): void {
+    if (this.modCustomForm.invalid) {
+      return;
+    }
+    const item = this.lerCarrinho().find((atual) => atual.uid === uid);
+    if (!item) {
+      return;
+    }
+    const bruto = this.modCustomForm.getRawValue();
+    const nome = bruto.nome.trim();
+    const empilhamentos = Math.max(1, bruto.empilhamentos);
+    const semMod = item.modificacoes.filter((modificacao) => modificacao.nome !== nome);
+    this.definirCarrinho(
+      this.lerCarrinho().map((atual) =>
+        atual.uid === uid ? { ...atual, modificacoes: [...semMod, { nome, empilhamentos }] } : atual,
+      ),
+    );
+    this.criandoModUid.set(null);
   }
 
   protected adicionarAmplificador(nome: string): void {
@@ -569,6 +769,7 @@ export class ComprasPage {
               : amplificador,
           ),
         );
+        this.sinalizarAdicao(`amp:${nome}`);
       }
       return;
     }
@@ -577,6 +778,7 @@ export class ComprasPage {
         ...this.lerAmplificadores(),
         { nome, empilhamentos: definicao.empilhamentosIniciais },
       ]);
+      this.sinalizarAdicao(`amp:${nome}`);
     }
   }
 
@@ -600,10 +802,21 @@ export class ComprasPage {
     );
   }
 
+  /** Pede confirmação antes de esvaziar o carrinho (a ação em si fica no `confirmarEsvaziar`). */
   protected esvaziarCarrinho(): void {
+    this.confirmandoEsvaziar.set(true);
+  }
+
+  protected cancelarEsvaziar(): void {
+    this.confirmandoEsvaziar.set(false);
+  }
+
+  /** Confirma o esvaziamento: limpa itens e amplificadores do carrinho ativo. */
+  protected confirmarEsvaziar(): void {
     this.definirCarrinho([]);
     this.definirAmplificadores([]);
     this.painelAbertos.set(new Set());
+    this.confirmandoEsvaziar.set(false);
   }
 
   /**
@@ -627,6 +840,11 @@ export class ComprasPage {
     this.uidContador = 0;
     this.taxaVenda.set(TaxaVendaEnum.NORMAL);
     this.fragmentos.set(fragmentosZerados());
+    this.confirmandoEsvaziar.set(false);
+    this.criandoItem.set(false);
+    this.criandoModUid.set(null);
+    this.uidConfirmandoRemocao.set(null);
+    this.uidRemovendoStack.set(null);
   }
 
   // === Modo Venda (m1-20) — ações e cálculos ===
@@ -892,11 +1110,12 @@ export class ComprasPage {
         nome: modificacao.nome,
         empilhamentos: modificacao.empilhamentos,
         custoTexto: this.formatarDinheiro(custo),
-        podeAumentar:
-          !!definicao &&
-          modificacao.empilhamentos < definicao.empilhamentoMaximo &&
-          modificacao.empilhamentos < limite.maxEmpilhamentos &&
-          modsUsados < limite.maxModificacoes,
+        // Custom (sem definição): o "+" incrementa livre; de catálogo: respeita os limites da patente.
+        podeAumentar: definicao
+          ? modificacao.empilhamentos < definicao.empilhamentoMaximo &&
+            modificacao.empilhamentos < limite.maxEmpilhamentos &&
+            modsUsados < limite.maxModificacoes
+          : true,
       };
     });
 

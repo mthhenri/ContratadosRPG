@@ -34,7 +34,12 @@ describe('FichaInventario', () => {
     fixture.detectChanges();
     const emitidos: FichaInventarioDto[] = [];
     fixture.componentInstance.inventarioMudou.subscribe((e) => emitidos.push(e));
-    return { fixture, raiz: fixture.nativeElement as HTMLElement, emitidos };
+    return {
+      fixture,
+      componentInstance: fixture.componentInstance,
+      raiz: fixture.nativeElement as HTMLElement,
+      emitidos,
+    };
   }
 
   it('é só leitura quando não editável: lista os itens sem botões de ação nem catálogo', () => {
@@ -91,16 +96,74 @@ describe('FichaInventario', () => {
     expect(alvo.emitidos[0].itens[0].modificacoes).toEqual([{ nome: 'Balanceada', empilhamentos: 1 }]);
   });
 
-  it('remove um item de quantidade 1 e emite a lista sem ele', () => {
+  it('remover a última unidade pede confirmação inline e só emite ao confirmar', () => {
     const alvo = montar({ itens: [itemLeve], amplificadores: [] });
     alvo.fixture.componentInstance['removerItem'](0);
+    // Apenas abriu a confirmação — nada emitido ainda.
+    expect(alvo.componentInstance['indiceConfirmandoRemocao']()).toBe(0);
+    expect(alvo.emitidos).toHaveLength(0);
+    alvo.componentInstance['confirmarRemocaoItem'](0);
     expect(alvo.emitidos[0].itens).toEqual([]);
   });
 
-  it('decrementa a quantidade ao remover item com quantidade > 1', () => {
+  it('remover um stack abre o dialog e remove a quantidade escolhida', () => {
     const alvo = montar({ itens: [{ ...itemLeve, quantidade: 3 }], amplificadores: [] });
     alvo.fixture.componentInstance['removerItem'](0);
-    expect(alvo.emitidos[0].itens[0].quantidade).toBe(2);
+    expect(alvo.componentInstance['indiceRemovendoStack']()).toBe(0);
+    expect(alvo.emitidos).toHaveLength(0);
+    alvo.componentInstance['quantidadeRemover'].setValue(2);
+    alvo.componentInstance['confirmarRemoverStack']();
+    expect(alvo.emitidos[0].itens[0].quantidade).toBe(1);
+  });
+
+  it('remover o stack inteiro (quantidade escolhida = total) tira o item da lista', () => {
+    const alvo = montar({ itens: [{ ...itemLeve, quantidade: 2 }], amplificadores: [] });
+    alvo.fixture.componentInstance['removerItem'](0);
+    alvo.componentInstance['quantidadeRemover'].setValue(2);
+    alvo.componentInstance['confirmarRemoverStack']();
+    expect(alvo.emitidos[0].itens).toEqual([]);
+  });
+
+  it('esvaziar pede confirmação e só emite o inventário vazio ao confirmar', () => {
+    const alvo = montar({ itens: [itemLeve], amplificadores: [] });
+    alvo.fixture.componentInstance['esvaziar']();
+    expect(alvo.componentInstance['confirmandoEsvaziar']()).toBe(true);
+    expect(alvo.emitidos).toHaveLength(0);
+    alvo.componentInstance['confirmarEsvaziar']();
+    expect(alvo.emitidos[0]).toEqual({ itens: [], amplificadores: [] });
+  });
+
+  it('cria um item custom com nome/categoria/custo/peso e o adiciona', () => {
+    const alvo = montar({ itens: [], amplificadores: [] });
+    alvo.componentInstance['alternarCriarItem']();
+    alvo.componentInstance['itemCustomForm'].setValue({
+      nome: '  Amuleto  ',
+      categoria: ItemCategoriaEnum.EXOTICOS,
+      custo: 300,
+      peso: 2,
+    });
+    alvo.componentInstance['confirmarCriarItem']();
+    expect(alvo.emitidos[0].itens).toEqual([
+      {
+        nome: 'Amuleto',
+        categoria: ItemCategoriaEnum.EXOTICOS,
+        custo: 300,
+        peso: 2,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+      },
+    ]);
+  });
+
+  it('aplica uma modificação custom (nome + empilhamentos) a um item', () => {
+    const alvo = montar({ itens: [itemLeve], amplificadores: [] });
+    alvo.componentInstance['alternarCriarMod'](0);
+    alvo.componentInstance['modCustomForm'].setValue({ nome: '  Amaldiçoada  ', empilhamentos: 2 });
+    alvo.componentInstance['confirmarCriarMod'](0);
+    expect(alvo.emitidos[0].itens[0].modificacoes).toEqual([
+      { nome: 'Amaldiçoada', empilhamentos: 2 },
+    ]);
   });
 
   it('alterna o porte (guardada/vestida) de um armazenamento e emite', () => {

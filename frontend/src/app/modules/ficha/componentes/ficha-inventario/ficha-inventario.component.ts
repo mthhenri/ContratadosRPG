@@ -1,5 +1,5 @@
-import { Component, computed, input, output, signal } from '@angular/core';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { Component, DestroyRef, computed, inject, input, output, signal } from '@angular/core';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 import { ItemCategoriaEnum } from '@contratados-rpg/shared/enums';
@@ -181,8 +181,50 @@ export class FichaInventario {
   private readonly buscaTexto = toSignal(this.busca.valueChanges, { initialValue: '' });
   private readonly termoBusca = computed(() => this.buscaTexto().trim().toLowerCase());
 
-  /** Índices dos itens com o painel de modificações aberto. */
+  /** Índices dos itens com o painel de modificações ("Modificar") aberto. */
   private readonly painelAbertos = signal<ReadonlySet<number>>(new Set());
+
+  /** Categorias disponíveis para um item custom (todas menos Amplificador, que não é item). */
+  protected readonly categoriasItem = CATALOGO_CATEGORIAS.filter(
+    (categoria) => categoria.categoria !== ItemCategoriaEnum.AMPLIFICADOR,
+  );
+
+  /** Chave do cartão recém-adicionado — acende o feedback "✓" no botão por ~900ms. */
+  protected readonly adicionadoRecente = signal<string | null>(null);
+  private temporizadorAdicionado: ReturnType<typeof setTimeout> | null = null;
+
+  /** Índice do item com a confirmação inline de remoção (última unidade), ou `null`. */
+  protected readonly indiceConfirmandoRemocao = signal<number | null>(null);
+  /** Índice do item com o dialog "quantos remover" aberto (stack, quantidade > 1), ou `null`. */
+  protected readonly indiceRemovendoStack = signal<number | null>(null);
+  /** Quantas unidades remover no dialog de stack (Reactive Forms). */
+  protected readonly quantidadeRemover = new FormControl(1, { nonNullable: true });
+  /** `true` quando a confirmação de "Esvaziar" está aberta. */
+  protected readonly confirmandoEsvaziar = signal(false);
+
+  /** `true` quando o formulário de item custom está aberto. */
+  protected readonly criandoItem = signal(false);
+  protected readonly itemCustomForm = new FormGroup({
+    nome: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    categoria: new FormControl(ItemCategoriaEnum.OPERACIONAL, { nonNullable: true }),
+    custo: new FormControl(0, { nonNullable: true }),
+    peso: new FormControl(1, { nonNullable: true }),
+  });
+
+  /** Índice do item cujo formulário de modificação custom está aberto, ou `null`. */
+  protected readonly criandoModIndice = signal<number | null>(null);
+  protected readonly modCustomForm = new FormGroup({
+    nome: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    empilhamentos: new FormControl(1, { nonNullable: true }),
+  });
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => {
+      if (this.temporizadorAdicionado !== null) {
+        clearTimeout(this.temporizadorAdicionado);
+      }
+    });
+  }
 
   /** Recorte de limites/peso do motor (patente, peso usado, inventário efetivo, amplificadores). */
   protected readonly resumo = computed(() =>
@@ -317,10 +359,72 @@ export class FichaInventario {
   }
 
   protected adicionarItem(vm: CartaoItemVM): void {
+    this.inserirItem({
+      nome: vm.item.nome,
+      categoria: vm.categoria,
+      custo: vm.item.custo,
+      peso: vm.item.peso,
+      quantidade: 1,
+      guardada: false,
+      modificacoes: [],
+    });
+    this.sinalizarAdicao(this.chaveCartao(vm.categoria, vm.item.nome));
+  }
+
+  /** Abre/fecha o formulário de item custom. */
+  protected alternarCriarItem(): void {
+    if (this.criandoItem()) {
+      this.criandoItem.set(false);
+      return;
+    }
+    this.itemCustomForm.reset({
+      nome: '',
+      categoria: ItemCategoriaEnum.OPERACIONAL,
+      custo: 0,
+      peso: 1,
+    });
+    this.criandoItem.set(true);
+  }
+
+  protected cancelarCriarItem(): void {
+    this.criandoItem.set(false);
+  }
+
+  /**
+   * Confirma o item custom (nome obrigatório): adiciona um `CarrinhoItemDto` com a categoria/custo/peso
+   * informados. Sem stat computável (não está no catálogo — `calcularStatItem` devolve `null`), mas
+   * participa dos totais de peso/custo pelo motor normalmente.
+   */
+  protected confirmarCriarItem(): void {
+    if (this.itemCustomForm.invalid) {
+      return;
+    }
+    const bruto = this.itemCustomForm.getRawValue();
+    this.inserirItem({
+      nome: bruto.nome.trim(),
+      categoria: bruto.categoria,
+      custo: Math.max(0, bruto.custo),
+      peso: Math.max(0, bruto.peso),
+      quantidade: 1,
+      guardada: false,
+      modificacoes: [],
+    });
+    this.sinalizarAdicao(this.chaveCartao(bruto.categoria, bruto.nome.trim()));
+    this.criandoItem.set(false);
+  }
+
+  /** Passo − / + num campo numérico do formulário de item custom (piso 0). */
+  protected ajustarCampoItem(campo: 'custo' | 'peso', delta: number): void {
+    const controle = this.itemCustomForm.controls[campo];
+    controle.setValue(Math.max(0, controle.value + delta));
+  }
+
+  /** Adiciona um item, empilhando a quantidade quando a categoria é empilhável e o item já existe. */
+  private inserirItem(novo: CarrinhoItemDto): void {
     const itens = this.inventario().itens;
-    const empilhavel = CATEGORIAS_EMPILHAVEIS.includes(vm.categoria);
+    const empilhavel = CATEGORIAS_EMPILHAVEIS.includes(novo.categoria);
     const indiceExistente = empilhavel
-      ? itens.findIndex((item) => item.categoria === vm.categoria && item.nome === vm.item.nome)
+      ? itens.findIndex((item) => item.categoria === novo.categoria && item.nome === novo.nome)
       : -1;
     if (indiceExistente >= 0) {
       this.emitirItens(
@@ -330,35 +434,99 @@ export class FichaInventario {
       );
       return;
     }
-    const novo: CarrinhoItemDto = {
-      nome: vm.item.nome,
-      categoria: vm.categoria,
-      custo: vm.item.custo,
-      peso: vm.item.peso,
-      quantidade: 1,
-      guardada: false,
-      modificacoes: [],
-    };
     this.emitirItens([...itens, novo]);
   }
 
+  /** Chave estável de um cartão do catálogo (mesma do `track` do template) — indexa o feedback "✓". */
+  protected chaveCartao(categoria: ItemCategoriaEnum, nome: string): string {
+    return `${categoria}/${nome}`;
+  }
+
+  /** Acende o feedback "✓ Adicionado" no botão do cartão por ~900ms (reinicia o timer a cada adição). */
+  private sinalizarAdicao(chave: string): void {
+    if (this.temporizadorAdicionado !== null) {
+      clearTimeout(this.temporizadorAdicionado);
+    }
+    this.adicionadoRecente.set(chave);
+    this.temporizadorAdicionado = setTimeout(() => {
+      this.adicionadoRecente.set(null);
+      this.temporizadorAdicionado = null;
+    }, 900);
+  }
+
   // === Ações da lista ===
+  /**
+   * Pedido de remoção: última unidade (quantidade 1) abre a **confirmação inline**; um **stack**
+   * (quantidade > 1) abre o **dialog** perguntando quantas unidades remover.
+   */
   protected removerItem(indice: number): void {
-    const itens = this.inventario().itens;
-    const item = itens[indice];
+    const item = this.inventario().itens[indice];
     if (!item) {
       return;
     }
     if (item.quantidade > 1) {
-      this.emitirItens(
-        itens.map((atual, i) =>
-          i === indice ? { ...atual, quantidade: atual.quantidade - 1 } : atual,
-        ),
-      );
+      this.quantidadeRemover.setValue(1);
+      this.indiceConfirmandoRemocao.set(null);
+      this.indiceRemovendoStack.set(indice);
       return;
     }
-    this.emitirItens(itens.filter((_, i) => i !== indice));
+    this.indiceRemovendoStack.set(null);
+    this.indiceConfirmandoRemocao.set(indice);
+  }
+
+  /** Cancela a confirmação de remoção (inline ou dialog de stack). */
+  protected cancelarRemocao(): void {
+    this.indiceConfirmandoRemocao.set(null);
+    this.indiceRemovendoStack.set(null);
+  }
+
+  /** Confirma a remoção da última unidade: retira o item da lista e emite. */
+  protected confirmarRemocaoItem(indice: number): void {
+    this.emitirItens(this.inventario().itens.filter((_, i) => i !== indice));
+    this.indiceConfirmandoRemocao.set(null);
     this.fecharPainel(indice);
+  }
+
+  /**
+   * Passo − / + na quantidade a remover no dialog de stack (limitado a 1..quantidade do item).
+   */
+  protected ajustarQuantidadeRemover(delta: number): void {
+    const indice = this.indiceRemovendoStack();
+    if (indice === null) {
+      return;
+    }
+    const maximo = this.inventario().itens[indice]?.quantidade ?? 1;
+    const valor = Math.min(maximo, Math.max(1, this.quantidadeRemover.value + delta));
+    this.quantidadeRemover.setValue(valor);
+  }
+
+  /**
+   * Confirma o dialog de stack: remove a quantidade escolhida (clampada a 1..quantidade). Removê-la
+   * toda tira o item da lista; caso contrário decrementa a quantidade. Emite o resultado.
+   */
+  protected confirmarRemoverStack(): void {
+    const indice = this.indiceRemovendoStack();
+    if (indice === null) {
+      return;
+    }
+    const itens = this.inventario().itens;
+    const item = itens[indice];
+    if (!item) {
+      this.indiceRemovendoStack.set(null);
+      return;
+    }
+    const quantidade = Math.min(item.quantidade, Math.max(1, this.quantidadeRemover.value));
+    if (quantidade >= item.quantidade) {
+      this.emitirItens(itens.filter((_, i) => i !== indice));
+      this.fecharPainel(indice);
+    } else {
+      this.emitirItens(
+        itens.map((atual, i) =>
+          i === indice ? { ...atual, quantidade: atual.quantidade - quantidade } : atual,
+        ),
+      );
+    }
+    this.indiceRemovendoStack.set(null);
   }
 
   protected alternarGuardada(indice: number): void {
@@ -385,7 +553,12 @@ export class FichaInventario {
       return;
     }
     const definicao = listarModificacoesDisponiveis(item).find((mod) => mod.nome === modNome);
+    const atuais = this.empilhamentosDaMod(item, modNome);
+    // Modificação custom (sem definição de catálogo): incrementa livre quando já aplicada.
     if (!definicao) {
+      if (atuais > 0) {
+        this.definirModificacao(indice, modNome, atuais + 1);
+      }
       return;
     }
     const limite = obterLimiteModificacoes({ prestigio: this.prestigio() });
@@ -393,7 +566,6 @@ export class FichaInventario {
     if (conflito.bloqueadaPor.length > 0) {
       return;
     }
-    const atuais = this.empilhamentosDaMod(item, modNome);
     const novos = atuais === 0 ? definicao.empilhamentosIniciais : atuais + 1;
     const aAdicionar = atuais === 0 ? definicao.empilhamentosIniciais : 1;
     const usados = this.modsUsados(item);
@@ -414,13 +586,60 @@ export class FichaInventario {
     if (!item) {
       return;
     }
-    const definicao = listarModificacoesDisponiveis(item).find((mod) => mod.nome === modNome);
     const atuais = this.empilhamentosDaMod(item, modNome);
-    if (!definicao || atuais === 0) {
+    if (atuais === 0) {
       return;
     }
-    const novos = atuais <= definicao.empilhamentosIniciais ? 0 : atuais - 1;
+    const definicao = listarModificacoesDisponiveis(item).find((mod) => mod.nome === modNome);
+    // Custom (sem definição): decrementa de 1 em 1 até sumir; de catálogo: piso nos iniciais.
+    const minInicial = definicao ? definicao.empilhamentosIniciais : 1;
+    const novos = atuais <= minInicial ? 0 : atuais - 1;
     this.definirModificacao(indice, modNome, novos);
+  }
+
+  /** Abre/fecha o formulário de modificação custom de um item. */
+  protected alternarCriarMod(indice: number): void {
+    if (this.criandoModIndice() === indice) {
+      this.criandoModIndice.set(null);
+      return;
+    }
+    this.modCustomForm.reset({ nome: '', empilhamentos: 1 });
+    this.criandoModIndice.set(indice);
+  }
+
+  protected cancelarCriarMod(): void {
+    this.criandoModIndice.set(null);
+  }
+
+  /**
+   * Confirma a modificação custom (nome obrigatório): acrescenta `{ nome, empilhamentos }` ao item.
+   * Sem definição de catálogo, o motor cobra o custo/peso padrão da categoria — o motor segue a fonte
+   * única (proibição #26); aqui só se acopla a mod livre que o jogador descreveu.
+   */
+  protected confirmarCriarMod(indice: number): void {
+    if (this.modCustomForm.invalid) {
+      return;
+    }
+    const item = this.inventario().itens[indice];
+    if (!item) {
+      return;
+    }
+    const bruto = this.modCustomForm.getRawValue();
+    const nome = bruto.nome.trim();
+    const empilhamentos = Math.max(1, bruto.empilhamentos);
+    const semMod = item.modificacoes.filter((modificacao) => modificacao.nome !== nome);
+    this.emitirItens(
+      this.inventario().itens.map((atual, i) =>
+        i === indice ? { ...atual, modificacoes: [...semMod, { nome, empilhamentos }] } : atual,
+      ),
+    );
+    this.criandoModIndice.set(null);
+  }
+
+  /** Passo − / + nos empilhamentos do formulário de modificação custom (piso 1). */
+  protected ajustarEmpilhamentosMod(delta: number): void {
+    const controle = this.modCustomForm.controls.empilhamentos;
+    controle.setValue(Math.max(1, controle.value + delta));
   }
 
   protected adicionarAmplificador(nome: string): void {
@@ -446,6 +665,7 @@ export class FichaInventario {
               : amplificador,
           ),
         );
+        this.sinalizarAdicao(`amp:${nome}`);
       }
       return;
     }
@@ -454,6 +674,7 @@ export class FichaInventario {
         ...amplificadores,
         { nome, empilhamentos: definicao.empilhamentosIniciais },
       ]);
+      this.sinalizarAdicao(`amp:${nome}`);
     }
   }
 
@@ -478,8 +699,19 @@ export class FichaInventario {
     );
   }
 
+  /** Pede confirmação antes de esvaziar (a ação em si fica no `confirmarEsvaziar`). */
   protected esvaziar(): void {
+    this.confirmandoEsvaziar.set(true);
+  }
+
+  protected cancelarEsvaziar(): void {
+    this.confirmandoEsvaziar.set(false);
+  }
+
+  /** Confirma o esvaziamento: limpa itens e amplificadores e emite o inventário vazio. */
+  protected confirmarEsvaziar(): void {
     this.painelAbertos.set(new Set());
+    this.confirmandoEsvaziar.set(false);
     this.inventarioMudou.emit({ itens: [], amplificadores: [] });
   }
 
@@ -539,11 +771,12 @@ export class FichaInventario {
         nome: modificacao.nome,
         empilhamentos: modificacao.empilhamentos,
         custoTexto: this.formatarDinheiro(custo),
-        podeAumentar:
-          !!definicao &&
-          modificacao.empilhamentos < definicao.empilhamentoMaximo &&
-          modificacao.empilhamentos < limite.maxEmpilhamentos &&
-          modsUsados < limite.maxModificacoes,
+        // Custom (sem definição): o "+" incrementa livre; de catálogo: respeita os limites da patente.
+        podeAumentar: definicao
+          ? modificacao.empilhamentos < definicao.empilhamentoMaximo &&
+            modificacao.empilhamentos < limite.maxEmpilhamentos &&
+            modsUsados < limite.maxModificacoes
+          : true,
       };
     });
 
