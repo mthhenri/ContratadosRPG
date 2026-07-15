@@ -1,6 +1,19 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-14 (**m3-13+ — habilidades do sistema na ficha**: a aba **Habilidades**
+> Última atualização: 2026-07-15 (**m3-13++ — refinamentos do seletor + confirmar remoção na Sanidade**:
+> no `FichaHabilidadeSeletor`, o **"＋" agora adiciona a habilidade direto na ficha** (o diálogo
+> **permanece aberto**) e a marca **"Na ficha ✕"** (o ✕ ali mesmo a remove) — dá para montar a lista
+> inteira sem fechar; as **gerais melhoradas** ganharam **selo** (não se misturam mais às do arquétipo);
+> a lista virou **2 colunas** com **fade topo/base** (`appOverflowFade`, mesmo recurso das listas da
+> calculadora) e o diálogo ficou **menos comprido** (teto 600px). O parent `FichaHabilidades` trocou o
+> fluxo "pré-preenche editor" por **`aoAdicionarDoCatalogo`** (grava direto, com `origem`) +
+> **`aoRemoverDoCatalogo`** (por nome). Na aba **Sanidade** (`FichaSanidade`), remover
+> sequela/trauma/lesão agora pede **confirmação inline** (mesmo padrão de `FichaHabilidades`). Testes:
+> frontend **273** (habilidades: add/remove direto + custo variável; sanidade: gate de confirmação),
+> `lint`/`build` verdes (bundle **569,77 kB**). **Verificação de render ainda pendente** — validado por
+> testes/build.)
+>
+> (**m3-13+ — habilidades do sistema na ficha**: a aba **Habilidades**
 > passou a permitir **adicionar habilidades do catálogo do sistema**, não só texto livre. Novo dado
 > puro em `shared/regras/agente`: `habilidades-catalogo.dados.ts` (as ~224 habilidades do
 > `sistema-v4.1.0.md` — Gerais, Classe, Arquétipo, Gerais Melhoradas e Subclasses de Experimento,
