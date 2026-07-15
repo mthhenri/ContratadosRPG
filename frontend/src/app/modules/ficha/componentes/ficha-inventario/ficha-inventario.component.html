@@ -58,20 +58,18 @@
     <!-- Formulário de item custom (nome obrigatório; categoria/custo/peso). -->
     @if (criandoItem()) {
       <form class="ficha-inv__form" [formGroup]="itemCustomForm" (ngSubmit)="confirmarCriarItem()">
-        <div class="ficha-inv__form-linha">
-          <label class="ficha-inv__campo ficha-inv__campo--largo">
-            <span class="ficha-inv__campo-rotulo">Nome</span>
-            <input class="ficha-inv__entrada" type="text" formControlName="nome" placeholder="Nome do item" />
-          </label>
-          <label class="ficha-inv__campo">
-            <span class="ficha-inv__campo-rotulo">Categoria</span>
-            <select class="ficha-inv__entrada" formControlName="categoria">
-              @for (categoria of categoriasItem; track categoria.categoria) {
-                <option [value]="categoria.categoria">{{ categoria.rotulo }}</option>
-              }
-            </select>
-          </label>
-        </div>
+        <label class="ficha-inv__campo">
+          <span class="ficha-inv__campo-rotulo">Nome</span>
+          <input class="ficha-inv__entrada" type="text" formControlName="nome" placeholder="Nome do item" />
+        </label>
+        <label class="ficha-inv__campo">
+          <span class="ficha-inv__campo-rotulo">Categoria</span>
+          <select class="ficha-inv__entrada" formControlName="categoria">
+            @for (categoria of categoriasItem; track categoria.categoria) {
+              <option [value]="categoria.categoria">{{ categoria.rotulo }}</option>
+            }
+          </select>
+        </label>
         <div class="ficha-inv__form-linha">
           <div class="ficha-inv__campo">
             <span class="ficha-inv__campo-rotulo">Custo ($)</span>
@@ -90,27 +88,31 @@
             </div>
           </div>
         </div>
-        @if (mostraEmprestimo()) {
-          <label class="ficha-inv__campo ficha-inv__campo--largo">
-            <span class="ficha-inv__campo-rotulo">Encaixa em (recebe modificações de)</span>
-            <select class="ficha-inv__entrada" formControlName="categoriaEmprestada">
-              <option value="">— nenhuma —</option>
-              @for (cat of categoriasEmprestaveis; track cat) {
-                <option [value]="cat">{{ rotuloCategoria(cat) }}</option>
-              }
-            </select>
-          </label>
-        }
-        @if (mostraModulo()) {
-          <label class="ficha-inv__campo">
-            <span class="ficha-inv__campo-rotulo">Módulo do fragmento</span>
-            <select class="ficha-inv__entrada" formControlName="modulo">
-              <option value="">—</option>
-              @for (m of modulosFragmento; track m) {
-                <option [value]="m">Módulo {{ m }}</option>
-              }
-            </select>
-          </label>
+        @if (mostraEmprestimo() || mostraModulo()) {
+          <div class="ficha-inv__form-linha">
+            @if (mostraEmprestimo()) {
+              <label class="ficha-inv__campo">
+                <span class="ficha-inv__campo-rotulo">Encaixa em (recebe modificações de)</span>
+                <select class="ficha-inv__entrada" formControlName="categoriaEmprestada">
+                  <option value="">— nenhuma —</option>
+                  @for (cat of categoriasEmprestaveis; track cat) {
+                    <option [value]="cat">{{ rotuloCategoria(cat) }}</option>
+                  }
+                </select>
+              </label>
+            }
+            @if (mostraModulo()) {
+              <label class="ficha-inv__campo">
+                <span class="ficha-inv__campo-rotulo">Módulo do fragmento</span>
+                <select class="ficha-inv__entrada" formControlName="modulo">
+                  <option value="">—</option>
+                  @for (m of modulosFragmento; track m) {
+                    <option [value]="m">Módulo {{ m }}</option>
+                  }
+                </select>
+              </label>
+            }
+          </div>
         }
         @if (mostraDano()) {
           <label class="ficha-inv__campo ficha-inv__campo--largo">
@@ -420,12 +422,7 @@
                     </div>
                   </div>
                   <div class="ficha-inv__efeito">
-                    <div class="ficha-inv__efeito-cabecalho">
-                      <span class="ficha-inv__efeito-titulo">Efeitos mecânicos (por empilhamento)</span>
-                      <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--mini" (click)="adicionarEfeitoMod()">
-                        + Efeito
-                      </button>
-                    </div>
+                    <span class="ficha-inv__efeito-titulo">Efeitos mecânicos (por empilhamento)</span>
                     @if (efeitosMod.length === 0) {
                       <p class="ficha-inv__efeito-vazio">
                         Sem efeito mecânico — a mod fica só descritiva. Adicione um efeito para ela funcionar (dano, resistência,
@@ -436,25 +433,29 @@
                       @for (grupo of efeitosMod.controls; track $index) {
                         <div class="ficha-inv__efeito-linha" [formGroupName]="$index">
                           @let meta = metaEfeito(grupo.controls.tipo.value);
-                          <div class="ficha-inv__form-linha">
-                            <label class="ficha-inv__campo ficha-inv__campo--largo">
-                              <span class="ficha-inv__campo-rotulo">Tipo de efeito</span>
-                              <select class="ficha-inv__entrada" formControlName="tipo" (change)="aoTrocarTipoEfeito($index)">
-                                @for (tipoMeta of efeitoTipos; track tipoMeta.tipo) {
-                                  <option [value]="tipoMeta.tipo">{{ tipoMeta.rotulo }}</option>
-                                }
-                              </select>
-                            </label>
+                          <div class="ficha-inv__efeito-topo">
+                            <span class="ficha-inv__efeito-indice" aria-hidden="true">{{ $index + 1 }}</span>
+                            <select
+                              class="ficha-inv__entrada ficha-inv__efeito-tipo"
+                              formControlName="tipo"
+                              (change)="aoTrocarTipoEfeito($index)"
+                              aria-label="Tipo de efeito"
+                            >
+                              @for (tipoMeta of efeitoTipos; track tipoMeta.tipo) {
+                                <option [value]="tipoMeta.tipo">{{ tipoMeta.rotulo }}</option>
+                              }
+                            </select>
                             <button
                               type="button"
                               class="ficha-inv__efeito-remover"
                               aria-label="Remover efeito"
+                              title="Remover efeito"
                               (click)="removerEfeitoMod($index)"
                             >
                               ×
                             </button>
                           </div>
-                          <div class="ficha-inv__form-linha">
+                          <div class="ficha-inv__efeito-campos">
                             @if (meta.valorRotulo) {
                               <div class="ficha-inv__campo">
                                 <span class="ficha-inv__campo-rotulo">{{ meta.valorRotulo }}</span>
@@ -491,9 +492,7 @@
                                 <input class="ficha-inv__entrada" type="text" formControlName="tipoDano" [placeholder]="meta.tipoDanoPlaceholder" />
                               </label>
                             }
-                          </div>
-                          @if (meta.condicao) {
-                            <div class="ficha-inv__form-linha">
+                            @if (meta.condicao) {
                               <label class="ficha-inv__campo ficha-inv__campo--largo">
                                 <span class="ficha-inv__campo-rotulo">Condição</span>
                                 <input class="ficha-inv__entrada" type="text" formControlName="condicao" placeholder="Ex.: Sangramento" />
@@ -510,11 +509,14 @@
                                   <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar turnos" (click)="ajustarCampoEfeito($index, 'duracaoTurnos', 1)">+</button>
                                 </div>
                               </div>
-                            </div>
-                          }
+                            }
+                          </div>
                         </div>
                       }
                     </div>
+                    <button type="button" class="ficha-inv__efeito-adicionar" (click)="adicionarEfeitoMod()">
+                      + Adicionar efeito
+                    </button>
                   </div>
                   <label class="ficha-inv__campo">
                     <span class="ficha-inv__campo-rotulo">Descrição (opcional)</span>

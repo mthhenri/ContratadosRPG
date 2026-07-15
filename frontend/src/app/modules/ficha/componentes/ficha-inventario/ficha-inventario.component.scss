@@ -188,12 +188,6 @@
     letter-spacing: 0.1em;
     color: var(--text-mute);
   }
-  &__efeito-cabecalho {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
   &__efeito-vazio {
     margin: 0;
     font-size: 12px;
@@ -204,25 +198,50 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+
+    &:empty {
+      display: none;
+    }
   }
   &__efeito-linha {
     display: flex;
     flex-direction: column;
     gap: 10px;
     border: 1px solid var(--border);
+    border-left: 2px solid var(--accent-border);
     border-radius: var(--radius-control);
-    padding: 10px;
+    padding: 10px 12px;
     background: var(--surface);
-
-    & + & {
-      margin-top: 0;
-    }
+  }
+  // Linha do topo do efeito: índice + seletor de tipo (cresce) + remover — tudo alinhado.
+  &__efeito-topo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  &__efeito-indice {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: var(--radius-control);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+  }
+  &__efeito-tipo {
+    flex: 1;
+    min-width: 0;
   }
   &__efeito-remover {
-    align-self: end;
+    flex: none;
     width: 32px;
     height: 32px;
-    flex: none;
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-control);
     background: transparent;
@@ -236,9 +255,35 @@
       color: var(--accent);
     }
   }
-  &__btn--mini {
-    padding: 4px 10px;
+  // Campos específicos do tipo, num grid que não deixa célula órfã.
+  &__efeito-campos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+
+    &:empty {
+      display: none;
+    }
+  }
+  // Botão "adicionar efeito": afordância de linha nova, largura total, tracejado.
+  &__efeito-adicionar {
+    width: 100%;
+    padding: 9px;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-control);
+    background: transparent;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
     font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--accent-border);
+      color: var(--accent);
+    }
   }
   &__campo {
     display: flex;
