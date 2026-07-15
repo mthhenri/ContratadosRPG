@@ -199,7 +199,8 @@ export interface FichaDerivadosDto {
 
 /**
  * Preset de rolagem de dados salvo na ficha (m3-15). Atalho nomeado para uma fórmula (ex.:
- * `1d20+LUT`); o motor de avaliação vive em `shared/regras/dados` (m3-15).
+ * `1d20+LUT`); o motor de avaliação vive em `shared/regras/rolagem` (m3-15 — `regras/dados` já é a
+ * pasta de dados/tabelas de jogo, por isso o motor de rolagem mora em `regras/rolagem`).
  */
 export interface FichaRolagemDto {
   readonly nome: string;

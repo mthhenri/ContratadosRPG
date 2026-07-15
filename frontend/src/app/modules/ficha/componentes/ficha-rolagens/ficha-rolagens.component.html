@@ -1,0 +1,93 @@
+<div class="ficha-rol">
+  @if (editavel()) {
+    @if (indiceEmEdicao() === -1) {
+      <ng-container [ngTemplateOutlet]="formTpl" [ngTemplateOutletContext]="{ titulo: 'Novo preset' }" />
+    } @else {
+      <button type="button" class="ficha-rol__novo" (click)="abrirNovo()">+ Novo preset</button>
+    }
+  }
+
+  @if (vazio() && indiceEmEdicao() !== -1) {
+    <p class="ficha-rol__vazio">Nenhum preset de rolagem salvo.</p>
+  }
+
+  <div class="ficha-rol__lista">
+    @for (preset of presets(); track preset.indice) {
+      @if (editavel() && indiceEmEdicao() === preset.indice) {
+        <ng-container [ngTemplateOutlet]="formTpl" [ngTemplateOutletContext]="{ titulo: 'Editar preset' }" />
+      } @else {
+        <article class="ficha-rol__preset" [class.ficha-rol__preset--invalida]="!preset.formulaValida">
+          <div class="ficha-rol__preset-topo">
+            <div class="ficha-rol__preset-id">
+              <span class="ficha-rol__preset-nome">{{ preset.nome }}</span>
+              <span class="ficha-rol__preset-formula">{{ preset.formula }}</span>
+              @if (!preset.formulaValida) {
+                <span class="ficha-rol__aviso" title="Fórmula não reconhecida — não é possível rolar">fórmula inválida</span>
+              }
+            </div>
+            <div class="ficha-rol__preset-acoes">
+              <button
+                type="button"
+                class="ficha-rol__btn ficha-rol__btn--rolar"
+                [disabled]="!preset.formulaValida"
+                (click)="rolar(preset.indice)"
+              >
+                Rolar
+              </button>
+              @if (editavel()) {
+                @if (indiceRemovendo() === preset.indice) {
+                  <span class="ficha-rol__remover">
+                    <span class="ficha-rol__remover-texto">Remover?</span>
+                    <button type="button" class="ficha-rol__mini-btn ficha-rol__mini-btn--perigo" title="Confirmar" (click)="confirmarRemocao(preset.indice)">✓</button>
+                    <button type="button" class="ficha-rol__mini-btn" title="Cancelar" (click)="cancelarRemocao()">✕</button>
+                  </span>
+                } @else {
+                  <button type="button" class="ficha-rol__mini-btn" title="Editar" aria-label="Editar preset" (click)="editar(preset.indice)">✎</button>
+                  <button type="button" class="ficha-rol__mini-btn" title="Remover" aria-label="Remover preset" (click)="removerPedido(preset.indice)">✕</button>
+                }
+              }
+            </div>
+          </div>
+
+          @if (preset.descricao) {
+            <p class="ficha-rol__preset-desc">{{ preset.descricao }}</p>
+          }
+
+          @if (preset.resultado) {
+            <div class="ficha-rol__resultado">
+              <span class="ficha-rol__resultado-total">{{ preset.resultado.total }}</span>
+              <span class="ficha-rol__resultado-detalhe">{{ detalharResultado(preset.resultado) }}</span>
+            </div>
+          }
+        </article>
+      }
+    }
+  </div>
+</div>
+
+<ng-template #formTpl let-titulo="titulo">
+  <form class="ficha-rol__form" [formGroup]="form" (ngSubmit)="confirmar()">
+    <span class="ficha-rol__form-titulo">{{ titulo }}</span>
+    <label class="ficha-rol__campo">
+      <span class="ficha-rol__rotulo">Nome</span>
+      <input class="ficha-rol__entrada" type="text" formControlName="nome" placeholder="Ex.: Ataque (Luta)" />
+    </label>
+    <label class="ficha-rol__campo">
+      <span class="ficha-rol__rotulo">Fórmula</span>
+      <input class="ficha-rol__entrada ficha-rol__entrada--mono" type="text" formControlName="formula" placeholder="Ex.: 1d20 + LUT" />
+      @if (formulaAtualValida() === false) {
+        <span class="ficha-rol__dica ficha-rol__dica--erro">Fórmula inválida. Use dados (2d6), atributos (+LUT) e números (+2).</span>
+      } @else {
+        <span class="ficha-rol__dica">Dados `NdM`, atributos e números com `+`/`−`. Atributos: {{ abreviaturas }}.</span>
+      }
+    </label>
+    <label class="ficha-rol__campo">
+      <span class="ficha-rol__rotulo">Descrição <span class="ficha-rol__rotulo-aux">(opcional)</span></span>
+      <input class="ficha-rol__entrada" type="text" formControlName="descricao" placeholder="Nota sobre o preset…" />
+    </label>
+    <div class="ficha-rol__form-acoes">
+      <button type="submit" class="ficha-rol__btn ficha-rol__btn--principal" [disabled]="form.invalid">Salvar</button>
+      <button type="button" class="ficha-rol__btn ficha-rol__btn--secundario" (click)="cancelarEdicao()">Cancelar</button>
+    </div>
+  </form>
+</ng-template>

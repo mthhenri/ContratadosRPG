@@ -1392,11 +1392,33 @@ uma mod multi-efeito num rifle exibe `Dano 2D8+PON [Balístico] + 1D6 [Químico]
 `+1D6 [Químico] · aplica Em Chamas por 2t (DT Vigor) · ignora 5 de resist. [Balístico]`. Shared 204/204,
 frontend 298/298, lint limpo, build AOT ok.
 
-**Próxima task: `m3-15`** — **presets de rolagem** da ficha (aba Rolagens): atalhos nomeados para fórmulas
-(ex.: `1d20+LUT`) salvos em `dados.rolagens` (`FichaRolagemDto`, já no contrato m3-01), com o motor de
-avaliação em `shared/regras/dados`. **Antes de qualquer UI, ler `docs/design/DESIGN.md` e consumir os tokens
-de `docs/design/tema/`** — o tema "Terminal de Contenção" é a fonte da verdade visual (proibição #29). No
-backlog seguem ainda `m3-09` (refino mobile da ficha) e o trio de Identidade `m3-18`→`m3-20`.
+**5ª/6ª rodadas (layout + limites flexíveis + marcadores):** o **X** de remover foi para o fim do cabeçalho
+(`[Modificar] [Vestir] $custo peso [X]`); armazenamento **vestido ocupa "0 slots"**. O campo da mod custom
+virou o **teto** dela (`empilhamentoMaximo`; entra em 1×) e **corrigiu** o bug de perder efeitos ao empilhar.
+Os limites da **patente** deixaram de travar: exceder é permitido e marcado **"Excedente"** (âmbar). Cada mod
+(catálogo ou custom) pode ser marcada, via checkbox no chip, para **não contar** no limite total da arma
+(`ignoraLimiteTotal`) ou no próprio teto (`ignoraLimiteProprio`) — `modsUsados`/`podeAumentar`/`excedente`
+respeitam as flags. Contrato: `ModificacaoAplicadaDto` ganhou `empilhamentoMaximo`/`ignoraLimiteTotal`/
+`ignoraLimiteProprio`. Espelhado ficha+calculadora. Shared 204/204, frontend 301/301, lint limpo, build AOT ok.
+m3-14 **concluída** (spec em `done/`, com a seção "Refinamentos entregues").
+
+**m3-15 concluída** — **presets de rolagem** da ficha (aba Rolagens). Novo motor puro
+**`shared/regras/rolagem`** (não `regras/dados`, que já é a pasta de dados/tabelas de jogo):
+`interpretarFormula`/`validarFormula` (parser de `NdM`, inteiros e atributos por abreviação `LUT`/`FOR`/…
+ou nome, com `+`/`−` e teto de dados) + `rolarFormula` (RNG **injetável** — a brecha a `Math.random` no
+`rolarDadoPadrao`, §6.6; testes determinísticos). Tabela de abreviações em `rolagem.dados`, DTOs em
+`rolagem.dtos`, export em `package.json`. **Editor `ficha-rolagens`** (controlado, Signals + Reactive
+Forms): add/editar/remover preset com **validação de fórmula ao vivo** (inválida = aviso) e **Rolar**
+mostrando o total em destaque + detalhamento (`18 · 1D20 [15] + LUT 3`); embutido na aba Rolagens da
+`ficha-visualizacao`, persiste `dados.rolagens` via `alterarFicha` (otimista). Comentário do
+`FichaRolagemDto` corrigido para apontar `regras/rolagem`. Spec em `done/` (com "Notas de implementação").
+Shared 213/213, frontend 306/306, lint limpo, build AOT ok, verificado ao vivo. **Com m3-15, todas as abas
+da ficha têm editor** (m3-12 Sanidade, m3-13 Habilidades, m3-14 Inventário, m3-15 Rolagens).
+
+**Próxima task:** backlog do M3 restante — `m3-18`→`m3-20` (trio de **Identidade**: contrato/motor,
+backend de imutabilidade, frontend), `m3-09` (refino **mobile** da ficha) e `m3-21` (otimização de
+**espaço** da ficha). **Antes de qualquer UI, ler `docs/design/DESIGN.md` e consumir os tokens de
+`docs/design/tema/`** — tema "Terminal de Contenção" é a fonte da verdade visual (proibição #29).
 
 **`M3` — Ficha de Jogador** (CRUD + cálculo automático via `shared/regras` + permissões +
 tempo real): o milestone já foi quebrado em tasks numeradas (`m3-01`…`m3-09`, specs no backlog).

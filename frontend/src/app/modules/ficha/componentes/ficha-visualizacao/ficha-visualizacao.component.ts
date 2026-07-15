@@ -16,6 +16,7 @@ import type {
   FichaHabilidadeDto,
   FichaInventarioDto,
   FichaJogadorDadosDto,
+  FichaRolagemDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
   MAESTRIA_PONTOS_MINIMO,
@@ -31,6 +32,7 @@ import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive
 import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
 import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
 import { FichaInventario } from '../ficha-inventario/ficha-inventario.component';
+import { FichaRolagens } from '../ficha-rolagens/ficha-rolagens.component';
 import { EstadoSanidade, FichaSanidade } from '../ficha-sanidade/ficha-sanidade.component';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
 import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
@@ -158,7 +160,7 @@ export interface AjusteClasse {
  */
 @Component({
   selector: 'app-ficha-visualizacao',
-  imports: [HoldRepeat, Icone, FichaSanidade, FichaHabilidades, FichaInventario],
+  imports: [HoldRepeat, Icone, FichaSanidade, FichaHabilidades, FichaInventario, FichaRolagens],
   templateUrl: './ficha-visualizacao.component.html',
   styleUrl: './ficha-visualizacao.component.scss',
 })
@@ -202,6 +204,9 @@ export class FichaVisualizacao {
 
   /** Inventário (itens + amplificadores) editado — a página persiste em `dados.inventario` (m3-14). */
   readonly ajusteInventario = output<FichaInventarioDto>();
+
+  /** Presets de rolagem editados — a página persiste em `dados.rolagens` (m3-15). */
+  readonly ajusteRolagens = output<readonly FichaRolagemDto[]>();
 
   /**
    * Utilizar uma habilidade gasta o custo da Energia atual (pode **negativar** — regra do documento).

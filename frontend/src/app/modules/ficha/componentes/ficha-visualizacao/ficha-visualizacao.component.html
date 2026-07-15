@@ -760,19 +760,12 @@
             {{ totalRolagens() }} {{ totalRolagens() === 1 ? 'preset' : 'presets' }}
           </span>
         </header>
-        <p class="ficha-visao__construcao">Presets de rolagem em construção.</p>
-        @if (totalRolagens()) {
-          <ul class="ficha-visao__resumo">
-            @for (rolagem of dados().rolagens; track $index) {
-              <li class="ficha-visao__resumo-item">
-                <span class="ficha-visao__resumo-nome">{{ rolagem.nome }}</span>
-                <span class="ficha-visao__resumo-formula">{{ rolagem.formula }}</span>
-              </li>
-            }
-          </ul>
-        } @else {
-          <p class="ficha-visao__vazio">Nenhum preset de rolagem salvo.</p>
-        }
+        <app-ficha-rolagens
+          [rolagens]="dados().rolagens ?? []"
+          [atributos]="dados().atributos"
+          [editavel]="ajustavel()"
+          (rolagensMudou)="ajusteRolagens.emit($event)"
+        />
       </section>
     </div>
   }

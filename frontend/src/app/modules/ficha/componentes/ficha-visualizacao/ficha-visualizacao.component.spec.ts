@@ -511,7 +511,7 @@ describe('FichaVisualizacao', () => {
     expect(emitidas).toEqual([[]]);
   });
 
-  it('as abas sem editor mostram aviso "em construção" e o resumo read-only', () => {
+  it('embute o editor de Rolagens (m3-15) com os presets da ficha', () => {
     const documento: FichaJogadorDadosDto = {
       ...dados,
       rolagens: [{ nome: 'Ataque', formula: '1d20+PON' }],
@@ -520,7 +520,10 @@ describe('FichaVisualizacao', () => {
 
     trocarAba(alvo.fixture, 'rolagens');
     expect(alvo.raiz.querySelector('.ficha-cartao__meta')?.textContent).toContain('1 preset');
+    expect(alvo.raiz.querySelector('app-ficha-rolagens')).not.toBeNull();
+    // O preset aparece no editor (nome + fórmula), não num placeholder "em construção".
     expect(alvo.raiz.textContent).toContain('1d20+PON');
+    expect(alvo.raiz.textContent).not.toContain('em construção');
   });
 
   it('mostra o derivado STORED de combate (Esquiva) quando presente', () => {
