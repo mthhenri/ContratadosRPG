@@ -686,7 +686,7 @@
     </div>
   }
 
-  <!-- ABA: HABILIDADES — placeholder + contagem read-only até o editor (m3-13). -->
+  <!-- ABA: HABILIDADES — editor no próprio lugar da lista `habilidades` (m3-13). -->
   @if (abaAtiva() === 'habilidades') {
     <div
       class="ficha-visao__painel"
@@ -702,16 +702,16 @@
             {{ totalHabilidades() }} {{ totalHabilidades() === 1 ? 'habilidade' : 'habilidades' }}
           </span>
         </header>
-        <p class="ficha-visao__construcao">Editor de habilidades em construção.</p>
-        @if (totalHabilidades()) {
-          <ul class="ficha-visao__resumo">
-            @for (habilidade of dados().habilidades; track $index) {
-              <li class="ficha-visao__resumo-item">{{ habilidade.nome }}</li>
-            }
-          </ul>
-        } @else {
-          <p class="ficha-visao__vazio">Nenhuma habilidade cadastrada.</p>
-        }
+
+        <app-ficha-habilidades
+          [habilidades]="dados().habilidades"
+          [editavel]="ajustavel()"
+          [classe]="dados().classe"
+          [arquetipo]="dados().arquetipo"
+          [energiaAtual]="estado().energiaAtual"
+          (habilidadesMudou)="ajusteHabilidades.emit($event)"
+          (habilidadeUtilizada)="aoUtilizarHabilidade($event)"
+        />
       </section>
     </div>
   }

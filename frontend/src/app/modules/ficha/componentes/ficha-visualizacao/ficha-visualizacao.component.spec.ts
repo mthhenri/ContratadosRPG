@@ -5,7 +5,7 @@ import {
   HabilidadeCategoriaEnum,
   SeveridadeLesaoEnum,
 } from '@contratados-rpg/shared/enums';
-import type { FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { FichaHabilidadeDto, FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 import { calcularVida } from '@contratados-rpg/shared/regras/agente';
 
 import { FichaVisualizacao } from './ficha-visualizacao.component';
@@ -481,7 +481,7 @@ describe('FichaVisualizacao', () => {
     );
   });
 
-  it('as abas sem editor mostram aviso "em construção" e o resumo read-only', () => {
+  it('a aba Habilidades embute o editor (m3-13) e propaga a mutação por ajusteHabilidades', () => {
     const documento: FichaJogadorDadosDto = {
       ...dados,
       habilidades: [
@@ -492,14 +492,30 @@ describe('FichaVisualizacao', () => {
           descricao: '',
         },
       ],
+    };
+    const alvo = montar(documento, 'Corvo', 42, true);
+    const emitidas: (readonly FichaHabilidadeDto[])[] = [];
+    alvo.fixture.componentInstance.ajusteHabilidades.subscribe((h) => emitidas.push(h));
+
+    trocarAba(alvo.fixture, 'habilidades');
+    // Editor presente com o item existente (chip + custo), não mais o placeholder.
+    expect(alvo.raiz.querySelector('.ficha-visao__construcao')).toBeNull();
+    expect(alvo.raiz.querySelector('.habilidades__custo')?.textContent?.trim()).toBe('[2 E]');
+    expect(alvo.raiz.querySelector('.ficha-cartao__meta')?.textContent).toContain('1 habilidade');
+
+    // Remover propaga a lista nova pela saída do componente.
+    alvo.raiz.querySelector<HTMLButtonElement>('.habilidades__acao--remover')!.click();
+    alvo.fixture.detectChanges();
+    alvo.raiz.querySelector<HTMLButtonElement>('.habilidades__salvar--remover')!.click();
+    expect(emitidas).toEqual([[]]);
+  });
+
+  it('as abas sem editor mostram aviso "em construção" e o resumo read-only', () => {
+    const documento: FichaJogadorDadosDto = {
+      ...dados,
       rolagens: [{ nome: 'Ataque', formula: '1d20+PON' }],
     };
     const alvo = montar(documento);
-
-    trocarAba(alvo.fixture, 'habilidades');
-    expect(alvo.raiz.querySelector('.ficha-visao__construcao')).not.toBeNull();
-    expect(alvo.raiz.querySelector('.ficha-cartao__meta')?.textContent).toContain('1 habilidade');
-    expect(alvo.raiz.textContent).toContain('Tiro Certeiro');
 
     trocarAba(alvo.fixture, 'rolagens');
     expect(alvo.raiz.querySelector('.ficha-cartao__meta')?.textContent).toContain('1 preset');

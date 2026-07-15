@@ -11,7 +11,11 @@ import {
 } from '@angular/core';
 
 import { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
-import type { FichaAtributosDto, FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
+import type {
+  FichaAtributosDto,
+  FichaHabilidadeDto,
+  FichaJogadorDadosDto,
+} from '@contratados-rpg/shared/dtos/ficha';
 import {
   MAESTRIA_PONTOS_MINIMO,
   calcularAtributosEfetivos,
@@ -22,6 +26,7 @@ import {
 } from '@contratados-rpg/shared/regras/agente';
 
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
+import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
 import { EstadoSanidade, FichaSanidade } from '../ficha-sanidade/ficha-sanidade.component';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
 import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
@@ -148,7 +153,7 @@ export interface AjusteClasse {
  */
 @Component({
   selector: 'app-ficha-visualizacao',
-  imports: [HoldRepeat, FichaSanidade],
+  imports: [HoldRepeat, FichaSanidade, FichaHabilidades],
   templateUrl: './ficha-visualizacao.component.html',
   styleUrl: './ficha-visualizacao.component.scss',
 })
@@ -186,6 +191,20 @@ export class FichaVisualizacao {
 
   /** Listas de Sanidade (sequelas/traumas/lesões) editadas — a página persiste em `estado` (m3-12). */
   readonly ajusteSanidade = output<EstadoSanidade>();
+
+  /** Lista de habilidades editada — a página persiste em `dados.habilidades` (m3-13). */
+  readonly ajusteHabilidades = output<readonly FichaHabilidadeDto[]>();
+
+  /**
+   * Utilizar uma habilidade gasta o custo da Energia atual (pode **negativar** — regra do documento).
+   * Reusa o caminho de `ajusteVitalidade` (persistência de m3-10) em vez de um novo canal.
+   */
+  protected aoUtilizarHabilidade(custo: number): void {
+    this.ajusteVitalidade.emit({
+      campo: 'energiaAtual',
+      valor: this.estado().energiaAtual - custo,
+    });
+  }
 
   /**
    * Aba inicialmente ativa — semeia a barra a partir do `?aba=` da URL (deep-link/refresh, m3-11). A

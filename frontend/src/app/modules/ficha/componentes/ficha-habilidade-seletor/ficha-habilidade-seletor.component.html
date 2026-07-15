@@ -1,0 +1,88 @@
+<div class="seletor-fundo">
+  <div class="seletor" role="dialog" aria-modal="true" aria-label="Adicionar habilidade do sistema">
+    <header class="seletor__topo">
+      <h3 class="seletor__titulo">Adicionar do sistema</h3>
+      <button class="seletor__fechar" type="button" aria-label="Fechar" (click)="fechar.emit()">
+        ×
+      </button>
+    </header>
+
+    <!-- Abas (grupos) -->
+    <div class="seletor__abas" role="tablist" aria-label="Filtro de habilidades">
+      @for (grupo of grupos(); track grupo.id) {
+        <button
+          class="seletor__aba"
+          [class.seletor__aba--ativa]="abaAtiva() === grupo.id"
+          type="button"
+          role="tab"
+          [attr.aria-selected]="abaAtiva() === grupo.id"
+          (click)="selecionarAba(grupo.id)"
+        >
+          {{ rotuloAba(grupo.id) }}
+        </button>
+      }
+    </div>
+
+    <!-- Sub-filtro inline (Classe/Arquétipo) -->
+    @if (temSubfiltro()) {
+      <div class="seletor__subfiltro" role="group" aria-label="Sub-filtro">
+        @for (subgrupo of subgrupos(); track subgrupo.chave) {
+          <button
+            class="seletor__subchip"
+            [class.seletor__subchip--seu]="subgrupo.ehDaFicha"
+            [class.seletor__subchip--ativo]="subgrupoSelecionado()?.chave === subgrupo.chave"
+            type="button"
+            (click)="selecionarSubgrupo(subgrupo.chave)"
+          >
+            {{ rotuloSubgrupo(subgrupo.chave) }}
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Busca -->
+    <div class="seletor__busca">
+      <span class="seletor__busca-icone" aria-hidden="true">⌕</span>
+      <input
+        class="seletor__busca-campo"
+        type="text"
+        [formControl]="busca"
+        placeholder="Buscar habilidade…"
+        aria-label="Buscar habilidade"
+      />
+    </div>
+
+    <!-- Lista do catálogo -->
+    <ul class="seletor__lista">
+      @for (habilidade of habilidades(); track habilidade.nome + habilidade.categoria) {
+        <li class="seletor__opcao" [class.seletor__opcao--adicionada]="estaNaFicha(habilidade.nome)">
+          <div class="seletor__opcao-corpo">
+            <div class="seletor__opcao-cab">
+              <span class="seletor__opcao-nome">{{ habilidade.nome }}</span>
+              <span class="seletor__opcao-custo">
+                [{{ habilidade.custoEnergia === null ? 'X' : habilidade.custoEnergia }} E]
+              </span>
+            </div>
+            @if (habilidade.descricao) {
+              <span class="seletor__opcao-desc">{{ habilidade.descricao }}</span>
+            }
+          </div>
+          @if (estaNaFicha(habilidade.nome)) {
+            <span class="seletor__opcao-marca">Na ficha</span>
+          } @else {
+            <button
+              class="seletor__opcao-add"
+              type="button"
+              [attr.aria-label]="'Adicionar ' + habilidade.nome"
+              (click)="escolherHabilidade(habilidade)"
+            >
+              ＋
+            </button>
+          }
+        </li>
+      } @empty {
+        <li class="seletor__vazio">Nenhuma habilidade encontrada.</li>
+      }
+    </ul>
+  </div>
+</div>

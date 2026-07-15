@@ -1,0 +1,223 @@
+<div class="habilidades">
+  <header class="habilidades__cabecalho">
+    <h4 class="habilidades__titulo">Habilidades</h4>
+    <span class="habilidades__contagem">{{ habilidades().length }}</span>
+    <span class="habilidades__regua"></span>
+    @if (editavel()) {
+      <div class="habilidades__add-grupo">
+        <button
+          class="habilidades__add habilidades__add--primario"
+          type="button"
+          (click)="abrirSeletor()"
+        >
+          ＋ Do sistema
+        </button>
+        <button
+          class="habilidades__add"
+          type="button"
+          (click)="adicionar()"
+          [disabled]="editando(-1)"
+        >
+          ＋ Personalizada
+        </button>
+      </div>
+    }
+  </header>
+
+  <ul class="habilidades__lista">
+    @for (habilidade of habilidades(); track $index) {
+      @if (editando($index)) {
+        <li class="habilidades__item habilidades__item--edicao">
+          <ng-container [ngTemplateOutlet]="editor" />
+        </li>
+      } @else {
+        <li class="habilidades__item">
+          <div class="habilidades__linha">
+            <span
+              class="habilidades__chip"
+              [class.habilidades__chip--classe]="habilidade.categoria === Categoria.CLASSE"
+              [class.habilidades__chip--arquetipo]="habilidade.categoria === Categoria.ARQUETIPO"
+              [class.habilidades__chip--subclasse]="habilidade.categoria === Categoria.SUBCLASSE"
+              [class.habilidades__chip--personalidade]="habilidade.categoria === Categoria.PERSONALIDADE"
+            >
+              {{ rotuloChip(habilidade) }}
+            </span>
+            <span class="habilidades__nome">{{ habilidade.nome }}</span>
+            <span class="habilidades__custo">{{ rotuloCusto(habilidade.custoEnergia) }}</span>
+            @if (editavel()) {
+              <div class="habilidades__acoes">
+                <button
+                  class="habilidades__utilizar"
+                  type="button"
+                  [attr.aria-label]="'Utilizar ' + habilidade.nome"
+                  (click)="utilizar($index, habilidade)"
+                >
+                  ⚡ Utilizar
+                </button>
+                <button
+                  class="habilidades__acao"
+                  type="button"
+                  aria-label="Editar habilidade"
+                  (click)="editar($index)"
+                >
+                  ✎
+                </button>
+                <button
+                  class="habilidades__acao habilidades__acao--remover"
+                  type="button"
+                  aria-label="Remover habilidade"
+                  (click)="pedirRemocao($index)"
+                >
+                  ✕
+                </button>
+              </div>
+            }
+          </div>
+          @if (habilidade.descricao) {
+            <span class="habilidades__descricao">{{ habilidade.descricao }}</span>
+          }
+          @if (indiceUtilizando() === $index) {
+            <div class="habilidades__utilizar-variavel">
+              <span class="habilidades__rotulo-inline">Gastar quanto de Energia?</span>
+              <div class="habilidades__stepper">
+                <button
+                  class="ficha-passo"
+                  type="button"
+                  appHoldRepeat
+                  aria-label="Reduzir gasto"
+                  [disabled]="custoVariavel.value <= 0"
+                  (passo)="ajustarCustoVariavel(-1)"
+                >
+                  −
+                </button>
+                <span class="habilidades__valor">{{ custoVariavel.value }}</span>
+                <button
+                  class="ficha-passo"
+                  type="button"
+                  appHoldRepeat
+                  aria-label="Aumentar gasto"
+                  (passo)="ajustarCustoVariavel(1)"
+                >
+                  +
+                </button>
+              </div>
+              <div class="habilidades__confirmar-acoes">
+                <button class="habilidades__salvar" type="button" (click)="confirmarUtilizarVariavel()">
+                  Gastar
+                </button>
+                <button class="habilidades__cancelar" type="button" (click)="cancelarUtilizar()">
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          }
+          @if (indiceRemovendo() === $index) {
+            <div class="habilidades__confirmar">
+              <span class="habilidades__confirmar-texto">
+                Remover <strong>{{ habilidade.nome }}</strong>?
+              </span>
+              <div class="habilidades__confirmar-acoes">
+                <button
+                  class="habilidades__salvar habilidades__salvar--remover"
+                  type="button"
+                  (click)="remover($index)"
+                >
+                  Remover
+                </button>
+                <button class="habilidades__cancelar" type="button" (click)="cancelarRemocao()">
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          }
+        </li>
+      }
+    }
+    @if (editando(-1)) {
+      <li class="habilidades__item habilidades__item--edicao">
+        <ng-container [ngTemplateOutlet]="editor" />
+      </li>
+    }
+  </ul>
+  @if (!habilidades().length && !editando(-1)) {
+    <p class="habilidades__vazio">Nenhuma habilidade cadastrada.</p>
+  }
+</div>
+
+@if (seletorAberto()) {
+  <app-ficha-habilidade-seletor
+    [grupos]="grupos()"
+    [nomesNaFicha]="nomesNaFicha()"
+    (escolher)="aoEscolherDoCatalogo($event)"
+    (fechar)="fecharSeletor()"
+  />
+}
+
+<!-- ===== Editor (compartilhado entre adicionar e editar) ===== -->
+<ng-template #editor>
+  <form class="habilidades__form" [formGroup]="habilidadeForm" (ngSubmit)="confirmar()">
+    <input
+      class="habilidades__campo"
+      type="text"
+      formControlName="nome"
+      placeholder="Nome da habilidade"
+      aria-label="Nome da habilidade"
+    />
+    <div class="habilidades__form-linha">
+      <label class="habilidades__rotulo-campo">
+        <span>Categoria</span>
+        <select class="habilidades__campo" formControlName="categoria" aria-label="Categoria">
+          @for (opcao of categorias; track opcao.valor) {
+            <option [value]="opcao.valor">{{ opcao.rotulo }}</option>
+          }
+        </select>
+      </label>
+      <div class="habilidades__custo-campo">
+        <span class="habilidades__rotulo-inline">Custo de Energia</span>
+        @if (habilidadeForm.controls.variavel.value) {
+          <span class="habilidades__custo habilidades__custo--variavel">[X E]</span>
+        } @else {
+          <div class="habilidades__stepper">
+            <button
+              class="ficha-passo"
+              type="button"
+              appHoldRepeat
+              aria-label="Reduzir custo"
+              [disabled]="habilidadeForm.controls.custoEnergia.value <= 0"
+              (passo)="ajustarCusto(-1)"
+            >
+              −
+            </button>
+            <span class="habilidades__valor">{{ habilidadeForm.controls.custoEnergia.value }}</span>
+            <button
+              class="ficha-passo"
+              type="button"
+              appHoldRepeat
+              aria-label="Aumentar custo"
+              (passo)="ajustarCusto(1)"
+            >
+              +
+            </button>
+          </div>
+        }
+      </div>
+      <label class="habilidades__checkbox">
+        <input type="checkbox" formControlName="variavel" />
+        <span>Variável</span>
+      </label>
+    </div>
+    <textarea
+      class="habilidades__campo habilidades__campo--area"
+      formControlName="descricao"
+      rows="2"
+      placeholder="Descrição do efeito (opcional)"
+      aria-label="Descrição da habilidade"
+    ></textarea>
+    <div class="habilidades__form-acoes">
+      <button class="habilidades__salvar" type="submit" [disabled]="habilidadeForm.invalid">
+        Salvar
+      </button>
+      <button class="habilidades__cancelar" type="button" (click)="cancelar()">Cancelar</button>
+    </div>
+  </form>
+</ng-template>

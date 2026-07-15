@@ -5,6 +5,7 @@ import { NEVER, Subject, of, throwError } from 'rxjs';
 import {
   ArquetipoEnum,
   ClasseEnum,
+  HabilidadeCategoriaEnum,
   SeveridadeLesaoEnum,
   TipoCampanhaMembroPapelEnum,
 } from '@contratados-rpg/shared/enums';
@@ -227,6 +228,31 @@ describe('FichaVisualizar', () => {
       expect(fichaService.alterarFicha).toHaveBeenCalledWith(42, {
         nome: 'Kane',
         dados: { ...dados, estado: { ...dados.estado, sequelas: novasSequelas } },
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('edita a lista de habilidades otimista e persiste em lote (m3-13)', () => {
+    vi.useFakeTimers();
+    try {
+      const { fixture, fichaService } = montar({ usuarioLogadoId: 99 });
+      const componente = fixture.componentInstance;
+
+      const novasHabilidades = [
+        { nome: 'Investida', categoria: HabilidadeCategoriaEnum.GERAL, custoEnergia: null, descricao: '' },
+      ];
+      componente['ajustarHabilidades'](novasHabilidades);
+
+      // Otimista: a lista entra em dados.habilidades sem esperar o backend.
+      expect(componente['ficha']()?.dados.habilidades).toEqual(novasHabilidades);
+      vi.advanceTimersByTime(500);
+
+      expect(fichaService.alterarFicha).toHaveBeenCalledTimes(1);
+      expect(fichaService.alterarFicha).toHaveBeenCalledWith(42, {
+        nome: 'Kane',
+        dados: { ...dados, habilidades: novasHabilidades },
       });
     } finally {
       vi.useRealTimers();

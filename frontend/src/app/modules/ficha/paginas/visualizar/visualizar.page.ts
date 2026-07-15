@@ -27,6 +27,7 @@ import type {
   FichaAcessoResumoDto,
   FichaAtributosDto,
   FichaDerivadosDto,
+  FichaHabilidadeDto,
   FichaJogadorDadosDto,
   FichaRecuperadaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
@@ -469,6 +470,20 @@ export class FichaVisualizar {
   /** `true` se dois mapas de atributos são iguais em todas as chaves. */
   private mesmoMapaAtributos(a: FichaAtributosDto, b: FichaAtributosDto): boolean {
     return (Object.keys(a) as (keyof FichaAtributosDto)[]).every((chave) => a[chave] === b[chave]);
+  }
+
+  /**
+   * Edita a lista de habilidades (m3-13): substitui `dados.habilidades` inteira (o editor emite a lista
+   * completa), otimista na tela + persistência em lote. Só dono/mestre chega aqui; o backend valida
+   * forma. Sem cascata/progressão — o custo de Energia é só registro (fora de escopo o efeito em play).
+   */
+  protected ajustarHabilidades(habilidades: readonly FichaHabilidadeDto[]): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) {
+      return;
+    }
+    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, habilidades } });
+    this.agendarPersistencia();
   }
 
   /** Edita o Codinome (relacional) — otimista + persistência em lote. */

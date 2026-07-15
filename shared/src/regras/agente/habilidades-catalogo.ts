@@ -78,8 +78,12 @@ function comCategoria(
   return habilidades.map((habilidade) => ({ ...habilidade, categoria, origem }));
 }
 
-/** A classe-base efetiva da ficha: a própria (se base) ou a base da subclasse (se Experimento). */
-function classeBaseDaFicha(classe: ClasseEnum): ClasseEnum | null {
+/**
+ * A classe-base efetiva da ficha para fins de habilidades: a própria (se base), a base da subclasse
+ * (se Experimento) ou `null` (Civil). Exportada para a UI decidir se uma habilidade de classe é "da
+ * sua classe" (chip "Classe") ou de outra (chip "Classe - NOME").
+ */
+export function classeBaseDeHabilidades(classe: ClasseEnum): ClasseEnum | null {
   if (CLASSES_BASE.includes(classe)) {
     return classe;
   }
@@ -105,7 +109,7 @@ function grupoGerais(): GrupoHabilidades {
  * ficha sem classe-base (Civil) não tem acesso a habilidades de classe, então o grupo é omitido.
  */
 function grupoClasse(classe: ClasseEnum): GrupoHabilidades {
-  const base = classeBaseDaFicha(classe);
+  const base = classeBaseDeHabilidades(classe);
   if (base === null) {
     return { id: 'classe', subgrupos: [] };
   }
@@ -130,7 +134,7 @@ function grupoArquetipo(
   classe: ClasseEnum,
   arquetipo: ArquetipoEnum | null,
 ): GrupoHabilidades {
-  const base = classeBaseDaFicha(classe);
+  const base = classeBaseDeHabilidades(classe);
   const subgrupos: SubgrupoHabilidades[] = [];
 
   // Ficha Experimento: a própria subclasse primeiro (nível de arquétipo). Outras subclasses nunca entram.
