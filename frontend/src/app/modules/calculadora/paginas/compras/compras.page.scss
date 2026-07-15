@@ -845,7 +845,58 @@
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--text-mute);
+  }
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
     margin-bottom: 10px;
+  }
+  &__vazio {
+    margin: 0 0 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-dim);
+  }
+  &__lista {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  &__linha {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    padding: 10px;
+    background: var(--surface);
+  }
+  &__topo {
+    display: flex;
+    align-items: end;
+    gap: 8px;
+  }
+  &__tipo {
+    flex: 1;
+  }
+  &__remover {
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
   }
 }
 .compras-textarea {

@@ -461,28 +461,86 @@
                     </div>
                   </div>
                   <div class="compras-efeito">
-                    <span class="compras-efeito__titulo">Efeito mecânico (por empilhamento)</span>
-                    <div class="calc-config">
-                      <div class="calc-campo">
-                        <span class="calc-campo__rotulo">+ Dano fixo</span>
-                        <app-step-input formControlName="danoFixo" [min]="0" ariaRotulo="Dano fixo da modificação custom" />
-                      </div>
-                      <div class="calc-campo">
-                        <span class="calc-campo__rotulo">+ Resistência</span>
-                        <app-step-input formControlName="resistencia" [min]="0" ariaRotulo="Resistência da modificação custom" />
-                      </div>
-                      <div class="calc-campo">
-                        <span class="calc-campo__rotulo">+ Dados (qtd)</span>
-                        <app-step-input formControlName="dadosQuantidade" [min]="0" ariaRotulo="Quantidade de dados extras" />
-                      </div>
-                      <div class="calc-campo">
-                        <span class="calc-campo__rotulo">Faces (D)</span>
-                        <app-step-input formControlName="dadosFaces" [min]="0" ariaRotulo="Faces dos dados extras" />
-                      </div>
-                      <div class="calc-campo">
-                        <span class="calc-campo__rotulo">Tipo do dano</span>
-                        <input class="calc-texto" type="text" formControlName="dadosTipo" placeholder="Ex.: Químico" />
-                      </div>
+                    <div class="compras-efeito__cabecalho">
+                      <span class="compras-efeito__titulo">Efeitos mecânicos (por empilhamento)</span>
+                      <button type="button" class="compras-btn compras-btn--remover compras-btn--pequeno" (click)="adicionarEfeitoMod()">
+                        + Efeito
+                      </button>
+                    </div>
+                    @if (efeitosMod.length === 0) {
+                      <p class="compras-efeito__vazio">
+                        Sem efeito mecânico — a mod fica só descritiva. Adicione um efeito para ela funcionar (dano, resistência,
+                        perfuração, condição, alcance…).
+                      </p>
+                    }
+                    <div formArrayName="efeitos" class="compras-efeito__lista">
+                      @for (grupo of efeitosMod.controls; track $index) {
+                        <div class="compras-efeito__linha" [formGroupName]="$index">
+                          @let meta = metaEfeito(grupo.controls.tipo.value);
+                          <div class="compras-efeito__topo">
+                            <div class="calc-campo compras-efeito__tipo">
+                              <span class="calc-campo__rotulo">Tipo de efeito</span>
+                              <select class="calc-texto" formControlName="tipo" (change)="aoTrocarTipoEfeito($index)">
+                                @for (tipoMeta of efeitoTipos; track tipoMeta.tipo) {
+                                  <option [value]="tipoMeta.tipo">{{ tipoMeta.rotulo }}</option>
+                                }
+                              </select>
+                            </div>
+                            <button
+                              type="button"
+                              class="compras-efeito__remover"
+                              aria-label="Remover efeito"
+                              (click)="removerEfeitoMod($index)"
+                            >
+                              ×
+                            </button>
+                          </div>
+                          <div class="calc-config">
+                            @if (meta.valorRotulo) {
+                              <div class="calc-campo">
+                                <span class="calc-campo__rotulo">{{ meta.valorRotulo }}</span>
+                                <app-step-input formControlName="valor" [min]="meta.valorNegativo ? -99 : 0" ariaRotulo="Valor do efeito" />
+                              </div>
+                            }
+                            @if (meta.faces) {
+                              <div class="calc-campo">
+                                <span class="calc-campo__rotulo">Faces (D)</span>
+                                <app-step-input formControlName="faces" [min]="0" ariaRotulo="Faces dos dados extras" />
+                              </div>
+                            }
+                            @if (meta.variantes) {
+                              <div class="calc-campo">
+                                <span class="calc-campo__rotulo">{{ meta.varianteRotulo }}</span>
+                                <select class="calc-texto" formControlName="variante">
+                                  @for (variante of meta.variantes; track variante.valor) {
+                                    <option [value]="variante.valor">{{ variante.rotulo }}</option>
+                                  }
+                                </select>
+                              </div>
+                            }
+                            @if (meta.tipoDano) {
+                              <div class="calc-campo">
+                                <span class="calc-campo__rotulo">{{ meta.tipoDanoRotulo }}</span>
+                                <input class="calc-texto" type="text" formControlName="tipoDano" [placeholder]="meta.tipoDanoPlaceholder" />
+                              </div>
+                            }
+                            @if (meta.condicao) {
+                              <div class="calc-campo">
+                                <span class="calc-campo__rotulo">Condição</span>
+                                <input class="calc-texto" type="text" formControlName="condicao" placeholder="Ex.: Sangramento" />
+                              </div>
+                              <div class="calc-campo">
+                                <span class="calc-campo__rotulo">DT (atributo)</span>
+                                <input class="calc-texto" type="text" formControlName="atributoDt" placeholder="Ex.: Força" />
+                              </div>
+                              <div class="calc-campo">
+                                <span class="calc-campo__rotulo">Turnos</span>
+                                <app-step-input formControlName="duracaoTurnos" [min]="0" ariaRotulo="Duração em turnos" />
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      }
                     </div>
                   </div>
                   <div class="calc-campo compras-custom-desc">

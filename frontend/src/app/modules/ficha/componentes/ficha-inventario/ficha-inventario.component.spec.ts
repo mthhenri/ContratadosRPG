@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { ItemCategoriaEnum } from '@contratados-rpg/shared/enums';
+import { ItemCategoriaEnum, ModificacaoEfeitoTipoEnum } from '@contratados-rpg/shared/enums';
 import type { FichaInventarioDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 
@@ -209,32 +209,46 @@ describe('FichaInventario', () => {
   it('modificação custom com efeito mecânico (dano fixo) grava o efeito no item', () => {
     const alvo = montar({ itens: [itemLeve], amplificadores: [] });
     alvo.componentInstance['alternarCriarMod'](0);
-    alvo.componentInstance['modCustomForm'].setValue({
-      nome: 'Afiada',
-      empilhamentos: 1,
-      descricao: '',
-      danoFixo: 3,
-      dadosQuantidade: 0,
-      dadosFaces: 0,
-      dadosTipo: '',
-      resistencia: 0,
-    });
+    alvo.componentInstance['modCustomForm'].patchValue({ nome: 'Afiada', empilhamentos: 1, descricao: '' });
+    alvo.componentInstance['adicionarEfeitoMod']();
+    alvo.componentInstance['efeitosMod'].at(0).patchValue({ tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: 3 });
     alvo.componentInstance['confirmarCriarMod'](0);
-    expect(alvo.emitidos[0].itens[0].modificacoes[0].efeito).toEqual({ danoFixo: 3 });
+    expect(alvo.emitidos[0].itens[0].modificacoes[0].efeitos).toEqual([
+      { tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: 3 },
+    ]);
   });
 
-  it('aplica uma modificação custom (nome + empilhamentos) a um item', () => {
+  it('modificação custom pode combinar efeitos (dados de dano + condição)', () => {
     const alvo = montar({ itens: [itemLeve], amplificadores: [] });
     alvo.componentInstance['alternarCriarMod'](0);
-    alvo.componentInstance['modCustomForm'].setValue({
+    alvo.componentInstance['modCustomForm'].patchValue({ nome: 'Ígnea', empilhamentos: 1, descricao: '' });
+    alvo.componentInstance['adicionarEfeitoMod']();
+    alvo.componentInstance['efeitosMod'].at(0).patchValue({
+      tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS,
+      valor: 1,
+      faces: 6,
+      tipoDano: 'Químico',
+    });
+    alvo.componentInstance['adicionarEfeitoMod']();
+    alvo.componentInstance['efeitosMod'].at(1).patchValue({
+      tipo: ModificacaoEfeitoTipoEnum.CONDICAO,
+      condicao: 'Em Chamas',
+      duracaoTurnos: 2,
+    });
+    alvo.componentInstance['confirmarCriarMod'](0);
+    expect(alvo.emitidos[0].itens[0].modificacoes[0].efeitos).toEqual([
+      { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS, valor: 1, faces: 6, tipoDano: 'Químico' },
+      { tipo: ModificacaoEfeitoTipoEnum.CONDICAO, condicao: 'Em Chamas', duracaoTurnos: 2 },
+    ]);
+  });
+
+  it('aplica uma modificação custom (nome + empilhamentos, sem efeito) a um item', () => {
+    const alvo = montar({ itens: [itemLeve], amplificadores: [] });
+    alvo.componentInstance['alternarCriarMod'](0);
+    alvo.componentInstance['modCustomForm'].patchValue({
       nome: '  Amaldiçoada  ',
       empilhamentos: 2,
       descricao: '  −1 na resistência do alvo  ',
-      danoFixo: 0,
-      dadosQuantidade: 0,
-      dadosFaces: 0,
-      dadosTipo: '',
-      resistencia: 0,
     });
     alvo.componentInstance['confirmarCriarMod'](0);
     expect(alvo.emitidos[0].itens[0].modificacoes).toEqual([

@@ -1377,6 +1377,21 @@ Potencializador** (achados, montados como item custom com módulo I–V + forma 
 custom (ficha e calculadora) ganharam os campos por categoria. Tudo com testes no motor (`compras.spec`
 +7) e nos componentes. Frontend 296/296, shared 190/190.
 
+**4ª rodada (mod custom cobrindo todos os casos + cadastro melhorado):** o efeito da mod custom deixou de
+ser três campos fixos e virou uma **lista de efeitos** (`ModificacaoAplicadaDto.efeitos[]`) discriminada por
+`ModificacaoEfeitoTipoEnum` (enum novo), cobrindo **todos os arquétipos** das tabelas de modificação de todas
+as categorias: `DANO_FIXO`, `DANO_DADOS`, `DANO_DADOS_BASE`, `ELEVAR_DADO`, `PERFURACAO`, `BONUS_TESTE`,
+`RESISTENCIA` (todas ou por tipo, aceita negativo), `DEFESA`, `ALCANCE`, `RAIO`, `DURACAO`, `CONDICAO`,
+`INVENTARIO`. O motor **funde no stat computado** os efeitos de dano/resistência/inventário (como as mods do
+catálogo) e os demais viram **descrição do chip** via `descreverEfeitoModificacao`/`descreverEfeitosModificacao`
+(novos helpers puros). Uma mod pode **combinar efeitos** (ex.: dados + condição, estilo Incendiária). O
+**cadastro** foi redesenhado: `FormArray` de efeitos com **seletor de tipo por linha** + campos condicionais do
+tipo (add/remover efeito), espelhado em `FichaInventario` e `ComprasPage`, com os metadados de UI em
+`app/shared/inventario/efeito-modificacao.ui.ts` (sem acoplar `ficha`↔`calculadora`). Verificado ao vivo:
+uma mod multi-efeito num rifle exibe `Dano 2D8+PON [Balístico] + 1D6 [Químico]` e o chip
+`+1D6 [Químico] · aplica Em Chamas por 2t (DT Vigor) · ignora 5 de resist. [Balístico]`. Shared 204/204,
+frontend 298/298, lint limpo, build AOT ok.
+
 **Próxima task: `m3-15`** — **presets de rolagem** da ficha (aba Rolagens): atalhos nomeados para fórmulas
 (ex.: `1d20+LUT`) salvos em `dados.rolagens` (`FichaRolagemDto`, já no contrato m3-01), com o motor de
 avaliação em `shared/regras/dados`. **Antes de qualquer UI, ler `docs/design/DESIGN.md` e consumir os tokens

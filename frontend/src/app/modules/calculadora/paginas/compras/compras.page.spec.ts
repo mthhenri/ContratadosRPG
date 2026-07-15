@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { ItemCategoriaEnum } from '@contratados-rpg/shared/enums';
+import { ItemCategoriaEnum, ModificacaoEfeitoTipoEnum } from '@contratados-rpg/shared/enums';
 
 import { ComprasPage } from './compras.page';
 
@@ -382,19 +382,30 @@ describe('ComprasPage', () => {
     fixture.detectChanges();
     const uid = pagina['itensCarrinho']()[0].uid;
     pagina['alternarCriarMod'](uid);
-    pagina['modCustomForm'].setValue({
-      nome: 'Amaldiçoada',
-      empilhamentos: 2,
-      descricao: '',
-      danoFixo: 0,
-      dadosQuantidade: 0,
-      dadosFaces: 0,
-      dadosTipo: '',
-      resistencia: 0,
-    });
+    pagina['modCustomForm'].patchValue({ nome: 'Amaldiçoada', empilhamentos: 2, descricao: '' });
     pagina['confirmarCriarMod'](uid);
     fixture.detectChanges();
     expect(pagina['itensCarrinho']()[0].modsAtivas[0].nome).toBe('Amaldiçoada');
     expect(pagina['itensCarrinho']()[0].modsAtivas[0].empilhamentos).toBe(2);
+  });
+
+  it('modificação custom com efeito mecânico (dados de dano) grava o efeito e o descreve no chip', async () => {
+    const { fixture, componentInstance: pagina } = await montar();
+    const cartaoLeve = pagina['itensCatalogo']().find((c) => c.item.nome === 'Leve')!;
+    pagina['adicionarItem'](cartaoLeve);
+    fixture.detectChanges();
+    const uid = pagina['itensCarrinho']()[0].uid;
+    pagina['alternarCriarMod'](uid);
+    pagina['modCustomForm'].patchValue({ nome: 'Ígnea', empilhamentos: 1, descricao: '' });
+    pagina['adicionarEfeitoMod']();
+    pagina['efeitosMod'].at(0).patchValue({
+      tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS,
+      valor: 1,
+      faces: 6,
+      tipoDano: 'Químico',
+    });
+    pagina['confirmarCriarMod'](uid);
+    fixture.detectChanges();
+    expect(pagina['itensCarrinho']()[0].modsAtivas[0].descricao).toContain('+1D6 [Químico]');
   });
 });

@@ -1,4 +1,4 @@
-import { FragmentoModuloEnum, ItemCategoriaEnum, PatenteEnum } from '../../enums';
+import { FragmentoModuloEnum, ItemCategoriaEnum, ModificacaoEfeitoTipoEnum, PatenteEnum } from '../../enums';
 
 /**
  * DTOs de entrada e value-objects de saída do domínio de compras
@@ -15,21 +15,32 @@ import { FragmentoModuloEnum, ItemCategoriaEnum, PatenteEnum } from '../../enums
 // ── Estado do carrinho (value-objects de entrada) ────────────────────────────
 
 /**
- * Efeito **mecânico** de uma modificação custom (as do catálogo têm efeito próprio, embutido no
- * motor). Cada empilhamento aplica o efeito uma vez, então o total escala com os empilhamentos.
- * Só os campos preenchidos entram no cálculo do stat do item (`calcularStatItem`).
+ * Um efeito **mecânico** de uma modificação custom — um dos arquétipos de
+ * `ModificacaoEfeitoTipoEnum`, com os campos que o tipo usa. Cada empilhamento
+ * aplica o efeito uma vez, então o total escala com os empilhamentos. Uma mod
+ * custom carrega uma **lista** de efeitos (combos, como Incendiária = dano +
+ * condição). As mods do catálogo têm efeito próprio, embutido no motor.
+ *
+ * `valor` é a magnitude por empilhamento e serve à maioria dos tipos (dano fixo,
+ * nº de dados, degraus, resistência, alcance, raio, turnos, inventário,
+ * perfuração, bônus). Os demais campos são específicos do tipo (ver abaixo).
  */
 export interface ModificacaoEfeitoDto {
-  /** Soma fixa ao dano (ex.: +2 por empilhamento). */
-  readonly danoFixo?: number;
-  /** Dados de dano extras por empilhamento (ex.: `2` D`6` do tipo `Físico`). */
-  readonly danoDados?: {
-    readonly quantidade: number;
-    readonly faces: number;
-    readonly tipo: string;
-  };
-  /** Soma à resistência (proteções), aplicada a todos os tipos existentes, por empilhamento. */
-  readonly resistencia?: number;
+  readonly tipo: ModificacaoEfeitoTipoEnum;
+  /** Magnitude por empilhamento (pode ser negativa em `RESISTENCIA`, ex.: Camuflada). */
+  readonly valor?: number;
+  /** Faces do dado — `DANO_DADOS`. */
+  readonly faces?: number;
+  /** Tipo de dano/resistência — `DANO_DADOS`, `PERFURACAO`, `RESISTENCIA` (vazio = todas). */
+  readonly tipoDano?: string;
+  /** Sub-modo do efeito — `BONUS_TESTE` (`DADO`/`FIXO`) ou `DEFESA` (`Esquiva`/`Bloqueio`/`Defesa`). */
+  readonly variante?: string;
+  /** Nome da condição aplicada — `CONDICAO` (ex.: `Sangramento`). */
+  readonly condicao?: string;
+  /** Atributo da DT da condição — `CONDICAO` (ex.: `Força`). */
+  readonly atributoDt?: string;
+  /** Duração em turnos — `CONDICAO`. */
+  readonly duracaoTurnos?: number;
 }
 
 /** Uma modificação aplicada a um item do carrinho, com sua quantidade de empilhamentos. */
@@ -38,15 +49,16 @@ export interface ModificacaoAplicadaDto {
   /** Empilhamentos aplicados (o antigo `stacks`). O primeiro adquire `empilhamentosIniciais`. */
   readonly empilhamentos: number;
   /**
-   * Efeito da modificação em texto livre — **só nas modificações custom** (as do catálogo têm a
-   * descrição em `MODIFICACOES`). Opcional; é o registro de "o que essa mod faz" para a UI.
+   * Nota da modificação em texto livre — **só nas modificações custom** (as do catálogo têm a
+   * descrição em `MODIFICACOES`). Opcional; complementa os efeitos estruturados com flavor.
    */
   readonly descricao?: string;
   /**
-   * Efeito **mecânico** da modificação custom, aplicado de fato pelo motor ao stat do item
-   * (dano/resistência). Ausente = a mod é só rótulo/descrição. Ver `ModificacaoEfeitoDto`.
+   * Efeitos **mecânicos** da modificação custom, aplicados de fato pelo motor ao stat do item
+   * (dano/resistência/inventário) e/ou descritos no chip. Lista vazia/ausente = a mod é só rótulo.
+   * Ver `ModificacaoEfeitoDto`.
    */
-  readonly efeito?: ModificacaoEfeitoDto;
+  readonly efeitos?: readonly ModificacaoEfeitoDto[];
 }
 
 /** Um amplificador acoplado ao agente, com sua quantidade de empilhamentos. */

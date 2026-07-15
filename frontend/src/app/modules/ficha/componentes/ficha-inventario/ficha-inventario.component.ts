@@ -1,8 +1,8 @@
 import { Component, DestroyRef, computed, inject, input, output, signal } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 
-import { FragmentoModuloEnum, ItemCategoriaEnum } from '@contratados-rpg/shared/enums';
+import { FragmentoModuloEnum, ItemCategoriaEnum, ModificacaoEfeitoTipoEnum } from '@contratados-rpg/shared/enums';
 import type { FichaInventarioDto } from '@contratados-rpg/shared/dtos/ficha';
 import {
   AMPLIFICADORES,
@@ -14,6 +14,7 @@ import {
   CATALOGO_CATEGORIAS,
   CATALOGO_ITENS,
   contarComprasModificacao,
+  descreverEfeitosModificacao,
   ItemCatalogo,
   listarModificacoesDisponiveis,
   MODIFICACOES,
@@ -30,6 +31,7 @@ import {
 
 import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
+import { EFEITO_TIPOS, EfeitoTipoMeta, metaEfeitoTipo } from '../../../../shared/inventario/efeito-modificacao.ui';
 
 /**
  * Ícone de linha de cada categoria do catálogo (mesma escolha de `calculadora/rotulos.ts`).
@@ -305,17 +307,15 @@ export class FichaInventario {
 
   /** Índice do item cujo formulário de modificação custom está aberto, ou `null`. */
   protected readonly criandoModIndice = signal<number | null>(null);
+  /** Uma linha de efeito da mod custom: um `tipo` + os campos que o tipo usa (ver `EFEITO_TIPOS`). */
   protected readonly modCustomForm = new FormGroup({
     nome: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     empilhamentos: new FormControl(1, { nonNullable: true }),
     descricao: new FormControl('', { nonNullable: true }),
-    // Efeito mecânico (por empilhamento) — faz a mod custom "funcionar de verdade".
-    danoFixo: new FormControl(0, { nonNullable: true }),
-    dadosQuantidade: new FormControl(0, { nonNullable: true }),
-    dadosFaces: new FormControl(0, { nonNullable: true }),
-    dadosTipo: new FormControl('', { nonNullable: true }),
-    resistencia: new FormControl(0, { nonNullable: true }),
+    /** Lista de efeitos **mecânicos** (por empilhamento) — faz a mod custom "funcionar de verdade". */
+    efeitos: new FormArray<ReturnType<FichaInventario['criarEfeitoGrupo']>>([]),
   });
+  protected readonly efeitoTipos = EFEITO_TIPOS;
 
   constructor() {
     inject(DestroyRef).onDestroy(() => {
@@ -737,17 +737,63 @@ export class FichaInventario {
       this.criandoModIndice.set(null);
       return;
     }
-    this.modCustomForm.reset({
-      nome: '',
-      empilhamentos: 1,
-      descricao: '',
-      danoFixo: 0,
-      dadosQuantidade: 0,
-      dadosFaces: 0,
-      dadosTipo: '',
-      resistencia: 0,
-    });
+    this.modCustomForm.reset({ nome: '', empilhamentos: 1, descricao: '' });
+    this.efeitosMod.clear();
     this.criandoModIndice.set(indice);
+  }
+
+  /** A `FormArray` de efeitos da mod custom (tipada). */
+  protected get efeitosMod(): FormArray<ReturnType<FichaInventario['criarEfeitoGrupo']>> {
+    return this.modCustomForm.controls.efeitos;
+  }
+
+  /** Metadados de UI (rótulos/campos) do tipo de efeito atualmente escolhido numa linha. */
+  protected metaEfeito(tipo: ModificacaoEfeitoTipoEnum): EfeitoTipoMeta {
+    return metaEfeitoTipo(tipo);
+  }
+
+  /** Cria a `FormGroup` de uma linha de efeito, já com o tipo (e a variante padrão dele) definidos. */
+  private criarEfeitoGrupo(tipo: ModificacaoEfeitoTipoEnum) {
+    const meta = metaEfeitoTipo(tipo);
+    return new FormGroup({
+      tipo: new FormControl(tipo, { nonNullable: true }),
+      valor: new FormControl(0, { nonNullable: true }),
+      faces: new FormControl(6, { nonNullable: true }),
+      tipoDano: new FormControl('', { nonNullable: true }),
+      variante: new FormControl(meta.variantes?.[0]?.valor ?? '', { nonNullable: true }),
+      condicao: new FormControl('', { nonNullable: true }),
+      atributoDt: new FormControl('', { nonNullable: true }),
+      duracaoTurnos: new FormControl(0, { nonNullable: true }),
+    });
+  }
+
+  /** Adiciona uma linha de efeito (padrão: Dano fixo). */
+  protected adicionarEfeitoMod(): void {
+    this.efeitosMod.push(this.criarEfeitoGrupo(ModificacaoEfeitoTipoEnum.DANO_FIXO));
+  }
+
+  /** Remove a linha de efeito do índice. */
+  protected removerEfeitoMod(indice: number): void {
+    this.efeitosMod.removeAt(indice);
+  }
+
+  /** Ao trocar o tipo de uma linha, ajusta a variante para a primeira opção válida do novo tipo. */
+  protected aoTrocarTipoEfeito(indice: number): void {
+    const grupo = this.efeitosMod.at(indice);
+    const meta = metaEfeitoTipo(grupo.controls.tipo.value);
+    grupo.controls.variante.setValue(meta.variantes?.[0]?.valor ?? '');
+  }
+
+  /** Passo − / + num campo numérico (`valor`/`faces`/`duracaoTurnos`) de uma linha de efeito. */
+  protected ajustarCampoEfeito(
+    indice: number,
+    campo: 'valor' | 'faces' | 'duracaoTurnos',
+    delta: number,
+    permiteNegativo = false,
+  ): void {
+    const controle = this.efeitosMod.at(indice).controls[campo];
+    const piso = permiteNegativo ? -99 : 0;
+    controle.setValue(Math.max(piso, controle.value + delta));
   }
 
   protected cancelarCriarMod(): void {
@@ -771,12 +817,12 @@ export class FichaInventario {
     const nome = bruto.nome.trim();
     const empilhamentos = Math.max(1, bruto.empilhamentos);
     const descricao = bruto.descricao.trim();
-    const efeito = this.montarEfeitoMod(bruto);
+    const efeitos = this.montarEfeitosMod();
     const modificacao = {
       nome,
       empilhamentos,
       ...(descricao ? { descricao } : {}),
-      ...(efeito ? { efeito } : {}),
+      ...(efeitos.length > 0 ? { efeitos } : {}),
     };
     const semMod = item.modificacoes.filter((atual) => atual.nome !== nome);
     this.emitirItens(
@@ -793,40 +839,66 @@ export class FichaInventario {
     controle.setValue(Math.max(1, controle.value + delta));
   }
 
-  /** Passo − / + num campo numérico do efeito da mod custom (piso 0). */
-  protected ajustarEfeitoMod(
-    campo: 'danoFixo' | 'dadosQuantidade' | 'dadosFaces' | 'resistencia',
-    delta: number,
-  ): void {
-    const controle = this.modCustomForm.controls[campo];
-    controle.setValue(Math.max(0, controle.value + delta));
+  /**
+   * Monta os efeitos **mecânicos** da mod custom a partir das linhas do form: cada linha vira um
+   * `ModificacaoEfeitoDto` com só os campos do seu tipo. Linhas "vazias" (sem magnitude/condição) são
+   * descartadas, para a mod não carregar efeito nulo. Ver `montarEfeitoLinha`.
+   */
+  private montarEfeitosMod(): ModificacaoEfeitoDto[] {
+    return this.efeitosMod.controls
+      .map((grupo) => this.montarEfeitoLinha(grupo.getRawValue()))
+      .filter((efeito): efeito is ModificacaoEfeitoDto => efeito !== null);
   }
 
-  /**
-   * Monta o efeito **mecânico** da mod custom (dano fixo, dados extras, resistência) a partir do form —
-   * só os campos preenchidos. `null` quando nenhum efeito foi informado (a mod fica só descritiva).
-   */
-  private montarEfeitoMod(bruto: {
-    danoFixo: number;
-    dadosQuantidade: number;
-    dadosFaces: number;
-    dadosTipo: string;
-    resistencia: number;
+  /** Converte uma linha do form no `ModificacaoEfeitoDto` do seu tipo, ou `null` se não for significativa. */
+  private montarEfeitoLinha(bruto: {
+    tipo: ModificacaoEfeitoTipoEnum;
+    valor: number;
+    faces: number;
+    tipoDano: string;
+    variante: string;
+    condicao: string;
+    atributoDt: string;
+    duracaoTurnos: number;
   }): ModificacaoEfeitoDto | null {
-    const danoDados =
-      bruto.dadosQuantidade > 0 && bruto.dadosFaces > 0
-        ? {
-            quantidade: bruto.dadosQuantidade,
-            faces: bruto.dadosFaces,
-            tipo: bruto.dadosTipo.trim() || 'Físico',
-          }
-        : undefined;
-    const efeito: ModificacaoEfeitoDto = {
-      ...(bruto.danoFixo > 0 ? { danoFixo: bruto.danoFixo } : {}),
-      ...(danoDados ? { danoDados } : {}),
-      ...(bruto.resistencia > 0 ? { resistencia: bruto.resistencia } : {}),
-    };
-    return Object.keys(efeito).length > 0 ? efeito : null;
+    const tipo = bruto.tipo;
+    const tipoDano = bruto.tipoDano.trim();
+    const T = ModificacaoEfeitoTipoEnum;
+    switch (tipo) {
+      case T.DANO_FIXO:
+      case T.DANO_DADOS_BASE:
+      case T.ELEVAR_DADO:
+      case T.ALCANCE:
+      case T.RAIO:
+      case T.DURACAO:
+      case T.INVENTARIO:
+        return bruto.valor > 0 ? { tipo, valor: bruto.valor } : null;
+      case T.PERFURACAO:
+        return bruto.valor > 0 ? { tipo, valor: bruto.valor, ...(tipoDano ? { tipoDano } : {}) } : null;
+      case T.DANO_DADOS:
+        return bruto.valor > 0 && bruto.faces > 0
+          ? { tipo, valor: bruto.valor, faces: bruto.faces, tipoDano: tipoDano || 'Físico' }
+          : null;
+      case T.RESISTENCIA:
+        return bruto.valor !== 0 ? { tipo, valor: bruto.valor, ...(tipoDano ? { tipoDano } : {}) } : null;
+      case T.BONUS_TESTE:
+      case T.DEFESA:
+        return bruto.valor > 0 ? { tipo, valor: bruto.valor, variante: bruto.variante } : null;
+      case T.CONDICAO: {
+        const condicao = bruto.condicao.trim();
+        const atributoDt = bruto.atributoDt.trim();
+        return condicao
+          ? {
+              tipo,
+              condicao,
+              ...(atributoDt ? { atributoDt } : {}),
+              ...(bruto.duracaoTurnos > 0 ? { duracaoTurnos: bruto.duracaoTurnos } : {}),
+            }
+          : null;
+      }
+      default:
+        return null;
+    }
   }
 
   protected adicionarAmplificador(nome: string): void {
@@ -964,7 +1036,11 @@ export class FichaInventario {
             modificacao.empilhamentos < limite.maxEmpilhamentos &&
             modsUsados < limite.maxModificacoes
           : true,
-        descricao: modificacao.descricao ?? null,
+        // Chip da mod custom: os efeitos mecânicos gerados + a nota livre (o que houver).
+        descricao:
+          [descreverEfeitosModificacao(modificacao.efeitos), modificacao.descricao?.trim()]
+            .filter((parte): parte is string => !!parte)
+            .join(' — ') || null,
       };
     });
 

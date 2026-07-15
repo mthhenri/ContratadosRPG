@@ -1,4 +1,4 @@
-import { ItemCategoriaEnum } from '../../enums';
+import { ItemCategoriaEnum, ModificacaoEfeitoTipoEnum } from '../../enums';
 import { elevarDado } from '../descanso';
 import { obterPatente } from '../patente';
 import { CATALOGO_ITENS, ItemCatalogo } from './catalogo.dados';
@@ -23,6 +23,7 @@ import {
   CustoAmplificadorCalcularDto,
   LimiteModificacoesDto,
   LimiteModificacoesObterDto,
+  ModificacaoEfeitoDto,
   ModificacaoItemDto,
   ResumoComprasCalcularDto,
   ResumoComprasDto,
@@ -72,6 +73,63 @@ export function interpretarBonusArmazenamento(dto: BonusArmazenamentoInterpretar
   }
   const numero = dto.texto.match(/([\d,]+)/);
   return numero ? parseFloat(numero[1].replace(',', '.')) : 0;
+}
+
+/**
+ * Texto legível de um efeito de modificação custom (para o chip da mod), no mesmo
+ * estilo da coluna de efeito das tabelas do catálogo. Não computa nada — é
+ * formatação de dado (as somas ao stat ficam em `calcularStatItem`). `plural`
+ * evita repetir a regrinha de "s" em cada caso.
+ */
+export function descreverEfeitoModificacao(efeito: ModificacaoEfeitoDto): string {
+  const valor = efeito.valor ?? 0;
+  const plural = (quantidade: number, singular: string, muitos: string): string =>
+    Math.abs(quantidade) === 1 ? singular : muitos;
+  const comSinal = (numero: number): string => (numero >= 0 ? `+${numero}` : `${numero}`);
+  const tipoEntre = efeito.tipoDano ? ` [${efeito.tipoDano}]` : '';
+  switch (efeito.tipo) {
+    case ModificacaoEfeitoTipoEnum.DANO_FIXO:
+      return `+${valor} de dano`;
+    case ModificacaoEfeitoTipoEnum.DANO_DADOS:
+      return `+${valor}D${efeito.faces ?? 0} [${efeito.tipoDano || 'Físico'}]`;
+    case ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE:
+      return `+${valor} ${plural(valor, 'dado', 'dados')} de dano`;
+    case ModificacaoEfeitoTipoEnum.ELEVAR_DADO:
+      return `+${valor} ${plural(valor, 'tipo', 'tipos')} de dado`;
+    case ModificacaoEfeitoTipoEnum.PERFURACAO:
+      return `ignora ${valor} de resist.${tipoEntre}`;
+    case ModificacaoEfeitoTipoEnum.BONUS_TESTE:
+      return efeito.variante === 'FIXO'
+        ? `+${valor} nos testes`
+        : `+${valor} ${plural(valor, 'dado', 'dados')} nos testes`;
+    case ModificacaoEfeitoTipoEnum.RESISTENCIA:
+      return `${comSinal(valor)} de resist.${tipoEntre || ' (todas)'}`;
+    case ModificacaoEfeitoTipoEnum.DEFESA:
+      return `+${valor} em ${efeito.variante || 'Defesa'}`;
+    case ModificacaoEfeitoTipoEnum.ALCANCE:
+      return `+${valor} ${plural(valor, 'nível', 'níveis')} de alcance`;
+    case ModificacaoEfeitoTipoEnum.RAIO:
+      return `+${valor}m de raio`;
+    case ModificacaoEfeitoTipoEnum.DURACAO:
+      return `+${valor} ${plural(valor, 'turno', 'turnos')} de duração`;
+    case ModificacaoEfeitoTipoEnum.CONDICAO: {
+      const duracao = efeito.duracaoTurnos ? ` por ${efeito.duracaoTurnos}t` : '';
+      const dt = efeito.atributoDt ? ` (DT ${efeito.atributoDt})` : '';
+      return `aplica ${efeito.condicao || 'condição'}${duracao}${dt}`;
+    }
+    case ModificacaoEfeitoTipoEnum.INVENTARIO:
+      return `+${valor} de inventário`;
+    default:
+      return '';
+  }
+}
+
+/** Junta os efeitos de uma modificação custom em uma linha (` · ` entre eles), para a UI. */
+export function descreverEfeitosModificacao(efeitos: readonly ModificacaoEfeitoDto[] | undefined): string {
+  return (efeitos ?? [])
+    .map((efeito) => descreverEfeitoModificacao(efeito))
+    .filter((texto) => texto.length > 0)
+    .join(' · ');
 }
 
 /**
@@ -301,23 +359,31 @@ export function calcularStatItem(dto: StatItemCalcularDto): StatItemDto | null {
       if (empilhamentosDe('Potente') > 0) quantidade += empilhamentosDe('Potente') * 2;
     }
 
-    // Efeito mecânico das modificações CUSTOM (independe da categoria): dano fixo e dados extras,
-    // escalando com os empilhamentos. Faz uma mod inventada "funcionar de verdade" no dano.
+    // Efeitos mecânicos das modificações CUSTOM que mexem no dano (independe da categoria),
+    // escalando com os empilhamentos: faz uma mod inventada "funcionar de verdade" no dano.
+    // Perfuração/condição/alcance/etc. são descritivos (chip da mod), como no catálogo.
     item.modificacoes.forEach((modificacao) => {
-      const efeito = modificacao.efeito;
-      if (!efeito) {
-        return;
-      }
-      if (efeito.danoFixo) {
-        fixo += efeito.danoFixo * modificacao.empilhamentos;
-      }
-      if (efeito.danoDados && efeito.danoDados.quantidade > 0 && efeito.danoDados.faces > 0) {
-        extras.push({
-          quantidade: efeito.danoDados.quantidade * modificacao.empilhamentos,
-          faces: efeito.danoDados.faces,
-          tipo: efeito.danoDados.tipo || tipo,
-        });
-      }
+      (modificacao.efeitos ?? []).forEach((efeito) => {
+        const escala = (efeito.valor ?? 0) * modificacao.empilhamentos;
+        switch (efeito.tipo) {
+          case ModificacaoEfeitoTipoEnum.DANO_FIXO:
+            fixo += escala;
+            break;
+          case ModificacaoEfeitoTipoEnum.DANO_DADOS:
+            if (escala > 0 && (efeito.faces ?? 0) > 0) {
+              extras.push({ quantidade: escala, faces: efeito.faces as number, tipo: efeito.tipoDano || tipo });
+            }
+            break;
+          case ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE:
+            if (escala > 0) quantidade += escala;
+            break;
+          case ModificacaoEfeitoTipoEnum.ELEVAR_DADO:
+            if (escala > 0) faces = elevarDado({ faces, passos: escala, limite: 12 });
+            break;
+          default:
+            break;
+        }
+      });
     });
 
     // Agrupa os dados por tipo de dano: o grupo do tipo base carrega o modificador de atributo e o fixo.
@@ -378,14 +444,25 @@ export function calcularStatItem(dto: StatItemCalcularDto): StatItemDto | null {
       }
     }
 
-    // Efeito mecânico das modificações CUSTOM: soma a resistência informada a todos os tipos.
-    const resistCustom = item.modificacoes.reduce(
-      (soma, modificacao) => soma + (modificacao.efeito?.resistencia ?? 0) * modificacao.empilhamentos,
-      0,
-    );
-    if (resistCustom !== 0 && entradas.length > 0) {
-      entradas.forEach((entrada) => (entrada.valor = Math.max(0, entrada.valor + resistCustom)));
-    }
+    // Efeitos RESISTENCIA das modificações CUSTOM: `tipoDano` vazio soma a todos os tipos; senão soma
+    // (ou cria) o tipo informado. Escala com os empilhamentos e pode ser negativo (Camuflada-like).
+    item.modificacoes.forEach((modificacao) => {
+      (modificacao.efeitos ?? []).forEach((efeito) => {
+        if (efeito.tipo !== ModificacaoEfeitoTipoEnum.RESISTENCIA) {
+          return;
+        }
+        const total = (efeito.valor ?? 0) * modificacao.empilhamentos;
+        if (total === 0) {
+          return;
+        }
+        if (efeito.tipoDano) {
+          const alvo = obterOuAdicionar(efeito.tipoDano);
+          alvo.valor = Math.max(0, alvo.valor + total);
+        } else {
+          entradas.forEach((entrada) => (entrada.valor = Math.max(0, entrada.valor + total)));
+        }
+      });
+    });
 
     const notacao = entradas
       .filter((entrada) => entrada.valor > 0)
@@ -400,6 +477,14 @@ export function calcularStatItem(dto: StatItemCalcularDto): StatItemDto | null {
     if (empilhamentosDe('Compartimentos Extras') > 0) {
       slots += empilhamentosDe('Compartimentos Extras');
     }
+    // Efeitos INVENTARIO das modificações CUSTOM: somam slots ao bônus do armazenamento.
+    item.modificacoes.forEach((modificacao) => {
+      (modificacao.efeitos ?? []).forEach((efeito) => {
+        if (efeito.tipo === ModificacaoEfeitoTipoEnum.INVENTARIO) {
+          slots += (efeito.valor ?? 0) * modificacao.empilhamentos;
+        }
+      });
+    });
     return { bonusArmazenamento: slots };
   }
 
@@ -459,6 +544,11 @@ export function calcularTotaisCarrinho(dto: TotaisCarrinhoCalcularDto): TotaisCa
         } else if (modificacao.nome === 'Camadas Extras') {
           bonusInventario += modificacao.empilhamentos * 0.5 * quantidade;
         }
+        (modificacao.efeitos ?? []).forEach((efeito) => {
+          if (efeito.tipo === ModificacaoEfeitoTipoEnum.INVENTARIO) {
+            bonusInventario += (efeito.valor ?? 0) * modificacao.empilhamentos * quantidade;
+          }
+        });
       }
     });
   });

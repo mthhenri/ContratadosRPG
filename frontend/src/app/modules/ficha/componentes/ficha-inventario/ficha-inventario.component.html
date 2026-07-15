@@ -420,46 +420,100 @@
                     </div>
                   </div>
                   <div class="ficha-inv__efeito">
-                    <span class="ficha-inv__efeito-titulo">Efeito mecânico (por empilhamento)</span>
-                    <div class="ficha-inv__form-linha">
-                      <div class="ficha-inv__campo">
-                        <span class="ficha-inv__campo-rotulo">+ Dano fixo</span>
-                        <div class="ficha-inv__stepper">
-                          <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir dano fixo" (click)="ajustarEfeitoMod('danoFixo', -1)">−</button>
-                          <input class="ficha-inv__entrada ficha-inv__entrada--num" type="number" formControlName="danoFixo" />
-                          <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar dano fixo" (click)="ajustarEfeitoMod('danoFixo', 1)">+</button>
-                        </div>
-                      </div>
-                      <div class="ficha-inv__campo">
-                        <span class="ficha-inv__campo-rotulo">+ Resistência</span>
-                        <div class="ficha-inv__stepper">
-                          <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir resistência" (click)="ajustarEfeitoMod('resistencia', -1)">−</button>
-                          <input class="ficha-inv__entrada ficha-inv__entrada--num" type="number" formControlName="resistencia" />
-                          <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar resistência" (click)="ajustarEfeitoMod('resistencia', 1)">+</button>
-                        </div>
-                      </div>
+                    <div class="ficha-inv__efeito-cabecalho">
+                      <span class="ficha-inv__efeito-titulo">Efeitos mecânicos (por empilhamento)</span>
+                      <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--mini" (click)="adicionarEfeitoMod()">
+                        + Efeito
+                      </button>
                     </div>
-                    <div class="ficha-inv__form-linha">
-                      <div class="ficha-inv__campo">
-                        <span class="ficha-inv__campo-rotulo">+ Dados (qtd)</span>
-                        <div class="ficha-inv__stepper">
-                          <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir dados" (click)="ajustarEfeitoMod('dadosQuantidade', -1)">−</button>
-                          <input class="ficha-inv__entrada ficha-inv__entrada--num" type="number" formControlName="dadosQuantidade" />
-                          <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar dados" (click)="ajustarEfeitoMod('dadosQuantidade', 1)">+</button>
+                    @if (efeitosMod.length === 0) {
+                      <p class="ficha-inv__efeito-vazio">
+                        Sem efeito mecânico — a mod fica só descritiva. Adicione um efeito para ela funcionar (dano, resistência,
+                        perfuração, condição, alcance…).
+                      </p>
+                    }
+                    <div formArrayName="efeitos" class="ficha-inv__efeito-lista">
+                      @for (grupo of efeitosMod.controls; track $index) {
+                        <div class="ficha-inv__efeito-linha" [formGroupName]="$index">
+                          @let meta = metaEfeito(grupo.controls.tipo.value);
+                          <div class="ficha-inv__form-linha">
+                            <label class="ficha-inv__campo ficha-inv__campo--largo">
+                              <span class="ficha-inv__campo-rotulo">Tipo de efeito</span>
+                              <select class="ficha-inv__entrada" formControlName="tipo" (change)="aoTrocarTipoEfeito($index)">
+                                @for (tipoMeta of efeitoTipos; track tipoMeta.tipo) {
+                                  <option [value]="tipoMeta.tipo">{{ tipoMeta.rotulo }}</option>
+                                }
+                              </select>
+                            </label>
+                            <button
+                              type="button"
+                              class="ficha-inv__efeito-remover"
+                              aria-label="Remover efeito"
+                              (click)="removerEfeitoMod($index)"
+                            >
+                              ×
+                            </button>
+                          </div>
+                          <div class="ficha-inv__form-linha">
+                            @if (meta.valorRotulo) {
+                              <div class="ficha-inv__campo">
+                                <span class="ficha-inv__campo-rotulo">{{ meta.valorRotulo }}</span>
+                                <div class="ficha-inv__stepper">
+                                  <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir" (click)="ajustarCampoEfeito($index, 'valor', -1, meta.valorNegativo)">−</button>
+                                  <input class="ficha-inv__entrada ficha-inv__entrada--num" type="number" formControlName="valor" />
+                                  <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar" (click)="ajustarCampoEfeito($index, 'valor', 1, meta.valorNegativo)">+</button>
+                                </div>
+                              </div>
+                            }
+                            @if (meta.faces) {
+                              <div class="ficha-inv__campo">
+                                <span class="ficha-inv__campo-rotulo">Faces (D)</span>
+                                <div class="ficha-inv__stepper">
+                                  <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir faces" (click)="ajustarCampoEfeito($index, 'faces', -1)">−</button>
+                                  <input class="ficha-inv__entrada ficha-inv__entrada--num" type="number" formControlName="faces" />
+                                  <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar faces" (click)="ajustarCampoEfeito($index, 'faces', 1)">+</button>
+                                </div>
+                              </div>
+                            }
+                            @if (meta.variantes) {
+                              <label class="ficha-inv__campo">
+                                <span class="ficha-inv__campo-rotulo">{{ meta.varianteRotulo }}</span>
+                                <select class="ficha-inv__entrada" formControlName="variante">
+                                  @for (variante of meta.variantes; track variante.valor) {
+                                    <option [value]="variante.valor">{{ variante.rotulo }}</option>
+                                  }
+                                </select>
+                              </label>
+                            }
+                            @if (meta.tipoDano) {
+                              <label class="ficha-inv__campo ficha-inv__campo--largo">
+                                <span class="ficha-inv__campo-rotulo">{{ meta.tipoDanoRotulo }}</span>
+                                <input class="ficha-inv__entrada" type="text" formControlName="tipoDano" [placeholder]="meta.tipoDanoPlaceholder" />
+                              </label>
+                            }
+                          </div>
+                          @if (meta.condicao) {
+                            <div class="ficha-inv__form-linha">
+                              <label class="ficha-inv__campo ficha-inv__campo--largo">
+                                <span class="ficha-inv__campo-rotulo">Condição</span>
+                                <input class="ficha-inv__entrada" type="text" formControlName="condicao" placeholder="Ex.: Sangramento" />
+                              </label>
+                              <label class="ficha-inv__campo">
+                                <span class="ficha-inv__campo-rotulo">DT (atributo)</span>
+                                <input class="ficha-inv__entrada" type="text" formControlName="atributoDt" placeholder="Ex.: Força" />
+                              </label>
+                              <div class="ficha-inv__campo">
+                                <span class="ficha-inv__campo-rotulo">Turnos</span>
+                                <div class="ficha-inv__stepper">
+                                  <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir turnos" (click)="ajustarCampoEfeito($index, 'duracaoTurnos', -1)">−</button>
+                                  <input class="ficha-inv__entrada ficha-inv__entrada--num" type="number" formControlName="duracaoTurnos" />
+                                  <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar turnos" (click)="ajustarCampoEfeito($index, 'duracaoTurnos', 1)">+</button>
+                                </div>
+                              </div>
+                            </div>
+                          }
                         </div>
-                      </div>
-                      <div class="ficha-inv__campo">
-                        <span class="ficha-inv__campo-rotulo">Faces (D)</span>
-                        <div class="ficha-inv__stepper">
-                          <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir faces" (click)="ajustarEfeitoMod('dadosFaces', -1)">−</button>
-                          <input class="ficha-inv__entrada ficha-inv__entrada--num" type="number" formControlName="dadosFaces" />
-                          <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar faces" (click)="ajustarEfeitoMod('dadosFaces', 1)">+</button>
-                        </div>
-                      </div>
-                      <label class="ficha-inv__campo">
-                        <span class="ficha-inv__campo-rotulo">Tipo do dano</span>
-                        <input class="ficha-inv__entrada" type="text" formControlName="dadosTipo" placeholder="Ex.: Químico" />
-                      </label>
+                      }
                     </div>
                   </div>
                   <label class="ficha-inv__campo">
