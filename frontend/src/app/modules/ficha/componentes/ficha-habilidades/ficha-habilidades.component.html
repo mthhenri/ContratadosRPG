@@ -54,6 +54,7 @@
               [class.habilidades__chip--arquetipo]="habilidade.categoria === Categoria.ARQUETIPO"
               [class.habilidades__chip--subclasse]="habilidade.categoria === Categoria.SUBCLASSE"
               [class.habilidades__chip--personalidade]="habilidade.categoria === Categoria.PERSONALIDADE"
+              [class.habilidades__chip--inicial]="ehInicial(habilidade)"
             >
               {{ rotuloChip(habilidade) }}
             </span>
@@ -66,6 +67,8 @@
                   [class.habilidades__utilizar--gasto]="gastoRecente()?.indice === idx"
                   type="button"
                   [attr.aria-label]="'Utilizar ' + habilidade.nome"
+                  [disabled]="habilidade.custoEnergia === 0"
+                  [attr.title]="habilidade.custoEnergia === 0 ? 'Habilidade sem custo de Energia' : null"
                   (pointerdown)="aoPressionarUtilizar(idx, habilidade, $event)"
                   (click)="aoClicarUtilizar(idx, habilidade, $event)"
                 >

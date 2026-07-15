@@ -63,6 +63,9 @@
                 [{{ habilidade.custoEnergia === null ? 'X' : habilidade.custoEnergia }} E]
               </span>
             </div>
+            @if (ehInicial(habilidade)) {
+              <span class="seletor__opcao-selo seletor__opcao-selo--inicial">Inicial</span>
+            }
             @if (ehGeralMelhorada(habilidade)) {
               <span class="seletor__opcao-selo">Geral melhorada</span>
             }

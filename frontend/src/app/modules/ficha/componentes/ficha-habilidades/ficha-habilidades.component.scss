@@ -218,6 +218,14 @@
       color: var(--accent);
       border-color: var(--accent-border);
     }
+
+    // Habilidade Inicial (a que vem de graça do arquétipo/subclasse): preenche com a própria cor
+    // de categoria (currentColor) e reforça a borda — destaca-a das demais sem inventar cor nova.
+    &--inicial {
+      background: color-mix(in srgb, currentColor 15%, transparent);
+      border-color: currentColor;
+      font-weight: 700;
+    }
   }
 
   &__utilizar {
@@ -238,8 +246,16 @@
     cursor: pointer;
     transition: background-color 0.15s ease;
 
-    &:hover {
+    &:hover:not(:disabled) {
       background: color-mix(in srgb, var(--energy) 24%, transparent);
+    }
+
+    // Habilidade sem custo (0 E): nada a gastar, então Utilizar fica inerte. `pointer-events: none`
+    // garante que nem o pointerdown chegue (o atributo `disabled` sozinho só bloqueia o `click`).
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+      pointer-events: none;
     }
 
     // Segurar para repetir (gasta a cada 500ms) — `touch-action: none` evita que o toque vire scroll.

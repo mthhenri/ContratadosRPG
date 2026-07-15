@@ -12,6 +12,7 @@ import type { FichaHabilidadeDto } from '@contratados-rpg/shared/dtos/ficha';
 import {
   catalogoHabilidades,
   classeBaseDeHabilidades,
+  ehHabilidadeInicial,
   type HabilidadeCatalogoItemDto,
 } from '@contratados-rpg/shared/regras/agente';
 
@@ -267,6 +268,9 @@ export class FichaHabilidades {
    * um mini-campo perguntando quanto gastar.
    */
   protected utilizar(indice: number, habilidade: FichaHabilidadeDto): void {
+    if (habilidade.custoEnergia === 0) {
+      return; // sem custo de Energia: nada a gastar (o botão fica desabilitado)
+    }
     if (habilidade.custoEnergia === null) {
       this.custoVariavel.setValue(0);
       this.indiceUtilizando.set(indice);
@@ -298,6 +302,9 @@ export class FichaHabilidades {
     if (habilidade.custoEnergia === null) {
       this.utilizar(indice, habilidade);
       return;
+    }
+    if (habilidade.custoEnergia === 0) {
+      return; // 0 E: sem gasto, sem hold (o botão está desabilitado, mas o pointerdown ainda chega)
     }
     const custo = habilidade.custoEnergia;
     this.gastarComLimite(indice, custo);
@@ -389,7 +396,8 @@ export class FichaHabilidades {
   }
 
   /**
-   * Rótulo do chip da categoria — nomeia a origem quando a habilidade veio de **outra**
+   * Rótulo do chip da categoria — realça a **Habilidade Inicial** ("Arquétipo - Inicial", a que vem
+   * de graça do arquétipo/subclasse) e nomeia a origem quando a habilidade veio de **outra**
    * classe/arquétipo ("Classe - Especialista"); da própria, só a categoria ("Classe").
    */
   protected rotuloChip(habilidade: FichaHabilidadeDto): string {
@@ -397,6 +405,9 @@ export class FichaHabilidades {
     const origem = habilidade.origem;
     if (origem === undefined) {
       return base;
+    }
+    if (this.ehInicial(habilidade)) {
+      return `${base} - Inicial`;
     }
     if (
       habilidade.categoria === HabilidadeCategoriaEnum.CLASSE &&
@@ -411,6 +422,11 @@ export class FichaHabilidades {
       return `${base} - ${rotuloArquetipo(origem as ArquetipoEnum)}`;
     }
     return base;
+  }
+
+  /** `true` se a habilidade é a Inicial do arquétipo/subclasse (`shared/regras`) — ganha realce. */
+  protected ehInicial(habilidade: FichaHabilidadeDto): boolean {
+    return ehHabilidadeInicial(habilidade.origem, habilidade.nome);
   }
 
   /** Substitui o item no índice, ou anexa quando `indice < 0` (adição). */

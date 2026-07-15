@@ -204,6 +204,36 @@ describe('FichaHabilidades', () => {
     expect(alvo.utilizados).toEqual([5]);
   });
 
+  it('Utilizar fica desabilitado para habilidade de 0 E e não gasta nem no pointerdown; ativo p/ custo > 0', () => {
+    TestBed.configureTestingModule({ imports: [FichaHabilidades] });
+    const fixture = TestBed.createComponent(FichaHabilidades);
+    fixture.componentRef.setInput('habilidades', [
+      { nome: 'Passiva', categoria: HabilidadeCategoriaEnum.GERAL, custoEnergia: 0, descricao: '' },
+      { nome: 'Ativa', categoria: HabilidadeCategoriaEnum.GERAL, custoEnergia: 3, descricao: '' },
+    ] as FichaHabilidadeDto[]);
+    fixture.componentRef.setInput('editavel', true);
+    fixture.componentRef.setInput('classe', ClasseEnum.COMBATENTE);
+    fixture.componentRef.setInput('arquetipo', ArquetipoEnum.LUTADOR);
+    fixture.componentRef.setInput('energiaAtual', 20);
+    fixture.detectChanges();
+    const utilizados: number[] = [];
+    fixture.componentInstance.habilidadeUtilizada.subscribe((c) => utilizados.push(c));
+
+    const botoes = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('.habilidades__utilizar'),
+    ) as HTMLButtonElement[];
+    expect(botoes[0].disabled).toBe(true); // 0 E
+    expect(botoes[1].disabled).toBe(false); // 3 E
+
+    // O atributo `disabled` só barra o `click`; o `pointerdown` ainda chega — o guard do handler
+    // é que impede o gasto. Dispara direto no elemento e prova que nada foi gasto.
+    const evento = new Event('pointerdown', { bubbles: true }) as Event & { button: number; pointerId: number };
+    evento.button = 0;
+    evento.pointerId = 1;
+    botoes[0].dispatchEvent(evento);
+    expect(utilizados).toEqual([]);
+  });
+
   /**
    * Prova o HOLD no **botão renderizado de verdade** (não no método): dispara `pointerdown` no
    * elemento `.habilidades__utilizar` e avança o relógio — o gasto deve se repetir a cada 300ms e

@@ -2,10 +2,11 @@ import { Component, computed, input, linkedSignal, output, signal } from '@angul
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 import { ArquetipoEnum, ClasseEnum, HabilidadeCategoriaEnum } from '@contratados-rpg/shared/enums';
-import type {
-  GrupoHabilidades,
-  HabilidadeCatalogoItemDto,
-  SubgrupoHabilidades,
+import {
+  ehHabilidadeInicial,
+  type GrupoHabilidades,
+  type HabilidadeCatalogoItemDto,
+  type SubgrupoHabilidades,
 } from '@contratados-rpg/shared/regras/agente';
 
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
@@ -132,6 +133,11 @@ export class FichaHabilidadeSeletor {
   /** `true` para uma habilidade geral melhorada — ganha selo por conviver com as do arquétipo. */
   protected ehGeralMelhorada(habilidade: HabilidadeCatalogoItemDto): boolean {
     return habilidade.categoria === HabilidadeCategoriaEnum.GERAL_MELHORADA;
+  }
+
+  /** `true` para a Habilidade Inicial do arquétipo/subclasse (`shared/regras`) — ganha selo próprio. */
+  protected ehInicial(habilidade: HabilidadeCatalogoItemDto): boolean {
+    return ehHabilidadeInicial(habilidade.origem, habilidade.nome);
   }
 
   protected adicionarHabilidade(habilidade: HabilidadeCatalogoItemDto): void {
