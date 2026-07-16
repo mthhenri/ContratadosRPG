@@ -113,19 +113,24 @@ export interface GrupoDanoDto {
   readonly composto?: boolean;
 }
 
-/** Detalhe de um roll no modo `TESTE` (m3-19): o pool de dados, o maior escolhido e o que somou. */
+/** Detalhe de um roll no modo `TESTE` (m3-19; desvantagem m3-22): o pool, o dado escolhido e o que somou. */
 export interface ResultadoTesteDto {
   /** Todos os valores rolados (o pool de D20). */
   readonly pool: readonly number[];
-  /** O maior dado do pool (0 se o pool for vazio — atributo ≤ 0). */
-  readonly maiorDado: number;
+  /** O dado escolhido: o **maior** do pool normalmente, ou o **menor** sob desvantagem (0 se vazio). */
+  readonly dadoEscolhido: number;
   /** Os demais dados do pool (descartados). */
   readonly descartados: readonly number[];
   /** Proficiência somada (nível; 0 para Civil). */
   readonly proficiencia: number;
   /** Soma dos bônus planos (atributos-modificador + constantes). */
   readonly bonusPlano: number;
-  /** `maiorDado + proficiencia + bonusPlano`. */
+  /**
+   * `true` quando o atributo é **≤ 0**: rola dados extras (0 → 2, −1 → 3, −2 → 4…) e pega o **menor**
+   * (desvantagem). Fonte: docs/core/sistema-v4.1.0.md — "Testes".
+   */
+  readonly desvantagem: boolean;
+  /** `dadoEscolhido + proficiencia + bonusPlano`. */
   readonly total: number;
 }
 

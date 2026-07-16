@@ -250,10 +250,11 @@ describe('modo TESTE — pegar o maior + proficiência (m3-19)', () => {
     );
     expect(resultado?.teste).toEqual({
       pool: [5, 18, 9],
-      maiorDado: 18,
+      dadoEscolhido: 18,
       descartados: [5, 9],
       proficiencia: 2,
       bonusPlano: 0,
+      desvantagem: false,
       total: 20,
     });
     expect(resultado?.total).toBe(20);
@@ -266,7 +267,7 @@ describe('modo TESTE — pegar o maior + proficiência (m3-19)', () => {
       { formula: 'luta', atributos, modo: RolagemModoEnum.TESTE, proficiencia: 2 },
       sequencia,
     );
-    expect(resultado?.teste?.maiorDado).toBe(18);
+    expect(resultado?.teste?.dadoEscolhido).toBe(18);
     expect(resultado?.total).toBe(20);
   });
 
@@ -288,7 +289,7 @@ describe('modo TESTE — pegar o maior + proficiência (m3-19)', () => {
       { formula: 'lutad20 + 2', atributos: comLutaDois, modo: RolagemModoEnum.TESTE, proficiencia: 1 },
       sequencia,
     );
-    expect(resultado?.teste?.maiorDado).toBe(15);
+    expect(resultado?.teste?.dadoEscolhido).toBe(15);
     expect(resultado?.teste?.bonusPlano).toBe(2);
     expect(resultado?.total).toBe(18); // 15 + 1 (prof) + 2
   });
@@ -297,6 +298,43 @@ describe('modo TESTE — pegar o maior + proficiência (m3-19)', () => {
     const resultado = rolarFormula({ formula: 'luta', atributos }, rolarMaximo);
     expect(resultado?.teste).toBeUndefined();
     expect(resultado?.total).toBe(3); // luta como modificador
+  });
+
+  it('atributo 0 → desvantagem: 2 dados, pega o menor', () => {
+    let n = 0;
+    const sequencia = (): number => [12, 5][n++]; // 2 D20
+    const semLuta: FichaAtributosDto = { ...atributos, luta: 0 };
+    const resultado = rolarFormula(
+      { formula: 'lutad20', atributos: semLuta, modo: RolagemModoEnum.TESTE, proficiencia: 2 },
+      sequencia,
+    );
+    expect(resultado?.teste?.pool).toEqual([12, 5]);
+    expect(resultado?.teste?.desvantagem).toBe(true);
+    expect(resultado?.teste?.dadoEscolhido).toBe(5); // o MENOR
+    expect(resultado?.teste?.descartados).toEqual([12]);
+    expect(resultado?.total).toBe(7); // 5 + 2 (prof)
+  });
+
+  it('atributo negativo aumenta o pool da desvantagem (−1 → 3, −2 → 4)', () => {
+    const seq = (valores: number[]): (() => number) => {
+      let n = 0;
+      return () => valores[n++];
+    };
+    const lutaMenosUm: FichaAtributosDto = { ...atributos, luta: -1 };
+    const r1 = rolarFormula(
+      { formula: 'lutad20', atributos: lutaMenosUm, modo: RolagemModoEnum.TESTE },
+      seq([10, 4, 15]),
+    );
+    expect(r1?.teste?.pool).toHaveLength(3);
+    expect(r1?.teste?.dadoEscolhido).toBe(4);
+
+    const lutaMenosDois: FichaAtributosDto = { ...atributos, luta: -2 };
+    const r2 = rolarFormula(
+      { formula: 'lutad20', atributos: lutaMenosDois, modo: RolagemModoEnum.TESTE },
+      seq([9, 2, 20, 7]),
+    );
+    expect(r2?.teste?.pool).toHaveLength(4);
+    expect(r2?.teste?.dadoEscolhido).toBe(2);
   });
 });
 

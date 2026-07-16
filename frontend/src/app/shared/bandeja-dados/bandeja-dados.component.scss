@@ -154,7 +154,7 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-control);
 
-    &--maior {
+    &--escolhido {
       color: var(--text);
       border-color: var(--accent-border);
       background: var(--accent-dim);
@@ -165,6 +165,13 @@
     font-family: var(--font-mono);
     font-size: 15px;
     color: var(--text-dim);
+  }
+
+  &__desvantagem {
+    color: var(--warning);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    font-size: 12px;
   }
 
   &__grupos {

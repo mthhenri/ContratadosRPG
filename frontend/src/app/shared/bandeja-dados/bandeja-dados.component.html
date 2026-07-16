@@ -31,18 +31,21 @@
                 <div class="bandeja__detalhe">
                   <div class="bandeja__pool">
                     @for (valor of teste.pool; track $index) {
-                      <span class="bandeja__dado" [class.bandeja__dado--maior]="valor === teste.maiorDado">
+                      <span class="bandeja__dado" [class.bandeja__dado--escolhido]="valor === teste.dadoEscolhido">
                         {{ valor }}
                       </span>
                     }
                   </div>
                   <span class="bandeja__legenda">
-                    maior {{ teste.maiorDado }}
+                    {{ teste.desvantagem ? 'menor' : 'maior' }} {{ teste.dadoEscolhido }}
                     @if (teste.proficiencia) {
                       <span> + prof {{ teste.proficiencia }}</span>
                     }
                     @if (teste.bonusPlano) {
                       <span> + {{ teste.bonusPlano }}</span>
+                    }
+                    @if (teste.desvantagem) {
+                      <span class="bandeja__desvantagem"> · desvantagem</span>
                     }
                   </span>
                 </div>

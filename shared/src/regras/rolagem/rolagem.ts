@@ -32,7 +32,8 @@ import type { FichaAtributosDto, FichaHabilidadeDto } from '../../dtos/ficha';
  * como **fonte de dados** (`FORd6`), atributo **escalado** (`FOR*3`, `LUT/2`, piso), combinados por
  * `+`/`−`, com **tags de tipo de dano** `[Tipo]`/`[TipoA-TipoB]` (Composto = soma 50/50, resto pro
  * primeiro). No modo `TESTE`, rola o pool e **pega o maior** + Proficiência (atributo puro = pool
- * `(Atr)`D20). `aplicarEfeitos` funde efeitos de habilidade (ex.: Força Bruta = FOR×3) numa fórmula
+ * `(Atr)`D20); atributo **≤ 0** vira **desvantagem** (0 → 2 dados, −1 → 3…, pega o **menor**).
+ * `aplicarEfeitos` funde efeitos de habilidade (ex.: Força Bruta = FOR×3) numa fórmula
  * interpretada; `rolarInterpretada` rola essa fórmula. Parênteses ainda não são suportados. Funções
  * puras; a **única brecha a `Math.random`** é a função de rolagem injetável `rolarDado` (SYSTEM.SPEC §6.6).
  *
@@ -302,20 +303,21 @@ function agruparDano(contribuicoes: readonly Contribuicao[]): GrupoDanoDto[] {
 }
 
 /**
- * Monta o resultado de um roll no modo `TESTE`: junta todos os dados num pool, **pega o maior**, e
- * soma **Proficiência** + os bônus planos (atributos-modificador e constantes). O tipo de dano é
- * ignorado num teste. Pool vazio (atributo ≤ 0) → maior 0.
+ * Monta o resultado de um roll no modo `TESTE`: junta todos os dados num pool e pega o **maior**
+ * (normal) ou o **menor** (sob `desvantagem`, atributo ≤ 0), somando **Proficiência** + os bônus
+ * planos (atributos-modificador e constantes). O tipo de dano é ignorado num teste. Pool vazio → 0.
  */
 function montarResultadoTeste(
   dados: readonly DadosRoladosDto[],
   atributos: readonly AtributoAplicadoDto[],
   formula: FormulaInterpretadaDto,
   proficienciaEntrada: number | null | undefined,
+  desvantagem: boolean,
 ): ResultadoRolagemDto {
   const pool = dados.flatMap((termo) => [...termo.valores]);
-  const maiorDado = pool.length > 0 ? Math.max(...pool) : 0;
-  const indiceMaior = pool.indexOf(maiorDado);
-  const descartados = pool.filter((_, indice) => indice !== indiceMaior);
+  const dadoEscolhido = pool.length > 0 ? (desvantagem ? Math.min(...pool) : Math.max(...pool)) : 0;
+  const indiceEscolhido = pool.indexOf(dadoEscolhido);
+  const descartados = pool.filter((_, indice) => indice !== indiceEscolhido);
 
   const proficiencia = proficienciaEntrada ?? 0;
   const bonusAtributos = atributos.reduce((acumulado, atributo) => acumulado + atributo.valor, 0);
@@ -323,9 +325,9 @@ function montarResultadoTeste(
     formula.constante +
     (formula.constantesTipadas ?? []).reduce((acumulado, termo) => acumulado + termo.sinal * termo.valor, 0);
   const bonusPlano = bonusAtributos + bonusConstantes;
-  const total = maiorDado + proficiencia + bonusPlano;
+  const total = dadoEscolhido + proficiencia + bonusPlano;
 
-  const teste: ResultadoTesteDto = { pool, maiorDado, descartados, proficiencia, bonusPlano, total };
+  const teste: ResultadoTesteDto = { pool, dadoEscolhido, descartados, proficiencia, bonusPlano, desvantagem, total };
   return { dados, atributos, constante: formula.constante, teste, total };
 }
 
@@ -355,10 +357,23 @@ export function rolarInterpretada(
   proficiencia?: number | null,
   rolarDado: RolarDado = rolarDadoPadrao,
 ): ResultadoRolagemDto {
+  const noTeste = modo === RolagemModoEnum.TESTE;
+  // Desvantagem (m3-22): num teste, atributo ≤ 0 rola dados extras (0 → 2, −1 → 3, −2 → 4…) e pega o menor.
+  let desvantagem = false;
+
   const dados: DadosRoladosDto[] = formula.dados.map((termo) => {
-    const quantidade = termo.quantidadeAtributo
-      ? Math.max(0, Math.min(QUANTIDADE_DADOS_MAXIMA, atributos[termo.quantidadeAtributo] ?? 0))
-      : termo.quantidade;
+    let quantidade: number;
+    if (termo.quantidadeAtributo) {
+      const valorAtributo = atributos[termo.quantidadeAtributo] ?? 0;
+      if (noTeste && valorAtributo <= 0) {
+        desvantagem = true;
+        quantidade = Math.min(QUANTIDADE_DADOS_MAXIMA, 2 - valorAtributo);
+      } else {
+        quantidade = Math.max(0, Math.min(QUANTIDADE_DADOS_MAXIMA, valorAtributo));
+      }
+    } else {
+      quantidade = termo.quantidade;
+    }
     const valores = Array.from({ length: quantidade }, () => rolarDado(termo.faces));
     const soma = valores.reduce((acumulado, valor) => acumulado + valor, 0);
     return {
@@ -380,8 +395,8 @@ export function rolarInterpretada(
     };
   });
 
-  if (modo === RolagemModoEnum.TESTE) {
-    return montarResultadoTeste(dados, atributosAplicados, formula, proficiencia);
+  if (noTeste) {
+    return montarResultadoTeste(dados, atributosAplicados, formula, proficiencia, desvantagem);
   }
 
   const contribuicoes: Contribuicao[] = [
