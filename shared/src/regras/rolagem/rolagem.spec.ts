@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { FichaAtributosDto } from '../../dtos/ficha';
-import { TipoDanoEnum } from '../../enums';
+import { RolagemModoEnum, TipoDanoEnum } from '../../enums';
 import { interpretarFormula, rolarFormula, validarFormula } from './rolagem';
 
 /**
@@ -210,5 +210,77 @@ describe('dano tipado e Composto (m3-18)', () => {
   it('TipoDanoEnum tem os valores de exibição do documento', () => {
     expect(TipoDanoEnum.FISICO).toBe('Físico');
     expect(TipoDanoEnum.BALISTICO).toBe('Balístico');
+  });
+});
+
+describe('modo TESTE — pegar o maior + proficiência (m3-19)', () => {
+  it('açúcar: atributo puro vira o pool `(Atributo)`D20 no modo TESTE', () => {
+    const formula = interpretarFormula('luta', RolagemModoEnum.TESTE).formula;
+    expect(formula?.dados).toEqual([{ sinal: 1, quantidade: 1, quantidadeAtributo: 'luta', faces: 20 }]);
+    expect(formula?.atributos).toEqual([]);
+  });
+
+  it('sem TESTE, o atributo puro continua modificador (regressão)', () => {
+    const formula = interpretarFormula('luta').formula;
+    expect(formula?.atributos).toEqual([{ sinal: 1, atributo: 'luta', rotulo: 'LUTA' }]);
+    expect(formula?.dados).toEqual([]);
+  });
+
+  it('pega o maior dado do pool e soma a Proficiência', () => {
+    let n = 0;
+    const sequencia = (): number => [5, 18, 9][n++]; // luta=3 → 3 D20
+    const resultado = rolarFormula(
+      { formula: 'lutad20', atributos, modo: RolagemModoEnum.TESTE, proficiencia: 2 },
+      sequencia,
+    );
+    expect(resultado?.teste).toEqual({
+      pool: [5, 18, 9],
+      maiorDado: 18,
+      descartados: [5, 9],
+      proficiencia: 2,
+      bonusPlano: 0,
+      total: 20,
+    });
+    expect(resultado?.total).toBe(20);
+  });
+
+  it('o açúcar `luta` rola igual a `lutad20`', () => {
+    let n = 0;
+    const sequencia = (): number => [5, 18, 9][n++];
+    const resultado = rolarFormula(
+      { formula: 'luta', atributos, modo: RolagemModoEnum.TESTE, proficiencia: 2 },
+      sequencia,
+    );
+    expect(resultado?.teste?.maiorDado).toBe(18);
+    expect(resultado?.total).toBe(20);
+  });
+
+  it('Proficiência nula (Civil) conta como 0', () => {
+    // luta=3 → 3 D20, todos no máximo (20) → maior 20.
+    const resultado = rolarFormula(
+      { formula: 'lutad20', atributos, modo: RolagemModoEnum.TESTE, proficiencia: null },
+      rolarMaximo,
+    );
+    expect(resultado?.teste?.proficiencia).toBe(0);
+    expect(resultado?.total).toBe(20);
+  });
+
+  it('soma bônus plano (constante) ao teste', () => {
+    let n = 0;
+    const sequencia = (): number => [10, 15][n++]; // luta=2 → 2 D20
+    const comLutaDois: FichaAtributosDto = { ...atributos, luta: 2 };
+    const resultado = rolarFormula(
+      { formula: 'lutad20 + 2', atributos: comLutaDois, modo: RolagemModoEnum.TESTE, proficiencia: 1 },
+      sequencia,
+    );
+    expect(resultado?.teste?.maiorDado).toBe(15);
+    expect(resultado?.teste?.bonusPlano).toBe(2);
+    expect(resultado?.total).toBe(18); // 15 + 1 (prof) + 2
+  });
+
+  it('modo SOMA não produz `teste` (regressão)', () => {
+    const resultado = rolarFormula({ formula: 'luta', atributos }, rolarMaximo);
+    expect(resultado?.teste).toBeUndefined();
+    expect(resultado?.total).toBe(3); // luta como modificador
   });
 });

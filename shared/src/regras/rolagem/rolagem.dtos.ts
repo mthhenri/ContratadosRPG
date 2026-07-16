@@ -1,5 +1,5 @@
 import type { FichaAtributosDto } from '../../dtos/ficha';
-import type { TipoDanoEnum } from '../../enums';
+import type { RolagemModoEnum, TipoDanoEnum } from '../../enums';
 
 /**
  * DTOs do motor de rolagem (m3-15; dano tipado m3-18): interpretação de uma fórmula de dados
@@ -73,10 +73,14 @@ export interface InterpretacaoFormulaDto {
 
 // ── Entrada e resultado da rolagem ───────────────────────────────────────────
 
-/** Entrada de `rolarFormula`/`validarFormula`: a fórmula (texto) e os atributos da ficha. */
+/** Entrada de `rolarFormula`/`validarFormula`: a fórmula (texto), os atributos e (opcional) o modo. */
 export interface RolagemDto {
   readonly formula: string;
   readonly atributos: FichaAtributosDto;
+  /** Modo do roll (m3-19). Ausente = `SOMA` (legado). */
+  readonly modo?: RolagemModoEnum;
+  /** Proficiência somada no modo `TESTE` (m3-19). `null`/ausente (Civil) = 0. */
+  readonly proficiencia?: number | null;
 }
 
 /** Dados rolados de um termo (ex.: `2D6` → `[4, 1]`), já com o sinal aplicado no subtotal. */
@@ -109,12 +113,30 @@ export interface GrupoDanoDto {
   readonly composto?: boolean;
 }
 
+/** Detalhe de um roll no modo `TESTE` (m3-19): o pool de dados, o maior escolhido e o que somou. */
+export interface ResultadoTesteDto {
+  /** Todos os valores rolados (o pool de D20). */
+  readonly pool: readonly number[];
+  /** O maior dado do pool (0 se o pool for vazio — atributo ≤ 0). */
+  readonly maiorDado: number;
+  /** Os demais dados do pool (descartados). */
+  readonly descartados: readonly number[];
+  /** Proficiência somada (nível; 0 para Civil). */
+  readonly proficiencia: number;
+  /** Soma dos bônus planos (atributos-modificador + constantes). */
+  readonly bonusPlano: number;
+  /** `maiorDado + proficiencia + bonusPlano`. */
+  readonly total: number;
+}
+
 /** Resultado de uma rolagem: dados rolados, atributos aplicados, constante, grupos por tipo e o total. */
 export interface ResultadoRolagemDto {
   readonly dados: readonly DadosRoladosDto[];
   readonly atributos: readonly AtributoAplicadoDto[];
   readonly constante: number;
-  /** Totais por tipo de dano (m3-18); presente só quando a fórmula usa tags `[Tipo]`. */
+  /** Totais por tipo de dano (m3-18); presente só quando a fórmula usa tags `[Tipo]` (modo `SOMA`). */
   readonly grupos?: readonly GrupoDanoDto[];
+  /** Detalhe do teste (m3-19); presente só no modo `TESTE`. Quando presente, `total` = `teste.total`. */
+  readonly teste?: ResultadoTesteDto;
   readonly total: number;
 }

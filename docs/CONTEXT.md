@@ -1439,12 +1439,21 @@ Composto pela **soma do segmento** (resto pro primeiro). DTOs aditivos (`tipoDan
 termos e resultados, `constantesTipadas?`, `GrupoDanoDto`). **Sem tags = idêntico ao legado** (sem
 `grupos`). Shared **231/231** (9 novos casos). Spec em `done/`.
 
-**Próxima task:** `m3-19` — **modo TESTE** (`RolagemModoEnum`): rolar `(Atributo)`D20 e **pegar o
-maior**, somar **Proficiência** (nível) e amplificadores; `ResultadoTesteDto` (maior + descartados);
-açúcar `luta` = `lutad20`. Depois `m3-20` (efeitos de habilidade), `m3-21` (presets + runner
-encadeado), `m3-22` (frontend). Em seguida o backlog anterior: `m3-23`→`m3-25` (**Identidade**),
-`m3-09` (**mobile**), `m3-26` (**espaço** da ficha). **Antes de qualquer UI, ler `docs/design/DESIGN.md`
-e consumir os tokens de `docs/design/tema/`** (proibição #29).
+**m3-19 concluída** — **modo TESTE** no motor. Novo `RolagemModoEnum` (`TESTE|SOMA`; ausente =
+`SOMA` legado). `RolagemDto` += `modo?`/`proficiencia?`. `interpretarFormula`/`validarFormula`
+recebem `modo`; **açúcar do teste**: atributo puro (`luta`) vira o pool `(Atributo)`D20 no TESTE.
+`rolarFormula` no TESTE → `montarResultadoTeste`: junta o pool, **pega o maior** (`Math.max`), separa
+`descartados`, e `total = maiorDado + Proficiência (null=0) + bônus plano`. Novo `ResultadoTesteDto`;
+`ResultadoRolagemDto` += `teste?` (presença sinaliza o modo — optei por não duplicar um campo `modo`).
+Shared **238/238** (7 novos casos). Spec em `done/`.
+
+**Próxima task:** `m3-20` — **efeitos estruturados de habilidade**: `RolagemEfeitoTipoEnum`
+(`DANO_FIXO`/`DANO_DADOS`/`DANO_ATRIBUTO`/`BONUS_TESTE`/`ELEVAR_DADO`) + `RolagemEfeitoDto` (espelha
+`ModificacaoEfeitoDto`), `FichaHabilidadeDto.efeitos?`, semear catálogo (Força Bruta = FOR×3 físico),
+e `aplicarEfeitos(formula, efeitos)`. Depois `m3-21` (presets + runner encadeado), `m3-22` (frontend).
+Em seguida o backlog anterior: `m3-23`→`m3-25` (**Identidade**), `m3-09` (**mobile**), `m3-26`
+(**espaço** da ficha). **Antes de qualquer UI, ler `docs/design/DESIGN.md` e consumir os tokens de
+`docs/design/tema/`** (proibição #29).
 
 **`M3` — Ficha de Jogador** (CRUD + cálculo automático via `shared/regras` + permissões +
 tempo real): o milestone já foi quebrado em tasks numeradas (`m3-01`…`m3-09`, specs no backlog).

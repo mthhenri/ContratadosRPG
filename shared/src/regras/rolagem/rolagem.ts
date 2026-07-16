@@ -7,21 +7,23 @@ import {
   InterpretacaoFormulaDto,
   ParTipoDano,
   ResultadoRolagemDto,
+  ResultadoTesteDto,
   RolagemDto,
   TermoAtributoDto,
   TermoConstanteDto,
   TermoDadoDto,
 } from './rolagem.dtos';
-import { TipoDanoEnum } from '../../enums';
+import { RolagemModoEnum, TipoDanoEnum } from '../../enums';
 import type { FichaAtributosDto } from '../../dtos/ficha';
 
 /**
- * Motor de rolagem de dados (m3-15; gramática v2 m3-16; dano tipado m3-18): interpreta e rola uma
- * fórmula de preset — `NdM`, constantes, atributo (`+LUT`), atributo como **fonte de dados** (`FORd6`),
- * atributo **escalado** (`FOR*3`, `LUT/2`, piso), combinados por `+`/`−`, com **tags de tipo de dano**
- * `[Tipo]`/`[TipoA-TipoB]` (Composto = soma dividida 50/50, resto pro primeiro). Parênteses ainda não
- * são suportados. Funções puras; a **única brecha a `Math.random`** é a função de rolagem injetável
- * `rolarDado` (SYSTEM.SPEC §6.6), com padrão de produção.
+ * Motor de rolagem de dados (m3-15; gramática v2 m3-16; dano tipado m3-18; modo TESTE m3-19):
+ * interpreta e rola uma fórmula — `NdM`, constantes, atributo (`+LUT`), atributo como **fonte de
+ * dados** (`FORd6`), atributo **escalado** (`FOR*3`, `LUT/2`, piso), combinados por `+`/`−`, com
+ * **tags de tipo de dano** `[Tipo]`/`[TipoA-TipoB]` (Composto = soma 50/50, resto pro primeiro).
+ * No modo `TESTE`, rola o pool e **pega o maior** + Proficiência (atributo puro = pool `(Atr)`D20).
+ * Parênteses ainda não são suportados. Funções puras; a **única brecha a `Math.random`** é a função
+ * de rolagem injetável `rolarDado` (SYSTEM.SPEC §6.6), com padrão de produção.
  *
  * Fonte: docs/core/sistema-v4.1.0.md — "Atributos"/"Testes"/"Tipos de Dano".
  */
@@ -82,6 +84,7 @@ function interpretarSegmento(
   expr: string,
   destino: DestinoDano,
   acc: AcumuladoresFormula,
+  modo: RolagemModoEnum | undefined,
 ): { readonly constante: number; readonly erro?: string } {
   const tipado = destino.tipoDano !== undefined || destino.composto !== undefined;
   const normalizada = /^[+-]/.test(expr) ? expr : `+${expr}`;
@@ -157,10 +160,14 @@ function interpretarSegmento(
       continue;
     }
 
-    // Atributo modificador (`+LUT`, `-forca`).
+    // Atributo modificador (`+LUT`, `-forca`) — no modo TESTE vira o pool `(Atributo)`D20 (açúcar).
     const atributo = resolverAtributo(corpo);
     if (atributo) {
-      acc.atributos.push({ sinal, atributo, rotulo: corpo.toUpperCase(), ...destino });
+      if (modo === RolagemModoEnum.TESTE) {
+        acc.dados.push({ sinal, quantidade: 1, quantidadeAtributo: atributo, faces: 20, ...destino });
+      } else {
+        acc.atributos.push({ sinal, atributo, rotulo: corpo.toUpperCase(), ...destino });
+      }
       continue;
     }
     return { constante, erro: `Termo desconhecido "${corpo}".` };
@@ -174,8 +181,9 @@ function interpretarSegmento(
  * como antes (um único total). Com tags, cada segmento (`termos [Tipo]`) estampa seus termos; um
  * trecho sem tag numa fórmula tipada assume **Físico**. Devolve `{ valida: false, erro }` para fórmula
  * vazia, parênteses, tag/termo inválido ou dado acima do teto — nunca lança (a UI trata como aviso).
+ * No modo `TESTE`, um atributo puro é o pool `(Atributo)`D20 (açúcar `luta` = `lutad20`).
  */
-export function interpretarFormula(formulaTexto: string): InterpretacaoFormulaDto {
+export function interpretarFormula(formulaTexto: string, modo?: RolagemModoEnum): InterpretacaoFormulaDto {
   const texto = (formulaTexto ?? '').replace(/\s+/g, '');
   if (!texto) {
     return { valida: false, erro: 'Fórmula vazia.' };
@@ -188,7 +196,7 @@ export function interpretarFormula(formulaTexto: string): InterpretacaoFormulaDt
   let constante = 0;
 
   if (!texto.includes('[')) {
-    const { constante: parcial, erro } = interpretarSegmento(texto, {}, acc);
+    const { constante: parcial, erro } = interpretarSegmento(texto, {}, acc, modo);
     if (erro) {
       return { valida: false, erro };
     }
@@ -215,7 +223,7 @@ export function interpretarFormula(formulaTexto: string): InterpretacaoFormulaDt
         }
         destino = resolvido;
       }
-      const { erro } = interpretarSegmento(expr, destino, acc);
+      const { erro } = interpretarSegmento(expr, destino, acc, modo);
       if (erro) {
         return { valida: false, erro };
       }
@@ -239,8 +247,8 @@ export function interpretarFormula(formulaTexto: string): InterpretacaoFormulaDt
 }
 
 /** `true` se a fórmula é interpretável. Espelha `interpretarFormula(...).valida`. */
-export function validarFormula(formulaTexto: string): boolean {
-  return interpretarFormula(formulaTexto).valida;
+export function validarFormula(formulaTexto: string, modo?: RolagemModoEnum): boolean {
+  return interpretarFormula(formulaTexto, modo).valida;
 }
 
 /** Uma contribuição de valor já rolado/aplicado, com seu destino de tipo de dano (ou nenhum). */
@@ -283,13 +291,41 @@ function agruparDano(contribuicoes: readonly Contribuicao[]): GrupoDanoDto[] {
 }
 
 /**
+ * Monta o resultado de um roll no modo `TESTE`: junta todos os dados num pool, **pega o maior**, e
+ * soma **Proficiência** + os bônus planos (atributos-modificador e constantes). O tipo de dano é
+ * ignorado num teste. Pool vazio (atributo ≤ 0) → maior 0.
+ */
+function montarResultadoTeste(
+  dados: readonly DadosRoladosDto[],
+  atributos: readonly AtributoAplicadoDto[],
+  formula: FormulaInterpretadaDto,
+  proficienciaEntrada: number | null | undefined,
+): ResultadoRolagemDto {
+  const pool = dados.flatMap((termo) => [...termo.valores]);
+  const maiorDado = pool.length > 0 ? Math.max(...pool) : 0;
+  const indiceMaior = pool.indexOf(maiorDado);
+  const descartados = pool.filter((_, indice) => indice !== indiceMaior);
+
+  const proficiencia = proficienciaEntrada ?? 0;
+  const bonusAtributos = atributos.reduce((acumulado, atributo) => acumulado + atributo.valor, 0);
+  const bonusConstantes =
+    formula.constante +
+    (formula.constantesTipadas ?? []).reduce((acumulado, termo) => acumulado + termo.sinal * termo.valor, 0);
+  const bonusPlano = bonusAtributos + bonusConstantes;
+  const total = maiorDado + proficiencia + bonusPlano;
+
+  const teste: ResultadoTesteDto = { pool, maiorDado, descartados, proficiencia, bonusPlano, total };
+  return { dados, atributos, constante: formula.constante, teste, total };
+}
+
+/**
  * Rola a fórmula com os atributos da ficha: rola cada termo de dado (via `rolarDado`), aplica os
- * atributos (com escalonamento) e a constante, e agrupa por tipo de dano quando há tags. Devolve o
- * detalhamento + `grupos` (se tipada) + o total. Fórmula inválida devolve `null` (a UI valida antes).
- * Determinístico quando `rolarDado` é injetado (testes).
+ * atributos (com escalonamento) e a constante. No modo `TESTE` pega o maior dado + Proficiência; no
+ * modo `SOMA` soma e agrupa por tipo de dano quando há tags. Devolve o detalhamento + `grupos`/`teste`
+ * + o total. Fórmula inválida devolve `null` (a UI valida antes). Determinístico quando `rolarDado` é injetado.
  */
 export function rolarFormula(dto: RolagemDto, rolarDado: RolarDado = rolarDadoPadrao): ResultadoRolagemDto | null {
-  const interpretacao = interpretarFormula(dto.formula);
+  const interpretacao = interpretarFormula(dto.formula, dto.modo);
   if (!interpretacao.valida || !interpretacao.formula) {
     return null;
   }
@@ -319,6 +355,10 @@ export function rolarFormula(dto: RolagemDto, rolarDado: RolarDado = rolarDadoPa
       ...(termo.composto ? { composto: termo.composto } : termo.tipoDano ? { tipoDano: termo.tipoDano } : {}),
     };
   });
+
+  if (dto.modo === RolagemModoEnum.TESTE) {
+    return montarResultadoTeste(dados, atributos, formula, dto.proficiencia);
+  }
 
   const contribuicoes: Contribuicao[] = [
     ...dados.map((termo) => ({ valor: termo.subtotal, tipoDano: termo.tipoDano, composto: termo.composto })),
