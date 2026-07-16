@@ -6,7 +6,12 @@
         [style.transform]="'translateX(-50%) translateX(' + deslocamento() + 'px)'"
       >
         @for (entrada of bandeja.entradas(); track entrada.id) {
-          <article class="bandeja__carta" [style.opacity]="entrada.saindo ? 0 : opacidade($index)">
+          <article
+            class="bandeja__carta"
+            [style.opacity]="entrada.saindo ? 0 : opacidade($index)"
+            (mouseenter)="bandeja.pausar(entrada.id)"
+            (mouseleave)="bandeja.retomar(entrada.id)"
+          >
             <header class="bandeja__cabecalho">
               <span class="bandeja__rotulo">{{ entrada.rotulo }}</span>
               <button
@@ -49,6 +54,8 @@
                 </div>
               }
             </div>
+
+            <span class="bandeja__barra" aria-hidden="true"></span>
           </article>
         }
       </div>

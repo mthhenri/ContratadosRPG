@@ -32,6 +32,11 @@ export interface EntradaBandeja {
 export class BandejaDadosService {
   private contador = 0;
   private readonly _entradas = signal<readonly EntradaBandeja[]>([]);
+  /** Handles dos timers de auto-sumir por id (limpos/reiniciados no hover). */
+  private readonly timers = new Map<number, ReturnType<typeof setTimeout>>();
+
+  /** Quanto tempo (ms) cada rolagem fica antes de sumir — casa com a duração da barra no SCSS. */
+  readonly duracaoMs = DURACAO_MS;
 
   /** Rolagens recentes, da mais nova para a mais antiga (teto {@link LIMITE_ENTRADAS}). */
   readonly entradas = this._entradas.asReadonly();
@@ -42,7 +47,52 @@ export class BandejaDadosService {
     const id = this.contador;
     const nova: EntradaBandeja = { id, saindo: false, ...entrada };
     this._entradas.update((atuais) => [nova, ...atuais].slice(0, LIMITE_ENTRADAS));
-    setTimeout(() => this.iniciarSaida(id), DURACAO_MS);
+    this.agendar(id);
+  }
+
+  /** Pausa o auto-sumir (mouse sobre a carta) — a barra de tempo congela cheia via `:hover` no SCSS. */
+  pausar(id: number): void {
+    this.cancelarTimer(id);
+  }
+
+  /** Ao sair o mouse, reinicia o auto-sumir **do tempo cheio** (se a carta ainda existe e não está saindo). */
+  retomar(id: number): void {
+    if (this._entradas().some((entrada) => entrada.id === id && !entrada.saindo)) {
+      this.agendar(id);
+    }
+  }
+
+  /** Remove uma entrada específica (o × da carta ou o fim do auto-sumir). */
+  fechar(id: number): void {
+    this.cancelarTimer(id);
+    this._entradas.update((atuais) => atuais.filter((entrada) => entrada.id !== id));
+  }
+
+  /** Esvazia a bandeja. */
+  limpar(): void {
+    this.timers.forEach((handle) => clearTimeout(handle));
+    this.timers.clear();
+    this._entradas.set([]);
+  }
+
+  /** (Re)agenda o auto-sumir da entrada a partir de agora (tempo cheio). */
+  private agendar(id: number): void {
+    this.cancelarTimer(id);
+    this.timers.set(
+      id,
+      setTimeout(() => {
+        this.timers.delete(id);
+        this.iniciarSaida(id);
+      }, DURACAO_MS),
+    );
+  }
+
+  private cancelarTimer(id: number): void {
+    const handle = this.timers.get(id);
+    if (handle !== undefined) {
+      clearTimeout(handle);
+      this.timers.delete(id);
+    }
   }
 
   /** Marca a entrada como saindo (dispara o fade) e a remove após a transição. */
@@ -51,15 +101,5 @@ export class BandejaDadosService {
       atuais.map((entrada) => (entrada.id === id ? { ...entrada, saindo: true } : entrada)),
     );
     setTimeout(() => this.fechar(id), FADE_MS);
-  }
-
-  /** Remove uma entrada específica (o × da carta ou o fim do auto-sumir). */
-  fechar(id: number): void {
-    this._entradas.update((atuais) => atuais.filter((entrada) => entrada.id !== id));
-  }
-
-  /** Esvazia a bandeja. */
-  limpar(): void {
-    this._entradas.set([]);
   }
 }

@@ -15,6 +15,16 @@
   }
 }
 
+@keyframes bandeja-esvazia {
+  from {
+    transform: scaleX(1);
+  }
+
+  to {
+    transform: scaleX(0);
+  }
+}
+
 .bandeja {
   position: fixed;
   left: 0;
@@ -45,6 +55,8 @@
   }
 
   &__carta {
+    position: relative; // ancora a barra de tempo no rodapé
+    overflow: hidden; // a barra respeita o raio da carta
     pointer-events: auto;
     box-sizing: border-box; // largura total = 320 (casa com LARGURA_CARTA da centralização)
     flex: 0 0 320px;
@@ -56,6 +68,23 @@
     box-shadow: 0 12px 30px rgb(0 0 0 / 42%);
     animation: bandeja-entra 0.22s ease;
     transition: opacity 0.4s ease;
+  }
+
+  // Barra de tempo no rodapé: esvazia em 7s (casa com duracaoMs); no hover volta cheia e pausa.
+  &__barra {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: var(--accent);
+    transform-origin: left;
+    animation: bandeja-esvazia 7s linear forwards;
+  }
+
+  &__carta:hover &__barra {
+    animation: none; // pausa
+    transform: scaleX(1); // e volta ao máximo
   }
 
   &__cabecalho {
