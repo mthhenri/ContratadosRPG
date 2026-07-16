@@ -1,6 +1,6 @@
-# m3-21-otimizacao-espaco-ficha.spec.md
+# m3-26-otimizacao-espaco-ficha.spec.md
 
-> Extensão do milestone `m3-ficha-jogador.spec.md` — task `m3-21`.
+> Extensão do milestone `m3-ficha-jogador.spec.md` — task `m3-26`.
 > **Incorpora e supersede a `m3-09-refinamento-mobile-ficha`** (o passe mobile vira parte deste
 > redesenho desktop+mobile único; ver banner no topo da m3-09).
 

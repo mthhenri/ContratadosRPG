@@ -1,7 +1,7 @@
-# m3-18-contrato-motor-identidade.spec.md
+# m3-23-contrato-motor-identidade.spec.md
 
-> Task 18 do milestone `m3-ficha-jogador.spec.md`. Primeira das três da **Identidade**
-> (`m3-18` contrato+motor → `m3-19` backend → `m3-20` frontend).
+> Task 23 do milestone `m3-ficha-jogador.spec.md`. Primeira das três da **Identidade**
+> (`m3-23` contrato+motor → `m3-24` backend → `m3-25` frontend).
 
 > **Regras de jogo:** `docs/core/sistema-v4.1.0.md` §⬡ Identidade (Personalidade, Fortificação de
 > Traços, Origem: Formação/Especialidade/Saber de Campo). **O documento vence** (proibição #27).
@@ -141,8 +141,8 @@ do contrato". Registrar que o `bonus: null` é o escape autorizado pelo document
 
 ## Fora de Escopo
 
-- Validação e trava de imutabilidade (`m3-19`).
-- Qualquer UI (`m3-20`).
+- Validação e trava de imutabilidade (`m3-24`).
+- Qualquer UI (`m3-25`).
 - Criar os campos que faltam (resistências, Sobrecarga, Iniciativa, DT de reparo) e o motor de
   rolagem que consumiria os modificadores — os 16 efeitos ficam **modelados e sem consumidor**.
 - Fortificação de Traços como estrutura própria: é a habilidade de Personalidade sendo reescrita.

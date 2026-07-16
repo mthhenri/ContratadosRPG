@@ -1,7 +1,7 @@
-# m3-20-frontend-identidade.spec.md
+# m3-25-frontend-identidade.spec.md
 
-> Task 20 do milestone `m3-ficha-jogador.spec.md`. Terceira das três da **Identidade**
-> (`m3-18` contrato+motor → `m3-19` backend → `m3-20` frontend).
+> Task 25 do milestone `m3-ficha-jogador.spec.md`. Terceira das três da **Identidade**
+> (`m3-23` contrato+motor → `m3-24` backend → `m3-25` frontend).
 
 > **Antes de qualquer UI:** ler `docs/design/DESIGN.md` e consumir os tokens do tema
 > "Terminal de Contenção" (`docs/design/tema/`). Nada de hex/fonte/raio solto (proibição #29).
@@ -29,7 +29,7 @@ momento em que a Origem é definida.
 
 3. **Origem:** `nome`, `descricao`, `saberDeCampo` (textos), `especialidade` (frase do gatilho +
    `<select>` do efeito) e **Formação (exatamente 2)**:
-   - `<select>` com as 21 linhas de `FORMACOES` (m3-18), agrupadas por Combate / Movimento /
+   - `<select>` com as 21 linhas de `FORMACOES` (m3-23), agrupadas por Combate / Movimento /
      Perícia / Equipamento / Logística;
    - quando a linha exige parâmetro (`ATRIBUTO`, `CATEGORIA_ARMA`, `TIPO_DANO`,
      `ESQUIVA_OU_BLOQUEIO`, `CONDICAO`), aparece o controle do parâmetro;
@@ -37,7 +37,7 @@ momento em que a Origem é definida.
      que o documento autoriza.
 
 4. **Delta de Formação nos derivados:** ao definir (ou o mestre trocar) a Origem, chamar
-   `aplicarFormacaoAosDerivados` (m3-18) — **remove o delta da Origem anterior e soma o da nova**,
+   `aplicarFormacaoAosDerivados` (m3-23) — **remove o delta da Origem anterior e soma o da nova**,
    exatamente como `ajustarClasse` já faz com o bônus de arquétipo. Nenhuma fórmula no componente
    (proibições #26/#27).
 
@@ -46,7 +46,7 @@ momento em que a Origem é definida.
    Sobrecarga, Iniciativa, DT de reparo, modificadores de rolagem). Não inventar campo para eles —
    quem os consome são tasks futuras.
 
-6. **Trava de imutabilidade refletida** (o backend é o árbitro — `m3-19`; o front só apresenta): para
+6. **Trava de imutabilidade refletida** (o backend é o árbitro — `m3-24`; o front só apresenta): para
    o **dono**, Personalidade e Origem **já definidas** aparecem somente-leitura, com o motivo
    explicado. Para o **mestre**, tudo editável. Definir pela primeira vez é liberado a ambos.
 
@@ -69,6 +69,6 @@ momento em que a Origem é definida.
 
 ## Dependências
 
-- `m3-18` (contrato + `FORMACOES` + `aplicarFormacaoAosDerivados` + `listarEfeitosPendentes`).
-- `m3-19` (validação e trava — o backend arbitra).
+- `m3-23` (contrato + `FORMACOES` + `aplicarFormacaoAosDerivados` + `listarEfeitosPendentes`).
+- `m3-24` (validação e trava — o backend arbitra).
 - `m3-11` (aba Identidade, onde o card mora). **Bloqueante:** não puxar antes.

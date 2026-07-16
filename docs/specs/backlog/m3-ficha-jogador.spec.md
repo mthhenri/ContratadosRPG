@@ -21,13 +21,13 @@
 > mesclado com a edição local em vez de descartado — fechava uma perda de dados silenciosa.
 >
 > **Identidade — pacote de três tasks** (`sistema-v4.1.0.md` §⬡ Identidade), hoje **fora do contrato**
-> (`SCHEMA.md`): `m3-18` (contrato `FichaIdentidadeDto` + motor `shared/regras/identidade` com as 21
-> linhas da tabela de Formação), `m3-19` (backend: validação de forma + imutabilidade — trava para o
-> dono, mestre passa) e `m3-20` (frontend, **aguardando a aba Identidade da `m3-11`**). Personalidade
+> (`SCHEMA.md`): `m3-23` (contrato `FichaIdentidadeDto` + motor `shared/regras/identidade` com as 21
+> linhas da tabela de Formação), `m3-24` (backend: validação de forma + imutabilidade — trava para o
+> dono, mestre passa) e `m3-25` (frontend, **aguardando a aba Identidade da `m3-11`**). Personalidade
 > é a palavra; a **habilidade** de Personalidade já tem casa em `habilidades[]`
 > (`HabilidadeCategoriaEnum.PERSONALIDADE`, m3-01) e as Fortificações (níveis 7/14) são o Mestre
 > reescrevendo-a. Só **5 das 21** linhas de Formação têm campo na ficha hoje; as outras 16 nascem
-> modeladas e **sem consumidor**, por decisão do autor — ver o aviso na `m3-18`.
+> modeladas e **sem consumidor**, por decisão do autor — ver o aviso na `m3-23`.
 
 ## Objetivo
 

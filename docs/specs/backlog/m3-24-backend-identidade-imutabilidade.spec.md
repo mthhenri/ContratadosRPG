@@ -1,7 +1,7 @@
-# m3-19-backend-identidade-imutabilidade.spec.md
+# m3-24-backend-identidade-imutabilidade.spec.md
 
-> Task 19 do milestone `m3-ficha-jogador.spec.md`. Segunda das três da **Identidade**
-> (`m3-18` contrato+motor → `m3-19` backend → `m3-20` frontend).
+> Task 24 do milestone `m3-ficha-jogador.spec.md`. Segunda das três da **Identidade**
+> (`m3-23` contrato+motor → `m3-24` backend → `m3-25` frontend).
 
 > **Regras de jogo:** `docs/core/sistema-v4.1.0.md` §⬡ Identidade. **O documento vence**
 > (proibição #27).
@@ -29,7 +29,7 @@ e a regra de **Maestria**. A Identidade entra nessa camada 1 — forma, não fai
 - `FichaFormacaoDto.texto` é obrigatório sempre — inclusive no bônus custom (`bonus: null`).
 - `especialidade.efeito` precisa existir em `EspecialidadeEfeitoEnum`.
 
-Reusa o catálogo de `shared/regras/identidade` (m3-18). **Nenhuma regra reimplementada no backend**
+Reusa o catálogo de `shared/regras/identidade` (m3-23). **Nenhuma regra reimplementada no backend**
 (proibições #26/#28).
 
 ### 2. Imutabilidade em `FichaService.alterarFicha`
@@ -57,13 +57,13 @@ A regra vive na **service**, único árbitro (§14, proibição #28). O papel na
 - Travar uma não trava a outra.
 - Forma inválida (personalidade com duas palavras, `formacao` com 1 ou 3 entradas, `bonus` fora do
   enum, parâmetro faltando onde a definição exige) → `BusinessException`.
-- Ficha **sem** `identidade` (anterior à m3-18) continua sendo aceita e alterada normalmente.
+- Ficha **sem** `identidade` (anterior à m3-23) continua sendo aceita e alterada normalmente.
 - Testes de service cobrindo cada linha acima; verificação ao vivo contra o Postgres, no padrão das
   m3-03/m3-04 (a receita está em `.claude/skills/verify/SKILL.md`).
 
 ## Fora de Escopo
 
-- Qualquer UI (`m3-20`).
+- Qualquer UI (`m3-25`).
 - Aplicar o delta de Formação aos derivados: quem aplica é quem edita (o front, no padrão de
   `ajustarClasse`); o backend só valida forma. **Não** recalcular derivados no backend — a m3-10
   inverteu esse princípio ("o motor não recalcula sobre as edições").
@@ -74,5 +74,5 @@ A regra vive na **service**, único árbitro (§14, proibição #28). O papel na
 
 ## Dependências
 
-- `m3-18` (contrato `FichaIdentidadeDto` e catálogo `FORMACOES`).
+- `m3-23` (contrato `FichaIdentidadeDto` e catálogo `FORMACOES`).
 - `m3-03` (CRUD da ficha, `validarDadosContraRegras`, `validarPermissaoEdicao`).
