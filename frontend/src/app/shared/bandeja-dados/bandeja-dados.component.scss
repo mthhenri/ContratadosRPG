@@ -17,26 +17,38 @@
 
 .bandeja {
   position: fixed;
-  left: 50%;
+  left: 0;
+  right: 0;
   bottom: 20px;
-  transform: translateX(-50%);
   z-index: 50;
-  max-width: 96vw;
-  overflow: hidden;
+  overflow-x: clip; // corta o histórico que sai pela esquerda — sem scroll horizontal da página
+  overflow-y: visible; // preserva a sombra das cartas (clip permite o eixo perpendicular visível)
   pointer-events: none; // o container não intercepta cliques; as cartas reativam
 
+  // Ponto de ancoragem no centro da tela: a carta mais nova é centralizada nele.
+  &__ancora {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+  }
+
   &__pilha {
+    position: absolute;
+    left: 0;
+    bottom: 0;
     display: flex;
-    flex-direction: row-reverse; // a mais nova (índice 0) fica à direita; o histórico cresce p/ a esquerda
+    flex-direction: row-reverse; // a mais nova (índice 0) à direita; o transform a traz ao centro
     align-items: flex-end;
     gap: 12px;
+    transition: transform 0.35s ease;
+    // transform inline: translateX(-50%) centraliza a mais nova + offset desliza o histórico p/ a esquerda
   }
 
   &__carta {
     pointer-events: auto;
-    flex: 0 0 auto;
-    min-width: 300px;
-    max-width: 100%;
+    box-sizing: border-box; // largura total = 320 (casa com LARGURA_CARTA da centralização)
+    flex: 0 0 320px;
+    width: 320px;
     background: var(--surface);
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-card);

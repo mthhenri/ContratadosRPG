@@ -1,52 +1,57 @@
 @if (bandeja.entradas().length > 0) {
   <div class="bandeja" role="status" aria-live="polite">
-    <div class="bandeja__pilha">
-      @for (entrada of bandeja.entradas(); track entrada.id) {
-        <article class="bandeja__carta" [style.opacity]="entrada.saindo ? 0 : opacidade($index)">
-          <header class="bandeja__cabecalho">
-            <span class="bandeja__rotulo">{{ entrada.rotulo }}</span>
-            <button
-              class="bandeja__fechar"
-              type="button"
-              aria-label="Fechar rolagem"
-              (click)="bandeja.fechar(entrada.id)"
-            >
-              ×
-            </button>
-          </header>
+    <div class="bandeja__ancora">
+      <div
+        class="bandeja__pilha"
+        [style.transform]="'translateX(-50%) translateX(' + deslocamento() + 'px)'"
+      >
+        @for (entrada of bandeja.entradas(); track entrada.id) {
+          <article class="bandeja__carta" [style.opacity]="entrada.saindo ? 0 : opacidade($index)">
+            <header class="bandeja__cabecalho">
+              <span class="bandeja__rotulo">{{ entrada.rotulo }}</span>
+              <button
+                class="bandeja__fechar"
+                type="button"
+                aria-label="Fechar rolagem"
+                (click)="bandeja.fechar(entrada.id)"
+              >
+                ×
+              </button>
+            </header>
 
-          <div class="bandeja__corpo">
-            <span class="bandeja__total">{{ entrada.resultado.total }}</span>
+            <div class="bandeja__corpo">
+              <span class="bandeja__total">{{ entrada.resultado.total }}</span>
 
-            @if (entrada.resultado.teste; as teste) {
-              <div class="bandeja__detalhe">
-                <div class="bandeja__pool">
-                  @for (valor of teste.pool; track $index) {
-                    <span class="bandeja__dado" [class.bandeja__dado--maior]="valor === teste.maiorDado">
-                      {{ valor }}
-                    </span>
+              @if (entrada.resultado.teste; as teste) {
+                <div class="bandeja__detalhe">
+                  <div class="bandeja__pool">
+                    @for (valor of teste.pool; track $index) {
+                      <span class="bandeja__dado" [class.bandeja__dado--maior]="valor === teste.maiorDado">
+                        {{ valor }}
+                      </span>
+                    }
+                  </div>
+                  <span class="bandeja__legenda">
+                    maior {{ teste.maiorDado }}
+                    @if (teste.proficiencia) {
+                      <span> + prof {{ teste.proficiencia }}</span>
+                    }
+                    @if (teste.bonusPlano) {
+                      <span> + {{ teste.bonusPlano }}</span>
+                    }
+                  </span>
+                </div>
+              } @else if (entrada.resultado.grupos; as grupos) {
+                <div class="bandeja__grupos">
+                  @for (grupo of grupos; track grupo.tipoDano) {
+                    <span class="bandeja__grupo">{{ grupo.tipoDano }} {{ grupo.total }}</span>
                   }
                 </div>
-                <span class="bandeja__legenda">
-                  maior {{ teste.maiorDado }}
-                  @if (teste.proficiencia) {
-                    <span> + prof {{ teste.proficiencia }}</span>
-                  }
-                  @if (teste.bonusPlano) {
-                    <span> + {{ teste.bonusPlano }}</span>
-                  }
-                </span>
-              </div>
-            } @else if (entrada.resultado.grupos; as grupos) {
-              <div class="bandeja__grupos">
-                @for (grupo of grupos; track grupo.tipoDano) {
-                  <span class="bandeja__grupo">{{ grupo.tipoDano }} {{ grupo.total }}</span>
-                }
-              </div>
-            }
-          </div>
-        </article>
-      }
+              }
+            </div>
+          </article>
+        }
+      </div>
     </div>
   </div>
 }
