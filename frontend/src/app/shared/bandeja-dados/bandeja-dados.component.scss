@@ -166,6 +166,8 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
+    flex: 1; // ocupa a largura restante da carta ao lado do total
+    min-width: 0; // permite os dados quebrarem em vez de estourar a carta
   }
 
   &__pool {
@@ -175,9 +177,11 @@
     gap: 5px 10px;
   }
 
-  // Um termo de dado no SOMA (m3-22): o rótulo NdM + os valores rolados em chips.
+  // Um termo de dado (m3-22): o rótulo NdM + os valores rolados em chips. Quebra em várias linhas
+  // quando há muitos dados (ex.: 6d6, 10d10 crítico) — antes estourava/cortava na borda da carta (m3-31).
   &__dado-termo {
-    display: inline-flex;
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 5px;
   }
