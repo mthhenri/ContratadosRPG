@@ -3,6 +3,7 @@ import {
   ElementRef,
   computed,
   effect,
+  inject,
   input,
   linkedSignal,
   output,
@@ -10,7 +11,7 @@ import {
   viewChild,
 } from '@angular/core';
 
-import { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
+import { ArquetipoEnum, ClasseEnum, RolagemModoEnum } from '@contratados-rpg/shared/enums';
 import type {
   FichaAtributosDto,
   FichaHabilidadeDto,
@@ -23,13 +24,17 @@ import {
   calcularAtributosEfetivos,
   calcularEnergia,
   calcularInventario,
+  calcularProficiencia,
   calcularVida,
   maestriaAtingivel,
   somarLesoesAtributo,
 } from '@contratados-rpg/shared/regras/agente';
+import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
 
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
 import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
+import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
+import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
 import { FichaInventario } from '../ficha-inventario/ficha-inventario.component';
 import { FichaRolagens } from '../ficha-rolagens/ficha-rolagens.component';
@@ -160,7 +165,7 @@ export interface AjusteClasse {
  */
 @Component({
   selector: 'app-ficha-visualizacao',
-  imports: [HoldRepeat, Icone, FichaSanidade, FichaHabilidades, FichaInventario, FichaRolagens],
+  imports: [HoldRepeat, Icone, FichaSanidade, FichaHabilidades, FichaInventario, FichaRolagens, BandejaDados],
   templateUrl: './ficha-visualizacao.component.html',
   styleUrl: './ficha-visualizacao.component.scss',
 })
@@ -357,6 +362,31 @@ export class FichaVisualizacao {
   protected readonly atributosEfetivos = computed(() =>
     calcularAtributosEfetivos(this.atributos(), this.estado().lesoes),
   );
+
+  /** Proficiência derivada (nível; `null` para Civil → 0) — somada no teste de atributo (m3-22). */
+  protected readonly proficiencia = computed(() =>
+    calcularProficiencia({ classe: this.dados().classe, nivel: this.dados().nivel }),
+  );
+
+  /** Bandeja de dados global — onde o teste rolado aqui aparece. */
+  private readonly bandeja = inject(BandejaDadosService);
+
+  /**
+   * Rola o teste de um atributo direto da Visão Geral (m3-22): pool `(Atributo efetivo)`D20, pega o
+   * maior e soma a Proficiência; mostra na bandeja. Usa os atributos **efetivos** (pós-lesão) — a
+   * lesão reduz quantos D20 entram no pool, como o documento manda.
+   */
+  protected rolarTesteAtributo(campo: CampoAtributo): void {
+    const resultado = rolarFormula({
+      formula: `${campo.chave}d20`,
+      modo: RolagemModoEnum.TESTE,
+      atributos: this.atributosEfetivos(),
+      proficiencia: this.proficiencia(),
+    });
+    if (resultado) {
+      this.bandeja.mostrar({ rotulo: campo.nome, resultado, modo: RolagemModoEnum.TESTE });
+    }
+  }
 
   /** Penalidade de lesão por atributo (0 quando não lesionado) — badge "−N" na leitura. */
   protected readonly penalidadesLesao = computed<Record<ChaveAtributo, number>>(() => {

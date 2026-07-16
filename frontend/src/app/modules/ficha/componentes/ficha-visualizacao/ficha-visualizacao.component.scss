@@ -814,6 +814,7 @@
 }
 
 .ficha-atributo {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -822,6 +823,36 @@
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--radius-control);
+
+  // Dadinho de rolar teste (m3-22): canto superior direito do box, discreto até o hover/foco.
+  &__rolar {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    font-size: 13px;
+    color: var(--text-mute);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition:
+      color 0.12s ease,
+      border-color 0.12s ease,
+      background 0.12s ease;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--accent-dim);
+    }
+  }
 
   &__abrev {
     display: inline-flex;

@@ -1,0 +1,128 @@
+// Bandeja de dados flutuante (m3-22) — fixa na base central, só tokens do tema (proibição #29).
+
+:host {
+  display: contents;
+}
+
+.bandeja {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 50;
+  max-width: min(92vw, 440px);
+  pointer-events: none; // o container não intercepta cliques; as cartas reativam
+
+  &__pilha {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+
+  &__carta {
+    pointer-events: auto;
+    min-width: 220px;
+    max-width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+    padding: 10px 14px;
+    box-shadow: 0 10px 28px rgb(0 0 0 / 40%);
+  }
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__rotulo {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  &__fechar {
+    border: 0;
+    background: transparent;
+    color: var(--text-mute);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 2px;
+
+    &:hover {
+      color: var(--text);
+    }
+  }
+
+  &__corpo {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-top: 6px;
+  }
+
+  &__total {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 30px;
+    line-height: 1;
+    color: var(--accent);
+  }
+
+  &__detalhe {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__pool {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  &__dado {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-mute);
+    min-width: 20px;
+    text-align: center;
+    padding: 1px 4px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+
+    &--maior {
+      color: var(--text);
+      border-color: var(--accent-border);
+      background: var(--accent-dim);
+    }
+  }
+
+  &__legenda {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  &__grupos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  &__grupo {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    padding: 1px 6px;
+  }
+}

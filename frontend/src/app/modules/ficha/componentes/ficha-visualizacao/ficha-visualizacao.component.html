@@ -497,6 +497,15 @@
                             }
                           </span>
                           <span class="ficha-atributo__nome">{{ campo.nome }}</span>
+                          <button
+                            class="ficha-atributo__rolar"
+                            type="button"
+                            [attr.aria-label]="'Rolar teste de ' + campo.nome"
+                            [attr.title]="'Rolar teste de ' + campo.nome"
+                            (click)="rolarTesteAtributo(campo)"
+                          >
+                            <app-icone [nome]="'dado'" />
+                          </button>
                         </div>
                       }
                     }
@@ -769,4 +778,6 @@
       </section>
     </div>
   }
+
+  <app-bandeja-dados />
 </div>

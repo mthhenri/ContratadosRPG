@@ -50,7 +50,8 @@ export type IconeNome =
   | 'rolagens'
   | 'vestida'
   | 'guardada'
-  | 'fragmento';
+  | 'fragmento'
+  | 'dado';
 
 /**
  * Ícone monocromático de linha (SVG inline, `stroke: currentColor`) — reutilizado nos menus de
