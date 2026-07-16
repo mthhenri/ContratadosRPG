@@ -378,14 +378,15 @@ export class FichaVisualizacao {
    * entram no pool, como o documento manda (atributo 0/negativo vira desvantagem intrínseca do motor).
    */
   protected rolarTesteAtributo(campo: CampoAtributo): void {
+    const formula = `${campo.chave}d20kh1 + PROF`;
     const resultado = rolarFormula({
-      formula: `${campo.chave}d20kh1 + PROF`,
+      formula,
       atributos: this.atributosEfetivos(),
       proficiencia: this.proficiencia(),
       nivel: this.dados().nivel,
     });
     if (resultado) {
-      this.bandeja.mostrar({ rotulo: campo.nome, resultado });
+      this.bandeja.mostrar({ rotulo: campo.nome, formula, resultado });
     }
   }
 

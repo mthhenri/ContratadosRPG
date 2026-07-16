@@ -24,6 +24,10 @@
               </button>
             </header>
 
+            @if (entrada.formula) {
+              <code class="bandeja__formula">{{ entrada.formula }}</code>
+            }
+
             <div class="bandeja__corpo">
               <span class="bandeja__total">{{ entrada.resultado.total }}</span>
 

@@ -117,6 +117,16 @@
     }
   }
 
+  // Fórmula executada (m3-30): legenda mono discreta logo abaixo do rótulo.
+  &__formula {
+    display: block;
+    margin-top: 4px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-mute);
+    overflow-wrap: anywhere;
+  }
+
   &__corpo {
     display: flex;
     align-items: baseline;

@@ -68,7 +68,7 @@
                 @if (passo.habilidadesVinculadas.length) {
                   <div class="ficha-rol__passo-vinculos">
                     @for (nome of passo.habilidadesVinculadas; track nome) {
-                      <span class="ficha-rol__vinculo">{{ nome }}</span>
+                      <span class="ficha-rol__vinculo" [appTooltip]="descricaoDe(nome)">{{ nome }}</span>
                     }
                     <span class="ficha-rol__energia" title="Energia gasta ao rolar este passo">
                       − {{ passo.energiaGasta }}{{ passo.energiaVariavel ? ' + X' : '' }} E
@@ -178,6 +178,7 @@
             class="ficha-rol__hab"
             [class.ficha-rol__hab--marcada]="controle.value.includes(habilidade.nome)"
             [attr.aria-pressed]="controle.value.includes(habilidade.nome)"
+            [appTooltip]="habilidade.descricao"
             (click)="alternarHabilidade(controle, habilidade.nome)"
           >
             <span class="ficha-rol__hab-nome">{{ habilidade.nome }}</span>

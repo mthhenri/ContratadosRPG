@@ -20,6 +20,7 @@ import {
 } from '@contratados-rpg/shared/regras/rolagem';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { GuiaFormula } from '../guia-formula/guia-formula.component';
 
 /** Grupo tipado de um passo seguinte no formulário (encadeamento), com as habilidades **deste passo**. */
@@ -60,7 +61,7 @@ interface RolagemVM {
  */
 @Component({
   selector: 'app-ficha-rolagens',
-  imports: [ReactiveFormsModule, NgTemplateOutlet, GuiaFormula],
+  imports: [ReactiveFormsModule, NgTemplateOutlet, GuiaFormula, Tooltip],
   templateUrl: './ficha-rolagens.component.html',
   styleUrl: './ficha-rolagens.component.scss',
 })
@@ -200,6 +201,11 @@ export class FichaRolagens {
     return nomes.filter((nome) => this.habilidadesDisponiveis().some((habilidade) => habilidade.nome === nome));
   }
 
+  /** Descrição de uma habilidade pelo nome (para o tooltip dos chips de vínculo) — vazio se não achar. */
+  protected descricaoDe(nome: string): string {
+    return this.habilidadesDisponiveis().find((habilidade) => habilidade.nome === nome)?.descricao ?? '';
+  }
+
   /**
    * Confirma o preset: monta o `FichaRolagemDto` **enxuto** (omite `tipo`/`seguintes` vazios e
    * `habilidades` vazias por passo → preset simples inalterado), insere (novo) ou substitui (edição) e
@@ -282,7 +288,7 @@ export class FichaRolagens {
       return;
     }
     const rotulo = preset.encadeado ? `${preset.nome} · ${passo.nome}` : preset.nome;
-    this.bandeja.mostrar({ rotulo, resultado });
+    this.bandeja.mostrar({ rotulo, formula: passo.formula, resultado });
     this.debitarEnergia(preset.indice, passo, indicePasso);
   }
 
