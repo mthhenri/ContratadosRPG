@@ -140,6 +140,26 @@
     font-size: 44px;
     line-height: 1;
     color: var(--accent);
+    display: inline-flex;
+    flex-direction: column;
+    gap: 5px;
+
+    // Crítico (m3-30): brilho no número — destaque maior quando bate crítico ou dobra o dano.
+    &--critico {
+      text-shadow:
+        0 0 16px color-mix(in srgb, var(--accent) 80%, transparent),
+        0 0 5px color-mix(in srgb, var(--accent) 60%, transparent);
+    }
+  }
+
+  // Selo "crítico ×2" abaixo do total, na rolagem de crítico (dano dobrado).
+  &__critico-badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--accent);
+    text-shadow: none;
   }
 
   &__detalhe {
@@ -190,13 +210,15 @@
     }
   }
 
-  // Contagem de crítico (margem `cm`) de um termo (m3-29).
+  // Contagem de crítico (margem `cm`) de um termo (m3-29; realçada em m3-30 — maior + glow).
   &__critico {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 14px;
+    font-weight: 700;
     color: var(--accent);
     text-transform: uppercase;
     letter-spacing: var(--tracking-label);
+    text-shadow: 0 0 10px color-mix(in srgb, var(--accent) 70%, transparent);
   }
 
   &__legenda {

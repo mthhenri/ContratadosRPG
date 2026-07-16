@@ -1,6 +1,22 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-16 (**duas extensões do modelo de efeitos (m3-20) — fecham duas lacunas**:
+> Última atualização: 2026-07-16 (**crítico mecânico + polimento visual (m3-30)**: um passo de preset
+> pode ser marcado como **critável** (`critico` em `FichaRolagemDto`/`FichaRolagemPassoDto`). Na UI, o
+> passo critável ganha **dois botões — "Rolar" e "Rolar crítico"**; o crítico **dobra o dano** conforme
+> `sistema-v4.1.0` (1217/1303): dobra o **número de dados** (`2d8`→`4d8`, rolagem fresca), os **fixos** e
+> os **atributos** — **inclusive efeitos de habilidade** (Força Bruta `FOR×3`→`×6`) — **exceto** valores de
+> **Patente/Nível** (`PROF`/`NIV`), que se mantêm. Motor: `rolarInterpretada`/`rolarPasso` ganharam um
+> parâmetro `critico`; `rolarTermo` dobra a contagem de dados; `resolverPreset` carrega `critico` no
+> `PassoInterpretadoDto`; `ResultadoRolagemDto.critico` sinaliza a rolagem. `normalizarPresetLegado`
+> preserva o novo campo. **Bandeja**: realce de crítico **maior + glow** — o **total** brilha (crítico de
+> dano ou termo que bateu `cm`), selo **"crítico ×2"** na rolagem dobrada, e o indicador `◆` de margem
+> ficou maior com brilho. **Testes:** shared **301** (+5: dobra de dados/fixos/atributos, exceção
+> PROF/NIV, grupo tipado, `resolverPreset`/`rolarPasso` crítico), frontend **317** (+2: serialização de
+> `critico` + rolar crítico marca a entrada). Verificado no stack real (Playwright): passo critável mostra
+> os dois botões; "Rolar crítico" dobra o pool (`2D8`→`4D8`) e a Força Bruta (`FOR×3 18`→`36`), total com
+> glow e selo. Lint/build verdes.)
+>
+> (**duas extensões do modelo de efeitos (m3-20) — fecham duas lacunas**:
 > (1) **`BONUS_TESTE` variante `'ATRIBUTO'`** — soma `atributo × multiplicador` ao **resultado do teste**
 > (reusa os campos `atributo`/`multiplicador` do DTO; sem tipo de dano). Destrava **Atirador Calculista**
 > (Geral + melhorada do Mercenário: soma Pontaria ao ataque). (2) Novo tipo **`DANO_DADOS_ARMA`** —

@@ -434,6 +434,7 @@ function rolarTermo(
   termo: TermoDadoDto,
   ambiente: Record<FonteEscalar, number>,
   rolarDado: RolarDado,
+  critico = false,
 ): DadosRoladosDto {
   // 1. Contagem base + desvantagem intrínseca (atributo ≤ 0 num pool de teste — regra 270).
   let manterMaior = termo.manterMaior;
@@ -454,7 +455,9 @@ function rolarTermo(
   } else {
     quantidade = termo.quantidade;
   }
-  quantidade = Math.max(0, Math.min(QUANTIDADE_DADOS_MAXIMA, quantidade + (termo.bonusDados ?? 0)));
+  // Crítico (m3-30): dobra o **número de dados** rolados (regra 1217 — `3D10` vira `6D10`).
+  const quantidadeBruta = (quantidade + (termo.bonusDados ?? 0)) * (critico ? 2 : 1);
+  quantidade = Math.max(0, Math.min(QUANTIDADE_DADOS_MAXIMA, quantidadeBruta));
 
   // 2. Rola o pool base.
   const valores: number[] = Array.from({ length: quantidade }, () => rolarDado(termo.faces));
@@ -531,6 +534,7 @@ export function rolarInterpretada(
   proficiencia?: number | null,
   nivel?: number,
   rolarDado: RolarDado = rolarDadoPadrao,
+  critico = false,
 ): ResultadoRolagemDto {
   // Ambiente escalar da rolagem (m3-22): os 10 atributos + Proficiência (`PROF`) + Nível (`NIV`).
   const ambiente: Record<FonteEscalar, number> = {
@@ -539,37 +543,47 @@ export function rolarInterpretada(
     nivel: nivel ?? 0,
   };
 
-  const dados: DadosRoladosDto[] = formula.dados.map((termo) => rolarTermo(termo, ambiente, rolarDado));
+  const dados: DadosRoladosDto[] = formula.dados.map((termo) => rolarTermo(termo, ambiente, rolarDado, critico));
 
   const atributosAplicados: AtributoAplicadoDto[] = formula.atributos.map((termo) => {
     const base = ambiente[termo.atributo] ?? 0;
     const escalado = Math.floor((base * (termo.multiplicador ?? 1)) / (termo.divisor ?? 1));
+    // Crítico (m3-30): dobra o atributo, **exceto** valores de Patente/Nível (PROF/NIV) — regra 1303.
+    const dobra = critico && termo.atributo !== 'proficiencia' && termo.atributo !== 'nivel' ? 2 : 1;
     return {
       rotulo: termo.rotulo,
-      valor: termo.sinal * escalado,
+      valor: termo.sinal * escalado * dobra,
       ...(termo.composto ? { composto: termo.composto } : termo.tipoDano ? { tipoDano: termo.tipoDano } : {}),
     };
   });
 
+  // Crítico dobra também as constantes (fixos), tipadas e sem tag (dados já vêm dobrados de `rolarTermo`).
+  const fatorFixo = critico ? 2 : 1;
   const contribuicoes: Contribuicao[] = [
     ...dados.map((termo) => ({ valor: termo.subtotal, tipoDano: termo.tipoDano, composto: termo.composto })),
     ...atributosAplicados.map((termo) => ({ valor: termo.valor, tipoDano: termo.tipoDano, composto: termo.composto })),
     ...(formula.constantesTipadas ?? []).map((termo) => ({
-      valor: termo.sinal * termo.valor,
+      valor: termo.sinal * termo.valor * fatorFixo,
       tipoDano: termo.tipoDano,
       composto: termo.composto,
     })),
   ];
 
+  const constante = formula.constante * fatorFixo;
   const grupos = agruparDano(contribuicoes);
   const totalSemTipo = contribuicoes
     .filter((contribuicao) => contribuicao.tipoDano === undefined && contribuicao.composto === undefined)
     .reduce((acumulado, contribuicao) => acumulado + contribuicao.valor, 0);
-  const total = grupos.reduce((acumulado, grupo) => acumulado + grupo.total, 0) + totalSemTipo + formula.constante;
+  const total = grupos.reduce((acumulado, grupo) => acumulado + grupo.total, 0) + totalSemTipo + constante;
 
-  return grupos.length > 0
-    ? { dados, atributos: atributosAplicados, constante: formula.constante, grupos, total }
-    : { dados, atributos: atributosAplicados, constante: formula.constante, total };
+  return {
+    dados,
+    atributos: atributosAplicados,
+    constante,
+    ...(grupos.length > 0 ? { grupos } : {}),
+    total,
+    ...(critico ? { critico: true } : {}),
+  };
 }
 
 /** Alvo padrão de um efeito quando não declarado: bônus de teste vai no teste, o resto no dano. */
@@ -689,7 +703,13 @@ export function resolverPreset(dto: PresetResolverDto): PlanoPresetDto {
       .filter((habilidade): habilidade is FichaHabilidadeDto => habilidade !== undefined);
 
   const passosBrutos = [
-    { nome: preset.nome, formula: preset.formula, descricao: preset.descricao, habilidades: preset.habilidades },
+    {
+      nome: preset.nome,
+      formula: preset.formula,
+      descricao: preset.descricao,
+      habilidades: preset.habilidades,
+      critico: preset.critico,
+    },
     ...(preset.seguintes ?? []),
   ];
   const passos: PassoInterpretadoDto[] = passosBrutos.map((passo) => {
@@ -706,6 +726,7 @@ export function resolverPreset(dto: PresetResolverDto): PlanoPresetDto {
       energiaGasta: vinculadas.reduce((soma, habilidade) => soma + (habilidade.custoEnergia ?? 0), 0),
       energiaVariavel: vinculadas.some((habilidade) => habilidade.custoEnergia === null),
       habilidadesVinculadas: vinculadas.map((habilidade) => habilidade.nome),
+      critico: passo.critico ?? false,
     };
   });
 
@@ -724,11 +745,12 @@ export function rolarPasso(
   proficiencia?: number | null,
   nivel?: number,
   rolarDado: RolarDado = rolarDadoPadrao,
+  critico = false,
 ): ResultadoRolagemDto | null {
   if (!passo.interpretacao.valida || !passo.interpretacao.formula) {
     return null;
   }
-  return rolarInterpretada(passo.interpretacao.formula, atributos, proficiencia, nivel, rolarDado);
+  return rolarInterpretada(passo.interpretacao.formula, atributos, proficiencia, nivel, rolarDado, critico);
 }
 
 // ── Migração de presets legados (m3-19 → m3-29) ──────────────────────────────
@@ -740,6 +762,8 @@ interface FichaRolagemPassoLegadoDto {
   readonly modo?: string;
   readonly descricao?: string;
   readonly habilidades?: readonly string[];
+  /** `critico` (m3-30) — preservado na migração (não é campo legado, mas passa pela normalização na carga). */
+  readonly critico?: boolean;
 }
 
 /** Preset legado (m3-19): idem, com `seguintes` legados. */
@@ -751,6 +775,7 @@ interface FichaRolagemLegadoDto {
   readonly tipo?: FichaRolagemDto['tipo'];
   readonly seguintes?: readonly FichaRolagemPassoLegadoDto[];
   readonly habilidades?: readonly string[];
+  readonly critico?: boolean;
 }
 
 /**
@@ -811,6 +836,7 @@ export function normalizarPresetLegado(preset: FichaRolagemLegadoDto): FichaRola
     formula: passo.modo === 'TESTE' ? reescreverFormulaTeste(passo.formula) : passo.formula,
     ...(passo.descricao ? { descricao: passo.descricao } : {}),
     ...(passo.habilidades ? { habilidades: passo.habilidades } : {}),
+    ...(passo.critico ? { critico: true } : {}),
   });
 
   return {
@@ -820,5 +846,6 @@ export function normalizarPresetLegado(preset: FichaRolagemLegadoDto): FichaRola
     ...(preset.tipo ? { tipo: preset.tipo } : {}),
     ...(preset.seguintes ? { seguintes: preset.seguintes.map(normalizarPasso) } : {}),
     ...(preset.habilidades ? { habilidades: preset.habilidades } : {}),
+    ...(preset.critico ? { critico: true } : {}),
   };
 }

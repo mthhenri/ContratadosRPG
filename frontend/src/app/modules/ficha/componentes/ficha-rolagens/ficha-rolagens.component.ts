@@ -29,6 +29,7 @@ type PassoForm = FormGroup<{
   formula: FormControl<string>;
   descricao: FormControl<string>;
   habilidades: FormControl<readonly string[]>;
+  critico: FormControl<boolean>;
 }>;
 
 /**
@@ -104,6 +105,8 @@ export class FichaRolagens {
     descricao: new FormControl('', { nonNullable: true }),
     /** Habilidades do **passo primário**. */
     habilidades: new FormControl<readonly string[]>([], { nonNullable: true }),
+    /** Passo primário é **critável** (m3-30) — ganha o botão "Rolar crítico". */
+    critico: new FormControl(false, { nonNullable: true }),
     seguintes: new FormArray<PassoForm>([]),
   });
 
@@ -156,6 +159,7 @@ export class FichaRolagens {
       formula: preset.formula,
       descricao: preset.descricao ?? '',
       habilidades: preset.habilidades ?? [],
+      critico: preset.critico ?? false,
     });
     (preset.seguintes ?? []).forEach((passo) => this.seguintes.push(this.novoPassoForm(passo)));
     this.indiceRemovendo.set(null);
@@ -169,7 +173,7 @@ export class FichaRolagens {
   /** Zera o formulário para o estado neutro (novo preset) — inclui esvaziar os passos e as habilidades. */
   private resetarForm(): void {
     this.seguintes.clear();
-    this.form.reset({ nome: '', formula: '', descricao: '', habilidades: [] });
+    this.form.reset({ nome: '', formula: '', descricao: '', habilidades: [], critico: false });
   }
 
   private novoPassoForm(passo?: FichaRolagemPassoDto): PassoForm {
@@ -178,6 +182,7 @@ export class FichaRolagens {
       formula: new FormControl(passo?.formula ?? '', { nonNullable: true, validators: [Validators.required] }),
       descricao: new FormControl(passo?.descricao ?? '', { nonNullable: true }),
       habilidades: new FormControl<readonly string[]>(passo?.habilidades ?? [], { nonNullable: true }),
+      critico: new FormControl(passo?.critico ?? false, { nonNullable: true }),
     });
   }
 
@@ -232,6 +237,7 @@ export class FichaRolagens {
           formula: passo.formula.trim(),
           ...(passo.descricao.trim() ? { descricao: passo.descricao.trim() } : {}),
           ...(passoHabilidades.length ? { habilidades: passoHabilidades } : {}),
+          ...(passo.critico ? { critico: true } : {}),
         };
       })
       .filter((passo) => passo.nome && passo.formula);
@@ -242,6 +248,7 @@ export class FichaRolagens {
       ...(descricao ? { descricao } : {}),
       ...(seguintes.length ? { tipo: RolagemPresetTipoEnum.ENCADEADO, seguintes } : {}),
       ...(habilidadesPrimaria.length ? { habilidades: habilidadesPrimaria } : {}),
+      ...(bruto.critico ? { critico: true } : {}),
     };
 
     const indice = this.indiceEmEdicao();
@@ -278,16 +285,17 @@ export class FichaRolagens {
    * Rola um passo do preset e o joga na **bandeja** (m3-22). Ao rolar, debita a Energia das habilidades
    * **deste passo** (soma dos custos + o valor variável informado). Passo inválido não rola.
    */
-  protected rolarPassoDoPreset(preset: RolagemVM, indicePasso: number): void {
+  protected rolarPassoDoPreset(preset: RolagemVM, indicePasso: number, critico = false): void {
     const passo = preset.plano.passos[indicePasso];
     if (!passo) {
       return;
     }
-    const resultado = rolarPasso(passo, this.atributos(), this.proficiencia(), this.nivel());
+    const resultado = rolarPasso(passo, this.atributos(), this.proficiencia(), this.nivel(), undefined, critico);
     if (!resultado) {
       return;
     }
-    const rotulo = preset.encadeado ? `${preset.nome} · ${passo.nome}` : preset.nome;
+    const sufixoCritico = critico ? ' · CRÍTICO' : '';
+    const rotulo = (preset.encadeado ? `${preset.nome} · ${passo.nome}` : preset.nome) + sufixoCritico;
     this.bandeja.mostrar({ rotulo, formula: passo.formula, resultado });
     this.debitarEnergia(preset.indice, passo, indicePasso);
   }

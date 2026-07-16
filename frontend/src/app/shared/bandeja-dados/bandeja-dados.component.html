@@ -29,7 +29,12 @@
             }
 
             <div class="bandeja__corpo">
-              <span class="bandeja__total">{{ entrada.resultado.total }}</span>
+              <span class="bandeja__total" [class.bandeja__total--critico]="ehCritico(entrada.resultado)">
+                {{ entrada.resultado.total }}
+                @if (entrada.resultado.critico) {
+                  <span class="bandeja__critico-badge">crítico ×2</span>
+                }
+              </span>
 
               <div class="bandeja__detalhe">
                 @if (entrada.resultado.dados.length) {

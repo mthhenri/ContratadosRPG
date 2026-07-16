@@ -512,6 +512,74 @@ describe('efeitos de habilidade — aplicarEfeitos por papel inferido (m3-20/m3-
   });
 });
 
+describe('crítico — dobra o dano (m3-30; sistema-v4.1.0 1217/1303)', () => {
+  const forcaBruta: FichaHabilidadeDto = {
+    nome: 'Força Bruta',
+    categoria: HabilidadeCategoriaEnum.ARQUETIPO,
+    custoEnergia: 4,
+    descricao: 'Soma sua Força × 3 no dano de ataques físicos.',
+    efeitos: [
+      {
+        tipo: RolagemEfeitoTipoEnum.DANO_ATRIBUTO,
+        atributo: 'forca',
+        multiplicador: 3,
+        tipoDano: TipoDanoEnum.FISICO,
+        alvo: RolagemEfeitoAlvoEnum.DANO,
+      },
+    ],
+  };
+
+  it('dobra o número de dados, os fixos e os atributos (FOR=6, dados no máximo)', () => {
+    const formula = interpretarFormula('2d8 + FOR*3 + 5').formula!;
+    const normal = rolarInterpretada(formula, atributos, undefined, undefined, rolarMaximo);
+    // 2×8 + 6×3 + 5 = 39; sem flag de crítico.
+    expect(normal.total).toBe(39);
+    expect(normal.critico).toBeUndefined();
+
+    const critico = rolarInterpretada(formula, atributos, undefined, undefined, rolarMaximo, true);
+    // Dados dobram (4d8=32), FOR*3 dobra (36), fixo dobra (10) → 78.
+    expect(critico.total).toBe(78);
+    expect(critico.critico).toBe(true);
+    expect(critico.dados[0].valores).toHaveLength(4); // 2d8 → 4d8
+  });
+
+  it('NÃO dobra valores de Patente/Nível (PROF/NIV) — regra 1303', () => {
+    const formula = interpretarFormula('2d6 + PROF + NIV').formula!;
+    const critico = rolarInterpretada(formula, atributos, 3, 2, rolarMaximo, true);
+    // 4d6 (=24) + PROF 3 (mantém) + NIV 2 (mantém) = 29.
+    expect(critico.total).toBe(29);
+  });
+
+  it('dobra dentro do grupo de dano tipado', () => {
+    const formula = interpretarFormula('2d8 [Físico]').formula!;
+    const critico = rolarInterpretada(formula, atributos, undefined, undefined, rolarMaximo, true);
+    expect(critico.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 32 }]); // 4d8 no máximo
+  });
+
+  it('resolverPreset carrega `critico` no passo; rolarPasso(critico) dobra dados + efeito de habilidade', () => {
+    const preset: FichaRolagemDto = {
+      nome: 'Dano',
+      formula: '2d8 [Físico]',
+      habilidades: ['Força Bruta'],
+      critico: true,
+    };
+    const plano = resolverPreset({ preset, atributos, habilidades: [forcaBruta] });
+    expect(plano.passos[0].critico).toBe(true);
+
+    // Normal: 2d8 (16) + FOR*3 (18) = 34. Crítico: 4d8 (32) + FOR*6 (36) = 68.
+    const normal = rolarPasso(plano.passos[0], atributos, undefined, undefined, rolarMaximo, false);
+    expect(normal?.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 34 }]);
+    const critico = rolarPasso(plano.passos[0], atributos, undefined, undefined, rolarMaximo, true);
+    expect(critico?.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 68 }]);
+    expect(critico?.critico).toBe(true);
+  });
+
+  it('passo sem `critico` fica false no plano', () => {
+    const plano = resolverPreset({ preset: { nome: 'S', formula: '2d8 [Físico]' }, atributos });
+    expect(plano.passos[0].critico).toBe(false);
+  });
+});
+
 describe('presets + runner encadeado — resolverPreset/rolarPasso (m3-21)', () => {
   const forcaBruta: FichaHabilidadeDto = {
     nome: 'Força Bruta',

@@ -154,6 +154,8 @@ export interface ResultadoRolagemDto {
   /** Totais por tipo de dano (m3-18); presente só quando a fórmula usa tags `[Tipo]`. */
   readonly grupos?: readonly GrupoDanoDto[];
   readonly total: number;
+  /** `true` quando foi uma **rolagem de crítico** (m3-30): dados/fixos/atributos dobrados (exceto PROF/NIV). */
+  readonly critico?: boolean;
 }
 
 // ── Efeitos de habilidade (m3-20) ────────────────────────────────────────────
@@ -210,6 +212,8 @@ export interface PassoInterpretadoDto {
   readonly energiaVariavel: boolean;
   /** Nomes das habilidades da ficha vinculadas **a este passo** (m3-22). */
   readonly habilidadesVinculadas: readonly string[];
+  /** `true` se o passo é **critável** (m3-30): a UI oferece "Rolar crítico" (dobra o dano). */
+  readonly critico: boolean;
 }
 
 /** Saída de `resolverPreset`: os passos prontos p/ rolar + os **agregados** de energia (m3-22 debita por passo). Puro. */

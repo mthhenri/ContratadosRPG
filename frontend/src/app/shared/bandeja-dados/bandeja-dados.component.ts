@@ -37,6 +37,14 @@ export class BandejaDados {
   }
 
   /**
+   * Se a rolagem deve ganhar o realce de **crítico** (m3-30): ou foi uma rolagem de crítico (dano
+   * dobrado), ou algum termo bateu a margem de crítico (`cm`). Usado para o glow no total e no ◆.
+   */
+  protected ehCritico(resultado: ResultadoRolagemDto): boolean {
+    return resultado.critico === true || resultado.dados.some((dado) => (dado.criticos ?? 0) > 0);
+  }
+
+  /**
    * Marca cada valor rolado de um termo como **mantido** ou **descartado** (m3-29), replicando a
    * separação por multiset do motor (preserva a ordem e trata duplicados). Sem keep (`mantidos` ausente),
    * todos contam como mantidos — a UI então não aplica realce.

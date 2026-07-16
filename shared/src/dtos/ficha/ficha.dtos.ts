@@ -224,6 +224,12 @@ export interface FichaRolagemPassoDto {
    * (ex.: Força Bruta só no passo de dano). Ausente = passo sem habilidade.
    */
   readonly habilidades?: readonly string[];
+  /**
+   * `true` marca o passo como **critável** (m3-30): a UI oferece um botão "Rolar crítico" além do
+   * "Rolar", e o crítico **dobra** o dano (dados, fixos e atributos — inclusive efeitos de habilidade),
+   * exceto valores de Patente/Nível (`PROF`/`NIV`), conforme `sistema-v4.1.0` (1217/1303). Ausente = não.
+   */
+  readonly critico?: boolean;
 }
 
 /**
@@ -248,6 +254,8 @@ export interface FichaRolagemDto {
    * FOR × 3). Cada passo seguinte tem o seu próprio `habilidades` (`FichaRolagemPassoDto`).
    */
   readonly habilidades?: readonly string[];
+  /** `true` marca o **passo primário** como critável (m3-30) — ver `FichaRolagemPassoDto.critico`. Ausente = não. */
+  readonly critico?: boolean;
 }
 
 /**

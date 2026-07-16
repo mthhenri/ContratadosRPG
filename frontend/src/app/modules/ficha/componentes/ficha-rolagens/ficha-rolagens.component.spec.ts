@@ -107,6 +107,41 @@ describe('FichaRolagens', () => {
     ]);
   });
 
+  it('serializa `critico` do passo primário e do seguinte (m3-30); rola crítico dobra o dano', () => {
+    const alvo = montar([]);
+    alvo.componentInstance['abrirNovo']();
+    alvo.componentInstance['form'].patchValue({ nome: 'Golpe', formula: 'LUTd20kh1 + PROF' });
+    alvo.componentInstance['adicionarPasso']();
+    alvo.componentInstance['seguintes'].at(0).patchValue({ nome: 'Dano', formula: '2d8 [Físico]', critico: true });
+    alvo.componentInstance['confirmar']();
+    expect(alvo.emitidos[0]).toEqual([
+      {
+        nome: 'Golpe',
+        formula: 'LUTd20kh1 + PROF',
+        tipo: RolagemPresetTipoEnum.ENCADEADO,
+        seguintes: [{ nome: 'Dano', formula: '2d8 [Físico]', critico: true }],
+      },
+    ]);
+  });
+
+  it('rolar crítico gera um total >= ao normal e marca a entrada da bandeja como crítica', () => {
+    const alvo = montar([
+      {
+        nome: 'Golpe',
+        formula: 'LUTd20kh1 + PROF',
+        tipo: RolagemPresetTipoEnum.ENCADEADO,
+        seguintes: [{ nome: 'Dano', formula: '10d8 [Físico]', critico: true }],
+      },
+    ]);
+    const vm = alvo.componentInstance['presets']()[0];
+    alvo.componentInstance['rolarPassoDoPreset'](vm, 1, true);
+    const arg = alvo.mostrar.mock.calls[0][0];
+    // 10d8 crítico dobra o pool → 20d8: total ∈ [20, 160]; marcado como crítico.
+    expect(arg.resultado.total).toBeGreaterThanOrEqual(20);
+    expect(arg.resultado.critico).toBe(true);
+    expect(arg.rotulo).toContain('CRÍTICO');
+  });
+
   it('rola um passo e o joga na bandeja com total dentro da faixa', () => {
     const alvo = montar([{ nome: 'Ataque', formula: '1d20+LUT+2' }]);
     const vm = alvo.componentInstance['presets']()[0];

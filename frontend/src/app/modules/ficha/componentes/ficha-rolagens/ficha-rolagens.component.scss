@@ -193,9 +193,33 @@
       color: var(--accent);
       padding: 5px 12px;
     }
+    // Rolar crítico (m3-30): accent sólido + brilho, para destacar a ação de dobrar o dano.
+    &--critico {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg);
+      padding: 5px 12px;
+      box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
+    }
     &:disabled {
       opacity: 0.45;
       cursor: not-allowed;
+    }
+  }
+
+  // Checkbox "passo critável" (m3-30).
+  &__critico-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    cursor: pointer;
+
+    input {
+      accent-color: var(--accent);
+      cursor: pointer;
     }
   }
   &__mini-btn {

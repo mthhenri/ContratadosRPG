@@ -63,6 +63,17 @@
                   >
                     Rolar
                   </button>
+                  @if (passo.critico) {
+                    <button
+                      type="button"
+                      class="ficha-rol__btn ficha-rol__btn--critico"
+                      [disabled]="!passo.interpretacao.valida"
+                      title="Dobra o dano (dados, fixos e atributos, exceto Patente/Nível)"
+                      (click)="rolarPassoDoPreset(preset, indicePasso, true)"
+                    >
+                      Rolar crítico
+                    </button>
+                  }
                 </div>
 
                 @if (passo.habilidadesVinculadas.length) {
@@ -138,6 +149,11 @@
       [ngTemplateOutletContext]="{ controle: form.controls.habilidades, sufixo: 'aplicadas na rolagem primária' }"
     />
 
+    <label class="ficha-rol__critico-check">
+      <input type="checkbox" formControlName="critico" />
+      <span>Passo critável <span class="ficha-rol__rotulo-aux">(ganha "Rolar crítico" — dobra o dano)</span></span>
+    </label>
+
     <div class="ficha-rol__campo" formArrayName="seguintes">
       <span class="ficha-rol__rotulo">
         Passos seguintes <span class="ficha-rol__rotulo-aux">(encadeamento — ex.: dano, crítico)</span>
@@ -153,6 +169,10 @@
             [ngTemplateOutlet]="habTpl"
             [ngTemplateOutletContext]="{ controle: passoCtrl.controls.habilidades, sufixo: 'aplicadas neste passo' }"
           />
+          <label class="ficha-rol__critico-check">
+            <input type="checkbox" formControlName="critico" />
+            <span>Passo critável <span class="ficha-rol__rotulo-aux">(dobra o dano)</span></span>
+          </label>
         </div>
       }
       <button type="button" class="ficha-rol__add-passo" (click)="adicionarPasso()">+ Passo seguinte</button>
