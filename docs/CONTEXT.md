@@ -1,6 +1,23 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-16 (**crítico mecânico + polimento visual (m3-30)**: um passo de preset
+> Última atualização: 2026-07-16 (**aposentadoria da aplicação de efeitos de habilidade + habilidade
+> repetível por passo (m3-31)**: a **fusão automática de efeitos** na fórmula (m3-20) foi **removida** —
+> por decisão do dono, agregava complexidade com pouco retorno. Deletados: `aplicarEfeitos`/`alvoPadrao`,
+> o campo `efeitos` do catálogo + `HabilidadeBaseDto.efeitos` + `FichaHabilidadeDto.efeitos`, `RolagemEfeitoDto`,
+> os enums `RolagemEfeitoTipoEnum`/`RolagemEfeitoAlvoEnum` (+ barrel), o campo `bonusDados` de `TermoDadoDto`
+> e as extensões DANO_DADOS_ARMA/BONUS_TESTE ATRIBUTO. **O que fica:** a **marcação de habilidades por
+> passo** continua, mas agora **só conta Energia** — `resolverPreset` usa a fórmula **crua** e apenas soma
+> o custo. A lista `habilidades` virou **multiconjunto**: a **mesma habilidade pode ser aplicada N vezes**
+> num passo (energia soma por ocorrência). UI: o seletor por passo virou um **stepper `− N +`** por
+> habilidade; os chips de vínculo do preset agrupam em **"Nome ×N"**; a energia do passo reflete as
+> repetições. O tooltip da descrição (m3-30) fica ainda mais útil — o jogador lê e aplica o efeito na mão.
+> O **crítico mecânico** (m3-30) segue: dobra a **fórmula crua** (dados/fixos/atributos escritos, exceto
+> PROF/NIV). **Testes:** shared **281** (removidos os testes de fusão; +2 de multiconjunto de energia),
+> frontend **319** (stepper add/remove/contagem + serialização repetida). Verificado no stack real:
+> vínculo "Força Bruta ×2" com energia "− 8 E"; rolar o dano usa `2d8` cru (sem FOR×3 fundido); stepper
+> mostra a contagem por passo. Build/lint verdes.)
+>
+> (**crítico mecânico + polimento visual (m3-30)**: um passo de preset
 > pode ser marcado como **critável** (`critico` em `FichaRolagemDto`/`FichaRolagemPassoDto`). Na UI, o
 > passo critável ganha **dois botões — "Rolar" e "Rolar crítico"**; o crítico **dobra o dano** conforme
 > `sistema-v4.1.0` (1217/1303): dobra o **número de dados** (`2d8`→`4d8`, rolagem fresca), os **fixos** e

@@ -219,11 +219,11 @@ describe('FichaRolagens', () => {
     const alvo = montar([], { habilidades: [foco, forca] });
     alvo.componentInstance['abrirNovo']();
     alvo.componentInstance['form'].patchValue({ nome: 'Espada', formula: 'LUTd20kh1 + PROF' });
-    alvo.componentInstance['alternarHabilidade'](alvo.componentInstance['form'].controls.habilidades, 'Foco');
+    alvo.componentInstance['adicionarHabilidade'](alvo.componentInstance['form'].controls.habilidades, 'Foco');
     alvo.componentInstance['adicionarPasso']();
     const passo = alvo.componentInstance['seguintes'].at(0);
     passo.patchValue({ nome: 'Dano', formula: '2d6' });
-    alvo.componentInstance['alternarHabilidade'](passo.controls.habilidades, 'Força Bruta');
+    alvo.componentInstance['adicionarHabilidade'](passo.controls.habilidades, 'Força Bruta');
     alvo.componentInstance['confirmar']();
     expect(alvo.emitidos[0]).toEqual([
       {
@@ -234,5 +234,44 @@ describe('FichaRolagens', () => {
         habilidades: ['Foco'],
       },
     ]);
+  });
+
+  it('aplica a mesma habilidade mais de uma vez no passo (multiconjunto; m3-31): energia soma e serializa repetido', () => {
+    const forca: FichaHabilidadeDto = {
+      nome: 'Força Bruta',
+      categoria: HabilidadeCategoriaEnum.GERAL,
+      custoEnergia: 3,
+      descricao: '',
+    };
+    const alvo = montar([], { habilidades: [forca] });
+    alvo.componentInstance['abrirNovo']();
+    alvo.componentInstance['form'].patchValue({ nome: 'Golpe', formula: '2d6 [Físico]' });
+    const controle = alvo.componentInstance['form'].controls.habilidades;
+    alvo.componentInstance['adicionarHabilidade'](controle, 'Força Bruta');
+    alvo.componentInstance['adicionarHabilidade'](controle, 'Força Bruta');
+    expect(alvo.componentInstance['contarHabilidade'](controle, 'Força Bruta')).toBe(2);
+    alvo.componentInstance['removerHabilidade'](controle, 'Força Bruta');
+    expect(alvo.componentInstance['contarHabilidade'](controle, 'Força Bruta')).toBe(1);
+    alvo.componentInstance['adicionarHabilidade'](controle, 'Força Bruta');
+    alvo.componentInstance['confirmar']();
+    expect(alvo.emitidos[0]).toEqual([
+      { nome: 'Golpe', formula: '2d6 [Físico]', habilidades: ['Força Bruta', 'Força Bruta'] },
+    ]);
+  });
+
+  it('a energia do preset conta as ocorrências repetidas da habilidade (m3-31)', () => {
+    const forca: FichaHabilidadeDto = {
+      nome: 'Força Bruta',
+      categoria: HabilidadeCategoriaEnum.GERAL,
+      custoEnergia: 3,
+      descricao: '',
+    };
+    // Preset já com a habilidade repetida no passo → energia agregada = 3 × 2.
+    const alvo = montar([{ nome: 'Golpe', formula: '2d6 [Físico]', habilidades: ['Força Bruta', 'Força Bruta'] }], {
+      habilidades: [forca],
+    });
+    const vm = alvo.componentInstance['presets']()[0];
+    expect(vm.plano.energiaGasta).toBe(6);
+    expect(vm.plano.habilidadesVinculadas).toEqual(['Força Bruta', 'Força Bruta']);
   });
 });

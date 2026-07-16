@@ -101,6 +101,11 @@
     border-radius: var(--radius-control);
     padding: 1px 7px;
   }
+  // Multiplicador de vínculo repetido (m3-31): "×N" em accent.
+  &__vinculo-qtd {
+    color: var(--accent);
+    font-weight: 700;
+  }
   &__energia {
     font-family: var(--font-mono);
     font-size: 11px;
@@ -374,6 +379,7 @@
     flex-wrap: wrap;
     gap: 8px;
   }
+  // Item do seletor de habilidades por passo (m3-31): rótulo + custo + stepper de contagem.
   &__hab {
     display: inline-flex;
     align-items: center;
@@ -384,13 +390,8 @@
     background: var(--surface);
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-control);
-    padding: 6px 10px;
-    cursor: pointer;
+    padding: 4px 6px 4px 10px;
 
-    &:hover {
-      color: var(--text);
-      border-color: var(--accent-border);
-    }
     &--marcada {
       color: var(--accent);
       border-color: var(--accent-border);
@@ -403,6 +404,38 @@
   &__hab-custo {
     font-size: 10px;
     color: var(--energy);
+  }
+  &__hab-stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  &__hab-passo {
+    width: 22px;
+    height: 22px;
+    flex: none;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      color: var(--text);
+      border-color: var(--accent-border);
+    }
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+  &__hab-qtd {
+    min-width: 14px;
+    text-align: center;
+    font-weight: 700;
+    color: var(--text);
   }
 
   &__form-acoes {

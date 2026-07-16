@@ -1,5 +1,10 @@
 # m3-30-rolagem-critico-mecanico.spec.md
 
+> **Nota (m3-31):** a **aplicação automática de efeitos de habilidade** (m3-20) foi **aposentada** depois
+> desta spec. O crítico continua igual — dobra a **fórmula crua** (dados, fixos e atributos **escritos na
+> fórmula**), exceto PROF/NIV. A única diferença é que, hoje, um `FOR×3` (ex.: Força Bruta) precisa estar
+> **escrito na fórmula** do passo para ser dobrado; não há mais fusão automática vinda da habilidade.
+
 > Sucede a **Gramática v3** (`m3-29`) e o modelo de **efeitos de habilidade** (`m3-20`). Torna o
 > **crítico** uma mecânica de verdade nas rolagens de preset: um passo pode ser marcado como **critável**
 > e, com isso, ganha a ação **"Rolar crítico"** que **dobra o dano**.
@@ -13,8 +18,8 @@
 ## Objetivo
 
 Permitir que o jogador marque um passo de preset (tipicamente o dano) como **critável**. A UI passa a
-oferecer dois botões — **"Rolar"** e **"Rolar crítico"** — e o crítico dobra o dano conforme o documento,
-inclusive os efeitos de habilidade fundidos, exceto Patente/Nível.
+oferecer dois botões — **"Rolar"** e **"Rolar crítico"** — e o crítico dobra o dano conforme o documento
+(dados, fixos e atributos escritos na fórmula), exceto Patente/Nível.
 
 ## Entregáveis
 

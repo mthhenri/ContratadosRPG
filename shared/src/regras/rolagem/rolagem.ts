@@ -2,7 +2,6 @@ import {
   ABREVIACOES_ATRIBUTO,
   ABREVIACOES_FONTE_EXTRA,
   QUANTIDADE_DADOS_MAXIMA,
-  abreviacaoAtributo,
   resolverTipoDanoSimples,
 } from './rolagem.dados';
 import {
@@ -18,18 +17,16 @@ import {
   PresetResolverDto,
   ResultadoRolagemDto,
   RolagemDto,
-  RolagemEfeitoDto,
   TermoAtributoDto,
   TermoConstanteDto,
   TermoDadoDto,
 } from './rolagem.dtos';
-import { RolagemEfeitoAlvoEnum, RolagemEfeitoTipoEnum, TipoDanoEnum } from '../../enums';
-import { elevarDado } from '../descanso';
+import { TipoDanoEnum } from '../../enums';
 import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto, FichaRolagemPassoDto } from '../../dtos/ficha';
 
 /**
- * Motor de rolagem de dados (m3-15; gramática v2 m3-16; dano tipado m3-18; efeitos de habilidade m3-20;
- * **gramática v3 m3-29**): interpreta e rola uma fórmula — `NdM`, constantes, atributo (`+LUT`), atributo
+ * Motor de rolagem de dados (m3-15; gramática v2 m3-16; dano tipado m3-18; **gramática v3 m3-29**;
+ * crítico mecânico m3-30): interpreta e rola uma fórmula — `NdM`, constantes, atributo (`+LUT`), atributo
  * como **fonte de dados** (`FORd6`), atributo **escalado** (`FOR*3`, `LUT/2`, piso), combinados por
  * `+`/`−`, com **tags de tipo de dano** `[Tipo]`/`[TipoA-TipoB]` (Composto = soma 50/50, resto pro
  * primeiro), e **operadores por pool**: manter maior/menor (`kh`/`kl`), margem de crítico (`cm`,
@@ -38,8 +35,8 @@ import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto, FichaRolag
  * **Não há mais "modo".** Um teste é a expressão explícita `LUTd20kh1 + PROF` — a Proficiência é um termo
  * escrito, nunca somada por baixo dos panos. A **desvantagem** de atributo zerado (regra 270) sobrevive
  * como propriedade **intrínseca** de um pool de atributo (`ATRd20kh…` com atributo ≤ 0 → rola 2+|attr|
- * dados e mantém o menor). `aplicarEfeitos` funde efeitos de habilidade roteando por `alvo` × papel
- * inferido da fórmula (fórmula com keep = teste); `normalizarPresetLegado` migra presets antigos
+ * dados e mantém o menor). As habilidades vinculadas a um passo **só contam Energia** — não alteram mais a
+ * fórmula (fusão de efeitos aposentada em m3-31). `normalizarPresetLegado` migra presets antigos
  * (`modo:'TESTE'`) para a notação nova. Parênteses ainda não são suportados. Funções puras; a **única
  * brecha a `Math.random`** é a função de rolagem injetável `rolarDado` (SYSTEM.SPEC §6.6).
  *
@@ -456,7 +453,7 @@ function rolarTermo(
     quantidade = termo.quantidade;
   }
   // Crítico (m3-30): dobra o **número de dados** rolados (regra 1217 — `3D10` vira `6D10`).
-  const quantidadeBruta = (quantidade + (termo.bonusDados ?? 0)) * (critico ? 2 : 1);
+  const quantidadeBruta = quantidade * (critico ? 2 : 1);
   quantidade = Math.max(0, Math.min(QUANTIDADE_DADOS_MAXIMA, quantidadeBruta));
 
   // 2. Rola o pool base.
@@ -586,109 +583,10 @@ export function rolarInterpretada(
   };
 }
 
-/** Alvo padrão de um efeito quando não declarado: bônus de teste vai no teste, o resto no dano. */
-function alvoPadrao(tipo: RolagemEfeitoTipoEnum): RolagemEfeitoAlvoEnum {
-  return tipo === RolagemEfeitoTipoEnum.BONUS_TESTE ? RolagemEfeitoAlvoEnum.TESTE : RolagemEfeitoAlvoEnum.DANO;
-}
-
-/**
- * Funde os `efeitos` de habilidade (m3-20) numa fórmula já interpretada, respeitando o **papel** da
- * fórmula (m3-29): uma fórmula com operador de keep (`kh`/`kl`) é um **teste**; senão é **dano**. Só
- * aplica os efeitos cujo `alvo` (declarado ou inferido) casa com esse papel — bônus de teste num teste,
- * efeitos de dano num dano. Puro; devolve uma **nova** fórmula (não muta a original).
- */
-export function aplicarEfeitos(
-  formula: FormulaInterpretadaDto,
-  efeitos: readonly RolagemEfeitoDto[],
-): FormulaInterpretadaDto {
-  const ehTeste = formula.dados.some((dado) => dado.manterMaior !== undefined || dado.manterMenor !== undefined);
-  let dados: TermoDadoDto[] = [...formula.dados];
-  const atributos: TermoAtributoDto[] = [...formula.atributos];
-  const constantesTipadas: TermoConstanteDto[] = [...(formula.constantesTipadas ?? [])];
-  let constante = formula.constante;
-
-  for (const efeito of efeitos) {
-    const alvo = efeito.alvo ?? alvoPadrao(efeito.tipo);
-    if ((alvo === RolagemEfeitoAlvoEnum.TESTE) !== ehTeste) {
-      continue; // efeito não pertence a este passo
-    }
-    const tipoDano = efeito.tipoDano ?? TipoDanoEnum.FISICO;
-
-    switch (efeito.tipo) {
-      case RolagemEfeitoTipoEnum.DANO_FIXO:
-        constantesTipadas.push({ sinal: 1, valor: efeito.valor ?? 0, tipoDano });
-        break;
-      case RolagemEfeitoTipoEnum.DANO_DADOS:
-        dados = [...dados, { sinal: 1, quantidade: efeito.valor ?? 1, faces: efeito.faces ?? 6, tipoDano }];
-        break;
-      case RolagemEfeitoTipoEnum.DANO_DADOS_ARMA: {
-        // Espelha o maior dado de dano positivo da fórmula (faces + tipo/composto da arma), `valor` vezes.
-        const candidatos = dados.filter((dado) => dado.sinal === 1);
-        const referencia = candidatos.length
-          ? candidatos.reduce((maior, dado) => (dado.faces > maior.faces ? dado : maior))
-          : undefined;
-        if (referencia) {
-          const tipoArma: Partial<Pick<TermoDadoDto, 'tipoDano' | 'composto'>> = referencia.composto
-            ? { composto: referencia.composto }
-            : { tipoDano: referencia.tipoDano };
-          dados = [...dados, { sinal: 1, quantidade: efeito.valor ?? 1, faces: referencia.faces, ...tipoArma }];
-        }
-        break;
-      }
-      case RolagemEfeitoTipoEnum.DANO_ATRIBUTO:
-        if (efeito.atributo) {
-          const multiplicador = efeito.multiplicador ?? 1;
-          const abreviacao = abreviacaoAtributo(efeito.atributo);
-          const rotulo = multiplicador === 1 ? abreviacao : `${abreviacao}*${multiplicador}`;
-          atributos.push({
-            sinal: 1,
-            atributo: efeito.atributo,
-            rotulo,
-            ...(multiplicador !== 1 ? { multiplicador } : {}),
-            tipoDano,
-          });
-        }
-        break;
-      case RolagemEfeitoTipoEnum.BONUS_TESTE:
-        if (efeito.variante === 'FIXO') {
-          constante += efeito.valor ?? 0;
-        } else if (efeito.variante === 'ATRIBUTO') {
-          // Soma o atributo ao resultado do teste (sem tipo de dano — é um teste, não um dano).
-          if (efeito.atributo) {
-            const multiplicador = efeito.multiplicador ?? 1;
-            const abreviacao = abreviacaoAtributo(efeito.atributo);
-            const rotulo = multiplicador === 1 ? abreviacao : `${abreviacao}*${multiplicador}`;
-            atributos.push({
-              sinal: 1,
-              atributo: efeito.atributo,
-              rotulo,
-              ...(multiplicador !== 1 ? { multiplicador } : {}),
-            });
-          }
-        } else {
-          // Vantagem: aumenta o pool do termo com keep (mais dados, mesmo kh/kl); sem termo com keep, ignora.
-          const indice = dados.findIndex((dado) => dado.manterMaior !== undefined || dado.manterMenor !== undefined);
-          if (indice >= 0) {
-            const bonus = (dados[indice].bonusDados ?? 0) + (efeito.valor ?? 1);
-            dados = dados.map((dado, i) => (i === indice ? { ...dado, bonusDados: bonus } : dado));
-          }
-        }
-        break;
-      case RolagemEfeitoTipoEnum.ELEVAR_DADO:
-        dados = dados.map((termo) => ({ ...termo, faces: elevarDado({ faces: termo.faces, passos: efeito.valor ?? 1 }) }));
-        break;
-    }
-  }
-
-  return constantesTipadas.length > 0
-    ? { dados, atributos, constante, constantesTipadas }
-    : { dados, atributos, constante };
-}
-
 /**
  * Resolve um preset (m3-21; habilidade **por passo** em m3-22) **sem rolar**: interpreta cada passo
- * (primária + `seguintes`) e funde os efeitos das habilidades vinculadas **daquele passo** (por
- * `alvo` × papel da fórmula), reportando a Energia por passo. Puro — o front rola cada passo com
+ * (primária + `seguintes`) e resolve as habilidades vinculadas **daquele passo** só para a **Energia**
+ * (efeitos aposentados em m3-31 — a fórmula não é alterada), reportando a Energia por passo. Puro — o front rola cada passo com
  * `rolarPasso` e debita a energia do passo pelo canal existente. Habilidades cujo nome não está na ficha
  * são ignoradas. Os campos de energia do `PlanoPresetDto` são os **agregados** (soma de todos os passos).
  */
@@ -713,11 +611,10 @@ export function resolverPreset(dto: PresetResolverDto): PlanoPresetDto {
     ...(preset.seguintes ?? []),
   ];
   const passos: PassoInterpretadoDto[] = passosBrutos.map((passo) => {
+    // Multiconjunto: o mesmo nome pode repetir (aplicar a habilidade N vezes) → soma Energia por ocorrência.
     const vinculadas = resolverVinculo(passo.habilidades);
-    const efeitos = vinculadas.flatMap((habilidade) => habilidade.efeitos ?? []);
-    const base = interpretarFormula(passo.formula);
-    const interpretacao: InterpretacaoFormulaDto =
-      base.valida && base.formula ? { valida: true, formula: aplicarEfeitos(base.formula, efeitos) } : base;
+    // A fórmula é usada **crua** — as habilidades só contam Energia (efeitos aposentados em m3-31).
+    const interpretacao = interpretarFormula(passo.formula);
     return {
       nome: passo.nome,
       formula: passo.formula,

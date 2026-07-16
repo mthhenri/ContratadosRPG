@@ -51,11 +51,12 @@ interface RolagemVM {
  * m3-29): os presets nomeados da ficha (`FichaRolagemDto`). Não há mais "modo" — a **fórmula** especifica
  * tudo (um teste é `LUTd20kh1 + PROF`; keep, margem de crítico `cm`, explosão `!`/implosão `?`). Um preset
  * pode ser **encadeado** (primária → dano → crítico, todos os passos visíveis, cada um com seu botão de
- * rolar) e **anexar habilidades por passo**: cada ação escolhe quais habilidades aplica, e ao rolá-la
- * gasta a Energia delas + aplica os efeitos (ex.: Força Bruta = FOR × 3 só no passo de dano).
+ * rolar) e **anexar habilidades por passo** (m3-31): cada passo escolhe quais habilidades usa **só para a
+ * Energia** (a fusão de efeitos foi aposentada); a mesma habilidade pode ser aplicada mais de uma vez
+ * (multiconjunto — soma energia por ocorrência). Um passo pode ser marcado **critável** (dobra o dano).
  *
  * **Nenhuma regra de dados vive aqui** (proibição #26): interpretar/validar/rolar e resolver o preset
- * (efeitos + energia por passo) é o motor puro `shared/regras/rolagem` (`resolverPreset`/`rolarPasso`,
+ * (energia por passo) é o motor puro `shared/regras/rolagem` (`resolverPreset`/`rolarPasso`,
  * RNG do navegador — §6.6). O componente é **controlado**: cada mutação da lista emite `rolagensMudou` e
  * a página persiste. O resultado de cada rolagem vai para a **bandeja de dados** global (m3-22), não
  * fica no cartão. Estilos só com os tokens do tema "Terminal de Contenção" (proibição #29).
@@ -194,16 +195,39 @@ export class FichaRolagens {
     this.seguintes.removeAt(indice);
   }
 
-  // === Habilidades anexadas (por passo) ===
-  /** Alterna a habilidade `nome` no controle de habilidades de um passo (primária ou seguinte). */
-  protected alternarHabilidade(controle: FormControl<readonly string[]>, nome: string): void {
-    const atual = controle.value;
-    controle.setValue(atual.includes(nome) ? atual.filter((item) => item !== nome) : [...atual, nome]);
+  // === Habilidades anexadas (por passo) — multiconjunto (m3-31) ===
+  /** Quantas vezes a habilidade `nome` está aplicada no passo (0 = não usada). */
+  protected contarHabilidade(controle: FormControl<readonly string[]>, nome: string): number {
+    return controle.value.filter((item) => item === nome).length;
   }
 
-  /** Mantém só as habilidades que ainda existem na ficha (nome casado). */
+  /** Aplica **mais uma** ocorrência da habilidade `nome` (soma energia por ocorrência). */
+  protected adicionarHabilidade(controle: FormControl<readonly string[]>, nome: string): void {
+    controle.setValue([...controle.value, nome]);
+  }
+
+  /** Remove **uma** ocorrência da habilidade `nome` (a primeira encontrada). */
+  protected removerHabilidade(controle: FormControl<readonly string[]>, nome: string): void {
+    const indice = controle.value.indexOf(nome);
+    if (indice >= 0) {
+      const proximo = [...controle.value];
+      proximo.splice(indice, 1);
+      controle.setValue(proximo);
+    }
+  }
+
+  /** Mantém só as habilidades que ainda existem na ficha (nome casado) — preserva repetições. */
   private filtrarHabilidades(nomes: readonly string[]): string[] {
     return nomes.filter((nome) => this.habilidadesDisponiveis().some((habilidade) => habilidade.nome === nome));
+  }
+
+  /** Agrupa uma lista de nomes (multiconjunto) em `{ nome, quantidade }` para exibir os chips de vínculo. */
+  protected vinculosAgrupados(nomes: readonly string[]): readonly { readonly nome: string; readonly quantidade: number }[] {
+    const contagem = new Map<string, number>();
+    for (const nome of nomes) {
+      contagem.set(nome, (contagem.get(nome) ?? 0) + 1);
+    }
+    return [...contagem].map(([nome, quantidade]) => ({ nome, quantidade }));
   }
 
   /** Descrição de uma habilidade pelo nome (para o tooltip dos chips de vínculo) — vazio se não achar. */

@@ -1,14 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto } from '../../dtos/ficha';
+import { HabilidadeCategoriaEnum, RolagemPresetTipoEnum, TipoDanoEnum } from '../../enums';
 import {
-  HabilidadeCategoriaEnum,
-  RolagemEfeitoAlvoEnum,
-  RolagemEfeitoTipoEnum,
-  RolagemPresetTipoEnum,
-  TipoDanoEnum,
-} from '../../enums';
-import {
-  aplicarEfeitos,
   interpretarFormula,
   normalizarPresetLegado,
   reescreverFormulaTeste,
@@ -415,120 +408,7 @@ describe('validação de operadores (m3-29)', () => {
   });
 });
 
-describe('efeitos de habilidade — aplicarEfeitos por papel inferido (m3-20/m3-29)', () => {
-  it('Força Bruta (DANO_ATRIBUTO) soma FOR×3 ao dano físico (fórmula sem keep = dano)', () => {
-    const base = interpretarFormula('2d8 [Físico]').formula!;
-    const comEfeito = aplicarEfeitos(base, [
-      {
-        tipo: RolagemEfeitoTipoEnum.DANO_ATRIBUTO,
-        atributo: 'forca',
-        multiplicador: 3,
-        tipoDano: TipoDanoEnum.FISICO,
-        alvo: RolagemEfeitoAlvoEnum.DANO,
-      },
-    ]);
-    // FOR=6 → FOR*3 = 18; 2d8 no máximo = 16 → Físico 34.
-    const resultado = rolarInterpretada(comEfeito, atributos, undefined, undefined, rolarMaximo);
-    expect(resultado.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 34 }]);
-    expect(resultado.total).toBe(34);
-  });
-
-  it('DANO_FIXO soma uma constante tipada ao dano', () => {
-    const base = interpretarFormula('2d6 [Balístico]').formula!;
-    const comEfeito = aplicarEfeitos(base, [
-      { tipo: RolagemEfeitoTipoEnum.DANO_FIXO, valor: 2, tipoDano: TipoDanoEnum.BALISTICO },
-    ]);
-    const resultado = rolarInterpretada(comEfeito, atributos, undefined, undefined, rolarMaximo);
-    expect(resultado.grupos).toEqual([{ tipoDano: TipoDanoEnum.BALISTICO, total: 14 }]); // 12 + 2
-  });
-
-  it('ELEVAR_DADO sobe as faces dos dados de dano (D8 → D10)', () => {
-    const base = interpretarFormula('2d8 [Físico]').formula!;
-    const comEfeito = aplicarEfeitos(base, [{ tipo: RolagemEfeitoTipoEnum.ELEVAR_DADO, valor: 1 }]);
-    expect(comEfeito.dados[0].faces).toBe(10);
-  });
-
-  it('BONUS_TESTE DADO aumenta o pool do termo com keep; FIXO soma bônus plano (fórmula com keep = teste)', () => {
-    const base = interpretarFormula('lutad20kh1').formula!;
-    const comDado = aplicarEfeitos(base, [
-      { tipo: RolagemEfeitoTipoEnum.BONUS_TESTE, variante: 'DADO', valor: 2 },
-    ]);
-    expect(comDado.dados[0].bonusDados).toBe(2);
-
-    const comFixo = aplicarEfeitos(base, [
-      { tipo: RolagemEfeitoTipoEnum.BONUS_TESTE, variante: 'FIXO', valor: 3 },
-    ]);
-    expect(comFixo.constante).toBe(3);
-  });
-
-  it('BONUS_TESTE ATRIBUTO soma o atributo ao resultado do teste (sem tipo de dano)', () => {
-    const base = interpretarFormula('pontariad20kh1 + PROF').formula!;
-    const comEfeito = aplicarEfeitos(base, [
-      { tipo: RolagemEfeitoTipoEnum.BONUS_TESTE, variante: 'ATRIBUTO', atributo: 'pontaria', multiplicador: 1 },
-    ]);
-    // Vira um termo de atributo somado ao teste (além de PROF), sem tipoDano.
-    const somados = comEfeito.atributos.filter((atributo) => atributo.atributo === 'pontaria');
-    expect(somados).toHaveLength(1);
-    expect(somados[0]).toMatchObject({ sinal: 1, atributo: 'pontaria', rotulo: 'PON' });
-    expect(somados[0].tipoDano).toBeUndefined();
-  });
-
-  it('DANO_DADOS_ARMA espelha o maior dado de dano da fórmula (faces + tipo), N vezes', () => {
-    const base = interpretarFormula('2d8 [Balístico]').formula!;
-    const comEfeito = aplicarEfeitos(base, [{ tipo: RolagemEfeitoTipoEnum.DANO_DADOS_ARMA, valor: 2 }]);
-    // Ganha um termo extra: 2 dados D8 Balísticos (espelhando a arma).
-    expect(comEfeito.dados).toHaveLength(2);
-    const extra = comEfeito.dados[1];
-    expect(extra).toMatchObject({ sinal: 1, quantidade: 2, faces: 8, tipoDano: TipoDanoEnum.BALISTICO });
-  });
-
-  it('DANO_DADOS_ARMA escolhe o dado de MAIOR face quando há mais de um tipo', () => {
-    const base = interpretarFormula('1d6 [Físico] + 1d10 [Balístico]').formula!;
-    const comEfeito = aplicarEfeitos(base, [{ tipo: RolagemEfeitoTipoEnum.DANO_DADOS_ARMA, valor: 1 }]);
-    const extra = comEfeito.dados[comEfeito.dados.length - 1];
-    expect(extra).toMatchObject({ quantidade: 1, faces: 10, tipoDano: TipoDanoEnum.BALISTICO });
-  });
-
-  it('DANO_DADOS_ARMA é no-op quando a fórmula não tem dado de dano', () => {
-    const base = interpretarFormula('+5 [Físico]').formula!;
-    const comEfeito = aplicarEfeitos(base, [{ tipo: RolagemEfeitoTipoEnum.DANO_DADOS_ARMA, valor: 2 }]);
-    expect(comEfeito.dados).toHaveLength(0);
-  });
-
-  it('efeito de DANO é ignorado numa fórmula de teste (roteamento por papel)', () => {
-    const base = interpretarFormula('lutad20kh1').formula!;
-    const comEfeito = aplicarEfeitos(base, [
-      { tipo: RolagemEfeitoTipoEnum.DANO_ATRIBUTO, atributo: 'forca', multiplicador: 3, alvo: RolagemEfeitoAlvoEnum.DANO },
-    ]);
-    expect(comEfeito).toEqual(base); // inalterado
-  });
-
-  it('efeito de BONUS_TESTE é ignorado numa fórmula de dano', () => {
-    const base = interpretarFormula('2d8 [Físico]').formula!;
-    const comEfeito = aplicarEfeitos(base, [
-      { tipo: RolagemEfeitoTipoEnum.BONUS_TESTE, variante: 'DADO', valor: 2 },
-    ]);
-    expect(comEfeito).toEqual(base);
-  });
-});
-
 describe('crítico — dobra o dano (m3-30; sistema-v4.1.0 1217/1303)', () => {
-  const forcaBruta: FichaHabilidadeDto = {
-    nome: 'Força Bruta',
-    categoria: HabilidadeCategoriaEnum.ARQUETIPO,
-    custoEnergia: 4,
-    descricao: 'Soma sua Força × 3 no dano de ataques físicos.',
-    efeitos: [
-      {
-        tipo: RolagemEfeitoTipoEnum.DANO_ATRIBUTO,
-        atributo: 'forca',
-        multiplicador: 3,
-        tipoDano: TipoDanoEnum.FISICO,
-        alvo: RolagemEfeitoAlvoEnum.DANO,
-      },
-    ],
-  };
-
   it('dobra o número de dados, os fixos e os atributos (FOR=6, dados no máximo)', () => {
     const formula = interpretarFormula('2d8 + FOR*3 + 5').formula!;
     const normal = rolarInterpretada(formula, atributos, undefined, undefined, rolarMaximo);
@@ -556,21 +436,29 @@ describe('crítico — dobra o dano (m3-30; sistema-v4.1.0 1217/1303)', () => {
     expect(critico.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 32 }]); // 4d8 no máximo
   });
 
-  it('resolverPreset carrega `critico` no passo; rolarPasso(critico) dobra dados + efeito de habilidade', () => {
+  it('resolverPreset carrega `critico` no passo e conta a energia; rolarPasso(critico) dobra o dano', () => {
+    const reforco: FichaHabilidadeDto = {
+      nome: 'Reforço',
+      categoria: HabilidadeCategoriaEnum.GERAL,
+      custoEnergia: 4,
+      descricao: '',
+    };
     const preset: FichaRolagemDto = {
       nome: 'Dano',
       formula: '2d8 [Físico]',
-      habilidades: ['Força Bruta'],
+      habilidades: ['Reforço'],
       critico: true,
     };
-    const plano = resolverPreset({ preset, atributos, habilidades: [forcaBruta] });
+    const plano = resolverPreset({ preset, atributos, habilidades: [reforco] });
     expect(plano.passos[0].critico).toBe(true);
+    // A habilidade **só conta Energia** — não altera a fórmula (efeitos aposentados em m3-31).
+    expect(plano.passos[0].energiaGasta).toBe(4);
 
-    // Normal: 2d8 (16) + FOR*3 (18) = 34. Crítico: 4d8 (32) + FOR*6 (36) = 68.
+    // Normal: 2d8 (16). Crítico: 4d8 (32).
     const normal = rolarPasso(plano.passos[0], atributos, undefined, undefined, rolarMaximo, false);
-    expect(normal?.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 34 }]);
+    expect(normal?.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 16 }]);
     const critico = rolarPasso(plano.passos[0], atributos, undefined, undefined, rolarMaximo, true);
-    expect(critico?.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 68 }]);
+    expect(critico?.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 32 }]);
     expect(critico?.critico).toBe(true);
   });
 
@@ -586,15 +474,6 @@ describe('presets + runner encadeado — resolverPreset/rolarPasso (m3-21)', () 
     categoria: HabilidadeCategoriaEnum.ARQUETIPO,
     custoEnergia: 4,
     descricao: 'Soma sua Força × 3 no dano de ataques físicos.',
-    efeitos: [
-      {
-        tipo: RolagemEfeitoTipoEnum.DANO_ATRIBUTO,
-        atributo: 'forca',
-        multiplicador: 3,
-        tipoDano: TipoDanoEnum.FISICO,
-        alvo: RolagemEfeitoAlvoEnum.DANO,
-      },
-    ],
   };
 
   it('preset legado {nome, formula} → 1 passo, sem energia', () => {
@@ -618,7 +497,7 @@ describe('presets + runner encadeado — resolverPreset/rolarPasso (m3-21)', () 
     expect(plano.passos.map((passo) => passo.nome)).toEqual(['Arma', 'Dano', 'Crítico']);
   });
 
-  it('injeta efeitos das habilidades vinculadas e soma a energia', () => {
+  it('conta a energia das habilidades vinculadas sem alterar a fórmula (efeitos aposentados em m3-31)', () => {
     const preset: FichaRolagemDto = {
       nome: 'Ataque',
       formula: '2d8 [Físico]',
@@ -628,12 +507,23 @@ describe('presets + runner encadeado — resolverPreset/rolarPasso (m3-21)', () 
     expect(plano.energiaGasta).toBe(4);
     expect(plano.energiaVariavel).toBe(false);
     expect(plano.habilidadesVinculadas).toEqual(['Força Bruta']);
-    // Rola o passo: 2d8 (=16) + FOR*3 (=18) → Físico 34.
+    // A fórmula é crua: 2d8 no máximo = 16 (sem FOR*3 fundido).
     const resultado = rolarPasso(plano.passos[0], atributos, undefined, undefined, rolarMaximo);
-    expect(resultado?.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 34 }]);
+    expect(resultado?.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 16 }]);
   });
 
-  it('habilidade vinculada a um passo seguinte só afeta aquele passo (m3-22)', () => {
+  it('a mesma habilidade repetida no passo soma a energia por ocorrência (multiconjunto; m3-31)', () => {
+    const preset: FichaRolagemDto = {
+      nome: 'Ataque',
+      formula: '2d8 [Físico]',
+      habilidades: ['Força Bruta', 'Força Bruta'],
+    };
+    const plano = resolverPreset({ preset, atributos, habilidades: [forcaBruta] });
+    expect(plano.energiaGasta).toBe(8); // 4 × 2 ocorrências
+    expect(plano.habilidadesVinculadas).toEqual(['Força Bruta', 'Força Bruta']);
+  });
+
+  it('habilidade vinculada a um passo seguinte só debita naquele passo (m3-22)', () => {
     const preset: FichaRolagemDto = {
       nome: 'Ataque',
       formula: 'lutad20kh1 + PROF',
@@ -647,9 +537,6 @@ describe('presets + runner encadeado — resolverPreset/rolarPasso (m3-21)', () 
     expect(plano.passos[1].habilidadesVinculadas).toEqual(['Força Bruta']);
     expect(plano.passos[1].energiaGasta).toBe(4);
     expect(plano.energiaGasta).toBe(4); // agregado do preset = soma dos passos
-    // Só o passo de dano recebe FOR*3: 2d8 (=16) + 18 → Físico 34.
-    const dano = rolarPasso(plano.passos[1], atributos, undefined, undefined, rolarMaximo);
-    expect(dano?.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 34 }]);
   });
 
   it('custo variável [X E] não soma, mas marca energiaVariavel', () => {

@@ -1,5 +1,5 @@
 import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto } from '../../dtos/ficha';
-import type { RolagemEfeitoAlvoEnum, RolagemEfeitoTipoEnum, TipoDanoEnum } from '../../enums';
+import type { TipoDanoEnum } from '../../enums';
 
 /**
  * DTOs do motor de rolagem (m3-15; dano tipado m3-18; gramática v3 m3-29): interpretação de uma fórmula
@@ -45,8 +45,6 @@ export interface TermoDadoDto {
   readonly explosao?: number;
   /** `?`/`?<=N` (m3-29, não-canônico): implode ao rolar um valor ≤ este limiar (bare `?` = 1). */
   readonly implosao?: number;
-  /** Dados extras somados ao pool **antes** do keep (efeito `BONUS_TESTE` variante `DADO`; m3-29). */
-  readonly bonusDados?: number;
   /** Tipo de dano do termo (m3-18), quando a fórmula usa tags `[Tipo]`. */
   readonly tipoDano?: TipoDanoEnum;
   /** Composto (m3-18): quando presente, `tipoDano` fica ausente e o termo entra no par 50/50. */
@@ -158,34 +156,6 @@ export interface ResultadoRolagemDto {
   readonly critico?: boolean;
 }
 
-// ── Efeitos de habilidade (m3-20) ────────────────────────────────────────────
-
-/**
- * Efeito **mecânico** de uma habilidade num preset de rolagem (m3-20). Espelha `ModificacaoEfeitoDto`
- * (compras): `aplicarEfeitos` funde estes efeitos na fórmula interpretada de um passo. Ex.: Força
- * Bruta = `{ tipo: DANO_ATRIBUTO, atributo: 'forca', multiplicador: 3, tipoDano: Físico, alvo: DANO }`.
- */
-export interface RolagemEfeitoDto {
-  readonly tipo: RolagemEfeitoTipoEnum;
-  /** Magnitude: dano fixo, quantidade de dados, passos de elevação, ou bônus de teste. */
-  readonly valor?: number;
-  /** Faces do dado em `DANO_DADOS`. */
-  readonly faces?: number;
-  /** Atributo em `DANO_ATRIBUTO` **ou** em `BONUS_TESTE` variante `'ATRIBUTO'` (soma o atributo ao teste). */
-  readonly atributo?: keyof FichaAtributosDto;
-  /** Multiplicador do atributo em `DANO_ATRIBUTO` / `BONUS_TESTE` `'ATRIBUTO'` (default 1). */
-  readonly multiplicador?: number;
-  /** Tipo de dano dos efeitos de dano (default Físico). Ignorado por `DANO_DADOS_ARMA` (herda o do dado espelhado). */
-  readonly tipoDano?: TipoDanoEnum;
-  /**
-   * `BONUS_TESTE`: `'DADO'` (soma D20 ao pool = vantagem), `'FIXO'` (bônus plano) ou `'ATRIBUTO'` (soma
-   * `atributo × multiplicador` ao resultado do teste — ex.: Atirador Calculista soma a Pontaria).
-   */
-  readonly variante?: 'DADO' | 'FIXO' | 'ATRIBUTO';
-  /** Onde o efeito se aplica; ausente = inferido do tipo (dano → `DANO`, bônus de teste → `TESTE`). */
-  readonly alvo?: RolagemEfeitoAlvoEnum;
-}
-
 // ── Runner de preset encadeado (m3-21) ───────────────────────────────────────
 
 /** Entrada de `resolverPreset`: o preset, os atributos da ficha e as habilidades para resolver os vínculos. */
@@ -194,11 +164,11 @@ export interface PresetResolverDto {
   readonly atributos: FichaAtributosDto;
   /** Proficiência resolvida pela fonte `PROF` nas fórmulas dos passos (m3-29). */
   readonly proficiencia?: number | null;
-  /** Habilidades da ficha — usadas para resolver `preset.habilidades` (nomes) em efeitos + energia. */
+  /** Habilidades da ficha — usadas para resolver `preset.habilidades` (nomes) em Energia (m3-31). */
   readonly habilidades?: readonly FichaHabilidadeDto[];
 }
 
-/** Um passo do preset já interpretado, com os efeitos das habilidades **deste passo** fundidos (m3-21; m3-22). */
+/** Um passo do preset já interpretado (m3-21; m3-22). As habilidades **só** contam Energia (efeitos aposentados em m3-31). */
 export interface PassoInterpretadoDto {
   readonly nome: string;
   /** Texto original da fórmula (para exibição). */

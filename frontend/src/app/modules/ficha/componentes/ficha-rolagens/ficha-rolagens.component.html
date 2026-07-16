@@ -78,8 +78,10 @@
 
                 @if (passo.habilidadesVinculadas.length) {
                   <div class="ficha-rol__passo-vinculos">
-                    @for (nome of passo.habilidadesVinculadas; track nome) {
-                      <span class="ficha-rol__vinculo" [appTooltip]="descricaoDe(nome)">{{ nome }}</span>
+                    @for (vinculo of vinculosAgrupados(passo.habilidadesVinculadas); track vinculo.nome) {
+                      <span class="ficha-rol__vinculo" [appTooltip]="descricaoDe(vinculo.nome)">
+                        {{ vinculo.nome }}@if (vinculo.quantidade > 1) {<span class="ficha-rol__vinculo-qtd"> ×{{ vinculo.quantidade }}</span>}
+                      </span>
                     }
                     <span class="ficha-rol__energia" title="Energia gasta ao rolar este passo">
                       − {{ passo.energiaGasta }}{{ passo.energiaVariavel ? ' + X' : '' }} E
@@ -189,21 +191,39 @@
   @if (habilidadesDisponiveis().length) {
     <div class="ficha-rol__campo">
       <span class="ficha-rol__rotulo">
-        Habilidades <span class="ficha-rol__rotulo-aux">({{ sufixo }} — gastam energia e aplicam efeito)</span>
+        Habilidades <span class="ficha-rol__rotulo-aux">({{ sufixo }} — só contam energia; repita para aplicar mais de uma vez)</span>
       </span>
       <div class="ficha-rol__hab-lista">
         @for (habilidade of habilidadesDisponiveis(); track habilidade.nome) {
-          <button
-            type="button"
+          @let quantidade = contarHabilidade(controle, habilidade.nome);
+          <div
             class="ficha-rol__hab"
-            [class.ficha-rol__hab--marcada]="controle.value.includes(habilidade.nome)"
-            [attr.aria-pressed]="controle.value.includes(habilidade.nome)"
+            [class.ficha-rol__hab--marcada]="quantidade > 0"
             [appTooltip]="habilidade.descricao"
-            (click)="alternarHabilidade(controle, habilidade.nome)"
           >
             <span class="ficha-rol__hab-nome">{{ habilidade.nome }}</span>
             <span class="ficha-rol__hab-custo">{{ habilidade.custoEnergia === null ? 'X' : habilidade.custoEnergia }} E</span>
-          </button>
+            <span class="ficha-rol__hab-stepper">
+              <button
+                type="button"
+                class="ficha-rol__hab-passo"
+                [disabled]="quantidade === 0"
+                [attr.aria-label]="'Remover ' + habilidade.nome"
+                (click)="removerHabilidade(controle, habilidade.nome)"
+              >
+                −
+              </button>
+              <span class="ficha-rol__hab-qtd">{{ quantidade }}</span>
+              <button
+                type="button"
+                class="ficha-rol__hab-passo"
+                [attr.aria-label]="'Adicionar ' + habilidade.nome"
+                (click)="adicionarHabilidade(controle, habilidade.nome)"
+              >
+                +
+              </button>
+            </span>
+          </div>
         }
       </div>
     </div>
