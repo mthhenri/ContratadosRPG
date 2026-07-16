@@ -1,5 +1,6 @@
 import {
   ABREVIACOES_ATRIBUTO,
+  ABREVIACOES_FONTE_EXTRA,
   QUANTIDADE_DADOS_MAXIMA,
   abreviacaoAtributo,
   resolverTipoDanoSimples,
@@ -7,6 +8,7 @@ import {
 import {
   AtributoAplicadoDto,
   DadosRoladosDto,
+  FonteEscalar,
   FormulaInterpretadaDto,
   GrupoDanoDto,
   InterpretacaoFormulaDto,
@@ -55,6 +57,18 @@ function resolverAtributo(texto: string): keyof FichaAtributosDto | null {
   const nome = texto.toLowerCase();
   const chaves = Object.values(ABREVIACOES_ATRIBUTO);
   return chaves.find((chave) => chave === nome) ?? null;
+}
+
+/**
+ * Resolve uma **fonte escalar** (m3-22): um atributo (`LUT`), a Proficiência (`PROF`) ou o Nível
+ * (`NIV`), ou `null`. O valor é lido do ambiente da rolagem em `rolarInterpretada`.
+ */
+function resolverFonte(texto: string): FonteEscalar | null {
+  const atributo = resolverAtributo(texto);
+  if (atributo) {
+    return atributo;
+  }
+  return ABREVIACOES_FONTE_EXTRA[texto.toUpperCase()] ?? null;
 }
 
 /** Tipo de dano estampado nos termos de um segmento: single (`tipoDano`), Composto ou nenhum. */
@@ -131,7 +145,7 @@ function interpretarSegmento(
     // Atributo como fonte de dados `ATRdM` (ex.: `FORd6`, `lutad20`).
     const dadoAtributo = corpo.match(/^([A-Za-z]+)[dD](\d+)$/);
     if (dadoAtributo) {
-      const atributoDado = resolverAtributo(dadoAtributo[1]);
+      const atributoDado = resolverFonte(dadoAtributo[1]);
       const faces = parseInt(dadoAtributo[2], 10);
       if (atributoDado) {
         if (faces < 1) {
@@ -145,7 +159,7 @@ function interpretarSegmento(
     // Atributo escalado `ATR*N` / `ATR/N` (ex.: `FOR*3`, `LUT/2`).
     const escalado = corpo.match(/^([A-Za-z]+)([*/])(\d+)$/);
     if (escalado) {
-      const atributoEscalado = resolverAtributo(escalado[1]);
+      const atributoEscalado = resolverFonte(escalado[1]);
       const fator = parseInt(escalado[3], 10);
       if (atributoEscalado) {
         const rotulo = corpo.toUpperCase();
@@ -172,8 +186,8 @@ function interpretarSegmento(
       continue;
     }
 
-    // Atributo modificador (`+LUT`, `-forca`) — no modo TESTE vira o pool `(Atributo)`D20 (açúcar).
-    const atributo = resolverAtributo(corpo);
+    // Fonte modificador (`+LUT`, `-forca`, `+PROF`, `+NIV`) — no modo TESTE vira o pool `(fonte)`D20 (açúcar).
+    const atributo = resolverFonte(corpo);
     if (atributo) {
       if (modo === RolagemModoEnum.TESTE) {
         acc.dados.push({ sinal, quantidade: 1, quantidadeAtributo: atributo, faces: 20, ...destino });
@@ -342,7 +356,7 @@ export function rolarFormula(dto: RolagemDto, rolarDado: RolarDado = rolarDadoPa
   if (!interpretacao.valida || !interpretacao.formula) {
     return null;
   }
-  return rolarInterpretada(interpretacao.formula, dto.atributos, dto.modo, dto.proficiencia, rolarDado);
+  return rolarInterpretada(interpretacao.formula, dto.atributos, dto.modo, dto.proficiencia, dto.nivel, rolarDado);
 }
 
 /**
@@ -355,16 +369,23 @@ export function rolarInterpretada(
   atributos: FichaAtributosDto,
   modo?: RolagemModoEnum,
   proficiencia?: number | null,
+  nivel?: number,
   rolarDado: RolarDado = rolarDadoPadrao,
 ): ResultadoRolagemDto {
   const noTeste = modo === RolagemModoEnum.TESTE;
+  // Ambiente escalar da rolagem (m3-22): os 10 atributos + Proficiência (`PROF`) + Nível (`NIV`).
+  const ambiente: Record<FonteEscalar, number> = {
+    ...atributos,
+    proficiencia: proficiencia ?? 0,
+    nivel: nivel ?? 0,
+  };
   // Desvantagem (m3-22): num teste, atributo ≤ 0 rola dados extras (0 → 2, −1 → 3, −2 → 4…) e pega o menor.
   let desvantagem = false;
 
   const dados: DadosRoladosDto[] = formula.dados.map((termo) => {
     let quantidade: number;
     if (termo.quantidadeAtributo) {
-      const valorAtributo = atributos[termo.quantidadeAtributo] ?? 0;
+      const valorAtributo = ambiente[termo.quantidadeAtributo] ?? 0;
       if (noTeste && valorAtributo <= 0) {
         desvantagem = true;
         quantidade = Math.min(QUANTIDADE_DADOS_MAXIMA, 2 - valorAtributo);
@@ -386,7 +407,7 @@ export function rolarInterpretada(
   });
 
   const atributosAplicados: AtributoAplicadoDto[] = formula.atributos.map((termo) => {
-    const base = atributos[termo.atributo] ?? 0;
+    const base = ambiente[termo.atributo] ?? 0;
     const escalado = Math.floor((base * (termo.multiplicador ?? 1)) / (termo.divisor ?? 1));
     return {
       rotulo: termo.rotulo,
@@ -541,10 +562,11 @@ export function rolarPasso(
   passo: PassoInterpretadoDto,
   atributos: FichaAtributosDto,
   proficiencia?: number | null,
+  nivel?: number,
   rolarDado: RolarDado = rolarDadoPadrao,
 ): ResultadoRolagemDto | null {
   if (!passo.interpretacao.valida || !passo.interpretacao.formula) {
     return null;
   }
-  return rolarInterpretada(passo.interpretacao.formula, atributos, passo.modo, proficiencia, rolarDado);
+  return rolarInterpretada(passo.interpretacao.formula, atributos, passo.modo, proficiencia, nivel, rolarDado);
 }

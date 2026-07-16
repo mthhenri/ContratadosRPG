@@ -12,6 +12,14 @@ import type { RolagemEfeitoAlvoEnum, RolagemEfeitoTipoEnum, RolagemModoEnum, Tip
 /** Par de tipos de um dano **Composto** (`[A-B]`): a soma do segmento é dividida 50/50 (resto → A). */
 export type ParTipoDano = readonly [TipoDanoEnum, TipoDanoEnum];
 
+/**
+ * Fonte de um valor escalar numa fórmula (m3-22): um dos 10 atributos **ou** a **Proficiência**
+ * (`PROF`) **ou** o **Nível** (`NIV`) do agente. Todas se usam igual — modificador (`+PROF`), fonte de
+ * dados (`PROFd6`) ou escalada (`NIV*2`). Proficiência/Nível vêm como escalares no `rolarFormula`
+ * (`proficiencia`/`nivel`), fora do `FichaAtributosDto`. Fonte: docs/core/sistema-v4.1.0.md — "Testes".
+ */
+export type FonteEscalar = keyof FichaAtributosDto | 'proficiencia' | 'nivel';
+
 // ── Fórmula interpretada ─────────────────────────────────────────────────────
 
 /** Um termo de dado: `quantidade`D`faces`, com o sinal (+1 soma, −1 subtrai). */
@@ -19,10 +27,11 @@ export interface TermoDadoDto {
   readonly sinal: 1 | -1;
   readonly quantidade: number;
   /**
-   * Atributo como **fonte de dados** (m3-16, ex.: `FORd6`): a contagem de dados é o valor deste
-   * atributo no momento da rolagem — `quantidade` fica no default 1 e é ignorada.
+   * Fonte escalar como **fonte de dados** (m3-16; m3-22 aceita Proficiência/Nível, ex.: `FORd6`,
+   * `PROFd6`): a contagem de dados é o valor desta fonte no momento da rolagem — `quantidade` fica no
+   * default 1 e é ignorada.
    */
-  readonly quantidadeAtributo?: keyof FichaAtributosDto;
+  readonly quantidadeAtributo?: FonteEscalar;
   readonly faces: number;
   /** Tipo de dano do termo (m3-18), quando a fórmula usa tags `[Tipo]`. */
   readonly tipoDano?: TipoDanoEnum;
@@ -30,11 +39,12 @@ export interface TermoDadoDto {
   readonly composto?: ParTipoDano;
 }
 
-/** Um termo de atributo: a chave resolvida na ficha + a abreviação original, com sinal. */
+/** Um termo de fonte escalar (atributo/Proficiência/Nível): a fonte resolvida + o rótulo original, com sinal. */
 export interface TermoAtributoDto {
   readonly sinal: 1 | -1;
-  readonly atributo: keyof FichaAtributosDto;
-  /** Texto original da referência (ex.: `LUT`, `FOR*3`), para exibir no detalhamento. */
+  /** Atributo, Proficiência (`proficiencia`) ou Nível (`nivel`) — resolvido no `rolarFormula` (m3-22). */
+  readonly atributo: FonteEscalar;
+  /** Texto original da referência (ex.: `LUT`, `FOR*3`, `PROF`), para exibir no detalhamento. */
   readonly rotulo: string;
   /** `ATR*N` (m3-16): multiplica o valor do atributo. Default 1. */
   readonly multiplicador?: number;
@@ -79,8 +89,10 @@ export interface RolagemDto {
   readonly atributos: FichaAtributosDto;
   /** Modo do roll (m3-19). Ausente = `SOMA` (legado). */
   readonly modo?: RolagemModoEnum;
-  /** Proficiência somada no modo `TESTE` (m3-19). `null`/ausente (Civil) = 0. */
+  /** Proficiência somada no modo `TESTE` (m3-19) e resolvida pela fonte `PROF` (m3-22). `null`/ausente = 0. */
   readonly proficiencia?: number | null;
+  /** Nível do agente — resolvido pela fonte `NIV` nas fórmulas (m3-22). Ausente = 0. */
+  readonly nivel?: number;
 }
 
 /** Dados rolados de um termo (ex.: `2D6` → `[4, 1]`), já com o sinal aplicado no subtotal. */

@@ -773,6 +773,7 @@
           [rolagens]="dados().rolagens ?? []"
           [atributos]="atributosEfetivos()"
           [proficiencia]="proficiencia()"
+          [nivel]="dados().nivel"
           [habilidadesDisponiveis]="dados().habilidades"
           [editavel]="ajustavel()"
           (rolagensMudou)="ajusteRolagens.emit($event)"

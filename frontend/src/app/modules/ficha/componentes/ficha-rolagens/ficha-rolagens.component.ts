@@ -70,8 +70,10 @@ export class FichaRolagens {
   readonly rolagens = input<readonly FichaRolagemDto[]>([]);
   /** Atributos da ficha (já **efetivos**, pós-lesão) — alimentam a rolagem. */
   readonly atributos = input.required<FichaAtributosDto>();
-  /** Proficiência (nível; `null` para Civil) somada nos passos de Teste (m3-22). */
+  /** Proficiência (nível; `null` para Civil) somada nos passos de Teste + fonte `PROF` (m3-22). */
   readonly proficiencia = input<number | null>(null);
+  /** Nível do agente — fonte `NIV` nas fórmulas (m3-22). */
+  readonly nivel = input<number>(0);
   /** Habilidades da ficha — o pool que um preset pode anexar (energia + efeitos). */
   readonly habilidadesDisponiveis = input<readonly FichaHabilidadeDto[]>([]);
   /** Dono/mestre edita; para os demais é só leitura + rolar (a página liga por `podeGerenciar`). */
@@ -292,7 +294,7 @@ export class FichaRolagens {
     if (!passo) {
       return;
     }
-    const resultado = rolarPasso(passo, this.atributos(), this.proficiencia());
+    const resultado = rolarPasso(passo, this.atributos(), this.proficiencia(), this.nivel());
     if (!resultado) {
       return;
     }

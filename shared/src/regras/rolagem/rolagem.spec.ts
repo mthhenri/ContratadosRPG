@@ -355,7 +355,7 @@ describe('efeitos de habilidade — aplicarEfeitos (m3-20)', () => {
       RolagemModoEnum.SOMA,
     );
     // FOR=6 → FOR*3 = 18; 2d8 no máximo = 16 → Físico 34.
-    const resultado = rolarInterpretada(comEfeito, atributos, RolagemModoEnum.SOMA, undefined, rolarMaximo);
+    const resultado = rolarInterpretada(comEfeito, atributos, RolagemModoEnum.SOMA, undefined, undefined, rolarMaximo);
     expect(resultado.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 34 }]);
     expect(resultado.total).toBe(34);
   });
@@ -367,7 +367,7 @@ describe('efeitos de habilidade — aplicarEfeitos (m3-20)', () => {
       [{ tipo: RolagemEfeitoTipoEnum.DANO_FIXO, valor: 2, tipoDano: TipoDanoEnum.BALISTICO }],
       RolagemModoEnum.SOMA,
     );
-    const resultado = rolarInterpretada(comEfeito, atributos, RolagemModoEnum.SOMA, undefined, rolarMaximo);
+    const resultado = rolarInterpretada(comEfeito, atributos, RolagemModoEnum.SOMA, undefined, undefined, rolarMaximo);
     expect(resultado.grupos).toEqual([{ tipoDano: TipoDanoEnum.BALISTICO, total: 14 }]); // 12 + 2
   });
 
@@ -458,7 +458,7 @@ describe('presets + runner encadeado — resolverPreset/rolarPasso (m3-21)', () 
     expect(plano.energiaVariavel).toBe(false);
     expect(plano.habilidadesVinculadas).toEqual(['Força Bruta']);
     // Rola o passo: 2d8 (=16) + FOR*3 (=18) → Físico 34.
-    const resultado = rolarPasso(plano.passos[0], atributos, undefined, rolarMaximo);
+    const resultado = rolarPasso(plano.passos[0], atributos, undefined, undefined, rolarMaximo);
     expect(resultado?.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 34 }]);
   });
 
@@ -492,5 +492,52 @@ describe('presets + runner encadeado — resolverPreset/rolarPasso (m3-21)', () 
     const plano = resolverPreset({ preset: { nome: 'X', formula: 'xyz' }, atributos });
     expect(plano.passos[0].interpretacao.valida).toBe(false);
     expect(rolarPasso(plano.passos[0], atributos)).toBeNull();
+  });
+});
+
+describe('fontes escalares — Proficiência e Nível (m3-22)', () => {
+  it('+PROF soma a Proficiência ao total (modo SOMA)', () => {
+    const resultado = rolarFormula(
+      { formula: '2d6 + PROF', atributos, modo: RolagemModoEnum.SOMA, proficiencia: 3 },
+      rolarMaximo,
+    );
+    expect(resultado?.total).toBe(15); // 2d6 (=12) + PROF (=3)
+  });
+
+  it('+NIV soma o Nível ao total', () => {
+    const resultado = rolarFormula({ formula: '1d6 + NIV', atributos, nivel: 5 }, rolarMaximo);
+    expect(resultado?.total).toBe(11); // 1d6 (=6) + NIV (=5)
+  });
+
+  it('escalona a fonte extra: PROF*2 e NIV/2 (piso)', () => {
+    const dobro = rolarFormula({ formula: 'PROF*2', atributos, proficiencia: 3 }, rolarMaximo);
+    expect(dobro?.total).toBe(6);
+    const metade = rolarFormula({ formula: 'NIV/2', atributos, nivel: 5 }, rolarMaximo);
+    expect(metade?.total).toBe(2); // floor(5/2)
+  });
+
+  it('PROF como fonte de dados: PROFd6 rola (Proficiência) dados', () => {
+    const resultado = rolarFormula({ formula: 'PROFd6', atributos, proficiencia: 3 }, rolarMaximo);
+    expect(resultado?.dados[0].valores).toHaveLength(3);
+    expect(resultado?.total).toBe(18); // 3 × 6
+  });
+
+  it('Proficiência ausente/null resolve como 0 (Civil)', () => {
+    const resultado = rolarFormula({ formula: '2d6 + PROF', atributos, proficiencia: null }, rolarMaximo);
+    expect(resultado?.total).toBe(12); // PROF = 0
+  });
+
+  it('a fonte extra participa de um grupo de dano tipado', () => {
+    const resultado = rolarFormula(
+      { formula: '2d6 + NIV [Físico]', atributos, modo: RolagemModoEnum.SOMA, nivel: 4 },
+      rolarMaximo,
+    );
+    expect(resultado?.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 16 }]); // 12 + 4
+  });
+
+  it('valida PROF e NIV como termos reconhecidos', () => {
+    expect(validarFormula('+PROF')).toBe(true);
+    expect(validarFormula('+NIV')).toBe(true);
+    expect(validarFormula('PROFd20')).toBe(true);
   });
 });

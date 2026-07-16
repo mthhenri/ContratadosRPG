@@ -50,6 +50,13 @@ const SECOES: readonly SecaoGuia[] = [
     ],
   },
   {
+    titulo: 'Proficiência e Nível',
+    linhas: [
+      { codigo: '+PROF', texto: 'Soma a Proficiência (= o Nível; Civil = 0). No modo Teste ela já entra sozinha.' },
+      { codigo: '+NIV', texto: 'Soma o Nível do agente. Valem como atributo: PROFd6, NIV*2, NIV/2.' },
+    ],
+  },
+  {
     titulo: 'Números fixos',
     linhas: [
       { codigo: '+2', texto: 'Soma dois ao total.' },

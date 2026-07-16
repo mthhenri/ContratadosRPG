@@ -382,6 +382,7 @@ export class FichaVisualizacao {
       modo: RolagemModoEnum.TESTE,
       atributos: this.atributosEfetivos(),
       proficiencia: this.proficiencia(),
+      nivel: this.dados().nivel,
     });
     if (resultado) {
       this.bandeja.mostrar({ rotulo: campo.nome, resultado, modo: RolagemModoEnum.TESTE });
