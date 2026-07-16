@@ -1447,13 +1447,23 @@ recebem `modo`; **açúcar do teste**: atributo puro (`luta`) vira o pool `(Atri
 `ResultadoRolagemDto` += `teste?` (presença sinaliza o modo — optei por não duplicar um campo `modo`).
 Shared **238/238** (7 novos casos). Spec em `done/`.
 
-**Próxima task:** `m3-20` — **efeitos estruturados de habilidade**: `RolagemEfeitoTipoEnum`
-(`DANO_FIXO`/`DANO_DADOS`/`DANO_ATRIBUTO`/`BONUS_TESTE`/`ELEVAR_DADO`) + `RolagemEfeitoDto` (espelha
-`ModificacaoEfeitoDto`), `FichaHabilidadeDto.efeitos?`, semear catálogo (Força Bruta = FOR×3 físico),
-e `aplicarEfeitos(formula, efeitos)`. Depois `m3-21` (presets + runner encadeado), `m3-22` (frontend).
-Em seguida o backlog anterior: `m3-23`→`m3-25` (**Identidade**), `m3-09` (**mobile**), `m3-26`
-(**espaço** da ficha). **Antes de qualquer UI, ler `docs/design/DESIGN.md` e consumir os tokens de
-`docs/design/tema/`** (proibição #29).
+**m3-20 concluída** — **efeitos estruturados de habilidade**. Novos `RolagemEfeitoTipoEnum`
+(`DANO_FIXO`/`DANO_DADOS`/`DANO_ATRIBUTO`/`BONUS_TESTE`/`ELEVAR_DADO`) + `RolagemEfeitoAlvoEnum`
+(`TESTE`/`DANO`) e `RolagemEfeitoDto` (espelha `ModificacaoEfeitoDto`). `FichaHabilidadeDto`/
+`HabilidadeBaseDto` += `efeitos?` (herdado pelo catálogo; **Força Bruta** semeada = FOR×3 físico).
+Motor: **`aplicarEfeitos(formula, efeitos, modo?)`** funde efeitos por `alvo`↔modo numa nova fórmula
+(DANO_ATRIBUTO = termo escalado tipado; BONUS_TESTE = +D20/constante; ELEVAR_DADO via `elevarDado`
+do descanso); **`rolarInterpretada`** extraído de `rolarFormula` (interpretar → rolar) para rolar
+fórmulas já com efeitos. `abreviacaoAtributo` em `rolagem.dados`. Shared **244/244** (6 novos).
+`ficha.dtos` passou a importar `type RolagemEfeitoDto` de `regras/rolagem` (só-tipo, sem ciclo runtime).
+Spec em `done/`.
+
+**Próxima task:** `m3-21` — **presets + runner encadeado**: `FichaRolagemDto` += `modo?`/`tipo?`
+(`SIMPLES|ENCADEADO`, `RolagemPresetTipoEnum`)/`seguintes?`/`habilidades?`; `FichaRolagemPassoDto`;
+`resolverPreset` (interpreta cada passo, injeta efeitos das habilidades, soma energia) → `PlanoPresetDto`;
+`rolarPasso`. Depois `m3-22` (frontend). Em seguida o backlog anterior: `m3-23`→`m3-25`
+(**Identidade**), `m3-09` (**mobile**), `m3-26` (**espaço** da ficha). **Antes de qualquer UI, ler
+`docs/design/DESIGN.md` e consumir os tokens de `docs/design/tema/`** (proibição #29).
 
 **`M3` — Ficha de Jogador** (CRUD + cálculo automático via `shared/regras` + permissões +
 tempo real): o milestone já foi quebrado em tasks numeradas (`m3-01`…`m3-09`, specs no backlog).

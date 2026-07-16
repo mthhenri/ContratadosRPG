@@ -39,3 +39,9 @@ const MAPA_TIPO_DANO: Readonly<Record<string, TipoDanoEnum>> = Object.fromEntrie
 export function resolverTipoDanoSimples(texto: string): TipoDanoEnum | null {
   return MAPA_TIPO_DANO[normalizarTipoDano(texto)] ?? null;
 }
+
+/** Chave do atributo → abreviação de 3 letras (ex.: `forca` → `FOR`), para rótulos de efeito (m3-20). */
+export function abreviacaoAtributo(chave: keyof FichaAtributosDto): string {
+  const par = Object.entries(ABREVIACOES_ATRIBUTO).find(([, valor]) => valor === chave);
+  return par ? par[0] : chave.toUpperCase();
+}

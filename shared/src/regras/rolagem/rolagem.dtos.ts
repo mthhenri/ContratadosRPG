@@ -1,5 +1,5 @@
 import type { FichaAtributosDto } from '../../dtos/ficha';
-import type { RolagemModoEnum, TipoDanoEnum } from '../../enums';
+import type { RolagemEfeitoAlvoEnum, RolagemEfeitoTipoEnum, RolagemModoEnum, TipoDanoEnum } from '../../enums';
 
 /**
  * DTOs do motor de rolagem (m3-15; dano tipado m3-18): interpretação de uma fórmula de dados
@@ -139,4 +139,29 @@ export interface ResultadoRolagemDto {
   /** Detalhe do teste (m3-19); presente só no modo `TESTE`. Quando presente, `total` = `teste.total`. */
   readonly teste?: ResultadoTesteDto;
   readonly total: number;
+}
+
+// ── Efeitos de habilidade (m3-20) ────────────────────────────────────────────
+
+/**
+ * Efeito **mecânico** de uma habilidade num preset de rolagem (m3-20). Espelha `ModificacaoEfeitoDto`
+ * (compras): `aplicarEfeitos` funde estes efeitos na fórmula interpretada de um passo. Ex.: Força
+ * Bruta = `{ tipo: DANO_ATRIBUTO, atributo: 'forca', multiplicador: 3, tipoDano: Físico, alvo: DANO }`.
+ */
+export interface RolagemEfeitoDto {
+  readonly tipo: RolagemEfeitoTipoEnum;
+  /** Magnitude: dano fixo, quantidade de dados, passos de elevação, ou bônus de teste. */
+  readonly valor?: number;
+  /** Faces do dado em `DANO_DADOS`. */
+  readonly faces?: number;
+  /** Atributo em `DANO_ATRIBUTO`. */
+  readonly atributo?: keyof FichaAtributosDto;
+  /** Multiplicador do atributo em `DANO_ATRIBUTO` (default 1). */
+  readonly multiplicador?: number;
+  /** Tipo de dano dos efeitos de dano (default Físico). */
+  readonly tipoDano?: TipoDanoEnum;
+  /** `BONUS_TESTE`: `'DADO'` (soma D20 ao pool) ou `'FIXO'` (bônus plano). */
+  readonly variante?: 'DADO' | 'FIXO';
+  /** Onde o efeito se aplica; ausente = inferido do tipo (dano → `DANO`, bônus de teste → `TESTE`). */
+  readonly alvo?: RolagemEfeitoAlvoEnum;
 }

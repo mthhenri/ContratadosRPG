@@ -5,6 +5,8 @@ export * from './item-categoria.enum';
 export * from './modificacao-efeito-tipo.enum';
 export * from './tipo-dano.enum';
 export * from './rolagem-modo.enum';
+export * from './rolagem-efeito-tipo.enum';
+export * from './rolagem-efeito-alvo.enum';
 export * from './severidade-lesao.enum';
 export * from './habilidade-categoria.enum';
 export * from './tipo-descanso.enum';

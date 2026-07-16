@@ -1,4 +1,5 @@
-import { ArquetipoEnum, ClasseEnum } from '../../enums';
+import { ArquetipoEnum, ClasseEnum, RolagemEfeitoAlvoEnum, RolagemEfeitoTipoEnum, TipoDanoEnum } from '../../enums';
+import type { RolagemEfeitoDto } from '../rolagem';
 
 /**
  * Catálogo de habilidades **do sistema** (`sistema-v4.1.0.md`), transcrito fielmente do documento
@@ -15,6 +16,12 @@ export interface HabilidadeBaseDto {
   readonly nome: string;
   readonly custoEnergia: number | null;
   readonly descricao: string;
+  /**
+   * Efeitos mecânicos (m3-20) para presets de rolagem — herdados por `HabilidadeCatalogoItemDto` e
+   * copiados para a ficha ao adicionar do catálogo. Só as habilidades com efeito estruturado hoje
+   * (ex.: Força Bruta) têm o campo; as demais ficam só na descrição até serem modeladas.
+   */
+  readonly efeitos?: readonly RolagemEfeitoDto[];
 }
 
 /** Habilidades Gerais — disponíveis a qualquer agente (`sistema-v4.1.0.md` — "⬥ Habilidades Gerais"). */
@@ -161,7 +168,20 @@ export const HABILIDADES_CLASSE: Readonly<Record<ClasseEnum, readonly Habilidade
  */
 export const HABILIDADES_ARQUETIPO: Readonly<Record<ArquetipoEnum, readonly HabilidadeBaseDto[]>> = {
   [ArquetipoEnum.LUTADOR]: [
-    { nome: 'Força Bruta', custoEnergia: 4, descricao: 'Soma sua Força × 3 no dano de ataques físicos.' },
+    {
+      nome: 'Força Bruta',
+      custoEnergia: 4,
+      descricao: 'Soma sua Força × 3 no dano de ataques físicos.',
+      efeitos: [
+        {
+          tipo: RolagemEfeitoTipoEnum.DANO_ATRIBUTO,
+          atributo: 'forca',
+          multiplicador: 3,
+          tipoDano: TipoDanoEnum.FISICO,
+          alvo: RolagemEfeitoAlvoEnum.DANO,
+        },
+      ],
+    },
     { nome: 'Golpe Devastador', custoEnergia: 3, descricao: 'Em um ataque físico, após rodar o dano, pode selecionar dados que obtiveram seu valor máximo e rodá-los novamente.' },
     { nome: 'Golpe Frenético', custoEnergia: 4, descricao: 'Ao acertar um ataque físico corpo a corpo, desfere um segundo ataque físico imediato contra o mesmo alvo. Caso este segundo ataque acerte, adiciona Luta × 2 ao dano.' },
     { nome: 'Peso Pesado', custoEnergia: 3, descricao: 'Em armas corpo a corpo, adiciona o peso da sua arma ao dano causado.' },

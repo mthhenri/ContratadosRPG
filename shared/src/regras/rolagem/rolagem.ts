@@ -1,4 +1,9 @@
-import { ABREVIACOES_ATRIBUTO, QUANTIDADE_DADOS_MAXIMA, resolverTipoDanoSimples } from './rolagem.dados';
+import {
+  ABREVIACOES_ATRIBUTO,
+  QUANTIDADE_DADOS_MAXIMA,
+  abreviacaoAtributo,
+  resolverTipoDanoSimples,
+} from './rolagem.dados';
 import {
   AtributoAplicadoDto,
   DadosRoladosDto,
@@ -9,21 +14,24 @@ import {
   ResultadoRolagemDto,
   ResultadoTesteDto,
   RolagemDto,
+  RolagemEfeitoDto,
   TermoAtributoDto,
   TermoConstanteDto,
   TermoDadoDto,
 } from './rolagem.dtos';
-import { RolagemModoEnum, TipoDanoEnum } from '../../enums';
+import { RolagemEfeitoAlvoEnum, RolagemEfeitoTipoEnum, RolagemModoEnum, TipoDanoEnum } from '../../enums';
+import { elevarDado } from '../descanso';
 import type { FichaAtributosDto } from '../../dtos/ficha';
 
 /**
- * Motor de rolagem de dados (m3-15; gramática v2 m3-16; dano tipado m3-18; modo TESTE m3-19):
- * interpreta e rola uma fórmula — `NdM`, constantes, atributo (`+LUT`), atributo como **fonte de
- * dados** (`FORd6`), atributo **escalado** (`FOR*3`, `LUT/2`, piso), combinados por `+`/`−`, com
- * **tags de tipo de dano** `[Tipo]`/`[TipoA-TipoB]` (Composto = soma 50/50, resto pro primeiro).
- * No modo `TESTE`, rola o pool e **pega o maior** + Proficiência (atributo puro = pool `(Atr)`D20).
- * Parênteses ainda não são suportados. Funções puras; a **única brecha a `Math.random`** é a função
- * de rolagem injetável `rolarDado` (SYSTEM.SPEC §6.6), com padrão de produção.
+ * Motor de rolagem de dados (m3-15; gramática v2 m3-16; dano tipado m3-18; modo TESTE m3-19; efeitos
+ * de habilidade m3-20): interpreta e rola uma fórmula — `NdM`, constantes, atributo (`+LUT`), atributo
+ * como **fonte de dados** (`FORd6`), atributo **escalado** (`FOR*3`, `LUT/2`, piso), combinados por
+ * `+`/`−`, com **tags de tipo de dano** `[Tipo]`/`[TipoA-TipoB]` (Composto = soma 50/50, resto pro
+ * primeiro). No modo `TESTE`, rola o pool e **pega o maior** + Proficiência (atributo puro = pool
+ * `(Atr)`D20). `aplicarEfeitos` funde efeitos de habilidade (ex.: Força Bruta = FOR×3) numa fórmula
+ * interpretada; `rolarInterpretada` rola essa fórmula. Parênteses ainda não são suportados. Funções
+ * puras; a **única brecha a `Math.random`** é a função de rolagem injetável `rolarDado` (SYSTEM.SPEC §6.6).
  *
  * Fonte: docs/core/sistema-v4.1.0.md — "Atributos"/"Testes"/"Tipos de Dano".
  */
@@ -329,11 +337,24 @@ export function rolarFormula(dto: RolagemDto, rolarDado: RolarDado = rolarDadoPa
   if (!interpretacao.valida || !interpretacao.formula) {
     return null;
   }
-  const formula: FormulaInterpretadaDto = interpretacao.formula;
+  return rolarInterpretada(interpretacao.formula, dto.atributos, dto.modo, dto.proficiencia, rolarDado);
+}
 
+/**
+ * Rola uma fórmula **já interpretada** (com efeitos de habilidade opcionalmente já fundidos via
+ * `aplicarEfeitos`) — mesma semântica de `rolarFormula`, sem reinterpretar o texto. Usado pelo runner
+ * de presets encadeados (m3-21). Determinístico quando `rolarDado` é injetado.
+ */
+export function rolarInterpretada(
+  formula: FormulaInterpretadaDto,
+  atributos: FichaAtributosDto,
+  modo?: RolagemModoEnum,
+  proficiencia?: number | null,
+  rolarDado: RolarDado = rolarDadoPadrao,
+): ResultadoRolagemDto {
   const dados: DadosRoladosDto[] = formula.dados.map((termo) => {
     const quantidade = termo.quantidadeAtributo
-      ? Math.max(0, Math.min(QUANTIDADE_DADOS_MAXIMA, dto.atributos[termo.quantidadeAtributo] ?? 0))
+      ? Math.max(0, Math.min(QUANTIDADE_DADOS_MAXIMA, atributos[termo.quantidadeAtributo] ?? 0))
       : termo.quantidade;
     const valores = Array.from({ length: quantidade }, () => rolarDado(termo.faces));
     const soma = valores.reduce((acumulado, valor) => acumulado + valor, 0);
@@ -346,8 +367,8 @@ export function rolarFormula(dto: RolagemDto, rolarDado: RolarDado = rolarDadoPa
     };
   });
 
-  const atributos: AtributoAplicadoDto[] = formula.atributos.map((termo) => {
-    const base = dto.atributos[termo.atributo] ?? 0;
+  const atributosAplicados: AtributoAplicadoDto[] = formula.atributos.map((termo) => {
+    const base = atributos[termo.atributo] ?? 0;
     const escalado = Math.floor((base * (termo.multiplicador ?? 1)) / (termo.divisor ?? 1));
     return {
       rotulo: termo.rotulo,
@@ -356,13 +377,13 @@ export function rolarFormula(dto: RolagemDto, rolarDado: RolarDado = rolarDadoPa
     };
   });
 
-  if (dto.modo === RolagemModoEnum.TESTE) {
-    return montarResultadoTeste(dados, atributos, formula, dto.proficiencia);
+  if (modo === RolagemModoEnum.TESTE) {
+    return montarResultadoTeste(dados, atributosAplicados, formula, proficiencia);
   }
 
   const contribuicoes: Contribuicao[] = [
     ...dados.map((termo) => ({ valor: termo.subtotal, tipoDano: termo.tipoDano, composto: termo.composto })),
-    ...atributos.map((termo) => ({ valor: termo.valor, tipoDano: termo.tipoDano, composto: termo.composto })),
+    ...atributosAplicados.map((termo) => ({ valor: termo.valor, tipoDano: termo.tipoDano, composto: termo.composto })),
     ...(formula.constantesTipadas ?? []).map((termo) => ({
       valor: termo.sinal * termo.valor,
       tipoDano: termo.tipoDano,
@@ -377,6 +398,80 @@ export function rolarFormula(dto: RolagemDto, rolarDado: RolarDado = rolarDadoPa
   const total = grupos.reduce((acumulado, grupo) => acumulado + grupo.total, 0) + totalSemTipo + formula.constante;
 
   return grupos.length > 0
-    ? { dados, atributos, constante: formula.constante, grupos, total }
-    : { dados, atributos, constante: formula.constante, total };
+    ? { dados, atributos: atributosAplicados, constante: formula.constante, grupos, total }
+    : { dados, atributos: atributosAplicados, constante: formula.constante, total };
+}
+
+/** Alvo padrão de um efeito quando não declarado: bônus de teste vai no teste, o resto no dano. */
+function alvoPadrao(tipo: RolagemEfeitoTipoEnum): RolagemEfeitoAlvoEnum {
+  return tipo === RolagemEfeitoTipoEnum.BONUS_TESTE ? RolagemEfeitoAlvoEnum.TESTE : RolagemEfeitoAlvoEnum.DANO;
+}
+
+/**
+ * Funde os `efeitos` de habilidade (m3-20) numa fórmula já interpretada, respeitando o `modo` do
+ * passo: só aplica os efeitos cujo `alvo` (declarado ou inferido) casa com o modo — bônus de teste
+ * no `TESTE`, efeitos de dano no `SOMA`. Puro; devolve uma **nova** fórmula (não muta a original).
+ */
+export function aplicarEfeitos(
+  formula: FormulaInterpretadaDto,
+  efeitos: readonly RolagemEfeitoDto[],
+  modo?: RolagemModoEnum,
+): FormulaInterpretadaDto {
+  const noTeste = modo === RolagemModoEnum.TESTE;
+  let dados: TermoDadoDto[] = [...formula.dados];
+  const atributos: TermoAtributoDto[] = [...formula.atributos];
+  const constantesTipadas: TermoConstanteDto[] = [...(formula.constantesTipadas ?? [])];
+  let constante = formula.constante;
+
+  for (const efeito of efeitos) {
+    const alvo = efeito.alvo ?? alvoPadrao(efeito.tipo);
+    if ((alvo === RolagemEfeitoAlvoEnum.TESTE) !== noTeste) {
+      continue; // efeito não pertence a este passo
+    }
+    const tipoDano = efeito.tipoDano ?? TipoDanoEnum.FISICO;
+
+    switch (efeito.tipo) {
+      case RolagemEfeitoTipoEnum.DANO_FIXO:
+        if (noTeste) {
+          constante += efeito.valor ?? 0;
+        } else {
+          constantesTipadas.push({ sinal: 1, valor: efeito.valor ?? 0, tipoDano });
+        }
+        break;
+      case RolagemEfeitoTipoEnum.DANO_DADOS:
+        dados = [
+          ...dados,
+          { sinal: 1, quantidade: efeito.valor ?? 1, faces: efeito.faces ?? 6, ...(noTeste ? {} : { tipoDano }) },
+        ];
+        break;
+      case RolagemEfeitoTipoEnum.DANO_ATRIBUTO:
+        if (efeito.atributo) {
+          const multiplicador = efeito.multiplicador ?? 1;
+          const abreviacao = abreviacaoAtributo(efeito.atributo);
+          const rotulo = multiplicador === 1 ? abreviacao : `${abreviacao}*${multiplicador}`;
+          atributos.push({
+            sinal: 1,
+            atributo: efeito.atributo,
+            rotulo,
+            ...(multiplicador !== 1 ? { multiplicador } : {}),
+            ...(noTeste ? {} : { tipoDano }),
+          });
+        }
+        break;
+      case RolagemEfeitoTipoEnum.BONUS_TESTE:
+        if (efeito.variante === 'FIXO') {
+          constante += efeito.valor ?? 0;
+        } else {
+          dados = [...dados, { sinal: 1, quantidade: efeito.valor ?? 1, faces: 20 }];
+        }
+        break;
+      case RolagemEfeitoTipoEnum.ELEVAR_DADO:
+        dados = dados.map((termo) => ({ ...termo, faces: elevarDado({ faces: termo.faces, passos: efeito.valor ?? 1 }) }));
+        break;
+    }
+  }
+
+  return constantesTipadas.length > 0
+    ? { dados, atributos, constante, constantesTipadas }
+    : { dados, atributos, constante };
 }

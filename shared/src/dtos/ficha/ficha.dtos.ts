@@ -1,5 +1,6 @@
 import type { ArquetipoEnum, ClasseEnum, HabilidadeCategoriaEnum, SeveridadeLesaoEnum } from '../../enums';
 import type { AmplificadorAplicadoDto, CarrinhoItemDto } from '../../regras/compras';
+import type { RolagemEfeitoDto } from '../../regras/rolagem';
 
 /**
  * Contrato tipado do documento JSONB `ficha.dados` para a **ficha de jogador**
@@ -128,6 +129,11 @@ export interface FichaHabilidadeDto {
    * sem o campo exibem só o rótulo da categoria.
    */
   readonly origem?: ClasseEnum | ArquetipoEnum;
+  /**
+   * Efeitos **mecânicos** (m3-20): quando a habilidade entra num preset de rolagem, estes efeitos
+   * são fundidos na fórmula (ex.: Força Bruta soma FOR × 3 ao dano). Ausente = só descrição (legado).
+   */
+  readonly efeitos?: readonly RolagemEfeitoDto[];
 }
 
 /**

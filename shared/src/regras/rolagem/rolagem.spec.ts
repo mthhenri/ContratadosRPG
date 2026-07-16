@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { FichaAtributosDto } from '../../dtos/ficha';
-import { RolagemModoEnum, TipoDanoEnum } from '../../enums';
-import { interpretarFormula, rolarFormula, validarFormula } from './rolagem';
+import { RolagemEfeitoAlvoEnum, RolagemEfeitoTipoEnum, RolagemModoEnum, TipoDanoEnum } from '../../enums';
+import { aplicarEfeitos, interpretarFormula, rolarFormula, rolarInterpretada, validarFormula } from './rolagem';
 
 /**
  * Motor de rolagem (m3-15): interpretação e rolagem de fórmulas de preset. A rolagem é
@@ -282,5 +282,72 @@ describe('modo TESTE — pegar o maior + proficiência (m3-19)', () => {
     const resultado = rolarFormula({ formula: 'luta', atributos }, rolarMaximo);
     expect(resultado?.teste).toBeUndefined();
     expect(resultado?.total).toBe(3); // luta como modificador
+  });
+});
+
+describe('efeitos de habilidade — aplicarEfeitos (m3-20)', () => {
+  it('Força Bruta (DANO_ATRIBUTO) soma FOR×3 ao dano físico', () => {
+    const base = interpretarFormula('2d8 [Físico]').formula!;
+    const comEfeito = aplicarEfeitos(
+      base,
+      [
+        {
+          tipo: RolagemEfeitoTipoEnum.DANO_ATRIBUTO,
+          atributo: 'forca',
+          multiplicador: 3,
+          tipoDano: TipoDanoEnum.FISICO,
+          alvo: RolagemEfeitoAlvoEnum.DANO,
+        },
+      ],
+      RolagemModoEnum.SOMA,
+    );
+    // FOR=6 → FOR*3 = 18; 2d8 no máximo = 16 → Físico 34.
+    const resultado = rolarInterpretada(comEfeito, atributos, RolagemModoEnum.SOMA, undefined, rolarMaximo);
+    expect(resultado.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 34 }]);
+    expect(resultado.total).toBe(34);
+  });
+
+  it('DANO_FIXO soma uma constante tipada ao dano', () => {
+    const base = interpretarFormula('2d6 [Balístico]').formula!;
+    const comEfeito = aplicarEfeitos(
+      base,
+      [{ tipo: RolagemEfeitoTipoEnum.DANO_FIXO, valor: 2, tipoDano: TipoDanoEnum.BALISTICO }],
+      RolagemModoEnum.SOMA,
+    );
+    const resultado = rolarInterpretada(comEfeito, atributos, RolagemModoEnum.SOMA, undefined, rolarMaximo);
+    expect(resultado.grupos).toEqual([{ tipoDano: TipoDanoEnum.BALISTICO, total: 14 }]); // 12 + 2
+  });
+
+  it('ELEVAR_DADO sobe as faces dos dados de dano (D8 → D10)', () => {
+    const base = interpretarFormula('2d8 [Físico]').formula!;
+    const comEfeito = aplicarEfeitos(base, [{ tipo: RolagemEfeitoTipoEnum.ELEVAR_DADO, valor: 1 }], RolagemModoEnum.SOMA);
+    expect(comEfeito.dados[0].faces).toBe(10);
+  });
+
+  it('BONUS_TESTE DADO adiciona D20 ao pool; FIXO soma bônus plano', () => {
+    const base = interpretarFormula('lutad20', RolagemModoEnum.TESTE).formula!;
+    const comDado = aplicarEfeitos(
+      base,
+      [{ tipo: RolagemEfeitoTipoEnum.BONUS_TESTE, variante: 'DADO', valor: 2 }],
+      RolagemModoEnum.TESTE,
+    );
+    expect(comDado.dados).toContainEqual({ sinal: 1, quantidade: 2, faces: 20 });
+
+    const comFixo = aplicarEfeitos(
+      base,
+      [{ tipo: RolagemEfeitoTipoEnum.BONUS_TESTE, variante: 'FIXO', valor: 3 }],
+      RolagemModoEnum.TESTE,
+    );
+    expect(comFixo.constante).toBe(3);
+  });
+
+  it('efeito de DANO é ignorado num passo de TESTE (roteamento por alvo)', () => {
+    const base = interpretarFormula('lutad20', RolagemModoEnum.TESTE).formula!;
+    const comEfeito = aplicarEfeitos(
+      base,
+      [{ tipo: RolagemEfeitoTipoEnum.DANO_ATRIBUTO, atributo: 'forca', multiplicador: 3, alvo: RolagemEfeitoAlvoEnum.DANO }],
+      RolagemModoEnum.TESTE,
+    );
+    expect(comEfeito).toEqual(base); // inalterado
   });
 });
