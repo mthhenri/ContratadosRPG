@@ -1,6 +1,31 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-16 (**m3-29 — Rolagem gramática v3: fim dos "modos"**: o
+> Última atualização: 2026-07-16 (**catálogo de habilidades — efeitos mecânicos (m3-20)**: passou-se um
+> lote de habilidades do sistema de "só descrição" para **efeito estruturado** (`efeitos` em
+> `habilidades-catalogo.dados.ts`), aproveitando a infra que já existia (só Força Bruta a usava). Modeladas
+> só as **contribuições aditivas limpas** que mapeiam para os 5 tipos de efeito: `+N dado(s)` /
+> `+N no resultado` (**`BONUS_TESTE`** `DADO`/`FIXO`), `Atributo × N no dano` (**`DANO_ATRIBUTO`**) e
+> `+1 tipo nos dados de dano` (**`ELEVAR_DADO`**). A **condição de gatilho não é codificada** (o jogador
+> vincula ao passo certo, como Força Bruta). Novos: **DANO_ATRIBUTO** — Pistoleiro (DES×3 Balístico),
+> Golpe Pesado (VIG×1), Golpe Frenético (LUT×2), Atacante Furtivo (DES×2, dano furtivo → Físico por
+> padrão); **BONUS_TESTE DADO** — Eclético, Charlatão, Investida Brutal, Passos Furtivos, Persistência,
+> Raciocínio Dedutivo, Na Base do Ódio, Duplamente Letal, Conhecimento Técnico, Hacker, Investigador Nato,
+> Perito, Linha de Frente, Mira de Elite, Acesso Privilegiado; **BONUS_TESTE FIXO** — Espólios de Guerra,
+> Prodígio Forense, Linguagem Corporal, Camuflagem Rápida, Olhos de Águia, Sombra, Socorrista, Barreira
+> Mental; **ELEVAR_DADO** — Especialista em Explosivos, Pugilista; e 4 **Gerais Melhoradas** que compõem
+> dado+fixo (Persistência/Lutador, Passos Furtivos/Assassino, Raciocínio Dedutivo/Acadêmico,
+> Charlatão/Diplomata). **Ficaram só na descrição** as que não mapeiam aos 5 tipos: magnitude que
+> escala/tem teto (Esforço Extra, Guerreiro de Rua, Porradeiro, Postura de Ataque…), escolha "A **ou** B"
+> (Observador Astuto, Planejamento Tático, Analisar Cenário melhorada…), troca de atributo (Artista
+> Marcial, Jogo de Corpo, Bacharel em Agressão…), `+N dados de dano` de faces dependentes da arma
+> (Queima-Roupa, Técnica Aplicada, Manejo, Vingativo…), **soma de atributo ao teste** (sem tipo de efeito —
+> Atirador Calculista, Berserk), buff em aliado (Marcar Alvo, Aura de Liderança, Ordem Direta…), rerolagem
+> (Segunda Chance, Mimado, Arrepio…), e tudo de cura/defesa/deslocamento/condição/reação. **Sem mudança de
+> engine** — só dados contra o contrato tipado existente. **Testes:** shared **289** (7 novos no catálogo;
+> fusão conferida em runtime: Pistoleiro → DES×3 Balístico no dano, Eclético → `bonusDados:1` no pool);
+> build/lint verdes.)
+>
+> (**m3-29 — Rolagem gramática v3: fim dos "modos"**: o
 > `RolagemModoEnum { SOMA | TESTE }` foi **aposentado** (enum deletado, campo `modo?` removido de
 > `FichaRolagemDto`/`FichaRolagemPassoDto`, `RolagemDto`, `PassoInterpretadoDto`). Um **teste deixa de
 > somar Proficiência por baixo dos panos**: a fórmula agora especifica tudo — um teste é a expressão

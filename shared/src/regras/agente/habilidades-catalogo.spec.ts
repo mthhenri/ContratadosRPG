@@ -8,6 +8,7 @@ import {
   RolagemEfeitoTipoEnum,
   TipoDanoEnum,
 } from '../../enums';
+import type { RolagemEfeitoDto } from '../rolagem';
 import {
   catalogoHabilidades,
   ehHabilidadeInicial,
@@ -17,8 +18,11 @@ import {
 } from './habilidades-catalogo';
 import {
   HABILIDADES_ARQUETIPO,
+  HABILIDADES_CLASSE,
   HABILIDADES_GERAIS,
+  HABILIDADES_GERAIS_MELHORADAS,
   HABILIDADES_SUBCLASSE,
+  type HabilidadeBaseDto,
 } from './habilidades-catalogo.dados';
 
 /**
@@ -209,6 +213,17 @@ describe('ehHabilidadeInicial', () => {
 });
 
 describe('efeitos estruturados no catálogo (m3-20)', () => {
+  /** Todas as habilidades do catálogo (todas as coleções), achatadas para busca por nome. */
+  const todas: readonly HabilidadeBaseDto[] = [
+    ...HABILIDADES_GERAIS,
+    ...Object.values(HABILIDADES_CLASSE).flat(),
+    ...Object.values(HABILIDADES_ARQUETIPO).flat(),
+    ...Object.values(HABILIDADES_GERAIS_MELHORADAS).flat(),
+    ...Object.values(HABILIDADES_SUBCLASSE).flat(),
+  ];
+  const efeitosDe = (nome: string, colecao: readonly HabilidadeBaseDto[] = todas): readonly RolagemEfeitoDto[] | undefined =>
+    colecao.find((habilidade) => habilidade.nome === nome)?.efeitos;
+
   it('Força Bruta carrega o efeito FOR × 3 físico', () => {
     const forcaBruta = Object.values(HABILIDADES_ARQUETIPO)
       .flat()
@@ -222,5 +237,75 @@ describe('efeitos estruturados no catálogo (m3-20)', () => {
         alvo: RolagemEfeitoAlvoEnum.DANO,
       },
     ]);
+  });
+
+  it('Pistoleiro soma DES × 3 no dano, tipo Balístico (ataque à distância)', () => {
+    expect(efeitosDe('Pistoleiro', HABILIDADES_ARQUETIPO[ArquetipoEnum.MERCENARIO])).toEqual([
+      {
+        tipo: RolagemEfeitoTipoEnum.DANO_ATRIBUTO,
+        atributo: 'destreza',
+        multiplicador: 3,
+        tipoDano: TipoDanoEnum.BALISTICO,
+        alvo: RolagemEfeitoAlvoEnum.DANO,
+      },
+    ]);
+  });
+
+  it('Golpe Pesado soma VIG × 1 no dano físico', () => {
+    expect(efeitosDe('Golpe Pesado', HABILIDADES_ARQUETIPO[ArquetipoEnum.VANGUARDA])).toEqual([
+      {
+        tipo: RolagemEfeitoTipoEnum.DANO_ATRIBUTO,
+        atributo: 'vigor',
+        multiplicador: 1,
+        tipoDano: TipoDanoEnum.FISICO,
+        alvo: RolagemEfeitoAlvoEnum.DANO,
+      },
+    ]);
+  });
+
+  it('Eclético dá vantagem no teste (+1 dado)', () => {
+    expect(efeitosDe('Eclético', HABILIDADES_CLASSE[ClasseEnum.ESPECIALISTA])).toEqual([
+      { tipo: RolagemEfeitoTipoEnum.BONUS_TESTE, variante: 'DADO', valor: 1, alvo: RolagemEfeitoAlvoEnum.TESTE },
+    ]);
+  });
+
+  it('Prodígio Forense dá bônus fixo no teste (+5)', () => {
+    expect(efeitosDe('Prodígio Forense', HABILIDADES_CLASSE[ClasseEnum.ESPECIALISTA])).toEqual([
+      { tipo: RolagemEfeitoTipoEnum.BONUS_TESTE, variante: 'FIXO', valor: 5, alvo: RolagemEfeitoAlvoEnum.TESTE },
+    ]);
+  });
+
+  it('Especialista em Explosivos eleva os dados de dano em 1 tipo', () => {
+    expect(efeitosDe('Especialista em Explosivos', HABILIDADES_GERAIS)).toEqual([
+      { tipo: RolagemEfeitoTipoEnum.ELEVAR_DADO, valor: 1, alvo: RolagemEfeitoAlvoEnum.DANO },
+    ]);
+  });
+
+  it('Gerais Melhoradas compõem dado + fixo (Charlatão do Diplomata: +2 dados e +2 no resultado)', () => {
+    expect(efeitosDe('Charlatão', HABILIDADES_GERAIS_MELHORADAS[ArquetipoEnum.DIPLOMATA])).toEqual([
+      { tipo: RolagemEfeitoTipoEnum.BONUS_TESTE, variante: 'DADO', valor: 2, alvo: RolagemEfeitoAlvoEnum.TESTE },
+      { tipo: RolagemEfeitoTipoEnum.BONUS_TESTE, variante: 'FIXO', valor: 2, alvo: RolagemEfeitoAlvoEnum.TESTE },
+    ]);
+  });
+
+  it('todos os efeitos do catálogo são bem-formados (tipo + alvo, e campos coerentes por tipo)', () => {
+    const comEfeito = todas.filter((habilidade) => habilidade.efeitos);
+    expect(comEfeito.length).toBeGreaterThan(20); // sanidade: o pass estruturou um lote de habilidades
+    for (const habilidade of comEfeito) {
+      for (const efeito of habilidade.efeitos!) {
+        expect(Object.values(RolagemEfeitoTipoEnum)).toContain(efeito.tipo);
+        expect(Object.values(RolagemEfeitoAlvoEnum)).toContain(efeito.alvo);
+        if (efeito.tipo === RolagemEfeitoTipoEnum.BONUS_TESTE) {
+          expect(efeito.alvo).toBe(RolagemEfeitoAlvoEnum.TESTE);
+          expect(['DADO', 'FIXO']).toContain(efeito.variante);
+          expect(efeito.valor).toBeGreaterThan(0);
+        }
+        if (efeito.tipo === RolagemEfeitoTipoEnum.DANO_ATRIBUTO) {
+          expect(efeito.alvo).toBe(RolagemEfeitoAlvoEnum.DANO);
+          expect(efeito.atributo).toBeTruthy();
+          expect(efeito.multiplicador).toBeGreaterThan(0);
+        }
+      }
+    }
   });
 });
