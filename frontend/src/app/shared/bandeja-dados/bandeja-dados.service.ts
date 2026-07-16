@@ -7,7 +7,7 @@ import type { ResultadoRolagemDto } from '@contratados-rpg/shared/regras/rolagem
 const LIMITE_ENTRADAS = 5;
 
 /** Quanto uma rolagem fica na bandeja antes de começar a sumir sozinha. */
-const DURACAO_MS = 5000;
+const DURACAO_MS = 7000;
 
 /** Duração do fade de saída (casa com a transição de opacidade no SCSS). */
 const FADE_MS = 400;
