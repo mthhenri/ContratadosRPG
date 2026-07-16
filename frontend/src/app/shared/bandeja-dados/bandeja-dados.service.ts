@@ -3,8 +3,14 @@ import { Injectable, signal } from '@angular/core';
 import type { RolagemModoEnum } from '@contratados-rpg/shared/enums';
 import type { ResultadoRolagemDto } from '@contratados-rpg/shared/regras/rolagem';
 
-/** Quantas rolagens recentes a bandeja mantém empilhadas (ex.: teste → dano → crítico de um preset). */
+/** Quantas rolagens recentes a bandeja mantém lado a lado (ex.: teste → dano → crítico de um preset). */
 const LIMITE_ENTRADAS = 5;
+
+/** Quanto uma rolagem fica na bandeja antes de começar a sumir sozinha. */
+const DURACAO_MS = 5000;
+
+/** Duração do fade de saída (casa com a transição de opacidade no SCSS). */
+const FADE_MS = 400;
 
 /** Uma rolagem exibida na bandeja (m3-22): o rótulo do que foi rolado + o resultado do motor. */
 export interface EntradaBandeja {
@@ -12,6 +18,8 @@ export interface EntradaBandeja {
   readonly rotulo: string;
   readonly resultado: ResultadoRolagemDto;
   readonly modo?: RolagemModoEnum;
+  /** `true` na janela de fade antes de a entrada ser removida (auto-sumir). */
+  readonly saindo: boolean;
 }
 
 /**
@@ -28,14 +36,24 @@ export class BandejaDadosService {
   /** Rolagens recentes, da mais nova para a mais antiga (teto {@link LIMITE_ENTRADAS}). */
   readonly entradas = this._entradas.asReadonly();
 
-  /** Empilha uma rolagem no topo da bandeja. */
+  /** Mostra uma rolagem à direita da bandeja (as anteriores deslizam para a esquerda) e agenda o auto-sumir. */
   mostrar(entrada: { readonly rotulo: string; readonly resultado: ResultadoRolagemDto; readonly modo?: RolagemModoEnum }): void {
     this.contador += 1;
-    const nova: EntradaBandeja = { id: this.contador, ...entrada };
+    const id = this.contador;
+    const nova: EntradaBandeja = { id, saindo: false, ...entrada };
     this._entradas.update((atuais) => [nova, ...atuais].slice(0, LIMITE_ENTRADAS));
+    setTimeout(() => this.iniciarSaida(id), DURACAO_MS);
   }
 
-  /** Remove uma entrada específica (o × da carta). */
+  /** Marca a entrada como saindo (dispara o fade) e a remove após a transição. */
+  private iniciarSaida(id: number): void {
+    this._entradas.update((atuais) =>
+      atuais.map((entrada) => (entrada.id === id ? { ...entrada, saindo: true } : entrada)),
+    );
+    setTimeout(() => this.fechar(id), FADE_MS);
+  }
+
+  /** Remove uma entrada específica (o × da carta ou o fim do auto-sumir). */
   fechar(id: number): void {
     this._entradas.update((atuais) => atuais.filter((entrada) => entrada.id !== id));
   }

@@ -16,4 +16,9 @@ import { BandejaDadosService } from './bandeja-dados.service';
 })
 export class BandejaDados {
   protected readonly bandeja = inject(BandejaDadosService);
+
+  /** Opacidade por posição: a mais nova (índice 0, à direita) cheia; o histórico à esquerda esmaece. */
+  protected opacidade(indice: number): number {
+    return Math.max(0.3, 1 - indice * 0.22);
+  }
 }

@@ -2,7 +2,7 @@
   <div class="bandeja" role="status" aria-live="polite">
     <div class="bandeja__pilha">
       @for (entrada of bandeja.entradas(); track entrada.id) {
-        <article class="bandeja__carta">
+        <article class="bandeja__carta" [style.opacity]="entrada.saindo ? 0 : opacidade($index)">
           <header class="bandeja__cabecalho">
             <span class="bandeja__rotulo">{{ entrada.rotulo }}</span>
             <button
