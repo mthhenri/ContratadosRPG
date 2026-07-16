@@ -11,6 +11,9 @@ import {
   GrupoDanoDto,
   InterpretacaoFormulaDto,
   ParTipoDano,
+  PassoInterpretadoDto,
+  PlanoPresetDto,
+  PresetResolverDto,
   ResultadoRolagemDto,
   ResultadoTesteDto,
   RolagemDto,
@@ -21,7 +24,7 @@ import {
 } from './rolagem.dtos';
 import { RolagemEfeitoAlvoEnum, RolagemEfeitoTipoEnum, RolagemModoEnum, TipoDanoEnum } from '../../enums';
 import { elevarDado } from '../descanso';
-import type { FichaAtributosDto } from '../../dtos/ficha';
+import type { FichaAtributosDto, FichaHabilidadeDto } from '../../dtos/ficha';
 
 /**
  * Motor de rolagem de dados (m3-15; gramática v2 m3-16; dano tipado m3-18; modo TESTE m3-19; efeitos
@@ -474,4 +477,59 @@ export function aplicarEfeitos(
   return constantesTipadas.length > 0
     ? { dados, atributos, constante, constantesTipadas }
     : { dados, atributos, constante };
+}
+
+/**
+ * Resolve um preset (m3-21) **sem rolar**: interpreta cada passo (primária + `seguintes`), funde os
+ * efeitos das habilidades vinculadas (por `alvo`↔modo) e soma a Energia a gastar. Puro — o front rola
+ * cada passo com `rolarPasso` e debita a energia pelo canal existente. Habilidades cujo nome não está
+ * na ficha são ignoradas (não contam energia nem efeito).
+ */
+export function resolverPreset(dto: PresetResolverDto): PlanoPresetDto {
+  const { preset } = dto;
+  const habilidadesFicha = dto.habilidades ?? [];
+  const vinculadas = (preset.habilidades ?? [])
+    .map((nome) => habilidadesFicha.find((habilidade) => habilidade.nome === nome))
+    .filter((habilidade): habilidade is FichaHabilidadeDto => habilidade !== undefined);
+  const efeitos = vinculadas.flatMap((habilidade) => habilidade.efeitos ?? []);
+  const energiaGasta = vinculadas.reduce((soma, habilidade) => soma + (habilidade.custoEnergia ?? 0), 0);
+  const energiaVariavel = vinculadas.some((habilidade) => habilidade.custoEnergia === null);
+
+  const passosBrutos = [
+    { nome: preset.nome, formula: preset.formula, modo: preset.modo, descricao: preset.descricao },
+    ...(preset.seguintes ?? []),
+  ];
+  const passos: PassoInterpretadoDto[] = passosBrutos.map((passo) => {
+    const modo = passo.modo ?? RolagemModoEnum.SOMA;
+    const base = interpretarFormula(passo.formula, modo);
+    const interpretacao: InterpretacaoFormulaDto =
+      base.valida && base.formula ? { valida: true, formula: aplicarEfeitos(base.formula, efeitos, modo) } : base;
+    return {
+      nome: passo.nome,
+      modo,
+      formula: passo.formula,
+      interpretacao,
+      ...(passo.descricao ? { descricao: passo.descricao } : {}),
+    };
+  });
+
+  return {
+    passos,
+    energiaGasta,
+    energiaVariavel,
+    habilidadesVinculadas: vinculadas.map((habilidade) => habilidade.nome),
+  };
+}
+
+/** Rola um passo já resolvido de um preset (m3-21). Passo com fórmula inválida devolve `null`. */
+export function rolarPasso(
+  passo: PassoInterpretadoDto,
+  atributos: FichaAtributosDto,
+  proficiencia?: number | null,
+  rolarDado: RolarDado = rolarDadoPadrao,
+): ResultadoRolagemDto | null {
+  if (!passo.interpretacao.valida || !passo.interpretacao.formula) {
+    return null;
+  }
+  return rolarInterpretada(passo.interpretacao.formula, atributos, passo.modo, proficiencia, rolarDado);
 }

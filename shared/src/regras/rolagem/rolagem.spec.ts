@@ -1,7 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import type { FichaAtributosDto } from '../../dtos/ficha';
-import { RolagemEfeitoAlvoEnum, RolagemEfeitoTipoEnum, RolagemModoEnum, TipoDanoEnum } from '../../enums';
-import { aplicarEfeitos, interpretarFormula, rolarFormula, rolarInterpretada, validarFormula } from './rolagem';
+import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto } from '../../dtos/ficha';
+import {
+  HabilidadeCategoriaEnum,
+  RolagemEfeitoAlvoEnum,
+  RolagemEfeitoTipoEnum,
+  RolagemModoEnum,
+  RolagemPresetTipoEnum,
+  TipoDanoEnum,
+} from '../../enums';
+import {
+  aplicarEfeitos,
+  interpretarFormula,
+  resolverPreset,
+  rolarFormula,
+  rolarInterpretada,
+  rolarPasso,
+  validarFormula,
+} from './rolagem';
 
 /**
  * Motor de rolagem (m3-15): interpretação e rolagem de fórmulas de preset. A rolagem é
@@ -349,5 +364,95 @@ describe('efeitos de habilidade — aplicarEfeitos (m3-20)', () => {
       RolagemModoEnum.TESTE,
     );
     expect(comEfeito).toEqual(base); // inalterado
+  });
+});
+
+describe('presets + runner encadeado — resolverPreset/rolarPasso (m3-21)', () => {
+  const forcaBruta: FichaHabilidadeDto = {
+    nome: 'Força Bruta',
+    categoria: HabilidadeCategoriaEnum.ARQUETIPO,
+    custoEnergia: 4,
+    descricao: 'Soma sua Força × 3 no dano de ataques físicos.',
+    efeitos: [
+      {
+        tipo: RolagemEfeitoTipoEnum.DANO_ATRIBUTO,
+        atributo: 'forca',
+        multiplicador: 3,
+        tipoDano: TipoDanoEnum.FISICO,
+        alvo: RolagemEfeitoAlvoEnum.DANO,
+      },
+    ],
+  };
+
+  it('preset legado {nome, formula} → 1 passo SOMA, sem energia', () => {
+    const plano = resolverPreset({ preset: { nome: 'Simples', formula: '1d20+LUT' }, atributos });
+    expect(plano.passos).toHaveLength(1);
+    expect(plano.passos[0].modo).toBe(RolagemModoEnum.SOMA);
+    expect(plano.energiaGasta).toBe(0);
+    expect(plano.habilidadesVinculadas).toEqual([]);
+  });
+
+  it('encadeado devolve primária + seguintes na ordem, com os modos', () => {
+    const preset: FichaRolagemDto = {
+      nome: 'Arma',
+      formula: 'lutad20',
+      modo: RolagemModoEnum.TESTE,
+      tipo: RolagemPresetTipoEnum.ENCADEADO,
+      seguintes: [
+        { nome: 'Dano', formula: '2d8 [Físico]', modo: RolagemModoEnum.SOMA },
+        { nome: 'Crítico', formula: '4d8 [Físico]', modo: RolagemModoEnum.SOMA },
+      ],
+    };
+    const plano = resolverPreset({ preset, atributos, proficiencia: 2 });
+    expect(plano.passos.map((passo) => passo.nome)).toEqual(['Arma', 'Dano', 'Crítico']);
+    expect(plano.passos[0].modo).toBe(RolagemModoEnum.TESTE);
+  });
+
+  it('injeta efeitos das habilidades vinculadas e soma a energia', () => {
+    const preset: FichaRolagemDto = {
+      nome: 'Ataque',
+      formula: '2d8 [Físico]',
+      modo: RolagemModoEnum.SOMA,
+      habilidades: ['Força Bruta'],
+    };
+    const plano = resolverPreset({ preset, atributos, habilidades: [forcaBruta] });
+    expect(plano.energiaGasta).toBe(4);
+    expect(plano.energiaVariavel).toBe(false);
+    expect(plano.habilidadesVinculadas).toEqual(['Força Bruta']);
+    // Rola o passo: 2d8 (=16) + FOR*3 (=18) → Físico 34.
+    const resultado = rolarPasso(plano.passos[0], atributos, undefined, rolarMaximo);
+    expect(resultado?.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 34 }]);
+  });
+
+  it('custo variável [X E] não soma, mas marca energiaVariavel', () => {
+    const variavel: FichaHabilidadeDto = {
+      nome: 'Custo X',
+      categoria: HabilidadeCategoriaEnum.GERAL,
+      custoEnergia: null,
+      descricao: '',
+    };
+    const plano = resolverPreset({
+      preset: { nome: 'P', formula: '1d6', habilidades: ['Custo X'] },
+      atributos,
+      habilidades: [variavel],
+    });
+    expect(plano.energiaGasta).toBe(0);
+    expect(plano.energiaVariavel).toBe(true);
+  });
+
+  it('habilidade vinculada inexistente na ficha é ignorada', () => {
+    const plano = resolverPreset({
+      preset: { nome: 'P', formula: '1d6', habilidades: ['Fantasma'] },
+      atributos,
+      habilidades: [],
+    });
+    expect(plano.energiaGasta).toBe(0);
+    expect(plano.habilidadesVinculadas).toEqual([]);
+  });
+
+  it('rolarPasso devolve null para passo com fórmula inválida', () => {
+    const plano = resolverPreset({ preset: { nome: 'X', formula: 'xyz' }, atributos });
+    expect(plano.passos[0].interpretacao.valida).toBe(false);
+    expect(rolarPasso(plano.passos[0], atributos)).toBeNull();
   });
 });

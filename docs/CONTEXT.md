@@ -1458,12 +1458,25 @@ fórmulas já com efeitos. `abreviacaoAtributo` em `rolagem.dados`. Shared **244
 `ficha.dtos` passou a importar `type RolagemEfeitoDto` de `regras/rolagem` (só-tipo, sem ciclo runtime).
 Spec em `done/`.
 
-**Próxima task:** `m3-21` — **presets + runner encadeado**: `FichaRolagemDto` += `modo?`/`tipo?`
-(`SIMPLES|ENCADEADO`, `RolagemPresetTipoEnum`)/`seguintes?`/`habilidades?`; `FichaRolagemPassoDto`;
-`resolverPreset` (interpreta cada passo, injeta efeitos das habilidades, soma energia) → `PlanoPresetDto`;
-`rolarPasso`. Depois `m3-22` (frontend). Em seguida o backlog anterior: `m3-23`→`m3-25`
-(**Identidade**), `m3-09` (**mobile**), `m3-26` (**espaço** da ficha). **Antes de qualquer UI, ler
-`docs/design/DESIGN.md` e consumir os tokens de `docs/design/tema/`** (proibição #29).
+**m3-21 concluída** — **presets encadeados + runner** (fecha o **motor** da Rolagem v2). Novo
+`RolagemPresetTipoEnum` (`SIMPLES|ENCADEADO`). `FichaRolagemDto` += `modo?`/`tipo?`/`seguintes?`/
+`habilidades?` (nomes) + novo `FichaRolagemPassoDto` (retrocompatível: preset legado = `SIMPLES`/`SOMA`).
+Runner puro em `rolagem.ts`: **`resolverPreset`** resolve as habilidades vinculadas pelo nome, coleta
+`efeitos` + soma `custoEnergia` (`null` → `energiaVariavel`), monta os passos (primária + `seguintes`),
+interpreta cada um e funde os efeitos (`aplicarEfeitos` por `alvo`↔modo) → `PlanoPresetDto`;
+**`rolarPasso`** rola um passo via `rolarInterpretada`. Energia só **reportada** (o front debita por
+`ajusteVitalidade`). DTOs `PresetResolverDto`/`PassoInterpretadoDto`/`PlanoPresetDto`. Shared
+**250/250** (6 novos). Spec em `done/`.
+
+> **Motor da Rolagem v2 completo** (m3-16 gramática, m3-18 dano tipado, m3-19 teste, m3-20 efeitos,
+> m3-21 presets/runner) — tudo puro e testado. Falta só a **UI** (m3-22).
+
+**Próxima task:** `m3-22` — **frontend da Rolagem v2**: editor de preset (tipo/modo/passos/picker de
+habilidades) em `ficha-rolagens`, débito de energia via `ajusteVitalidade`, render por tipo/teste,
+**guia de fórmula** (dialog no padrão `ajuda-calculadora`), **dadinho + teste na Visão Geral** (caixa
+`.ficha-atributo`) e novo ícone `dado`. Em seguida o backlog anterior: `m3-23`→`m3-25` (**Identidade**),
+`m3-09` (**mobile**), `m3-26` (**espaço** da ficha). **Antes de qualquer UI, ler `docs/design/DESIGN.md`
+e consumir os tokens de `docs/design/tema/`** (proibição #29).
 
 **`M3` — Ficha de Jogador** (CRUD + cálculo automático via `shared/regras` + permissões +
 tempo real): o milestone já foi quebrado em tasks numeradas (`m3-01`…`m3-09`, specs no backlog).

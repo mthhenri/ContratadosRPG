@@ -1,4 +1,11 @@
-import type { ArquetipoEnum, ClasseEnum, HabilidadeCategoriaEnum, SeveridadeLesaoEnum } from '../../enums';
+import type {
+  ArquetipoEnum,
+  ClasseEnum,
+  HabilidadeCategoriaEnum,
+  RolagemModoEnum,
+  RolagemPresetTipoEnum,
+  SeveridadeLesaoEnum,
+} from '../../enums';
 import type { AmplificadorAplicadoDto, CarrinhoItemDto } from '../../regras/compras';
 import type { RolagemEfeitoDto } from '../../regras/rolagem';
 
@@ -204,14 +211,39 @@ export interface FichaDerivadosDto {
 }
 
 /**
- * Preset de rolagem de dados salvo na ficha (m3-15). Atalho nomeado para uma fórmula (ex.:
- * `1d20+LUT`); o motor de avaliação vive em `shared/regras/rolagem` (m3-15 — `regras/dados` já é a
- * pasta de dados/tabelas de jogo, por isso o motor de rolagem mora em `regras/rolagem`).
+ * Um passo **seguinte** de um preset encadeado (m3-21): uma rolagem disparada após a primária
+ * (ex.: o dano depois do teste da arma, ou o dano crítico).
+ */
+export interface FichaRolagemPassoDto {
+  readonly nome: string;
+  readonly formula: string;
+  /** Modo do passo (m3-19). Ausente = `SOMA`. */
+  readonly modo?: RolagemModoEnum;
+  readonly descricao?: string;
+}
+
+/**
+ * Preset de rolagem de dados salvo na ficha (m3-15; estendido em m3-21). Atalho nomeado para uma
+ * fórmula (ex.: `1d20+LUT`); o motor de avaliação vive em `shared/regras/rolagem` (m3-15 —
+ * `regras/dados` já é a pasta de dados/tabelas de jogo, por isso o motor mora em `regras/rolagem`).
+ *
+ * Retrocompatível: um preset legado `{ nome, formula, descricao? }` lê como `SIMPLES`/`SOMA`.
  */
 export interface FichaRolagemDto {
   readonly nome: string;
   readonly formula: string;
   readonly descricao?: string;
+  /** Modo da rolagem primária (m3-19). Ausente = `SOMA` (legado). */
+  readonly modo?: RolagemModoEnum;
+  /** `SIMPLES` (uma rolagem) ou `ENCADEADO` (primária + `seguintes`). Ausente = `SIMPLES`. */
+  readonly tipo?: RolagemPresetTipoEnum;
+  /** Passos disparados após a primária, na ordem (m3-21). */
+  readonly seguintes?: readonly FichaRolagemPassoDto[];
+  /**
+   * Nomes das **habilidades** da própria ficha vinculadas ao preset (m3-21): ao usar, o preset gasta
+   * a Energia delas e **aplica os efeitos** (`efeitos`) nas fórmulas (ex.: Força Bruta soma FOR × 3).
+   */
+  readonly habilidades?: readonly string[];
 }
 
 /**

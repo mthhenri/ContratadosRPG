@@ -1,4 +1,4 @@
-import type { FichaAtributosDto } from '../../dtos/ficha';
+import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto } from '../../dtos/ficha';
 import type { RolagemEfeitoAlvoEnum, RolagemEfeitoTipoEnum, RolagemModoEnum, TipoDanoEnum } from '../../enums';
 
 /**
@@ -164,4 +164,39 @@ export interface RolagemEfeitoDto {
   readonly variante?: 'DADO' | 'FIXO';
   /** Onde o efeito se aplica; ausente = inferido do tipo (dano → `DANO`, bônus de teste → `TESTE`). */
   readonly alvo?: RolagemEfeitoAlvoEnum;
+}
+
+// ── Runner de preset encadeado (m3-21) ───────────────────────────────────────
+
+/** Entrada de `resolverPreset`: o preset, os atributos da ficha e as habilidades para resolver os vínculos. */
+export interface PresetResolverDto {
+  readonly preset: FichaRolagemDto;
+  readonly atributos: FichaAtributosDto;
+  /** Proficiência para os passos de teste (m3-19). */
+  readonly proficiencia?: number | null;
+  /** Habilidades da ficha — usadas para resolver `preset.habilidades` (nomes) em efeitos + energia. */
+  readonly habilidades?: readonly FichaHabilidadeDto[];
+}
+
+/** Um passo do preset já interpretado, com os efeitos das habilidades fundidos (m3-21). */
+export interface PassoInterpretadoDto {
+  readonly nome: string;
+  readonly modo: RolagemModoEnum;
+  /** Texto original da fórmula (para exibição). */
+  readonly formula: string;
+  readonly descricao?: string;
+  /** Interpretação já com efeitos aplicados (inválida se a fórmula do passo não parseia). */
+  readonly interpretacao: InterpretacaoFormulaDto;
+}
+
+/** Saída de `resolverPreset`: os passos prontos p/ rolar + a energia a gastar. Puro (não rola/debita). */
+export interface PlanoPresetDto {
+  /** Passos na ordem: primária primeiro, depois os `seguintes`. */
+  readonly passos: readonly PassoInterpretadoDto[];
+  /** Soma da Energia das habilidades vinculadas com custo fixo (o front debita via `ajusteVitalidade`). */
+  readonly energiaGasta: number;
+  /** `true` se alguma habilidade vinculada tem custo variável (`[X E]`) — o front pergunta quanto. */
+  readonly energiaVariavel: boolean;
+  /** Nomes das habilidades efetivamente resolvidas na ficha. */
+  readonly habilidadesVinculadas: readonly string[];
 }
