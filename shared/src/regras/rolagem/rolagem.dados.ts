@@ -1,4 +1,5 @@
 import type { FichaAtributosDto } from '../../dtos/ficha';
+import { TipoDanoEnum } from '../../enums';
 
 /**
  * Abreviação de 3 letras → chave do atributo na ficha. As fórmulas de rolagem (m3-15) referenciam
@@ -20,3 +21,21 @@ export const ABREVIACOES_ATRIBUTO: Readonly<Record<string, keyof FichaAtributosD
 
 /** Teto defensivo de dados por termo (evita fórmulas absurdas como `9999d6`). */
 export const QUANTIDADE_DADOS_MAXIMA = 100;
+
+/** Remove acentos e caixa para casar tags de dano de forma tolerante (`fisico` = `Físico`). */
+const normalizarTipoDano = (texto: string): string =>
+  texto
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .trim()
+    .toUpperCase();
+
+/** Nome normalizado → `TipoDanoEnum` (m3-18). Os valores do enum já são as strings de exibição. */
+const MAPA_TIPO_DANO: Readonly<Record<string, TipoDanoEnum>> = Object.fromEntries(
+  Object.values(TipoDanoEnum).map((tipo) => [normalizarTipoDano(tipo), tipo]),
+);
+
+/** Resolve um nome de tipo de dano (tolerante a caixa/acentos), ou `null` se desconhecido. */
+export function resolverTipoDanoSimples(texto: string): TipoDanoEnum | null {
+  return MAPA_TIPO_DANO[normalizarTipoDano(texto)] ?? null;
+}

@@ -1,23 +1,29 @@
-import { ABREVIACOES_ATRIBUTO, QUANTIDADE_DADOS_MAXIMA } from './rolagem.dados';
+import { ABREVIACOES_ATRIBUTO, QUANTIDADE_DADOS_MAXIMA, resolverTipoDanoSimples } from './rolagem.dados';
 import {
+  AtributoAplicadoDto,
   DadosRoladosDto,
   FormulaInterpretadaDto,
+  GrupoDanoDto,
   InterpretacaoFormulaDto,
+  ParTipoDano,
   ResultadoRolagemDto,
   RolagemDto,
   TermoAtributoDto,
+  TermoConstanteDto,
   TermoDadoDto,
 } from './rolagem.dtos';
+import { TipoDanoEnum } from '../../enums';
 import type { FichaAtributosDto } from '../../dtos/ficha';
 
 /**
- * Motor de rolagem de dados (m3-15; gramática v2 m3-16): interpreta e rola uma fórmula de preset —
- * `NdM`, constantes inteiras, referências a atributo (`+LUT` / nome completo `+luta`), atributo como
- * **fonte de dados** (`FORd6` = FOR dados) e atributo **escalado** (`FOR*3`, `LUT/2`, piso),
- * combinados por `+`/`−`. Parênteses ainda não são suportados. Funções puras; a **única brecha a
- * `Math.random`** é a função de rolagem injetável `rolarDado` (SYSTEM.SPEC §6.6), com padrão de produção.
+ * Motor de rolagem de dados (m3-15; gramática v2 m3-16; dano tipado m3-18): interpreta e rola uma
+ * fórmula de preset — `NdM`, constantes, atributo (`+LUT`), atributo como **fonte de dados** (`FORd6`),
+ * atributo **escalado** (`FOR*3`, `LUT/2`, piso), combinados por `+`/`−`, com **tags de tipo de dano**
+ * `[Tipo]`/`[TipoA-TipoB]` (Composto = soma dividida 50/50, resto pro primeiro). Parênteses ainda não
+ * são suportados. Funções puras; a **única brecha a `Math.random`** é a função de rolagem injetável
+ * `rolarDado` (SYSTEM.SPEC §6.6), com padrão de produção.
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Atributos"/"Testes" (notação `1d20 + Atributo`).
+ * Fonte: docs/core/sistema-v4.1.0.md — "Atributos"/"Testes"/"Tipos de Dano".
  */
 
 /** Função que rola um dado de `faces` faces e devolve 1..faces. Injetável para testes determinísticos. */
@@ -37,45 +43,73 @@ function resolverAtributo(texto: string): keyof FichaAtributosDto | null {
   return chaves.find((chave) => chave === nome) ?? null;
 }
 
-/**
- * Interpreta a fórmula em termos de dado, atributo e constante. Aceita espaços; o 1º termo pode vir
- * sem sinal (assume `+`). Um termo é `NdM` (N opcional, default 1), um inteiro, ou um atributo.
- * Devolve `{ valida: false, erro }` para fórmula vazia, termo desconhecido, dado inválido ou
- * quantidade acima do teto — nunca lança (a UI trata como aviso).
- */
-export function interpretarFormula(formulaTexto: string): InterpretacaoFormulaDto {
-  const texto = (formulaTexto ?? '').replace(/\s+/g, '');
-  if (!texto) {
-    return { valida: false, erro: 'Fórmula vazia.' };
-  }
-  if (/[()]/.test(texto)) {
-    return { valida: false, erro: 'Parênteses ainda não são suportados.' };
-  }
-  const normalizada = /^[+-]/.test(texto) ? texto : `+${texto}`;
-  const partes = normalizada.match(/[+-][^+-]*/g) ?? [];
+/** Tipo de dano estampado nos termos de um segmento: single (`tipoDano`), Composto ou nenhum. */
+type DestinoDano = { readonly tipoDano?: TipoDanoEnum; readonly composto?: ParTipoDano };
 
-  const dados: TermoDadoDto[] = [];
-  const atributos: TermoAtributoDto[] = [];
+/**
+ * Resolve uma tag `[Tipo]` (single) ou `[TipoA-TipoB]` (Composto). Composto exige **dois tipos
+ * bloqueáveis distintos** (Geral, irredutível, fica de fora). `null` se desconhecida/inválida.
+ */
+function resolverTipoDano(tag: string): DestinoDano | null {
+  const partes = tag.split('-');
+  if (partes.length === 1) {
+    const tipo = resolverTipoDanoSimples(partes[0]);
+    return tipo ? { tipoDano: tipo } : null;
+  }
+  if (partes.length === 2) {
+    const a = resolverTipoDanoSimples(partes[0]);
+    const b = resolverTipoDanoSimples(partes[1]);
+    if (!a || !b || a === b || a === TipoDanoEnum.GERAL || b === TipoDanoEnum.GERAL) {
+      return null;
+    }
+    return { composto: [a, b] };
+  }
+  return null;
+}
+
+/** Acumuladores mutáveis preenchidos por `interpretarSegmento`. */
+interface AcumuladoresFormula {
+  readonly dados: TermoDadoDto[];
+  readonly atributos: TermoAtributoDto[];
+  readonly constantesTipadas: TermoConstanteDto[];
+}
+
+/**
+ * Interpreta um segmento (expressão aritmética `+`/`−`) estampando cada termo com o `destino`
+ * (tipo de dano). Devolve a soma das constantes **sem tag** e, em erro, a mensagem. Nunca lança.
+ */
+function interpretarSegmento(
+  expr: string,
+  destino: DestinoDano,
+  acc: AcumuladoresFormula,
+): { readonly constante: number; readonly erro?: string } {
+  const tipado = destino.tipoDano !== undefined || destino.composto !== undefined;
+  const normalizada = /^[+-]/.test(expr) ? expr : `+${expr}`;
+  const partes = normalizada.match(/[+-][^+-]*/g) ?? [];
   let constante = 0;
 
   for (const parte of partes) {
     const sinal: 1 | -1 = parte[0] === '-' ? -1 : 1;
     const corpo = parte.slice(1);
     if (!corpo) {
-      return { valida: false, erro: `Termo vazio em "${parte}".` };
+      return { constante, erro: `Termo vazio em "${parte}".` };
     }
+    if (/[[\]]/.test(corpo)) {
+      return { constante, erro: `Tag de dano malformada em "${corpo}".` };
+    }
+
     // Dado literal `NdM` (N opcional).
     const dado = corpo.match(/^(\d*)[dD](\d+)$/);
     if (dado) {
       const quantidade = dado[1] === '' ? 1 : parseInt(dado[1], 10);
       const faces = parseInt(dado[2], 10);
       if (quantidade < 1 || faces < 1) {
-        return { valida: false, erro: `Dado inválido "${corpo}".` };
+        return { constante, erro: `Dado inválido "${corpo}".` };
       }
       if (quantidade > QUANTIDADE_DADOS_MAXIMA) {
-        return { valida: false, erro: `Máximo de ${QUANTIDADE_DADOS_MAXIMA} dados por termo.` };
+        return { constante, erro: `Máximo de ${QUANTIDADE_DADOS_MAXIMA} dados por termo.` };
       }
-      dados.push({ sinal, quantidade, faces });
+      acc.dados.push({ sinal, quantidade, faces, ...destino });
       continue;
     }
 
@@ -86,9 +120,9 @@ export function interpretarFormula(formulaTexto: string): InterpretacaoFormulaDt
       const faces = parseInt(dadoAtributo[2], 10);
       if (atributoDado) {
         if (faces < 1) {
-          return { valida: false, erro: `Dado inválido "${corpo}".` };
+          return { constante, erro: `Dado inválido "${corpo}".` };
         }
-        dados.push({ sinal, quantidade: 1, quantidadeAtributo: atributoDado, faces });
+        acc.dados.push({ sinal, quantidade: 1, quantidadeAtributo: atributoDado, faces, ...destino });
         continue;
       }
     }
@@ -102,35 +136,106 @@ export function interpretarFormula(formulaTexto: string): InterpretacaoFormulaDt
         const rotulo = corpo.toUpperCase();
         if (escalado[2] === '/') {
           if (fator < 1) {
-            return { valida: false, erro: `Divisor inválido em "${corpo}".` };
+            return { constante, erro: `Divisor inválido em "${corpo}".` };
           }
-          atributos.push({ sinal, atributo: atributoEscalado, rotulo, divisor: fator });
+          acc.atributos.push({ sinal, atributo: atributoEscalado, rotulo, divisor: fator, ...destino });
         } else {
-          atributos.push({ sinal, atributo: atributoEscalado, rotulo, multiplicador: fator });
+          acc.atributos.push({ sinal, atributo: atributoEscalado, rotulo, multiplicador: fator, ...destino });
         }
         continue;
       }
     }
 
-    // Constante inteira.
+    // Constante inteira (tipada vai para `constantesTipadas`; sem tag soma em `constante`).
     if (/^\d+$/.test(corpo)) {
-      constante += sinal * parseInt(corpo, 10);
+      const valor = parseInt(corpo, 10);
+      if (tipado) {
+        acc.constantesTipadas.push({ sinal, valor, ...destino });
+      } else {
+        constante += sinal * valor;
+      }
       continue;
     }
 
     // Atributo modificador (`+LUT`, `-forca`).
     const atributo = resolverAtributo(corpo);
     if (atributo) {
-      atributos.push({ sinal, atributo, rotulo: corpo.toUpperCase() });
+      acc.atributos.push({ sinal, atributo, rotulo: corpo.toUpperCase(), ...destino });
       continue;
     }
-    return { valida: false, erro: `Termo desconhecido "${corpo}".` };
+    return { constante, erro: `Termo desconhecido "${corpo}".` };
+  }
+  return { constante };
+}
+
+/**
+ * Interpreta a fórmula em termos de dado, atributo e constante, com tags de tipo de dano opcionais.
+ * Aceita espaços; o 1º termo de cada segmento pode vir sem sinal (assume `+`). Sem tags, comporta-se
+ * como antes (um único total). Com tags, cada segmento (`termos [Tipo]`) estampa seus termos; um
+ * trecho sem tag numa fórmula tipada assume **Físico**. Devolve `{ valida: false, erro }` para fórmula
+ * vazia, parênteses, tag/termo inválido ou dado acima do teto — nunca lança (a UI trata como aviso).
+ */
+export function interpretarFormula(formulaTexto: string): InterpretacaoFormulaDto {
+  const texto = (formulaTexto ?? '').replace(/\s+/g, '');
+  if (!texto) {
+    return { valida: false, erro: 'Fórmula vazia.' };
+  }
+  if (/[()]/.test(texto)) {
+    return { valida: false, erro: 'Parênteses ainda não são suportados.' };
   }
 
-  if (dados.length === 0 && atributos.length === 0 && constante === 0) {
+  const acc: AcumuladoresFormula = { dados: [], atributos: [], constantesTipadas: [] };
+  let constante = 0;
+
+  if (!texto.includes('[')) {
+    const { constante: parcial, erro } = interpretarSegmento(texto, {}, acc);
+    if (erro) {
+      return { valida: false, erro };
+    }
+    constante = parcial;
+  } else {
+    // Divide por tag: `split` com grupo de captura intercala [expr, tag, expr, tag, …, exprFinal].
+    const partes = texto.split(/\[([^\]]+)\]/);
+    for (let i = 0; i < partes.length; i += 2) {
+      const expr = partes[i];
+      const tag = partes[i + 1];
+      if (!expr) {
+        if (tag !== undefined) {
+          return { valida: false, erro: `Tag "[${tag}]" sem termos antes.` };
+        }
+        continue;
+      }
+      let destino: DestinoDano;
+      if (tag === undefined) {
+        destino = { tipoDano: TipoDanoEnum.FISICO };
+      } else {
+        const resolvido = resolverTipoDano(tag);
+        if (!resolvido) {
+          return { valida: false, erro: `Tipo de dano desconhecido: "${tag}".` };
+        }
+        destino = resolvido;
+      }
+      const { erro } = interpretarSegmento(expr, destino, acc);
+      if (erro) {
+        return { valida: false, erro };
+      }
+    }
+  }
+
+  const vazio =
+    acc.dados.length === 0 &&
+    acc.atributos.length === 0 &&
+    acc.constantesTipadas.length === 0 &&
+    constante === 0;
+  if (vazio) {
     return { valida: false, erro: 'A fórmula não soma nada.' };
   }
-  return { valida: true, formula: { dados, atributos, constante } };
+
+  const formula: FormulaInterpretadaDto =
+    acc.constantesTipadas.length > 0
+      ? { dados: acc.dados, atributos: acc.atributos, constante, constantesTipadas: acc.constantesTipadas }
+      : { dados: acc.dados, atributos: acc.atributos, constante };
+  return { valida: true, formula };
 }
 
 /** `true` se a fórmula é interpretável. Espelha `interpretarFormula(...).valida`. */
@@ -138,10 +243,50 @@ export function validarFormula(formulaTexto: string): boolean {
   return interpretarFormula(formulaTexto).valida;
 }
 
+/** Uma contribuição de valor já rolado/aplicado, com seu destino de tipo de dano (ou nenhum). */
+type Contribuicao = { readonly valor: number; readonly tipoDano?: TipoDanoEnum; readonly composto?: ParTipoDano };
+
 /**
- * Rola a fórmula com os atributos da ficha: rola cada termo de dado (via `rolarDado`), soma os
- * atributos e a constante e devolve o detalhamento + o total. Fórmula inválida devolve `null`
- * (a UI valida antes). Determinístico quando `rolarDado` é injetado (testes).
+ * Agrega as contribuições **tipadas** por tipo de dano. Cada Composto tem a **soma do segmento**
+ * dividida 50/50 (resto pro primeiro) só depois de somada. Devolve `[]` quando não há nada tipado.
+ */
+function agruparDano(contribuicoes: readonly Contribuicao[]): GrupoDanoDto[] {
+  const tipadas = contribuicoes.filter((c) => c.tipoDano !== undefined || c.composto !== undefined);
+  if (tipadas.length === 0) {
+    return [];
+  }
+  const mapa = new Map<TipoDanoEnum, { total: number; composto: boolean }>();
+  const somar = (tipo: TipoDanoEnum, valor: number, composto: boolean): void => {
+    const atual = mapa.get(tipo) ?? { total: 0, composto: false };
+    mapa.set(tipo, { total: atual.total + valor, composto: atual.composto || composto });
+  };
+
+  const buckets = new Map<string, { par: ParTipoDano; total: number }>();
+  for (const contribuicao of tipadas) {
+    if (contribuicao.composto) {
+      const chave = contribuicao.composto.join('|');
+      const atual = buckets.get(chave) ?? { par: contribuicao.composto, total: 0 };
+      buckets.set(chave, { par: atual.par, total: atual.total + contribuicao.valor });
+    } else if (contribuicao.tipoDano) {
+      somar(contribuicao.tipoDano, contribuicao.valor, false);
+    }
+  }
+  for (const { par, total } of buckets.values()) {
+    const secundario = Math.floor(total / 2);
+    somar(par[0], total - secundario, true); // resto pro primeiro
+    somar(par[1], secundario, true);
+  }
+
+  return [...mapa.entries()].map(([tipoDano, valor]) =>
+    valor.composto ? { tipoDano, total: valor.total, composto: true } : { tipoDano, total: valor.total },
+  );
+}
+
+/**
+ * Rola a fórmula com os atributos da ficha: rola cada termo de dado (via `rolarDado`), aplica os
+ * atributos (com escalonamento) e a constante, e agrupa por tipo de dano quando há tags. Devolve o
+ * detalhamento + `grupos` (se tipada) + o total. Fórmula inválida devolve `null` (a UI valida antes).
+ * Determinístico quando `rolarDado` é injetado (testes).
  */
 export function rolarFormula(dto: RolagemDto, rolarDado: RolarDado = rolarDadoPadrao): ResultadoRolagemDto | null {
   const interpretacao = interpretarFormula(dto.formula);
@@ -156,18 +301,42 @@ export function rolarFormula(dto: RolagemDto, rolarDado: RolarDado = rolarDadoPa
       : termo.quantidade;
     const valores = Array.from({ length: quantidade }, () => rolarDado(termo.faces));
     const soma = valores.reduce((acumulado, valor) => acumulado + valor, 0);
-    return { sinal: termo.sinal, faces: termo.faces, valores, subtotal: termo.sinal * soma };
+    return {
+      sinal: termo.sinal,
+      faces: termo.faces,
+      valores,
+      subtotal: termo.sinal * soma,
+      ...(termo.composto ? { composto: termo.composto } : termo.tipoDano ? { tipoDano: termo.tipoDano } : {}),
+    };
   });
 
-  const atributos = formula.atributos.map((termo) => {
+  const atributos: AtributoAplicadoDto[] = formula.atributos.map((termo) => {
     const base = dto.atributos[termo.atributo] ?? 0;
     const escalado = Math.floor((base * (termo.multiplicador ?? 1)) / (termo.divisor ?? 1));
-    return { rotulo: termo.rotulo, valor: termo.sinal * escalado };
+    return {
+      rotulo: termo.rotulo,
+      valor: termo.sinal * escalado,
+      ...(termo.composto ? { composto: termo.composto } : termo.tipoDano ? { tipoDano: termo.tipoDano } : {}),
+    };
   });
 
-  const totalDados = dados.reduce((acumulado, grupo) => acumulado + grupo.subtotal, 0);
-  const totalAtributos = atributos.reduce((acumulado, atributo) => acumulado + atributo.valor, 0);
-  const total = totalDados + totalAtributos + formula.constante;
+  const contribuicoes: Contribuicao[] = [
+    ...dados.map((termo) => ({ valor: termo.subtotal, tipoDano: termo.tipoDano, composto: termo.composto })),
+    ...atributos.map((termo) => ({ valor: termo.valor, tipoDano: termo.tipoDano, composto: termo.composto })),
+    ...(formula.constantesTipadas ?? []).map((termo) => ({
+      valor: termo.sinal * termo.valor,
+      tipoDano: termo.tipoDano,
+      composto: termo.composto,
+    })),
+  ];
 
-  return { dados, atributos, constante: formula.constante, total };
+  const grupos = agruparDano(contribuicoes);
+  const totalSemTipo = contribuicoes
+    .filter((contribuicao) => contribuicao.tipoDano === undefined && contribuicao.composto === undefined)
+    .reduce((acumulado, contribuicao) => acumulado + contribuicao.valor, 0);
+  const total = grupos.reduce((acumulado, grupo) => acumulado + grupo.total, 0) + totalSemTipo + formula.constante;
+
+  return grupos.length > 0
+    ? { dados, atributos, constante: formula.constante, grupos, total }
+    : { dados, atributos, constante: formula.constante, total };
 }

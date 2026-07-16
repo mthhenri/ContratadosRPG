@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { FichaAtributosDto } from '../../dtos/ficha';
+import { TipoDanoEnum } from '../../enums';
 import { interpretarFormula, rolarFormula, validarFormula } from './rolagem';
 
 /**
@@ -140,5 +141,74 @@ describe('gramática v2 — atributo-como-dado e escalonamento (m3-16)', () => {
     expect(rolarFormula({ formula: 'FOR*3', atributos }, rolarMaximo)?.total).toBe(18);
     // LUT=3 → /2 = floor(1.5) = 1.
     expect(rolarFormula({ formula: 'LUT/2', atributos }, rolarMaximo)?.total).toBe(1);
+  });
+});
+
+describe('dano tipado e Composto (m3-18)', () => {
+  it('estampa o tipo de dano nos termos (`2d8 [Balístico]`)', () => {
+    expect(interpretarFormula('2d8 [Balístico]').formula?.dados).toEqual([
+      { sinal: 1, quantidade: 2, faces: 8, tipoDano: TipoDanoEnum.BALISTICO },
+    ]);
+  });
+
+  it('agrupa o total por tipo de dano', () => {
+    // 1d6 (=6) + FOR (6) = 12 Físico; 2d4 (=8) Explosão.
+    const resultado = rolarFormula(
+      { formula: '1d6+FOR [Físico] + 2d4 [Explosão]', atributos },
+      rolarMaximo,
+    );
+    expect(resultado?.grupos).toEqual([
+      { tipoDano: TipoDanoEnum.FISICO, total: 12 },
+      { tipoDano: TipoDanoEnum.EXPLOSAO, total: 8 },
+    ]);
+    expect(resultado?.total).toBe(20);
+  });
+
+  it('trecho sem tag numa fórmula tipada assume Físico', () => {
+    // 2d6 (=12) Explosão + 3 (sem tag) → Físico.
+    const resultado = rolarFormula({ formula: '2d6 [Explosão] + 3', atributos }, rolarMaximo);
+    expect(resultado?.grupos).toEqual([
+      { tipoDano: TipoDanoEnum.EXPLOSAO, total: 12 },
+      { tipoDano: TipoDanoEnum.FISICO, total: 3 },
+    ]);
+    expect(resultado?.total).toBe(15);
+  });
+
+  it('Composto divide a soma do segmento 50/50, resto pro primeiro', () => {
+    let n = 0;
+    const sequencia = (): number => [10, 5][n++]; // 2d10 → 15
+    const resultado = rolarFormula({ formula: '2d10 [Físico-Químico]', atributos }, sequencia);
+    expect(resultado?.grupos).toEqual([
+      { tipoDano: TipoDanoEnum.FISICO, total: 8, composto: true },
+      { tipoDano: TipoDanoEnum.QUIMICO, total: 7, composto: true },
+    ]);
+    expect(resultado?.total).toBe(15);
+  });
+
+  it('resolve tags tolerando caixa e acentos (`[quimico]`)', () => {
+    expect(interpretarFormula('2d6 [quimico]').formula?.dados[0].tipoDano).toBe(TipoDanoEnum.QUIMICO);
+  });
+
+  it('rejeita tipo desconhecido, Composto com Geral, 3 tipos e tipos iguais', () => {
+    expect(interpretarFormula('2d6 [Xyz]').valida).toBe(false);
+    expect(interpretarFormula('2d6 [Físico-Geral]').valida).toBe(false);
+    expect(interpretarFormula('2d6 [Físico-Químico-Balístico]').valida).toBe(false);
+    expect(interpretarFormula('2d6 [Físico-Físico]').valida).toBe(false);
+  });
+
+  it('rejeita tag sem termos antes e tag malformada', () => {
+    expect(interpretarFormula('[Físico]2d6').valida).toBe(false);
+    expect(interpretarFormula('2d6[Físico').valida).toBe(false);
+  });
+
+  it('fórmula sem tags não gera grupos (regressão)', () => {
+    const resultado = rolarFormula({ formula: '2d6+FOR', atributos }, rolarMaximo);
+    expect(resultado?.grupos).toBeUndefined();
+    expect(resultado?.total).toBe(18); // 2d6 (=12) + FOR (6)
+  });
+
+  it('TipoDanoEnum tem os valores de exibição do documento', () => {
+    expect(TipoDanoEnum.FISICO).toBe('Físico');
+    expect(TipoDanoEnum.BALISTICO).toBe('Balístico');
   });
 });

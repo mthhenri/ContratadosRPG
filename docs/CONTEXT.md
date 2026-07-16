@@ -1430,9 +1430,19 @@ pelo atributo (≤0 → 0 dados, teto 100) e aplica mult/div. **Ainda somando** 
 vêm a seguir. Tudo aditivo/opcional (presets legados idênticos). Shared **222/222** (6 novos casos).
 Spec em `done/`.
 
-**Próxima task:** `m3-18` — **dano tipado** + `TipoDanoEnum` (tags `[Tipo]`/`[A-B]` → grupos por tipo,
-Composto 50/50). Depois `m3-19` (modo TESTE), `m3-20` (efeitos de habilidade), `m3-21` (presets +
-runner encadeado), `m3-22` (frontend). Em seguida o backlog anterior: `m3-23`→`m3-25` (**Identidade**),
+**m3-18 concluída** — **dano tipado** no motor. Novo `TipoDanoEnum` (`shared/enums`, valores = as
+strings já usadas em compras → sem migração) + `TIPOS_DANO_BLOQUEAVEIS`. A fórmula aceita tags
+`[Tipo]` e `[TipoA-TipoB]` (**Composto**): o parser virou por **segmentos** (`split` por tag),
+estampando cada termo; trecho sem tag numa fórmula tipada assume **Físico**; `resolverTipoDanoSimples`
+tolera caixa/acentos. `rolarFormula` agrupa o total por tipo (`grupos: GrupoDanoDto[]`) e divide cada
+Composto pela **soma do segmento** (resto pro primeiro). DTOs aditivos (`tipoDano?`/`composto?` nos
+termos e resultados, `constantesTipadas?`, `GrupoDanoDto`). **Sem tags = idêntico ao legado** (sem
+`grupos`). Shared **231/231** (9 novos casos). Spec em `done/`.
+
+**Próxima task:** `m3-19` — **modo TESTE** (`RolagemModoEnum`): rolar `(Atributo)`D20 e **pegar o
+maior**, somar **Proficiência** (nível) e amplificadores; `ResultadoTesteDto` (maior + descartados);
+açúcar `luta` = `lutad20`. Depois `m3-20` (efeitos de habilidade), `m3-21` (presets + runner
+encadeado), `m3-22` (frontend). Em seguida o backlog anterior: `m3-23`→`m3-25` (**Identidade**),
 `m3-09` (**mobile**), `m3-26` (**espaço** da ficha). **Antes de qualquer UI, ler `docs/design/DESIGN.md`
 e consumir os tokens de `docs/design/tema/`** (proibição #29).
 
