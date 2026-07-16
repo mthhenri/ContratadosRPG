@@ -12,8 +12,13 @@
 > habilidade; os chips de vínculo do preset agrupam em **"Nome ×N"**; a energia do passo reflete as
 > repetições. O tooltip da descrição (m3-30) fica ainda mais útil — o jogador lê e aplica o efeito na mão.
 > O **crítico mecânico** (m3-30) segue: dobra a **fórmula crua** (dados/fixos/atributos escritos, exceto
-> PROF/NIV). **Testes:** shared **281** (removidos os testes de fusão; +2 de multiconjunto de energia),
-> frontend **319** (stepper add/remove/contagem + serialização repetida). Verificado no stack real:
+> PROF/NIV). **Teste de atributo da Visão Geral:** passou a aplicar **`cm1`** (margem de crítico natural,
+> regra 1216) — `(Atributo)d20kh1cm1 + PROF`; e a legenda da bandeja ficou **honesta na desvantagem**
+> (atributo ≤ 0 → mostra `(2+|attr|)d20kl1cm1` = mantém o menor, em vez de exibir `kh1`). **Bandeja:** muitos
+> dados (6d6, crítico 10d10→20d10) não são mais cortados — o termo quebra em linhas e a coluna de detalhe
+> ocupa a largura restante. **Testes:** shared **281** (removidos os testes de fusão; +2 de multiconjunto de energia),
+> frontend **321** (stepper add/remove/contagem + serialização repetida; teste de atributo cm1 + legenda
+> honesta na desvantagem). Verificado no stack real:
 > vínculo "Força Bruta ×2" com energia "− 8 E"; rolar o dano usa `2d8` cru (sem FOR×3 fundido); stepper
 > mostra a contagem por passo. Build/lint verdes.)
 >

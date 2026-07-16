@@ -36,6 +36,15 @@
 - Chips de vínculo do preset salvo **agrupam** em `Nome ×N` (`vinculosAgrupados`).
 - Copy dos rótulos ajustada ("só contam energia; repita para aplicar mais de uma vez").
 
+### 4. Teste de atributo da Visão Geral
+
+- A rolagem rápida de atributo passa a aplicar **`cm1`** (margem de crítico natural — todo teste crita no
+  20; regra 1216): fórmula `(Atributo)d20kh1cm1 + PROF`.
+- **Legenda honesta em desvantagem:** quando o atributo efetivo é **≤ 0**, o motor rola `(2+|attr|)d20` e
+  mantém o **menor** (desvantagem intrínseca, regra 270). Antes a legenda da bandeja ainda mostrava
+  `kh1` (mantém o maior), contradizendo o resultado; agora exibe `(2+|attr|)d20kl1cm1 + PROF` — coerente
+  com o que foi rolado. (A fórmula enviada ao motor segue `…kh1…`, que é o gatilho da desvantagem.)
+
 ## Fora de escopo / preservado
 
 - **Crítico mecânico** (`m3-30`) permanece — dobra a **fórmula crua** (dados/fixos/atributos escritos),
