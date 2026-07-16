@@ -93,3 +93,52 @@ describe('rolarFormula', () => {
     expect(rolarFormula({ formula: 'xyz', atributos }, rolarMaximo)).toBeNull();
   });
 });
+
+describe('gramática v2 — atributo-como-dado e escalonamento (m3-16)', () => {
+  it('interpreta atributo como fonte de dados (`FORd6`, `lutad20`)', () => {
+    expect(interpretarFormula('FORd6').formula?.dados).toEqual([
+      { sinal: 1, quantidade: 1, faces: 6, quantidadeAtributo: 'forca' },
+    ]);
+    expect(interpretarFormula('lutad20').formula?.dados).toEqual([
+      { sinal: 1, quantidade: 1, faces: 20, quantidadeAtributo: 'luta' },
+    ]);
+  });
+
+  it('interpreta escalonamento de atributo (`FOR*3`, `LUT/2`)', () => {
+    expect(interpretarFormula('FOR*3').formula?.atributos).toEqual([
+      { sinal: 1, atributo: 'forca', rotulo: 'FOR*3', multiplicador: 3 },
+    ]);
+    expect(interpretarFormula('LUT/2').formula?.atributos).toEqual([
+      { sinal: 1, atributo: 'luta', rotulo: 'LUT/2', divisor: 2 },
+    ]);
+  });
+
+  it('rejeita divisor zero e parênteses', () => {
+    expect(interpretarFormula('FOR/0').valida).toBe(false);
+    expect(interpretarFormula('(1d20)').valida).toBe(false);
+    expect(interpretarFormula('1d20)').valida).toBe(false);
+  });
+
+  it('rola (Atributo) dados — `FORd6` com FOR=6 → 6 dados', () => {
+    // 6 dados de 6 faces, cada um no máximo (=6) → 36.
+    const resultado = rolarFormula({ formula: 'FORd6', atributos }, rolarMaximo);
+    expect(resultado?.dados[0].valores).toHaveLength(6);
+    expect(resultado?.dados[0].subtotal).toBe(36);
+    expect(resultado?.total).toBe(36);
+  });
+
+  it('atributo ≤ 0 como fonte de dados → 0 dados', () => {
+    const semDestreza: FichaAtributosDto = { ...atributos, destreza: 0 };
+    const resultado = rolarFormula({ formula: 'DESd20', atributos: semDestreza }, rolarMaximo);
+    expect(resultado?.dados[0].valores).toEqual([]);
+    expect(resultado?.dados[0].subtotal).toBe(0);
+    expect(resultado?.total).toBe(0);
+  });
+
+  it('aplica multiplicador e divisor (piso) ao atributo', () => {
+    // FOR=6 → ×3 = 18.
+    expect(rolarFormula({ formula: 'FOR*3', atributos }, rolarMaximo)?.total).toBe(18);
+    // LUT=3 → /2 = floor(1.5) = 1.
+    expect(rolarFormula({ formula: 'LUT/2', atributos }, rolarMaximo)?.total).toBe(1);
+  });
+});

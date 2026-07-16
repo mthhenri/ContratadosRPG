@@ -11,10 +11,11 @@ import {
 import type { FichaAtributosDto } from '../../dtos/ficha';
 
 /**
- * Motor de rolagem de dados (m3-15): interpreta e rola uma fórmula de preset da ficha —
- * `NdM`, constantes inteiras e referências a atributo (`+LUT`, ou o nome completo `+luta`),
- * combinadas por `+`/`−`. Funções puras; a **única brecha a `Math.random`** é a função de
- * rolagem injetável `rolarDado` (SYSTEM.SPEC §6.6), com um padrão para produção.
+ * Motor de rolagem de dados (m3-15; gramática v2 m3-16): interpreta e rola uma fórmula de preset —
+ * `NdM`, constantes inteiras, referências a atributo (`+LUT` / nome completo `+luta`), atributo como
+ * **fonte de dados** (`FORd6` = FOR dados) e atributo **escalado** (`FOR*3`, `LUT/2`, piso),
+ * combinados por `+`/`−`. Parênteses ainda não são suportados. Funções puras; a **única brecha a
+ * `Math.random`** é a função de rolagem injetável `rolarDado` (SYSTEM.SPEC §6.6), com padrão de produção.
  *
  * Fonte: docs/core/sistema-v4.1.0.md — "Atributos"/"Testes" (notação `1d20 + Atributo`).
  */
@@ -47,6 +48,9 @@ export function interpretarFormula(formulaTexto: string): InterpretacaoFormulaDt
   if (!texto) {
     return { valida: false, erro: 'Fórmula vazia.' };
   }
+  if (/[()]/.test(texto)) {
+    return { valida: false, erro: 'Parênteses ainda não são suportados.' };
+  }
   const normalizada = /^[+-]/.test(texto) ? texto : `+${texto}`;
   const partes = normalizada.match(/[+-][^+-]*/g) ?? [];
 
@@ -60,6 +64,7 @@ export function interpretarFormula(formulaTexto: string): InterpretacaoFormulaDt
     if (!corpo) {
       return { valida: false, erro: `Termo vazio em "${parte}".` };
     }
+    // Dado literal `NdM` (N opcional).
     const dado = corpo.match(/^(\d*)[dD](\d+)$/);
     if (dado) {
       const quantidade = dado[1] === '' ? 1 : parseInt(dado[1], 10);
@@ -73,10 +78,47 @@ export function interpretarFormula(formulaTexto: string): InterpretacaoFormulaDt
       dados.push({ sinal, quantidade, faces });
       continue;
     }
+
+    // Atributo como fonte de dados `ATRdM` (ex.: `FORd6`, `lutad20`).
+    const dadoAtributo = corpo.match(/^([A-Za-z]+)[dD](\d+)$/);
+    if (dadoAtributo) {
+      const atributoDado = resolverAtributo(dadoAtributo[1]);
+      const faces = parseInt(dadoAtributo[2], 10);
+      if (atributoDado) {
+        if (faces < 1) {
+          return { valida: false, erro: `Dado inválido "${corpo}".` };
+        }
+        dados.push({ sinal, quantidade: 1, quantidadeAtributo: atributoDado, faces });
+        continue;
+      }
+    }
+
+    // Atributo escalado `ATR*N` / `ATR/N` (ex.: `FOR*3`, `LUT/2`).
+    const escalado = corpo.match(/^([A-Za-z]+)([*/])(\d+)$/);
+    if (escalado) {
+      const atributoEscalado = resolverAtributo(escalado[1]);
+      const fator = parseInt(escalado[3], 10);
+      if (atributoEscalado) {
+        const rotulo = corpo.toUpperCase();
+        if (escalado[2] === '/') {
+          if (fator < 1) {
+            return { valida: false, erro: `Divisor inválido em "${corpo}".` };
+          }
+          atributos.push({ sinal, atributo: atributoEscalado, rotulo, divisor: fator });
+        } else {
+          atributos.push({ sinal, atributo: atributoEscalado, rotulo, multiplicador: fator });
+        }
+        continue;
+      }
+    }
+
+    // Constante inteira.
     if (/^\d+$/.test(corpo)) {
       constante += sinal * parseInt(corpo, 10);
       continue;
     }
+
+    // Atributo modificador (`+LUT`, `-forca`).
     const atributo = resolverAtributo(corpo);
     if (atributo) {
       atributos.push({ sinal, atributo, rotulo: corpo.toUpperCase() });
@@ -109,15 +151,19 @@ export function rolarFormula(dto: RolagemDto, rolarDado: RolarDado = rolarDadoPa
   const formula: FormulaInterpretadaDto = interpretacao.formula;
 
   const dados: DadosRoladosDto[] = formula.dados.map((termo) => {
-    const valores = Array.from({ length: termo.quantidade }, () => rolarDado(termo.faces));
+    const quantidade = termo.quantidadeAtributo
+      ? Math.max(0, Math.min(QUANTIDADE_DADOS_MAXIMA, dto.atributos[termo.quantidadeAtributo] ?? 0))
+      : termo.quantidade;
+    const valores = Array.from({ length: quantidade }, () => rolarDado(termo.faces));
     const soma = valores.reduce((acumulado, valor) => acumulado + valor, 0);
     return { sinal: termo.sinal, faces: termo.faces, valores, subtotal: termo.sinal * soma };
   });
 
-  const atributos = formula.atributos.map((termo) => ({
-    rotulo: termo.rotulo,
-    valor: termo.sinal * (dto.atributos[termo.atributo] ?? 0),
-  }));
+  const atributos = formula.atributos.map((termo) => {
+    const base = dto.atributos[termo.atributo] ?? 0;
+    const escalado = Math.floor((base * (termo.multiplicador ?? 1)) / (termo.divisor ?? 1));
+    return { rotulo: termo.rotulo, valor: termo.sinal * escalado };
+  });
 
   const totalDados = dados.reduce((acumulado, grupo) => acumulado + grupo.subtotal, 0);
   const totalAtributos = atributos.reduce((acumulado, atributo) => acumulado + atributo.valor, 0);

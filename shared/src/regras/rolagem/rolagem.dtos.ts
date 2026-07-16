@@ -13,6 +13,11 @@ import type { FichaAtributosDto } from '../../dtos/ficha';
 export interface TermoDadoDto {
   readonly sinal: 1 | -1;
   readonly quantidade: number;
+  /**
+   * Atributo como **fonte de dados** (m3-16, ex.: `FORd6`): a contagem de dados é o valor deste
+   * atributo no momento da rolagem — `quantidade` fica no default 1 e é ignorada.
+   */
+  readonly quantidadeAtributo?: keyof FichaAtributosDto;
   readonly faces: number;
 }
 
@@ -20,8 +25,12 @@ export interface TermoDadoDto {
 export interface TermoAtributoDto {
   readonly sinal: 1 | -1;
   readonly atributo: keyof FichaAtributosDto;
-  /** Texto original da referência (ex.: `LUT`), para exibir no detalhamento. */
+  /** Texto original da referência (ex.: `LUT`, `FOR*3`), para exibir no detalhamento. */
   readonly rotulo: string;
+  /** `ATR*N` (m3-16): multiplica o valor do atributo. Default 1. */
+  readonly multiplicador?: number;
+  /** `ATR/N` (m3-16): divide o valor do atributo com piso (`Math.floor`). Default 1. */
+  readonly divisor?: number;
 }
 
 /** Fórmula já interpretada: termos de dado, termos de atributo e a constante somada. */

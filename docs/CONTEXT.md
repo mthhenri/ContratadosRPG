@@ -175,7 +175,7 @@
 > Spec `m3-12` → `done/`. **M3 avança: a aba Sanidade virou um editor completo — e as lesões agora
 > mordem o atributo (e, se permanentes, todos os cálculos), mas nunca a Maestria.** Sessão anterior
 > (2026-07-13, **m3-11 — navegação por abas da ficha**: fecha o scaffold navegável
-> que destrava o resto do M3 (os editores de sub-coleções m3-12…m3-15 e o frontend de Identidade m3-20,
+> que destrava o resto do M3 (os editores de sub-coleções m3-12…m3-15 e o frontend de Identidade m3-25,
 > que aguardava a aba). A **ficha virou uma tela com abas** — barra mono/uppercase fiel ao protótipo
 > (`docs/design/examples/ficha-de-jogador.html`), aba ativa em **accent sólido + texto escuro**, as demais
 > em `--text-dim`; **Visão Geral · Combate · Inventário · Habilidades · Sanidade · Rolagens**. Tudo mora no
@@ -1415,10 +1415,26 @@ mostrando o total em destaque + detalhamento (`18 · 1D20 [15] + LUT 3`); embuti
 Shared 213/213, frontend 306/306, lint limpo, build AOT ok, verificado ao vivo. **Com m3-15, todas as abas
 da ficha têm editor** (m3-12 Sanidade, m3-13 Habilidades, m3-14 Inventário, m3-15 Rolagens).
 
-**Próxima task:** backlog do M3 restante — `m3-18`→`m3-20` (trio de **Identidade**: contrato/motor,
-backend de imutabilidade, frontend), `m3-09` (refino **mobile** da ficha) e `m3-21` (otimização de
-**espaço** da ficha). **Antes de qualquer UI, ler `docs/design/DESIGN.md` e consumir os tokens de
-`docs/design/tema/`** — tema "Terminal de Contenção" é a fonte da verdade visual (proibição #29).
+**Milestone Rolagem v2 (m3-16, m3-18…m3-22)** — em andamento. Expande o motor de rolagem para as
+regras reais: atributo como fonte de dados, `× ÷`, dano tipado + Composto, **modo TESTE** (maior
+dado + Proficiência), **efeitos estruturados de habilidade**, presets **encadeados** que gastam
+energia, guia de fórmula e **rolar teste na Visão Geral**. As specs de Identidade e otimização foram
+renumeradas para **m3-23…m3-26** (rodam depois). Plano completo em
+`~/.claude/plans/nos-presets-tamb-m-tem-structured-sparrow.md`.
+
+**m3-16 concluída** — **gramática v2** do motor (`shared/regras/rolagem`). `interpretarFormula` ganhou
+o **atributo como fonte de dados** (`FORd6` = FOR dados de 6 faces; `quantidadeAtributo` no
+`TermoDadoDto`) e o **escalonamento** de atributo (`FOR*3`, `LUT/2` com piso; `multiplicador`/`divisor`
+no `TermoAtributoDto`), além de **rejeitar parênteses** com mensagem. `rolarFormula` resolve a contagem
+pelo atributo (≤0 → 0 dados, teto 100) e aplica mult/div. **Ainda somando** — modo TESTE e dano tipado
+vêm a seguir. Tudo aditivo/opcional (presets legados idênticos). Shared **222/222** (6 novos casos).
+Spec em `done/`.
+
+**Próxima task:** `m3-18` — **dano tipado** + `TipoDanoEnum` (tags `[Tipo]`/`[A-B]` → grupos por tipo,
+Composto 50/50). Depois `m3-19` (modo TESTE), `m3-20` (efeitos de habilidade), `m3-21` (presets +
+runner encadeado), `m3-22` (frontend). Em seguida o backlog anterior: `m3-23`→`m3-25` (**Identidade**),
+`m3-09` (**mobile**), `m3-26` (**espaço** da ficha). **Antes de qualquer UI, ler `docs/design/DESIGN.md`
+e consumir os tokens de `docs/design/tema/`** (proibição #29).
 
 **`M3` — Ficha de Jogador** (CRUD + cálculo automático via `shared/regras` + permissões +
 tempo real): o milestone já foi quebrado em tasks numeradas (`m3-01`…`m3-09`, specs no backlog).
