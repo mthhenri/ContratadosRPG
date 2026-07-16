@@ -180,7 +180,7 @@ Contrato: `shared/src/dtos/ficha/ficha.dtos.ts`. Forma 1:1 com `sistema-v4.1.0.m
     // opcionais/retrocompat: ausentes → fallback ao cálculo de shared/regras (fichas antigas)
   },
   "rolagens": [                       // m3-15: presets de rolagem de dados salvos na ficha
-    // m3-27 (gramática v3): a fórmula especifica tudo — NÃO há mais campo "modo".
+    // m3-29 (gramática v3): a fórmula especifica tudo — NÃO há mais campo "modo".
     // Um teste é a expressão explícita `LUTd20kh1 + PROF` (kh/kl, margem `cm`, explosão `!`/implosão `?`).
     // Presets legados com "modo":"TESTE" migram na CARGA (normalizarPresetLegado, shared/regras/rolagem)
     // e persistem a fórmula nova no próximo save — o backend guarda o JSONB opaco (não valida rolagem).

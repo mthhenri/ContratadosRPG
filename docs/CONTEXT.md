@@ -1,6 +1,6 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-16 (**m3-27 — Rolagem gramática v3: fim dos "modos"**: o
+> Última atualização: 2026-07-16 (**m3-29 — Rolagem gramática v3: fim dos "modos"**: o
 > `RolagemModoEnum { SOMA | TESTE }` foi **aposentado** (enum deletado, campo `modo?` removido de
 > `FichaRolagemDto`/`FichaRolagemPassoDto`, `RolagemDto`, `PassoInterpretadoDto`). Um **teste deixa de
 > somar Proficiência por baixo dos panos**: a fórmula agora especifica tudo — um teste é a expressão
@@ -20,7 +20,7 @@
 > documenta os operadores novos. `ResultadoTesteDto` e `teste?` removidos; `DadosRoladosDto` ganhou
 > `mantidos?/descartados?/criticos?/desvantagem?`, `TermoDadoDto` ganhou os operadores. **Testes:** shared
 > **282** (rolagem 74, era 38), frontend **311**, backend **88** — todos verdes; `lint` shared+frontend e
-> `tsc` backend limpos; build do frontend no budget. Spec `docs/specs/done/m3-27-rolagem-gramatica-v3.spec.md`.
+> `tsc` backend limpos; build do frontend no budget. Spec `docs/specs/done/m3-29-rolagem-gramatica-v3.spec.md`.
 > **Verificação de render pendente** — validado por testes/build/lint. )
 >
 > (**m3-13++ — refinamentos do seletor + confirmar remoção na Sanidade**:

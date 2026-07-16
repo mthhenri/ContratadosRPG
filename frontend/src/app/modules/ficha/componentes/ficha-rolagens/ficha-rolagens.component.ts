@@ -46,7 +46,7 @@ interface RolagemVM {
 
 /**
  * Editor **no próprio lugar** da aba Rolagens (m3-15; estendido em m3-22 — "Rolagem v2"; gramática v3
- * m3-27): os presets nomeados da ficha (`FichaRolagemDto`). Não há mais "modo" — a **fórmula** especifica
+ * m3-29): os presets nomeados da ficha (`FichaRolagemDto`). Não há mais "modo" — a **fórmula** especifica
  * tudo (um teste é `LUTd20kh1 + PROF`; keep, margem de crítico `cm`, explosão `!`/implosão `?`). Um preset
  * pode ser **encadeado** (primária → dano → crítico, todos os passos visíveis, cada um com seu botão de
  * rolar) e **anexar habilidades por passo**: cada ação escolhe quais habilidades aplica, e ao rolá-la

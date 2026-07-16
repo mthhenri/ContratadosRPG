@@ -215,7 +215,7 @@ export interface FichaDerivadosDto {
  */
 export interface FichaRolagemPassoDto {
   readonly nome: string;
-  /** Fórmula do passo — expressão de dados completa (m3-27; ex.: `LUTd20kh1 + PROF`, `2d8 [Físico]`). */
+  /** Fórmula do passo — expressão de dados completa (m3-29; ex.: `LUTd20kh1 + PROF`, `2d8 [Físico]`). */
   readonly formula: string;
   readonly descricao?: string;
   /**
@@ -231,7 +231,7 @@ export interface FichaRolagemPassoDto {
  * fórmula (ex.: `1d20+LUT`); o motor de avaliação vive em `shared/regras/rolagem` (m3-15 —
  * `regras/dados` já é a pasta de dados/tabelas de jogo, por isso o motor mora em `regras/rolagem`).
  *
- * A fórmula é uma expressão de dados completa (m3-27) — não há mais "modo"; um teste é `LUTd20kh1 + PROF`.
+ * A fórmula é uma expressão de dados completa (m3-29) — não há mais "modo"; um teste é `LUTd20kh1 + PROF`.
  * Presets legados (`modo:'TESTE'`) migram na carga via `normalizarPresetLegado` (`shared/regras/rolagem`).
  */
 export interface FichaRolagemDto {

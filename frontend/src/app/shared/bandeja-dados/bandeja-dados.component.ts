@@ -37,7 +37,7 @@ export class BandejaDados {
   }
 
   /**
-   * Marca cada valor rolado de um termo como **mantido** ou **descartado** (m3-27), replicando a
+   * Marca cada valor rolado de um termo como **mantido** ou **descartado** (m3-29), replicando a
    * separação por multiset do motor (preserva a ordem e trata duplicados). Sem keep (`mantidos` ausente),
    * todos contam como mantidos — a UI então não aplica realce.
    */

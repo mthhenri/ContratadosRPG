@@ -8,7 +8,7 @@ import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-da
 import { FichaRolagens } from './ficha-rolagens.component';
 
 /**
- * Prova o editor da aba Rolagens (m3-15; Rolagem v2 em m3-22; gramática v3 em m3-27): adicionar/editar/
+ * Prova o editor da aba Rolagens (m3-15; Rolagem v2 em m3-22; gramática v3 em m3-29): adicionar/editar/
  * remover presets (sem "modo" — a fórmula especifica tudo; encadeados, com habilidades) e **rolar cada
  * passo** — reusando `shared/regras/rolagem` (`resolverPreset`/`rolarPasso`; nenhuma regra de dados no
  * componente). Controlado: cada mutação emite a lista inteira por `rolagensMudou`; o resultado do roll

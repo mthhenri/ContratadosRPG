@@ -2,11 +2,11 @@ import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto } from '../
 import type { RolagemEfeitoAlvoEnum, RolagemEfeitoTipoEnum, TipoDanoEnum } from '../../enums';
 
 /**
- * DTOs do motor de rolagem (m3-15; dano tipado m3-18; gramática v3 m3-27): interpretação de uma fórmula
+ * DTOs do motor de rolagem (m3-15; dano tipado m3-18; gramática v3 m3-29): interpretação de uma fórmula
  * de dados (`NdM`, constantes, atributo `+LUT`, atributo-como-dado `FORd6`, escalonamento `FOR*3`) com
  * operadores **por pool** — manter maior/menor (`kh`/`kl`), margem de crítico (`cm`), explosão (`!`) e
  * implosão (`?`) — e **tags de tipo de dano** `[Tipo]`/`[TipoA-TipoB]`, e o resultado de rolá-la
- * agrupado por tipo. Não há mais "modo": um teste é a expressão explícita `LUTd20kh1 + PROF` (m3-27).
+ * agrupado por tipo. Não há mais "modo": um teste é a expressão explícita `LUTd20kh1 + PROF` (m3-29).
  * Funções puras em `rolagem.ts` — a única brecha a `Math.random` é a função de rolagem injetável
  * (SYSTEM.SPEC §6.6). Fonte: docs/core/sistema-v4.1.0.md — "Atributos"/"Testes"/"Tipos de Dano".
  */
@@ -24,7 +24,7 @@ export type FonteEscalar = keyof FichaAtributosDto | 'proficiencia' | 'nivel';
 
 // ── Fórmula interpretada ─────────────────────────────────────────────────────
 
-/** Um termo de dado: `quantidade`D`faces`, com o sinal (+1 soma, −1 subtrai), e operadores por pool (m3-27). */
+/** Um termo de dado: `quantidade`D`faces`, com o sinal (+1 soma, −1 subtrai), e operadores por pool (m3-29). */
 export interface TermoDadoDto {
   readonly sinal: 1 | -1;
   readonly quantidade: number;
@@ -35,17 +35,17 @@ export interface TermoDadoDto {
    */
   readonly quantidadeAtributo?: FonteEscalar;
   readonly faces: number;
-  /** `khN` (m3-27): mantém os N **maiores** do pool; subtotal = soma dos mantidos. */
+  /** `khN` (m3-29): mantém os N **maiores** do pool; subtotal = soma dos mantidos. */
   readonly manterMaior?: number;
-  /** `klN` (m3-27): mantém os N **menores** do pool. */
+  /** `klN` (m3-29): mantém os N **menores** do pool. */
   readonly manterMenor?: number;
-  /** `cmN` (m3-27): margem de crítico — limiar = `faces − N + 1`; conta os mantidos ≥ limiar (informativo). */
+  /** `cmN` (m3-29): margem de crítico — limiar = `faces − N + 1`; conta os mantidos ≥ limiar (informativo). */
   readonly margemCritico?: number;
-  /** `!`/`!>=N` (m3-27, não-canônico): explode ao rolar um valor ≥ este limiar (bare `!` = `faces`). */
+  /** `!`/`!>=N` (m3-29, não-canônico): explode ao rolar um valor ≥ este limiar (bare `!` = `faces`). */
   readonly explosao?: number;
-  /** `?`/`?<=N` (m3-27, não-canônico): implode ao rolar um valor ≤ este limiar (bare `?` = 1). */
+  /** `?`/`?<=N` (m3-29, não-canônico): implode ao rolar um valor ≤ este limiar (bare `?` = 1). */
   readonly implosao?: number;
-  /** Dados extras somados ao pool **antes** do keep (efeito `BONUS_TESTE` variante `DADO`; m3-27). */
+  /** Dados extras somados ao pool **antes** do keep (efeito `BONUS_TESTE` variante `DADO`; m3-29). */
   readonly bonusDados?: number;
   /** Tipo de dano do termo (m3-18), quando a fórmula usa tags `[Tipo]`. */
   readonly tipoDano?: TipoDanoEnum;
@@ -101,7 +101,7 @@ export interface InterpretacaoFormulaDto {
 export interface RolagemDto {
   readonly formula: string;
   readonly atributos: FichaAtributosDto;
-  /** Proficiência resolvida pela fonte `PROF` nas fórmulas (m3-22; explícita como `+PROF` desde m3-27). `null`/ausente = 0. */
+  /** Proficiência resolvida pela fonte `PROF` nas fórmulas (m3-22; explícita como `+PROF` desde m3-29). `null`/ausente = 0. */
   readonly proficiencia?: number | null;
   /** Nível do agente — resolvido pela fonte `NIV` nas fórmulas (m3-22). Ausente = 0. */
   readonly nivel?: number;
@@ -111,17 +111,17 @@ export interface RolagemDto {
 export interface DadosRoladosDto {
   readonly sinal: 1 | -1;
   readonly faces: number;
-  /** Todos os valores rolados, **incluindo** os explodidos/imploididos (m3-27). */
+  /** Todos os valores rolados, **incluindo** os explodidos/imploididos (m3-29). */
   readonly valores: readonly number[];
   /** Soma dos **mantidos** com o sinal do termo (sem keep, soma o pool todo). */
   readonly subtotal: number;
-  /** Dados mantidos após `kh`/`kl` (m3-27); ausente quando não há keep (subtotal = pool todo). */
+  /** Dados mantidos após `kh`/`kl` (m3-29); ausente quando não há keep (subtotal = pool todo). */
   readonly mantidos?: readonly number[];
-  /** Dados descartados pelo `kh`/`kl` (m3-27); ausente quando não há keep. */
+  /** Dados descartados pelo `kh`/`kl` (m3-29); ausente quando não há keep. */
   readonly descartados?: readonly number[];
-  /** Quantos dados **mantidos** atingiram a margem de crítico `cm` (m3-27); ausente sem `cm`. */
+  /** Quantos dados **mantidos** atingiram a margem de crítico `cm` (m3-29); ausente sem `cm`. */
   readonly criticos?: number;
-  /** `true` quando a desvantagem intrínseca disparou (atributo ≤ 0 num pool de teste; m3-27, regra 270). */
+  /** `true` quando a desvantagem intrínseca disparou (atributo ≤ 0 num pool de teste; m3-29, regra 270). */
   readonly desvantagem?: boolean;
   /** Tipo de dano do termo (m3-18), para o detalhamento por tipo. */
   readonly tipoDano?: TipoDanoEnum;
@@ -187,7 +187,7 @@ export interface RolagemEfeitoDto {
 export interface PresetResolverDto {
   readonly preset: FichaRolagemDto;
   readonly atributos: FichaAtributosDto;
-  /** Proficiência resolvida pela fonte `PROF` nas fórmulas dos passos (m3-27). */
+  /** Proficiência resolvida pela fonte `PROF` nas fórmulas dos passos (m3-29). */
   readonly proficiencia?: number | null;
   /** Habilidades da ficha — usadas para resolver `preset.habilidades` (nomes) em efeitos + energia. */
   readonly habilidades?: readonly FichaHabilidadeDto[];

@@ -29,7 +29,7 @@ import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto, FichaRolag
 
 /**
  * Motor de rolagem de dados (m3-15; gramática v2 m3-16; dano tipado m3-18; efeitos de habilidade m3-20;
- * **gramática v3 m3-27**): interpreta e rola uma fórmula — `NdM`, constantes, atributo (`+LUT`), atributo
+ * **gramática v3 m3-29**): interpreta e rola uma fórmula — `NdM`, constantes, atributo (`+LUT`), atributo
  * como **fonte de dados** (`FORd6`), atributo **escalado** (`FOR*3`, `LUT/2`, piso), combinados por
  * `+`/`−`, com **tags de tipo de dano** `[Tipo]`/`[TipoA-TipoB]` (Composto = soma 50/50, resto pro
  * primeiro), e **operadores por pool**: manter maior/menor (`kh`/`kl`), margem de crítico (`cm`,
@@ -44,7 +44,7 @@ import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto, FichaRolag
  * brecha a `Math.random`** é a função de rolagem injetável `rolarDado` (SYSTEM.SPEC §6.6).
  *
  * Fonte: docs/core/sistema-v4.1.0.md — "Atributos"/"Testes"/"Tipos de Dano". Explosão/implosão não são
- * regra do documento — entram como operadores de ferramenta (m3-27).
+ * regra do documento — entram como operadores de ferramenta (m3-29).
  */
 
 /** Função que rola um dado de `faces` faces e devolve 1..faces. Injetável para testes determinísticos. */
@@ -100,7 +100,7 @@ function resolverTipoDano(tag: string): DestinoDano | null {
   return null;
 }
 
-/** Operadores por pool extraídos do sufixo de um termo de dado (m3-27). */
+/** Operadores por pool extraídos do sufixo de um termo de dado (m3-29). */
 interface OperadoresDado {
   manterMaior?: number;
   manterMenor?: number;
@@ -277,7 +277,7 @@ function interpretarSegmento(
       continue;
     }
 
-    // Fonte modificador (`+LUT`, `-forca`, `+PROF`, `+NIV`) — sempre modificador plano (m3-27, sem "modo").
+    // Fonte modificador (`+LUT`, `-forca`, `+PROF`, `+NIV`) — sempre modificador plano (m3-29, sem "modo").
     const atributo = resolverFonte(corpo);
     if (atributo) {
       acc.atributos.push({ sinal, atributo, rotulo: corpo.toUpperCase(), ...destino });
@@ -426,7 +426,7 @@ function separarMantidos(
 }
 
 /**
- * Rola um termo de dado com os operadores por pool (m3-27): resolve a contagem (com a desvantagem
+ * Rola um termo de dado com os operadores por pool (m3-29): resolve a contagem (com a desvantagem
  * intrínseca de atributo zerado), rola o pool, aplica explosão/implosão (com teto), seleciona `kh`/`kl`,
  * conta a margem de crítico e devolve o subtotal dos **mantidos**. Determinístico via `rolarDado`.
  */
@@ -579,7 +579,7 @@ function alvoPadrao(tipo: RolagemEfeitoTipoEnum): RolagemEfeitoAlvoEnum {
 
 /**
  * Funde os `efeitos` de habilidade (m3-20) numa fórmula já interpretada, respeitando o **papel** da
- * fórmula (m3-27): uma fórmula com operador de keep (`kh`/`kl`) é um **teste**; senão é **dano**. Só
+ * fórmula (m3-29): uma fórmula com operador de keep (`kh`/`kl`) é um **teste**; senão é **dano**. Só
  * aplica os efeitos cujo `alvo` (declarado ou inferido) casa com esse papel — bônus de teste num teste,
  * efeitos de dano num dano. Puro; devolve uma **nova** fórmula (não muta a original).
  */
@@ -704,7 +704,7 @@ export function rolarPasso(
   return rolarInterpretada(passo.interpretacao.formula, atributos, proficiencia, nivel, rolarDado);
 }
 
-// ── Migração de presets legados (m3-19 → m3-27) ──────────────────────────────
+// ── Migração de presets legados (m3-19 → m3-29) ──────────────────────────────
 
 /** Passo legado (m3-19): pode carregar `modo: 'TESTE'` que a v3 traduz para notação explícita. */
 interface FichaRolagemPassoLegadoDto {
@@ -727,7 +727,7 @@ interface FichaRolagemLegadoDto {
 }
 
 /**
- * Reescreve a fórmula de um passo que era **modo TESTE** (m3-19) na notação v3 explícita (m3-27): cada
+ * Reescreve a fórmula de um passo que era **modo TESTE** (m3-19) na notação v3 explícita (m3-29): cada
  * atributo puro vira o pool `…d20kh1` (pegar o maior), um pool d20 explícito ganha `kh1`, e se faltar a
  * Proficiência soma `+ PROF`. **Idempotente** — fórmula que já tem `kh`/`kl` ou já cita PROF passa intacta.
  */
@@ -773,7 +773,7 @@ export function reescreverFormulaTeste(formula: string): string {
 }
 
 /**
- * Migra um preset legado (m3-19) para a forma v3 (m3-27): reescreve as fórmulas dos passos que eram
+ * Migra um preset legado (m3-19) para a forma v3 (m3-29): reescreve as fórmulas dos passos que eram
  * `modo:'TESTE'` para a notação explícita e **dropa `modo`** em todos os níveis. Pura e idempotente —
  * presets `SOMA`/sem `modo` só perdem a chave `modo`; presets já-v3 voltam iguais. Chamada no boundary
  * de carga da ficha (frontend); o backend guarda o JSONB opaco.

@@ -257,7 +257,7 @@ export class FichaVisualizar {
   }
 
   /**
-   * Migra os presets de rolagem legados (m3-19 `modo:'TESTE'`) para a notação v3 (m3-27) na **carga** —
+   * Migra os presets de rolagem legados (m3-19 `modo:'TESTE'`) para a notação v3 (m3-29) na **carga** —
    * o boundary onde o JSONB persistido entra. `normalizarPresetLegado` é puro e idempotente; aplicá-lo a
    * todo documento vindo do servidor mantém `ficha`/`fichaBase` consistentes (o merge não vê falso diff)
    * e persiste a fórmula nova no próximo save. Sem `rolagens`, devolve a ficha intacta.

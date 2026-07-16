@@ -1,4 +1,4 @@
-# m3-27-rolagem-gramatica-v3.spec.md
+# m3-29-rolagem-gramatica-v3.spec.md
 
 > Refinamento do pacote **Rolagem v2** (`m3-16`…`m3-22`). Sucede a gramática v2. **Aposenta os "modos"
 > de rolagem**: um teste deixa de ser um `RolagemModoEnum` que soma Proficiência por baixo dos panos e

@@ -20,7 +20,7 @@ import {
 } from './rolagem';
 
 /**
- * Motor de rolagem (m3-15; gramática v3 m3-27): interpretação e rolagem de fórmulas de preset. A
+ * Motor de rolagem (m3-15; gramática v3 m3-29): interpretação e rolagem de fórmulas de preset. A
  * rolagem é determinística nos testes via `rolarDado` injetado. Conferido contra a notação de
  * docs/core/sistema-v4.1.0.md — "Testes" (`(Atributo)d20`, pega o maior; +Proficiência explícita).
  */
@@ -228,7 +228,7 @@ describe('dano tipado e Composto (m3-18)', () => {
   });
 });
 
-describe('manter maior/menor — kh/kl (m3-27)', () => {
+describe('manter maior/menor — kh/kl (m3-29)', () => {
   it('interpreta os operadores de keep', () => {
     expect(interpretarFormula('4d6kh1').formula?.dados).toEqual([
       { sinal: 1, quantidade: 4, faces: 6, manterMaior: 1 },
@@ -268,7 +268,7 @@ describe('manter maior/menor — kh/kl (m3-27)', () => {
   });
 });
 
-describe('teste de atributo — pool d20 + kh1 + PROF explícita (m3-27)', () => {
+describe('teste de atributo — pool d20 + kh1 + PROF explícita (m3-29)', () => {
   it('atributo puro é sempre modificador (sem sugar de teste)', () => {
     const formula = interpretarFormula('luta').formula;
     expect(formula?.atributos).toEqual([{ sinal: 1, atributo: 'luta', rotulo: 'LUTA' }]);
@@ -336,7 +336,7 @@ describe('teste de atributo — pool d20 + kh1 + PROF explícita (m3-27)', () =>
   });
 });
 
-describe('margem de crítico — cm (m3-27)', () => {
+describe('margem de crítico — cm (m3-29)', () => {
   it('conta os dados que atingiram a margem (d20 cm1 → só o 20)', () => {
     const resultado = rolarFormula({ formula: '4d20cm1', atributos }, sequencia([20, 20, 7, 3]));
     expect(resultado?.dados[0].criticos).toBe(2);
@@ -361,7 +361,7 @@ describe('margem de crítico — cm (m3-27)', () => {
   });
 });
 
-describe('explosão e implosão — não-canônicas (m3-27)', () => {
+describe('explosão e implosão — não-canônicas (m3-29)', () => {
   it('interpreta os limiares de explosão', () => {
     expect(interpretarFormula('2d6!').formula?.dados[0].explosao).toBe(6); // bare ! = máximo
     expect(interpretarFormula('2d6!>=5').formula?.dados[0].explosao).toBe(5);
@@ -399,7 +399,7 @@ describe('explosão e implosão — não-canônicas (m3-27)', () => {
   });
 });
 
-describe('validação de operadores (m3-27)', () => {
+describe('validação de operadores (m3-29)', () => {
   it('rejeita combinações e valores inválidos', () => {
     expect(interpretarFormula('4d6kh1kl1').valida).toBe(false); // kh + kl
     expect(interpretarFormula('4d6kh0').valida).toBe(false); // manter zero
@@ -415,7 +415,7 @@ describe('validação de operadores (m3-27)', () => {
   });
 });
 
-describe('efeitos de habilidade — aplicarEfeitos por papel inferido (m3-20/m3-27)', () => {
+describe('efeitos de habilidade — aplicarEfeitos por papel inferido (m3-20/m3-29)', () => {
   it('Força Bruta (DANO_ATRIBUTO) soma FOR×3 ao dano físico (fórmula sem keep = dano)', () => {
     const base = interpretarFormula('2d8 [Físico]').formula!;
     const comEfeito = aplicarEfeitos(base, [
@@ -624,7 +624,7 @@ describe('fontes escalares — Proficiência e Nível (m3-22)', () => {
   });
 });
 
-describe('migração de presets legados — normalizarPresetLegado (m3-27)', () => {
+describe('migração de presets legados — normalizarPresetLegado (m3-29)', () => {
   it('reescreve o modo TESTE na notação explícita', () => {
     expect(reescreverFormulaTeste('luta')).toBe('lutad20kh1 + PROF');
     expect(reescreverFormulaTeste('lutad20')).toBe('lutad20kh1 + PROF');

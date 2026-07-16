@@ -372,7 +372,7 @@ export class FichaVisualizacao {
   private readonly bandeja = inject(BandejaDadosService);
 
   /**
-   * Rola o teste de um atributo direto da Visão Geral (m3-22; gramática v3 m3-27): a fórmula explícita
+   * Rola o teste de um atributo direto da Visão Geral (m3-22; gramática v3 m3-29): a fórmula explícita
    * `(Atributo efetivo)d20kh1 + PROF` — pool de D20, pega o maior e soma a Proficiência (agora um termo
    * escrito, não um "modo"). Usa os atributos **efetivos** (pós-lesão) — a lesão reduz quantos D20
    * entram no pool, como o documento manda (atributo 0/negativo vira desvantagem intrínseca do motor).
