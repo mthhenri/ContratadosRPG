@@ -45,6 +45,12 @@
   `kh1` (mantém o maior), contradizendo o resultado; agora exibe `(2+|attr|)d20kl1cm1 + PROF` — coerente
   com o que foi rolado. (A fórmula enviada ao motor segue `…kh1…`, que é o gatilho da desvantagem.)
 
+### 5. Rolagem rápida (avulsa)
+
+- Campo livre no topo da aba Rolagens: digita uma fórmula e **rola na hora** (`rolarFormula` + bandeja),
+  **sem salvar preset e sem gastar Energia**. Usa a fórmula **crua** (o jogador escreve o que quiser —
+  `2d6 [Físico]`, `LUTd20kh1cm1 + PROF`…), com validação live e o mesmo guia (`?`). Enter ou "Rolar" dispara.
+
 ## Fora de escopo / preservado
 
 - **Crítico mecânico** (`m3-30`) permanece — dobra a **fórmula crua** (dados/fixos/atributos escritos),

@@ -5,6 +5,26 @@
   flex-direction: column;
   gap: 12px;
 
+  // Rolagem avulsa (m3-31): caixa própria no topo, separada dos presets.
+  &__rapida {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+  }
+  &__rapida-linha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .ficha-rol__entrada {
+      flex: 1;
+    }
+  }
+
   &__novo {
     align-self: flex-start;
     font-family: var(--font-mono);

@@ -13,6 +13,7 @@ import type {
 import {
   ABREVIACOES_ATRIBUTO,
   resolverPreset,
+  rolarFormula,
   rolarPasso,
   validarFormula,
   type PassoInterpretadoDto,
@@ -120,6 +121,15 @@ export class FichaRolagens {
   private readonly formulaTexto = toSignal(this.form.controls.formula.valueChanges, { initialValue: '' });
   protected readonly formulaAtualValida = computed<boolean | null>(() => {
     const texto = this.formulaTexto().trim();
+    return texto === '' ? null : validarFormula(texto);
+  });
+
+  /** Campo de **rolagem avulsa** (m3-31): digita uma fórmula e rola na hora, **sem salvar** um preset. */
+  protected readonly rapida = new FormControl('', { nonNullable: true });
+  private readonly rapidaTexto = toSignal(this.rapida.valueChanges, { initialValue: '' });
+  /** Validade da fórmula avulsa (live): `null` enquanto vazia. */
+  protected readonly rapidaValida = computed<boolean | null>(() => {
+    const texto = this.rapidaTexto().trim();
     return texto === '' ? null : validarFormula(texto);
   });
 
@@ -305,6 +315,26 @@ export class FichaRolagens {
   }
 
   // === Rolar ===
+  /**
+   * Rola a **fórmula avulsa** (m3-31) na bandeja, **sem salvar** preset e **sem gastar Energia**. Usa a
+   * fórmula crua digitada (o jogador escreve exatamente o que quer — `2d6 [Físico]`, `LUTd20kh1cm1 + PROF`…).
+   */
+  protected rolarRapida(): void {
+    const formula = this.rapida.value.trim();
+    if (!formula || !validarFormula(formula)) {
+      return;
+    }
+    const resultado = rolarFormula({
+      formula,
+      atributos: this.atributos(),
+      proficiencia: this.proficiencia(),
+      nivel: this.nivel(),
+    });
+    if (resultado) {
+      this.bandeja.mostrar({ rotulo: 'Rolagem rápida', formula, resultado });
+    }
+  }
+
   /**
    * Rola um passo do preset e o joga na **bandeja** (m3-22). Ao rolar, debita a Energia das habilidades
    * **deste passo** (soma dos custos + o valor variável informado). Passo inválido não rola.

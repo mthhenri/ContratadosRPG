@@ -142,6 +142,28 @@ describe('FichaRolagens', () => {
     expect(arg.rotulo).toContain('CRÍTICO');
   });
 
+  it('rolagem rápida rola na hora, sem salvar preset nem emitir a lista (m3-31)', () => {
+    const alvo = montar([]);
+    alvo.componentInstance['rapida'].setValue('2d6 + 3 [Físico]');
+    alvo.componentInstance['rolarRapida']();
+    expect(alvo.mostrar).toHaveBeenCalledOnce();
+    const arg = alvo.mostrar.mock.calls[0][0];
+    expect(arg.rotulo).toBe('Rolagem rápida');
+    expect(arg.formula).toBe('2d6 + 3 [Físico]');
+    // 2d6 (2..12) + 3 → total em [5, 15].
+    expect(arg.resultado.total).toBeGreaterThanOrEqual(5);
+    expect(arg.resultado.total).toBeLessThanOrEqual(15);
+    // Não salva: nenhuma emissão de rolagensMudou.
+    expect(alvo.emitidos).toEqual([]);
+  });
+
+  it('rolagem rápida com fórmula inválida não rola', () => {
+    const alvo = montar([]);
+    alvo.componentInstance['rapida'].setValue('xyz');
+    alvo.componentInstance['rolarRapida']();
+    expect(alvo.mostrar).not.toHaveBeenCalled();
+  });
+
   it('rola um passo e o joga na bandeja com total dentro da faixa', () => {
     const alvo = montar([{ nome: 'Ataque', formula: '1d20+LUT+2' }]);
     const vm = alvo.componentInstance['presets']()[0];

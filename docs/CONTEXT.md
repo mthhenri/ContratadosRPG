@@ -16,9 +16,11 @@
 > regra 1216) — `(Atributo)d20kh1cm1 + PROF`; e a legenda da bandeja ficou **honesta na desvantagem**
 > (atributo ≤ 0 → mostra `(2+|attr|)d20kl1cm1` = mantém o menor, em vez de exibir `kh1`). **Bandeja:** muitos
 > dados (6d6, crítico 10d10→20d10) não são mais cortados — o termo quebra em linhas e a coluna de detalhe
-> ocupa a largura restante. **Testes:** shared **281** (removidos os testes de fusão; +2 de multiconjunto de energia),
-> frontend **321** (stepper add/remove/contagem + serialização repetida; teste de atributo cm1 + legenda
-> honesta na desvantagem). Verificado no stack real:
+> ocupa a largura restante. **Rolagem rápida:** campo livre no topo da aba Rolagens — digita uma fórmula e
+> rola na hora (bandeja), **sem salvar preset nem gastar energia**. **Testes:** shared **281** (removidos os
+> testes de fusão; +2 de multiconjunto de energia),
+> frontend **323** (stepper add/remove/contagem + serialização repetida; teste de atributo cm1 + legenda
+> honesta na desvantagem; rolagem rápida rola sem salvar). Verificado no stack real:
 > vínculo "Força Bruta ×2" com energia "− 8 E"; rolar o dano usa `2d8` cru (sem FOR×3 fundido); stepper
 > mostra a contagem por passo. Build/lint verdes.)
 >
