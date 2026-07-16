@@ -62,24 +62,6 @@
     font-weight: 700;
     color: var(--text);
   }
-  // Badge do modo primário (Soma padrão; Teste em accent).
-  &__modo {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-mute);
-    border: 1px solid var(--border-strong);
-    border-radius: 3px;
-    padding: 1px 6px;
-
-    &--teste {
-      color: var(--accent);
-      border-color: var(--accent-border);
-      background: var(--accent-dim);
-    }
-  }
   &__cadeia {
     font-family: var(--font-mono);
     font-size: 10px;
@@ -167,25 +149,6 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 6px;
-  }
-  // Marca do modo do passo num encadeado (T / S).
-  &__passo-modo {
-    flex: none;
-    width: 20px;
-    text-align: center;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--text-mute);
-    border: 1px solid var(--border-strong);
-    border-radius: 3px;
-    padding: 1px 0;
-
-    &--teste {
-      color: var(--accent);
-      border-color: var(--accent-border);
-      background: var(--accent-dim);
-    }
   }
   &__passo-nome {
     font-size: 13px;
@@ -345,50 +308,6 @@
     &--erro {
       color: var(--warning);
     }
-  }
-
-  // === Seletor de modo (segmentado) ===
-  &__modo-escolha {
-    display: inline-flex;
-    align-self: flex-start;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    overflow: hidden;
-
-    &--compacta {
-      flex: none;
-    }
-  }
-  &__modo-opcao {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 6px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-dim);
-    background: var(--surface);
-    border: 0;
-    padding: 7px 14px;
-    cursor: pointer;
-
-    & + & {
-      border-left: 1px solid var(--border-strong);
-    }
-    &:hover {
-      color: var(--text);
-    }
-    &--ativa {
-      color: var(--accent);
-      background: var(--accent-dim);
-    }
-  }
-  &__modo-dica {
-    font-size: 10px;
-    font-weight: 400;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-mute);
   }
 
   // === Editor de passos seguintes ===

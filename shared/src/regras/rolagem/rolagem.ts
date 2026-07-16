@@ -17,29 +17,34 @@ import {
   PlanoPresetDto,
   PresetResolverDto,
   ResultadoRolagemDto,
-  ResultadoTesteDto,
   RolagemDto,
   RolagemEfeitoDto,
   TermoAtributoDto,
   TermoConstanteDto,
   TermoDadoDto,
 } from './rolagem.dtos';
-import { RolagemEfeitoAlvoEnum, RolagemEfeitoTipoEnum, RolagemModoEnum, TipoDanoEnum } from '../../enums';
+import { RolagemEfeitoAlvoEnum, RolagemEfeitoTipoEnum, TipoDanoEnum } from '../../enums';
 import { elevarDado } from '../descanso';
-import type { FichaAtributosDto, FichaHabilidadeDto } from '../../dtos/ficha';
+import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto, FichaRolagemPassoDto } from '../../dtos/ficha';
 
 /**
- * Motor de rolagem de dados (m3-15; gramática v2 m3-16; dano tipado m3-18; modo TESTE m3-19; efeitos
- * de habilidade m3-20): interpreta e rola uma fórmula — `NdM`, constantes, atributo (`+LUT`), atributo
+ * Motor de rolagem de dados (m3-15; gramática v2 m3-16; dano tipado m3-18; efeitos de habilidade m3-20;
+ * **gramática v3 m3-27**): interpreta e rola uma fórmula — `NdM`, constantes, atributo (`+LUT`), atributo
  * como **fonte de dados** (`FORd6`), atributo **escalado** (`FOR*3`, `LUT/2`, piso), combinados por
  * `+`/`−`, com **tags de tipo de dano** `[Tipo]`/`[TipoA-TipoB]` (Composto = soma 50/50, resto pro
- * primeiro). No modo `TESTE`, rola o pool e **pega o maior** + Proficiência (atributo puro = pool
- * `(Atr)`D20); atributo **≤ 0** vira **desvantagem** (0 → 2 dados, −1 → 3…, pega o **menor**).
- * `aplicarEfeitos` funde efeitos de habilidade (ex.: Força Bruta = FOR×3) numa fórmula
- * interpretada; `rolarInterpretada` rola essa fórmula. Parênteses ainda não são suportados. Funções
- * puras; a **única brecha a `Math.random`** é a função de rolagem injetável `rolarDado` (SYSTEM.SPEC §6.6).
+ * primeiro), e **operadores por pool**: manter maior/menor (`kh`/`kl`), margem de crítico (`cm`,
+ * informativo), explosão (`!`) e implosão (`?`).
  *
- * Fonte: docs/core/sistema-v4.1.0.md — "Atributos"/"Testes"/"Tipos de Dano".
+ * **Não há mais "modo".** Um teste é a expressão explícita `LUTd20kh1 + PROF` — a Proficiência é um termo
+ * escrito, nunca somada por baixo dos panos. A **desvantagem** de atributo zerado (regra 270) sobrevive
+ * como propriedade **intrínseca** de um pool de atributo (`ATRd20kh…` com atributo ≤ 0 → rola 2+|attr|
+ * dados e mantém o menor). `aplicarEfeitos` funde efeitos de habilidade roteando por `alvo` × papel
+ * inferido da fórmula (fórmula com keep = teste); `normalizarPresetLegado` migra presets antigos
+ * (`modo:'TESTE'`) para a notação nova. Parênteses ainda não são suportados. Funções puras; a **única
+ * brecha a `Math.random`** é a função de rolagem injetável `rolarDado` (SYSTEM.SPEC §6.6).
+ *
+ * Fonte: docs/core/sistema-v4.1.0.md — "Atributos"/"Testes"/"Tipos de Dano". Explosão/implosão não são
+ * regra do documento — entram como operadores de ferramenta (m3-27).
  */
 
 /** Função que rola um dado de `faces` faces e devolve 1..faces. Injetável para testes determinísticos. */
@@ -95,6 +100,85 @@ function resolverTipoDano(tag: string): DestinoDano | null {
   return null;
 }
 
+/** Operadores por pool extraídos do sufixo de um termo de dado (m3-27). */
+interface OperadoresDado {
+  manterMaior?: number;
+  manterMenor?: number;
+  margemCritico?: number;
+  explosao?: number;
+  implosao?: number;
+}
+
+/**
+ * Tokeniza o sufixo de operadores de um termo de dado (`kh`/`kl`/`cm`/`!`/`?`), consumindo um operador
+ * por vez da frente. `faces` resolve o limiar padrão de explosão (bare `!` = máximo). Nunca lança —
+ * devolve os operadores e, em erro (conflito, repetição, valor inválido, sufixo desconhecido), a mensagem.
+ */
+function interpretarOperadores(sufixo: string, faces: number): { ops: OperadoresDado; erro?: string } {
+  const ops: OperadoresDado = {};
+  let resto = sufixo;
+  while (resto.length > 0) {
+    const keep = resto.match(/^k([hl])(\d*)/i);
+    if (keep) {
+      const maior = keep[1].toLowerCase() === 'h';
+      const chave = maior ? 'manterMaior' : 'manterMenor';
+      const oposto = maior ? 'manterMenor' : 'manterMaior';
+      if (ops[chave] !== undefined) {
+        return { ops, erro: `Operador repetido "k${keep[1]}".` };
+      }
+      if (ops[oposto] !== undefined) {
+        return { ops, erro: 'Não combine kh e kl no mesmo termo.' };
+      }
+      const n = keep[2] === '' ? 1 : parseInt(keep[2], 10);
+      if (n < 1) {
+        return { ops, erro: 'Manter zero dados não faz sentido.' };
+      }
+      ops[chave] = n;
+      resto = resto.slice(keep[0].length);
+      continue;
+    }
+    const cm = resto.match(/^cm(\d*)/i);
+    if (cm) {
+      if (ops.margemCritico !== undefined) {
+        return { ops, erro: 'Operador repetido "cm".' };
+      }
+      const n = cm[1] === '' ? 1 : parseInt(cm[1], 10);
+      if (n < 1) {
+        return { ops, erro: 'Margem de crítico inválida.' };
+      }
+      ops.margemCritico = n;
+      resto = resto.slice(cm[0].length);
+      continue;
+    }
+    const explode = resto.match(/^!(?:>=)?(\d*)/);
+    if (explode) {
+      if (ops.explosao !== undefined) {
+        return { ops, erro: 'Operador repetido "!".' };
+      }
+      if (ops.implosao !== undefined) {
+        return { ops, erro: 'Não combine explosão e implosão no mesmo termo.' };
+      }
+      ops.explosao = explode[1] === '' ? faces : parseInt(explode[1], 10);
+      resto = resto.slice(explode[0].length);
+      continue;
+    }
+    const implode = resto.match(/^\?(?:<=)?(\d*)/);
+    if (implode) {
+      if (ops.implosao !== undefined) {
+        return { ops, erro: 'Operador repetido "?".' };
+      }
+      if (ops.explosao !== undefined) {
+        return { ops, erro: 'Não combine explosão e implosão no mesmo termo.' };
+      }
+      ops.implosao = implode[1] === '' ? 1 : parseInt(implode[1], 10);
+      resto = resto.slice(implode[0].length);
+      continue;
+    }
+    return { ops, erro: `Operador desconhecido em "${resto}".` };
+  }
+  return { ops };
+}
+
 /** Acumuladores mutáveis preenchidos por `interpretarSegmento`. */
 interface AcumuladoresFormula {
   readonly dados: TermoDadoDto[];
@@ -110,7 +194,6 @@ function interpretarSegmento(
   expr: string,
   destino: DestinoDano,
   acc: AcumuladoresFormula,
-  modo: RolagemModoEnum | undefined,
 ): { readonly constante: number; readonly erro?: string } {
   const tipado = destino.tipoDano !== undefined || destino.composto !== undefined;
   const normalizada = /^[+-]/.test(expr) ? expr : `+${expr}`;
@@ -127,8 +210,8 @@ function interpretarSegmento(
       return { constante, erro: `Tag de dano malformada em "${corpo}".` };
     }
 
-    // Dado literal `NdM` (N opcional).
-    const dado = corpo.match(/^(\d*)[dD](\d+)$/);
+    // Dado literal `NdM` (N opcional) + operadores por pool.
+    const dado = corpo.match(/^(\d*)[dD](\d+)(.*)$/);
     if (dado) {
       const quantidade = dado[1] === '' ? 1 : parseInt(dado[1], 10);
       const faces = parseInt(dado[2], 10);
@@ -138,12 +221,16 @@ function interpretarSegmento(
       if (quantidade > QUANTIDADE_DADOS_MAXIMA) {
         return { constante, erro: `Máximo de ${QUANTIDADE_DADOS_MAXIMA} dados por termo.` };
       }
-      acc.dados.push({ sinal, quantidade, faces, ...destino });
+      const { ops, erro } = interpretarOperadores(dado[3], faces);
+      if (erro) {
+        return { constante, erro };
+      }
+      acc.dados.push({ sinal, quantidade, faces, ...ops, ...destino });
       continue;
     }
 
-    // Atributo como fonte de dados `ATRdM` (ex.: `FORd6`, `lutad20`).
-    const dadoAtributo = corpo.match(/^([A-Za-z]+)[dD](\d+)$/);
+    // Atributo como fonte de dados `ATRdM` (ex.: `FORd6`, `lutad20`) + operadores por pool.
+    const dadoAtributo = corpo.match(/^([A-Za-z]+)[dD](\d+)(.*)$/);
     if (dadoAtributo) {
       const atributoDado = resolverFonte(dadoAtributo[1]);
       const faces = parseInt(dadoAtributo[2], 10);
@@ -151,7 +238,11 @@ function interpretarSegmento(
         if (faces < 1) {
           return { constante, erro: `Dado inválido "${corpo}".` };
         }
-        acc.dados.push({ sinal, quantidade: 1, quantidadeAtributo: atributoDado, faces, ...destino });
+        const { ops, erro } = interpretarOperadores(dadoAtributo[3], faces);
+        if (erro) {
+          return { constante, erro };
+        }
+        acc.dados.push({ sinal, quantidade: 1, quantidadeAtributo: atributoDado, faces, ...ops, ...destino });
         continue;
       }
     }
@@ -186,14 +277,10 @@ function interpretarSegmento(
       continue;
     }
 
-    // Fonte modificador (`+LUT`, `-forca`, `+PROF`, `+NIV`) — no modo TESTE vira o pool `(fonte)`D20 (açúcar).
+    // Fonte modificador (`+LUT`, `-forca`, `+PROF`, `+NIV`) — sempre modificador plano (m3-27, sem "modo").
     const atributo = resolverFonte(corpo);
     if (atributo) {
-      if (modo === RolagemModoEnum.TESTE) {
-        acc.dados.push({ sinal, quantidade: 1, quantidadeAtributo: atributo, faces: 20, ...destino });
-      } else {
-        acc.atributos.push({ sinal, atributo, rotulo: corpo.toUpperCase(), ...destino });
-      }
+      acc.atributos.push({ sinal, atributo, rotulo: corpo.toUpperCase(), ...destino });
       continue;
     }
     return { constante, erro: `Termo desconhecido "${corpo}".` };
@@ -206,10 +293,9 @@ function interpretarSegmento(
  * Aceita espaços; o 1º termo de cada segmento pode vir sem sinal (assume `+`). Sem tags, comporta-se
  * como antes (um único total). Com tags, cada segmento (`termos [Tipo]`) estampa seus termos; um
  * trecho sem tag numa fórmula tipada assume **Físico**. Devolve `{ valida: false, erro }` para fórmula
- * vazia, parênteses, tag/termo inválido ou dado acima do teto — nunca lança (a UI trata como aviso).
- * No modo `TESTE`, um atributo puro é o pool `(Atributo)`D20 (açúcar `luta` = `lutad20`).
+ * vazia, parênteses, tag/termo/operador inválido ou dado acima do teto — nunca lança (a UI trata como aviso).
  */
-export function interpretarFormula(formulaTexto: string, modo?: RolagemModoEnum): InterpretacaoFormulaDto {
+export function interpretarFormula(formulaTexto: string): InterpretacaoFormulaDto {
   const texto = (formulaTexto ?? '').replace(/\s+/g, '');
   if (!texto) {
     return { valida: false, erro: 'Fórmula vazia.' };
@@ -222,7 +308,7 @@ export function interpretarFormula(formulaTexto: string, modo?: RolagemModoEnum)
   let constante = 0;
 
   if (!texto.includes('[')) {
-    const { constante: parcial, erro } = interpretarSegmento(texto, {}, acc, modo);
+    const { constante: parcial, erro } = interpretarSegmento(texto, {}, acc);
     if (erro) {
       return { valida: false, erro };
     }
@@ -249,7 +335,7 @@ export function interpretarFormula(formulaTexto: string, modo?: RolagemModoEnum)
         }
         destino = resolvido;
       }
-      const { erro } = interpretarSegmento(expr, destino, acc, modo);
+      const { erro } = interpretarSegmento(expr, destino, acc);
       if (erro) {
         return { valida: false, erro };
       }
@@ -273,8 +359,8 @@ export function interpretarFormula(formulaTexto: string, modo?: RolagemModoEnum)
 }
 
 /** `true` se a fórmula é interpretável. Espelha `interpretarFormula(...).valida`. */
-export function validarFormula(formulaTexto: string, modo?: RolagemModoEnum): boolean {
-  return interpretarFormula(formulaTexto, modo).valida;
+export function validarFormula(formulaTexto: string): boolean {
+  return interpretarFormula(formulaTexto).valida;
 }
 
 /** Uma contribuição de valor já rolado/aplicado, com seu destino de tipo de dano (ou nenhum). */
@@ -316,47 +402,122 @@ function agruparDano(contribuicoes: readonly Contribuicao[]): GrupoDanoDto[] {
   );
 }
 
+/** Separa `valores` em mantidos/descartados conforme o multiset `alvo` (top/bottom N), preservando a ordem. */
+function separarMantidos(
+  valores: readonly number[],
+  alvo: readonly number[],
+): { mantidos: number[]; descartados: number[] } {
+  const restante = new Map<number, number>();
+  for (const valor of alvo) {
+    restante.set(valor, (restante.get(valor) ?? 0) + 1);
+  }
+  const mantidos: number[] = [];
+  const descartados: number[] = [];
+  for (const valor of valores) {
+    const disponivel = restante.get(valor) ?? 0;
+    if (disponivel > 0) {
+      restante.set(valor, disponivel - 1);
+      mantidos.push(valor);
+    } else {
+      descartados.push(valor);
+    }
+  }
+  return { mantidos, descartados };
+}
+
 /**
- * Monta o resultado de um roll no modo `TESTE`: junta todos os dados num pool e pega o **maior**
- * (normal) ou o **menor** (sob `desvantagem`, atributo ≤ 0), somando **Proficiência** + os bônus
- * planos (atributos-modificador e constantes). O tipo de dano é ignorado num teste. Pool vazio → 0.
+ * Rola um termo de dado com os operadores por pool (m3-27): resolve a contagem (com a desvantagem
+ * intrínseca de atributo zerado), rola o pool, aplica explosão/implosão (com teto), seleciona `kh`/`kl`,
+ * conta a margem de crítico e devolve o subtotal dos **mantidos**. Determinístico via `rolarDado`.
  */
-function montarResultadoTeste(
-  dados: readonly DadosRoladosDto[],
-  atributos: readonly AtributoAplicadoDto[],
-  formula: FormulaInterpretadaDto,
-  proficienciaEntrada: number | null | undefined,
-  desvantagem: boolean,
-): ResultadoRolagemDto {
-  const pool = dados.flatMap((termo) => [...termo.valores]);
-  const dadoEscolhido = pool.length > 0 ? (desvantagem ? Math.min(...pool) : Math.max(...pool)) : 0;
-  const indiceEscolhido = pool.indexOf(dadoEscolhido);
-  const descartados = pool.filter((_, indice) => indice !== indiceEscolhido);
+function rolarTermo(
+  termo: TermoDadoDto,
+  ambiente: Record<FonteEscalar, number>,
+  rolarDado: RolarDado,
+): DadosRoladosDto {
+  // 1. Contagem base + desvantagem intrínseca (atributo ≤ 0 num pool de teste — regra 270).
+  let manterMaior = termo.manterMaior;
+  let manterMenor = termo.manterMenor;
+  let desvantagem = false;
+  let quantidade: number;
+  if (termo.quantidadeAtributo) {
+    const valorAtributo = ambiente[termo.quantidadeAtributo] ?? 0;
+    if (manterMaior !== undefined && valorAtributo <= 0) {
+      // Teste de atributo zerado/negativo: rola 2+|attr| dados e mantém o(s) MENOR(es).
+      desvantagem = true;
+      quantidade = Math.min(QUANTIDADE_DADOS_MAXIMA, 2 - valorAtributo);
+      manterMenor = manterMaior;
+      manterMaior = undefined;
+    } else {
+      quantidade = Math.max(0, Math.min(QUANTIDADE_DADOS_MAXIMA, valorAtributo));
+    }
+  } else {
+    quantidade = termo.quantidade;
+  }
+  quantidade = Math.max(0, Math.min(QUANTIDADE_DADOS_MAXIMA, quantidade + (termo.bonusDados ?? 0)));
 
-  const proficiencia = proficienciaEntrada ?? 0;
-  const bonusAtributos = atributos.reduce((acumulado, atributo) => acumulado + atributo.valor, 0);
-  const bonusConstantes =
-    formula.constante +
-    (formula.constantesTipadas ?? []).reduce((acumulado, termo) => acumulado + termo.sinal * termo.valor, 0);
-  const bonusPlano = bonusAtributos + bonusConstantes;
-  const total = dadoEscolhido + proficiencia + bonusPlano;
+  // 2. Rola o pool base.
+  const valores: number[] = Array.from({ length: quantidade }, () => rolarDado(termo.faces));
 
-  const teste: ResultadoTesteDto = { pool, dadoEscolhido, descartados, proficiencia, bonusPlano, desvantagem, total };
-  return { dados, atributos, constante: formula.constante, teste, total };
+  // 3. Explosão/implosão — cada dado no limiar anexa +1 dado (recursivo), com teto no total.
+  if (termo.explosao !== undefined || termo.implosao !== undefined) {
+    for (let indice = 0; indice < valores.length && valores.length < QUANTIDADE_DADOS_MAXIMA; indice += 1) {
+      const valor = valores[indice];
+      const explode = termo.explosao !== undefined && valor >= termo.explosao;
+      const implode = termo.implosao !== undefined && valor <= termo.implosao;
+      if (explode || implode) {
+        valores.push(rolarDado(termo.faces));
+      }
+    }
+  }
+
+  // 4. Keep (kh/kl). Sem keep, mantém tudo.
+  const temKeep = manterMaior !== undefined || manterMenor !== undefined;
+  let mantidos: number[];
+  let descartados: number[];
+  if (temKeep) {
+    const n = Math.min(valores.length, (manterMaior ?? manterMenor) as number);
+    const ordenados = [...valores].sort((a, b) => (manterMaior !== undefined ? b - a : a - b));
+    ({ mantidos, descartados } = separarMantidos(valores, ordenados.slice(0, n)));
+  } else {
+    mantidos = valores;
+    descartados = [];
+  }
+
+  // 5. Crítico (informativo) — quantos mantidos atingiram a margem.
+  let criticos: number | undefined;
+  if (termo.margemCritico !== undefined) {
+    const limiar = termo.faces - termo.margemCritico + 1;
+    criticos = mantidos.filter((valor) => valor >= limiar).length;
+  }
+
+  // 6. Subtotal dos mantidos.
+  const soma = mantidos.reduce((acumulado, valor) => acumulado + valor, 0);
+
+  return {
+    sinal: termo.sinal,
+    faces: termo.faces,
+    valores,
+    subtotal: termo.sinal * soma,
+    ...(temKeep ? { mantidos, descartados } : {}),
+    ...(criticos !== undefined ? { criticos } : {}),
+    ...(desvantagem ? { desvantagem: true } : {}),
+    ...(termo.composto ? { composto: termo.composto } : termo.tipoDano ? { tipoDano: termo.tipoDano } : {}),
+  };
 }
 
 /**
  * Rola a fórmula com os atributos da ficha: rola cada termo de dado (via `rolarDado`), aplica os
- * atributos (com escalonamento) e a constante. No modo `TESTE` pega o maior dado + Proficiência; no
- * modo `SOMA` soma e agrupa por tipo de dano quando há tags. Devolve o detalhamento + `grupos`/`teste`
- * + o total. Fórmula inválida devolve `null` (a UI valida antes). Determinístico quando `rolarDado` é injetado.
+ * atributos (com escalonamento) e a constante, e agrupa por tipo de dano quando há tags. Devolve o
+ * detalhamento + `grupos` + o total. Fórmula inválida devolve `null` (a UI valida antes). Determinístico
+ * quando `rolarDado` é injetado.
  */
 export function rolarFormula(dto: RolagemDto, rolarDado: RolarDado = rolarDadoPadrao): ResultadoRolagemDto | null {
-  const interpretacao = interpretarFormula(dto.formula, dto.modo);
+  const interpretacao = interpretarFormula(dto.formula);
   if (!interpretacao.valida || !interpretacao.formula) {
     return null;
   }
-  return rolarInterpretada(interpretacao.formula, dto.atributos, dto.modo, dto.proficiencia, dto.nivel, rolarDado);
+  return rolarInterpretada(interpretacao.formula, dto.atributos, dto.proficiencia, dto.nivel, rolarDado);
 }
 
 /**
@@ -367,44 +528,18 @@ export function rolarFormula(dto: RolagemDto, rolarDado: RolarDado = rolarDadoPa
 export function rolarInterpretada(
   formula: FormulaInterpretadaDto,
   atributos: FichaAtributosDto,
-  modo?: RolagemModoEnum,
   proficiencia?: number | null,
   nivel?: number,
   rolarDado: RolarDado = rolarDadoPadrao,
 ): ResultadoRolagemDto {
-  const noTeste = modo === RolagemModoEnum.TESTE;
   // Ambiente escalar da rolagem (m3-22): os 10 atributos + Proficiência (`PROF`) + Nível (`NIV`).
   const ambiente: Record<FonteEscalar, number> = {
     ...atributos,
     proficiencia: proficiencia ?? 0,
     nivel: nivel ?? 0,
   };
-  // Desvantagem (m3-22): num teste, atributo ≤ 0 rola dados extras (0 → 2, −1 → 3, −2 → 4…) e pega o menor.
-  let desvantagem = false;
 
-  const dados: DadosRoladosDto[] = formula.dados.map((termo) => {
-    let quantidade: number;
-    if (termo.quantidadeAtributo) {
-      const valorAtributo = ambiente[termo.quantidadeAtributo] ?? 0;
-      if (noTeste && valorAtributo <= 0) {
-        desvantagem = true;
-        quantidade = Math.min(QUANTIDADE_DADOS_MAXIMA, 2 - valorAtributo);
-      } else {
-        quantidade = Math.max(0, Math.min(QUANTIDADE_DADOS_MAXIMA, valorAtributo));
-      }
-    } else {
-      quantidade = termo.quantidade;
-    }
-    const valores = Array.from({ length: quantidade }, () => rolarDado(termo.faces));
-    const soma = valores.reduce((acumulado, valor) => acumulado + valor, 0);
-    return {
-      sinal: termo.sinal,
-      faces: termo.faces,
-      valores,
-      subtotal: termo.sinal * soma,
-      ...(termo.composto ? { composto: termo.composto } : termo.tipoDano ? { tipoDano: termo.tipoDano } : {}),
-    };
-  });
+  const dados: DadosRoladosDto[] = formula.dados.map((termo) => rolarTermo(termo, ambiente, rolarDado));
 
   const atributosAplicados: AtributoAplicadoDto[] = formula.atributos.map((termo) => {
     const base = ambiente[termo.atributo] ?? 0;
@@ -415,10 +550,6 @@ export function rolarInterpretada(
       ...(termo.composto ? { composto: termo.composto } : termo.tipoDano ? { tipoDano: termo.tipoDano } : {}),
     };
   });
-
-  if (noTeste) {
-    return montarResultadoTeste(dados, atributosAplicados, formula, proficiencia, desvantagem);
-  }
 
   const contribuicoes: Contribuicao[] = [
     ...dados.map((termo) => ({ valor: termo.subtotal, tipoDano: termo.tipoDano, composto: termo.composto })),
@@ -447,16 +578,16 @@ function alvoPadrao(tipo: RolagemEfeitoTipoEnum): RolagemEfeitoAlvoEnum {
 }
 
 /**
- * Funde os `efeitos` de habilidade (m3-20) numa fórmula já interpretada, respeitando o `modo` do
- * passo: só aplica os efeitos cujo `alvo` (declarado ou inferido) casa com o modo — bônus de teste
- * no `TESTE`, efeitos de dano no `SOMA`. Puro; devolve uma **nova** fórmula (não muta a original).
+ * Funde os `efeitos` de habilidade (m3-20) numa fórmula já interpretada, respeitando o **papel** da
+ * fórmula (m3-27): uma fórmula com operador de keep (`kh`/`kl`) é um **teste**; senão é **dano**. Só
+ * aplica os efeitos cujo `alvo` (declarado ou inferido) casa com esse papel — bônus de teste num teste,
+ * efeitos de dano num dano. Puro; devolve uma **nova** fórmula (não muta a original).
  */
 export function aplicarEfeitos(
   formula: FormulaInterpretadaDto,
   efeitos: readonly RolagemEfeitoDto[],
-  modo?: RolagemModoEnum,
 ): FormulaInterpretadaDto {
-  const noTeste = modo === RolagemModoEnum.TESTE;
+  const ehTeste = formula.dados.some((dado) => dado.manterMaior !== undefined || dado.manterMenor !== undefined);
   let dados: TermoDadoDto[] = [...formula.dados];
   const atributos: TermoAtributoDto[] = [...formula.atributos];
   const constantesTipadas: TermoConstanteDto[] = [...(formula.constantesTipadas ?? [])];
@@ -464,24 +595,17 @@ export function aplicarEfeitos(
 
   for (const efeito of efeitos) {
     const alvo = efeito.alvo ?? alvoPadrao(efeito.tipo);
-    if ((alvo === RolagemEfeitoAlvoEnum.TESTE) !== noTeste) {
+    if ((alvo === RolagemEfeitoAlvoEnum.TESTE) !== ehTeste) {
       continue; // efeito não pertence a este passo
     }
     const tipoDano = efeito.tipoDano ?? TipoDanoEnum.FISICO;
 
     switch (efeito.tipo) {
       case RolagemEfeitoTipoEnum.DANO_FIXO:
-        if (noTeste) {
-          constante += efeito.valor ?? 0;
-        } else {
-          constantesTipadas.push({ sinal: 1, valor: efeito.valor ?? 0, tipoDano });
-        }
+        constantesTipadas.push({ sinal: 1, valor: efeito.valor ?? 0, tipoDano });
         break;
       case RolagemEfeitoTipoEnum.DANO_DADOS:
-        dados = [
-          ...dados,
-          { sinal: 1, quantidade: efeito.valor ?? 1, faces: efeito.faces ?? 6, ...(noTeste ? {} : { tipoDano }) },
-        ];
+        dados = [...dados, { sinal: 1, quantidade: efeito.valor ?? 1, faces: efeito.faces ?? 6, tipoDano }];
         break;
       case RolagemEfeitoTipoEnum.DANO_ATRIBUTO:
         if (efeito.atributo) {
@@ -493,7 +617,7 @@ export function aplicarEfeitos(
             atributo: efeito.atributo,
             rotulo,
             ...(multiplicador !== 1 ? { multiplicador } : {}),
-            ...(noTeste ? {} : { tipoDano }),
+            tipoDano,
           });
         }
         break;
@@ -501,7 +625,12 @@ export function aplicarEfeitos(
         if (efeito.variante === 'FIXO') {
           constante += efeito.valor ?? 0;
         } else {
-          dados = [...dados, { sinal: 1, quantidade: efeito.valor ?? 1, faces: 20 }];
+          // Vantagem: aumenta o pool do termo com keep (mais dados, mesmo kh/kl); sem termo com keep, ignora.
+          const indice = dados.findIndex((dado) => dado.manterMaior !== undefined || dado.manterMenor !== undefined);
+          if (indice >= 0) {
+            const bonus = (dados[indice].bonusDados ?? 0) + (efeito.valor ?? 1);
+            dados = dados.map((dado, i) => (i === indice ? { ...dado, bonusDados: bonus } : dado));
+          }
         }
         break;
       case RolagemEfeitoTipoEnum.ELEVAR_DADO:
@@ -518,9 +647,9 @@ export function aplicarEfeitos(
 /**
  * Resolve um preset (m3-21; habilidade **por passo** em m3-22) **sem rolar**: interpreta cada passo
  * (primária + `seguintes`) e funde os efeitos das habilidades vinculadas **daquele passo** (por
- * `alvo`↔modo), reportando a Energia por passo. Puro — o front rola cada passo com `rolarPasso` e
- * debita a energia do passo pelo canal existente. Habilidades cujo nome não está na ficha são
- * ignoradas. Os campos de energia do `PlanoPresetDto` são os **agregados** (soma de todos os passos).
+ * `alvo` × papel da fórmula), reportando a Energia por passo. Puro — o front rola cada passo com
+ * `rolarPasso` e debita a energia do passo pelo canal existente. Habilidades cujo nome não está na ficha
+ * são ignoradas. Os campos de energia do `PlanoPresetDto` são os **agregados** (soma de todos os passos).
  */
 export function resolverPreset(dto: PresetResolverDto): PlanoPresetDto {
   const { preset } = dto;
@@ -533,19 +662,17 @@ export function resolverPreset(dto: PresetResolverDto): PlanoPresetDto {
       .filter((habilidade): habilidade is FichaHabilidadeDto => habilidade !== undefined);
 
   const passosBrutos = [
-    { nome: preset.nome, formula: preset.formula, modo: preset.modo, descricao: preset.descricao, habilidades: preset.habilidades },
+    { nome: preset.nome, formula: preset.formula, descricao: preset.descricao, habilidades: preset.habilidades },
     ...(preset.seguintes ?? []),
   ];
   const passos: PassoInterpretadoDto[] = passosBrutos.map((passo) => {
-    const modo = passo.modo ?? RolagemModoEnum.SOMA;
     const vinculadas = resolverVinculo(passo.habilidades);
     const efeitos = vinculadas.flatMap((habilidade) => habilidade.efeitos ?? []);
-    const base = interpretarFormula(passo.formula, modo);
+    const base = interpretarFormula(passo.formula);
     const interpretacao: InterpretacaoFormulaDto =
-      base.valida && base.formula ? { valida: true, formula: aplicarEfeitos(base.formula, efeitos, modo) } : base;
+      base.valida && base.formula ? { valida: true, formula: aplicarEfeitos(base.formula, efeitos) } : base;
     return {
       nome: passo.nome,
-      modo,
       formula: passo.formula,
       interpretacao,
       ...(passo.descricao ? { descricao: passo.descricao } : {}),
@@ -574,5 +701,97 @@ export function rolarPasso(
   if (!passo.interpretacao.valida || !passo.interpretacao.formula) {
     return null;
   }
-  return rolarInterpretada(passo.interpretacao.formula, atributos, passo.modo, proficiencia, nivel, rolarDado);
+  return rolarInterpretada(passo.interpretacao.formula, atributos, proficiencia, nivel, rolarDado);
+}
+
+// ── Migração de presets legados (m3-19 → m3-27) ──────────────────────────────
+
+/** Passo legado (m3-19): pode carregar `modo: 'TESTE'` que a v3 traduz para notação explícita. */
+interface FichaRolagemPassoLegadoDto {
+  readonly nome: string;
+  readonly formula: string;
+  readonly modo?: string;
+  readonly descricao?: string;
+  readonly habilidades?: readonly string[];
+}
+
+/** Preset legado (m3-19): idem, com `seguintes` legados. */
+interface FichaRolagemLegadoDto {
+  readonly nome: string;
+  readonly formula: string;
+  readonly modo?: string;
+  readonly descricao?: string;
+  readonly tipo?: FichaRolagemDto['tipo'];
+  readonly seguintes?: readonly FichaRolagemPassoLegadoDto[];
+  readonly habilidades?: readonly string[];
+}
+
+/**
+ * Reescreve a fórmula de um passo que era **modo TESTE** (m3-19) na notação v3 explícita (m3-27): cada
+ * atributo puro vira o pool `…d20kh1` (pegar o maior), um pool d20 explícito ganha `kh1`, e se faltar a
+ * Proficiência soma `+ PROF`. **Idempotente** — fórmula que já tem `kh`/`kl` ou já cita PROF passa intacta.
+ */
+export function reescreverFormulaTeste(formula: string): string {
+  const compacto = (formula ?? '').replace(/\s+/g, '');
+  if (!compacto) {
+    return (formula ?? '').trim();
+  }
+  const temSinalInicial = /^[+-]/.test(compacto);
+  const normalizada = temSinalInicial ? compacto : `+${compacto}`;
+  const partes = normalizada.match(/[+-][^+-]*/g) ?? [];
+  let temProf = false;
+
+  const termos = partes.map((parte) => {
+    const sinal = parte[0] as '+' | '-';
+    const corpo = parte.slice(1);
+    if (resolverFonte(corpo) === 'proficiencia') {
+      temProf = true;
+    }
+    // Já tem keep → intacto (idempotência).
+    if (/k[hl]\d*/i.test(corpo)) {
+      return { sinal, corpo };
+    }
+    // Atributo puro (não PROF/NIV) → pool d20 pegando o maior.
+    if (resolverAtributo(corpo) !== null) {
+      return { sinal, corpo: `${corpo}d20kh1` };
+    }
+    // Pool d20 explícito (`lutad20`, `1d20`, `d20`) → append kh1.
+    if (/^(\d*|[A-Za-z]+)[dD]20$/.test(corpo)) {
+      return { sinal, corpo: `${corpo}kh1` };
+    }
+    return { sinal, corpo };
+  });
+
+  const pecas = termos.map((termo, indice) => {
+    if (indice === 0 && !temSinalInicial) {
+      return termo.corpo;
+    }
+    return `${termo.sinal === '-' ? '- ' : '+ '}${termo.corpo}`;
+  });
+  const base = pecas.join(' ');
+  return temProf ? base : `${base} + PROF`;
+}
+
+/**
+ * Migra um preset legado (m3-19) para a forma v3 (m3-27): reescreve as fórmulas dos passos que eram
+ * `modo:'TESTE'` para a notação explícita e **dropa `modo`** em todos os níveis. Pura e idempotente —
+ * presets `SOMA`/sem `modo` só perdem a chave `modo`; presets já-v3 voltam iguais. Chamada no boundary
+ * de carga da ficha (frontend); o backend guarda o JSONB opaco.
+ */
+export function normalizarPresetLegado(preset: FichaRolagemLegadoDto): FichaRolagemDto {
+  const normalizarPasso = (passo: FichaRolagemPassoLegadoDto): FichaRolagemPassoDto => ({
+    nome: passo.nome,
+    formula: passo.modo === 'TESTE' ? reescreverFormulaTeste(passo.formula) : passo.formula,
+    ...(passo.descricao ? { descricao: passo.descricao } : {}),
+    ...(passo.habilidades ? { habilidades: passo.habilidades } : {}),
+  });
+
+  return {
+    nome: preset.nome,
+    formula: preset.modo === 'TESTE' ? reescreverFormulaTeste(preset.formula) : preset.formula,
+    ...(preset.descricao ? { descricao: preset.descricao } : {}),
+    ...(preset.tipo ? { tipo: preset.tipo } : {}),
+    ...(preset.seguintes ? { seguintes: preset.seguintes.map(normalizarPasso) } : {}),
+    ...(preset.habilidades ? { habilidades: preset.habilidades } : {}),
+  };
 }

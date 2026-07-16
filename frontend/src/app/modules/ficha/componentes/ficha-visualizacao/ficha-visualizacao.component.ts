@@ -11,7 +11,7 @@ import {
   viewChild,
 } from '@angular/core';
 
-import { ArquetipoEnum, ClasseEnum, RolagemModoEnum } from '@contratados-rpg/shared/enums';
+import { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
 import type {
   FichaAtributosDto,
   FichaHabilidadeDto,
@@ -372,20 +372,20 @@ export class FichaVisualizacao {
   private readonly bandeja = inject(BandejaDadosService);
 
   /**
-   * Rola o teste de um atributo direto da Visão Geral (m3-22): pool `(Atributo efetivo)`D20, pega o
-   * maior e soma a Proficiência; mostra na bandeja. Usa os atributos **efetivos** (pós-lesão) — a
-   * lesão reduz quantos D20 entram no pool, como o documento manda.
+   * Rola o teste de um atributo direto da Visão Geral (m3-22; gramática v3 m3-27): a fórmula explícita
+   * `(Atributo efetivo)d20kh1 + PROF` — pool de D20, pega o maior e soma a Proficiência (agora um termo
+   * escrito, não um "modo"). Usa os atributos **efetivos** (pós-lesão) — a lesão reduz quantos D20
+   * entram no pool, como o documento manda (atributo 0/negativo vira desvantagem intrínseca do motor).
    */
   protected rolarTesteAtributo(campo: CampoAtributo): void {
     const resultado = rolarFormula({
-      formula: `${campo.chave}d20`,
-      modo: RolagemModoEnum.TESTE,
+      formula: `${campo.chave}d20kh1 + PROF`,
       atributos: this.atributosEfetivos(),
       proficiencia: this.proficiencia(),
       nivel: this.dados().nivel,
     });
     if (resultado) {
-      this.bandeja.mostrar({ rotulo: campo.nome, resultado, modo: RolagemModoEnum.TESTE });
+      this.bandeja.mostrar({ rotulo: campo.nome, resultado });
     }
   }
 

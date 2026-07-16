@@ -172,6 +172,21 @@
       border-color: var(--accent-border);
       background: var(--accent-dim);
     }
+
+    // Dado descartado pelo keep (kh/kl) — esmaecido e riscado (m3-27).
+    &--descartado {
+      opacity: 0.45;
+      text-decoration: line-through;
+    }
+  }
+
+  // Contagem de crítico (margem `cm`) de um termo (m3-27).
+  &__critico {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
   }
 
   &__legenda {

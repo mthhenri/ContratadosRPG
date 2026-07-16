@@ -20,12 +20,6 @@
           <div class="ficha-rol__preset-topo">
             <div class="ficha-rol__preset-id">
               <span class="ficha-rol__preset-nome">{{ preset.nome }}</span>
-              <span
-                class="ficha-rol__modo"
-                [class.ficha-rol__modo--teste]="preset.modoPrimario === RolagemModoEnum.TESTE"
-              >
-                {{ preset.modoPrimario === RolagemModoEnum.TESTE ? 'Teste' : 'Soma' }}
-              </span>
               @if (preset.encadeado) {
                 <span class="ficha-rol__cadeia">encadeado</span>
               }
@@ -55,13 +49,6 @@
               <div class="ficha-rol__passo" [class.ficha-rol__passo--invalido]="!passo.interpretacao.valida">
                 <div class="ficha-rol__passo-linha">
                   @if (preset.encadeado) {
-                    <span
-                      class="ficha-rol__passo-modo"
-                      [class.ficha-rol__passo-modo--teste]="passo.modo === RolagemModoEnum.TESTE"
-                      [title]="passo.modo === RolagemModoEnum.TESTE ? 'Teste' : 'Soma'"
-                    >
-                      {{ passo.modo === RolagemModoEnum.TESTE ? 'T' : 'S' }}
-                    </span>
                     <span class="ficha-rol__passo-nome">{{ passo.nome }}</span>
                   }
                   <span class="ficha-rol__passo-formula">{{ passo.formula }}</span>
@@ -121,28 +108,6 @@
     </label>
 
     <div class="ficha-rol__campo">
-      <span class="ficha-rol__rotulo">Modo da rolagem primária</span>
-      <div class="ficha-rol__modo-escolha" role="group" aria-label="Modo da rolagem primária">
-        <button
-          type="button"
-          class="ficha-rol__modo-opcao"
-          [class.ficha-rol__modo-opcao--ativa]="form.controls.modo.value === RolagemModoEnum.SOMA"
-          (click)="form.controls.modo.setValue(RolagemModoEnum.SOMA)"
-        >
-          Soma <span class="ficha-rol__modo-dica">dano / total</span>
-        </button>
-        <button
-          type="button"
-          class="ficha-rol__modo-opcao"
-          [class.ficha-rol__modo-opcao--ativa]="form.controls.modo.value === RolagemModoEnum.TESTE"
-          (click)="form.controls.modo.setValue(RolagemModoEnum.TESTE)"
-        >
-          Teste <span class="ficha-rol__modo-dica">maior + prof</span>
-        </button>
-      </div>
-    </div>
-
-    <div class="ficha-rol__campo">
       <span class="ficha-rol__rotulo-linha">
         <span class="ficha-rol__rotulo">Fórmula</span>
         <app-guia-formula />
@@ -151,12 +116,15 @@
         class="ficha-rol__entrada ficha-rol__entrada--mono"
         type="text"
         formControlName="formula"
-        placeholder="Ex.: 1d20 + LUT  ·  2d6 [Balístico]  ·  luta"
+        placeholder="Ex.: LUTd20kh1 + PROF  ·  2d6 [Balístico]  ·  4d6kh1!"
       />
       @if (formulaAtualValida() === false) {
         <span class="ficha-rol__dica ficha-rol__dica--erro">Fórmula não reconhecida. Veja o guia (?) ao lado.</span>
       } @else {
-        <span class="ficha-rol__dica">Dados, atributos e números com <code>+</code>/<code>−</code>. Atributos: {{ abreviaturas }}. Também PROF e NIV.</span>
+        <span class="ficha-rol__dica">
+          Um teste é <code>LUTd20kh1 + PROF</code>. Operadores: <code>kh</code>/<code>kl</code>, <code>cm</code>,
+          <code>!</code>/<code>?</code>. Atributos: {{ abreviaturas }}. Também PROF e NIV.
+        </span>
       }
     </div>
 
@@ -178,24 +146,6 @@
         <div class="ficha-rol__passo-edit" [formGroupName]="$index">
           <div class="ficha-rol__passo-edit-linha">
             <input class="ficha-rol__entrada ficha-rol__entrada--nome" type="text" formControlName="nome" placeholder="Nome (ex.: Dano)" />
-            <div class="ficha-rol__modo-escolha ficha-rol__modo-escolha--compacta" role="group" aria-label="Modo do passo">
-              <button
-                type="button"
-                class="ficha-rol__modo-opcao"
-                [class.ficha-rol__modo-opcao--ativa]="passoCtrl.controls.modo.value === RolagemModoEnum.SOMA"
-                (click)="passoCtrl.controls.modo.setValue(RolagemModoEnum.SOMA)"
-              >
-                Soma
-              </button>
-              <button
-                type="button"
-                class="ficha-rol__modo-opcao"
-                [class.ficha-rol__modo-opcao--ativa]="passoCtrl.controls.modo.value === RolagemModoEnum.TESTE"
-                (click)="passoCtrl.controls.modo.setValue(RolagemModoEnum.TESTE)"
-              >
-                Teste
-              </button>
-            </div>
             <button type="button" class="ficha-rol__mini-btn" title="Remover passo" aria-label="Remover passo" (click)="removerPasso($index)">✕</button>
           </div>
           <input class="ficha-rol__entrada ficha-rol__entrada--mono" type="text" formControlName="formula" placeholder="Fórmula (ex.: 2d6 + FOR [Físico])" />

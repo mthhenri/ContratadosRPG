@@ -1,18 +1,18 @@
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 
-import { HabilidadeCategoriaEnum, RolagemModoEnum, RolagemPresetTipoEnum } from '@contratados-rpg/shared/enums';
+import { HabilidadeCategoriaEnum, RolagemPresetTipoEnum } from '@contratados-rpg/shared/enums';
 import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { FichaRolagens } from './ficha-rolagens.component';
 
 /**
- * Prova o editor da aba Rolagens (m3-15; Rolagem v2 em m3-22): adicionar/editar/remover presets
- * (Teste/Soma, encadeados, com habilidades) e **rolar cada passo** — reusando `shared/regras/rolagem`
- * (`resolverPreset`/`rolarPasso`; nenhuma regra de dados no componente). Controlado: cada mutação emite
- * a lista inteira por `rolagensMudou`; o resultado do roll vai para a bandeja global (`mostrar`), e a
- * energia das habilidades vinculadas sai por `energiaGasta` ao rolar o passo primário.
+ * Prova o editor da aba Rolagens (m3-15; Rolagem v2 em m3-22; gramática v3 em m3-27): adicionar/editar/
+ * remover presets (sem "modo" — a fórmula especifica tudo; encadeados, com habilidades) e **rolar cada
+ * passo** — reusando `shared/regras/rolagem` (`resolverPreset`/`rolarPasso`; nenhuma regra de dados no
+ * componente). Controlado: cada mutação emite a lista inteira por `rolagensMudou`; o resultado do roll
+ * vai para a bandeja global (`mostrar`), e a energia das habilidades vinculadas sai por `energiaGasta`.
  */
 describe('FichaRolagens', () => {
   const atributos: FichaAtributosDto = {
@@ -57,7 +57,7 @@ describe('FichaRolagens', () => {
     return { fixture, componentInstance: fixture.componentInstance, emitidos, energias, mostrar };
   }
 
-  it('adiciona um preset simples (nome + fórmula) e emite a lista enxuta (modo SOMA omitido)', () => {
+  it('adiciona um preset simples (nome + fórmula) e emite a lista enxuta', () => {
     const alvo = montar([]);
     alvo.componentInstance['abrirNovo']();
     alvo.componentInstance['form'].patchValue({ nome: '  Ataque  ', formula: '  1d20 + LUT  ' });
@@ -65,13 +65,12 @@ describe('FichaRolagens', () => {
     expect(alvo.emitidos[0]).toEqual([{ nome: 'Ataque', formula: '1d20 + LUT' }]);
   });
 
-  it('grava o modo Teste no preset', () => {
+  it('grava a fórmula de teste explícita (kh1 + PROF), sem modo', () => {
     const alvo = montar([]);
     alvo.componentInstance['abrirNovo']();
-    alvo.componentInstance['form'].patchValue({ nome: 'Percepção', formula: 'sentidos' });
-    alvo.componentInstance['form'].controls.modo.setValue(RolagemModoEnum.TESTE);
+    alvo.componentInstance['form'].patchValue({ nome: 'Percepção', formula: 'SENd20kh1 + PROF' });
     alvo.componentInstance['confirmar']();
-    expect(alvo.emitidos[0]).toEqual([{ nome: 'Percepção', formula: 'sentidos', modo: RolagemModoEnum.TESTE }]);
+    expect(alvo.emitidos[0]).toEqual([{ nome: 'Percepção', formula: 'SENd20kh1 + PROF' }]);
   });
 
   it('edita um preset existente substituindo-o na lista', () => {
@@ -94,16 +93,14 @@ describe('FichaRolagens', () => {
   it('adiciona um passo seguinte e grava o preset como ENCADEADO', () => {
     const alvo = montar([]);
     alvo.componentInstance['abrirNovo']();
-    alvo.componentInstance['form'].patchValue({ nome: 'Espada', formula: 'luta' });
-    alvo.componentInstance['form'].controls.modo.setValue(RolagemModoEnum.TESTE);
+    alvo.componentInstance['form'].patchValue({ nome: 'Espada', formula: 'LUTd20kh1 + PROF' });
     alvo.componentInstance['adicionarPasso']();
     alvo.componentInstance['seguintes'].at(0).patchValue({ nome: 'Dano', formula: '2d6 + FOR' });
     alvo.componentInstance['confirmar']();
     expect(alvo.emitidos[0]).toEqual([
       {
         nome: 'Espada',
-        formula: 'luta',
-        modo: RolagemModoEnum.TESTE,
+        formula: 'LUTd20kh1 + PROF',
         tipo: RolagemPresetTipoEnum.ENCADEADO,
         seguintes: [{ nome: 'Dano', formula: '2d6 + FOR' }],
       },
@@ -155,8 +152,7 @@ describe('FichaRolagens', () => {
     };
     const preset: FichaRolagemDto = {
       nome: 'Espada',
-      formula: 'luta',
-      modo: RolagemModoEnum.TESTE,
+      formula: 'LUTd20kh1 + PROF',
       tipo: RolagemPresetTipoEnum.ENCADEADO,
       seguintes: [{ nome: 'Dano', formula: '2d6', habilidades: ['Força Bruta'] }],
     };
@@ -187,8 +183,7 @@ describe('FichaRolagens', () => {
     };
     const alvo = montar([], { habilidades: [foco, forca] });
     alvo.componentInstance['abrirNovo']();
-    alvo.componentInstance['form'].patchValue({ nome: 'Espada', formula: 'luta' });
-    alvo.componentInstance['form'].controls.modo.setValue(RolagemModoEnum.TESTE);
+    alvo.componentInstance['form'].patchValue({ nome: 'Espada', formula: 'LUTd20kh1 + PROF' });
     alvo.componentInstance['alternarHabilidade'](alvo.componentInstance['form'].controls.habilidades, 'Foco');
     alvo.componentInstance['adicionarPasso']();
     const passo = alvo.componentInstance['seguintes'].at(0);
@@ -198,8 +193,7 @@ describe('FichaRolagens', () => {
     expect(alvo.emitidos[0]).toEqual([
       {
         nome: 'Espada',
-        formula: 'luta',
-        modo: RolagemModoEnum.TESTE,
+        formula: 'LUTd20kh1 + PROF',
         tipo: RolagemPresetTipoEnum.ENCADEADO,
         seguintes: [{ nome: 'Dano', formula: '2d6', habilidades: ['Força Bruta'] }],
         habilidades: ['Foco'],

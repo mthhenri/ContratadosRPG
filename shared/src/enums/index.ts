@@ -4,7 +4,6 @@ export * from './patente.enum';
 export * from './item-categoria.enum';
 export * from './modificacao-efeito-tipo.enum';
 export * from './tipo-dano.enum';
-export * from './rolagem-modo.enum';
 export * from './rolagem-efeito-tipo.enum';
 export * from './rolagem-efeito-alvo.enum';
 export * from './rolagem-preset-tipo.enum';

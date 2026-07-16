@@ -1,6 +1,29 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-15 (**m3-13++ — refinamentos do seletor + confirmar remoção na Sanidade**:
+> Última atualização: 2026-07-16 (**m3-27 — Rolagem gramática v3: fim dos "modos"**: o
+> `RolagemModoEnum { SOMA | TESTE }` foi **aposentado** (enum deletado, campo `modo?` removido de
+> `FichaRolagemDto`/`FichaRolagemPassoDto`, `RolagemDto`, `PassoInterpretadoDto`). Um **teste deixa de
+> somar Proficiência por baixo dos panos**: a fórmula agora especifica tudo — um teste é a expressão
+> explícita `LUTd20kh1 + PROF`. Novos **operadores por pool** no parser (`shared/regras/rolagem`):
+> **`kh`/`kl`** (manter maior/menor, padrão N=1), **`cm`** (margem de crítico — só **conta** os críticos,
+> sem efeito automático, por decisão do dono), **`!`** (explosão) e **`?`** (implosão) — estes dois
+> **não-canônicos** (não existem no `sistema-v4.1.0`; entram como operadores de ferramenta, com teto de
+> dados contra runaway). A **desvantagem de atributo zerado** (regra 270) sobrevive como propriedade
+> **intrínseca** de um pool de atributo (`ATRd20kh…` com atributo ≤ 0 → rola 2+|attr| dados, mantém o
+> menor) — sem reintroduzir "modo". `aplicarEfeitos` deixou de rotear por `modo` e passou a **inferir o
+> papel** da fórmula (com keep = teste; senão dano); `BONUS_TESTE DADO` agora infla `bonusDados` do termo
+> com keep (vantagem = pool maior). Nova função pura **`normalizarPresetLegado`** migra presets antigos
+> (`modo:'TESTE'`) para a notação nova na **carga** da ficha (`visualizar.page`), idempotente; o backend
+> segue guardando o JSONB opaco (**sem migração SQL** — nunca valida rolagem). Frontend: `ficha-visualizacao`
+> rola `${atributo}d20kh1 + PROF`; `ficha-rolagens` perdeu os toggles/badges de modo; `bandeja-dados`
+> mostra **mantidos/descartados/críticos/desvantagem** por termo (o ramo `teste` sumiu); `guia-formula`
+> documenta os operadores novos. `ResultadoTesteDto` e `teste?` removidos; `DadosRoladosDto` ganhou
+> `mantidos?/descartados?/criticos?/desvantagem?`, `TermoDadoDto` ganhou os operadores. **Testes:** shared
+> **282** (rolagem 74, era 38), frontend **311**, backend **88** — todos verdes; `lint` shared+frontend e
+> `tsc` backend limpos; build do frontend no budget. Spec `docs/specs/done/m3-27-rolagem-gramatica-v3.spec.md`.
+> **Verificação de render pendente** — validado por testes/build/lint. )
+>
+> (**m3-13++ — refinamentos do seletor + confirmar remoção na Sanidade**:
 > no `FichaHabilidadeSeletor`, o **"＋" agora adiciona a habilidade direto na ficha** (o diálogo
 > **permanece aberto**) e a marca **"Na ficha ✕"** (o ✕ ali mesmo a remove) — dá para montar a lista
 > inteira sem fechar; as **gerais melhoradas** ganharam **selo** (não se misturam mais às do arquétipo);

@@ -3,7 +3,7 @@ import { Component, computed, inject, input, output, signal } from '@angular/cor
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 
-import { RolagemModoEnum, RolagemPresetTipoEnum } from '@contratados-rpg/shared/enums';
+import { RolagemPresetTipoEnum } from '@contratados-rpg/shared/enums';
 import type {
   FichaAtributosDto,
   FichaHabilidadeDto,
@@ -25,7 +25,6 @@ import { GuiaFormula } from '../guia-formula/guia-formula.component';
 /** Grupo tipado de um passo seguinte no formulário (encadeamento), com as habilidades **deste passo**. */
 type PassoForm = FormGroup<{
   nome: FormControl<string>;
-  modo: FormControl<RolagemModoEnum>;
   formula: FormControl<string>;
   descricao: FormControl<string>;
   habilidades: FormControl<readonly string[]>;
@@ -43,17 +42,15 @@ interface RolagemVM {
   readonly plano: PlanoPresetDto;
   /** `true` quando há passos seguintes (primária + ≥1) — muda a renderização dos passos. */
   readonly encadeado: boolean;
-  /** Modo da rolagem primária (badge do cartão). */
-  readonly modoPrimario: RolagemModoEnum;
 }
 
 /**
- * Editor **no próprio lugar** da aba Rolagens (m3-15; estendido em m3-22 — "Rolagem v2"): os presets
- * nomeados da ficha (`FichaRolagemDto`). Um preset pode ser **Teste** (rola o pool, pega o maior +
- * Proficiência) ou **Soma** (dano/total, agrupado por tipo), ser **encadeado** (primária → dano →
- * crítico, todos os passos visíveis, cada um com seu botão de rolar) e **anexar habilidades por passo**:
- * cada ação escolhe quais habilidades aplica, e ao rolá-la gasta a Energia delas + aplica os efeitos
- * (ex.: Força Bruta = FOR × 3 só no passo de dano).
+ * Editor **no próprio lugar** da aba Rolagens (m3-15; estendido em m3-22 — "Rolagem v2"; gramática v3
+ * m3-27): os presets nomeados da ficha (`FichaRolagemDto`). Não há mais "modo" — a **fórmula** especifica
+ * tudo (um teste é `LUTd20kh1 + PROF`; keep, margem de crítico `cm`, explosão `!`/implosão `?`). Um preset
+ * pode ser **encadeado** (primária → dano → crítico, todos os passos visíveis, cada um com seu botão de
+ * rolar) e **anexar habilidades por passo**: cada ação escolhe quais habilidades aplica, e ao rolá-la
+ * gasta a Energia delas + aplica os efeitos (ex.: Força Bruta = FOR × 3 só no passo de dano).
  *
  * **Nenhuma regra de dados vive aqui** (proibição #26): interpretar/validar/rolar e resolver o preset
  * (efeitos + energia por passo) é o motor puro `shared/regras/rolagem` (`resolverPreset`/`rolarPasso`,
@@ -89,8 +86,6 @@ export class FichaRolagens {
   /** Bandeja de dados global — onde cada passo rolado aqui aparece. */
   private readonly bandeja = inject(BandejaDadosService);
 
-  /** Exposto ao template para comparar o modo dos passos/badges. */
-  protected readonly RolagemModoEnum = RolagemModoEnum;
   /** Abreviações de atributo aceitas nas fórmulas (para a dica do formulário). */
   protected readonly abreviaturas = Object.keys(ABREVIACOES_ATRIBUTO).join(' ');
 
@@ -104,7 +99,6 @@ export class FichaRolagens {
 
   protected readonly form = new FormGroup({
     nome: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    modo: new FormControl<RolagemModoEnum>(RolagemModoEnum.SOMA, { nonNullable: true }),
     formula: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     descricao: new FormControl('', { nonNullable: true }),
     /** Habilidades do **passo primário**. */
@@ -119,12 +113,9 @@ export class FichaRolagens {
 
   /** Validade da fórmula digitada no form (live): `null` enquanto vazia, senão `true`/`false`. */
   private readonly formulaTexto = toSignal(this.form.controls.formula.valueChanges, { initialValue: '' });
-  private readonly modoSelecionado = toSignal(this.form.controls.modo.valueChanges, {
-    initialValue: RolagemModoEnum.SOMA,
-  });
   protected readonly formulaAtualValida = computed<boolean | null>(() => {
     const texto = this.formulaTexto().trim();
-    return texto === '' ? null : validarFormula(texto, this.modoSelecionado());
+    return texto === '' ? null : validarFormula(texto);
   });
 
   /** Presets resolvidos pelo motor (passos + efeitos + energia por passo), prontos para exibir e rolar. */
@@ -140,7 +131,6 @@ export class FichaRolagens {
         descricao: preset.descricao?.trim() || null,
         plano,
         encadeado: plano.passos.length > 1,
-        modoPrimario: plano.passos[0]?.modo ?? RolagemModoEnum.SOMA,
       };
     });
   });
@@ -162,7 +152,6 @@ export class FichaRolagens {
     this.resetarForm();
     this.form.patchValue({
       nome: preset.nome,
-      modo: preset.modo ?? RolagemModoEnum.SOMA,
       formula: preset.formula,
       descricao: preset.descricao ?? '',
       habilidades: preset.habilidades ?? [],
@@ -179,13 +168,12 @@ export class FichaRolagens {
   /** Zera o formulário para o estado neutro (novo preset) — inclui esvaziar os passos e as habilidades. */
   private resetarForm(): void {
     this.seguintes.clear();
-    this.form.reset({ nome: '', modo: RolagemModoEnum.SOMA, formula: '', descricao: '', habilidades: [] });
+    this.form.reset({ nome: '', formula: '', descricao: '', habilidades: [] });
   }
 
   private novoPassoForm(passo?: FichaRolagemPassoDto): PassoForm {
     return new FormGroup({
       nome: new FormControl(passo?.nome ?? '', { nonNullable: true, validators: [Validators.required] }),
-      modo: new FormControl(passo?.modo ?? RolagemModoEnum.SOMA, { nonNullable: true }),
       formula: new FormControl(passo?.formula ?? '', { nonNullable: true, validators: [Validators.required] }),
       descricao: new FormControl(passo?.descricao ?? '', { nonNullable: true }),
       habilidades: new FormControl<readonly string[]>(passo?.habilidades ?? [], { nonNullable: true }),
@@ -213,9 +201,9 @@ export class FichaRolagens {
   }
 
   /**
-   * Confirma o preset: monta o `FichaRolagemDto` **enxuto** (omite `modo` `SOMA`, `tipo`/`seguintes`
-   * vazios e `habilidades` vazias por passo → preset legado inalterado), insere (novo) ou substitui
-   * (edição) e emite. Guarda contra passos meio-preenchidos: só entram os que têm nome **e** fórmula.
+   * Confirma o preset: monta o `FichaRolagemDto` **enxuto** (omite `tipo`/`seguintes` vazios e
+   * `habilidades` vazias por passo → preset simples inalterado), insere (novo) ou substitui (edição) e
+   * emite. Guarda contra passos meio-preenchidos: só entram os que têm nome **e** fórmula.
    */
   protected confirmar(): void {
     if (this.form.invalid) {
@@ -228,7 +216,6 @@ export class FichaRolagens {
       return;
     }
     const descricao = bruto.descricao.trim();
-    const modo = bruto.modo;
     const habilidadesPrimaria = this.filtrarHabilidades(bruto.habilidades);
 
     const seguintes: FichaRolagemPassoDto[] = bruto.seguintes
@@ -237,7 +224,6 @@ export class FichaRolagens {
         return {
           nome: passo.nome.trim(),
           formula: passo.formula.trim(),
-          ...(passo.modo !== RolagemModoEnum.SOMA ? { modo: passo.modo } : {}),
           ...(passo.descricao.trim() ? { descricao: passo.descricao.trim() } : {}),
           ...(passoHabilidades.length ? { habilidades: passoHabilidades } : {}),
         };
@@ -248,7 +234,6 @@ export class FichaRolagens {
       nome,
       formula,
       ...(descricao ? { descricao } : {}),
-      ...(modo !== RolagemModoEnum.SOMA ? { modo } : {}),
       ...(seguintes.length ? { tipo: RolagemPresetTipoEnum.ENCADEADO, seguintes } : {}),
       ...(habilidadesPrimaria.length ? { habilidades: habilidadesPrimaria } : {}),
     };
@@ -297,7 +282,7 @@ export class FichaRolagens {
       return;
     }
     const rotulo = preset.encadeado ? `${preset.nome} · ${passo.nome}` : preset.nome;
-    this.bandeja.mostrar({ rotulo, resultado, modo: passo.modo });
+    this.bandeja.mostrar({ rotulo, resultado });
     this.debitarEnergia(preset.indice, passo, indicePasso);
   }
 
