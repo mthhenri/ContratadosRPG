@@ -16,25 +16,22 @@
       @if (editavel() && indiceEmEdicao() === preset.indice) {
         <ng-container [ngTemplateOutlet]="formTpl" [ngTemplateOutletContext]="{ titulo: 'Editar preset' }" />
       } @else {
-        <article class="ficha-rol__preset" [class.ficha-rol__preset--invalida]="!preset.formulaValida">
+        <article class="ficha-rol__preset">
           <div class="ficha-rol__preset-topo">
             <div class="ficha-rol__preset-id">
               <span class="ficha-rol__preset-nome">{{ preset.nome }}</span>
-              <span class="ficha-rol__preset-formula">{{ preset.formula }}</span>
-              @if (!preset.formulaValida) {
-                <span class="ficha-rol__aviso" title="Fórmula não reconhecida — não é possível rolar">fórmula inválida</span>
+              <span
+                class="ficha-rol__modo"
+                [class.ficha-rol__modo--teste]="preset.modoPrimario === RolagemModoEnum.TESTE"
+              >
+                {{ preset.modoPrimario === RolagemModoEnum.TESTE ? 'Teste' : 'Soma' }}
+              </span>
+              @if (preset.encadeado) {
+                <span class="ficha-rol__cadeia">encadeado</span>
               }
             </div>
-            <div class="ficha-rol__preset-acoes">
-              <button
-                type="button"
-                class="ficha-rol__btn ficha-rol__btn--rolar"
-                [disabled]="!preset.formulaValida"
-                (click)="rolar(preset.indice)"
-              >
-                Rolar
-              </button>
-              @if (editavel()) {
+            @if (editavel()) {
+              <div class="ficha-rol__preset-acoes">
                 @if (indiceRemovendo() === preset.indice) {
                   <span class="ficha-rol__remover">
                     <span class="ficha-rol__remover-texto">Remover?</span>
@@ -45,20 +42,69 @@
                   <button type="button" class="ficha-rol__mini-btn" title="Editar" aria-label="Editar preset" (click)="editar(preset.indice)">✎</button>
                   <button type="button" class="ficha-rol__mini-btn" title="Remover" aria-label="Remover preset" (click)="removerPedido(preset.indice)">✕</button>
                 }
-              }
-            </div>
+              </div>
+            }
           </div>
 
           @if (preset.descricao) {
             <p class="ficha-rol__preset-desc">{{ preset.descricao }}</p>
           }
 
-          @if (preset.resultado) {
-            <div class="ficha-rol__resultado">
-              <span class="ficha-rol__resultado-total">{{ preset.resultado.total }}</span>
-              <span class="ficha-rol__resultado-detalhe">{{ detalharResultado(preset.resultado) }}</span>
+          @if (preset.plano.habilidadesVinculadas.length) {
+            <div class="ficha-rol__vinculos">
+              <span class="ficha-rol__vinculos-rotulo">Habilidades</span>
+              @for (nome of preset.plano.habilidadesVinculadas; track nome) {
+                <span class="ficha-rol__vinculo">{{ nome }}</span>
+              }
+              <span class="ficha-rol__energia" title="Energia gasta ao rolar o passo primário">
+                − {{ preset.plano.energiaGasta }}{{ preset.plano.energiaVariavel ? ' + X' : '' }} E
+              </span>
             </div>
           }
+
+          @if (preset.plano.energiaVariavel) {
+            <label class="ficha-rol__energia-var">
+              <span class="ficha-rol__rotulo">Energia variável (X)</span>
+              <input
+                #campoEnergia
+                class="ficha-rol__entrada ficha-rol__entrada--curta"
+                type="number"
+                min="0"
+                inputmode="numeric"
+                [value]="energiaVariavelDe(preset.indice)"
+                (input)="definirEnergiaVariavel(preset.indice, campoEnergia.value)"
+              />
+            </label>
+          }
+
+          <div class="ficha-rol__passos">
+            @for (passo of preset.plano.passos; track $index) {
+              <div class="ficha-rol__passo" [class.ficha-rol__passo--invalido]="!passo.interpretacao.valida">
+                @if (preset.encadeado) {
+                  <span
+                    class="ficha-rol__passo-modo"
+                    [class.ficha-rol__passo-modo--teste]="passo.modo === RolagemModoEnum.TESTE"
+                    [title]="passo.modo === RolagemModoEnum.TESTE ? 'Teste' : 'Soma'"
+                  >
+                    {{ passo.modo === RolagemModoEnum.TESTE ? 'T' : 'S' }}
+                  </span>
+                  <span class="ficha-rol__passo-nome">{{ passo.nome }}</span>
+                }
+                <span class="ficha-rol__passo-formula">{{ passo.formula }}</span>
+                @if (!passo.interpretacao.valida) {
+                  <span class="ficha-rol__aviso" title="Fórmula não reconhecida — não é possível rolar">inválida</span>
+                }
+                <button
+                  type="button"
+                  class="ficha-rol__btn ficha-rol__btn--rolar"
+                  [disabled]="!passo.interpretacao.valida"
+                  (click)="rolarPassoDoPreset(preset, $index)"
+                >
+                  Rolar
+                </button>
+              </div>
+            }
+          </div>
         </article>
       }
     }
@@ -68,23 +114,113 @@
 <ng-template #formTpl let-titulo="titulo">
   <form class="ficha-rol__form" [formGroup]="form" (ngSubmit)="confirmar()">
     <span class="ficha-rol__form-titulo">{{ titulo }}</span>
+
     <label class="ficha-rol__campo">
       <span class="ficha-rol__rotulo">Nome</span>
       <input class="ficha-rol__entrada" type="text" formControlName="nome" placeholder="Ex.: Ataque (Luta)" />
     </label>
-    <label class="ficha-rol__campo">
-      <span class="ficha-rol__rotulo">Fórmula</span>
-      <input class="ficha-rol__entrada ficha-rol__entrada--mono" type="text" formControlName="formula" placeholder="Ex.: 1d20 + LUT" />
+
+    <div class="ficha-rol__campo">
+      <span class="ficha-rol__rotulo">Modo da rolagem primária</span>
+      <div class="ficha-rol__modo-escolha" role="group" aria-label="Modo da rolagem primária">
+        <button
+          type="button"
+          class="ficha-rol__modo-opcao"
+          [class.ficha-rol__modo-opcao--ativa]="form.controls.modo.value === RolagemModoEnum.SOMA"
+          (click)="form.controls.modo.setValue(RolagemModoEnum.SOMA)"
+        >
+          Soma <span class="ficha-rol__modo-dica">dano / total</span>
+        </button>
+        <button
+          type="button"
+          class="ficha-rol__modo-opcao"
+          [class.ficha-rol__modo-opcao--ativa]="form.controls.modo.value === RolagemModoEnum.TESTE"
+          (click)="form.controls.modo.setValue(RolagemModoEnum.TESTE)"
+        >
+          Teste <span class="ficha-rol__modo-dica">maior + prof</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="ficha-rol__campo">
+      <span class="ficha-rol__rotulo-linha">
+        <span class="ficha-rol__rotulo">Fórmula</span>
+        <app-guia-formula />
+      </span>
+      <input
+        class="ficha-rol__entrada ficha-rol__entrada--mono"
+        type="text"
+        formControlName="formula"
+        placeholder="Ex.: 1d20 + LUT  ·  2d6 [Balístico]  ·  luta"
+      />
       @if (formulaAtualValida() === false) {
-        <span class="ficha-rol__dica ficha-rol__dica--erro">Fórmula inválida. Use dados (2d6), atributos (+LUT) e números (+2).</span>
+        <span class="ficha-rol__dica ficha-rol__dica--erro">Fórmula não reconhecida. Veja o guia (?) ao lado.</span>
       } @else {
-        <span class="ficha-rol__dica">Dados `NdM`, atributos e números com `+`/`−`. Atributos: {{ abreviaturas }}.</span>
+        <span class="ficha-rol__dica">Dados, atributos e números com <code>+</code>/<code>−</code>. Atributos: {{ abreviaturas }}.</span>
       }
-    </label>
+    </div>
+
     <label class="ficha-rol__campo">
       <span class="ficha-rol__rotulo">Descrição <span class="ficha-rol__rotulo-aux">(opcional)</span></span>
       <input class="ficha-rol__entrada" type="text" formControlName="descricao" placeholder="Nota sobre o preset…" />
     </label>
+
+    <div class="ficha-rol__campo" formArrayName="seguintes">
+      <span class="ficha-rol__rotulo">
+        Passos seguintes <span class="ficha-rol__rotulo-aux">(encadeamento — ex.: dano, crítico)</span>
+      </span>
+      @for (passoCtrl of seguintes.controls; track $index) {
+        <div class="ficha-rol__passo-edit" [formGroupName]="$index">
+          <div class="ficha-rol__passo-edit-linha">
+            <input class="ficha-rol__entrada ficha-rol__entrada--nome" type="text" formControlName="nome" placeholder="Nome (ex.: Dano)" />
+            <div class="ficha-rol__modo-escolha ficha-rol__modo-escolha--compacta" role="group" aria-label="Modo do passo">
+              <button
+                type="button"
+                class="ficha-rol__modo-opcao"
+                [class.ficha-rol__modo-opcao--ativa]="passoCtrl.controls.modo.value === RolagemModoEnum.SOMA"
+                (click)="passoCtrl.controls.modo.setValue(RolagemModoEnum.SOMA)"
+              >
+                Soma
+              </button>
+              <button
+                type="button"
+                class="ficha-rol__modo-opcao"
+                [class.ficha-rol__modo-opcao--ativa]="passoCtrl.controls.modo.value === RolagemModoEnum.TESTE"
+                (click)="passoCtrl.controls.modo.setValue(RolagemModoEnum.TESTE)"
+              >
+                Teste
+              </button>
+            </div>
+            <button type="button" class="ficha-rol__mini-btn" title="Remover passo" aria-label="Remover passo" (click)="removerPasso($index)">✕</button>
+          </div>
+          <input class="ficha-rol__entrada ficha-rol__entrada--mono" type="text" formControlName="formula" placeholder="Fórmula (ex.: 2d6 + FOR [Físico])" />
+        </div>
+      }
+      <button type="button" class="ficha-rol__add-passo" (click)="adicionarPasso()">+ Passo seguinte</button>
+    </div>
+
+    @if (habilidadesDisponiveis().length) {
+      <div class="ficha-rol__campo">
+        <span class="ficha-rol__rotulo">
+          Habilidades <span class="ficha-rol__rotulo-aux">(gastam energia e aplicam efeito ao rolar)</span>
+        </span>
+        <div class="ficha-rol__hab-lista">
+          @for (habilidade of habilidadesDisponiveis(); track habilidade.nome) {
+            <button
+              type="button"
+              class="ficha-rol__hab"
+              [class.ficha-rol__hab--marcada]="habilidadeMarcada(habilidade.nome)"
+              [attr.aria-pressed]="habilidadeMarcada(habilidade.nome)"
+              (click)="alternarHabilidade(habilidade.nome)"
+            >
+              <span class="ficha-rol__hab-nome">{{ habilidade.nome }}</span>
+              <span class="ficha-rol__hab-custo">{{ habilidade.custoEnergia === null ? 'X' : habilidade.custoEnergia }} E</span>
+            </button>
+          }
+        </div>
+      </div>
+    }
+
     <div class="ficha-rol__form-acoes">
       <button type="submit" class="ficha-rol__btn ficha-rol__btn--principal" [disabled]="form.invalid">Salvar</button>
       <button type="button" class="ficha-rol__btn ficha-rol__btn--secundario" (click)="cancelarEdicao()">Cancelar</button>

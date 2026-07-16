@@ -1415,7 +1415,7 @@ mostrando o total em destaque + detalhamento (`18 · 1D20 [15] + LUT 3`); embuti
 Shared 213/213, frontend 306/306, lint limpo, build AOT ok, verificado ao vivo. **Com m3-15, todas as abas
 da ficha têm editor** (m3-12 Sanidade, m3-13 Habilidades, m3-14 Inventário, m3-15 Rolagens).
 
-**Milestone Rolagem v2 (m3-16, m3-18…m3-22)** — em andamento. Expande o motor de rolagem para as
+**Milestone Rolagem v2 (m3-16, m3-18…m3-22)** — **concluído** (m3-22 fecha a UI). Expande o motor de rolagem para as
 regras reais: atributo como fonte de dados, `× ÷`, dano tipado + Composto, **modo TESTE** (maior
 dado + Proficiência), **efeitos estruturados de habilidade**, presets **encadeados** que gastam
 energia, guia de fórmula e **rolar teste na Visão Geral**. As specs de Identidade e otimização foram
@@ -1468,15 +1468,39 @@ interpreta cada um e funde os efeitos (`aplicarEfeitos` por `alvo`↔modo) → `
 `ajusteVitalidade`). DTOs `PresetResolverDto`/`PassoInterpretadoDto`/`PlanoPresetDto`. Shared
 **250/250** (6 novos). Spec em `done/`.
 
-> **Motor da Rolagem v2 completo** (m3-16 gramática, m3-18 dano tipado, m3-19 teste, m3-20 efeitos,
-> m3-21 presets/runner) — tudo puro e testado. Falta só a **UI** (m3-22).
+**m3-22 concluída — frontend da Rolagem v2 (fecha o milestone).** Duas fatias.
 
-**Próxima task:** `m3-22` — **frontend da Rolagem v2**: editor de preset (tipo/modo/passos/picker de
-habilidades) em `ficha-rolagens`, débito de energia via `ajusteVitalidade`, render por tipo/teste,
-**guia de fórmula** (dialog no padrão `ajuda-calculadora`), **dadinho + teste na Visão Geral** (caixa
-`.ficha-atributo`) e novo ícone `dado`. Em seguida o backlog anterior: `m3-23`→`m3-25` (**Identidade**),
-`m3-09` (**mobile**), `m3-26` (**espaço** da ficha). **Antes de qualquer UI, ler `docs/design/DESIGN.md`
-e consumir os tokens de `docs/design/tema/`** (proibição #29).
+**Fatia A — bandeja + teste na Visão Geral.** Nova **bandeja de dados** global (`shared/bandeja-dados/`,
+`BandejaDadosService` `providedIn: root` + componente `BandejaDados`): fixa na base central, acúmulo
+**horizontal** (a mais nova ao centro, histórico esmaecendo à esquerda), **auto-sumir** com barra de
+tempo (7 s) que **volta ao cheio e pausa no hover**; teto de 5 entradas. Ícone `dado` (d6 face-5) no
+`icone.component`. Na Visão Geral, um **dadinho** no canto de cada box `.ficha-atributo` rola o **teste**
+(`<atributo>d20`, modo TESTE, **atributos efetivos** pós-lesão + Proficiência) → bandeja. **Regra de
+desvantagem** (refino do teste): atributo **≤ 0** rola dados extras (0 → 2, −1 → 3, −2 → 4…) e pega o
+**menor** — `ResultadoTesteDto.maiorDado` virou **`dadoEscolhido`** + flag **`desvantagem`**; a bandeja
+mostra "menor N" + selo `desvantagem`. Shared **252** (2 novos).
+
+**Fatia B — editor de preset + guia.** `ficha-rolagens` reescrito (controlado, Signals + Reactive
+Forms): escolher **modo** (TESTE/SOMA, segmentado) da primária; **passos seguintes** (encadeamento —
+FormArray, **todos visíveis**, cada passo com seu **Rolar**); **anexar habilidades** da ficha (chips
+toggle) que, ao rolar o **passo primário**, debitam a Energia (soma via `resolverPreset`; `[X E]` = campo
+inline) e aplicam os efeitos (Força Bruta = FOR×3). Rolar qualquer passo (`rolarPasso`) manda o resultado
+para a **bandeja** — o cartão não mostra mais total inline. Novo output **`energiaGasta`** → o parent liga
+em `aoUtilizarHabilidade` (canal `ajusteVitalidade` de m3-10) e passa **atributos efetivos** + **proficiência**
++ **habilidades** ao editor. Novo componente **`GuiaFormula`** (`?` no campo Fórmula → modal no padrão
+`.ajuda-modal`, data-driven: dados, atributo-como-dado, `× ÷`, tipos/Composto, Teste×Soma). DTOs emitidos
+**enxutos** (omitem `modo` SOMA, `tipo`/`seguintes` vazios, `habilidades` vazias → preset legado inalterado).
+Só tokens do tema (proibição #29). Frontend **309** (spec do editor reescrito p/ a nova API), lint/build AOT
+verdes. Spec `m3-22` em `done/`. **Verificação de render pendente** — validado por testes/build.
+
+> **Milestone Rolagem v2 completo** (m3-16 gramática, m3-18 dano tipado, m3-19 teste, m3-20 efeitos,
+> m3-21 presets/runner, **m3-22 frontend**) — motor puro e testado + UI ligada. Falta só a verificação
+> ao vivo no navegador (skill `verify`).
+
+**Próxima task:** o backlog anterior, renumerado — **`m3-23`→`m3-25` (Identidade** — contrato/motor,
+backend imutabilidade, frontend), **`m3-09` (mobile)** e **`m3-26` (otimização de espaço** da ficha).
+**Antes de qualquer UI, ler `docs/design/DESIGN.md` e consumir os tokens de `docs/design/tema/`**
+(proibição #29).
 
 **`M3` — Ficha de Jogador** (CRUD + cálculo automático via `shared/regras` + permissões +
 tempo real): o milestone já foi quebrado em tasks numeradas (`m3-01`…`m3-09`, specs no backlog).

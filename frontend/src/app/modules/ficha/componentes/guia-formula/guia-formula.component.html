@@ -1,0 +1,53 @@
+<button
+  type="button"
+  class="guia-gatilho"
+  aria-label="Guia: como escrever uma fórmula"
+  (click)="abrir()"
+>
+  <span class="guia-gatilho__marca" aria-hidden="true">?</span>
+  <span>Guia</span>
+</button>
+
+@if (aberto()) {
+  <div class="guia-modal-fundo">
+    <div class="guia-modal" role="dialog" aria-modal="true" aria-label="Como escrever uma fórmula">
+      <header class="guia-modal__cabecalho">
+        <h3 class="guia-modal__titulo">Como escrever uma fórmula</h3>
+        <button
+          type="button"
+          class="guia-modal__fechar"
+          aria-label="Fechar guia"
+          (click)="fechar()"
+        >
+          ×
+        </button>
+      </header>
+
+      <p class="guia-modal__resumo">
+        Uma fórmula combina dados, atributos e números com <code>+</code> e <code>−</code>. Multiplicar
+        e dividir aparecem colados a um atributo (<code>FOR*3</code>, <code>LUT/2</code>). Não use
+        parênteses.
+      </p>
+
+      @for (secao of secoes; track secao.titulo) {
+        <section class="guia-secao">
+          <h4 class="guia-secao__titulo">{{ secao.titulo }}</h4>
+          <ul class="guia-secao__lista">
+            @for (linha of secao.linhas; track linha.codigo) {
+              <li class="guia-secao__item">
+                <code class="guia-secao__codigo">{{ linha.codigo }}</code>
+                <span class="guia-secao__texto">{{ linha.texto }}</span>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      <p class="guia-modal__nota">Atributos aceitos: {{ atributos }}.</p>
+
+      <div class="guia-modal__acoes">
+        <button type="button" class="guia-btn" (click)="fechar()">Fechar</button>
+      </div>
+    </div>
+  </div>
+}

@@ -27,13 +27,23 @@
   (fórmula `<atributo>d20`, modo TESTE, **atributos efetivos** pós-lesão) → bandeja; **dadinho** no
   canto do box `.ficha-atributo` (leitura); `<app-bandeja-dados>` no template. Build/lint/testes verdes (306).
 
-### Fatia B — editor de preset + guia (a fazer)
+### Fatia B — editor de preset + guia ✅
 
-- `ficha-rolagens`: escolher **modo** (TESTE/SOMA) e **tipo** (SIMPLES/ENCADEADO); editar **passos
-  seguintes**; **seletor de habilidades** da ficha (anexar); rolar cada passo → bandeja; débito de
-  energia via `ajusteVitalidade` (somatório de `resolverPreset`; custo `[X E]` pergunta quanto).
-- **Guia de fórmula:** botão de info ao lado do campo `formula` → modal no padrão `.ajuda-modal`
-  (`ajuda-calculadora`), data-driven, ensinando dados/atributo-como-dado/`× ÷`/tipos/Composto/teste.
+- `ficha-rolagens` **reescrito** (controlado, Signals + Reactive Forms): **modo** (TESTE/SOMA) da
+  primária num seletor segmentado; **passos seguintes** num `FormArray` (o `tipo` ENCADEADO é
+  **inferido** — há passos ⇒ encadeado; o motor não lê `tipo`), **todos visíveis**, cada passo com seu
+  botão **Rolar**; **seletor de habilidades** (chips toggle) da ficha. Rolar um passo chama `rolarPasso`
+  e joga o resultado na **bandeja** (o cartão não guarda mais total inline). Débito de energia **uma vez**,
+  ao rolar o **passo primário** (índice 0), pelo novo output `energiaGasta` → o parent liga em
+  `aoUtilizarHabilidade` (canal `ajusteVitalidade`); custo `[X E]` = campo numérico inline por preset.
+  DTO emitido **enxuto**: omite `modo` SOMA, `tipo`/`seguintes` vazios e `habilidades` vazias (preset
+  legado inalterado).
+- O parent (`ficha-visualizacao`) passa **atributos efetivos** (pós-lesão) + **proficiência** +
+  **habilidades da ficha** ao editor (mesma base do dadinho da Visão Geral).
+- **Guia de fórmula:** novo componente autocontido `GuiaFormula` (`?` ao lado do rótulo Fórmula → modal
+  no padrão `.ajuda-modal`, data-driven: dados, atributo-como-dado, `× ÷`, tipos/Composto, Teste×Soma).
+- Verificação: frontend **309** (spec do editor reescrito p/ a nova API — add/editar/remover, modo Teste,
+  encadeado, energia debitada, roll → bandeja, fórmula inválida não rola), `lint`/`build` AOT verdes.
 
 ## Verificação
 

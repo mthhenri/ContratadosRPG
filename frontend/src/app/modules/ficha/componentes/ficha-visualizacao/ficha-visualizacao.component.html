@@ -771,9 +771,12 @@
         </header>
         <app-ficha-rolagens
           [rolagens]="dados().rolagens ?? []"
-          [atributos]="dados().atributos"
+          [atributos]="atributosEfetivos()"
+          [proficiencia]="proficiencia()"
+          [habilidadesDisponiveis]="dados().habilidades"
           [editavel]="ajustavel()"
           (rolagensMudou)="ajusteRolagens.emit($event)"
+          (energiaGasta)="aoUtilizarHabilidade($event)"
         />
       </section>
     </div>

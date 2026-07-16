@@ -1,4 +1,5 @@
-// Editor da aba Rolagens (m3-15) — só tokens do tema "Terminal de Contenção" (proibição #29).
+// Editor da aba Rolagens (m3-15; Rolagem v2 em m3-22) — só tokens do tema "Terminal de
+// Contenção" (proibição #29). Presets Teste/Soma, encadeados e com habilidades anexadas.
 .ficha-rol {
   display: flex;
   flex-direction: column;
@@ -41,10 +42,6 @@
     border-radius: var(--radius-control);
     padding: 12px;
     background: var(--surface);
-
-    &--invalida {
-      border-left: 2px solid color-mix(in srgb, var(--warning) 55%, transparent);
-    }
   }
   &__preset-topo {
     display: flex;
@@ -55,9 +52,9 @@
   }
   &__preset-id {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     flex-wrap: wrap;
-    gap: 4px 10px;
+    gap: 6px 10px;
     min-width: 0;
   }
   &__preset-nome {
@@ -65,10 +62,30 @@
     font-weight: 700;
     color: var(--text);
   }
-  &__preset-formula {
+  // Badge do modo primário (Soma padrão; Teste em accent).
+  &__modo {
     font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-dim);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-mute);
+    border: 1px solid var(--border-strong);
+    border-radius: 3px;
+    padding: 1px 6px;
+
+    &--teste {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--accent-dim);
+    }
+  }
+  &__cadeia {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-mute);
   }
   &__aviso {
     font-family: var(--font-mono);
@@ -93,30 +110,98 @@
     color: var(--text-dim);
   }
 
-  // === Resultado da rolagem ===
-  &__resultado {
+  // === Habilidades vinculadas + energia ===
+  &__vinculos {
     display: flex;
-    align-items: baseline;
-    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
     margin-top: 10px;
-    padding: 8px 12px;
+  }
+  &__vinculos-rotulo {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-mute);
+  }
+  &__vinculo {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 1px 7px;
+  }
+  &__energia {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--energy);
+    margin-left: auto;
+  }
+  &__energia-var {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  // === Passos (rolar) ===
+  &__passos {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  &__passo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-control);
-    flex-wrap: wrap;
+
+    &--invalido {
+      border-left: 2px solid color-mix(in srgb, var(--warning) 55%, transparent);
+    }
   }
-  &__resultado-total {
+  // Marca do modo do passo num encadeado (T / S).
+  &__passo-modo {
+    flex: none;
+    width: 20px;
+    text-align: center;
     font-family: var(--font-mono);
-    font-size: 26px;
+    font-size: 11px;
     font-weight: 700;
-    color: var(--accent);
-    line-height: 1;
+    color: var(--text-mute);
+    border: 1px solid var(--border-strong);
+    border-radius: 3px;
+    padding: 1px 0;
+
+    &--teste {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--accent-dim);
+    }
   }
-  &__resultado-detalhe {
+  &__passo-nome {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    flex: none;
+  }
+  &__passo-formula {
     font-family: var(--font-mono);
     font-size: 12px;
     color: var(--text-dim);
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
+
+  // === Resultado agora vive na bandeja de dados global (m3-22) — sem detalhamento no cartão. ===
 
   // === Botões ===
   &__btn {
@@ -127,6 +212,7 @@
     padding: 7px 14px;
     cursor: pointer;
     border: 1px solid transparent;
+    flex: none;
 
     &--principal {
       background: var(--accent);
@@ -141,6 +227,7 @@
       background: var(--accent-dim);
       border-color: var(--accent-border);
       color: var(--accent);
+      padding: 5px 12px;
     }
     &:disabled {
       opacity: 0.45;
@@ -182,7 +269,7 @@
   &__form {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-control);
     padding: 14px;
@@ -207,6 +294,13 @@
     letter-spacing: 0.1em;
     color: var(--text-mute);
   }
+  // Linha do rótulo com o gatilho do guia à direita (campo Fórmula).
+  &__rotulo-linha {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
   &__rotulo-aux {
     text-transform: none;
     letter-spacing: 0;
@@ -229,16 +323,144 @@
     &--mono {
       font-family: var(--font-mono);
     }
+    &--nome {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    &--curta {
+      width: 88px;
+    }
   }
   &__dica {
     font-family: var(--font-sans);
     font-size: 11px;
     color: var(--text-mute);
 
+    code {
+      font-family: var(--font-mono);
+      color: var(--text-dim);
+    }
+
     &--erro {
       color: var(--warning);
     }
   }
+
+  // === Seletor de modo (segmentado) ===
+  &__modo-escolha {
+    display: inline-flex;
+    align-self: flex-start;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    overflow: hidden;
+
+    &--compacta {
+      flex: none;
+    }
+  }
+  &__modo-opcao {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    background: var(--surface);
+    border: 0;
+    padding: 7px 14px;
+    cursor: pointer;
+
+    & + & {
+      border-left: 1px solid var(--border-strong);
+    }
+    &:hover {
+      color: var(--text);
+    }
+    &--ativa {
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+  }
+  &__modo-dica {
+    font-size: 10px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-mute);
+  }
+
+  // === Editor de passos seguintes ===
+  &__passo-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+  }
+  &__passo-edit-linha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  &__add-passo {
+    align-self: flex-start;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 7px 12px;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--accent);
+      border-color: var(--accent-border);
+    }
+  }
+
+  // === Seletor de habilidades (chips toggle) ===
+  &__hab-lista {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  &__hab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 6px 10px;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--text);
+      border-color: var(--accent-border);
+    }
+    &--marcada {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--accent-dim);
+    }
+  }
+  &__hab-nome {
+    font-weight: 600;
+  }
+  &__hab-custo {
+    font-size: 10px;
+    color: var(--energy);
+  }
+
   &__form-acoes {
     display: flex;
     gap: 8px;
