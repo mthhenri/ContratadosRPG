@@ -49,10 +49,29 @@
                     }
                   </span>
                 </div>
-              } @else if (entrada.resultado.grupos; as grupos) {
-                <div class="bandeja__grupos">
-                  @for (grupo of grupos; track grupo.tipoDano) {
-                    <span class="bandeja__grupo">{{ grupo.tipoDano }} {{ grupo.total }}</span>
+              } @else {
+                <div class="bandeja__detalhe">
+                  @if (entrada.resultado.dados.length) {
+                    <div class="bandeja__pool">
+                      @for (dado of entrada.resultado.dados; track $index) {
+                        <span class="bandeja__dado-termo">
+                          <span class="bandeja__dado-nota">{{ (dado.sinal < 0 ? '−' : '') + dado.valores.length + 'D' + dado.faces }}</span>
+                          @for (valor of dado.valores; track $index) {
+                            <span class="bandeja__dado">{{ valor }}</span>
+                          }
+                        </span>
+                      }
+                    </div>
+                  }
+                  @if (entrada.resultado.grupos; as grupos) {
+                    <div class="bandeja__grupos">
+                      @for (grupo of grupos; track grupo.tipoDano) {
+                        <span class="bandeja__grupo">{{ grupo.tipoDano }} {{ grupo.total }}</span>
+                      }
+                    </div>
+                  }
+                  @if (modificadoresSoma(entrada.resultado); as mods) {
+                    <span class="bandeja__legenda">{{ mods }}</span>
                   }
                 </div>
               }
