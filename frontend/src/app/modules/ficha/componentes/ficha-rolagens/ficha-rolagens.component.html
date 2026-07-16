@@ -50,58 +50,58 @@
             <p class="ficha-rol__preset-desc">{{ preset.descricao }}</p>
           }
 
-          @if (preset.plano.habilidadesVinculadas.length) {
-            <div class="ficha-rol__vinculos">
-              <span class="ficha-rol__vinculos-rotulo">Habilidades</span>
-              @for (nome of preset.plano.habilidadesVinculadas; track nome) {
-                <span class="ficha-rol__vinculo">{{ nome }}</span>
-              }
-              <span class="ficha-rol__energia" title="Energia gasta ao rolar o passo primário">
-                − {{ preset.plano.energiaGasta }}{{ preset.plano.energiaVariavel ? ' + X' : '' }} E
-              </span>
-            </div>
-          }
-
-          @if (preset.plano.energiaVariavel) {
-            <label class="ficha-rol__energia-var">
-              <span class="ficha-rol__rotulo">Energia variável (X)</span>
-              <input
-                #campoEnergia
-                class="ficha-rol__entrada ficha-rol__entrada--curta"
-                type="number"
-                min="0"
-                inputmode="numeric"
-                [value]="energiaVariavelDe(preset.indice)"
-                (input)="definirEnergiaVariavel(preset.indice, campoEnergia.value)"
-              />
-            </label>
-          }
-
           <div class="ficha-rol__passos">
-            @for (passo of preset.plano.passos; track $index) {
+            @for (passo of preset.plano.passos; track $index; let indicePasso = $index) {
               <div class="ficha-rol__passo" [class.ficha-rol__passo--invalido]="!passo.interpretacao.valida">
-                @if (preset.encadeado) {
-                  <span
-                    class="ficha-rol__passo-modo"
-                    [class.ficha-rol__passo-modo--teste]="passo.modo === RolagemModoEnum.TESTE"
-                    [title]="passo.modo === RolagemModoEnum.TESTE ? 'Teste' : 'Soma'"
+                <div class="ficha-rol__passo-linha">
+                  @if (preset.encadeado) {
+                    <span
+                      class="ficha-rol__passo-modo"
+                      [class.ficha-rol__passo-modo--teste]="passo.modo === RolagemModoEnum.TESTE"
+                      [title]="passo.modo === RolagemModoEnum.TESTE ? 'Teste' : 'Soma'"
+                    >
+                      {{ passo.modo === RolagemModoEnum.TESTE ? 'T' : 'S' }}
+                    </span>
+                    <span class="ficha-rol__passo-nome">{{ passo.nome }}</span>
+                  }
+                  <span class="ficha-rol__passo-formula">{{ passo.formula }}</span>
+                  @if (!passo.interpretacao.valida) {
+                    <span class="ficha-rol__aviso" title="Fórmula não reconhecida — não é possível rolar">inválida</span>
+                  }
+                  <button
+                    type="button"
+                    class="ficha-rol__btn ficha-rol__btn--rolar"
+                    [disabled]="!passo.interpretacao.valida"
+                    (click)="rolarPassoDoPreset(preset, indicePasso)"
                   >
-                    {{ passo.modo === RolagemModoEnum.TESTE ? 'T' : 'S' }}
-                  </span>
-                  <span class="ficha-rol__passo-nome">{{ passo.nome }}</span>
+                    Rolar
+                  </button>
+                </div>
+
+                @if (passo.habilidadesVinculadas.length) {
+                  <div class="ficha-rol__passo-vinculos">
+                    @for (nome of passo.habilidadesVinculadas; track nome) {
+                      <span class="ficha-rol__vinculo">{{ nome }}</span>
+                    }
+                    <span class="ficha-rol__energia" title="Energia gasta ao rolar este passo">
+                      − {{ passo.energiaGasta }}{{ passo.energiaVariavel ? ' + X' : '' }} E
+                    </span>
+                    @if (passo.energiaVariavel) {
+                      <label class="ficha-rol__energia-var">
+                        <span class="ficha-rol__energia-var-rotulo">X</span>
+                        <input
+                          #campoEnergia
+                          class="ficha-rol__entrada ficha-rol__entrada--curta"
+                          type="number"
+                          min="0"
+                          inputmode="numeric"
+                          [value]="energiaVariavelDe(preset.indice, indicePasso)"
+                          (input)="definirEnergiaVariavel(preset.indice, indicePasso, campoEnergia.value)"
+                        />
+                      </label>
+                    }
+                  </div>
                 }
-                <span class="ficha-rol__passo-formula">{{ passo.formula }}</span>
-                @if (!passo.interpretacao.valida) {
-                  <span class="ficha-rol__aviso" title="Fórmula não reconhecida — não é possível rolar">inválida</span>
-                }
-                <button
-                  type="button"
-                  class="ficha-rol__btn ficha-rol__btn--rolar"
-                  [disabled]="!passo.interpretacao.valida"
-                  (click)="rolarPassoDoPreset(preset, $index)"
-                >
-                  Rolar
-                </button>
               </div>
             }
           </div>
@@ -165,6 +165,11 @@
       <input class="ficha-rol__entrada" type="text" formControlName="descricao" placeholder="Nota sobre o preset…" />
     </label>
 
+    <ng-container
+      [ngTemplateOutlet]="habTpl"
+      [ngTemplateOutletContext]="{ controle: form.controls.habilidades, sufixo: 'aplicadas na rolagem primária' }"
+    />
+
     <div class="ficha-rol__campo" formArrayName="seguintes">
       <span class="ficha-rol__rotulo">
         Passos seguintes <span class="ficha-rol__rotulo-aux">(encadeamento — ex.: dano, crítico)</span>
@@ -194,36 +199,42 @@
             <button type="button" class="ficha-rol__mini-btn" title="Remover passo" aria-label="Remover passo" (click)="removerPasso($index)">✕</button>
           </div>
           <input class="ficha-rol__entrada ficha-rol__entrada--mono" type="text" formControlName="formula" placeholder="Fórmula (ex.: 2d6 + FOR [Físico])" />
+          <ng-container
+            [ngTemplateOutlet]="habTpl"
+            [ngTemplateOutletContext]="{ controle: passoCtrl.controls.habilidades, sufixo: 'aplicadas neste passo' }"
+          />
         </div>
       }
       <button type="button" class="ficha-rol__add-passo" (click)="adicionarPasso()">+ Passo seguinte</button>
     </div>
-
-    @if (habilidadesDisponiveis().length) {
-      <div class="ficha-rol__campo">
-        <span class="ficha-rol__rotulo">
-          Habilidades <span class="ficha-rol__rotulo-aux">(gastam energia e aplicam efeito ao rolar)</span>
-        </span>
-        <div class="ficha-rol__hab-lista">
-          @for (habilidade of habilidadesDisponiveis(); track habilidade.nome) {
-            <button
-              type="button"
-              class="ficha-rol__hab"
-              [class.ficha-rol__hab--marcada]="habilidadeMarcada(habilidade.nome)"
-              [attr.aria-pressed]="habilidadeMarcada(habilidade.nome)"
-              (click)="alternarHabilidade(habilidade.nome)"
-            >
-              <span class="ficha-rol__hab-nome">{{ habilidade.nome }}</span>
-              <span class="ficha-rol__hab-custo">{{ habilidade.custoEnergia === null ? 'X' : habilidade.custoEnergia }} E</span>
-            </button>
-          }
-        </div>
-      </div>
-    }
 
     <div class="ficha-rol__form-acoes">
       <button type="submit" class="ficha-rol__btn ficha-rol__btn--principal" [disabled]="form.invalid">Salvar</button>
       <button type="button" class="ficha-rol__btn ficha-rol__btn--secundario" (click)="cancelarEdicao()">Cancelar</button>
     </div>
   </form>
+</ng-template>
+
+<ng-template #habTpl let-controle="controle" let-sufixo="sufixo">
+  @if (habilidadesDisponiveis().length) {
+    <div class="ficha-rol__campo">
+      <span class="ficha-rol__rotulo">
+        Habilidades <span class="ficha-rol__rotulo-aux">({{ sufixo }} — gastam energia e aplicam efeito)</span>
+      </span>
+      <div class="ficha-rol__hab-lista">
+        @for (habilidade of habilidadesDisponiveis(); track habilidade.nome) {
+          <button
+            type="button"
+            class="ficha-rol__hab"
+            [class.ficha-rol__hab--marcada]="controle.value.includes(habilidade.nome)"
+            [attr.aria-pressed]="controle.value.includes(habilidade.nome)"
+            (click)="alternarHabilidade(controle, habilidade.nome)"
+          >
+            <span class="ficha-rol__hab-nome">{{ habilidade.nome }}</span>
+            <span class="ficha-rol__hab-custo">{{ habilidade.custoEnergia === null ? 'X' : habilidade.custoEnergia }} E</span>
+          </button>
+        }
+      </div>
+    </div>
+  }
 </ng-template>

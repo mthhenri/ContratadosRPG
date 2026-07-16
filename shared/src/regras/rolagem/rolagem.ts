@@ -516,27 +516,30 @@ export function aplicarEfeitos(
 }
 
 /**
- * Resolve um preset (m3-21) **sem rolar**: interpreta cada passo (primária + `seguintes`), funde os
- * efeitos das habilidades vinculadas (por `alvo`↔modo) e soma a Energia a gastar. Puro — o front rola
- * cada passo com `rolarPasso` e debita a energia pelo canal existente. Habilidades cujo nome não está
- * na ficha são ignoradas (não contam energia nem efeito).
+ * Resolve um preset (m3-21; habilidade **por passo** em m3-22) **sem rolar**: interpreta cada passo
+ * (primária + `seguintes`) e funde os efeitos das habilidades vinculadas **daquele passo** (por
+ * `alvo`↔modo), reportando a Energia por passo. Puro — o front rola cada passo com `rolarPasso` e
+ * debita a energia do passo pelo canal existente. Habilidades cujo nome não está na ficha são
+ * ignoradas. Os campos de energia do `PlanoPresetDto` são os **agregados** (soma de todos os passos).
  */
 export function resolverPreset(dto: PresetResolverDto): PlanoPresetDto {
   const { preset } = dto;
   const habilidadesFicha = dto.habilidades ?? [];
-  const vinculadas = (preset.habilidades ?? [])
-    .map((nome) => habilidadesFicha.find((habilidade) => habilidade.nome === nome))
-    .filter((habilidade): habilidade is FichaHabilidadeDto => habilidade !== undefined);
-  const efeitos = vinculadas.flatMap((habilidade) => habilidade.efeitos ?? []);
-  const energiaGasta = vinculadas.reduce((soma, habilidade) => soma + (habilidade.custoEnergia ?? 0), 0);
-  const energiaVariavel = vinculadas.some((habilidade) => habilidade.custoEnergia === null);
+
+  // Resolve os nomes de habilidade de um passo nas habilidades da ficha (ignora nomes ausentes).
+  const resolverVinculo = (nomes: readonly string[] | undefined): FichaHabilidadeDto[] =>
+    (nomes ?? [])
+      .map((nome) => habilidadesFicha.find((habilidade) => habilidade.nome === nome))
+      .filter((habilidade): habilidade is FichaHabilidadeDto => habilidade !== undefined);
 
   const passosBrutos = [
-    { nome: preset.nome, formula: preset.formula, modo: preset.modo, descricao: preset.descricao },
+    { nome: preset.nome, formula: preset.formula, modo: preset.modo, descricao: preset.descricao, habilidades: preset.habilidades },
     ...(preset.seguintes ?? []),
   ];
   const passos: PassoInterpretadoDto[] = passosBrutos.map((passo) => {
     const modo = passo.modo ?? RolagemModoEnum.SOMA;
+    const vinculadas = resolverVinculo(passo.habilidades);
+    const efeitos = vinculadas.flatMap((habilidade) => habilidade.efeitos ?? []);
     const base = interpretarFormula(passo.formula, modo);
     const interpretacao: InterpretacaoFormulaDto =
       base.valida && base.formula ? { valida: true, formula: aplicarEfeitos(base.formula, efeitos, modo) } : base;
@@ -546,14 +549,17 @@ export function resolverPreset(dto: PresetResolverDto): PlanoPresetDto {
       formula: passo.formula,
       interpretacao,
       ...(passo.descricao ? { descricao: passo.descricao } : {}),
+      energiaGasta: vinculadas.reduce((soma, habilidade) => soma + (habilidade.custoEnergia ?? 0), 0),
+      energiaVariavel: vinculadas.some((habilidade) => habilidade.custoEnergia === null),
+      habilidadesVinculadas: vinculadas.map((habilidade) => habilidade.nome),
     };
   });
 
   return {
     passos,
-    energiaGasta,
-    energiaVariavel,
-    habilidadesVinculadas: vinculadas.map((habilidade) => habilidade.nome),
+    energiaGasta: passos.reduce((soma, passo) => soma + passo.energiaGasta, 0),
+    energiaVariavel: passos.some((passo) => passo.energiaVariavel),
+    habilidadesVinculadas: passos.flatMap((passo) => passo.habilidadesVinculadas),
   };
 }
 

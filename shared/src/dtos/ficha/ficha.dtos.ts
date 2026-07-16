@@ -220,6 +220,12 @@ export interface FichaRolagemPassoDto {
   /** Modo do passo (m3-19). Ausente = `SOMA`. */
   readonly modo?: RolagemModoEnum;
   readonly descricao?: string;
+  /**
+   * Nomes das **habilidades** da ficha vinculadas a **este passo** (m3-22): ao rolá-lo, gasta a Energia
+   * delas e aplica os `efeitos` só nesta fórmula. Permite anexar uma habilidade a uma ação específica
+   * (ex.: Força Bruta só no passo de dano). Ausente = passo sem habilidade.
+   */
+  readonly habilidades?: readonly string[];
 }
 
 /**
@@ -240,8 +246,9 @@ export interface FichaRolagemDto {
   /** Passos disparados após a primária, na ordem (m3-21). */
   readonly seguintes?: readonly FichaRolagemPassoDto[];
   /**
-   * Nomes das **habilidades** da própria ficha vinculadas ao preset (m3-21): ao usar, o preset gasta
-   * a Energia delas e **aplica os efeitos** (`efeitos`) nas fórmulas (ex.: Força Bruta soma FOR × 3).
+   * Nomes das **habilidades** da ficha vinculadas ao **passo primário** (m3-21; por-passo em m3-22): ao
+   * rolá-lo, gasta a Energia delas e **aplica os efeitos** (`efeitos`) na fórmula (ex.: Força Bruta soma
+   * FOR × 3). Cada passo seguinte tem o seu próprio `habilidades` (`FichaRolagemPassoDto`).
    */
   readonly habilidades?: readonly string[];
 }

@@ -15,29 +15,31 @@ import {
   resolverPreset,
   rolarPasso,
   validarFormula,
+  type PassoInterpretadoDto,
   type PlanoPresetDto,
 } from '@contratados-rpg/shared/regras/rolagem';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { GuiaFormula } from '../guia-formula/guia-formula.component';
 
-/** Grupo tipado de um passo seguinte no formulário (encadeamento). */
+/** Grupo tipado de um passo seguinte no formulário (encadeamento), com as habilidades **deste passo**. */
 type PassoForm = FormGroup<{
   nome: FormControl<string>;
   modo: FormControl<RolagemModoEnum>;
   formula: FormControl<string>;
   descricao: FormControl<string>;
+  habilidades: FormControl<readonly string[]>;
 }>;
 
 /**
  * Um preset renderizado: o índice original, o plano já **resolvido** pelo motor (passos interpretados
- * com os efeitos das habilidades fundidos + energia a gastar) e os campos de exibição.
+ * com os efeitos das habilidades de cada passo fundidos + energia por passo) e os campos de exibição.
  */
 interface RolagemVM {
   readonly indice: number;
   readonly nome: string;
   readonly descricao: string | null;
-  /** Plano do motor: passos prontos p/ rolar, energia e habilidades vinculadas resolvidas. */
+  /** Plano do motor: passos prontos p/ rolar, cada um com sua energia e habilidades vinculadas. */
   readonly plano: PlanoPresetDto;
   /** `true` quando há passos seguintes (primária + ≥1) — muda a renderização dos passos. */
   readonly encadeado: boolean;
@@ -49,14 +51,14 @@ interface RolagemVM {
  * Editor **no próprio lugar** da aba Rolagens (m3-15; estendido em m3-22 — "Rolagem v2"): os presets
  * nomeados da ficha (`FichaRolagemDto`). Um preset pode ser **Teste** (rola o pool, pega o maior +
  * Proficiência) ou **Soma** (dano/total, agrupado por tipo), ser **encadeado** (primária → dano →
- * crítico, todos os passos visíveis, cada um com seu botão de rolar) e **anexar habilidades** da
- * própria ficha (ao rolar o passo primário, gasta a Energia delas e aplica os efeitos, ex.: Força
- * Bruta soma FOR × 3 ao dano).
+ * crítico, todos os passos visíveis, cada um com seu botão de rolar) e **anexar habilidades por passo**:
+ * cada ação escolhe quais habilidades aplica, e ao rolá-la gasta a Energia delas + aplica os efeitos
+ * (ex.: Força Bruta = FOR × 3 só no passo de dano).
  *
  * **Nenhuma regra de dados vive aqui** (proibição #26): interpretar/validar/rolar e resolver o preset
- * (efeitos + energia) é o motor puro `shared/regras/rolagem` (`resolverPreset`/`rolarPasso`, RNG do
- * navegador — §6.6). O componente é **controlado**: cada mutação da lista emite `rolagensMudou` e a
- * página persiste. O resultado de cada rolagem vai para a **bandeja de dados** global (m3-22), não
+ * (efeitos + energia por passo) é o motor puro `shared/regras/rolagem` (`resolverPreset`/`rolarPasso`,
+ * RNG do navegador — §6.6). O componente é **controlado**: cada mutação da lista emite `rolagensMudou` e
+ * a página persiste. O resultado de cada rolagem vai para a **bandeja de dados** global (m3-22), não
  * fica no cartão. Estilos só com os tokens do tema "Terminal de Contenção" (proibição #29).
  */
 @Component({
@@ -74,14 +76,14 @@ export class FichaRolagens {
   readonly proficiencia = input<number | null>(null);
   /** Nível do agente — fonte `NIV` nas fórmulas (m3-22). */
   readonly nivel = input<number>(0);
-  /** Habilidades da ficha — o pool que um preset pode anexar (energia + efeitos). */
+  /** Habilidades da ficha — o pool que cada passo pode anexar (energia + efeitos). */
   readonly habilidadesDisponiveis = input<readonly FichaHabilidadeDto[]>([]);
   /** Dono/mestre edita; para os demais é só leitura + rolar (a página liga por `podeGerenciar`). */
   readonly editavel = input(false);
 
   /** Emite a lista inteira após qualquer mutação — a página persiste. */
   readonly rolagensMudou = output<readonly FichaRolagemDto[]>();
-  /** Energia a debitar ao usar um preset com habilidades — a página aplica em `energiaAtual`. */
+  /** Energia a debitar ao rolar um passo com habilidades — a página aplica em `energiaAtual`. */
   readonly energiaGasta = output<number>();
 
   /** Bandeja de dados global — onde cada passo rolado aqui aparece. */
@@ -97,17 +99,16 @@ export class FichaRolagens {
   /** Índice com a confirmação de remoção inline aberta, ou `null`. */
   protected readonly indiceRemovendo = signal<number | null>(null);
 
-  /** Nomes das habilidades marcadas no formulário — anexadas ao preset ao salvar. */
-  protected readonly habilidadesMarcadas = signal<ReadonlySet<string>>(new Set());
-
-  /** Valor de Energia informado para presets de custo variável (`[X E]`), por índice. Efêmero. */
-  private readonly energiaVariavelPorIndice = signal<ReadonlyMap<number, number>>(new Map());
+  /** Valor de Energia informado para passos de custo variável (`[X E]`), por `preset:passo`. Efêmero. */
+  private readonly energiaVariavelPorPasso = signal<ReadonlyMap<string, number>>(new Map());
 
   protected readonly form = new FormGroup({
     nome: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     modo: new FormControl<RolagemModoEnum>(RolagemModoEnum.SOMA, { nonNullable: true }),
     formula: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     descricao: new FormControl('', { nonNullable: true }),
+    /** Habilidades do **passo primário**. */
+    habilidades: new FormControl<readonly string[]>([], { nonNullable: true }),
     seguintes: new FormArray<PassoForm>([]),
   });
 
@@ -126,7 +127,7 @@ export class FichaRolagens {
     return texto === '' ? null : validarFormula(texto, this.modoSelecionado());
   });
 
-  /** Presets resolvidos pelo motor (passos + efeitos + energia), prontos para exibir e rolar. */
+  /** Presets resolvidos pelo motor (passos + efeitos + energia por passo), prontos para exibir e rolar. */
   protected readonly presets = computed<readonly RolagemVM[]>(() => {
     const atributos = this.atributos();
     const proficiencia = this.proficiencia();
@@ -164,9 +165,9 @@ export class FichaRolagens {
       modo: preset.modo ?? RolagemModoEnum.SOMA,
       formula: preset.formula,
       descricao: preset.descricao ?? '',
+      habilidades: preset.habilidades ?? [],
     });
     (preset.seguintes ?? []).forEach((passo) => this.seguintes.push(this.novoPassoForm(passo)));
-    this.habilidadesMarcadas.set(new Set(preset.habilidades ?? []));
     this.indiceRemovendo.set(null);
     this.indiceEmEdicao.set(indice);
   }
@@ -175,11 +176,10 @@ export class FichaRolagens {
     this.indiceEmEdicao.set(null);
   }
 
-  /** Zera o formulário para o estado neutro (novo preset) — inclui esvaziar os passos e habilidades. */
+  /** Zera o formulário para o estado neutro (novo preset) — inclui esvaziar os passos e as habilidades. */
   private resetarForm(): void {
     this.seguintes.clear();
-    this.form.reset({ nome: '', modo: RolagemModoEnum.SOMA, formula: '', descricao: '' });
-    this.habilidadesMarcadas.set(new Set());
+    this.form.reset({ nome: '', modo: RolagemModoEnum.SOMA, formula: '', descricao: '', habilidades: [] });
   }
 
   private novoPassoForm(passo?: FichaRolagemPassoDto): PassoForm {
@@ -188,6 +188,7 @@ export class FichaRolagens {
       modo: new FormControl(passo?.modo ?? RolagemModoEnum.SOMA, { nonNullable: true }),
       formula: new FormControl(passo?.formula ?? '', { nonNullable: true, validators: [Validators.required] }),
       descricao: new FormControl(passo?.descricao ?? '', { nonNullable: true }),
+      habilidades: new FormControl<readonly string[]>(passo?.habilidades ?? [], { nonNullable: true }),
     });
   }
 
@@ -199,25 +200,22 @@ export class FichaRolagens {
     this.seguintes.removeAt(indice);
   }
 
-  // === Habilidades anexadas ===
-  protected habilidadeMarcada(nome: string): boolean {
-    return this.habilidadesMarcadas().has(nome);
+  // === Habilidades anexadas (por passo) ===
+  /** Alterna a habilidade `nome` no controle de habilidades de um passo (primária ou seguinte). */
+  protected alternarHabilidade(controle: FormControl<readonly string[]>, nome: string): void {
+    const atual = controle.value;
+    controle.setValue(atual.includes(nome) ? atual.filter((item) => item !== nome) : [...atual, nome]);
   }
 
-  protected alternarHabilidade(nome: string): void {
-    const marcadas = new Set(this.habilidadesMarcadas());
-    if (marcadas.has(nome)) {
-      marcadas.delete(nome);
-    } else {
-      marcadas.add(nome);
-    }
-    this.habilidadesMarcadas.set(marcadas);
+  /** Mantém só as habilidades que ainda existem na ficha (nome casado). */
+  private filtrarHabilidades(nomes: readonly string[]): string[] {
+    return nomes.filter((nome) => this.habilidadesDisponiveis().some((habilidade) => habilidade.nome === nome));
   }
 
   /**
    * Confirma o preset: monta o `FichaRolagemDto` **enxuto** (omite `modo` `SOMA`, `tipo`/`seguintes`
-   * vazios e `habilidades` vazias → preset legado inalterado), insere (novo) ou substitui (edição) e
-   * emite. Guarda contra passos meio-preenchidos: só entram os que têm nome **e** fórmula.
+   * vazios e `habilidades` vazias por passo → preset legado inalterado), insere (novo) ou substitui
+   * (edição) e emite. Guarda contra passos meio-preenchidos: só entram os que têm nome **e** fórmula.
    */
   protected confirmar(): void {
     if (this.form.invalid) {
@@ -231,19 +229,20 @@ export class FichaRolagens {
     }
     const descricao = bruto.descricao.trim();
     const modo = bruto.modo;
+    const habilidadesPrimaria = this.filtrarHabilidades(bruto.habilidades);
 
     const seguintes: FichaRolagemPassoDto[] = bruto.seguintes
-      .map((passo) => ({
-        nome: passo.nome.trim(),
-        formula: passo.formula.trim(),
-        ...(passo.modo !== RolagemModoEnum.SOMA ? { modo: passo.modo } : {}),
-        ...(passo.descricao.trim() ? { descricao: passo.descricao.trim() } : {}),
-      }))
+      .map((passo) => {
+        const passoHabilidades = this.filtrarHabilidades(passo.habilidades);
+        return {
+          nome: passo.nome.trim(),
+          formula: passo.formula.trim(),
+          ...(passo.modo !== RolagemModoEnum.SOMA ? { modo: passo.modo } : {}),
+          ...(passo.descricao.trim() ? { descricao: passo.descricao.trim() } : {}),
+          ...(passoHabilidades.length ? { habilidades: passoHabilidades } : {}),
+        };
+      })
       .filter((passo) => passo.nome && passo.formula);
-
-    const habilidades = [...this.habilidadesMarcadas()].filter((nomeHabilidade) =>
-      this.habilidadesDisponiveis().some((habilidade) => habilidade.nome === nomeHabilidade),
-    );
 
     const preset: FichaRolagemDto = {
       nome,
@@ -251,7 +250,7 @@ export class FichaRolagens {
       ...(descricao ? { descricao } : {}),
       ...(modo !== RolagemModoEnum.SOMA ? { modo } : {}),
       ...(seguintes.length ? { tipo: RolagemPresetTipoEnum.ENCADEADO, seguintes } : {}),
-      ...(habilidades.length ? { habilidades } : {}),
+      ...(habilidadesPrimaria.length ? { habilidades: habilidadesPrimaria } : {}),
     };
 
     const indice = this.indiceEmEdicao();
@@ -285,9 +284,8 @@ export class FichaRolagens {
 
   // === Rolar ===
   /**
-   * Rola um passo do preset e o joga na **bandeja** (m3-22). Ao rolar o passo **primário** (índice 0)
-   * de um preset com habilidades vinculadas, debita a Energia **uma vez** (soma dos custos + o valor
-   * variável informado). Os passos seguintes (dano, crítico) não redebitam. Passo inválido não rola.
+   * Rola um passo do preset e o joga na **bandeja** (m3-22). Ao rolar, debita a Energia das habilidades
+   * **deste passo** (soma dos custos + o valor variável informado). Passo inválido não rola.
    */
   protected rolarPassoDoPreset(preset: RolagemVM, indicePasso: number): void {
     const passo = preset.plano.passos[indicePasso];
@@ -300,37 +298,39 @@ export class FichaRolagens {
     }
     const rotulo = preset.encadeado ? `${preset.nome} · ${passo.nome}` : preset.nome;
     this.bandeja.mostrar({ rotulo, resultado, modo: passo.modo });
-    if (indicePasso === 0) {
-      this.debitarEnergia(preset);
-    }
+    this.debitarEnergia(preset.indice, passo, indicePasso);
   }
 
-  private debitarEnergia(preset: RolagemVM): void {
-    if (preset.plano.habilidadesVinculadas.length === 0) {
+  private debitarEnergia(presetIndice: number, passo: PassoInterpretadoDto, indicePasso: number): void {
+    if (passo.habilidadesVinculadas.length === 0) {
       return;
     }
-    const variavel = preset.plano.energiaVariavel ? this.energiaVariavelDe(preset.indice) : 0;
-    const total = preset.plano.energiaGasta + variavel;
+    const variavel = passo.energiaVariavel ? this.energiaVariavelDe(presetIndice, indicePasso) : 0;
+    const total = passo.energiaGasta + variavel;
     if (total > 0) {
       this.energiaGasta.emit(total);
     }
   }
 
-  // === Energia variável (`[X E]`) ===
-  protected energiaVariavelDe(indice: number): number {
-    return this.energiaVariavelPorIndice().get(indice) ?? 0;
+  // === Energia variável (`[X E]`), por passo ===
+  private chaveEnergia(presetIndice: number, passoIndice: number): string {
+    return `${presetIndice}:${passoIndice}`;
   }
 
-  protected definirEnergiaVariavel(indice: number, texto: string): void {
+  protected energiaVariavelDe(presetIndice: number, passoIndice: number): number {
+    return this.energiaVariavelPorPasso().get(this.chaveEnergia(presetIndice, passoIndice)) ?? 0;
+  }
+
+  protected definirEnergiaVariavel(presetIndice: number, passoIndice: number, texto: string): void {
     const valor = Number.parseInt(texto, 10);
-    const mapa = new Map(this.energiaVariavelPorIndice());
-    mapa.set(indice, Number.isNaN(valor) || valor < 0 ? 0 : valor);
-    this.energiaVariavelPorIndice.set(mapa);
+    const mapa = new Map(this.energiaVariavelPorPasso());
+    mapa.set(this.chaveEnergia(presetIndice, passoIndice), Number.isNaN(valor) || valor < 0 ? 0 : valor);
+    this.energiaVariavelPorPasso.set(mapa);
   }
 
   private emitir(lista: readonly FichaRolagemDto[]): void {
     // Os valores de energia variável ficam presos ao índice; limpa ao mudar a lista para não desalinhar.
-    this.energiaVariavelPorIndice.set(new Map());
+    this.energiaVariavelPorPasso.set(new Map());
     this.rolagensMudou.emit(lista);
   }
 }

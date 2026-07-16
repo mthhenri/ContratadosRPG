@@ -1497,6 +1497,16 @@ verdes. Spec `m3-22` em `done/`. **Verificação de render pendente** — valida
 > m3-21 presets/runner, **m3-22 frontend**) — motor puro e testado + UI ligada. Falta só a verificação
 > ao vivo no navegador (skill `verify`).
 
+**Rolagem v2 — refinamentos pós-m3-22** (a pedido do autor): (1) **Proficiência (`PROF`) e Nível
+(`NIV`) como fontes de fórmula** — entram em qualquer fórmula igual a um atributo (`+PROF`, `PROFd6`,
+`NIV*2`, `NIV/2`); novo tipo `FonteEscalar` + `resolverFonte` no motor, `nivel` no `RolagemDto`/
+`rolarPasso`, guia e dicas atualizados. (2) **Bandeja mostra os dados rolados no modo SOMA** (chips por
+termo `2D6` + legenda dos modificadores), não só o total. (3) **Habilidade por passo** — cada ação
+escolhe quais habilidades aplica (`FichaRolagemPassoDto.habilidades`; a primária em
+`FichaRolagemDto.habilidades`); `resolverPreset` funde efeitos + reporta energia **por passo**
+(`PassoInterpretadoDto` ganhou `energiaGasta`/`energiaVariavel`/`habilidadesVinculadas`), e rolar um
+passo debita só a energia dele. Shared **260**, frontend **311**, lint/build AOT verdes.
+
 **Próxima task:** o backlog anterior, renumerado — **`m3-23`→`m3-25` (Identidade** — contrato/motor,
 backend imutabilidade, frontend), **`m3-09` (mobile)** e **`m3-26` (otimização de espaço** da ficha).
 **Antes de qualquer UI, ler `docs/design/DESIGN.md` e consumir os tokens de `docs/design/tema/`**

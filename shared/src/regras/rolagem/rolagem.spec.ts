@@ -462,6 +462,28 @@ describe('presets + runner encadeado — resolverPreset/rolarPasso (m3-21)', () 
     expect(resultado?.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 34 }]);
   });
 
+  it('habilidade vinculada a um passo seguinte só afeta aquele passo (m3-22)', () => {
+    const preset: FichaRolagemDto = {
+      nome: 'Ataque',
+      formula: 'lutad20',
+      modo: RolagemModoEnum.TESTE,
+      tipo: RolagemPresetTipoEnum.ENCADEADO,
+      seguintes: [
+        { nome: 'Dano', formula: '2d8 [Físico]', modo: RolagemModoEnum.SOMA, habilidades: ['Força Bruta'] },
+      ],
+    };
+    const plano = resolverPreset({ preset, atributos, habilidades: [forcaBruta] });
+    // A primária (teste) não tem habilidade; só o passo de dano tem a Força Bruta.
+    expect(plano.passos[0].habilidadesVinculadas).toEqual([]);
+    expect(plano.passos[0].energiaGasta).toBe(0);
+    expect(plano.passos[1].habilidadesVinculadas).toEqual(['Força Bruta']);
+    expect(plano.passos[1].energiaGasta).toBe(4);
+    expect(plano.energiaGasta).toBe(4); // agregado do preset = soma dos passos
+    // Só o passo de dano recebe FOR*3: 2d8 (=16) + 18 → Físico 34.
+    const dano = rolarPasso(plano.passos[1], atributos, undefined, undefined, rolarMaximo);
+    expect(dano?.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 34 }]);
+  });
+
   it('custo variável [X E] não soma, mas marca energiaVariavel', () => {
     const variavel: FichaHabilidadeDto = {
       nome: 'Custo X',

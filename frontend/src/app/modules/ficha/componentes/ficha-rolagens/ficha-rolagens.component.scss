@@ -110,21 +110,7 @@
     color: var(--text-dim);
   }
 
-  // === Habilidades vinculadas + energia ===
-  &__vinculos {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 10px;
-  }
-  &__vinculos-rotulo {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text-mute);
-  }
+  // === Habilidades vinculadas + energia (por passo) ===
   &__vinculo {
     font-family: var(--font-mono);
     font-size: 11px;
@@ -141,10 +127,14 @@
     margin-left: auto;
   }
   &__energia-var {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 10px;
-    margin-top: 8px;
+    gap: 6px;
+  }
+  &__energia-var-rotulo {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-mute);
   }
 
   // === Passos (rolar) ===
@@ -156,7 +146,7 @@
   }
   &__passo {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 8px;
     padding: 7px 10px;
     background: var(--surface-2);
@@ -166,6 +156,17 @@
     &--invalido {
       border-left: 2px solid color-mix(in srgb, var(--warning) 55%, transparent);
     }
+  }
+  &__passo-linha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  &__passo-vinculos {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
   }
   // Marca do modo do passo num encadeado (T / S).
   &__passo-modo {

@@ -195,7 +195,7 @@ export interface PresetResolverDto {
   readonly habilidades?: readonly FichaHabilidadeDto[];
 }
 
-/** Um passo do preset já interpretado, com os efeitos das habilidades fundidos (m3-21). */
+/** Um passo do preset já interpretado, com os efeitos das habilidades **deste passo** fundidos (m3-21; m3-22). */
 export interface PassoInterpretadoDto {
   readonly nome: string;
   readonly modo: RolagemModoEnum;
@@ -204,16 +204,22 @@ export interface PassoInterpretadoDto {
   readonly descricao?: string;
   /** Interpretação já com efeitos aplicados (inválida se a fórmula do passo não parseia). */
   readonly interpretacao: InterpretacaoFormulaDto;
+  /** Energia a gastar ao rolar **este passo** (soma dos custos fixos das habilidades dele; m3-22). */
+  readonly energiaGasta: number;
+  /** `true` se alguma habilidade **deste passo** tem custo variável (`[X E]`) — o front pergunta quanto. */
+  readonly energiaVariavel: boolean;
+  /** Nomes das habilidades da ficha vinculadas **a este passo** (m3-22). */
+  readonly habilidadesVinculadas: readonly string[];
 }
 
-/** Saída de `resolverPreset`: os passos prontos p/ rolar + a energia a gastar. Puro (não rola/debita). */
+/** Saída de `resolverPreset`: os passos prontos p/ rolar + os **agregados** de energia (m3-22 debita por passo). Puro. */
 export interface PlanoPresetDto {
-  /** Passos na ordem: primária primeiro, depois os `seguintes`. */
+  /** Passos na ordem: primária primeiro, depois os `seguintes`. Cada um carrega a sua energia/habilidades. */
   readonly passos: readonly PassoInterpretadoDto[];
-  /** Soma da Energia das habilidades vinculadas com custo fixo (o front debita via `ajusteVitalidade`). */
+  /** **Total** da Energia fixa de todas as habilidades vinculadas (soma dos passos) — resumo do preset. */
   readonly energiaGasta: number;
-  /** `true` se alguma habilidade vinculada tem custo variável (`[X E]`) — o front pergunta quanto. */
+  /** `true` se **algum** passo tem habilidade de custo variável (`[X E]`). */
   readonly energiaVariavel: boolean;
-  /** Nomes das habilidades efetivamente resolvidas na ficha. */
+  /** Nomes de **todas** as habilidades vinculadas (de todos os passos), para o resumo do preset. */
   readonly habilidadesVinculadas: readonly string[];
 }

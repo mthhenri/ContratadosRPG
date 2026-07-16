@@ -145,4 +145,65 @@ describe('FichaRolagens', () => {
     alvo.componentInstance['rolarPassoDoPreset'](vm, 0);
     expect(alvo.mostrar).not.toHaveBeenCalled();
   });
+
+  it('habilidade num passo seguinte só debita ao rolar aquele passo (m3-22)', () => {
+    const forcaBruta: FichaHabilidadeDto = {
+      nome: 'Força Bruta',
+      categoria: HabilidadeCategoriaEnum.GERAL,
+      custoEnergia: 3,
+      descricao: '',
+    };
+    const preset: FichaRolagemDto = {
+      nome: 'Espada',
+      formula: 'luta',
+      modo: RolagemModoEnum.TESTE,
+      tipo: RolagemPresetTipoEnum.ENCADEADO,
+      seguintes: [{ nome: 'Dano', formula: '2d6', habilidades: ['Força Bruta'] }],
+    };
+    const alvo = montar([preset], { habilidades: [forcaBruta] });
+    const vm = alvo.componentInstance['presets']()[0];
+    expect(vm.plano.passos[0].habilidadesVinculadas).toEqual([]);
+    expect(vm.plano.passos[1].habilidadesVinculadas).toEqual(['Força Bruta']);
+    // Rolar a primária (teste) não debita nada.
+    alvo.componentInstance['rolarPassoDoPreset'](vm, 0);
+    expect(alvo.energias).toEqual([]);
+    // Rolar o passo de dano debita a energia da Força Bruta.
+    alvo.componentInstance['rolarPassoDoPreset'](vm, 1);
+    expect(alvo.energias).toEqual([3]);
+  });
+
+  it('salva habilidades por passo: primária no preset, seguinte no próprio passo', () => {
+    const foco: FichaHabilidadeDto = {
+      nome: 'Foco',
+      categoria: HabilidadeCategoriaEnum.GERAL,
+      custoEnergia: 1,
+      descricao: '',
+    };
+    const forca: FichaHabilidadeDto = {
+      nome: 'Força Bruta',
+      categoria: HabilidadeCategoriaEnum.GERAL,
+      custoEnergia: 3,
+      descricao: '',
+    };
+    const alvo = montar([], { habilidades: [foco, forca] });
+    alvo.componentInstance['abrirNovo']();
+    alvo.componentInstance['form'].patchValue({ nome: 'Espada', formula: 'luta' });
+    alvo.componentInstance['form'].controls.modo.setValue(RolagemModoEnum.TESTE);
+    alvo.componentInstance['alternarHabilidade'](alvo.componentInstance['form'].controls.habilidades, 'Foco');
+    alvo.componentInstance['adicionarPasso']();
+    const passo = alvo.componentInstance['seguintes'].at(0);
+    passo.patchValue({ nome: 'Dano', formula: '2d6' });
+    alvo.componentInstance['alternarHabilidade'](passo.controls.habilidades, 'Força Bruta');
+    alvo.componentInstance['confirmar']();
+    expect(alvo.emitidos[0]).toEqual([
+      {
+        nome: 'Espada',
+        formula: 'luta',
+        modo: RolagemModoEnum.TESTE,
+        tipo: RolagemPresetTipoEnum.ENCADEADO,
+        seguintes: [{ nome: 'Dano', formula: '2d6', habilidades: ['Força Bruta'] }],
+        habilidades: ['Foco'],
+      },
+    ]);
+  });
 });
