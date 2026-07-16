@@ -607,6 +607,20 @@ export function aplicarEfeitos(
       case RolagemEfeitoTipoEnum.DANO_DADOS:
         dados = [...dados, { sinal: 1, quantidade: efeito.valor ?? 1, faces: efeito.faces ?? 6, tipoDano }];
         break;
+      case RolagemEfeitoTipoEnum.DANO_DADOS_ARMA: {
+        // Espelha o maior dado de dano positivo da fórmula (faces + tipo/composto da arma), `valor` vezes.
+        const candidatos = dados.filter((dado) => dado.sinal === 1);
+        const referencia = candidatos.length
+          ? candidatos.reduce((maior, dado) => (dado.faces > maior.faces ? dado : maior))
+          : undefined;
+        if (referencia) {
+          const tipoArma: Partial<Pick<TermoDadoDto, 'tipoDano' | 'composto'>> = referencia.composto
+            ? { composto: referencia.composto }
+            : { tipoDano: referencia.tipoDano };
+          dados = [...dados, { sinal: 1, quantidade: efeito.valor ?? 1, faces: referencia.faces, ...tipoArma }];
+        }
+        break;
+      }
       case RolagemEfeitoTipoEnum.DANO_ATRIBUTO:
         if (efeito.atributo) {
           const multiplicador = efeito.multiplicador ?? 1;
@@ -624,6 +638,19 @@ export function aplicarEfeitos(
       case RolagemEfeitoTipoEnum.BONUS_TESTE:
         if (efeito.variante === 'FIXO') {
           constante += efeito.valor ?? 0;
+        } else if (efeito.variante === 'ATRIBUTO') {
+          // Soma o atributo ao resultado do teste (sem tipo de dano — é um teste, não um dano).
+          if (efeito.atributo) {
+            const multiplicador = efeito.multiplicador ?? 1;
+            const abreviacao = abreviacaoAtributo(efeito.atributo);
+            const rotulo = multiplicador === 1 ? abreviacao : `${abreviacao}*${multiplicador}`;
+            atributos.push({
+              sinal: 1,
+              atributo: efeito.atributo,
+              rotulo,
+              ...(multiplicador !== 1 ? { multiplicador } : {}),
+            });
+          }
         } else {
           // Vantagem: aumenta o pool do termo com keep (mais dados, mesmo kh/kl); sem termo com keep, ignora.
           const indice = dados.findIndex((dado) => dado.manterMaior !== undefined || dado.manterMenor !== undefined);

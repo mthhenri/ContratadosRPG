@@ -1,6 +1,22 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-16 (**catálogo de habilidades — efeitos mecânicos (m3-20)**: passou-se um
+> Última atualização: 2026-07-16 (**duas extensões do modelo de efeitos (m3-20) — fecham duas lacunas**:
+> (1) **`BONUS_TESTE` variante `'ATRIBUTO'`** — soma `atributo × multiplicador` ao **resultado do teste**
+> (reusa os campos `atributo`/`multiplicador` do DTO; sem tipo de dano). Destrava **Atirador Calculista**
+> (Geral + melhorada do Mercenário: soma Pontaria ao ataque). (2) Novo tipo **`DANO_DADOS_ARMA`** —
+> `+N dados de dano iguais ao dado da arma`: `aplicarEfeitos` **espelha o maior dado de dano positivo** da
+> fórmula (mesmas faces + tipo/composto) N vezes; no-op se a fórmula não tem dado de dano. Destrava
+> **Queima-Roupa** (Geral + melhorada), **Técnica Aplicada**, **Manejo**, **Vingativo**, e completa
+> **Reforço Adrenalizado** (FIXO no teste + dado de dano) e **Especialista em Explosivos melhorada**
+> (ELEVAR + dado de dano) — antes fora por faces dependentes da arma. Enum `RolagemEfeitoTipoEnum` ganhou
+> `DANO_DADOS_ARMA`; `RolagemEfeitoDto.variante` ganhou `'ATRIBUTO'`. **Sem mudança de grammar/DTO de
+> rolagem** além disso, e **sem mudança de frontend** (os dados espelhados entram como termos normais da
+> fórmula, rolados/exibidos pela bandeja sem alteração). Continuam fora: contagem de dados **derivada de
+> atributo** (Fúria Controlada = Força÷2 dados) e "atributo do teste **ao dano**" (Berserk, atributo
+> ambíguo). **Testes:** shared **296** (+7: fusão + rolagem e2e conferidas — Atirador soma PON ao total,
+> Queima dobra os dados da arma no dano); build/lint verdes.)
+>
+> (**catálogo de habilidades — efeitos mecânicos (m3-20)**: passou-se um
 > lote de habilidades do sistema de "só descrição" para **efeito estruturado** (`efeitos` em
 > `habilidades-catalogo.dados.ts`), aproveitando a infra que já existia (só Força Bruta a usava). Modeladas
 > só as **contribuições aditivas limpas** que mapeiam para os 5 tipos de efeito: `+N dado(s)` /
@@ -17,13 +33,12 @@
 > Charlatão/Diplomata). **Ficaram só na descrição** as que não mapeiam aos 5 tipos: magnitude que
 > escala/tem teto (Esforço Extra, Guerreiro de Rua, Porradeiro, Postura de Ataque…), escolha "A **ou** B"
 > (Observador Astuto, Planejamento Tático, Analisar Cenário melhorada…), troca de atributo (Artista
-> Marcial, Jogo de Corpo, Bacharel em Agressão…), `+N dados de dano` de faces dependentes da arma
-> (Queima-Roupa, Técnica Aplicada, Manejo, Vingativo…), **soma de atributo ao teste** (sem tipo de efeito —
-> Atirador Calculista, Berserk), buff em aliado (Marcar Alvo, Aura de Liderança, Ordem Direta…), rerolagem
-> (Segunda Chance, Mimado, Arrepio…), e tudo de cura/defesa/deslocamento/condição/reação. **Sem mudança de
-> engine** — só dados contra o contrato tipado existente. **Testes:** shared **289** (7 novos no catálogo;
-> fusão conferida em runtime: Pistoleiro → DES×3 Balístico no dano, Eclético → `bonusDados:1` no pool);
-> build/lint verdes.)
+> Marcial, Jogo de Corpo, Bacharel em Agressão…), buff em aliado (Marcar Alvo, Aura de Liderança, Ordem
+> Direta…), rerolagem (Segunda Chance, Mimado, Arrepio…), e tudo de cura/defesa/deslocamento/condição/
+> reação. (`+N dados de dano da arma` e `+atributo no teste` **saíram desta lista** — viraram
+> `DANO_DADOS_ARMA` e `BONUS_TESTE 'ATRIBUTO'` no bloco acima.) **Sem mudança de engine** — só dados contra
+> o contrato tipado existente. Fusão conferida em runtime: Pistoleiro → DES×3 Balístico no dano, Eclético →
+> `bonusDados:1` no pool; build/lint verdes.)
 >
 > (**m3-29 — Rolagem gramática v3: fim dos "modos"**: o
 > `RolagemModoEnum { SOMA | TESTE }` foi **aposentado** (enum deletado, campo `modo?` removido de

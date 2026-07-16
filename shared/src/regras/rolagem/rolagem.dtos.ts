@@ -169,14 +169,17 @@ export interface RolagemEfeitoDto {
   readonly valor?: number;
   /** Faces do dado em `DANO_DADOS`. */
   readonly faces?: number;
-  /** Atributo em `DANO_ATRIBUTO`. */
+  /** Atributo em `DANO_ATRIBUTO` **ou** em `BONUS_TESTE` variante `'ATRIBUTO'` (soma o atributo ao teste). */
   readonly atributo?: keyof FichaAtributosDto;
-  /** Multiplicador do atributo em `DANO_ATRIBUTO` (default 1). */
+  /** Multiplicador do atributo em `DANO_ATRIBUTO` / `BONUS_TESTE` `'ATRIBUTO'` (default 1). */
   readonly multiplicador?: number;
-  /** Tipo de dano dos efeitos de dano (default Físico). */
+  /** Tipo de dano dos efeitos de dano (default Físico). Ignorado por `DANO_DADOS_ARMA` (herda o do dado espelhado). */
   readonly tipoDano?: TipoDanoEnum;
-  /** `BONUS_TESTE`: `'DADO'` (soma D20 ao pool) ou `'FIXO'` (bônus plano). */
-  readonly variante?: 'DADO' | 'FIXO';
+  /**
+   * `BONUS_TESTE`: `'DADO'` (soma D20 ao pool = vantagem), `'FIXO'` (bônus plano) ou `'ATRIBUTO'` (soma
+   * `atributo × multiplicador` ao resultado do teste — ex.: Atirador Calculista soma a Pontaria).
+   */
+  readonly variante?: 'DADO' | 'FIXO' | 'ATRIBUTO';
   /** Onde o efeito se aplica; ausente = inferido do tipo (dano → `DANO`, bônus de teste → `TESTE`). */
   readonly alvo?: RolagemEfeitoAlvoEnum;
 }

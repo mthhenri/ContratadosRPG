@@ -281,6 +281,31 @@ describe('efeitos estruturados no catálogo (m3-20)', () => {
     ]);
   });
 
+  it('Atirador Calculista soma a Pontaria ao teste (BONUS_TESTE variante ATRIBUTO)', () => {
+    expect(efeitosDe('Atirador Calculista', HABILIDADES_GERAIS)).toEqual([
+      {
+        tipo: RolagemEfeitoTipoEnum.BONUS_TESTE,
+        variante: 'ATRIBUTO',
+        atributo: 'pontaria',
+        multiplicador: 1,
+        alvo: RolagemEfeitoAlvoEnum.TESTE,
+      },
+    ]);
+  });
+
+  it('Queima-Roupa adiciona 2 dados de dano da arma (DANO_DADOS_ARMA)', () => {
+    expect(efeitosDe('Queima-Roupa', HABILIDADES_GERAIS)).toEqual([
+      { tipo: RolagemEfeitoTipoEnum.DANO_DADOS_ARMA, valor: 2, alvo: RolagemEfeitoAlvoEnum.DANO },
+    ]);
+  });
+
+  it('Reforço Adrenalizado compõe bônus de teste (FIXO) + dado de dano da arma (roteados por papel)', () => {
+    expect(efeitosDe('Reforço Adrenalizado', HABILIDADES_ARQUETIPO[ArquetipoEnum.LUTADOR])).toEqual([
+      { tipo: RolagemEfeitoTipoEnum.BONUS_TESTE, variante: 'FIXO', valor: 3, alvo: RolagemEfeitoAlvoEnum.TESTE },
+      { tipo: RolagemEfeitoTipoEnum.DANO_DADOS_ARMA, valor: 1, alvo: RolagemEfeitoAlvoEnum.DANO },
+    ]);
+  });
+
   it('Gerais Melhoradas compõem dado + fixo (Charlatão do Diplomata: +2 dados e +2 no resultado)', () => {
     expect(efeitosDe('Charlatão', HABILIDADES_GERAIS_MELHORADAS[ArquetipoEnum.DIPLOMATA])).toEqual([
       { tipo: RolagemEfeitoTipoEnum.BONUS_TESTE, variante: 'DADO', valor: 2, alvo: RolagemEfeitoAlvoEnum.TESTE },
@@ -297,7 +322,16 @@ describe('efeitos estruturados no catálogo (m3-20)', () => {
         expect(Object.values(RolagemEfeitoAlvoEnum)).toContain(efeito.alvo);
         if (efeito.tipo === RolagemEfeitoTipoEnum.BONUS_TESTE) {
           expect(efeito.alvo).toBe(RolagemEfeitoAlvoEnum.TESTE);
-          expect(['DADO', 'FIXO']).toContain(efeito.variante);
+          expect(['DADO', 'FIXO', 'ATRIBUTO']).toContain(efeito.variante);
+          if (efeito.variante === 'ATRIBUTO') {
+            expect(efeito.atributo).toBeTruthy();
+            expect(efeito.multiplicador).toBeGreaterThan(0);
+          } else {
+            expect(efeito.valor).toBeGreaterThan(0);
+          }
+        }
+        if (efeito.tipo === RolagemEfeitoTipoEnum.DANO_DADOS_ARMA) {
+          expect(efeito.alvo).toBe(RolagemEfeitoAlvoEnum.DANO);
           expect(efeito.valor).toBeGreaterThan(0);
         }
         if (efeito.tipo === RolagemEfeitoTipoEnum.DANO_ATRIBUTO) {

@@ -461,6 +461,40 @@ describe('efeitos de habilidade — aplicarEfeitos por papel inferido (m3-20/m3-
     expect(comFixo.constante).toBe(3);
   });
 
+  it('BONUS_TESTE ATRIBUTO soma o atributo ao resultado do teste (sem tipo de dano)', () => {
+    const base = interpretarFormula('pontariad20kh1 + PROF').formula!;
+    const comEfeito = aplicarEfeitos(base, [
+      { tipo: RolagemEfeitoTipoEnum.BONUS_TESTE, variante: 'ATRIBUTO', atributo: 'pontaria', multiplicador: 1 },
+    ]);
+    // Vira um termo de atributo somado ao teste (além de PROF), sem tipoDano.
+    const somados = comEfeito.atributos.filter((atributo) => atributo.atributo === 'pontaria');
+    expect(somados).toHaveLength(1);
+    expect(somados[0]).toMatchObject({ sinal: 1, atributo: 'pontaria', rotulo: 'PON' });
+    expect(somados[0].tipoDano).toBeUndefined();
+  });
+
+  it('DANO_DADOS_ARMA espelha o maior dado de dano da fórmula (faces + tipo), N vezes', () => {
+    const base = interpretarFormula('2d8 [Balístico]').formula!;
+    const comEfeito = aplicarEfeitos(base, [{ tipo: RolagemEfeitoTipoEnum.DANO_DADOS_ARMA, valor: 2 }]);
+    // Ganha um termo extra: 2 dados D8 Balísticos (espelhando a arma).
+    expect(comEfeito.dados).toHaveLength(2);
+    const extra = comEfeito.dados[1];
+    expect(extra).toMatchObject({ sinal: 1, quantidade: 2, faces: 8, tipoDano: TipoDanoEnum.BALISTICO });
+  });
+
+  it('DANO_DADOS_ARMA escolhe o dado de MAIOR face quando há mais de um tipo', () => {
+    const base = interpretarFormula('1d6 [Físico] + 1d10 [Balístico]').formula!;
+    const comEfeito = aplicarEfeitos(base, [{ tipo: RolagemEfeitoTipoEnum.DANO_DADOS_ARMA, valor: 1 }]);
+    const extra = comEfeito.dados[comEfeito.dados.length - 1];
+    expect(extra).toMatchObject({ quantidade: 1, faces: 10, tipoDano: TipoDanoEnum.BALISTICO });
+  });
+
+  it('DANO_DADOS_ARMA é no-op quando a fórmula não tem dado de dano', () => {
+    const base = interpretarFormula('+5 [Físico]').formula!;
+    const comEfeito = aplicarEfeitos(base, [{ tipo: RolagemEfeitoTipoEnum.DANO_DADOS_ARMA, valor: 2 }]);
+    expect(comEfeito.dados).toHaveLength(0);
+  });
+
   it('efeito de DANO é ignorado numa fórmula de teste (roteamento por papel)', () => {
     const base = interpretarFormula('lutad20kh1').formula!;
     const comEfeito = aplicarEfeitos(base, [

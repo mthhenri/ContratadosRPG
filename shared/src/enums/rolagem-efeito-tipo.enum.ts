@@ -11,6 +11,12 @@ export enum RolagemEfeitoTipoEnum {
   DANO_FIXO = 'DANO_FIXO',
   /** +N D`faces` de dano, no `tipoDano` (ex.: dano elemental extra). */
   DANO_DADOS = 'DANO_DADOS',
+  /**
+   * +N dados de dano **iguais ao dado da arma**: espelha o maior dado de dano da fórmula (mesmas
+   * `faces` e mesmo tipo/composto) N vezes (ex.: Queima-Roupa `+2 dados de dano`). No-op se a fórmula
+   * não tem nenhum dado de dano para espelhar.
+   */
+  DANO_DADOS_ARMA = 'DANO_DADOS_ARMA',
   /** +`atributo` × `multiplicador` no dano, no `tipoDano` (ex.: **Força Bruta** = FOR × 3 físico). */
   DANO_ATRIBUTO = 'DANO_ATRIBUTO',
   /** Bônus em teste — `variante` `'DADO'` (soma D20 ao pool) ou `'FIXO'` (bônus plano). */

@@ -19,12 +19,13 @@ export interface HabilidadeBaseDto {
   /**
    * Efeitos mecânicos (m3-20) para presets de rolagem — herdados por `HabilidadeCatalogoItemDto` e
    * copiados para a ficha ao adicionar do catálogo. Só carregam o campo as habilidades cujo efeito é
-   * uma **contribuição aditiva limpa** a um teste ou dano — `+N dado(s)`/`+N no resultado`
-   * (`BONUS_TESTE`), `Atributo × N no dano` (`DANO_ATRIBUTO`) ou `+1 tipo nos dados de dano`
-   * (`ELEVAR_DADO`). A condição de gatilho (ex.: "ataques físicos") **não** é codificada: o jogador
-   * vincula a habilidade ao passo certo, como em Força Bruta. Ficam **só na descrição** as que não
-   * mapeiam para os 5 tipos de efeito: magnitude que escala/tem teto, escolha "A **ou** B", troca de
-   * atributo, `+N dados de dano` (faces dependem da arma), soma de atributo **ao teste**, buff em
+   * uma **contribuição aditiva limpa** a um teste ou dano — `+N dado(s)` (vantagem) / `+N no resultado`
+   * / `+Atributo no teste` (`BONUS_TESTE` `DADO`/`FIXO`/`ATRIBUTO`), `Atributo × N no dano`
+   * (`DANO_ATRIBUTO`), `+1 tipo nos dados de dano` (`ELEVAR_DADO`) ou `+N dados de dano da arma`
+   * (`DANO_DADOS_ARMA`, espelha o maior dado de dano da fórmula). A condição de gatilho (ex.: "ataques
+   * físicos") **não** é codificada: o jogador vincula a habilidade ao passo certo, como em Força Bruta.
+   * Ficam **só na descrição** as que não mapeiam para nenhum tipo de efeito: magnitude que escala/tem
+   * teto, escolha "A **ou** B", troca de atributo, contagem de dados **derivada de atributo**, buff em
    * aliado, rerolagem, cura, defesa, deslocamento, condição e reação.
    */
   readonly efeitos?: readonly RolagemEfeitoDto[];
@@ -36,7 +37,12 @@ export const HABILIDADES_GERAIS: readonly HabilidadeBaseDto[] = [
   { nome: 'Analisar Cenário', custoEnergia: 2, descricao: 'Refaz um teste em um local já explorado ou investigado.' },
   { nome: 'Arrepio', custoEnergia: 2, descricao: 'Pode refazer um teste de Sentidos fracassado.' },
   { nome: 'Ataque Duplo', custoEnergia: 3, descricao: 'Dá um segundo ataque no mesmo turno.' },
-  { nome: 'Atirador Calculista', custoEnergia: 3, descricao: 'Ao ficar 1 turno completo mirando no alvo, soma sua Pontaria ao teste de ataque.' },
+  {
+    nome: 'Atirador Calculista',
+    custoEnergia: 3,
+    descricao: 'Ao ficar 1 turno completo mirando no alvo, soma sua Pontaria ao teste de ataque.',
+    efeitos: [{ tipo: RolagemEfeitoTipoEnum.BONUS_TESTE, variante: 'ATRIBUTO', atributo: 'pontaria', multiplicador: 1, alvo: RolagemEfeitoAlvoEnum.TESTE }],
+  },
   { nome: 'Bater e Reposicionar', custoEnergia: 4, descricao: 'Inibe um ser de Esquivar ou Bloquear um golpe corpo a corpo.' },
   { nome: 'Cautela Extra', custoEnergia: 3, descricao: 'Ao realizar um teste de Destreza (DT 20) e obtiver sucesso, reduz a área de detecção de um ser para te localizar para Sentidos × 4 por 1D4+1 turnos.' },
   { nome: 'Chance Crítica', custoEnergia: 6, descricao: 'Reduz a margem de crítico de um teste em 1.' },
@@ -111,7 +117,12 @@ export const HABILIDADES_GERAIS: readonly HabilidadeBaseDto[] = [
     efeitos: [{ tipo: RolagemEfeitoTipoEnum.BONUS_TESTE, variante: 'DADO', valor: 1, alvo: RolagemEfeitoAlvoEnum.TESTE }],
   },
   { nome: 'Planejamento Tático', custoEnergia: 4, descricao: 'Antes de uma cena de combate, você e seus aliados reajustam suas estratégias e se preparam para ocasionais combates, concedendo +1 dado ou +2 em uma ação a escolha (Limite de até +3 dados e +6 no teste).' },
-  { nome: 'Queima-Roupa', custoEnergia: 0, descricao: 'Recebe +2 dados de dano ao estar adjacente ao seu alvo durante um disparo.' },
+  {
+    nome: 'Queima-Roupa',
+    custoEnergia: 0,
+    descricao: 'Recebe +2 dados de dano ao estar adjacente ao seu alvo durante um disparo.',
+    efeitos: [{ tipo: RolagemEfeitoTipoEnum.DANO_DADOS_ARMA, valor: 2, alvo: RolagemEfeitoAlvoEnum.DANO }],
+  },
   {
     nome: 'Raciocínio Dedutivo',
     custoEnergia: 3,
@@ -159,7 +170,12 @@ export const HABILIDADES_CLASSE: Readonly<Record<ClasseEnum, readonly Habilidade
     { nome: 'Explosão de Adrenalina', custoEnergia: 5, descricao: 'Aumenta +2 dados no teste em um ataque, mas fica Cansado no próximo turno.' },
     { nome: 'Guerreiro de Rua', custoEnergia: 4, descricao: 'Para cada turno decorrido no combate, recebe +1 nos testes de Atributos Físicos, com limite em Vigor + Destreza divididos por 2 para estes aumentos.' },
     { nome: 'Mano a Mano', custoEnergia: 6, descricao: 'Escolha um ser na cena e, até o fim dela ou a morte do mesmo, recebe +3 em todos os testes de Atributos Físicos contra ele, mas, -2 em testes não relacionados à ele. Desfocar do alvo necessita de um teste de Vontade DT 15 + 2 por turno focado.' },
-    { nome: 'Manejo', custoEnergia: 0, descricao: 'Ao escolher no início de uma missão uma categoria de arma (Corpo a corpo, De fogo, Exótica ou Explosivos), recebe +1 dado de dano ao usá-la.' },
+    {
+      nome: 'Manejo',
+      custoEnergia: 0,
+      descricao: 'Ao escolher no início de uma missão uma categoria de arma (Corpo a corpo, De fogo, Exótica ou Explosivos), recebe +1 dado de dano ao usá-la.',
+      efeitos: [{ tipo: RolagemEfeitoTipoEnum.DANO_DADOS_ARMA, valor: 1, alvo: RolagemEfeitoAlvoEnum.DANO }],
+    },
     { nome: 'Mira de Combate', custoEnergia: 1, descricao: 'Aumenta o tempo de espera para perder a mira em +1 turno (uma vez por ação de mirar).' },
     {
       nome: 'Na Base do Ódio',
@@ -176,7 +192,12 @@ export const HABILIDADES_CLASSE: Readonly<Record<ClasseEnum, readonly Habilidade
     },
     { nome: 'Ruptura', custoEnergia: 4, descricao: 'Reduz a resistência do alvo ao tipo de dano de sua arma em Atributo do Teste × 2 pontos por 2 turnos. A resistência não pode ser reduzida abaixo de 0.' },
     { nome: 'Segundo Fôlego', custoEnergia: 0, descricao: 'Ao realizar um descanso, aumenta seus dados de recuperação de energia em Vigor ÷ 2.' },
-    { nome: 'Técnica Aplicada', custoEnergia: 1, descricao: 'Estar flanqueando um alvo te concede +1 dado de dano.' },
+    {
+      nome: 'Técnica Aplicada',
+      custoEnergia: 1,
+      descricao: 'Estar flanqueando um alvo te concede +1 dado de dano.',
+      efeitos: [{ tipo: RolagemEfeitoTipoEnum.DANO_DADOS_ARMA, valor: 1, alvo: RolagemEfeitoAlvoEnum.DANO }],
+    },
     { nome: 'Vem pra Cima!', custoEnergia: 3, descricao: 'Escolha um ser. Obriga-o a fazer um teste de Vontade (DT Vigor). Caso ele falhe, para todos na cena (exceto você) o ser estará Vulnerável até que você fique Inconsciente ou a cena finalize.' },
   ],
   [ClasseEnum.ESPECIALISTA]: [
@@ -300,8 +321,21 @@ export const HABILIDADES_ARQUETIPO: Readonly<Record<ArquetipoEnum, readonly Habi
     },
     { nome: 'Peso Pesado', custoEnergia: 3, descricao: 'Em armas corpo a corpo, adiciona o peso da sua arma ao dano causado.' },
     { nome: 'Postura de Ataque', custoEnergia: 2, descricao: 'Para cada turno seguido atacando o mesmo ser, mesmo que falhando em seus testes, recebe +2 no dano (Limite Luta turnos para acumulação).' },
-    { nome: 'Reforço Adrenalizado', custoEnergia: 0, descricao: 'Ao entrar na condição Machucado, recebe +3 em testes de Força e Luta e +1 dado de dano em armas de dano físico até o fim da cena.' },
-    { nome: 'Vingativo', custoEnergia: 5, descricao: 'Ao receber 25% ou mais de sua vida máxima em um único golpe, adiciona +2 dados de dano ao seu próximo ataque no mesmo ser.' },
+    {
+      nome: 'Reforço Adrenalizado',
+      custoEnergia: 0,
+      descricao: 'Ao entrar na condição Machucado, recebe +3 em testes de Força e Luta e +1 dado de dano em armas de dano físico até o fim da cena.',
+      efeitos: [
+        { tipo: RolagemEfeitoTipoEnum.BONUS_TESTE, variante: 'FIXO', valor: 3, alvo: RolagemEfeitoAlvoEnum.TESTE },
+        { tipo: RolagemEfeitoTipoEnum.DANO_DADOS_ARMA, valor: 1, alvo: RolagemEfeitoAlvoEnum.DANO },
+      ],
+    },
+    {
+      nome: 'Vingativo',
+      custoEnergia: 5,
+      descricao: 'Ao receber 25% ou mais de sua vida máxima em um único golpe, adiciona +2 dados de dano ao seu próximo ataque no mesmo ser.',
+      efeitos: [{ tipo: RolagemEfeitoTipoEnum.DANO_DADOS_ARMA, valor: 2, alvo: RolagemEfeitoAlvoEnum.DANO }],
+    },
   ],
   [ArquetipoEnum.MERCENARIO]: [
     { nome: 'Munição Eficiente', custoEnergia: 0, descricao: 'Uma vez por pacote de munição, ao utilizá-lo quando cheio, a primeira cena não é gasta.' },
@@ -466,15 +500,33 @@ export const HABILIDADES_GERAIS_MELHORADAS: Readonly<
     },
   ],
   [ArquetipoEnum.MERCENARIO]: [
-    { nome: 'Queima-Roupa', custoEnergia: 0, descricao: 'Recebe +2 dados de dano ao estar adjacente ao seu alvo durante um disparo e reduz a defesa em -2.' },
-    { nome: 'Atirador Calculista', custoEnergia: 3, descricao: 'Ao mirar em um alvo, soma sua Pontaria ao teste de ataque.' },
+    {
+      nome: 'Queima-Roupa',
+      custoEnergia: 0,
+      descricao: 'Recebe +2 dados de dano ao estar adjacente ao seu alvo durante um disparo e reduz a defesa em -2.',
+      efeitos: [{ tipo: RolagemEfeitoTipoEnum.DANO_DADOS_ARMA, valor: 2, alvo: RolagemEfeitoAlvoEnum.DANO }],
+    },
+    {
+      nome: 'Atirador Calculista',
+      custoEnergia: 3,
+      descricao: 'Ao mirar em um alvo, soma sua Pontaria ao teste de ataque.',
+      efeitos: [{ tipo: RolagemEfeitoTipoEnum.BONUS_TESTE, variante: 'ATRIBUTO', atributo: 'pontaria', multiplicador: 1, alvo: RolagemEfeitoAlvoEnum.TESTE }],
+    },
   ],
   [ArquetipoEnum.VANGUARDA]: [
     { nome: 'Contra-Ataque', custoEnergia: 2, descricao: '(Reação) Soma sua Luta ÷ 2 ou Vigor ÷ 2 na sua Defesa ao reagir, caso o atacante não à ultrapasse, garante um ataque físico direto no ser, rolando apenas o dano da arma em mãos.' },
     { nome: 'Defesa Precisa', custoEnergia: 2, descricao: 'Recebe +2 de Defesa.' },
   ],
   [ArquetipoEnum.ENGENHEIRO]: [
-    { nome: 'Especialista em Explosivos', custoEnergia: 4, descricao: 'Reduz o raio de explosão da granada em 1 metro e aumenta em 1 tipo os dados de dano e adiciona +1 dado ao dano.' },
+    {
+      nome: 'Especialista em Explosivos',
+      custoEnergia: 4,
+      descricao: 'Reduz o raio de explosão da granada em 1 metro e aumenta em 1 tipo os dados de dano e adiciona +1 dado ao dano.',
+      efeitos: [
+        { tipo: RolagemEfeitoTipoEnum.ELEVAR_DADO, valor: 1, alvo: RolagemEfeitoAlvoEnum.DANO },
+        { tipo: RolagemEfeitoTipoEnum.DANO_DADOS_ARMA, valor: 1, alvo: RolagemEfeitoAlvoEnum.DANO },
+      ],
+    },
     { nome: 'Mochileiro', custoEnergia: 0, descricao: 'Muda o atributo de cálculo do inventário de Força para Intelecto.' },
   ],
   [ArquetipoEnum.ASSASSINO]: [
