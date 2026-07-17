@@ -184,14 +184,8 @@
   }
 
   &__acoes,
-  &__exclusao,
-  &__ficha {
+  &__exclusao {
     margin-bottom: 24px;
-  }
-
-  // Ações de ficha (m3-06/m3-07) — links para a lista e a criação da ficha nesta campanha.
-  &__ficha-acao {
-    text-decoration: none;
   }
 
   &__acao {
@@ -227,11 +221,30 @@
 
   // Cabeçalho da seção de membros — mesmo tratamento do contador de seção dos protótipos
   // ("ESQUADRÃO 4"): rótulo mono uppercase + régua fina + contagem à direita. Só apresentação.
+  // m2-16: ganhou também a ação "Nova ficha" (a régua flex:1 empurra contagem+botão pra direita).
   &__secao {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 11px;
     margin: 0 0 12px;
+  }
+
+  // Ação "Nova ficha" (m2-16 — trazida da extinta lista plana de fichas para o próprio detalhe).
+  &__nova-ficha {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
   }
 
   &__secao-titulo {
@@ -257,6 +270,8 @@
     color: var(--text-mute);
   }
 
+  // Rolável quando a campanha acumula membros (cada linha ficou mais alta com as fichas
+  // inline, m2-16) — fade topo/base só aparece de fato quando há corte (appOverflowFade).
   &__membros {
     list-style: none;
     margin: 0;
@@ -264,6 +279,34 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    max-height: 520px;
+    overflow-y: auto;
+
+    --fade-topo: 0px;
+    --fade-base: 0px;
+    &.overflow-fade--topo,
+    &.overflow-fade--base {
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+    }
+    &.overflow-fade--topo {
+      --fade-topo: 22px;
+    }
+    &.overflow-fade--base {
+      --fade-base: 22px;
+    }
   }
 
   &__membro {
@@ -280,6 +323,112 @@
     display: flex;
     align-items: center;
     gap: 12px;
+  }
+
+  // Fichas do membro, inline (m2-16, lar das fichas — substitui a extinta lista plana). No
+  // desktop o disclosure fica escondido e a lista é sempre visível; no mobile é o inverso
+  // (ver o breakpoint no fim do bloco). Fade topo/base só some quando a lista de fato corta.
+  &__membro-fichas {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__fichas-toggle {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-dim);
+    cursor: pointer;
+
+    app-icone {
+      font-size: 11px;
+      transition: transform 0.15s ease;
+    }
+
+    &:hover {
+      color: var(--text);
+    }
+
+    &--aberto app-icone {
+      transform: rotate(180deg);
+    }
+  }
+
+  &__fichas-lista {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 44px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 220px;
+    overflow-y: auto;
+
+    --fade-topo: 0px;
+    --fade-base: 0px;
+    &.overflow-fade--topo,
+    &.overflow-fade--base {
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+    }
+    &.overflow-fade--topo {
+      --fade-topo: 16px;
+    }
+    &.overflow-fade--base {
+      --fade-base: 16px;
+    }
+  }
+
+  &__ficha-card {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    text-decoration: none;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      background: var(--accent-dim);
+      border-color: var(--border-strong);
+    }
+  }
+
+  &__ficha-nome {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  &__ficha-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
   }
 
   // Ações de gestão do mestre sobre um jogador (transferir mestre / remover) — botões-ícone
@@ -407,6 +556,29 @@
     &__membro-acao {
       width: bp.$alvo-toque;
       height: bp.$alvo-toque;
+    }
+
+    &__nova-ficha {
+      flex: 1 1 100%;
+      justify-content: center;
+      min-height: bp.$alvo-toque;
+    }
+
+    // Híbrido por largura (m2-16): no desktop as fichas ficam sempre abertas (regra acima);
+    // no mobile viram disclosure — some a lista, aparece o gatilho "N fichas ⌄" com alvo de
+    // toque confortável, e a lista só aparece com o toggle expandido.
+    &__fichas-toggle {
+      display: inline-flex;
+      min-height: bp.$alvo-toque;
+    }
+
+    &__fichas-lista {
+      display: none;
+      padding-left: 0;
+
+      &--aberta {
+        display: flex;
+      }
     }
 
     &__link {

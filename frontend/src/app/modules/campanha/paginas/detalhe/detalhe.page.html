@@ -14,6 +14,7 @@
         <span class="card__indice">//</span>
         <h1 class="card__titulo">{{ campanhaAtual.nome }}</h1>
         <span class="card__regua"></span>
+        <app-indicador-tempo-real />
       </header>
 
       @if (editando()) {
@@ -124,29 +125,21 @@
         }
       }
 
-      <div class="detalhe__ficha">
-        <a
-          class="botao botao--secundario detalhe__acao detalhe__ficha-acao"
-          [routerLink]="['/painel', campanhaAtual.id, 'ficha']"
-        >
-          <app-icone nome="olho" />
-          Fichas
-        </a>
-        <a
-          class="botao botao--primario detalhe__acao detalhe__ficha-acao"
-          [routerLink]="['/painel', campanhaAtual.id, 'ficha', 'nova']"
-        >
-          <app-icone nome="novo-agente" />
-          Nova ficha
-        </a>
-      </div>
-
       <header class="detalhe__secao">
         <h2 class="detalhe__secao-titulo">Membros</h2>
         <span class="detalhe__secao-regua"></span>
         <span class="detalhe__secao-contagem" aria-hidden="true">{{ membros().length }}</span>
+        <button
+          class="botao botao--primario detalhe__nova-ficha"
+          type="button"
+          [disabled]="criando()"
+          (click)="abrirCriarFicha()"
+        >
+          <app-icone nome="novo-agente" />
+          {{ criando() ? 'Criando…' : 'Nova ficha' }}
+        </button>
       </header>
-      <ul class="detalhe__membros">
+      <ul class="detalhe__membros" appOverflowFade>
         @for (membro of membros(); track membro.usuarioId) {
           <li class="detalhe__membro">
             <div class="detalhe__membro-linha">
@@ -180,6 +173,39 @@
                 </div>
               }
             </div>
+
+            <!-- Fichas do membro (m2-16) — sempre abertas no desktop; disclosure no mobile. -->
+            @if (fichasDoMembro(membro.usuarioId).length; as totalFichas) {
+              <div class="detalhe__membro-fichas">
+                <button
+                  class="detalhe__fichas-toggle"
+                  type="button"
+                  [class.detalhe__fichas-toggle--aberto]="fichasExpandidas().has(membro.usuarioId)"
+                  [attr.aria-expanded]="fichasExpandidas().has(membro.usuarioId)"
+                  (click)="alternarFichas(membro.usuarioId)"
+                >
+                  {{ totalFichas }} {{ totalFichas === 1 ? 'ficha' : 'fichas' }}
+                  <app-icone nome="chevron" />
+                </button>
+                <ul
+                  class="detalhe__fichas-lista"
+                  [class.detalhe__fichas-lista--aberta]="fichasExpandidas().has(membro.usuarioId)"
+                  appOverflowFade
+                >
+                  @for (ficha of fichasDoMembro(membro.usuarioId); track ficha.id) {
+                    <li>
+                      <a
+                        class="detalhe__ficha-card"
+                        [routerLink]="['/painel', campanhaAtual.id, 'ficha', ficha.id]"
+                      >
+                        <span class="detalhe__ficha-nome">{{ ficha.nome }}</span>
+                        <span class="detalhe__ficha-meta">{{ ficha.classeTexto }} · Nível {{ ficha.nivel }}</span>
+                      </a>
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
 
             @if (acaoMembro()?.usuarioId === membro.usuarioId) {
               <div
@@ -254,3 +280,11 @@
     </a>
   </p>
 </section>
+
+@if (dialogCriar()) {
+  <app-ficha-criar-dialog
+    [criando]="criando()"
+    (criar)="criarFicha($event)"
+    (cancelar)="fecharCriarFicha()"
+  />
+}

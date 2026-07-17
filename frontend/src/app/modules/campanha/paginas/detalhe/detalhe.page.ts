@@ -1,17 +1,34 @@
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { finalize, forkJoin } from 'rxjs';
+import { finalize, forkJoin, merge } from 'rxjs';
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import {
   CampanhaMembroResumoDto,
   CampanhaRecuperadaDto,
 } from '@contratados-rpg/shared/dtos/campanha';
+import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { Icone } from '../../../../shared/icone/icone.component';
+import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
+import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
+import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaContextoService } from '../../campanha-contexto.service';
 import { CampanhaService } from '../../campanha.service';
+import { FichaService } from '../../../ficha/ficha.service';
+import { construirFichaInicial, type OpcoesFichaInicial } from '../../../ficha/ficha-padrao';
+import { FichaCriarDialog } from '../../../ficha/componentes/ficha-criar-dialog/ficha-criar-dialog.component';
+import { rotuloClasse } from '../../../ficha/rotulos-ficha';
+
+/** Ficha já enriquecida para o mini-card inline (m2-16): id/nome/classe legível/nível. */
+interface ItemFicha {
+  readonly id: number;
+  readonly nome: string;
+  readonly classeTexto: string;
+  readonly nivel: number;
+}
 
 /**
  * Detalhe de uma campanha (`/painel/:id`): nome/descrição, membros com o papel e — só para o
@@ -28,17 +45,20 @@ import { CampanhaService } from '../../campanha.service';
  */
 @Component({
   selector: 'app-campanha-detalhe',
-  imports: [RouterLink, ReactiveFormsModule, Icone],
+  imports: [RouterLink, ReactiveFormsModule, Icone, OverflowFade, IndicadorTempoReal, FichaCriarDialog],
   templateUrl: './detalhe.page.html',
   styleUrl: './detalhe.page.scss',
 })
 export class CampanhaDetalhe {
   private readonly campanhaService = inject(CampanhaService);
+  private readonly fichaService = inject(FichaService);
   private readonly sessaoService = inject(SessaoService);
   private readonly campanhaContextoService = inject(CampanhaContextoService);
+  private readonly tempoRealService = inject(TempoRealService);
   private readonly rotaAtiva = inject(ActivatedRoute);
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   /** `id` da campanha, lido do parâmetro de rota (`/painel/:id`). */
   private readonly id = Number(this.rotaAtiva.snapshot.paramMap.get('id'));
@@ -74,6 +94,15 @@ export class CampanhaDetalhe {
   /** Bloqueia os botões enquanto a remoção/transferência do membro está em voo. */
   protected readonly processandoMembro = signal(false);
 
+  /** Fichas visíveis da campanha (m2-16) — o backend já filtra por §14; o front só agrupa. */
+  private readonly fichas = signal<FichaResumoDto[]>([]);
+  /** `true` enquanto a criação da nova ficha está em voo (desabilita o botão do assistente). */
+  protected readonly criando = signal(false);
+  /** Assistente de criação (m3-16) aberto — agora disparado do próprio detalhe (m2-16). */
+  protected readonly dialogCriar = signal(false);
+  /** Donos com o disclosure de fichas expandido no mobile (ignorado no desktop — sempre aberto). */
+  protected readonly fichasExpandidas = signal<ReadonlySet<number>>(new Set());
+
   protected readonly formularioEdicao = this.formBuilder.nonNullable.group({
     nome: ['', [Validators.required]],
     descricao: [''],
@@ -88,16 +117,73 @@ export class CampanhaDetalhe {
     );
   });
 
+  /** Fichas visíveis agrupadas por dono (`usuarioId`), enriquecidas com o rótulo de classe. */
+  private readonly fichasPorMembro = computed<ReadonlyMap<number, readonly ItemFicha[]>>(() => {
+    const mapa = new Map<number, ItemFicha[]>();
+    for (const ficha of this.fichas()) {
+      const item: ItemFicha = {
+        id: ficha.id,
+        nome: ficha.nome,
+        classeTexto: rotuloClasse(ficha.classe),
+        nivel: ficha.nivel,
+      };
+      const listaDoDono = mapa.get(ficha.usuarioId);
+      if (listaDoDono) {
+        listaDoDono.push(item);
+      } else {
+        mapa.set(ficha.usuarioId, [item]);
+      }
+    }
+    return mapa;
+  });
+
   constructor() {
+    this.carregar(true);
+
+    // Tempo real (m3-05/m3-08, trazido da extinta FichaLista pela m2-16): entra na sala
+    // `campanha:<id>` para as fichas inline e novos membros atualizarem ao vivo. Uma ficha criada
+    // ou um membro que entra refazem o fetch (membros + fichas) via REST — o recorte visível
+    // (§14) continua **arbitrado pelo backend**, o front não duplica a regra a partir do payload
+    // do broadcast.
+    this.tempoRealService.conectar();
+    this.tempoRealService.entrarSalaCampanha(this.id);
+    this.destroyRef.onDestroy(() => {
+      this.tempoRealService.sairSalaCampanha(this.id);
+      this.campanhaContextoService.limpar();
+    });
+
+    merge(this.tempoRealService.fichaCriada$, this.tempoRealService.membroEntrou$)
+      .pipe(takeUntilDestroyed())
+      .subscribe({ next: () => this.recarregarMembrosEFichas() });
+
+    // Ressincronização ao reconectar (§9 — o Render dorme e derruba a conexão): refaz o fetch.
+    effect(() => {
+      if (this.tempoRealService.reconexao() > 0) {
+        this.recarregarMembrosEFichas();
+      }
+    });
+  }
+
+  /**
+   * (Re)carrega campanha, membros e fichas. `mostrarEsqueleto` liga o esqueleto só no primeiro
+   * carregamento; as ressincronizações ao vivo não devem piscar a tela inteira (ver
+   * `recarregarMembrosEFichas`, que atualiza só membros/fichas).
+   */
+  private carregar(mostrarEsqueleto: boolean): void {
+    if (mostrarEsqueleto) {
+      this.carregando.set(true);
+    }
     forkJoin({
       campanha: this.campanhaService.recuperarCampanha(this.id),
       membros: this.campanhaService.listarMembros(this.id),
+      fichas: this.fichaService.listarFichas(this.id),
     })
       .pipe(finalize(() => this.carregando.set(false)))
       .subscribe({
-        next: ({ campanha, membros }) => {
+        next: ({ campanha, membros, fichas }) => {
           this.campanha.set(campanha);
           this.membros.set(membros);
+          this.fichas.set(fichas);
           this.campanhaContextoService.definir({
             id: campanha.id,
             nome: campanha.nome,
@@ -105,7 +191,6 @@ export class CampanhaDetalhe {
           });
         },
       });
-    inject(DestroyRef).onDestroy(() => this.campanhaContextoService.limpar());
   }
 
   protected regenerarConvite(): void {
@@ -264,16 +349,26 @@ export class CampanhaDetalhe {
       .subscribe({
         next: () => {
           this.acaoMembro.set(null);
-          this.recarregarMembros();
+          this.recarregarMembrosEFichas();
         },
       });
   }
 
-  /** Recarrega a lista de membros (após transferir o mestre) para refletir os novos papéis. */
-  private recarregarMembros(): void {
-    this.campanhaService
-      .listarMembros(this.id)
-      .subscribe({ next: (membros) => this.membros.set(membros) });
+  /**
+   * Recarrega membros e fichas (após transferir o mestre, ou ao receber `ficha:criada`/
+   * `membro:entrou` em tempo real) para refletir novos papéis/fichas sem piscar a tela — só a
+   * `campanha` (nome/descrição/convite) fica de fora, ela não muda por esses eventos.
+   */
+  private recarregarMembrosEFichas(): void {
+    forkJoin({
+      membros: this.campanhaService.listarMembros(this.id),
+      fichas: this.fichaService.listarFichas(this.id),
+    }).subscribe({
+      next: ({ membros, fichas }) => {
+        this.membros.set(membros);
+        this.fichas.set(fichas);
+      },
+    });
   }
 
   /** Copia o código de convite para a área de transferência — puramente apresentação. */
@@ -286,5 +381,58 @@ export class CampanhaDetalhe {
       this.copiado.set(true);
       setTimeout(() => this.copiado.set(false), 1500);
     });
+  }
+
+  /** Fichas do membro (`usuarioId`) já enriquecidas para o mini-card — `[]` quando não há nenhuma. */
+  protected fichasDoMembro(usuarioId: number): readonly ItemFicha[] {
+    return this.fichasPorMembro().get(usuarioId) ?? [];
+  }
+
+  /** Expande/recolhe o disclosure "N fichas" do membro (só tem efeito visual no mobile — SCSS). */
+  protected alternarFichas(usuarioId: number): void {
+    this.fichasExpandidas.update((atual) => {
+      const proximo = new Set(atual);
+      if (proximo.has(usuarioId)) {
+        proximo.delete(usuarioId);
+      } else {
+        proximo.add(usuarioId);
+      }
+      return proximo;
+    });
+  }
+
+  /** Abre o assistente de criação de ficha (m3-16), agora disparado do detalhe (m2-16). */
+  protected abrirCriarFicha(): void {
+    this.dialogCriar.set(true);
+  }
+
+  /** Fecha o assistente de criação (Cancelar/✕) — inócuo enquanto uma criação está em voo. */
+  protected fecharCriarFicha(): void {
+    if (!this.criando()) {
+      this.dialogCriar.set(false);
+    }
+  }
+
+  /**
+   * Confirma o assistente: monta a ficha (`construirFichaInicial` — snapshot + bônus de
+   * arquétipo) e cria via `FichaService`. O backend valida a autoria/permissão (§14) e revalida
+   * forma/Maestria; um erro chega pelo `error-handler.interceptor`. Ao criar, navega direto para a
+   * ficha (edição no próprio lugar, sem tela de criação separada — m3-10).
+   */
+  protected criarFicha(opcoes: OpcoesFichaInicial): void {
+    if (this.criando()) {
+      return;
+    }
+    this.criando.set(true);
+    const ficha = construirFichaInicial(opcoes);
+    this.fichaService
+      .criarFicha({ campanhaId: this.id, nome: ficha.nome, dados: ficha.dados })
+      .pipe(finalize(() => this.criando.set(false)))
+      .subscribe({
+        next: (fichaCriada) => {
+          this.dialogCriar.set(false);
+          void this.router.navigate(['/painel', this.id, 'ficha', fichaCriada.id]);
+        },
+      });
   }
 }
