@@ -18,3 +18,6 @@ export * from './fragmento-tipo.enum';
 export * from './fragmento-modulo.enum';
 export * from './tipo-campanha-membro-papel.enum';
 export * from './tipo-ficha.enum';
+export * from './formacao-bonus.enum';
+export * from './formacao-parametro.enum';
+export * from './especialidade-efeito.enum';
