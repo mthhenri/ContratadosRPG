@@ -1,0 +1,108 @@
+import { describe, expect, it } from 'vitest';
+import type { FichaDerivadosDto, FichaFormacaoDto } from '../../dtos/ficha';
+import { FormacaoBonusEnum } from '../../enums';
+import { FORMACOES } from './formacoes.dados';
+import { aplicarFormacaoAosDerivados, listarEfeitosPendentes } from './formacoes';
+
+/**
+ * `aplicarFormacaoAosDerivados` conferida contra `docs/core/sistema-v4.1.0.md` — "⬦ Formação": as 5
+ * linhas com campo em `FichaDerivadosDto` aplicam o delta; as outras 16 são ignoradas sem quebrar.
+ */
+const BASE: FichaDerivadosDto = {
+  defesa: 14,
+  esquiva: 12,
+  bloqueio: 16,
+  deslocamento: 9,
+  proficiencia: 2,
+  danoCorpoACorpo: '1D3 [Físico]',
+  danoFurtivo: '1D6+1',
+  percepcao: 15,
+  inventarioMaximo: 20,
+  habilidadesPorTurno: 2,
+};
+
+function formacao(bonus: FormacaoBonusEnum, parametro: string | null = null): FichaFormacaoDto {
+  return { bonus, parametro, texto: FORMACOES[bonus].rotulo };
+}
+
+describe('FORMACOES', () => {
+  it('tem exatamente 21 entradas, distribuídas por grupo conforme o documento', () => {
+    const entradas = Object.values(FORMACOES);
+    expect(entradas).toHaveLength(21);
+    const porGrupo = entradas.reduce<Record<string, number>>((contagem, entrada) => {
+      contagem[entrada.grupo] = (contagem[entrada.grupo] ?? 0) + 1;
+      return contagem;
+    }, {});
+    expect(porGrupo).toEqual({ Combate: 5, Movimento: 2, Perícia: 4, Equipamento: 7, Logística: 3 });
+  });
+
+  it('só as linhas que exigem escolha do jogador declaram parametro (6 no total)', () => {
+    const comParametro = Object.values(FORMACOES).filter((entrada) => entrada.parametro !== null);
+    expect(comParametro).toHaveLength(6);
+  });
+});
+
+describe('aplicarFormacaoAosDerivados', () => {
+  it('aplica +1m de Deslocamento (DERIVADO)', () => {
+    const resultado = aplicarFormacaoAosDerivados(BASE, [formacao(FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO)]);
+    expect(resultado.deslocamento).toBe(10);
+  });
+
+  it('aplica +1 na base de Inventário (DERIVADO)', () => {
+    const resultado = aplicarFormacaoAosDerivados(BASE, [formacao(FormacaoBonusEnum.LOGISTICA_INVENTARIO_MAXIMO)]);
+    expect(resultado.inventarioMaximo).toBe(21);
+  });
+
+  it('aplica +1 de Esquiva ou Bloqueio conforme o parâmetro escolhido (DERIVADO_ESCOLHA)', () => {
+    const comEsquiva = aplicarFormacaoAosDerivados(BASE, [
+      formacao(FormacaoBonusEnum.COMBATE_ESQUIVA_OU_BLOQUEIO, 'Esquiva'),
+    ]);
+    expect(comEsquiva.esquiva).toBe(13);
+    expect(comEsquiva.bloqueio).toBe(16);
+
+    const comBloqueio = aplicarFormacaoAosDerivados(BASE, [
+      formacao(FormacaoBonusEnum.COMBATE_ESQUIVA_OU_BLOQUEIO, 'Bloqueio'),
+    ]);
+    expect(comBloqueio.esquiva).toBe(12);
+    expect(comBloqueio.bloqueio).toBe(17);
+  });
+
+  it('aplica +1 no dano de Corpo reusando somarDanoFixo (DANO_CORPO)', () => {
+    const resultado = aplicarFormacaoAosDerivados(BASE, [formacao(FormacaoBonusEnum.COMBATE_DANO_CORPO)]);
+    expect(resultado.danoCorpoACorpo).toBe('1D3+1 [Físico]');
+  });
+
+  it('aplica +1 dado de dano Furtivo reusando incrementarDanoFurtivo (DANO_FURTIVO_DADO)', () => {
+    const resultado = aplicarFormacaoAosDerivados(BASE, [formacao(FormacaoBonusEnum.COMBATE_DANO_FURTIVO_DADO)]);
+    expect(resultado.danoFurtivo).toBe('2D6+2');
+  });
+
+  it('ignora as 16 linhas pendentes sem quebrar', () => {
+    const pendentes = listarEfeitosPendentes(FORMACOES);
+    const resultado = aplicarFormacaoAosDerivados(BASE, pendentes.map((definicao) => formacao(definicao.codigo)));
+    expect(resultado).toEqual(BASE);
+  });
+
+  it('ignora bonus:null (custom autorizado pelo Mestre) sem quebrar', () => {
+    const custom: FichaFormacaoDto = { bonus: null, parametro: null, texto: '+1 dado em testes de Escalada' };
+    expect(aplicarFormacaoAosDerivados(BASE, [custom])).toEqual(BASE);
+  });
+
+  it('delta único: aplicar a partir da mesma base não empilha entre Origens diferentes', () => {
+    const comA = aplicarFormacaoAosDerivados(BASE, [formacao(FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO)]);
+    const comB = aplicarFormacaoAosDerivados(BASE, [formacao(FormacaoBonusEnum.LOGISTICA_INVENTARIO_MAXIMO)]);
+    expect(comA.deslocamento).toBe(10);
+    expect(comA.inventarioMaximo).toBe(20);
+    expect(comB.deslocamento).toBe(9);
+    expect(comB.inventarioMaximo).toBe(21);
+  });
+});
+
+describe('listarEfeitosPendentes', () => {
+  it('devolve exatamente as 16 linhas sem campo hoje', () => {
+    const pendentes = listarEfeitosPendentes(FORMACOES);
+    expect(pendentes).toHaveLength(16);
+    const alvosAplicaveis = ['DERIVADO', 'DERIVADO_ESCOLHA', 'DANO_CORPO', 'DANO_FURTIVO_DADO'];
+    expect(pendentes.every((definicao) => !alvosAplicaveis.includes(definicao.efeito.alvo))).toBe(true);
+  });
+});
