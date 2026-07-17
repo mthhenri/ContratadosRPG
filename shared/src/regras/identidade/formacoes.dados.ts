@@ -9,12 +9,12 @@ import type { FormacaoDefinicaoDto } from './identidade.dtos';
  *
  * **Cobertura real: 5 de 21.** Só as linhas com `efeito.alvo` em `DERIVADO`/`DERIVADO_ESCOLHA`/
  * `DANO_CORPO`/`DANO_FURTIVO_DADO` têm campo hoje em `FichaDerivadosDto` e são aplicadas por
- * `aplicarFormacaoAosDerivados`. As outras 16 (`ROLAGEM`/`RESISTENCIA`/`SOBRECARGA`/`INICIATIVA`/
+ * `aplicarFormacaoAosDerivados`. As outras 16 (`ROLAGEM`/`DURACAO_EFEITO`/`RESISTENCIA`/`SOBRECARGA`/`INICIATIVA`/
  * `DT_REPARO`) **não têm consumidor ainda** — o motor de rolagem só nasce na `m3-15` (backlog) e a
  * ficha não modela resistências/Sobrecarga/Iniciativa/DT de reparo.
  *
  * **Aviso à sessão futura — isto não é código morto.** Ao fim da `m3-23`, os alvos `ROLAGEM`,
- * `RESISTENCIA`, `SOBRECARGA`, `INICIATIVA` e `DT_REPARO` estão **corretos, testados e sem nenhum
+ * `DURACAO_EFEITO`, `RESISTENCIA`, `SOBRECARGA`, `INICIATIVA` e `DT_REPARO` estão **corretos, testados e sem nenhum
  * consumidor**. É deliberado (decisão do autor): quando os campos existirem, muda-se o
  * **aplicador**, não esta tabela. **Não apagar por "não usado".**
  */
@@ -147,7 +147,7 @@ export const FORMACOES: Readonly<Record<FormacaoBonusEnum, FormacaoDefinicaoDto>
     grupo: 'Equipamento',
     rotulo: '+1 turno extra de duração em itens com efeitos de status',
     parametro: null,
-    efeito: { alvo: 'ROLAGEM', modificador: 'DADO', valor: 1 },
+    efeito: { alvo: 'DURACAO_EFEITO', valor: 1 },
   },
   // ── Logística (3) ───────────────────────────────────────────────────────────
   [FormacaoBonusEnum.LOGISTICA_INVENTARIO_MAXIMO]: {
