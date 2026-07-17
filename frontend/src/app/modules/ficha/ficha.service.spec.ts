@@ -106,7 +106,20 @@ describe('FichaService', () => {
   it('lista as fichas da campanha pelo campanhaId', () => {
     const { servico, http } = criar();
     const fichas: FichaResumoDto[] = [
-      { id: 3, usuarioId: 7, nome: 'Kane', classe: ClasseEnum.COMBATENTE, nivel: 2 },
+      {
+        id: 3,
+        usuarioId: 7,
+        nome: 'Kane',
+        classe: ClasseEnum.COMBATENTE,
+        nivel: 2,
+        vidaAtual: 34,
+        vidaMaxima: 34,
+        energiaAtual: 18,
+        energiaMaxima: 18,
+        morrendo: false,
+        machucado: false,
+        inconsciente: false,
+      },
     ];
 
     let recebido: FichaResumoDto[] | undefined;

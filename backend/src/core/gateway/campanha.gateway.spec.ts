@@ -178,7 +178,12 @@ describe('CampanhaGateway', () => {
         campanhaId: 3,
         usuarioId: 10,
         nome: 'Agente Alfa',
-        dados: { classe: 'COMBATENTE', nivel: 1, segredo: 'não vaza' },
+        dados: {
+          classe: 'COMBATENTE',
+          nivel: 1,
+          segredo: 'não vaza',
+          estado: { vidaAtual: 34, vidaMaxima: 34, energiaAtual: 18, energiaMaxima: 18, morrendo: true },
+        },
       };
 
       gateway.emitirFichaCriada(ficha as never);
@@ -190,6 +195,13 @@ describe('CampanhaGateway', () => {
         nome: 'Agente Alfa',
         classe: 'COMBATENTE',
         nivel: 1,
+        vidaAtual: 34,
+        vidaMaxima: 34,
+        energiaAtual: 18,
+        energiaMaxima: 18,
+        morrendo: true,
+        machucado: false,
+        inconsciente: false,
       });
       // o payload emitido não carrega o `dados` completo da ficha
       const payloadEmitido = emitir.mock.calls[0][1] as Record<string, unknown>;

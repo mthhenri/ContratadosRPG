@@ -380,6 +380,28 @@
                 ></span>
               </div>
             </div>
+
+            <!-- Condições (m2-16b): Morrendo/Inconsciente/Machucado — alternadas manualmente, sem
+                 regra derivada de Vida/Energia (mesma filosofia de m3-10). -->
+            <div class="ficha-condicoes" role="group" aria-label="Condições">
+              @for (condicao of condicoesFicha; track condicao.chave) {
+                <button
+                  class="ficha-condicoes__item"
+                  [class.ficha-condicoes__item--ativa]="condicoes()[condicao.chave]"
+                  [class.ficha-condicoes__item--somente-leitura]="!ajustavel()"
+                  [attr.data-condicao]="condicao.chave"
+                  type="button"
+                  [disabled]="!ajustavel()"
+                  [attr.aria-pressed]="condicoes()[condicao.chave]"
+                  [attr.aria-label]="condicao.rotulo"
+                  [attr.title]="condicao.rotulo"
+                  (click)="alternarCondicao(condicao.chave)"
+                >
+                  <app-icone [nome]="condicao.icone" />
+                  <span>{{ condicao.rotulo }}</span>
+                </button>
+              }
+            </div>
           </section>
         </div>
 

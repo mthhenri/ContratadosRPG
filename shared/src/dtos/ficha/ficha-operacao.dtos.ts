@@ -57,6 +57,13 @@ export interface FichaListarDto {
  * Item de listagem — recorte enxuto da ficha, com os campos de jogo lidos do JSONB
  * (`dados->>'classe'`, `dados->>'nivel'` — §10.4). `usuarioId` é o dono, para o front distinguir
  * "minha ficha" das demais.
+ *
+ * Vida/Energia + as três condições rastreadas (`morrendo`/`machucado`/`inconsciente` —
+ * `sistema-v4.1.0.md`, "Condições") entraram para alimentar o mini-card de ficha embutido no
+ * detalhe da campanha (m2-16) sem precisar do documento completo — continua um recorte, não o
+ * `dados` inteiro (§14/§10.4: a listagem nunca expõe inventário/habilidades/sequelas de terceiros).
+ * `vidaMaxima`/`energiaMaxima` seguem opcionais (retrocompat de `FichaEstadoDto`, m3-10 — fichas
+ * sem snapshot); as três condições vêm sempre resolvidas (`false` quando ausentes no documento).
  */
 export interface FichaResumoDto {
   readonly id: number;
@@ -64,6 +71,13 @@ export interface FichaResumoDto {
   readonly nome: string;
   readonly classe: ClasseEnum;
   readonly nivel: number;
+  readonly vidaAtual: number;
+  readonly vidaMaxima?: number;
+  readonly energiaAtual: number;
+  readonly energiaMaxima?: number;
+  readonly morrendo: boolean;
+  readonly machucado: boolean;
+  readonly inconsciente: boolean;
 }
 
 /**

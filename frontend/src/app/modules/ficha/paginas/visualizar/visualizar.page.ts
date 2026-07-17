@@ -43,6 +43,7 @@ import { FichaService } from '../../ficha.service';
 import { lerParamRota } from '../../ler-param-rota';
 import { mesclarFicha } from '../../mesclar-ficha';
 import { normalizarEntrada, type EntradaAgente } from '../../status-derivado';
+import type { CondicoesFicha } from '../../condicoes-ficha';
 
 import {
   AbaFicha,
@@ -466,6 +467,21 @@ export class FichaVisualizar {
     }
 
     this.ficha.set({ ...fichaAtual, dados });
+    this.agendarPersistencia();
+  }
+
+  /**
+   * Alterna uma das três condições (Morrendo/Machucado/Inconsciente, m2-16b): reflete na hora
+   * (otimista) e agenda a persistência em lote. Sem cascata — as condições não recalculam nenhuma
+   * outra stat (documento: são refletidas manualmente, não derivadas de Vida/Energia).
+   */
+  protected ajustarCondicoes(condicoes: CondicoesFicha): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) {
+      return;
+    }
+    const estado = { ...fichaAtual.dados.estado, ...condicoes };
+    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, estado } });
     this.agendarPersistencia();
   }
 

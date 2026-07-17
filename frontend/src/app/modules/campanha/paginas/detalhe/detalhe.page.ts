@@ -10,7 +10,7 @@ import {
 } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 
-import { Icone } from '../../../../shared/icone/icone.component';
+import { Icone, type IconeNome } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
@@ -21,13 +21,24 @@ import { FichaService } from '../../../ficha/ficha.service';
 import { construirFichaInicial, type FichaAssistenteResultado } from '../../../ficha/ficha-padrao';
 import { FichaCriarDialog } from '../../../ficha/componentes/ficha-criar-dialog/ficha-criar-dialog.component';
 import { rotuloClasse } from '../../../ficha/rotulos-ficha';
+import { CONDICOES_FICHA } from '../../../ficha/condicoes-ficha';
 
-/** Ficha já enriquecida para o mini-card inline (m2-16): id/nome/classe legível/nível. */
+/**
+ * Ficha já enriquecida para o mini-card inline (m2-16 + m2-16b): id/nome/classe legível/nível +
+ * Vida/Energia e as condições ativas, direto do recorte `FichaResumoDto` (sem o documento
+ * completo — §14/§10.4, mesma listagem que já alimentava nome/classe/nível).
+ */
 interface ItemFicha {
   readonly id: number;
   readonly nome: string;
   readonly classeTexto: string;
   readonly nivel: number;
+  readonly vidaAtual: number;
+  readonly vidaMaxima?: number;
+  readonly energiaAtual: number;
+  readonly energiaMaxima?: number;
+  /** Condições ativas (subconjunto de `CONDICOES_FICHA`) — vazio quando nenhuma está marcada. */
+  readonly condicoesAtivas: readonly { readonly rotulo: string; readonly icone: IconeNome }[];
 }
 
 /**
@@ -120,7 +131,11 @@ export class CampanhaDetalhe {
     );
   });
 
-  /** Fichas visíveis agrupadas por dono (`usuarioId`), enriquecidas com o rótulo de classe. */
+  /**
+   * Fichas visíveis agrupadas por dono (`usuarioId`), enriquecidas com o rótulo de classe e as
+   * condições ativas (m2-16b) — o backend já resolve `morrendo`/`machucado`/`inconsciente` para
+   * `false` quando ausentes (`FichaResumoDto`), então aqui só filtra as marcadas.
+   */
   private readonly fichasPorMembro = computed<ReadonlyMap<number, readonly ItemFicha[]>>(() => {
     const mapa = new Map<number, ItemFicha[]>();
     for (const ficha of this.fichas()) {
@@ -129,6 +144,13 @@ export class CampanhaDetalhe {
         nome: ficha.nome,
         classeTexto: rotuloClasse(ficha.classe),
         nivel: ficha.nivel,
+        vidaAtual: ficha.vidaAtual,
+        vidaMaxima: ficha.vidaMaxima,
+        energiaAtual: ficha.energiaAtual,
+        energiaMaxima: ficha.energiaMaxima,
+        condicoesAtivas: CONDICOES_FICHA.filter((condicao) => ficha[condicao.chave]).map(
+          (condicao) => ({ rotulo: condicao.rotulo, icone: condicao.icone }),
+        ),
       };
       const listaDoDono = mapa.get(ficha.usuarioId);
       if (listaDoDono) {

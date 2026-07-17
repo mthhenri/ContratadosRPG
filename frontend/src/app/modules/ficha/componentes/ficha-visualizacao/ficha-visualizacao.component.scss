@@ -746,6 +746,76 @@
   }
 }
 
+// Barra de condições (m2-16b — Morrendo/Inconsciente/Machucado, sistema-v4.1.0.md "Condições").
+// Botões-chip: inativa é neutra (--surface-2), ativa ganha a cor semântica da condição via
+// [data-condicao] (só tokens do tema — proibição #29). Sem cor própria para "Inconsciente": não
+// há token semântico que caiba (--vida é saúde crítica, --warning é aviso/machucado), então fica
+// neutro/realçado só por contorno + preenchimento, diferenciado pelo ícone.
+.ficha-condicoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+
+  &__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: var(--surface-2);
+    color: var(--text-dim);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+    app-icone {
+      font-size: 13px;
+    }
+
+    &:hover:not(:disabled) {
+      border-color: var(--accent-border);
+      color: var(--text);
+    }
+
+    &:disabled {
+      cursor: default;
+    }
+
+    // Somente leitura (sem `ajustavel`) e inativa: unidade decorativa, sem afundar o hover.
+    &--somente-leitura:not(&--ativa) {
+      opacity: 0.55;
+    }
+  }
+
+  &__item--ativa {
+    color: var(--text);
+    border-color: var(--border-strong);
+
+    &[data-condicao='morrendo'] {
+      color: var(--vida);
+      background: color-mix(in srgb, var(--vida) 12%, transparent);
+      border-color: var(--vida-border);
+    }
+
+    &[data-condicao='machucado'] {
+      color: var(--warning);
+      background: color-mix(in srgb, var(--warning) 12%, transparent);
+      border-color: color-mix(in srgb, var(--warning) 40%, transparent);
+    }
+
+    &[data-condicao='inconsciente'] {
+      background: var(--surface);
+      border-color: var(--text-dim);
+    }
+  }
+}
+
 // Passo − / + de ajuste rápido de Vida/Energia na leitura (dono/mestre), sem entrar em edição.
 // Segue o padrão de stepper do tema: quadradinho mono, borda de controle, hover no accent.
 .ficha-passo {

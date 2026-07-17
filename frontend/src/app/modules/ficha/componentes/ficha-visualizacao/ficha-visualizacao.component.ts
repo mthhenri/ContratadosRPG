@@ -40,6 +40,7 @@ import { FichaInventario } from '../ficha-inventario/ficha-inventario.component'
 import { FichaRolagens } from '../ficha-rolagens/ficha-rolagens.component';
 import { EstadoSanidade, FichaSanidade } from '../ficha-sanidade/ficha-sanidade.component';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
+import { CONDICOES_FICHA, type CondicoesFicha } from '../../condicoes-ficha';
 import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
 import {
   ChaveInfoExtra,
@@ -150,6 +151,7 @@ export interface AjusteClasse {
   readonly arquetipo: ArquetipoEnum | null;
 }
 
+
 /**
  * A **ficha** de jogador (m3-07/m3-10) — alvo de fidelidade `docs/design/examples/ficha-de-jogador.html`.
  * Edição no próprio lugar para dono/mestre (`ajustavel`), read-only para quem só tem acesso concedido.
@@ -204,6 +206,9 @@ export class FichaVisualizacao {
   /** Listas de Sanidade (sequelas/traumas/lesões) editadas — a página persiste em `estado` (m3-12). */
   readonly ajusteSanidade = output<EstadoSanidade>();
 
+  /** As três condições (Morrendo/Machucado/Inconsciente) alternadas — a página persiste em `estado`. */
+  readonly ajusteCondicoes = output<CondicoesFicha>();
+
   /** Lista de habilidades editada — a página persiste em `dados.habilidades` (m3-13). */
   readonly ajusteHabilidades = output<readonly FichaHabilidadeDto[]>();
 
@@ -222,6 +227,15 @@ export class FichaVisualizacao {
       campo: 'energiaAtual',
       valor: this.estado().energiaAtual - custo,
     });
+  }
+
+  /** Alterna uma condição (Morrendo/Machucado/Inconsciente) e emite o conjunto atualizado. */
+  protected alternarCondicao(chave: keyof CondicoesFicha): void {
+    if (!this.ajustavel()) {
+      return;
+    }
+    const condicoes = this.condicoes();
+    this.ajusteCondicoes.emit({ ...condicoes, [chave]: !condicoes[chave] });
   }
 
   /**
@@ -352,6 +366,16 @@ export class FichaVisualizacao {
 
   protected readonly atributos = computed(() => this.dados().atributos);
   protected readonly estado = computed(() => this.dados().estado);
+
+  /** Descritores das 3 condições, para o `@for` da barra de toggles. */
+  protected readonly condicoesFicha = CONDICOES_FICHA;
+
+  /** As três condições resolvidas (ausente no documento → `false`) — alimenta a barra de toggles. */
+  protected readonly condicoes = computed<CondicoesFicha>(() => ({
+    morrendo: this.estado().morrendo ?? false,
+    machucado: this.estado().machucado ?? false,
+    inconsciente: this.estado().inconsciente ?? false,
+  }));
 
   /**
    * Atributos **efetivos** = base − pontos de lesão (`shared/regras`, `sistema-v4.1.0.md` — "⬡ Lesões").

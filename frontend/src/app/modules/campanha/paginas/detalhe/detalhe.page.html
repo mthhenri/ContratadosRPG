@@ -205,8 +205,29 @@
                         class="detalhe__ficha-card"
                         [routerLink]="['/painel', campanhaAtual.id, 'ficha', ficha.id]"
                       >
-                        <span class="detalhe__ficha-nome">{{ ficha.nome }}</span>
+                        <div class="detalhe__ficha-topo">
+                          <span class="detalhe__ficha-nome">{{ ficha.nome }}</span>
+                          @if (ficha.condicoesAtivas.length) {
+                            <span class="detalhe__ficha-condicoes">
+                              @for (condicao of ficha.condicoesAtivas; track condicao.icone) {
+                                <app-icone
+                                  [nome]="condicao.icone"
+                                  [attr.aria-label]="condicao.rotulo"
+                                  [attr.title]="condicao.rotulo"
+                                />
+                              }
+                            </span>
+                          }
+                        </div>
                         <span class="detalhe__ficha-meta">{{ ficha.classeTexto }} · Nível {{ ficha.nivel }}</span>
+                        <div class="detalhe__ficha-vitais">
+                          <span class="detalhe__ficha-vital detalhe__ficha-vital--vida">
+                            Vida {{ ficha.vidaAtual }}/{{ ficha.vidaMaxima ?? '—' }}
+                          </span>
+                          <span class="detalhe__ficha-vital detalhe__ficha-vital--energia">
+                            Energia {{ ficha.energiaAtual }}/{{ ficha.energiaMaxima ?? '—' }}
+                          </span>
+                        </div>
                       </a>
                     </li>
                   }

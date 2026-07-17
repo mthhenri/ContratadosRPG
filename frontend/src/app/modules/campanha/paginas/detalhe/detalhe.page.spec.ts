@@ -266,9 +266,48 @@ describe('CampanhaDetalhe', () => {
   // m2-16 — fichas dos membros vivem inline no detalhe (a extinta FichaLista aposentada).
   describe('fichas inline (m2-16)', () => {
     const fichas: FichaResumoDto[] = [
-      { id: 3, usuarioId: 1, nome: 'Kane', classe: ClasseEnum.COMBATENTE, nivel: 2 },
-      { id: 4, usuarioId: 2, nome: 'Vera', classe: ClasseEnum.SUPORTE, nivel: 1 },
-      { id: 5, usuarioId: 2, nome: 'Zeta', classe: ClasseEnum.ESPECIALISTA, nivel: 3 },
+      {
+        id: 3,
+        usuarioId: 1,
+        nome: 'Kane',
+        classe: ClasseEnum.COMBATENTE,
+        nivel: 2,
+        vidaAtual: 0,
+        vidaMaxima: 49,
+        energiaAtual: 10,
+        energiaMaxima: 27,
+        morrendo: true,
+        machucado: false,
+        inconsciente: false,
+      },
+      {
+        id: 4,
+        usuarioId: 2,
+        nome: 'Vera',
+        classe: ClasseEnum.SUPORTE,
+        nivel: 1,
+        vidaAtual: 15,
+        vidaMaxima: 34,
+        energiaAtual: 18,
+        energiaMaxima: 18,
+        morrendo: false,
+        machucado: true,
+        inconsciente: false,
+      },
+      {
+        id: 5,
+        usuarioId: 2,
+        nome: 'Zeta',
+        classe: ClasseEnum.ESPECIALISTA,
+        nivel: 3,
+        vidaAtual: 40,
+        vidaMaxima: 40,
+        energiaAtual: 5,
+        energiaMaxima: 20,
+        morrendo: false,
+        machucado: false,
+        inconsciente: true,
+      },
     ];
 
     it('mostra as fichas de cada membro agrupadas sob a sua linha', () => {
@@ -293,6 +332,50 @@ describe('CampanhaDetalhe', () => {
       const blocos = raiz.querySelectorAll('.detalhe__membro');
       expect(blocos[0].querySelector('.detalhe__membro-fichas')).not.toBeNull();
       expect(blocos[1].querySelector('.detalhe__membro-fichas')).toBeNull();
+    });
+
+    it('mostra Vida/Energia e o ícone da condição ativa em cada mini-card (m2-16b)', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      const cartoes = raiz.querySelectorAll('.detalhe__ficha-card');
+      const [kane, vera, zeta] = Array.from(cartoes);
+
+      expect(kane.textContent).toContain('Vida 0/49');
+      expect(kane.textContent).toContain('Energia 10/27');
+      expect(kane.querySelector('.detalhe__ficha-condicoes [aria-label="Morrendo"]')).not.toBeNull();
+      expect(kane.querySelector('.detalhe__ficha-condicoes [aria-label="Machucado"]')).toBeNull();
+
+      expect(vera.textContent).toContain('Vida 15/34');
+      expect(vera.querySelector('.detalhe__ficha-condicoes [aria-label="Machucado"]')).not.toBeNull();
+
+      expect(zeta.textContent).toContain('Energia 5/20');
+      expect(zeta.querySelector('.detalhe__ficha-condicoes [aria-label="Inconsciente"]')).not.toBeNull();
+    });
+
+    it('omite a área de condições quando a ficha não tem nenhuma marcada', () => {
+      const { raiz } = montar({
+        usuarioId: 1,
+        membros: membrosDois(),
+        fichas: [
+          {
+            id: 8,
+            usuarioId: 1,
+            nome: 'Sem Condições',
+            classe: ClasseEnum.COMBATENTE,
+            nivel: 1,
+            vidaAtual: 20,
+            vidaMaxima: 20,
+            energiaAtual: 10,
+            energiaMaxima: 10,
+            morrendo: false,
+            machucado: false,
+            inconsciente: false,
+          },
+        ],
+      });
+
+      const cartao = raiz.querySelector('.detalhe__ficha-card')!;
+      expect(cartao.querySelector('.detalhe__ficha-condicoes')).toBeNull();
     });
 
     it('cada ficha liga à sua tela de visualização', () => {
@@ -366,7 +449,20 @@ describe('CampanhaDetalhe', () => {
       expect(fichaService.listarFichas).toHaveBeenCalledTimes(1);
       expect(campanhaService.listarMembros).toHaveBeenCalledTimes(1);
 
-      fichaCriada$.next({ id: 9, usuarioId: 2, nome: 'Nova', classe: ClasseEnum.COMBATENTE, nivel: 0 });
+      fichaCriada$.next({
+        id: 9,
+        usuarioId: 2,
+        nome: 'Nova',
+        classe: ClasseEnum.COMBATENTE,
+        nivel: 0,
+        vidaAtual: 20,
+        vidaMaxima: 20,
+        energiaAtual: 10,
+        energiaMaxima: 10,
+        morrendo: false,
+        machucado: false,
+        inconsciente: false,
+      });
       expect(fichaService.listarFichas).toHaveBeenCalledTimes(2);
       expect(campanhaService.listarMembros).toHaveBeenCalledTimes(2);
 

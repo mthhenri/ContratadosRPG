@@ -147,6 +147,13 @@ export class CampanhaGateway implements OnGatewayConnection {
       nome: ficha.nome,
       classe: ficha.dados.classe,
       nivel: ficha.dados.nivel,
+      vidaAtual: ficha.dados.estado.vidaAtual,
+      vidaMaxima: ficha.dados.estado.vidaMaxima,
+      energiaAtual: ficha.dados.estado.energiaAtual,
+      energiaMaxima: ficha.dados.estado.energiaMaxima,
+      morrendo: ficha.dados.estado.morrendo ?? false,
+      machucado: ficha.dados.estado.machucado ?? false,
+      inconsciente: ficha.dados.estado.inconsciente ?? false,
     };
     this.servidor.to(this.salaCampanha(ficha.campanhaId)).emit('ficha:criada', resumo);
   }

@@ -422,10 +422,12 @@
     }
   }
 
+  // m2-16b: virou cartão em coluna (era uma única linha nome+meta) — cabe o topo (nome +
+  // condições ativas), a meta (classe/nível) e a linha de vitais (Vida/Energia).
   &__ficha-card {
     display: flex;
-    align-items: baseline;
-    gap: 10px;
+    flex-direction: column;
+    gap: 3px;
     padding: 8px 12px;
     background: var(--surface);
     border: 1px solid var(--border);
@@ -439,17 +441,58 @@
     }
   }
 
+  &__ficha-topo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   &__ficha-nome {
+    flex: 1;
+    min-width: 0;
     font-family: var(--font-mono);
     font-size: 13px;
     font-weight: 700;
     color: var(--text);
   }
 
+  // Ícones das condições ativas (Morrendo/Machucado/Inconsciente) — só aparecem quando marcadas.
+  &__ficha-condicoes {
+    flex: none;
+    display: inline-flex;
+    gap: 4px;
+    color: var(--text-dim);
+
+    app-icone {
+      font-size: 13px;
+    }
+  }
+
   &__ficha-meta {
     font-family: var(--font-mono);
     font-size: 11px;
     color: var(--text-dim);
+  }
+
+  &__ficha-vitais {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+  }
+
+  &__ficha-vital {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-mute);
+
+    &--vida {
+      color: var(--vida);
+    }
+
+    &--energia {
+      color: var(--energy);
+    }
   }
 
   // Ações de gestão do mestre sobre um jogador (transferir mestre / remover) — botões-ícone

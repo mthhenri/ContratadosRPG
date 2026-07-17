@@ -72,14 +72,33 @@ export class FichaRepository extends BaseRepository {
   }
 
   /**
+   * Colunas do recorte `FichaResumoDto` (§10.4) — compartilhadas por `listarPorCampanha` e
+   * `listarVisiveisParaUsuario`, que só diferem no `WHERE`. Vida/Energia e as três condições
+   * (m2-16b — mini-card de ficha no detalhe da campanha) somam-se a `classe`/`nivel`, todas lidas
+   * do JSONB `dados`. As condições usam `COALESCE(..., false)`: ausentes no documento (fichas sem
+   * o campo, ou nunca marcadas) viram `false` explícito — o resumo nunca devolve `undefined` aqui,
+   * diferente de `FichaEstadoDto` (que é opcional por retrocompatibilidade do documento completo).
+   */
+  private colunasResumo(): string {
+    return `ficha.id, ficha.usuario_id AS "usuarioId", ficha.nome,
+              ficha.dados->>'classe' AS classe,
+              (ficha.dados->>'nivel')::int AS nivel,
+              (ficha.dados->'estado'->>'vidaAtual')::int AS "vidaAtual",
+              (ficha.dados->'estado'->>'vidaMaxima')::int AS "vidaMaxima",
+              (ficha.dados->'estado'->>'energiaAtual')::int AS "energiaAtual",
+              (ficha.dados->'estado'->>'energiaMaxima')::int AS "energiaMaxima",
+              COALESCE((ficha.dados->'estado'->>'morrendo')::boolean, false) AS morrendo,
+              COALESCE((ficha.dados->'estado'->>'machucado')::boolean, false) AS machucado,
+              COALESCE((ficha.dados->'estado'->>'inconsciente')::boolean, false) AS inconsciente`;
+  }
+
+  /**
    * Lista **todas** as fichas ativas de uma campanha (uso do mestre — §14). Recorte resumido: os
    * campos de jogo `classe`/`nivel` são lidos do JSONB (`dados->>'campo'`, §10.4). Ordena por nome.
    */
   async listarPorCampanha(dto: FichaListarDto): Promise<FichaResumoDto[]> {
     return this.executarConsulta<FichaResumoDto>(
-      `SELECT ficha.id, ficha.usuario_id AS "usuarioId", ficha.nome,
-              ficha.dados->>'classe' AS classe,
-              (ficha.dados->>'nivel')::int AS nivel
+      `SELECT ${this.colunasResumo()}
        FROM ficha
        WHERE ficha.campanha_id = :campanhaId AND ficha.is_deleted = false
        ORDER BY ficha.nome ASC`,
@@ -94,9 +113,7 @@ export class FichaRepository extends BaseRepository {
    */
   async listarVisiveisParaUsuario(dto: FichaVisiveisInternoListarDto): Promise<FichaResumoDto[]> {
     return this.executarConsulta<FichaResumoDto>(
-      `SELECT ficha.id, ficha.usuario_id AS "usuarioId", ficha.nome,
-              ficha.dados->>'classe' AS classe,
-              (ficha.dados->>'nivel')::int AS nivel
+      `SELECT ${this.colunasResumo()}
        FROM ficha
        WHERE ficha.campanha_id = :campanhaId AND ficha.is_deleted = false
          AND (

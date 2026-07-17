@@ -234,6 +234,32 @@ describe('FichaVisualizar', () => {
     }
   });
 
+  it('alterna condições otimista e persiste em lote, sem recalcular outra stat (m2-16b)', () => {
+    vi.useFakeTimers();
+    try {
+      const { fixture, fichaService } = montar({ usuarioLogadoId: 99 });
+      const componente = fixture.componentInstance;
+
+      componente['ajustarCondicoes']({ morrendo: true, machucado: false, inconsciente: false });
+
+      // Otimista: reflete na hora, sem esperar o backend.
+      expect(componente['ficha']()?.dados.estado.morrendo).toBe(true);
+      expect(fichaService.alterarFicha).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(500);
+
+      expect(fichaService.alterarFicha).toHaveBeenCalledTimes(1);
+      expect(fichaService.alterarFicha).toHaveBeenCalledWith(42, {
+        nome: 'Kane',
+        dados: {
+          ...dados,
+          estado: { ...dados.estado, morrendo: true, machucado: false, inconsciente: false },
+        },
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('edita a lista de habilidades otimista e persiste em lote (m3-13)', () => {
     vi.useFakeTimers();
     try {
