@@ -117,6 +117,16 @@
     }
   }
 
+  // Fórmula executada (m3-30): legenda mono discreta logo abaixo do rótulo.
+  &__formula {
+    display: block;
+    margin-top: 4px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-mute);
+    overflow-wrap: anywhere;
+  }
+
   &__corpo {
     display: flex;
     align-items: baseline;
@@ -130,18 +140,55 @@
     font-size: 44px;
     line-height: 1;
     color: var(--accent);
+    display: inline-flex;
+    flex-direction: column;
+    gap: 5px;
+
+    // Crítico (m3-30): brilho no número — destaque maior quando bate crítico ou dobra o dano.
+    &--critico {
+      text-shadow:
+        0 0 16px color-mix(in srgb, var(--accent) 80%, transparent),
+        0 0 5px color-mix(in srgb, var(--accent) 60%, transparent);
+    }
+  }
+
+  // Selo "crítico ×2" abaixo do total, na rolagem de crítico (dano dobrado).
+  &__critico-badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--accent);
+    text-shadow: none;
   }
 
   &__detalhe {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    flex: 1; // ocupa a largura restante da carta ao lado do total
+    min-width: 0; // permite os dados quebrarem em vez de estourar a carta
   }
 
   &__pool {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
+    gap: 5px 10px;
+  }
+
+  // Um termo de dado (m3-22): o rótulo NdM + os valores rolados em chips. Quebra em várias linhas
+  // quando há muitos dados (ex.: 6d6, 10d10 crítico) — antes estourava/cortava na borda da carta (m3-31).
+  &__dado-termo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     gap: 5px;
+  }
+  &__dado-nota {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-mute);
   }
 
   &__dado {
@@ -159,6 +206,23 @@
       border-color: var(--accent-border);
       background: var(--accent-dim);
     }
+
+    // Dado descartado pelo keep (kh/kl) — esmaecido e riscado (m3-29).
+    &--descartado {
+      opacity: 0.45;
+      text-decoration: line-through;
+    }
+  }
+
+  // Contagem de crítico (margem `cm`) de um termo (m3-29; realçada em m3-30 — maior + glow).
+  &__critico {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    text-shadow: 0 0 10px color-mix(in srgb, var(--accent) 70%, transparent);
   }
 
   &__legenda {

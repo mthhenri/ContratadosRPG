@@ -19,6 +19,19 @@ export const ABREVIACOES_ATRIBUTO: Readonly<Record<string, keyof FichaAtributosD
   VON: 'vontade',
 };
 
+/**
+ * Fontes escalares **extras** além dos 10 atributos (m3-22): a **Proficiência** (`PROF`) e o **Nível**
+ * (`NIV`) do agente, usáveis nas fórmulas exatamente como um atributo (modificador, fonte de dados ou
+ * escalada). Proficiência = Nível para não-Civis; Civil = 0 (`sistema-v4.1.0.md` — "Testes"). Conteúdo
+ * de jogo, sem tabela `tipo_*` (§10.3).
+ */
+export const ABREVIACOES_FONTE_EXTRA: Readonly<Record<string, 'proficiencia' | 'nivel'>> = {
+  PROF: 'proficiencia',
+  PROFICIENCIA: 'proficiencia',
+  NIV: 'nivel',
+  NIVEL: 'nivel',
+};
+
 /** Teto defensivo de dados por termo (evita fórmulas absurdas como `9999d6`). */
 export const QUANTIDADE_DADOS_MAXIMA = 100;
 

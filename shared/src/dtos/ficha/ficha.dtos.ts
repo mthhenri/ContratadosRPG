@@ -2,12 +2,10 @@ import type {
   ArquetipoEnum,
   ClasseEnum,
   HabilidadeCategoriaEnum,
-  RolagemModoEnum,
   RolagemPresetTipoEnum,
   SeveridadeLesaoEnum,
 } from '../../enums';
 import type { AmplificadorAplicadoDto, CarrinhoItemDto } from '../../regras/compras';
-import type { RolagemEfeitoDto } from '../../regras/rolagem';
 
 /**
  * Contrato tipado do documento JSONB `ficha.dados` para a **ficha de jogador**
@@ -136,11 +134,6 @@ export interface FichaHabilidadeDto {
    * sem o campo exibem só o rótulo da categoria.
    */
   readonly origem?: ClasseEnum | ArquetipoEnum;
-  /**
-   * Efeitos **mecânicos** (m3-20): quando a habilidade entra num preset de rolagem, estes efeitos
-   * são fundidos na fórmula (ex.: Força Bruta soma FOR × 3 ao dano). Ausente = só descrição (legado).
-   */
-  readonly efeitos?: readonly RolagemEfeitoDto[];
 }
 
 /**
@@ -216,10 +209,22 @@ export interface FichaDerivadosDto {
  */
 export interface FichaRolagemPassoDto {
   readonly nome: string;
+  /** Fórmula do passo — expressão de dados completa (m3-29; ex.: `LUTd20kh1 + PROF`, `2d8 [Físico]`). */
   readonly formula: string;
-  /** Modo do passo (m3-19). Ausente = `SOMA`. */
-  readonly modo?: RolagemModoEnum;
   readonly descricao?: string;
+  /**
+   * Nomes das **habilidades** da ficha usadas **neste passo** (m3-22; efeitos aposentados em m3-31): ao
+   * rolá-lo, debita a **Energia** de cada ocorrência. A lista é um **multiconjunto** — o mesmo nome pode
+   * repetir para aplicar a habilidade mais de uma vez (energia soma por ocorrência). As habilidades
+   * **não** alteram mais a fórmula: quem lê a descrição aplica o efeito na mão. Ausente = passo sem habilidade.
+   */
+  readonly habilidades?: readonly string[];
+  /**
+   * `true` marca o passo como **critável** (m3-30): a UI oferece um botão "Rolar crítico" além do
+   * "Rolar", e o crítico **dobra** o dano (dados, fixos e atributos da fórmula), exceto valores de
+   * Patente/Nível (`PROF`/`NIV`), conforme `sistema-v4.1.0` (1217/1303). Ausente = não.
+   */
+  readonly critico?: boolean;
 }
 
 /**
@@ -227,23 +232,26 @@ export interface FichaRolagemPassoDto {
  * fórmula (ex.: `1d20+LUT`); o motor de avaliação vive em `shared/regras/rolagem` (m3-15 —
  * `regras/dados` já é a pasta de dados/tabelas de jogo, por isso o motor mora em `regras/rolagem`).
  *
- * Retrocompatível: um preset legado `{ nome, formula, descricao? }` lê como `SIMPLES`/`SOMA`.
+ * A fórmula é uma expressão de dados completa (m3-29) — não há mais "modo"; um teste é `LUTd20kh1 + PROF`.
+ * Presets legados (`modo:'TESTE'`) migram na carga via `normalizarPresetLegado` (`shared/regras/rolagem`).
  */
 export interface FichaRolagemDto {
   readonly nome: string;
   readonly formula: string;
   readonly descricao?: string;
-  /** Modo da rolagem primária (m3-19). Ausente = `SOMA` (legado). */
-  readonly modo?: RolagemModoEnum;
   /** `SIMPLES` (uma rolagem) ou `ENCADEADO` (primária + `seguintes`). Ausente = `SIMPLES`. */
   readonly tipo?: RolagemPresetTipoEnum;
   /** Passos disparados após a primária, na ordem (m3-21). */
   readonly seguintes?: readonly FichaRolagemPassoDto[];
   /**
-   * Nomes das **habilidades** da própria ficha vinculadas ao preset (m3-21): ao usar, o preset gasta
-   * a Energia delas e **aplica os efeitos** (`efeitos`) nas fórmulas (ex.: Força Bruta soma FOR × 3).
+   * Nomes das **habilidades** da ficha usadas no **passo primário** (m3-21; por-passo em m3-22): ao
+   * rolá-lo, debita a Energia de cada ocorrência (multiconjunto — repetir o nome aplica a habilidade
+   * mais de uma vez). **Não** altera a fórmula (efeitos aposentados em m3-31). Cada passo seguinte tem o
+   * seu próprio `habilidades` (`FichaRolagemPassoDto`).
    */
   readonly habilidades?: readonly string[];
+  /** `true` marca o **passo primário** como critável (m3-30) — ver `FichaRolagemPassoDto.critico`. Ausente = não. */
+  readonly critico?: boolean;
 }
 
 /**

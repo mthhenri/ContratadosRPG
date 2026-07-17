@@ -1,6 +1,5 @@
 import { Injectable, signal } from '@angular/core';
 
-import type { RolagemModoEnum } from '@contratados-rpg/shared/enums';
 import type { ResultadoRolagemDto } from '@contratados-rpg/shared/regras/rolagem';
 
 /** Quantas rolagens recentes a bandeja mantém lado a lado (ex.: teste → dano → crítico de um preset). */
@@ -16,8 +15,9 @@ const FADE_MS = 400;
 export interface EntradaBandeja {
   readonly id: number;
   readonly rotulo: string;
+  /** Fórmula executada (texto), exibida como legenda mono (m3-30). Ausente quando quem rola não a informa. */
+  readonly formula?: string;
   readonly resultado: ResultadoRolagemDto;
-  readonly modo?: RolagemModoEnum;
   /** `true` na janela de fade antes de a entrada ser removida (auto-sumir). */
   readonly saindo: boolean;
 }
@@ -42,7 +42,11 @@ export class BandejaDadosService {
   readonly entradas = this._entradas.asReadonly();
 
   /** Mostra uma rolagem à direita da bandeja (as anteriores deslizam para a esquerda) e agenda o auto-sumir. */
-  mostrar(entrada: { readonly rotulo: string; readonly resultado: ResultadoRolagemDto; readonly modo?: RolagemModoEnum }): void {
+  mostrar(entrada: {
+    readonly rotulo: string;
+    readonly formula?: string;
+    readonly resultado: ResultadoRolagemDto;
+  }): void {
     this.contador += 1;
     const id = this.contador;
     const nova: EntradaBandeja = { id, saindo: false, ...entrada };

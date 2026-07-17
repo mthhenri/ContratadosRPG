@@ -22,6 +22,7 @@ import {
   obterBonusAtributos,
   type BonusAtributos,
 } from '@contratados-rpg/shared/regras/agente';
+import { normalizarPresetLegado } from '@contratados-rpg/shared/regras/rolagem';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type {
   FichaAcessoResumoDto,
@@ -168,8 +169,9 @@ export class FichaVisualizar {
       .pipe(finalize(() => this.carregando.set(false)))
       .subscribe({
         next: ({ ficha, membros }) => {
-          this.ficha.set(ficha);
-          this.fichaBase.set(ficha);
+          const normalizada = this.normalizarRolagens(ficha);
+          this.ficha.set(normalizada);
+          this.fichaBase.set(normalizada);
           this.membros.set(membros);
           if (this.podeGerenciar()) {
             this.carregarAcessos();
@@ -243,7 +245,8 @@ export class FichaVisualizar {
    * O `alterarFicha` debounced serializa o resultado — é isso que impede o `PUT` de sobrescrever a
    * edição concorrente de outro usuário (m3-17). Descartar o remoto, como se fazia antes, apagava-a.
    */
-  private absorverRemoto(remoto: FichaRecuperadaDto): void {
+  private absorverRemoto(remotoBruto: FichaRecuperadaDto): void {
+    const remoto = this.normalizarRolagens(remotoBruto);
     const base = this.fichaBase();
     const local = this.ficha();
 
@@ -251,6 +254,23 @@ export class FichaVisualizar {
       this.edicaoPendente() && base && local ? mesclarFicha(base, local, remoto) : remoto,
     );
     this.fichaBase.set(remoto);
+  }
+
+  /**
+   * Migra os presets de rolagem legados (m3-19 `modo:'TESTE'`) para a notação v3 (m3-29) na **carga** —
+   * o boundary onde o JSONB persistido entra. `normalizarPresetLegado` é puro e idempotente; aplicá-lo a
+   * todo documento vindo do servidor mantém `ficha`/`fichaBase` consistentes (o merge não vê falso diff)
+   * e persiste a fórmula nova no próximo save. Sem `rolagens`, devolve a ficha intacta.
+   */
+  private normalizarRolagens(ficha: FichaRecuperadaDto): FichaRecuperadaDto {
+    const rolagens = ficha.dados.rolagens;
+    if (!rolagens?.length) {
+      return ficha;
+    }
+    return {
+      ...ficha,
+      dados: { ...ficha.dados, rolagens: rolagens.map((preset) => normalizarPresetLegado(preset)) },
+    };
   }
 
   /** Marca uma edição local pendente e agenda a persistência em lote (debounced). */

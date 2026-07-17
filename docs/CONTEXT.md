@@ -1,6 +1,109 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-15 (**m3-13++ — refinamentos do seletor + confirmar remoção na Sanidade**:
+> Última atualização: 2026-07-16 (**aposentadoria da aplicação de efeitos de habilidade + habilidade
+> repetível por passo (m3-31)**: a **fusão automática de efeitos** na fórmula (m3-20) foi **removida** —
+> por decisão do dono, agregava complexidade com pouco retorno. Deletados: `aplicarEfeitos`/`alvoPadrao`,
+> o campo `efeitos` do catálogo + `HabilidadeBaseDto.efeitos` + `FichaHabilidadeDto.efeitos`, `RolagemEfeitoDto`,
+> os enums `RolagemEfeitoTipoEnum`/`RolagemEfeitoAlvoEnum` (+ barrel), o campo `bonusDados` de `TermoDadoDto`
+> e as extensões DANO_DADOS_ARMA/BONUS_TESTE ATRIBUTO. **O que fica:** a **marcação de habilidades por
+> passo** continua, mas agora **só conta Energia** — `resolverPreset` usa a fórmula **crua** e apenas soma
+> o custo. A lista `habilidades` virou **multiconjunto**: a **mesma habilidade pode ser aplicada N vezes**
+> num passo (energia soma por ocorrência). UI: o seletor por passo virou um **stepper `− N +`** por
+> habilidade; os chips de vínculo do preset agrupam em **"Nome ×N"**; a energia do passo reflete as
+> repetições. O tooltip da descrição (m3-30) fica ainda mais útil — o jogador lê e aplica o efeito na mão.
+> O **crítico mecânico** (m3-30) segue: dobra a **fórmula crua** (dados/fixos/atributos escritos, exceto
+> PROF/NIV). **Teste de atributo da Visão Geral:** passou a aplicar **`cm1`** (margem de crítico natural,
+> regra 1216) — `(Atributo)d20kh1cm1 + PROF`; e a legenda da bandeja ficou **honesta na desvantagem**
+> (atributo ≤ 0 → mostra `(2+|attr|)d20kl1cm1` = mantém o menor, em vez de exibir `kh1`). **Bandeja:** muitos
+> dados (6d6, crítico 10d10→20d10) não são mais cortados — o termo quebra em linhas e a coluna de detalhe
+> ocupa a largura restante. **Rolagem rápida:** campo livre no topo da aba Rolagens — digita uma fórmula e
+> rola na hora (bandeja), **sem salvar preset nem gastar energia**. **Testes:** shared **281** (removidos os
+> testes de fusão; +2 de multiconjunto de energia),
+> frontend **323** (stepper add/remove/contagem + serialização repetida; teste de atributo cm1 + legenda
+> honesta na desvantagem; rolagem rápida rola sem salvar). Verificado no stack real:
+> vínculo "Força Bruta ×2" com energia "− 8 E"; rolar o dano usa `2d8` cru (sem FOR×3 fundido); stepper
+> mostra a contagem por passo. Build/lint verdes.)
+>
+> (**crítico mecânico + polimento visual (m3-30)**: um passo de preset
+> pode ser marcado como **critável** (`critico` em `FichaRolagemDto`/`FichaRolagemPassoDto`). Na UI, o
+> passo critável ganha **dois botões — "Rolar" e "Rolar crítico"**; o crítico **dobra o dano** conforme
+> `sistema-v4.1.0` (1217/1303): dobra o **número de dados** (`2d8`→`4d8`, rolagem fresca), os **fixos** e
+> os **atributos** — **inclusive efeitos de habilidade** (Força Bruta `FOR×3`→`×6`) — **exceto** valores de
+> **Patente/Nível** (`PROF`/`NIV`), que se mantêm. Motor: `rolarInterpretada`/`rolarPasso` ganharam um
+> parâmetro `critico`; `rolarTermo` dobra a contagem de dados; `resolverPreset` carrega `critico` no
+> `PassoInterpretadoDto`; `ResultadoRolagemDto.critico` sinaliza a rolagem. `normalizarPresetLegado`
+> preserva o novo campo. **Bandeja**: realce de crítico **maior + glow** — o **total** brilha (crítico de
+> dano ou termo que bateu `cm`), selo **"crítico ×2"** na rolagem dobrada, e o indicador `◆` de margem
+> ficou maior com brilho. **Testes:** shared **301** (+5: dobra de dados/fixos/atributos, exceção
+> PROF/NIV, grupo tipado, `resolverPreset`/`rolarPasso` crítico), frontend **317** (+2: serialização de
+> `critico` + rolar crítico marca a entrada). Verificado no stack real (Playwright): passo critável mostra
+> os dois botões; "Rolar crítico" dobra o pool (`2D8`→`4D8`) e a Força Bruta (`FOR×3 18`→`36`), total com
+> glow e selo. Lint/build verdes.)
+>
+> (**duas extensões do modelo de efeitos (m3-20) — fecham duas lacunas**:
+> (1) **`BONUS_TESTE` variante `'ATRIBUTO'`** — soma `atributo × multiplicador` ao **resultado do teste**
+> (reusa os campos `atributo`/`multiplicador` do DTO; sem tipo de dano). Destrava **Atirador Calculista**
+> (Geral + melhorada do Mercenário: soma Pontaria ao ataque). (2) Novo tipo **`DANO_DADOS_ARMA`** —
+> `+N dados de dano iguais ao dado da arma`: `aplicarEfeitos` **espelha o maior dado de dano positivo** da
+> fórmula (mesmas faces + tipo/composto) N vezes; no-op se a fórmula não tem dado de dano. Destrava
+> **Queima-Roupa** (Geral + melhorada), **Técnica Aplicada**, **Manejo**, **Vingativo**, e completa
+> **Reforço Adrenalizado** (FIXO no teste + dado de dano) e **Especialista em Explosivos melhorada**
+> (ELEVAR + dado de dano) — antes fora por faces dependentes da arma. Enum `RolagemEfeitoTipoEnum` ganhou
+> `DANO_DADOS_ARMA`; `RolagemEfeitoDto.variante` ganhou `'ATRIBUTO'`. **Sem mudança de grammar/DTO de
+> rolagem** além disso, e **sem mudança de frontend** (os dados espelhados entram como termos normais da
+> fórmula, rolados/exibidos pela bandeja sem alteração). Continuam fora: contagem de dados **derivada de
+> atributo** (Fúria Controlada = Força÷2 dados) e "atributo do teste **ao dano**" (Berserk, atributo
+> ambíguo). **Testes:** shared **296** (+7: fusão + rolagem e2e conferidas — Atirador soma PON ao total,
+> Queima dobra os dados da arma no dano); build/lint verdes.)
+>
+> (**catálogo de habilidades — efeitos mecânicos (m3-20)**: passou-se um
+> lote de habilidades do sistema de "só descrição" para **efeito estruturado** (`efeitos` em
+> `habilidades-catalogo.dados.ts`), aproveitando a infra que já existia (só Força Bruta a usava). Modeladas
+> só as **contribuições aditivas limpas** que mapeiam para os 5 tipos de efeito: `+N dado(s)` /
+> `+N no resultado` (**`BONUS_TESTE`** `DADO`/`FIXO`), `Atributo × N no dano` (**`DANO_ATRIBUTO`**) e
+> `+1 tipo nos dados de dano` (**`ELEVAR_DADO`**). A **condição de gatilho não é codificada** (o jogador
+> vincula ao passo certo, como Força Bruta). Novos: **DANO_ATRIBUTO** — Pistoleiro (DES×3 Balístico),
+> Golpe Pesado (VIG×1), Golpe Frenético (LUT×2), Atacante Furtivo (DES×2, dano furtivo → Físico por
+> padrão); **BONUS_TESTE DADO** — Eclético, Charlatão, Investida Brutal, Passos Furtivos, Persistência,
+> Raciocínio Dedutivo, Na Base do Ódio, Duplamente Letal, Conhecimento Técnico, Hacker, Investigador Nato,
+> Perito, Linha de Frente, Mira de Elite, Acesso Privilegiado; **BONUS_TESTE FIXO** — Espólios de Guerra,
+> Prodígio Forense, Linguagem Corporal, Camuflagem Rápida, Olhos de Águia, Sombra, Socorrista, Barreira
+> Mental; **ELEVAR_DADO** — Especialista em Explosivos, Pugilista; e 4 **Gerais Melhoradas** que compõem
+> dado+fixo (Persistência/Lutador, Passos Furtivos/Assassino, Raciocínio Dedutivo/Acadêmico,
+> Charlatão/Diplomata). **Ficaram só na descrição** as que não mapeiam aos 5 tipos: magnitude que
+> escala/tem teto (Esforço Extra, Guerreiro de Rua, Porradeiro, Postura de Ataque…), escolha "A **ou** B"
+> (Observador Astuto, Planejamento Tático, Analisar Cenário melhorada…), troca de atributo (Artista
+> Marcial, Jogo de Corpo, Bacharel em Agressão…), buff em aliado (Marcar Alvo, Aura de Liderança, Ordem
+> Direta…), rerolagem (Segunda Chance, Mimado, Arrepio…), e tudo de cura/defesa/deslocamento/condição/
+> reação. (`+N dados de dano da arma` e `+atributo no teste` **saíram desta lista** — viraram
+> `DANO_DADOS_ARMA` e `BONUS_TESTE 'ATRIBUTO'` no bloco acima.) **Sem mudança de engine** — só dados contra
+> o contrato tipado existente. Fusão conferida em runtime: Pistoleiro → DES×3 Balístico no dano, Eclético →
+> `bonusDados:1` no pool; build/lint verdes.)
+>
+> (**m3-29 — Rolagem gramática v3: fim dos "modos"**: o
+> `RolagemModoEnum { SOMA | TESTE }` foi **aposentado** (enum deletado, campo `modo?` removido de
+> `FichaRolagemDto`/`FichaRolagemPassoDto`, `RolagemDto`, `PassoInterpretadoDto`). Um **teste deixa de
+> somar Proficiência por baixo dos panos**: a fórmula agora especifica tudo — um teste é a expressão
+> explícita `LUTd20kh1 + PROF`. Novos **operadores por pool** no parser (`shared/regras/rolagem`):
+> **`kh`/`kl`** (manter maior/menor, padrão N=1), **`cm`** (margem de crítico — só **conta** os críticos,
+> sem efeito automático, por decisão do dono), **`!`** (explosão) e **`?`** (implosão) — estes dois
+> **não-canônicos** (não existem no `sistema-v4.1.0`; entram como operadores de ferramenta, com teto de
+> dados contra runaway). A **desvantagem de atributo zerado** (regra 270) sobrevive como propriedade
+> **intrínseca** de um pool de atributo (`ATRd20kh…` com atributo ≤ 0 → rola 2+|attr| dados, mantém o
+> menor) — sem reintroduzir "modo". `aplicarEfeitos` deixou de rotear por `modo` e passou a **inferir o
+> papel** da fórmula (com keep = teste; senão dano); `BONUS_TESTE DADO` agora infla `bonusDados` do termo
+> com keep (vantagem = pool maior). Nova função pura **`normalizarPresetLegado`** migra presets antigos
+> (`modo:'TESTE'`) para a notação nova na **carga** da ficha (`visualizar.page`), idempotente; o backend
+> segue guardando o JSONB opaco (**sem migração SQL** — nunca valida rolagem). Frontend: `ficha-visualizacao`
+> rola `${atributo}d20kh1 + PROF`; `ficha-rolagens` perdeu os toggles/badges de modo; `bandeja-dados`
+> mostra **mantidos/descartados/críticos/desvantagem** por termo (o ramo `teste` sumiu); `guia-formula`
+> documenta os operadores novos. `ResultadoTesteDto` e `teste?` removidos; `DadosRoladosDto` ganhou
+> `mantidos?/descartados?/criticos?/desvantagem?`, `TermoDadoDto` ganhou os operadores. **Testes:** shared
+> **282** (rolagem 74, era 38), frontend **311**, backend **88** — todos verdes; `lint` shared+frontend e
+> `tsc` backend limpos; build do frontend no budget. Spec `docs/specs/done/m3-29-rolagem-gramatica-v3.spec.md`.
+> **Verificação de render pendente** — validado por testes/build/lint. )
+>
+> (**m3-13++ — refinamentos do seletor + confirmar remoção na Sanidade**:
 > no `FichaHabilidadeSeletor`, o **"＋" agora adiciona a habilidade direto na ficha** (o diálogo
 > **permanece aberto**) e a marca **"Na ficha ✕"** (o ✕ ali mesmo a remove) — dá para montar a lista
 > inteira sem fechar; as **gerais melhoradas** ganharam **selo** (não se misturam mais às do arquétipo);
@@ -1496,6 +1599,16 @@ verdes. Spec `m3-22` em `done/`. **Verificação de render pendente** — valida
 > **Milestone Rolagem v2 completo** (m3-16 gramática, m3-18 dano tipado, m3-19 teste, m3-20 efeitos,
 > m3-21 presets/runner, **m3-22 frontend**) — motor puro e testado + UI ligada. Falta só a verificação
 > ao vivo no navegador (skill `verify`).
+
+**Rolagem v2 — refinamentos pós-m3-22** (a pedido do autor): (1) **Proficiência (`PROF`) e Nível
+(`NIV`) como fontes de fórmula** — entram em qualquer fórmula igual a um atributo (`+PROF`, `PROFd6`,
+`NIV*2`, `NIV/2`); novo tipo `FonteEscalar` + `resolverFonte` no motor, `nivel` no `RolagemDto`/
+`rolarPasso`, guia e dicas atualizados. (2) **Bandeja mostra os dados rolados no modo SOMA** (chips por
+termo `2D6` + legenda dos modificadores), não só o total. (3) **Habilidade por passo** — cada ação
+escolhe quais habilidades aplica (`FichaRolagemPassoDto.habilidades`; a primária em
+`FichaRolagemDto.habilidades`); `resolverPreset` funde efeitos + reporta energia **por passo**
+(`PassoInterpretadoDto` ganhou `energiaGasta`/`energiaVariavel`/`habilidadesVinculadas`), e rolar um
+passo debita só a energia dele. Shared **260**, frontend **311**, lint/build AOT verdes.
 
 **Próxima task:** o backlog anterior, renumerado — **`m3-23`→`m3-25` (Identidade** — contrato/motor,
 backend imutabilidade, frontend), **`m3-09` (mobile)** e **`m3-26` (otimização de espaço** da ficha).

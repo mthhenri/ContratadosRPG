@@ -11,7 +11,7 @@ import {
   viewChild,
 } from '@angular/core';
 
-import { ArquetipoEnum, ClasseEnum, RolagemModoEnum } from '@contratados-rpg/shared/enums';
+import { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
 import type {
   FichaAtributosDto,
   FichaHabilidadeDto,
@@ -372,19 +372,28 @@ export class FichaVisualizacao {
   private readonly bandeja = inject(BandejaDadosService);
 
   /**
-   * Rola o teste de um atributo direto da Visão Geral (m3-22): pool `(Atributo efetivo)`D20, pega o
-   * maior e soma a Proficiência; mostra na bandeja. Usa os atributos **efetivos** (pós-lesão) — a
-   * lesão reduz quantos D20 entram no pool, como o documento manda.
+   * Rola o teste de um atributo direto da Visão Geral (m3-22; gramática v3 m3-29; margem de crítico
+   * natural em m3-31): a fórmula explícita `(Atributo efetivo)d20kh1cm1 + PROF` — pool de D20, pega o
+   * maior, **conta a margem de crítico natural** (`cm1` = crita no 20; regra 1216) e soma a Proficiência.
+   * Usa os atributos **efetivos** (pós-lesão) — a lesão reduz quantos D20 entram no pool, e atributo
+   * 0/negativo vira desvantagem intrínseca do motor (rola 2+|attr| dados e mantém o menor; regra 270).
    */
   protected rolarTesteAtributo(campo: CampoAtributo): void {
+    const atributo = this.atributosEfetivos()[campo.chave];
+    // A fórmula que vai ao **motor** mantém `kh1` — é o gatilho da desvantagem intrínseca (atributo ≤ 0).
+    const formula = `${campo.chave}d20kh1cm1 + PROF`;
     const resultado = rolarFormula({
-      formula: `${campo.chave}d20`,
-      modo: RolagemModoEnum.TESTE,
+      formula,
       atributos: this.atributosEfetivos(),
       proficiencia: this.proficiencia(),
+      nivel: this.dados().nivel,
     });
     if (resultado) {
-      this.bandeja.mostrar({ rotulo: campo.nome, resultado, modo: RolagemModoEnum.TESTE });
+      // Legenda **honesta** (m3-31): em **desvantagem** (atributo ≤ 0) o motor rola `(2+|attr|)d20` e
+      // mantém o **menor** — então a fórmula exibida troca `kh1`→`kl1` e mostra a contagem real, em vez de
+      // exibir `kh1` (mantém o maior) numa rolagem que na verdade manteve o menor.
+      const formulaExibida = atributo <= 0 ? `${2 - atributo}d20kl1cm1 + PROF` : formula;
+      this.bandeja.mostrar({ rotulo: campo.nome, formula: formulaExibida, resultado });
     }
   }
 
