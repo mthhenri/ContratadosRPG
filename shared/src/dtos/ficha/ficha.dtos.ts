@@ -1,6 +1,8 @@
 import type {
   ArquetipoEnum,
   ClasseEnum,
+  EspecialidadeEfeitoEnum,
+  FormacaoBonusEnum,
   HabilidadeCategoriaEnum,
   RolagemModoEnum,
   RolagemPresetTipoEnum,
@@ -40,11 +42,11 @@ import type { RolagemEfeitoDto } from '../../regras/rolagem';
  * domínio que permanece na ficha é a **Maestria** (atributo com 6+; única).
  *
  * ── Escopo ───────────────────────────────────────────────────────────────────
- * Casamento 1:1 com o documento em **classe / atributos / maestria / estado /
+ * Casamento 1:1 com o documento em **classe / atributos / maestria / identidade / estado /
  * inventário** (+ arquétipo, nível, prestígio, habilidades, anotações). Ainda
- * **fora**: Identidade (Personalidade, Origem), Dinheiro e Peculiaridade de
- * Experimento — entram quando as tasks de ficha os exigirem. A **Maestria** entrou
- * no contrato em m3-10. Ver SCHEMA.md.
+ * **fora**: Dinheiro e Peculiaridade de Experimento — entram quando as tasks de ficha os
+ * exigirem. A **Maestria** entrou no contrato em m3-10; a **Identidade** (Personalidade,
+ * Origem) em m3-23. Ver SCHEMA.md.
  */
 
 /**
@@ -247,6 +249,55 @@ export interface FichaRolagemDto {
 }
 
 /**
+ * Uma linha de bônus de **Formação** já aplicada a um personagem (`docs/core/sistema-v4.1.0.md` —
+ * "⬦ Formação"). `bonus: null` **não é lacuna, é o escape do documento**: *"A lista apresentada não é
+ * definitiva. Bônus adicionais podem ser autorizados pelo Mestre."* — nesse caso só o `texto` livre
+ * existe. Quando `bonus` aponta para uma linha de `FormacaoBonusEnum`, `parametro` guarda a escolha
+ * livre que a linha exige (ex.: "Vigor", "Armas de Fogo", "Químico", "Esquiva") — `null` quando a
+ * linha não exige parâmetro. `texto` é sempre a fonte de exibição, independente do tipo do bônus.
+ */
+export interface FichaFormacaoDto {
+  readonly bonus: FormacaoBonusEnum | null;
+  readonly parametro: string | null;
+  readonly texto: string;
+}
+
+/**
+ * A **Especialidade** de um agente (`docs/core/sistema-v4.1.0.md` — "⬦ Especialidade"): um único
+ * bônus com gatilho circunstancial, sem custo de Energia. `efeito` não acumula com outras opções
+ * (regra do documento).
+ */
+export interface FichaEspecialidadeDto {
+  readonly gatilho: string;
+  readonly efeito: EspecialidadeEfeitoEnum;
+}
+
+/**
+ * A **Origem** de um agente (`docs/core/sistema-v4.1.0.md` — "⬦ Origem"): passado profissional antes
+ * da Fundação SCP, composto por Formação (exatamente 2 bônus), Especialidade e Saber de Campo.
+ * **Imutável após definida** (regra do documento) — a trava de imutabilidade é validada no backend
+ * (m3-24), não aqui.
+ */
+export interface FichaOrigemDto {
+  readonly nome: string;
+  readonly descricao: string;
+  readonly formacao: readonly FichaFormacaoDto[];
+  readonly especialidade: FichaEspecialidadeDto;
+  readonly saberDeCampo: string;
+}
+
+/**
+ * A **Identidade** de um agente (`docs/core/sistema-v4.1.0.md` — "⬡ Identidade"): Personalidade
+ * (uma única palavra, um adjetivo — a habilidade correspondente vive em `habilidades[]` com
+ * `categoria: HabilidadeCategoriaEnum.PERSONALIDADE`) e Origem. **Imutável após definida** (regra do
+ * documento) — validado no backend (m3-24). Opcional — fichas anteriores a esta task (m3-23) não têm.
+ */
+export interface FichaIdentidadeDto {
+  readonly personalidade: string | null;
+  readonly origem: FichaOrigemDto | null;
+}
+
+/**
  * Documento completo `ficha.dados` de uma ficha de jogador — a forma final do
  * JSONB (m3-01, estendido em m3-10). Consumível por backend e frontend sem redefinição.
  */
@@ -281,6 +332,11 @@ export interface FichaJogadorDadosDto {
    * (distinto por atributo, tabela do documento) é exibição derivada, não persistido.
    */
   readonly maestria: keyof FichaAtributosDto | null;
+  /**
+   * Personalidade e Origem (m3-23). **Opcional** — ausente em fichas anteriores a esta task
+   * (fallback: sem Identidade definida). Ver `FichaIdentidadeDto`.
+   */
+  readonly identidade?: FichaIdentidadeDto;
   readonly estado: FichaEstadoDto;
   /**
    * Derivados persistidos (m3-10). **Opcional** por retrocompatibilidade — ausente em fichas
