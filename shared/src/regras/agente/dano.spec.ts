@@ -5,6 +5,7 @@ import {
   calcularDanoFurtivo,
   contarMarcosDanoFurtivo,
   incrementarDanoFurtivo,
+  somarDanoFixo,
 } from './dano';
 
 /**
@@ -78,5 +79,28 @@ describe('incrementarDanoFurtivo', () => {
 
   it('devolve a expressão intacta fora do formato esperado (fail-safe)', () => {
     expect(incrementarDanoFurtivo('4D6+7 [Físico]', 1)).toBe('4D6+7 [Físico]');
+  });
+});
+
+describe('somarDanoFixo', () => {
+  it('soma ao número quando não há dado', () => {
+    expect(somarDanoFixo('1 [Físico]', 1)).toBe('2 [Físico]');
+    expect(somarDanoFixo('0 [Físico]', 1)).toBe('1 [Físico]');
+  });
+
+  it('soma ao fixo existente quando há dado', () => {
+    expect(somarDanoFixo('4D6+7 [Físico]', 1)).toBe('4D6+8 [Físico]');
+  });
+
+  it('cria o fixo quando há dado mas nenhum fixo ainda', () => {
+    expect(somarDanoFixo('1D3 [Físico]', 1)).toBe('1D3+1 [Físico]');
+  });
+
+  it('é fail-safe no sentinela "0 Dano" (sem componente fixo/tipo)', () => {
+    expect(somarDanoFixo('0 Dano', 1)).toBe('0 Dano');
+  });
+
+  it('é fail-safe fora do formato esperado', () => {
+    expect(somarDanoFixo('dano customizado', 1)).toBe('dano customizado');
   });
 });

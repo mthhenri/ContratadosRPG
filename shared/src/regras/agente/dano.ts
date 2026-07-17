@@ -32,6 +32,34 @@ export function incrementarDanoFurtivo(expressao: string, incrementoMarcos: numb
   return fixo > 0 ? `${dados}D6+${fixo}` : `${dados}D6`;
 }
 
+/** Notação de dano com valor fixo `N[Dx[+M]] [Tipo]` — número inicial (puro ou nº de dados), dado opcional, fixo opcional somado ao dado, e o resto (tipo/sentinela) preservado intacto. */
+const PADRAO_DANO_FIXO = /^(\d+)(D\d+)?(?:\+(\d+))?(\s.*)?$/i;
+
+/**
+ * Soma `valor` ao componente **fixo** de uma expressão de dano (`danoCorpoACorpo`): incrementa o
+ * número quando a expressão não tem dado (`"1 [Físico]"` → `"2 [Físico]"`), ou o `+M` somado ao dado
+ * quando tem (`"1D3 [Físico]"` → `"1D3+1 [Físico]"`, `"4D6+7 [Físico]"` → `"4D6+8 [Físico]"`).
+ * Fail-safe fora do formato (ex.: o sentinela `"0 Dano"`, sem dado nem tipo) — devolve a expressão
+ * intacta, como `incrementarDanoFurtivo`. Nunca gera componente negativo (clamp em 0).
+ */
+export function somarDanoFixo(dano: string, valor: number): string {
+  const normalizado = dano.trim();
+  if (normalizado === '0 Dano') {
+    return dano;
+  }
+  const encontrado = PADRAO_DANO_FIXO.exec(normalizado);
+  if (!encontrado) {
+    return dano;
+  }
+  const [, numero, dado, fixo, resto = ''] = encontrado;
+  if (dado) {
+    const novoFixo = Math.max(Number(fixo ?? 0) + valor, 0);
+    return `${numero}${dado}${novoFixo > 0 ? `+${novoFixo}` : ''}${resto}`;
+  }
+  const novoNumero = Math.max(Number(numero) + valor, 0);
+  return `${novoNumero}${resto}`;
+}
+
 /**
  * Expressão de dano de Corpo (dado + tipo). A saída é uma notação de dado pronta
  * para exibição — os consumidores (calculadora, ficha) apenas a mostram.
