@@ -44,10 +44,11 @@ import { FichaRepository } from './ficha.repository';
  * `CampanhaRepository` (módulo dono de `campanha_membro`), reusado sem duplicar a regra.
  *
  * Escopo m3-03: a ficha criada aqui é sempre do tipo `JOGADOR`, com dono = usuário autenticado
- * (`@ActiveUser().sub`). A concessão de visualização a outro membro (`usuario_ficha_acesso`) é
- * criada em m3-04; aqui só se **lê** essa concessão para arbitrar a visualização. A criação e a
- * alteração emitem, após persistir, `ficha:criada`/`ficha:alterada` pelo `CampanhaGateway`
- * (broadcast-only — m3-05).
+ * (`@ActiveUser().sub`) por padrão — **o mestre pode informar outro dono** (§14: "criar ficha de
+ * jogador" é irrestrito para o mestre, só a própria para os demais). A concessão de visualização
+ * a outro membro (`usuario_ficha_acesso`) é criada em m3-04; aqui só se **lê** essa concessão
+ * para arbitrar a visualização. A criação e a alteração emitem, após persistir,
+ * `ficha:criada`/`ficha:alterada` pelo `CampanhaGateway` (broadcast-only — m3-05).
  */
 @Injectable()
 export class FichaService {
@@ -59,18 +60,36 @@ export class FichaService {
   ) {}
 
   /**
-   * Cria a ficha de jogador do usuário autenticado numa campanha de que ele é membro (§14). O
-   * documento de jogo é validado contra `shared/regras` antes de persistir; dados incoerentes →
-   * `BusinessException`. O usuário precisa ser membro da campanha (`UnauthorizedAccessException`
-   * caso contrário).
+   * Cria uma ficha de jogador numa campanha de que o autenticado é membro (§14). Sem `usuarioId`
+   * no `dto`, o dono é o próprio autenticado; **com** `usuarioId`, o dono é o membro indicado —
+   * só permitido se o autenticado for o **mestre** da campanha (matriz §14: "criar ficha de
+   * jogador" é irrestrito para o mestre, só a própria para os demais), e o alvo precisa ser
+   * membro (`validarMembroAlvo`, mesma checagem da concessão de acesso — m3-04). O documento de
+   * jogo é validado contra `shared/regras` antes de persistir; dados incoerentes →
+   * `BusinessException`.
    */
   async criarFicha(dto: FichaCriarDto, usuarioAtivo: JwtPayload): Promise<FichaCriadaDto> {
-    await this.validarMembro({ campanhaId: dto.campanhaId, usuarioId: usuarioAtivo.sub });
+    const membroAtivo = await this.campanhaRepositorio.recuperarMembro({
+      campanhaId: dto.campanhaId,
+      usuarioId: usuarioAtivo.sub,
+    });
+    if (!membroAtivo) {
+      throw new UnauthorizedAccessException();
+    }
+
+    const donoId = dto.usuarioId ?? usuarioAtivo.sub;
+    if (donoId !== usuarioAtivo.sub) {
+      if (membroAtivo.papel !== TipoCampanhaMembroPapelEnum.MESTRE) {
+        throw new UnauthorizedAccessException();
+      }
+      await this.validarMembroAlvo({ campanhaId: dto.campanhaId, usuarioId: donoId });
+    }
+
     this.validarDadosContraRegras(dto.dados);
 
     const fichaCriada = await this.fichaRepositorio.criarFicha({
       campanhaId: dto.campanhaId,
-      usuarioId: usuarioAtivo.sub,
+      usuarioId: donoId,
       tipo: TipoFichaEnum.JOGADOR,
       nome: dto.nome,
       dados: this.aplicarSnapshotDeMaximos(dto.dados),
@@ -283,17 +302,6 @@ export class FichaService {
       usuarioId: usuarioAtivo.sub,
     });
     if (membroEncontrado?.papel !== TipoCampanhaMembroPapelEnum.MESTRE) {
-      throw new UnauthorizedAccessException();
-    }
-  }
-
-  /**
-   * Garante que o usuário é membro da campanha (dono/mestre ou jogador) — do contrário lança
-   * `UnauthorizedAccessException`. Base da criação de ficha e da visualização (§14).
-   */
-  private async validarMembro(dto: { campanhaId: number; usuarioId: number }): Promise<void> {
-    const membroEncontrado = await this.campanhaRepositorio.recuperarMembro(dto);
-    if (!membroEncontrado) {
       throw new UnauthorizedAccessException();
     }
   }

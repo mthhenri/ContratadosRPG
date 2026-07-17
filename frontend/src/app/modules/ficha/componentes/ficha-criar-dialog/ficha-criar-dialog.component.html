@@ -12,6 +12,20 @@
       Informe os dados de registro do agente. Você poderá ajustar cada campo depois, na ficha.
     </p>
 
+    <!-- Dono (só mestre, §14) — a ficha é sempre a própria pra qualquer outro membro. -->
+    @if (podeEscolherDono()) {
+      <div class="criar__campo">
+        <label class="criar__rotulo" for="criar-dono">Ficha de</label>
+        <select id="criar-dono" class="criar__select" (change)="mudarDono($event)">
+          @for (membro of membros(); track membro.usuarioId) {
+            <option [value]="membro.usuarioId" [selected]="membro.usuarioId === donoEfetivo()">
+              {{ membro.nome }}{{ membro.usuarioId === usuarioAtivoId() ? ' (Você)' : '' }}
+            </option>
+          }
+        </select>
+      </div>
+    }
+
     <!-- Identidade: Codinome + Classe/Arquétipo -->
     <div class="criar__campo">
       <label class="criar__rotulo" for="criar-nome">Codinome</label>

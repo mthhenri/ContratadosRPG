@@ -13,20 +13,23 @@ import type { FichaJogadorDadosDto } from './ficha.dtos';
  * as listagens leem só um recorte (`dados->>'classe'`, `dados->>'nivel'`) — daí o
  * `FichaResumoDto` enxuto.
  *
- * O `usuarioId` do dono e a permissão nunca chegam pelo corpo da requisição: o dono
- * é o usuário autenticado (`@ActiveUser().sub`) e a matriz de permissões (§14) é
- * arbitrada pela service. A ficha criada aqui é sempre do tipo `JOGADOR` (criatura/NPC
- * é M4).
+ * O dono padrão e a permissão nunca chegam de graça pelo corpo da requisição: sem
+ * `usuarioId`, o dono é o usuário autenticado (`@ActiveUser().sub`); a matriz de
+ * permissões (§14) é arbitrada pela service. A ficha criada aqui é sempre do tipo
+ * `JOGADOR` (criatura/NPC é M4).
  */
 
 /**
- * Entrada de criação de ficha de jogador — o `dono` é o usuário autenticado
- * (`@ActiveUser().sub`, nunca no corpo); a ficha entra na `campanhaId` informada, com o tipo
- * `JOGADOR`. O `dados` é o documento de jogo completo (validado contra `shared/regras` na
- * service antes de persistir).
+ * Entrada de criação de ficha de jogador — a ficha entra na `campanhaId` informada, com o
+ * tipo `JOGADOR`. `usuarioId` é o dono; **omitido, é o usuário autenticado** (a própria ficha).
+ * Um `usuarioId` diferente do autenticado só é aceito se o autenticado for o **mestre** da
+ * campanha (§14 — "criar ficha de jogador": dono só a própria, mestre sem restrição) — do
+ * contrário a service recusa com `UnauthorizedAccessException`. O `dados` é o documento de
+ * jogo completo (validado contra `shared/regras` na service antes de persistir).
  */
 export interface FichaCriarDto {
   readonly campanhaId: number;
+  readonly usuarioId?: number;
   readonly nome: string;
   readonly dados: FichaJogadorDadosDto;
 }

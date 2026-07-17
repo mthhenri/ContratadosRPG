@@ -18,7 +18,7 @@ import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaContextoService } from '../../campanha-contexto.service';
 import { CampanhaService } from '../../campanha.service';
 import { FichaService } from '../../../ficha/ficha.service';
-import { construirFichaInicial, type OpcoesFichaInicial } from '../../../ficha/ficha-padrao';
+import { construirFichaInicial, type FichaAssistenteResultado } from '../../../ficha/ficha-padrao';
 import { FichaCriarDialog } from '../../../ficha/componentes/ficha-criar-dialog/ficha-criar-dialog.component';
 import { rotuloClasse } from '../../../ficha/rotulos-ficha';
 
@@ -108,9 +108,12 @@ export class CampanhaDetalhe {
     descricao: [''],
   });
 
+  /** `id` do usuário autenticado — exposto ao template para o seletor de dono do assistente. */
+  protected readonly usuarioAtivoId = computed(() => this.sessaoService.usuario()?.id ?? null);
+
   /** `true` quando o usuário autenticado é o `MESTRE` desta campanha (deriva dos membros). */
   protected readonly ehMestre = computed(() => {
-    const usuarioId = this.sessaoService.usuario()?.id;
+    const usuarioId = this.usuarioAtivoId();
     return this.membros().some(
       (membro) =>
         membro.usuarioId === usuarioId && membro.papel === TipoCampanhaMembroPapelEnum.MESTRE,
@@ -415,18 +418,26 @@ export class CampanhaDetalhe {
 
   /**
    * Confirma o assistente: monta a ficha (`construirFichaInicial` — snapshot + bônus de
-   * arquétipo) e cria via `FichaService`. O backend valida a autoria/permissão (§14) e revalida
-   * forma/Maestria; um erro chega pelo `error-handler.interceptor`. Ao criar, navega direto para a
-   * ficha (edição no próprio lugar, sem tela de criação separada — m3-10).
+   * arquétipo) e cria via `FichaService`. `usuarioId` só vem preenchido quando o mestre escolheu
+   * outro dono no seletor do assistente (§14 — jogador comum sempre cria a própria); o backend
+   * valida a autoria/permissão e revalida forma/Maestria, um erro chega pelo
+   * `error-handler.interceptor`. Ao criar, navega direto para a ficha (edição no próprio lugar,
+   * sem tela de criação separada — m3-10) — o mestre pode continuar preenchendo a ficha do jogador
+   * ali mesmo, já que edita qualquer ficha da campanha.
    */
-  protected criarFicha(opcoes: OpcoesFichaInicial): void {
+  protected criarFicha(resultado: FichaAssistenteResultado): void {
     if (this.criando()) {
       return;
     }
     this.criando.set(true);
-    const ficha = construirFichaInicial(opcoes);
+    const ficha = construirFichaInicial(resultado.opcoes);
     this.fichaService
-      .criarFicha({ campanhaId: this.id, nome: ficha.nome, dados: ficha.dados })
+      .criarFicha({
+        campanhaId: this.id,
+        usuarioId: resultado.usuarioId,
+        nome: ficha.nome,
+        dados: ficha.dados,
+      })
       .pipe(finalize(() => this.criando.set(false)))
       .subscribe({
         next: (fichaCriada) => {

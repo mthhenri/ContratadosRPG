@@ -284,6 +284,9 @@
 @if (dialogCriar()) {
   <app-ficha-criar-dialog
     [criando]="criando()"
+    [podeEscolherDono]="ehMestre()"
+    [membros]="membros()"
+    [usuarioAtivoId]="usuarioAtivoId()"
     (criar)="criarFicha($event)"
     (cancelar)="fecharCriarFicha()"
   />
