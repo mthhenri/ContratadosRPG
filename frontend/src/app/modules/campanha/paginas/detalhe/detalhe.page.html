@@ -1,6 +1,6 @@
 <section class="detalhe">
   @if (carregando()) {
-    <article class="card" role="status" aria-label="Carregando campanha">
+    <article class="card detalhe__esqueleto-card" role="status" aria-label="Carregando campanha">
       <div class="detalhe__esqueleto">
         <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
         <span class="esqueleto-bloco esqueleto-bloco--convite"></span>
@@ -9,7 +9,10 @@
       </div>
     </article>
   } @else if (campanha(); as campanhaAtual) {
-    <article class="card">
+    <div class="detalhe__grade">
+    <!-- Coluna lateral: identidade, descrição, convite e ações de mestre (m2-17 — era tudo um
+         único card em coluna de 680px; agora cada bloco ocupa seu espaço, mais denso). -->
+    <article class="card detalhe__identidade">
       <header class="card__cabecalho">
         <span class="card__indice">//</span>
         <h1 class="card__titulo">{{ campanhaAtual.nome }}</h1>
@@ -124,7 +127,11 @@
           </div>
         }
       }
+    </article>
 
+    <!-- Coluna principal: membros + fichas inline (m2-16) — o bloco mais denso, ganha o espaço
+         que sobra da grade. -->
+    <article class="card detalhe__equipe">
       <header class="detalhe__secao">
         <h2 class="detalhe__secao-titulo">Membros</h2>
         <span class="detalhe__secao-regua"></span>
@@ -271,6 +278,7 @@
         }
       </ul>
     </article>
+    </div>
   }
 
   <p class="detalhe__voltar">

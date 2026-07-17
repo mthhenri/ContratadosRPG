@@ -35,21 +35,24 @@
         Nenhuma campanha ainda. Crie uma nova ou entre em uma com o código de convite.
       </p>
     } @else {
-      <ul class="campanhas__lista">
+      <ul class="campanhas__lista" appOverflowFade>
         @for (campanha of campanhas(); track campanha.id) {
           <li class="campanhas__item">
-            <a class="campanhas__ligacao" [routerLink]="['/painel', campanha.id]">
-              <span class="campanhas__avatar" aria-hidden="true"></span>
-              <span class="campanhas__texto">
+            <a class="campanhas__cartao" [routerLink]="['/painel', campanha.id]">
+              <div class="campanhas__cartao-topo">
+                <span class="campanhas__avatar" aria-hidden="true"></span>
                 <span class="campanhas__nome">{{ campanha.nome }}</span>
-                @if (campanha.descricao) {
-                  <span class="campanhas__descricao">{{ campanha.descricao }}</span>
-                }
-              </span>
-              <span class="chip-papel">
-                <app-icone [nome]="campanha.papel === TipoCampanhaMembroPapelEnum.MESTRE ? 'coroa' : 'protecoes'" />
-                {{ campanha.papel }}
-              </span>
+              </div>
+              @if (campanha.descricao) {
+                <p class="campanhas__descricao">{{ campanha.descricao }}</p>
+              }
+              <div class="campanhas__cartao-rodape">
+                <span class="campanhas__cartao-regua"></span>
+                <span class="chip-papel">
+                  <app-icone [nome]="campanha.papel === TipoCampanhaMembroPapelEnum.MESTRE ? 'coroa' : 'protecoes'" />
+                  {{ campanha.papel }}
+                </span>
+              </div>
             </a>
           </li>
         }

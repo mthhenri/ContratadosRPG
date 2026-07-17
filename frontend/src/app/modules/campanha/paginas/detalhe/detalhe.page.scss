@@ -1,8 +1,24 @@
 @use 'tema/breakpoints' as bp;
 
 .detalhe {
-  max-width: 680px;
+  // m2-17: era uma coluna única de 680px — a grade abaixo separa identidade/convite (lateral) de
+  // membros+fichas (principal), mesma largura-alvo de 1160px da lista/ficha de jogador.
+  max-width: 1160px;
   margin: 0 auto;
+
+  // Duas colunas no desktop: identidade+convite (largura fixa, cresce só até o teto) e a equipe
+  // (o bloco mais denso, ganha o espaço que sobra). Empilha abaixo de 960px — colunas de ~340px
+  // ficariam espremidas antes da própria `bp.mobile`.
+  &__grade {
+    display: grid;
+    grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+    gap: var(--gap-grid);
+    align-items: start;
+
+    @media (max-width: 960px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
 
   // Esqueleto de carregamento — mimetiza título + caixa de convite + linhas de membro, evitando
   // o "flash" seco de texto "Carregando…" antes do conteúdo real.
@@ -10,6 +26,12 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+  }
+
+  // Card do esqueleto — largura da coluna lateral real (identidade), não a página inteira: o
+  // card carregado não vira uma faixa larga e vazia antes da grade de duas colunas assentar.
+  &__esqueleto-card {
+    max-width: 340px;
   }
 
   &__descricao {
@@ -45,8 +67,11 @@
 
   // Código de convite emoldurado como campo próprio (protótipo lobby): caixa --surface com
   // borda, o código em mono accent. Dá hierarquia de "credencial" em vez de texto solto.
+  // m2-17: a coluna de identidade agora é sempre estreita (340px, era 680px de página inteira) —
+  // `flex-basis: 100%` bota o código na sua própria linha em qualquer largura (era só no
+  // mobile), senão ele trunca com reticências antes mesmo de mostrar o código inteiro.
   &__codigo {
-    flex: 1;
+    flex: 1 1 100%;
     min-width: 0;
     padding: 8px 12px;
     background: var(--surface);
@@ -57,11 +82,7 @@
     font-weight: 700;
     letter-spacing: 0.08em;
     color: var(--accent);
-    // Nunca deixa o código vazar por cima dos botões vizinhos quando o rótulo do "Regenerar"
-    // cresce (Regenerar → Regenerando… → Regenerado) e aperta o espaço da linha (achado ao vivo).
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    text-align: center;
   }
 
   &__copiar {
@@ -529,13 +550,6 @@
 
   // Alvos de toque confortáveis (m1-15 / WCAG 2.5.5) nas ações do mestre e no link de voltar.
   @include bp.mobile {
-    // Código sempre na sua própria linha (flex-basis 100% força a quebra) — o rótulo do
-    // "Regenerar" muda de tamanho (Regenerar → Regenerando… → Regenerado) e, na mesma linha,
-    // apertava o código a ponto de vazar por cima do botão de copiar (achado ao vivo no mobile).
-    &__codigo {
-      flex: 1 1 100%;
-    }
-
     &__copiar {
       width: bp.$alvo-toque;
       height: bp.$alvo-toque;
