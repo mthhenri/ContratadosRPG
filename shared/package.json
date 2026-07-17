@@ -63,6 +63,10 @@
     "./regras/compras": {
       "types": "./dist/regras/compras/index.d.ts",
       "default": "./dist/regras/compras/index.js"
+    },
+    "./regras/identidade": {
+      "types": "./dist/regras/identidade/index.d.ts",
+      "default": "./dist/regras/identidade/index.js"
     }
   },
   "files": [
