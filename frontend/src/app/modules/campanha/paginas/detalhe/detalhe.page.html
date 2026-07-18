@@ -206,36 +206,74 @@
                 >
                   @for (ficha of fichasDoMembro(membro.usuarioId); track ficha.id) {
                     <li>
-                      <a
-                        class="detalhe__ficha-card"
-                        [class.detalhe__ficha-card--critico]="ficha.critico"
-                        [routerLink]="['/painel', campanhaAtual.id, 'ficha', ficha.id]"
-                      >
-                        <div class="detalhe__ficha-topo">
-                          <span class="detalhe__ficha-nome">{{ ficha.nome }}</span>
-                          <span class="detalhe__ficha-condicoes">
-                            @for (condicao of ficha.condicoes; track condicao.chave) {
-                              <app-icone
-                                [nome]="condicao.icone"
-                                class="detalhe__ficha-condicao"
-                                [class.detalhe__ficha-condicao--ativa]="condicao.ativa"
-                                [attr.data-condicao]="condicao.chave"
-                                [attr.aria-label]="condicao.rotulo + (condicao.ativa ? ' (ativa)' : ' (inativa)')"
-                                [attr.title]="condicao.rotulo"
-                              />
+                      <div class="detalhe__ficha-card" [class.detalhe__ficha-card--critico]="ficha.critico">
+                        <a
+                          class="detalhe__ficha-link"
+                          [routerLink]="['/painel', campanhaAtual.id, 'ficha', ficha.id]"
+                        >
+                          <div class="detalhe__ficha-topo">
+                            <span class="detalhe__ficha-nome">{{ ficha.nome }}</span>
+                            <span class="detalhe__ficha-condicoes">
+                              @for (condicao of ficha.condicoes; track condicao.chave) {
+                                <app-icone
+                                  [nome]="condicao.icone"
+                                  class="detalhe__ficha-condicao"
+                                  [class.detalhe__ficha-condicao--ativa]="condicao.ativa"
+                                  [attr.data-condicao]="condicao.chave"
+                                  [attr.aria-label]="condicao.rotulo + (condicao.ativa ? ' (ativa)' : ' (inativa)')"
+                                  [attr.title]="condicao.rotulo"
+                                />
+                              }
+                            </span>
+                          </div>
+                          <span class="detalhe__ficha-meta">{{ ficha.classeTexto }} · Nível {{ ficha.nivel }}</span>
+                        </a>
+                        <div class="detalhe__ficha-vitais">
+                          <span class="detalhe__ficha-vital detalhe__ficha-vital--vida">
+                            @if (podeAjustarFicha(membro.usuarioId)) {
+                              <button
+                                class="detalhe__ficha-passo"
+                                type="button"
+                                appHoldRepeat
+                                [attr.aria-label]="'Reduzir Vida de ' + ficha.nome"
+                                [disabled]="ficha.vidaAtual <= 0"
+                                (passo)="ajustarVitalidade(ficha, 'vidaAtual', -1)"
+                              >−</button>
+                            }
+                            <span>Vida {{ ficha.vidaAtual }}/{{ ficha.vidaMaxima ?? '—' }}</span>
+                            @if (podeAjustarFicha(membro.usuarioId)) {
+                              <button
+                                class="detalhe__ficha-passo"
+                                type="button"
+                                appHoldRepeat
+                                [attr.aria-label]="'Aumentar Vida de ' + ficha.nome"
+                                (passo)="ajustarVitalidade(ficha, 'vidaAtual', 1)"
+                              >+</button>
+                            }
+                          </span>
+                          <span class="detalhe__ficha-vital detalhe__ficha-vital--energia">
+                            @if (podeAjustarFicha(membro.usuarioId)) {
+                              <button
+                                class="detalhe__ficha-passo"
+                                type="button"
+                                appHoldRepeat
+                                [attr.aria-label]="'Reduzir Energia de ' + ficha.nome"
+                                (passo)="ajustarVitalidade(ficha, 'energiaAtual', -1)"
+                              >−</button>
+                            }
+                            <span>Energia {{ ficha.energiaAtual }}/{{ ficha.energiaMaxima ?? '—' }}</span>
+                            @if (podeAjustarFicha(membro.usuarioId)) {
+                              <button
+                                class="detalhe__ficha-passo"
+                                type="button"
+                                appHoldRepeat
+                                [attr.aria-label]="'Aumentar Energia de ' + ficha.nome"
+                                (passo)="ajustarVitalidade(ficha, 'energiaAtual', 1)"
+                              >+</button>
                             }
                           </span>
                         </div>
-                        <span class="detalhe__ficha-meta">{{ ficha.classeTexto }} · Nível {{ ficha.nivel }}</span>
-                        <div class="detalhe__ficha-vitais">
-                          <span class="detalhe__ficha-vital detalhe__ficha-vital--vida">
-                            Vida {{ ficha.vidaAtual }}/{{ ficha.vidaMaxima ?? '—' }}
-                          </span>
-                          <span class="detalhe__ficha-vital detalhe__ficha-vital--energia">
-                            Energia {{ ficha.energiaAtual }}/{{ ficha.energiaMaxima ?? '—' }}
-                          </span>
-                        </div>
-                      </a>
+                      </div>
                     </li>
                   }
                 </ul>

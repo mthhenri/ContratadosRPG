@@ -41,6 +41,7 @@ import { FichaRolagens } from '../ficha-rolagens/ficha-rolagens.component';
 import { EstadoSanidade, FichaSanidade } from '../ficha-sanidade/ficha-sanidade.component';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
 import { CONDICOES_FICHA, type CondicoesFicha } from '../../condicoes-ficha';
+import { clamparVitalidade, type CampoVitalidadeAtual } from '../../ajuste-vitalidade';
 import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
 import {
   ChaveInfoExtra,
@@ -111,9 +112,6 @@ const CHAVES_COMBATE: readonly ChaveInfoExtra[] = [
   'danoFurtivo',
   'habilidadesPorTurno',
 ];
-
-/** Campo de vitalidade atual (recebe passos − / + e digitação). */
-export type CampoVitalidadeAtual = 'vidaAtual' | 'energiaAtual';
 
 /** Campo de vitalidade editável na leitura — atual **e** máxima (a máxima é stored/editável, m3-10). */
 export type CampoVitalidade = CampoVitalidadeAtual | 'vidaMaxima' | 'energiaMaxima';
@@ -458,9 +456,7 @@ export class FichaVisualizacao {
    */
   protected ajustar(campo: CampoVitalidadeAtual, delta: number): void {
     const atual = this.estado()[campo];
-    // m3-10: a atual PODE exceder a máxima. Vida tem piso 0; Energia pode negativar (sem piso).
-    const bruto = atual + delta;
-    const valor = campo === 'vidaAtual' ? Math.max(0, bruto) : bruto;
+    const valor = clamparVitalidade(campo, atual, delta);
     if (valor !== atual) {
       this.ajusteVitalidade.emit({ campo, valor });
     }

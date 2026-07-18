@@ -58,6 +58,28 @@ describe('CampanhaDetalhe', () => {
     const fichaService = {
       listarFichas: vi.fn(() => of(opts.fichas ?? [])),
       criarFicha: vi.fn(() => of({ id: 42, campanhaId: CAMPANHA_ID, usuarioId: opts.usuarioId, nome: 'Novo agente' })),
+      recuperarFicha: vi.fn((id: number) => {
+        const ficha = (opts.fichas ?? []).find((item) => item.id === id);
+        return of({
+          id,
+          campanhaId: CAMPANHA_ID,
+          usuarioId: ficha?.usuarioId ?? 0,
+          nome: ficha?.nome ?? '',
+          dados: {
+            nivel: ficha?.nivel ?? 1,
+            classe: ficha?.classe ?? ClasseEnum.COMBATENTE,
+            estado: {
+              vidaAtual: ficha?.vidaAtual ?? 0,
+              vidaMaxima: ficha?.vidaMaxima,
+              energiaAtual: ficha?.energiaAtual ?? 0,
+              energiaMaxima: ficha?.energiaMaxima,
+            },
+          },
+        });
+      }),
+      alterarFicha: vi.fn((id: number, dto: { nome: string; dados: unknown }) =>
+        of({ id, campanhaId: CAMPANHA_ID, usuarioId: 0, nome: dto.nome, dados: dto.dados }),
+      ),
     };
     const contextoService = { definir: vi.fn(), limpar: vi.fn() };
     const sessaoService = { usuario: () => ({ id: opts.usuarioId, login: 'x', nome: 'x' }) };
@@ -448,7 +470,7 @@ describe('CampanhaDetalhe', () => {
     it('cada ficha liga à sua tela de visualização', () => {
       const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
 
-      const primeiraFichaLink = raiz.querySelector('.detalhe__ficha-card') as HTMLAnchorElement;
+      const primeiraFichaLink = raiz.querySelector('.detalhe__ficha-link') as HTMLAnchorElement;
       expect(primeiraFichaLink.getAttribute('href')).toBe(`/painel/${CAMPANHA_ID}/ficha/3`);
     });
 
@@ -628,6 +650,85 @@ describe('CampanhaDetalhe', () => {
           vi.advanceTimersByTime(11_000);
           fixture.detectChanges();
           expect(raiz.querySelector('.detalhe__secao-atualizado')?.textContent).toMatch(/Atualizado há \d+s/);
+        } finally {
+          vi.useRealTimers();
+        }
+      });
+    });
+
+    // m2-16g: ações rápidas de Vida/Energia direto no mini-card, sem abrir a ficha.
+    describe('ações rápidas de Vida/Energia no mini-card (m2-16g)', () => {
+      it('mostra os passos − / + só pra dono ou mestre — mestre vê em qualquer ficha', () => {
+        const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+        // Kane (dono: mestre), Vera e Zeta (dona: jogador) — o mestre ajusta as três.
+        expect(raiz.querySelector('[aria-label="Aumentar Vida de Kane"]')).not.toBeNull();
+        expect(raiz.querySelector('[aria-label="Aumentar Vida de Vera"]')).not.toBeNull();
+        expect(raiz.querySelector('[aria-label="Aumentar Vida de Zeta"]')).not.toBeNull();
+      });
+
+      it('jogador comum só vê os passos nas próprias fichas, nunca na do mestre', () => {
+        const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+
+        expect(raiz.querySelector('[aria-label="Aumentar Vida de Vera"]')).not.toBeNull();
+        expect(raiz.querySelector('[aria-label="Aumentar Vida de Zeta"]')).not.toBeNull();
+        expect(raiz.querySelector('[aria-label="Aumentar Vida de Kane"]')).toBeNull();
+      });
+
+      it('clique em + soma 1 na Vida na hora (otimista, sem esperar a rede)', () => {
+        const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+        const botaoMais = raiz.querySelector(
+          '[aria-label="Aumentar Vida de Vera"]',
+        ) as HTMLButtonElement;
+        botaoMais.dispatchEvent(new MouseEvent('pointerdown', { button: 0 }));
+        botaoMais.dispatchEvent(new MouseEvent('pointerup'));
+        fixture.detectChanges();
+
+        const cartaoVera = [...raiz.querySelectorAll('.detalhe__ficha-card')].find((cartao) =>
+          cartao.textContent?.includes('Vera'),
+        );
+        expect(cartaoVera?.textContent).toContain('Vida 16/34');
+      });
+
+      it('desabilita o passo de reduzir Vida quando a Vida já está em 0', () => {
+        const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+        const botaoMenos = raiz.querySelector(
+          '[aria-label="Reduzir Vida de Kane"]',
+        ) as HTMLButtonElement;
+        expect(botaoMenos.disabled).toBe(true);
+      });
+
+      it('agenda a persistência em lote: busca o documento completo e grava só depois do debounce', () => {
+        vi.useFakeTimers();
+        try {
+          const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+          const botaoMais = raiz.querySelector(
+            '[aria-label="Aumentar Vida de Vera"]',
+          ) as HTMLButtonElement;
+          botaoMais.dispatchEvent(new MouseEvent('pointerdown', { button: 0 }));
+        botaoMais.dispatchEvent(new MouseEvent('pointerup'));
+          fixture.detectChanges();
+          botaoMais.dispatchEvent(new MouseEvent('pointerdown', { button: 0 }));
+        botaoMais.dispatchEvent(new MouseEvent('pointerup'));
+          fixture.detectChanges();
+
+          vi.advanceTimersByTime(300);
+          expect(fichaService.alterarFicha).not.toHaveBeenCalled();
+
+          vi.advanceTimersByTime(300);
+          expect(fichaService.recuperarFicha).toHaveBeenCalledWith(4);
+          expect(fichaService.alterarFicha).toHaveBeenCalledTimes(1);
+          expect(fichaService.alterarFicha).toHaveBeenCalledWith(
+            4,
+            expect.objectContaining({
+              dados: expect.objectContaining({
+                estado: expect.objectContaining({ vidaAtual: 17 }),
+              }),
+            }),
+          );
         } finally {
           vi.useRealTimers();
         }

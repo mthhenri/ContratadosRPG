@@ -22,6 +22,9 @@ import { construirFichaInicial, type FichaAssistenteResultado } from '../../../f
 import { FichaCriarDialog } from '../../../ficha/componentes/ficha-criar-dialog/ficha-criar-dialog.component';
 import { rotuloClasse } from '../../../ficha/rotulos-ficha';
 import { CONDICOES_FICHA, type DescritorCondicao } from '../../../ficha/condicoes-ficha';
+import { clamparVitalidade, type CampoVitalidadeAtual } from '../../../ficha/ajuste-vitalidade';
+import { FichaVitalidadeRapidaService } from '../../../ficha/ficha-vitalidade-rapida.service';
+import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
 
 /** Uma das 3 condições no mini-card — sempre as 3, com `ativa` dizendo se está marcada (item 3). */
 interface ItemFichaCondicao extends DescritorCondicao {
@@ -66,13 +69,22 @@ interface ItemFicha {
  */
 @Component({
   selector: 'app-campanha-detalhe',
-  imports: [RouterLink, ReactiveFormsModule, Icone, OverflowFade, IndicadorTempoReal, FichaCriarDialog],
+  imports: [
+    RouterLink,
+    ReactiveFormsModule,
+    Icone,
+    OverflowFade,
+    IndicadorTempoReal,
+    FichaCriarDialog,
+    HoldRepeat,
+  ],
   templateUrl: './detalhe.page.html',
   styleUrl: './detalhe.page.scss',
 })
 export class CampanhaDetalhe {
   private readonly campanhaService = inject(CampanhaService);
   private readonly fichaService = inject(FichaService);
+  private readonly fichaVitalidadeRapidaService = inject(FichaVitalidadeRapidaService);
   private readonly sessaoService = inject(SessaoService);
   private readonly campanhaContextoService = inject(CampanhaContextoService);
   private readonly tempoRealService = inject(TempoRealService);
@@ -239,6 +251,13 @@ export class CampanhaDetalhe {
         this.recarregarMembrosEFichas();
       }
     });
+
+    // Ações rápidas de Vida/Energia no mini-card (m2-16g): o otimismo local já reflete o valor
+    // certo no sucesso (mesmo clamp que o `FichaVitalidadeRapidaService` persiste); só uma falha
+    // (403/400/rede) precisa de reconciliação — refaz o fetch e descarta o otimismo divergente.
+    this.fichaVitalidadeRapidaService.falhou$
+      .pipe(takeUntilDestroyed())
+      .subscribe({ next: () => this.recarregarMembrosEFichas() });
 
     // Relógio do "Atualizado há Xs" (item 9) — só recomputa o texto, nunca refaz fetch.
     const relogio = setInterval(() => this.agora.set(Date.now()), 5000);
@@ -503,6 +522,33 @@ export class CampanhaDetalhe {
    */
   protected podeAfirmarSemFichas(membro: CampanhaMembroResumoDto): boolean {
     return this.ehMestre() || membro.usuarioId === this.usuarioAtivoId();
+  }
+
+  /**
+   * `true` quando o usuário autenticado pode ajustar a Vida/Energia desta ficha na hora (m2-16g) —
+   * mesma regra de edição da própria ficha (§14): dono ou mestre, nunca outro membro com só
+   * visualização concedida.
+   */
+  protected podeAjustarFicha(usuarioIdDono: number): boolean {
+    return this.ehMestre() || usuarioIdDono === this.usuarioAtivoId();
+  }
+
+  /**
+   * Ajuste rápido de Vida/Energia direto no mini-card (m2-16g), sem abrir a ficha: aplica o mesmo
+   * clamp da leitura completa (`clamparVitalidade` — Vida com piso 0, Energia sem piso),
+   * atualiza o resumo local na hora (otimista) e agenda a persistência em lote no
+   * `FichaVitalidadeRapidaService` (que busca o documento completo só na hora de gravar).
+   */
+  protected ajustarVitalidade(ficha: ItemFicha, campo: CampoVitalidadeAtual, delta: number): void {
+    const atual = ficha[campo];
+    const valor = clamparVitalidade(campo, atual, delta);
+    if (valor === atual) {
+      return;
+    }
+    this.fichas.update((lista) =>
+      lista.map((item) => (item.id === ficha.id ? { ...item, [campo]: valor } : item)),
+    );
+    this.fichaVitalidadeRapidaService.ajustar(ficha.id, campo, valor);
   }
 
   /** Expande/recolhe o disclosure "N fichas" do membro (só tem efeito visual no mobile — SCSS). */
