@@ -291,6 +291,16 @@
     color: var(--text-mute);
   }
 
+  // "Atualizado há Xs" (item 9) — legenda discreta na própria linha, abaixo do cabeçalho da
+  // seção (flex-basis 100% força a quebra: título/régua/contagem/botão continuam numa só linha).
+  &__secao-atualizado {
+    flex-basis: 100%;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-mute);
+  }
+
   // Rolável quando a campanha acumula membros (cada linha ficou mais alta com as fichas
   // inline, m2-16) — fade topo/base só aparece de fato quando há corte (appOverflowFade).
   &__membros {
@@ -423,7 +433,7 @@
   }
 
   // m2-16b: virou cartão em coluna (era uma única linha nome+meta) — cabe o topo (nome +
-  // condições ativas), a meta (classe/nível) e a linha de vitais (Vida/Energia).
+  // condições), a meta (classe/nível) e a linha de vitais (Vida/Energia).
   &__ficha-card {
     display: flex;
     flex-direction: column;
@@ -438,6 +448,17 @@
     &:hover {
       background: var(--accent-dim);
       border-color: var(--border-strong);
+    }
+  }
+
+  // Vida ≤ 0 (item 4) — sinaliza mesmo sem "Morrendo" marcado ainda, tingido com o mesmo token
+  // fixo da stat Vida (não é uma cor nova). `color-mix` a partir do token, não hex solto (#29).
+  &__ficha-card--critico {
+    background: color-mix(in srgb, var(--vida) 8%, var(--surface));
+    border-color: var(--vida-border);
+
+    &:hover {
+      background: color-mix(in srgb, var(--vida) 14%, var(--surface));
     }
   }
 
@@ -456,15 +477,32 @@
     color: var(--text);
   }
 
-  // Ícones das condições ativas (Morrendo/Machucado/Inconsciente) — só aparecem quando marcadas.
+  // As 3 condições, sempre visíveis (item 3) — inativa esmaecida, ativa ganha cor semântica.
   &__ficha-condicoes {
     flex: none;
     display: inline-flex;
     gap: 4px;
-    color: var(--text-dim);
+  }
 
-    app-icone {
-      font-size: 13px;
+  &__ficha-condicao {
+    font-size: 13px;
+    color: var(--text-mute);
+    opacity: 0.35;
+  }
+
+  &__ficha-condicao--ativa {
+    opacity: 1;
+
+    &[data-condicao='morrendo'] {
+      color: var(--vida);
+    }
+
+    &[data-condicao='machucado'] {
+      color: var(--warning);
+    }
+
+    &[data-condicao='inconsciente'] {
+      color: var(--text);
     }
   }
 
@@ -472,6 +510,16 @@
     font-family: var(--font-mono);
     font-size: 11px;
     color: var(--text-dim);
+  }
+
+  // Estado vazio por membro (item 8) — só aparece quando a visão é autoritativa
+  // (`podeAfirmarSemFichas`: a própria linha, ou o mestre — nunca "adivinha" ausência alheia).
+  &__sem-fichas {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-style: italic;
+    color: var(--text-mute);
   }
 
   &__ficha-vitais {

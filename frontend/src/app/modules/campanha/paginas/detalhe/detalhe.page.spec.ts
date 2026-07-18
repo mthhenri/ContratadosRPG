@@ -62,17 +62,21 @@ describe('CampanhaDetalhe', () => {
     const contextoService = { definir: vi.fn(), limpar: vi.fn() };
     const sessaoService = { usuario: () => ({ id: opts.usuarioId, login: 'x', nome: 'x' }) };
 
-    // Stub do tempo real (m2-16, trazido da extinta FichaLista): `Subject`s controláveis para os
-    // eventos da sala e um Signal de reconexão.
+    // Stub do tempo real (m2-16, trazido da extinta FichaLista; +m2-16c item 1: `ficha:alterada`):
+    // `Subject`s controláveis para os eventos da sala e um Signal de reconexão.
     const fichaCriada$ = new Subject<FichaResumoDto>();
     const membroEntrou$ = new Subject<CampanhaMembroEntradaDto>();
+    const fichaAlterada$ = new Subject<unknown>();
     const reconexao = signal(0);
     const tempoRealService = {
       conectar: vi.fn(),
       entrarSalaCampanha: vi.fn(),
       sairSalaCampanha: vi.fn(),
+      entrarSalaFicha: vi.fn(),
+      sairSalaFicha: vi.fn(),
       fichaCriada$: fichaCriada$.asObservable(),
       membroEntrou$: membroEntrou$.asObservable(),
+      fichaAlterada$: fichaAlterada$.asObservable(),
       reconexao,
       conectado: signal(true),
     };
@@ -104,6 +108,7 @@ describe('CampanhaDetalhe', () => {
       tempoRealService,
       fichaCriada$,
       membroEntrou$,
+      fichaAlterada$,
       reconexao,
       navegar,
     };
@@ -334,7 +339,7 @@ describe('CampanhaDetalhe', () => {
       expect(blocos[1].querySelector('.detalhe__membro-fichas')).toBeNull();
     });
 
-    it('mostra Vida/Energia e o ícone da condição ativa em cada mini-card (m2-16b)', () => {
+    it('mostra Vida/Energia e a condição ativa em cada mini-card (m2-16b)', () => {
       const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
 
       const cartoes = raiz.querySelectorAll('.detalhe__ficha-card');
@@ -342,17 +347,17 @@ describe('CampanhaDetalhe', () => {
 
       expect(kane.textContent).toContain('Vida 0/49');
       expect(kane.textContent).toContain('Energia 10/27');
-      expect(kane.querySelector('.detalhe__ficha-condicoes [aria-label="Morrendo"]')).not.toBeNull();
-      expect(kane.querySelector('.detalhe__ficha-condicoes [aria-label="Machucado"]')).toBeNull();
+      expect(kane.querySelector('[data-condicao="morrendo"].detalhe__ficha-condicao--ativa')).not.toBeNull();
+      expect(kane.querySelector('[data-condicao="machucado"].detalhe__ficha-condicao--ativa')).toBeNull();
 
       expect(vera.textContent).toContain('Vida 15/34');
-      expect(vera.querySelector('.detalhe__ficha-condicoes [aria-label="Machucado"]')).not.toBeNull();
+      expect(vera.querySelector('[data-condicao="machucado"].detalhe__ficha-condicao--ativa')).not.toBeNull();
 
       expect(zeta.textContent).toContain('Energia 5/20');
-      expect(zeta.querySelector('.detalhe__ficha-condicoes [aria-label="Inconsciente"]')).not.toBeNull();
+      expect(zeta.querySelector('[data-condicao="inconsciente"].detalhe__ficha-condicao--ativa')).not.toBeNull();
     });
 
-    it('omite a área de condições quando a ficha não tem nenhuma marcada', () => {
+    it('sempre mostra as 3 condições, esmaecidas quando nenhuma está marcada (item 3)', () => {
       const { raiz } = montar({
         usuarioId: 1,
         membros: membrosDois(),
@@ -375,7 +380,42 @@ describe('CampanhaDetalhe', () => {
       });
 
       const cartao = raiz.querySelector('.detalhe__ficha-card')!;
-      expect(cartao.querySelector('.detalhe__ficha-condicoes')).toBeNull();
+      expect(cartao.querySelectorAll('.detalhe__ficha-condicao')).toHaveLength(3);
+      expect(cartao.querySelectorAll('.detalhe__ficha-condicao--ativa')).toHaveLength(0);
+    });
+
+    it('destaca o cartão quando a Vida está zerada/negativa, mesmo sem Morrendo marcado (item 4)', () => {
+      const { raiz } = montar({
+        usuarioId: 1,
+        membros: membrosDois(),
+        fichas: [
+          {
+            id: 9,
+            usuarioId: 1,
+            nome: 'No Chão',
+            classe: ClasseEnum.COMBATENTE,
+            nivel: 1,
+            vidaAtual: 0,
+            vidaMaxima: 20,
+            energiaAtual: 10,
+            energiaMaxima: 10,
+            morrendo: false,
+            machucado: false,
+            inconsciente: false,
+          },
+        ],
+      });
+
+      const cartao = raiz.querySelector('.detalhe__ficha-card')!;
+      expect(cartao.classList.contains('detalhe__ficha-card--critico')).toBe(true);
+    });
+
+    it('não destaca o cartão quando a Vida está positiva', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+      // Vera tem vidaAtual 15 (positiva) no fixture — não deve ganhar o destaque de crítico.
+      const cartoes = Array.from(raiz.querySelectorAll('.detalhe__ficha-card'));
+      const vera = cartoes.find((c) => c.textContent?.includes('Vida 15/34'));
+      expect(vera?.classList.contains('detalhe__ficha-card--critico')).toBe(false);
     });
 
     it('cada ficha liga à sua tela de visualização', () => {
@@ -479,6 +519,92 @@ describe('CampanhaDetalhe', () => {
       fixture.detectChanges();
 
       expect(fichaService.listarFichas).toHaveBeenCalledTimes(2);
+    });
+
+    // Item 1 — ficha:alterada propagado à tela de campanha.
+    describe('tempo real de ficha:alterada (item 1)', () => {
+      it('entra na sala ficha:<id> de cada ficha visível após o fetch', () => {
+        const { tempoRealService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+        expect(tempoRealService.entrarSalaFicha).toHaveBeenCalledWith(3);
+        expect(tempoRealService.entrarSalaFicha).toHaveBeenCalledWith(4);
+        expect(tempoRealService.entrarSalaFicha).toHaveBeenCalledWith(5);
+      });
+
+      it('sai de todas as salas de ficha ao destruir', () => {
+        const { fixture, tempoRealService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+        fixture.destroy();
+
+        expect(tempoRealService.sairSalaFicha).toHaveBeenCalledWith(3);
+        expect(tempoRealService.sairSalaFicha).toHaveBeenCalledWith(4);
+        expect(tempoRealService.sairSalaFicha).toHaveBeenCalledWith(5);
+      });
+
+      it('refaz o fetch ao receber ficha:alterada (Vida/Energia/condição mudou em outra aba)', () => {
+        const { fichaService, campanhaService, fichaAlterada$ } = montar({
+          usuarioId: 1,
+          membros: membrosDois(),
+          fichas,
+        });
+        expect(fichaService.listarFichas).toHaveBeenCalledTimes(1);
+
+        fichaAlterada$.next({ id: 3, campanhaId: CAMPANHA_ID, usuarioId: 1, nome: 'Kane', dados: {} });
+
+        expect(fichaService.listarFichas).toHaveBeenCalledTimes(2);
+        expect(campanhaService.listarMembros).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    // Item 8 — estado vazio por membro, só quando a visão é autoritativa.
+    describe('estado vazio por membro (item 8)', () => {
+      it('mostra "ainda sem ficha" na própria linha quando você não tem nenhuma', () => {
+        const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas: [] });
+
+        const blocoMestre = raiz.querySelectorAll('.detalhe__membro')[0];
+        expect(blocoMestre.querySelector('.detalhe__sem-fichas')?.textContent).toContain(
+          'Você ainda não tem uma ficha',
+        );
+      });
+
+      it('mestre vê "ainda sem ficha" também na linha de outro membro (visão autoritativa)', () => {
+        const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas: [] });
+
+        const blocoJogador = raiz.querySelectorAll('.detalhe__membro')[1];
+        expect(blocoJogador.querySelector('.detalhe__sem-fichas')?.textContent).toContain(
+          'Ainda sem ficha',
+        );
+      });
+
+      it('jogador comum NÃO afirma ausência na linha de outro membro (pode só estar oculta)', () => {
+        const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas: [] });
+
+        const blocoMestre = raiz.querySelectorAll('.detalhe__membro')[0];
+        expect(blocoMestre.querySelector('.detalhe__sem-fichas')).toBeNull();
+        // Mas a própria linha do jogador (a dele mesmo) continua autoritativa.
+        const blocoJogador = raiz.querySelectorAll('.detalhe__membro')[1];
+        expect(blocoJogador.querySelector('.detalhe__sem-fichas')).not.toBeNull();
+      });
+    });
+
+    // Item 9 — "Atualizado há Xs".
+    describe('legenda de frescor "Atualizado há Xs" (item 9)', () => {
+      it('mostra "Atualizado agora" logo após o primeiro fetch', () => {
+        const { raiz } = montar({ usuarioId: 1, membros: membrosDois() });
+        expect(raiz.querySelector('.detalhe__secao-atualizado')?.textContent).toBe('Atualizado agora');
+      });
+
+      it('avança pra segundos depois que o relógio interno tica', () => {
+        vi.useFakeTimers();
+        try {
+          const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois() });
+          vi.advanceTimersByTime(11_000);
+          fixture.detectChanges();
+          expect(raiz.querySelector('.detalhe__secao-atualizado')?.textContent).toMatch(/Atualizado há \d+s/);
+        } finally {
+          vi.useRealTimers();
+        }
+      });
     });
   });
 });

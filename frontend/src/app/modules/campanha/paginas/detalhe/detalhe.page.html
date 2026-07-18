@@ -145,6 +145,9 @@
           <app-icone nome="novo-agente" />
           {{ criando() ? 'Criando…' : 'Nova ficha' }}
         </button>
+        @if (textoAtualizacao(); as texto) {
+          <span class="detalhe__secao-atualizado">{{ texto }}</span>
+        }
       </header>
       <ul class="detalhe__membros" appOverflowFade>
         @for (membro of membros(); track membro.usuarioId) {
@@ -203,21 +206,23 @@
                     <li>
                       <a
                         class="detalhe__ficha-card"
+                        [class.detalhe__ficha-card--critico]="ficha.critico"
                         [routerLink]="['/painel', campanhaAtual.id, 'ficha', ficha.id]"
                       >
                         <div class="detalhe__ficha-topo">
                           <span class="detalhe__ficha-nome">{{ ficha.nome }}</span>
-                          @if (ficha.condicoesAtivas.length) {
-                            <span class="detalhe__ficha-condicoes">
-                              @for (condicao of ficha.condicoesAtivas; track condicao.icone) {
-                                <app-icone
-                                  [nome]="condicao.icone"
-                                  [attr.aria-label]="condicao.rotulo"
-                                  [attr.title]="condicao.rotulo"
-                                />
-                              }
-                            </span>
-                          }
+                          <span class="detalhe__ficha-condicoes">
+                            @for (condicao of ficha.condicoes; track condicao.chave) {
+                              <app-icone
+                                [nome]="condicao.icone"
+                                class="detalhe__ficha-condicao"
+                                [class.detalhe__ficha-condicao--ativa]="condicao.ativa"
+                                [attr.data-condicao]="condicao.chave"
+                                [attr.aria-label]="condicao.rotulo + (condicao.ativa ? ' (ativa)' : ' (inativa)')"
+                                [attr.title]="condicao.rotulo"
+                              />
+                            }
+                          </span>
                         </div>
                         <span class="detalhe__ficha-meta">{{ ficha.classeTexto }} · Nível {{ ficha.nivel }}</span>
                         <div class="detalhe__ficha-vitais">
@@ -233,6 +238,14 @@
                   }
                 </ul>
               </div>
+            } @else if (podeAfirmarSemFichas(membro)) {
+              <p class="detalhe__sem-fichas">
+                {{
+                  membro.usuarioId === usuarioAtivoId()
+                    ? 'Você ainda não tem uma ficha aqui.'
+                    : 'Ainda sem ficha.'
+                }}
+              </p>
             }
 
             @if (acaoMembro()?.usuarioId === membro.usuarioId) {

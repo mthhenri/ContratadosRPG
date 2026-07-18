@@ -10,7 +10,7 @@ import {
 } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 
-import { Icone, type IconeNome } from '../../../../shared/icone/icone.component';
+import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
@@ -21,12 +21,17 @@ import { FichaService } from '../../../ficha/ficha.service';
 import { construirFichaInicial, type FichaAssistenteResultado } from '../../../ficha/ficha-padrao';
 import { FichaCriarDialog } from '../../../ficha/componentes/ficha-criar-dialog/ficha-criar-dialog.component';
 import { rotuloClasse } from '../../../ficha/rotulos-ficha';
-import { CONDICOES_FICHA } from '../../../ficha/condicoes-ficha';
+import { CONDICOES_FICHA, type DescritorCondicao } from '../../../ficha/condicoes-ficha';
+
+/** Uma das 3 condições no mini-card — sempre as 3, com `ativa` dizendo se está marcada (item 3). */
+interface ItemFichaCondicao extends DescritorCondicao {
+  readonly ativa: boolean;
+}
 
 /**
  * Ficha já enriquecida para o mini-card inline (m2-16 + m2-16b): id/nome/classe legível/nível +
- * Vida/Energia e as condições ativas, direto do recorte `FichaResumoDto` (sem o documento
- * completo — §14/§10.4, mesma listagem que já alimentava nome/classe/nível).
+ * Vida/Energia e as três condições (sempre as 3, com `ativa`), direto do recorte `FichaResumoDto`
+ * (sem o documento completo — §14/§10.4, mesma listagem que já alimentava nome/classe/nível).
  */
 interface ItemFicha {
   readonly id: number;
@@ -37,8 +42,13 @@ interface ItemFicha {
   readonly vidaMaxima?: number;
   readonly energiaAtual: number;
   readonly energiaMaxima?: number;
-  /** Condições ativas (subconjunto de `CONDICOES_FICHA`) — vazio quando nenhuma está marcada. */
-  readonly condicoesAtivas: readonly { readonly rotulo: string; readonly icone: IconeNome }[];
+  readonly condicoes: readonly ItemFichaCondicao[];
+  /**
+   * Vida ≤ 0 (o próprio limiar documentado pra entrar em "Morrendo" — sistema-v4.1.0.md) —
+   * destaque visual no cartão mesmo que ninguém tenha marcado a condição ainda (item 4: sinaliza
+   * antes do dono/mestre lembrar de marcar o checkbox).
+   */
+  readonly critico: boolean;
 }
 
 /**
@@ -114,6 +124,39 @@ export class CampanhaDetalhe {
   /** Donos com o disclosure de fichas expandido no mobile (ignorado no desktop — sempre aberto). */
   protected readonly fichasExpandidas = signal<ReadonlySet<number>>(new Set());
 
+  /**
+   * Salas `ficha:<id>` já ingressadas (item 1 — tempo real de `ficha:alterada`) — uma por ficha
+   * hoje visível, sincronizada a cada fetch (`sincronizarSalasFicha`). O gateway já reusa a mesma
+   * checagem de visualização de `recuperarFicha` (§14) no `ficha:entrar`, então entrar na sala de
+   * uma ficha que a listagem já devolveu nunca é negado — sem duplicar permissão aqui.
+   */
+  private readonly salasFichaAtivas = new Set<number>();
+
+  /** Instante (epoch ms) do último fetch bem-sucedido — alimenta `textoAtualizacao` (item 9). */
+  private readonly ultimaAtualizacaoEm = signal<number | null>(null);
+  /** Relógio ticando a cada 5s só pra recomputar `textoAtualizacao` sem novo fetch. */
+  private readonly agora = signal(Date.now());
+
+  /** "Atualizado agora/há Xs/há X min" — `null` antes do primeiro fetch completar. */
+  protected readonly textoAtualizacao = computed<string | null>(() => {
+    const em = this.ultimaAtualizacaoEm();
+    if (em === null) {
+      return null;
+    }
+    const segundos = Math.max(0, Math.floor((this.agora() - em) / 1000));
+    if (segundos < 5) {
+      return 'Atualizado agora';
+    }
+    if (segundos < 60) {
+      return `Atualizado há ${segundos}s`;
+    }
+    const minutos = Math.floor(segundos / 60);
+    if (minutos < 60) {
+      return `Atualizado há ${minutos} min`;
+    }
+    return `Atualizado há ${Math.floor(minutos / 60)} h`;
+  });
+
   protected readonly formularioEdicao = this.formBuilder.nonNullable.group({
     nome: ['', [Validators.required]],
     descricao: [''],
@@ -133,8 +176,9 @@ export class CampanhaDetalhe {
 
   /**
    * Fichas visíveis agrupadas por dono (`usuarioId`), enriquecidas com o rótulo de classe e as
-   * condições ativas (m2-16b) — o backend já resolve `morrendo`/`machucado`/`inconsciente` para
-   * `false` quando ausentes (`FichaResumoDto`), então aqui só filtra as marcadas.
+   * três condições — sempre as 3, com `ativa` (item 3: mostra também as inativas, esmaecidas, em
+   * vez de sumir quando nada está marcado). O backend já resolve `morrendo`/`machucado`/
+   * `inconsciente` para `false` quando ausentes (`FichaResumoDto`).
    */
   private readonly fichasPorMembro = computed<ReadonlyMap<number, readonly ItemFicha[]>>(() => {
     const mapa = new Map<number, ItemFicha[]>();
@@ -148,9 +192,8 @@ export class CampanhaDetalhe {
         vidaMaxima: ficha.vidaMaxima,
         energiaAtual: ficha.energiaAtual,
         energiaMaxima: ficha.energiaMaxima,
-        condicoesAtivas: CONDICOES_FICHA.filter((condicao) => ficha[condicao.chave]).map(
-          (condicao) => ({ rotulo: condicao.rotulo, icone: condicao.icone }),
-        ),
+        condicoes: CONDICOES_FICHA.map((condicao) => ({ ...condicao, ativa: ficha[condicao.chave] })),
+        critico: ficha.vidaAtual <= 0,
       };
       const listaDoDono = mapa.get(ficha.usuarioId);
       if (listaDoDono) {
@@ -169,15 +212,24 @@ export class CampanhaDetalhe {
     // `campanha:<id>` para as fichas inline e novos membros atualizarem ao vivo. Uma ficha criada
     // ou um membro que entra refazem o fetch (membros + fichas) via REST — o recorte visível
     // (§14) continua **arbitrado pelo backend**, o front não duplica a regra a partir do payload
-    // do broadcast.
+    // do broadcast. **Item 1:** `ficha:alterada` também refaz o fetch — mas esse evento só chega
+    // a quem entrou na sala `ficha:<id>` da ficha alterada, daí `sincronizarSalasFicha` (chamada a
+    // cada fetch) manter o cliente inscrito em toda ficha hoje visível na tela.
     this.tempoRealService.conectar();
     this.tempoRealService.entrarSalaCampanha(this.id);
     this.destroyRef.onDestroy(() => {
       this.tempoRealService.sairSalaCampanha(this.id);
+      for (const fichaId of this.salasFichaAtivas) {
+        this.tempoRealService.sairSalaFicha(fichaId);
+      }
       this.campanhaContextoService.limpar();
     });
 
-    merge(this.tempoRealService.fichaCriada$, this.tempoRealService.membroEntrou$)
+    merge(
+      this.tempoRealService.fichaCriada$,
+      this.tempoRealService.membroEntrou$,
+      this.tempoRealService.fichaAlterada$,
+    )
       .pipe(takeUntilDestroyed())
       .subscribe({ next: () => this.recarregarMembrosEFichas() });
 
@@ -187,6 +239,31 @@ export class CampanhaDetalhe {
         this.recarregarMembrosEFichas();
       }
     });
+
+    // Relógio do "Atualizado há Xs" (item 9) — só recomputa o texto, nunca refaz fetch.
+    const relogio = setInterval(() => this.agora.set(Date.now()), 5000);
+    this.destroyRef.onDestroy(() => clearInterval(relogio));
+  }
+
+  /**
+   * Ingressa nas salas `ficha:<id>` das fichas hoje visíveis e sai das que deixaram de aparecer
+   * (dono removido, acesso revogado…) — mantém `ficha:alterada` chegando exatamente pro conjunto
+   * de fichas que a tela mostra agora, sem acumular salas de fichas antigas indefinidamente.
+   */
+  private sincronizarSalasFicha(fichas: readonly FichaResumoDto[]): void {
+    const idsAtuais = new Set(fichas.map((ficha) => ficha.id));
+    for (const id of idsAtuais) {
+      if (!this.salasFichaAtivas.has(id)) {
+        this.tempoRealService.entrarSalaFicha(id);
+        this.salasFichaAtivas.add(id);
+      }
+    }
+    for (const id of this.salasFichaAtivas) {
+      if (!idsAtuais.has(id)) {
+        this.tempoRealService.sairSalaFicha(id);
+        this.salasFichaAtivas.delete(id);
+      }
+    }
   }
 
   /**
@@ -209,6 +286,8 @@ export class CampanhaDetalhe {
           this.campanha.set(campanha);
           this.membros.set(membros);
           this.fichas.set(fichas);
+          this.sincronizarSalasFicha(fichas);
+          this.ultimaAtualizacaoEm.set(Date.now());
           this.campanhaContextoService.definir({
             id: campanha.id,
             nome: campanha.nome,
@@ -381,8 +460,9 @@ export class CampanhaDetalhe {
 
   /**
    * Recarrega membros e fichas (após transferir o mestre, ou ao receber `ficha:criada`/
-   * `membro:entrou` em tempo real) para refletir novos papéis/fichas sem piscar a tela — só a
-   * `campanha` (nome/descrição/convite) fica de fora, ela não muda por esses eventos.
+   * `ficha:alterada`/`membro:entrou` em tempo real) para refletir novos papéis/fichas/Vida-Energia-
+   * condições sem piscar a tela — só a `campanha` (nome/descrição/convite) fica de fora, ela não
+   * muda por esses eventos.
    */
   private recarregarMembrosEFichas(): void {
     forkJoin({
@@ -392,6 +472,8 @@ export class CampanhaDetalhe {
       next: ({ membros, fichas }) => {
         this.membros.set(membros);
         this.fichas.set(fichas);
+        this.sincronizarSalasFicha(fichas);
+        this.ultimaAtualizacaoEm.set(Date.now());
       },
     });
   }
@@ -411,6 +493,16 @@ export class CampanhaDetalhe {
   /** Fichas do membro (`usuarioId`) já enriquecidas para o mini-card — `[]` quando não há nenhuma. */
   protected fichasDoMembro(usuarioId: number): readonly ItemFicha[] {
     return this.fichasPorMembro().get(usuarioId) ?? [];
+  }
+
+  /**
+   * `true` quando dá pra afirmar com segurança que o membro **não tem** ficha nenhuma (item 8) —
+   * só quando a visão é autoritativa: a própria linha (você sempre vê as suas) ou o mestre (vê
+   * todas — §14). Pra um jogador olhando a linha de OUTRO jogador, "nenhuma visível" pode só
+   * significar "não compartilhada com você" — aí a UI fica muda, como já era.
+   */
+  protected podeAfirmarSemFichas(membro: CampanhaMembroResumoDto): boolean {
+    return this.ehMestre() || membro.usuarioId === this.usuarioAtivoId();
   }
 
   /** Expande/recolhe o disclosure "N fichas" do membro (só tem efeito visual no mobile — SCSS). */
