@@ -200,6 +200,8 @@
                 <ul
                   class="detalhe__fichas-lista"
                   [class.detalhe__fichas-lista--aberta]="fichasExpandidas().has(membro.usuarioId)"
+                  [class.detalhe__fichas-lista--grid-2]="totalFichas === 2"
+                  [class.detalhe__fichas-lista--grid-3]="totalFichas >= 3"
                   appOverflowFade
                 >
                   @for (ficha of fichasDoMembro(membro.usuarioId); track ficha.id) {

@@ -430,6 +430,20 @@
     &.overflow-fade--base {
       --fade-base: 16px;
     }
+
+    // Grid dinâmica pela quantidade de fichas do membro: 1 mantém a linha (flex column acima),
+    // 2 vira grid de 2 colunas, 3+ vira grid de 3 — só no desktop (mobile força 1 coluna abaixo).
+    &--grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+    }
+
+    &--grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: start;
+    }
   }
 
   // m2-16b: virou cartão em coluna (era uma única linha nome+meta) — cabe o topo (nome +
@@ -681,8 +695,15 @@
       display: none;
       padding-left: 0;
 
+      // Mobile sempre em 1 coluna — a grid de 2/3 colunas é só desktop (a lista já é
+      // disclosure aqui, não precisa competir por espaço horizontal).
       &--aberta {
         display: flex;
+      }
+
+      &--grid-2,
+      &--grid-3 {
+        grid-template-columns: none;
       }
     }
 

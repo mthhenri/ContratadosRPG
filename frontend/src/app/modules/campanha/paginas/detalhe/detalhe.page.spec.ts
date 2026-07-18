@@ -327,6 +327,33 @@ describe('CampanhaDetalhe', () => {
       expect(raiz.textContent).toContain('Suporte · Nível 1');
     });
 
+    it('vira grid dinâmica pela quantidade de fichas: 1 mantém a linha, 2 vira grid-2, 3+ vira grid-3', () => {
+      const { raiz } = montar({
+        usuarioId: 1,
+        membros: membrosDois(),
+        fichas: [...fichas, { ...fichas[2], id: 6, nome: 'Orin' }],
+      });
+
+      const listas = raiz.querySelectorAll('.detalhe__fichas-lista');
+      const listaMestre = listas[0]; // 1 ficha (Kane) — sem grid
+      const listaJogador = listas[1]; // 3 fichas (Vera, Zeta, Orin) — grid-3
+
+      expect(listaMestre.classList.contains('detalhe__fichas-lista--grid-2')).toBe(false);
+      expect(listaMestre.classList.contains('detalhe__fichas-lista--grid-3')).toBe(false);
+      expect(listaJogador.classList.contains('detalhe__fichas-lista--grid-2')).toBe(false);
+      expect(listaJogador.classList.contains('detalhe__fichas-lista--grid-3')).toBe(true);
+    });
+
+    it('mantém grid-2 quando o membro tem exatamente 2 fichas', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      const listas = raiz.querySelectorAll('.detalhe__fichas-lista');
+      const listaJogador = listas[1]; // Vera + Zeta
+
+      expect(listaJogador.classList.contains('detalhe__fichas-lista--grid-2')).toBe(true);
+      expect(listaJogador.classList.contains('detalhe__fichas-lista--grid-3')).toBe(false);
+    });
+
     it('não mostra o bloco de fichas para um membro sem nenhuma visível', () => {
       const { raiz } = montar({
         usuarioId: 1,
