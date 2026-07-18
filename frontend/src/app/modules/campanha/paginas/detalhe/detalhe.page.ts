@@ -36,8 +36,8 @@ interface ItemFichaCondicao extends DescritorCondicao {
  * Vida/Energia e as três condições (sempre as 3, com `ativa`), direto do recorte `FichaResumoDto`
  * (sem o documento completo — §14/§10.4, mesma listagem que já alimentava nome/classe/nível).
  * `classeTexto` já vem combinado via `rotuloClasseCompleto` ("Classe - Arquétipo" para as três
- * classes base, "Experimento - Bestial/Artificial/Híbrido" para a subclasse); só `CIVIL` (sem
- * arquétipo nem subclasse) mostra a classe sozinha.
+ * classes base, "Classe-base - Experimento Bestial/Artificial/Híbrido" para a subclasse — ela
+ * ainda é daquela classe-base); só `CIVIL` (sem classe-base nem arquétipo) mostra a classe sozinha.
  */
 interface ItemFicha {
   readonly id: number;
