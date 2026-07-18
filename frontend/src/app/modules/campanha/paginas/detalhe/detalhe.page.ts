@@ -20,7 +20,7 @@ import { CampanhaService } from '../../campanha.service';
 import { FichaService } from '../../../ficha/ficha.service';
 import { construirFichaInicial, type FichaAssistenteResultado } from '../../../ficha/ficha-padrao';
 import { FichaCriarDialog } from '../../../ficha/componentes/ficha-criar-dialog/ficha-criar-dialog.component';
-import { rotuloArquetipo, rotuloClasse } from '../../../ficha/rotulos-ficha';
+import { rotuloClasseCompleto } from '../../../ficha/rotulos-ficha';
 import { CONDICOES_FICHA, type DescritorCondicao } from '../../../ficha/condicoes-ficha';
 import { clamparVitalidade, type CampoVitalidadeAtual } from '../../../ficha/ajuste-vitalidade';
 import { FichaVitalidadeRapidaService } from '../../../ficha/ficha-vitalidade-rapida.service';
@@ -35,9 +35,9 @@ interface ItemFichaCondicao extends DescritorCondicao {
  * Ficha já enriquecida para o mini-card inline (m2-16 + m2-16b): id/nome/classe legível/nível +
  * Vida/Energia e as três condições (sempre as 3, com `ativa`), direto do recorte `FichaResumoDto`
  * (sem o documento completo — §14/§10.4, mesma listagem que já alimentava nome/classe/nível).
- * `classeTexto` já vem combinado com o arquétipo ("Classe - Arquétipo") quando ele existe — uma
- * classe base sem arquétipo ainda não escolhido, ou uma subclasse Experimento/`CIVIL` (onde o
- * próprio rótulo de classe já carrega a subclasse), mostram só a classe.
+ * `classeTexto` já vem combinado via `rotuloClasseCompleto` ("Classe - Arquétipo" para as três
+ * classes base, "Experimento - Bestial/Artificial/Híbrido" para a subclasse); só `CIVIL` (sem
+ * arquétipo nem subclasse) mostra a classe sozinha.
  */
 interface ItemFicha {
   readonly id: number;
@@ -201,10 +201,7 @@ export class CampanhaDetalhe {
       const item: ItemFicha = {
         id: ficha.id,
         nome: ficha.nome,
-        classeTexto:
-          ficha.arquetipo === null
-            ? rotuloClasse(ficha.classe)
-            : `${rotuloClasse(ficha.classe)} - ${rotuloArquetipo(ficha.arquetipo)}`,
+        classeTexto: rotuloClasseCompleto(ficha.classe, ficha.arquetipo),
         nivel: ficha.nivel,
         vidaAtual: ficha.vidaAtual,
         vidaMaxima: ficha.vidaMaxima,
