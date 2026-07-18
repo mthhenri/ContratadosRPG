@@ -1491,11 +1491,24 @@ em `aoUtilizarHabilidade` (canal `ajusteVitalidade` de m3-10) e passa **atributo
 `.ajuda-modal`, data-driven: dados, atributo-como-dado, `× ÷`, tipos/Composto, Teste×Soma). DTOs emitidos
 **enxutos** (omitem `modo` SOMA, `tipo`/`seguintes` vazios, `habilidades` vazias → preset legado inalterado).
 Só tokens do tema (proibição #29). Frontend **309** (spec do editor reescrito p/ a nova API), lint/build AOT
-verdes. Spec `m3-22` em `done/`. **Verificação de render pendente** — validado por testes/build.
+verdes. Spec `m3-22` em `done/`.
 
-> **Milestone Rolagem v2 completo** (m3-16 gramática, m3-18 dano tipado, m3-19 teste, m3-20 efeitos,
-> m3-21 presets/runner, **m3-22 frontend**) — motor puro e testado + UI ligada. Falta só a verificação
-> ao vivo no navegador (skill `verify`).
+**Verificação ao vivo da m3-22 (2026-07-18, skill `verify`):** stack real (Postgres nativo — Docker
+bloqueado no ambiente da sessão, pull de `postgres:16` negado pela política de rede —, backend,
+frontend) com um agente novo + campanha + ficha via REST/UI. **Fatia A confirmada:** dadinho em cada
+box de atributo rola o teste e manda pra bandeja; acúmulo horizontal com a mais nova em destaque e a
+anterior esmaecida; barra de tempo pausa no hover e a entrada some sozinha ao tirar o mouse. **Fatia B
+confirmada:** editor cria preset SOMA/TESTE, o modal `GuiaFormula` ("? GUIA") renderiza o conteúdo
+completo (dados/atributo-como-dado/mult-div/tipos/Composto/Teste×Soma); passo seguinte encadeado (`T`/
+`S`) com fórmula própria; anexar uma habilidade com `efeitos` (testado com "Força Bruta", FOR×3
+físico, arquétipo Lutador) debita a Energia certinha ao rolar o passo primário (17→13, exatos os 4 E
+do custo) e o passo de dano encadeado funde o efeito sem erro (2d6+FOR×3 → resultado plausível).
+**Nenhum bug encontrado** — só uma confirmação de design (não é bug): a Habilidade Inicial de um
+arquétipo (`Força Bruta` é o 1º item de `HABILIDADES_ARQUETIPO[LUTADOR]`) só aparece no catálogo do
+seletor quando aquele é o **próprio** arquétipo da ficha (`ehDaFicha`) — em outra ficha ou sem
+arquétipo escolhido ela some da lista por design (`habilidades-catalogo.ts` — "não é possível obtê-la
+fora a seleção do próprio arquétipo"). **Milestone Rolagem v2 fechado ponta a ponta** (motor + UI +
+verificação ao vivo).
 
 **Próxima task:** o backlog anterior, renumerado — **`m3-23`→`m3-25` (Identidade** — contrato/motor,
 backend imutabilidade, frontend), **`m3-09` (mobile)** e **`m3-26` (otimização de espaço** da ficha).
