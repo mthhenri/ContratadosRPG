@@ -133,6 +133,66 @@ describe('FichaVisualizacao', () => {
     expect(raiz.querySelector('.ficha-passo')).toBeNull();
   });
 
+  // Condições (m2-16b): Morrendo/Machucado/Inconsciente — sistema-v4.1.0.md "Condições".
+  describe('condições', () => {
+    it('mostra as três, ativas conforme o estado e inativas quando ausentes do documento', () => {
+      const { raiz } = montar({
+        ...dados,
+        estado: { ...dados.estado, morrendo: true, machucado: false },
+        // `inconsciente` fica de fora do documento de propósito — ausente deve virar inativo.
+      });
+      expect(raiz.querySelectorAll('.ficha-condicoes__item')).toHaveLength(3);
+      expect(
+        raiz.querySelector('[data-condicao="morrendo"]')?.classList.contains('ficha-condicoes__item--ativa'),
+      ).toBe(true);
+      expect(
+        raiz.querySelector('[data-condicao="machucado"]')?.classList.contains('ficha-condicoes__item--ativa'),
+      ).toBe(false);
+      expect(
+        raiz
+          .querySelector('[data-condicao="inconsciente"]')
+          ?.classList.contains('ficha-condicoes__item--ativa'),
+      ).toBe(false);
+    });
+
+    it('não ajustável: os botões ficam desabilitados (clicar não emite nada)', () => {
+      const { fixture, raiz } = montar(dados, 'Corvo', 42, false);
+      const emitidos: unknown[] = [];
+      fixture.componentInstance.ajusteCondicoes.subscribe((c) => emitidos.push(c));
+
+      const botao = raiz.querySelector<HTMLButtonElement>('[data-condicao="morrendo"]')!;
+      expect(botao.disabled).toBe(true);
+      botao.click();
+
+      expect(emitidos).toHaveLength(0);
+    });
+
+    it('ajustável: clicar liga a condição e emite o conjunto atualizado', () => {
+      const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
+      const emitidos: unknown[] = [];
+      fixture.componentInstance.ajusteCondicoes.subscribe((c) => emitidos.push(c));
+
+      raiz.querySelector<HTMLButtonElement>('[data-condicao="morrendo"]')!.click();
+
+      expect(emitidos).toEqual([{ morrendo: true, machucado: false, inconsciente: false }]);
+    });
+
+    it('clicar de novo desliga a condição (toggle)', () => {
+      const { fixture, raiz } = montar(
+        { ...dados, estado: { ...dados.estado, morrendo: true } },
+        'Corvo',
+        42,
+        true,
+      );
+      const emitidos: unknown[] = [];
+      fixture.componentInstance.ajusteCondicoes.subscribe((c) => emitidos.push(c));
+
+      raiz.querySelector<HTMLButtonElement>('[data-condicao="morrendo"]')!.click();
+
+      expect(emitidos).toEqual([{ morrendo: false, machucado: false, inconsciente: false }]);
+    });
+  });
+
   it('emite o novo valor clampado ao ajustar Vida/Energia quando ajustável', () => {
     // Vida 5, Energia 4; ambos abaixo do máximo → passos livres.
     const { fixture, raiz } = montar(dados, 'Corvo', 42, true);

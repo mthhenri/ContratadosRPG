@@ -5,6 +5,7 @@ import { CampanhaResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 
 import { Icone } from '../../../../shared/icone/icone.component';
+import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { CampanhaService } from '../../campanha.service';
 
 /**
@@ -12,10 +13,13 @@ import { CampanhaService } from '../../campanha.service';
  * uma com o papel (`MESTRE`/`JOGADOR`), e dá acesso a criar uma campanha ou entrar por código.
  * Cada item liga ao detalhe (`/painel/:id`). Estado em Signals; os dados vêm do backend
  * (m2-04) via `CampanhaService`. Substitui a casca semente do painel da m2-06.
+ *
+ * **Redesenho visual (m2-17):** a lista virou uma grade de cartões (era uma coluna única de
+ * linhas finas) — mesmos dados, layout mais denso. Só apresentação (proibições #16/#17).
  */
 @Component({
   selector: 'app-campanha-lista',
-  imports: [RouterLink, Icone],
+  imports: [RouterLink, Icone, OverflowFade],
   templateUrl: './lista.page.html',
   styleUrl: './lista.page.scss',
 })

@@ -42,6 +42,18 @@ export interface OpcoesFichaInicial {
   readonly maestria: keyof FichaAtributosDto | null;
 }
 
+/**
+ * Resultado emitido pelo assistente de criação — as escolhas de jogo (`opcoes`, para
+ * `construirFichaInicial`) separadas do **dono** escolhido (`usuarioId`, identidade/posse — não é
+ * documento de jogo). Ausente = a própria ficha do usuário autenticado; só o **mestre** pode
+ * escolher outro membro (§14 — "criar ficha de jogador": mestre sem restrição, dono só a
+ * própria); o backend recusa com 401 se um jogador comum tentar.
+ */
+export interface FichaAssistenteResultado {
+  readonly opcoes: OpcoesFichaInicial;
+  readonly usuarioId?: number;
+}
+
 /** Restringe `valor` ao intervalo [minimo, maximo]. */
 function restringir(valor: number, minimo: number, maximo: number): number {
   return Math.min(maximo, Math.max(minimo, valor));

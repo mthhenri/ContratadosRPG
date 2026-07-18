@@ -178,6 +178,25 @@ export interface FichaEstadoDto {
   readonly sequelas: readonly FichaSequelaDto[];
   readonly traumas: readonly FichaTraumaDto[];
   readonly lesoes: readonly FichaLesaoDto[];
+  /**
+   * Condição **Morrendo** (`sistema-v4.1.0.md` — "Condições": teste de Vigor a cada turno, DT
+   * crescente; falhar mata). Alternada **manualmente** pelo dono/mestre — não é recalculada
+   * automaticamente a partir de `vidaAtual` (mesma filosofia de m3-10: o estado narrativo é
+   * refletido por quem joga, não travado pelo motor). Opcional por retrocompatibilidade —
+   * ausente equivale a `false`.
+   */
+  readonly morrendo?: boolean;
+  /**
+   * Condição **Machucado** (`sistema-v4.1.0.md` — "Condições": resultado de um golpe que
+   * removeu metade da vida; só sai ao recuperar 100%). Alternada manualmente, mesmo modelo de
+   * `morrendo`.
+   */
+  readonly machucado?: boolean;
+  /**
+   * Condição **Inconsciente** (`sistema-v4.1.0.md` — "Condições": impossibilitado de agir ou
+   * reagir, também Vulnerável). Alternada manualmente, mesmo modelo de `morrendo`.
+   */
+  readonly inconsciente?: boolean;
 }
 
 /**

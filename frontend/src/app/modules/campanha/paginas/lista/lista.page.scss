@@ -1,7 +1,9 @@
 @use 'tema/breakpoints' as bp;
 
 .campanhas {
-  max-width: 680px;
+  // m2-17: era uma coluna única de 680px — a grade de cartões abaixo aproveita a largura real
+  // da tela (alvo de 1160px, mesma escala da ficha de jogador), sem esticar linha de texto solta.
+  max-width: 1160px;
   margin: 0 auto;
 
   &__acoes {
@@ -49,21 +51,56 @@
     }
   }
 
+  // Grade de cartões (m2-17 — era uma coluna única de linhas finas): reflui de 1 a N colunas
+  // conforme a largura disponível, sem largura mínima artificial no mobile (o `bp.mobile` cobre
+  // isso à parte). Rolável com fade topo/base quando a lista é longa (`appOverflowFade`).
   &__lista {
     list-style: none;
     margin: 0;
-    padding: 0;
+    padding: 2px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--gap-grid);
+    align-items: start;
+    max-height: 640px;
+    overflow-y: auto;
+
+    --fade-topo: 0px;
+    --fade-base: 0px;
+    &.overflow-fade--topo,
+    &.overflow-fade--base {
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+    }
+    &.overflow-fade--topo {
+      --fade-topo: 22px;
+    }
+    &.overflow-fade--base {
+      --fade-base: 22px;
+    }
+  }
+
+  // Cartão inteiro clicável — coluna vertical (era uma linha horizontal): avatar+nome no topo,
+  // descrição no meio, papel no rodapé, cada card com a mesma altura da linha da grade
+  // (`align-items: start` no pai + altura própria por conteúdo, todas esticadas por padrão do
+  // grid quando a linha é a mesma).
+  &__cartao {
     display: flex;
     flex-direction: column;
     gap: 10px;
-  }
-
-  // O item inteiro é clicável (o `<a>` cobre avatar + texto + chip) — o hover tinge a linha
-  // toda, então precisa ser genuinamente clicável em qualquer ponto (não só o nome/descrição).
-  &__ligacao {
-    display: flex;
-    align-items: center;
-    gap: 14px;
+    height: 100%;
     padding: 16px 18px;
     background: var(--surface-2);
     border: 1px solid var(--border);
@@ -71,18 +108,16 @@
     text-decoration: none;
     transition: background-color 0.15s ease, border-color 0.15s ease;
 
-    // No mobile, o chip de papel desce para a própria linha (ver `&__texto`/`.chip-papel`
-    // abaixo): a linha precisa permitir quebra e o avatar topo-alinha com o nome (que pode ter
-    // várias linhas), em vez de centralizar contra o bloco de texto alto.
-    @include bp.mobile {
-      flex-wrap: wrap;
-      align-items: flex-start;
-    }
-
     &:hover {
       background: var(--accent-dim);
       border-color: var(--border-strong);
     }
+  }
+
+  &__cartao-topo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
 
   // Avatar decorativo (placeholder de imagem — sem foto real no domínio ainda). Listras em
@@ -90,8 +125,8 @@
   // --surface-2 nas duas bases do tema em runtime (m1-13); direto com --surface/--surface-2 o
   // contraste ficava quase invisível na base clara.
   &__avatar {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
     flex: none;
     border-radius: var(--radius-control);
     background-color: var(--surface-2);
@@ -99,23 +134,8 @@
     border: 1px solid var(--border-strong);
   }
 
-  &__texto {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 0;
-
-    // Base do flex grande o bastante para que avatar + texto ocupem a 1ª linha e empurrem o
-    // chip para a linha de baixo (a soma avatar + texto + chip passa de 100%), devolvendo a
-    // largura cheia ao nome — que, dividindo a linha com o chip, quebrava uma palavra por
-    // linha em ~360px. Fica entre "sobra espaço p/ o avatar" e "não cabe o chip junto".
-    @include bp.mobile {
-      flex-basis: 75%;
-    }
-  }
-
   &__nome {
+    min-width: 0;
     font-family: var(--font-mono);
     font-size: 15px;
     font-weight: 700;
@@ -123,9 +143,32 @@
   }
 
   &__descricao {
+    margin: 0;
+    flex: 1;
     font-family: var(--font-sans);
     font-size: 13px;
     color: var(--text-dim);
+    // Corta descrições longas em 3 linhas — o cartão não estica indefinidamente na grade.
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  // Rodapé do cartão — régua fina empurra o chip de papel para a direita (mesmo padrão do
+  // cabeçalho de seção: régua + elemento de destaque); `margin-top: auto` gruda o rodapé na base
+  // do cartão mesmo quando a descrição está ausente, mantendo os chips alinhados entre cartões.
+  &__cartao-rodape {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: auto;
+  }
+
+  &__cartao-regua {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
   }
 
   // Esqueleto de carregamento — mesma silhueta do `__item` real (avatar + linha), evitando o
@@ -200,12 +243,6 @@
 
   app-icone {
     font-size: 11px;
-  }
-
-  // No mobile o chip cai para a própria linha (empurrado pelo `flex-basis` do texto): alinha à
-  // direita, colado ao conteúdo (o pill continua abraçando o rótulo, sem esticar a borda).
-  @include bp.mobile {
-    margin-left: auto;
   }
 }
 
