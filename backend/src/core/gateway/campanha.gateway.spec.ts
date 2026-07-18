@@ -180,6 +180,7 @@ describe('CampanhaGateway', () => {
         nome: 'Agente Alfa',
         dados: {
           classe: 'COMBATENTE',
+          arquetipo: 'LUTADOR',
           nivel: 1,
           segredo: 'não vaza',
           estado: { vidaAtual: 34, vidaMaxima: 34, energiaAtual: 18, energiaMaxima: 18, morrendo: true },
@@ -194,6 +195,7 @@ describe('CampanhaGateway', () => {
         usuarioId: 10,
         nome: 'Agente Alfa',
         classe: 'COMBATENTE',
+        arquetipo: 'LUTADOR',
         nivel: 1,
         vidaAtual: 34,
         vidaMaxima: 34,
