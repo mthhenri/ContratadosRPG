@@ -74,14 +74,17 @@ export class FichaRepository extends BaseRepository {
   /**
    * Colunas do recorte `FichaResumoDto` (§10.4) — compartilhadas por `listarPorCampanha` e
    * `listarVisiveisParaUsuario`, que só diferem no `WHERE`. Vida/Energia e as três condições
-   * (m2-16b — mini-card de ficha no detalhe da campanha) somam-se a `classe`/`nivel`, todas lidas
-   * do JSONB `dados`. As condições usam `COALESCE(..., false)`: ausentes no documento (fichas sem
-   * o campo, ou nunca marcadas) viram `false` explícito — o resumo nunca devolve `undefined` aqui,
-   * diferente de `FichaEstadoDto` (que é opcional por retrocompatibilidade do documento completo).
+   * (m2-16b — mini-card de ficha no detalhe da campanha) somam-se a `classe`/`arquetipo`/`nivel`,
+   * todas lidas do JSONB `dados`. As condições usam `COALESCE(..., false)`: ausentes no documento
+   * (fichas sem o campo, ou nunca marcadas) viram `false` explícito — o resumo nunca devolve
+   * `undefined` aqui, diferente de `FichaEstadoDto` (que é opcional por retrocompatibilidade do
+   * documento completo). `arquetipo` fica `NULL` quando o JSON já é `null` (subclasse Experimento
+   * ou `CIVIL`) — mesma leitura de `dados->>'campo'` usada pelas demais colunas.
    */
   private colunasResumo(): string {
     return `ficha.id, ficha.usuario_id AS "usuarioId", ficha.nome,
               ficha.dados->>'classe' AS classe,
+              ficha.dados->>'arquetipo' AS arquetipo,
               (ficha.dados->>'nivel')::int AS nivel,
               (ficha.dados->'estado'->>'vidaAtual')::int AS "vidaAtual",
               (ficha.dados->'estado'->>'vidaMaxima')::int AS "vidaMaxima",

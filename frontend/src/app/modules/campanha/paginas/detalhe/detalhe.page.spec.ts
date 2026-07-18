@@ -2,7 +2,7 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, provideRouter } from '@angular/router';
 import { Observable, Subject, of } from 'rxjs';
-import { ClasseEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { ArquetipoEnum, ClasseEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import {
   CampanhaAlteradaDto,
   CampanhaMembroEntradaDto,
@@ -298,6 +298,7 @@ describe('CampanhaDetalhe', () => {
         usuarioId: 1,
         nome: 'Kane',
         classe: ClasseEnum.COMBATENTE,
+        arquetipo: ArquetipoEnum.LUTADOR,
         nivel: 2,
         vidaAtual: 0,
         vidaMaxima: 49,
@@ -312,6 +313,7 @@ describe('CampanhaDetalhe', () => {
         usuarioId: 2,
         nome: 'Vera',
         classe: ClasseEnum.SUPORTE,
+        arquetipo: ArquetipoEnum.PARAMEDICO,
         nivel: 1,
         vidaAtual: 15,
         vidaMaxima: 34,
@@ -326,6 +328,7 @@ describe('CampanhaDetalhe', () => {
         usuarioId: 2,
         nome: 'Zeta',
         classe: ClasseEnum.ESPECIALISTA,
+        arquetipo: ArquetipoEnum.ACADEMICO,
         nivel: 3,
         vidaAtual: 40,
         vidaMaxima: 40,
@@ -346,7 +349,24 @@ describe('CampanhaDetalhe', () => {
       expect(fichasMestre).toHaveLength(1);
       expect(fichasMestre[0].textContent).toContain('Kane');
       expect(fichasJogador).toHaveLength(2);
-      expect(raiz.textContent).toContain('Suporte · Nível 1');
+      expect(raiz.textContent).toContain('Suporte - Paramédico · Nível 1');
+    });
+
+    it('mostra "Classe - Arquétipo" no mini-card quando a ficha tem arquétipo', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      expect(raiz.textContent).toContain('Combatente - Lutador · Nível 2');
+      expect(raiz.textContent).toContain('Especialista - Acadêmico · Nível 3');
+    });
+
+    it('mostra só a classe quando não há arquétipo (subclasse Experimento/Civil)', () => {
+      const { raiz } = montar({
+        usuarioId: 1,
+        membros: membrosDois(),
+        fichas: [{ ...fichas[0], classe: ClasseEnum.EXPERIMENTO_BESTIAL, arquetipo: null }],
+      });
+
+      expect(raiz.textContent).toContain('Experimento Bestial · Nível 2');
     });
 
     it('vira grid dinâmica pela quantidade de fichas: 1 mantém a linha, 2 vira grid-2, 3+ vira grid-3', () => {
@@ -416,6 +436,7 @@ describe('CampanhaDetalhe', () => {
             usuarioId: 1,
             nome: 'Sem Condições',
             classe: ClasseEnum.COMBATENTE,
+            arquetipo: ArquetipoEnum.LUTADOR,
             nivel: 1,
             vidaAtual: 20,
             vidaMaxima: 20,
@@ -443,6 +464,7 @@ describe('CampanhaDetalhe', () => {
             usuarioId: 1,
             nome: 'No Chão',
             classe: ClasseEnum.COMBATENTE,
+            arquetipo: ArquetipoEnum.LUTADOR,
             nivel: 1,
             vidaAtual: 0,
             vidaMaxima: 20,
@@ -543,6 +565,7 @@ describe('CampanhaDetalhe', () => {
         usuarioId: 2,
         nome: 'Nova',
         classe: ClasseEnum.COMBATENTE,
+        arquetipo: ArquetipoEnum.LUTADOR,
         nivel: 0,
         vidaAtual: 20,
         vidaMaxima: 20,

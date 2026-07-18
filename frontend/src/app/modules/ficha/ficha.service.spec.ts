@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { StandardResponse } from '@contratados-rpg/shared/interfaces';
-import { ClasseEnum } from '@contratados-rpg/shared/enums';
+import { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
 import {
   FichaAcessoConcedidoDto,
   FichaAcessoResumoDto,
@@ -111,6 +111,7 @@ describe('FichaService', () => {
         usuarioId: 7,
         nome: 'Kane',
         classe: ClasseEnum.COMBATENTE,
+        arquetipo: ArquetipoEnum.LUTADOR,
         nivel: 2,
         vidaAtual: 34,
         vidaMaxima: 34,

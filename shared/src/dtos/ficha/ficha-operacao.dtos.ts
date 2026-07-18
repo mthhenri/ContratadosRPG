@@ -1,4 +1,4 @@
-import type { ClasseEnum, TipoFichaEnum } from '../../enums';
+import type { ArquetipoEnum, ClasseEnum, TipoFichaEnum } from '../../enums';
 import type { FichaJogadorDadosDto } from './ficha.dtos';
 
 /**
@@ -64,12 +64,15 @@ export interface FichaListarDto {
  * `dados` inteiro (§14/§10.4: a listagem nunca expõe inventário/habilidades/sequelas de terceiros).
  * `vidaMaxima`/`energiaMaxima` seguem opcionais (retrocompat de `FichaEstadoDto`, m3-10 — fichas
  * sem snapshot); as três condições vêm sempre resolvidas (`false` quando ausentes no documento).
+ * `arquetipo` acompanha `classe` para o mini-card mostrar "Classe - Arquétipo" — `null` quando a
+ * classe é uma subclasse Experimento ou `CIVIL` (mesma regra de `FichaJogadorDadosDto.arquetipo`).
  */
 export interface FichaResumoDto {
   readonly id: number;
   readonly usuarioId: number;
   readonly nome: string;
   readonly classe: ClasseEnum;
+  readonly arquetipo: ArquetipoEnum | null;
   readonly nivel: number;
   readonly vidaAtual: number;
   readonly vidaMaxima?: number;
