@@ -359,14 +359,24 @@ describe('CampanhaDetalhe', () => {
       expect(raiz.textContent).toContain('Especialista - Acadêmico · Nível 3');
     });
 
-    it('mostra só a classe quando não há arquétipo (subclasse Experimento/Civil)', () => {
+    it('mostra "Experimento - Subclasse" para as subclasses de Experimento (sem arquétipo)', () => {
       const { raiz } = montar({
         usuarioId: 1,
         membros: membrosDois(),
         fichas: [{ ...fichas[0], classe: ClasseEnum.EXPERIMENTO_BESTIAL, arquetipo: null }],
       });
 
-      expect(raiz.textContent).toContain('Experimento Bestial · Nível 2');
+      expect(raiz.textContent).toContain('Experimento - Bestial · Nível 2');
+    });
+
+    it('mostra só "Civil" quando a ficha não tem classe jogável nem arquétipo', () => {
+      const { raiz } = montar({
+        usuarioId: 1,
+        membros: membrosDois(),
+        fichas: [{ ...fichas[0], classe: ClasseEnum.CIVIL, arquetipo: null }],
+      });
+
+      expect(raiz.textContent).toContain('Civil · Nível 2');
     });
 
     it('vira grid dinâmica pela quantidade de fichas: 1 mantém a linha, 2 vira grid-2, 3+ vira grid-3', () => {
