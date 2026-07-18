@@ -1,4 +1,5 @@
 import { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
+import { classeBaseDeHabilidades } from '@contratados-rpg/shared/regras/agente';
 
 /**
  * Rótulos legíveis de classe/registro e arquétipo — mesma grafia dos `<select>` do formulário
@@ -41,27 +42,18 @@ export function rotuloArquetipo(arquetipo: ArquetipoEnum): string {
 }
 
 /**
- * Subclasse de cada `EXPERIMENTO_*` — a subclasse, não o próprio arquétipo, ocupa o lugar do
- * arquétipo (`sistema-v4.1.0.md`, "Subclasse": "abdicar de ganhar o seu arquétipo tornando a sua
- * subclasse o seu arquétipo"). `ClasseEnum` funde classe+subclasse num só valor (proibição #21),
- * daí extrair aqui só a metade "Bestial/Artificial/Híbrido" para a exibição combinada.
- */
-const SUBCLASSE_EXPERIMENTO: Partial<Record<ClasseEnum, string>> = {
-  [ClasseEnum.EXPERIMENTO_BESTIAL]: 'Bestial',
-  [ClasseEnum.EXPERIMENTO_ARTIFICIAL]: 'Artificial',
-  [ClasseEnum.EXPERIMENTO_HIBRIDO]: 'Híbrido',
-};
-
-/**
  * Rótulo combinado "Classe - Arquétipo/Subclasse" para exibição compacta (mini-card da campanha).
- * Classe base com arquétipo: `"Combatente - Lutador"`. Subclasse Experimento: `"Experimento -
- * Bestial"` (a subclasse é o complemento no lugar do arquétipo, não um nome de classe único).
- * `CIVIL` (sem arquétipo nem subclasse): só `"Civil"`.
+ * Classe base com arquétipo: `"Combatente - Lutador"`. Subclasse Experimento: `"Combatente -
+ * Experimento Bestial"` — a subclasse **é** daquela classe-base (`sistema-v4.1.0.md`, "Subclasse":
+ * "abdicar de ganhar o seu arquétipo tornando a sua subclasse o seu arquétipo"; o vínculo
+ * fixo Bestial→Combatente/Artificial→Especialista/Híbrido→Suporte já vem de
+ * `classeBaseDeHabilidades`, a mesma fonte usada pelo seletor de habilidades — nenhum mapa
+ * duplicado aqui). `CIVIL` (sem classe-base, sem arquétipo): só `"Civil"`.
  */
 export function rotuloClasseCompleto(classe: ClasseEnum, arquetipo: ArquetipoEnum | null): string {
-  const subclasse = SUBCLASSE_EXPERIMENTO[classe];
-  if (subclasse) {
-    return `Experimento - ${subclasse}`;
+  const classeBase = classeBaseDeHabilidades(classe);
+  if (classeBase !== null && classeBase !== classe) {
+    return `${rotuloClasse(classeBase)} - ${rotuloClasse(classe)}`;
   }
   if (arquetipo === null) {
     return rotuloClasse(classe);

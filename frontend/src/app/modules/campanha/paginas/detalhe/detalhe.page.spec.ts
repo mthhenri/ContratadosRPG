@@ -359,14 +359,20 @@ describe('CampanhaDetalhe', () => {
       expect(raiz.textContent).toContain('Especialista - Acadêmico · Nível 3');
     });
 
-    it('mostra "Experimento - Subclasse" para as subclasses de Experimento (sem arquétipo)', () => {
+    it('mostra "Classe-base - Subclasse" para as subclasses de Experimento (sem arquétipo)', () => {
       const { raiz } = montar({
         usuarioId: 1,
         membros: membrosDois(),
-        fichas: [{ ...fichas[0], classe: ClasseEnum.EXPERIMENTO_BESTIAL, arquetipo: null }],
+        fichas: [
+          { ...fichas[0], classe: ClasseEnum.EXPERIMENTO_BESTIAL, arquetipo: null },
+          { ...fichas[0], id: 99, classe: ClasseEnum.EXPERIMENTO_ARTIFICIAL, arquetipo: null },
+          { ...fichas[0], id: 98, classe: ClasseEnum.EXPERIMENTO_HIBRIDO, arquetipo: null },
+        ],
       });
 
-      expect(raiz.textContent).toContain('Experimento - Bestial · Nível 2');
+      expect(raiz.textContent).toContain('Combatente - Experimento Bestial · Nível 2');
+      expect(raiz.textContent).toContain('Especialista - Experimento Artificial · Nível 2');
+      expect(raiz.textContent).toContain('Suporte - Experimento Híbrido · Nível 2');
     });
 
     it('mostra só "Civil" quando a ficha não tem classe jogável nem arquétipo', () => {
