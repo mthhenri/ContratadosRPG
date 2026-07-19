@@ -692,27 +692,56 @@
         </dl>
       </section>
 
-      <!-- Resistências (m3-33): soma das Proteções equipadas — calculado ao vivo, sem lápis (o
-           equipamento muda com frequência demais pra congelar num snapshot editável). -->
+      <!-- Resistências (m3-33 + ajuste posterior): sempre as cinco, base manual editável somada ao
+           equipamento (itens equipados + Fragmento aplicado + amplificadores Resistente/Defesa). -->
       <section class="ficha-cartao ficha-visao__painel-cartao">
         <header class="ficha-cartao__cabecalho">
           <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Resistências</h3>
           <span class="ficha-cartao__regua"></span>
-          <span class="ficha-cartao__meta">calculado do equipamento</span>
+          <span class="ficha-cartao__meta">manual + equipamento</span>
         </header>
 
-        @if (resistencias().length > 0) {
-          <dl class="ficha-info ficha-info--combate">
-            @for (resistencia of resistencias(); track resistencia.tipo) {
-              <div class="ficha-info__linha">
-                <dt class="ficha-info__rotulo">{{ resistencia.tipo }}</dt>
-                <dd class="ficha-info__valor">{{ resistencia.valor }}</dd>
-              </div>
-            }
-          </dl>
-        } @else {
-          <p class="ficha-visao__vazio">Nenhuma Proteção equipada.</p>
-        }
+        <dl class="ficha-info ficha-info--combate">
+          @for (resistencia of resistencias(); track resistencia.tipo) {
+            <div class="ficha-info__linha">
+              <dt class="ficha-info__rotulo">{{ resistencia.tipo }}</dt>
+              @if (ajustavel() && editandoResistencia() === resistencia.tipo) {
+                <dd class="ficha-info__valor">
+                  <input
+                    #entradaResistencia
+                    class="ficha-info__entrada"
+                    type="number"
+                    [value]="resistencia.manual"
+                    [attr.aria-label]="'Editar resistência a ' + resistencia.tipo"
+                    [attr.title]="'Editar resistência a ' + resistencia.tipo"
+                    (keydown.enter)="confirmarResistencia(resistencia.tipo, entradaResistencia.value)"
+                    (keydown.escape)="cancelarResistencia()"
+                    (blur)="confirmarResistencia(resistencia.tipo, entradaResistencia.value)"
+                  />
+                </dd>
+              } @else if (ajustavel()) {
+                <dd class="ficha-info__valor">
+                  <button
+                    type="button"
+                    class="ficha-info__editavel"
+                    [attr.aria-label]="'Editar resistência a ' + resistencia.tipo"
+                    [attr.title]="'Manual ' + resistencia.manual + ' + Equipamento ' + resistencia.equipamento"
+                    (click)="editarResistencia(resistencia.tipo)"
+                  >
+                    {{ resistencia.total }}
+                  </button>
+                </dd>
+              } @else {
+                <dd
+                  class="ficha-info__valor"
+                  [attr.title]="'Manual ' + resistencia.manual + ' + Equipamento ' + resistencia.equipamento"
+                >
+                  {{ resistencia.total }}
+                </dd>
+              }
+            </div>
+          }
+        </dl>
       </section>
 
       <!-- Rolagens (m3-15/m3-22) — mesclada na aba Combate em m3-34. -->

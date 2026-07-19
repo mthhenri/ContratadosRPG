@@ -5,6 +5,7 @@ import type {
   RolagemModoEnum,
   RolagemPresetTipoEnum,
   SeveridadeLesaoEnum,
+  TipoDanoEnum,
 } from '../../enums';
 import type { AmplificadorAplicadoDto, CarrinhoItemDto } from '../../regras/compras';
 import type { RolagemEfeitoDto } from '../../regras/rolagem';
@@ -229,6 +230,13 @@ export interface FichaDerivadosDto {
   readonly percepcao?: number;
   readonly inventarioMaximo?: number;
   readonly habilidadesPorTurno?: number;
+  /**
+   * Base **manual** de resistência por tipo de dano (ajuste pós-m3-33) — complementada pela soma do
+   * equipamento (itens equipados + Fragmento aplicado + amplificadores `Resistente`/`Defesa`,
+   * `shared/regras/agente/resistencia` `montarResistencias`). Ausente/tipo ausente = 0 manual;
+   * a aba Combate sempre mostra os cinco tipos, mesmo em 0.
+   */
+  readonly resistencias?: Partial<Record<TipoDanoEnum, number>>;
 }
 
 /**

@@ -1,12 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { FragmentoModuloEnum, FragmentoTipoEnum, ItemCategoriaEnum, ModificacaoEfeitoTipoEnum } from '../../enums';
-import type { CarrinhoItemDto } from '../compras';
-import { calcularResistencias } from './resistencia';
+import {
+  FragmentoModuloEnum,
+  FragmentoTipoEnum,
+  ItemCategoriaEnum,
+  ModificacaoEfeitoTipoEnum,
+  TipoDanoEnum,
+} from '../../enums';
+import type { AmplificadorAplicadoDto, CarrinhoItemDto } from '../compras';
+import { montarResistencias } from './resistencia';
 
 /**
- * Agregação de resistências da aba Combate (m3-33) conferida contra
- * docs/core/sistema-v4.1.0.md — "⬦ Resistências" (exemplo: Colete Kevlar com 3 de Resistência a
- * Dano Balístico) e "Tipos de Dano" (Dano Geral soma como mais uma entrada).
+ * Resistências da aba Combate (m3-33 + ajuste posterior: sempre as 5, manual + equipamento,
+ * amplificadores) conferida contra docs/core/sistema-v4.1.0.md — "⬦ Resistências" (exemplo: Colete
+ * Kevlar com 3 de Resistência a Dano Balístico) e "⬡ Amplificadores" (Resistente/Defesa).
  */
 function protecao(parcial: Partial<CarrinhoItemDto> & { resistencia: string }): CarrinhoItemDto {
   return {
@@ -22,46 +28,32 @@ function protecao(parcial: Partial<CarrinhoItemDto> & { resistencia: string }): 
   };
 }
 
-describe('calcularResistencias', () => {
-  it('soma a resistência de uma única Proteção equipada', () => {
+describe('montarResistencias', () => {
+  it('devolve sempre as cinco linhas, mesmo sem nenhum equipamento (tudo em 0)', () => {
+    const resultado = montarResistencias({ itens: [], amplificadores: [] });
+    expect(resultado).toEqual([
+      { tipo: TipoDanoEnum.FISICO, manual: 0, equipamento: 0, total: 0 },
+      { tipo: TipoDanoEnum.BALISTICO, manual: 0, equipamento: 0, total: 0 },
+      { tipo: TipoDanoEnum.EXPLOSAO, manual: 0, equipamento: 0, total: 0 },
+      { tipo: TipoDanoEnum.QUIMICO, manual: 0, equipamento: 0, total: 0 },
+      { tipo: TipoDanoEnum.GERAL, manual: 0, equipamento: 0, total: 0 },
+    ]);
+  });
+
+  it('soma a resistência de uma Proteção equipada no total (sem base manual)', () => {
     const item = protecao({ resistencia: '3 [Balístico]' });
-    expect(calcularResistencias({ itens: [item] })).toEqual([{ tipo: 'Balístico', valor: 3 }]);
+    const resultado = montarResistencias({ itens: [item], amplificadores: [] });
+    const balistico = resultado.find((linha) => linha.tipo === TipoDanoEnum.BALISTICO)!;
+    expect(balistico).toEqual({ tipo: TipoDanoEnum.BALISTICO, manual: 0, equipamento: 3, total: 3 });
   });
 
   it('ignora itens não equipados', () => {
     const item = protecao({ resistencia: '5 [Físico]', equipado: false });
-    expect(calcularResistencias({ itens: [item] })).toEqual([]);
+    const resultado = montarResistencias({ itens: [item], amplificadores: [] });
+    expect(resultado.find((l) => l.tipo === TipoDanoEnum.FISICO)?.total).toBe(0);
   });
 
-  it('soma resistências de tipos sobrepostos entre duas Proteções equipadas', () => {
-    const a = protecao({ nome: 'Colete', resistencia: '3 [Balístico]' });
-    const b = protecao({ nome: 'Placa', resistencia: '5 [Balístico], 2 [Físico]' });
-    const resultado = calcularResistencias({ itens: [a, b] });
-    expect(resultado).toContainEqual({ tipo: 'Balístico', valor: 8 });
-    expect(resultado).toContainEqual({ tipo: 'Físico', valor: 2 });
-  });
-
-  it('itens sem resistência computável (armas, itens não equipados) não contribuem', () => {
-    const arma: CarrinhoItemDto = {
-      nome: 'Faca',
-      categoria: ItemCategoriaEnum.CORPO_A_CORPO,
-      custo: 0,
-      peso: 0,
-      quantidade: 1,
-      guardada: false,
-      modificacoes: [],
-      equipado: true,
-      dano: '1D4+FOR [Físico]',
-    };
-    expect(calcularResistencias({ itens: [arma] })).toEqual([]);
-  });
-
-  it('Dano Geral entra como mais uma entrada agregada (doc: "reduz qualquer um" dos tipos)', () => {
-    const item = protecao({ resistencia: '7 [Geral]' });
-    expect(calcularResistencias({ itens: [item] })).toEqual([{ tipo: 'Geral', valor: 7 }]);
-  });
-
-  it('soma o bônus de um Fragmento aplicado (m3-32) junto da resistência base', () => {
+  it('soma o bônus de um Fragmento aplicado (m3-32) no equipamento', () => {
     const item = protecao({
       resistencia: '10 [Físico]',
       modificacoes: [
@@ -75,20 +67,67 @@ describe('calcularResistencias', () => {
         },
       ],
     });
-    expect(calcularResistencias({ itens: [item] })).toEqual([{ tipo: 'Físico', valor: 20 }]);
+    const resultado = montarResistencias({ itens: [item], amplificadores: [] });
+    expect(resultado.find((l) => l.tipo === TipoDanoEnum.FISICO)?.total).toBe(20);
   });
 
-  it('aceita bônus externos (ponto de extensão pra Formação, ainda não populado por nada)', () => {
-    const item = protecao({ resistencia: '3 [Físico]' });
-    const resultado = calcularResistencias({
+  it('a base manual complementa o total, somada ao equipamento', () => {
+    const item = protecao({ resistencia: '3 [Balístico]' });
+    const resultado = montarResistencias({
       itens: [item],
-      bonusExternos: [{ tipo: 'Físico', valor: 2 }, { tipo: 'Químico', valor: 1 }],
+      amplificadores: [],
+      manual: { [TipoDanoEnum.BALISTICO]: 5, [TipoDanoEnum.GERAL]: 2 },
     });
-    expect(resultado).toContainEqual({ tipo: 'Físico', valor: 5 });
-    expect(resultado).toContainEqual({ tipo: 'Químico', valor: 1 });
+    expect(resultado.find((l) => l.tipo === TipoDanoEnum.BALISTICO)).toEqual({
+      tipo: TipoDanoEnum.BALISTICO,
+      manual: 5,
+      equipamento: 3,
+      total: 8,
+    });
+    expect(resultado.find((l) => l.tipo === TipoDanoEnum.GERAL)).toEqual({
+      tipo: TipoDanoEnum.GERAL,
+      manual: 2,
+      equipamento: 0,
+      total: 2,
+    });
   });
 
-  it('inventário vazio ou sem Proteções equipadas devolve lista vazia', () => {
-    expect(calcularResistencias({ itens: [] })).toEqual([]);
+  it('o total nunca fica negativo mesmo com base manual negativa', () => {
+    const resultado = montarResistencias({
+      itens: [],
+      amplificadores: [],
+      manual: { [TipoDanoEnum.FISICO]: -10 },
+    });
+    expect(resultado.find((l) => l.tipo === TipoDanoEnum.FISICO)?.total).toBe(0);
+  });
+
+  describe('amplificador Resistente — +1 de resistência a Dano Geral (fixo, não escala)', () => {
+    it('1 empilhamento concede +1 Geral', () => {
+      const amplificadores: AmplificadorAplicadoDto[] = [{ nome: 'Resistente', empilhamentos: 1 }];
+      const resultado = montarResistencias({ itens: [], amplificadores });
+      expect(resultado.find((l) => l.tipo === TipoDanoEnum.GERAL)?.total).toBe(1);
+    });
+
+    it('3 empilhamentos continuam concedendo só +1 Geral (bônus fixo, não escala)', () => {
+      const amplificadores: AmplificadorAplicadoDto[] = [{ nome: 'Resistente', empilhamentos: 3 }];
+      const resultado = montarResistencias({ itens: [], amplificadores });
+      expect(resultado.find((l) => l.tipo === TipoDanoEnum.GERAL)?.total).toBe(1);
+    });
+  });
+
+  describe('amplificador Defesa — a partir do 2º empilhamento, -1 de resistência a todos os tipos', () => {
+    it('1 empilhamento não aplica penalidade', () => {
+      const amplificadores: AmplificadorAplicadoDto[] = [{ nome: 'Defesa', empilhamentos: 1 }];
+      const resultado = montarResistencias({ itens: [], amplificadores });
+      expect(resultado.every((l) => l.total === 0)).toBe(true);
+    });
+
+    it('3 empilhamentos aplicam -2 (empilhamentos além do 1º) em todos os tipos', () => {
+      const item = protecao({ resistencia: '5 [Físico]' });
+      const amplificadores: AmplificadorAplicadoDto[] = [{ nome: 'Defesa', empilhamentos: 3 }];
+      const resultado = montarResistencias({ itens: [item], amplificadores });
+      expect(resultado.find((l) => l.tipo === TipoDanoEnum.FISICO)?.total).toBe(3); // 5 - 2
+      expect(resultado.find((l) => l.tipo === TipoDanoEnum.QUIMICO)?.total).toBe(0); // 0 - 2, clampado
+    });
   });
 });

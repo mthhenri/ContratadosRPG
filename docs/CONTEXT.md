@@ -1595,19 +1595,28 @@ bate exatamente com o exemplo do documento "7 de Energia + 7 de Energia Máxima"
 (só Proteções, com toggle "Equipado"/"Na mochila" no Inventário — hoje só Armazenamento tinha um
 conceito parecido, `guardada`, que não servia pra isso). O regex de parsing de resistência que vivia
 inline em `calcularStatItem` virou função exportada `interpretarNotacaoResistencia` (refactor puro,
-264→264 testes de shared inalterados) pra ser reusada sem duplicar. Novo
-`shared/regras/agente/resistencia.ts` — `calcularResistencias({ itens, bonusExternos? })` soma
-`calcularStatItem({item}).resistencia` só dos itens equipados, agrupado por tipo (Dano Geral entra
-como mais uma entrada — a semântica "reduz qualquer tipo" é resolução de dano, fora de escopo aqui,
-só exibição); já soma bônus de Fragmento aplicado (m3-32) de graça, e aceita `bonusExternos?`
-opcional como ponto de extensão pra quando Formação (m3-25) precisar injetar resistência, sem quebrar
-a assinatura. Combate ganhou uma 2ª seção "Resistências", **calculada ao vivo** (não é um derivado
-stored/editável como as outras linhas de Combate — resistência muda toda hora que o equipamento
-muda, então congelar num snapshot ficaria desatualizado; legenda "calculado do equipamento" no lugar
-do lápis, uma quebra deliberada do padrão clique-pra-editar das outras linhas). `+8` testes de
-`shared` + `5` de componente. **Verificado ao vivo**: sem Proteção equipada mostra "Nenhuma Proteção
-equipada.", equipar um Colete Kevlar (3 [Balístico]) faz a linha aparecer no Combate na hora,
-sobrevive a reload.
+264→264 testes de shared inalterados) pra ser reusada sem duplicar.
+
+**Ajuste pós-m3-33 (mesma sessão, a pedido do autor)**: a versão "calculado ao vivo, sem edição" foi
+substituída por **sempre as cinco linhas de `TipoDanoEnum` + base manual editável + complemento do
+equipamento**. `shared/regras/agente/resistencia.ts` trocou `calcularResistencias`/
+`ResistenciaAgregadaDto` (só somava equipamento, filtrava zero) por `montarResistencias({ itens,
+amplificadores, manual? })` → `ResistenciaLinhaDto[] { tipo; manual; equipamento; total }`, sempre 5
+entradas (`ORDEM_TIPOS`), `total = max(0, manual + equipamento)`. `equipamento` soma
+`calcularStatItem({item}).resistencia` dos itens equipados (Fragmento aplicado, m3-32, incluso de
+graça) **mais os dois amplificadores que mexem em resistência** (primeira vez que um amplificador
+ganha efeito mecânico real em `shared/regras` — os demais seguem só texto no catálogo): `Resistente`
+= +1 Geral fixo (não escala com empilhamento) e `Defesa` = a partir do 2º empilhamento, `-(empilhamentos
+− 1)` em **todos** os tipos (efeito em Defesa em si, fora de escopo aqui). `FichaDerivadosDto` ganhou
+`resistencias?: Partial<Record<TipoDanoEnum, number>>` (a base manual, stored/editável — mesmo padrão
+`stored + editável` de m3-10). Frontend: `ficha-visualizacao.component.ts` ganhou
+`ajusteResistencia` output + `editarResistencia`/`cancelarResistencia`/`confirmarResistencia` (mesmo
+padrão clique-pra-editar de `editarDinheiro`); `visualizar.page.ts` persiste em
+`derivados.resistencias[tipo]`. `+10` testes de `shared` (274 no total) cobrindo as 5-linhas-sempre,
+soma de equipamento/Fragmento, complemento manual, clamp em 0, e os dois amplificadores; specs de
+componente reescritos (a antiga asserção "sem affordance de edição" virou o oposto). **Verificado ao
+vivo**: Físico manual=7 (editado e sobrevive a reload) + Colete de Kevlar equipado (5 Físico, 3
+Balístico) → Combate mostra Físico=12, Balístico=3, batendo exatamente com manual+equipamento.
 
 **m3-34 concluída — merge Combate+Rolagens, Combos (fecha a nova frente).** `AbaFicha`/`ABAS_FICHA`
 perdeu `'rolagens'` (ficam 6 abas); o `id` `'combate'` permanece de propósito, deixando `m3-27`

@@ -52,6 +52,7 @@ import {
   AjusteCampoDados,
   AjusteClasse,
   AjusteDerivado,
+  AjusteResistencia,
   AjusteVitalidade,
   FichaVisualizacao,
   ehAbaFicha,
@@ -334,6 +335,23 @@ export class FichaVisualizar {
       return;
     }
     const derivados = { ...(fichaAtual.dados.derivados ?? {}), [ajuste.chave]: ajuste.valor };
+    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, derivados } });
+    this.agendarPersistencia();
+  }
+
+  /**
+   * Edição da base manual de uma Resistência (ajuste pós-m3-33): grava em
+   * `derivados.resistencias[tipo]`, otimista na tela, e agenda a persistência em lote. O total
+   * exibido soma isso ao equipamento (`montarResistencias`, calculado no próprio componente).
+   */
+  protected ajustarResistencia(ajuste: AjusteResistencia): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) {
+      return;
+    }
+    const derivadosAtuais = fichaAtual.dados.derivados ?? {};
+    const resistencias = { ...(derivadosAtuais.resistencias ?? {}), [ajuste.tipo]: ajuste.valor };
+    const derivados = { ...derivadosAtuais, resistencias };
     this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, derivados } });
     this.agendarPersistencia();
   }

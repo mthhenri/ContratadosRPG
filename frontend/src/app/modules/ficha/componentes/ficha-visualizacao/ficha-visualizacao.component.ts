@@ -11,7 +11,7 @@ import {
   viewChild,
 } from '@angular/core';
 
-import { ArquetipoEnum, ClasseEnum, RolagemModoEnum } from '@contratados-rpg/shared/enums';
+import { ArquetipoEnum, ClasseEnum, RolagemModoEnum, TipoDanoEnum } from '@contratados-rpg/shared/enums';
 import type {
   FichaAtributosDto,
   FichaComboDto,
@@ -26,7 +26,7 @@ import {
   calcularEnergia,
   calcularInventario,
   calcularProficiencia,
-  calcularResistencias,
+  montarResistencias,
   calcularVida,
   maestriaAtingivel,
   somarLesoesAtributo,
@@ -131,6 +131,12 @@ export interface AjusteDerivado {
   readonly valor: number | string;
 }
 
+/** Edição da base manual de uma resistência (ajuste pós-m3-33) — a página persiste em `derivados.resistencias`. */
+export interface AjusteResistencia {
+  readonly tipo: TipoDanoEnum;
+  readonly valor: number;
+}
+
 /** Edição em grupo dos atributos + Maestria (m3-10) — a página persiste `atributos` e `maestria`. */
 export interface AjusteAtributos {
   readonly atributos: FichaAtributosDto;
@@ -204,6 +210,9 @@ export class FichaVisualizacao {
 
   /** Novo valor de um derivado editado (Informações Extras) — a página persiste em `derivados`. */
   readonly ajusteDerivado = output<AjusteDerivado>();
+
+  /** Base manual de uma resistência editada (ajuste pós-m3-33) — a página persiste em `derivados.resistencias`. */
+  readonly ajusteResistencia = output<AjusteResistencia>();
 
   /** Atributos + Maestria editados em grupo — a página persiste. */
   readonly ajusteAtributos = output<AjusteAtributos>();
@@ -354,6 +363,13 @@ export class FichaVisualizacao {
     effect(() => {
       if (this.editandoDinheiro()) {
         const elemento = this.entradaDinheiro()?.nativeElement;
+        elemento?.focus();
+        elemento?.select();
+      }
+    });
+    effect(() => {
+      if (this.editandoResistencia() !== null) {
+        const elemento = this.entradaResistencia()?.nativeElement;
         elemento?.focus();
         elemento?.select();
       }
@@ -865,15 +881,49 @@ export class FichaVisualizacao {
   });
 
   /**
-   * Resistências a dano da aba Combate (m3-33) — soma das Proteções **equipadas**, **calculado ao
-   * vivo** (não é um derivado stored/editável como as outras linhas de Combate): muda toda hora que
-   * o equipamento muda, então congelar num snapshot editável ficaria desatualizado na hora. Reusa
-   * `shared/regras/agente/calcularResistencias`, a mesma fonte que já soma bônus de Fragmento
-   * (m3-32) — zero motor duplicado aqui.
+   * Resistências a dano da aba Combate (m3-33; editável + amplificadores em ajuste posterior) —
+   * **sempre as cinco linhas** de `TipoDanoEnum`. Cada uma soma uma base **manual editável**
+   * (`derivados.resistencias`, stored/editável — mesmo modelo de m3-10) com o que vem do
+   * **equipamento** (itens equipados + Fragmento aplicado + amplificadores `Resistente`/`Defesa`),
+   * via `shared/regras/agente/montarResistencias` — zero motor duplicado aqui.
    */
   protected readonly resistencias = computed(() =>
-    calcularResistencias({ itens: this.dados().inventario.itens }),
+    montarResistencias({
+      itens: this.dados().inventario.itens,
+      amplificadores: this.dados().inventario.amplificadores,
+      manual: this.dados().derivados?.resistencias,
+    }),
   );
+
+  /** Tipo de dano em digitação direta na linha de Resistências, ou `null` fora de edição. */
+  protected readonly editandoResistencia = signal<TipoDanoEnum | null>(null);
+  private readonly entradaResistencia = viewChild<ElementRef<HTMLInputElement>>('entradaResistencia');
+
+  /** Abre a digitação direta da base manual de uma Resistência (clique na linha). */
+  protected editarResistencia(tipo: TipoDanoEnum): void {
+    this.editandoResistencia.set(tipo);
+  }
+
+  /** Cancela a digitação da Resistência (Escape) sem alterar. */
+  protected cancelarResistencia(): void {
+    this.editandoResistencia.set(null);
+  }
+
+  /**
+   * Confirma a base manual de Resistência digitada (Enter/blur): emite se mudou. Sem trava de
+   * faixa (liberdade total — m3-10); o guard evita o commit duplo do blur após o Enter.
+   */
+  protected confirmarResistencia(tipo: TipoDanoEnum, texto: string): void {
+    if (this.editandoResistencia() !== tipo) {
+      return;
+    }
+    this.editandoResistencia.set(null);
+    const bruto = Number.parseInt(texto, 10);
+    const manualAtual = this.resistencias().find((linha) => linha.tipo === tipo)?.manual ?? 0;
+    if (!Number.isNaN(bruto) && bruto !== manualAtual) {
+      this.ajusteResistencia.emit({ tipo, valor: bruto });
+    }
+  }
 
   /** Resumo read-only das sub-coleções (contagem exibida nas abas ainda sem editor — m3-15). */
   protected readonly totalHabilidades = computed(() => this.dados().habilidades.length);

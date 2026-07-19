@@ -252,11 +252,20 @@ describe('FichaVisualizacao', () => {
       return raiz;
     }
 
-    it('mostra "Nenhuma Proteção equipada" quando o inventário não tem Proteção equipada', () => {
+    it('mostra sempre as cinco linhas de resistência, mesmo sem nenhum equipamento (tudo em 0)', () => {
       const { fixture } = montar(dados);
       const raiz = trocarParaCombate(fixture);
-      expect(raiz.textContent).toContain('Nenhuma Proteção equipada.');
+      ['Físico', 'Balístico', 'Explosão', 'Químico', 'Geral'].forEach((tipo) => {
+        expect(raiz.textContent).toContain(tipo);
+      });
     });
+
+    /** Localiza a linha (`.ficha-info__linha`) de um tipo de dano dentro da aba Combate. */
+    function linhaDoTipo(raiz: HTMLElement, tipo: string): Element | undefined {
+      return Array.from(raiz.querySelectorAll('.ficha-info__linha')).find(
+        (linha) => linha.querySelector('.ficha-info__rotulo')?.textContent?.trim() === tipo,
+      );
+    }
 
     it('soma a resistência das Proteções equipadas e reage a mudança de equipamento', () => {
       const alvo = montar({
@@ -279,7 +288,7 @@ describe('FichaVisualizacao', () => {
         },
       });
       const raiz = trocarParaCombate(alvo.fixture);
-      expect(raiz.textContent).toContain('Balístico');
+      expect(linhaDoTipo(raiz, 'Balístico')?.querySelector('.ficha-info__valor')?.textContent?.trim()).toBe('3');
 
       // Desequipa via nova entrada de `dados` (componente controlado) — some da soma.
       alvo.fixture.componentRef.setInput('dados', {
@@ -302,10 +311,12 @@ describe('FichaVisualizacao', () => {
         },
       });
       alvo.fixture.detectChanges();
-      expect(alvo.raiz.textContent).toContain('Nenhuma Proteção equipada.');
+      expect(
+        linhaDoTipo(alvo.raiz, 'Balístico')?.querySelector('.ficha-info__valor')?.textContent?.trim(),
+      ).toBe('0');
     });
 
-    it('não mostra affordance de edição na linha de resistência (calculado, não editável)', () => {
+    it('permite editar a base manual de uma resistência (complementa o equipamento) quando ajustável', () => {
       const alvo = montar(
         {
           ...dados,
@@ -331,9 +342,28 @@ describe('FichaVisualizacao', () => {
         true,
       );
       const raiz = trocarParaCombate(alvo.fixture);
-      const linhaResistencia = Array.from(raiz.querySelectorAll('.ficha-info__linha')).find((linha) =>
-        linha.querySelector('.ficha-info__rotulo')?.textContent?.trim() === 'Balístico',
-      );
+      const linhaResistencia = linhaDoTipo(raiz, 'Balístico')!;
+      const botao = linhaResistencia.querySelector<HTMLButtonElement>('button');
+      expect(botao).not.toBeNull();
+      expect(botao!.textContent?.trim()).toBe('3');
+
+      const emitidos: Array<{ tipo: string; valor: number }> = [];
+      alvo.fixture.componentInstance.ajusteResistencia.subscribe((ajuste) => emitidos.push(ajuste));
+
+      botao!.click();
+      alvo.fixture.detectChanges();
+      const entrada = linhaResistencia.querySelector<HTMLInputElement>('input')!;
+      entrada.value = '5';
+      entrada.dispatchEvent(new Event('blur'));
+      alvo.fixture.detectChanges();
+
+      expect(emitidos).toEqual([{ tipo: 'Balístico', valor: 5 }]);
+    });
+
+    it('não mostra affordance de edição na linha de resistência quando não ajustável (só leitura)', () => {
+      const alvo = montar(dados, 'Corvo', 42, false);
+      const raiz = trocarParaCombate(alvo.fixture);
+      const linhaResistencia = linhaDoTipo(raiz, 'Balístico');
       expect(linhaResistencia?.querySelector('button')).toBeNull();
     });
   });
