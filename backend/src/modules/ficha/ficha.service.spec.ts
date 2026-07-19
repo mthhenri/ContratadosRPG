@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import type {
   FichaInternoCriarDto,
   FichaJogadorDadosDto,
@@ -39,7 +39,7 @@ interface FichaRepositorioDublado {
 }
 
 interface CampanhaRepositorioDublado {
-  recuperarMembro: ReturnType<typeof vi.fn>;
+  recuperarMembro: Mock<CampanhaRepository['recuperarMembro']>;
 }
 
 interface CampanhaGatewayDublado {
