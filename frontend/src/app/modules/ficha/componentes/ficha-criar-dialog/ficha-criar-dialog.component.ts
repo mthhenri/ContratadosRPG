@@ -163,16 +163,16 @@ export class FichaCriarDialog {
     });
   }
 
-  /** Valor **final** de um atributo (base + bônus), clampado aos limites da classe. */
+  /**
+   * Valor **final** de um atributo (base + bônus), clampado aos limites da classe — é o que o box
+   * exibe (o bônus soma direto no valor, sem marcador `+n` à parte) e o que `construirFichaInicial`
+   * persiste. Reagir a troca de arquétipo é de graça: `bonus()` deriva de `classe()`/`arquetipo()`
+   * atuais, então trocar Lutador → Mercenário já recalcula o total certo pro atributo certo.
+   */
   protected atributoFinal(chave: ChaveAtributo): number {
     const limites = this.limites();
     const bruto = this.atributos()[chave] + (this.bonus()[chave] ?? 0);
     return Math.min(limites.atributoMaximo, Math.max(limites.atributoMinimo, bruto));
-  }
-
-  /** Bônus de arquétipo aplicado a um atributo (0 quando não há) — marcador `+n` no box. */
-  protected bonusAtributo(chave: ChaveAtributo): number {
-    return this.bonus()[chave] ?? 0;
   }
 
   protected atualizarNome(valor: string): void {

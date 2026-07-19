@@ -146,14 +146,7 @@
                 class="ficha-atributo ficha-atributo--edicao"
                 [class.ficha-atributo--maestria]="maestria() === campo.chave"
               >
-                <span class="ficha-atributo__abrev">
-                  {{ campo.abrev }}
-                  @if (bonusAtributo(campo.chave) > 0) {
-                    <span class="ficha-atributo__bonus" [attr.title]="'Bônus de arquétipo'">
-                      +{{ bonusAtributo(campo.chave) }}
-                    </span>
-                  }
-                </span>
+                <span class="ficha-atributo__abrev">{{ campo.abrev }}</span>
                 <div class="ficha-atributo__stepper">
                   <button
                     class="ficha-passo"
@@ -164,7 +157,7 @@
                   >
                     −
                   </button>
-                  <span class="ficha-atributo__valor">{{ atributos()[campo.chave] }}</span>
+                  <span class="ficha-atributo__valor">{{ atributoFinal(campo.chave) }}</span>
                   <button
                     class="ficha-passo"
                     type="button"
