@@ -11,3 +11,5 @@ export * from './compras';
 export * from './venda.dtos';
 export * from './venda.dados';
 export * from './venda';
+export * from './fragmento.dados';
+export * from './fragmento';

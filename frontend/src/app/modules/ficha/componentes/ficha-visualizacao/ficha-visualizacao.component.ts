@@ -14,6 +14,7 @@ import {
 import { ArquetipoEnum, ClasseEnum, RolagemModoEnum } from '@contratados-rpg/shared/enums';
 import type {
   FichaAtributosDto,
+  FichaComboDto,
   FichaHabilidadeDto,
   FichaInventarioDto,
   FichaJogadorDadosDto,
@@ -25,6 +26,7 @@ import {
   calcularEnergia,
   calcularInventario,
   calcularProficiencia,
+  calcularResistencias,
   calcularVida,
   maestriaAtingivel,
   somarLesoesAtributo,
@@ -35,8 +37,9 @@ import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive
 import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { FichaCombos } from '../ficha-combos/ficha-combos.component';
 import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
-import { FichaInventario } from '../ficha-inventario/ficha-inventario.component';
+import { CustoEnergiaFragmento, FichaInventario } from '../ficha-inventario/ficha-inventario.component';
 import { FichaRolagens } from '../ficha-rolagens/ficha-rolagens.component';
 import { EstadoSanidade, FichaSanidade } from '../ficha-sanidade/ficha-sanidade.component';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
@@ -49,6 +52,7 @@ import {
   montarInformacoesExtras,
   normalizarEntrada,
   rotuloPatente,
+  salarioPatente,
 } from '../../status-derivado';
 
 /** Chave de cada atributo (as dez chaves de `FichaAtributosDto`). */
@@ -70,14 +74,13 @@ interface GrupoAtributos {
 /** Lembrete da fórmula da DT — exibido como chip informativo no card de Atributos (como no protótipo). */
 const FORMULA_DT = 'DT = 10 + NÍVEL + ATR×2';
 
-/** Aba da ficha (m3-11) — o scaffold navegável. `Visão Geral`/`Combate` têm conteúdo; as demais, resumo. */
-export type AbaFicha =
-  | 'visao-geral'
-  | 'combate'
-  | 'inventario'
-  | 'habilidades'
-  | 'sanidade'
-  | 'rolagens';
+/**
+ * Aba da ficha (m3-11). **Combate** (m3-34) absorveu **Rolagens** — hoje hospeda os stats de
+ * combate, Resistências (m3-33), o editor de Rolagens e os Combos, todos na mesma aba; o `id`
+ * continua `'combate'` (não `'rolagens'`) de propósito, pra um futuro `historico` (`m3-27`,
+ * backlog) poder entrar sem colidir com este merge.
+ */
+export type AbaFicha = 'visao-geral' | 'combate' | 'inventario' | 'habilidades' | 'sanidade' | 'anotacoes';
 
 /** Descritor de uma aba na barra (id semântico p/ deep-link + rótulo legível + ícone de linha). */
 interface DescritorAba {
@@ -93,7 +96,7 @@ export const ABAS_FICHA: readonly DescritorAba[] = [
   { id: 'inventario', rotulo: 'Inventário', icone: 'inventario' },
   { id: 'habilidades', rotulo: 'Habilidades', icone: 'habilidades' },
   { id: 'sanidade', rotulo: 'Sanidade & Lesões', icone: 'sanidade' },
-  { id: 'rolagens', rotulo: 'Rolagens', icone: 'rolagens' },
+  { id: 'anotacoes', rotulo: 'Anotações', icone: 'anotacoes' },
 ];
 
 /** `true` quando a string é uma aba conhecida — valida o `?aba=` da URL (deep-link). */
@@ -134,8 +137,12 @@ export interface AjusteAtributos {
   readonly maestria: keyof FichaAtributosDto | null;
 }
 
-/** Campo escalar do documento editável na identidade (Nível dispara o delta de progressão na página). */
-export type CampoDadosEscalar = 'nivel' | 'prestigio';
+/**
+ * Campo escalar do documento editável na identidade (Nível dispara o delta de progressão na
+ * página) — **`dinheiro`** (m3-31) reusa o mesmo canal de persistência (`ajusteCampoDados`), mas
+ * é editado no seu próprio lugar (Informações Extras), não na identidade.
+ */
+export type CampoDadosEscalar = 'nivel' | 'prestigio' | 'dinheiro';
 
 /** Edição de um campo escalar do documento (Nível/Prestígio) — a página persiste. */
 export interface AjusteCampoDados {
@@ -165,7 +172,16 @@ export interface AjusteClasse {
  */
 @Component({
   selector: 'app-ficha-visualizacao',
-  imports: [HoldRepeat, Icone, FichaSanidade, FichaHabilidades, FichaInventario, FichaRolagens, BandejaDados],
+  imports: [
+    HoldRepeat,
+    Icone,
+    FichaSanidade,
+    FichaHabilidades,
+    FichaInventario,
+    FichaRolagens,
+    FichaCombos,
+    BandejaDados,
+  ],
   templateUrl: './ficha-visualizacao.component.html',
   styleUrl: './ficha-visualizacao.component.scss',
 })
@@ -216,6 +232,12 @@ export class FichaVisualizacao {
   /** Presets de rolagem editados — a página persiste em `dados.rolagens` (m3-15). */
   readonly ajusteRolagens = output<readonly FichaRolagemDto[]>();
 
+  /** Combos editados (m3-34) — a página persiste em `dados.combos`. */
+  readonly ajusteCombos = output<readonly FichaComboDto[]>();
+
+  /** Anotações livres editadas (m3-29) — a página persiste em `dados.anotacoes`. */
+  readonly ajusteAnotacoes = output<string>();
+
   /**
    * Utilizar uma habilidade gasta o custo da Energia atual (pode **negativar** — regra do documento).
    * Reusa o caminho de `ajusteVitalidade` (persistência de m3-10) em vez de um novo canal.
@@ -225,6 +247,16 @@ export class FichaVisualizacao {
       campo: 'energiaAtual',
       valor: this.estado().energiaAtual - custo,
     });
+  }
+
+  /**
+   * Custo de Energia de um Fragmento (m3-32 — adquirir/acoplar/remover): o `FichaInventario` já
+   * calcula os novos valores absolutos; aqui só se reusa o mesmo canal `ajusteVitalidade` (m3-10)
+   * pros dois campos, em vez de abrir uma persistência paralela.
+   */
+  protected aoAjustarEnergiaFragmento(custo: CustoEnergiaFragmento): void {
+    this.ajusteVitalidade.emit({ campo: 'energiaAtual', valor: custo.energiaAtual });
+    this.ajusteVitalidade.emit({ campo: 'energiaMaxima', valor: custo.energiaMaxima });
   }
 
   /** Alterna uma condição (Morrendo/Machucado/Inconsciente) e emite o conjunto atualizado. */
@@ -274,6 +306,10 @@ export class FichaVisualizacao {
   /** Campo de identidade em digitação (Codinome/Nível/Prestígio), ou `null` fora de edição. */
   protected readonly editandoIdentidade = signal<'nome' | CampoDadosEscalar | null>(null);
   private readonly entradaIdentidade = viewChild<ElementRef<HTMLInputElement>>('entradaIdentidade');
+  private readonly entradaAnotacoes = viewChild<ElementRef<HTMLTextAreaElement>>('entradaAnotacoes');
+  /** `true` enquanto o Dinheiro (m3-31, Informações Extras) está em edição. */
+  protected readonly editandoDinheiro = signal(false);
+  private readonly entradaDinheiro = viewChild<ElementRef<HTMLInputElement>>('entradaDinheiro');
 
   /** Editor de Classe/Arquétipo aberto (mini-editor com dois `<select>`). */
   protected readonly editandoClasse = signal(false);
@@ -306,6 +342,18 @@ export class FichaVisualizacao {
     effect(() => {
       if (this.editandoIdentidade() !== null) {
         const elemento = this.entradaIdentidade()?.nativeElement;
+        elemento?.focus();
+        elemento?.select();
+      }
+    });
+    effect(() => {
+      if (this.editandoAnotacoes()) {
+        this.entradaAnotacoes()?.nativeElement.focus();
+      }
+    });
+    effect(() => {
+      if (this.editandoDinheiro()) {
+        const elemento = this.entradaDinheiro()?.nativeElement;
         elemento?.focus();
         elemento?.select();
       }
@@ -360,6 +408,10 @@ export class FichaVisualizacao {
   });
   /** Patente derivada do Prestígio (`shared/regras/patente`) — não é persistida. */
   protected readonly patenteTexto = computed(() => rotuloPatente(this.dados().prestigio));
+  /** Dinheiro atual (m3-31) — ausente em fichas anteriores cai em 0 (retrocompat). */
+  protected readonly dinheiro = computed(() => this.dados().dinheiro ?? 0);
+  /** Salário da patente atual (m3-31) — derivado do Prestígio, nunca persistido. */
+  protected readonly salario = computed(() => salarioPatente(this.dados().prestigio));
   protected readonly rotuloNivel = computed(() => (this.ehCivil() ? 'Treinamentos' : 'Nível'));
 
   protected readonly atributos = computed(() => this.dados().atributos);
@@ -420,6 +472,30 @@ export class FichaVisualizacao {
     return mapa;
   });
   protected readonly anotacoes = computed(() => this.dados().anotacoes.trim());
+
+  /** `true` enquanto a aba Anotações (m3-29) está em edição (textarea aberta). */
+  protected readonly editandoAnotacoes = signal(false);
+
+  /** Abre a edição das Anotações (aba própria — distinta do peek read-only da Visão Geral). */
+  protected editarAnotacoes(): void {
+    this.editandoAnotacoes.set(true);
+  }
+
+  /** Cancela a edição das Anotações sem alterar. */
+  protected cancelarAnotacoes(): void {
+    this.editandoAnotacoes.set(false);
+  }
+
+  /** Confirma o texto digitado (blur/Ctrl+Enter): emite se mudou. Sem trim — espaço é do usuário. */
+  protected confirmarAnotacoes(texto: string): void {
+    if (!this.editandoAnotacoes()) {
+      return;
+    }
+    this.editandoAnotacoes.set(false);
+    if (texto !== this.dados().anotacoes) {
+      this.ajusteAnotacoes.emit(texto);
+    }
+  }
 
   // m3-10: máxima é stored (snapshot na criação, editável); cai no derivado só em fichas antigas.
   protected readonly vidaMaxima = computed(
@@ -611,6 +687,32 @@ export class FichaVisualizacao {
     }
   }
 
+  /** Abre a digitação direta do Dinheiro (Informações Extras, m3-31). */
+  protected editarDinheiro(): void {
+    this.editandoDinheiro.set(true);
+  }
+
+  /** Cancela a digitação do Dinheiro (Escape) sem alterar. */
+  protected cancelarDinheiro(): void {
+    this.editandoDinheiro.set(false);
+  }
+
+  /**
+   * Confirma o Dinheiro digitado (Enter/blur): emite pelo mesmo canal de `ajusteCampoDados` dos
+   * campos escalares — a página persiste sem cascata (dinheiro não deriva nenhuma outra stat). Sem
+   * trava de faixa (liberdade total — m3-10/m3-31); o guard evita o commit duplo do blur após Enter.
+   */
+  protected confirmarDinheiro(texto: string): void {
+    if (!this.editandoDinheiro()) {
+      return;
+    }
+    this.editandoDinheiro.set(false);
+    const bruto = Number.parseInt(texto, 10);
+    if (!Number.isNaN(bruto) && bruto !== this.dinheiro()) {
+      this.ajusteCampoDados.emit({ campo: 'dinheiro', valor: bruto });
+    }
+  }
+
   /** Abre o mini-editor de Classe/Arquétipo (semeia o rascunho com o documento). */
   protected editarClasse(): void {
     this.rascunhoClasse.set(this.dados().classe);
@@ -762,10 +864,24 @@ export class FichaVisualizacao {
     return CHAVES_COMBATE.map((chave) => mapa.get(chave)!);
   });
 
+  /**
+   * Resistências a dano da aba Combate (m3-33) — soma das Proteções **equipadas**, **calculado ao
+   * vivo** (não é um derivado stored/editável como as outras linhas de Combate): muda toda hora que
+   * o equipamento muda, então congelar num snapshot editável ficaria desatualizado na hora. Reusa
+   * `shared/regras/agente/calcularResistencias`, a mesma fonte que já soma bônus de Fragmento
+   * (m3-32) — zero motor duplicado aqui.
+   */
+  protected readonly resistencias = computed(() =>
+    calcularResistencias({ itens: this.dados().inventario.itens }),
+  );
+
   /** Resumo read-only das sub-coleções (contagem exibida nas abas ainda sem editor — m3-15). */
   protected readonly totalHabilidades = computed(() => this.dados().habilidades.length);
   protected readonly totalItens = computed(() => this.dados().inventario.itens.length);
   protected readonly totalRolagens = computed(() => this.dados().rolagens?.length ?? 0);
+
+  /** Combos (m3-34) — ausente em fichas anteriores cai em lista vazia. */
+  protected readonly combos = computed(() => this.dados().combos ?? []);
 
   /**
    * Inventário máximo resolvido (`Força × 5`) para o editor de Inventário (m3-14): o stored

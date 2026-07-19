@@ -81,6 +81,32 @@
     margin: 0;
   }
 
+  // Aba Anotações (m3-29): texto livre editável em tela cheia (distinto do peek read-only acima).
+  &__anotacoes-campo {
+    width: 100%;
+    min-height: 360px;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 14px 16px;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.15s ease;
+
+    &:focus {
+      border-color: var(--accent-border);
+    }
+  }
+
+  &__anotacoes-leitura {
+    min-height: 360px;
+    white-space: pre-wrap;
+  }
+
   // Painel de uma aba (m3-11). "Visão Geral" traz a grade; as demais, um cartão único.
   &__painel {
     // Fade suave ao trocar de aba (sem reflow — as abas alternam via @if).

@@ -1,4 +1,10 @@
-import { FragmentoModuloEnum, ItemCategoriaEnum, ModificacaoEfeitoTipoEnum, PatenteEnum } from '../../enums';
+import {
+  FragmentoModuloEnum,
+  FragmentoTipoEnum,
+  ItemCategoriaEnum,
+  ModificacaoEfeitoTipoEnum,
+  PatenteEnum,
+} from '../../enums';
 
 /**
  * DTOs de entrada e value-objects de saída do domínio de compras
@@ -74,6 +80,15 @@ export interface ModificacaoAplicadaDto {
    * custom) e do limite de stack por mod da patente, sem ser barrada nem marcada como excedente por isso.
    */
   readonly ignoraLimiteProprio?: boolean;
+  /**
+   * Marca esta mod como **originada de um fragmento Potencializador** (m3-32) — distingue do
+   * chip/UI sem depender de string-matching em `nome`, e é o que o fluxo de "remover" (desacoplar)
+   * usa para saber que custa Energia × 2 do módulo. Ausente = mod comum (catálogo ou custom livre).
+   */
+  readonly origemFragmento?: {
+    readonly tipo: FragmentoTipoEnum;
+    readonly modulo: FragmentoModuloEnum;
+  };
 }
 
 /** Um amplificador acoplado ao agente, com sua quantidade de empilhamentos. */
@@ -102,6 +117,18 @@ export interface CarrinhoItemDto {
    * Ignorado nas demais categorias.
    */
   readonly guardada: boolean;
+  /**
+   * Nome que o jogador dá a **esta instância** do item (ex.: "Espada Excalibur" numa
+   * Arma Branca Média) — puramente de exibição (m3-30). `resolverDadosItem`/`calcularStatItem`
+   * continuam resolvendo pelo `nome` (chave do catálogo); o motor de cálculo nunca lê `apelido`.
+   */
+  readonly apelido?: string;
+  /**
+   * Só para `PROTECOES` (m3-33): `true` = vestida/em uso — só as equipadas entram na soma de
+   * resistências da aba Combate (`shared/regras/agente/resistencia`). Ausente/`false` = na mochila,
+   * não conta. Ignorado nas demais categorias.
+   */
+  readonly equipado?: boolean;
   readonly modificacoes: readonly ModificacaoAplicadaDto[];
   /**
    * Descrição em texto livre — **só nos itens custom** (os do catálogo têm a descrição em

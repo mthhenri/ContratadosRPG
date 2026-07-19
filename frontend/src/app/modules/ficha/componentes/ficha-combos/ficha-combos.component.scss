@@ -1,0 +1,312 @@
+// Editor + runner de Combos (m3-34) — só tokens do tema "Terminal de Contenção" (proibição #29).
+// BEM próprio (`.ficha-combos`) espelhando o padrão de `.ficha-rol` (m3-15/m3-22).
+.ficha-combos {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &__novo {
+    align-self: flex-start;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 8px 14px;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--accent);
+      border-color: var(--accent-border);
+    }
+  }
+
+  &__vazio {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text-mute);
+  }
+
+  &__lista {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  // === Runner ===
+  &__runner {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-control);
+    padding: 12px;
+    background: var(--accent-dim);
+  }
+  &__runner-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  &__runner-titulo {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  &__runner-passo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+  }
+  &__runner-passo-nome {
+    font-weight: 700;
+    color: var(--text);
+  }
+  &__runner-passo-preset {
+    font-family: var(--font-mono);
+    color: var(--text-dim);
+  }
+
+  // === Cartão de combo ===
+  &__combo {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    padding: 12px;
+    background: var(--surface);
+  }
+  &__combo-topo {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+  &__combo-nome {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  &__combo-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-mute);
+  }
+  &__combo-acoes {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+  }
+
+  &__passos {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  &__passo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  &__passo-nome {
+    font-weight: 600;
+    color: var(--text);
+  }
+  &__passo-seta {
+    color: var(--text-mute);
+  }
+  &__passo-preset {
+    font-family: var(--font-mono);
+  }
+
+  // === Form (novo/editar) ===
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 14px;
+    background: var(--surface);
+  }
+  &__form-titulo {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-dim);
+  }
+  &__campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  &__rotulo {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-mute);
+  }
+  &__rotulo-aux {
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--text-mute);
+  }
+  &__entrada {
+    width: 100%;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 7px 10px;
+    outline: none;
+    transition: border-color 0.15s ease;
+
+    &:focus {
+      border-color: var(--accent-border);
+    }
+  }
+
+  &__passo-edit {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+
+    &-acoes {
+      display: flex;
+      gap: 4px;
+      flex: 0 0 auto;
+    }
+  }
+  &__entrada--nome {
+    flex: 1 1 40%;
+  }
+
+  &__add-passo {
+    align-self: flex-start;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 6px 10px;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--accent);
+      border-color: var(--accent-border);
+    }
+  }
+
+  &__form-acoes {
+    display: flex;
+    gap: 8px;
+  }
+
+  &__aviso {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--warning);
+  }
+
+  &__remover {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  &__remover-texto {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  // === Botões ===
+  &__btn {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: var(--radius-control);
+    padding: 7px 12px;
+    cursor: pointer;
+    transition: filter 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    &--principal {
+      background: var(--accent);
+      color: var(--bg);
+      border: 0;
+
+      &:hover:not(:disabled) {
+        filter: brightness(1.08);
+      }
+    }
+    &--secundario {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border-strong);
+
+      &:hover:not(:disabled) {
+        background: var(--surface-2);
+      }
+    }
+    &--rolar {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border-strong);
+
+      &:hover:not(:disabled) {
+        color: var(--accent);
+        border-color: var(--accent-border);
+      }
+    }
+  }
+
+  &__mini-btn {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+    &:hover:not(:disabled) {
+      color: var(--accent);
+      border-color: var(--accent-border);
+    }
+    &--perigo:hover:not(:disabled) {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+  }
+}

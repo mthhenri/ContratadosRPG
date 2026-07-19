@@ -1515,6 +1515,130 @@ backend imutabilidade, frontend), **`m3-09` (mobile)** e **`m3-26` (otimização
 **Antes de qualquer UI, ler `docs/design/DESIGN.md` e consumir os tokens de `docs/design/tema/`**
 (proibição #29).
 
+**Nova frente aberta (2026-07-19) — reforma da aba Combate.** A pedido do autor (a aba estava "vazia
+demais"), seis specs novas no backlog do M3, `m3-29`→`m3-34` (paralelas a `m3-23`→`m3-25`, que rodam
+em outra sessão): **m3-29** Anotações editáveis, **m3-30** apelido de equipamento, **m3-31** dinheiro
+atual + salário, **m3-32** fragmentos consumíveis/aplicáveis no inventário (com custo de Energia),
+**m3-33** resistências no Combate afetadas por equipamento e **m3-34** merge Combate+Rolagens com um
+sistema de Combos. Sequência combinada com o autor: ordem crescente de complexidade, uma spec por
+vez, `backlog/ → active/ → done/`. Nenhuma das seis precisa de migration — tudo cabe no JSONB
+`ficha.dados` (§ "Ficha Data Model").
+
+**m3-29 concluída — aba "Anotações".** O campo `anotacoes: string` (já existia em
+`FichaJogadorDadosDto`, só exibido read-only na Visão Geral) ganhou aba própria e editável: nova
+entrada em `AbaFicha`/`ABAS_FICHA` (`ficha-visualizacao.component.ts`), ícone novo `anotacoes` em
+`shared/icone`, textarea com o mesmo padrão de edição no próprio lugar (lápis abre, blur/Escape
+fecha) das demais seções, novo output `ajusteAnotacoes` persistido em `visualizar.page.ts` (mesmo
+batching otimista dos outros campos — `mesclarFicha` já é genérico por chave, não precisou de ajuste
+para o merge de edição concorrente). O card read-only da Visão Geral continua como "peek". Zero
+mudança em `shared/` além do ícone. `+5` testes de componente. **Verificado ao vivo** (Postgres
+nativo + backend + frontend, agente novo via REST): aba aparece, placeholder "Sem anotações." some
+ao editar, texto sobrevive a reload. Spec `m3-29` em `done/`.
+
+**m3-30 concluída — apelido de equipamento.** `CarrinhoItemDto` (`shared/regras/compras`) ganhou
+`apelido?: string` — puramente de exibição, `resolverDadosItem`/`calcularStatItem` continuam
+resolvendo por `categoria`+`nome` (zero mudança no motor). Novo helper `rotuloItem(item)` em
+`modules/ficha/rotulos-ficha.ts` (`apelido ?? nome`, mesmo padrão de `rotuloClasse`/`rotuloArquetipo`)
+— ponto único reusável pelos Combos (`m3-34`) mais tarde. `FichaInventario`: lápis inline no nome do
+item (só em categorias **não-empilháveis** — Operacional/Medicinal ficam de fora, são pilha, não
+instância), apelido em destaque + nome mecânico como legenda; confirmar vazio remove o apelido. A
+lógica de empilhamento (`adicionarItem`) passou a exigir `apelido` igual (ou ambos ausentes) antes de
+juntar duas entradas na mesma pilha, senão um item apelidado seria absorvido por outro sem apelido.
+`+8` testes de componente. **Verificado ao vivo**: renomear "Arma Branca Média" → "Espada Excalibur",
+legenda mecânica aparece, sobrevive a reload.
+
+**m3-31 concluída — dinheiro atual + salário.** `FichaJogadorDadosDto` ganhou `dinheiro?: number`
+(opcional, retrocompat — fichas antigas caem em 0). Novo par de funções em
+`shared/regras/novo-agente` (mesmo lugar de `calcularBonusMonetario`, já documentado como "dinheiro
+inicial calculado à parte" desde m1-03, nunca implementado até agora): `calcularDinheiroInicial({
+somaDados })` pura (`1000 + somaDados × 250`) e `rolarDinheiroInicial()` (rola 4D4 via `rolarDados`
+de `regras/descanso` — mesma "brecha sancionada" a `Math.random`, mesma separação rolagem/cálculo
+puro já usada em `calcularResultadoDescanso`). Novo `salarioPatente(prestigio)` em `status-derivado.ts`
+(`obterPatente(prestigio).salario`, zero código de regra novo). `ficha-padrao.ts` seta o dinheiro
+inicial na criação. Visão Geral (Informações Extras): nova linha editável "Dinheiro" (reusa o canal
+`ajusteCampoDados`/`CampoDadosEscalar` de Nível/Prestígio, sem cascata) e linha read-only "Salário".
+`ficha-inventario.component.ts`: o `dinheiro: 0` hardcoded que alimentava `calcularResumoCompras`
+virou um `@input` real — o "Dinheiro restante" (antes nunca exibido) agora aparece como 3º box de
+referência na aba Inventário, com aviso visual quando negativo. `+9` testes de componente + `2` de
+`shared`. **Verificado ao vivo**: Visão Geral mostra dinheiro/salário corretos, editar dinheiro
+persiste a reload, Inventário mostra "Dinheiro restante" batendo com dinheiro − gasto do carrinho.
+
+**m3-32 concluída — fragmentos no inventário (núcleo: adquirir/acoplar/remover).** A leitura completa
+de "⬡ Fragmentos" no documento revelou uma mecânica bem maior que o pedido original (Afinidade,
+Anomalia Biológica, Colapso/transformação em criatura, Consumo com Preço de Sanidade, Redução de
+Módulo, Forja, tabela de bônus fixos do Construtor) — **recorte confirmado com o autor**: só o custo
+de Energia de adquirir/acoplar/remover + aplicar o bônus do Potencializador num item; o resto vira
+specs futuras. Novo `shared/regras/compras/fragmento.dados.ts` (tabela de custo por módulo — V=3,
+IV=7, III=12, II=16, I=20 — e o cardápio de bônus "em um item" do Potencializador) +
+`fragmento.ts` (`custoAquisicaoFragmento` — dobrado pro Construtor, doc: "seu valor... é dobrado —,
+`custoAcoplarFragmento` — Energia + Energia Máxima do módulo —, `custoRemoverFragmento` — Energia ×2
+—, `listarBonusFragmentoPotencializador` — mapeado a `DANO_DADOS_BASE`/`BONUS_TESTE`/`DANO_FIXO`/
+`RESISTENCIA` já existentes, zero motor novo em `calcularStatItem`). A opção "N× valor máximo do
+maior tipo de dado" do documento ficou de fora (exigiria uma primitiva de "maior dado do item" que
+não existe ainda). `ModificacaoAplicadaDto` ganhou `origemFragmento?` (tipo + módulo) pra UI/remoção
+não depender de string-matching em `nome`. `FichaInventario`: adquirir um fragmento (categoria +
+módulo no form de item custom) debita Energia Máxima na hora; nova ação "Aplicar em..." num
+fragmento Potencializador (seleciona item-alvo + uma das 5 opções de bônus) empurra a mod no alvo,
+remove o fragmento do inventário avulso e debita Energia + Energia Máxima do acoplamento; remover
+essa mod (o mesmo botão "−" de sempre, já que o fragmento nunca empilha) debita Energia ×2, sem
+devolver a Energia Máxima nem ressuscitar o fragmento; remover um fragmento **ainda não aplicado**
+diretamente do inventário restaura a Energia Máxima da aquisição. Badge com o ícone `fragmento` no
+chip da mod de origem fragmento. Novos inputs `energiaAtual`/`energiaMaxima` + output
+`ajusteEnergiaFragmento` em `FichaInventario`, capturado por `FichaVisualizacao` e traduzido em dois
+`ajusteVitalidade.emit()` (reusa o canal de persistência de m3-10, sem canal novo). `+10` testes de
+`shared` + `5` de componente. **Verificado ao vivo** (Postgres real): adquirir um fragmento
+Potencializador módulo IV (50/50→50/43), aplicar na arma (fragmento some, mod aparece, 50/43→43/36 —
+bate exatamente com o exemplo do documento "7 de Energia + 7 de Energia Máxima"), remover a mod
+(43/36→29/36 — Energia ×2, Máxima intocada), tudo sobrevivendo a reload.
+
+**m3-33 concluída — resistências no Combate.** Novo campo `equipado?: boolean` em `CarrinhoItemDto`
+(só Proteções, com toggle "Equipado"/"Na mochila" no Inventário — hoje só Armazenamento tinha um
+conceito parecido, `guardada`, que não servia pra isso). O regex de parsing de resistência que vivia
+inline em `calcularStatItem` virou função exportada `interpretarNotacaoResistencia` (refactor puro,
+264→264 testes de shared inalterados) pra ser reusada sem duplicar. Novo
+`shared/regras/agente/resistencia.ts` — `calcularResistencias({ itens, bonusExternos? })` soma
+`calcularStatItem({item}).resistencia` só dos itens equipados, agrupado por tipo (Dano Geral entra
+como mais uma entrada — a semântica "reduz qualquer tipo" é resolução de dano, fora de escopo aqui,
+só exibição); já soma bônus de Fragmento aplicado (m3-32) de graça, e aceita `bonusExternos?`
+opcional como ponto de extensão pra quando Formação (m3-25) precisar injetar resistência, sem quebrar
+a assinatura. Combate ganhou uma 2ª seção "Resistências", **calculada ao vivo** (não é um derivado
+stored/editável como as outras linhas de Combate — resistência muda toda hora que o equipamento
+muda, então congelar num snapshot ficaria desatualizado; legenda "calculado do equipamento" no lugar
+do lápis, uma quebra deliberada do padrão clique-pra-editar das outras linhas). `+8` testes de
+`shared` + `5` de componente. **Verificado ao vivo**: sem Proteção equipada mostra "Nenhuma Proteção
+equipada.", equipar um Colete Kevlar (3 [Balístico]) faz a linha aparecer no Combate na hora,
+sobrevive a reload.
+
+**m3-34 concluída — merge Combate+Rolagens, Combos (fecha a nova frente).** `AbaFicha`/`ABAS_FICHA`
+perdeu `'rolagens'` (ficam 6 abas); o `id` `'combate'` permanece de propósito, deixando `m3-27`
+(histórico de rolagem, backlog) livre pra somar um `'historico'` futuro sem colidir. A aba Combate
+mesclada agora hospeda 4 seções na mesma tela: os stats de sempre, Resistências (m3-33),
+`<app-ficha-rolagens>` (m3-15/m3-22, intacto) e a nova `<app-ficha-combos>`. `?aba=rolagens`
+(links antigos) redireciona pra `combate` em vez de cair no fallback genérico. Novo contrato
+`FichaComboDto { nome; passos: FichaComboPassoDto[] }` (`shared/dtos/ficha/ficha-combo.dtos.ts`) —
+cada passo **referencia** um preset de `dados.rolagens` pelo nome (decisão do autor: reusar 100% o
+motor de rolagem em vez de montar fórmula solta na tela de Combos); `combos?` novo campo opcional em
+`FichaJogadorDadosDto`. Zero motor novo em `shared/regras/rolagem` — a lógica de resolver+rolar+
+rotular+debitar energia que vivia dentro de `FichaRolagens.rolarPassoDoPreset` foi **extraída** pra
+`frontend/modules/ficha/executar-rolagem.ts` (`executarPassoPreset`), reusada tanto por
+`FichaRolagens` (refatorado, comportamento idêntico — mesma suíte de testes passando) quanto pelo
+novo runner de Combos. Novo componente `FichaCombos` (`componentes/ficha-combos/`, padrão de
+`FichaRolagens`: editor CRUD com Reactive Forms, reordenar passo via `moverPasso`) + runner: estado
+de "passo atual", botão único que avança **um passo por clique** (decisão do autor — não dispara
+tudo de uma vez), cada resultado cai na `BandejaDadosService` como uma rolagem normal (mesmo débito
+de energia de habilidade vinculada, sem tratamento especial); passo com `rolagemNome` que não
+resolve mais mostra "preset não encontrado" e só avança, sem travar (mesma liberdade de edição de
+m3-10 — não valida a referência no salvar). `+11` testes de componente (`FichaCombos`) + specs de
+`FichaVisualizacao`/`FichaRolagens` ajustadas pro merge (7→6 abas, aba `rolagens` deixou de existir
+como aba própria). **Verificado ao vivo**: barra de abas com 6 itens, painel Combate mostrando as 4
+seções com 2 presets criados de antemão, combo de 2 passos montado e executado passo a passo
+("passo 1/2" → "Rolar e avançar" → "passo 2/2" → "Rolar e concluir" → runner fecha), sobrevive a
+reload. **Milestone da nova frente fechado ponta a ponta** (`m3-29`→`m3-34`, seis specs, ordem
+crescente de complexidade, todas verificadas ao vivo).
+
+**Próxima task**: a fila original `m3-23`→`m3-26` (Identidade, mobile, otimização de espaço),
+possivelmente já em andamento em outra sessão — conferir `docs/specs/active/` antes de começar.
+
 **Trilha paralela — extensão pós-M2 (`m2-16`/`m2-17`, specs adicionadas ao backlog depois do M2
 "fechado" acima, dependendo de fichas já entregues pelo M3): `m2-16` (fichas do membro na lista) e
 `m2-17` (redesenho visual de `/painel`/`/painel/:id`) concluídas** (specs em `docs/specs/done/`) —

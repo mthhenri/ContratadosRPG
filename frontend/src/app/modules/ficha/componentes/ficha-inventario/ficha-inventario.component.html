@@ -9,6 +9,10 @@
       <span class="ficha-inv__ref-rotulo">Modificações</span>
       <span class="ficha-inv__ref-valor">{{ limiteModsTexto() }}</span>
     </div>
+    <div class="ficha-inv__ref-box" [class.ficha-inv__ref-box--aviso]="dinheiroNegativo()">
+      <span class="ficha-inv__ref-rotulo">Dinheiro restante</span>
+      <span class="ficha-inv__ref-valor">{{ dinheiroRestanteTexto() }}</span>
+    </div>
   </div>
 
   @if (excedeInventario()) {
@@ -281,12 +285,40 @@
     <div class="ficha-inv__item">
       <div class="ficha-inv__item-cabecalho">
         <div class="ficha-inv__item-identidade">
-          <span class="ficha-inv__item-nome">
-            {{ item.nome }}
-            @if (item.quantidade > 1) {
-              <span class="ficha-inv__tag">×{{ item.quantidade }}</span>
+          @if (editavel() && editandoApelidoIndice() === item.indice) {
+            <input
+              #entradaApelido
+              class="ficha-inv__item-apelido-entrada"
+              type="text"
+              [value]="item.apelido ?? ''"
+              [attr.aria-label]="'Apelido de ' + item.nome"
+              [placeholder]="item.nome"
+              (keydown.enter)="confirmarApelido(item.indice, entradaApelido.value)"
+              (keydown.escape)="cancelarApelido()"
+              (blur)="confirmarApelido(item.indice, entradaApelido.value)"
+            />
+          } @else {
+            <span class="ficha-inv__item-nome">
+              {{ item.nomeExibido }}
+              @if (item.quantidade > 1) {
+                <span class="ficha-inv__tag">×{{ item.quantidade }}</span>
+              }
+              @if (editavel() && item.podeApelidar) {
+                <button
+                  type="button"
+                  class="ficha-inv__item-apelido-lapis"
+                  aria-label="Editar apelido"
+                  title="Editar apelido"
+                  (click)="editarApelido(item.indice)"
+                >
+                  ✎
+                </button>
+              }
+            </span>
+            @if (item.apelido) {
+              <span class="ficha-inv__item-nome-mecanico">{{ item.nome }}</span>
             }
-          </span>
+          }
           <span class="ficha-inv__item-categoria">{{ item.categoriaRotulo }}</span>
         </div>
         <div class="ficha-inv__item-controles">
@@ -324,6 +356,32 @@
                 >
                   <app-icone [nome]="item.guardada ? 'guardada' : 'vestida'" />
                   <span>{{ item.guardada ? 'Guardada' : 'Vestida' }}</span>
+                </button>
+              }
+
+              @if (item.ehProtecao) {
+                <button
+                  type="button"
+                  class="ficha-inv__porte"
+                  [class.ficha-inv__porte--vestida]="item.equipado"
+                  title="Só Proteções equipadas somam na resistência da aba Combate"
+                  (click)="alternarEquipado(item.indice)"
+                >
+                  <app-icone [nome]="item.equipado ? 'vestida' : 'guardada'" />
+                  <span>{{ item.equipado ? 'Equipado' : 'Na mochila' }}</span>
+                </button>
+              }
+
+              @if (item.fragmentoPotencializador) {
+                <button
+                  type="button"
+                  class="ficha-inv__modificar"
+                  [class.ficha-inv__modificar--aberto]="aplicandoFragmentoIndice() === item.indice"
+                  [attr.aria-expanded]="aplicandoFragmentoIndice() === item.indice"
+                  (click)="abrirAplicarFragmento(item.indice)"
+                >
+                  <app-icone nome="fragmento" />
+                  <span>Aplicar em...</span>
                 </button>
               }
             </div>
@@ -384,6 +442,13 @@
             <div class="ficha-inv__mod-tag" [class.ficha-inv__mod-tag--excede]="mod.excedente">
               <div class="ficha-inv__mod-tag-info">
                 <span>
+                  @if (mod.deFragmento) {
+                    <app-icone
+                      nome="fragmento"
+                      class="ficha-inv__mod-tag-fragmento"
+                      title="Aplicado por Fragmento"
+                    />
+                  }
                   {{ mod.nome }} ×{{ mod.empilhamentos }}
                   @if (mod.excedente) {
                     <span class="ficha-inv__excede-tag" title="Além do limite da patente">Excedente</span>
@@ -438,6 +503,51 @@
               }
             </div>
           }
+        </div>
+      }
+
+      @if (editavel() && item.fragmentoPotencializador && aplicandoFragmentoIndice() === item.indice) {
+        <div class="ficha-inv__mod-painel">
+          <div class="ficha-inv__form-linha">
+            <label class="ficha-inv__campo ficha-inv__campo--largo">
+              <span class="ficha-inv__campo-rotulo">Aplicar em</span>
+              <select class="ficha-inv__entrada" (change)="escolherAlvoFragmento($event)">
+                <option value="">— Escolha o item-alvo —</option>
+                @for (alvo of alvosFragmentoDisponiveis(); track alvo.indice) {
+                  <option [value]="alvo.indice">{{ alvo.rotulo }}</option>
+                }
+              </select>
+            </label>
+            <label class="ficha-inv__campo ficha-inv__campo--largo">
+              <span class="ficha-inv__campo-rotulo">Bônus (escolha um)</span>
+              <select class="ficha-inv__entrada" (change)="escolherOpcaoBonusFragmento($event)">
+                <option value="">— Escolha o bônus —</option>
+                @for (opcao of opcoesBonusFragmento(); track opcao.rotulo; let i = $index) {
+                  <option [value]="i">{{ opcao.rotulo }}</option>
+                }
+              </select>
+            </label>
+          </div>
+          <p class="ficha-inv__aviso">
+            Aplicar consome o fragmento (some do inventário) e debita o custo de Energia do módulo
+            (Energia atual + Energia Máxima).
+          </p>
+          <div class="ficha-inv__form-acoes">
+            <button
+              type="button"
+              class="ficha-inv__btn ficha-inv__btn--principal"
+              (click)="confirmarAplicarFragmento(item.indice)"
+            >
+              Aplicar
+            </button>
+            <button
+              type="button"
+              class="ficha-inv__btn ficha-inv__btn--secundario"
+              (click)="cancelarAplicarFragmento()"
+            >
+              Cancelar
+            </button>
+          </div>
         </div>
       }
 

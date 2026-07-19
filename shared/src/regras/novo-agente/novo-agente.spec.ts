@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { MotivoEntradaAgenteEnum, PatenteEnum } from '../../enums';
 import {
   calcularBonusMonetario,
+  calcularDinheiroInicial,
   calcularNivelInicial,
   calcularNovoAgente,
   calcularPrestigioInicial,
+  rolarDinheiroInicial,
 } from './novo-agente';
 
 /**
@@ -113,6 +115,25 @@ describe('calcularBonusMonetario', () => {
 
   it('Prestígio 0 (Agente, 1×) → sem bônus', () => {
     expect(calcularBonusMonetario({ prestigioInicial: 0 }).bonus).toBe(0);
+  });
+});
+
+describe('calcularDinheiroInicial', () => {
+  it('1000 + soma × 250 (exemplo do documento: 1000 + 4D4 × 250)', () => {
+    expect(calcularDinheiroInicial({ somaDados: 4 })).toEqual({ dinheiro: 2000, somaDados: 4 });
+    expect(calcularDinheiroInicial({ somaDados: 16 })).toEqual({ dinheiro: 5000, somaDados: 16 });
+    expect(calcularDinheiroInicial({ somaDados: 10 })).toEqual({ dinheiro: 3500, somaDados: 10 });
+  });
+});
+
+describe('rolarDinheiroInicial', () => {
+  it('rola 4D4 e aplica a fórmula — sempre dentro da faixa $2.000–$5.000', () => {
+    for (let tentativa = 0; tentativa < 50; tentativa++) {
+      const resultado = rolarDinheiroInicial();
+      expect(resultado.somaDados).toBeGreaterThanOrEqual(4);
+      expect(resultado.somaDados).toBeLessThanOrEqual(16);
+      expect(resultado.dinheiro).toBe(1000 + resultado.somaDados * 250);
+    }
   });
 });
 

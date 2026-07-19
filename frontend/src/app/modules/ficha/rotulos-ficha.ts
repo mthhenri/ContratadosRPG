@@ -1,5 +1,6 @@
 import { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
 import { classeBaseDeHabilidades } from '@contratados-rpg/shared/regras/agente';
+import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 
 /**
  * Rótulos legíveis de classe/registro e arquétipo — mesma grafia dos `<select>` do formulário
@@ -59,4 +60,13 @@ export function rotuloClasseCompleto(classe: ClasseEnum, arquetipo: ArquetipoEnu
     return rotuloClasse(classe);
   }
   return `${rotuloClasse(classe)} - ${rotuloArquetipo(arquetipo)}`;
+}
+
+/**
+ * Nome exibido de um item do inventário (m3-30): o **apelido** que o jogador deu à instância
+ * (ex.: "Espada Excalibur"), ou o nome mecânico do catálogo quando não tem. Ponto único de
+ * formatação — reusado pelo Inventário e, mais tarde, pelo seletor de Combos (`m3-34`).
+ */
+export function rotuloItem(item: Pick<CarrinhoItemDto, 'nome' | 'apelido'>): string {
+  return item.apelido?.trim() || item.nome;
 }

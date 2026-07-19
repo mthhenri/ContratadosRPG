@@ -13,12 +13,12 @@ import type {
 import {
   ABREVIACOES_ATRIBUTO,
   resolverPreset,
-  rolarPasso,
   validarFormula,
   type PlanoPresetDto,
 } from '@contratados-rpg/shared/regras/rolagem';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { executarPassoPreset } from '../../executar-rolagem';
 import { GuiaFormula } from '../guia-formula/guia-formula.component';
 
 /** Grupo tipado de um passo seguinte no formulário (encadeamento). */
@@ -283,34 +283,31 @@ export class FichaRolagens {
 
   // === Rolar ===
   /**
-   * Rola um passo do preset e o joga na **bandeja** (m3-22). Ao rolar o passo **primário** (índice 0)
-   * de um preset com habilidades vinculadas, debita a Energia **uma vez** (soma dos custos + o valor
-   * variável informado). Os passos seguintes (dano, crítico) não redebitam. Passo inválido não rola.
+   * Rola um passo do preset e o joga na **bandeja** (m3-22): resolve+rola via `executarPassoPreset`
+   * (extraído em m3-34 pra ser reusado também pelo runner de Combos). Ao rolar o passo **primário**
+   * (índice 0) de um preset com habilidades vinculadas, debita a Energia **uma vez** (soma dos
+   * custos + o valor variável informado). Os passos seguintes (dano, crítico) não redebitam. Passo
+   * inválido não rola.
    */
   protected rolarPassoDoPreset(preset: RolagemVM, indicePasso: number): void {
-    const passo = preset.plano.passos[indicePasso];
-    if (!passo) {
+    const original = this.rolagens()[preset.indice];
+    if (!original) {
       return;
     }
-    const resultado = rolarPasso(passo, this.atributos(), this.proficiencia());
-    if (!resultado) {
+    const executado = executarPassoPreset({
+      preset: original,
+      atributos: this.atributos(),
+      proficiencia: this.proficiencia(),
+      habilidadesDisponiveis: this.habilidadesDisponiveis(),
+      indicePasso,
+      energiaVariavel: preset.plano.energiaVariavel ? this.energiaVariavelDe(preset.indice) : undefined,
+    });
+    if (!executado) {
       return;
     }
-    const rotulo = preset.encadeado ? `${preset.nome} · ${passo.nome}` : preset.nome;
-    this.bandeja.mostrar({ rotulo, resultado, modo: passo.modo });
-    if (indicePasso === 0) {
-      this.debitarEnergia(preset);
-    }
-  }
-
-  private debitarEnergia(preset: RolagemVM): void {
-    if (preset.plano.habilidadesVinculadas.length === 0) {
-      return;
-    }
-    const variavel = preset.plano.energiaVariavel ? this.energiaVariavelDe(preset.indice) : 0;
-    const total = preset.plano.energiaGasta + variavel;
-    if (total > 0) {
-      this.energiaGasta.emit(total);
+    this.bandeja.mostrar({ rotulo: executado.rotulo, resultado: executado.resultado, modo: executado.modo });
+    if (executado.energiaGasta > 0) {
+      this.energiaGasta.emit(executado.energiaGasta);
     }
   }
 

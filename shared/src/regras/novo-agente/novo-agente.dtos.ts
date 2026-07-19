@@ -30,6 +30,12 @@ export interface BonusMonetarioCalcularDto {
   readonly prestigioInicial: number;
 }
 
+/** Entrada de `calcularDinheiroInicial`: a soma já rolada de 4D4. */
+export interface DinheiroInicialCalcularDto {
+  /** Soma dos 4 dados de 4 faces já rolados (mín. 4, máx. 16). */
+  readonly somaDados: number;
+}
+
 /** Entrada de `calcularNovoAgente`: motivo + médias de Nível e Prestígio do esquadrão. */
 export interface NovoAgenteCalcularDto {
   readonly motivo: MotivoEntradaAgenteEnum;
@@ -65,6 +71,15 @@ export interface PrestigioInicialDto {
 export interface BonusMonetarioDto {
   readonly bonus: number;
   readonly patente: PatenteDados;
+}
+
+/**
+ * Dinheiro inicial de um novo agente: `1000 + (soma de 4D4) × 250`. `somaDados` é devolvida
+ * junto para exibição do detalhamento (ex.: "4D4 = 11 → $3.750").
+ */
+export interface DinheiroInicialDto {
+  readonly dinheiro: number;
+  readonly somaDados: number;
 }
 
 /**
