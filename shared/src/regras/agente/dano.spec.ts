@@ -4,6 +4,7 @@ import {
   calcularDanoCorpo,
   calcularDanoFurtivo,
   contarMarcosDanoFurtivo,
+  incrementarDadosDanoFurtivo,
   incrementarDanoFurtivo,
   somarDanoFixo,
 } from './dano';
@@ -79,6 +80,29 @@ describe('incrementarDanoFurtivo', () => {
 
   it('devolve a expressão intacta fora do formato esperado (fail-safe)', () => {
     expect(incrementarDanoFurtivo('4D6+7 [Físico]', 1)).toBe('4D6+7 [Físico]');
+  });
+});
+
+describe('incrementarDadosDanoFurtivo', () => {
+  it('soma só ao número de dados, preservando o fixo (bônus de Formação — m3-23)', () => {
+    expect(incrementarDadosDanoFurtivo('1D6+1', 1)).toBe('2D6+1');
+    expect(incrementarDadosDanoFurtivo('2D6+5', 1)).toBe('3D6+5');
+  });
+
+  it('soma mais de um dado de uma vez', () => {
+    expect(incrementarDadosDanoFurtivo('1D6+1', 2)).toBe('3D6+1');
+  });
+
+  it('tolera caixa e espaços na notação', () => {
+    expect(incrementarDadosDanoFurtivo('2d6 + 2', 1)).toBe('3D6+2');
+  });
+
+  it('nunca gera dados negativos (clamp em 0)', () => {
+    expect(incrementarDadosDanoFurtivo('1D6+1', -5)).toBe('0D6+1');
+  });
+
+  it('devolve a expressão intacta fora do formato esperado (fail-safe)', () => {
+    expect(incrementarDadosDanoFurtivo('4D6+7 [Físico]', 1)).toBe('4D6+7 [Físico]');
   });
 });
 

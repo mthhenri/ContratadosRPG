@@ -1,10 +1,11 @@
 import type { FichaDerivadosDto, FichaFormacaoDto } from '../../dtos/ficha';
 import type { FormacaoBonusEnum } from '../../enums';
-import { incrementarDanoFurtivo, somarDanoFixo } from '../agente/dano';
+import { incrementarDadosDanoFurtivo, somarDanoFixo } from '../agente/dano';
 import { FORMACOES } from './formacoes.dados';
 import type { EfeitoFormacao, FormacaoDefinicaoDto } from './identidade.dtos';
 
-const ALVOS_APLICAVEIS = new Set(['DERIVADO', 'DERIVADO_ESCOLHA', 'DANO_CORPO', 'DANO_FURTIVO_DADO']);
+/** Alvos de `EfeitoFormacao` com campo hoje em `FichaDerivadosDto` — espelha os `case`s de `aplicarEfeitoUnico`. Exportado para o teste não manter uma cópia própria (drift). */
+export const ALVOS_APLICAVEIS = new Set(['DERIVADO', 'DERIVADO_ESCOLHA', 'DANO_CORPO', 'DANO_FURTIVO_DADO']);
 
 /**
  * Aplica o `efeito` de uma linha de Formação a um `FichaDerivadosDto`. Só os quatro alvos com campo
@@ -18,19 +19,28 @@ function aplicarEfeitoUnico(
   parametro: string | null,
 ): FichaDerivadosDto {
   switch (efeito.alvo) {
-    case 'DERIVADO':
-      return { ...derivados, [efeito.campo]: (derivados[efeito.campo] ?? 0) + efeito.valor };
+    case 'DERIVADO': {
+      // `!== undefined`, não `??`: um derivado ausente (undefined) é "a classe não possui essa
+      // stat" — tratar como 0 fabricaria uma stat que a classe não tem. Ver DERIVADO_ESCOLHA.
+      const atual = derivados[efeito.campo];
+      return atual !== undefined ? { ...derivados, [efeito.campo]: atual + efeito.valor } : derivados;
+    }
     case 'DERIVADO_ESCOLHA': {
       const escolha = efeito.campos.find((campo) => campo.toLowerCase() === (parametro ?? '').toLowerCase());
-      return escolha ? { ...derivados, [escolha]: (derivados[escolha] ?? 0) + efeito.valor } : derivados;
+      const atual = escolha ? derivados[escolha] : undefined;
+      // Civil não possui esquiva/bloqueio (`calcularDefesa` retorna `null` → campos `undefined` em
+      // `FichaDerivadosDto`, doc do próprio DTO): `!== undefined` evita fabricar a stat com `?? 0`.
+      return escolha && atual !== undefined ? { ...derivados, [escolha]: atual + efeito.valor } : derivados;
     }
     case 'DANO_CORPO':
       return derivados.danoCorpoACorpo
         ? { ...derivados, danoCorpoACorpo: somarDanoFixo(derivados.danoCorpoACorpo, efeito.valor) }
         : derivados;
     case 'DANO_FURTIVO_DADO':
+      // Bônus de Formação concede só DADO (sistema-v4.1.0.md "⬦ Formação") — incrementarDadosDanoFurtivo,
+      // não incrementarDanoFurtivo (que soma dado E fixo, contrato de marco de progressão/Letalidade).
       return derivados.danoFurtivo
-        ? { ...derivados, danoFurtivo: incrementarDanoFurtivo(derivados.danoFurtivo, 1) }
+        ? { ...derivados, danoFurtivo: incrementarDadosDanoFurtivo(derivados.danoFurtivo, efeito.valor) }
         : derivados;
     default:
       return derivados;
@@ -53,7 +63,13 @@ export function aplicarFormacaoAosDerivados(
     if (!formacao.bonus) {
       return acumulado;
     }
-    return aplicarEfeitoUnico(acumulado, FORMACOES[formacao.bonus].efeito, formacao.parametro);
+    // Sem validação/trava ainda (m3-24): um código persistido que não exista mais em `FORMACOES`
+    // (ficha legada, enum renomeado) é ignorado como `bonus: null`, não derruba o cálculo.
+    const definicao = FORMACOES[formacao.bonus] as FormacaoDefinicaoDto | undefined;
+    if (!definicao) {
+      return acumulado;
+    }
+    return aplicarEfeitoUnico(acumulado, definicao.efeito, formacao.parametro);
   }, derivados);
 }
 

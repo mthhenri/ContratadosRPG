@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { FichaDerivadosDto, FichaFormacaoDto } from '../../dtos/ficha';
 import { FormacaoBonusEnum } from '../../enums';
 import { FORMACOES } from './formacoes.dados';
-import { aplicarFormacaoAosDerivados, listarEfeitosPendentes } from './formacoes';
+import { ALVOS_APLICAVEIS, aplicarFormacaoAosDerivados, listarEfeitosPendentes } from './formacoes';
 
 /**
  * `aplicarFormacaoAosDerivados` conferida contra `docs/core/sistema-v4.1.0.md` — "⬦ Formação": as 5
@@ -40,6 +40,75 @@ describe('FORMACOES', () => {
     const comParametro = Object.values(FORMACOES).filter((entrada) => entrada.parametro !== null);
     expect(comParametro).toHaveLength(6);
   });
+
+  it('confere o efeito de cada uma das 16 linhas pendentes contra o documento (cobertura contra typo)', () => {
+    expect(FORMACOES[FormacaoBonusEnum.COMBATE_DADO_CATEGORIA_ARMA].efeito).toEqual({
+      alvo: 'ROLAGEM',
+      modificador: 'DADO',
+      valor: 1,
+    });
+    expect(FORMACOES[FormacaoBonusEnum.COMBATE_RESISTENCIA_TIPO_DANO].efeito).toEqual({
+      alvo: 'RESISTENCIA',
+      valor: 3,
+    });
+    expect(FORMACOES[FormacaoBonusEnum.MOVIMENTO_DADO_CORRIDA].efeito).toEqual({
+      alvo: 'ROLAGEM',
+      modificador: 'DADO',
+      valor: 1,
+    });
+    expect(FORMACOES[FormacaoBonusEnum.PERICIA_DADO_ATRIBUTO].efeito).toEqual({
+      alvo: 'ROLAGEM',
+      modificador: 'DADO',
+      valor: 1,
+    });
+    expect(FORMACOES[FormacaoBonusEnum.PERICIA_BONUS_ATRIBUTO].efeito).toEqual({
+      alvo: 'ROLAGEM',
+      modificador: 'BONUS',
+      valor: 1,
+    });
+    expect(FORMACOES[FormacaoBonusEnum.PERICIA_DADO_ATRIBUTO_CONDICAO].efeito).toEqual({
+      alvo: 'ROLAGEM',
+      modificador: 'DADO',
+      valor: 1,
+    });
+    expect(FORMACOES[FormacaoBonusEnum.PERICIA_DADO_INICIATIVA].efeito).toEqual({ alvo: 'INICIATIVA', valor: 1 });
+    expect(FORMACOES[FormacaoBonusEnum.EQUIPAMENTO_DADO_ITENS_MEDICINAIS].efeito).toEqual({
+      alvo: 'ROLAGEM',
+      modificador: 'DADO',
+      valor: 1,
+    });
+    expect(FORMACOES[FormacaoBonusEnum.EQUIPAMENTO_BONUS_ITENS_MEDICINAIS].efeito).toEqual({
+      alvo: 'ROLAGEM',
+      modificador: 'BONUS',
+      valor: 2,
+    });
+    expect(FORMACOES[FormacaoBonusEnum.EQUIPAMENTO_DADO_EFEITO_ITENS_MEDICINAIS].efeito).toEqual({
+      alvo: 'ROLAGEM',
+      modificador: 'DADO',
+      valor: 1,
+    });
+    expect(FORMACOES[FormacaoBonusEnum.EQUIPAMENTO_DADO_ITENS_OPERACIONAIS].efeito).toEqual({
+      alvo: 'ROLAGEM',
+      modificador: 'DADO',
+      valor: 1,
+    });
+    expect(FORMACOES[FormacaoBonusEnum.EQUIPAMENTO_BONUS_ITENS_OPERACIONAIS].efeito).toEqual({
+      alvo: 'ROLAGEM',
+      modificador: 'BONUS',
+      valor: 2,
+    });
+    expect(FORMACOES[FormacaoBonusEnum.EQUIPAMENTO_DADO_EFEITO_ITENS_OPERACIONAIS].efeito).toEqual({
+      alvo: 'ROLAGEM',
+      modificador: 'DADO',
+      valor: 1,
+    });
+    expect(FORMACOES[FormacaoBonusEnum.EQUIPAMENTO_TURNO_EXTRA_STATUS].efeito).toEqual({
+      alvo: 'DURACAO_EFEITO',
+      valor: 1,
+    });
+    expect(FORMACOES[FormacaoBonusEnum.LOGISTICA_SOBRECARGA].efeito).toEqual({ alvo: 'SOBRECARGA', valor: 3 });
+    expect(FORMACOES[FormacaoBonusEnum.LOGISTICA_DT_REPARO].efeito).toEqual({ alvo: 'DT_REPARO', valor: -2 });
+  });
 });
 
 describe('aplicarFormacaoAosDerivados', () => {
@@ -72,9 +141,23 @@ describe('aplicarFormacaoAosDerivados', () => {
     expect(resultado.danoCorpoACorpo).toBe('1D3+1 [Físico]');
   });
 
-  it('aplica +1 dado de dano Furtivo reusando incrementarDanoFurtivo (DANO_FURTIVO_DADO)', () => {
+  it('aplica +1 dado de dano Furtivo sem alterar o fixo — só dado, não "+1D6+1" (DANO_FURTIVO_DADO)', () => {
     const resultado = aplicarFormacaoAosDerivados(BASE, [formacao(FormacaoBonusEnum.COMBATE_DANO_FURTIVO_DADO)]);
-    expect(resultado.danoFurtivo).toBe('2D6+2');
+    expect(resultado.danoFurtivo).toBe('2D6+1');
+  });
+
+  it('não fabrica esquiva/bloqueio quando a stat está ausente (Civil — DERIVADO_ESCOLHA)', () => {
+    const semDefesa: FichaDerivadosDto = { ...BASE, esquiva: undefined, bloqueio: undefined };
+    const resultado = aplicarFormacaoAosDerivados(semDefesa, [
+      formacao(FormacaoBonusEnum.COMBATE_ESQUIVA_OU_BLOQUEIO, 'Esquiva'),
+    ]);
+    expect(resultado.esquiva).toBeUndefined();
+    expect(resultado.bloqueio).toBeUndefined();
+  });
+
+  it('ignora um código de bônus sem entrada em FORMACOES sem quebrar (ficha legada/enum removido)', () => {
+    const invalido = { bonus: 'BONUS_INEXISTENTE', parametro: null, texto: '...' } as unknown as FichaFormacaoDto;
+    expect(aplicarFormacaoAosDerivados(BASE, [invalido])).toEqual(BASE);
   });
 
   it('ignora as 16 linhas pendentes sem quebrar', () => {
@@ -102,7 +185,6 @@ describe('listarEfeitosPendentes', () => {
   it('devolve exatamente as 16 linhas sem campo hoje', () => {
     const pendentes = listarEfeitosPendentes(FORMACOES);
     expect(pendentes).toHaveLength(16);
-    const alvosAplicaveis = ['DERIVADO', 'DERIVADO_ESCOLHA', 'DANO_CORPO', 'DANO_FURTIVO_DADO'];
-    expect(pendentes.every((definicao) => !alvosAplicaveis.includes(definicao.efeito.alvo))).toBe(true);
+    expect(pendentes.every((definicao) => !ALVOS_APLICAVEIS.has(definicao.efeito.alvo))).toBe(true);
   });
 });

@@ -32,6 +32,23 @@ export function incrementarDanoFurtivo(expressao: string, incrementoMarcos: numb
   return fixo > 0 ? `${dados}D6+${fixo}` : `${dados}D6`;
 }
 
+/**
+ * Soma `incrementoDados` só ao **número de dados** de uma expressão `Nd6+M` já existente,
+ * preservando o fixo intacto — para bônus que concedem **apenas dado** (ex.: Formação "+1 dado de
+ * dano Furtivo", `sistema-v4.1.0.md` "⬦ Formação", m3-23), diferente de `incrementarDanoFurtivo`
+ * (marco de progressão/Letalidade, que soma dado **e** fixo juntos — "+1D6+1"). Fora do formato
+ * esperado, devolve a expressão intacta (fail-safe). Nunca gera componente negativo (clamp em 0).
+ */
+export function incrementarDadosDanoFurtivo(expressao: string, incrementoDados: number): string {
+  const encontrado = PADRAO_DANO_FURTIVO.exec(expressao.trim());
+  if (!encontrado) {
+    return expressao;
+  }
+  const dados = Math.max(Number(encontrado[1]) + incrementoDados, 0);
+  const fixo = Number(encontrado[2] ?? 0);
+  return fixo > 0 ? `${dados}D6+${fixo}` : `${dados}D6`;
+}
+
 /** Notação de dano com valor fixo `N[Dx[+M]] [Tipo]` — número inicial (puro ou nº de dados), dado opcional, fixo opcional somado ao dado, e o resto (tipo/sentinela) preservado intacto. */
 const PADRAO_DANO_FIXO = /^(\d+)(D\d+)?(?:\+(\d+))?(\s.*)?$/i;
 

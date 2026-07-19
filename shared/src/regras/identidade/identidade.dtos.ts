@@ -20,7 +20,7 @@ export type EfeitoFormacao =
   | { readonly alvo: 'DERIVADO'; readonly campo: 'deslocamento' | 'inventarioMaximo'; readonly valor: number }
   | { readonly alvo: 'DERIVADO_ESCOLHA'; readonly campos: readonly ['esquiva', 'bloqueio']; readonly valor: number }
   | { readonly alvo: 'DANO_CORPO'; readonly valor: number }
-  | { readonly alvo: 'DANO_FURTIVO_DADO' }
+  | { readonly alvo: 'DANO_FURTIVO_DADO'; readonly valor: number }
   | { readonly alvo: 'ROLAGEM'; readonly modificador: 'DADO' | 'BONUS'; readonly valor: number }
   | { readonly alvo: 'DURACAO_EFEITO'; readonly valor: number }
   | {

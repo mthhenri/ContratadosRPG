@@ -53,7 +53,7 @@ export const FORMACOES: Readonly<Record<FormacaoBonusEnum, FormacaoDefinicaoDto>
     grupo: 'Combate',
     rotulo: '+1 dado de dano Furtivo',
     parametro: null,
-    efeito: { alvo: 'DANO_FURTIVO_DADO' },
+    efeito: { alvo: 'DANO_FURTIVO_DADO', valor: 1 },
   },
   // ── Movimento (2) ───────────────────────────────────────────────────────────
   [FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO]: {
