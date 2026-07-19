@@ -16,9 +16,9 @@ interface SecaoGuia {
 const ATRIBUTOS = 'DES FOR LUT PON VIG · INT MED SEN SOC VON';
 
 /**
- * Guia da gramática de fórmula, redigido a partir do motor `shared/regras/rolagem` (m3-16/18/19) e
- * conferido contra `docs/core/sistema-v4.1.0.md` — "Atributos"/"Testes"/"Tipos de Dano". Texto de
- * interface (não é regra nova).
+ * Guia da gramática de fórmula, redigido a partir do motor `shared/regras/rolagem` (m3-16/18/27) e
+ * conferido contra `docs/core/sistema-v4.1.0.md` — "Atributos"/"Testes"/"Tipos de Dano". Não há "modo":
+ * a fórmula especifica tudo. Texto de interface (não é regra nova).
  */
 const SECOES: readonly SecaoGuia[] = [
   {
@@ -29,10 +29,31 @@ const SECOES: readonly SecaoGuia[] = [
     ],
   },
   {
-    titulo: 'Atributo como dado',
+    titulo: 'Teste de atributo',
     linhas: [
+      { codigo: 'LUTd20kh1 + PROF', texto: 'O teste: rola (Luta) d20, mantém o maior (kh1) e soma a Proficiência.' },
       { codigo: 'FORd6', texto: 'Rola (valor de Força) dados de seis — a quantidade vem do atributo.' },
-      { codigo: 'luta', texto: 'No modo Teste, vira (valor de Luta) d20: é o teste do atributo.' },
+    ],
+  },
+  {
+    titulo: 'Manter maior / menor',
+    linhas: [
+      { codigo: 'kh1', texto: 'Mantém o 1 maior do pool (keep highest). Bare kh = 1.' },
+      { codigo: 'kl2', texto: 'Mantém os 2 menores (keep lowest) — é a desvantagem.' },
+    ],
+  },
+  {
+    titulo: 'Margem de crítico',
+    linhas: [
+      { codigo: 'cm1', texto: 'Conta os dados no valor máximo (d20 → só o 20). Só informa; não altera o total.' },
+      { codigo: 'cm2', texto: 'Abre a margem (d20 → 19 e 20).' },
+    ],
+  },
+  {
+    titulo: 'Explosão e implosão',
+    linhas: [
+      { codigo: '4d6!', texto: 'Explode: cada dado no máximo (6) rola outro dado extra. !>=5 explode em 5+.' },
+      { codigo: '4d6?', texto: 'Implode: cada dado no mínimo (1) rola outro extra. ?<=2 implode em 2−.' },
     ],
   },
   {
@@ -50,6 +71,13 @@ const SECOES: readonly SecaoGuia[] = [
     ],
   },
   {
+    titulo: 'Proficiência e Nível',
+    linhas: [
+      { codigo: '+PROF', texto: 'Soma a Proficiência (= o Nível; Civil = 0). Escreva-a no teste — não entra sozinha.' },
+      { codigo: '+NIV', texto: 'Soma o Nível do agente. Valem como atributo: PROFd6, NIV*2, NIV/2.' },
+    ],
+  },
+  {
     titulo: 'Números fixos',
     linhas: [
       { codigo: '+2', texto: 'Soma dois ao total.' },
@@ -61,17 +89,6 @@ const SECOES: readonly SecaoGuia[] = [
     linhas: [
       { codigo: '2d8 [Balístico]', texto: 'Marca o dano como Balístico; o total sai separado por tipo.' },
       { codigo: '[Físico-Químico]', texto: 'Dano Composto: metade de cada tipo (a sobra vai para o primeiro).' },
-    ],
-  },
-  {
-    titulo: 'Modo Teste × modo Soma',
-    linhas: [
-      {
-        codigo: 'Teste',
-        texto:
-          'Rola o grupo de d20 e pega o MAIOR + Proficiência. Atributo 0 ou negativo rola com desvantagem (mais dados, pega o menor).',
-      },
-      { codigo: 'Soma', texto: 'Soma todos os termos; com tipos de dano, agrupa o total por tipo.' },
     ],
   },
 ];

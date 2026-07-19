@@ -5,6 +5,26 @@
   flex-direction: column;
   gap: 12px;
 
+  // Rolagem avulsa (m3-31): caixa própria no topo, separada dos presets.
+  &__rapida {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+  }
+  &__rapida-linha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .ficha-rol__entrada {
+      flex: 1;
+    }
+  }
+
   &__novo {
     align-self: flex-start;
     font-family: var(--font-mono);
@@ -62,24 +82,6 @@
     font-weight: 700;
     color: var(--text);
   }
-  // Badge do modo primário (Soma padrão; Teste em accent).
-  &__modo {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-mute);
-    border: 1px solid var(--border-strong);
-    border-radius: 3px;
-    padding: 1px 6px;
-
-    &--teste {
-      color: var(--accent);
-      border-color: var(--accent-border);
-      background: var(--accent-dim);
-    }
-  }
   &__cadeia {
     font-family: var(--font-mono);
     font-size: 10px;
@@ -110,21 +112,7 @@
     color: var(--text-dim);
   }
 
-  // === Habilidades vinculadas + energia ===
-  &__vinculos {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 10px;
-  }
-  &__vinculos-rotulo {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text-mute);
-  }
+  // === Habilidades vinculadas + energia (por passo) ===
   &__vinculo {
     font-family: var(--font-mono);
     font-size: 11px;
@@ -132,6 +120,11 @@
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-control);
     padding: 1px 7px;
+  }
+  // Multiplicador de vínculo repetido (m3-31): "×N" em accent.
+  &__vinculo-qtd {
+    color: var(--accent);
+    font-weight: 700;
   }
   &__energia {
     font-family: var(--font-mono);
@@ -141,10 +134,14 @@
     margin-left: auto;
   }
   &__energia-var {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 10px;
-    margin-top: 8px;
+    gap: 6px;
+  }
+  &__energia-var-rotulo {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-mute);
   }
 
   // === Passos (rolar) ===
@@ -156,7 +153,7 @@
   }
   &__passo {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 8px;
     padding: 7px 10px;
     background: var(--surface-2);
@@ -167,24 +164,16 @@
       border-left: 2px solid color-mix(in srgb, var(--warning) 55%, transparent);
     }
   }
-  // Marca do modo do passo num encadeado (T / S).
-  &__passo-modo {
-    flex: none;
-    width: 20px;
-    text-align: center;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--text-mute);
-    border: 1px solid var(--border-strong);
-    border-radius: 3px;
-    padding: 1px 0;
-
-    &--teste {
-      color: var(--accent);
-      border-color: var(--accent-border);
-      background: var(--accent-dim);
-    }
+  &__passo-linha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  &__passo-vinculos {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
   }
   &__passo-nome {
     font-size: 13px;
@@ -229,9 +218,33 @@
       color: var(--accent);
       padding: 5px 12px;
     }
+    // Rolar crítico (m3-30): accent sólido + brilho, para destacar a ação de dobrar o dano.
+    &--critico {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg);
+      padding: 5px 12px;
+      box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
+    }
     &:disabled {
       opacity: 0.45;
       cursor: not-allowed;
+    }
+  }
+
+  // Checkbox "passo critável" (m3-30).
+  &__critico-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    cursor: pointer;
+
+    input {
+      accent-color: var(--accent);
+      cursor: pointer;
     }
   }
   &__mini-btn {
@@ -346,50 +359,6 @@
     }
   }
 
-  // === Seletor de modo (segmentado) ===
-  &__modo-escolha {
-    display: inline-flex;
-    align-self: flex-start;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    overflow: hidden;
-
-    &--compacta {
-      flex: none;
-    }
-  }
-  &__modo-opcao {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 6px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-dim);
-    background: var(--surface);
-    border: 0;
-    padding: 7px 14px;
-    cursor: pointer;
-
-    & + & {
-      border-left: 1px solid var(--border-strong);
-    }
-    &:hover {
-      color: var(--text);
-    }
-    &--ativa {
-      color: var(--accent);
-      background: var(--accent-dim);
-    }
-  }
-  &__modo-dica {
-    font-size: 10px;
-    font-weight: 400;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-mute);
-  }
-
   // === Editor de passos seguintes ===
   &__passo-edit {
     display: flex;
@@ -430,6 +399,7 @@
     flex-wrap: wrap;
     gap: 8px;
   }
+  // Item do seletor de habilidades por passo (m3-31): rótulo + custo + stepper de contagem.
   &__hab {
     display: inline-flex;
     align-items: center;
@@ -440,13 +410,8 @@
     background: var(--surface);
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-control);
-    padding: 6px 10px;
-    cursor: pointer;
+    padding: 4px 6px 4px 10px;
 
-    &:hover {
-      color: var(--text);
-      border-color: var(--accent-border);
-    }
     &--marcada {
       color: var(--accent);
       border-color: var(--accent-border);
@@ -459,6 +424,38 @@
   &__hab-custo {
     font-size: 10px;
     color: var(--energy);
+  }
+  &__hab-stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  &__hab-passo {
+    width: 22px;
+    height: 22px;
+    flex: none;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      color: var(--text);
+      border-color: var(--accent-border);
+    }
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+  &__hab-qtd {
+    min-width: 14px;
+    text-align: center;
+    font-weight: 700;
+    color: var(--text);
   }
 
   &__form-acoes {

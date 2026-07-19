@@ -1,16 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto } from '../../dtos/ficha';
+import { HabilidadeCategoriaEnum, RolagemPresetTipoEnum, TipoDanoEnum } from '../../enums';
 import {
-  HabilidadeCategoriaEnum,
-  RolagemEfeitoAlvoEnum,
-  RolagemEfeitoTipoEnum,
-  RolagemModoEnum,
-  RolagemPresetTipoEnum,
-  TipoDanoEnum,
-} from '../../enums';
-import {
-  aplicarEfeitos,
   interpretarFormula,
+  normalizarPresetLegado,
+  reescreverFormulaTeste,
   resolverPreset,
   rolarFormula,
   rolarInterpretada,
@@ -19,9 +13,9 @@ import {
 } from './rolagem';
 
 /**
- * Motor de rolagem (m3-15): interpretação e rolagem de fórmulas de preset. A rolagem é
- * determinística nos testes via `rolarDado` injetado. Conferido contra a notação de
- * docs/core/sistema-v4.1.0.md — "Atributos"/"Testes" (`1d20 + Atributo`).
+ * Motor de rolagem (m3-15; gramática v3 m3-29): interpretação e rolagem de fórmulas de preset. A
+ * rolagem é determinística nos testes via `rolarDado` injetado. Conferido contra a notação de
+ * docs/core/sistema-v4.1.0.md — "Testes" (`(Atributo)d20`, pega o maior; +Proficiência explícita).
  */
 
 const atributos: FichaAtributosDto = {
@@ -39,6 +33,12 @@ const atributos: FichaAtributosDto = {
 
 /** Rola sempre o valor máximo do dado — determinístico. */
 const rolarMaximo = (faces: number): number => faces;
+
+/** Fábrica de roller determinístico que devolve uma sequência de valores. */
+const sequencia = (valores: readonly number[]): (() => number) => {
+  let indice = 0;
+  return () => valores[indice++];
+};
 
 describe('interpretarFormula', () => {
   it('interpreta dado + atributo (`1d20+LUT`)', () => {
@@ -98,9 +98,7 @@ describe('rolarFormula', () => {
   });
 
   it('devolve os valores individuais de cada dado', () => {
-    let n = 0;
-    const sequencia = (): number => [3, 5, 1][n++]; // 3d6 → 3,5,1
-    const resultado = rolarFormula({ formula: '3d6', atributos }, sequencia);
+    const resultado = rolarFormula({ formula: '3d6', atributos }, sequencia([3, 5, 1]));
     expect(resultado?.dados[0].valores).toEqual([3, 5, 1]);
     expect(resultado?.total).toBe(9);
   });
@@ -143,7 +141,7 @@ describe('gramática v2 — atributo-como-dado e escalonamento (m3-16)', () => {
     expect(resultado?.total).toBe(36);
   });
 
-  it('atributo ≤ 0 como fonte de dados → 0 dados', () => {
+  it('atributo ≤ 0 como fonte de dados (sem keep) → 0 dados', () => {
     const semDestreza: FichaAtributosDto = { ...atributos, destreza: 0 };
     const resultado = rolarFormula({ formula: 'DESd20', atributos: semDestreza }, rolarMaximo);
     expect(resultado?.dados[0].valores).toEqual([]);
@@ -168,10 +166,7 @@ describe('dano tipado e Composto (m3-18)', () => {
 
   it('agrupa o total por tipo de dano', () => {
     // 1d6 (=6) + FOR (6) = 12 Físico; 2d4 (=8) Explosão.
-    const resultado = rolarFormula(
-      { formula: '1d6+FOR [Físico] + 2d4 [Explosão]', atributos },
-      rolarMaximo,
-    );
+    const resultado = rolarFormula({ formula: '1d6+FOR [Físico] + 2d4 [Explosão]', atributos }, rolarMaximo);
     expect(resultado?.grupos).toEqual([
       { tipoDano: TipoDanoEnum.FISICO, total: 12 },
       { tipoDano: TipoDanoEnum.EXPLOSAO, total: 8 },
@@ -190,9 +185,7 @@ describe('dano tipado e Composto (m3-18)', () => {
   });
 
   it('Composto divide a soma do segmento 50/50, resto pro primeiro', () => {
-    let n = 0;
-    const sequencia = (): number => [10, 5][n++]; // 2d10 → 15
-    const resultado = rolarFormula({ formula: '2d10 [Físico-Químico]', atributos }, sequencia);
+    const resultado = rolarFormula({ formula: '2d10 [Físico-Químico]', atributos }, sequencia([10, 5]));
     expect(resultado?.grupos).toEqual([
       { tipoDano: TipoDanoEnum.FISICO, total: 8, composto: true },
       { tipoDano: TipoDanoEnum.QUIMICO, total: 7, composto: true },
@@ -228,180 +221,250 @@ describe('dano tipado e Composto (m3-18)', () => {
   });
 });
 
-describe('modo TESTE — pegar o maior + proficiência (m3-19)', () => {
-  it('açúcar: atributo puro vira o pool `(Atributo)`D20 no modo TESTE', () => {
-    const formula = interpretarFormula('luta', RolagemModoEnum.TESTE).formula;
-    expect(formula?.dados).toEqual([{ sinal: 1, quantidade: 1, quantidadeAtributo: 'luta', faces: 20 }]);
-    expect(formula?.atributos).toEqual([]);
+describe('manter maior/menor — kh/kl (m3-29)', () => {
+  it('interpreta os operadores de keep', () => {
+    expect(interpretarFormula('4d6kh1').formula?.dados).toEqual([
+      { sinal: 1, quantidade: 4, faces: 6, manterMaior: 1 },
+    ]);
+    expect(interpretarFormula('4d6kl2').formula?.dados).toEqual([
+      { sinal: 1, quantidade: 4, faces: 6, manterMenor: 2 },
+    ]);
+    expect(interpretarFormula('4d6kh').formula?.dados[0].manterMaior).toBe(1); // bare kh = 1
   });
 
-  it('sem TESTE, o atributo puro continua modificador (regressão)', () => {
+  it('kh1 mantém o maior; separa mantidos/descartados preservando a ordem', () => {
+    const resultado = rolarFormula({ formula: '4d6kh1', atributos }, sequencia([2, 6, 3, 5]));
+    expect(resultado?.dados[0].valores).toEqual([2, 6, 3, 5]);
+    expect(resultado?.dados[0].mantidos).toEqual([6]);
+    expect(resultado?.dados[0].descartados).toEqual([2, 3, 5]);
+    expect(resultado?.dados[0].subtotal).toBe(6);
+    expect(resultado?.total).toBe(6);
+  });
+
+  it('kl2 mantém os dois menores', () => {
+    const resultado = rolarFormula({ formula: '4d6kl2', atributos }, sequencia([2, 6, 3, 5]));
+    expect(resultado?.dados[0].mantidos).toEqual([2, 3]);
+    expect(resultado?.dados[0].descartados).toEqual([6, 5]);
+    expect(resultado?.total).toBe(5);
+  });
+
+  it('N maior que o pool mantém tudo', () => {
+    const resultado = rolarFormula({ formula: '2d6kh5', atributos }, sequencia([3, 4]));
+    expect(resultado?.dados[0].mantidos).toEqual([3, 4]);
+    expect(resultado?.dados[0].descartados).toEqual([]);
+  });
+
+  it('pool com sinal negativo subtrai o mantido', () => {
+    const resultado = rolarFormula({ formula: '-4d6kh1', atributos }, sequencia([2, 6, 3, 5]));
+    expect(resultado?.dados[0].subtotal).toBe(-6);
+    expect(resultado?.total).toBe(-6);
+  });
+});
+
+describe('teste de atributo — pool d20 + kh1 + PROF explícita (m3-29)', () => {
+  it('atributo puro é sempre modificador (sem sugar de teste)', () => {
     const formula = interpretarFormula('luta').formula;
     expect(formula?.atributos).toEqual([{ sinal: 1, atributo: 'luta', rotulo: 'LUTA' }]);
     expect(formula?.dados).toEqual([]);
   });
 
-  it('pega o maior dado do pool e soma a Proficiência', () => {
-    let n = 0;
-    const sequencia = (): number => [5, 18, 9][n++]; // luta=3 → 3 D20
+  it('`LUTd20kh1 + PROF` pega o maior e soma a Proficiência', () => {
+    // luta=3 → 3 D20 [5,18,9], mantém 18; + PROF 2 = 20.
     const resultado = rolarFormula(
-      { formula: 'lutad20', atributos, modo: RolagemModoEnum.TESTE, proficiencia: 2 },
-      sequencia,
+      { formula: 'lutad20kh1 + PROF', atributos, proficiencia: 2 },
+      sequencia([5, 18, 9]),
     );
-    expect(resultado?.teste).toEqual({
-      pool: [5, 18, 9],
-      dadoEscolhido: 18,
-      descartados: [5, 9],
-      proficiencia: 2,
-      bonusPlano: 0,
-      desvantagem: false,
-      total: 20,
-    });
-    expect(resultado?.total).toBe(20);
-  });
-
-  it('o açúcar `luta` rola igual a `lutad20`', () => {
-    let n = 0;
-    const sequencia = (): number => [5, 18, 9][n++];
-    const resultado = rolarFormula(
-      { formula: 'luta', atributos, modo: RolagemModoEnum.TESTE, proficiencia: 2 },
-      sequencia,
-    );
-    expect(resultado?.teste?.dadoEscolhido).toBe(18);
+    expect(resultado?.dados[0].valores).toEqual([5, 18, 9]);
+    expect(resultado?.dados[0].mantidos).toEqual([18]);
+    expect(resultado?.dados[0].descartados).toEqual([5, 9]);
+    expect(resultado?.dados[0].subtotal).toBe(18);
+    expect(resultado?.atributos).toEqual([{ rotulo: 'PROF', valor: 2 }]);
     expect(resultado?.total).toBe(20);
   });
 
   it('Proficiência nula (Civil) conta como 0', () => {
-    // luta=3 → 3 D20, todos no máximo (20) → maior 20.
-    const resultado = rolarFormula(
-      { formula: 'lutad20', atributos, modo: RolagemModoEnum.TESTE, proficiencia: null },
-      rolarMaximo,
-    );
-    expect(resultado?.teste?.proficiencia).toBe(0);
+    const resultado = rolarFormula({ formula: 'lutad20kh1 + PROF', atributos, proficiencia: null }, rolarMaximo);
+    expect(resultado?.atributos).toEqual([{ rotulo: 'PROF', valor: 0 }]);
     expect(resultado?.total).toBe(20);
   });
 
-  it('soma bônus plano (constante) ao teste', () => {
-    let n = 0;
-    const sequencia = (): number => [10, 15][n++]; // luta=2 → 2 D20
+  it('bônus plano (constante) soma ao teste', () => {
+    // luta=2 → 2 D20 [10,15], mantém 15; + 2 + PROF 1 = 18.
     const comLutaDois: FichaAtributosDto = { ...atributos, luta: 2 };
     const resultado = rolarFormula(
-      { formula: 'lutad20 + 2', atributos: comLutaDois, modo: RolagemModoEnum.TESTE, proficiencia: 1 },
-      sequencia,
+      { formula: 'lutad20kh1 + 2 + PROF', atributos: comLutaDois, proficiencia: 1 },
+      sequencia([10, 15]),
     );
-    expect(resultado?.teste?.dadoEscolhido).toBe(15);
-    expect(resultado?.teste?.bonusPlano).toBe(2);
-    expect(resultado?.total).toBe(18); // 15 + 1 (prof) + 2
+    expect(resultado?.dados[0].mantidos).toEqual([15]);
+    expect(resultado?.constante).toBe(2);
+    expect(resultado?.total).toBe(18);
   });
 
-  it('modo SOMA não produz `teste` (regressão)', () => {
-    const resultado = rolarFormula({ formula: 'luta', atributos }, rolarMaximo);
-    expect(resultado?.teste).toBeUndefined();
-    expect(resultado?.total).toBe(3); // luta como modificador
+  it('sem PROF na fórmula, a Proficiência não entra sozinha', () => {
+    // luta=3 → 3 D20 no máximo (20), sem +PROF → total 20 (não soma prof por baixo dos panos).
+    const resultado = rolarFormula({ formula: 'lutad20kh1', atributos, proficiencia: 5 }, rolarMaximo);
+    expect(resultado?.total).toBe(20);
   });
 
-  it('atributo 0 → desvantagem: 2 dados, pega o menor', () => {
-    let n = 0;
-    const sequencia = (): number => [12, 5][n++]; // 2 D20
+  it('atributo 0 → desvantagem intrínseca: 2 dados, mantém o menor', () => {
     const semLuta: FichaAtributosDto = { ...atributos, luta: 0 };
-    const resultado = rolarFormula(
-      { formula: 'lutad20', atributos: semLuta, modo: RolagemModoEnum.TESTE, proficiencia: 2 },
-      sequencia,
-    );
-    expect(resultado?.teste?.pool).toEqual([12, 5]);
-    expect(resultado?.teste?.desvantagem).toBe(true);
-    expect(resultado?.teste?.dadoEscolhido).toBe(5); // o MENOR
-    expect(resultado?.teste?.descartados).toEqual([12]);
-    expect(resultado?.total).toBe(7); // 5 + 2 (prof)
+    const resultado = rolarFormula({ formula: 'lutad20kh1', atributos: semLuta }, sequencia([12, 5]));
+    expect(resultado?.dados[0].valores).toEqual([12, 5]);
+    expect(resultado?.dados[0].desvantagem).toBe(true);
+    expect(resultado?.dados[0].mantidos).toEqual([5]); // o MENOR
+    expect(resultado?.dados[0].descartados).toEqual([12]);
+    expect(resultado?.total).toBe(5);
   });
 
   it('atributo negativo aumenta o pool da desvantagem (−1 → 3, −2 → 4)', () => {
-    const seq = (valores: number[]): (() => number) => {
-      let n = 0;
-      return () => valores[n++];
-    };
     const lutaMenosUm: FichaAtributosDto = { ...atributos, luta: -1 };
-    const r1 = rolarFormula(
-      { formula: 'lutad20', atributos: lutaMenosUm, modo: RolagemModoEnum.TESTE },
-      seq([10, 4, 15]),
-    );
-    expect(r1?.teste?.pool).toHaveLength(3);
-    expect(r1?.teste?.dadoEscolhido).toBe(4);
+    const r1 = rolarFormula({ formula: 'lutad20kh1', atributos: lutaMenosUm }, sequencia([10, 4, 15]));
+    expect(r1?.dados[0].valores).toHaveLength(3);
+    expect(r1?.dados[0].mantidos).toEqual([4]);
 
     const lutaMenosDois: FichaAtributosDto = { ...atributos, luta: -2 };
-    const r2 = rolarFormula(
-      { formula: 'lutad20', atributos: lutaMenosDois, modo: RolagemModoEnum.TESTE },
-      seq([9, 2, 20, 7]),
-    );
-    expect(r2?.teste?.pool).toHaveLength(4);
-    expect(r2?.teste?.dadoEscolhido).toBe(2);
+    const r2 = rolarFormula({ formula: 'lutad20kh1', atributos: lutaMenosDois }, sequencia([9, 2, 20, 7]));
+    expect(r2?.dados[0].valores).toHaveLength(4);
+    expect(r2?.dados[0].mantidos).toEqual([2]);
   });
 });
 
-describe('efeitos de habilidade — aplicarEfeitos (m3-20)', () => {
-  it('Força Bruta (DANO_ATRIBUTO) soma FOR×3 ao dano físico', () => {
-    const base = interpretarFormula('2d8 [Físico]').formula!;
-    const comEfeito = aplicarEfeitos(
-      base,
-      [
-        {
-          tipo: RolagemEfeitoTipoEnum.DANO_ATRIBUTO,
-          atributo: 'forca',
-          multiplicador: 3,
-          tipoDano: TipoDanoEnum.FISICO,
-          alvo: RolagemEfeitoAlvoEnum.DANO,
-        },
-      ],
-      RolagemModoEnum.SOMA,
-    );
-    // FOR=6 → FOR*3 = 18; 2d8 no máximo = 16 → Físico 34.
-    const resultado = rolarInterpretada(comEfeito, atributos, RolagemModoEnum.SOMA, undefined, rolarMaximo);
-    expect(resultado.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 34 }]);
-    expect(resultado.total).toBe(34);
+describe('margem de crítico — cm (m3-29)', () => {
+  it('conta os dados que atingiram a margem (d20 cm1 → só o 20)', () => {
+    const resultado = rolarFormula({ formula: '4d20cm1', atributos }, sequencia([20, 20, 7, 3]));
+    expect(resultado?.dados[0].criticos).toBe(2);
+    expect(resultado?.total).toBe(50); // sem keep, soma tudo
   });
 
-  it('DANO_FIXO soma uma constante tipada ao dano', () => {
-    const base = interpretarFormula('2d6 [Balístico]').formula!;
-    const comEfeito = aplicarEfeitos(
-      base,
-      [{ tipo: RolagemEfeitoTipoEnum.DANO_FIXO, valor: 2, tipoDano: TipoDanoEnum.BALISTICO }],
-      RolagemModoEnum.SOMA,
-    );
-    const resultado = rolarInterpretada(comEfeito, atributos, RolagemModoEnum.SOMA, undefined, rolarMaximo);
-    expect(resultado.grupos).toEqual([{ tipoDano: TipoDanoEnum.BALISTICO, total: 14 }]); // 12 + 2
+  it('cm2 abre a margem para 19–20', () => {
+    const resultado = rolarFormula({ formula: '4d20cm2', atributos }, sequencia([19, 20, 18, 5]));
+    expect(resultado?.dados[0].criticos).toBe(2);
   });
 
-  it('ELEVAR_DADO sobe as faces dos dados de dano (D8 → D10)', () => {
-    const base = interpretarFormula('2d8 [Físico]').formula!;
-    const comEfeito = aplicarEfeitos(base, [{ tipo: RolagemEfeitoTipoEnum.ELEVAR_DADO, valor: 1 }], RolagemModoEnum.SOMA);
-    expect(comEfeito.dados[0].faces).toBe(10);
+  it('cm em dado não-d20 usa faces − N + 1 como limiar', () => {
+    const resultado = rolarFormula({ formula: '4d6cm1', atributos }, sequencia([6, 6, 3, 1]));
+    expect(resultado?.dados[0].criticos).toBe(2); // limiar 6
   });
 
-  it('BONUS_TESTE DADO adiciona D20 ao pool; FIXO soma bônus plano', () => {
-    const base = interpretarFormula('lutad20', RolagemModoEnum.TESTE).formula!;
-    const comDado = aplicarEfeitos(
-      base,
-      [{ tipo: RolagemEfeitoTipoEnum.BONUS_TESTE, variante: 'DADO', valor: 2 }],
-      RolagemModoEnum.TESTE,
-    );
-    expect(comDado.dados).toContainEqual({ sinal: 1, quantidade: 2, faces: 20 });
+  it('conta o crítico só entre os dados mantidos pelo keep', () => {
+    // luta=3 → 3 D20 [20,20,9]; mantém 1 (o 20); só 1 crítico apesar de dois 20 no pool.
+    const resultado = rolarFormula({ formula: 'lutad20kh1cm1', atributos }, sequencia([20, 20, 9]));
+    expect(resultado?.dados[0].mantidos).toEqual([20]);
+    expect(resultado?.dados[0].criticos).toBe(1);
+  });
+});
 
-    const comFixo = aplicarEfeitos(
-      base,
-      [{ tipo: RolagemEfeitoTipoEnum.BONUS_TESTE, variante: 'FIXO', valor: 3 }],
-      RolagemModoEnum.TESTE,
-    );
-    expect(comFixo.constante).toBe(3);
+describe('explosão e implosão — não-canônicas (m3-29)', () => {
+  it('interpreta os limiares de explosão', () => {
+    expect(interpretarFormula('2d6!').formula?.dados[0].explosao).toBe(6); // bare ! = máximo
+    expect(interpretarFormula('2d6!>=5').formula?.dados[0].explosao).toBe(5);
+    expect(interpretarFormula('2d6!5').formula?.dados[0].explosao).toBe(5);
   });
 
-  it('efeito de DANO é ignorado num passo de TESTE (roteamento por alvo)', () => {
-    const base = interpretarFormula('lutad20', RolagemModoEnum.TESTE).formula!;
-    const comEfeito = aplicarEfeitos(
-      base,
-      [{ tipo: RolagemEfeitoTipoEnum.DANO_ATRIBUTO, atributo: 'forca', multiplicador: 3, alvo: RolagemEfeitoAlvoEnum.DANO }],
-      RolagemModoEnum.TESTE,
-    );
-    expect(comEfeito).toEqual(base); // inalterado
+  it('explode: cada valor no limiar anexa +1 dado', () => {
+    // 3 dados base [6,2,4]; o 6 explode → +1 dado (=5, não explode). Pool [6,2,4,5].
+    const resultado = rolarFormula({ formula: '3d6!', atributos }, sequencia([6, 2, 4, 5]));
+    expect(resultado?.dados[0].valores).toEqual([6, 2, 4, 5]);
+    expect(resultado?.total).toBe(17);
+  });
+
+  it('explosão respeita o teto de dados (não roda infinito)', () => {
+    const resultado = rolarFormula({ formula: '1d6!', atributos }, () => 6);
+    expect(resultado?.dados[0].valores).toHaveLength(100); // QUANTIDADE_DADOS_MAXIMA
+  });
+
+  it('interpreta os limiares de implosão', () => {
+    expect(interpretarFormula('2d6?').formula?.dados[0].implosao).toBe(1); // bare ? = mínimo
+    expect(interpretarFormula('2d6?<=2').formula?.dados[0].implosao).toBe(2);
+  });
+
+  it('implode: cada valor no limiar mínimo anexa +1 dado', () => {
+    // 3 dados base [1,4,2]; o 1 implode → +1 dado. Pool [1,4,2,6].
+    const resultado = rolarFormula({ formula: '3d6?', atributos }, sequencia([1, 4, 2, 6]));
+    expect(resultado?.dados[0].valores).toEqual([1, 4, 2, 6]);
+  });
+
+  it('explode ANTES do keep (dados extras entram no pool do keep)', () => {
+    // 1 dado base [6] explode → +[6] explode → +[3]. Pool [6,6,3]; mantém 1 → 6.
+    const resultado = rolarFormula({ formula: '1d6kh1!', atributos }, sequencia([6, 6, 3]));
+    expect(resultado?.dados[0].valores).toEqual([6, 6, 3]);
+    expect(resultado?.dados[0].mantidos).toEqual([6]);
+  });
+});
+
+describe('validação de operadores (m3-29)', () => {
+  it('rejeita combinações e valores inválidos', () => {
+    expect(interpretarFormula('4d6kh1kl1').valida).toBe(false); // kh + kl
+    expect(interpretarFormula('4d6kh0').valida).toBe(false); // manter zero
+    expect(interpretarFormula('4d6zz').valida).toBe(false); // operador desconhecido
+    expect(interpretarFormula('2d6!?').valida).toBe(false); // explosão + implosão
+    expect(interpretarFormula('2d6cmcm').valida).toBe(false); // repetido
+  });
+
+  it('aceita operadores válidos e formas curtas', () => {
+    expect(interpretarFormula('4d6kh').valida).toBe(true);
+    expect(interpretarFormula('d20cm2').valida).toBe(true);
+    expect(interpretarFormula('4d6kh1cm1!').valida).toBe(true);
+  });
+});
+
+describe('crítico — dobra o dano (m3-30; sistema-v4.1.0 1217/1303)', () => {
+  it('dobra o número de dados, os fixos e os atributos (FOR=6, dados no máximo)', () => {
+    const formula = interpretarFormula('2d8 + FOR*3 + 5').formula!;
+    const normal = rolarInterpretada(formula, atributos, undefined, undefined, rolarMaximo);
+    // 2×8 + 6×3 + 5 = 39; sem flag de crítico.
+    expect(normal.total).toBe(39);
+    expect(normal.critico).toBeUndefined();
+
+    const critico = rolarInterpretada(formula, atributos, undefined, undefined, rolarMaximo, true);
+    // Dados dobram (4d8=32), FOR*3 dobra (36), fixo dobra (10) → 78.
+    expect(critico.total).toBe(78);
+    expect(critico.critico).toBe(true);
+    expect(critico.dados[0].valores).toHaveLength(4); // 2d8 → 4d8
+  });
+
+  it('NÃO dobra valores de Patente/Nível (PROF/NIV) — regra 1303', () => {
+    const formula = interpretarFormula('2d6 + PROF + NIV').formula!;
+    const critico = rolarInterpretada(formula, atributos, 3, 2, rolarMaximo, true);
+    // 4d6 (=24) + PROF 3 (mantém) + NIV 2 (mantém) = 29.
+    expect(critico.total).toBe(29);
+  });
+
+  it('dobra dentro do grupo de dano tipado', () => {
+    const formula = interpretarFormula('2d8 [Físico]').formula!;
+    const critico = rolarInterpretada(formula, atributos, undefined, undefined, rolarMaximo, true);
+    expect(critico.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 32 }]); // 4d8 no máximo
+  });
+
+  it('resolverPreset carrega `critico` no passo e conta a energia; rolarPasso(critico) dobra o dano', () => {
+    const reforco: FichaHabilidadeDto = {
+      nome: 'Reforço',
+      categoria: HabilidadeCategoriaEnum.GERAL,
+      custoEnergia: 4,
+      descricao: '',
+    };
+    const preset: FichaRolagemDto = {
+      nome: 'Dano',
+      formula: '2d8 [Físico]',
+      habilidades: ['Reforço'],
+      critico: true,
+    };
+    const plano = resolverPreset({ preset, atributos, habilidades: [reforco] });
+    expect(plano.passos[0].critico).toBe(true);
+    // A habilidade **só conta Energia** — não altera a fórmula (efeitos aposentados em m3-31).
+    expect(plano.passos[0].energiaGasta).toBe(4);
+
+    // Normal: 2d8 (16). Crítico: 4d8 (32).
+    const normal = rolarPasso(plano.passos[0], atributos, undefined, undefined, rolarMaximo, false);
+    expect(normal?.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 16 }]);
+    const critico = rolarPasso(plano.passos[0], atributos, undefined, undefined, rolarMaximo, true);
+    expect(critico?.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 32 }]);
+    expect(critico?.critico).toBe(true);
+  });
+
+  it('passo sem `critico` fica false no plano', () => {
+    const plano = resolverPreset({ preset: { nome: 'S', formula: '2d8 [Físico]' }, atributos });
+    expect(plano.passos[0].critico).toBe(false);
   });
 });
 
@@ -411,55 +474,69 @@ describe('presets + runner encadeado — resolverPreset/rolarPasso (m3-21)', () 
     categoria: HabilidadeCategoriaEnum.ARQUETIPO,
     custoEnergia: 4,
     descricao: 'Soma sua Força × 3 no dano de ataques físicos.',
-    efeitos: [
-      {
-        tipo: RolagemEfeitoTipoEnum.DANO_ATRIBUTO,
-        atributo: 'forca',
-        multiplicador: 3,
-        tipoDano: TipoDanoEnum.FISICO,
-        alvo: RolagemEfeitoAlvoEnum.DANO,
-      },
-    ],
   };
 
-  it('preset legado {nome, formula} → 1 passo SOMA, sem energia', () => {
+  it('preset legado {nome, formula} → 1 passo, sem energia', () => {
     const plano = resolverPreset({ preset: { nome: 'Simples', formula: '1d20+LUT' }, atributos });
     expect(plano.passos).toHaveLength(1);
-    expect(plano.passos[0].modo).toBe(RolagemModoEnum.SOMA);
     expect(plano.energiaGasta).toBe(0);
     expect(plano.habilidadesVinculadas).toEqual([]);
   });
 
-  it('encadeado devolve primária + seguintes na ordem, com os modos', () => {
+  it('encadeado devolve primária + seguintes na ordem', () => {
     const preset: FichaRolagemDto = {
       nome: 'Arma',
-      formula: 'lutad20',
-      modo: RolagemModoEnum.TESTE,
+      formula: 'lutad20kh1 + PROF',
       tipo: RolagemPresetTipoEnum.ENCADEADO,
       seguintes: [
-        { nome: 'Dano', formula: '2d8 [Físico]', modo: RolagemModoEnum.SOMA },
-        { nome: 'Crítico', formula: '4d8 [Físico]', modo: RolagemModoEnum.SOMA },
+        { nome: 'Dano', formula: '2d8 [Físico]' },
+        { nome: 'Crítico', formula: '4d8 [Físico]' },
       ],
     };
     const plano = resolverPreset({ preset, atributos, proficiencia: 2 });
     expect(plano.passos.map((passo) => passo.nome)).toEqual(['Arma', 'Dano', 'Crítico']);
-    expect(plano.passos[0].modo).toBe(RolagemModoEnum.TESTE);
   });
 
-  it('injeta efeitos das habilidades vinculadas e soma a energia', () => {
+  it('conta a energia das habilidades vinculadas sem alterar a fórmula (efeitos aposentados em m3-31)', () => {
     const preset: FichaRolagemDto = {
       nome: 'Ataque',
       formula: '2d8 [Físico]',
-      modo: RolagemModoEnum.SOMA,
       habilidades: ['Força Bruta'],
     };
     const plano = resolverPreset({ preset, atributos, habilidades: [forcaBruta] });
     expect(plano.energiaGasta).toBe(4);
     expect(plano.energiaVariavel).toBe(false);
     expect(plano.habilidadesVinculadas).toEqual(['Força Bruta']);
-    // Rola o passo: 2d8 (=16) + FOR*3 (=18) → Físico 34.
-    const resultado = rolarPasso(plano.passos[0], atributos, undefined, rolarMaximo);
-    expect(resultado?.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 34 }]);
+    // A fórmula é crua: 2d8 no máximo = 16 (sem FOR*3 fundido).
+    const resultado = rolarPasso(plano.passos[0], atributos, undefined, undefined, rolarMaximo);
+    expect(resultado?.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 16 }]);
+  });
+
+  it('a mesma habilidade repetida no passo soma a energia por ocorrência (multiconjunto; m3-31)', () => {
+    const preset: FichaRolagemDto = {
+      nome: 'Ataque',
+      formula: '2d8 [Físico]',
+      habilidades: ['Força Bruta', 'Força Bruta'],
+    };
+    const plano = resolverPreset({ preset, atributos, habilidades: [forcaBruta] });
+    expect(plano.energiaGasta).toBe(8); // 4 × 2 ocorrências
+    expect(plano.habilidadesVinculadas).toEqual(['Força Bruta', 'Força Bruta']);
+  });
+
+  it('habilidade vinculada a um passo seguinte só debita naquele passo (m3-22)', () => {
+    const preset: FichaRolagemDto = {
+      nome: 'Ataque',
+      formula: 'lutad20kh1 + PROF',
+      tipo: RolagemPresetTipoEnum.ENCADEADO,
+      seguintes: [{ nome: 'Dano', formula: '2d8 [Físico]', habilidades: ['Força Bruta'] }],
+    };
+    const plano = resolverPreset({ preset, atributos, habilidades: [forcaBruta] });
+    // A primária (teste) não tem habilidade; só o passo de dano tem a Força Bruta.
+    expect(plano.passos[0].habilidadesVinculadas).toEqual([]);
+    expect(plano.passos[0].energiaGasta).toBe(0);
+    expect(plano.passos[1].habilidadesVinculadas).toEqual(['Força Bruta']);
+    expect(plano.passos[1].energiaGasta).toBe(4);
+    expect(plano.energiaGasta).toBe(4); // agregado do preset = soma dos passos
   });
 
   it('custo variável [X E] não soma, mas marca energiaVariavel', () => {
@@ -492,5 +569,93 @@ describe('presets + runner encadeado — resolverPreset/rolarPasso (m3-21)', () 
     const plano = resolverPreset({ preset: { nome: 'X', formula: 'xyz' }, atributos });
     expect(plano.passos[0].interpretacao.valida).toBe(false);
     expect(rolarPasso(plano.passos[0], atributos)).toBeNull();
+  });
+});
+
+describe('fontes escalares — Proficiência e Nível (m3-22)', () => {
+  it('+PROF soma a Proficiência ao total', () => {
+    const resultado = rolarFormula({ formula: '2d6 + PROF', atributos, proficiencia: 3 }, rolarMaximo);
+    expect(resultado?.total).toBe(15); // 2d6 (=12) + PROF (=3)
+  });
+
+  it('+NIV soma o Nível ao total', () => {
+    const resultado = rolarFormula({ formula: '1d6 + NIV', atributos, nivel: 5 }, rolarMaximo);
+    expect(resultado?.total).toBe(11); // 1d6 (=6) + NIV (=5)
+  });
+
+  it('escalona a fonte extra: PROF*2 e NIV/2 (piso)', () => {
+    const dobro = rolarFormula({ formula: 'PROF*2', atributos, proficiencia: 3 }, rolarMaximo);
+    expect(dobro?.total).toBe(6);
+    const metade = rolarFormula({ formula: 'NIV/2', atributos, nivel: 5 }, rolarMaximo);
+    expect(metade?.total).toBe(2); // floor(5/2)
+  });
+
+  it('PROF como fonte de dados: PROFd6 rola (Proficiência) dados', () => {
+    const resultado = rolarFormula({ formula: 'PROFd6', atributos, proficiencia: 3 }, rolarMaximo);
+    expect(resultado?.dados[0].valores).toHaveLength(3);
+    expect(resultado?.total).toBe(18); // 3 × 6
+  });
+
+  it('Proficiência ausente/null resolve como 0 (Civil)', () => {
+    const resultado = rolarFormula({ formula: '2d6 + PROF', atributos, proficiencia: null }, rolarMaximo);
+    expect(resultado?.total).toBe(12); // PROF = 0
+  });
+
+  it('a fonte extra participa de um grupo de dano tipado', () => {
+    const resultado = rolarFormula({ formula: '2d6 + NIV [Físico]', atributos, nivel: 4 }, rolarMaximo);
+    expect(resultado?.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 16 }]); // 12 + 4
+  });
+
+  it('valida PROF e NIV como termos reconhecidos', () => {
+    expect(validarFormula('+PROF')).toBe(true);
+    expect(validarFormula('+NIV')).toBe(true);
+    expect(validarFormula('PROFd20')).toBe(true);
+  });
+});
+
+describe('migração de presets legados — normalizarPresetLegado (m3-29)', () => {
+  it('reescreve o modo TESTE na notação explícita', () => {
+    expect(reescreverFormulaTeste('luta')).toBe('lutad20kh1 + PROF');
+    expect(reescreverFormulaTeste('lutad20')).toBe('lutad20kh1 + PROF');
+    expect(reescreverFormulaTeste('lutad20 + 2')).toBe('lutad20kh1 + 2 + PROF');
+  });
+
+  it('é idempotente: fórmula já-v3 passa intacta', () => {
+    expect(reescreverFormulaTeste('lutad20kh1 + PROF')).toBe('lutad20kh1 + PROF');
+  });
+
+  it('migra um preset TESTE e dropa o modo', () => {
+    expect(normalizarPresetLegado({ nome: 'T', formula: 'luta', modo: 'TESTE' })).toEqual({
+      nome: 'T',
+      formula: 'lutad20kh1 + PROF',
+    });
+  });
+
+  it('preset SOMA/sem modo só perde a chave modo (fórmula intacta)', () => {
+    expect(normalizarPresetLegado({ nome: 'D', formula: '2d8 [Físico]' })).toEqual({
+      nome: 'D',
+      formula: '2d8 [Físico]',
+    });
+    expect(normalizarPresetLegado({ nome: 'S', formula: '1d20+LUT', modo: 'SOMA' })).toEqual({
+      nome: 'S',
+      formula: '1d20+LUT',
+    });
+  });
+
+  it('reescreve recursivamente só os passos que eram TESTE', () => {
+    const migrado = normalizarPresetLegado({
+      nome: 'Arma',
+      formula: 'luta',
+      modo: 'TESTE',
+      tipo: RolagemPresetTipoEnum.ENCADEADO,
+      seguintes: [{ nome: 'Dano', formula: '2d8 [Físico]' }],
+    });
+    expect(migrado.formula).toBe('lutad20kh1 + PROF');
+    expect(migrado.seguintes?.[0].formula).toBe('2d8 [Físico]');
+  });
+
+  it('idempotência total: rodar de novo no já-migrado não muda nada', () => {
+    const v3: FichaRolagemDto = { nome: 'T', formula: 'lutad20kh1 + PROF' };
+    expect(normalizarPresetLegado(v3)).toEqual(v3);
   });
 });

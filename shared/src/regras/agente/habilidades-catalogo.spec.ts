@@ -1,13 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  ArquetipoEnum,
-  ClasseEnum,
-  HabilidadeCategoriaEnum,
-  RolagemEfeitoAlvoEnum,
-  RolagemEfeitoTipoEnum,
-  TipoDanoEnum,
-} from '../../enums';
+import { ArquetipoEnum, ClasseEnum, HabilidadeCategoriaEnum } from '../../enums';
 import {
   catalogoHabilidades,
   ehHabilidadeInicial,
@@ -205,22 +198,5 @@ describe('ehHabilidadeInicial', () => {
 
   it('origem ausente (Geral/Personalidade) nunca é inicial', () => {
     expect(ehHabilidadeInicial(undefined, HABILIDADES_ARQUETIPO[ArquetipoEnum.LUTADOR][0].nome)).toBe(false);
-  });
-});
-
-describe('efeitos estruturados no catálogo (m3-20)', () => {
-  it('Força Bruta carrega o efeito FOR × 3 físico', () => {
-    const forcaBruta = Object.values(HABILIDADES_ARQUETIPO)
-      .flat()
-      .find((habilidade) => habilidade.nome === 'Força Bruta');
-    expect(forcaBruta?.efeitos).toEqual([
-      {
-        tipo: RolagemEfeitoTipoEnum.DANO_ATRIBUTO,
-        atributo: 'forca',
-        multiplicador: 3,
-        tipoDano: TipoDanoEnum.FISICO,
-        alvo: RolagemEfeitoAlvoEnum.DANO,
-      },
-    ]);
   });
 });

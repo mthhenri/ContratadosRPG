@@ -8,6 +8,7 @@ import {
 import type { FichaHabilidadeDto, FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 import { calcularVida } from '@contratados-rpg/shared/regras/agente';
 
+import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { FichaVisualizacao } from './ficha-visualizacao.component';
 
 /**
@@ -524,6 +525,30 @@ describe('FichaVisualizacao', () => {
     // O preset aparece no editor (nome + fórmula), não num placeholder "em construção".
     expect(alvo.raiz.textContent).toContain('1d20+PON');
     expect(alvo.raiz.textContent).not.toContain('em construção');
+  });
+
+  const campoLuta = { chave: 'luta' as const, abrev: 'LUT', nome: 'Luta' };
+
+  it('rola teste de atributo normal com kh1 + cm1 (margem de crítico natural; m3-31)', () => {
+    const alvo = montar(dados, 'Corvo', 42, true); // Luta 2, sem lesão → normal
+    const spy = vi.spyOn(TestBed.inject(BandejaDadosService), 'mostrar').mockImplementation(() => undefined);
+    alvo.fixture.componentInstance['rolarTesteAtributo'](campoLuta);
+    expect(spy.mock.calls[0][0].formula).toBe('lutad20kh1cm1 + PROF');
+  });
+
+  it('em desvantagem (atributo ≤ 0) a legenda é honesta: kl1 com a contagem real, não kh1 (m3-31)', () => {
+    const doc = {
+      ...dados,
+      estado: {
+        ...dados.estado,
+        lesoes: [{ atributo: 'luta' as const, pontos: 2, severidade: SeveridadeLesaoEnum.GRAVE, permanente: true }],
+      },
+    };
+    const alvo = montar(doc, 'Corvo', 42, true); // Luta efetivo 0 → desvantagem (2d20 mantém o menor)
+    const spy = vi.spyOn(TestBed.inject(BandejaDadosService), 'mostrar').mockImplementation(() => undefined);
+    alvo.fixture.componentInstance['rolarTesteAtributo'](campoLuta);
+    expect(spy.mock.calls[0][0].formula).toBe('2d20kl1cm1 + PROF');
+    expect(spy.mock.calls[0][0].resultado.dados[0].desvantagem).toBe(true);
   });
 
   it('mostra o derivado STORED de combate (Esquiva) quando presente', () => {
