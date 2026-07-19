@@ -138,7 +138,7 @@ export function rotuloPatente(prestigio: number): string {
   return ROTULOS_PATENTE[obterPatente({ prestigio }).patente];
 }
 
-/** Salário da patente derivada do Prestígio (m3-31) — nunca persistido, só exibição. */
+/** Salário da patente derivada do Prestígio (m3-34) — nunca persistido, só exibição. */
 export function salarioPatente(prestigio: number): number {
   return obterPatente({ prestigio }).salario;
 }

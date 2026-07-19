@@ -357,7 +357,7 @@ describe('FichaInventario', () => {
     expect(alvo.emitidos[1].amplificadores).toEqual([]);
   });
 
-  describe('equipado — Proteções (m3-33)', () => {
+  describe('equipado — Proteções (m3-36)', () => {
     const colete: CarrinhoItemDto = {
       nome: 'Colete Kevlar',
       categoria: ItemCategoriaEnum.PROTECOES,
@@ -388,7 +388,7 @@ describe('FichaInventario', () => {
     });
   });
 
-  describe('dinheiro restante (m3-31)', () => {
+  describe('dinheiro restante (m3-34)', () => {
     it('mostra o dinheiro atual menos o gasto do carrinho', () => {
       const { raiz } = montar({ itens: [itemLeve], amplificadores: [] }, true, 100);
       // dinheiro 5000 (do montar()) − 500 (custo do item leve) = 4500.
@@ -420,7 +420,7 @@ describe('FichaInventario', () => {
     });
   });
 
-  describe('apelido de equipamento (m3-30)', () => {
+  describe('apelido de equipamento (m3-33)', () => {
     it('exibe o apelido em destaque e o nome mecânico como legenda quando tem apelido', () => {
       const { raiz } = montar({
         itens: [{ ...itemLeve, apelido: 'Espada Excalibur' }],
@@ -528,7 +528,7 @@ describe('FichaInventario', () => {
     });
   });
 
-  describe('fragmentos (m3-32)', () => {
+  describe('fragmentos (m3-35)', () => {
     /** Monta um fragmento (Potencializador ou Construtor) de um módulo, já com o campo exigido. */
     function fragmento(categoria: ItemCategoriaEnum, modulo: FragmentoModuloEnum): CarrinhoItemDto {
       return {

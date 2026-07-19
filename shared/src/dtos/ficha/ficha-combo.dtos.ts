@@ -1,5 +1,5 @@
 /**
- * Contrato do "Combo" (m3-34): sequência ordenada de rolagens que o jogador monta e executa passo a
+ * Contrato do "Combo" (m3-37): sequência ordenada de rolagens que o jogador monta e executa passo a
  * passo na aba Combate (mesclada com Rolagens). Cada passo **referencia** um preset de rolagem já
  * existente da ficha (`FichaRolagemDto.nome`) — zero motor novo: o runner reusa
  * `resolverPreset`/`rolarPasso` (`shared/regras/rolagem`) exatamente como o editor de Rolagens.

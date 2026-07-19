@@ -75,8 +75,8 @@ interface GrupoAtributos {
 const FORMULA_DT = 'DT = 10 + NÍVEL + ATR×2';
 
 /**
- * Aba da ficha (m3-11). **Combate** (m3-34) absorveu **Rolagens** — hoje hospeda os stats de
- * combate, Resistências (m3-33), o editor de Rolagens e os Combos, todos na mesma aba; o `id`
+ * Aba da ficha (m3-11). **Combate** (m3-37) absorveu **Rolagens** — hoje hospeda os stats de
+ * combate, Resistências (m3-36), o editor de Rolagens e os Combos, todos na mesma aba; o `id`
  * continua `'combate'` (não `'rolagens'`) de propósito, pra um futuro `historico` (`m3-27`,
  * backlog) poder entrar sem colidir com este merge.
  */
@@ -131,7 +131,7 @@ export interface AjusteDerivado {
   readonly valor: number | string;
 }
 
-/** Edição da base manual de uma resistência (ajuste pós-m3-33) — a página persiste em `derivados.resistencias`. */
+/** Edição da base manual de uma resistência (ajuste pós-m3-36) — a página persiste em `derivados.resistencias`. */
 export interface AjusteResistencia {
   readonly tipo: TipoDanoEnum;
   readonly valor: number;
@@ -145,7 +145,7 @@ export interface AjusteAtributos {
 
 /**
  * Campo escalar do documento editável na identidade (Nível dispara o delta de progressão na
- * página) — **`dinheiro`** (m3-31) reusa o mesmo canal de persistência (`ajusteCampoDados`), mas
+ * página) — **`dinheiro`** (m3-34) reusa o mesmo canal de persistência (`ajusteCampoDados`), mas
  * é editado no seu próprio lugar (Informações Extras), não na identidade.
  */
 export type CampoDadosEscalar = 'nivel' | 'prestigio' | 'dinheiro';
@@ -211,7 +211,7 @@ export class FichaVisualizacao {
   /** Novo valor de um derivado editado (Informações Extras) — a página persiste em `derivados`. */
   readonly ajusteDerivado = output<AjusteDerivado>();
 
-  /** Base manual de uma resistência editada (ajuste pós-m3-33) — a página persiste em `derivados.resistencias`. */
+  /** Base manual de uma resistência editada (ajuste pós-m3-36) — a página persiste em `derivados.resistencias`. */
   readonly ajusteResistencia = output<AjusteResistencia>();
 
   /** Atributos + Maestria editados em grupo — a página persiste. */
@@ -241,10 +241,10 @@ export class FichaVisualizacao {
   /** Presets de rolagem editados — a página persiste em `dados.rolagens` (m3-15). */
   readonly ajusteRolagens = output<readonly FichaRolagemDto[]>();
 
-  /** Combos editados (m3-34) — a página persiste em `dados.combos`. */
+  /** Combos editados (m3-37) — a página persiste em `dados.combos`. */
   readonly ajusteCombos = output<readonly FichaComboDto[]>();
 
-  /** Anotações livres editadas (m3-29) — a página persiste em `dados.anotacoes`. */
+  /** Anotações livres editadas (m3-32) — a página persiste em `dados.anotacoes`. */
   readonly ajusteAnotacoes = output<string>();
 
   /**
@@ -259,7 +259,7 @@ export class FichaVisualizacao {
   }
 
   /**
-   * Custo de Energia de um Fragmento (m3-32 — adquirir/acoplar/remover): o `FichaInventario` já
+   * Custo de Energia de um Fragmento (m3-35 — adquirir/acoplar/remover): o `FichaInventario` já
    * calcula os novos valores absolutos; aqui só se reusa o mesmo canal `ajusteVitalidade` (m3-10)
    * pros dois campos, em vez de abrir uma persistência paralela.
    */
@@ -316,7 +316,7 @@ export class FichaVisualizacao {
   protected readonly editandoIdentidade = signal<'nome' | CampoDadosEscalar | null>(null);
   private readonly entradaIdentidade = viewChild<ElementRef<HTMLInputElement>>('entradaIdentidade');
   private readonly entradaAnotacoes = viewChild<ElementRef<HTMLTextAreaElement>>('entradaAnotacoes');
-  /** `true` enquanto o Dinheiro (m3-31, Informações Extras) está em edição. */
+  /** `true` enquanto o Dinheiro (m3-34, Informações Extras) está em edição. */
   protected readonly editandoDinheiro = signal(false);
   private readonly entradaDinheiro = viewChild<ElementRef<HTMLInputElement>>('entradaDinheiro');
 
@@ -424,9 +424,9 @@ export class FichaVisualizacao {
   });
   /** Patente derivada do Prestígio (`shared/regras/patente`) — não é persistida. */
   protected readonly patenteTexto = computed(() => rotuloPatente(this.dados().prestigio));
-  /** Dinheiro atual (m3-31) — ausente em fichas anteriores cai em 0 (retrocompat). */
+  /** Dinheiro atual (m3-34) — ausente em fichas anteriores cai em 0 (retrocompat). */
   protected readonly dinheiro = computed(() => this.dados().dinheiro ?? 0);
-  /** Salário da patente atual (m3-31) — derivado do Prestígio, nunca persistido. */
+  /** Salário da patente atual (m3-34) — derivado do Prestígio, nunca persistido. */
   protected readonly salario = computed(() => salarioPatente(this.dados().prestigio));
   protected readonly rotuloNivel = computed(() => (this.ehCivil() ? 'Treinamentos' : 'Nível'));
 
@@ -498,7 +498,7 @@ export class FichaVisualizacao {
   });
   protected readonly anotacoes = computed(() => this.dados().anotacoes.trim());
 
-  /** `true` enquanto a aba Anotações (m3-29) está em edição (textarea aberta). */
+  /** `true` enquanto a aba Anotações (m3-32) está em edição (textarea aberta). */
   protected readonly editandoAnotacoes = signal(false);
 
   /** Abre a edição das Anotações (aba própria — distinta do peek read-only da Visão Geral). */
@@ -712,7 +712,7 @@ export class FichaVisualizacao {
     }
   }
 
-  /** Abre a digitação direta do Dinheiro (Informações Extras, m3-31). */
+  /** Abre a digitação direta do Dinheiro (Informações Extras, m3-34). */
   protected editarDinheiro(): void {
     this.editandoDinheiro.set(true);
   }
@@ -725,7 +725,7 @@ export class FichaVisualizacao {
   /**
    * Confirma o Dinheiro digitado (Enter/blur): emite pelo mesmo canal de `ajusteCampoDados` dos
    * campos escalares — a página persiste sem cascata (dinheiro não deriva nenhuma outra stat). Sem
-   * trava de faixa (liberdade total — m3-10/m3-31); o guard evita o commit duplo do blur após Enter.
+   * trava de faixa (liberdade total — m3-10/m3-34); o guard evita o commit duplo do blur após Enter.
    */
   protected confirmarDinheiro(texto: string): void {
     if (!this.editandoDinheiro()) {
@@ -890,7 +890,7 @@ export class FichaVisualizacao {
   });
 
   /**
-   * Resistências a dano da aba Combate (m3-33; editável + amplificadores em ajuste posterior) —
+   * Resistências a dano da aba Combate (m3-36; editável + amplificadores em ajuste posterior) —
    * **sempre as cinco linhas** de `TipoDanoEnum`. Cada uma soma uma base **manual editável**
    * (`derivados.resistencias`, stored/editável — mesmo modelo de m3-10) com o que vem do
    * **equipamento** (itens equipados + Fragmento aplicado + amplificadores `Resistente`/`Defesa`),
@@ -939,7 +939,7 @@ export class FichaVisualizacao {
   protected readonly totalItens = computed(() => this.dados().inventario.itens.length);
   protected readonly totalRolagens = computed(() => this.dados().rolagens?.length ?? 0);
 
-  /** Combos (m3-34) — ausente em fichas anteriores cai em lista vazia. */
+  /** Combos (m3-37) — ausente em fichas anteriores cai em lista vazia. */
   protected readonly combos = computed(() => this.dados().combos ?? []);
 
   /**

@@ -330,7 +330,7 @@ export interface EntradaResistencia {
 
 /**
  * Interpreta a notação de resistência base de um item (ex.: `"14 [Físico], 3 [Balístico]"`) em
- * entradas `{valor, tipos}` — extraído de `calcularStatItem` (m3-33) pra ser reusado por
+ * entradas `{valor, tipos}` — extraído de `calcularStatItem` (m3-36) pra ser reusado por
  * `shared/regras/agente/resistencia.ts` (agregação da aba Combate) sem duplicar o regex. Texto fora
  * do padrão `N [Tipo]` é descartado por entrada (não lança).
  */

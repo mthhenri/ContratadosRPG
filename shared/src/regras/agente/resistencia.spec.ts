@@ -10,7 +10,7 @@ import type { AmplificadorAplicadoDto, CarrinhoItemDto } from '../compras';
 import { montarResistencias } from './resistencia';
 
 /**
- * Resistências da aba Combate (m3-33 + ajuste posterior: sempre as 5, manual + equipamento,
+ * Resistências da aba Combate (m3-36 + ajuste posterior: sempre as 5, manual + equipamento,
  * amplificadores) conferida contra docs/core/sistema-v4.1.0.md — "⬦ Resistências" (exemplo: Colete
  * Kevlar com 3 de Resistência a Dano Balístico) e "⬡ Amplificadores" (Resistente/Defesa).
  */
@@ -53,7 +53,7 @@ describe('montarResistencias', () => {
     expect(resultado.find((l) => l.tipo === TipoDanoEnum.FISICO)?.total).toBe(0);
   });
 
-  it('soma o bônus de um Fragmento aplicado (m3-32) no equipamento', () => {
+  it('soma o bônus de um Fragmento aplicado (m3-35) no equipamento', () => {
     const item = protecao({
       resistencia: '10 [Físico]',
       modificacoes: [

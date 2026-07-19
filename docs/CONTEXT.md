@@ -1661,15 +1661,15 @@ task: `m3-24`** (backend — validação + trava de imutabilidade da Identidade)
 (proibição #29).
 
 **Nova frente aberta (2026-07-19) — reforma da aba Combate.** A pedido do autor (a aba estava "vazia
-demais"), seis specs novas no backlog do M3, `m3-29`→`m3-34` (paralelas a `m3-23`→`m3-25`, que rodam
-em outra sessão): **m3-29** Anotações editáveis, **m3-30** apelido de equipamento, **m3-31** dinheiro
-atual + salário, **m3-32** fragmentos consumíveis/aplicáveis no inventário (com custo de Energia),
-**m3-33** resistências no Combate afetadas por equipamento e **m3-34** merge Combate+Rolagens com um
+demais"), seis specs novas no backlog do M3, `m3-32`→`m3-37` (paralelas a `m3-23`→`m3-25`, que rodam
+em outra sessão): **m3-32** Anotações editáveis, **m3-33** apelido de equipamento, **m3-34** dinheiro
+atual + salário, **m3-35** fragmentos consumíveis/aplicáveis no inventário (com custo de Energia),
+**m3-36** resistências no Combate afetadas por equipamento e **m3-37** merge Combate+Rolagens com um
 sistema de Combos. Sequência combinada com o autor: ordem crescente de complexidade, uma spec por
 vez, `backlog/ → active/ → done/`. Nenhuma das seis precisa de migration — tudo cabe no JSONB
 `ficha.dados` (§ "Ficha Data Model").
 
-**m3-29 concluída — aba "Anotações".** O campo `anotacoes: string` (já existia em
+**m3-32 concluída — aba "Anotações".** O campo `anotacoes: string` (já existia em
 `FichaJogadorDadosDto`, só exibido read-only na Visão Geral) ganhou aba própria e editável: nova
 entrada em `AbaFicha`/`ABAS_FICHA` (`ficha-visualizacao.component.ts`), ícone novo `anotacoes` em
 `shared/icone`, textarea com o mesmo padrão de edição no próprio lugar (lápis abre, blur/Escape
@@ -1678,13 +1678,13 @@ batching otimista dos outros campos — `mesclarFicha` já é genérico por chav
 para o merge de edição concorrente). O card read-only da Visão Geral continua como "peek". Zero
 mudança em `shared/` além do ícone. `+5` testes de componente. **Verificado ao vivo** (Postgres
 nativo + backend + frontend, agente novo via REST): aba aparece, placeholder "Sem anotações." some
-ao editar, texto sobrevive a reload. Spec `m3-29` em `done/`.
+ao editar, texto sobrevive a reload. Spec `m3-32` em `done/`.
 
-**m3-30 concluída — apelido de equipamento.** `CarrinhoItemDto` (`shared/regras/compras`) ganhou
+**m3-33 concluída — apelido de equipamento.** `CarrinhoItemDto` (`shared/regras/compras`) ganhou
 `apelido?: string` — puramente de exibição, `resolverDadosItem`/`calcularStatItem` continuam
 resolvendo por `categoria`+`nome` (zero mudança no motor). Novo helper `rotuloItem(item)` em
 `modules/ficha/rotulos-ficha.ts` (`apelido ?? nome`, mesmo padrão de `rotuloClasse`/`rotuloArquetipo`)
-— ponto único reusável pelos Combos (`m3-34`) mais tarde. `FichaInventario`: lápis inline no nome do
+— ponto único reusável pelos Combos (`m3-37`) mais tarde. `FichaInventario`: lápis inline no nome do
 item (só em categorias **não-empilháveis** — Operacional/Medicinal ficam de fora, são pilha, não
 instância), apelido em destaque + nome mecânico como legenda; confirmar vazio remove o apelido. A
 lógica de empilhamento (`adicionarItem`) passou a exigir `apelido` igual (ou ambos ausentes) antes de
@@ -1692,7 +1692,7 @@ juntar duas entradas na mesma pilha, senão um item apelidado seria absorvido po
 `+8` testes de componente. **Verificado ao vivo**: renomear "Arma Branca Média" → "Espada Excalibur",
 legenda mecânica aparece, sobrevive a reload.
 
-**m3-31 concluída — dinheiro atual + salário.** `FichaJogadorDadosDto` ganhou `dinheiro?: number`
+**m3-34 concluída — dinheiro atual + salário.** `FichaJogadorDadosDto` ganhou `dinheiro?: number`
 (opcional, retrocompat — fichas antigas caem em 0). Novo par de funções em
 `shared/regras/novo-agente` (mesmo lugar de `calcularBonusMonetario`, já documentado como "dinheiro
 inicial calculado à parte" desde m1-03, nunca implementado até agora): `calcularDinheiroInicial({
@@ -1708,7 +1708,7 @@ referência na aba Inventário, com aviso visual quando negativo. `+9` testes de
 `shared`. **Verificado ao vivo**: Visão Geral mostra dinheiro/salário corretos, editar dinheiro
 persiste a reload, Inventário mostra "Dinheiro restante" batendo com dinheiro − gasto do carrinho.
 
-**m3-32 concluída — fragmentos no inventário (núcleo: adquirir/acoplar/remover).** A leitura completa
+**m3-35 concluída — fragmentos no inventário (núcleo: adquirir/acoplar/remover).** A leitura completa
 de "⬡ Fragmentos" no documento revelou uma mecânica bem maior que o pedido original (Afinidade,
 Anomalia Biológica, Colapso/transformação em criatura, Consumo com Preço de Sanidade, Redução de
 Módulo, Forja, tabela de bônus fixos do Construtor) — **recorte confirmado com o autor**: só o custo
@@ -1736,19 +1736,19 @@ Potencializador módulo IV (50/50→50/43), aplicar na arma (fragmento some, mod
 bate exatamente com o exemplo do documento "7 de Energia + 7 de Energia Máxima"), remover a mod
 (43/36→29/36 — Energia ×2, Máxima intocada), tudo sobrevivendo a reload.
 
-**m3-33 concluída — resistências no Combate.** Novo campo `equipado?: boolean` em `CarrinhoItemDto`
+**m3-36 concluída — resistências no Combate.** Novo campo `equipado?: boolean` em `CarrinhoItemDto`
 (só Proteções, com toggle "Equipado"/"Na mochila" no Inventário — hoje só Armazenamento tinha um
 conceito parecido, `guardada`, que não servia pra isso). O regex de parsing de resistência que vivia
 inline em `calcularStatItem` virou função exportada `interpretarNotacaoResistencia` (refactor puro,
 264→264 testes de shared inalterados) pra ser reusada sem duplicar.
 
-**Ajuste pós-m3-33 (mesma sessão, a pedido do autor)**: a versão "calculado ao vivo, sem edição" foi
+**Ajuste pós-m3-36 (mesma sessão, a pedido do autor)**: a versão "calculado ao vivo, sem edição" foi
 substituída por **sempre as cinco linhas de `TipoDanoEnum` + base manual editável + complemento do
 equipamento**. `shared/regras/agente/resistencia.ts` trocou `calcularResistencias`/
 `ResistenciaAgregadaDto` (só somava equipamento, filtrava zero) por `montarResistencias({ itens,
 amplificadores, manual? })` → `ResistenciaLinhaDto[] { tipo; manual; equipamento; total }`, sempre 5
 entradas (`ORDEM_TIPOS`), `total = max(0, manual + equipamento)`. `equipamento` soma
-`calcularStatItem({item}).resistencia` dos itens equipados (Fragmento aplicado, m3-32, incluso de
+`calcularStatItem({item}).resistencia` dos itens equipados (Fragmento aplicado, m3-35, incluso de
 graça) **mais os dois amplificadores que mexem em resistência** (primeira vez que um amplificador
 ganha efeito mecânico real em `shared/regras` — os demais seguem só texto no catálogo): `Resistente`
 = +1 Geral fixo (não escala com empilhamento) e `Defesa` = a partir do 2º empilhamento, `-(empilhamentos
@@ -1763,10 +1763,10 @@ componente reescritos (a antiga asserção "sem affordance de edição" virou o 
 vivo**: Físico manual=7 (editado e sobrevive a reload) + Colete de Kevlar equipado (5 Físico, 3
 Balístico) → Combate mostra Físico=12, Balístico=3, batendo exatamente com manual+equipamento.
 
-**m3-34 concluída — merge Combate+Rolagens, Combos (fecha a nova frente).** `AbaFicha`/`ABAS_FICHA`
+**m3-37 concluída — merge Combate+Rolagens, Combos (fecha a nova frente).** `AbaFicha`/`ABAS_FICHA`
 perdeu `'rolagens'` (ficam 6 abas); o `id` `'combate'` permanece de propósito, deixando `m3-27`
 (histórico de rolagem, backlog) livre pra somar um `'historico'` futuro sem colidir. A aba Combate
-mesclada agora hospeda 4 seções na mesma tela: os stats de sempre, Resistências (m3-33),
+mesclada agora hospeda 4 seções na mesma tela: os stats de sempre, Resistências (m3-36),
 `<app-ficha-rolagens>` (m3-15/m3-22, intacto) e a nova `<app-ficha-combos>`. `?aba=rolagens`
 (links antigos) redireciona pra `combate` em vez de cair no fallback genérico. Novo contrato
 `FichaComboDto { nome; passos: FichaComboPassoDto[] }` (`shared/dtos/ficha/ficha-combo.dtos.ts`) —
@@ -1787,11 +1787,26 @@ m3-10 — não valida a referência no salvar). `+11` testes de componente (`Fic
 como aba própria). **Verificado ao vivo**: barra de abas com 6 itens, painel Combate mostrando as 4
 seções com 2 presets criados de antemão, combo de 2 passos montado e executado passo a passo
 ("passo 1/2" → "Rolar e avançar" → "passo 2/2" → "Rolar e concluir" → runner fecha), sobrevive a
-reload. **Milestone da nova frente fechado ponta a ponta** (`m3-29`→`m3-34`, seis specs, ordem
+reload. **Milestone da nova frente fechado ponta a ponta** (`m3-32`→`m3-37`, seis specs, ordem
 crescente de complexidade, todas verificadas ao vivo).
 
-**Próxima task**: a fila original `m3-23`→`m3-26` (Identidade, mobile, otimização de espaço),
-possivelmente já em andamento em outra sessão — conferir `docs/specs/active/` antes de começar.
+**Integração (2026-07-19, mesma data — sessão paralela).** Esta frente rodou numa branch separada
+(`claude/proxima-task-9a7dcn`) enquanto `m3-23` corria aqui — as duas sessões numeraram specs novas
+sem se coordenar, e a branch reusou `m3-29`→`m3-34` (os números que `m3-23` já tinha herdado da
+Rolagem v3, então mesclado a `master`). Renumerado na integração pra `m3-32`→`m3-37` (arquivos,
+comentários de código e os parágrafos acima já refletem os números finais). A branch também foi
+cortada **antes** do rewrite "Rolagem v3" pousar em `master` (fim do campo `modo`, `critico` como
+parâmetro de `rolarPasso`): `executar-rolagem.ts` (extraído de `FichaRolagens` pra reuso em Combos)
+foi reescrito contra a API atual, preservando o parâmetro `critico` e o débito de energia por-passo
+que a v3 já tinha — sem isso o build quebrava silenciosamente (nenhum marcador de conflito, só
+`RolagemModoEnum` inexistente). Merge com 5 conflitos de texto (contrato `ficha.dtos.ts`,
+`ficha-rolagens`/`ficha-visualizacao` reconciliando crítico mecânico + rolagem avulsa da v3 com a
+extração de Combos da branch) + 2 quebras silenciosas de tipo. **Testes pós-integração:** shared
+**327**/327, backend **91**/91, frontend **404**/404; lint e build limpos nos 3 workspaces.
+Worktree isolada (`worktree-m3-32-combate-reforma`), depois integrada de volta a `master`.
+
+**Próxima task**: a fila original `m3-24`→`m3-26` (Identidade — backend/frontend, mobile,
+otimização de espaço) — ver o bloco `m3-23` no topo do arquivo.
 
 **Trilha paralela — extensão pós-M2 (`m2-16`/`m2-17`, specs adicionadas ao backlog depois do M2
 "fechado" acima, dependendo de fichas já entregues pelo M3): `m2-16` (fichas do membro na lista) e

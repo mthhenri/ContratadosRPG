@@ -94,7 +94,7 @@ export class FichaVisualizar {
   /**
    * Aba inicialmente ativa (m3-11): lida do `?aba=` da URL para deep-link/refresh. Parâmetro inválido
    * ou ausente cai em "Visão Geral". `?aba=rolagens` (compatibilidade com links antigos de antes da
-   * m3-34, quando Rolagens era uma aba própria) vai para `combate`, que a absorveu. A aba ativa vive
+   * m3-37, quando Rolagens era uma aba própria) vai para `combate`, que a absorveu. A aba ativa vive
    * no `FichaVisualizacao` (`linkedSignal`); esta página só semeia o valor inicial e reflete as
    * trocas de volta na URL (`mudarAba`).
    */
@@ -360,7 +360,7 @@ export class FichaVisualizar {
   }
 
   /**
-   * Edição da base manual de uma Resistência (ajuste pós-m3-33): grava em
+   * Edição da base manual de uma Resistência (ajuste pós-m3-36): grava em
    * `derivados.resistencias[tipo]`, otimista na tela, e agenda a persistência em lote. O total
    * exibido soma isso ao equipamento (`montarResistencias`, calculado no próprio componente).
    */
@@ -578,7 +578,7 @@ export class FichaVisualizar {
   }
 
   /**
-   * Edita os Combos (m3-34): substitui `dados.combos` inteiro, otimista na tela + persistência em
+   * Edita os Combos (m3-37): substitui `dados.combos` inteiro, otimista na tela + persistência em
    * lote. Só dono/mestre chega aqui; sem cascata/derivados (combos não alteram nada calculado — cada
    * passo só referencia um preset de `rolagens` já existente, validado em tempo de execução).
    */
@@ -592,7 +592,7 @@ export class FichaVisualizar {
   }
 
   /**
-   * Edita as Anotações livres (m3-29): substitui `dados.anotacoes` inteiro, otimista na tela +
+   * Edita as Anotações livres (m3-32): substitui `dados.anotacoes` inteiro, otimista na tela +
    * persistência em lote. Só dono/mestre chega aqui; sem regra de domínio (texto livre).
    */
   protected ajustarAnotacoes(anotacoes: string): void {
@@ -615,7 +615,7 @@ export class FichaVisualizar {
   }
 
   /**
-   * Edita Nível/Prestígio/**Dinheiro** (m3-31). **Nível** aplica a **progressão** (m3-10): as
+   * Edita Nível/Prestígio/**Dinheiro** (m3-34). **Nível** aplica a **progressão** (m3-10): as
    * máximas (Vida/Energia) e os derivados stored que dependem do Nível — Defesa/Esquiva/Bloqueio,
    * Proficiência, Hab./Turno e Dano Furtivo (+1D6+1 por marco cruzado) — acompanham a mudança.
    * Dinheiro/Prestígio não disparam cascata. Otimista + em lote.

@@ -7,9 +7,9 @@ import {
 } from '../compras';
 
 /**
- * Resistências a dano da aba Combate (m3-33; editável + amplificadores em ajuste posterior) —
+ * Resistências a dano da aba Combate (m3-36; editável + amplificadores em ajuste posterior) —
  * **sempre mostra os cinco tipos** (`TipoDanoEnum`), somando o que vem do **equipamento** (itens
- * equipados + modificações, incluindo Fragmento aplicado — m3-32) com uma base **manual editável**
+ * equipados + modificações, incluindo Fragmento aplicado — m3-35) com uma base **manual editável**
  * (persistida em `FichaDerivadosDto.resistencias`, mesmo modelo `stored + editável` de m3-10). O
  * total exibido é `manual + equipamento`, nunca abaixo de 0.
  *

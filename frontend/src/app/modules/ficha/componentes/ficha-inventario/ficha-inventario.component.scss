@@ -411,7 +411,7 @@
     font-family: var(--font-sans);
     color: var(--text-dim);
   }
-  // Badge do fragmento aplicado (m3-32) — precede o nome da mod no chip.
+  // Badge do fragmento aplicado (m3-35) — precede o nome da mod no chip.
   &__mod-tag-fragmento {
     display: inline-flex;
     width: 12px;
@@ -799,7 +799,7 @@
       font-weight: 700;
       color: var(--text);
     }
-    // Apelido do jogador (m3-30): legenda com o nome mecânico do catálogo logo abaixo.
+    // Apelido do jogador (m3-33): legenda com o nome mecânico do catálogo logo abaixo.
     &-nome-mecanico {
       display: block;
       font-size: 11px;

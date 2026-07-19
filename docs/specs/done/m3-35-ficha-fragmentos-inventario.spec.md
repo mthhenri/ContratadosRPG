@@ -1,4 +1,4 @@
-# m3-32-ficha-fragmentos-inventario.spec.md
+# m3-35-ficha-fragmentos-inventario.spec.md
 
 > Task 32 do milestone `m3-ficha-jogador.spec.md`.
 
@@ -30,7 +30,7 @@ nenhum efeito mecânico.
    Energia atual ×2 (sem devolver Energia Máxima nem ressuscitar o fragmento).
 4. Verificar se `calcularStatItem` já soma efeitos `DEFESA` (como já soma `RESISTENCIA`) —
    se for só chip decorativo hoje, estender pra realmente agregar, já que o bônus de
-   Proteção do exemplo (Módulo I) depende disso alimentar o Combate (`m3-33`).
+   Proteção do exemplo (Módulo I) depende disso alimentar o Combate (`m3-36`).
 5. UI no `ficha-inventario`:
    - Adicionar fragmento ao inventário já debita a Energia Máxima da aquisição.
    - Ação "Aplicar em..." em fragmentos Potencializador: escolhe item-alvo compatível →

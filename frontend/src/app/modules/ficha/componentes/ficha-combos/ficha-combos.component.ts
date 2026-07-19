@@ -27,7 +27,7 @@ interface ComboVM {
 }
 
 /**
- * Editor + runner de **Combos** (m3-34) — sequências ordenadas de rolagens que o jogador monta e
+ * Editor + runner de **Combos** (m3-37) — sequências ordenadas de rolagens que o jogador monta e
  * executa passo a passo, na aba Combate mesclada com Rolagens. Cada passo **referencia** um preset
  * de rolagem já existente da ficha (`FichaRolagemDto.nome`) — reusa 100% o motor de
  * `shared/regras/rolagem` via `executarPassoPreset` (extraído de `FichaRolagens`), sem duplicar

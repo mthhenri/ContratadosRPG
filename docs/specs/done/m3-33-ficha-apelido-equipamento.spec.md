@@ -1,4 +1,4 @@
-# m3-30-ficha-apelido-equipamento.spec.md
+# m3-33-ficha-apelido-equipamento.spec.md
 
 > Task 30 do milestone `m3-ficha-jogador.spec.md`.
 
@@ -19,7 +19,7 @@ dano/resistência/etc.
    cálculo (`compras.ts` continua ignorando `apelido`).
 2. Helper de exibição `rotuloItem(item)` em `frontend/src/app/modules/ficha/rotulos-ficha.ts`
    (mesmo padrão de `rotuloArquetipo`/`rotuloClasse`), retornando `apelido ?? nome` — ponto
-   único de formatação reusado por Inventário e, mais tarde, pelos Combos (`m3-34`).
+   único de formatação reusado por Inventário e, mais tarde, pelos Combos (`m3-37`).
 3. UI no `ficha-inventario`: affordance de renomear (ícone lápis) restrita a categorias
    **não-empilháveis** (armas, proteções, exóticos, armazenamento) — itens empilháveis
    (munição, medicinal, operacional) não ganham apelido. Exibição: apelido em destaque +
@@ -37,7 +37,7 @@ dano/resistência/etc.
 ## Fora de Escopo
 
 - Apelido em itens empilháveis.
-- Uso do apelido nos Combos (`m3-34` consome `rotuloItem`, mas a UI de Combos é escopo dela).
+- Uso do apelido nos Combos (`m3-37` consome `rotuloItem`, mas a UI de Combos é escopo dela).
 
 ## Dependências
 

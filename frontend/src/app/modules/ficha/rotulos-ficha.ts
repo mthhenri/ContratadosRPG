@@ -63,9 +63,9 @@ export function rotuloClasseCompleto(classe: ClasseEnum, arquetipo: ArquetipoEnu
 }
 
 /**
- * Nome exibido de um item do inventário (m3-30): o **apelido** que o jogador deu à instância
+ * Nome exibido de um item do inventário (m3-33): o **apelido** que o jogador deu à instância
  * (ex.: "Espada Excalibur"), ou o nome mecânico do catálogo quando não tem. Ponto único de
- * formatação — reusado pelo Inventário e, mais tarde, pelo seletor de Combos (`m3-34`).
+ * formatação — reusado pelo Inventário e, mais tarde, pelo seletor de Combos (`m3-37`).
  */
 export function rotuloItem(item: Pick<CarrinhoItemDto, 'nome' | 'apelido'>): string {
   return item.apelido?.trim() || item.nome;

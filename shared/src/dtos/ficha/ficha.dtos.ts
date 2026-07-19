@@ -226,7 +226,7 @@ export interface FichaDerivadosDto {
   readonly inventarioMaximo?: number;
   readonly habilidadesPorTurno?: number;
   /**
-   * Base **manual** de resistência por tipo de dano (ajuste pós-m3-33) — complementada pela soma do
+   * Base **manual** de resistência por tipo de dano (ajuste pós-m3-36) — complementada pela soma do
    * equipamento (itens equipados + Fragmento aplicado + amplificadores `Resistente`/`Defesa`,
    * `shared/regras/agente/resistencia` `montarResistencias`). Ausente/tipo ausente = 0 manual;
    * a aba Combate sempre mostra os cinco tipos, mesmo em 0.
@@ -385,17 +385,17 @@ export interface FichaJogadorDadosDto {
   /** Presets de rolagem de dados salvos na ficha (m3-15). Opcional; ausente = sem presets. */
   readonly rolagens?: readonly FichaRolagemDto[];
   /**
-   * Combos (m3-34) — sequências de rolagens que o jogador monta e executa passo a passo, cada passo
+   * Combos (m3-37) — sequências de rolagens que o jogador monta e executa passo a passo, cada passo
    * referenciando um preset de `rolagens`. Opcional; ausente = sem combos.
    */
   readonly combos?: readonly FichaComboDto[];
   /** Anotações livres do jogador/mestre sobre a ficha. */
   readonly anotacoes: string;
   /**
-   * Dinheiro atual do agente (m3-31). Nasce do dinheiro inicial (`1000 + 4D4 × 250`,
+   * Dinheiro atual do agente (m3-34). Nasce do dinheiro inicial (`1000 + 4D4 × 250`,
    * `shared/regras/novo-agente` `rolarDinheiroInicial`) e é editável dali em diante (mesma
    * liberdade de edição de m3-10 — sem piso/teto). **Opcional** por retrocompatibilidade —
-   * fichas anteriores a m3-31 não têm o campo; consumidores tratam a ausência como `0`. Salário
+   * fichas anteriores a m3-34 não têm o campo; consumidores tratam a ausência como `0`. Salário
    * **não** é persistido aqui — é derivado da Patente (`obterPatente(prestigio).salario`).
    */
   readonly dinheiro?: number;

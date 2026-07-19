@@ -1,4 +1,4 @@
-# m3-34-ficha-combate-rolagens-combos.spec.md
+# m3-37-ficha-combate-rolagens-combos.spec.md
 
 > Task 34 do milestone `m3-ficha-jogador.spec.md`.
 
@@ -18,7 +18,7 @@ passo.
    futuro sem colidir. Ajustar deep-links `?aba=rolagens` (redirecionar pra
    `?aba=combate`).
 2. Painel mesclado da aba Combate hospeda: o `<dl>` de stats existente, Resistências
-   (`m3-33`), `<app-ficha-rolagens>` e a nova seção de Combos, como sub-navegação interna
+   (`m3-36`), `<app-ficha-rolagens>` e a nova seção de Combos, como sub-navegação interna
    (chips) dentro da mesma aba.
 3. Novo DTO `shared/src/dtos/ficha/ficha-combo.dtos.ts`:
    `FichaComboPassoDto { nome; rolagemNome (referencia FichaRolagemDto.nome); descricao? }`
@@ -51,4 +51,4 @@ passo.
 
 ## Dependências
 
-- `m3-15` (presets de rolagem), `m3-33` (Resistências, compõe o mesmo painel).
+- `m3-15` (presets de rolagem), `m3-36` (Resistências, compõe o mesmo painel).

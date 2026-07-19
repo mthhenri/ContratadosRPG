@@ -81,7 +81,7 @@ export interface ModificacaoAplicadaDto {
    */
   readonly ignoraLimiteProprio?: boolean;
   /**
-   * Marca esta mod como **originada de um fragmento Potencializador** (m3-32) — distingue do
+   * Marca esta mod como **originada de um fragmento Potencializador** (m3-35) — distingue do
    * chip/UI sem depender de string-matching em `nome`, e é o que o fluxo de "remover" (desacoplar)
    * usa para saber que custa Energia × 2 do módulo. Ausente = mod comum (catálogo ou custom livre).
    */
@@ -119,12 +119,12 @@ export interface CarrinhoItemDto {
   readonly guardada: boolean;
   /**
    * Nome que o jogador dá a **esta instância** do item (ex.: "Espada Excalibur" numa
-   * Arma Branca Média) — puramente de exibição (m3-30). `resolverDadosItem`/`calcularStatItem`
+   * Arma Branca Média) — puramente de exibição (m3-33). `resolverDadosItem`/`calcularStatItem`
    * continuam resolvendo pelo `nome` (chave do catálogo); o motor de cálculo nunca lê `apelido`.
    */
   readonly apelido?: string;
   /**
-   * Só para `PROTECOES` (m3-33): `true` = vestida/em uso — só as equipadas entram na soma de
+   * Só para `PROTECOES` (m3-36): `true` = vestida/em uso — só as equipadas entram na soma de
    * resistências da aba Combate (`shared/regras/agente/resistencia`). Ausente/`false` = na mochila,
    * não conta. Ignorado nas demais categorias.
    */

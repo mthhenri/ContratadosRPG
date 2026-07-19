@@ -1,4 +1,4 @@
-# m3-31-ficha-dinheiro-salario.spec.md
+# m3-34-ficha-dinheiro-salario.spec.md
 
 > Task 31 do milestone `m3-ficha-jogador.spec.md`.
 

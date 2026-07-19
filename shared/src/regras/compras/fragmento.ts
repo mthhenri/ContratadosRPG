@@ -3,7 +3,7 @@ import { BONUS_POTENCIALIZADOR, CUSTO_ENERGIA_MAXIMA_MODULO } from './fragmento.
 import { ModificacaoEfeitoDto } from './compras.dtos';
 
 /**
- * Custos de Energia dos Fragmentos (m3-32) — funções puras conferidas contra
+ * Custos de Energia dos Fragmentos (m3-35) — funções puras conferidas contra
  * `docs/core/sistema-v4.1.0.md` — "⬡ Fragmentos". Só o núcleo desta task: adquirir (portar),
  * acoplar e remover (ver `fragmento.dados.ts` para o que fica de fora).
  */

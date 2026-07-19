@@ -1,4 +1,4 @@
-# m3-33-ficha-resistencias-combate.spec.md
+# m3-36-ficha-resistencias-combate.spec.md
 
 > Task 33 do milestone `m3-ficha-jogador.spec.md`.
 
@@ -8,9 +8,9 @@
 ## Objetivo
 
 A aba Combate hoje não mostra resistências a dano. Esta task agrega a resistência de todo
-equipamento **equipado** (Proteções, e Armas pensando na "arma atual" de `m3-34`), agrupada
+equipamento **equipado** (Proteções, e Armas pensando na "arma atual" de `m3-37`), agrupada
 por `TipoDanoEnum`, e exibe na aba Combate — incluindo bônus de fragmentos aplicados
-(`m3-32`).
+(`m3-35`).
 
 ## Entregáveis
 
@@ -36,7 +36,7 @@ por `TipoDanoEnum`, e exibe na aba Combate — incluindo bônus de fragmentos ap
 
 - Equipar/desequipar uma Proteção atualiza a resistência exibida no Combate imediatamente.
 - Soma bate com o valor individual de resistência mostrado no Inventário.
-- Bônus de fragmento aplicado (`m3-32`) entra na soma.
+- Bônus de fragmento aplicado (`m3-35`) entra na soma.
 
 ## Fora de Escopo
 
@@ -44,4 +44,4 @@ por `TipoDanoEnum`, e exibe na aba Combate — incluindo bônus de fragmentos ap
 
 ## Dependências
 
-- `m3-14` (Inventário), `m3-32` (fragmentos aplicados alimentam a soma).
+- `m3-14` (Inventário), `m3-35` (fragmentos aplicados alimentam a soma).

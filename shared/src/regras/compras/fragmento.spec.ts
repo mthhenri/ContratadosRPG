@@ -15,7 +15,7 @@ import {
 } from './fragmento';
 
 /**
- * Custos de Energia e cardápio de bônus de Fragmentos (m3-32, núcleo: adquirir/acoplar/remover)
+ * Custos de Energia e cardápio de bônus de Fragmentos (m3-35, núcleo: adquirir/acoplar/remover)
  * conferidos contra docs/core/sistema-v4.1.0.md — "⬡ Fragmentos" (exemplo do documento: "acoplar um
  * fragmento de módulo IV em um item custa 7 de Energia + 7 de Energia Máxima, e removê-lo do item
  * custa 14 de Energia").

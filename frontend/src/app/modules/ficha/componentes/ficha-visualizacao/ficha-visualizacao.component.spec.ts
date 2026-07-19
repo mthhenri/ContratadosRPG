@@ -129,7 +129,7 @@ describe('FichaVisualizacao', () => {
     expect(raiz.querySelector('.ficha-visao__anotacoes')).toBeNull();
   });
 
-  describe('aba Anotações (m3-29)', () => {
+  describe('aba Anotações (m3-32)', () => {
     it('mostra o texto em leitura e não expõe o lápis quando não é ajustável', () => {
       const alvo = montar(dados, 'Corvo', 42, false);
       trocarAba(alvo.fixture, 'anotacoes');
@@ -194,7 +194,7 @@ describe('FichaVisualizacao', () => {
     });
   });
 
-  describe('Dinheiro + Salário (m3-31)', () => {
+  describe('Dinheiro + Salário (m3-34)', () => {
     it('exibe o dinheiro atual e o salário derivado do Prestígio', () => {
       const { raiz } = montar({ ...dados, prestigio: 1, dinheiro: 3500 });
       const linhas = Array.from(raiz.querySelectorAll('.ficha-info__linha')).map((linha) => ({
@@ -244,7 +244,7 @@ describe('FichaVisualizacao', () => {
     });
   });
 
-  describe('Resistências no Combate (m3-33)', () => {
+  describe('Resistências no Combate (m3-36)', () => {
     /** Ativa a aba Combate clicando no seu `role="tab"`. */
     function trocarParaCombate(fixture: ReturnType<typeof montar>['fixture']): HTMLElement {
       const raiz = fixture.nativeElement as HTMLElement;
@@ -676,7 +676,7 @@ describe('FichaVisualizacao', () => {
 
   // === Navegação por abas (m3-11) ===
 
-  it('renderiza as seis abas com a Visão Geral ativa por padrão (Rolagens mesclada em Combate — m3-34)', () => {
+  it('renderiza as seis abas com a Visão Geral ativa por padrão (Rolagens mesclada em Combate — m3-37)', () => {
     const { raiz } = montar(dados);
     const abas = Array.from(raiz.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
     expect(abas.map((a) => a.textContent?.trim())).toEqual([

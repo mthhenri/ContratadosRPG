@@ -7,7 +7,7 @@ import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-da
 import { FichaCombos } from './ficha-combos.component';
 
 /**
- * Prova o editor + runner de Combos (m3-34): monta uma sequência ordenada de passos, cada um
+ * Prova o editor + runner de Combos (m3-37): monta uma sequência ordenada de passos, cada um
  * **referenciando** um preset de rolagem existente (`FichaRolagemDto.nome`), e executa **um passo
  * por clique** — reusando `executarPassoPreset` (extraído de `FichaRolagens`), nenhuma regra de
  * dados no componente. Controlado: cada mutação emite a lista inteira por `combosMudou`.

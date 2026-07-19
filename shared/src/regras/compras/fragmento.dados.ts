@@ -1,7 +1,7 @@
 import { FragmentoModuloEnum } from '../../enums';
 
 /**
- * Dados tipados de Fragmentos (m3-32) — custo em Energia por módulo e o cardápio de bônus do
+ * Dados tipados de Fragmentos (m3-35) — custo em Energia por módulo e o cardápio de bônus do
  * Potencializador "em um item". Conferidos contra `docs/core/sistema-v4.1.0.md` — "⬡ Fragmentos"
  * (⬥ Módulos, ⬥ Acoplamento, ⬥ Função > Potencializador). Em conflito, o documento vence
  * (proibição #27).

@@ -591,7 +591,7 @@
                 </div>
               }
 
-              <!-- Dinheiro atual (m3-31) — editável no próprio lugar, mesmo canal de nível/prestígio. -->
+              <!-- Dinheiro atual (m3-34) — editável no próprio lugar, mesmo canal de nível/prestígio. -->
               <div class="ficha-info__linha">
                 <dt class="ficha-info__rotulo">Dinheiro</dt>
                 @if (ajustavel() && editandoDinheiro()) {
@@ -624,7 +624,7 @@
                 }
               </div>
 
-              <!-- Salário (m3-31) — derivado da Patente, nunca persistido/editável. -->
+              <!-- Salário (m3-34) — derivado da Patente, nunca persistido/editável. -->
               <div class="ficha-info__linha">
                 <dt class="ficha-info__rotulo">Salário</dt>
                 <dd class="ficha-info__valor">${{ salario().toLocaleString('pt-BR') }}</dd>
@@ -692,7 +692,7 @@
         </dl>
       </section>
 
-      <!-- Resistências (m3-33 + ajuste posterior): sempre as cinco, base manual editável somada ao
+      <!-- Resistências (m3-36 + ajuste posterior): sempre as cinco, base manual editável somada ao
            equipamento (itens equipados + Fragmento aplicado + amplificadores Resistente/Defesa). -->
       <section class="ficha-cartao ficha-visao__painel-cartao">
         <header class="ficha-cartao__cabecalho">
@@ -744,7 +744,7 @@
         </dl>
       </section>
 
-      <!-- Rolagens (m3-15/m3-22) — mesclada na aba Combate em m3-34. -->
+      <!-- Rolagens (m3-15/m3-22) — mesclada na aba Combate em m3-37. -->
       <section class="ficha-cartao ficha-visao__painel-cartao">
         <header class="ficha-cartao__cabecalho">
           <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Rolagens</h3>
@@ -765,7 +765,7 @@
         />
       </section>
 
-      <!-- Combos (m3-34): sequência de rolagens já existentes, executada passo a passo. -->
+      <!-- Combos (m3-37): sequência de rolagens já existentes, executada passo a passo. -->
       <section class="ficha-cartao ficha-visao__painel-cartao">
         <header class="ficha-cartao__cabecalho">
           <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Combos</h3>
@@ -911,7 +911,7 @@
     </div>
   }
 
-  <!-- ABA: ANOTAÇÕES — texto livre editável (m3-29); campo `dados.anotacoes` já existia read-only. -->
+  <!-- ABA: ANOTAÇÕES — texto livre editável (m3-32); campo `dados.anotacoes` já existia read-only. -->
   @if (abaAtiva() === 'anotacoes') {
     <div
       class="ficha-visao__painel"
