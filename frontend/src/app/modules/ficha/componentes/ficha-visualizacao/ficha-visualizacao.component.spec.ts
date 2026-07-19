@@ -3,6 +3,7 @@ import {
   ArquetipoEnum,
   ClasseEnum,
   HabilidadeCategoriaEnum,
+  ItemCategoriaEnum,
   SeveridadeLesaoEnum,
 } from '@contratados-rpg/shared/enums';
 import type { FichaHabilidadeDto, FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
@@ -123,9 +124,249 @@ describe('FichaVisualizacao', () => {
     expect(marcas).toContain('Insônia');
   });
 
-  it('omite o card de anotações quando não há texto', () => {
+  it('omite o card de anotações (peek da Visão Geral) quando não há texto', () => {
     const { raiz } = montar({ ...dados, anotacoes: '   ' });
-    expect(raiz.textContent).not.toContain('Anotações');
+    expect(raiz.querySelector('.ficha-visao__anotacoes')).toBeNull();
+  });
+
+  describe('aba Anotações (m3-29)', () => {
+    it('mostra o texto em leitura e não expõe o lápis quando não é ajustável', () => {
+      const alvo = montar(dados, 'Corvo', 42, false);
+      trocarAba(alvo.fixture, 'anotacoes');
+      expect(alvo.raiz.querySelector('#painel-anotacoes')?.textContent).toContain(
+        'Veterano de contenção.',
+      );
+      expect(alvo.raiz.querySelector('.ficha-cartao__lapis')).toBeNull();
+      expect(alvo.raiz.querySelector('textarea')).toBeNull();
+    });
+
+    it('mostra o placeholder quando não há anotações', () => {
+      const alvo = montar({ ...dados, anotacoes: '' }, 'Corvo', 42, false);
+      trocarAba(alvo.fixture, 'anotacoes');
+      expect(alvo.raiz.querySelector('#painel-anotacoes')?.textContent).toContain(
+        'Sem anotações.',
+      );
+    });
+
+    it('abre a textarea ao clicar no lápis (ajustável) e emite ao confirmar', () => {
+      const alvo = montar(dados, 'Corvo', 42, true);
+      trocarAba(alvo.fixture, 'anotacoes');
+      const emitidas: string[] = [];
+      alvo.fixture.componentInstance.ajusteAnotacoes.subscribe((a) => emitidas.push(a));
+
+      alvo.raiz.querySelector<HTMLButtonElement>('.ficha-cartao__lapis')!.click();
+      alvo.fixture.detectChanges();
+      const textarea = alvo.raiz.querySelector<HTMLTextAreaElement>('textarea')!;
+      expect(textarea).not.toBeNull();
+      textarea.value = 'Nova anotação.';
+      textarea.dispatchEvent(new Event('blur'));
+      alvo.fixture.detectChanges();
+
+      expect(emitidas).toEqual(['Nova anotação.']);
+    });
+
+    it('Escape cancela a edição sem emitir', () => {
+      const alvo = montar(dados, 'Corvo', 42, true);
+      trocarAba(alvo.fixture, 'anotacoes');
+      const emitidas: string[] = [];
+      alvo.fixture.componentInstance.ajusteAnotacoes.subscribe((a) => emitidas.push(a));
+
+      alvo.raiz.querySelector<HTMLButtonElement>('.ficha-cartao__lapis')!.click();
+      alvo.fixture.detectChanges();
+      const textarea = alvo.raiz.querySelector<HTMLTextAreaElement>('textarea')!;
+      textarea.value = 'Descartado.';
+      textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      alvo.fixture.detectChanges();
+
+      expect(alvo.raiz.querySelector('textarea')).toBeNull();
+      expect(emitidas).toEqual([]);
+    });
+
+    it('não emite quando o texto confirmado é igual ao original', () => {
+      const componente = montar(dados, 'Corvo', 42, true).fixture.componentInstance;
+      const emitidas: string[] = [];
+      componente.ajusteAnotacoes.subscribe((a) => emitidas.push(a));
+
+      componente['editarAnotacoes']();
+      componente['confirmarAnotacoes'](dados.anotacoes);
+
+      expect(emitidas).toEqual([]);
+    });
+  });
+
+  describe('Dinheiro + Salário (m3-31)', () => {
+    it('exibe o dinheiro atual e o salário derivado do Prestígio', () => {
+      const { raiz } = montar({ ...dados, prestigio: 1, dinheiro: 3500 });
+      const linhas = Array.from(raiz.querySelectorAll('.ficha-info__linha')).map((linha) => ({
+        rotulo: linha.querySelector('.ficha-info__rotulo')?.textContent?.trim(),
+        valor: linha.querySelector('.ficha-info__valor')?.textContent?.trim(),
+      }));
+      expect(linhas).toContainEqual({ rotulo: 'Dinheiro', valor: '$3.500' });
+      // Prestígio 1 → patente "Agente", salário $1.000 (tabela de patente).
+      expect(linhas).toContainEqual({ rotulo: 'Salário', valor: '$1.000' });
+    });
+
+    it('cai em 0 quando a ficha não tem o campo `dinheiro` (retrocompat)', () => {
+      // O fixture `dados` base do describe-pai já não tem `dinheiro` — exatamente o caso legado.
+      const { raiz } = montar(dados);
+      expect(raiz.querySelector('.ficha-info__linha')?.textContent).not.toContain('undefined');
+      const linhas = Array.from(raiz.querySelectorAll('.ficha-info__linha')).map((linha) => ({
+        rotulo: linha.querySelector('.ficha-info__rotulo')?.textContent?.trim(),
+        valor: linha.querySelector('.ficha-info__valor')?.textContent?.trim(),
+      }));
+      expect(linhas).toContainEqual({ rotulo: 'Dinheiro', valor: '$0' });
+    });
+
+    it('Salário nunca tem affordance de edição, mesmo ajustável', () => {
+      const { raiz } = montar({ ...dados, dinheiro: 1000 }, 'Corvo', 42, true);
+      const linhaSalario = Array.from(raiz.querySelectorAll('.ficha-info__linha')).find(
+        (linha) => linha.querySelector('.ficha-info__rotulo')?.textContent?.trim() === 'Salário',
+      );
+      expect(linhaSalario?.querySelector('button')).toBeNull();
+    });
+
+    it('edita o Dinheiro e emite via ajusteCampoDados', () => {
+      const alvo = montar({ ...dados, dinheiro: 1000 }, 'Corvo', 42, true);
+      const campos: { campo: string; valor: number }[] = [];
+      alvo.fixture.componentInstance.ajusteCampoDados.subscribe((c) => campos.push(c));
+
+      const botao = Array.from(alvo.raiz.querySelectorAll('.ficha-info__linha')).find(
+        (linha) => linha.querySelector('.ficha-info__rotulo')?.textContent?.trim() === 'Dinheiro',
+      )!.querySelector<HTMLButtonElement>('.ficha-info__editavel')!;
+      botao.click();
+      alvo.fixture.detectChanges();
+      const entrada = alvo.raiz.querySelector<HTMLInputElement>('.ficha-info__entrada')!;
+      entrada.value = '4200';
+      entrada.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+      alvo.fixture.detectChanges();
+
+      expect(campos).toEqual([{ campo: 'dinheiro', valor: 4200 }]);
+    });
+  });
+
+  describe('Resistências no Combate (m3-33)', () => {
+    /** Ativa a aba Combate clicando no seu `role="tab"`. */
+    function trocarParaCombate(fixture: ReturnType<typeof montar>['fixture']): HTMLElement {
+      const raiz = fixture.nativeElement as HTMLElement;
+      raiz.querySelector<HTMLButtonElement>('#aba-combate')!.click();
+      fixture.detectChanges();
+      return raiz;
+    }
+
+    it('mostra sempre as cinco linhas de resistência, mesmo sem nenhum equipamento (tudo em 0)', () => {
+      const { fixture } = montar(dados);
+      const raiz = trocarParaCombate(fixture);
+      ['Físico', 'Balístico', 'Explosão', 'Químico', 'Geral'].forEach((tipo) => {
+        expect(raiz.textContent).toContain(tipo);
+      });
+    });
+
+    /** Localiza a linha (`.ficha-info__linha`) de um tipo de dano dentro da aba Combate. */
+    function linhaDoTipo(raiz: HTMLElement, tipo: string): Element | undefined {
+      return Array.from(raiz.querySelectorAll('.ficha-info__linha')).find(
+        (linha) => linha.querySelector('.ficha-info__rotulo')?.textContent?.trim() === tipo,
+      );
+    }
+
+    it('soma a resistência das Proteções equipadas e reage a mudança de equipamento', () => {
+      const alvo = montar({
+        ...dados,
+        inventario: {
+          itens: [
+            {
+              nome: 'Colete Kevlar',
+              categoria: ItemCategoriaEnum.PROTECOES,
+              custo: 400,
+              peso: 2,
+              quantidade: 1,
+              guardada: false,
+              modificacoes: [],
+              resistencia: '3 [Balístico]',
+              equipado: true,
+            },
+          ],
+          amplificadores: [],
+        },
+      });
+      const raiz = trocarParaCombate(alvo.fixture);
+      expect(linhaDoTipo(raiz, 'Balístico')?.querySelector('.ficha-info__valor')?.textContent?.trim()).toBe('3');
+
+      // Desequipa via nova entrada de `dados` (componente controlado) — some da soma.
+      alvo.fixture.componentRef.setInput('dados', {
+        ...dados,
+        inventario: {
+          itens: [
+            {
+              nome: 'Colete Kevlar',
+              categoria: ItemCategoriaEnum.PROTECOES,
+              custo: 400,
+              peso: 2,
+              quantidade: 1,
+              guardada: false,
+              modificacoes: [],
+              resistencia: '3 [Balístico]',
+              equipado: false,
+            },
+          ],
+          amplificadores: [],
+        },
+      });
+      alvo.fixture.detectChanges();
+      expect(
+        linhaDoTipo(alvo.raiz, 'Balístico')?.querySelector('.ficha-info__valor')?.textContent?.trim(),
+      ).toBe('0');
+    });
+
+    it('permite editar a base manual de uma resistência (complementa o equipamento) quando ajustável', () => {
+      const alvo = montar(
+        {
+          ...dados,
+          inventario: {
+            itens: [
+              {
+                nome: 'Colete Kevlar',
+                categoria: ItemCategoriaEnum.PROTECOES,
+                custo: 400,
+                peso: 2,
+                quantidade: 1,
+                guardada: false,
+                modificacoes: [],
+                resistencia: '3 [Balístico]',
+                equipado: true,
+              },
+            ],
+            amplificadores: [],
+          },
+        },
+        'Corvo',
+        42,
+        true,
+      );
+      const raiz = trocarParaCombate(alvo.fixture);
+      const linhaResistencia = linhaDoTipo(raiz, 'Balístico')!;
+      const botao = linhaResistencia.querySelector<HTMLButtonElement>('button');
+      expect(botao).not.toBeNull();
+      expect(botao!.textContent?.trim()).toBe('3');
+
+      const emitidos: Array<{ tipo: string; valor: number }> = [];
+      alvo.fixture.componentInstance.ajusteResistencia.subscribe((ajuste) => emitidos.push(ajuste));
+
+      botao!.click();
+      alvo.fixture.detectChanges();
+      const entrada = linhaResistencia.querySelector<HTMLInputElement>('input')!;
+      entrada.value = '5';
+      entrada.dispatchEvent(new Event('blur'));
+      alvo.fixture.detectChanges();
+
+      expect(emitidos).toEqual([{ tipo: 'Balístico', valor: 5 }]);
+    });
+
+    it('não mostra affordance de edição na linha de resistência quando não ajustável (só leitura)', () => {
+      const alvo = montar(dados, 'Corvo', 42, false);
+      const raiz = trocarParaCombate(alvo.fixture);
+      const linhaResistencia = linhaDoTipo(raiz, 'Balístico');
+      expect(linhaResistencia?.querySelector('button')).toBeNull();
+    });
   });
 
   it('não mostra os passos − / + de Vida/Energia quando não é ajustável (só leitura)', () => {
@@ -435,7 +676,7 @@ describe('FichaVisualizacao', () => {
 
   // === Navegação por abas (m3-11) ===
 
-  it('renderiza as seis abas com a Visão Geral ativa por padrão', () => {
+  it('renderiza as seis abas com a Visão Geral ativa por padrão (Rolagens mesclada em Combate — m3-34)', () => {
     const { raiz } = montar(dados);
     const abas = Array.from(raiz.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
     expect(abas.map((a) => a.textContent?.trim())).toEqual([
@@ -444,7 +685,7 @@ describe('FichaVisualizacao', () => {
       'Inventário',
       'Habilidades',
       'Sanidade & Lesões',
-      'Rolagens',
+      'Anotações',
     ]);
     const ativa = raiz.querySelector('[role="tab"][aria-selected="true"]');
     expect(ativa?.textContent?.trim()).toBe('Visão Geral');
@@ -572,19 +813,32 @@ describe('FichaVisualizacao', () => {
     expect(emitidas).toEqual([[]]);
   });
 
-  it('embute o editor de Rolagens (m3-15) com os presets da ficha', () => {
+  it('embute o editor de Rolagens (m3-15) com os presets da ficha, mesclado na aba Combate (m3-37)', () => {
     const documento: FichaJogadorDadosDto = {
       ...dados,
       rolagens: [{ nome: 'Ataque', formula: '1d20+PON' }],
     };
     const alvo = montar(documento);
 
-    trocarAba(alvo.fixture, 'rolagens');
-    expect(alvo.raiz.querySelector('.ficha-cartao__meta')?.textContent).toContain('1 preset');
+    trocarAba(alvo.fixture, 'combate');
+    expect(alvo.raiz.textContent).toContain('1 preset');
     expect(alvo.raiz.querySelector('app-ficha-rolagens')).not.toBeNull();
     // O preset aparece no editor (nome + fórmula), não num placeholder "em construção".
     expect(alvo.raiz.textContent).toContain('1d20+PON');
     expect(alvo.raiz.textContent).not.toContain('em construção');
+  });
+
+  it('embute o editor de Combos (m3-37) na mesma aba Combate', () => {
+    const documento: FichaJogadorDadosDto = {
+      ...dados,
+      rolagens: [{ nome: 'Ataque', formula: '1d20+PON' }],
+      combos: [{ nome: 'Abertura', passos: [{ nome: 'Golpe', rolagemNome: 'Ataque' }] }],
+    };
+    const alvo = montar(documento);
+
+    trocarAba(alvo.fixture, 'combate');
+    expect(alvo.raiz.querySelector('app-ficha-combos')).not.toBeNull();
+    expect(alvo.raiz.textContent).toContain('Abertura');
   });
 
   const campoLuta = { chave: 'luta' as const, abrev: 'LUT', nome: 'Luta' };

@@ -49,6 +49,7 @@ export type IconeNome =
   | 'habilidades'
   | 'sanidade'
   | 'rolagens'
+  | 'anotacoes'
   | 'vestida'
   | 'guardada'
   | 'fragmento'

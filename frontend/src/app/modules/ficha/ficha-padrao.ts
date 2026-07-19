@@ -13,6 +13,7 @@ import {
   obterBonusAtributos,
   obterLimitesClasse,
 } from '@contratados-rpg/shared/regras/agente';
+import { rolarDinheiroInicial } from '@contratados-rpg/shared/regras/novo-agente';
 
 import { ehClasseBase } from './opcoes-ficha';
 
@@ -65,7 +66,8 @@ function restringir(valor: number, minimo: number, maximo: number): number {
  * "Classes e Arquétipos", mesma tabela do editor no lugar), valida a Maestria (só em atributo 6+) e
  * grava o **snapshot** de Vida/Energia máximas + `derivados` de `shared/regras` (proibições #26/#27 —
  * nenhuma fórmula nova aqui; o backend também revalida forma e Maestria). Vida/Energia atuais nascem
- * cheias. Só orquestra `shared/regras`.
+ * cheias. Dinheiro inicial (m3-31) é rolado uma vez aqui (`rolarDinheiroInicial`, `1000 + 4D4 × 250`).
+ * Só orquestra `shared/regras`.
  */
 export function construirFichaInicial(
   opcoes: OpcoesFichaInicial,
@@ -124,6 +126,7 @@ export function construirFichaInicial(
       inventario: { itens: [], amplificadores: [] },
       rolagens: [],
       anotacoes: '',
+      dinheiro: rolarDinheiroInicial().dinheiro,
     },
   };
 }

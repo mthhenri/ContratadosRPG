@@ -2,7 +2,12 @@ import { Component, DestroyRef, computed, inject, input, output, signal } from '
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 
-import { FragmentoModuloEnum, ItemCategoriaEnum, ModificacaoEfeitoTipoEnum } from '@contratados-rpg/shared/enums';
+import {
+  FragmentoModuloEnum,
+  FragmentoTipoEnum,
+  ItemCategoriaEnum,
+  ModificacaoEfeitoTipoEnum,
+} from '@contratados-rpg/shared/enums';
 import type { FichaInventarioDto } from '@contratados-rpg/shared/dtos/ficha';
 import {
   AMPLIFICADORES,
@@ -14,8 +19,12 @@ import {
   CATALOGO_CATEGORIAS,
   CATALOGO_ITENS,
   contarComprasModificacao,
+  custoAcoplarFragmento,
+  custoAquisicaoFragmento,
+  custoRemoverFragmento,
   descreverEfeitosModificacao,
   ItemCatalogo,
+  listarBonusFragmentoPotencializador,
   listarModificacoesCategoria,
   listarModificacoesDisponiveis,
   ModificacaoDados,
@@ -24,6 +33,7 @@ import {
   obterCustoModificacao,
   obterLimiteModificacoes,
   obterPesoModificacao,
+  OpcaoBonusFragmentoDto,
   PENALIDADE_VONTADE_POR_EMPILHAMENTO,
   StatItemDto,
   verificarConflitoModificacao,
@@ -32,6 +42,7 @@ import {
 import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { EFEITO_TIPOS, EfeitoTipoMeta, metaEfeitoTipo } from '../../../../shared/inventario/efeito-modificacao.ui';
+import { rotuloItem } from '../../rotulos-ficha';
 
 /**
  * Ícone de linha de cada categoria do catálogo (mesma escolha de `calculadora/rotulos.ts`).
@@ -111,6 +122,17 @@ const MODULOS_FRAGMENTO: readonly FragmentoModuloEnum[] = [
   FragmentoModuloEnum.V,
 ];
 
+/** `FragmentoTipoEnum` correspondente à categoria de item — `null` fora das duas categorias de Fragmento. */
+function tipoFragmentoDaCategoria(categoria: ItemCategoriaEnum): FragmentoTipoEnum | null {
+  if (categoria === ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR) {
+    return FragmentoTipoEnum.POTENCIALIZADOR;
+  }
+  if (categoria === ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR) {
+    return FragmentoTipoEnum.CONSTRUTOR;
+  }
+  return null;
+}
+
 /** Cartão de item do catálogo (view-model do passo "adicionar"). */
 interface CartaoItemVM {
   readonly item: ItemCatalogo;
@@ -146,6 +168,8 @@ interface ModAtivaVM {
   readonly ignoraProprio: boolean;
   /** Efeito da mod custom (texto livre), ou `null` para mods do catálogo. */
   readonly descricao: string | null;
+  /** `true` quando esta mod veio de um Fragmento aplicado (m3-32) — mostra o badge/ícone de origem. */
+  readonly deFragmento: boolean;
 }
 
 /** Uma entrada do painel de modificações (mod disponível para o item). */
@@ -169,10 +193,24 @@ interface SecaoModVM {
   readonly entradas: readonly EntradaModVM[];
 }
 
+/** Novo valor de Energia atual/máxima após um custo de fragmento (m3-32) — a página persiste. */
+export interface CustoEnergiaFragmento {
+  readonly energiaAtual: number;
+  readonly energiaMaxima: number;
+}
+
 /** Item do inventário renderizado (view-model). O `indice` referencia a posição na lista real. */
 interface ItemInventarioVM {
   readonly indice: number;
   readonly nome: string;
+  /** Apelido do jogador para esta instância (m3-30), ou `null` quando não tem. */
+  readonly apelido: string | null;
+  /** `apelido ?? nome` — o que o card exibe em destaque. */
+  readonly nomeExibido: string;
+  /** `false` para categorias empilháveis (munição, medicinal, operacional) — pilha, não instância. */
+  readonly podeApelidar: boolean;
+  /** `true` para fragmento Potencializador — mostra a ação "Aplicar em..." (m3-32). */
+  readonly fragmentoPotencializador: boolean;
   readonly categoriaRotulo: string;
   readonly quantidade: number;
   readonly custoTotalTexto: string;
@@ -184,6 +222,9 @@ interface ItemInventarioVM {
   readonly modificavel: boolean;
   readonly ehArmazenamento: boolean;
   readonly guardada: boolean;
+  /** `true` para categoria Proteções (m3-33) — mostra o toggle "Equipado" (só ela soma resistência). */
+  readonly ehProtecao: boolean;
+  readonly equipado: boolean;
   readonly modsUsados: number;
   readonly maxModificacoes: number;
   /** `true` quando o total de empilhamentos passou do limite da patente (contador vira aviso). */
@@ -237,9 +278,16 @@ export class FichaInventario {
   readonly inventarioMaximo = input.required<number>();
   /** Vontade da ficha — determina o limite de empilhamentos de amplificador (Vontade × 3, via `shared/regras`). */
   readonly vontade = input.required<number>();
+  /** Dinheiro atual da ficha (m3-31) — referência pro "dinheiro restante" do resumo; não trava. */
+  readonly dinheiro = input.required<number>();
+  /** Energia atual/máxima da ficha — só para o custo de Fragmentos (m3-32; adquirir/acoplar/remover). */
+  readonly energiaAtual = input.required<number>();
+  readonly energiaMaxima = input.required<number>();
 
   /** Emite o inventário inteiro após qualquer mutação — a página persiste. */
   readonly inventarioMudou = output<FichaInventarioDto>();
+  /** Emite o novo par Energia atual/máxima após um custo de Fragmento — a página persiste. */
+  readonly ajusteEnergiaFragmento = output<CustoEnergiaFragmento>();
 
   /** Abas do catálogo comprável — sem os Fragmentos (achados, montados como item custom). */
   protected readonly categorias = CATALOGO_CATEGORIAS.filter(
@@ -258,6 +306,9 @@ export class FichaInventario {
 
   /** Índices dos itens com o painel de modificações ("Modificar") aberto. */
   private readonly painelAbertos = signal<ReadonlySet<number>>(new Set());
+
+  /** Índice do item com a edição de apelido aberta (m3-30), ou `null`. */
+  protected readonly editandoApelidoIndice = signal<number | null>(null);
 
   /** Categorias disponíveis para um item custom (todas menos Amplificador, que não é item). */
   protected readonly categoriasItem = CATALOGO_CATEGORIAS.filter(
@@ -315,6 +366,13 @@ export class FichaInventario {
   protected readonly categoriasEmprestaveis = CATEGORIAS_EMPRESTAVEIS;
   protected readonly modulosFragmento = MODULOS_FRAGMENTO;
 
+  /** Índice do fragmento Potencializador cujo painel "Aplicar em..." está aberto (m3-32), ou `null`. */
+  protected readonly aplicandoFragmentoIndice = signal<number | null>(null);
+  /** Índice (na lista de itens) do alvo escolhido no painel de aplicar fragmento, ou `null`. */
+  protected readonly alvoFragmento = signal<number | null>(null);
+  /** Índice da opção de bônus escolhida (em `opcoesBonusFragmento()`), ou `null`. */
+  protected readonly opcaoBonusFragmento = signal<number | null>(null);
+
   /** Índice do item cujo formulário de modificação custom está aberto, ou `null`. */
   protected readonly criandoModIndice = signal<number | null>(null);
   /** Uma linha de efeito da mod custom: um `tipo` + os campos que o tipo usa (ver `EFEITO_TIPOS`). */
@@ -345,12 +403,19 @@ export class FichaInventario {
     calcularResumoCompras({
       itens: this.inventario().itens,
       amplificadores: this.inventario().amplificadores,
-      dinheiro: 0,
+      dinheiro: this.dinheiro(),
       prestigio: this.prestigio(),
       inventario: this.inventarioMaximo(),
       vontade: this.vontade(),
     }),
   );
+
+  /** Dinheiro restante formatado (dinheiro atual − gasto do carrinho) — referência, não trava. */
+  protected readonly dinheiroRestanteTexto = computed(() =>
+    this.formatarDinheiro(this.resumo().dinheiroRestante),
+  );
+  /** `true` quando o gasto já ultrapassou o dinheiro atual — só aviso visual. */
+  protected readonly dinheiroNegativo = computed(() => this.resumo().dinheiroRestante < 0);
 
   /** Peso usado / inventário efetivo (base + armazenamentos vestidos) — referência. */
   protected readonly inventarioTexto = computed(() => {
@@ -440,6 +505,28 @@ export class FichaInventario {
     this.inventario().itens.map((item, indice) => this.montarItemInventario(item, indice)),
   );
 
+  /** Alvos válidos pro "Aplicar em..." de um fragmento Potencializador — qualquer item, menos fragmentos. */
+  protected readonly alvosFragmentoDisponiveis = computed<readonly { indice: number; rotulo: string }[]>(
+    () =>
+      this.inventario()
+        .itens.map((item, indice) => ({ item, indice }))
+        .filter(({ item }) => tipoFragmentoDaCategoria(item.categoria) === null)
+        .map(({ item, indice }) => ({ indice, rotulo: rotuloItem(item) })),
+  );
+
+  /** Cardápio de bônus do fragmento com o painel "Aplicar em..." aberto (m3-32), vazio se nenhum. */
+  protected readonly opcoesBonusFragmento = computed<readonly OpcaoBonusFragmentoDto[]>(() => {
+    const indice = this.aplicandoFragmentoIndice();
+    if (indice === null) {
+      return [];
+    }
+    const fragmento = this.inventario().itens[indice];
+    if (!fragmento?.modulo) {
+      return [];
+    }
+    return listarBonusFragmentoPotencializador(fragmento.modulo);
+  });
+
   protected readonly amplificadoresInventario = computed<readonly AmpInventarioVM[]>(() => {
     const resumo = this.resumo();
     const maxEmpilhamentos = resumo.limiteModificacoes.maxEmpilhamentos;
@@ -514,7 +601,8 @@ export class FichaInventario {
   /**
    * Confirma o item custom (nome obrigatório): adiciona um `CarrinhoItemDto` com a categoria/custo/peso
    * informados. Sem stat computável (não está no catálogo — `calcularStatItem` devolve `null`), mas
-   * participa dos totais de peso/custo pelo motor normalmente.
+   * participa dos totais de peso/custo pelo motor normalmente. Um Fragmento (Potencializador ou
+   * Construtor) com módulo debita a Energia Máxima de adquiri-lo (m3-32) — Construtor custa o dobro.
    */
   protected confirmarCriarItem(): void {
     if (this.itemCustomForm.invalid) {
@@ -524,6 +612,20 @@ export class FichaInventario {
     this.inserirItem(item);
     this.sinalizarAdicao(this.chaveCartao(item.categoria, item.nome));
     this.criandoItem.set(false);
+    this.debitarAquisicaoFragmento(item);
+  }
+
+  /** Debita a Energia Máxima de adquirir um Fragmento (m3-32) — nenhum custo fora das duas categorias. */
+  private debitarAquisicaoFragmento(item: CarrinhoItemDto): void {
+    const tipo = tipoFragmentoDaCategoria(item.categoria);
+    if (!tipo || !item.modulo) {
+      return;
+    }
+    const custo = custoAquisicaoFragmento(tipo, item.modulo);
+    this.ajusteEnergiaFragmento.emit({
+      energiaAtual: this.energiaAtual(),
+      energiaMaxima: this.energiaMaxima() - custo,
+    });
   }
 
   /**
@@ -568,12 +670,21 @@ export class FichaInventario {
     controle.setValue(Math.max(0, controle.value + delta));
   }
 
-  /** Adiciona um item, empilhando a quantidade quando a categoria é empilhável e o item já existe. */
+  /**
+   * Adiciona um item, empilhando a quantidade quando a categoria é empilhável e o item já existe
+   * **com o mesmo apelido** (m3-30) — um item apelidado não absorve silenciosamente um item sem
+   * apelido (ou de apelido diferente) de mesma categoria/nome.
+   */
   private inserirItem(novo: CarrinhoItemDto): void {
     const itens = this.inventario().itens;
     const empilhavel = CATEGORIAS_EMPILHAVEIS.includes(novo.categoria);
     const indiceExistente = empilhavel
-      ? itens.findIndex((item) => item.categoria === novo.categoria && item.nome === novo.nome)
+      ? itens.findIndex(
+          (item) =>
+            item.categoria === novo.categoria &&
+            item.nome === novo.nome &&
+            (item.apelido ?? null) === (novo.apelido ?? null),
+        )
       : -1;
     if (indiceExistente >= 0) {
       this.emitirItens(
@@ -629,11 +740,99 @@ export class FichaInventario {
     this.indiceRemovendoStack.set(null);
   }
 
-  /** Confirma a remoção da última unidade: retira o item da lista e emite. */
+  /**
+   * Confirma a remoção da última unidade: retira o item da lista e emite. Um Fragmento (nunca
+   * empilhável — sempre cai aqui, não no dialog de stack) devolve a Energia Máxima da aquisição ao
+   * sair do inventário (m3-32 — doc: "esse gasto cessa ao remover o fragmento de seu inventário").
+   */
   protected confirmarRemocaoItem(indice: number): void {
+    const item = this.inventario().itens[indice];
     this.emitirItens(this.inventario().itens.filter((_, i) => i !== indice));
     this.indiceConfirmandoRemocao.set(null);
     this.fecharPainel(indice);
+    if (item) {
+      this.restaurarAquisicaoFragmento(item);
+    }
+  }
+
+  /** Restaura a Energia Máxima drenada por um Fragmento removido do inventário (m3-32). */
+  private restaurarAquisicaoFragmento(item: CarrinhoItemDto): void {
+    const tipo = tipoFragmentoDaCategoria(item.categoria);
+    if (!tipo || !item.modulo) {
+      return;
+    }
+    const custo = custoAquisicaoFragmento(tipo, item.modulo);
+    this.ajusteEnergiaFragmento.emit({
+      energiaAtual: this.energiaAtual(),
+      energiaMaxima: this.energiaMaxima() + custo,
+    });
+  }
+
+  // === Aplicar fragmento Potencializador (m3-32) ===
+  /** Abre o painel "Aplicar em..." de um fragmento Potencializador, zerando o rascunho de escolha. */
+  protected abrirAplicarFragmento(indice: number): void {
+    this.aplicandoFragmentoIndice.set(indice);
+    this.alvoFragmento.set(null);
+    this.opcaoBonusFragmento.set(null);
+  }
+
+  /** Fecha o painel "Aplicar em..." sem alterar nada. */
+  protected cancelarAplicarFragmento(): void {
+    this.aplicandoFragmentoIndice.set(null);
+  }
+
+  /** Escolhe o item-alvo do `<select>` do painel "Aplicar em...". */
+  protected escolherAlvoFragmento(evento: Event): void {
+    const valor = (evento.target as HTMLSelectElement).value;
+    this.alvoFragmento.set(valor === '' ? null : Number(valor));
+  }
+
+  /** Escolhe a opção de bônus do `<select>` do painel "Aplicar em...". */
+  protected escolherOpcaoBonusFragmento(evento: Event): void {
+    const valor = (evento.target as HTMLSelectElement).value;
+    this.opcaoBonusFragmento.set(valor === '' ? null : Number(valor));
+  }
+
+  /**
+   * Confirma a aplicação: empurra o bônus escolhido como `ModificacaoAplicadaDto` no item-alvo
+   * (`ignoraLimiteTotal`/`ignoraLimiteProprio` — não conta no limite de mods da patente, doc: o
+   * fragmento não é uma modificação comprada), remove o fragmento do inventário avulso (consumido) e
+   * debita o custo de **acoplar** (Energia atual + Energia Máxima do módulo — m3-32).
+   */
+  protected confirmarAplicarFragmento(fragmentoIndice: number): void {
+    const alvoIndice = this.alvoFragmento();
+    const opcaoIndice = this.opcaoBonusFragmento();
+    if (alvoIndice === null || opcaoIndice === null) {
+      return;
+    }
+    const itens = this.inventario().itens;
+    const fragmento = itens[fragmentoIndice];
+    const alvo = itens[alvoIndice];
+    const opcao = this.opcoesBonusFragmento()[opcaoIndice];
+    if (!fragmento?.modulo || !alvo || !opcao) {
+      return;
+    }
+
+    const modificacao = {
+      nome: `Fragmento Potencializador — Módulo ${fragmento.modulo}`,
+      empilhamentos: 1,
+      efeitos: [opcao.efeito],
+      ignoraLimiteTotal: true,
+      ignoraLimiteProprio: true,
+      origemFragmento: { tipo: FragmentoTipoEnum.POTENCIALIZADOR, modulo: fragmento.modulo },
+    };
+    const novosItens = itens
+      .map((item, i) => (i === alvoIndice ? { ...item, modificacoes: [...item.modificacoes, modificacao] } : item))
+      .filter((_, i) => i !== fragmentoIndice);
+    this.emitirItens(novosItens);
+
+    const custo = custoAcoplarFragmento(fragmento.modulo);
+    this.ajusteEnergiaFragmento.emit({
+      energiaAtual: this.energiaAtual() - custo.energia,
+      energiaMaxima: this.energiaMaxima() - custo.energiaMaxima,
+    });
+
+    this.aplicandoFragmentoIndice.set(null);
   }
 
   /**
@@ -686,6 +885,39 @@ export class FichaInventario {
     );
   }
 
+  /** Alterna "Equipado" numa Proteção (m3-33) — só as equipadas somam na resistência do Combate. */
+  protected alternarEquipado(indice: number): void {
+    this.emitirItens(
+      this.inventario().itens.map((item, i) =>
+        i === indice ? { ...item, equipado: !item.equipado } : item,
+      ),
+    );
+  }
+
+  /** Abre a edição inline do apelido (m3-30) — só para categorias não-empilháveis. */
+  protected editarApelido(indice: number): void {
+    this.editandoApelidoIndice.set(indice);
+  }
+
+  /** Cancela a edição de apelido sem alterar. */
+  protected cancelarApelido(): void {
+    this.editandoApelidoIndice.set(null);
+  }
+
+  /** Confirma o apelido digitado (vazio remove o apelido, voltando ao nome mecânico). */
+  protected confirmarApelido(indice: number, texto: string): void {
+    if (this.editandoApelidoIndice() !== indice) {
+      return;
+    }
+    this.editandoApelidoIndice.set(null);
+    const apelido = texto.trim();
+    this.emitirItens(
+      this.inventario().itens.map((item, i) =>
+        i === indice ? { ...item, apelido: apelido || undefined } : item,
+      ),
+    );
+  }
+
   protected alternarPainel(indice: number): void {
     const abertos = new Set(this.painelAbertos());
     if (abertos.has(indice)) {
@@ -727,6 +959,12 @@ export class FichaInventario {
     this.definirModificacao(indice, modNome, novos);
   }
 
+  /**
+   * Remove um empilhamento de uma modificação (ou o último, sumindo com ela). Uma mod de
+   * **origem fragmento** (m3-32) some sempre inteira (1× só) e o desacoplamento debita Energia
+   * atual × 2 do módulo (doc — "removê-lo do item custa 14 de Energia" pro módulo IV) — sem
+   * devolver a Energia Máxima do acoplamento nem ressuscitar o fragmento avulso.
+   */
   protected removerModificacao(indice: number, modNome: string): void {
     const item = this.inventario().itens[indice];
     if (!item) {
@@ -736,11 +974,19 @@ export class FichaInventario {
     if (atuais === 0) {
       return;
     }
+    const aplicada = item.modificacoes.find((mod) => mod.nome === modNome);
     const definicao = listarModificacoesDisponiveis(item).find((mod) => mod.nome === modNome);
     // Custom (sem definição): decrementa de 1 em 1 até sumir; de catálogo: piso nos iniciais.
     const minInicial = definicao ? definicao.empilhamentosIniciais : 1;
     const novos = atuais <= minInicial ? 0 : atuais - 1;
     this.definirModificacao(indice, modNome, novos);
+    if (novos === 0 && aplicada?.origemFragmento) {
+      const custo = custoRemoverFragmento(aplicada.origemFragmento.modulo);
+      this.ajusteEnergiaFragmento.emit({
+        energiaAtual: this.energiaAtual() - custo,
+        energiaMaxima: this.energiaMaxima(),
+      });
+    }
   }
 
   /** Abre/fecha o formulário de modificação custom de um item. */
@@ -1075,12 +1321,17 @@ export class FichaInventario {
           [descreverEfeitosModificacao(modificacao.efeitos), modificacao.descricao?.trim()]
             .filter((parte): parte is string => !!parte)
             .join(' — ') || null,
+        deFragmento: !!modificacao.origemFragmento,
       };
     });
 
     return {
       indice,
       nome: item.nome,
+      apelido: item.apelido?.trim() || null,
+      nomeExibido: rotuloItem(item),
+      podeApelidar: !CATEGORIAS_EMPILHAVEIS.includes(item.categoria),
+      fragmentoPotencializador: item.categoria === ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
       categoriaRotulo: this.rotuloCategoria(item.categoria),
       quantidade: item.quantidade,
       custoTotalTexto: this.formatarDinheiro(custoTotal),
@@ -1090,6 +1341,8 @@ export class FichaInventario {
       modificavel: !CATEGORIAS_NAO_MODIFICAVEIS.includes(item.categoria),
       ehArmazenamento,
       guardada: item.guardada,
+      ehProtecao: item.categoria === ItemCategoriaEnum.PROTECOES,
+      equipado: item.equipado === true,
       modsUsados,
       maxModificacoes: limite.maxModificacoes,
       excedeModsLimite: modsUsados > limite.maxModificacoes,

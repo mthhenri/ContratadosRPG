@@ -27,6 +27,7 @@ import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campa
 import type {
   FichaAcessoResumoDto,
   FichaAtributosDto,
+  FichaComboDto,
   FichaDerivadosDto,
   FichaHabilidadeDto,
   FichaInventarioDto,
@@ -52,6 +53,7 @@ import {
   AjusteCampoDados,
   AjusteClasse,
   AjusteDerivado,
+  AjusteResistencia,
   AjusteVitalidade,
   FichaVisualizacao,
   ehAbaFicha,
@@ -91,11 +93,16 @@ export class FichaVisualizar {
 
   /**
    * Aba inicialmente ativa (m3-11): lida do `?aba=` da URL para deep-link/refresh. Parâmetro inválido
-   * ou ausente cai em "Visão Geral". A aba ativa vive no `FichaVisualizacao` (`linkedSignal`); esta
-   * página só semeia o valor inicial e reflete as trocas de volta na URL (`mudarAba`).
+   * ou ausente cai em "Visão Geral". `?aba=rolagens` (compatibilidade com links antigos de antes da
+   * m3-34, quando Rolagens era uma aba própria) vai para `combate`, que a absorveu. A aba ativa vive
+   * no `FichaVisualizacao` (`linkedSignal`); esta página só semeia o valor inicial e reflete as
+   * trocas de volta na URL (`mudarAba`).
    */
   protected readonly abaInicial: AbaFicha = (() => {
     const parametro = this.rotaAtiva.snapshot.queryParamMap.get('aba');
+    if (parametro === 'rolagens') {
+      return 'combate';
+    }
     return ehAbaFicha(parametro) ? parametro : 'visao-geral';
   })();
 
@@ -353,6 +360,23 @@ export class FichaVisualizar {
   }
 
   /**
+   * Edição da base manual de uma Resistência (ajuste pós-m3-33): grava em
+   * `derivados.resistencias[tipo]`, otimista na tela, e agenda a persistência em lote. O total
+   * exibido soma isso ao equipamento (`montarResistencias`, calculado no próprio componente).
+   */
+  protected ajustarResistencia(ajuste: AjusteResistencia): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) {
+      return;
+    }
+    const derivadosAtuais = fichaAtual.dados.derivados ?? {};
+    const resistencias = { ...(derivadosAtuais.resistencias ?? {}), [ajuste.tipo]: ajuste.valor };
+    const derivados = { ...derivadosAtuais, resistencias };
+    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, derivados } });
+    this.agendarPersistencia();
+  }
+
+  /**
    * Edição em grupo dos atributos + Maestria (m3-10): reflete na hora (otimista) e persiste em lote.
    * Aplica a **progressão** — os derivados que dependem de atributo acompanham a mudança: Vigor →
    * Vida máxima e Bloqueio; Destreza → Energia máxima, Esquiva e Deslocamento; Sentidos → Percepção;
@@ -553,6 +577,33 @@ export class FichaVisualizar {
     this.agendarPersistencia();
   }
 
+  /**
+   * Edita os Combos (m3-34): substitui `dados.combos` inteiro, otimista na tela + persistência em
+   * lote. Só dono/mestre chega aqui; sem cascata/derivados (combos não alteram nada calculado — cada
+   * passo só referencia um preset de `rolagens` já existente, validado em tempo de execução).
+   */
+  protected ajustarCombos(combos: readonly FichaComboDto[]): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) {
+      return;
+    }
+    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, combos } });
+    this.agendarPersistencia();
+  }
+
+  /**
+   * Edita as Anotações livres (m3-29): substitui `dados.anotacoes` inteiro, otimista na tela +
+   * persistência em lote. Só dono/mestre chega aqui; sem regra de domínio (texto livre).
+   */
+  protected ajustarAnotacoes(anotacoes: string): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) {
+      return;
+    }
+    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, anotacoes } });
+    this.agendarPersistencia();
+  }
+
   /** Edita o Codinome (relacional) — otimista + persistência em lote. */
   protected ajustarNome(nome: string): void {
     const fichaAtual = this.ficha();
@@ -564,9 +615,10 @@ export class FichaVisualizar {
   }
 
   /**
-   * Edita Nível/Prestígio. **Nível** aplica a **progressão** (m3-10): as máximas (Vida/Energia) e os
-   * derivados stored que dependem do Nível — Defesa/Esquiva/Bloqueio, Proficiência, Hab./Turno e Dano
-   * Furtivo (+1D6+1 por marco cruzado) — acompanham a mudança. Otimista + em lote.
+   * Edita Nível/Prestígio/**Dinheiro** (m3-31). **Nível** aplica a **progressão** (m3-10): as
+   * máximas (Vida/Energia) e os derivados stored que dependem do Nível — Defesa/Esquiva/Bloqueio,
+   * Proficiência, Hab./Turno e Dano Furtivo (+1D6+1 por marco cruzado) — acompanham a mudança.
+   * Dinheiro/Prestígio não disparam cascata. Otimista + em lote.
    */
   protected ajustarCampoDados(ajuste: AjusteCampoDados): void {
     const fichaAtual = this.ficha();

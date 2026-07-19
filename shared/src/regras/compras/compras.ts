@@ -322,6 +322,28 @@ interface DadoExtra {
   readonly tipo: string;
 }
 
+/** Uma entrada de resistência já interpretada: valor + o(s) tipo(s) de dano que ela cobre. */
+export interface EntradaResistencia {
+  readonly valor: number;
+  readonly tipos: string;
+}
+
+/**
+ * Interpreta a notação de resistência base de um item (ex.: `"14 [Físico], 3 [Balístico]"`) em
+ * entradas `{valor, tipos}` — extraído de `calcularStatItem` (m3-33) pra ser reusado por
+ * `shared/regras/agente/resistencia.ts` (agregação da aba Combate) sem duplicar o regex. Texto fora
+ * do padrão `N [Tipo]` é descartado por entrada (não lança).
+ */
+export function interpretarNotacaoResistencia(texto: string): readonly EntradaResistencia[] {
+  return texto
+    .split(',')
+    .map((parte) => {
+      const casada = parte.trim().match(/^(\d+)\s*\[([^\]]+)\]$/);
+      return casada ? { valor: parseInt(casada[1], 10), tipos: casada[2] } : null;
+    })
+    .filter((entrada): entrada is EntradaResistencia => entrada !== null);
+}
+
 /**
  * Stat computado de um item com as modificações aplicadas: dano (armas),
  * resistência (proteções) ou bônus de inventário (armazenamento). Reusa
@@ -443,13 +465,9 @@ export function calcularStatItem(dto: StatItemCalcularDto): StatItemDto | null {
 
   // ── RESISTÊNCIA ─────────────────────────────────────────────────────────────
   if (itemCatalogo.resistencia) {
-    const entradas = itemCatalogo.resistencia
-      .split(',')
-      .map((parte) => {
-        const casada = parte.trim().match(/^(\d+)\s*\[([^\]]+)\]$/);
-        return casada ? { valor: parseInt(casada[1], 10), tipos: casada[2] } : null;
-      })
-      .filter((entrada): entrada is { valor: number; tipos: string } => entrada !== null);
+    const entradas = interpretarNotacaoResistencia(itemCatalogo.resistencia).map((entrada) => ({
+      ...entrada,
+    }));
 
     const obterOuAdicionar = (tipo: string): { valor: number; tipos: string } => {
       let entrada = entradas.find((atual) => atual.tipos === tipo || atual.tipos.includes(tipo));

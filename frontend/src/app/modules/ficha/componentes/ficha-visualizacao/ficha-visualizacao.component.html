@@ -590,6 +590,45 @@
                   }
                 </div>
               }
+
+              <!-- Dinheiro atual (m3-31) — editável no próprio lugar, mesmo canal de nível/prestígio. -->
+              <div class="ficha-info__linha">
+                <dt class="ficha-info__rotulo">Dinheiro</dt>
+                @if (ajustavel() && editandoDinheiro()) {
+                  <dd class="ficha-info__valor">
+                    <input
+                      #entradaDinheiro
+                      class="ficha-info__entrada"
+                      type="number"
+                      [value]="dinheiro()"
+                      aria-label="Editar dinheiro"
+                      title="Editar dinheiro"
+                      (keydown.enter)="confirmarDinheiro(entradaDinheiro.value)"
+                      (keydown.escape)="cancelarDinheiro()"
+                      (blur)="confirmarDinheiro(entradaDinheiro.value)"
+                    />
+                  </dd>
+                } @else if (ajustavel()) {
+                  <dd class="ficha-info__valor">
+                    <button
+                      type="button"
+                      class="ficha-info__editavel"
+                      aria-label="Editar dinheiro"
+                      (click)="editarDinheiro()"
+                    >
+                      ${{ dinheiro().toLocaleString('pt-BR') }}
+                    </button>
+                  </dd>
+                } @else {
+                  <dd class="ficha-info__valor">${{ dinheiro().toLocaleString('pt-BR') }}</dd>
+                }
+              </div>
+
+              <!-- Salário (m3-31) — derivado da Patente, nunca persistido/editável. -->
+              <div class="ficha-info__linha">
+                <dt class="ficha-info__rotulo">Salário</dt>
+                <dd class="ficha-info__valor">${{ salario().toLocaleString('pt-BR') }}</dd>
+              </div>
             </dl>
           </section>
         </div>
@@ -652,6 +691,99 @@
           }
         </dl>
       </section>
+
+      <!-- Resistências (m3-33 + ajuste posterior): sempre as cinco, base manual editável somada ao
+           equipamento (itens equipados + Fragmento aplicado + amplificadores Resistente/Defesa). -->
+      <section class="ficha-cartao ficha-visao__painel-cartao">
+        <header class="ficha-cartao__cabecalho">
+          <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Resistências</h3>
+          <span class="ficha-cartao__regua"></span>
+          <span class="ficha-cartao__meta">manual + equipamento</span>
+        </header>
+
+        <dl class="ficha-info ficha-info--combate">
+          @for (resistencia of resistencias(); track resistencia.tipo) {
+            <div class="ficha-info__linha">
+              <dt class="ficha-info__rotulo">{{ resistencia.tipo }}</dt>
+              @if (ajustavel() && editandoResistencia() === resistencia.tipo) {
+                <dd class="ficha-info__valor">
+                  <input
+                    #entradaResistencia
+                    class="ficha-info__entrada"
+                    type="number"
+                    [value]="resistencia.manual"
+                    [attr.aria-label]="'Editar resistência a ' + resistencia.tipo"
+                    [attr.title]="'Editar resistência a ' + resistencia.tipo"
+                    (keydown.enter)="confirmarResistencia(resistencia.tipo, entradaResistencia.value)"
+                    (keydown.escape)="cancelarResistencia()"
+                    (blur)="confirmarResistencia(resistencia.tipo, entradaResistencia.value)"
+                  />
+                </dd>
+              } @else if (ajustavel()) {
+                <dd class="ficha-info__valor">
+                  <button
+                    type="button"
+                    class="ficha-info__editavel"
+                    [attr.aria-label]="'Editar resistência a ' + resistencia.tipo"
+                    [attr.title]="'Manual ' + resistencia.manual + ' + Equipamento ' + resistencia.equipamento"
+                    (click)="editarResistencia(resistencia.tipo)"
+                  >
+                    {{ resistencia.total }}
+                  </button>
+                </dd>
+              } @else {
+                <dd
+                  class="ficha-info__valor"
+                  [attr.title]="'Manual ' + resistencia.manual + ' + Equipamento ' + resistencia.equipamento"
+                >
+                  {{ resistencia.total }}
+                </dd>
+              }
+            </div>
+          }
+        </dl>
+      </section>
+
+      <!-- Rolagens (m3-15/m3-22) — mesclada na aba Combate em m3-34. -->
+      <section class="ficha-cartao ficha-visao__painel-cartao">
+        <header class="ficha-cartao__cabecalho">
+          <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Rolagens</h3>
+          <span class="ficha-cartao__regua"></span>
+          <span class="ficha-cartao__meta">
+            {{ totalRolagens() }} {{ totalRolagens() === 1 ? 'preset' : 'presets' }}
+          </span>
+        </header>
+        <app-ficha-rolagens
+          [rolagens]="dados().rolagens ?? []"
+          [atributos]="atributosEfetivos()"
+          [proficiencia]="proficiencia()"
+          [nivel]="dados().nivel"
+          [habilidadesDisponiveis]="dados().habilidades"
+          [editavel]="ajustavel()"
+          (rolagensMudou)="ajusteRolagens.emit($event)"
+          (energiaGasta)="aoUtilizarHabilidade($event)"
+        />
+      </section>
+
+      <!-- Combos (m3-34): sequência de rolagens já existentes, executada passo a passo. -->
+      <section class="ficha-cartao ficha-visao__painel-cartao">
+        <header class="ficha-cartao__cabecalho">
+          <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Combos</h3>
+          <span class="ficha-cartao__regua"></span>
+          <span class="ficha-cartao__meta">{{ combos().length }} {{ combos().length === 1 ? 'combo' : 'combos' }}</span>
+        </header>
+        <app-ficha-combos
+          [combos]="combos()"
+          [rolagens]="dados().rolagens ?? []"
+          [atributos]="atributosEfetivos()"
+          [proficiencia]="proficiencia()"
+          [nivel]="dados().nivel"
+          [habilidadesDisponiveis]="dados().habilidades"
+          [editavel]="ajustavel()"
+          (combosMudou)="ajusteCombos.emit($event)"
+          (energiaGasta)="aoUtilizarHabilidade($event)"
+        />
+      </section>
     </div>
   }
 
@@ -713,7 +845,11 @@
           [prestigio]="dados().prestigio"
           [inventarioMaximo]="inventarioMaximoValor()"
           [vontade]="dados().atributos.vontade"
+          [dinheiro]="dinheiro()"
+          [energiaAtual]="estado().energiaAtual"
+          [energiaMaxima]="energiaMaxima()"
           (inventarioMudou)="ajusteInventario.emit($event)"
+          (ajusteEnergiaFragmento)="aoAjustarEnergiaFragmento($event)"
         />
       </section>
     </div>
@@ -775,32 +911,45 @@
     </div>
   }
 
-  <!-- ABA: ROLAGENS — placeholder + contagem read-only até o editor (m3-15). -->
-  @if (abaAtiva() === 'rolagens') {
+  <!-- ABA: ANOTAÇÕES — texto livre editável (m3-29); campo `dados.anotacoes` já existia read-only. -->
+  @if (abaAtiva() === 'anotacoes') {
     <div
       class="ficha-visao__painel"
       role="tabpanel"
-      id="painel-rolagens"
-      aria-labelledby="aba-rolagens"
+      id="painel-anotacoes"
+      aria-labelledby="aba-anotacoes"
     >
-      <section class="ficha-cartao ficha-visao__painel-cartao">
+      <section class="ficha-cartao ficha-visao__painel-cartao ficha-visao__painel-cartao--largo">
         <header class="ficha-cartao__cabecalho">
-          <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Rolagens</h3>
+          <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Anotações</h3>
           <span class="ficha-cartao__regua"></span>
-          <span class="ficha-cartao__meta">
-            {{ totalRolagens() }} {{ totalRolagens() === 1 ? 'preset' : 'presets' }}
-          </span>
+          @if (ajustavel() && !editandoAnotacoes()) {
+            <button
+              class="ficha-cartao__lapis"
+              type="button"
+              aria-label="Editar anotações"
+              title="Editar anotações"
+              (click)="editarAnotacoes()"
+            >
+              ✎
+            </button>
+          }
         </header>
-        <app-ficha-rolagens
-          [rolagens]="dados().rolagens ?? []"
-          [atributos]="atributosEfetivos()"
-          [proficiencia]="proficiencia()"
-          [nivel]="dados().nivel"
-          [habilidadesDisponiveis]="dados().habilidades"
-          [editavel]="ajustavel()"
-          (rolagensMudou)="ajusteRolagens.emit($event)"
-          (energiaGasta)="aoUtilizarHabilidade($event)"
-        />
+        @if (ajustavel() && editandoAnotacoes()) {
+          <textarea
+            #entradaAnotacoes
+            class="ficha-visao__anotacoes-campo"
+            aria-label="Anotações"
+            placeholder="Escreva suas anotações aqui…"
+            [value]="dados().anotacoes"
+            (keydown.escape)="cancelarAnotacoes()"
+            (blur)="confirmarAnotacoes(entradaAnotacoes.value)"
+          ></textarea>
+        } @else if (anotacoes()) {
+          <p class="ficha-visao__anotacoes ficha-visao__anotacoes-leitura">{{ anotacoes() }}</p>
+        } @else {
+          <p class="ficha-visao__vazio">Sem anotações.</p>
+        }
       </section>
     </div>
   }

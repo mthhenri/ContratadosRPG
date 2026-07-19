@@ -14,14 +14,13 @@ import {
   ABREVIACOES_ATRIBUTO,
   resolverPreset,
   rolarFormula,
-  rolarPasso,
   validarFormula,
-  type PassoInterpretadoDto,
   type PlanoPresetDto,
 } from '@contratados-rpg/shared/regras/rolagem';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { executarPassoPreset } from '../../executar-rolagem';
 import { GuiaFormula } from '../guia-formula/guia-formula.component';
 
 /** Grupo tipado de um passo seguinte no formulário (encadeamento), com as habilidades **deste passo**. */
@@ -336,32 +335,32 @@ export class FichaRolagens {
   }
 
   /**
-   * Rola um passo do preset e o joga na **bandeja** (m3-22). Ao rolar, debita a Energia das habilidades
-   * **deste passo** (soma dos custos + o valor variável informado). Passo inválido não rola.
+   * Rola um passo do preset e o joga na **bandeja** (m3-22): resolve+rola via `executarPassoPreset`
+   * (extraído em m3-37 pra ser reusado também pelo runner de Combos). Debita a Energia das
+   * habilidades vinculadas **a este passo** (soma dos custos fixos + o valor variável informado).
+   * Passo inválido não rola.
    */
   protected rolarPassoDoPreset(preset: RolagemVM, indicePasso: number, critico = false): void {
-    const passo = preset.plano.passos[indicePasso];
-    if (!passo) {
+    const original = this.rolagens()[preset.indice];
+    if (!original) {
       return;
     }
-    const resultado = rolarPasso(passo, this.atributos(), this.proficiencia(), this.nivel(), undefined, critico);
-    if (!resultado) {
+    const executado = executarPassoPreset({
+      preset: original,
+      atributos: this.atributos(),
+      proficiencia: this.proficiencia(),
+      nivel: this.nivel(),
+      habilidadesDisponiveis: this.habilidadesDisponiveis(),
+      indicePasso,
+      energiaVariavel: this.energiaVariavelDe(preset.indice, indicePasso),
+      critico,
+    });
+    if (!executado) {
       return;
     }
-    const sufixoCritico = critico ? ' · CRÍTICO' : '';
-    const rotulo = (preset.encadeado ? `${preset.nome} · ${passo.nome}` : preset.nome) + sufixoCritico;
-    this.bandeja.mostrar({ rotulo, formula: passo.formula, resultado });
-    this.debitarEnergia(preset.indice, passo, indicePasso);
-  }
-
-  private debitarEnergia(presetIndice: number, passo: PassoInterpretadoDto, indicePasso: number): void {
-    if (passo.habilidadesVinculadas.length === 0) {
-      return;
-    }
-    const variavel = passo.energiaVariavel ? this.energiaVariavelDe(presetIndice, indicePasso) : 0;
-    const total = passo.energiaGasta + variavel;
-    if (total > 0) {
-      this.energiaGasta.emit(total);
+    this.bandeja.mostrar({ rotulo: executado.rotulo, formula: executado.formula, resultado: executado.resultado });
+    if (executado.energiaGasta > 0) {
+      this.energiaGasta.emit(executado.energiaGasta);
     }
   }
 

@@ -6,8 +6,10 @@ import type {
   HabilidadeCategoriaEnum,
   RolagemPresetTipoEnum,
   SeveridadeLesaoEnum,
+  TipoDanoEnum,
 } from '../../enums';
 import type { AmplificadorAplicadoDto, CarrinhoItemDto } from '../../regras/compras';
+import type { FichaComboDto } from './ficha-combo.dtos';
 
 /**
  * Contrato tipado do documento JSONB `ficha.dados` para a **ficha de jogador**
@@ -41,10 +43,11 @@ import type { AmplificadorAplicadoDto, CarrinhoItemDto } from '../../regras/comp
  *
  * ── Escopo ───────────────────────────────────────────────────────────────────
  * Casamento 1:1 com o documento em **classe / atributos / maestria / identidade / estado /
- * inventário** (+ arquétipo, nível, prestígio, habilidades, anotações). Ainda
- * **fora**: Dinheiro e Peculiaridade de Experimento — entram quando as tasks de ficha os
- * exigirem. A **Maestria** entrou no contrato em m3-10; a **Identidade** (Personalidade,
- * Origem) em m3-23. Ver SCHEMA.md.
+ * inventário** (+ arquétipo, nível, prestígio, habilidades, anotações, dinheiro). Ainda
+ * **fora**: Peculiaridade de Experimento — entra quando as tasks de ficha o exigirem. A
+ * **Maestria** entrou no contrato em m3-10; a **Identidade** (Personalidade, Origem) em
+ * m3-23; **Dinheiro** em m3-34 (Salário é derivado da Patente, `shared/regras/patente` —
+ * não persistido). Ver SCHEMA.md.
  */
 
 /**
@@ -222,6 +225,13 @@ export interface FichaDerivadosDto {
   readonly percepcao?: number;
   readonly inventarioMaximo?: number;
   readonly habilidadesPorTurno?: number;
+  /**
+   * Base **manual** de resistência por tipo de dano (ajuste pós-m3-33) — complementada pela soma do
+   * equipamento (itens equipados + Fragmento aplicado + amplificadores `Resistente`/`Defesa`,
+   * `shared/regras/agente/resistencia` `montarResistencias`). Ausente/tipo ausente = 0 manual;
+   * a aba Combate sempre mostra os cinco tipos, mesmo em 0.
+   */
+  readonly resistencias?: Partial<Record<TipoDanoEnum, number>>;
 }
 
 /**
@@ -374,6 +384,19 @@ export interface FichaJogadorDadosDto {
   readonly inventario: FichaInventarioDto;
   /** Presets de rolagem de dados salvos na ficha (m3-15). Opcional; ausente = sem presets. */
   readonly rolagens?: readonly FichaRolagemDto[];
+  /**
+   * Combos (m3-34) — sequências de rolagens que o jogador monta e executa passo a passo, cada passo
+   * referenciando um preset de `rolagens`. Opcional; ausente = sem combos.
+   */
+  readonly combos?: readonly FichaComboDto[];
   /** Anotações livres do jogador/mestre sobre a ficha. */
   readonly anotacoes: string;
+  /**
+   * Dinheiro atual do agente (m3-31). Nasce do dinheiro inicial (`1000 + 4D4 × 250`,
+   * `shared/regras/novo-agente` `rolarDinheiroInicial`) e é editável dali em diante (mesma
+   * liberdade de edição de m3-10 — sem piso/teto). **Opcional** por retrocompatibilidade —
+   * fichas anteriores a m3-31 não têm o campo; consumidores tratam a ausência como `0`. Salário
+   * **não** é persistido aqui — é derivado da Patente (`obterPatente(prestigio).salario`).
+   */
+  readonly dinheiro?: number;
 }

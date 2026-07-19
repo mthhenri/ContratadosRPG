@@ -1,9 +1,12 @@
 import { MotivoEntradaAgenteEnum } from '../../enums';
 import { PATENTES } from '../dados';
 import { obterPatente } from '../patente';
+import { rolarDados } from '../descanso';
 import {
   BonusMonetarioCalcularDto,
   BonusMonetarioDto,
+  DinheiroInicialCalcularDto,
+  DinheiroInicialDto,
   NivelInicialCalcularDto,
   NovoAgenteCalcularDto,
   NovoAgenteDto,
@@ -132,6 +135,26 @@ export function calcularBonusMonetario(dto: BonusMonetarioCalcularDto): BonusMon
     bonus: dto.prestigioInicial * (500 * patente.multiplicador),
     patente,
   };
+}
+
+/**
+ * Dinheiro inicial a partir de uma soma de 4D4 **já rolada** — função pura, sem aleatoriedade
+ * (mesma separação de `calcularResultadoDescanso`/`rolarDados`).
+ *
+ * Fonte: docs/core/sistema-v4.1.0.md — "Iniciando um Novo Agente" > "Dinheiro Inicial".
+ */
+export function calcularDinheiroInicial(dto: DinheiroInicialCalcularDto): DinheiroInicialDto {
+  return { dinheiro: 1000 + dto.somaDados * 250, somaDados: dto.somaDados };
+}
+
+/**
+ * Rola o dinheiro inicial (`1000 + 4D4 × 250`): rola os 4D4 via `rolarDados` (a utilidade
+ * explícita de rolagem, única brecha a `Math.random` no motor — SYSTEM.SPEC §6.6) e aplica
+ * `calcularDinheiroInicial`. Faixa: $2.000 (4×1) a $5.000 (4×4).
+ */
+export function rolarDinheiroInicial(): DinheiroInicialDto {
+  const somaDados = rolarDados({ quantidade: 4, faces: 4 }).reduce((soma, valor) => soma + valor, 0);
+  return calcularDinheiroInicial({ somaDados });
 }
 
 /**

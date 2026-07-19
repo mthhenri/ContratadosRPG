@@ -1,0 +1,130 @@
+<div class="ficha-combos">
+  @if (executandoIndice() !== null) {
+    <div class="ficha-combos__runner">
+      <div class="ficha-combos__runner-topo">
+        <span class="ficha-combos__runner-titulo">
+          Executando "{{ combos()[executandoIndice()!]?.nome }}" — passo {{ passoAtualIndice() + 1 }}/{{ passosExecucao().length }}
+        </span>
+        <button type="button" class="ficha-combos__mini-btn" title="Parar" aria-label="Parar execução" (click)="pararExecucao()">✕</button>
+      </div>
+
+      @if (passosExecucao()[passoAtualIndice()]; as passoAtual) {
+        <div class="ficha-combos__runner-passo">
+          <span class="ficha-combos__runner-passo-nome">{{ passoAtual.nome }}</span>
+          @if (passoAtualNaoEncontrado()) {
+            <span class="ficha-combos__aviso" title="O preset de rolagem referenciado não existe mais">
+              preset não encontrado
+            </span>
+          } @else {
+            <span class="ficha-combos__runner-passo-preset">{{ passoAtual.rolagemNome }}</span>
+          }
+        </div>
+      }
+
+      <button type="button" class="ficha-combos__btn ficha-combos__btn--principal" (click)="executarPassoAtual()">
+        {{ passoAtualIndice() + 1 >= passosExecucao().length ? 'Rolar e concluir' : 'Rolar e avançar' }}
+      </button>
+    </div>
+  }
+
+  @if (editavel()) {
+    @if (indiceEmEdicao() === -1) {
+      <ng-container [ngTemplateOutlet]="formTpl" [ngTemplateOutletContext]="{ titulo: 'Novo combo' }" />
+    } @else {
+      <button type="button" class="ficha-combos__novo" (click)="abrirNovo()">+ Novo combo</button>
+    }
+  }
+
+  @if (vazio() && indiceEmEdicao() !== -1) {
+    <p class="ficha-combos__vazio">
+      Nenhum combo salvo. Um combo é uma sequência de rolagens já existentes, executada passo a passo.
+    </p>
+  }
+
+  <div class="ficha-combos__lista">
+    @for (combo of combosVM(); track combo.indice) {
+      @if (editavel() && indiceEmEdicao() === combo.indice) {
+        <ng-container [ngTemplateOutlet]="formTpl" [ngTemplateOutletContext]="{ titulo: 'Editar combo' }" />
+      } @else {
+        <article class="ficha-combos__combo">
+          <div class="ficha-combos__combo-topo">
+            <span class="ficha-combos__combo-nome">{{ combo.nome }}</span>
+            <span class="ficha-combos__combo-meta">{{ combo.passos.length }} passo(s)</span>
+            <div class="ficha-combos__combo-acoes">
+              <button
+                type="button"
+                class="ficha-combos__btn ficha-combos__btn--rolar"
+                [disabled]="combo.passos.length === 0"
+                (click)="iniciarExecucao(combo.indice)"
+              >
+                Executar
+              </button>
+              @if (editavel()) {
+                @if (indiceRemovendo() === combo.indice) {
+                  <span class="ficha-combos__remover">
+                    <span class="ficha-combos__remover-texto">Remover?</span>
+                    <button type="button" class="ficha-combos__mini-btn ficha-combos__mini-btn--perigo" title="Confirmar" (click)="confirmarRemocao(combo.indice)">✓</button>
+                    <button type="button" class="ficha-combos__mini-btn" title="Cancelar" (click)="cancelarRemocao()">✕</button>
+                  </span>
+                } @else {
+                  <button type="button" class="ficha-combos__mini-btn" title="Editar" aria-label="Editar combo" (click)="editar(combo.indice)">✎</button>
+                  <button type="button" class="ficha-combos__mini-btn" title="Remover" aria-label="Remover combo" (click)="removerPedido(combo.indice)">✕</button>
+                }
+              }
+            </div>
+          </div>
+
+          <ol class="ficha-combos__passos">
+            @for (passo of combo.passos; track $index) {
+              <li class="ficha-combos__passo">
+                <span class="ficha-combos__passo-nome">{{ passo.nome }}</span>
+                <span class="ficha-combos__passo-seta">→</span>
+                <span class="ficha-combos__passo-preset">{{ passo.rolagemNome }}</span>
+              </li>
+            }
+          </ol>
+        </article>
+      }
+    }
+  </div>
+</div>
+
+<ng-template #formTpl let-titulo="titulo">
+  <form class="ficha-combos__form" [formGroup]="form" (ngSubmit)="confirmar()">
+    <span class="ficha-combos__form-titulo">{{ titulo }}</span>
+
+    <label class="ficha-combos__campo">
+      <span class="ficha-combos__rotulo">Nome</span>
+      <input class="ficha-combos__entrada" type="text" formControlName="nome" placeholder="Ex.: Combo de abertura" />
+    </label>
+
+    <div class="ficha-combos__campo" formArrayName="passos">
+      <span class="ficha-combos__rotulo">Passos <span class="ficha-combos__rotulo-aux">(na ordem de execução)</span></span>
+      @if (rolagens().length === 0) {
+        <p class="ficha-combos__aviso">Nenhum preset de rolagem salvo ainda — crie um na aba Rolagens antes.</p>
+      }
+      @for (passoCtrl of passos.controls; track $index) {
+        <div class="ficha-combos__passo-edit" [formGroupName]="$index">
+          <input class="ficha-combos__entrada ficha-combos__entrada--nome" type="text" formControlName="nome" placeholder="Nome do passo (ex.: Ataque)" />
+          <select class="ficha-combos__entrada" formControlName="rolagemNome">
+            <option value="">— Escolha o preset —</option>
+            @for (rolagem of rolagens(); track rolagem.nome) {
+              <option [value]="rolagem.nome">{{ rolagem.nome }}</option>
+            }
+          </select>
+          <div class="ficha-combos__passo-edit-acoes">
+            <button type="button" class="ficha-combos__mini-btn" title="Mover pra cima" aria-label="Mover passo pra cima" [disabled]="$index === 0" (click)="moverPasso($index, -1)">↑</button>
+            <button type="button" class="ficha-combos__mini-btn" title="Mover pra baixo" aria-label="Mover passo pra baixo" [disabled]="$index === passos.length - 1" (click)="moverPasso($index, 1)">↓</button>
+            <button type="button" class="ficha-combos__mini-btn" title="Remover passo" aria-label="Remover passo" (click)="removerPasso($index)">✕</button>
+          </div>
+        </div>
+      }
+      <button type="button" class="ficha-combos__add-passo" (click)="adicionarPasso()">+ Passo</button>
+    </div>
+
+    <div class="ficha-combos__form-acoes">
+      <button type="submit" class="ficha-combos__btn ficha-combos__btn--principal" [disabled]="form.invalid">Salvar</button>
+      <button type="button" class="ficha-combos__btn ficha-combos__btn--secundario" (click)="cancelarEdicao()">Cancelar</button>
+    </div>
+  </form>
+</ng-template>

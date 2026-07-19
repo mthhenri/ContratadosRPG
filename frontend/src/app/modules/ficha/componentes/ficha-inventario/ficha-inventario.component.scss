@@ -411,6 +411,15 @@
     font-family: var(--font-sans);
     color: var(--text-dim);
   }
+  // Badge do fragmento aplicado (m3-32) — precede o nome da mod no chip.
+  &__mod-tag-fragmento {
+    display: inline-flex;
+    width: 12px;
+    height: 12px;
+    margin-right: 4px;
+    color: var(--accent);
+    vertical-align: -1px;
+  }
 
   // === Botão "Modificar" (revela a caixa de mods) ===
   &__modificar {
@@ -789,6 +798,46 @@
       font-size: 14px;
       font-weight: 700;
       color: var(--text);
+    }
+    // Apelido do jogador (m3-30): legenda com o nome mecânico do catálogo logo abaixo.
+    &-nome-mecanico {
+      display: block;
+      font-size: 11px;
+      color: var(--text-mute);
+      margin-top: 1px;
+    }
+    &-apelido-lapis {
+      margin-left: 6px;
+      font-size: 11px;
+      line-height: 1;
+      color: var(--text-mute);
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+      padding: 0;
+      transition: color 0.15s ease;
+
+      &:hover {
+        color: var(--accent);
+      }
+    }
+    &-apelido-entrada {
+      display: block;
+      width: 100%;
+      max-width: 260px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      background: var(--surface-2);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-control);
+      padding: 4px 8px;
+      outline: none;
+      transition: border-color 0.15s ease;
+
+      &:focus {
+        border-color: var(--accent-border);
+      }
     }
     &-categoria {
       font-size: 10px;

@@ -92,6 +92,12 @@ describe('construirFichaInicial', () => {
     expect(construirFichaInicial(base({ nome: '  Vex  ' })).nome).toBe('Vex');
     expect(construirFichaInicial(base({ nome: '   ' })).nome).toBe('Novo agente');
   });
+
+  it('nasce com o dinheiro inicial rolado (1000 + 4D4 × 250 — m3-31)', () => {
+    const { dados } = construirFichaInicial(base());
+    expect(dados.dinheiro).toBeGreaterThanOrEqual(2000);
+    expect(dados.dinheiro).toBeLessThanOrEqual(5000);
+  });
 });
 
 describe('construirFichaPadrao', () => {
