@@ -168,7 +168,7 @@ Contrato: `shared/src/dtos/ficha/ficha.dtos.ts`. Forma 1:1 com `sistema-v4.1.0.m
       "descricao": "...",
       "formacao": [                   // exatamente 2 FichaFormacaoDto
         { "bonus": "COMBATE_RESISTENCIA_TIPO_DANO", "parametro": "Químico", "texto": "+3 de resistência a dano Químico" },
-        { "bonus": null, "parametro": null, "texto": "+1 dado em testes de Vigor" } // bonus:null = custom autorizado pelo Mestre
+        { "bonus": null, "parametro": null, "texto": "+1 dado em testes de Escalada" } // bonus:null = custom autorizado pelo Mestre
       ],
       "especialidade": { "gatilho": "...", "efeito": "DADO_EXTRA" },
       "saberDeCampo": "..."
@@ -228,7 +228,7 @@ tasks de ficha os exigirem. **Identidade** (Personalidade, Origem) entrou em **m
 (`FichaIdentidadeDto`, `shared/regras/identidade`): a tabela `FORMACOES` cobre as 21 linhas de bônus
 de Formação do documento, mas só 5 têm campo hoje em `derivados` (`esquiva`/`bloqueio`,
 `deslocamento`, `danoCorpoACorpo`, `danoFurtivo`, `inventarioMaximo`) — as outras 16 (modificadores de
-rolagem, resistências, Sobrecarga, Iniciativa, DT de reparo) ficam modeladas e sem consumidor até os
+rolagem, duração de efeito, resistências, Sobrecarga, Iniciativa, DT de reparo) ficam modeladas e sem consumidor até os
 campos/motor que as aplicarão existirem. `FichaFormacaoDto.bonus: null` é o escape do documento ("Bônus
 adicionais podem ser autorizados pelo Mestre") — nesse caso só o `texto` livre é exibido. Sem
 validação nem trava de imutabilidade ainda (`m3-24`); sem UI ainda (`m3-25`).
