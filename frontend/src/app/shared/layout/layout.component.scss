@@ -41,10 +41,13 @@
     color: var(--text);
     white-space: nowrap;
 
-    // No mobile o logo (app-marca) já ancora a identidade — esconder o wordmark textual libera a
-    // largura que a nav (agora com alvo de toque de 44px), o perfil e o tema disputam em ~360px,
-    // evitando que a topbar estoure/seja cortada.
-    @include bp.mobile {
+    // No mobile o logo (app-marca) já ancora a identidade — esconder o wordmark textual libera
+    // espaço. 900px (não `bp.mobile`/560px) porque o gap real é maior: dentro de /painel/:id o
+    // chip de campanha soma largura extra que a topbar de sempre não tinha, e "Calculadora" passa
+    // a colidir com o perfil a partir de ~870px (achado ao vivo, m2-16f). 900px já cobre o 560px
+    // de sempre (é um limiar mais largo, não um segundo breakpoint) — mesmo valor usado em
+    // `ficha-sanidade.component.scss`.
+    @media (max-width: 900px) {
       display: none;
     }
   }
@@ -100,7 +103,9 @@
     min-width: 0;
     line-height: 1.2;
 
-    @include bp.mobile {
+    // 900px (m2-16f, mesmo racional do `&__marca` acima) — o chip vira só o ícone, ainda leva ao
+    // painel, só perde nome/código (que também aparecem no cabeçalho da própria campanha).
+    @media (max-width: 900px) {
       display: none;
     }
   }
@@ -181,7 +186,9 @@
     font-size: 12px;
     color: var(--text-dim);
 
-    @include bp.mobile {
+    // 900px (m2-16f, mesmo racional do `&__marca` acima) — o nome continua acessível dentro do
+    // dropdown do perfil (`__perfil-usuario`, ajustado ao mesmo limiar logo abaixo).
+    @media (max-width: 900px) {
       display: none;
     }
   }
@@ -247,12 +254,13 @@
     gap: 2px;
   }
 
-  // Cabeçalho do dropdown com o nome do usuário — só no mobile, onde `__identidade` sai da barra.
+  // Cabeçalho do dropdown com o nome do usuário — some da barra (`__identidade`) a partir de
+  // 900px (m2-16f, mesmo limiar), então reaparece aqui dentro do menu.
   // Rótulo mono/uppercase da identidade "Terminal de Contenção", com régua hairline separando as ações.
   &__perfil-usuario {
     display: none;
 
-    @include bp.mobile {
+    @media (max-width: 900px) {
       display: block;
       padding: 8px 10px 10px;
       margin-bottom: 3px;

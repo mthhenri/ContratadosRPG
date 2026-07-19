@@ -13,7 +13,13 @@ import {
 
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
-import { ATRIBUTOS_BASE_PADRAO, type OpcoesFichaInicial } from '../../ficha-padrao';
+import { ATRIBUTOS_BASE_PADRAO, type FichaAssistenteResultado } from '../../ficha-padrao';
+
+/** Membro da campanha para o seletor de dono (só mestre) — recorte enxuto de `CampanhaMembroResumoDto`. */
+export interface MembroParaDono {
+  readonly usuarioId: number;
+  readonly nome: string;
+}
 
 /** Chave de cada atributo (as dez chaves de `FichaAtributosDto`). */
 type ChaveAtributo = keyof FichaAtributosDto;
@@ -50,9 +56,19 @@ interface GrupoAtributos {
 export class FichaCriarDialog {
   /** `true` enquanto a criação está em voo (desabilita os botões). */
   readonly criando = input(false);
+  /**
+   * `true` só quando o autenticado é o **mestre** da campanha — mostra o seletor "Ficha de"
+   * (§14: só o mestre cria ficha para outro membro). Jogador comum nunca vê o seletor: a ficha é
+   * sempre a própria.
+   */
+  readonly podeEscolherDono = input(false);
+  /** Membros da campanha para o seletor de dono — ignorado quando `podeEscolherDono` é `false`. */
+  readonly membros = input<readonly MembroParaDono[]>([]);
+  /** `id` do usuário autenticado — pré-seleciona "Você" no seletor de dono. */
+  readonly usuarioAtivoId = input<number | null>(null);
 
   /** Escolhas confirmadas — a página monta e persiste a ficha. */
-  readonly criar = output<OpcoesFichaInicial>();
+  readonly criar = output<FichaAssistenteResultado>();
   /** Fechar o assistente sem criar. */
   readonly cancelar = output<void>();
 
@@ -67,6 +83,8 @@ export class FichaCriarDialog {
   /** Atributos **base** (antes do bônus fixo de arquétipo). */
   protected readonly atributos = signal<FichaAtributosDto>({ ...ATRIBUTOS_BASE_PADRAO });
   protected readonly maestria = signal<ChaveAtributo | null>(null);
+  /** Dono escolhido no seletor (só mestre) — `null` até o mestre trocar, cai no próprio autenticado. */
+  private readonly donoEscolhido = signal<number | null>(null);
 
   protected readonly gruposAtributos: readonly GrupoAtributos[] = [
     {
@@ -99,6 +117,9 @@ export class FichaCriarDialog {
   protected readonly arquetipos = computed(() => arquetiposDaClasse(this.classe()));
   protected readonly ehCivil = computed(() => this.classe() === ClasseEnum.CIVIL);
   protected readonly rotuloNivel = computed(() => (this.ehCivil() ? 'Treinamentos' : 'Nível'));
+
+  /** Dono efetivo do seletor — o escolhido, ou o próprio autenticado enquanto o mestre não mexe. */
+  protected readonly donoEfetivo = computed(() => this.donoEscolhido() ?? this.usuarioAtivoId());
 
   /** Bônus fixo de atributos do arquétipo/subclasse escolhido (só quando a classe o comporta). */
   private readonly bonus = computed(() =>
@@ -142,16 +163,16 @@ export class FichaCriarDialog {
     });
   }
 
-  /** Valor **final** de um atributo (base + bônus), clampado aos limites da classe. */
+  /**
+   * Valor **final** de um atributo (base + bônus), clampado aos limites da classe — é o que o box
+   * exibe (o bônus soma direto no valor, sem marcador `+n` à parte) e o que `construirFichaInicial`
+   * persiste. Reagir a troca de arquétipo é de graça: `bonus()` deriva de `classe()`/`arquetipo()`
+   * atuais, então trocar Lutador → Mercenário já recalcula o total certo pro atributo certo.
+   */
   protected atributoFinal(chave: ChaveAtributo): number {
     const limites = this.limites();
     const bruto = this.atributos()[chave] + (this.bonus()[chave] ?? 0);
     return Math.min(limites.atributoMaximo, Math.max(limites.atributoMinimo, bruto));
-  }
-
-  /** Bônus de arquétipo aplicado a um atributo (0 quando não há) — marcador `+n` no box. */
-  protected bonusAtributo(chave: ChaveAtributo): number {
-    return this.bonus()[chave] ?? 0;
   }
 
   protected atualizarNome(valor: string): void {
@@ -185,6 +206,12 @@ export class FichaCriarDialog {
   protected mudarArquetipo(evento: Event): void {
     const valor = (evento.target as HTMLSelectElement).value;
     this.arquetipo.set(valor === '' ? null : (valor as ArquetipoEnum));
+  }
+
+  /** Troca o dono escolhido (só mestre, `podeEscolherDono`) — `<select>` de `membros`. */
+  protected mudarDono(evento: Event): void {
+    const valor = (evento.target as HTMLSelectElement).value;
+    this.donoEscolhido.set(valor === '' ? null : Number(valor));
   }
 
   /** Passo − / + no Nível, clampado aos limites da classe. */
@@ -225,19 +252,26 @@ export class FichaCriarDialog {
     this.maestria.set(this.maestria() === chave ? null : chave);
   }
 
-  /** Confirma o assistente: emite as escolhas **base** (a página aplica o bônus e o snapshot). */
+  /**
+   * Confirma o assistente: emite as escolhas **base** (a página aplica o bônus e o snapshot) e,
+   * só quando o mestre pôde escolher (`podeEscolherDono`), o `usuarioId` do dono selecionado —
+   * jogador comum nunca envia `usuarioId` (a ficha é sempre a própria, resolvida no backend).
+   */
   protected confirmar(): void {
     if (this.criando()) {
       return;
     }
     this.criar.emit({
-      nome: this.nome(),
-      classe: this.classe(),
-      arquetipo: this.arquetipo(),
-      nivel: this.nivel(),
-      prestigio: this.prestigio(),
-      atributos: this.atributos(),
-      maestria: this.maestria(),
+      opcoes: {
+        nome: this.nome(),
+        classe: this.classe(),
+        arquetipo: this.arquetipo(),
+        nivel: this.nivel(),
+        prestigio: this.prestigio(),
+        atributos: this.atributos(),
+        maestria: this.maestria(),
+      },
+      usuarioId: this.podeEscolherDono() ? (this.donoEfetivo() ?? undefined) : undefined,
     });
   }
 

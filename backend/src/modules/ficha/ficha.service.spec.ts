@@ -198,6 +198,62 @@ describe('FichaService', () => {
       expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
     });
 
+    it('mestre cria a ficha em nome de outro membro (usuarioId no dto)', async () => {
+      campanhaRepositorio.recuperarMembro.mockImplementation((dto: { usuarioId: number }) =>
+        Promise.resolve(
+          dto.usuarioId === usuarioMestre.sub
+            ? { papel: TipoCampanhaMembroPapelEnum.MESTRE }
+            : { papel: TipoCampanhaMembroPapelEnum.JOGADOR },
+        ),
+      );
+      const fichaCriada = {
+        id: 6,
+        campanhaId: 3,
+        usuarioId: usuarioMembro.sub,
+        nome: 'Ficha do Jogador',
+        dados: criarDados(),
+      };
+      fichaRepositorio.criarFicha.mockResolvedValue(fichaCriada);
+
+      const resultado = await service.criarFicha(
+        { campanhaId: 3, usuarioId: usuarioMembro.sub, nome: 'Ficha do Jogador', dados: criarDados() },
+        usuarioMestre,
+      );
+
+      expect(fichaRepositorio.criarFicha).toHaveBeenCalledWith(
+        expect.objectContaining({ campanhaId: 3, usuarioId: usuarioMembro.sub }),
+      );
+      expect(resultado).toBe(fichaCriada);
+    });
+
+    it('lança UnauthorizedAccessException quando um membro comum tenta criar ficha para outro', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+
+      await expect(
+        service.criarFicha(
+          { campanhaId: 3, usuarioId: usuarioMembro.sub, nome: 'Ficha Alheia', dados: criarDados() },
+          usuarioDono,
+        ),
+      ).rejects.toThrow(UnauthorizedAccessException);
+      expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+    });
+
+    it('lança ResourceNotFoundException quando o mestre indica um usuarioId que não é membro', async () => {
+      campanhaRepositorio.recuperarMembro.mockImplementation((dto: { usuarioId: number }) =>
+        Promise.resolve(dto.usuarioId === usuarioMestre.sub ? { papel: TipoCampanhaMembroPapelEnum.MESTRE } : null),
+      );
+
+      await expect(
+        service.criarFicha(
+          { campanhaId: 3, usuarioId: 999, nome: 'Fantasma', dados: criarDados() },
+          usuarioMestre,
+        ),
+      ).rejects.toThrow(ResourceNotFoundException);
+      expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+    });
+
     it('permite Vida atual acima da máxima e valores fora das faixas antigas (liberdade total, m3-10)', async () => {
       campanhaRepositorio.recuperarMembro.mockResolvedValue({
         papel: TipoCampanhaMembroPapelEnum.JOGADOR,

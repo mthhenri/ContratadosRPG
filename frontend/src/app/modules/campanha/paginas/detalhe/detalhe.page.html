@@ -1,6 +1,6 @@
 <section class="detalhe">
   @if (carregando()) {
-    <article class="card" role="status" aria-label="Carregando campanha">
+    <article class="card detalhe__esqueleto-card" role="status" aria-label="Carregando campanha">
       <div class="detalhe__esqueleto">
         <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
         <span class="esqueleto-bloco esqueleto-bloco--convite"></span>
@@ -9,11 +9,15 @@
       </div>
     </article>
   } @else if (campanha(); as campanhaAtual) {
-    <article class="card">
+    <div class="detalhe__grade">
+    <!-- Coluna lateral: identidade, descrição, convite e ações de mestre (m2-17 — era tudo um
+         único card em coluna de 680px; agora cada bloco ocupa seu espaço, mais denso). -->
+    <article class="card detalhe__identidade">
       <header class="card__cabecalho">
         <span class="card__indice">//</span>
         <h1 class="card__titulo">{{ campanhaAtual.nome }}</h1>
         <span class="card__regua"></span>
+        <app-indicador-tempo-real />
       </header>
 
       @if (editando()) {
@@ -123,30 +127,29 @@
           </div>
         }
       }
+    </article>
 
-      <div class="detalhe__ficha">
-        <a
-          class="botao botao--secundario detalhe__acao detalhe__ficha-acao"
-          [routerLink]="['/painel', campanhaAtual.id, 'ficha']"
-        >
-          <app-icone nome="olho" />
-          Fichas
-        </a>
-        <a
-          class="botao botao--primario detalhe__acao detalhe__ficha-acao"
-          [routerLink]="['/painel', campanhaAtual.id, 'ficha', 'nova']"
-        >
-          <app-icone nome="novo-agente" />
-          Nova ficha
-        </a>
-      </div>
-
+    <!-- Coluna principal: membros + fichas inline (m2-16) — o bloco mais denso, ganha o espaço
+         que sobra da grade. -->
+    <article class="card detalhe__equipe">
       <header class="detalhe__secao">
         <h2 class="detalhe__secao-titulo">Membros</h2>
         <span class="detalhe__secao-regua"></span>
         <span class="detalhe__secao-contagem" aria-hidden="true">{{ membros().length }}</span>
+        <button
+          class="botao botao--primario detalhe__nova-ficha"
+          type="button"
+          [disabled]="criando()"
+          (click)="abrirCriarFicha()"
+        >
+          <app-icone nome="novo-agente" />
+          {{ criando() ? 'Criando…' : 'Nova ficha' }}
+        </button>
+        @if (textoAtualizacao(); as texto) {
+          <span class="detalhe__secao-atualizado">{{ texto }}</span>
+        }
       </header>
-      <ul class="detalhe__membros">
+      <ul class="detalhe__membros" appOverflowFade>
         @for (membro of membros(); track membro.usuarioId) {
           <li class="detalhe__membro">
             <div class="detalhe__membro-linha">
@@ -180,6 +183,110 @@
                 </div>
               }
             </div>
+
+            <!-- Fichas do membro (m2-16) — sempre abertas no desktop; disclosure no mobile. -->
+            @if (fichasDoMembro(membro.usuarioId).length; as totalFichas) {
+              <div class="detalhe__membro-fichas">
+                <button
+                  class="detalhe__fichas-toggle"
+                  type="button"
+                  [class.detalhe__fichas-toggle--aberto]="fichasExpandidas().has(membro.usuarioId)"
+                  [attr.aria-expanded]="fichasExpandidas().has(membro.usuarioId)"
+                  (click)="alternarFichas(membro.usuarioId)"
+                >
+                  {{ totalFichas }} {{ totalFichas === 1 ? 'ficha' : 'fichas' }}
+                  <app-icone nome="chevron" />
+                </button>
+                <ul
+                  class="detalhe__fichas-lista"
+                  [class.detalhe__fichas-lista--aberta]="fichasExpandidas().has(membro.usuarioId)"
+                  [class.detalhe__fichas-lista--grid-2]="totalFichas === 2"
+                  [class.detalhe__fichas-lista--grid-3]="totalFichas >= 3"
+                  appOverflowFade
+                >
+                  @for (ficha of fichasDoMembro(membro.usuarioId); track ficha.id) {
+                    <li>
+                      <div class="detalhe__ficha-card" [class.detalhe__ficha-card--critico]="ficha.critico">
+                        <a
+                          class="detalhe__ficha-link"
+                          [routerLink]="['/painel', campanhaAtual.id, 'ficha', ficha.id]"
+                        >
+                          <div class="detalhe__ficha-topo">
+                            <span class="detalhe__ficha-nome">{{ ficha.nome }}</span>
+                            <span class="detalhe__ficha-condicoes">
+                              @for (condicao of ficha.condicoes; track condicao.chave) {
+                                <app-icone
+                                  [nome]="condicao.icone"
+                                  class="detalhe__ficha-condicao"
+                                  [class.detalhe__ficha-condicao--ativa]="condicao.ativa"
+                                  [attr.data-condicao]="condicao.chave"
+                                  [attr.aria-label]="condicao.rotulo + (condicao.ativa ? ' (ativa)' : ' (inativa)')"
+                                  [attr.title]="condicao.rotulo"
+                                />
+                              }
+                            </span>
+                          </div>
+                          <span class="detalhe__ficha-meta">{{ ficha.classeTexto }} · Nível {{ ficha.nivel }}</span>
+                        </a>
+                        <div class="detalhe__ficha-vitais">
+                          <span class="detalhe__ficha-vital detalhe__ficha-vital--vida">
+                            @if (podeAjustarFicha(membro.usuarioId)) {
+                              <button
+                                class="detalhe__ficha-passo"
+                                type="button"
+                                appHoldRepeat
+                                [attr.aria-label]="'Reduzir Vida de ' + ficha.nome"
+                                [disabled]="ficha.vidaAtual <= 0"
+                                (passo)="ajustarVitalidade(ficha, 'vidaAtual', -1)"
+                              >−</button>
+                            }
+                            <span>Vida {{ ficha.vidaAtual }}/{{ ficha.vidaMaxima ?? '—' }}</span>
+                            @if (podeAjustarFicha(membro.usuarioId)) {
+                              <button
+                                class="detalhe__ficha-passo"
+                                type="button"
+                                appHoldRepeat
+                                [attr.aria-label]="'Aumentar Vida de ' + ficha.nome"
+                                (passo)="ajustarVitalidade(ficha, 'vidaAtual', 1)"
+                              >+</button>
+                            }
+                          </span>
+                          <span class="detalhe__ficha-vital detalhe__ficha-vital--energia">
+                            @if (podeAjustarFicha(membro.usuarioId)) {
+                              <button
+                                class="detalhe__ficha-passo"
+                                type="button"
+                                appHoldRepeat
+                                [attr.aria-label]="'Reduzir Energia de ' + ficha.nome"
+                                (passo)="ajustarVitalidade(ficha, 'energiaAtual', -1)"
+                              >−</button>
+                            }
+                            <span>Energia {{ ficha.energiaAtual }}/{{ ficha.energiaMaxima ?? '—' }}</span>
+                            @if (podeAjustarFicha(membro.usuarioId)) {
+                              <button
+                                class="detalhe__ficha-passo"
+                                type="button"
+                                appHoldRepeat
+                                [attr.aria-label]="'Aumentar Energia de ' + ficha.nome"
+                                (passo)="ajustarVitalidade(ficha, 'energiaAtual', 1)"
+                              >+</button>
+                            }
+                          </span>
+                        </div>
+                      </div>
+                    </li>
+                  }
+                </ul>
+              </div>
+            } @else if (podeAfirmarSemFichas(membro)) {
+              <p class="detalhe__sem-fichas">
+                {{
+                  membro.usuarioId === usuarioAtivoId()
+                    ? 'Você ainda não tem uma ficha aqui.'
+                    : 'Ainda sem ficha.'
+                }}
+              </p>
+            }
 
             @if (acaoMembro()?.usuarioId === membro.usuarioId) {
               <div
@@ -245,6 +352,7 @@
         }
       </ul>
     </article>
+    </div>
   }
 
   <p class="detalhe__voltar">
@@ -254,3 +362,14 @@
     </a>
   </p>
 </section>
+
+@if (dialogCriar()) {
+  <app-ficha-criar-dialog
+    [criando]="criando()"
+    [podeEscolherDono]="ehMestre()"
+    [membros]="membros()"
+    [usuarioAtivoId]="usuarioAtivoId()"
+    (criar)="criarFicha($event)"
+    (cancelar)="fecharCriarFicha()"
+  />
+}

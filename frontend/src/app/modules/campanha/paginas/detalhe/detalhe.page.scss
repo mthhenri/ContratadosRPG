@@ -1,8 +1,24 @@
 @use 'tema/breakpoints' as bp;
 
 .detalhe {
-  max-width: 680px;
+  // m2-17: era uma coluna única de 680px — a grade abaixo separa identidade/convite (lateral) de
+  // membros+fichas (principal), mesma largura-alvo de 1160px da lista/ficha de jogador.
+  max-width: 1160px;
   margin: 0 auto;
+
+  // Duas colunas no desktop: identidade+convite (largura fixa, cresce só até o teto) e a equipe
+  // (o bloco mais denso, ganha o espaço que sobra). Empilha abaixo de 960px — colunas de ~340px
+  // ficariam espremidas antes da própria `bp.mobile`.
+  &__grade {
+    display: grid;
+    grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+    gap: var(--gap-grid);
+    align-items: start;
+
+    @media (max-width: 960px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
 
   // Esqueleto de carregamento — mimetiza título + caixa de convite + linhas de membro, evitando
   // o "flash" seco de texto "Carregando…" antes do conteúdo real.
@@ -10,6 +26,12 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+  }
+
+  // Card do esqueleto — largura da coluna lateral real (identidade), não a página inteira: o
+  // card carregado não vira uma faixa larga e vazia antes da grade de duas colunas assentar.
+  &__esqueleto-card {
+    max-width: 340px;
   }
 
   &__descricao {
@@ -45,8 +67,11 @@
 
   // Código de convite emoldurado como campo próprio (protótipo lobby): caixa --surface com
   // borda, o código em mono accent. Dá hierarquia de "credencial" em vez de texto solto.
+  // m2-17: a coluna de identidade agora é sempre estreita (340px, era 680px de página inteira) —
+  // `flex-basis: 100%` bota o código na sua própria linha em qualquer largura (era só no
+  // mobile), senão ele trunca com reticências antes mesmo de mostrar o código inteiro.
   &__codigo {
-    flex: 1;
+    flex: 1 1 100%;
     min-width: 0;
     padding: 8px 12px;
     background: var(--surface);
@@ -57,11 +82,7 @@
     font-weight: 700;
     letter-spacing: 0.08em;
     color: var(--accent);
-    // Nunca deixa o código vazar por cima dos botões vizinhos quando o rótulo do "Regenerar"
-    // cresce (Regenerar → Regenerando… → Regenerado) e aperta o espaço da linha (achado ao vivo).
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    text-align: center;
   }
 
   &__copiar {
@@ -184,14 +205,8 @@
   }
 
   &__acoes,
-  &__exclusao,
-  &__ficha {
+  &__exclusao {
     margin-bottom: 24px;
-  }
-
-  // Ações de ficha (m3-06/m3-07) — links para a lista e a criação da ficha nesta campanha.
-  &__ficha-acao {
-    text-decoration: none;
   }
 
   &__acao {
@@ -227,11 +242,30 @@
 
   // Cabeçalho da seção de membros — mesmo tratamento do contador de seção dos protótipos
   // ("ESQUADRÃO 4"): rótulo mono uppercase + régua fina + contagem à direita. Só apresentação.
+  // m2-16: ganhou também a ação "Nova ficha" (a régua flex:1 empurra contagem+botão pra direita).
   &__secao {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 11px;
     margin: 0 0 12px;
+  }
+
+  // Ação "Nova ficha" (m2-16 — trazida da extinta lista plana de fichas para o próprio detalhe).
+  &__nova-ficha {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
   }
 
   &__secao-titulo {
@@ -257,6 +291,18 @@
     color: var(--text-mute);
   }
 
+  // "Atualizado há Xs" (item 9) — legenda discreta na própria linha, abaixo do cabeçalho da
+  // seção (flex-basis 100% força a quebra: título/régua/contagem/botão continuam numa só linha).
+  &__secao-atualizado {
+    flex-basis: 100%;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-mute);
+  }
+
+  // Rolável quando a campanha acumula membros (cada linha ficou mais alta com as fichas
+  // inline, m2-16) — fade topo/base só aparece de fato quando há corte (appOverflowFade).
   &__membros {
     list-style: none;
     margin: 0;
@@ -264,6 +310,34 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    max-height: 520px;
+    overflow-y: auto;
+
+    --fade-topo: 0px;
+    --fade-base: 0px;
+    &.overflow-fade--topo,
+    &.overflow-fade--base {
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+    }
+    &.overflow-fade--topo {
+      --fade-topo: 22px;
+    }
+    &.overflow-fade--base {
+      --fade-base: 22px;
+    }
   }
 
   &__membro {
@@ -280,6 +354,258 @@
     display: flex;
     align-items: center;
     gap: 12px;
+  }
+
+  // Fichas do membro, inline (m2-16, lar das fichas — substitui a extinta lista plana). No
+  // desktop o disclosure fica escondido e a lista é sempre visível; no mobile é o inverso
+  // (ver o breakpoint no fim do bloco). Fade topo/base só some quando a lista de fato corta.
+  &__membro-fichas {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__fichas-toggle {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-dim);
+    cursor: pointer;
+
+    app-icone {
+      font-size: 11px;
+      transition: transform 0.15s ease;
+    }
+
+    &:hover {
+      color: var(--text);
+    }
+
+    &--aberto app-icone {
+      transform: rotate(180deg);
+    }
+  }
+
+  &__fichas-lista {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 44px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 220px;
+    overflow-y: auto;
+
+    --fade-topo: 0px;
+    --fade-base: 0px;
+    &.overflow-fade--topo,
+    &.overflow-fade--base {
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+    }
+    &.overflow-fade--topo {
+      --fade-topo: 16px;
+    }
+    &.overflow-fade--base {
+      --fade-base: 16px;
+    }
+
+    // Grid dinâmica pela quantidade de fichas do membro: 1 mantém a linha (flex column acima),
+    // 2 vira grid de 2 colunas, 3+ vira grid de 3 — só no desktop (mobile força 1 coluna abaixo).
+    &--grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+    }
+
+    &--grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: start;
+    }
+  }
+
+  // m2-16b: virou cartão em coluna (era uma única linha nome+meta) — cabe o topo (nome +
+  // condições), a meta (classe/nível) e a linha de vitais (Vida/Energia). m2-16g: deixou de ser
+  // o próprio `<a>` — os passos rápidos de Vida/Energia (`&__ficha-passo`) não podem viver dentro
+  // de um link (aninhamento inválido / roubaria o clique de navegação), então o card virou um
+  // `<div>` com o link só no topo+meta (`&__ficha-link`) e os vitais como irmão, fora do link.
+  &__ficha-card {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 8px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      background: var(--accent-dim);
+      border-color: var(--border-strong);
+    }
+  }
+
+  &__ficha-link {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  // Vida ≤ 0 (item 4) — sinaliza mesmo sem "Morrendo" marcado ainda, tingido com o mesmo token
+  // fixo da stat Vida (não é uma cor nova). `color-mix` a partir do token, não hex solto (#29).
+  &__ficha-card--critico {
+    background: color-mix(in srgb, var(--vida) 8%, var(--surface));
+    border-color: var(--vida-border);
+
+    &:hover {
+      background: color-mix(in srgb, var(--vida) 14%, var(--surface));
+    }
+  }
+
+  &__ficha-topo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__ficha-nome {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  // As 3 condições, sempre visíveis (item 3) — inativa esmaecida, ativa ganha cor semântica.
+  &__ficha-condicoes {
+    flex: none;
+    display: inline-flex;
+    gap: 4px;
+  }
+
+  &__ficha-condicao {
+    font-size: 13px;
+    color: var(--text-mute);
+    opacity: 0.35;
+  }
+
+  &__ficha-condicao--ativa {
+    opacity: 1;
+
+    &[data-condicao='morrendo'] {
+      color: var(--vida);
+    }
+
+    &[data-condicao='machucado'] {
+      color: var(--warning);
+    }
+
+    &[data-condicao='inconsciente'] {
+      color: var(--text);
+    }
+  }
+
+  &__ficha-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  // Estado vazio por membro (item 8) — só aparece quando a visão é autoritativa
+  // (`podeAfirmarSemFichas`: a própria linha, ou o mestre — nunca "adivinha" ausência alheia).
+  &__sem-fichas {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-style: italic;
+    color: var(--text-mute);
+  }
+
+  &__ficha-vitais {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+  }
+
+  // m2-16g: cada vital ganhou os passos − / + em volta do texto (só dono/mestre — `podeAjustarFicha`).
+  &__ficha-vital {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-mute);
+
+    &--vida {
+      color: var(--vida);
+    }
+
+    &--energia {
+      color: var(--energy);
+    }
+  }
+
+  // Ação rápida de Vida/Energia direto no mini-card (m2-16g) — mesma receita visual do
+  // `.ficha-passo` da leitura completa da ficha, só que menor (a coluna da grade é mais estreita).
+  &__ficha-passo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text-dim);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    // Segurar para repetir (appHoldRepeat): sem seleção de texto nem scroll/zoom de toque no gesto.
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: none;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+    &:hover:not(:disabled) {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--surface);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
   }
 
   // Ações de gestão do mestre sobre um jogador (transferir mestre / remover) — botões-ícone
@@ -380,13 +706,6 @@
 
   // Alvos de toque confortáveis (m1-15 / WCAG 2.5.5) nas ações do mestre e no link de voltar.
   @include bp.mobile {
-    // Código sempre na sua própria linha (flex-basis 100% força a quebra) — o rótulo do
-    // "Regenerar" muda de tamanho (Regenerar → Regenerando… → Regenerado) e, na mesma linha,
-    // apertava o código a ponto de vazar por cima do botão de copiar (achado ao vivo no mobile).
-    &__codigo {
-      flex: 1 1 100%;
-    }
-
     &__copiar {
       width: bp.$alvo-toque;
       height: bp.$alvo-toque;
@@ -407,6 +726,36 @@
     &__membro-acao {
       width: bp.$alvo-toque;
       height: bp.$alvo-toque;
+    }
+
+    &__nova-ficha {
+      flex: 1 1 100%;
+      justify-content: center;
+      min-height: bp.$alvo-toque;
+    }
+
+    // Híbrido por largura (m2-16): no desktop as fichas ficam sempre abertas (regra acima);
+    // no mobile viram disclosure — some a lista, aparece o gatilho "N fichas ⌄" com alvo de
+    // toque confortável, e a lista só aparece com o toggle expandido.
+    &__fichas-toggle {
+      display: inline-flex;
+      min-height: bp.$alvo-toque;
+    }
+
+    &__fichas-lista {
+      display: none;
+      padding-left: 0;
+
+      // Mobile sempre em 1 coluna — a grid de 2/3 colunas é só desktop (a lista já é
+      // disclosure aqui, não precisa competir por espaço horizontal).
+      &--aberta {
+        display: flex;
+      }
+
+      &--grid-2,
+      &--grid-3 {
+        grid-template-columns: none;
+      }
     }
 
     &__link {

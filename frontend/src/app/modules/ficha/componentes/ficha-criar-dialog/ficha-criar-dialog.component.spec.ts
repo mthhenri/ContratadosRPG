@@ -1,22 +1,32 @@
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it, vi } from 'vitest';
 import { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
-import type { OpcoesFichaInicial } from '../../ficha-padrao';
+import type { FichaAssistenteResultado } from '../../ficha-padrao';
 
 import { FichaCriarDialog } from './ficha-criar-dialog.component';
 
 /**
  * Prova o assistente de criação (m3-16): coleta as escolhas cruciais, aplica limites da classe e o
- * bônus fixo de arquétipo (na Maestria) e emite as escolhas base ao confirmar.
+ * bônus fixo de arquétipo (na Maestria) e emite as escolhas base ao confirmar. O seletor de dono
+ * (m2-16b, só mestre — §14) é provado à parte, mais abaixo.
  */
 describe('FichaCriarDialog', () => {
-  function montar() {
+  function montar(inputs: {
+    podeEscolherDono?: boolean;
+    membros?: readonly { usuarioId: number; nome: string }[];
+    usuarioAtivoId?: number | null;
+  } = {}) {
     TestBed.configureTestingModule({ imports: [FichaCriarDialog] });
     const fixture = TestBed.createComponent(FichaCriarDialog);
     const componente = fixture.componentInstance;
-    const criado: OpcoesFichaInicial[] = [];
+    fixture.componentRef.setInput('podeEscolherDono', inputs.podeEscolherDono ?? false);
+    fixture.componentRef.setInput('membros', inputs.membros ?? []);
+    fixture.componentRef.setInput('usuarioAtivoId', inputs.usuarioAtivoId ?? null);
+    const criado: FichaAssistenteResultado[] = [];
     const cancelado = vi.fn();
-    fixture.componentRef.instance.criar.subscribe((op: OpcoesFichaInicial) => criado.push(op));
+    fixture.componentRef.instance.criar.subscribe((resultado: FichaAssistenteResultado) =>
+      criado.push(resultado),
+    );
     fixture.componentRef.instance.cancelar.subscribe(() => cancelado());
     fixture.detectChanges();
     return { fixture, componente, raiz: fixture.nativeElement as HTMLElement, criado, cancelado };
@@ -35,14 +45,16 @@ describe('FichaCriarDialog', () => {
     fixture.detectChanges();
 
     expect(criado).toHaveLength(1);
-    expect(criado[0]).toMatchObject({
+    expect(criado[0].opcoes).toMatchObject({
       classe: ClasseEnum.COMBATENTE,
       arquetipo: null,
       nivel: 0,
       prestigio: 0,
       maestria: null,
     });
-    expect(criado[0].atributos.forca).toBe(1);
+    expect(criado[0].opcoes.atributos.forca).toBe(1);
+    // Sem seletor de dono (jogador comum) — nunca emite usuarioId, o backend resolve o próprio.
+    expect(criado[0].usuarioId).toBeUndefined();
   });
 
   it('trocar para Civil reclampa atributos/nível e oculta o arquétipo', () => {
@@ -99,5 +111,43 @@ describe('FichaCriarDialog', () => {
     const { raiz, cancelado } = montar();
     (raiz.querySelector('.botao--secundario') as HTMLButtonElement).click();
     expect(cancelado).toHaveBeenCalled();
+  });
+
+  // Seletor de dono (m2-16b) — só o mestre pode criar a ficha em nome de outro membro (§14).
+  describe('seletor de dono (só mestre)', () => {
+    const membros = [
+      { usuarioId: 1, nome: 'Mestre Um' },
+      { usuarioId: 2, nome: 'Jogador Dois' },
+    ];
+
+    it('não mostra o seletor quando o autenticado não pode escolher (jogador comum)', () => {
+      const { raiz } = montar({ podeEscolherDono: false, membros, usuarioAtivoId: 2 });
+      expect(raiz.querySelector('#criar-dono')).toBeNull();
+    });
+
+    it('mostra o seletor pré-selecionado no próprio autenticado quando ele é mestre', () => {
+      const { raiz } = montar({ podeEscolherDono: true, membros, usuarioAtivoId: 1 });
+      const select = raiz.querySelector('#criar-dono') as HTMLSelectElement;
+      expect(select).not.toBeNull();
+      expect(select.value).toBe('1');
+      expect(select.options[0].textContent).toContain('(Você)');
+    });
+
+    it('confirmar sem mexer no seletor emite o usuarioId do próprio mestre', () => {
+      const { fixture, raiz, criado } = montar({ podeEscolherDono: true, membros, usuarioAtivoId: 1 });
+      (raiz.querySelector('.botao--primario') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(criado[0].usuarioId).toBe(1);
+    });
+
+    it('trocar o seletor para outro membro emite o usuarioId escolhido', () => {
+      const { fixture, raiz, criado } = montar({ podeEscolherDono: true, membros, usuarioAtivoId: 1 });
+      selecionar(raiz, '#criar-dono', '2');
+      fixture.detectChanges();
+      (raiz.querySelector('.botao--primario') as HTMLButtonElement).click();
+
+      expect(criado[0].usuarioId).toBe(2);
+    });
   });
 });

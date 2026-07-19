@@ -182,7 +182,11 @@ Contrato: `shared/src/dtos/ficha/ficha.dtos.ts`. Forma 1:1 com `sistema-v4.1.0.m
     "sequelas": [ { "nome": "Paranoia", "descricao": "..." } ],          // temporárias
     "traumas":  [ { "nome": "...", "descricao": "...", "tratado": false } ], // permanentes, tratáveis
     "lesoes":   [ { "atributo": "forca", "pontos": 1,
-                    "severidade": "LEVE", "permanente": false } ]        // remove ponto de atributo
+                    "severidade": "LEVE", "permanente": false } ],       // remove ponto de atributo
+    "morrendo": false, "machucado": false, "inconsciente": false
+    // m2-16b: as três condições de sistema-v4.1.0.md ("Condições") rastreadas na ficha.
+    // Opcionais (retrocompat) — ausente equivale a false. Alternadas MANUALMENTE pelo dono/mestre,
+    // nunca recalculadas a partir de vidaAtual (mesma filosofia de m3-10: liberdade de edição).
   },
   "derivados": {                      // m3-10: TODO derivado é snapshot na criação e depois EDITÁVEL
     "defesa": 14, "esquiva": 12, "bloqueio": 16,   // "nada exclusivamente calculado" — tudo no banco

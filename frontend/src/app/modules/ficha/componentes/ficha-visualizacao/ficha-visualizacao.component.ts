@@ -40,6 +40,8 @@ import { FichaInventario } from '../ficha-inventario/ficha-inventario.component'
 import { FichaRolagens } from '../ficha-rolagens/ficha-rolagens.component';
 import { EstadoSanidade, FichaSanidade } from '../ficha-sanidade/ficha-sanidade.component';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
+import { CONDICOES_FICHA, type CondicoesFicha } from '../../condicoes-ficha';
+import { clamparVitalidade, type CampoVitalidadeAtual } from '../../ajuste-vitalidade';
 import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
 import {
   ChaveInfoExtra,
@@ -111,9 +113,6 @@ const CHAVES_COMBATE: readonly ChaveInfoExtra[] = [
   'habilidadesPorTurno',
 ];
 
-/** Campo de vitalidade atual (recebe passos − / + e digitação). */
-export type CampoVitalidadeAtual = 'vidaAtual' | 'energiaAtual';
-
 /** Campo de vitalidade editável na leitura — atual **e** máxima (a máxima é stored/editável, m3-10). */
 export type CampoVitalidade = CampoVitalidadeAtual | 'vidaMaxima' | 'energiaMaxima';
 
@@ -149,6 +148,7 @@ export interface AjusteClasse {
   readonly classe: ClasseEnum;
   readonly arquetipo: ArquetipoEnum | null;
 }
+
 
 /**
  * A **ficha** de jogador (m3-07/m3-10) — alvo de fidelidade `docs/design/examples/ficha-de-jogador.html`.
@@ -204,6 +204,9 @@ export class FichaVisualizacao {
   /** Listas de Sanidade (sequelas/traumas/lesões) editadas — a página persiste em `estado` (m3-12). */
   readonly ajusteSanidade = output<EstadoSanidade>();
 
+  /** As três condições (Morrendo/Machucado/Inconsciente) alternadas — a página persiste em `estado`. */
+  readonly ajusteCondicoes = output<CondicoesFicha>();
+
   /** Lista de habilidades editada — a página persiste em `dados.habilidades` (m3-13). */
   readonly ajusteHabilidades = output<readonly FichaHabilidadeDto[]>();
 
@@ -222,6 +225,15 @@ export class FichaVisualizacao {
       campo: 'energiaAtual',
       valor: this.estado().energiaAtual - custo,
     });
+  }
+
+  /** Alterna uma condição (Morrendo/Machucado/Inconsciente) e emite o conjunto atualizado. */
+  protected alternarCondicao(chave: keyof CondicoesFicha): void {
+    if (!this.ajustavel()) {
+      return;
+    }
+    const condicoes = this.condicoes();
+    this.ajusteCondicoes.emit({ ...condicoes, [chave]: !condicoes[chave] });
   }
 
   /**
@@ -353,6 +365,16 @@ export class FichaVisualizacao {
   protected readonly atributos = computed(() => this.dados().atributos);
   protected readonly estado = computed(() => this.dados().estado);
 
+  /** Descritores das 3 condições, para o `@for` da barra de toggles. */
+  protected readonly condicoesFicha = CONDICOES_FICHA;
+
+  /** As três condições resolvidas (ausente no documento → `false`) — alimenta a barra de toggles. */
+  protected readonly condicoes = computed<CondicoesFicha>(() => ({
+    morrendo: this.estado().morrendo ?? false,
+    machucado: this.estado().machucado ?? false,
+    inconsciente: this.estado().inconsciente ?? false,
+  }));
+
   /**
    * Atributos **efetivos** = base − pontos de lesão (`shared/regras`, `sistema-v4.1.0.md` — "⬡ Lesões").
    * O valor **base** (`atributos()`) nunca é mutado; por isso a **Maestria** (ligada ao base) sobrevive à
@@ -443,9 +465,7 @@ export class FichaVisualizacao {
    */
   protected ajustar(campo: CampoVitalidadeAtual, delta: number): void {
     const atual = this.estado()[campo];
-    // m3-10: a atual PODE exceder a máxima. Vida tem piso 0; Energia pode negativar (sem piso).
-    const bruto = atual + delta;
-    const valor = campo === 'vidaAtual' ? Math.max(0, bruto) : bruto;
+    const valor = clamparVitalidade(campo, atual, delta);
     if (valor !== atual) {
       this.ajusteVitalidade.emit({ campo, valor });
     }
