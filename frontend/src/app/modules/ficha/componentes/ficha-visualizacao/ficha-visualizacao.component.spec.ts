@@ -2,11 +2,17 @@ import { TestBed } from '@angular/core/testing';
 import {
   ArquetipoEnum,
   ClasseEnum,
+  EspecialidadeEfeitoEnum,
+  FormacaoBonusEnum,
   HabilidadeCategoriaEnum,
   ItemCategoriaEnum,
   SeveridadeLesaoEnum,
 } from '@contratados-rpg/shared/enums';
-import type { FichaHabilidadeDto, FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
+import type {
+  FichaHabilidadeDto,
+  FichaJogadorDadosDto,
+  FichaOrigemDto,
+} from '@contratados-rpg/shared/dtos/ficha';
 import { calcularVida } from '@contratados-rpg/shared/regras/agente';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
@@ -48,13 +54,20 @@ describe('FichaVisualizacao', () => {
     anotacoes: 'Veterano de contenção.',
   };
 
-  function montar(documento: FichaJogadorDadosDto, nome = 'Corvo', fichaId = 42, ajustavel = false) {
+  function montar(
+    documento: FichaJogadorDadosDto,
+    nome = 'Corvo',
+    fichaId = 42,
+    ajustavel = false,
+    ehMestre = false,
+  ) {
     TestBed.configureTestingModule({ imports: [FichaVisualizacao] });
     const fixture = TestBed.createComponent(FichaVisualizacao);
     fixture.componentRef.setInput('fichaId', fichaId);
     fixture.componentRef.setInput('nome', nome);
     fixture.componentRef.setInput('dados', documento);
     fixture.componentRef.setInput('ajustavel', ajustavel);
+    fixture.componentRef.setInput('ehMestre', ehMestre);
     fixture.detectChanges();
     return { fixture, raiz: fixture.nativeElement as HTMLElement };
   }
@@ -900,5 +913,144 @@ describe('FichaVisualizacao', () => {
       { chave: 'esquiva', valor: 19 },
       { chave: 'bloqueio', valor: 21 },
     ]);
+  });
+
+  describe('Identidade (m3-25)', () => {
+    const origemExemplo: FichaOrigemDto = {
+      nome: 'Ex-Militar',
+      descricao: 'Serviu nas forças armadas antes de ser recrutado.',
+      saberDeCampo: 'Táticas de combate urbano',
+      formacao: [
+        { bonus: FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO, parametro: null, texto: '+1m de Deslocamento' },
+        {
+          bonus: FormacaoBonusEnum.COMBATE_DADO_CATEGORIA_ARMA,
+          parametro: 'Armas de Fogo',
+          texto: '+1 dado com Armas de Fogo',
+        },
+      ],
+      especialidade: { gatilho: 'Sob fogo direto', efeito: EspecialidadeEfeitoEnum.DADO_EXTRA },
+    };
+
+    it('ficha sem o bloco identidade (retrocompat) mostra tudo como não definido', () => {
+      const { raiz } = montar(dados, 'Corvo', 42, true);
+      expect(raiz.querySelector('.ficha-identidade__personalidade')?.textContent).toContain('— Definir —');
+      expect(raiz.querySelector('.ficha-visao__vazio')?.textContent).toContain('Origem ainda não definida');
+    });
+
+    it('dono define a Personalidade e a Origem pela primeira vez — emite os ajustes', () => {
+      const alvo = montar(dados, 'Corvo', 42, true, false);
+      const personalidades: string[] = [];
+      const origens: FichaOrigemDto[] = [];
+      alvo.fixture.componentInstance.ajustePersonalidade.subscribe((p) => personalidades.push(p));
+      alvo.fixture.componentInstance.ajusteOrigem.subscribe((o) => origens.push(o));
+
+      const componente = alvo.fixture.componentInstance;
+      componente['editarIdentidade']('personalidade');
+      componente['confirmarIdentidade']('personalidade', 'Valente');
+      componente['editarOrigem']();
+      componente['rascunhoOrigem'].set(origemExemplo);
+      componente['confirmarOrigem']();
+
+      expect(personalidades).toEqual(['Valente']);
+      expect(origens).toEqual([origemExemplo]);
+    });
+
+    it('dono com Personalidade/Origem já definidas vê somente leitura, sem lápis', () => {
+      const documento = { ...dados, identidade: { personalidade: 'Valente', origem: origemExemplo } };
+      const { raiz } = montar(documento, 'Corvo', 42, true, false);
+
+      expect(raiz.querySelector('.ficha-identidade__personalidade .ficha-ident__nome--editavel')).toBeNull();
+      expect(raiz.querySelector('.ficha-identidade__personalidade')?.textContent).toContain('Valente');
+      expect(raiz.querySelector('.ficha-identidade__personalidade')?.textContent).toContain('imutável');
+      expect(raiz.querySelector('.ficha-identidade__origem-cabecalho .ficha-ident__chip-lapis')).toBeNull();
+      expect(raiz.querySelector('.ficha-identidade__origem-cabecalho')?.textContent).toContain('imutável');
+      expect(raiz.querySelector('.ficha-identidade__origem-nome')?.textContent).toContain('Ex-Militar');
+    });
+
+    it('mestre com Personalidade/Origem já definidas continua vendo os lápis', () => {
+      const documento = { ...dados, identidade: { personalidade: 'Valente', origem: origemExemplo } };
+      const { raiz } = montar(documento, 'Corvo', 42, true, true);
+
+      expect(raiz.querySelector('.ficha-identidade__personalidade .ficha-ident__nome--editavel')).not.toBeNull();
+      expect(raiz.querySelector('.ficha-identidade__origem-cabecalho .ficha-ident__chip-lapis')).not.toBeNull();
+    });
+
+    it('escolher um bônus de Formação preenche o texto com o rótulo do catálogo e zera o parâmetro', () => {
+      const componente = montar(dados, 'Corvo', 42, true).fixture.componentInstance;
+      componente['editarOrigem']();
+
+      componente['mudarBonusFormacaoRascunho'](0, FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO);
+
+      const linha = componente['rascunhoOrigem']()!.formacao[0];
+      expect(linha.bonus).toBe(FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO);
+      expect(linha.texto).toBe('+1m de Deslocamento');
+      expect(linha.parametro).toBeNull();
+    });
+
+    it('"Outro (autorizado pelo Mestre)" grava bonus: null com texto preenchido pelo autor', () => {
+      const componente = montar(dados, 'Corvo', 42, true).fixture.componentInstance;
+      componente['editarOrigem']();
+
+      componente['mudarBonusFormacaoRascunho'](0, '');
+      componente['mudarTextoFormacaoRascunho'](0, '+1 dado em testes de Escalada');
+
+      const linha = componente['rascunhoOrigem']()!.formacao[0];
+      expect(linha.bonus).toBeNull();
+      expect(linha.texto).toBe('+1 dado em testes de Escalada');
+    });
+
+    it('Esquiva ou Bloqueio renderiza um <select> com as duas opções (o motor casa a string exata)', () => {
+      const alvo = montar(dados, 'Corvo', 42, true);
+      alvo.fixture.componentInstance['editarOrigem']();
+      alvo.fixture.componentInstance['mudarBonusFormacaoRascunho'](
+        0,
+        FormacaoBonusEnum.COMBATE_ESQUIVA_OU_BLOQUEIO,
+      );
+      alvo.fixture.detectChanges();
+
+      const selects = Array.from(alvo.raiz.querySelectorAll('.ficha-identidade__formacao-editor select'));
+      const opcoes = selects
+        .find((select) => Array.from(select.querySelectorAll('option')).some((o) => o.value === 'Esquiva'))
+        ?.querySelectorAll('option');
+      expect(Array.from(opcoes ?? []).map((o) => o.value)).toEqual(['', 'Esquiva', 'Bloqueio']);
+    });
+
+    it('marca "sem efeito automático" para um bônus ainda pendente, e não marca um já aplicado', () => {
+      const documento = {
+        ...dados,
+        identidade: {
+          personalidade: null,
+          origem: {
+            ...origemExemplo,
+            // MOVIMENTO_DESLOCAMENTO já é aplicado (DERIVADO); PERICIA_DADO_INICIATIVA ainda não (INICIATIVA).
+            formacao: [
+              { bonus: FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO, parametro: null, texto: 'Aplicado' },
+              { bonus: FormacaoBonusEnum.PERICIA_DADO_INICIATIVA, parametro: null, texto: 'Pendente' },
+            ],
+          },
+        },
+      };
+      const { raiz } = montar(documento, 'Corvo', 42, true);
+
+      const linhas = Array.from(raiz.querySelectorAll('.ficha-identidade__formacao-linha'));
+      const aplicada = linhas.find((linha) => linha.textContent?.includes('Aplicado'))!;
+      const pendente = linhas.find((linha) => linha.textContent?.includes('Pendente'))!;
+      expect(aplicada.querySelector('.chip--pendente')).toBeNull();
+      expect(pendente.querySelector('.chip--pendente')).not.toBeNull();
+    });
+
+    it('cancelar a edição de Origem descarta o rascunho sem emitir nada', () => {
+      const alvo = montar(dados, 'Corvo', 42, true);
+      const origens: FichaOrigemDto[] = [];
+      alvo.fixture.componentInstance.ajusteOrigem.subscribe((o) => origens.push(o));
+
+      alvo.fixture.componentInstance['editarOrigem']();
+      alvo.fixture.componentInstance['mudarTextoOrigemRascunho']('nome', 'Rascunho descartado');
+      alvo.fixture.componentInstance['cancelarOrigem']();
+
+      expect(origens).toEqual([]);
+      expect(alvo.fixture.componentInstance['editandoOrigem']()).toBe(false);
+      expect(alvo.fixture.componentInstance['rascunhoOrigem']()).toBeNull();
+    });
   });
 });

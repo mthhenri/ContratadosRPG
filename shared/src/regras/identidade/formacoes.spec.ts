@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 import type { FichaDerivadosDto, FichaFormacaoDto } from '../../dtos/ficha';
 import { FormacaoBonusEnum } from '../../enums';
 import { FORMACOES } from './formacoes.dados';
-import { ALVOS_APLICAVEIS, aplicarFormacaoAosDerivados, listarEfeitosPendentes } from './formacoes';
+import {
+  ALVOS_APLICAVEIS,
+  aplicarFormacaoAosDerivados,
+  listarEfeitosPendentes,
+  removerFormacaoDosDerivados,
+} from './formacoes';
 
 /**
  * `aplicarFormacaoAosDerivados` conferida contra `docs/core/sistema-v4.1.0.md` — "⬦ Formação": as 5
@@ -178,6 +183,51 @@ describe('aplicarFormacaoAosDerivados', () => {
     expect(comA.inventarioMaximo).toBe(20);
     expect(comB.deslocamento).toBe(9);
     expect(comB.inventarioMaximo).toBe(21);
+  });
+});
+
+describe('removerFormacaoDosDerivados', () => {
+  it('desfaz +1m de Deslocamento (DERIVADO)', () => {
+    const aplicado = aplicarFormacaoAosDerivados(BASE, [formacao(FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO)]);
+    expect(removerFormacaoDosDerivados(aplicado, [formacao(FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO)])).toEqual(
+      BASE,
+    );
+  });
+
+  it('desfaz +1 de Esquiva ou Bloqueio (DERIVADO_ESCOLHA)', () => {
+    const aplicado = aplicarFormacaoAosDerivados(BASE, [
+      formacao(FormacaoBonusEnum.COMBATE_ESQUIVA_OU_BLOQUEIO, 'Esquiva'),
+    ]);
+    expect(
+      removerFormacaoDosDerivados(aplicado, [formacao(FormacaoBonusEnum.COMBATE_ESQUIVA_OU_BLOQUEIO, 'Esquiva')]),
+    ).toEqual(BASE);
+  });
+
+  it('desfaz +1 no dano de Corpo (DANO_CORPO)', () => {
+    const aplicado = aplicarFormacaoAosDerivados(BASE, [formacao(FormacaoBonusEnum.COMBATE_DANO_CORPO)]);
+    expect(removerFormacaoDosDerivados(aplicado, [formacao(FormacaoBonusEnum.COMBATE_DANO_CORPO)])).toEqual(BASE);
+  });
+
+  it('desfaz +1 dado de dano Furtivo (DANO_FURTIVO_DADO)', () => {
+    const aplicado = aplicarFormacaoAosDerivados(BASE, [formacao(FormacaoBonusEnum.COMBATE_DANO_FURTIVO_DADO)]);
+    expect(removerFormacaoDosDerivados(aplicado, [formacao(FormacaoBonusEnum.COMBATE_DANO_FURTIVO_DADO)])).toEqual(
+      BASE,
+    );
+  });
+
+  it('troca de Origem: remove a Formação antiga e aplica a nova a partir da mesma base', () => {
+    const comAntiga = aplicarFormacaoAosDerivados(BASE, [formacao(FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO)]);
+    const semAntiga = removerFormacaoDosDerivados(comAntiga, [formacao(FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO)]);
+    const comNova = aplicarFormacaoAosDerivados(semAntiga, [
+      formacao(FormacaoBonusEnum.LOGISTICA_INVENTARIO_MAXIMO),
+    ]);
+    expect(comNova.deslocamento).toBe(9);
+    expect(comNova.inventarioMaximo).toBe(21);
+  });
+
+  it('ignora bonus:null e código inexistente sem quebrar (mesmo guard de aplicarFormacaoAosDerivados)', () => {
+    const custom: FichaFormacaoDto = { bonus: null, parametro: null, texto: 'x' };
+    expect(removerFormacaoDosDerivados(BASE, [custom])).toEqual(BASE);
   });
 });
 

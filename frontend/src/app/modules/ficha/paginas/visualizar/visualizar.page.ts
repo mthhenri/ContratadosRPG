@@ -23,6 +23,7 @@ import {
   type BonusAtributos,
 } from '@contratados-rpg/shared/regras/agente';
 import { normalizarPresetLegado } from '@contratados-rpg/shared/regras/rolagem';
+import { aplicarFormacaoAosDerivados, removerFormacaoDosDerivados } from '@contratados-rpg/shared/regras/identidade';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type {
   FichaAcessoResumoDto,
@@ -30,8 +31,10 @@ import type {
   FichaComboDto,
   FichaDerivadosDto,
   FichaHabilidadeDto,
+  FichaIdentidadeDto,
   FichaInventarioDto,
   FichaJogadorDadosDto,
+  FichaOrigemDto,
   FichaRecuperadaDto,
   FichaRolagemDto,
 } from '@contratados-rpg/shared/dtos/ficha';
@@ -612,6 +615,50 @@ export class FichaVisualizar {
     }
     this.ficha.set({ ...fichaAtual, nome });
     this.agendarPersistencia();
+  }
+
+  /**
+   * Define/altera a Personalidade (m3-25): sem cascata (não deriva nenhuma stat) — o backend arbitra
+   * a trava de imutabilidade (m3-24); o front só esconde o lápis quando já sabe que vai travar.
+   */
+  protected ajustarPersonalidade(personalidade: string): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) {
+      return;
+    }
+    const identidade: FichaIdentidadeDto = { ...this.identidadeAtual(fichaAtual), personalidade };
+    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, identidade } });
+    this.agendarPersistencia();
+  }
+
+  /**
+   * Define/troca a Origem (m3-25): aplica o **delta de Formação** aos derivados
+   * (`aplicarFormacaoAosDerivados`/`removerFormacaoDosDerivados`, m3-23) — remove o delta da Origem
+   * anterior (se havia) antes de somar o da nova, exatamente como `ajustarClasse` faz com o bônus de
+   * arquétipo (`aplicarDeltaBonus`), preservando ajustes manuais fora dos campos que a Formação toca.
+   * Sem derivados stored (ficha antiga), não há o que ajustar. Otimista + em lote.
+   */
+  protected ajustarOrigem(origem: FichaOrigemDto): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) {
+      return;
+    }
+    const origemAnterior = this.identidadeAtual(fichaAtual).origem;
+    const derivadosAtuais = fichaAtual.dados.derivados;
+    const derivados = derivadosAtuais
+      ? aplicarFormacaoAosDerivados(
+          origemAnterior ? removerFormacaoDosDerivados(derivadosAtuais, origemAnterior.formacao) : derivadosAtuais,
+          origem.formacao,
+        )
+      : derivadosAtuais;
+    const identidade: FichaIdentidadeDto = { ...this.identidadeAtual(fichaAtual), origem };
+    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, identidade, derivados } });
+    this.agendarPersistencia();
+  }
+
+  /** Identidade atual da ficha — ausente em fichas anteriores à m3-23 cai em "nada definido". */
+  private identidadeAtual(ficha: FichaRecuperadaDto): FichaIdentidadeDto {
+    return ficha.dados.identidade ?? { personalidade: null, origem: null };
   }
 
   /**

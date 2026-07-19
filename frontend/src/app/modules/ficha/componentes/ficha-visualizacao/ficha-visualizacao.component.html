@@ -633,6 +633,232 @@
           </section>
         </div>
       </div>
+
+      <!-- Identidade (m3-23/m3-25): Personalidade + Origem. Trava de imutabilidade refletida (m3-24) —
+           o backend é o árbitro; aqui só se esconde o lápis pro dono depois da primeira definição. -->
+      <section class="ficha-cartao ficha-visao__painel-cartao ficha-visao__painel-cartao--largo">
+        <header class="ficha-cartao__cabecalho">
+          <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Identidade</h3>
+          <span class="ficha-cartao__regua"></span>
+        </header>
+
+        <!-- Personalidade: a palavra — mesmo padrão de edição no lugar do Codinome. -->
+        <div class="ficha-identidade__personalidade">
+          <span class="ficha-info__rotulo">Personalidade</span>
+          @if (editandoIdentidade() === 'personalidade') {
+            <input
+              #entradaIdentidade
+              class="ficha-ident__entrada"
+              type="text"
+              [value]="identidade().personalidade ?? ''"
+              aria-label="Personalidade"
+              (keydown.enter)="confirmarIdentidade('personalidade', entradaIdentidade.value)"
+              (keydown.escape)="cancelarIdentidade()"
+              (blur)="confirmarIdentidade('personalidade', entradaIdentidade.value)"
+            />
+          } @else if (personalidadeEditavel()) {
+            <button
+              class="ficha-ident__nome ficha-ident__nome--editavel"
+              type="button"
+              aria-label="Editar personalidade"
+              (click)="editarIdentidade('personalidade')"
+            >
+              {{ identidade().personalidade ?? '— Definir —' }}
+            </button>
+          } @else {
+            <span class="ficha-identidade__valor">
+              {{ identidade().personalidade ?? 'Ainda não definida' }}
+              @if (personalidadeDefinida()) {
+                <span class="ficha-identidade__trava" title="Definida — imutável para você; peça ao Mestre para corrigir.">
+                  (imutável)
+                </span>
+              }
+            </span>
+          }
+        </div>
+
+        <!-- Origem: nome/descrição/Saber de Campo + Especialidade + 2 linhas de Formação. -->
+        <div class="ficha-identidade__origem">
+          <header class="ficha-identidade__origem-cabecalho">
+            <h4 class="ficha-identidade__subtitulo">Origem</h4>
+            @if (editandoOrigem()) {
+              <button class="ficha-cartao__acao ficha-cartao__acao--confirmar" type="button" (click)="confirmarOrigem()">
+                Salvar
+              </button>
+              <button class="ficha-cartao__acao" type="button" (click)="cancelarOrigem()">Cancelar</button>
+            } @else if (origemEditavel()) {
+              <button
+                class="ficha-ident__chip-lapis"
+                type="button"
+                aria-label="Editar origem"
+                title="Editar origem"
+                (click)="editarOrigem()"
+              >
+                ✎
+              </button>
+            } @else if (origemDefinida()) {
+              <span class="ficha-identidade__trava" title="Definida — imutável para você; peça ao Mestre para corrigir.">
+                🔒 imutável
+              </span>
+            }
+          </header>
+
+          @if (editandoOrigem()) {
+            @if (rascunhoOrigem(); as rascunho) {
+              <div class="ficha-identidade__editor">
+                <label class="ficha-identidade__campo">
+                  <span class="ficha-info__rotulo">Nome</span>
+                  <input
+                    class="ficha-ident__select"
+                    type="text"
+                    [value]="rascunho.nome"
+                    (input)="mudarTextoOrigemRascunho('nome', $any($event.target).value)"
+                  />
+                </label>
+                <label class="ficha-identidade__campo">
+                  <span class="ficha-info__rotulo">Descrição</span>
+                  <input
+                    class="ficha-ident__select"
+                    type="text"
+                    [value]="rascunho.descricao"
+                    (input)="mudarTextoOrigemRascunho('descricao', $any($event.target).value)"
+                  />
+                </label>
+                <label class="ficha-identidade__campo">
+                  <span class="ficha-info__rotulo">Saber de Campo</span>
+                  <input
+                    class="ficha-ident__select"
+                    type="text"
+                    [value]="rascunho.saberDeCampo"
+                    (input)="mudarTextoOrigemRascunho('saberDeCampo', $any($event.target).value)"
+                  />
+                </label>
+
+                <div class="ficha-identidade__especialidade">
+                  <label class="ficha-identidade__campo">
+                    <span class="ficha-info__rotulo">Especialidade — gatilho</span>
+                    <input
+                      class="ficha-ident__select"
+                      type="text"
+                      placeholder="Ex.: Sob fogo direto"
+                      [value]="rascunho.especialidade.gatilho"
+                      (input)="mudarGatilhoEspecialidadeRascunho($any($event.target).value)"
+                    />
+                  </label>
+                  <label class="ficha-identidade__campo">
+                    <span class="ficha-info__rotulo">Especialidade — efeito</span>
+                    <select
+                      class="ficha-ident__select"
+                      (change)="mudarEfeitoEspecialidadeRascunho($any($event.target).value)"
+                    >
+                      @for (efeito of efeitosEspecialidade; track efeito) {
+                        <option [value]="efeito" [selected]="efeito === rascunho.especialidade.efeito">
+                          {{ rotuloEfeitoEspecialidade(efeito) }}
+                        </option>
+                      }
+                    </select>
+                  </label>
+                </div>
+
+                @for (linha of rascunho.formacao; track $index) {
+                  <div class="ficha-identidade__formacao-editor">
+                    <span class="ficha-info__rotulo">Formação {{ $index + 1 }}</span>
+                    <select
+                      class="ficha-ident__select"
+                      [attr.aria-label]="'Bônus de Formação ' + ($index + 1)"
+                      (change)="mudarBonusFormacaoRascunho($index, $any($event.target).value)"
+                    >
+                      <option value="" [selected]="linha.bonus === null">Outro (autorizado pelo Mestre)</option>
+                      @for (grupo of gruposFormacao; track grupo.rotulo) {
+                        <optgroup [label]="grupo.rotulo">
+                          @for (opcao of grupo.opcoes; track opcao.codigo) {
+                            <option [value]="opcao.codigo" [selected]="opcao.codigo === linha.bonus">
+                              {{ opcao.rotulo }}
+                            </option>
+                          }
+                        </optgroup>
+                      }
+                    </select>
+
+                    @if (definicaoFormacaoRascunho($index); as definicao) {
+                      @if (definicao.parametro === parametroEsquivaOuBloqueio) {
+                        <select
+                          class="ficha-ident__select"
+                          aria-label="Esquiva ou Bloqueio"
+                          (change)="mudarParametroFormacaoRascunho($index, $any($event.target).value)"
+                        >
+                          <option value="" [selected]="!linha.parametro">— Escolha —</option>
+                          <option value="Esquiva" [selected]="linha.parametro === 'Esquiva'">Esquiva</option>
+                          <option value="Bloqueio" [selected]="linha.parametro === 'Bloqueio'">Bloqueio</option>
+                        </select>
+                      } @else if (definicao.parametro) {
+                        <input
+                          class="ficha-ident__select"
+                          type="text"
+                          [attr.placeholder]="rotuloParametroFormacao(definicao.parametro)"
+                          [attr.aria-label]="rotuloParametroFormacao(definicao.parametro)"
+                          [value]="linha.parametro ?? ''"
+                          (input)="mudarParametroFormacaoRascunho($index, $any($event.target).value)"
+                        />
+                      }
+                      @if (efeitoAindaPendente(linha.bonus)) {
+                        <span class="chip chip--pendente" title="Registrado — ainda sem motor que aplique este efeito automaticamente.">
+                          Sem efeito automático ainda
+                        </span>
+                      }
+                    }
+
+                    <input
+                      class="ficha-ident__select"
+                      type="text"
+                      placeholder="Texto de exibição"
+                      [attr.aria-label]="'Texto de exibição da Formação ' + ($index + 1)"
+                      [value]="linha.texto"
+                      (input)="mudarTextoFormacaoRascunho($index, $any($event.target).value)"
+                    />
+                  </div>
+                }
+              </div>
+            }
+          } @else if (origemAtual(); as origem) {
+            <div class="ficha-identidade__leitura">
+              <p class="ficha-identidade__origem-nome">{{ origem.nome }}</p>
+              @if (origem.descricao) {
+                <p class="ficha-visao__anotacoes">{{ origem.descricao }}</p>
+              }
+              <dl class="ficha-info">
+                <div class="ficha-info__linha">
+                  <dt class="ficha-info__rotulo">Saber de Campo</dt>
+                  <dd class="ficha-info__valor">{{ origem.saberDeCampo }}</dd>
+                </div>
+                <div class="ficha-info__linha">
+                  <dt class="ficha-info__rotulo">Especialidade</dt>
+                  <dd class="ficha-info__valor">
+                    {{ origem.especialidade.gatilho }} — {{ rotuloEfeitoEspecialidade(origem.especialidade.efeito) }}
+                  </dd>
+                </div>
+              </dl>
+              <div class="ficha-identidade__formacoes">
+                @for (linha of origem.formacao; track $index) {
+                  <div class="ficha-identidade__formacao-linha">
+                    <span>{{ linha.texto }}</span>
+                    @if (linha.parametro) {
+                      <span class="chip">{{ linha.parametro }}</span>
+                    }
+                    @if (efeitoAindaPendente(linha.bonus)) {
+                      <span class="chip chip--pendente" title="Registrado — ainda sem motor que aplique este efeito automaticamente.">
+                        Sem efeito automático ainda
+                      </span>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          } @else if (ajustavel()) {
+            <p class="ficha-visao__vazio">Origem ainda não definida.</p>
+          }
+        </div>
+      </section>
     </div>
   }
 

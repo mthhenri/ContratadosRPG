@@ -601,6 +601,13 @@
     border-color: var(--accent-border);
     background: var(--accent-dim);
   }
+
+  // Selo dos efeitos de Formação ainda sem motor que os aplique (m3-23/m3-25) — registro, não erro.
+  &--pendente {
+    color: var(--warning);
+    border-color: var(--warning);
+    background: color-mix(in srgb, var(--warning) 12%, transparent);
+  }
 }
 
 // Chip de classificação (mono, borda accent) — padrão do tema "CLASSE-E // CONFIDENCIAL".
@@ -1131,5 +1138,119 @@
       -webkit-appearance: none;
       margin: 0;
     }
+  }
+}
+
+// === Identidade (Personalidade + Origem, m3-23/m3-25) ===
+.ficha-identidade {
+  &__personalidade {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 14px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  &__valor {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  // "(imutável)" / "🔒 imutável" — nota discreta ao lado do valor travado (m3-24, refletido).
+  &__trava {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-mute);
+    cursor: help;
+  }
+
+  &__origem-cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 12px;
+  }
+
+  &__subtitulo {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-mute);
+    margin: 0;
+    flex: 1;
+  }
+
+  &__origem-nome {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 6px;
+  }
+
+  &__leitura {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__formacoes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  &__formacao-linha {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text-dim);
+    padding: 8px 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+  }
+
+  // Mini-editor de Origem: campos empilhados + a dupla de linhas de Formação.
+  &__editor {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__campo {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  &__especialidade {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+
+    @include bp.mobile {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__formacao-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
   }
 }

@@ -1,4 +1,4 @@
-import { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
+import { ArquetipoEnum, ClasseEnum, EspecialidadeEfeitoEnum } from '@contratados-rpg/shared/enums';
 import { classeBaseDeHabilidades } from '@contratados-rpg/shared/regras/agente';
 import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 
@@ -40,6 +40,18 @@ export function rotuloClasse(classe: ClasseEnum): string {
 /** Rótulo legível de um arquétipo. */
 export function rotuloArquetipo(arquetipo: ArquetipoEnum): string {
   return ROTULO_ARQUETIPO[arquetipo];
+}
+
+/** Rótulos legíveis dos três efeitos de Especialidade (`docs/core/sistema-v4.1.0.md` — "⬦ Especialidade"). */
+const ROTULO_EFEITO_ESPECIALIDADE: Record<EspecialidadeEfeitoEnum, string> = {
+  [EspecialidadeEfeitoEnum.DADO_EXTRA]: '+1 dado em um teste',
+  [EspecialidadeEfeitoEnum.BONUS_TESTE]: '+3 no resultado de um teste',
+  [EspecialidadeEfeitoEnum.DANO]: '+2 no dano',
+};
+
+/** Rótulo legível do efeito de uma Especialidade. */
+export function rotuloEfeitoEspecialidade(efeito: EspecialidadeEfeitoEnum): string {
+  return ROTULO_EFEITO_ESPECIALIDADE[efeito];
 }
 
 /**

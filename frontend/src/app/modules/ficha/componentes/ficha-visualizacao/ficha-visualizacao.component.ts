@@ -11,13 +11,22 @@ import {
   viewChild,
 } from '@angular/core';
 
-import { ArquetipoEnum, ClasseEnum, TipoDanoEnum } from '@contratados-rpg/shared/enums';
+import {
+  ArquetipoEnum,
+  ClasseEnum,
+  EspecialidadeEfeitoEnum,
+  FormacaoBonusEnum,
+  FormacaoParametroEnum,
+  TipoDanoEnum,
+} from '@contratados-rpg/shared/enums';
 import type {
   FichaAtributosDto,
   FichaComboDto,
   FichaHabilidadeDto,
+  FichaIdentidadeDto,
   FichaInventarioDto,
   FichaJogadorDadosDto,
+  FichaOrigemDto,
   FichaRolagemDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
@@ -32,6 +41,11 @@ import {
   somarLesoesAtributo,
 } from '@contratados-rpg/shared/regras/agente';
 import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
+import {
+  FORMACOES,
+  listarEfeitosPendentes,
+  type FormacaoDefinicaoDto,
+} from '@contratados-rpg/shared/regras/identidade';
 
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
 import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
@@ -43,9 +57,10 @@ import { CustoEnergiaFragmento, FichaInventario } from '../ficha-inventario/fich
 import { FichaRolagens } from '../ficha-rolagens/ficha-rolagens.component';
 import { EstadoSanidade, FichaSanidade } from '../ficha-sanidade/ficha-sanidade.component';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
+import { GRUPOS_FORMACAO, rotuloParametroFormacao } from '../../opcoes-formacao';
 import { CONDICOES_FICHA, type CondicoesFicha } from '../../condicoes-ficha';
 import { clamparVitalidade, type CampoVitalidadeAtual } from '../../ajuste-vitalidade';
-import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
+import { rotuloArquetipo, rotuloClasse, rotuloEfeitoEspecialidade } from '../../rotulos-ficha';
 import {
   ChaveInfoExtra,
   InfoExtra,
@@ -205,6 +220,13 @@ export class FichaVisualizacao {
    */
   readonly ajustavel = input(false);
 
+  /**
+   * `true` quando o autor é o **mestre** da campanha (distinto de `ajustavel`, que também vale pro
+   * dono) — só a Identidade (Personalidade/Origem) precisa distinguir os dois papéis: a trava de
+   * imutabilidade (m3-24) libera o mestre e prende o dono depois da primeira definição.
+   */
+  readonly ehMestre = input(false);
+
   /** Novo valor de Vida/Energia atual após um passo − / + ou digitação (já clampado). A página persiste. */
   readonly ajusteVitalidade = output<AjusteVitalidade>();
 
@@ -246,6 +268,16 @@ export class FichaVisualizacao {
 
   /** Anotações livres editadas (m3-32) — a página persiste em `dados.anotacoes`. */
   readonly ajusteAnotacoes = output<string>();
+
+  /** Nova Personalidade (m3-25) — a página persiste em `dados.identidade.personalidade`. */
+  readonly ajustePersonalidade = output<string>();
+
+  /**
+   * Nova Origem, definida ou trocada (m3-25) — a página persiste em `dados.identidade.origem` e
+   * aplica o delta de Formação aos derivados (`aplicarFormacaoAosDerivados`/`removerFormacaoDosDerivados`,
+   * m3-23), removendo o da Origem anterior antes de somar o da nova.
+   */
+  readonly ajusteOrigem = output<FichaOrigemDto>();
 
   /**
    * Utilizar uma habilidade gasta o custo da Energia atual (pode **negativar** — regra do documento).
@@ -312,8 +344,8 @@ export class FichaVisualizacao {
   /** Pontos mínimos para marcar Maestria (`sistema-v4.1.0.md`). */
   protected readonly limiteMaestria = MAESTRIA_PONTOS_MINIMO;
 
-  /** Campo de identidade em digitação (Codinome/Nível/Prestígio), ou `null` fora de edição. */
-  protected readonly editandoIdentidade = signal<'nome' | CampoDadosEscalar | null>(null);
+  /** Campo de identidade em digitação (Codinome/Nível/Prestígio/Personalidade), ou `null` fora de edição. */
+  protected readonly editandoIdentidade = signal<'nome' | 'personalidade' | CampoDadosEscalar | null>(null);
   private readonly entradaIdentidade = viewChild<ElementRef<HTMLInputElement>>('entradaIdentidade');
   private readonly entradaAnotacoes = viewChild<ElementRef<HTMLTextAreaElement>>('entradaAnotacoes');
   /** `true` enquanto o Dinheiro (m3-34, Informações Extras) está em edição. */
@@ -679,8 +711,160 @@ export class FichaVisualizacao {
   /** Maestria persistida (leitura) — o atributo que a carrega, ou `null`. */
   protected readonly maestriaAtual = computed(() => this.dados().maestria);
 
-  /** Abre a digitação de um campo de identidade (Codinome/Nível/Prestígio). */
-  protected editarIdentidade(campo: 'nome' | CampoDadosEscalar): void {
+  /** Identidade (m3-23) — ausente em fichas anteriores cai em "nada definido" (retrocompat). */
+  protected readonly identidade = computed<FichaIdentidadeDto>(
+    () => this.dados().identidade ?? { personalidade: null, origem: null },
+  );
+  protected readonly personalidadeDefinida = computed(() => this.identidade().personalidade !== null);
+  protected readonly origemAtual = computed(() => this.identidade().origem);
+  protected readonly origemDefinida = computed(() => this.origemAtual() !== null);
+
+  /**
+   * Trava de imutabilidade (m3-24, refletida — o backend é o árbitro): livre pro **mestre** sempre;
+   * pro **dono**, só até a primeira definição. Campo a campo — Personalidade e Origem travam
+   * independente uma da outra.
+   */
+  protected readonly personalidadeEditavel = computed(
+    () => this.ajustavel() && (this.ehMestre() || !this.personalidadeDefinida()),
+  );
+  protected readonly origemEditavel = computed(
+    () => this.ajustavel() && (this.ehMestre() || !this.origemDefinida()),
+  );
+
+  protected readonly gruposFormacao = GRUPOS_FORMACAO;
+  protected readonly rotuloParametroFormacao = rotuloParametroFormacao;
+  protected readonly rotuloEfeitoEspecialidade = rotuloEfeitoEspecialidade;
+  protected readonly efeitosEspecialidade = Object.values(EspecialidadeEfeitoEnum);
+  protected readonly parametroEsquivaOuBloqueio = FormacaoParametroEnum.ESQUIVA_OU_BLOQUEIO;
+  /** As 16 linhas de Formação sem campo onde aterrissar ainda (m3-23) — "selo" de registro (m3-25). */
+  protected readonly efeitosFormacaoPendentes = listarEfeitosPendentes(FORMACOES);
+
+  /** Editor de Origem aberto (mini-editor: 3 textos + Especialidade + 2 linhas de Formação). */
+  protected readonly editandoOrigem = signal(false);
+  protected readonly rascunhoOrigem = signal<FichaOrigemDto | null>(null);
+
+  /** Origem vazia — ponto de partida do rascunho quando ainda não há Origem definida. */
+  private origemVazia(): FichaOrigemDto {
+    return {
+      nome: '',
+      descricao: '',
+      saberDeCampo: '',
+      formacao: [
+        { bonus: null, parametro: null, texto: '' },
+        { bonus: null, parametro: null, texto: '' },
+      ],
+      especialidade: { gatilho: '', efeito: EspecialidadeEfeitoEnum.DADO_EXTRA },
+    };
+  }
+
+  /** Abre o editor de Origem, semeando o rascunho com a Origem atual (cópia — Cancelar não muta nada) ou vazia. */
+  protected editarOrigem(): void {
+    const atual = this.origemAtual();
+    this.rascunhoOrigem.set(
+      atual
+        ? { ...atual, formacao: atual.formacao.map((linha) => ({ ...linha })), especialidade: { ...atual.especialidade } }
+        : this.origemVazia(),
+    );
+    this.editandoOrigem.set(true);
+  }
+
+  /** Cancela a edição de Origem, descartando o rascunho. */
+  protected cancelarOrigem(): void {
+    this.editandoOrigem.set(false);
+    this.rascunhoOrigem.set(null);
+  }
+
+  /** Confirma a Origem — emite o rascunho inteiro para a página persistir e aplicar o delta de Formação. */
+  protected confirmarOrigem(): void {
+    const rascunho = this.rascunhoOrigem();
+    if (!rascunho) {
+      return;
+    }
+    this.editandoOrigem.set(false);
+    this.rascunhoOrigem.set(null);
+    this.ajusteOrigem.emit(rascunho);
+  }
+
+  /** Edita um dos três textos livres da Origem no rascunho (Nome/Descrição/Saber de Campo). */
+  protected mudarTextoOrigemRascunho(campo: 'nome' | 'descricao' | 'saberDeCampo', valor: string): void {
+    const atual = this.rascunhoOrigem();
+    if (!atual) {
+      return;
+    }
+    this.rascunhoOrigem.set({ ...atual, [campo]: valor });
+  }
+
+  /** Edita o gatilho (texto livre) da Especialidade no rascunho. */
+  protected mudarGatilhoEspecialidadeRascunho(valor: string): void {
+    const atual = this.rascunhoOrigem();
+    if (!atual) {
+      return;
+    }
+    this.rascunhoOrigem.set({ ...atual, especialidade: { ...atual.especialidade, gatilho: valor } });
+  }
+
+  /** Troca o efeito da Especialidade no rascunho. */
+  protected mudarEfeitoEspecialidadeRascunho(valor: string): void {
+    const atual = this.rascunhoOrigem();
+    if (!atual) {
+      return;
+    }
+    this.rascunhoOrigem.set({
+      ...atual,
+      especialidade: { ...atual.especialidade, efeito: valor as EspecialidadeEfeitoEnum },
+    });
+  }
+
+  /**
+   * Troca o bônus de uma das duas linhas de Formação do rascunho — `''` é "Outro (autorizado pelo
+   * Mestre)" (`bonus: null`, escape do documento). Preenche `texto` com o rótulo do catálogo (o
+   * usuário pode reescrever depois) e zera `parametro` — a linha nova pode não exigir o mesmo tipo.
+   */
+  protected mudarBonusFormacaoRascunho(indice: number, valorSelecionado: string): void {
+    const atual = this.rascunhoOrigem();
+    if (!atual) {
+      return;
+    }
+    const bonus = valorSelecionado === '' ? null : (valorSelecionado as FormacaoBonusEnum);
+    const formacao = atual.formacao.map((linha, i) =>
+      i === indice ? { bonus, parametro: null, texto: bonus ? FORMACOES[bonus].rotulo : '' } : linha,
+    );
+    this.rascunhoOrigem.set({ ...atual, formacao });
+  }
+
+  /** Edita o parâmetro de uma linha de Formação do rascunho (`''` grava `null`). */
+  protected mudarParametroFormacaoRascunho(indice: number, valor: string): void {
+    const atual = this.rascunhoOrigem();
+    if (!atual) {
+      return;
+    }
+    const formacao = atual.formacao.map((linha, i) => (i === indice ? { ...linha, parametro: valor || null } : linha));
+    this.rascunhoOrigem.set({ ...atual, formacao });
+  }
+
+  /** Edita o texto de exibição de uma linha de Formação do rascunho. */
+  protected mudarTextoFormacaoRascunho(indice: number, valor: string): void {
+    const atual = this.rascunhoOrigem();
+    if (!atual) {
+      return;
+    }
+    const formacao = atual.formacao.map((linha, i) => (i === indice ? { ...linha, texto: valor } : linha));
+    this.rascunhoOrigem.set({ ...atual, formacao });
+  }
+
+  /** Definição de `FORMACOES` da linha `indice` do rascunho — `null` no bônus custom (`bonus: null`). */
+  protected definicaoFormacaoRascunho(indice: number): FormacaoDefinicaoDto | null {
+    const bonus = this.rascunhoOrigem()?.formacao[indice]?.bonus;
+    return bonus ? FORMACOES[bonus] : null;
+  }
+
+  /** `true` quando o bônus de Formação escolhido é uma das 16 linhas ainda sem efeito automático (m3-23/m3-25). */
+  protected efeitoAindaPendente(bonus: FormacaoBonusEnum | null): boolean {
+    return bonus !== null && this.efeitosFormacaoPendentes.some((definicao) => definicao.codigo === bonus);
+  }
+
+  /** Abre a digitação de um campo de identidade (Codinome/Nível/Prestígio/Personalidade). */
+  protected editarIdentidade(campo: 'nome' | 'personalidade' | CampoDadosEscalar): void {
     this.editandoIdentidade.set(campo);
   }
 
@@ -691,10 +875,12 @@ export class FichaVisualizacao {
 
   /**
    * Confirma o campo de identidade digitado. Codinome (relacional) sai por `ajusteNome`; Nível/
-   * Prestígio (documento) por `ajusteCampoDados`. Sem trava de faixa (liberdade total — m3-10); o
-   * guard evita o commit duplo do blur após o Enter.
+   * Prestígio (documento) por `ajusteCampoDados`; Personalidade (m3-25) por `ajustePersonalidade`.
+   * Sem trava de faixa (liberdade total — m3-10; a Personalidade tem sua própria trava de
+   * imutabilidade, arbitrada pelo backend — m3-24, o front só esconde o lápis). O guard evita o
+   * commit duplo do blur após o Enter.
    */
-  protected confirmarIdentidade(campo: 'nome' | CampoDadosEscalar, texto: string): void {
+  protected confirmarIdentidade(campo: 'nome' | 'personalidade' | CampoDadosEscalar, texto: string): void {
     if (this.editandoIdentidade() !== campo) {
       return;
     }
@@ -703,6 +889,13 @@ export class FichaVisualizacao {
       const aparado = texto.trim();
       if (aparado && aparado !== this.nome()) {
         this.ajusteNome.emit(aparado);
+      }
+      return;
+    }
+    if (campo === 'personalidade') {
+      const aparada = texto.trim();
+      if (aparada && aparada !== (this.identidade().personalidade ?? '')) {
+        this.ajustePersonalidade.emit(aparada);
       }
       return;
     }

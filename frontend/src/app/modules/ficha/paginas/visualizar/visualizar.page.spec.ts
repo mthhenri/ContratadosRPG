@@ -5,6 +5,8 @@ import { NEVER, Subject, of, throwError } from 'rxjs';
 import {
   ArquetipoEnum,
   ClasseEnum,
+  EspecialidadeEfeitoEnum,
+  FormacaoBonusEnum,
   HabilidadeCategoriaEnum,
   SeveridadeLesaoEnum,
   TipoCampanhaMembroPapelEnum,
@@ -25,6 +27,7 @@ import type {
   FichaAlterarDto,
   FichaAlteradaDto,
   FichaJogadorDadosDto,
+  FichaOrigemDto,
   FichaRecuperadaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 
@@ -598,6 +601,99 @@ describe('FichaVisualizar', () => {
     expect(d.estado.energiaAtual).toBe(d.estado.energiaMaxima);
     // Derivados recalculados do zero (não o defesa 50 customizado).
     expect(d.derivados).toEqual(calcularDerivados(ClasseEnum.ESPECIALISTA, nivel, d.atributos));
+  });
+
+  describe('Identidade (m3-25)', () => {
+    function origemComFormacao(bonus: FormacaoBonusEnum, nome = 'Ex-Militar'): FichaOrigemDto {
+      return {
+        nome,
+        descricao: 'Serviu antes da Fundação.',
+        saberDeCampo: 'Táticas de combate urbano',
+        formacao: [
+          { bonus, parametro: null, texto: 'Bônus principal' },
+          { bonus: null, parametro: null, texto: 'Bônus custom autorizado pelo Mestre' },
+        ],
+        especialidade: { gatilho: 'Sob fogo direto', efeito: EspecialidadeEfeitoEnum.DADO_EXTRA },
+      };
+    }
+
+    it('define a Personalidade pela primeira vez — otimista, sem cascata', () => {
+      const { fixture } = montar({ usuarioLogadoId: 7 });
+      const componente = fixture.componentInstance;
+
+      componente['ajustarPersonalidade']('Valente');
+
+      expect(componente['ficha']()!.dados.identidade).toEqual({ personalidade: 'Valente', origem: null });
+    });
+
+    it('define a Origem pela primeira vez: aplica o delta de Formação aos derivados (+1m de Deslocamento)', () => {
+      const { fixture } = montar({ usuarioLogadoId: 7 });
+      const componente = fixture.componentInstance;
+      const carregada = componente['ficha']()!;
+      const derivadosBase = calcularDerivados(carregada.dados.classe, carregada.dados.nivel, carregada.dados.atributos);
+      componente['ficha'].set({ ...carregada, dados: { ...carregada.dados, derivados: derivadosBase } });
+
+      const origem = origemComFormacao(FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO);
+      componente['ajustarOrigem'](origem);
+
+      const d = componente['ficha']()!.dados;
+      expect(d.identidade).toEqual({ personalidade: null, origem });
+      expect(d.derivados!.deslocamento).toBe(derivadosBase.deslocamento! + 1);
+      // Os outros derivados não tocados pela Formação ficam intactos.
+      expect(d.derivados!.defesa).toBe(derivadosBase.defesa);
+    });
+
+    it('trocar a Origem: remove o delta da anterior e aplica o da nova a partir da mesma base', () => {
+      const { fixture } = montar({ usuarioLogadoId: 99 }); // mestre — livre pra trocar Origem já definida
+      const componente = fixture.componentInstance;
+      const carregada = componente['ficha']()!;
+      const derivadosBase = calcularDerivados(carregada.dados.classe, carregada.dados.nivel, carregada.dados.atributos);
+      const origemAntiga = origemComFormacao(FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO);
+      componente['ficha'].set({
+        ...carregada,
+        dados: {
+          ...carregada.dados,
+          identidade: { personalidade: null, origem: origemAntiga },
+          derivados: { ...derivadosBase, deslocamento: derivadosBase.deslocamento! + 1 },
+        },
+      });
+
+      const origemNova = origemComFormacao(FormacaoBonusEnum.LOGISTICA_INVENTARIO_MAXIMO, 'Ex-Policial');
+      componente['ajustarOrigem'](origemNova);
+
+      const d = componente['ficha']()!.dados;
+      expect(d.identidade!.origem).toEqual(origemNova);
+      // Deslocamento devolveu ao valor base (delta antigo removido); Inventário Máximo ganhou o novo.
+      expect(d.derivados!.deslocamento).toBe(derivadosBase.deslocamento);
+      expect(d.derivados!.inventarioMaximo).toBe(derivadosBase.inventarioMaximo! + 1);
+    });
+
+    it('"+1 dado em testes de Vigor" (efeito ainda pendente) é gravado sem alterar nenhum derivado numérico', () => {
+      const { fixture } = montar({ usuarioLogadoId: 7 });
+      const componente = fixture.componentInstance;
+      const carregada = componente['ficha']()!;
+      const derivadosBase = calcularDerivados(carregada.dados.classe, carregada.dados.nivel, carregada.dados.atributos);
+      componente['ficha'].set({ ...carregada, dados: { ...carregada.dados, derivados: derivadosBase } });
+
+      const origem = origemComFormacao(FormacaoBonusEnum.PERICIA_DADO_ATRIBUTO);
+      componente['ajustarOrigem'](origem);
+
+      // ROLAGEM ainda não tem consumidor (m3-23) — o registro é gravado, mas nenhum derivado muda.
+      expect(componente['ficha']()!.dados.derivados).toEqual(derivadosBase);
+      expect(componente['ficha']()!.dados.identidade!.origem).toEqual(origem);
+    });
+
+    it('sem derivados stored (ficha antiga), define a Origem sem quebrar', () => {
+      const { fixture } = montar({ usuarioLogadoId: 7 });
+      const componente = fixture.componentInstance;
+      const carregada = componente['ficha']()!;
+      componente['ficha'].set({ ...carregada, dados: { ...carregada.dados, derivados: undefined } });
+
+      const origem = origemComFormacao(FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO);
+      expect(() => componente['ajustarOrigem'](origem)).not.toThrow();
+      expect(componente['ficha']()!.dados.derivados).toBeUndefined();
+      expect(componente['ficha']()!.dados.identidade!.origem).toEqual(origem);
+    });
   });
 
   it('concede acesso ao membro selecionado e recarrega os acessos', () => {

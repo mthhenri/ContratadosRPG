@@ -1,6 +1,52 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-19 (**m3-24 — backend: validação de forma + imutabilidade da
+> Última atualização: 2026-07-19 (**m3-25 — frontend da Identidade (Personalidade + Origem)**: card
+> "Identidade" na aba **Visão Geral** (decisão do autor — a `m3-11` real não criou a aba "Identidade"
+> que a spec original previa; ver nota de desvio abaixo), no padrão de edição no próprio lugar de
+> `FichaVisualizacao`. **Personalidade** reusa o canal `editandoIdentidade` (mesmo padrão do
+> Codinome). **Origem** ganha um mini-editor próprio (`editandoOrigem`/`rascunhoOrigem`, no padrão
+> Salvar/Cancelar de `editarClasse`): 3 textos livres (nome/descrição/Saber de Campo), Especialidade
+> (gatilho + `<select>` de efeito) e as **2 linhas de Formação** — `<select>` das 21 linhas de
+> `FORMACOES` (m3-23, `optgroup` por grupo via `opcoes-formacao.ts`, novo) com opção "Outro
+> (autorizado pelo Mestre)" (`bonus: null`); ao escolher um bônus do catálogo, o `texto` de exibição
+> é pré-preenchido com o rótulo (editável depois) e o `parametro` zera. Quando a linha exige
+> parâmetro, aparece o controle — **Esquiva ou Bloqueio vira um `<select>` fechado** (não texto
+> livre: o motor casa a string exata contra `'esquiva'`/`'bloqueio'`, `DERIVADO_ESCOLHA`); os demais
+> tipos (Atributo/Categoria de arma/Tipo de dano/Condição) ainda não têm consumidor programático
+> (só `ROLAGEM`/`RESISTENCIA`, sem campo — m3-23), então ficam texto livre. **Selo dos efeitos
+> pendentes:** uma linha de Formação cujo alvo não está em `ALVOS_APLICAVEIS` (16 das 21) ganha um
+> chip "Sem efeito automático ainda" — contextual (só nas linhas escolhidas), não uma lista solta
+> das 16. **Trava de imutabilidade refletida** (m3-24 arbitra; o front só apresenta): novo input
+> `ehMestre` em `FichaVisualizacao` (distinto de `ajustavel`, que não diferenciava dono/mestre) —
+> `personalidadeEditavel`/`origemEditavel` = `ajustavel() && (ehMestre() || !jáDefinida())`; o dono
+> com campo já definido vê leitura + nota "(imutável)"/"🔒 imutável", sem lápis; o mestre sempre vê o
+> lápis. **Delta de Formação nos derivados** (entregável mais delicado): `shared/regras/identidade`
+> ganhou `removerFormacaoDosDerivados` — `aplicarFormacaoAosDerivados` passou a aceitar um 3º
+> parâmetro opcional `sinal: 1|-1` (multiplica `efeito.valor` antes de somar; default `1`,
+> retrocompatível com as chamadas de 2 argumentos do m3-23), e `removerFormacaoDosDerivados` é só
+> `sinal: -1` — reusa o mesmo switch, zero duplicação (proibições #26/#27). `visualizar.page.ts`
+> ganhou `ajustarOrigem`: se já havia uma Origem, remove o delta dela dos derivados **atuais**
+> (preserva ajustes manuais fora dos campos que a Formação toca) antes de somar o da nova — o mesmo
+> espírito de `aplicarDeltaBonus`/`ajustarClasse` (m3-10), só que a `removerFormacaoDosDerivados` do
+> shared faz o "subtrai" em vez de reimplementar na página. **Testes:** shared **332** (+5:
+> `removerFormacaoDosDerivados`, round-trip de cada alvo aplicável + troca de Origem sem duplicar
+> delta), frontend **418** (+14: 9 no componente — trava dono/mestre, auto-preenchimento do texto,
+> `<select>` de Esquiva-ou-Bloqueio, "Outro" grava `bonus: null`, selo pendente, cancelar descarta —
+> + 5 na página — Personalidade/Origem otimistas, delta aplicado/trocado/preservado, sem derivados
+> não quebra). **Verificado ao vivo no browser** (Playwright, dono + mestre reais, Postgres local):
+> dono define Personalidade e Origem (com Esquiva-ou-Bloqueio via `<select>` real), Deslocamento sobe
+> de 9m→10m na aba Combate; reload confirma a trava (dono sem lápis, nota "imutável"); o mestre abre
+> a mesma ficha e vê os dois lápis; `GET /ficha` confere a persistência real no Postgres. Spec em
+> `docs/specs/done/m3-25-frontend-identidade.spec.md`.
+>
+> **Desvio da spec original:** `m3-25-frontend-identidade.spec.md` foi escrita esperando uma aba
+> "Identidade" própria que a `m3-11` criaria — a `m3-11` real (já concluída) fechou com um conjunto
+> diferente de abas (Visão Geral/Combate/Inventário/Habilidades/Sanidade/Anotações), sem essa aba.
+> Perguntado, o autor escolheu encaixar o card dentro de **Visão Geral** (onde a identidade básica —
+> nome/classe/nível — já mora) em vez de abrir uma 7ª aba. Próxima task: **`m3-09`** (refinamento
+> mobile da ficha), depois **`m3-26`** (otimização de espaço).)
+>
+> (**m3-24 — backend: validação de forma + imutabilidade da
 > Identidade**: ensina o backend a validar a **forma** do bloco `identidade` (§11 camada 1) e a
 > impor a imutabilidade que o documento exige — *"assim que receber a descrição e efeito de sua
 > personalidade, ela não poderá mais ser mudada"* / *"uma vez definida, a Origem não pode ser
@@ -1681,9 +1727,9 @@ escolhe quais habilidades aplica (`FichaRolagemPassoDto.habilidades`; a primári
 (`PassoInterpretadoDto` ganhou `energiaGasta`/`energiaVariavel`/`habilidadesVinculadas`), e rolar um
 passo debita só a energia dele. Shared **260**, frontend **311**, lint/build AOT verdes.
 
-**`m3-23` (contrato + motor de Identidade) e `m3-24` (backend — validação + trava de imutabilidade
-da Identidade) concluídos** — ver os blocos no topo do arquivo. **Próxima task: `m3-25`** (frontend
-da Identidade), depois **`m3-09`** (mobile) e **`m3-26`** (otimização de espaço da ficha).
+**`m3-23`/`m3-24`/`m3-25` (Identidade: contrato+motor, backend, frontend) concluídos** — ver os
+blocos no topo do arquivo. **Próxima task: `m3-09`** (refinamento mobile da ficha), depois
+**`m3-26`** (otimização de espaço da ficha).
 **Antes de qualquer UI, ler `docs/design/DESIGN.md` e consumir os tokens de `docs/design/tema/`**
 (proibição #29).
 
@@ -1835,8 +1881,9 @@ Worktree isolada (`worktree-m3-32-combate-reforma`), depois integrada de volta a
 **Próxima task após esta integração**: a fila original `m3-24`→`m3-26` (Identidade —
 backend/frontend, mobile, otimização de espaço) — ver o bloco `m3-23` no topo do arquivo.
 
-**`m3-24` (backend — validação de forma + trava de imutabilidade da Identidade) concluído**
-(2026-07-19) — ver o bloco no topo do arquivo. **Próxima task: `m3-25`** (frontend da Identidade).
+**`m3-24` (backend — validação de forma + trava de imutabilidade da Identidade) e `m3-25` (frontend
+da Identidade) concluídos** (2026-07-19) — ver os blocos no topo do arquivo. **Próxima task:
+`m3-09`** (refinamento mobile da ficha).
 
 **Trilha paralela — extensão pós-M2 (`m2-16`/`m2-17`, specs adicionadas ao backlog depois do M2
 "fechado" acima, dependendo de fichas já entregues pelo M3): `m2-16` (fichas do membro na lista) e

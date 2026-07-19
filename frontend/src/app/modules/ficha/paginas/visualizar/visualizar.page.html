@@ -54,6 +54,7 @@
       [nome]="fichaAtual.nome"
       [dados]="fichaAtual.dados"
       [ajustavel]="podeGerenciar()"
+      [ehMestre]="ehMestre()"
       [abaInicial]="abaInicial"
       (abaMudou)="mudarAba($event)"
       (ajusteVitalidade)="ajustarVitalidade($event)"
@@ -70,6 +71,8 @@
       (ajusteRolagens)="ajustarRolagens($event)"
       (ajusteCombos)="ajustarCombos($event)"
       (ajusteAnotacoes)="ajustarAnotacoes($event)"
+      (ajustePersonalidade)="ajustarPersonalidade($event)"
+      (ajusteOrigem)="ajustarOrigem($event)"
     />
   } @else {
     <p class="ficha-pagina__carregando">Ficha não encontrada.</p>
