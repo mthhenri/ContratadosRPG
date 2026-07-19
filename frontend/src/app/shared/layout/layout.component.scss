@@ -331,6 +331,9 @@
     }
   }
 
+  // Deslogado: só "Entrar" (o Registrar saiu da topbar — segue acessível pelo link "Criar agora"
+  // da própria tela de login). Ícone + texto sempre visíveis, mobile e desktop — sem o colapso
+  // pra só-ícone que os outros botões da topbar têm, já que é o único item aqui.
   &__sessao {
     display: inline-flex;
     align-items: center;
@@ -347,26 +350,11 @@
     text-decoration: none;
 
     @include bp.mobile {
-      min-width: bp.$alvo-toque;
       min-height: bp.$alvo-toque;
-      justify-content: center;
-
-      span {
-        display: none;
-      }
     }
 
     &:hover {
       color: var(--text);
-    }
-
-    &--destaque {
-      color: var(--accent);
-
-      &:hover {
-        color: var(--accent);
-        text-decoration: underline;
-      }
     }
   }
 
