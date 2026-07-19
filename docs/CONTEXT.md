@@ -1,6 +1,37 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-16 (**aposentadoria da aplicação de efeitos de habilidade + habilidade
+> Última atualização: 2026-07-19 (**m3-23 — contrato + motor de Identidade**: fecha o contrato de
+> **Identidade** (Personalidade + Origem) no JSONB `ficha.dados` e o motor puro que interpreta os 21
+> bônus de Formação — só `shared/` e documentação, zero mudança em `backend/`/`frontend/` (entram em
+> `m3-24`/`m3-25`). Três enums novos de conteúdo de jogo: `FormacaoBonusEnum` (as 21 linhas, agrupadas
+> em Combate/Movimento/Perícia/Equipamento/Logística), `FormacaoParametroEnum` (o tipo de escolha que
+> uma linha exige — atributo, categoria de arma, tipo de dano, esquiva/bloqueio, condição) e
+> `EspecialidadeEfeitoEnum` (dado extra / bônus no teste / dano). Contrato em `ficha.dtos.ts`:
+> `FichaFormacaoDto` (`bonus`/`parametro`/`texto` — `bonus: null` é o escape do documento p/ bônus
+> customizado autorizado pelo Mestre), `FichaEspecialidadeDto`, `FichaOrigemDto` (nome/descrição/
+> exatamente 2 Formações/Especialidade/Saber de Campo — **imutável após definida**, trava em `m3-24`)
+> e `FichaIdentidadeDto` (`personalidade` + `origem`), campo **opcional** `identidade?` em
+> `FichaJogadorDadosDto` — fichas anteriores continuam válidas sem o campo. Motor novo
+> `shared/regras/identidade/`: tabela declarativa `FORMACOES` (as 21 linhas transcritas 1:1 do
+> documento, `Record<FormacaoBonusEnum, FormacaoDefinicaoDto>` — o tipo força as 21 chaves) e duas
+> funções puras, `aplicarFormacaoAosDerivados` (delta único sobre um `FichaDerivadosDto`, mesmo padrão
+> de `ajustarClasse`/m3-10) e `listarEfeitosPendentes`. **Cobertura real: 5 de 21** — só
+> `DERIVADO`/`DERIVADO_ESCOLHA`/`DANO_CORPO`/`DANO_FURTIVO_DADO` têm campo hoje em `FichaDerivadosDto`
+> (`deslocamento`, `inventarioMaximo`, `esquiva`/`bloqueio`, `danoCorpoACorpo`, `danoFurtivo`); as
+> outras 16 (`ROLAGEM`/`DURACAO_EFEITO`/`RESISTENCIA`/`SOBRECARGA`/`INICIATIVA`/`DT_REPARO`) ficam
+> **modeladas e corretas, sem consumidor** — decisão deliberada do autor, não apagar por "não usado":
+> quando os campos existirem, muda-se o aplicador, não a tabela. Novo helper `somarDanoFixo` em
+> `regras/agente/dano.ts` (soma ao componente fixo de uma notação de dano, reusando o padrão de
+> `incrementarDanoFurtivo` por analogia — sem duplicar fórmula, proibições #26/#27). Um fix pontual:
+> `EQUIPAMENTO_TURNO_EXTRA_STATUS` ("+1 turno extra de duração") ganhou o próprio alvo `DURACAO_EFEITO`
+> em vez de reusar `ROLAGEM` por engano. `SCHEMA.md` documenta o bloco `identidade` no exemplo JSONB e
+> sai de "ainda fora do contrato". **Testes:** shared **297** (+16: `somarDanoFixo` +5, `FORMACOES`/
+> `aplicarFormacaoAosDerivados`/`listarEfeitosPendentes` +11). Spec em
+> `docs/specs/done/m3-23-contrato-motor-identidade.spec.md`. **Sem verificação ao vivo** — task é só
+> `shared/` + documentação, sem UI/backend para rodar; validado por typecheck + suíte completa verde.
+> Feito numa worktree isolada (`worktree-m3-23-identidade`), depois integrada de volta a `master`.)
+>
+> (**aposentadoria da aplicação de efeitos de habilidade + habilidade
 > repetível por passo (m3-31)**: a **fusão automática de efeitos** na fórmula (m3-20) foi **removida** —
 > por decisão do dono, agregava complexidade com pouco retorno. Deletados: `aplicarEfeitos`/`alvoPadrao`,
 > o campo `efeitos` do catálogo + `HabilidadeBaseDto.efeitos` + `FichaHabilidadeDto.efeitos`, `RolagemEfeitoDto`,
@@ -1610,8 +1641,9 @@ escolhe quais habilidades aplica (`FichaRolagemPassoDto.habilidades`; a primári
 (`PassoInterpretadoDto` ganhou `energiaGasta`/`energiaVariavel`/`habilidadesVinculadas`), e rolar um
 passo debita só a energia dele. Shared **260**, frontend **311**, lint/build AOT verdes.
 
-**Próxima task:** o backlog anterior, renumerado — **`m3-23`→`m3-25` (Identidade** — contrato/motor,
-backend imutabilidade, frontend), **`m3-09` (mobile)** e **`m3-26` (otimização de espaço** da ficha).
+**`m3-23` (contrato + motor de Identidade) concluído** — ver o bloco no topo do arquivo. **Próxima
+task: `m3-24`** (backend — validação + trava de imutabilidade da Identidade), depois **`m3-25`**
+(frontend da Identidade), **`m3-09`** (mobile) e **`m3-26`** (otimização de espaço da ficha).
 **Antes de qualquer UI, ler `docs/design/DESIGN.md` e consumir os tokens de `docs/design/tema/`**
 (proibição #29).
 
