@@ -161,6 +161,19 @@ Contrato: `shared/src/dtos/ficha/ficha.dtos.ts`. Forma 1:1 com `sistema-v4.1.0.m
   },
   "maestria": "forca",                // keyof atributos | null — atributo com Maestria (m3-10);
                                       // único na ficha, só em atributo com 6+ (sistema-v4.1.0.md)
+  "identidade": {                     // m3-23: opcional — ausente em fichas anteriores a esta task
+    "personalidade": "Determinado",   // string | null — uma única palavra, um adjetivo
+    "origem": {                       // FichaOrigemDto | null — imutável após definida (m3-24 trava)
+      "nome": "Bombeiro",
+      "descricao": "...",
+      "formacao": [                   // exatamente 2 FichaFormacaoDto
+        { "bonus": "COMBATE_RESISTENCIA_TIPO_DANO", "parametro": "Químico", "texto": "+3 de resistência a dano Químico" },
+        { "bonus": null, "parametro": null, "texto": "+1 dado em testes de Vigor" } // bonus:null = custom autorizado pelo Mestre
+      ],
+      "especialidade": { "gatilho": "...", "efeito": "DADO_EXTRA" },
+      "saberDeCampo": "..."
+    }
+  },
   "estado": {
     "vidaAtual": 34,                  // atual PODE exceder a máxima (m3-10)
     "energiaAtual": 18,               // pode negativar; PODE exceder a máxima (m3-10)
@@ -206,8 +219,15 @@ máximos stored. Campos `derivados` **opcionais** — ausentes em fichas anterio
 cálculo de `shared/regras` como fallback. (A Patente segue derivada do Prestígio como rótulo; se
 editada, mora em `derivados`.)
 
-**Ainda fora do contrato:** Identidade (Personalidade, Origem: Formação/Especialidade/Saber de Campo),
-Dinheiro corrente e Peculiaridade de Experimento — entram quando as tasks de ficha os exigirem.
+**Ainda fora do contrato:** Dinheiro corrente e Peculiaridade de Experimento — entram quando as
+tasks de ficha os exigirem. **Identidade** (Personalidade, Origem) entrou em **m3-23**
+(`FichaIdentidadeDto`, `shared/regras/identidade`): a tabela `FORMACOES` cobre as 21 linhas de bônus
+de Formação do documento, mas só 5 têm campo hoje em `derivados` (`esquiva`/`bloqueio`,
+`deslocamento`, `danoCorpoACorpo`, `danoFurtivo`, `inventarioMaximo`) — as outras 16 (modificadores de
+rolagem, resistências, Sobrecarga, Iniciativa, DT de reparo) ficam modeladas e sem consumidor até os
+campos/motor que as aplicarão existirem. `FichaFormacaoDto.bonus: null` é o escape do documento ("Bônus
+adicionais podem ser autorizados pelo Mestre") — nesse caso só o `texto` livre é exibido. Sem
+validação nem trava de imutabilidade ainda (`m3-24`); sem UI ainda (`m3-25`).
 **Maestrias** entraram em **m3-10** (`maestria`, campo único `keyof atributos | null`). As
 sub-coleções de jogo — **sequelas/traumas/lesões** (Sanidade), **habilidades**, **inventário** e
 **presets de rolagem** (`rolagens`) — moram no `dados` e ganham editores/abas nas tasks `m3-11`…`m3-15`.
