@@ -1,11 +1,15 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import type {
+  FichaIdentidadeDto,
   FichaInternoCriarDto,
   FichaJogadorDadosDto,
+  FichaOrigemDto,
   FichaRecuperadaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
   ClasseEnum,
+  EspecialidadeEfeitoEnum,
+  FormacaoBonusEnum,
   TipoCampanhaMembroPapelEnum,
   TipoFichaEnum,
 } from '@contratados-rpg/shared/enums';
@@ -99,6 +103,33 @@ function comSnapshot(dados: FichaJogadorDadosDto): FichaJogadorDadosDto {
       }),
     },
     derivados: calcularDerivados(dados.classe, dados.nivel, dados.atributos),
+  };
+}
+
+/** Origem válida (m3-24) — 2 Formações, uma com parâmetro exigido e outra sem, Especialidade e Saber de Campo. */
+function criarOrigem(overrides: Partial<FichaOrigemDto> = {}): FichaOrigemDto {
+  return {
+    nome: 'Ex-Militar',
+    descricao: 'Serviu nas forças armadas antes de ser recrutado pela Fundação.',
+    formacao: [
+      { bonus: FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO, parametro: null, texto: '+1 de Deslocamento' },
+      {
+        bonus: FormacaoBonusEnum.COMBATE_DADO_CATEGORIA_ARMA,
+        parametro: 'Armas de Fogo',
+        texto: '+1 dado em testes com Armas de Fogo',
+      },
+    ],
+    especialidade: { gatilho: 'Sob fogo direto', efeito: EspecialidadeEfeitoEnum.DADO_EXTRA },
+    saberDeCampo: 'Táticas de combate urbano',
+    ...overrides,
+  };
+}
+
+function criarIdentidade(overrides: Partial<FichaIdentidadeDto> = {}): FichaIdentidadeDto {
+  return {
+    personalidade: 'Valente',
+    origem: criarOrigem(),
+    ...overrides,
   };
 }
 
@@ -304,6 +335,140 @@ describe('FichaService', () => {
 
       expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
     });
+
+    describe('forma da Identidade (m3-24)', () => {
+      beforeEach(() => {
+        campanhaRepositorio.recuperarMembro.mockResolvedValue({
+          papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+        });
+        fichaRepositorio.criarFicha.mockResolvedValue({ id: 5 });
+      });
+
+      it('aceita uma ficha com Identidade válida', async () => {
+        await expect(
+          service.criarFicha(
+            { campanhaId: 3, nome: 'Agente Alfa', dados: criarDados({ identidade: criarIdentidade() }) },
+            usuarioDono,
+          ),
+        ).resolves.toBeDefined();
+      });
+
+      it('aceita uma ficha sem o bloco identidade (retrocompatível, anterior à m3-23)', async () => {
+        await expect(
+          service.criarFicha({ campanhaId: 3, nome: 'Agente Alfa', dados: criarDados() }, usuarioDono),
+        ).resolves.toBeDefined();
+      });
+
+      it('lança BusinessException para Personalidade com mais de uma palavra', async () => {
+        await expect(
+          service.criarFicha(
+            {
+              campanhaId: 3,
+              nome: 'Agente Alfa',
+              dados: criarDados({ identidade: criarIdentidade({ personalidade: 'Muito Valente' }) }),
+            },
+            usuarioDono,
+          ),
+        ).rejects.toThrow(BusinessException);
+        expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+      });
+
+      it.each([1, 3])('lança BusinessException quando a Formação tem %i entradas', async (quantidade) => {
+        const origem = criarOrigem({
+          formacao: Array.from({ length: quantidade }, () => criarOrigem().formacao[0]),
+        });
+
+        await expect(
+          service.criarFicha(
+            {
+              campanhaId: 3,
+              nome: 'Agente Alfa',
+              dados: criarDados({ identidade: criarIdentidade({ origem }) }),
+            },
+            usuarioDono,
+          ),
+        ).rejects.toThrow(BusinessException);
+        expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+      });
+
+      it('lança BusinessException quando o bônus de Formação não existe em FormacaoBonusEnum', async () => {
+        const origem = criarOrigem({
+          formacao: [
+            { bonus: 'BONUS_INEXISTENTE' as FormacaoBonusEnum, parametro: null, texto: 'Bônus inventado' },
+            criarOrigem().formacao[1],
+          ],
+        });
+
+        await expect(
+          service.criarFicha(
+            {
+              campanhaId: 3,
+              nome: 'Agente Alfa',
+              dados: criarDados({ identidade: criarIdentidade({ origem }) }),
+            },
+            usuarioDono,
+          ),
+        ).rejects.toThrow(BusinessException);
+        expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+      });
+
+      it('lança BusinessException quando falta o parâmetro exigido pela definição da Formação', async () => {
+        const origem = criarOrigem({
+          formacao: [
+            { bonus: FormacaoBonusEnum.COMBATE_DADO_CATEGORIA_ARMA, parametro: null, texto: 'Sem parâmetro' },
+            criarOrigem().formacao[0],
+          ],
+        });
+
+        await expect(
+          service.criarFicha(
+            {
+              campanhaId: 3,
+              nome: 'Agente Alfa',
+              dados: criarDados({ identidade: criarIdentidade({ origem }) }),
+            },
+            usuarioDono,
+          ),
+        ).rejects.toThrow(BusinessException);
+        expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+      });
+
+      it('lança BusinessException quando falta o texto de uma Formação (mesmo com bônus custom)', async () => {
+        const origem = criarOrigem({
+          formacao: [{ bonus: null, parametro: null, texto: '' }, criarOrigem().formacao[1]],
+        });
+
+        await expect(
+          service.criarFicha(
+            {
+              campanhaId: 3,
+              nome: 'Agente Alfa',
+              dados: criarDados({ identidade: criarIdentidade({ origem }) }),
+            },
+            usuarioDono,
+          ),
+        ).rejects.toThrow(BusinessException);
+        expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+      });
+
+      it('lança BusinessException quando o efeito da Especialidade não existe em EspecialidadeEfeitoEnum', async () => {
+        const origem = criarOrigem({
+          especialidade: { gatilho: 'Sob fogo direto', efeito: 'EFEITO_INEXISTENTE' as EspecialidadeEfeitoEnum },
+        });
+
+        await expect(
+          service.criarFicha(
+            {
+              campanhaId: 3,
+              nome: 'Agente Alfa',
+              dados: criarDados({ identidade: criarIdentidade({ origem }) }),
+            },
+            usuarioDono,
+          ),
+        ).rejects.toThrow(BusinessException);
+        expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe('listarFichas', () => {
@@ -501,6 +666,147 @@ describe('FichaService', () => {
       ).rejects.toThrow(ResourceNotFoundException);
 
       expect(fichaRepositorio.alterarFicha).not.toHaveBeenCalled();
+    });
+
+    describe('imutabilidade da Identidade (m3-24)', () => {
+      const fichaComIdentidade: FichaRecuperadaDto = {
+        ...fichaPersistida,
+        dados: criarDados({ identidade: criarIdentidade() }),
+      };
+
+      it('lança BusinessException quando o dono altera a Personalidade já definida', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaComIdentidade);
+
+        await expect(
+          service.alterarFicha(
+            {
+              id: 5,
+              nome: 'Agente Alfa',
+              dados: criarDados({ identidade: criarIdentidade({ personalidade: 'Cruel' }) }),
+            },
+            usuarioDono,
+          ),
+        ).rejects.toThrow(BusinessException);
+        expect(fichaRepositorio.alterarFicha).not.toHaveBeenCalled();
+      });
+
+      it('permite o mestre alterar a Personalidade já definida', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaComIdentidade);
+        campanhaRepositorio.recuperarMembro.mockResolvedValue({
+          papel: TipoCampanhaMembroPapelEnum.MESTRE,
+        });
+        fichaRepositorio.alterarFicha.mockResolvedValue(fichaComIdentidade);
+
+        const dadosAlterados = criarDados({ identidade: criarIdentidade({ personalidade: 'Cruel' }) });
+        await service.alterarFicha({ id: 5, nome: 'Agente Alfa', dados: dadosAlterados }, usuarioMestre);
+
+        expect(fichaRepositorio.alterarFicha).toHaveBeenCalledWith({
+          id: 5,
+          nome: 'Agente Alfa',
+          dados: dadosAlterados,
+        });
+      });
+
+      it('permite o dono definir a Personalidade pela primeira vez (era null)', async () => {
+        const fichaSemPersonalidade: FichaRecuperadaDto = {
+          ...fichaPersistida,
+          dados: criarDados({ identidade: criarIdentidade({ personalidade: null }) }),
+        };
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaSemPersonalidade);
+        fichaRepositorio.alterarFicha.mockResolvedValue(fichaSemPersonalidade);
+
+        await expect(
+          service.alterarFicha(
+            { id: 5, nome: 'Agente Alfa', dados: criarDados({ identidade: criarIdentidade() }) },
+            usuarioDono,
+          ),
+        ).resolves.toBeDefined();
+        expect(fichaRepositorio.alterarFicha).toHaveBeenCalled();
+      });
+
+      it('lança BusinessException quando o dono altera a Origem já definida', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaComIdentidade);
+        const origemAlterada = criarOrigem({ nome: 'Ex-Policial' });
+
+        await expect(
+          service.alterarFicha(
+            {
+              id: 5,
+              nome: 'Agente Alfa',
+              dados: criarDados({ identidade: criarIdentidade({ origem: origemAlterada }) }),
+            },
+            usuarioDono,
+          ),
+        ).rejects.toThrow(BusinessException);
+        expect(fichaRepositorio.alterarFicha).not.toHaveBeenCalled();
+      });
+
+      it('permite o mestre alterar a Origem já definida', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaComIdentidade);
+        campanhaRepositorio.recuperarMembro.mockResolvedValue({
+          papel: TipoCampanhaMembroPapelEnum.MESTRE,
+        });
+        const dadosAlterados = criarDados({
+          identidade: criarIdentidade({ origem: criarOrigem({ nome: 'Ex-Policial' }) }),
+        });
+        fichaRepositorio.alterarFicha.mockResolvedValue(fichaComIdentidade);
+
+        await service.alterarFicha({ id: 5, nome: 'Agente Alfa', dados: dadosAlterados }, usuarioMestre);
+
+        expect(fichaRepositorio.alterarFicha).toHaveBeenCalledWith({
+          id: 5,
+          nome: 'Agente Alfa',
+          dados: dadosAlterados,
+        });
+      });
+
+      it('permite o dono definir a Origem pela primeira vez (era null)', async () => {
+        const fichaSemOrigem: FichaRecuperadaDto = {
+          ...fichaPersistida,
+          dados: criarDados({ identidade: criarIdentidade({ origem: null }) }),
+        };
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaSemOrigem);
+        fichaRepositorio.alterarFicha.mockResolvedValue(fichaSemOrigem);
+
+        await expect(
+          service.alterarFicha(
+            { id: 5, nome: 'Agente Alfa', dados: criarDados({ identidade: criarIdentidade() }) },
+            usuarioDono,
+          ),
+        ).resolves.toBeDefined();
+        expect(fichaRepositorio.alterarFicha).toHaveBeenCalled();
+      });
+
+      it('permite reenviar a Origem já definida sem alterá-la (mesmo conteúdo)', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaComIdentidade);
+        fichaRepositorio.alterarFicha.mockResolvedValue(fichaComIdentidade);
+
+        await expect(
+          service.alterarFicha(
+            { id: 5, nome: 'Agente Alfa', dados: criarDados({ identidade: criarIdentidade() }) },
+            usuarioDono,
+          ),
+        ).resolves.toBeDefined();
+        expect(fichaRepositorio.alterarFicha).toHaveBeenCalled();
+      });
+
+      it('travar a Personalidade não trava a Origem — dono define Origem sem tocar na Personalidade travada', async () => {
+        const fichaComPersonalidadeSoDefinida: FichaRecuperadaDto = {
+          ...fichaPersistida,
+          dados: criarDados({ identidade: criarIdentidade({ origem: null }) }),
+        };
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaComPersonalidadeSoDefinida);
+        fichaRepositorio.alterarFicha.mockResolvedValue(fichaComPersonalidadeSoDefinida);
+
+        // Personalidade permanece igual (já travada); Origem é definida agora — não deve travar.
+        await expect(
+          service.alterarFicha(
+            { id: 5, nome: 'Agente Alfa', dados: criarDados({ identidade: criarIdentidade() }) },
+            usuarioDono,
+          ),
+        ).resolves.toBeDefined();
+        expect(fichaRepositorio.alterarFicha).toHaveBeenCalled();
+      });
     });
   });
 

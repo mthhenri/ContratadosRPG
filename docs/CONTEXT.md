@@ -1,6 +1,33 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-19 (**m3-23 — contrato + motor de Identidade**: fecha o contrato de
+> Última atualização: 2026-07-19 (**m3-24 — backend: validação de forma + imutabilidade da
+> Identidade**: ensina o backend a validar a **forma** do bloco `identidade` (§11 camada 1) e a
+> impor a imutabilidade que o documento exige — *"assim que receber a descrição e efeito de sua
+> personalidade, ela não poderá mais ser mudada"* / *"uma vez definida, a Origem não pode ser
+> alterada"*. Sem frontend (`m3-25`). `FichaService.validarDadosContraRegras` ganhou
+> `validarFormaIdentidade`/`validarFormaOrigem`: Personalidade uma única palavra (sem espaço
+> interno, aparada), Origem com exatamente 2 Formações, cada bônus de Formação existente em
+> `FORMACOES` (reusa o catálogo de `shared/regras/identidade`, m3-23 — nenhuma regra de conteúdo
+> reimplementada, proibições #26/#28) com `parametro` presente quando a definição exige, `texto`
+> sempre obrigatório (inclusive no bônus custom `bonus: null`) e Especialidade com `efeito`
+> existente em `EspecialidadeEfeitoEnum`. `alterarFicha` ganhou `validarImutabilidadeIdentidade`:
+> **trava para o dono, o mestre passa** (decisão do autor — o mestre constrói as duas e o sistema
+> não versiona ficha, `SYSTEM.SPEC`, então uma trava total tornaria um erro de digitação
+> irrecuperável); campo a campo — travar Personalidade não trava Origem, e definir pela primeira
+> vez (`null` → valor) é sempre permitido, inclusive ao dono. `origensIguais` (privado, comparação
+> estrutural campo a campo — não por referência/serialização, já que o dono costuma reenviar o
+> documento inteiro a cada PUT) deixa o dono reenviar a Origem já definida sem alterá-la sem
+> disparar a trava por engano. **Testes:** backend **108** (+17: 8 de forma da Identidade em
+> `criarFicha` + 9 de imutabilidade em `alterarFicha`, cobrindo dono/mestre × Personalidade/Origem
+> × definir-primeira-vez/alterar/reenviar-igual). **Verificado ao vivo contra o Postgres** (padrão
+> m3-03/m3-04): registro de mestre+dono, campanha, entrada por convite, 3 casos de forma inválida
+> rejeitados na criação, definição inicial de Personalidade/Origem aceita, alteração pelo dono
+> rejeitada, reenvio idêntico aceito, alteração pelo mestre aceita e persistida — 14/14 checagens
+> via REST direto (sem UI, task é backend-only). Spec em
+> `docs/specs/done/m3-24-backend-identidade-imutabilidade.spec.md`. Próxima task: **m3-25**
+> (frontend da Identidade).)
+>
+> (**m3-23 — contrato + motor de Identidade**: fecha o contrato de
 > **Identidade** (Personalidade + Origem) no JSONB `ficha.dados` e o motor puro que interpreta os 21
 > bônus de Formação — só `shared/` e documentação, zero mudança em `backend/`/`frontend/` (entram em
 > `m3-24`/`m3-25`). Três enums novos de conteúdo de jogo: `FormacaoBonusEnum` (as 21 linhas, agrupadas
@@ -1654,9 +1681,9 @@ escolhe quais habilidades aplica (`FichaRolagemPassoDto.habilidades`; a primári
 (`PassoInterpretadoDto` ganhou `energiaGasta`/`energiaVariavel`/`habilidadesVinculadas`), e rolar um
 passo debita só a energia dele. Shared **260**, frontend **311**, lint/build AOT verdes.
 
-**`m3-23` (contrato + motor de Identidade) concluído** — ver o bloco no topo do arquivo. **Próxima
-task: `m3-24`** (backend — validação + trava de imutabilidade da Identidade), depois **`m3-25`**
-(frontend da Identidade), **`m3-09`** (mobile) e **`m3-26`** (otimização de espaço da ficha).
+**`m3-23` (contrato + motor de Identidade) e `m3-24` (backend — validação + trava de imutabilidade
+da Identidade) concluídos** — ver os blocos no topo do arquivo. **Próxima task: `m3-25`** (frontend
+da Identidade), depois **`m3-09`** (mobile) e **`m3-26`** (otimização de espaço da ficha).
 **Antes de qualquer UI, ler `docs/design/DESIGN.md` e consumir os tokens de `docs/design/tema/`**
 (proibição #29).
 
@@ -1805,8 +1832,11 @@ extração de Combos da branch) + 2 quebras silenciosas de tipo. **Testes pós-i
 **327**/327, backend **91**/91, frontend **404**/404; lint e build limpos nos 3 workspaces.
 Worktree isolada (`worktree-m3-32-combate-reforma`), depois integrada de volta a `master`.
 
-**Próxima task**: a fila original `m3-24`→`m3-26` (Identidade — backend/frontend, mobile,
-otimização de espaço) — ver o bloco `m3-23` no topo do arquivo.
+**Próxima task após esta integração**: a fila original `m3-24`→`m3-26` (Identidade —
+backend/frontend, mobile, otimização de espaço) — ver o bloco `m3-23` no topo do arquivo.
+
+**`m3-24` (backend — validação de forma + trava de imutabilidade da Identidade) concluído**
+(2026-07-19) — ver o bloco no topo do arquivo. **Próxima task: `m3-25`** (frontend da Identidade).
 
 **Trilha paralela — extensão pós-M2 (`m2-16`/`m2-17`, specs adicionadas ao backlog depois do M2
 "fechado" acima, dependendo de fichas já entregues pelo M3): `m2-16` (fichas do membro na lista) e
