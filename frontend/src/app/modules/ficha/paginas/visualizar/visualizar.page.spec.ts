@@ -908,18 +908,11 @@ describe('FichaVisualizar', () => {
   });
 
   // === Deep-link das abas (m3-11) ===
-
-  it('deep-link: o ?aba= válido da URL semeia a aba ativa da ficha (refresh preserva)', () => {
-    const { raiz } = montar({ usuarioLogadoId: 99, abaUrl: 'combate' });
-    // O painel de Combate está montado (não a Visão Geral) — a aba veio da URL.
-    expect(raiz.querySelector('#painel-combate')).not.toBeNull();
-    expect(raiz.querySelector('#painel-visao-geral')).toBeNull();
-  });
-
-  it('deep-link: um ?aba= inválido cai na Visão Geral', () => {
-    const { raiz } = montar({ usuarioLogadoId: 99, abaUrl: 'inexistente' });
-    expect(raiz.querySelector('#painel-visao-geral')).not.toBeNull();
-  });
+  // As duas provas de DOM (`#painel-combate`/`#painel-visao-geral` por `?aba=`) saíram nesta
+  // rodada: o redesenho de comparação visual (branch `claude/redesign-ficha-screen-*`) removeu a
+  // navegação por abas do template do `FichaVisualizacao` — só um card fica na tela, qualquer
+  // valor de `?aba=`. A reflexão da aba na URL (esta página → router) continua correta e testada
+  // abaixo, independente do filho renderizar ou não um painel por aba.
 
   it('reflete a aba escolhida no ?aba= da URL sem empilhar histórico (replaceUrl)', () => {
     const { fixture } = montar({ usuarioLogadoId: 99 });

@@ -4,15 +4,10 @@ import {
   ClasseEnum,
   EspecialidadeEfeitoEnum,
   FormacaoBonusEnum,
-  HabilidadeCategoriaEnum,
   ItemCategoriaEnum,
   SeveridadeLesaoEnum,
 } from '@contratados-rpg/shared/enums';
-import type {
-  FichaHabilidadeDto,
-  FichaJogadorDadosDto,
-  FichaOrigemDto,
-} from '@contratados-rpg/shared/dtos/ficha';
+import type { FichaJogadorDadosDto, FichaOrigemDto } from '@contratados-rpg/shared/dtos/ficha';
 import { calcularVida } from '@contratados-rpg/shared/regras/agente';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
@@ -20,8 +15,13 @@ import { FichaVisualizacao } from './ficha-visualizacao.component';
 
 /**
  * Prova a exibição read-only da ficha (m3-07): apresenta identidade (codinome, classe/arquétipo,
- * patente derivada), atributos, estado e os status derivados **via `shared/regras`** (mesma fonte
- * da edição, sem duplicar fórmula) e **não** expõe nenhum controle de formulário (é só leitura).
+ * patente derivada), vitalidade e os status derivados **via `shared/regras`** (mesma fonte da
+ * edição, sem duplicar fórmula) e **não** expõe nenhum controle de formulário fora do card.
+ *
+ * Redesenho de comparação visual (branch `claude/redesign-ficha-screen-*`): a tela ficou reduzida
+ * a este único card — abas, Atributos, Informações Extras e o card "Identidade" detalhado saíram
+ * da tela por ora. Os testes que cobriam exclusivamente essas seções removidas saíram junto; os
+ * que exercitam lógica pura do componente (sem depender do DOM removido) foram mantidos.
  */
 describe('FichaVisualizacao', () => {
   const dados: FichaJogadorDadosDto = {
@@ -72,18 +72,15 @@ describe('FichaVisualizacao', () => {
     return { fixture, raiz: fixture.nativeElement as HTMLElement };
   }
 
-  it('exibe codinome, classe/arquétipo e classificação, e é somente leitura', () => {
+  it('exibe codinome, classe/arquétipo e classificação, e é somente leitura quando não ajustável', () => {
     const { raiz } = montar(dados);
     expect(raiz.querySelector('.ficha-ident__nome')?.textContent?.trim()).toBe('Corvo');
     const chips = Array.from(raiz.querySelectorAll('.chip')).map((c) => c.textContent?.trim());
     expect(chips).toContain('Combatente');
     expect(chips).toContain('Mercenário');
     expect(raiz.querySelector('.chip-classificacao')?.textContent?.trim()).toBe('FICHA-JGD-0042');
-    // Nenhum controle editável — é a exibição read-only, não o formulário.
     expect(raiz.querySelector('input')).toBeNull();
     expect(raiz.querySelector('select')).toBeNull();
-    expect(raiz.querySelector('textarea')).toBeNull();
-    expect(raiz.querySelector('app-step-input')).toBeNull();
   });
 
   it('deriva a Vida Máxima via shared/regras (mesma fonte da edição)', () => {
@@ -116,95 +113,6 @@ describe('FichaVisualizacao', () => {
     expect(chips).toContain('Civil');
     // Só o chip de classe; nenhum chip extra de arquétipo.
     expect(chips.length).toBe(1);
-  });
-
-  /** Ativa uma aba clicando no seu `role="tab"` (m3-11). */
-  function trocarAba(fixture: ReturnType<typeof montar>['fixture'], aba: string): void {
-    const raiz = fixture.nativeElement as HTMLElement;
-    raiz.querySelector<HTMLButtonElement>(`#aba-${aba}`)!.click();
-    fixture.detectChanges();
-  }
-
-  it('lista as marcas de Sanidade (traumas/sequelas) na aba Sanidade', () => {
-    const alvo = montar(dados);
-    trocarAba(alvo.fixture, 'sanidade');
-    expect(alvo.raiz.querySelector('.ficha-cartao__meta')?.textContent).toContain('2 marcas');
-    // O editor de Sanidade (m3-12) renderiza as listas; leitura pura (não ajustável) sem controles.
-    const marcas = Array.from(alvo.raiz.querySelectorAll('.sanidade__nome')).map((m) =>
-      m.textContent?.trim(),
-    );
-    expect(marcas).toContain('Pânico');
-    expect(marcas).toContain('Insônia');
-  });
-
-  it('omite o card de anotações (peek da Visão Geral) quando não há texto', () => {
-    const { raiz } = montar({ ...dados, anotacoes: '   ' });
-    expect(raiz.querySelector('.ficha-visao__anotacoes')).toBeNull();
-  });
-
-  describe('aba Anotações (m3-32)', () => {
-    it('mostra o texto em leitura e não expõe o lápis quando não é ajustável', () => {
-      const alvo = montar(dados, 'Corvo', 42, false);
-      trocarAba(alvo.fixture, 'anotacoes');
-      expect(alvo.raiz.querySelector('#painel-anotacoes')?.textContent).toContain(
-        'Veterano de contenção.',
-      );
-      expect(alvo.raiz.querySelector('.ficha-cartao__lapis')).toBeNull();
-      expect(alvo.raiz.querySelector('textarea')).toBeNull();
-    });
-
-    it('mostra o placeholder quando não há anotações', () => {
-      const alvo = montar({ ...dados, anotacoes: '' }, 'Corvo', 42, false);
-      trocarAba(alvo.fixture, 'anotacoes');
-      expect(alvo.raiz.querySelector('#painel-anotacoes')?.textContent).toContain(
-        'Sem anotações.',
-      );
-    });
-
-    it('abre a textarea ao clicar no lápis (ajustável) e emite ao confirmar', () => {
-      const alvo = montar(dados, 'Corvo', 42, true);
-      trocarAba(alvo.fixture, 'anotacoes');
-      const emitidas: string[] = [];
-      alvo.fixture.componentInstance.ajusteAnotacoes.subscribe((a) => emitidas.push(a));
-
-      alvo.raiz.querySelector<HTMLButtonElement>('.ficha-cartao__lapis')!.click();
-      alvo.fixture.detectChanges();
-      const textarea = alvo.raiz.querySelector<HTMLTextAreaElement>('textarea')!;
-      expect(textarea).not.toBeNull();
-      textarea.value = 'Nova anotação.';
-      textarea.dispatchEvent(new Event('blur'));
-      alvo.fixture.detectChanges();
-
-      expect(emitidas).toEqual(['Nova anotação.']);
-    });
-
-    it('Escape cancela a edição sem emitir', () => {
-      const alvo = montar(dados, 'Corvo', 42, true);
-      trocarAba(alvo.fixture, 'anotacoes');
-      const emitidas: string[] = [];
-      alvo.fixture.componentInstance.ajusteAnotacoes.subscribe((a) => emitidas.push(a));
-
-      alvo.raiz.querySelector<HTMLButtonElement>('.ficha-cartao__lapis')!.click();
-      alvo.fixture.detectChanges();
-      const textarea = alvo.raiz.querySelector<HTMLTextAreaElement>('textarea')!;
-      textarea.value = 'Descartado.';
-      textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-      alvo.fixture.detectChanges();
-
-      expect(alvo.raiz.querySelector('textarea')).toBeNull();
-      expect(emitidas).toEqual([]);
-    });
-
-    it('não emite quando o texto confirmado é igual ao original', () => {
-      const componente = montar(dados, 'Corvo', 42, true).fixture.componentInstance;
-      const emitidas: string[] = [];
-      componente.ajusteAnotacoes.subscribe((a) => emitidas.push(a));
-
-      componente['editarAnotacoes']();
-      componente['confirmarAnotacoes'](dados.anotacoes);
-
-      expect(emitidas).toEqual([]);
-    });
   });
 
   describe('Dinheiro + Salário (m3-34)', () => {
@@ -259,32 +167,28 @@ describe('FichaVisualizacao', () => {
     });
   });
 
-  describe('Resistências no Combate (m3-36)', () => {
-    /** Ativa a aba Combate clicando no seu `role="tab"`. */
-    function trocarParaCombate(fixture: ReturnType<typeof montar>['fixture']): HTMLElement {
-      const raiz = fixture.nativeElement as HTMLElement;
-      raiz.querySelector<HTMLButtonElement>('#aba-combate')!.click();
-      fixture.detectChanges();
-      return raiz;
-    }
-
-    it('mostra sempre as cinco linhas de resistência, mesmo sem nenhum equipamento (tudo em 0)', () => {
-      const { fixture } = montar(dados);
-      const raiz = trocarParaCombate(fixture);
-      ['Físico', 'Balístico', 'Explosão', 'Químico', 'Geral'].forEach((tipo) => {
-        expect(raiz.textContent).toContain(tipo);
-      });
+  describe('Defesa/Resistências em miniatura (glance, redesenho de comparação visual)', () => {
+    it('mostra Defesa/Esquiva/Bloqueio e o placeholder de Contra-ataque, sempre só leitura', () => {
+      const { raiz } = montar(dados, 'Corvo', 42, true);
+      const caixas = Array.from(raiz.querySelectorAll('.ficha-combate-rapido .ficha-mini__rotulo')).map(
+        (r) => r.textContent?.trim(),
+      );
+      expect(caixas).toEqual(['Defesa', 'Esquiva', 'Bloqueio', 'Contra-ataque']);
+      // Nenhum botão/input aqui — glance somente leitura mesmo com ajustavel=true.
+      expect(raiz.querySelector('.ficha-combate-rapido button')).toBeNull();
+      expect(raiz.querySelector('.ficha-combate-rapido input')).toBeNull();
     });
 
-    /** Localiza a linha (`.ficha-info__linha`) de um tipo de dano dentro da aba Combate. */
-    function linhaDoTipo(raiz: HTMLElement, tipo: string): Element | undefined {
-      return Array.from(raiz.querySelectorAll('.ficha-info__linha')).find(
-        (linha) => linha.querySelector('.ficha-info__rotulo')?.textContent?.trim() === tipo,
+    it('mostra sempre as cinco linhas de Resistência, mesmo sem nenhum equipamento (tudo em 0)', () => {
+      const { raiz } = montar(dados);
+      const abrevs = Array.from(raiz.querySelectorAll('.ficha-resistencia__abrev')).map((a) =>
+        a.textContent?.trim(),
       );
-    }
+      expect(abrevs).toEqual(['Físico', 'Balíst.', 'Explos.', 'Químico', 'Geral']);
+    });
 
-    it('soma a resistência das Proteções equipadas e reage a mudança de equipamento', () => {
-      const alvo = montar({
+    it('soma a resistência das Proteções equipadas (mesmo shared/regras da aba Combate)', () => {
+      const { raiz } = montar({
         ...dados,
         inventario: {
           itens: [
@@ -303,84 +207,10 @@ describe('FichaVisualizacao', () => {
           amplificadores: [],
         },
       });
-      const raiz = trocarParaCombate(alvo.fixture);
-      expect(linhaDoTipo(raiz, 'Balístico')?.querySelector('.ficha-info__valor')?.textContent?.trim()).toBe('3');
-
-      // Desequipa via nova entrada de `dados` (componente controlado) — some da soma.
-      alvo.fixture.componentRef.setInput('dados', {
-        ...dados,
-        inventario: {
-          itens: [
-            {
-              nome: 'Colete Kevlar',
-              categoria: ItemCategoriaEnum.PROTECOES,
-              custo: 400,
-              peso: 2,
-              quantidade: 1,
-              guardada: false,
-              modificacoes: [],
-              resistencia: '3 [Balístico]',
-              equipado: false,
-            },
-          ],
-          amplificadores: [],
-        },
-      });
-      alvo.fixture.detectChanges();
-      expect(
-        linhaDoTipo(alvo.raiz, 'Balístico')?.querySelector('.ficha-info__valor')?.textContent?.trim(),
-      ).toBe('0');
-    });
-
-    it('permite editar a base manual de uma resistência (complementa o equipamento) quando ajustável', () => {
-      const alvo = montar(
-        {
-          ...dados,
-          inventario: {
-            itens: [
-              {
-                nome: 'Colete Kevlar',
-                categoria: ItemCategoriaEnum.PROTECOES,
-                custo: 400,
-                peso: 2,
-                quantidade: 1,
-                guardada: false,
-                modificacoes: [],
-                resistencia: '3 [Balístico]',
-                equipado: true,
-              },
-            ],
-            amplificadores: [],
-          },
-        },
-        'Corvo',
-        42,
-        true,
+      const balistico = Array.from(raiz.querySelectorAll('.ficha-resistencia')).find((box) =>
+        box.querySelector('.ficha-resistencia__abrev')?.textContent?.trim() === 'Balíst.',
       );
-      const raiz = trocarParaCombate(alvo.fixture);
-      const linhaResistencia = linhaDoTipo(raiz, 'Balístico')!;
-      const botao = linhaResistencia.querySelector<HTMLButtonElement>('button');
-      expect(botao).not.toBeNull();
-      expect(botao!.textContent?.trim()).toBe('3');
-
-      const emitidos: Array<{ tipo: string; valor: number }> = [];
-      alvo.fixture.componentInstance.ajusteResistencia.subscribe((ajuste) => emitidos.push(ajuste));
-
-      botao!.click();
-      alvo.fixture.detectChanges();
-      const entrada = linhaResistencia.querySelector<HTMLInputElement>('input')!;
-      entrada.value = '5';
-      entrada.dispatchEvent(new Event('blur'));
-      alvo.fixture.detectChanges();
-
-      expect(emitidos).toEqual([{ tipo: 'Balístico', valor: 5 }]);
-    });
-
-    it('não mostra affordance de edição na linha de resistência quando não ajustável (só leitura)', () => {
-      const alvo = montar(dados, 'Corvo', 42, false);
-      const raiz = trocarParaCombate(alvo.fixture);
-      const linhaResistencia = linhaDoTipo(raiz, 'Balístico');
-      expect(linhaResistencia?.querySelector('button')).toBeNull();
+      expect(balistico?.querySelector('.ficha-resistencia__valor')?.textContent?.trim()).toBe('3');
     });
   });
 
@@ -525,54 +355,7 @@ describe('FichaVisualizacao', () => {
     expect(ajustes).toEqual([{ campo: 'vidaMaxima', valor: 150 }]);
   });
 
-  it('edita um derivado (Informações Extras) e emite o override para persistir', () => {
-    const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
-    const ajustes: { chave: string; valor: number | string }[] = [];
-    fixture.componentInstance.ajusteDerivado.subscribe((a) => ajustes.push(a));
-
-    // Clica no valor de uma linha editável (ex.: Deslocamento) → abre o campo.
-    const editaveis = raiz.querySelectorAll<HTMLButtonElement>('.ficha-info__editavel');
-    expect(editaveis.length).toBeGreaterThan(0);
-    editaveis[0].click();
-    fixture.detectChanges();
-
-    const entrada = raiz.querySelector<HTMLInputElement>('.ficha-info__entrada')!;
-    entrada.value = '99';
-    entrada.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-
-    expect(ajustes).toHaveLength(1);
-    expect(ajustes[0].valor).toBe(99);
-  });
-
-  it('exibe o derivado STORED em vez do calculado quando presente', () => {
-    const { raiz } = montar(
-      { ...dados, derivados: { deslocamento: 42 } },
-      'Corvo',
-      42,
-      false,
-    );
-    const textoPainel = raiz.querySelector('.ficha-info')?.textContent ?? '';
-    // O override (42m) aparece, provando que o stored vence o calculado.
-    expect(textoPainel).toContain('42m');
-  });
-
-  it('não abre edição de derivado quando não é ajustável (só leitura)', () => {
-    const { raiz } = montar(dados);
-    expect(raiz.querySelector('.ficha-info__editavel')).toBeNull();
-  });
-
-  it('edita atributos em grupo: um lápis abre as dez caixinhas de uma vez', () => {
-    const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
-    expect(raiz.querySelector('.ficha-atributo--edicao')).toBeNull();
-
-    (raiz.querySelector('.ficha-cartao__lapis') as HTMLButtonElement).click();
-    fixture.detectChanges();
-
-    expect(raiz.querySelectorAll('.ficha-atributo--edicao').length).toBe(10);
-    expect(raiz.querySelectorAll('.ficha-atributo__maestria').length).toBe(10);
-  });
-
-  it('marca Maestria só em atributo com 6+ e emite atributos + maestria ao salvar', () => {
+  it('marca Maestria só em atributo com 6+ e emite atributos + maestria ao salvar (lógica, sem UI de Atributos na tela)', () => {
     const componente = montar(dados, 'Corvo', 42, true).fixture.componentInstance;
     const ajustes: { atributos: { vigor: number }; maestria: string | null }[] = [];
     componente.ajusteAtributos.subscribe((a) => ajustes.push(a));
@@ -599,33 +382,6 @@ describe('FichaVisualizacao', () => {
     expect(componente['rascunhoMaestria']()).toBe('forca');
     componente['ajustarAtributoRascunho']('forca', -1); // 6 → 5
     expect(componente['rascunhoMaestria']()).toBeNull();
-  });
-
-  it('mostra a estrela de Maestria no atributo marcado (leitura)', () => {
-    const documento = { ...dados, atributos: { ...dados.atributos, forca: 6 }, maestria: 'forca' as const };
-    const { raiz } = montar(documento, 'Corvo', 42, false);
-    expect(raiz.querySelector('.ficha-atributo--maestria .ficha-atributo__estrela')).not.toBeNull();
-  });
-
-  it('lesão reduz o atributo efetivo exibido (−N) e a Maestria sobrevive (base intacto)', () => {
-    const documento = {
-      ...dados,
-      atributos: { ...dados.atributos, forca: 6 },
-      maestria: 'forca' as const,
-      estado: {
-        ...dados.estado,
-        lesoes: [
-          { atributo: 'forca' as const, pontos: 1, severidade: SeveridadeLesaoEnum.LEVE, permanente: false },
-        ],
-      },
-    };
-    const { raiz } = montar(documento, 'Corvo', 42, false);
-    // O box de Força tem Maestria (estrela) E está lesionado; mostra o efetivo 5 e a penalidade −1.
-    const box = raiz.querySelector('.ficha-atributo--maestria')!;
-    expect(box.classList.contains('ficha-atributo--lesionado')).toBe(true);
-    expect(box.querySelector('.ficha-atributo__estrela')).not.toBeNull();
-    expect(box.querySelector('.ficha-atributo__valor')?.textContent).toContain('5');
-    expect(box.querySelector('.ficha-atributo__lesao')?.textContent?.trim()).toBe('−1');
   });
 
   it('edita Classe/Arquétipo: trocar para Civil limpa o arquétipo e emite classe + null', () => {
@@ -689,173 +445,6 @@ describe('FichaVisualizacao', () => {
     expect(raiz.querySelector('.ficha-barra--energia .ficha-barra__entrada')).toBeNull();
   });
 
-  // === Navegação por abas (m3-11) ===
-
-  it('renderiza as seis abas com a Visão Geral ativa por padrão (Rolagens mesclada em Combate — m3-37)', () => {
-    const { raiz } = montar(dados);
-    const abas = Array.from(raiz.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
-    expect(abas.map((a) => a.textContent?.trim())).toEqual([
-      'Visão Geral',
-      'Combate',
-      'Inventário',
-      'Habilidades',
-      'Sanidade & Lesões',
-      'Anotações',
-    ]);
-    const ativa = raiz.querySelector('[role="tab"][aria-selected="true"]');
-    expect(ativa?.textContent?.trim()).toBe('Visão Geral');
-    // O painel da Visão Geral está montado (identidade visível).
-    expect(raiz.querySelector('#painel-visao-geral')).not.toBeNull();
-    expect(raiz.querySelector('.ficha-ident__nome')?.textContent?.trim()).toBe('Corvo');
-  });
-
-  it('troca de aba sem recarregar: a Visão Geral some e o painel de Combate aparece', () => {
-    const alvo = montar(dados);
-    trocarAba(alvo.fixture, 'combate');
-    expect(alvo.raiz.querySelector('#painel-visao-geral')).toBeNull();
-    const combate = alvo.raiz.querySelector('#painel-combate');
-    expect(combate).not.toBeNull();
-    // Combate mostra Defesa/Esquiva/Bloqueio (derivados de combate reorganizados).
-    const rotulos = Array.from(combate!.querySelectorAll('.ficha-info__rotulo')).map((r) =>
-      r.textContent?.trim(),
-    );
-    expect(rotulos).toEqual(
-      expect.arrayContaining([
-        'Defesa',
-        'Esquiva',
-        'Bloqueio',
-        'Deslocamento',
-        'Proficiência',
-        'Hab. / Turno',
-      ]),
-    );
-  });
-
-  it('realoca Inventário para a aba Inventário e Hab./Turno para Combate (fora de Informações Extras)', () => {
-    const alvo = montar(dados);
-
-    // Visão Geral: "Informações Extras" não traz mais Inventário nem Hab. / Turno.
-    const gerais = Array.from(
-      alvo.raiz.querySelectorAll('#painel-visao-geral .ficha-info__rotulo'),
-    ).map((r) => r.textContent?.trim());
-    expect(gerais).not.toContain('Inventário');
-    expect(gerais).not.toContain('Hab. / Turno');
-    // As demais seguem lá (ex.: Percepção).
-    expect(gerais).toContain('Percepção');
-
-    // Combate ganhou Hab. / Turno.
-    trocarAba(alvo.fixture, 'combate');
-    const combate = Array.from(
-      alvo.raiz.querySelectorAll('#painel-combate .ficha-info__rotulo'),
-    ).map((r) => r.textContent?.trim());
-    expect(combate).toContain('Hab. / Turno');
-
-    // Inventário mostra o máximo (derivado realocado) e embute o editor de inventário (m3-14).
-    trocarAba(alvo.fixture, 'inventario');
-    const inventario = Array.from(
-      alvo.raiz.querySelectorAll('#painel-inventario .ficha-info__rotulo'),
-    ).map((r) => r.textContent?.trim());
-    expect(inventario).toEqual(['Máximo']);
-    expect(alvo.raiz.querySelector('#painel-inventario app-ficha-inventario')).not.toBeNull();
-  });
-
-  it('edita o Inventário máximo na aba Inventário e emite o override (persistência de m3-10)', () => {
-    const alvo = montar(dados, 'Corvo', 42, true);
-    const ajustes: { chave: string; valor: number | string }[] = [];
-    alvo.fixture.componentInstance.ajusteDerivado.subscribe((a) => ajustes.push(a));
-
-    trocarAba(alvo.fixture, 'inventario');
-    alvo.raiz.querySelector<HTMLButtonElement>('#painel-inventario .ficha-info__editavel')!.click();
-    alvo.fixture.detectChanges();
-
-    const entrada = alvo.raiz.querySelector<HTMLInputElement>('#painel-inventario .ficha-info__entrada')!;
-    entrada.value = '30';
-    entrada.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-
-    expect(ajustes).toEqual([{ chave: 'inventarioMaximo', valor: 30 }]);
-  });
-
-  it('emite abaMudou ao clicar numa aba (a página reflete no ?aba= da URL)', () => {
-    const { fixture, raiz } = montar(dados);
-    const emitidas: string[] = [];
-    fixture.componentInstance.abaMudou.subscribe((aba) => emitidas.push(aba));
-    raiz.querySelector<HTMLButtonElement>('#aba-habilidades')!.click();
-    expect(emitidas).toEqual(['habilidades']);
-  });
-
-  it('deep-link: abaInicial semeia a aba ativa (refresh preserva a aba)', () => {
-    TestBed.configureTestingModule({ imports: [FichaVisualizacao] });
-    const fixture = TestBed.createComponent(FichaVisualizacao);
-    fixture.componentRef.setInput('fichaId', 42);
-    fixture.componentRef.setInput('nome', 'Corvo');
-    fixture.componentRef.setInput('dados', dados);
-    fixture.componentRef.setInput('ajustavel', false);
-    fixture.componentRef.setInput('abaInicial', 'inventario');
-    fixture.detectChanges();
-    const raiz = fixture.nativeElement as HTMLElement;
-    expect(raiz.querySelector('#painel-inventario')).not.toBeNull();
-    expect(raiz.querySelector('[role="tab"][aria-selected="true"]')?.textContent?.trim()).toBe(
-      'Inventário',
-    );
-  });
-
-  it('a aba Habilidades embute o editor (m3-13) e propaga a mutação por ajusteHabilidades', () => {
-    const documento: FichaJogadorDadosDto = {
-      ...dados,
-      habilidades: [
-        {
-          nome: 'Tiro Certeiro',
-          categoria: HabilidadeCategoriaEnum.CLASSE,
-          custoEnergia: 2,
-          descricao: '',
-        },
-      ],
-    };
-    const alvo = montar(documento, 'Corvo', 42, true);
-    const emitidas: (readonly FichaHabilidadeDto[])[] = [];
-    alvo.fixture.componentInstance.ajusteHabilidades.subscribe((h) => emitidas.push(h));
-
-    trocarAba(alvo.fixture, 'habilidades');
-    // Editor presente com o item existente (chip + custo), não mais o placeholder.
-    expect(alvo.raiz.querySelector('.ficha-visao__construcao')).toBeNull();
-    expect(alvo.raiz.querySelector('.habilidades__custo')?.textContent?.trim()).toBe('[2 E]');
-    expect(alvo.raiz.querySelector('.ficha-cartao__meta')?.textContent).toContain('1 habilidade');
-
-    // Remover propaga a lista nova pela saída do componente.
-    alvo.raiz.querySelector<HTMLButtonElement>('.habilidades__acao--remover')!.click();
-    alvo.fixture.detectChanges();
-    alvo.raiz.querySelector<HTMLButtonElement>('.habilidades__salvar--remover')!.click();
-    expect(emitidas).toEqual([[]]);
-  });
-
-  it('embute o editor de Rolagens (m3-15) com os presets da ficha, mesclado na aba Combate (m3-37)', () => {
-    const documento: FichaJogadorDadosDto = {
-      ...dados,
-      rolagens: [{ nome: 'Ataque', formula: '1d20+PON' }],
-    };
-    const alvo = montar(documento);
-
-    trocarAba(alvo.fixture, 'combate');
-    expect(alvo.raiz.textContent).toContain('1 preset');
-    expect(alvo.raiz.querySelector('app-ficha-rolagens')).not.toBeNull();
-    // O preset aparece no editor (nome + fórmula), não num placeholder "em construção".
-    expect(alvo.raiz.textContent).toContain('1d20+PON');
-    expect(alvo.raiz.textContent).not.toContain('em construção');
-  });
-
-  it('embute o editor de Combos (m3-37) na mesma aba Combate', () => {
-    const documento: FichaJogadorDadosDto = {
-      ...dados,
-      rolagens: [{ nome: 'Ataque', formula: '1d20+PON' }],
-      combos: [{ nome: 'Abertura', passos: [{ nome: 'Golpe', rolagemNome: 'Ataque' }] }],
-    };
-    const alvo = montar(documento);
-
-    trocarAba(alvo.fixture, 'combate');
-    expect(alvo.raiz.querySelector('app-ficha-combos')).not.toBeNull();
-    expect(alvo.raiz.textContent).toContain('Abertura');
-  });
-
   const campoLuta = { chave: 'luta' as const, abrev: 'LUT', nome: 'Luta' };
 
   it('rola teste de atributo normal com kh1 + cm1 (margem de crítico natural; m3-31)', () => {
@@ -880,44 +469,10 @@ describe('FichaVisualizacao', () => {
     expect(spy.mock.calls[0][0].resultado.dados[0].desvantagem).toBe(true);
   });
 
-  it('mostra o derivado STORED de combate (Esquiva) quando presente', () => {
-    const alvo = montar({ ...dados, derivados: { esquiva: 77 } });
-    trocarAba(alvo.fixture, 'combate');
-    const combate = alvo.raiz.querySelector('#painel-combate');
-    expect(combate?.textContent).toContain('77');
-  });
-
-  it('edita Esquiva e Bloqueio no próprio lugar na aba Combate e emite o override', () => {
-    const alvo = montar(dados, 'Corvo', 42, true);
-    const ajustes: { chave: string; valor: number | string }[] = [];
-    alvo.fixture.componentInstance.ajusteDerivado.subscribe((a) => ajustes.push(a));
-    trocarAba(alvo.fixture, 'combate');
-
-    /** Abre o editor da linha de Combate com esse rótulo e confirma o valor digitado. */
-    const editarLinha = (rotulo: string, valor: string): void => {
-      const linha = Array.from(
-        alvo.raiz.querySelectorAll<HTMLElement>('#painel-combate .ficha-info__linha'),
-      ).find((item) => item.querySelector('.ficha-info__rotulo')?.textContent?.trim() === rotulo)!;
-      linha.querySelector<HTMLButtonElement>('.ficha-info__editavel')!.click();
-      alvo.fixture.detectChanges();
-      const entrada = alvo.raiz.querySelector<HTMLInputElement>(
-        '#painel-combate .ficha-info__entrada',
-      )!;
-      entrada.value = valor;
-      entrada.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-      alvo.fixture.detectChanges();
-    };
-
-    editarLinha('Esquiva', '19');
-    editarLinha('Bloqueio', '21');
-
-    expect(ajustes).toEqual([
-      { chave: 'esquiva', valor: 19 },
-      { chave: 'bloqueio', valor: 21 },
-    ]);
-  });
-
-  describe('Identidade (m3-25)', () => {
+  // === Identidade (m3-25) — só a lógica pura sobrevive nesta rodada: o card "Identidade"
+  // detalhado (Personalidade/Origem com Formação/Especialidade) saiu da tela; os métodos do
+  // componente continuam corretos e testados diretamente, sem depender do DOM removido.
+  describe('Identidade (m3-25) — lógica sem UI dedicada na tela', () => {
     const origemExemplo: FichaOrigemDto = {
       nome: 'Ex-Militar',
       descricao: 'Serviu nas forças armadas antes de ser recrutado.',
@@ -932,12 +487,6 @@ describe('FichaVisualizacao', () => {
       ],
       especialidade: { gatilho: 'Sob fogo direto', efeito: EspecialidadeEfeitoEnum.DADO_EXTRA },
     };
-
-    it('ficha sem o bloco identidade (retrocompat) mostra tudo como não definido', () => {
-      const { raiz } = montar(dados, 'Corvo', 42, true);
-      expect(raiz.querySelector('.ficha-identidade__personalidade')?.textContent).toContain('— Definir —');
-      expect(raiz.querySelector('.ficha-visao__vazio')?.textContent).toContain('Origem ainda não definida');
-    });
 
     it('dono define a Personalidade e a Origem pela primeira vez — emite os ajustes', () => {
       const alvo = montar(dados, 'Corvo', 42, true, false);
@@ -955,26 +504,6 @@ describe('FichaVisualizacao', () => {
 
       expect(personalidades).toEqual(['Valente']);
       expect(origens).toEqual([origemExemplo]);
-    });
-
-    it('dono com Personalidade/Origem já definidas vê somente leitura, sem lápis', () => {
-      const documento = { ...dados, identidade: { personalidade: 'Valente', origem: origemExemplo } };
-      const { raiz } = montar(documento, 'Corvo', 42, true, false);
-
-      expect(raiz.querySelector('.ficha-identidade__personalidade .ficha-ident__nome--editavel')).toBeNull();
-      expect(raiz.querySelector('.ficha-identidade__personalidade')?.textContent).toContain('Valente');
-      expect(raiz.querySelector('.ficha-identidade__personalidade')?.textContent).toContain('imutável');
-      expect(raiz.querySelector('.ficha-identidade__origem-cabecalho .ficha-ident__chip-lapis')).toBeNull();
-      expect(raiz.querySelector('.ficha-identidade__origem-cabecalho')?.textContent).toContain('imutável');
-      expect(raiz.querySelector('.ficha-identidade__origem-nome')?.textContent).toContain('Ex-Militar');
-    });
-
-    it('mestre com Personalidade/Origem já definidas continua vendo os lápis', () => {
-      const documento = { ...dados, identidade: { personalidade: 'Valente', origem: origemExemplo } };
-      const { raiz } = montar(documento, 'Corvo', 42, true, true);
-
-      expect(raiz.querySelector('.ficha-identidade__personalidade .ficha-ident__nome--editavel')).not.toBeNull();
-      expect(raiz.querySelector('.ficha-identidade__origem-cabecalho .ficha-ident__chip-lapis')).not.toBeNull();
     });
 
     it('escolher um bônus de Formação preenche o texto com o rótulo do catálogo e zera o parâmetro', () => {
@@ -999,46 +528,6 @@ describe('FichaVisualizacao', () => {
       const linha = componente['rascunhoOrigem']()!.formacao[0];
       expect(linha.bonus).toBeNull();
       expect(linha.texto).toBe('+1 dado em testes de Escalada');
-    });
-
-    it('Esquiva ou Bloqueio renderiza um <select> com as duas opções (o motor casa a string exata)', () => {
-      const alvo = montar(dados, 'Corvo', 42, true);
-      alvo.fixture.componentInstance['editarOrigem']();
-      alvo.fixture.componentInstance['mudarBonusFormacaoRascunho'](
-        0,
-        FormacaoBonusEnum.COMBATE_ESQUIVA_OU_BLOQUEIO,
-      );
-      alvo.fixture.detectChanges();
-
-      const selects = Array.from(alvo.raiz.querySelectorAll('.ficha-identidade__formacao-editor select'));
-      const opcoes = selects
-        .find((select) => Array.from(select.querySelectorAll('option')).some((o) => o.value === 'Esquiva'))
-        ?.querySelectorAll('option');
-      expect(Array.from(opcoes ?? []).map((o) => o.value)).toEqual(['', 'Esquiva', 'Bloqueio']);
-    });
-
-    it('marca "sem efeito automático" para um bônus ainda pendente, e não marca um já aplicado', () => {
-      const documento = {
-        ...dados,
-        identidade: {
-          personalidade: null,
-          origem: {
-            ...origemExemplo,
-            // MOVIMENTO_DESLOCAMENTO já é aplicado (DERIVADO); PERICIA_DADO_INICIATIVA ainda não (INICIATIVA).
-            formacao: [
-              { bonus: FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO, parametro: null, texto: 'Aplicado' },
-              { bonus: FormacaoBonusEnum.PERICIA_DADO_INICIATIVA, parametro: null, texto: 'Pendente' },
-            ],
-          },
-        },
-      };
-      const { raiz } = montar(documento, 'Corvo', 42, true);
-
-      const linhas = Array.from(raiz.querySelectorAll('.ficha-identidade__formacao-linha'));
-      const aplicada = linhas.find((linha) => linha.textContent?.includes('Aplicado'))!;
-      const pendente = linhas.find((linha) => linha.textContent?.includes('Pendente'))!;
-      expect(aplicada.querySelector('.chip--pendente')).toBeNull();
-      expect(pendente.querySelector('.chip--pendente')).not.toBeNull();
     });
 
     it('cancelar a edição de Origem descarta o rascunho sem emitir nada', () => {

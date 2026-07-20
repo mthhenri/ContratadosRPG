@@ -6,1236 +6,466 @@
     <span class="chip-classificacao">{{ classificacao() }}</span>
   </header>
 
-  <!-- Barra de abas (m3-11): navegação por seção; a ativa em accent, padrão do protótipo. -->
-  <div #barraAbas class="ficha-abas" role="tablist" aria-label="Seções da ficha">
-    @for (aba of abas; track aba.id; let i = $index) {
-      <button
-        class="ficha-abas__aba"
-        [class.ficha-abas__aba--ativa]="abaAtiva() === aba.id"
-        type="button"
-        role="tab"
-        [id]="'aba-' + aba.id"
-        [attr.aria-selected]="abaAtiva() === aba.id"
-        [attr.aria-controls]="'painel-' + aba.id"
-        [attr.tabindex]="abaAtiva() === aba.id ? 0 : -1"
-        (click)="selecionarAba(aba.id)"
-        (keydown)="navegarAbas($event, i)"
-      >
-        <app-icone class="ficha-abas__icone" [nome]="aba.icone" />
-        <span class="ficha-abas__rotulo">{{ aba.rotulo }}</span>
-      </button>
-    }
-  </div>
-
-  <!-- ABA: VISÃO GERAL — identidade + vitalidade + atributos + informações extras (m3-10). -->
-  @if (abaAtiva() === 'visao-geral') {
-    <div
-      class="ficha-visao__painel"
-      role="tabpanel"
-      id="painel-visao-geral"
-      aria-labelledby="aba-visao-geral"
-    >
-      <div class="ficha-visao__grade">
-        <!-- COLUNA ESQUERDA: identidade + vitalidade -->
-        <div class="ficha-visao__coluna">
-          <section class="ficha-cartao">
-            <div class="ficha-ident">
-              <span class="ficha-ident__avatar" aria-hidden="true"></span>
-              <div class="ficha-ident__texto">
-                <span class="ficha-ident__rotulo">Codinome</span>
-                @if (ajustavel() && editandoIdentidade() === 'nome') {
-                  <input
-                    #entradaIdentidade
-                    class="ficha-ident__entrada"
-                    type="text"
-                    [value]="nome()"
-                    aria-label="Codinome"
-                    (keydown.enter)="confirmarIdentidade('nome', entradaIdentidade.value)"
-                    (keydown.escape)="cancelarIdentidade()"
-                    (blur)="confirmarIdentidade('nome', entradaIdentidade.value)"
-                  />
-                } @else if (ajustavel()) {
-                  <button
-                    class="ficha-ident__nome ficha-ident__nome--editavel"
-                    type="button"
-                    aria-label="Editar codinome"
-                    (click)="editarIdentidade('nome')"
-                  >
-                    {{ nome() }}
-                  </button>
-                } @else {
-                  <h2 class="ficha-ident__nome">{{ nome() }}</h2>
-                }
-              </div>
-            </div>
-
-            <!-- Personalidade/Origem — atalho de leitura (redesenho de comparação visual); a edição
-                 completa (Origem com Formação/Especialidade) continua só no card Identidade, abaixo. -->
-            <div class="ficha-ident__meta">
-              <div class="ficha-ident__meta-linha">
-                <span class="ficha-ident__meta-rotulo">Personalidade</span>
-                <span class="ficha-ident__meta-valor">{{ identidade().personalidade ?? 'Não definida' }}</span>
-              </div>
-              <div class="ficha-ident__meta-linha">
-                <span class="ficha-ident__meta-rotulo">Origem</span>
-                <span class="ficha-ident__meta-valor">{{ origemAtual()?.nome ?? 'Não definida' }}</span>
-              </div>
-            </div>
-
-            @if (ajustavel() && editandoClasse()) {
-              <div class="ficha-ident__classe-editor">
-                <select
-                  class="ficha-ident__select"
-                  aria-label="Classe"
-                  (change)="mudarClasseRascunho($event)"
-                >
-                  @for (grupo of gruposClasse; track grupo.rotulo) {
-                    <optgroup [label]="grupo.rotulo">
-                      @for (opcao of grupo.opcoes; track opcao.valor) {
-                        <option [value]="opcao.valor" [selected]="opcao.valor === rascunhoClasse()">
-                          {{ opcao.rotulo }}
-                        </option>
-                      }
-                    </optgroup>
-                  }
-                </select>
-                @if (ehClasseBaseRascunho()) {
-                  <select
-                    class="ficha-ident__select"
-                    aria-label="Arquétipo"
-                    (change)="mudarArquetipoRascunho($event)"
-                  >
-                    <option value="" [selected]="rascunhoArquetipo() === null">— Nenhum —</option>
-                    @for (opcao of arquetiposRascunho(); track opcao.valor) {
-                      <option [value]="opcao.valor" [selected]="opcao.valor === rascunhoArquetipo()">
-                        {{ opcao.rotulo }}
-                      </option>
-                    }
-                  </select>
-                }
-                <div class="ficha-ident__classe-acoes">
-                  <button
-                    class="ficha-cartao__acao ficha-cartao__acao--confirmar"
-                    type="button"
-                    (click)="confirmarClasse()"
-                  >
-                    Salvar
-                  </button>
-                  <button class="ficha-cartao__acao" type="button" (click)="cancelarClasse()">
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            } @else {
-              <div class="ficha-ident__chips">
-                <span class="chip chip--accent">{{ classeTexto() }}</span>
-                @if (arquetipoTexto(); as arquetipo) {
-                  <span class="chip">{{ arquetipo }}</span>
-                }
-                @if (ajustavel()) {
-                  <button
-                    class="ficha-ident__chip-lapis"
-                    type="button"
-                    aria-label="Editar classe e arquétipo"
-                    title="Editar classe e arquétipo"
-                    (click)="editarClasse()"
-                  >
-                    ✎
-                  </button>
-                }
-              </div>
-            }
-
-            <div class="ficha-ident__stats">
-              <div class="ficha-ident__stats-linha">
-                <div class="ficha-mini ficha-mini--fino">
-                  <span class="ficha-mini__rotulo">{{ rotuloNivel() }}</span>
-                  @if (ajustavel() && editandoIdentidade() === 'nivel') {
-                    <input
-                      #entradaIdentidade
-                      class="ficha-mini__entrada"
-                      type="number"
-                      inputmode="numeric"
-                      [value]="dados().nivel"
-                      aria-label="Nível"
-                      (keydown.enter)="confirmarIdentidade('nivel', entradaIdentidade.value)"
-                      (keydown.escape)="cancelarIdentidade()"
-                      (blur)="confirmarIdentidade('nivel', entradaIdentidade.value)"
-                    />
-                  } @else if (ajustavel()) {
-                    <button
-                      class="ficha-mini__valor ficha-mini__valor--warning ficha-mini__valor--editavel"
-                      type="button"
-                      aria-label="Editar nível"
-                      (click)="editarIdentidade('nivel')"
-                    >
-                      {{ dados().nivel }}
-                    </button>
-                  } @else {
-                    <span class="ficha-mini__valor ficha-mini__valor--warning">{{ dados().nivel }}</span>
-                  }
-                </div>
-                <div class="ficha-mini ficha-mini--fino">
-                  <span class="ficha-mini__rotulo">Prestígio</span>
-                  @if (ajustavel() && editandoIdentidade() === 'prestigio') {
-                    <input
-                      #entradaIdentidade
-                      class="ficha-mini__entrada"
-                      type="number"
-                      inputmode="numeric"
-                      [value]="dados().prestigio"
-                      aria-label="Prestígio"
-                      (keydown.enter)="confirmarIdentidade('prestigio', entradaIdentidade.value)"
-                      (keydown.escape)="cancelarIdentidade()"
-                      (blur)="confirmarIdentidade('prestigio', entradaIdentidade.value)"
-                    />
-                  } @else if (ajustavel()) {
-                    <button
-                      class="ficha-mini__valor ficha-mini__valor--editavel"
-                      type="button"
-                      aria-label="Editar prestígio"
-                      (click)="editarIdentidade('prestigio')"
-                    >
-                      {{ dados().prestigio }}
-                    </button>
-                  } @else {
-                    <span class="ficha-mini__valor">{{ dados().prestigio }}</span>
-                  }
-                </div>
-                <div class="ficha-mini ficha-mini--fino">
-                  <span class="ficha-mini__rotulo">Dinheiro</span>
-                  @if (ajustavel() && editandoDinheiro()) {
-                    <input
-                      #entradaDinheiro
-                      class="ficha-mini__entrada"
-                      type="number"
-                      [value]="dinheiro()"
-                      aria-label="Editar dinheiro"
-                      title="Editar dinheiro"
-                      (keydown.enter)="confirmarDinheiro(entradaDinheiro.value)"
-                      (keydown.escape)="cancelarDinheiro()"
-                      (blur)="confirmarDinheiro(entradaDinheiro.value)"
-                    />
-                  } @else if (ajustavel()) {
-                    <button
-                      type="button"
-                      class="ficha-mini__valor ficha-mini__valor--warning ficha-mini__valor--editavel"
-                      aria-label="Editar dinheiro"
-                      (click)="editarDinheiro()"
-                    >
-                      ${{ dinheiro().toLocaleString('pt-BR') }}
-                      <span class="ficha-mini__lapis" aria-hidden="true">✎</span>
-                    </button>
-                  } @else {
-                    <span class="ficha-mini__valor ficha-mini__valor--warning">${{ dinheiro().toLocaleString('pt-BR') }}</span>
-                  }
-                </div>
-                <div class="ficha-mini ficha-mini--fino">
-                  <span class="ficha-mini__rotulo">Salário</span>
-                  <span class="ficha-mini__valor ficha-mini__valor--warning">${{ salario().toLocaleString('pt-BR') }}</span>
-                </div>
-              </div>
-              <div class="ficha-mini ficha-mini--fino ficha-mini--largo">
-                <span class="ficha-mini__rotulo">Patente</span>
-                <span class="ficha-mini__valor ficha-mini__valor--accent">{{ patenteTexto() }}</span>
-              </div>
-            </div>
-
-            <div class="ficha-cartao__divisor"></div>
-
-            <div class="ficha-vitalidade">
-            <div class="ficha-barra ficha-barra--vida">
-              <div class="ficha-barra__topo">
-                <span class="ficha-barra__rotulo ficha-barra__rotulo--dica" [attr.title]="progressaoVida()">
-                  Vida
-                </span>
-                <div class="ficha-barra__medidor">
-                  @if (ajustavel()) {
-                    <button
-                      class="ficha-passo"
-                      type="button"
-                      aria-label="Reduzir vida"
-                      appHoldRepeat
-                      [disabled]="estado().vidaAtual <= 0"
-                      (passo)="ajustar('vidaAtual', -1)"
-                    >
-                      −
-                    </button>
-                  }
-                  <span class="ficha-barra__valor">
-                    @if (ajustavel() && editandoVitalidade() === 'vidaAtual') {
-                      <input
-                        #entradaVitalidade
-                        class="ficha-barra__entrada"
-                        type="number"
-                        inputmode="numeric"
-                        min="0"
-                        [value]="estado().vidaAtual"
-                        aria-label="Vida atual"
-                        (keydown.enter)="confirmarVitalidade('vidaAtual', entradaVitalidade.value)"
-                        (keydown.escape)="cancelarVitalidade()"
-                        (blur)="confirmarVitalidade('vidaAtual', entradaVitalidade.value)"
-                      />
-                    } @else if (ajustavel()) {
-                      <button
-                        class="ficha-barra__valor--editavel"
-                        type="button"
-                        aria-label="Editar vida atual"
-                        (click)="editarVitalidade('vidaAtual')"
-                      >
-                        <strong>{{ estado().vidaAtual }}</strong>
-                      </button>
-                    } @else {
-                      <strong>{{ estado().vidaAtual }}</strong>
-                    }
-                    <span class="ficha-barra__sep">/</span>
-                    @if (ajustavel() && editandoVitalidade() === 'vidaMaxima') {
-                      <input
-                        #entradaVitalidade
-                        class="ficha-barra__entrada"
-                        type="number"
-                        inputmode="numeric"
-                        min="0"
-                        [value]="vidaMaxima()"
-                        aria-label="Vida máxima"
-                        (keydown.enter)="confirmarVitalidade('vidaMaxima', entradaVitalidade.value)"
-                        (keydown.escape)="cancelarVitalidade()"
-                        (blur)="confirmarVitalidade('vidaMaxima', entradaVitalidade.value)"
-                      />
-                    } @else if (ajustavel()) {
-                      <button
-                        class="ficha-barra__valor--editavel ficha-barra__max"
-                        type="button"
-                        aria-label="Editar vida máxima"
-                        (click)="editarVitalidade('vidaMaxima')"
-                      >
-                        {{ vidaMaxima() }}
-                      </button>
-                    } @else {
-                      <span class="ficha-barra__max">{{ vidaMaxima() }}</span>
-                    }
-                  </span>
-                  @if (ajustavel()) {
-                    <button
-                      class="ficha-passo"
-                      type="button"
-                      aria-label="Aumentar vida"
-                      appHoldRepeat
-                      (passo)="ajustar('vidaAtual', 1)"
-                    >
-                      +
-                    </button>
-                  }
-                </div>
-              </div>
-              <div class="ficha-barra__trilho">
-                <span
-                  class="ficha-barra__preenchimento"
-                  [style.width.%]="percentual(estado().vidaAtual, vidaMaxima())"
-                ></span>
-              </div>
-            </div>
-
-            <div class="ficha-barra ficha-barra--energia">
-              <div class="ficha-barra__topo">
-                <span
-                  class="ficha-barra__rotulo ficha-barra__rotulo--dica"
-                  [attr.title]="progressaoEnergia()"
-                >
-                  Energia
-                </span>
-                <div class="ficha-barra__medidor">
-                  @if (ajustavel()) {
-                    <button
-                      class="ficha-passo"
-                      type="button"
-                      aria-label="Reduzir energia"
-                      appHoldRepeat
-                      (passo)="ajustar('energiaAtual', -1)"
-                    >
-                      −
-                    </button>
-                  }
-                  <span class="ficha-barra__valor">
-                    @if (ajustavel() && editandoVitalidade() === 'energiaAtual') {
-                      <input
-                        #entradaVitalidade
-                        class="ficha-barra__entrada"
-                        type="number"
-                        inputmode="numeric"
-                        [value]="estado().energiaAtual"
-                        aria-label="Energia atual"
-                        (keydown.enter)="confirmarVitalidade('energiaAtual', entradaVitalidade.value)"
-                        (keydown.escape)="cancelarVitalidade()"
-                        (blur)="confirmarVitalidade('energiaAtual', entradaVitalidade.value)"
-                      />
-                    } @else if (ajustavel()) {
-                      <button
-                        class="ficha-barra__valor--editavel"
-                        type="button"
-                        aria-label="Editar energia atual"
-                        (click)="editarVitalidade('energiaAtual')"
-                      >
-                        <strong>{{ estado().energiaAtual }}</strong>
-                      </button>
-                    } @else {
-                      <strong>{{ estado().energiaAtual }}</strong>
-                    }
-                    <span class="ficha-barra__sep">/</span>
-                    @if (ajustavel() && editandoVitalidade() === 'energiaMaxima') {
-                      <input
-                        #entradaVitalidade
-                        class="ficha-barra__entrada"
-                        type="number"
-                        inputmode="numeric"
-                        min="0"
-                        [value]="energiaMaxima()"
-                        aria-label="Energia máxima"
-                        (keydown.enter)="confirmarVitalidade('energiaMaxima', entradaVitalidade.value)"
-                        (keydown.escape)="cancelarVitalidade()"
-                        (blur)="confirmarVitalidade('energiaMaxima', entradaVitalidade.value)"
-                      />
-                    } @else if (ajustavel()) {
-                      <button
-                        class="ficha-barra__valor--editavel ficha-barra__max"
-                        type="button"
-                        aria-label="Editar energia máxima"
-                        (click)="editarVitalidade('energiaMaxima')"
-                      >
-                        {{ energiaMaxima() }}
-                      </button>
-                    } @else {
-                      <span class="ficha-barra__max">{{ energiaMaxima() }}</span>
-                    }
-                  </span>
-                  @if (ajustavel()) {
-                    <button
-                      class="ficha-passo"
-                      type="button"
-                      aria-label="Aumentar energia"
-                      appHoldRepeat
-                      (passo)="ajustar('energiaAtual', 1)"
-                    >
-                      +
-                    </button>
-                  }
-                </div>
-              </div>
-              <div class="ficha-barra__trilho">
-                <span
-                  class="ficha-barra__preenchimento"
-                  [style.width.%]="percentual(estado().energiaAtual, energiaMaxima())"
-                ></span>
-              </div>
-            </div>
-            </div>
-
-            <!-- Condições (m2-16b): Morrendo/Inconsciente/Machucado — alternadas manualmente, sem
-                 regra derivada de Vida/Energia (mesma filosofia de m3-10). -->
-            <div class="ficha-condicoes" role="group" aria-label="Condições">
-              @for (condicao of condicoesFicha; track condicao.chave) {
-                <button
-                  class="ficha-condicoes__item"
-                  [class.ficha-condicoes__item--ativa]="condicoes()[condicao.chave]"
-                  [class.ficha-condicoes__item--somente-leitura]="!ajustavel()"
-                  [attr.data-condicao]="condicao.chave"
-                  type="button"
-                  [disabled]="!ajustavel()"
-                  [attr.aria-pressed]="condicoes()[condicao.chave]"
-                  [attr.aria-label]="condicao.rotulo"
-                  [attr.title]="condicao.rotulo"
-                  (click)="alternarCondicao(condicao.chave)"
-                >
-                  <app-icone [nome]="condicao.icone" />
-                  <span>{{ condicao.rotulo }}</span>
-                </button>
-              }
-            </div>
-
-            <div class="ficha-cartao__divisor"></div>
-
-            <!-- Defesa/Esquiva/Bloqueio — só leitura (glance); edição continua na aba Combate. -->
-            <p class="ficha-cartao__subrotulo ficha-cartao__subrotulo--meta">
-              <span>Defesa</span>
-              <span class="ficha-cartao__subrotulo-nota">edição na aba Combate</span>
-            </p>
-            <div class="ficha-combate-rapido ficha-combate-rapido--com-contra">
-              @for (linha of defesaRapida(); track linha.chave) {
-                <div class="ficha-mini ficha-mini--fino ficha-mini--somente-leitura">
-                  <span class="ficha-mini__rotulo">{{ linha.rotulo }}</span>
-                  <span class="ficha-mini__valor">{{ linha.display }}</span>
-                </div>
-              }
-              <!-- Contra-ataque: só existe hoje como habilidade narrativa (Lutador/Vanguarda) — o motor
-                   não tem um stat mecânico calculado pra ele ainda. Placeholder até fechar essa lacuna. -->
-              <div
-                class="ficha-mini ficha-mini--fino ficha-mini--somente-leitura ficha-mini--contra"
-                title="Ainda não calculado pelo motor — depende da habilidade de Contra-ataque"
+  <!-- Redesenho de comparação visual (branch claude/redesign-ficha-screen-*): só o card de
+       identidade/vitalidade/combate-glance fica na tela — abas, Atributos, Informações Extras,
+       Identidade detalhada e as demais seções saem por ora. O objetivo é comparar só este card
+       com a versão em produção (master), não entregar paridade de funcionalidade. -->
+  <div class="ficha-visao__painel ficha-visao__painel--solo">
+    <div class="ficha-visao__coluna">
+      <section class="ficha-cartao">
+        <div class="ficha-ident">
+          <span class="ficha-ident__avatar" aria-hidden="true"></span>
+          <div class="ficha-ident__texto">
+            <span class="ficha-ident__rotulo">Codinome</span>
+            @if (ajustavel() && editandoIdentidade() === 'nome') {
+              <input
+                #entradaIdentidade
+                class="ficha-ident__entrada"
+                type="text"
+                [value]="nome()"
+                aria-label="Codinome"
+                (keydown.enter)="confirmarIdentidade('nome', entradaIdentidade.value)"
+                (keydown.escape)="cancelarIdentidade()"
+                (blur)="confirmarIdentidade('nome', entradaIdentidade.value)"
+              />
+            } @else if (ajustavel()) {
+              <button
+                class="ficha-ident__nome ficha-ident__nome--editavel"
+                type="button"
+                aria-label="Editar codinome"
+                (click)="editarIdentidade('nome')"
               >
-                <span class="ficha-mini__rotulo">Contra-ataque</span>
-                <span class="ficha-mini__valor">—</span>
-              </div>
-            </div>
-
-            <div class="ficha-cartao__divisor"></div>
-
-            <!-- Resistências — só leitura (glance); edição continua na aba Combate. -->
-            <p class="ficha-cartao__subrotulo">Resistências</p>
-            <div class="ficha-resistencias">
-              @for (resistencia of resistencias(); track resistencia.tipo) {
-                <div class="ficha-resistencia">
-                  <span class="ficha-resistencia__abrev">{{ abreviacaoResistencia[resistencia.tipo] }}</span>
-                  <span class="ficha-resistencia__valor">{{ resistencia.total }}</span>
-                </div>
-              }
-            </div>
-          </section>
+                {{ nome() }}
+              </button>
+            } @else {
+              <h2 class="ficha-ident__nome">{{ nome() }}</h2>
+            }
+          </div>
         </div>
 
-        <!-- COLUNA CENTRAL: atributos + anotações -->
-        <div class="ficha-visao__coluna ficha-visao__coluna--central">
-          <section class="ficha-cartao">
-            <header class="ficha-cartao__cabecalho">
-              <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Atributos</h3>
-              <span class="ficha-cartao__regua"></span>
-              @if (editandoAtributos()) {
-                <button
-                  class="ficha-cartao__acao ficha-cartao__acao--confirmar"
-                  type="button"
-                  (click)="confirmarAtributos()"
-                >
-                  Salvar
-                </button>
-                <button class="ficha-cartao__acao" type="button" (click)="cancelarAtributos()">
-                  Cancelar
-                </button>
-              } @else {
-                <span class="chip-formula">{{ formulaDt }}</span>
-                @if (ajustavel()) {
-                  <button
-                    class="ficha-cartao__lapis"
-                    type="button"
-                    aria-label="Editar atributos"
-                    title="Editar atributos"
-                    (click)="editarAtributos()"
-                  >
-                    ✎
-                  </button>
-                }
-              }
-            </header>
-
-            <div class="ficha-atributos">
-              @for (grupo of gruposAtributos; track grupo.rotulo) {
-                <div class="ficha-atributos__grupo">
-                  <span class="ficha-atributos__rotulo-grupo">{{ grupo.rotulo }}</span>
-                  <div class="ficha-atributos__grade">
-                    @for (campo of grupo.campos; track campo.chave) {
-                      @if (editandoAtributos()) {
-                        <div
-                          class="ficha-atributo ficha-atributo--edicao"
-                          [class.ficha-atributo--maestria]="rascunhoMaestria() === campo.chave"
-                        >
-                          <span class="ficha-atributo__abrev">{{ campo.abrev }}</span>
-                          <div class="ficha-atributo__stepper">
-                            <button
-                              class="ficha-passo"
-                              type="button"
-                              appHoldRepeat
-                              [attr.aria-label]="'Reduzir ' + campo.nome"
-                              (passo)="ajustarAtributoRascunho(campo.chave, -1)"
-                            >
-                              −
-                            </button>
-                            <span class="ficha-atributo__valor">{{ rascunhoAtributos()?.[campo.chave] }}</span>
-                            <button
-                              class="ficha-passo"
-                              type="button"
-                              appHoldRepeat
-                              [attr.aria-label]="'Aumentar ' + campo.nome"
-                              (passo)="ajustarAtributoRascunho(campo.chave, 1)"
-                            >
-                              +
-                            </button>
-                          </div>
-                          <button
-                            class="ficha-atributo__maestria"
-                            type="button"
-                            [class.ficha-atributo__maestria--ativa]="rascunhoMaestria() === campo.chave"
-                            [disabled]="!maestriaHabilitada(campo.chave)"
-                            [attr.aria-label]="'Maestria em ' + campo.nome"
-                            [attr.title]="'Maestria em ' + campo.nome + ' — requer ' + limiteMaestria + '+ pontos'"
-                            (click)="alternarMaestria(campo.chave)"
-                          >
-                            ★
-                          </button>
-                          <span class="ficha-atributo__nome">{{ campo.nome }}</span>
-                        </div>
-                      } @else {
-                        <div
-                          class="ficha-atributo"
-                          [class.ficha-atributo--maestria]="maestriaAtual() === campo.chave"
-                          [class.ficha-atributo--lesionado]="penalidadesLesao()[campo.chave] > 0"
-                        >
-                          <span
-                            class="ficha-atributo__abrev"
-                            [attr.title]="maestriaAtual() === campo.chave ? 'Maestria' : null"
-                          >
-                            @if (maestriaAtual() === campo.chave) {
-                              <span class="ficha-atributo__estrela" aria-hidden="true">★</span>
-                            }
-                            {{ campo.abrev }}
-                            @if (maestriaAtual() === campo.chave) {
-                              <span class="ficha-atributo__estrela" aria-hidden="true">★</span>
-                            }
-                          </span>
-                          <span class="ficha-atributo__valor">
-                            {{ atributosEfetivos()[campo.chave] }}
-                            @if (penalidadesLesao()[campo.chave] > 0) {
-                              <span
-                                class="ficha-atributo__lesao"
-                                [attr.title]="
-                                  'Base ' +
-                                  atributos()[campo.chave] +
-                                  ' · lesão −' +
-                                  penalidadesLesao()[campo.chave]
-                                "
-                              >
-                                −{{ penalidadesLesao()[campo.chave] }}
-                              </span>
-                            }
-                          </span>
-                          <span class="ficha-atributo__nome">{{ campo.nome }}</span>
-                          <button
-                            class="ficha-atributo__rolar"
-                            type="button"
-                            [attr.aria-label]="'Rolar teste de ' + campo.nome"
-                            [attr.title]="'Rolar teste de ' + campo.nome"
-                            (click)="rolarTesteAtributo(campo)"
-                          >
-                            <app-icone [nome]="'dado'" />
-                          </button>
-                        </div>
-                      }
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          </section>
-
-          @if (anotacoes()) {
-            <details open class="ficha-cartao ficha-cartao--colapsavel">
-              <summary class="ficha-cartao__cabecalho">
-                <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Anotações</h3>
-                <span class="ficha-cartao__regua"></span>
-                <span class="ficha-cartao__chevron" aria-hidden="true">▾</span>
-              </summary>
-              <p class="ficha-visao__anotacoes">{{ anotacoes() }}</p>
-            </details>
-          }
+        <!-- Personalidade/Origem — atalho de leitura (redesenho de comparação visual); a edição
+             completa (Origem com Formação/Especialidade) saiu da tela nesta rodada de recorte. -->
+        <div class="ficha-ident__meta">
+          <div class="ficha-ident__meta-linha">
+            <span class="ficha-ident__meta-rotulo">Personalidade</span>
+            <span class="ficha-ident__meta-valor">{{ identidade().personalidade ?? 'Não definida' }}</span>
+          </div>
+          <div class="ficha-ident__meta-linha">
+            <span class="ficha-ident__meta-rotulo">Origem</span>
+            <span class="ficha-ident__meta-valor">{{ origemAtual()?.nome ?? 'Não definida' }}</span>
+          </div>
         </div>
 
-        <!-- COLUNA DIREITA: status derivado -->
-        <div class="ficha-visao__coluna ficha-visao__coluna--lateral">
-          <details open class="ficha-cartao ficha-cartao--colapsavel">
-            <summary class="ficha-cartao__cabecalho">
-              <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Informações Extras</h3>
-              <span class="ficha-cartao__regua"></span>
-              <span class="ficha-cartao__chevron" aria-hidden="true">▾</span>
-            </summary>
-
-            <dl class="ficha-info">
-              @for (info of informacoesGerais(); track info.chave) {
-                <div class="ficha-info__linha">
-                  <dt class="ficha-info__rotulo">{{ info.rotulo }}</dt>
-                  @if (ajustavel() && editandoDerivado() === info.chave) {
-                    <dd class="ficha-info__valor">
-                      <input
-                        #entradaDerivado
-                        class="ficha-info__entrada"
-                        [type]="info.tipo === 'numero' ? 'number' : 'text'"
-                        [value]="info.bruto"
-                        [attr.aria-label]="'Editar ' + info.rotulo"
-                        [attr.title]="'Editar ' + info.rotulo"
-                        (keydown.enter)="confirmarDerivado(info, entradaDerivado.value)"
-                        (keydown.escape)="cancelarDerivado()"
-                        (blur)="confirmarDerivado(info, entradaDerivado.value)"
-                      />
-                    </dd>
-                  } @else if (ajustavel() && info.bruto !== null) {
-                    <dd class="ficha-info__valor">
-                      <button
-                        type="button"
-                        class="ficha-info__editavel"
-                        [attr.aria-label]="'Editar ' + info.rotulo"
-                        (click)="editarDerivado(info.chave)"
-                      >
-                        {{ info.display }}
-                      </button>
-                    </dd>
-                  } @else {
-                    <dd class="ficha-info__valor">{{ info.display }}</dd>
-                  }
-                </div>
-              }
-
-              <!-- Dinheiro/Salário (m3-34) subiram para o card de identidade (redesenho de comparação
-                   visual) — sem duplicar controle de edição na mesma tela. -->
-            </dl>
-          </details>
-        </div>
-      </div>
-
-      <!-- Identidade (m3-23/m3-25): Personalidade + Origem. Trava de imutabilidade refletida (m3-24) —
-           o backend é o árbitro; aqui só se esconde o lápis pro dono depois da primeira definição. -->
-      <section class="ficha-cartao ficha-visao__painel-cartao ficha-visao__painel-cartao--largo">
-        <header class="ficha-cartao__cabecalho">
-          <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Identidade</h3>
-          <span class="ficha-cartao__regua"></span>
-        </header>
-
-        <!-- Personalidade: a palavra — mesmo padrão de edição no lugar do Codinome. -->
-        <div class="ficha-identidade__personalidade">
-          <span class="ficha-info__rotulo">Personalidade</span>
-          @if (editandoIdentidade() === 'personalidade') {
-            <input
-              #entradaIdentidade
-              class="ficha-ident__entrada"
-              type="text"
-              [value]="identidade().personalidade ?? ''"
-              aria-label="Personalidade"
-              (keydown.enter)="confirmarIdentidade('personalidade', entradaIdentidade.value)"
-              (keydown.escape)="cancelarIdentidade()"
-              (blur)="confirmarIdentidade('personalidade', entradaIdentidade.value)"
-            />
-          } @else if (personalidadeEditavel()) {
-            <button
-              class="ficha-ident__nome ficha-ident__nome--editavel"
-              type="button"
-              aria-label="Editar personalidade"
-              (click)="editarIdentidade('personalidade')"
+        @if (ajustavel() && editandoClasse()) {
+          <div class="ficha-ident__classe-editor">
+            <select
+              class="ficha-ident__select"
+              aria-label="Classe"
+              (change)="mudarClasseRascunho($event)"
             >
-              {{ identidade().personalidade ?? '— Definir —' }}
-            </button>
-          } @else {
-            <span class="ficha-identidade__valor">
-              {{ identidade().personalidade ?? 'Ainda não definida' }}
-              @if (personalidadeDefinida()) {
-                <span class="ficha-identidade__trava" title="Definida — imutável para você; peça ao Mestre para corrigir.">
-                  (imutável)
-                </span>
+              @for (grupo of gruposClasse; track grupo.rotulo) {
+                <optgroup [label]="grupo.rotulo">
+                  @for (opcao of grupo.opcoes; track opcao.valor) {
+                    <option [value]="opcao.valor" [selected]="opcao.valor === rascunhoClasse()">
+                      {{ opcao.rotulo }}
+                    </option>
+                  }
+                </optgroup>
               }
-            </span>
-          }
-        </div>
-
-        <!-- Origem: nome/descrição/Saber de Campo + Especialidade + 2 linhas de Formação. -->
-        <div class="ficha-identidade__origem">
-          <header class="ficha-identidade__origem-cabecalho">
-            <h4 class="ficha-identidade__subtitulo">Origem</h4>
-            @if (editandoOrigem()) {
-              <button class="ficha-cartao__acao ficha-cartao__acao--confirmar" type="button" (click)="confirmarOrigem()">
+            </select>
+            @if (ehClasseBaseRascunho()) {
+              <select
+                class="ficha-ident__select"
+                aria-label="Arquétipo"
+                (change)="mudarArquetipoRascunho($event)"
+              >
+                <option value="" [selected]="rascunhoArquetipo() === null">— Nenhum —</option>
+                @for (opcao of arquetiposRascunho(); track opcao.valor) {
+                  <option [value]="opcao.valor" [selected]="opcao.valor === rascunhoArquetipo()">
+                    {{ opcao.rotulo }}
+                  </option>
+                }
+              </select>
+            }
+            <div class="ficha-ident__classe-acoes">
+              <button
+                class="ficha-cartao__acao ficha-cartao__acao--confirmar"
+                type="button"
+                (click)="confirmarClasse()"
+              >
                 Salvar
               </button>
-              <button class="ficha-cartao__acao" type="button" (click)="cancelarOrigem()">Cancelar</button>
-            } @else if (origemEditavel()) {
+              <button class="ficha-cartao__acao" type="button" (click)="cancelarClasse()">
+                Cancelar
+              </button>
+            </div>
+          </div>
+        } @else {
+          <div class="ficha-ident__chips">
+            <span class="chip chip--accent">{{ classeTexto() }}</span>
+            @if (arquetipoTexto(); as arquetipo) {
+              <span class="chip">{{ arquetipo }}</span>
+            }
+            @if (ajustavel()) {
               <button
                 class="ficha-ident__chip-lapis"
                 type="button"
-                aria-label="Editar origem"
-                title="Editar origem"
-                (click)="editarOrigem()"
+                aria-label="Editar classe e arquétipo"
+                title="Editar classe e arquétipo"
+                (click)="editarClasse()"
               >
                 ✎
               </button>
-            } @else if (origemDefinida()) {
-              <span class="ficha-identidade__trava" title="Definida — imutável para você; peça ao Mestre para corrigir.">
-                🔒 imutável
-              </span>
             }
-          </header>
+          </div>
+        }
 
-          @if (editandoOrigem()) {
-            @if (rascunhoOrigem(); as rascunho) {
-              <div class="ficha-identidade__editor">
-                <label class="ficha-identidade__campo">
-                  <span class="ficha-info__rotulo">Nome</span>
-                  <input
-                    class="ficha-ident__select"
-                    type="text"
-                    [value]="rascunho.nome"
-                    (input)="mudarTextoOrigemRascunho('nome', $any($event.target).value)"
-                  />
-                </label>
-                <label class="ficha-identidade__campo">
-                  <span class="ficha-info__rotulo">Descrição</span>
-                  <input
-                    class="ficha-ident__select"
-                    type="text"
-                    [value]="rascunho.descricao"
-                    (input)="mudarTextoOrigemRascunho('descricao', $any($event.target).value)"
-                  />
-                </label>
-                <label class="ficha-identidade__campo">
-                  <span class="ficha-info__rotulo">Saber de Campo</span>
-                  <input
-                    class="ficha-ident__select"
-                    type="text"
-                    [value]="rascunho.saberDeCampo"
-                    (input)="mudarTextoOrigemRascunho('saberDeCampo', $any($event.target).value)"
-                  />
-                </label>
-
-                <div class="ficha-identidade__especialidade">
-                  <label class="ficha-identidade__campo">
-                    <span class="ficha-info__rotulo">Especialidade — gatilho</span>
-                    <input
-                      class="ficha-ident__select"
-                      type="text"
-                      placeholder="Ex.: Sob fogo direto"
-                      [value]="rascunho.especialidade.gatilho"
-                      (input)="mudarGatilhoEspecialidadeRascunho($any($event.target).value)"
-                    />
-                  </label>
-                  <label class="ficha-identidade__campo">
-                    <span class="ficha-info__rotulo">Especialidade — efeito</span>
-                    <select
-                      class="ficha-ident__select"
-                      (change)="mudarEfeitoEspecialidadeRascunho($any($event.target).value)"
-                    >
-                      @for (efeito of efeitosEspecialidade; track efeito) {
-                        <option [value]="efeito" [selected]="efeito === rascunho.especialidade.efeito">
-                          {{ rotuloEfeitoEspecialidade(efeito) }}
-                        </option>
-                      }
-                    </select>
-                  </label>
-                </div>
-
-                @for (linha of rascunho.formacao; track $index) {
-                  <div class="ficha-identidade__formacao-editor">
-                    <span class="ficha-info__rotulo">Formação {{ $index + 1 }}</span>
-                    <select
-                      class="ficha-ident__select"
-                      [attr.aria-label]="'Bônus de Formação ' + ($index + 1)"
-                      (change)="mudarBonusFormacaoRascunho($index, $any($event.target).value)"
-                    >
-                      <option value="" [selected]="linha.bonus === null">Outro (autorizado pelo Mestre)</option>
-                      @for (grupo of gruposFormacao; track grupo.rotulo) {
-                        <optgroup [label]="grupo.rotulo">
-                          @for (opcao of grupo.opcoes; track opcao.codigo) {
-                            <option [value]="opcao.codigo" [selected]="opcao.codigo === linha.bonus">
-                              {{ opcao.rotulo }}
-                            </option>
-                          }
-                        </optgroup>
-                      }
-                    </select>
-
-                    @if (definicaoFormacaoRascunho($index); as definicao) {
-                      @if (definicao.parametro === parametroEsquivaOuBloqueio) {
-                        <select
-                          class="ficha-ident__select"
-                          aria-label="Esquiva ou Bloqueio"
-                          (change)="mudarParametroFormacaoRascunho($index, $any($event.target).value)"
-                        >
-                          <option value="" [selected]="!linha.parametro">— Escolha —</option>
-                          <option value="Esquiva" [selected]="linha.parametro === 'Esquiva'">Esquiva</option>
-                          <option value="Bloqueio" [selected]="linha.parametro === 'Bloqueio'">Bloqueio</option>
-                        </select>
-                      } @else if (definicao.parametro) {
-                        <input
-                          class="ficha-ident__select"
-                          type="text"
-                          [attr.placeholder]="rotuloParametroFormacao(definicao.parametro)"
-                          [attr.aria-label]="rotuloParametroFormacao(definicao.parametro)"
-                          [value]="linha.parametro ?? ''"
-                          (input)="mudarParametroFormacaoRascunho($index, $any($event.target).value)"
-                        />
-                      }
-                      @if (efeitoAindaPendente(linha.bonus)) {
-                        <span class="chip chip--pendente" title="Registrado — ainda sem motor que aplique este efeito automaticamente.">
-                          Sem efeito automático ainda
-                        </span>
-                      }
-                    }
-
-                    <input
-                      class="ficha-ident__select"
-                      type="text"
-                      placeholder="Texto de exibição"
-                      [attr.aria-label]="'Texto de exibição da Formação ' + ($index + 1)"
-                      [value]="linha.texto"
-                      (input)="mudarTextoFormacaoRascunho($index, $any($event.target).value)"
-                    />
-                  </div>
-                }
-              </div>
-            }
-          } @else if (origemAtual(); as origem) {
-            <div class="ficha-identidade__leitura">
-              <p class="ficha-identidade__origem-nome">{{ origem.nome }}</p>
-              @if (origem.descricao) {
-                <p class="ficha-visao__anotacoes">{{ origem.descricao }}</p>
+        <div class="ficha-ident__stats">
+          <div class="ficha-ident__stats-linha">
+            <div class="ficha-mini ficha-mini--fino">
+              <span class="ficha-mini__rotulo">{{ rotuloNivel() }}</span>
+              @if (ajustavel() && editandoIdentidade() === 'nivel') {
+                <input
+                  #entradaIdentidade
+                  class="ficha-mini__entrada"
+                  type="number"
+                  inputmode="numeric"
+                  [value]="dados().nivel"
+                  aria-label="Nível"
+                  (keydown.enter)="confirmarIdentidade('nivel', entradaIdentidade.value)"
+                  (keydown.escape)="cancelarIdentidade()"
+                  (blur)="confirmarIdentidade('nivel', entradaIdentidade.value)"
+                />
+              } @else if (ajustavel()) {
+                <button
+                  class="ficha-mini__valor ficha-mini__valor--warning ficha-mini__valor--editavel"
+                  type="button"
+                  aria-label="Editar nível"
+                  (click)="editarIdentidade('nivel')"
+                >
+                  {{ dados().nivel }}
+                </button>
+              } @else {
+                <span class="ficha-mini__valor ficha-mini__valor--warning">{{ dados().nivel }}</span>
               }
-              <dl class="ficha-info">
-                <div class="ficha-info__linha">
-                  <dt class="ficha-info__rotulo">Saber de Campo</dt>
-                  <dd class="ficha-info__valor">{{ origem.saberDeCampo }}</dd>
-                </div>
-                <div class="ficha-info__linha">
-                  <dt class="ficha-info__rotulo">Especialidade</dt>
-                  <dd class="ficha-info__valor">
-                    {{ origem.especialidade.gatilho }} — {{ rotuloEfeitoEspecialidade(origem.especialidade.efeito) }}
-                  </dd>
-                </div>
-              </dl>
-              <div class="ficha-identidade__formacoes">
-                @for (linha of origem.formacao; track $index) {
-                  <div class="ficha-identidade__formacao-linha">
-                    <span>{{ linha.texto }}</span>
-                    @if (linha.parametro) {
-                      <span class="chip">{{ linha.parametro }}</span>
-                    }
-                    @if (efeitoAindaPendente(linha.bonus)) {
-                      <span class="chip chip--pendente" title="Registrado — ainda sem motor que aplique este efeito automaticamente.">
-                        Sem efeito automático ainda
-                      </span>
-                    }
-                  </div>
+            </div>
+            <div class="ficha-mini ficha-mini--fino">
+              <span class="ficha-mini__rotulo">Prestígio</span>
+              @if (ajustavel() && editandoIdentidade() === 'prestigio') {
+                <input
+                  #entradaIdentidade
+                  class="ficha-mini__entrada"
+                  type="number"
+                  inputmode="numeric"
+                  [value]="dados().prestigio"
+                  aria-label="Prestígio"
+                  (keydown.enter)="confirmarIdentidade('prestigio', entradaIdentidade.value)"
+                  (keydown.escape)="cancelarIdentidade()"
+                  (blur)="confirmarIdentidade('prestigio', entradaIdentidade.value)"
+                />
+              } @else if (ajustavel()) {
+                <button
+                  class="ficha-mini__valor ficha-mini__valor--editavel"
+                  type="button"
+                  aria-label="Editar prestígio"
+                  (click)="editarIdentidade('prestigio')"
+                >
+                  {{ dados().prestigio }}
+                </button>
+              } @else {
+                <span class="ficha-mini__valor">{{ dados().prestigio }}</span>
+              }
+            </div>
+            <div class="ficha-mini ficha-mini--fino">
+              <span class="ficha-mini__rotulo">Dinheiro</span>
+              @if (ajustavel() && editandoDinheiro()) {
+                <input
+                  #entradaDinheiro
+                  class="ficha-mini__entrada"
+                  type="number"
+                  [value]="dinheiro()"
+                  aria-label="Editar dinheiro"
+                  title="Editar dinheiro"
+                  (keydown.enter)="confirmarDinheiro(entradaDinheiro.value)"
+                  (keydown.escape)="cancelarDinheiro()"
+                  (blur)="confirmarDinheiro(entradaDinheiro.value)"
+                />
+              } @else if (ajustavel()) {
+                <button
+                  type="button"
+                  class="ficha-mini__valor ficha-mini__valor--warning ficha-mini__valor--editavel"
+                  aria-label="Editar dinheiro"
+                  (click)="editarDinheiro()"
+                >
+                  ${{ dinheiro().toLocaleString('pt-BR') }}
+                  <span class="ficha-mini__lapis" aria-hidden="true">✎</span>
+                </button>
+              } @else {
+                <span class="ficha-mini__valor ficha-mini__valor--warning">${{ dinheiro().toLocaleString('pt-BR') }}</span>
+              }
+            </div>
+            <div class="ficha-mini ficha-mini--fino">
+              <span class="ficha-mini__rotulo">Salário</span>
+              <span class="ficha-mini__valor ficha-mini__valor--warning">${{ salario().toLocaleString('pt-BR') }}</span>
+            </div>
+          </div>
+          <div class="ficha-mini ficha-mini--fino ficha-mini--largo">
+            <span class="ficha-mini__rotulo">Patente</span>
+            <span class="ficha-mini__valor ficha-mini__valor--accent">{{ patenteTexto() }}</span>
+          </div>
+        </div>
+
+        <div class="ficha-cartao__divisor"></div>
+
+        <div class="ficha-vitalidade">
+          <div class="ficha-barra ficha-barra--vida">
+            <div class="ficha-barra__topo">
+              <span class="ficha-barra__rotulo ficha-barra__rotulo--dica" [attr.title]="progressaoVida()">
+                Vida
+              </span>
+              <div class="ficha-barra__medidor">
+                @if (ajustavel()) {
+                  <button
+                    class="ficha-passo"
+                    type="button"
+                    aria-label="Reduzir vida"
+                    appHoldRepeat
+                    [disabled]="estado().vidaAtual <= 0"
+                    (passo)="ajustar('vidaAtual', -1)"
+                  >
+                    −
+                  </button>
+                }
+                <span class="ficha-barra__valor">
+                  @if (ajustavel() && editandoVitalidade() === 'vidaAtual') {
+                    <input
+                      #entradaVitalidade
+                      class="ficha-barra__entrada"
+                      type="number"
+                      inputmode="numeric"
+                      min="0"
+                      [value]="estado().vidaAtual"
+                      aria-label="Vida atual"
+                      (keydown.enter)="confirmarVitalidade('vidaAtual', entradaVitalidade.value)"
+                      (keydown.escape)="cancelarVitalidade()"
+                      (blur)="confirmarVitalidade('vidaAtual', entradaVitalidade.value)"
+                    />
+                  } @else if (ajustavel()) {
+                    <button
+                      class="ficha-barra__valor--editavel"
+                      type="button"
+                      aria-label="Editar vida atual"
+                      (click)="editarVitalidade('vidaAtual')"
+                    >
+                      <strong>{{ estado().vidaAtual }}</strong>
+                    </button>
+                  } @else {
+                    <strong>{{ estado().vidaAtual }}</strong>
+                  }
+                  <span class="ficha-barra__sep">/</span>
+                  @if (ajustavel() && editandoVitalidade() === 'vidaMaxima') {
+                    <input
+                      #entradaVitalidade
+                      class="ficha-barra__entrada"
+                      type="number"
+                      inputmode="numeric"
+                      min="0"
+                      [value]="vidaMaxima()"
+                      aria-label="Vida máxima"
+                      (keydown.enter)="confirmarVitalidade('vidaMaxima', entradaVitalidade.value)"
+                      (keydown.escape)="cancelarVitalidade()"
+                      (blur)="confirmarVitalidade('vidaMaxima', entradaVitalidade.value)"
+                    />
+                  } @else if (ajustavel()) {
+                    <button
+                      class="ficha-barra__valor--editavel ficha-barra__max"
+                      type="button"
+                      aria-label="Editar vida máxima"
+                      (click)="editarVitalidade('vidaMaxima')"
+                    >
+                      {{ vidaMaxima() }}
+                    </button>
+                  } @else {
+                    <span class="ficha-barra__max">{{ vidaMaxima() }}</span>
+                  }
+                </span>
+                @if (ajustavel()) {
+                  <button
+                    class="ficha-passo"
+                    type="button"
+                    aria-label="Aumentar vida"
+                    appHoldRepeat
+                    (passo)="ajustar('vidaAtual', 1)"
+                  >
+                    +
+                  </button>
                 }
               </div>
             </div>
-          } @else if (ajustavel()) {
-            <p class="ficha-visao__vazio">Origem ainda não definida.</p>
+            <div class="ficha-barra__trilho">
+              <span
+                class="ficha-barra__preenchimento"
+                [style.width.%]="percentual(estado().vidaAtual, vidaMaxima())"
+              ></span>
+            </div>
+          </div>
+
+          <div class="ficha-barra ficha-barra--energia">
+            <div class="ficha-barra__topo">
+              <span
+                class="ficha-barra__rotulo ficha-barra__rotulo--dica"
+                [attr.title]="progressaoEnergia()"
+              >
+                Energia
+              </span>
+              <div class="ficha-barra__medidor">
+                @if (ajustavel()) {
+                  <button
+                    class="ficha-passo"
+                    type="button"
+                    aria-label="Reduzir energia"
+                    appHoldRepeat
+                    (passo)="ajustar('energiaAtual', -1)"
+                  >
+                    −
+                  </button>
+                }
+                <span class="ficha-barra__valor">
+                  @if (ajustavel() && editandoVitalidade() === 'energiaAtual') {
+                    <input
+                      #entradaVitalidade
+                      class="ficha-barra__entrada"
+                      type="number"
+                      inputmode="numeric"
+                      [value]="estado().energiaAtual"
+                      aria-label="Energia atual"
+                      (keydown.enter)="confirmarVitalidade('energiaAtual', entradaVitalidade.value)"
+                      (keydown.escape)="cancelarVitalidade()"
+                      (blur)="confirmarVitalidade('energiaAtual', entradaVitalidade.value)"
+                    />
+                  } @else if (ajustavel()) {
+                    <button
+                      class="ficha-barra__valor--editavel"
+                      type="button"
+                      aria-label="Editar energia atual"
+                      (click)="editarVitalidade('energiaAtual')"
+                    >
+                      <strong>{{ estado().energiaAtual }}</strong>
+                    </button>
+                  } @else {
+                    <strong>{{ estado().energiaAtual }}</strong>
+                  }
+                  <span class="ficha-barra__sep">/</span>
+                  @if (ajustavel() && editandoVitalidade() === 'energiaMaxima') {
+                    <input
+                      #entradaVitalidade
+                      class="ficha-barra__entrada"
+                      type="number"
+                      inputmode="numeric"
+                      min="0"
+                      [value]="energiaMaxima()"
+                      aria-label="Energia máxima"
+                      (keydown.enter)="confirmarVitalidade('energiaMaxima', entradaVitalidade.value)"
+                      (keydown.escape)="cancelarVitalidade()"
+                      (blur)="confirmarVitalidade('energiaMaxima', entradaVitalidade.value)"
+                    />
+                  } @else if (ajustavel()) {
+                    <button
+                      class="ficha-barra__valor--editavel ficha-barra__max"
+                      type="button"
+                      aria-label="Editar energia máxima"
+                      (click)="editarVitalidade('energiaMaxima')"
+                    >
+                      {{ energiaMaxima() }}
+                    </button>
+                  } @else {
+                    <span class="ficha-barra__max">{{ energiaMaxima() }}</span>
+                  }
+                </span>
+                @if (ajustavel()) {
+                  <button
+                    class="ficha-passo"
+                    type="button"
+                    aria-label="Aumentar energia"
+                    appHoldRepeat
+                    (passo)="ajustar('energiaAtual', 1)"
+                  >
+                    +
+                  </button>
+                }
+              </div>
+            </div>
+            <div class="ficha-barra__trilho">
+              <span
+                class="ficha-barra__preenchimento"
+                [style.width.%]="percentual(estado().energiaAtual, energiaMaxima())"
+              ></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Condições (m2-16b): Morrendo/Inconsciente/Machucado — alternadas manualmente, sem
+             regra derivada de Vida/Energia (mesma filosofia de m3-10). -->
+        <div class="ficha-condicoes" role="group" aria-label="Condições">
+          @for (condicao of condicoesFicha; track condicao.chave) {
+            <button
+              class="ficha-condicoes__item"
+              [class.ficha-condicoes__item--ativa]="condicoes()[condicao.chave]"
+              [class.ficha-condicoes__item--somente-leitura]="!ajustavel()"
+              [attr.data-condicao]="condicao.chave"
+              type="button"
+              [disabled]="!ajustavel()"
+              [attr.aria-pressed]="condicoes()[condicao.chave]"
+              [attr.aria-label]="condicao.rotulo"
+              [attr.title]="condicao.rotulo"
+              (click)="alternarCondicao(condicao.chave)"
+            >
+              <app-icone [nome]="condicao.icone" />
+              <span>{{ condicao.rotulo }}</span>
+            </button>
+          }
+        </div>
+
+        <div class="ficha-cartao__divisor"></div>
+
+        <!-- Defesa/Esquiva/Bloqueio — só leitura (glance); a edição saiu da tela nesta rodada. -->
+        <p class="ficha-cartao__subrotulo ficha-cartao__subrotulo--meta">
+          <span>Defesa</span>
+          <span class="ficha-cartao__subrotulo-nota">só leitura</span>
+        </p>
+        <div class="ficha-combate-rapido ficha-combate-rapido--com-contra">
+          @for (linha of defesaRapida(); track linha.chave) {
+            <div class="ficha-mini ficha-mini--fino ficha-mini--somente-leitura">
+              <span class="ficha-mini__rotulo">{{ linha.rotulo }}</span>
+              <span class="ficha-mini__valor">{{ linha.display }}</span>
+            </div>
+          }
+          <!-- Contra-ataque: só existe hoje como habilidade narrativa (Lutador/Vanguarda) — o motor
+               não tem um stat mecânico calculado pra ele ainda. Placeholder até fechar essa lacuna. -->
+          <div
+            class="ficha-mini ficha-mini--fino ficha-mini--somente-leitura ficha-mini--contra"
+            title="Ainda não calculado pelo motor — depende da habilidade de Contra-ataque"
+          >
+            <span class="ficha-mini__rotulo">Contra-ataque</span>
+            <span class="ficha-mini__valor">—</span>
+          </div>
+        </div>
+
+        <div class="ficha-cartao__divisor"></div>
+
+        <!-- Resistências — só leitura (glance); a edição saiu da tela nesta rodada. -->
+        <p class="ficha-cartao__subrotulo">Resistências</p>
+        <div class="ficha-resistencias">
+          @for (resistencia of resistencias(); track resistencia.tipo) {
+            <div class="ficha-resistencia">
+              <span class="ficha-resistencia__abrev">{{ abreviacaoResistencia[resistencia.tipo] }}</span>
+              <span class="ficha-resistencia__valor">{{ resistencia.total }}</span>
+            </div>
           }
         </div>
       </section>
     </div>
-  }
-
-  <!-- ABA: COMBATE — derivados de combate reorganizados (reusa os editáveis de m3-10). -->
-  @if (abaAtiva() === 'combate') {
-    <div
-      class="ficha-visao__painel ficha-visao__painel--grade"
-      role="tabpanel"
-      id="painel-combate"
-      aria-labelledby="aba-combate"
-    >
-      <details open class="ficha-cartao ficha-visao__painel-cartao ficha-cartao--colapsavel">
-        <summary class="ficha-cartao__cabecalho">
-          <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Combate</h3>
-          <span class="ficha-cartao__regua"></span>
-          <span class="chip-formula">{{ formulaDt }}</span>
-          <span class="ficha-cartao__chevron" aria-hidden="true">▾</span>
-        </summary>
-
-        <dl class="ficha-info ficha-info--combate">
-          @for (info of combateLinhas(); track info.chave) {
-            <div class="ficha-info__linha">
-              <dt class="ficha-info__rotulo">{{ info.rotulo }}</dt>
-              @if (ajustavel()) {
-                @if (editandoDerivado() === info.chave) {
-                  <dd class="ficha-info__valor">
-                    <input
-                      #entradaDerivado
-                      class="ficha-info__entrada"
-                      [type]="info.tipo === 'numero' ? 'number' : 'text'"
-                      [value]="info.bruto"
-                      [attr.aria-label]="'Editar ' + info.rotulo"
-                      [attr.title]="'Editar ' + info.rotulo"
-                      (keydown.enter)="confirmarDerivado(info, entradaDerivado.value)"
-                      (keydown.escape)="cancelarDerivado()"
-                      (blur)="confirmarDerivado(info, entradaDerivado.value)"
-                    />
-                  </dd>
-                } @else if (info.bruto !== null) {
-                  <dd class="ficha-info__valor">
-                    <button
-                      type="button"
-                      class="ficha-info__editavel"
-                      [attr.aria-label]="'Editar ' + info.rotulo"
-                      (click)="editarDerivado(info.chave)"
-                    >
-                      {{ info.display }}
-                    </button>
-                  </dd>
-                } @else {
-                  <dd class="ficha-info__valor">{{ info.display }}</dd>
-                }
-              } @else {
-                <dd class="ficha-info__valor">{{ info.display }}</dd>
-              }
-            </div>
-          }
-        </dl>
-      </details>
-
-      <!-- Resistências (m3-36 + ajuste posterior): sempre as cinco, base manual editável somada ao
-           equipamento (itens equipados + Fragmento aplicado + amplificadores Resistente/Defesa). -->
-      <details open class="ficha-cartao ficha-visao__painel-cartao ficha-cartao--colapsavel">
-        <summary class="ficha-cartao__cabecalho">
-          <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Resistências</h3>
-          <span class="ficha-cartao__regua"></span>
-          <span class="ficha-cartao__meta">manual + equipamento</span>
-          <span class="ficha-cartao__chevron" aria-hidden="true">▾</span>
-        </summary>
-
-        <dl class="ficha-info ficha-info--combate">
-          @for (resistencia of resistencias(); track resistencia.tipo) {
-            <div class="ficha-info__linha">
-              <dt class="ficha-info__rotulo">{{ resistencia.tipo }}</dt>
-              @if (ajustavel() && editandoResistencia() === resistencia.tipo) {
-                <dd class="ficha-info__valor">
-                  <input
-                    #entradaResistencia
-                    class="ficha-info__entrada"
-                    type="number"
-                    [value]="resistencia.manual"
-                    [attr.aria-label]="'Editar resistência a ' + resistencia.tipo"
-                    [attr.title]="'Editar resistência a ' + resistencia.tipo"
-                    (keydown.enter)="confirmarResistencia(resistencia.tipo, entradaResistencia.value)"
-                    (keydown.escape)="cancelarResistencia()"
-                    (blur)="confirmarResistencia(resistencia.tipo, entradaResistencia.value)"
-                  />
-                </dd>
-              } @else if (ajustavel()) {
-                <dd class="ficha-info__valor">
-                  <button
-                    type="button"
-                    class="ficha-info__editavel"
-                    [attr.aria-label]="'Editar resistência a ' + resistencia.tipo"
-                    [attr.title]="'Manual ' + resistencia.manual + ' + Equipamento ' + resistencia.equipamento"
-                    (click)="editarResistencia(resistencia.tipo)"
-                  >
-                    {{ resistencia.total }}
-                  </button>
-                </dd>
-              } @else {
-                <dd
-                  class="ficha-info__valor"
-                  [attr.title]="'Manual ' + resistencia.manual + ' + Equipamento ' + resistencia.equipamento"
-                >
-                  {{ resistencia.total }}
-                </dd>
-              }
-            </div>
-          }
-        </dl>
-      </details>
-
-      <!-- Rolagens (m3-15/m3-22) — mesclada na aba Combate em m3-37. -->
-      <details open class="ficha-cartao ficha-visao__painel-cartao ficha-cartao--colapsavel">
-        <summary class="ficha-cartao__cabecalho">
-          <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Rolagens</h3>
-          <span class="ficha-cartao__regua"></span>
-          <span class="ficha-cartao__meta">
-            {{ totalRolagens() }} {{ totalRolagens() === 1 ? 'preset' : 'presets' }}
-          </span>
-          <span class="ficha-cartao__chevron" aria-hidden="true">▾</span>
-        </summary>
-        <app-ficha-rolagens
-          [rolagens]="dados().rolagens ?? []"
-          [atributos]="atributosEfetivos()"
-          [proficiencia]="proficiencia()"
-          [nivel]="dados().nivel"
-          [habilidadesDisponiveis]="dados().habilidades"
-          [editavel]="ajustavel()"
-          (rolagensMudou)="ajusteRolagens.emit($event)"
-          (energiaGasta)="aoUtilizarHabilidade($event)"
-        />
-      </details>
-
-      <!-- Combos (m3-37): sequência de rolagens já existentes, executada passo a passo. -->
-      <details open class="ficha-cartao ficha-visao__painel-cartao ficha-cartao--colapsavel">
-        <summary class="ficha-cartao__cabecalho">
-          <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Combos</h3>
-          <span class="ficha-cartao__regua"></span>
-          <span class="ficha-cartao__meta">{{ combos().length }} {{ combos().length === 1 ? 'combo' : 'combos' }}</span>
-          <span class="ficha-cartao__chevron" aria-hidden="true">▾</span>
-        </summary>
-        <app-ficha-combos
-          [combos]="combos()"
-          [rolagens]="dados().rolagens ?? []"
-          [atributos]="atributosEfetivos()"
-          [proficiencia]="proficiencia()"
-          [nivel]="dados().nivel"
-          [habilidadesDisponiveis]="dados().habilidades"
-          [editavel]="ajustavel()"
-          (combosMudou)="ajusteCombos.emit($event)"
-          (energiaGasta)="aoUtilizarHabilidade($event)"
-        />
-      </details>
-    </div>
-  }
-
-  <!-- ABA: INVENTÁRIO — placeholder + resumo read-only até o editor (m3-14). -->
-  @if (abaAtiva() === 'inventario') {
-    <div
-      class="ficha-visao__painel"
-      role="tabpanel"
-      id="painel-inventario"
-      aria-labelledby="aba-inventario"
-    >
-      <section class="ficha-cartao ficha-visao__painel-cartao ficha-visao__painel-cartao--largo">
-        <header class="ficha-cartao__cabecalho">
-          <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Inventário</h3>
-          <span class="ficha-cartao__regua"></span>
-          <span class="ficha-cartao__meta">{{ totalItens() }} {{ totalItens() === 1 ? 'item' : 'itens' }}</span>
-        </header>
-
-        <!-- Inventário máximo (editável, reusa a persistência de m3-10) — realocado da Visão Geral. -->
-        @if (inventarioMaximoLinha(); as invMax) {
-          <dl class="ficha-info ficha-visao__inv-maximo">
-            <div class="ficha-info__linha">
-              <dt class="ficha-info__rotulo">Máximo</dt>
-              @if (ajustavel() && editandoDerivado() === invMax.chave) {
-                <dd class="ficha-info__valor">
-                  <input
-                    #entradaDerivado
-                    class="ficha-info__entrada"
-                    type="number"
-                    [value]="invMax.bruto"
-                    aria-label="Editar Inventário máximo"
-                    title="Editar Inventário máximo"
-                    (keydown.enter)="confirmarDerivado(invMax, entradaDerivado.value)"
-                    (keydown.escape)="cancelarDerivado()"
-                    (blur)="confirmarDerivado(invMax, entradaDerivado.value)"
-                  />
-                </dd>
-              } @else if (ajustavel() && invMax.bruto !== null) {
-                <dd class="ficha-info__valor">
-                  <button
-                    type="button"
-                    class="ficha-info__editavel"
-                    aria-label="Editar Inventário máximo"
-                    (click)="editarDerivado(invMax.chave)"
-                  >
-                    {{ invMax.display }}
-                  </button>
-                </dd>
-              } @else {
-                <dd class="ficha-info__valor">{{ invMax.display }}</dd>
-              }
-            </div>
-          </dl>
-        }
-
-        <app-ficha-inventario
-          [inventario]="dados().inventario"
-          [editavel]="ajustavel()"
-          [prestigio]="dados().prestigio"
-          [inventarioMaximo]="inventarioMaximoValor()"
-          [vontade]="dados().atributos.vontade"
-          [dinheiro]="dinheiro()"
-          [energiaAtual]="estado().energiaAtual"
-          [energiaMaxima]="energiaMaxima()"
-          (inventarioMudou)="ajusteInventario.emit($event)"
-          (ajusteEnergiaFragmento)="aoAjustarEnergiaFragmento($event)"
-        />
-      </section>
-    </div>
-  }
-
-  <!-- ABA: HABILIDADES — editor no próprio lugar da lista `habilidades` (m3-13). -->
-  @if (abaAtiva() === 'habilidades') {
-    <div
-      class="ficha-visao__painel"
-      role="tabpanel"
-      id="painel-habilidades"
-      aria-labelledby="aba-habilidades"
-    >
-      <section class="ficha-cartao ficha-visao__painel-cartao ficha-visao__painel-cartao--largo">
-        <header class="ficha-cartao__cabecalho">
-          <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Habilidades</h3>
-          <span class="ficha-cartao__regua"></span>
-          <span class="ficha-cartao__meta">
-            {{ totalHabilidades() }} {{ totalHabilidades() === 1 ? 'habilidade' : 'habilidades' }}
-          </span>
-        </header>
-
-        <app-ficha-habilidades
-          [habilidades]="dados().habilidades"
-          [editavel]="ajustavel()"
-          [classe]="dados().classe"
-          [arquetipo]="dados().arquetipo"
-          [energiaAtual]="estado().energiaAtual"
-          (habilidadesMudou)="ajusteHabilidades.emit($event)"
-          (habilidadeUtilizada)="aoUtilizarHabilidade($event)"
-        />
-      </section>
-    </div>
-  }
-
-  <!-- ABA: SANIDADE — marcas do estado, read-only (editor em m3-12). -->
-  @if (abaAtiva() === 'sanidade') {
-    <div
-      class="ficha-visao__painel"
-      role="tabpanel"
-      id="painel-sanidade"
-      aria-labelledby="aba-sanidade"
-    >
-      <section class="ficha-cartao ficha-visao__painel-cartao ficha-visao__painel-cartao--largo">
-        <header class="ficha-cartao__cabecalho">
-          <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Sanidade &amp; Lesões</h3>
-          <span class="ficha-cartao__regua"></span>
-          <span class="ficha-cartao__meta">{{ totalMarcas() }} {{ totalMarcas() === 1 ? 'marca' : 'marcas' }}</span>
-        </header>
-
-        <app-ficha-sanidade
-          [sequelas]="estado().sequelas"
-          [traumas]="estado().traumas"
-          [lesoes]="estado().lesoes"
-          [editavel]="ajustavel()"
-          (sanidadeMudou)="ajusteSanidade.emit($event)"
-        />
-      </section>
-    </div>
-  }
-
-  <!-- ABA: ANOTAÇÕES — texto livre editável (m3-32); campo `dados.anotacoes` já existia read-only. -->
-  @if (abaAtiva() === 'anotacoes') {
-    <div
-      class="ficha-visao__painel"
-      role="tabpanel"
-      id="painel-anotacoes"
-      aria-labelledby="aba-anotacoes"
-    >
-      <section class="ficha-cartao ficha-visao__painel-cartao ficha-visao__painel-cartao--largo">
-        <header class="ficha-cartao__cabecalho">
-          <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Anotações</h3>
-          <span class="ficha-cartao__regua"></span>
-          @if (ajustavel() && !editandoAnotacoes()) {
-            <button
-              class="ficha-cartao__lapis"
-              type="button"
-              aria-label="Editar anotações"
-              title="Editar anotações"
-              (click)="editarAnotacoes()"
-            >
-              ✎
-            </button>
-          }
-        </header>
-        @if (ajustavel() && editandoAnotacoes()) {
-          <textarea
-            #entradaAnotacoes
-            class="ficha-visao__anotacoes-campo"
-            aria-label="Anotações"
-            placeholder="Escreva suas anotações aqui…"
-            [value]="dados().anotacoes"
-            (keydown.escape)="cancelarAnotacoes()"
-            (blur)="confirmarAnotacoes(entradaAnotacoes.value)"
-          ></textarea>
-        } @else if (anotacoes()) {
-          <p class="ficha-visao__anotacoes ficha-visao__anotacoes-leitura">{{ anotacoes() }}</p>
-        } @else {
-          <p class="ficha-visao__vazio">Sem anotações.</p>
-        }
-      </section>
-    </div>
-  }
+  </div>
 
   <app-bandeja-dados />
 </div>

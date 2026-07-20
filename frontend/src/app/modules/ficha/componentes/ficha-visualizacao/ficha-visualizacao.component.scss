@@ -120,6 +120,12 @@
     }
   }
 
+  // Redesenho de comparação visual: só o card de identidade fica na tela — sem grade de 3
+  // colunas, contido na mesma largura que a coluna esquerda tinha na grade original.
+  &__painel--solo {
+    max-width: 360px;
+  }
+
   // Cartão único das abas não-grade (Inventário/Habilidades/Sanidade/Anotações): largura contida.
   &__painel-cartao {
     max-width: 640px;

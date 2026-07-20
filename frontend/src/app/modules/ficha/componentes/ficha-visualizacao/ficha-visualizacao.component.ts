@@ -51,11 +51,8 @@ import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive
 import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
-import { FichaCombos } from '../ficha-combos/ficha-combos.component';
-import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
-import { CustoEnergiaFragmento, FichaInventario } from '../ficha-inventario/ficha-inventario.component';
-import { FichaRolagens } from '../ficha-rolagens/ficha-rolagens.component';
-import { EstadoSanidade, FichaSanidade } from '../ficha-sanidade/ficha-sanidade.component';
+import type { CustoEnergiaFragmento } from '../ficha-inventario/ficha-inventario.component';
+import type { EstadoSanidade } from '../ficha-sanidade/ficha-sanidade.component';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
 import { GRUPOS_FORMACAO, rotuloParametroFormacao } from '../../opcoes-formacao';
 import { CONDICOES_FICHA, type CondicoesFicha } from '../../condicoes-ficha';
@@ -182,10 +179,11 @@ export interface AjusteClasse {
  * A **ficha** de jogador (m3-07/m3-10) — alvo de fidelidade `docs/design/examples/ficha-de-jogador.html`.
  * Edição no próprio lugar para dono/mestre (`ajustavel`), read-only para quem só tem acesso concedido.
  *
- * **Navegação por abas** (m3-11): **Visão Geral** (identidade + Vida/Energia + Atributos + Informações
- * Extras editáveis), **Combate** (derivados de combate reorganizados), **Sanidade** (marcas do estado,
- * read-only) e os placeholders **Inventário/Habilidades/Rolagens** com resumo até os editores chegarem
- * (m3-12…m3-15). A aba ativa é `?aba=` na URL (deep-link/refresh).
+ * **Redesenho de comparação visual** (branch `claude/redesign-ficha-screen-*`): a tela foi reduzida
+ * a um único card (identidade + vitalidade + condições + glance de Defesa/Resistências) pra comparar
+ * lado a lado com a versão em produção (master) — a navegação por abas (m3-11) e as seções de
+ * Atributos, Informações Extras, Identidade detalhada, Inventário, Habilidades, Sanidade e Anotações
+ * saíram do template nesta rodada; os `@Output`/computeds que as alimentavam continuam intactos.
  *
  * **Nenhuma regra de jogo vive aqui**: toda stat derivada (Vida/Energia máximas, Defesa, Deslocamento,
  * Dano, Percepção, Inventário, Patente…) vem de `shared/regras` (fonte única — SYSTEM.SPEC §6.6,
@@ -193,16 +191,7 @@ export interface AjusteClasse {
  */
 @Component({
   selector: 'app-ficha-visualizacao',
-  imports: [
-    HoldRepeat,
-    Icone,
-    FichaSanidade,
-    FichaHabilidades,
-    FichaInventario,
-    FichaRolagens,
-    FichaCombos,
-    BandejaDados,
-  ],
+  imports: [HoldRepeat, Icone, BandejaDados],
   templateUrl: './ficha-visualizacao.component.html',
   styleUrl: './ficha-visualizacao.component.scss',
 })
