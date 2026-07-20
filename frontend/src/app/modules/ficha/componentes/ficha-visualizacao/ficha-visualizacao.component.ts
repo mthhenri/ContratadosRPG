@@ -1097,6 +1097,22 @@ export class FichaVisualizacao {
     }),
   );
 
+  /**
+   * Defesa/Esquiva/Bloqueio em miniatura no card de identidade (redesenho de comparação visual) —
+   * só leitura (a edição continua na aba Combate); reaproveita `combateLinhas()`, que já traz esses
+   * três primeiro, na ordem de `CHAVES_COMBATE` — nenhum cálculo novo.
+   */
+  protected readonly defesaRapida = computed<readonly InfoExtra[]>(() => this.combateLinhas().slice(0, 3));
+
+  /** Abreviação de exibição de cada `TipoDanoEnum` no grid compacto de Resistências (glance). */
+  protected readonly abreviacaoResistencia: Record<TipoDanoEnum, string> = {
+    [TipoDanoEnum.FISICO]: 'Físico',
+    [TipoDanoEnum.BALISTICO]: 'Balíst.',
+    [TipoDanoEnum.EXPLOSAO]: 'Explos.',
+    [TipoDanoEnum.QUIMICO]: 'Químico',
+    [TipoDanoEnum.GERAL]: 'Geral',
+  };
+
   /** Tipo de dano em digitação direta na linha de Resistências, ou `null` fora de edição. */
   protected readonly editandoResistencia = signal<TipoDanoEnum | null>(null);
   private readonly entradaResistencia = viewChild<ElementRef<HTMLInputElement>>('entradaResistencia');

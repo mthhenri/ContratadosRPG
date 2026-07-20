@@ -34,9 +34,12 @@
   }
 
   // Três colunas no desktop; empilha no mobile. A central cresce, as laterais têm largura base.
+  // Esquerda em 360px (era 300px) — redesenho de comparação visual: o card de identidade ganhou
+  // Personalidade/Origem, a linha de 4 stats (Nível/Prestígio/Dinheiro/Salário) e os grids de
+  // Defesa/Resistências em miniatura, que não cabiam confortavelmente nos 300px originais.
   &__grade {
     display: grid;
-    grid-template-columns: minmax(0, 300px) minmax(0, 1fr) minmax(0, 280px);
+    grid-template-columns: minmax(0, 360px) minmax(0, 1fr) minmax(0, 280px);
     gap: var(--gap-grid);
     align-items: start;
 
@@ -416,6 +419,42 @@
   }
 }
 
+// Divisória fina dentro do card consolidado de identidade (redesenho de comparação visual) —
+// separa identidade/vitalidade/condições/defesa-rápida/resistências-rápida no mesmo `.ficha-cartao`.
+.ficha-cartao__divisor {
+  height: 1px;
+  background: var(--border-strong);
+  margin: 18px 0;
+}
+
+// Sub-rótulo discreto de uma seção dentro do mesmo card (Defesa/Resistências em miniatura) —
+// mais leve que `.ficha-cartao__cabecalho` (sem índice/régua), porque aqui é só um separador
+// textual dentro de um card que já tem seu próprio cabeçalho principal.
+.ficha-cartao__subrotulo {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--text-dim);
+  margin: 0 0 10px;
+
+  &--meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+}
+
+.ficha-cartao__subrotulo-nota {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 0;
+  text-transform: none;
+  font-style: italic;
+  color: var(--text-mute);
+}
+
 // === Card de identidade ===
 .ficha-ident {
   display: flex;
@@ -492,6 +531,38 @@
     }
   }
 
+  // Personalidade/Origem lado a lado — atalho de leitura (redesenho de comparação visual); a
+  // edição completa continua só no card "Identidade" mais abaixo na página.
+  &__meta {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+
+  &__meta-linha {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    flex: 1 1 0;
+  }
+
+  &__meta-rotulo {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+    flex: 0 0 auto;
+  }
+
+  &__meta-valor {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text-dim);
+    overflow-wrap: anywhere;
+  }
+
   &__chips {
     display: flex;
     flex-wrap: wrap;
@@ -553,13 +624,20 @@
     gap: 8px;
   }
 
-  // Nível e Prestígio são números curtos (largura mínima); Patente é textual e ocupa o meio
-  // flexível — como no protótipo, evitando que um nome longo (ex.: "Operações Especiais") vaze.
+  // Nível/Prestígio/Dinheiro/Salário dividem uma linha de 4 (números curtos); Patente (texto,
+  // pode ser longa — "Força Tarefa Especial") ocupa a linha inteira abaixo, nunca espremida ao
+  // lado de outro box — é a única forma de garantir que não quebre nem corte (redesenho de
+  // comparação visual).
   &__stats {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__stats-linha {
     display: grid;
-    // Nível e Prestígio (números curtos) dividem a 1ª linha; a Patente (texto, pode ser longa —
-    // "Força Tarefa Especial") ocupa a linha inteira abaixo, sem nunca quebrar no meio da palavra.
-    grid-template-columns: 1fr 1fr;
+    // Nível só precisa caber 2 dígitos; Dinheiro carrega valor + ✎ e pede mais espaço.
+    grid-template-columns: 0.6fr 1fr 1.5fr 1fr;
     gap: 8px;
   }
 }
@@ -575,9 +653,39 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-control);
 
-  // Patente ocupa a linha inteira (texto largo).
+  // Patente ocupa a linha inteira (texto largo) quando ao lado de outros boxes numa grade.
   &--largo {
     grid-column: 1 / -1;
+  }
+
+  // Densidade mais baixa que o box padrão — Nível/Prestígio/Dinheiro/Salário/Patente, que dividem
+  // espaço com mais vizinhos que o box "solo" original (redesenho de comparação visual). Valor
+  // nunca quebra linha; corta com "…" no caso extremo (nome de Patente maior que "Força Tarefa
+  // Especial") em vez de vazar ou empurrar o layout.
+  &--fino {
+    padding: 7px 8px;
+    gap: 4px;
+
+    .ficha-mini__valor {
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  // Read-only glance (Defesa/Esquiva/Bloqueio/Contra-ataque, Resistências) — edição fica noutra aba.
+  &--somente-leitura {
+    .ficha-mini__valor {
+      color: var(--text-dim);
+    }
+  }
+
+  // Contra-ataque: sem stat calculado hoje (só existe como habilidade narrativa) — contorno
+  // pontilhado sinaliza "ainda não é um dado real", distinto dos vizinhos com valor de verdade.
+  &--contra {
+    border-style: dashed;
+    border-color: var(--border-strong);
   }
 
   &__rotulo {
@@ -604,8 +712,11 @@
       color: var(--warning);
     }
 
-    // Valor clicável (Nível/Prestígio no lugar): mesmo visual, alvo de clique discreto.
+    // Valor clicável (Nível/Prestígio/Dinheiro no lugar): mesmo visual, alvo de clique discreto.
     &--editavel {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 5px;
       align-self: flex-start;
       background: transparent;
       border: 1px solid transparent;
@@ -620,6 +731,17 @@
         background: var(--surface);
       }
     }
+  }
+
+  // ✎ do valor editável (hoje só o Dinheiro combina lápis — Nível/Prestígio seguem sem ícone,
+  // o clique no próprio número já bastava antes; manter os dois padrões evita mexer nos demais).
+  &__lapis {
+    font-size: 10px;
+    color: var(--text-mute);
+  }
+
+  &__valor--editavel:hover &__lapis {
+    color: var(--text-dim);
   }
 
   &__entrada {
@@ -704,21 +826,30 @@
   white-space: nowrap;
 }
 
+// Vida/Energia lado a lado (redesenho de comparação visual) — cada `.ficha-barra` centralizada
+// na própria metade da coluna; empilha só no mobile bem estreito.
+.ficha-vitalidade {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+
+  @media (max-width: 360px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 // === Barras de Vida/Energia ===
 .ficha-barra {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 8px;
-
-  & + & {
-    margin-top: 16px;
-  }
 
   &__topo {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    gap: 6px;
   }
 
   // Valor + passos − / + (quando ajustável): agrupa à direita, alinhado à barra.
@@ -730,9 +861,11 @@
 
   &__rotulo {
     font-family: var(--font-mono);
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 600;
-    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-mute);
 
     // Sinaliza a dica (progressão da classe no hover/title).
     &--dica {
@@ -813,6 +946,7 @@
   }
 
   &__trilho {
+    width: 100%;
     height: 8px;
     border-radius: var(--radius-control);
     background: var(--surface-2);
@@ -962,6 +1096,61 @@
     width: bp.$alvo-toque;
     height: bp.$alvo-toque;
     font-size: 18px;
+  }
+}
+
+// Defesa/Esquiva/Bloqueio/Contra-ataque em miniatura no card de identidade (redesenho de
+// comparação visual) — glance somente leitura; reusa `.ficha-mini` para o mesmo visual dos boxes
+// de Nível/Prestígio acima, só com a grade em 4 colunas.
+.ficha-combate-rapido {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+
+  &--com-contra {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    @include bp.mobile {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
+// Resistências em miniatura no card de identidade (redesenho de comparação visual) — glance
+// somente leitura das 5 linhas de `TipoDanoEnum`; a edição continua na aba Combate.
+.ficha-resistencias {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+
+  @include bp.mobile {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+.ficha-resistencia {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+
+  &__abrev {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-mute);
+  }
+
+  &__valor {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-dim);
   }
 }
 

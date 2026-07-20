@@ -69,6 +69,19 @@
               </div>
             </div>
 
+            <!-- Personalidade/Origem — atalho de leitura (redesenho de comparação visual); a edição
+                 completa (Origem com Formação/Especialidade) continua só no card Identidade, abaixo. -->
+            <div class="ficha-ident__meta">
+              <div class="ficha-ident__meta-linha">
+                <span class="ficha-ident__meta-rotulo">Personalidade</span>
+                <span class="ficha-ident__meta-valor">{{ identidade().personalidade ?? 'Não definida' }}</span>
+              </div>
+              <div class="ficha-ident__meta-linha">
+                <span class="ficha-ident__meta-rotulo">Origem</span>
+                <span class="ficha-ident__meta-valor">{{ origemAtual()?.nome ?? 'Não definida' }}</span>
+              </div>
+            </div>
+
             @if (ajustavel() && editandoClasse()) {
               <div class="ficha-ident__classe-editor">
                 <select
@@ -134,68 +147,103 @@
             }
 
             <div class="ficha-ident__stats">
-              <div class="ficha-mini">
-                <span class="ficha-mini__rotulo">{{ rotuloNivel() }}</span>
-                @if (ajustavel() && editandoIdentidade() === 'nivel') {
-                  <input
-                    #entradaIdentidade
-                    class="ficha-mini__entrada"
-                    type="number"
-                    inputmode="numeric"
-                    [value]="dados().nivel"
-                    aria-label="Nível"
-                    (keydown.enter)="confirmarIdentidade('nivel', entradaIdentidade.value)"
-                    (keydown.escape)="cancelarIdentidade()"
-                    (blur)="confirmarIdentidade('nivel', entradaIdentidade.value)"
-                  />
-                } @else if (ajustavel()) {
-                  <button
-                    class="ficha-mini__valor ficha-mini__valor--editavel"
-                    type="button"
-                    aria-label="Editar nível"
-                    (click)="editarIdentidade('nivel')"
-                  >
-                    {{ dados().nivel }}
-                  </button>
-                } @else {
-                  <span class="ficha-mini__valor">{{ dados().nivel }}</span>
-                }
+              <div class="ficha-ident__stats-linha">
+                <div class="ficha-mini ficha-mini--fino">
+                  <span class="ficha-mini__rotulo">{{ rotuloNivel() }}</span>
+                  @if (ajustavel() && editandoIdentidade() === 'nivel') {
+                    <input
+                      #entradaIdentidade
+                      class="ficha-mini__entrada"
+                      type="number"
+                      inputmode="numeric"
+                      [value]="dados().nivel"
+                      aria-label="Nível"
+                      (keydown.enter)="confirmarIdentidade('nivel', entradaIdentidade.value)"
+                      (keydown.escape)="cancelarIdentidade()"
+                      (blur)="confirmarIdentidade('nivel', entradaIdentidade.value)"
+                    />
+                  } @else if (ajustavel()) {
+                    <button
+                      class="ficha-mini__valor ficha-mini__valor--warning ficha-mini__valor--editavel"
+                      type="button"
+                      aria-label="Editar nível"
+                      (click)="editarIdentidade('nivel')"
+                    >
+                      {{ dados().nivel }}
+                    </button>
+                  } @else {
+                    <span class="ficha-mini__valor ficha-mini__valor--warning">{{ dados().nivel }}</span>
+                  }
+                </div>
+                <div class="ficha-mini ficha-mini--fino">
+                  <span class="ficha-mini__rotulo">Prestígio</span>
+                  @if (ajustavel() && editandoIdentidade() === 'prestigio') {
+                    <input
+                      #entradaIdentidade
+                      class="ficha-mini__entrada"
+                      type="number"
+                      inputmode="numeric"
+                      [value]="dados().prestigio"
+                      aria-label="Prestígio"
+                      (keydown.enter)="confirmarIdentidade('prestigio', entradaIdentidade.value)"
+                      (keydown.escape)="cancelarIdentidade()"
+                      (blur)="confirmarIdentidade('prestigio', entradaIdentidade.value)"
+                    />
+                  } @else if (ajustavel()) {
+                    <button
+                      class="ficha-mini__valor ficha-mini__valor--editavel"
+                      type="button"
+                      aria-label="Editar prestígio"
+                      (click)="editarIdentidade('prestigio')"
+                    >
+                      {{ dados().prestigio }}
+                    </button>
+                  } @else {
+                    <span class="ficha-mini__valor">{{ dados().prestigio }}</span>
+                  }
+                </div>
+                <div class="ficha-mini ficha-mini--fino">
+                  <span class="ficha-mini__rotulo">Dinheiro</span>
+                  @if (ajustavel() && editandoDinheiro()) {
+                    <input
+                      #entradaDinheiro
+                      class="ficha-mini__entrada"
+                      type="number"
+                      [value]="dinheiro()"
+                      aria-label="Editar dinheiro"
+                      title="Editar dinheiro"
+                      (keydown.enter)="confirmarDinheiro(entradaDinheiro.value)"
+                      (keydown.escape)="cancelarDinheiro()"
+                      (blur)="confirmarDinheiro(entradaDinheiro.value)"
+                    />
+                  } @else if (ajustavel()) {
+                    <button
+                      type="button"
+                      class="ficha-mini__valor ficha-mini__valor--warning ficha-mini__valor--editavel"
+                      aria-label="Editar dinheiro"
+                      (click)="editarDinheiro()"
+                    >
+                      ${{ dinheiro().toLocaleString('pt-BR') }}
+                      <span class="ficha-mini__lapis" aria-hidden="true">✎</span>
+                    </button>
+                  } @else {
+                    <span class="ficha-mini__valor ficha-mini__valor--warning">${{ dinheiro().toLocaleString('pt-BR') }}</span>
+                  }
+                </div>
+                <div class="ficha-mini ficha-mini--fino">
+                  <span class="ficha-mini__rotulo">Salário</span>
+                  <span class="ficha-mini__valor ficha-mini__valor--warning">${{ salario().toLocaleString('pt-BR') }}</span>
+                </div>
               </div>
-              <div class="ficha-mini">
-                <span class="ficha-mini__rotulo">Prestígio</span>
-                @if (ajustavel() && editandoIdentidade() === 'prestigio') {
-                  <input
-                    #entradaIdentidade
-                    class="ficha-mini__entrada"
-                    type="number"
-                    inputmode="numeric"
-                    [value]="dados().prestigio"
-                    aria-label="Prestígio"
-                    (keydown.enter)="confirmarIdentidade('prestigio', entradaIdentidade.value)"
-                    (keydown.escape)="cancelarIdentidade()"
-                    (blur)="confirmarIdentidade('prestigio', entradaIdentidade.value)"
-                  />
-                } @else if (ajustavel()) {
-                  <button
-                    class="ficha-mini__valor ficha-mini__valor--warning ficha-mini__valor--editavel"
-                    type="button"
-                    aria-label="Editar prestígio"
-                    (click)="editarIdentidade('prestigio')"
-                  >
-                    {{ dados().prestigio }}
-                  </button>
-                } @else {
-                  <span class="ficha-mini__valor ficha-mini__valor--warning">{{ dados().prestigio }}</span>
-                }
-              </div>
-              <div class="ficha-mini ficha-mini--largo">
+              <div class="ficha-mini ficha-mini--fino ficha-mini--largo">
                 <span class="ficha-mini__rotulo">Patente</span>
                 <span class="ficha-mini__valor ficha-mini__valor--accent">{{ patenteTexto() }}</span>
               </div>
             </div>
-          </section>
 
-          <section class="ficha-cartao">
+            <div class="ficha-cartao__divisor"></div>
+
+            <div class="ficha-vitalidade">
             <div class="ficha-barra ficha-barra--vida">
               <div class="ficha-barra__topo">
                 <span class="ficha-barra__rotulo ficha-barra__rotulo--dica" [attr.title]="progressaoVida()">
@@ -380,6 +428,7 @@
                 ></span>
               </div>
             </div>
+            </div>
 
             <!-- Condições (m2-16b): Morrendo/Inconsciente/Machucado — alternadas manualmente, sem
                  regra derivada de Vida/Energia (mesma filosofia de m3-10). -->
@@ -400,6 +449,44 @@
                   <app-icone [nome]="condicao.icone" />
                   <span>{{ condicao.rotulo }}</span>
                 </button>
+              }
+            </div>
+
+            <div class="ficha-cartao__divisor"></div>
+
+            <!-- Defesa/Esquiva/Bloqueio — só leitura (glance); edição continua na aba Combate. -->
+            <p class="ficha-cartao__subrotulo ficha-cartao__subrotulo--meta">
+              <span>Defesa</span>
+              <span class="ficha-cartao__subrotulo-nota">edição na aba Combate</span>
+            </p>
+            <div class="ficha-combate-rapido ficha-combate-rapido--com-contra">
+              @for (linha of defesaRapida(); track linha.chave) {
+                <div class="ficha-mini ficha-mini--fino ficha-mini--somente-leitura">
+                  <span class="ficha-mini__rotulo">{{ linha.rotulo }}</span>
+                  <span class="ficha-mini__valor">{{ linha.display }}</span>
+                </div>
+              }
+              <!-- Contra-ataque: só existe hoje como habilidade narrativa (Lutador/Vanguarda) — o motor
+                   não tem um stat mecânico calculado pra ele ainda. Placeholder até fechar essa lacuna. -->
+              <div
+                class="ficha-mini ficha-mini--fino ficha-mini--somente-leitura ficha-mini--contra"
+                title="Ainda não calculado pelo motor — depende da habilidade de Contra-ataque"
+              >
+                <span class="ficha-mini__rotulo">Contra-ataque</span>
+                <span class="ficha-mini__valor">—</span>
+              </div>
+            </div>
+
+            <div class="ficha-cartao__divisor"></div>
+
+            <!-- Resistências — só leitura (glance); edição continua na aba Combate. -->
+            <p class="ficha-cartao__subrotulo">Resistências</p>
+            <div class="ficha-resistencias">
+              @for (resistencia of resistencias(); track resistencia.tipo) {
+                <div class="ficha-resistencia">
+                  <span class="ficha-resistencia__abrev">{{ abreviacaoResistencia[resistencia.tipo] }}</span>
+                  <span class="ficha-resistencia__valor">{{ resistencia.total }}</span>
+                </div>
               }
             </div>
           </section>
@@ -593,44 +680,8 @@
                 </div>
               }
 
-              <!-- Dinheiro atual (m3-34) — editável no próprio lugar, mesmo canal de nível/prestígio. -->
-              <div class="ficha-info__linha">
-                <dt class="ficha-info__rotulo">Dinheiro</dt>
-                @if (ajustavel() && editandoDinheiro()) {
-                  <dd class="ficha-info__valor">
-                    <input
-                      #entradaDinheiro
-                      class="ficha-info__entrada"
-                      type="number"
-                      [value]="dinheiro()"
-                      aria-label="Editar dinheiro"
-                      title="Editar dinheiro"
-                      (keydown.enter)="confirmarDinheiro(entradaDinheiro.value)"
-                      (keydown.escape)="cancelarDinheiro()"
-                      (blur)="confirmarDinheiro(entradaDinheiro.value)"
-                    />
-                  </dd>
-                } @else if (ajustavel()) {
-                  <dd class="ficha-info__valor">
-                    <button
-                      type="button"
-                      class="ficha-info__editavel"
-                      aria-label="Editar dinheiro"
-                      (click)="editarDinheiro()"
-                    >
-                      ${{ dinheiro().toLocaleString('pt-BR') }}
-                    </button>
-                  </dd>
-                } @else {
-                  <dd class="ficha-info__valor">${{ dinheiro().toLocaleString('pt-BR') }}</dd>
-                }
-              </div>
-
-              <!-- Salário (m3-34) — derivado da Patente, nunca persistido/editável. -->
-              <div class="ficha-info__linha">
-                <dt class="ficha-info__rotulo">Salário</dt>
-                <dd class="ficha-info__valor">${{ salario().toLocaleString('pt-BR') }}</dd>
-              </div>
+              <!-- Dinheiro/Salário (m3-34) subiram para o card de identidade (redesenho de comparação
+                   visual) — sem duplicar controle de edição na mesma tela. -->
             </dl>
           </details>
         </div>

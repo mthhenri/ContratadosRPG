@@ -208,34 +208,36 @@ describe('FichaVisualizacao', () => {
   });
 
   describe('Dinheiro + Salário (m3-34)', () => {
+    /** Localiza o box `.ficha-mini` (redesenho de comparação visual) de um rótulo no card de identidade. */
+    function boxDoRotulo(raiz: HTMLElement, rotulo: string): Element | undefined {
+      return Array.from(raiz.querySelectorAll('.ficha-mini')).find(
+        (box) => box.querySelector('.ficha-mini__rotulo')?.textContent?.trim() === rotulo,
+      );
+    }
+
     it('exibe o dinheiro atual e o salário derivado do Prestígio', () => {
       const { raiz } = montar({ ...dados, prestigio: 1, dinheiro: 3500 });
-      const linhas = Array.from(raiz.querySelectorAll('.ficha-info__linha')).map((linha) => ({
-        rotulo: linha.querySelector('.ficha-info__rotulo')?.textContent?.trim(),
-        valor: linha.querySelector('.ficha-info__valor')?.textContent?.trim(),
-      }));
-      expect(linhas).toContainEqual({ rotulo: 'Dinheiro', valor: '$3.500' });
+      expect(boxDoRotulo(raiz, 'Dinheiro')?.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe(
+        '$3.500',
+      );
       // Prestígio 1 → patente "Agente", salário $1.000 (tabela de patente).
-      expect(linhas).toContainEqual({ rotulo: 'Salário', valor: '$1.000' });
+      expect(boxDoRotulo(raiz, 'Salário')?.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe(
+        '$1.000',
+      );
     });
 
     it('cai em 0 quando a ficha não tem o campo `dinheiro` (retrocompat)', () => {
       // O fixture `dados` base do describe-pai já não tem `dinheiro` — exatamente o caso legado.
       const { raiz } = montar(dados);
-      expect(raiz.querySelector('.ficha-info__linha')?.textContent).not.toContain('undefined');
-      const linhas = Array.from(raiz.querySelectorAll('.ficha-info__linha')).map((linha) => ({
-        rotulo: linha.querySelector('.ficha-info__rotulo')?.textContent?.trim(),
-        valor: linha.querySelector('.ficha-info__valor')?.textContent?.trim(),
-      }));
-      expect(linhas).toContainEqual({ rotulo: 'Dinheiro', valor: '$0' });
+      expect(boxDoRotulo(raiz, 'Dinheiro')?.textContent).not.toContain('undefined');
+      expect(boxDoRotulo(raiz, 'Dinheiro')?.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe(
+        '$0',
+      );
     });
 
     it('Salário nunca tem affordance de edição, mesmo ajustável', () => {
       const { raiz } = montar({ ...dados, dinheiro: 1000 }, 'Corvo', 42, true);
-      const linhaSalario = Array.from(raiz.querySelectorAll('.ficha-info__linha')).find(
-        (linha) => linha.querySelector('.ficha-info__rotulo')?.textContent?.trim() === 'Salário',
-      );
-      expect(linhaSalario?.querySelector('button')).toBeNull();
+      expect(boxDoRotulo(raiz, 'Salário')?.querySelector('button')).toBeNull();
     });
 
     it('edita o Dinheiro e emite via ajusteCampoDados', () => {
@@ -243,12 +245,12 @@ describe('FichaVisualizacao', () => {
       const campos: { campo: string; valor: number }[] = [];
       alvo.fixture.componentInstance.ajusteCampoDados.subscribe((c) => campos.push(c));
 
-      const botao = Array.from(alvo.raiz.querySelectorAll('.ficha-info__linha')).find(
-        (linha) => linha.querySelector('.ficha-info__rotulo')?.textContent?.trim() === 'Dinheiro',
-      )!.querySelector<HTMLButtonElement>('.ficha-info__editavel')!;
+      const botao = boxDoRotulo(alvo.raiz, 'Dinheiro')!.querySelector<HTMLButtonElement>(
+        '.ficha-mini__valor--editavel',
+      )!;
       botao.click();
       alvo.fixture.detectChanges();
-      const entrada = alvo.raiz.querySelector<HTMLInputElement>('.ficha-info__entrada')!;
+      const entrada = alvo.raiz.querySelector<HTMLInputElement>('.ficha-mini__entrada')!;
       entrada.value = '4200';
       entrada.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
       alvo.fixture.detectChanges();
@@ -642,11 +644,11 @@ describe('FichaVisualizacao', () => {
     expect(ajustes).toEqual([{ classe: ClasseEnum.CIVIL, arquetipo: null }]);
   });
 
-  it('mostra os alvos de edição de identidade (Codinome/Nível/Prestígio) quando ajustável', () => {
+  it('mostra os alvos de edição de identidade (Codinome/Nível/Prestígio/Dinheiro) quando ajustável', () => {
     const { raiz } = montar(dados, 'Corvo', 42, true);
     expect(raiz.querySelector('.ficha-ident__nome--editavel')).not.toBeNull();
-    // Nível e Prestígio editáveis (a Patente segue derivada, não editável).
-    expect(raiz.querySelectorAll('.ficha-mini__valor--editavel').length).toBe(2);
+    // Nível, Prestígio e Dinheiro editáveis (Patente e Salário seguem derivados, não editáveis).
+    expect(raiz.querySelectorAll('.ficha-mini__valor--editavel').length).toBe(3);
   });
 
   it('emite os eventos certos ao confirmar Codinome/Nível/Prestígio', () => {
