@@ -32,6 +32,7 @@ import type {
 } from '@contratados-rpg/shared/dtos/ficha';
 
 import { FichaVisualizar } from './visualizar.page';
+import type { AjusteAtributos } from '../../componentes/ficha-visualizacao/ficha-visualizacao.component';
 import { FichaService } from '../../ficha.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { SessaoService } from '../../../../core/services/sessao.service';
@@ -448,7 +449,11 @@ describe('FichaVisualizar', () => {
       destreza: 5,
       forca: 6,
     };
-    componente['ajustarAtributos']({ atributos: novosAtributos, maestria: null });
+    componente['ajustarAtributos']({
+      atributos: novosAtributos,
+      maestria: null,
+      modificadoresTeste: {} as AjusteAtributos['modificadoresTeste'],
+    });
     const d = componente['ficha']()!.dados;
 
     // Máximas somam o delta do atributo (no Nível atual), sem recalcular do zero.
@@ -500,6 +505,7 @@ describe('FichaVisualizar', () => {
     componente['ajustarAtributos']({
       atributos: { ...carregada.dados.atributos, forca: 6, vigor: 4 },
       maestria: null,
+      modificadoresTeste: {} as AjusteAtributos['modificadoresTeste'],
     });
 
     // Valor editado à mão diverge do calculado → preservado.

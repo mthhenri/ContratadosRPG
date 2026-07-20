@@ -149,10 +149,15 @@ export interface AjusteResistencia {
   readonly valor: number;
 }
 
-/** Edição em grupo dos atributos + Maestria (m3-10) — a página persiste `atributos` e `maestria`. */
+/**
+ * Edição em grupo dos atributos + Maestria + modificadores de teste — a página persiste os três em
+ * `atributos`, `maestria` e `modificadoresTeste` (redesenho de comparação visual: o modificador de
+ * teste só é editável junto com o resto, na mesma tela de edição — não há um canal separado).
+ */
 export interface AjusteAtributos {
   readonly atributos: FichaAtributosDto;
   readonly maestria: keyof FichaAtributosDto | null;
+  readonly modificadoresTeste: Record<keyof FichaAtributosDto, number>;
 }
 
 /**
@@ -490,26 +495,37 @@ export class FichaVisualizacao {
   private readonly bandeja = inject(BandejaDadosService);
 
   /**
-   * Modificador temporário de teste por atributo (ex.: Amplificador aplicado) — local à leitura,
-   * **não persistido** (redesenho de comparação visual): soma direto na fórmula rolada, sem afetar
-   * o atributo base nem a Maestria.
+   * Modificador temporário de teste por atributo (ex.: Amplificador aplicado) — persistido em
+   * `dados.modificadoresTeste` (redesenho de comparação visual), mas só **editável** dentro da
+   * mesma tela de edição dos atributos (`editandoAtributos()`); fora dela é só leitura.
    */
-  protected readonly modificadoresTeste = signal<Record<ChaveAtributo, number>>({
-    destreza: 0,
-    forca: 0,
-    luta: 0,
-    pontaria: 0,
-    vigor: 0,
-    intelecto: 0,
-    medicina: 0,
-    sentidos: 0,
-    social: 0,
-    vontade: 0,
-  });
+  protected readonly modificadoresTeste = computed(() => this.dados().modificadoresTeste ?? {});
 
-  /** Passo −/+ no modificador de teste de um atributo (sem clamp — mesma liberdade dos demais steppers). */
-  protected ajustarModificadorTeste(chave: ChaveAtributo, delta: number): void {
-    this.modificadoresTeste.update((atual) => ({ ...atual, [chave]: atual[chave] + delta }));
+  /** Modificador de teste de um atributo, já resolvido a 0 quando ausente do documento. */
+  protected modificadorTeste(chave: ChaveAtributo): number {
+    return this.modificadoresTeste()[chave] ?? 0;
+  }
+
+  /** Rascunho dos modificadores de teste durante a edição — completo (as 10 chaves, 0 onde ausente). */
+  protected readonly rascunhoModificadoresTeste = signal<Record<ChaveAtributo, number> | null>(null);
+
+  /** Record completo (as 10 chaves) dos modificadores persistidos, preenchendo 0 onde ausente. */
+  private modificadoresTesteCompletos(): Record<ChaveAtributo, number> {
+    const persistidos = this.modificadoresTeste();
+    const completo = {} as Record<ChaveAtributo, number>;
+    (Object.keys(this.atributos()) as ChaveAtributo[]).forEach((chave) => {
+      completo[chave] = persistidos[chave] ?? 0;
+    });
+    return completo;
+  }
+
+  /** Passo −/+ no modificador de teste do rascunho (sem clamp — mesma liberdade dos demais steppers). */
+  protected ajustarModificadorTesteRascunho(chave: ChaveAtributo, delta: number): void {
+    const atual = this.rascunhoModificadoresTeste();
+    if (!atual) {
+      return;
+    }
+    this.rascunhoModificadoresTeste.set({ ...atual, [chave]: atual[chave] + delta });
   }
 
   /** Sufixo `" + N"`/`" − N"` do modificador de teste na fórmula — vazio quando zerado. */
@@ -530,7 +546,7 @@ export class FichaVisualizacao {
    */
   protected rolarTesteAtributo(campo: CampoAtributo): void {
     const atributo = this.atributosEfetivos()[campo.chave];
-    const sufixo = this.sufixoModificador(this.modificadoresTeste()[campo.chave]);
+    const sufixo = this.sufixoModificador(this.modificadorTeste(campo.chave));
     // A fórmula que vai ao **motor** mantém `kh1` — é o gatilho da desvantagem intrínseca (atributo ≤ 0).
     const formula = `${campo.chave}d20kh1cm1 + PROF${sufixo}`;
     const resultado = rolarFormula({
@@ -1016,6 +1032,7 @@ export class FichaVisualizacao {
   protected editarAtributos(): void {
     this.rascunhoAtributos.set({ ...this.atributos() });
     this.rascunhoMaestria.set(this.dados().maestria);
+    this.rascunhoModificadoresTeste.set(this.modificadoresTesteCompletos());
     this.editandoAtributos.set(true);
   }
 
@@ -1023,6 +1040,7 @@ export class FichaVisualizacao {
   protected cancelarAtributos(): void {
     this.editandoAtributos.set(false);
     this.rascunhoAtributos.set(null);
+    this.rascunhoModificadoresTeste.set(null);
   }
 
   /** Passo − / + num atributo do rascunho (sem clamp — liberdade total, m3-10). */
@@ -1053,15 +1071,17 @@ export class FichaVisualizacao {
     this.rascunhoMaestria.set(this.rascunhoMaestria() === chave ? null : chave);
   }
 
-  /** Confirma a edição em grupo: emite atributos + Maestria para a página persistir. */
+  /** Confirma a edição em grupo: emite atributos + Maestria + modificadores de teste para a página persistir. */
   protected confirmarAtributos(): void {
     const atributos = this.rascunhoAtributos();
-    if (!atributos) {
+    const modificadoresTeste = this.rascunhoModificadoresTeste();
+    if (!atributos || !modificadoresTeste) {
       return;
     }
     this.editandoAtributos.set(false);
     this.rascunhoAtributos.set(null);
-    this.ajusteAtributos.emit({ atributos, maestria: this.rascunhoMaestria() });
+    this.rascunhoModificadoresTeste.set(null);
+    this.ajusteAtributos.emit({ atributos, maestria: this.rascunhoMaestria(), modificadoresTeste });
   }
 
   /**

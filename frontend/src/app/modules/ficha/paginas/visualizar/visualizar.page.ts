@@ -395,6 +395,7 @@ export class FichaVisualizar {
       ...fichaAtual.dados,
       atributos: ajuste.atributos,
       maestria: ajuste.maestria,
+      modificadoresTeste: ajuste.modificadoresTeste,
     };
     this.ficha.set({ ...fichaAtual, dados: this.aplicarProgressao(fichaAtual.dados, dadosNovos) });
     this.agendarPersistencia();

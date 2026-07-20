@@ -732,6 +732,34 @@
                       >
                         ★
                       </button>
+                      <!-- Modificador de teste (soma na fórmula rolada, ex.: Amplificador aplicado) —
+                           só editável aqui, na mesma tela de edição dos atributos. -->
+                      <div class="ficha-atributo__modificador">
+                        <button
+                          class="ficha-atributo__mod-passo"
+                          type="button"
+                          appHoldRepeat
+                          [attr.aria-label]="'Reduzir modificador de teste de ' + campo.nome"
+                          (passo)="ajustarModificadorTesteRascunho(campo.chave, -1)"
+                        >
+                          −
+                        </button>
+                        <span
+                          class="ficha-atributo__mod-valor"
+                          [class.ficha-atributo__mod-valor--ativo]="rascunhoModificadoresTeste()?.[campo.chave] !== 0"
+                        >
+                          {{ (rascunhoModificadoresTeste()?.[campo.chave] ?? 0) >= 0 ? '+' : '' }}{{ rascunhoModificadoresTeste()?.[campo.chave] ?? 0 }}
+                        </span>
+                        <button
+                          class="ficha-atributo__mod-passo"
+                          type="button"
+                          appHoldRepeat
+                          [attr.aria-label]="'Aumentar modificador de teste de ' + campo.nome"
+                          (passo)="ajustarModificadorTesteRascunho(campo.chave, 1)"
+                        >
+                          +
+                        </button>
+                      </div>
                     </div>
                   } @else {
                     <div
@@ -774,32 +802,16 @@
                           </span>
                         }
                       </span>
-                      <div class="ficha-atributo__modificador">
-                        <button
-                          class="ficha-atributo__mod-passo"
-                          type="button"
-                          appHoldRepeat
-                          [attr.aria-label]="'Reduzir modificador de teste de ' + campo.nome"
-                          (passo)="ajustarModificadorTeste(campo.chave, -1)"
-                        >
-                          −
-                        </button>
+                      <!-- Modificador de teste — só leitura aqui; a edição fica atrás do lápis de
+                           Atributos (mesma tela de edição dos atributos base). Só aparece se ≠ 0. -->
+                      @if (modificadorTeste(campo.chave) !== 0) {
                         <span
-                          class="ficha-atributo__mod-valor"
-                          [class.ficha-atributo__mod-valor--ativo]="modificadoresTeste()[campo.chave] !== 0"
+                          class="ficha-atributo__mod-valor ficha-atributo__mod-valor--ativo"
+                          [attr.title]="'Modificador de teste de ' + campo.nome"
                         >
-                          {{ modificadoresTeste()[campo.chave] >= 0 ? '+' : '' }}{{ modificadoresTeste()[campo.chave] }}
+                          {{ modificadorTeste(campo.chave) >= 0 ? '+' : '' }}{{ modificadorTeste(campo.chave) }}
                         </span>
-                        <button
-                          class="ficha-atributo__mod-passo"
-                          type="button"
-                          appHoldRepeat
-                          [attr.aria-label]="'Aumentar modificador de teste de ' + campo.nome"
-                          (passo)="ajustarModificadorTeste(campo.chave, 1)"
-                        >
-                          +
-                        </button>
-                      </div>
+                      }
                     </div>
                   }
                 }

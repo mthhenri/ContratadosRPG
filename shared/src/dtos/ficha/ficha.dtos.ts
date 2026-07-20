@@ -399,4 +399,10 @@ export interface FichaJogadorDadosDto {
    * **não** é persistido aqui — é derivado da Patente (`obterPatente(prestigio).salario`).
    */
   readonly dinheiro?: number;
+  /**
+   * Modificadores temporários de teste por atributo (redesenho de comparação visual): somam direto
+   * na fórmula rolada (ex.: Amplificador aplicado), sem alterar o atributo base nem a Maestria.
+   * **Opcional** por retrocompatibilidade e parcial — atributo ausente cai em 0.
+   */
+  readonly modificadoresTeste?: Partial<Record<keyof FichaAtributosDto, number>>;
 }

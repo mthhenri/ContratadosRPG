@@ -48,8 +48,11 @@
       flex: 0 0 auto;
     }
 
+    // 260px (era 170px) — nos 170px o cabeçalho, o resumo de Maestria e o Salvar/Cancelar da
+    // edição só cabiam espremendo tudo (padding mínimo, fonte minúscula); ainda mais fina que a
+    // Identidade, mas com espaço de sobra para nada quebrar visualmente.
     &--atributos {
-      width: 170px;
+      width: 260px;
       flex: 0 0 auto;
     }
   }
@@ -72,9 +75,9 @@
   }
 
   // Redesenho de comparação visual: só os dois cards (Identidade + Atributos) ficam na tela — sem
-  // grade de 3 colunas. Largura = as duas colunas fixas (420px + 170px) + o gap entre elas.
+  // grade de 3 colunas. Largura = as duas colunas fixas (420px + 260px) + o gap entre elas.
   &__painel--solo {
-    max-width: calc(420px + var(--gap-grid) + 170px);
+    max-width: calc(420px + var(--gap-grid) + 260px);
   }
 }
 
@@ -195,26 +198,25 @@
   }
 }
 
-// Card compacto de Atributos (redesenho de comparação visual): padding menor que o padrão (a
-// coluna é bem mais estreita que a de Identidade) e conteúdo alinhado no topo, esticando (`flex: 1`)
-// até o mesmo comprimento da coluna de Identidade (`__linha-colunas` acima tem `align-items: stretch`).
+// Card compacto de Atributos (redesenho de comparação visual): conteúdo alinhado no topo,
+// esticando (`flex: 1`) até o mesmo comprimento da coluna de Identidade (`__linha-colunas` acima
+// tem `align-items: stretch`).
 .ficha-cartao--atributos {
   width: 100%;
-  padding: 6px;
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
 }
 
-// Fórmula da DT abaixo do título (não cabe ao lado numa coluna de 170px) — linha própria, centralizada.
+// Fórmula da DT abaixo do título (não cabe ao lado do título+régua) — linha própria, centralizada.
 .ficha-atributos__formula {
   text-align: center;
   margin-bottom: 12px;
 }
 
-// Salvar/Cancelar da edição de atributos — empilhados (largura cheia cada) pelo mesmo motivo:
-// os dois lado a lado não cabem nos ~158px de conteúdo da coluna de Atributos.
+// Salvar/Cancelar da edição de atributos — empilhados (largura cheia cada): a coluna de Atributos é
+// mais estreita que a de Identidade, então os dois lado a lado ainda ficariam apertados.
 .ficha-atributos__acoes {
   display: flex;
   flex-direction: column;
@@ -1053,12 +1055,13 @@
 
   // Card compacto de Atributos (redesenho de comparação visual): no máximo 2 colunas internas
   // (a pedido) — em vez das 5 do card original, caixas mais largas cabem o stepper de modificador
-  // de teste. Densidade menor (gaps/paddings) pra caber no comprimento da coluna de Identidade.
+  // de teste. Densidade um pouco menor que o card original (280px eram 5 colunas; aqui são 2 numa
+  // coluna mais estreita), mas com espaço de sobra para nada quebrar visualmente.
   &--2col {
-    gap: 8px;
+    gap: 10px;
 
     .ficha-atributos__grupo {
-      gap: 6px;
+      gap: 8px;
     }
 
     .ficha-atributos__rotulo-grupo {
@@ -1067,24 +1070,24 @@
 
     .ficha-atributos__grade {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 5px;
+      gap: 8px;
 
       // Atributo sem par na última linha (5º de 5, em grade de 2 colunas) — centralizado em vez
       // de grudar na coluna esquerda com um vão vazio ao lado.
       > *:nth-child(5) {
         grid-column: 1 / -1;
         justify-self: center;
-        width: calc(50% - 2.5px);
+        width: calc(50% - 4px);
       }
     }
 
     .ficha-atributo {
-      padding: 6px 3px;
-      gap: 3px;
+      padding: 10px 6px;
+      gap: 5px;
     }
 
     .ficha-atributo__valor {
-      font-size: 18px;
+      font-size: 22px;
     }
   }
 }
@@ -1207,17 +1210,17 @@
 
   &__mod-passo {
     @extend .ficha-passo;
-    width: 14px;
-    height: 14px;
-    font-size: 10px;
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
   }
 
   &__mod-valor {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     color: var(--text-mute);
-    min-width: 15px;
+    min-width: 17px;
     text-align: center;
 
     &--ativo {
