@@ -41,8 +41,10 @@
 
     // Redesenho de comparação visual: as duas colunas do painel solo têm largura fixa (a
     // atributos não pode passar do comprimento nem da largura da identidade — mais fina que ela).
+    // Identidade em 420px (era 360px) — nos 360px os três botões de Condição (Morrendo/Machucado/
+    // Inconsciente) não cabiam numa linha só (Machucado ia pra uma segunda linha).
     &--identidade {
-      width: 360px;
+      width: 420px;
       flex: 0 0 auto;
     }
 
@@ -70,9 +72,9 @@
   }
 
   // Redesenho de comparação visual: só os dois cards (Identidade + Atributos) ficam na tela — sem
-  // grade de 3 colunas. Largura = as duas colunas fixas (360px + 170px) + o gap entre elas.
+  // grade de 3 colunas. Largura = as duas colunas fixas (420px + 170px) + o gap entre elas.
   &__painel--solo {
-    max-width: calc(360px + var(--gap-grid) + 170px);
+    max-width: calc(420px + var(--gap-grid) + 170px);
   }
 }
 
@@ -203,6 +205,25 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+}
+
+// Fórmula da DT abaixo do título (não cabe ao lado numa coluna de 170px) — linha própria, centralizada.
+.ficha-atributos__formula {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+// Salvar/Cancelar da edição de atributos — empilhados (largura cheia cada) pelo mesmo motivo:
+// os dois lado a lado não cabem nos ~158px de conteúdo da coluna de Atributos.
+.ficha-atributos__acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+
+  .ficha-cartao__acao {
+    width: 100%;
+  }
 }
 
 // Divisória fina dentro do card consolidado de identidade (redesenho de comparação visual) —
@@ -347,6 +368,42 @@
     font-size: 13px;
     color: var(--text-dim);
     overflow-wrap: anywhere;
+
+    // Personalidade clicável (mesmo padrão do Codinome/Nível) — botão-texto, sem estilo nativo.
+    &--editavel {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--radius-control);
+      padding: 0 4px;
+      margin-left: -4px;
+      cursor: text;
+
+      &:hover {
+        border-color: var(--border-strong);
+        background: var(--surface-2);
+      }
+    }
+  }
+
+  // Origem: valor + lápis na mesma linha (o rótulo já fica acima, em `&__meta-rotulo`).
+  &__meta-valor-linha {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  // Caixa de uma linha de Formação no editor de Origem — mesmo visual de `.ficha-mini`.
+  &__caixa {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
   }
 
   &__chips {
@@ -422,8 +479,9 @@
 
   &__stats-linha {
     display: grid;
-    // Nível só precisa caber 2 dígitos; Dinheiro carrega valor + ✎ e pede mais espaço.
-    grid-template-columns: 0.6fr 1fr 1.5fr 1fr;
+    // Nível ganhou um pouco mais (o rótulo "NÍVEL" é mais largo que o valor de 2 dígitos, sobrava
+    // espaço desigual nas laterais) — compensado tirando de Dinheiro, que ainda cabe valor + ✎.
+    grid-template-columns: 0.85fr 1fr 1.25fr 1fr;
     gap: 8px;
   }
 }

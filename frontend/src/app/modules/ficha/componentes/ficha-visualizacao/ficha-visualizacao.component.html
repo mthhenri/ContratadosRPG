@@ -44,18 +44,187 @@
           </div>
         </div>
 
-        <!-- Personalidade/Origem — atalho de leitura (redesenho de comparação visual); a edição
-             completa (Origem com Formação/Especialidade) saiu da tela nesta rodada de recorte. -->
+        <!-- Personalidade/Origem (m3-23/m3-25) — trava de imutabilidade refletida (m3-24): livre
+             pro mestre sempre, pro dono só até a primeira definição. -->
         <div class="ficha-ident__meta">
           <div class="ficha-ident__meta-linha">
             <span class="ficha-ident__meta-rotulo">Personalidade</span>
-            <span class="ficha-ident__meta-valor">{{ identidade().personalidade ?? 'Não definida' }}</span>
+            @if (editandoIdentidade() === 'personalidade') {
+              <input
+                #entradaIdentidade
+                class="ficha-ident__select"
+                type="text"
+                [value]="identidade().personalidade ?? ''"
+                aria-label="Personalidade"
+                (keydown.enter)="confirmarIdentidade('personalidade', entradaIdentidade.value)"
+                (keydown.escape)="cancelarIdentidade()"
+                (blur)="confirmarIdentidade('personalidade', entradaIdentidade.value)"
+              />
+            } @else if (personalidadeEditavel()) {
+              <button
+                class="ficha-ident__meta-valor ficha-ident__meta-valor--editavel"
+                type="button"
+                aria-label="Editar personalidade"
+                (click)="editarIdentidade('personalidade')"
+              >
+                {{ identidade().personalidade ?? '— Definir —' }}
+              </button>
+            } @else {
+              <span class="ficha-ident__meta-valor">{{ identidade().personalidade ?? 'Não definida' }}</span>
+            }
           </div>
           <div class="ficha-ident__meta-linha">
             <span class="ficha-ident__meta-rotulo">Origem</span>
-            <span class="ficha-ident__meta-valor">{{ origemAtual()?.nome ?? 'Não definida' }}</span>
+            <span class="ficha-ident__meta-valor-linha">
+              <span class="ficha-ident__meta-valor">{{ origemAtual()?.nome ?? 'Não definida' }}</span>
+              @if (!editandoOrigem() && origemEditavel()) {
+                <button
+                  class="ficha-ident__chip-lapis"
+                  type="button"
+                  aria-label="Editar origem"
+                  title="Editar origem"
+                  (click)="editarOrigem()"
+                >
+                  ✎
+                </button>
+              }
+            </span>
           </div>
         </div>
+
+        <!-- Editor de Origem (m3-23): nome/descrição/Saber de Campo + Especialidade + 2 linhas de
+             Formação. Reusa o mesmo mini-editor da Classe/Arquétipo (`ficha-ident__classe-editor`). -->
+        @if (editandoOrigem()) {
+          @if (rascunhoOrigem(); as rascunho) {
+            <div class="ficha-ident__classe-editor">
+              <label class="ficha-ident__meta-linha">
+                <span class="ficha-ident__meta-rotulo">Nome</span>
+                <input
+                  class="ficha-ident__select"
+                  type="text"
+                  [value]="rascunho.nome"
+                  (input)="mudarTextoOrigemRascunho('nome', $any($event.target).value)"
+                />
+              </label>
+              <label class="ficha-ident__meta-linha">
+                <span class="ficha-ident__meta-rotulo">Descrição</span>
+                <input
+                  class="ficha-ident__select"
+                  type="text"
+                  [value]="rascunho.descricao"
+                  (input)="mudarTextoOrigemRascunho('descricao', $any($event.target).value)"
+                />
+              </label>
+              <label class="ficha-ident__meta-linha">
+                <span class="ficha-ident__meta-rotulo">Saber de Campo</span>
+                <input
+                  class="ficha-ident__select"
+                  type="text"
+                  [value]="rascunho.saberDeCampo"
+                  (input)="mudarTextoOrigemRascunho('saberDeCampo', $any($event.target).value)"
+                />
+              </label>
+              <label class="ficha-ident__meta-linha">
+                <span class="ficha-ident__meta-rotulo">Especialidade — gatilho</span>
+                <input
+                  class="ficha-ident__select"
+                  type="text"
+                  placeholder="Ex.: Sob fogo direto"
+                  [value]="rascunho.especialidade.gatilho"
+                  (input)="mudarGatilhoEspecialidadeRascunho($any($event.target).value)"
+                />
+              </label>
+              <label class="ficha-ident__meta-linha">
+                <span class="ficha-ident__meta-rotulo">Especialidade — efeito</span>
+                <select
+                  class="ficha-ident__select"
+                  (change)="mudarEfeitoEspecialidadeRascunho($any($event.target).value)"
+                >
+                  @for (efeito of efeitosEspecialidade; track efeito) {
+                    <option [value]="efeito" [selected]="efeito === rascunho.especialidade.efeito">
+                      {{ rotuloEfeitoEspecialidade(efeito) }}
+                    </option>
+                  }
+                </select>
+              </label>
+
+              @for (linha of rascunho.formacao; track $index) {
+                <div class="ficha-ident__caixa">
+                  <span class="ficha-ident__meta-rotulo">Formação {{ $index + 1 }}</span>
+                  <select
+                    class="ficha-ident__select"
+                    [attr.aria-label]="'Bônus de Formação ' + ($index + 1)"
+                    (change)="mudarBonusFormacaoRascunho($index, $any($event.target).value)"
+                  >
+                    <option value="" [selected]="linha.bonus === null">Outro (autorizado pelo Mestre)</option>
+                    @for (grupo of gruposFormacao; track grupo.rotulo) {
+                      <optgroup [label]="grupo.rotulo">
+                        @for (opcao of grupo.opcoes; track opcao.codigo) {
+                          <option [value]="opcao.codigo" [selected]="opcao.codigo === linha.bonus">
+                            {{ opcao.rotulo }}
+                          </option>
+                        }
+                      </optgroup>
+                    }
+                  </select>
+
+                  @if (definicaoFormacaoRascunho($index); as definicao) {
+                    @if (definicao.parametro === parametroEsquivaOuBloqueio) {
+                      <select
+                        class="ficha-ident__select"
+                        aria-label="Esquiva ou Bloqueio"
+                        (change)="mudarParametroFormacaoRascunho($index, $any($event.target).value)"
+                      >
+                        <option value="" [selected]="!linha.parametro">— Escolha —</option>
+                        <option value="Esquiva" [selected]="linha.parametro === 'Esquiva'">Esquiva</option>
+                        <option value="Bloqueio" [selected]="linha.parametro === 'Bloqueio'">Bloqueio</option>
+                      </select>
+                    } @else if (definicao.parametro) {
+                      <input
+                        class="ficha-ident__select"
+                        type="text"
+                        [attr.placeholder]="rotuloParametroFormacao(definicao.parametro)"
+                        [attr.aria-label]="rotuloParametroFormacao(definicao.parametro)"
+                        [value]="linha.parametro ?? ''"
+                        (input)="mudarParametroFormacaoRascunho($index, $any($event.target).value)"
+                      />
+                    }
+                    @if (efeitoAindaPendente(linha.bonus)) {
+                      <span
+                        class="chip chip--pendente"
+                        title="Registrado — ainda sem motor que aplique este efeito automaticamente."
+                      >
+                        Sem efeito automático ainda
+                      </span>
+                    }
+                  }
+
+                  <input
+                    class="ficha-ident__select"
+                    type="text"
+                    placeholder="Texto de exibição"
+                    [attr.aria-label]="'Texto de exibição da Formação ' + ($index + 1)"
+                    [value]="linha.texto"
+                    (input)="mudarTextoFormacaoRascunho($index, $any($event.target).value)"
+                  />
+                </div>
+              }
+
+              <div class="ficha-ident__classe-acoes">
+                <button
+                  class="ficha-cartao__acao ficha-cartao__acao--confirmar"
+                  type="button"
+                  (click)="confirmarOrigem()"
+                >
+                  Salvar
+                </button>
+                <button class="ficha-cartao__acao" type="button" (click)="cancelarOrigem()">
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          }
+        }
 
         @if (ajustavel() && editandoClasse()) {
           <div class="ficha-ident__classe-editor">
@@ -476,20 +645,47 @@
         <header class="ficha-cartao__cabecalho">
           <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Atributos</h3>
           <span class="ficha-cartao__regua"></span>
-          <span class="chip-formula">{{ formulaDt }}</span>
+          @if (!editandoAtributos() && ajustavel()) {
+            <button
+              class="ficha-cartao__lapis"
+              type="button"
+              aria-label="Editar atributos"
+              title="Editar atributos"
+              (click)="editarAtributos()"
+            >
+              ✎
+            </button>
+          }
         </header>
+        <!-- Salvar/Cancelar empilhados (não "Atributos" + dois botões cabem lado a lado numa
+             coluna de 170px) — mesmo racional da fórmula da DT abaixo do título. -->
+        @if (editandoAtributos()) {
+          <div class="ficha-atributos__acoes">
+            <button
+              class="ficha-cartao__acao ficha-cartao__acao--confirmar"
+              type="button"
+              (click)="confirmarAtributos()"
+            >
+              Salvar
+            </button>
+            <button class="ficha-cartao__acao" type="button" (click)="cancelarAtributos()">
+              Cancelar
+            </button>
+          </div>
+        }
+        <div class="ficha-atributos__formula">
+          <span class="chip-formula">{{ formulaDt }}</span>
+        </div>
 
         <div class="ficha-mini ficha-proficiencia">
           <span class="ficha-mini__rotulo">Proficiência</span>
           <span class="ficha-mini__valor">{{ proficienciaLinha().display }}</span>
         </div>
 
-        @if (maestriaNomeAtual(); as nomeMaestria) {
-          <div class="ficha-mini ficha-maestria-resumo">
-            <span class="ficha-mini__rotulo">Maestria</span>
-            <span class="ficha-mini__valor">{{ nomeMaestria }}</span>
-          </div>
-        }
+        <div class="ficha-mini ficha-maestria-resumo">
+          <span class="ficha-mini__rotulo">Maestria</span>
+          <span class="ficha-mini__valor">{{ maestriaNomeAtual() ?? 'Nenhuma' }}</span>
+        </div>
 
         <div class="ficha-atributos ficha-atributos--2col">
           @for (grupo of gruposAtributos; track grupo.rotulo) {
@@ -497,73 +693,115 @@
               <span class="ficha-atributos__rotulo-grupo">{{ grupo.rotulo }}</span>
               <div class="ficha-atributos__grade">
                 @for (campo of grupo.campos; track campo.chave) {
-                  <div
-                    class="ficha-atributo"
-                    [attr.title]="campo.nome"
-                    [class.ficha-atributo--maestria]="maestriaAtual() === campo.chave"
-                    [class.ficha-atributo--lesionado]="penalidadesLesao()[campo.chave] > 0"
-                  >
-                    <button
-                      class="ficha-atributo__rolar"
-                      type="button"
-                      [attr.aria-label]="'Rolar teste de ' + campo.nome"
-                      [attr.title]="'Rolar teste de ' + campo.nome"
-                      (click)="rolarTesteAtributo(campo)"
+                  @if (editandoAtributos()) {
+                    <div
+                      class="ficha-atributo ficha-atributo--edicao"
+                      [attr.title]="campo.nome"
+                      [class.ficha-atributo--maestria]="rascunhoMaestria() === campo.chave"
                     >
-                      <app-icone [nome]="'dado'" />
-                    </button>
-                    <span class="ficha-atributo__abrev">
-                      @if (maestriaAtual() === campo.chave) {
-                        <span class="ficha-atributo__estrela" aria-hidden="true">★</span>
-                      }
-                      {{ campo.abrev }}
-                      @if (maestriaAtual() === campo.chave) {
-                        <span class="ficha-atributo__estrela" aria-hidden="true">★</span>
-                      }
-                    </span>
-                    <span class="ficha-atributo__valor">
-                      {{ atributosEfetivos()[campo.chave] }}
-                      @if (penalidadesLesao()[campo.chave] > 0) {
-                        <span
-                          class="ficha-atributo__lesao"
-                          [attr.title]="
-                            'Base ' +
-                            atributos()[campo.chave] +
-                            ' · lesão −' +
-                            penalidadesLesao()[campo.chave]
-                          "
+                      <span class="ficha-atributo__abrev">{{ campo.abrev }}</span>
+                      <div class="ficha-atributo__stepper">
+                        <button
+                          class="ficha-passo"
+                          type="button"
+                          appHoldRepeat
+                          [attr.aria-label]="'Reduzir ' + campo.nome"
+                          (passo)="ajustarAtributoRascunho(campo.chave, -1)"
                         >
-                          −{{ penalidadesLesao()[campo.chave] }}
-                        </span>
-                      }
-                    </span>
-                    <div class="ficha-atributo__modificador">
+                          −
+                        </button>
+                        <span class="ficha-atributo__valor">{{ rascunhoAtributos()?.[campo.chave] }}</span>
+                        <button
+                          class="ficha-passo"
+                          type="button"
+                          appHoldRepeat
+                          [attr.aria-label]="'Aumentar ' + campo.nome"
+                          (passo)="ajustarAtributoRascunho(campo.chave, 1)"
+                        >
+                          +
+                        </button>
+                      </div>
                       <button
-                        class="ficha-atributo__mod-passo"
+                        class="ficha-atributo__maestria"
                         type="button"
-                        appHoldRepeat
-                        [attr.aria-label]="'Reduzir modificador de teste de ' + campo.nome"
-                        (passo)="ajustarModificadorTeste(campo.chave, -1)"
+                        [class.ficha-atributo__maestria--ativa]="rascunhoMaestria() === campo.chave"
+                        [disabled]="!maestriaHabilitada(campo.chave)"
+                        [attr.aria-label]="'Maestria em ' + campo.nome"
+                        [attr.title]="'Maestria em ' + campo.nome + ' — requer ' + limiteMaestria + '+ pontos'"
+                        (click)="alternarMaestria(campo.chave)"
                       >
-                        −
-                      </button>
-                      <span
-                        class="ficha-atributo__mod-valor"
-                        [class.ficha-atributo__mod-valor--ativo]="modificadoresTeste()[campo.chave] !== 0"
-                      >
-                        {{ modificadoresTeste()[campo.chave] >= 0 ? '+' : '' }}{{ modificadoresTeste()[campo.chave] }}
-                      </span>
-                      <button
-                        class="ficha-atributo__mod-passo"
-                        type="button"
-                        appHoldRepeat
-                        [attr.aria-label]="'Aumentar modificador de teste de ' + campo.nome"
-                        (passo)="ajustarModificadorTeste(campo.chave, 1)"
-                      >
-                        +
+                        ★
                       </button>
                     </div>
-                  </div>
+                  } @else {
+                    <div
+                      class="ficha-atributo"
+                      [attr.title]="campo.nome"
+                      [class.ficha-atributo--maestria]="maestriaAtual() === campo.chave"
+                      [class.ficha-atributo--lesionado]="penalidadesLesao()[campo.chave] > 0"
+                    >
+                      <button
+                        class="ficha-atributo__rolar"
+                        type="button"
+                        [attr.aria-label]="'Rolar teste de ' + campo.nome"
+                        [attr.title]="'Rolar teste de ' + campo.nome"
+                        (click)="rolarTesteAtributo(campo)"
+                      >
+                        <app-icone [nome]="'dado'" />
+                      </button>
+                      <span class="ficha-atributo__abrev">
+                        @if (maestriaAtual() === campo.chave) {
+                          <span class="ficha-atributo__estrela" aria-hidden="true">★</span>
+                        }
+                        {{ campo.abrev }}
+                        @if (maestriaAtual() === campo.chave) {
+                          <span class="ficha-atributo__estrela" aria-hidden="true">★</span>
+                        }
+                      </span>
+                      <span class="ficha-atributo__valor">
+                        {{ atributosEfetivos()[campo.chave] }}
+                        @if (penalidadesLesao()[campo.chave] > 0) {
+                          <span
+                            class="ficha-atributo__lesao"
+                            [attr.title]="
+                              'Base ' +
+                              atributos()[campo.chave] +
+                              ' · lesão −' +
+                              penalidadesLesao()[campo.chave]
+                            "
+                          >
+                            −{{ penalidadesLesao()[campo.chave] }}
+                          </span>
+                        }
+                      </span>
+                      <div class="ficha-atributo__modificador">
+                        <button
+                          class="ficha-atributo__mod-passo"
+                          type="button"
+                          appHoldRepeat
+                          [attr.aria-label]="'Reduzir modificador de teste de ' + campo.nome"
+                          (passo)="ajustarModificadorTeste(campo.chave, -1)"
+                        >
+                          −
+                        </button>
+                        <span
+                          class="ficha-atributo__mod-valor"
+                          [class.ficha-atributo__mod-valor--ativo]="modificadoresTeste()[campo.chave] !== 0"
+                        >
+                          {{ modificadoresTeste()[campo.chave] >= 0 ? '+' : '' }}{{ modificadoresTeste()[campo.chave] }}
+                        </span>
+                        <button
+                          class="ficha-atributo__mod-passo"
+                          type="button"
+                          appHoldRepeat
+                          [attr.aria-label]="'Aumentar modificador de teste de ' + campo.nome"
+                          (passo)="ajustarModificadorTeste(campo.chave, 1)"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  }
                 }
               </div>
             </div>
