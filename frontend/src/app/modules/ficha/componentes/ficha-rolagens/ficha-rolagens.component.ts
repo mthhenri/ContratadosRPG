@@ -19,6 +19,7 @@ import {
 } from '@contratados-rpg/shared/regras/rolagem';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { executarPassoPreset } from '../../executar-rolagem';
 import { GuiaFormula } from '../guia-formula/guia-formula.component';
@@ -63,7 +64,7 @@ interface RolagemVM {
  */
 @Component({
   selector: 'app-ficha-rolagens',
-  imports: [ReactiveFormsModule, NgTemplateOutlet, GuiaFormula, Tooltip],
+  imports: [ReactiveFormsModule, NgTemplateOutlet, GuiaFormula, Tooltip, OverflowFade],
   templateUrl: './ficha-rolagens.component.html',
   styleUrl: './ficha-rolagens.component.scss',
 })

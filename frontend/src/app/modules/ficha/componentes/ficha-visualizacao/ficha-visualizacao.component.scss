@@ -40,7 +40,7 @@
     gap: var(--gap-grid);
     align-items: start;
 
-    @media (max-width: 1080px) {
+    @include bp.tablet {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     }
 
@@ -56,7 +56,7 @@
     min-width: 0;
 
     // No layout de 2 colunas, a coluna central ocupa a linha inteira acima das laterais.
-    @media (max-width: 1080px) {
+    @include bp.tablet {
       &--central {
         grid-column: 1 / -1;
         order: -1;
@@ -117,13 +117,33 @@
     }
   }
 
-  // Cartão único das abas não-grade (Combate/Inventário/Habilidades/Sanidade/Rolagens): largura contida.
+  // Cartão único das abas não-grade (Inventário/Habilidades/Sanidade/Anotações): largura contida.
   &__painel-cartao {
     max-width: 640px;
 
     // Abas com listas multi-coluna (Habilidades, Sanidade) ganham mais largura de tela.
     &--largo {
       max-width: 1040px;
+    }
+  }
+
+  // Aba Combate (m3-26): em vez de 4 cartões de 640px empilhados (metade da tela vazia no
+  // desktop), refluem numa grade de 2 colunas que aproveita a largura da página — mesmo padrão
+  // "grades que refluem" da calculadora (m1-15). `minmax(420px, …)` não encolhe sozinho abaixo de
+  // 420px: no mobile (~320–390px de conteúdo) isso estouraria a largura, então a coluna única
+  // precisa do mesmo override explícito que `&__grade`/`&__atributos__grade` já usam.
+  &__painel--grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    gap: var(--gap-grid);
+    align-items: start;
+
+    @include bp.mobile {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ficha-visao__painel-cartao {
+      max-width: none;
     }
   }
 
@@ -231,6 +251,12 @@
     @media (prefers-reduced-motion: reduce) {
       transition: none;
     }
+
+    // Navegação principal da ficha: alvo de toque confortável no mobile.
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
+      padding: 8px 16px;
+    }
   }
 
   // Ícone da aba: um pouco maior que o rótulo p/ presença; herda a cor via currentColor
@@ -318,6 +344,11 @@
       border-color: var(--accent-border);
       background: var(--surface-2);
     }
+
+    @include bp.mobile {
+      min-width: bp.$alvo-toque;
+      min-height: bp.$alvo-toque;
+    }
   }
 
   // Salvar/Cancelar da seção em edição, no próprio cabeçalho (nunca no fim da página).
@@ -341,6 +372,10 @@
       border-color: var(--accent-border);
     }
 
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
+    }
+
     &--confirmar {
       color: var(--bg);
       background: var(--accent);
@@ -351,6 +386,33 @@
         background: var(--accent);
       }
     }
+  }
+}
+
+// Seção colapsável (m3-26): `<details>`/`<summary>` nativos — zero JS/estado novo. Só nos
+// cartões cujo `.ficha-cartao__cabecalho` é estático (título + régua + meta somente leitura,
+// sem lápis/Salvar/Cancelar dentro), porque clicar em qualquer parte do `<summary>` alterna o
+// `open` — um botão de ação ali dentro disputaria o clique com o toggle. Aberto por padrão
+// (`open`): reduz a rolagem no polegar sem esconder nada à primeira vista.
+.ficha-cartao--colapsavel {
+  > summary.ficha-cartao__cabecalho {
+    cursor: pointer;
+    list-style: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+
+  .ficha-cartao__chevron {
+    flex: 0 0 auto;
+    font-size: 10px;
+    color: var(--text-mute);
+    transition: transform 0.15s ease;
+  }
+
+  &[open] .ficha-cartao__chevron {
+    transform: rotate(180deg);
   }
 }
 
@@ -454,6 +516,11 @@
       color: var(--accent);
       border-color: var(--accent-border);
       background: var(--surface-2);
+    }
+
+    @include bp.mobile {
+      min-width: bp.$alvo-toque;
+      min-height: bp.$alvo-toque;
     }
   }
 
@@ -824,6 +891,11 @@
     &--somente-leitura:not(&--ativa) {
       opacity: 0.55;
     }
+
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
+      padding: 6px 12px;
+    }
   }
 
   &__item--ativa {
@@ -882,6 +954,14 @@
   &:disabled {
     opacity: 0.4;
     cursor: default;
+  }
+
+  // Alvo de toque confortável no mobile (m3-26) sem inchar a densidade do desktop — mesmo
+  // racional do `.stepper__botao` da calculadora (m1-15).
+  @include bp.mobile {
+    width: bp.$alvo-toque;
+    height: bp.$alvo-toque;
+    font-size: 18px;
   }
 }
 

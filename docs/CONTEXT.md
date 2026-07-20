@@ -1,6 +1,54 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-19 (**m3-25 — frontend da Identidade (Personalidade + Origem)**: card
+> Última atualização: 2026-07-19 (**m3-26 — otimização de espaço + refino mobile da ficha,
+> absorvendo a `m3-09`**: a `m3-09-refinamento-mobile-ficha.spec.md` estava marcada **SUPERSEDED**
+> no próprio backlog — banner do autor (2026-07-15) dizendo que o passe mobile virou parte deste
+> redesenho desktop+mobile único; ao invés de implementar a m3-09 isolada, a task real foi a
+> `m3-26`, que a incorpora (as duas fecham juntas em `docs/specs/done/`). **Desktop — aba Combate
+> deixava de aproveitar a largura** (4 cartões de 640px empilhados, com a coluna 1160px da página
+> quase metade vazia à direita): virou uma grade de 2 colunas (`.ficha-visao__painel--grade`,
+> `grid-template-columns: repeat(auto-fit, minmax(420px, 1fr))`, mesmo padrão "grades que refluem"
+> da calculadora — m1-15) — Combate/Resistências na 1ª linha, Rolagens/Combos na 2ª, cada cartão
+> ocupando a coluna inteira (`max-width: none` dentro do modificador `--grade`, em vez do
+> `max-width: 640px` do `&__painel-cartao` isolado). As demais abas (Inventário/Habilidades/
+> Sanidade/Anotações) já usavam `--largo` (1040px) de tasks posteriores à m3-26 original — não
+> precisaram de ajuste. **Mobile — breakpoint mágico substituído por token:** `_breakpoints.scss`
+> ganhou `$bp-tablet: 1080px` + mixin `tablet`, substituindo os dois `@media (max-width: 1080px)`
+> soltos que colapsavam a grade de 3 colunas da Visão Geral para 2 (eram token técnico, distinto do
+> `$bp-mobile: 560px`). **Alvos de toque ≥44px** (`$alvo-toque`, definido desde a m1-15 mas nunca
+> usado na ficha): `.ficha-passo` (steppers de Vida/Energia/Atributos — o mais repetido da tela),
+> `.ficha-abas__aba` (navegação principal), `.ficha-cartao__lapis`/`__acao`, `.ficha-ident__chip-lapis`
+> e `.ficha-condicoes__item`, todos só dentro de `@include bp.mobile` (sem inchar a densidade do
+> desktop) — escolha seletiva, não exaustiva: ícones secundários/ocasionais (dado de rolar teste do
+> atributo, estrela de Maestria) ficaram de fora, mesmo critério já usado no passe mobile parcial do
+> Inventário (m3-14). **Seções colapsáveis** (`<details>`/`<summary>` nativos, zero JS/estado novo):
+> só nos cartões com cabeçalho **estático** (título + régua + meta somente leitura, sem lápis/
+> Salvar/Cancelar dentro) — Combate, Resistências, Rolagens, Combos (aba Combate) e Informações
+> Extras, Anotações (Visão Geral); abertos por padrão (`open`). Deliberadamente **fora**: Atributos
+> (o cabeçalho tem os botões Salvar/Cancelar do modo edição — colidiriam com o toggle de clique do
+> `<summary>`) e os cartões de Identidade/Vitalidade (sem um cabeçalho estático para virar
+> `<summary>`). **Fade topo/base:** lista de presets de `app-ficha-rolagens` (`.ficha-rol__lista`)
+> ganhou `max-height: 560px` + `overflow-y: auto` + `appOverflowFade`, mesmo padrão de máscara em
+> gradiente do `&__grade` do Inventário (m3-14) — só essa lista fechava o item "rolagens... quando
+> aplicável" da spec; Inventário/Habilidades/Sanidade já tinham o fade de tasks anteriores.
+> **Achado ao vivo:** a 1ª tentativa da grade do Combate usava só `minmax(420px, 1fr)` sem override
+> mobile, assumindo que `auto-fit` colapsaria sozinho — errado: `minmax` com mínimo fixo em px não
+> encolhe abaixo de 420px mesmo com 1 coluna só, e a ~360-430px de largura isso estourava a página
+> (bug pego pela verificação responsiva ao vivo, não pelos testes unitários). Corrigido com o mesmo
+> padrão de override explícito que `&__grade`/`&__atributos__grade` já usavam:
+> `@include bp.mobile { grid-template-columns: minmax(0, 1fr); }`. Budget do `anyComponentStyle`
+> subiu 20→**22kB** (aviso)/22→**24kB** (erro) pra acomodar o SCSS responsivo — mesmo precedente de
+> elevação da m1-15. **Testes:** frontend **418/418** (sem novo teste unitário — task é só SCSS/
+> marcação, comportamento coberto pela suíte existente + verificação ao vivo abaixo); lint/build
+> limpos nos 3 workspaces. **Verificado ao vivo** (Playwright, stack real): desktop 1280px —
+> Combate/Resistências e Rolagens/Combos lado a lado, sem vazio à direita; clique no cabeçalho
+> fecha/reabre o cartão Combos (`<details>` nativo); mobile 360/390/430px — zero scroll horizontal
+> do body na Visão Geral e na aba Combate (grade 2 colunas → 1), `.ficha-passo` e `.ficha-abas__aba`
+> com alvo de toque ≥44px nas três larguras. Spec em `docs/specs/done/m3-26-otimizacao-espaco-ficha.spec.md`
+> (`docs/specs/done/m3-09-refinamento-mobile-ficha.spec.md` fecha junto, como superseded/absorvida).
+> Próxima task: **`m3-27`** (histórico de rolagem — persistência + feed em tempo real na campanha).)
+>
+> (**m3-25 — frontend da Identidade (Personalidade + Origem)**: card
 > "Identidade" na aba **Visão Geral** (decisão do autor — a `m3-11` real não criou a aba "Identidade"
 > que a spec original previa; ver nota de desvio abaixo), no padrão de edição no próprio lugar de
 > `FichaVisualizacao`. **Personalidade** reusa o canal `editandoIdentidade` (mesmo padrão do
@@ -1727,9 +1775,9 @@ escolhe quais habilidades aplica (`FichaRolagemPassoDto.habilidades`; a primári
 (`PassoInterpretadoDto` ganhou `energiaGasta`/`energiaVariavel`/`habilidadesVinculadas`), e rolar um
 passo debita só a energia dele. Shared **260**, frontend **311**, lint/build AOT verdes.
 
-**`m3-23`/`m3-24`/`m3-25` (Identidade: contrato+motor, backend, frontend) concluídos** — ver os
-blocos no topo do arquivo. **Próxima task: `m3-09`** (refinamento mobile da ficha), depois
-**`m3-26`** (otimização de espaço da ficha).
+**`m3-23`/`m3-24`/`m3-25`/`m3-26` (Identidade: contrato+motor, backend, frontend; otimização de
+espaço + mobile — `m3-09` absorvida) concluídos** — ver os blocos no topo do arquivo. **Próxima
+task: `m3-27`** (histórico de rolagem).
 **Antes de qualquer UI, ler `docs/design/DESIGN.md` e consumir os tokens de `docs/design/tema/`**
 (proibição #29).
 
@@ -1881,9 +1929,9 @@ Worktree isolada (`worktree-m3-32-combate-reforma`), depois integrada de volta a
 **Próxima task após esta integração**: a fila original `m3-24`→`m3-26` (Identidade —
 backend/frontend, mobile, otimização de espaço) — ver o bloco `m3-23` no topo do arquivo.
 
-**`m3-24` (backend — validação de forma + trava de imutabilidade da Identidade) e `m3-25` (frontend
-da Identidade) concluídos** (2026-07-19) — ver os blocos no topo do arquivo. **Próxima task:
-`m3-09`** (refinamento mobile da ficha).
+**`m3-24` (backend — validação de forma + trava de imutabilidade da Identidade), `m3-25` (frontend
+da Identidade) e `m3-26` (otimização de espaço + mobile, absorvendo a `m3-09`) concluídos**
+(2026-07-19) — ver os blocos no topo do arquivo. **Próxima task: `m3-27`** (histórico de rolagem).
 
 **Trilha paralela — extensão pós-M2 (`m2-16`/`m2-17`, specs adicionadas ao backlog depois do M2
 "fechado" acima, dependendo de fichas já entregues pelo M3): `m2-16` (fichas do membro na lista) e

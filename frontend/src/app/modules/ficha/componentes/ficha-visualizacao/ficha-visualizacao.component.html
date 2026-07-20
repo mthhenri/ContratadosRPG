@@ -538,23 +538,25 @@
           </section>
 
           @if (anotacoes()) {
-            <section class="ficha-cartao">
-              <header class="ficha-cartao__cabecalho">
+            <details open class="ficha-cartao ficha-cartao--colapsavel">
+              <summary class="ficha-cartao__cabecalho">
                 <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Anotações</h3>
                 <span class="ficha-cartao__regua"></span>
-              </header>
+                <span class="ficha-cartao__chevron" aria-hidden="true">▾</span>
+              </summary>
               <p class="ficha-visao__anotacoes">{{ anotacoes() }}</p>
-            </section>
+            </details>
           }
         </div>
 
         <!-- COLUNA DIREITA: status derivado -->
         <div class="ficha-visao__coluna ficha-visao__coluna--lateral">
-          <section class="ficha-cartao">
-            <header class="ficha-cartao__cabecalho">
+          <details open class="ficha-cartao ficha-cartao--colapsavel">
+            <summary class="ficha-cartao__cabecalho">
               <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Informações Extras</h3>
               <span class="ficha-cartao__regua"></span>
-            </header>
+              <span class="ficha-cartao__chevron" aria-hidden="true">▾</span>
+            </summary>
 
             <dl class="ficha-info">
               @for (info of informacoesGerais(); track info.chave) {
@@ -630,7 +632,7 @@
                 <dd class="ficha-info__valor">${{ salario().toLocaleString('pt-BR') }}</dd>
               </div>
             </dl>
-          </section>
+          </details>
         </div>
       </div>
 
@@ -865,17 +867,18 @@
   <!-- ABA: COMBATE — derivados de combate reorganizados (reusa os editáveis de m3-10). -->
   @if (abaAtiva() === 'combate') {
     <div
-      class="ficha-visao__painel"
+      class="ficha-visao__painel ficha-visao__painel--grade"
       role="tabpanel"
       id="painel-combate"
       aria-labelledby="aba-combate"
     >
-      <section class="ficha-cartao ficha-visao__painel-cartao">
-        <header class="ficha-cartao__cabecalho">
+      <details open class="ficha-cartao ficha-visao__painel-cartao ficha-cartao--colapsavel">
+        <summary class="ficha-cartao__cabecalho">
           <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Combate</h3>
           <span class="ficha-cartao__regua"></span>
           <span class="chip-formula">{{ formulaDt }}</span>
-        </header>
+          <span class="ficha-cartao__chevron" aria-hidden="true">▾</span>
+        </summary>
 
         <dl class="ficha-info ficha-info--combate">
           @for (info of combateLinhas(); track info.chave) {
@@ -916,16 +919,17 @@
             </div>
           }
         </dl>
-      </section>
+      </details>
 
       <!-- Resistências (m3-36 + ajuste posterior): sempre as cinco, base manual editável somada ao
            equipamento (itens equipados + Fragmento aplicado + amplificadores Resistente/Defesa). -->
-      <section class="ficha-cartao ficha-visao__painel-cartao">
-        <header class="ficha-cartao__cabecalho">
+      <details open class="ficha-cartao ficha-visao__painel-cartao ficha-cartao--colapsavel">
+        <summary class="ficha-cartao__cabecalho">
           <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Resistências</h3>
           <span class="ficha-cartao__regua"></span>
           <span class="ficha-cartao__meta">manual + equipamento</span>
-        </header>
+          <span class="ficha-cartao__chevron" aria-hidden="true">▾</span>
+        </summary>
 
         <dl class="ficha-info ficha-info--combate">
           @for (resistencia of resistencias(); track resistencia.tipo) {
@@ -968,17 +972,18 @@
             </div>
           }
         </dl>
-      </section>
+      </details>
 
       <!-- Rolagens (m3-15/m3-22) — mesclada na aba Combate em m3-37. -->
-      <section class="ficha-cartao ficha-visao__painel-cartao">
-        <header class="ficha-cartao__cabecalho">
+      <details open class="ficha-cartao ficha-visao__painel-cartao ficha-cartao--colapsavel">
+        <summary class="ficha-cartao__cabecalho">
           <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Rolagens</h3>
           <span class="ficha-cartao__regua"></span>
           <span class="ficha-cartao__meta">
             {{ totalRolagens() }} {{ totalRolagens() === 1 ? 'preset' : 'presets' }}
           </span>
-        </header>
+          <span class="ficha-cartao__chevron" aria-hidden="true">▾</span>
+        </summary>
         <app-ficha-rolagens
           [rolagens]="dados().rolagens ?? []"
           [atributos]="atributosEfetivos()"
@@ -989,15 +994,16 @@
           (rolagensMudou)="ajusteRolagens.emit($event)"
           (energiaGasta)="aoUtilizarHabilidade($event)"
         />
-      </section>
+      </details>
 
       <!-- Combos (m3-37): sequência de rolagens já existentes, executada passo a passo. -->
-      <section class="ficha-cartao ficha-visao__painel-cartao">
-        <header class="ficha-cartao__cabecalho">
+      <details open class="ficha-cartao ficha-visao__painel-cartao ficha-cartao--colapsavel">
+        <summary class="ficha-cartao__cabecalho">
           <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Combos</h3>
           <span class="ficha-cartao__regua"></span>
           <span class="ficha-cartao__meta">{{ combos().length }} {{ combos().length === 1 ? 'combo' : 'combos' }}</span>
-        </header>
+          <span class="ficha-cartao__chevron" aria-hidden="true">▾</span>
+        </summary>
         <app-ficha-combos
           [combos]="combos()"
           [rolagens]="dados().rolagens ?? []"
@@ -1009,7 +1015,7 @@
           (combosMudou)="ajusteCombos.emit($event)"
           (energiaGasta)="aoUtilizarHabilidade($event)"
         />
-      </section>
+      </details>
     </div>
   }
 

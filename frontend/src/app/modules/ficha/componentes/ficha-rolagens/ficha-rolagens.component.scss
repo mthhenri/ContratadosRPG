@@ -50,10 +50,43 @@
     color: var(--text-mute);
   }
 
+  // Rolada num container próprio (m3-26) — reduz a rolagem da página quando há muitos presets;
+  // o fade topo/base (appOverflowFade) só aparece onde o conteúdo está de fato cortado, mesmo
+  // padrão do `&__grade` do Inventário (m3-14).
   &__lista {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    max-height: 560px;
+    overflow-y: auto;
+    padding-right: 4px;
+
+    --fade-topo: 0px;
+    --fade-base: 0px;
+
+    &.overflow-fade--topo,
+    &.overflow-fade--base {
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+    }
+    &.overflow-fade--topo {
+      --fade-topo: 24px;
+    }
+    &.overflow-fade--base {
+      --fade-base: 24px;
+    }
   }
 
   // === Cartão de preset ===

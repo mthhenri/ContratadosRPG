@@ -13,11 +13,23 @@
 
 $bp-mobile: 560px;
 
+// Segundo degrau (m3-26): telas de tablet/notebook pequeno, onde uma grade de 3 colunas já
+// aperta mas o layout de 1 coluna do mobile ainda seria um desperdício de largura — usado pela
+// grade de 3 colunas da Visão Geral da ficha (identidade | atributos | status). Substitui o
+// media-query mágico de 1080px que existia solto no componente antes da m3-26.
+$bp-tablet: 1080px;
+
 // Alvo de toque confortável (WCAG 2.5.5 / diretrizes de mobile): 44px.
 $alvo-toque: 44px;
 
 @mixin mobile {
   @media (max-width: $bp-mobile) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (max-width: $bp-tablet) {
     @content;
   }
 }

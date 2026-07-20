@@ -40,7 +40,7 @@
     <p class="ficha-rol__vazio">Nenhum preset de rolagem salvo.</p>
   }
 
-  <div class="ficha-rol__lista">
+  <div class="ficha-rol__lista" appOverflowFade>
     @for (preset of presets(); track preset.indice) {
       @if (editavel() && indiceEmEdicao() === preset.indice) {
         <ng-container [ngTemplateOutlet]="formTpl" [ngTemplateOutletContext]="{ titulo: 'Editar preset' }" />
