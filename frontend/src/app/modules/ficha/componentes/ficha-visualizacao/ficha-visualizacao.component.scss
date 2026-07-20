@@ -33,38 +33,11 @@
     background: var(--border);
   }
 
-  // Três colunas no desktop; empilha no mobile. A central cresce, as laterais têm largura base.
-  // Esquerda em 360px (era 300px) — redesenho de comparação visual: o card de identidade ganhou
-  // Personalidade/Origem, a linha de 4 stats (Nível/Prestígio/Dinheiro/Salário) e os grids de
-  // Defesa/Resistências em miniatura, que não cabiam confortavelmente nos 300px originais.
-  &__grade {
-    display: grid;
-    grid-template-columns: minmax(0, 360px) minmax(0, 1fr) minmax(0, 280px);
-    gap: var(--gap-grid);
-    align-items: start;
-
-    @include bp.tablet {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    }
-
-    @include bp.mobile {
-      grid-template-columns: minmax(0, 1fr);
-    }
-  }
-
   &__coluna {
     display: flex;
     flex-direction: column;
     gap: var(--gap-grid);
     min-width: 0;
-
-    // No layout de 2 colunas, a coluna central ocupa a linha inteira acima das laterais.
-    @include bp.tablet {
-      &--central {
-        grid-column: 1 / -1;
-        order: -1;
-      }
-    }
 
     // Redesenho de comparação visual: as duas colunas do painel solo têm largura fixa (a
     // atributos não pode passar do comprimento nem da largura da identidade — mais fina que ela).
@@ -87,52 +60,8 @@
     gap: var(--gap-grid);
   }
 
-  &__vazio {
-    font-family: var(--font-sans);
-    font-size: 13px;
-    font-style: italic;
-    color: var(--text-mute);
-    margin: 0;
-  }
-
-  &__anotacoes {
-    font-family: var(--font-sans);
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--text-dim);
-    white-space: pre-wrap;
-    margin: 0;
-  }
-
-  // Aba Anotações (m3-32): texto livre editável em tela cheia (distinto do peek read-only acima).
-  &__anotacoes-campo {
-    width: 100%;
-    min-height: 360px;
-    font-family: var(--font-sans);
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--text);
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 14px 16px;
-    resize: vertical;
-    outline: none;
-    transition: border-color 0.15s ease;
-
-    &:focus {
-      border-color: var(--accent-border);
-    }
-  }
-
-  &__anotacoes-leitura {
-    min-height: 360px;
-    white-space: pre-wrap;
-  }
-
-  // Painel de uma aba (m3-11). "Visão Geral" traz a grade; as demais, um cartão único.
+  // Fade suave ao entrar (o painel solo troca de conteúdo entre Identidade e Atributos).
   &__painel {
-    // Fade suave ao trocar de aba (sem reflow — as abas alternam via @if).
     animation: ficha-painel-entra 0.16s ease-out;
 
     @media (prefers-reduced-motion: reduce) {
@@ -144,160 +73,6 @@
   // grade de 3 colunas. Largura = as duas colunas fixas (360px + 170px) + o gap entre elas.
   &__painel--solo {
     max-width: calc(360px + var(--gap-grid) + 170px);
-  }
-
-  // Cartão único das abas não-grade (Inventário/Habilidades/Sanidade/Anotações): largura contida.
-  &__painel-cartao {
-    max-width: 640px;
-
-    // Abas com listas multi-coluna (Habilidades, Sanidade) ganham mais largura de tela.
-    &--largo {
-      max-width: 1040px;
-    }
-  }
-
-  // Aba Combate (m3-26): em vez de 4 cartões de 640px empilhados (metade da tela vazia no
-  // desktop), refluem numa grade de 2 colunas que aproveita a largura da página — mesmo padrão
-  // "grades que refluem" da calculadora (m1-15). `minmax(420px, …)` não encolhe sozinho abaixo de
-  // 420px: no mobile (~320–390px de conteúdo) isso estouraria a largura, então a coluna única
-  // precisa do mesmo override explícito que `&__grade`/`&__atributos__grade` já usam.
-  &__painel--grade {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
-    gap: var(--gap-grid);
-    align-items: start;
-
-    @include bp.mobile {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
-    .ficha-visao__painel-cartao {
-      max-width: none;
-    }
-  }
-
-  // Linha "Máximo" (Inventário máximo editável, m3-10) acima do editor de inventário (m3-14).
-  &__inv-maximo {
-    margin: 0 0 14px;
-  }
-
-  // Aviso "em construção" das abas cujo editor ainda não chegou (m3-15).
-  &__construcao {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    letter-spacing: 0.02em;
-    color: var(--text-mute);
-    margin: 0 0 16px;
-  }
-
-  &__resumo {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  &__resumo-item {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-    font-family: var(--font-sans);
-    font-size: 14px;
-    color: var(--text-dim);
-    padding: 8px 12px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-  }
-
-  &__resumo-formula {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-mute);
-  }
-}
-
-// === Barra de abas (m3-11) — alvo: docs/design/examples/ficha-de-jogador.html ===
-// Mono/uppercase; a ativa em accent sólido com texto escuro (padrão do protótipo).
-.ficha-abas {
-  display: flex;
-  gap: 6px;
-  padding: 5px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  // No mobile as abas rolam na horizontal sem esticar o body.
-  overflow-x: auto;
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-
-  &__aba {
-    flex: 0 0 auto;
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-dim);
-    background: transparent;
-    border: 0;
-    padding: 8px 14px;
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    white-space: nowrap;
-    transition:
-      color 0.12s ease,
-      background 0.12s ease;
-
-    &:hover {
-      color: var(--text);
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 1px;
-    }
-
-    &--ativa {
-      font-weight: 700;
-      color: var(--bg);
-      background: var(--accent);
-    }
-
-    &--ativa:hover {
-      color: var(--bg);
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      transition: none;
-    }
-
-    // Navegação principal da ficha: alvo de toque confortável no mobile.
-    @include bp.mobile {
-      min-height: bp.$alvo-toque;
-      padding: 8px 16px;
-    }
-  }
-
-  // Ícone da aba: um pouco maior que o rótulo p/ presença; herda a cor via currentColor
-  // (dim → text no hover → --bg quando a aba está ativa). Some no mobile estreito p/ caber.
-  &__icone {
-    font-size: 14px;
-  }
-
-  @media (max-width: 420px) {
-    &__icone {
-      display: none;
-    }
   }
 }
 
@@ -428,33 +203,6 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-}
-
-// Seção colapsável (m3-26): `<details>`/`<summary>` nativos — zero JS/estado novo. Só nos
-// cartões cujo `.ficha-cartao__cabecalho` é estático (título + régua + meta somente leitura,
-// sem lápis/Salvar/Cancelar dentro), porque clicar em qualquer parte do `<summary>` alterna o
-// `open` — um botão de ação ali dentro disputaria o clique com o toggle. Aberto por padrão
-// (`open`): reduz a rolagem no polegar sem esconder nada à primeira vista.
-.ficha-cartao--colapsavel {
-  > summary.ficha-cartao__cabecalho {
-    cursor: pointer;
-    list-style: none;
-
-    &::-webkit-details-marker {
-      display: none;
-    }
-  }
-
-  .ficha-cartao__chevron {
-    flex: 0 0 auto;
-    font-size: 10px;
-    color: var(--text-mute);
-    transition: transform 0.15s ease;
-  }
-
-  &[open] .ficha-cartao__chevron {
-    transform: rotate(180deg);
-  }
 }
 
 // Divisória fina dentro do card consolidado de identidade (redesenho de comparação visual) —
@@ -1390,6 +1138,8 @@
 
   // Modificador de teste (redesenho de comparação visual, coluna de Atributos): passo -/+ que soma
   // direto na fórmula rolada — não muta o atributo base nem a Maestria (ex.: Amplificador aplicado).
+  // Sempre visível (mesmo só-leitura) — por isso `@extend .ficha-passo` (que só reaparece na
+  // marcação quando `ajustavel()`) em vez de reusar a classe, que quebraria esse contrato.
   &__modificador {
     display: flex;
     align-items: center;
@@ -1398,27 +1148,10 @@
   }
 
   &__mod-passo {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    @extend .ficha-passo;
     width: 14px;
     height: 14px;
-    padding: 0;
-    font-family: var(--font-mono);
     font-size: 10px;
-    font-weight: 700;
-    line-height: 1;
-    color: var(--text-mute);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition: color 0.15s ease, border-color 0.15s ease;
-
-    &:hover {
-      color: var(--accent);
-      border-color: var(--accent-border);
-    }
   }
 
   &__mod-valor {
@@ -1472,198 +1205,3 @@
   }
 }
 
-// === Informações Extras: rótulo à esquerda, valor derivado à direita ===
-.ficha-info {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-
-  &__linha {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
-
-    &:last-child {
-      border-bottom: 0;
-    }
-  }
-
-  &__rotulo {
-    font-family: var(--font-sans);
-    font-size: 14px;
-    color: var(--text-dim);
-    margin: 0;
-  }
-
-  &__valor {
-    font-family: var(--font-mono);
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text);
-    margin: 0;
-    text-align: right;
-  }
-
-  // Valor clicável (edição no próprio lugar do derivado): parece o valor, com alvo de clique discreto.
-  &__editavel {
-    font-family: var(--font-mono);
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text);
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: var(--radius-control);
-    padding: 1px 6px;
-    cursor: text;
-    transition: border-color 0.15s ease, background-color 0.15s ease;
-
-    &:hover {
-      border-color: var(--border-strong);
-      background: var(--surface-2);
-    }
-  }
-
-  &__entrada {
-    width: 84px;
-    font-family: var(--font-mono);
-    font-size: 14px;
-    font-weight: 700;
-    text-align: right;
-    color: var(--text);
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 2px 6px;
-    outline: none;
-    -moz-appearance: textfield;
-    -webkit-appearance: textfield;
-    appearance: textfield;
-
-    &:focus {
-      border-color: var(--accent-border);
-    }
-
-    &::-webkit-outer-spin-button,
-    &::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-  }
-}
-
-// === Identidade (Personalidade + Origem, m3-23/m3-25) ===
-.ficha-identidade {
-  &__personalidade {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding-bottom: 14px;
-    margin-bottom: 14px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  &__valor {
-    font-family: var(--font-mono);
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text);
-  }
-
-  // "(imutável)" / "🔒 imutável" — nota discreta ao lado do valor travado (m3-24, refletido).
-  &__trava {
-    font-family: var(--font-sans);
-    font-size: 11px;
-    font-weight: 400;
-    color: var(--text-mute);
-    cursor: help;
-  }
-
-  &__origem-cabecalho {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    margin-bottom: 12px;
-  }
-
-  &__subtitulo {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text-mute);
-    margin: 0;
-    flex: 1;
-  }
-
-  &__origem-nome {
-    font-family: var(--font-mono);
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text);
-    margin: 0 0 6px;
-  }
-
-  &__leitura {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  &__formacoes {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-top: 10px;
-  }
-
-  &__formacao-linha {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--text-dim);
-    padding: 8px 10px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-  }
-
-  // Mini-editor de Origem: campos empilhados + a dupla de linhas de Formação.
-  &__editor {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  &__campo {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  &__especialidade {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-
-    @include bp.mobile {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  &__formacao-editor {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 10px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-  }
-}
