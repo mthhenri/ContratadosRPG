@@ -6,12 +6,13 @@
     <span class="chip-classificacao">{{ classificacao() }}</span>
   </header>
 
-  <!-- Redesenho de comparação visual (branch claude/redesign-ficha-screen-*): só o card de
-       identidade/vitalidade/combate-glance fica na tela — abas, Atributos, Informações Extras,
-       Identidade detalhada e as demais seções saem por ora. O objetivo é comparar só este card
-       com a versão em produção (master), não entregar paridade de funcionalidade. -->
+  <!-- Redesenho de comparação visual (branch claude/redesign-ficha-screen-*): só dois cards ficam
+       na tela — identidade/vitalidade/combate-glance e uma versão compacta de Atributos. Abas,
+       Informações Extras, Identidade detalhada e as demais seções saem por ora. O objetivo é
+       comparar com a versão em produção (master), não entregar paridade de funcionalidade. -->
   <div class="ficha-visao__painel ficha-visao__painel--solo">
-    <div class="ficha-visao__coluna">
+    <div class="ficha-visao__linha-colunas">
+    <div class="ficha-visao__coluna ficha-visao__coluna--identidade">
       <section class="ficha-cartao">
         <div class="ficha-ident">
           <span class="ficha-ident__avatar" aria-hidden="true"></span>
@@ -464,6 +465,112 @@
           }
         </div>
       </section>
+    </div>
+
+    <!-- Atributos — versão compacta (redesenho de comparação visual): Proficiência + resumo de
+         Maestria + os 10 atributos em no máximo 2 colunas internas, cada um com o modificador de
+         teste (não persistido). A edição em grupo do atributo base (lápis/rascunho) saiu daqui —
+         só a leitura + o teste rolado ficaram nesta rodada de recorte. -->
+    <div class="ficha-visao__coluna ficha-visao__coluna--atributos">
+      <section class="ficha-cartao ficha-cartao--atributos">
+        <header class="ficha-cartao__cabecalho">
+          <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Atributos</h3>
+          <span class="ficha-cartao__regua"></span>
+          <span class="chip-formula">{{ formulaDt }}</span>
+        </header>
+
+        <div class="ficha-mini ficha-proficiencia">
+          <span class="ficha-mini__rotulo">Proficiência</span>
+          <span class="ficha-mini__valor">{{ proficienciaLinha().display }}</span>
+        </div>
+
+        @if (maestriaNomeAtual(); as nomeMaestria) {
+          <div class="ficha-mini ficha-maestria-resumo">
+            <span class="ficha-mini__rotulo">Maestria</span>
+            <span class="ficha-mini__valor">{{ nomeMaestria }}</span>
+          </div>
+        }
+
+        <div class="ficha-atributos ficha-atributos--2col">
+          @for (grupo of gruposAtributos; track grupo.rotulo) {
+            <div class="ficha-atributos__grupo">
+              <span class="ficha-atributos__rotulo-grupo">{{ grupo.rotulo }}</span>
+              <div class="ficha-atributos__grade">
+                @for (campo of grupo.campos; track campo.chave) {
+                  <div
+                    class="ficha-atributo"
+                    [attr.title]="campo.nome"
+                    [class.ficha-atributo--maestria]="maestriaAtual() === campo.chave"
+                    [class.ficha-atributo--lesionado]="penalidadesLesao()[campo.chave] > 0"
+                  >
+                    <button
+                      class="ficha-atributo__rolar"
+                      type="button"
+                      [attr.aria-label]="'Rolar teste de ' + campo.nome"
+                      [attr.title]="'Rolar teste de ' + campo.nome"
+                      (click)="rolarTesteAtributo(campo)"
+                    >
+                      <app-icone [nome]="'dado'" />
+                    </button>
+                    <span class="ficha-atributo__abrev">
+                      @if (maestriaAtual() === campo.chave) {
+                        <span class="ficha-atributo__estrela" aria-hidden="true">★</span>
+                      }
+                      {{ campo.abrev }}
+                      @if (maestriaAtual() === campo.chave) {
+                        <span class="ficha-atributo__estrela" aria-hidden="true">★</span>
+                      }
+                    </span>
+                    <span class="ficha-atributo__valor">
+                      {{ atributosEfetivos()[campo.chave] }}
+                      @if (penalidadesLesao()[campo.chave] > 0) {
+                        <span
+                          class="ficha-atributo__lesao"
+                          [attr.title]="
+                            'Base ' +
+                            atributos()[campo.chave] +
+                            ' · lesão −' +
+                            penalidadesLesao()[campo.chave]
+                          "
+                        >
+                          −{{ penalidadesLesao()[campo.chave] }}
+                        </span>
+                      }
+                    </span>
+                    <div class="ficha-atributo__modificador">
+                      <button
+                        class="ficha-atributo__mod-passo"
+                        type="button"
+                        appHoldRepeat
+                        [attr.aria-label]="'Reduzir modificador de teste de ' + campo.nome"
+                        (passo)="ajustarModificadorTeste(campo.chave, -1)"
+                      >
+                        −
+                      </button>
+                      <span
+                        class="ficha-atributo__mod-valor"
+                        [class.ficha-atributo__mod-valor--ativo]="modificadoresTeste()[campo.chave] !== 0"
+                      >
+                        {{ modificadoresTeste()[campo.chave] >= 0 ? '+' : '' }}{{ modificadoresTeste()[campo.chave] }}
+                      </span>
+                      <button
+                        class="ficha-atributo__mod-passo"
+                        type="button"
+                        appHoldRepeat
+                        [attr.aria-label]="'Aumentar modificador de teste de ' + campo.nome"
+                        (passo)="ajustarModificadorTeste(campo.chave, 1)"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    </div>
     </div>
   </div>
 

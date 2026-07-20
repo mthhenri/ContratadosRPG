@@ -65,6 +65,26 @@
         order: -1;
       }
     }
+
+    // Redesenho de comparação visual: as duas colunas do painel solo têm largura fixa (a
+    // atributos não pode passar do comprimento nem da largura da identidade — mais fina que ela).
+    &--identidade {
+      width: 360px;
+      flex: 0 0 auto;
+    }
+
+    &--atributos {
+      width: 170px;
+      flex: 0 0 auto;
+    }
+  }
+
+  // Fileira das duas colunas do painel solo (redesenho de comparação visual) — `stretch` faz a
+  // coluna de Atributos esticar até o mesmo comprimento da Identidade (a mais alta das duas).
+  &__linha-colunas {
+    display: flex;
+    align-items: stretch;
+    gap: var(--gap-grid);
   }
 
   &__vazio {
@@ -120,10 +140,10 @@
     }
   }
 
-  // Redesenho de comparação visual: só o card de identidade fica na tela — sem grade de 3
-  // colunas, contido na mesma largura que a coluna esquerda tinha na grade original.
+  // Redesenho de comparação visual: só os dois cards (Identidade + Atributos) ficam na tela — sem
+  // grade de 3 colunas. Largura = as duas colunas fixas (360px + 170px) + o gap entre elas.
   &__painel--solo {
-    max-width: 360px;
+    max-width: calc(360px + var(--gap-grid) + 170px);
   }
 
   // Cartão único das abas não-grade (Inventário/Habilidades/Sanidade/Anotações): largura contida.
@@ -396,6 +416,18 @@
       }
     }
   }
+}
+
+// Card compacto de Atributos (redesenho de comparação visual): padding menor que o padrão (a
+// coluna é bem mais estreita que a de Identidade) e conteúdo alinhado no topo, esticando (`flex: 1`)
+// até o mesmo comprimento da coluna de Identidade (`__linha-colunas` acima tem `align-items: stretch`).
+.ficha-cartao--atributos {
+  width: 100%;
+  padding: 6px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
 // Seção colapsável (m3-26): `<details>`/`<summary>` nativos — zero JS/estado novo. Só nos
@@ -775,6 +807,29 @@
       margin: 0;
     }
   }
+}
+
+// Proficiência (destaque, acima da grade de Atributos) e o resumo redundante "Maestria: Nome"
+// abaixo dela (redesenho de comparação visual) — `.ficha-mini` em linha (rótulo + valor lado a
+// lado) em vez de empilhado, pra nunca quebrar mesmo com a coluna estreita.
+.ficha-proficiencia,
+.ficha-maestria-resumo {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 10px;
+  margin-bottom: 12px;
+
+  .ficha-mini__valor {
+    font-size: 14px;
+    white-space: nowrap;
+    color: var(--accent);
+  }
+}
+
+.ficha-maestria-resumo {
+  border-color: var(--accent-border);
 }
 
 // === Chips ===
@@ -1189,6 +1244,43 @@
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
+
+  // Card compacto de Atributos (redesenho de comparação visual): no máximo 2 colunas internas
+  // (a pedido) — em vez das 5 do card original, caixas mais largas cabem o stepper de modificador
+  // de teste. Densidade menor (gaps/paddings) pra caber no comprimento da coluna de Identidade.
+  &--2col {
+    gap: 8px;
+
+    .ficha-atributos__grupo {
+      gap: 6px;
+    }
+
+    .ficha-atributos__rotulo-grupo {
+      text-align: center;
+    }
+
+    .ficha-atributos__grade {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 5px;
+
+      // Atributo sem par na última linha (5º de 5, em grade de 2 colunas) — centralizado em vez
+      // de grudar na coluna esquerda com um vão vazio ao lado.
+      > *:nth-child(5) {
+        grid-column: 1 / -1;
+        justify-self: center;
+        width: calc(50% - 2.5px);
+      }
+    }
+
+    .ficha-atributo {
+      padding: 6px 3px;
+      gap: 3px;
+    }
+
+    .ficha-atributo__valor {
+      font-size: 18px;
+    }
+  }
 }
 
 .ficha-atributo {
@@ -1294,6 +1386,52 @@
     display: flex;
     align-items: center;
     gap: 6px;
+  }
+
+  // Modificador de teste (redesenho de comparação visual, coluna de Atributos): passo -/+ que soma
+  // direto na fórmula rolada — não muta o atributo base nem a Maestria (ex.: Amplificador aplicado).
+  &__modificador {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+  }
+
+  &__mod-passo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text-mute);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      color: var(--accent);
+      border-color: var(--accent-border);
+    }
+  }
+
+  &__mod-valor {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-mute);
+    min-width: 15px;
+    text-align: center;
+
+    &--ativo {
+      color: var(--accent);
+    }
   }
 
   // Estrelas de Maestria flanqueando a abreviação do atributo (★ PON ★).

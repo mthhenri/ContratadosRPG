@@ -179,11 +179,13 @@ export interface AjusteClasse {
  * A **ficha** de jogador (m3-07/m3-10) — alvo de fidelidade `docs/design/examples/ficha-de-jogador.html`.
  * Edição no próprio lugar para dono/mestre (`ajustavel`), read-only para quem só tem acesso concedido.
  *
- * **Redesenho de comparação visual** (branch `claude/redesign-ficha-screen-*`): a tela foi reduzida
- * a um único card (identidade + vitalidade + condições + glance de Defesa/Resistências) pra comparar
- * lado a lado com a versão em produção (master) — a navegação por abas (m3-11) e as seções de
- * Atributos, Informações Extras, Identidade detalhada, Inventário, Habilidades, Sanidade e Anotações
- * saíram do template nesta rodada; os `@Output`/computeds que as alimentavam continuam intactos.
+ * **Redesenho de comparação visual** (branch `claude/redesign-ficha-screen-*`): a tela foi reduzida a
+ * dois cards lado a lado — identidade (+ vitalidade + condições + glance de Defesa/Resistências) e uma
+ * versão compacta de Atributos (Proficiência + resumo de Maestria + os 10 atributos em no máximo 2
+ * colunas, cada um com um stepper de modificador de teste **não persistido**, ex.: Amplificadores) —
+ * pra comparar com a versão em produção (master). A navegação por abas (m3-11) e as seções de
+ * Informações Extras, Identidade detalhada, Inventário, Habilidades, Sanidade e Anotações saíram do
+ * template nesta rodada; os `@Output`/computeds que as alimentavam continuam intactos.
  *
  * **Nenhuma regra de jogo vive aqui**: toda stat derivada (Vida/Energia máximas, Defesa, Deslocamento,
  * Dano, Percepção, Inventário, Patente…) vem de `shared/regras` (fonte única — SYSTEM.SPEC §6.6,
@@ -474,13 +476,49 @@ export class FichaVisualizacao {
     calcularAtributosEfetivos(this.atributos(), this.estado().lesoes),
   );
 
-  /** Proficiência derivada (nível; `null` para Civil → 0) — somada no teste de atributo (m3-22). */
+  /** Proficiência derivada (nível; `null` para Civil) — somada no teste de atributo (m3-22). */
   protected readonly proficiencia = computed(() =>
     calcularProficiencia({ classe: this.dados().classe, nivel: this.dados().nivel }),
   );
 
+  /** Linha de Proficiência já formatada ("+N" ou "—" pro Civil) — mesma fonte de `Informações Extras`. */
+  protected readonly proficienciaLinha = computed<InfoExtra>(
+    () => this.informacoesExtras().find((info) => info.chave === 'proficiencia')!,
+  );
+
   /** Bandeja de dados global — onde o teste rolado aqui aparece. */
   private readonly bandeja = inject(BandejaDadosService);
+
+  /**
+   * Modificador temporário de teste por atributo (ex.: Amplificador aplicado) — local à leitura,
+   * **não persistido** (redesenho de comparação visual): soma direto na fórmula rolada, sem afetar
+   * o atributo base nem a Maestria.
+   */
+  protected readonly modificadoresTeste = signal<Record<ChaveAtributo, number>>({
+    destreza: 0,
+    forca: 0,
+    luta: 0,
+    pontaria: 0,
+    vigor: 0,
+    intelecto: 0,
+    medicina: 0,
+    sentidos: 0,
+    social: 0,
+    vontade: 0,
+  });
+
+  /** Passo −/+ no modificador de teste de um atributo (sem clamp — mesma liberdade dos demais steppers). */
+  protected ajustarModificadorTeste(chave: ChaveAtributo, delta: number): void {
+    this.modificadoresTeste.update((atual) => ({ ...atual, [chave]: atual[chave] + delta }));
+  }
+
+  /** Sufixo `" + N"`/`" − N"` do modificador de teste na fórmula — vazio quando zerado. */
+  private sufixoModificador(modificador: number): string {
+    if (modificador === 0) {
+      return '';
+    }
+    return modificador > 0 ? ` + ${modificador}` : ` - ${Math.abs(modificador)}`;
+  }
 
   /**
    * Rola o teste de um atributo direto da Visão Geral (m3-22; gramática v3 m3-29; margem de crítico
@@ -488,11 +526,13 @@ export class FichaVisualizacao {
    * maior, **conta a margem de crítico natural** (`cm1` = crita no 20; regra 1216) e soma a Proficiência.
    * Usa os atributos **efetivos** (pós-lesão) — a lesão reduz quantos D20 entram no pool, e atributo
    * 0/negativo vira desvantagem intrínseca do motor (rola 2+|attr| dados e mantém o menor; regra 270).
+   * O modificador de teste (coluna de Atributos) some no final, como uma constante da fórmula.
    */
   protected rolarTesteAtributo(campo: CampoAtributo): void {
     const atributo = this.atributosEfetivos()[campo.chave];
+    const sufixo = this.sufixoModificador(this.modificadoresTeste()[campo.chave]);
     // A fórmula que vai ao **motor** mantém `kh1` — é o gatilho da desvantagem intrínseca (atributo ≤ 0).
-    const formula = `${campo.chave}d20kh1cm1 + PROF`;
+    const formula = `${campo.chave}d20kh1cm1 + PROF${sufixo}`;
     const resultado = rolarFormula({
       formula,
       atributos: this.atributosEfetivos(),
@@ -503,7 +543,7 @@ export class FichaVisualizacao {
       // Legenda **honesta** (m3-31): em **desvantagem** (atributo ≤ 0) o motor rola `(2+|attr|)d20` e
       // mantém o **menor** — então a fórmula exibida troca `kh1`→`kl1` e mostra a contagem real, em vez de
       // exibir `kh1` (mantém o maior) numa rolagem que na verdade manteve o menor.
-      const formulaExibida = atributo <= 0 ? `${2 - atributo}d20kl1cm1 + PROF` : formula;
+      const formulaExibida = atributo <= 0 ? `${2 - atributo}d20kl1cm1 + PROF${sufixo}` : formula;
       this.bandeja.mostrar({ rotulo: campo.nome, formula: formulaExibida, resultado });
     }
   }
@@ -699,6 +739,24 @@ export class FichaVisualizacao {
 
   /** Maestria persistida (leitura) — o atributo que a carrega, ou `null`. */
   protected readonly maestriaAtual = computed(() => this.dados().maestria);
+
+  /**
+   * Nome por extenso do atributo com Maestria — alimenta o resumo "Maestria: Nome" da coluna de
+   * Atributos (redundante com a estrela ★ no próprio box, mas pedido assim mesmo). `null` sem Maestria.
+   */
+  protected readonly maestriaNomeAtual = computed(() => {
+    const chave = this.maestriaAtual();
+    if (!chave) {
+      return null;
+    }
+    for (const grupo of this.gruposAtributos) {
+      const campo = grupo.campos.find((candidato) => candidato.chave === chave);
+      if (campo) {
+        return campo.nome;
+      }
+    }
+    return null;
+  });
 
   /** Identidade (m3-23) — ausente em fichas anteriores cai em "nada definido" (retrocompat). */
   protected readonly identidade = computed<FichaIdentidadeDto>(
