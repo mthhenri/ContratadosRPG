@@ -38,6 +38,7 @@ import {
   montarResistencias,
   calcularVida,
   maestriaAtingivel,
+  obterLimitesClasse,
   somarLesoesAtributo,
 } from '@contratados-rpg/shared/regras/agente';
 import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
@@ -459,6 +460,8 @@ export class FichaVisualizacao {
   /** Salário da patente atual (m3-34) — derivado do Prestígio, nunca persistido. */
   protected readonly salario = computed(() => salarioPatente(this.dados().prestigio));
   protected readonly rotuloNivel = computed(() => (this.ehCivil() ? 'Treinamentos' : 'Nível'));
+  /** Bounds de Nível pra classe atual (0–20 Agente / 0–5 Civil) — hint nativo do input + clamp no confirmar. */
+  protected readonly limitesNivel = computed(() => obterLimitesClasse({ classe: this.dados().classe }));
 
   protected readonly atributos = computed(() => this.dados().atributos);
   protected readonly estado = computed(() => this.dados().estado);
@@ -942,9 +945,11 @@ export class FichaVisualizacao {
   /**
    * Confirma o campo de identidade digitado. Codinome (relacional) sai por `ajusteNome`; Nível/
    * Prestígio (documento) por `ajusteCampoDados`; Personalidade (m3-25) por `ajustePersonalidade`.
-   * Sem trava de faixa (liberdade total — m3-10; a Personalidade tem sua própria trava de
-   * imutabilidade, arbitrada pelo backend — m3-24, o front só esconde o lápis). O guard evita o
-   * commit duplo do blur após o Enter.
+   * Prestígio segue sem trava de faixa (liberdade total — m3-10; a Personalidade tem sua própria
+   * trava de imutabilidade, arbitrada pelo backend — m3-24, o front só esconde o lápis). **Nível**
+   * é clampado aos bounds da classe (0–20 Agente / 0–5 Civil, `shared/regras/agente/limites` —
+   * mesma fonte que já normaliza os cálculos, "Progressão"/"Jogando como um Civil" no documento).
+   * O guard evita o commit duplo do blur após o Enter.
    */
   protected confirmarIdentidade(campo: 'nome' | 'personalidade' | CampoDadosEscalar, texto: string): void {
     if (this.editandoIdentidade() !== campo) {
@@ -966,8 +971,16 @@ export class FichaVisualizacao {
       return;
     }
     const bruto = Number.parseInt(texto, 10);
-    if (!Number.isNaN(bruto) && bruto !== this.dados()[campo]) {
-      this.ajusteCampoDados.emit({ campo, valor: bruto });
+    if (Number.isNaN(bruto)) {
+      return;
+    }
+    let valor = bruto;
+    if (campo === 'nivel') {
+      const limites = obterLimitesClasse({ classe: this.dados().classe });
+      valor = Math.min(limites.nivelMaximo, Math.max(limites.nivelMinimo, bruto));
+    }
+    if (valor !== this.dados()[campo]) {
+      this.ajusteCampoDados.emit({ campo, valor });
     }
   }
 

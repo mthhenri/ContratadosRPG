@@ -517,6 +517,34 @@ describe('FichaVisualizacao', () => {
     ]);
   });
 
+  it('clampa o Nível a 0–20 pra Agente (não deixa passar de 20 nem ir abaixo de 0)', () => {
+    const componente = montar(dados, 'Corvo', 42, true).fixture.componentInstance;
+    const campos: { campo: string; valor: number }[] = [];
+    componente.ajusteCampoDados.subscribe((c) => campos.push(c));
+
+    componente['editarIdentidade']('nivel');
+    componente['confirmarIdentidade']('nivel', '35');
+    componente['editarIdentidade']('nivel');
+    componente['confirmarIdentidade']('nivel', '-4');
+
+    expect(campos).toEqual([
+      { campo: 'nivel', valor: 20 },
+      { campo: 'nivel', valor: 0 },
+    ]);
+  });
+
+  it('clampa o Nível (Treinamentos) a 0–5 pra Civil', () => {
+    const componente = montar({ ...dados, classe: ClasseEnum.CIVIL, arquetipo: null }, 'Corvo', 42, true)
+      .fixture.componentInstance;
+    const campos: { campo: string; valor: number }[] = [];
+    componente.ajusteCampoDados.subscribe((c) => campos.push(c));
+
+    componente['editarIdentidade']('nivel');
+    componente['confirmarIdentidade']('nivel', '9');
+
+    expect(campos).toEqual([{ campo: 'nivel', valor: 5 }]);
+  });
+
   it('Escape cancela a digitação direta sem emitir alteração', () => {
     const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
     const ajustes: unknown[] = [];

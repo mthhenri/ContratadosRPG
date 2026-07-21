@@ -314,6 +314,8 @@
                   type="number"
                   inputmode="numeric"
                   [value]="dados().nivel"
+                  [attr.min]="limitesNivel().nivelMinimo"
+                  [attr.max]="limitesNivel().nivelMaximo"
                   aria-label="Nível"
                   (keydown.enter)="confirmarIdentidade('nivel', entradaIdentidade.value)"
                   (keydown.escape)="cancelarIdentidade()"
