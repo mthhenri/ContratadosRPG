@@ -40,8 +40,10 @@
     &--trauma {
       --marca: var(--warning);
     }
+    // `--vida`, não `--accent`: Lesões é sempre vermelho, mesmo que o usuário troque o accent do
+    // tema (preset/color-picker — spec M1) — mesmo racional do `--vida` fixo na stat de Vida.
     &--lesao {
-      --marca: var(--accent);
+      --marca: var(--vida);
     }
   }
 
@@ -167,7 +169,7 @@
     }
 
     &--lesao {
-      border-left-color: var(--accent);
+      border-left-color: var(--vida);
     }
 
     &--edicao {
@@ -183,13 +185,15 @@
     gap: 8px;
   }
 
+  // Severidade da Lesão (Leve/Grave/Mortal) — sempre vermelho (`--vida`, fixo — mesma identidade
+  // da borda esquerda do item), independente da severidade E do accent do tema escolhido.
   &__tag {
     font-family: var(--font-mono);
     font-size: 9px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: var(--text-mute);
+    color: var(--vida);
     flex: 0 0 auto;
   }
 
