@@ -308,6 +308,8 @@
         [draggable]="false"
         [resizable]="false"
         [dismissableMask]="true"
+        [style]="{ width: '50vw' }"
+        [breakpoints]="{ '560px': '95vw' }"
         header="Adicionar itens"
         styleClass="ficha-inv__dialogo ficha-inv__dialogo--catalogo"
         (onHide)="fecharCatalogo()"
