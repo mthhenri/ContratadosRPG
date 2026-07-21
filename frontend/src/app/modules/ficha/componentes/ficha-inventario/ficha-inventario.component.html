@@ -5,43 +5,47 @@
   <div class="ficha-inv__carga" [class.ficha-inv__carga--aviso]="excedeInventario()">
     <div class="ficha-inv__carga-topo">
       <span class="ficha-inv__carga-rotulo">Inventário</span>
-      @if (editavel() && editandoInventarioMaximo()) {
-        <span class="ficha-inv__carga-valor">
-          {{ pesoUsadoTexto() }} /
-          <input
-            #entradaInventarioMaximo
-            class="ficha-inv__carga-entrada"
-            type="number"
-            [value]="inventarioMaximo()"
+      <span class="ficha-inv__carga-direita">
+        @if (editavel() && editandoInventarioMaximo()) {
+          <span class="ficha-inv__carga-valor">
+            {{ pesoUsadoTexto() }} /
+            <input
+              #entradaInventarioMaximo
+              class="ficha-inv__carga-entrada"
+              type="number"
+              [value]="inventarioMaximo()"
+              aria-label="Editar inventário máximo"
+              (keydown.enter)="confirmarInventarioMaximo(entradaInventarioMaximo.value)"
+              (keydown.escape)="cancelarInventarioMaximo()"
+              (blur)="confirmarInventarioMaximo(entradaInventarioMaximo.value)"
+            />
+          </span>
+        } @else if (editavel()) {
+          <button
+            type="button"
+            class="ficha-inv__carga-valor ficha-inv__carga-valor--editavel"
             aria-label="Editar inventário máximo"
-            (keydown.enter)="confirmarInventarioMaximo(entradaInventarioMaximo.value)"
-            (keydown.escape)="cancelarInventarioMaximo()"
-            (blur)="confirmarInventarioMaximo(entradaInventarioMaximo.value)"
+            (click)="editarInventarioMaximo()"
+          >
+            {{ inventarioTexto() }}
+          </button>
+        } @else {
+          <span class="ficha-inv__carga-valor">{{ inventarioTexto() }}</span>
+        }
+        @if (excedeInventario()) {
+          <app-icone
+            nome="alerta"
+            class="ficha-inv__carga-alerta"
+            aria-label="Sobrecarregado!"
+            title="Sobrecarregado!"
           />
-        </span>
-      } @else if (editavel()) {
-        <button
-          type="button"
-          class="ficha-inv__carga-valor ficha-inv__carga-valor--editavel"
-          aria-label="Editar inventário máximo"
-          (click)="editarInventarioMaximo()"
-        >
-          {{ inventarioTexto() }}
-        </button>
-      } @else {
-        <span class="ficha-inv__carga-valor">{{ inventarioTexto() }}</span>
-      }
+        }
+      </span>
     </div>
     <div class="ficha-inv__carga-trilho">
       <span class="ficha-inv__carga-preenchimento" [style.width.%]="percentualCarga()"></span>
     </div>
   </div>
-
-  @if (excedeInventario()) {
-    <p class="ficha-inv__aviso">
-      Peso acima do inventário máximo — apenas um aviso; o inventário é salvo assim mesmo.
-    </p>
-  }
 
   <!-- Montar/adicionar itens: catálogo recolhível + item custom (só para quem edita). -->
   @if (editavel()) {
@@ -323,6 +327,8 @@
         [draggable]="false"
         [resizable]="false"
         [dismissableMask]="true"
+        [style]="{ width: '460px' }"
+        [breakpoints]="{ '560px': '95vw' }"
         header="Item custom"
         styleClass="ficha-inv__dialogo"
         (onHide)="cancelarCriarItem()"
@@ -332,7 +338,11 @@
     }
   }
 
-  <!-- Lista do inventário: itens (com modificações) + amplificadores. -->
+  <!-- Lista do inventário: itens (com modificações) + amplificadores — rola por dentro em vez de
+       esticar a coluna Status além da altura da coluna de Identidade vizinha (`--linha-colunas`
+       tem `align-items:stretch`; sem teto, a lista cresce sem fim e a página inteira fica gigante
+       — teto fixo só no modo `dialog`, ver `--compacto` no SCSS). -->
+  <div class="ficha-inv__lista" appOverflowFade>
   @if (inventarioVazio()) {
     <p class="ficha-inv__vazio">
       @if (editavel()) {
@@ -629,6 +639,8 @@
             [draggable]="false"
             [resizable]="false"
             [dismissableMask]="true"
+            [style]="{ width: '460px' }"
+            [breakpoints]="{ '560px': '95vw' }"
             header="Aplicar Fragmento"
             styleClass="ficha-inv__dialogo"
             (onHide)="cancelarAplicarFragmento()"
@@ -850,6 +862,8 @@
               [draggable]="false"
               [resizable]="false"
               [dismissableMask]="true"
+              [style]="{ width: '460px' }"
+              [breakpoints]="{ '560px': '95vw' }"
               [header]="'Modificar — ' + item.nomeExibido"
               styleClass="ficha-inv__dialogo"
               (onHide)="fecharPainelDialog()"
@@ -910,6 +924,7 @@
       }
     </div>
   }
+  </div>
 
   <!-- Dialog "quantos remover" para stacks (quantidade > 1). -->
   @if (indiceRemovendoStack() !== null) {

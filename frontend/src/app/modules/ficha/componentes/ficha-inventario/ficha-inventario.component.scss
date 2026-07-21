@@ -43,6 +43,18 @@
     justify-content: space-between;
     gap: 8px;
   }
+  &__carga-direita {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  // Ícone de sobrecarga (substitui o antigo texto de aviso) — hover/foco mostram "Sobrecarregado!"
+  // via `title` nativo (mesmo padrão do badge de Fragmento aplicado, abaixo).
+  &__carga-alerta {
+    align-self: center;
+    color: var(--accent);
+    cursor: help;
+  }
   &__carga-rotulo {
     font-size: 11px;
     font-weight: 700;
@@ -834,6 +846,43 @@
     }
   }
 
+  // === Lista rolável (itens + amplificadores) ===
+  // Sem teto por padrão (modo `inline`, aba antiga — ocupava a página inteira). No modo `dialog`
+  // (`--compacto` no fim do arquivo) ganha um teto fixo + rolagem própria, pra não esticar a
+  // coluna Status além da altura da coluna de Identidade vizinha (mesmo raciocínio de
+  // `.sanidade__lista`/`.ficha-status__anotacoes` na visualização).
+  &__lista {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    --fade-topo: 0px;
+    --fade-base: 0px;
+    &.overflow-fade--topo,
+    &.overflow-fade--base {
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+    }
+    &.overflow-fade--topo {
+      --fade-topo: 20px;
+    }
+    &.overflow-fade--base {
+      --fade-base: 20px;
+    }
+  }
+
   // === Itens da lista ===
   &__item {
     border: 1px solid var(--border);
@@ -1128,6 +1177,15 @@
     }
     .ficha-inv__carga-entrada {
       font-size: 13px;
+    }
+
+    // Teto fixo + rolagem própria — a coluna Status é esticada (`align-items:stretch`) até a
+    // altura da coluna de Identidade vizinha; sem este teto a lista cresce sem fim e estica a
+    // coluna (e a página) além disso.
+    .ficha-inv__lista {
+      max-height: 480px;
+      overflow-y: auto;
+      padding-right: 4px;
     }
 
     .ficha-inv__item {

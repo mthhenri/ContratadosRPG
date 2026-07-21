@@ -454,6 +454,20 @@ describe('FichaInventario', () => {
         alvo.raiz.querySelector('.ficha-inv__carga')?.classList.contains('ficha-inv__carga--aviso'),
       ).toBe(true);
     });
+
+    it('sem sobrecarga: sem ícone de alerta', () => {
+      const { raiz } = montar({ itens: [itemLeve], amplificadores: [] });
+      expect(raiz.querySelector('.ficha-inv__carga-alerta')).toBeNull();
+    });
+
+    it('com sobrecarga: mostra o ícone de alerta com dica "Sobrecarregado!"', () => {
+      const alvo = montar({ itens: [itemLeve], amplificadores: [] });
+      alvo.fixture.componentRef.setInput('inventarioMaximo', 0);
+      alvo.fixture.detectChanges();
+      const alerta = alvo.raiz.querySelector('.ficha-inv__carga-alerta');
+      expect(alerta).not.toBeNull();
+      expect(alerta?.getAttribute('title')).toBe('Sobrecarregado!');
+    });
   });
 
   describe('apelido de equipamento (m3-33)', () => {
