@@ -58,6 +58,7 @@ import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
 import { FichaInventario, type CustoEnergiaFragmento } from '../ficha-inventario/ficha-inventario.component';
 import { FichaSanidade, type EstadoSanidade } from '../ficha-sanidade/ficha-sanidade.component';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
@@ -205,7 +206,16 @@ export interface AjusteClasse {
  */
 @Component({
   selector: 'app-ficha-visualizacao',
-  imports: [HoldRepeat, Icone, FichaSanidade, FichaInventario, BandejaDados, OverflowFade, Dialog],
+  imports: [
+    HoldRepeat,
+    Icone,
+    FichaSanidade,
+    FichaInventario,
+    FichaHabilidades,
+    BandejaDados,
+    OverflowFade,
+    Dialog,
+  ],
   templateUrl: './ficha-visualizacao.component.html',
   styleUrl: './ficha-visualizacao.component.scss',
 })
@@ -333,13 +343,14 @@ export class FichaVisualizacao {
   /**
    * Aba ativa da mini barra de abas do card de **Status** (terceira coluna, redesenho de
    * comparação visual) — distinta de `abaAtiva`/`abas` acima (a navegação por abas de página
-   * inteira, m3-11, hoje fora do template). Estado puramente local: não sincroniza com a URL. A
-   * barra tem 1 posição ainda reservada pra mais conteúdo.
+   * inteira, m3-11, hoje fora do template). Estado puramente local: não sincroniza com a URL.
    */
-  protected readonly abaStatusAtiva = signal<'informacoes' | 'inventario'>('informacoes');
+  protected readonly abaStatusAtiva = signal<'informacoes' | 'inventario' | 'habilidades'>(
+    'informacoes',
+  );
 
   /** Troca a aba ativa da mini barra do card de Status. */
-  protected selecionarAbaStatus(aba: 'informacoes' | 'inventario'): void {
+  protected selecionarAbaStatus(aba: 'informacoes' | 'inventario' | 'habilidades'): void {
     this.abaStatusAtiva.set(aba);
   }
 

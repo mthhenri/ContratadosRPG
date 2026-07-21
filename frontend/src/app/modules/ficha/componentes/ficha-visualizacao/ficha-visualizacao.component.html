@@ -929,9 +929,9 @@
 
     <!-- Status — terceira coluna (redesenho de comparação visual): Informações (glance de
          Deslocamento/Dano C. a C./Dano Furtivo/Percepção + Sequelas/Traumas/Lesões, editável via
-         `FichaSanidade`, + Anotações) e Inventário (editor completo, `FichaInventario` em modo
-         `dialog` — lista compacta aqui, catálogo/mods/fragmento em `p-dialog`). A barra tem 1
-         posição ainda reservada pra mais conteúdo. -->
+         `FichaSanidade`, + Anotações), Inventário (editor completo, `FichaInventario` em modo
+         `dialog` — lista compacta aqui, catálogo/mods/fragmento em `p-dialog`) e Habilidades
+         (`FichaHabilidades`, m3-13, reencaixada aqui — as 3 posições da barra em uso). -->
     <div class="ficha-visao__coluna ficha-visao__coluna--status">
       <div class="ficha-status__abas">
         <button
@@ -952,7 +952,15 @@
           <app-icone class="ficha-status__aba-icone" [nome]="'inventario'" />
           Inventário
         </button>
-        <span class="ficha-status__aba" aria-hidden="true"></span>
+        <button
+          type="button"
+          class="ficha-status__aba"
+          [class.ficha-status__aba--ativa]="abaStatusAtiva() === 'habilidades'"
+          (click)="selecionarAbaStatus('habilidades')"
+        >
+          <app-icone class="ficha-status__aba-icone" [nome]="'habilidades'" />
+          Habilidades
+        </button>
       </div>
 
       <section class="ficha-cartao ficha-cartao--status">
@@ -1064,6 +1072,20 @@
             (inventarioMudou)="ajusteInventario.emit($event)"
             (ajusteEnergiaFragmento)="aoAjustarEnergiaFragmento($event)"
             (ajusteInventarioMaximo)="ajustarInventarioMaximo($event)"
+          />
+        </div>
+        }
+        @if (abaStatusAtiva() === 'habilidades') {
+        <div class="ficha-status__conteudo">
+          <app-ficha-habilidades
+            [habilidades]="dados().habilidades"
+            [editavel]="ajustavel()"
+            [classe]="dados().classe"
+            [arquetipo]="dados().arquetipo"
+            [energiaAtual]="estado().energiaAtual"
+            [amplificadores]="dados().inventario.amplificadores"
+            (habilidadesMudou)="ajusteHabilidades.emit($event)"
+            (habilidadeUtilizada)="aoUtilizarHabilidade($event)"
           />
         </div>
         }

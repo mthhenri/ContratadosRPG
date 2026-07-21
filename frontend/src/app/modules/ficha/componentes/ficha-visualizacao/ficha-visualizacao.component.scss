@@ -274,9 +274,7 @@
 }
 
 // === Status: barra de abas — mesmo padrão de `.ficha-abas` do estilo antigo (pílulas do tamanho
-// do conteúdo, não esticadas), só mais compacta pra não dominar o card. Só a 1ª tem conteúdo por
-// ora ("por enquanto só essa"); as outras duas são reservas visuais, mesmo visual de uma aba
-// inativa comum.
+// do conteúdo, não esticadas), só mais compacta pra não dominar o card.
 .ficha-status {
   &__abas {
     display: flex;
