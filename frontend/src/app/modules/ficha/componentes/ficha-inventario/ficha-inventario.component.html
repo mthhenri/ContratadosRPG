@@ -808,47 +808,49 @@
               }
             </div>
 
-            @for (secao of item.secoes; track secao.titulo) {
-              @if (secao.titulo) {
-                <div class="ficha-inv__mod-secao">{{ secao.titulo }}</div>
-              }
-              <div class="ficha-inv__mod-grade" appOverflowFade>
-                @for (entrada of secao.entradas; track entrada.nome) {
-                  <div
-                    class="ficha-inv__mod-entrada"
-                    [class.ficha-inv__mod-entrada--bloqueada]="entrada.bloqueada"
-                    [class.ficha-inv__mod-entrada--ativa]="entrada.ativa"
-                  >
-                    <div class="ficha-inv__mod-entrada-topo">
-                      <span class="ficha-inv__mod-entrada-nome">{{ entrada.nome }}</span>
-                      <div class="ficha-inv__mod-entrada-pontos">
-                        @for (preenchido of entrada.pontos; track $index) {
-                          <span class="ficha-inv__ponto" [class.ficha-inv__ponto--cheio]="preenchido"></span>
-                        }
-                      </div>
-                    </div>
-                    <div class="ficha-inv__mod-entrada-desc">{{ entrada.descricao }}</div>
-                    @if (entrada.motivo) {
-                      <div
-                        class="ficha-inv__mod-entrada-motivo"
-                        [class.ficha-inv__mod-entrada-motivo--excede]="entrada.excedente"
-                      >{{ entrada.motivo }}</div>
-                    }
-                    @if (entrada.bloqueia.length > 0) {
-                      <div class="ficha-inv__mod-entrada-bloqueia">Bloqueia: {{ entrada.bloqueia.join(', ') }}</div>
-                    }
-                    <div class="ficha-inv__mod-entrada-custo">{{ entrada.custoTexto }}</div>
-                    <button
-                      type="button"
-                      class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--largo ficha-inv__btn--pequeno"
-                      [disabled]="!entrada.podeAdicionar"
-                      (click)="adicionarModificacao(item.indice, entrada.nome)"
-                    >
-                      {{ entrada.ativa ? '+ Stack' : '+ Aplicar' }}
-                    </button>
-                  </div>
+            @if (criandoModIndice() !== item.indice) {
+              @for (secao of item.secoes; track secao.titulo) {
+                @if (secao.titulo) {
+                  <div class="ficha-inv__mod-secao">{{ secao.titulo }}</div>
                 }
-              </div>
+                <div class="ficha-inv__mod-grade" appOverflowFade>
+                  @for (entrada of secao.entradas; track entrada.nome) {
+                    <div
+                      class="ficha-inv__mod-entrada"
+                      [class.ficha-inv__mod-entrada--bloqueada]="entrada.bloqueada"
+                      [class.ficha-inv__mod-entrada--ativa]="entrada.ativa"
+                    >
+                      <div class="ficha-inv__mod-entrada-topo">
+                        <span class="ficha-inv__mod-entrada-nome">{{ entrada.nome }}</span>
+                        <div class="ficha-inv__mod-entrada-pontos">
+                          @for (preenchido of entrada.pontos; track $index) {
+                            <span class="ficha-inv__ponto" [class.ficha-inv__ponto--cheio]="preenchido"></span>
+                          }
+                        </div>
+                      </div>
+                      <div class="ficha-inv__mod-entrada-desc">{{ entrada.descricao }}</div>
+                      @if (entrada.motivo) {
+                        <div
+                          class="ficha-inv__mod-entrada-motivo"
+                          [class.ficha-inv__mod-entrada-motivo--excede]="entrada.excedente"
+                        >{{ entrada.motivo }}</div>
+                      }
+                      @if (entrada.bloqueia.length > 0) {
+                        <div class="ficha-inv__mod-entrada-bloqueia">Bloqueia: {{ entrada.bloqueia.join(', ') }}</div>
+                      }
+                      <div class="ficha-inv__mod-entrada-custo">{{ entrada.custoTexto }}</div>
+                      <button
+                        type="button"
+                        class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--largo ficha-inv__btn--pequeno"
+                        [disabled]="!entrada.podeAdicionar"
+                        (click)="adicionarModificacao(item.indice, entrada.nome)"
+                      >
+                        {{ entrada.ativa ? '+ Stack' : '+ Aplicar' }}
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
             }
           </div>
           </ng-template>
