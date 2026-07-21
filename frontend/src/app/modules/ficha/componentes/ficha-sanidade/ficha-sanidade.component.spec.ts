@@ -125,7 +125,7 @@ describe('FichaSanidade', () => {
         severidade: SeveridadeLesaoEnum.GRAVE,
         permanente: true,
       }),
-    ).toBe('−2 Força (permanente)');
+    ).toBe('−2 Força');
   });
 
   it('adiciona uma lesão preenchida e emite o trio com o novo item', () => {

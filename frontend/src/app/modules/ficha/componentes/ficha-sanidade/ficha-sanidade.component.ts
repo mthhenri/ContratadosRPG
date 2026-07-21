@@ -1,6 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, input, output, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Dialog } from 'primeng/dialog';
 
 import { SeveridadeLesaoEnum } from '@contratados-rpg/shared/enums';
 import type {
@@ -11,6 +12,7 @@ import type {
 } from '@contratados-rpg/shared/dtos/ficha';
 
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
+import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 
 /** As três listas de Sanidade do `estado`, emitidas juntas a cada mutação (a página persiste o trio). */
@@ -55,6 +57,13 @@ const SEVERIDADES: readonly OpcaoSeveridade[] = [
   { valor: SeveridadeLesaoEnum.MORTAL, rotulo: 'Mortal', pontos: 5 },
 ];
 
+/** Rótulo singular de cada lista — alimenta o título do diálogo (`apresentacao="dialog"`). */
+const ROTULO_LISTA: Record<ListaSanidade, string> = {
+  sequela: 'Sequela',
+  trauma: 'Trauma',
+  lesao: 'Lesão',
+};
+
 /**
  * Editor **no próprio lugar** da aba Sanidade (m3-12): as três listas de `estado` — **sequelas**
  * (temporárias), **traumas** (permanentes, tratáveis) e **lesões** (removem pontos de atributo). Cada
@@ -67,7 +76,7 @@ const SEVERIDADES: readonly OpcaoSeveridade[] = [
  */
 @Component({
   selector: 'app-ficha-sanidade',
-  imports: [NgTemplateOutlet, ReactiveFormsModule, HoldRepeat, OverflowFade],
+  imports: [NgTemplateOutlet, ReactiveFormsModule, HoldRepeat, Icone, OverflowFade, Dialog],
   templateUrl: './ficha-sanidade.component.html',
   styleUrl: './ficha-sanidade.component.scss',
 })
@@ -77,6 +86,13 @@ export class FichaSanidade {
   readonly lesoes = input.required<readonly FichaLesaoDto[]>();
   /** Dono/mestre edita; para os demais é só leitura (a página liga por `podeGerenciar`). */
   readonly editavel = input(false);
+  /**
+   * `'inline'` (padrão, aba Sanidade & Lesões): o formulário abre dentro da própria lista, como
+   * sempre foi. `'dialog'`: abre num `p-dialog` centralizado — pro card de Status (redesenho de
+   * comparação visual), cuja coluna é estreita demais pro formulário/botão "+ Adicionar" caber
+   * inline sem quebrar. Mesmo estado/lógica dos dois modos; só a moldura do editor muda.
+   */
+  readonly apresentacao = input<'inline' | 'dialog'>('inline');
 
   /** Emite as três listas (o trio inteiro) após qualquer mutação — a página persiste. */
   readonly sanidadeMudou = output<EstadoSanidade>();
@@ -114,6 +130,16 @@ export class FichaSanidade {
   protected readonly totalMarcas = computed(
     () => this.sequelas().length + this.traumas().length + this.lesoes().length,
   );
+
+  /** Título do `p-dialog` (`apresentacao="dialog"`) — "Adicionar"/"Editar" + o nome da lista. */
+  protected readonly tituloEditor = computed(() => {
+    const lista = this.listaEmEdicao();
+    if (lista === null) {
+      return '';
+    }
+    const verbo = this.indiceEmEdicao() < 0 ? 'Adicionar' : 'Editar';
+    return `${verbo} ${ROTULO_LISTA[lista]}`;
+  });
 
   /** `true` quando o editor aberto é desta lista e deste índice (`-1` = adicionar). */
   protected editando(lista: ListaSanidade, indice: number): boolean {
@@ -258,10 +284,11 @@ export class FichaSanidade {
     this.emitir({ traumas });
   }
 
-  /** Efeito derivado de uma lesão ("−N Atributo (permanente)") — exibição, não persistido. */
+  /** Efeito derivado de uma lesão ("−N Atributo") — exibição, não persistido. A marca de
+   * "permanente" vira o ícone `infinito` no template (mesmo texto sempre cabendo numa linha). */
   protected efeitoLesao(lesao: FichaLesaoDto): string {
     const nome = ATRIBUTOS.find((opcao) => opcao.chave === lesao.atributo)?.nome ?? lesao.atributo;
-    return `−${lesao.pontos} ${nome}${lesao.permanente ? ' (permanente)' : ''}`;
+    return `−${lesao.pontos} ${nome}`;
   }
 
   /** Rótulo legível da severidade. */

@@ -21,6 +21,13 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    // Piso comum às três colunas (Sequelas/Traumas/Lesões): cobre cabeçalho + lista de 3 itens
+    // compactos mesmo quando a coluna tem 0/1 item, então elas terminam alinhadas em vez de uma
+    // dominar as outras (era o "quebrado visualmente" reportado — Sequelas com 3 itens ficava bem
+    // mais alta que Traumas/Lesões com 1). Também funciona como teto: a lista rola a partir do 4º
+    // item (`&__lista` abaixo), então o grupo nunca cresce além disso — independe da altura da
+    // caixa de Anotações vizinha (fora deste componente).
+    min-height: 260px;
     padding: 12px 12px 14px;
     background: var(--surface);
     border: 1px solid var(--border);
@@ -91,17 +98,30 @@
       opacity: 0.4;
       cursor: default;
     }
+
+    // `apresentacao="dialog"` (coluna estreita, ex.: card de Status): só o "+", sem o texto
+    // "Adicionar" — o cabeçalho (título + contagem + régua + botão) não tem espaço pra frase.
+    &--compacto {
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+    }
   }
 
-  // Lista rolável por dentro (altura limitada) com fade nas bordas — não estica a coluna.
+  // Lista rolável por dentro (altura limitada, ~3 itens compactos) com fade nas bordas — não
+  // estica a coluna além do piso de `&__grupo` acima.
   &__lista {
     list-style: none;
     margin: 0;
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    max-height: 360px;
+    gap: 6px;
+    max-height: 200px;
     overflow-y: auto;
 
     --fade-topo: 0px;
@@ -132,7 +152,7 @@
   }
 
   &__item {
-    padding: 9px 12px;
+    padding: 7px 10px;
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-left-width: 3px;
@@ -183,6 +203,14 @@
     overflow-wrap: anywhere;
   }
 
+  // Marca de lesão permanente (substitui o texto "(permanente)" — mantém o nome numa linha só).
+  &__permanente {
+    font-size: 11px;
+    color: var(--vida);
+    vertical-align: -1px;
+    margin-left: 3px;
+  }
+
   &__acoes {
     margin-left: auto;
     display: flex;
@@ -216,17 +244,20 @@
     }
   }
 
+  // Ícone-só (era um botão de texto "Tratado" — a versão longa empurrava o resto da linha pra
+  // quebrar em duas, inflando a altura do item). Mesmo tamanho/formato de `&__acao` vizinho.
   &__toggle {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    font-size: 12px;
     color: var(--text-mute);
     background: transparent;
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-control);
-    padding: 4px 8px;
     cursor: pointer;
     transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
 
@@ -237,9 +268,15 @@
     }
   }
 
+  // Trunca numa linha só (visual "sumarizado" — item compacto de altura previsível, necessário
+  // pro piso/teto fixos de `&__grupo`/`&__lista` acima). Texto completo continua acessível via
+  // `title` (tooltip nativo) e no formulário de edição.
   &__descricao {
     display: block;
-    margin-top: 4px;
+    margin-top: 3px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
     font-family: var(--font-sans);
     font-size: 12px;
     color: var(--text-dim);

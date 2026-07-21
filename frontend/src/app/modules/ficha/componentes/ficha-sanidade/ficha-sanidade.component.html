@@ -9,29 +9,30 @@
         <button
           class="sanidade__add"
           type="button"
+          [class.sanidade__add--compacto]="apresentacao() === 'dialog'"
+          [attr.aria-label]="apresentacao() === 'dialog' ? 'Adicionar sequela' : null"
           (click)="adicionar('sequela')"
           [disabled]="editando('sequela', -1)"
         >
-          ＋ Adicionar
+          {{ apresentacao() === 'dialog' ? '＋' : '＋ Adicionar' }}
         </button>
       }
     </header>
 
     <ul class="sanidade__lista" appOverflowFade>
-      @if (editando('sequela', -1)) {
+      @if (apresentacao() === 'inline' && editando('sequela', -1)) {
         <li class="sanidade__item sanidade__item--edicao">
           <ng-container [ngTemplateOutlet]="editorSequela" />
         </li>
       }
       @for (sequela of sequelas(); track $index) {
-        @if (editando('sequela', $index)) {
+        @if (apresentacao() === 'inline' && editando('sequela', $index)) {
           <li class="sanidade__item sanidade__item--edicao">
             <ng-container [ngTemplateOutlet]="editorSequela" />
           </li>
         } @else {
           <li class="sanidade__item sanidade__item--sequela">
             <div class="sanidade__linha">
-              <span class="sanidade__tag">Sequela</span>
               <span class="sanidade__nome">{{ sequela.nome }}</span>
               @if (editavel()) {
                 <div class="sanidade__acoes">
@@ -55,7 +56,7 @@
               }
             </div>
             @if (sequela.descricao) {
-              <span class="sanidade__descricao">{{ sequela.descricao }}</span>
+              <span class="sanidade__descricao" [title]="sequela.descricao">{{ sequela.descricao }}</span>
             }
             @if (removendo('sequela', $index)) {
               <div class="sanidade__confirmar">
@@ -95,29 +96,30 @@
         <button
           class="sanidade__add"
           type="button"
+          [class.sanidade__add--compacto]="apresentacao() === 'dialog'"
+          [attr.aria-label]="apresentacao() === 'dialog' ? 'Adicionar trauma' : null"
           (click)="adicionar('trauma')"
           [disabled]="editando('trauma', -1)"
         >
-          ＋ Adicionar
+          {{ apresentacao() === 'dialog' ? '＋' : '＋ Adicionar' }}
         </button>
       }
     </header>
 
     <ul class="sanidade__lista" appOverflowFade>
-      @if (editando('trauma', -1)) {
+      @if (apresentacao() === 'inline' && editando('trauma', -1)) {
         <li class="sanidade__item sanidade__item--edicao">
           <ng-container [ngTemplateOutlet]="editorTrauma" />
         </li>
       }
       @for (trauma of traumas(); track $index) {
-        @if (editando('trauma', $index)) {
+        @if (apresentacao() === 'inline' && editando('trauma', $index)) {
           <li class="sanidade__item sanidade__item--edicao">
             <ng-container [ngTemplateOutlet]="editorTrauma" />
           </li>
         } @else {
           <li class="sanidade__item sanidade__item--trauma">
             <div class="sanidade__linha">
-              <span class="sanidade__tag">{{ trauma.tratado ? 'Trauma tratado' : 'Trauma' }}</span>
               <span class="sanidade__nome">{{ trauma.nome }}</span>
               @if (editavel()) {
                 <div class="sanidade__acoes">
@@ -130,7 +132,7 @@
                     title="Alternar tratado (reduz a penalidade; o trauma permanece)"
                     (click)="alternarTratado($index)"
                   >
-                    Tratado
+                    <app-icone [nome]="'medicinal'" />
                   </button>
                   <button
                     class="sanidade__acao"
@@ -152,7 +154,7 @@
               }
             </div>
             @if (trauma.descricao) {
-              <span class="sanidade__descricao">{{ trauma.descricao }}</span>
+              <span class="sanidade__descricao" [title]="trauma.descricao">{{ trauma.descricao }}</span>
             }
             @if (removendo('trauma', $index)) {
               <div class="sanidade__confirmar">
@@ -192,30 +194,37 @@
         <button
           class="sanidade__add"
           type="button"
+          [class.sanidade__add--compacto]="apresentacao() === 'dialog'"
+          [attr.aria-label]="apresentacao() === 'dialog' ? 'Adicionar lesão' : null"
           (click)="adicionar('lesao')"
           [disabled]="editando('lesao', -1)"
         >
-          ＋ Adicionar
+          {{ apresentacao() === 'dialog' ? '＋' : '＋ Adicionar' }}
         </button>
       }
     </header>
 
     <ul class="sanidade__lista" appOverflowFade>
-      @if (editando('lesao', -1)) {
+      @if (apresentacao() === 'inline' && editando('lesao', -1)) {
         <li class="sanidade__item sanidade__item--edicao">
           <ng-container [ngTemplateOutlet]="editorLesao" />
         </li>
       }
       @for (lesao of lesoes(); track $index) {
-        @if (editando('lesao', $index)) {
+        @if (apresentacao() === 'inline' && editando('lesao', $index)) {
           <li class="sanidade__item sanidade__item--edicao">
             <ng-container [ngTemplateOutlet]="editorLesao" />
           </li>
         } @else {
           <li class="sanidade__item sanidade__item--lesao">
             <div class="sanidade__linha">
-              <span class="sanidade__tag">Lesão · {{ rotuloSeveridade(lesao.severidade) }}</span>
-              <span class="sanidade__nome">{{ efeitoLesao(lesao) }}</span>
+              <span class="sanidade__tag">{{ rotuloSeveridade(lesao.severidade) }}</span>
+              <span class="sanidade__nome">
+                {{ efeitoLesao(lesao) }}
+                @if (lesao.permanente) {
+                  <app-icone class="sanidade__permanente" [nome]="'infinito'" title="Permanente" aria-label="Permanente" />
+                }
+              </span>
               @if (editavel()) {
                 <div class="sanidade__acoes">
                   <button
@@ -238,7 +247,7 @@
               }
             </div>
             @if (lesao.descricao) {
-              <span class="sanidade__descricao">{{ lesao.descricao }}</span>
+              <span class="sanidade__descricao" [title]="lesao.descricao">{{ lesao.descricao }}</span>
             }
             @if (removendo('lesao', $index)) {
               <div class="sanidade__confirmar">
@@ -268,6 +277,32 @@
     }
   </section>
 </div>
+
+<!-- Diálogo do editor (`apresentacao="dialog"`) — mesmo formulário/estado dos `<ng-template>`
+     abaixo, só numa moldura flutuante em vez de inline na lista (colunas estreitas, ex.: card de
+     Status do redesenho de comparação visual, não têm espaço pro formulário/botão "+ Adicionar"). -->
+<p-dialog
+  [visible]="apresentacao() === 'dialog' && listaEmEdicao() !== null"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  [header]="tituloEditor()"
+  styleClass="sanidade__dialogo"
+  (onHide)="cancelar()"
+>
+  @switch (listaEmEdicao()) {
+    @case ('sequela') {
+      <ng-container [ngTemplateOutlet]="editorSequela" />
+    }
+    @case ('trauma') {
+      <ng-container [ngTemplateOutlet]="editorTrauma" />
+    }
+    @case ('lesao') {
+      <ng-container [ngTemplateOutlet]="editorLesao" />
+    }
+  }
+</p-dialog>
 
 <!-- ===== Editores (compartilhados entre adicionar e editar) ===== -->
 <ng-template #editorSequela>

@@ -6,7 +6,8 @@ import { Component, input } from '@angular/core';
  * depois (m2-09) topbar, autenticação e campanhas (nav, dropdown de perfil, chips de papel,
  * ações); e por fim as seis abas da ficha (batem com o `id` da aba — Visão Geral, Combate,
  * Inventário, Habilidades, Sanidade, Rolagens); e por fim as três condições rastreadas na ficha
- * (`sistema-v4.1.0.md` — "Condições"; m2-16b), usadas no editor e no mini-card de campanha.
+ * (`sistema-v4.1.0.md` — "Condições"; m2-16b), usadas no editor e no mini-card de campanha; e
+ * `infinito`, marca de lesão permanente na aba Sanidade.
  */
 export type IconeNome =
   | 'agente'
@@ -56,7 +57,8 @@ export type IconeNome =
   | 'dado'
   | 'morrendo'
   | 'machucado'
-  | 'inconsciente';
+  | 'inconsciente'
+  | 'infinito';
 
 /**
  * Ícone monocromático de linha (SVG inline, `stroke: currentColor`) — reutilizado nos menus de
