@@ -1,17 +1,39 @@
-<div class="ficha-inv">
-  <!-- Referência: peso usado / inventário máximo (Força × 5) + limite de modificações. Aviso, não trava. -->
-  <div class="ficha-inv__referencia">
-    <div class="ficha-inv__ref-box" [class.ficha-inv__ref-box--aviso]="excedeInventario()">
-      <span class="ficha-inv__ref-rotulo">Inventário usado</span>
-      <span class="ficha-inv__ref-valor">{{ inventarioTexto() }}</span>
+<div class="ficha-inv" [class.ficha-inv--compacto]="apresentacao() === 'dialog'">
+  <!-- Linha "Inventário": peso usado / máximo (Força × 5, editável no próprio lugar) — mesma barra de
+       preenchimento de Vida/Energia (`ficha-barra` na visualização), só que compacta. Aviso, não trava.
+       (`ficha-inv__carga*`, não `__peso*` — essa já é a badge de peso por item/carta abaixo.) -->
+  <div class="ficha-inv__carga" [class.ficha-inv__carga--aviso]="excedeInventario()">
+    <div class="ficha-inv__carga-topo">
+      <span class="ficha-inv__carga-rotulo">Inventário</span>
+      @if (editavel() && editandoInventarioMaximo()) {
+        <span class="ficha-inv__carga-valor">
+          {{ pesoUsadoTexto() }} /
+          <input
+            #entradaInventarioMaximo
+            class="ficha-inv__carga-entrada"
+            type="number"
+            [value]="inventarioMaximo()"
+            aria-label="Editar inventário máximo"
+            (keydown.enter)="confirmarInventarioMaximo(entradaInventarioMaximo.value)"
+            (keydown.escape)="cancelarInventarioMaximo()"
+            (blur)="confirmarInventarioMaximo(entradaInventarioMaximo.value)"
+          />
+        </span>
+      } @else if (editavel()) {
+        <button
+          type="button"
+          class="ficha-inv__carga-valor ficha-inv__carga-valor--editavel"
+          aria-label="Editar inventário máximo"
+          (click)="editarInventarioMaximo()"
+        >
+          {{ inventarioTexto() }}
+        </button>
+      } @else {
+        <span class="ficha-inv__carga-valor">{{ inventarioTexto() }}</span>
+      }
     </div>
-    <div class="ficha-inv__ref-box">
-      <span class="ficha-inv__ref-rotulo">Modificações</span>
-      <span class="ficha-inv__ref-valor">{{ limiteModsTexto() }}</span>
-    </div>
-    <div class="ficha-inv__ref-box" [class.ficha-inv__ref-box--aviso]="dinheiroNegativo()">
-      <span class="ficha-inv__ref-rotulo">Dinheiro restante</span>
-      <span class="ficha-inv__ref-valor">{{ dinheiroRestanteTexto() }}</span>
+    <div class="ficha-inv__carga-trilho">
+      <span class="ficha-inv__carga-preenchimento" [style.width.%]="percentualCarga()"></span>
     </div>
   </div>
 
@@ -59,8 +81,10 @@
       }
     </div>
 
-    <!-- Formulário de item custom (nome obrigatório; categoria/custo/peso). -->
-    @if (criandoItem()) {
+    <!-- Formulário de item custom (nome obrigatório; categoria/custo/peso) — no modo `inline` abre na
+         própria lista (aqui embaixo); no modo `dialog` o mesmo template abre num `p-dialog` (fim do
+         arquivo) — a coluna de Status não tem espaço pro formulário inteiro sem quebrar. -->
+    <ng-template #formItemCustomTemplate>
       <form class="ficha-inv__form" [formGroup]="itemCustomForm" (ngSubmit)="confirmarCriarItem()">
         <label class="ficha-inv__campo">
           <span class="ficha-inv__campo-rotulo">Nome</span>
@@ -158,9 +182,14 @@
           </button>
         </div>
       </form>
+    </ng-template>
+    @if (apresentacao() === 'inline' && criandoItem()) {
+      <ng-container [ngTemplateOutlet]="formItemCustomTemplate" />
     }
 
-    @if (catalogoAberto()) {
+    <!-- Catálogo (busca + categorias + grade de itens/amplificadores) — mesmo racional do form acima:
+         `catalogoTemplate` abre inline aqui no modo `inline`, ou num `p-dialog` maior no modo `dialog`. -->
+    <ng-template #catalogoTemplate>
       <section class="ficha-inv__catalogo">
         <input
           class="ficha-inv__busca"
@@ -267,6 +296,37 @@
           </div>
         }
       </section>
+    </ng-template>
+    @if (apresentacao() === 'inline' && catalogoAberto()) {
+      <ng-container [ngTemplateOutlet]="catalogoTemplate" />
+    }
+
+    @if (apresentacao() === 'dialog') {
+      <p-dialog
+        [visible]="catalogoAberto()"
+        [modal]="true"
+        [draggable]="false"
+        [resizable]="false"
+        [dismissableMask]="true"
+        header="Adicionar itens"
+        styleClass="ficha-inv__dialogo ficha-inv__dialogo--catalogo"
+        (onHide)="fecharCatalogo()"
+      >
+        <ng-container [ngTemplateOutlet]="catalogoTemplate" />
+      </p-dialog>
+
+      <p-dialog
+        [visible]="criandoItem()"
+        [modal]="true"
+        [draggable]="false"
+        [resizable]="false"
+        [dismissableMask]="true"
+        header="Item custom"
+        styleClass="ficha-inv__dialogo"
+        (onHide)="cancelarCriarItem()"
+      >
+        <ng-container [ngTemplateOutlet]="formItemCustomTemplate" />
+      </p-dialog>
     }
   }
 
@@ -329,6 +389,7 @@
                 <button
                   type="button"
                   class="ficha-inv__modificar"
+                  title="Modificar"
                   [class.ficha-inv__modificar--aberto]="item.painelAberto"
                   [attr.aria-expanded]="item.painelAberto"
                   (click)="alternarPainel(item.indice)"
@@ -376,6 +437,7 @@
                 <button
                   type="button"
                   class="ficha-inv__modificar"
+                  title="Aplicar Fragmento"
                   [class.ficha-inv__modificar--aberto]="aplicandoFragmentoIndice() === item.indice"
                   [attr.aria-expanded]="aplicandoFragmentoIndice() === item.indice"
                   (click)="abrirAplicarFragmento(item.indice)"
@@ -506,7 +568,11 @@
         </div>
       }
 
-      @if (editavel() && item.fragmentoPotencializador && aplicandoFragmentoIndice() === item.indice) {
+      @if (editavel() && item.fragmentoPotencializador) {
+        <!-- "Aplicar em..." — modo `inline`: abre na própria lista. Modo `dialog`: mesmo template
+             (`painelFragmentoTemplate`) abre num `p-dialog` — só um item por vez (`alternarPainel`/
+             `aplicandoFragmentoIndice` já garantem isso). -->
+        <ng-template #painelFragmentoTemplate>
         <div class="ficha-inv__mod-painel">
           <div class="ficha-inv__form-linha">
             <label class="ficha-inv__campo ficha-inv__campo--largo">
@@ -549,10 +615,33 @@
             </button>
           </div>
         </div>
+        </ng-template>
+        @if (apresentacao() === 'inline') {
+          @if (aplicandoFragmentoIndice() === item.indice) {
+            <ng-container [ngTemplateOutlet]="painelFragmentoTemplate" />
+          }
+        } @else {
+          <p-dialog
+            [visible]="aplicandoFragmentoIndice() === item.indice"
+            [modal]="true"
+            [draggable]="false"
+            [resizable]="false"
+            [dismissableMask]="true"
+            header="Aplicar Fragmento"
+            styleClass="ficha-inv__dialogo"
+            (onHide)="cancelarAplicarFragmento()"
+          >
+            <ng-container [ngTemplateOutlet]="painelFragmentoTemplate" />
+          </p-dialog>
+        }
       }
 
       @if (editavel()) {
-        @if (item.modificavel && item.painelAberto) {
+        @if (item.modificavel) {
+          <!-- Painel "Modificar" — modo `inline`: expande na própria lista. Modo `dialog`: mesmo
+               template (`painelModTemplate`) abre num `p-dialog` — a grade de mods + o form de mod
+               custom não cabem inline na coluna de Status sem quebrar. -->
+          <ng-template #painelModTemplate>
           <div class="ficha-inv__mod-painel">
             <!-- Modificação custom -->
             <div class="ficha-inv__mod-custom">
@@ -747,6 +836,25 @@
               </div>
             }
           </div>
+          </ng-template>
+          @if (apresentacao() === 'inline') {
+            @if (item.painelAberto) {
+              <ng-container [ngTemplateOutlet]="painelModTemplate" />
+            }
+          } @else {
+            <p-dialog
+              [visible]="item.painelAberto"
+              [modal]="true"
+              [draggable]="false"
+              [resizable]="false"
+              [dismissableMask]="true"
+              [header]="'Modificar — ' + item.nomeExibido"
+              styleClass="ficha-inv__dialogo"
+              (onHide)="fecharPainelDialog()"
+            >
+              <ng-container [ngTemplateOutlet]="painelModTemplate" />
+            </p-dialog>
+          }
         }
       } @else if (item.ehArmazenamento) {
         <span class="ficha-inv__porte ficha-inv__porte--leitura" [class.ficha-inv__porte--vestida]="!item.guardada">

@@ -1,6 +1,8 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, DestroyRef, computed, inject, input, output, signal } from '@angular/core';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { Dialog } from 'primeng/dialog';
 
 import {
   FragmentoModuloEnum,
@@ -263,7 +265,7 @@ interface AmpInventarioVM {
  */
 @Component({
   selector: 'app-ficha-inventario',
-  imports: [ReactiveFormsModule, Icone, OverflowFade],
+  imports: [ReactiveFormsModule, Icone, OverflowFade, Dialog, NgTemplateOutlet],
   templateUrl: './ficha-inventario.component.html',
   styleUrl: './ficha-inventario.component.scss',
 })
@@ -272,6 +274,15 @@ export class FichaInventario {
   readonly inventario = input.required<FichaInventarioDto>();
   /** Dono/mestre edita; para os demais é só leitura (a página liga por `podeGerenciar`). */
   readonly editavel = input(false);
+  /**
+   * `'inline'` (padrão, aba Inventário completa): catálogo, item/mod custom e aplicar Fragmento abrem
+   * dentro da própria lista, como sempre foi. `'dialog'`: a lista de itens fica compacta e essas quatro
+   * superfícies (catálogo+amplificadores, item custom, painel "Modificar" e "Aplicar em...") abrem cada
+   * uma num `p-dialog` — pro card de Status (redesenho de comparação visual), cuja coluna não tem espaço
+   * pra tudo isso inline sem quebrar. Mesmo estado/lógica dos dois modos; só a moldura muda (mesmo padrão
+   * de `FichaSanidade.apresentacao`).
+   */
+  readonly apresentacao = input<'inline' | 'dialog'>('inline');
   /** Prestígio da ficha — determina a patente e, por ela, os limites de modificação (via `shared/regras`). */
   readonly prestigio = input.required<number>();
   /** Inventário máximo (`Força × 5`, stored/derivado) — referência do peso usado; exceder é aviso, não trava. */
@@ -288,6 +299,8 @@ export class FichaInventario {
   readonly inventarioMudou = output<FichaInventarioDto>();
   /** Emite o novo par Energia atual/máxima após um custo de Fragmento — a página persiste. */
   readonly ajusteEnergiaFragmento = output<CustoEnergiaFragmento>();
+  /** Emite o novo Inventário máximo editado na linha "Inventário" — a página persiste como derivado. */
+  readonly ajusteInventarioMaximo = output<number>();
 
   /** Abas do catálogo comprável — sem os Fragmentos (achados, montados como item custom). */
   protected readonly categorias = CATALOGO_CATEGORIAS.filter(
@@ -410,13 +423,6 @@ export class FichaInventario {
     }),
   );
 
-  /** Dinheiro restante formatado (dinheiro atual − gasto do carrinho) — referência, não trava. */
-  protected readonly dinheiroRestanteTexto = computed(() =>
-    this.formatarDinheiro(this.resumo().dinheiroRestante),
-  );
-  /** `true` quando o gasto já ultrapassou o dinheiro atual — só aviso visual. */
-  protected readonly dinheiroNegativo = computed(() => this.resumo().dinheiroRestante < 0);
-
   /** Peso usado / inventário efetivo (base + armazenamentos vestidos) — referência. */
   protected readonly inventarioTexto = computed(() => {
     const resumo = this.resumo();
@@ -425,15 +431,48 @@ export class FichaInventario {
       ? `${base} (base ${this.formatarPeso(this.inventarioMaximo())} +${this.formatarPeso(resumo.bonusInventario)} vest.)`
       : base;
   });
+  /** Só o peso usado formatado — mantém o "X /" visível enquanto o máximo está em edição. */
+  protected readonly pesoUsadoTexto = computed(() => this.formatarPeso(this.resumo().pesoUsado));
   /** Excedeu o inventário efetivo — só **aviso** (não trava o salvamento). */
   protected readonly excedeInventario = computed(
     () => this.resumo().pesoUsado > this.resumo().inventarioEfetivo,
   );
-
-  protected readonly limiteModsTexto = computed(() => {
-    const limite = this.resumo().limiteModificacoes;
-    return `máx. ${limite.maxModificacoes} mods (${limite.maxEmpilhamentos} stack/mod)`;
+  /** Preenchimento da barra da linha "Inventário" (peso usado ÷ efetivo) — mesma barra de Vida/Energia. */
+  protected readonly percentualCarga = computed(() => {
+    const resumo = this.resumo();
+    if (resumo.inventarioEfetivo <= 0) {
+      return 0;
+    }
+    return Math.max(0, Math.min(100, (resumo.pesoUsado / resumo.inventarioEfetivo) * 100));
   });
+
+  /** `true` enquanto o Inventário máximo está em digitação direta na linha "Inventário". */
+  protected readonly editandoInventarioMaximo = signal(false);
+
+  /** Abre a digitação direta do Inventário máximo (clique no valor da linha "Inventário"). */
+  protected editarInventarioMaximo(): void {
+    this.editandoInventarioMaximo.set(true);
+  }
+
+  /** Cancela a digitação do Inventário máximo (Escape) sem alterar. */
+  protected cancelarInventarioMaximo(): void {
+    this.editandoInventarioMaximo.set(false);
+  }
+
+  /**
+   * Confirma o Inventário máximo digitado (Enter/blur): emite pra página persistir como derivado.
+   * O guard evita o commit duplo do `blur` que segue o `Enter`. Sem trava de faixa (liberdade total).
+   */
+  protected confirmarInventarioMaximo(texto: string): void {
+    if (!this.editandoInventarioMaximo()) {
+      return;
+    }
+    this.editandoInventarioMaximo.set(false);
+    const bruto = Number.parseInt(texto, 10);
+    if (!Number.isNaN(bruto) && bruto !== this.inventarioMaximo()) {
+      this.ajusteInventarioMaximo.emit(bruto);
+    }
+  }
 
   // === Catálogo ===
   /** Se a categoria de amplificadores deve ser exibida (aba ativa ou casada pela busca). */
@@ -553,6 +592,11 @@ export class FichaInventario {
   // === Ações do catálogo ===
   protected alternarCatalogo(): void {
     this.catalogoAberto.update((aberto) => !aberto);
+  }
+
+  /** Fecha o catálogo — usado pelo `onHide` do dialog (modo `dialog`), não o mesmo `alternarCatalogo`. */
+  protected fecharCatalogo(): void {
+    this.catalogoAberto.set(false);
   }
 
   protected definirCategoria(categoria: ItemCategoriaEnum): void {
@@ -918,14 +962,28 @@ export class FichaInventario {
     );
   }
 
+  /**
+   * Abre/fecha o painel "Modificar" de um item. No modo `inline` vários itens podem ficar abertos ao
+   * mesmo tempo (cada um expande na própria lista); no modo `dialog` só um por vez faz sentido (um
+   * `p-dialog` só mostra um item), então abrir um novo fecha o anterior.
+   */
   protected alternarPainel(indice: number): void {
     const abertos = new Set(this.painelAbertos());
     if (abertos.has(indice)) {
       abertos.delete(indice);
     } else {
+      if (this.apresentacao() === 'dialog') {
+        abertos.clear();
+      }
       abertos.add(indice);
     }
     this.painelAbertos.set(abertos);
+  }
+
+  /** Fecha o painel "Modificar" aberto (usado pelo `onHide` do dialog, modo `dialog`) e cancela a mod custom em edição. */
+  protected fecharPainelDialog(): void {
+    this.painelAbertos.set(new Set());
+    this.criandoModIndice.set(null);
   }
 
   protected adicionarModificacao(indice: number, modNome: string): void {

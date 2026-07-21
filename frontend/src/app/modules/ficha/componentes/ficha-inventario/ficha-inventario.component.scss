@@ -11,7 +11,6 @@
   font-family: var(--font-mono);
 
   // Padrão "caixa": fundo surface-2, borda hairline, raio de controle.
-  &__ref-box,
   &__cartao,
   &__mod-tag,
   &__mod-entrada,
@@ -21,42 +20,113 @@
     border-radius: var(--radius-control);
   }
 
-  // === Referência (peso/limites) ===
-  &__referencia {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 10px;
-  }
-  &__ref-box {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 12px 14px;
-
-    &--aviso {
-      border-color: var(--accent-border);
-    }
-  }
-  &__ref-rotulo {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-mute);
-  }
-  &__ref-valor {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text);
-
-    .ficha-inv__ref-box--aviso & {
-      color: var(--accent);
-    }
-  }
   &__aviso {
     margin: 0;
     font-family: var(--font-sans);
     font-size: 12px;
     color: var(--warning);
+  }
+
+  // === Linha "Inventário" (peso usado / máximo editável) ===
+  // `__carga*`, não `__peso*` — essa classe já existe como badge de peso por item/carta (abaixo).
+  // Mesmo padrão visual das barras de Vida/Energia (`.ficha-barra` na visualização — rótulo + valor
+  // em cima, trilho preenchido embaixo), só compacto e sem os passos − / +.
+  &__carga {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 0 2px;
+  }
+  &__carga-topo {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  &__carga-rotulo {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+  &__carga-trilho {
+    width: 100%;
+    height: 6px;
+    border-radius: var(--radius-control);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  &__carga-preenchimento {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--text-dim);
+    transition: width 0.2s ease;
+
+    .ficha-inv__carga--aviso & {
+      background: var(--accent);
+    }
+  }
+  &__carga-valor {
+    display: inline-flex;
+    align-items: baseline;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+
+    .ficha-inv__carga--aviso & {
+      color: var(--accent);
+    }
+
+    &--editavel {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--radius-control);
+      padding: 0 4px;
+      margin: 0 -4px;
+      cursor: text;
+      transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease;
+
+      &:hover {
+        border-color: var(--border-strong);
+        background: var(--surface-2);
+      }
+    }
+  }
+  &__carga-entrada {
+    width: 5ch;
+    min-width: 3ch;
+    max-width: 100%;
+    field-sizing: content;
+    margin-left: 4px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 1px 5px;
+    outline: none;
+    -moz-appearance: textfield;
+    -webkit-appearance: textfield;
+    appearance: textfield;
+
+    &:focus {
+      border-color: var(--accent-border);
+    }
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
   }
 
   // === Ações ===
@@ -1038,6 +1108,54 @@
     &__mod-tag,
     &__cartao-acoes {
       flex-wrap: wrap;
+    }
+  }
+
+  // === Modo `dialog` (card de Status, redesenho de comparação visual) ===
+  // Catálogo, item/mod custom e "Aplicar em..." saíram para `p-dialog`s (ver template) — o que
+  // sobra aqui na coluna é só a referência + a lista de itens/amplificadores, então aperta
+  // padding/fonte e troca o texto dos botões de ação por item (Modificar/Vestir-Guardar/Aplicar
+  // Fragmento) por ícone + `title`, pra caber sem quebrar numa coluna mais estreita que a página
+  // cheia da aba antiga.
+  &--compacto {
+    gap: 10px;
+
+    .ficha-inv__carga-rotulo {
+      font-size: 10px;
+    }
+    .ficha-inv__carga-valor {
+      font-size: 13px;
+    }
+    .ficha-inv__carga-entrada {
+      font-size: 13px;
+    }
+
+    .ficha-inv__item {
+      padding: 9px 10px;
+    }
+    .ficha-inv__item-cabecalho {
+      gap: 6px 10px;
+    }
+    .ficha-inv__item-controles {
+      gap: 6px 8px;
+    }
+    .ficha-inv__item-acoes {
+      gap: 5px;
+    }
+    .ficha-inv__item-nome {
+      font-size: 13px;
+    }
+
+    .ficha-inv__modificar,
+    .ficha-inv__porte {
+      padding: 5px 7px;
+    }
+    // Só o ícone (+ o badge de contagem, quando houver) — o rótulo vira `title` (tooltip).
+    .ficha-inv__modificar > span:not(.ficha-inv__modificar-contagem) {
+      display: none;
+    }
+    .ficha-inv__porte > span {
+      display: none;
     }
   }
 }

@@ -388,35 +388,71 @@ describe('FichaInventario', () => {
     });
   });
 
-  describe('dinheiro restante (m3-34)', () => {
-    it('mostra o dinheiro atual menos o gasto do carrinho', () => {
-      const { raiz } = montar({ itens: [itemLeve], amplificadores: [] }, true, 100);
-      // dinheiro 5000 (do montar()) − 500 (custo do item leve) = 4500.
-      const box = Array.from(raiz.querySelectorAll('.ficha-inv__ref-box')).find((b) =>
-        b.querySelector('.ficha-inv__ref-rotulo')?.textContent?.includes('Dinheiro restante'),
-      );
-      expect(box?.querySelector('.ficha-inv__ref-valor')?.textContent?.trim()).toBe('$4.500');
-      expect(box?.classList.contains('ficha-inv__ref-box--aviso')).toBe(false);
+  describe('linha "Inventário" (peso usado / máximo editável no próprio lugar)', () => {
+    it('mostra "Inventário" com o peso usado sobre o máximo', () => {
+      const { raiz } = montar({ itens: [itemLeve], amplificadores: [] });
+      const linha = raiz.querySelector('.ficha-inv__carga');
+      expect(linha?.querySelector('.ficha-inv__carga-rotulo')?.textContent?.trim()).toBe('Inventário');
+      expect(linha?.querySelector('.ficha-inv__carga-valor')?.textContent?.trim()).toBe('1 / 25');
     });
 
-    it('marca aviso quando o gasto ultrapassa o dinheiro atual', () => {
-      TestBed.configureTestingModule({ imports: [FichaInventario] });
-      const fixture = TestBed.createComponent(FichaInventario);
-      fixture.componentRef.setInput('inventario', { itens: [itemLeve], amplificadores: [] });
-      fixture.componentRef.setInput('editavel', true);
-      fixture.componentRef.setInput('prestigio', 100);
-      fixture.componentRef.setInput('inventarioMaximo', 25);
-      fixture.componentRef.setInput('vontade', 3);
-      fixture.componentRef.setInput('dinheiro', 100); // menos que os $500 do item leve.
-      fixture.componentRef.setInput('energiaAtual', 50);
-      fixture.componentRef.setInput('energiaMaxima', 50);
-      fixture.detectChanges();
-      const raiz = fixture.nativeElement as HTMLElement;
-      const box = Array.from(raiz.querySelectorAll('.ficha-inv__ref-box')).find((b) =>
-        b.querySelector('.ficha-inv__ref-rotulo')?.textContent?.includes('Dinheiro restante'),
-      );
-      expect(box?.querySelector('.ficha-inv__ref-valor')?.textContent?.trim()).toBe('$-400');
-      expect(box?.classList.contains('ficha-inv__ref-box--aviso')).toBe(true);
+    it('quem não edita vê só o texto — sem botão nem input', () => {
+      const { raiz } = montar({ itens: [itemLeve], amplificadores: [] }, false);
+      const linha = raiz.querySelector('.ficha-inv__carga');
+      expect(linha?.querySelector('button')).toBeNull();
+      expect(linha?.querySelector('input')).toBeNull();
+      expect(linha?.querySelector('.ficha-inv__carga-valor')?.textContent?.trim()).toBe('1 / 25');
+    });
+
+    it('clicar no valor abre a digitação e confirmar (Enter) emite o novo máximo', () => {
+      const alvo = montar({ itens: [itemLeve], amplificadores: [] });
+      const emitidos: number[] = [];
+      alvo.componentInstance.ajusteInventarioMaximo.subscribe((valor) => emitidos.push(valor));
+
+      alvo.componentInstance['editarInventarioMaximo']();
+      expect(alvo.componentInstance['editandoInventarioMaximo']()).toBe(true);
+
+      alvo.componentInstance['confirmarInventarioMaximo']('40');
+      expect(alvo.componentInstance['editandoInventarioMaximo']()).toBe(false);
+      expect(emitidos).toEqual([40]);
+    });
+
+    it('Escape cancela a digitação sem emitir', () => {
+      const alvo = montar({ itens: [itemLeve], amplificadores: [] });
+      const emitidos: number[] = [];
+      alvo.componentInstance.ajusteInventarioMaximo.subscribe((valor) => emitidos.push(valor));
+
+      alvo.componentInstance['editarInventarioMaximo']();
+      alvo.componentInstance['cancelarInventarioMaximo']();
+      expect(alvo.componentInstance['editandoInventarioMaximo']()).toBe(false);
+      expect(emitidos).toEqual([]);
+    });
+
+    it('confirmar com o mesmo valor não emite', () => {
+      const alvo = montar({ itens: [itemLeve], amplificadores: [] });
+      const emitidos: number[] = [];
+      alvo.componentInstance.ajusteInventarioMaximo.subscribe((valor) => emitidos.push(valor));
+
+      alvo.componentInstance['editarInventarioMaximo']();
+      alvo.componentInstance['confirmarInventarioMaximo']('25');
+      expect(emitidos).toEqual([]);
+    });
+
+    it('preenche a barra proporcional ao peso usado ÷ inventário efetivo', () => {
+      const alvo = montar({ itens: [itemLeve], amplificadores: [] });
+      alvo.fixture.componentRef.setInput('inventarioMaximo', 4); // peso 1 / 4 = 25%.
+      alvo.fixture.detectChanges();
+      const preenchimento = alvo.raiz.querySelector<HTMLElement>('.ficha-inv__carga-preenchimento');
+      expect(preenchimento?.style.width).toBe('25%');
+    });
+
+    it('marca aviso quando o peso usado ultrapassa o inventário efetivo', () => {
+      const alvo = montar({ itens: [itemLeve], amplificadores: [] });
+      alvo.fixture.componentRef.setInput('inventarioMaximo', 0);
+      alvo.fixture.detectChanges();
+      expect(
+        alvo.raiz.querySelector('.ficha-inv__carga')?.classList.contains('ficha-inv__carga--aviso'),
+      ).toBe(true);
     });
   });
 
@@ -638,6 +674,55 @@ describe('FichaInventario', () => {
       expect(alvo.emitidos[0].itens[0].modificacoes).toHaveLength(0);
       // Não devolve um fragmento avulso ao inventário — só o item alvo continua ali.
       expect(alvo.emitidos[0].itens).toHaveLength(1);
+    });
+  });
+
+  describe('apresentacao="dialog" (card de Status, redesenho de comparação visual)', () => {
+    it('aplica a classe compacta na raiz só no modo dialog', () => {
+      const { raiz, fixture } = montar({ itens: [itemLeve], amplificadores: [] });
+      expect(raiz.querySelector('.ficha-inv')?.classList.contains('ficha-inv--compacto')).toBe(false);
+      fixture.componentRef.setInput('apresentacao', 'dialog');
+      fixture.detectChanges();
+      expect(raiz.querySelector('.ficha-inv')?.classList.contains('ficha-inv--compacto')).toBe(true);
+    });
+
+    it('no modo dialog, abrir o painel "Modificar" de um item fecha o de outro (só um por vez)', () => {
+      const outroItem: CarrinhoItemDto = { ...itemLeve, nome: 'Outra Leve' };
+      const alvo = montar({ itens: [itemLeve, outroItem], amplificadores: [] });
+      alvo.fixture.componentRef.setInput('apresentacao', 'dialog');
+      alvo.fixture.detectChanges();
+
+      alvo.componentInstance['alternarPainel'](0);
+      expect(alvo.componentInstance['itensInventario']()[0].painelAberto).toBe(true);
+      expect(alvo.componentInstance['itensInventario']()[1].painelAberto).toBe(false);
+
+      alvo.componentInstance['alternarPainel'](1);
+      expect(alvo.componentInstance['itensInventario']()[0].painelAberto).toBe(false);
+      expect(alvo.componentInstance['itensInventario']()[1].painelAberto).toBe(true);
+    });
+
+    it('no modo inline (padrão), vários painéis "Modificar" podem ficar abertos ao mesmo tempo', () => {
+      const outroItem: CarrinhoItemDto = { ...itemLeve, nome: 'Outra Leve' };
+      const alvo = montar({ itens: [itemLeve, outroItem], amplificadores: [] });
+
+      alvo.componentInstance['alternarPainel'](0);
+      alvo.componentInstance['alternarPainel'](1);
+      expect(alvo.componentInstance['itensInventario']()[0].painelAberto).toBe(true);
+      expect(alvo.componentInstance['itensInventario']()[1].painelAberto).toBe(true);
+    });
+
+    it('fecharCatalogo/fecharPainelDialog fecham o estado usado pelo `onHide` dos p-dialogs', () => {
+      const alvo = montar({ itens: [itemLeve], amplificadores: [] });
+      alvo.componentInstance['alternarCatalogo']();
+      expect(alvo.componentInstance['catalogoAberto']()).toBe(true);
+      alvo.componentInstance['fecharCatalogo']();
+      expect(alvo.componentInstance['catalogoAberto']()).toBe(false);
+
+      alvo.componentInstance['alternarPainel'](0);
+      alvo.componentInstance['alternarCriarMod'](0);
+      alvo.componentInstance['fecharPainelDialog']();
+      expect(alvo.componentInstance['itensInventario']()[0].painelAberto).toBe(false);
+      expect(alvo.componentInstance['criandoModIndice']()).toBeNull();
     });
   });
 });
