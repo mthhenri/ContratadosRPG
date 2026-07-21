@@ -1,6 +1,12 @@
 import { ClasseEnum } from '@contratados-rpg/shared/enums';
 import type { FichaAtributosDto, FichaDerivadosDto } from '@contratados-rpg/shared/dtos/ficha';
 import {
+  ajusteBloqueioAmplificadores,
+  ajusteDanoFurtivoAmplificadores,
+  ajusteDefesaAmplificadores,
+  ajusteDeslocamentoAmplificadores,
+  ajusteEsquivaAmplificadores,
+  ajusteInventarioAmplificadores,
   aplicarLimitesPorClasse,
   calcularAreaPercepcao,
   calcularDanoCorpo,
@@ -10,7 +16,9 @@ import {
   calcularInventario,
   calcularLimiteHabilidadesPorTurno,
   calcularProficiencia,
+  incrementarDanoFurtivo,
 } from '@contratados-rpg/shared/regras/agente';
+import type { AmplificadorAplicadoDto } from '@contratados-rpg/shared/regras/compras';
 import { obterPatente } from '@contratados-rpg/shared/regras/patente';
 
 import { ROTULOS_PATENTE } from '../calculadora/rotulos';
@@ -21,6 +29,12 @@ import { ROTULOS_PATENTE } from '../calculadora/rotulos';
  * única — proibições #26/#27) e resolve o **valor efetivo** de cada derivado — o **stored** (`dados.
  * derivados`, m3-10) tem precedência; ausente, cai no **calculado**. Cada linha carrega `bruto` (valor
  * cru p/ edição no próprio lugar) e `display` (formatado p/ leitura).
+ *
+ * **Amplificadores** (`shared/regras/agente/amplificador`) somam **por cima** do `bruto` só no
+ * `display` — nunca entram no valor editável, pelo mesmo motivo de `atributosEfetivos` (lesão): se
+ * o delta do amplificador fosse commitado de volta como override manual, a próxima leitura somaria
+ * o mesmo bônus/penalidade de novo (drift). Editar sempre mexe na base; o amplificador é sempre
+ * recalculado ao vivo.
  */
 
 /** Texto exibido no lugar de uma stat que a classe não possui (ex.: Civil sem defesa/furtivo). */
@@ -78,12 +92,15 @@ export function normalizarEntrada(
 }
 
 /**
- * Linhas da coluna "Informações Extras" — o **stored** (`derivados`) vence o **calculado**. Cada uma
- * é editável no próprio lugar (m3-10) e persiste como override em `derivados[chave]`.
+ * Linhas da coluna "Informações Extras" — o **stored** (`derivados`) vence o **calculado**; o
+ * amplificador soma por cima só na leitura (ver docstring do módulo). Cada uma é editável no
+ * próprio lugar (m3-10) e persiste como override em `derivados[chave]` (o `bruto`, sem o delta do
+ * amplificador).
  */
 export function montarInformacoesExtras(
   entrada: EntradaAgente,
   derivados?: FichaDerivadosDto,
+  amplificadores: readonly AmplificadorAplicadoDto[] = [],
 ): InfoExtra[] {
   const defesaCalc = calcularDefesa(entrada);
   const proficienciaCalc = calcularProficiencia(entrada);
@@ -93,13 +110,15 @@ export function montarInformacoesExtras(
     rotulo: string,
     calculado: number | null,
     formatar: (valor: number) => string,
+    ajusteAmplificador = 0,
   ): InfoExtra => {
     const stored = derivados?.[chave];
     const valor = typeof stored === 'number' ? stored : calculado;
+    const efetivo = valor === null ? null : valor + ajusteAmplificador;
     return {
       chave,
       rotulo,
-      display: valor === null ? INDISPONIVEL : formatar(valor),
+      display: efetivo === null ? INDISPONIVEL : formatar(efetivo),
       bruto: valor,
       tipo: 'numero',
     };
@@ -109,24 +128,64 @@ export function montarInformacoesExtras(
     chave: ChaveInfoExtra,
     rotulo: string,
     calculado: string | null,
+    incrementoMarcosAmplificador = 0,
   ): InfoExtra => {
     const stored = derivados?.[chave];
     const valor = typeof stored === 'string' ? stored : calculado;
-    return { chave, rotulo, display: valor ?? INDISPONIVEL, bruto: valor, tipo: 'texto' };
+    const efetivo =
+      valor !== null && incrementoMarcosAmplificador > 0
+        ? incrementarDanoFurtivo(valor, incrementoMarcosAmplificador)
+        : valor;
+    return { chave, rotulo, display: efetivo ?? INDISPONIVEL, bruto: valor, tipo: 'texto' };
   };
 
   return [
-    linhaNumero('defesa', 'Defesa', defesaCalc?.defesa ?? null, (valor) => String(valor)),
-    linhaNumero('esquiva', 'Esquiva', defesaCalc?.esquiva ?? null, (valor) => String(valor)),
-    linhaNumero('bloqueio', 'Bloqueio', defesaCalc?.bloqueio ?? null, (valor) => String(valor)),
+    linhaNumero(
+      'defesa',
+      'Defesa',
+      defesaCalc?.defesa ?? null,
+      (valor) => String(valor),
+      ajusteDefesaAmplificadores(amplificadores),
+    ),
+    linhaNumero(
+      'esquiva',
+      'Esquiva',
+      defesaCalc?.esquiva ?? null,
+      (valor) => String(valor),
+      ajusteEsquivaAmplificadores(amplificadores),
+    ),
+    linhaNumero(
+      'bloqueio',
+      'Bloqueio',
+      defesaCalc?.bloqueio ?? null,
+      (valor) => String(valor),
+      ajusteBloqueioAmplificadores(amplificadores),
+    ),
     // Sem fórmula em `shared/regras` — puro override manual (ver `FichaDerivadosDto.contraAtaque`).
     linhaNumero('contraAtaque', 'Contra-ataque', null, (valor) => String(valor)),
-    linhaNumero('deslocamento', 'Deslocamento', calcularDeslocamento(entrada), (valor) => `${valor}m`),
+    linhaNumero(
+      'deslocamento',
+      'Deslocamento',
+      calcularDeslocamento(entrada),
+      (valor) => `${valor}m`,
+      ajusteDeslocamentoAmplificadores(amplificadores),
+    ),
     linhaNumero('proficiencia', 'Proficiência', proficienciaCalc, (valor) => `+${valor}`),
     linhaTexto('danoCorpoACorpo', 'Dano C. a C.', calcularDanoCorpo(entrada)),
-    linhaTexto('danoFurtivo', 'Dano Furtivo', calcularDanoFurtivo(entrada)),
+    linhaTexto(
+      'danoFurtivo',
+      'Dano Furtivo',
+      calcularDanoFurtivo(entrada),
+      ajusteDanoFurtivoAmplificadores(amplificadores),
+    ),
     linhaNumero('percepcao', 'Percepção', calcularAreaPercepcao(entrada), (valor) => `${valor}m`),
-    linhaNumero('inventarioMaximo', 'Inventário', calcularInventario(entrada), (valor) => `${valor} máx`),
+    linhaNumero(
+      'inventarioMaximo',
+      'Inventário',
+      calcularInventario(entrada),
+      (valor) => `${valor} máx`,
+      ajusteInventarioAmplificadores(amplificadores),
+    ),
     linhaNumero(
       'habilidadesPorTurno',
       'Hab. / Turno',

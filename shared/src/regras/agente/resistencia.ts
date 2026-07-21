@@ -5,18 +5,21 @@ import {
   type AmplificadorAplicadoDto,
   type CarrinhoItemDto,
 } from '../compras';
+import { empilhamentosAmplificador } from './amplificador';
 
 /**
- * Resistências a dano da aba Combate (m3-36; editável + amplificadores em ajuste posterior) —
+ * Resistências a dano da aba Combate (m3-36; amplificadores generalizados em ajuste posterior) —
  * **sempre mostra os cinco tipos** (`TipoDanoEnum`), somando o que vem do **equipamento** (itens
  * equipados + modificações, incluindo Fragmento aplicado — m3-35) com uma base **manual editável**
  * (persistida em `FichaDerivadosDto.resistencias`, mesmo modelo `stored + editável` de m3-10). O
- * total exibido é `manual + equipamento`, nunca abaixo de 0.
+ * total exibido é `manual + equipamento` — **pode ficar negativo** (uma Defesa muito empilhada
+ * derruba a resistência abaixo de 0; o documento não veda isso, e o motor não deve mascarar).
  *
- * **Amplificadores**: hoje nenhum amplificador tem efeito mecânico aplicado em lugar nenhum do
- * motor (só o texto livre do catálogo) — os dois que mexem em resistência (`Resistente`/`Defesa`,
- * doc — "⬡ Amplificadores") são a **primeira exceção**, tratados aqui por nome (mesmo padrão de
- * `Blindada`/`Hazmat` em `calcularStatItem`), não um motor genérico de efeito de amplificador.
+ * **Amplificadores**: os dois que mexem em resistência (`Resistente`/`Defesa`, doc —
+ * "⬡ Amplificadores") são tratados aqui por nome (mesmo padrão de `Blindada`/`Hazmat` em
+ * `calcularStatItem`) via `empilhamentosAmplificador` de `./amplificador` — o módulo que
+ * generaliza o efeito de amplificador pras demais stats (Defesa/Esquiva/Bloqueio/Deslocamento/
+ * Inventário/Vida/Energia/testes de atributo).
  *
  * Fonte: docs/core/sistema-v4.1.0.md — "⬦ Resistências", "Tipos de Dano" e "⬡ Amplificadores"
  * (Resistente: "+1 de resistência a Dano Geral, a partir do 2º empilhamento -1 de Defesa a cada
@@ -32,7 +35,7 @@ export interface ResistenciaLinhaDto {
   readonly manual: number;
   /** Soma do equipamento (itens equipados + mods, incluindo Fragmento aplicado, + amplificadores). */
   readonly equipamento: number;
-  /** `manual + equipamento`, nunca negativo. */
+  /** `manual + equipamento` — sem piso, pode negativar. */
   readonly total: number;
 }
 
@@ -73,11 +76,6 @@ function calcularResistenciaEquipamento(itens: readonly CarrinhoItemDto[]): Map<
   return totais;
 }
 
-/** Empilhamentos de um amplificador pelo nome — 0 se não portado. */
-function empilhamentosAmplificador(amplificadores: readonly AmplificadorAplicadoDto[], nome: string): number {
-  return amplificadores.find((amplificador) => amplificador.nome === nome)?.empilhamentos ?? 0;
-}
-
 /**
  * Monta as cinco linhas de resistência (sempre todas, mesmo em 0) — `manual` vem do stored da
  * ficha, `equipamento` soma itens equipados + Fragmento aplicado + os dois amplificadores que
@@ -99,6 +97,6 @@ export function montarResistencias(dto: ResistenciasMontarDto): readonly Resiste
   return ORDEM_TIPOS.map((tipo) => {
     const manual = dto.manual?.[tipo] ?? 0;
     const equipamento = doEquipamento.get(tipo) ?? 0;
-    return { tipo, manual, equipamento, total: Math.max(0, manual + equipamento) };
+    return { tipo, manual, equipamento, total: manual + equipamento };
   });
 }

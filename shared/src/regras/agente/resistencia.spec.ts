@@ -92,13 +92,13 @@ describe('montarResistencias', () => {
     });
   });
 
-  it('o total nunca fica negativo mesmo com base manual negativa', () => {
+  it('o total pode negativar com base manual negativa (sem piso)', () => {
     const resultado = montarResistencias({
       itens: [],
       amplificadores: [],
       manual: { [TipoDanoEnum.FISICO]: -10 },
     });
-    expect(resultado.find((l) => l.tipo === TipoDanoEnum.FISICO)?.total).toBe(0);
+    expect(resultado.find((l) => l.tipo === TipoDanoEnum.FISICO)?.total).toBe(-10);
   });
 
   describe('amplificador Resistente — +1 de resistência a Dano Geral (fixo, não escala)', () => {
@@ -122,12 +122,12 @@ describe('montarResistencias', () => {
       expect(resultado.every((l) => l.total === 0)).toBe(true);
     });
 
-    it('3 empilhamentos aplicam -2 (empilhamentos além do 1º) em todos os tipos', () => {
+    it('3 empilhamentos aplicam -2 (empilhamentos além do 1º) em todos os tipos, podendo negativar', () => {
       const item = protecao({ resistencia: '5 [Físico]' });
       const amplificadores: AmplificadorAplicadoDto[] = [{ nome: 'Defesa', empilhamentos: 3 }];
       const resultado = montarResistencias({ itens: [item], amplificadores });
       expect(resultado.find((l) => l.tipo === TipoDanoEnum.FISICO)?.total).toBe(3); // 5 - 2
-      expect(resultado.find((l) => l.tipo === TipoDanoEnum.QUIMICO)?.total).toBe(0); // 0 - 2, clampado
+      expect(resultado.find((l) => l.tipo === TipoDanoEnum.QUIMICO)?.total).toBe(-2); // 0 - 2, sem piso
     });
   });
 });

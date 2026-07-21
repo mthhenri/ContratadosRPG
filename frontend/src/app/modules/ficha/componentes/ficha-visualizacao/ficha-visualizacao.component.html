@@ -468,10 +468,10 @@
                       aria-label="Editar vida máxima"
                       (click)="editarVitalidade('vidaMaxima')"
                     >
-                      {{ vidaMaxima() }}
+                      {{ vidaMaximaEfetiva() }}
                     </button>
                   } @else {
-                    <span class="ficha-barra__max">{{ vidaMaxima() }}</span>
+                    <span class="ficha-barra__max">{{ vidaMaximaEfetiva() }}</span>
                   }
                 </span>
                 @if (ajustavel()) {
@@ -490,7 +490,7 @@
             <div class="ficha-barra__trilho">
               <span
                 class="ficha-barra__preenchimento"
-                [style.width.%]="percentual(estado().vidaAtual, vidaMaxima())"
+                [style.width.%]="percentual(estado().vidaAtual, vidaMaximaEfetiva())"
               ></span>
             </div>
           </div>
@@ -561,10 +561,10 @@
                       aria-label="Editar energia máxima"
                       (click)="editarVitalidade('energiaMaxima')"
                     >
-                      {{ energiaMaxima() }}
+                      {{ energiaMaximaEfetiva() }}
                     </button>
                   } @else {
-                    <span class="ficha-barra__max">{{ energiaMaxima() }}</span>
+                    <span class="ficha-barra__max">{{ energiaMaximaEfetiva() }}</span>
                   }
                 </span>
                 @if (ajustavel()) {
@@ -583,7 +583,7 @@
             <div class="ficha-barra__trilho">
               <span
                 class="ficha-barra__preenchimento"
-                [style.width.%]="percentual(estado().energiaAtual, energiaMaxima())"
+                [style.width.%]="percentual(estado().energiaAtual, energiaMaximaEfetiva())"
               ></span>
             </div>
           </div>

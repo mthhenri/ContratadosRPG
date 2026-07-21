@@ -10,11 +10,13 @@ import {
 } from '@contratados-rpg/shared/enums';
 import type { FichaHabilidadeDto } from '@contratados-rpg/shared/dtos/ficha';
 import {
+  aplicarReducaoCustoEnergia,
   catalogoHabilidades,
   classeBaseDeHabilidades,
   ehHabilidadeInicial,
   type HabilidadeCatalogoItemDto,
 } from '@contratados-rpg/shared/regras/agente';
+import type { AmplificadorAplicadoDto } from '@contratados-rpg/shared/regras/compras';
 
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
@@ -47,6 +49,11 @@ const CATEGORIAS: readonly OpcaoCategoria[] = (
  * Especialidade só existem aqui). Cada habilidade tem um botão **Utilizar** que gasta o custo de
  * Energia (custo variável `[X E]` pergunta quanto). Nenhuma regra trava (liberdade total, m3-10; o
  * nome obrigatório é a única validação de forma). Estilos só com tokens do tema (proibição #29).
+ *
+ * **Amplificador `Conservador`** (`shared/regras/agente/amplificador`, doc — "⬡ Amplificadores":
+ * "-1 de Energia em custos de habilidades, mínimo 1"): o custo exibido (`[N E]`) e o efetivamente
+ * debitado ao Utilizar já saem com o desconto aplicado — habilidades sem custo (`[0 E]`) ficam
+ * intactas, o piso de 1 só vale pra quem já custa Energia.
  */
 @Component({
   selector: 'app-ficha-habilidades',
@@ -64,6 +71,8 @@ export class FichaHabilidades {
   readonly arquetipo = input.required<ArquetipoEnum | null>();
   /** Energia atual — o Utilizar subtrai o custo daqui (pode negativar). */
   readonly energiaAtual = input.required<number>();
+  /** Amplificadores portados — hoje só `Conservador` mexe aqui (desconto no custo de Energia). */
+  readonly amplificadores = input<readonly AmplificadorAplicadoDto[]>([]);
 
   /** Emite a lista inteira após qualquer mutação — a página persiste. */
   readonly habilidadesMudou = output<readonly FichaHabilidadeDto[]>();
@@ -264,8 +273,22 @@ export class FichaHabilidades {
   }
 
   /**
-   * Utiliza a habilidade, gastando Energia. Custo fixo emite direto; custo variável (`[X E]`) abre
-   * um mini-campo perguntando quanto gastar.
+   * Desconto de `Conservador` (`shared/regras/agente/amplificador`) sobre um custo **fixo** de
+   * habilidade — o custo variável (`[X E]`) não passa por aqui: o jogador já digita o valor exato
+   * que quer gastar naquela circunstância, não o custo de catálogo que o amplificador desconta.
+   */
+  private custoComDesconto(custoEnergia: number): number {
+    return aplicarReducaoCustoEnergia(this.amplificadores(), custoEnergia);
+  }
+
+  /** Custo exibido no chip `[N E]` da lista — já com o desconto de `Conservador` aplicado. */
+  protected custoExibido(custoEnergia: number | null): number | null {
+    return custoEnergia === null ? null : this.custoComDesconto(custoEnergia);
+  }
+
+  /**
+   * Utiliza a habilidade, gastando Energia. Custo fixo emite direto (já descontado); custo
+   * variável (`[X E]`) abre um mini-campo perguntando quanto gastar.
    */
   protected utilizar(indice: number, habilidade: FichaHabilidadeDto): void {
     if (habilidade.custoEnergia === 0) {
@@ -276,8 +299,9 @@ export class FichaHabilidades {
       this.indiceUtilizando.set(indice);
       return;
     }
-    this.habilidadeUtilizada.emit(habilidade.custoEnergia);
-    this.sinalizarGasto(indice, habilidade.custoEnergia);
+    const custo = this.custoComDesconto(habilidade.custoEnergia);
+    this.habilidadeUtilizada.emit(custo);
+    this.sinalizarGasto(indice, custo);
   }
 
   /**
@@ -306,7 +330,7 @@ export class FichaHabilidades {
     if (habilidade.custoEnergia === 0) {
       return; // 0 E: sem gasto, sem hold (o botão está desabilitado, mas o pointerdown ainda chega)
     }
-    const custo = habilidade.custoEnergia;
+    const custo = this.custoComDesconto(habilidade.custoEnergia);
     this.gastarComLimite(indice, custo);
     this.pararHold();
     this.holdIntervalo = setInterval(() => this.gastar(indice, custo), FichaHabilidades.HOLD_MS);

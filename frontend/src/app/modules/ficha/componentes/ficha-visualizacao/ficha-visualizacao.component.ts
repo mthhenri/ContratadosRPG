@@ -31,10 +31,13 @@ import type {
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
   MAESTRIA_PONTOS_MINIMO,
+  ajusteEnergiaAmplificadores,
+  ajusteVidaAmplificadores,
   calcularAtributosEfetivos,
   calcularEnergia,
   calcularInventario,
   calcularProficiencia,
+  modificadoresTesteAmplificadores,
   montarResistencias,
   calcularVida,
   maestriaAtingivel,
@@ -520,9 +523,18 @@ export class FichaVisualizacao {
    */
   protected readonly modificadoresTeste = computed(() => this.dados().modificadoresTeste ?? {});
 
-  /** Modificador de teste de um atributo, já resolvido a 0 quando ausente do documento. */
+  /**
+   * Modificadores de teste vindos dos amplificadores portados (`shared/regras/agente/amplificador`)
+   * — somam por cima do manual (`modificadoresTeste`) só na leitura, nunca substituem nem são
+   * commitados de volta ao editar (mesmo motivo de `informacoesExtras`/`vidaMaximaEfetiva`).
+   */
+  protected readonly modificadoresTesteAmplificador = computed(() =>
+    modificadoresTesteAmplificadores(this.dados().inventario.amplificadores),
+  );
+
+  /** Modificador de teste de um atributo (manual + amplificador), já resolvido a 0 quando ausente. */
   protected modificadorTeste(chave: ChaveAtributo): number {
-    return this.modificadoresTeste()[chave] ?? 0;
+    return (this.modificadoresTeste()[chave] ?? 0) + (this.modificadoresTesteAmplificador()[chave] ?? 0);
   }
 
   /** Rascunho dos modificadores de teste durante a edição — completo (as 10 chaves, 0 onde ausente). */
@@ -647,6 +659,21 @@ export class FichaVisualizacao {
   );
 
   /**
+   * Vida/Energia máximas **efetivas** = base (`vidaMaxima`/`energiaMaxima`, stored/editável) + o
+   * ajuste ao vivo dos amplificadores `Vida`/`Energia` (`shared/regras/agente/amplificador`), que
+   * escala com o Nível. Só para **leitura** (badge fechado + barra) — a edição continua na base, mesma
+   * razão de `informacoesExtras` (evitar commitar o delta de volta como override manual).
+   */
+  protected readonly vidaMaximaEfetiva = computed(
+    () => this.vidaMaxima() + ajusteVidaAmplificadores(this.dados().inventario.amplificadores, this.dados().nivel),
+  );
+  protected readonly energiaMaximaEfetiva = computed(
+    () =>
+      this.energiaMaxima() +
+      ajusteEnergiaAmplificadores(this.dados().inventario.amplificadores, this.dados().nivel),
+  );
+
+  /**
    * Progressão de **Vida** da classe/subclasse (tooltip do rótulo): base (nível 0) + ganho por nível,
    * derivados de `shared/regras` para o Vigor atual. Referência da regra — a máxima é editável e pode
    * divergir disso (m3-10).
@@ -734,7 +761,7 @@ export class FichaVisualizacao {
   /** Status derivado (mesma seleção da edição — `status-derivado`); stored vence o calculado. */
   // Fonte única das linhas editáveis; as abas Visão Geral/Combate/Inventário consomem recortes daqui.
   protected readonly informacoesExtras = computed(() =>
-    montarInformacoesExtras(this.entrada(), this.dados().derivados),
+    montarInformacoesExtras(this.entrada(), this.dados().derivados, this.dados().inventario.amplificadores),
   );
 
   /**

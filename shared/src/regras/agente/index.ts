@@ -19,3 +19,4 @@ export * from './arquetipo';
 export * from './habilidades-catalogo.dados';
 export * from './habilidades-catalogo';
 export * from './resistencia';
+export * from './amplificador';

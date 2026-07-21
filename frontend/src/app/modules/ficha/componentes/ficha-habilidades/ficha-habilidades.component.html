@@ -59,7 +59,7 @@
               {{ rotuloChip(habilidade) }}
             </span>
             <span class="habilidades__nome">{{ habilidade.nome }}</span>
-            <span class="habilidades__custo">{{ rotuloCusto(habilidade.custoEnergia) }}</span>
+            <span class="habilidades__custo">{{ rotuloCusto(custoExibido(habilidade.custoEnergia)) }}</span>
             @if (editavel()) {
               <div class="habilidades__acoes">
                 <button

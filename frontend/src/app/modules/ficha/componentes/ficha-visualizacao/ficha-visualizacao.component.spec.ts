@@ -298,6 +298,125 @@ describe('FichaVisualizacao', () => {
     });
   });
 
+  /**
+   * Amplificadores realmente aplicando efeito/débuff (ajuste posterior à m3-36):
+   * `shared/regras/agente/amplificador` soma o delta **por cima** do valor base/manual só na
+   * leitura — a edição continua mexendo na base (mesma separação de `resistencia.ts`), então os
+   * totais exibidos podem **negativar** (ex.: Defesa muito empilhada derruba a Resistência).
+   */
+  describe('Amplificadores — efeitos mecânicos aplicados (bônus e débuffs)', () => {
+    /** Localiza o box `.ficha-mini` de um rótulo na linha de Defesa/Esquiva/Bloqueio (Identidade). */
+    function boxDefesa(raiz: HTMLElement, rotulo: string): Element | undefined {
+      const linha = raiz.querySelector('.ficha-visao__coluna--identidade .ficha-combate-rapido')!;
+      return Array.from(linha.querySelectorAll('.ficha-mini')).find(
+        (box) => box.querySelector('.ficha-mini__rotulo')?.textContent?.trim() === rotulo,
+      );
+    }
+
+    it('Defesa (amplificador) soma +1 fixo à Defesa exibida, sem mexer no valor editável (base)', () => {
+      const documento: FichaJogadorDadosDto = {
+        ...dados,
+        inventario: { itens: [], amplificadores: [{ nome: 'Defesa', empilhamentos: 1 }] },
+      };
+      // calcularDefesa: 10 + nível(3) = 13 de base; +1 do amplificador → 14 exibido.
+      const alvo = montar(documento, 'Corvo', 42, true);
+      const defesa = boxDefesa(alvo.raiz, 'Defesa')!;
+      expect(defesa.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('14');
+
+      const ajustes: { chave: string; valor: number | string }[] = [];
+      alvo.fixture.componentInstance.ajusteDerivado.subscribe((a) => ajustes.push(a));
+      defesa.querySelector<HTMLButtonElement>('.ficha-mini__valor--editavel')!.click();
+      alvo.fixture.detectChanges();
+      // A edição mostra a base (13), não o efetivo (14) — evita commitar o delta de volta.
+      const entrada = defesa.querySelector<HTMLInputElement>('.ficha-mini__entrada')!;
+      expect(entrada.value).toBe('13');
+      entrada.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+      // Sem alterar o valor, blur/enter no mesmo número não emite nada.
+      expect(ajustes).toEqual([]);
+    });
+
+    it('Resistente penaliza -1 de Defesa por empilhamento além do 1º (débuff cruzado, doc — "Amplificadores")', () => {
+      const documento: FichaJogadorDadosDto = {
+        ...dados,
+        inventario: { itens: [], amplificadores: [{ nome: 'Resistente', empilhamentos: 3 }] },
+      };
+      // Base 13; Resistente com 3 empilhamentos: -1 × (3-1) = -2 → 11.
+      const { raiz } = montar(documento, 'Corvo', 42, true);
+      expect(boxDefesa(raiz, 'Defesa')?.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('11');
+    });
+
+    it('Reflexos soma +1 fixo à Esquiva; Resiliência soma +1 fixo ao Bloqueio', () => {
+      const documento: FichaJogadorDadosDto = {
+        ...dados,
+        inventario: {
+          itens: [],
+          amplificadores: [
+            { nome: 'Reflexos', empilhamentos: 1 },
+            { nome: 'Resiliência', empilhamentos: 1 },
+          ],
+        },
+      };
+      // calcularDefesa: esquiva = 13 + destreza(2) = 15; bloqueio = 13 + vigor(4) = 17.
+      const { raiz } = montar(documento, 'Corvo', 42, false);
+      expect(boxDefesa(raiz, 'Esquiva')?.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('16');
+      expect(boxDefesa(raiz, 'Bloqueio')?.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('18');
+    });
+
+    it('a Resistência total pode negativar quando o débuff supera o equipamento (sem piso em 0)', () => {
+      const documento: FichaJogadorDadosDto = {
+        ...dados,
+        inventario: { itens: [], amplificadores: [{ nome: 'Defesa', empilhamentos: 3 }] },
+      };
+      // Sem equipamento/manual: -1 × (3-1) = -2 em todos os cinco tipos.
+      const { raiz } = montar(documento);
+      const valores = Array.from(raiz.querySelectorAll('.ficha-resistencia__valor')).map((v) =>
+        v.textContent?.trim(),
+      );
+      expect(valores.every((v) => v === '-2')).toBe(true);
+    });
+
+    it('Vida/Energia (amplificadores) somam ±1 por Nível na máxima exibida, escalando com empilhamentos', () => {
+      const documento: FichaJogadorDadosDto = {
+        ...dados,
+        inventario: { itens: [], amplificadores: [{ nome: 'Vida', empilhamentos: 1 }] },
+      };
+      const vidaBase = calcularVida({ classe: ClasseEnum.COMBATENTE, nivel: 3, vigor: 4 });
+      // Vida concede +1/Nível fixo — Nível 3 → +3.
+      const { raiz } = montar(documento);
+      const barra = raiz.querySelector('.ficha-barra--vida .ficha-barra__valor')?.textContent ?? '';
+      expect(barra.replace(/\s+/g, '')).toBe(`5/${vidaBase + 3}`);
+    });
+
+    it('Muscular soma +2 no modificador de teste de Luta/Força e -1 em Intelecto do 2º empilhamento', () => {
+      const documento: FichaJogadorDadosDto = {
+        ...dados,
+        inventario: { itens: [], amplificadores: [{ nome: 'Muscular', empilhamentos: 2 }] },
+      };
+      const { raiz } = montar(documento);
+      const caixaLuta = Array.from(raiz.querySelectorAll('.ficha-atributo')).find(
+        (box) => box.querySelector('.ficha-atributo__abrev')?.textContent?.trim().startsWith('LUT'),
+      )!;
+      expect(caixaLuta.querySelector('.ficha-atributo__mod-valor')?.textContent?.trim()).toBe('+2');
+      const caixaIntelecto = Array.from(raiz.querySelectorAll('.ficha-atributo')).find(
+        (box) => box.querySelector('.ficha-atributo__abrev')?.textContent?.trim().startsWith('INT'),
+      )!;
+      expect(caixaIntelecto.querySelector('.ficha-atributo__mod-valor')?.textContent?.trim()).toBe('-1');
+    });
+
+    it('o modificador de teste do amplificador entra na fórmula rolada (soma ao manual, nunca substitui)', () => {
+      const documento: FichaJogadorDadosDto = {
+        ...dados,
+        modificadoresTeste: { luta: 1 },
+        inventario: { itens: [], amplificadores: [{ nome: 'Muscular', empilhamentos: 1 }] },
+      };
+      const alvo = montar(documento, 'Corvo', 42, true);
+      const spy = vi.spyOn(TestBed.inject(BandejaDadosService), 'mostrar').mockImplementation(() => undefined);
+      alvo.fixture.componentInstance['rolarTesteAtributo'](campoLuta);
+      // manual (+1) + amplificador Muscular (+2) = +3.
+      expect(spy.mock.calls[0][0].formula).toBe('lutad20kh1cm1 + PROF + 3');
+    });
+  });
+
   it('não mostra os passos − / + de Vida/Energia quando não é ajustável (só leitura)', () => {
     const { raiz } = montar(dados);
     expect(raiz.querySelector('.ficha-passo')).toBeNull();

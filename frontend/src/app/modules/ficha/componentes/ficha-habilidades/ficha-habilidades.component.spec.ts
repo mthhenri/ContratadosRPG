@@ -288,4 +288,86 @@ describe('FichaHabilidades', () => {
       vi.useRealTimers();
     }
   });
+
+  /**
+   * Amplificador `Conservador` (doc — "⬡ Amplificadores": "-1 de Energia em custos de habilidades,
+   * mínimo 1") — desconta o custo exibido e o efetivamente debitado; custo variável (`[X E]`) fica
+   * de fora (o jogador já digita o valor exato que quer gastar).
+   */
+  describe('Amplificador Conservador — desconto no custo de Energia', () => {
+    function montarComConservador(empilhamentos = 1) {
+      TestBed.configureTestingModule({ imports: [FichaHabilidades] });
+      const fixture = TestBed.createComponent(FichaHabilidades);
+      fixture.componentRef.setInput('habilidades', habilidades);
+      fixture.componentRef.setInput('editavel', true);
+      fixture.componentRef.setInput('classe', ClasseEnum.COMBATENTE);
+      fixture.componentRef.setInput('arquetipo', ArquetipoEnum.LUTADOR);
+      fixture.componentRef.setInput('energiaAtual', 20);
+      fixture.componentRef.setInput('amplificadores', [{ nome: 'Conservador', empilhamentos }]);
+      fixture.detectChanges();
+      const utilizados: number[] = [];
+      fixture.componentInstance.habilidadeUtilizada.subscribe((c) => utilizados.push(c));
+      return { fixture, raiz: fixture.nativeElement as HTMLElement, utilizados };
+    }
+
+    it('desconta -1 no custo exibido (Tiro Certeiro [2 E] → [1 E]), custo variável intacto ([X E])', () => {
+      const { raiz } = montarComConservador();
+      const custos = Array.from(raiz.querySelectorAll('.habilidades__custo')).map((n) => n.textContent?.trim());
+      expect(custos).toEqual(['[1 E]', '[X E]']);
+    });
+
+    it('debita o custo já descontado ao Utilizar', () => {
+      const alvo = montarComConservador();
+      alvo.fixture.componentInstance['utilizar'](0, habilidades[0]); // custo base 2
+      expect(alvo.utilizados).toEqual([1]);
+    });
+
+    it('nunca reduz abaixo de 1 (mínimo do doc), mesmo com custo base 1', () => {
+      TestBed.configureTestingModule({ imports: [FichaHabilidades] });
+      const fixture = TestBed.createComponent(FichaHabilidades);
+      const habilidadeCustoUm: FichaHabilidadeDto = {
+        nome: 'Foco',
+        categoria: HabilidadeCategoriaEnum.GERAL,
+        custoEnergia: 1,
+        descricao: '',
+      };
+      fixture.componentRef.setInput('habilidades', [habilidadeCustoUm]);
+      fixture.componentRef.setInput('editavel', true);
+      fixture.componentRef.setInput('classe', ClasseEnum.COMBATENTE);
+      fixture.componentRef.setInput('arquetipo', ArquetipoEnum.LUTADOR);
+      fixture.componentRef.setInput('energiaAtual', 20);
+      fixture.componentRef.setInput('amplificadores', [{ nome: 'Conservador', empilhamentos: 1 }]);
+      fixture.detectChanges();
+      const utilizados: number[] = [];
+      fixture.componentInstance.habilidadeUtilizada.subscribe((c) => utilizados.push(c));
+      fixture.componentInstance['utilizar'](0, habilidadeCustoUm);
+      expect(utilizados).toEqual([1]);
+    });
+
+    it('habilidade sem custo (0 E) permanece 0 — não vira "mínimo 1"', () => {
+      TestBed.configureTestingModule({ imports: [FichaHabilidades] });
+      const fixture = TestBed.createComponent(FichaHabilidades);
+      const habilidadeGratis: FichaHabilidadeDto = {
+        nome: 'Passiva',
+        categoria: HabilidadeCategoriaEnum.GERAL,
+        custoEnergia: 0,
+        descricao: '',
+      };
+      fixture.componentRef.setInput('habilidades', [habilidadeGratis]);
+      fixture.componentRef.setInput('editavel', true);
+      fixture.componentRef.setInput('classe', ClasseEnum.COMBATENTE);
+      fixture.componentRef.setInput('arquetipo', ArquetipoEnum.LUTADOR);
+      fixture.componentRef.setInput('energiaAtual', 20);
+      fixture.componentRef.setInput('amplificadores', [{ nome: 'Conservador', empilhamentos: 1 }]);
+      fixture.detectChanges();
+      const custo = fixture.nativeElement.querySelector('.habilidades__custo')?.textContent?.trim();
+      expect(custo).toBe('[0 E]');
+    });
+
+    it('sem Conservador portado (input padrão, []), custo não muda (mesmo comportamento de antes)', () => {
+      const { raiz } = montar(true);
+      const custos = Array.from(raiz.querySelectorAll('.habilidades__custo')).map((n) => n.textContent?.trim());
+      expect(custos).toEqual(['[2 E]', '[X E]']);
+    });
+  });
 });
