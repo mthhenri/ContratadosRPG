@@ -360,6 +360,33 @@ export function validarFormula(formulaTexto: string): boolean {
   return interpretarFormula(formulaTexto).valida;
 }
 
+/**
+ * Atalhos de fórmula para os danos derivados do agente (m3-27-visual): troca as palavras inteiras
+ * `corpo`/`furtivo` (tolerante a caixa) pela própria expressão calculada (`calcularDanoCorpo`/
+ * `calcularDanoFurtivo`, ex.: `2D6 [Físico]`, `2D6+2`) — quem digita a fórmula escreve só "corpo"
+ * ou "furtivo" em vez de saber/copiar a notação de dado atual, e o resultado acompanha o
+ * personagem (sobe de nível, o furtivo mudou, a próxima rolagem já usa o valor novo sem editar o
+ * preset salvo). A expressão calculada já é sintaxe de fórmula válida por conta própria (dado +
+ * tag de tipo), então a troca dispensa parênteses (o motor ainda não os aceita). Chame **antes**
+ * de `interpretarFormula`/`validarFormula`/`rolarFormula` — eles não conhecem os atalhos, só o
+ * texto já expandido. Sem a expressão disponível (ex.: `furtivo` para um Civil, que não tem —
+ * `calcularDanoFurtivo` devolve `null`), a palavra fica intacta e a interpretação reporta "termo
+ * desconhecido", igual a qualquer termo inexistente.
+ */
+export function expandirAtalhosDano(
+  formulaTexto: string,
+  atalhos: { readonly corpo?: string | null; readonly furtivo?: string | null },
+): string {
+  let expandida = formulaTexto;
+  if (atalhos.corpo) {
+    expandida = expandida.replace(/\bcorpo\b/gi, atalhos.corpo);
+  }
+  if (atalhos.furtivo) {
+    expandida = expandida.replace(/\bfurtivo\b/gi, atalhos.furtivo);
+  }
+  return expandida;
+}
+
 /** Uma contribuição de valor já rolado/aplicado, com seu destino de tipo de dano (ou nenhum). */
 type Contribuicao = { readonly valor: number; readonly tipoDano?: TipoDanoEnum; readonly composto?: ParTipoDano };
 

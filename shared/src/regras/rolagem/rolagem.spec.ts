@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto } from '../../dtos/ficha';
 import { HabilidadeCategoriaEnum, RolagemPresetTipoEnum, TipoDanoEnum } from '../../enums';
 import {
+  expandirAtalhosDano,
   interpretarFormula,
   normalizarPresetLegado,
   reescreverFormulaTeste,
@@ -75,6 +76,35 @@ describe('interpretarFormula', () => {
   it('validarFormula espelha a validade', () => {
     expect(validarFormula('1d20+LUT')).toBe(true);
     expect(validarFormula('nada')).toBe(false);
+  });
+});
+
+describe('expandirAtalhosDano', () => {
+  it('troca "corpo" e "furtivo" (tolerante a caixa) pela expressão calculada', () => {
+    const atalhos = { corpo: '2D6 [Físico]', furtivo: '2D6+2' };
+    expect(expandirAtalhosDano('corpo', atalhos)).toBe('2D6 [Físico]');
+    expect(expandirAtalhosDano('CORPO + furtivo', atalhos)).toBe('2D6 [Físico] + 2D6+2');
+    expect(expandirAtalhosDano('Furtivo', atalhos)).toBe('2D6+2');
+  });
+
+  it('a expressão expandida já é fórmula válida por conta própria (dado + tag, sem parênteses)', () => {
+    const expandida = expandirAtalhosDano('corpo + furtivo', {
+      corpo: '2D6 [Físico]',
+      furtivo: '2D6+2',
+    });
+    expect(validarFormula(expandida)).toBe(true);
+  });
+
+  it('só troca a palavra inteira — não afeta termos que só contêm o texto como substring', () => {
+    const atalhos = { corpo: '1D3 [Físico]' };
+    // "corpodagua" não é o atalho "corpo" — some por termo desconhecido, não por troca parcial.
+    expect(expandirAtalhosDano('corpodagua', atalhos)).toBe('corpodagua');
+  });
+
+  it('sem a expressão do atalho disponível (ex.: Furtivo de um Civil, `null`), a palavra fica intacta', () => {
+    const expandida = expandirAtalhosDano('furtivo + FOR', { corpo: '1 [Físico]', furtivo: null });
+    expect(expandida).toBe('furtivo + FOR');
+    expect(validarFormula(expandida)).toBe(false);
   });
 });
 
