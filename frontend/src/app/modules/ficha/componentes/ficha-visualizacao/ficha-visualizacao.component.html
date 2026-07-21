@@ -93,8 +93,19 @@
         </div>
 
         <!-- Editor de Origem (m3-23): nome/descrição/Saber de Campo + Especialidade + 2 linhas de
-             Formação. Reusa o mesmo mini-editor da Classe/Arquétipo (`ficha-ident__classe-editor`). -->
-        @if (editandoOrigem()) {
+             Formação. Reusa o mesmo mini-editor da Classe/Arquétipo (`ficha-ident__classe-editor`).
+             Abre num `p-dialog` (não mais inline): o formulário é grande — Nome/Descrição/Saber de
+             Campo + Especialidade + 2 caixas de Formação — e inflava demais o card de Identidade. -->
+        <p-dialog
+          [visible]="editandoOrigem()"
+          [modal]="true"
+          [draggable]="false"
+          [resizable]="false"
+          [dismissableMask]="true"
+          header="Origem"
+          styleClass="ficha-ident__dialogo-origem"
+          (onHide)="cancelarOrigem()"
+        >
           @if (rascunhoOrigem(); as rascunho) {
             <div class="ficha-ident__classe-editor">
               <label class="ficha-ident__meta-linha">
@@ -224,39 +235,41 @@
               </div>
             </div>
           }
-        }
+        </p-dialog>
 
         @if (ajustavel() && editandoClasse()) {
           <div class="ficha-ident__classe-editor">
-            <select
-              class="ficha-ident__select"
-              aria-label="Classe"
-              (change)="mudarClasseRascunho($event)"
-            >
-              @for (grupo of gruposClasse; track grupo.rotulo) {
-                <optgroup [label]="grupo.rotulo">
-                  @for (opcao of grupo.opcoes; track opcao.valor) {
-                    <option [value]="opcao.valor" [selected]="opcao.valor === rascunhoClasse()">
+            <div class="ficha-ident__classe-linha">
+              <select
+                class="ficha-ident__select"
+                aria-label="Classe"
+                (change)="mudarClasseRascunho($event)"
+              >
+                @for (grupo of gruposClasse; track grupo.rotulo) {
+                  <optgroup [label]="grupo.rotulo">
+                    @for (opcao of grupo.opcoes; track opcao.valor) {
+                      <option [value]="opcao.valor" [selected]="opcao.valor === rascunhoClasse()">
+                        {{ opcao.rotulo }}
+                      </option>
+                    }
+                  </optgroup>
+                }
+              </select>
+              @if (ehClasseBaseRascunho()) {
+                <select
+                  class="ficha-ident__select"
+                  aria-label="Arquétipo"
+                  (change)="mudarArquetipoRascunho($event)"
+                >
+                  <option value="" [selected]="rascunhoArquetipo() === null">— Nenhum —</option>
+                  @for (opcao of arquetiposRascunho(); track opcao.valor) {
+                    <option [value]="opcao.valor" [selected]="opcao.valor === rascunhoArquetipo()">
                       {{ opcao.rotulo }}
                     </option>
                   }
-                </optgroup>
+                </select>
               }
-            </select>
-            @if (ehClasseBaseRascunho()) {
-              <select
-                class="ficha-ident__select"
-                aria-label="Arquétipo"
-                (change)="mudarArquetipoRascunho($event)"
-              >
-                <option value="" [selected]="rascunhoArquetipo() === null">— Nenhum —</option>
-                @for (opcao of arquetiposRascunho(); track opcao.valor) {
-                  <option [value]="opcao.valor" [selected]="opcao.valor === rascunhoArquetipo()">
-                    {{ opcao.rotulo }}
-                  </option>
-                }
-              </select>
-            }
+            </div>
             <div class="ficha-ident__classe-acoes">
               <button
                 class="ficha-cartao__acao ficha-cartao__acao--confirmar"
@@ -747,8 +760,6 @@
             </button>
           }
         </header>
-        <!-- Salvar/Cancelar empilhados (não "Atributos" + dois botões cabem lado a lado numa
-             coluna de 170px) — mesmo racional da fórmula da DT abaixo do título. -->
         @if (editandoAtributos()) {
           <div class="ficha-atributos__acoes">
             <button
@@ -762,20 +773,21 @@
               Cancelar
             </button>
           </div>
+        } @else {
+          <div class="ficha-atributos__formula">
+            <span class="chip-formula">{{ formulaDt }}</span>
+          </div>
+
+          <div class="ficha-mini ficha-proficiencia">
+            <span class="ficha-mini__rotulo">Proficiência</span>
+            <span class="ficha-mini__valor">{{ proficienciaLinha().display }}</span>
+          </div>
+
+          <div class="ficha-mini ficha-maestria-resumo">
+            <span class="ficha-mini__rotulo">Maestria</span>
+            <span class="ficha-mini__valor">{{ maestriaNomeAtual() ?? 'Nenhuma' }}</span>
+          </div>
         }
-        <div class="ficha-atributos__formula">
-          <span class="chip-formula">{{ formulaDt }}</span>
-        </div>
-
-        <div class="ficha-mini ficha-proficiencia">
-          <span class="ficha-mini__rotulo">Proficiência</span>
-          <span class="ficha-mini__valor">{{ proficienciaLinha().display }}</span>
-        </div>
-
-        <div class="ficha-mini ficha-maestria-resumo">
-          <span class="ficha-mini__rotulo">Maestria</span>
-          <span class="ficha-mini__valor">{{ maestriaNomeAtual() ?? 'Nenhuma' }}</span>
-        </div>
 
         <div class="ficha-atributos ficha-atributos--2col">
           @for (grupo of gruposAtributos; track grupo.rotulo) {
@@ -893,15 +905,16 @@
                         }
                       </span>
                       <!-- Modificador de teste — só leitura aqui; a edição fica atrás do lápis de
-                           Atributos (mesma tela de edição dos atributos base). Só aparece se ≠ 0. -->
-                      @if (modificadorTeste(campo.chave) !== 0) {
-                        <span
-                          class="ficha-atributo__mod-valor ficha-atributo__mod-valor--ativo"
-                          [attr.title]="'Modificador de teste de ' + campo.nome"
-                        >
-                          {{ modificadorTeste(campo.chave) >= 0 ? '+' : '' }}{{ modificadorTeste(campo.chave) }}
-                        </span>
-                      }
+                           Atributos. Linha própria (não a mesma da lesão: são selos parecidos —
+                           mono, negrito, accent quando ativos — e colados no valor ficam
+                           indistinguíveis). Sempre visível, inclusive em +0. -->
+                      <span
+                        class="ficha-atributo__mod-valor"
+                        [class.ficha-atributo__mod-valor--ativo]="modificadorTeste(campo.chave) !== 0"
+                        [attr.title]="'Modificador de teste de ' + campo.nome"
+                      >
+                        {{ modificadorTeste(campo.chave) >= 0 ? '+' : '' }}{{ modificadorTeste(campo.chave) }}
+                      </span>
                     </div>
                   }
                 }

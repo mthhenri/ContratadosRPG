@@ -212,19 +212,18 @@
 // Fórmula da DT abaixo do título (não cabe ao lado do título+régua) — linha própria, centralizada.
 .ficha-atributos__formula {
   text-align: center;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
-// Salvar/Cancelar da edição de atributos — empilhados (largura cheia cada): a coluna de Atributos é
-// mais estreita que a de Identidade, então os dois lado a lado ainda ficariam apertados.
+// Salvar/Cancelar da edição de atributos — lado a lado, dividindo a largura da coluna (DT/
+// Proficiência/Maestria somem enquanto edita, então sobra espaço mesmo na coluna estreita).
 .ficha-atributos__acoes {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   margin-bottom: 12px;
 
   .ficha-cartao__acao {
-    width: 100%;
+    flex: 1;
   }
 }
 
@@ -446,6 +445,18 @@
     flex-direction: column;
     gap: 8px;
     margin-bottom: 16px;
+  }
+
+  // Classe + Arquétipo lado a lado (em vez de empilhados) — ocupa menos altura; cada select
+  // divide a largura igualmente, e sozinho (classe sem arquétipo) ocupa a linha inteira.
+  &__classe-linha {
+    display: flex;
+    gap: 8px;
+
+    .ficha-ident__select {
+      flex: 1;
+      min-width: 0;
+    }
   }
 
   &__select {
@@ -1095,7 +1106,7 @@
 .ficha-atributos {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
 
   &__grupo {
     display: flex;
@@ -1126,10 +1137,10 @@
   // de teste. Densidade um pouco menor que o card original (280px eram 5 colunas; aqui são 2 numa
   // coluna mais estreita), mas com espaço de sobra para nada quebrar visualmente.
   &--2col {
-    gap: 10px;
+    gap: 8px;
 
     .ficha-atributos__grupo {
-      gap: 8px;
+      gap: 6px;
     }
 
     .ficha-atributos__rotulo-grupo {
@@ -1138,7 +1149,7 @@
 
     .ficha-atributos__grade {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
+      gap: 6px;
 
       // Atributo sem par na última linha (5º de 5, em grade de 2 colunas) — centralizado em vez
       // de grudar na coluna esquerda com um vão vazio ao lado.
@@ -1150,12 +1161,19 @@
     }
 
     .ficha-atributo {
-      padding: 10px 6px;
-      gap: 5px;
+      padding: 7px 6px;
+      gap: 3px;
     }
 
     .ficha-atributo__valor {
       font-size: 22px;
+    }
+
+    // Modificador de teste bem mais discreto que o valor — linha própria, mas compacta (a grade
+    // de 5 linhas x 2 colunas não pode empurrar o card além da altura da coluna de Identidade).
+    .ficha-atributo__mod-valor {
+      font-size: 10px;
+      line-height: 1;
     }
   }
 }

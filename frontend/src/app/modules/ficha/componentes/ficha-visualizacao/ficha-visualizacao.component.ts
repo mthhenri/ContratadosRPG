@@ -47,6 +47,8 @@ import {
   type FormacaoDefinicaoDto,
 } from '@contratados-rpg/shared/regras/identidade';
 
+import { Dialog } from 'primeng/dialog';
+
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
 import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
@@ -198,7 +200,7 @@ export interface AjusteClasse {
  */
 @Component({
   selector: 'app-ficha-visualizacao',
-  imports: [HoldRepeat, Icone, BandejaDados],
+  imports: [HoldRepeat, Icone, BandejaDados, Dialog],
   templateUrl: './ficha-visualizacao.component.html',
   styleUrl: './ficha-visualizacao.component.scss',
 })
