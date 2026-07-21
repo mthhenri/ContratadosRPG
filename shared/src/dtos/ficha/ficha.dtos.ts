@@ -216,6 +216,12 @@ export interface FichaDerivadosDto {
   readonly defesa?: number;
   readonly esquiva?: number;
   readonly bloqueio?: number;
+  /**
+   * Contra-Ataque — override **manual**, sem fórmula em `shared/regras` (a habilidade só existe
+   * hoje como texto narrativo do catálogo; o motor não calcula essa stat). Só editável na ficha
+   * quando o jogador tem a habilidade "Contra-Ataque" (`dados.habilidades`).
+   */
+  readonly contraAtaque?: number;
   readonly deslocamento?: number;
   readonly proficiencia?: number;
   /** Dano de Corpo a Corpo em notação de dados (ex.: `"1d6+3"`) — `calcularDanoCorpo`. */
