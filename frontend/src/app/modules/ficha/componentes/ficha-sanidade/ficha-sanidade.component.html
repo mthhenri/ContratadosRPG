@@ -287,6 +287,8 @@
   [draggable]="false"
   [resizable]="false"
   [dismissableMask]="true"
+  [style]="{ width: '520px' }"
+  [breakpoints]="{ '560px': '95vw' }"
   [header]="tituloEditor()"
   styleClass="sanidade__dialogo"
   (onHide)="cancelar()"
