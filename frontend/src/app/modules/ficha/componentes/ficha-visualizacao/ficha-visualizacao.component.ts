@@ -708,6 +708,7 @@ export class FichaVisualizacao {
     'habilidadesPorTurno',
     'esquiva',
     'bloqueio',
+    'contraAtaque',
   ]);
 
   /** Linhas exibidas em "Informações Extras" (Visão Geral) — sem os derivados realocados às abas. */
@@ -1170,6 +1171,21 @@ export class FichaVisualizacao {
    * três primeiro, na ordem de `CHAVES_COMBATE` — nenhum cálculo novo.
    */
   protected readonly defesaRapida = computed<readonly InfoExtra[]>(() => this.combateLinhas().slice(0, 3));
+
+  /**
+   * `true` quando o jogador tem a habilidade "Contra-Ataque" no catálogo (Lutador/Vanguarda e
+   * variantes — `shared/regras/agente/habilidades-catalogo`) — só então a caixa de Contra-ataque
+   * na Reações vira editável; sem a habilidade, o motor não tem stat pra oferecer e ela segue o
+   * placeholder tracejado.
+   */
+  protected readonly temHabilidadeContraAtaque = computed(() =>
+    this.dados().habilidades.some((habilidade) => habilidade.nome === 'Contra-Ataque'),
+  );
+
+  /** Linha de Contra-ataque — puro override manual (`derivados.contraAtaque`); sem cálculo. */
+  protected readonly contraAtaqueLinha = computed<InfoExtra>(
+    () => this.informacoesExtras().find((info) => info.chave === 'contraAtaque')!,
+  );
 
   /** Abreviação de exibição de cada `TipoDanoEnum` no grid compacto de Resistências (glance). */
   protected readonly abreviacaoResistencia: Record<TipoDanoEnum, string> = {

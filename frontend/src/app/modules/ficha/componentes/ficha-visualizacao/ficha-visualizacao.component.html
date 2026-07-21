@@ -598,38 +598,128 @@
 
         <div class="ficha-cartao__divisor"></div>
 
-        <!-- Defesa/Esquiva/Bloqueio — só leitura (glance); a edição saiu da tela nesta rodada. -->
+        <!-- Defesa/Esquiva/Bloqueio/Contra-ataque — editável no próprio lugar (dono/mestre). Rótulo
+             "Reações" (não só "Defesa") porque a linha já inclui Contra-ataque. -->
         <p class="ficha-cartao__subrotulo ficha-cartao__subrotulo--meta">
-          <span>Defesa</span>
-          <span class="ficha-cartao__subrotulo-nota">só leitura</span>
+          <span>Reações</span>
+          @if (!ajustavel()) {
+            <span class="ficha-cartao__subrotulo-nota">só leitura</span>
+          }
         </p>
         <div class="ficha-combate-rapido ficha-combate-rapido--com-contra">
           @for (linha of defesaRapida(); track linha.chave) {
-            <div class="ficha-mini ficha-mini--fino ficha-mini--somente-leitura">
+            <div class="ficha-mini ficha-mini--fino ficha-mini--centralizado" [class.ficha-mini--somente-leitura]="!ajustavel()">
               <span class="ficha-mini__rotulo">{{ linha.rotulo }}</span>
-              <span class="ficha-mini__valor">{{ linha.display }}</span>
+              @if (ajustavel() && editandoDerivado() === linha.chave) {
+                <input
+                  #entradaDerivado
+                  class="ficha-mini__entrada"
+                  type="number"
+                  inputmode="numeric"
+                  [value]="linha.bruto"
+                  [attr.aria-label]="'Editar ' + linha.rotulo"
+                  (keydown.enter)="confirmarDerivado(linha, entradaDerivado.value)"
+                  (keydown.escape)="cancelarDerivado()"
+                  (blur)="confirmarDerivado(linha, entradaDerivado.value)"
+                />
+              } @else if (ajustavel()) {
+                <button
+                  type="button"
+                  class="ficha-mini__valor ficha-mini__valor--editavel"
+                  [attr.aria-label]="'Editar ' + linha.rotulo"
+                  (click)="editarDerivado(linha.chave)"
+                >
+                  {{ linha.display }}
+                </button>
+              } @else {
+                <span class="ficha-mini__valor">{{ linha.display }}</span>
+              }
             </div>
           }
           <!-- Contra-ataque: só existe hoje como habilidade narrativa (Lutador/Vanguarda) — o motor
-               não tem um stat mecânico calculado pra ele ainda. Placeholder até fechar essa lacuna. -->
+               não tem um stat mecânico calculado pra ele ainda. Editável (override manual) só quando
+               o jogador tem a habilidade; sem ela, segue o placeholder tracejado. -->
           <div
-            class="ficha-mini ficha-mini--fino ficha-mini--somente-leitura ficha-mini--contra"
-            title="Ainda não calculado pelo motor — depende da habilidade de Contra-ataque"
+            class="ficha-mini ficha-mini--fino ficha-mini--centralizado"
+            [class.ficha-mini--somente-leitura]="!ajustavel() || !temHabilidadeContraAtaque()"
+            [class.ficha-mini--contra]="!temHabilidadeContraAtaque()"
+            [attr.title]="
+              temHabilidadeContraAtaque()
+                ? 'Contra-ataque'
+                : 'Ainda não calculado pelo motor — depende da habilidade de Contra-ataque'
+            "
           >
             <span class="ficha-mini__rotulo">Contra-ataque</span>
-            <span class="ficha-mini__valor">—</span>
+            @if (temHabilidadeContraAtaque()) {
+              @if (ajustavel() && editandoDerivado() === 'contraAtaque') {
+                <input
+                  #entradaDerivado
+                  class="ficha-mini__entrada"
+                  type="number"
+                  inputmode="numeric"
+                  [value]="contraAtaqueLinha().bruto"
+                  aria-label="Editar Contra-ataque"
+                  (keydown.enter)="confirmarDerivado(contraAtaqueLinha(), entradaDerivado.value)"
+                  (keydown.escape)="cancelarDerivado()"
+                  (blur)="confirmarDerivado(contraAtaqueLinha(), entradaDerivado.value)"
+                />
+              } @else if (ajustavel()) {
+                <button
+                  type="button"
+                  class="ficha-mini__valor ficha-mini__valor--editavel"
+                  aria-label="Editar Contra-ataque"
+                  (click)="editarDerivado('contraAtaque')"
+                >
+                  {{ contraAtaqueLinha().display }}
+                </button>
+              } @else {
+                <span class="ficha-mini__valor">{{ contraAtaqueLinha().display }}</span>
+              }
+            } @else {
+              <span class="ficha-mini__valor">—</span>
+            }
           </div>
         </div>
 
         <div class="ficha-cartao__divisor"></div>
 
-        <!-- Resistências — só leitura (glance); a edição saiu da tela nesta rodada. -->
-        <p class="ficha-cartao__subrotulo">Resistências</p>
+        <!-- Resistências — editável no próprio lugar (dono/mestre): edita a base manual; o total
+             exibido soma essa base com o que vem do equipamento (`shared/regras`, m3-36). -->
+        <p class="ficha-cartao__subrotulo ficha-cartao__subrotulo--meta">
+          <span>Resistências</span>
+          @if (!ajustavel()) {
+            <span class="ficha-cartao__subrotulo-nota">só leitura</span>
+          }
+        </p>
         <div class="ficha-resistencias">
           @for (resistencia of resistencias(); track resistencia.tipo) {
             <div class="ficha-resistencia">
               <span class="ficha-resistencia__abrev">{{ abreviacaoResistencia[resistencia.tipo] }}</span>
-              <span class="ficha-resistencia__valor">{{ resistencia.total }}</span>
+              @if (ajustavel() && editandoResistencia() === resistencia.tipo) {
+                <input
+                  #entradaResistencia
+                  class="ficha-resistencia__entrada"
+                  type="number"
+                  inputmode="numeric"
+                  [value]="resistencia.manual"
+                  [attr.aria-label]="'Editar resistência ' + abreviacaoResistencia[resistencia.tipo]"
+                  (keydown.enter)="confirmarResistencia(resistencia.tipo, entradaResistencia.value)"
+                  (keydown.escape)="cancelarResistencia()"
+                  (blur)="confirmarResistencia(resistencia.tipo, entradaResistencia.value)"
+                />
+              } @else if (ajustavel()) {
+                <button
+                  type="button"
+                  class="ficha-resistencia__valor ficha-resistencia__valor--editavel"
+                  [attr.aria-label]="'Editar resistência ' + abreviacaoResistencia[resistencia.tipo]"
+                  [attr.title]="'Base manual ' + resistencia.manual + ' + equipamento ' + resistencia.equipamento"
+                  (click)="editarResistencia(resistencia.tipo)"
+                >
+                  {{ resistencia.total }}
+                </button>
+              } @else {
+                <span class="ficha-resistencia__valor">{{ resistencia.total }}</span>
+              }
             </div>
           }
         </div>

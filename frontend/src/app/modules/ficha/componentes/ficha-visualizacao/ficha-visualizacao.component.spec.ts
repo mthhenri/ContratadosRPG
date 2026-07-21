@@ -4,8 +4,10 @@ import {
   ClasseEnum,
   EspecialidadeEfeitoEnum,
   FormacaoBonusEnum,
+  HabilidadeCategoriaEnum,
   ItemCategoriaEnum,
   SeveridadeLesaoEnum,
+  TipoDanoEnum,
 } from '@contratados-rpg/shared/enums';
 import type { FichaJogadorDadosDto, FichaOrigemDto } from '@contratados-rpg/shared/dtos/ficha';
 import { calcularVida } from '@contratados-rpg/shared/regras/agente';
@@ -168,15 +170,80 @@ describe('FichaVisualizacao', () => {
   });
 
   describe('Defesa/Resistências em miniatura (glance, redesenho de comparação visual)', () => {
-    it('mostra Defesa/Esquiva/Bloqueio e o placeholder de Contra-ataque, sempre só leitura', () => {
-      const { raiz } = montar(dados, 'Corvo', 42, true);
-      const caixas = Array.from(raiz.querySelectorAll('.ficha-combate-rapido .ficha-mini__rotulo')).map(
+    it('mostra Defesa/Esquiva/Bloqueio e o placeholder de Contra-ataque, só leitura quando não ajustável', () => {
+      const { raiz } = montar(dados, 'Corvo', 42, false);
+      // Escopado ao card de Identidade — o card de Status tem outra `.ficha-combate-rapido`
+      // (Deslocamento e cia., redesenho de comparação visual), essa sim editável.
+      const linhaDefesa = raiz.querySelector('.ficha-visao__coluna--identidade .ficha-combate-rapido')!;
+      const caixas = Array.from(linhaDefesa.querySelectorAll('.ficha-mini__rotulo')).map(
         (r) => r.textContent?.trim(),
       );
       expect(caixas).toEqual(['Defesa', 'Esquiva', 'Bloqueio', 'Contra-ataque']);
-      // Nenhum botão/input aqui — glance somente leitura mesmo com ajustavel=true.
-      expect(raiz.querySelector('.ficha-combate-rapido button')).toBeNull();
-      expect(raiz.querySelector('.ficha-combate-rapido input')).toBeNull();
+      expect(linhaDefesa.querySelector('button')).toBeNull();
+      expect(linhaDefesa.querySelector('input')).toBeNull();
+    });
+
+    it('Defesa/Esquiva/Bloqueio ficam editáveis quando ajustável e emitem via ajusteDerivado', () => {
+      const alvo = montar(dados, 'Corvo', 42, true);
+      const ajustes: { chave: string; valor: number | string }[] = [];
+      alvo.fixture.componentInstance.ajusteDerivado.subscribe((a) => ajustes.push(a));
+
+      const linhaDefesa = alvo.raiz.querySelector('.ficha-visao__coluna--identidade .ficha-combate-rapido')!;
+      const botao = Array.from(linhaDefesa.querySelectorAll('.ficha-mini__valor--editavel')).find(
+        (b) => b.getAttribute('aria-label') === 'Editar Defesa',
+      ) as HTMLButtonElement;
+      botao.click();
+      alvo.fixture.detectChanges();
+
+      const entrada = linhaDefesa.querySelector<HTMLInputElement>('.ficha-mini__entrada')!;
+      entrada.value = '15';
+      entrada.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+
+      expect(ajustes).toEqual([{ chave: 'defesa', valor: 15 }]);
+    });
+
+    it('Contra-ataque segue placeholder tracejado, não editável, sem a habilidade "Contra-Ataque"', () => {
+      const { raiz } = montar(dados, 'Corvo', 42, true);
+      const linhaDefesa = raiz.querySelector('.ficha-visao__coluna--identidade .ficha-combate-rapido')!;
+      const contraAtaque = Array.from(linhaDefesa.querySelectorAll('.ficha-mini')).find(
+        (box) => box.querySelector('.ficha-mini__rotulo')?.textContent?.trim() === 'Contra-ataque',
+      )!;
+      expect(contraAtaque.classList.contains('ficha-mini--contra')).toBe(true);
+      expect(contraAtaque.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('—');
+      expect(contraAtaque.querySelector('button')).toBeNull();
+      expect(contraAtaque.querySelector('input')).toBeNull();
+    });
+
+    it('Contra-ataque fica editável quando o jogador tem a habilidade "Contra-Ataque"', () => {
+      const documento: FichaJogadorDadosDto = {
+        ...dados,
+        habilidades: [
+          {
+            nome: 'Contra-Ataque',
+            categoria: HabilidadeCategoriaEnum.CLASSE,
+            custoEnergia: 2,
+            descricao: '(Reação)…',
+          },
+        ],
+      };
+      const alvo = montar(documento, 'Corvo', 42, true);
+      const ajustes: { chave: string; valor: number | string }[] = [];
+      alvo.fixture.componentInstance.ajusteDerivado.subscribe((a) => ajustes.push(a));
+
+      const linhaDefesa = alvo.raiz.querySelector('.ficha-visao__coluna--identidade .ficha-combate-rapido')!;
+      const contraAtaque = Array.from(linhaDefesa.querySelectorAll('.ficha-mini')).find(
+        (box) => box.querySelector('.ficha-mini__rotulo')?.textContent?.trim() === 'Contra-ataque',
+      )!;
+      expect(contraAtaque.classList.contains('ficha-mini--contra')).toBe(false);
+
+      const botao = contraAtaque.querySelector<HTMLButtonElement>('.ficha-mini__valor--editavel')!;
+      botao.click();
+      alvo.fixture.detectChanges();
+      const entrada = contraAtaque.querySelector<HTMLInputElement>('.ficha-mini__entrada')!;
+      entrada.value = '4';
+      entrada.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+
+      expect(ajustes).toEqual([{ chave: 'contraAtaque', valor: 4 }]);
     });
 
     it('mostra sempre as cinco linhas de Resistência, mesmo sem nenhum equipamento (tudo em 0)', () => {
@@ -211,6 +278,23 @@ describe('FichaVisualizacao', () => {
         box.querySelector('.ficha-resistencia__abrev')?.textContent?.trim() === 'Balíst.',
       );
       expect(balistico?.querySelector('.ficha-resistencia__valor')?.textContent?.trim()).toBe('3');
+    });
+
+    it('Resistências ficam editáveis quando ajustável e emitem via ajusteResistencia (base manual)', () => {
+      const alvo = montar(dados, 'Corvo', 42, true);
+      const ajustes: { tipo: TipoDanoEnum; valor: number }[] = [];
+      alvo.fixture.componentInstance.ajusteResistencia.subscribe((a) => ajustes.push(a));
+
+      const fisico = Array.from(alvo.raiz.querySelectorAll('.ficha-resistencia')).find(
+        (box) => box.querySelector('.ficha-resistencia__abrev')?.textContent?.trim() === 'Físico',
+      )!;
+      fisico.querySelector<HTMLButtonElement>('.ficha-resistencia__valor--editavel')!.click();
+      alvo.fixture.detectChanges();
+      const entrada = fisico.querySelector<HTMLInputElement>('.ficha-resistencia__entrada')!;
+      entrada.value = '2';
+      entrada.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+
+      expect(ajustes).toEqual([{ tipo: TipoDanoEnum.FISICO, valor: 2 }]);
     });
   });
 
@@ -403,8 +487,13 @@ describe('FichaVisualizacao', () => {
   it('mostra os alvos de edição de identidade (Codinome/Nível/Prestígio/Dinheiro) quando ajustável', () => {
     const { raiz } = montar(dados, 'Corvo', 42, true);
     expect(raiz.querySelector('.ficha-ident__nome--editavel')).not.toBeNull();
-    // Nível, Prestígio e Dinheiro editáveis (Patente e Salário seguem derivados, não editáveis).
-    expect(raiz.querySelectorAll('.ficha-mini__valor--editavel').length).toBe(3);
+    // Nível, Prestígio, Dinheiro, Defesa, Esquiva e Bloqueio editáveis (Patente e Salário seguem
+    // derivados, não editáveis; Contra-ataque só entra com a habilidade — fora deste fixture).
+    // Escopado ao card de Identidade — o card de Status tem seus próprios editáveis (Deslocamento
+    // e cia., redesenho de comparação visual).
+    expect(
+      raiz.querySelectorAll('.ficha-visao__coluna--identidade .ficha-mini__valor--editavel').length,
+    ).toBe(6);
   });
 
   it('emite os eventos certos ao confirmar Codinome/Nível/Prestígio', () => {

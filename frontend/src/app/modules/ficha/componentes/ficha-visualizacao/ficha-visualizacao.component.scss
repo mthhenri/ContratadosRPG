@@ -527,6 +527,24 @@
     }
   }
 
+  // Reações (Defesa/Esquiva/Bloqueio/Contra-ataque): rótulo + valor centralizados no box, como as
+  // Resistências vizinhas (`.ficha-resistencia` já é centralizada).
+  &--centralizado {
+    align-items: center;
+    text-align: center;
+
+    // O valor editável tem `align-self: flex-start` lá embaixo (pensado pros boxes alinhados à
+    // esquerda, tipo Nível/Prestígio) — aqui teria puxado o número de volta pra esquerda. O campo
+    // de digitação também centraliza o texto, em vez do padrão do navegador (à esquerda).
+    .ficha-mini__valor--editavel {
+      align-self: center;
+    }
+
+    .ficha-mini__entrada {
+      text-align: center;
+    }
+  }
+
   // Contra-ataque: sem stat calculado hoje (só existe como habilidade narrativa) — contorno
   // pontilhado sinaliza "ainda não é um dado real", distinto dos vizinhos com valor de verdade.
   &--contra {
@@ -976,6 +994,10 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 
+  // Quatro colunas iguais — Contra-ataque tinha coluna própria em `auto` (largura do rótulo, o
+  // mais longo dos quatro), que destoava das outras três e quebrava a simetria da fileira; o
+  // rótulo mais longo agora corta com "…" (`.ficha-mini--fino .ficha-mini__rotulo` abaixo), mesmo
+  // padrão já usado no valor da Patente.
   &--com-contra {
     grid-template-columns: repeat(4, minmax(0, 1fr));
 
@@ -1020,6 +1042,52 @@
     font-size: 15px;
     font-weight: 700;
     color: var(--text-dim);
+
+    // Valor clicável (edição no próprio lugar, m3-36): mesmo padrão de `.ficha-mini__valor--editavel`.
+    &--editavel {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--radius-control);
+      padding: 0 3px;
+      cursor: text;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+
+      &:hover {
+        border-color: var(--border-strong);
+        background: var(--surface);
+      }
+    }
+  }
+
+  // Campo de digitação direta da base manual — mesma filosofia de `.ficha-mini__entrada`: largura
+  // no tamanho do texto (2-3 dígitos), não do box inteiro.
+  &__entrada {
+    width: 3ch;
+    min-width: 2.5ch;
+    field-sizing: content;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 1px 4px;
+    outline: none;
+    -moz-appearance: textfield;
+    -webkit-appearance: textfield;
+    appearance: textfield;
+
+    &:focus {
+      border-color: var(--accent-border);
+    }
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
   }
 }
 
