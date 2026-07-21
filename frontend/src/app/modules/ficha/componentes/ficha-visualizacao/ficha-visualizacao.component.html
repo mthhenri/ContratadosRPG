@@ -366,7 +366,7 @@
               @if (ajustavel() && editandoDinheiro()) {
                 <input
                   #entradaDinheiro
-                  class="ficha-mini__entrada"
+                  class="ficha-mini__entrada ficha-mini__entrada--larga"
                   type="number"
                   [value]="dinheiro()"
                   aria-label="Editar dinheiro"
@@ -924,6 +924,149 @@
             </div>
           }
         </div>
+      </section>
+    </div>
+
+    <!-- Status — terceira coluna (redesenho de comparação visual): Informações (glance de
+         Deslocamento/Dano C. a C./Dano Furtivo/Percepção + Sequelas/Traumas/Lesões, editável via
+         `FichaSanidade`, + Anotações) e Inventário (editor completo, `FichaInventario` em modo
+         `dialog` — lista compacta aqui, catálogo/mods/fragmento em `p-dialog`). A barra tem 1
+         posição ainda reservada pra mais conteúdo. -->
+    <div class="ficha-visao__coluna ficha-visao__coluna--status">
+      <div class="ficha-status__abas">
+        <button
+          type="button"
+          class="ficha-status__aba"
+          [class.ficha-status__aba--ativa]="abaStatusAtiva() === 'informacoes'"
+          (click)="selecionarAbaStatus('informacoes')"
+        >
+          <app-icone class="ficha-status__aba-icone" [nome]="'visao-geral'" />
+          Informações
+        </button>
+        <button
+          type="button"
+          class="ficha-status__aba"
+          [class.ficha-status__aba--ativa]="abaStatusAtiva() === 'inventario'"
+          (click)="selecionarAbaStatus('inventario')"
+        >
+          <app-icone class="ficha-status__aba-icone" [nome]="'inventario'" />
+          Inventário
+        </button>
+        <span class="ficha-status__aba" aria-hidden="true"></span>
+      </div>
+
+      <section class="ficha-cartao ficha-cartao--status">
+        @if (abaStatusAtiva() === 'informacoes') {
+        <div class="ficha-status__conteudo">
+          <div class="ficha-combate-rapido ficha-combate-rapido--quatro">
+            @for (linha of statusRapido(); track linha.chave) {
+              <div class="ficha-mini ficha-mini--fino">
+                <!-- Dano C. a C./Furtivo: dadinho de rolar direto a expressão (m3-22, mesmo padrão
+                     do dadinho de Atributos). Civil sem Dano Furtivo (`bruto` null) não ganha botão. -->
+                @if (
+                  (linha.chave === 'danoCorpoACorpo' || linha.chave === 'danoFurtivo') &&
+                  linha.bruto !== null
+                ) {
+                  <button
+                    class="ficha-mini__rolar"
+                    type="button"
+                    [attr.aria-label]="'Rolar ' + linha.rotulo"
+                    [attr.title]="'Rolar ' + linha.rotulo"
+                    (click)="rolarDano(linha)"
+                  >
+                    <app-icone [nome]="'dado'" />
+                  </button>
+                }
+                <span class="ficha-mini__rotulo">{{ linha.rotulo }}</span>
+                @if (ajustavel() && editandoDerivado() === linha.chave) {
+                  <input
+                    #entradaDerivado
+                    class="ficha-mini__entrada"
+                    [class.ficha-mini__entrada--larga]="linha.tipo === 'texto'"
+                    [type]="linha.tipo === 'numero' ? 'number' : 'text'"
+                    [value]="linha.bruto"
+                    [attr.aria-label]="'Editar ' + linha.rotulo"
+                    (keydown.enter)="confirmarDerivado(linha, entradaDerivado.value)"
+                    (keydown.escape)="cancelarDerivado()"
+                    (blur)="confirmarDerivado(linha, entradaDerivado.value)"
+                  />
+                } @else if (ajustavel() && linha.bruto !== null) {
+                  <button
+                    type="button"
+                    class="ficha-mini__valor ficha-mini__valor--editavel"
+                    [attr.aria-label]="'Editar ' + linha.rotulo"
+                    (click)="editarDerivado(linha.chave)"
+                  >
+                    {{ linha.display }}
+                  </button>
+                } @else {
+                  <span class="ficha-mini__valor">{{ linha.display }}</span>
+                }
+              </div>
+            }
+          </div>
+
+          <app-ficha-sanidade
+            [sequelas]="estado().sequelas"
+            [traumas]="estado().traumas"
+            [lesoes]="estado().lesoes"
+            [editavel]="ajustavel()"
+            [apresentacao]="'dialog'"
+            (sanidadeMudou)="ajusteSanidade.emit($event)"
+          />
+
+          <div class="ficha-status__anotacoes-caixa">
+            <div class="ficha-status__anotacoes-cabecalho">
+              <span class="ficha-status__rotulo-coluna">Anotações</span>
+              @if (ajustavel() && !editandoAnotacoes()) {
+                <button
+                  class="ficha-cartao__lapis"
+                  type="button"
+                  aria-label="Editar anotações"
+                  title="Editar anotações"
+                  (click)="editarAnotacoes()"
+                >
+                  ✎
+                </button>
+              }
+            </div>
+            @if (ajustavel() && editandoAnotacoes()) {
+              <textarea
+                #entradaAnotacoes
+                class="ficha-status__anotacoes-campo"
+                rows="10"
+                aria-label="Anotações"
+                placeholder="Escreva suas anotações aqui…"
+                [value]="dados().anotacoes"
+                (keydown.escape)="cancelarAnotacoes()"
+                (blur)="confirmarAnotacoes(entradaAnotacoes.value)"
+              ></textarea>
+            } @else if (anotacoes()) {
+              <p class="ficha-visao__anotacoes" appOverflowFade>{{ anotacoes() }}</p>
+            } @else {
+              <p class="ficha-visao__vazio">Sem anotações.</p>
+            }
+          </div>
+        </div>
+        }
+        @if (abaStatusAtiva() === 'inventario') {
+        <div class="ficha-status__conteudo">
+          <app-ficha-inventario
+            [inventario]="dados().inventario"
+            [editavel]="ajustavel()"
+            [prestigio]="dados().prestigio"
+            [inventarioMaximo]="inventarioMaximoValor()"
+            [vontade]="dados().atributos.vontade"
+            [dinheiro]="dinheiro()"
+            [energiaAtual]="estado().energiaAtual"
+            [energiaMaxima]="energiaMaxima()"
+            [apresentacao]="'dialog'"
+            (inventarioMudou)="ajusteInventario.emit($event)"
+            (ajusteEnergiaFragmento)="aoAjustarEnergiaFragmento($event)"
+            (ajusteInventarioMaximo)="ajustarInventarioMaximo($event)"
+          />
+        </div>
+        }
       </section>
     </div>
     </div>

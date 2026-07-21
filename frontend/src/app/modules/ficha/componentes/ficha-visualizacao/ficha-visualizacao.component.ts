@@ -52,10 +52,11 @@ import { Dialog } from 'primeng/dialog';
 
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
 import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
+import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
-import type { CustoEnergiaFragmento } from '../ficha-inventario/ficha-inventario.component';
-import type { EstadoSanidade } from '../ficha-sanidade/ficha-sanidade.component';
+import { FichaInventario, type CustoEnergiaFragmento } from '../ficha-inventario/ficha-inventario.component';
+import { FichaSanidade, type EstadoSanidade } from '../ficha-sanidade/ficha-sanidade.component';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
 import { GRUPOS_FORMACAO, rotuloParametroFormacao } from '../../opcoes-formacao';
 import { CONDICOES_FICHA, type CondicoesFicha } from '../../condicoes-ficha';
@@ -201,7 +202,7 @@ export interface AjusteClasse {
  */
 @Component({
   selector: 'app-ficha-visualizacao',
-  imports: [HoldRepeat, Icone, BandejaDados, Dialog],
+  imports: [HoldRepeat, Icone, FichaSanidade, FichaInventario, BandejaDados, OverflowFade, Dialog],
   templateUrl: './ficha-visualizacao.component.html',
   styleUrl: './ficha-visualizacao.component.scss',
 })
@@ -325,6 +326,19 @@ export class FichaVisualizacao {
 
   /** Emite a aba escolhida — a página reflete no `?aba=` da URL (deep-link/refresh). */
   readonly abaMudou = output<AbaFicha>();
+
+  /**
+   * Aba ativa da mini barra de abas do card de **Status** (terceira coluna, redesenho de
+   * comparação visual) — distinta de `abaAtiva`/`abas` acima (a navegação por abas de página
+   * inteira, m3-11, hoje fora do template). Estado puramente local: não sincroniza com a URL. A
+   * barra tem 1 posição ainda reservada pra mais conteúdo.
+   */
+  protected readonly abaStatusAtiva = signal<'informacoes' | 'inventario'>('informacoes');
+
+  /** Troca a aba ativa da mini barra do card de Status. */
+  protected selecionarAbaStatus(aba: 'informacoes' | 'inventario'): void {
+    this.abaStatusAtiva.set(aba);
+  }
 
   /** Campo de vitalidade em digitação direta (clicou no valor), ou `null` fora de edição. */
   protected readonly editandoVitalidade = signal<CampoVitalidade | null>(null);
@@ -569,6 +583,26 @@ export class FichaVisualizacao {
     }
   }
 
+  /**
+   * Rola Dano C. a C. ou Dano Furtivo direto do glance de Status (mesmo dadinho da Visão Geral) —
+   * a fórmula é a própria expressão de `informacoesExtras()` (ex.: `2D6 [Físico]`, `2D6+2`), sem
+   * atributo/PROF envolvido (o motor já entende dado + tag de tipo sem eles).
+   */
+  protected rolarDano(linha: InfoExtra): void {
+    if (typeof linha.bruto !== 'string' || !linha.bruto) {
+      return;
+    }
+    const resultado = rolarFormula({
+      formula: linha.bruto,
+      atributos: this.atributosEfetivos(),
+      proficiencia: this.proficiencia(),
+      nivel: this.dados().nivel,
+    });
+    if (resultado) {
+      this.bandeja.mostrar({ rotulo: linha.rotulo, formula: linha.bruto, resultado });
+    }
+  }
+
   /** Penalidade de lesão por atributo (0 quando não lesionado) — badge "−N" na leitura. */
   protected readonly penalidadesLesao = computed<Record<ChaveAtributo, number>>(() => {
     const lesoes = this.estado().lesoes;
@@ -721,10 +755,22 @@ export class FichaVisualizacao {
     this.informacoesExtras().filter((info) => !this.CHAVES_REALOCADAS.has(info.chave)),
   );
 
-  /** Linha editável do Inventário máximo (exibida na aba Inventário junto do total atual de itens). */
-  protected readonly inventarioMaximoLinha = computed<InfoExtra>(
-    () => this.informacoesExtras().find((info) => info.chave === 'inventarioMaximo')!,
-  );
+  /** Derivados do card **Status** (redesenho de comparação visual, "por enquanto só essa" aba). */
+  private readonly CHAVES_STATUS_RAPIDO: readonly ChaveInfoExtra[] = [
+    'deslocamento',
+    'danoCorpoACorpo',
+    'danoFurtivo',
+    'percepcao',
+  ];
+
+  /**
+   * Glance de Deslocamento/Dano C. a C./Dano Furtivo/Percepção no novo card de Status — mesmas
+   * linhas editáveis de `Informações Extras` (m3-10), só reorganizadas; nenhum cálculo novo.
+   */
+  protected readonly statusRapido = computed<readonly InfoExtra[]>(() => {
+    const mapa = new Map(this.informacoesExtras().map((info) => [info.chave, info] as const));
+    return this.CHAVES_STATUS_RAPIDO.map((chave) => mapa.get(chave)!);
+  });
 
   /** Abre a digitação direta de um derivado (clique no valor). */
   protected editarDerivado(chave: ChaveInfoExtra): void {
@@ -757,6 +803,14 @@ export class FichaVisualizacao {
     if (aparado && aparado !== info.bruto) {
       this.ajusteDerivado.emit({ chave: info.chave, valor: aparado });
     }
+  }
+
+  /**
+   * Repassa o Inventário máximo editado na linha "Inventário" do `app-ficha-inventario` (edição no
+   * próprio lugar, dentro do componente) pro mesmo pipeline de persistência dos demais derivados.
+   */
+  protected ajustarInventarioMaximo(valor: number): void {
+    this.ajusteDerivado.emit({ chave: 'inventarioMaximo', valor });
   }
 
   /** Maestria persistida (leitura) — o atributo que a carrega, ou `null`. */

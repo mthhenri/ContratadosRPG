@@ -55,10 +55,16 @@
       width: 260px;
       flex: 0 0 auto;
     }
+
+    // Status (m3-27-visual, terceira coluna): ocupa o resto da largura da página — Identidade e
+    // Atributos são fixas, então é a única que aproveita o `max-width` maior do `.ficha-pagina`.
+    &--status {
+      flex: 1 1 auto;
+    }
   }
 
-  // Fileira das duas colunas do painel solo (redesenho de comparação visual) — `stretch` faz a
-  // coluna de Atributos esticar até o mesmo comprimento da Identidade (a mais alta das duas).
+  // Fileira das colunas do painel solo (redesenho de comparação visual) — `stretch` faz as colunas
+  // mais baixas esticarem até o comprimento da mais alta.
   &__linha-colunas {
     display: flex;
     align-items: stretch;
@@ -74,10 +80,59 @@
     }
   }
 
-  // Redesenho de comparação visual: só os dois cards (Identidade + Atributos) ficam na tela — sem
-  // grade de 3 colunas. Largura = as duas colunas fixas (420px + 260px) + o gap entre elas.
+  // Redesenho de comparação visual: Identidade + Atributos + Status ficam na tela — sem grade de
+  // abas. Largura livre (a coluna Status é flexível) até o `max-width` do `.ficha-pagina`.
   &__painel--solo {
-    max-width: calc(420px + var(--gap-grid) + 260px);
+    width: 100%;
+  }
+
+  // Estado vazio genérico (Origem indefinida, sem sequela/trauma/lesão, sem anotações).
+  &__vazio {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-style: italic;
+    color: var(--text-mute);
+    margin: 0;
+  }
+
+  // Peek read-only de Anotações — mesma classe usada na aba "Anotações" completa (m3-32) e aqui
+  // no card de Status. Rola por dentro (não estica a coluna) a partir de 195px, com fade nas
+  // bordas — mesmo padrão de `.sanidade__lista` (FichaSanidade).
+  &__anotacoes {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    white-space: pre-wrap;
+    margin: 0;
+    max-height: 195px;
+    overflow-y: auto;
+
+    --fade-topo: 0px;
+    --fade-base: 0px;
+    &.overflow-fade--topo,
+    &.overflow-fade--base {
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+    }
+    &.overflow-fade--topo {
+      --fade-topo: 20px;
+    }
+    &.overflow-fade--base {
+      --fade-base: 20px;
+    }
   }
 }
 
@@ -207,6 +262,123 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+}
+
+// Card de Status (terceira coluna, redesenho de comparação visual): a barra de abas substitui o
+// cabeçalho título+régua dos outros dois cards — a aba ativa já diz o que está sendo mostrado.
+.ficha-cartao--status {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+// === Status: barra de abas — mesmo padrão de `.ficha-abas` do estilo antigo (pílulas do tamanho
+// do conteúdo, não esticadas), só mais compacta pra não dominar o card. Só a 1ª tem conteúdo por
+// ora ("por enquanto só essa"); as outras duas são reservas visuais, mesmo visual de uma aba
+// inativa comum.
+.ficha-status {
+  &__abas {
+    display: flex;
+    gap: 5px;
+    padding: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+  }
+
+  &__aba {
+    flex: 0 0 auto;
+    min-width: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-dim);
+    background: transparent;
+    border: 0;
+    padding: 6px 10px;
+    border-radius: var(--radius-control);
+    cursor: default;
+    transition:
+      color 0.12s ease,
+      background 0.12s ease;
+
+    &--ativa {
+      font-weight: 700;
+      color: var(--bg);
+      background: var(--accent);
+    }
+  }
+
+  &__aba-icone {
+    font-size: 13px;
+  }
+
+  // Sem a caixa de fundo mais clara que envolvia tudo — só espaçamento estrutural entre as
+  // seções; a única seção com caixa própria agora é a de Anotações, abaixo.
+  &__conteudo {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1;
+  }
+
+  // Única seção com a caixa de fundo mais clara (era o "conteudo" inteiro antes) — Sequelas/
+  // Traumas/Lesões agora usam o próprio visual do `FichaSanidade` (editável). Altura mínima pra
+  // ocupar um espaço considerável mesmo com pouco (ou nenhum) texto — o espaço sobrou das tags
+  // redundantes removidas de Sequelas/Traumas/Lesões (Sequela/Trauma/"Lesão ·" repetiam o que o
+  // cabeçalho do grupo já diz), então cabe sem estourar a altura da coluna de Identidade.
+  &__anotacoes-caixa {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px;
+    min-height: 130px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+  }
+
+  &__anotacoes-cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  // `rows="10"` no HTML já fixa a altura em 10 linhas — `resize: none` trava esse tamanho (não dá
+  // pra arrastar/crescer o campo).
+  &__anotacoes-campo {
+    width: 100%;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 10px 12px;
+    resize: none;
+    outline: none;
+    transition: border-color 0.15s ease;
+
+    &:focus {
+      border-color: var(--accent-border);
+    }
+  }
+
+  &__rotulo-coluna {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-dim);
+  }
 }
 
 // Fórmula da DT abaixo do título (não cabe ao lado do título+régua) — linha própria, centralizada.
@@ -501,6 +673,7 @@
 
 // Mini stat box (Nível / Patente / Prestígio) no card de identidade.
 .ficha-mini {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -515,6 +688,37 @@
     grid-column: 1 / -1;
   }
 
+  // Dadinho de rolar (Dano C. a C./Furtivo no glance de Status) — mesmo padrão visual do dadinho
+  // de Atributos (`.ficha-atributo__rolar`), só que aqui é opcional (só nas duas caixas de dano).
+  &__rolar {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    font-size: 11px;
+    color: var(--text-mute);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition:
+      color 0.12s ease,
+      border-color 0.12s ease,
+      background 0.12s ease;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--accent-dim);
+    }
+  }
+
   // Densidade mais baixa que o box padrão — Nível/Prestígio/Dinheiro/Salário/Patente, que dividem
   // espaço com mais vizinhos que o box "solo" original (redesenho de comparação visual). Valor
   // nunca quebra linha; corta com "…" no caso extremo (nome de Patente maior que "Força Tarefa
@@ -523,11 +727,25 @@
     padding: 7px 8px;
     gap: 4px;
 
+    .ficha-mini__rotulo {
+      display: block;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     .ficha-mini__valor {
       font-size: 13px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    // O campo de digitação segue o mesmo tamanho de texto da leitura — sem isso, o input abria
+    // maior que o valor que substituía (o card inteiro "pulava" no clique).
+    .ficha-mini__entrada {
+      font-size: 13px;
     }
   }
 
@@ -619,8 +837,16 @@
     color: var(--text-dim);
   }
 
+  // Largura no tamanho do texto (não do box) — clicar pra editar não deve "pular" o valor pra um
+  // campo bem maior que o número que ele substitui. `field-sizing: content` (navegadores que
+  // suportam) acompanha o que foi digitado; `width` em `ch` é o piso pros demais. `--larga` é só
+  // pros poucos casos que precisam de mais (Dinheiro, e os dois derivados de texto — dano em
+  // notação de dados, ex. "2d6+3").
   &__entrada {
-    width: 100%;
+    width: 4ch;
+    min-width: 2.5ch;
+    max-width: 100%;
+    field-sizing: content;
     font-family: var(--font-mono);
     font-size: 17px;
     font-weight: 700;
@@ -643,6 +869,10 @@
       -webkit-appearance: none;
       margin: 0;
     }
+
+    &--larga {
+      width: 9ch;
+    }
   }
 }
 
@@ -655,8 +885,8 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 6px 10px;
-  margin-bottom: 12px;
+  padding: 5px 10px;
+  margin-bottom: 8px;
 
   .ficha-mini__valor {
     font-size: 14px;
@@ -1010,6 +1240,16 @@
   // rótulo mais longo agora corta com "…" (`.ficha-mini--fino .ficha-mini__rotulo` abaixo), mesmo
   // padrão já usado no valor da Patente.
   &--com-contra {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    @include bp.mobile {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  // Quatro colunas iguais (glance de Status: Deslocamento/Dano C. a C./Dano Furtivo/Percepção —
+  // nenhuma delas precisa de mais espaço que as outras, diferente do Contra-ataque acima).
+  &--quatro {
     grid-template-columns: repeat(4, minmax(0, 1fr));
 
     @include bp.mobile {
