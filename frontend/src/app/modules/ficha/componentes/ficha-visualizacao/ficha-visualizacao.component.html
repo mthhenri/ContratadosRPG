@@ -968,7 +968,7 @@
           (click)="selecionarAbaStatus('rolagens')"
         >
           <app-icone class="ficha-status__aba-icone" [nome]="'rolagens'" />
-          Rolagens
+          Rolagens & Combos
         </button>
         <button
           type="button"
@@ -1125,6 +1125,19 @@
             [atalhosDano]="atalhosDano()"
             [editavel]="ajustavel()"
             (rolagensMudou)="ajusteRolagens.emit($event)"
+            (energiaGasta)="aoUtilizarHabilidade($event)"
+          />
+
+          <span class="ficha-status__rotulo-coluna">Combos</span>
+          <app-ficha-combos
+            [combos]="combos()"
+            [rolagens]="dados().rolagens ?? []"
+            [atributos]="atributosEfetivos()"
+            [proficiencia]="proficiencia()"
+            [nivel]="dados().nivel"
+            [habilidadesDisponiveis]="dados().habilidades"
+            [editavel]="ajustavel()"
+            (combosMudou)="ajusteCombos.emit($event)"
             (energiaGasta)="aoUtilizarHabilidade($event)"
           />
         </div>

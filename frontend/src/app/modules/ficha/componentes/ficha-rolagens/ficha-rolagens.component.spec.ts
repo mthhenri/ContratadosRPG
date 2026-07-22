@@ -308,4 +308,72 @@ describe('FichaRolagens', () => {
     expect(vm.plano.energiaGasta).toBe(6);
     expect(vm.plano.habilidadesVinculadas).toEqual(['Força Bruta', 'Força Bruta']);
   });
+
+  it('duplica um preset com o nome sufixado " (cópia)", sem alterar o original', () => {
+    const alvo = montar([{ nome: 'Ataque', formula: '1d20 + LUT', descricao: 'nota' }]);
+    alvo.componentInstance['duplicar'](0);
+    expect(alvo.emitidos[0]).toEqual([
+      { nome: 'Ataque', formula: '1d20 + LUT', descricao: 'nota' },
+      { nome: 'Ataque (cópia)', formula: '1d20 + LUT', descricao: 'nota' },
+    ]);
+  });
+
+  it('duplicar evita colidir com um nome já existente, incrementando o sufixo', () => {
+    const alvo = montar([
+      { nome: 'Ataque', formula: '1d20' },
+      { nome: 'Ataque (cópia)', formula: '1d20' },
+    ]);
+    alvo.componentInstance['duplicar'](0);
+    expect(alvo.emitidos[0]?.[2]).toEqual({ nome: 'Ataque (cópia 2)', formula: '1d20' });
+  });
+
+  it('preset "só energia" (m3-38): sem fórmula, mas com habilidade, salva com formula vazia', () => {
+    const foco: FichaHabilidadeDto = {
+      nome: 'Foco',
+      categoria: HabilidadeCategoriaEnum.GERAL,
+      custoEnergia: 2,
+      descricao: '',
+    };
+    const alvo = montar([], { habilidades: [foco] });
+    alvo.componentInstance['abrirNovo']();
+    alvo.componentInstance['form'].patchValue({ nome: 'Passivas' });
+    expect(alvo.componentInstance['precisaFormulaOuHabilidade']()).toBe(true);
+    alvo.componentInstance['adicionarHabilidade'](alvo.componentInstance['form'].controls.habilidades, 'Foco');
+    expect(alvo.componentInstance['precisaFormulaOuHabilidade']()).toBe(false);
+    alvo.componentInstance['confirmar']();
+    expect(alvo.emitidos[0]).toEqual([{ nome: 'Passivas', formula: '', habilidades: ['Foco'] }]);
+  });
+
+  it('preset "só energia" não salva sem nenhuma habilidade vinculada (nada pra gastar)', () => {
+    const alvo = montar([]);
+    alvo.componentInstance['abrirNovo']();
+    alvo.componentInstance['form'].patchValue({ nome: 'Vazio' });
+    expect(alvo.componentInstance['precisaFormulaOuHabilidade']()).toBe(true);
+    alvo.componentInstance['confirmar']();
+    expect(alvo.emitidos).toEqual([]);
+  });
+
+  it('gastarEnergiaDoPasso debita a energia das habilidades sem rolar nem jogar na bandeja', () => {
+    const foco: FichaHabilidadeDto = {
+      nome: 'Foco',
+      categoria: HabilidadeCategoriaEnum.GERAL,
+      custoEnergia: 2,
+      descricao: '',
+    };
+    const alvo = montar([{ nome: 'Passivas', formula: '', habilidades: ['Foco', 'Foco'] }], {
+      habilidades: [foco],
+    });
+    const vm = alvo.componentInstance['presets']()[0];
+    expect(alvo.componentInstance['somenteEnergia'](vm.plano.passos[0])).toBe(true);
+    alvo.componentInstance['gastarEnergiaDoPasso'](vm, 0);
+    expect(alvo.energias).toEqual([4]);
+    expect(alvo.mostrar).not.toHaveBeenCalled();
+  });
+
+  it('gastarEnergiaDoPasso não faz nada sem habilidade vinculada', () => {
+    const alvo = montar([{ nome: 'Passivas', formula: '' }]);
+    const vm = alvo.componentInstance['presets']()[0];
+    alvo.componentInstance['gastarEnergiaDoPasso'](vm, 0);
+    expect(alvo.energias).toEqual([]);
+  });
 });

@@ -233,6 +233,13 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+
+    // Passo "só energia" (m3-38, sem fórmula): rótulo mudo em vez da fórmula truncada.
+    &--energia {
+      font-family: var(--font-sans);
+      font-style: italic;
+      color: var(--text-mute);
+    }
   }
 
   // === Resultado agora vive na bandeja de dados global (m3-22) — sem detalhamento no cartão. ===
@@ -270,6 +277,15 @@
       color: var(--bg);
       padding: 5px 12px;
       box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
+    }
+    // Passo "só energia" (m3-38, sem fórmula): gasta a Energia vinculada de uma vez, sem rolar —
+    // cor de Energia (`--energy`) em vez de accent, pra distinguir claramente de "Rolar".
+    &--gastar {
+      background: color-mix(in srgb, var(--energy) 16%, transparent);
+      border-color: color-mix(in srgb, var(--energy) 45%, transparent);
+      color: var(--energy);
+      padding: 5px 10px;
+      font-size: 11px;
     }
     // Botão de rolar só-ícone (m3-38): usado nos passos da grade de 2 colunas — sem o texto
     // "Rolar"/"Rolar crítico", que não cabia mais junto da fórmula truncada.

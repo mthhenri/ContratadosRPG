@@ -59,6 +59,7 @@ import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.dir
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { FichaCombos } from '../ficha-combos/ficha-combos.component';
 import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
 import { FichaInventario, type CustoEnergiaFragmento } from '../ficha-inventario/ficha-inventario.component';
 import { FichaRolagens } from '../ficha-rolagens/ficha-rolagens.component';
@@ -226,6 +227,7 @@ export interface AjusteClasse {
     FichaInventario,
     FichaHabilidades,
     FichaRolagens,
+    FichaCombos,
     BandejaDados,
     OverflowFade,
     Tooltip,

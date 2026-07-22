@@ -54,6 +54,9 @@
                   <button type="button" class="ficha-rol__mini-btn" [appTooltip]="'Cancelar'" aria-label="Cancelar remoção do preset" (click)="cancelarRemocao()">✕</button>
                 </span>
               } @else {
+                <button type="button" class="ficha-rol__mini-btn" [appTooltip]="'Duplicar'" aria-label="Duplicar preset" (click)="duplicar(preset.indice)">
+                  <app-icone [nome]="'copiar'" />
+                </button>
                 <button type="button" class="ficha-rol__mini-btn" [appTooltip]="'Editar'" aria-label="Editar preset" (click)="editar(preset.indice)">✎</button>
                 <button type="button" class="ficha-rol__mini-btn" [appTooltip]="'Remover'" aria-label="Remover preset" (click)="removerPedido(preset.indice)">✕</button>
               }
@@ -67,34 +70,52 @@
 
         <div class="ficha-rol__passos">
           @for (passo of preset.plano.passos; track $index; let indicePasso = $index) {
-            <div class="ficha-rol__passo" [class.ficha-rol__passo--invalido]="!passo.interpretacao.valida">
+            <div class="ficha-rol__passo" [class.ficha-rol__passo--invalido]="!passo.interpretacao.valida && !somenteEnergia(passo)">
               <div class="ficha-rol__passo-linha">
                 @if (preset.encadeado) {
                   <span class="ficha-rol__passo-nome">{{ passo.nome }}</span>
                 }
-                <span class="ficha-rol__passo-formula" [appTooltip]="passo.formula">{{ passo.formula }}</span>
-                @if (!passo.interpretacao.valida) {
-                  <span class="ficha-rol__aviso" [appTooltip]="'Fórmula não reconhecida — não é possível rolar'">!</span>
-                }
-                <button
-                  type="button"
-                  class="ficha-rol__btn ficha-rol__btn--rolar ficha-rol__btn--icone"
-                  [disabled]="!passo.interpretacao.valida"
-                  [appTooltip]="'Rolar'"
-                  (click)="rolarPassoDoPreset(preset, indicePasso)"
-                >
-                  <app-icone [nome]="'dado'" />
-                </button>
-                @if (passo.critico) {
+                @if (somenteEnergia(passo)) {
+                  <span
+                    class="ficha-rol__passo-formula ficha-rol__passo-formula--energia"
+                    [appTooltip]="'Sem fórmula — gasta a Energia das habilidades vinculadas de uma vez, sem rolar'"
+                  >
+                    só energia
+                  </span>
                   <button
                     type="button"
-                    class="ficha-rol__btn ficha-rol__btn--critico ficha-rol__btn--icone"
+                    class="ficha-rol__btn ficha-rol__btn--gastar"
+                    [disabled]="passo.habilidadesVinculadas.length === 0"
+                    [appTooltip]="'Gastar a energia das habilidades vinculadas'"
+                    (click)="gastarEnergiaDoPasso(preset, indicePasso)"
+                  >
+                    Gastar
+                  </button>
+                } @else {
+                  <span class="ficha-rol__passo-formula" [appTooltip]="passo.formula">{{ passo.formula }}</span>
+                  @if (!passo.interpretacao.valida) {
+                    <span class="ficha-rol__aviso" [appTooltip]="'Fórmula não reconhecida — não é possível rolar'">!</span>
+                  }
+                  <button
+                    type="button"
+                    class="ficha-rol__btn ficha-rol__btn--rolar ficha-rol__btn--icone"
                     [disabled]="!passo.interpretacao.valida"
-                    [appTooltip]="'Rolar crítico — dobra o dano'"
-                    (click)="rolarPassoDoPreset(preset, indicePasso, true)"
+                    [appTooltip]="'Rolar'"
+                    (click)="rolarPassoDoPreset(preset, indicePasso)"
                   >
                     <app-icone [nome]="'dado'" />
                   </button>
+                  @if (passo.critico) {
+                    <button
+                      type="button"
+                      class="ficha-rol__btn ficha-rol__btn--critico ficha-rol__btn--icone"
+                      [disabled]="!passo.interpretacao.valida"
+                      [appTooltip]="'Rolar crítico — dobra o dano'"
+                      (click)="rolarPassoDoPreset(preset, indicePasso, true)"
+                    >
+                      <app-icone [nome]="'dado'" />
+                    </button>
+                  }
                 }
               </div>
 
@@ -178,6 +199,8 @@
       />
       @if (formulaAtualValida() === false) {
         <span class="ficha-rol__dica ficha-rol__dica--erro">Fórmula não reconhecida. Veja o guia (?) ao lado.</span>
+      } @else if (precisaFormulaOuHabilidade()) {
+        <span class="ficha-rol__dica">Deixe em branco pra um preset só de habilidades — o botão só gasta a Energia, sem rolar.</span>
       }
     </div>
 
@@ -218,7 +241,7 @@
     </div>
 
     <div class="ficha-rol__form-acoes">
-      <button type="submit" class="ficha-rol__btn ficha-rol__btn--principal" [disabled]="form.invalid">Salvar</button>
+      <button type="submit" class="ficha-rol__btn ficha-rol__btn--principal" [disabled]="form.invalid || precisaFormulaOuHabilidade()">Salvar</button>
       <button type="button" class="ficha-rol__btn ficha-rol__btn--secundario" (click)="cancelarEdicao()">Cancelar</button>
     </div>
   </form>

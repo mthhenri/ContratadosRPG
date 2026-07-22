@@ -60,6 +60,18 @@ já estabelecida em m3-10/m3-12/m3-13/m3-14.
    lugar) com barra de preenchimento (mesmo padrão visual de Vida/Energia). Excesso de peso vira
    um ícone de alerta com dica "Sobrecarregado!" ao lado do valor (era um texto fixo abaixo).
    Caixas de referência "Modificações"/"Dinheiro restante" removidas do resumo compacto.
+10. **Mini-aba "Rolagens" renomeada "Rolagens & Combos"** e passa a hospedar `<app-ficha-combos>`
+    (m3-37) logo abaixo de `<app-ficha-rolagens>` — o componente já existia (editor CRUD + runner
+    "Executar combo") mas nunca tinha sido reencaixado no layout de 3 colunas; a página já escutava
+    `(ajusteCombos)`, só faltava o `<app-ficha-combos>` no template.
+11. **Preset "só energia"** (`FichaRolagens`): a fórmula de um passo (primário ou seguinte) agora é
+    opcional — com ao menos uma habilidade vinculada e nenhuma fórmula, o passo vira um botão
+    "Gastar" que debita de uma vez a Energia de todas as habilidades vinculadas, sem rolar nada
+    (útil pra "gastar tudo" de um pacote de habilidades passivas sem clicar uma a uma na aba
+    Habilidades). Um preset não pode ficar sem fórmula **e** sem habilidade ao mesmo tempo.
+12. **"Duplicar preset"** (`FichaRolagens`): novo botão na lista de presets que copia o preset
+    inteiro (fórmula, passos seguintes, habilidades) com o nome sufixado `" (cópia)"`
+    (`" (cópia 2)"`, … se já existir), como ponto de partida pra uma variante.
 
 ## Critérios de Aceite
 
@@ -79,9 +91,8 @@ já estabelecida em m3-10/m3-12/m3-13/m3-14.
 
 - Refino mobile dedicado deste layout de 3 colunas (fica pra uma rodada própria, mesmo padrão
   responsivo por tokens de m1-15/m3-26 — hoje o foco é desktop).
-- `expandirAtalhosDano` (`shared/regras/rolagem`, atalhos `corpo`/`furtivo` numa fórmula
-  digitada) — motor pronto e testado, ainda **sem consumidor** (nenhuma tela chama); entra
-  quando a tela que o usa (rolagens/combos com fórmula livre) for definida.
+- Restilizar `FichaCombos` no padrão compacto (dialog + grade) da rodada de `FichaRolagens` —
+  entrou só reencaixado no layout (item 10); segue com o visual mais antigo (form inline).
 - Histórico de rolagem (`m3-27`, backlog separado).
 
 ## Dependências

@@ -16,6 +16,7 @@ import {
   resolverPreset,
   rolarFormula,
   validarFormula,
+  type PassoInterpretadoDto,
   type PlanoPresetDto,
 } from '@contratados-rpg/shared/regras/rolagem';
 
@@ -62,6 +63,11 @@ interface RolagemVM {
  * O formulário de novo/editar preset abre num `p-dialog` (não mais inline na lista) — o cartão da
  * coluna de Status é estreito demais pro formulário completo (nome, fórmula, habilidades por passo);
  * a lista de presets em si é uma grade de 2 colunas, cada item resumido ao essencial pra rolar.
+ * "Duplicar" copia um preset inteiro (nome + " (cópia)", evitando colidir com um nome existente).
+ * Um passo pode ficar **sem fórmula** desde que tenha ao menos uma habilidade vinculada — vira um
+ * passo "só energia": em vez de rolar, o botão apenas debita a Energia das habilidades de uma vez
+ * (ex.: gastar um pacote inteiro de habilidades passivas sem precisar clicar uma por uma na aba
+ * Habilidades).
  *
  * **Nenhuma regra de dados vive aqui** (proibição #26): interpretar/validar/rolar e resolver o preset
  * (energia por passo) é o motor puro `shared/regras/rolagem` (`resolverPreset`/`rolarPasso`,
@@ -112,7 +118,11 @@ export class FichaRolagens {
 
   protected readonly form = new FormGroup({
     nome: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    formula: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    /**
+     * Sem `Validators.required`: um preset pode ficar **sem fórmula** desde que tenha ao menos uma
+     * habilidade vinculada (`precisaFormulaOuHabilidade`, abaixo) — vira um passo "só energia".
+     */
+    formula: new FormControl('', { nonNullable: true }),
     descricao: new FormControl('', { nonNullable: true }),
     /** Habilidades do **passo primário**. */
     habilidades: new FormControl<readonly string[]>([], { nonNullable: true }),
@@ -132,6 +142,18 @@ export class FichaRolagens {
     const texto = this.formulaTexto().trim();
     return texto === '' ? null : validarFormula(texto);
   });
+
+  /** Habilidades do passo primário (live) — junto com `formulaTexto`, decide se falta preencher algo. */
+  private readonly habilidadesPrimariaTexto = toSignal(this.form.controls.habilidades.valueChanges, {
+    initialValue: [] as readonly string[],
+  });
+  /**
+   * `true` enquanto o passo primário não tem **nem** fórmula **nem** habilidade vinculada — um preset
+   * "só energia" (sem fórmula) precisa de ao menos uma habilidade pra ter o que gastar.
+   */
+  protected readonly precisaFormulaOuHabilidade = computed(
+    () => !this.formulaTexto().trim() && this.habilidadesPrimariaTexto().length === 0,
+  );
 
   /** Campo de **rolagem avulsa** (m3-31): digita uma fórmula e rola na hora, **sem salvar** um preset. */
   protected readonly rapida = new FormControl('', { nonNullable: true });
@@ -199,7 +221,9 @@ export class FichaRolagens {
   private novoPassoForm(passo?: FichaRolagemPassoDto): PassoForm {
     return new FormGroup({
       nome: new FormControl(passo?.nome ?? '', { nonNullable: true, validators: [Validators.required] }),
-      formula: new FormControl(passo?.formula ?? '', { nonNullable: true, validators: [Validators.required] }),
+      // Sem `Validators.required`: idem ao passo primário, um passo seguinte também pode ficar
+      // "só energia" (sem fórmula) desde que tenha habilidade vinculada — filtrado em `confirmar()`.
+      formula: new FormControl(passo?.formula ?? '', { nonNullable: true }),
       descricao: new FormControl(passo?.descricao ?? '', { nonNullable: true }),
       habilidades: new FormControl<readonly string[]>(passo?.habilidades ?? [], { nonNullable: true }),
       critico: new FormControl(passo?.critico ?? false, { nonNullable: true }),
@@ -257,20 +281,21 @@ export class FichaRolagens {
   /**
    * Confirma o preset: monta o `FichaRolagemDto` **enxuto** (omite `tipo`/`seguintes` vazios e
    * `habilidades` vazias por passo → preset simples inalterado), insere (novo) ou substitui (edição) e
-   * emite. Guarda contra passos meio-preenchidos: só entram os que têm nome **e** fórmula.
+   * emite. Guarda contra passos meio-preenchidos: só entram os que têm nome **e** (fórmula **ou**
+   * habilidade) — um passo "só energia" (m3-38, sem fórmula) precisa de ao menos uma habilidade.
    */
   protected confirmar(): void {
-    if (this.form.invalid) {
+    if (this.form.invalid || this.precisaFormulaOuHabilidade()) {
       return;
     }
     const bruto = this.form.getRawValue();
     const nome = bruto.nome.trim();
     const formula = bruto.formula.trim();
-    if (!nome || !formula) {
+    const habilidadesPrimaria = this.filtrarHabilidades(bruto.habilidades);
+    if (!nome || (!formula && habilidadesPrimaria.length === 0)) {
       return;
     }
     const descricao = bruto.descricao.trim();
-    const habilidadesPrimaria = this.filtrarHabilidades(bruto.habilidades);
 
     const seguintes: FichaRolagemPassoDto[] = bruto.seguintes
       .map((passo) => {
@@ -283,7 +308,7 @@ export class FichaRolagens {
           ...(passo.critico ? { critico: true } : {}),
         };
       })
-      .filter((passo) => passo.nome && passo.formula);
+      .filter((passo) => passo.nome && (passo.formula || (passo.habilidades?.length ?? 0) > 0));
 
     const preset: FichaRolagemDto = {
       nome,
@@ -321,6 +346,32 @@ export class FichaRolagens {
   protected confirmarRemocao(indice: number): void {
     this.emitir(this.rolagens().filter((_, i) => i !== indice));
     this.indiceRemovendo.set(null);
+  }
+
+  /**
+   * Duplica um preset inteiro (nome, fórmula, passos seguintes e habilidades) como ponto de partida
+   * pra uma variante — ex.: "Ataque (Luta)" → "Ataque (Luta) (cópia)" pra depois trocar só a fórmula.
+   * O nome ganha o sufixo " (cópia)"/" (cópia N)" até achar um que ainda não existe na ficha.
+   */
+  protected duplicar(indice: number): void {
+    const original = this.rolagens()[indice];
+    if (!original) {
+      return;
+    }
+    this.indiceEmEdicao.set(null);
+    this.indiceRemovendo.set(null);
+    const copia: FichaRolagemDto = { ...original, nome: this.nomeCopiaDisponivel(original.nome) };
+    this.emitir([...this.rolagens(), copia]);
+  }
+
+  /** Primeiro nome livre entre `"${base} (cópia)"`, `"${base} (cópia 2)"`, … — nunca colide. */
+  private nomeCopiaDisponivel(base: string): string {
+    const existentes = new Set(this.rolagens().map((preset) => preset.nome));
+    let candidato = `${base} (cópia)`;
+    for (let contador = 2; existentes.has(candidato); contador += 1) {
+      candidato = `${base} (cópia ${contador})`;
+    }
+    return candidato;
   }
 
   // === Rolar ===
@@ -375,6 +426,32 @@ export class FichaRolagens {
     this.bandeja.mostrar({ rotulo: executado.rotulo, formula: executado.formula, resultado: executado.resultado });
     if (executado.energiaGasta > 0) {
       this.energiaGasta.emit(executado.energiaGasta);
+    }
+  }
+
+  /**
+   * `true` quando o passo não tem fórmula — um passo "só energia" (m3-38): não há o que rolar, só
+   * debitar de uma vez a Energia de todas as habilidades vinculadas (ex.: um pacote de passivas).
+   */
+  protected somenteEnergia(passo: PassoInterpretadoDto): boolean {
+    return !passo.formula.trim();
+  }
+
+  /**
+   * Gasta a Energia de um passo "só energia" **sem rolar** (nenhuma fórmula pra jogar na bandeja) —
+   * soma o custo fixo das habilidades vinculadas ao passo + o variável informado, e debita direto
+   * pelo mesmo canal `energiaGasta` que `rolarPassoDoPreset` usa. Sem habilidade vinculada, não há
+   * nada a gastar (o botão fica desabilitado).
+   */
+  protected gastarEnergiaDoPasso(preset: RolagemVM, indicePasso: number): void {
+    const passo = preset.plano.passos[indicePasso];
+    if (!passo || passo.habilidadesVinculadas.length === 0) {
+      return;
+    }
+    const variavel = passo.energiaVariavel ? this.energiaVariavelDe(preset.indice, indicePasso) : 0;
+    const total = passo.energiaGasta + variavel;
+    if (total > 0) {
+      this.energiaGasta.emit(total);
     }
   }
 
