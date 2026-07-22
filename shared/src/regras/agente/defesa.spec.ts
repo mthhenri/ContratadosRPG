@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { ClasseEnum } from '../../enums';
-import { calcularDefesa, calcularProficiencia } from './defesa';
+import type { FichaHabilidadeDto } from '../../dtos/ficha';
+import { ArquetipoEnum, ClasseEnum, HabilidadeCategoriaEnum } from '../../enums';
+import { calcularContraAtaque, calcularDefesa, calcularProficiencia } from './defesa';
 
 /**
  * Defesa e Proficiência conferidas contra docs/core/sistema-v4.1.0.md — "Defesa"
@@ -35,5 +36,45 @@ describe('calcularProficiencia', () => {
 
   it('civil não possui proficiência (retorna null)', () => {
     expect(calcularProficiencia({ classe: ClasseEnum.CIVIL, nivel: 5 })).toBeNull();
+  });
+});
+
+function habilidadeContraAtaque(
+  categoria: HabilidadeCategoriaEnum,
+  origem?: ArquetipoEnum,
+): FichaHabilidadeDto {
+  return {
+    nome: 'Contra-Ataque',
+    categoria,
+    custoEnergia: 2,
+    descricao: '(Reação)…',
+    ...(origem === undefined ? {} : { origem }),
+  };
+}
+
+describe('calcularContraAtaque', () => {
+  it('sem a habilidade "Contra-Ataque" na ficha → null', () => {
+    expect(calcularContraAtaque({ luta: 4, vigor: 4, habilidades: [] })).toBeNull();
+  });
+
+  it('Geral: Luta ÷ 2, arredondado para baixo', () => {
+    const habilidades = [habilidadeContraAtaque(HabilidadeCategoriaEnum.GERAL)];
+    expect(calcularContraAtaque({ luta: 4, vigor: 1, habilidades })).toBe(2);
+    expect(calcularContraAtaque({ luta: 5, vigor: 1, habilidades })).toBe(2);
+  });
+
+  it('Lutador (Melhorada): Luta inteira', () => {
+    const habilidades = [
+      habilidadeContraAtaque(HabilidadeCategoriaEnum.GERAL_MELHORADA, ArquetipoEnum.LUTADOR),
+    ];
+    expect(calcularContraAtaque({ luta: 4, vigor: 1, habilidades })).toBe(4);
+  });
+
+  it('Vanguarda (Melhorada): usa o maior entre Luta ÷ 2 e Vigor ÷ 2', () => {
+    const habilidades = [
+      habilidadeContraAtaque(HabilidadeCategoriaEnum.GERAL_MELHORADA, ArquetipoEnum.VANGUARDA),
+    ];
+    expect(calcularContraAtaque({ luta: 2, vigor: 5, habilidades })).toBe(2); // floor(5/2)=2 > floor(2/2)=1
+    expect(calcularContraAtaque({ luta: 6, vigor: 1, habilidades })).toBe(3); // floor(6/2)=3 > floor(1/2)=0
   });
 });

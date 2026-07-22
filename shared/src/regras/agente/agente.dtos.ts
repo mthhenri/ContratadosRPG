@@ -1,4 +1,5 @@
 import { ClasseEnum } from '../../enums';
+import type { FichaHabilidadeDto } from '../../dtos/ficha';
 
 /**
  * DTOs de entrada e value-objects de saída das fórmulas do agente
@@ -39,6 +40,18 @@ export interface DefesaCalcularDto {
   readonly nivel: number;
   readonly destreza: number;
   readonly vigor: number;
+}
+
+/**
+ * Entrada de `calcularContraAtaque`: Luta e Vigor (o chamador aplica os bounds da classe antes de
+ * passar — ver `obterLimitesClasse`) + as habilidades da ficha, usadas só para achar a habilidade
+ * "Contra-Ataque" e resolver qual variante de fórmula se aplica (doc — "Habilidades Gerais
+ * [Melhoradas]": Geral, Lutador Melhorada, Vanguarda Melhorada têm fórmulas diferentes).
+ */
+export interface ContraAtaqueCalcularDto {
+  readonly luta: number;
+  readonly vigor: number;
+  readonly habilidades: readonly FichaHabilidadeDto[];
 }
 
 /** Entrada de `calcularProficiencia`: +Nível (agente); civil não possui. */

@@ -217,9 +217,10 @@ export interface FichaDerivadosDto {
   readonly esquiva?: number;
   readonly bloqueio?: number;
   /**
-   * Contra-Ataque — override **manual**, sem fórmula em `shared/regras` (a habilidade só existe
-   * hoje como texto narrativo do catálogo; o motor não calcula essa stat). Só editável na ficha
-   * quando o jogador tem a habilidade "Contra-Ataque" (`dados.habilidades`).
+   * Contra-Ataque — calculado por `calcularContraAtaque` (`shared/regras/agente/defesa`) a
+   * partir da variante da habilidade "Contra-Ataque" em `dados.habilidades`; ausente quando a
+   * ficha não tem a habilidade. Editável no próprio lugar como override manual (m3-10, mesmo
+   * mecanismo de Defesa/Esquiva/Bloqueio) — o valor digitado vence o calculado.
    */
   readonly contraAtaque?: number;
   readonly deslocamento?: number;
