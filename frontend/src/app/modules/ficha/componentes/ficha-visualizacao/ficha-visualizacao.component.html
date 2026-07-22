@@ -651,9 +651,9 @@
               }
             </div>
           }
-          <!-- Contra-ataque: só existe hoje como habilidade narrativa (Lutador/Vanguarda) — o motor
-               não tem um stat mecânico calculado pra ele ainda. Editável (override manual) só quando
-               o jogador tem a habilidade; sem ela, segue o placeholder tracejado. -->
+          <!-- Contra-ataque: calculado por variante da habilidade (Geral/Lutador/Vanguarda —
+               shared/regras/agente/defesa). Editável (override manual, m3-10) só quando o jogador
+               tem a habilidade; sem ela, segue o placeholder tracejado. -->
           <div
             class="ficha-mini ficha-mini--fino ficha-mini--centralizado"
             [class.ficha-mini--somente-leitura]="!ajustavel() || !temHabilidadeContraAtaque()"

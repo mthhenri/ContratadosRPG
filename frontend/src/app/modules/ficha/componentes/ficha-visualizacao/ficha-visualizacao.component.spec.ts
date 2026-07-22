@@ -252,6 +252,28 @@ describe('FichaVisualizacao', () => {
       expect(ajustes).toEqual([{ chave: 'contraAtaque', valor: 4 }]);
     });
 
+    it('Contra-ataque mostra o valor calculado (Luta ÷ 2) sem precisar de edição manual', () => {
+      const documento: FichaJogadorDadosDto = {
+        ...dados,
+        habilidades: [
+          {
+            nome: 'Contra-Ataque',
+            categoria: HabilidadeCategoriaEnum.GERAL,
+            custoEnergia: 2,
+            descricao: '(Reação)…',
+          },
+        ],
+      };
+      const { raiz } = montar(documento, 'Corvo', 42, true);
+      const linhaDefesa = raiz.querySelector('.ficha-visao__coluna--identidade .ficha-combate-rapido')!;
+      const contraAtaque = Array.from(linhaDefesa.querySelectorAll('.ficha-mini')).find(
+        (box) => box.querySelector('.ficha-mini__rotulo')?.textContent?.trim() === 'Contra-ataque',
+      )!;
+      const botao = contraAtaque.querySelector<HTMLButtonElement>('.ficha-mini__valor--editavel')!;
+      // dados.atributos.luta = 2 (ver fixture no topo do arquivo) → floor(2 / 2) = 1.
+      expect(botao.textContent?.trim()).toBe('1');
+    });
+
     it('mostra sempre as cinco linhas de Resistência, mesmo sem nenhum equipamento (tudo em 0)', () => {
       const { raiz } = montar(dados);
       const abrevs = Array.from(raiz.querySelectorAll('.ficha-resistencia__abrev')).map((a) =>

@@ -774,7 +774,12 @@ export class FichaVisualizacao {
   /** Status derivado (mesma seleção da edição — `status-derivado`); stored vence o calculado. */
   // Fonte única das linhas editáveis; as abas Visão Geral/Combate/Inventário consomem recortes daqui.
   protected readonly informacoesExtras = computed(() =>
-    montarInformacoesExtras(this.entrada(), this.dados().derivados, this.dados().inventario.amplificadores),
+    montarInformacoesExtras(
+      this.entrada(),
+      this.dados().habilidades,
+      this.dados().derivados,
+      this.dados().inventario.amplificadores,
+    ),
   );
 
   /**
@@ -1294,7 +1299,11 @@ export class FichaVisualizacao {
     this.dados().habilidades.some((habilidade) => habilidade.nome === 'Contra-Ataque'),
   );
 
-  /** Linha de Contra-ataque — puro override manual (`derivados.contraAtaque`); sem cálculo. */
+  /**
+   * Linha de Contra-ataque — calculada por `calcularContraAtaque` (Luta/Vigor conforme a
+   * variante da habilidade); editável no próprio lugar como override manual (m3-10), igual
+   * Defesa/Esquiva/Bloqueio.
+   */
   protected readonly contraAtaqueLinha = computed<InfoExtra>(
     () => this.informacoesExtras().find((info) => info.chave === 'contraAtaque')!,
   );
