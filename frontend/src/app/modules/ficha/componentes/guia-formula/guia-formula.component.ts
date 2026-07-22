@@ -15,6 +15,9 @@ interface SecaoGuia {
 /** Abreviações de atributo aceitas nas fórmulas (para a nota final). */
 const ATRIBUTOS = 'DES FOR LUT PON VIG · INT MED SEN SOC VON';
 
+/** Fontes escalares extras aceitas nas fórmulas — segunda linha da nota final. */
+const NOTA_EXTRA = 'Também PROF (proficiência), NIV (nível), CORPO (dano corpo a corpo) e FURTIVO (dano furtivo).';
+
 /**
  * Guia da gramática de fórmula, redigido a partir do motor `shared/regras/rolagem` (m3-16/18/27) e
  * conferido contra `docs/core/sistema-v4.1.0.md` — "Atributos"/"Testes"/"Tipos de Dano". Não há "modo":
@@ -80,8 +83,8 @@ const SECOES: readonly SecaoGuia[] = [
   {
     titulo: 'Dano do agente',
     linhas: [
-      { codigo: 'corpo', texto: 'Vira o Dano C. a C. atual (ex.: 2D6 + FOR [Físico]) — acompanha o agente.' },
-      { codigo: 'furtivo', texto: 'Vira o Dano Furtivo atual. Civil não tem — a palavra fica sem efeito.' },
+      { codigo: 'CORPO', texto: 'Vira o Dano C. a C. atual (ex.: 2D6 + FOR [Físico]) — acompanha o agente.' },
+      { codigo: 'FURTIVO', texto: 'Vira o Dano Furtivo atual. Civil não tem — a palavra fica sem efeito.' },
     ],
   },
   {
@@ -124,6 +127,9 @@ export class GuiaFormula {
 
   /** Nota final com os atributos aceitos. */
   protected readonly atributos = ATRIBUTOS;
+
+  /** Segunda linha da nota final — fontes escalares extras (PROF/NIV/CORPO/FURTIVO). */
+  protected readonly notaExtra = NOTA_EXTRA;
 
   protected abrir(): void {
     this.aberto.set(true);
