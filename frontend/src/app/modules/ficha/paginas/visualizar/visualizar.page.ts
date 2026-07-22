@@ -456,7 +456,7 @@ export class FichaVisualizar {
         vidaAtual: Math.min(dados.estado.vidaAtual, vidaMaxima),
         energiaAtual: Math.min(dados.estado.energiaAtual, energiaMaxima),
       },
-      derivados: calcularDerivados(dados.classe, dados.nivel, dados.atributos),
+      derivados: calcularDerivados(dados.classe, dados.nivel, dados.atributos, dados.habilidades),
     };
   }
 
