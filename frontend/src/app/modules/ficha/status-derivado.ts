@@ -1,5 +1,9 @@
 import { ClasseEnum } from '@contratados-rpg/shared/enums';
-import type { FichaAtributosDto, FichaDerivadosDto } from '@contratados-rpg/shared/dtos/ficha';
+import type {
+  FichaAtributosDto,
+  FichaDerivadosDto,
+  FichaHabilidadeDto,
+} from '@contratados-rpg/shared/dtos/ficha';
 import {
   ajusteBloqueioAmplificadores,
   ajusteDanoFurtivoAmplificadores,
@@ -9,6 +13,7 @@ import {
   ajusteInventarioAmplificadores,
   aplicarLimitesPorClasse,
   calcularAreaPercepcao,
+  calcularContraAtaque,
   calcularDanoCorpo,
   calcularDanoFurtivo,
   calcularDefesa,
@@ -17,6 +22,7 @@ import {
   calcularLimiteHabilidadesPorTurno,
   calcularProficiencia,
   incrementarDanoFurtivo,
+  obterLimitesClasse,
 } from '@contratados-rpg/shared/regras/agente';
 import type { AmplificadorAplicadoDto } from '@contratados-rpg/shared/regras/compras';
 import { obterPatente } from '@contratados-rpg/shared/regras/patente';
@@ -67,8 +73,15 @@ export interface InfoExtra {
   readonly tipo: 'numero' | 'texto';
 }
 
-/** Entrada já normalizada aos limites da classe (os cinco atributos que as fórmulas consomem). */
-export type EntradaAgente = { readonly classe: ClasseEnum } & ReturnType<typeof aplicarLimitesPorClasse>;
+/**
+ * Entrada já normalizada aos limites da classe (os cinco atributos que a maioria das fórmulas
+ * consome, `+ luta` — usado só por `calcularContraAtaque`; clampado aqui do mesmo jeito, mas fora
+ * de `aplicarLimitesPorClasse` porque essa função também serve a Calculadora pública, que não tem
+ * campo de Luta no formulário).
+ */
+export type EntradaAgente = { readonly classe: ClasseEnum; readonly luta: number } & ReturnType<
+  typeof aplicarLimitesPorClasse
+>;
 
 /**
  * Normaliza classe/nível/atributos aos limites da classe, devolvendo só o recorte que
@@ -88,7 +101,12 @@ export function normalizarEntrada(
     vontade: atributos.vontade,
     sentidos: atributos.sentidos,
   });
-  return { classe, ...normalizado };
+  const limitesAtributo = obterLimitesClasse({ classe });
+  const luta = Math.min(
+    limitesAtributo.atributoMaximo,
+    Math.max(limitesAtributo.atributoMinimo, atributos.luta),
+  );
+  return { classe, luta, ...normalizado };
 }
 
 /**
@@ -99,6 +117,7 @@ export function normalizarEntrada(
  */
 export function montarInformacoesExtras(
   entrada: EntradaAgente,
+  habilidades: readonly FichaHabilidadeDto[],
   derivados?: FichaDerivadosDto,
   amplificadores: readonly AmplificadorAplicadoDto[] = [],
 ): InfoExtra[] {
@@ -161,8 +180,12 @@ export function montarInformacoesExtras(
       (valor) => String(valor),
       ajusteBloqueioAmplificadores(amplificadores),
     ),
-    // Sem fórmula em `shared/regras` — puro override manual (ver `FichaDerivadosDto.contraAtaque`).
-    linhaNumero('contraAtaque', 'Contra-ataque', null, (valor) => String(valor)),
+    linhaNumero(
+      'contraAtaque',
+      'Contra-ataque',
+      calcularContraAtaque({ luta: entrada.luta, vigor: entrada.vigor, habilidades }),
+      (valor) => String(valor),
+    ),
     linhaNumero(
       'deslocamento',
       'Deslocamento',
