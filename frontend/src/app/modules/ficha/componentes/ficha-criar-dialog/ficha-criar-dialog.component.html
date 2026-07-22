@@ -174,7 +174,7 @@
                   [class.ficha-atributo__maestria--ativa]="maestria() === campo.chave"
                   [disabled]="!maestriaHabilitada(campo.chave)"
                   [attr.aria-label]="'Maestria em ' + campo.nome"
-                  [attr.title]="'Maestria em ' + campo.nome + ' — requer total ' + limiteMaestria + '+'"
+                  [appTooltip]="'Maestria em ' + campo.nome + ' — requer total ' + limiteMaestria + '+'"
                   (click)="alternarMaestria(campo.chave)"
                 >
                   ★

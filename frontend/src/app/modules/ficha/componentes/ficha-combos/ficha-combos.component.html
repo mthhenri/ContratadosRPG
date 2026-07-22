@@ -5,14 +5,14 @@
         <span class="ficha-combos__runner-titulo">
           Executando "{{ combos()[executandoIndice()!]?.nome }}" — passo {{ passoAtualIndice() + 1 }}/{{ passosExecucao().length }}
         </span>
-        <button type="button" class="ficha-combos__mini-btn" title="Parar" aria-label="Parar execução" (click)="pararExecucao()">✕</button>
+        <button type="button" class="ficha-combos__mini-btn" [appTooltip]="'Parar'" aria-label="Parar execução" (click)="pararExecucao()">✕</button>
       </div>
 
       @if (passosExecucao()[passoAtualIndice()]; as passoAtual) {
         <div class="ficha-combos__runner-passo">
           <span class="ficha-combos__runner-passo-nome">{{ passoAtual.nome }}</span>
           @if (passoAtualNaoEncontrado()) {
-            <span class="ficha-combos__aviso" title="O preset de rolagem referenciado não existe mais">
+            <span class="ficha-combos__aviso" [appTooltip]="'O preset de rolagem referenciado não existe mais'">
               preset não encontrado
             </span>
           } @else {
@@ -63,12 +63,12 @@
                 @if (indiceRemovendo() === combo.indice) {
                   <span class="ficha-combos__remover">
                     <span class="ficha-combos__remover-texto">Remover?</span>
-                    <button type="button" class="ficha-combos__mini-btn ficha-combos__mini-btn--perigo" title="Confirmar" (click)="confirmarRemocao(combo.indice)">✓</button>
-                    <button type="button" class="ficha-combos__mini-btn" title="Cancelar" (click)="cancelarRemocao()">✕</button>
+                    <button type="button" class="ficha-combos__mini-btn ficha-combos__mini-btn--perigo" [appTooltip]="'Confirmar'" aria-label="Confirmar remoção do combo" (click)="confirmarRemocao(combo.indice)">✓</button>
+                    <button type="button" class="ficha-combos__mini-btn" [appTooltip]="'Cancelar'" aria-label="Cancelar remoção do combo" (click)="cancelarRemocao()">✕</button>
                   </span>
                 } @else {
-                  <button type="button" class="ficha-combos__mini-btn" title="Editar" aria-label="Editar combo" (click)="editar(combo.indice)">✎</button>
-                  <button type="button" class="ficha-combos__mini-btn" title="Remover" aria-label="Remover combo" (click)="removerPedido(combo.indice)">✕</button>
+                  <button type="button" class="ficha-combos__mini-btn" [appTooltip]="'Editar'" aria-label="Editar combo" (click)="editar(combo.indice)">✎</button>
+                  <button type="button" class="ficha-combos__mini-btn" [appTooltip]="'Remover'" aria-label="Remover combo" (click)="removerPedido(combo.indice)">✕</button>
                 }
               }
             </div>
@@ -113,9 +113,9 @@
             }
           </select>
           <div class="ficha-combos__passo-edit-acoes">
-            <button type="button" class="ficha-combos__mini-btn" title="Mover pra cima" aria-label="Mover passo pra cima" [disabled]="$index === 0" (click)="moverPasso($index, -1)">↑</button>
-            <button type="button" class="ficha-combos__mini-btn" title="Mover pra baixo" aria-label="Mover passo pra baixo" [disabled]="$index === passos.length - 1" (click)="moverPasso($index, 1)">↓</button>
-            <button type="button" class="ficha-combos__mini-btn" title="Remover passo" aria-label="Remover passo" (click)="removerPasso($index)">✕</button>
+            <button type="button" class="ficha-combos__mini-btn" [appTooltip]="'Mover pra cima'" aria-label="Mover passo pra cima" [disabled]="$index === 0" (click)="moverPasso($index, -1)">↑</button>
+            <button type="button" class="ficha-combos__mini-btn" [appTooltip]="'Mover pra baixo'" aria-label="Mover passo pra baixo" [disabled]="$index === passos.length - 1" (click)="moverPasso($index, 1)">↓</button>
+            <button type="button" class="ficha-combos__mini-btn" [appTooltip]="'Remover passo'" aria-label="Remover passo" (click)="removerPasso($index)">✕</button>
           </div>
         </div>
       }

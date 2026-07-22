@@ -58,12 +58,12 @@
                 @if (indiceRemovendo() === preset.indice) {
                   <span class="ficha-rol__remover">
                     <span class="ficha-rol__remover-texto">Remover?</span>
-                    <button type="button" class="ficha-rol__mini-btn ficha-rol__mini-btn--perigo" title="Confirmar" (click)="confirmarRemocao(preset.indice)">✓</button>
-                    <button type="button" class="ficha-rol__mini-btn" title="Cancelar" (click)="cancelarRemocao()">✕</button>
+                    <button type="button" class="ficha-rol__mini-btn ficha-rol__mini-btn--perigo" [appTooltip]="'Confirmar'" aria-label="Confirmar remoção do preset" (click)="confirmarRemocao(preset.indice)">✓</button>
+                    <button type="button" class="ficha-rol__mini-btn" [appTooltip]="'Cancelar'" aria-label="Cancelar remoção do preset" (click)="cancelarRemocao()">✕</button>
                   </span>
                 } @else {
-                  <button type="button" class="ficha-rol__mini-btn" title="Editar" aria-label="Editar preset" (click)="editar(preset.indice)">✎</button>
-                  <button type="button" class="ficha-rol__mini-btn" title="Remover" aria-label="Remover preset" (click)="removerPedido(preset.indice)">✕</button>
+                  <button type="button" class="ficha-rol__mini-btn" [appTooltip]="'Editar'" aria-label="Editar preset" (click)="editar(preset.indice)">✎</button>
+                  <button type="button" class="ficha-rol__mini-btn" [appTooltip]="'Remover'" aria-label="Remover preset" (click)="removerPedido(preset.indice)">✕</button>
                 }
               </div>
             }
@@ -82,7 +82,7 @@
                   }
                   <span class="ficha-rol__passo-formula">{{ passo.formula }}</span>
                   @if (!passo.interpretacao.valida) {
-                    <span class="ficha-rol__aviso" title="Fórmula não reconhecida — não é possível rolar">inválida</span>
+                    <span class="ficha-rol__aviso" [appTooltip]="'Fórmula não reconhecida — não é possível rolar'">inválida</span>
                   }
                   <button
                     type="button"
@@ -97,7 +97,7 @@
                       type="button"
                       class="ficha-rol__btn ficha-rol__btn--critico"
                       [disabled]="!passo.interpretacao.valida"
-                      title="Dobra o dano (dados, fixos e atributos, exceto Patente/Nível)"
+                      [appTooltip]="'Dobra o dano (dados, fixos e atributos, exceto Patente/Nível)'"
                       (click)="rolarPassoDoPreset(preset, indicePasso, true)"
                     >
                       Rolar crítico
@@ -112,7 +112,7 @@
                         {{ vinculo.nome }}@if (vinculo.quantidade > 1) {<span class="ficha-rol__vinculo-qtd"> ×{{ vinculo.quantidade }}</span>}
                       </span>
                     }
-                    <span class="ficha-rol__energia" title="Energia gasta ao rolar este passo">
+                    <span class="ficha-rol__energia" [appTooltip]="'Energia gasta ao rolar este passo'">
                       − {{ passo.energiaGasta }}{{ passo.energiaVariavel ? ' + X' : '' }} E
                     </span>
                     @if (passo.energiaVariavel) {
@@ -193,7 +193,7 @@
         <div class="ficha-rol__passo-edit" [formGroupName]="$index">
           <div class="ficha-rol__passo-edit-linha">
             <input class="ficha-rol__entrada ficha-rol__entrada--nome" type="text" formControlName="nome" placeholder="Nome (ex.: Dano)" />
-            <button type="button" class="ficha-rol__mini-btn" title="Remover passo" aria-label="Remover passo" (click)="removerPasso($index)">✕</button>
+            <button type="button" class="ficha-rol__mini-btn" [appTooltip]="'Remover passo'" aria-label="Remover passo" (click)="removerPasso($index)">✕</button>
           </div>
           <input class="ficha-rol__entrada ficha-rol__entrada--mono" type="text" formControlName="formula" placeholder="Fórmula (ex.: 2d6 + FOR [Físico])" />
           <ng-container

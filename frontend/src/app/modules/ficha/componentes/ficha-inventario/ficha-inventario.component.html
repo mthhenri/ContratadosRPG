@@ -37,7 +37,7 @@
             nome="alerta"
             class="ficha-inv__carga-alerta"
             aria-label="Sobrecarregado!"
-            title="Sobrecarregado!"
+            [appTooltip]="'Sobrecarregado!'"
           />
         }
       </span>
@@ -88,7 +88,7 @@
         class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--custos"
         [class.ficha-inv__btn--ativo]="mostrarCustos()"
         [attr.aria-pressed]="mostrarCustos()"
-        title="Mostrar/ocultar custo dos itens no inventário"
+        [appTooltip]="'Mostrar/ocultar custo dos itens no inventário'"
         (click)="alternarMostrarCustos()"
       >
         <app-icone [nome]="mostrarCustos() ? 'olho' : 'olho-fechado'" />
@@ -399,7 +399,7 @@
                   type="button"
                   class="ficha-inv__item-apelido-lapis"
                   aria-label="Editar apelido"
-                  title="Editar apelido"
+                  [appTooltip]="'Editar apelido'"
                   (click)="editarApelido(item.indice)"
                 >
                   ✎
@@ -420,7 +420,7 @@
                 <button
                   type="button"
                   class="ficha-inv__modificar"
-                  title="Modificar"
+                  [appTooltip]="'Modificar'"
                   [class.ficha-inv__modificar--aberto]="item.painelAberto"
                   [attr.aria-expanded]="item.painelAberto"
                   (click)="alternarPainel(item.indice)"
@@ -431,7 +431,7 @@
                     <span
                       class="ficha-inv__modificar-contagem"
                       [class.ficha-inv__modificar-contagem--excede]="item.excedeModsLimite"
-                      [title]="item.excedeModsLimite ? 'Além do limite da patente (excedente)' : ''"
+                      [appTooltip]="item.excedeModsLimite ? 'Além do limite da patente (excedente)' : ''"
                     >{{ item.modsUsados }}/{{ item.maxModificacoes }}</span>
                   }
                   <span class="ficha-inv__modificar-chevron">{{ item.painelAberto ? '▴' : '▾' }}</span>
@@ -443,7 +443,7 @@
                   type="button"
                   class="ficha-inv__porte"
                   [class.ficha-inv__porte--vestida]="!item.guardada"
-                  [title]="item.guardada ? 'Guardada: ocupa slots, não amplia o inventário' : 'Vestida: amplia o inventário, não ocupa slots'"
+                  [appTooltip]="item.guardada ? 'Guardada: ocupa slots, não amplia o inventário' : 'Vestida: amplia o inventário, não ocupa slots'"
                   (click)="alternarGuardada(item.indice)"
                 >
                   <app-icone [nome]="item.guardada ? 'guardada' : 'vestida'" />
@@ -456,7 +456,7 @@
                   type="button"
                   class="ficha-inv__porte"
                   [class.ficha-inv__porte--vestida]="item.equipado"
-                  title="Só Proteções equipadas somam na resistência da aba Combate"
+                  [appTooltip]="'Só Proteções equipadas somam na resistência da aba Combate'"
                   (click)="alternarEquipado(item.indice)"
                 >
                   <app-icone [nome]="item.equipado ? 'vestida' : 'guardada'" />
@@ -468,7 +468,7 @@
                 <button
                   type="button"
                   class="ficha-inv__modificar"
-                  title="Aplicar Fragmento"
+                  [appTooltip]="'Aplicar Fragmento'"
                   [class.ficha-inv__modificar--aberto]="aplicandoFragmentoIndice() === item.indice"
                   [attr.aria-expanded]="aplicandoFragmentoIndice() === item.indice"
                   (click)="abrirAplicarFragmento(item.indice)"
@@ -493,7 +493,7 @@
                 <button
                   type="button"
                   class="ficha-inv__btn ficha-inv__btn--perigo ficha-inv__btn--icone"
-                  title="Confirmar remoção"
+                  [appTooltip]="'Confirmar remoção'"
                   aria-label="Confirmar remoção"
                   (click)="confirmarRemocaoItem(item.indice)"
                 >
@@ -502,7 +502,7 @@
                 <button
                   type="button"
                   class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
-                  title="Cancelar"
+                  [appTooltip]="'Cancelar'"
                   aria-label="Cancelar remoção"
                   (click)="cancelarRemocao()"
                 >
@@ -512,7 +512,7 @@
                 <button
                   type="button"
                   class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
-                  title="Remover"
+                  [appTooltip]="'Remover'"
                   aria-label="Remover item"
                   (click)="removerItem(item.indice)"
                 >
@@ -542,12 +542,12 @@
                       <app-icone
                         nome="fragmento"
                         class="ficha-inv__mod-tag-fragmento"
-                        title="Aplicado por Fragmento"
+                        [appTooltip]="'Aplicado por Fragmento'"
                       />
                     }
                     {{ mod.nome }} ×{{ mod.empilhamentos }}
                     @if (mod.excedente) {
-                      <span class="ficha-inv__excede-tag" title="Além do limite da patente">Excedente</span>
+                      <span class="ficha-inv__excede-tag" [appTooltip]="'Além do limite da patente'">Excedente</span>
                     }
                   </span>
                   @if (mostrarCustos()) {
@@ -566,7 +566,7 @@
                       [class.ficha-inv__mod-flag--ativo]="mod.ignoraTotal"
                       [attr.aria-checked]="mod.ignoraTotal"
                       aria-label="Não conta no total"
-                      title="Não conta no total — quando marcada, esta mod não conta no limite total de empilhamentos da arma"
+                      [appTooltip]="'Não conta no total — quando marcada, esta mod não conta no limite total de empilhamentos da arma'"
                       (click)="alternarIgnoraTotal(item.indice, mod.nome)"
                     >
                       <app-icone nome="camadas" />
@@ -578,7 +578,7 @@
                       [class.ficha-inv__mod-flag--ativo]="mod.ignoraProprio"
                       [attr.aria-checked]="mod.ignoraProprio"
                       aria-label="Não conta no teto"
-                      title="Não conta no teto — quando marcada, esta mod pode empilhar além do próprio teto"
+                      [appTooltip]="'Não conta no teto — quando marcada, esta mod pode empilhar além do próprio teto'"
                       (click)="alternarIgnoraProprio(item.indice, mod.nome)"
                     >
                       <app-icone nome="teto" />
@@ -739,7 +739,7 @@
                               type="button"
                               class="ficha-inv__efeito-remover"
                               aria-label="Remover efeito"
-                              title="Remover efeito"
+                              [appTooltip]="'Remover efeito'"
                               (click)="removerEfeitoMod($index)"
                             >
                               ×

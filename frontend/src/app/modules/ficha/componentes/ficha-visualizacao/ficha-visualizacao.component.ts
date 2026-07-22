@@ -56,6 +56,7 @@ import { Dialog } from 'primeng/dialog';
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
 import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
@@ -214,6 +215,7 @@ export interface AjusteClasse {
     FichaHabilidades,
     BandejaDados,
     OverflowFade,
+    Tooltip,
     Dialog,
   ],
   templateUrl: './ficha-visualizacao.component.html',

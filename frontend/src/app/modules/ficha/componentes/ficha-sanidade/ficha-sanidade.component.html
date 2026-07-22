@@ -56,7 +56,7 @@
               }
             </div>
             @if (sequela.descricao) {
-              <span class="sanidade__descricao" [title]="sequela.descricao">{{ sequela.descricao }}</span>
+              <span class="sanidade__descricao" [appTooltip]="sequela.descricao">{{ sequela.descricao }}</span>
             }
             @if (removendo('sequela', $index)) {
               <div class="sanidade__confirmar">
@@ -129,7 +129,7 @@
                     [class.sanidade__toggle--ativo]="trauma.tratado"
                     [attr.aria-pressed]="trauma.tratado"
                     aria-label="Alternar tratado"
-                    title="Alternar tratado (reduz a penalidade; o trauma permanece)"
+                    [appTooltip]="'Alternar tratado (reduz a penalidade; o trauma permanece)'"
                     (click)="alternarTratado($index)"
                   >
                     <app-icone [nome]="'medicinal'" />
@@ -154,7 +154,7 @@
               }
             </div>
             @if (trauma.descricao) {
-              <span class="sanidade__descricao" [title]="trauma.descricao">{{ trauma.descricao }}</span>
+              <span class="sanidade__descricao" [appTooltip]="trauma.descricao">{{ trauma.descricao }}</span>
             }
             @if (removendo('trauma', $index)) {
               <div class="sanidade__confirmar">
@@ -222,7 +222,7 @@
               <span class="sanidade__nome">
                 {{ efeitoLesao(lesao) }}
                 @if (lesao.permanente) {
-                  <app-icone class="sanidade__permanente" [nome]="'infinito'" title="Permanente" aria-label="Permanente" />
+                  <app-icone class="sanidade__permanente" [nome]="'infinito'" [appTooltip]="'Permanente'" aria-label="Permanente" />
                 }
               </span>
               @if (editavel()) {
@@ -247,7 +247,7 @@
               }
             </div>
             @if (lesao.descricao) {
-              <span class="sanidade__descricao" [title]="lesao.descricao">{{ lesao.descricao }}</span>
+              <span class="sanidade__descricao" [appTooltip]="lesao.descricao">{{ lesao.descricao }}</span>
             }
             @if (removendo('lesao', $index)) {
               <div class="sanidade__confirmar">

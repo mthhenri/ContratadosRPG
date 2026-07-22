@@ -10,6 +10,7 @@ import {
 } from '@contratados-rpg/shared/regras/agente';
 
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
 
 /** Rótulo de cada aba (grupo) do seletor. */
@@ -34,7 +35,7 @@ const VALORES_CLASSE = new Set<string>(Object.values(ClasseEnum));
  */
 @Component({
   selector: 'app-ficha-habilidade-seletor',
-  imports: [ReactiveFormsModule, OverflowFade],
+  imports: [ReactiveFormsModule, OverflowFade, Tooltip],
   templateUrl: './ficha-habilidade-seletor.component.html',
   styleUrl: './ficha-habilidade-seletor.component.scss',
 })

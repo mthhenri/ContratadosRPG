@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import {
   ArquetipoEnum,
   ClasseEnum,
@@ -13,6 +14,7 @@ import type { FichaJogadorDadosDto, FichaOrigemDto } from '@contratados-rpg/shar
 import { calcularVida } from '@contratados-rpg/shared/regras/agente';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { FichaVisualizacao } from './ficha-visualizacao.component';
 
 /**
@@ -92,13 +94,17 @@ describe('FichaVisualizacao', () => {
     expect(barra.replace(/\s+/g, '')).toBe(`5/${vidaEsperada}`);
   });
 
-  it('mostra a progressão da classe no hover (title) dos rótulos de Vida e Energia', () => {
-    const { raiz } = montar(dados);
-    const vida = raiz.querySelector('.ficha-barra--vida .ficha-barra__rotulo--dica');
-    expect(vida?.getAttribute('title')).toContain('Combatente');
-    expect(vida?.getAttribute('title')).toContain('/nível');
-    const energia = raiz.querySelector('.ficha-barra--energia .ficha-barra__rotulo--dica');
-    expect(energia?.getAttribute('title')).toContain('Energia');
+  it('mostra a progressão da classe no hover (appTooltip) dos rótulos de Vida e Energia', () => {
+    const { fixture } = montar(dados);
+    const dicaVida = fixture.debugElement
+      .query(By.css('.ficha-barra--vida .ficha-barra__rotulo--dica'))
+      .injector.get(Tooltip).appTooltip();
+    expect(dicaVida).toContain('Combatente');
+    expect(dicaVida).toContain('/nível');
+    const dicaEnergia = fixture.debugElement
+      .query(By.css('.ficha-barra--energia .ficha-barra__rotulo--dica'))
+      .injector.get(Tooltip).appTooltip();
+    expect(dicaEnergia).toContain('Energia');
   });
 
   it('deriva a Patente do Prestígio', () => {

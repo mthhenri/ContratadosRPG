@@ -94,7 +94,7 @@
                   type="button"
                   [attr.aria-label]="'Utilizar ' + habilidade.nome"
                   [disabled]="habilidade.custoEnergia === 0"
-                  [attr.title]="habilidade.custoEnergia === 0 ? 'Habilidade sem custo de Energia' : null"
+                  [appTooltip]="habilidade.custoEnergia === 0 ? 'Habilidade sem custo de Energia' : null"
                   (pointerdown)="aoPressionarUtilizar(idx, habilidade, $event)"
                   (click)="aoClicarUtilizar(idx, habilidade, $event)"
                 >

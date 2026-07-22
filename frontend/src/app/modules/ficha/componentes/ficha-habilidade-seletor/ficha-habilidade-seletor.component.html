@@ -78,7 +78,7 @@
               class="seletor__opcao-remover"
               type="button"
               [attr.aria-label]="'Remover ' + habilidade.nome + ' da ficha'"
-              title="Na ficha — clique para remover"
+              [appTooltip]="'Na ficha — clique para remover'"
               (click)="removerHabilidade(habilidade.nome)"
             >
               <span class="seletor__opcao-marca">Na ficha</span>

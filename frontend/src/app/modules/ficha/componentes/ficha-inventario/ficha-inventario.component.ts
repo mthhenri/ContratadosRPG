@@ -43,6 +43,7 @@ import {
 
 import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { EFEITO_TIPOS, EfeitoTipoMeta, metaEfeitoTipo } from '../../../../shared/inventario/efeito-modificacao.ui';
 import { rotuloItem } from '../../rotulos-ficha';
 
@@ -265,7 +266,7 @@ interface AmpInventarioVM {
  */
 @Component({
   selector: 'app-ficha-inventario',
-  imports: [ReactiveFormsModule, Icone, OverflowFade, Dialog, NgTemplateOutlet],
+  imports: [ReactiveFormsModule, Icone, OverflowFade, Tooltip, Dialog, NgTemplateOutlet],
   templateUrl: './ficha-inventario.component.html',
   styleUrl: './ficha-inventario.component.scss',
 })

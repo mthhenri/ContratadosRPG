@@ -82,7 +82,7 @@
                   class="ficha-ident__chip-lapis"
                   type="button"
                   aria-label="Editar origem"
-                  title="Editar origem"
+                  [appTooltip]="'Editar origem'"
                   (click)="editarOrigem()"
                 >
                   ✎
@@ -203,7 +203,7 @@
                     @if (efeitoAindaPendente(linha.bonus)) {
                       <span
                         class="chip chip--pendente"
-                        title="Registrado — ainda sem motor que aplique este efeito automaticamente."
+                        [appTooltip]="'Registrado — ainda sem motor que aplique este efeito automaticamente.'"
                       >
                         Sem efeito automático ainda
                       </span>
@@ -294,7 +294,7 @@
                 class="ficha-ident__chip-lapis"
                 type="button"
                 aria-label="Editar classe e arquétipo"
-                title="Editar classe e arquétipo"
+                [appTooltip]="'Editar classe e arquétipo'"
                 (click)="editarClasse()"
               >
                 ✎
@@ -370,7 +370,7 @@
                   type="number"
                   [value]="dinheiro()"
                   aria-label="Editar dinheiro"
-                  title="Editar dinheiro"
+                  [appTooltip]="'Editar dinheiro'"
                   (keydown.enter)="confirmarDinheiro(entradaDinheiro.value)"
                   (keydown.escape)="cancelarDinheiro()"
                   (blur)="confirmarDinheiro(entradaDinheiro.value)"
@@ -405,7 +405,7 @@
         <div class="ficha-vitalidade">
           <div class="ficha-barra ficha-barra--vida">
             <div class="ficha-barra__topo">
-              <span class="ficha-barra__rotulo ficha-barra__rotulo--dica" [attr.title]="progressaoVida()">
+              <span class="ficha-barra__rotulo ficha-barra__rotulo--dica" [appTooltip]="progressaoVida()">
                 Vida
               </span>
               <div class="ficha-barra__medidor">
@@ -499,7 +499,7 @@
             <div class="ficha-barra__topo">
               <span
                 class="ficha-barra__rotulo ficha-barra__rotulo--dica"
-                [attr.title]="progressaoEnergia()"
+                [appTooltip]="progressaoEnergia()"
               >
                 Energia
               </span>
@@ -602,7 +602,7 @@
               [disabled]="!ajustavel()"
               [attr.aria-pressed]="condicoes()[condicao.chave]"
               [attr.aria-label]="condicao.rotulo"
-              [attr.title]="condicao.rotulo"
+              [appTooltip]="condicao.rotulo"
               (click)="alternarCondicao(condicao.chave)"
             >
               <app-icone [nome]="condicao.icone" />
@@ -658,7 +658,7 @@
             class="ficha-mini ficha-mini--fino ficha-mini--centralizado"
             [class.ficha-mini--somente-leitura]="!ajustavel() || !temHabilidadeContraAtaque()"
             [class.ficha-mini--contra]="!temHabilidadeContraAtaque()"
-            [attr.title]="
+            [appTooltip]="
               temHabilidadeContraAtaque()
                 ? 'Contra-ataque'
                 : 'Ainda não calculado pelo motor — depende da habilidade de Contra-ataque'
@@ -727,7 +727,7 @@
                   type="button"
                   class="ficha-resistencia__valor ficha-resistencia__valor--editavel"
                   [attr.aria-label]="'Editar resistência ' + abreviacaoResistencia[resistencia.tipo]"
-                  [attr.title]="'Base manual ' + resistencia.manual + ' + equipamento ' + resistencia.equipamento"
+                  [appTooltip]="'Base manual ' + resistencia.manual + ' + equipamento ' + resistencia.equipamento"
                   (click)="editarResistencia(resistencia.tipo)"
                 >
                   {{ resistencia.total }}
@@ -755,7 +755,7 @@
               class="ficha-cartao__lapis"
               type="button"
               aria-label="Editar atributos"
-              title="Editar atributos"
+              [appTooltip]="'Editar atributos'"
               (click)="editarAtributos()"
             >
               ✎
@@ -800,7 +800,7 @@
                   @if (editandoAtributos()) {
                     <div
                       class="ficha-atributo ficha-atributo--edicao"
-                      [attr.title]="campo.nome"
+                      [appTooltip]="campo.nome"
                       [class.ficha-atributo--maestria]="rascunhoMaestria() === campo.chave"
                     >
                       <span class="ficha-atributo__abrev">{{ campo.abrev }}</span>
@@ -831,7 +831,7 @@
                         [class.ficha-atributo__maestria--ativa]="rascunhoMaestria() === campo.chave"
                         [disabled]="!maestriaHabilitada(campo.chave)"
                         [attr.aria-label]="'Maestria em ' + campo.nome"
-                        [attr.title]="'Maestria em ' + campo.nome + ' — requer ' + limiteMaestria + '+ pontos'"
+                        [appTooltip]="'Maestria em ' + campo.nome + ' — requer ' + limiteMaestria + '+ pontos'"
                         (click)="alternarMaestria(campo.chave)"
                       >
                         ★
@@ -868,7 +868,7 @@
                   } @else {
                     <div
                       class="ficha-atributo"
-                      [attr.title]="campo.nome"
+                      [appTooltip]="campo.nome"
                       [class.ficha-atributo--maestria]="maestriaAtual() === campo.chave"
                       [class.ficha-atributo--lesionado]="penalidadesLesao()[campo.chave] > 0"
                     >
@@ -876,7 +876,7 @@
                         class="ficha-atributo__rolar"
                         type="button"
                         [attr.aria-label]="'Rolar teste de ' + campo.nome"
-                        [attr.title]="'Rolar teste de ' + campo.nome"
+                        [appTooltip]="'Rolar teste de ' + campo.nome"
                         (click)="rolarTesteAtributo(campo)"
                       >
                         <app-icone [nome]="'dado'" />
@@ -895,7 +895,7 @@
                         @if (penalidadesLesao()[campo.chave] > 0) {
                           <span
                             class="ficha-atributo__lesao"
-                            [attr.title]="
+                            [appTooltip]="
                               'Base ' +
                               atributos()[campo.chave] +
                               ' · lesão −' +
@@ -913,7 +913,7 @@
                       <span
                         class="ficha-atributo__mod-valor"
                         [class.ficha-atributo__mod-valor--ativo]="modificadorTeste(campo.chave) !== 0"
-                        [attr.title]="'Modificador de teste de ' + campo.nome"
+                        [appTooltip]="'Modificador de teste de ' + campo.nome"
                       >
                         {{ modificadorTeste(campo.chave) >= 0 ? '+' : '' }}{{ modificadorTeste(campo.chave) }}
                       </span>
@@ -979,7 +979,7 @@
                     class="ficha-mini__rolar"
                     type="button"
                     [attr.aria-label]="'Rolar ' + linha.rotulo"
-                    [attr.title]="'Rolar ' + linha.rotulo"
+                    [appTooltip]="'Rolar ' + linha.rotulo"
                     (click)="rolarDano(linha)"
                   >
                     <app-icone [nome]="'dado'" />
@@ -1031,7 +1031,7 @@
                   class="ficha-cartao__lapis"
                   type="button"
                   aria-label="Editar anotações"
-                  title="Editar anotações"
+                  [appTooltip]="'Editar anotações'"
                   (click)="editarAnotacoes()"
                 >
                   ✎

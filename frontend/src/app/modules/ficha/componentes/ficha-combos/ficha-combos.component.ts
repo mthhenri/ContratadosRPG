@@ -11,6 +11,7 @@ import type {
 } from '@contratados-rpg/shared/dtos/ficha';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { executarPassoPreset } from '../../executar-rolagem';
 
 /** Grupo tipado de um passo do formulário de combo. */
@@ -44,7 +45,7 @@ interface ComboVM {
  */
 @Component({
   selector: 'app-ficha-combos',
-  imports: [ReactiveFormsModule, NgTemplateOutlet],
+  imports: [ReactiveFormsModule, NgTemplateOutlet, Tooltip],
   templateUrl: './ficha-combos.component.html',
   styleUrl: './ficha-combos.component.scss',
 })

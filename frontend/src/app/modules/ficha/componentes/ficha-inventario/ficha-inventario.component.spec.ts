@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 
 import {
   FragmentoModuloEnum,
@@ -9,6 +10,7 @@ import {
 import type { FichaInventarioDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { FichaInventario } from './ficha-inventario.component';
 
 /**
@@ -466,7 +468,10 @@ describe('FichaInventario', () => {
       alvo.fixture.detectChanges();
       const alerta = alvo.raiz.querySelector('.ficha-inv__carga-alerta');
       expect(alerta).not.toBeNull();
-      expect(alerta?.getAttribute('title')).toBe('Sobrecarregado!');
+      const dica = alvo.fixture.debugElement
+        .query(By.css('.ficha-inv__carga-alerta'))
+        .injector.get(Tooltip).appTooltip();
+      expect(dica).toBe('Sobrecarregado!');
     });
   });
 

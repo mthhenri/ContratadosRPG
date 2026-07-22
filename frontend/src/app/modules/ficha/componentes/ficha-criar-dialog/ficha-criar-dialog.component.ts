@@ -12,6 +12,7 @@ import {
 } from '@contratados-rpg/shared/regras/agente';
 
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
 import { ATRIBUTOS_BASE_PADRAO, type FichaAssistenteResultado } from '../../ficha-padrao';
 
@@ -49,7 +50,7 @@ interface GrupoAtributos {
  */
 @Component({
   selector: 'app-ficha-criar-dialog',
-  imports: [HoldRepeat],
+  imports: [HoldRepeat, Tooltip],
   templateUrl: './ficha-criar-dialog.component.html',
   styleUrl: './ficha-criar-dialog.component.scss',
 })

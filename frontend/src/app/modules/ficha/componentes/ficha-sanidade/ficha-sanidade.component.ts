@@ -14,6 +14,7 @@ import type {
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 
 /** As três listas de Sanidade do `estado`, emitidas juntas a cada mutação (a página persiste o trio). */
 export interface EstadoSanidade {
@@ -76,7 +77,7 @@ const ROTULO_LISTA: Record<ListaSanidade, string> = {
  */
 @Component({
   selector: 'app-ficha-sanidade',
-  imports: [NgTemplateOutlet, ReactiveFormsModule, HoldRepeat, Icone, OverflowFade, Dialog],
+  imports: [NgTemplateOutlet, ReactiveFormsModule, HoldRepeat, Icone, OverflowFade, Tooltip, Dialog],
   templateUrl: './ficha-sanidade.component.html',
   styleUrl: './ficha-sanidade.component.scss',
 })
