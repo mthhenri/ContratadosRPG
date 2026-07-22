@@ -55,7 +55,7 @@
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-card);
   padding: var(--pad-card);
-  max-width: 520px;
+  max-width: 820px;
   width: 100%;
   max-height: calc(100dvh - 32px);
   overflow-y: auto;
@@ -130,9 +130,20 @@
   }
 }
 
+// Seções em 2 colunas (encolhe a altura do modal à metade) — cada seção não quebra entre colunas.
+.guia-modal__secoes {
+  column-count: 2;
+  column-gap: 28px;
+
+  @media (max-width: 560px) {
+    column-count: 1;
+  }
+}
+
 // === Seção do guia ===
 .guia-secao {
   margin-bottom: 14px;
+  break-inside: avoid;
 
   &__titulo {
     font-family: var(--font-mono);

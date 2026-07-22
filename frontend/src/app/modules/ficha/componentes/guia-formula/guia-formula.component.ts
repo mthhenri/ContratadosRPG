@@ -78,6 +78,13 @@ const SECOES: readonly SecaoGuia[] = [
     ],
   },
   {
+    titulo: 'Dano do agente',
+    linhas: [
+      { codigo: 'corpo', texto: 'Vira o Dano C. a C. atual (ex.: 2D6 + FOR [Físico]) — acompanha o agente.' },
+      { codigo: 'furtivo', texto: 'Vira o Dano Furtivo atual. Civil não tem — a palavra fica sem efeito.' },
+    ],
+  },
+  {
     titulo: 'Números fixos',
     linhas: [
       { codigo: '+2', texto: 'Soma dois ao total.' },

@@ -29,19 +29,21 @@
         parênteses.
       </p>
 
-      @for (secao of secoes; track secao.titulo) {
-        <section class="guia-secao">
-          <h4 class="guia-secao__titulo">{{ secao.titulo }}</h4>
-          <ul class="guia-secao__lista">
-            @for (linha of secao.linhas; track linha.codigo) {
-              <li class="guia-secao__item">
-                <code class="guia-secao__codigo">{{ linha.codigo }}</code>
-                <span class="guia-secao__texto">{{ linha.texto }}</span>
-              </li>
-            }
-          </ul>
-        </section>
-      }
+      <div class="guia-modal__secoes">
+        @for (secao of secoes; track secao.titulo) {
+          <section class="guia-secao">
+            <h4 class="guia-secao__titulo">{{ secao.titulo }}</h4>
+            <ul class="guia-secao__lista">
+              @for (linha of secao.linhas; track linha.codigo) {
+                <li class="guia-secao__item">
+                  <code class="guia-secao__codigo">{{ linha.codigo }}</code>
+                  <span class="guia-secao__texto">{{ linha.texto }}</span>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+      </div>
 
       <p class="guia-modal__nota">Atributos: {{ atributos }}. Também PROF (proficiência) e NIV (nível).</p>
 

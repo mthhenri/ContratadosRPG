@@ -44,7 +44,7 @@ import {
   obterLimitesClasse,
   somarLesoesAtributo,
 } from '@contratados-rpg/shared/regras/agente';
-import { rolarFormula, validarFormula } from '@contratados-rpg/shared/regras/rolagem';
+import { expandirAtalhosDano, rolarFormula, validarFormula } from '@contratados-rpg/shared/regras/rolagem';
 import {
   FORMACOES,
   listarEfeitosPendentes,
@@ -659,16 +659,36 @@ export class FichaVisualizacao {
    */
   protected readonly rolagemRapida = signal('');
 
-  /** Validade da fórmula da rolagem rápida (live): `null` enquanto vazia, senão `true`/`false`. */
+  /**
+   * Dano C. a C./Furtivo **atuais** (stored vence calculado, m3-10) — alimentam os atalhos de
+   * fórmula `corpo`/`furtivo` (`expandirAtalhosDano`): quem digita escreve só a palavra em vez de
+   * copiar a notação de dado, e o resultado acompanha o agente (sobe de nível, o valor mudou, a
+   * próxima rolagem já usa o novo sem editar nada). Civil não tem Furtivo — vira `null`.
+   */
+  private readonly atalhosDano = computed(() => {
+    const mapa = new Map(this.informacoesExtras().map((info) => [info.chave, info] as const));
+    const corpo = mapa.get('danoCorpoACorpo')?.bruto;
+    const furtivo = mapa.get('danoFurtivo')?.bruto;
+    return {
+      corpo: typeof corpo === 'string' ? corpo : null,
+      furtivo: typeof furtivo === 'string' ? furtivo : null,
+    };
+  });
+
+  /** Validade da fórmula da rolagem rápida (live, já com `corpo`/`furtivo` expandidos): `null` vazia. */
   protected readonly rolagemRapidaValida = computed<boolean | null>(() => {
     const texto = this.rolagemRapida().trim();
-    return texto === '' ? null : validarFormula(texto);
+    return texto === '' ? null : validarFormula(expandirAtalhosDano(texto, this.atalhosDano()));
   });
 
   /** Rola a fórmula avulsa da aba Rolagens na bandeja — usa os atributos efetivos (pós-lesão). */
   protected rolarRolagemRapida(): void {
-    const formula = this.rolagemRapida().trim();
-    if (!formula || !validarFormula(formula)) {
+    const bruto = this.rolagemRapida().trim();
+    if (!bruto) {
+      return;
+    }
+    const formula = expandirAtalhosDano(bruto, this.atalhosDano());
+    if (!validarFormula(formula)) {
       return;
     }
     const resultado = rolarFormula({
