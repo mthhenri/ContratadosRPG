@@ -146,6 +146,16 @@
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+
+    // Modo busca (botão de lupa ao lado de "Custos"): a linha inteira vira busca + "X" pra sair.
+    &--busca {
+      flex-wrap: nowrap;
+      align-items: center;
+    }
+  }
+  &__busca--flex {
+    flex: 1;
+    min-width: 0;
   }
   // Toggle "mostrar custos" — empurrado pro fim da linha de ações.
   &__btn--custos {
@@ -863,6 +873,17 @@
     }
   }
 
+  // === Grade dupla de Medicinal/Operacional (misturados, ordenados por nome) ===
+  &__grade-medop {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+
+    @include bp.mobile {
+      grid-template-columns: 1fr;
+    }
+  }
+
   // === Itens da lista ===
   &__item {
     border: 1px solid var(--border);
@@ -905,10 +926,13 @@
       color: var(--text-mute);
       margin-top: 1px;
     }
+    // `app-icone` (SVG, `1.15em`) em vez do glifo de texto: alinha certinho com a baseline do
+    // nome (glifo Unicode de fonte tem métrica própria e sempre desalinha).
     &-apelido-lapis {
+      display: inline-flex;
+      align-items: center;
       margin-left: 6px;
-      font-size: 11px;
-      line-height: 1;
+      font-size: 12px;
       color: var(--text-mute);
       background: transparent;
       border: 0;
@@ -1207,6 +1231,10 @@
     }
     .ficha-inv__porte > span {
       display: none;
+    }
+    // Coluna estreita demais pra 2 colunas de Medicinal/Operacional — cai pra 1.
+    .ficha-inv__grade-medop {
+      grid-template-columns: 1fr;
     }
   }
 }

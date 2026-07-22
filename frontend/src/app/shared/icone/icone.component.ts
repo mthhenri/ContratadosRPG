@@ -8,7 +8,8 @@ import { Component, input } from '@angular/core';
  * Inventário, Habilidades, Sanidade, Rolagens); e por fim as três condições rastreadas na ficha
  * (`sistema-v4.1.0.md` — "Condições"; m2-16b), usadas no editor e no mini-card de campanha; e
  * `infinito`, marca de lesão permanente na aba Sanidade; `alerta`, sinal de sobrecarga na linha
- * "Inventário"; e `camadas`/`teto`, toggles "não conta no total/teto" das modificações de item.
+ * "Inventário"; `camadas`/`teto`, toggles "não conta no total/teto" das modificações de item; e
+ * `busca`, botão de busca de itens na aba Inventário.
  */
 export type IconeNome =
   | 'agente'
@@ -62,7 +63,8 @@ export type IconeNome =
   | 'infinito'
   | 'alerta'
   | 'camadas'
-  | 'teto';
+  | 'teto'
+  | 'busca';
 
 /**
  * Ícone monocromático de linha (SVG inline, `stroke: currentColor`) — reutilizado nos menus de

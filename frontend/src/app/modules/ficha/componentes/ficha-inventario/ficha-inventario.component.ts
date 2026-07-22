@@ -74,6 +74,23 @@ const CATEGORIAS_EMPILHAVEIS: readonly ItemCategoriaEnum[] = [
   ItemCategoriaEnum.MEDICINAL,
 ];
 
+/**
+ * Ordem de exibição da lista principal do inventário: armas (corpo a corpo/fogo/explosivos/
+ * exóticos) → munições → proteções → armazenamento → fragmentos. Medicinal/Operacional
+ * (`CATEGORIAS_EMPILHAVEIS`) saem dessa lista — vão pra grade dupla ao final, ordenados por nome.
+ */
+const ORDEM_CATEGORIAS_LISTA: readonly ItemCategoriaEnum[] = [
+  ItemCategoriaEnum.CORPO_A_CORPO,
+  ItemCategoriaEnum.ARMAS_DE_FOGO,
+  ItemCategoriaEnum.EXPLOSIVOS,
+  ItemCategoriaEnum.EXOTICOS,
+  ItemCategoriaEnum.MUNICOES,
+  ItemCategoriaEnum.PROTECOES,
+  ItemCategoriaEnum.ARMAZENAMENTO,
+  ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+  ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+];
+
 /** Categorias que **não aceitam modificação** alguma (nem do catálogo, nem custom): consumíveis. */
 const CATEGORIAS_NAO_MODIFICAVEIS: readonly ItemCategoriaEnum[] = [
   ItemCategoriaEnum.OPERACIONAL,
@@ -214,6 +231,7 @@ interface ItemInventarioVM {
   readonly podeApelidar: boolean;
   /** `true` para fragmento Potencializador — mostra a ação "Aplicar em..." (m3-35). */
   readonly fragmentoPotencializador: boolean;
+  readonly categoria: ItemCategoriaEnum;
   readonly categoriaRotulo: string;
   readonly quantidade: number;
   readonly custoTotalTexto: string;
@@ -317,6 +335,15 @@ export class FichaInventario {
   protected readonly busca = new FormControl('', { nonNullable: true });
   private readonly buscaTexto = toSignal(this.busca.valueChanges, { initialValue: '' });
   private readonly termoBusca = computed(() => this.buscaTexto().trim().toLowerCase());
+
+  /** Busca dos itens já no inventário (lista abaixo) — independente da busca do catálogo acima. */
+  protected readonly buscaItens = new FormControl('', { nonNullable: true });
+  private readonly buscaItensTexto = toSignal(this.buscaItens.valueChanges, { initialValue: '' });
+  private readonly termoBuscaItens = computed(() => this.buscaItensTexto().trim().toLowerCase());
+  /** `true` quando a linha de ações virou a barra de busca (botão de lupa ao lado de "Custos"). */
+  protected readonly buscandoItens = signal(false);
+  /** `true` quando a lista mostra só os amplificadores (toggle ao lado de "Custos"). */
+  protected readonly mostrandoSoAmplificadores = signal(false);
 
   /** Índices dos itens com o painel de modificações ("Modificar") aberto. */
   private readonly painelAbertos = signal<ReadonlySet<number>>(new Set());
@@ -546,6 +573,46 @@ export class FichaInventario {
 
   protected readonly itensInventario = computed<readonly ItemInventarioVM[]>(() =>
     this.inventario().itens.map((item, indice) => this.montarItemInventario(item, indice)),
+  );
+
+  /** Itens da lista após a busca (nome exibido, nome real e categoria) — a busca em si não reordena nem remove do inventário real. */
+  protected readonly itensInventarioFiltrados = computed<readonly ItemInventarioVM[]>(() => {
+    const termo = this.termoBuscaItens();
+    if (!termo) {
+      return this.itensInventario();
+    }
+    return this.itensInventario().filter(
+      (item) =>
+        item.nomeExibido.toLowerCase().includes(termo) ||
+        item.nome.toLowerCase().includes(termo) ||
+        item.categoriaRotulo.toLowerCase().includes(termo),
+    );
+  });
+
+  /** `true` quando a busca de itens não achou nada (mas o inventário tem itens). */
+  protected readonly buscaItensSemResultado = computed(
+    () => this.termoBuscaItens().length > 0 && this.itensInventarioFiltrados().length === 0,
+  );
+
+  /**
+   * Lista principal (tudo menos Medicinal/Operacional): armas (corpo a corpo/fogo/explosivos/
+   * exóticos) → munições → proteções → armazenamento → fragmentos (`ORDEM_CATEGORIAS_LISTA`).
+   * A ordem dentro da mesma categoria é a do inventário real (`sort` é estável).
+   */
+  protected readonly itensListaPrincipal = computed<readonly ItemInventarioVM[]>(() => {
+    const ordem = new Map(ORDEM_CATEGORIAS_LISTA.map((categoria, indiceOrdem) => [categoria, indiceOrdem]));
+    return this.itensInventarioFiltrados()
+      .filter((item) => !CATEGORIAS_EMPILHAVEIS.includes(item.categoria))
+      .slice()
+      .sort((a, b) => (ordem.get(a.categoria) ?? ORDEM_CATEGORIAS_LISTA.length) - (ordem.get(b.categoria) ?? ORDEM_CATEGORIAS_LISTA.length));
+  });
+
+  /** Medicinal + Operacional misturados numa grade de 2 colunas, ordenados por nome exibido. */
+  protected readonly itensListaMedicinalOperacional = computed<readonly ItemInventarioVM[]>(() =>
+    this.itensInventarioFiltrados()
+      .filter((item) => CATEGORIAS_EMPILHAVEIS.includes(item.categoria))
+      .slice()
+      .sort((a, b) => a.nomeExibido.localeCompare(b.nomeExibido, 'pt-BR')),
   );
 
   /** Alvos válidos pro "Aplicar em..." de um fragmento Potencializador — qualquer item, menos fragmentos. */
@@ -1308,6 +1375,21 @@ export class FichaInventario {
     this.mostrarCustos.update((mostrar) => !mostrar);
   }
 
+  protected alternarSoAmplificadores(): void {
+    this.mostrandoSoAmplificadores.update((mostrar) => !mostrar);
+  }
+
+  /** Abre a barra de busca de itens — substitui a linha de ações inteira (botão de lupa). */
+  protected abrirBuscaItens(): void {
+    this.buscandoItens.set(true);
+  }
+
+  /** Fecha a barra de busca de itens (botão "X") e limpa o termo digitado. */
+  protected fecharBuscaItens(): void {
+    this.buscandoItens.set(false);
+    this.buscaItens.setValue('');
+  }
+
   // === Construção de view-models ===
   private montarCartaoItem(item: ItemCatalogo, categoria: ItemCategoriaEnum): CartaoItemVM {
     return {
@@ -1398,6 +1480,7 @@ export class FichaInventario {
       nomeExibido: rotuloItem(item),
       podeApelidar: !CATEGORIAS_EMPILHAVEIS.includes(item.categoria),
       fragmentoPotencializador: item.categoria === ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+      categoria: item.categoria,
       categoriaRotulo: this.rotuloCategoria(item.categoria),
       quantidade: item.quantidade,
       custoTotalTexto: this.formatarDinheiro(custoTotal),
