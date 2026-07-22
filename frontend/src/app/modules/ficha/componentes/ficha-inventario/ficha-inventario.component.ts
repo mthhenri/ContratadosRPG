@@ -318,6 +318,11 @@ export class FichaInventario {
   private readonly buscaTexto = toSignal(this.busca.valueChanges, { initialValue: '' });
   private readonly termoBusca = computed(() => this.buscaTexto().trim().toLowerCase());
 
+  /** Busca dos itens já no inventário (lista abaixo) — independente da busca do catálogo acima. */
+  protected readonly buscaItens = new FormControl('', { nonNullable: true });
+  private readonly buscaItensTexto = toSignal(this.buscaItens.valueChanges, { initialValue: '' });
+  private readonly termoBuscaItens = computed(() => this.buscaItensTexto().trim().toLowerCase());
+
   /** Índices dos itens com o painel de modificações ("Modificar") aberto. */
   private readonly painelAbertos = signal<ReadonlySet<number>>(new Set());
 
@@ -546,6 +551,25 @@ export class FichaInventario {
 
   protected readonly itensInventario = computed<readonly ItemInventarioVM[]>(() =>
     this.inventario().itens.map((item, indice) => this.montarItemInventario(item, indice)),
+  );
+
+  /** Itens da lista após a busca (nome exibido, nome real e categoria) — a busca em si não reordena nem remove do inventário real. */
+  protected readonly itensInventarioFiltrados = computed<readonly ItemInventarioVM[]>(() => {
+    const termo = this.termoBuscaItens();
+    if (!termo) {
+      return this.itensInventario();
+    }
+    return this.itensInventario().filter(
+      (item) =>
+        item.nomeExibido.toLowerCase().includes(termo) ||
+        item.nome.toLowerCase().includes(termo) ||
+        item.categoriaRotulo.toLowerCase().includes(termo),
+    );
+  });
+
+  /** `true` quando a busca de itens não achou nada (mas o inventário tem itens). */
+  protected readonly buscaItensSemResultado = computed(
+    () => this.termoBuscaItens().length > 0 && this.itensInventarioFiltrados().length === 0,
   );
 
   /** Alvos válidos pro "Aplicar em..." de um fragmento Potencializador — qualquer item, menos fragmentos. */

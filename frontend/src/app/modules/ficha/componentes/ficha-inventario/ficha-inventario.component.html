@@ -361,6 +361,17 @@
        esticar a coluna Status além da altura da coluna de Identidade vizinha (`--linha-colunas`
        tem `align-items:stretch`; sem teto, a lista cresce sem fim e a página inteira fica gigante
        — teto fixo só no modo `dialog`, ver `--compacto` no SCSS). -->
+  @if (!inventarioVazio()) {
+    <input
+      class="ficha-inv__busca"
+      type="search"
+      placeholder="Pesquisar no inventário…"
+      autocomplete="off"
+      aria-label="Pesquisar item no inventário"
+      [formControl]="buscaItens"
+    />
+  }
+
   <div class="ficha-inv__lista" appOverflowFade>
   @if (inventarioVazio()) {
     <p class="ficha-inv__vazio">
@@ -370,9 +381,11 @@
         Inventário vazio.
       }
     </p>
+  } @else if (buscaItensSemResultado()) {
+    <p class="ficha-inv__vazio">Nenhum item encontrado.</p>
   }
 
-  @for (item of itensInventario(); track item.indice) {
+  @for (item of itensInventarioFiltrados(); track item.indice) {
     <div class="ficha-inv__item">
       <div class="ficha-inv__item-cabecalho">
         <div class="ficha-inv__item-identidade">
@@ -407,7 +420,7 @@
               }
             </span>
             @if (item.apelido) {
-              <span class="ficha-inv__item-nome-mecanico">{{ item.nome }}</span>
+              <span class="ficha-inv__item-nome-mecanico">{{ item.nome }} — {{ item.categoriaRotulo }}</span>
             }
           }
           <span class="ficha-inv__item-categoria">{{ item.categoriaRotulo }}</span>
