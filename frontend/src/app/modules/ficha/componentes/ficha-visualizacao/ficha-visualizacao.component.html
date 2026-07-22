@@ -961,6 +961,24 @@
           <app-icone class="ficha-status__aba-icone" [nome]="'habilidades'" />
           Habilidades
         </button>
+        <button
+          type="button"
+          class="ficha-status__aba"
+          [class.ficha-status__aba--ativa]="abaStatusAtiva() === 'rolagens'"
+          (click)="selecionarAbaStatus('rolagens')"
+        >
+          <app-icone class="ficha-status__aba-icone" [nome]="'rolagens'" />
+          Rolagens
+        </button>
+        <button
+          type="button"
+          class="ficha-status__aba"
+          [class.ficha-status__aba--ativa]="abaStatusAtiva() === 'extras'"
+          (click)="selecionarAbaStatus('extras')"
+        >
+          <app-icone class="ficha-status__aba-icone" [nome]="'mais'" />
+          Extras
+        </button>
       </div>
 
       <section class="ficha-cartao ficha-cartao--status">
@@ -1095,6 +1113,12 @@
             (habilidadeUtilizada)="aoUtilizarHabilidade($event)"
           />
         </div>
+        }
+        @if (abaStatusAtiva() === 'rolagens') {
+        <div class="ficha-status__conteudo"></div>
+        }
+        @if (abaStatusAtiva() === 'extras') {
+        <div class="ficha-status__conteudo"></div>
         }
       </section>
     </div>

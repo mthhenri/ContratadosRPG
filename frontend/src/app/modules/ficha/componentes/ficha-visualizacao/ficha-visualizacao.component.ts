@@ -347,12 +347,14 @@ export class FichaVisualizacao {
    * comparação visual) — distinta de `abaAtiva`/`abas` acima (a navegação por abas de página
    * inteira, m3-11, hoje fora do template). Estado puramente local: não sincroniza com a URL.
    */
-  protected readonly abaStatusAtiva = signal<'informacoes' | 'inventario' | 'habilidades'>(
-    'informacoes',
-  );
+  protected readonly abaStatusAtiva = signal<
+    'informacoes' | 'inventario' | 'habilidades' | 'rolagens' | 'extras'
+  >('informacoes');
 
   /** Troca a aba ativa da mini barra do card de Status. */
-  protected selecionarAbaStatus(aba: 'informacoes' | 'inventario' | 'habilidades'): void {
+  protected selecionarAbaStatus(
+    aba: 'informacoes' | 'inventario' | 'habilidades' | 'rolagens' | 'extras',
+  ): void {
     this.abaStatusAtiva.set(aba);
   }
 
