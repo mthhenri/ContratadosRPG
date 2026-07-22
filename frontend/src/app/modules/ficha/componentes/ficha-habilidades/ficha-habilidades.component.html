@@ -1,7 +1,6 @@
 <div class="habilidades">
   <header class="habilidades__cabecalho">
     <h4 class="habilidades__titulo">Habilidades</h4>
-    <span class="habilidades__contagem">{{ habilidades().length }}</span>
     <span class="habilidades__regua"></span>
     @if (editavel()) {
       <div class="habilidades__add-grupo">
@@ -23,6 +22,27 @@
       </div>
     }
   </header>
+
+  @if (habilidades().length > 0) {
+    <div class="habilidades__resumo">
+      <span class="habilidades__resumo-item habilidades__resumo-item--arquetipo">
+        <span class="habilidades__resumo-rotulo">Arquétipo</span>
+        <span class="habilidades__resumo-valor">{{ contagemPorCategoria().arquetipo }}</span>
+      </span>
+      <span class="habilidades__resumo-item habilidades__resumo-item--classe">
+        <span class="habilidades__resumo-rotulo">Classe</span>
+        <span class="habilidades__resumo-valor">{{ contagemPorCategoria().classe }}</span>
+      </span>
+      <span class="habilidades__resumo-item">
+        <span class="habilidades__resumo-rotulo">Geral</span>
+        <span class="habilidades__resumo-valor">{{ contagemPorCategoria().geral }}</span>
+      </span>
+      <span class="habilidades__resumo-item">
+        <span class="habilidades__resumo-rotulo">Outras classes/arquétipos</span>
+        <span class="habilidades__resumo-valor">{{ contagemPorCategoria().outraClasse }}</span>
+      </span>
+    </div>
+  }
 
   @if (mostrarBusca()) {
     <div class="habilidades__busca">

@@ -23,10 +23,55 @@
     color: var(--text);
   }
 
-  &__contagem {
+  // Resumo por categoria (Arquétipo/Classe/Geral/Outra classe) — acima da busca, mesmas cores
+  // semânticas do chip de cada categoria (`&__chip--classe`/`--arquetipo` abaixo).
+  &__resumo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  &__resumo-item {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
     font-family: var(--font-mono);
-    font-size: 11px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    padding: 3px 8px;
+
+    &--arquetipo {
+      color: var(--positive);
+    }
+
+    &--classe {
+      color: var(--warning);
+    }
+  }
+
+  &__resumo-rotulo {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
     color: var(--text-mute);
+
+    .habilidades__resumo-item--arquetipo &,
+    .habilidades__resumo-item--classe & {
+      color: currentColor;
+      opacity: 0.75;
+    }
+  }
+
+  &__resumo-valor {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+
+    .habilidades__resumo-item--arquetipo &,
+    .habilidades__resumo-item--classe & {
+      color: currentColor;
+    }
   }
 
   &__regua {

@@ -119,6 +119,19 @@ export class FichaHabilidades {
   /** Só oferece a busca quando a lista já é grande o bastante para valer a pena procurar. */
   protected readonly mostrarBusca = computed(() => this.habilidades().length > 4);
 
+  /** Contagem por categoria (resumo acima da busca) — Arquétipo/Classe/Geral/Outra classe. */
+  protected readonly contagemPorCategoria = computed(() => {
+    const habilidades = this.habilidades();
+    const contar = (categoria: HabilidadeCategoriaEnum) =>
+      habilidades.filter((habilidade) => habilidade.categoria === categoria).length;
+    return {
+      arquetipo: contar(HabilidadeCategoriaEnum.ARQUETIPO),
+      classe: contar(HabilidadeCategoriaEnum.CLASSE),
+      geral: contar(HabilidadeCategoriaEnum.GERAL),
+      outraClasse: contar(HabilidadeCategoriaEnum.OUTRA_CLASSE),
+    };
+  });
+
   /**
    * Habilidades a exibir, com o índice **original** preservado (o editor/remover/utilizar operam
    * sobre a lista real). Filtra por nome/descrição quando há busca.
