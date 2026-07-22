@@ -28,10 +28,11 @@ já estabelecida em m3-10/m3-12/m3-13/m3-14.
    antes só leitura) e **Resistências** (idem, edita a base manual — total soma com
    equipamento). **Nível** validado aos limites da classe (`shared/regras/agente/limites`):
    0–20 Agente, 0–5 Civil — clamp na confirmação, `min`/`max` no input como dica nativa.
-3. **Contra-ataque**: novo stat na linha de Reações — override manual puro
-   (`FichaDerivadosDto.contraAtaque`, sem fórmula em `shared/regras`), editável só quando o
-   jogador tem a habilidade "Contra-Ataque" no catálogo; sem ela, segue placeholder tracejado
-   só-leitura.
+3. **Contra-ataque**: novo stat na linha de Reações — editável só quando o jogador tem a
+   habilidade "Contra-Ataque" no catálogo; sem ela, segue placeholder tracejado só-leitura.
+   Nasceu como override manual puro (`FichaDerivadosDto.contraAtaque`, sem fórmula em
+   `shared/regras`); a fórmula por variante da habilidade entrou em `m3-39`, override manual
+   segue disponível como em Defesa/Esquiva/Bloqueio.
 4. **Card Atributos compacto**: grade 2 colunas (era 5), Proficiência/Maestria some durante a
    edição (mais espaço pro stepper), modificador de teste sempre visível (inclusive em `+0`).
 5. **Card Status (3ª coluna)**: barra de abas própria (Informações/Inventário, uma posição
