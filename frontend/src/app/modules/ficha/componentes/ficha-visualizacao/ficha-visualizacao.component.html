@@ -968,7 +968,13 @@
         <div class="ficha-status__conteudo">
           <div class="ficha-combate-rapido ficha-combate-rapido--cinco">
             @for (linha of statusRapido(); track linha.chave) {
-              <div class="ficha-mini ficha-mini--fino">
+              <div
+                class="ficha-mini ficha-mini--fino"
+                [class.ficha-mini--com-rolar]="
+                  (linha.chave === 'danoCorpoACorpo' || linha.chave === 'danoFurtivo') &&
+                  linha.bruto !== null
+                "
+              >
                 <!-- Dano C. a C./Furtivo: dadinho de rolar direto a expressão (m3-22, mesmo padrão
                      do dadinho de Atributos). Civil sem Dano Furtivo (`bruto` null) não ganha botão. -->
                 @if (
@@ -991,6 +997,7 @@
                     #entradaDerivado
                     class="ficha-mini__entrada"
                     [class.ficha-mini__entrada--larga]="linha.tipo === 'texto'"
+                    [class.ficha-mini__entrada--cheia]="linha.chave === 'danoCorpoACorpo'"
                     [type]="linha.tipo === 'numero' ? 'number' : 'text'"
                     [value]="linha.bruto"
                     [attr.aria-label]="'Editar ' + linha.rotulo"

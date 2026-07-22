@@ -58,8 +58,11 @@
 
     // Status (m3-27-visual, terceira coluna): ocupa o resto da largura da página — Identidade e
     // Atributos são fixas, então é a única que aproveita o `max-width` maior do `.ficha-pagina`.
+    // min-width evita que ela fique espremida quando o `80vw` do `.ficha-pagina` é pequeno (telas
+    // estreitas) — abaixo disso, prefere estourar a largura da página a espremer o card de Status.
     &--status {
       flex: 1 1 auto;
+      min-width: 420px;
     }
   }
 
@@ -746,6 +749,14 @@
     }
   }
 
+  // Reserva espaço pro dadinho de rolar (Dano C. a C./Furtivo — `__rolar` é `position: absolute`,
+  // então não empurra o layout sozinho). Sem isso, uma coluna ajustada ao conteúdo (`max-content`,
+  // caso do Dano Furtivo na grade `--cinco`) fica exatamente do tamanho do rótulo/valor, e o ícone
+  // no canto superior direito cai por cima do texto em vez de ao lado.
+  &.ficha-mini--com-rolar {
+    padding-right: 26px;
+  }
+
   // Read-only glance (Defesa/Esquiva/Bloqueio/Contra-ataque, Resistências) — edição fica noutra aba.
   &--somente-leitura {
     .ficha-mini__valor {
@@ -869,6 +880,14 @@
 
     &--larga {
       width: 9ch;
+    }
+
+    // Dano C. a C.: exceção à regra "largura no tamanho do texto" acima — é o box mais largo da
+    // fileira (`--cinco` estica ele até o fim da grade), mas o valor por extenso (ex.
+    // "2D6 [Físico]") ainda estourava os 9ch da `--larga` e ficava cortado/pouco visível. Aqui o
+    // box já tem espaço de sobra, então o input pode ocupar até o fim dele.
+    &--cheia {
+      width: 100%;
     }
   }
 }
@@ -1245,9 +1264,13 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  // Status: idem + Hab. por Turno.
+  // Status: Deslocamento/Hab. por Turno/Percepção têm valor curto (ex. "9m", "16") — a coluna
+  // encolhe pro conteúdo (`max-content`) em vez de dividir a fileira em 5 partes iguais, senão
+  // sobra vão morto entre o valor e a borda direita da caixa. O espaço que sobra vai inteiro pra
+  // Dano C. a C. (`1fr`, última da fileira — valor mais longo, ex. "2D6 [Físico]"); Dano Furtivo
+  // fica no meio, do tamanho do próprio conteúdo.
   &--cinco {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, max-content) minmax(0, 1fr);
   }
 
   &--com-contra,

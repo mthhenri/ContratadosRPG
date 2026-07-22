@@ -798,16 +798,17 @@ export class FichaVisualizacao {
   /** Derivados do card **Status** (redesenho de comparação visual, "por enquanto só essa" aba). */
   private readonly CHAVES_STATUS_RAPIDO: readonly ChaveInfoExtra[] = [
     'deslocamento',
-    'danoCorpoACorpo',
-    'danoFurtivo',
-    'percepcao',
     'habilidadesPorTurno',
+    'percepcao',
+    'danoFurtivo',
+    'danoCorpoACorpo',
   ];
 
   /**
-   * Glance de Deslocamento/Dano C. a C./Dano Furtivo/Percepção/Hab. por Turno no novo card de
+   * Glance de Deslocamento/Hab. por Turno/Percepção/Dano Furtivo/Dano C. a C. no novo card de
    * Status — mesmas linhas editáveis de `Informações Extras` (m3-10), só reorganizadas; nenhum
-   * cálculo novo.
+   * cálculo novo. Dano C. a C. por último de propósito: é o box maior da fileira (grade
+   * `--cinco` abaixo), então fica melhor encostado na borda de fora do card.
    */
   protected readonly statusRapido = computed<readonly InfoExtra[]>(() => {
     const mapa = new Map(this.informacoesExtras().map((info) => [info.chave, info] as const));
