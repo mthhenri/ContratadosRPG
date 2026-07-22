@@ -926,10 +926,13 @@
       color: var(--text-mute);
       margin-top: 1px;
     }
+    // `app-icone` (SVG, `1.15em`) em vez do glifo de texto: alinha certinho com a baseline do
+    // nome (glifo Unicode de fonte tem métrica própria e sempre desalinha).
     &-apelido-lapis {
+      display: inline-flex;
+      align-items: center;
       margin-left: 6px;
-      font-size: 11px;
-      line-height: 1;
+      font-size: 12px;
       color: var(--text-mute);
       background: transparent;
       border: 0;

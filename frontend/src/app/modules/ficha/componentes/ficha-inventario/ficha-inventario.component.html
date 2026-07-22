@@ -449,7 +449,7 @@
                   [appTooltip]="'Editar apelido'"
                   (click)="editarApelido(item.indice)"
                 >
-                  ✎
+                  <app-icone nome="editar" />
                 </button>
               }
             </span>
@@ -979,7 +979,7 @@
     <p class="ficha-inv__vazio">Nenhum amplificador no inventário.</p>
   }
 
-  @if (amplificadoresInventario().length > 0) {
+  @if (mostrandoSoAmplificadores() && amplificadoresInventario().length > 0) {
     <div class="ficha-inv__amps">
       <div class="ficha-inv__amps-cabecalho">
         Amplificadores ({{ resumo().empilhamentosAmplificador }}/{{ resumo().limiteAmplificadores }} stacks)
