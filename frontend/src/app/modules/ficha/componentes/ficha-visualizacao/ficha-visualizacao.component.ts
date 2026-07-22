@@ -44,7 +44,7 @@ import {
   obterLimitesClasse,
   somarLesoesAtributo,
 } from '@contratados-rpg/shared/regras/agente';
-import { expandirAtalhosDano, rolarFormula, validarFormula } from '@contratados-rpg/shared/regras/rolagem';
+import { rolarFormula, validarFormula } from '@contratados-rpg/shared/regras/rolagem';
 import {
   FORMACOES,
   listarEfeitosPendentes,
@@ -61,8 +61,8 @@ import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.com
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
 import { FichaInventario, type CustoEnergiaFragmento } from '../ficha-inventario/ficha-inventario.component';
+import { FichaRolagens } from '../ficha-rolagens/ficha-rolagens.component';
 import { FichaSanidade, type EstadoSanidade } from '../ficha-sanidade/ficha-sanidade.component';
-import { GuiaFormula } from '../guia-formula/guia-formula.component';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
 import { GRUPOS_FORMACAO, rotuloParametroFormacao } from '../../opcoes-formacao';
 import { CONDICOES_FICHA, type CondicoesFicha } from '../../condicoes-ficha';
@@ -225,8 +225,8 @@ export interface AjusteClasse {
     FichaSanidade,
     FichaInventario,
     FichaHabilidades,
+    FichaRolagens,
     BandejaDados,
-    GuiaFormula,
     OverflowFade,
     Tooltip,
     Dialog,
@@ -653,19 +653,13 @@ export class FichaVisualizacao {
   }
 
   /**
-   * Fórmula digitada na **rolagem rápida** da aba Rolagens (mesmo campo avulso do editor completo
-   * de `FichaRolagens`, m3-31 — aqui isolado até o resto da aba ser ligada): digita e rola na hora,
-   * **sem salvar** preset e sem gastar Energia.
-   */
-  protected readonly rolagemRapida = signal('');
-
-  /**
    * Dano C. a C./Furtivo **atuais** (stored vence calculado, m3-10) — alimentam os atalhos de
-   * fórmula `corpo`/`furtivo` (`expandirAtalhosDano`): quem digita escreve só a palavra em vez de
-   * copiar a notação de dado, e o resultado acompanha o agente (sobe de nível, o valor mudou, a
-   * próxima rolagem já usa o novo sem editar nada). Civil não tem Furtivo — vira `null`.
+   * fórmula `CORPO`/`FURTIVO` (`expandirAtalhosDano`, consumidos por `FichaRolagens` na rolagem
+   * avulsa): quem digita escreve só a palavra em vez de copiar a notação de dado, e o resultado
+   * acompanha o agente (sobe de nível, o valor mudou, a próxima rolagem já usa o novo sem editar
+   * nada). Civil não tem Furtivo — vira `null`.
    */
-  private readonly atalhosDano = computed(() => {
+  protected readonly atalhosDano = computed(() => {
     const mapa = new Map(this.informacoesExtras().map((info) => [info.chave, info] as const));
     const corpo = mapa.get('danoCorpoACorpo')?.bruto;
     const furtivo = mapa.get('danoFurtivo')?.bruto;
@@ -674,33 +668,6 @@ export class FichaVisualizacao {
       furtivo: typeof furtivo === 'string' ? furtivo : null,
     };
   });
-
-  /** Validade da fórmula da rolagem rápida (live, já com `corpo`/`furtivo` expandidos): `null` vazia. */
-  protected readonly rolagemRapidaValida = computed<boolean | null>(() => {
-    const texto = this.rolagemRapida().trim();
-    return texto === '' ? null : validarFormula(expandirAtalhosDano(texto, this.atalhosDano()));
-  });
-
-  /** Rola a fórmula avulsa da aba Rolagens na bandeja — usa os atributos efetivos (pós-lesão). */
-  protected rolarRolagemRapida(): void {
-    const bruto = this.rolagemRapida().trim();
-    if (!bruto) {
-      return;
-    }
-    const formula = expandirAtalhosDano(bruto, this.atalhosDano());
-    if (!validarFormula(formula)) {
-      return;
-    }
-    const resultado = rolarFormula({
-      formula,
-      atributos: this.atributosEfetivos(),
-      proficiencia: this.proficiencia(),
-      nivel: this.dados().nivel,
-    });
-    if (resultado) {
-      this.bandeja.mostrar({ rotulo: 'Rolagem rápida', formula, resultado });
-    }
-  }
 
   /** Penalidade de lesão por atributo (0 quando não lesionado) — badge "−N" na leitura. */
   protected readonly penalidadesLesao = computed<Record<ChaveAtributo, number>>(() => {

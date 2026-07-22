@@ -12,6 +12,7 @@ import type {
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
   ABREVIACOES_ATRIBUTO,
+  expandirAtalhosDano,
   resolverPreset,
   rolarFormula,
   validarFormula,
@@ -81,6 +82,8 @@ export class FichaRolagens {
   readonly habilidadesDisponiveis = input<readonly FichaHabilidadeDto[]>([]);
   /** Dono/mestre edita; para os demais é só leitura + rolar (a página liga por `podeGerenciar`). */
   readonly editavel = input(false);
+  /** Dano C. a C./Furtivo atuais — expandem os atalhos `corpo`/`furtivo` na rolagem avulsa. */
+  readonly atalhosDano = input<{ readonly corpo?: string | null; readonly furtivo?: string | null }>({});
 
   /** Emite a lista inteira após qualquer mutação — a página persiste. */
   readonly rolagensMudou = output<readonly FichaRolagemDto[]>();
@@ -127,10 +130,10 @@ export class FichaRolagens {
   /** Campo de **rolagem avulsa** (m3-31): digita uma fórmula e rola na hora, **sem salvar** um preset. */
   protected readonly rapida = new FormControl('', { nonNullable: true });
   private readonly rapidaTexto = toSignal(this.rapida.valueChanges, { initialValue: '' });
-  /** Validade da fórmula avulsa (live): `null` enquanto vazia. */
+  /** Validade da fórmula avulsa (live, já com `corpo`/`furtivo` expandidos): `null` enquanto vazia. */
   protected readonly rapidaValida = computed<boolean | null>(() => {
     const texto = this.rapidaTexto().trim();
-    return texto === '' ? null : validarFormula(texto);
+    return texto === '' ? null : validarFormula(expandirAtalhosDano(texto, this.atalhosDano()));
   });
 
   /** Presets resolvidos pelo motor (passos + efeitos + energia por passo), prontos para exibir e rolar. */
@@ -320,8 +323,12 @@ export class FichaRolagens {
    * fórmula crua digitada (o jogador escreve exatamente o que quer — `2d6 [Físico]`, `LUTd20kh1cm1 + PROF`…).
    */
   protected rolarRapida(): void {
-    const formula = this.rapida.value.trim();
-    if (!formula || !validarFormula(formula)) {
+    const bruto = this.rapida.value.trim();
+    if (!bruto) {
+      return;
+    }
+    const formula = expandirAtalhosDano(bruto, this.atalhosDano());
+    if (!validarFormula(formula)) {
       return;
     }
     const resultado = rolarFormula({

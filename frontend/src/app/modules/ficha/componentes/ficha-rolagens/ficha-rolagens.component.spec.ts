@@ -34,6 +34,7 @@ describe('FichaRolagens', () => {
       editavel?: boolean;
       proficiencia?: number | null;
       habilidades?: readonly FichaHabilidadeDto[];
+      atalhosDano?: { readonly corpo?: string | null; readonly furtivo?: string | null };
     } = {},
   ) {
     TestBed.configureTestingModule({ imports: [FichaRolagens] });
@@ -46,6 +47,9 @@ describe('FichaRolagens', () => {
     }
     if (opcoes.habilidades) {
       fixture.componentRef.setInput('habilidadesDisponiveis', opcoes.habilidades);
+    }
+    if (opcoes.atalhosDano) {
+      fixture.componentRef.setInput('atalhosDano', opcoes.atalhosDano);
     }
     const emitidos: (readonly FichaRolagemDto[])[] = [];
     fixture.componentInstance.rolagensMudou.subscribe((lista) => emitidos.push(lista));
@@ -155,6 +159,14 @@ describe('FichaRolagens', () => {
     expect(arg.resultado.total).toBeLessThanOrEqual(15);
     // Não salva: nenhuma emissão de rolagensMudou.
     expect(alvo.emitidos).toEqual([]);
+  });
+
+  it('rolagem rápida expande os atalhos CORPO/FURTIVO antes de rolar (m3-38)', () => {
+    const alvo = montar([], { atalhosDano: { corpo: '2D6 + FOR [Físico]', furtivo: null } });
+    alvo.componentInstance['rapida'].setValue('CORPO');
+    alvo.componentInstance['rolarRapida']();
+    expect(alvo.mostrar).toHaveBeenCalledOnce();
+    expect(alvo.mostrar.mock.calls[0][0].formula).toBe('2D6 + FOR [Físico]');
   });
 
   it('rolagem rápida com fórmula inválida não rola', () => {
