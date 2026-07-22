@@ -18,6 +18,7 @@ import {
 } from '@contratados-rpg/shared/regras/agente';
 import type { AmplificadorAplicadoDto } from '@contratados-rpg/shared/regras/compras';
 
+import { AutoFocus } from '../../../../shared/auto-focus/auto-focus.directive';
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
@@ -61,6 +62,7 @@ const CATEGORIAS: readonly OpcaoCategoria[] = (
   imports: [
     NgTemplateOutlet,
     ReactiveFormsModule,
+    AutoFocus,
     HoldRepeat,
     OverflowFade,
     Tooltip,
