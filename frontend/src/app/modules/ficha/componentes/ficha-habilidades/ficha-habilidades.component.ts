@@ -20,6 +20,7 @@ import type { AmplificadorAplicadoDto } from '@contratados-rpg/shared/regras/com
 
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { FichaHabilidadeSeletor } from '../ficha-habilidade-seletor/ficha-habilidade-seletor.component';
 import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
 
@@ -57,7 +58,14 @@ const CATEGORIAS: readonly OpcaoCategoria[] = (
  */
 @Component({
   selector: 'app-ficha-habilidades',
-  imports: [NgTemplateOutlet, ReactiveFormsModule, HoldRepeat, OverflowFade, FichaHabilidadeSeletor],
+  imports: [
+    NgTemplateOutlet,
+    ReactiveFormsModule,
+    HoldRepeat,
+    OverflowFade,
+    Tooltip,
+    FichaHabilidadeSeletor,
+  ],
   templateUrl: './ficha-habilidades.component.html',
   styleUrl: './ficha-habilidades.component.scss',
 })
@@ -119,17 +127,31 @@ export class FichaHabilidades {
   /** Só oferece a busca quando a lista já é grande o bastante para valer a pena procurar. */
   protected readonly mostrarBusca = computed(() => this.habilidades().length > 4);
 
-  /** Contagem por categoria (resumo acima da busca) — Arquétipo/Classe/Geral/Outra classe. */
+  /**
+   * Contagem por categoria (resumo acima da busca) — Arquétipo/Classe/Geral/Outra classe. Uma
+   * habilidade de Classe/Arquétipo vinda de **outra** origem (`ehDeOutraOrigem` — mesmo critério
+   * do sufixo do chip, ex. "Classe - Especialista") conta em "outra classe", não na própria.
+   */
   protected readonly contagemPorCategoria = computed(() => {
-    const habilidades = this.habilidades();
-    const contar = (categoria: HabilidadeCategoriaEnum) =>
-      habilidades.filter((habilidade) => habilidade.categoria === categoria).length;
-    return {
-      arquetipo: contar(HabilidadeCategoriaEnum.ARQUETIPO),
-      classe: contar(HabilidadeCategoriaEnum.CLASSE),
-      geral: contar(HabilidadeCategoriaEnum.GERAL),
-      outraClasse: contar(HabilidadeCategoriaEnum.OUTRA_CLASSE),
-    };
+    let arquetipo = 0;
+    let classe = 0;
+    let geral = 0;
+    let outraClasse = 0;
+    for (const habilidade of this.habilidades()) {
+      if (
+        habilidade.categoria === HabilidadeCategoriaEnum.OUTRA_CLASSE ||
+        this.ehDeOutraOrigem(habilidade)
+      ) {
+        outraClasse++;
+      } else if (habilidade.categoria === HabilidadeCategoriaEnum.ARQUETIPO) {
+        arquetipo++;
+      } else if (habilidade.categoria === HabilidadeCategoriaEnum.CLASSE) {
+        classe++;
+      } else if (habilidade.categoria === HabilidadeCategoriaEnum.GERAL) {
+        geral++;
+      }
+    }
+    return { arquetipo, classe, geral, outraClasse };
   });
 
   /**
@@ -439,26 +461,39 @@ export class FichaHabilidades {
    */
   protected rotuloChip(habilidade: FichaHabilidadeDto): string {
     const base = ROTULOS_HABILIDADE_CATEGORIA[habilidade.categoria];
-    const origem = habilidade.origem;
-    if (origem === undefined) {
+    if (habilidade.origem === undefined) {
       return base;
     }
     if (this.ehInicial(habilidade)) {
       return `${base} - Inicial`;
     }
-    if (
-      habilidade.categoria === HabilidadeCategoriaEnum.CLASSE &&
-      origem !== classeBaseDeHabilidades(this.classe())
-    ) {
-      return `${base} - ${rotuloClasse(origem as ClasseEnum)}`;
+    if (habilidade.categoria === HabilidadeCategoriaEnum.CLASSE && this.ehDeOutraOrigem(habilidade)) {
+      return `${base} - ${rotuloClasse(habilidade.origem as ClasseEnum)}`;
     }
-    if (
-      habilidade.categoria === HabilidadeCategoriaEnum.ARQUETIPO &&
-      origem !== this.arquetipo()
-    ) {
-      return `${base} - ${rotuloArquetipo(origem as ArquetipoEnum)}`;
+    if (habilidade.categoria === HabilidadeCategoriaEnum.ARQUETIPO && this.ehDeOutraOrigem(habilidade)) {
+      return `${base} - ${rotuloArquetipo(habilidade.origem as ArquetipoEnum)}`;
     }
     return base;
+  }
+
+  /**
+   * `true` quando uma habilidade de Classe/Arquétipo veio de **outra** classe/arquétipo que não
+   * o da própria ficha (ex.: "Classe - Especialista" numa ficha de Combatente) — usado tanto no
+   * sufixo do chip quanto no resumo por categoria (`contagemPorCategoria`). A Habilidade Inicial
+   * nunca conta como "de outra origem" mesmo quando `origem` não bate com a classe/arquétipo
+   * atual (ex.: depois de trocar de arquétipo) — o chip já trata isso como caso à parte.
+   */
+  private ehDeOutraOrigem(habilidade: FichaHabilidadeDto): boolean {
+    if (habilidade.origem === undefined || this.ehInicial(habilidade)) {
+      return false;
+    }
+    if (habilidade.categoria === HabilidadeCategoriaEnum.CLASSE) {
+      return habilidade.origem !== classeBaseDeHabilidades(this.classe());
+    }
+    if (habilidade.categoria === HabilidadeCategoriaEnum.ARQUETIPO) {
+      return habilidade.origem !== this.arquetipo();
+    }
+    return false;
   }
 
   /** `true` se a habilidade é a Inicial do arquétipo/subclasse (`shared/regras`) — ganha realce. */

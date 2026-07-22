@@ -66,7 +66,13 @@
           <ng-container [ngTemplateOutlet]="editor" />
         </li>
       } @else {
-        <li class="habilidades__item">
+        <li
+          class="habilidades__item"
+          [class.habilidades__item--classe]="habilidade.categoria === Categoria.CLASSE"
+          [class.habilidades__item--arquetipo]="habilidade.categoria === Categoria.ARQUETIPO"
+          [class.habilidades__item--subclasse]="habilidade.categoria === Categoria.SUBCLASSE"
+          [class.habilidades__item--personalidade]="habilidade.categoria === Categoria.PERSONALIDADE"
+        >
           <div class="habilidades__linha">
             <span
               class="habilidades__chip"
@@ -107,14 +113,29 @@
                 >
                   ✎
                 </button>
-                <button
-                  class="habilidades__acao habilidades__acao--remover"
-                  type="button"
-                  aria-label="Remover habilidade"
-                  (click)="pedirRemocao(idx)"
-                >
-                  ✕
-                </button>
+                @if (indiceRemovendo() === idx) {
+                  <button
+                    class="habilidades__acao habilidades__acao--confirmar-remover"
+                    type="button"
+                    autofocus
+                    [attr.aria-label]="'Remover ' + habilidade.nome + '?'"
+                    [appTooltip]="'Remover ' + habilidade.nome + '?'"
+                    (click)="remover(idx)"
+                    (blur)="cancelarRemocao()"
+                    (keydown.escape)="cancelarRemocao()"
+                  >
+                    ✓
+                  </button>
+                } @else {
+                  <button
+                    class="habilidades__acao habilidades__acao--remover"
+                    type="button"
+                    aria-label="Remover habilidade"
+                    (click)="pedirRemocao(idx)"
+                  >
+                    ✕
+                  </button>
+                }
               </div>
             }
           </div>
@@ -151,25 +172,6 @@
                   Gastar
                 </button>
                 <button class="habilidades__cancelar" type="button" (click)="cancelarUtilizar()">
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          }
-          @if (indiceRemovendo() === idx) {
-            <div class="habilidades__confirmar">
-              <span class="habilidades__confirmar-texto">
-                Remover <strong>{{ habilidade.nome }}</strong>?
-              </span>
-              <div class="habilidades__confirmar-acoes">
-                <button
-                  class="habilidades__salvar habilidades__salvar--remover"
-                  type="button"
-                  (click)="remover(idx)"
-                >
-                  Remover
-                </button>
-                <button class="habilidades__cancelar" type="button" (click)="cancelarRemocao()">
                   Cancelar
                 </button>
               </div>

@@ -214,7 +214,28 @@
     border-left-color: var(--text-mute);
     border-radius: var(--radius-control);
 
+    // Mesma cor do chip da categoria (`&__chip--classe`/`--arquetipo`/... abaixo) — só a cor da
+    // borda muda, sem mexer no `border-left-color` neutro das categorias sem cor própria (Geral,
+    // Outra classe, Personalidade especial à parte etc.).
+    &--classe {
+      border-left-color: var(--warning);
+    }
+
+    &--arquetipo {
+      border-left-color: var(--positive);
+    }
+
+    &--subclasse {
+      border-left-color: var(--energy);
+    }
+
+    &--personalidade {
+      border-left-color: var(--accent);
+    }
+
     // Editor no próprio lugar: fica só na coluna do item sendo editado (não estica pelas duas).
+    // Depois das cores de categoria acima para vencer o empate de especificidade quando as duas
+    // classes coexistem (editando um item de Classe/Arquétipo/...).
     &--edicao {
       border-left-color: var(--accent);
       background: var(--surface);
@@ -389,6 +410,19 @@
     &--remover:hover {
       color: var(--accent);
     }
+
+    // Confirmação de remover: o próprio ✕ vira ✓ sólido no lugar (sem texto/linha extra); o
+    // rótulo "Remover NOME?" mora no title/aria-label. Perde o foco (clique fora) ou Esc cancela.
+    &--confirmar-remover {
+      color: var(--bg);
+      background: var(--accent);
+      border-color: var(--accent);
+
+      &:hover {
+        color: var(--bg);
+        background: color-mix(in srgb, var(--accent) 86%, black);
+      }
+    }
   }
 
   &__descricao {
@@ -407,24 +441,8 @@
     color: var(--text-mute);
   }
 
-  // === Confirmação de remoção (inline) ===
-  &__confirmar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid var(--border);
-  }
-
-  &__confirmar-texto {
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--text-dim);
-  }
-
+  // Ações do mini-campo de custo variável do Utilizar ("Gastar" / "Cancelar") — a confirmação de
+  // remoção não usa mais este bloco: vira o próprio botão ✕ em ✓ no lugar (ver `&--confirmar-remover`).
   &__confirmar-acoes {
     display: flex;
     gap: 8px;
