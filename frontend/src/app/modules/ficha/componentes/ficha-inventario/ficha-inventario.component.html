@@ -83,6 +83,17 @@
           </button>
         </span>
       }
+      <button
+        type="button"
+        class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--custos"
+        [class.ficha-inv__btn--ativo]="mostrarCustos()"
+        [attr.aria-pressed]="mostrarCustos()"
+        title="Mostrar/ocultar custo dos itens no inventário"
+        (click)="alternarMostrarCustos()"
+      >
+        <app-icone [nome]="mostrarCustos() ? 'olho' : 'olho-fechado'" />
+        <span>Custos</span>
+      </button>
     </div>
 
     <!-- Formulário de item custom (nome obrigatório; categoria/custo/peso) — no modo `inline` abre na
@@ -90,18 +101,20 @@
          arquivo) — a coluna de Status não tem espaço pro formulário inteiro sem quebrar. -->
     <ng-template #formItemCustomTemplate>
       <form class="ficha-inv__form" [formGroup]="itemCustomForm" (ngSubmit)="confirmarCriarItem()">
-        <label class="ficha-inv__campo">
-          <span class="ficha-inv__campo-rotulo">Nome</span>
-          <input class="ficha-inv__entrada" type="text" formControlName="nome" placeholder="Nome do item" />
-        </label>
-        <label class="ficha-inv__campo">
-          <span class="ficha-inv__campo-rotulo">Categoria</span>
-          <select class="ficha-inv__entrada" formControlName="categoria">
-            @for (categoria of categoriasItem; track categoria.categoria) {
-              <option [value]="categoria.categoria">{{ categoria.rotulo }}</option>
-            }
-          </select>
-        </label>
+        <div class="ficha-inv__form-linha">
+          <label class="ficha-inv__campo">
+            <span class="ficha-inv__campo-rotulo">Nome</span>
+            <input class="ficha-inv__entrada" type="text" formControlName="nome" placeholder="Nome do item" />
+          </label>
+          <label class="ficha-inv__campo">
+            <span class="ficha-inv__campo-rotulo">Categoria</span>
+            <select class="ficha-inv__entrada" formControlName="categoria">
+              @for (categoria of categoriasItem; track categoria.categoria) {
+                <option [value]="categoria.categoria">{{ categoria.rotulo }}</option>
+              }
+            </select>
+          </label>
+        </div>
         <div class="ficha-inv__form-linha">
           <div class="ficha-inv__campo">
             <span class="ficha-inv__campo-rotulo">Custo ($)</span>
@@ -147,26 +160,32 @@
           </div>
         }
         @if (mostraDano()) {
-          <label class="ficha-inv__campo ficha-inv__campo--largo">
-            <span class="ficha-inv__campo-rotulo">Dano</span>
-            <input class="ficha-inv__entrada" type="text" formControlName="dano" placeholder="Ex.: 3D6+FOR [Físico]" />
-          </label>
-          <label class="ficha-inv__campo ficha-inv__campo--largo">
-            <span class="ficha-inv__campo-rotulo">Informação (alcance / área / munição)</span>
-            <input class="ficha-inv__entrada" type="text" formControlName="informacao" placeholder="Ex.: Médio · 3m" />
-          </label>
+          <div class="ficha-inv__form-linha">
+            <label class="ficha-inv__campo">
+              <span class="ficha-inv__campo-rotulo">Dano</span>
+              <input class="ficha-inv__entrada" type="text" formControlName="dano" placeholder="Ex.: 3D6+FOR [Físico]" />
+            </label>
+            <label class="ficha-inv__campo">
+              <span class="ficha-inv__campo-rotulo">Informação (alcance / área / munição)</span>
+              <input class="ficha-inv__entrada" type="text" formControlName="informacao" placeholder="Ex.: Médio · 3m" />
+            </label>
+          </div>
         }
-        @if (mostraResistencia()) {
-          <label class="ficha-inv__campo ficha-inv__campo--largo">
-            <span class="ficha-inv__campo-rotulo">Resistência</span>
-            <input class="ficha-inv__entrada" type="text" formControlName="resistencia" placeholder="Ex.: 14 [Físico], 3 [Balístico]" />
-          </label>
-        }
-        @if (mostraBonus()) {
-          <label class="ficha-inv__campo ficha-inv__campo--largo">
-            <span class="ficha-inv__campo-rotulo">Bônus de inventário</span>
-            <input class="ficha-inv__entrada" type="text" formControlName="bonus" placeholder="Ex.: +6 inv." />
-          </label>
+        @if (mostraResistencia() || mostraBonus()) {
+          <div class="ficha-inv__form-linha">
+            @if (mostraResistencia()) {
+              <label class="ficha-inv__campo">
+                <span class="ficha-inv__campo-rotulo">Resistência</span>
+                <input class="ficha-inv__entrada" type="text" formControlName="resistencia" placeholder="Ex.: 14 [Físico], 3 [Balístico]" />
+              </label>
+            }
+            @if (mostraBonus()) {
+              <label class="ficha-inv__campo">
+                <span class="ficha-inv__campo-rotulo">Bônus de inventário</span>
+                <input class="ficha-inv__entrada" type="text" formControlName="bonus" placeholder="Ex.: +6 inv." />
+              </label>
+            }
+          </div>
         }
         <label class="ficha-inv__campo">
           <span class="ficha-inv__campo-rotulo">Descrição / efeito (opcional)</span>
@@ -327,8 +346,8 @@
         [draggable]="false"
         [resizable]="false"
         [dismissableMask]="true"
-        [style]="{ width: '460px' }"
-        [breakpoints]="{ '560px': '95vw' }"
+        [style]="{ width: '640px' }"
+        [breakpoints]="{ '680px': '90vw', '480px': '95vw' }"
         header="Item custom"
         styleClass="ficha-inv__dialogo"
         (onHide)="cancelarCriarItem()"
@@ -461,7 +480,9 @@
             </div>
           }
           <div class="ficha-inv__item-meta">
-            <span class="ficha-inv__custo">{{ item.custoTotalTexto }}</span>
+            @if (mostrarCustos()) {
+              <span class="ficha-inv__custo">{{ item.custoTotalTexto }}</span>
+            }
             <span class="ficha-inv__peso">{{ item.pesoTexto }}</span>
           </div>
           <!-- Remover por último: a confirmação acontece no próprio X (troca in-place). -->
@@ -515,20 +536,24 @@
           @for (mod of item.modsAtivas; track mod.nome) {
             <div class="ficha-inv__mod-tag" [class.ficha-inv__mod-tag--excede]="mod.excedente">
               <div class="ficha-inv__mod-tag-info">
-                <span>
-                  @if (mod.deFragmento) {
-                    <app-icone
-                      nome="fragmento"
-                      class="ficha-inv__mod-tag-fragmento"
-                      title="Aplicado por Fragmento"
-                    />
+                <div class="ficha-inv__mod-tag-linha">
+                  <span class="ficha-inv__mod-tag-nome">
+                    @if (mod.deFragmento) {
+                      <app-icone
+                        nome="fragmento"
+                        class="ficha-inv__mod-tag-fragmento"
+                        title="Aplicado por Fragmento"
+                      />
+                    }
+                    {{ mod.nome }} ×{{ mod.empilhamentos }}
+                    @if (mod.excedente) {
+                      <span class="ficha-inv__excede-tag" title="Além do limite da patente">Excedente</span>
+                    }
+                  </span>
+                  @if (mostrarCustos()) {
+                    <span class="ficha-inv__mod-tag-custo">{{ mod.custoTexto }}</span>
                   }
-                  {{ mod.nome }} ×{{ mod.empilhamentos }}
-                  @if (mod.excedente) {
-                    <span class="ficha-inv__excede-tag" title="Além do limite da patente">Excedente</span>
-                  }
-                </span>
-                <span class="ficha-inv__mod-tag-custo">{{ mod.custoTexto }}</span>
+                </div>
                 @if (mod.descricao) {
                   <span class="ficha-inv__mod-tag-desc">{{ mod.descricao }}</span>
                 }
@@ -540,11 +565,11 @@
                       role="checkbox"
                       [class.ficha-inv__mod-flag--ativo]="mod.ignoraTotal"
                       [attr.aria-checked]="mod.ignoraTotal"
-                      title="Quando marcada, esta mod não conta no limite total de empilhamentos da arma"
+                      aria-label="Não conta no total"
+                      title="Não conta no total — quando marcada, esta mod não conta no limite total de empilhamentos da arma"
                       (click)="alternarIgnoraTotal(item.indice, mod.nome)"
                     >
-                      <span class="ficha-inv__mod-flag-caixa" aria-hidden="true"></span>
-                      <span>Não conta no total</span>
+                      <app-icone nome="camadas" />
                     </button>
                     <button
                       type="button"
@@ -552,11 +577,11 @@
                       role="checkbox"
                       [class.ficha-inv__mod-flag--ativo]="mod.ignoraProprio"
                       [attr.aria-checked]="mod.ignoraProprio"
-                      title="Quando marcada, esta mod pode empilhar além do próprio teto"
+                      aria-label="Não conta no teto"
+                      title="Não conta no teto — quando marcada, esta mod pode empilhar além do próprio teto"
                       (click)="alternarIgnoraProprio(item.indice, mod.nome)"
                     >
-                      <span class="ficha-inv__mod-flag-caixa" aria-hidden="true"></span>
-                      <span>Não conta no teto</span>
+                      <app-icone nome="teto" />
                     </button>
                   </div>
                 }
@@ -903,7 +928,9 @@
               }
             </div>
             <div class="ficha-inv__item-meta">
-              <span class="ficha-inv__custo">{{ amp.custoTexto }}</span>
+              @if (mostrarCustos()) {
+                <span class="ficha-inv__custo">{{ amp.custoTexto }}</span>
+              }
               <span class="ficha-inv__peso">{{ amp.empilhamentos }}/{{ amp.maximoEfetivo }} stacks</span>
             </div>
           </div>

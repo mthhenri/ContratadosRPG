@@ -341,6 +341,9 @@ export class FichaInventario {
   /** `true` quando a confirmação de "Esvaziar" está aberta. */
   protected readonly confirmandoEsvaziar = signal(false);
 
+  /** Exibe o custo dos itens/mods/amplificadores já no inventário — oculto por padrão (não afeta o catálogo). */
+  protected readonly mostrarCustos = signal(false);
+
   /** `true` quando o formulário de item custom está aberto. */
   protected readonly criandoItem = signal(false);
   protected readonly itemCustomForm = new FormGroup({
@@ -1298,6 +1301,10 @@ export class FichaInventario {
     this.painelAbertos.set(new Set());
     this.confirmandoEsvaziar.set(false);
     this.inventarioMudou.emit({ itens: [], amplificadores: [] });
+  }
+
+  protected alternarMostrarCustos(): void {
+    this.mostrarCustos.update((mostrar) => !mostrar);
   }
 
   // === Construção de view-models ===

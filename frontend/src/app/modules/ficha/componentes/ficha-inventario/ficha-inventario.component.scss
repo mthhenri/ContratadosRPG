@@ -147,6 +147,13 @@
     gap: 8px;
     flex-wrap: wrap;
   }
+  // Toggle "mostrar custos" — empurrado pro fim da linha de ações.
+  &__btn--custos {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+  }
 
   // === Botões ===
   &__btn {
@@ -560,60 +567,33 @@
   &__mod-entrada-motivo--excede {
     color: var(--warning);
   }
-  // Toggles "não conta no limite" no chip da mod (total da arma / teto próprio).
+  // Toggles "não conta no limite" no chip da mod (total da arma / teto próprio) — ícone-only,
+  // rótulo vai em `aria-label`/`title` (hover). Estado ativo = accent, igual aos demais toggles.
   &__mod-flags {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 4px;
+    gap: 4px;
+    margin-top: 1px;
   }
   &__mod-flag {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    font-family: var(--font-sans);
+    justify-content: center;
+    width: 20px;
+    height: 20px;
     font-size: 11px;
     color: var(--text-dim);
     background: var(--surface-2);
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-control);
-    padding: 3px 8px;
     cursor: pointer;
 
     &:hover {
       color: var(--text);
-      border-color: var(--border-strong);
     }
     &--ativo {
       color: var(--accent);
       border-color: var(--accent-border);
       background: var(--accent-dim);
-    }
-  }
-  // Caixinha de checkbox: vazia por padrão, accent com "✓" quando marcada.
-  &__mod-flag-caixa {
-    flex: none;
-    width: 13px;
-    height: 13px;
-    border: 1px solid var(--border-strong);
-    border-radius: 3px;
-    position: relative;
-
-    .ficha-inv__mod-flag--ativo & {
-      background: var(--accent);
-      border-color: var(--accent);
-
-      &::after {
-        content: '✓';
-        position: absolute;
-        inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 9px;
-        font-weight: 700;
-        color: var(--bg);
-      }
     }
   }
   // Checkbox do form de mod custom.
@@ -1012,16 +992,29 @@
   &__mod-tag {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 5px 8px;
+    gap: 6px;
+    padding: 4px 8px;
     font-size: 11px;
 
     &-info {
       display: flex;
       flex-direction: column;
+      gap: 2px;
+      flex: 1;
+      min-width: 0;
       color: var(--text);
     }
+    &-linha {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    &-nome {
+      flex: 1;
+      min-width: 0;
+    }
     &-custo {
+      flex: none;
       color: var(--warning);
     }
     &-botoes {

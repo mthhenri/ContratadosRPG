@@ -7,8 +7,8 @@ import { Component, input } from '@angular/core';
  * ações); e por fim as seis abas da ficha (batem com o `id` da aba — Visão Geral, Combate,
  * Inventário, Habilidades, Sanidade, Rolagens); e por fim as três condições rastreadas na ficha
  * (`sistema-v4.1.0.md` — "Condições"; m2-16b), usadas no editor e no mini-card de campanha; e
- * `infinito`, marca de lesão permanente na aba Sanidade; e `alerta`, sinal de sobrecarga na linha
- * "Inventário".
+ * `infinito`, marca de lesão permanente na aba Sanidade; `alerta`, sinal de sobrecarga na linha
+ * "Inventário"; e `camadas`/`teto`, toggles "não conta no total/teto" das modificações de item.
  */
 export type IconeNome =
   | 'agente'
@@ -60,7 +60,9 @@ export type IconeNome =
   | 'machucado'
   | 'inconsciente'
   | 'infinito'
-  | 'alerta';
+  | 'alerta'
+  | 'camadas'
+  | 'teto';
 
 /**
  * Ícone monocromático de linha (SVG inline, `stroke: currentColor`) — reutilizado nos menus de

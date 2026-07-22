@@ -235,5 +235,16 @@
       <path d="M12 9.5v4.5" />
       <circle cx="12" cy="17" r="0.1" fill="currentColor" stroke="currentColor" stroke-width="2.2" />
     }
+    @case ('camadas') {
+      <!-- Camadas empilhadas: toggle "não conta no total" (limite somado de empilhamentos). -->
+      <path d="M12 3 3 8l9 5 9-5z" />
+      <path d="M3 13.5 12 18.5l9-5" />
+    }
+    @case ('teto') {
+      <!-- Seta batendo num teto: toggle "não conta no teto" (limite próprio da mod). -->
+      <path d="M4 4h16" />
+      <path d="M12 20V8" />
+      <path d="M8 12l4-4 4 4" />
+    }
   }
 </svg>
