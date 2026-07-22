@@ -121,7 +121,7 @@ export function construirFichaInicial(
         traumas: [],
         lesoes: [],
       },
-      derivados: calcularDerivados(classe, nivel, atributos),
+      derivados: calcularDerivados(classe, nivel, atributos, habilidades),
       habilidades,
       inventario: { itens: [], amplificadores: [] },
       rolagens: [],

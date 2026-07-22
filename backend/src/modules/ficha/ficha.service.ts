@@ -468,7 +468,7 @@ export class FichaService {
         destreza: dados.atributos.destreza,
       });
     const derivados =
-      dados.derivados ?? calcularDerivados(dados.classe, dados.nivel, dados.atributos);
+      dados.derivados ?? calcularDerivados(dados.classe, dados.nivel, dados.atributos, dados.habilidades);
 
     return { ...dados, estado: { ...dados.estado, vidaMaxima, energiaMaxima }, derivados };
   }

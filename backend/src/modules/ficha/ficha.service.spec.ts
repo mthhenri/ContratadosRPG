@@ -102,7 +102,7 @@ function comSnapshot(dados: FichaJogadorDadosDto): FichaJogadorDadosDto {
         destreza: dados.atributos.destreza,
       }),
     },
-    derivados: calcularDerivados(dados.classe, dados.nivel, dados.atributos),
+    derivados: calcularDerivados(dados.classe, dados.nivel, dados.atributos, dados.habilidades),
   };
 }
 

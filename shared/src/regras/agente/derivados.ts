@@ -1,10 +1,10 @@
 import type { ClasseEnum } from '../../enums';
-import type { FichaAtributosDto, FichaDerivadosDto } from '../../dtos/ficha';
+import type { FichaAtributosDto, FichaDerivadosDto, FichaHabilidadeDto } from '../../dtos/ficha';
 import { calcularDanoCorpo, calcularDanoFurtivo } from './dano';
-import { calcularDefesa, calcularProficiencia } from './defesa';
+import { calcularContraAtaque, calcularDefesa, calcularProficiencia } from './defesa';
 import { calcularLimiteHabilidadesPorTurno } from './habilidades';
 import { calcularInventario } from './inventario';
-import { aplicarLimitesPorClasse } from './limites';
+import { aplicarLimitesPorClasse, obterLimitesClasse } from './limites';
 import { calcularDeslocamento } from './movimento';
 import { calcularAreaPercepcao } from './percepcao';
 
@@ -15,11 +15,16 @@ import { calcularAreaPercepcao } from './percepcao';
  * `proficiencia`, `danoFurtivo`) saem como `undefined`. Só orquestra `shared/regras` — nenhuma
  * fórmula nova aqui (fonte única, proibições #26/#27). Import do DTO é **type-only** (zero-dep em
  * runtime; regras não passa a depender de dtos).
+ *
+ * `habilidades` (opcional, `[]` por padrão) só alimenta `calcularContraAtaque` — na prática quase
+ * sempre vazio aqui, já que a habilidade "Contra-Ataque" normalmente só entra na ficha depois da
+ * criação (via seletor de habilidades, m3-13), não durante o assistente.
  */
 export function calcularDerivados(
   classe: ClasseEnum,
   nivel: number,
   atributos: FichaAtributosDto,
+  habilidades: readonly FichaHabilidadeDto[] = [],
 ): FichaDerivadosDto {
   const normalizado = aplicarLimitesPorClasse({
     classe,
@@ -32,14 +37,22 @@ export function calcularDerivados(
   });
   const entrada = { classe, ...normalizado };
 
+  const limitesAtributo = obterLimitesClasse({ classe });
+  const luta = Math.min(
+    limitesAtributo.atributoMaximo,
+    Math.max(limitesAtributo.atributoMinimo, atributos.luta),
+  );
+
   const defesa = calcularDefesa(entrada);
   const proficiencia = calcularProficiencia(entrada);
   const danoFurtivo = calcularDanoFurtivo(entrada);
+  const contraAtaque = calcularContraAtaque({ luta, vigor: normalizado.vigor, habilidades });
 
   return {
     defesa: defesa?.defesa,
     esquiva: defesa?.esquiva,
     bloqueio: defesa?.bloqueio,
+    contraAtaque: contraAtaque ?? undefined,
     deslocamento: calcularDeslocamento(entrada),
     proficiencia: proficiencia ?? undefined,
     danoCorpoACorpo: calcularDanoCorpo(entrada),

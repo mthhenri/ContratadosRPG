@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { ClasseEnum } from '../../enums';
-import type { FichaAtributosDto } from '../../dtos/ficha';
+import { ClasseEnum, HabilidadeCategoriaEnum } from '../../enums';
+import type { FichaAtributosDto, FichaHabilidadeDto } from '../../dtos/ficha';
 import { calcularDerivados } from './derivados';
-import { calcularDefesa } from './defesa';
+import { calcularContraAtaque, calcularDefesa } from './defesa';
 import { calcularInventario } from './inventario';
 
 const atributos: FichaAtributosDto = {
@@ -46,5 +46,27 @@ describe('calcularDerivados', () => {
     expect(derivados.danoFurtivo).toBeUndefined();
     // Deslocamento/percepção/inventário existem para qualquer classe.
     expect(typeof derivados.deslocamento).toBe('number');
+  });
+});
+
+describe('calcularDerivados — contraAtaque', () => {
+  it('sem habilidades (padrão) → contraAtaque undefined', () => {
+    const derivados = calcularDerivados(ClasseEnum.COMBATENTE, 3, atributos);
+    expect(derivados.contraAtaque).toBeUndefined();
+  });
+
+  it('com a habilidade "Contra-Ataque" → mesma fórmula de calcularContraAtaque', () => {
+    const habilidades: FichaHabilidadeDto[] = [
+      {
+        nome: 'Contra-Ataque',
+        categoria: HabilidadeCategoriaEnum.GERAL,
+        custoEnergia: 2,
+        descricao: '(Reação)…',
+      },
+    ];
+    const derivados = calcularDerivados(ClasseEnum.COMBATENTE, 3, atributos, habilidades);
+    expect(derivados.contraAtaque).toBe(
+      calcularContraAtaque({ luta: atributos.luta, vigor: atributos.vigor, habilidades }),
+    );
   });
 });
