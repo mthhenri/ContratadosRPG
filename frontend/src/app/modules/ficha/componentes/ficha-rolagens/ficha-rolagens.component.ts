@@ -19,7 +19,10 @@ import {
   type PlanoPresetDto,
 } from '@contratados-rpg/shared/regras/rolagem';
 
+import { Dialog } from 'primeng/dialog';
+
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { executarPassoPreset } from '../../executar-rolagem';
@@ -56,6 +59,9 @@ interface RolagemVM {
  * rolar) e **anexar habilidades por passo** (m3-31): cada passo escolhe quais habilidades usa **só para a
  * Energia** (a fusão de efeitos foi aposentada); a mesma habilidade pode ser aplicada mais de uma vez
  * (multiconjunto — soma energia por ocorrência). Um passo pode ser marcado **critável** (dobra o dano).
+ * O formulário de novo/editar preset abre num `p-dialog` (não mais inline na lista) — o cartão da
+ * coluna de Status é estreito demais pro formulário completo (nome, fórmula, habilidades por passo);
+ * a lista de presets em si é uma grade de 2 colunas, cada item resumido ao essencial pra rolar.
  *
  * **Nenhuma regra de dados vive aqui** (proibição #26): interpretar/validar/rolar e resolver o preset
  * (energia por passo) é o motor puro `shared/regras/rolagem` (`resolverPreset`/`rolarPasso`,
@@ -65,7 +71,7 @@ interface RolagemVM {
  */
 @Component({
   selector: 'app-ficha-rolagens',
-  imports: [ReactiveFormsModule, NgTemplateOutlet, GuiaFormula, Tooltip, OverflowFade],
+  imports: [ReactiveFormsModule, NgTemplateOutlet, GuiaFormula, Icone, Tooltip, OverflowFade, Dialog],
   templateUrl: './ficha-rolagens.component.html',
   styleUrl: './ficha-rolagens.component.scss',
 })
