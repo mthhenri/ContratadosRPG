@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal, viewChild } from '@angular/core';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 
@@ -104,6 +104,11 @@ export class FichaRolagens {
 
   /** Bandeja de dados global — onde cada passo rolado aqui aparece. */
   private readonly bandeja = inject(BandejaDadosService);
+
+  /** Guia de fórmula da rolagem rápida (`#guiaExterna`) — o gatilho do dialog de preset abre este
+   *  mesmo, em vez de uma cópia própria (`aoClicar`, ver `GuiaFormula`). */
+  private readonly guiaExterna = viewChild.required<GuiaFormula>('guiaExterna');
+  protected readonly abrirGuiaExterna = (): void => this.guiaExterna().abrir();
 
   /** Abreviações de atributo aceitas nas fórmulas (para a dica do formulário). */
   protected readonly abreviaturas = Object.keys(ABREVIACOES_ATRIBUTO).join(' ');

@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 
 /** Uma linha do guia: um trecho de fórmula + o que ele significa. */
 interface LinhaGuia {
@@ -119,6 +119,15 @@ const SECOES: readonly SecaoGuia[] = [
   styleUrl: './guia-formula.component.scss',
 })
 export class GuiaFormula {
+  /**
+   * Quando definido, o clique no gatilho chama este callback em vez de abrir o próprio modal —
+   * usado quando há mais de um gatilho na tela (ex.: rolagem rápida + formulário de preset no
+   * dialog) e todos devem abrir o **mesmo** guia já renderizado fora do dialog, em vez de cada um
+   * abrir sua própria cópia (o modal de um `<app-guia-formula>` aninhado dentro do `p-dialog` do
+   * preset ficaria atrás do dialog, cujo z-index é maior).
+   */
+  readonly aoClicar = input<(() => void) | null>(null);
+
   /** Se o modal está aberto. */
   protected readonly aberto = signal(false);
 
@@ -131,7 +140,13 @@ export class GuiaFormula {
   /** Segunda linha da nota final — fontes escalares extras (PROF/NIV/CORPO/FURTIVO). */
   protected readonly notaExtra = NOTA_EXTRA;
 
-  protected abrir(): void {
+  /** Público: outro componente pode chamar `abrir()` num gatilho externo (`viewChild`). */
+  abrir(): void {
+    const externo = this.aoClicar();
+    if (externo) {
+      externo();
+      return;
+    }
     this.aberto.set(true);
   }
 

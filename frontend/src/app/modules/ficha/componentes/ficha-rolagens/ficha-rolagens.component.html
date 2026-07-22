@@ -3,7 +3,7 @@
   <div class="ficha-rol__rapida">
     <span class="ficha-rol__rotulo-linha">
       <span class="ficha-rol__rotulo">Rolagem rápida</span>
-      <app-guia-formula />
+      <app-guia-formula #guiaExterna />
     </span>
     <div class="ficha-rol__rapida-linha">
       <input
@@ -201,7 +201,7 @@
     <div class="ficha-rol__campo">
       <span class="ficha-rol__rotulo-linha">
         <span class="ficha-rol__rotulo">Fórmula</span>
-        <app-guia-formula />
+        <app-guia-formula [aoClicar]="abrirGuiaExterna" />
       </span>
       <input
         class="ficha-rol__entrada ficha-rol__entrada--mono"
