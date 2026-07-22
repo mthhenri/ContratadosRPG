@@ -8,9 +8,12 @@
 
 O stat "Contra-ataque" nunca é calculado: mesmo o jogador tendo a habilidade "Contra-Ataque" no
 catálogo, o campo fica em "N/A" até alguém digitar um valor na mão. A habilidade tem fórmula
-definida no documento (`sistema-v4.1.0.md`), com três variantes conforme a origem:
+definida no documento (`sistema-v4.1.0.md`: "Soma sua Luta ÷ 2 na sua Defesa ao reagir"), com três
+variantes de bônus conforme a origem — e, como qualquer bônus de reação (doc — "Defesa": "você
+poderá somar os bônus de reação, sendo ele Esquiva, Bloqueio ou Contra-Ataque"), o valor exibido é
+a **Defesa Final** (Defesa Base + bônus), igual ao padrão já usado por Esquiva/Bloqueio:
 
-| Variante | `categoria` + `origem` da habilidade na ficha | Fórmula |
+| Variante | `categoria` + `origem` da habilidade na ficha | Bônus somado à Defesa Base |
 |---|---|---|
 | Geral (qualquer classe) | `GERAL`, sem `origem` | Luta ÷ 2 |
 | Lutador (Melhorada) | `GERAL_MELHORADA`, `origem: ArquetipoEnum.LUTADOR` | Luta (cheio) |
@@ -20,6 +23,11 @@ Esta task calcula o valor automaticamente a partir do atributo `luta` (já exist
 `FichaAtributosDto`, nunca usado em fórmula alguma até hoje) e da habilidade já salva em
 `dados.habilidades`, sem remover a edição manual existente (continua vencendo quando presente —
 mesmo mecanismo "stored > calculado" de Defesa/Esquiva/Bloqueio).
+
+> **Correção pós-implementação:** a primeira versão retornava só o bônus (ex.: `2`), sem somar a
+> Defesa Base — divergindo do padrão de Esquiva/Bloqueio e do texto da habilidade. Corrigido para
+> `calcularContraAtaque` receber também `defesa: number | null` (a Defesa Base, `null` p/ Civil) e
+> retornar `defesa + bônus`.
 
 ## Entregáveis
 
@@ -56,11 +64,11 @@ mesmo mecanismo "stored > calculado" de Defesa/Esquiva/Bloqueio).
 
 ## Critérios de Aceite
 
-- Jogador com a habilidade geral "Contra-Ataque" (Luta = 4): caixa mostra `2` sem precisar digitar
-  nada.
-- Jogador Lutador com a "Contra-Ataque" (Melhorada) (Luta = 4): caixa mostra `4`.
-- Jogador Vanguarda com a "Contra-Ataque" (Melhorada) (Luta = 2, Vigor = 5): caixa mostra `2`
-  (o maior dos dois, `floor(5/2)`).
+- Jogador com a habilidade geral "Contra-Ataque" (Nível 3 → Defesa Base 13, Luta = 4): caixa
+  mostra `15` (13 + floor(4/2)) sem precisar digitar nada.
+- Jogador Lutador com a "Contra-Ataque" (Melhorada) (Nível 3, Luta = 4): caixa mostra `17` (13 + 4).
+- Jogador Vanguarda com a "Contra-Ataque" (Melhorada) (Nível 3, Luta = 2, Vigor = 5): caixa mostra
+  `15` (13 + o maior dos dois, `floor(5/2)`).
 - Editar manualmente o valor continua funcionando e passa a vencer o calculado dali em diante
   (mesmo comportamento de Defesa/Esquiva/Bloqueio — sem regressão).
 - Ficha sem a habilidade "Contra-Ataque" continua mostrando o placeholder "—" tracejado, não
