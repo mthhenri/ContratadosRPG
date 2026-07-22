@@ -46,11 +46,14 @@ export interface DefesaCalcularDto {
  * Entrada de `calcularContraAtaque`: Luta e Vigor (o chamador aplica os bounds da classe antes de
  * passar — ver `obterLimitesClasse`) + as habilidades da ficha, usadas só para achar a habilidade
  * "Contra-Ataque" e resolver qual variante de fórmula se aplica (doc — "Habilidades Gerais
- * [Melhoradas]": Geral, Lutador Melhorada, Vanguarda Melhorada têm fórmulas diferentes).
+ * [Melhoradas]": Geral, Lutador Melhorada, Vanguarda Melhorada têm fórmulas diferentes). `defesa` é
+ * a Defesa Base (`calcularDefesa(...)?.defesa`) na qual o bônus é somado — `null` para Civil (sem
+ * Defesa), igual ao motivo de `calcularDefesa` retornar `null` para essa classe.
  */
 export interface ContraAtaqueCalcularDto {
   readonly luta: number;
   readonly vigor: number;
+  readonly defesa: number | null;
   readonly habilidades: readonly FichaHabilidadeDto[];
 }
 

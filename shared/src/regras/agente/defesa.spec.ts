@@ -54,27 +54,34 @@ function habilidadeContraAtaque(
 
 describe('calcularContraAtaque', () => {
   it('sem a habilidade "Contra-Ataque" na ficha → null', () => {
-    expect(calcularContraAtaque({ luta: 4, vigor: 4, habilidades: [] })).toBeNull();
+    expect(calcularContraAtaque({ luta: 4, vigor: 4, defesa: 12, habilidades: [] })).toBeNull();
   });
 
-  it('Geral: Luta ÷ 2, arredondado para baixo', () => {
+  it('civil (defesa null) → null, mesmo com a habilidade', () => {
     const habilidades = [habilidadeContraAtaque(HabilidadeCategoriaEnum.GERAL)];
-    expect(calcularContraAtaque({ luta: 4, vigor: 1, habilidades })).toBe(2);
-    expect(calcularContraAtaque({ luta: 5, vigor: 1, habilidades })).toBe(2);
+    expect(calcularContraAtaque({ luta: 4, vigor: 1, defesa: null, habilidades })).toBeNull();
   });
 
-  it('Lutador (Melhorada): Luta inteira', () => {
+  it('Geral: Defesa + Luta ÷ 2, arredondado para baixo', () => {
+    const habilidades = [habilidadeContraAtaque(HabilidadeCategoriaEnum.GERAL)];
+    expect(calcularContraAtaque({ luta: 4, vigor: 1, defesa: 12, habilidades })).toBe(14);
+    expect(calcularContraAtaque({ luta: 5, vigor: 1, defesa: 12, habilidades })).toBe(14);
+  });
+
+  it('Lutador (Melhorada): Defesa + Luta inteira', () => {
     const habilidades = [
       habilidadeContraAtaque(HabilidadeCategoriaEnum.GERAL_MELHORADA, ArquetipoEnum.LUTADOR),
     ];
-    expect(calcularContraAtaque({ luta: 4, vigor: 1, habilidades })).toBe(4);
+    expect(calcularContraAtaque({ luta: 4, vigor: 1, defesa: 12, habilidades })).toBe(16);
   });
 
-  it('Vanguarda (Melhorada): usa o maior entre Luta ÷ 2 e Vigor ÷ 2', () => {
+  it('Vanguarda (Melhorada): Defesa + o maior entre Luta ÷ 2 e Vigor ÷ 2', () => {
     const habilidades = [
       habilidadeContraAtaque(HabilidadeCategoriaEnum.GERAL_MELHORADA, ArquetipoEnum.VANGUARDA),
     ];
-    expect(calcularContraAtaque({ luta: 2, vigor: 5, habilidades })).toBe(2); // floor(5/2)=2 > floor(2/2)=1
-    expect(calcularContraAtaque({ luta: 6, vigor: 1, habilidades })).toBe(3); // floor(6/2)=3 > floor(1/2)=0
+    // floor(5/2)=2 > floor(2/2)=1
+    expect(calcularContraAtaque({ luta: 2, vigor: 5, defesa: 12, habilidades })).toBe(14);
+    // floor(6/2)=3 > floor(1/2)=0
+    expect(calcularContraAtaque({ luta: 6, vigor: 1, defesa: 12, habilidades })).toBe(15);
   });
 });

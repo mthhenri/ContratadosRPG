@@ -65,8 +65,14 @@ describe('calcularDerivados — contraAtaque', () => {
       },
     ];
     const derivados = calcularDerivados(ClasseEnum.COMBATENTE, 3, atributos, habilidades);
+    const defesa = calcularDefesa({ classe: ClasseEnum.COMBATENTE, nivel: 3, destreza: 2, vigor: 4 });
     expect(derivados.contraAtaque).toBe(
-      calcularContraAtaque({ luta: atributos.luta, vigor: atributos.vigor, habilidades }),
+      calcularContraAtaque({
+        luta: atributos.luta,
+        vigor: atributos.vigor,
+        defesa: defesa?.defesa ?? null,
+        habilidades,
+      }),
     );
   });
 });

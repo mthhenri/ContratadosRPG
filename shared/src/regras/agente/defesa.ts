@@ -36,28 +36,33 @@ export function calcularProficiencia(dto: ProficienciaCalcularDto): number | nul
 }
 
 /**
- * Contra-Ataque: bônus de Reação somado à Defesa ao reagir com a habilidade "Contra-Ataque"
- * (doc — "Habilidades Gerais [Melhoradas]"). Três variantes conforme a origem da habilidade na
- * ficha:
+ * Contra-Ataque: Defesa Final ao reagir com a habilidade "Contra-Ataque" — Defesa Base + bônus de
+ * Reação (doc — "Defesa": "a defesa base é complementada com as Habilidades e Fragmentos [...]
+ * você poderá somar os bônus de reação, sendo ele Esquiva, Bloqueio ou Contra-Ataque"), mesmo
+ * padrão de `calcularDefesa` para `esquiva`/`bloqueio`. O bônus em si varia por três variantes
+ * conforme a origem da habilidade na ficha (doc — "Habilidades Gerais [Melhoradas]"):
  *   - Geral (qualquer classe): Luta ÷ 2
  *   - Lutador (Melhorada): Luta inteira
  *   - Vanguarda (Melhorada): Luta ÷ 2 ou Vigor ÷ 2 — usa o maior, já que não há campo de escolha
  *     explícita no modelo de dados e um jogador racional sempre tomaria a opção maior
- * `null` quando a ficha não tem a habilidade "Contra-Ataque" (a UI mostra o placeholder "—"
- * nesse caso, sem chamar esta função).
+ * `null` quando a ficha não tem a habilidade "Contra-Ataque" ou quando a classe não possui Defesa
+ * (Civil, `dto.defesa === null`) — a UI mostra o placeholder "—" nesse caso.
  */
 export function calcularContraAtaque(dto: ContraAtaqueCalcularDto): number | null {
+  if (dto.defesa === null) {
+    return null;
+  }
   const habilidade = dto.habilidades.find((habilidade) => habilidade.nome === 'Contra-Ataque');
   if (!habilidade) {
     return null;
   }
   if (habilidade.categoria === HabilidadeCategoriaEnum.GERAL_MELHORADA) {
     if (habilidade.origem === ArquetipoEnum.LUTADOR) {
-      return dto.luta;
+      return dto.defesa + dto.luta;
     }
     if (habilidade.origem === ArquetipoEnum.VANGUARDA) {
-      return Math.max(Math.floor(dto.luta / 2), Math.floor(dto.vigor / 2));
+      return dto.defesa + Math.max(Math.floor(dto.luta / 2), Math.floor(dto.vigor / 2));
     }
   }
-  return Math.floor(dto.luta / 2);
+  return dto.defesa + Math.floor(dto.luta / 2);
 }

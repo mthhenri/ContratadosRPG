@@ -1300,9 +1300,9 @@ export class FichaVisualizacao {
   );
 
   /**
-   * Linha de Contra-ataque — calculada por `calcularContraAtaque` (Luta/Vigor conforme a
-   * variante da habilidade); editável no próprio lugar como override manual (m3-10), igual
-   * Defesa/Esquiva/Bloqueio.
+   * Linha de Contra-ataque — Defesa Final calculada por `calcularContraAtaque` (Defesa Base +
+   * bônus de Luta/Vigor conforme a variante da habilidade, mesmo padrão de Esquiva/Bloqueio);
+   * editável no próprio lugar como override manual (m3-10), igual Defesa/Esquiva/Bloqueio.
    */
   protected readonly contraAtaqueLinha = computed<InfoExtra>(
     () => this.informacoesExtras().find((info) => info.chave === 'contraAtaque')!,

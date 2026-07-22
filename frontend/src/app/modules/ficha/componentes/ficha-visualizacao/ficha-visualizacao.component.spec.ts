@@ -252,7 +252,7 @@ describe('FichaVisualizacao', () => {
       expect(ajustes).toEqual([{ chave: 'contraAtaque', valor: 4 }]);
     });
 
-    it('Contra-ataque mostra o valor calculado (Luta ÷ 2) sem precisar de edição manual', () => {
+    it('Contra-ataque mostra a Defesa Final calculada (Defesa + Luta ÷ 2) sem precisar de edição manual', () => {
       const documento: FichaJogadorDadosDto = {
         ...dados,
         habilidades: [
@@ -270,8 +270,9 @@ describe('FichaVisualizacao', () => {
         (box) => box.querySelector('.ficha-mini__rotulo')?.textContent?.trim() === 'Contra-ataque',
       )!;
       const botao = contraAtaque.querySelector<HTMLButtonElement>('.ficha-mini__valor--editavel')!;
-      // dados.atributos.luta = 2 (ver fixture no topo do arquivo) → floor(2 / 2) = 1.
-      expect(botao.textContent?.trim()).toBe('1');
+      // dados.nivel = 3, classe COMBATENTE → Defesa Base = 10 + 3 = 13.
+      // dados.atributos.luta = 2 (ver fixture no topo do arquivo) → floor(2 / 2) = 1. Total = 14.
+      expect(botao.textContent?.trim()).toBe('14');
     });
 
     it('mostra sempre as cinco linhas de Resistência, mesmo sem nenhum equipamento (tudo em 0)', () => {

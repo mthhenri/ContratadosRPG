@@ -183,7 +183,12 @@ export function montarInformacoesExtras(
     linhaNumero(
       'contraAtaque',
       'Contra-ataque',
-      calcularContraAtaque({ luta: entrada.luta, vigor: entrada.vigor, habilidades }),
+      calcularContraAtaque({
+        luta: entrada.luta,
+        vigor: entrada.vigor,
+        defesa: defesaCalc?.defesa ?? null,
+        habilidades,
+      }),
       (valor) => String(valor),
     ),
     linhaNumero(

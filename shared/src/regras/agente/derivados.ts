@@ -46,7 +46,12 @@ export function calcularDerivados(
   const defesa = calcularDefesa(entrada);
   const proficiencia = calcularProficiencia(entrada);
   const danoFurtivo = calcularDanoFurtivo(entrada);
-  const contraAtaque = calcularContraAtaque({ luta, vigor: normalizado.vigor, habilidades });
+  const contraAtaque = calcularContraAtaque({
+    luta,
+    vigor: normalizado.vigor,
+    defesa: defesa?.defesa ?? null,
+    habilidades,
+  });
 
   return {
     defesa: defesa?.defesa,
