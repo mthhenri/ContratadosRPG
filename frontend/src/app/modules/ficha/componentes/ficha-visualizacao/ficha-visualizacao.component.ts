@@ -44,7 +44,7 @@ import {
   obterLimitesClasse,
   somarLesoesAtributo,
 } from '@contratados-rpg/shared/regras/agente';
-import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
+import { rolarFormula, validarFormula } from '@contratados-rpg/shared/regras/rolagem';
 import {
   FORMACOES,
   listarEfeitosPendentes,
@@ -62,6 +62,7 @@ import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-da
 import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
 import { FichaInventario, type CustoEnergiaFragmento } from '../ficha-inventario/ficha-inventario.component';
 import { FichaSanidade, type EstadoSanidade } from '../ficha-sanidade/ficha-sanidade.component';
+import { GuiaFormula } from '../guia-formula/guia-formula.component';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
 import { GRUPOS_FORMACAO, rotuloParametroFormacao } from '../../opcoes-formacao';
 import { CONDICOES_FICHA, type CondicoesFicha } from '../../condicoes-ficha';
@@ -123,6 +124,17 @@ export const ABAS_FICHA: readonly DescritorAba[] = [
 /** `true` quando a string é uma aba conhecida — valida o `?aba=` da URL (deep-link). */
 export function ehAbaFicha(valor: string | null | undefined): valor is AbaFicha {
   return ABAS_FICHA.some((aba) => aba.id === valor);
+}
+
+/** Aba da mini barra do card de **Status** (terceira coluna, redesenho de comparação visual). */
+export type AbaStatus = 'informacoes' | 'inventario' | 'habilidades' | 'rolagens' | 'extras';
+
+/** Todas as abas do card de Status, na ordem de exibição da barra. */
+const ABAS_STATUS: readonly AbaStatus[] = ['informacoes', 'inventario', 'habilidades', 'rolagens', 'extras'];
+
+/** `true` quando a string é uma aba do Status conhecida — valida o `#` (fragmento) da URL (deep-link). */
+export function ehAbaStatus(valor: string | null | undefined): valor is AbaStatus {
+  return ABAS_STATUS.includes(valor as AbaStatus);
 }
 
 /** Derivados do painel **Combate**, na ordem de exibição — todos editáveis no próprio lugar (m3-10). */
@@ -214,6 +226,7 @@ export interface AjusteClasse {
     FichaInventario,
     FichaHabilidades,
     BandejaDados,
+    GuiaFormula,
     OverflowFade,
     Tooltip,
     Dialog,
@@ -343,19 +356,28 @@ export class FichaVisualizacao {
   readonly abaMudou = output<AbaFicha>();
 
   /**
-   * Aba ativa da mini barra de abas do card de **Status** (terceira coluna, redesenho de
-   * comparação visual) — distinta de `abaAtiva`/`abas` acima (a navegação por abas de página
-   * inteira, m3-11, hoje fora do template). Estado puramente local: não sincroniza com a URL.
+   * Aba inicialmente ativa da mini barra do card de **Status** — semeia a barra a partir do `#`
+   * (fragmento) da URL (deep-link/refresh), mesmo padrão de `abaInicial`/`abas` acima, mas com o
+   * próprio canal (fragmento, não `?aba=`) para não colidir com a navegação por abas de página
+   * inteira (m3-11, hoje fora do template). A página valida o fragmento (`ehAbaStatus`) e o repassa.
    */
-  protected readonly abaStatusAtiva = signal<
-    'informacoes' | 'inventario' | 'habilidades' | 'rolagens' | 'extras'
-  >('informacoes');
+  readonly abaStatusInicial = input<AbaStatus>('informacoes');
+
+  /**
+   * Aba ativa da mini barra de abas do card de **Status** (terceira coluna, redesenho de
+   * comparação visual) — distinta de `abaAtiva`/`abas` acima. `linkedSignal` re-deriva do
+   * `abaStatusInicial` (navegação por URL) mas permanece gravável — um clique numa aba a
+   * sobrescreve localmente sem esperar a volta pela rota.
+   */
+  protected readonly abaStatusAtiva = linkedSignal<AbaStatus>(() => this.abaStatusInicial());
+
+  /** Emite a aba escolhida — a página reflete no `#` (fragmento) da URL (deep-link/refresh). */
+  readonly abaStatusMudou = output<AbaStatus>();
 
   /** Troca a aba ativa da mini barra do card de Status. */
-  protected selecionarAbaStatus(
-    aba: 'informacoes' | 'inventario' | 'habilidades' | 'rolagens' | 'extras',
-  ): void {
+  protected selecionarAbaStatus(aba: AbaStatus): void {
     this.abaStatusAtiva.set(aba);
+    this.abaStatusMudou.emit(aba);
   }
 
   /** Campo de vitalidade em digitação direta (clicou no valor), ou `null` fora de edição. */
@@ -627,6 +649,36 @@ export class FichaVisualizacao {
     });
     if (resultado) {
       this.bandeja.mostrar({ rotulo: linha.rotulo, formula: linha.bruto, resultado });
+    }
+  }
+
+  /**
+   * Fórmula digitada na **rolagem rápida** da aba Rolagens (mesmo campo avulso do editor completo
+   * de `FichaRolagens`, m3-31 — aqui isolado até o resto da aba ser ligada): digita e rola na hora,
+   * **sem salvar** preset e sem gastar Energia.
+   */
+  protected readonly rolagemRapida = signal('');
+
+  /** Validade da fórmula da rolagem rápida (live): `null` enquanto vazia, senão `true`/`false`. */
+  protected readonly rolagemRapidaValida = computed<boolean | null>(() => {
+    const texto = this.rolagemRapida().trim();
+    return texto === '' ? null : validarFormula(texto);
+  });
+
+  /** Rola a fórmula avulsa da aba Rolagens na bandeja — usa os atributos efetivos (pós-lesão). */
+  protected rolarRolagemRapida(): void {
+    const formula = this.rolagemRapida().trim();
+    if (!formula || !validarFormula(formula)) {
+      return;
+    }
+    const resultado = rolarFormula({
+      formula,
+      atributos: this.atributosEfetivos(),
+      proficiencia: this.proficiencia(),
+      nivel: this.dados().nivel,
+    });
+    if (resultado) {
+      this.bandeja.mostrar({ rotulo: 'Rolagem rápida', formula, resultado });
     }
   }
 

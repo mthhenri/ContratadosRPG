@@ -379,6 +379,83 @@
     letter-spacing: var(--tracking-label);
     color: var(--text-dim);
   }
+
+  // === Aba Rolagens: rolagem avulsa (mesmo padrão de `.ficha-rol__rapida`, m3-31) ===
+  &__rolagem-rapida {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+  }
+
+  &__rolagem-rapida-linha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .ficha-status__entrada {
+      flex: 1;
+    }
+  }
+
+  // Linha do rótulo com o gatilho do guia (?) à direita.
+  &__rotulo-linha {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__entrada {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    color: var(--text);
+    font-family: var(--font-sans);
+    padding: 9px 10px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s ease;
+
+    &:focus {
+      border-color: var(--accent-border);
+    }
+    &--mono {
+      font-family: var(--font-mono);
+    }
+  }
+
+  &__btn-rolar {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-control);
+    padding: 9px 16px;
+    flex: none;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+  }
+
+  &__dica {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    color: var(--text-mute);
+
+    &--erro {
+      color: var(--warning);
+    }
+  }
 }
 
 // Fórmula da DT abaixo do título (não cabe ao lado do título+régua) — linha própria, centralizada.

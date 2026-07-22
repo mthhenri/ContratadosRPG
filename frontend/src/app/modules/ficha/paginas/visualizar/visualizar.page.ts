@@ -52,6 +52,7 @@ import type { CondicoesFicha } from '../../condicoes-ficha';
 
 import {
   AbaFicha,
+  AbaStatus,
   AjusteAtributos,
   AjusteCampoDados,
   AjusteClasse,
@@ -60,6 +61,7 @@ import {
   AjusteVitalidade,
   FichaVisualizacao,
   ehAbaFicha,
+  ehAbaStatus,
 } from '../../componentes/ficha-visualizacao/ficha-visualizacao.component';
 import type { EstadoSanidade } from '../../componentes/ficha-sanidade/ficha-sanidade.component';
 
@@ -107,6 +109,17 @@ export class FichaVisualizar {
       return 'combate';
     }
     return ehAbaFicha(parametro) ? parametro : 'visao-geral';
+  })();
+
+  /**
+   * Aba inicialmente ativa da mini barra do card de **Status** (Informações/Inventário/
+   * Habilidades/Rolagens/Extras): lida do `#` (fragmento) da URL para deep-link/refresh —
+   * canal próprio, distinto do `?aba=` acima, para não colidir com a navegação por abas de
+   * página inteira. Fragmento inválido ou ausente cai em "Informações".
+   */
+  protected readonly abaStatusInicial: AbaStatus = (() => {
+    const fragmento = this.rotaAtiva.snapshot.fragment;
+    return ehAbaStatus(fragmento) ? fragmento : 'informacoes';
   })();
 
   protected readonly carregando = signal(true);
@@ -320,6 +333,19 @@ export class FichaVisualizar {
       relativeTo: this.rotaAtiva,
       queryParams: { aba },
       queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  /**
+   * Reflete a aba escolhida na mini barra do card de Status no `#` (fragmento) da URL (deep-link/
+   * refresh) sem recarregar a ficha — mesmo padrão de `mudarAba`, mas em canal próprio (fragmento).
+   */
+  protected mudarAbaStatus(aba: AbaStatus): void {
+    this.router.navigate([], {
+      relativeTo: this.rotaAtiva,
+      fragment: aba,
+      queryParamsHandling: 'preserve',
       replaceUrl: true,
     });
   }

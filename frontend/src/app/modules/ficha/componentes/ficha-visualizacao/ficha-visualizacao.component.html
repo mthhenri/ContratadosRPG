@@ -1115,7 +1115,41 @@
         </div>
         }
         @if (abaStatusAtiva() === 'rolagens') {
-        <div class="ficha-status__conteudo"></div>
+        <div class="ficha-status__conteudo">
+          <!-- Rolagem avulsa (m3-31): digite e role na hora, sem salvar preset nem gastar energia.
+               Primeiro pedaço da aba Rolagens a entrar aqui — os presets vêm depois. -->
+          <div class="ficha-status__rolagem-rapida">
+            <span class="ficha-status__rotulo-linha">
+              <span class="ficha-status__rotulo-coluna">Rolagem rápida</span>
+              <app-guia-formula />
+            </span>
+            <div class="ficha-status__rolagem-rapida-linha">
+              <input
+                #campoRolagemRapida
+                class="ficha-status__entrada ficha-status__entrada--mono"
+                type="text"
+                [value]="rolagemRapida()"
+                placeholder="Ex.: 2d6 + FOR [Físico]  ·  LUTd20kh1cm1 + PROF"
+                aria-label="Fórmula da rolagem rápida"
+                (input)="rolagemRapida.set(campoRolagemRapida.value)"
+                (keydown.enter)="rolarRolagemRapida()"
+              />
+              <button
+                type="button"
+                class="ficha-status__btn-rolar"
+                [disabled]="!rolagemRapida().trim() || rolagemRapidaValida() === false"
+                (click)="rolarRolagemRapida()"
+              >
+                Rolar
+              </button>
+            </div>
+            @if (rolagemRapidaValida() === false) {
+              <span class="ficha-status__dica ficha-status__dica--erro">
+                Fórmula não reconhecida. Veja o guia (?) ao lado.
+              </span>
+            }
+          </div>
+        </div>
         }
         @if (abaStatusAtiva() === 'extras') {
         <div class="ficha-status__conteudo"></div>
