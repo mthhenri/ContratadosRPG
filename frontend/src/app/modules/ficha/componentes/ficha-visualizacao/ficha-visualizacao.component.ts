@@ -799,11 +799,13 @@ export class FichaVisualizacao {
     'danoCorpoACorpo',
     'danoFurtivo',
     'percepcao',
+    'habilidadesPorTurno',
   ];
 
   /**
-   * Glance de Deslocamento/Dano C. a C./Dano Furtivo/Percepção no novo card de Status — mesmas
-   * linhas editáveis de `Informações Extras` (m3-10), só reorganizadas; nenhum cálculo novo.
+   * Glance de Deslocamento/Dano C. a C./Dano Furtivo/Percepção/Hab. por Turno no novo card de
+   * Status — mesmas linhas editáveis de `Informações Extras` (m3-10), só reorganizadas; nenhum
+   * cálculo novo.
    */
   protected readonly statusRapido = computed<readonly InfoExtra[]>(() => {
     const mapa = new Map(this.informacoesExtras().map((info) => [info.chave, info] as const));

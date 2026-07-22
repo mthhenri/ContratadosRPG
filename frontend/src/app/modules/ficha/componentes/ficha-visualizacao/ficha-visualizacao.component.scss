@@ -286,8 +286,7 @@
   }
 
   &__aba {
-    flex: 0 0 auto;
-    min-width: 40px;
+    width: 100%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1233,23 +1232,27 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 
-  // Quatro colunas iguais — Contra-ataque tinha coluna própria em `auto` (largura do rótulo, o
-  // mais longo dos quatro), que destoava das outras três e quebrava a simetria da fileira; o
-  // rótulo mais longo agora corta com "…" (`.ficha-mini--fino .ficha-mini__rotulo` abaixo), mesmo
-  // padrão já usado no valor da Patente.
+  // Contra-ataque tinha coluna própria em `auto` (largura do rótulo, o mais longo dos quatro),
+  // que destoava das outras três e quebrava a simetria da fileira; o rótulo mais longo agora
+  // corta com "…" (`.ficha-mini--fino .ficha-mini__rotulo` abaixo), mesmo padrão já usado no
+  // valor da Patente.
   &--com-contra {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-
-    @include bp.mobile {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
   }
 
-  // Quatro colunas iguais (glance de Status: Deslocamento/Dano C. a C./Dano Furtivo/Percepção —
-  // nenhuma delas precisa de mais espaço que as outras, diferente do Contra-ataque acima).
+  // Status: Deslocamento/Dano C. a C./Dano Furtivo/Percepção — nenhuma precisa de mais espaço.
   &--quatro {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 
+  // Status: idem + Hab. por Turno.
+  &--cinco {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  &--com-contra,
+  &--quatro,
+  &--cinco {
     @include bp.mobile {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
