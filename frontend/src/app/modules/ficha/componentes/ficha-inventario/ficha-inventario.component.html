@@ -47,54 +47,98 @@
     </div>
   </div>
 
-  <!-- Montar/adicionar itens: catálogo recolhível + item custom (só para quem edita). -->
+  <!-- Montar/adicionar itens: catálogo recolhível + item custom (só para quem edita). Busca de
+       itens: botão de lupa ao lado de "Custos" troca a linha inteira pela barra + "X" pra sair. -->
   @if (editavel()) {
-    <div class="ficha-inv__acoes">
-      <button
-        type="button"
-        class="ficha-inv__btn ficha-inv__btn--principal"
-        [attr.aria-expanded]="catalogoAberto()"
-        (click)="alternarCatalogo()"
-      >
-        {{ catalogoAberto() ? 'Fechar catálogo' : '+ Adicionar itens' }}
-      </button>
-      <button
-        type="button"
-        class="ficha-inv__btn ficha-inv__btn--secundario"
-        [class.ficha-inv__btn--ativo]="criandoItem()"
-        [attr.aria-expanded]="criandoItem()"
-        (click)="alternarCriarItem()"
-      >
-        + Item custom
-      </button>
-      @if (!inventarioVazio() && !confirmandoEsvaziar()) {
-        <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="esvaziar()">
-          Esvaziar
+    @if (buscandoItens()) {
+      <div class="ficha-inv__acoes ficha-inv__acoes--busca">
+        <input
+          class="ficha-inv__busca ficha-inv__busca--flex"
+          type="search"
+          autofocus
+          placeholder="Pesquisar no inventário…"
+          autocomplete="off"
+          aria-label="Pesquisar item no inventário"
+          [formControl]="buscaItens"
+        />
+        <button
+          type="button"
+          class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
+          aria-label="Fechar busca"
+          [appTooltip]="'Fechar busca'"
+          (click)="fecharBuscaItens()"
+        >
+          ✕
         </button>
-      }
-      @if (confirmandoEsvaziar()) {
-        <span class="ficha-inv__confirmar">
-          <span class="ficha-inv__confirmar-texto">Esvaziar tudo?</span>
-          <button type="button" class="ficha-inv__btn ficha-inv__btn--perigo" (click)="confirmarEsvaziar()">
+      </div>
+    } @else {
+      <div class="ficha-inv__acoes">
+        <button
+          type="button"
+          class="ficha-inv__btn ficha-inv__btn--principal"
+          [attr.aria-expanded]="catalogoAberto()"
+          (click)="alternarCatalogo()"
+        >
+          {{ catalogoAberto() ? 'Fechar catálogo' : '+ Adicionar itens' }}
+        </button>
+        <button
+          type="button"
+          class="ficha-inv__btn ficha-inv__btn--secundario"
+          [class.ficha-inv__btn--ativo]="criandoItem()"
+          [attr.aria-expanded]="criandoItem()"
+          (click)="alternarCriarItem()"
+        >
+          + Item custom
+        </button>
+        @if (!inventarioVazio() && !confirmandoEsvaziar()) {
+          <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="esvaziar()">
             Esvaziar
           </button>
-          <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="cancelarEsvaziar()">
-            Cancelar
-          </button>
-        </span>
-      }
-      <button
-        type="button"
-        class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--custos"
-        [class.ficha-inv__btn--ativo]="mostrarCustos()"
-        [attr.aria-pressed]="mostrarCustos()"
-        [appTooltip]="'Mostrar/ocultar custo dos itens no inventário'"
-        (click)="alternarMostrarCustos()"
-      >
-        <app-icone [nome]="mostrarCustos() ? 'olho' : 'olho-fechado'" />
-        <span>Custos</span>
-      </button>
-    </div>
+        }
+        @if (confirmandoEsvaziar()) {
+          <span class="ficha-inv__confirmar">
+            <span class="ficha-inv__confirmar-texto">Esvaziar tudo?</span>
+            <button type="button" class="ficha-inv__btn ficha-inv__btn--perigo" (click)="confirmarEsvaziar()">
+              Esvaziar
+            </button>
+            <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="cancelarEsvaziar()">
+              Cancelar
+            </button>
+          </span>
+        }
+        <button
+          type="button"
+          class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--custos"
+          [class.ficha-inv__btn--ativo]="mostrarCustos()"
+          [attr.aria-pressed]="mostrarCustos()"
+          [appTooltip]="'Mostrar/ocultar custo dos itens no inventário'"
+          (click)="alternarMostrarCustos()"
+        >
+          <app-icone [nome]="mostrarCustos() ? 'olho' : 'olho-fechado'" />
+          <span>Custos</span>
+        </button>
+        <button
+          type="button"
+          class="ficha-inv__btn ficha-inv__btn--secundario"
+          [class.ficha-inv__btn--ativo]="mostrandoSoAmplificadores()"
+          [attr.aria-pressed]="mostrandoSoAmplificadores()"
+          [appTooltip]="mostrandoSoAmplificadores() ? 'Ver equipamentos' : 'Ver só amplificadores'"
+          (click)="alternarSoAmplificadores()"
+        >
+          <app-icone nome="amplificador" />
+          <span>{{ mostrandoSoAmplificadores() ? 'Equipamentos' : 'Amplificadores' }}</span>
+        </button>
+        <button
+          type="button"
+          class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
+          aria-label="Pesquisar no inventário"
+          [appTooltip]="'Pesquisar no inventário'"
+          (click)="abrirBuscaItens()"
+        >
+          <app-icone nome="busca" />
+        </button>
+      </div>
+    }
 
     <!-- Formulário de item custom (nome obrigatório; categoria/custo/peso) — no modo `inline` abre na
          própria lista (aqui embaixo); no modo `dialog` o mesmo template abre num `p-dialog` (fim do
@@ -361,17 +405,6 @@
        esticar a coluna Status além da altura da coluna de Identidade vizinha (`--linha-colunas`
        tem `align-items:stretch`; sem teto, a lista cresce sem fim e a página inteira fica gigante
        — teto fixo só no modo `dialog`, ver `--compacto` no SCSS). -->
-  @if (!inventarioVazio()) {
-    <input
-      class="ficha-inv__busca"
-      type="search"
-      placeholder="Pesquisar no inventário…"
-      autocomplete="off"
-      aria-label="Pesquisar item no inventário"
-      [formControl]="buscaItens"
-    />
-  }
-
   <div class="ficha-inv__lista" appOverflowFade>
   @if (inventarioVazio()) {
     <p class="ficha-inv__vazio">
@@ -381,11 +414,12 @@
         Inventário vazio.
       }
     </p>
-  } @else if (buscaItensSemResultado()) {
-    <p class="ficha-inv__vazio">Nenhum item encontrado.</p>
   }
 
-  @for (item of itensInventarioFiltrados(); track item.indice) {
+  <!-- Cartão de um item — mesmo card na lista principal (armas → munições → proteções →
+       armazenamento → fragmentos) e na grade dupla de Medicinal/Operacional abaixo (só a
+       ordem/layout mudam — ver `itensListaPrincipal`/`itensListaMedicinalOperacional`). -->
+  <ng-template #cartaoItemTemplate let-item="item">
     <div class="ficha-inv__item">
       <div class="ficha-inv__item-cabecalho">
         <div class="ficha-inv__item-identidade">
@@ -423,7 +457,9 @@
               <span class="ficha-inv__item-nome-mecanico">{{ item.nome }} — {{ item.categoriaRotulo }}</span>
             }
           }
-          <span class="ficha-inv__item-categoria">{{ item.categoriaRotulo }}</span>
+          @if (!item.apelido) {
+            <span class="ficha-inv__item-categoria">{{ item.categoriaRotulo }}</span>
+          }
         </div>
         <div class="ficha-inv__item-controles">
           <!-- Ações (Modificar / Vestir-Guardar) → meta ($ e peso) → X de remover, por último. -->
@@ -921,6 +957,26 @@
         </span>
       }
     </div>
+  </ng-template>
+
+  @if (!inventarioVazio() && !mostrandoSoAmplificadores()) {
+    @if (buscaItensSemResultado()) {
+      <p class="ficha-inv__vazio">Nenhum item encontrado.</p>
+    }
+    @for (item of itensListaPrincipal(); track item.indice) {
+      <ng-container [ngTemplateOutlet]="cartaoItemTemplate" [ngTemplateOutletContext]="{ item: item }" />
+    }
+    @if (itensListaMedicinalOperacional().length > 0) {
+      <div class="ficha-inv__grade-medop">
+        @for (item of itensListaMedicinalOperacional(); track item.indice) {
+          <ng-container [ngTemplateOutlet]="cartaoItemTemplate" [ngTemplateOutletContext]="{ item: item }" />
+        }
+      </div>
+    }
+  }
+
+  @if (mostrandoSoAmplificadores() && amplificadoresInventario().length === 0) {
+    <p class="ficha-inv__vazio">Nenhum amplificador no inventário.</p>
   }
 
   @if (amplificadoresInventario().length > 0) {
