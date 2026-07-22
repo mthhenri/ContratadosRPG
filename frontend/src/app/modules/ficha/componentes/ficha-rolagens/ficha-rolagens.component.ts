@@ -112,6 +112,16 @@ export class FichaRolagens {
   protected readonly indiceEmEdicao = signal<number | null>(null);
   /** Índice com a confirmação de remoção inline aberta, ou `null`. */
   protected readonly indiceRemovendo = signal<number | null>(null);
+  /** Índices dos presets **abertos** (accordion) — todos fechados por padrão pra ocupar menos espaço. */
+  protected readonly presetsAbertos = signal<ReadonlySet<number>>(new Set());
+
+  protected alternarAberto(indice: number): void {
+    const abertos = new Set(this.presetsAbertos());
+    if (!abertos.delete(indice)) {
+      abertos.add(indice);
+    }
+    this.presetsAbertos.set(abertos);
+  }
 
   /** Valor de Energia informado para passos de custo variável (`[X E]`), por `preset:passo`. Efêmero. */
   private readonly energiaVariavelPorPasso = signal<ReadonlyMap<string, number>>(new Map());

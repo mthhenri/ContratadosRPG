@@ -59,7 +59,7 @@
     grid-template-columns: repeat(2, 1fr);
     align-items: start;
     gap: 10px;
-    max-height: 560px;
+    max-height: 410px;
     overflow-y: auto;
     padding-right: 4px;
 
@@ -344,6 +344,20 @@
     &--perigo {
       color: var(--accent);
       border-color: var(--accent-border);
+    }
+    // Toggle do accordion do preset (fechado por padrão) — sem borda, ícone rotaciona ao abrir.
+    &--chevron {
+      width: 20px;
+      height: 20px;
+      border-color: transparent;
+
+      svg {
+        transition: transform 0.15s ease;
+        transform: rotate(-90deg);
+      }
+    }
+    &--aberto svg {
+      transform: rotate(0deg);
     }
   }
   &__remover {

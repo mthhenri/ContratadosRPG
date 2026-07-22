@@ -41,6 +41,16 @@
       <article class="ficha-rol__preset">
         <div class="ficha-rol__preset-topo">
           <div class="ficha-rol__preset-id">
+            <button
+              type="button"
+              class="ficha-rol__mini-btn ficha-rol__mini-btn--chevron"
+              [class.ficha-rol__mini-btn--aberto]="presetsAbertos().has(preset.indice)"
+              [appTooltip]="presetsAbertos().has(preset.indice) ? 'Fechar' : 'Abrir'"
+              [attr.aria-label]="(presetsAbertos().has(preset.indice) ? 'Fechar' : 'Abrir') + ' ' + preset.nome"
+              (click)="alternarAberto(preset.indice)"
+            >
+              <app-icone [nome]="'chevron'" />
+            </button>
             @if (preset.encadeado) {
               <span class="ficha-rol__cadeia" [appTooltip]="'Encadeado — vários passos'">⛓</span>
             }
@@ -64,6 +74,7 @@
           }
         </div>
 
+        @if (presetsAbertos().has(preset.indice)) {
         @if (preset.descricao) {
           <p class="ficha-rol__preset-desc" [appTooltip]="preset.descricao">{{ preset.descricao }}</p>
         }
@@ -148,6 +159,7 @@
             </div>
           }
         </div>
+        }
       </article>
     }
   </div>
