@@ -809,4 +809,35 @@ describe('FichaVisualizacao', () => {
       expect(alvo.fixture.componentInstance['rascunhoOrigem']()).toBeNull();
     });
   });
+
+  describe('Contrato (m3-40)', () => {
+    it('exibe o placeholder "CONTRATO — 0000" quando ainda não definido', () => {
+      const { raiz } = montar(dados, 'Corvo', 42, false);
+      expect(raiz.querySelector('.ficha-ident__contrato')?.textContent?.trim()).toBe('CONTRATO — 0000');
+    });
+
+    it('exibe o número do Contrato persistido', () => {
+      const documento = { ...dados, contrato: '0731' };
+      const { raiz } = montar(documento, 'Corvo', 42, false);
+      expect(raiz.querySelector('.ficha-ident__contrato')?.textContent?.trim()).toBe('CONTRATO — 0731');
+    });
+
+    it('dono vê o Contrato só leitura, sem lápis', () => {
+      const { raiz } = montar(dados, 'Corvo', 42, true, false);
+      expect(raiz.querySelector('.ficha-ident__contrato--editavel')).toBeNull();
+    });
+
+    it('mestre vê o Contrato editável e emite o ajuste ao confirmar', () => {
+      const alvo = montar(dados, 'Corvo', 42, true, true);
+      const contratos: string[] = [];
+      alvo.fixture.componentInstance.ajusteContrato.subscribe((c) => contratos.push(c));
+
+      expect(alvo.raiz.querySelector('.ficha-ident__contrato--editavel')).not.toBeNull();
+      const componente = alvo.fixture.componentInstance;
+      componente['editarIdentidade']('contrato');
+      componente['confirmarIdentidade']('contrato', '1234');
+
+      expect(contratos).toEqual(['1234']);
+    });
+  });
 });

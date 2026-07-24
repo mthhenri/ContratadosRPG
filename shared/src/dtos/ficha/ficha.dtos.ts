@@ -412,4 +412,12 @@ export interface FichaJogadorDadosDto {
    * **Opcional** por retrocompatibilidade e parcial — atributo ausente cai em 0.
    */
   readonly modificadoresTeste?: Partial<Record<keyof FichaAtributosDto, number>>;
+  /**
+   * Número do Contrato do agente (m3-40) — texto livre, exibido como "CONTRATO — 0000" ao lado do
+   * nome no cabeçalho da Identidade. Editável **só pelo mestre** da campanha (`ehMestre()` no
+   * `FichaVisualizacao`; o backend trava o dono em `alterarFicha`). **Opcional** — ausente em
+   * fichas anteriores a esta task e enquanto o mestre não o define. Sem geração/validação
+   * automática — o mestre digita o número livremente (fora de escopo desta task).
+   */
+  readonly contrato?: string;
 }

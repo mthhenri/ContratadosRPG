@@ -1,6 +1,38 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-19 (**m3-26 — otimização de espaço + refino mobile da ficha,
+> Última atualização: 2026-07-24 (**m3-40 — cabeçalho da Identidade: "Codinome"→"Agente" +
+> Contrato só-mestre**: 1ª task do lote de refino `m3-40`…`m3-56` implementada. **Rótulo:** o card
+> de Identidade (`ficha-visualizacao.component.html`) trocou "Codinome" por "Agente" — só o texto;
+> o binding (`nome()`, coluna relacional) e o conceito interno (`ajusteNome`, comentários) seguem
+> "Codinome"/`nome`, como a spec previu. **Contrato:** novo `contrato?: string` opcional em
+> `FichaJogadorDadosDto` (JSONB `dados`, não coluna — `docs/SCHEMA.md` atualizado), exibido ao lado
+> do nome do Agente como "CONTRATO — 0000" (mono/uppercase, tokens do tema; "0000" é o placeholder
+> quando ainda não definido). Reusa o padrão de edição no lugar de Personalidade/Codinome (canal
+> `editandoIdentidade`, agora com o membro `'contrato'`) mas com trava **exclusiva do mestre** — ao
+> contrário de Personalidade/Origem (que liberam o dono até a 1ª definição), o dono nunca edita o
+> Contrato, nem antes nem depois de definido: `contratoEditavel = ajustavel() && ehMestre()`, novo
+> output `ajusteContrato`. **Backend é o árbitro** (não só o front escondendo o lápis): nova
+> `validarContratoSomenteMestre` em `ficha.service.ts`, chamada ao lado de
+> `validarImutabilidadeIdentidade` dentro do `if (dono === autor)` de `alterarFicha` — um PUT direto
+> do dono tentando mudar `dados.contrato` recebe `BusinessException` ("Contrato só pode ser alterado
+> pelo Mestre"), mesmo que a UI nunca ofereça esse caminho. **Personalidade editável pelo mestre
+> (deliverable 3):** já estava correto desde a m3-24/m3-25 — `personalidadeEditavel` no componente já
+> checava `ehMestre()`, e `alterarFicha` já só chama `validarImutabilidadeIdentidade` quando
+> `fichaEncontrada.usuarioId === usuarioAtivo.sub` (dono); confirmado ao vivo, sem mudança de código
+> (fora de escopo da spec, além de confirmar). **Testes:** shared 333/333 (sem novo — nenhuma regra
+> de jogo tocada), backend 108/108 (sem novo teste dedicado — a trava é coberta indiretamente pela
+> suíte existente de `alterarFicha`, mas verificada ao vivo abaixo), frontend +4 no componente
+> (placeholder "CONTRATO — 0000", número persistido, dono sem lápis, mestre edita e emite
+> `ajusteContrato`); lint/build limpos nos 3 workspaces. **Verificado ao vivo** (Postgres local,
+> backend+frontend reais, Playwright, mestre + dono distintos): cabeçalho mostra "Agente" pros dois
+> papéis; mestre vê "CONTRATO — 0000" clicável, edita para "0731", reload confirma persistência real
+> no Postgres; dono vê "CONTRATO — 0731" só leitura, sem lápis; `PUT /ficha/:id` disparado direto
+> pelo dono (bypassando a UI) tentando gravar `contrato: '9999'` volta `400` com a mensagem exata da
+> trava — confirma que a UI não é a única linha de defesa. Spec em
+> `docs/specs/done/m3-40-ficha-cabecalho-agente-contrato.spec.md`. Próxima task: **`m3-41`**
+> (Origem — motor de efeitos das 16 linhas de Formação ainda sem consumidor).)
+>
+> (**m3-26 — otimização de espaço + refino mobile da ficha,
 > absorvendo a `m3-09`**: a `m3-09-refinamento-mobile-ficha.spec.md` estava marcada **SUPERSEDED**
 > no próprio backlog — banner do autor (2026-07-15) dizendo que o passe mobile virou parte deste
 > redesenho desktop+mobile único; ao invés de implementar a m3-09 isolada, a task real foi a

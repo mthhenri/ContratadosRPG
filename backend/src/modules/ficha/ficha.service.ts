@@ -149,9 +149,11 @@ export class FichaService {
    * dono ou o mestre da campanha. O `id` vem no DTO (montado pela controller com o `@Param`). O
    * documento é validado contra `shared/regras` antes de persistir. Para o **dono**, a Identidade
    * já definida (Personalidade/Origem) é travada (m3-24 — `validarImutabilidadeIdentidade`); o
-   * mestre altera as duas livremente. `ResourceNotFoundException` se a ficha não existir;
-   * `UnauthorizedAccessException` se o autor não puder editá-la; `BusinessException` se os dados
-   * forem incoerentes ou a Identidade travada for alterada pelo dono.
+   * mestre altera as duas livremente. O Contrato (m3-40) segue a mesma lógica — o dono nunca o
+   * altera, só o mestre (`validarContratoSomenteMestre`). `ResourceNotFoundException` se a ficha
+   * não existir; `UnauthorizedAccessException` se o autor não puder editá-la; `BusinessException`
+   * se os dados forem incoerentes, a Identidade travada for alterada pelo dono, ou o dono tentar
+   * alterar o Contrato.
    */
   async alterarFicha(
     dto: FichaInternoAlterarDto,
@@ -166,6 +168,7 @@ export class FichaService {
     this.validarDadosContraRegras(dto.dados);
     if (fichaEncontrada.usuarioId === usuarioAtivo.sub) {
       this.validarImutabilidadeIdentidade(fichaEncontrada.dados.identidade, dto.dados.identidade);
+      this.validarContratoSomenteMestre(fichaEncontrada.dados.contrato, dto.dados.contrato);
     }
 
     const fichaAlterada = await this.fichaRepositorio.alterarFicha(dto);
@@ -421,6 +424,18 @@ export class FichaService {
     const origemAtual = identidadeAtual?.origem ?? null;
     if (origemAtual !== null && !this.origensIguais(origemAtual, identidadeNova?.origem ?? null)) {
       throw new BusinessException('Origem já definida — imutável para o dono da ficha');
+    }
+  }
+
+  /**
+   * Trava o Contrato (m3-40) para o **dono** — só o mestre da campanha define/altera o número
+   * (o front já esconde o lápis; aqui é a validação autoritativa, mesmo padrão de
+   * `validarImutabilidadeIdentidade`). O dono nunca dispara este caminho pra Contrato; se o
+   * payload trouxer um valor diferente do persistido (ex.: chamada direta à API), rejeita.
+   */
+  private validarContratoSomenteMestre(contratoAtual: string | undefined, contratoNovo: string | undefined): void {
+    if ((contratoNovo ?? '') !== (contratoAtual ?? '')) {
+      throw new BusinessException('Contrato só pode ser alterado pelo Mestre');
     }
   }
 

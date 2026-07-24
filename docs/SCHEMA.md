@@ -174,6 +174,8 @@ Contrato: `shared/src/dtos/ficha/ficha.dtos.ts`. Forma 1:1 com `sistema-v4.1.0.m
       "saberDeCampo": "..."
     }
   },
+  "contrato": "0000",                 // m3-40: opcional, texto livre — só o Mestre altera
+                                      // (dono/visualizador só leem; backend trava o dono)
   "estado": {
     "vidaAtual": 34,                  // atual PODE exceder a máxima (m3-10)
     "energiaAtual": 18,               // pode negativar; PODE exceder a máxima (m3-10)
