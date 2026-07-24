@@ -46,6 +46,7 @@ import {
 } from '@contratados-rpg/shared/regras/agente';
 import { rolarFormula, validarFormula } from '@contratados-rpg/shared/regras/rolagem';
 import {
+  experimentoComPeculiaridade,
   FORMACOES,
   listarEfeitosPendentes,
   obterBonusRolagemAtributoFormacao,
@@ -973,8 +974,21 @@ export class FichaVisualizacao {
   protected readonly personalidadeEditavel = computed(
     () => this.ajustavel() && (this.ehMestre() || !this.personalidadeDefinida()),
   );
+  /**
+   * `true` quando a classe é uma subclasse de Experimento com a habilidade "Peculiaridade" tomada
+   * (m3-41 — `sistema-v4.1.0.md` "⬡ Subclasse": ela "substitui os bônus originais de Origem"). Nesse
+   * caso a Origem trava para **todo mundo**, inclusive o mestre — não é a trava de posse/edição
+   * (`origemEditavel`), é a Origem deixar de existir para aquele agente (o backend é o árbitro final,
+   * `validarFormaIdentidade`).
+   */
+  protected readonly origemBloqueadaPorPeculiaridade = computed(() =>
+    experimentoComPeculiaridade(this.dados().classe, this.dados().habilidades),
+  );
   protected readonly origemEditavel = computed(
-    () => this.ajustavel() && (this.ehMestre() || !this.origemDefinida()),
+    () =>
+      this.ajustavel() &&
+      !this.origemBloqueadaPorPeculiaridade() &&
+      (this.ehMestre() || !this.origemDefinida()),
   );
 
   /**

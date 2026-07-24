@@ -10,6 +10,7 @@ import {
   ClasseEnum,
   EspecialidadeEfeitoEnum,
   FormacaoBonusEnum,
+  HabilidadeCategoriaEnum,
   TipoCampanhaMembroPapelEnum,
   TipoFichaEnum,
 } from '@contratados-rpg/shared/enums';
@@ -216,6 +217,41 @@ describe('FichaService', () => {
       );
       expect(dadosPersistidos.estado.energiaMaxima).toBe(
         calcularEnergia({ classe: ClasseEnum.COMBATENTE, nivel: 1, destreza: 2 }),
+      );
+    });
+
+    it('snapshot de derivados na criação já reflete o delta de Formação da Origem (m3-41)', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      fichaRepositorio.criarFicha.mockResolvedValue({ id: 5 });
+
+      // Origem com MOVIMENTO_DESLOCAMENTO (+1m) — cliente não manda `derivados`, o backend deriva do zero.
+      await service.criarFicha(
+        {
+          campanhaId: 3,
+          nome: 'Agente Alfa',
+          dados: criarDados({ identidade: criarIdentidade() }),
+        },
+        usuarioDono,
+      );
+
+      const [argumentoCriacao] = fichaRepositorio.criarFicha.mock.calls[0] as [FichaInternoCriarDto];
+      const derivadosSemOrigem = calcularDerivados(ClasseEnum.COMBATENTE, 1, criarDados().atributos, []);
+      expect(argumentoCriacao.dados.derivados?.deslocamento).toBe((derivadosSemOrigem.deslocamento ?? 0) + 1);
+    });
+
+    it('snapshot de derivados na criação não muda sem Origem definida (m3-41)', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      fichaRepositorio.criarFicha.mockResolvedValue({ id: 5 });
+
+      await service.criarFicha({ campanhaId: 3, nome: 'Agente Alfa', dados: criarDados() }, usuarioDono);
+
+      const [argumentoCriacao] = fichaRepositorio.criarFicha.mock.calls[0] as [FichaInternoCriarDto];
+      expect(argumentoCriacao.dados.derivados).toEqual(
+        calcularDerivados(ClasseEnum.COMBATENTE, 1, criarDados().atributos, []),
       );
     });
 
@@ -451,6 +487,24 @@ describe('FichaService', () => {
         expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
       });
 
+      it('lança BusinessException quando o gatilho da Especialidade está vazio (m3-41 — acoplada à Origem)', async () => {
+        const origem = criarOrigem({
+          especialidade: { gatilho: '   ', efeito: EspecialidadeEfeitoEnum.DADO_EXTRA },
+        });
+
+        await expect(
+          service.criarFicha(
+            {
+              campanhaId: 3,
+              nome: 'Agente Alfa',
+              dados: criarDados({ identidade: criarIdentidade({ origem }) }),
+            },
+            usuarioDono,
+          ),
+        ).rejects.toThrow(BusinessException);
+        expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+      });
+
       it('lança BusinessException quando o efeito da Especialidade não existe em EspecialidadeEfeitoEnum', async () => {
         const origem = criarOrigem({
           especialidade: { gatilho: 'Sob fogo direto', efeito: 'EFEITO_INEXISTENTE' as EspecialidadeEfeitoEnum },
@@ -467,6 +521,79 @@ describe('FichaService', () => {
           ),
         ).rejects.toThrow(BusinessException);
         expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+      });
+
+      describe('Experimento com Peculiaridade zera a Origem (m3-41)', () => {
+        const peculiaridade = {
+          nome: 'Peculiaridade',
+          categoria: HabilidadeCategoriaEnum.SUBCLASSE,
+          custoEnergia: 0,
+          descricao: '...',
+        };
+
+        it('lança BusinessException quando um Experimento com Peculiaridade tenta salvar Origem', async () => {
+          await expect(
+            service.criarFicha(
+              {
+                campanhaId: 3,
+                nome: 'Agente Alfa',
+                dados: criarDados({
+                  classe: ClasseEnum.EXPERIMENTO_BESTIAL,
+                  habilidades: [peculiaridade],
+                  identidade: criarIdentidade(),
+                }),
+              },
+              usuarioDono,
+            ),
+          ).rejects.toThrow(BusinessException);
+          expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+        });
+
+        it('aceita um Experimento com Peculiaridade sem Origem definida', async () => {
+          await expect(
+            service.criarFicha(
+              {
+                campanhaId: 3,
+                nome: 'Agente Alfa',
+                dados: criarDados({
+                  classe: ClasseEnum.EXPERIMENTO_BESTIAL,
+                  habilidades: [peculiaridade],
+                  identidade: criarIdentidade({ origem: null }),
+                }),
+              },
+              usuarioDono,
+            ),
+          ).resolves.toBeDefined();
+        });
+
+        it('aceita um Experimento com Origem quando ele não tem a Peculiaridade', async () => {
+          await expect(
+            service.criarFicha(
+              {
+                campanhaId: 3,
+                nome: 'Agente Alfa',
+                dados: criarDados({ classe: ClasseEnum.EXPERIMENTO_BESTIAL, identidade: criarIdentidade() }),
+              },
+              usuarioDono,
+            ),
+          ).resolves.toBeDefined();
+        });
+
+        it('aceita uma classe base com Origem, mesmo com uma habilidade chamada "Peculiaridade" (categoria errada)', async () => {
+          await expect(
+            service.criarFicha(
+              {
+                campanhaId: 3,
+                nome: 'Agente Alfa',
+                dados: criarDados({
+                  habilidades: [{ ...peculiaridade, categoria: HabilidadeCategoriaEnum.GERAL }],
+                  identidade: criarIdentidade(),
+                }),
+              },
+              usuarioDono,
+            ),
+          ).resolves.toBeDefined();
+        });
       });
     });
   });

@@ -1,6 +1,40 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-24 (**m3-40 — cabeçalho da Identidade: "Codinome"→"Agente" +
+> Última atualização: 2026-07-24 (**m3-41 — Origem passa a afetar cálculos de verdade**: 2ª task do
+> lote de refino `m3-40`…`m3-56` implementada, em duas fatias. **Entregável 1 (motor de efeitos),
+> escopo reduzido conscientemente:** das 6 categorias de efeito de Formação sem consumidor
+> (`RESISTENCIA`/`INICIATIVA`/`SOBRECARGA`/`ROLAGEM`/`DT_REPARO`/`DURACAO_EFEITO`), só 3 tinham onde
+> aterrissar sem inventar subsistema novo — `obterResistenciaFormacao`/
+> `obterToleranciaSobrecargaFormacao`/`obterBonusRolagemAtributoFormacao`
+> (`shared/src/regras/identidade/formacoes.ts`) ganharam consumidor: Resistência soma em
+> `montarResistencias` (novo campo `formacao` em `ResistenciaLinhaDto`), a tolerância de Sobrecarga
+> desloca o limiar de "Sobrecarregado" do Inventário (`toleranciaSobrecarga`, novo input de
+> `FichaInventario`), e o dado/bônus de Formação num teste de atributo específico entra em
+> `rolarTesteAtributo`/`modificadorTeste`. `INICIATIVA`/`DT_REPARO`/`DURACAO_EFEITO`/`ROLAGEM` por
+> categoria de arma ou condição foram pra **Fora de Escopo** — exigiriam construir do zero um
+> sistema de durabilidade/reparo, um rastreador de duração de efeito por turno e um motor de
+> rolagem ciente de contexto, nenhum existente nem detalhado o bastante no `sistema-v4.1.0.md` pra
+> não extrapolar; ficam para quando `m3-47` (Iniciativa) e specs futuras ainda inexistentes
+> cobrirem os outros três. **Entregável 2 (aplicação server-side):** `aplicarSnapshotDeMaximos`
+> (`ficha.service.ts`, só em `criarFicha`) agora aplica o delta de Formação ao snapshot que o
+> próprio backend deriva do zero, via nova `calcularDerivadosComOrigem` — `alterarFicha` continua
+> sem recalcular `derivados` (m3-10, liberdade total; o cliente já manda o delta aplicado).
+> **Entregável 3 (Especialidade↔Origem):** já era estruturalmente impossível ter uma sem a outra
+> (`especialidade` é campo obrigatório de `FichaOrigemDto`); o gap real era completude —
+> `validarFormaOrigem` agora exige `gatilho` não-vazio. **Entregável 4 (Experimento+Peculiaridade
+> zera a Origem):** nova `experimentoComPeculiaridade(classe, habilidades)`
+> (`shared/src/regras/identidade/experimento.ts`) — true quando a classe é uma das 3 subclasses de
+> Experimento e a ficha tem a habilidade "Peculiaridade" (catálogo de Subclasse); backend
+> (`validarFormaIdentidade`) rejeita `identidade.origem` não-nulo nesse caso, vale pra qualquer
+> editor (regra de forma, não de posse); frontend trava `origemEditavel` e mostra um chip
+> "Substituída pela Peculiaridade". **Testes:** shared 386/386 (+13 na formação: 3 funções novas +
+> 6 do `experimentoComPeculiaridade`; +1 em `montarResistencias`), backend 115/115 (+7: snapshot
+> com/sem Origem, gatilho vazio, 4 casos de Experimento+Peculiaridade), frontend 426/427 (a 1 falha
+> é pré-existente, não-relacionada — `ficha-inventario` apelido de equipamento); build limpo nos 3
+> workspaces. Spec em `docs/specs/done/m3-41-origem-motor-efeitos.spec.md`. Próxima task: **`m3-42`**
+> (mecânicas de Fragmento hoje deferidas — Preço de Sanidade, Afinidade, fragmento-como-Modificação).)
+>
+> (**m3-40 — cabeçalho da Identidade: "Codinome"→"Agente" +
 > Contrato só-mestre**: 1ª task do lote de refino `m3-40`…`m3-56` implementada. **Rótulo:** o card
 > de Identidade (`ficha-visualizacao.component.html`) trocou "Codinome" por "Agente" — só o texto;
 > o binding (`nome()`, coluna relacional) e o conceito interno (`ajusteNome`, comentários) seguem

@@ -113,6 +113,14 @@
                   ✎
                 </button>
               }
+              @if (origemBloqueadaPorPeculiaridade()) {
+                <span
+                  class="chip chip--pendente"
+                  [appTooltip]="'Peculiaridade substitui os bônus de Origem — Experimento com esta habilidade não tem Origem.'"
+                >
+                  Substituída pela Peculiaridade
+                </span>
+              }
             </span>
           </div>
         </div>

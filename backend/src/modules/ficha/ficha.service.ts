@@ -9,7 +9,9 @@ import type {
   FichaAlteradaDto,
   FichaCriadaDto,
   FichaCriarDto,
+  FichaDerivadosDto,
   FichaExcluirDto,
+  FichaHabilidadeDto,
   FichaIdentidadeDto,
   FichaInternoAlterarDto,
   FichaJogadorDadosDto,
@@ -19,7 +21,12 @@ import type {
   FichaRecuperarDto,
   FichaResumoDto,
 } from '@contratados-rpg/shared/dtos/ficha';
-import { EspecialidadeEfeitoEnum, TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
+import {
+  ClasseEnum,
+  EspecialidadeEfeitoEnum,
+  TipoCampanhaMembroPapelEnum,
+  TipoFichaEnum,
+} from '@contratados-rpg/shared/enums';
 import {
   MAESTRIA_PONTOS_MINIMO,
   calcularDerivados,
@@ -27,7 +34,12 @@ import {
   calcularVida,
   maestriaValida,
 } from '@contratados-rpg/shared/regras/agente';
-import { FORMACOES, type FormacaoDefinicaoDto } from '@contratados-rpg/shared/regras/identidade';
+import {
+  aplicarFormacaoAosDerivados,
+  experimentoComPeculiaridade,
+  FORMACOES,
+  type FormacaoDefinicaoDto,
+} from '@contratados-rpg/shared/regras/identidade';
 import {
   BusinessException,
   ResourceNotFoundException,
@@ -347,7 +359,7 @@ export class FichaService {
       );
     }
 
-    this.validarFormaIdentidade(dados.identidade);
+    this.validarFormaIdentidade(dados.identidade, dados.classe, dados.habilidades);
   }
 
   /**
@@ -358,8 +370,16 @@ export class FichaService {
    * Especialidade com `efeito` existente em `EspecialidadeEfeitoEnum`. Reusa o catálogo de
    * `shared/regras/identidade` (m3-23) — nenhuma regra de conteúdo é reimplementada aqui
    * (proibições #26/#28). Ficha sem `identidade` (anterior à m3-23) não valida nada.
+   *
+   * **Experimento + Peculiaridade zera a Origem (m3-41).** `classe`/`habilidades` entram só pra essa
+   * checagem — `experimentoComPeculiaridade` (`shared/regras/identidade`) reusa o mesmo catálogo que
+   * já descreve a habilidade "Peculiaridade" das três subclasses de Experimento.
    */
-  private validarFormaIdentidade(identidade: FichaIdentidadeDto | undefined): void {
+  private validarFormaIdentidade(
+    identidade: FichaIdentidadeDto | undefined,
+    classe: ClasseEnum,
+    habilidades: readonly FichaHabilidadeDto[],
+  ): void {
     if (!identidade) {
       return;
     }
@@ -371,10 +391,21 @@ export class FichaService {
     }
 
     if (identidade.origem !== null) {
+      if (experimentoComPeculiaridade(classe, habilidades)) {
+        throw new BusinessException(
+          'Origem inválida: um Experimento com a habilidade Peculiaridade não pode ter Origem — a Peculiaridade substitui os bônus de Origem',
+        );
+      }
       this.validarFormaOrigem(identidade.origem);
     }
   }
 
+  /**
+   * Valida a forma da Origem (m3-24), incluindo a **Especialidade acoplada** (m3-41 — Entregável 3):
+   * `especialidade` é campo obrigatório de `FichaOrigemDto` (nunca existe Origem sem Especialidade,
+   * por construção do contrato); esta validação garante que ela não chega **vazia/incompleta**
+   * (gatilho em branco) — mesma exigência já feita para o `texto` de cada Formação.
+   */
   private validarFormaOrigem(origem: FichaOrigemDto): void {
     if (origem.formacao.length !== 2) {
       throw new BusinessException('Origem inválida: a Formação precisa ter exatamente 2 entradas');
@@ -395,6 +426,9 @@ export class FichaService {
       }
     }
 
+    if (!origem.especialidade.gatilho.trim()) {
+      throw new BusinessException('Especialidade inválida: o gatilho é obrigatório');
+    }
     if (!Object.values(EspecialidadeEfeitoEnum).includes(origem.especialidade.efeito)) {
       throw new BusinessException(
         `Especialidade inválida: efeito "${origem.especialidade.efeito}" não existe`,
@@ -470,6 +504,14 @@ export class FichaService {
    * bloco `derivados` (Defesa, Deslocamento, Dano, Percepção, Inventário, Hab./turno…), que a partir
    * daí são editáveis e nunca recalculados. Respeita valores já enviados pelo cliente (só preenche os
    * ausentes) — a `alterarFicha` **não** passa por aqui, preservando o que foi editado.
+   *
+   * **Delta de Formação da Origem (m3-41).** Quando o backend precisa calcular `derivados` do zero
+   * (cliente não enviou) e a ficha já chega com `identidade.origem` definida, o snapshot já nasce
+   * com o delta da Formação aplicado (`aplicarFormacaoAosDerivados`) — mesmo cálculo que o frontend
+   * faz ao vivo (`ficha-visualizacao.component.ts`) e ao trocar a Origem (`ajustarOrigem`,
+   * `visualizar.page.ts`), agora também coberto quando é o **backend** quem deriva o snapshot pela
+   * primeira vez. Cliente que já manda `derivados` pronto (fluxo normal da UI) não passa por aqui —
+   * ele já aplicou o delta antes de enviar.
    */
   private aplicarSnapshotDeMaximos(dados: FichaJogadorDadosDto): FichaJogadorDadosDto {
     const vidaMaxima =
@@ -482,9 +524,15 @@ export class FichaService {
         nivel: dados.nivel,
         destreza: dados.atributos.destreza,
       });
-    const derivados =
-      dados.derivados ?? calcularDerivados(dados.classe, dados.nivel, dados.atributos, dados.habilidades);
+    const derivados = dados.derivados ?? this.calcularDerivadosComOrigem(dados);
 
     return { ...dados, estado: { ...dados.estado, vidaMaxima, energiaMaxima }, derivados };
+  }
+
+  /** `calcularDerivados` cru + delta de Formação da Origem, quando `identidade.origem` já está definida. */
+  private calcularDerivadosComOrigem(dados: FichaJogadorDadosDto): FichaDerivadosDto {
+    const derivadosBase = calcularDerivados(dados.classe, dados.nivel, dados.atributos, dados.habilidades);
+    const formacao = dados.identidade?.origem?.formacao ?? [];
+    return formacao.length > 0 ? aplicarFormacaoAosDerivados(derivadosBase, formacao) : derivadosBase;
   }
 }
