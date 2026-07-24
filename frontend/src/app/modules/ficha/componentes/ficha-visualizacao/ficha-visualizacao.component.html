@@ -42,14 +42,14 @@
             <div class="ficha-ident">
               <span class="ficha-ident__avatar" aria-hidden="true"></span>
               <div class="ficha-ident__texto">
-                <span class="ficha-ident__rotulo">Codinome</span>
+                <span class="ficha-ident__rotulo">Agente</span>
                 @if (ajustavel() && editandoIdentidade() === 'nome') {
                   <input
                     #entradaIdentidade
                     class="ficha-ident__entrada"
                     type="text"
                     [value]="nome()"
-                    aria-label="Codinome"
+                    aria-label="Agente"
                     (keydown.enter)="confirmarIdentidade('nome', entradaIdentidade.value)"
                     (keydown.escape)="cancelarIdentidade()"
                     (blur)="confirmarIdentidade('nome', entradaIdentidade.value)"
@@ -58,13 +58,38 @@
                   <button
                     class="ficha-ident__nome ficha-ident__nome--editavel"
                     type="button"
-                    aria-label="Editar codinome"
+                    aria-label="Editar agente"
                     (click)="editarIdentidade('nome')"
                   >
                     {{ nome() }}
                   </button>
                 } @else {
                   <h2 class="ficha-ident__nome">{{ nome() }}</h2>
+                }
+
+                <!-- Contrato (m3-40): mesmo padrão de edição no lugar; só o mestre edita. -->
+                @if (editandoIdentidade() === 'contrato') {
+                  <input
+                    #entradaIdentidade
+                    class="ficha-ident__contrato-entrada"
+                    type="text"
+                    [value]="dados().contrato ?? ''"
+                    aria-label="Contrato"
+                    (keydown.enter)="confirmarIdentidade('contrato', entradaIdentidade.value)"
+                    (keydown.escape)="cancelarIdentidade()"
+                    (blur)="confirmarIdentidade('contrato', entradaIdentidade.value)"
+                  />
+                } @else if (contratoEditavel()) {
+                  <button
+                    class="ficha-ident__contrato ficha-ident__contrato--editavel"
+                    type="button"
+                    aria-label="Editar contrato"
+                    (click)="editarIdentidade('contrato')"
+                  >
+                    {{ contratoTexto() }}
+                  </button>
+                } @else {
+                  <span class="ficha-ident__contrato">{{ contratoTexto() }}</span>
                 }
               </div>
             </div>

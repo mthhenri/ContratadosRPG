@@ -632,6 +632,20 @@ export class FichaVisualizar {
   }
 
   /**
+   * Define/altera o Contrato (m3-40): só o mestre chega aqui (`contratoEditavel()` esconde o
+   * lápis pro dono/visualizador); o backend arbitra a trava (`validarContratoSomenteMestre`).
+   * Sem cascata — texto livre, não deriva nenhuma stat.
+   */
+  protected ajustarContrato(contrato: string): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) {
+      return;
+    }
+    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, contrato } });
+    this.agendarPersistencia();
+  }
+
+  /**
    * Define/troca a Origem (m3-25): aplica o **delta de Formação** aos derivados
    * (`aplicarFormacaoAosDerivados`/`removerFormacaoDosDerivados`, m3-23) — remove o delta da Origem
    * anterior (se havia) antes de somar o da nova, exatamente como `ajustarClasse` faz com o bônus de

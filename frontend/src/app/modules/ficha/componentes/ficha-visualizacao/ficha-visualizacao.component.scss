@@ -492,6 +492,53 @@
     }
   }
 
+  // Contrato (m3-40): rótulo + número ao lado do nome do Agente, edição só para o mestre.
+  &__contrato {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+
+    &--editavel {
+      display: inline-block;
+      text-align: left;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--radius-control);
+      padding: 1px 5px;
+      margin-left: -5px;
+      cursor: text;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+
+      &:hover {
+        border-color: var(--border-strong);
+        background: var(--surface-2);
+      }
+    }
+  }
+
+  &__contrato-entrada {
+    width: fit-content;
+    max-width: 100%;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 2px 5px;
+    outline: none;
+
+    &:focus {
+      border-color: var(--accent-border);
+    }
+  }
+
   &__chips {
     display: flex;
     flex-wrap: wrap;

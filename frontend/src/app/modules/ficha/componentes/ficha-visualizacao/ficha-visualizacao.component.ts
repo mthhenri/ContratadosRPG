@@ -273,6 +273,12 @@ export class FichaVisualizacao {
   readonly ajustePersonalidade = output<string>();
 
   /**
+   * Novo Contrato (m3-40) — a página persiste em `dados.contrato`. Só emitido quando
+   * `contratoEditavel()` está ativo (mestre); o backend é o árbitro final (`alterarFicha`).
+   */
+  readonly ajusteContrato = output<string>();
+
+  /**
    * Nova Origem, definida ou trocada (m3-25) — a página persiste em `dados.identidade.origem` e
    * aplica o delta de Formação aos derivados (`aplicarFormacaoAosDerivados`/`removerFormacaoDosDerivados`,
    * m3-23), removendo o da Origem anterior antes de somar o da nova.
@@ -344,8 +350,10 @@ export class FichaVisualizacao {
   /** Pontos mínimos para marcar Maestria (`sistema-v4.1.0.md`). */
   protected readonly limiteMaestria = MAESTRIA_PONTOS_MINIMO;
 
-  /** Campo de identidade em digitação (Codinome/Nível/Prestígio/Personalidade), ou `null` fora de edição. */
-  protected readonly editandoIdentidade = signal<'nome' | 'personalidade' | CampoDadosEscalar | null>(null);
+  /** Campo de identidade em digitação (Agente/Nível/Prestígio/Personalidade/Contrato), ou `null` fora de edição. */
+  protected readonly editandoIdentidade = signal<'nome' | 'personalidade' | 'contrato' | CampoDadosEscalar | null>(
+    null,
+  );
   private readonly entradaIdentidade = viewChild<ElementRef<HTMLInputElement>>('entradaIdentidade');
   private readonly entradaAnotacoes = viewChild<ElementRef<HTMLTextAreaElement>>('entradaAnotacoes');
   /** `true` enquanto o Dinheiro (m3-34, Informações Extras) está em edição. */
@@ -731,6 +739,15 @@ export class FichaVisualizacao {
     () => this.ajustavel() && (this.ehMestre() || !this.origemDefinida()),
   );
 
+  /**
+   * Contrato (m3-40) — texto livre no cabeçalho da Identidade, editável **só pelo mestre**
+   * (diferente de Personalidade/Origem, não há liberação para o dono nem antes da 1ª definição).
+   * O backend é o árbitro final (`validarContratoSomenteMestre`, `alterarFicha`).
+   */
+  protected readonly contratoEditavel = computed(() => this.ajustavel() && this.ehMestre());
+  /** Texto de exibição do Contrato — "CONTRATO — 0000" quando ainda não definido (placeholder). */
+  protected readonly contratoTexto = computed(() => `CONTRATO — ${this.dados().contrato || '0000'}`);
+
   protected readonly gruposFormacao = GRUPOS_FORMACAO;
   protected readonly rotuloParametroFormacao = rotuloParametroFormacao;
   protected readonly rotuloEfeitoEspecialidade = rotuloEfeitoEspecialidade;
@@ -863,8 +880,8 @@ export class FichaVisualizacao {
     return bonus !== null && this.efeitosFormacaoPendentes.some((definicao) => definicao.codigo === bonus);
   }
 
-  /** Abre a digitação de um campo de identidade (Codinome/Nível/Prestígio/Personalidade). */
-  protected editarIdentidade(campo: 'nome' | 'personalidade' | CampoDadosEscalar): void {
+  /** Abre a digitação de um campo de identidade (Agente/Nível/Prestígio/Personalidade/Contrato). */
+  protected editarIdentidade(campo: 'nome' | 'personalidade' | 'contrato' | CampoDadosEscalar): void {
     this.editandoIdentidade.set(campo);
   }
 
@@ -874,13 +891,13 @@ export class FichaVisualizacao {
   }
 
   /**
-   * Confirma o campo de identidade digitado. Codinome (relacional) sai por `ajusteNome`; Nível/
-   * Prestígio (documento) por `ajusteCampoDados`; Personalidade (m3-25) por `ajustePersonalidade`.
-   * Sem trava de faixa (liberdade total — m3-10; a Personalidade tem sua própria trava de
-   * imutabilidade, arbitrada pelo backend — m3-24, o front só esconde o lápis). O guard evita o
-   * commit duplo do blur após o Enter.
+   * Confirma o campo de identidade digitado. Agente/Codinome (relacional) sai por `ajusteNome`;
+   * Nível/Prestígio (documento) por `ajusteCampoDados`; Personalidade (m3-25) por
+   * `ajustePersonalidade`; Contrato (m3-40) por `ajusteContrato`. Sem trava de faixa (liberdade
+   * total — m3-10; Personalidade/Contrato têm sua própria trava, arbitrada pelo backend — m3-24/
+   * m3-40, o front só esconde o lápis). O guard evita o commit duplo do blur após o Enter.
    */
-  protected confirmarIdentidade(campo: 'nome' | 'personalidade' | CampoDadosEscalar, texto: string): void {
+  protected confirmarIdentidade(campo: 'nome' | 'personalidade' | 'contrato' | CampoDadosEscalar, texto: string): void {
     if (this.editandoIdentidade() !== campo) {
       return;
     }
@@ -896,6 +913,13 @@ export class FichaVisualizacao {
       const aparada = texto.trim();
       if (aparada && aparada !== (this.identidade().personalidade ?? '')) {
         this.ajustePersonalidade.emit(aparada);
+      }
+      return;
+    }
+    if (campo === 'contrato') {
+      const aparado = texto.trim();
+      if (aparado && aparado !== (this.dados().contrato ?? '')) {
+        this.ajusteContrato.emit(aparado);
       }
       return;
     }
