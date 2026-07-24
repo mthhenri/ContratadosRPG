@@ -752,7 +752,10 @@
                   type="button"
                   class="ficha-resistencia__valor ficha-resistencia__valor--editavel"
                   [attr.aria-label]="'Editar resistência ' + abreviacaoResistencia[resistencia.tipo]"
-                  [appTooltip]="'Base manual ' + resistencia.manual + ' + equipamento ' + resistencia.equipamento"
+                  [appTooltip]="
+                    'Base manual ' + resistencia.manual + ' + equipamento ' + resistencia.equipamento +
+                    (resistencia.formacao !== 0 ? ' + formação ' + resistencia.formacao : '')
+                  "
                   (click)="editarResistencia(resistencia.tipo)"
                 >
                   {{ resistencia.total }}
@@ -1114,6 +1117,7 @@
             [editavel]="ajustavel()"
             [prestigio]="dados().prestigio"
             [inventarioMaximo]="inventarioMaximoValor()"
+            [toleranciaSobrecarga]="toleranciaSobrecargaFormacao()"
             [vontade]="dados().atributos.vontade"
             [dinheiro]="dinheiro()"
             [energiaAtual]="estado().energiaAtual"

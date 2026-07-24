@@ -8,12 +8,14 @@ import {
 import { empilhamentosAmplificador } from './amplificador';
 
 /**
- * Resistências a dano da aba Combate (m3-36; amplificadores generalizados em ajuste posterior) —
- * **sempre mostra os cinco tipos** (`TipoDanoEnum`), somando o que vem do **equipamento** (itens
- * equipados + modificações, incluindo Fragmento aplicado — m3-35) com uma base **manual editável**
- * (persistida em `FichaDerivadosDto.resistencias`, mesmo modelo `stored + editável` de m3-10). O
- * total exibido é `manual + equipamento` — **pode ficar negativo** (uma Defesa muito empilhada
- * derruba a resistência abaixo de 0; o documento não veda isso, e o motor não deve mascarar).
+ * Resistências a dano da aba Combate (m3-36; amplificadores generalizados em ajuste posterior; bônus
+ * de Formação em m3-41) — **sempre mostra os cinco tipos** (`TipoDanoEnum`), somando o que vem do
+ * **equipamento** (itens equipados + modificações, incluindo Fragmento aplicado — m3-35) com uma
+ * base **manual editável** (persistida em `FichaDerivadosDto.resistencias`, mesmo modelo
+ * `stored + editável` de m3-10) e o bônus de **Formação da Origem** (`obterResistenciaFormacao`,
+ * `shared/regras/identidade`). O total exibido é `manual + equipamento + formacao` — **pode ficar
+ * negativo** (uma Defesa muito empilhada derruba a resistência abaixo de 0; o documento não veda
+ * isso, e o motor não deve mascarar).
  *
  * **Amplificadores**: os dois que mexem em resistência (`Resistente`/`Defesa`, doc —
  * "⬡ Amplificadores") são tratados aqui por nome (mesmo padrão de `Blindada`/`Hazmat` em
@@ -35,7 +37,9 @@ export interface ResistenciaLinhaDto {
   readonly manual: number;
   /** Soma do equipamento (itens equipados + mods, incluindo Fragmento aplicado, + amplificadores). */
   readonly equipamento: number;
-  /** `manual + equipamento` — sem piso, pode negativar. */
+  /** Bônus de Formação da Origem no tipo (`COMBATE_RESISTENCIA_TIPO_DANO`, m3-41). */
+  readonly formacao: number;
+  /** `manual + equipamento + formacao` — sem piso, pode negativar. */
   readonly total: number;
 }
 
@@ -45,6 +49,8 @@ export interface ResistenciasMontarDto {
   readonly amplificadores: readonly AmplificadorAplicadoDto[];
   /** Base manual por tipo — ausente = 0 em todos (ficha nova/anterior à edição manual). */
   readonly manual?: Partial<Record<TipoDanoEnum, number>>;
+  /** Bônus de Formação por tipo (`obterResistenciaFormacao`, m3-41) — ausente = 0 em todos. */
+  readonly formacao?: Partial<Record<TipoDanoEnum, number>>;
 }
 
 /** Ordem canônica de exibição — mesma ordem de `TipoDanoEnum`. */
@@ -97,6 +103,7 @@ export function montarResistencias(dto: ResistenciasMontarDto): readonly Resiste
   return ORDEM_TIPOS.map((tipo) => {
     const manual = dto.manual?.[tipo] ?? 0;
     const equipamento = doEquipamento.get(tipo) ?? 0;
-    return { tipo, manual, equipamento, total: manual + equipamento };
+    const formacao = dto.formacao?.[tipo] ?? 0;
+    return { tipo, manual, equipamento, formacao, total: manual + equipamento + formacao };
   });
 }

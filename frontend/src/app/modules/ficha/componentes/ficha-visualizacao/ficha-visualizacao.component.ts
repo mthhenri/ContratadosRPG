@@ -48,6 +48,9 @@ import { rolarFormula, validarFormula } from '@contratados-rpg/shared/regras/rol
 import {
   FORMACOES,
   listarEfeitosPendentes,
+  obterBonusRolagemAtributoFormacao,
+  obterResistenciaFormacao,
+  obterToleranciaSobrecargaFormacao,
   type FormacaoDefinicaoDto,
 } from '@contratados-rpg/shared/regras/identidade';
 
@@ -577,9 +580,23 @@ export class FichaVisualizacao {
     modificadoresTesteAmplificadores(this.dados().inventario.amplificadores),
   );
 
-  /** Modificador de teste de um atributo (manual + amplificador), já resolvido a 0 quando ausente. */
+  /**
+   * Modificador de teste de um atributo (manual + amplificador + bônus **plano** de Formação da
+   * Origem, m3-41: `PERICIA_BONUS_ATRIBUTO`), já resolvido a 0 quando ausente. O dado **extra** de
+   * `PERICIA_DADO_ATRIBUTO` não entra aqui — soma no pool da rolagem (`rolarTesteAtributo`), não no
+   * modificador plano.
+   */
   protected modificadorTeste(chave: ChaveAtributo): number {
-    return (this.modificadoresTeste()[chave] ?? 0) + (this.modificadoresTesteAmplificador()[chave] ?? 0);
+    return (
+      (this.modificadoresTeste()[chave] ?? 0) +
+      (this.modificadoresTesteAmplificador()[chave] ?? 0) +
+      this.bonusRolagemAtributoFormacao(chave).bonus
+    );
+  }
+
+  /** Bônus de Formação da Origem (dado extra no pool + bônus plano no resultado) no teste do atributo `chave`. */
+  private bonusRolagemAtributoFormacao(chave: ChaveAtributo) {
+    return obterBonusRolagemAtributoFormacao(this.formacaoOrigem(), chave);
   }
 
   /** Rascunho dos modificadores de teste durante a edição — completo (as 10 chaves, 0 onde ausente). */
@@ -614,20 +631,29 @@ export class FichaVisualizacao {
 
   /**
    * Rola o teste de um atributo direto da Visão Geral (m3-22; gramática v3 m3-29; margem de crítico
-   * natural em m3-31): a fórmula explícita `(Atributo efetivo)d20kh1cm1 + PROF` — pool de D20, pega o
-   * maior, **conta a margem de crítico natural** (`cm1` = crita no 20; regra 1216) e soma a Proficiência.
-   * Usa os atributos **efetivos** (pós-lesão) — a lesão reduz quantos D20 entram no pool, e atributo
+   * natural em m3-31; dado extra de Formação em m3-41): a fórmula explícita
+   * `(Atributo efetivo)d20kh1cm1 + PROF` — pool de D20, pega o maior, **conta a margem de crítico
+   * natural** (`cm1` = crita no 20; regra 1216) e soma a Proficiência. Usa os atributos **efetivos**
+   * (pós-lesão, **+ dado de Formação da Origem** quando a linha `PERICIA_DADO_ATRIBUTO` mira este
+   * atributo) — a lesão reduz e a Formação aumenta quantos D20 entram no pool; atributo efetivo
    * 0/negativo vira desvantagem intrínseca do motor (rola 2+|attr| dados e mantém o menor; regra 270).
-   * O modificador de teste (coluna de Atributos) some no final, como uma constante da fórmula.
+   * O modificador de teste (coluna de Atributos, já com o bônus **plano** de Formação embutido em
+   * `modificadorTeste`) some no final, como uma constante da fórmula.
    */
   protected rolarTesteAtributo(campo: CampoAtributo): void {
-    const atributo = this.atributosEfetivos()[campo.chave];
+    const dadosFormacao = this.bonusRolagemAtributoFormacao(campo.chave).dados;
+    const atributosEfetivos = this.atributosEfetivos();
+    const atributo = atributosEfetivos[campo.chave] + dadosFormacao;
     const sufixo = this.sufixoModificador(this.modificadorTeste(campo.chave));
     // A fórmula que vai ao **motor** mantém `kh1` — é o gatilho da desvantagem intrínseca (atributo ≤ 0).
     const formula = `${campo.chave}d20kh1cm1 + PROF${sufixo}`;
+    // O motor lê a contagem do pool direto do mapa de atributos — o dado de Formação entra ajustando
+    // só a chave deste teste, sem alterar o atributo exibido em nenhum outro lugar da ficha.
+    const atributosParaRolagem =
+      dadosFormacao !== 0 ? { ...atributosEfetivos, [campo.chave]: atributo } : atributosEfetivos;
     const resultado = rolarFormula({
       formula,
-      atributos: this.atributosEfetivos(),
+      atributos: atributosParaRolagem,
       proficiencia: this.proficiencia(),
       nivel: this.dados().nivel,
     });
@@ -1333,11 +1359,15 @@ export class FichaVisualizacao {
     return CHAVES_COMBATE.map((chave) => mapa.get(chave)!);
   });
 
+  /** Linhas de Formação da Origem atual — `[]` sem Origem definida. Base dos consumidores de m3-41. */
+  private readonly formacaoOrigem = computed(() => this.origemAtual()?.formacao ?? []);
+
   /**
-   * Resistências a dano da aba Combate (m3-36; editável + amplificadores em ajuste posterior) —
-   * **sempre as cinco linhas** de `TipoDanoEnum`. Cada uma soma uma base **manual editável**
-   * (`derivados.resistencias`, stored/editável — mesmo modelo de m3-10) com o que vem do
-   * **equipamento** (itens equipados + Fragmento aplicado + amplificadores `Resistente`/`Defesa`),
+   * Resistências a dano da aba Combate (m3-36; editável + amplificadores em ajuste posterior;
+   * bônus de Formação em m3-41) — **sempre as cinco linhas** de `TipoDanoEnum`. Cada uma soma uma
+   * base **manual editável** (`derivados.resistencias`, stored/editável — mesmo modelo de m3-10)
+   * com o que vem do **equipamento** (itens equipados + Fragmento aplicado + amplificadores
+   * `Resistente`/`Defesa`) e o bônus de **Formação da Origem** (`COMBATE_RESISTENCIA_TIPO_DANO`),
    * via `shared/regras/agente/montarResistencias` — zero motor duplicado aqui.
    */
   protected readonly resistencias = computed(() =>
@@ -1345,7 +1375,16 @@ export class FichaVisualizacao {
       itens: this.dados().inventario.itens,
       amplificadores: this.dados().inventario.amplificadores,
       manual: this.dados().derivados?.resistencias,
+      formacao: obterResistenciaFormacao(this.formacaoOrigem()),
     }),
+  );
+
+  /**
+   * Tolerância extra de Sobrecarga vinda da Formação da Origem (m3-41: `LOGISTICA_SOBRECARGA`) —
+   * repassada ao `app-ficha-inventario` para deslocar o limiar de "Sobrecarregado".
+   */
+  protected readonly toleranciaSobrecargaFormacao = computed(() =>
+    obterToleranciaSobrecargaFormacao(this.formacaoOrigem()),
   );
 
   /**

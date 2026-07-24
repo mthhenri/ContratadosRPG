@@ -306,6 +306,13 @@ export class FichaInventario {
   readonly prestigio = input.required<number>();
   /** Inventário máximo (`Força × 5`, stored/derivado) — referência do peso usado; exceder é aviso, não trava. */
   readonly inventarioMaximo = input.required<number>();
+  /**
+   * Tolerância extra de Sobrecarga vinda da Formação da Origem (m3-41: `LOGISTICA_SOBRECARGA`,
+   * "+3 de tolerância de Sobrecarga") — desloca só o **limiar** de "Sobrecarregado"
+   * (`pesoUsado > inventarioEfetivo + tolerância`), sem mudar o Inventário efetivo exibido (esse é
+   * o alvo `DERIVADO`/`LOGISTICA_INVENTARIO_MAXIMO`, já embutido em `inventarioMaximo`). Padrão 0.
+   */
+  readonly toleranciaSobrecarga = input(0);
   /** Vontade da ficha — determina o limite de empilhamentos de amplificador (Vontade × 3, via `shared/regras`). */
   readonly vontade = input.required<number>();
   /** Dinheiro atual da ficha (m3-34) — referência pro "dinheiro restante" do resumo; não trava. */
@@ -464,9 +471,12 @@ export class FichaInventario {
   });
   /** Só o peso usado formatado — mantém o "X /" visível enquanto o máximo está em edição. */
   protected readonly pesoUsadoTexto = computed(() => this.formatarPeso(this.resumo().pesoUsado));
-  /** Excedeu o inventário efetivo — só **aviso** (não trava o salvamento). */
+  /**
+   * Excedeu o inventário efetivo **+ tolerância de Sobrecarga da Formação** (m3-41) — só **aviso**
+   * (não trava o salvamento).
+   */
   protected readonly excedeInventario = computed(
-    () => this.resumo().pesoUsado > this.resumo().inventarioEfetivo,
+    () => this.resumo().pesoUsado > this.resumo().inventarioEfetivo + this.toleranciaSobrecarga(),
   );
   /** Preenchimento da barra da linha "Inventário" (peso usado ÷ efetivo) — mesma barra de Vida/Energia. */
   protected readonly percentualCarga = computed(() => {

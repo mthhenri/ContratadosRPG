@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { FichaDerivadosDto, FichaFormacaoDto } from '../../dtos/ficha';
-import { FormacaoBonusEnum } from '../../enums';
+import { FormacaoBonusEnum, TipoDanoEnum } from '../../enums';
 import { FORMACOES } from './formacoes.dados';
 import {
   ALVOS_APLICAVEIS,
   aplicarFormacaoAosDerivados,
   listarEfeitosPendentes,
+  obterBonusRolagemAtributoFormacao,
+  obterResistenciaFormacao,
+  obterToleranciaSobrecargaFormacao,
   removerFormacaoDosDerivados,
 } from './formacoes';
 
@@ -165,10 +168,20 @@ describe('aplicarFormacaoAosDerivados', () => {
     expect(aplicarFormacaoAosDerivados(BASE, [invalido])).toEqual(BASE);
   });
 
-  it('ignora as 16 linhas pendentes sem quebrar', () => {
+  it('ignora as linhas pendentes sem quebrar (nem no bloco derivados)', () => {
     const pendentes = listarEfeitosPendentes(FORMACOES);
     const resultado = aplicarFormacaoAosDerivados(BASE, pendentes.map((definicao) => formacao(definicao.codigo)));
     expect(resultado).toEqual(BASE);
+  });
+
+  it('também ignora as linhas com consumidor fora do bloco derivados (RESISTENCIA/SOBRECARGA/ROLAGEM por atributo)', () => {
+    const foraDerivados = [
+      formacao(FormacaoBonusEnum.COMBATE_RESISTENCIA_TIPO_DANO, 'Físico'),
+      formacao(FormacaoBonusEnum.LOGISTICA_SOBRECARGA),
+      formacao(FormacaoBonusEnum.PERICIA_DADO_ATRIBUTO, 'Vigor'),
+      formacao(FormacaoBonusEnum.PERICIA_BONUS_ATRIBUTO, 'Vigor'),
+    ];
+    expect(aplicarFormacaoAosDerivados(BASE, foraDerivados)).toEqual(BASE);
   });
 
   it('ignora bonus:null (custom autorizado pelo Mestre) sem quebrar', () => {
@@ -232,9 +245,83 @@ describe('removerFormacaoDosDerivados', () => {
 });
 
 describe('listarEfeitosPendentes', () => {
-  it('devolve exatamente as 16 linhas sem campo hoje', () => {
+  it('devolve exatamente as 12 linhas ainda sem consumidor (m3-41 deu consumidor a 4 das 16)', () => {
     const pendentes = listarEfeitosPendentes(FORMACOES);
-    expect(pendentes).toHaveLength(16);
+    expect(pendentes).toHaveLength(12);
     expect(pendentes.every((definicao) => !ALVOS_APLICAVEIS.has(definicao.efeito.alvo))).toBe(true);
+    const codigosCobertos = [
+      FormacaoBonusEnum.COMBATE_RESISTENCIA_TIPO_DANO,
+      FormacaoBonusEnum.LOGISTICA_SOBRECARGA,
+      FormacaoBonusEnum.PERICIA_DADO_ATRIBUTO,
+      FormacaoBonusEnum.PERICIA_BONUS_ATRIBUTO,
+    ];
+    expect(pendentes.some((definicao) => codigosCobertos.includes(definicao.codigo))).toBe(false);
+  });
+});
+
+describe('obterResistenciaFormacao (m3-41)', () => {
+  it('soma +3 no tipo de dano escolhido (parametro tolerante a acento/caixa)', () => {
+    const resultado = obterResistenciaFormacao([
+      formacao(FormacaoBonusEnum.COMBATE_RESISTENCIA_TIPO_DANO, 'balistico'),
+    ]);
+    expect(resultado).toEqual({ [TipoDanoEnum.BALISTICO]: 3 });
+  });
+
+  it('soma as duas linhas de Formação quando ambas miram o mesmo tipo', () => {
+    const resultado = obterResistenciaFormacao([
+      formacao(FormacaoBonusEnum.COMBATE_RESISTENCIA_TIPO_DANO, 'Físico'),
+      formacao(FormacaoBonusEnum.COMBATE_RESISTENCIA_TIPO_DANO, 'Físico'),
+    ]);
+    expect(resultado).toEqual({ [TipoDanoEnum.FISICO]: 6 });
+  });
+
+  it('ignora tipo de dano não reconhecível e linhas de outro bônus sem quebrar', () => {
+    expect(obterResistenciaFormacao([formacao(FormacaoBonusEnum.COMBATE_RESISTENCIA_TIPO_DANO, 'Fogo')])).toEqual({});
+    expect(obterResistenciaFormacao([formacao(FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO)])).toEqual({});
+  });
+});
+
+describe('obterToleranciaSobrecargaFormacao (m3-41)', () => {
+  it('soma +3 por linha de LOGISTICA_SOBRECARGA', () => {
+    expect(obterToleranciaSobrecargaFormacao([formacao(FormacaoBonusEnum.LOGISTICA_SOBRECARGA)])).toBe(3);
+  });
+
+  it('devolve 0 sem a linha, sem quebrar com outros bônus', () => {
+    expect(obterToleranciaSobrecargaFormacao([formacao(FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO)])).toBe(0);
+    expect(obterToleranciaSobrecargaFormacao([])).toBe(0);
+  });
+});
+
+describe('obterBonusRolagemAtributoFormacao (m3-41)', () => {
+  it('devolve +1 dado quando a linha é PERICIA_DADO_ATRIBUTO do atributo pedido', () => {
+    const resultado = obterBonusRolagemAtributoFormacao(
+      [formacao(FormacaoBonusEnum.PERICIA_DADO_ATRIBUTO, 'Vigor')],
+      'vigor',
+    );
+    expect(resultado).toEqual({ dados: 1, bonus: 0 });
+  });
+
+  it('devolve +1 no resultado quando a linha é PERICIA_BONUS_ATRIBUTO do atributo pedido (abreviação "VIG")', () => {
+    const resultado = obterBonusRolagemAtributoFormacao(
+      [formacao(FormacaoBonusEnum.PERICIA_BONUS_ATRIBUTO, 'VIG')],
+      'vigor',
+    );
+    expect(resultado).toEqual({ dados: 0, bonus: 1 });
+  });
+
+  it('ignora a linha quando o atributo pedido é outro', () => {
+    const resultado = obterBonusRolagemAtributoFormacao(
+      [formacao(FormacaoBonusEnum.PERICIA_DADO_ATRIBUTO, 'Vigor')],
+      'destreza',
+    );
+    expect(resultado).toEqual({ dados: 0, bonus: 0 });
+  });
+
+  it('ignora a linha com condição (PERICIA_DADO_ATRIBUTO_CONDICAO) — não modela em que situação o teste ocorre', () => {
+    const resultado = obterBonusRolagemAtributoFormacao(
+      [formacao(FormacaoBonusEnum.PERICIA_DADO_ATRIBUTO_CONDICAO, 'Destreza para Furtividade')],
+      'destreza',
+    );
+    expect(resultado).toEqual({ dados: 0, bonus: 0 });
   });
 });

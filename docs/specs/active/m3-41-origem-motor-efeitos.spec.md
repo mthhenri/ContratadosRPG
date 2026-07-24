@@ -6,6 +6,22 @@
 > Especialidade / Experimento). **O documento vence** (proibição #27) — o texto abaixo é resumo
 > de trabalho.
 
+> **Status parcial (primeira fatia implementada).** Do Entregável 1, investigação mostrou que só
+> `RESISTENCIA`, `SOBRECARGA` e a parte de `ROLAGEM` referente a **teste de atributo**
+> (`PERICIA_DADO_ATRIBUTO`/`PERICIA_BONUS_ATRIBUTO`) têm onde aterrissar hoje sem inventar
+> subsistema novo — implementados: `obterResistenciaFormacao`/`obterToleranciaSobrecargaFormacao`/
+> `obterBonusRolagemAtributoFormacao` (`shared/src/regras/identidade/formacoes.ts`), consumidos por
+> `montarResistencias` (`shared/src/regras/agente/resistencia.ts`, novo campo `formacao` em
+> `ResistenciaLinhaDto`), pelo limiar de "Sobrecarregado" do Inventário (`toleranciaSobrecarga` em
+> `FichaInventario`) e por `rolarTesteAtributo`/`modificadorTeste`
+> (`ficha-visualizacao.component.ts`). **Ainda pendentes** desta mesma linha: `INICIATIVA`,
+> `DT_REPARO`, `DURACAO_EFEITO` e o resto de `ROLAGEM` (categoria de arma/condição) — nenhum tem
+> tela/motor existente pra aterrissar (sem sistema de durabilidade/reparo, sem rastreio de duração
+> de efeito por turno, sem preset de Iniciativa até a `m3-47`); construir do zero ficaria fora do
+> que o documento especifica. Os **Entregáveis 2, 3 e 4** (aplicação server-side, acoplamento
+> Especialidade↔Origem, Experimento+Peculiaridade zera Origem) **não foram tocados nesta fatia** —
+> seguem como próximo passo desta spec.
+
 ## Objetivo
 
 Fazer a **Origem afetar de fato os cálculos** da ficha (hoje só parte das Formações tem efeito),

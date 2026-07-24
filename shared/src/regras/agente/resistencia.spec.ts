@@ -32,11 +32,11 @@ describe('montarResistencias', () => {
   it('devolve sempre as cinco linhas, mesmo sem nenhum equipamento (tudo em 0)', () => {
     const resultado = montarResistencias({ itens: [], amplificadores: [] });
     expect(resultado).toEqual([
-      { tipo: TipoDanoEnum.FISICO, manual: 0, equipamento: 0, total: 0 },
-      { tipo: TipoDanoEnum.BALISTICO, manual: 0, equipamento: 0, total: 0 },
-      { tipo: TipoDanoEnum.EXPLOSAO, manual: 0, equipamento: 0, total: 0 },
-      { tipo: TipoDanoEnum.QUIMICO, manual: 0, equipamento: 0, total: 0 },
-      { tipo: TipoDanoEnum.GERAL, manual: 0, equipamento: 0, total: 0 },
+      { tipo: TipoDanoEnum.FISICO, manual: 0, equipamento: 0, formacao: 0, total: 0 },
+      { tipo: TipoDanoEnum.BALISTICO, manual: 0, equipamento: 0, formacao: 0, total: 0 },
+      { tipo: TipoDanoEnum.EXPLOSAO, manual: 0, equipamento: 0, formacao: 0, total: 0 },
+      { tipo: TipoDanoEnum.QUIMICO, manual: 0, equipamento: 0, formacao: 0, total: 0 },
+      { tipo: TipoDanoEnum.GERAL, manual: 0, equipamento: 0, formacao: 0, total: 0 },
     ]);
   });
 
@@ -44,7 +44,7 @@ describe('montarResistencias', () => {
     const item = protecao({ resistencia: '3 [Balístico]' });
     const resultado = montarResistencias({ itens: [item], amplificadores: [] });
     const balistico = resultado.find((linha) => linha.tipo === TipoDanoEnum.BALISTICO)!;
-    expect(balistico).toEqual({ tipo: TipoDanoEnum.BALISTICO, manual: 0, equipamento: 3, total: 3 });
+    expect(balistico).toEqual({ tipo: TipoDanoEnum.BALISTICO, manual: 0, equipamento: 3, formacao: 0, total: 3 });
   });
 
   it('ignora itens não equipados', () => {
@@ -82,13 +82,32 @@ describe('montarResistencias', () => {
       tipo: TipoDanoEnum.BALISTICO,
       manual: 5,
       equipamento: 3,
+      formacao: 0,
       total: 8,
     });
     expect(resultado.find((l) => l.tipo === TipoDanoEnum.GERAL)).toEqual({
       tipo: TipoDanoEnum.GERAL,
       manual: 2,
       equipamento: 0,
+      formacao: 0,
       total: 2,
+    });
+  });
+
+  it('soma o bônus de Formação da Origem (m3-41: COMBATE_RESISTENCIA_TIPO_DANO) no total', () => {
+    const item = protecao({ resistencia: '3 [Balístico]' });
+    const resultado = montarResistencias({
+      itens: [item],
+      amplificadores: [],
+      manual: { [TipoDanoEnum.BALISTICO]: 1 },
+      formacao: { [TipoDanoEnum.BALISTICO]: 3 },
+    });
+    expect(resultado.find((l) => l.tipo === TipoDanoEnum.BALISTICO)).toEqual({
+      tipo: TipoDanoEnum.BALISTICO,
+      manual: 1,
+      equipamento: 3,
+      formacao: 3,
+      total: 7,
     });
   });
 
