@@ -1,6 +1,6 @@
-# m3-51-ficha-exportar-pdf.spec.md
+# m3-53-ficha-exportar-pdf.spec.md
 
-> Task 48 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-38`…`m3-54`).
+> Task 50 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-40`…`m3-56`).
 > **Spec grande** — pode ser quebrada em subtasks na hora de implementar.
 
 > **Antes de qualquer UI:** ler `docs/design/DESIGN.md` e consumir os tokens do tema
@@ -17,7 +17,7 @@ Contratados, com os dados da ficha.
 1. **Decisão de arquitetura (a spec fixa antes de codar):** geração no **frontend** (client-side —
    ex.: layout HTML dedicado + `window.print()`/`@media print`, ou lib de PDF sem dependência de
    servidor) **vs. backend**. Levar em conta as fontes embutidas, fidelidade ao tema e a
-   privacidade de campos (História/Anotações privadas — respeitar o gate da `m3-48`/`m3-49`: só o
+   privacidade de campos (História/Anotações privadas — respeitar o gate da `m3-50`/`m3-51`: só o
    dono/mestre exporta com esses campos).
 2. **Layout do PDF** fiel a `docs/design/` (cores/tokens, mono para dados/rótulos, sans para
    corpo, chip de classificação, cabeçalhos de seção com badge+régua). Seções: identidade
@@ -41,5 +41,5 @@ Contratados, com os dados da ficha.
 
 ## Dependências
 
-- `m3-06`/`m3-07` (visualização da ficha), `m3-48`/`m3-49` (campos privados por permissão),
+- `m3-06`/`m3-07` (visualização da ficha), `m3-50`/`m3-51` (campos privados por permissão),
   `shared/regras` (derivados).

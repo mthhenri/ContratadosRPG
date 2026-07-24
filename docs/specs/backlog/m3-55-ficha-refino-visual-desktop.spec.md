@@ -1,6 +1,6 @@
-# m3-53-ficha-refino-visual-desktop.spec.md
+# m3-55-ficha-refino-visual-desktop.spec.md
 
-> Task 50 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-38`…`m3-54`).
+> Task 52 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-40`…`m3-56`).
 
 > **Antes de qualquer UI:** ler `docs/design/DESIGN.md` e consumir os tokens do tema
 > "Terminal de Contenção" (`docs/design/tema/`). Nada de hex/fonte/raio solto (proibição #29).
@@ -34,7 +34,7 @@ Polimento visual desktop da ficha: (3) **alinhar os ícones em cada tab** (ajust
 
 ## Fora de Escopo
 
-- Passe mobile (é a `m3-54`).
+- Passe mobile (é a `m3-56`).
 - Mudar o conteúdo/comportamento da rolagem em si (só apresentação da bandeja).
 
 ## Dependências

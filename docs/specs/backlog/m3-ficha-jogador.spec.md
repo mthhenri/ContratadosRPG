@@ -29,25 +29,25 @@
 > reescrevendo-a. Só **5 das 21** linhas de Formação têm campo na ficha hoje; as outras 16 nascem
 > modeladas e **sem consumidor**, por decisão do autor — ver o aviso na `m3-23`.
 >
-> **Lote de refino da ficha (`m3-38`…`m3-54`)** — 17 tasks derivadas de uma lista de ajustes/
+> **Lote de refino da ficha (`m3-40`…`m3-56`)** — 17 tasks derivadas de uma lista de ajustes/
 > correções/features sobre a ficha já entregue, agrupadas por bloco de trabalho similar (specs em
-> `docs/specs/backlog/`): `m3-38` (cabeçalho: "Agente" + campo "Contrato" só-mestre + mestre edita
-> Personalidade), `m3-39` (motor de Origem: Formações afetam derivados server-side + Especialidade
-> atrelada à Origem + Experimento c/ peculiaridade perde Origem), `m3-40` (mecânicas de fragmento
-> hoje deferidas: Preço de Sanidade, Afinidade, fragmento-como-Modificação), `m3-41` (bugs de
+> `docs/specs/backlog/`): `m3-40` (cabeçalho: "Agente" + campo "Contrato" só-mestre + mestre edita
+> Personalidade), `m3-41` (motor de Origem: Formações afetam derivados server-side + Especialidade
+> atrelada à Origem + Experimento c/ peculiaridade perde Origem), `m3-42` (mecânicas de fragmento
+> hoje deferidas: Preço de Sanidade, Afinidade, fragmento-como-Modificação), `m3-43` (bugs de
 > motor: mods de armadura na Esquiva/Defesa, resistência de armazenamento, amplificador de
-> inventário), `m3-42` (Inventário: pochete/bolsa como sub-inventários, lista própria de
-> Fragmentos, amplificadores em 2 colunas), `m3-43` (rolar dano direto na arma), `m3-44` (gramática
-> de rolagem v4: `(…)#N` e `(ATRIBUTO+n)dM`, exige parênteses no parser), `m3-45` (preset de
-> Iniciativa `DESd6` automático na criação), `m3-46` (Habilidades: filtro por tipo pelo contador +
-> limpar), `m3-47` (card "Informações Extras": exibir Origem, Personalidade, afinidade — **sem aba
-> nova**), `m3-48` (aba **História** privada — só dono/mestre, dado não recuperado p/ visualizador;
-> **introduz** o mecanismo de campo-privado-por-permissão), `m3-49` (permissões granulares:
+> inventário), `m3-44` (Inventário: pochete/bolsa como sub-inventários, lista própria de
+> Fragmentos, amplificadores em 2 colunas), `m3-45` (rolar dano direto na arma), `m3-46` (gramática
+> de rolagem v4: `(…)#N` e `(ATRIBUTO+n)dM`, exige parênteses no parser), `m3-47` (preset de
+> Iniciativa `DESd6` automático na criação), `m3-48` (Habilidades: filtro por tipo pelo contador +
+> limpar), `m3-49` (card "Informações Extras": exibir Origem, Personalidade, afinidade — **sem aba
+> nova**), `m3-50` (aba **História** privada — só dono/mestre, dado não recuperado p/ visualizador;
+> **introduz** o mecanismo de campo-privado-por-permissão), `m3-51` (permissões granulares:
 > visualizador não rola, trauma só em edição, revogar acesso expulsa em tempo real, Anotações com
-> gate de visualização reusando o mecanismo da `m3-48`), `m3-50` (acervo: excluir + duplicar ficha),
-> `m3-51` (exportar ficha em PDF do tema), `m3-52` (calculadora comum flutuante/arrastável na
-> ficha), `m3-53` (refino visual desktop: alinhar ícones das tabs, hover do atributo mostra DT,
-> largura+animação da bandeja), `m3-54` (passe mobile de todas as abas + skeletons dos novos
+> gate de visualização reusando o mecanismo da `m3-50`), `m3-52` (acervo: excluir + duplicar ficha),
+> `m3-53` (exportar ficha em PDF do tema), `m3-54` (calculadora comum flutuante/arrastável na
+> ficha), `m3-55` (refino visual desktop: alinhar ícones das tabs, hover do atributo mostra DT,
+> largura+animação da bandeja), `m3-56` (passe mobile de todas as abas + skeletons dos novos
 > layouts). Implementar uma por vez, movendo cada spec `backlog/ → active/ → done/` e atualizando
 > `CONTEXT.md` (fluxo padrão). `m3-27`/`m3-28` seguem à frente na fila.
 

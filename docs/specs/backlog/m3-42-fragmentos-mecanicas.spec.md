@@ -1,6 +1,6 @@
-# m3-40-fragmentos-mecanicas.spec.md
+# m3-42-fragmentos-mecanicas.spec.md
 
-> Task 37 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-38`…`m3-54`).
+> Task 39 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-40`…`m3-56`).
 
 > **Antes de codar:** reler `docs/core/sistema-v4.1.0.md` (seção Fragmentos) — o header de
 > `shared/src/regras/compras/fragmento.dados.ts` lista estas mecânicas como **deferidas**;
@@ -21,7 +21,7 @@ formalizar fragmentos **como "Modificações"** de itens modificáveis.
    redução de limite de trauma, etc.). Debitar no fluxo de aplicação do Inventário.
 2. **Afinidade.** Modelar a afinidade de fragmento (por tipo/módulo) conforme o documento e
    expô-la como função pura para consumo (custo/bônus). A **exibição** da afinidade no card
-   "Informações Extras" é da `m3-47`; aqui entra só a **mecânica**.
+   "Informações Extras" é da `m3-49`; aqui entra só a **mecânica**.
 3. **Fragmentos como "Modificações".** Formalizar que um fragmento aplicado a um item modificável
    é uma **Modificação** do item, reusando o fluxo `origemFragmento`/`ModificacaoAplicadaDto`
    criado na `m3-35` (`ficha-inventario.component.ts` ~linhas 771-836) — chips de modificação,
@@ -40,7 +40,7 @@ formalizar fragmentos **como "Modificações"** de itens modificáveis.
 
 ## Fora de Escopo
 
-- Exibição da afinidade e dos dados de fragmento no card Extras (fica na `m3-47`).
+- Exibição da afinidade e dos dados de fragmento no card Extras (fica na `m3-49`).
 - Venda de fragmentos na calculadora M1 (`shared/src/regras/compras/venda.ts`) — intocada.
 - Demais mecânicas ainda deferidas no header de `fragmento.dados.ts` que o documento não exigir
   agora (Anomalia Biológica, Colapso, Redução de Módulo, Forja) — só as três acima.

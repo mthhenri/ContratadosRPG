@@ -1,6 +1,6 @@
-# m3-48-aba-historia-privada.spec.md
+# m3-50-aba-historia-privada.spec.md
 
-> Task 45 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-38`…`m3-54`).
+> Task 47 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-40`…`m3-56`).
 
 > **Antes de qualquer UI:** ler `docs/design/DESIGN.md` e consumir os tokens do tema
 > "Terminal de Contenção" (`docs/design/tema/`). Nada de hex/fonte/raio solto (proibição #29).
@@ -10,7 +10,7 @@
 Adicionar uma aba **"História"** à ficha, visível **apenas ao mestre e ao jogador dono**. Para os
 demais (acesso de visualização) a aba **não aparece** e **os dados nem são recuperados** para a
 tela. Esta task também **introduz o mecanismo de "seção privada por permissão"** reusado pela
-`m3-49` (Anotações).
+`m3-51` (Anotações).
 
 ## Entregáveis
 
@@ -21,7 +21,7 @@ tela. Esta task também **introduz o mecanismo de "seção privada por permissã
    (`backend/src/modules/ficha/ficha.service.ts`), **omitir `historia` do payload** quando o
    solicitante é **só-visualizador** (não dono, não mestre) — não basta esconder no front, o dado
    não pode trafegar. Introduzir um utilitário reusável de "campos privados por permissão"
-   (usado também pela `m3-49` para `anotacoes`) para não duplicar a lógica de omissão.
+   (usado também pela `m3-51` para `anotacoes`) para não duplicar a lógica de omissão.
 3. **Aba condicional.** Estender a union `AbaFicha` + a lista `ABAS_FICHA` + `ehAbaFicha`
    (`ficha-visualizacao.component.ts` ~linhas 98-118) com o id `historia`, **exibido só quando**
    `ehDono() || ehMestre()` (`visualizar.page.ts` ~linhas 144-158). Painel
@@ -41,7 +41,7 @@ tela. Esta task também **introduz o mecanismo de "seção privada por permissã
 
 ## Fora de Escopo
 
-- Gate de Anotações (é a `m3-49`, que reusa o mecanismo introduzido aqui).
+- Gate de Anotações (é a `m3-51`, que reusa o mecanismo introduzido aqui).
 - Rich text/anexos na História (texto simples, padrão Anotações).
 
 ## Dependências

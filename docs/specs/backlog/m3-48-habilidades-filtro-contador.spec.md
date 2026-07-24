@@ -1,6 +1,6 @@
-# m3-46-habilidades-filtro-contador.spec.md
+# m3-48-habilidades-filtro-contador.spec.md
 
-> Task 43 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-38`…`m3-54`).
+> Task 45 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-40`…`m3-56`).
 
 > **Antes de qualquer UI:** ler `docs/design/DESIGN.md` e consumir os tokens do tema
 > "Terminal de Contenção" (`docs/design/tema/`). Nada de hex/fonte/raio solto (proibição #29).

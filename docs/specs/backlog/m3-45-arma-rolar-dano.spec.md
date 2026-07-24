@@ -1,6 +1,6 @@
-# m3-43-arma-rolar-dano.spec.md
+# m3-45-arma-rolar-dano.spec.md
 
-> Task 40 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-38`…`m3-54`).
+> Task 42 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-40`…`m3-56`).
 
 > **Antes de qualquer UI:** ler `docs/design/DESIGN.md` e consumir os tokens do tema
 > "Terminal de Contenção" (`docs/design/tema/`). Nada de hex/fonte/raio solto (proibição #29).
@@ -23,7 +23,7 @@ Inventário, sem precisar ir montar um preset de rolagem.
 3. **Persistência:** se a `m3-27` (histórico de rolagem) já estiver concluída, gravar a rolagem
    pelo mesmo padrão (`RolagemService`, com `rotulo` = nome da arma); caso contrário,
    fire-and-forget só na bandeja. A spec deve tratar os dois cenários sem acoplar rígido à `m3-27`.
-4. Respeitar o gate de permissão de rolagem da `m3-49` (visualizador não rola) quando esta existir.
+4. Respeitar o gate de permissão de rolagem da `m3-51` (visualizador não rola) quando esta existir.
 
 ## Critérios de Aceite
 
@@ -34,9 +34,9 @@ Inventário, sem precisar ir montar um preset de rolagem.
 ## Fora de Escopo
 
 - Rolar ataque/acerto (só dano aqui).
-- Nova gramática de rolagem (é a `m3-44`).
+- Nova gramática de rolagem (é a `m3-46`).
 
 ## Dependências
 
 - `m3-18` (dano tipado), `m3-14` (inventário), `m3-22` (bandeja/frontend de rolagem),
-  `m3-27` (histórico — opcional), `m3-49` (gate de permissão de rolagem — opcional).
+  `m3-27` (histórico — opcional), `m3-51` (gate de permissão de rolagem — opcional).

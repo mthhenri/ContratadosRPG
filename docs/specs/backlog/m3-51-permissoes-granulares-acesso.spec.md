@@ -1,6 +1,6 @@
-# m3-49-permissoes-granulares-acesso.spec.md
+# m3-51-permissoes-granulares-acesso.spec.md
 
-> Task 46 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-38`…`m3-54`).
+> Task 48 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-40`…`m3-56`).
 
 > **Antes de qualquer UI:** ler `docs/design/DESIGN.md` e consumir os tokens do tema
 > "Terminal de Contenção" (`docs/design/tema/`). Nada de hex/fonte/raio solto (proibição #29).
@@ -12,14 +12,14 @@
 Granularizar as permissões da ficha: (24) **quem tem só visualização não pode rolar dados**;
 (2) **traumas só podem ser tratados na visão de edição**; (27) **revogar acesso "expulsa"** o
 jogador da tela da ficha em tempo real; e *(comentário do autor)* **Anotações passa a ter gate de
-visualização, igual à História (`m3-48`)**.
+visualização, igual à História (`m3-50`)**.
 
 ## Entregáveis
 
 1. **Visualizador não rola dados (item 24).** Bloquear as ações de rolagem para quem tem só
    acesso de visualização: teste de atributo (`rolarTesteAtributo`,
    `ficha-visualizacao.component.ts` ~linha 503), presets (`ficha-rolagens`), rolar dano da arma
-   (`m3-43`). Introduzir um conceito de permissão **mais granular** (ex.: `podeRolar` distinto de
+   (`m3-45`). Introduzir um conceito de permissão **mais granular** (ex.: `podeRolar` distinto de
    `podeVer`/`podeEditar`) derivado do papel/acesso — arbitrado no backend nos endpoints de
    rolagem (quando existirem, `m3-27`) e refletido no front. Dono e mestre rolam; visualizador não.
 2. **Tratar trauma só em edição (item 2).** A ação "tratar trauma" no `ficha-sanidade`
@@ -35,7 +35,7 @@ visualização, igual à História (`m3-48`)**.
    passa a seguir o **mesmo tratamento da História**: **filtragem server-side** em
    `FichaService.recuperarFicha` (não recuperar `anotacoes` para só-visualizador) + aba
    condicionada em `ABAS_FICHA` a `ehDono() || ehMestre()`. **Reusar o mecanismo de "campos
-   privados por permissão" introduzido na `m3-48`** (não duplicar a lógica de omissão), inclusive
+   privados por permissão" introduzido na `m3-50`** (não duplicar a lógica de omissão), inclusive
    no broadcast de tempo real.
 
 ## Critérios de Aceite
@@ -55,5 +55,5 @@ visualização, igual à História (`m3-48`)**.
 ## Dependências
 
 - `m3-04` (acesso de visualização), `m3-05`/`m3-08` (gateway + `TempoRealService`), `m3-12`
-  (sanidade/traumas), `m3-48` (mecanismo de seção privada por permissão / História), `m3-32`
-  (Anotações), `m3-27`/`m3-43` (rolagem — para o gate `podeRolar`).
+  (sanidade/traumas), `m3-50` (mecanismo de seção privada por permissão / História), `m3-32`
+  (Anotações), `m3-27`/`m3-45` (rolagem — para o gate `podeRolar`).

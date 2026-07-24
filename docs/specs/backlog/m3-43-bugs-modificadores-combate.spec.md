@@ -1,6 +1,6 @@
-# m3-41-bugs-modificadores-combate.spec.md
+# m3-43-bugs-modificadores-combate.spec.md
 
-> Task 38 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-38`…`m3-54`).
+> Task 40 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-40`…`m3-56`).
 
 > **Antes de codar:** reler `docs/core/sistema-v4.1.0.md` (Proteções / Resistências / Esquiva /
 > Armazenamento / Amplificadores). **O documento vence** (proibição #27). Task de **motor** —

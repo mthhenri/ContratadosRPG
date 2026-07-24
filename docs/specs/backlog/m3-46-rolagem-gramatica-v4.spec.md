@@ -1,6 +1,6 @@
-# m3-44-rolagem-gramatica-v4.spec.md
+# m3-46-rolagem-gramatica-v4.spec.md
 
-> Task 41 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-38`…`m3-54`).
+> Task 43 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-40`…`m3-56`).
 > Estende o pacote de rolagem (`m3-16`/`m3-29` — gramática v2/v3).
 
 > **Regras de jogo:** `docs/core/sistema-v4.1.0.md` (Testes / Dano). **O documento vence**

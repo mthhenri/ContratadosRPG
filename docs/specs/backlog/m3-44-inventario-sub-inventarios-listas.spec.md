@@ -1,6 +1,6 @@
-# m3-42-inventario-sub-inventarios-listas.spec.md
+# m3-44-inventario-sub-inventarios-listas.spec.md
 
-> Task 39 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-38`…`m3-54`).
+> Task 41 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-40`…`m3-56`).
 
 > **Antes de qualquer UI:** ler `docs/design/DESIGN.md` e consumir os tokens do tema
 > "Terminal de Contenção" (`docs/design/tema/`). Nada de hex/fonte/raio solto (proibição #29).
@@ -40,8 +40,8 @@ Reorganizar a aba **Inventário**: (14) **pochete e bolsa de corpo como inventá
 
 ## Fora de Escopo
 
-- Mecânica de fragmentos (é a `m3-40`) — aqui só a organização visual/estrutural da lista.
-- Rolar dano nas armas (é a `m3-43`).
+- Mecânica de fragmentos (é a `m3-42`) — aqui só a organização visual/estrutural da lista.
+- Rolar dano nas armas (é a `m3-45`).
 
 ## Dependências
 

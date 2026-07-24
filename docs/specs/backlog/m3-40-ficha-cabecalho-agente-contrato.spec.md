@@ -1,6 +1,6 @@
-# m3-38-ficha-cabecalho-agente-contrato.spec.md
+# m3-40-ficha-cabecalho-agente-contrato.spec.md
 
-> Task 35 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-38`…`m3-54`).
+> Task 37 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-40`…`m3-56`).
 
 > **Antes de qualquer UI:** ler `docs/design/DESIGN.md` e consumir os tokens do tema
 > "Terminal de Contenção" (`docs/design/tema/`). Nada de hex/fonte/raio solto (proibição #29).

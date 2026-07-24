@@ -1,6 +1,6 @@
-# m3-50-ficha-acervo-excluir-duplicar.spec.md
+# m3-52-ficha-acervo-excluir-duplicar.spec.md
 
-> Task 47 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-38`…`m3-54`).
+> Task 49 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-40`…`m3-56`).
 
 > **Antes de qualquer UI:** ler `docs/design/DESIGN.md` e consumir os tokens do tema
 > "Terminal de Contenção" (`docs/design/tema/`). Nada de hex/fonte/raio solto (proibição #29).
@@ -36,7 +36,7 @@ ficha e **duplicar** uma ficha.
 
 ## Fora de Escopo
 
-- Exportar ficha (é a `m3-51`).
+- Exportar ficha (é a `m3-53`).
 - Duplicar levando junto os acessos de visualização (o clone nasce sem acessos).
 
 ## Dependências

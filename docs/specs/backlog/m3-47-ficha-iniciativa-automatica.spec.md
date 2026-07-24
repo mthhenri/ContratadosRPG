@@ -1,6 +1,6 @@
-# m3-45-ficha-iniciativa-automatica.spec.md
+# m3-47-ficha-iniciativa-automatica.spec.md
 
-> Task 42 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-38`…`m3-54`).
+> Task 44 do milestone `m3-ficha-jogador.spec.md`. Lote de refino da ficha (`m3-40`…`m3-56`).
 
 > **Regras de jogo:** `docs/core/sistema-v4.1.0.md` (Iniciativa). **O documento vence**
 > (proibição #27).
