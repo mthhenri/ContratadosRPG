@@ -10,7 +10,7 @@ import {
   ItemCategoriaEnum,
   ModificacaoEfeitoTipoEnum,
 } from '@contratados-rpg/shared/enums';
-import type { FichaInventarioDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { FichaInventarioDto, FichaSequelaDto } from '@contratados-rpg/shared/dtos/ficha';
 import {
   AMPLIFICADORES,
   AmplificadorAplicadoDto,
@@ -24,6 +24,7 @@ import {
   custoAcoplarFragmento,
   custoAquisicaoFragmento,
   custoRemoverFragmento,
+  custoSanidadeConsumirFragmento,
   descreverEfeitosModificacao,
   ItemCatalogo,
   listarBonusFragmentoPotencializador,
@@ -37,6 +38,8 @@ import {
   obterPesoModificacao,
   OpcaoBonusFragmentoDto,
   PENALIDADE_VONTADE_POR_EMPILHAMENTO,
+  PrecoSanidadeConsumoDto,
+  SEQUELA_CONSUMO_FRAGMENTO,
   StatItemDto,
   verificarConflitoModificacao,
 } from '@contratados-rpg/shared/regras/compras';
@@ -327,6 +330,12 @@ export class FichaInventario {
   readonly ajusteEnergiaFragmento = output<CustoEnergiaFragmento>();
   /** Emite o novo Inventário máximo editado na linha "Inventário" — a página persiste como derivado. */
   readonly ajusteInventarioMaximo = output<number>();
+  /**
+   * Emite as sequelas "Rejeição Biológica" do Preço de Sanidade ao **consumir** um fragmento
+   * (m3-42) — a página as acrescenta a `estado.sequelas`. Não emite quando o jogador evitou a
+   * sequela com o teste de Vontade.
+   */
+  readonly sequelasFragmentoConsumido = output<readonly FichaSequelaDto[]>();
 
   /** Abas do catálogo comprável — sem os Fragmentos (achados, montados como item custom). */
   protected readonly categorias = CATALOGO_CATEGORIAS.filter(
@@ -423,6 +432,17 @@ export class FichaInventario {
   protected readonly alvoFragmento = signal<number | null>(null);
   /** Índice da opção de bônus escolhida (em `opcoesBonusFragmento()`), ou `null`. */
   protected readonly opcaoBonusFragmento = signal<number | null>(null);
+
+  /** Índice do fragmento Potencializador cujo painel "Consumir" está aberto (m3-42), ou `null`. */
+  protected readonly consumindoFragmentoIndice = signal<number | null>(null);
+  /** Declaração do jogador de que evitou a sequela com o teste de Vontade (m3-42) — não trava, é honra. */
+  protected readonly evitouSequelaConsumo = signal(false);
+  /** Preço de Sanidade do fragmento em `consumindoFragmentoIndice`, ou `null` se o painel está fechado. */
+  protected readonly precoSanidadeConsumo = computed<PrecoSanidadeConsumoDto | null>(() => {
+    const indice = this.consumindoFragmentoIndice();
+    const item = indice === null ? null : this.inventario().itens[indice];
+    return item?.modulo ? custoSanidadeConsumirFragmento(item.modulo) : null;
+  });
 
   /** Índice do item cujo formulário de modificação custom está aberto, ou `null`. */
   protected readonly criandoModIndice = signal<number | null>(null);
@@ -922,7 +942,11 @@ export class FichaInventario {
    * Confirma a aplicação: empurra o bônus escolhido como `ModificacaoAplicadaDto` no item-alvo
    * (`ignoraLimiteTotal`/`ignoraLimiteProprio` — não conta no limite de mods da patente, doc: o
    * fragmento não é uma modificação comprada), remove o fragmento do inventário avulso (consumido) e
-   * debita o custo de **acoplar** (Energia atual + Energia Máxima do módulo — m3-35).
+   * debita o custo de **acoplar** (Energia atual + Energia Máxima do módulo — m3-35). A Energia
+   * Máxima da **aquisição** (drenada quando o fragmento entrou solto no inventário) é restituída
+   * antes de aplicar o custo do acoplamento — sem isso, os dois custos se somavam e o total drenado
+   * ficava o dobro do exemplo do documento ("acoplar um fragmento de módulo IV... custa... 7 de
+   * Energia Máxima", não 14).
    */
   protected confirmarAplicarFragmento(fragmentoIndice: number): void {
     const alvoIndice = this.alvoFragmento();
@@ -951,13 +975,62 @@ export class FichaInventario {
       .filter((_, i) => i !== fragmentoIndice);
     this.emitirItens(novosItens);
 
+    const custoAquisicao = custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, fragmento.modulo);
     const custo = custoAcoplarFragmento(fragmento.modulo);
     this.ajusteEnergiaFragmento.emit({
       energiaAtual: this.energiaAtual() - custo.energia,
-      energiaMaxima: this.energiaMaxima() - custo.energiaMaxima,
+      energiaMaxima: this.energiaMaxima() + custoAquisicao - custo.energiaMaxima,
     });
 
     this.aplicandoFragmentoIndice.set(null);
+  }
+
+  // === Consumir fragmento Potencializador (m3-42) ===
+  /** Abre o painel "Consumir" de um fragmento Potencializador, zerando a declaração de Vontade. */
+  protected abrirConsumirFragmento(indice: number): void {
+    this.consumindoFragmentoIndice.set(indice);
+    this.evitouSequelaConsumo.set(false);
+  }
+
+  /** Fecha o painel "Consumir" sem alterar nada. */
+  protected cancelarConsumirFragmento(): void {
+    this.consumindoFragmentoIndice.set(null);
+  }
+
+  /** Alterna a declaração "evitei a sequela com o teste de Vontade" do painel "Consumir". */
+  protected alternarEvitouSequelaConsumo(): void {
+    this.evitouSequelaConsumo.update((valor) => !valor);
+  }
+
+  /**
+   * Confirma o **consumo**: remove o fragmento do inventário avulso, restitui o dreno de Energia
+   * Máxima da aquisição (doc — "⬥ Módulos": "esse gasto cessa ao remover o fragmento de seu
+   * inventário") e debita o Preço de Sanidade — preço físico (Energia Máxima extra, sempre) e
+   * mental (sequela "Rejeição Biológica" × multiplicador, só se o jogador não evitou com Vontade).
+   */
+  protected confirmarConsumirFragmento(fragmentoIndice: number): void {
+    const item = this.inventario().itens[fragmentoIndice];
+    const tipo = item ? tipoFragmentoDaCategoria(item.categoria) : null;
+    const preco = this.precoSanidadeConsumo();
+    if (!item?.modulo || !tipo || !preco) {
+      return;
+    }
+
+    this.emitirItens(this.inventario().itens.filter((_, i) => i !== fragmentoIndice));
+
+    const custoAquisicao = custoAquisicaoFragmento(tipo, item.modulo);
+    this.ajusteEnergiaFragmento.emit({
+      energiaAtual: this.energiaAtual(),
+      energiaMaxima: this.energiaMaxima() + custoAquisicao - preco.energiaMaximaExtra,
+    });
+
+    if (!this.evitouSequelaConsumo()) {
+      this.sequelasFragmentoConsumido.emit(
+        Array.from({ length: preco.multiplicadorSequela }, () => ({ nome: SEQUELA_CONSUMO_FRAGMENTO })),
+      );
+    }
+
+    this.consumindoFragmentoIndice.set(null);
   }
 
   /**
@@ -1100,9 +1173,8 @@ export class FichaInventario {
 
   /**
    * Remove um empilhamento de uma modificação (ou o último, sumindo com ela). Uma mod de
-   * **origem fragmento** (m3-35) some sempre inteira (1× só) e o desacoplamento debita Energia
-   * atual × 2 do módulo (doc — "removê-lo do item custa 14 de Energia" pro módulo IV) — sem
-   * devolver a Energia Máxima do acoplamento nem ressuscitar o fragmento avulso.
+   * **origem fragmento** (m3-35/m3-42) some sempre inteira (1× só) e vira `desacoplarFragmento` —
+   * um caso à parte porque o fragmento **volta como item avulso** ao inventário, não é destruído.
    */
   protected removerModificacao(indice: number, modNome: string): void {
     const item = this.inventario().itens[indice];
@@ -1118,14 +1190,57 @@ export class FichaInventario {
     // Custom (sem definição): decrementa de 1 em 1 até sumir; de catálogo: piso nos iniciais.
     const minInicial = definicao ? definicao.empilhamentosIniciais : 1;
     const novos = atuais <= minInicial ? 0 : atuais - 1;
-    this.definirModificacao(indice, modNome, novos);
     if (novos === 0 && aplicada?.origemFragmento) {
-      const custo = custoRemoverFragmento(aplicada.origemFragmento.modulo);
-      this.ajusteEnergiaFragmento.emit({
-        energiaAtual: this.energiaAtual() - custo,
-        energiaMaxima: this.energiaMaxima(),
-      });
+      this.desacoplarFragmento(indice, modNome, aplicada.nome, aplicada.origemFragmento.tipo, aplicada.origemFragmento.modulo);
+      return;
     }
+    this.definirModificacao(indice, modNome, novos);
+  }
+
+  /**
+   * Desacopla uma mod de fragmento (m3-42): a mod some do item-alvo e o fragmento **volta como
+   * item avulso** ao inventário — ele continua "no inventário" (doc — "⬥ Módulos": o gasto "cessa
+   * ao remover o fragmento de seu inventário", não ao desacoplá-lo), então a Energia Máxima segue
+   * drenando o mesmo valor de antes: restitui o custo do acoplamento e reaplica a aquisição — como
+   * os dois valem o mesmo pra Potencializador, o líquido é 0. Só debita a Energia atual × 2 do
+   * custo de remoção (doc: "removê-lo do item custa 14 de Energia" pro módulo IV). O fragmento só
+   * para de contar energia quando o jogador de fato o remove do inventário (avulso) ou o consome.
+   */
+  private desacoplarFragmento(
+    indiceAlvo: number,
+    modNome: string,
+    nomeFragmento: string,
+    tipo: FragmentoTipoEnum,
+    modulo: FragmentoModuloEnum,
+  ): void {
+    const categoria =
+      tipo === FragmentoTipoEnum.CONSTRUTOR
+        ? ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR
+        : ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR;
+    const fragmentoAvulso: CarrinhoItemDto = {
+      nome: nomeFragmento,
+      categoria,
+      custo: 0,
+      peso: 0,
+      quantidade: 1,
+      guardada: false,
+      modificacoes: [],
+      modulo,
+    };
+    const itens = this.inventario().itens.map((item, i) =>
+      i === indiceAlvo
+        ? { ...item, modificacoes: item.modificacoes.filter((mod) => mod.nome !== modNome) }
+        : item,
+    );
+    this.emitirItens([...itens, fragmentoAvulso]);
+
+    const custoRemocao = custoRemoverFragmento(modulo);
+    const custoAquisicao = custoAquisicaoFragmento(tipo, modulo);
+    const energiaMaximaAcoplamento = custoAcoplarFragmento(modulo).energiaMaxima;
+    this.ajusteEnergiaFragmento.emit({
+      energiaAtual: this.energiaAtual() - custoRemocao,
+      energiaMaxima: this.energiaMaxima() + energiaMaximaAcoplamento - custoAquisicao,
+    });
   }
 
   /** Abre/fecha o formulário de modificação custom de um item. */

@@ -1,4 +1,5 @@
 import { ClasseEnum } from '../../enums';
+import { custoSanidadeConsumirFragmento } from '../compras';
 import { SanidadeCalcularDto, SanidadeDto } from './agente.dtos';
 
 /**
@@ -8,10 +9,16 @@ import { SanidadeCalcularDto, SanidadeDto } from './agente.dtos';
  *     limite na calculadora, então vem `null`.
  *   - `sequelasRemovidasPorMissao` = Vontade sequelas removidas ao encerrar a missão
  *     e retornar à base (doc — "Sanidade" > "Sequelas"). Vale para todas as classes.
+ *   - `precoSanidadeFragmento` = Preço de Sanidade do fragmento consumido nesta ação, se
+ *     `moduloFragmentoConsumido` foi informado (doc — "⬦ Consumo de Fragmentos", m3-42); `null`
+ *     quando não há fragmento consumido.
  */
 export function calcularSanidade(dto: SanidadeCalcularDto): SanidadeDto {
   return {
     limiteTraumas: dto.classe === ClasseEnum.CIVIL ? null : dto.vontade + 1,
     sequelasRemovidasPorMissao: dto.vontade,
+    precoSanidadeFragmento: dto.moduloFragmentoConsumido
+      ? custoSanidadeConsumirFragmento(dto.moduloFragmentoConsumido)
+      : null,
   };
 }

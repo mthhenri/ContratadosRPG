@@ -203,6 +203,18 @@
             }
           </div>
         }
+        @if (mostraModulo()) {
+          <p class="ficha-inv__aviso">
+            @if (mostraEmprestimo()) {
+              Fragmento Construtor: <strong>é a peça em si</strong> — escolha em "Encaixa em" o tipo
+              de arma/proteção que ele materializa. Não recebe fragmentos Potencializadores.
+            } @else {
+              Fragmento Potencializador: <strong>melhora outro item</strong> (ou pode ser consumido
+              por um benefício pessoal) — depois de adicionar, use "Aplicar em..." ou "Consumir" no
+              item na lista do inventário.
+            }
+          </p>
+        }
         @if (mostraDano()) {
           <div class="ficha-inv__form-linha">
             <label class="ficha-inv__campo">
@@ -525,6 +537,17 @@
                   <app-icone nome="fragmento" />
                   <span>Aplicar em...</span>
                 </button>
+                <button
+                  type="button"
+                  class="ficha-inv__modificar"
+                  [appTooltip]="'Consumir para benefício pessoal — cobra Preço de Sanidade'"
+                  [class.ficha-inv__modificar--aberto]="consumindoFragmentoIndice() === item.indice"
+                  [attr.aria-expanded]="consumindoFragmentoIndice() === item.indice"
+                  (click)="abrirConsumirFragmento(item.indice)"
+                >
+                  <app-icone nome="fragmento" />
+                  <span>Consumir</span>
+                </button>
               }
             </div>
           }
@@ -721,6 +744,76 @@
             (onHide)="cancelarAplicarFragmento()"
           >
             <ng-container [ngTemplateOutlet]="painelFragmentoTemplate" />
+          </p-dialog>
+        }
+      }
+
+      @if (editavel() && item.fragmentoPotencializador) {
+        <!-- "Consumir" (m3-42) — Preço de Sanidade do Consumo (doc: "⬦ Consumo de Fragmentos"):
+             remove o fragmento em troca de um benefício pessoal (negociado fora do app), cobra
+             Energia Máxima extra e a sequela "Rejeição Biológica" × multiplicador, evitável com um
+             teste de Vontade feito na aba Rolagens — aqui só se declara o resultado. -->
+        <ng-template #painelConsumirFragmentoTemplate>
+        <div class="ficha-inv__mod-painel">
+          @if (precoSanidadeConsumo(); as preco) {
+            <p class="ficha-inv__aviso">
+              Preço de Sanidade: sequela "Rejeição Biológica" ×{{ preco.multiplicadorSequela }}
+              (evitável com teste de Vontade DT {{ preco.dtEvitarVontade }}) + {{ preco.energiaMaximaExtra }}
+              de Energia Máxima extra, sempre. O benefício pessoal do Consumo é narrativo — combine com o Mestre.
+            </p>
+            <div class="ficha-inv__mod-flags">
+              <button
+                type="button"
+                class="ficha-inv__mod-flag"
+                role="checkbox"
+                [class.ficha-inv__mod-flag--ativo]="evitouSequelaConsumo()"
+                [attr.aria-checked]="evitouSequelaConsumo()"
+                aria-label="Evitei a sequela com o teste de Vontade"
+                [appTooltip]="'Evitei a sequela com o teste de Vontade'"
+                (click)="alternarEvitouSequelaConsumo()"
+              >
+                <app-icone nome="check" />
+              </button>
+              <span class="ficha-inv__campo-rotulo">Evitei a sequela com o teste de Vontade</span>
+            </div>
+          }
+          <div class="ficha-inv__form-acoes">
+            <button
+              type="button"
+              class="ficha-inv__btn ficha-inv__btn--principal"
+              (click)="confirmarConsumirFragmento(item.indice)"
+            >
+              Consumir
+            </button>
+            <button
+              type="button"
+              class="ficha-inv__btn ficha-inv__btn--secundario"
+              (click)="cancelarConsumirFragmento()"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+        </ng-template>
+        @if (apresentacao() === 'inline') {
+          @if (consumindoFragmentoIndice() === item.indice) {
+            <ng-container [ngTemplateOutlet]="painelConsumirFragmentoTemplate" />
+          }
+        } @else {
+          <p-dialog
+            [visible]="consumindoFragmentoIndice() === item.indice"
+            [modal]="true"
+            [draggable]="false"
+            [resizable]="false"
+            [dismissableMask]="true"
+            [appendTo]="'body'"
+            [style]="{ width: '460px' }"
+            [breakpoints]="{ '560px': '95vw' }"
+            header="Consumir Fragmento"
+            styleClass="ficha-inv__dialogo"
+            (onHide)="cancelarConsumirFragmento()"
+          >
+            <ng-container [ngTemplateOutlet]="painelConsumirFragmentoTemplate" />
           </p-dialog>
         }
       }

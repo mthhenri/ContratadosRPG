@@ -248,9 +248,14 @@
       background: var(--accent);
       border-color: var(--accent);
 
-      &:hover {
+      &:hover:not(:disabled) {
         filter: brightness(1.08);
         background: var(--accent);
+      }
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: default;
       }
     }
   }
@@ -698,6 +703,15 @@
   &__classe-acoes {
     display: flex;
     gap: 8px;
+  }
+
+  // Aviso de campos obrigatórios pendentes no mini-editor (Origem) — mesma cor semântica de aviso
+  // usada em "Excedente"/condição "machucado" (proibição #29: só tokens do tema).
+  &__aviso-obrigatorio {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--warning);
+    margin-bottom: 4px;
   }
 
   // Nível/Prestígio/Dinheiro/Salário dividem uma linha de 4 (números curtos); Patente (texto,

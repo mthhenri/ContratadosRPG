@@ -1,5 +1,6 @@
-import { ClasseEnum } from '../../enums';
+import { ClasseEnum, FragmentoModuloEnum } from '../../enums';
 import type { FichaHabilidadeDto } from '../../dtos/ficha';
+import type { PrecoSanidadeConsumoDto } from '../compras';
 
 /**
  * DTOs de entrada e value-objects de saída das fórmulas do agente
@@ -93,10 +94,14 @@ export interface AreaPercepcaoCalcularDto {
   readonly sentidos: number;
 }
 
-/** Entrada de `calcularSanidade`: limite de traumas e recuperação de sequelas por Vontade. */
+/**
+ * Entrada de `calcularSanidade`: limite de traumas e recuperação de sequelas por Vontade, mais o
+ * módulo de um fragmento consumido nesta ação, se houver (Preço de Sanidade, m3-42).
+ */
 export interface SanidadeCalcularDto {
   readonly classe: ClasseEnum;
   readonly vontade: number;
+  readonly moduloFragmentoConsumido?: FragmentoModuloEnum;
 }
 
 /** Entrada de `calcularLimiteHabilidadesPorTurno`: base 4 + ganhos por Nível (civil = 3). */
@@ -149,6 +154,8 @@ export interface DefesaDto {
 export interface SanidadeDto {
   readonly limiteTraumas: number | null;
   readonly sequelasRemovidasPorMissao: number;
+  /** Preço de Sanidade do fragmento consumido nesta ação (m3-42), ou `null` se nenhum. */
+  readonly precoSanidadeFragmento: PrecoSanidadeConsumoDto | null;
 }
 
 /**

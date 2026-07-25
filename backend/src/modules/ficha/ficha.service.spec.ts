@@ -8,7 +8,6 @@ import type {
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
   ClasseEnum,
-  EspecialidadeEfeitoEnum,
   FormacaoBonusEnum,
   HabilidadeCategoriaEnum,
   TipoCampanhaMembroPapelEnum,
@@ -120,7 +119,7 @@ function criarOrigem(overrides: Partial<FichaOrigemDto> = {}): FichaOrigemDto {
         texto: '+1 dado em testes com Armas de Fogo',
       },
     ],
-    especialidade: { gatilho: 'Sob fogo direto', efeito: EspecialidadeEfeitoEnum.DADO_EXTRA },
+    especialidade: { gatilho: 'Sob fogo direto', efeito: '+1 dado em um teste' },
     saberDeCampo: 'Táticas de combate urbano',
     ...overrides,
   };
@@ -489,7 +488,7 @@ describe('FichaService', () => {
 
       it('lança BusinessException quando o gatilho da Especialidade está vazio (m3-41 — acoplada à Origem)', async () => {
         const origem = criarOrigem({
-          especialidade: { gatilho: '   ', efeito: EspecialidadeEfeitoEnum.DADO_EXTRA },
+          especialidade: { gatilho: '   ', efeito: '+1 dado em um teste' },
         });
 
         await expect(
@@ -505,9 +504,9 @@ describe('FichaService', () => {
         expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
       });
 
-      it('lança BusinessException quando o efeito da Especialidade não existe em EspecialidadeEfeitoEnum', async () => {
+      it('lança BusinessException quando o efeito da Especialidade está vazio', async () => {
         const origem = criarOrigem({
-          especialidade: { gatilho: 'Sob fogo direto', efeito: 'EFEITO_INEXISTENTE' as EspecialidadeEfeitoEnum },
+          especialidade: { gatilho: 'Sob fogo direto', efeito: '   ' },
         });
 
         await expect(
@@ -522,6 +521,25 @@ describe('FichaService', () => {
         ).rejects.toThrow(BusinessException);
         expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
       });
+
+      it.each(['nome', 'descricao', 'saberDeCampo'] as const)(
+        'lança BusinessException quando a Origem não tem %s',
+        async (campo) => {
+          const origem = criarOrigem({ [campo]: '   ' });
+
+          await expect(
+            service.criarFicha(
+              {
+                campanhaId: 3,
+                nome: 'Agente Alfa',
+                dados: criarDados({ identidade: criarIdentidade({ origem }) }),
+              },
+              usuarioDono,
+            ),
+          ).rejects.toThrow(BusinessException);
+          expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+        },
+      );
 
       describe('Experimento com Peculiaridade zera a Origem (m3-41)', () => {
         const peculiaridade = {

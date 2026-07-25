@@ -8,10 +8,15 @@ import {
 import type { CarrinhoItemDto } from './compras.dtos';
 import { calcularStatItem } from './compras';
 import {
+  aplicarReducaoAfinidade,
+  calcularAfinidade,
   custoAcoplarFragmento,
   custoAquisicaoFragmento,
   custoRemoverFragmento,
+  custoSanidadeConsumirFragmento,
   listarBonusFragmentoPotencializador,
+  reducaoCustoPorAfinidade,
+  valorAfinidadeFragmento,
 } from './fragmento';
 
 /**
@@ -123,5 +128,93 @@ describe('regressão — calcularStatItem soma mod de origemFragmento igual a mo
       ],
     };
     expect(calcularStatItem({ item })?.dano).toBe('5D4+FOR [Físico]');
+  });
+});
+
+/**
+ * Afinidade (m3-42) — doc: "⬥ Afinidade com Fragmentos". Valor por fragmento = 6 - Módulo (numeral
+ * romano); exemplo do documento: 2 fragmentos de módulo V + 1 de módulo IV = 4 de afinidade.
+ */
+describe('valorAfinidadeFragmento', () => {
+  it('módulo V vale 1, módulo I vale 5 (6 - numeral romano)', () => {
+    expect(valorAfinidadeFragmento(FragmentoModuloEnum.V)).toBe(1);
+    expect(valorAfinidadeFragmento(FragmentoModuloEnum.IV)).toBe(2);
+    expect(valorAfinidadeFragmento(FragmentoModuloEnum.III)).toBe(3);
+    expect(valorAfinidadeFragmento(FragmentoModuloEnum.II)).toBe(4);
+    expect(valorAfinidadeFragmento(FragmentoModuloEnum.I)).toBe(5);
+  });
+});
+
+describe('calcularAfinidade', () => {
+  it('2 fragmentos de módulo V + 1 de módulo IV = 4 de afinidade (exemplo do documento)', () => {
+    expect(
+      calcularAfinidade([FragmentoModuloEnum.V, FragmentoModuloEnum.V, FragmentoModuloEnum.IV]),
+    ).toBe(4);
+  });
+
+  it('sem fragmentos portados: afinidade 0', () => {
+    expect(calcularAfinidade([])).toBe(0);
+  });
+});
+
+describe('reducaoCustoPorAfinidade', () => {
+  it('afinidade até 10: sem redução', () => {
+    expect(reducaoCustoPorAfinidade(0)).toBe(0);
+    expect(reducaoCustoPorAfinidade(10)).toBe(0);
+  });
+
+  it('afinidade 15: -2 de Energia (exemplo do documento)', () => {
+    expect(reducaoCustoPorAfinidade(15)).toBe(2);
+  });
+
+  it('afinidade 11: -1 a cada 2 pontos excedentes, arredondado para baixo', () => {
+    expect(reducaoCustoPorAfinidade(11)).toBe(0);
+    expect(reducaoCustoPorAfinidade(12)).toBe(1);
+  });
+});
+
+describe('aplicarReducaoAfinidade', () => {
+  it('afinidade 15 reduz o custo em 2, sem afinidade nenhuma reduz nada', () => {
+    expect(aplicarReducaoAfinidade(20, 15)).toBe(18);
+    expect(aplicarReducaoAfinidade(20, 0)).toBe(20);
+  });
+
+  it('nunca zera o custo — piso de 1 (doc: "no mínimo, 1 de Energia Máxima")', () => {
+    expect(aplicarReducaoAfinidade(3, 40)).toBe(1);
+  });
+});
+
+/**
+ * Preço de Sanidade do Consumo (m3-42) — doc: "⬦ Consumo de Fragmentos". Exemplo do documento:
+ * módulo III aplica a sequela "Rejeição Biológica" 3× mais forte; módulo IV remove 21 de Energia
+ * Máxima extra (custo do módulo × 3 = 7 × 3).
+ */
+describe('custoSanidadeConsumirFragmento', () => {
+  it('módulo III: multiplicador 3, DT 22, energia extra 36 (exemplo do documento — "3× mais forte")', () => {
+    expect(custoSanidadeConsumirFragmento(FragmentoModuloEnum.III)).toEqual({
+      multiplicadorSequela: 3,
+      dtEvitarVontade: 22,
+      energiaMaximaExtra: 36,
+    });
+  });
+
+  it('módulo IV: energia extra 21 (exemplo do documento)', () => {
+    expect(custoSanidadeConsumirFragmento(FragmentoModuloEnum.IV).energiaMaximaExtra).toBe(21);
+  });
+
+  it('módulo V (mais fraco): multiplicador 1, DT 12', () => {
+    expect(custoSanidadeConsumirFragmento(FragmentoModuloEnum.V)).toEqual({
+      multiplicadorSequela: 1,
+      dtEvitarVontade: 12,
+      energiaMaximaExtra: 9,
+    });
+  });
+
+  it('módulo I (mais forte): multiplicador 5, DT 32', () => {
+    expect(custoSanidadeConsumirFragmento(FragmentoModuloEnum.I)).toEqual({
+      multiplicadorSequela: 5,
+      dtEvitarVontade: 32,
+      energiaMaximaExtra: 60,
+    });
   });
 });

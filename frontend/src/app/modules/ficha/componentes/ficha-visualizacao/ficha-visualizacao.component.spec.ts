@@ -3,7 +3,6 @@ import { By } from '@angular/platform-browser';
 import {
   ArquetipoEnum,
   ClasseEnum,
-  EspecialidadeEfeitoEnum,
   FormacaoBonusEnum,
   HabilidadeCategoriaEnum,
   ItemCategoriaEnum,
@@ -750,7 +749,7 @@ describe('FichaVisualizacao', () => {
           texto: '+1 dado com Armas de Fogo',
         },
       ],
-      especialidade: { gatilho: 'Sob fogo direto', efeito: EspecialidadeEfeitoEnum.DADO_EXTRA },
+      especialidade: { gatilho: 'Sob fogo direto', efeito: '+1 dado em um teste' },
     };
 
     it('dono define a Personalidade e a Origem pela primeira vez — emite os ajustes', () => {
@@ -808,6 +807,57 @@ describe('FichaVisualizacao', () => {
       expect(alvo.fixture.componentInstance['editandoOrigem']()).toBe(false);
       expect(alvo.fixture.componentInstance['rascunhoOrigem']()).toBeNull();
     });
+
+    it.each(['nome', 'descricao', 'saberDeCampo'] as const)(
+      'origemRascunhoValida é false quando falta %s',
+      (campo) => {
+        const componente = montar(dados, 'Corvo', 42, true).fixture.componentInstance;
+        componente['editarOrigem']();
+        componente['rascunhoOrigem'].set({ ...origemExemplo, [campo]: '' });
+
+        expect(componente['origemRascunhoValida']()).toBe(false);
+      },
+    );
+
+    it('origemRascunhoValida é false quando falta o gatilho ou o efeito da Especialidade', () => {
+      const componente = montar(dados, 'Corvo', 42, true).fixture.componentInstance;
+      componente['editarOrigem']();
+
+      componente['rascunhoOrigem'].set({
+        ...origemExemplo,
+        especialidade: { gatilho: '', efeito: origemExemplo.especialidade.efeito },
+      });
+      expect(componente['origemRascunhoValida']()).toBe(false);
+
+      componente['rascunhoOrigem'].set({
+        ...origemExemplo,
+        especialidade: { gatilho: origemExemplo.especialidade.gatilho, efeito: '' },
+      });
+      expect(componente['origemRascunhoValida']()).toBe(false);
+    });
+
+    it('origemRascunhoValida é true com todos os campos preenchidos', () => {
+      const componente = montar(dados, 'Corvo', 42, true).fixture.componentInstance;
+      componente['editarOrigem']();
+      componente['rascunhoOrigem'].set(origemExemplo);
+
+      expect(componente['origemRascunhoValida']()).toBe(true);
+    });
+
+    it('confirmarOrigem não emite nada quando o rascunho está incompleto', () => {
+      const alvo = montar(dados, 'Corvo', 42, true);
+      const origens: FichaOrigemDto[] = [];
+      alvo.fixture.componentInstance.ajusteOrigem.subscribe((o) => origens.push(o));
+
+      const componente = alvo.fixture.componentInstance;
+      componente['editarOrigem']();
+      componente['rascunhoOrigem'].set({ ...origemExemplo, nome: '' });
+      componente['confirmarOrigem']();
+
+      expect(origens).toEqual([]);
+      // O editor continua aberto — não fecha num rascunho inválido.
+      expect(componente['editandoOrigem']()).toBe(true);
+    });
   });
 
   describe('Contrato (m3-40)', () => {
@@ -838,6 +888,41 @@ describe('FichaVisualizacao', () => {
       componente['confirmarIdentidade']('contrato', '1234');
 
       expect(contratos).toEqual(['1234']);
+    });
+  });
+
+  describe('Preço de Sanidade do Consumo de Fragmento (m3-42)', () => {
+    it('acrescenta as sequelas recebidas às já existentes, preservando traumas e lesões', () => {
+      const alvo = montar(dados);
+      const emitidos: { sequelas: readonly unknown[]; traumas: readonly unknown[]; lesoes: readonly unknown[] }[] = [];
+      alvo.fixture.componentInstance.ajusteSanidade.subscribe((e) => emitidos.push(e));
+
+      alvo.fixture.componentInstance['aoConsumirFragmentoSanidade']([
+        { nome: 'Rejeição Biológica' },
+        { nome: 'Rejeição Biológica' },
+      ]);
+
+      expect(emitidos).toEqual([
+        {
+          sequelas: [
+            { nome: 'Insônia', descricao: '−1m de deslocamento' },
+            { nome: 'Rejeição Biológica' },
+            { nome: 'Rejeição Biológica' },
+          ],
+          traumas: dados.estado.traumas,
+          lesoes: dados.estado.lesoes,
+        },
+      ]);
+    });
+
+    it('lista vazia (evitou a sequela): não emite nada', () => {
+      const alvo = montar(dados);
+      const emitidos: unknown[] = [];
+      alvo.fixture.componentInstance.ajusteSanidade.subscribe((e) => emitidos.push(e));
+
+      alvo.fixture.componentInstance['aoConsumirFragmentoSanidade']([]);
+
+      expect(emitidos).toEqual([]);
     });
   });
 });

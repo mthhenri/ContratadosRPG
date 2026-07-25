@@ -1,6 +1,60 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-24 (**m3-41 — Origem passa a afetar cálculos de verdade**: 2ª task do
+> Última atualização: 2026-07-25 (**m3-42 — mecânicas de Fragmento hoje deferidas**: 3ª task do lote
+> de refino `m3-40`…`m3-56` implementada. **Entregável 1 (Preço de Sanidade):** novo
+> `custoSanidadeConsumirFragmento(modulo)` (`shared/src/regras/compras/fragmento.ts`) devolve o
+> multiplicador da sequela "Rejeição Biológica" (doc — "Consumo de Fragmentos": "multiplicada por
+> Módulo - 6"), a DT de Vontade pra evitá-la e a Energia Máxima extra (preço físico, "custo do
+> módulo × 3") — todos derivados do mesmo valor `6 - numeral romano` que também é a Afinidade de um
+> fragmento (conferido contra os 2 exemplos do documento: módulo III → sequela 3× mais forte; módulo
+> IV → 21 de Energia Máxima extra). `calcularSanidade` (`sanidade.ts`) ganhou o campo opcional
+> `moduloFragmentoConsumido`, preenchendo `precoSanidadeFragmento` quando informado. No Inventário
+> (`ficha-inventario.component.ts`), um fragmento Potencializador avulso ganhou o botão "Consumir"
+> ao lado de "Aplicar em...": remove o fragmento, restitui a Energia Máxima da aquisição, debita o
+> preço físico e emite as sequelas via novo output `sequelasFragmentoConsumido` — a página
+> (`ficha-visualizacao.component.ts`) as acrescenta a `estado.sequelas` pelo mesmo canal
+> `ajusteSanidade` já usado pela aba Sanidade (m3-12). O jogador declara (checkbox, não travado por
+> dado automático) se evitou a sequela com o teste de Vontade feito à parte; o benefício pessoal do
+> Consumo em si (+1 em testes/Defesa/dano do Corpo, tabela "Consumido") ficou **fora de escopo**
+> conscientemente — nenhum entregável pede esse catálogo, só o preço de consumir, e construí-lo
+> exigiria um sistema novo de buffs permanentes sem contrato definido. **Entregável 2 (Afinidade):**
+> `valorAfinidadeFragmento`/`calcularAfinidade`/`reducaoCustoPorAfinidade`/`aplicarReducaoAfinidade`
+> (mesmo arquivo) — só a mecânica pura, sem wiring em nenhum custo existente nem exibição (ambos
+> fora de escopo: a exibição é da `m3-49`, e a redução automática exigiria threading de "afinidade
+> atual" por toda a UI de Inventário sem um pedido explícito para isso). **Entregável 3
+> (Fragmento-como-Modificação):** já funcionava desde a `m3-35` via `origemFragmento`/
+> `ModificacaoAplicadaDto` (`confirmarAplicarFragmento`) — o gap era só deixar explícito no
+> formulário de item custom qual dos dois tipos faz o quê; o form agora mostra um aviso condicional
+> ("é a peça em si, use Encaixa em" para Construtor vs. "melhora outro item, use Aplicar em.../
+> Consumir depois" para Potencializador) assim que o jogador escolhe a categoria. **Bugs achados e
+> corrigidos em QA ao vivo com o autor (pré-existentes da m3-35, fora do escopo original mas na
+> mesma área — o autor identificou testando a app de verdade):** (1) `confirmarAplicarFragmento`
+> (acoplar) debitava o custo do acoplamento **em cima** da Energia Máxima já drenada pela aquisição,
+> sem restituí-la — dobrando o dreno real (14 em vez dos 7 do exemplo do documento pro módulo IV).
+> (2) `removerModificacao` (desacoplar) destruía o fragmento e não devolvia nada de Energia Máxima —
+> o autor esclareceu a regra correta: o fragmento **continua contando energia enquanto estiver em
+> qualquer lugar do inventário** (solto ou acoplado) e só para de contar quando o jogador de fato o
+> **remove do inventário** (não quando desacopla). Corrigido nos dois pontos com um modelo
+> consistente: acoplar restitui a Energia Máxima da aquisição antes de debitar o custo do
+> acoplamento (líquido 0 — bate com o exemplo do documento, 7 de Energia Máxima drenados, não 14);
+> desacoplar (`desacoplarFragmento`, novo método) devolve o fragmento como **item avulso** à lista do
+> inventário, restituindo o custo do acoplamento e reaplicando a aquisição — líquido também 0, então
+> a Energia Máxima nunca sai do valor que já estava drenando desde que o fragmento entrou no
+> inventário; só a Energia atual é debitada (× 2 do módulo, doc). Round-trip completo (adquirir →
+> acoplar → desacoplar) verificado ao vivo: Energia Máxima constante do início ao fim, fragmento
+> reaparece na lista com suas próprias ações (Aplicar em.../Consumir/Remover). **Testes:** shared
+> 414/414 (+14: 5 na Afinidade, 4 no Preço de Sanidade do Consumo — `fragmento.spec.ts` — e 4 em
+> `sanidade.spec.ts` pro novo campo), frontend 440/441 (+14: 4 no fluxo Consumir + 2 no aviso
+> Construtor/Potencializador — `ficha-inventario` — e 2 em `ficha-visualizacao`; 2 testes
+> pré-existentes de acoplar/desacoplar tiveram os números e o formato esperados reescritos junto com
+> os bugs; a 1 falha remanescente é a mesma pré-existente e não-relacionada — apelido de
+> equipamento), backend 118/118 (sem mudança — task não tocou o backend); build limpo nos 3
+> workspaces (o aviso de budget do `ng build`, 591.29 kB vs. 580 kB, é pré-existente — confirmado
+> idêntico em byte a byte contra o HEAD commitado antes desta task). Spec em
+> `docs/specs/done/m3-42-fragmentos-mecanicas.spec.md`. Próxima task: **`m3-43`** (bugs de
+> modificadores em Combate).)
+>
+> (**m3-41 — Origem passa a afetar cálculos de verdade**: 2ª task do
 > lote de refino `m3-40`…`m3-56` implementada, em duas fatias. **Entregável 1 (motor de efeitos),
 > escopo reduzido conscientemente:** das 6 categorias de efeito de Formação sem consumidor
 > (`RESISTENCIA`/`INICIATIVA`/`SOBRECARGA`/`ROLAGEM`/`DT_REPARO`/`DURACAO_EFEITO`), só 3 tinham onde

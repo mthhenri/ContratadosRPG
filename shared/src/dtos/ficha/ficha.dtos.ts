@@ -1,7 +1,6 @@
 import type {
   ArquetipoEnum,
   ClasseEnum,
-  EspecialidadeEfeitoEnum,
   FormacaoBonusEnum,
   HabilidadeCategoriaEnum,
   RolagemPresetTipoEnum,
@@ -309,11 +308,13 @@ export interface FichaFormacaoDto {
 /**
  * A **Especialidade** de um agente (`docs/core/sistema-v4.1.0.md` — "⬦ Especialidade"): um único
  * bônus com gatilho circunstancial, sem custo de Energia. `efeito` não acumula com outras opções
- * (regra do documento).
+ * (regra do documento). Texto livre — descreve o bônus específico (ex.: "+1 dado em testes de
+ * Furtividade"), não um catálogo fechado; o Mestre é o árbitro do teto de poder (mesmo espírito do
+ * escape "autorizado pelo Mestre" que `FichaFormacaoDto.bonus: null` já usa).
  */
 export interface FichaEspecialidadeDto {
   readonly gatilho: string;
-  readonly efeito: EspecialidadeEfeitoEnum;
+  readonly efeito: string;
 }
 
 /**

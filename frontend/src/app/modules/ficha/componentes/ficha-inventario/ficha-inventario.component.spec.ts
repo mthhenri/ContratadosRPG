@@ -642,7 +642,7 @@ describe('FichaInventario', () => {
       expect(alvo.emitidos[0].itens).toHaveLength(0);
     });
 
-    it('aplicar um fragmento Potencializador em outro item: soma o efeito, remove o fragmento e debita Energia + Energia Máxima do acoplamento', () => {
+    it('aplicar um fragmento Potencializador em outro item: soma o efeito, remove o fragmento e debita Energia + Energia Máxima do acoplamento (restituindo a aquisição, m3-42)', () => {
       const alvo = montar({
         itens: [itemLeve, fragmento(ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR, FragmentoModuloEnum.IV)],
         amplificadores: [],
@@ -655,8 +655,10 @@ describe('FichaInventario', () => {
       alvo.fixture.componentInstance['opcaoBonusFragmento'].set(0);
       alvo.fixture.componentInstance['confirmarAplicarFragmento'](1);
 
-      // Módulo IV: acoplar custa 7 de Energia + 7 de Energia Máxima (exemplo do documento).
-      expect(custos).toEqual([{ energiaAtual: 43, energiaMaxima: 43 }]);
+      // Módulo IV: acoplar custa 7 de Energia + 7 de Energia Máxima, mas restitui os 7 de Energia
+      // Máxima da aquisição (drenados quando o fragmento entrou solto) — total líquido de Energia
+      // Máxima é 0 (exemplo do documento: só 7 de Energia Máxima ficam drenados, os mesmos de antes).
+      expect(custos).toEqual([{ energiaAtual: 43, energiaMaxima: 50 }]);
       expect(alvo.emitidos[0].itens).toHaveLength(1);
       const alvoResultante = alvo.emitidos[0].itens[0];
       expect(alvoResultante.nome).toBe('Leve');
@@ -668,7 +670,7 @@ describe('FichaInventario', () => {
       expect(alvoResultante.modificacoes[0].ignoraLimiteTotal).toBe(true);
     });
 
-    it('remover (desacoplar) uma mod de fragmento debita Energia × 2, sem ressuscitar o fragmento nem tocar a Energia Máxima', () => {
+    it('remover (desacoplar) uma mod de fragmento debita Energia × 2, mantém a Energia Máxima (líquido 0) e devolve o fragmento como item avulso (m3-42)', () => {
       const itemComFragmento: CarrinhoItemDto = {
         ...itemLeve,
         modificacoes: [
@@ -688,11 +690,111 @@ describe('FichaInventario', () => {
 
       alvo.fixture.componentInstance['removerModificacao'](0, 'Fragmento Potencializador — Módulo IV');
 
-      // Módulo IV: remover custa Energia × 2 = 14; Energia Máxima não muda (50).
+      // Módulo IV: remover custa Energia × 2 = 14; Energia Máxima líquida não muda — restitui o
+      // acoplamento (+7) e reaplica a aquisição (−7), já que o fragmento volta a ser avulso.
       expect(custos).toEqual([{ energiaAtual: 36, energiaMaxima: 50 }]);
       expect(alvo.emitidos[0].itens[0].modificacoes).toHaveLength(0);
-      // Não devolve um fragmento avulso ao inventário — só o item alvo continua ali.
-      expect(alvo.emitidos[0].itens).toHaveLength(1);
+      // O item-alvo continua ali, e o fragmento reaparece como item avulso no fim da lista.
+      expect(alvo.emitidos[0].itens).toHaveLength(2);
+      const fragmentoAvulso = alvo.emitidos[0].itens[1];
+      expect(fragmentoAvulso.nome).toBe('Fragmento Potencializador — Módulo IV');
+      expect(fragmentoAvulso.categoria).toBe(ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR);
+      expect(fragmentoAvulso.modulo).toBe(FragmentoModuloEnum.IV);
+    });
+  });
+
+  describe('consumir fragmento — Preço de Sanidade (m3-42)', () => {
+    function fragmento(modulo: FragmentoModuloEnum): CarrinhoItemDto {
+      return {
+        nome: 'Fragmento achado',
+        categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+        custo: 0,
+        peso: 0,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        modulo,
+      };
+    }
+
+    it('consumir remove o fragmento, restitui a Energia Máxima da aquisição e debita o preço físico extra (módulo III)', () => {
+      const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.III)], amplificadores: [] });
+      const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
+      alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
+
+      // Módulo III: aquisição custava 12 (restituídos); preço físico extra = 12 × 3 = 36.
+      // 50 (base) + 12 (restitui aquisição) − 36 (preço físico) = 26.
+      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 26 }]);
+      expect(alvo.emitidos[0].itens).toHaveLength(0);
+    });
+
+    it('consumir sem declarar que evitou: emite a sequela "Rejeição Biológica" ×multiplicador do módulo', () => {
+      const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.III)], amplificadores: [] });
+      const sequelas: (readonly { nome: string }[])[] = [];
+      alvo.fixture.componentInstance.sequelasFragmentoConsumido.subscribe((s) => sequelas.push(s));
+
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
+
+      // Módulo III: multiplicador 3 (doc: "3× mais forte").
+      expect(sequelas).toEqual([
+        [
+          { nome: 'Rejeição Biológica' },
+          { nome: 'Rejeição Biológica' },
+          { nome: 'Rejeição Biológica' },
+        ],
+      ]);
+    });
+
+    it('declarando que evitou com o teste de Vontade: não emite sequela nenhuma, mas ainda debita a Energia', () => {
+      const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.III)], amplificadores: [] });
+      const sequelas: (readonly unknown[])[] = [];
+      alvo.fixture.componentInstance.sequelasFragmentoConsumido.subscribe((s) => sequelas.push(s));
+      const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
+      alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['alternarEvitouSequelaConsumo']();
+      alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
+
+      expect(sequelas).toEqual([]);
+      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 26 }]);
+    });
+
+    it('cancelar fecha o painel sem alterar o inventário nem emitir nada', () => {
+      const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.III)], amplificadores: [] });
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['cancelarConsumirFragmento']();
+
+      expect(alvo.fixture.componentInstance['consumindoFragmentoIndice']()).toBeNull();
+      expect(alvo.emitidos).toHaveLength(0);
+    });
+  });
+
+  describe('form de item custom — Fragmento Construtor vs Potencializador é explicado (m3-42)', () => {
+    it('categoria Fragmento Construtor: explica que ele é a peça em si', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.fixture.componentInstance['alternarCriarItem']();
+      alvo.fixture.componentInstance['itemCustomForm'].controls.categoria.setValue(
+        ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+      );
+      alvo.fixture.detectChanges();
+
+      expect(alvo.raiz.querySelector('.ficha-inv__aviso')?.textContent).toContain('é a peça em si');
+    });
+
+    it('categoria Fragmento Potencializador: explica que ele melhora outro item', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.fixture.componentInstance['alternarCriarItem']();
+      alvo.fixture.componentInstance['itemCustomForm'].controls.categoria.setValue(
+        ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+      );
+      alvo.fixture.detectChanges();
+
+      expect(alvo.raiz.querySelector('.ficha-inv__aviso')?.textContent).toContain('melhora outro item');
     });
   });
 

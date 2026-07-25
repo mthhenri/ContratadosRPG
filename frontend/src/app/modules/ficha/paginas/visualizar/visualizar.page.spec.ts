@@ -5,7 +5,6 @@ import { NEVER, Subject, of, throwError } from 'rxjs';
 import {
   ArquetipoEnum,
   ClasseEnum,
-  EspecialidadeEfeitoEnum,
   FormacaoBonusEnum,
   HabilidadeCategoriaEnum,
   SeveridadeLesaoEnum,
@@ -619,7 +618,7 @@ describe('FichaVisualizar', () => {
           { bonus, parametro: null, texto: 'Bônus principal' },
           { bonus: null, parametro: null, texto: 'Bônus custom autorizado pelo Mestre' },
         ],
-        especialidade: { gatilho: 'Sob fogo direto', efeito: EspecialidadeEfeitoEnum.DADO_EXTRA },
+        especialidade: { gatilho: 'Sob fogo direto', efeito: '+1 dado em um teste' },
       };
     }
 

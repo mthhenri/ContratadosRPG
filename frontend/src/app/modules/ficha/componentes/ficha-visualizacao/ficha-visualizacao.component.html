@@ -142,54 +142,56 @@
           @if (rascunhoOrigem(); as rascunho) {
             <div class="ficha-ident__classe-editor">
               <label class="ficha-ident__meta-linha">
-                <span class="ficha-ident__meta-rotulo">Nome</span>
+                <span class="ficha-ident__meta-rotulo">Nome *</span>
                 <input
                   class="ficha-ident__select"
                   type="text"
+                  required
                   [value]="rascunho.nome"
                   (input)="mudarTextoOrigemRascunho('nome', $any($event.target).value)"
                 />
               </label>
               <label class="ficha-ident__meta-linha">
-                <span class="ficha-ident__meta-rotulo">Descrição</span>
+                <span class="ficha-ident__meta-rotulo">Descrição *</span>
                 <input
                   class="ficha-ident__select"
                   type="text"
+                  required
                   [value]="rascunho.descricao"
                   (input)="mudarTextoOrigemRascunho('descricao', $any($event.target).value)"
                 />
               </label>
               <label class="ficha-ident__meta-linha">
-                <span class="ficha-ident__meta-rotulo">Saber de Campo</span>
+                <span class="ficha-ident__meta-rotulo">Saber de Campo *</span>
                 <input
                   class="ficha-ident__select"
                   type="text"
+                  required
                   [value]="rascunho.saberDeCampo"
                   (input)="mudarTextoOrigemRascunho('saberDeCampo', $any($event.target).value)"
                 />
               </label>
               <label class="ficha-ident__meta-linha">
-                <span class="ficha-ident__meta-rotulo">Especialidade — gatilho</span>
+                <span class="ficha-ident__meta-rotulo">Especialidade — gatilho *</span>
                 <input
                   class="ficha-ident__select"
                   type="text"
+                  required
                   placeholder="Ex.: Sob fogo direto"
                   [value]="rascunho.especialidade.gatilho"
                   (input)="mudarGatilhoEspecialidadeRascunho($any($event.target).value)"
                 />
               </label>
               <label class="ficha-ident__meta-linha">
-                <span class="ficha-ident__meta-rotulo">Especialidade — efeito</span>
-                <select
+                <span class="ficha-ident__meta-rotulo">Especialidade — efeito *</span>
+                <input
                   class="ficha-ident__select"
-                  (change)="mudarEfeitoEspecialidadeRascunho($any($event.target).value)"
-                >
-                  @for (efeito of efeitosEspecialidade; track efeito) {
-                    <option [value]="efeito" [selected]="efeito === rascunho.especialidade.efeito">
-                      {{ rotuloEfeitoEspecialidade(efeito) }}
-                    </option>
-                  }
-                </select>
+                  type="text"
+                  required
+                  placeholder="Ex.: +1 dado em testes de Furtividade"
+                  [value]="rascunho.especialidade.efeito"
+                  (input)="mudarEfeitoEspecialidadeRascunho($any($event.target).value)"
+                />
               </label>
 
               @for (linha of rascunho.formacao; track $index) {
@@ -246,7 +248,8 @@
                   <input
                     class="ficha-ident__select"
                     type="text"
-                    placeholder="Texto de exibição"
+                    required
+                    placeholder="Texto de exibição *"
                     [attr.aria-label]="'Texto de exibição da Formação ' + ($index + 1)"
                     [value]="linha.texto"
                     (input)="mudarTextoFormacaoRascunho($index, $any($event.target).value)"
@@ -254,10 +257,17 @@
                 </div>
               }
 
+              @if (!origemRascunhoValida()) {
+                <span class="ficha-ident__aviso-obrigatorio">
+                  Preencha todos os campos obrigatórios (*) para salvar.
+                </span>
+              }
+
               <div class="ficha-ident__classe-acoes">
                 <button
                   class="ficha-cartao__acao ficha-cartao__acao--confirmar"
                   type="button"
+                  [disabled]="!origemRascunhoValida()"
                   (click)="confirmarOrigem()"
                 >
                   Salvar
@@ -1134,6 +1144,7 @@
             (inventarioMudou)="ajusteInventario.emit($event)"
             (ajusteEnergiaFragmento)="aoAjustarEnergiaFragmento($event)"
             (ajusteInventarioMaximo)="ajustarInventarioMaximo($event)"
+            (sequelasFragmentoConsumido)="aoConsumirFragmentoSanidade($event)"
           />
         </div>
         }

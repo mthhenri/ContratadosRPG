@@ -23,7 +23,6 @@ import type {
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
   ClasseEnum,
-  EspecialidadeEfeitoEnum,
   TipoCampanhaMembroPapelEnum,
   TipoFichaEnum,
 } from '@contratados-rpg/shared/enums';
@@ -364,10 +363,12 @@ export class FichaService {
 
   /**
    * Valida a **forma** do bloco `identidade` (m3-24, §11 camada 1 — não trava faixa, só forma):
-   * Personalidade uma única palavra (sem espaço interno, aparada), Origem com exatamente 2
-   * Formações, cada bônus de Formação existente em `FORMACOES` com `parametro` presente quando a
-   * definição exige, `texto` sempre obrigatório (inclusive no bônus custom `bonus: null`) e
-   * Especialidade com `efeito` existente em `EspecialidadeEfeitoEnum`. Reusa o catálogo de
+   * Personalidade uma única palavra (sem espaço interno, aparada), Origem com `nome`/`descricao`/
+   * `saberDeCampo` preenchidos e exatamente 2 Formações, cada bônus de Formação existente em
+   * `FORMACOES` com `parametro` presente quando a definição exige, `texto` sempre obrigatório
+   * (inclusive no bônus custom `bonus: null`) e Especialidade com `gatilho`/`efeito` preenchidos
+   * (`efeito` é texto livre — o Mestre arbitra o teto de poder, `sistema-v4.1.0.md` "⬦
+   * Especialidade" não lista um catálogo fechado como a Formação lista). Reusa o catálogo de
    * `shared/regras/identidade` (m3-23) — nenhuma regra de conteúdo é reimplementada aqui
    * (proibições #26/#28). Ficha sem `identidade` (anterior à m3-23) não valida nada.
    *
@@ -401,12 +402,22 @@ export class FichaService {
   }
 
   /**
-   * Valida a forma da Origem (m3-24), incluindo a **Especialidade acoplada** (m3-41 — Entregável 3):
-   * `especialidade` é campo obrigatório de `FichaOrigemDto` (nunca existe Origem sem Especialidade,
-   * por construção do contrato); esta validação garante que ela não chega **vazia/incompleta**
-   * (gatilho em branco) — mesma exigência já feita para o `texto` de cada Formação.
+   * Valida a forma da Origem (m3-24), incluindo os três textos livres (`nome`/`descricao`/
+   * `saberDeCampo`) e a **Especialidade acoplada** (m3-41 — Entregável 3): `especialidade` é campo
+   * obrigatório de `FichaOrigemDto` (nunca existe Origem sem Especialidade, por construção do
+   * contrato); esta validação garante que nenhum dos textos chega **vazio/incompleto** — mesma
+   * exigência já feita para o `texto` de cada Formação.
    */
   private validarFormaOrigem(origem: FichaOrigemDto): void {
+    if (!origem.nome.trim()) {
+      throw new BusinessException('Origem inválida: o nome é obrigatório');
+    }
+    if (!origem.descricao.trim()) {
+      throw new BusinessException('Origem inválida: a descrição é obrigatória');
+    }
+    if (!origem.saberDeCampo.trim()) {
+      throw new BusinessException('Origem inválida: o Saber de Campo é obrigatório');
+    }
     if (origem.formacao.length !== 2) {
       throw new BusinessException('Origem inválida: a Formação precisa ter exatamente 2 entradas');
     }
@@ -429,10 +440,8 @@ export class FichaService {
     if (!origem.especialidade.gatilho.trim()) {
       throw new BusinessException('Especialidade inválida: o gatilho é obrigatório');
     }
-    if (!Object.values(EspecialidadeEfeitoEnum).includes(origem.especialidade.efeito)) {
-      throw new BusinessException(
-        `Especialidade inválida: efeito "${origem.especialidade.efeito}" não existe`,
-      );
+    if (!origem.especialidade.efeito.trim()) {
+      throw new BusinessException('Especialidade inválida: o efeito é obrigatório');
     }
   }
 

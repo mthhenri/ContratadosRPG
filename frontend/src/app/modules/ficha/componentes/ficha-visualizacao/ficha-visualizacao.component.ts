@@ -14,7 +14,6 @@ import {
 import {
   ArquetipoEnum,
   ClasseEnum,
-  EspecialidadeEfeitoEnum,
   FormacaoBonusEnum,
   FormacaoParametroEnum,
   TipoDanoEnum,
@@ -28,6 +27,7 @@ import type {
   FichaJogadorDadosDto,
   FichaOrigemDto,
   FichaRolagemDto,
+  FichaSequelaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
   MAESTRIA_PONTOS_MINIMO,
@@ -71,7 +71,7 @@ import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-fi
 import { GRUPOS_FORMACAO, rotuloParametroFormacao } from '../../opcoes-formacao';
 import { CONDICOES_FICHA, type CondicoesFicha } from '../../condicoes-ficha';
 import { clamparVitalidade, type CampoVitalidadeAtual } from '../../ajuste-vitalidade';
-import { rotuloArquetipo, rotuloClasse, rotuloEfeitoEspecialidade } from '../../rotulos-ficha';
+import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
 import {
   ChaveInfoExtra,
   InfoExtra,
@@ -336,6 +336,23 @@ export class FichaVisualizacao {
   protected aoAjustarEnergiaFragmento(custo: CustoEnergiaFragmento): void {
     this.ajusteVitalidade.emit({ campo: 'energiaAtual', valor: custo.energiaAtual });
     this.ajusteVitalidade.emit({ campo: 'energiaMaxima', valor: custo.energiaMaxima });
+  }
+
+  /**
+   * Preço de Sanidade de **consumir** um Fragmento (m3-42): acrescenta as sequelas "Rejeição
+   * Biológica" recebidas às já existentes, reusando o mesmo canal `ajusteSanidade` (m3-12) da aba
+   * Sanidade em vez de abrir uma persistência paralela.
+   */
+  protected aoConsumirFragmentoSanidade(sequelasAdicionadas: readonly FichaSequelaDto[]): void {
+    if (sequelasAdicionadas.length === 0) {
+      return;
+    }
+    const estado = this.estado();
+    this.ajusteSanidade.emit({
+      sequelas: [...estado.sequelas, ...sequelasAdicionadas],
+      traumas: estado.traumas,
+      lesoes: estado.lesoes,
+    });
   }
 
   /** Alterna uma condição (Morrendo/Machucado/Inconsciente) e emite o conjunto atualizado. */
@@ -1002,8 +1019,6 @@ export class FichaVisualizacao {
 
   protected readonly gruposFormacao = GRUPOS_FORMACAO;
   protected readonly rotuloParametroFormacao = rotuloParametroFormacao;
-  protected readonly rotuloEfeitoEspecialidade = rotuloEfeitoEspecialidade;
-  protected readonly efeitosEspecialidade = Object.values(EspecialidadeEfeitoEnum);
   protected readonly parametroEsquivaOuBloqueio = FormacaoParametroEnum.ESQUIVA_OU_BLOQUEIO;
   /** As 16 linhas de Formação sem campo onde aterrissar ainda (m3-23) — "selo" de registro (m3-25). */
   protected readonly efeitosFormacaoPendentes = listarEfeitosPendentes(FORMACOES);
@@ -1011,6 +1026,33 @@ export class FichaVisualizacao {
   /** Editor de Origem aberto (mini-editor: 3 textos + Especialidade + 2 linhas de Formação). */
   protected readonly editandoOrigem = signal(false);
   protected readonly rascunhoOrigem = signal<FichaOrigemDto | null>(null);
+
+  /**
+   * `true` quando o rascunho de Origem tem todos os campos obrigatórios preenchidos (espelha
+   * `FichaService.validarFormaOrigem` no backend — o backend continua o árbitro final, isto só
+   * evita a viagem de rede com um rascunho que ele vai rejeitar): os três textos livres
+   * (Nome/Descrição/Saber de Campo), o gatilho e o efeito da Especialidade, o texto de cada linha
+   * de Formação e o parâmetro quando a definição escolhida o exige.
+   */
+  protected readonly origemRascunhoValida = computed(() => {
+    const rascunho = this.rascunhoOrigem();
+    if (!rascunho) {
+      return false;
+    }
+    if (!rascunho.nome.trim() || !rascunho.descricao.trim() || !rascunho.saberDeCampo.trim()) {
+      return false;
+    }
+    if (!rascunho.especialidade.gatilho.trim() || !rascunho.especialidade.efeito.trim()) {
+      return false;
+    }
+    return rascunho.formacao.every((linha) => {
+      if (!linha.texto.trim()) {
+        return false;
+      }
+      const definicao = linha.bonus ? FORMACOES[linha.bonus] : null;
+      return !definicao || definicao.parametro === null || !!linha.parametro?.trim();
+    });
+  });
 
   /** Origem vazia — ponto de partida do rascunho quando ainda não há Origem definida. */
   private origemVazia(): FichaOrigemDto {
@@ -1022,7 +1064,7 @@ export class FichaVisualizacao {
         { bonus: null, parametro: null, texto: '' },
         { bonus: null, parametro: null, texto: '' },
       ],
-      especialidade: { gatilho: '', efeito: EspecialidadeEfeitoEnum.DADO_EXTRA },
+      especialidade: { gatilho: '', efeito: '' },
     };
   }
 
@@ -1046,7 +1088,7 @@ export class FichaVisualizacao {
   /** Confirma a Origem — emite o rascunho inteiro para a página persistir e aplicar o delta de Formação. */
   protected confirmarOrigem(): void {
     const rascunho = this.rascunhoOrigem();
-    if (!rascunho) {
+    if (!rascunho || !this.origemRascunhoValida()) {
       return;
     }
     this.editandoOrigem.set(false);
@@ -1078,10 +1120,7 @@ export class FichaVisualizacao {
     if (!atual) {
       return;
     }
-    this.rascunhoOrigem.set({
-      ...atual,
-      especialidade: { ...atual.especialidade, efeito: valor as EspecialidadeEfeitoEnum },
-    });
+    this.rascunhoOrigem.set({ ...atual, especialidade: { ...atual.especialidade, efeito: valor } });
   }
 
   /**

@@ -1,11 +1,15 @@
 import { FragmentoModuloEnum, FragmentoTipoEnum, ModificacaoEfeitoTipoEnum } from '../../enums';
-import { BONUS_POTENCIALIZADOR, CUSTO_ENERGIA_MAXIMA_MODULO } from './fragmento.dados';
+import {
+  BONUS_POTENCIALIZADOR,
+  CUSTO_ENERGIA_MAXIMA_MODULO,
+  VALOR_AFINIDADE_MODULO,
+} from './fragmento.dados';
 import { ModificacaoEfeitoDto } from './compras.dtos';
 
 /**
- * Custos de Energia dos Fragmentos (m3-35) — funções puras conferidas contra
- * `docs/core/sistema-v4.1.0.md` — "⬡ Fragmentos". Só o núcleo desta task: adquirir (portar),
- * acoplar e remover (ver `fragmento.dados.ts` para o que fica de fora).
+ * Custos de Energia, Afinidade e Preço de Sanidade dos Fragmentos (m3-35/m3-42) — funções puras
+ * conferidas contra `docs/core/sistema-v4.1.0.md` — "⬡ Fragmentos" (ver `fragmento.dados.ts` para
+ * o que fica de fora).
  */
 
 /**
@@ -76,4 +80,61 @@ export function listarBonusFragmentoPotencializador(
       efeito: { tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: valores.valorFixo },
     },
   ];
+}
+
+// === Afinidade (m3-42) ===
+
+/** Afinidade que um único fragmento de `modulo` contribui (doc — "⬥ Afinidade com Fragmentos"). */
+export function valorAfinidadeFragmento(modulo: FragmentoModuloEnum): number {
+  return VALOR_AFINIDADE_MODULO[modulo];
+}
+
+/** Afinidade total de um agente: soma da Afinidade de cada fragmento portado (mesma seção do doc). */
+export function calcularAfinidade(modulosPortados: readonly FragmentoModuloEnum[]): number {
+  return modulosPortados.reduce((total, modulo) => total + valorAfinidadeFragmento(modulo), 0);
+}
+
+/**
+ * Redução de Energia no custo de fragmentos por excesso de Afinidade acima de 10 (doc: "acima de
+ * 10... redução... igual a -1 de Energia para cada 2 pontos excedidos do limite de afinidade").
+ */
+export function reducaoCustoPorAfinidade(afinidade: number): number {
+  return Math.floor(Math.max(0, afinidade - 10) / 2);
+}
+
+/**
+ * Aplica a redução de Afinidade a um custo de Energia de fragmento, sem nunca zerá-lo (doc: "Não é
+ * possível anular o custo de um fragmento... deve ter o custo de, no mínimo, 1 de Energia Máxima").
+ */
+export function aplicarReducaoAfinidade(custo: number, afinidade: number): number {
+  return Math.max(1, custo - reducaoCustoPorAfinidade(afinidade));
+}
+
+// === Preço de Sanidade do Consumo (m3-42) ===
+
+/** Preço de Sanidade (mental + físico) de **consumir** um fragmento (doc — "⬦ Consumo de Fragmentos"). */
+export interface PrecoSanidadeConsumoDto {
+  /** Quantas vezes a sequela "Rejeição Biológica" é aplicada (doc: "multiplicada por Módulo - 6"). */
+  readonly multiplicadorSequela: number;
+  /** DT de Vontade para evitar a sequela (doc: "DT 7 + (Módulo - 6) × 5"). */
+  readonly dtEvitarVontade: number;
+  /**
+   * Energia Máxima adicional perdida — preço físico, cobrado independente do teste de Vontade
+   * (doc: "removendo ainda mais de sua Energia Máxima, sendo igual ao custo do módulo multiplicado
+   * por 3").
+   */
+  readonly energiaMaximaExtra: number;
+}
+
+/**
+ * Preço de Sanidade de **consumir** um fragmento de `modulo` (doc — "⬦ Consumo de Fragmentos").
+ * Exemplo do documento: módulo IV remove 21 de Energia Máxima extra (custo 7 × 3).
+ */
+export function custoSanidadeConsumirFragmento(modulo: FragmentoModuloEnum): PrecoSanidadeConsumoDto {
+  const multiplicadorSequela = valorAfinidadeFragmento(modulo);
+  return {
+    multiplicadorSequela,
+    dtEvitarVontade: 7 + multiplicadorSequela * 5,
+    energiaMaximaExtra: CUSTO_ENERGIA_MAXIMA_MODULO[modulo] * 3,
+  };
 }

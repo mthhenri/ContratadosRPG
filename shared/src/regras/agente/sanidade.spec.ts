@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ClasseEnum } from '../../enums';
+import { ClasseEnum, FragmentoModuloEnum } from '../../enums';
 import { calcularSanidade } from './sanidade';
 
 /**
@@ -13,10 +13,12 @@ describe('calcularSanidade', () => {
     expect(calcularSanidade({ classe: ClasseEnum.COMBATENTE, vontade: 3 })).toEqual({
       limiteTraumas: 4,
       sequelasRemovidasPorMissao: 3,
+      precoSanidadeFragmento: null,
     });
     expect(calcularSanidade({ classe: ClasseEnum.SUPORTE, vontade: 0 })).toEqual({
       limiteTraumas: 1,
       sequelasRemovidasPorMissao: 0,
+      precoSanidadeFragmento: null,
     });
   });
 
@@ -24,6 +26,24 @@ describe('calcularSanidade', () => {
     expect(calcularSanidade({ classe: ClasseEnum.CIVIL, vontade: 2 })).toEqual({
       limiteTraumas: null,
       sequelasRemovidasPorMissao: 2,
+      precoSanidadeFragmento: null,
+    });
+  });
+
+  it('sem moduloFragmentoConsumido: precoSanidadeFragmento é null (m3-42)', () => {
+    expect(calcularSanidade({ classe: ClasseEnum.COMBATENTE, vontade: 3 }).precoSanidadeFragmento).toBeNull();
+  });
+
+  it('com moduloFragmentoConsumido: preenche o Preço de Sanidade do módulo (m3-42, doc: módulo III 3× mais forte)', () => {
+    const resultado = calcularSanidade({
+      classe: ClasseEnum.COMBATENTE,
+      vontade: 3,
+      moduloFragmentoConsumido: FragmentoModuloEnum.III,
+    });
+    expect(resultado.precoSanidadeFragmento).toEqual({
+      multiplicadorSequela: 3,
+      dtEvitarVontade: 22,
+      energiaMaximaExtra: 36,
     });
   });
 });
