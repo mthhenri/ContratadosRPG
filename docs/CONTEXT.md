@@ -1,6 +1,27 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-25 (**m3-46 — Gramática de rolagem v4**: task `m3-46` do lote de
+> Última atualização: 2026-07-25 (**m3-47 — Iniciativa automática na criação da ficha**: task
+> `m3-47` do lote de refino `m3-40`…`m3-56` implementada. Ao **criar** uma ficha (`FichaService.criarFicha`,
+> `backend/src/modules/ficha/ficha.service.ts`), o backend agora grava automaticamente um preset em
+> `dados.rolagens` — rótulo **"Iniciativa"**, fórmula **`DESd6`** (gramática de atributo-como-fonte-de-dados
+> já existente, m3-29 — cada ponto de Destreza é 1d6 rolado na Iniciativa) e a descrição fixa do documento
+> de jogo. **Fonte única no backend** (não duplicado no wizard `ficha-criar-dialog`): como toda criação de
+> ficha passa por `criarFicha` independente do caminho do frontend, gravar só ali cobre 100% dos casos sem
+> duplicar a semente em dois lugares. Novo `PRESET_INICIATIVA_PADRAO` (exportado do service, reusado pelos
+> testes) + `aplicarPresetIniciativa` (chamado em conjunto com `aplicarSnapshotDeMaximos` — ambos "enriquecem
+> o documento na criação"), que só adiciona o preset se `dados.rolagens` ainda não tiver um de mesmo nome
+> (evita duplicar caso o cliente já mande um — não há caso de uso atual, mas é uma guarda barata). O preset
+> nasce **editável/removível como qualquer outro** (não é imutável — é só um `FichaRolagemDto` comum) e a
+> fórmula `DESd6` já é gramática válida (`ATRdM`, m3-29/m3-46). **Fora de escopo** (conforme a spec): sem
+> stat derivada de Iniciativa no motor (é preset de rolagem, não derivado) e sem migração de fichas
+> existentes (só criação nova). **Testes:** backend `+2` (`ficha.service.spec.ts` — preset gerado com
+> `DESd6`/descrição corretos, e não duplica quando o cliente já manda um preset de mesmo nome); os testes
+> existentes de `criarFicha` que comparam o documento inteiro (`comSnapshot`) foram ajustados para incluir
+> o novo preset. 120/120 backend, 449/449 shared, build limpo em `shared`/`backend`. Spec em
+> `docs/specs/done/m3-47-ficha-iniciativa-automatica.spec.md`. Próxima task: **`m3-48`**
+> (filtro/contador de habilidades).)
+>
+> (**m3-46 — Gramática de rolagem v4**: task `m3-46` do lote de
 > refino `m3-40`…`m3-56` implementada — motor puro em `shared/regras/rolagem`, dois entregáveis.
 > **Parênteses no parser** (`interpretarFormula`/`interpretarSegmento`, `rolagem.ts`): o motor não
 > suportava `(`/`)` (rejeição cega); agora aceita só **duas formas sancionadas**, sem aninhamento

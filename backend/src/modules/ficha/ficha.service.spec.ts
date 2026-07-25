@@ -27,7 +27,7 @@ import type { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import type { CampanhaRepository } from '../campanha/campanha.repository';
 import type { FichaRepository } from './ficha.repository';
-import { FichaService } from './ficha.service';
+import { FichaService, PRESET_INICIATIVA_PADRAO } from './ficha.service';
 
 interface FichaRepositorioDublado {
   criarFicha: ReturnType<typeof vi.fn>;
@@ -89,7 +89,10 @@ function criarDados(overrides: Partial<FichaJogadorDadosDto> = {}): FichaJogador
   };
 }
 
-/** Snapshot que o backend grava na criação (m3-10): Vida/Energia máximas + bloco `derivados`. */
+/**
+ * Snapshot que o backend grava na criação (m3-10): Vida/Energia máximas + bloco `derivados` +
+ * o preset de Iniciativa (m3-47).
+ */
 function comSnapshot(dados: FichaJogadorDadosDto): FichaJogadorDadosDto {
   return {
     ...dados,
@@ -103,6 +106,7 @@ function comSnapshot(dados: FichaJogadorDadosDto): FichaJogadorDadosDto {
       }),
     },
     derivados: calcularDerivados(dados.classe, dados.nivel, dados.atributos, dados.habilidades),
+    rolagens: [...(dados.rolagens ?? []), PRESET_INICIATIVA_PADRAO],
   };
 }
 
@@ -252,6 +256,34 @@ describe('FichaService', () => {
       expect(argumentoCriacao.dados.derivados).toEqual(
         calcularDerivados(ClasseEnum.COMBATENTE, 1, criarDados().atributos, []),
       );
+    });
+
+    it('gera o preset de Iniciativa (DESd6) automaticamente na criação (m3-47)', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      fichaRepositorio.criarFicha.mockResolvedValue({ id: 5 });
+
+      await service.criarFicha({ campanhaId: 3, nome: 'Agente Alfa', dados: criarDados() }, usuarioDono);
+
+      const [argumentoCriacao] = fichaRepositorio.criarFicha.mock.calls[0] as [FichaInternoCriarDto];
+      expect(argumentoCriacao.dados.rolagens).toEqual([PRESET_INICIATIVA_PADRAO]);
+    });
+
+    it('não duplica o preset de Iniciativa quando o cliente já manda um preset de mesmo nome (m3-47)', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      fichaRepositorio.criarFicha.mockResolvedValue({ id: 5 });
+
+      const presetPersonalizado = { ...PRESET_INICIATIVA_PADRAO, formula: '1d6' };
+      await service.criarFicha(
+        { campanhaId: 3, nome: 'Agente Alfa', dados: criarDados({ rolagens: [presetPersonalizado] }) },
+        usuarioDono,
+      );
+
+      const [argumentoCriacao] = fichaRepositorio.criarFicha.mock.calls[0] as [FichaInternoCriarDto];
+      expect(argumentoCriacao.dados.rolagens).toEqual([presetPersonalizado]);
     });
 
     it('lança UnauthorizedAccessException quando o autor não é membro da campanha', async () => {

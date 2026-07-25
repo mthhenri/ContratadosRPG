@@ -20,6 +20,7 @@ import type {
   FichaRecuperadaDto,
   FichaRecuperarDto,
   FichaResumoDto,
+  FichaRolagemDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
   ClasseEnum,
@@ -48,6 +49,20 @@ import { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { CampanhaRepository } from '../campanha/campanha.repository';
 import { FichaRepository } from './ficha.repository';
+
+/**
+ * Preset de rolagem de Iniciativa (m3-47), gerado automaticamente em toda criação de ficha —
+ * fonte única no backend para não duplicar com o wizard do frontend. `DESd6` usa a gramática de
+ * atributo-como-fonte-de-dados (m3-29): cada ponto de Destreza é 1d6 rolado na Iniciativa.
+ */
+export const PRESET_INICIATIVA_PADRAO: FichaRolagemDto = {
+  nome: 'Iniciativa',
+  formula: 'DESd6',
+  descricao:
+    'Quantidade de dados rolados para a iniciativa. Essa quantidade é relativa ao seu atributo ' +
+    'de DESTREZA, sendo cada ponto neste atributo 1 dado de 6 faces (D6) a ser rolado na ' +
+    'Iniciativa, somando todos para obter o valor total.',
+};
 
 /**
  * Regras da ficha de jogador (SYSTEM.SPEC §13/§14): CRUD com a **matriz de permissões** (§14) e a
@@ -106,7 +121,7 @@ export class FichaService {
       usuarioId: donoId,
       tipo: TipoFichaEnum.JOGADOR,
       nome: dto.nome,
-      dados: this.aplicarSnapshotDeMaximos(dto.dados),
+      dados: this.aplicarPresetIniciativa(this.aplicarSnapshotDeMaximos(dto.dados)),
     });
 
     this.campanhaGateway.emitirFichaCriada(fichaCriada);
@@ -536,6 +551,18 @@ export class FichaService {
     const derivados = dados.derivados ?? this.calcularDerivadosComOrigem(dados);
 
     return { ...dados, estado: { ...dados.estado, vidaMaxima, energiaMaxima }, derivados };
+  }
+
+  /**
+   * Garante o preset de Iniciativa (m3-47) em toda ficha nova, sem duplicar caso o cliente já
+   * tenha enviado um preset de mesmo nome (ex.: wizard futuro que replique a mesma semente).
+   */
+  private aplicarPresetIniciativa(dados: FichaJogadorDadosDto): FichaJogadorDadosDto {
+    const rolagens = dados.rolagens ?? [];
+    if (rolagens.some((preset) => preset.nome === PRESET_INICIATIVA_PADRAO.nome)) {
+      return dados;
+    }
+    return { ...dados, rolagens: [...rolagens, PRESET_INICIATIVA_PADRAO] };
   }
 
   /** `calcularDerivados` cru + delta de Formação da Origem, quando `identidade.origem` já está definida. */
