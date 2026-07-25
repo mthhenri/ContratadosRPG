@@ -242,9 +242,10 @@ export interface ConflitoModificacaoDto {
 }
 
 /**
- * Stat computado de um item com suas modificações aplicadas. Só um dos campos de
- * valor vem preenchido, conforme a categoria: `dano` (armas), `resistencia`
- * (proteções) ou `bonusArmazenamento` (armazenamento). As notações de jogo
+ * Stat computado de um item com suas modificações aplicadas. Os campos vêm preenchidos conforme a
+ * categoria: `dano` (armas), `resistencia`/`bonusEsquiva`/`bonusBloqueio`/`bonusDefesa` (proteções
+ * — um item pode ter resistência e bônus de reação ao mesmo tempo), `bonusArmazenamento`/
+ * `resistencia` (armazenamento — idem, ex.: Mochila Kevlar). As notações de jogo
  * (`"3D8+FOR [Físico]"`) não trazem ícone/rótulo — isso é formatação de UI
  * (m1-10), como o `null`→"N/A" da aba agente (m1-02).
  */
@@ -257,6 +258,12 @@ export interface StatItemDto {
   readonly resistencia?: string;
   /** Bônus de inventário já modificado (slots) para itens de armazenamento. */
   readonly bonusArmazenamento?: number;
+  /** Bônus de Esquiva de um item de Proteções (ex.: mod "Flexível", +1/stack — m3-43). */
+  readonly bonusEsquiva?: number;
+  /** Bônus de Bloqueio de um item de Proteções (ex.: mod "Resistente", +1/stack — m3-43). */
+  readonly bonusBloqueio?: number;
+  /** Bônus de Defesa base de um item de Proteções (mod custom com efeito `DEFESA` variante "Defesa" — m3-43). */
+  readonly bonusDefesa?: number;
 }
 
 /**

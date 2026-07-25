@@ -96,7 +96,7 @@ export const CATALOGO_ITENS: Readonly<Record<ItemCategoriaEnum, readonly ItemCat
     { nome: 'Mochila Mediana', custo: 750, peso: 0.5, bonus: '+6 inv.', descricao: 'Mochila tática de uso geral' },
     { nome: 'Mochila Grande', custo: 1200, peso: 0.7, bonus: '+9 inv.', descricao: 'Mochila de grande capacidade' },
     { nome: 'Mochila Cargueira', custo: 2000, peso: 1.0, bonus: '+12 inv.', descricao: 'Mochila de capacidade máxima' },
-    { nome: 'Mochila Kevlar', custo: 1200, peso: 0.7, bonus: '+4,5 inv.', descricao: 'Proteção para conteúdo + armazenamento médio' },
+    { nome: 'Mochila Kevlar', custo: 1200, peso: 0.7, bonus: '+4,5 inv.', resistencia: '2 [Físico], 2 [Balístico]', descricao: 'Proteção para conteúdo + armazenamento médio' },
     { nome: 'Mochila Médica', custo: 1600, peso: 0.5, bonus: '+5 inv.', descricao: 'Bolsas organizadas para kits médicos' },
   ],
   [ItemCategoriaEnum.OPERACIONAL]: [

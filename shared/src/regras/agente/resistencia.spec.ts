@@ -120,17 +120,54 @@ describe('montarResistencias', () => {
     expect(resultado.find((l) => l.tipo === TipoDanoEnum.FISICO)?.total).toBe(-10);
   });
 
-  describe('amplificador Resistente — +1 de resistência a Dano Geral (fixo, não escala)', () => {
+  /** Bug de m3-43 (item 28): armazenamento com resistência (Mochila Kevlar, Camadas Extras) não entrava aqui. */
+  describe('armazenamento vestido com resistência (m3-43)', () => {
+    function armazenamento(parcial: Partial<CarrinhoItemDto>): CarrinhoItemDto {
+      return {
+        nome: 'Mochila Kevlar',
+        categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+        custo: 0,
+        peso: 0,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        ...parcial,
+      };
+    }
+
+    it('soma a resistência embutida de uma mochila vestida (guardada = false)', () => {
+      const resultado = montarResistencias({ itens: [armazenamento({})], amplificadores: [] });
+      expect(resultado.find((l) => l.tipo === TipoDanoEnum.FISICO)?.equipamento).toBe(2);
+      expect(resultado.find((l) => l.tipo === TipoDanoEnum.BALISTICO)?.equipamento).toBe(2);
+    });
+
+    it('ignora a resistência de uma mochila guardada (guardada = true, não vestida)', () => {
+      const resultado = montarResistencias({ itens: [armazenamento({ guardada: true })], amplificadores: [] });
+      expect(resultado.find((l) => l.tipo === TipoDanoEnum.FISICO)?.equipamento).toBe(0);
+    });
+
+    it('soma a resistência de "Camadas Extras" mesmo sem resistência embutida no armazenamento', () => {
+      const item = armazenamento({
+        nome: 'Mochila Mediana',
+        modificacoes: [{ nome: 'Camadas Extras', empilhamentos: 1 }],
+      });
+      const resultado = montarResistencias({ itens: [item], amplificadores: [] });
+      expect(resultado.find((l) => l.tipo === TipoDanoEnum.FISICO)?.equipamento).toBe(1);
+      expect(resultado.find((l) => l.tipo === TipoDanoEnum.BALISTICO)?.equipamento).toBe(1);
+    });
+  });
+
+  describe('amplificador Resistente — +1 de resistência a Dano Geral por empilhamento (escala)', () => {
     it('1 empilhamento concede +1 Geral', () => {
       const amplificadores: AmplificadorAplicadoDto[] = [{ nome: 'Resistente', empilhamentos: 1 }];
       const resultado = montarResistencias({ itens: [], amplificadores });
       expect(resultado.find((l) => l.tipo === TipoDanoEnum.GERAL)?.total).toBe(1);
     });
 
-    it('3 empilhamentos continuam concedendo só +1 Geral (bônus fixo, não escala)', () => {
+    it('3 empilhamentos concedem +3 Geral (bônus escala com os empilhamentos, mesma regra das demais modificações)', () => {
       const amplificadores: AmplificadorAplicadoDto[] = [{ nome: 'Resistente', empilhamentos: 3 }];
       const resultado = montarResistencias({ itens: [], amplificadores });
-      expect(resultado.find((l) => l.tipo === TipoDanoEnum.GERAL)?.total).toBe(1);
+      expect(resultado.find((l) => l.tipo === TipoDanoEnum.GERAL)?.total).toBe(3);
     });
   });
 

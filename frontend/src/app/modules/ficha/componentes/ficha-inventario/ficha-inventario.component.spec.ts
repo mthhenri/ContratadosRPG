@@ -359,6 +359,29 @@ describe('FichaInventario', () => {
     expect(alvo.emitidos[1].amplificadores).toEqual([]);
   });
 
+  it('não deixa o total de stacks passar do limite (Vontade × 3) ao adicionar um amplificador de 2 stacks iniciais', () => {
+    // limite = Vontade(1) × 3 = 3; já há 2 stacks de "Atento" portados. "Veloz" entra de uma vez com
+    // 2 stacks iniciais (doc — "■■") — 2 + 2 = 4 > 3, então a aquisição deve ser bloqueada por
+    // inteiro (bug anterior checava só "+1", deixando passar do limite: 2 + 1 <= 3 era verdadeiro).
+    const alvo = montar({ itens: [], amplificadores: [{ nome: 'Atento', empilhamentos: 2 }] });
+    alvo.fixture.componentRef.setInput('vontade', 1);
+    alvo.fixture.detectChanges();
+    alvo.fixture.componentInstance['adicionarAmplificador']('Veloz');
+    expect(alvo.emitidos).toEqual([]);
+  });
+
+  it('o catálogo já mostra "Veloz" como indisponível quando os 2 stacks iniciais não cabem no limite', () => {
+    const alvo = montar({ itens: [], amplificadores: [{ nome: 'Atento', empilhamentos: 2 }] });
+    alvo.fixture.componentRef.setInput('vontade', 1);
+    alvo.fixture.detectChanges();
+    const cartoes = alvo.fixture.componentInstance['amplificadoresCatalogo']();
+    const veloz = cartoes.find((cartao: { nome: string }) => cartao.nome === 'Veloz');
+    expect(veloz?.podeAdicionar).toBe(false);
+    // "Atento" já está em 2/3 (empilhamentoMaximo) e incrementar por +1 cabe no limite (2+1=3) — continua disponível.
+    const atento = cartoes.find((cartao: { nome: string }) => cartao.nome === 'Atento');
+    expect(atento?.podeAdicionar).toBe(true);
+  });
+
   describe('equipado — Proteções (m3-36)', () => {
     const colete: CarrinhoItemDto = {
       nome: 'Colete Kevlar',
@@ -396,6 +419,40 @@ describe('FichaInventario', () => {
       const linha = raiz.querySelector('.ficha-inv__carga');
       expect(linha?.querySelector('.ficha-inv__carga-rotulo')?.textContent?.trim()).toBe('Inventário');
       expect(linha?.querySelector('.ficha-inv__carga-valor')?.textContent?.trim()).toBe('1 / 25');
+    });
+
+    it('amplificador "Inventário" soma +5 ao máximo efetivo (m3-43 — antes não era consumido em lugar nenhum)', () => {
+      const { raiz } = montar({
+        itens: [itemLeve],
+        amplificadores: [{ nome: 'Inventário', empilhamentos: 1 }],
+      });
+      const linha = raiz.querySelector('.ficha-inv__carga');
+      // Base 25 (input) + 5 do amplificador "Inventário" = 30 efetivo.
+      expect(linha?.querySelector('.ficha-inv__carga-valor')?.textContent?.trim()).toBe('1 / 30');
+    });
+
+    it('"Inventário" escala com os empilhamentos (+5 por stack); "Veloz" penaliza -2/stack além do 1º', () => {
+      const { raiz } = montar({
+        itens: [itemLeve],
+        amplificadores: [
+          { nome: 'Inventário', empilhamentos: 3 },
+          { nome: 'Veloz', empilhamentos: 2 },
+        ],
+      });
+      const linha = raiz.querySelector('.ficha-inv__carga');
+      // Base 25 + 15 (Inventário, 5 × 3 stacks) - 2 (Veloz, 1 stack além do 1º) = 38.
+      expect(linha?.querySelector('.ficha-inv__carga-valor')?.textContent?.trim()).toBe('1 / 38');
+    });
+
+    it('a edição no próprio lugar continua mostrando a base (25), não o efetivo com amplificador', () => {
+      const alvo = montar({
+        itens: [itemLeve],
+        amplificadores: [{ nome: 'Inventário', empilhamentos: 1 }],
+      });
+      alvo.componentInstance['editarInventarioMaximo']();
+      alvo.fixture.detectChanges();
+      const entrada = alvo.raiz.querySelector<HTMLInputElement>('.ficha-inv__carga input');
+      expect(entrada?.value).toBe('25');
     });
 
     it('quem não edita vê só o texto — sem botão nem input', () => {

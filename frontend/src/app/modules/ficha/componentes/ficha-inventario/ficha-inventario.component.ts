@@ -11,6 +11,7 @@ import {
   ModificacaoEfeitoTipoEnum,
 } from '@contratados-rpg/shared/enums';
 import type { FichaInventarioDto, FichaSequelaDto } from '@contratados-rpg/shared/dtos/ficha';
+import { ajusteInventarioAmplificadores } from '@contratados-rpg/shared/regras/agente';
 import {
   AMPLIFICADORES,
   AmplificadorAplicadoDto,
@@ -469,6 +470,15 @@ export class FichaInventario {
     });
   }
 
+  /**
+   * Inventário máximo com o ajuste do amplificador "Inventário" (+5 fixo; "Veloz" penaliza -2/stack
+   * além do 1º) somado **por cima** do stored/calculado (m3-43) — nunca persistido de volta, mesma
+   * filosofia "manual + equipamento" de `status-derivado`/`resistencia.ts`.
+   */
+  protected readonly inventarioMaximoEfetivo = computed(
+    () => this.inventarioMaximo() + ajusteInventarioAmplificadores(this.inventario().amplificadores),
+  );
+
   /** Recorte de limites/peso do motor (patente, peso usado, inventário efetivo, amplificadores). */
   protected readonly resumo = computed(() =>
     calcularResumoCompras({
@@ -476,7 +486,7 @@ export class FichaInventario {
       amplificadores: this.inventario().amplificadores,
       dinheiro: this.dinheiro(),
       prestigio: this.prestigio(),
-      inventario: this.inventarioMaximo(),
+      inventario: this.inventarioMaximoEfetivo(),
       vontade: this.vontade(),
     }),
   );
@@ -486,7 +496,7 @@ export class FichaInventario {
     const resumo = this.resumo();
     const base = `${this.formatarPeso(resumo.pesoUsado)} / ${this.formatarPeso(resumo.inventarioEfetivo)}`;
     return resumo.bonusInventario > 0
-      ? `${base} (base ${this.formatarPeso(this.inventarioMaximo())} +${this.formatarPeso(resumo.bonusInventario)} vest.)`
+      ? `${base} (base ${this.formatarPeso(this.inventarioMaximoEfetivo())} +${this.formatarPeso(resumo.bonusInventario)} vest.)`
       : base;
   });
   /** Só o peso usado formatado — mantém o "X /" visível enquanto o máximo está em edição. */
@@ -581,12 +591,16 @@ export class FichaInventario {
     ).map((amplificador) => {
       const atuais = this.empilhamentosDoAmplificador(amplificador.nome);
       const maximoEfetivo = Math.min(amplificador.empilhamentoMaximo, disponivel);
+      // Amplificador ainda não portado entra de uma vez com `empilhamentosIniciais` (2 pra
+      // Conservador/Veloz, doc — "■■") — o botão só pode ficar habilitado se o total couber por
+      // inteiro no limite (Vontade × 3), não só +1 (m3-43-bis: bug que deixava passar do limite).
+      const incremento = atuais === 0 ? amplificador.empilhamentosIniciais : 1;
       return {
         nome: amplificador.nome,
         efeito: amplificador.efeito,
         empilhamentosAtuais: atuais,
         maximoEfetivo,
-        podeAdicionar: totalStacks < limite && atuais < maximoEfetivo,
+        podeAdicionar: totalStacks + incremento <= limite && atuais < maximoEfetivo,
         custoTexto: atuais === 0 ? '$3.000' : '$1.000',
       };
     });
@@ -1450,7 +1464,9 @@ export class FichaInventario {
       }
       return;
     }
-    if (totalStacks + 1 <= limite) {
+    // A aquisição entra de uma vez com `empilhamentosIniciais` (2 pra Conservador/Veloz) — checar
+    // contra o total real, não +1 fixo, senão o limite (Vontade × 3) pode passar direto.
+    if (totalStacks + definicao.empilhamentosIniciais <= limite) {
       this.emitirAmplificadores([
         ...amplificadores,
         { nome, empilhamentos: definicao.empilhamentosIniciais },

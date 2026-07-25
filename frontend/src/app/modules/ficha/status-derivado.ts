@@ -13,6 +13,7 @@ import {
   ajusteInventarioAmplificadores,
   aplicarLimitesPorClasse,
   calcularAreaPercepcao,
+  calcularBonusDefesaEquipamento,
   calcularContraAtaque,
   calcularDanoCorpo,
   calcularDanoFurtivo,
@@ -24,7 +25,7 @@ import {
   incrementarDanoFurtivo,
   obterLimitesClasse,
 } from '@contratados-rpg/shared/regras/agente';
-import type { AmplificadorAplicadoDto } from '@contratados-rpg/shared/regras/compras';
+import type { AmplificadorAplicadoDto, CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 import { obterPatente } from '@contratados-rpg/shared/regras/patente';
 
 import { ROTULOS_PATENTE } from '../calculadora/rotulos';
@@ -114,15 +115,21 @@ export function normalizarEntrada(
  * amplificador soma por cima só na leitura (ver docstring do módulo). Cada uma é editável no
  * próprio lugar (m3-10) e persiste como override em `derivados[chave]` (o `bruto`, sem o delta do
  * amplificador).
+ *
+ * **Equipamento** (`itens`, m3-43): Esquiva/Bloqueio/Defesa somam também o bônus de itens de
+ * Proteções **equipados** (`calcularBonusDefesaEquipamento` — mods "Flexível"/"Resistente" e
+ * efeito custom `DEFESA`), mesma filosofia "por cima, nunca persistido" do amplificador.
  */
 export function montarInformacoesExtras(
   entrada: EntradaAgente,
   habilidades: readonly FichaHabilidadeDto[],
   derivados?: FichaDerivadosDto,
   amplificadores: readonly AmplificadorAplicadoDto[] = [],
+  itens: readonly CarrinhoItemDto[] = [],
 ): InfoExtra[] {
   const defesaCalc = calcularDefesa(entrada);
   const proficienciaCalc = calcularProficiencia(entrada);
+  const bonusEquipamento = calcularBonusDefesaEquipamento(itens);
 
   const linhaNumero = (
     chave: ChaveInfoExtra,
@@ -164,21 +171,21 @@ export function montarInformacoesExtras(
       'Defesa',
       defesaCalc?.defesa ?? null,
       (valor) => String(valor),
-      ajusteDefesaAmplificadores(amplificadores),
+      ajusteDefesaAmplificadores(amplificadores) + bonusEquipamento.defesa,
     ),
     linhaNumero(
       'esquiva',
       'Esquiva',
       defesaCalc?.esquiva ?? null,
       (valor) => String(valor),
-      ajusteEsquivaAmplificadores(amplificadores),
+      ajusteEsquivaAmplificadores(amplificadores) + bonusEquipamento.esquiva,
     ),
     linhaNumero(
       'bloqueio',
       'Bloqueio',
       defesaCalc?.bloqueio ?? null,
       (valor) => String(valor),
-      ajusteBloqueioAmplificadores(amplificadores),
+      ajusteBloqueioAmplificadores(amplificadores) + bonusEquipamento.bloqueio,
     ),
     linhaNumero(
       'contraAtaque',

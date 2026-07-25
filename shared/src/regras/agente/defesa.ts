@@ -1,4 +1,5 @@
 import { ArquetipoEnum, ClasseEnum, HabilidadeCategoriaEnum } from '../../enums';
+import { calcularStatItem, type CarrinhoItemDto } from '../compras';
 import { ContraAtaqueCalcularDto, DefesaCalcularDto, DefesaDto, ProficienciaCalcularDto } from './agente.dtos';
 
 /**
@@ -65,4 +66,38 @@ export function calcularContraAtaque(dto: ContraAtaqueCalcularDto): number | nul
     }
   }
   return dto.defesa + Math.floor(dto.luta / 2);
+}
+
+/** Bônus de Esquiva/Bloqueio/Defesa vindos do equipamento (m3-43) — ver `calcularBonusDefesaEquipamento`. */
+export interface BonusDefesaEquipamentoDto {
+  readonly esquiva: number;
+  readonly bloqueio: number;
+  readonly defesa: number;
+}
+
+/**
+ * Bônus de Esquiva/Bloqueio/Defesa vindos de **itens de Proteções equipados** (`item.equipado ===
+ * true`) — mods do catálogo por nome ("Flexível": +1 Esquivar/stack; "Resistente": +1 Bloquear/
+ * stack) e efeito `DEFESA` de mods custom (`variante` Esquiva/Bloqueio/Defesa), via
+ * `calcularStatItem` (fonte única — zero motor duplicado aqui). Quem consome soma isto **por cima**
+ * do valor manual/calculado de cada stat, nunca escreve de volta no `derivados` (mesma filosofia
+ * "manual + equipamento" de `resistencia.ts`/`amplificador.ts`).
+ *
+ * Fonte: docs/core/sistema-v4.1.0.md — "⬥ Modificações" de Proteções e Escudos (Flexível/Resistente).
+ */
+export function calcularBonusDefesaEquipamento(itens: readonly CarrinhoItemDto[]): BonusDefesaEquipamentoDto {
+  let esquiva = 0;
+  let bloqueio = 0;
+  let defesa = 0;
+
+  itens
+    .filter((item) => item.equipado === true)
+    .forEach((item) => {
+      const stat = calcularStatItem({ item });
+      esquiva += stat?.bonusEsquiva ?? 0;
+      bloqueio += stat?.bonusBloqueio ?? 0;
+      defesa += stat?.bonusDefesa ?? 0;
+    });
+
+  return { esquiva, bloqueio, defesa };
 }

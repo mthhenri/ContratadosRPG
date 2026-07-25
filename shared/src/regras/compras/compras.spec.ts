@@ -233,6 +233,69 @@ describe('calcularStatItem', () => {
   it('devolve null para item fora do catálogo', () => {
     expect(calcularStatItem({ item: item('Item Inexistente', ItemCategoriaEnum.CORPO_A_CORPO) })).toBeNull();
   });
+
+  /**
+   * Bugs de m3-43 (item 16 do lote): mods de Proteções "Flexível"/"Resistente" (doc — "⬥
+   * Modificações" de Proteções e Escudos) não tinham efeito mecânico algum — só o chip descritivo.
+   */
+  describe('Proteções: Esquiva/Bloqueio/Defesa (m3-43)', () => {
+    it('Flexível soma Esquiva por stack; Resistente soma Bloqueio por stack (doc: "por stack")', () => {
+      expect(calcularStatItem({ item: item('Colete de Kevlar', ItemCategoriaEnum.PROTECOES, [mod('Flexível', 2)]) })?.bonusEsquiva).toBe(2);
+      expect(calcularStatItem({ item: item('Colete de Kevlar', ItemCategoriaEnum.PROTECOES, [mod('Resistente', 2)]) })?.bonusBloqueio).toBe(2);
+    });
+
+    it('sem Flexível/Resistente, os bônus ficam undefined (nada pra somar)', () => {
+      const stat = calcularStatItem({ item: item('Colete de Kevlar', ItemCategoriaEnum.PROTECOES) });
+      expect(stat?.bonusEsquiva).toBeUndefined();
+      expect(stat?.bonusBloqueio).toBeUndefined();
+      expect(stat?.bonusDefesa).toBeUndefined();
+    });
+
+    it('efeito custom DEFESA soma na variante indicada (Esquiva por padrão, ou Bloqueio/Defesa)', () => {
+      const comEfeito = (variante: string | undefined) =>
+        montarItem({
+          nome: 'Colete customizado',
+          categoria: ItemCategoriaEnum.PROTECOES,
+          resistencia: '5 [Físico]',
+          modificacoes: [
+            {
+              nome: 'Placa Extra',
+              empilhamentos: 1,
+              efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 2, variante }],
+            },
+          ],
+        });
+      expect(calcularStatItem({ item: comEfeito(undefined) })?.bonusEsquiva).toBe(2);
+      expect(calcularStatItem({ item: comEfeito('Bloqueio') })?.bonusBloqueio).toBe(2);
+      expect(calcularStatItem({ item: comEfeito('Defesa') })?.bonusDefesa).toBe(2);
+    });
+  });
+
+  /**
+   * Bug de m3-43 (item 28): armazenamento com resistência embutida (ex. Mochila Kevlar) ou com a
+   * mod "Camadas Extras" (doc: "+1 de resistência à Físico e Balístico") não computava resistência
+   * nenhuma — a ramificação de resistência só rodava quando o catálogo já tinha `resistencia`.
+   */
+  describe('Armazenamento: resistência (m3-43)', () => {
+    it('Mochila Kevlar tem resistência embutida (doc: "Resistência: 2 Físico e Balístico")', () => {
+      expect(calcularStatItem({ item: item('Mochila Kevlar', ItemCategoriaEnum.ARMAZENAMENTO) })?.resistencia).toBe(
+        '2 [Físico], 2 [Balístico]',
+      );
+    });
+
+    it('Camadas Extras soma resistência mesmo em armazenamento sem resistência de catálogo', () => {
+      expect(
+        calcularStatItem({ item: item('Mochila Mediana', ItemCategoriaEnum.ARMAZENAMENTO, [mod('Camadas Extras', 2)]) })
+          ?.resistencia,
+      ).toBe('2 [Físico], 2 [Balístico]');
+    });
+
+    it('Mochila Kevlar mantém o bônus de inventário ao lado da resistência (os dois stats coexistem)', () => {
+      const stat = calcularStatItem({ item: item('Mochila Kevlar', ItemCategoriaEnum.ARMAZENAMENTO) });
+      expect(stat?.bonusArmazenamento).toBe(4.5);
+      expect(stat?.resistencia).toBe('2 [Físico], 2 [Balístico]');
+    });
+  });
 });
 
 describe('interpretarBonusArmazenamento', () => {

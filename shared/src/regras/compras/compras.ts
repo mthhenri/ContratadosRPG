@@ -345,11 +345,12 @@ export function interpretarNotacaoResistencia(texto: string): readonly EntradaRe
 }
 
 /**
- * Stat computado de um item com as modificações aplicadas: dano (armas),
- * resistência (proteções) ou bônus de inventário (armazenamento). Reusa
- * `elevarDado` (m1-04) para o degrau de dado da modificação Pesada. Devolve
- * `null` quando não há stat computável. Espelha `computeItemStat` do site
- * antigo — as notações de jogo saem sem ícone/rótulo (isso é UI, m1-10).
+ * Stat computado de um item com as modificações aplicadas: dano (armas), resistência (proteções e,
+ * quando aplicável, armazenamento — m3-43), bônus de Esquiva/Bloqueio/Defesa (proteções — m3-43,
+ * mods "Flexível"/"Resistente" e efeito custom `DEFESA`) ou bônus de inventário (armazenamento).
+ * Reusa `elevarDado` (m1-04) para o degrau de dado da modificação Pesada. Devolve `null` quando não
+ * há stat computável. Espelha `computeItemStat` do site antigo — as notações de jogo saem sem
+ * ícone/rótulo (isso é UI, m1-10).
  *
  * Fonte: docs/core/sistema-v4.1.0.md — tabelas de item e efeitos de modificação.
  */
@@ -463,11 +464,14 @@ export function calcularStatItem(dto: StatItemCalcularDto): StatItemDto | null {
     return { dano: notacao, informacao: informacao || undefined };
   }
 
-  // ── RESISTÊNCIA ─────────────────────────────────────────────────────────────
-  if (itemCatalogo.resistencia) {
-    const entradas = interpretarNotacaoResistencia(itemCatalogo.resistencia).map((entrada) => ({
-      ...entrada,
-    }));
+  // ── RESISTÊNCIA (Proteções e Armazenamento — m3-43: um item de armazenamento pode ter
+  // resistência embutida, ex. Mochila Kevlar, ou por mod "Camadas Extras", independente de ter
+  // resistência de catálogo) ────────────────────────────────────────────────────
+  let statResistencia: string | undefined;
+  if (item.categoria === ItemCategoriaEnum.PROTECOES || item.categoria === ItemCategoriaEnum.ARMAZENAMENTO) {
+    const entradas = itemCatalogo.resistencia
+      ? interpretarNotacaoResistencia(itemCatalogo.resistencia).map((entrada) => ({ ...entrada }))
+      : [];
 
     const obterOuAdicionar = (tipo: string): { valor: number; tipos: string } => {
       let entrada = entradas.find((atual) => atual.tipos === tipo || atual.tipos.includes(tipo));
@@ -485,11 +489,9 @@ export function calcularStatItem(dto: StatItemCalcularDto): StatItemDto | null {
       if (empilhamentosDe('Hazmat') > 0) obterOuAdicionar('Químico').valor += empilhamentosDe('Hazmat') * 2;
       if (empilhamentosDe('Antibombas') > 0) obterOuAdicionar('Explosão').valor += empilhamentosDe('Antibombas') * 2;
     }
-    if (item.categoria === ItemCategoriaEnum.ARMAZENAMENTO) {
-      if (empilhamentosDe('Camadas Extras') > 0) {
-        obterOuAdicionar('Físico').valor += empilhamentosDe('Camadas Extras');
-        obterOuAdicionar('Balístico').valor += empilhamentosDe('Camadas Extras');
-      }
+    if (item.categoria === ItemCategoriaEnum.ARMAZENAMENTO && empilhamentosDe('Camadas Extras') > 0) {
+      obterOuAdicionar('Físico').valor += empilhamentosDe('Camadas Extras');
+      obterOuAdicionar('Balístico').valor += empilhamentosDe('Camadas Extras');
     }
 
     // Efeitos RESISTENCIA das modificações CUSTOM: `tipoDano` vazio soma a todos os tipos; senão soma
@@ -516,10 +518,41 @@ export function calcularStatItem(dto: StatItemCalcularDto): StatItemDto | null {
       .filter((entrada) => entrada.valor > 0)
       .map((entrada) => `${entrada.valor} [${entrada.tipos}]`)
       .join(', ');
-    return notacao ? { resistencia: notacao } : null;
+    statResistencia = notacao || undefined;
   }
 
-  // ── ARMAZENAMENTO ───────────────────────────────────────────────────────────
+  // ── DEFESA (Proteções — m3-43: mods "Flexível"/"Resistente" por nome + efeito DEFESA custom) ──
+  let statBonusEsquiva: number | undefined;
+  let statBonusBloqueio: number | undefined;
+  let statBonusDefesa: number | undefined;
+  if (item.categoria === ItemCategoriaEnum.PROTECOES) {
+    let esquiva = empilhamentosDe('Flexível');
+    let bloqueio = empilhamentosDe('Resistente');
+    let defesa = 0;
+
+    item.modificacoes.forEach((modificacao) => {
+      (modificacao.efeitos ?? []).forEach((efeito) => {
+        if (efeito.tipo !== ModificacaoEfeitoTipoEnum.DEFESA) {
+          return;
+        }
+        const total = (efeito.valor ?? 0) * modificacao.empilhamentos;
+        if (efeito.variante === 'Bloqueio') {
+          bloqueio += total;
+        } else if (efeito.variante === 'Defesa') {
+          defesa += total;
+        } else {
+          esquiva += total;
+        }
+      });
+    });
+
+    statBonusEsquiva = esquiva || undefined;
+    statBonusBloqueio = bloqueio || undefined;
+    statBonusDefesa = defesa || undefined;
+  }
+
+  // ── ARMAZENAMENTO (bônus de inventário) ───────────────────────────────────────
+  let statBonusArmazenamento: number | undefined;
   if (itemCatalogo.bonus) {
     let slots = interpretarBonusArmazenamento({ texto: itemCatalogo.bonus });
     if (empilhamentosDe('Compartimentos Extras') > 0) {
@@ -533,10 +566,25 @@ export function calcularStatItem(dto: StatItemCalcularDto): StatItemDto | null {
         }
       });
     });
-    return { bonusArmazenamento: slots };
+    statBonusArmazenamento = slots;
   }
 
-  return null;
+  if (
+    statResistencia === undefined &&
+    statBonusArmazenamento === undefined &&
+    statBonusEsquiva === undefined &&
+    statBonusBloqueio === undefined &&
+    statBonusDefesa === undefined
+  ) {
+    return null;
+  }
+  return {
+    resistencia: statResistencia,
+    bonusArmazenamento: statBonusArmazenamento,
+    bonusEsquiva: statBonusEsquiva,
+    bonusBloqueio: statBonusBloqueio,
+    bonusDefesa: statBonusDefesa,
+  };
 }
 
 /**

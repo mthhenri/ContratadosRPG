@@ -872,6 +872,7 @@ export class FichaVisualizacao {
       this.dados().habilidades,
       this.dados().derivados,
       this.dados().inventario.amplificadores,
+      this.dados().inventario.itens,
     ),
   );
 

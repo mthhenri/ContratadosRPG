@@ -541,12 +541,16 @@ export class ComprasPage {
     ).map((amplificador) => {
       const atuais = this.empilhamentosDoAmplificador(amplificador.nome);
       const maximoEfetivo = Math.min(amplificador.empilhamentoMaximo, disponivel);
+      // Amplificador ainda não adquirido entra de uma vez com `empilhamentosIniciais` (2 pra
+      // Conservador/Veloz, doc — "■■") — o total precisa caber por inteiro no limite (Vontade × 3),
+      // não só +1 (bug que deixava passar do limite ao adquirir esses dois).
+      const incremento = atuais === 0 ? amplificador.empilhamentosIniciais : 1;
       return {
         nome: amplificador.nome,
         efeito: amplificador.efeito,
         empilhamentosAtuais: atuais,
         maximoEfetivo,
-        podeAdicionar: totalStacks < limite && atuais < maximoEfetivo,
+        podeAdicionar: totalStacks + incremento <= limite && atuais < maximoEfetivo,
         custoTexto: atuais === 0 ? '$3.000' : '$1.000',
         maxEmpilhamentoProprio: amplificador.empilhamentoMaximo,
       };
@@ -1049,7 +1053,9 @@ export class ComprasPage {
       }
       return;
     }
-    if (totalStacks + 1 <= limite) {
+    // A aquisição entra de uma vez com `empilhamentosIniciais` (2 pra Conservador/Veloz) — checar
+    // contra o total real, não +1 fixo, senão o limite (Vontade × 3) pode passar direto.
+    if (totalStacks + definicao.empilhamentosIniciais <= limite) {
       this.definirAmplificadores([
         ...this.lerAmplificadores(),
         { nome, empilhamentos: definicao.empilhamentosIniciais },

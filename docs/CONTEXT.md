@@ -1,6 +1,55 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-25 (**m3-42 — mecânicas de Fragmento hoje deferidas**: 3ª task do lote
+> Última atualização: 2026-07-25 (**m3-43 — bugs de modificadores em Combate**: 4ª task do lote de
+> refino `m3-40`…`m3-56` implementada. Três modificadores documentados que não tinham efeito
+> mecânico algum — todos descobertos por inspeção do código (nenhum reportado pelo autor nesta
+> task). **Item 16 (mods de armadura → Esquiva/Defesa):** as mods de Proteções "Flexível" (+1
+> Esquivar/stack) e "Resistente" (+1 Bloquear/stack, doc — "⬥ Modificações" de Proteções e Escudos)
+> só existiam como chip descritivo — `calcularStatItem` (`shared/src/regras/compras/compras.ts`)
+> ganhou um bloco `DEFESA` (novo, gate por `categoria === PROTECOES`) que soma essas duas por nome
+> mais o efeito custom `DEFESA` (`variante` Esquiva/Bloqueio/Defesa — o enum já previa isso desde a
+> m1-05/m3-01, mas nunca tinha consumidor) em três campos novos de `StatItemDto`
+> (`bonusEsquiva`/`bonusBloqueio`/`bonusDefesa`). Novo `calcularBonusDefesaEquipamento(itens)`
+> (`shared/src/regras/agente/defesa.ts`) soma isso de itens **equipados**, no mesmo padrão
+> "manual/calculado + equipamento, nunca persistido de volta" de `resistencia.ts`/`amplificador.ts`
+> — `status-derivado.ts` (`montarInformacoesExtras`, novo parâmetro `itens`) soma o resultado **por
+> cima** do amplificador já existente nas linhas Defesa/Esquiva/Bloqueio. **Item 28 (armazenamento
+> com resistência):** a ramificação de resistência de `calcularStatItem` só rodava quando
+> `itemCatalogo.resistencia` existia — então a mod "Camadas Extras" (+1 Físico/Balístico) em
+> qualquer mochila comum (sem resistência de catálogo, a maioria) nunca executava, e a Mochila
+> Kevlar nem tinha a resistência embutida (`docs/core/sistema-v4.1.0.md`: "2 Físico e Balístico")
+> cadastrada no catálogo (`catalogo.dados.ts`) — corrigido nos dois: `resistencia` some ao
+> `bonus` no catálogo da Mochila Kevlar (os dois stats agora coexistem no mesmo `StatItemDto`, a
+> função parou de fazer `return` cedo demais) e a ramificação passou a rodar sempre que a categoria é
+> `ARMAZENAMENTO`, com ou sem resistência de catálogo. `calcularResistenciaEquipamento`
+> (`resistencia.ts`) filtrava só `item.equipado === true` (campo exclusivo de Proteções) — armazenamento
+> usa `guardada`, não `equipado`, então nenhum armazenamento entrava na soma; o filtro agora inclui
+> `categoria === ARMAZENAMENTO && guardada === false` (vestido). **Item 15 (amplificador de
+> Inventário):** `ajusteInventarioAmplificadores` já existia (`shared/regras/agente/amplificador.ts`,
+> de um ajuste anterior) e já era somado na linha "Inventário" de `informacoesExtras()` — mas essa
+> linha é **realocada** para a aba Inventário (`CHAVES_REALOCADAS`) e nunca renderizada; o valor que
+> a aba Inventário de fato usa (`inventarioMaximoValor` em `ficha-visualizacao.component.ts`, e o
+> `resumo`/`calcularResumoCompras` dentro de `ficha-inventario.component.ts`) vinha só do
+> stored/calculado, sem o amplificador — corrigido com um novo `inventarioMaximoEfetivo` computed em
+> `FichaInventario` que soma `ajusteInventarioAmplificadores` por cima do `inventarioMaximo` (input,
+> a base), usado no `calcularResumoCompras` e no texto "(base X +Y vest.)"; a edição no próprio lugar
+> continua mexendo só na base (mesmo cuidado anti-drift dos demais ajustes de amplificador). **Testes:**
+> shared 414/414 (+14: `Proteções: Esquiva/Bloqueio/Defesa` e `Armazenamento: resistência` em
+> `compras.spec.ts`, `calcularBonusDefesaEquipamento` em `defesa.spec.ts`, armazenamento vestido em
+> `resistencia.spec.ts`), frontend 446/447 (+8: mods de armadura equipada/não-equipada e Mochila
+> Kevlar vestida em `ficha-visualizacao.component.spec.ts`, amplificador Inventário em
+> `ficha-inventario.component.spec.ts`; a 1 falha remanescente é a mesma pré-existente e
+> não-relacionada — apelido de equipamento, `ResizeObserver`), backend sem mudança (task não tocou o
+> backend); build limpo nos 3 workspaces (mesmo aviso de budget pré-existente do `ng build`,
+> 591.29 kB vs. 580 kB). **Verificado ao vivo** (Postgres local, backend+frontend reais, Playwright,
+> PUT direto via REST para montar o cenário): colete equipado com Flexível×2 + Resistente×2 — Esquiva
+> 15→17, Bloqueio 17→19; Mochila Kevlar vestida soma sua resistência embutida (2 Físico/Balístico) à
+> do colete (5 Físico) → 7 total exibido no Combate; amplificador "Inventário" (+5) some ao Inventário
+> máximo derivado (Força×5=15) → base efetiva 20, exibida corretamente na aba Inventário. Spec em
+> `docs/specs/done/m3-43-bugs-modificadores-combate.spec.md`. Próxima task: **`m3-44`** (Inventário —
+> sub-inventários/listas).)
+>
+> (**m3-42 — mecânicas de Fragmento hoje deferidas**: 3ª task do lote
 > de refino `m3-40`…`m3-56` implementada. **Entregável 1 (Preço de Sanidade):** novo
 > `custoSanidadeConsumirFragmento(modulo)` (`shared/src/regras/compras/fragmento.ts`) devolve o
 > multiplicador da sequela "Rejeição Biológica" (doc — "Consumo de Fragmentos": "multiplicada por

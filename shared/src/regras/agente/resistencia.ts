@@ -1,4 +1,4 @@
-import { TipoDanoEnum } from '../../enums';
+import { ItemCategoriaEnum, TipoDanoEnum } from '../../enums';
 import {
   calcularStatItem,
   interpretarNotacaoResistencia,
@@ -25,9 +25,11 @@ import { empilhamentosAmplificador } from './amplificador';
  *
  * Fonte: docs/core/sistema-v4.1.0.md — "⬦ Resistências", "Tipos de Dano" e "⬡ Amplificadores"
  * (Resistente: "+1 de resistência a Dano Geral, a partir do 2º empilhamento -1 de Defesa a cada
- * empilhamento" — o bônus de resistência é fixo, não escala com empilhamento; Defesa: "+1 em
- * Defesa, a partir do 2º empilhamento -1 de resistência a tipos de dano a cada empilhamento" — a
- * penalidade de resistência escala com os empilhamentos além do primeiro, sobre **todos** os tipos).
+ * empilhamento" — o bônus de resistência **escala com os empilhamentos** (mesma regra geral de
+ * `amplificador.ts`), a penalidade cruzada em Defesa só entra do 2º empilhamento em diante; Defesa:
+ * "+1 em Defesa, a partir do 2º empilhamento -1 de resistência a tipos de dano a cada empilhamento"
+ * — a penalidade de resistência escala com os empilhamentos além do primeiro, sobre **todos** os
+ * tipos).
  */
 
 /** Uma linha de resistência — sempre uma das cinco de `TipoDanoEnum`. */
@@ -62,7 +64,13 @@ const ORDEM_TIPOS: readonly TipoDanoEnum[] = [
   TipoDanoEnum.GERAL,
 ];
 
-/** Soma da resistência do equipamento (itens equipados, mods, Fragmento aplicado) por tipo. */
+/**
+ * Soma da resistência do equipamento (itens equipados, mods, Fragmento aplicado) por tipo — inclui
+ * armaduras/escudos **equipados** (`item.equipado === true`) e armazenamentos **vestidos**
+ * (`item.categoria === ARMAZENAMENTO && item.guardada === false`, m3-43: a resistência embutida ou
+ * de mod como "Camadas Extras" de uma mochila só vale enquanto ela está sendo usada, mesma regra de
+ * `calcularTotaisCarrinho`/`bonusInventario` — guardada não conta).
+ */
 function calcularResistenciaEquipamento(itens: readonly CarrinhoItemDto[]): Map<string, number> {
   const totais = new Map<string, number>();
   const somar = (tipo: string, valor: number): void => {
@@ -70,7 +78,11 @@ function calcularResistenciaEquipamento(itens: readonly CarrinhoItemDto[]): Map<
   };
 
   itens
-    .filter((item) => item.equipado === true)
+    .filter(
+      (item) =>
+        item.equipado === true ||
+        (item.categoria === ItemCategoriaEnum.ARMAZENAMENTO && item.guardada === false),
+    )
     .forEach((item) => {
       const stat = calcularStatItem({ item });
       if (!stat?.resistencia) {
@@ -92,7 +104,7 @@ export function montarResistencias(dto: ResistenciasMontarDto): readonly Resiste
 
   const resistente = empilhamentosAmplificador(dto.amplificadores, 'Resistente');
   if (resistente > 0) {
-    doEquipamento.set(TipoDanoEnum.GERAL, (doEquipamento.get(TipoDanoEnum.GERAL) ?? 0) + 1);
+    doEquipamento.set(TipoDanoEnum.GERAL, (doEquipamento.get(TipoDanoEnum.GERAL) ?? 0) + resistente);
   }
   const defesaStacks = empilhamentosAmplificador(dto.amplificadores, 'Defesa');
   if (defesaStacks > 1) {

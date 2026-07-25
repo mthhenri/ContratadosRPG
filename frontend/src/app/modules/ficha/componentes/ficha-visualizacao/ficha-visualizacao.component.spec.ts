@@ -308,6 +308,30 @@ describe('FichaVisualizacao', () => {
       expect(balistico?.querySelector('.ficha-resistencia__valor')?.textContent?.trim()).toBe('3');
     });
 
+    it('soma a resistência embutida de um armazenamento vestido, ex. Mochila Kevlar (m3-43)', () => {
+      const { raiz } = montar({
+        ...dados,
+        inventario: {
+          itens: [
+            {
+              nome: 'Mochila Kevlar',
+              categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+              custo: 1200,
+              peso: 0.7,
+              quantidade: 1,
+              guardada: false,
+              modificacoes: [],
+            },
+          ],
+          amplificadores: [],
+        },
+      });
+      const fisico = Array.from(raiz.querySelectorAll('.ficha-resistencia')).find((box) =>
+        box.querySelector('.ficha-resistencia__abrev')?.textContent?.trim() === 'Físico',
+      );
+      expect(fisico?.querySelector('.ficha-resistencia__valor')?.textContent?.trim()).toBe('2');
+    });
+
     it('Resistências ficam editáveis quando ajustável e emitem via ajusteResistencia (base manual)', () => {
       const alvo = montar(dados, 'Corvo', 42, true);
       const ajustes: { tipo: TipoDanoEnum; valor: number }[] = [];
@@ -373,7 +397,7 @@ describe('FichaVisualizacao', () => {
       expect(boxDefesa(raiz, 'Defesa')?.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('11');
     });
 
-    it('Reflexos soma +1 fixo à Esquiva; Resiliência soma +1 fixo ao Bloqueio', () => {
+    it('Reflexos soma +1/empilhamento à Esquiva; Resiliência soma +1/empilhamento ao Bloqueio', () => {
       const documento: FichaJogadorDadosDto = {
         ...dados,
         inventario: {
@@ -388,6 +412,59 @@ describe('FichaVisualizacao', () => {
       const { raiz } = montar(documento, 'Corvo', 42, false);
       expect(boxDefesa(raiz, 'Esquiva')?.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('16');
       expect(boxDefesa(raiz, 'Bloqueio')?.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('18');
+    });
+
+    it('Flexível (mod de Proteções equipada) soma Esquiva; Resistente soma Bloqueio (m3-43)', () => {
+      const documento: FichaJogadorDadosDto = {
+        ...dados,
+        inventario: {
+          itens: [
+            {
+              nome: 'Colete Kevlar',
+              categoria: ItemCategoriaEnum.PROTECOES,
+              custo: 400,
+              peso: 2,
+              quantidade: 1,
+              guardada: false,
+              modificacoes: [
+                { nome: 'Flexível', empilhamentos: 1 },
+                { nome: 'Resistente', empilhamentos: 1 },
+              ],
+              resistencia: '3 [Balístico]',
+              equipado: true,
+            },
+          ],
+          amplificadores: [],
+        },
+      };
+      // esquiva base 15 (13 + destreza 2) + 1 Flexível = 16; bloqueio base 17 (13 + vigor 4) + 1 Resistente = 18.
+      const { raiz } = montar(documento);
+      expect(boxDefesa(raiz, 'Esquiva')?.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('16');
+      expect(boxDefesa(raiz, 'Bloqueio')?.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('18');
+    });
+
+    it('ignora mods de armadura fora do equipado — item na mochila não conta (m3-43)', () => {
+      const documento: FichaJogadorDadosDto = {
+        ...dados,
+        inventario: {
+          itens: [
+            {
+              nome: 'Colete Kevlar',
+              categoria: ItemCategoriaEnum.PROTECOES,
+              custo: 400,
+              peso: 2,
+              quantidade: 1,
+              guardada: false,
+              modificacoes: [{ nome: 'Flexível', empilhamentos: 1 }],
+              resistencia: '3 [Balístico]',
+              equipado: false,
+            },
+          ],
+          amplificadores: [],
+        },
+      };
+      const { raiz } = montar(documento);
+      expect(boxDefesa(raiz, 'Esquiva')?.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('15');
     });
 
     it('a Resistência total pode negativar quando o débuff supera o equipamento (sem piso em 0)', () => {
@@ -415,7 +492,7 @@ describe('FichaVisualizacao', () => {
       expect(barra.replace(/\s+/g, '')).toBe(`5/${vidaBase + 3}`);
     });
 
-    it('Muscular soma +2 no modificador de teste de Luta/Força e -1 em Intelecto do 2º empilhamento', () => {
+    it('Muscular soma +2/empilhamento no modificador de teste de Luta/Força e -1 em Intelecto do 2º empilhamento', () => {
       const documento: FichaJogadorDadosDto = {
         ...dados,
         inventario: { itens: [], amplificadores: [{ nome: 'Muscular', empilhamentos: 2 }] },
@@ -424,7 +501,8 @@ describe('FichaVisualizacao', () => {
       const caixaLuta = Array.from(raiz.querySelectorAll('.ficha-atributo')).find(
         (box) => box.querySelector('.ficha-atributo__abrev')?.textContent?.trim().startsWith('LUT'),
       )!;
-      expect(caixaLuta.querySelector('.ficha-atributo__mod-valor')?.textContent?.trim()).toBe('+2');
+      // Bônus escala com os empilhamentos (2 × +2 = +4) — só a penalidade cruzada (Intelecto) fica presa a "empilhamentos - 1".
+      expect(caixaLuta.querySelector('.ficha-atributo__mod-valor')?.textContent?.trim()).toBe('+4');
       const caixaIntelecto = Array.from(raiz.querySelectorAll('.ficha-atributo')).find(
         (box) => box.querySelector('.ficha-atributo__abrev')?.textContent?.trim().startsWith('INT'),
       )!;

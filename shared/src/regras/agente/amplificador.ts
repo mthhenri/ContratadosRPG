@@ -2,11 +2,17 @@ import type { FichaAtributosDto } from '../../dtos/ficha';
 import type { AmplificadorAplicadoDto } from '../compras';
 
 /**
- * Efeito mecânico dos Amplificadores (`docs/core/sistema-v4.1.0.md` — "⬡ Amplificadores"). Cada
- * amplificador some **um bônus fixo** (concedido a partir de 1 empilhamento, não escala com mais
- * empilhamentos — confirmado pelo doc: "Resistente ... bônus fixo, não escala") e, **a partir do 2º
- * empilhamento**, uma **penalidade que escala** com `empilhamentos − 1`. `Veloz` é a única exceção
- * documentada (seu próprio bônus escala: "Empilhamentos adicionais aumentam apenas em +1 metro").
+ * Efeito mecânico dos Amplificadores (`docs/core/sistema-v4.1.0.md` — "⬡ Amplificadores"). Um
+ * amplificador é "muito similar à modificação" (doc) — assim como uma modificação de item, seu
+ * **bônus principal escala linearmente com os empilhamentos** (`valorPorEmpilhamento × empilhamentos`,
+ * mesma regra de `Reforçada`/`Blindada` em `compras.ts`, mesmo quando a tabela não escreve "por
+ * empilhamento" explicitamente — só a tabela de item escreve isso por extenso às vezes). **A partir
+ * do 2º empilhamento**, soma-se ainda uma **penalidade que escala** com `empilhamentos − 1`
+ * (clarificado pelo doc: "amplificadores que iniciam em ■■ já aplicam a penalidade... " — ou seja, a
+ * contagem de empilhamento é sempre literal, mesmo quando a aquisição mínima já é 2). `Veloz` é a
+ * única exceção onde o **próprio bônus** muda de ritmo depois do 1º empilhamento (doc: "+3 metros...
+ * empilhamentos adicionais aumentam **apenas** em +1 metro" — o advérbio "apenas" marca o contraste
+ * com a escala normal das demais).
  *
  * Funções puras, testáveis isoladamente — quem consome (frontend) soma o resultado **por cima** do
  * valor manual/calculado de cada stat, nunca escreve de volta no `derivados` (mesma filosofia do
@@ -21,9 +27,13 @@ export function empilhamentosAmplificador(
   return amplificadores.find((amplificador) => amplificador.nome === nome)?.empilhamentos ?? 0;
 }
 
-/** `valor` quando o amplificador `nome` está portado (≥1 empilhamento) — bônus fixo, não escala. */
-function bonusFixo(amplificadores: readonly AmplificadorAplicadoDto[], nome: string, valor: number): number {
-  return empilhamentosAmplificador(amplificadores, nome) > 0 ? valor : 0;
+/** `valorPorEmpilhamento × empilhamentos` — o bônus principal do amplificador, escalando com os stacks. */
+function bonusEscalado(
+  amplificadores: readonly AmplificadorAplicadoDto[],
+  nome: string,
+  valorPorEmpilhamento: number,
+): number {
+  return valorPorEmpilhamento * empilhamentosAmplificador(amplificadores, nome);
 }
 
 /** `valorPorEmpilhamento × (empilhamentos − 1)` — penalidade que só passa a escalar do 2º empilhamento em diante. */
@@ -37,41 +47,41 @@ function penalidadeEscalada(
 }
 
 /**
- * Ajuste de **Defesa**: `Defesa` concede +1 fixo; `Resistente` penaliza −1 por empilhamento além do
- * 1º (doc — "Resistente ... À partir do 2ª Empilhamento é aplicado -1 de Defesa a cada empilhamento").
- * Pode negativar — sem piso (mesma liberdade de `montarResistencias`).
+ * Ajuste de **Defesa**: `Defesa` concede +1 por empilhamento; `Resistente` penaliza −1 por
+ * empilhamento além do 1º (doc — "Resistente ... À partir do 2ª Empilhamento é aplicado -1 de
+ * Defesa a cada empilhamento"). Pode negativar — sem piso (mesma liberdade de `montarResistencias`).
  */
 export function ajusteDefesaAmplificadores(amplificadores: readonly AmplificadorAplicadoDto[]): number {
-  return bonusFixo(amplificadores, 'Defesa', 1) - penalidadeEscalada(amplificadores, 'Resistente', 1);
+  return bonusEscalado(amplificadores, 'Defesa', 1) - penalidadeEscalada(amplificadores, 'Resistente', 1);
 }
 
-/** Ajuste de **Esquiva**: `Reflexos` concede +1 fixo. */
+/** Ajuste de **Esquiva**: `Reflexos` concede +1 por empilhamento. */
 export function ajusteEsquivaAmplificadores(amplificadores: readonly AmplificadorAplicadoDto[]): number {
-  return bonusFixo(amplificadores, 'Reflexos', 1);
+  return bonusEscalado(amplificadores, 'Reflexos', 1);
 }
 
-/** Ajuste de **Bloqueio**: `Resiliência` concede +1 fixo. */
+/** Ajuste de **Bloqueio**: `Resiliência` concede +1 por empilhamento. */
 export function ajusteBloqueioAmplificadores(amplificadores: readonly AmplificadorAplicadoDto[]): number {
-  return bonusFixo(amplificadores, 'Resiliência', 1);
+  return bonusEscalado(amplificadores, 'Resiliência', 1);
 }
 
-/** Um amplificador que concede bônus fixo em dois testes de atributo e penaliza outros a partir do 2º empilhamento. */
+/** Um amplificador que concede bônus escalável em dois testes de atributo e penaliza outros a partir do 2º empilhamento. */
 interface EfeitoAtributoAmplificador {
   readonly nome: string;
   readonly bonus: readonly (keyof FichaAtributosDto)[];
-  readonly valorBonus: number;
+  readonly valorBonusPorEmpilhamento: number;
   readonly penalidade: readonly (keyof FichaAtributosDto)[];
   readonly valorPenalidadePorEmpilhamento: number;
 }
 
 /** Os seis amplificadores que mexem em testes de atributo (doc — "⬡ Amplificadores"). */
 const EFEITOS_ATRIBUTO: readonly EfeitoAtributoAmplificador[] = [
-  { nome: 'Interpessoal', bonus: ['social', 'vontade'], valorBonus: 2, penalidade: ['luta', 'pontaria'], valorPenalidadePorEmpilhamento: 1 },
-  { nome: 'Muscular', bonus: ['luta', 'forca'], valorBonus: 2, penalidade: ['intelecto'], valorPenalidadePorEmpilhamento: 1 },
-  { nome: 'Precisão', bonus: ['pontaria', 'medicina'], valorBonus: 2, penalidade: ['social'], valorPenalidadePorEmpilhamento: 1 },
-  { nome: 'Reflexos', bonus: ['destreza'], valorBonus: 1, penalidade: ['vigor'], valorPenalidadePorEmpilhamento: 1 },
-  { nome: 'Resiliência', bonus: ['vigor'], valorBonus: 1, penalidade: ['destreza'], valorPenalidadePorEmpilhamento: 1 },
-  { nome: 'Sinapses', bonus: ['intelecto', 'sentidos'], valorBonus: 2, penalidade: ['forca'], valorPenalidadePorEmpilhamento: 1 },
+  { nome: 'Interpessoal', bonus: ['social', 'vontade'], valorBonusPorEmpilhamento: 2, penalidade: ['luta', 'pontaria'], valorPenalidadePorEmpilhamento: 1 },
+  { nome: 'Muscular', bonus: ['luta', 'forca'], valorBonusPorEmpilhamento: 2, penalidade: ['intelecto'], valorPenalidadePorEmpilhamento: 1 },
+  { nome: 'Precisão', bonus: ['pontaria', 'medicina'], valorBonusPorEmpilhamento: 2, penalidade: ['social'], valorPenalidadePorEmpilhamento: 1 },
+  { nome: 'Reflexos', bonus: ['destreza'], valorBonusPorEmpilhamento: 1, penalidade: ['vigor'], valorPenalidadePorEmpilhamento: 1 },
+  { nome: 'Resiliência', bonus: ['vigor'], valorBonusPorEmpilhamento: 1, penalidade: ['destreza'], valorPenalidadePorEmpilhamento: 1 },
+  { nome: 'Sinapses', bonus: ['intelecto', 'sentidos'], valorBonusPorEmpilhamento: 2, penalidade: ['forca'], valorPenalidadePorEmpilhamento: 1 },
 ];
 
 /**
@@ -92,7 +102,7 @@ export function modificadoresTesteAmplificadores(
   };
 
   EFEITOS_ATRIBUTO.forEach((efeito) => {
-    const bonus = bonusFixo(amplificadores, efeito.nome, efeito.valorBonus);
+    const bonus = bonusEscalado(amplificadores, efeito.nome, efeito.valorBonusPorEmpilhamento);
     efeito.bonus.forEach((atributo) => somar(atributo, bonus));
     const penalidade = penalidadeEscalada(amplificadores, efeito.nome, efeito.valorPenalidadePorEmpilhamento);
     efeito.penalidade.forEach((atributo) => somar(atributo, -penalidade));
@@ -103,8 +113,8 @@ export function modificadoresTesteAmplificadores(
 
 /**
  * Ajuste de **Deslocamento**: `Veloz` concede +3m no 1º empilhamento e +1m por empilhamento
- * adicional (única exceção com bônus escalável — doc: "Empilhamentos adicionais aumentam apenas em
- * +1 metro"); `Inventário` penaliza −1m por empilhamento além do 1º.
+ * adicional (única exceção com ritmo de escala diferente — doc: "Empilhamentos adicionais aumentam
+ * apenas em +1 metro"); `Inventário` penaliza −1m por empilhamento além do 1º.
  */
 export function ajusteDeslocamentoAmplificadores(amplificadores: readonly AmplificadorAplicadoDto[]): number {
   const empilhamentosVeloz = empilhamentosAmplificador(amplificadores, 'Veloz');
@@ -113,51 +123,53 @@ export function ajusteDeslocamentoAmplificadores(amplificadores: readonly Amplif
 }
 
 /**
- * Ajuste de **Inventário** (base): `Inventário` concede +5 fixo; `Veloz` penaliza −2 por
- * empilhamento além do 1º.
+ * Ajuste de **Inventário** (base): `Inventário` concede +5 por empilhamento; `Veloz` penaliza −2
+ * por empilhamento além do 1º.
  */
 export function ajusteInventarioAmplificadores(amplificadores: readonly AmplificadorAplicadoDto[]): number {
-  return bonusFixo(amplificadores, 'Inventário', 5) - penalidadeEscalada(amplificadores, 'Veloz', 2);
+  return bonusEscalado(amplificadores, 'Inventário', 5) - penalidadeEscalada(amplificadores, 'Veloz', 2);
 }
 
 /**
  * Marcos de **Dano Furtivo** (`+1D6+1` cada, mesma unidade de `incrementarDanoFurtivo`) vindos de
- * `Letalidade` — bônus fixo, não escala com empilhamentos (doc não menciona "por empilhamento").
+ * `Letalidade` — um marco por empilhamento.
  */
 export function ajusteDanoFurtivoAmplificadores(amplificadores: readonly AmplificadorAplicadoDto[]): number {
-  return bonusFixo(amplificadores, 'Letalidade', 1);
+  return bonusEscalado(amplificadores, 'Letalidade', 1);
 }
 
 /**
- * Ajuste de **Vida máxima**, multiplicado pelo Nível: `Vida` concede +1/Nível fixo; `Energia`
- * penaliza −1/Nível por empilhamento além do 1º (doc — "a cada Nível a cada empilhamento").
+ * Ajuste de **Vida máxima**, multiplicado pelo Nível: `Vida` concede +1/Nível por empilhamento;
+ * `Energia` penaliza −1/Nível por empilhamento além do 1º (doc — "a cada Nível a cada empilhamento").
  */
 export function ajusteVidaAmplificadores(
   amplificadores: readonly AmplificadorAplicadoDto[],
   nivel: number,
 ): number {
-  const bonus = bonusFixo(amplificadores, 'Vida', 1);
+  const bonus = bonusEscalado(amplificadores, 'Vida', 1);
   const penalidade = penalidadeEscalada(amplificadores, 'Energia', 1);
   return (bonus - penalidade) * nivel;
 }
 
 /**
- * Ajuste de **Energia máxima**, multiplicado pelo Nível: `Energia` concede +1/Nível fixo; `Vida`
- * penaliza −1/Nível por empilhamento além do 1º.
+ * Ajuste de **Energia máxima**, multiplicado pelo Nível: `Energia` concede +1/Nível por
+ * empilhamento; `Vida` penaliza −1/Nível por empilhamento além do 1º.
  */
 export function ajusteEnergiaAmplificadores(
   amplificadores: readonly AmplificadorAplicadoDto[],
   nivel: number,
 ): number {
-  const bonus = bonusFixo(amplificadores, 'Energia', 1);
+  const bonus = bonusEscalado(amplificadores, 'Energia', 1);
   const penalidade = penalidadeEscalada(amplificadores, 'Vida', 1);
   return (bonus - penalidade) * nivel;
 }
 
 /**
- * Aplica o desconto de `Conservador` (−1 de Energia em custos de habilidades, mínimo 1) a um custo
- * de Energia. Custos que já são 0 (habilidades sem custo) ficam intactos — o "mínimo 1" do doc só
- * vale para habilidades que de fato custam Energia.
+ * Aplica o desconto de `Conservador` (−1 de Energia em custos de habilidades por empilhamento,
+ * mínimo 1) a um custo de Energia. Custos que já são 0 (habilidades sem custo) ficam intactos — o
+ * "mínimo 1" do doc só vale para habilidades que de fato custam Energia. `Conservador` só existe em
+ * 0 ou 2 empilhamentos (`empilhamentosIniciais === empilhamentoMaximo === 2`), então na prática o
+ * desconto ativo é sempre −2.
  */
 export function aplicarReducaoCustoEnergia(
   amplificadores: readonly AmplificadorAplicadoDto[],
@@ -166,6 +178,6 @@ export function aplicarReducaoCustoEnergia(
   if (custoEnergia <= 0) {
     return custoEnergia;
   }
-  const reducao = bonusFixo(amplificadores, 'Conservador', 1);
+  const reducao = bonusEscalado(amplificadores, 'Conservador', 1);
   return Math.max(1, custoEnergia - reducao);
 }
