@@ -41,6 +41,32 @@ const CATEGORIAS: readonly OpcaoCategoria[] = (
   Object.values(HabilidadeCategoriaEnum) as HabilidadeCategoriaEnum[]
 ).map((valor) => ({ valor, rotulo: ROTULOS_HABILIDADE_CATEGORIA[valor] }));
 
+/** Os 4 grupos do resumo por categoria (m3-48) — mesmos buckets de `contagemPorCategoria`. */
+type FiltroCategoriaResumo = 'arquetipo' | 'classe' | 'geral' | 'outraClasse';
+
+/** Ordem canônica dos 4 tipos — usada pra checar "todos selecionados" e montar a mensagem de vazio. */
+const TIPOS_FILTRO_RESUMO: readonly FiltroCategoriaResumo[] = [
+  'arquetipo',
+  'classe',
+  'geral',
+  'outraClasse',
+];
+
+const ROTULO_FILTRO_RESUMO: Readonly<Record<FiltroCategoriaResumo, string>> = {
+  arquetipo: 'Arquétipo',
+  classe: 'Classe',
+  geral: 'Geral',
+  outraClasse: 'Outra classe/arquétipo',
+};
+
+/** Junta rótulos em prosa: "A", "A ou B", "A, B ou C" — usado na mensagem de lista vazia. */
+function juntarComOu(rotulos: readonly string[]): string {
+  if (rotulos.length <= 1) {
+    return rotulos[0] ?? '';
+  }
+  return `${rotulos.slice(0, -1).join(', ')} ou ${rotulos.at(-1)}`;
+}
+
 /**
  * Editor **no próprio lugar** da aba Habilidades (m3-13): a lista `habilidades` do `dados`
  * (`FichaHabilidadeDto`). Adiciona/edita/remove com um formulário inline; um editor por vez.
@@ -102,6 +128,14 @@ export class FichaHabilidades {
   /** `true` quando o seletor "Do sistema" está aberto. */
   protected readonly seletorAberto = signal(false);
 
+  /**
+   * Tipos do resumo ativos como filtro (m3-48) — **cumulativo**: vazio = sem filtro (todos os
+   * tipos aparecem); cada clique soma um tipo à seleção. Se a seleção chegar a cobrir os 4 tipos,
+   * volta a vazio (equivalente a "todos" — não faz sentido manter os 4 acesos). Estado de UI
+   * volátil, não persiste após sair da ficha (fora de escopo qualquer campo novo em `dados`).
+   */
+  protected readonly filtroCategoria = signal<ReadonlySet<FiltroCategoriaResumo>>(new Set());
+
   /** Gasto recém-confirmado (índice + valor) — acende o feedback no botão Utilizar por ~1s. */
   protected readonly gastoRecente = signal<{ indice: number; valor: number } | null>(null);
   private temporizadorGasto: ReturnType<typeof setTimeout> | null = null;
@@ -140,37 +174,122 @@ export class FichaHabilidades {
     let geral = 0;
     let outraClasse = 0;
     for (const habilidade of this.habilidades()) {
-      if (
-        habilidade.categoria === HabilidadeCategoriaEnum.OUTRA_CLASSE ||
-        this.ehDeOutraOrigem(habilidade)
-      ) {
-        outraClasse++;
-      } else if (habilidade.categoria === HabilidadeCategoriaEnum.ARQUETIPO) {
+      const bucket = this.bucketResumo(habilidade);
+      if (bucket === 'arquetipo') {
         arquetipo++;
-      } else if (habilidade.categoria === HabilidadeCategoriaEnum.CLASSE) {
+      } else if (bucket === 'classe') {
         classe++;
-      } else if (habilidade.categoria === HabilidadeCategoriaEnum.GERAL) {
+      } else if (bucket === 'geral') {
         geral++;
+      } else if (bucket === 'outraClasse') {
+        outraClasse++;
       }
     }
     return { arquetipo, classe, geral, outraClasse };
   });
 
   /**
+   * Bucket do resumo por categoria (m3-48) a que a habilidade pertence, ou `null` quando não cai em
+   * nenhum dos 4 grupos exibidos (ex.: Subclasse/Personalidade/Especialidade/Civil) — mesmo critério
+   * usado por `contagemPorCategoria` e pelo filtro de `habilidadesFiltradas`.
+   */
+  private bucketResumo(habilidade: FichaHabilidadeDto): FiltroCategoriaResumo | null {
+    if (
+      habilidade.categoria === HabilidadeCategoriaEnum.OUTRA_CLASSE ||
+      this.ehDeOutraOrigem(habilidade)
+    ) {
+      return 'outraClasse';
+    }
+    if (habilidade.categoria === HabilidadeCategoriaEnum.ARQUETIPO) {
+      return 'arquetipo';
+    }
+    if (habilidade.categoria === HabilidadeCategoriaEnum.CLASSE) {
+      return 'classe';
+    }
+    if (habilidade.categoria === HabilidadeCategoriaEnum.GERAL) {
+      return 'geral';
+    }
+    return null;
+  }
+
+  /**
+   * Soma/tira um tipo da seleção cumulativa. Clicar de novo no mesmo tipo o tira; somar os 4
+   * tipos limpa tudo (equivale a "todos" — ver o comentário de `filtroCategoria`).
+   */
+  protected alternarFiltro(tipo: FiltroCategoriaResumo): void {
+    const proximo = new Set(this.filtroCategoria());
+    if (proximo.has(tipo)) {
+      proximo.delete(tipo);
+    } else {
+      proximo.add(tipo);
+    }
+    this.filtroCategoria.set(proximo.size === TIPOS_FILTRO_RESUMO.length ? new Set() : proximo);
+  }
+
+  /** Limpa toda a seleção de tipos — volta a mostrar todas as habilidades. */
+  protected limparFiltroCategoria(): void {
+    this.filtroCategoria.set(new Set());
+  }
+
+  /**
+   * Clique direito num contador **tira** aquele tipo da seleção (sem alternar/somar — é sempre
+   * remoção, mesmo clicando várias vezes). No-op se o tipo já não estiver selecionado. Suprime o
+   * menu de contexto nativo do browser.
+   */
+  protected removerFiltroPorContexto(tipo: FiltroCategoriaResumo, evento: MouseEvent): void {
+    evento.preventDefault();
+    if (!this.filtroCategoria().has(tipo)) {
+      return;
+    }
+    const proximo = new Set(this.filtroCategoria());
+    proximo.delete(tipo);
+    this.filtroCategoria.set(proximo);
+  }
+
+  /**
    * Habilidades a exibir, com o índice **original** preservado (o editor/remover/utilizar operam
-   * sobre a lista real). Filtra por nome/descrição quando há busca.
+   * sobre a lista real). Filtra pelo tipo ativo do resumo (m3-48) e por nome/descrição quando há
+   * busca — os dois filtros compõem.
    */
   protected readonly habilidadesFiltradas = computed<HabilidadeIndexada[]>(() => {
     const indexadas = this.habilidades().map((habilidade, indice) => ({ habilidade, indice }));
+    const filtro = this.filtroCategoria();
+    const porCategoria =
+      filtro.size === 0
+        ? indexadas
+        : indexadas.filter(({ habilidade }) => {
+            const bucket = this.bucketResumo(habilidade);
+            return bucket !== null && filtro.has(bucket);
+          });
     const termo = this.buscaTexto().trim().toLowerCase();
     if (!termo) {
-      return indexadas;
+      return porCategoria;
     }
-    return indexadas.filter(
+    return porCategoria.filter(
       ({ habilidade }) =>
         habilidade.nome.toLowerCase().includes(termo) ||
         habilidade.descricao.toLowerCase().includes(termo),
     );
+  });
+
+  /** Mensagem da lista vazia (m3-48) — combina os tipos ativos (em prosa, "A ou B") com a busca. */
+  protected readonly mensagemListaVazia = computed<string>(() => {
+    const termo = this.buscaTexto().trim();
+    const filtro = this.filtroCategoria();
+    const rotulos = TIPOS_FILTRO_RESUMO.filter((tipo) => filtro.has(tipo)).map(
+      (tipo) => ROTULO_FILTRO_RESUMO[tipo],
+    );
+    const rotuloFiltro = rotulos.length ? juntarComOu(rotulos) : null;
+    if (termo && rotuloFiltro) {
+      return `Nenhuma habilidade de ${rotuloFiltro} encontrada para “${termo}”.`;
+    }
+    if (termo) {
+      return `Nenhuma habilidade encontrada para “${termo}”.`;
+    }
+    if (rotuloFiltro) {
+      return `Nenhuma habilidade de ${rotuloFiltro}.`;
+    }
+    return '';
   });
 
   /** Origem (classe/arquétipo/subclasse) do item em edição — preservada do catálogo/edição. */

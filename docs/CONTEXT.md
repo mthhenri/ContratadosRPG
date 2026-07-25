@@ -1,6 +1,84 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-25 (**m3-47 — Iniciativa automática na criação da ficha**: task
+> Última atualização: 2026-07-25 (**m3-48 — Filtro/contador de Habilidades (cumulativo)**: task
+> `m3-48` do lote de refino `m3-40`…`m3-56` implementada, com um ajuste de comportamento pedido
+> pelo autor **depois** da 1ª entrega — este registro já reflete a versão final. Na aba Habilidades
+> (`frontend/src/app/modules/ficha/componentes/ficha-habilidades/`), os contadores do resumo por
+> categoria (antes só exibição) viraram **botões clicáveis e cumulativos**: um novo Signal
+> `filtroCategoria` guarda um `ReadonlySet<'arquetipo' | 'classe' | 'geral' | 'outraClasse'>`
+> (vazio = sem filtro, mostra tudo) e um método privado `bucketResumo()` (extraído do corpo de
+> `contagemPorCategoria`, que agora o reusa) classifica cada habilidade no mesmo bucket usado pela
+> contagem. Clicar em um tipo **soma** ao conjunto ativo (`alternarFiltro`); clicar de novo no
+> mesmo tipo o **tira** da seleção; se o clique fizer a seleção cobrir os **4 tipos**, ela é
+> **zerada** (equivalente a "todos" — não faz sentido manter os 4 acesos, já que o resultado visual
+> é idêntico a nenhum filtro). Um botão **"🧹 Limpar filtro"** (`&__limpar-filtro`) aparece **no fim
+> da lista** só quando há algum tipo selecionado (`filtroCategoria().size > 0`) e chama
+> `limparFiltroCategoria()`, zerando o conjunto inteiro de uma vez — a versão anterior tinha um 5º
+> pill "Todos" no resumo para isso; foi **removido** e substituído por este botão, por pedido
+> explícito do autor. `habilidadesFiltradas` compõe **filtro de categoria (união dos tipos ativos)
+> + busca de texto**. Mensagem de lista vazia (`mensagemListaVazia`) junta os rótulos dos tipos
+> ativos em prosa (`juntarComOu` — "Classe", "Classe ou Geral", "Classe, Geral ou Outra
+> classe/arquétipo") e compõe com o termo de busca quando os dois filtros não batem com nada. Cada
+> pill é `<button>` com `[attr.aria-pressed]` refletindo `filtroCategoria().has(tipo)` (vários
+> podem estar `true` ao mesmo tempo — não é exclusivo como uma aba) — navegável por teclado de
+> graça (elemento nativo), `role="group"` no container (mesmo padrão do `seletor__subfiltro` em
+> `ficha-habilidade-seletor`). Sem persistência (estado de UI volátil, nenhum campo novo em `dados`).
+> **Fora de escopo:** busca textual/ordenação além do que já existia, e qualquer mudança no
+> `ficha-habilidade-seletor`.
+>
+> **Ajuste pós-entrega (mesmo dia, pedido do autor após ver a 1ª versão):** três correções sobre o
+> comportamento acima. **(1) Glow por cor própria do tipo** — o estado ativo **não** usa mais accent
+> uniforme; cada um dos 4 modificadores (`--arquetipo`/`--classe`/`--geral`/`--outra-classe`) fixa
+> `color` num dos 4 tokens semânticos do tema (`--positive`/`--warning`/`--energy`/`--accent` — os
+> únicos 4 disponíveis, nenhum hex novo, proibição #29) e `&--ativo` usa `currentColor` pra
+> `border-color`/`background`/`box-shadow`, herdando a cor do próprio tipo (Arquétipo verde, Classe
+> âmbar, Geral azul, Outra classe/arquétipo accent). **Bug pego durante a verificação ao vivo**: a
+> regra `&:hover { border-color: var(--accent-border); }` tinha *mais* especificidade CSS (2
+> seletores: classe base + `:hover`) que `&--ativo` (1 seletor), então passar o mouse sobre um tipo
+> **já ativo** apagava o glow colorido e mostrava o hover neutro por baixo — corrigido com
+> `&:hover:not(.habilidades__resumo-item--ativo)`, que exclui os ativos da regra de hover neutra em
+> vez de competir por especificidade com eles. **(2) Botão "Limpar filtro" mais visível e
+> reposicionado** — o autor relatou não ter visto o botão vassoura da 1ª entrega; ele **existia e
+> funcionava** (a cor é que era neutra/discreta demais, mesmo padrão do `&__cancelar`, e ficava no
+> fim da lista) — 1ª correção: trocado pra estilo accent sólido (`--accent`/`--accent-dim`/
+> `--accent-border`), mesma posição. Depois de ver essa versão, o autor pediu mais um ajuste: mover
+> o botão pra **dentro da linha do resumo**, logo depois do pill "Outras classes/arquétipos", **e**
+> reduzi-lo a **ícone só** (sem o texto "Limpar filtro") **alinhado à direita** da própria linha —
+> versão final usa `margin-left: auto` no `&__limpar-filtro` (funciona mesmo com `flex-wrap` no
+> `&__resumo`: quando os pills não cabem numa linha só, o ícone fica à direita da linha em que
+> caiu, não force a quebra pra linha própria). **(3) Clique direito desmarca** —
+> `removerFiltroPorContexto(tipo, evento)` no `(contextmenu)` de cada pill: suprime o menu nativo
+> do browser (`evento.preventDefault()`) e **tira** aquele tipo específico da seleção (sempre
+> remoção, nunca alterna; no-op se o tipo já não estiver selecionado) — mais rápido que achar o
+> mesmo pill e clicar de novo quando vários tipos estão ativos. **Testes:** frontend `+7` no spec
+> do componente (cumulativo: filtra por 1 tipo, soma um 2º, tira um do meio mantendo os outros,
+> completar os 4 tipos zera tudo e tira o `aria-pressed` de todos, múltiplos `aria-pressed`
+> simultâneos, botão vassoura só aparece com filtro ativo e limpa tudo, mensagem de vazio juntando 2
+> rótulos com "ou") `+3` no 1º ajuste pós-entrega (cada pill carrega o modificador de cor certo,
+> clique direito remove só aquele tipo sem mexer nos demais, clique direito num tipo já inativo é
+> no-op e `defaultPrevented` fica `true`) — os mesmos 10 continuam valendo depois do reposicionamento
+> do ícone (a asserção é por classe `.habilidades__limpar-filtro`, indiferente à posição/conteúdo).
+> 472/473 frontend (a 1 falha é pré-existente em `ficha-inventario.component.spec.ts`, arquivo não
+> tocado por esta task — nome mecânico da arma "Leve" vs "Leve — Corpo a Corpo", alheio ao filtro
+> de Habilidades). Verificado ao vivo no browser quatro vezes ao todo (stack real: Postgres +
+> backend + frontend, ficha criada via REST, driver via Playwright) — a 2ª rodada provou o
+> cumulativo (Arquétipo, depois +Classe, depois +Geral, depois +Outras completando os 4 e limpando
+> tudo automaticamente); a 3ª leu a `border-color` computada de cada pill ativo via
+> `getComputedStyle` e confirmou os 3 RGBs certos (`--positive`/`--warning`/`--energy`), clicou com
+> `button: 'right'` pra confirmar o clique direito removendo só um tipo (foi essa mesma rodada que
+> **pegou o bug do hover** antes do fix — Geral aparecia com a borda accent-tintada errada até eu
+> perceber que era o cursor do Playwright ainda "em cima" do botão do clique anterior, disparando
+> `:hover`); a 4ª (pós-reposicionamento do ícone) confirmou visualmente o botão como ícone só, à
+> direita da linha, logo depois de "Outras classes/arquétipos". **(4) Ícone trocado por um glifo
+> mono** — o 🧹 (emoji colorido) destoava do resto do tema (`✎`/`✕`/`⚡`/`＋` são todos glifos
+> monocromáticos que herdam `currentColor`, sem cor própria de fonte); trocado por `↺` (reset), que
+> renderiza na cor do botão (`--accent`) como qualquer outro ícone da tela, em vez de vir colorido
+> pela fonte de emoji do sistema. Spec em
+> `docs/specs/done/m3-48-habilidades-filtro-contador.spec.md`. Próxima task: **`m3-49`**
+> (Informações Extras — Origem/Personalidade/afinidade de fragmentos no card já existente da Visão
+> Geral).)
+>
+> (**m3-47 — Iniciativa automática na criação da ficha**: task
 > `m3-47` do lote de refino `m3-40`…`m3-56` implementada. Ao **criar** uma ficha (`FichaService.criarFicha`,
 > `backend/src/modules/ficha/ficha.service.ts`), o backend agora grava automaticamente um preset em
 > `dados.rolagens` — rótulo **"Iniciativa"**, fórmula **`DESd6`** (gramática de atributo-como-fonte-de-dados

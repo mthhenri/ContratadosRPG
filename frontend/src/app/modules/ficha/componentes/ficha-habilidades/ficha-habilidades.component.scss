@@ -23,8 +23,12 @@
     color: var(--text);
   }
 
-  // Resumo por categoria (Arquétipo/Classe/Geral/Outra classe) — acima da busca, mesmas cores
-  // semânticas do chip de cada categoria (`&__chip--classe`/`--arquetipo` abaixo).
+  // Resumo por categoria (Arquétipo/Classe/Geral/Outra classe) — acima da busca. Cada contador é
+  // um botão cumulativo (m3-48): clique soma/tira o tipo do filtro (clique direito só tira — ver
+  // `removerFiltroPorContexto`); o glow do tipo ativo usa a MESMA cor semântica do próprio tipo
+  // (`currentColor`, herdada do modificador de cor abaixo), não um accent uniforme — os 4
+  // modificadores usam os 4 tokens semânticos do tema (positive/warning/energy/accent), sem
+  // inventar cor nova (proibição #29).
   &__resumo {
     display: flex;
     flex-wrap: wrap;
@@ -36,10 +40,19 @@
     align-items: baseline;
     gap: 5px;
     font-family: var(--font-mono);
+    color: var(--text-dim);
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-control);
     padding: 3px 8px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+
+    // `:not(--ativo)` de propósito: sem ele, a especificidade de `.item:hover` (2 seletores) vence
+    // a de `.item--ativo` (1 seletor) e o hover apagaria o glow colorido de um tipo já ativo.
+    &:hover:not(.habilidades__resumo-item--ativo) {
+      border-color: var(--accent-border);
+    }
 
     &--arquetipo {
       color: var(--positive);
@@ -47,6 +60,23 @@
 
     &--classe {
       color: var(--warning);
+    }
+
+    &--geral {
+      color: var(--energy);
+    }
+
+    &--outra-classe {
+      color: var(--accent);
+    }
+
+    // Tipo ativo: glow na própria cor do tipo (currentColor dos modificadores acima) — Arquétipo
+    // brilha verde, Classe âmbar, Geral azul, Outra classe/arquétipo accent.
+    &--ativo {
+      background: color-mix(in srgb, currentColor 16%, transparent);
+      border-color: currentColor;
+      box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 45%, transparent),
+        0 0 8px color-mix(in srgb, currentColor 55%, transparent);
     }
   }
 
@@ -57,9 +87,16 @@
     color: var(--text-mute);
 
     .habilidades__resumo-item--arquetipo &,
-    .habilidades__resumo-item--classe & {
+    .habilidades__resumo-item--classe &,
+    .habilidades__resumo-item--geral &,
+    .habilidades__resumo-item--outra-classe & {
       color: currentColor;
       opacity: 0.75;
+    }
+
+    .habilidades__resumo-item--ativo & {
+      color: currentColor;
+      opacity: 1;
     }
   }
 
@@ -69,7 +106,10 @@
     color: var(--text);
 
     .habilidades__resumo-item--arquetipo &,
-    .habilidades__resumo-item--classe & {
+    .habilidades__resumo-item--classe &,
+    .habilidades__resumo-item--geral &,
+    .habilidades__resumo-item--outra-classe &,
+    .habilidades__resumo-item--ativo & {
       color: currentColor;
     }
   }
@@ -439,6 +479,39 @@
     font-size: 13px;
     font-style: italic;
     color: var(--text-mute);
+  }
+
+  // Limpa o filtro cumulativo de tipos (m3-48) — ícone só (↺, glifo mono como os demais botões de
+  // ação do tema — `&__acao` usa ✎/✕, o form usa ＋ — nada de emoji colorido destoando da
+  // identidade visual), na linha do resumo logo depois de "Outras classes/arquétipos", empurrado
+  // pro final da própria linha com `margin-left: auto` (funciona mesmo com `flex-wrap` no
+  // `&__resumo`). Só aparece com algum tipo selecionado; tom accent (não neutro como `&__acao`)
+  // pra não passar despercebido — clique direito num contador continua sendo o jeito de tirar só
+  // UM tipo (`removerFiltroPorContexto`).
+  &__limpar-filtro {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    flex: 0 0 auto;
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      background: color-mix(in srgb, var(--accent) 22%, transparent);
+      border-color: var(--accent);
+    }
   }
 
   // Ações do mini-campo de custo variável do Utilizar ("Gastar" / "Cancelar") — a confirmação de

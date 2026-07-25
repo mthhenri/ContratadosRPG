@@ -24,23 +24,66 @@
   </header>
 
   @if (habilidades().length > 0) {
-    <div class="habilidades__resumo">
-      <span class="habilidades__resumo-item habilidades__resumo-item--arquetipo">
+    <div class="habilidades__resumo" role="group" aria-label="Filtrar habilidades por tipo (soma vários)">
+      <button
+        type="button"
+        class="habilidades__resumo-item habilidades__resumo-item--arquetipo"
+        [class.habilidades__resumo-item--ativo]="filtroCategoria().has('arquetipo')"
+        [attr.aria-pressed]="filtroCategoria().has('arquetipo')"
+        title="Clique direito remove só este filtro"
+        (click)="alternarFiltro('arquetipo')"
+        (contextmenu)="removerFiltroPorContexto('arquetipo', $event)"
+      >
         <span class="habilidades__resumo-rotulo">Arquétipo</span>
         <span class="habilidades__resumo-valor">{{ contagemPorCategoria().arquetipo }}</span>
-      </span>
-      <span class="habilidades__resumo-item habilidades__resumo-item--classe">
+      </button>
+      <button
+        type="button"
+        class="habilidades__resumo-item habilidades__resumo-item--classe"
+        [class.habilidades__resumo-item--ativo]="filtroCategoria().has('classe')"
+        [attr.aria-pressed]="filtroCategoria().has('classe')"
+        title="Clique direito remove só este filtro"
+        (click)="alternarFiltro('classe')"
+        (contextmenu)="removerFiltroPorContexto('classe', $event)"
+      >
         <span class="habilidades__resumo-rotulo">Classe</span>
         <span class="habilidades__resumo-valor">{{ contagemPorCategoria().classe }}</span>
-      </span>
-      <span class="habilidades__resumo-item">
+      </button>
+      <button
+        type="button"
+        class="habilidades__resumo-item habilidades__resumo-item--geral"
+        [class.habilidades__resumo-item--ativo]="filtroCategoria().has('geral')"
+        [attr.aria-pressed]="filtroCategoria().has('geral')"
+        title="Clique direito remove só este filtro"
+        (click)="alternarFiltro('geral')"
+        (contextmenu)="removerFiltroPorContexto('geral', $event)"
+      >
         <span class="habilidades__resumo-rotulo">Geral</span>
         <span class="habilidades__resumo-valor">{{ contagemPorCategoria().geral }}</span>
-      </span>
-      <span class="habilidades__resumo-item">
+      </button>
+      <button
+        type="button"
+        class="habilidades__resumo-item habilidades__resumo-item--outra-classe"
+        [class.habilidades__resumo-item--ativo]="filtroCategoria().has('outraClasse')"
+        [attr.aria-pressed]="filtroCategoria().has('outraClasse')"
+        title="Clique direito remove só este filtro"
+        (click)="alternarFiltro('outraClasse')"
+        (contextmenu)="removerFiltroPorContexto('outraClasse', $event)"
+      >
         <span class="habilidades__resumo-rotulo">Outras classes/arquétipos</span>
         <span class="habilidades__resumo-valor">{{ contagemPorCategoria().outraClasse }}</span>
-      </span>
+      </button>
+      @if (filtroCategoria().size > 0) {
+        <button
+          type="button"
+          class="habilidades__limpar-filtro"
+          aria-label="Limpar filtro de tipos"
+          title="Limpar filtro (clique direito num contador remove só aquele tipo)"
+          (click)="limparFiltroCategoria()"
+        >
+          ↺
+        </button>
+      }
     </div>
   }
 
@@ -184,7 +227,7 @@
   @if (!habilidades().length && !editando(-1)) {
     <p class="habilidades__vazio">Nenhuma habilidade cadastrada.</p>
   } @else if (habilidades().length && !habilidadesFiltradas().length) {
-    <p class="habilidades__vazio">Nenhuma habilidade encontrada para “{{ busca.value }}”.</p>
+    <p class="habilidades__vazio">{{ mensagemListaVazia() }}</p>
   }
 </div>
 

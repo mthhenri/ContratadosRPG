@@ -370,4 +370,168 @@ describe('FichaHabilidades', () => {
       expect(custos).toEqual(['[2 E]', '[X E]']);
     });
   });
+
+  /**
+   * m3-48: contadores por tipo no resumo ficam clicáveis e o filtro é **cumulativo** — cada clique
+   * soma um tipo à seleção; clicar de novo no mesmo tipo o tira; somar os 4 tipos limpa tudo
+   * (equivalente a "todos"). O botão vassoura (`&__limpar-filtro`, ícone só, alinhado à direita na
+   * própria linha do resumo, logo depois de "Outras classes/arquétipos") só aparece com algum tipo
+   * ativo e limpa a seleção inteira. Estado de UI volátil (nenhum campo novo em `dados`).
+   */
+  describe('filtro cumulativo por tipo pelo contador do resumo (m3-48)', () => {
+    // 1 habilidade por bucket, na ordem em que aparecem na lista (preserva a ordem original).
+    const habilidadesCompletas: FichaHabilidadeDto[] = [
+      { nome: 'Golpe de Classe', categoria: HabilidadeCategoriaEnum.CLASSE, custoEnergia: 1, descricao: '' },
+      { nome: 'Salto de Arquétipo', categoria: HabilidadeCategoriaEnum.ARQUETIPO, custoEnergia: 0, descricao: '' },
+      { nome: 'Primeiros Socorros', categoria: HabilidadeCategoriaEnum.GERAL, custoEnergia: 1, descricao: '' },
+      { nome: 'Técnica Emprestada', categoria: HabilidadeCategoriaEnum.OUTRA_CLASSE, custoEnergia: 2, descricao: '' },
+    ];
+
+    function montarCompleta() {
+      TestBed.configureTestingModule({ imports: [FichaHabilidades] });
+      const fixture = TestBed.createComponent(FichaHabilidades);
+      fixture.componentRef.setInput('habilidades', habilidadesCompletas);
+      fixture.componentRef.setInput('editavel', true);
+      fixture.componentRef.setInput('classe', ClasseEnum.COMBATENTE);
+      fixture.componentRef.setInput('arquetipo', ArquetipoEnum.LUTADOR);
+      fixture.componentRef.setInput('energiaAtual', 20);
+      fixture.detectChanges();
+      return { fixture, raiz: fixture.nativeElement as HTMLElement };
+    }
+
+    function botaoResumo(raiz: HTMLElement, rotulo: string): HTMLButtonElement {
+      const botoes = Array.from(raiz.querySelectorAll('.habilidades__resumo-item')) as HTMLButtonElement[];
+      const alvo = botoes.find((b) => b.querySelector('.habilidades__resumo-rotulo')?.textContent?.trim() === rotulo);
+      if (!alvo) {
+        throw new Error(`Botão de resumo "${rotulo}" não encontrado`);
+      }
+      return alvo;
+    }
+
+    function nomes(raiz: HTMLElement): (string | undefined)[] {
+      return Array.from(raiz.querySelectorAll('.habilidades__nome')).map((n) => n.textContent?.trim());
+    }
+
+    it('clicar no contador de Arquétipo filtra a lista para só as de Arquétipo', () => {
+      const { raiz, fixture } = montarCompleta();
+      botaoResumo(raiz, 'Arquétipo').click();
+      fixture.detectChanges();
+      expect(nomes(raiz)).toEqual(['Salto de Arquétipo']);
+    });
+
+    it('clicar em Classe depois de Arquétipo soma os dois tipos (cumulativo)', () => {
+      const { raiz, fixture } = montarCompleta();
+      botaoResumo(raiz, 'Arquétipo').click();
+      fixture.detectChanges();
+      botaoResumo(raiz, 'Classe').click();
+      fixture.detectChanges();
+      expect(nomes(raiz)).toEqual(['Golpe de Classe', 'Salto de Arquétipo']);
+    });
+
+    it('clicar de novo no mesmo tipo só tira aquele da seleção (mantém os demais)', () => {
+      const { raiz, fixture } = montarCompleta();
+      botaoResumo(raiz, 'Arquétipo').click();
+      botaoResumo(raiz, 'Classe').click();
+      fixture.detectChanges();
+      expect(nomes(raiz)).toEqual(['Golpe de Classe', 'Salto de Arquétipo']);
+
+      botaoResumo(raiz, 'Classe').click();
+      fixture.detectChanges();
+      expect(nomes(raiz)).toEqual(['Salto de Arquétipo']);
+    });
+
+    it('selecionar os 4 tipos limpa tudo (equivalente a "todos")', () => {
+      const { raiz, fixture } = montarCompleta();
+      botaoResumo(raiz, 'Arquétipo').click();
+      botaoResumo(raiz, 'Classe').click();
+      botaoResumo(raiz, 'Geral').click();
+      fixture.detectChanges();
+      expect(nomes(raiz)).toHaveLength(3); // ainda faltam "Outras classes/arquétipos"
+
+      botaoResumo(raiz, 'Outras classes/arquétipos').click();
+      fixture.detectChanges();
+      expect(nomes(raiz)).toEqual(habilidadesCompletas.map((h) => h.nome)); // limpou: mostra tudo
+      for (const rotulo of ['Arquétipo', 'Classe', 'Geral', 'Outras classes/arquétipos']) {
+        expect(botaoResumo(raiz, rotulo).getAttribute('aria-pressed')).toBe('false');
+      }
+    });
+
+    it('o(s) contador(es) ativo(s) têm aria-pressed="true"; os demais, "false"', () => {
+      const { raiz, fixture } = montarCompleta();
+      const botaoClasse = botaoResumo(raiz, 'Classe');
+      const botaoArquetipo = botaoResumo(raiz, 'Arquétipo');
+      expect(botaoClasse.getAttribute('aria-pressed')).toBe('false');
+
+      botaoClasse.click();
+      fixture.detectChanges();
+      expect(botaoClasse.getAttribute('aria-pressed')).toBe('true');
+      expect(botaoArquetipo.getAttribute('aria-pressed')).toBe('false');
+
+      botaoArquetipo.click();
+      fixture.detectChanges();
+      expect(botaoClasse.getAttribute('aria-pressed')).toBe('true');
+      expect(botaoArquetipo.getAttribute('aria-pressed')).toBe('true');
+    });
+
+    it('o botão vassoura só aparece com algum filtro ativo, e limpa tudo ao clicar', () => {
+      const { raiz, fixture } = montarCompleta();
+      expect(raiz.querySelector('.habilidades__limpar-filtro')).toBeNull();
+
+      botaoResumo(raiz, 'Arquétipo').click();
+      fixture.detectChanges();
+      const vassoura = raiz.querySelector('.habilidades__limpar-filtro') as HTMLButtonElement;
+      expect(vassoura).not.toBeNull();
+
+      vassoura.click();
+      fixture.detectChanges();
+      expect(raiz.querySelector('.habilidades__limpar-filtro')).toBeNull();
+      expect(nomes(raiz)).toEqual(habilidadesCompletas.map((h) => h.nome));
+    });
+
+    /** Cada contador leva a cor do próprio tipo (glow verde/âmbar/azul/accent — não um accent uniforme). */
+    it('cada contador carrega o modificador de cor do próprio tipo', () => {
+      const { raiz } = montarCompleta();
+      expect(botaoResumo(raiz, 'Arquétipo').classList.contains('habilidades__resumo-item--arquetipo')).toBe(true);
+      expect(botaoResumo(raiz, 'Classe').classList.contains('habilidades__resumo-item--classe')).toBe(true);
+      expect(botaoResumo(raiz, 'Geral').classList.contains('habilidades__resumo-item--geral')).toBe(true);
+      expect(botaoResumo(raiz, 'Outras classes/arquétipos').classList.contains('habilidades__resumo-item--outra-classe')).toBe(true);
+    });
+
+    function dispararContextMenu(botao: HTMLButtonElement): Event {
+      const evento = new Event('contextmenu', { bubbles: true, cancelable: true });
+      botao.dispatchEvent(evento);
+      return evento;
+    }
+
+    it('clique direito num contador ativo o remove da seleção (sem alternar os demais)', () => {
+      const { raiz, fixture } = montarCompleta();
+      botaoResumo(raiz, 'Arquétipo').click();
+      botaoResumo(raiz, 'Classe').click();
+      fixture.detectChanges();
+      expect(nomes(raiz)).toEqual(['Golpe de Classe', 'Salto de Arquétipo']);
+
+      dispararContextMenu(botaoResumo(raiz, 'Arquétipo'));
+      fixture.detectChanges();
+      expect(nomes(raiz)).toEqual(['Golpe de Classe']);
+      expect(botaoResumo(raiz, 'Arquétipo').getAttribute('aria-pressed')).toBe('false');
+      expect(botaoResumo(raiz, 'Classe').getAttribute('aria-pressed')).toBe('true');
+    });
+
+    it('clique direito num contador já sem filtro não faz nada (no-op) e suprime o menu nativo', () => {
+      const { raiz, fixture } = montarCompleta();
+      const evento = dispararContextMenu(botaoResumo(raiz, 'Geral'));
+      fixture.detectChanges();
+      expect(nomes(raiz)).toEqual(habilidadesCompletas.map((h) => h.nome)); // nada mudou
+      expect(evento.defaultPrevented).toBe(true); // menu de contexto do browser não abre
+    });
+
+    it('sem resultado nos tipos filtrados, mostra a mensagem de vazio juntando os rótulos com "ou"', () => {
+      const { raiz, fixture } = montar(true); // fixture original: só Classe e Arquétipo
+      botaoResumo(raiz, 'Geral').click();
+      botaoResumo(raiz, 'Outras classes/arquétipos').click();
+      fixture.detectChanges();
+      const vazio = raiz.querySelector('.habilidades__vazio')?.textContent?.trim();
+      expect(vazio).toBe('Nenhuma habilidade de Geral ou Outra classe/arquétipo.');
+    });
+  });
 });
