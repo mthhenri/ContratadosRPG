@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { vi } from 'vitest';
 
 import {
   FragmentoModuloEnum,
@@ -7,9 +8,10 @@ import {
   ItemCategoriaEnum,
   ModificacaoEfeitoTipoEnum,
 } from '@contratados-rpg/shared/enums';
-import type { FichaInventarioDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { FichaAtributosDto, FichaInventarioDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 
+import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { FichaInventario } from './ficha-inventario.component';
 
@@ -30,6 +32,19 @@ describe('FichaInventario', () => {
     modificacoes: [],
   };
 
+  const atributos: FichaAtributosDto = {
+    destreza: 2,
+    forca: 6,
+    luta: 3,
+    pontaria: 1,
+    vigor: 4,
+    intelecto: 1,
+    medicina: 1,
+    sentidos: 2,
+    social: 1,
+    vontade: 3,
+  };
+
   function montar(inventario: FichaInventarioDto, editavel = true, prestigio = 100) {
     TestBed.configureTestingModule({ imports: [FichaInventario] });
     const fixture = TestBed.createComponent(FichaInventario);
@@ -41,14 +56,18 @@ describe('FichaInventario', () => {
     fixture.componentRef.setInput('dinheiro', 5000);
     fixture.componentRef.setInput('energiaAtual', 50);
     fixture.componentRef.setInput('energiaMaxima', 50);
+    fixture.componentRef.setInput('atributos', atributos);
     fixture.detectChanges();
     const emitidos: FichaInventarioDto[] = [];
     fixture.componentInstance.inventarioMudou.subscribe((e) => emitidos.push(e));
+    const bandeja = TestBed.inject(BandejaDadosService);
+    const mostrar = vi.spyOn(bandeja, 'mostrar').mockImplementation(() => undefined);
     return {
       fixture,
       componentInstance: fixture.componentInstance,
       raiz: fixture.nativeElement as HTMLElement,
       emitidos,
+      mostrar,
     };
   }
 
@@ -214,6 +233,40 @@ describe('FichaInventario', () => {
     alvo.fixture.componentRef.setInput('inventario', alvo.emitidos[0]);
     alvo.fixture.detectChanges();
     expect(alvo.componentInstance['itensInventario']()[0].stat).toContain('3D6+FOR');
+  });
+
+  it('rola o dano de uma arma pelo card e joga o resultado na bandeja (m3-45)', () => {
+    const alvo = montar({ itens: [itemLeve], amplificadores: [] });
+    const botaoRolar = alvo.raiz.querySelector('.ficha-inv__item-rolar') as HTMLButtonElement;
+    expect(botaoRolar).toBeTruthy();
+    botaoRolar.click();
+    expect(alvo.mostrar).toHaveBeenCalledTimes(1);
+    const chamada = alvo.mostrar.mock.calls[0][0];
+    expect(chamada.rotulo).toBe('Leve');
+    // Dano do catálogo (m3-18, sem mods) — a fórmula que vai ao motor é a mesma exibida no card.
+    expect(chamada.formula).toBe('1D6+DES [Físico]');
+    expect(chamada.resultado.total).toBeGreaterThanOrEqual(0);
+  });
+
+  it('mantém o botão "Rolar dano" mesmo sem edição (rolar não é ação de edição da ficha)', () => {
+    const alvo = montar({ itens: [itemLeve], amplificadores: [] }, false);
+    expect(alvo.raiz.querySelector('.ficha-inv__item-rolar')).toBeTruthy();
+    // Sem edição, nem "Modificar" nem outras ações de gerenciamento aparecem.
+    expect(alvo.raiz.querySelector('.ficha-inv__modificar')).toBeFalsy();
+  });
+
+  it('não oferece "Rolar dano" numa categoria sem dano computável (Armazenamento)', () => {
+    const mochila: CarrinhoItemDto = {
+      nome: 'Mochila Pequena',
+      categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+      custo: 300,
+      peso: 0.3,
+      quantidade: 1,
+      guardada: true,
+      modificacoes: [],
+    };
+    const alvo = montar({ itens: [mochila], amplificadores: [] });
+    expect(alvo.raiz.querySelector('.ficha-inv__item-rolar')).toBeFalsy();
   });
 
   it('modificação custom com efeito mecânico (dano fixo) grava o efeito no item', () => {

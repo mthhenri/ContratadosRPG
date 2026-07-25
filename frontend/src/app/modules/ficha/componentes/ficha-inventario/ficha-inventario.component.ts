@@ -10,8 +10,9 @@ import {
   ItemCategoriaEnum,
   ModificacaoEfeitoTipoEnum,
 } from '@contratados-rpg/shared/enums';
-import type { FichaInventarioDto, FichaSequelaDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { FichaAtributosDto, FichaInventarioDto, FichaSequelaDto } from '@contratados-rpg/shared/dtos/ficha';
 import { ajusteInventarioAmplificadores } from '@contratados-rpg/shared/regras/agente';
+import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
 import {
   AMPLIFICADORES,
   AmplificadorAplicadoDto,
@@ -47,6 +48,7 @@ import {
   verificarConflitoModificacao,
 } from '@contratados-rpg/shared/regras/compras';
 
+import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
@@ -243,6 +245,8 @@ interface ItemInventarioVM {
   readonly custoTotalTexto: string;
   readonly pesoTexto: string;
   readonly stat: string | null;
+  /** Fórmula de dano tipada (`calcularStatItem`, m3-18) pronta para `rolarFormula` — `null` fora de `CATEGORIAS_COM_DANO` ou sem stat computável (m3-45). */
+  readonly danoFormula: string | null;
   /** Descrição do item custom (texto livre), ou `null` para itens do catálogo. */
   readonly descricao: string | null;
   /** `false` para consumíveis (Operacional/Medicinal): sem "Modificar" (nem custom). */
@@ -350,6 +354,12 @@ export class FichaInventario {
   /** Energia atual/máxima da ficha — só para o custo de Fragmentos (m3-35; adquirir/acoplar/remover). */
   readonly energiaAtual = input.required<number>();
   readonly energiaMaxima = input.required<number>();
+  /** Atributos efetivos da ficha — fórmula de dano do item pode somar atributo (ex.: `+FOR`; m3-45). */
+  readonly atributos = input.required<FichaAtributosDto>();
+  /** Proficiência atual — entra no ambiente da rolagem, mesmo quando a fórmula do item não a usa (m3-45). */
+  readonly proficiencia = input<number | null>(null);
+  /** Nível atual — idem `proficiencia` (m3-45). */
+  readonly nivel = input(0);
 
   /** Emite o inventário inteiro após qualquer mutação — a página persiste. */
   readonly inventarioMudou = output<FichaInventarioDto>();
@@ -495,6 +505,8 @@ export class FichaInventario {
     efeitos: new FormArray<ReturnType<FichaInventario['criarEfeitoGrupo']>>([]),
   });
   protected readonly efeitoTipos = EFEITO_TIPOS;
+
+  private readonly bandeja = inject(BandejaDadosService);
 
   constructor() {
     inject(DestroyRef).onDestroy(() => {
@@ -1218,6 +1230,29 @@ export class FichaInventario {
   }
 
   /**
+   * Rola o dano de uma arma direto do card (m3-45) — a fórmula sai de `item.danoFormula`
+   * (`calcularStatItem`, m3-18: já traz mods/fragmentos aplicados) e roda no mesmo motor
+   * (`rolarFormula`, `shared/regras/rolagem`) e bandeja (`BandejaDadosService`) usados pela Visão
+   * Geral (`FichaVisualizacao.rolarDano`). Não é gated por `editavel()` — rolar não é uma ação de
+   * edição da ficha (mesmo padrão de `rolarTesteAtributo`/`rolarDano` lá). Sem histórico ainda
+   * (`m3-27` não existe): fire-and-forget só na bandeja.
+   */
+  protected rolarDanoItem(item: ItemInventarioVM): void {
+    if (!item.danoFormula) {
+      return;
+    }
+    const resultado = rolarFormula({
+      formula: item.danoFormula,
+      atributos: this.atributos(),
+      proficiencia: this.proficiencia(),
+      nivel: this.nivel(),
+    });
+    if (resultado) {
+      this.bandeja.mostrar({ rotulo: item.nomeExibido, formula: item.danoFormula, resultado });
+    }
+  }
+
+  /**
    * Move um item para dentro de um container próprio (`containerId`, m3-44 — Pochete/Bolso de
    * Corpo) ou de volta ao inventário principal (`null`). Sem trava de categoria/capacidade — a
    * seção do container e a linha "Inventário" marcam excedente como **aviso**, mesma filosofia
@@ -1708,6 +1743,7 @@ export class FichaInventario {
     // Armazenamento vestido (não guardado) não ocupa slots → "0 slots"; guardado/demais usam o peso real.
     const pesoTexto = `${this.formatarPeso(contaPeso ? pesoBruto : 0)} slots`;
 
+    const statComputado = calcularStatItem({ item });
     const definicoes = listarModificacoesDisponiveis(item);
     // Acumula os empilhamentos na ordem para marcar como "excedente" o que passa do limite da patente.
     let acumuladoStacks = 0;
@@ -1762,7 +1798,8 @@ export class FichaInventario {
       quantidade: item.quantidade,
       custoTotalTexto: this.formatarDinheiro(custoTotal),
       pesoTexto,
-      stat: this.formatarStat(calcularStatItem({ item })),
+      stat: this.formatarStat(statComputado),
+      danoFormula: statComputado?.dano ?? null,
       descricao: item.descricao ?? null,
       modificavel: !CATEGORIAS_NAO_MODIFICAVEIS.includes(item.categoria),
       ehArmazenamento,

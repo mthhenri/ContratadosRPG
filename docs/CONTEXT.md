@@ -1,6 +1,38 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-25 (**m3-44 — Inventário: sub-inventários/listas**: 5ª task do lote
+> Última atualização: 2026-07-25 (**m3-45 — Rolar dano da arma direto no card**: 6ª task do lote de
+> refino `m3-40`…`m3-56` implementada. Botão "Rolar dano" nos cards de item do Inventário
+> (`ficha-inventario.component.ts`/`.html`) para qualquer categoria com dano computável (não uma
+> lista fixa de categorias — o gate é `item.danoFormula !== null`, que na prática cobre
+> Corpo a Corpo/Armas de Fogo/Explosivos/Exóticos e Fragmento Construtor, os mesmos de
+> `CATEGORIAS_COM_DANO`). Novo campo `danoFormula: string | null` na `ItemInventarioVM`, preenchido
+> a partir de `calcularStatItem({ item })?.dano` (`shared/regras/compras`, m3-18) — a mesma string
+> tipada (`"3D4+FOR [Físico]"`) já usada pra montar `item.stat`, com mods/fragmentos aplicados
+> embutidos, sem cálculo duplicado (proibição #26). Clicar chama `rolarFormula` direto
+> (`shared/regras/rolagem`, m3-22/m3-29) — não passa pelo runner de preset
+> (`executarPassoPreset`/`resolverPreset`) porque não há preset aqui, só uma fórmula pronta, mesmo
+> padrão de `FichaVisualizacao.rolarDano` (Dano C. a C./Furtivo no glance de Status) — e joga o
+> resultado na `BandejaDadosService` (`rotulo` = `item.nomeExibido`, `formula` = a própria fórmula).
+> Três novos inputs no componente (`atributos: FichaAtributosDto`, `proficiencia: number | null`,
+> `nivel: number`), passados por `ficha-visualizacao.component.html` com os mesmos signals já usados
+> por `app-ficha-rolagens` (`atributosEfetivos()`/`proficiencia()`/`dados().nivel`). **Decisão sem
+> pedir esclarecimento** (a spec deixava em aberto): o botão **não é gated por `editavel()`** —
+> rolar dado não é uma ação de edição da ficha, mesmo padrão já estabelecido em
+> `rolarTesteAtributo`/`rolarDano` da Visão Geral (nenhum dos dois é gated por `ajustavel()`); um
+> visualizador sem permissão de editar ainda rola. **`m3-27` (histórico de rolagem) e `m3-51` (gate
+> de permissão de rolagem) continuam no backlog** — nenhum dos dois existe ainda no código
+> (confirmado por busca: zero ocorrências de `RolagemService`), então a spec's dependências
+> opcionais caem no cenário mais simples: fire-and-forget só na bandeja, sem gate extra além da
+> visibilidade normal da ficha. Fora de escopo (conforme a spec): rolar ataque/acerto, nova
+> gramática de rolagem. **Testes:** shared 429/429 (sem mudança — task não tocou `shared/regras`),
+> frontend 462/463 (+3: rola e joga na bandeja com a fórmula do catálogo, botão aparece mesmo sem
+> `editavel()`, não aparece em categoria sem dano computável como Armazenamento —
+> `ficha-inventario.component.spec.ts`; a 1 falha remanescente é a mesma pré-existente e
+> não-relacionada — apelido de equipamento, `ResizeObserver`), backend sem mudança (task não tocou o
+> backend). Spec em `docs/specs/done/m3-45-arma-rolar-dano.spec.md`. Próxima task: **`m3-46`**
+> (nova gramática de rolagem v4).)
+>
+> (**m3-44 — Inventário: sub-inventários/listas**: 5ª task do lote
 > de refino `m3-40`…`m3-56` implementada, em quatro entregáveis. **Item 14 (Pochete/Bolso de Corpo
 > como inventários separados):** `ItemCatalogo` (`shared/regras/compras/catalogo.dados.ts`) ganhou
 > `inventarioProprio?: { categoriasPermitidas? }` — marcado só nos dois itens do doc que "possuem

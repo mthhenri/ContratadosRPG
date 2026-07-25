@@ -638,7 +638,21 @@
       </div>
 
       @if (item.stat) {
-        <div class="ficha-inv__item-stat">{{ item.stat }}</div>
+        <div class="ficha-inv__item-stat">
+          {{ item.stat }}
+          @if (item.danoFormula) {
+            <button
+              type="button"
+              class="ficha-inv__item-rolar"
+              aria-label="Rolar dano"
+              [appTooltip]="'Rolar dano'"
+              (click)="rolarDanoItem(item)"
+            >
+              <app-icone nome="dado" />
+              <span>Rolar dano</span>
+            </button>
+          }
+        </div>
       }
       @if (item.descricao) {
         <div class="ficha-inv__item-desc">{{ item.descricao }}</div>

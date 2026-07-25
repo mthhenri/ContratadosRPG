@@ -499,6 +499,49 @@
     color: var(--text-dim);
   }
 
+  // Linha "Dano X [Tipo]" + botão de rolar (m3-45).
+  &__item-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  // Botão "Rolar dano" (m3-45) — mesmo padrão de pílula ícone+texto do `&__modificar`, sem gate de
+  // `editavel()`: rolar dado não é uma ação de edição da ficha.
+  &__item-rolar {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 4px 9px;
+    cursor: pointer;
+    transition:
+      color 0.12s ease,
+      border-color 0.12s ease,
+      background 0.12s ease;
+
+    app-icone {
+      display: inline-flex;
+      width: 12px;
+      height: 12px;
+    }
+    &:hover,
+    &:focus-visible {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--accent-dim);
+    }
+  }
+
   // Descrição/efeito de item e modificação custom (texto livre).
   &__item-desc {
     font-family: var(--font-sans);
