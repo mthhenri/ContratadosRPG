@@ -525,6 +525,47 @@
                 </button>
               }
 
+              @if (!item.ehArmazenamento && (containersDisponiveis().length > 0 || item.containerId)) {
+                <div class="ficha-inv__mover">
+                  <button
+                    type="button"
+                    class="ficha-inv__mover-gatilho"
+                    [appTooltip]="'Mover para um container próprio (Pochete/Bolso de Corpo)'"
+                    [attr.aria-expanded]="moverAbertoIndice() === item.indice"
+                    (click)="alternarMover(item.indice)"
+                  >
+                    <app-icone nome="armazenamento" />
+                    <span>{{ rotuloContainerAtual(item.containerId) }}</span>
+                  </button>
+                  @if (moverAbertoIndice() === item.indice) {
+                    <div class="ficha-inv__mover-lista" role="listbox" aria-label="Mover para">
+                      <button
+                        type="button"
+                        class="ficha-inv__mover-opcao"
+                        [class.ficha-inv__mover-opcao--ativa]="item.containerId === null"
+                        role="option"
+                        [attr.aria-selected]="item.containerId === null"
+                        (click)="escolherContainer(item.indice, null)"
+                      >
+                        Inventário principal
+                      </button>
+                      @for (destino of containersDisponiveis(); track destino.containerId) {
+                        <button
+                          type="button"
+                          class="ficha-inv__mover-opcao"
+                          [class.ficha-inv__mover-opcao--ativa]="item.containerId === destino.containerId"
+                          role="option"
+                          [attr.aria-selected]="item.containerId === destino.containerId"
+                          (click)="escolherContainer(item.indice, destino.containerId)"
+                        >
+                          {{ destino.rotulo }}
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+
               @if (item.fragmentoPotencializador) {
                 <button
                   type="button"
@@ -1066,6 +1107,38 @@
         }
       </div>
     }
+
+    <!-- Sub-inventários próprios (m3-44 — item 14): Pochete/Bolso de Corpo vestidos, cada um com sua
+         própria lista e capacidade — nunca somado ao inventário principal (`shared/regras/compras`). -->
+    @for (sub of subInventarios(); track sub.containerId) {
+      <div class="ficha-inv__subinventario" [class.ficha-inv__subinventario--aviso]="sub.excede">
+        <div class="ficha-inv__amps-cabecalho">
+          {{ sub.nomeContainer }} — {{ sub.pesoTexto }}
+          @if (sub.excede) {
+            <app-icone nome="alerta" class="ficha-inv__carga-alerta" aria-label="Acima da capacidade" [appTooltip]="'Acima da capacidade'" />
+          }
+          @if (sub.categoriasRotulo) {
+            <span class="ficha-inv__subinventario-restricao">Só {{ sub.categoriasRotulo }}</span>
+          }
+        </div>
+        @if (sub.itens.length === 0) {
+          <p class="ficha-inv__vazio">Vazio — use "Mover para" num item da lista para guardar aqui.</p>
+        }
+        @for (item of sub.itens; track item.indice) {
+          <ng-container [ngTemplateOutlet]="cartaoItemTemplate" [ngTemplateOutletContext]="{ item: item }" />
+        }
+      </div>
+    }
+
+    <!-- Fragmentos em seção própria (m3-44 — item 19), mesmo padrão da lista de Amplificadores. -->
+    @if (itensListaFragmentos().length > 0) {
+      <div class="ficha-inv__amps" appOverflowFade>
+        <div class="ficha-inv__amps-cabecalho">Fragmentos</div>
+        @for (item of itensListaFragmentos(); track item.indice) {
+          <ng-container [ngTemplateOutlet]="cartaoItemTemplate" [ngTemplateOutletContext]="{ item: item }" />
+        }
+      </div>
+    }
   }
 
   @if (mostrandoSoAmplificadores() && amplificadoresInventario().length === 0) {
@@ -1080,41 +1153,43 @@
           <span class="ficha-inv__tag ficha-inv__tag--penalidade">−{{ resumo().penalidadeVontade }} Vontade total</span>
         }
       </div>
-      @for (amp of amplificadoresInventario(); track amp.nome) {
-        <div class="ficha-inv__item ficha-inv__item--amp">
-          <div class="ficha-inv__item-cabecalho">
-            <div>
-              <span class="ficha-inv__item-nome">{{ amp.nome }}</span>
-              @if (amp.penalidade > 0) {
-                <span class="ficha-inv__tag ficha-inv__tag--penalidade">−{{ amp.penalidade }} Vontade</span>
-              }
+      <div class="ficha-inv__grade-amps">
+        @for (amp of amplificadoresInventario(); track amp.nome) {
+          <div class="ficha-inv__item ficha-inv__item--amp">
+            <div class="ficha-inv__item-cabecalho">
+              <div>
+                <span class="ficha-inv__item-nome">{{ amp.nome }}</span>
+                @if (amp.penalidade > 0) {
+                  <span class="ficha-inv__tag ficha-inv__tag--penalidade">−{{ amp.penalidade }} Vontade</span>
+                }
+              </div>
+              <div class="ficha-inv__item-meta">
+                @if (mostrarCustos()) {
+                  <span class="ficha-inv__custo">{{ amp.custoTexto }}</span>
+                }
+                <span class="ficha-inv__peso">{{ amp.empilhamentos }}/{{ amp.maximoEfetivo }} stacks</span>
+              </div>
             </div>
-            <div class="ficha-inv__item-meta">
-              @if (mostrarCustos()) {
-                <span class="ficha-inv__custo">{{ amp.custoTexto }}</span>
-              }
-              <span class="ficha-inv__peso">{{ amp.empilhamentos }}/{{ amp.maximoEfetivo }} stacks</span>
-            </div>
+            <div class="ficha-inv__item-stat">{{ amp.efeito }}</div>
+            @if (editavel()) {
+              <div class="ficha-inv__cartao-acoes">
+                <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="removerAmplificador(amp.nome)">
+                  − Stack
+                </button>
+                <button
+                  type="button"
+                  class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--flex"
+                  [class.ficha-inv__btn--feito]="adicionadoRecente() === 'amp:' + amp.nome"
+                  [disabled]="!amp.podeAumentar"
+                  (click)="adicionarAmplificador(amp.nome)"
+                >
+                  {{ adicionadoRecente() === 'amp:' + amp.nome ? '✓' : '+ Stack' }}
+                </button>
+              </div>
+            }
           </div>
-          <div class="ficha-inv__item-stat">{{ amp.efeito }}</div>
-          @if (editavel()) {
-            <div class="ficha-inv__cartao-acoes">
-              <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="removerAmplificador(amp.nome)">
-                − Stack
-              </button>
-              <button
-                type="button"
-                class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--flex"
-                [class.ficha-inv__btn--feito]="adicionadoRecente() === 'amp:' + amp.nome"
-                [disabled]="!amp.podeAumentar"
-                (click)="adicionarAmplificador(amp.nome)"
-              >
-                {{ adicionadoRecente() === 'amp:' + amp.nome ? '✓' : '+ Stack' }}
-              </button>
-            </div>
-          }
-        </div>
-      }
+        }
+      </div>
     </div>
   }
   </div>

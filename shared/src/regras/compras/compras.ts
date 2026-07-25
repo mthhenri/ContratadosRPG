@@ -29,6 +29,7 @@ import {
   ResumoComprasDto,
   StatItemCalcularDto,
   StatItemDto,
+  SubInventarioDto,
   TotaisCarrinhoCalcularDto,
   TotaisCarrinhoDto,
 } from './compras.dtos';
@@ -73,6 +74,32 @@ export function interpretarBonusArmazenamento(dto: BonusArmazenamentoInterpretar
   }
   const numero = dto.texto.match(/([\d,]+)/);
   return numero ? parseFloat(numero[1].replace(',', '.')) : 0;
+}
+
+/**
+ * Bônus de inventário concedido por **este** item de Armazenamento vestido: bônus base do
+ * catálogo (ou do item custom, via `resolverDadosItem`) + "Compartimentos Extras" (+1/stack) +
+ * "Camadas Extras" (+0,5/stack) + efeitos `INVENTARIO` das mods custom. Reusado por
+ * `calcularTotaisCarrinho` (soma no total do inventário principal) e por `listarSubInventarios`
+ * (m3-44 — a mesma conta vira a **capacidade** do sub-inventário próprio de Pochete/Bolso de
+ * Corpo, em vez de somar no pool principal).
+ */
+export function calcularBonusArmazenamentoItem(item: CarrinhoItemDto): number {
+  const itemCatalogo = resolverDadosItem(item);
+  let slots = interpretarBonusArmazenamento({ texto: itemCatalogo?.bonus });
+  item.modificacoes.forEach((modificacao) => {
+    if (modificacao.nome === 'Compartimentos Extras') {
+      slots += modificacao.empilhamentos;
+    } else if (modificacao.nome === 'Camadas Extras') {
+      slots += modificacao.empilhamentos * 0.5;
+    }
+    (modificacao.efeitos ?? []).forEach((efeito) => {
+      if (efeito.tipo === ModificacaoEfeitoTipoEnum.INVENTARIO) {
+        slots += (efeito.valor ?? 0) * modificacao.empilhamentos;
+      }
+    });
+  });
+  return slots;
 }
 
 /**
@@ -206,18 +233,26 @@ export function obterCategoriaEmprestada(item: CarrinhoItemDto): ItemCategoriaEn
 
 /**
  * Modificações de uma categoria aplicáveis a **este** item: as da categoria, menos
- * as "Apenas para escudos" (Combativo, Arremesso) quando o item não é escudo. As
- * demais categorias não têm mods de escudo, então o filtro só recorta `PROTECOES`.
+ * as "Apenas para escudos" (Combativo, Arremesso) quando o item não é escudo — as
+ * demais categorias não têm mods de escudo, então esse filtro só recorta `PROTECOES`.
+ * Quando `categoria` é a **própria** categoria do item e o catálogo restringe
+ * `modificacoesPermitidas` (m3-44 — ex.: Bolso de Corpo só aceita "Bolso Tático"), o resultado
+ * também é recortado por nome; mods de categoria **emprestada** (Faz Parte/Combativo) nunca são
+ * restringidas por essa lista — ela é sobre o item receptor, não sobre a categoria doada.
  */
 export function listarModificacoesCategoria(
   item: CarrinhoItemDto,
   categoria: ItemCategoriaEnum,
 ): readonly ModificacaoDados[] {
   const modificacoes = MODIFICACOES[categoria] ?? [];
-  if (ehEscudo(item)) {
-    return modificacoes;
+  const semExclusivaEscudo = ehEscudo(item)
+    ? modificacoes
+    : modificacoes.filter((modificacao) => !modificacao.apenasEscudos);
+  if (categoria !== item.categoria) {
+    return semExclusivaEscudo;
   }
-  return modificacoes.filter((modificacao) => !modificacao.apenasEscudos);
+  const permitidas = resolverDadosItem(item)?.modificacoesPermitidas;
+  return permitidas ? semExclusivaEscudo.filter((modificacao) => permitidas.includes(modificacao.nome)) : semExclusivaEscudo;
 }
 
 /**
@@ -552,22 +587,7 @@ export function calcularStatItem(dto: StatItemCalcularDto): StatItemDto | null {
   }
 
   // ── ARMAZENAMENTO (bônus de inventário) ───────────────────────────────────────
-  let statBonusArmazenamento: number | undefined;
-  if (itemCatalogo.bonus) {
-    let slots = interpretarBonusArmazenamento({ texto: itemCatalogo.bonus });
-    if (empilhamentosDe('Compartimentos Extras') > 0) {
-      slots += empilhamentosDe('Compartimentos Extras');
-    }
-    // Efeitos INVENTARIO das modificações CUSTOM: somam slots ao bônus do armazenamento.
-    item.modificacoes.forEach((modificacao) => {
-      (modificacao.efeitos ?? []).forEach((efeito) => {
-        if (efeito.tipo === ModificacaoEfeitoTipoEnum.INVENTARIO) {
-          slots += (efeito.valor ?? 0) * modificacao.empilhamentos;
-        }
-      });
-    });
-    statBonusArmazenamento = slots;
-  }
+  const statBonusArmazenamento = itemCatalogo.bonus ? calcularBonusArmazenamentoItem(item) : undefined;
 
   if (
     statResistencia === undefined &&
@@ -602,8 +622,14 @@ export function calcularCustoAmplificador(dto: CustoAmplificadorCalcularDto): nu
  * Totais brutos do carrinho: gasto (itens + modificações + amplificadores), peso
  * ocupado, empilhamentos de amplificador somados e bônus de inventário dos
  * armazenamentos vestidos. Um armazenamento vestido (`guardada = false`) amplia o
- * inventário e não pesa; guardado (`guardada = true`) pesa e não amplia. Espelha
- * `getCmpTotals` do site antigo.
+ * inventário e não pesa; guardado (`guardada = true`) pesa e não amplia. Um item
+ * com `containerId` (m3-44 — dentro de um Pochete/Bolso de Corpo) **não pesa aqui e não soma
+ * `bonusInventario`** (se for ele mesmo um armazenamento): conta só contra a capacidade própria
+ * do container (`listarSubInventarios`), nunca contra o pool principal — a UI não deixa colocar
+ * um armazenamento dentro de outro (`!item.ehArmazenamento` no seletor "Mover para"), mas o motor
+ * não confia só nisso. Um container com `inventarioProprio` (Pochete/Bolso de Corpo) também **não
+ * soma** seu próprio bônus em `bonusInventario` — vestido, o bônus vira a capacidade do
+ * sub-inventário, não amplia o principal. Espelha `getCmpTotals` do site antigo.
  */
 export function calcularTotaisCarrinho(dto: TotaisCarrinhoCalcularDto): TotaisCarrinhoDto {
   let gasto = 0;
@@ -614,16 +640,18 @@ export function calcularTotaisCarrinho(dto: TotaisCarrinhoCalcularDto): TotaisCa
     const quantidade = item.quantidade;
     gasto += item.custo * quantidade;
     const ehArmazenamento = item.categoria === ItemCategoriaEnum.ARMAZENAMENTO;
-    const ocupaPeso = !ehArmazenamento || item.guardada;
+    const ocupaPeso = (!ehArmazenamento || item.guardada) && !item.containerId;
+    const itemCatalogo = resolverDadosItem(item);
+    const temInventarioProprio = ehArmazenamento && !!itemCatalogo?.inventarioProprio;
 
     if (ocupaPeso) {
       pesoUsado += item.peso * quantidade;
     }
-    if (ehArmazenamento && !item.guardada) {
+    if (ehArmazenamento && !item.guardada && !temInventarioProprio && !item.containerId) {
       // Custom (fora do catálogo) usa o bônus embutido no próprio item — o armazenamento inventado
-      // amplia o inventário de verdade, como um do catálogo.
-      const itemCatalogo = resolverDadosItem(item);
-      bonusInventario += interpretarBonusArmazenamento({ texto: itemCatalogo?.bonus }) * quantidade;
+      // amplia o inventário de verdade, como um do catálogo. Dentro de um container (m3-44), um
+      // armazenamento não amplia o principal — mesmo raciocínio de `ocupaPeso` acima.
+      bonusInventario += calcularBonusArmazenamentoItem(item) * quantidade;
     }
 
     item.modificacoes.forEach((modificacao) => {
@@ -633,18 +661,6 @@ export function calcularTotaisCarrinho(dto: TotaisCarrinhoCalcularDto): TotaisCa
         quantidade;
       if (ocupaPeso) {
         pesoUsado += modificacao.empilhamentos * obterPesoModificacao({ item, modificacao: modificacao.nome }) * quantidade;
-      }
-      if (ehArmazenamento && !item.guardada) {
-        if (modificacao.nome === 'Compartimentos Extras') {
-          bonusInventario += modificacao.empilhamentos * quantidade;
-        } else if (modificacao.nome === 'Camadas Extras') {
-          bonusInventario += modificacao.empilhamentos * 0.5 * quantidade;
-        }
-        (modificacao.efeitos ?? []).forEach((efeito) => {
-          if (efeito.tipo === ModificacaoEfeitoTipoEnum.INVENTARIO) {
-            bonusInventario += (efeito.valor ?? 0) * modificacao.empilhamentos * quantidade;
-          }
-        });
       }
     });
   });
@@ -656,6 +672,48 @@ export function calcularTotaisCarrinho(dto: TotaisCarrinhoCalcularDto): TotaisCa
   });
 
   return { gasto, pesoUsado, empilhamentosAmplificador, bonusInventario };
+}
+
+/**
+ * Sub-inventários próprios (m3-44 — doc: "Possui inventário separado", Pochete/Bolso de Corpo):
+ * um container vestido, cujo catálogo marca `inventarioProprio`, com `id` atribuído, abre sua
+ * própria lista — os itens com `containerId` igual a esse `id` pesam só contra a capacidade do
+ * container (o bônus dele, via `calcularBonusArmazenamentoItem`), nunca contra o pool principal.
+ * Containers sem `id` (de antes desta task) e itens `guardada = true` (não vestidos) não abrem
+ * sub-inventário. Espelha `renderCmpSummary`/`getCmpTotals` na mesma filosofia "aviso, não trava" —
+ * `categoriasPermitidas`/capacidade excedida são só sinalização da UI.
+ */
+export function listarSubInventarios(itens: readonly CarrinhoItemDto[]): readonly SubInventarioDto[] {
+  const subInventarios: SubInventarioDto[] = [];
+
+  itens.forEach((container) => {
+    if (container.categoria !== ItemCategoriaEnum.ARMAZENAMENTO || container.guardada || !container.id) {
+      return;
+    }
+    const itemCatalogo = resolverDadosItem(container);
+    if (!itemCatalogo?.inventarioProprio) {
+      return;
+    }
+    const itensContidos = itens.filter((item) => item.containerId === container.id);
+    const pesoUsado = itensContidos.reduce((total, item) => {
+      const pesoMods = item.modificacoes.reduce(
+        (soma, modificacao) => soma + modificacao.empilhamentos * obterPesoModificacao({ item, modificacao: modificacao.nome }),
+        0,
+      );
+      return total + (item.peso + pesoMods) * item.quantidade;
+    }, 0);
+
+    subInventarios.push({
+      containerId: container.id,
+      nomeContainer: container.apelido?.trim() || container.nome,
+      capacidade: calcularBonusArmazenamentoItem(container),
+      pesoUsado,
+      categoriasPermitidas: itemCatalogo.inventarioProprio.categoriasPermitidas,
+      itens: itensContidos,
+    });
+  });
+
+  return subInventarios;
 }
 
 /**

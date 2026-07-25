@@ -903,4 +903,205 @@ describe('FichaInventario', () => {
       expect(alvo.componentInstance['criandoModIndice']()).toBeNull();
     });
   });
+
+  describe('sub-inventários próprios — Pochete/Bolso de Corpo (m3-44)', () => {
+    function municao(quantidade = 1): CarrinhoItemDto {
+      return {
+        nome: '9mm',
+        categoria: ItemCategoriaEnum.MUNICOES,
+        custo: 100,
+        peso: 0.5,
+        quantidade,
+        guardada: false,
+        modificacoes: [],
+      };
+    }
+
+    it('adicionar uma Pochete do catálogo atribui um `id` estável ao item', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.componentInstance['definirCategoria'](ItemCategoriaEnum.ARMAZENAMENTO);
+      const cartao = alvo.fixture.componentInstance['itensCatalogo']().find((c) => c.item.nome === 'Pochete')!;
+      alvo.fixture.componentInstance['adicionarItem'](cartao);
+
+      expect(alvo.emitidos[0].itens).toHaveLength(1);
+      expect(typeof alvo.emitidos[0].itens[0].id).toBe('string');
+      expect(alvo.emitidos[0].itens[0].id).not.toBe('');
+    });
+
+    it('uma Mochila comum (sem inventário próprio) não ganha `id`', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.componentInstance['definirCategoria'](ItemCategoriaEnum.ARMAZENAMENTO);
+      const cartao = alvo.fixture.componentInstance['itensCatalogo']().find((c) => c.item.nome === 'Mochila Pequena')!;
+      alvo.fixture.componentInstance['adicionarItem'](cartao);
+
+      expect(alvo.emitidos[0].itens[0].id).toBeUndefined();
+    });
+
+    it('Pochete vestida abre sua própria seção, com capacidade e restrição de categoria', () => {
+      const pochete: CarrinhoItemDto = {
+        nome: 'Pochete',
+        categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+        custo: 200,
+        peso: 0.2,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        id: 'poch-1',
+      };
+      const { raiz } = montar({ itens: [pochete, municao(3)], amplificadores: [] });
+
+      const secao = raiz.querySelector('.ficha-inv__subinventario');
+      expect(secao).not.toBeNull();
+      expect(secao?.textContent).toContain('Pochete');
+      expect(secao?.textContent).toContain('Munições');
+    });
+
+    it('um item com `containerId` some da lista principal e aparece dentro da seção do container', () => {
+      const pochete: CarrinhoItemDto = {
+        nome: 'Pochete',
+        categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+        custo: 200,
+        peso: 0.2,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        id: 'poch-1',
+      };
+      const dentro: CarrinhoItemDto = { ...municao(2), containerId: 'poch-1' };
+      const { raiz, componentInstance } = montar({ itens: [pochete, dentro, itemLeve], amplificadores: [] });
+
+      // A munição guardada na Pochete não entra na lista principal (só "Leve" e a Pochete aparecem lá).
+      expect(componentInstance['itensListaPrincipal']().map((item) => item.nome)).toEqual(['Leve', 'Pochete']);
+      const secao = raiz.querySelector('.ficha-inv__subinventario');
+      expect(secao?.textContent).toContain('9mm');
+    });
+
+    it('mover um item para a Pochete grava o `containerId`; mover de volta remove o campo', () => {
+      const pochete: CarrinhoItemDto = {
+        nome: 'Pochete',
+        categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+        custo: 200,
+        peso: 0.2,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        id: 'poch-1',
+      };
+      const alvo = montar({ itens: [pochete, municao()], amplificadores: [] });
+
+      alvo.componentInstance['moverItemParaContainer'](1, 'poch-1');
+      expect(alvo.emitidos[0].itens[1].containerId).toBe('poch-1');
+
+      alvo.componentInstance['moverItemParaContainer'](1, null);
+      expect(alvo.emitidos[1].itens[1].containerId).toBeUndefined();
+    });
+
+    it('o menu "Mover para" (popover próprio, não `<select>` nativo) reflete o container atual e move ao clicar numa opção', () => {
+      const pochete: CarrinhoItemDto = {
+        nome: 'Pochete',
+        categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+        custo: 200,
+        peso: 0.2,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        id: 'poch-1',
+      };
+      const alvo = montar({ itens: [pochete, municao()], amplificadores: [] });
+
+      // Não há mais `<select>` nativo pra essa ação.
+      expect(alvo.raiz.querySelector('select.ficha-inv__mover-entrada')).toBeNull();
+
+      const gatilho = alvo.raiz.querySelector('.ficha-inv__mover-gatilho') as HTMLButtonElement;
+      expect(gatilho.textContent).toContain('Inventário principal');
+
+      gatilho.click();
+      alvo.fixture.detectChanges();
+      const opcoes = Array.from(alvo.raiz.querySelectorAll('.ficha-inv__mover-opcao'));
+      const opcaoPochete = opcoes.find((el) => el.textContent?.includes('Pochete')) as HTMLButtonElement;
+      opcaoPochete.click();
+      alvo.fixture.detectChanges();
+
+      expect(alvo.emitidos[0].itens[1].containerId).toBe('poch-1');
+      // O menu fecha ao escolher, e a próxima renderização mostra o container escolhido.
+      expect(alvo.raiz.querySelector('.ficha-inv__mover-lista')).toBeNull();
+    });
+
+    // Doc — "Bolso de Corpo": "Apenas pode aplicar a modificação Bolso Tático".
+    it('"Bolso de Corpo" só oferece a modificação "Bolso Tático" no painel "Modificar"', () => {
+      const bolso: CarrinhoItemDto = {
+        nome: 'Bolso de Corpo',
+        categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+        custo: 75,
+        peso: 0.1,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        id: 'bolso-1',
+      };
+      const alvo = montar({ itens: [bolso], amplificadores: [] });
+      alvo.componentInstance['alternarPainel'](0);
+      alvo.fixture.detectChanges();
+
+      const nomesMod = Array.from(alvo.raiz.querySelectorAll('.ficha-inv__mod-entrada-nome')).map((el) => el.textContent?.trim());
+      expect(nomesMod).toEqual(['Bolso Tático']);
+    });
+
+    it('um Bolso de Corpo guardado (não vestido) não abre seção de sub-inventário', () => {
+      const bolsoGuardado: CarrinhoItemDto = {
+        nome: 'Bolso de Corpo',
+        categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+        custo: 75,
+        peso: 0.1,
+        quantidade: 1,
+        guardada: true,
+        modificacoes: [],
+        id: 'bolso-1',
+      };
+      const { raiz } = montar({ itens: [bolsoGuardado], amplificadores: [] });
+      expect(raiz.querySelector('.ficha-inv__subinventario')).toBeNull();
+    });
+  });
+
+  describe('Fragmentos em seção própria (m3-44)', () => {
+    function fragmentoAvulso(): CarrinhoItemDto {
+      return {
+        nome: 'Fragmento achado',
+        categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+        custo: 0,
+        peso: 0,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        modulo: FragmentoModuloEnum.IV,
+      };
+    }
+
+    it('um Fragmento não aparece na lista principal — só na seção própria de Fragmentos', () => {
+      const { componentInstance } = montar({ itens: [itemLeve, fragmentoAvulso()], amplificadores: [] });
+      expect(componentInstance['itensListaPrincipal']().map((item) => item.nome)).toEqual(['Leve']);
+      expect(componentInstance['itensListaFragmentos']().map((item) => item.nome)).toEqual(['Fragmento achado']);
+    });
+
+    it('renderiza a seção "Fragmentos" com o item dentro, com header separado da lista principal', () => {
+      const { raiz } = montar({ itens: [fragmentoAvulso()], amplificadores: [] });
+      const secoes = Array.from(raiz.querySelectorAll('.ficha-inv__amps-cabecalho')).map((el) => el.textContent?.trim());
+      expect(secoes.some((texto) => texto === 'Fragmentos')).toBe(true);
+    });
+  });
+
+  describe('Amplificadores em grade de 2 colunas (m3-44)', () => {
+    it('a lista de amplificadores (toggle "Ver amplificadores") usa a grade de 2 colunas', () => {
+      const { raiz, fixture, componentInstance } = montar({
+        itens: [],
+        amplificadores: [{ nome: 'Vida', empilhamentos: 1 }],
+      });
+      componentInstance['alternarSoAmplificadores']();
+      fixture.detectChanges();
+
+      const grade = raiz.querySelector('.ficha-inv__grade-amps');
+      expect(grade).not.toBeNull();
+      expect(grade?.querySelectorAll('.ficha-inv__item--amp').length).toBe(1);
+    });
+  });
 });

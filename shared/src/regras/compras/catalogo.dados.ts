@@ -28,6 +28,25 @@ export interface ItemCatalogo {
   readonly descricao?: string;
   readonly categoriaEmprestada?: ItemCategoriaEnum;
   readonly ehEscudo?: boolean;
+  /**
+   * Só `Bolso de Corpo`/`Pochete` (m3-44 — doc: "Possui inventário separado"): marca este
+   * armazenamento como **sub-inventário próprio**, não um que amplia o pool principal. Vestido, o
+   * `bonus` do catálogo vira a **capacidade** desse pool próprio (não soma em `bonusInventario`); os
+   * itens que o jogador colocar dentro (`CarrinhoItemDto.containerId`) pesam só contra essa
+   * capacidade, nunca contra o inventário principal. `categoriasPermitidas` (Pochete: Munições,
+   * Operacional, Medicinal) é só **aviso** (não trava — mesma filosofia de peso excedente).
+   */
+  readonly inventarioProprio?: {
+    readonly categoriasPermitidas?: readonly ItemCategoriaEnum[];
+  };
+  /**
+   * Restringe as modificações que **este** item aceita, pelo nome — as demais da categoria não
+   * aparecem pra ele (m3-44: doc — "Bolso de Corpo": "Apenas pode aplicar a modificação Bolso
+   * Tático"). Ausente = aceita todas as modificações da categoria normalmente. Só recorta as mods
+   * da **própria** categoria do item; mods de categoria emprestada (Faz Parte/Combativo) não são
+   * afetadas.
+   */
+  readonly modificacoesPermitidas?: readonly string[];
 }
 
 export const CATALOGO_ITENS: Readonly<Record<ItemCategoriaEnum, readonly ItemCatalogo[]>> = {
@@ -90,8 +109,25 @@ export const CATALOGO_ITENS: Readonly<Record<ItemCategoriaEnum, readonly ItemCat
     { nome: 'Quebra-Átomos', custo: 3500, peso: 4, dano: '2D12 [Químico]', informacao: 'Médio · Mun: Células de Plasma', descricao: 'Fuzil de plasma que desintegra alvos — 2 mãos', categoriaEmprestada: ItemCategoriaEnum.ARMAS_DE_FOGO },
   ],
   [ItemCategoriaEnum.ARMAZENAMENTO]: [
-    { nome: 'Bolso de Corpo', custo: 75, peso: 0.1, bonus: '+1 inv.', descricao: 'Pequeno bolso corporal discreto' },
-    { nome: 'Pochete', custo: 200, peso: 0.2, bonus: '+2 inv.', descricao: 'Pochete compacta de cintura' },
+    {
+      nome: 'Bolso de Corpo',
+      custo: 75,
+      peso: 0.1,
+      bonus: '+1 inv.',
+      descricao: 'Pequeno bolso corporal discreto',
+      inventarioProprio: {},
+      modificacoesPermitidas: ['Bolso Tático'],
+    },
+    {
+      nome: 'Pochete',
+      custo: 200,
+      peso: 0.2,
+      bonus: '+2 inv.',
+      descricao: 'Pochete compacta de cintura',
+      inventarioProprio: {
+        categoriasPermitidas: [ItemCategoriaEnum.MUNICOES, ItemCategoriaEnum.OPERACIONAL, ItemCategoriaEnum.MEDICINAL],
+      },
+    },
     { nome: 'Mochila Pequena', custo: 300, peso: 0.3, bonus: '+3 inv.', descricao: 'Mochila leve para missões rápidas' },
     { nome: 'Mochila Mediana', custo: 750, peso: 0.5, bonus: '+6 inv.', descricao: 'Mochila tática de uso geral' },
     { nome: 'Mochila Grande', custo: 1200, peso: 0.7, bonus: '+9 inv.', descricao: 'Mochila de grande capacidade' },

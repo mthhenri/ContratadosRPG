@@ -836,16 +836,15 @@
     }
   }
 
-  // === Lista rolável (itens + amplificadores) ===
-  // Sem teto por padrão (modo `inline`, aba antiga — ocupava a página inteira). No modo `dialog`
-  // (`--compacto` no fim do arquivo) ganha um teto fixo + rolagem própria, pra não esticar a
+  // === Lista rolável (itens) e a de Amplificadores/Fragmentos — mesma máscara de fade nos dois ===
+  // `&__lista`: sem teto por padrão (modo `inline`, aba antiga — ocupava a página inteira); no modo
+  // `dialog` (`--compacto` no fim do arquivo) ganha teto fixo + rolagem própria, pra não esticar a
   // coluna Status além da altura da coluna de Identidade vizinha (mesmo raciocínio de
-  // `.sanidade__lista`/`.ficha-status__anotacoes` na visualização).
-  &__lista {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-
+  // `.sanidade__lista`/`.ficha-status__anotacoes` na visualização). `&__amps`: teto fixo sempre
+  // (m3-44 — item 19), pra a seção de Amplificadores/Fragmentos não crescer sem fim e estourar
+  // 1920×1080 junto com a lista principal de itens.
+  &__lista,
+  &__amps {
     --fade-topo: 0px;
     --fade-base: 0px;
     &.overflow-fade--topo,
@@ -871,6 +870,12 @@
     &.overflow-fade--base {
       --fade-base: 20px;
     }
+  }
+
+  &__lista {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
 
   // === Grade dupla de Medicinal/Operacional (misturados, ordenados por nome) ===
@@ -1139,17 +1144,138 @@
     }
   }
 
-  // === Amplificadores ===
+  // === Amplificadores / Fragmentos (mesma seção-lista, m3-44 — item 19) ===
+  // Teto fixo + rolagem própria (fade no `&__lista, &__amps` acima) — impede que a seção cresça sem
+  // fim e estoure a restrição de caber em 1920×1080 junto com a lista principal de itens.
   &__amps {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 4px;
 
     &-cabecalho {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px 10px;
       font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--text-dim);
+    }
+  }
+
+  // === Amplificadores em grade de 2 colunas (m3-44 — item 12; 1 no mobile) ===
+  &__grade-amps {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+
+    @include bp.mobile {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  // === Sub-inventário próprio (Pochete/Bolso de Corpo, m3-44 — item 14) ===
+  // Mesma "caixa" de `&__cartao`/`&__form`, com cabeçalho no padrão de `&__amps-cabecalho`.
+  &__subinventario {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    padding: 12px;
+
+    &--aviso {
+      border-color: var(--accent-border);
+
+      .ficha-inv__amps-cabecalho {
+        color: var(--accent);
+      }
+    }
+  }
+  &__subinventario-restricao {
+    font-size: 11px;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--text-mute);
+  }
+
+  // === "Mover para" (m3-44 — mover item para um Pochete/Bolso de Corpo vestido) ===
+  // Popover próprio (não `<select>` nativo — o popup nativo não é temável de verdade, mesmo com
+  // `color-scheme: dark` global; aqui os tokens do tema valem 100%). `position: relative` no
+  // wrapper ancora a lista absoluta (`&-lista`) logo abaixo do gatilho.
+  &__mover {
+    position: relative;
+    display: inline-flex;
+  }
+  &__mover-gatilho {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 5px 8px;
+    max-width: 150px;
+    cursor: pointer;
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    app-icone {
+      display: inline-flex;
+      flex: none;
+      width: 14px;
+      height: 14px;
+    }
+    &[aria-expanded='true'] {
+      color: var(--text);
+      border-color: var(--accent-border);
+    }
+  }
+  &__mover-lista {
+    position: absolute;
+    z-index: 5;
+    top: calc(100% + 4px);
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    min-width: 160px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 4px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  }
+  &__mover-opcao {
+    text-align: left;
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-control);
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 7px 8px;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--surface-2);
+      color: var(--text);
+    }
+    &--ativa {
+      color: var(--accent);
+      background: var(--accent-dim);
     }
   }
 
@@ -1232,9 +1358,16 @@
     .ficha-inv__porte > span {
       display: none;
     }
-    // Coluna estreita demais pra 2 colunas de Medicinal/Operacional — cai pra 1.
+    // Coluna estreita demais pra 2 colunas de Medicinal/Operacional — cai pra 1. Amplificadores
+    // (m3-44 — item 12) mantém as 2 colunas aqui: a coluna Status já tem ~700px de sobra na
+    // grade de 3 colunas do desktop (m3-26), só cai pra 1 no breakpoint mobile do próprio
+    // `&__grade-amps`.
     .ficha-inv__grade-medop {
       grid-template-columns: 1fr;
+    }
+    // Teto menor pra Amplificadores/Fragmentos — já vive dentro do teto de 480px do `&__lista`.
+    .ficha-inv__amps {
+      max-height: 220px;
     }
   }
 }

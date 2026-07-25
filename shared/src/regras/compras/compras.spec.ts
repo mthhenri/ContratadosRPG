@@ -13,6 +13,7 @@ import {
   descreverEfeitosModificacao,
   interpretarBonusArmazenamento,
   listarModificacoesDisponiveis,
+  listarSubInventarios,
   obterCategoriaEmprestada,
   obterCustoModificacao,
   obterLimiteModificacoes,
@@ -81,6 +82,29 @@ describe('listarModificacoesDisponiveis — "Apenas escudos" (Combativo/Arremess
       modificacoes: [mod('Combativo', 1)],
     });
     expect(obterCategoriaEmprestada(coleteCombativo)).toBeNull();
+  });
+});
+
+/** Bug de m3-44: "Bolso de Corpo" oferecia todas as mods de Armazenamento (doc — "Apenas pode aplicar a modificação Bolso Tático"). */
+describe('listarModificacoesDisponiveis — restrição por item (m3-44, "modificacoesPermitidas")', () => {
+  it('"Bolso de Corpo" só oferece "Bolso Tático", nenhuma outra mod de Armazenamento', () => {
+    const bolso = montarItem({ nome: 'Bolso de Corpo', categoria: ItemCategoriaEnum.ARMAZENAMENTO });
+    const nomes = listarModificacoesDisponiveis(bolso).map((modificacao) => modificacao.nome);
+    expect(nomes).toEqual(['Bolso Tático']);
+  });
+
+  it('uma Mochila comum continua oferecendo todas as mods de Armazenamento (sem restrição)', () => {
+    const mochila = montarItem({ nome: 'Mochila Pequena', categoria: ItemCategoriaEnum.ARMAZENAMENTO });
+    const nomes = listarModificacoesDisponiveis(mochila).map((modificacao) => modificacao.nome);
+    expect(nomes).toEqual(
+      expect.arrayContaining(['Compartimentos Extras', 'Bolso Tático', 'Camadas Extras', 'Espaço Reservado', 'Arsenal Reserva', 'Distribuição de Peso']),
+    );
+  });
+
+  it('"Pochete" não tem restrição de modificações (só de categoria de item aceito dentro dela)', () => {
+    const pochete = montarItem({ nome: 'Pochete', categoria: ItemCategoriaEnum.ARMAZENAMENTO });
+    const nomes = listarModificacoesDisponiveis(pochete).map((modificacao) => modificacao.nome);
+    expect(nomes).toContain('Compartimentos Extras');
   });
 });
 
@@ -382,6 +406,125 @@ describe('calcularTotaisCarrinho', () => {
     // Guardada: pesa só o item base (mods de armazenamento têm peso 0) e não amplia inventário.
     expect(totais.pesoUsado).toBe(0.5);
     expect(totais.bonusInventario).toBe(0);
+  });
+
+  /** Bug de m3-44 (item 14): Pochete/Bolso de Corpo têm inventário separado, não ampliam o principal. */
+  describe('sub-inventário próprio (Pochete/Bolso de Corpo, m3-44)', () => {
+    it('vestida, não soma o bônus de uma Pochete no inventário principal', () => {
+      const totais = calcularTotaisCarrinho({
+        itens: [montarItem({ nome: 'Pochete', categoria: ItemCategoriaEnum.ARMAZENAMENTO, custo: 200, peso: 0.2, id: 'poch-1' })],
+        amplificadores: [],
+      });
+      expect(totais.bonusInventario).toBe(0);
+      expect(totais.pesoUsado).toBe(0);
+    });
+
+    it('um item com containerId não pesa contra o inventário principal, mesmo fora de qualquer container real', () => {
+      const totais = calcularTotaisCarrinho({
+        itens: [
+          montarItem({ nome: '9mm', categoria: ItemCategoriaEnum.MUNICOES, peso: 0.5, quantidade: 4, containerId: 'poch-1' }),
+        ],
+        amplificadores: [],
+      });
+      expect(totais.pesoUsado).toBe(0);
+    });
+
+    it('Mochila comum (sem inventarioProprio) continua ampliando o principal normalmente', () => {
+      const totais = calcularTotaisCarrinho({
+        itens: [montarItem({ nome: 'Mochila Pequena', categoria: ItemCategoriaEnum.ARMAZENAMENTO, custo: 300, peso: 0.3 })],
+        amplificadores: [],
+      });
+      expect(totais.bonusInventario).toBe(3);
+    });
+
+    // A UI não deixa mover um armazenamento pra dentro de outro (proteção contra o
+    // caso do usuário: "Mochila Mediana" dentro de "Bolso de Corpo" mostrava +6 inv. duplicado no
+    // principal E contando peso no sub-inventário) — o motor não confia só nisso.
+    it('um armazenamento comum com `containerId` (defesa: não deveria acontecer pela UI) não soma bônus nem peso no principal', () => {
+      const totais = calcularTotaisCarrinho({
+        itens: [
+          montarItem({ nome: 'Bolso de Corpo', categoria: ItemCategoriaEnum.ARMAZENAMENTO, custo: 75, peso: 0.1, id: 'bolso-1' }),
+          montarItem({
+            nome: 'Mochila Pequena',
+            categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+            custo: 300,
+            peso: 0.3,
+            containerId: 'bolso-1',
+          }),
+        ],
+        amplificadores: [],
+      });
+      expect(totais.bonusInventario).toBe(0);
+      expect(totais.pesoUsado).toBe(0);
+    });
+  });
+});
+
+describe('listarSubInventarios (m3-44)', () => {
+  it('devolve vazio sem containers vestidos', () => {
+    expect(listarSubInventarios([])).toEqual([]);
+    const guardada = montarItem({ nome: 'Pochete', categoria: ItemCategoriaEnum.ARMAZENAMENTO, id: 'poch-1', guardada: true });
+    expect(listarSubInventarios([guardada])).toEqual([]);
+  });
+
+  it('ignora um container sem `id` (de antes da m3-44)', () => {
+    const semId = montarItem({ nome: 'Pochete', categoria: ItemCategoriaEnum.ARMAZENAMENTO });
+    expect(listarSubInventarios([semId])).toEqual([]);
+  });
+
+  it('ignora um armazenamento comum (Mochila) — não tem `inventarioProprio`', () => {
+    const mochila = montarItem({ nome: 'Mochila Pequena', categoria: ItemCategoriaEnum.ARMAZENAMENTO, id: 'moch-1' });
+    expect(listarSubInventarios([mochila])).toEqual([]);
+  });
+
+  it('uma Pochete vestida abre sub-inventário com capacidade 2 e a categoria permitida', () => {
+    const pochete = montarItem({ nome: 'Pochete', categoria: ItemCategoriaEnum.ARMAZENAMENTO, id: 'poch-1' });
+    const subInventarios = listarSubInventarios([pochete]);
+    expect(subInventarios).toHaveLength(1);
+    expect(subInventarios[0]).toMatchObject({
+      containerId: 'poch-1',
+      nomeContainer: 'Pochete',
+      capacidade: 2,
+      pesoUsado: 0,
+      categoriasPermitidas: [ItemCategoriaEnum.MUNICOES, ItemCategoriaEnum.OPERACIONAL, ItemCategoriaEnum.MEDICINAL],
+    });
+  });
+
+  it('soma o peso dos itens com containerId apontando pra este container (não os de outro)', () => {
+    const pochete = montarItem({ nome: 'Pochete', categoria: ItemCategoriaEnum.ARMAZENAMENTO, id: 'poch-1' });
+    const municao = montarItem({
+      nome: '9mm',
+      categoria: ItemCategoriaEnum.MUNICOES,
+      peso: 0.5,
+      quantidade: 3,
+      containerId: 'poch-1',
+    });
+    const deOutraPochete = montarItem({
+      nome: '10mm',
+      categoria: ItemCategoriaEnum.MUNICOES,
+      peso: 0.7,
+      containerId: 'outra-pochete',
+    });
+    const subInventarios = listarSubInventarios([pochete, municao, deOutraPochete]);
+    expect(subInventarios[0].pesoUsado).toBe(1.5);
+    expect(subInventarios[0].itens).toEqual([municao]);
+  });
+
+  it('um Bolso de Corpo vestido abre sub-inventário com capacidade 1 e sem restrição de categoria', () => {
+    const bolso = montarItem({ nome: 'Bolso de Corpo', categoria: ItemCategoriaEnum.ARMAZENAMENTO, id: 'bolso-1' });
+    const subInventarios = listarSubInventarios([bolso]);
+    expect(subInventarios[0].capacidade).toBe(1);
+    expect(subInventarios[0].categoriasPermitidas).toBeUndefined();
+  });
+
+  it('usa o apelido do container como nomeContainer quando definido (m3-33)', () => {
+    const pochete = montarItem({
+      nome: 'Pochete',
+      categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+      id: 'poch-1',
+      apelido: 'Pochete de campo',
+    });
+    expect(listarSubInventarios([pochete])[0].nomeContainer).toBe('Pochete de campo');
   });
 });
 

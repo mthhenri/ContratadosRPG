@@ -156,6 +156,20 @@ export interface CarrinhoItemDto {
   readonly categoriaEmprestada?: ItemCategoriaEnum;
   /** Módulo do fragmento (I–V) — só nas categorias de Fragmento. */
   readonly modulo?: FragmentoModuloEnum;
+  /**
+   * Id estável desta instância (m3-44) — só atribuído a itens Armazenamento com sub-inventário
+   * próprio (`ItemCatalogo.inventarioProprio`: Pochete/Bolso de Corpo), pra que outros itens o
+   * referenciem via `containerId` mesmo com o array reordenado/filtrado. Ausente nos demais itens
+   * (inclusive armazenamento comum — Mochilas não precisam de identidade própria).
+   */
+  readonly id?: string;
+  /**
+   * Quando presente, este item vive dentro do sub-inventário do item Armazenamento cujo `id` bate
+   * com este valor (m3-44 — Pochete/Bolso de Corpo) — não pesa contra o inventário principal, só
+   * contra a capacidade própria do container (`calcularBonusArmazenamentoItem` do container).
+   * Ausente = inventário principal (padrão, todo o comportamento anterior à m3-44).
+   */
+  readonly containerId?: string;
 }
 
 // ── Entradas das funções ─────────────────────────────────────────────────────
@@ -299,4 +313,25 @@ export interface ResumoComprasDto {
   readonly limiteAmplificadores: number;
   /** Penalidade acumulada em testes de Vontade (−2 por empilhamento além do 1º de cada amplificador). */
   readonly penalidadeVontade: number;
+}
+
+/**
+ * Um sub-inventário próprio (m3-44 — Pochete/Bolso de Corpo, `ItemCatalogo.inventarioProprio`):
+ * uma lista de itens separada do inventário principal, com sua própria capacidade. Só existe
+ * para um item Armazenamento **vestido** cujo catálogo marca `inventarioProprio` e que já tem
+ * `id` atribuído (containers antigos, de antes da m3-44, ainda sem `id`, não aparecem aqui até
+ * serem removidos/recriados). Espelha `listarSubInventarios`.
+ */
+export interface SubInventarioDto {
+  /** `id` do item container — mesmo valor que os itens dentro dele carregam em `containerId`. */
+  readonly containerId: string;
+  /** Nome exibido do container (apelido do jogador, senão o nome do catálogo). */
+  readonly nomeContainer: string;
+  /** Capacidade do sub-inventário (bônus do container — ex.: Pochete = 2, Bolso de Corpo = 1). */
+  readonly capacidade: number;
+  /** Peso já ocupado pelos itens dentro deste container. */
+  readonly pesoUsado: number;
+  /** Categorias que este container aceita (Pochete: Munições/Operacional/Medicinal) — aviso, não trava. */
+  readonly categoriasPermitidas?: readonly ItemCategoriaEnum[];
+  readonly itens: readonly CarrinhoItemDto[];
 }

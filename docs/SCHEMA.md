@@ -218,6 +218,15 @@ Contrato: `shared/src/dtos/ficha/ficha.dtos.ts`. Forma 1:1 com `sistema-v4.1.0.m
 }
 ```
 
+**Sub-inventários próprios (m3-44 — Pochete/Bolso de Corpo).** `CarrinhoItemDto` ganhou dois campos
+opcionais: `id?` (atribuído só a um item Armazenamento cujo catálogo marca `inventarioProprio` —
+hoje Pochete/Bolso de Corpo, doc: "Possui inventário separado") e `containerId?` (aponta pro `id` do
+container onde este item foi guardado). Um container vestido com `id` abre sua própria lista
+(`listarSubInventarios`, `shared/regras/compras`): a capacidade vem do `bonus` do catálogo, e os
+itens com `containerId` correspondente pesam só contra ela, nunca contra o inventário principal —
+`calcularTotaisCarrinho` exclui os dois dos totais do pool principal. Containers de antes desta task
+(sem `id`) continuam se comportando como um armazenamento comum até serem removidos/recriados.
+
 **Nada é exclusivamente calculado — todo derivado é persistido (revisto em `m3-10`).** O princípio
 antigo ("nenhum derivado persistido") foi **invertido**: **tudo o que aparece na ficha existe no
 banco**. Na **criação**, `shared/regras` calcula os derivados uma vez e eles são **gravados** no bloco

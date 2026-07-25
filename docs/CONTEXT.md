@@ -1,6 +1,92 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-25 (**m3-43 — bugs de modificadores em Combate**: 4ª task do lote de
+> Última atualização: 2026-07-25 (**m3-44 — Inventário: sub-inventários/listas**: 5ª task do lote
+> de refino `m3-40`…`m3-56` implementada, em quatro entregáveis. **Item 14 (Pochete/Bolso de Corpo
+> como inventários separados):** `ItemCatalogo` (`shared/regras/compras/catalogo.dados.ts`) ganhou
+> `inventarioProprio?: { categoriasPermitidas? }` — marcado só nos dois itens do doc que "possuem
+> inventário separado" (Pochete: só Munições/Operacional/Medicinal; Bolso de Corpo: sem restrição,
+> doc — "Apenas 1 item de até 1 de peso", aqui só um aviso de capacidade, não uma trava dura, mesma
+> filosofia "liberdade total" do resto do motor). `CarrinhoItemDto` ganhou dois campos opcionais:
+> `id?` (atribuído só a um container com `inventarioProprio`, gerado por `crypto.randomUUID()` na
+> criação — `ficha-inventario.component.ts#comIdDeContainerSeNecessario`) e `containerId?` (aponta
+> pro `id` do container onde o item foi guardado). Nova `calcularBonusArmazenamentoItem(item)`
+> (extraída do bloco de bônus de armazenamento de `calcularStatItem`) e nova
+> `listarSubInventarios(itens)` (ambas `shared/regras/compras/compras.ts`) — um container vestido
+> com `inventarioProprio` e `id` abre sua própria lista, cuja capacidade é o `bonus` do catálogo;
+> `calcularTotaisCarrinho` foi ajustada para **excluir** tanto o bônus desses containers quanto o
+> peso de itens com `containerId` do pool principal (nunca contam duas vezes). Containers de antes
+> desta task (sem `id`) continuam se comportando como armazenamento comum até serem
+> removidos/recriados — retrocompat sem migração. **Item 19 (lista própria de Fragmentos):**
+> `ORDEM_CATEGORIAS_LISTA` perdeu as duas categorias de Fragmento; novo computed
+> `itensListaFragmentos` monta uma seção própria abaixo da grade de Medicinal/Operacional, no mesmo
+> padrão visual da lista de Amplificadores (`.ficha-inv__amps`, cabeçalho + itens). **Item 12
+> (Amplificadores em 2 colunas):** nova `.ficha-inv__grade-amps` (`grid-template-columns:
+> repeat(2, 1fr)`, 1 coluna no breakpoint mobile de `_breakpoints.scss`) envolvendo a lista de
+> amplificadores — descoberto ao vivo que o modo `dialog` (único usado de verdade, `apresentacao`
+> sempre `'dialog'` em `ficha-visualizacao.component.html`) tinha uma regra pré-existente forçando
+> `grid-template-columns: 1fr` na coluna estreita (herdada de Medicinal/Operacional); a régua real
+> da coluna Status mede ~700px no desktop (grade de 3 colunas da m3-26), então a nova classe foi
+> deixada de fora dessa regra — só Medicinal/Operacional (fora de escopo aqui) permanece em 1
+> coluna no modo compacto. **Restrição de layout (1920×1080):** `.ficha-inv__amps` (Amplificadores
+> e Fragmentos) ganhou teto fixo (420px, 220px no modo compacto) + rolagem própria + a mesma
+> máscara de fade de `.ficha-inv__lista` (selector combinado no SCSS), pra não crescer sem fim e
+> estourar a tela junto com a lista principal de itens. **Ação "Mover para":** cada item elegível
+> (fora de containers) ganhou um `<select>` compacto (`moverItemParaContainer`) listando os
+> containers abertos + "Inventário principal"; um item cujo `containerId` aponta pra um container
+> que deixou de estar ativo (guardado/removido) "cai" sozinho de volta pras listas principais
+> (`noInventarioPrincipal`, computed derivado do conjunto de `id`s ativos) — nunca fica invisível.
+> **Bugs achados e corrigidos em QA ao vivo com o autor, mesma task (antes de qualquer commit):**
+> (1) o `<select>` de "Mover para" não refletia o container atual do item — `[value]` no elemento
+> `<select>` some com o `<option>` gerado pelo `@for` na primeira renderização (a propriedade é
+> setada antes dos filhos existirem, e o Angular não reaplica em CD seguinte porque a string ligada
+> não muda); trocado por `[selected]` em cada `<option>` individualmente, que é robusto a essa
+> ordem. (2) itens de Armazenamento (mochilas comuns) podiam ser movidos **para dentro** de um
+> Pochete/Bolso de Corpo pelo mesmo seletor — sem sentido no domínio (mochila dentro de bolso) e
+> ainda deixava o bônus de inventário da mochila somando no pool principal **e** seu peso contando
+> no sub-inventário ao mesmo tempo; a condição do seletor virou `!item.ehArmazenamento` (nenhum
+> Armazenamento é "movível" mais, só o que já vinha implícito nos containers de `inventarioProprio`
+> — o campo `ehContainer` do view-model, que ficou sem uso, foi removido) e `calcularTotaisCarrinho`
+> ganhou uma defesa extra (`&& !item.containerId` no bônus de inventário) pro motor não confiar só
+> na UI. (3) "Bolso de Corpo" oferecia as 6 modificações de Armazenamento do catálogo, quando o doc
+> diz "Apenas pode aplicar a modificação Bolso Tático" — novo `ItemCatalogo.modificacoesPermitidas?`
+> (lista de nomes; ausente = sem restrição) filtra `listarModificacoesCategoria` quando a categoria
+> é a **própria** do item (não afeta mods emprestadas via Faz Parte/Combativo); só "Bolso de Corpo"
+> usa o campo hoje. (4) o `<select>` nativo do "Mover para" abria um popup do sistema (branco no
+> Chrome/Edge por padrão) que nenhum CSS de app estiliza de verdade — `color-scheme: dark` em
+> `:root` (`tema/_base.scss`) foi a primeira tentativa (avisa o navegador a usar a variante escura
+> nativa em qualquer controle sem CSS próprio — date/time picker, autofill também — mantido, é
+> ganho de graça em qualquer `<select>` que sobrar no app), mas o resultado ainda não batia com os
+> tokens do tema (cinza genérico do SO, não `--surface`/`--accent`); o "Mover para" virou um
+> **popover próprio** (`.ficha-inv__mover*`, botão-gatilho + lista posicionada em `position:
+> absolute` com `.ficha-inv__mover-opcao`/`--ativa`) — só ele, os demais `<select>` do componente
+> (categoria, módulo, "Aplicar em...") continuam nativos, fora de escopo aqui. `moverAbertoIndice`
+> (signal) controla qual item tem o menu aberto, mesmo padrão de painel único por vez de
+> `aplicandoFragmentoIndice`; não fecha em clique fora (mesma filosofia dos demais painéis inline
+> do componente — fecha ao escolher uma opção). **Testes:** shared
+> 429/429 (+14 no total desta task: `listarSubInventarios`/sub-inventário em
+> `calcularTotaisCarrinho` + `modificacoesPermitidas`/defesa de `containerId`, `compras.spec.ts`),
+> frontend 459/460 (+11: sub-inventários, mover para/de volta, Fragmentos em seção própria, grade de
+> Amplificadores, popover "Mover para" sem `<select>` nativo, restrição de mods do Bolso de Corpo —
+> `ficha-inventario.component.spec.ts`; a 1 falha remanescente é a mesma pré-existente e
+> não-relacionada — apelido de equipamento, `ResizeObserver`), backend sem mudança (task não tocou o
+> backend); build limpo nos 3 workspaces (mesmo aviso de budget pré-existente do `ng build`, 591.31
+> kB vs. 580 kB). **Verificado ao vivo** (Postgres local, backend+frontend reais, Playwright,
+> 1920×1080 e 390×844): Pochete vestida com 4× "9mm" guardadas mostra a seção própria "Pochete —
+> 2/2 · Só Munições, Operacional, Medicinal" com a munição dentro e fora da lista principal; seção
+> "Fragmentos" separada da lista de itens; grade de Amplificadores confirmada em 2 colunas
+> (`grid-template-columns` computado: `362px 362px`) a 1920px e 1 coluna (`380px`) a 390px, sem
+> overflow horizontal (`scrollWidth − clientWidth = 0`) em nenhuma das duas larguras; mover "9mm"
+> para o Bolso de Corpo pelo popover persistiu `containerId: 'bolso-1'` via REST e o rótulo do
+> gatilho mostrou "Bolso de Corpo" tanto logo após mover quanto **depois de recarregar a página**
+> (prova do bug 1 corrigido, sem depender mais de `<select>`); os cartões de "Pochete"/"Bolso de
+> Corpo" confirmados **sem** o gatilho "Mover para" (bug 2); painel "Modificar" do Bolso de Corpo
+> mostrou só "Bolso Tático" (bug 3); popover capturado em screenshot com fundo `--surface`/borda
+> `--border-strong`/opção ativa em `--accent`, igual ao resto do tema (bug 4, revisado de
+> `color-scheme: dark` pro popover próprio depois que o autor apontou que ainda destoava). Spec em
+> `docs/specs/done/m3-44-inventario-sub-inventarios-listas.spec.md`. Próxima task: **`m3-45`**
+> (rolar dano nas armas).)
+>
+> (**m3-43 — bugs de modificadores em Combate**: 4ª task do lote de
 > refino `m3-40`…`m3-56` implementada. Três modificadores documentados que não tinham efeito
 > mecânico algum — todos descobertos por inspeção do código (nenhum reportado pelo autor nesta
 > task). **Item 16 (mods de armadura → Esquiva/Defesa):** as mods de Proteções "Flexível" (+1

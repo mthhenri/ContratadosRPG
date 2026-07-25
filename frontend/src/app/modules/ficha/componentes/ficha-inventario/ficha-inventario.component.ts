@@ -31,6 +31,7 @@ import {
   listarBonusFragmentoPotencializador,
   listarModificacoesCategoria,
   listarModificacoesDisponiveis,
+  listarSubInventarios,
   ModificacaoDados,
   ModificacaoEfeitoDto,
   obterCategoriaEmprestada,
@@ -40,6 +41,7 @@ import {
   OpcaoBonusFragmentoDto,
   PENALIDADE_VONTADE_POR_EMPILHAMENTO,
   PrecoSanidadeConsumoDto,
+  resolverDadosItem,
   SEQUELA_CONSUMO_FRAGMENTO,
   StatItemDto,
   verificarConflitoModificacao,
@@ -80,8 +82,10 @@ const CATEGORIAS_EMPILHAVEIS: readonly ItemCategoriaEnum[] = [
 
 /**
  * Ordem de exibição da lista principal do inventário: armas (corpo a corpo/fogo/explosivos/
- * exóticos) → munições → proteções → armazenamento → fragmentos. Medicinal/Operacional
- * (`CATEGORIAS_EMPILHAVEIS`) saem dessa lista — vão pra grade dupla ao final, ordenados por nome.
+ * exóticos) → munições → proteções → armazenamento. Medicinal/Operacional (`CATEGORIAS_EMPILHAVEIS`)
+ * saem dessa lista — vão pra grade dupla logo abaixo, ordenados por nome; Fragmentos
+ * (`CATEGORIAS_FRAGMENTO`) ganham seção própria mais abaixo ainda (m3-44 — item 19, mesmo padrão
+ * da lista de Amplificadores).
  */
 const ORDEM_CATEGORIAS_LISTA: readonly ItemCategoriaEnum[] = [
   ItemCategoriaEnum.CORPO_A_CORPO,
@@ -91,8 +95,6 @@ const ORDEM_CATEGORIAS_LISTA: readonly ItemCategoriaEnum[] = [
   ItemCategoriaEnum.MUNICOES,
   ItemCategoriaEnum.PROTECOES,
   ItemCategoriaEnum.ARMAZENAMENTO,
-  ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
-  ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
 ];
 
 /** Categorias que **não aceitam modificação** alguma (nem do catálogo, nem custom): consumíveis. */
@@ -258,6 +260,30 @@ interface ItemInventarioVM {
   readonly painelAberto: boolean;
   readonly modsAtivas: readonly ModAtivaVM[];
   readonly secoes: readonly SecaoModVM[];
+  /** `id` do container (m3-44) onde este item vive, ou `null` = inventário principal. */
+  readonly containerId: string | null;
+}
+
+/**
+ * Um destino do seletor "Mover para" (m3-44): um container próprio (Pochete/Bolso de Corpo)
+ * vestido no inventário, com vagas livres calculadas pelo motor (`listarSubInventarios`).
+ */
+interface ContainerDestinoVM {
+  readonly containerId: string;
+  readonly rotulo: string;
+}
+
+/** Um sub-inventário próprio (Pochete/Bolso de Corpo, m3-44) renderizado como lista distinta. */
+interface SubInventarioVM {
+  readonly containerId: string;
+  readonly nomeContainer: string;
+  readonly capacidade: number;
+  readonly pesoTexto: string;
+  /** `true` quando o peso dos itens dentro passa da capacidade do container — aviso, não trava. */
+  readonly excede: boolean;
+  /** Rótulo das categorias aceitas (Pochete), ou `null` quando o container aceita qualquer uma (Bolso de Corpo). */
+  readonly categoriasRotulo: string | null;
+  readonly itens: readonly ItemInventarioVM[];
 }
 
 /** Amplificador renderizado no inventário. */
@@ -426,6 +452,14 @@ export class FichaInventario {
   );
   protected readonly categoriasEmprestaveis = CATEGORIAS_EMPRESTAVEIS;
   protected readonly modulosFragmento = MODULOS_FRAGMENTO;
+
+  /**
+   * Índice do item com o menu "Mover para" (m3-44) aberto, ou `null`. Popover próprio (não
+   * `<select>` nativo — o popup nativo não é temável, destoa do tema dark-first) na mesma linha
+   * de raciocínio dos demais painéis inline (`aplicandoFragmentoIndice` etc.): fica aberto até uma
+   * opção ser escolhida, sem fechar em clique fora (mesmo padrão do resto do componente).
+   */
+  protected readonly moverAbertoIndice = signal<number | null>(null);
 
   /** Índice do fragmento Potencializador cujo painel "Aplicar em..." está aberto (m3-35), ou `null`. */
   protected readonly aplicandoFragmentoIndice = signal<number | null>(null);
@@ -639,14 +673,21 @@ export class FichaInventario {
   );
 
   /**
-   * Lista principal (tudo menos Medicinal/Operacional): armas (corpo a corpo/fogo/explosivos/
-   * exóticos) → munições → proteções → armazenamento → fragmentos (`ORDEM_CATEGORIAS_LISTA`).
-   * A ordem dentro da mesma categoria é a do inventário real (`sort` é estável).
+   * Lista principal (tudo menos Medicinal/Operacional e Fragmentos): armas (corpo a corpo/fogo/
+   * explosivos/exóticos) → munições → proteções → armazenamento (`ORDEM_CATEGORIAS_LISTA`). A ordem
+   * dentro da mesma categoria é a do inventário real (`sort` é estável). Itens **dentro** de um
+   * container próprio (`containerId`, m3-44 — Pochete/Bolso de Corpo) saem daqui: aparecem só na
+   * seção de sub-inventário do próprio container (`subInventarios`), nunca duplicados.
    */
   protected readonly itensListaPrincipal = computed<readonly ItemInventarioVM[]>(() => {
     const ordem = new Map(ORDEM_CATEGORIAS_LISTA.map((categoria, indiceOrdem) => [categoria, indiceOrdem]));
     return this.itensInventarioFiltrados()
-      .filter((item) => !CATEGORIAS_EMPILHAVEIS.includes(item.categoria))
+      .filter(
+        (item) =>
+          !CATEGORIAS_EMPILHAVEIS.includes(item.categoria) &&
+          !CATEGORIAS_FRAGMENTO.includes(item.categoria) &&
+          this.noInventarioPrincipal(item),
+      )
       .slice()
       .sort((a, b) => (ordem.get(a.categoria) ?? ORDEM_CATEGORIAS_LISTA.length) - (ordem.get(b.categoria) ?? ORDEM_CATEGORIAS_LISTA.length));
   });
@@ -654,10 +695,66 @@ export class FichaInventario {
   /** Medicinal + Operacional misturados numa grade de 2 colunas, ordenados por nome exibido. */
   protected readonly itensListaMedicinalOperacional = computed<readonly ItemInventarioVM[]>(() =>
     this.itensInventarioFiltrados()
-      .filter((item) => CATEGORIAS_EMPILHAVEIS.includes(item.categoria))
+      .filter((item) => CATEGORIAS_EMPILHAVEIS.includes(item.categoria) && this.noInventarioPrincipal(item))
       .slice()
       .sort((a, b) => a.nomeExibido.localeCompare(b.nomeExibido, 'pt-BR')),
   );
+
+  /**
+   * Fragmentos (Construtor + Potencializador) em seção própria (m3-44 — item 19), no mesmo padrão
+   * da lista de Amplificadores: Construtor antes de Potencializador, estável dentro da categoria.
+   */
+  protected readonly itensListaFragmentos = computed<readonly ItemInventarioVM[]>(() => {
+    const ordem = new Map(CATEGORIAS_FRAGMENTO.map((categoria, indiceOrdem) => [categoria, indiceOrdem]));
+    return this.itensInventarioFiltrados()
+      .filter((item) => CATEGORIAS_FRAGMENTO.includes(item.categoria) && this.noInventarioPrincipal(item))
+      .slice()
+      .sort((a, b) => (ordem.get(a.categoria) ?? 0) - (ordem.get(b.categoria) ?? 0));
+  });
+
+  /**
+   * Sub-inventários próprios abertos (m3-44 — Pochete/Bolso de Corpo vestidos): cada container vira
+   * uma lista distinta com sua própria capacidade (`shared/regras/compras#listarSubInventarios`,
+   * fonte única do cálculo — proibições #26/#27). Não passa pela busca de itens (listas pequenas,
+   * sempre visíveis por inteiro).
+   */
+  protected readonly subInventarios = computed<readonly SubInventarioVM[]>(() => {
+    const todosItens = this.itensInventario();
+    return listarSubInventarios(this.inventario().itens).map((sub) => ({
+      containerId: sub.containerId,
+      nomeContainer: sub.nomeContainer,
+      capacidade: sub.capacidade,
+      pesoTexto: `${this.formatarPeso(sub.pesoUsado)} / ${this.formatarPeso(sub.capacidade)}`,
+      excede: sub.pesoUsado > sub.capacidade,
+      categoriasRotulo: sub.categoriasPermitidas?.map((categoria) => this.rotuloCategoria(categoria)).join(', ') ?? null,
+      itens: todosItens.filter((item) => item.containerId === sub.containerId),
+    }));
+  });
+
+  /** Destinos do menu "Mover para" (m3-44): um container próprio vestido por sub-inventário aberto. */
+  protected readonly containersDisponiveis = computed<readonly ContainerDestinoVM[]>(() =>
+    this.subInventarios().map((sub) => ({ containerId: sub.containerId, rotulo: sub.nomeContainer })),
+  );
+
+  /** Rótulo do container atual de um item pro gatilho do menu "Mover para" — "Inventário principal" quando `null` ou o container não existe mais. */
+  protected rotuloContainerAtual(containerId: string | null): string {
+    if (containerId === null) {
+      return 'Inventário principal';
+    }
+    return this.containersDisponiveis().find((destino) => destino.containerId === containerId)?.rotulo ?? 'Inventário principal';
+  }
+
+  /**
+   * `id`s de containers com sub-inventário **ativo** agora (vestidos, com `id`). Um item cujo
+   * `containerId` não bate com nenhum destes "cai de volta" pro inventário principal sozinho — se o
+   * container foi guardado/removido, o item some da seção dele mas não fica invisível em lugar nenhum.
+   */
+  private readonly containerIdsAtivos = computed(() => new Set(this.subInventarios().map((sub) => sub.containerId)));
+
+  /** `true` quando o item deve aparecer nas listas do inventário **principal** (fora de um sub-inventário ativo). */
+  private noInventarioPrincipal(item: ItemInventarioVM): boolean {
+    return item.containerId === null || !this.containerIdsAtivos().has(item.containerId);
+  }
 
   /** Alvos válidos pro "Aplicar em..." de um fragmento Potencializador — qualquer item, menos fragmentos. */
   protected readonly alvosFragmentoDisponiveis = computed<readonly { indice: number; rotulo: string }[]>(
@@ -835,25 +932,39 @@ export class FichaInventario {
    * apelido (ou de apelido diferente) de mesma categoria/nome.
    */
   private inserirItem(novo: CarrinhoItemDto): void {
+    const item = this.comIdDeContainerSeNecessario(novo);
     const itens = this.inventario().itens;
-    const empilhavel = CATEGORIAS_EMPILHAVEIS.includes(novo.categoria);
+    const empilhavel = CATEGORIAS_EMPILHAVEIS.includes(item.categoria);
     const indiceExistente = empilhavel
       ? itens.findIndex(
-          (item) =>
-            item.categoria === novo.categoria &&
-            item.nome === novo.nome &&
-            (item.apelido ?? null) === (novo.apelido ?? null),
+          (atual) =>
+            atual.categoria === item.categoria &&
+            atual.nome === item.nome &&
+            (atual.apelido ?? null) === (item.apelido ?? null),
         )
       : -1;
     if (indiceExistente >= 0) {
       this.emitirItens(
-        itens.map((item, indice) =>
-          indice === indiceExistente ? { ...item, quantidade: item.quantidade + 1 } : item,
+        itens.map((atual, indice) =>
+          indice === indiceExistente ? { ...atual, quantidade: atual.quantidade + 1 } : atual,
         ),
       );
       return;
     }
-    this.emitirItens([...itens, novo]);
+    this.emitirItens([...itens, item]);
+  }
+
+  /**
+   * Atribui um `id` estável (m3-44) a um item recém-criado que abre sub-inventário próprio
+   * (Pochete/Bolso de Corpo, `ItemCatalogo.inventarioProprio`) — os itens colocados dentro dele
+   * vão referenciar esse `id` via `containerId`. Os demais armazenamentos (Mochilas comuns) e
+   * todas as outras categorias não precisam de `id`.
+   */
+  private comIdDeContainerSeNecessario(item: CarrinhoItemDto): CarrinhoItemDto {
+    if (item.id || item.categoria !== ItemCategoriaEnum.ARMAZENAMENTO) {
+      return item;
+    }
+    return resolverDadosItem(item)?.inventarioProprio ? { ...item, id: crypto.randomUUID() } : item;
   }
 
   /** Chave estável de um cartão do catálogo (mesma do `track` do template) — indexa o feedback "✓". */
@@ -1104,6 +1215,31 @@ export class FichaInventario {
         i === indice ? { ...item, equipado: !item.equipado } : item,
       ),
     );
+  }
+
+  /**
+   * Move um item para dentro de um container próprio (`containerId`, m3-44 — Pochete/Bolso de
+   * Corpo) ou de volta ao inventário principal (`null`). Sem trava de categoria/capacidade — a
+   * seção do container e a linha "Inventário" marcam excedente como **aviso**, mesma filosofia
+   * "liberdade total" do resto do motor.
+   */
+  protected moverItemParaContainer(indice: number, containerId: string | null): void {
+    this.emitirItens(
+      this.inventario().itens.map((item, i) =>
+        i === indice ? { ...item, containerId: containerId ?? undefined } : item,
+      ),
+    );
+  }
+
+  /** Abre/fecha o menu "Mover para" (m3-44) de um item — só um por vez, como o painel "Modificar". */
+  protected alternarMover(indice: number): void {
+    this.moverAbertoIndice.update((atual) => (atual === indice ? null : indice));
+  }
+
+  /** Escolhe um destino no menu "Mover para" (m3-44): move o item e fecha o menu. */
+  protected escolherContainer(indice: number, containerId: string | null): void {
+    this.moverItemParaContainer(indice, containerId);
+    this.moverAbertoIndice.set(null);
   }
 
   /** Abre a edição inline do apelido (m3-33) — só para categorias não-empilháveis. */
@@ -1640,6 +1776,7 @@ export class FichaInventario {
       painelAberto: this.painelAbertos().has(indice),
       modsAtivas,
       secoes: this.montarSecoes(item, modsUsados, limite),
+      containerId: item.containerId ?? null,
     };
   }
 
