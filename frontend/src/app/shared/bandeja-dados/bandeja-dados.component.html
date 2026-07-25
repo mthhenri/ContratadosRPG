@@ -28,50 +28,57 @@
               <code class="bandeja__formula">{{ entrada.formula }}</code>
             }
 
-            <div class="bandeja__corpo">
-              <span class="bandeja__total" [class.bandeja__total--critico]="ehCritico(entrada.resultado)">
-                {{ entrada.resultado.total }}
-                @if (entrada.resultado.critico) {
-                  <span class="bandeja__critico-badge">crítico ×2</span>
-                }
-              </span>
+            <div class="bandeja__resultados">
+              @for (resultado of resultadosExibidos(entrada); track $index) {
+                <div class="bandeja__corpo">
+                  <span class="bandeja__total" [class.bandeja__total--critico]="ehCritico(resultado)">
+                    {{ resultado.total }}
+                    @if ($count > 1) {
+                      <span class="bandeja__indice-badge">{{ $index + 1 }}/{{ $count }}</span>
+                    }
+                    @if (resultado.critico) {
+                      <span class="bandeja__critico-badge">crítico ×2</span>
+                    }
+                  </span>
 
-              <div class="bandeja__detalhe">
-                @if (entrada.resultado.dados.length) {
-                  <div class="bandeja__pool">
-                    @for (dado of entrada.resultado.dados; track $index) {
-                      <span class="bandeja__dado-termo">
-                        <span class="bandeja__dado-nota">{{ (dado.sinal < 0 ? '−' : '') + dado.valores.length + 'D' + dado.faces }}</span>
-                        @for (marcado of dadosMarcados(dado); track $index) {
-                          <span
-                            class="bandeja__dado"
-                            [class.bandeja__dado--escolhido]="dado.mantidos && marcado.mantido"
-                            [class.bandeja__dado--descartado]="dado.mantidos && !marcado.mantido"
-                          >
-                            {{ marcado.valor }}
+                  <div class="bandeja__detalhe">
+                    @if (resultado.dados.length) {
+                      <div class="bandeja__pool">
+                        @for (dado of resultado.dados; track $index) {
+                          <span class="bandeja__dado-termo">
+                            <span class="bandeja__dado-nota">{{ (dado.sinal < 0 ? '−' : '') + dado.valores.length + 'D' + dado.faces }}</span>
+                            @for (marcado of dadosMarcados(dado); track $index) {
+                              <span
+                                class="bandeja__dado"
+                                [class.bandeja__dado--escolhido]="dado.mantidos && marcado.mantido"
+                                [class.bandeja__dado--descartado]="dado.mantidos && !marcado.mantido"
+                              >
+                                {{ marcado.valor }}
+                              </span>
+                            }
+                            @if (dado.desvantagem) {
+                              <span class="bandeja__desvantagem">desvantagem</span>
+                            }
+                            @if (dado.criticos) {
+                              <span class="bandeja__critico">◆ {{ dado.criticos }}</span>
+                            }
                           </span>
                         }
-                        @if (dado.desvantagem) {
-                          <span class="bandeja__desvantagem">desvantagem</span>
+                      </div>
+                    }
+                    @if (resultado.grupos; as grupos) {
+                      <div class="bandeja__grupos">
+                        @for (grupo of grupos; track grupo.tipoDano) {
+                          <span class="bandeja__grupo">{{ grupo.tipoDano }} {{ grupo.total }}</span>
                         }
-                        @if (dado.criticos) {
-                          <span class="bandeja__critico">◆ {{ dado.criticos }}</span>
-                        }
-                      </span>
+                      </div>
+                    }
+                    @if (modificadoresSoma(resultado); as mods) {
+                      <span class="bandeja__legenda">{{ mods }}</span>
                     }
                   </div>
-                }
-                @if (entrada.resultado.grupos; as grupos) {
-                  <div class="bandeja__grupos">
-                    @for (grupo of grupos; track grupo.tipoDano) {
-                      <span class="bandeja__grupo">{{ grupo.tipoDano }} {{ grupo.total }}</span>
-                    }
-                  </div>
-                }
-                @if (modificadoresSoma(entrada.resultado); as mods) {
-                  <span class="bandeja__legenda">{{ mods }}</span>
-                }
-              </div>
+                </div>
+              }
             </div>
 
             <span class="bandeja__barra" aria-hidden="true"></span>

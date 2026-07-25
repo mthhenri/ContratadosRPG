@@ -41,7 +41,12 @@ export class BandejaDadosService {
   /** Rolagens recentes, da mais nova para a mais antiga (teto {@link LIMITE_ENTRADAS}). */
   readonly entradas = this._entradas.asReadonly();
 
-  /** Mostra uma rolagem à direita da bandeja (as anteriores deslizam para a esquerda) e agenda o auto-sumir. */
+  /**
+   * Mostra uma rolagem à direita da bandeja (as anteriores deslizam para a esquerda) e agenda o
+   * auto-sumir. Repetição `(<fórmula>)#N` (m3-46): quando `resultado.subResultados` tem 2+ rolagens
+   * independentes, elas continuam **uma única carta** (o componente `BandejaDados` itera
+   * `subResultados` dentro da mesma carta) — o chamador não precisa saber disso.
+   */
   mostrar(entrada: {
     readonly rotulo: string;
     readonly formula?: string;

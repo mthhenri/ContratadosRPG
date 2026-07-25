@@ -1,6 +1,40 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-25 (**m3-45 — Rolar dano da arma direto no card**: 6ª task do lote de
+> Última atualização: 2026-07-25 (**m3-46 — Gramática de rolagem v4**: task `m3-46` do lote de
+> refino `m3-40`…`m3-56` implementada — motor puro em `shared/regras/rolagem`, dois entregáveis.
+> **Parênteses no parser** (`interpretarFormula`/`interpretarSegmento`, `rolagem.ts`): o motor não
+> suportava `(`/`)` (rejeição cega); agora aceita só **duas formas sancionadas**, sem aninhamento
+> arbitrário — qualquer outro uso de parênteses continua erro de parse. Novo helper
+> `dividirTermosNivelSuperior` faz o split de termos por `+`/`−` respeitando profundidade de
+> parênteses (necessário pro `+` interno de `(ATR+n)`). **Item 21 — atributo+valor como quantidade
+> de dados** `(ATR±n)dM` (ex.: `(LUT+3)d20`): novo campo `quantidadeAtributoOffset?: number` em
+> `TermoDadoDto`; distinto do `ATRdM` já existente — **não** aciona a desvantagem intrínseca de
+> atributo zerado (regra 270), é uma contagem explícita, clampada em `[0, QUANTIDADE_DADOS_MAXIMA]`.
+> **Item 20 — repetição** `(<fórmula>)#N` (ex.: `(PONd20kh1cm1+PROF)#3`): novo campo
+> `repeticoes?: number` em `FormulaInterpretadaDto`, detectado por `extrairRepeticao` (só reconhece
+> quando os parênteses envolvem a fórmula **inteira**, nunca um trecho); repetição aninhada é erro
+> explícito. Teto `REPETICOES_MAXIMA = 20` (`rolagem.dados.ts`, mesmo espírito defensivo do
+> `QUANTIDADE_DADOS_MAXIMA`). `rolarInterpretada` (chamada por `rolarFormula`/`rolarPasso`) rola N
+> vezes **independentes** e devolve o novo `ResultadoRolagemDto.subResultados` — o objeto externo
+> espelha a 1ª rolagem por compatibilidade (zero mudança de assinatura pros call sites existentes).
+> **Decisão de UI sem pedir esclarecimento** (a spec deixava em aberto "como o resultado múltiplo
+> entra na UI"): a repetição continua **uma única carta** na bandeja — `BandejaDados`
+> (`frontend/.../bandeja-dados.component.ts`/`.html`) ganhou `resultadosExibidos(entrada)`
+> (`subResultados ?? [resultado]`) e o `@for` do corpo da carta agora itera essa lista, empilhando
+> um bloco de total+dados por rolagem (com o índice `N/total` e uma régua fina separando cada bloco,
+> via `.bandeja__resultados`/`.bandeja__corpo:not(:first-child)` no SCSS) em vez de abrir uma carta
+> por repetição; `BandejaDadosService.mostrar` não precisou mudar, e nenhum dos call sites que
+> chamam `bandeja.mostrar` sabe da repetição. Cheatsheet
+> (`guia-formula.component.ts`/`.html`) ganhou as duas seções novas e a nota "não use parênteses"
+> virou "só nos dois casos abaixo". **Testes:** shared 449/449 (+20 — offset positivo/negativo/
+> clamp, distinção da desvantagem, operadores por pool no offset, repetição simples/tags/crítico/
+> aninhamento rejeitado/teto, composição das duas formas, regressão dos casos de parênteses já
+> rejeitados antes). Frontend: `tsc --noEmit` limpo; sem spec de componente pra bandeja/guia-formula
+> ainda. Fora de escopo (conforme a spec): dados físicos 3D, crítico automático, aninhamento além do
+> mínimo viável. Spec em `docs/specs/done/m3-46-rolagem-gramatica-v4.spec.md`. Próxima task:
+> **`m3-47`** (iniciativa automática na criação da ficha).)
+>
+> (**m3-45 — Rolar dano da arma direto no card**: 6ª task do lote de
 > refino `m3-40`…`m3-56` implementada. Botão "Rolar dano" nos cards de item do Inventário
 > (`ficha-inventario.component.ts`/`.html`) para qualquer categoria com dano computável (não uma
 > lista fixa de categorias — o gate é `item.danoFormula !== null`, que na prática cobre

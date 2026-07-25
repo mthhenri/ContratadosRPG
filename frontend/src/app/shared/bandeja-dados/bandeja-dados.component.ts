@@ -2,7 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 
 import type { DadosRoladosDto, ResultadoRolagemDto } from '@contratados-rpg/shared/regras/rolagem';
 
-import { BandejaDadosService } from './bandeja-dados.service';
+import { BandejaDadosService, type EntradaBandeja } from './bandeja-dados.service';
 
 /** Largura fixa da carta e gap (casam com o SCSS) — usados para manter a mais nova centralizada. */
 const LARGURA_CARTA = 320;
@@ -34,6 +34,15 @@ export class BandejaDados {
   /** Opacidade por posição: a mais nova (índice 0, centralizada) cheia; o histórico à esquerda esmaece. */
   protected opacidade(indice: number): number {
     return Math.max(0.3, 1 - indice * 0.22);
+  }
+
+  /**
+   * Resultados a exibir **dentro de uma mesma carta** (m3-46): sem repetição `#N`, é só o próprio
+   * resultado; com `subResultados` (2+ rolagens independentes de `(<fórmula>)#N`), são todas elas —
+   * a carta empilha um bloco de total+dados por rolagem, em vez de abrir uma carta por repetição.
+   */
+  protected resultadosExibidos(entrada: EntradaBandeja): readonly ResultadoRolagemDto[] {
+    return entrada.resultado.subResultados ?? [entrada.resultado];
   }
 
   /**

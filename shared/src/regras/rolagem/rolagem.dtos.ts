@@ -2,13 +2,14 @@ import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto } from '../
 import type { TipoDanoEnum } from '../../enums';
 
 /**
- * DTOs do motor de rolagem (m3-15; dano tipado m3-18; gramática v3 m3-29): interpretação de uma fórmula
- * de dados (`NdM`, constantes, atributo `+LUT`, atributo-como-dado `FORd6`, escalonamento `FOR*3`) com
- * operadores **por pool** — manter maior/menor (`kh`/`kl`), margem de crítico (`cm`), explosão (`!`) e
- * implosão (`?`) — e **tags de tipo de dano** `[Tipo]`/`[TipoA-TipoB]`, e o resultado de rolá-la
- * agrupado por tipo. Não há mais "modo": um teste é a expressão explícita `LUTd20kh1 + PROF` (m3-29).
- * Funções puras em `rolagem.ts` — a única brecha a `Math.random` é a função de rolagem injetável
- * (SYSTEM.SPEC §6.6). Fonte: docs/core/sistema-v4.1.0.md — "Atributos"/"Testes"/"Tipos de Dano".
+ * DTOs do motor de rolagem (m3-15; dano tipado m3-18; gramática v3 m3-29; **gramática v4 m3-46**):
+ * interpretação de uma fórmula de dados (`NdM`, constantes, atributo `+LUT`, atributo-como-dado `FORd6`,
+ * escalonamento `FOR*3`) com operadores **por pool** — manter maior/menor (`kh`/`kl`), margem de crítico
+ * (`cm`), explosão (`!`) e implosão (`?`) — **tags de tipo de dano** `[Tipo]`/`[TipoA-TipoB]`, e desde a
+ * v4: **atributo+valor como quantidade de dados** `(ATR±n)dM` e **repetição** `(<fórmula>)#N`. Não há
+ * mais "modo": um teste é a expressão explícita `LUTd20kh1 + PROF` (m3-29). Funções puras em
+ * `rolagem.ts` — a única brecha a `Math.random` é a função de rolagem injetável (SYSTEM.SPEC §6.6).
+ * Fonte: docs/core/sistema-v4.1.0.md — "Atributos"/"Testes"/"Tipos de Dano".
  */
 
 /** Par de tipos de um dano **Composto** (`[A-B]`): a soma do segmento é dividida 50/50 (resto → A). */
@@ -34,6 +35,12 @@ export interface TermoDadoDto {
    * default 1 e é ignorada.
    */
   readonly quantidadeAtributo?: FonteEscalar;
+  /**
+   * `(ATR±n)dM` (m3-46): deslocamento somado ao valor da fonte antes de virar contagem de dados, ex.:
+   * `(LUT+3)d20` = (Luta + 3) dados de 20. Presente só nessa forma — distinto de `ATRdM` (sem offset),
+   * que mantém a desvantagem intrínseca (regra 270); `(ATR±n)dM` não tem essa desvantagem.
+   */
+  readonly quantidadeAtributoOffset?: number;
   readonly faces: number;
   /** `khN` (m3-29): mantém os N **maiores** do pool; subtotal = soma dos mantidos. */
   readonly manterMaior?: number;
@@ -84,6 +91,11 @@ export interface FormulaInterpretadaDto {
   readonly constante: number;
   /** Constantes com tag de dano (m3-18); presente só quando a fórmula usa tags. */
   readonly constantesTipadas?: readonly TermoConstanteDto[];
+  /**
+   * `(<fórmula>)#N` (m3-46): repete a fórmula inteira N vezes independentes. Ausente/1 = sem repetição.
+   * Definido só quando os parênteses envolvem a fórmula **inteira** — sem aninhamento.
+   */
+  readonly repeticoes?: number;
 }
 
 /** Saída de `interpretarFormula`: válida (com a fórmula) ou inválida (com o erro). */
@@ -154,6 +166,13 @@ export interface ResultadoRolagemDto {
   readonly total: number;
   /** `true` quando foi uma **rolagem de crítico** (m3-30): dados/fixos/atributos dobrados (exceto PROF/NIV). */
   readonly critico?: boolean;
+  /**
+   * Sub-resultados de uma repetição `(<fórmula>)#N` (m3-46): N rolagens **independentes** da mesma
+   * fórmula, presente só quando N ≥ 2. Inclui a própria rolagem como o 1º elemento — os campos de
+   * nível superior (`dados`/`total`/…) espelham essa 1ª rolagem por compatibilidade, mas quem exibe o
+   * resultado deve iterar `subResultados` para mostrar as N rolagens separadamente.
+   */
+  readonly subResultados?: readonly ResultadoRolagemDto[];
 }
 
 // ── Runner de preset encadeado (m3-21) ───────────────────────────────────────

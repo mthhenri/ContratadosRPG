@@ -101,6 +101,20 @@ const SECOES: readonly SecaoGuia[] = [
       { codigo: '[Físico-Químico]', texto: 'Dano Composto: metade de cada tipo (a sobra vai para o primeiro).' },
     ],
   },
+  {
+    titulo: 'Atributo + valor como quantidade de dados',
+    linhas: [
+      { codigo: '(LUT+3)d20', texto: '(Luta + 3) dados de vinte — o parêntese soma antes de virar dado.' },
+      { codigo: '(FOR-1)d6kh2', texto: 'Aceita os mesmos operadores por pool depois do dM (kh/kl/cm/!/?).' },
+    ],
+  },
+  {
+    titulo: 'Repetir a fórmula inteira',
+    linhas: [
+      { codigo: '(PONd20kh1cm1+PROF)#3', texto: 'Rola a fórmula inteira 3 vezes, cada uma independente.' },
+      { codigo: '(2d6)#5', texto: 'Também vale para dano — 5 rolagens de 2d6 separadas, sem somar.' },
+    ],
+  },
 ];
 
 /**

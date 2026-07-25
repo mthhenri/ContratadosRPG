@@ -689,3 +689,143 @@ describe('migração de presets legados — normalizarPresetLegado (m3-29)', () 
     expect(normalizarPresetLegado(v3)).toEqual(v3);
   });
 });
+
+describe('gramática v4 — atributo+valor como quantidade de dados: `(ATR±n)dM` (m3-46)', () => {
+  it('interpreta o offset positivo e negativo', () => {
+    expect(interpretarFormula('(LUT+3)d20').formula?.dados).toEqual([
+      { sinal: 1, quantidade: 1, faces: 20, quantidadeAtributo: 'luta', quantidadeAtributoOffset: 3 },
+    ]);
+    expect(interpretarFormula('(FOR-1)d6').formula?.dados).toEqual([
+      { sinal: 1, quantidade: 1, faces: 6, quantidadeAtributo: 'forca', quantidadeAtributoOffset: -1 },
+    ]);
+  });
+
+  it('aceita operadores por pool depois do dM', () => {
+    expect(interpretarFormula('(LUT+3)d20kh1').formula?.dados).toEqual([
+      { sinal: 1, quantidade: 1, faces: 20, quantidadeAtributo: 'luta', quantidadeAtributoOffset: 3, manterMaior: 1 },
+    ]);
+  });
+
+  it('(LUT+3)d20 rola (Luta+3) dados — luta=3 → 6 dados', () => {
+    const resultado = rolarFormula({ formula: '(LUT+3)d20', atributos }, rolarMaximo);
+    expect(resultado?.dados[0].valores).toHaveLength(6);
+    expect(resultado?.total).toBe(120); // 6 × 20
+  });
+
+  it('offset negativo reduz a quantidade (LUT=3, -1 → 2 dados)', () => {
+    const resultado = rolarFormula({ formula: '(LUT-1)d6', atributos }, rolarMaximo);
+    expect(resultado?.dados[0].valores).toHaveLength(2);
+  });
+
+  it('quantidade nunca fica negativa — offset abaixo de zero clampa em 0 dados, sem desvantagem', () => {
+    const resultado = rolarFormula({ formula: '(LUT-10)d6', atributos }, rolarMaximo);
+    expect(resultado?.dados[0].valores).toEqual([]);
+    expect(resultado?.dados[0].desvantagem).toBeUndefined();
+  });
+
+  it('distinto de ATRdM: não aciona a desvantagem intrínseca de atributo zerado (regra 270)', () => {
+    const semLuta: FichaAtributosDto = { ...atributos, luta: 0 };
+    // Sem offset, LUTd20kh1 com luta=0 rolaria em desvantagem (2 dados, mantém o menor) — ver m3-29.
+    // Com offset, (LUT+0)d20kh1 é só "0 dados", sem a mecânica de desvantagem.
+    const resultado = rolarFormula({ formula: '(LUT+0)d20kh1', atributos: semLuta }, rolarMaximo);
+    expect(resultado?.dados[0].desvantagem).toBeUndefined();
+    expect(resultado?.dados[0].valores).toEqual([]);
+  });
+
+  it('rejeita fonte desconhecida e forma sem dM', () => {
+    expect(interpretarFormula('(XYZ+2)d6').valida).toBe(false);
+    expect(interpretarFormula('(LUT+3)').valida).toBe(false);
+  });
+});
+
+describe('gramática v4 — repetição da fórmula inteira: `(<fórmula>)#N` (m3-46)', () => {
+  it('interpreta N e preserva a fórmula interna intacta', () => {
+    const interpretacao = interpretarFormula('(1d6+2)#3');
+    expect(interpretacao.valida).toBe(true);
+    expect(interpretacao.formula?.repeticoes).toBe(3);
+    expect(interpretacao.formula?.dados).toEqual([{ sinal: 1, quantidade: 1, faces: 6 }]);
+    expect(interpretacao.formula?.constante).toBe(2);
+  });
+
+  it('(PONd20kh1cm1+PROF)#3 — o exemplo do critério de aceite — interpreta como 3 repetições', () => {
+    const interpretacao = interpretarFormula('(PONd20kh1cm1+PROF)#3');
+    expect(interpretacao.valida).toBe(true);
+    expect(interpretacao.formula?.repeticoes).toBe(3);
+  });
+
+  it('rola N vezes independentes — cada rolagem consome seus próprios dados do RNG', () => {
+    // 1d6 três vezes, RNG determinístico devolve 2, 5, 1 em sequência — uma por repetição.
+    const resultado = rolarFormula({ formula: '(1d6)#3', atributos }, sequencia([2, 5, 1]));
+    expect(resultado?.subResultados).toHaveLength(3);
+    expect(resultado?.subResultados?.map((sub) => sub.total)).toEqual([2, 5, 1]);
+    // O objeto externo espelha a 1ª rolagem (compatibilidade).
+    expect(resultado?.total).toBe(2);
+  });
+
+  it('produz 3 resultados separados exibidos independentemente (critério de aceite)', () => {
+    const resultado = rolarFormula(
+      { formula: '(PONd20kh1cm1+PROF)#3', atributos, proficiencia: 2 },
+      sequencia([10, 15, 3]),
+    );
+    expect(resultado?.subResultados).toHaveLength(3);
+    // pontaria=1 → 1 dado por rolagem; cada uma soma + PROF (2).
+    expect(resultado?.subResultados?.map((sub) => sub.total)).toEqual([12, 17, 5]);
+  });
+
+  it('respeita tags de tipo de dano dentro do envelope', () => {
+    const resultado = rolarFormula({ formula: '(2d6 [Físico])#2', atributos }, rolarMaximo);
+    expect(resultado?.subResultados).toHaveLength(2);
+    resultado?.subResultados?.forEach((sub) => {
+      expect(sub.grupos).toEqual([{ tipoDano: TipoDanoEnum.FISICO, total: 12 }]);
+    });
+  });
+
+  it('rolarPasso propaga a repetição e o crítico dobra cada sub-resultado', () => {
+    const plano = resolverPreset({ preset: { nome: 'D', formula: '(1d6)#2', critico: true }, atributos });
+    const critico = rolarPasso(plano.passos[0], atributos, undefined, undefined, rolarMaximo, true);
+    expect(critico?.subResultados).toHaveLength(2);
+    expect(critico?.subResultados?.every((sub) => sub.critico === true)).toBe(true);
+    expect(critico?.subResultados?.every((sub) => sub.total === 12)).toBe(true); // 1d6 crítico → 2d6 no máx = 12
+  });
+
+  it('sem repetição (N ausente/1), `subResultados` fica ausente — sem regressão', () => {
+    const resultado = rolarFormula({ formula: '1d6+2', atributos }, rolarMaximo);
+    expect(resultado?.subResultados).toBeUndefined();
+  });
+
+  it('rejeita N zero, fracionário ausente e acima do teto', () => {
+    expect(interpretarFormula('(1d6)#0').valida).toBe(false);
+    expect(interpretarFormula('(1d6)#').valida).toBe(false);
+    expect(interpretarFormula('(1d6)#21').valida).toBe(false); // teto = 20
+    expect(interpretarFormula('(1d6)#20').valida).toBe(true);
+  });
+
+  it('rejeita repetição aninhada sem travar', () => {
+    expect(interpretarFormula('((1d6)#2)#3').valida).toBe(false);
+  });
+
+  it('erro da fórmula interna propaga (repetição de fórmula inválida)', () => {
+    const interpretacao = interpretarFormula('(xyz)#3');
+    expect(interpretacao.valida).toBe(false);
+    expect(interpretacao.erro).toBeTruthy();
+  });
+});
+
+describe('gramática v4 — parênteses fora das duas formas sancionadas continuam inválidos (m3-46)', () => {
+  it('regressão: `(1d20)` e `1d20)` soltos continuam inválidos', () => {
+    expect(interpretarFormula('(1d20)').valida).toBe(false);
+    expect(interpretarFormula('1d20)').valida).toBe(false);
+  });
+
+  it('atributo sozinho entre parênteses (sem offset/dM) é inválido', () => {
+    expect(interpretarFormula('(LUT)').valida).toBe(false);
+    expect(interpretarFormula('2d6 + (LUT)').valida).toBe(false);
+  });
+
+  it('as duas formas novas podem compor: `((ATR+n)dM)#N`', () => {
+    const resultado = rolarFormula({ formula: '((LUT+1)d20)#2', atributos }, rolarMaximo);
+    expect(resultado?.subResultados).toHaveLength(2);
+    // luta=3 → (3+1)=4 dados de d20 no máximo = 80, em cada uma das 2 repetições.
+    expect(resultado?.subResultados?.map((sub) => sub.total)).toEqual([80, 80]);
+  });
+});

@@ -2,6 +2,7 @@ import {
   ABREVIACOES_ATRIBUTO,
   ABREVIACOES_FONTE_EXTRA,
   QUANTIDADE_DADOS_MAXIMA,
+  REPETICOES_MAXIMA,
   resolverTipoDanoSimples,
 } from './rolagem.dados';
 import {
@@ -25,20 +26,25 @@ import { TipoDanoEnum } from '../../enums';
 import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto, FichaRolagemPassoDto } from '../../dtos/ficha';
 
 /**
- * Motor de rolagem de dados (m3-15; gramática v2 m3-16; dano tipado m3-18; **gramática v3 m3-29**;
- * crítico mecânico m3-30): interpreta e rola uma fórmula — `NdM`, constantes, atributo (`+LUT`), atributo
- * como **fonte de dados** (`FORd6`), atributo **escalado** (`FOR*3`, `LUT/2`, piso), combinados por
- * `+`/`−`, com **tags de tipo de dano** `[Tipo]`/`[TipoA-TipoB]` (Composto = soma 50/50, resto pro
- * primeiro), e **operadores por pool**: manter maior/menor (`kh`/`kl`), margem de crítico (`cm`,
- * informativo), explosão (`!`) e implosão (`?`).
+ * Motor de rolagem de dados (m3-15; gramática v2 m3-16; dano tipado m3-18; gramática v3 m3-29;
+ * crítico mecânico m3-30; **gramática v4 m3-46**): interpreta e rola uma fórmula — `NdM`, constantes,
+ * atributo (`+LUT`), atributo como **fonte de dados** (`FORd6`), atributo **escalado** (`FOR*3`, `LUT/2`,
+ * piso), combinados por `+`/`−`, com **tags de tipo de dano** `[Tipo]`/`[TipoA-TipoB]` (Composto = soma
+ * 50/50, resto pro primeiro), e **operadores por pool**: manter maior/menor (`kh`/`kl`), margem de
+ * crítico (`cm`, informativo), explosão (`!`) e implosão (`?`).
  *
  * **Não há mais "modo".** Um teste é a expressão explícita `LUTd20kh1 + PROF` — a Proficiência é um termo
  * escrito, nunca somada por baixo dos panos. A **desvantagem** de atributo zerado (regra 270) sobrevive
  * como propriedade **intrínseca** de um pool de atributo (`ATRd20kh…` com atributo ≤ 0 → rola 2+|attr|
  * dados e mantém o menor). As habilidades vinculadas a um passo **só contam Energia** — não alteram mais a
  * fórmula (fusão de efeitos aposentada em m3-31). `normalizarPresetLegado` migra presets antigos
- * (`modo:'TESTE'`) para a notação nova. Parênteses ainda não são suportados. Funções puras; a **única
- * brecha a `Math.random`** é a função de rolagem injetável `rolarDado` (SYSTEM.SPEC §6.6).
+ * (`modo:'TESTE'`) para a notação nova. Funções puras; a **única brecha a `Math.random`** é a função de
+ * rolagem injetável `rolarDado` (SYSTEM.SPEC §6.6).
+ *
+ * **Parênteses (m3-46) só existem em duas formas sancionadas**, sem aninhamento arbitrário:
+ * `(ATR±n)dM` — atributo+valor como quantidade de dados (ex.: `(LUT+3)d20`) — e `(<fórmula>)#N` —
+ * repete a fórmula **inteira** N vezes independentes (ex.: `(PONd20kh1cm1+PROF)#3`). Qualquer outro uso
+ * de parênteses é erro de parse.
  *
  * Fonte: docs/core/sistema-v4.1.0.md — "Atributos"/"Testes"/"Tipos de Dano". Explosão/implosão não são
  * regra do documento — entram como operadores de ferramenta (m3-29).
@@ -176,6 +182,34 @@ function interpretarOperadores(sufixo: string, faces: number): { ops: Operadores
   return { ops };
 }
 
+/**
+ * Divide uma expressão já normalizada (prefixada com sinal) em termos de nível superior por `+`/`−`,
+ * sem quebrar dentro de parênteses (m3-46) — necessário para `(ATR±n)dM` carregar seu próprio sinal
+ * interno sem ser cortado ao meio pelo split.
+ */
+function dividirTermosNivelSuperior(expressaoComSinal: string): string[] {
+  const partes: string[] = [];
+  let atual = '';
+  let profundidade = 0;
+  for (const caractere of expressaoComSinal) {
+    if (caractere === '(') {
+      profundidade += 1;
+    } else if (caractere === ')') {
+      profundidade -= 1;
+    }
+    if (profundidade === 0 && (caractere === '+' || caractere === '-') && atual.length > 0) {
+      partes.push(atual);
+      atual = caractere;
+    } else {
+      atual += caractere;
+    }
+  }
+  if (atual) {
+    partes.push(atual);
+  }
+  return partes;
+}
+
 /** Acumuladores mutáveis preenchidos por `interpretarSegmento`. */
 interface AcumuladoresFormula {
   readonly dados: TermoDadoDto[];
@@ -194,7 +228,7 @@ function interpretarSegmento(
 ): { readonly constante: number; readonly erro?: string } {
   const tipado = destino.tipoDano !== undefined || destino.composto !== undefined;
   const normalizada = /^[+-]/.test(expr) ? expr : `+${expr}`;
-  const partes = normalizada.match(/[+-][^+-]*/g) ?? [];
+  const partes = dividirTermosNivelSuperior(normalizada);
   let constante = 0;
 
   for (const parte of partes) {
@@ -205,6 +239,34 @@ function interpretarSegmento(
     }
     if (/[[\]]/.test(corpo)) {
       return { constante, erro: `Tag de dano malformada em "${corpo}".` };
+    }
+
+    // Atributo+valor como quantidade de dados `(ATR±n)dM` (m3-46) + operadores por pool.
+    const dadoAtributoOffset = corpo.match(/^\(([A-Za-z]+)([+-]\d+)\)[dD](\d+)(.*)$/);
+    if (dadoAtributoOffset) {
+      const atributoOffset = resolverFonte(dadoAtributoOffset[1]);
+      const offset = parseInt(dadoAtributoOffset[2], 10);
+      const faces = parseInt(dadoAtributoOffset[3], 10);
+      if (!atributoOffset) {
+        return { constante, erro: `Fonte desconhecida "${dadoAtributoOffset[1]}".` };
+      }
+      if (faces < 1) {
+        return { constante, erro: `Dado inválido "${corpo}".` };
+      }
+      const { ops, erro } = interpretarOperadores(dadoAtributoOffset[4], faces);
+      if (erro) {
+        return { constante, erro };
+      }
+      acc.dados.push({
+        sinal,
+        quantidade: 1,
+        quantidadeAtributo: atributoOffset,
+        quantidadeAtributoOffset: offset,
+        faces,
+        ...ops,
+        ...destino,
+      });
+      continue;
     }
 
     // Dado literal `NdM` (N opcional) + operadores por pool.
@@ -286,19 +348,67 @@ function interpretarSegmento(
 }
 
 /**
+ * Detecta o envelope de repetição `(<fórmula>)#N` (m3-46): só reconhece quando os parênteses envolvem
+ * o texto **inteiro** — i.e., o `(` inicial fecha exatamente no `)` que precede o `#N` final, sem sobrar
+ * nada fora. `null` quando não é esse envelope (formula normal, ou `(ATR±n)dM` solto). `n` pode vir
+ * `NaN` (ex.: `(...)#` sem dígitos) — quem chama valida.
+ */
+function extrairRepeticao(texto: string): { readonly interna: string; readonly n: number } | null {
+  const encontrado = texto.match(/^\((.*)\)#(\d*)$/);
+  if (!encontrado) {
+    return null;
+  }
+  const interna = encontrado[1];
+  let profundidade = 1;
+  for (const caractere of interna) {
+    if (caractere === '(') {
+      profundidade += 1;
+    } else if (caractere === ')') {
+      profundidade -= 1;
+    }
+    if (profundidade === 0) {
+      return null; // o '(' inicial fechou antes do fim — não é o envelope inteiro.
+    }
+  }
+  if (profundidade !== 1) {
+    return null; // parênteses internos desbalanceados.
+  }
+  const n = encontrado[2] === '' ? NaN : parseInt(encontrado[2], 10);
+  return { interna, n };
+}
+
+/**
  * Interpreta a fórmula em termos de dado, atributo e constante, com tags de tipo de dano opcionais.
  * Aceita espaços; o 1º termo de cada segmento pode vir sem sinal (assume `+`). Sem tags, comporta-se
  * como antes (um único total). Com tags, cada segmento (`termos [Tipo]`) estampa seus termos; um
- * trecho sem tag numa fórmula tipada assume **Físico**. Devolve `{ valida: false, erro }` para fórmula
- * vazia, parênteses, tag/termo/operador inválido ou dado acima do teto — nunca lança (a UI trata como aviso).
+ * trecho sem tag numa fórmula tipada assume **Físico**. Suporta parênteses só nas duas formas
+ * sancionadas (m3-46): `(ATR±n)dM` (por termo) e `(<fórmula>)#N` (envelope da fórmula inteira, sem
+ * aninhamento). Devolve `{ valida: false, erro }` para fórmula vazia, repetição inválida/acima do teto,
+ * parênteses fora dessas formas, tag/termo/operador inválido ou dado acima do teto — nunca lança (a UI
+ * trata como aviso).
  */
 export function interpretarFormula(formulaTexto: string): InterpretacaoFormulaDto {
   const texto = (formulaTexto ?? '').replace(/\s+/g, '');
   if (!texto) {
     return { valida: false, erro: 'Fórmula vazia.' };
   }
-  if (/[()]/.test(texto)) {
-    return { valida: false, erro: 'Parênteses ainda não são suportados.' };
+
+  const repeticao = extrairRepeticao(texto);
+  if (repeticao) {
+    if (extrairRepeticao(repeticao.interna)) {
+      return { valida: false, erro: 'Repetição "#N" aninhada não é suportada.' };
+    }
+    if (!(repeticao.n >= 1)) {
+      return { valida: false, erro: 'Repetição "#N" inválida — N deve ser ao menos 1.' };
+    }
+    if (repeticao.n > REPETICOES_MAXIMA) {
+      return { valida: false, erro: `Máximo de ${REPETICOES_MAXIMA} repetições.` };
+    }
+    const internaInterpretada = interpretarFormula(repeticao.interna);
+    if (!internaInterpretada.valida || !internaInterpretada.formula) {
+      return internaInterpretada;
+    }
+    return { valida: true, formula: { ...internaInterpretada.formula, repeticoes: repeticao.n } };
   }
 
   const acc: AcumuladoresFormula = { dados: [], atributos: [], constantesTipadas: [] };
@@ -467,14 +577,17 @@ function rolarTermo(
   let quantidade: number;
   if (termo.quantidadeAtributo) {
     const valorAtributo = ambiente[termo.quantidadeAtributo] ?? 0;
-    if (manterMaior !== undefined && valorAtributo <= 0) {
+    if (termo.quantidadeAtributoOffset === undefined && manterMaior !== undefined && valorAtributo <= 0) {
       // Teste de atributo zerado/negativo: rola 2+|attr| dados e mantém o(s) MENOR(es).
       desvantagem = true;
       quantidade = Math.min(QUANTIDADE_DADOS_MAXIMA, 2 - valorAtributo);
       manterMenor = manterMaior;
       manterMaior = undefined;
     } else {
-      quantidade = Math.max(0, Math.min(QUANTIDADE_DADOS_MAXIMA, valorAtributo));
+      // `(ATR±n)dM` (m3-46): quantidade = fonte + offset, sem a desvantagem intrínseca acima — é uma
+      // contagem explícita, não um pool de teste.
+      const valorComOffset = valorAtributo + (termo.quantidadeAtributoOffset ?? 0);
+      quantidade = Math.max(0, Math.min(QUANTIDADE_DADOS_MAXIMA, valorComOffset));
     }
   } else {
     quantidade = termo.quantidade;
@@ -550,7 +663,9 @@ export function rolarFormula(dto: RolagemDto, rolarDado: RolarDado = rolarDadoPa
 /**
  * Rola uma fórmula **já interpretada** (com efeitos de habilidade opcionalmente já fundidos via
  * `aplicarEfeitos`) — mesma semântica de `rolarFormula`, sem reinterpretar o texto. Usado pelo runner
- * de presets encadeados (m3-21). Determinístico quando `rolarDado` é injetado.
+ * de presets encadeados (m3-21). Quando `formula.repeticoes` (m3-46) é ≥ 2, rola a fórmula N vezes
+ * **independentes** e devolve as N em `subResultados` (o objeto externo espelha a 1ª, por
+ * compatibilidade). Determinístico quando `rolarDado` é injetado.
  */
 export function rolarInterpretada(
   formula: FormulaInterpretadaDto,
@@ -559,6 +674,27 @@ export function rolarInterpretada(
   nivel?: number,
   rolarDado: RolarDado = rolarDadoPadrao,
   critico = false,
+): ResultadoRolagemDto {
+  const primeiro = rolarInterpretadaUnica(formula, atributos, proficiencia, nivel, rolarDado, critico);
+  const repeticoes = formula.repeticoes ?? 1;
+  if (repeticoes < 2) {
+    return primeiro;
+  }
+  const subResultados: ResultadoRolagemDto[] = [primeiro];
+  for (let indice = 1; indice < repeticoes; indice += 1) {
+    subResultados.push(rolarInterpretadaUnica(formula, atributos, proficiencia, nivel, rolarDado, critico));
+  }
+  return { ...primeiro, subResultados };
+}
+
+/** Rola uma única passada de uma fórmula já interpretada — o corpo de `rolarInterpretada` sem repetição. */
+function rolarInterpretadaUnica(
+  formula: FormulaInterpretadaDto,
+  atributos: FichaAtributosDto,
+  proficiencia: number | null | undefined,
+  nivel: number | undefined,
+  rolarDado: RolarDado,
+  critico: boolean,
 ): ResultadoRolagemDto {
   // Ambiente escalar da rolagem (m3-22): os 10 atributos + Proficiência (`PROF`) + Nível (`NIV`).
   const ambiente: Record<FonteEscalar, number> = {

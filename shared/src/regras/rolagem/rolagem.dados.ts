@@ -35,6 +35,9 @@ export const ABREVIACOES_FONTE_EXTRA: Readonly<Record<string, 'proficiencia' | '
 /** Teto defensivo de dados por termo (evita fórmulas absurdas como `9999d6`). */
 export const QUANTIDADE_DADOS_MAXIMA = 100;
 
+/** Teto defensivo de repetições `(<fórmula>)#N` (m3-46, evita fórmulas absurdas como `(1d6)#9999`). */
+export const REPETICOES_MAXIMA = 20;
+
 /** Remove acentos e caixa para casar tags de dano de forma tolerante (`fisico` = `Físico`). */
 const normalizarTipoDano = (texto: string): string =>
   texto
