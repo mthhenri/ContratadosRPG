@@ -172,6 +172,22 @@ describe('CampanhaGateway', () => {
       expect(emitir).toHaveBeenCalledWith('ficha:alterada', ficha);
     });
 
+    it('omite historia do broadcast de ficha:alterada — sala mista, sem distinção por socket (m3-50)', () => {
+      const ficha = {
+        id: 5,
+        campanhaId: 3,
+        usuarioId: 10,
+        nome: 'Agente Alfa',
+        dados: { classe: 'COMBATENTE', historia: 'Nasceu numa colônia orbital.' },
+      };
+
+      gateway.emitirFichaAlterada(ficha as never);
+
+      const payloadEmitido = emitir.mock.calls[0][1] as { dados: Record<string, unknown> };
+      expect(payloadEmitido.dados).not.toHaveProperty('historia');
+      expect(payloadEmitido.dados).toEqual({ classe: 'COMBATENTE' });
+    });
+
     it('emite ficha:criada na sala campanha:<id> só com o resumo (sem o dados — §14)', () => {
       const ficha = {
         id: 5,

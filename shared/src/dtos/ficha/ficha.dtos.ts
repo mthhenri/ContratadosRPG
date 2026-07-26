@@ -421,4 +421,12 @@ export interface FichaJogadorDadosDto {
    * automática — o mestre digita o número livremente (fora de escopo desta task).
    */
   readonly contrato?: string;
+  /**
+   * Texto livre de história do agente (m3-50) — visível e editável só por **dono** e **mestre**;
+   * um visualizador só-acesso nunca a recebe (o backend a omite em `FichaService.recuperarFicha` e
+   * no broadcast `ficha:alterada` — `omitirCamposPrivados`, `backend/src/modules/ficha/
+   * ficha-campos-privados.util.ts`). **Opcional**: ausente para quem não pode vê-la e em fichas sem
+   * texto definido.
+   */
+  readonly historia?: string;
 }

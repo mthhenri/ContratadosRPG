@@ -21,6 +21,7 @@ import type {
 import type { Server, Socket } from 'socket.io';
 import type { JwtPayload } from '../../modules/autenticacao/jwt-payload.interface';
 import { CampanhaService } from '../../modules/campanha/campanha.service';
+import { omitirCamposPrivados } from '../../modules/ficha/ficha-campos-privados.util';
 import { FichaService } from '../../modules/ficha/ficha.service';
 
 /** Resposta (ack) de um pedido de entrada em sala — o cliente sabe se a permissão foi concedida. */
@@ -124,10 +125,18 @@ export class CampanhaGateway implements OnGatewayConnection {
 
   /**
    * Emite `ficha:alterada` na sala `ficha:<id>` (§9). Chamado por `FichaService.alterarFicha` após
-   * a alteração ser persistida.
+   * a alteração ser persistida. O `emit()` é **único para toda a sala** — não distingue socket por
+   * permissão —, e a sala `ficha:<id>` pode incluir um visualizador só-acesso (`entrarSalaFicha`
+   * só exige visualização, não edição); por isso o broadcast sempre omite
+   * `CAMPOS_PRIVADOS_FICHA` (m3-50 — `historia`), até para dono/mestre, que recuperam o valor
+   * atualizado pelo REST (o mesmo tratamento do `dados` reduzido em `emitirFichaCriada` abaixo).
    */
   emitirFichaAlterada(ficha: FichaAlteradaDto): void {
-    this.servidor.to(this.salaFicha(ficha.id)).emit('ficha:alterada', ficha);
+    const fichaSemCamposPrivados: FichaAlteradaDto = {
+      ...ficha,
+      dados: omitirCamposPrivados(ficha.dados),
+    };
+    this.servidor.to(this.salaFicha(ficha.id)).emit('ficha:alterada', fichaSemCamposPrivados);
   }
 
   /**

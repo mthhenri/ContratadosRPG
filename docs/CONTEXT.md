@@ -1,6 +1,54 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-26 (**Fade de overflow no filtro do Inventário + ícone em
+> Última atualização: 2026-07-26 (**m3-50 — Aba História (seção privada por
+> permissão)**: task `m3-50` do lote de refino `m3-40`…`m3-56` implementada, **com adaptação de
+> local** em relação ao texto original da spec — mesmo padrão da `m3-49`. A spec (escrita antes da
+> `m3-38`) pedia para estender `AbaFicha`/`ABAS_FICHA`/`ehAbaFicha` (o sistema de abas de página
+> inteira da `m3-11`) — mas esse sistema está **aposentado e fora do template** desde a `m3-38`
+> (confirmado: zero referência a `abaAtiva()`/`ABAS_FICHA` no HTML); a UI real é a mini barra
+> `AbaStatus` do card de Status (3ª coluna). A `historia` entrou como **6ª aba** de `AbaStatus`
+> (`'historia'`, `ficha-visualizacao.component.ts`), **condicional**: o botão só renderiza
+> `@if (ajustavel())` (`ajustavel` já é exatamente "dono ou mestre" — `visualizar.page.html` liga
+> `[ajustavel]="podeGerenciar()"`, e `podeGerenciar = ehDono() || ehMestre()` em
+> `visualizar.page.ts`) e o painel repete o mesmo guard (`abaStatusAtiva() === 'historia' &&
+> ajustavel()`) pra um fragmento de URL `#historia` digitado à mão por um visualizador não renderizar
+> a caixa vazia. Editor de texto **reusa literalmente** o bloco BEM de Anotações (m3-32—
+> `.ficha-status__anotacoes-caixa/-cabecalho/-campo`, mesmo `.ficha-cartao__lapis` + textarea com
+> blur/Escape) em vez de inventar variantes (proibição de duplicar padrão visual) — `editarHistoria`/
+> `cancelarHistoria`/`confirmarHistoria` e o `output<string>() ajusteHistoria` espelham
+> `*Anotacoes` campo a campo; `visualizar.page.ts` ganhou `ajustarHistoria` (mesmo formato de
+> `ajustarAnotacoes`: otimista + `agendarPersistencia()`, sem regra de domínio). **O mecanismo de
+> "campos privados por permissão"** (entregável central da task, reusado pela `m3-51` para
+> `anotacoes`) é novo: `backend/src/modules/ficha/ficha-campos-privados.util.ts` exporta
+> `CAMPOS_PRIVADOS_FICHA` (hoje só `['historia']`) e `omitirCamposPrivados(dados)` — função pura,
+> sem I/O, chamada de dois lugares diferentes por motivos diferentes. (1) `FichaService.recuperarFicha`
+> omite `historia` **só** quando quem pediu é só-visualizador — `validarPermissaoVisualizacao` mudou
+> de `Promise<void>` (lança ou passa) para `Promise<boolean>` (devolve se é só-visualizador), sem
+> quebrar nenhum outro chamador (era usado só ali). (2) `CampanhaGateway.emitirFichaAlterada`
+> **decisão de arquitetura registrada aqui**: o broadcast de `ficha:alterada` é um `emit()` único pra
+> toda a sala `ficha:<id>` (sem distinção por socket/permissão — a sala mistura dono/mestre/
+> visualizador-com-concessão, todos que passaram em `entrarSalaFicha`), então não dá pra mandar
+> payloads diferentes por destinatário sem reescrever o gateway pra rastrear permissão por socket
+> (fora de escopo). A spec já previa essa saída como alternativa explícita ("ou emitir sem o campo") —
+> `emitirFichaAlterada` agora omite `CAMPOS_PRIVADOS_FICHA` **sempre**, até pra dono/mestre (que
+> recuperam o valor atualizado pelo REST/refetch; só perdem o live-sync entre si desse campo
+> específico — aceitável, o critério de aceite só exige persistir e sobreviver a reload, não
+> sincronizar em tempo real). Mesmo padrão de "payload reduzido no broadcast" que `emitirFichaCriada`
+> já usava pro `dados` inteiro (§14). Contrato: `historia?: string` em `FichaJogadorDadosDto`
+> (`shared/src/dtos/ficha/ficha.dtos.ts`) — opcional (ausente pro visualizador e em fichas sem
+> texto); `docs/SCHEMA.md` atualizado. **Testes:** backend +6 (`ficha.service.spec.ts`: omite
+> `historia` pra visualizador só-acesso, mantém pra dono e mestre; `campanha.gateway.spec.ts`: omite
+> do broadcast mesmo com outros campos presentes; `ficha-campos-privados.util.spec.ts`: remove só o
+> campo privado, não mexe no objeto original, no-op de conteúdo sem `historia`) — 126/126 backend.
+> Frontend +6 em `ficha-visualizacao.component.spec.ts` (botão/painel ausentes pra não-ajustável,
+> botão presente pra ajustável, clique mostra o texto, mensagem de vazio, `ajusteHistoria` emite só
+> quando o texto muda) — 501/502 frontend (1 falha pré-existente alheia, mesma de sempre; shared
+> 452/452 inalterado). Spec em `docs/specs/done/m3-50-aba-historia-privada.spec.md`. Próxima task:
+> **`m3-51`** (permissões granulares de acesso — bloqueia rolagem/tratamento de trauma pro
+> visualizador, expulsão da tela ao revogar acesso, e retrofita `anotacoes` pro mesmo mecanismo de
+> campos privados introduzido aqui).)
+>
+> (**Fade de overflow no filtro do Inventário + ícone em
 > "Equipamentos"**: dois pedidos diretos e curtos do autor. (1) "aplique o fade no overflow da
 > lista de equipamentos, amplificadores e fragmentos" — auditoria achou que Equipamentos
 > (`.ficha-inv__lista`) e Fragmentos (`.ficha-inv__amps`, dentro do `@if

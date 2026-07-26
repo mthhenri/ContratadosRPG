@@ -1025,6 +1025,18 @@
           <app-icone class="ficha-status__aba-icone" [nome]="'mais'" />
           Extras
         </button>
+        @if (ajustavel()) {
+          <!-- Só dono/mestre (m3-50) — o backend já nem manda `dados.historia` pro visualizador. -->
+          <button
+            type="button"
+            class="ficha-status__aba"
+            [class.ficha-status__aba--ativa]="abaStatusAtiva() === 'historia'"
+            (click)="selecionarAbaStatus('historia')"
+          >
+            <app-icone class="ficha-status__aba-icone" [nome]="'anotacoes'" />
+            História
+          </button>
+        }
       </div>
 
       <section class="ficha-cartao ficha-cartao--status">
@@ -1250,6 +1262,45 @@
               <p class="ficha-extras__nota">
                 Afinidade acima de 10: −{{ reducaoAfinidade() }} de Energia no custo de fragmentos.
               </p>
+            }
+          </div>
+        </div>
+        }
+        <!-- História (m3-50): aba própria, só dono/mestre — o botão já não aparece pra quem não
+             pode, e `ajustavel()` regate o painel também (fragmento de URL manipulado à mão não
+             renderiza a caixa; a `dados().historia` nem chega ao visualizador). -->
+        @if (abaStatusAtiva() === 'historia' && ajustavel()) {
+        <div class="ficha-status__conteudo">
+          <div class="ficha-status__anotacoes-caixa">
+            <div class="ficha-status__anotacoes-cabecalho">
+              <span class="ficha-status__rotulo-coluna">História</span>
+              @if (!editandoHistoria()) {
+                <button
+                  class="ficha-cartao__lapis"
+                  type="button"
+                  aria-label="Editar história"
+                  [appTooltip]="'Editar história'"
+                  (click)="editarHistoria()"
+                >
+                  ✎
+                </button>
+              }
+            </div>
+            @if (editandoHistoria()) {
+              <textarea
+                #entradaHistoria
+                class="ficha-status__anotacoes-campo"
+                rows="10"
+                aria-label="História"
+                placeholder="Escreva a história do agente aqui…"
+                [value]="dados().historia ?? ''"
+                (keydown.escape)="cancelarHistoria()"
+                (blur)="confirmarHistoria(entradaHistoria.value)"
+              ></textarea>
+            } @else if (historia()) {
+              <p class="ficha-visao__anotacoes" appOverflowFade>{{ historia() }}</p>
+            } @else {
+              <p class="ficha-visao__vazio">Sem história definida.</p>
             }
           </div>
         </div>

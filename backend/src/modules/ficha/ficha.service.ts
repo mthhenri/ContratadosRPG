@@ -48,6 +48,7 @@ import {
 import { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { CampanhaRepository } from '../campanha/campanha.repository';
+import { omitirCamposPrivados } from './ficha-campos-privados.util';
 import { FichaRepository } from './ficha.repository';
 
 /**
@@ -155,7 +156,9 @@ export class FichaService {
   /**
    * Recupera uma ficha pelo `id`, exigindo permissão de **visualização** (§14): dono, mestre da
    * campanha ou membro com concessão em `usuario_ficha_acesso`. `ResourceNotFoundException` se a
-   * ficha não existir; `UnauthorizedAccessException` se o autor não puder vê-la.
+   * ficha não existir; `UnauthorizedAccessException` se o autor não puder vê-la. Um visualizador
+   * só-acesso (nem dono, nem mestre) nunca recebe `CAMPOS_PRIVADOS_FICHA` (m3-50 — `historia`) — o
+   * dado nem trafega, não é só ocultado no front.
    */
   async recuperarFicha(
     dto: FichaRecuperarDto,
@@ -166,7 +169,10 @@ export class FichaService {
       throw new ResourceNotFoundException('Ficha');
     }
 
-    await this.validarPermissaoVisualizacao(fichaEncontrada, usuarioAtivo);
+    const ehSoVisualizador = await this.validarPermissaoVisualizacao(fichaEncontrada, usuarioAtivo);
+    if (ehSoVisualizador) {
+      return { ...fichaEncontrada, dados: omitirCamposPrivados(fichaEncontrada.dados) };
+    }
     return fichaEncontrada;
   }
 
@@ -294,14 +300,16 @@ export class FichaService {
   /**
    * Garante permissão de **visualização** da ficha (§14): dono (posse), mestre da campanha (papel)
    * ou membro com concessão ativa em `usuario_ficha_acesso`. Do contrário lança
-   * `UnauthorizedAccessException`.
+   * `UnauthorizedAccessException`. Devolve `true` quando quem pediu é **só-visualizador**
+   * (nem dono, nem mestre) — usado por `recuperarFicha` para decidir se omite
+   * `CAMPOS_PRIVADOS_FICHA` (m3-50).
    */
   private async validarPermissaoVisualizacao(
     ficha: FichaRecuperadaDto,
     usuarioAtivo: JwtPayload,
-  ): Promise<void> {
+  ): Promise<boolean> {
     if (ficha.usuarioId === usuarioAtivo.sub) {
-      return;
+      return false;
     }
 
     const membroEncontrado = await this.campanhaRepositorio.recuperarMembro({
@@ -309,7 +317,7 @@ export class FichaService {
       usuarioId: usuarioAtivo.sub,
     });
     if (membroEncontrado?.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
-      return;
+      return false;
     }
 
     const acessoConcedido = await this.fichaRepositorio.recuperarAcesso({
@@ -319,6 +327,7 @@ export class FichaService {
     if (!acessoConcedido) {
       throw new UnauthorizedAccessException();
     }
+    return true;
   }
 
   /**

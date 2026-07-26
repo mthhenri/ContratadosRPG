@@ -727,7 +727,41 @@ describe('FichaService', () => {
         fichaId: 5,
         usuarioId: usuarioMembro.sub,
       });
-      expect(resultado).toBe(fichaPersistida);
+      expect(resultado).toEqual(fichaPersistida);
+    });
+
+    it('omite historia do payload para um visualizador só-acesso (m3-50)', async () => {
+      const fichaComHistoria = {
+        ...fichaPersistida,
+        dados: criarDados({ historia: 'Nasceu numa colônia orbital.' }),
+      };
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaComHistoria);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      fichaRepositorio.recuperarAcesso.mockResolvedValue({ id: 1 });
+
+      const resultado = await service.recuperarFicha({ id: 5 }, usuarioMembro);
+
+      expect(resultado.dados.historia).toBeUndefined();
+      expect('historia' in resultado.dados).toBe(false);
+    });
+
+    it('mantém historia no payload para o dono e para o mestre', async () => {
+      const fichaComHistoria = {
+        ...fichaPersistida,
+        dados: criarDados({ historia: 'Nasceu numa colônia orbital.' }),
+      };
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaComHistoria);
+
+      const resultadoDono = await service.recuperarFicha({ id: 5 }, usuarioDono);
+      expect(resultadoDono.dados.historia).toBe('Nasceu numa colônia orbital.');
+
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.MESTRE,
+      });
+      const resultadoMestre = await service.recuperarFicha({ id: 5 }, usuarioMestre);
+      expect(resultadoMestre.dados.historia).toBe('Nasceu numa colônia orbital.');
     });
 
     it('lança UnauthorizedAccessException para um membro sem concessão', async () => {

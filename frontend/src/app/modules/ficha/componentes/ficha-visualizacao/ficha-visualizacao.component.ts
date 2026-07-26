@@ -137,11 +137,23 @@ export function ehAbaFicha(valor: string | null | undefined): valor is AbaFicha 
   return ABAS_FICHA.some((aba) => aba.id === valor);
 }
 
-/** Aba da mini barra do card de **Status** (terceira coluna, redesenho de comparação visual). */
-export type AbaStatus = 'informacoes' | 'inventario' | 'habilidades' | 'rolagens' | 'extras';
+/**
+ * Aba da mini barra do card de **Status** (terceira coluna, redesenho de comparação visual).
+ * `historia` (m3-50) é **condicional** — só dono/mestre veem o botão (`ajustavel()`); o template
+ * também gate o painel pelo mesmo sinal, já que a `dados().historia` nem chega ao visualizador
+ * (omitida no backend), mas um fragmento de URL manipulado à mão não deve renderizar a caixa vazia.
+ */
+export type AbaStatus = 'informacoes' | 'inventario' | 'habilidades' | 'rolagens' | 'extras' | 'historia';
 
 /** Todas as abas do card de Status, na ordem de exibição da barra. */
-const ABAS_STATUS: readonly AbaStatus[] = ['informacoes', 'inventario', 'habilidades', 'rolagens', 'extras'];
+const ABAS_STATUS: readonly AbaStatus[] = [
+  'informacoes',
+  'inventario',
+  'habilidades',
+  'rolagens',
+  'extras',
+  'historia',
+];
 
 /** `true` quando a string é uma aba do Status conhecida — valida o `#` (fragmento) da URL (deep-link). */
 export function ehAbaStatus(valor: string | null | undefined): valor is AbaStatus {
@@ -308,6 +320,12 @@ export class FichaVisualizacao {
   /** Anotações livres editadas (m3-32) — a página persiste em `dados.anotacoes`. */
   readonly ajusteAnotacoes = output<string>();
 
+  /**
+   * História livre editada (m3-50) — a página persiste em `dados.historia`. Só emitido quando
+   * `ajustavel()` está ativo (dono/mestre); um visualizador nem vê o botão/painel da aba.
+   */
+  readonly ajusteHistoria = output<string>();
+
   /** Nova Personalidade (m3-25) — a página persiste em `dados.identidade.personalidade`. */
   readonly ajustePersonalidade = output<string>();
 
@@ -437,6 +455,7 @@ export class FichaVisualizacao {
   );
   private readonly entradaIdentidade = viewChild<ElementRef<HTMLInputElement>>('entradaIdentidade');
   private readonly entradaAnotacoes = viewChild<ElementRef<HTMLTextAreaElement>>('entradaAnotacoes');
+  private readonly entradaHistoria = viewChild<ElementRef<HTMLTextAreaElement>>('entradaHistoria');
   /** `true` enquanto o Dinheiro (m3-34, Informações Extras) está em edição. */
   protected readonly editandoDinheiro = signal(false);
   private readonly entradaDinheiro = viewChild<ElementRef<HTMLInputElement>>('entradaDinheiro');
@@ -479,6 +498,11 @@ export class FichaVisualizacao {
     effect(() => {
       if (this.editandoAnotacoes()) {
         this.entradaAnotacoes()?.nativeElement.focus();
+      }
+    });
+    effect(() => {
+      if (this.editandoHistoria()) {
+        this.entradaHistoria()?.nativeElement.focus();
       }
     });
     effect(() => {
@@ -760,6 +784,36 @@ export class FichaVisualizacao {
     this.editandoAnotacoes.set(false);
     if (texto !== this.dados().anotacoes) {
       this.ajusteAnotacoes.emit(texto);
+    }
+  }
+
+  /**
+   * `historia` (m3-50) é opcional — ausente para um visualizador (omitida no backend) e em fichas
+   * sem texto definido; `??` cobre os dois casos antes do `.trim()`.
+   */
+  protected readonly historia = computed(() => (this.dados().historia ?? '').trim());
+
+  /** `true` enquanto a aba própria História (m3-50) está em edição (textarea aberta). */
+  protected readonly editandoHistoria = signal(false);
+
+  /** Abre a edição da História — só chega aqui quando `ajustavel()` (o botão/painel são gated). */
+  protected editarHistoria(): void {
+    this.editandoHistoria.set(true);
+  }
+
+  /** Cancela a edição da História sem alterar. */
+  protected cancelarHistoria(): void {
+    this.editandoHistoria.set(false);
+  }
+
+  /** Confirma o texto digitado (blur/Ctrl+Enter): emite se mudou. Sem trim — espaço é do usuário. */
+  protected confirmarHistoria(texto: string): void {
+    if (!this.editandoHistoria()) {
+      return;
+    }
+    this.editandoHistoria.set(false);
+    if (texto !== (this.dados().historia ?? '')) {
+      this.ajusteHistoria.emit(texto);
     }
   }
 

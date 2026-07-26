@@ -634,6 +634,21 @@ export class FichaVisualizar {
     this.agendarPersistencia();
   }
 
+  /**
+   * Edita a História livre (m3-50): substitui `dados.historia` inteiro, otimista na tela +
+   * persistência em lote — mesmo padrão de `ajustarAnotacoes`. Só dono/mestre chega aqui (a aba
+   * nem aparece pra quem não pode); o backend é quem de fato garante o sigilo (omite o campo pro
+   * visualizador em `recuperarFicha`/broadcast, não só esconde no front).
+   */
+  protected ajustarHistoria(historia: string): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) {
+      return;
+    }
+    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, historia } });
+    this.agendarPersistencia();
+  }
+
   /** Edita o Codinome (relacional) — otimista + persistência em lote. */
   protected ajustarNome(nome: string): void {
     const fichaAtual = this.ficha();

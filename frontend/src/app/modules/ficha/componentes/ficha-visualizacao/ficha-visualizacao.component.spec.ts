@@ -1144,4 +1144,76 @@ describe('FichaVisualizacao', () => {
       expect(raiz.textContent).toContain('Afinidade acima de 10: −10 de Energia no custo de fragmentos.');
     });
   });
+
+  describe('História (m3-50) — aba própria, só dono/mestre', () => {
+    it('não mostra o botão da aba nem o painel quando não ajustável (visualizador)', () => {
+      const { raiz } = montar(dados, 'Corvo', 42, false, false);
+      const botoes = Array.from(raiz.querySelectorAll('.ficha-status__aba')).map((b) =>
+        b.textContent?.trim(),
+      );
+      expect(botoes).not.toContain('História');
+      expect(raiz.textContent).not.toContain('Sem história definida.');
+    });
+
+    it('mostra o botão da aba para dono/mestre (ajustavel)', () => {
+      const { raiz } = montar(dados, 'Corvo', 42, true, false);
+      const botoes = Array.from(raiz.querySelectorAll('.ficha-status__aba')).map((b) =>
+        b.textContent?.trim(),
+      );
+      expect(botoes).toContain('História');
+    });
+
+    it('clicar no botão da aba mostra o texto de história definido', () => {
+      const { raiz, fixture } = montar(
+        { ...dados, historia: 'Nasceu numa colônia orbital.' },
+        'Corvo',
+        42,
+        true,
+        false,
+      );
+      const botao = Array.from(raiz.querySelectorAll('.ficha-status__aba')).find(
+        (b) => b.textContent?.trim() === 'História',
+      ) as HTMLButtonElement;
+      botao.click();
+      fixture.detectChanges();
+
+      expect(raiz.textContent).toContain('Nasceu numa colônia orbital.');
+    });
+
+    it('sem historia definida (ou ausente — visualizador nunca chega aqui) mostra a mensagem de vazio', () => {
+      const { raiz, fixture } = montar(dados, 'Corvo', 42, true, false);
+      fixture.componentRef.setInput('abaStatusInicial', 'historia');
+      fixture.detectChanges();
+
+      expect(raiz.textContent).toContain('Sem história definida.');
+    });
+
+    it('emite ajusteHistoria com o texto confirmado (blur) quando muda', () => {
+      const alvo = montar(dados, 'Corvo', 42, true, false);
+      alvo.fixture.componentRef.setInput('abaStatusInicial', 'historia');
+      alvo.fixture.detectChanges();
+      const emitidos: string[] = [];
+      alvo.fixture.componentInstance.ajusteHistoria.subscribe((h) => emitidos.push(h));
+      const componente = alvo.fixture.componentInstance;
+
+      componente['editarHistoria']();
+      componente['confirmarHistoria']('Nasceu numa colônia orbital.');
+
+      expect(emitidos).toEqual(['Nasceu numa colônia orbital.']);
+    });
+
+    it('não emite ajusteHistoria quando o texto confirmado não mudou', () => {
+      const alvo = montar({ ...dados, historia: 'Já escrita.' }, 'Corvo', 42, true, false);
+      alvo.fixture.componentRef.setInput('abaStatusInicial', 'historia');
+      alvo.fixture.detectChanges();
+      const emitidos: string[] = [];
+      alvo.fixture.componentInstance.ajusteHistoria.subscribe((h) => emitidos.push(h));
+      const componente = alvo.fixture.componentInstance;
+
+      componente['editarHistoria']();
+      componente['confirmarHistoria']('Já escrita.');
+
+      expect(emitidos).toEqual([]);
+    });
+  });
 });
