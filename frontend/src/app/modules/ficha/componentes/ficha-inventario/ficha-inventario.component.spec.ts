@@ -884,6 +884,125 @@ describe('FichaInventario', () => {
     });
   });
 
+  describe('Afinidade — redução de custo de fragmentos acima de 10 (m3-42/m3-49)', () => {
+    /** Monta um fragmento avulso de um módulo, com a quantidade dada (default 1). */
+    function fragmento(modulo: FragmentoModuloEnum, quantidade = 1): CarrinhoItemDto {
+      return {
+        nome: 'Fragmento achado',
+        categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+        custo: 0,
+        peso: 0,
+        quantidade,
+        guardada: false,
+        modificacoes: [],
+        modulo,
+      };
+    }
+
+    it('adquirir um fragmento **considera o próprio módulo** na Afinidade (retroativa) — reduz o custo da própria compra', () => {
+      // 3 já portados de módulo I (Afinidade 15) + o novo módulo I sendo comprado agora (+5) = 20.
+      const alvo = montar({
+        itens: [fragmento(FragmentoModuloEnum.I, 3)],
+        amplificadores: [],
+      });
+      const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
+      alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+
+      alvo.fixture.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Fragmento achado',
+        categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+        modulo: FragmentoModuloEnum.I,
+      });
+      alvo.fixture.componentInstance['confirmarCriarItem']();
+
+      // Afinidade 20 → redução −5 (floor((20-10)/2)); custo base 20 → 15. 50 − 15 = 35.
+      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 35 }]);
+    });
+
+    it('a Afinidade nunca reduz o custo abaixo de 1 (piso do doc), mesmo muito acima de 10', () => {
+      // 6 já portados de módulo I (Afinidade 30) + o novo módulo V sendo comprado agora (+1) = 31.
+      const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.I, 6)], amplificadores: [] });
+      const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
+      alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+
+      alvo.fixture.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Fragmento achado',
+        categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+        modulo: FragmentoModuloEnum.V,
+      });
+      alvo.fixture.componentInstance['confirmarCriarItem']();
+
+      // Custo base de módulo V é 3; a redução (−10) o levaria a −7, mas o piso é 1. 50 − 1 = 49.
+      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 49 }]);
+    });
+
+    it('remover um fragmento restitui a Afinidade ATUAL (retroativa) — pode ser menos do que foi pago na compra', () => {
+      // 3 de módulo I já portados (Afinidade 15) + o item sendo removido, também módulo I (+5) = 20.
+      // Redução −5 → restitui 15, não os 20 cheios que teriam sido cobrados sem nenhum outro fragmento.
+      const alvo = montar({
+        itens: [fragmento(FragmentoModuloEnum.I, 3), fragmento(FragmentoModuloEnum.I)],
+        amplificadores: [],
+      });
+      const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
+      alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+
+      alvo.fixture.componentInstance['confirmarRemocaoItem'](1);
+
+      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 65 }]);
+    });
+
+    it('acoplar um Potencializador sob Afinidade alta reduz os dois lados igualmente — líquido de Energia Máxima continua 0', () => {
+      // 3 de módulo I já portados (Afinidade 15) + o próprio fragmento sendo acoplado, módulo IV
+      // (+2) = 17. Redução −3: aquisição restituída 7→4, acoplamento debitado 7→4 (mesmo valor).
+      const alvo = montar({
+        itens: [
+          itemLeve,
+          fragmento(FragmentoModuloEnum.I, 3),
+          fragmento(FragmentoModuloEnum.IV),
+        ],
+        amplificadores: [],
+      });
+      const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
+      alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+
+      alvo.fixture.componentInstance['abrirAplicarFragmento'](2);
+      alvo.fixture.componentInstance['alvoFragmento'].set(0);
+      alvo.fixture.componentInstance['opcaoBonusFragmento'].set(0);
+      alvo.fixture.componentInstance['confirmarAplicarFragmento'](2);
+
+      // Energia atual debitada já reduzida (7 → 4); Energia Máxima líquida segue 0 apesar da redução.
+      expect(custos).toEqual([{ energiaAtual: 46, energiaMaxima: 50 }]);
+    });
+
+    it('desacoplar sob Afinidade alta reduz o custo de remoção — líquido de Energia Máxima continua 0', () => {
+      const itemComFragmento: CarrinhoItemDto = {
+        ...itemLeve,
+        modificacoes: [
+          {
+            nome: 'Fragmento Potencializador — Módulo IV',
+            empilhamentos: 1,
+            efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: 3 }],
+            ignoraLimiteTotal: true,
+            ignoraLimiteProprio: true,
+            origemFragmento: { tipo: FragmentoTipoEnum.POTENCIALIZADOR, modulo: FragmentoModuloEnum.IV },
+          },
+        ],
+      };
+      // 3 de módulo I soltos (Afinidade 15) + o módulo IV acoplado (+2) = 17. Redução −3.
+      const alvo = montar({
+        itens: [itemComFragmento, fragmento(FragmentoModuloEnum.I, 3)],
+        amplificadores: [],
+      });
+      const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
+      alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+
+      alvo.fixture.componentInstance['removerModificacao'](0, 'Fragmento Potencializador — Módulo IV');
+
+      // Remover módulo IV custaria 14 sem redução; com −3 vira 11. Energia Máxima líquida segue 0.
+      expect(custos).toEqual([{ energiaAtual: 39, energiaMaxima: 50 }]);
+    });
+  });
+
   describe('form de item custom — Fragmento Construtor vs Potencializador é explicado (m3-42)', () => {
     it('categoria Fragmento Construtor: explica que ele é a peça em si', () => {
       const alvo = montar({ itens: [], amplificadores: [] });
@@ -905,6 +1024,80 @@ describe('FichaInventario', () => {
       alvo.fixture.detectChanges();
 
       expect(alvo.raiz.querySelector('.ficha-inv__aviso')?.textContent).toContain('melhora outro item');
+    });
+  });
+
+  describe('catálogo — atalho "Fragmentos" (grade de módulos, botões Construtor/Potencializador direto)', () => {
+    it('a aba "Fragmentos" aparece nas categorias do catálogo, ao lado das demais', () => {
+      const { raiz, fixture, componentInstance } = montar({ itens: [], amplificadores: [] });
+      componentInstance['alternarCatalogo']();
+      fixture.detectChanges();
+      const botao = Array.from(raiz.querySelectorAll('.ficha-inv__categoria')).find(
+        (b) => b.textContent?.trim() === 'Fragmentos',
+      );
+      expect(botao).toBeTruthy();
+    });
+
+    it('clicar em "Fragmentos" mostra a grade de módulos em vez do catálogo comprável — ordem V → I', () => {
+      const { raiz, fixture, componentInstance } = montar({ itens: [], amplificadores: [] });
+      componentInstance['alternarCatalogo']();
+      fixture.detectChanges();
+      componentInstance['selecionarCategoriaFragmentos']();
+      fixture.detectChanges();
+
+      const cartoes = Array.from(raiz.querySelectorAll('.ficha-inv__cartao--fragmento'));
+      const afinidades = cartoes.map((c) => c.querySelector('.ficha-inv__tag')?.textContent?.trim());
+      expect(afinidades).toEqual(['Afinidade +1', 'Afinidade +2', 'Afinidade +3', 'Afinidade +4', 'Afinidade +5']);
+    });
+
+    it('cada cartão tem os dois botões — Construtor e Potencializador — direto, sem passo intermediário', () => {
+      const { raiz, fixture, componentInstance } = montar({ itens: [], amplificadores: [] });
+      componentInstance['alternarCatalogo']();
+      componentInstance['selecionarCategoriaFragmentos']();
+      fixture.detectChanges();
+
+      const primeiroCartao = raiz.querySelector('.ficha-inv__cartao--fragmento');
+      const botoes = Array.from(primeiroCartao?.querySelectorAll('.ficha-inv__cartao-acoes .ficha-inv__btn') ?? []).map(
+        (b) => b.textContent?.trim(),
+      );
+      expect(botoes).toEqual(['+ Potencializador', '+ Construtor']);
+    });
+
+    it('clicar "+ Construtor" num módulo fecha o catálogo e abre o item custom com categoria e módulo pré-preenchidos', () => {
+      const { raiz, fixture, componentInstance } = montar({ itens: [], amplificadores: [] });
+      componentInstance['alternarCatalogo']();
+      componentInstance['selecionarCategoriaFragmentos']();
+      componentInstance['escolherTipoFragmento'](FragmentoModuloEnum.III, FragmentoTipoEnum.CONSTRUTOR);
+      fixture.detectChanges();
+
+      expect(componentInstance['catalogoAberto']()).toBe(false);
+      expect(componentInstance['criandoItem']()).toBe(true);
+      const form = componentInstance['itemCustomForm'].getRawValue();
+      expect(form.categoria).toBe(ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR);
+      expect(form.modulo).toBe(FragmentoModuloEnum.III);
+      expect(raiz.querySelector('.ficha-inv__form')).toBeTruthy();
+    });
+
+    it('clicar "+ Potencializador" pré-preenche a categoria correspondente', () => {
+      const { componentInstance } = montar({ itens: [], amplificadores: [] });
+      componentInstance['alternarCatalogo']();
+      componentInstance['selecionarCategoriaFragmentos']();
+      componentInstance['escolherTipoFragmento'](FragmentoModuloEnum.V, FragmentoTipoEnum.POTENCIALIZADOR);
+
+      const form = componentInstance['itemCustomForm'].getRawValue();
+      expect(form.categoria).toBe(ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR);
+      expect(form.modulo).toBe(FragmentoModuloEnum.V);
+    });
+
+    it('trocar pra outra categoria do catálogo sai da grade de Fragmentos', () => {
+      const { raiz, fixture, componentInstance } = montar({ itens: [], amplificadores: [] });
+      componentInstance['alternarCatalogo']();
+      componentInstance['selecionarCategoriaFragmentos']();
+      componentInstance['definirCategoria'](ItemCategoriaEnum.CORPO_A_CORPO);
+      fixture.detectChanges();
+
+      expect(componentInstance['catalogoFragmentosAtivo']()).toBe(false);
+      expect(raiz.querySelector('.ficha-inv__cartao--fragmento')).toBeNull();
     });
   });
 
@@ -1144,17 +1337,103 @@ describe('FichaInventario', () => {
   });
 
   describe('Amplificadores em grade de 2 colunas (m3-44)', () => {
-    it('a lista de amplificadores (toggle "Ver amplificadores") usa a grade de 2 colunas', () => {
+    it('a lista de amplificadores (filtro "Amplificadores") usa a grade de 2 colunas', () => {
       const { raiz, fixture, componentInstance } = montar({
         itens: [],
         amplificadores: [{ nome: 'Vida', empilhamentos: 1 }],
       });
-      componentInstance['alternarSoAmplificadores']();
+      componentInstance['selecionarFiltroInventario']('amplificadores');
       fixture.detectChanges();
 
       const grade = raiz.querySelector('.ficha-inv__grade-amps');
       expect(grade).not.toBeNull();
       expect(grade?.querySelectorAll('.ficha-inv__item--amp').length).toBe(1);
+    });
+  });
+
+  describe('Filtro de visualização do Inventário (controle segmentado Equipamentos/Amplificadores/Fragmentos)', () => {
+    function fragmentoAvulso(): CarrinhoItemDto {
+      return {
+        nome: 'Fragmento achado',
+        categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+        custo: 0,
+        peso: 0,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        modulo: FragmentoModuloEnum.IV,
+      };
+    }
+
+    /** Localiza o botão do filtro (grupo `.ficha-inv__filtro`) pelo rótulo — nunca troca de texto. */
+    function botaoFiltro(raiz: HTMLElement, rotulo: string): HTMLButtonElement {
+      return Array.from(raiz.querySelectorAll('.ficha-inv__filtro-item')).find(
+        (b) => b.textContent?.trim() === rotulo,
+      ) as HTMLButtonElement;
+    }
+
+    it('começa em "Equipamentos" (mostra tudo) por padrão', () => {
+      const { componentInstance } = montar({ itens: [itemLeve], amplificadores: [] });
+      expect(componentInstance['filtroInventario']()).toBe('equipamentos');
+      expect(componentInstance['mostrandoSoAmplificadores']()).toBe(false);
+      expect(componentInstance['mostrandoSoFragmentos']()).toBe(false);
+    });
+
+    it('selecionar "fragmentos" esconde os demais itens e mostra só a seção de Fragmentos', () => {
+      const { raiz, fixture, componentInstance } = montar({
+        itens: [itemLeve, fragmentoAvulso()],
+        amplificadores: [],
+      });
+      componentInstance['selecionarFiltroInventario']('fragmentos');
+      fixture.detectChanges();
+
+      expect(raiz.textContent).not.toContain('Leve');
+      const cabecalhos = Array.from(raiz.querySelectorAll('.ficha-inv__amps-cabecalho')).map((el) =>
+        el.textContent?.trim(),
+      );
+      expect(cabecalhos).toEqual(['Fragmentos']);
+    });
+
+    it('sem fragmentos no inventário, o filtro "fragmentos" mostra a mensagem de vazio', () => {
+      const { raiz, fixture, componentInstance } = montar({ itens: [itemLeve], amplificadores: [] });
+      componentInstance['selecionarFiltroInventario']('fragmentos');
+      fixture.detectChanges();
+
+      expect(raiz.textContent).toContain('Nenhum fragmento no inventário.');
+    });
+
+    it('é um controle de 3 opções — só uma fica ativa por vez (sem estado combinado possível)', () => {
+      const { componentInstance } = montar({
+        itens: [fragmentoAvulso()],
+        amplificadores: [{ nome: 'Vida', empilhamentos: 1 }],
+      });
+
+      componentInstance['selecionarFiltroInventario']('amplificadores');
+      expect(componentInstance['mostrandoSoAmplificadores']()).toBe(true);
+      expect(componentInstance['mostrandoSoFragmentos']()).toBe(false);
+
+      componentInstance['selecionarFiltroInventario']('fragmentos');
+      expect(componentInstance['mostrandoSoFragmentos']()).toBe(true);
+      expect(componentInstance['mostrandoSoAmplificadores']()).toBe(false);
+
+      componentInstance['selecionarFiltroInventario']('equipamentos');
+      expect(componentInstance['mostrandoSoAmplificadores']()).toBe(false);
+      expect(componentInstance['mostrandoSoFragmentos']()).toBe(false);
+    });
+
+    it('os 3 botões existem sempre visíveis (rótulo fixo) e refletem o estado ativo em aria-pressed', () => {
+      const { raiz, fixture, componentInstance } = montar({ itens: [fragmentoAvulso()], amplificadores: [] });
+      expect(botaoFiltro(raiz, 'Equipamentos')).toBeTruthy();
+      expect(botaoFiltro(raiz, 'Amplificadores')).toBeTruthy();
+      expect(botaoFiltro(raiz, 'Fragmentos')).toBeTruthy();
+
+      botaoFiltro(raiz, 'Fragmentos').click();
+      fixture.detectChanges();
+
+      expect(botaoFiltro(raiz, 'Fragmentos').getAttribute('aria-pressed')).toBe('true');
+      expect(botaoFiltro(raiz, 'Equipamentos').getAttribute('aria-pressed')).toBe('false');
+      expect(botaoFiltro(raiz, 'Fragmentos').textContent?.trim()).toBe('Fragmentos');
+      expect(componentInstance['filtroInventario']()).toBe('fragmentos');
     });
   });
 });

@@ -16,6 +16,8 @@ import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
 import {
   AMPLIFICADORES,
   AmplificadorAplicadoDto,
+  aplicarReducaoAfinidade,
+  calcularAfinidade,
   calcularCustoAmplificador,
   calcularResumoCompras,
   calcularStatItem,
@@ -32,6 +34,7 @@ import {
   listarBonusFragmentoPotencializador,
   listarModificacoesCategoria,
   listarModificacoesDisponiveis,
+  listarModulosFragmentosPortados,
   listarSubInventarios,
   ModificacaoDados,
   ModificacaoEfeitoDto,
@@ -45,6 +48,7 @@ import {
   resolverDadosItem,
   SEQUELA_CONSUMO_FRAGMENTO,
   StatItemDto,
+  valorAfinidadeFragmento,
   verificarConflitoModificacao,
 } from '@contratados-rpg/shared/regras/compras';
 
@@ -161,6 +165,24 @@ function tipoFragmentoDaCategoria(categoria: ItemCategoriaEnum): FragmentoTipoEn
   return null;
 }
 
+/**
+ * Afinidade de Fragmentos (doc — "⬥ Afinidade com Fragmentos"; m3-42/m3-49) a considerar na
+ * redução de custo de uma ação com fragmento — **retroativa**, por pedido do autor: usa sempre a
+ * Afinidade **atual** (nunca a "de quando o fragmento foi comprado"), então o desconto de um
+ * fragmento antigo sobe/desce junto com a Afinidade total de hoje. `itens` é o inventário **antes**
+ * da ação (aquisição/remoção/acoplamento/desacoplamento/consumo mudam a lista depois); `moduloExtra`
+ * só é necessário na **aquisição**, onde o fragmento ainda não existe em `itens` no momento do
+ * débito — nas demais ações o fragmento em questão já está portado (solto ou acoplado) e por isso
+ * já vem contado em `itens` sem precisar somar de novo.
+ */
+function afinidadeConsiderando(
+  itens: readonly CarrinhoItemDto[],
+  moduloExtra?: FragmentoModuloEnum,
+): number {
+  const modulos = listarModulosFragmentosPortados(itens);
+  return calcularAfinidade(moduloExtra ? [...modulos, moduloExtra] : modulos);
+}
+
 /** Cartão de item do catálogo (view-model do passo "adicionar"). */
 interface CartaoItemVM {
   readonly item: ItemCatalogo;
@@ -170,6 +192,14 @@ interface CartaoItemVM {
   readonly stat: string | null;
   readonly bonus: string | null;
   readonly descricao: string | null;
+}
+
+/** Cartão de um módulo (I–V) na grade de Fragmentos do catálogo — atalho pra montar o item custom. */
+interface CartaoModuloFragmentoVM {
+  readonly modulo: FragmentoModuloEnum;
+  readonly afinidade: number;
+  readonly custoPotencializador: number;
+  readonly custoConstrutor: number;
 }
 
 /** Cartão de amplificador do catálogo. */
@@ -226,6 +256,12 @@ export interface CustoEnergiaFragmento {
   readonly energiaAtual: number;
   readonly energiaMaxima: number;
 }
+
+/**
+ * Filtro de visualização da lista do Inventário — controle segmentado de 3 opções (revisão de UX
+ * do filtro "ver só amplificadores"/"ver só fragmentos"). `'equipamentos'` é o padrão (mostra tudo).
+ */
+export type FiltroInventario = 'equipamentos' | 'amplificadores' | 'fragmentos';
 
 /** Item do inventário renderizado (view-model). O `indice` referencia a posição na lista real. */
 interface ItemInventarioVM {
@@ -383,6 +419,14 @@ export class FichaInventario {
   /** Catálogo aberto (montar/adicionar itens) — recolhido por padrão para o inventário respirar. */
   protected readonly catalogoAberto = signal(false);
   protected readonly categoriaAtiva = signal<ItemCategoriaEnum>(ItemCategoriaEnum.CORPO_A_CORPO);
+  /**
+   * `true` quando a aba "Fragmentos" do catálogo está ativa — pseudo-categoria (não é uma entrada
+   * de `categoriaAtiva`/`CATALOGO_ITENS`, que ficam vazios pra Fragmento — doc: são achados, não
+   * comprados) que mostra a grade de módulos I–V em vez de itens/amplificadores.
+   */
+  protected readonly catalogoFragmentosAtivo = signal(false);
+  protected readonly fragmentoTipoConstrutor = FragmentoTipoEnum.CONSTRUTOR;
+  protected readonly fragmentoTipoPotencializador = FragmentoTipoEnum.POTENCIALIZADOR;
 
   /** Busca do catálogo (Reactive Forms — sem `ngModel`). */
   protected readonly busca = new FormControl('', { nonNullable: true });
@@ -395,8 +439,20 @@ export class FichaInventario {
   private readonly termoBuscaItens = computed(() => this.buscaItensTexto().trim().toLowerCase());
   /** `true` quando a linha de ações virou a barra de busca (botão de lupa ao lado de "Custos"). */
   protected readonly buscandoItens = signal(false);
-  /** `true` quando a lista mostra só os amplificadores (toggle ao lado de "Custos"). */
-  protected readonly mostrandoSoAmplificadores = signal(false);
+  /**
+   * Filtro de visualização do Inventário — Equipamentos (tudo, padrão) | só Amplificadores | só
+   * Fragmentos. Revisão de UX: era dois botões-toggle independentes (cada um trocava o próprio
+   * rótulo entre a categoria e "Equipamentos") — ficava estranho tanto no texto (rótulo mutante,
+   * ambíguo sobre o estado atual) quanto no layout (dois botões soltos quebravam linha sozinhos,
+   * sem se conectar visualmente). Virou um único controle segmentado de 3 opções (sempre uma
+   * ativa), mesmo padrão visual da barra de abas do Status (`ficha-visualizacao` —
+   * `.ficha-status__abas`).
+   */
+  protected readonly filtroInventario = signal<FiltroInventario>('equipamentos');
+  /** `true` quando o filtro mostra só os amplificadores — mantido para o resto do componente/template. */
+  protected readonly mostrandoSoAmplificadores = computed(() => this.filtroInventario() === 'amplificadores');
+  /** `true` quando o filtro mostra só os fragmentos — mantido para o resto do componente/template. */
+  protected readonly mostrandoSoFragmentos = computed(() => this.filtroInventario() === 'fragmentos');
 
   /** Índices dos itens com o painel de modificações ("Modificar") aberto. */
   private readonly painelAbertos = signal<ReadonlySet<number>>(new Set());
@@ -594,6 +650,9 @@ export class FichaInventario {
   // === Catálogo ===
   /** Se a categoria de amplificadores deve ser exibida (aba ativa ou casada pela busca). */
   protected readonly mostrarAmplificadores = computed(() => {
+    if (this.catalogoFragmentosAtivo()) {
+      return false;
+    }
     const termo = this.termoBusca();
     if (!termo) {
       return this.categoriaAtiva() === ItemCategoriaEnum.AMPLIFICADOR;
@@ -616,7 +675,7 @@ export class FichaInventario {
           }
         }
       }
-    } else if (this.categoriaAtiva() !== ItemCategoriaEnum.AMPLIFICADOR) {
+    } else if (!this.catalogoFragmentosAtivo() && this.categoriaAtiva() !== ItemCategoriaEnum.AMPLIFICADOR) {
       const categoria = this.categoriaAtiva();
       for (const item of CATALOGO_ITENS[categoria]) {
         bruto.push({ item, categoria });
@@ -624,6 +683,23 @@ export class FichaInventario {
     }
     return bruto.map(({ item, categoria }) => this.montarCartaoItem(item, categoria));
   });
+
+  /**
+   * Grade de módulos de Fragmento — Fragmentos não têm catálogo comprável (achados, m3-49), então
+   * cada cartão é só o atalho pra escolher módulo + tipo e abrir o item custom pré-preenchido.
+   * Custo mostrado é o de **adquirir** (Energia Máxima) — Construtor é sempre o dobro do
+   * Potencializador. Ordem **V → I** (do módulo mais fraco/comum pro mais forte/raro — o jogador
+   * tende a achar os fracos primeiro; a ordem crescente de força faz mais sentido de leitura que a
+   * ordem "I é o mais forte" usada no `<select>` do item custom).
+   */
+  protected readonly cartaoModulosFragmento = computed<readonly CartaoModuloFragmentoVM[]>(() =>
+    MODULOS_FRAGMENTO.map((modulo) => ({
+      modulo,
+      afinidade: valorAfinidadeFragmento(modulo),
+      custoPotencializador: custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, modulo),
+      custoConstrutor: custoAquisicaoFragmento(FragmentoTipoEnum.CONSTRUTOR, modulo),
+    })).reverse(),
+  );
 
   /** Cartões de amplificador do catálogo, filtrados pela busca quando houver. */
   protected readonly amplificadoresCatalogo = computed<readonly CartaoAmpVM[]>(() => {
@@ -653,7 +729,8 @@ export class FichaInventario {
   });
 
   protected readonly catalogoVazio = computed(
-    () => this.itensCatalogo().length === 0 && !this.mostrarAmplificadores(),
+    () =>
+      !this.catalogoFragmentosAtivo() && this.itensCatalogo().length === 0 && !this.mostrarAmplificadores(),
   );
 
   // === Inventário (lista) ===
@@ -825,6 +902,41 @@ export class FichaInventario {
 
   protected definirCategoria(categoria: ItemCategoriaEnum): void {
     this.categoriaAtiva.set(categoria);
+    this.catalogoFragmentosAtivo.set(false);
+  }
+
+  /** Abre a grade de módulos de Fragmento no catálogo — pseudo-categoria, ver `catalogoFragmentosAtivo`. */
+  protected selecionarCategoriaFragmentos(): void {
+    this.catalogoFragmentosAtivo.set(true);
+  }
+
+  /**
+   * Escolhe o módulo + tipo (Construtor/Potencializador — cada cartão da grade de Fragmentos tem um
+   * botão de cada) direto: fecha o catálogo e abre o formulário de item custom já pré-preenchido com
+   * a categoria e o módulo — o resto (nome, custo, peso, dano/resistência) o jogador preenche como
+   * qualquer achado.
+   */
+  protected escolherTipoFragmento(modulo: FragmentoModuloEnum, tipo: FragmentoTipoEnum): void {
+    const categoria =
+      tipo === FragmentoTipoEnum.CONSTRUTOR
+        ? ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR
+        : ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR;
+    this.itemCustomForm.reset({
+      nome: '',
+      categoria,
+      custo: 0,
+      peso: 1,
+      descricao: '',
+      dano: '',
+      informacao: '',
+      resistencia: '',
+      bonus: '',
+      categoriaEmprestada: '',
+      modulo,
+    });
+    this.catalogoAberto.set(false);
+    this.catalogoFragmentosAtivo.set(false);
+    this.criandoItem.set(true);
   }
 
   protected adicionarItem(vm: CartaoItemVM): void {
@@ -877,19 +989,27 @@ export class FichaInventario {
       return;
     }
     const item = this.montarItemCustom();
+    const itensAntes = this.inventario().itens;
     this.inserirItem(item);
     this.sinalizarAdicao(this.chaveCartao(item.categoria, item.nome));
     this.criandoItem.set(false);
-    this.debitarAquisicaoFragmento(item);
+    this.debitarAquisicaoFragmento(item, itensAntes);
   }
 
-  /** Debita a Energia Máxima de adquirir um Fragmento (m3-35) — nenhum custo fora das duas categorias. */
-  private debitarAquisicaoFragmento(item: CarrinhoItemDto): void {
+  /**
+   * Debita a Energia Máxima de adquirir um Fragmento (m3-35) — nenhum custo fora das duas
+   * categorias. Reduzido pela Afinidade acima de 10 (m3-42/m3-49, `aplicarReducaoAfinidade`) — a
+   * Afinidade "considera" o próprio fragmento sendo adquirido (retroativa, ver `afinidadeConsiderando`),
+   * já que ele entra no inventário logo em seguida. `itensAntes` é o inventário **antes** de
+   * `inserirItem` o incluir (evita contar o fragmento duas vezes).
+   */
+  private debitarAquisicaoFragmento(item: CarrinhoItemDto, itensAntes: readonly CarrinhoItemDto[]): void {
     const tipo = tipoFragmentoDaCategoria(item.categoria);
     if (!tipo || !item.modulo) {
       return;
     }
-    const custo = custoAquisicaoFragmento(tipo, item.modulo);
+    const afinidade = afinidadeConsiderando(itensAntes, item.modulo);
+    const custo = aplicarReducaoAfinidade(custoAquisicaoFragmento(tipo, item.modulo), afinidade);
     this.ajusteEnergiaFragmento.emit({
       energiaAtual: this.energiaAtual(),
       energiaMaxima: this.energiaMaxima() - custo,
@@ -1028,22 +1148,29 @@ export class FichaInventario {
    * sair do inventário (m3-35 — doc: "esse gasto cessa ao remover o fragmento de seu inventário").
    */
   protected confirmarRemocaoItem(indice: number): void {
-    const item = this.inventario().itens[indice];
-    this.emitirItens(this.inventario().itens.filter((_, i) => i !== indice));
+    const itensAntes = this.inventario().itens;
+    const item = itensAntes[indice];
+    this.emitirItens(itensAntes.filter((_, i) => i !== indice));
     this.indiceConfirmandoRemocao.set(null);
     this.fecharPainel(indice);
     if (item) {
-      this.restaurarAquisicaoFragmento(item);
+      this.restaurarAquisicaoFragmento(item, itensAntes);
     }
   }
 
-  /** Restaura a Energia Máxima drenada por um Fragmento removido do inventário (m3-35). */
-  private restaurarAquisicaoFragmento(item: CarrinhoItemDto): void {
+  /**
+   * Restaura a Energia Máxima drenada por um Fragmento removido do inventário (m3-35). Mesma
+   * redução por Afinidade da aquisição (m3-42/m3-49) — `itensAntes` ainda inclui o próprio
+   * fragmento sendo removido, então a Afinidade "atual" já o conta (retroativa, sem precisar somar
+   * de novo como na aquisição).
+   */
+  private restaurarAquisicaoFragmento(item: CarrinhoItemDto, itensAntes: readonly CarrinhoItemDto[]): void {
     const tipo = tipoFragmentoDaCategoria(item.categoria);
     if (!tipo || !item.modulo) {
       return;
     }
-    const custo = custoAquisicaoFragmento(tipo, item.modulo);
+    const afinidade = afinidadeConsiderando(itensAntes);
+    const custo = aplicarReducaoAfinidade(custoAquisicaoFragmento(tipo, item.modulo), afinidade);
     this.ajusteEnergiaFragmento.emit({
       energiaAtual: this.energiaAtual(),
       energiaMaxima: this.energiaMaxima() + custo,
@@ -1112,8 +1239,19 @@ export class FichaInventario {
       .filter((_, i) => i !== fragmentoIndice);
     this.emitirItens(novosItens);
 
-    const custoAquisicao = custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, fragmento.modulo);
-    const custo = custoAcoplarFragmento(fragmento.modulo);
+    // Afinidade (m3-42/m3-49): o fragmento já está portado em `itens` (ainda solto, antes do
+    // acoplamento) — mesma Afinidade reduz os dois lados (aquisição restituída e acoplamento
+    // debitado), preservando o líquido zero do Potencializador (docstring acima).
+    const afinidade = afinidadeConsiderando(itens);
+    const custoAquisicao = aplicarReducaoAfinidade(
+      custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, fragmento.modulo),
+      afinidade,
+    );
+    const custoBruto = custoAcoplarFragmento(fragmento.modulo);
+    const custo = {
+      energia: aplicarReducaoAfinidade(custoBruto.energia, afinidade),
+      energiaMaxima: aplicarReducaoAfinidade(custoBruto.energiaMaxima, afinidade),
+    };
     this.ajusteEnergiaFragmento.emit({
       energiaAtual: this.energiaAtual() - custo.energia,
       energiaMaxima: this.energiaMaxima() + custoAquisicao - custo.energiaMaxima,
@@ -1146,16 +1284,22 @@ export class FichaInventario {
    * mental (sequela "Rejeição Biológica" × multiplicador, só se o jogador não evitou com Vontade).
    */
   protected confirmarConsumirFragmento(fragmentoIndice: number): void {
-    const item = this.inventario().itens[fragmentoIndice];
+    const itensAntes = this.inventario().itens;
+    const item = itensAntes[fragmentoIndice];
     const tipo = item ? tipoFragmentoDaCategoria(item.categoria) : null;
     const preco = this.precoSanidadeConsumo();
     if (!item?.modulo || !tipo || !preco) {
       return;
     }
 
-    this.emitirItens(this.inventario().itens.filter((_, i) => i !== fragmentoIndice));
+    this.emitirItens(itensAntes.filter((_, i) => i !== fragmentoIndice));
 
-    const custoAquisicao = custoAquisicaoFragmento(tipo, item.modulo);
+    // Afinidade (m3-42/m3-49) só reduz a restituição da aquisição — o Preço de Sanidade
+    // (`energiaMaximaExtra`) é o preço físico de consumir o fragmento, não um "custo de fragmento".
+    const custoAquisicao = aplicarReducaoAfinidade(
+      custoAquisicaoFragmento(tipo, item.modulo),
+      afinidadeConsiderando(itensAntes),
+    );
     this.ajusteEnergiaFragmento.emit({
       energiaAtual: this.energiaAtual(),
       energiaMaxima: this.energiaMaxima() + custoAquisicao - preco.energiaMaximaExtra,
@@ -1412,16 +1556,23 @@ export class FichaInventario {
       modificacoes: [],
       modulo,
     };
-    const itens = this.inventario().itens.map((item, i) =>
+    const itensAntes = this.inventario().itens;
+    const itens = itensAntes.map((item, i) =>
       i === indiceAlvo
         ? { ...item, modificacoes: item.modificacoes.filter((mod) => mod.nome !== modNome) }
         : item,
     );
     this.emitirItens([...itens, fragmentoAvulso]);
 
-    const custoRemocao = custoRemoverFragmento(modulo);
-    const custoAquisicao = custoAquisicaoFragmento(tipo, modulo);
-    const energiaMaximaAcoplamento = custoAcoplarFragmento(modulo).energiaMaxima;
+    // Afinidade (m3-42/m3-49): o fragmento já está portado (acoplado) em `itensAntes` — mesma
+    // Afinidade reduz os três termos, preservando o líquido zero de acoplamento↔desacoplamento.
+    const afinidade = afinidadeConsiderando(itensAntes);
+    const custoRemocao = aplicarReducaoAfinidade(custoRemoverFragmento(modulo), afinidade);
+    const custoAquisicao = aplicarReducaoAfinidade(custoAquisicaoFragmento(tipo, modulo), afinidade);
+    const energiaMaximaAcoplamento = aplicarReducaoAfinidade(
+      custoAcoplarFragmento(modulo).energiaMaxima,
+      afinidade,
+    );
     this.ajusteEnergiaFragmento.emit({
       energiaAtual: this.energiaAtual() - custoRemocao,
       energiaMaxima: this.energiaMaxima() + energiaMaximaAcoplamento - custoAquisicao,
@@ -1687,8 +1838,9 @@ export class FichaInventario {
     this.mostrarCustos.update((mostrar) => !mostrar);
   }
 
-  protected alternarSoAmplificadores(): void {
-    this.mostrandoSoAmplificadores.update((mostrar) => !mostrar);
+  /** Seleciona o filtro de visualização do Inventário (controle segmentado — sempre um ativo). */
+  protected selecionarFiltroInventario(filtro: FiltroInventario): void {
+    this.filtroInventario.set(filtro);
   }
 
   /** Abre a barra de busca de itens — substitui a linha de ações inteira (botão de lupa). */

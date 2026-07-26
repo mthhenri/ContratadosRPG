@@ -387,6 +387,67 @@
 
 }
 
+// === Extras: Origem/Personalidade/afinidade de Fragmentos (m3-49, aba "Extras" do Status) ===
+.ficha-extras {
+  &__secao {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__titulo {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+  }
+
+  &__texto {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-dim);
+    margin: 0;
+  }
+
+  &__linha {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  &__rotulo {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+    flex: 0 0 auto;
+  }
+
+  &__valor {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  &__nota {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-style: italic;
+    color: var(--text-mute);
+    margin: 0;
+  }
+}
+
 // Fórmula da DT abaixo do título (não cabe ao lado do título+régua) — linha própria, centralizada.
 .ficha-atributos__formula {
   text-align: center;

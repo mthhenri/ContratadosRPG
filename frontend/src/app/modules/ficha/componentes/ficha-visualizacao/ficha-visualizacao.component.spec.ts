@@ -4,6 +4,8 @@ import {
   ArquetipoEnum,
   ClasseEnum,
   FormacaoBonusEnum,
+  FragmentoModuloEnum,
+  FragmentoTipoEnum,
   HabilidadeCategoriaEnum,
   ItemCategoriaEnum,
   SeveridadeLesaoEnum,
@@ -11,6 +13,7 @@ import {
 } from '@contratados-rpg/shared/enums';
 import type { FichaJogadorDadosDto, FichaOrigemDto } from '@contratados-rpg/shared/dtos/ficha';
 import { calcularVida } from '@contratados-rpg/shared/regras/agente';
+import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
@@ -1001,6 +1004,144 @@ describe('FichaVisualizacao', () => {
       alvo.fixture.componentInstance['aoConsumirFragmentoSanidade']([]);
 
       expect(emitidos).toEqual([]);
+    });
+  });
+
+  describe('Extras (m3-49) — Origem/Personalidade/afinidade de fragmentos na aba "Extras" do Status', () => {
+    const origemExemplo: FichaOrigemDto = {
+      nome: 'Ex-Militar',
+      descricao: 'Serviu nas forças armadas antes de ser recrutado.',
+      saberDeCampo: 'Táticas de combate urbano',
+      formacao: [
+        { bonus: FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO, parametro: null, texto: '+1m de Deslocamento' },
+      ],
+      especialidade: { gatilho: 'Sob fogo direto', efeito: '+1 dado em um teste' },
+    };
+
+    /** Monta já na aba "Extras" (evita depender de clique na barra do card de Status). */
+    function montarExtras(documento: FichaJogadorDadosDto) {
+      const alvo = montar(documento);
+      alvo.fixture.componentRef.setInput('abaStatusInicial', 'extras');
+      alvo.fixture.detectChanges();
+      return alvo;
+    }
+
+    it('mostra nome/descrição/Saber de Campo/Especialidade/Formação da Origem definida', () => {
+      const { raiz } = montarExtras({ ...dados, identidade: { personalidade: null, origem: origemExemplo } });
+
+      expect(raiz.querySelector('.ficha-extras__titulo')?.textContent?.trim()).toBe('Ex-Militar');
+      expect(raiz.textContent).toContain('Serviu nas forças armadas antes de ser recrutado.');
+      expect(raiz.textContent).toContain('Táticas de combate urbano');
+      expect(raiz.textContent).toContain('Sob fogo direto — +1 dado em um teste');
+      const chips = Array.from(raiz.querySelectorAll('.ficha-extras__chips .chip')).map((c) =>
+        c.textContent?.trim(),
+      );
+      expect(chips).toContain('+1m de Deslocamento');
+    });
+
+    it('Origem ainda não definida mostra a mensagem de vazio', () => {
+      const { raiz } = montarExtras(dados);
+      expect(raiz.textContent).toContain('Origem ainda não definida.');
+    });
+
+    it('mostra a Personalidade e a descrição da habilidade correspondente (categoria PERSONALIDADE)', () => {
+      const { raiz } = montarExtras({
+        ...dados,
+        identidade: { personalidade: 'Destemido', origem: null },
+        habilidades: [
+          {
+            nome: 'Destemido',
+            categoria: HabilidadeCategoriaEnum.PERSONALIDADE,
+            custoEnergia: 2,
+            descricao: 'Ignora a primeira fonte de Medo em cada cena.',
+          },
+        ],
+      });
+
+      const secaoPersonalidade = Array.from(raiz.querySelectorAll('.ficha-extras__secao')).find((secao) =>
+        secao.textContent?.includes('Destemido'),
+      );
+      expect(secaoPersonalidade?.querySelector('.ficha-extras__titulo')?.textContent?.trim()).toBe('Destemido');
+      expect(secaoPersonalidade?.textContent).toContain('Ignora a primeira fonte de Medo em cada cena.');
+      expect(secaoPersonalidade?.textContent).toContain('2 E');
+    });
+
+    it('Personalidade definida sem habilidade cadastrada avisa "sem habilidade registrada"', () => {
+      const { raiz } = montarExtras({ ...dados, identidade: { personalidade: 'Destemido', origem: null } });
+      expect(raiz.textContent).toContain('Sem habilidade de Personalidade registrada.');
+    });
+
+    it('afinidade soma fragmentos soltos (por unidade do stack) + fragmentos já acoplados como Modificação', () => {
+      const itens: CarrinhoItemDto[] = [
+        // 2 fragmentos Potencializador módulo V ainda soltos no inventário (mesmo stack, quantidade 2).
+        {
+          nome: 'Fragmento Potencializador',
+          categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+          custo: 0,
+          peso: 0,
+          quantidade: 2,
+          guardada: false,
+          modificacoes: [],
+          modulo: FragmentoModuloEnum.V,
+        },
+        // 1 fragmento módulo IV já acoplado a uma arma — vira Modificação com origemFragmento (m3-42).
+        {
+          nome: 'Pistola',
+          categoria: ItemCategoriaEnum.ARMAS_DE_FOGO,
+          custo: 100,
+          peso: 1,
+          quantidade: 1,
+          guardada: false,
+          modificacoes: [
+            {
+              nome: 'Fragmento Potencializador — Módulo IV',
+              empilhamentos: 1,
+              efeitos: [],
+              origemFragmento: { tipo: FragmentoTipoEnum.POTENCIALIZADOR, modulo: FragmentoModuloEnum.IV },
+            },
+          ],
+        },
+      ];
+      const { raiz, fixture } = montarExtras({ ...dados, inventario: { itens, amplificadores: [] } });
+
+      // Doc — "⬥ Afinidade com Fragmentos": 2× módulo V (1 cada) + 1× módulo IV (2) = 4.
+      expect(fixture.componentInstance['afinidadeFragmentos']()).toBe(4);
+      const box = Array.from(raiz.querySelectorAll('.ficha-mini')).find(
+        (b) => b.querySelector('.ficha-mini__rotulo')?.textContent?.trim() === 'Afinidade',
+      );
+      expect(box?.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('4');
+      const chips = Array.from(raiz.querySelectorAll('.ficha-extras__chips .chip')).map((c) =>
+        c.textContent?.trim(),
+      );
+      expect(chips.filter((c) => c === 'Módulo V')).toHaveLength(2);
+      expect(chips).toContain('Módulo IV');
+    });
+
+    it('sem fragmentos portados: afinidade 0 e mensagem de vazio, sem nota de redução', () => {
+      const { raiz, fixture } = montarExtras(dados);
+      expect(fixture.componentInstance['afinidadeFragmentos']()).toBe(0);
+      expect(raiz.textContent).toContain('Nenhum fragmento portado.');
+      expect(raiz.textContent).not.toContain('Afinidade acima de 10');
+    });
+
+    it('afinidade acima de 10 mostra a nota de redução de custo de Energia (m3-42)', () => {
+      // 6 fragmentos módulo I (5 cada) = 30 de afinidade → redução de −10 (floor((30-10)/2)).
+      const itens: CarrinhoItemDto[] = [
+        {
+          nome: 'Fragmento Potencializador',
+          categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+          custo: 0,
+          peso: 0,
+          quantidade: 6,
+          guardada: false,
+          modificacoes: [],
+          modulo: FragmentoModuloEnum.I,
+        },
+      ];
+      const { raiz, fixture } = montarExtras({ ...dados, inventario: { itens, amplificadores: [] } });
+
+      expect(fixture.componentInstance['afinidadeFragmentos']()).toBe(30);
+      expect(raiz.textContent).toContain('Afinidade acima de 10: −10 de Energia no custo de fragmentos.');
     });
   });
 });

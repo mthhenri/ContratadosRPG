@@ -1,6 +1,238 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-25 (**m3-48 — Filtro/contador de Habilidades (cumulativo)**: task
+> Última atualização: 2026-07-26 (**Fade de overflow no filtro do Inventário + ícone em
+> "Equipamentos"**: dois pedidos diretos e curtos do autor. (1) "aplique o fade no overflow da
+> lista de equipamentos, amplificadores e fragmentos" — auditoria achou que Equipamentos
+> (`.ficha-inv__lista`) e Fragmentos (`.ficha-inv__amps`, dentro do `@if
+> (!mostrandoSoAmplificadores() && itensListaFragmentos()...)`) já tinham `appOverflowFade`; só a
+> seção **Amplificadores** (mesma classe `.ficha-inv__amps`, bloco `@if
+> (mostrandoSoAmplificadores() && ...)` logo abaixo) estava **sem** a diretiva — inconsistência,
+> não redesenho: os três já compartilhavam a mesma máscara CSS (`&__lista, &__amps` no SCSS), só
+> faltava a diretiva computar as classes `overflow-fade--topo/base` pra essa seção. Adicionado
+> `appOverflowFade` no `<div class="ficha-inv__amps">` da seção Amplificadores — verificado ao vivo
+> (Playwright, ficha com os 16 amplificadores do catálogo + Vontade 30 pra passar dos 420px de
+> teto): antes de rolar só `overflow-fade--base`; no meio do scroll, `--topo` **e** `--base` juntos,
+> confirmando a máscara reagindo de verdade. (2) "coloca um icone em equipamentos" — o botão
+> "Equipamentos" do controle segmentado era o único dos três sem ícone (Amplificadores usa
+> `amplificador`, Fragmentos usa `fragmento`); adicionado `<app-icone nome="corpo-a-corpo" />`
+> (glifo de espada já usado como ícone da categoria Corpo a Corpo — sem ícone genérico de
+> "equipamentos" no catálogo do `Icone`, a espada é o glifo mais próximo de "arma/equipamento" que
+> já existe, evitando inventar um novo). Testes: 88/89 frontend (mesma falha pré-existente alheia).
+> Lint: só o mesmo erro alheio de sempre. Nenhum spec numerado criado.)
+>
+> (**Fix de layout — botões Potencializador/Construtor vazando do
+> cartão**: seguindo direto a task anterior, o autor mandou print mostrando os dois botões lado a
+> lado ("+ Potencializador"/"+ Construtor") **vazando pra fora do cartão** em telas largas — o
+> texto do botão não encolhia (flex item sem `min-width:0`) e transbordava sobre o cartão vizinho,
+> forçando até *overflow-x* na grade inteira. Corrigido **empilhando os dois botões** (coluna, não
+> lado a lado) — sempre cabem por inteiro, independente da largura da coluna do grid. Novo modifier
+> `.ficha-inv__cartao-acoes--coluna` (`flex-direction: column`) somado aos botões trocando
+> `ficha-inv__btn--flex` por `ficha-inv__btn--largo` (100% de largura). Verificado ao vivo
+> (Playwright, viewport 1600 — mesma largura do print do autor): nenhum botão vaza do próprio
+> cartão, `scrollWidth === clientWidth` na grade (sem scroll horizontal). Testes/lint inalterados
+> (489/490 frontend, mesma falha alheia; lint só o erro alheio de sempre).)
+>
+> (**Ajuste de UI/UX no atalho "Fragmentos" do catálogo** — dois
+> pedidos diretos do autor logo depois da task anterior entrar, com print da grade de módulos:
+> "ajuste o visual, inverta a ordem da lista (primeiro mod. V por fim mod. I)" + "o botão de
+> adicionar deles deve ser dividido em contrutor e potencializador para ser mais simples". (1)
+> **Ordem invertida**: `cartaoModulosFragmento` agora faz `.reverse()` no fim (V → I, do módulo mais
+> fraco/comum pro mais forte/raro — só a grade do catálogo; o `<select>` "Módulo do fragmento" do
+> item custom continua I → V, sem mudança). (2) **Passo intermediário removido**: a pergunta
+> "Construtor ou Potencializador?" que abria depois de escolher o módulo (signal
+> `moduloFragmentoEscolhido`, métodos `escolherModuloFragmento`/`cancelarModuloFragmento`) foi
+> **eliminada** — cada cartão da grade agora tem os **dois botões direto** ("+ Potencializador"
+> secundário, "+ Construtor" principal/accent, lado a lado em `.ficha-inv__cartao-acoes`).
+> `escolherTipoFragmento` mudou de assinatura: recebia só o `tipo` (lendo o módulo do signal
+> removido) e passou a receber `(modulo, tipo)` direto do clique — um clique a menos no fluxo
+> inteiro. Visual do cartão também ganhou: badge "Afinidade +N" ao lado do nome (reaproveitando
+> `.ficha-inv__tag`, mesmo padrão de bônus dos itens do catálogo) em vez de linha solta, e os dois
+> custos (Potencializador/Construtor) em duas linhas rótulo↔valor (`.ficha-inv__cartao-fragmento-custo`,
+> nova classe, só tokens do tema) em vez do texto corrido que colava "(Construtor)" no cartão vizinho
+> da grade. **Testes:** as 4 antigas que testavam o passo intermediário (perguntar tipo, "Voltar")
+> foram substituídas por 2 que provam os botões diretos no cartão + a ordem V→I via os badges de
+> Afinidade — 6 testes no describe (489/490 frontend total, mesma falha pré-existente alheia de
+> sempre). Lint: só o mesmo erro pré-existente alheio. **Verificado ao vivo** (Playwright, stack
+> real): grade renderiza V→I, cada cartão com os 2 botões, clicar "+ Construtor" no cartão de Módulo
+> V abre o item custom já com "Fragmento Construtor" + "Módulo V" selecionados — 2 screenshots
+> confirmando. Nenhum spec numerado criado.)
+>
+> (**Atalho "Fragmentos" no catálogo "+ Adicionar itens"**: pedido
+> direto do autor — "No '+ Adicionar Itens' adicione a opção de 'Fragmentos' onde ele já tem os 5
+> módulos e, ao adicionar, ele pergunta se é construtor ou potencializador e, após a seleção, abre o
+> formulário devido". Fragmentos não têm catálogo comprável (`CATALOGO_ITENS[FRAGMENTO_CONSTRUTOR]`/
+> `[FRAGMENTO_POTENCIALIZADOR]` são `[]` — doc: são achados, não comprados), então a nova aba
+> "Fragmentos" em `.ficha-inv__categorias` é uma **pseudo-categoria** (`catalogoFragmentosAtivo`
+> signal, não um valor de `categoriaAtiva`) que troca a grade de itens/amplificadores por uma grade
+> de 5 cartões (Módulo I–V, com Afinidade e custo de Energia de adquirir em Potencializador/
+> Construtor — `custoAquisicaoFragmento`/`valorAfinidadeFragmento`, `shared/regras/compras`, zero
+> fórmula nova). Clicar num módulo (`escolherModuloFragmento`) abre a pergunta Construtor ou
+> Potencializador (`moduloFragmentoEscolhido` signal); escolher um tipo
+> (`escolherTipoFragmento(tipo)`) fecha o catálogo, reseta o `itemCustomForm` já com `categoria` +
+> `modulo` pré-preenchidos e abre `criandoItem` — o formulário de item custom que já existia
+> (nome/custo/peso/dano/resistência, aviso explicando Construtor vs Potencializador) assume dali em
+> diante sem nenhuma duplicação. `mostrarAmplificadores`/`itensCatalogo`/`catalogoVazio` ganharam o
+> guard `!catalogoFragmentosAtivo()`; `definirCategoria()` (clicar numa categoria normal) sai da
+> pseudo-categoria. **Bug pego na verificação ao vivo** (não nos testes): a aba "Fragmentos" e a
+> categoria antiga (ex.: "Corpo a Corpo") apareciam **ativas ao mesmo tempo** (ambas com o
+> `--ativa` accent) porque o `[class.ficha-inv__categoria--ativa]` das categorias normais só
+> checava `categoriaAtiva()`, sem saber da pseudo-categoria — corrigido com
+> `!catalogoFragmentosAtivo() &&` na condição. **Testes:** 8 novos (aba aparece nas categorias,
+> grade mostra os 5 módulos, escolher módulo pergunta o tipo, Construtor/Potencializador
+> pré-preenchem a categoria certa, "Voltar" retorna à grade sem fechar o catálogo, trocar de
+> categoria sai da grade) — 489/490 frontend (1 falha pré-existente alheia, mesma de sempre; shared
+> 452/452). Lint: só o mesmo erro pré-existente alheio (`no-autofocus`). **Verificado ao vivo**
+> (stack real, Playwright): fluxo completo registro → campanha → ficha → aba Inventário → "+
+> Adicionar itens" → "Fragmentos" → Módulo III → Construtor → item custom pré-preenchido → "Núcleo
+> de Teste" preenchido e enviado → item aparece na seção Fragmentos do inventário com a Energia
+> Máxima debitada — 5 screenshots confirmando cada passo, inclusive o antes/depois do fix do bug de
+> duas abas ativas. Nenhum spec numerado criado.)
+>
+> (**Revisão de UX do filtro de Inventário — controle segmentado**:
+> pedido direto do autor logo depois do filtro de Fragmentos entrar ("melhore a UI/UX destes
+> botões, ta estranho os filtros", com print dos dois botões "Amplificadores"/"Fragmentos" lado a
+> lado). Causa do estranhamento: os dois toggles independentes trocavam o **próprio rótulo** para
+> "Equipamentos" no estado ativo (ambíguo — não dava pra saber de relance qual filtro estava ligado
+> só olhando o par de botões) e, por serem só 2 numa `flex-wrap` linha cheia de outros botões
+> ("+ Adicionar itens"/"+ Item custom"/"Esvaziar"/"Custos"), quebravam pra uma 2ª linha sozinhos com
+> bastante espaço vazio sobrando. **Substituídos por um único controle segmentado de 3 opções**
+> sempre visíveis (Equipamentos/Amplificadores/Fragmentos, sempre uma ativa) — mesmo padrão visual
+> da barra de abas do Status (`ficha-visualizacao` — `.ficha-status__abas`/`.ficha-status__aba`,
+> ativa em accent sólido), só com os itens do tamanho do próprio conteúdo em vez de esticados, e em
+> linha própria abaixo dos botões de ação (não mais espremido dentro do `.ficha-inv__acoes`). Em
+> `ficha-inventario.component.ts`: os dois `signal<boolean>` independentes (`mostrandoSoAmplificadores`/
+> `mostrandoSoFragmentos`) mais os dois métodos `alternarSoX()` viraram um único
+> `filtroInventario = signal<FiltroInventario>('equipamentos')` (`FiltroInventario = 'equipamentos' |
+> 'amplificadores' | 'fragmentos'`, exportado) + `selecionarFiltroInventario(filtro)` — a exclusão
+> mútua deixou de precisar de código (`.set(false)` cruzado): é estrutural, só um valor de cada vez.
+> `mostrandoSoAmplificadores`/`mostrandoSoFragmentos` **continuam existindo**, agora como `computed`
+> derivados do novo signal — toda a lógica de filtragem de listas (`itensListaPrincipal`, a seção
+> "Fragmentos", a seção "Amplificadores") **não mudou uma linha**, só a fonte da verdade por trás
+> dela. Novo bloco SCSS `.ficha-inv__filtro`/`.ficha-inv__filtro-item` (só tokens do tema —
+> proibição #29), reaproveitando literalmente as mesmas regras de cor/peso de fonte do
+> `.ficha-status__aba` (ativo = `--bg` sobre `--accent` sólido). **Testes:** os 5 testes do filtro
+> (alguns já existentes da task anterior, outros novos) foram reescritos pra bater no novo método —
+> "começa em Equipamentos por padrão", "selecionar fragmentos esconde o resto", "mensagem de vazio",
+> "só uma opção ativa por vez" (a exclusão mútua virou trivial de provar) e "os 3 botões sempre
+> existem, com rótulo fixo, e refletem o estado em `aria-pressed`" — 489/490 frontend (1 falha
+> pré-existente alheia, mesma de sempre). **Verificado ao vivo** (stack real): 4 screenshots
+> (Equipamentos/Fragmentos/Amplificadores, cada clique) confirmando visualmente o controle segmentado
+> compacto numa linha só, sempre com as 3 opções visíveis e só uma em destaque accent sólido — sem
+> mais o rótulo mutante nem a quebra de linha solitária. Nenhum spec numerado criado.)
+>
+> (**Filtro "ver só fragmentos" no Inventário**: pedido direto do
+> autor, fora do fluxo de spec numerada — "fragmentos deveriam ter um filtro igual tem em
+> amplificadores". `ficha-inventario.component.ts` ganhou `mostrandoSoFragmentos` (signal) e
+> `alternarSoFragmentos()`, espelhando exatamente `mostrandoSoAmplificadores`/
+> `alternarSoAmplificadores()` já existentes: um botão "Fragmentos"/"Equipamentos" na barra de ações
+> (`.ficha-inv__acoes`, ao lado do botão "Amplificadores", mesmo ícone `fragmento` já usado alhures),
+> que isola a seção "Fragmentos" (já existente desde a m3-44) escondendo o resto do inventário — lista
+> principal, grade Medicinal/Operacional e sub-inventários. **Mutuamente exclusivo** com o filtro de
+> Amplificadores (ativar um desativa o outro) — dois "ver só X" simultâneos não fariam sentido
+> visual. Reestruturação no template: a seção "Fragmentos" saiu de dentro do bloco condicional da
+> lista "normal" (que agora também exclui `mostrandoSoFragmentos()`) e virou um bloco irmão, gated só
+> por `!mostrandoSoAmplificadores()` — assim continua aparecendo tanto no modo normal quanto no modo
+> isolado, sem duplicar markup; ganhou também a mensagem de vazio "Nenhum fragmento no inventário."
+> (mesmo padrão da mensagem de Amplificadores vazio). **Testes:** +4 em
+> `ficha-inventario.component.spec.ts` (ativar o filtro esconde os demais itens e mostra só
+> Fragmentos; mensagem de vazio sem fragmentos; mutuamente exclusivo com Amplificadores nos dois
+> sentidos; o botão existe e alterna rótulo/`aria-pressed`) — 488/489 frontend (1 falha pré-existente
+> alheia, mesma de sempre). **Verificado ao vivo** (stack real): ficha com 1 item comum + 2
+> fragmentos + 1 amplificador; Playwright confirmou que ativar "Fragmentos" esconde o item comum e
+> mantém só a seção de Fragmentos (botão vira "Equipamentos", accent ativo — mesmo visual do botão
+> de Amplificadores), e que clicar em "Amplificadores" em seguida desliga o filtro de Fragmentos
+> automaticamente (mutuamente exclusivo) e mostra só os amplificadores — três screenshots conferidos
+> visualmente. Nenhum spec numerado criado.)
+>
+> (**Afinidade de Fragmentos passa a reduzir o custo de verdade**:
+> a `m3-42` tinha modelado a mecânica (`calcularAfinidade`/`reducaoCustoPorAfinidade`/
+> `aplicarReducaoAfinidade`, `shared/regras/compras/fragmento`) só como função pura "para consumo",
+> sem nenhum fluxo real usá-la — a `m3-49` só **exibia** o número. Pedido direto do autor **fora do
+> fluxo de spec numerada** (refinamento pontual, sem `docs/specs/`) pra fechar esse gap: **a
+> Afinidade agora desconta Energia de verdade** ao adquirir/acoplar/desacoplar/remover um fragmento
+> em `ficha-inventario.component.ts`. **Critério do autor pra ambiguidade do documento** (não
+> deixava claro se a redução usada num fragmento considera ele mesmo): **retroativa** — a Afinidade
+> usada em qualquer ação é sempre a **atual** (nunca a "de quando foi comprado"), e a compra de um
+> fragmento **conta com ele mesmo** na Afinidade que reduz o próprio custo dela. Na prática: (1)
+> **`listarModulosFragmentosPortados(itens)`** — a lógica de "que fragmentos contam como portados"
+> (soltos × `quantidade` + acoplados via `origemFragmento`) que a `m3-49` tinha só localmente em
+> `ficha-visualizacao.component.ts` **subiu pro `shared/regras/compras/fragmento.ts`** (proibição
+> #26 — as duas telas agora consomem a mesma fonte; `ficha-visualizacao` só chama a versão
+> compartilhada). (2) Nova função de módulo `afinidadeConsiderando(itens, moduloExtra?)` em
+> `ficha-inventario.component.ts`: soma a Afinidade de `itens` e, só na **aquisição** (onde o
+> fragmento ainda não existe na lista no momento do débito), soma também o módulo do fragmento
+> sendo comprado — nas demais ações (remover/acoplar/desacoplar/consumir) o fragmento já está
+> portado em `itens` **antes** da ação, então já vem contado sem precisar somar de novo; por isso os
+> 5 métodos de custo passaram a capturar `itensAntes` explicitamente **antes** de mutar a lista
+> (nunca depender de o `input()` do inventário já refletir a mudança no mesmo tick). (3)
+> `aplicarReducaoAfinidade` envolve cada custo de Energia: aquisição
+> (`debitarAquisicaoFragmento`/`restaurarAquisicaoFragmento`), acoplamento
+> (`confirmarAplicarFragmento` — os dois lados, aquisição restituída e acoplamento debitado, usando
+> a **mesma** Afinidade dentro do método, preservando o líquido-zero do Potencializador) e
+> desacoplamento (`desacoplarFragmento` — os três termos, incluindo o custo de remoção `×2`).
+> **Deixado de fora, deliberadamente:** o Preço de Sanidade do Consumo (`energiaMaximaExtra` de
+> `custoSanidadeConsumirFragmento`) não é reduzido — é o preço físico de **consumir** o fragmento
+> (mecânica distinta, doc — "⬦ Consumo de Fragmentos"), não um "custo de fragmento" no sentido da
+> seção de Afinidade; só a restituição da aquisição embutida no consumo usa a redução. **Testes:**
+> `shared` +3 (`listarModulosFragmentosPortados`: stack solto conta por unidade, Construtor solto +
+> Potencializador acoplado juntos, item sem fragmento não conta nada — 452/452 shared). `frontend`
+> +5 em `ficha-inventario.component.spec.ts` (aquisição considera o próprio fragmento — Afinidade
+> 15→20, custo 20→15; piso de 1 mesmo com Afinidade muito alta; remoção restitui a Afinidade
+> **atual**, menos do que foi cobrado na compra original — prova direta da retroatividade;
+> acoplamento e desacoplamento sob Afinidade alta continuam líquido-zero de Energia Máxima apesar da
+> redução) — 484/485 frontend (1 falha pré-existente alheia, mesma de sempre). **Verificado ao
+> vivo** (stack real): ficha criada via REST com 3 fragmentos módulo I já portados (Afinidade 15,
+> Energia Máxima 200); Playwright abriu a ficha, conferiu "Afinidade 15" na aba Extras, adicionou um
+> **4º** fragmento módulo I pelo formulário real ("+ Item custom" → categoria Fragmento
+> Potencializador → Módulo I → Adicionar), e confirmou **os três lados batendo**: Energia Máxima caiu
+> pra **185** (200 − 15, não os 20 cheios — a Afinidade 20 já considerando o novo fragmento reduziu
+> em 5), a aba Extras atualizou pra "Afinidade 20" com a nota "Afinidade acima de 10: −5 de Energia
+> no custo de fragmentos", e o `GET /ficha/:id` confirmou os mesmos 185 **persistidos no Postgres**
+> (não só otimista no browser). Nenhum spec numerado criado — registrado só aqui por ser
+> continuação direta da `m3-42`/`m3-49` dentro da mesma sessão.)
+>
+> (**m3-49 — Informações Extras: Origem/Personalidade/afinidade de
+> fragmentos**: task `m3-49` do lote de refino `m3-40`…`m3-56` implementada, **com adaptação de
+> local** em relação ao texto original da spec. A spec pedia para estender o card "Informações
+> Extras" da aba Visão Geral — mas esse card e o sistema de abas (`m3-11`) **não existem mais**
+> nesta branch: a `m3-38` (redesenho de comparação visual, spec **ativa**, concorrente a este lote)
+> substituiu tudo por um layout de 3 colunas e **já reservava uma posição vazia** pra isto — a aba
+> "Extras" (`AbaStatus`, 3ª coluna "Status", ao lado de Informações/Inventário/Habilidades/
+> Rolagens), até agora um `<div>` vazio no template. É lá que o conteúdo entrou — mesmo requisito
+> (Origem + Personalidade + afinidade num único painel), local adaptado à realidade atual do
+> código; `AbaFicha`/`ABAS_FICHA` (o sistema de abas antigo, aposentado pela `m3-38` mas ainda no
+> código) **não foi tocado**, como a spec pedia. Em `ficha-visualizacao.component.ts`: 4 novos
+> `computed` — `habilidadePersonalidade` (busca em `dados().habilidades` a que tem
+> `categoria: HabilidadeCategoriaEnum.PERSONALIDADE`), `modulosFragmentosPortados` (mecânica m3-42:
+> junta os fragmentos **ainda soltos** no inventário — Construtor **é** o item, Potencializador
+> solto até ser acoplado, cada um repetido pela própria `quantidade` do stack — com os **já
+> acoplados** a outro item como Modificação, `origemFragmento` em `modificacoes[]`, já que acoplar
+> remove o item avulso e dobra ele numa mod do alvo, m3-42), `afinidadeFragmentos` (chama
+> `calcularAfinidade` de `shared/regras/compras/fragmento`, função pura da m3-42 — zero motor novo
+> aqui, só consumo) e `reducaoAfinidade` (`reducaoCustoPorAfinidade`, legenda de quanto a Energia de
+> fragmentos futuros é reduzida acima de 10 de afinidade). Origem mostra nome/descrição/Saber de
+> Campo/Especialidade (gatilho — efeito) + chips com o texto de cada Formação; Personalidade mostra
+> a palavra + descrição/custo de Energia da habilidade correspondente (ou aviso se a ficha não tem
+> uma habilidade PERSONALIDADE cadastrada); Afinidade mostra o total num `.ficha-mini` (mesmo
+> padrão visual de Nível/Prestígio) + um chip por módulo portado + nota de redução quando > 10.
+> Três estados vazios (Origem indefinida/bloqueada por Peculiaridade, Personalidade indefinida, sem
+> fragmentos portados) reusam `.ficha-visao__vazio` (mesma classe dos outros vazios da tela). Novo
+> bloco BEM `.ficha-extras` no SCSS, só tokens do tema (proibição #29) — reusa `.ficha-cartao__subrotulo`/
+> `.chip`/`.ficha-mini`/`.ficha-cartao__divisor` já existentes em vez de inventar variantes. **Testes:**
+> +7 no spec do componente (Origem completa renderizada, Origem indefinida, Personalidade + habilidade
+> associada, Personalidade sem habilidade cadastrada, afinidade somando fragmento solto em stack +
+> fragmento acoplado como Modificação — 2×Módulo V + 1×Módulo IV = 4, conferido contra o exemplo do
+> documento, sem fragmentos → afinidade 0 e vazio, afinidade > 10 → nota de redução com o valor certo).
+> 479/480 frontend (a 1 falha é a mesma pré-existente de `ficha-inventario.component.spec.ts`, alheia
+> a esta task, já registrada no histórico da `m3-48`). **Verificado ao vivo** (stack real: Postgres +
+> backend + frontend): ficha criada via REST com Origem/Personalidade/2 fragmentos módulo V,
+> Playwright abriu `/painel/:campanhaId/ficha/:id`, clicou na aba "Extras" e confirmou o texto
+> renderizado + um screenshot em viewport largo (1600px, as 3 colunas cabem sem quebrar) mostrando a
+> aba "Extras" ativa (destaque accent) com Origem/Personalidade/Afinidade = 2 corretos. Spec em
+> `docs/specs/done/m3-49-extras-conteudo.spec.md`. Próxima task: **`m3-50`** (aba História —
+> privacidade).)
+>
+> (**m3-48 — Filtro/contador de Habilidades (cumulativo)**: task
 > `m3-48` do lote de refino `m3-40`…`m3-56` implementada, com um ajuste de comportamento pedido
 > pelo autor **depois** da 1ª entrega — este registro já reflete a versão final. Na aba Habilidades
 > (`frontend/src/app/modules/ficha/componentes/ficha-habilidades/`), os contadores do resumo por

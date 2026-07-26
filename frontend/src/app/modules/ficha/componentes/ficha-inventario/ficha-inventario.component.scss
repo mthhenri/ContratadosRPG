@@ -165,6 +165,63 @@
     margin-left: auto;
   }
 
+  // === Filtro de visualização (Equipamentos/Amplificadores/Fragmentos) ===
+  // Controle segmentado de 3 opções, sempre uma ativa (revisão de UX — eram dois botões-toggle
+  // soltos na linha de ações, cujo rótulo trocava para "Equipamentos" no estado ativo: ambíguo
+  // sobre qual filtro estava ligado, e os dois quebravam linha sozinhos sem se conectar
+  // visualmente). Mesmo padrão visual da barra de abas do Status (`ficha-visualizacao` —
+  // `.ficha-status__abas`/`.ficha-status__aba`), só que os itens ficam do tamanho do próprio
+  // conteúdo (`width: auto`) — é um filtro de 3 opções lado a lado, não uma barra de navegação de
+  // largura fixa.
+  &__filtro {
+    display: inline-flex;
+    align-self: flex-start;
+    gap: 4px;
+    padding: 4px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+  }
+
+  &__filtro-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-control);
+    padding: 6px 11px;
+    cursor: pointer;
+    transition:
+      color 0.12s ease,
+      background-color 0.12s ease;
+
+    app-icone {
+      display: inline-flex;
+      width: 13px;
+      height: 13px;
+    }
+
+    &:hover:not(&--ativo) {
+      color: var(--text);
+      background: var(--surface);
+    }
+
+    &--ativo {
+      font-weight: 700;
+      color: var(--bg);
+      background: var(--accent);
+    }
+
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
+    }
+  }
+
   // === Botões ===
   &__btn {
     font-size: 12px;
@@ -855,6 +912,23 @@
     }
   }
 
+  // === Cartão de módulo na grade de Fragmentos (catálogo — pseudo-categoria) ===
+  &__cartao--fragmento {
+    gap: 8px;
+  }
+  &__cartao-fragmento-custo {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  // Botões Potencializador/Construtor empilhados (não lado a lado — em cartões estreitos os dois
+  // rótulos lado a lado cortavam/vazavam pra fora do cartão; empilhado sempre cabe).
+  &__cartao-acoes--coluna {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   &__custo {
     color: var(--warning);
     font-weight: 700;
@@ -1369,7 +1443,7 @@
     // altura da coluna de Identidade vizinha; sem este teto a lista cresce sem fim e estica a
     // coluna (e a página) além disso.
     .ficha-inv__lista {
-      max-height: 480px;
+      max-height: 458px;
       overflow-y: auto;
       padding-right: 4px;
     }
@@ -1408,9 +1482,8 @@
     .ficha-inv__grade-medop {
       grid-template-columns: 1fr;
     }
-    // Teto menor pra Amplificadores/Fragmentos — já vive dentro do teto de 480px do `&__lista`.
     .ficha-inv__amps {
-      max-height: 220px;
+      max-height: 458px;
     }
   }
 }

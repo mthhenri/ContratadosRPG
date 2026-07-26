@@ -1,10 +1,15 @@
-import { FragmentoModuloEnum, FragmentoTipoEnum, ModificacaoEfeitoTipoEnum } from '../../enums';
+import {
+  FragmentoModuloEnum,
+  FragmentoTipoEnum,
+  ItemCategoriaEnum,
+  ModificacaoEfeitoTipoEnum,
+} from '../../enums';
 import {
   BONUS_POTENCIALIZADOR,
   CUSTO_ENERGIA_MAXIMA_MODULO,
   VALOR_AFINIDADE_MODULO,
 } from './fragmento.dados';
-import { ModificacaoEfeitoDto } from './compras.dtos';
+import { CarrinhoItemDto, ModificacaoEfeitoDto } from './compras.dtos';
 
 /**
  * Custos de Energia, Afinidade e Preço de Sanidade dos Fragmentos (m3-35/m3-42) — funções puras
@@ -92,6 +97,34 @@ export function valorAfinidadeFragmento(modulo: FragmentoModuloEnum): number {
 /** Afinidade total de um agente: soma da Afinidade de cada fragmento portado (mesma seção do doc). */
 export function calcularAfinidade(modulosPortados: readonly FragmentoModuloEnum[]): number {
   return modulosPortados.reduce((total, modulo) => total + valorAfinidadeFragmento(modulo), 0);
+}
+
+/**
+ * Módulos de todos os fragmentos **portados** pelo agente (doc — "⬥ Afinidade com Fragmentos": "para
+ * cada fragmento portado"): os ainda **soltos** no inventário (Construtor **é** o próprio item;
+ * Potencializador solto até ser acoplado, `m3-35`) **e** os já **acoplados** a outro item como
+ * Modificação (`origemFragmento`, `m3-42` — acoplar remove o item avulso e o dobra numa mod do
+ * alvo, então só conta aqui, não duas vezes). Um fragmento solto em stack (`quantidade` > 1) conta
+ * uma vez por unidade; um acoplado conta uma vez por modificação (nunca empilha — cada acoplamento
+ * gera sua própria entrada em `modificacoes`). Entrada de `calcularAfinidade`.
+ */
+export function listarModulosFragmentosPortados(
+  itens: readonly CarrinhoItemDto[],
+): FragmentoModuloEnum[] {
+  const soltos = itens
+    .filter(
+      (item) =>
+        (item.categoria === ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR ||
+          item.categoria === ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR) &&
+        item.modulo,
+    )
+    .flatMap((item) => Array<FragmentoModuloEnum>(item.quantidade).fill(item.modulo!));
+  const acoplados = itens.flatMap((item) =>
+    item.modificacoes
+      .filter((modificacao) => modificacao.origemFragmento)
+      .map((modificacao) => modificacao.origemFragmento!.modulo),
+  );
+  return [...soltos, ...acoplados];
 }
 
 /**

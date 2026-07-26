@@ -119,23 +119,50 @@
         </button>
         <button
           type="button"
-          class="ficha-inv__btn ficha-inv__btn--secundario"
-          [class.ficha-inv__btn--ativo]="mostrandoSoAmplificadores()"
-          [attr.aria-pressed]="mostrandoSoAmplificadores()"
-          [appTooltip]="mostrandoSoAmplificadores() ? 'Ver equipamentos' : 'Ver só amplificadores'"
-          (click)="alternarSoAmplificadores()"
-        >
-          <app-icone nome="amplificador" />
-          <span>{{ mostrandoSoAmplificadores() ? 'Equipamentos' : 'Amplificadores' }}</span>
-        </button>
-        <button
-          type="button"
           class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
           aria-label="Pesquisar no inventário"
           [appTooltip]="'Pesquisar no inventário'"
           (click)="abrirBuscaItens()"
         >
           <app-icone nome="busca" />
+        </button>
+      </div>
+
+      <!-- Filtro de visualização (Equipamentos/Amplificadores/Fragmentos) — controle segmentado de
+           3 opções (revisão de UX): era dois botões-toggle soltos que trocavam o próprio rótulo,
+           quebravam linha sozinhos e não deixavam claro qual filtro estava ativo. Mesmo padrão
+           visual da barra de abas do Status (`ficha-visualizacao` — `.ficha-status__abas`), só com
+           os itens do tamanho do próprio conteúdo (não esticados feito abas de navegação). -->
+      <div class="ficha-inv__filtro" role="group" aria-label="Filtrar o inventário">
+        <button
+          type="button"
+          class="ficha-inv__filtro-item"
+          [class.ficha-inv__filtro-item--ativo]="filtroInventario() === 'equipamentos'"
+          [attr.aria-pressed]="filtroInventario() === 'equipamentos'"
+          (click)="selecionarFiltroInventario('equipamentos')"
+        >
+          <app-icone nome="corpo-a-corpo" />
+          <span>Equipamentos</span>
+        </button>
+        <button
+          type="button"
+          class="ficha-inv__filtro-item"
+          [class.ficha-inv__filtro-item--ativo]="filtroInventario() === 'amplificadores'"
+          [attr.aria-pressed]="filtroInventario() === 'amplificadores'"
+          (click)="selecionarFiltroInventario('amplificadores')"
+        >
+          <app-icone nome="amplificador" />
+          <span>Amplificadores</span>
+        </button>
+        <button
+          type="button"
+          class="ficha-inv__filtro-item"
+          [class.ficha-inv__filtro-item--ativo]="filtroInventario() === 'fragmentos'"
+          [attr.aria-pressed]="filtroInventario() === 'fragmentos'"
+          (click)="selecionarFiltroInventario('fragmentos')"
+        >
+          <app-icone nome="fragmento" />
+          <span>Fragmentos</span>
         </button>
       </div>
     }
@@ -284,7 +311,7 @@
             <button
               type="button"
               class="ficha-inv__categoria"
-              [class.ficha-inv__categoria--ativa]="!busca.value && categoriaAtiva() === categoria.categoria"
+              [class.ficha-inv__categoria--ativa]="!busca.value && !catalogoFragmentosAtivo() && categoriaAtiva() === categoria.categoria"
               [disabled]="!!busca.value"
               (click)="definirCategoria(categoria.categoria)"
             >
@@ -292,7 +319,60 @@
               <span>{{ categoria.rotulo }}</span>
             </button>
           }
+          <!-- Fragmentos: pseudo-categoria (não tem catálogo comprável, são achados) — atalho pra
+               escolher módulo (I–V) + tipo e abrir o item custom já pré-preenchido. -->
+          <button
+            type="button"
+            class="ficha-inv__categoria"
+            [class.ficha-inv__categoria--ativa]="!busca.value && catalogoFragmentosAtivo()"
+            [disabled]="!!busca.value"
+            (click)="selecionarCategoriaFragmentos()"
+          >
+            <app-icone nome="fragmento" />
+            <span>Fragmentos</span>
+          </button>
         </nav>
+
+        @if (!busca.value && catalogoFragmentosAtivo()) {
+          <p class="ficha-inv__info">
+            Fragmentos são achados, não comprados — escolha o módulo e o tipo pra montar como item
+            custom (nome, custo, peso e stats próprios).
+          </p>
+          <div class="ficha-inv__grade" appOverflowFade>
+            @for (cartao of cartaoModulosFragmento(); track cartao.modulo) {
+              <article class="ficha-inv__cartao ficha-inv__cartao--fragmento">
+                <div class="ficha-inv__cartao-nome">
+                  Módulo {{ cartao.modulo }}
+                  <span class="ficha-inv__tag">Afinidade +{{ cartao.afinidade }}</span>
+                </div>
+                <div class="ficha-inv__cartao-fragmento-custo">
+                  <span>Potencializador</span>
+                  <span class="ficha-inv__custo">{{ cartao.custoPotencializador }} Energia</span>
+                </div>
+                <div class="ficha-inv__cartao-fragmento-custo">
+                  <span>Construtor</span>
+                  <span class="ficha-inv__custo">{{ cartao.custoConstrutor }} Energia</span>
+                </div>
+                <div class="ficha-inv__cartao-acoes ficha-inv__cartao-acoes--coluna">
+                  <button
+                    type="button"
+                    class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--largo"
+                    (click)="escolherTipoFragmento(cartao.modulo, fragmentoTipoPotencializador)"
+                  >
+                    + Potencializador
+                  </button>
+                  <button
+                    type="button"
+                    class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--largo"
+                    (click)="escolherTipoFragmento(cartao.modulo, fragmentoTipoConstrutor)"
+                  >
+                    + Construtor
+                  </button>
+                </div>
+              </article>
+            }
+          </div>
+        }
 
         @if (catalogoVazio()) {
           <p class="ficha-inv__vazio">Nenhum item encontrado.</p>
@@ -1107,7 +1187,7 @@
     </div>
   </ng-template>
 
-  @if (!inventarioVazio() && !mostrandoSoAmplificadores()) {
+  @if (!inventarioVazio() && !mostrandoSoAmplificadores() && !mostrandoSoFragmentos()) {
     @if (buscaItensSemResultado()) {
       <p class="ficha-inv__vazio">Nenhum item encontrado.</p>
     }
@@ -1143,16 +1223,21 @@
         }
       </div>
     }
+  }
 
-    <!-- Fragmentos em seção própria (m3-44 — item 19), mesmo padrão da lista de Amplificadores. -->
-    @if (itensListaFragmentos().length > 0) {
-      <div class="ficha-inv__amps" appOverflowFade>
-        <div class="ficha-inv__amps-cabecalho">Fragmentos</div>
-        @for (item of itensListaFragmentos(); track item.indice) {
-          <ng-container [ngTemplateOutlet]="cartaoItemTemplate" [ngTemplateOutletContext]="{ item: item }" />
-        }
-      </div>
-    }
+  <!-- Fragmentos em seção própria (m3-44 — item 19), mesmo padrão da lista de Amplificadores — fora
+       do bloco acima porque também aparece isolada no filtro "ver só fragmentos" (m3-49). Some só
+       quando "ver só amplificadores" está ativo. -->
+  @if (!mostrandoSoAmplificadores() && itensListaFragmentos().length > 0) {
+    <div class="ficha-inv__amps" appOverflowFade>
+      <div class="ficha-inv__amps-cabecalho">Fragmentos</div>
+      @for (item of itensListaFragmentos(); track item.indice) {
+        <ng-container [ngTemplateOutlet]="cartaoItemTemplate" [ngTemplateOutletContext]="{ item: item }" />
+      }
+    </div>
+  }
+  @if (mostrandoSoFragmentos() && itensListaFragmentos().length === 0) {
+    <p class="ficha-inv__vazio">Nenhum fragmento no inventário.</p>
   }
 
   @if (mostrandoSoAmplificadores() && amplificadoresInventario().length === 0) {
@@ -1160,7 +1245,7 @@
   }
 
   @if (mostrandoSoAmplificadores() && amplificadoresInventario().length > 0) {
-    <div class="ficha-inv__amps">
+    <div class="ficha-inv__amps" appOverflowFade>
       <div class="ficha-inv__amps-cabecalho">
         Amplificadores ({{ resumo().empilhamentosAmplificador }}/{{ resumo().limiteAmplificadores }} stacks)
         @if (resumo().penalidadeVontade > 0) {

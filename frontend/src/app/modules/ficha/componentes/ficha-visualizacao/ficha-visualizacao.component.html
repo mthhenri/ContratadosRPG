@@ -1181,7 +1181,78 @@
         </div>
         }
         @if (abaStatusAtiva() === 'extras') {
-        <div class="ficha-status__conteudo"></div>
+        <div class="ficha-status__conteudo ficha-extras">
+          <!-- Origem (m3-41/m3-49): apresentação — a mecânica (efeito no cálculo) já roda na m3-41. -->
+          <div class="ficha-extras__secao">
+            <p class="ficha-cartao__subrotulo">Origem</p>
+            @if (origemAtual(); as origem) {
+              <h4 class="ficha-extras__titulo">{{ origem.nome }}</h4>
+              <p class="ficha-extras__texto">{{ origem.descricao }}</p>
+              <div class="ficha-extras__linha">
+                <span class="ficha-extras__rotulo">Saber de Campo</span>
+                <span class="ficha-extras__valor">{{ origem.saberDeCampo }}</span>
+              </div>
+              <div class="ficha-extras__linha">
+                <span class="ficha-extras__rotulo">Especialidade</span>
+                <span class="ficha-extras__valor">{{ origem.especialidade.gatilho }} — {{ origem.especialidade.efeito }}</span>
+              </div>
+              <div class="ficha-extras__chips">
+                @for (linha of origem.formacao; track $index) {
+                  <span class="chip">{{ linha.texto }}</span>
+                }
+              </div>
+            } @else if (origemBloqueadaPorPeculiaridade()) {
+              <p class="ficha-visao__vazio">Substituída pela Peculiaridade do Experimento.</p>
+            } @else {
+              <p class="ficha-visao__vazio">Origem ainda não definida.</p>
+            }
+          </div>
+
+          <div class="ficha-cartao__divisor"></div>
+
+          <!-- Personalidade (m3-25/m3-49): a palavra + a habilidade correspondente (categoria PERSONALIDADE). -->
+          <div class="ficha-extras__secao">
+            <p class="ficha-cartao__subrotulo">Personalidade</p>
+            @if (identidade().personalidade; as personalidade) {
+              <h4 class="ficha-extras__titulo">{{ personalidade }}</h4>
+              @if (habilidadePersonalidade(); as habilidade) {
+                <p class="ficha-extras__texto">{{ habilidade.descricao }}</p>
+                @if (habilidade.custoEnergia !== null) {
+                  <span class="chip">{{ habilidade.custoEnergia }} E</span>
+                }
+              } @else {
+                <p class="ficha-visao__vazio">Sem habilidade de Personalidade registrada.</p>
+              }
+            } @else {
+              <p class="ficha-visao__vazio">Personalidade ainda não definida.</p>
+            }
+          </div>
+
+          <div class="ficha-cartao__divisor"></div>
+
+          <!-- Afinidade de Fragmentos (m3-42/m3-49): mecânica pronta na m3-42 — aqui só a exibição. -->
+          <div class="ficha-extras__secao">
+            <p class="ficha-cartao__subrotulo">Afinidade de Fragmentos</p>
+            <div class="ficha-mini">
+              <span class="ficha-mini__rotulo">Afinidade</span>
+              <span class="ficha-mini__valor ficha-mini__valor--accent">{{ afinidadeFragmentos() }}</span>
+            </div>
+            @if (modulosFragmentosPortados().length > 0) {
+              <div class="ficha-extras__chips">
+                @for (modulo of modulosFragmentosPortados(); track $index) {
+                  <span class="chip">Módulo {{ modulo }}</span>
+                }
+              </div>
+            } @else {
+              <p class="ficha-visao__vazio">Nenhum fragmento portado.</p>
+            }
+            @if (reducaoAfinidade() > 0) {
+              <p class="ficha-extras__nota">
+                Afinidade acima de 10: −{{ reducaoAfinidade() }} de Energia no custo de fragmentos.
+              </p>
+            }
+          </div>
+        </div>
         }
       </section>
     </div>

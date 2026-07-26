@@ -16,6 +16,8 @@ import {
   ClasseEnum,
   FormacaoBonusEnum,
   FormacaoParametroEnum,
+  FragmentoModuloEnum,
+  HabilidadeCategoriaEnum,
   TipoDanoEnum,
 } from '@contratados-rpg/shared/enums';
 import type {
@@ -44,6 +46,11 @@ import {
   obterLimitesClasse,
   somarLesoesAtributo,
 } from '@contratados-rpg/shared/regras/agente';
+import {
+  calcularAfinidade,
+  listarModulosFragmentosPortados,
+  reducaoCustoPorAfinidade,
+} from '@contratados-rpg/shared/regras/compras';
 import { rolarFormula, validarFormula } from '@contratados-rpg/shared/regras/rolagem';
 import {
   experimentoComPeculiaridade,
@@ -1521,5 +1528,35 @@ export class FichaVisualizacao {
    */
   protected readonly inventarioMaximoValor = computed(
     () => this.dados().derivados?.inventarioMaximo ?? calcularInventario(this.entrada()),
+  );
+
+  // === Extras (m3-49): Origem/Personalidade/afinidade de fragmentos, aba "Extras" do Status ===
+
+  /** Habilidade de Personalidade (m3-25) — a que carrega `categoria: PERSONALIDADE`, se existir. */
+  protected readonly habilidadePersonalidade = computed(
+    () =>
+      this.dados().habilidades.find(
+        (habilidade) => habilidade.categoria === HabilidadeCategoriaEnum.PERSONALIDADE,
+      ) ?? null,
+  );
+
+  /**
+   * Módulos de todos os fragmentos portados pelo agente — `shared/regras/compras/fragmento`
+   * (`listarModulosFragmentosPortados`, m3-42/m3-49): mesma função consumida por `FichaInventario`
+   * pra aplicar a redução de custo por Afinidade (proibição #26 — uma fonte só pra "o que conta
+   * como portado").
+   */
+  protected readonly modulosFragmentosPortados = computed<readonly FragmentoModuloEnum[]>(() =>
+    listarModulosFragmentosPortados(this.dados().inventario.itens),
+  );
+
+  /** Afinidade total de Fragmentos do agente (`shared/regras/compras/fragmento`, m3-42 — função pura). */
+  protected readonly afinidadeFragmentos = computed(() =>
+    calcularAfinidade(this.modulosFragmentosPortados()),
+  );
+
+  /** Redução de custo de Energia de fragmento por excesso de Afinidade acima de 10 (m3-42) — legenda. */
+  protected readonly reducaoAfinidade = computed(() =>
+    reducaoCustoPorAfinidade(this.afinidadeFragmentos()),
   );
 }

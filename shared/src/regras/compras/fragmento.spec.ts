@@ -15,6 +15,7 @@ import {
   custoRemoverFragmento,
   custoSanidadeConsumirFragmento,
   listarBonusFragmentoPotencializador,
+  listarModulosFragmentosPortados,
   reducaoCustoPorAfinidade,
   valorAfinidadeFragmento,
 } from './fragmento';
@@ -154,6 +155,72 @@ describe('calcularAfinidade', () => {
 
   it('sem fragmentos portados: afinidade 0', () => {
     expect(calcularAfinidade([])).toBe(0);
+  });
+});
+
+describe('listarModulosFragmentosPortados', () => {
+  it('conta um fragmento solto em stack uma vez por unidade (quantidade)', () => {
+    const itens: CarrinhoItemDto[] = [
+      {
+        nome: 'Fragmento Potencializador',
+        categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+        custo: 0,
+        peso: 0,
+        quantidade: 2,
+        guardada: false,
+        modificacoes: [],
+        modulo: FragmentoModuloEnum.V,
+      },
+    ];
+    expect(listarModulosFragmentosPortados(itens)).toEqual([FragmentoModuloEnum.V, FragmentoModuloEnum.V]);
+  });
+
+  it('conta um fragmento Construtor solto (ele é o próprio item) e um Potencializador já acoplado como Modificação', () => {
+    const itens: CarrinhoItemDto[] = [
+      {
+        nome: 'Faca de Ossos',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        custo: 0,
+        peso: 1,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        modulo: FragmentoModuloEnum.III,
+        categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+      },
+      {
+        nome: 'Pistola',
+        categoria: ItemCategoriaEnum.ARMAS_DE_FOGO,
+        custo: 100,
+        peso: 1,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [
+          {
+            nome: 'Fragmento Potencializador — Módulo IV',
+            empilhamentos: 1,
+            efeitos: [],
+            origemFragmento: { tipo: FragmentoTipoEnum.POTENCIALIZADOR, modulo: FragmentoModuloEnum.IV },
+          },
+        ],
+      },
+    ];
+    expect(listarModulosFragmentosPortados(itens)).toEqual([FragmentoModuloEnum.III, FragmentoModuloEnum.IV]);
+  });
+
+  it('ignora itens sem fragmento (categoria comum, sem modificação de origemFragmento)', () => {
+    const itens: CarrinhoItemDto[] = [
+      {
+        nome: 'Colete',
+        categoria: ItemCategoriaEnum.PROTECOES,
+        custo: 10,
+        peso: 1,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [{ nome: 'Reforçado', empilhamentos: 1, efeitos: [] }],
+      },
+    ];
+    expect(listarModulosFragmentosPortados(itens)).toEqual([]);
   });
 });
 
