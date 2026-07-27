@@ -8,6 +8,7 @@ import {
   FichaAcessoRevogadoDto,
   FichaAlteradaDto,
   FichaAlterarDto,
+  FichaCampanhaAtribuidaDto,
   FichaCriadaDto,
   FichaCriarDto,
   FichaRecuperadaDto,
@@ -53,6 +54,17 @@ export class FichaService {
   listarFichas(campanhaId: number): Observable<FichaResumoDto[]> {
     return this.httpClient
       .get<StandardResponse<FichaResumoDto[]>>(this.base, { params: { campanhaId } })
+      .pipe(map((resposta) => resposta.dados as FichaResumoDto[]));
+  }
+
+  /**
+   * Lista **todas** as fichas ativas do usuário autenticado — com e sem campanha (m3-28, o
+   * acervo `/fichas`). Cada item traz `campanhaId`/`campanhaNome` para o chip da campanha (ou
+   * "Sem campanha" quando `null`).
+   */
+  listarMinhasFichas(): Observable<FichaResumoDto[]> {
+    return this.httpClient
+      .get<StandardResponse<FichaResumoDto[]>>(`${this.base}/minhas`)
       .pipe(map((resposta) => resposta.dados as FichaResumoDto[]));
   }
 
@@ -119,5 +131,15 @@ export class FichaService {
     return this.httpClient
       .post<StandardResponse<FichaCriadaDto>>(`${this.base}/${id}/duplicar`, {})
       .pipe(map((resposta) => resposta.dados as FichaCriadaDto));
+  }
+
+  /**
+   * Move a ficha entre o acervo solto e uma campanha (m3-28) — `campanhaId: null` desatribui
+   * (volta ao acervo). Só o dono ou o mestre atual da ficha (§14; barrado com 403 no backend).
+   */
+  atribuirCampanha(id: number, campanhaId: number | null): Observable<FichaCampanhaAtribuidaDto> {
+    return this.httpClient
+      .put<StandardResponse<FichaCampanhaAtribuidaDto>>(`${this.base}/${id}/campanha`, { campanhaId })
+      .pipe(map((resposta) => resposta.dados as FichaCampanhaAtribuidaDto));
   }
 }

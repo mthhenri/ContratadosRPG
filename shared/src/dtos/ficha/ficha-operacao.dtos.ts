@@ -20,24 +20,29 @@ import type { FichaJogadorDadosDto } from './ficha.dtos';
  */
 
 /**
- * Entrada de criação de ficha de jogador — a ficha entra na `campanhaId` informada, com o
- * tipo `JOGADOR`. `usuarioId` é o dono; **omitido, é o usuário autenticado** (a própria ficha).
+ * Entrada de criação de ficha de jogador — com `campanhaId`, a ficha entra na campanha
+ * informada; **omitido/`null`** (m3-28), a ficha nasce **solta** no acervo do dono (sem
+ * `validarMembro`, sem afordance de escolher outro dono — `usuarioId` só se aplica dentro de
+ * uma campanha). `usuarioId` é o dono; **omitido, é o usuário autenticado** (a própria ficha).
  * Um `usuarioId` diferente do autenticado só é aceito se o autenticado for o **mestre** da
  * campanha (§14 — "criar ficha de jogador": dono só a própria, mestre sem restrição) — do
  * contrário a service recusa com `UnauthorizedAccessException`. O `dados` é o documento de
  * jogo completo (validado contra `shared/regras` na service antes de persistir).
  */
 export interface FichaCriarDto {
-  readonly campanhaId: number;
+  readonly campanhaId?: number;
   readonly usuarioId?: number;
   readonly nome: string;
   readonly dados: FichaJogadorDadosDto;
 }
 
-/** Saída de criação — a ficha criada (identidade/posse + documento de jogo). */
+/**
+ * Saída de criação — a ficha criada (identidade/posse + documento de jogo). `campanhaId`
+ * `null` quando a ficha nasceu solta no acervo (m3-28).
+ */
 export interface FichaCriadaDto {
   readonly id: number;
-  readonly campanhaId: number;
+  readonly campanhaId: number | null;
   readonly usuarioId: number;
   readonly nome: string;
   readonly dados: FichaJogadorDadosDto;
@@ -66,9 +71,16 @@ export interface FichaListarDto {
  * sem snapshot); as três condições vêm sempre resolvidas (`false` quando ausentes no documento).
  * `arquetipo` acompanha `classe` para o mini-card mostrar "Classe - Arquétipo" — `null` quando a
  * classe é uma subclasse Experimento ou `CIVIL` (mesma regra de `FichaJogadorDadosDto.arquetipo`).
+ *
+ * `campanhaId`/`campanhaNome` (m3-28) alimentam o **chip de campanha** do acervo (`/fichas`,
+ * `FichaAcervo`) — `null`/`null` para uma ficha solta ("Sem campanha"). O mesmo recorte também
+ * atende a listagem campanha-scoped (`listarPorCampanha`/`listarVisiveisParaUsuario`), onde os
+ * dois campos são redundantes (a campanha já é conhecida pela rota) mas inofensivos.
  */
 export interface FichaResumoDto {
   readonly id: number;
+  readonly campanhaId: number | null;
+  readonly campanhaNome: string | null;
   readonly usuarioId: number;
   readonly nome: string;
   readonly classe: ClasseEnum;
@@ -84,6 +96,16 @@ export interface FichaResumoDto {
 }
 
 /**
+ * Entrada da listagem do **acervo** (m3-28) — todas as fichas do dono, com e sem campanha
+ * (`FichaRepository.listarPorUsuario`). `usuarioId` é sempre o autenticado (`@ActiveUser().sub`),
+ * montado pela controller — mesmo padrão de `CampanhaListarDto`. A saída é a `FichaResumoDto`
+ * (com `campanhaId`/`campanhaNome` resolvidos) — sem DTO de item dedicado.
+ */
+export interface FichaAcervoListarDto {
+  readonly usuarioId: number;
+}
+
+/**
  * Entrada de recuperação individual — o `id` vem do `@Param`, injetado no DTO pela controller
  * (recuperação individual sempre `{ id }`, nunca primitivo).
  */
@@ -91,10 +113,13 @@ export interface FichaRecuperarDto {
   readonly id: number;
 }
 
-/** Saída da recuperação individual — a ficha completa (identidade/posse + documento de jogo). */
+/**
+ * Saída da recuperação individual — a ficha completa (identidade/posse + documento de jogo).
+ * `campanhaId` `null` para uma ficha solta no acervo (m3-28).
+ */
 export interface FichaRecuperadaDto {
   readonly id: number;
-  readonly campanhaId: number;
+  readonly campanhaId: number | null;
   readonly usuarioId: number;
   readonly nome: string;
   readonly dados: FichaJogadorDadosDto;
@@ -110,10 +135,10 @@ export interface FichaAlterarDto {
   readonly dados: FichaJogadorDadosDto;
 }
 
-/** Saída da alteração — a ficha alterada. */
+/** Saída da alteração — a ficha alterada. `campanhaId` `null` para uma ficha solta (m3-28). */
 export interface FichaAlteradaDto {
   readonly id: number;
-  readonly campanhaId: number;
+  readonly campanhaId: number | null;
   readonly usuarioId: number;
   readonly nome: string;
   readonly dados: FichaJogadorDadosDto;
@@ -122,6 +147,35 @@ export interface FichaAlteradaDto {
 /** Entrada da exclusão (soft delete) — o `id` vem do `@Param`. Só o dono ou o mestre podem. */
 export interface FichaExcluirDto {
   readonly id: number;
+}
+
+/**
+ * ── Atribuição de campanha (m3-28) ───────────────────────────────────────────
+ * Move uma ficha entre o acervo solto e uma campanha (cardinalidade 1:N — no máximo **uma**
+ * campanha por vez; reatribuir **move**, nunca soma). Só o **dono** atribui/desatribui a
+ * própria ficha (`validarPermissaoEdicao`); atribuir a uma campanha exige que o dono seja
+ * **membro** dela (`validarMembroAlvo`, mesma checagem da concessão de acesso — m3-04).
+ * `campanhaId: null` **desatribui** — a ficha volta ao acervo.
+ */
+
+/** Entrada da atribuição — o `id` da ficha vem do `@Param`, injetado no DTO pela controller. */
+export interface FichaCampanhaAtribuirDto {
+  readonly campanhaId: number | null;
+}
+
+/** Saída da atribuição — a ficha e sua campanha atual (ou `null`, se desatribuída). */
+export interface FichaCampanhaAtribuidaDto {
+  readonly id: number;
+  readonly campanhaId: number | null;
+}
+
+/**
+ * Entrada interna do `FichaRepository.atribuirCampanha` — o `id` vem do `@Param`, montado pela
+ * controller. Só service ↔ repository (mesmo papel de `FichaInternoAlterarDto`).
+ */
+export interface FichaCampanhaInternoAtribuirDto {
+  readonly id: number;
+  readonly campanhaId: number | null;
 }
 
 /**
@@ -138,10 +192,11 @@ export interface FichaDuplicarDto {
 /**
  * Entrada interna do `FichaRepository.criarFicha` — inclui o `usuarioId` do dono (resolvido do
  * JWT na service) e o `tipo` (`codigo` de `tipo_ficha`; o repositório traduz `codigo → id` no
- * SQL — §10.2.12). Só service ↔ repository.
+ * SQL — §10.2.12). `campanhaId` `null` insere a ficha solta no acervo (m3-28). Só service ↔
+ * repository.
  */
 export interface FichaInternoCriarDto {
-  readonly campanhaId: number;
+  readonly campanhaId: number | null;
   readonly usuarioId: number;
   readonly tipo: TipoFichaEnum;
   readonly nome: string;

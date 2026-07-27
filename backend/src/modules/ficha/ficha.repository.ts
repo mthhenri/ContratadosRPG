@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { Knex } from 'knex';
 import type {
+  FichaAcervoListarDto,
   FichaAcessoConcederDto,
   FichaAcessoConcedidoDto,
   FichaAcessoInternoRecuperadoDto,
@@ -8,6 +9,7 @@ import type {
   FichaAcessoResumoDto,
   FichaAcessoRevogarDto,
   FichaAcessosListarDto,
+  FichaCampanhaInternoAtribuirDto,
   FichaCriadaDto,
   FichaExcluirDto,
   FichaInternoAlterarDto,
@@ -72,17 +74,23 @@ export class FichaRepository extends BaseRepository {
   }
 
   /**
-   * Colunas do recorte `FichaResumoDto` (§10.4) — compartilhadas por `listarPorCampanha` e
-   * `listarVisiveisParaUsuario`, que só diferem no `WHERE`. Vida/Energia e as três condições
-   * (m2-16b — mini-card de ficha no detalhe da campanha) somam-se a `classe`/`arquetipo`/`nivel`,
-   * todas lidas do JSONB `dados`. As condições usam `COALESCE(..., false)`: ausentes no documento
-   * (fichas sem o campo, ou nunca marcadas) viram `false` explícito — o resumo nunca devolve
-   * `undefined` aqui, diferente de `FichaEstadoDto` (que é opcional por retrocompatibilidade do
-   * documento completo). `arquetipo` fica `NULL` quando o JSON já é `null` (subclasse Experimento
-   * ou `CIVIL`) — mesma leitura de `dados->>'campo'` usada pelas demais colunas.
+   * Colunas do recorte `FichaResumoDto` (§10.4) — compartilhadas por `listarPorCampanha`,
+   * `listarVisiveisParaUsuario` e `listarPorUsuario` (acervo, m3-28), que só diferem no
+   * `FROM`/`WHERE`. Vida/Energia e as três condições (m2-16b — mini-card de ficha no detalhe da
+   * campanha) somam-se a `classe`/`arquetipo`/`nivel`, todas lidas do JSONB `dados`. As condições
+   * usam `COALESCE(..., false)`: ausentes no documento (fichas sem o campo, ou nunca marcadas)
+   * viram `false` explícito — o resumo nunca devolve `undefined` aqui, diferente de
+   * `FichaEstadoDto` (que é opcional por retrocompatibilidade do documento completo). `arquetipo`
+   * fica `NULL` quando o JSON já é `null` (subclasse Experimento ou `CIVIL`) — mesma leitura de
+   * `dados->>'campo'` usada pelas demais colunas. `campanhaId`/`campanhaNome` (m3-28) vêm do
+   * `LEFT JOIN campanha` que os três métodos precisam declarar no `FROM` — `LEFT` porque
+   * `campanha_id` tolera `NULL` (ficha solta no acervo); nesse caso as duas colunas saem `NULL`.
    */
   private colunasResumo(): string {
-    return `ficha.id, ficha.usuario_id AS "usuarioId", ficha.nome,
+    return `ficha.id,
+              ficha.campanha_id AS "campanhaId",
+              campanha.nome AS "campanhaNome",
+              ficha.usuario_id AS "usuarioId", ficha.nome,
               ficha.dados->>'classe' AS classe,
               ficha.dados->>'arquetipo' AS arquetipo,
               (ficha.dados->>'nivel')::int AS nivel,
@@ -95,6 +103,11 @@ export class FichaRepository extends BaseRepository {
               COALESCE((ficha.dados->'estado'->>'inconsciente')::boolean, false) AS inconsciente`;
   }
 
+  /** `LEFT JOIN` que resolve `campanhaNome` em `colunasResumo()` — `campanha_id` tolera `NULL`. */
+  private juncaoCampanhaResumo(): string {
+    return `LEFT JOIN campanha ON campanha.id = ficha.campanha_id AND campanha.is_deleted = false`;
+  }
+
   /**
    * Lista **todas** as fichas ativas de uma campanha (uso do mestre — §14). Recorte resumido: os
    * campos de jogo `classe`/`nivel` são lidos do JSONB (`dados->>'campo'`, §10.4). Ordena por nome.
@@ -103,6 +116,7 @@ export class FichaRepository extends BaseRepository {
     return this.executarConsulta<FichaResumoDto>(
       `SELECT ${this.colunasResumo()}
        FROM ficha
+       ${this.juncaoCampanhaResumo()}
        WHERE ficha.campanha_id = :campanhaId AND ficha.is_deleted = false
        ORDER BY ficha.nome ASC`,
       { campanhaId: dto.campanhaId },
@@ -118,6 +132,7 @@ export class FichaRepository extends BaseRepository {
     return this.executarConsulta<FichaResumoDto>(
       `SELECT ${this.colunasResumo()}
        FROM ficha
+       ${this.juncaoCampanhaResumo()}
        WHERE ficha.campanha_id = :campanhaId AND ficha.is_deleted = false
          AND (
            ficha.usuario_id = :usuarioId
@@ -130,6 +145,23 @@ export class FichaRepository extends BaseRepository {
          )
        ORDER BY ficha.nome ASC`,
       { campanhaId: dto.campanhaId, usuarioId: dto.usuarioId },
+    );
+  }
+
+  /**
+   * Lista **todas** as fichas ativas do dono — com e sem campanha (m3-28, o acervo `/fichas`).
+   * Mesmo recorte resumido dos demais, com `campanhaId`/`campanhaNome` alimentando o chip da
+   * campanha (ou "Sem campanha", resolvido no frontend quando `campanhaId` é `null`). Ordena por
+   * nome.
+   */
+  async listarPorUsuario(dto: FichaAcervoListarDto): Promise<FichaResumoDto[]> {
+    return this.executarConsulta<FichaResumoDto>(
+      `SELECT ${this.colunasResumo()}
+       FROM ficha
+       ${this.juncaoCampanhaResumo()}
+       WHERE ficha.usuario_id = :usuarioId AND ficha.is_deleted = false
+       ORDER BY ficha.nome ASC`,
+      { usuarioId: dto.usuarioId },
     );
   }
 
@@ -218,5 +250,22 @@ export class FichaRepository extends BaseRepository {
   /** Exclui a ficha via soft delete (nunca `DELETE` físico — proibição #14). */
   async excluirFicha(dto: FichaExcluirDto): Promise<void> {
     await this.executarSoftDelete(dto.id);
+  }
+
+  /**
+   * Move a ficha entre o acervo solto e uma campanha (m3-28) — atualiza `campanha_id` e devolve a
+   * ficha completa (mesmo recorte de `FichaCriadaDto`) para a service reusar `emitirFichaCriada`
+   * ao atribuir a uma nova sala. `campanhaId: null` desatribui (volta ao acervo). Só toca ficha
+   * ativa (`WHERE is_deleted = false`), sem `DEFAULT`.
+   */
+  async atribuirCampanha(dto: FichaCampanhaInternoAtribuirDto): Promise<FichaCriadaDto> {
+    const [fichaAtribuida] = await this.executarConsulta<FichaCriadaDto>(
+      `UPDATE ficha
+       SET campanha_id = :campanhaId, updated_date = NOW()
+       WHERE id = :id AND is_deleted = false
+       RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, dados`,
+      { id: dto.id, campanhaId: dto.campanhaId },
+    );
+    return fichaAtribuida;
   }
 }

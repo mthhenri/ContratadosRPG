@@ -1,6 +1,81 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-27 (**m3-52 — Acervo de ficha: excluir/duplicar (escopo adaptado, a
+> Última atualização: 2026-07-27 (**m3-28 — Fichas desacopladas da campanha (acervo)**: a ficha
+> deixa de ser filha obrigatória da campanha e ganha um **acervo próprio** do usuário. **(1)
+> Migration `0009 - Ficha campanha opcional.sql`** — `ficha.campanha_id` vira nullable (`DROP NOT
+> NULL`/`SET NOT NULL` no down); FK e índice já toleravam `NULL`, mantidos intactos. **(2)
+> Contrato (shared)** — `campanhaId` vira `number | null` em `FichaCriadaDto`/`FichaRecuperadaDto`/
+> `FichaAlteradaDto`; em `FichaCriarDto` vira opcional (`campanhaId?: number`); `FichaResumoDto`
+> ganha `campanhaId`/`campanhaNome` (alimentam o chip do acervo, redundantes mas inofensivos nas
+> listagens campanha-scoped); novos `FichaCampanhaAtribuirDto`/`FichaCampanhaAtribuidaDto`/
+> `FichaCampanhaInternoAtribuirDto` (nomeados por convenção — complemento `Campanha` antes do verbo,
+> mesmo padrão de `FichaAcessoConcederDto` — divergindo do nome literal `FichaAtribuirCampanhaDto`
+> da spec original, que invertia complemento/verbo) e `FichaAcervoListarDto { usuarioId }`. **(3)
+> Backend** — `criarFicha` pula `validarMembro` por completo quando `campanhaId` está ausente/`null`
+> (`== null`, cobrindo tanto o corpo da requisição quanto o repasse de `duplicarFicha`), dono sempre
+> o autenticado, sem sala de campanha pra emitir; `validarPermissaoVisualizacao`/
+> `validarPermissaoEdicao` curto-circuitam pra dono-apenas quando `ficha.campanhaId === null` (nunca
+> chamam `recuperarMembro` com `null`) — visualização ainda respeita concessões explícitas de
+> `usuario_ficha_acesso`, edição vira estritamente dono (sem conceito de mestre sem campanha);
+> `validarMembroAlvo` (reusada por `concederAcesso`/`atribuirCampanha`) rejeita com
+> `ResourceNotFoundException('Membro')` quando `campanhaId` é `null` (não há "membro" a validar sem
+> campanha). Novo `FichaRepository.listarPorUsuario` (`LEFT JOIN campanha` pra resolver
+> `campanhaNome`, reusado também por `listarPorCampanha`/`listarVisiveisParaUsuario` via
+> `colunasResumo()`/`juncaoCampanhaResumo()` compartilhados) e `FichaRepository.atribuirCampanha`
+> (`UPDATE campanha_id`, devolve o formato de `FichaCriadaDto` pra service reusar
+> `emitirFichaCriada` na atribuição). Novo `FichaService.listarAcervo`/`atribuirCampanha` (dono ou
+> mestre atual edita; atribuir a uma campanha exige que o **dono da ficha** seja membro dela;
+> `campanhaId: null` desatribui sem checagem extra; emite `ficha:criada` na sala nova só quando a
+> campanha de destino muda — a remoção da sala anterior fica **fora de escopo**, a própria spec
+> marca como opcional). Novos endpoints `GET /ficha/minhas` (antes de `:id` na ordem de rotas —
+> senão o Nest capturaria "minhas" como `:id`) e `PUT /ficha/:id/campanha`.
+> `CampanhaGateway.emitirFichaCriada` ganha uma guarda (`campanhaId === null` → no-op, sem sala) e o
+> resumo emitido agora carrega `campanhaId`/`campanhaNome: null` (quem recebe já está na própria
+> sala da campanha, não precisa do nome). **(4) Frontend** — nav "Fichas" na topbar (ícone `agente`,
+> ao lado de "Painel"); rota nova top-level `/fichas` (`ficha-acervo.routes.ts`): `''` → nova página
+> `FichaAcervo` (lista + criação), `:id` → **o mesmo** `FichaVisualizar` já usado em
+> `/painel/:campanhaId/ficha/:id` — decisão de arquitetura tomada com o autor (a spec original
+> prevê "fora de escopo unificar as duas rotas", mas reusar o mesmo *componente* sob duas rotas não
+> é unificar rotas): `campanhaId` virou `signal<number | null>`, resolvido do parâmetro de rota
+> quando presente (síncrono) ou do payload da ficha carregada quando ausente (`/fichas/:id`); sem
+> campanha, a busca de membros é pulada (`switchMap` pra `of([])` em vez do antigo `forkJoin` fixo),
+> `ehMestre()` cai em `false` naturalmente (array de membros vazio) e a navegação de saída
+> (excluir/expulsão) vai para `/fichas` em vez de `/painel/:campanhaId`; o link "Voltar" no
+> cabeçalho também alterna entre "Voltar à campanha"/"Voltar ao acervo". `FichaCriarDialog` **já
+> não precisava de mudança nenhuma** — nunca conheceu `campanhaId`, só emite as escolhas base e um
+> `usuarioId` opcional. Nova `FichaAcervo` (`paginas/acervo/`): grid de bloquinhos (mesmo padrão
+> `card`/grade de `CampanhaLista`), cada um com chip da campanha (ou "Sem campanha"), Vida/Energia,
+> botão "Criar ficha" (reusa `FichaCriarDialog` sem `campanhaId` → nasce solta) e um menu de ações
+> (kebab) por cartão — "Atribuir a campanha" (dialog com `<select>` das campanhas do usuário) e
+> "Remover da campanha" (ação direta, otimista, sem dialog); o dropdown do kebab mora na **raiz do
+> template**, fora da lista com `overflow-y`/`mask-image` (`appOverflowFade`) — mesma correção de
+> clipping da `m3-52` (`CampanhaDetalhe`), aplicada preventivamente aqui. `FichaService` ganha
+> `listarMinhasFichas()`/`atribuirCampanha(id, campanhaId | null)`; `criarFicha` já aceitava o DTO
+> inteiro (campanhaId agora opcional nele, sem mudança de assinatura). **Testes:** backend +23
+> (`ficha.service.spec.ts` — ficha solta na criação, ignora `usuarioId` sem campanha, ainda valida
+> Maestria, `listarAcervo`, permissão dono-only pra visualizar/editar ficha solta sem chamar
+> `recuperarMembro`, `atribuirCampanha` — atribuir/desatribuir/mover entre campanhas, mestre atual
+> move a ficha de um membro, `ResourceNotFoundException('Membro')` quando o dono não é membro do
+> alvo, idempotência sem emitir evento — e `campanha.gateway.spec.ts` +1 pro guard de
+> `campanhaId === null`) — 152/152 backend. Frontend +2 no `FichaService`, +5 em `FichaVisualizar`
+> (resolve `campanhaId` do payload, ficha solta não busca membros/`ehMestre` false/dono ainda
+> gerencia, membro sem concessão não gerencia, link "Voltar" pro acervo, exclusão redireciona a
+> `/fichas`) e +9 na nova `FichaAcervo` (lista, chips, estado vazio, link do cartão, criação sem
+> `campanhaId`, menu condicional, atribuir, remover) — 559/560 frontend (1 falha pré-existente
+> alheia — "apelido de equipamento", m3-33 — inalterada; shared 452/452 inalterado). Lint/build
+> limpos nos três workspaces (mesmos 3 erros de lint pré-existentes e alheios ao frontend, 1 ao
+> backend — não tocados); bundle inicial de produção 591.75 kB (mesmo warning de budget
+> pré-existente, `/fichas`/`/fichas/:id` são lazy chunks, não tocam o inicial). **Fora de escopo
+> desta rodada** (conforme a própria spec `m3-28`): remoção da tela de fichas dentro da campanha
+> (`m3-26`), unificação das duas *rotas* num único caminho de URL, cardinalidade N:N e
+> cópia/snapshot ao atribuir, emissão de `ficha:removida` na sala anterior ao desatribuir/mover
+> (marcada "opcional" na própria spec), UI de concessão de acesso (`usuario_ficha_acesso`) para
+> fichas soltas (o backend já suporta a checagem — `validarPermissaoVisualizacao` respeita
+> concessões existentes mesmo sem campanha —, mas conceder uma **nova** por essa via ainda exige
+> campanha, `validarMembroAlvo` recusa com `campanhaId: null`; nenhuma UI expõe essa combinação
+> hoje). Spec movida para `docs/specs/done/m3-28-fichas-desacopladas-acervo.spec.md`.
+>
+> Última atualização anterior: 2026-07-27 (**m3-52 — Acervo de ficha: excluir/duplicar (escopo adaptado, a
 > pedido do autor)**: a spec `m3-52` pressupõe a tela de acervo da `m3-28` (rota `/fichas`,
 > `campanha_id` nullable, `listarMinhasFichas`) — **que nunca foi implementada** neste código
 > (continua no backlog, sem migration, sem rota). A pedido do autor, o escopo desta rodada foi

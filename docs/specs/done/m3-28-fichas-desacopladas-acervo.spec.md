@@ -88,3 +88,27 @@ temporária e some no `m3-26` (que remove a tela de fichas dentro da campanha).
 - `m3-06`/`m3-10` (criação e edição inline da ficha).
 - `m3-07` (lista de fichas — o acervo reaproveita o card/estilo).
 - `m2-07` (campanhas — dropdown de atribuição).
+
+## Adaptação de escopo (implementado)
+
+- **Nome dos DTOs de atribuição.** O texto acima usava `FichaAtribuirCampanhaDto`
+  (verbo antes do complemento). Implementado como `FichaCampanhaAtribuirDto`/
+  `FichaCampanhaAtribuidaDto`/`FichaCampanhaInternoAtribuirDto` — complemento (`Campanha`) antes
+  do verbo, mesmo padrão de `FichaAcessoConcederDto` (skill `dto-conventions`, regra inegociável).
+- **"Fora de Escopo: unificar as duas rotas num único componente".** As **rotas** continuam
+  duplicadas (`/painel/:campanhaId/ficha/:id` e `/fichas/:id`), como previsto. Mas as duas rotas
+  apontam pro **mesmo componente** `FichaVisualizar` (`campanhaId` virou `signal<number | null>`,
+  resolvido do parâmetro de rota quando presente ou do payload da ficha quando ausente) — decisão
+  tomada com o autor: duplicar ~950 linhas de edição-no-próprio-lugar/tempo-real/progressão de
+  stats era um risco/custo desproporcional ao ganho de manter os dois fisicamente separados. Isso
+  diverge do texto literal da spec, mas não do objetivo (rotas continuam duplicadas até a m3-26).
+- **`ficha:removida` na sala anterior ao desatribuir/mover** — a própria spec já marcava como
+  "opcional" (entregável 3); não implementado nesta rodada. `atribuirCampanha` emite
+  `ficha:criada` na sala nova quando a campanha de destino muda, mas nenhum evento sai pra sala
+  antiga.
+- **UI de concessão de acesso para ficha solta** — o backend já respeita concessões existentes
+  de `usuario_ficha_acesso` para uma ficha sem campanha (`validarPermissaoVisualizacao`), mas
+  **conceder uma nova** por essa via ainda exige campanha (`validarMembroAlvo` recusa com
+  `campanhaId: null` — não há "membro" a validar sem campanha). Nenhuma UI do acervo expõe essa
+  combinação; não fazia parte dos entregáveis desta spec (o painel de acesso é da `m3-04`/`m3-07`,
+  ambos campanha-scoped).

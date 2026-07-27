@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { EMPTY, Subject, catchError, debounceTime, filter, finalize, forkJoin, switchMap } from 'rxjs';
+import { EMPTY, Subject, catchError, debounceTime, filter, finalize, map, of, switchMap } from 'rxjs';
 
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import {
@@ -67,17 +67,28 @@ import {
 import type { EstadoSanidade } from '../../componentes/ficha-sanidade/ficha-sanidade.component';
 
 /**
- * A **ficha** de jogador numa tela só (`/painel/:campanhaId/ficha/:id`, m3-10): **edição no próprio
- * lugar, campo a campo** — cada trecho tem seu lápis no `FichaVisualizacao` (identidade, classe,
- * atributos+Maestria, Vida/Energia atual e máxima, derivados). **Não há botão global de editar nem
+ * A **ficha** de jogador numa tela só — montada em **duas rotas** (`/painel/:campanhaId/ficha/:id`,
+ * m3-10, e `/fichas/:id`, o acervo campanha-agnóstico, m3-28): **edição no próprio lugar, campo a
+ * campo** — cada trecho tem seu lápis no `FichaVisualizacao` (identidade, classe, atributos+
+ * Maestria, Vida/Energia atual e máxima, derivados). **Não há botão global de editar nem
  * formulário separado**; cada confirmação persiste otimista e em lote (`alterarFicha`, debounced).
  * A autoridade é sempre o backend (§14): permissões e a regra de Maestria são revalidadas; um erro
  * (403/400) chega pelo `error-handler.interceptor`. O painel de **gestão de acesso** (m3-04) aparece
  * para dono/mestre.
  *
- * Estado em Signals; carrega a ficha e os membros da campanha (para o nome do dono, a checagem de
- * mestre e a lista de candidatos à concessão). Os acessos só são buscados quando o usuário pode
- * geri-los. Os `id`s vêm dos parâmetros de rota (`lerParamRota` sobe até a rota-pai).
+ * **Duas rotas, um componente (m3-28).** A spec `m3-28` aceita a duplicação das *rotas* como
+ * dívida temporária (até a `m3-26` aposentar a tela campanha-scoped), mas não exige duplicar o
+ * *componente* — `campanhaId` é opcional: sob `/painel/:campanhaId/ficha/:id` vem do parâmetro de
+ * rota (síncrono); sob `/fichas/:id` (sem `:campanhaId` na URL) só se resolve **depois** da ficha
+ * carregar, lendo `ficha.campanhaId` do próprio payload (`null` para uma ficha solta no acervo).
+ * Enquanto não há campanha (ficha solta, ou ainda carregando sob `/fichas/:id`), não há membros
+ * a buscar — `ehMestre()` cai em `false` naturalmente (nenhum membro no array) e a gestão de acesso
+ * vira dono-apenas, sem código condicional extra.
+ *
+ * Estado em Signals; carrega a ficha e, só quando há campanha, os membros dela (para o nome do
+ * dono, a checagem de mestre e a lista de candidatos à concessão). Os acessos só são buscados
+ * quando o usuário pode geri-los. Os `id`s vêm dos parâmetros de rota (`lerParamRota` sobe até a
+ * rota-pai).
  */
 @Component({
   selector: 'app-ficha-visualizar',
@@ -95,8 +106,18 @@ export class FichaVisualizar {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly campanhaId = Number(lerParamRota(this.rotaAtiva, 'campanhaId'));
+  /** `campanhaId` da rota-pai (`/painel/:campanhaId/ficha/:id`), ou `null` sob `/fichas/:id`. */
+  private readonly campanhaIdRota = lerParamRota(this.rotaAtiva, 'campanhaId');
   protected readonly fichaId = Number(lerParamRota(this.rotaAtiva, 'id'));
+
+  /**
+   * `campanhaId` efetivo (m3-28): sob a rota campanha-scoped, conhecido de imediato; sob
+   * `/fichas/:id`, `null` até a ficha carregar — o `constructor` então o resolve do próprio
+   * payload (`ficha.campanhaId`).
+   */
+  protected readonly campanhaId = signal<number | null>(
+    this.campanhaIdRota !== null ? Number(this.campanhaIdRota) : null,
+  );
 
   /**
    * Aba inicialmente ativa (m3-11): lida do `?aba=` da URL para deep-link/refresh. Parâmetro inválido
@@ -191,11 +212,21 @@ export class FichaVisualizar {
   });
 
   constructor() {
-    forkJoin({
-      ficha: this.fichaService.recuperarFicha(this.fichaId),
-      membros: this.campanhaService.listarMembros(this.campanhaId),
-    })
-      .pipe(finalize(() => this.carregando.set(false)))
+    // Sob `/fichas/:id` (sem `:campanhaId` na URL), o `campanhaId` só é conhecido depois da ficha
+    // carregar (m3-28) — daí a ficha vir primeiro e os membros serem buscados só quando há
+    // campanha (`switchMap` para `of([])` sem ela: ficha solta ou ainda sem sala de campanha).
+    this.fichaService
+      .recuperarFicha(this.fichaId)
+      .pipe(
+        switchMap((ficha) => {
+          const campanhaId = this.campanhaIdRota !== null ? Number(this.campanhaIdRota) : ficha.campanhaId;
+          this.campanhaId.set(campanhaId);
+          const membros$ =
+            campanhaId !== null ? this.campanhaService.listarMembros(campanhaId) : of([]);
+          return membros$.pipe(map((membros) => ({ ficha, membros })));
+        }),
+        finalize(() => this.carregando.set(false)),
+      )
       .subscribe({
         next: ({ ficha, membros }) => {
           const normalizada = this.normalizarRolagens(ficha);
@@ -319,8 +350,9 @@ export class FichaVisualizar {
 
   /**
    * Redireciona pra fora da tela da ficha após a revogação do próprio acesso (m3-51, item 27) —
-   * volta ao detalhe da campanha, com um toast avisando o motivo (o REST já negaria um refetch daqui
-   * pra frente, mas o usuário continuaria vendo o último estado carregado sem isso).
+   * volta ao detalhe da campanha (ou ao acervo, m3-28, se a ficha não tem campanha), com um toast
+   * avisando o motivo (o REST já negaria um refetch daqui pra frente, mas o usuário continuaria
+   * vendo o último estado carregado sem isso).
    */
   private expulsar(): void {
     this.messageService.add({
@@ -328,7 +360,7 @@ export class FichaVisualizar {
       summary: 'Acesso revogado',
       detail: 'Seu acesso a esta ficha foi revogado.',
     });
-    void this.router.navigate(['/painel', this.campanhaId]);
+    void this.router.navigate(this.rotaDeSaida());
   }
 
   /** Marca uma edição local pendente e agenda a persistência em lote (debounced). */
@@ -372,9 +404,9 @@ export class FichaVisualizar {
   }
 
   /**
-   * Exclui a ficha (soft delete no backend, só dono/mestre — §14) e volta ao detalhe da campanha,
-   * de onde a ficha some da lista (m3-52). Sem affordance de duplicar aqui — só no painel da
-   * campanha (`CampanhaDetalhe`), a pedido do autor.
+   * Exclui a ficha (soft delete no backend, só dono/mestre — §14) e volta ao detalhe da campanha
+   * (ou ao acervo, m3-28, se a ficha não tem campanha), de onde a ficha some da lista (m3-52). Sem
+   * affordance de duplicar aqui — só no painel da campanha (`CampanhaDetalhe`), a pedido do autor.
    */
   protected confirmarExclusao(): void {
     if (this.excluindo()) {
@@ -386,9 +418,15 @@ export class FichaVisualizar {
       .pipe(finalize(() => this.excluindo.set(false)))
       .subscribe({
         next: () => {
-          void this.router.navigate(['/painel', this.campanhaId]);
+          void this.router.navigate(this.rotaDeSaida());
         },
       });
+  }
+
+  /** Rota de saída da tela (excluir/expulsão, m3-28): a campanha atual, ou o acervo sem ela. */
+  private rotaDeSaida(): (string | number)[] {
+    const campanhaId = this.campanhaId();
+    return campanhaId !== null ? ['/painel', campanhaId] : ['/fichas'];
   }
 
   /**

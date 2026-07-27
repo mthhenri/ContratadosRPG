@@ -39,6 +39,14 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./modules/campanha/campanha.routes').then((modulo) => modulo.campanhaRoutes),
   },
+  // Acervo de fichas do usuário (guardada) — m3-28: a ficha deixa de ser filha obrigatória da
+  // campanha. Montada sob `/fichas` (acervo / :id), ao lado de `/painel`.
+  {
+    path: 'fichas',
+    canActivate: [autenticacaoGuard],
+    loadChildren: () =>
+      import('./modules/ficha/ficha-acervo.routes').then((modulo) => modulo.fichaAcervoRoutes),
+  },
   // Perfil self-service do usuário autenticado (editar nome/login, trocar senha, excluir a
   // conta), acessível pelo dropdown de perfil da topbar — m2-14.
   {

@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import type {
+  FichaAcervoListarDto,
   FichaAcessoConcederDto,
   FichaAcessoConcedidoDto,
   FichaAcessoResumoDto,
@@ -7,6 +8,8 @@ import type {
   FichaAcessoRevogarDto,
   FichaAcessosListarDto,
   FichaAlteradaDto,
+  FichaCampanhaAtribuidaDto,
+  FichaCampanhaInternoAtribuirDto,
   FichaCriadaDto,
   FichaCriarDto,
   FichaDerivadosDto,
@@ -91,15 +94,33 @@ export class FichaService {
   ) {}
 
   /**
-   * Cria uma ficha de jogador numa campanha de que o autenticado é membro (§14). Sem `usuarioId`
-   * no `dto`, o dono é o próprio autenticado; **com** `usuarioId`, o dono é o membro indicado —
-   * só permitido se o autenticado for o **mestre** da campanha (matriz §14: "criar ficha de
-   * jogador" é irrestrito para o mestre, só a própria para os demais), e o alvo precisa ser
-   * membro (`validarMembroAlvo`, mesma checagem da concessão de acesso — m3-04). O documento de
-   * jogo é validado contra `shared/regras` antes de persistir; dados incoerentes →
-   * `BusinessException`.
+   * Cria uma ficha de jogador — numa campanha de que o autenticado é membro (§14), ou **solta**
+   * no acervo do dono (m3-28) quando `campanhaId` está ausente/`null`. Sem `usuarioId` no `dto`,
+   * o dono é o próprio autenticado; **com** `usuarioId`, o dono é o membro indicado — só permitido
+   * se o autenticado for o **mestre** da campanha (matriz §14: "criar ficha de jogador" é
+   * irrestrito para o mestre, só a própria para os demais), e o alvo precisa ser membro
+   * (`validarMembroAlvo`, mesma checagem da concessão de acesso — m3-04). O documento de jogo é
+   * validado contra `shared/regras` antes de persistir; dados incoerentes → `BusinessException`.
+   *
+   * **Ficha solta (m3-28).** Sem `campanhaId`, `validarMembro` é pulada por completo — não há
+   * campanha para validar o vínculo — e o dono é sempre o próprio autenticado (`usuarioId` do
+   * `dto`, que só faz sentido para o mestre atribuir a outro membro, é ignorado). A ficha nasce
+   * sem sala de campanha, então `emitirFichaCriada` não dispara (ninguém está esperando).
    */
   async criarFicha(dto: FichaCriarDto, usuarioAtivo: JwtPayload): Promise<FichaCriadaDto> {
+    // `== null` cobre `undefined` (corpo da requisição, DTO público) e `null` (repasse direto de
+    // `duplicarFicha`, que lê `campanhaId` de uma `FichaRecuperadaDto` já tipada `number | null`).
+    if (dto.campanhaId == null) {
+      this.validarDadosContraRegras(dto.dados);
+      return this.fichaRepositorio.criarFicha({
+        campanhaId: null,
+        usuarioId: usuarioAtivo.sub,
+        tipo: TipoFichaEnum.JOGADOR,
+        nome: dto.nome,
+        dados: this.aplicarPresetIniciativa(this.aplicarSnapshotDeMaximos(dto.dados)),
+      });
+    }
+
     const membroAtivo = await this.campanhaRepositorio.recuperarMembro({
       campanhaId: dto.campanhaId,
       usuarioId: usuarioAtivo.sub,
@@ -152,6 +173,15 @@ export class FichaService {
       campanhaId: dto.campanhaId,
       usuarioId: usuarioAtivo.sub,
     });
+  }
+
+  /**
+   * Lista **todas** as fichas ativas do dono — com e sem campanha (m3-28, o acervo `/fichas`).
+   * Sem checagem de permissão além do JWT: cada usuário só enxerga o próprio acervo (`usuarioId`
+   * vem do autenticado, montado pela controller).
+   */
+  async listarAcervo(dto: FichaAcervoListarDto): Promise<FichaResumoDto[]> {
+    return this.fichaRepositorio.listarPorUsuario(dto);
   }
 
   /**
@@ -234,12 +264,13 @@ export class FichaService {
    * **é** uma criação, sem DTO de saída dedicado. `ResourceNotFoundException` se a ficha original
    * não existir; `UnauthorizedAccessException` se o autor não puder editá-la.
    *
-   * **Adaptação de escopo (a spec `m3-52` pressupõe a `m3-28`, ainda não implementada neste
-   * código — `campanha_id` continua `NOT NULL`, sem acervo `/fichas`).** A spec original previa o
-   * clone nascendo **solto** (sem campanha). A pedido do autor, esta task ficou restrita a
-   * **excluir na própria tela da ficha** + **duplicar só no painel da campanha**: o clone nasce na
-   * **mesma campanha** da ficha original — única opção possível sem a coluna nullable — e aparece
-   * no mini-card do dono no detalhe da campanha (m2-16). Revisitar quando a `m3-28` existir.
+   * **Adaptação de escopo (m3-52, a pedido do autor).** A spec original previa o clone nascendo
+   * **solto** (sem campanha) — hoje possível (`campanha_id` nullable, m3-28), mas a superfície de
+   * duplicar segue restrita ao **painel da campanha** (`CampanhaDetalhe`), como decidido em m3-52:
+   * duplicar uma ficha **em campanha** clona **na mesma campanha** (`campanhaId` repassado
+   * intacto); duplicar uma ficha **solta** (hipotético — sem affordance no acervo ainda) clonaria
+   * solta também, pela mesma passagem direta. Trazer "duplicar" para o acervo é um passo futuro,
+   * não coberto por esta task.
    */
   async duplicarFicha(dto: FichaDuplicarDto, usuarioAtivo: JwtPayload): Promise<FichaCriadaDto> {
     const fichaOriginal = await this.fichaRepositorio.recuperarPorId({ id: dto.id });
@@ -251,12 +282,51 @@ export class FichaService {
 
     return this.criarFicha(
       {
-        campanhaId: fichaOriginal.campanhaId,
+        campanhaId: fichaOriginal.campanhaId ?? undefined,
         nome: `${fichaOriginal.nome} (cópia)`,
         dados: fichaOriginal.dados,
       },
       usuarioAtivo,
     );
+  }
+
+  /**
+   * Move a ficha entre o acervo solto e uma campanha (m3-28) — cardinalidade 1:N (no máximo uma
+   * campanha por vez; reatribuir **move**). Só o **dono ou o mestre atual** da ficha atribuem/
+   * desatribuem (`validarPermissaoEdicao`, mesma regra de edição — §14); atribuir a uma campanha
+   * (`campanhaId !== null`) exige que o **dono da ficha** seja membro dela (`validarMembroAlvo`,
+   * mesma checagem da concessão de acesso — m3-04); `campanhaId: null` desatribui sem checagem
+   * extra. Ao entrar numa campanha nova, emite `ficha:criada` (resumo) na sala dela — os membros
+   * conectados veem a ficha aparecer, mesmo evento de `criarFicha` (m3-05); ao sair de uma
+   * campanha (desatribuir ou mover para outra), a sala anterior não recebe evento — fora de
+   * escopo desta task (a spec marca como opcional). `ResourceNotFoundException` se a ficha não
+   * existir; `UnauthorizedAccessException` se o autor não puder editá-la ou o dono não for membro
+   * da campanha-alvo.
+   */
+  async atribuirCampanha(
+    dto: FichaCampanhaInternoAtribuirDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<FichaCampanhaAtribuidaDto> {
+    const fichaEncontrada = await this.fichaRepositorio.recuperarPorId({ id: dto.id });
+    if (!fichaEncontrada) {
+      throw new ResourceNotFoundException('Ficha');
+    }
+
+    await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
+
+    if (dto.campanhaId !== null) {
+      await this.validarMembroAlvo({
+        campanhaId: dto.campanhaId,
+        usuarioId: fichaEncontrada.usuarioId,
+      });
+    }
+
+    const fichaAtribuida = await this.fichaRepositorio.atribuirCampanha(dto);
+    if (dto.campanhaId !== null && dto.campanhaId !== fichaEncontrada.campanhaId) {
+      this.campanhaGateway.emitirFichaCriada(fichaAtribuida);
+    }
+
+    return { id: fichaAtribuida.id, campanhaId: fichaAtribuida.campanhaId };
   }
 
   /**
@@ -346,6 +416,10 @@ export class FichaService {
    * `UnauthorizedAccessException`. Devolve `true` quando quem pediu é **só-visualizador**
    * (nem dono, nem mestre) — usado por `recuperarFicha` para decidir se omite
    * `CAMPOS_PRIVADOS_FICHA` (m3-50).
+   *
+   * **Ficha solta (m3-28).** Sem `campanhaId`, não há campanha nem mestre a consultar — o ramo
+   * de mestre fica atrás de `ficha.campanhaId !== null` (nunca chama `recuperarMembro` com
+   * `null`); a visualização vira dono-ou-concessão explícita.
    */
   private async validarPermissaoVisualizacao(
     ficha: FichaRecuperadaDto,
@@ -355,12 +429,14 @@ export class FichaService {
       return false;
     }
 
-    const membroEncontrado = await this.campanhaRepositorio.recuperarMembro({
-      campanhaId: ficha.campanhaId,
-      usuarioId: usuarioAtivo.sub,
-    });
-    if (membroEncontrado?.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
-      return false;
+    if (ficha.campanhaId !== null) {
+      const membroEncontrado = await this.campanhaRepositorio.recuperarMembro({
+        campanhaId: ficha.campanhaId,
+        usuarioId: usuarioAtivo.sub,
+      });
+      if (membroEncontrado?.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
+        return false;
+      }
     }
 
     const acessoConcedido = await this.fichaRepositorio.recuperarAcesso({
@@ -377,6 +453,9 @@ export class FichaService {
    * Garante permissão de **edição** da ficha (§14): só o dono (posse) ou o mestre da campanha
    * (papel). Um membro com concessão de visualização **nunca** edita. Do contrário lança
    * `UnauthorizedAccessException`.
+   *
+   * **Ficha solta (m3-28).** Sem `campanhaId`, não há mestre — vira dono-apenas (mesmo racional
+   * de `validarPermissaoVisualizacao`, sem chamar `recuperarMembro` com `null`).
    */
   private async validarPermissaoEdicao(
     ficha: FichaRecuperadaDto,
@@ -384,6 +463,10 @@ export class FichaService {
   ): Promise<void> {
     if (ficha.usuarioId === usuarioAtivo.sub) {
       return;
+    }
+
+    if (ficha.campanhaId === null) {
+      throw new UnauthorizedAccessException();
     }
 
     const membroEncontrado = await this.campanhaRepositorio.recuperarMembro({
@@ -400,8 +483,16 @@ export class FichaService {
    * concessão revela a ficha a "outro membro da campanha"). Alvo não-membro →
    * `ResourceNotFoundException('Membro')` (mesmo tratamento da transferência de mestre em m2-10).
    */
-  private async validarMembroAlvo(dto: { campanhaId: number; usuarioId: number }): Promise<void> {
-    const membroEncontrado = await this.campanhaRepositorio.recuperarMembro(dto);
+  private async validarMembroAlvo(dto: { campanhaId: number | null; usuarioId: number }): Promise<void> {
+    // Ficha solta (m3-28): sem campanha não existe "membro" a validar — o alvo nunca qualifica.
+    if (dto.campanhaId === null) {
+      throw new ResourceNotFoundException('Membro');
+    }
+
+    const membroEncontrado = await this.campanhaRepositorio.recuperarMembro({
+      campanhaId: dto.campanhaId,
+      usuarioId: dto.usuarioId,
+    });
     if (!membroEncontrado) {
       throw new ResourceNotFoundException('Membro');
     }

@@ -108,7 +108,7 @@ Regras: uma campanha tem exatamente um membro `MESTRE` no v1 (inicialmente o cri
 ```sql
 CREATE TABLE ficha (
   -- BaseEntity...
-  campanha_id    INTEGER NOT NULL,   -- fk_ficha_campanha
+  campanha_id    INTEGER,            -- fk_ficha_campanha (nullable — m3-28, ver nota abaixo)
   usuario_id     INTEGER NOT NULL,   -- fk_ficha_usuario (dono; mestre para CRIATURA/NPC)
   tipo_ficha_id  INTEGER NOT NULL,   -- fk_ficha_tipo_ficha
   nome           VARCHAR NOT NULL,
@@ -117,6 +117,15 @@ CREATE TABLE ficha (
 -- ix_ficha_campanha: (campanha_id)
 -- ix_ficha_usuario:  (usuario_id)
 ```
+
+**`campanha_id` nullable (m3-28 — acervo).** A ficha deixou de ser filha obrigatória da
+campanha: `NULL` = ficha **solta** no acervo do dono (`/fichas`), visível/editável só pelo
+dono (mais concessões explícitas em `usuario_ficha_acesso`, que continuam ficha-scoped, não
+campanha-scoped). Cardinalidade **1:N** — no máximo **uma** campanha por vez; atribuir
+(`PUT /ficha/:id/campanha`) **move**, nunca soma. As rotas campanha-scoped
+(`/painel/:campanhaId/ficha/*`) continuam existindo em paralelo até a m3-26 aposentá-las —
+dívida de rota assumida na m3-28, não no componente (`FichaVisualizar` é o mesmo nas duas
+rotas, resolvendo `campanhaId` do payload quando a URL não o traz).
 
 ## usuario_ficha_acesso (M3)
 

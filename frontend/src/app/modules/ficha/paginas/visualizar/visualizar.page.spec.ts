@@ -80,8 +80,18 @@ describe('FichaVisualizar', () => {
     usuarioLogadoId: number;
     acessos?: FichaAcessoResumoDto[];
     abaUrl?: string;
+    /** m3-28: sem `:campanhaId` na URL, simulando a rota `/fichas/:id` (acervo). */
+    semCampanhaNaRota?: boolean;
+    /** m3-28: `campanhaId` da ficha carregada — só relevante junto de `semCampanhaNaRota`. */
+    fichaCampanhaId?: number | null;
   }) {
-    const recuperada: FichaRecuperadaDto = { id: 42, campanhaId: 9, usuarioId: 7, nome: 'Kane', dados };
+    const recuperada: FichaRecuperadaDto = {
+      id: 42,
+      campanhaId: opcoes.semCampanhaNaRota ? (opcoes.fichaCampanhaId ?? null) : 9,
+      usuarioId: 7,
+      nome: 'Kane',
+      dados,
+    };
     const fichaService = {
       recuperarFicha: vi.fn(() => of(recuperada)),
       listarAcessos: vi.fn(() => of(opcoes.acessos ?? [])),
@@ -126,10 +136,14 @@ describe('FichaVisualizar', () => {
           provide: ActivatedRoute,
           useValue: {
             snapshot: {
-              paramMap: new Map([
-                ['campanhaId', '9'],
-                ['id', '42'],
-              ]),
+              // `ParamMap.get` real devolve `null` (não `undefined`) para uma chave ausente — o
+              // `Map` do teste precisa da entrada explícita pra `lerParamRota` (`valor !== null`)
+              // simular a ausência de `:campanhaId` sob `/fichas/:id` corretamente.
+              paramMap: new Map<string, string | null>(
+                opcoes.semCampanhaNaRota
+                  ? [['campanhaId', null], ['id', '42']]
+                  : [['campanhaId', '9'], ['id', '42']],
+              ),
               queryParamMap: new Map<string, string>(
                 opcoes.abaUrl ? [['aba', opcoes.abaUrl]] : [],
               ),
@@ -148,6 +162,7 @@ describe('FichaVisualizar', () => {
       fixture,
       raiz: fixture.nativeElement as HTMLElement,
       fichaService,
+      campanhaService,
       tempoRealService,
       fichaAlterada$,
       acessoRevogado$,
@@ -1013,5 +1028,66 @@ describe('FichaVisualizar', () => {
         replaceUrl: true,
       }),
     );
+  });
+
+  // === Acervo campanha-agnóstico (m3-28) — rota /fichas/:id, sem :campanhaId na URL ===
+  describe('sob /fichas/:id (m3-28 — sem :campanhaId na rota)', () => {
+    it('resolve campanhaId a partir do payload da ficha quando ela pertence a uma campanha', () => {
+      const { fixture, campanhaService } = montar({
+        usuarioLogadoId: 7,
+        semCampanhaNaRota: true,
+        fichaCampanhaId: 9,
+      });
+      const componente = fixture.componentInstance;
+
+      expect(componente['campanhaId']()).toBe(9);
+      expect(campanhaService.listarMembros).toHaveBeenCalledWith(9);
+    });
+
+    it('ficha solta (campanhaId null): não busca membros, ehMestre fica false, dono ainda gerencia', () => {
+      const { fixture, campanhaService } = montar({
+        usuarioLogadoId: 7,
+        semCampanhaNaRota: true,
+        fichaCampanhaId: null,
+      });
+      const componente = fixture.componentInstance;
+
+      expect(componente['campanhaId']()).toBeNull();
+      expect(campanhaService.listarMembros).not.toHaveBeenCalled();
+      expect(componente['ehMestre']()).toBe(false);
+      expect(componente['podeGerenciar']()).toBe(true);
+    });
+
+    it('membro sem concessão numa ficha solta não gerencia (só dono, m3-28)', () => {
+      const { fixture } = montar({
+        usuarioLogadoId: 11,
+        semCampanhaNaRota: true,
+        fichaCampanhaId: null,
+      });
+
+      expect(fixture.componentInstance['podeGerenciar']()).toBe(false);
+    });
+
+    it('o link "Voltar" aponta pro acervo (/fichas) quando a ficha está solta', () => {
+      const { raiz } = montar({ usuarioLogadoId: 7, semCampanhaNaRota: true, fichaCampanhaId: null });
+
+      const voltar = raiz.querySelector('.ficha-pagina__voltar');
+      expect(voltar?.textContent).toContain('Voltar ao acervo');
+      expect(voltar?.getAttribute('href')).toBe('/fichas');
+    });
+
+    it('exclusão de uma ficha solta redireciona ao acervo (/fichas), não a /painel', () => {
+      const { fixture, navegarEspiao } = montar({
+        usuarioLogadoId: 7,
+        semCampanhaNaRota: true,
+        fichaCampanhaId: null,
+      });
+      const componente = fixture.componentInstance;
+
+      componente['abrirExclusao']();
+      componente['confirmarExclusao']();
+
+      expect(navegarEspiao).toHaveBeenCalledWith(['/fichas']);
+    });
   });
 });

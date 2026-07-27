@@ -1,0 +1,444 @@
+@use 'tema/breakpoints' as bp;
+
+.acervo {
+  max-width: 1160px;
+  margin: 0 auto;
+
+  &__acoes {
+    display: flex;
+    margin-bottom: 20px;
+  }
+
+  &__acao {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+
+    @include bp.mobile {
+      width: 100%;
+      justify-content: center;
+      min-height: bp.$alvo-toque;
+    }
+  }
+
+  &__estado {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-family: var(--font-sans);
+    color: var(--text-dim);
+
+    app-icone {
+      color: var(--text-mute);
+    }
+  }
+
+  // Grade de cartões, rolável com fade topo/base — mesmo padrão de `CampanhaLista` (m2-17).
+  &__lista {
+    list-style: none;
+    margin: 0;
+    padding: 2px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--gap-grid);
+    align-items: start;
+    max-height: 640px;
+    overflow-y: auto;
+
+    --fade-topo: 0px;
+    --fade-base: 0px;
+    &.overflow-fade--topo,
+    &.overflow-fade--base {
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+    }
+    &.overflow-fade--topo {
+      --fade-topo: 22px;
+    }
+    &.overflow-fade--base {
+      --fade-base: 22px;
+    }
+  }
+
+  &__cartao {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+    padding: 16px 18px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+  }
+
+  &__cartao-link {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    text-decoration: none;
+
+    &:hover .acervo__cartao-nome {
+      color: var(--accent);
+    }
+  }
+
+  &__cartao-nome {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    transition: color 0.15s ease;
+  }
+
+  &__cartao-meta {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  &__cartao-vitais {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 2px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-mute);
+  }
+
+  &__cartao-rodape {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: auto;
+  }
+
+  &__cartao-regua {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  // Chip de campanha (ou "Sem campanha") — variação do chip de classificação do tema.
+  &__chip {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    border: 1px solid var(--border-strong);
+    border-radius: 3px;
+    padding: 4px 8px;
+
+    &--campanha {
+      color: var(--accent);
+      border-color: var(--accent-border);
+    }
+
+    app-icone {
+      font-size: 11px;
+    }
+  }
+
+  // Botão do menu de ações (kebab) — o dropdown em si (`&__menu*`) mora na raiz do template, fora
+  // desta subárvore (ver a nota no componente: `overflow-y` + `mask-image` cortariam um
+  // `position: fixed` comum na pintura — mesmo problema/correção de `CampanhaDetalhe`, m3-52).
+  &__menu-botao {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 22px;
+    font-size: 15px;
+    line-height: 1;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+    &:hover {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--surface-2);
+    }
+
+    @include bp.mobile {
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
+    }
+  }
+
+  &__menu-fundo {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    background: transparent;
+    border: 0;
+    cursor: default;
+  }
+
+  &__menu {
+    position: fixed;
+    z-index: 21;
+    min-width: 190px;
+    padding: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+  }
+
+  &__menu-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 9px 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    &:hover:not(:disabled) {
+      background: var(--surface-2);
+      color: var(--accent);
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: default;
+    }
+  }
+
+  &__select {
+    width: 100%;
+    margin-bottom: 16px;
+    padding: 9px 10px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+  }
+}
+
+// Card + cabeçalho de seção — bloco sancionado copiado de docs/design/tema/_componentes.scss.
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--pad-card);
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 18px;
+  }
+
+  &__indice {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+  }
+
+  &__titulo {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text);
+  }
+
+  &__regua {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  &__contagem {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-mute);
+  }
+}
+
+// Botões — bloco sancionado copiado de docs/design/tema/_componentes.scss.
+.botao {
+  border-radius: var(--radius-control);
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: filter 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+
+  &--primario {
+    background: var(--accent);
+    color: var(--bg);
+    border: 0;
+
+    &:hover:not(:disabled) {
+      filter: brightness(1.08);
+    }
+  }
+
+  &--secundario {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+
+    &:hover:not(:disabled) {
+      background: var(--surface-2);
+      border-color: var(--accent-border);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+}
+
+// Dialog — bloco sancionado copiado de docs/design/tema/_componentes.scss (mesmo padrão de
+// `CampanhaDetalhe`/`FichaVisualizar`).
+.dialogo {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 60px 20px;
+  overflow-y: auto;
+
+  &__fundo {
+    position: fixed;
+    inset: 0;
+    background: rgb(0 0 0 / 55%);
+    border: 0;
+    cursor: default;
+  }
+
+  &__painel {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+    padding: var(--pad-card);
+    box-shadow: 0 16px 48px rgb(0 0 0 / 45%);
+  }
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 16px;
+  }
+
+  &__titulo {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+  }
+
+  &__fechar {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    font-size: 13px;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+    &:hover {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--surface-2);
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: default;
+    }
+  }
+
+  &__aviso {
+    margin: 0 0 16px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  &__acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  &__acao {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 11px 18px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+}

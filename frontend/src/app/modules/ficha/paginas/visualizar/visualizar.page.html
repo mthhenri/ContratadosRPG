@@ -1,9 +1,16 @@
 <section class="ficha-pagina">
   <header class="ficha-pagina__topo">
-    <a class="ficha-pagina__voltar" [routerLink]="['/painel', campanhaId]">
-      <app-icone nome="voltar" />
-      <span>Voltar à campanha</span>
-    </a>
+    @if (campanhaId(); as campanhaAtualId) {
+      <a class="ficha-pagina__voltar" [routerLink]="['/painel', campanhaAtualId]">
+        <app-icone nome="voltar" />
+        <span>Voltar à campanha</span>
+      </a>
+    } @else {
+      <a class="ficha-pagina__voltar" routerLink="/fichas">
+        <app-icone nome="voltar" />
+        <span>Voltar ao acervo</span>
+      </a>
+    }
 
     <app-indicador-tempo-real />
 

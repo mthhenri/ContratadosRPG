@@ -299,6 +299,8 @@ describe('CampanhaDetalhe', () => {
     const fichas: FichaResumoDto[] = [
       {
         id: 3,
+        campanhaId: CAMPANHA_ID,
+        campanhaNome: null,
         usuarioId: 1,
         nome: 'Kane',
         classe: ClasseEnum.COMBATENTE,
@@ -314,6 +316,8 @@ describe('CampanhaDetalhe', () => {
       },
       {
         id: 4,
+        campanhaId: CAMPANHA_ID,
+        campanhaNome: null,
         usuarioId: 2,
         nome: 'Vera',
         classe: ClasseEnum.SUPORTE,
@@ -329,6 +333,8 @@ describe('CampanhaDetalhe', () => {
       },
       {
         id: 5,
+        campanhaId: CAMPANHA_ID,
+        campanhaNome: null,
         usuarioId: 2,
         nome: 'Zeta',
         classe: ClasseEnum.ESPECIALISTA,
@@ -453,6 +459,8 @@ describe('CampanhaDetalhe', () => {
         fichas: [
           {
             id: 8,
+            campanhaId: CAMPANHA_ID,
+            campanhaNome: null,
             usuarioId: 1,
             nome: 'Sem Condições',
             classe: ClasseEnum.COMBATENTE,
@@ -481,6 +489,8 @@ describe('CampanhaDetalhe', () => {
         fichas: [
           {
             id: 9,
+            campanhaId: CAMPANHA_ID,
+            campanhaNome: null,
             usuarioId: 1,
             nome: 'No Chão',
             classe: ClasseEnum.COMBATENTE,
@@ -582,6 +592,8 @@ describe('CampanhaDetalhe', () => {
 
       fichaCriada$.next({
         id: 9,
+        campanhaId: CAMPANHA_ID,
+        campanhaNome: null,
         usuarioId: 2,
         nome: 'Nova',
         classe: ClasseEnum.COMBATENTE,

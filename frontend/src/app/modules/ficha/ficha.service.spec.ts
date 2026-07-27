@@ -76,6 +76,19 @@ describe('FichaService', () => {
     expect(recebido).toEqual(criada);
   });
 
+  it('cria uma ficha solta no acervo, sem campanhaId (m3-28)', () => {
+    const { servico, http } = criar();
+    const criada: FichaCriadaDto = { id: 6, campanhaId: null, usuarioId: 7, nome: 'Solta', dados };
+
+    let recebido: FichaCriadaDto | undefined;
+    servico.criarFicha({ nome: 'Solta', dados }).subscribe((r) => (recebido = r));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/ficha'));
+    expect(requisicao.request.body).toEqual({ nome: 'Solta', dados });
+    requisicao.flush(envelope(criada));
+
+    expect(recebido).toEqual(criada);
+  });
+
   it('recupera uma ficha pelo id', () => {
     const { servico, http } = criar();
     const recuperada: FichaRecuperadaDto = { id: 3, campanhaId: 9, usuarioId: 7, nome: 'Kane', dados };
@@ -108,6 +121,8 @@ describe('FichaService', () => {
     const fichas: FichaResumoDto[] = [
       {
         id: 3,
+        campanhaId: 9,
+        campanhaNome: 'Operação Alfa',
         usuarioId: 7,
         nome: 'Kane',
         classe: ClasseEnum.COMBATENTE,
@@ -131,6 +146,64 @@ describe('FichaService', () => {
     requisicao.flush(envelope(fichas));
 
     expect(recebido).toEqual(fichas);
+  });
+
+  it('lista as fichas do acervo (m3-28)', () => {
+    const { servico, http } = criar();
+    const fichas: FichaResumoDto[] = [
+      {
+        id: 6,
+        campanhaId: null,
+        campanhaNome: null,
+        usuarioId: 7,
+        nome: 'Solta',
+        classe: ClasseEnum.COMBATENTE,
+        arquetipo: null,
+        nivel: 1,
+        vidaAtual: 20,
+        vidaMaxima: 20,
+        energiaAtual: 10,
+        energiaMaxima: 10,
+        morrendo: false,
+        machucado: false,
+        inconsciente: false,
+      },
+    ];
+
+    let recebido: FichaResumoDto[] | undefined;
+    servico.listarMinhasFichas().subscribe((r) => (recebido = r));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/ficha/minhas'));
+    expect(requisicao.request.method).toBe('GET');
+    requisicao.flush(envelope(fichas));
+
+    expect(recebido).toEqual(fichas);
+  });
+
+  it('atribui a ficha a uma campanha (m3-28)', () => {
+    const { servico, http } = criar();
+    const atribuida = { id: 3, campanhaId: 9 };
+
+    let recebido: { id: number; campanhaId: number | null } | undefined;
+    servico.atribuirCampanha(3, 9).subscribe((r) => (recebido = r));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/ficha/3/campanha'));
+    expect(requisicao.request.method).toBe('PUT');
+    expect(requisicao.request.body).toEqual({ campanhaId: 9 });
+    requisicao.flush(envelope(atribuida));
+
+    expect(recebido).toEqual(atribuida);
+  });
+
+  it('desatribui a ficha (campanhaId: null) da campanha', () => {
+    const { servico, http } = criar();
+    const desatribuida = { id: 3, campanhaId: null };
+
+    let recebido: { id: number; campanhaId: number | null } | undefined;
+    servico.atribuirCampanha(3, null).subscribe((r) => (recebido = r));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/ficha/3/campanha'));
+    expect(requisicao.request.body).toEqual({ campanhaId: null });
+    requisicao.flush(envelope(desatribuida));
+
+    expect(recebido).toEqual(desatribuida);
   });
 
   it('lista as concessões de acesso de uma ficha', () => {

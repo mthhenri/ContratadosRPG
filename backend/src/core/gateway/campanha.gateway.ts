@@ -149,10 +149,19 @@ export class CampanhaGateway implements OnGatewayConnection {
    * é mais restrita (§14 — dono/mestre/concessão). Emitir o `dados` completo aqui vazaria a ficha a
    * um membro que o REST (`recuperarFicha`) negaria — o conteúdo continua atrás do endpoint gateado
    * pela §14. (o gateway não relaxa a permissão — proibição #28.)
+   *
+   * **Ficha solta no acervo (m3-28)**: `campanhaId === null` não tem sala — no-op (nenhum membro de
+   * campanha está esperando essa ficha). `campanhaNome` fica sempre `null` aqui — quem recebe o
+   * evento já está dentro da própria sala da campanha, não precisa do nome dela.
    */
   emitirFichaCriada(ficha: FichaCriadaDto): void {
+    if (ficha.campanhaId === null) {
+      return;
+    }
     const resumo: FichaResumoDto = {
       id: ficha.id,
+      campanhaId: ficha.campanhaId,
+      campanhaNome: null,
       usuarioId: ficha.usuarioId,
       nome: ficha.nome,
       classe: ficha.dados.classe,

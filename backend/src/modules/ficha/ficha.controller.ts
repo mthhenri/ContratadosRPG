@@ -16,6 +16,8 @@ import type {
   FichaAcessoRevogadoDto,
   FichaAlteradaDto,
   FichaAlterarDto,
+  FichaCampanhaAtribuidaDto,
+  FichaCampanhaAtribuirDto,
   FichaCriadaDto,
   FichaCriarDto,
   FichaRecuperadaDto,
@@ -51,6 +53,12 @@ export class FichaController {
     return this.fichaService.listarFichas({ campanhaId }, usuarioAtivo);
   }
 
+  /** O acervo (m3-28) — todas as fichas do autenticado, com e sem campanha. */
+  @Get('minhas')
+  minhas(@ActiveUser() usuarioAtivo: JwtPayload): Promise<FichaResumoDto[]> {
+    return this.fichaService.listarAcervo({ usuarioId: usuarioAtivo.sub });
+  }
+
   @Get(':id')
   recuperar(
     @Param('id', ParseIntPipe) id: number,
@@ -82,6 +90,16 @@ export class FichaController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<FichaCriadaDto> {
     return this.fichaService.duplicarFicha({ id }, usuarioAtivo);
+  }
+
+  /** Move a ficha entre o acervo solto e uma campanha (m3-28) — `campanhaId: null` desatribui. */
+  @Put(':id/campanha')
+  atribuirCampanha(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: FichaCampanhaAtribuirDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<FichaCampanhaAtribuidaDto> {
+    return this.fichaService.atribuirCampanha({ ...dto, id }, usuarioAtivo);
   }
 
   @Get(':id/acesso')

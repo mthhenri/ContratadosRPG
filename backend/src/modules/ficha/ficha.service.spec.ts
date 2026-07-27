@@ -34,12 +34,14 @@ interface FichaRepositorioDublado {
   recuperarPorId: ReturnType<typeof vi.fn>;
   listarPorCampanha: ReturnType<typeof vi.fn>;
   listarVisiveisParaUsuario: ReturnType<typeof vi.fn>;
+  listarPorUsuario: ReturnType<typeof vi.fn>;
   recuperarAcesso: ReturnType<typeof vi.fn>;
   concederAcesso: ReturnType<typeof vi.fn>;
   revogarAcesso: ReturnType<typeof vi.fn>;
   listarAcessos: ReturnType<typeof vi.fn>;
   alterarFicha: ReturnType<typeof vi.fn>;
   excluirFicha: ReturnType<typeof vi.fn>;
+  atribuirCampanha: ReturnType<typeof vi.fn>;
 }
 
 interface CampanhaRepositorioDublado {
@@ -162,12 +164,14 @@ describe('FichaService', () => {
       recuperarPorId: vi.fn(),
       listarPorCampanha: vi.fn(),
       listarVisiveisParaUsuario: vi.fn(),
+      listarPorUsuario: vi.fn(),
       recuperarAcesso: vi.fn(),
       concederAcesso: vi.fn(),
       revogarAcesso: vi.fn(),
       listarAcessos: vi.fn(),
       alterarFicha: vi.fn(),
       excluirFicha: vi.fn(),
+      atribuirCampanha: vi.fn(),
     };
     campanhaRepositorio = { recuperarMembro: vi.fn() };
     campanhaGateway = {
@@ -651,6 +655,70 @@ describe('FichaService', () => {
         });
       });
     });
+
+    describe('ficha solta no acervo (m3-28 — sem campanhaId)', () => {
+      it('cria a ficha sem campanha, dono = autenticado, sem validar membro nem emitir evento', async () => {
+        const fichaCriada = { id: 5, campanhaId: null, usuarioId: usuarioDono.sub, nome: 'Solta', dados: criarDados() };
+        fichaRepositorio.criarFicha.mockResolvedValue(fichaCriada);
+
+        const resultado = await service.criarFicha({ nome: 'Solta', dados: criarDados() }, usuarioDono);
+
+        expect(campanhaRepositorio.recuperarMembro).not.toHaveBeenCalled();
+        expect(fichaRepositorio.criarFicha).toHaveBeenCalledWith({
+          campanhaId: null,
+          usuarioId: usuarioDono.sub,
+          tipo: TipoFichaEnum.JOGADOR,
+          nome: 'Solta',
+          dados: comSnapshot(criarDados()),
+        });
+        expect(campanhaGateway.emitirFichaCriada).not.toHaveBeenCalled();
+        expect(resultado).toBe(fichaCriada);
+      });
+
+      it('ignora usuarioId do dto — sem campanha não há mestre para atribuir a outro dono', async () => {
+        fichaRepositorio.criarFicha.mockResolvedValue({
+          id: 5,
+          campanhaId: null,
+          usuarioId: usuarioDono.sub,
+          nome: 'Solta',
+          dados: criarDados(),
+        });
+
+        await service.criarFicha(
+          { usuarioId: usuarioMembro.sub, nome: 'Solta', dados: criarDados() },
+          usuarioDono,
+        );
+
+        expect(fichaRepositorio.criarFicha).toHaveBeenCalledWith(
+          expect.objectContaining({ usuarioId: usuarioDono.sub }),
+        );
+      });
+
+      it('ainda valida a Maestria mesmo sem campanha', async () => {
+        await expect(
+          service.criarFicha(
+            { nome: 'Solta', dados: criarDados({ maestria: 'destreza' }) },
+            usuarioDono,
+          ),
+        ).rejects.toThrow(BusinessException);
+        expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('listarAcervo', () => {
+    it('lista todas as fichas do autenticado, com e sem campanha (m3-28)', async () => {
+      const fichas = [
+        { id: 5, campanhaId: 3, campanhaNome: 'Operação Alfa', usuarioId: usuarioDono.sub, nome: 'Kane' },
+        { id: 6, campanhaId: null, campanhaNome: null, usuarioId: usuarioDono.sub, nome: 'Solta' },
+      ];
+      fichaRepositorio.listarPorUsuario.mockResolvedValue(fichas);
+
+      const resultado = await service.listarAcervo({ usuarioId: usuarioDono.sub });
+
+      expect(fichaRepositorio.listarPorUsuario).toHaveBeenCalledWith({ usuarioId: usuarioDono.sub });
+      expect(resultado).toBe(fichas);
+    });
   });
 
   describe('listarFichas', () => {
@@ -824,6 +892,39 @@ describe('FichaService', () => {
       await expect(service.recuperarFicha({ id: 99 }, usuarioDono)).rejects.toThrow(
         ResourceNotFoundException,
       );
+    });
+
+    describe('ficha solta no acervo (m3-28 — campanhaId null)', () => {
+      const fichaSolta: FichaRecuperadaDto = { ...fichaPersistida, campanhaId: null };
+
+      it('devolve a ficha para o dono sem consultar campanha', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaSolta);
+
+        const resultado = await service.recuperarFicha({ id: 5 }, usuarioDono);
+
+        expect(resultado).toBe(fichaSolta);
+        expect(campanhaRepositorio.recuperarMembro).not.toHaveBeenCalled();
+      });
+
+      it('devolve a ficha para quem tem concessão explícita, sem consultar recuperarMembro', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaSolta);
+        fichaRepositorio.recuperarAcesso.mockResolvedValue({ id: 1 });
+
+        const resultado = await service.recuperarFicha({ id: 5 }, usuarioMembro);
+
+        expect(campanhaRepositorio.recuperarMembro).not.toHaveBeenCalled();
+        expect(resultado.id).toBe(fichaSolta.id);
+      });
+
+      it('lança UnauthorizedAccessException para quem não é dono nem tem concessão', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaSolta);
+        fichaRepositorio.recuperarAcesso.mockResolvedValue(null);
+
+        await expect(service.recuperarFicha({ id: 5 }, usuarioMembro)).rejects.toThrow(
+          UnauthorizedAccessException,
+        );
+        expect(campanhaRepositorio.recuperarMembro).not.toHaveBeenCalled();
+      });
     });
   });
 
@@ -1061,6 +1162,30 @@ describe('FichaService', () => {
         expect(fichaRepositorio.alterarFicha).toHaveBeenCalled();
       });
     });
+
+    describe('ficha solta no acervo (m3-28 — campanhaId null)', () => {
+      const fichaSolta: FichaRecuperadaDto = { ...fichaPersistida, campanhaId: null };
+
+      it('o dono altera sem consultar campanha', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaSolta);
+        fichaRepositorio.alterarFicha.mockResolvedValue(fichaSolta);
+
+        await expect(
+          service.alterarFicha({ id: 5, nome: 'Novo nome', dados: criarDados() }, usuarioDono),
+        ).resolves.toBeDefined();
+        expect(campanhaRepositorio.recuperarMembro).not.toHaveBeenCalled();
+      });
+
+      it('lança UnauthorizedAccessException para quem não é dono — sem consultar campanha', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaSolta);
+
+        await expect(
+          service.alterarFicha({ id: 5, nome: 'Novo nome', dados: criarDados() }, usuarioMembro),
+        ).rejects.toThrow(UnauthorizedAccessException);
+        expect(campanhaRepositorio.recuperarMembro).not.toHaveBeenCalled();
+        expect(fichaRepositorio.alterarFicha).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe('excluirFicha', () => {
@@ -1161,6 +1286,107 @@ describe('FichaService', () => {
       );
 
       expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('atribuirCampanha', () => {
+    const fichaSolta: FichaRecuperadaDto = { ...fichaPersistida, campanhaId: null };
+
+    it('atribui a ficha solta a uma campanha da qual o dono é membro — emite ficha:criada na sala nova', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaSolta);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      const fichaAtribuida = { id: 5, campanhaId: 3, usuarioId: usuarioDono.sub, nome: 'Agente Alfa', dados: criarDados() };
+      fichaRepositorio.atribuirCampanha.mockResolvedValue(fichaAtribuida);
+
+      const resultado = await service.atribuirCampanha({ id: 5, campanhaId: 3 }, usuarioDono);
+
+      expect(campanhaRepositorio.recuperarMembro).toHaveBeenCalledWith({
+        campanhaId: 3,
+        usuarioId: usuarioDono.sub,
+      });
+      expect(fichaRepositorio.atribuirCampanha).toHaveBeenCalledWith({ id: 5, campanhaId: 3 });
+      expect(campanhaGateway.emitirFichaCriada).toHaveBeenCalledWith(fichaAtribuida);
+      expect(resultado).toEqual({ id: 5, campanhaId: 3 });
+    });
+
+    it('desatribui a ficha (campanhaId: null) sem checar membro nem emitir evento', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      const fichaDesatribuida = { id: 5, campanhaId: null, usuarioId: usuarioDono.sub, nome: 'Agente Alfa', dados: criarDados() };
+      fichaRepositorio.atribuirCampanha.mockResolvedValue(fichaDesatribuida);
+
+      const resultado = await service.atribuirCampanha({ id: 5, campanhaId: null }, usuarioDono);
+
+      expect(campanhaRepositorio.recuperarMembro).not.toHaveBeenCalled();
+      expect(fichaRepositorio.atribuirCampanha).toHaveBeenCalledWith({ id: 5, campanhaId: null });
+      expect(campanhaGateway.emitirFichaCriada).not.toHaveBeenCalled();
+      expect(resultado).toEqual({ id: 5, campanhaId: null });
+    });
+
+    it('lança ResourceNotFoundException("Membro") quando o dono não é membro da campanha-alvo', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaSolta);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue(null);
+
+      await expect(service.atribuirCampanha({ id: 5, campanhaId: 3 }, usuarioDono)).rejects.toThrow(
+        ResourceNotFoundException,
+      );
+      expect(fichaRepositorio.atribuirCampanha).not.toHaveBeenCalled();
+    });
+
+    it('lança UnauthorizedAccessException quando o autor não é dono nem mestre da ficha', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+
+      await expect(service.atribuirCampanha({ id: 5, campanhaId: 4 }, usuarioMembro)).rejects.toThrow(
+        UnauthorizedAccessException,
+      );
+      expect(fichaRepositorio.atribuirCampanha).not.toHaveBeenCalled();
+    });
+
+    it('o mestre da campanha atual move a ficha de um membro para outra campanha', async () => {
+      // fichaPersistida já está na campanha 3, cujo mestre é usuarioMestre.
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.MESTRE,
+      });
+      fichaRepositorio.atribuirCampanha.mockResolvedValue({
+        id: 5,
+        campanhaId: 4,
+        usuarioId: fichaPersistida.usuarioId,
+        nome: 'Agente Alfa',
+        dados: criarDados(),
+      });
+
+      await service.atribuirCampanha({ id: 5, campanhaId: 4 }, usuarioMestre);
+
+      // valida que o DONO da ficha (não quem chamou) é membro da campanha-alvo.
+      expect(campanhaRepositorio.recuperarMembro).toHaveBeenCalledWith({
+        campanhaId: 4,
+        usuarioId: fichaPersistida.usuarioId,
+      });
+    });
+
+    it('lança ResourceNotFoundException("Ficha") quando a ficha não existe', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(null);
+
+      await expect(service.atribuirCampanha({ id: 99, campanhaId: 3 }, usuarioDono)).rejects.toThrow(
+        ResourceNotFoundException,
+      );
+    });
+
+    it('não emite ficha:criada quando a campanha de destino é a mesma já atribuída (no-op idempotente)', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      fichaRepositorio.atribuirCampanha.mockResolvedValue(fichaPersistida);
+
+      await service.atribuirCampanha({ id: 5, campanhaId: fichaPersistida.campanhaId }, usuarioDono);
+
+      expect(campanhaGateway.emitirFichaCriada).not.toHaveBeenCalled();
     });
   });
 

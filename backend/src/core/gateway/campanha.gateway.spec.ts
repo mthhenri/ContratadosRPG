@@ -208,6 +208,8 @@ describe('CampanhaGateway', () => {
       expect(paraSala).toHaveBeenCalledWith('campanha:3');
       expect(emitir).toHaveBeenCalledWith('ficha:criada', {
         id: 5,
+        campanhaId: 3,
+        campanhaNome: null,
         usuarioId: 10,
         nome: 'Agente Alfa',
         classe: 'COMBATENTE',
@@ -224,6 +226,21 @@ describe('CampanhaGateway', () => {
       // o payload emitido não carrega o `dados` completo da ficha
       const payloadEmitido = emitir.mock.calls[0][1] as Record<string, unknown>;
       expect(payloadEmitido).not.toHaveProperty('dados');
+    });
+
+    it('não emite ficha:criada para uma ficha solta no acervo (m3-28 — campanhaId null, sem sala)', () => {
+      const ficha = {
+        id: 5,
+        campanhaId: null,
+        usuarioId: 10,
+        nome: 'Agente Alfa',
+        dados: { classe: 'COMBATENTE', arquetipo: 'LUTADOR', nivel: 1, estado: { vidaAtual: 34 } },
+      };
+
+      gateway.emitirFichaCriada(ficha as never);
+
+      expect(paraSala).not.toHaveBeenCalled();
+      expect(emitir).not.toHaveBeenCalled();
     });
 
     it('emite membro:entrou na sala campanha:<id>', () => {
