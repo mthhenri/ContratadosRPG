@@ -142,6 +142,14 @@ export class CampanhaDetalhe {
    * cabeçalho de `FichaVisualizar`, um por ficha, só um aberto por vez.
    */
   protected readonly menuFichaAberto = signal<number | null>(null);
+  /**
+   * Posição do menu aberto (`position: fixed`, calculada do botão ao abrir) — os mini-cards vivem
+   * dentro de listas com `overflow-y: auto` (`.detalhe__fichas-lista`/`.detalhe__membros`), então um
+   * dropdown `position: absolute` comum ficava cortado pelo scroll do ancestral. `fixed` ancorado no
+   * viewport escapa desse corte; `right` (não `left`) mantém o menu alinhado à direita do botão,
+   * como antes.
+   */
+  protected readonly menuFichaPosicao = signal<{ top: number; right: number } | null>(null);
   /** Ficha pendente de confirmação de duplicação — guarda o nome dela e do dono pra mensagem. */
   protected readonly confirmandoDuplicar = signal<{
     id: number;
@@ -284,6 +292,19 @@ export class CampanhaDetalhe {
     // Relógio do "Atualizado há Xs" (item 9) — só recomputa o texto, nunca refaz fetch.
     const relogio = setInterval(() => this.agora.set(Date.now()), 5000);
     this.destroyRef.onDestroy(() => clearInterval(relogio));
+
+    // Menu de ficha (m3-52) é `position: fixed` calculado no clique (ver `menuFichaPosicao`) — se a
+    // lista rolar (ou a janela redimensionar) com o menu aberto, ele descolaria visualmente do
+    // botão que o abriu. `scroll` não borbulha, então o listener precisa de `capture: true` pra
+    // pegar o scroll de qualquer ancestral rolável (`.detalhe__fichas-lista`/`.detalhe__membros`),
+    // não só do `window`.
+    const fecharMenuAoRolarOuRedimensionar = () => this.fecharMenuFicha();
+    window.addEventListener('scroll', fecharMenuAoRolarOuRedimensionar, true);
+    window.addEventListener('resize', fecharMenuAoRolarOuRedimensionar);
+    this.destroyRef.onDestroy(() => {
+      window.removeEventListener('scroll', fecharMenuAoRolarOuRedimensionar, true);
+      window.removeEventListener('resize', fecharMenuAoRolarOuRedimensionar);
+    });
   }
 
   /**
@@ -629,14 +650,28 @@ export class CampanhaDetalhe {
       });
   }
 
-  /** Abre/fecha o menu de ações (kebab) de uma ficha específica no mini-card (m3-52). */
-  protected alternarMenuFicha(fichaId: number): void {
-    this.menuFichaAberto.update((atual) => (atual === fichaId ? null : fichaId));
+  /**
+   * Abre/fecha o menu de ações (kebab) de uma ficha específica no mini-card (m3-52). Calcula a
+   * posição `fixed` a partir do botão clicado (`getBoundingClientRect`) — ver a nota em
+   * `menuFichaPosicao` sobre o corte pelo scroll dos ancestrais.
+   */
+  protected alternarMenuFicha(fichaId: number, evento: MouseEvent): void {
+    if (this.menuFichaAberto() === fichaId) {
+      this.fecharMenuFicha();
+      return;
+    }
+    const retangulo = (evento.currentTarget as HTMLElement).getBoundingClientRect();
+    this.menuFichaPosicao.set({
+      top: retangulo.bottom + 6,
+      right: window.innerWidth - retangulo.right,
+    });
+    this.menuFichaAberto.set(fichaId);
   }
 
   /** Fecha o menu de ações de ficha aberto. */
   protected fecharMenuFicha(): void {
     this.menuFichaAberto.set(null);
+    this.menuFichaPosicao.set(null);
   }
 
   /** Abre a confirmação de duplicação a partir do menu da ficha (m3-52). */

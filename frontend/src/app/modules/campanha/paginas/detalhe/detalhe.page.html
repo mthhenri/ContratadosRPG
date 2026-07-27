@@ -282,7 +282,7 @@
                                 [attr.aria-label]="'Ações de ' + ficha.nome"
                                 aria-haspopup="menu"
                                 [attr.aria-expanded]="menuFichaAberto() === ficha.id"
-                                (click)="alternarMenuFicha(ficha.id)"
+                                (click)="alternarMenuFicha(ficha.id, $event)"
                               >
                                 ⋯
                               </button>
@@ -293,7 +293,12 @@
                                   aria-label="Fechar menu"
                                   (click)="fecharMenuFicha()"
                                 ></button>
-                                <div class="detalhe__ficha-menu" role="menu">
+                                <div
+                                  class="detalhe__ficha-menu"
+                                  role="menu"
+                                  [style.top.px]="menuFichaPosicao()?.top"
+                                  [style.right.px]="menuFichaPosicao()?.right"
+                                >
                                   <button
                                     class="detalhe__ficha-menu-item"
                                     type="button"

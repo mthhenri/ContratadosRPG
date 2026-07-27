@@ -652,10 +652,12 @@
     cursor: default;
   }
 
+  // `fixed` (não `absolute`) — os mini-cards vivem dentro de listas com `overflow-y: auto`
+  // (`.detalhe__fichas-lista`/`.detalhe__membros`, m2-16), que cortavam um dropdown `absolute`
+  // comum contra o próprio scroll. `top`/`right` chegam via `[style]`, calculados no clique do
+  // botão (`alternarMenuFicha`) — ver a nota em `menuFichaPosicao` no componente.
   &__ficha-menu {
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
+    position: fixed;
     z-index: 21;
     min-width: 170px;
     padding: 6px;
