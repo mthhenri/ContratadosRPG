@@ -127,7 +127,7 @@ describe('TempoRealService', () => {
     expect(socketFake.emitidos.every((e) => e.evento.endsWith(':entrar'))).toBe(true);
   });
 
-  it('repassa ficha:alterada / ficha:criada / membro:entrou aos Observables', () => {
+  it('repassa ficha:alterada / ficha:criada / membro:entrou / ficha:acesso-revogado aos Observables', () => {
     const { servico } = criar(() => 'jwt');
     servico.conectar();
 
@@ -135,12 +135,14 @@ describe('TempoRealService', () => {
     servico.fichaAlterada$.subscribe((f) => recebidos.push(`alterada:${f.id}`));
     servico.fichaCriada$.subscribe((r) => recebidos.push(`criada:${r.id}`));
     servico.membroEntrou$.subscribe((m) => recebidos.push(`membro:${m.usuarioId}`));
+    servico.acessoRevogado$.subscribe((e) => recebidos.push(`revogado:${e.fichaId}:${e.usuarioId}`));
 
     socketFake.disparar('ficha:alterada', { id: 42 });
     socketFake.disparar('ficha:criada', { id: 7 });
     socketFake.disparar('membro:entrou', { campanhaId: 9, usuarioId: 3 });
+    socketFake.disparar('ficha:acesso-revogado', { fichaId: 5, usuarioId: 42 });
 
-    expect(recebidos).toEqual(['alterada:42', 'criada:7', 'membro:3']);
+    expect(recebidos).toEqual(['alterada:42', 'criada:7', 'membro:3', 'revogado:5:42']);
   });
 
   it('reingressa nas salas e bumpa a reconexão a cada reconexão (§9)', () => {

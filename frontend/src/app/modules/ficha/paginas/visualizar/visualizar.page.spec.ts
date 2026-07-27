@@ -1,6 +1,7 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, provideRouter } from '@angular/router';
+import { MessageService } from 'primeng/api';
 import { NEVER, Subject, of, throwError } from 'rxjs';
 import {
   ArquetipoEnum,
@@ -23,6 +24,7 @@ import {
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type {
   FichaAcessoResumoDto,
+  FichaAcessoRevogadoDto,
   FichaAlterarDto,
   FichaAlteradaDto,
   FichaJogadorDadosDto,
@@ -94,17 +96,21 @@ describe('FichaVisualizar', () => {
       usuario: () => ({ id: opcoes.usuarioLogadoId, login: 'u', nome: 'U', token: 't' }),
     };
 
-    // Stub do tempo real: um `Subject` controlável para `ficha:alterada` e um Signal de reconexão.
+    // Stub do tempo real: `Subject`s controláveis para `ficha:alterada`/`ficha:acesso-revogado` e um
+    // Signal de reconexão.
     const fichaAlterada$ = new Subject<FichaAlteradaDto>();
+    const acessoRevogado$ = new Subject<FichaAcessoRevogadoDto>();
     const reconexao = signal(0);
     const tempoRealService = {
       conectar: vi.fn(),
       entrarSalaFicha: vi.fn(),
       sairSalaFicha: vi.fn(),
       fichaAlterada$: fichaAlterada$.asObservable(),
+      acessoRevogado$: acessoRevogado$.asObservable(),
       reconexao,
       conectado: signal(true),
     };
+    const messageService = { add: vi.fn() };
 
     TestBed.configureTestingModule({
       imports: [FichaVisualizar],
@@ -114,6 +120,7 @@ describe('FichaVisualizar', () => {
         { provide: CampanhaService, useValue: campanhaService },
         { provide: SessaoService, useValue: sessaoService },
         { provide: TempoRealService, useValue: tempoRealService },
+        { provide: MessageService, useValue: messageService },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -133,6 +140,8 @@ describe('FichaVisualizar', () => {
     });
 
     const fixture = TestBed.createComponent(FichaVisualizar);
+    const router = TestBed.inject(Router);
+    const navegarEspiao = vi.spyOn(router, 'navigate');
     fixture.detectChanges();
     return {
       fixture,
@@ -140,7 +149,10 @@ describe('FichaVisualizar', () => {
       fichaService,
       tempoRealService,
       fichaAlterada$,
+      acessoRevogado$,
       reconexao,
+      messageService,
+      navegarEspiao,
     };
   }
 
@@ -183,6 +195,38 @@ describe('FichaVisualizar', () => {
     fixture.componentInstance['abrirAcesso']();
     fixture.detectChanges();
     expect(raiz.querySelector('.dialogo .acesso')).not.toBeNull();
+  });
+
+  describe('expulsão em tempo real ao revogar acesso (m3-51, item 27)', () => {
+    it('redireciona pra fora da tela quando o próprio acesso é revogado', () => {
+      const { fixture, acessoRevogado$, messageService, navegarEspiao } = montar({
+        usuarioLogadoId: 11,
+      });
+      expect(fixture.componentInstance['podeGerenciar']()).toBe(false);
+
+      acessoRevogado$.next({ fichaId: 42, usuarioId: 11 });
+
+      expect(messageService.add).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: 'warn' }),
+      );
+      expect(navegarEspiao).toHaveBeenCalledWith(['/painel', 9]);
+    });
+
+    it('ignora a revogação de outro usuário (não é o próprio acesso)', () => {
+      const { navegarEspiao, acessoRevogado$ } = montar({ usuarioLogadoId: 11 });
+
+      acessoRevogado$.next({ fichaId: 42, usuarioId: 999 });
+
+      expect(navegarEspiao).not.toHaveBeenCalled();
+    });
+
+    it('não expulsa o dono/mestre mesmo se o usuarioId bater (segunda trava defensiva)', () => {
+      const { navegarEspiao, acessoRevogado$ } = montar({ usuarioLogadoId: 7 });
+
+      acessoRevogado$.next({ fichaId: 42, usuarioId: 7 });
+
+      expect(navegarEspiao).not.toHaveBeenCalled();
+    });
   });
 
   it('ajusta a vitalidade na hora (otimista) e persiste os cliques em lote via alterarFicha', () => {

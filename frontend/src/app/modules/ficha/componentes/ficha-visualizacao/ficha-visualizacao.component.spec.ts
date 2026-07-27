@@ -66,6 +66,9 @@ describe('FichaVisualizacao', () => {
     fichaId = 42,
     ajustavel = false,
     ehMestre = false,
+    // m3-51: por padrão espelha `ajustavel` (é assim que a página liga hoje — dono/mestre rolam,
+    // visualizador não) — testes que precisam dissociar os dois passam o valor explicitamente.
+    podeRolar = ajustavel,
   ) {
     TestBed.configureTestingModule({ imports: [FichaVisualizacao] });
     const fixture = TestBed.createComponent(FichaVisualizacao);
@@ -74,6 +77,7 @@ describe('FichaVisualizacao', () => {
     fixture.componentRef.setInput('dados', documento);
     fixture.componentRef.setInput('ajustavel', ajustavel);
     fixture.componentRef.setInput('ehMestre', ehMestre);
+    fixture.componentRef.setInput('podeRolar', podeRolar);
     fixture.detectChanges();
     return { fixture, raiz: fixture.nativeElement as HTMLElement };
   }
@@ -1214,6 +1218,75 @@ describe('FichaVisualizacao', () => {
       componente['confirmarHistoria']('Já escrita.');
 
       expect(emitidos).toEqual([]);
+    });
+  });
+
+  describe('Anotações (m3-51) — gate de visualização igual à História', () => {
+    it('não mostra a caixa de anotações quando não ajustável (visualizador)', () => {
+      const { raiz } = montar(dados, 'Corvo', 42, false, false);
+      expect(raiz.querySelector('.ficha-status__anotacoes-caixa')).toBeNull();
+      expect(raiz.textContent).not.toContain('Veterano de contenção.');
+    });
+
+    it('mostra a caixa de anotações para dono/mestre (ajustavel)', () => {
+      const { raiz } = montar(dados, 'Corvo', 42, true, false);
+      expect(raiz.querySelector('.ficha-status__anotacoes-caixa')).not.toBeNull();
+      expect(raiz.textContent).toContain('Veterano de contenção.');
+    });
+
+    it('anotacoes ausente (omitida no backend pro visualizador) não quebra a leitura', () => {
+      const { anotacoes, ...semAnotacoes } = dados;
+      const { raiz } = montar(semAnotacoes as FichaJogadorDadosDto, 'Corvo', 42, false, false);
+      expect(raiz.querySelector('.ficha-status__anotacoes-caixa')).toBeNull();
+    });
+
+    it('emite ajusteAnotacoes com o texto confirmado (blur) quando muda', () => {
+      const alvo = montar(dados, 'Corvo', 42, true, false);
+      const emitidos: string[] = [];
+      alvo.fixture.componentInstance.ajusteAnotacoes.subscribe((a) => emitidos.push(a));
+      const componente = alvo.fixture.componentInstance;
+
+      componente['editarAnotacoes']();
+      componente['confirmarAnotacoes']('Nova anotação.');
+
+      expect(emitidos).toEqual(['Nova anotação.']);
+    });
+  });
+
+  describe('podeRolar (m3-51) — visualizador não rola dados', () => {
+    it('esconde o dadinho de teste de atributo e rolarTesteAtributo não faz nada sem podeRolar', () => {
+      const alvo = montar(dados, 'Corvo', 42, true, false, false);
+      expect(alvo.raiz.querySelector('.ficha-atributo__rolar')).toBeNull();
+      const spy = vi
+        .spyOn(TestBed.inject(BandejaDadosService), 'mostrar')
+        .mockImplementation(() => undefined);
+      alvo.fixture.componentInstance['rolarTesteAtributo'](campoLuta);
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    it('mostra o dadinho de teste de atributo e rola quando podeRolar', () => {
+      const alvo = montar(dados, 'Corvo', 42, true, false, true);
+      expect(alvo.raiz.querySelector('.ficha-atributo__rolar')).not.toBeNull();
+      const spy = vi
+        .spyOn(TestBed.inject(BandejaDadosService), 'mostrar')
+        .mockImplementation(() => undefined);
+      alvo.fixture.componentInstance['rolarTesteAtributo'](campoLuta);
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('rolarDano não faz nada sem podeRolar mesmo com uma fórmula válida', () => {
+      const alvo = montar(dados, 'Corvo', 42, true, false, false);
+      const spy = vi
+        .spyOn(TestBed.inject(BandejaDadosService), 'mostrar')
+        .mockImplementation(() => undefined);
+      alvo.fixture.componentInstance['rolarDano']({
+        chave: 'danoCorpoACorpo',
+        rotulo: 'Dano C. a C.',
+        tipo: 'texto',
+        bruto: '2D6',
+        display: '2D6',
+      });
+      expect(spy).not.toHaveBeenCalled();
     });
   });
 });

@@ -13,6 +13,7 @@ import type {
   CampanhaRecuperarDto,
 } from '@contratados-rpg/shared/dtos/campanha';
 import type {
+  FichaAcessoRevogadoDto,
   FichaAlteradaDto,
   FichaCriadaDto,
   FichaRecuperarDto,
@@ -174,6 +175,18 @@ export class CampanhaGateway implements OnGatewayConnection {
    */
   emitirMembroEntrou(evento: CampanhaMembroEntradaDto): void {
     this.servidor.to(this.salaCampanha(evento.campanhaId)).emit('membro:entrou', evento);
+  }
+
+  /**
+   * Emite `ficha:acesso-revogado` na sala `ficha:<id>` (m3-51, item 27 — "revogar acesso expulsa").
+   * Chamado por `FichaService.revogarAcesso` após a revogação ser persistida. Mesmo `emit()` único
+   * pra sala inteira dos demais broadcasts (proibição de distinguir por socket) — o cliente é quem
+   * decide reagir: `TempoRealService`/`visualizar.page.ts` só redirecionam para fora da tela quando
+   * `evento.usuarioId` bate com o usuário autenticado **e** ele não é dono/mestre (que nunca perdem
+   * acesso por esta via).
+   */
+  emitirAcessoRevogado(evento: FichaAcessoRevogadoDto): void {
+    this.servidor.to(this.salaFicha(evento.fichaId)).emit('ficha:acesso-revogado', evento);
   }
 
   /**

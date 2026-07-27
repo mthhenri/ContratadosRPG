@@ -397,8 +397,15 @@ export interface FichaJogadorDadosDto {
    * referenciando um preset de `rolagens`. Opcional; ausente = sem combos.
    */
   readonly combos?: readonly FichaComboDto[];
-  /** Anotações livres do jogador/mestre sobre a ficha. */
-  readonly anotacoes: string;
+  /**
+   * Anotações livres do jogador/mestre sobre a ficha — visíveis e editáveis só por **dono** e
+   * **mestre** (m3-51, mesmo tratamento de `historia`/m3-50); um visualizador só-acesso nunca as
+   * recebe (o backend as omite em `FichaService.recuperarFicha` e no broadcast `ficha:alterada` —
+   * `omitirCamposPrivados`, `backend/src/modules/ficha/ficha-campos-privados.util.ts`). **Opcional**:
+   * ausente para quem não pode vê-las (sempre presentes, mesmo vazias, para dono/mestre — a criação
+   * grava `''` por padrão).
+   */
+  readonly anotacoes?: string;
   /**
    * Dinheiro atual do agente (m3-34). Nasce do dinheiro inicial (`1000 + 4D4 × 250`,
    * `shared/regras/novo-agente` `rolarDinheiroInicial`) e é editável dali em diante (mesma

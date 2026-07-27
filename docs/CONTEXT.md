@@ -1,6 +1,66 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-26 (**m3-50 — Aba História (seção privada por
+> Última atualização: 2026-07-26 (**m3-51 — Permissões granulares de acesso**: task `m3-51` do
+> lote de refino `m3-40`…`m3-56` implementada. Quatro entregáveis independentes. **(1) Visualizador
+> não rola dados (item 24).** Novo conceito `podeRolar` — distinto de `ajustavel`/edição, propositalmente
+> granular para uma futura concessão de rolagem sem edição não exigir reabrir o contrato — como
+> `input(false)` em `FichaVisualizacao`/`FichaRolagens`/`FichaInventario`, ligado pela página com
+> `[podeRolar]="podeGerenciar()"` (hoje coincide com `ajustavel`: só dono/mestre rolam). Gateia, em
+> template **e** no método (mesmo padrão defensivo de `alternarCondicao`): `rolarTesteAtributo`/
+> `rolarDano` (teste de atributo e Dano C.a.C./Furtivo na Visão Geral), `rolarRapida`/
+> `rolarPassoDoPreset`/`gastarEnergiaDoPasso` (aba Rolagens — presets e rolagem avulsa) e
+> `rolarDanoItem` (dano de arma no Inventário, m3-45). **Sem endpoint de rolagem no backend ainda**
+> (`m3-27` não existe) — o gate é hoje só de apresentação, como a spec previa como saída aceitável
+> ("aqui só o gate de permissão quando ele existir"). **(2) Tratar trauma só em edição (item 2)** —
+> o gate por papel (`@if (editavel())`, dono/mestre) já existia antes desta task e seguiu correto, mas
+> QA ao vivo do autor pegou um problema mais fino: havia **dois** caminhos pra alternar `tratado` — o
+> atalho `.sanidade__toggle` (um clique, direto na linha, fora de qualquer formulário — feature da
+> `m3-12` original) e o checkbox "Tratado" dentro do `editorTrauma` (só some ao clicar o lápis
+> "Editar trauma", com Salvar/Cancelar). O pedido original do autor era que `tratado` só alternasse
+> **dentro da edição do trauma** — o atalho quebrava isso mesmo sendo gated por `editavel()`, porque
+> ainda deixava qualquer dono/mestre mudar o estado sem passar pelo formulário. Correção: removido
+> `.sanidade__toggle` do template, o método `alternarTratado()` (agora morto) e o SCSS `&__toggle`
+> associado — `tratado` só muda mais via `traumaForm.controls.tratado` dentro do editor (que já
+> existia desde a `m3-12`, sem mudança nele). **Indicador de leitura** (pedido em seguida pelo autor,
+> pra não perder a informação visual que o toggle antigo carregava): ícone `medicinal` ao lado do nome
+> do trauma quando `tratado`, marca `.sanidade__tratado` — mesmo padrão do ícone `infinito` de
+> `lesao.permanente` (sempre visível, **fora** do `@if (editavel())`, sem `(click)`, só leitura). **(3) Revogar acesso expulsa (item
+> 27).** `FichaService.revogarAcesso` emite `ficha:acesso-revogado` (`{ fichaId, usuarioId }`,
+> reusa `FichaAcessoRevogadoDto`) via novo `CampanhaGateway.emitirAcessoRevogado` — broadcast único
+> pra sala `ficha:<id>` inteira (mesmo padrão dos demais eventos: sem distinção por socket). O
+> frontend (`TempoRealService.acessoRevogado$` novo) e `visualizar.page.ts` filtram pelo próprio
+> `usuarioId` (+ `!podeGerenciar()` como segunda trava defensiva — dono/mestre nunca são alvo de uma
+> revogação de qualquer forma) e chamam `expulsar()`: toast de aviso (`MessageService`, PrimeNG —
+> precisou ser injetado no `TestBed` dos specs, não é `providedIn: 'root'`) + `router.navigate(['/painel',
+> campanhaId])`, de volta ao detalhe da campanha. **(4) Anotações com gate de visualização (pedido do
+> autor, fora do texto original da spec).** Mesma adaptação de local que a `historia` fez na m3-50: a
+> spec original pedia gatear a aba `ABAS_FICHA`/`ehAbaFicha` (sistema aposentado desde a m3-38) — na
+> prática `anotacoes` não é uma aba própria como `historia`, vive embutida na aba `informacoes` da
+> mini barra `AbaStatus`; a caixa inteira (`.ficha-status__anotacoes-caixa`) entrou num
+> `@if (ajustavel())`, mesmo tratamento visual da História. **Reusa literalmente** o mecanismo de
+> "campos privados por permissão" da m3-50 — `CAMPOS_PRIVADOS_FICHA` (`ficha-campos-privados.util.ts`)
+> virou `['historia', 'anotacoes']`, sem nova lógica de omissão. `anotacoes` (`FichaJogadorDadosDto`)
+> virou **opcional** (`string` → `string?`), espelhando `historia` — frontend cobre a ausência com
+> `?? ''` (mesmo padrão de `historia`). Nenhuma nova branch de omissão no gateway: `emitirFichaAlterada`
+> já omitia `CAMPOS_PRIVADOS_FICHA` genericamente por chave, então `anotacoes` some do broadcast de
+> graça. **Testes:** backend +8 (`ficha.service.spec.ts`: emite `ficha:acesso-revogado` após persistir,
+> omite/mantém `anotacoes` no `recuperarFicha` espelhando os testes de `historia`, teste "membro com
+> concessão" corrigido pra não esperar mais `anotacoes` no payload; `campanha.gateway.spec.ts`: emite
+> `ficha:acesso-revogado` na sala certa; `ficha-campos-privados.util.spec.ts`: remove `anotacoes`
+> também, no-op só quando nenhum dos dois campos privados está presente) — 131/131 backend. Frontend
+> +19 entre os specs tocados (`tempo-real.service.spec.ts`: repassa `ficha:acesso-revogado`;
+> `visualizar.page.spec.ts`: expulsão redireciona + toast, ignora revogação de outro usuário, dono/mestre
+> nunca são expulsos; `ficha-visualizacao.component.spec.ts`: gate de Anotações + `podeRolar` pro
+> teste de atributo/dano; `ficha-rolagens.component.spec.ts`: `podeRolar` pra rolagem rápida/passo/
+> gastar energia, visualizador ainda vê presets sem poder rolar; `ficha-inventario.component.spec.ts`:
+> `podeRolar` pro dano de arma; `ficha-sanidade.component.spec.ts`: removido o teste do atalho morto
+> `alternarTratado`, +1 teste do indicador `.sanidade__tratado` visível mesmo sem `editavel`) —
+> 518/519 frontend (1 falha pré-existente alheia — "apelido de equipamento", m3-33 — nada a ver com esta task, mesma classe de falha já
+> registrada em rodadas anteriores; shared 452/452 inalterado). Spec em
+> `docs/specs/done/m3-51-permissoes-granulares-acesso.spec.md`. Próxima task: **`m3-52`** (ficha —
+> acervo: excluir/duplicar).)
+>
+> Última atualização anterior: 2026-07-26 (**m3-50 — Aba História (seção privada por
 > permissão)**: task `m3-50` do lote de refino `m3-40`…`m3-56` implementada, **com adaptação de
 > local** em relação ao texto original da spec — mesmo padrão da `m3-49`. A spec (escrita antes da
 > `m3-38`) pedia para estender `AbaFicha`/`ABAS_FICHA`/`ehAbaFicha` (o sistema de abas de página

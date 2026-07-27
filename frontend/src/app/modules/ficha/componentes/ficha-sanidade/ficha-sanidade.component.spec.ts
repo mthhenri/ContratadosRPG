@@ -10,8 +10,9 @@ import { EstadoSanidade, FichaSanidade } from './ficha-sanidade.component';
 
 /**
  * Prova o editor no próprio lugar da aba Sanidade (m3-12): adicionar/editar/remover sequelas, traumas
- * e lesões, alternar "tratado" in loco, e o efeito derivado da lesão. Controlado — cada mutação emite
- * o **trio inteiro** por `sanidadeMudou`; sem trava de regra (liberdade total, m3-10).
+ * e lesões — "tratado" só alterna dentro do formulário de editar trauma (m3-51, item 2), sem atalho
+ * fora dele — e o efeito derivado da lesão. Controlado — cada mutação emite o **trio inteiro** por
+ * `sanidadeMudou`; sem trava de regra (liberdade total, m3-10).
  */
 describe('FichaSanidade', () => {
   const sequelas: FichaSequelaDto[] = [{ nome: 'Insônia', descricao: '−1m' }];
@@ -68,6 +69,15 @@ describe('FichaSanidade', () => {
     expect(alvo.emitidos).toHaveLength(0);
   });
 
+  it('mostra o indicador de "tratado" (só leitura) mesmo sem ser editável', () => {
+    const alvo = montar(false);
+    expect(alvo.raiz.querySelector('.sanidade__tratado')).toBeNull();
+
+    alvo.fixture.componentRef.setInput('traumas', [{ nome: 'Pânico', tratado: true }]);
+    alvo.fixture.detectChanges();
+    expect(alvo.raiz.querySelector('.sanidade__tratado')).not.toBeNull();
+  });
+
   it('edita um trauma existente e emite a substituição', () => {
     const alvo = montar(true);
     alvo.fixture.componentInstance['editar']('trauma', 0);
@@ -75,12 +85,6 @@ describe('FichaSanidade', () => {
     alvo.fixture.componentInstance['confirmar']();
 
     expect(alvo.emitidos[0].traumas).toEqual([{ nome: 'Pânico crônico', tratado: true }]);
-  });
-
-  it('alterna "tratado" de um trauma no próprio lugar', () => {
-    const alvo = montar(true);
-    alvo.fixture.componentInstance['alternarTratado'](0);
-    expect(alvo.emitidos[0].traumas).toEqual([{ nome: 'Pânico', tratado: true }]);
   });
 
   it('remove uma lesão só após a confirmação inline', () => {

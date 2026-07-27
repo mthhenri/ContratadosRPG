@@ -49,6 +49,7 @@ interface CampanhaRepositorioDublado {
 interface CampanhaGatewayDublado {
   emitirFichaCriada: ReturnType<typeof vi.fn>;
   emitirFichaAlterada: ReturnType<typeof vi.fn>;
+  emitirAcessoRevogado: ReturnType<typeof vi.fn>;
 }
 
 /**
@@ -169,7 +170,11 @@ describe('FichaService', () => {
       excluirFicha: vi.fn(),
     };
     campanhaRepositorio = { recuperarMembro: vi.fn() };
-    campanhaGateway = { emitirFichaCriada: vi.fn(), emitirFichaAlterada: vi.fn() };
+    campanhaGateway = {
+      emitirFichaCriada: vi.fn(),
+      emitirFichaAlterada: vi.fn(),
+      emitirAcessoRevogado: vi.fn(),
+    };
     service = new FichaService(
       fichaRepositorio as unknown as FichaRepository,
       campanhaRepositorio as unknown as CampanhaRepository,
@@ -727,7 +732,10 @@ describe('FichaService', () => {
         fichaId: 5,
         usuarioId: usuarioMembro.sub,
       });
-      expect(resultado).toEqual(fichaPersistida);
+      // Visualizador só-acesso nunca recebe os campos privados (m3-50/m3-51 — `anotacoes` aqui é
+      // `''` na ficha base, então some do payload igual a `historia` ausente.
+      const { anotacoes: _anotacoesOmitida, ...dadosSemAnotacoes } = fichaPersistida.dados;
+      expect(resultado).toEqual({ ...fichaPersistida, dados: dadosSemAnotacoes });
     });
 
     it('omite historia do payload para um visualizador só-acesso (m3-50)', async () => {
@@ -762,6 +770,40 @@ describe('FichaService', () => {
       });
       const resultadoMestre = await service.recuperarFicha({ id: 5 }, usuarioMestre);
       expect(resultadoMestre.dados.historia).toBe('Nasceu numa colônia orbital.');
+    });
+
+    it('omite anotacoes do payload para um visualizador só-acesso (m3-51)', async () => {
+      const fichaComAnotacoes = {
+        ...fichaPersistida,
+        dados: criarDados({ anotacoes: 'Só o mestre pode ver isso.' }),
+      };
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaComAnotacoes);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      fichaRepositorio.recuperarAcesso.mockResolvedValue({ id: 1 });
+
+      const resultado = await service.recuperarFicha({ id: 5 }, usuarioMembro);
+
+      expect(resultado.dados.anotacoes).toBeUndefined();
+      expect('anotacoes' in resultado.dados).toBe(false);
+    });
+
+    it('mantém anotacoes no payload para o dono e para o mestre', async () => {
+      const fichaComAnotacoes = {
+        ...fichaPersistida,
+        dados: criarDados({ anotacoes: 'Notas da campanha.' }),
+      };
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaComAnotacoes);
+
+      const resultadoDono = await service.recuperarFicha({ id: 5 }, usuarioDono);
+      expect(resultadoDono.dados.anotacoes).toBe('Notas da campanha.');
+
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.MESTRE,
+      });
+      const resultadoMestre = await service.recuperarFicha({ id: 5 }, usuarioMestre);
+      expect(resultadoMestre.dados.anotacoes).toBe('Notas da campanha.');
     });
 
     it('lança UnauthorizedAccessException para um membro sem concessão', async () => {
@@ -1156,6 +1198,18 @@ describe('FichaService', () => {
         usuarioId: usuarioMembro.sub,
       });
       expect(resultado).toEqual({ fichaId: 5, usuarioId: usuarioMembro.sub });
+    });
+
+    it('emite ficha:acesso-revogado após persistir (m3-51 — expulsão em tempo real)', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      fichaRepositorio.revogarAcesso.mockResolvedValue(undefined);
+
+      await service.revogarAcesso({ fichaId: 5, usuarioId: usuarioMembro.sub }, usuarioDono);
+
+      expect(campanhaGateway.emitirAcessoRevogado).toHaveBeenCalledWith({
+        fichaId: 5,
+        usuarioId: usuarioMembro.sub,
+      });
     });
 
     it('lança UnauthorizedAccessException quando o autor não é dono nem mestre', async () => {

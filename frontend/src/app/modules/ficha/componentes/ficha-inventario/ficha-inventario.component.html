@@ -720,7 +720,7 @@
       @if (item.stat) {
         <div class="ficha-inv__item-stat">
           {{ item.stat }}
-          @if (item.danoFormula) {
+          @if (podeRolar() && item.danoFormula) {
             <button
               type="button"
               class="ficha-inv__item-rolar"

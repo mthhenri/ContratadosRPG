@@ -272,6 +272,16 @@ export class FichaVisualizacao {
   readonly ajustavel = input(false);
 
   /**
+   * `true` quando o autor pode **rolar dados** desta ficha (m3-51, item 24) — teste de atributo, dano
+   * (C.a.C./Furtivo/arma) e presets/rolagem avulsa da aba Rolagens. **Distinto** de `ajustavel`
+   * (edição): hoje as duas coincidem (só dono/mestre — "visualizador não rola"), mas o conceito é
+   * granular de propósito, para uma futura concessão de rolagem sem edição não exigir reabrir este
+   * contrato. Sem endpoint de rolagem no backend ainda (`m3-27`, fora de escopo aqui) — o gate é hoje
+   * só de apresentação; a página liga com o mesmo `podeGerenciar()` de `ajustavel`.
+   */
+  readonly podeRolar = input(false);
+
+  /**
    * `true` quando o autor é o **mestre** da campanha (distinto de `ajustavel`, que também vale pro
    * dono) — só a Identidade (Personalidade/Origem) precisa distinguir os dois papéis: a trava de
    * imutabilidade (m3-24) libera o mestre e prende o dono depois da primeira definição.
@@ -690,6 +700,9 @@ export class FichaVisualizacao {
    * `modificadorTeste`) some no final, como uma constante da fórmula.
    */
   protected rolarTesteAtributo(campo: CampoAtributo): void {
+    if (!this.podeRolar()) {
+      return;
+    }
     const dadosFormacao = this.bonusRolagemAtributoFormacao(campo.chave).dados;
     const atributosEfetivos = this.atributosEfetivos();
     const atributo = atributosEfetivos[campo.chave] + dadosFormacao;
@@ -721,7 +734,7 @@ export class FichaVisualizacao {
    * atributo/PROF envolvido (o motor já entende dado + tag de tipo sem eles).
    */
   protected rolarDano(linha: InfoExtra): void {
-    if (typeof linha.bruto !== 'string' || !linha.bruto) {
+    if (!this.podeRolar() || typeof linha.bruto !== 'string' || !linha.bruto) {
       return;
     }
     const resultado = rolarFormula({
@@ -761,7 +774,12 @@ export class FichaVisualizacao {
     });
     return mapa;
   });
-  protected readonly anotacoes = computed(() => this.dados().anotacoes.trim());
+  /**
+   * `anotacoes` (m3-51) é opcional — ausente para um visualizador (omitida no backend, mesmo
+   * mecanismo de `historia`/m3-50) e em fichas sem texto definido; `??` cobre os dois casos antes do
+   * `.trim()`.
+   */
+  protected readonly anotacoes = computed(() => (this.dados().anotacoes ?? '').trim());
 
   /** `true` enquanto a aba Anotações (m3-32) está em edição (textarea aberta). */
   protected readonly editandoAnotacoes = signal(false);
@@ -782,7 +800,7 @@ export class FichaVisualizacao {
       return;
     }
     this.editandoAnotacoes.set(false);
-    if (texto !== this.dados().anotacoes) {
+    if (texto !== (this.dados().anotacoes ?? '')) {
       this.ajusteAnotacoes.emit(texto);
     }
   }

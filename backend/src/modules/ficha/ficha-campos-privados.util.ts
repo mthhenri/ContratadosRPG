@@ -2,10 +2,10 @@ import type { FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 
 /**
  * Campos de `FichaJogadorDadosDto` visíveis só para **dono** ou **mestre** — nunca para um
- * visualizador só-acesso (§14). Introduzido pela `historia` (m3-50); `anotacoes` entra depois
- * (m3-51), mesmo mecanismo.
+ * visualizador só-acesso (§14). Introduzido pela `historia` (m3-50); `anotacoes` entra na m3-51,
+ * mesmo mecanismo (item 4 — "gate de visualização, igual à História").
  */
-export const CAMPOS_PRIVADOS_FICHA: readonly (keyof FichaJogadorDadosDto)[] = ['historia'];
+export const CAMPOS_PRIVADOS_FICHA: readonly (keyof FichaJogadorDadosDto)[] = ['historia', 'anotacoes'];
 
 /**
  * Remove os `CAMPOS_PRIVADOS_FICHA` de um `dados` de ficha. Reusado por

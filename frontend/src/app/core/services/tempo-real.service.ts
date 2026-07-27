@@ -3,7 +3,11 @@ import { Observable, Subject } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
 
 import type { CampanhaMembroEntradaDto } from '@contratados-rpg/shared/dtos/campanha';
-import type { FichaAlteradaDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
+import type {
+  FichaAcessoRevogadoDto,
+  FichaAlteradaDto,
+  FichaResumoDto,
+} from '@contratados-rpg/shared/dtos/ficha';
 
 import { environment } from '../../../environments/environment';
 import { SessaoService } from './sessao.service';
@@ -55,6 +59,7 @@ export class TempoRealService {
   private readonly fichaAlteradaSubject = new Subject<FichaAlteradaDto>();
   private readonly fichaCriadaSubject = new Subject<FichaResumoDto>();
   private readonly membroEntrouSubject = new Subject<CampanhaMembroEntradaDto>();
+  private readonly acessoRevogadoSubject = new Subject<FichaAcessoRevogadoDto>();
 
   /** Uma ficha da campanha foi alterada (na sala `ficha:<id>` em que o cliente está). */
   readonly fichaAlterada$: Observable<FichaAlteradaDto> = this.fichaAlteradaSubject.asObservable();
@@ -63,6 +68,13 @@ export class TempoRealService {
   /** Um membro entrou na campanha (na sala `campanha:<id>`). */
   readonly membroEntrou$: Observable<CampanhaMembroEntradaDto> =
     this.membroEntrouSubject.asObservable();
+  /**
+   * O acesso de visualização de alguém a uma ficha foi revogado (m3-51, item 27 — "expulsão"): a
+   * tela da ficha, se aberta pelo revogado, se redireciona para fora. Emitido pra sala `ficha:<id>`
+   * inteira — quem escuta decide se o `usuarioId` bate com o próprio.
+   */
+  readonly acessoRevogado$: Observable<FichaAcessoRevogadoDto> =
+    this.acessoRevogadoSubject.asObservable();
 
   /**
    * Abre a conexão Socket.IO com o JWT da sessão. **Idempotente** enquanto a sessão não muda (chamável
@@ -107,6 +119,9 @@ export class TempoRealService {
     );
     this.socket.on('membro:entrou', (evento: CampanhaMembroEntradaDto) =>
       this.membroEntrouSubject.next(evento),
+    );
+    this.socket.on('ficha:acesso-revogado', (evento: FichaAcessoRevogadoDto) =>
+      this.acessoRevogadoSubject.next(evento),
     );
   }
 

@@ -40,18 +40,27 @@ describe('omitirCamposPrivados', () => {
     expect('historia' in dadosFiltrados).toBe(false);
   });
 
+  it('remove anotacoes do dados (m3-51 — mesmo tratamento de historia)', () => {
+    const dados = criarDados({ anotacoes: 'Anotações confidenciais.' });
+
+    const dadosFiltrados = omitirCamposPrivados(dados);
+
+    expect(dadosFiltrados.anotacoes).toBeUndefined();
+    expect('anotacoes' in dadosFiltrados).toBe(false);
+  });
+
   it('não mexe em outros campos nem no objeto original', () => {
     const dados = criarDados({ historia: 'Nasceu numa colônia orbital.' });
 
     const dadosFiltrados = omitirCamposPrivados(dados);
 
     expect(dadosFiltrados.classe).toBe(ClasseEnum.COMBATENTE);
-    expect(dadosFiltrados.anotacoes).toBe('');
     expect(dados.historia).toBe('Nasceu numa colônia orbital.');
+    expect(dados.anotacoes).toBe('');
   });
 
-  it('é um no-op de conteúdo quando não há historia', () => {
-    const dados = criarDados();
+  it('é um no-op de conteúdo quando não há historia nem anotacoes', () => {
+    const dados = criarDados({ anotacoes: undefined });
 
     const dadosFiltrados = omitirCamposPrivados(dados);
 

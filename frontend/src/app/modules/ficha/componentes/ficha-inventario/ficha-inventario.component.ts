@@ -364,6 +364,11 @@ export class FichaInventario {
   /** Dono/mestre edita; para os demais é só leitura (a página liga por `podeGerenciar`). */
   readonly editavel = input(false);
   /**
+   * `true` quando o autor pode **rolar dados** (m3-51) — gate do botão de rolar dano da arma
+   * (`rolarDanoItem`), distinto de `editavel` (rolar não é uma ação de edição do inventário).
+   */
+  readonly podeRolar = input(false);
+  /**
    * `'inline'` (padrão, aba Inventário completa): catálogo, item/mod custom e aplicar Fragmento abrem
    * dentro da própria lista, como sempre foi. `'dialog'`: a lista de itens fica compacta e essas quatro
    * superfícies (catálogo+amplificadores, item custom, painel "Modificar" e "Aplicar em...") abrem cada
@@ -1378,11 +1383,12 @@ export class FichaInventario {
    * (`calcularStatItem`, m3-18: já traz mods/fragmentos aplicados) e roda no mesmo motor
    * (`rolarFormula`, `shared/regras/rolagem`) e bandeja (`BandejaDadosService`) usados pela Visão
    * Geral (`FichaVisualizacao.rolarDano`). Não é gated por `editavel()` — rolar não é uma ação de
-   * edição da ficha (mesmo padrão de `rolarTesteAtributo`/`rolarDano` lá). Sem histórico ainda
-   * (`m3-27` não existe): fire-and-forget só na bandeja.
+   * edição da ficha (mesmo padrão de `rolarTesteAtributo`/`rolarDano` lá) — mas é gated por
+   * `podeRolar()` (m3-51: visualizador não rola dados). Sem histórico ainda (`m3-27` não existe):
+   * fire-and-forget só na bandeja.
    */
   protected rolarDanoItem(item: ItemInventarioVM): void {
-    if (!item.danoFormula) {
+    if (!this.podeRolar() || !item.danoFormula) {
       return;
     }
     const resultado = rolarFormula({

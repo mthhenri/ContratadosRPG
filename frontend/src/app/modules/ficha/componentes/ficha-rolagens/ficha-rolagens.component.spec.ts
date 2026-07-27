@@ -32,6 +32,7 @@ describe('FichaRolagens', () => {
     rolagens: readonly FichaRolagemDto[],
     opcoes: {
       editavel?: boolean;
+      podeRolar?: boolean;
       proficiencia?: number | null;
       habilidades?: readonly FichaHabilidadeDto[];
       atalhosDano?: { readonly corpo?: string | null; readonly furtivo?: string | null };
@@ -42,6 +43,9 @@ describe('FichaRolagens', () => {
     fixture.componentRef.setInput('rolagens', rolagens);
     fixture.componentRef.setInput('atributos', atributos);
     fixture.componentRef.setInput('editavel', opcoes.editavel ?? true);
+    // m3-51: por padrão `true` — preserva o comportamento dos testes existentes de rolagem,
+    // escritos antes do gate; os que testam especificamente o gate passam `false`.
+    fixture.componentRef.setInput('podeRolar', opcoes.podeRolar ?? true);
     if (opcoes.proficiencia !== undefined) {
       fixture.componentRef.setInput('proficiencia', opcoes.proficiencia);
     }
@@ -375,5 +379,55 @@ describe('FichaRolagens', () => {
     const vm = alvo.componentInstance['presets']()[0];
     alvo.componentInstance['gastarEnergiaDoPasso'](vm, 0);
     expect(alvo.energias).toEqual([]);
+  });
+
+  describe('podeRolar (m3-51) — visualizador não rola dados', () => {
+    it('esconde a rolagem rápida sem podeRolar', () => {
+      const alvo = montar([], { podeRolar: false });
+      expect(
+        alvo.fixture.nativeElement.querySelector('.ficha-rol__rapida'),
+      ).toBeNull();
+    });
+
+    it('rolarRapida não rola nem sem podeRolar mesmo com fórmula válida', () => {
+      const alvo = montar([], { podeRolar: false });
+      alvo.componentInstance['rapida'].setValue('2d6');
+      alvo.componentInstance['rolarRapida']();
+      expect(alvo.mostrar).not.toHaveBeenCalled();
+    });
+
+    it('rolarPassoDoPreset não rola sem podeRolar', () => {
+      const alvo = montar([{ nome: 'Ataque', formula: '1d20+LUT+2' }], { podeRolar: false });
+      const vm = alvo.componentInstance['presets']()[0];
+      alvo.componentInstance['rolarPassoDoPreset'](vm, 0);
+      expect(alvo.mostrar).not.toHaveBeenCalled();
+    });
+
+    it('gastarEnergiaDoPasso não debita energia sem podeRolar', () => {
+      const foco: FichaHabilidadeDto = {
+        nome: 'Foco',
+        categoria: HabilidadeCategoriaEnum.GERAL,
+        custoEnergia: 2,
+        descricao: '',
+      };
+      const alvo = montar([{ nome: 'Passivas', formula: '', habilidades: ['Foco'] }], {
+        habilidades: [foco],
+        podeRolar: false,
+      });
+      const vm = alvo.componentInstance['presets']()[0];
+      alvo.componentInstance['gastarEnergiaDoPasso'](vm, 0);
+      expect(alvo.energias).toEqual([]);
+    });
+
+    it('visualizador ainda vê os presets existentes (só não rola) — editavel e podeRolar são distintos', () => {
+      const alvo = montar([{ nome: 'Ataque', formula: '1d20+LUT+2' }], {
+        editavel: false,
+        podeRolar: false,
+      });
+      alvo.componentInstance['alternarAberto'](0);
+      alvo.fixture.detectChanges();
+      expect(alvo.fixture.nativeElement.textContent).toContain('Ataque');
+      expect(alvo.fixture.nativeElement.querySelector('.ficha-rol__btn--rolar')).toBeNull();
+    });
   });
 });

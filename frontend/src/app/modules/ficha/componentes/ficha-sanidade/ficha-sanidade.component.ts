@@ -277,14 +277,6 @@ export class FichaSanidade {
     }
   }
 
-  /** Alterna o "tratado" de um trauma **no próprio lugar** (o trauma permanece; só a penalidade cai). */
-  protected alternarTratado(indice: number): void {
-    const traumas = this.traumas().map((trauma, i) =>
-      i === indice ? { ...trauma, tratado: !trauma.tratado } : trauma,
-    );
-    this.emitir({ traumas });
-  }
-
   /** Efeito derivado de uma lesão ("−N Atributo") — exibição, não persistido. A marca de
    * "permanente" vira o ícone `infinito` no template (mesmo texto sempre cabendo numa linha). */
   protected efeitoLesao(lesao: FichaLesaoDto): string {

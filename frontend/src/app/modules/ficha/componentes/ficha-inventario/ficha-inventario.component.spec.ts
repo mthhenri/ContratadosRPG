@@ -45,11 +45,17 @@ describe('FichaInventario', () => {
     vontade: 3,
   };
 
-  function montar(inventario: FichaInventarioDto, editavel = true, prestigio = 100) {
+  function montar(
+    inventario: FichaInventarioDto,
+    editavel = true,
+    prestigio = 100,
+    podeRolar = true,
+  ) {
     TestBed.configureTestingModule({ imports: [FichaInventario] });
     const fixture = TestBed.createComponent(FichaInventario);
     fixture.componentRef.setInput('inventario', inventario);
     fixture.componentRef.setInput('editavel', editavel);
+    fixture.componentRef.setInput('podeRolar', podeRolar);
     fixture.componentRef.setInput('prestigio', prestigio);
     fixture.componentRef.setInput('inventarioMaximo', 25);
     fixture.componentRef.setInput('vontade', 3);
@@ -1434,6 +1440,37 @@ describe('FichaInventario', () => {
       expect(botaoFiltro(raiz, 'Equipamentos').getAttribute('aria-pressed')).toBe('false');
       expect(botaoFiltro(raiz, 'Fragmentos').textContent?.trim()).toBe('Fragmentos');
       expect(componentInstance['filtroInventario']()).toBe('fragmentos');
+    });
+  });
+
+  describe('podeRolar (m3-51) — rolar dano da arma (m3-45) gated', () => {
+    it('rolarDanoItem não rola sem podeRolar mesmo com danoFormula presente', () => {
+      const { componentInstance, mostrar } = montar(
+        { itens: [itemLeve], amplificadores: [] },
+        true,
+        100,
+        false,
+      );
+      componentInstance['rolarDanoItem']({
+        nomeExibido: 'Leve',
+        danoFormula: '2d6',
+      } as never);
+      expect(mostrar).not.toHaveBeenCalled();
+    });
+
+    it('rolarDanoItem rola quando podeRolar (mesmo sem editavel — rolar não é edição)', () => {
+      const { componentInstance, mostrar } = montar(
+        { itens: [itemLeve], amplificadores: [] },
+        false,
+        100,
+        true,
+      );
+      componentInstance['rolarDanoItem']({
+        nomeExibido: 'Leve',
+        danoFormula: '2d6',
+      } as never);
+      expect(mostrar).toHaveBeenCalledOnce();
+      expect(mostrar.mock.calls[0][0].formula).toBe('2d6');
     });
   });
 });

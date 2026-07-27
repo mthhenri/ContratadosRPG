@@ -263,6 +263,11 @@ export class FichaService {
    * §14) — m3-04. Só o **dono** ou o **mestre** revogam (`validarPermissaoEdicao` — proibição #28).
    * Idempotente: revogar uma concessão inexistente é um no-op. `ResourceNotFoundException` se a ficha
    * não existir; `UnauthorizedAccessException` se o autor não puder revogar.
+   *
+   * **Expulsão em tempo real (m3-51, item 27).** Após persistir, emite `ficha:acesso-revogado` na
+   * sala `ficha:<id>` (`CampanhaGateway.emitirAcessoRevogado`) — se o alvo estiver com a ficha aberta,
+   * o front o redireciona para fora da tela; o revogado nunca deveria continuar vendo um documento
+   * que o REST já negaria num próximo `recuperarFicha`.
    */
   async revogarAcesso(
     dto: FichaAcessoRevogarDto,
@@ -276,7 +281,9 @@ export class FichaService {
     await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
     await this.fichaRepositorio.revogarAcesso(dto);
 
-    return { fichaId: dto.fichaId, usuarioId: dto.usuarioId };
+    const acessoRevogado: FichaAcessoRevogadoDto = { fichaId: dto.fichaId, usuarioId: dto.usuarioId };
+    this.campanhaGateway.emitirAcessoRevogado(acessoRevogado);
+    return acessoRevogado;
   }
 
   /**

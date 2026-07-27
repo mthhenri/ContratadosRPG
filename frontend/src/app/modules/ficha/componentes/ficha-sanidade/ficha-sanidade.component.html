@@ -120,20 +120,14 @@
         } @else {
           <li class="sanidade__item sanidade__item--trauma">
             <div class="sanidade__linha">
-              <span class="sanidade__nome">{{ trauma.nome }}</span>
+              <span class="sanidade__nome">
+                {{ trauma.nome }}
+                @if (trauma.tratado) {
+                  <app-icone class="sanidade__tratado" [nome]="'medicinal'" [appTooltip]="'Tratado'" aria-label="Tratado" />
+                }
+              </span>
               @if (editavel()) {
                 <div class="sanidade__acoes">
-                  <button
-                    class="sanidade__toggle"
-                    type="button"
-                    [class.sanidade__toggle--ativo]="trauma.tratado"
-                    [attr.aria-pressed]="trauma.tratado"
-                    aria-label="Alternar tratado"
-                    [appTooltip]="'Alternar tratado (reduz a penalidade; o trauma permanece)'"
-                    (click)="alternarTratado($index)"
-                  >
-                    <app-icone [nome]="'medicinal'" />
-                  </button>
                   <button
                     class="sanidade__acao"
                     type="button"

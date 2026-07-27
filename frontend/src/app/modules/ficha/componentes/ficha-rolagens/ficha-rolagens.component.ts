@@ -94,6 +94,12 @@ export class FichaRolagens {
   readonly habilidadesDisponiveis = input<readonly FichaHabilidadeDto[]>([]);
   /** Dono/mestre edita; para os demais é só leitura + rolar (a página liga por `podeGerenciar`). */
   readonly editavel = input(false);
+  /**
+   * `true` quando o autor pode **rolar** (m3-51) — distinto de `editavel` (CRUD de presets): gate da
+   * rolagem avulsa e de cada passo dos presets/combos. Visualizador não rola (`editavel` já era
+   * `false` pra ele, mas antes da m3-51 ele ainda conseguia rolar os presets existentes).
+   */
+  readonly podeRolar = input(false);
   /** Dano C. a C./Furtivo atuais — expandem os atalhos `corpo`/`furtivo` na rolagem avulsa. */
   readonly atalhosDano = input<{ readonly corpo?: string | null; readonly furtivo?: string | null }>({});
 
@@ -395,6 +401,9 @@ export class FichaRolagens {
    * fórmula crua digitada (o jogador escreve exatamente o que quer — `2d6 [Físico]`, `LUTd20kh1cm1 + PROF`…).
    */
   protected rolarRapida(): void {
+    if (!this.podeRolar()) {
+      return;
+    }
     const bruto = this.rapida.value.trim();
     if (!bruto) {
       return;
@@ -421,6 +430,9 @@ export class FichaRolagens {
    * Passo inválido não rola.
    */
   protected rolarPassoDoPreset(preset: RolagemVM, indicePasso: number, critico = false): void {
+    if (!this.podeRolar()) {
+      return;
+    }
     const original = this.rolagens()[preset.indice];
     if (!original) {
       return;
@@ -459,6 +471,9 @@ export class FichaRolagens {
    * nada a gastar (o botão fica desabilitado).
    */
   protected gastarEnergiaDoPasso(preset: RolagemVM, indicePasso: number): void {
+    if (!this.podeRolar()) {
+      return;
+    }
     const passo = preset.plano.passos[indicePasso];
     if (!passo || passo.habilidadesVinculadas.length === 0) {
       return;

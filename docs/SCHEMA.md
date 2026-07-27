@@ -214,7 +214,9 @@ Contrato: `shared/src/dtos/ficha/ficha.dtos.ts`. Forma 1:1 com `sistema-v4.1.0.m
     "itens": [ /* CarrinhoItemDto de shared/regras/compras — item + modificações */ ],
     "amplificadores": [ /* AmplificadorAplicadoDto de shared/regras/compras */ ]
   },
-  "anotacoes": "...",
+  "anotacoes": "...",                 // m3-51: opcional, mesmo tratamento de "historia" abaixo —
+                                      // só dono/mestre veem e editam; visualizador só-acesso nunca
+                                      // recebe este campo (omitirCamposPrivados)
   "historia": "..."                   // m3-50: opcional, texto livre — só dono/mestre veem e
                                       // editam; um visualizador só-acesso nunca recebe este campo
                                       // (omitido em FichaService.recuperarFicha e no broadcast

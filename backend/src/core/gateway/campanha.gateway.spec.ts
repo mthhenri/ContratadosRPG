@@ -232,5 +232,12 @@ describe('CampanhaGateway', () => {
       expect(paraSala).toHaveBeenCalledWith('campanha:3');
       expect(emitir).toHaveBeenCalledWith('membro:entrou', { campanhaId: 3, usuarioId: 42 });
     });
+
+    it('emite ficha:acesso-revogado na sala ficha:<id> (m3-51 — expulsão em tempo real)', () => {
+      gateway.emitirAcessoRevogado({ fichaId: 5, usuarioId: 42 });
+
+      expect(paraSala).toHaveBeenCalledWith('ficha:5');
+      expect(emitir).toHaveBeenCalledWith('ficha:acesso-revogado', { fichaId: 5, usuarioId: 42 });
+    });
   });
 });

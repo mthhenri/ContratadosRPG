@@ -1,5 +1,7 @@
 <div class="ficha-rol">
-  <!-- Rolagem avulsa (m3-31): digite e role na hora, sem salvar preset nem gastar energia. -->
+  <!-- Rolagem avulsa (m3-31): digite e role na hora, sem salvar preset nem gastar energia. Gated
+       por `podeRolar()` (m3-51) — visualizador só-acesso não rola. -->
+  @if (podeRolar()) {
   <div class="ficha-rol__rapida">
     <span class="ficha-rol__rotulo-linha">
       <span class="ficha-rol__rotulo">Rolagem rápida</span>
@@ -27,6 +29,7 @@
       <span class="ficha-rol__dica ficha-rol__dica--erro">Fórmula não reconhecida. Veja o guia (?) ao lado.</span>
     }
   </div>
+  }
 
   @if (editavel()) {
     <button type="button" class="ficha-rol__novo" (click)="abrirNovo()">+ Novo preset</button>
@@ -93,39 +96,43 @@
                   >
                     só energia
                   </span>
-                  <button
-                    type="button"
-                    class="ficha-rol__btn ficha-rol__btn--gastar"
-                    [disabled]="passo.habilidadesVinculadas.length === 0"
-                    [appTooltip]="'Gastar a energia das habilidades vinculadas'"
-                    (click)="gastarEnergiaDoPasso(preset, indicePasso)"
-                  >
-                    Gastar
-                  </button>
+                  @if (podeRolar()) {
+                    <button
+                      type="button"
+                      class="ficha-rol__btn ficha-rol__btn--gastar"
+                      [disabled]="passo.habilidadesVinculadas.length === 0"
+                      [appTooltip]="'Gastar a energia das habilidades vinculadas'"
+                      (click)="gastarEnergiaDoPasso(preset, indicePasso)"
+                    >
+                      Gastar
+                    </button>
+                  }
                 } @else {
                   <span class="ficha-rol__passo-formula" [appTooltip]="passo.formula">{{ passo.formula }}</span>
                   @if (!passo.interpretacao.valida) {
                     <span class="ficha-rol__aviso" [appTooltip]="'Fórmula não reconhecida — não é possível rolar'">!</span>
                   }
-                  <button
-                    type="button"
-                    class="ficha-rol__btn ficha-rol__btn--rolar ficha-rol__btn--icone"
-                    [disabled]="!passo.interpretacao.valida"
-                    [appTooltip]="'Rolar'"
-                    (click)="rolarPassoDoPreset(preset, indicePasso)"
-                  >
-                    <app-icone [nome]="'dado'" />
-                  </button>
-                  @if (passo.critico) {
+                  @if (podeRolar()) {
                     <button
                       type="button"
-                      class="ficha-rol__btn ficha-rol__btn--critico ficha-rol__btn--icone"
+                      class="ficha-rol__btn ficha-rol__btn--rolar ficha-rol__btn--icone"
                       [disabled]="!passo.interpretacao.valida"
-                      [appTooltip]="'Rolar crítico — dobra o dano'"
-                      (click)="rolarPassoDoPreset(preset, indicePasso, true)"
+                      [appTooltip]="'Rolar'"
+                      (click)="rolarPassoDoPreset(preset, indicePasso)"
                     >
                       <app-icone [nome]="'dado'" />
                     </button>
+                    @if (passo.critico) {
+                      <button
+                        type="button"
+                        class="ficha-rol__btn ficha-rol__btn--critico ficha-rol__btn--icone"
+                        [disabled]="!passo.interpretacao.valida"
+                        [appTooltip]="'Rolar crítico — dobra o dano'"
+                        (click)="rolarPassoDoPreset(preset, indicePasso, true)"
+                      >
+                        <app-icone [nome]="'dado'" />
+                      </button>
+                    }
                   }
                 }
               </div>

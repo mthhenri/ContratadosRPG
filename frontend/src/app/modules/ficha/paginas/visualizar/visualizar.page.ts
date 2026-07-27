@@ -2,6 +2,7 @@ import { Component, DestroyRef, computed, effect, inject, signal, untracked } fr
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { MessageService } from 'primeng/api';
 import { EMPTY, Subject, catchError, debounceTime, filter, finalize, forkJoin, switchMap } from 'rxjs';
 
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
@@ -89,6 +90,7 @@ export class FichaVisualizar {
   private readonly campanhaService = inject(CampanhaService);
   private readonly sessaoService = inject(SessaoService);
   private readonly tempoRealService = inject(TempoRealService);
+  private readonly messageService = inject(MessageService);
   private readonly rotaAtiva = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -246,6 +248,21 @@ export class FichaVisualizar {
       )
       .subscribe({ next: (fichaAlterada) => this.absorverRemoto(fichaAlterada) });
 
+    // Expulsão em tempo real (m3-51, item 27): se o acesso revogado é o do próprio autenticado nesta
+    // ficha, sai da tela — dono/mestre nunca são alvo de uma revogação (só concedida a "outro
+    // membro"), o `podeGerenciar()` é só uma segunda trava defensiva.
+    this.tempoRealService.acessoRevogado$
+      .pipe(
+        filter(
+          (evento) =>
+            evento.fichaId === this.fichaId &&
+            evento.usuarioId === this.sessaoService.usuario()?.id &&
+            !this.podeGerenciar(),
+        ),
+        takeUntilDestroyed(),
+      )
+      .subscribe({ next: () => this.expulsar() });
+
     // Ressincronização ao reconectar (§9 — o Render dorme e derruba a conexão): refaz o fetch da
     // ficha aberta. O documento buscado entra pelo mesmo merge, então uma edição local pendente
     // sobrevive ao refetch em vez de bloqueá-lo.
@@ -295,6 +312,20 @@ export class FichaVisualizar {
       ...ficha,
       dados: { ...ficha.dados, rolagens: rolagens.map((preset) => normalizarPresetLegado(preset)) },
     };
+  }
+
+  /**
+   * Redireciona pra fora da tela da ficha após a revogação do próprio acesso (m3-51, item 27) —
+   * volta ao detalhe da campanha, com um toast avisando o motivo (o REST já negaria um refetch daqui
+   * pra frente, mas o usuário continuaria vendo o último estado carregado sem isso).
+   */
+  private expulsar(): void {
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'Acesso revogado',
+      detail: 'Seu acesso a esta ficha foi revogado.',
+    });
+    void this.router.navigate(['/painel', this.campanhaId]);
   }
 
   /** Marca uma edição local pendente e agenda a persistência em lote (debounced). */

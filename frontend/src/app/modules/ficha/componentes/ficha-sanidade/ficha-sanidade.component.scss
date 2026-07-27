@@ -215,6 +215,15 @@
     margin-left: 3px;
   }
 
+  // Marca de trauma tratado — só leitura, fora do `@if (editavel())` (mesmo padrão de `&__permanente`);
+  // o estado só muda dentro do formulário de editar trauma (m3-51, item 2).
+  &__tratado {
+    font-size: 11px;
+    color: var(--positive);
+    vertical-align: -1px;
+    margin-left: 3px;
+  }
+
   &__acoes {
     margin-left: auto;
     display: flex;
@@ -245,30 +254,6 @@
 
     &--remover:hover {
       color: var(--accent);
-    }
-  }
-
-  // Ícone-só (era um botão de texto "Tratado" — a versão longa empurrava o resto da linha pra
-  // quebrar em duas, inflando a altura do item). Mesmo tamanho/formato de `&__acao` vizinho.
-  &__toggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    padding: 0;
-    font-size: 12px;
-    color: var(--text-mute);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-
-    &--ativo {
-      color: var(--positive);
-      border-color: var(--positive);
-      background: color-mix(in srgb, var(--positive) 12%, transparent);
     }
   }
 

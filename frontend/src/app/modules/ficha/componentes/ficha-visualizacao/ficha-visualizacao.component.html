@@ -918,15 +918,17 @@
                       [class.ficha-atributo--maestria]="maestriaAtual() === campo.chave"
                       [class.ficha-atributo--lesionado]="penalidadesLesao()[campo.chave] > 0"
                     >
-                      <button
-                        class="ficha-atributo__rolar"
-                        type="button"
-                        [attr.aria-label]="'Rolar teste de ' + campo.nome"
-                        [appTooltip]="'Rolar teste de ' + campo.nome"
-                        (click)="rolarTesteAtributo(campo)"
-                      >
-                        <app-icone [nome]="'dado'" />
-                      </button>
+                      @if (podeRolar()) {
+                        <button
+                          class="ficha-atributo__rolar"
+                          type="button"
+                          [attr.aria-label]="'Rolar teste de ' + campo.nome"
+                          [appTooltip]="'Rolar teste de ' + campo.nome"
+                          (click)="rolarTesteAtributo(campo)"
+                        >
+                          <app-icone [nome]="'dado'" />
+                        </button>
+                      }
                       <span class="ficha-atributo__abrev">
                         @if (maestriaAtual() === campo.chave) {
                           <span class="ficha-atributo__estrela" aria-hidden="true">★</span>
@@ -1047,13 +1049,16 @@
               <div
                 class="ficha-mini ficha-mini--fino"
                 [class.ficha-mini--com-rolar]="
+                  podeRolar() &&
                   (linha.chave === 'danoCorpoACorpo' || linha.chave === 'danoFurtivo') &&
                   linha.bruto !== null
                 "
               >
                 <!-- Dano C. a C./Furtivo: dadinho de rolar direto a expressão (m3-22, mesmo padrão
-                     do dadinho de Atributos). Civil sem Dano Furtivo (`bruto` null) não ganha botão. -->
+                     do dadinho de Atributos). Civil sem Dano Furtivo (`bruto` null) não ganha botão;
+                     visualizador sem `podeRolar()` (m3-51) também não. -->
                 @if (
+                  podeRolar() &&
                   (linha.chave === 'danoCorpoACorpo' || linha.chave === 'danoFurtivo') &&
                   linha.bruto !== null
                 ) {
@@ -1106,10 +1111,13 @@
             (sanidadeMudou)="ajusteSanidade.emit($event)"
           />
 
+          <!-- Anotações (m3-51): gate de visualização igual à História (m3-50) — só dono/mestre; o
+               backend já nem manda `dados.anotacoes` pro visualizador (`omitirCamposPrivados`). -->
+          @if (ajustavel()) {
           <div class="ficha-status__anotacoes-caixa">
             <div class="ficha-status__anotacoes-cabecalho">
               <span class="ficha-status__rotulo-coluna">Anotações</span>
-              @if (ajustavel() && !editandoAnotacoes()) {
+              @if (!editandoAnotacoes()) {
                 <button
                   class="ficha-cartao__lapis"
                   type="button"
@@ -1121,14 +1129,14 @@
                 </button>
               }
             </div>
-            @if (ajustavel() && editandoAnotacoes()) {
+            @if (editandoAnotacoes()) {
               <textarea
                 #entradaAnotacoes
                 class="ficha-status__anotacoes-campo"
                 rows="10"
                 aria-label="Anotações"
                 placeholder="Escreva suas anotações aqui…"
-                [value]="dados().anotacoes"
+                [value]="dados().anotacoes ?? ''"
                 (keydown.escape)="cancelarAnotacoes()"
                 (blur)="confirmarAnotacoes(entradaAnotacoes.value)"
               ></textarea>
@@ -1138,6 +1146,7 @@
               <p class="ficha-visao__vazio">Sem anotações.</p>
             }
           </div>
+          }
         </div>
         }
         @if (abaStatusAtiva() === 'inventario') {
@@ -1145,6 +1154,7 @@
           <app-ficha-inventario
             [inventario]="dados().inventario"
             [editavel]="ajustavel()"
+            [podeRolar]="podeRolar()"
             [prestigio]="dados().prestigio"
             [inventarioMaximo]="inventarioMaximoValor()"
             [toleranciaSobrecarga]="toleranciaSobrecargaFormacao()"
@@ -1187,6 +1197,7 @@
             [habilidadesDisponiveis]="dados().habilidades"
             [atalhosDano]="atalhosDano()"
             [editavel]="ajustavel()"
+            [podeRolar]="podeRolar()"
             (rolagensMudou)="ajusteRolagens.emit($event)"
             (energiaGasta)="aoUtilizarHabilidade($event)"
           />
