@@ -608,24 +608,27 @@
     }
   }
 
-  // Ação "Duplicar" (m3-52) — linha própria abaixo dos vitais, só dono/mestre da ficha
-  // (`podeAjustarFicha`, mesma checagem já usada nos passos de Vida/Energia).
+  // Menu de ações (kebab) de uma ficha no mini-card (m3-52) — Duplicar/Excluir, mesmo padrão do
+  // `.ficha-pagina__menu*` do cabeçalho de `FichaVisualizar` (copiado aqui, view encapsulation);
+  // só dono/mestre da ficha (`podeAjustarFicha`, mesma checagem já usada nos passos de Vida/Energia).
   &__ficha-acoes {
     display: flex;
     justify-content: flex-end;
     margin-top: 2px;
   }
 
-  &__ficha-duplicar {
+  &__ficha-menu-container {
+    position: relative;
+  }
+
+  &__ficha-menu-botao {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 3px 8px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    justify-content: center;
+    width: 26px;
+    height: 22px;
+    font-size: 15px;
+    line-height: 1;
     color: var(--text-dim);
     background: transparent;
     border: 1px solid var(--border-strong);
@@ -633,19 +636,54 @@
     cursor: pointer;
     transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
 
-    app-icone {
-      font-size: 11px;
-    }
-
-    &:hover:not(:disabled) {
+    &:hover {
       color: var(--accent);
       border-color: var(--accent-border);
       background: var(--surface-2);
     }
+  }
 
-    &:disabled {
-      opacity: 0.6;
-      cursor: default;
+  &__ficha-menu-fundo {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    background: transparent;
+    border: 0;
+    cursor: default;
+  }
+
+  &__ficha-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 21;
+    min-width: 170px;
+    padding: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+  }
+
+  &__ficha-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 9px 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      background: var(--surface-2);
+      color: var(--accent);
     }
   }
 
@@ -769,8 +807,9 @@
       height: bp.$alvo-toque;
     }
 
-    &__ficha-duplicar {
-      min-height: bp.$alvo-toque;
+    &__ficha-menu-botao {
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
     }
 
     &__nova-ficha {
@@ -882,6 +921,11 @@
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease, filter 0.15s ease;
 
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+
   &--primario {
     background: var(--accent);
     color: var(--bg);
@@ -902,6 +946,105 @@
       background: var(--surface-2);
       border-color: var(--accent-border);
     }
+  }
+}
+
+// === Dialog de confirmação (m3-52) — Duplicar/Excluir ficha a partir do menu do mini-card.
+// Mesmo padrão `.dialogo` genérico já usado por `FichaVisualizar` (m3-10/m3-52), copiado aqui
+// (view encapsulation não deixa reusar o `.scss` de outro componente). ===
+.dialogo {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 60px 20px;
+  overflow-y: auto;
+
+  &__fundo {
+    position: fixed;
+    inset: 0;
+    background: rgb(0 0 0 / 55%);
+    border: 0;
+    cursor: default;
+  }
+
+  &__painel {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+    padding: var(--pad-card);
+    box-shadow: 0 16px 48px rgb(0 0 0 / 45%);
+  }
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 16px;
+  }
+
+  &__titulo {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+  }
+
+  &__fechar {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    font-size: 13px;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+    &:hover {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--surface-2);
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: default;
+    }
+  }
+
+  &__aviso {
+    margin: 0 0 16px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  &__acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  &__acao {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 11px 18px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
   }
 }
 

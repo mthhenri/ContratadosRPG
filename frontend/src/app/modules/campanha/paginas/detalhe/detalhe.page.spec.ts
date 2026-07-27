@@ -83,6 +83,7 @@ describe('CampanhaDetalhe', () => {
       duplicarFicha: vi.fn((id: number) =>
         of({ id: 100, campanhaId: CAMPANHA_ID, usuarioId: opts.usuarioId, nome: `Clone de ${id} (cópia)` }),
       ),
+      excluirFicha: vi.fn(() => of(undefined)),
     };
     const contextoService = { definir: vi.fn(), limpar: vi.fn() };
     const sessaoService = { usuario: () => ({ id: opts.usuarioId, login: 'x', nome: 'x' }) };
@@ -777,32 +778,111 @@ describe('CampanhaDetalhe', () => {
       });
     });
 
-    // m3-52: "Duplicar" só no painel da campanha (a m3-28/acervo ainda não existe).
-    describe('duplicar ficha (m3-52)', () => {
-      it('mestre vê "Duplicar" em qualquer ficha', () => {
+    // m3-52: menu de ações (kebab) no mini-card — Duplicar/Excluir, cada um com dialog de
+    // confirmação própria (mesmo padrão do menu do cabeçalho de FichaVisualizar). A ação em si só
+    // no painel da campanha (a m3-28/acervo ainda não existe).
+    describe('menu de ações da ficha (m3-52) — Duplicar/Excluir', () => {
+      function abrirMenu(raiz: HTMLElement, fixture: ReturnType<typeof montar>['fixture'], rotulo: string) {
+        (raiz.querySelector(`[aria-label="Ações de ${rotulo}"]`) as HTMLButtonElement).click();
+        fixture.detectChanges();
+      }
+
+      it('mestre vê o menu de ações em qualquer ficha', () => {
         const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
 
-        expect(raiz.querySelector('[aria-label="Duplicar Kane"]')).not.toBeNull();
-        expect(raiz.querySelector('[aria-label="Duplicar Vera"]')).not.toBeNull();
+        expect(raiz.querySelector('[aria-label="Ações de Kane"]')).not.toBeNull();
+        expect(raiz.querySelector('[aria-label="Ações de Vera"]')).not.toBeNull();
       });
 
-      it('jogador comum só vê "Duplicar" na própria ficha, nunca na do mestre', () => {
+      it('jogador comum só vê o menu de ações na própria ficha, nunca na do mestre', () => {
         const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
 
-        expect(raiz.querySelector('[aria-label="Duplicar Vera"]')).not.toBeNull();
-        expect(raiz.querySelector('[aria-label="Duplicar Kane"]')).toBeNull();
+        expect(raiz.querySelector('[aria-label="Ações de Vera"]')).not.toBeNull();
+        expect(raiz.querySelector('[aria-label="Ações de Kane"]')).toBeNull();
       });
 
-      it('clique chama FichaService.duplicarFicha e recarrega a lista de fichas', () => {
-        const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
-        expect(fichaService.listarFichas).toHaveBeenCalledTimes(1);
+      describe('duplicar', () => {
+        it('abre a dialog de confirmação com o nome da ficha e do dono', () => {
+          const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+          abrirMenu(raiz, fixture, 'Kane');
 
-        const botao = raiz.querySelector('[aria-label="Duplicar Kane"]') as HTMLButtonElement;
-        botao.click();
-        fixture.detectChanges();
+          (raiz.querySelector('.detalhe__ficha-menu-item') as HTMLButtonElement).click();
+          fixture.detectChanges();
 
-        expect(fichaService.duplicarFicha).toHaveBeenCalledWith(3);
-        expect(fichaService.listarFichas).toHaveBeenCalledTimes(2);
+          const dialog = raiz.querySelector('.dialogo');
+          expect(dialog).not.toBeNull();
+          expect(dialog?.textContent).toContain('Deseja mesmo duplicar a ficha "Kane" de "Mestre"?');
+        });
+
+        it('cancelar fecha a dialog sem chamar o serviço', () => {
+          const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+          abrirMenu(raiz, fixture, 'Kane');
+          (raiz.querySelector('.detalhe__ficha-menu-item') as HTMLButtonElement).click();
+          fixture.detectChanges();
+
+          (raiz.querySelector('.dialogo__fundo') as HTMLButtonElement).click();
+          fixture.detectChanges();
+
+          expect(raiz.querySelector('.dialogo')).toBeNull();
+          expect(fichaService.duplicarFicha).not.toHaveBeenCalled();
+        });
+
+        it('confirmar chama FichaService.duplicarFicha e recarrega a lista', () => {
+          const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+          expect(fichaService.listarFichas).toHaveBeenCalledTimes(1);
+          abrirMenu(raiz, fixture, 'Kane');
+          (raiz.querySelector('.detalhe__ficha-menu-item') as HTMLButtonElement).click();
+          fixture.detectChanges();
+
+          (raiz.querySelector('.dialogo .botao--primario') as HTMLButtonElement).click();
+          fixture.detectChanges();
+
+          expect(fichaService.duplicarFicha).toHaveBeenCalledWith(3);
+          expect(fichaService.listarFichas).toHaveBeenCalledTimes(2);
+          expect(raiz.querySelector('.dialogo')).toBeNull();
+        });
+      });
+
+      describe('excluir', () => {
+        it('abre a dialog de confirmação com o nome da ficha', () => {
+          const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+          abrirMenu(raiz, fixture, 'Vera');
+
+          (raiz.querySelectorAll('.detalhe__ficha-menu-item')[1] as HTMLButtonElement).click();
+          fixture.detectChanges();
+
+          const dialog = raiz.querySelector('.dialogo');
+          expect(dialog).not.toBeNull();
+          expect(dialog?.textContent).toContain('Excluir');
+          expect(dialog?.textContent).toContain('Vera');
+        });
+
+        it('cancelar fecha a dialog sem chamar o serviço', () => {
+          const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+          abrirMenu(raiz, fixture, 'Vera');
+          (raiz.querySelectorAll('.detalhe__ficha-menu-item')[1] as HTMLButtonElement).click();
+          fixture.detectChanges();
+
+          (raiz.querySelector('.dialogo .botao--secundario') as HTMLButtonElement).click();
+          fixture.detectChanges();
+
+          expect(raiz.querySelector('.dialogo')).toBeNull();
+          expect(fichaService.excluirFicha).not.toHaveBeenCalled();
+        });
+
+        it('confirmar chama FichaService.excluirFicha e remove o mini-card na hora', () => {
+          const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+          abrirMenu(raiz, fixture, 'Vera');
+          (raiz.querySelectorAll('.detalhe__ficha-menu-item')[1] as HTMLButtonElement).click();
+          fixture.detectChanges();
+
+          (raiz.querySelector('.dialogo .botao--primario') as HTMLButtonElement).click();
+          fixture.detectChanges();
+
+          expect(fichaService.excluirFicha).toHaveBeenCalledWith(4);
+          expect(raiz.querySelector('.dialogo')).toBeNull();
+          expect(raiz.textContent).not.toContain('Vera');
+        });
       });
     });
   });

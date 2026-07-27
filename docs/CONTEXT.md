@@ -7,42 +7,52 @@
 > restrito ao que dá pra entregar **sem** a `m3-28`: **excluir** na própria tela da ficha e
 > **duplicar** só no painel da campanha; o resto fica **documentado como pendente** (ver a seção
 > "Adaptação de escopo" na spec, em `docs/specs/done/m3-52-ficha-acervo-excluir-duplicar.spec.md`).
-> **(1) Excluir** — novo item "Excluir ficha" no menu (kebab) do cabeçalho de `FichaVisualizar`
-> (`/painel/:campanhaId/ficha/:id`), com uma dialog de confirmação (mesmo padrão `.dialogo` já
-> usado pela gestão de acesso — `dialogExclusao`/`excluindo`, `abrirExclusao`/`fecharExclusao`/
-> `confirmarExclusao`); confirmar chama `FichaService.excluirFicha` (`DELETE /ficha/:id`, endpoint
-> que já existia desde a `m3-03` — só faltava a affordance de UI) e navega de volta ao detalhe da
-> campanha. Entregue **conforme a spec original** — este entregável não dependia da `m3-28`.
-> **(2) Duplicar (net-new)** — novo endpoint `POST /ficha/:id/duplicar` (backend):
-> `FichaController.duplicar` → `FichaService.duplicarFicha`, que exige permissão de **edição** da
-> ficha original (§14 — só dono/mestre, `validarPermissaoEdicao`) e então **reusa `criarFicha` por
-> inteiro** (mesmo snapshot de máximas/preset de Iniciativa/validação `shared/regras`): clona
-> `dados`, nome vira `"<nome> (cópia)"`, dono = quem duplicou (nunca o dono original), sem herdar
-> acessos de visualização (`criarFicha` nunca toca `usuario_ficha_acesso`). Contrato: novo
-> `FichaDuplicarDto { id }` em `ficha-operacao.dtos.ts`; a saída reaproveita `FichaCriadaDto` (a
-> duplicação **é** uma criação, sem DTO de saída dedicado — decisão documentada no código, seguindo
-> a skill `dto-conventions`). **Divergência da spec original:** como `campanha_id` continua
-> `NOT NULL` (sem a `m3-28`), o clone **não nasce solto** — nasce na **mesma campanha** da ficha
-> original, única opção possível sem a coluna nullable; a affordance "Duplicar" só aparece no
-> mini-card de cada ficha em `CampanhaDetalhe` (`m2-16`), gated por `podeAjustarFicha` (mesma regra
-> dono/mestre reusada dos passos de Vida/Energia), com feedback "Duplicando…"/"Duplicado ✓" (mesmo
-> padrão de `regenerarConvite`) e recarregando membros/fichas ao concluir (`recarregarMembrosEFichas`,
-> já existente). Novo ícone `duplicar` (dois retângulos sobrepostos) em `shared/icone`. **Testes:**
-> backend +4 (`ficha.service.spec.ts` — dono duplica, mestre duplica em nome de quem duplicou
-> (nunca o dono original), `UnauthorizedAccessException` para não-dono/não-mestre,
-> `ResourceNotFoundException` para ficha inexistente) — 135/135 backend. Frontend +2 no
-> `FichaService` (excluir/duplicar via HTTP) + 5 em `FichaVisualizar` (menu/dialog de exclusão,
-> cancelar, confirmar navega) + 3 em `CampanhaDetalhe` (mestre vê "Duplicar" em qualquer ficha,
-> jogador só na própria, clique chama o serviço e recarrega a lista) — 527/528 frontend (1 falha
-> pré-existente alheia — "apelido de equipamento", m3-33 — já registrada em rodadas anteriores;
-> shared 452/452 inalterado). Lint/build limpos nos três workspaces (o único erro de lint
-> pré-existente, em `ficha.service.spec.ts` linha 737, já existia antes desta task). Spec em
-> `docs/specs/done/m3-52-ficha-acervo-excluir-duplicar.spec.md`, com a seção "Adaptação de escopo"
-> documentando o que falta para quando a `m3-28` for implementada (acervo `/fichas` em si,
-> `campanha_id` nullable, `listarMinhasFichas`, duplicar nascendo solto, atribuir/remover
-> campanha). **Próxima task (fila do lote `m3-40`…`m3-56`): `m3-53`** (ficha — exportar PDF); esta
-> branch (`claude/redesign-ficha-screen-061wgy`) também tem a `m3-38` (redesenho visual da ficha)
-> como task **própria e distinta**, ainda `active/` — não tocada nesta rodada.
+> **(1) Excluir na tela da ficha** — novo item "Excluir ficha" no menu (kebab) do cabeçalho de
+> `FichaVisualizar` (`/painel/:campanhaId/ficha/:id`), com uma dialog de confirmação (mesmo padrão
+> `.dialogo` já usado pela gestão de acesso — `dialogExclusao`/`excluindo`, `abrirExclusao`/
+> `fecharExclusao`/`confirmarExclusao`); confirmar chama `FichaService.excluirFicha`
+> (`DELETE /ficha/:id`, endpoint que já existia desde a `m3-03` — só faltava a affordance de UI) e
+> navega de volta ao detalhe da campanha. Entregue **conforme a spec original** — este entregável
+> não dependia da `m3-28`. **(2) Duplicar (net-new)** — novo endpoint `POST /ficha/:id/duplicar`
+> (backend): `FichaController.duplicar` → `FichaService.duplicarFicha`, que exige permissão de
+> **edição** da ficha original (§14 — só dono/mestre, `validarPermissaoEdicao`) e então **reusa
+> `criarFicha` por inteiro** (mesmo snapshot de máximas/preset de Iniciativa/validação
+> `shared/regras`): clona `dados`, nome vira `"<nome> (cópia)"`, dono = quem duplicou (nunca o dono
+> original), sem herdar acessos de visualização (`criarFicha` nunca toca `usuario_ficha_acesso`).
+> Contrato: novo `FichaDuplicarDto { id }` em `ficha-operacao.dtos.ts`; a saída reaproveita
+> `FichaCriadaDto` (a duplicação **é** uma criação, sem DTO de saída dedicado — decisão documentada
+> no código, seguindo a skill `dto-conventions`). **Divergência da spec original:** como
+> `campanha_id` continua `NOT NULL` (sem a `m3-28`), o clone **não nasce solto** — nasce na **mesma
+> campanha** da ficha original, única opção possível sem a coluna nullable.
+> **(3) Refino de UI (a pedido do autor, mesma sessão):** Duplicar/Excluir migraram do painel da
+> campanha para um **menu de ações (kebab) por ficha** no mini-card de `CampanhaDetalhe`
+> (`m2-16`), mesmo padrão visual do menu do cabeçalho de `FichaVisualizar` — `menuFichaAberto`
+> (um aberto por vez), item "Duplicar ficha"/"Excluir ficha", gated por `podeAjustarFicha`
+> (dono/mestre, mesma regra reusada dos passos de Vida/Energia). Cada ação abre sua própria
+> **dialog de confirmação** (`.dialogo`, copiado do padrão de `FichaVisualizar` — view
+> encapsulation não deixa reusar o `.scss` de outro componente): duplicar pergunta
+> `Deseja mesmo duplicar a ficha "<nome da ficha>" de "<nome do dono>"?` (`confirmandoDuplicar`
+> guarda os dois nomes); excluir pergunta `Excluir <nome da ficha>? Esta ação não pode ser
+> desfeita.` (`confirmandoExcluirFicha`). Confirmar exclusão remove o mini-card **na hora**
+> (`this.fichas.update(...)`, sem refetch); confirmar duplicação chama `recarregarMembrosEFichas()`
+> (já existente) pro clone aparecer. Novo ícone `duplicar` (dois retângulos sobrepostos) em
+> `shared/icone`. **Testes:** backend +4 (`ficha.service.spec.ts` — dono duplica, mestre duplica em
+> nome de quem duplicou (nunca o dono original), `UnauthorizedAccessException` para
+> não-dono/não-mestre, `ResourceNotFoundException` para ficha inexistente) — 135/135 backend.
+> Frontend +2 no `FichaService` (excluir/duplicar via HTTP) + 5 em `FichaVisualizar` (menu/dialog de
+> exclusão, cancelar, confirmar navega) + 8 em `CampanhaDetalhe` (menu de ações gated por
+> dono/mestre; duplicar — dialog com nome da ficha/dono, cancelar não chama o serviço, confirmar
+> chama e recarrega; excluir — dialog com o nome, cancelar não chama o serviço, confirmar chama e
+> remove o mini-card na hora) — 532/533 frontend (1 falha pré-existente alheia — "apelido de
+> equipamento", m3-33 — já registrada em rodadas anteriores; shared 452/452 inalterado). Lint/build
+> limpos nos três workspaces (os poucos erros de lint pré-existentes, alheios a esta task, não
+> foram tocados). Spec em `docs/specs/done/m3-52-ficha-acervo-excluir-duplicar.spec.md`, com a
+> seção "Adaptação de escopo" documentando o que falta para quando a `m3-28` for implementada
+> (acervo `/fichas` em si, `campanha_id` nullable, `listarMinhasFichas`, duplicar nascendo solto,
+> atribuir/remover campanha). **Próxima task (fila do lote `m3-40`…`m3-56`): `m3-53`** (ficha —
+> exportar PDF); esta branch (`claude/redesign-ficha-screen-061wgy`) também tem a `m3-38`
+> (redesenho visual da ficha) como task **própria e distinta**, ainda `active/` — não tocada nesta
+> rodada.
 >
 > Última atualização anterior: 2026-07-26 (**m3-51 — Permissões granulares de acesso**: task `m3-51` do
 > lote de refino `m3-40`…`m3-56` implementada. Quatro entregáveis independentes. **(1) Visualizador

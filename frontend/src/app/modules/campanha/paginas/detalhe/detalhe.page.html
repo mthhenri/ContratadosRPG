@@ -275,22 +275,46 @@
                         </div>
                         @if (podeAjustarFicha(membro.usuarioId)) {
                           <div class="detalhe__ficha-acoes">
-                            <button
-                              class="detalhe__ficha-duplicar"
-                              type="button"
-                              [attr.aria-label]="'Duplicar ' + ficha.nome"
-                              [disabled]="duplicando() === ficha.id"
-                              (click)="duplicarFicha(ficha)"
-                            >
-                              <app-icone [nome]="duplicado() === ficha.id ? 'check' : 'duplicar'" />
-                              {{
-                                duplicando() === ficha.id
-                                  ? 'Duplicando…'
-                                  : duplicado() === ficha.id
-                                    ? 'Duplicado'
-                                    : 'Duplicar'
-                              }}
-                            </button>
+                            <div class="detalhe__ficha-menu-container">
+                              <button
+                                class="detalhe__ficha-menu-botao"
+                                type="button"
+                                [attr.aria-label]="'Ações de ' + ficha.nome"
+                                aria-haspopup="menu"
+                                [attr.aria-expanded]="menuFichaAberto() === ficha.id"
+                                (click)="alternarMenuFicha(ficha.id)"
+                              >
+                                ⋯
+                              </button>
+                              @if (menuFichaAberto() === ficha.id) {
+                                <button
+                                  class="detalhe__ficha-menu-fundo"
+                                  type="button"
+                                  aria-label="Fechar menu"
+                                  (click)="fecharMenuFicha()"
+                                ></button>
+                                <div class="detalhe__ficha-menu" role="menu">
+                                  <button
+                                    class="detalhe__ficha-menu-item"
+                                    type="button"
+                                    role="menuitem"
+                                    (click)="pedirDuplicar(ficha, membro.nome)"
+                                  >
+                                    <app-icone nome="duplicar" />
+                                    <span>Duplicar ficha</span>
+                                  </button>
+                                  <button
+                                    class="detalhe__ficha-menu-item"
+                                    type="button"
+                                    role="menuitem"
+                                    (click)="pedirExcluirFicha(ficha)"
+                                  >
+                                    <app-icone nome="excluir" />
+                                    <span>Excluir ficha</span>
+                                  </button>
+                                </div>
+                              }
+                            </div>
                           </div>
                         }
                       </div>
@@ -392,4 +416,98 @@
     (criar)="criarFicha($event)"
     (cancelar)="fecharCriarFicha()"
   />
+}
+
+@if (confirmandoDuplicar(); as pendenteDuplicar) {
+  <div class="dialogo" role="dialog" aria-modal="true" aria-label="Duplicar ficha">
+    <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="cancelarDuplicar()"></button>
+    <div class="dialogo__painel">
+      <header class="dialogo__cabecalho">
+        <span class="card__indice"><app-icone nome="duplicar" /></span>
+        <h2 class="dialogo__titulo">Duplicar Ficha</h2>
+        <span class="card__regua"></span>
+        <button
+          class="dialogo__fechar"
+          type="button"
+          aria-label="Fechar"
+          [disabled]="duplicando() === pendenteDuplicar.id"
+          (click)="cancelarDuplicar()"
+        >
+          ✕
+        </button>
+      </header>
+
+      <p class="dialogo__aviso">
+        Deseja mesmo duplicar a ficha "<strong>{{ pendenteDuplicar.nome }}</strong>" de "<strong
+          >{{ pendenteDuplicar.donoNome }}</strong
+        >"?
+      </p>
+
+      <div class="dialogo__acoes">
+        <button
+          class="botao botao--primario dialogo__acao"
+          type="button"
+          [disabled]="duplicando() === pendenteDuplicar.id"
+          (click)="confirmarDuplicar()"
+        >
+          <app-icone nome="duplicar" />
+          {{ duplicando() === pendenteDuplicar.id ? 'Duplicando…' : 'Confirmar duplicação' }}
+        </button>
+        <button
+          class="botao botao--secundario dialogo__acao"
+          type="button"
+          [disabled]="duplicando() === pendenteDuplicar.id"
+          (click)="cancelarDuplicar()"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (confirmandoExcluirFicha(); as pendenteExcluir) {
+  <div class="dialogo" role="dialog" aria-modal="true" aria-label="Excluir ficha">
+    <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="cancelarExcluirFicha()"></button>
+    <div class="dialogo__painel">
+      <header class="dialogo__cabecalho">
+        <span class="card__indice"><app-icone nome="excluir" /></span>
+        <h2 class="dialogo__titulo">Excluir Ficha</h2>
+        <span class="card__regua"></span>
+        <button
+          class="dialogo__fechar"
+          type="button"
+          aria-label="Fechar"
+          [disabled]="excluindoFicha() === pendenteExcluir.id"
+          (click)="cancelarExcluirFicha()"
+        >
+          ✕
+        </button>
+      </header>
+
+      <p class="dialogo__aviso">
+        Excluir <strong>{{ pendenteExcluir.nome }}</strong>? Esta ação não pode ser desfeita.
+      </p>
+
+      <div class="dialogo__acoes">
+        <button
+          class="botao botao--primario dialogo__acao"
+          type="button"
+          [disabled]="excluindoFicha() === pendenteExcluir.id"
+          (click)="confirmarExcluirFicha()"
+        >
+          <app-icone nome="excluir" />
+          {{ excluindoFicha() === pendenteExcluir.id ? 'Excluindo…' : 'Confirmar exclusão' }}
+        </button>
+        <button
+          class="botao botao--secundario dialogo__acao"
+          type="button"
+          [disabled]="excluindoFicha() === pendenteExcluir.id"
+          (click)="cancelarExcluirFicha()"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
 }

@@ -136,10 +136,25 @@ export class CampanhaDetalhe {
   protected readonly criando = signal(false);
   /** Assistente de criação (m3-16) aberto — agora disparado do próprio detalhe (m2-16). */
   protected readonly dialogCriar = signal(false);
-  /** `id` da ficha cuja duplicação está em voo (m3-52) — desabilita só o botão daquele card. */
+
+  /**
+   * Menu de ações (kebab) aberto no mini-card de uma ficha (m3-52) — mesmo padrão do menu do
+   * cabeçalho de `FichaVisualizar`, um por ficha, só um aberto por vez.
+   */
+  protected readonly menuFichaAberto = signal<number | null>(null);
+  /** Ficha pendente de confirmação de duplicação — guarda o nome dela e do dono pra mensagem. */
+  protected readonly confirmandoDuplicar = signal<{
+    id: number;
+    nome: string;
+    donoNome: string;
+  } | null>(null);
+  /** `id` da ficha cuja duplicação está em voo (m3-52) — desabilita só os botões daquela dialog. */
   protected readonly duplicando = signal<number | null>(null);
-  /** Confirmação efêmera pós-duplicação — o botão vira "Duplicado ✓" por ~1,5 s. */
-  protected readonly duplicado = signal<number | null>(null);
+  /** Ficha pendente de confirmação de exclusão (m3-52). */
+  protected readonly confirmandoExcluirFicha = signal<{ id: number; nome: string } | null>(null);
+  /** `id` da ficha cuja exclusão está em voo (m3-52) — desabilita só os botões daquela dialog. */
+  protected readonly excluindoFicha = signal<number | null>(null);
+
   /** Donos com o disclosure de fichas expandido no mobile (ignorado no desktop — sempre aberto). */
   protected readonly fichasExpandidas = signal<ReadonlySet<number>>(new Set());
 
@@ -614,6 +629,29 @@ export class CampanhaDetalhe {
       });
   }
 
+  /** Abre/fecha o menu de ações (kebab) de uma ficha específica no mini-card (m3-52). */
+  protected alternarMenuFicha(fichaId: number): void {
+    this.menuFichaAberto.update((atual) => (atual === fichaId ? null : fichaId));
+  }
+
+  /** Fecha o menu de ações de ficha aberto. */
+  protected fecharMenuFicha(): void {
+    this.menuFichaAberto.set(null);
+  }
+
+  /** Abre a confirmação de duplicação a partir do menu da ficha (m3-52). */
+  protected pedirDuplicar(ficha: ItemFicha, donoNome: string): void {
+    this.menuFichaAberto.set(null);
+    this.confirmandoDuplicar.set({ id: ficha.id, nome: ficha.nome, donoNome });
+  }
+
+  /** Cancela a duplicação pendente — inócuo enquanto a duplicação está em voo. */
+  protected cancelarDuplicar(): void {
+    if (this.duplicando() === null) {
+      this.confirmandoDuplicar.set(null);
+    }
+  }
+
   /**
    * Duplica uma ficha (m3-52, item 26) — só disponível aqui, no painel da campanha: a spec
    * original previa a ação no acervo desacoplado da `m3-28`, que ainda não existe neste código
@@ -622,19 +660,53 @@ export class CampanhaDetalhe {
    * `FichaService.duplicarFicha` no backend). Ao concluir, recarrega membros/fichas para o clone
    * aparecer no mini-card de quem duplicou (o dono do clone é sempre quem duplicou — §14).
    */
-  protected duplicarFicha(ficha: ItemFicha): void {
-    if (this.duplicando() !== null) {
+  protected confirmarDuplicar(): void {
+    const pendente = this.confirmandoDuplicar();
+    if (!pendente || this.duplicando() !== null) {
       return;
     }
-    this.duplicando.set(ficha.id);
+    this.duplicando.set(pendente.id);
     this.fichaService
-      .duplicarFicha(ficha.id)
+      .duplicarFicha(pendente.id)
       .pipe(finalize(() => this.duplicando.set(null)))
       .subscribe({
         next: () => {
-          this.duplicado.set(ficha.id);
-          setTimeout(() => this.duplicado.set(null), 1500);
+          this.confirmandoDuplicar.set(null);
           this.recarregarMembrosEFichas();
+        },
+      });
+  }
+
+  /** Abre a confirmação de exclusão a partir do menu da ficha (m3-52). */
+  protected pedirExcluirFicha(ficha: ItemFicha): void {
+    this.menuFichaAberto.set(null);
+    this.confirmandoExcluirFicha.set({ id: ficha.id, nome: ficha.nome });
+  }
+
+  /** Cancela a exclusão pendente — inócuo enquanto a exclusão está em voo. */
+  protected cancelarExcluirFicha(): void {
+    if (this.excluindoFicha() === null) {
+      this.confirmandoExcluirFicha.set(null);
+    }
+  }
+
+  /**
+   * Exclui a ficha (soft delete, só dono/mestre — §14, m3-52) e some da lista na hora — sem
+   * refetch, mesmo padrão otimista de `confirmarRemocaoMembro`.
+   */
+  protected confirmarExcluirFicha(): void {
+    const pendente = this.confirmandoExcluirFicha();
+    if (!pendente || this.excluindoFicha() !== null) {
+      return;
+    }
+    this.excluindoFicha.set(pendente.id);
+    this.fichaService
+      .excluirFicha(pendente.id)
+      .pipe(finalize(() => this.excluindoFicha.set(null)))
+      .subscribe({
+        next: () => {
+          this.confirmandoExcluirFicha.set(null);
+          this.fichas.update((lista) => lista.filter((ficha) => ficha.id !== pendente.id));
         },
       });
   }
