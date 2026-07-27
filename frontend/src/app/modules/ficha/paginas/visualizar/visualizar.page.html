@@ -39,6 +39,15 @@
                 <span class="ficha-pagina__menu-contagem">{{ acessos().length }}</span>
               }
             </button>
+            <button
+              class="ficha-pagina__menu-item"
+              type="button"
+              role="menuitem"
+              (click)="abrirExclusao()"
+            >
+              <app-icone nome="excluir" />
+              <span>Excluir ficha</span>
+            </button>
           </div>
         }
       </div>
@@ -149,6 +158,52 @@
       } @else {
         <p class="acesso__vazio">Nenhum acesso concedido ainda.</p>
       }
+    </div>
+  </div>
+}
+
+@if (dialogExclusao()) {
+  <div class="dialogo" role="dialog" aria-modal="true" aria-label="Excluir ficha">
+    <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="fecharExclusao()"></button>
+    <div class="dialogo__painel exclusao">
+      <header class="dialogo__cabecalho">
+        <span class="ficha-cartao__indice"><app-icone nome="excluir" /></span>
+        <h2 class="dialogo__titulo">Excluir Ficha</h2>
+        <span class="ficha-cartao__regua"></span>
+        <button
+          class="dialogo__fechar"
+          type="button"
+          aria-label="Fechar"
+          [disabled]="excluindo()"
+          (click)="fecharExclusao()"
+        >
+          ✕
+        </button>
+      </header>
+
+      <p class="exclusao__aviso">
+        Excluir <strong>{{ ficha()?.nome }}</strong>? Esta ação não pode ser desfeita.
+      </p>
+
+      <div class="exclusao__acoes">
+        <button
+          class="botao botao--primario exclusao__acao"
+          type="button"
+          [disabled]="excluindo()"
+          (click)="confirmarExclusao()"
+        >
+          <app-icone nome="excluir" />
+          {{ excluindo() ? 'Excluindo…' : 'Confirmar exclusão' }}
+        </button>
+        <button
+          class="botao botao--secundario exclusao__acao"
+          type="button"
+          [disabled]="excluindo()"
+          (click)="fecharExclusao()"
+        >
+          Cancelar
+        </button>
+      </div>
     </div>
   </div>
 }

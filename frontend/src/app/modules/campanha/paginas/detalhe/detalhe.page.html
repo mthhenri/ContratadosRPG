@@ -273,6 +273,26 @@
                             }
                           </span>
                         </div>
+                        @if (podeAjustarFicha(membro.usuarioId)) {
+                          <div class="detalhe__ficha-acoes">
+                            <button
+                              class="detalhe__ficha-duplicar"
+                              type="button"
+                              [attr.aria-label]="'Duplicar ' + ficha.nome"
+                              [disabled]="duplicando() === ficha.id"
+                              (click)="duplicarFicha(ficha)"
+                            >
+                              <app-icone [nome]="duplicado() === ficha.id ? 'check' : 'duplicar'" />
+                              {{
+                                duplicando() === ficha.id
+                                  ? 'Duplicando…'
+                                  : duplicado() === ficha.id
+                                    ? 'Duplicado'
+                                    : 'Duplicar'
+                              }}
+                            </button>
+                          </div>
+                        }
                       </div>
                     </li>
                   }

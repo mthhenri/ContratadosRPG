@@ -282,6 +282,34 @@
   }
 }
 
+// Confirmação de exclusão da ficha (m3-52) — mesmo tratamento do `.acesso` acima, dentro da
+// mesma dialog genérica.
+.exclusao {
+  &__aviso {
+    margin: 0 0 16px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  &__acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  &__acao {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 11px 18px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+}
+
 // Botões — bloco sancionado copiado de docs/design/tema/_componentes.scss.
 .botao {
   border-radius: var(--radius-control);

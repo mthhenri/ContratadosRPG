@@ -1097,6 +1097,73 @@ describe('FichaService', () => {
     });
   });
 
+  describe('duplicarFicha', () => {
+    it('duplica a ficha quando o autor é o dono — clone com nome "(cópia)", dono = quem duplicou, mesma campanha', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      const fichaClonada = {
+        id: 8,
+        campanhaId: 3,
+        usuarioId: usuarioDono.sub,
+        nome: 'Agente Alfa (cópia)',
+        dados: criarDados(),
+      };
+      fichaRepositorio.criarFicha.mockResolvedValue(fichaClonada);
+
+      const resultado = await service.duplicarFicha({ id: 5 }, usuarioDono);
+
+      expect(fichaRepositorio.criarFicha).toHaveBeenCalledWith({
+        campanhaId: 3,
+        usuarioId: usuarioDono.sub,
+        tipo: TipoFichaEnum.JOGADOR,
+        nome: 'Agente Alfa (cópia)',
+        dados: comSnapshot(criarDados()),
+      });
+      expect(resultado).toBe(fichaClonada);
+      // Não herda acessos de visualização — `criarFicha` nunca toca `usuario_ficha_acesso`.
+      expect(fichaRepositorio.concederAcesso).not.toHaveBeenCalled();
+    });
+
+    it('mestre duplica a ficha de outro membro — o clone pertence a quem duplicou, não ao dono original', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.MESTRE,
+      });
+      fichaRepositorio.criarFicha.mockResolvedValue({ id: 9 });
+
+      await service.duplicarFicha({ id: 5 }, usuarioMestre);
+
+      expect(fichaRepositorio.criarFicha).toHaveBeenCalledWith(
+        expect.objectContaining({ campanhaId: 3, usuarioId: usuarioMestre.sub }),
+      );
+    });
+
+    it('lança UnauthorizedAccessException quando o autor não é dono nem mestre da ficha original', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+
+      await expect(service.duplicarFicha({ id: 5 }, usuarioMembro)).rejects.toThrow(
+        UnauthorizedAccessException,
+      );
+
+      expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+    });
+
+    it('lança ResourceNotFoundException quando a ficha original não existe', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(null);
+
+      await expect(service.duplicarFicha({ id: 99 }, usuarioDono)).rejects.toThrow(
+        ResourceNotFoundException,
+      );
+
+      expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+    });
+  });
+
   describe('concederAcesso', () => {
     it('concede o acesso quando o autor é o dono e o alvo é membro da campanha', async () => {
       fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);

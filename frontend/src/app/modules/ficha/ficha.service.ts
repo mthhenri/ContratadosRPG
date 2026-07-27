@@ -103,4 +103,21 @@ export class FichaService {
       .delete<StandardResponse<FichaAcessoRevogadoDto>>(`${this.base}/${fichaId}/acesso/${usuarioId}`)
       .pipe(map((resposta) => resposta.dados as FichaAcessoRevogadoDto));
   }
+
+  /** Exclui (soft delete) a ficha — só o dono ou o mestre (§14; barrado com 403 no backend, m3-52). */
+  excluirFicha(id: number): Observable<void> {
+    return this.httpClient
+      .delete<StandardResponse<null>>(`${this.base}/${id}`)
+      .pipe(map(() => undefined));
+  }
+
+  /**
+   * Duplica a ficha (m3-52): cria um clone com nome "(cópia)", dono = quem duplicou, sem herdar
+   * acessos de visualização. Só o dono ou o mestre da ficha original podem duplicar (§14).
+   */
+  duplicarFicha(id: number): Observable<FichaCriadaDto> {
+    return this.httpClient
+      .post<StandardResponse<FichaCriadaDto>>(`${this.base}/${id}/duplicar`, {})
+      .pipe(map((resposta) => resposta.dados as FichaCriadaDto));
+  }
 }

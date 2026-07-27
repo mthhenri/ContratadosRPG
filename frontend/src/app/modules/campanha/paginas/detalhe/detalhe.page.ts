@@ -136,6 +136,10 @@ export class CampanhaDetalhe {
   protected readonly criando = signal(false);
   /** Assistente de criação (m3-16) aberto — agora disparado do próprio detalhe (m2-16). */
   protected readonly dialogCriar = signal(false);
+  /** `id` da ficha cuja duplicação está em voo (m3-52) — desabilita só o botão daquele card. */
+  protected readonly duplicando = signal<number | null>(null);
+  /** Confirmação efêmera pós-duplicação — o botão vira "Duplicado ✓" por ~1,5 s. */
+  protected readonly duplicado = signal<number | null>(null);
   /** Donos com o disclosure de fichas expandido no mobile (ignorado no desktop — sempre aberto). */
   protected readonly fichasExpandidas = signal<ReadonlySet<number>>(new Set());
 
@@ -606,6 +610,31 @@ export class CampanhaDetalhe {
         next: (fichaCriada) => {
           this.dialogCriar.set(false);
           void this.router.navigate(['/painel', this.id, 'ficha', fichaCriada.id]);
+        },
+      });
+  }
+
+  /**
+   * Duplica uma ficha (m3-52, item 26) — só disponível aqui, no painel da campanha: a spec
+   * original previa a ação no acervo desacoplado da `m3-28`, que ainda não existe neste código
+   * (`campanha_id` continua `NOT NULL`, sem rota `/fichas`); a pedido do autor, o clone nasce na
+   * **mesma campanha** (única opção possível sem a coluna nullable — ver a nota em
+   * `FichaService.duplicarFicha` no backend). Ao concluir, recarrega membros/fichas para o clone
+   * aparecer no mini-card de quem duplicou (o dono do clone é sempre quem duplicou — §14).
+   */
+  protected duplicarFicha(ficha: ItemFicha): void {
+    if (this.duplicando() !== null) {
+      return;
+    }
+    this.duplicando.set(ficha.id);
+    this.fichaService
+      .duplicarFicha(ficha.id)
+      .pipe(finalize(() => this.duplicando.set(null)))
+      .subscribe({
+        next: () => {
+          this.duplicado.set(ficha.id);
+          setTimeout(() => this.duplicado.set(null), 1500);
+          this.recarregarMembrosEFichas();
         },
       });
   }

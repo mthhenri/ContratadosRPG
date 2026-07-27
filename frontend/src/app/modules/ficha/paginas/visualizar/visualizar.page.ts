@@ -148,6 +148,9 @@ export class FichaVisualizar {
   protected readonly menuAberto = signal(false);
   /** Dialog de gestão de acesso aberta (m3-10 — tira o painel do corpo da tela). */
   protected readonly dialogAcesso = signal(false);
+  /** Dialog de confirmação de exclusão aberta (m3-52). */
+  protected readonly dialogExclusao = signal(false);
+  protected readonly excluindo = signal(false);
 
   /** Membro selecionado para receber acesso (Reactive Forms — sem `ngModel`). */
   protected readonly membroParaConceder = new FormControl<number | null>(null);
@@ -353,6 +356,39 @@ export class FichaVisualizar {
   /** Fecha a dialog de gestão de acesso. */
   protected fecharAcesso(): void {
     this.dialogAcesso.set(false);
+  }
+
+  /** Abre a dialog de confirmação de exclusão (a partir do menu, m3-52). */
+  protected abrirExclusao(): void {
+    this.menuAberto.set(false);
+    this.dialogExclusao.set(true);
+  }
+
+  /** Fecha a dialog de exclusão — inócuo enquanto a exclusão está em voo. */
+  protected fecharExclusao(): void {
+    if (!this.excluindo()) {
+      this.dialogExclusao.set(false);
+    }
+  }
+
+  /**
+   * Exclui a ficha (soft delete no backend, só dono/mestre — §14) e volta ao detalhe da campanha,
+   * de onde a ficha some da lista (m3-52). Sem affordance de duplicar aqui — só no painel da
+   * campanha (`CampanhaDetalhe`), a pedido do autor.
+   */
+  protected confirmarExclusao(): void {
+    if (this.excluindo()) {
+      return;
+    }
+    this.excluindo.set(true);
+    this.fichaService
+      .excluirFicha(this.fichaId)
+      .pipe(finalize(() => this.excluindo.set(false)))
+      .subscribe({
+        next: () => {
+          void this.router.navigate(['/painel', this.campanhaId]);
+        },
+      });
   }
 
   /**

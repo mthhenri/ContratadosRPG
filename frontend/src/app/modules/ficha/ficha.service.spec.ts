@@ -172,4 +172,29 @@ describe('FichaService', () => {
 
     expect(recebido).toEqual(revogado);
   });
+
+  it('exclui uma ficha pelo id (m3-52)', () => {
+    const { servico, http } = criar();
+
+    let concluido = false;
+    servico.excluirFicha(3).subscribe(() => (concluido = true));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/ficha/3'));
+    expect(requisicao.request.method).toBe('DELETE');
+    requisicao.flush(envelope(null));
+
+    expect(concluido).toBe(true);
+  });
+
+  it('duplica uma ficha pela rota ficha/:id/duplicar (m3-52)', () => {
+    const { servico, http } = criar();
+    const clonada: FichaCriadaDto = { id: 8, campanhaId: 9, usuarioId: 7, nome: 'Kane (cópia)', dados };
+
+    let recebido: FichaCriadaDto | undefined;
+    servico.duplicarFicha(3).subscribe((r) => (recebido = r));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/ficha/3/duplicar'));
+    expect(requisicao.request.method).toBe('POST');
+    requisicao.flush(envelope(clonada));
+
+    expect(recebido).toEqual(clonada);
+  });
 });

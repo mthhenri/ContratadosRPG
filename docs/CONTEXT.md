@@ -1,6 +1,50 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-26 (**m3-51 — Permissões granulares de acesso**: task `m3-51` do
+> Última atualização: 2026-07-27 (**m3-52 — Acervo de ficha: excluir/duplicar (escopo adaptado, a
+> pedido do autor)**: a spec `m3-52` pressupõe a tela de acervo da `m3-28` (rota `/fichas`,
+> `campanha_id` nullable, `listarMinhasFichas`) — **que nunca foi implementada** neste código
+> (continua no backlog, sem migration, sem rota). A pedido do autor, o escopo desta rodada foi
+> restrito ao que dá pra entregar **sem** a `m3-28`: **excluir** na própria tela da ficha e
+> **duplicar** só no painel da campanha; o resto fica **documentado como pendente** (ver a seção
+> "Adaptação de escopo" na spec, em `docs/specs/done/m3-52-ficha-acervo-excluir-duplicar.spec.md`).
+> **(1) Excluir** — novo item "Excluir ficha" no menu (kebab) do cabeçalho de `FichaVisualizar`
+> (`/painel/:campanhaId/ficha/:id`), com uma dialog de confirmação (mesmo padrão `.dialogo` já
+> usado pela gestão de acesso — `dialogExclusao`/`excluindo`, `abrirExclusao`/`fecharExclusao`/
+> `confirmarExclusao`); confirmar chama `FichaService.excluirFicha` (`DELETE /ficha/:id`, endpoint
+> que já existia desde a `m3-03` — só faltava a affordance de UI) e navega de volta ao detalhe da
+> campanha. Entregue **conforme a spec original** — este entregável não dependia da `m3-28`.
+> **(2) Duplicar (net-new)** — novo endpoint `POST /ficha/:id/duplicar` (backend):
+> `FichaController.duplicar` → `FichaService.duplicarFicha`, que exige permissão de **edição** da
+> ficha original (§14 — só dono/mestre, `validarPermissaoEdicao`) e então **reusa `criarFicha` por
+> inteiro** (mesmo snapshot de máximas/preset de Iniciativa/validação `shared/regras`): clona
+> `dados`, nome vira `"<nome> (cópia)"`, dono = quem duplicou (nunca o dono original), sem herdar
+> acessos de visualização (`criarFicha` nunca toca `usuario_ficha_acesso`). Contrato: novo
+> `FichaDuplicarDto { id }` em `ficha-operacao.dtos.ts`; a saída reaproveita `FichaCriadaDto` (a
+> duplicação **é** uma criação, sem DTO de saída dedicado — decisão documentada no código, seguindo
+> a skill `dto-conventions`). **Divergência da spec original:** como `campanha_id` continua
+> `NOT NULL` (sem a `m3-28`), o clone **não nasce solto** — nasce na **mesma campanha** da ficha
+> original, única opção possível sem a coluna nullable; a affordance "Duplicar" só aparece no
+> mini-card de cada ficha em `CampanhaDetalhe` (`m2-16`), gated por `podeAjustarFicha` (mesma regra
+> dono/mestre reusada dos passos de Vida/Energia), com feedback "Duplicando…"/"Duplicado ✓" (mesmo
+> padrão de `regenerarConvite`) e recarregando membros/fichas ao concluir (`recarregarMembrosEFichas`,
+> já existente). Novo ícone `duplicar` (dois retângulos sobrepostos) em `shared/icone`. **Testes:**
+> backend +4 (`ficha.service.spec.ts` — dono duplica, mestre duplica em nome de quem duplicou
+> (nunca o dono original), `UnauthorizedAccessException` para não-dono/não-mestre,
+> `ResourceNotFoundException` para ficha inexistente) — 135/135 backend. Frontend +2 no
+> `FichaService` (excluir/duplicar via HTTP) + 5 em `FichaVisualizar` (menu/dialog de exclusão,
+> cancelar, confirmar navega) + 3 em `CampanhaDetalhe` (mestre vê "Duplicar" em qualquer ficha,
+> jogador só na própria, clique chama o serviço e recarrega a lista) — 527/528 frontend (1 falha
+> pré-existente alheia — "apelido de equipamento", m3-33 — já registrada em rodadas anteriores;
+> shared 452/452 inalterado). Lint/build limpos nos três workspaces (o único erro de lint
+> pré-existente, em `ficha.service.spec.ts` linha 737, já existia antes desta task). Spec em
+> `docs/specs/done/m3-52-ficha-acervo-excluir-duplicar.spec.md`, com a seção "Adaptação de escopo"
+> documentando o que falta para quando a `m3-28` for implementada (acervo `/fichas` em si,
+> `campanha_id` nullable, `listarMinhasFichas`, duplicar nascendo solto, atribuir/remover
+> campanha). **Próxima task (fila do lote `m3-40`…`m3-56`): `m3-53`** (ficha — exportar PDF); esta
+> branch (`claude/redesign-ficha-screen-061wgy`) também tem a `m3-38` (redesenho visual da ficha)
+> como task **própria e distinta**, ainda `active/` — não tocada nesta rodada.
+>
+> Última atualização anterior: 2026-07-26 (**m3-51 — Permissões granulares de acesso**: task `m3-51` do
 > lote de refino `m3-40`…`m3-56` implementada. Quatro entregáveis independentes. **(1) Visualizador
 > não rola dados (item 24).** Novo conceito `podeRolar` — distinto de `ajustavel`/edição, propositalmente
 > granular para uma futura concessão de rolagem sem edição não exigir reabrir o contrato — como

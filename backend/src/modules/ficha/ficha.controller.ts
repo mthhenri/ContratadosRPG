@@ -76,6 +76,14 @@ export class FichaController {
     return this.fichaService.excluirFicha({ id }, usuarioAtivo);
   }
 
+  @Post(':id/duplicar')
+  duplicar(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<FichaCriadaDto> {
+    return this.fichaService.duplicarFicha({ id }, usuarioAtivo);
+  }
+
   @Get(':id/acesso')
   listarAcessos(
     @Param('id', ParseIntPipe) id: number,

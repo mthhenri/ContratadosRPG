@@ -608,6 +608,47 @@
     }
   }
 
+  // Ação "Duplicar" (m3-52) — linha própria abaixo dos vitais, só dono/mestre da ficha
+  // (`podeAjustarFicha`, mesma checagem já usada nos passos de Vida/Energia).
+  &__ficha-acoes {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 2px;
+  }
+
+  &__ficha-duplicar {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+    app-icone {
+      font-size: 11px;
+    }
+
+    &:hover:not(:disabled) {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--surface-2);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+  }
+
   // Ações de gestão do mestre sobre um jogador (transferir mestre / remover) — botões-ícone
   // discretos, mesmo tratamento do &__copiar (aqui sobre --surface-2, hover pra --surface).
   &__membro-acoes {
@@ -726,6 +767,10 @@
     &__membro-acao {
       width: bp.$alvo-toque;
       height: bp.$alvo-toque;
+    }
+
+    &__ficha-duplicar {
+      min-height: bp.$alvo-toque;
     }
 
     &__nova-ficha {

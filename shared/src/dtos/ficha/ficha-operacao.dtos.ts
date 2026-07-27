@@ -125,6 +125,17 @@ export interface FichaExcluirDto {
 }
 
 /**
+ * Entrada da duplicação (m3-52, item 26) — o `id` da ficha **original** vem do `@Param`, injetado
+ * no DTO pela controller. Só o dono ou o mestre da ficha original podem duplicar (§14, mesma regra
+ * de `validarPermissaoEdicao`); o clone pertence sempre a quem duplicou, nunca ao dono original. A
+ * saída reaproveita `FichaCriadaDto` — a duplicação **é** uma criação (`duplicarFicha` reusa
+ * `criarFicha` por inteiro), sem um DTO de saída dedicado para o mesmo formato.
+ */
+export interface FichaDuplicarDto {
+  readonly id: number;
+}
+
+/**
  * Entrada interna do `FichaRepository.criarFicha` — inclui o `usuarioId` do dono (resolvido do
  * JWT na service) e o `tipo` (`codigo` de `tipo_ficha`; o repositório traduz `codigo → id` no
  * SQL — §10.2.12). Só service ↔ repository.

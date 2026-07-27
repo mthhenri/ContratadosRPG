@@ -10,6 +10,7 @@ import type {
   FichaCriadaDto,
   FichaCriarDto,
   FichaDerivadosDto,
+  FichaDuplicarDto,
   FichaExcluirDto,
   FichaHabilidadeDto,
   FichaIdentidadeDto,
@@ -221,6 +222,41 @@ export class FichaService {
 
     await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
     await this.fichaRepositorio.excluirFicha(dto);
+  }
+
+  /**
+   * Duplica uma ficha (m3-52, item 26): clona o documento de jogo (`dados`) e cria uma ficha nova
+   * com nome `"<nome> (cópia)"`, dono = quem duplicou (nunca o dono original) e sem herdar acessos
+   * de visualização (`usuario_ficha_acesso`) — o clone nasce sem nenhuma concessão, já que
+   * `criarFicha` nunca as toca. Exige permissão de **edição** da ficha original (§14: só dono ou
+   * mestre). Reusa `criarFicha` por inteiro (mesmo snapshot de máximas/preset de Iniciativa/
+   * validação contra `shared/regras`), então o retorno é o próprio `FichaCriadaDto` — a duplicação
+   * **é** uma criação, sem DTO de saída dedicado. `ResourceNotFoundException` se a ficha original
+   * não existir; `UnauthorizedAccessException` se o autor não puder editá-la.
+   *
+   * **Adaptação de escopo (a spec `m3-52` pressupõe a `m3-28`, ainda não implementada neste
+   * código — `campanha_id` continua `NOT NULL`, sem acervo `/fichas`).** A spec original previa o
+   * clone nascendo **solto** (sem campanha). A pedido do autor, esta task ficou restrita a
+   * **excluir na própria tela da ficha** + **duplicar só no painel da campanha**: o clone nasce na
+   * **mesma campanha** da ficha original — única opção possível sem a coluna nullable — e aparece
+   * no mini-card do dono no detalhe da campanha (m2-16). Revisitar quando a `m3-28` existir.
+   */
+  async duplicarFicha(dto: FichaDuplicarDto, usuarioAtivo: JwtPayload): Promise<FichaCriadaDto> {
+    const fichaOriginal = await this.fichaRepositorio.recuperarPorId({ id: dto.id });
+    if (!fichaOriginal) {
+      throw new ResourceNotFoundException('Ficha');
+    }
+
+    await this.validarPermissaoEdicao(fichaOriginal, usuarioAtivo);
+
+    return this.criarFicha(
+      {
+        campanhaId: fichaOriginal.campanhaId,
+        nome: `${fichaOriginal.nome} (cópia)`,
+        dados: fichaOriginal.dados,
+      },
+      usuarioAtivo,
+    );
   }
 
   /**

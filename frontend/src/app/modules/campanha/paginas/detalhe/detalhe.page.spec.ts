@@ -80,6 +80,9 @@ describe('CampanhaDetalhe', () => {
       alterarFicha: vi.fn((id: number, dto: { nome: string; dados: unknown }) =>
         of({ id, campanhaId: CAMPANHA_ID, usuarioId: 0, nome: dto.nome, dados: dto.dados }),
       ),
+      duplicarFicha: vi.fn((id: number) =>
+        of({ id: 100, campanhaId: CAMPANHA_ID, usuarioId: opts.usuarioId, nome: `Clone de ${id} (cópia)` }),
+      ),
     };
     const contextoService = { definir: vi.fn(), limpar: vi.fn() };
     const sessaoService = { usuario: () => ({ id: opts.usuarioId, login: 'x', nome: 'x' }) };
@@ -771,6 +774,35 @@ describe('CampanhaDetalhe', () => {
         } finally {
           vi.useRealTimers();
         }
+      });
+    });
+
+    // m3-52: "Duplicar" só no painel da campanha (a m3-28/acervo ainda não existe).
+    describe('duplicar ficha (m3-52)', () => {
+      it('mestre vê "Duplicar" em qualquer ficha', () => {
+        const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+        expect(raiz.querySelector('[aria-label="Duplicar Kane"]')).not.toBeNull();
+        expect(raiz.querySelector('[aria-label="Duplicar Vera"]')).not.toBeNull();
+      });
+
+      it('jogador comum só vê "Duplicar" na própria ficha, nunca na do mestre', () => {
+        const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+
+        expect(raiz.querySelector('[aria-label="Duplicar Vera"]')).not.toBeNull();
+        expect(raiz.querySelector('[aria-label="Duplicar Kane"]')).toBeNull();
+      });
+
+      it('clique chama FichaService.duplicarFicha e recarrega a lista de fichas', () => {
+        const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+        expect(fichaService.listarFichas).toHaveBeenCalledTimes(1);
+
+        const botao = raiz.querySelector('[aria-label="Duplicar Kane"]') as HTMLButtonElement;
+        botao.click();
+        fixture.detectChanges();
+
+        expect(fichaService.duplicarFicha).toHaveBeenCalledWith(3);
+        expect(fichaService.listarFichas).toHaveBeenCalledTimes(2);
       });
     });
   });

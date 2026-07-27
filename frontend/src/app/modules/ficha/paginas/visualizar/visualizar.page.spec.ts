@@ -90,6 +90,7 @@ describe('FichaVisualizar', () => {
       alterarFicha: vi.fn(
         () => of({ id: 42, campanhaId: 9, usuarioId: 7, nome: 'Novo', dados } as FichaAlteradaDto),
       ),
+      excluirFicha: vi.fn(() => of(undefined)),
     };
     const campanhaService = { listarMembros: vi.fn(() => of(membros)) };
     const sessaoService = {
@@ -195,6 +196,40 @@ describe('FichaVisualizar', () => {
     fixture.componentInstance['abrirAcesso']();
     fixture.detectChanges();
     expect(raiz.querySelector('.dialogo .acesso')).not.toBeNull();
+  });
+
+  describe('excluir ficha (m3-52)', () => {
+    it('não oferece "Excluir ficha" a um membro comum (sem menu de ações)', () => {
+      const { raiz } = montar({ usuarioLogadoId: 11 });
+      expect(raiz.querySelector('.ficha-pagina__menu-botao')).toBeNull();
+    });
+
+    it('abre a confirmação de exclusão pelo menu para o dono', () => {
+      const { raiz, fixture } = montar({ usuarioLogadoId: 7 });
+      expect(raiz.querySelector('.exclusao')).toBeNull();
+      fixture.componentInstance['abrirExclusao']();
+      fixture.detectChanges();
+      expect(raiz.querySelector('.dialogo .exclusao')).not.toBeNull();
+    });
+
+    it('cancelar fecha a dialog sem excluir', () => {
+      const { raiz, fixture, fichaService } = montar({ usuarioLogadoId: 7 });
+      fixture.componentInstance['abrirExclusao']();
+      fixture.detectChanges();
+      fixture.componentInstance['fecharExclusao']();
+      fixture.detectChanges();
+      expect(raiz.querySelector('.exclusao')).toBeNull();
+      expect(fichaService.excluirFicha).not.toHaveBeenCalled();
+    });
+
+    it('confirmar exclui a ficha e navega de volta ao detalhe da campanha', () => {
+      const { fixture, fichaService, navegarEspiao } = montar({ usuarioLogadoId: 7 });
+      fixture.componentInstance['abrirExclusao']();
+      fixture.componentInstance['confirmarExclusao']();
+
+      expect(fichaService.excluirFicha).toHaveBeenCalledWith(42);
+      expect(navegarEspiao).toHaveBeenCalledWith(['/painel', 9]);
+    });
   });
 
   describe('expulsão em tempo real ao revogar acesso (m3-51, item 27)', () => {

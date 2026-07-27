@@ -9,7 +9,8 @@ import { Component, input } from '@angular/core';
  * (`sistema-v4.1.0.md` — "Condições"; m2-16b), usadas no editor e no mini-card de campanha; e
  * `infinito`, marca de lesão permanente na aba Sanidade; `alerta`, sinal de sobrecarga na linha
  * "Inventário"; `camadas`/`teto`, toggles "não conta no total/teto" das modificações de item; e
- * `busca`, botão de busca de itens na aba Inventário.
+ * `busca`, botão de busca de itens na aba Inventário; e `duplicar`, ação de clonar uma ficha no
+ * painel da campanha (m3-52).
  */
 export type IconeNome =
   | 'agente'
@@ -64,7 +65,8 @@ export type IconeNome =
   | 'alerta'
   | 'camadas'
   | 'teto'
-  | 'busca';
+  | 'busca'
+  | 'duplicar';
 
 /**
  * Ícone monocromático de linha (SVG inline, `stroke: currentColor`) — reutilizado nos menus de
