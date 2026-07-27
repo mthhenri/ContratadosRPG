@@ -275,51 +275,16 @@
                         </div>
                         @if (podeAjustarFicha(membro.usuarioId)) {
                           <div class="detalhe__ficha-acoes">
-                            <div class="detalhe__ficha-menu-container">
-                              <button
-                                class="detalhe__ficha-menu-botao"
-                                type="button"
-                                [attr.aria-label]="'Ações de ' + ficha.nome"
-                                aria-haspopup="menu"
-                                [attr.aria-expanded]="menuFichaAberto() === ficha.id"
-                                (click)="alternarMenuFicha(ficha.id, $event)"
-                              >
-                                ⋯
-                              </button>
-                              @if (menuFichaAberto() === ficha.id) {
-                                <button
-                                  class="detalhe__ficha-menu-fundo"
-                                  type="button"
-                                  aria-label="Fechar menu"
-                                  (click)="fecharMenuFicha()"
-                                ></button>
-                                <div
-                                  class="detalhe__ficha-menu"
-                                  role="menu"
-                                  [style.top.px]="menuFichaPosicao()?.top"
-                                  [style.right.px]="menuFichaPosicao()?.right"
-                                >
-                                  <button
-                                    class="detalhe__ficha-menu-item"
-                                    type="button"
-                                    role="menuitem"
-                                    (click)="pedirDuplicar(ficha, membro.nome)"
-                                  >
-                                    <app-icone nome="duplicar" />
-                                    <span>Duplicar ficha</span>
-                                  </button>
-                                  <button
-                                    class="detalhe__ficha-menu-item"
-                                    type="button"
-                                    role="menuitem"
-                                    (click)="pedirExcluirFicha(ficha)"
-                                  >
-                                    <app-icone nome="excluir" />
-                                    <span>Excluir ficha</span>
-                                  </button>
-                                </div>
-                              }
-                            </div>
+                            <button
+                              class="detalhe__ficha-menu-botao"
+                              type="button"
+                              [attr.aria-label]="'Ações de ' + ficha.nome"
+                              aria-haspopup="menu"
+                              [attr.aria-expanded]="menuFichaAberto()?.id === ficha.id"
+                              (click)="alternarMenuFicha(ficha, membro.nome, $event)"
+                            >
+                              ⋯
+                            </button>
                           </div>
                         }
                       </div>
@@ -421,6 +386,41 @@
     (criar)="criarFicha($event)"
     (cancelar)="fecharCriarFicha()"
   />
+}
+
+<!--
+  Menu de ações (kebab) da ficha (m3-52) — fica na RAIZ do template, fora da lista de fichas
+  (`.detalhe__fichas-lista`/`.detalhe__membros`, que têm `overflow-y: auto` + `mask-image` e
+  recortariam o dropdown na pintura mesmo sendo `position: fixed` — ver a nota em
+  `menuFichaAberto` no componente). Mesmo lugar das dialogs abaixo, que já não sofrem esse corte.
+-->
+@if (menuFichaAberto(); as menuAberto) {
+  <button class="detalhe__ficha-menu-fundo" type="button" aria-label="Fechar menu" (click)="fecharMenuFicha()"></button>
+  <div
+    class="detalhe__ficha-menu"
+    role="menu"
+    [style.top.px]="menuFichaPosicao()?.top"
+    [style.right.px]="menuFichaPosicao()?.right"
+  >
+    <button
+      class="detalhe__ficha-menu-item"
+      type="button"
+      role="menuitem"
+      (click)="pedirDuplicar(menuAberto.id, menuAberto.nome, menuAberto.donoNome)"
+    >
+      <app-icone nome="duplicar" />
+      <span>Duplicar ficha</span>
+    </button>
+    <button
+      class="detalhe__ficha-menu-item"
+      type="button"
+      role="menuitem"
+      (click)="pedirExcluirFicha(menuAberto.id, menuAberto.nome)"
+    >
+      <app-icone nome="excluir" />
+      <span>Excluir ficha</span>
+    </button>
+  </div>
 }
 
 @if (confirmandoDuplicar(); as pendenteDuplicar) {

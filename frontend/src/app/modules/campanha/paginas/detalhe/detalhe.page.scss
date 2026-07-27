@@ -608,17 +608,14 @@
     }
   }
 
-  // Menu de ações (kebab) de uma ficha no mini-card (m3-52) — Duplicar/Excluir, mesmo padrão do
-  // `.ficha-pagina__menu*` do cabeçalho de `FichaVisualizar` (copiado aqui, view encapsulation);
-  // só dono/mestre da ficha (`podeAjustarFicha`, mesma checagem já usada nos passos de Vida/Energia).
+  // Botão do menu de ações (kebab) de uma ficha no mini-card (m3-52) — o dropdown em si
+  // (`&__ficha-menu*`, estilizado abaixo, fora do `.detalhe`) mora na raiz do template, não aqui
+  // dentro — ver a nota em `menuFichaAberto` no componente sobre por quê. Só dono/mestre da ficha
+  // (`podeAjustarFicha`, mesma checagem já usada nos passos de Vida/Energia).
   &__ficha-acoes {
     display: flex;
     justify-content: flex-end;
     margin-top: 2px;
-  }
-
-  &__ficha-menu-container {
-    position: relative;
   }
 
   &__ficha-menu-botao {

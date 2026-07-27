@@ -138,16 +138,24 @@ export class CampanhaDetalhe {
   protected readonly dialogCriar = signal(false);
 
   /**
-   * Menu de ações (kebab) aberto no mini-card de uma ficha (m3-52) — mesmo padrão do menu do
-   * cabeçalho de `FichaVisualizar`, um por ficha, só um aberto por vez.
+   * Ficha cujo menu de ações (kebab) está aberto no mini-card (m3-52) — guarda `id`/`nome`/
+   * `donoNome` porque o **DOM do dropdown vive na raiz do template** (fora da lista), não dentro
+   * do `@for` do card; só um aberto por vez.
+   *
+   * **Por que na raiz, e não junto do botão que abre?** `.detalhe__fichas-lista`/`.detalhe__membros`
+   * têm `overflow-y: auto` **e** `mask-image` (`appOverflowFade`, o fade do topo/base) — um elemento
+   * com `mask-image` cria um novo *stacking context*, e a combinação com `overflow` recorta **na
+   * pintura** qualquer descendente, mesmo `position: fixed` (que só escapa do problema de
+   * *containing block* pro cálculo de posição, não da pintura recortada do ancestral). Só *fixed*
+   * não bastou (tentativa anterior); o dropdown precisa morar fora dessa subárvore — mesmo lugar das
+   * dialogs de confirmação abaixo, que já renderizam sem corte por isso.
    */
-  protected readonly menuFichaAberto = signal<number | null>(null);
+  protected readonly menuFichaAberto = signal<{ id: number; nome: string; donoNome: string } | null>(
+    null,
+  );
   /**
-   * Posição do menu aberto (`position: fixed`, calculada do botão ao abrir) — os mini-cards vivem
-   * dentro de listas com `overflow-y: auto` (`.detalhe__fichas-lista`/`.detalhe__membros`), então um
-   * dropdown `position: absolute` comum ficava cortado pelo scroll do ancestral. `fixed` ancorado no
-   * viewport escapa desse corte; `right` (não `left`) mantém o menu alinhado à direita do botão,
-   * como antes.
+   * Posição do menu aberto (`position: fixed`, calculada do botão ao abrir, `getBoundingClientRect`).
+   * `right` (não `left`) mantém o menu alinhado à direita do botão.
    */
   protected readonly menuFichaPosicao = signal<{ top: number; right: number } | null>(null);
   /** Ficha pendente de confirmação de duplicação — guarda o nome dela e do dono pra mensagem. */
@@ -653,10 +661,10 @@ export class CampanhaDetalhe {
   /**
    * Abre/fecha o menu de ações (kebab) de uma ficha específica no mini-card (m3-52). Calcula a
    * posição `fixed` a partir do botão clicado (`getBoundingClientRect`) — ver a nota em
-   * `menuFichaPosicao` sobre o corte pelo scroll dos ancestrais.
+   * `menuFichaAberto` sobre por que o dropdown em si vive fora desta subárvore.
    */
-  protected alternarMenuFicha(fichaId: number, evento: MouseEvent): void {
-    if (this.menuFichaAberto() === fichaId) {
+  protected alternarMenuFicha(ficha: ItemFicha, donoNome: string, evento: MouseEvent): void {
+    if (this.menuFichaAberto()?.id === ficha.id) {
       this.fecharMenuFicha();
       return;
     }
@@ -665,7 +673,7 @@ export class CampanhaDetalhe {
       top: retangulo.bottom + 6,
       right: window.innerWidth - retangulo.right,
     });
-    this.menuFichaAberto.set(fichaId);
+    this.menuFichaAberto.set({ id: ficha.id, nome: ficha.nome, donoNome });
   }
 
   /** Fecha o menu de ações de ficha aberto. */
@@ -675,9 +683,9 @@ export class CampanhaDetalhe {
   }
 
   /** Abre a confirmação de duplicação a partir do menu da ficha (m3-52). */
-  protected pedirDuplicar(ficha: ItemFicha, donoNome: string): void {
-    this.menuFichaAberto.set(null);
-    this.confirmandoDuplicar.set({ id: ficha.id, nome: ficha.nome, donoNome });
+  protected pedirDuplicar(fichaId: number, fichaNome: string, donoNome: string): void {
+    this.fecharMenuFicha();
+    this.confirmandoDuplicar.set({ id: fichaId, nome: fichaNome, donoNome });
   }
 
   /** Cancela a duplicação pendente — inócuo enquanto a duplicação está em voo. */
@@ -713,9 +721,9 @@ export class CampanhaDetalhe {
   }
 
   /** Abre a confirmação de exclusão a partir do menu da ficha (m3-52). */
-  protected pedirExcluirFicha(ficha: ItemFicha): void {
-    this.menuFichaAberto.set(null);
-    this.confirmandoExcluirFicha.set({ id: ficha.id, nome: ficha.nome });
+  protected pedirExcluirFicha(fichaId: number, fichaNome: string): void {
+    this.fecharMenuFicha();
+    this.confirmandoExcluirFicha.set({ id: fichaId, nome: fichaNome });
   }
 
   /** Cancela a exclusão pendente — inócuo enquanto a exclusão está em voo. */
