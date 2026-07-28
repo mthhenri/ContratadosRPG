@@ -951,7 +951,7 @@ Algumas modificações possuem **Restrições**, indicadas pela coluna “Bloque
 **⬦ Empilhamento**  
 Empilhamento é a **aplicação da mesma modificação múltiplas vezes**. A marcação de □ (quadrado vazio) ao lado do nome indica o limite máximo, já o ■ (quadrado preenchido) marca quantos níveis são aplicados na primeira compra. Assim, ■□□□□ indica limite 5 com 1 nível inicial, enquanto ■■□ indica limite 3 com 2 níveis iniciais.  
 Mesmo que uma modificação conceda vários níveis na primeira compra, ela ainda custa apenas $ 750\. Entretanto, para fins de limite por Patente, **cada nível concedido é contabilizado como uma modificação**. Portanto, adquirir uma modificação com 3 níveis iniciais possui o valor de uma modificação (750 $) mas ocupa três espaços do limite de modificações do item.  
-Naturalmente, cada empilhamento **reaplica o efeito descrito**. Quando o comportamento for diferente, isso estará especificado no próprio efeito.  
+Naturalmente, cada empilhamento **reaplica o efeito descrito**. Quando o comportamento for diferente, isso estará especificado no próprio efeito. **Os níveis concedidos pela primeira compra (■■ ou mais) contam como uma única reaplicação do efeito** — o bônus não dobra só porque a modificação já nasce empilhada (ex.: Flexível, ■■, concede +1 ao Esquivar na primeira compra, não +2). Só os níveis pagos **depois** da primeira compra reaplicam o efeito, um a um.  
 A quantidade máxima de empilhamentos que você pode realizar de uma modificação é descrito em sua Patente ([Página 26](#⬡-prestígio-e-patentes)), esse limite não pode ser ultrapassado em compras **dentro da base**. Modificações encontradas por fora podem ser utilizadas por você, mas ao fim da missão, quaisquer equipamentos **fora da regulamentação** serão ajustados pela *Fundação SCP*. Isso significa que você receberá metade do valor de mercado por aquela modificação fora de acesso.
 
 **⬦ Aplicação de Modificações**  
@@ -1997,7 +1997,14 @@ Dentro da *Fundação SCP*, muitos agentes utilizam **Amplificadores**, disposit
 Um amplificador é uma peça ou módulo biotecnológico que é **acoplado ao seu agente**, de forma que, ele se torne algo natural de seu ser, sendo usado como se fosse uma parte de seu corpo desde sempre, mas, **há um custo**.  
 Amplificadores são muito similares à modificações, mas o alvo dessa vez é **você**. Eles também possuem empilhamento, mas seu limite máximo de amplificadores (contando seus empilhamentos) segue o seu atributo de **Vontade**, sendo **Vontade** × 3\.  
 O primeiro empilhamento de cada amplificador não tem efeitos de sanidade em seu agente, mas, à partir dele, cada empilhamento aplica **\-2 em testes de Vontade** do agente. Em questões monetárias, o primeiro empilhamento de um amplificador tem o custo de $ 3000, já seus demais empilhamentos custam $ 1000\.  
-Amplificadores que iniciam em ■■ já aplicam a penalidade de \-2 em testes de **Vontade**.
+Amplificadores que iniciam em ■■ já aplicam a penalidade de \-2 em testes de **Vontade**.  
+O **bônus principal** de cada amplificador segue a mesma regra das modificações de item (ver
+"⬦ Empilhamento", acima): não dobra pelos níveis da primeira compra. Um amplificador que já nasce
+em ■■ (`Conservador`, `Veloz`) tem sua primeira compra valendo uma única aplicação do efeito — o
+desconto de `Conservador` continua −1 (não −2), e o Deslocamento de `Veloz` continua +3 metros (não
++4) na primeira compra, mesmo já vindo com dois níveis. Isso vale só para o bônus; a penalidade de
+Vontade acima (e a penalidade cruzada própria de cada amplificador, quando houver) continuam
+contando o empilhamento literal, já ativas desde a primeira compra.
 
 A única forma de remover um amplificador é entre missões.
 

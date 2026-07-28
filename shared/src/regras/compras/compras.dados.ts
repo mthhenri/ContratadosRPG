@@ -149,7 +149,7 @@ export const MODIFICACOES: Partial<Record<ItemCategoriaEnum, readonly Modificaca
     { nome: 'Estabilizada', empilhamentosIniciais: 1, empilhamentoMaximo: 5, bloqueia: [], descricao: '+1 metro de raio por stack' },
     { nome: 'Persistente', empilhamentosIniciais: 1, empilhamentoMaximo: 2, bloqueia: [], descricao: '+1 turno de duração por stack' },
     { nome: 'Posicionável', empilhamentosIniciais: 1, empilhamentoMaximo: 5, bloqueia: ['Adesiva', 'Aerodinâmica', 'Corrosiva'], descricao: 'Instalável e ativável remotamente (30m; DT +2/+5m/stack)' },
-    { nome: 'Potente', empilhamentosIniciais: 2, empilhamentoMaximo: 4, bloqueia: [], descricao: '+2 dados de dano por stack' },
+    { nome: 'Potente', empilhamentosIniciais: 2, empilhamentoMaximo: 4, bloqueia: [], descricao: '+2 dados de dano por compra' },
     { nome: 'Estilhaços', empilhamentosIniciais: 3, empilhamentoMaximo: 5, bloqueia: [], descricao: 'Ignora 10 pontos de resistência por stack' },
   ],
   [ItemCategoriaEnum.ARMAS_DE_FOGO]: [
@@ -185,10 +185,10 @@ export const MODIFICACOES: Partial<Record<ItemCategoriaEnum, readonly Modificaca
     { nome: 'Camuflada', empilhamentosIniciais: 1, empilhamentoMaximo: 5, bloqueia: ['Antibombas', 'Blindada', 'Espinhos'], descricao: '−1 peso (mín. 1), −1 resist. por stack' },
     { nome: 'Combativo', empilhamentosIniciais: 1, empilhamentoMaximo: 5, bloqueia: ['Flexível'], apenasEscudos: true, descricao: '(Apenas escudos) Usa o escudo como arma CaC. Dano: (Peso)D3+FOR [Físico] máx 5 dados. Sem resist. ao atacar. +1 dado/stack extra' },
     { nome: 'Espinhos', empilhamentosIniciais: 1, empilhamentoMaximo: 5, bloqueia: ['Antibombas', 'Camuflada', 'Hazmat'], descricao: '1D6+VIG [Físico] ao atacante. +1 dado/stack' },
-    { nome: 'Flexível', empilhamentosIniciais: 2, empilhamentoMaximo: 5, bloqueia: ['Antibombas', 'Arremesso', 'Blindada', 'Combativo', 'Resistente'], descricao: '+1 ao Esquivar por stack' },
+    { nome: 'Flexível', empilhamentosIniciais: 2, empilhamentoMaximo: 5, bloqueia: ['Antibombas', 'Arremesso', 'Blindada', 'Combativo', 'Resistente'], descricao: '+1 ao Esquivar por compra' },
     { nome: 'Hazmat', empilhamentosIniciais: 1, empilhamentoMaximo: 5, bloqueia: ['Antibombas', 'Espinhos'], descricao: '+2 resist. [Químico] por stack' },
     { nome: 'Reforçada', empilhamentosIniciais: 1, empilhamentoMaximo: 5, bloqueia: ['Blindada'], descricao: '+1 na resist. principal por stack' },
-    { nome: 'Resistente', empilhamentosIniciais: 2, empilhamentoMaximo: 5, bloqueia: ['Flexível'], descricao: '+1 ao Bloquear por stack' },
+    { nome: 'Resistente', empilhamentosIniciais: 2, empilhamentoMaximo: 5, bloqueia: ['Flexível'], descricao: '+1 ao Bloquear por compra' },
   ],
   [ItemCategoriaEnum.EXOTICOS]: [
     { nome: 'Antimatéria', empilhamentosIniciais: 4, empilhamentoMaximo: 4, bloqueia: ['Faz Parte', 'Vibrante', 'Flamejante'], descricao: 'Muda o tipo de dano da arma para Dano Geral' },

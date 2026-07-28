@@ -1,16 +1,23 @@
 import type { FichaAtributosDto } from '../../dtos/ficha';
-import type { AmplificadorAplicadoDto } from '../compras';
+import { AMPLIFICADORES, type AmplificadorAplicadoDto } from '../compras';
 
 /**
  * Efeito mecânico dos Amplificadores (`docs/core/sistema-v4.1.0.md` — "⬡ Amplificadores"). Um
  * amplificador é "muito similar à modificação" (doc) — assim como uma modificação de item, seu
- * **bônus principal escala linearmente com os empilhamentos** (`valorPorEmpilhamento × empilhamentos`,
- * mesma regra de `Reforçada`/`Blindada` em `compras.ts`, mesmo quando a tabela não escreve "por
- * empilhamento" explicitamente — só a tabela de item escreve isso por extenso às vezes). **A partir
- * do 2º empilhamento**, soma-se ainda uma **penalidade que escala** com `empilhamentos − 1`
- * (clarificado pelo doc: "amplificadores que iniciam em ■■ já aplicam a penalidade... " — ou seja, a
- * contagem de empilhamento é sempre literal, mesmo quando a aquisição mínima já é 2). `Veloz` é a
- * única exceção onde o **próprio bônus** muda de ritmo depois do 1º empilhamento (doc: "+3 metros...
+ * **bônus principal escala com as compras** (`valorPorEmpilhamento × compras`, mesma regra de
+ * `Reforçada`/`Blindada` em `compras.ts`, mesmo quando a tabela não escreve "por empilhamento"
+ * explicitamente). "Compras" não é o empilhamento bruto: um amplificador que já nasce em ■■
+ * (`Conservador`, `Veloz`) tem a 1ª compra contando como **uma única aplicação** do bônus — ele não
+ * dobra só por já vir empilhado (doc — "Empilhamento": "cada empilhamento reaplica o efeito
+ * descrito", mas os níveis da 1ª compra não são reaplicações extras, são o que a própria compra
+ * concede). Só os níveis pagos **depois** da 1ª compra reaplicam o bônus, um por um.
+ *
+ * A **penalidade cruzada** (quando existe) tem semântica diferente e continua contando o
+ * empilhamento **bruto**, sempre literal: começa a valer **a partir do 2º empilhamento**, escalando
+ * com `empilhamentos − 1`, mesmo quando a aquisição mínima já é 2 (clarificado pelo doc:
+ * "Amplificadores que iniciam em ■■ já aplicam a penalidade de -2 em testes de Vontade" — a mesma
+ * regra vale para a penalidade própria de cada amplificador, ex. Veloz/Inventário). `Veloz` é a
+ * única exceção onde o **próprio bônus** muda de ritmo depois da 1ª compra (doc: "+3 metros...
  * empilhamentos adicionais aumentam **apenas** em +1 metro" — o advérbio "apenas" marca o contraste
  * com a escala normal das demais).
  *
@@ -27,13 +34,27 @@ export function empilhamentosAmplificador(
   return amplificadores.find((amplificador) => amplificador.nome === nome)?.empilhamentos ?? 0;
 }
 
-/** `valorPorEmpilhamento × empilhamentos` — o bônus principal do amplificador, escalando com os stacks. */
+/**
+ * Nº de compras de um amplificador (1ª compra + extras) — mesma contagem de
+ * `contarComprasModificacao` (`shared/regras/compras`), agora para amplificador: um amplificador que
+ * já nasce em ■■ (`Conservador`, `Veloz`) tem a 1ª compra valendo 1, não 2. 0 se não portado.
+ */
+function comprasAmplificador(amplificadores: readonly AmplificadorAplicadoDto[], nome: string): number {
+  const empilhamentos = empilhamentosAmplificador(amplificadores, nome);
+  if (empilhamentos === 0) {
+    return 0;
+  }
+  const empilhamentosIniciais = AMPLIFICADORES.find((amplificador) => amplificador.nome === nome)?.empilhamentosIniciais ?? 1;
+  return Math.max(1, empilhamentos - empilhamentosIniciais + 1);
+}
+
+/** `valorPorEmpilhamento × compras` — o bônus principal do amplificador, escalando com as compras (não dobra a 1ª compra em ■■). */
 function bonusEscalado(
   amplificadores: readonly AmplificadorAplicadoDto[],
   nome: string,
   valorPorEmpilhamento: number,
 ): number {
-  return valorPorEmpilhamento * empilhamentosAmplificador(amplificadores, nome);
+  return valorPorEmpilhamento * comprasAmplificador(amplificadores, nome);
 }
 
 /** `valorPorEmpilhamento × (empilhamentos − 1)` — penalidade que só passa a escalar do 2º empilhamento em diante. */
@@ -112,13 +133,14 @@ export function modificadoresTesteAmplificadores(
 }
 
 /**
- * Ajuste de **Deslocamento**: `Veloz` concede +3m no 1º empilhamento e +1m por empilhamento
- * adicional (única exceção com ritmo de escala diferente — doc: "Empilhamentos adicionais aumentam
- * apenas em +1 metro"); `Inventário` penaliza −1m por empilhamento além do 1º.
+ * Ajuste de **Deslocamento**: `Veloz` concede +3m na 1ª compra (mesmo já nascendo em ■■ — não
+ * dobra) e +1m por compra adicional (única exceção com ritmo de escala diferente — doc:
+ * "Empilhamentos adicionais aumentam apenas em +1 metro"); `Inventário` penaliza −1m por
+ * empilhamento além do 1º (penalidade — conta o empilhamento bruto, sempre literal).
  */
 export function ajusteDeslocamentoAmplificadores(amplificadores: readonly AmplificadorAplicadoDto[]): number {
-  const empilhamentosVeloz = empilhamentosAmplificador(amplificadores, 'Veloz');
-  const bonusVeloz = empilhamentosVeloz > 0 ? 3 + Math.max(0, empilhamentosVeloz - 1) : 0;
+  const comprasVeloz = comprasAmplificador(amplificadores, 'Veloz');
+  const bonusVeloz = comprasVeloz > 0 ? 3 + Math.max(0, comprasVeloz - 1) : 0;
   return bonusVeloz - penalidadeEscalada(amplificadores, 'Inventário', 1);
 }
 

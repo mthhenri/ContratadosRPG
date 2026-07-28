@@ -77,8 +77,9 @@ export interface BonusDefesaEquipamentoDto {
 
 /**
  * Bônus de Esquiva/Bloqueio/Defesa vindos de **itens de Proteções equipados** (`item.equipado ===
- * true`) — mods do catálogo por nome ("Flexível": +1 Esquivar/stack; "Resistente": +1 Bloquear/
- * stack) e efeito `DEFESA` de mods custom (`variante` Esquiva/Bloqueio/Defesa), via
+ * true`) — mods do catálogo por nome ("Flexível": +1 Esquivar/compra; "Resistente": +1 Bloquear/
+ * compra — a 1ª compra vale 1 aplicação mesmo já nascendo em ■■, não dobra) e efeito `DEFESA` de
+ * mods custom (`variante` Esquiva/Bloqueio/Defesa), via
  * `calcularStatItem` (fonte única — zero motor duplicado aqui). Quem consome soma isto **por cima**
  * do valor manual/calculado de cada stat, nunca escreve de volta no `derivados` (mesma filosofia
  * "manual + equipamento" de `resistencia.ts`/`amplificador.ts`).

@@ -16,12 +16,14 @@ import {
 
 /**
  * Efeito mecânico dos amplificadores conferido contra docs/core/sistema-v4.1.0.md —
- * "⬡ Amplificadores": bônus principal **escala** com os empilhamentos (`valorPorEmpilhamento ×
- * empilhamentos`, mesma regra das modificações de item — confirmado pelo autor: um amplificador é
- * "muito similar à modificação", e modificação sempre escala mesmo sem a tabela escrever "por
- * empilhamento" por extenso), penalidade cruzada escalando com `empilhamentos - 1` a partir do 2º.
- * `Veloz` é a única exceção onde o próprio ritmo de escala muda depois do 1º empilhamento (doc:
- * "Empilhamentos adicionais aumentam apenas em +1 metro").
+ * "⬡ Amplificadores": bônus principal **escala com as compras** (`valorPorEmpilhamento × compras`,
+ * mesma regra das modificações de item — um amplificador é "muito similar à modificação"). Compras
+ * ≠ empilhamento bruto: um amplificador que já nasce em ■■ (`Conservador`, `Veloz`) tem a 1ª compra
+ * valendo 1 aplicação do bônus, não 2 — só as compras extras (além da 1ª) reaplicam. A penalidade
+ * cruzada continua escalando com o empilhamento **bruto** (`empilhamentos - 1` a partir do 2º,
+ * sempre literal, mesmo quando a aquisição mínima já é 2). `Veloz` é a única exceção onde o próprio
+ * ritmo do bônus muda depois da 1ª compra (doc: "Empilhamentos adicionais aumentam apenas em +1
+ * metro").
  */
 function porta(nome: string, empilhamentos: number): AmplificadorAplicadoDto[] {
   return [{ nome, empilhamentos }];
@@ -104,13 +106,17 @@ describe('modificadoresTesteAmplificadores', () => {
 });
 
 describe('ajusteDeslocamentoAmplificadores', () => {
-  it('Veloz: +3m no 1º empilhamento (empilhamentoInicial é 2, mas testa a fórmula genérica)', () => {
+  it('Veloz: +3m na 1ª compra (empilhamentoInicial é 2, mas testa a fórmula genérica)', () => {
     expect(ajusteDeslocamentoAmplificadores(porta('Veloz', 1))).toBe(3);
   });
 
-  it('Veloz: empilhamentos adicionais somam apenas +1m cada (única exceção com ritmo de escala diferente)', () => {
-    expect(ajusteDeslocamentoAmplificadores(porta('Veloz', 2))).toBe(4);
-    expect(ajusteDeslocamentoAmplificadores(porta('Veloz', 4))).toBe(6);
+  it('Veloz: a 1ª compra (2 stacks, ■■) não dobra o bônus — continua +3m, não +4m', () => {
+    expect(ajusteDeslocamentoAmplificadores(porta('Veloz', 2))).toBe(3);
+  });
+
+  it('Veloz: compras adicionais somam apenas +1m cada (única exceção com ritmo de escala diferente)', () => {
+    expect(ajusteDeslocamentoAmplificadores(porta('Veloz', 3))).toBe(4);
+    expect(ajusteDeslocamentoAmplificadores(porta('Veloz', 4))).toBe(5);
   });
 
   it('Inventário penaliza -1m por empilhamento além do 1º', () => {
@@ -171,8 +177,8 @@ describe('aplicarReducaoCustoEnergia', () => {
     expect(aplicarReducaoCustoEnergia(porta('Conservador', 2), 1)).toBe(1);
   });
 
-  it('Conservador só existe em 0 ou 2 empilhamentos na prática — com os 2, reduz 2', () => {
-    expect(aplicarReducaoCustoEnergia(porta('Conservador', 2), 5)).toBe(3);
+  it('Conservador só existe em 0 ou 2 empilhamentos na prática — a 1ª compra (■■) não dobra: reduz só 1', () => {
+    expect(aplicarReducaoCustoEnergia(porta('Conservador', 2), 5)).toBe(4);
   });
 
   it('custo 0 permanece 0 (habilidade sem custo não vira "mínimo 1")', () => {

@@ -238,9 +238,11 @@ describe('calcularStatItem', () => {
     expect(calcularStatItem({ item: item('Motoserra', ItemCategoriaEnum.EXOTICOS, [mod('Vibrante', 1)]) })?.dano).toBe('2D8+1D8 [Físico]');
   });
 
-  it('Explosivos: Potente soma 2 dados de dano por empilhamento', () => {
-    // Granada de Mão 3D10; Potente inicia em 2 → +4 dados.
-    expect(calcularStatItem({ item: item('Granada de Mão', ItemCategoriaEnum.EXPLOSIVOS, [mod('Potente', 2)]) })?.dano).toBe('7D10 [Explosão]');
+  it('Explosivos: Potente soma 2 dados de dano por compra (a 1ª compra, mesmo já vindo em ■■, não dobra)', () => {
+    // Granada de Mão 3D10; Potente inicia em 2 (1ª compra) → +2 dados, não +4.
+    expect(calcularStatItem({ item: item('Granada de Mão', ItemCategoriaEnum.EXPLOSIVOS, [mod('Potente', 2)]) })?.dano).toBe('5D10 [Explosão]');
+    // Uma compra extra (3 stacks) reaplica o efeito: +4 dados.
+    expect(calcularStatItem({ item: item('Granada de Mão', ItemCategoriaEnum.EXPLOSIVOS, [mod('Potente', 3)]) })?.dano).toBe('7D10 [Explosão]');
   });
 
   it('Proteções: Blindada +2, Camuflada −1 (mín. 0) e Hazmat adiciona resistência Química', () => {
@@ -263,9 +265,14 @@ describe('calcularStatItem', () => {
    * Modificações" de Proteções e Escudos) não tinham efeito mecânico algum — só o chip descritivo.
    */
   describe('Proteções: Esquiva/Bloqueio/Defesa (m3-43)', () => {
-    it('Flexível soma Esquiva por stack; Resistente soma Bloqueio por stack (doc: "por stack")', () => {
-      expect(calcularStatItem({ item: item('Colete de Kevlar', ItemCategoriaEnum.PROTECOES, [mod('Flexível', 2)]) })?.bonusEsquiva).toBe(2);
-      expect(calcularStatItem({ item: item('Colete de Kevlar', ItemCategoriaEnum.PROTECOES, [mod('Resistente', 2)]) })?.bonusBloqueio).toBe(2);
+    it('Flexível soma Esquiva por compra; Resistente soma Bloqueio por compra (a 1ª compra, mesmo em ■■, não dobra)', () => {
+      expect(calcularStatItem({ item: item('Colete de Kevlar', ItemCategoriaEnum.PROTECOES, [mod('Flexível', 2)]) })?.bonusEsquiva).toBe(1);
+      expect(calcularStatItem({ item: item('Colete de Kevlar', ItemCategoriaEnum.PROTECOES, [mod('Resistente', 2)]) })?.bonusBloqueio).toBe(1);
+    });
+
+    it('uma compra extra de Flexível/Resistente (além da 1ª) reaplica o efeito normalmente', () => {
+      expect(calcularStatItem({ item: item('Colete de Kevlar', ItemCategoriaEnum.PROTECOES, [mod('Flexível', 3)]) })?.bonusEsquiva).toBe(2);
+      expect(calcularStatItem({ item: item('Colete de Kevlar', ItemCategoriaEnum.PROTECOES, [mod('Resistente', 5)]) })?.bonusBloqueio).toBe(4);
     });
 
     it('sem Flexível/Resistente, os bônus ficam undefined (nada pra somar)', () => {

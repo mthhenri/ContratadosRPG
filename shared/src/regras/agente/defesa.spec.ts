@@ -111,9 +111,10 @@ describe('calcularBonusDefesaEquipamento', () => {
     expect(calcularBonusDefesaEquipamento([])).toEqual({ esquiva: 0, bloqueio: 0, defesa: 0 });
   });
 
-  it('Flexível equipado soma Esquiva; Resistente equipado soma Bloqueio', () => {
+  it('Flexível equipado soma Esquiva; Resistente equipado soma Bloqueio (1ª compra não dobra, mesmo já em ■■)', () => {
+    // Flexível com 2 stacks = só a 1ª compra (+1); Resistente com 3 stacks = 1ª compra + 1 extra (+2).
     const item = protecao({ modificacoes: [{ nome: 'Flexível', empilhamentos: 2 }, { nome: 'Resistente', empilhamentos: 3 }] });
-    expect(calcularBonusDefesaEquipamento([item])).toEqual({ esquiva: 2, bloqueio: 3, defesa: 0 });
+    expect(calcularBonusDefesaEquipamento([item])).toEqual({ esquiva: 1, bloqueio: 2, defesa: 0 });
   });
 
   it('ignora itens de Proteções não equipados (na mochila)', () => {

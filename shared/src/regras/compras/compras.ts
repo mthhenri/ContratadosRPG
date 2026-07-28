@@ -401,6 +401,15 @@ export function calcularStatItem(dto: StatItemCalcularDto): StatItemDto | null {
     empilhamentos[modificacao.nome] = modificacao.empilhamentos;
   });
   const empilhamentosDe = (nome: string): number => empilhamentos[nome] ?? 0;
+  /**
+   * Nº de compras de uma modificação do catálogo (1ª compra + extras) — mesma contagem de
+   * `contarComprasModificacao` (custo/peso), usada aqui para escalar o **efeito**: uma mod que já
+   * nasce com vários níveis (■■, ex. Flexível/Resistente/Potente) não dobra o bônus por isso — a 1ª
+   * compra vale 1 aplicação do efeito, e só os níveis pagos **depois** dela reaplicam. 0 quando a
+   * mod não está presente no item.
+   */
+  const comprasDe = (nome: string): number =>
+    empilhamentosDe(nome) > 0 ? contarComprasModificacao({ item, modificacao: nome, empilhamentos: empilhamentosDe(nome) }) : 0;
 
   // ── DANO ──────────────────────────────────────────────────────────────────
   if (itemCatalogo.dano) {
@@ -444,7 +453,7 @@ export function calcularStatItem(dto: StatItemCalcularDto): StatItemDto | null {
       if (empilhamentosDe('Flamejante') > 0) extras.push({ quantidade: empilhamentosDe('Flamejante'), faces: 8, tipo: 'Químico' });
       if (empilhamentosDe('Antimatéria') > 0) extras.push({ quantidade: empilhamentosDe('Antimatéria'), faces, tipo: 'Explosão' });
     } else if (item.categoria === ItemCategoriaEnum.EXPLOSIVOS) {
-      if (empilhamentosDe('Potente') > 0) quantidade += empilhamentosDe('Potente') * 2;
+      if (empilhamentosDe('Potente') > 0) quantidade += comprasDe('Potente') * 2;
     }
 
     // Efeitos mecânicos das modificações CUSTOM que mexem no dano (independe da categoria),
@@ -561,8 +570,8 @@ export function calcularStatItem(dto: StatItemCalcularDto): StatItemDto | null {
   let statBonusBloqueio: number | undefined;
   let statBonusDefesa: number | undefined;
   if (item.categoria === ItemCategoriaEnum.PROTECOES) {
-    let esquiva = empilhamentosDe('Flexível');
-    let bloqueio = empilhamentosDe('Resistente');
+    let esquiva = comprasDe('Flexível');
+    let bloqueio = comprasDe('Resistente');
     let defesa = 0;
 
     item.modificacoes.forEach((modificacao) => {
