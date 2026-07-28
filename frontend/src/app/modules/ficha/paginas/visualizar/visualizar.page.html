@@ -62,7 +62,60 @@
   </header>
 
   @if (carregando()) {
-    <p class="ficha-pagina__carregando">Carregando ficha…</p>
+    <!-- Esqueleto de carregamento (m3-56) — mesmo padrão `.esqueleto-bloco`/`esqueleto-pulso` já
+         usado em campanha (lista/detalhe) e usuário (perfil); a silhueta espelha o layout real de
+         `FichaVisualizacao` (topo | identidade+atributos | status com barra de abas), inclusive no
+         mobile (mesmas larguras/breakpoints do componente real, ver `.ficha-esqueleto` no SCSS). -->
+    <div class="ficha-esqueleto" role="status" aria-label="Carregando ficha">
+      <div class="ficha-esqueleto__topo">
+        <span class="esqueleto-bloco esqueleto-bloco--rotulo"></span>
+        <span class="esqueleto-bloco esqueleto-bloco--chip"></span>
+      </div>
+
+      <div class="ficha-esqueleto__linha">
+        <div class="ficha-esqueleto__coluna ficha-esqueleto__coluna--identidade">
+          <div class="ficha-esqueleto__cartao">
+            <div class="ficha-esqueleto__ident-topo">
+              <span class="esqueleto-bloco esqueleto-bloco--avatar"></span>
+              <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
+            </div>
+            <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+            <span class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"></span>
+            <div class="ficha-esqueleto__barras">
+              <span class="esqueleto-bloco esqueleto-bloco--barra"></span>
+              <span class="esqueleto-bloco esqueleto-bloco--barra"></span>
+            </div>
+            <div class="ficha-esqueleto__mini-grade">
+              @for (indice of [0, 1, 2, 3]; track indice) {
+                <span class="esqueleto-bloco esqueleto-bloco--mini"></span>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="ficha-esqueleto__coluna ficha-esqueleto__coluna--atributos">
+          <div class="ficha-esqueleto__cartao">
+            <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
+            @for (indice of [0, 1, 2, 3, 4, 5]; track indice) {
+              <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+            }
+          </div>
+        </div>
+
+        <div class="ficha-esqueleto__coluna ficha-esqueleto__coluna--status">
+          <div class="ficha-esqueleto__abas">
+            @for (indice of [0, 1, 2, 3, 4, 5]; track indice) {
+              <span class="esqueleto-bloco esqueleto-bloco--aba"></span>
+            }
+          </div>
+          <div class="ficha-esqueleto__cartao ficha-esqueleto__cartao--conteudo">
+            <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+            <span class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"></span>
+            <span class="esqueleto-bloco esqueleto-bloco--bloco"></span>
+          </div>
+        </div>
+      </div>
+    </div>
   } @else if (ficha(); as fichaAtual) {
     <!-- Edição no próprio lugar (m3-10): cada campo tem seu lápis; não há mais botão global. -->
     <app-ficha-visualizacao

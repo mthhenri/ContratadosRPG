@@ -46,6 +46,13 @@
     &--identidade {
       width: 420px;
       flex: 0 0 auto;
+
+      // m3-56: as três colunas somam bem mais que qualquer viewport de tablet/celular (420 + 260 +
+      // 420px mínimo, fora gaps) — abaixo de `$bp-tablet` a largura fixa vira 100% (a coluna
+      // ocupa a linha inteira quando `&__linha-colunas` empilha, ver abaixo).
+      @include bp.tablet {
+        width: 100%;
+      }
     }
 
     // 260px (era 170px) — nos 170px o cabeçalho, o resumo de Maestria e o Salvar/Cancelar da
@@ -54,6 +61,10 @@
     &--atributos {
       width: 260px;
       flex: 0 0 auto;
+
+      @include bp.tablet {
+        width: 100%;
+      }
     }
 
     // Status (m3-27-visual, terceira coluna): ocupa o resto da largura da página — Identidade e
@@ -63,6 +74,11 @@
     &--status {
       flex: 1 1 auto;
       min-width: 420px;
+
+      @include bp.tablet {
+        min-width: 0;
+        width: 100%;
+      }
     }
   }
 
@@ -72,6 +88,15 @@
     display: flex;
     align-items: stretch;
     gap: var(--gap-grid);
+
+    // m3-56: abaixo de `$bp-tablet` (1080px) as três colunas de largura fixa já não cabem lado a
+    // lado em nenhum viewport real (identidade 420 + atributos 260 + status mín. 420, fora gaps,
+    // passa de 1100px) — empilha em coluna única, mesmo padrão "grades que refluem" já usado nas
+    // demais grades da ficha (m1-15/m3-26).
+    @include bp.tablet {
+      flex-direction: column;
+      align-items: stretch;
+    }
   }
 
   // Fade suave ao entrar (o painel solo troca de conteúdo entre Identidade e Atributos).
@@ -291,6 +316,14 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
+
+    // m3-56: seis abas de 44px + gaps somam ~289px — mais do que a coluna Status tem disponível
+    // a 360px (~288px). Em vez de deixar alguma aba encolher abaixo do alvo de toque (medido ao
+    // vivo: 40.7px de largura sem isto), a barra rola horizontalmente — cada aba mantém 44px.
+    @include bp.mobile {
+      overflow-x: auto;
+      flex-wrap: nowrap;
+    }
   }
 
   &__aba {
@@ -319,6 +352,23 @@
       color 0.12s ease,
       background 0.12s ease;
 
+    // m3-56: seis abas com ícone+rótulo não cabem lado a lado abaixo de `$bp-mobile` (o texto
+    // "Informações" sozinho já passa da largura que sobra por aba) — mesmo padrão já usado na
+    // barra de abas da calculadora (`calculadora-shell.component.scss`, m1-20): ícone-só por
+    // padrão, o rótulo só reaparece na aba ativa. `flex: 0 0 auto` + `min-width` (em vez de
+    // dividir a largura igualmente) garante os 44px de alvo de toque em toda aba, mesmo a
+    // inativa — a barra rola (ver `&__abas` acima) em vez de espremer alguma abaixo do alvo.
+    @include bp.mobile {
+      // `width: 100%` do desktop (acima) vira o `flex-basis` efetivo (flex-basis:auto usa
+      // `width` quando presente) — sem este reset pra `auto`, as seis abas tentavam ocupar 100%
+      // da barra cada uma (medido ao vivo: as seis com a mesma largura, bem maior que o conteúdo).
+      width: auto;
+      flex: 0 0 auto;
+      min-width: bp.$alvo-toque;
+      min-height: bp.$alvo-toque;
+      padding: 6px 4px;
+    }
+
     &--ativa {
       font-weight: 700;
       color: var(--bg);
@@ -330,6 +380,21 @@
   // em vez de depender do item anônimo que o navegador cria para um nó de texto cru.
   &__aba-texto {
     display: inline-block;
+
+    // Some no mobile (barra só de ícones) e reaparece na aba ativa, ver `&__aba--ativa` acima —
+    // mesmo comportamento do rótulo da calculadora (`abas__rotulo`, m1-20).
+    @include bp.mobile {
+      display: none;
+    }
+  }
+
+  &__aba--ativa &__aba-texto {
+    @include bp.mobile {
+      display: inline-block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
 
   &__aba-icone {
@@ -1112,7 +1177,13 @@
   grid-template-columns: 1fr 1fr;
   gap: 14px;
 
-  @media (max-width: 360px) {
+  // m3-56: era `max-width: 360px` (número mágico) — não bastava pros 390/430px de teste do
+  // passe mobile. Medido ao vivo: com 2 colunas, cada `.ficha-barra__medidor` (stepper − / valor
+  // / stepper +, ~120px + o texto do valor) não cabia na metade da coluna de Identidade
+  // (~161px a 390px) — o botão "+" saía do viewport e ficava clicável só em parte (escondido
+  // pelo `overflow-x: clip` de segurança do `html`, que evita scroll do body mas não evita o
+  // corte visual/de toque). Substituído por `bp.mobile` (560px, cobre toda a faixa 360-430px).
+  @include bp.mobile {
     grid-template-columns: minmax(0, 1fr);
   }
 }

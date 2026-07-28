@@ -37,3 +37,18 @@ video,
 canvas {
   max-width: 100%;
 }
+
+// m3-56: `p-toast` (`app-layout`, global) tem `--p-toast-width: 25rem` (400px) fixo — centralizado
+// via `left: 50%; transform: translateX(-50%)`, estourava os dois lados em viewports de
+// 360-390px (medido ao vivo: 20px além do viewport a 360px, escondido pelo `overflow-x: clip`
+// acima — sem scroll do body, mas parte do toast ficava fora de alcance de toque). O input
+// `[breakpoints]` do PrimeNG (mesma API do `p-dialog`) gera a media query certa, mas mira um
+// atributo `pn_id` que essa versão do PrimeNG não chega a colocar no elemento — sem efeito
+// (confirmado ao vivo). `!important` pra vencer o estilo inline que o PrimeNG já aplica com a
+// mesma especificidade; a centralização por `transform: translateX(-50%)` recalcula sozinha
+// sobre a largura nova (só a largura muda aqui).
+@include bp.mobile {
+  .p-toast {
+    width: calc(100vw - 32px) !important;
+  }
+}

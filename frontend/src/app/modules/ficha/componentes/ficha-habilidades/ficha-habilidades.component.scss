@@ -2,6 +2,8 @@
 // "Terminal de Contenção" — nenhum hex/fonte/raio solto (proibição #29). Padrão de card/stepper
 // espelha o FichaSanidade de m3-12.
 
+@use 'tema/breakpoints' as bp;
+
 .habilidades {
   display: flex;
   flex-direction: column;
@@ -11,6 +13,14 @@
     display: flex;
     align-items: center;
     gap: 10px;
+
+    // m3-56: título + régua + 2 botões "Adicionar" numa linha só passavam da largura da coluna
+    // Status a 360-390px — vazava pra fora do card (escondido pelo `overflow-x: clip` de
+    // segurança do `html`, sem scroll do body mas também sem clique possível na parte cortada).
+    // Quebra em duas linhas: título+régua, depois os botões numa linha própria e cheia.
+    @include bp.mobile {
+      flex-wrap: wrap;
+    }
   }
 
   &__titulo {
@@ -124,6 +134,11 @@
     flex: 0 0 auto;
     display: flex;
     gap: 6px;
+
+    @include bp.mobile {
+      flex-basis: 100%;
+      flex-wrap: wrap;
+    }
   }
 
   &__add {
@@ -748,6 +763,35 @@
   &:disabled {
     opacity: 0.4;
     cursor: default;
+  }
+
+  // Alvo de toque confortável no mobile (m3-56) — mesmo padrão do stepper equivalente na Visão
+  // Geral (`ficha-visualizacao.component.scss`, m3-26).
+  @include bp.mobile {
+    width: bp.$alvo-toque;
+    height: bp.$alvo-toque;
+    font-size: 18px;
+  }
+}
+
+// m3-56: alvo de toque ≥44px nos controles primários repetidos da aba — Editar/Remover por
+// habilidade (`&__acao`), os dois botões "Adicionar" do cabeçalho (`&__add`) e "Utilizar" (o
+// gasto de Energia, a ação mais repetida da aba). Só dentro de `bp.mobile`, sem inchar a
+// densidade do desktop (mesmo racional seletivo da m3-26).
+.habilidades {
+  @include bp.mobile {
+    &__acao {
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
+    }
+
+    &__add {
+      min-height: bp.$alvo-toque;
+    }
+
+    &__utilizar {
+      min-height: bp.$alvo-toque;
+    }
   }
 }
 

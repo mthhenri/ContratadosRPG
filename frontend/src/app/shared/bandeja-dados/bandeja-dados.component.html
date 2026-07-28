@@ -1,5 +1,5 @@
 @if (bandeja.entradas().length > 0) {
-  <div class="bandeja" role="status" aria-live="polite">
+  <div class="bandeja" role="status" aria-live="polite" [style.--bandeja-carta-largura.px]="larguraCarta()">
     <div class="bandeja__ancora">
       <div
         class="bandeja__pilha"

@@ -1,3 +1,9 @@
+<!-- m3-56: largura fixa (400px, --p-toast-width) estourava viewports de 360-390px (medido ao
+     vivo — `overflow-x: clip` do `html` escondia sem virar scroll do body, mas o toast ficava
+     parcialmente fora e inclicável). O input `[breakpoints]` do PrimeNG (mesma API do
+     `p-dialog`) gera a media query mas mira um atributo `pn_id` que não chega a existir no
+     elemento renderizado nesta versão (21.2.13) — sem efeito. Fix real em `styles.scss`
+     (`.p-toast`, `@include bp.mobile`). -->
 <p-toast position="bottom-center" />
 
 @if (loadingService.isLoading()) {

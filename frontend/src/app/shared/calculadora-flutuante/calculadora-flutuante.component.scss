@@ -2,6 +2,8 @@
 // Só tokens do tema "Terminal de Contenção" (proibição #29); scrollbar do histórico herda o
 // tratamento global de `tema/_base.scss` (não restilizada aqui).
 
+@use 'tema/breakpoints' as bp;
+
 :host {
   display: contents;
 }
@@ -87,6 +89,11 @@
     &:hover {
       color: var(--text);
     }
+
+    @include bp.mobile {
+      min-width: bp.$alvo-toque;
+      min-height: bp.$alvo-toque;
+    }
   }
 
   &__corpo {
@@ -129,6 +136,14 @@
     font-size: calc(15px * var(--calc-escala, 1));
     font-weight: 600;
     cursor: pointer;
+
+    // m3-56: 40px de altura padrão (escala 1×) fica abaixo do alvo de toque — medido ao vivo em
+    // 360-430px (o popup nasce na escala padrão, sem redimensionar). Piso de 44px só no mobile,
+    // sem mudar a altura "desenhada" em telas maiores nem interferir no redimensionamento manual
+    // (que já pode crescer a tecla além de 44px via `--calc-escala`).
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
+    }
 
     &:hover {
       border-color: var(--accent-border);

@@ -181,6 +181,15 @@
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
+
+    // m3-56: os 3 itens (Equipamentos/Fragmentos/Amplificadores) numa linha só passavam da
+    // largura da coluna Status a 360-390px — como é `inline-flex` sem limite próprio, o excesso
+    // vazava pra fora do card (escondido pelo `overflow-x: clip` de segurança do `html`, que
+    // evita scroll do body mas não evita o corte/perda de clique). Quebra em linha no mobile.
+    @include bp.mobile {
+      flex-wrap: wrap;
+      max-width: 100%;
+    }
   }
 
   &__filtro-item {
@@ -1407,8 +1416,10 @@
       height: bp.$alvo-toque;
       font-size: 16px;
     }
+    // m3-56: 40px → 44px (`$alvo-toque`) — o botão de ação primária (Adicionar/Confirmar/Aplicar)
+    // é controle principal, não decorativo; os 40px antigos ficavam abaixo do alvo de toque.
     &__btn {
-      min-height: 40px;
+      min-height: bp.$alvo-toque;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -1417,6 +1428,17 @@
     &__mod-tag,
     &__cartao-acoes {
       flex-wrap: wrap;
+    }
+
+    // m3-56: gatilho "Mover para..." (m3-44 — sub-inventários) é controle primário repetido em
+    // cada item, mas ficava com padding mínimo (~24px de altura) — mesmo alvo de toque do resto.
+    &__mover-gatilho {
+      min-height: bp.$alvo-toque;
+    }
+    &__mover-opcao {
+      min-height: bp.$alvo-toque;
+      display: flex;
+      align-items: center;
     }
   }
 

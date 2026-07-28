@@ -1,6 +1,134 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-28 (**m3-55 — Refino visual desktop da ficha**: task `m3-55` do
+> Última atualização: 2026-07-28 (**m3-56 — Passe mobile + esqueletos de carregamento da
+> ficha**: task `m3-56` do lote de refino `m3-40`…`m3-56` implementada — fecha o lote (falta só
+> a `m3-53`, ver "Próxima task"). **Achado central antes de implementar:** a `m3-26` (base mobile)
+> tratava a antiga grade de 3 colunas da Visão Geral, mas o redesenho de comparação visual
+> (branch `claude/redesign-ficha-screen-*`, anterior a este lote) substituiu aquilo por
+> `.ficha-visao__linha-colunas` — um **flex row de larguras fixas** (Identidade 420px + Atributos
+> 260px + Status mín. 420px, fora gaps ≈ 1116px) **sem nenhum tratamento responsivo** — a coluna
+> mais crítica da tela inteira estourava qualquer viewport de tablet/celular. Virou o alvo
+> principal do passe: `&__linha-colunas` ganhou `@include bp.tablet { flex-direction: column }`
+> e as três colunas (`--identidade`/`--atributos`/`--status`) ganharam `width: 100%` no mesmo
+> breakpoint — `bp.tablet` (1080px) escolhido em vez de `bp.mobile` porque a largura fixa já não
+> cabe em nenhum notebook pequeno, não só em celular (usa os dois tokens de `_breakpoints.scss`
+> com propósito: tablet resolve a estrutura, mobile afina densidade/alvo de toque por cima).
+> **Barra de abas do Status** (`.ficha-status__abas`, 6 abas — Informações/Inventário/
+> Habilidades/Rolagens/Extras/História): mesmo padrão **já usado** na barra de abas da calculadora
+> (`calculadora-shell.component.scss`, m1-20, precedente citado pela spec) — ícone-só por padrão,
+> rótulo reaparece só na aba ativa; **dois bugs pegos só ao vivo, não em teste unitário**: (1)
+> a primeira versão dava `flex: 1 1 0` a todas + `flex: 2 1 0` à ativa — a 360px isso deixava 5
+> das 6 abas com **40.7px de largura** (abaixo do alvo de 44px); trocado para `flex: 0 0 auto` +
+> `min-width: bp.$alvo-toque` em todas (a ativa cresce pelo próprio conteúdo, não por um multiplicador
+> de flex) e a barra ganhou `overflow-x: auto` no mobile — 6×44px + gaps (~289px) já não cabe nos
+> ~288px disponíveis da coluna Status a 360px, então a barra rola em vez de espremer alguma abaixo
+> do alvo; (2) o `width: 100%` do desktop (regra fora do `bp.mobile`) sobrevivia como `flex-basis`
+> efetivo mesmo depois de setar `flex: 0 0 auto` (flex-basis:auto usa `width` quando presente) —
+> as seis abas mediam **a mesma largura** (300px+) em vez de dimensionar pelo conteúdo; corrigido
+> com `width: auto` dentro do próprio `bp.mobile`. **Achado metodológico, o mais importante desta
+> rodada:** `styles.scss` tem uma "trava de segurança" global, `html { overflow-x: clip }`
+> (pré-existente, m1-15), que impede o **scroll** horizontal do body mas **não impede** um elemento
+> de renderizar fisicamente fora do viewport — ele só fica invisível e inclicável na parte cortada.
+> Isso significa que **`document.body.scrollWidth <= clientWidth` sozinho não prova ausência de
+> overflow** — só prova que não vira scrollbar. Descoberto ao comparar visualmente um screenshot
+> (botão "+" de Energia cortado na borda) com o scroll-check batendo `0`; escrito um verificador à
+> parte que soma o `getBoundingClientRect()` de **todo elemento visível da página** contra o
+> viewport (excluindo descendentes de contêineres intencionalmente roláveis, como a própria barra
+> de abas) — achou **43 elementos realmente fora do viewport** que o scroll-check não via, em 4
+> bugs distintos: **(a)** `.ficha-vitalidade` (Vida/Energia lado a lado) usava `@media (max-width:
+> 360px)` — número mágico que não cobria 390/430px; a 390px o stepper "+" de Energia ficava com o
+> right edge em 409px (19px fora dos 390) porque a coluna de 2 já não cabia o `.ficha-barra__medidor`
+> (steppers de 44px + valor); trocado para `bp.mobile` (560px), cobrindo toda a faixa 360-430
+> testada — mesmo fix em `.ficha-rol__lista` (Rolagens, grade de presets, era `max-width: 420px`,
+> não cobria 430px). **(b)** `.ficha-inv__filtro` (Equipamentos/Fragmentos/Amplificadores) era
+> `inline-flex` sem `flex-wrap`, vazando 59px/29px (360/390px) pra fora do card — ganhou
+> `flex-wrap: wrap` + `max-width: 100%` no mobile. **(c)** `.habilidades__cabecalho` (título + régua
+> + 2 botões "Adicionar") não quebrava linha — vazava 51px/21px; cabeçalho e `&__add-grupo` ganharam
+> `flex-wrap: wrap` (o grupo de botões cai pra linha própria, cheia, no mobile). **(d)** `p-toast`
+> global (`app-layout`) tem `--p-toast-width: 25rem` (400px) fixo, centralizado por
+> `translateX(-50%)` — vazava 20px/5px a 360/390px; o input `[breakpoints]` do PrimeNG (mesma API
+> do `p-dialog`, que funciona) **não teve efeito** — o CSS gerado mira um atributo `pn_id_N` que
+> essa versão do PrimeNG (21.2.13) não chega a colocar no elemento renderizado (confirmado
+> inspecionando o DOM ao vivo); resolvido com override direto em `styles.scss`
+> (`@include bp.mobile { .p-toast { width: calc(100vw - 32px) !important } }`, `!important`
+> necessário pra vencer o estilo inline que o próprio PrimeNG já aplica com a mesma especificidade).
+> **Bandeja de dados** (m3-55 tinha fixado a carta em 640px): virou responsiva — `LARGURA_CARTA`
+> fixa trocada por `larguraCarta` (`computed`) = `min(640, larguraJanela − 32)`, `larguraJanela`
+> um `signal` atualizado por `@HostListener('window:resize')`; exposta como CSS custom property
+> (`--bandeja-carta-largura`, `[style.--bandeja-carta-largura.px]` no container) consumida pelo
+> `width`/`flex-basis` da carta no SCSS — mantém a transição suave de saída da m3-55 (ambos os
+> lados do `transition: flex-basis`/`width` continuam valores numéricos, nunca `auto`) e mantém o
+> cálculo de `deslocamento` (empilhamento de múltiplas cartas) sincronizado com a largura real
+> renderizada, não com a constante antiga. `&__corpo` ganhou `flex-wrap: wrap` no mobile (total +
+> detalhe empilham em vez de espremer). **Calculadora flutuante** (m3-54): tecla do teclado
+> (`&__tecla`, altura `calc(40px * var(--calc-escala, 1))`, 40px na escala padrão) ganhou piso de
+> `bp.$alvo-toque` só no mobile — não mexe no redimensionamento manual (que já passa de 44px via
+> `--calc-escala`); `&__fechar` (✕) ganhou o mesmo piso de 44×44. **Alvo de toque ≥44px** também
+> aplicado, seletivamente (mesmo critério da m3-26 — "não exaustivo"), em: `.ficha-cartao__lapis`/
+> `__acao` (já cobertos desde m3-26), `.ficha-inv__btn--principal` (40→44px), `.ficha-inv__mover-
+> gatilho`/`-opcao` (sub-inventários, m3-44), `.habilidades__acao`/`__add`/`__utilizar` e
+> `.ficha-passo` local (duplicado por componente — encapsulamento de estilo do Angular não
+> compartilha `.scss`), barra de abas + botão fechar do seletor de habilidades do sistema
+> (`ficha-habilidade-seletor`, que também ganhou `overflow-x: auto` nas abas de grupo — até 4
+> categorias não cabiam em uma linha a 360px), `.ficha-rol__mini-btn`/`__btn`/`__hab-passo`/
+> `__novo`/`__add-passo` (Rolagens), `.ficha-status__aba--compacto`/`__acao`/`.ficha-passo`
+> (Sanidade), `.ficha-pagina__menu-botao`/`__menu-item`/`.botao`/`.dialogo__fechar`
+> (`visualizar.page.scss`, cabeçalho + dialogs de Acesso/Exclusão). **Página** (`visualizar.page.scss`):
+> `.ficha-pagina` trocou `max-width: 80vw` por `100%` no mobile (80vw sobrava ~20% de margem morta
+> nos dois lados a 360-430px) e reduziu padding; `__topo` ganhou `flex-wrap` defensivo (selo
+> "tempo real offline" só aparece após ~1,5s desconectado, raro de reproduzir ao vivo, mas sem
+> tratamento quebraria a linha). **Esqueleto de carregamento:** texto solto "Carregando ficha…"
+> virou `.ficha-esqueleto` — mesmo padrão `.esqueleto-bloco`/`esqueleto-pulso` de
+> `campanha/paginas/lista`, `campanha/paginas/detalhe` e `usuario/paginas/perfil` (bloco cinza
+> `--border-strong` com pulso de opacidade, `prefers-reduced-motion` zera a animação),
+> reimplementado localmente (mesmo motivo do `.ficha-passo` duplicado — sem compartilhamento de
+> `.scss` entre componentes) com a **mesma silhueta e os mesmos breakpoints** do layout real:
+> topo (rótulo + chip) → `__linha` de 3 colunas (identidade 420px | atributos 260px | status
+> flexível) que empilha em `bp.tablet`, réplica da barra de abas (6 blocos) + card de conteúdo.
+> Decisão de escopo: inline na própria `visualizar.page` (HTML+SCSS), não virou componente à
+> parte — silhueta única, um só consumidor, sem estado além de `@if (carregando())`; mesmo
+> critério "não infla" do restante do lote. **Ambiente desta rodada:** o Postgres via Docker
+> Compose não subiu — pull de `postgres:16` bloqueado pela política de egresso da organização
+> (`production.cloudfront.docker.com`, 403); usado o PostgreSQL 16 já instalado localmente
+> (`service postgresql start` + `createdb`) como substituto equivalente, sem alterar
+> `docker-compose.yml`/scripts do projeto. **Achado sem fix (fora de escopo, desktop):** a aba
+> "História" (6ª, só dono/mestre) já **vazava da própria `.ficha-status__abas`** em telas
+> desktop largas mesmo **antes** desta task — confirmado via `git stash` (mesmo comportamento com
+> e sem as mudanças desta rodada): a 1440px, `scrollWidth` da barra é 575px contra 418px de
+> `clientWidth`, cortando visualmente o "A" final de "HISTÓRIA" — mas não gera scroll do body (o
+> mesmo `overflow-x: clip` do `html` absorve, e a barra em si não tem próprio `overflow-x`, então
+> o corte acontece num ancestral acima dela). É polimento visual de **desktop**, explicitamente
+> fora de escopo desta spec ("isso é m3-55, já feito") — registrado aqui pra não se perder, não
+> corrigido. **Testes:** sem teste unitário novo — task é SCSS/marcação responsiva + skeleton,
+> mesmo padrão da `m3-26` (nenhum novo teste lá também); comportamento coberto pela suíte
+> existente + verificação ao vivo abaixo. 572 testes frontend, **571 passando** — a 1 falha é a
+> mesma pré-existente e alheia de `ficha-inventario` ("apelido de equipamento", m3-33), confirmada
+> inalterada. Lint com os mesmos 4 erros pré-existentes (confirmados via `git stash`, não tocados).
+> **Verificado ao vivo** (Playwright **instalado globalmente**, `npm root -g`, conforme a skill
+> `verify`; Postgres + backend + frontend reais, usuário registrado via REST, ficha criada pela UI
+> real — "Criar ficha" → "Criar ficha" com os valores padrão do diálogo): nos 6 tabs × 360/390/430px
+> **e** desktop (1440px), `document.body.scrollWidth === clientWidth` **e** — o teste mais forte,
+> given o achado do `overflow-x: clip` acima — **nenhum elemento visível da página com
+> `getBoundingClientRect()` fora do viewport**, incluindo dentro dos dialogs (menu kebab, Acesso
+> de Visualização, Excluir Ficha, Nova Habilidade, seletor "Do sistema", "+ Item custom" do
+> Inventário, "Novo preset" de Rolagens). Alvos de toque medidos e confirmados ≥44×44px nas seis
+> abas do Status, nos steppers de Vida/Energia, no lápis de Editar Atributos/História, na carta e
+> no botão fechar da bandeja de dados, na tecla e no fechar da calculadora flutuante. Bandeja de
+> dados (disparada com `2d6+3` na Rolagem Rápida) mediu carta com **328px/358px/398px** exatos
+> (`640 − 32` truncado pela viewport) a 360/390/430px, sempre com o botão fechar em 44×44px e
+> zero overflow. Calculadora flutuante: popup de 280px cabe com folga nas três larguras mobile
+> (gatilho 48×48, tecla 56.5×44, fechar 44×44). Esqueleto: `GET /ficha/:id` atrasado via
+> `page.route()` — `.ficha-esqueleto` renderizou com 28 blocos (incluindo os 6 placeholders da
+> barra de abas) enquanto a resposta ficou pendente, sumiu e deu lugar à ficha real assim que a
+> resposta foi liberada — testado em 1440px (screenshot conferido visualmente: silhueta reconhecível
+> da tela real) e responsivo (mesmos breakpoints do layout real). Zero erros de console/página
+> durante toda a verificação. Spec movida para
+> `docs/specs/done/m3-56-ficha-mobile-skeletons.spec.md`. **Próxima task:** com a `m3-56` fechada,
+> o lote `m3-40`…`m3-56` só tem um item pendente — a **`m3-53`** (ficha — exportar PDF), pulada
+> duas vezes ao longo do lote e ainda em `docs/specs/backlog/`; deve ser retomada de lá para
+> fechar o lote por completo.)
+>
+> Última atualização anterior: 2026-07-28 (**m3-55 — Refino visual desktop da ficha**: task `m3-55` do
 > lote de refino `m3-40`…`m3-56` implementada — 3 itens (numeração da spec original de refino):
 > **(3) alinhamento dos ícones das tabs**, **(17) hover/foco no atributo mostra a DT** e **(22)
 > bandeja de dados 2× mais larga + saída sem bounce**. **Achado de drift antes de implementar:** a

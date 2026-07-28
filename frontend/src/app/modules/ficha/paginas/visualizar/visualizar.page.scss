@@ -2,6 +2,8 @@
 // gestão de acesso (dono/mestre). Só tokens do tema "Terminal de Contenção" (proibição #29). O
 // cabeçalho reusa o padrão `.ficha-pagina` da tela de edição (m3-06).
 
+@use 'tema/breakpoints' as bp;
+
 .ficha-pagina {
   // Mais largo que as telas de criação/edição (960): a visualização é um layout de três colunas
   // (identidade+vitalidade | atributos | status derivado), como o protótipo de fidelidade.
@@ -12,11 +14,26 @@
   flex-direction: column;
   gap: var(--gap-grid);
 
+  // m3-56: `80vw` deixa margens enormes (~20% de cada lado) numa tela de 360-430px, que já é
+  // estreita — a página passa a usar a largura inteira (menos o padding lateral) abaixo de
+  // `$bp-mobile`, mesmo racional das demais páginas da ficha.
+  @include bp.mobile {
+    max-width: 100%;
+    padding: 10px 12px 28px;
+  }
+
   &__topo {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+
+    // Defensivo: se o selo "tempo real offline" (`app-indicador-tempo-real`) aparecer no mobile
+    // (só depois de ~1,5s desconectado — raro na verificação ao vivo), a linha quebra em vez de
+    // espremer o texto/kebab.
+    @include bp.mobile {
+      flex-wrap: wrap;
+    }
   }
 
   &__voltar {
@@ -60,6 +77,11 @@
       color: var(--accent);
       border-color: var(--accent-border);
       background: var(--surface-2);
+    }
+
+    @include bp.mobile {
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
     }
   }
 
@@ -105,6 +127,10 @@
     &:hover {
       background: var(--surface-2);
       color: var(--accent);
+    }
+
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
     }
   }
 
@@ -269,6 +295,8 @@
     color: var(--text);
   }
 
+  // `botao botao--secundario acesso__revogar` no template — já herda `min-height: bp.$alvo-toque`
+  // do `.botao` (mobile) acima; sem override próprio necessário aqui.
   &__revogar {
     display: inline-flex;
     align-items: center;
@@ -317,6 +345,10 @@
   cursor: pointer;
   transition: filter 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
 
+  @include bp.mobile {
+    min-height: bp.$alvo-toque;
+  }
+
   &:disabled {
     opacity: 0.55;
     cursor: default;
@@ -354,6 +386,11 @@
   justify-content: center;
   padding: 60px 20px;
   overflow-y: auto;
+
+  @include bp.mobile {
+    padding: 24px 12px;
+    align-items: center;
+  }
 
   &__fundo {
     position: fixed;
@@ -409,5 +446,201 @@
       border-color: var(--accent-border);
       background: var(--surface-2);
     }
+
+    @include bp.mobile {
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
+    }
+  }
+}
+
+// === Esqueleto de carregamento (m3-56) ===
+// Silhueta do layout real de `FichaVisualizacao` (topo | identidade+atributos | status com barra
+// de abas) — mesmas larguras/breakpoints do componente real (`ficha-visualizacao.component.scss`),
+// pra não "pular" quando o conteúdo de verdade assenta. `.esqueleto-bloco`/`esqueleto-pulso` é o
+// mesmo padrão de `campanha/paginas/lista`, `campanha/paginas/detalhe` e `usuario/paginas/perfil`
+// (bloco base reusado, cor `--border-strong`, raio `--radius-control`) — reimplementado aqui porque
+// o encapsulamento de estilo do Angular não compartilha `.scss` entre componentes.
+.ficha-esqueleto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-grid);
+
+  &__topo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  // Mesma fileira de três colunas do `.ficha-visao__linha-colunas` real — inclusive o colapso em
+  // coluna única abaixo de `$bp-tablet` (a página de carregamento nunca deve ser mais larga que a
+  // real, senão o layout "pula" quando o conteúdo chega).
+  &__linha {
+    display: flex;
+    align-items: stretch;
+    gap: var(--gap-grid);
+
+    @include bp.tablet {
+      flex-direction: column;
+    }
+  }
+
+  &__coluna {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-grid);
+    min-width: 0;
+
+    &--identidade {
+      width: 420px;
+      flex: 0 0 auto;
+
+      @include bp.tablet {
+        width: 100%;
+      }
+    }
+
+    &--atributos {
+      width: 260px;
+      flex: 0 0 auto;
+
+      @include bp.tablet {
+        width: 100%;
+      }
+    }
+
+    &--status {
+      flex: 1 1 auto;
+      min-width: 420px;
+
+      @include bp.tablet {
+        min-width: 0;
+        width: 100%;
+      }
+    }
+  }
+
+  &__cartao {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: var(--pad-card);
+
+    &--conteudo {
+      gap: 14px;
+    }
+  }
+
+  &__ident-topo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__barras {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+
+    @media (max-width: 360px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  &__mini-grade {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  // Mesma barra de abas do card de Status real (`.ficha-status__abas`).
+  &__abas {
+    display: flex;
+    gap: 5px;
+    padding: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+  }
+}
+
+// Blocos de esqueleto — reusados por qualquer estado de carregamento (proibição #29: só tokens).
+.esqueleto-bloco {
+  display: block;
+  border-radius: var(--radius-control);
+  background: var(--border-strong);
+  animation: esqueleto-pulso 1.4s ease-in-out infinite;
+
+  &--rotulo {
+    width: 130px;
+    height: 12px;
+  }
+
+  &--chip {
+    width: 150px;
+    height: 20px;
+    margin-left: auto;
+  }
+
+  &--avatar {
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border-radius: 50%;
+  }
+
+  &--titulo {
+    width: 65%;
+    max-width: 200px;
+    height: 18px;
+  }
+
+  &--linha {
+    width: 100%;
+    height: 14px;
+
+    &.esqueleto-bloco--curta {
+      width: 45%;
+    }
+  }
+
+  &--barra {
+    width: 100%;
+    height: 56px;
+  }
+
+  &--mini {
+    width: 100%;
+    height: 48px;
+  }
+
+  &--aba {
+    flex: 1;
+    height: 30px;
+  }
+
+  &--bloco {
+    width: 100%;
+    height: 160px;
+  }
+}
+
+@keyframes esqueleto-pulso {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .esqueleto-bloco {
+    animation: none;
   }
 }

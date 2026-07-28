@@ -1,5 +1,7 @@
 // Editor da aba Rolagens (m3-15; Rolagem v2 em m3-22) — só tokens do tema "Terminal de
 // Contenção" (proibição #29). Presets Teste/Soma, encadeados e com habilidades anexadas.
+@use 'tema/breakpoints' as bp;
+
 .ficha-rol {
   display: flex;
   flex-direction: column;
@@ -41,6 +43,10 @@
       color: var(--accent);
       border-color: var(--accent-border);
     }
+
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
+    }
   }
 
   &__vazio {
@@ -63,7 +69,10 @@
     overflow-y: auto;
     padding-right: 4px;
 
-    @media (max-width: 420px) {
+    // m3-56: era `max-width: 420px` (número mágico) — não cobria os 430px de teste do passe
+    // mobile (2 colunas de ~185px ficavam apertadas demais pro cartão de preset). Substituído por
+    // `bp.mobile` (560px), mesmo token usado no resto da ficha.
+    @include bp.mobile {
       grid-template-columns: 1fr;
     }
 
@@ -302,6 +311,17 @@
       opacity: 0.45;
       cursor: not-allowed;
     }
+
+    // m3-56: "Rolar"/"Gastar" são a ação primária do card de preset — alvo de toque confortável
+    // no mobile, mesmo com o botão só-ícone (`--icone`) da grade de 2 colunas.
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
+
+      &.ficha-rol__btn--icone {
+        width: bp.$alvo-toque;
+        height: bp.$alvo-toque;
+      }
+    }
   }
 
   // Checkbox "passo critável" (m3-30).
@@ -358,6 +378,14 @@
     }
     &--aberto svg {
       transform: rotate(0deg);
+    }
+
+    // m3-56: editar/duplicar/remover são controles primários repetidos por preset — mesmo padrão
+    // de `.ficha-cartao__lapis` (ficha-visualizacao, m3-26). O chevron de abrir/fechar entra
+    // também (é o toggle principal do card, não um ícone ocasional).
+    @include bp.mobile {
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
     }
   }
   &__remover {
@@ -484,6 +512,10 @@
       color: var(--accent);
       border-color: var(--accent-border);
     }
+
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
+    }
   }
 
   // === Seletor de habilidades (chips toggle) ===
@@ -542,6 +574,12 @@
     &:disabled {
       opacity: 0.4;
       cursor: not-allowed;
+    }
+
+    @include bp.mobile {
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
+      font-size: 18px;
     }
   }
   &__hab-qtd {

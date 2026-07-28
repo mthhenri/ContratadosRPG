@@ -2,6 +2,8 @@
 // "Terminal de Contenção" — nenhum hex/fonte/raio solto (proibição #29). O padrão de "marca"
 // (borda colorida à esquerda por tipo) espelha o read-only de m3-11.
 
+@use 'tema/breakpoints' as bp;
+
 .sanidade {
   // Três colunas (Sequelas / Traumas / Lesões) lado a lado; empilha em 1 coluna no estreito.
   display: grid;
@@ -111,6 +113,12 @@
       align-items: center;
       justify-content: center;
       font-size: 13px;
+
+      @include bp.mobile {
+        width: bp.$alvo-toque;
+        height: bp.$alvo-toque;
+        font-size: 16px;
+      }
     }
   }
 
@@ -254,6 +262,11 @@
 
     &--remover:hover {
       color: var(--accent);
+    }
+
+    @include bp.mobile {
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
     }
   }
 
@@ -404,6 +417,10 @@
       opacity: 0.4;
       cursor: default;
     }
+
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
+    }
   }
 
   &__cancelar {
@@ -421,6 +438,10 @@
 
     &:hover {
       color: var(--text);
+    }
+
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
     }
   }
 }
@@ -456,5 +477,11 @@
   &:disabled {
     opacity: 0.4;
     cursor: default;
+  }
+
+  @include bp.mobile {
+    width: bp.$alvo-toque;
+    height: bp.$alvo-toque;
+    font-size: 18px;
   }
 }
