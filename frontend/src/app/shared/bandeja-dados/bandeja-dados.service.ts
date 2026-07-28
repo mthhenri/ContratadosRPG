@@ -8,8 +8,13 @@ const LIMITE_ENTRADAS = 5;
 /** Quanto uma rolagem fica na bandeja antes de começar a sumir sozinha. */
 const DURACAO_MS = 7000;
 
-/** Duração do fade de saída (casa com a transição de opacidade no SCSS). */
-const FADE_MS = 400;
+/**
+ * Duração da transição de saída — fade **e** colapso de largura/margem acontecem juntos (casa com
+ * o SCSS, m3-55). Antes eram duas fases (fade parado, só depois some) e o "×" nem passava por elas
+ * (removia na hora); a troca de fase no meio do trajeto é o que lia como um "bounce" — uma
+ * transição só, de ponta a ponta, evita o salto.
+ */
+const DURACAO_SAIDA_MS = 280;
 
 /** Uma rolagem exibida na bandeja (m3-22): o rótulo do que foi rolado + o resultado do motor. */
 export interface EntradaBandeja {
@@ -18,7 +23,7 @@ export interface EntradaBandeja {
   /** Fórmula executada (texto), exibida como legenda mono (m3-30). Ausente quando quem rola não a informa. */
   readonly formula?: string;
   readonly resultado: ResultadoRolagemDto;
-  /** `true` na janela de fade antes de a entrada ser removida (auto-sumir). */
+  /** `true` durante a transição de saída (fade + colapso) — a entrada só sai do array ao fim dela. */
   readonly saindo: boolean;
 }
 
@@ -71,13 +76,24 @@ export class BandejaDadosService {
     }
   }
 
-  /** Remove uma entrada específica (o × da carta ou o fim do auto-sumir). */
+  /**
+   * Inicia a saída suave de uma entrada (o × da carta ou o fim do auto-sumir) — marca `saindo`
+   * (dispara a transição no SCSS) e só tira do array ao fim dela. Idempotente: chamar de novo numa
+   * entrada que já está saindo não reinicia a transição.
+   */
   fechar(id: number): void {
     this.cancelarTimer(id);
-    this._entradas.update((atuais) => atuais.filter((entrada) => entrada.id !== id));
+    const jaSaindo = this._entradas().some((entrada) => entrada.id === id && entrada.saindo);
+    if (jaSaindo) {
+      return;
+    }
+    this._entradas.update((atuais) =>
+      atuais.map((entrada) => (entrada.id === id ? { ...entrada, saindo: true } : entrada)),
+    );
+    setTimeout(() => this.remover(id), DURACAO_SAIDA_MS);
   }
 
-  /** Esvazia a bandeja. */
+  /** Esvazia a bandeja (sem transição — some tudo de uma vez, ação distinta de fechar um item). */
   limpar(): void {
     this.timers.forEach((handle) => clearTimeout(handle));
     this.timers.clear();
@@ -91,7 +107,7 @@ export class BandejaDadosService {
       id,
       setTimeout(() => {
         this.timers.delete(id);
-        this.iniciarSaida(id);
+        this.fechar(id);
       }, DURACAO_MS),
     );
   }
@@ -104,11 +120,8 @@ export class BandejaDadosService {
     }
   }
 
-  /** Marca a entrada como saindo (dispara o fade) e a remove após a transição. */
-  private iniciarSaida(id: number): void {
-    this._entradas.update((atuais) =>
-      atuais.map((entrada) => (entrada.id === id ? { ...entrada, saindo: true } : entrada)),
-    );
-    setTimeout(() => this.fechar(id), FADE_MS);
+  /** Remove de fato a entrada do array — chamado só depois que a transição de saída já terminou. */
+  private remover(id: number): void {
+    this._entradas.update((atuais) => atuais.filter((entrada) => entrada.id !== id));
   }
 }

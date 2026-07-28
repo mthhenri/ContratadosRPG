@@ -5,7 +5,7 @@ import type { DadosRoladosDto, ResultadoRolagemDto } from '@contratados-rpg/shar
 import { BandejaDadosService, type EntradaBandeja } from './bandeja-dados.service';
 
 /** Largura fixa da carta e gap (casam com o SCSS) — usados para manter a mais nova centralizada. */
-const LARGURA_CARTA = 320;
+const LARGURA_CARTA = 640;
 const GAP_CARTAS = 12;
 
 /**
@@ -26,10 +26,14 @@ export class BandejaDados {
   /**
    * Desloca a pilha (px) para a **esquerda** de modo que a carta mais nova (índice 0) fique sempre
    * centralizada na tela; as anteriores acumulam à esquerda dela. 0 quando há uma só (já centrada).
+   * Conta só as cartas **não** `saindo`: uma carta em saída já colapsa pra largura 0 via CSS (m3-55);
+   * se o desvio só reagisse depois que ela some do array (280ms depois, em `remover`), a pilha dava
+   * um salto adicional bem depois do colapso — visível só com 2+ cartas (com 1 só, o desvio é sempre 0).
    */
-  protected readonly deslocamento = computed(
-    () => (-(this.bandeja.entradas().length - 1) * (LARGURA_CARTA + GAP_CARTAS)) / 2,
-  );
+  protected readonly deslocamento = computed(() => {
+    const visiveis = this.bandeja.entradas().filter((entrada) => !entrada.saindo).length;
+    return (-Math.max(visiveis - 1, 0) * (LARGURA_CARTA + GAP_CARTAS)) / 2;
+  });
 
   /** Opacidade por posição: a mais nova (índice 0, centralizada) cheia; o histórico à esquerda esmaece. */
   protected opacidade(indice: number): number {

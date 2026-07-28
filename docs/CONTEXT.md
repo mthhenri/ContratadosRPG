@@ -1,6 +1,65 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-27 (**m3-54 — Calculadora flutuante**: task `m3-54` do lote de
+> Última atualização: 2026-07-28 (**m3-55 — Refino visual desktop da ficha**: task `m3-55` do
+> lote de refino `m3-40`…`m3-56` implementada — 3 itens (numeração da spec original de refino):
+> **(3) alinhamento dos ícones das tabs**, **(17) hover/foco no atributo mostra a DT** e **(22)
+> bandeja de dados 2× mais larga + saída sem bounce**. **Achado de drift antes de implementar:** a
+> spec apontava `ficha-visualizacao.component.html` linhas ~10-28 para a "barra de abas" — mas o
+> merge anterior da branch `claude/redesign-ficha-screen-*` (comentário no topo do arquivo) já tinha
+> removido a barra de abas de nível superior (`ABAS_FICHA`/`AbaFicha` sobrevivem só como estado de
+> deep-link em `visualizar.page.ts`, sem UI própria); a única barra de abas com ícone renderizada
+> hoje é `.ficha-status__abas` (Informações/Inventário/Habilidades/Rolagens/Extras/História, terceira
+> coluna) — foi o alvo real do item (3). **(3):** rótulo de cada aba passou a viver num
+> `<span class="ficha-status__aba-texto">` próprio (era nó de texto cru ao lado do `app-icone`,
+> caixa anônima do flex menos previsível) + `line-height: 1` em `.ficha-status__aba` (o
+> `line-height` padrão da fonte, variável entre navegadores, fazia o rótulo ficar mais alto que o
+> ícone — que já tem `line-height: 0` no host do `app-icone` — então `align-items: center`
+> centralizava os dois em alturas ligeiramente diferentes entre as seis abas); verificado ao vivo
+> (Playwright) que o delta de centro vertical ícone↔rótulo é **0px em todas as seis abas**. **(17):**
+> novo `dtAtributo(chave)` no componente, `calcularDtAtributo` de `shared/regras/dt` (mesma fórmula
+> da página de DT da calculadora, m1-08: `10 + Nível + Atributo×2`) sobre o atributo **efetivo** (já
+> com a penalidade de lesão descontada — mesma base de `rolarTesteAtributo`); aplicado na abreviação
+> do atributo (`.ficha-atributo__abrev`, ex. "FOR"), que ganhou `tabindex="0"` (um `<span>` sem isso
+> nunca recebe foco por teclado — sem tabindex o `appTooltip` nunca abriria via `focusin`) +
+> `aria-label` combinando nome e DT + o cue visual `--dica` (sublinhado pontilhado/`cursor: help`,
+> mesmo padrão de `.ficha-barra__rotulo--dica` de Vida/Energia) com `:focus-visible` próprio (a regra
+> global de foco em `_base.scss` só cobre `a`/`button`). **Bug pego e corrigido durante a
+> verificação ao vivo:** a `div.ficha-atributo` (caixa inteira) também tinha `[appTooltip]="campo.nome"`
+> — como `pointerenter` não borbulha mas dispara em todo ancestro cujo "tem o ponteiro dentro" virou
+> verdadeiro (e `focusin`, usado pelo mesmo directive, borbulha de verdade), passar o mouse ou focar
+> bem na abreviação abria **os dois balões ao mesmo tempo** (um por cima do outro). Resolvido
+> removendo o `[appTooltip]` da `div` e consolidando tudo na abreviação (`"Força — DT 12"`, nome +
+> DT juntos) — um único tooltip por box. **(22):** `LARGURA_CARTA` de `bandeja-dados.component.ts`
+> 320→**640px** (e o SCSS junto). A saída "bounce" tinha duas causas: o "×" da carta chamava
+> `fechar()` que **removia na hora** (sem passar pelo fade que só o auto-sumir usava), e mesmo no
+> auto-sumir, ao fim do fade a entrada saía do array **de uma vez** — o layout flex reagia
+> instantaneamente (cartas vizinhas saltam pra nova posição) no mesmo instante em que só o
+> `transform` da pilha (recentralização) tinha transição CSS, produzindo um salto seguido de uma
+> correção animada (o "bounce"). `BandejaDadosService.fechar()` virou o **único caminho** de saída
+> (usado pelo "×" e pelo fim do auto-sumir) — idempotente, marca `saindo` e só remove do array depois
+> de `DURACAO_SAIDA_MS` (280ms, era duas constantes/duas fases antes); o SCSS anima **opacidade e
+> largura/padding juntos**, na mesma transição `ease-out` (sem overshoot), então a carta "fecha como
+> cortina" em vez de sumir seca — quando enfim sai do array, a largura já está em ~0 e o salto residual
+> é mínimo. `prefers-reduced-motion: reduce` zera as transições (carta, entrada e o `transform` da
+> pilha) — confirmado ao vivo que `transition-duration` vira `0s` e a carta colapsa em <20ms sem
+> animação visível. **Testes:** +6 (5 novos `bandeja-dados.service.spec.ts` — saída idempotente,
+> mesmo caminho pro auto-sumir, `pausar`/`retomar` não mexe numa entrada já saindo, `limpar` sem
+> transição — e +1 no `ficha-visualizacao.component.spec.ts` pro hover/foco de DT) — 572 testes
+> frontend, **571 passando**; a 1 falha é a mesma pré-existente e alheia de `ficha-inventario`
+> ("apelido de equipamento", m3-33) já documentada como quebrada em `master` antes desta rodada.
+> Lint limpo (os mesmos 4 erros pré-existentes, confirmados via `git stash`, não tocados). **Verificado
+> ao vivo** (Playwright **instalado globalmente**, não MCP — `npm root -g`, conforme a skill
+> `verify`; Postgres + backend + frontend reais, usuário registrado via REST, ficha criada pela UI
+> real): as três mudanças bateram os critérios de aceite na aplicação de verdade, não só em teste —
+> abas com delta 0px, tooltip "Força — DT 12" idêntico por mouse e por teclado, carta da bandeja com
+> 640px exatos, e a transição de saída amostrada em 30ms/150ms/280ms mostrando encolhimento
+> contínuo de largura/opacidade (nunca um salto instantâneo). Zero erros de console/página durante a
+> verificação. Spec movida para `docs/specs/done/m3-55-ficha-refino-visual-desktop.spec.md`.
+> **Próxima task:** a fila do lote `m3-40`…`m3-56` segue com `m3-56` (ficha — mobile skeletons); a
+> `m3-53` (ficha — exportar PDF), pulada há duas rodadas, **continua no backlog** e ainda precisa ser
+> retomada antes do lote fechar.
+>
+> Última atualização anterior: 2026-07-27 (**m3-54 — Calculadora flutuante**: task `m3-54` do lote de
 > refino `m3-40`…`m3-56` implementada — fora de ordem (pulou a `m3-53`, exportar PDF, que segue no
 > backlog; ver "Próxima task" abaixo). Feature de UI isolada, sem dado/schema/permissão novos.
 > **Componente novo** `shared/calculadora-flutuante/` (`CalculadoraFlutuante`), autocontido — quem

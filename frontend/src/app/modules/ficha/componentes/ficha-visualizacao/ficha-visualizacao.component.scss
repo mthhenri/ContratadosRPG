@@ -299,6 +299,11 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
+    // Baseline consistente entre ícone e rótulo (m3-55): sem isso, o `line-height` padrão da fonte
+    // (variável entre navegadores) faz o nó de texto ficar mais alto que o ícone (`line-height: 0`
+    // no `app-icone`), então `align-items: center` centralizava cada um numa altura diferente —
+    // ícone e rótulo "flutuavam" em alturas ligeiramente distintas entre as seis abas.
+    line-height: 1;
     font-family: var(--font-mono);
     font-size: 10px;
     font-weight: 500;
@@ -321,8 +326,15 @@
     }
   }
 
+  // Rótulo em `<span>` próprio (era texto solto ao lado do `app-icone`) — caixa estável no flex,
+  // em vez de depender do item anônimo que o navegador cria para um nó de texto cru.
+  &__aba-texto {
+    display: inline-block;
+  }
+
   &__aba-icone {
     font-size: 13px;
+    flex-shrink: 0;
   }
 
   // Sem a caixa de fundo mais clara que envolvia tudo — só espaçamento estrutural entre as
@@ -1615,6 +1627,22 @@
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--text-mute);
+
+    // Hover/foco revela a DT do atributo (m3-55) — mesmo sinal visual de `.ficha-barra__rotulo--dica`
+    // (Vida/Energia): sublinhado pontilhado + cursor de ajuda avisam que há mais info ali.
+    &--dica {
+      cursor: help;
+      text-decoration: underline dotted var(--text-mute);
+      text-underline-offset: 3px;
+      border-radius: 2px;
+
+      // A regra global de foco (`_base.scss`) só cobre `a`/`button` — este rótulo precisa do
+      // próprio tratamento por ser focável via `tabindex` sem ser um controle nativo.
+      &:focus-visible {
+        outline: 2px solid var(--accent-border);
+        outline-offset: 2px;
+      }
+    }
   }
 
   &__valor {

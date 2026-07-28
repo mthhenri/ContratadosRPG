@@ -914,7 +914,6 @@
                   } @else {
                     <div
                       class="ficha-atributo"
-                      [appTooltip]="campo.nome"
                       [class.ficha-atributo--maestria]="maestriaAtual() === campo.chave"
                       [class.ficha-atributo--lesionado]="penalidadesLesao()[campo.chave] > 0"
                     >
@@ -929,7 +928,20 @@
                           <app-icone [nome]="'dado'" />
                         </button>
                       }
-                      <span class="ficha-atributo__abrev">
+                      <!-- Abreviação = o "rótulo" do atributo — hover/foco revela o nome + a DT dele
+                           (shared/regras/dt, m3-55), mesma base de `rolarTesteAtributo`. Único
+                           `[appTooltip]` do box: antes a `div` também tinha um (só `campo.nome`) —
+                           como `pointerenter` não borbulha mas dispara em todo ancestro cujo "tem o
+                           ponteiro dentro" virou verdadeiro, os dois abriam juntos ao passar o mouse
+                           bem na abreviação (dois balões sobrepostos). Focável (tabindex) porque um
+                           `<span>` sem isso nunca recebe foco por teclado — sem tabindex o tooltip
+                           nunca abriria via `focusin`. -->
+                      <span
+                        class="ficha-atributo__abrev ficha-atributo__abrev--dica"
+                        tabindex="0"
+                        [appTooltip]="campo.nome + ' — DT ' + dtAtributo(campo.chave)"
+                        [attr.aria-label]="campo.nome + ' — DT ' + dtAtributo(campo.chave)"
+                      >
                         @if (maestriaAtual() === campo.chave) {
                           <span class="ficha-atributo__estrela" aria-hidden="true">★</span>
                         }
@@ -989,7 +1001,7 @@
           (click)="selecionarAbaStatus('informacoes')"
         >
           <app-icone class="ficha-status__aba-icone" [nome]="'visao-geral'" />
-          Informações
+          <span class="ficha-status__aba-texto">Informações</span>
         </button>
         <button
           type="button"
@@ -998,7 +1010,7 @@
           (click)="selecionarAbaStatus('inventario')"
         >
           <app-icone class="ficha-status__aba-icone" [nome]="'inventario'" />
-          Inventário
+          <span class="ficha-status__aba-texto">Inventário</span>
         </button>
         <button
           type="button"
@@ -1007,7 +1019,7 @@
           (click)="selecionarAbaStatus('habilidades')"
         >
           <app-icone class="ficha-status__aba-icone" [nome]="'habilidades'" />
-          Habilidades
+          <span class="ficha-status__aba-texto">Habilidades</span>
         </button>
         <button
           type="button"
@@ -1016,7 +1028,7 @@
           (click)="selecionarAbaStatus('rolagens')"
         >
           <app-icone class="ficha-status__aba-icone" [nome]="'rolagens'" />
-          Rolagens
+          <span class="ficha-status__aba-texto">Rolagens</span>
         </button>
         <button
           type="button"
@@ -1025,7 +1037,7 @@
           (click)="selecionarAbaStatus('extras')"
         >
           <app-icone class="ficha-status__aba-icone" [nome]="'mais'" />
-          Extras
+          <span class="ficha-status__aba-texto">Extras</span>
         </button>
         @if (ajustavel()) {
           <!-- Só dono/mestre (m3-50) — o backend já nem manda `dados.historia` pro visualizador. -->
@@ -1036,7 +1048,7 @@
             (click)="selecionarAbaStatus('historia')"
           >
             <app-icone class="ficha-status__aba-icone" [nome]="'anotacoes'" />
-            História
+            <span class="ficha-status__aba-texto">História</span>
           </button>
         }
       </div>

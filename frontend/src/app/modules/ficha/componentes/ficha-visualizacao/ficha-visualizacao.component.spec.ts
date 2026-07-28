@@ -113,6 +113,16 @@ describe('FichaVisualizacao', () => {
     expect(dicaEnergia).toContain('Energia');
   });
 
+  it('hover/foco no atributo revela a DT dele — shared/regras/dt, mesma fórmula da página de DT (m3-55)', () => {
+    const { fixture } = montar(dados);
+    const abrevs = fixture.debugElement.queryAll(By.css('.ficha-atributo__abrev--dica'));
+    const forca = abrevs.find((de) => (de.nativeElement as HTMLElement).textContent?.trim().startsWith('FOR'))!;
+    // Nível 3, Força 3 (sem lesão) → DT = 10 + 3 + 3×2 = 19.
+    expect(forca.nativeElement.getAttribute('tabindex')).toBe('0');
+    expect(forca.nativeElement.getAttribute('aria-label')).toBe('Força — DT 19');
+    expect(forca.injector.get(Tooltip).appTooltip()).toBe('Força — DT 19');
+  });
+
   it('deriva a Patente do Prestígio', () => {
     const { raiz } = montar(dados);
     // Prestígio 1 → patente "Agente".

@@ -8,6 +8,7 @@
         @for (entrada of bandeja.entradas(); track entrada.id) {
           <article
             class="bandeja__carta"
+            [class.bandeja__carta--saindo]="entrada.saindo"
             [style.opacity]="entrada.saindo ? 0 : opacidade($index)"
             (mouseenter)="bandeja.pausar(entrada.id)"
             (mouseleave)="bandeja.retomar(entrada.id)"

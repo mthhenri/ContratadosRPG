@@ -52,22 +52,50 @@
     gap: 12px;
     transition: transform 0.35s ease;
     // transform inline: translateX(-50%) centraliza a mais nova + offset desliza o histórico p/ a esquerda
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
   }
 
   &__carta {
     position: relative; // ancora a barra de tempo no rodapé
-    overflow: hidden; // a barra respeita o raio da carta
+    overflow: hidden; // a barra respeita o raio da carta + o colapso de saída não vaza conteúdo
     pointer-events: auto;
-    box-sizing: border-box; // largura total = 320 (casa com LARGURA_CARTA da centralização)
-    flex: 0 0 320px;
-    width: 320px;
+    box-sizing: border-box; // largura total = 640 (casa com LARGURA_CARTA da centralização)
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: 640px;
+    width: 640px;
     background: var(--surface);
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-card);
     padding: 15px 21px;
     box-shadow: 0 12px 30px rgb(0 0 0 / 42%);
     animation: bandeja-entra 0.22s ease;
-    transition: opacity 0.4s ease;
+    // Saída (m3-55): fade + colapso de largura/padding acontecem juntos, na mesma transição — a
+    // carta "fecha" como uma cortina em vez de sumir seca e empurrar as vizinhas de repente (o
+    // "bounce" antigo). Duração casa com `DURACAO_SAIDA_MS` do serviço; `ease-out` não tem overshoot.
+    transition:
+      opacity 0.28s ease-out,
+      flex-basis 0.28s ease-out,
+      width 0.28s ease-out,
+      padding-left 0.28s ease-out,
+      padding-right 0.28s ease-out;
+
+    &--saindo {
+      flex-basis: 0;
+      width: 0;
+      min-width: 0;
+      padding-left: 0;
+      padding-right: 0;
+      pointer-events: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+      transition: none;
+    }
   }
 
   // Barra de tempo no rodapé: esvazia em 7s (casa com duracaoMs); no hover volta cheia e pausa.
@@ -125,6 +153,7 @@
     font-size: 12px;
     color: var(--text-mute);
     overflow-wrap: anywhere;
+    text-align: center; // carta larga (m3-55): centraliza em vez de grudar na esquerda
   }
 
   // Container dos blocos de resultado (m3-46): 1 bloco sem repetição; N blocos empilhados com
@@ -132,6 +161,7 @@
   &__resultados {
     display: flex;
     flex-direction: column;
+    align-items: center; // cada bloco encolhe pro próprio conteúdo e centraliza na carta larga (m3-55)
     gap: 10px;
   }
 
@@ -190,7 +220,6 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
-    flex: 1; // ocupa a largura restante da carta ao lado do total
     min-width: 0; // permite os dados quebrarem em vez de estourar a carta
   }
 

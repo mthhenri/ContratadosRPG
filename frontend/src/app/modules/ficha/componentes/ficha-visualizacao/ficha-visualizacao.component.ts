@@ -51,6 +51,7 @@ import {
   listarModulosFragmentosPortados,
   reducaoCustoPorAfinidade,
 } from '@contratados-rpg/shared/regras/compras';
+import { calcularDtAtributo } from '@contratados-rpg/shared/regras/dt';
 import { rolarFormula, validarFormula } from '@contratados-rpg/shared/regras/rolagem';
 import {
   experimentoComPeculiaridade,
@@ -609,6 +610,16 @@ export class FichaVisualizacao {
   protected readonly atributosEfetivos = computed(() =>
     calcularAtributosEfetivos(this.atributos(), this.estado().lesoes),
   );
+
+  /**
+   * DT (Dificuldade de Teste) do atributo `chave` quando **este agente** é o causador do teste —
+   * `shared/regras/dt` (mesma fórmula da página de DT da calculadora, m1-08): `10 + Nível +
+   * Atributo×2`. Usa o atributo **efetivo** (já com a penalidade de lesão descontada), a mesma base
+   * que `rolarTesteAtributo` rola (m3-55, hover/foco no atributo).
+   */
+  protected dtAtributo(chave: ChaveAtributo): number {
+    return calcularDtAtributo({ nivel: this.dados().nivel, atributo: this.atributosEfetivos()[chave] });
+  }
 
   /** Proficiência derivada (nível; `null` para Civil) — somada no teste de atributo (m3-22). */
   protected readonly proficiencia = computed(() =>
