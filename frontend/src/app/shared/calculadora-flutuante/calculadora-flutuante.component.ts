@@ -208,14 +208,29 @@ export class CalculadoraFlutuante {
     evento.preventDefault();
   }
 
-  /** Segue o ponteiro somando o delta ao tamanho de partida, clampado ao mínimo e à viewport. */
+  /**
+   * Segue o ponteiro escalando largura e altura juntas (proporcional) — projeta o deslocamento
+   * do ponteiro sobre a diagonal do popup em vez de tratar os dois eixos independentemente, então
+   * a proporção original nunca distorce, só o tamanho.
+   */
   private continuarRedimensionamento(evento: PointerEvent): void {
     const origem = this.origemRedimensionamento;
+    const diagonal = Math.hypot(origem.largura, origem.altura);
+    const deltaX = evento.clientX - origem.x;
+    const deltaY = evento.clientY - origem.y;
+    const deslocamento = (deltaX * origem.largura + deltaY * origem.altura) / diagonal;
+    const escala = (diagonal + deslocamento) / diagonal;
+
     const larguraMaxima = window.innerWidth - 16;
     const alturaMaxima = window.innerHeight - 16;
-    const largura = limitar(origem.largura + (evento.clientX - origem.x), LARGURA_MINIMA, larguraMaxima);
-    const altura = limitar(origem.altura + (evento.clientY - origem.y), ALTURA_MINIMA, alturaMaxima);
-    this.tamanho.set({ width: largura, height: altura });
+    const escalaMinima = Math.max(LARGURA_MINIMA / origem.largura, ALTURA_MINIMA / origem.altura);
+    const escalaMaxima = Math.min(larguraMaxima / origem.largura, alturaMaxima / origem.altura);
+    const escalaLimitada = limitar(escala, escalaMinima, escalaMaxima);
+
+    this.tamanho.set({
+      width: origem.largura * escalaLimitada,
+      height: origem.altura * escalaLimitada,
+    });
   }
 
   /** Um único par de listeners em `window` cobre arraste e redimensionamento (mutuamente exclusivos). */

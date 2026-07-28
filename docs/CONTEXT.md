@@ -41,7 +41,16 @@
 > botão **"Limpar"** no cabeçalho do histórico (`limparHistorico()`, zera só o array — não mexe na
 > expressão em edição). Reverificado ao vivo (mesmo Playwright): redimensionar cresce o popup nas
 > duas direções, "Limpar" esvazia a seção (que some, já que é `@if (historico().length)`), e uma
-> conta nova depois some do histórico igual após o reload. Spec movida para
+> conta nova depois some do histórico igual após o reload. **Segundo ajuste pós-entrega, mesma
+> sessão:** redimensionamento passa a ser **proporcional** (largura e altura escalam juntas) em vez
+> de esticar os dois eixos independentemente — `continuarRedimensionamento` projeta o deslocamento
+> do ponteiro sobre a diagonal do popup (`Math.hypot(largura, altura)`) pra achar um único fator de
+> escala, aplicado às duas dimensões a partir do tamanho de partida; mínimo/máximo agora são limites
+> de **escala** (`max(260/L, 380/H)` … `min(larguraViewport/L, alturaViewport/H)`), não clamps
+> independentes por eixo, então a proporção nunca distorce nem nos extremos. Reverificado ao vivo
+> (Playwright): arraste bem mais horizontal que vertical (e vice-versa) preserva a proporção
+> original (erro < 0.001) tanto crescendo quanto encolhendo, e encolher além do mínimo trava no
+> tamanho mínimo sem distorcer. Spec movida para
 > `docs/specs/done/m3-54-ficha-calculadora-flutuante.spec.md`. **Próxima task:** esta rodada pulou a
 > `m3-53` (ficha — exportar PDF), que **segue no backlog**; a fila do lote `m3-40`…`m3-56` continua
 > com `m3-55` (ficha — refino visual desktop) e `m3-56` (ficha — mobile skeletons), mas `m3-53` ainda
