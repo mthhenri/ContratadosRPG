@@ -317,12 +317,49 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
 
-    // m3-56: seis abas de 44px + gaps somam ~289px — mais do que a coluna Status tem disponível
-    // a 360px (~288px). Em vez de deixar alguma aba encolher abaixo do alvo de toque (medido ao
-    // vivo: 40.7px de largura sem isto), a barra rola horizontalmente — cada aba mantém 44px.
+    // m3-56.1: os 6 rótulos completos não cabem sempre — nem só no mobile (achado ao vivo: no
+    // desktop também, quando a coluna Status é mais estreita que Identidade+Atributos deixam
+    // sobrar — a barra vazava pra fora do card, cortando "HISTÓRIA" em "HISTÓRI" sem nenhum
+    // aviso). Rola nos dois contextos; o fade (`appOverflowFade`, ver classes abaixo) e o
+    // auto-scroll até a aba ativa (`effect` no componente) tornam a rolagem visível/alcançável.
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none; // a barra de rolagem some (o fade já indica "tem mais") — some no Firefox…
+    &::-webkit-scrollbar {
+      display: none; // …e no Chrome/Safari/Edge.
+    }
+
     @include bp.mobile {
-      overflow-x: auto;
-      flex-wrap: nowrap;
+      min-width: 0;
+    }
+
+    // Fade nas bordas onde há mais conteúdo pra rolar (mesmo padrão de `.compras-fragmentos` da
+    // calculadora, m1-15/m3-45 — `appOverflowFade` marca as classes conforme a posição do scroll).
+    --fade-esquerda: 0px;
+    --fade-direita: 0px;
+
+    &.overflow-fade--esquerda,
+    &.overflow-fade--direita {
+      -webkit-mask-image: linear-gradient(
+        to right,
+        transparent 0,
+        #000 var(--fade-esquerda),
+        #000 calc(100% - var(--fade-direita)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to right,
+        transparent 0,
+        #000 var(--fade-esquerda),
+        #000 calc(100% - var(--fade-direita)),
+        transparent 100%
+      );
+    }
+    &.overflow-fade--esquerda {
+      --fade-esquerda: 20px;
+    }
+    &.overflow-fade--direita {
+      --fade-direita: 20px;
     }
   }
 

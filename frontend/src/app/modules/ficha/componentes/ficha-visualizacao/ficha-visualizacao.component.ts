@@ -443,6 +443,13 @@ export class FichaVisualizacao {
     this.abaStatusMudou.emit(aba);
   }
 
+  /**
+   * Container da mini barra de abas do Status (m3-56.1) — a barra rola horizontalmente (mobile
+   * **e** desktop, ver SCSS) quando os 6 rótulos não cabem; usado pelo `effect` abaixo pra trazer
+   * a aba ativa pra dentro da área visível.
+   */
+  private readonly abasStatusContainer = viewChild<ElementRef<HTMLElement>>('abasStatusContainer');
+
   /** Campo de vitalidade em digitação direta (clicou no valor), ou `null` fora de edição. */
   protected readonly editandoVitalidade = signal<CampoVitalidade | null>(null);
   private readonly entradaVitalidade = viewChild<ElementRef<HTMLInputElement>>('entradaVitalidade');
@@ -529,6 +536,45 @@ export class FichaVisualizacao {
         elemento?.focus();
         elemento?.select();
       }
+    });
+    // m3-56.1: a mini barra de abas do Status rola horizontalmente (6 rótulos nem sempre cabem —
+    // achado ao vivo tanto no mobile quanto no desktop, onde a coluna Status pode ser mais estreita
+    // que os 6 rótulos completos). Sem isso, trocar para uma aba fora da área visível deixava o
+    // rótulo cortado na borda do card sem nenhuma pista de que dava pra rolar até ele.
+    //
+    // `scrollIntoView({ inline: 'nearest' })` (1ª versão) media a posição do botão **no mesmo
+    // tick** em que a classe `--ativa` muda — mas é justamente essa classe que expande o botão
+    // (ícone-só → ícone+rótulo, ver SCSS), então o layout ainda não tinha assentado a largura
+    // nova na hora da leitura (confirmado ao vivo: o botão calculava 349px de borda direita
+    // contra 336px do container, mas só rolava 11px de um máximo de 30px necessários — sobravam
+    // ~14px cortados). `requestAnimationFrame` adia a leitura pro frame seguinte, já com o
+    // layout recalculado; o scroll manual (em vez de deixar o `scrollIntoView` decidir "nearest")
+    // também garante a borda oposta certa nos dois sentidos (botão parcialmente fora à esquerda
+    // ou à direita).
+    effect(() => {
+      const aba = this.abaStatusAtiva();
+      const container = this.abasStatusContainer()?.nativeElement;
+      if (!container) {
+        return;
+      }
+      requestAnimationFrame(() => {
+        const botao = container.querySelector<HTMLElement>(`[data-aba-status="${aba}"]`);
+        if (!botao) {
+          return;
+        }
+        const areaContainer = container.getBoundingClientRect();
+        const areaBotao = botao.getBoundingClientRect();
+        let scrollAlvo = container.scrollLeft;
+        if (areaBotao.left < areaContainer.left) {
+          scrollAlvo -= areaContainer.left - areaBotao.left;
+        } else if (areaBotao.right > areaContainer.right) {
+          scrollAlvo += areaBotao.right - areaContainer.right;
+        } else {
+          return; // já totalmente visível — nada a rolar.
+        }
+        const reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        container.scrollTo({ left: scrollAlvo, behavior: reduzMovimento ? 'auto' : 'smooth' });
+      });
     });
   }
 

@@ -993,10 +993,15 @@
          `dialog` — lista compacta aqui, catálogo/mods/fragmento em `p-dialog`) e Habilidades
          (`FichaHabilidades`, m3-13, reencaixada aqui — as 3 posições da barra em uso). -->
     <div class="ficha-visao__coluna ficha-visao__coluna--status">
-      <div class="ficha-status__abas">
+      <!-- m3-56.1: rola horizontalmente (mobile e desktop — os 6 rótulos completos nem sempre
+           cabem na coluna Status) com fade nas bordas onde há mais conteúdo pra rolar
+           (appOverflowFade, mesmo padrão de `.compras-fragmentos` da calculadora) — o `effect`
+           de `abasStatusContainer` no componente traz a aba ativa pra dentro da área visível. -->
+      <div class="ficha-status__abas" #abasStatusContainer appOverflowFade>
         <button
           type="button"
           class="ficha-status__aba"
+          data-aba-status="informacoes"
           [class.ficha-status__aba--ativa]="abaStatusAtiva() === 'informacoes'"
           (click)="selecionarAbaStatus('informacoes')"
         >
@@ -1006,6 +1011,7 @@
         <button
           type="button"
           class="ficha-status__aba"
+          data-aba-status="inventario"
           [class.ficha-status__aba--ativa]="abaStatusAtiva() === 'inventario'"
           (click)="selecionarAbaStatus('inventario')"
         >
@@ -1015,6 +1021,7 @@
         <button
           type="button"
           class="ficha-status__aba"
+          data-aba-status="habilidades"
           [class.ficha-status__aba--ativa]="abaStatusAtiva() === 'habilidades'"
           (click)="selecionarAbaStatus('habilidades')"
         >
@@ -1024,6 +1031,7 @@
         <button
           type="button"
           class="ficha-status__aba"
+          data-aba-status="rolagens"
           [class.ficha-status__aba--ativa]="abaStatusAtiva() === 'rolagens'"
           (click)="selecionarAbaStatus('rolagens')"
         >
@@ -1033,6 +1041,7 @@
         <button
           type="button"
           class="ficha-status__aba"
+          data-aba-status="extras"
           [class.ficha-status__aba--ativa]="abaStatusAtiva() === 'extras'"
           (click)="selecionarAbaStatus('extras')"
         >
@@ -1044,6 +1053,7 @@
           <button
             type="button"
             class="ficha-status__aba"
+            data-aba-status="historia"
             [class.ficha-status__aba--ativa]="abaStatusAtiva() === 'historia'"
             (click)="selecionarAbaStatus('historia')"
           >

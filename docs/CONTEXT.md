@@ -122,7 +122,31 @@
 > barra de abas) enquanto a resposta ficou pendente, sumiu e deu lugar à ficha real assim que a
 > resposta foi liberada — testado em 1440px (screenshot conferido visualmente: silhueta reconhecível
 > da tela real) e responsivo (mesmos breakpoints do layout real). Zero erros de console/página
-> durante toda a verificação. Spec movida para
+> durante toda a verificação. **Adendo (mesma sessão, revisão de UX a partir das capturas):** a
+> checagem por bounding-box acima provava "sem overflow do body", mas não provava "legível" — em
+> capturas visuais a barra `.ficha-status__abas` cortava o rótulo da aba ativa na borda do card
+> sem nenhuma pista de que a barra era rolável (achado tanto no mobile quanto — mais grave — no
+> **desktop** 1440px, onde "HISTÓRIA" virava "HISTÓRI", já que a coluna Status pode ser mais
+> estreita que os 6 rótulos completos mesmo em telas largas). Fix em duas partes: **(1)** fade nas
+> bordas via `appOverflowFade` (mesmo directive/padrão de `.compras-fragmentos` da calculadora,
+> `--fade-esquerda`/`--fade-direita` + `mask-image`), aplicado também no desktop (o
+> `overflow-x: auto` da barra, antes só dentro de `bp.mobile`, passou a valer sempre). **(2)**
+> auto-scroll até a aba ativa ficar totalmente visível ao trocar de aba (`effect` novo no
+> componente) — primeira versão usou `botao.scrollIntoView({ inline: 'nearest' })`, mas **media a
+> posição do botão no mesmo tick em que a classe `--ativa` mudava**, e é essa classe que expande o
+> botão (ícone-só → ícone+rótulo); o layout ainda não tinha assentado a largura nova na hora da
+> leitura (confirmado ao vivo: rolava só 11px de 30px necessários, sobrando ~14px cortados — bug
+> só visível em screenshot, não no `document.body.scrollWidth`). Corrigido adiando a leitura pra
+> depois de `requestAnimationFrame` e calculando o `scrollLeft` manualmente a partir das duas
+> bordas (em vez de confiar no "nearest" do navegador) — `prefers-reduced-motion` pula a animação
+> (`behavior:'auto'`), confirmado ao vivo (scroll instantâneo, aba visível em <150ms). **Verificado
+> ao vivo de novo**, agora medindo explicitamente se o botão da aba ativa cabe inteiro dentro do
+> container em cada troca (não só "dentro do viewport"): as 6 abas × 360/390/430px **e** 1440px —
+> 24 combinações, todas com a aba ativa 100% dentro dos limites do container após o scroll assentar
+> (antes do fix, "História" a 1440px ficava com a borda direita ~13px fora). Capturas antes/depois
+> comparadas visualmente (zoom na barra de abas + página inteira) nas mesmas seis abas × quatro
+> larguras + os dois esqueletos (mobile/desktop) — sem outro corte, sobreposição de texto ou
+> espremimento encontrado nessa passada. Spec movida para
 > `docs/specs/done/m3-56-ficha-mobile-skeletons.spec.md`. **Próxima task:** com a `m3-56` fechada,
 > o lote `m3-40`…`m3-56` só tem um item pendente — a **`m3-53`** (ficha — exportar PDF), pulada
 > duas vezes ao longo do lote e ainda em `docs/specs/backlog/`; deve ser retomada de lá para
