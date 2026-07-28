@@ -1,6 +1,100 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-28 (**m3-56 — Passe mobile + esqueletos de carregamento da
+> Última atualização: 2026-07-28 (**m3-60 — Navegação mobile da ficha: HUD fixo + barra
+> inferior**: task nova, aberta depois que o dono do produto olhou o resultado da `m3-56` e disse
+> que "a UI/UX não encaixou". A `m3-56` passou nos testes de bounding box e ainda assim a tela não
+> se usa em mesa — este é o diagnóstico de por quê, e a correção. **Achado central:** no desktop a
+> ficha são três colunas (Identidade+Vitais | Atributos | Status com abas), em que as duas
+> primeiras são **contexto permanente** e as abas trocam só a terceira; no mobile um único
+> `flex-direction: column` (o `bp.tablet` que a própria `m3-56` introduziu) empilhava as três na
+> ordem do DOM. Empilhar **preserva o conteúdo das colunas e destrói a relação entre elas** — a
+> spec da `m3-56` pediu literalmente "grades que refluem para 1 coluna", ou seja, um passe
+> responsivo mecânico, e é essa a raiz do problema, não um bug pontual. A tradução correta de
+> paralelismo espacial (olhar para o lado) no celular é **navegação temporal (trocar de vista) +
+> um resumo fixo**, não empilhamento. **Números medidos ao vivo** (390×844, ficha cheia — as
+> capturas da `m3-56` usaram ficha **vazia**, e isso escondeu quase todos os defeitos reais):
+> página de **3.224px** (3,8 telas) na aba Informações; topo da barra de abas em **y=1.903px**
+> (2,25 telas de rolagem cega antes de encontrar a navegação, em **todas** as abas, o que dá
+> 80% da rolagem em Informações e **129%** em História); e — o achado que faltava — **trocar de
+> aba não movia o scroll**: `scrollTop` idêntico antes e depois nas três trocas medidas, com o
+> painel nascendo em **y=705 de 844**, ou seja, cada troca custava *mais uma* rolagem. Só a tarefa
+> "tomei 7 de dano" era barata (0 swipes); todas as outras pagavam ~3 swipes cegos + 1.
+> **Solução (mantendo o modelo, não matando a "nova forma de ver a ficha"):** o contexto permanente
+> vira um **HUD `sticky`** no topo (nome, patente/classe/nível, Vida/Energia com barra proporcional,
+> selos de condição ativa) e o detalhe trocável ganha a **tela inteira**, com uma **barra de
+> navegação `fixed` no rodapé**. As três colunas do desktop viram os destinos da barra, lidas da
+> esquerda para a direita: `agente` (Identidade + Atributos, destino **mobile-only**, tipo
+> `DestinoMobile = 'agente' | AbaStatus`) + as seis abas de Status já existentes. **`'agente'` não
+> entra em `AbaStatus` de propósito** — o `#` da URL continua sendo o canal das abas de Status e o
+> desktop segue com as três colunas visíveis ao mesmo tempo; `destinoMobileInicial` é calculado
+> **separado** de `abaStatusInicial` (e não derivado dele) porque este último não distingue "sem
+> fragmento" de "#informacoes", e sem fragmento o celular deve cair no agente. **Por que o sticky
+> funciona sem mexer em nenhum ancestral:** a cadeia usa `overflow-x: clip` com `overflow-y:
+> visible` (`html` em `styles.scss`, `.conteudo` em `layout.component.scss`) — é a única combinação
+> da spec que **não** transforma o outro eixo em scroll container. **Trocar qualquer um desses
+> `clip` por `hidden`/`auto` mata todo sticky da tela em silêncio** (tentação natural ao caçar
+> overflow horizontal — está comentado no SCSS). **A barra inferior não é invenção:** é o padrão
+> canônico já existente em `calculadora-shell.component.scss` (m1-20), z-index na faixa 10–19 e
+> `env(safe-area-inset-bottom)`. A diferença que importa é `flex: 1 1 0` (lá e agora aqui) contra
+> `flex: 0 0 auto` (a barra de abas do Status): com `1 1 0` os sete destinos **dividem** a largura e
+> cabem sem rolagem lateral nenhuma — medido, 52×44px por item a 390px, nenhum rótulo cortado.
+> **Isso invalida o fix da `m3-56.1`** (fade + auto-scroll até a aba ativa, commit `2e940d4`): ele
+> tratava o sintoma da rolagem lateral; a resposta certa era **não rolar**. O fade e o auto-scroll
+> continuam existindo, mas agora valem só no desktop, onde a coluna Status de fato pode ficar
+> estreita. A barra fica **fora** de `.ficha-visao__painel--solo` de propósito: aquele bloco tem
+> `animation` com `transform`, e um ancestral com transform vira containing block de descendente
+> `position: fixed`. **Convivência no rodapé:** bandeja de dados (`bottom: 20px`) e gatilho da
+> calculadora (`bottom: 24px`) moravam exatamente na faixa da barra nova — medido, a carta da
+> bandeja cobria a barra de abas **e** o próprio gatilho por 6,35s a cada rolagem. Resolvido com a
+> custom property `--piso-flutuante`, declarada no **`:host` da página** (não no `.ficha-pagina`:
+> `app-calculadora-flutuante` é **irmão** dele no template e não herdaria) e consumida com fallback
+> `0px`, então nenhuma outra tela muda. **Também nesta leva:** (a) **alvos de toque por área, não
+> por caixa** — mixin `alvo-de-toque` com `::after` de 44×44 centrado, porque o valor clicável da
+> edição no lugar (m3-10) é *texto no meio de uma frase* e crescer a caixa destruiria a densidade
+> do card; cobre o dado de rolar teste (22×22, ×10, o gesto mais repetido da ficha), a estrela de
+> Maestria e os `--editavel`. Inclui `.ficha-atributo__mod-passo`, que **parecia** corrigido pela
+> `m3-56` e não estava: `@extend .ficha-passo` injeta o seletor no media query de 44px, mas um
+> `width: 18px` declarado **depois** no arquivo, com a **mesma especificidade**, vence lá dentro —
+> armadilha a lembrar sempre que houver `@extend` + media query. (b) **Grade de atributos em 3
+> colunas no mobile**: a regra `bp.mobile { repeat(3) }` **já existia e nunca rodava**, anulada
+> pela especificidade (0,2,0) de `.ficha-atributos--2col` contra (0,1,0) dela — o resultado eram os
+> dois órfãos centralizados (VIG e VON); corrigido repetindo o media query **dentro** do bloco
+> `--2col`, o que empata a especificidade e vence por ordem. (c) **Indicador de auto-save**: o
+> signal `edicaoPendente` existia e **nunca era referenciado no template** — o sucesso do
+> salvamento era completamente mudo (sem toast, sem "salvando…"); virou um selo discreto no
+> cabeçalho, deliberadamente **não** um toast, porque salvar é constante nesta tela (cada passo de
+> Vida agenda um save) e um toast por edição seria ruído contínuo. (d) **Tooltip abre por toque**
+> (`shared/tooltip`): `pointerenter` agendava com 300ms e `pointerdown` escondia — num toque os
+> dois disparam quase juntos e o `pointerdown` cancelava o timer, então **no celular o tooltip
+> nunca aparecia**, apagando informação que não existe em nenhum outro lugar (DT de cada atributo,
+> progressão de classe de Vida/Energia, decomposição das Resistências em base+equipamento+formação,
+> Contra-ataque, requisito de Maestria). Contrato: host **informativo** → toque curto abre e o
+> clique é engolido; host **acionável** (`a[href]`, `button`, campos, `role` equivalentes) → toque
+> curto **executa a ação** e o balão só abre no **pressionar-e-segurar de 500ms** (convenção de
+> long-press dos sistemas móveis). Modalidade por `PointerEvent.pointerType`, com `matchMedia
+> ('(hover: none)')` só desempatando — sem sniffing de UA; `aria-describedby` enquanto aberto.
+> **Colisão de seletor que quebrou dois testes existentes:** o selo de condição do HUD usava
+> `data-condicao`, que **já** identifica os botões de condição do card de Identidade — o
+> `querySelector` dos testes passou a casar o selo do HUD (que vem antes no DOM) em vez do botão;
+> renomeado para `data-selo-condicao`. **Dívida deliberadamente adiada** (decisão do dono):
+> **"Extras" continua se chamando Extras** e a **Origem continua morando lá, não em História** —
+> a auditoria ao vivo mostrou que a tarefa "o mestre perguntou da minha origem" leva um humano a
+> História (ícone de documento) e ele não acha; e o ícone que nomeia "Extras" é o `mais` (`+`),
+> o mesmo dos botões "Adicionar" do app inteiro. Fica registrado como dívida de nomenclatura.
+> Removido também o comentário no topo do template que ainda descrevia a tela como recorte
+> experimental "para comparar com a versão em produção, não entregar paridade de funcionalidade" —
+> o experimento virou estado permanente há várias tasks e o comentário passou a mentir.
+> Spec em `docs/specs/done/m3-60-ficha-mobile-navegacao.spec.md`. **Próxima task:** `m3-53`
+> (ficha — exportar PDF), única pendência do lote `m3-40`…`m3-56`, ainda no backlog. Ficam também
+> registrados, fora do escopo desta task e **não corrigidos**: o cromo de autoria antes do conteúdo
+> em cada painel (medidos 281px de botões — carga, "Adicionar itens", "Item custom", "Esvaziar",
+> "Custos", busca e 3 chips — antes do 1º item do Inventário; Rolagens abrindo com um campo vazio e
+> um botão "Rolar" desabilitado, com os presets salvos abaixo e **colapsados**; o editor de
+> atributos com SALVAR/CANCELAR **acima** dos 10 campos), e a dívida de nomenclatura de "Extras"
+> acima. Numa sessão se consulta e usa muito mais do que se cria, e a ordem visual dos painéis
+> ainda não reflete isso.)
+
+> Última atualização anterior: 2026-07-28 (**m3-56 — Passe mobile + esqueletos de carregamento da
 > ficha**: task `m3-56` do lote de refino `m3-40`…`m3-56` implementada — fecha o lote (falta só
 > a `m3-53`, ver "Próxima task"). **Achado central antes de implementar:** a `m3-26` (base mobile)
 > tratava a antiga grade de 3 colunas da Visão Geral, mas o redesenho de comparação visual
