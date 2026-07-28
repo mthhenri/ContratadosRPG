@@ -50,6 +50,17 @@
 > largura+animação da bandeja), `m3-56` (passe mobile de todas as abas + skeletons dos novos
 > layouts). Implementar uma por vez, movendo cada spec `backlog/ → active/ → done/` e atualizando
 > `CONTEXT.md` (fluxo padrão). `m3-27`/`m3-28` seguem à frente na fila.
+>
+> **Guia de criação de ficha (`m3-57`…`m3-59`)** — trio que substitui o assistente-dialog da `m3-16`
+> por uma **tela guiada por passos** (`/painel/:campanhaId/ficha/nova`), conduzindo o jogador pelas
+> escolhas de criação com as travas do documento: `m3-57` (tela, trilha de passos, rascunho em
+> `localStorage`, regra nova de **orçamento de atributos** em `shared/regras/agente/criacao.ts` — os
+> 4 pontos da criação que o dialog ignora —, passo **Novo Agente** calculando Nível/Prestígio/**Bônus
+> Monetário** a partir das médias do esquadrão, Identidade completa, rolagem visível do dinheiro
+> inicial e mobile), `m3-58` (passo das **melhorias de nível**: as vagas de habilidade e as
+> Fortificações que `calcularProgressaoAcumulada` já conta e ninguém consome) e `m3-59` (passo do
+> **Equipamento Inicial** na loja, tetos de $2500 e 5 de peso, orçamento à parte do dinheiro
+> rolado). O `FichaCriarDialog` é removido na `m3-57` — caminho único de criação.
 
 ## Objetivo
 
