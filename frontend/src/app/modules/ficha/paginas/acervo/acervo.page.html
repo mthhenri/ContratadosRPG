@@ -46,18 +46,16 @@
                   <span class="acervo__chip">Sem campanha</span>
                 }
                 <span class="acervo__cartao-regua"></span>
-                @if (campanhas().length > 0 || item.campanhaId !== null) {
-                  <button
-                    class="acervo__menu-botao"
-                    type="button"
-                    [attr.aria-label]="'Ações de ' + item.nome"
-                    aria-haspopup="menu"
-                    [attr.aria-expanded]="menuFichaAberto()?.id === item.id"
-                    (click)="alternarMenuFicha(item, $event)"
-                  >
-                    ⋯
-                  </button>
-                }
+                <button
+                  class="acervo__menu-botao"
+                  type="button"
+                  [attr.aria-label]="'Ações de ' + item.nome"
+                  aria-haspopup="menu"
+                  [attr.aria-expanded]="menuFichaAberto()?.id === item.id"
+                  (click)="alternarMenuFicha(item, $event)"
+                >
+                  ⋯
+                </button>
               </div>
             </div>
           </li>
@@ -86,6 +84,7 @@
     class="acervo__menu"
     role="menu"
     [style.top.px]="menuFichaPosicao()?.top"
+    [style.bottom.px]="menuFichaPosicao()?.bottom"
     [style.right.px]="menuFichaPosicao()?.right"
   >
     @if (campanhas().length > 0) {
@@ -111,6 +110,116 @@
         <span>{{ removendo() === menuAberto.id ? 'Removendo…' : 'Remover da campanha' }}</span>
       </button>
     }
+    <button
+      class="acervo__menu-item"
+      type="button"
+      role="menuitem"
+      (click)="pedirDuplicar(menuAberto.id, menuAberto.nome)"
+    >
+      <app-icone nome="duplicar" />
+      <span>Duplicar ficha</span>
+    </button>
+    <button
+      class="acervo__menu-item"
+      type="button"
+      role="menuitem"
+      (click)="pedirExcluirFicha(menuAberto.id, menuAberto.nome)"
+    >
+      <app-icone nome="excluir" />
+      <span>Excluir ficha</span>
+    </button>
+  </div>
+}
+
+@if (confirmandoDuplicar(); as pendenteDuplicar) {
+  <div class="dialogo" role="dialog" aria-modal="true" aria-label="Duplicar ficha">
+    <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="cancelarDuplicar()"></button>
+    <div class="dialogo__painel">
+      <header class="dialogo__cabecalho">
+        <span class="card__indice"><app-icone nome="duplicar" /></span>
+        <h2 class="dialogo__titulo">Duplicar Ficha</h2>
+        <span class="card__regua"></span>
+        <button
+          class="dialogo__fechar"
+          type="button"
+          aria-label="Fechar"
+          [disabled]="duplicando() === pendenteDuplicar.id"
+          (click)="cancelarDuplicar()"
+        >
+          ✕
+        </button>
+      </header>
+
+      <p class="dialogo__aviso">
+        Deseja mesmo duplicar a ficha "<strong>{{ pendenteDuplicar.nome }}</strong>"?
+      </p>
+
+      <div class="dialogo__acoes">
+        <button
+          class="botao botao--primario dialogo__acao"
+          type="button"
+          [disabled]="duplicando() === pendenteDuplicar.id"
+          (click)="confirmarDuplicar()"
+        >
+          <app-icone nome="duplicar" />
+          {{ duplicando() === pendenteDuplicar.id ? 'Duplicando…' : 'Confirmar duplicação' }}
+        </button>
+        <button
+          class="botao botao--secundario dialogo__acao"
+          type="button"
+          [disabled]="duplicando() === pendenteDuplicar.id"
+          (click)="cancelarDuplicar()"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (confirmandoExcluirFicha(); as pendenteExcluir) {
+  <div class="dialogo" role="dialog" aria-modal="true" aria-label="Excluir ficha">
+    <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="cancelarExcluirFicha()"></button>
+    <div class="dialogo__painel">
+      <header class="dialogo__cabecalho">
+        <span class="card__indice"><app-icone nome="excluir" /></span>
+        <h2 class="dialogo__titulo">Excluir Ficha</h2>
+        <span class="card__regua"></span>
+        <button
+          class="dialogo__fechar"
+          type="button"
+          aria-label="Fechar"
+          [disabled]="excluindoFicha() === pendenteExcluir.id"
+          (click)="cancelarExcluirFicha()"
+        >
+          ✕
+        </button>
+      </header>
+
+      <p class="dialogo__aviso">
+        Excluir <strong>{{ pendenteExcluir.nome }}</strong>? Esta ação não pode ser desfeita.
+      </p>
+
+      <div class="dialogo__acoes">
+        <button
+          class="botao botao--primario dialogo__acao"
+          type="button"
+          [disabled]="excluindoFicha() === pendenteExcluir.id"
+          (click)="confirmarExcluirFicha()"
+        >
+          <app-icone nome="excluir" />
+          {{ excluindoFicha() === pendenteExcluir.id ? 'Excluindo…' : 'Confirmar exclusão' }}
+        </button>
+        <button
+          class="botao botao--secundario dialogo__acao"
+          type="button"
+          [disabled]="excluindoFicha() === pendenteExcluir.id"
+          (click)="cancelarExcluirFicha()"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
   </div>
 }
 

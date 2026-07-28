@@ -65,7 +65,16 @@ export class FichaAcervo {
     nome: string;
     campanhaId: number | null;
   } | null>(null);
-  protected readonly menuFichaPosicao = signal<{ top: number; right: number } | null>(null);
+  /**
+   * `top` quando o menu abre pra baixo (padrão); `bottom` quando abre pra cima (cartão perto do
+   * fim da página — sem isso o menu de 4 itens saía cortado pela borda inferior da viewport, já
+   * que `position: fixed` não reposiciona sozinho). Só um dos dois é setado por vez.
+   */
+  protected readonly menuFichaPosicao = signal<{
+    top?: number;
+    bottom?: number;
+    right: number;
+  } | null>(null);
 
   /** Ficha pendente de escolher a campanha-alvo (dialog "Atribuir a campanha"). */
   protected readonly confirmandoAtribuir = signal<{ id: number; nome: string } | null>(null);
@@ -73,6 +82,19 @@ export class FichaAcervo {
   protected readonly atribuindo = signal<number | null>(null);
   /** `id` da ficha sendo desatribuída (ação direta, sem dialog) — desabilita só aquele item. */
   protected readonly removendo = signal<number | null>(null);
+
+  /**
+   * Duplicar/excluir (m3-52, "pendente para quando a m3-28 existir") — as duas affordances que a
+   * spec original previa no acervo mas ficaram só no painel da campanha (`CampanhaDetalhe`) e na
+   * própria tela da ficha (`FichaVisualizar`) enquanto `/fichas` não existia. Aqui não há
+   * `donoNome` na mensagem de confirmação (diferente de `CampanhaDetalhe`, onde o mestre duplica
+   * fichas de outros membros): o acervo só lista fichas do **próprio** usuário (`listarMinhasFichas`
+   * filtra por dono), então toda ficha aqui já é do autenticado — sem gate extra de permissão.
+   */
+  protected readonly confirmandoDuplicar = signal<{ id: number; nome: string } | null>(null);
+  protected readonly duplicando = signal<number | null>(null);
+  protected readonly confirmandoExcluirFicha = signal<{ id: number; nome: string } | null>(null);
+  protected readonly excluindoFicha = signal<number | null>(null);
 
   protected readonly itens = computed<readonly ItemAcervo[]>(() =>
     this.fichas().map((ficha) => ({
@@ -151,17 +173,26 @@ export class FichaAcervo {
       });
   }
 
-  /** Abre/fecha o menu de ações (kebab) de uma ficha — posição `fixed` calculada no clique. */
+  /**
+   * Abre/fecha o menu de ações (kebab) de uma ficha — posição `fixed` calculada no clique. Abre
+   * pra baixo por padrão; se não houver espaço suficiente até o fim da viewport (o menu tem até 4
+   * itens, ~180px), e houver mais espaço acima do botão do que abaixo, abre pra cima em vez de
+   * cortar na borda inferior.
+   */
   protected alternarMenuFicha(item: ItemAcervo, evento: MouseEvent): void {
     if (this.menuFichaAberto()?.id === item.id) {
       this.fecharMenuFicha();
       return;
     }
     const retangulo = (evento.currentTarget as HTMLElement).getBoundingClientRect();
-    this.menuFichaPosicao.set({
-      top: retangulo.bottom + 6,
-      right: window.innerWidth - retangulo.right,
-    });
+    const espacoAbaixo = window.innerHeight - retangulo.bottom;
+    const espacoAcima = retangulo.top;
+    const right = window.innerWidth - retangulo.right;
+    this.menuFichaPosicao.set(
+      espacoAbaixo < 190 && espacoAcima > espacoAbaixo
+        ? { bottom: window.innerHeight - retangulo.top + 6, right }
+        : { top: retangulo.bottom + 6, right },
+    );
     this.menuFichaAberto.set({ id: item.id, nome: item.nome, campanhaId: item.campanhaId });
   }
 
@@ -226,6 +257,72 @@ export class FichaAcervo {
               ficha.id === fichaId ? { ...ficha, campanhaId: null, campanhaNome: null } : ficha,
             ),
           );
+        },
+      });
+  }
+
+  /** Abre a confirmação de duplicação a partir do menu da ficha (m3-52, mesmo padrão de `CampanhaDetalhe`). */
+  protected pedirDuplicar(fichaId: number, fichaNome: string): void {
+    this.fecharMenuFicha();
+    this.confirmandoDuplicar.set({ id: fichaId, nome: fichaNome });
+  }
+
+  /** Cancela a duplicação pendente — inócuo enquanto a duplicação está em voo. */
+  protected cancelarDuplicar(): void {
+    if (this.duplicando() === null) {
+      this.confirmandoDuplicar.set(null);
+    }
+  }
+
+  /**
+   * Duplica a ficha (m3-52): o clone nasce solto se a original estiver solta, ou na mesma
+   * campanha da original caso contrário (`FichaService.duplicarFicha` repassa `campanhaId` da
+   * ficha original — backend). Recarrega o acervo pro clone aparecer.
+   */
+  protected confirmarDuplicar(): void {
+    const pendente = this.confirmandoDuplicar();
+    if (!pendente || this.duplicando() !== null) {
+      return;
+    }
+    this.duplicando.set(pendente.id);
+    this.fichaService
+      .duplicarFicha(pendente.id)
+      .pipe(finalize(() => this.duplicando.set(null)))
+      .subscribe({
+        next: () => {
+          this.confirmandoDuplicar.set(null);
+          this.carregar();
+        },
+      });
+  }
+
+  /** Abre a confirmação de exclusão a partir do menu da ficha (m3-52). */
+  protected pedirExcluirFicha(fichaId: number, fichaNome: string): void {
+    this.fecharMenuFicha();
+    this.confirmandoExcluirFicha.set({ id: fichaId, nome: fichaNome });
+  }
+
+  /** Cancela a exclusão pendente — inócuo enquanto a exclusão está em voo. */
+  protected cancelarExcluirFicha(): void {
+    if (this.excluindoFicha() === null) {
+      this.confirmandoExcluirFicha.set(null);
+    }
+  }
+
+  /** Exclui a ficha (soft delete) e some da lista na hora — sem refetch (m3-52). */
+  protected confirmarExcluirFicha(): void {
+    const pendente = this.confirmandoExcluirFicha();
+    if (!pendente || this.excluindoFicha() !== null) {
+      return;
+    }
+    this.excluindoFicha.set(pendente.id);
+    this.fichaService
+      .excluirFicha(pendente.id)
+      .pipe(finalize(() => this.excluindoFicha.set(null)))
+      .subscribe({
+        next: () => {
+          this.confirmandoExcluirFicha.set(null);
+          this.fichas.update((lista) => lista.filter((ficha) => ficha.id !== pendente.id));
         },
       });
   }

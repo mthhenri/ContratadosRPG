@@ -48,6 +48,10 @@ describe('FichaAcervo', () => {
         of({ id: 5, campanhaId: null, usuarioId: 7, nome: dto.nome, dados: dto.dados }),
       ),
       atribuirCampanha: vi.fn(() => of({ id: 1, campanhaId: 9 })),
+      duplicarFicha: vi.fn((id: number) =>
+        of({ id: 99, campanhaId: null, usuarioId: 7, nome: 'Kane (cópia)', dados: {} }),
+      ),
+      excluirFicha: vi.fn(() => of(undefined)),
     };
     const campanhaService = {
       listarCampanhas: vi.fn(() => of(opcoes.campanhas ?? campanhas)),
@@ -142,10 +146,10 @@ describe('FichaAcervo', () => {
     expect(dtoEnviado).not.toHaveProperty('campanhaId');
   });
 
-  it('não mostra o menu de ações quando não há campanhas nem a ficha está atribuída', () => {
+  it('mostra o menu de ações mesmo sem campanhas nem ficha atribuída (duplicar/excluir sempre disponíveis)', () => {
     const { raiz } = montar({ fichas: [fichaResumo({ campanhaId: null })], campanhas: [] });
 
-    expect(raiz.querySelector('.acervo__menu-botao')).toBeNull();
+    expect(raiz.querySelector('.acervo__menu-botao')).not.toBeNull();
   });
 
   it('abre o menu e a dialog de atribuição, chamando atribuirCampanha com a campanha escolhida', () => {
@@ -189,5 +193,95 @@ describe('FichaAcervo', () => {
     expect(fichaService.atribuirCampanha).toHaveBeenCalledWith(1, null);
     expect(raiz.querySelector('.dialogo')).toBeNull();
     expect(raiz.querySelector('.acervo__chip--campanha')).toBeNull();
+  });
+
+  function abrirMenuFicha(raiz: HTMLElement, fixture: { detectChanges(): void }) {
+    (raiz.querySelector('.acervo__menu-botao') as HTMLButtonElement).click();
+    fixture.detectChanges();
+  }
+
+  function clicarItemMenu(raiz: HTMLElement, fixture: { detectChanges(): void }, texto: string) {
+    const item = Array.from(raiz.querySelectorAll('.acervo__menu-item')).find((botao) =>
+      botao.textContent?.includes(texto),
+    ) as HTMLButtonElement;
+    item.click();
+    fixture.detectChanges();
+  }
+
+  describe('duplicar (m3-52, replicado do painel da campanha)', () => {
+    it('abre a dialog de confirmação com o nome da ficha', () => {
+      const { fixture, raiz } = montar({ fichas: [fichaResumo({ id: 1, nome: 'Kane' })] });
+      abrirMenuFicha(raiz, fixture);
+      clicarItemMenu(raiz, fixture, 'Duplicar ficha');
+
+      const dialog = raiz.querySelector('.dialogo');
+      expect(dialog).not.toBeNull();
+      expect(dialog?.textContent).toContain('Deseja mesmo duplicar a ficha "Kane"');
+    });
+
+    it('cancelar fecha a dialog sem chamar o serviço', () => {
+      const { fixture, raiz, fichaService } = montar({ fichas: [fichaResumo({ id: 1 })] });
+      abrirMenuFicha(raiz, fixture);
+      clicarItemMenu(raiz, fixture, 'Duplicar ficha');
+
+      (raiz.querySelector('.dialogo__fundo') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(raiz.querySelector('.dialogo')).toBeNull();
+      expect(fichaService.duplicarFicha).not.toHaveBeenCalled();
+    });
+
+    it('confirmar chama FichaService.duplicarFicha e recarrega o acervo', () => {
+      const { fixture, raiz, fichaService } = montar({ fichas: [fichaResumo({ id: 1 })] });
+      expect(fichaService.listarMinhasFichas).toHaveBeenCalledTimes(1);
+      abrirMenuFicha(raiz, fixture);
+      clicarItemMenu(raiz, fixture, 'Duplicar ficha');
+
+      (raiz.querySelector('.dialogo .botao--primario') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(fichaService.duplicarFicha).toHaveBeenCalledWith(1);
+      expect(fichaService.listarMinhasFichas).toHaveBeenCalledTimes(2);
+      expect(raiz.querySelector('.dialogo')).toBeNull();
+    });
+  });
+
+  describe('excluir (m3-52, replicado da tela da ficha)', () => {
+    it('abre a dialog de confirmação com o nome da ficha', () => {
+      const { fixture, raiz } = montar({ fichas: [fichaResumo({ id: 1, nome: 'Kane' })] });
+      abrirMenuFicha(raiz, fixture);
+      clicarItemMenu(raiz, fixture, 'Excluir ficha');
+
+      const dialog = raiz.querySelector('.dialogo');
+      expect(dialog).not.toBeNull();
+      expect(dialog?.textContent).toContain('Excluir');
+      expect(dialog?.textContent).toContain('Kane');
+    });
+
+    it('cancelar fecha a dialog sem chamar o serviço', () => {
+      const { fixture, raiz, fichaService } = montar({ fichas: [fichaResumo({ id: 1 })] });
+      abrirMenuFicha(raiz, fixture);
+      clicarItemMenu(raiz, fixture, 'Excluir ficha');
+
+      (raiz.querySelector('.dialogo .botao--secundario') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(raiz.querySelector('.dialogo')).toBeNull();
+      expect(fichaService.excluirFicha).not.toHaveBeenCalled();
+    });
+
+    it('confirmar chama FichaService.excluirFicha e remove o cartão na hora, sem refetch', () => {
+      const { fixture, raiz, fichaService } = montar({ fichas: [fichaResumo({ id: 1, nome: 'Kane' })] });
+      abrirMenuFicha(raiz, fixture);
+      clicarItemMenu(raiz, fixture, 'Excluir ficha');
+
+      (raiz.querySelector('.dialogo .botao--primario') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(fichaService.excluirFicha).toHaveBeenCalledWith(1);
+      expect(fichaService.listarMinhasFichas).toHaveBeenCalledTimes(1);
+      expect(raiz.querySelector('.dialogo')).toBeNull();
+      expect(raiz.textContent).not.toContain('Kane');
+    });
   });
 });
