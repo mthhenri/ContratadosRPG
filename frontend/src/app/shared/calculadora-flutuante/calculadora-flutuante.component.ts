@@ -10,6 +10,10 @@ import {
 
 const TECLAS_OPERADOR = ['+', '-', '×', '÷'] as const;
 
+/** Tamanho mínimo do popup (px) — abaixo disso o teclado numérico deixa de caber decentemente. */
+const LARGURA_MINIMA = 260;
+const ALTURA_MINIMA = 380;
+
 /** Limita `valor` ao intervalo `[minimo, maximo]` (usado para não deixar o popup sair da tela). */
 function limitar(valor: number, minimo: number, maximo: number): number {
   return Math.min(Math.max(valor, minimo), Math.max(minimo, maximo));
@@ -30,8 +34,8 @@ function limitar(valor: number, minimo: number, maximo: number): number {
   templateUrl: './calculadora-flutuante.component.html',
   styleUrl: './calculadora-flutuante.component.scss',
   host: {
-    '(window:pointermove)': 'continuarArraste($event)',
-    '(window:pointerup)': 'finalizarArraste()',
+    '(window:pointermove)': 'aoMoverPonteiro($event)',
+    '(window:pointerup)': 'aoSoltarPonteiro()',
   },
 })
 export class CalculadoraFlutuante {
@@ -42,10 +46,14 @@ export class CalculadoraFlutuante {
 
   /** `null` até o primeiro arraste — o popup nasce ancorado por CSS (canto inferior direito). */
   protected readonly posicao = signal<{ x: number; y: number } | null>(null);
+  /** `null` até o primeiro redimensionamento — o popup nasce no tamanho fixo do CSS. */
+  protected readonly tamanho = signal<{ width: number; height: number } | null>(null);
 
   private readonly popupElemento = viewChild<ElementRef<HTMLElement>>('popup');
   private arrastando = false;
   private origemArraste = { x: 0, y: 0 };
+  private redimensionando = false;
+  private origemRedimensionamento = { x: 0, y: 0, largura: 0, altura: 0 };
 
   /** Abre o popup (o "x" é quem fecha — critério de aceite). */
   protected abrir(): void {
@@ -86,6 +94,11 @@ export class CalculadoraFlutuante {
   protected limpar(): void {
     this.expressao.set('');
     this.erro.set(false);
+  }
+
+  /** Esvazia o histórico da sessão (sem afetar a expressão em edição). */
+  protected limparHistorico(): void {
+    this.historico.set([]);
   }
 
   private apagarUltimo(): void {
@@ -166,10 +179,7 @@ export class CalculadoraFlutuante {
   }
 
   /** Segue o ponteiro (listener em `window` — o gesto continua mesmo saindo do cabeçalho). */
-  protected continuarArraste(evento: PointerEvent): void {
-    if (!this.arrastando) {
-      return;
-    }
+  private continuarArraste(evento: PointerEvent): void {
     const elemento = this.popupElemento()?.nativeElement;
     const largura = elemento?.offsetWidth ?? 0;
     const altura = elemento?.offsetHeight ?? 0;
@@ -178,7 +188,47 @@ export class CalculadoraFlutuante {
     this.posicao.set({ x, y });
   }
 
-  protected finalizarArraste(): void {
+  /** Início do redimensionamento (pointerdown na alça do canto) — guarda o tamanho de partida. */
+  protected iniciarRedimensionamento(evento: PointerEvent): void {
+    if (evento.button !== 0) {
+      return;
+    }
+    const elemento = this.popupElemento()?.nativeElement;
+    if (!elemento) {
+      return;
+    }
+    const retangulo = elemento.getBoundingClientRect();
+    this.origemRedimensionamento = {
+      x: evento.clientX,
+      y: evento.clientY,
+      largura: retangulo.width,
+      altura: retangulo.height,
+    };
+    this.redimensionando = true;
+    evento.preventDefault();
+  }
+
+  /** Segue o ponteiro somando o delta ao tamanho de partida, clampado ao mínimo e à viewport. */
+  private continuarRedimensionamento(evento: PointerEvent): void {
+    const origem = this.origemRedimensionamento;
+    const larguraMaxima = window.innerWidth - 16;
+    const alturaMaxima = window.innerHeight - 16;
+    const largura = limitar(origem.largura + (evento.clientX - origem.x), LARGURA_MINIMA, larguraMaxima);
+    const altura = limitar(origem.altura + (evento.clientY - origem.y), ALTURA_MINIMA, alturaMaxima);
+    this.tamanho.set({ width: largura, height: altura });
+  }
+
+  /** Um único par de listeners em `window` cobre arraste e redimensionamento (mutuamente exclusivos). */
+  protected aoMoverPonteiro(evento: PointerEvent): void {
+    if (this.arrastando) {
+      this.continuarArraste(evento);
+    } else if (this.redimensionando) {
+      this.continuarRedimensionamento(evento);
+    }
+  }
+
+  protected aoSoltarPonteiro(): void {
     this.arrastando = false;
+    this.redimensionando = false;
   }
 }

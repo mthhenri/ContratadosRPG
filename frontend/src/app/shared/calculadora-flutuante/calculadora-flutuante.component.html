@@ -15,6 +15,8 @@
     [class.calc-flutuante__popup--posicionado]="posicao() !== null"
     [style.left.px]="posicao()?.x ?? null"
     [style.top.px]="posicao()?.y ?? null"
+    [style.width.px]="tamanho()?.width ?? null"
+    [style.height.px]="tamanho()?.height ?? null"
     role="dialog"
     aria-label="Calculadora"
     tabindex="-1"
@@ -67,7 +69,17 @@
 
       @if (historico().length) {
         <div class="calc-flutuante__historico">
-          <div class="calc-flutuante__historico-titulo">Histórico da sessão</div>
+          <div class="calc-flutuante__historico-cabecalho">
+            <span class="calc-flutuante__historico-titulo">Histórico da sessão</span>
+            <button
+              class="calc-flutuante__historico-limpar"
+              type="button"
+              aria-label="Limpar histórico"
+              (click)="limparHistorico()"
+            >
+              Limpar
+            </button>
+          </div>
           <ul class="calc-flutuante__historico-lista">
             @for (entrada of historico(); track $index) {
               <li class="calc-flutuante__historico-item">
@@ -79,5 +91,11 @@
         </div>
       }
     </div>
+
+    <span
+      class="calc-flutuante__redimensionar"
+      aria-hidden="true"
+      (pointerdown)="iniciarRedimensionamento($event)"
+    ></span>
   </div>
 }

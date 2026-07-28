@@ -36,11 +36,14 @@
     bottom: 84px;
     z-index: 60;
     width: 280px;
+    display: flex;
+    flex-direction: column;
     background: var(--surface);
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-card);
     box-shadow: 0 16px 40px rgb(0 0 0 / 45%);
     outline: none;
+    overflow: hidden; // clipa o corpo/histórico no raio do card quando redimensionado
 
     &--posicionado {
       right: auto;
@@ -91,6 +94,9 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    flex: 1;
+    min-height: 0; // permite encolher e rolar em vez de estourar quando a altura é reduzida
+    overflow-y: auto;
   }
 
   &__visor {
@@ -153,6 +159,14 @@
     padding-top: 10px;
   }
 
+  &__historico-cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
   &__historico-titulo {
     font-family: var(--font-mono);
     font-size: 10px;
@@ -160,7 +174,23 @@
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     color: var(--text-mute);
-    margin-bottom: 6px;
+  }
+
+  &__historico-limpar {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-mute);
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    padding: 2px 4px;
+
+    &:hover {
+      color: var(--accent);
+    }
   }
 
   &__historico-lista {
@@ -191,5 +221,35 @@
   &__historico-resultado {
     color: var(--text-dim);
     font-weight: 600;
+  }
+
+  // Alça de redimensionamento — canto inferior direito, por cima do `overflow:hidden` do popup.
+  &__redimensionar {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nwse-resize;
+    touch-action: none;
+    background: repeating-linear-gradient(
+      135deg,
+      var(--border-strong) 0,
+      var(--border-strong) 1.5px,
+      transparent 1.5px,
+      transparent 4px
+    );
+    // Recorta o miolo em triângulo (só o canto fica com as listras) via clip-path.
+    clip-path: polygon(100% 0, 100% 100%, 0 100%);
+
+    &:hover {
+      background: repeating-linear-gradient(
+        135deg,
+        var(--accent-border) 0,
+        var(--accent-border) 1.5px,
+        transparent 1.5px,
+        transparent 4px
+      );
+    }
   }
 }

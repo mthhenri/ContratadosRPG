@@ -32,7 +32,16 @@
 > correta (`12+7×2` = `26`, não `38`), histórico lista a conta, arraste reposiciona o popup
 > (confirmado por bounding box antes/depois), "x" fecha preservando o histórico da sessão, e um
 > **reload completo zera o histórico** — todos os critérios de aceite da spec confirmados na
-> aplicação real (não só testes). Spec movida para
+> aplicação real (não só testes). **Ajuste pós-entrega, a pedido do autor, mesma sessão:**
+> popup passa a ser **redimensionável** — alça no canto inferior direito (`pointerdown` próprio,
+> mesmo par de listeners `window:pointermove`/`window:pointerup` do arraste, reunidos num único
+> `aoMoverPonteiro`/`aoSoltarPonteiro` já que os dois gestos são mutuamente exclusivos), tamanho
+> clampado a um mínimo (260×380) e à viewport; o popup vira `display:flex; flex-direction:column`
+> com o corpo em `flex:1; overflow-y:auto`, então encolher rola em vez de estourar o layout. Novo
+> botão **"Limpar"** no cabeçalho do histórico (`limparHistorico()`, zera só o array — não mexe na
+> expressão em edição). Reverificado ao vivo (mesmo Playwright): redimensionar cresce o popup nas
+> duas direções, "Limpar" esvazia a seção (que some, já que é `@if (historico().length)`), e uma
+> conta nova depois some do histórico igual após o reload. Spec movida para
 > `docs/specs/done/m3-54-ficha-calculadora-flutuante.spec.md`. **Próxima task:** esta rodada pulou a
 > `m3-53` (ficha — exportar PDF), que **segue no backlog**; a fila do lote `m3-40`…`m3-56` continua
 > com `m3-55` (ficha — refino visual desktop) e `m3-56` (ficha — mobile skeletons), mas `m3-53` ainda
