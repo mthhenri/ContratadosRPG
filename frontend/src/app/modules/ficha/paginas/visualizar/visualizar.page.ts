@@ -64,6 +64,7 @@ import {
   FichaVisualizacao,
   ehAbaFicha,
   ehAbaStatus,
+  type DestinoMobile,
 } from '../../componentes/ficha-visualizacao/ficha-visualizacao.component';
 import type { EstadoSanidade } from '../../componentes/ficha-sanidade/ficha-sanidade.component';
 
@@ -152,6 +153,32 @@ export class FichaVisualizar {
     const fragmento = this.rotaAtiva.snapshot.fragment;
     return ehAbaStatus(fragmento) ? fragmento : 'informacoes';
   })();
+
+  /**
+   * Destino inicial da barra de navegação **mobile** (m3-60). Sem fragmento na URL, abrir a ficha
+   * no celular cai no agente (Identidade + Atributos) — é o que a pessoa foi ver. Com fragmento
+   * (deep-link para uma aba de Status), respeita o link. `abaStatusInicial` acima não distingue
+   * "sem fragmento" de "#informacoes", por isso o cálculo é separado e não derivado dele.
+   */
+  protected readonly destinoMobileInicial: DestinoMobile = (() => {
+    const fragmento = this.rotaAtiva.snapshot.fragment;
+    return ehAbaStatus(fragmento) ? fragmento : 'agente';
+  })();
+
+  /**
+   * Estado do auto-save exposto ao template (m3-60). O `edicaoPendente` já existia mas nunca era
+   * referenciado na view: o sucesso do salvamento era completamente mudo — sem toast, sem
+   * "salvando…", nada além do formulário fechar. `'salvo'` some sozinho depois de um respiro para
+   * não virar ruído permanente no cabeçalho.
+   */
+  protected readonly estadoPersistencia = signal<'ocioso' | 'salvando' | 'salvo'>('ocioso');
+  private temporizadorSalvo: ReturnType<typeof setTimeout> | null = null;
+
+  private marcarSalvo(): void {
+    this.estadoPersistencia.set('salvo');
+    if (this.temporizadorSalvo) clearTimeout(this.temporizadorSalvo);
+    this.temporizadorSalvo = setTimeout(() => this.estadoPersistencia.set('ocioso'), 2000);
+  }
 
   protected readonly carregando = signal(true);
   protected readonly ficha = signal<FichaRecuperadaDto | null>(null);
@@ -262,6 +289,9 @@ export class FichaVisualizar {
               // congelaria a persistência e os live-updates. Libera a flag e segue ouvindo.
               catchError(() => {
                 this.edicaoPendente.set(false);
+                // O toast de erro já vem do interceptor global; aqui só devolve o indicador ao
+                // repouso para não ficar preso em "salvando…" para sempre.
+                this.estadoPersistencia.set('ocioso');
                 return EMPTY;
               }),
             );
@@ -273,6 +303,7 @@ export class FichaVisualizar {
           this.ficha.set(fichaAlterada);
           this.fichaBase.set(fichaAlterada);
           this.edicaoPendente.set(false);
+          this.marcarSalvo();
         },
       });
 
@@ -374,6 +405,7 @@ export class FichaVisualizar {
   /** Marca uma edição local pendente e agenda a persistência em lote (debounced). */
   private agendarPersistencia(): void {
     this.edicaoPendente.set(true);
+    this.estadoPersistencia.set('salvando');
     this.ajustePendente.next();
   }
 

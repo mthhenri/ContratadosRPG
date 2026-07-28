@@ -1159,6 +1159,107 @@ describe('FichaVisualizacao', () => {
     });
   });
 
+  describe('navegação mobile (m3-60) — barra inferior + HUD de vitais', () => {
+    it('a barra inferior tem os sete destinos para dono/mestre, começando pelo Agente', () => {
+      const { raiz } = montar(dados, 'Corvo', 42, true, false);
+      const destinos = Array.from(raiz.querySelectorAll('.ficha-nav__item')).map((b) =>
+        b.getAttribute('data-destino'),
+      );
+      expect(destinos).toEqual([
+        'agente',
+        'informacoes',
+        'inventario',
+        'habilidades',
+        'rolagens',
+        'extras',
+        'historia',
+      ]);
+    });
+
+    it('o visualizador não vê o destino História (mesma regra da aba)', () => {
+      const { raiz } = montar(dados, 'Corvo', 42, false, false);
+      const destinos = Array.from(raiz.querySelectorAll('.ficha-nav__item')).map((b) =>
+        b.getAttribute('data-destino'),
+      );
+      expect(destinos).not.toContain('historia');
+      expect(destinos).toHaveLength(6);
+    });
+
+    it('todo destino tem rótulo visível no DOM — nenhum é só ícone', () => {
+      const { raiz } = montar(dados, 'Corvo', 42, true, false);
+      const rotulos = Array.from(raiz.querySelectorAll('.ficha-nav__rotulo')).map((r) =>
+        r.textContent?.trim(),
+      );
+      expect(rotulos).toEqual(['Agente', 'Status', 'Invent.', 'Habilid.', 'Rolagens', 'Extras', 'História']);
+      // O rótulo curto é o visual; o leitor de tela ouve o nome inteiro pelo aria-label do botão.
+      const inventario = raiz.querySelector('[data-destino="inventario"]');
+      expect(inventario?.getAttribute('aria-label')).toBe('Inventário');
+    });
+
+    it('sem fragmento na URL o destino inicial é o agente, e a linha de colunas entra em modo agente', () => {
+      const { raiz } = montar(dados, 'Corvo', 42, true, false);
+      expect(raiz.querySelector('.ficha-visao__linha-colunas--agente')).not.toBeNull();
+      expect(raiz.querySelector('[data-destino="agente"]')?.classList).toContain('ficha-nav__item--ativo');
+    });
+
+    it('escolher um destino de status sai do modo agente e emite a aba (reflete no # da URL)', () => {
+      const { raiz, fixture } = montar(dados, 'Corvo', 42, true, false);
+      const emitidas: string[] = [];
+      fixture.componentInstance.abaStatusMudou.subscribe((aba) => emitidas.push(aba));
+
+      raiz.querySelector<HTMLButtonElement>('[data-destino="inventario"]')!.click();
+      fixture.detectChanges();
+
+      expect(emitidas).toEqual(['inventario']);
+      expect(raiz.querySelector('.ficha-visao__linha-colunas--agente')).toBeNull();
+      expect(raiz.querySelector('[data-destino="inventario"]')?.classList).toContain(
+        'ficha-nav__item--ativo',
+      );
+    });
+
+    it('um deep-link para uma aba de status abre nela, não no agente', () => {
+      const { raiz, fixture } = montar(dados, 'Corvo', 42, true, false);
+      fixture.componentRef.setInput('destinoMobileInicial', 'rolagens');
+      fixture.detectChanges();
+
+      expect(raiz.querySelector('.ficha-visao__linha-colunas--agente')).toBeNull();
+      expect(raiz.querySelector('[data-destino="rolagens"]')?.classList).toContain(
+        'ficha-nav__item--ativo',
+      );
+    });
+
+    it('o HUD ecoa nome, Vida/Energia e só as condições ativas', () => {
+      const { raiz } = montar(
+        { ...dados, estado: { ...dados.estado, vidaAtual: 12, energiaAtual: 9, machucado: true } },
+        'Dra. Marianna Vasconcellos-Ferreira',
+        42,
+        true,
+        false,
+      );
+
+      expect(raiz.querySelector('.ficha-hud__nome')?.textContent?.trim()).toBe(
+        'Dra. Marianna Vasconcellos-Ferreira',
+      );
+      const selos = Array.from(raiz.querySelectorAll('.ficha-hud__selo')).map((s) =>
+        s.getAttribute('data-selo-condicao'),
+      );
+      expect(selos).toEqual(['machucado']);
+      expect(raiz.querySelector('.ficha-hud__vital--vida .ficha-hud__vital-atual')?.textContent?.trim()).toBe('12');
+    });
+
+    it('barra de vitalidade com máxima zero não quebra (divisão por zero)', () => {
+      const { fixture } = montar(
+        { ...dados, estado: { ...dados.estado, vidaAtual: 0, vidaMaxima: 0, energiaAtual: 0, energiaMaxima: 0 } },
+        'Corvo',
+        42,
+        true,
+        false,
+      );
+      expect(fixture.componentInstance['percentualVida']()).toBe(0);
+      expect(fixture.componentInstance['percentualEnergia']()).toBe(0);
+    });
+  });
+
   describe('História (m3-50) — aba própria, só dono/mestre', () => {
     it('não mostra o botão da aba nem o painel quando não ajustável (visualizador)', () => {
       const { raiz } = montar(dados, 'Corvo', 42, false, false);

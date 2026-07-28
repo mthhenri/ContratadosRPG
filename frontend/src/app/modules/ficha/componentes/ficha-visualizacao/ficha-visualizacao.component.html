@@ -6,12 +6,64 @@
     <span class="chip-classificacao">{{ classificacao() }}</span>
   </header>
 
-  <!-- Redesenho de comparação visual (branch claude/redesign-ficha-screen-*): só dois cards ficam
-       na tela — identidade/vitalidade/combate-glance e uma versão compacta de Atributos. Abas,
-       Informações Extras, Identidade detalhada e as demais seções saem por ora. O objetivo é
-       comparar com a versão em produção (master), não entregar paridade de funcionalidade. -->
+  <!-- HUD de vitais (m3-60) — só no mobile (`display: none` acima de `$bp-mobile`, ver SCSS).
+       Fica `sticky` no topo porque a auditoria ao vivo mediu que, rolando até o Inventário, nem o
+       nome do agente nem a Vida estavam na tela (a topbar do app é `position: static` e some
+       junto). Concentra o que se consulta o tempo todo em mesa; o ajuste continua nos steppers do
+       card de Identidade, para onde este bloco leva com um toque. -->
+  <div class="ficha-hud">
+    <div class="ficha-hud__identidade">
+      <span class="ficha-hud__nome">{{ nome() }}</span>
+      <span class="ficha-hud__meta">{{ patenteTexto() }} · {{ classeTexto() }} · Nível {{ dados().nivel }}</span>
+    </div>
+
+    <button
+      class="ficha-hud__vitais"
+      type="button"
+      aria-label="Ver e ajustar Vida e Energia"
+      (click)="irParaVitais()"
+    >
+      <span class="ficha-hud__vital ficha-hud__vital--vida">
+        <span class="ficha-hud__vital-linha">
+          <span class="ficha-hud__vital-rotulo">Vida</span>
+          <span class="ficha-hud__vital-atual">{{ estado().vidaAtual }}</span>
+          <span class="ficha-hud__vital-max">/ {{ vidaMaximaEfetiva() }}</span>
+        </span>
+        <span class="ficha-hud__trilho">
+          <span class="ficha-hud__preenche" [style.width.%]="percentualVida()"></span>
+        </span>
+      </span>
+
+      <span class="ficha-hud__vital ficha-hud__vital--energia">
+        <span class="ficha-hud__vital-linha">
+          <span class="ficha-hud__vital-rotulo">Energia</span>
+          <span class="ficha-hud__vital-atual">{{ estado().energiaAtual }}</span>
+          <span class="ficha-hud__vital-max">/ {{ energiaMaximaEfetiva() }}</span>
+        </span>
+        <span class="ficha-hud__trilho">
+          <span class="ficha-hud__preenche" [style.width.%]="percentualEnergia()"></span>
+        </span>
+      </span>
+    </button>
+
+    @if (condicoesAtivas().length) {
+      <div class="ficha-hud__condicoes">
+        @for (condicao of condicoesAtivas(); track condicao.chave) {
+          <span class="ficha-hud__selo" [attr.data-selo-condicao]="condicao.chave">{{ condicao.rotulo }}</span>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- As três colunas da ficha: Identidade+Vitalidade | Atributos | Status com abas. No desktop
+       ficam lado a lado (contexto permanente à esquerda, detalhe trocável à direita). Abaixo de
+       `$bp-mobile` viram destinos da barra inferior — `--agente` mostra as duas primeiras, os
+       demais destinos mostram só a terceira (m3-60, ver SCSS). -->
   <div class="ficha-visao__painel ficha-visao__painel--solo">
-    <div class="ficha-visao__linha-colunas">
+    <div
+      class="ficha-visao__linha-colunas"
+      [class.ficha-visao__linha-colunas--agente]="mostrandoAgente()"
+    >
     <div class="ficha-visao__coluna ficha-visao__coluna--identidade">
       <section class="ficha-cartao">
         <div class="ficha-ident">
@@ -445,7 +497,7 @@
 
         <div class="ficha-cartao__divisor"></div>
 
-        <div class="ficha-vitalidade">
+        <div class="ficha-vitalidade" #blocoVitalidade>
           <div class="ficha-barra ficha-barra--vida">
             <div class="ficha-barra__topo">
               <span class="ficha-barra__rotulo ficha-barra__rotulo--dica" [appTooltip]="progressaoVida()">
@@ -1342,6 +1394,31 @@
     </div>
     </div>
   </div>
+
+  <!-- Navegação inferior (m3-60) — só no mobile. Fica FORA de `__painel--solo` de propósito: esse
+       bloco tem `animation` com `transform`, e um ancestral com transform vira containing block de
+       descendente `position: fixed`, o que faria a barra "pular" nos 160ms da animação de entrada.
+       `flex: 1 1 0` (padrão da barra da calculadora) faz os sete destinos dividirem a largura em
+       partes iguais e caberem sem rolagem horizontal — foi a rolagem lateral, com `flex: 0 0 auto`,
+       que cortava rótulo na m3-56. -->
+  <nav class="ficha-nav" #navMobile aria-label="Seções da ficha">
+    @for (item of destinosMobile; track item.destino) {
+      @if (item.destino !== 'historia' || ajustavel()) {
+        <button
+          class="ficha-nav__item"
+          [class.ficha-nav__item--ativo]="destinoMobile() === item.destino"
+          type="button"
+          [attr.data-destino]="item.destino"
+          [attr.aria-current]="destinoMobile() === item.destino ? 'page' : null"
+          [attr.aria-label]="item.rotuloCompleto"
+          (click)="selecionarDestinoMobile(item.destino)"
+        >
+          <app-icone class="ficha-nav__icone" [nome]="item.icone" />
+          <span class="ficha-nav__rotulo">{{ item.rotulo }}</span>
+        </button>
+      }
+    }
+  </nav>
 
   <app-bandeja-dados />
 </div>

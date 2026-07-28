@@ -31,7 +31,9 @@
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 20px;
+  // `--piso-flutuante` (m3-60) sobe a bandeja acima da barra de navegação da ficha no mobile.
+  // Fallback `0px` mantém o comportamento original em toda tela que não a declara.
+  bottom: calc(20px + var(--piso-flutuante, 0px));
   z-index: 50;
   overflow-x: clip; // corta o histórico que sai pela esquerda — sem scroll horizontal da página
   overflow-y: visible; // preserva a sombra das cartas (clip permite o eixo perpendicular visível)

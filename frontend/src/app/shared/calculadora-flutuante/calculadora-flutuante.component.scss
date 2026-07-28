@@ -12,7 +12,9 @@
   &__gatilho {
     position: fixed;
     right: 24px;
-    bottom: 24px;
+    // `--piso-flutuante` (m3-60): idem bandeja — sobe acima da barra de navegação da ficha no
+    // mobile, sem efeito nas telas que não declaram a custom property.
+    bottom: calc(24px + var(--piso-flutuante, 0px));
     z-index: 55;
     width: 48px;
     height: 48px;
@@ -35,7 +37,7 @@
   &__popup {
     position: fixed;
     right: 24px;
-    bottom: 84px;
+    bottom: calc(84px + var(--piso-flutuante, 0px));
     z-index: 60;
     width: 280px;
     display: flex;

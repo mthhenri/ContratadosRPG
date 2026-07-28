@@ -12,6 +12,17 @@
       </a>
     }
 
+    <!-- Estado do auto-save (m3-60): antes o sucesso era mudo — nenhum sinal de que salvou. -->
+    @if (estadoPersistencia() !== 'ocioso') {
+      <span
+        class="ficha-pagina__persistencia"
+        [class.ficha-pagina__persistencia--salvo]="estadoPersistencia() === 'salvo'"
+        role="status"
+      >
+        {{ estadoPersistencia() === 'salvando' ? 'Salvando…' : 'Salvo' }}
+      </span>
+    }
+
     <app-indicador-tempo-real />
 
     @if (ficha() && podeGerenciar()) {
@@ -129,6 +140,7 @@
       (abaMudou)="mudarAba($event)"
       [abaStatusInicial]="abaStatusInicial"
       (abaStatusMudou)="mudarAbaStatus($event)"
+      [destinoMobileInicial]="destinoMobileInicial"
       (ajusteVitalidade)="ajustarVitalidade($event)"
       (ajusteDerivado)="ajustarDerivado($event)"
       (ajusteResistencia)="ajustarResistencia($event)"

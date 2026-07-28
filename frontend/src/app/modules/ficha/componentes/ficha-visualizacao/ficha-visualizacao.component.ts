@@ -161,6 +161,51 @@ export function ehAbaStatus(valor: string | null | undefined): valor is AbaStatu
   return ABAS_STATUS.includes(valor as AbaStatus);
 }
 
+/**
+ * Destino da barra de navegação **inferior** do mobile (m3-60). É `AbaStatus` mais `'agente'`,
+ * porque no celular as colunas Identidade e Atributos do desktop deixam de ser blocos empilhados
+ * acima do Status e viram um destino próprio. `'agente'` **não** entra em `AbaStatus` de propósito:
+ * o `#` da URL continua sendo o canal das abas de Status e o desktop segue com as três colunas
+ * visíveis ao mesmo tempo.
+ */
+export type DestinoMobile = 'agente' | AbaStatus;
+
+/**
+ * Percentual de preenchimento de uma barra de vitalidade, limitado a 0–100. A máxima pode ser 0
+ * (ficha recém-criada, ou Energia zerada por classe) — nesse caso a barra fica vazia em vez de
+ * dividir por zero.
+ */
+function percentualBarra(atual: number, maxima: number): number {
+  if (maxima <= 0) return 0;
+  return Math.max(0, Math.min(100, (atual / maxima) * 100));
+}
+
+/**
+ * Destinos da barra inferior, na ordem de exibição. Os seis últimos espelham `ABAS_STATUS` — a
+ * barra lê como as três colunas do desktop da esquerda para a direita (Identidade+Atributos,
+ * depois as abas do card de Status).
+ *
+ * Os rótulos são curtos de propósito: com `flex: 1 1 0` os sete itens dividem a largura em partes
+ * iguais (mesmo padrão da barra da calculadora, `calculadora-shell.component.scss`) e a 360px cada
+ * item fica com ~48px — "Inventário" por extenso não caberia, e cortar rótulo foi exatamente o
+ * defeito da m3-56. `rotuloCompleto` alimenta o `aria-label`, então o leitor de tela ouve o nome
+ * inteiro mesmo com o rótulo visual abreviado.
+ */
+const DESTINOS_MOBILE: readonly {
+  readonly destino: DestinoMobile;
+  readonly rotulo: string;
+  readonly rotuloCompleto: string;
+  readonly icone: IconeNome;
+}[] = [
+  { destino: 'agente', rotulo: 'Agente', rotuloCompleto: 'Agente', icone: 'agente' },
+  { destino: 'informacoes', rotulo: 'Status', rotuloCompleto: 'Informações', icone: 'visao-geral' },
+  { destino: 'inventario', rotulo: 'Invent.', rotuloCompleto: 'Inventário', icone: 'inventario' },
+  { destino: 'habilidades', rotulo: 'Habilid.', rotuloCompleto: 'Habilidades', icone: 'habilidades' },
+  { destino: 'rolagens', rotulo: 'Rolagens', rotuloCompleto: 'Rolagens', icone: 'rolagens' },
+  { destino: 'extras', rotulo: 'Extras', rotuloCompleto: 'Extras', icone: 'mais' },
+  { destino: 'historia', rotulo: 'História', rotuloCompleto: 'História', icone: 'anotacoes' },
+];
+
 /** Derivados do painel **Combate**, na ordem de exibição — todos editáveis no próprio lugar (m3-10). */
 const CHAVES_COMBATE: readonly ChaveInfoExtra[] = [
   'defesa',
@@ -440,8 +485,98 @@ export class FichaVisualizacao {
   /** Troca a aba ativa da mini barra do card de Status. */
   protected selecionarAbaStatus(aba: AbaStatus): void {
     this.abaStatusAtiva.set(aba);
+    this.destinoMobile.set(aba);
     this.abaStatusMudou.emit(aba);
   }
+
+  /**
+   * Destino inicial da navegação **mobile** (m3-60). Distinto de `abaStatusInicial` porque no
+   * mobile as colunas Identidade e Atributos deixam de ficar empilhadas acima do card de Status e
+   * viram um destino próprio (`'agente'`) da barra inferior — as três colunas do desktop, lidas da
+   * esquerda para a direita, viram os destinos da barra. A página passa o fragmento da URL quando
+   * ele existe (deep-link) e `'agente'` quando não existe, de modo que abrir a ficha no celular
+   * cai no agente, não numa aba de Status arbitrária.
+   */
+  readonly destinoMobileInicial = input<DestinoMobile>('agente');
+
+  /**
+   * Destino ativo da barra de navegação inferior (mobile). No desktop é inerte: as três colunas
+   * ficam visíveis ao mesmo tempo e quem manda é `abaStatusAtiva` (ver SCSS — o recorte por
+   * destino só existe dentro de `bp.mobile`).
+   */
+  protected readonly destinoMobile = linkedSignal<DestinoMobile>(() => this.destinoMobileInicial());
+
+  /** Destinos da barra inferior, na ordem de exibição (mobile). */
+  protected readonly destinosMobile = DESTINOS_MOBILE;
+
+  /** `true` quando o destino mobile ativo é o agente (Identidade + Atributos). */
+  protected readonly mostrandoAgente = computed(() => this.destinoMobile() === 'agente');
+
+  /**
+   * Seleciona um destino da barra inferior. `'agente'` mostra Identidade + Atributos; qualquer
+   * outro delega para `selecionarAbaStatus` (que também reflete no `#` da URL).
+   */
+  protected selecionarDestinoMobile(destino: DestinoMobile): void {
+    if (destino === 'agente') {
+      this.destinoMobile.set('agente');
+      this.rolarParaTopoDoConteudo();
+      return;
+    }
+    this.selecionarAbaStatus(destino);
+    this.rolarParaTopoDoConteudo();
+  }
+
+  /**
+   * Traz o conteúdo do destino recém-escolhido para o topo da tela (m3-60). Sem isso, trocar de
+   * aba no celular não mostrava a aba: medido ao vivo, o `scrollTop` não mudava e o painel nascia
+   * a y=705 de um viewport de 844 — cada troca custava mais uma rolagem. Só no mobile: no desktop
+   * as três colunas estão visíveis ao mesmo tempo e mover a página seria gratuito.
+   */
+  private rolarParaTopoDoConteudo(): void {
+    if (typeof window === 'undefined') return;
+    // "Estou no mobile?" vem do CSS, não de um breakpoint duplicado em TS: a barra inferior é
+    // `display: none` acima de `$bp-mobile`, então `offsetParent` nulo == desktop. Mantém
+    // `_breakpoints.scss` como fonte única do valor (o `$bp-mobile` não vaza para cá).
+    if (!this.navMobile()?.nativeElement.offsetParent) return;
+    const reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reduzMovimento ? 'auto' : 'smooth' });
+  }
+
+  /** Barra de navegação inferior (mobile) — usada só para detectar o modo mobile a partir do CSS. */
+  private readonly navMobile = viewChild<ElementRef<HTMLElement>>('navMobile');
+
+  /**
+   * Leva ao bloco de Vida/Energia (m3-60): o HUD é leitura, o ajuste continua nos steppers de
+   * 44px do card de Identidade, que já têm `appHoldRepeat`. Um toque no HUD abre o destino
+   * `'agente'` e rola até eles, em vez de duplicar os controles em dois lugares.
+   */
+  protected irParaVitais(): void {
+    this.destinoMobile.set('agente');
+    if (typeof window === 'undefined') return;
+    if (!this.navMobile()?.nativeElement.offsetParent) return;
+    const reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    requestAnimationFrame(() => {
+      const alvo = this.blocoVitalidade()?.nativeElement;
+      alvo?.scrollIntoView({ block: 'center', behavior: reduzMovimento ? 'auto' : 'smooth' });
+    });
+  }
+
+  private readonly blocoVitalidade = viewChild<ElementRef<HTMLElement>>('blocoVitalidade');
+
+  /** Preenchimento da barra de Vida do HUD, em % da máxima efetiva (0–100). */
+  protected readonly percentualVida = computed(() =>
+    percentualBarra(this.estado().vidaAtual, this.vidaMaximaEfetiva()),
+  );
+
+  /** Preenchimento da barra de Energia do HUD, em % da máxima efetiva (0–100). */
+  protected readonly percentualEnergia = computed(() =>
+    percentualBarra(this.estado().energiaAtual, this.energiaMaximaEfetiva()),
+  );
+
+  /** Só as condições ligadas — o HUD mostra selo apenas do que está ativo (nada quando não há). */
+  protected readonly condicoesAtivas = computed(() =>
+    CONDICOES_FICHA.filter((condicao) => this.condicoes()[condicao.chave]),
+  );
 
   /**
    * Container da mini barra de abas do Status (m3-56.1) — a barra rola horizontalmente (mobile

@@ -6,6 +6,33 @@
 
 @use 'tema/breakpoints' as bp;
 
+// Área de toque de `$alvo-toque` SEM inflar o desenho (m3-60). A m3-56 subiu para 44px só os
+// controles que já tinham fundo/borda visível; ficaram de fora justamente os que a m3-10
+// introduziu como "edição no próprio lugar" — o valor clicável, o dadinho de rolar teste, a
+// estrela de Maestria. Aumentar a caixa desses controles destruiria a densidade do card (o valor
+// editável é texto no meio de uma frase), então o que cresce é a **área clicável**: um
+// pseudo-elemento centrado de 44×44 estende o alvo além do desenho.
+//
+// O host precisa ser um containing block. Quem já é `position: absolute` não deve receber
+// `position: relative` (quebraria o posicionamento), por isso o parâmetro.
+@mixin alvo-de-toque($posicionar: true) {
+  @include bp.mobile {
+    @if $posicionar {
+      position: relative;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
+    }
+  }
+}
+
 .ficha-visao {
   display: flex;
   flex-direction: column;
@@ -96,6 +123,29 @@
     @include bp.tablet {
       flex-direction: column;
       align-items: stretch;
+    }
+
+    // m3-60 — recorte por destino, SÓ no mobile. Abaixo de `$bp-mobile` as três colunas deixam de
+    // ser três blocos empilhados (que jogavam a navegação para y=1903, 2,25 telas de rolagem cega)
+    // e viram destinos da barra inferior: `--agente` mostra Identidade + Atributos, qualquer outro
+    // destino mostra só o card de Status. Entre `$bp-mobile` e `$bp-tablet` o empilhamento antigo
+    // continua valendo (tablet tem altura de sobra e não ganha barra inferior).
+    @include bp.mobile {
+      .ficha-visao__coluna--identidade,
+      .ficha-visao__coluna--atributos {
+        display: none;
+      }
+
+      &.ficha-visao__linha-colunas--agente {
+        .ficha-visao__coluna--identidade,
+        .ficha-visao__coluna--atributos {
+          display: block;
+        }
+
+        .ficha-visao__coluna--status {
+          display: none;
+        }
+      }
     }
   }
 
@@ -308,6 +358,267 @@
 
 // === Status: barra de abas — mesmo padrão de `.ficha-abas` do estilo antigo (pílulas do tamanho
 // do conteúdo, não esticadas), só mais compacta pra não dominar o card.
+// ============================================================================================
+// HUD de vitais (m3-60) — mobile only.
+// Fica `sticky` no topo da página. Isso funciona porque a cadeia de ancestrais usa
+// `overflow-x: clip` com `overflow-y: visible` (`styles.scss` no `html`, `layout.component.scss`
+// no `.conteudo`) — a única combinação da spec que NÃO transforma o outro eixo em scroll
+// container. ATENÇÃO: trocar qualquer um desses `clip` por `hidden`/`auto` (tentação natural ao
+// caçar overflow horizontal) mata este sticky em silêncio.
+// ============================================================================================
+.ficha-hud {
+  display: none;
+
+  @include bp.mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: sticky;
+    top: 0;
+    // Acima do conteúdo da ficha e bem abaixo dos overlays (kebab 20/21, diálogos 40, bandeja 50,
+    // calculadora 55/60) — mesma faixa 10–19 já usada pela barra da calculadora (z-index: 15).
+    z-index: 14;
+    padding: 9px 12px 10px;
+    margin-inline: calc(-1 * var(--pad-card));
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-strong);
+  }
+
+  &__identidade {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__nome {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--text);
+    // Nome longo ocupava 3 linhas e 83px no card de Identidade; aqui é uma linha só — o nome
+    // inteiro continua acessível no card, este é o eco permanente.
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__meta {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // O HUD inteiro de vitais é um alvo só (leva aos steppers) — bem acima dos 44px.
+  &__vitais {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    padding: 0;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+  }
+
+  &__vital {
+    flex: 1 1 0;
+    min-width: 0;
+    display: block;
+    padding: 7px 9px 8px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+  }
+
+  &__vital-linha {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    margin-bottom: 6px;
+  }
+
+  &__vital-rotulo {
+    flex: 1;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+  }
+
+  &__vital-atual {
+    font-family: var(--font-mono);
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  &__vital-max {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-mute);
+  }
+
+  // `display: block` porque `<span>` é inline por padrão e ignoraria a altura da barra.
+  // Trilho em `--border-strong` (não `--surface-2`, que é o fundo da própria caixa): esse é o par
+  // já calibrado do tema para ficar visível sobre `--surface-2` nas duas bases em runtime — mesmo
+  // motivo do avatar listrado de `campanha/lista` (m1-13).
+  &__trilho {
+    display: block;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border-strong);
+    overflow: hidden;
+  }
+
+  &__preenche {
+    display: block;
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.18s ease;
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  // Vida usa `--vida` (vermelho fixo da identidade, não acompanha a troca de `--accent`);
+  // Energia usa `--energy`. Mesma semântica das barras do card de Identidade.
+  &__vital--vida {
+    .ficha-hud__vital-atual {
+      color: var(--vida);
+    }
+    .ficha-hud__preenche {
+      background: var(--vida);
+    }
+  }
+
+  &__vital--energia {
+    .ficha-hud__vital-atual {
+      color: var(--energy);
+    }
+    .ficha-hud__preenche {
+      background: var(--energy);
+    }
+  }
+
+  &__condicoes {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+
+  &__selo {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-radius: 3px;
+    padding: 2px 6px;
+    color: var(--warning);
+    border: 1px solid color-mix(in srgb, var(--warning) 45%, transparent);
+    background: color-mix(in srgb, var(--warning) 10%, transparent);
+
+    // Morrendo e Inconsciente são estados críticos — accent, não aviso.
+    // `data-selo-condicao`, não `data-condicao`: este último já identifica os botões de condição
+    // do card de Identidade, e reusá-lo aqui faria `querySelector('[data-condicao=...]')` casar
+    // primeiro com o selo do HUD (que vem antes no DOM) em vez do botão.
+    &[data-selo-condicao='morrendo'],
+    &[data-selo-condicao='inconsciente'] {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--accent-dim);
+    }
+  }
+}
+
+// ============================================================================================
+// Barra de navegação inferior (m3-60) — mobile only.
+// Padrão canônico do projeto para navegação móvel: `calculadora-shell.component.scss` (m1-20).
+// A diferença que importa em relação à barra de abas do Status é `flex: 1 1 0` (aqui) contra
+// `flex: 0 0 auto` (lá): com `1 1 0` os sete destinos dividem a largura e cabem sem rolagem
+// lateral nenhuma — medido, 52×44px por item a 390px, nenhum rótulo cortado. Foi a rolagem
+// lateral que produziu o "HISTÓRI" da m3-56.
+// ============================================================================================
+.ficha-nav {
+  display: none;
+
+  @include bp.mobile {
+    display: flex;
+    gap: 2px;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    // Mesma faixa 10–19 da barra da calculadora; abaixo de diálogos, bandeja e calculadora.
+    z-index: 15;
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px));
+    background: var(--surface);
+    border-top: 1px solid var(--border-strong);
+  }
+
+  &__item {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: bp.$alvo-toque;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 5px 2px;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: var(--radius-control);
+    color: var(--text-mute);
+    cursor: pointer;
+    transition:
+      color 0.12s ease,
+      background 0.12s ease;
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+
+    &--ativo {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--accent-dim);
+    }
+  }
+
+  &__icone {
+    font-size: 18px;
+    flex-shrink: 0;
+    line-height: 0;
+  }
+
+  &__rotulo {
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1.3;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 .ficha-status {
   &__abas {
     display: flex;
@@ -329,8 +640,11 @@
       display: none; // …e no Chrome/Safari/Edge.
     }
 
+    // m3-60: no mobile quem navega é a barra inferior fixa (`.ficha-nav`) — esta barra sai de cena
+    // inteira. Com isso o icon-only, o fade horizontal e o auto-scroll até a aba ativa (o remendo
+    // da m3-56.1) passam a valer só no desktop, onde a barra de fato pode ficar estreita.
     @include bp.mobile {
-      min-width: 0;
+      display: none;
     }
 
     // Fade nas bordas onde há mais conteúdo pra rolar (mesmo padrão de `.compras-fragmentos` da
@@ -1665,6 +1979,21 @@
         justify-self: center;
         width: calc(50% - 4px);
       }
+
+      // m3-60: no mobile, 3 colunas — os 5 atributos fecham em 2 linhas (3+2) sem sobrar órfão.
+      // O bloco de 2 colunas acima tem especificidade (0,2,0) e vencia a regra `bp.mobile` de
+      // `&__grade` (0,1,0) mesmo estando antes no arquivo: a regra mobile de atributos existia e
+      // nunca rodava, e o resultado eram os dois órfãos centralizados (VIG e VON). Repetir o
+      // media query aqui dentro é o que devolve a vitória para o mobile.
+      @include bp.mobile {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+
+        > *:nth-child(5) {
+          grid-column: auto;
+          justify-self: stretch;
+          width: auto;
+        }
+      }
     }
 
     .ficha-atributo {
@@ -1875,3 +2204,46 @@
   }
 }
 
+
+// ============================================================================================
+// Alvos de toque que a m3-56 não cobriu (m3-60).
+// Medição ao vivo a 390px, ficha cheia: 35 controles abaixo de 44px na aba Informações e 68 no
+// Inventário. Os desta lista são os que vivem neste componente; os do Inventário/Habilidades/
+// Rolagens/Sanidade estão nos respectivos SCSS. Agrupados aqui, e não espalhados nos blocos
+// originais, para que o custo em densidade da decisão fique legível num lugar só.
+// ============================================================================================
+
+// Dadinho de rolar teste do atributo — 22×22, e é o gesto mais repetido da ficha em mesa.
+.ficha-atributo__rolar {
+  @include alvo-de-toque($posicionar: false); // já é `position: absolute`
+}
+
+// Dadinho de rolar Dano C.a.C./Furtivo no card de Status — 18×18.
+.ficha-mini__rolar {
+  @include alvo-de-toque($posicionar: false); // já é `position: absolute`
+}
+
+// Estrela de Maestria — ~21×26.
+.ficha-atributo__maestria {
+  @include alvo-de-toque;
+}
+
+// − / + do modificador de teste do atributo. `@extend .ficha-passo` já injeta este seletor no
+// media query que dá 44×44, mas o `width: 18px` declarado depois, com a MESMA especificidade,
+// vencia dentro do media query — parecia corrigido pela m3-56 e não estava. Aqui a caixa segue
+// 18px de propósito (44px reais espremeriam o card compacto de Atributos) e quem cresce é a área.
+.ficha-atributo__mod-passo {
+  @include alvo-de-toque;
+}
+
+// Valores clicáveis da edição no próprio lugar (m3-10): Nível, Prestígio, Dinheiro, Vida/Energia
+// atual e máxima, derivados de combate, resistências, Personalidade, Contrato e Codinome. Entre
+// 17 e 27px de altura — texto, não botão, e é justamente por isso que a caixa não pode crescer.
+.ficha-mini__valor--editavel,
+.ficha-barra__valor--editavel,
+.ficha-resistencia__valor--editavel,
+.ficha-ident__nome--editavel,
+.ficha-ident__meta-valor--editavel,
+.ficha-ident__contrato--editavel {
+  @include alvo-de-toque;
+}

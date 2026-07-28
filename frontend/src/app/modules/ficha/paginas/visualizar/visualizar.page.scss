@@ -4,6 +4,22 @@
 
 @use 'tema/breakpoints' as bp;
 
+// Piso reservado no rodapé (m3-60). No mobile a ficha ganha uma barra de navegação fixa
+// (`.ficha-nav`), e a bandeja de dados (`bottom: 20px`) e o gatilho da calculadora
+// (`bottom: 24px`) moravam exatamente nessa faixa — medido ao vivo, a carta da bandeja cobria a
+// barra de abas e o próprio gatilho por 6,35s a cada rolagem. Esta custom property é declarada no
+// `:host` porque `app-calculadora-flutuante` é irmão de `.ficha-pagina` no template da página:
+// declarada no `.ficha-pagina` ela não chegaria lá. Ambos os componentes a consomem com fallback
+// `0px`, então nas outras telas nada muda.
+:host {
+  --piso-flutuante: 0px;
+
+  @include bp.mobile {
+    // altura da barra: 44px de alvo + 6px de padding em cima e embaixo + 1px de borda
+    --piso-flutuante: 57px;
+  }
+}
+
 .ficha-pagina {
   // Mais largo que as telas de criação/edição (960): a visualização é um layout de três colunas
   // (identidade+vitalidade | atributos | status derivado), como o protótipo de fidelidade.
@@ -19,7 +35,26 @@
   // `$bp-mobile`, mesmo racional das demais páginas da ficha.
   @include bp.mobile {
     max-width: 100%;
-    padding: 10px 12px 28px;
+    // m3-60: o rodapé reserva a altura da barra de navegação fixa + a safe area do iOS, senão o
+    // último bloco de cada aba fica embaixo dela e é inalcançável.
+    padding: 10px 12px calc(28px + var(--piso-flutuante) + env(safe-area-inset-bottom, 0px));
+  }
+
+  // Indicador de auto-save (m3-60) — discreto, no cabeçalho, ao lado do indicador de tempo real.
+  // Nunca vira toast: salvar é constante nesta tela (cada passo de Vida agenda um save), e um
+  // toast por edição seria ruído contínuo.
+  &__persistencia {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-mute);
+    white-space: nowrap;
+
+    &--salvo {
+      color: var(--positive);
+    }
   }
 
   &__topo {
