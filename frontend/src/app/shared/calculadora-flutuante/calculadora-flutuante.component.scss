@@ -1,0 +1,195 @@
+// Calculadora comum flutuante (m3-54) — aritmética normal, isolada da calculadora do sistema (M1).
+// Só tokens do tema "Terminal de Contenção" (proibição #29); scrollbar do histórico herda o
+// tratamento global de `tema/_base.scss` (não restilizada aqui).
+
+:host {
+  display: contents;
+}
+
+.calc-flutuante {
+  &__gatilho {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 55;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+    color: var(--accent);
+    border: 1px solid var(--border-strong);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgb(0 0 0 / 40%);
+
+    &:hover {
+      border-color: var(--accent-border);
+      background: var(--surface-2);
+    }
+  }
+
+  &__popup {
+    position: fixed;
+    right: 24px;
+    bottom: 84px;
+    z-index: 60;
+    width: 280px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+    box-shadow: 0 16px 40px rgb(0 0 0 / 45%);
+    outline: none;
+
+    &--posicionado {
+      right: auto;
+      bottom: auto;
+    }
+  }
+
+  &__cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    cursor: grab;
+    touch-action: none;
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+
+  &__titulo {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  &__fechar {
+    border: 0;
+    background: transparent;
+    color: var(--text-mute);
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 4px;
+
+    &:hover {
+      color: var(--text);
+    }
+  }
+
+  &__corpo {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__visor {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    padding: 12px;
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    text-align: right;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  &__teclado {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  &__tecla {
+    height: 40px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    background: var(--surface-2);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--accent-border);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    &--funcao {
+      color: var(--text-dim);
+    }
+
+    &--operador {
+      color: var(--accent);
+    }
+
+    &--igual {
+      background: var(--accent);
+      color: var(--bg);
+      border: 0;
+
+      &:hover {
+        filter: brightness(1.08);
+      }
+    }
+  }
+
+  &__historico {
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+
+  &__historico-titulo {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-mute);
+    margin-bottom: 6px;
+  }
+
+  &__historico-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+
+  &__historico-item {
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 4px 0;
+
+    &:not(:last-child) {
+      border-bottom: 1px solid var(--border);
+    }
+  }
+
+  &__historico-expressao {
+    color: var(--text-mute);
+    overflow-wrap: anywhere;
+  }
+
+  &__historico-resultado {
+    color: var(--text-dim);
+    font-weight: 600;
+  }
+}

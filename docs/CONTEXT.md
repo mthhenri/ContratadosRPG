@@ -1,6 +1,44 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-27 (**m3-28 — Fichas desacopladas da campanha (acervo)**: a ficha
+> Última atualização: 2026-07-27 (**m3-54 — Calculadora flutuante**: task `m3-54` do lote de
+> refino `m3-40`…`m3-56` implementada — fora de ordem (pulou a `m3-53`, exportar PDF, que segue no
+> backlog; ver "Próxima task" abaixo). Feature de UI isolada, sem dado/schema/permissão novos.
+> **Componente novo** `shared/calculadora-flutuante/` (`CalculadoraFlutuante`), autocontido — quem
+> consome só declara `<app-calculadora-flutuante />` uma vez; o próprio componente carrega o
+> ícone-gatilho fixo (canto inferior direito, 48px, ≥44px de alvo de toque) e o popup. Ligado à
+> `FichaVisualizar` (`visualizar.page.ts`/`.html`), única tela hoje coberta pela spec. **Motor
+> aritmético** (`calculadora-flutuante.util.ts`) — recursive-descent **próprio** (sem `eval`, sem
+> dependência): `+ − × ÷ %` e parênteses sobre números; `%` é pós-fixo (divide por 100), compõe com
+> parênteses sem caso especial de "N% de M" (`(10+10)%` = 0.2). 9 testes unitários (vitest) cobrindo
+> precedência, parênteses, decimais, unário negativo, divisão por zero e expressão inválida/vazia.
+> **Popup arrastável sem Angular CDK** — pacote não está instalado no repo (spec permitia
+> "cdkDrag/cdkDragHandle **ou handlers próprios**"); drag via pointer events no cabeçalho
+> (`iniciarArraste`/`continuarArraste`/`finalizarArraste`), mesmo padrão de host bindings
+> `(window:pointermove)`/`(window:pointerup)` já usado em `HoldRepeat`; posição clampada aos limites
+> da viewport; nasce ancorada por CSS (canto inferior direito) até o primeiro arraste, quando passa a
+> `left`/`top` em pixels. **Teclado** (além do clique) só escuta dentro do popup (`keydown` no próprio
+> container, `tabindex="-1"` + `appAutoFocus` — foca ao abrir), então não interfere com o resto da
+> ficha; `Escape` limpa a expressão em vez de fechar o popup (evita fechar sem querer no meio de uma
+> conta). **Histórico** (Signal em memória, mais recente primeiro) sobrevive a fechar/reabrir o popup
+> na mesma sessão — só o **reload da página zera** (nenhum storage, conforme a spec). Estilo 100%
+> tokens do tema (`--surface`/`--surface-2`/`--accent`/`--font-mono`…, proibição #29); tecla "=" e
+> ícone-gatilho em `--accent`; reusa o ícone `calculadora` já existente em `shared/icone` (mesmo
+> glifo do M1, sem relação com a calculadora do sistema — spec explicita "fora de escopo"). **Testes:**
+> +9 vitest (`calculadora-flutuante.util.spec.ts`) — 566/566 frontend, shared/backend inalterados (a
+> 1 falha pré-existente e alheia de `ficha-inventario` — "apelido de equipamento", m3-33 — confirmada
+> como já quebrada em `master` antes desta rodada, via `git stash`). Lint e `ng build` limpos.
+> **Verificado ao vivo** (Playwright dirigindo o stack real — Postgres + backend + frontend, usuário
+> registrado via REST, ficha criada pela UI real): ícone abre o popup, aritmética com precedência
+> correta (`12+7×2` = `26`, não `38`), histórico lista a conta, arraste reposiciona o popup
+> (confirmado por bounding box antes/depois), "x" fecha preservando o histórico da sessão, e um
+> **reload completo zera o histórico** — todos os critérios de aceite da spec confirmados na
+> aplicação real (não só testes). Spec movida para
+> `docs/specs/done/m3-54-ficha-calculadora-flutuante.spec.md`. **Próxima task:** esta rodada pulou a
+> `m3-53` (ficha — exportar PDF), que **segue no backlog**; a fila do lote `m3-40`…`m3-56` continua
+> com `m3-55` (ficha — refino visual desktop) e `m3-56` (ficha — mobile skeletons), mas `m3-53` ainda
+> precisa ser retomada antes do lote fechar.
+>
+> Última atualização anterior: 2026-07-27 (**m3-28 — Fichas desacopladas da campanha (acervo)**: a ficha
 > deixa de ser filha obrigatória da campanha e ganha um **acervo próprio** do usuário. **(1)
 > Migration `0009 - Ficha campanha opcional.sql`** — `ficha.campanha_id` vira nullable (`DROP NOT
 > NULL`/`SET NOT NULL` no down); FK e índice já toleravam `NULL`, mantidos intactos. **(2)

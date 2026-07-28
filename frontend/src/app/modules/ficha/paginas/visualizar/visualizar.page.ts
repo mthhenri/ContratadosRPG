@@ -40,6 +40,7 @@ import type {
   FichaRolagemDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 
+import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
@@ -92,7 +93,14 @@ import type { EstadoSanidade } from '../../componentes/ficha-sanidade/ficha-sani
  */
 @Component({
   selector: 'app-ficha-visualizar',
-  imports: [RouterLink, ReactiveFormsModule, Icone, FichaVisualizacao, IndicadorTempoReal],
+  imports: [
+    RouterLink,
+    ReactiveFormsModule,
+    Icone,
+    FichaVisualizacao,
+    IndicadorTempoReal,
+    CalculadoraFlutuante,
+  ],
   templateUrl: './visualizar.page.html',
   styleUrl: './visualizar.page.scss',
 })
