@@ -155,9 +155,15 @@ export class CampanhaDetalhe {
   );
   /**
    * Posição do menu aberto (`position: fixed`, calculada do botão ao abrir, `getBoundingClientRect`).
-   * `right` (não `left`) mantém o menu alinhado à direita do botão.
+   * `right` (não `left`) mantém o menu alinhado à direita do botão. `top` quando abre pra baixo
+   * (padrão); `bottom` quando abre pra cima (mini-card perto do fim da página — sem isso o menu
+   * saía cortado pela borda inferior da viewport). Só um dos dois é setado por vez.
    */
-  protected readonly menuFichaPosicao = signal<{ top: number; right: number } | null>(null);
+  protected readonly menuFichaPosicao = signal<{
+    top?: number;
+    bottom?: number;
+    right: number;
+  } | null>(null);
   /** Ficha pendente de confirmação de duplicação — guarda o nome dela e do dono pra mensagem. */
   protected readonly confirmandoDuplicar = signal<{
     id: number;
@@ -669,10 +675,14 @@ export class CampanhaDetalhe {
       return;
     }
     const retangulo = (evento.currentTarget as HTMLElement).getBoundingClientRect();
-    this.menuFichaPosicao.set({
-      top: retangulo.bottom + 6,
-      right: window.innerWidth - retangulo.right,
-    });
+    const espacoAbaixo = window.innerHeight - retangulo.bottom;
+    const espacoAcima = retangulo.top;
+    const right = window.innerWidth - retangulo.right;
+    this.menuFichaPosicao.set(
+      espacoAbaixo < 130 && espacoAcima > espacoAbaixo
+        ? { bottom: window.innerHeight - retangulo.top + 6, right }
+        : { top: retangulo.bottom + 6, right },
+    );
     this.menuFichaAberto.set({ id: ficha.id, nome: ficha.nome, donoNome });
   }
 
