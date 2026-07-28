@@ -1,4 +1,4 @@
-import { Component, ElementRef, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, computed, signal, viewChild } from '@angular/core';
 
 import { Icone } from '../icone/icone.component';
 import { AutoFocus } from '../auto-focus/auto-focus.directive';
@@ -10,9 +10,12 @@ import {
 
 const TECLAS_OPERADOR = ['+', '-', '×', '÷'] as const;
 
+/** Largura de abertura (escala 1×) — referência pra derivar `--calc-escala` a partir da largura atual. */
+const LARGURA_PADRAO = 280;
+
 /** Tamanho mínimo do popup (px) — abaixo disso o teclado numérico deixa de caber decentemente. */
-const LARGURA_MINIMA = 260;
-const ALTURA_MINIMA = 380;
+const LARGURA_MINIMA = 190;
+const ALTURA_MINIMA = 250;
 
 /** Limita `valor` ao intervalo `[minimo, maximo]` (usado para não deixar o popup sair da tela). */
 function limitar(valor: number, minimo: number, maximo: number): number {
@@ -48,6 +51,15 @@ export class CalculadoraFlutuante {
   protected readonly posicao = signal<{ x: number; y: number } | null>(null);
   /** `null` até o primeiro redimensionamento — o popup nasce no tamanho fixo do CSS. */
   protected readonly tamanho = signal<{ width: number; height: number } | null>(null);
+
+  /**
+   * Fator aplicado via `--calc-escala` a fontes/controles no template (não só a caixa do popup) —
+   * redimensionar pra baixo também encolhe os números, não só sobra em branco/rolagem.
+   */
+  protected readonly escala = computed(() => {
+    const tamanhoAtual = this.tamanho();
+    return tamanhoAtual ? tamanhoAtual.width / LARGURA_PADRAO : 1;
+  });
 
   private readonly popupElemento = viewChild<ElementRef<HTMLElement>>('popup');
   private arrastando = false;

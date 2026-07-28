@@ -68,7 +68,7 @@
 
   &__titulo {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: calc(12px * var(--calc-escala, 1));
     font-weight: 600;
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
@@ -90,10 +90,10 @@
   }
 
   &__corpo {
-    padding: 14px;
+    padding: calc(14px * var(--calc-escala, 1));
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: calc(12px * var(--calc-escala, 1));
     flex: 1;
     min-height: 0; // permite encolher e rolar em vez de estourar quando a altura é reduzida
     overflow-y: auto;
@@ -103,9 +103,9 @@
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-control);
-    padding: 12px;
+    padding: calc(12px * var(--calc-escala, 1));
     font-family: var(--font-mono);
-    font-size: 22px;
+    font-size: calc(22px * var(--calc-escala, 1));
     font-weight: 700;
     color: var(--text);
     text-align: right;
@@ -116,17 +116,17 @@
   &__teclado {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
+    gap: calc(8px * var(--calc-escala, 1));
   }
 
   &__tecla {
-    height: 40px;
+    height: calc(40px * var(--calc-escala, 1));
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-control);
     background: var(--surface-2);
     color: var(--text);
     font-family: var(--font-mono);
-    font-size: 15px;
+    font-size: calc(15px * var(--calc-escala, 1));
     font-weight: 600;
     cursor: pointer;
 
@@ -169,7 +169,7 @@
 
   &__historico-titulo {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: calc(10px * var(--calc-escala, 1));
     font-weight: 600;
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
@@ -178,7 +178,7 @@
 
   &__historico-limpar {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: calc(10px * var(--calc-escala, 1));
     font-weight: 600;
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
@@ -205,7 +205,7 @@
     display: flex;
     flex-direction: column;
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: calc(12px * var(--calc-escala, 1));
     padding: 4px 0;
 
     &:not(:last-child) {

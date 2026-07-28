@@ -50,7 +50,17 @@
 > independentes por eixo, então a proporção nunca distorce nem nos extremos. Reverificado ao vivo
 > (Playwright): arraste bem mais horizontal que vertical (e vice-versa) preserva a proporção
 > original (erro < 0.001) tanto crescendo quanto encolhendo, e encolher além do mínimo trava no
-> tamanho mínimo sem distorcer. Spec movida para
+> tamanho mínimo sem distorcer. **Terceiro ajuste, mesma sessão:** o próprio autor apontou que a
+> proporção da *caixa* não bastava — os números/controles precisavam encolher/crescer junto, não só
+> sobrar espaço em branco ou rolagem. Nova var CSS `--calc-escala` (`escala` computed = `tamanho()
+> .width / LARGURA_PADRAO`, ligada via `[style.--calc-escala]` no popup) substitui os px fixos de
+> fonte/altura/gap/padding do teclado, visor, título e histórico por `calc(Npx * var(--calc-escala,
+> 1))` — puramente CSS, sem `transform: scale()` (que quebraria com a altura do histórico, que é
+> dinâmica). Mínimos recalibrados pra abrir faixa de escala visível (`LARGURA_MINIMA` 260→190,
+> `ALTURA_MINIMA` 380→250; antes o mínimo de altura era maior que a altura natural de abertura,
+> então praticamente não dava pra encolher). Reverificado ao vivo: fonte da tecla "7" e altura do
+> botão vão de ~15px/40px (escala 1×) a ~10px/27px encolhido e ~23px/62px esticado, sempre
+> acompanhando o tamanho do popup. Spec movida para
 > `docs/specs/done/m3-54-ficha-calculadora-flutuante.spec.md`. **Próxima task:** esta rodada pulou a
 > `m3-53` (ficha — exportar PDF), que **segue no backlog**; a fila do lote `m3-40`…`m3-56` continua
 > com `m3-55` (ficha — refino visual desktop) e `m3-56` (ficha — mobile skeletons), mas `m3-53` ainda
