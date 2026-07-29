@@ -42,7 +42,13 @@
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: 8px;
+    // O valor completo ("0 / 34.5 (base 30 +4.5 vest.)") é `nowrap` e cresce com o texto do bônus
+    // — numa coluna estreita (mobile) ele não cabe ao lado do rótulo "Inventário" e, sem quebra
+    // aqui, ou o texto do valor estourava a linha ou o global `overflow-x: clip` cortava o fim
+    // ("vest.)") sem aviso. Com `wrap`, é a LINHA que quebra (o valor desce inteiro pra baixo do
+    // rótulo) — o texto do valor em si nunca parte no meio.
+    flex-wrap: wrap;
+    gap: 4px 8px;
   }
   &__carga-direita {
     display: inline-flex;
