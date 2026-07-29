@@ -9,9 +9,11 @@ import {
   CampanhaRecuperadaDto,
 } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
+import { ResultadoRolagem } from '../../../../shared/resultado-rolagem/resultado-rolagem.component';
 import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
@@ -24,6 +26,7 @@ import { rotuloClasseCompleto } from '../../../ficha/rotulos-ficha';
 import { CONDICOES_FICHA, type DescritorCondicao } from '../../../ficha/condicoes-ficha';
 import { clamparVitalidade, type CampoVitalidadeAtual } from '../../../ficha/ajuste-vitalidade';
 import { FichaVitalidadeRapidaService } from '../../../ficha/ficha-vitalidade-rapida.service';
+import { RolagemService } from '../../../ficha/rolagem.service';
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
 
 /** Uma das 3 condições no mini-card — sempre as 3, com `ativa` dizendo se está marcada (item 3). */
@@ -77,6 +80,7 @@ interface ItemFicha {
     ReactiveFormsModule,
     Icone,
     OverflowFade,
+    ResultadoRolagem,
     IndicadorTempoReal,
     FichaCriarDialog,
     HoldRepeat,
@@ -88,6 +92,7 @@ export class CampanhaDetalhe {
   private readonly campanhaService = inject(CampanhaService);
   private readonly fichaService = inject(FichaService);
   private readonly fichaVitalidadeRapidaService = inject(FichaVitalidadeRapidaService);
+  private readonly rolagemService = inject(RolagemService);
   private readonly sessaoService = inject(SessaoService);
   private readonly campanhaContextoService = inject(CampanhaContextoService);
   private readonly tempoRealService = inject(TempoRealService);
@@ -132,6 +137,13 @@ export class CampanhaDetalhe {
 
   /** Fichas visíveis da campanha (m2-16) — o backend já filtra por §14; o front só agrupa. */
   private readonly fichas = signal<FichaResumoDto[]>([]);
+  /**
+   * Feed de rolagens da campanha (m3-27) — mais recente primeiro; privadas já filtradas pelo
+   * backend (§14: só o autor ou o mestre as veem). `carregandoRolagens` cobre só o esqueleto
+   * inicial da lista — um erro nunca deveria travar o resto da tela do detalhe.
+   */
+  protected readonly rolagensFeed = signal<readonly RolagemResumoDto[]>([]);
+  protected readonly carregandoRolagens = signal(true);
   /** `true` enquanto a criação da nova ficha está em voo (desabilita o botão do assistente). */
   protected readonly criando = signal(false);
   /** Assistente de criação (m3-16) aberto — agora disparado do próprio detalhe (m2-16). */
@@ -263,6 +275,7 @@ export class CampanhaDetalhe {
 
   constructor() {
     this.carregar(true);
+    this.carregarRolagens();
 
     // Tempo real (m3-05/m3-08, trazido da extinta FichaLista pela m2-16): entra na sala
     // `campanha:<id>` para as fichas inline e novos membros atualizarem ao vivo. Uma ficha criada
@@ -288,6 +301,12 @@ export class CampanhaDetalhe {
     )
       .pipe(takeUntilDestroyed())
       .subscribe({ next: () => this.recarregarMembrosEFichas() });
+
+    // Feed de rolagens em tempo real (m3-27): só rolagens `PUBLICA` chegam por aqui (o backend não
+    // broadcasta privadas — §9); prepend direto, sem refetch (o payload já vem completo).
+    this.tempoRealService.rolagemRegistrada$
+      .pipe(takeUntilDestroyed())
+      .subscribe({ next: (rolagem) => this.rolagensFeed.update((atuais) => [rolagem, ...atuais]) });
 
     // Ressincronização ao reconectar (§9 — o Render dorme e derruba a conexão): refaz o fetch.
     effect(() => {
@@ -552,6 +571,18 @@ export class CampanhaDetalhe {
         this.ultimaAtualizacaoEm.set(Date.now());
       },
     });
+  }
+
+  /**
+   * Carrega o feed de rolagens recentes da campanha (m3-27) — chamado uma vez no boot; as
+   * atualizações depois disso chegam por `rolagemRegistrada$` (prepend, sem refetch). Um erro
+   * (ex.: 401 de sessão expirada) só deixa o feed vazio, sem travar o resto do detalhe.
+   */
+  private carregarRolagens(): void {
+    this.rolagemService
+      .listarPorCampanha(this.id)
+      .pipe(finalize(() => this.carregandoRolagens.set(false)))
+      .subscribe({ next: (itens) => this.rolagensFeed.set(itens), error: () => undefined });
   }
 
   /** Copia o código de convite para a área de transferência — puramente apresentação. */

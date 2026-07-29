@@ -1,6 +1,48 @@
 # CONTEXT.md — Estado Atual do Projeto
 
-> Última atualização: 2026-07-28 (**m3-60 — Navegação mobile da ficha: HUD fixo + barra
+> Última atualização: 2026-07-29 (**m3-27 — Histórico de rolagem: persistência + feed em tempo
+> real**: task antiga do backlog (apontada como "próxima" desde a `m3-26`, mas empurrada por dois
+> lotes de refino inteiros — `m3-40`…`m3-56` e depois a `m3-60`) finalmente implementada. Rolagens
+> feitas na ficha (rolagem rápida/preset em `FichaRolagens`, dano de item em `FichaInventario`,
+> teste de atributo/dano em `FichaVisualizacao`) agora **persistem** em vez de só aparecer na
+> bandeja efêmera. **Modelo:** tabela nova `rolagem` (migration `0011`) — `ficha_id`, `campanha_id`
+> **nulo** (resolvido da própria ficha; ficha solta do acervo grava `null`, não quebra), `usuario_id`
+> (autor da jogada, não necessariamente o dono da ficha), `rotulo`, `tipo_rolagem_visibilidade_id`
+> e `resultado JSONB` reusando `ResultadoRolagemDto` **1:1** — zero transformação, o mesmo shape que
+> já alimenta a bandeja de dados. **Visibilidade `PUBLICA`/`PRIVADA` é tabela de referência
+> `tipo_rolagem_visibilidade` (migration `0010`)**, não enum solto na coluna — a spec original não
+> detalhava a coluna, mas o §10.2.12 do `SYSTEM.SPEC.md` (proibição #24) exige `tipo_*` pra qualquer
+> enum de coluna relacional; a exceção de enum-só-em-`shared/` vale só para conteúdo dentro do JSONB
+> `ficha.dados`, o que não é o caso aqui. `PRIVADA` = visível só para o autor e o mestre da campanha;
+> a permissão **reusa** `FichaService.recuperarFicha` (histórico da própria ficha) e
+> `CampanhaRepository.recuperarMembro` (feed da campanha, barra quem não é membro) em vez de duplicar
+> a matriz §14. **Decisão de design registrada em `SCHEMA.md`:** o gateway só emite
+> `rolagem:registrada` pra rolagens `PUBLICA` — `PRIVADA` nunca trafega por WebSocket, só aparece no
+> histórico de quem tem permissão de ver via REST. **Frontend:** nova mini-aba **Histórico** em
+> `AbaStatus` (o `id` `'combate'` que a `m3-37` deixou de propósito por causa disso continua livre;
+> `'historico'` é uma aba irmã nova, não um reaproveitamento) — lista paginada
+> (`FichaHistorico`, "Carregar mais") mais recente primeiro, reusando `ResultadoRolagem` (extraído de
+> `BandejaDados` pra não duplicar a renderização do resultado) e um toggle **Rolagem oculta** ao lado
+> da aba Rolagens que decide `PUBLICA`/`PRIVADA` da próxima jogada. O detalhe da campanha
+> (`/painel/:id`) ganhou a seção **"Rolagens Recentes"**: histórico via REST no load +
+> `TempoRealService.rolagemRegistrada$` pro feed ao vivo, mesmo padrão de fade topo/base da lista de
+> Membros. **Bug corrigido durante a verificação ao vivo:** `FichaHistorico` chamava
+> `carregarPagina(1)` direto no corpo do construtor, lendo `fichaId()` (`input.required`) antes do
+> Angular resolver os inputs — `NG0950` em runtime, não pego pelos testes (TestBed injeta o input
+> antes do primeiro change detection); corrigido envolvendo em `effect()`, que só roda depois disso.
+> `+10` testes de `rolagem.service.spec.ts` (backend 162/162); frontend 592/593 (a 1 falha é
+> pré-existente/não-relacionada, confirmada via `git diff` vazio no arquivo). Budgets do
+> `angular.json` ajustados (580kB→610kB inicial, 34kB→35kB `anyComponentStyle`). **Verificado ao
+> vivo** (Postgres real, REST + Playwright): dono vê as duas (pública+privada) no próprio histórico;
+> um terceiro membro da campanha (não-autor, não-mestre) vê a pública no feed mas **não** a privada;
+> o mestre vê as duas; rolagem feita na ficha aparece no Histórico na hora (prepend local, sem
+> reload) e a pública chega no feed do mestre em tempo real (WebSocket, sem reload); toggle "Rolagem
+> oculta" muda de estado visualmente (ícone + cor accent) conforme o tema "Terminal de Contenção".
+> Spec em `docs/specs/done/m3-27-historico-rolagem.spec.md`. **Próxima task: `m3-53`** (ficha —
+> exportar PDF), única pendência do lote `m3-40`…`m3-56`, ainda no backlog — ver o bloco `m3-60`
+> logo abaixo.)
+>
+> Última atualização anterior: 2026-07-28 (**m3-60 — Navegação mobile da ficha: HUD fixo + barra
 > inferior**: task nova, aberta depois que o dono do produto olhou o resultado da `m3-56` e disse
 > que "a UI/UX não encaixou". A `m3-56` passou nos testes de bounding box e ainda assim a tela não
 > se usa em mesa — este é o diagnóstico de por quê, e a correção. **Achado central:** no desktop a

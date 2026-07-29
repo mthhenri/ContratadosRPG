@@ -10,12 +10,14 @@ import {
   CampanhaRecuperadaDto,
 } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { CampanhaDetalhe } from './detalhe.page';
 import { CampanhaService } from '../../campanha.service';
 import { CampanhaContextoService } from '../../campanha-contexto.service';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { FichaService } from '../../../ficha/ficha.service';
+import { RolagemService } from '../../../ficha/rolagem.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 
 /**
@@ -42,6 +44,7 @@ describe('CampanhaDetalhe', () => {
     usuarioId: number;
     membros: CampanhaMembroResumoDto[];
     fichas?: FichaResumoDto[];
+    rolagens?: RolagemResumoDto[];
     alterarRetorno?: Observable<CampanhaAlteradaDto>;
   }) {
     const campanhaService = {
@@ -85,6 +88,9 @@ describe('CampanhaDetalhe', () => {
       ),
       excluirFicha: vi.fn(() => of(undefined)),
     };
+    const rolagemService = {
+      listarPorCampanha: vi.fn(() => of(opts.rolagens ?? [])),
+    };
     const contextoService = { definir: vi.fn(), limpar: vi.fn() };
     const sessaoService = { usuario: () => ({ id: opts.usuarioId, login: 'x', nome: 'x' }) };
 
@@ -93,6 +99,7 @@ describe('CampanhaDetalhe', () => {
     const fichaCriada$ = new Subject<FichaResumoDto>();
     const membroEntrou$ = new Subject<CampanhaMembroEntradaDto>();
     const fichaAlterada$ = new Subject<unknown>();
+    const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
     const reconexao = signal(0);
     const tempoRealService = {
       conectar: vi.fn(),
@@ -103,6 +110,7 @@ describe('CampanhaDetalhe', () => {
       fichaCriada$: fichaCriada$.asObservable(),
       membroEntrou$: membroEntrou$.asObservable(),
       fichaAlterada$: fichaAlterada$.asObservable(),
+      rolagemRegistrada$: rolagemRegistrada$.asObservable(),
       reconexao,
       conectado: signal(true),
     };
@@ -114,6 +122,7 @@ describe('CampanhaDetalhe', () => {
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => String(CAMPANHA_ID) } } } },
         { provide: CampanhaService, useValue: campanhaService },
         { provide: FichaService, useValue: fichaService },
+        { provide: RolagemService, useValue: rolagemService },
         { provide: CampanhaContextoService, useValue: contextoService },
         { provide: SessaoService, useValue: sessaoService },
         { provide: TempoRealService, useValue: tempoRealService },
@@ -130,11 +139,13 @@ describe('CampanhaDetalhe', () => {
       raiz: fixture.nativeElement as HTMLElement,
       campanhaService,
       fichaService,
+      rolagemService,
       contextoService,
       tempoRealService,
       fichaCriada$,
       membroEntrou$,
       fichaAlterada$,
+      rolagemRegistrada$,
       reconexao,
       navegar,
     };

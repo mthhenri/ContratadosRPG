@@ -53,9 +53,18 @@ CREATE TABLE tipo_ficha (
   descricao VARCHAR NOT NULL
 );
 -- uix_tipo_ficha_codigo_ativo: UNIQUE (codigo) WHERE is_deleted = false
+
+CREATE TABLE tipo_rolagem_visibilidade (
+  -- BaseEntity...
+  codigo    VARCHAR NOT NULL,   -- PUBLICA | PRIVADA
+  descricao VARCHAR NOT NULL
+);
+-- uix_tipo_rolagem_visibilidade_codigo_ativo: UNIQUE (codigo) WHERE is_deleted = false
 ```
 
-Enums TS espelhos: `TipoCampanhaMembroPapelEnum`, `TipoFichaEnum` (em `shared/src/enums/`).
+Enums TS espelhos: `TipoCampanhaMembroPapelEnum`, `TipoFichaEnum`, `RolagemVisibilidadeEnum`
+(em `shared/src/enums/`). `RolagemVisibilidadeEnum` é coluna relacional de `rolagem` (não vive no
+JSONB) — a exceção do §10.3 abaixo não se aplica a ela, segue a regra geral §10.2.12.
 
 > **Enums de conteúdo de jogo** (`ClasseEnum`, `PatenteEnum`, categorias de item, portes…)
 > vivem dentro do JSONB `ficha.dados` e **não** têm tabela `tipo_*` (SYSTEM.SPEC §10.3).
@@ -140,6 +149,43 @@ CREATE TABLE usuario_ficha_acesso (
 );
 -- uix_usuario_ficha_acesso_ficha_usuario_ativo: UNIQUE (ficha_id, usuario_id) WHERE is_deleted = false
 ```
+
+## rolagem (M3 — m3-27)
+
+Persistência das rolagens disparadas a partir de uma ficha (teste de atributo, dano, fórmula
+avulsa, passo de preset) — histórico por ficha + feed em tempo real na campanha. Relacional para
+identidade/permissão; `resultado` em JSONB reusa **1:1** `ResultadoRolagemDto`
+(`shared/src/regras/rolagem/rolagem.dtos.ts`) — nenhum tipo novo de resultado.
+
+```sql
+CREATE TABLE rolagem (
+  -- BaseEntity...
+  ficha_id                     INTEGER NOT NULL,   -- fk_rolagem_ficha
+  campanha_id                  INTEGER,            -- fk_rolagem_campanha (nullable — ficha solta, m3-28)
+  usuario_id                   INTEGER NOT NULL,   -- fk_rolagem_usuario (autor da rolagem)
+  rotulo                       VARCHAR NOT NULL,
+  tipo_rolagem_visibilidade_id INTEGER NOT NULL,   -- fk_rolagem_tipo_rolagem_visibilidade
+  resultado                    JSONB   NOT NULL    -- ResultadoRolagemDto — forma abaixo
+);
+-- ix_rolagem_ficha:    (ficha_id)
+-- ix_rolagem_campanha: (campanha_id)
+```
+
+**Autor ≠ dono da ficha, sempre.** `usuario_id` é quem **disparou** a rolagem — o dono da ficha
+na maioria dos casos, mas também um visualizador com acesso concedido (`usuario_ficha_acesso`,
+quem pode **ver** a ficha pode rolar) ou o mestre. `campanha_id` é resolvido da ficha no momento
+do registro (não vem do cliente).
+
+**Visibilidade.** `PUBLICA` (default) aparece para todos os membros da campanha no feed; `PRIVADA`
+só para o **autor** e o **mestre** — o mesmo mecanismo cobre o mestre rolando "só para si" (autor
+= mestre). Rolagem numa ficha **sem campanha** (`campanha_id NULL`) só alimenta o histórico da
+própria ficha; nenhum feed de campanha a recebe.
+
+**Emissão em tempo real (evento `rolagem:registrada`, sala `campanha:<id>`).** Só rolagens
+`PUBLICA` são broadcastadas — emitir uma `PRIVADA` pela sala inteira (broadcast não-direcionado,
+§9) vazaria o conteúdo a quem não deveria vê-la; o autor/mestre a recebe via REST no próximo
+carregamento/refresh do feed (decisão de design v1, `docs/specs/done/m3-27-*.spec.md`). Ficha sem
+campanha (`campanha_id NULL`) não tem sala — o emit é guardado (no-op).
 
 ---
 

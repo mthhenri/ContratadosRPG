@@ -1171,6 +1171,7 @@ describe('FichaVisualizacao', () => {
         'inventario',
         'habilidades',
         'rolagens',
+        'historico',
         'extras',
         'historia',
       ]);
@@ -1182,7 +1183,7 @@ describe('FichaVisualizacao', () => {
         b.getAttribute('data-destino'),
       );
       expect(destinos).not.toContain('historia');
-      expect(destinos).toHaveLength(6);
+      expect(destinos).toHaveLength(7);
     });
 
     it('todo destino tem rótulo visível no DOM — nenhum é só ícone', () => {
@@ -1190,7 +1191,16 @@ describe('FichaVisualizacao', () => {
       const rotulos = Array.from(raiz.querySelectorAll('.ficha-nav__rotulo')).map((r) =>
         r.textContent?.trim(),
       );
-      expect(rotulos).toEqual(['Agente', 'Status', 'Invent.', 'Habilid.', 'Rolagens', 'Extras', 'História']);
+      expect(rotulos).toEqual([
+        'Agente',
+        'Status',
+        'Invent.',
+        'Habilid.',
+        'Rolagens',
+        'Histór.',
+        'Extras',
+        'História',
+      ]);
       // O rótulo curto é o visual; o leitor de tela ouve o nome inteiro pelo aria-label do botão.
       const inventario = raiz.querySelector('[data-destino="inventario"]');
       expect(inventario?.getAttribute('aria-label')).toBe('Inventário');

@@ -18,6 +18,7 @@ import {
   FormacaoParametroEnum,
   FragmentoModuloEnum,
   HabilidadeCategoriaEnum,
+  RolagemVisibilidadeEnum,
   TipoDanoEnum,
 } from '@contratados-rpg/shared/enums';
 import type {
@@ -31,6 +32,7 @@ import type {
   FichaRolagemDto,
   FichaSequelaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
+import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import {
   MAESTRIA_PONTOS_MINIMO,
   ajusteEnergiaAmplificadores,
@@ -72,6 +74,7 @@ import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
+import { FichaHistorico } from '../ficha-historico/ficha-historico.component';
 import { FichaInventario, type CustoEnergiaFragmento } from '../ficha-inventario/ficha-inventario.component';
 import { FichaRolagens } from '../ficha-rolagens/ficha-rolagens.component';
 import { FichaSanidade, type EstadoSanidade } from '../ficha-sanidade/ficha-sanidade.component';
@@ -79,6 +82,8 @@ import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-fi
 import { GRUPOS_FORMACAO, rotuloParametroFormacao } from '../../opcoes-formacao';
 import { CONDICOES_FICHA, type CondicoesFicha } from '../../condicoes-ficha';
 import { clamparVitalidade, type CampoVitalidadeAtual } from '../../ajuste-vitalidade';
+import { RolagemService } from '../../rolagem.service';
+import type { RolagemRealizadaDto } from '../../rolagem-realizada';
 import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
 import {
   ChaveInfoExtra,
@@ -143,8 +148,18 @@ export function ehAbaFicha(valor: string | null | undefined): valor is AbaFicha 
  * `historia` (m3-50) é **condicional** — só dono/mestre veem o botão (`ajustavel()`); o template
  * também gate o painel pelo mesmo sinal, já que a `dados().historia` nem chega ao visualizador
  * (omitida no backend), mas um fragmento de URL manipulado à mão não deve renderizar a caixa vazia.
+ * `historico` (m3-27) lista as rolagens persistidas da ficha — entra aqui, e não na (vestigial)
+ * `AbaFicha` de página inteira do m3-11 (aposentada pelo layout de 3 colunas do m3-38), que é onde
+ * o comentário original de m3-19/m3-37 previa o encaixe antes desse redesenho acontecer.
  */
-export type AbaStatus = 'informacoes' | 'inventario' | 'habilidades' | 'rolagens' | 'extras' | 'historia';
+export type AbaStatus =
+  | 'informacoes'
+  | 'inventario'
+  | 'habilidades'
+  | 'rolagens'
+  | 'historico'
+  | 'extras'
+  | 'historia';
 
 /** Todas as abas do card de Status, na ordem de exibição da barra. */
 const ABAS_STATUS: readonly AbaStatus[] = [
@@ -152,6 +167,7 @@ const ABAS_STATUS: readonly AbaStatus[] = [
   'inventario',
   'habilidades',
   'rolagens',
+  'historico',
   'extras',
   'historia',
 ];
@@ -202,6 +218,7 @@ const DESTINOS_MOBILE: readonly {
   { destino: 'inventario', rotulo: 'Invent.', rotuloCompleto: 'Inventário', icone: 'inventario' },
   { destino: 'habilidades', rotulo: 'Habilid.', rotuloCompleto: 'Habilidades', icone: 'habilidades' },
   { destino: 'rolagens', rotulo: 'Rolagens', rotuloCompleto: 'Rolagens', icone: 'rolagens' },
+  { destino: 'historico', rotulo: 'Histór.', rotuloCompleto: 'Histórico', icone: 'rolagens' },
   { destino: 'extras', rotulo: 'Extras', rotuloCompleto: 'Extras', icone: 'mais' },
   { destino: 'historia', rotulo: 'História', rotuloCompleto: 'História', icone: 'anotacoes' },
 ];
@@ -295,6 +312,7 @@ export interface AjusteClasse {
     FichaInventario,
     FichaHabilidades,
     FichaRolagens,
+    FichaHistorico,
     BandejaDados,
     OverflowFade,
     Tooltip,
@@ -830,6 +848,52 @@ export class FichaVisualizacao {
 
   /** Bandeja de dados global — onde o teste rolado aqui aparece. */
   private readonly bandeja = inject(BandejaDadosService);
+  /** Persistência do histórico de rolagens (m3-27) — chamada direto daqui, fire-and-forget. */
+  private readonly rolagemService = inject(RolagemService);
+
+  /**
+   * Visibilidade das próximas rolagens (m3-27): `true` = `PRIVADA` (só o autor e o mestre veem —
+   * o mesmo toggle serve ao mestre pra rolar "só para si", já que aí autor = mestre). Default
+   * `false` (`PUBLICA`) — visível a estado local, não persistido (reflete a decisão do momento em
+   * que se rola, não um ajuste da ficha).
+   */
+  protected readonly rolagemOculta = signal(false);
+
+  /** Alterna a visibilidade das próximas rolagens desta sessão de leitura. */
+  protected alternarRolagemOculta(): void {
+    this.rolagemOculta.update((oculta) => !oculta);
+  }
+
+  /**
+   * Última rolagem persistida nesta sessão de leitura (m3-27) — alimenta `FichaHistorico` (aba
+   * Histórico) pra dar **prepend local** sem esperar o próximo carregamento: útil quando a aba já
+   * está aberta na 3ª coluna (Status) enquanto se rola de outra coluna (Atributos) ao mesmo tempo.
+   * Rolagens privadas ou de fichas sem campanha nunca chegam por WebSocket — só este caminho local
+   * garante que o próprio autor sempre vê a própria rolagem aparecer na hora.
+   */
+  protected readonly ultimaRolagemRegistrada = signal<RolagemResumoDto | null>(null);
+
+  /**
+   * Persiste uma rolagem executada nesta ficha (m3-27) — fire-and-forget, otimista (o resultado já
+   * está na bandeja antes desta chamada terminar). Chamado tanto pelos rolagens diretas daqui
+   * (`rolarTesteAtributo`/`rolarDano`) quanto pelo `(rolagemFeita)` dos componentes controlados
+   * (`FichaRolagens`/`FichaInventario`), que não conhecem o `fichaId`. Um erro (403/rede) só perde
+   * o registro — a rolagem já apareceu na bandeja e não trava a leitura; o toast global já avisa.
+   */
+  protected registrarRolagem(entrada: RolagemRealizadaDto): void {
+    this.rolagemService
+      .registrar(this.fichaId(), {
+        rotulo: entrada.rotulo,
+        visibilidade: this.rolagemOculta()
+          ? RolagemVisibilidadeEnum.PRIVADA
+          : RolagemVisibilidadeEnum.PUBLICA,
+        resultado: entrada.resultado,
+      })
+      .subscribe({
+        next: (rolagemRegistrada) => this.ultimaRolagemRegistrada.set(rolagemRegistrada),
+        error: () => undefined,
+      });
+  }
 
   /**
    * Modificador temporário de teste por atributo (ex.: Amplificador aplicado) — persistido em
@@ -933,6 +997,7 @@ export class FichaVisualizacao {
       // exibir `kh1` (mantém o maior) numa rolagem que na verdade manteve o menor.
       const formulaExibida = atributo <= 0 ? `${2 - atributo}d20kl1cm1 + PROF${sufixo}` : formula;
       this.bandeja.mostrar({ rotulo: campo.nome, formula: formulaExibida, resultado });
+      this.registrarRolagem({ rotulo: campo.nome, formula: formulaExibida, resultado });
     }
   }
 
@@ -953,6 +1018,7 @@ export class FichaVisualizacao {
     });
     if (resultado) {
       this.bandeja.mostrar({ rotulo: linha.rotulo, formula: linha.bruto, resultado });
+      this.registrarRolagem({ rotulo: linha.rotulo, formula: linha.bruto, resultado });
     }
   }
 

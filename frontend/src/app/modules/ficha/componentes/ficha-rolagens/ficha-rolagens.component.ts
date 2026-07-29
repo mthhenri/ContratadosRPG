@@ -27,6 +27,7 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { executarPassoPreset } from '../../executar-rolagem';
+import type { RolagemRealizadaDto } from '../../rolagem-realizada';
 import { GuiaFormula } from '../guia-formula/guia-formula.component';
 
 /** Grupo tipado de um passo seguinte no formulário (encadeamento), com as habilidades **deste passo**. */
@@ -73,7 +74,9 @@ interface RolagemVM {
  * (energia por passo) é o motor puro `shared/regras/rolagem` (`resolverPreset`/`rolarPasso`,
  * RNG do navegador — §6.6). O componente é **controlado**: cada mutação da lista emite `rolagensMudou` e
  * a página persiste. O resultado de cada rolagem vai para a **bandeja de dados** global (m3-22), não
- * fica no cartão. Estilos só com os tokens do tema "Terminal de Contenção" (proibição #29).
+ * fica no cartão — e emite `rolagemFeita` (m3-27): sem `fichaId` aqui, quem persiste o histórico é
+ * `FichaVisualizacao`, que já o conhece. Estilos só com os tokens do tema "Terminal de Contenção"
+ * (proibição #29).
  */
 @Component({
   selector: 'app-ficha-rolagens',
@@ -107,6 +110,8 @@ export class FichaRolagens {
   readonly rolagensMudou = output<readonly FichaRolagemDto[]>();
   /** Energia a debitar ao rolar um passo com habilidades — a página aplica em `energiaAtual`. */
   readonly energiaGasta = output<number>();
+  /** Toda rolagem executada aqui (rápida ou passo de preset) — quem persiste o histórico (m3-27). */
+  readonly rolagemFeita = output<RolagemRealizadaDto>();
 
   /** Bandeja de dados global — onde cada passo rolado aqui aparece. */
   private readonly bandeja = inject(BandejaDadosService);
@@ -420,6 +425,7 @@ export class FichaRolagens {
     });
     if (resultado) {
       this.bandeja.mostrar({ rotulo: 'Rolagem rápida', formula, resultado });
+      this.rolagemFeita.emit({ rotulo: 'Rolagem rápida', formula, resultado });
     }
   }
 
@@ -451,6 +457,7 @@ export class FichaRolagens {
       return;
     }
     this.bandeja.mostrar({ rotulo: executado.rotulo, formula: executado.formula, resultado: executado.resultado });
+    this.rolagemFeita.emit({ rotulo: executado.rotulo, formula: executado.formula, resultado: executado.resultado });
     if (executado.energiaGasta > 0) {
       this.energiaGasta.emit(executado.energiaGasta);
     }

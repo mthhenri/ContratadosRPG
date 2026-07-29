@@ -8,6 +8,7 @@ import type {
   FichaAlteradaDto,
   FichaResumoDto,
 } from '@contratados-rpg/shared/dtos/ficha';
+import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { environment } from '../../../environments/environment';
 import { SessaoService } from './sessao.service';
@@ -60,6 +61,7 @@ export class TempoRealService {
   private readonly fichaCriadaSubject = new Subject<FichaResumoDto>();
   private readonly membroEntrouSubject = new Subject<CampanhaMembroEntradaDto>();
   private readonly acessoRevogadoSubject = new Subject<FichaAcessoRevogadoDto>();
+  private readonly rolagemRegistradaSubject = new Subject<RolagemResumoDto>();
 
   /** Uma ficha da campanha foi alterada (na sala `ficha:<id>` em que o cliente está). */
   readonly fichaAlterada$: Observable<FichaAlteradaDto> = this.fichaAlteradaSubject.asObservable();
@@ -75,6 +77,13 @@ export class TempoRealService {
    */
   readonly acessoRevogado$: Observable<FichaAcessoRevogadoDto> =
     this.acessoRevogadoSubject.asObservable();
+  /**
+   * Uma rolagem `PUBLICA` foi registrada numa ficha da campanha (m3-27; na sala `campanha:<id>`
+   * em que o cliente está). Rolagens `PRIVADA` nunca chegam por aqui (o backend só broadcasta
+   * públicas) — o autor/mestre as vê pelo REST no próximo carregamento do feed.
+   */
+  readonly rolagemRegistrada$: Observable<RolagemResumoDto> =
+    this.rolagemRegistradaSubject.asObservable();
 
   /**
    * Abre a conexão Socket.IO com o JWT da sessão. **Idempotente** enquanto a sessão não muda (chamável
@@ -122,6 +131,9 @@ export class TempoRealService {
     );
     this.socket.on('ficha:acesso-revogado', (evento: FichaAcessoRevogadoDto) =>
       this.acessoRevogadoSubject.next(evento),
+    );
+    this.socket.on('rolagem:registrada', (rolagem: RolagemResumoDto) =>
+      this.rolagemRegistradaSubject.next(rolagem),
     );
   }
 

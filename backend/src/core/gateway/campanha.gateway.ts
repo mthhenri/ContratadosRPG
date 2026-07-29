@@ -19,6 +19,7 @@ import type {
   FichaRecuperarDto,
   FichaResumoDto,
 } from '@contratados-rpg/shared/dtos/ficha';
+import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import type { Server, Socket } from 'socket.io';
 import type { JwtPayload } from '../../modules/autenticacao/jwt-payload.interface';
 import { CampanhaService } from '../../modules/campanha/campanha.service';
@@ -196,6 +197,23 @@ export class CampanhaGateway implements OnGatewayConnection {
    */
   emitirAcessoRevogado(evento: FichaAcessoRevogadoDto): void {
     this.servidor.to(this.salaFicha(evento.fichaId)).emit('ficha:acesso-revogado', evento);
+  }
+
+  /**
+   * Emite `rolagem:registrada` na sala `campanha:<id>` (m3-27). Chamado por
+   * `RolagemService.registrarRolagem` após a rolagem ser persistida. **Só rolagens `PUBLICA`
+   * chegam aqui** — o `emit()` é único pra sala inteira, sem emissão direcionada por permissão
+   * (§9); broadcastar uma `PRIVADA` vazaria o conteúdo a quem não deveria vê-la. O autor/mestre de
+   * uma rolagem privada a recebe via REST no próximo carregamento do feed (decisão de design v1).
+   *
+   * **Ficha solta (m3-28)**: `campanhaId === null` não tem sala — no-op, mesmo tratamento de
+   * `emitirFichaCriada`.
+   */
+  emitirRolagemRegistrada(rolagem: RolagemResumoDto): void {
+    if (rolagem.campanhaId === null) {
+      return;
+    }
+    this.servidor.to(this.salaCampanha(rolagem.campanhaId)).emit('rolagem:registrada', rolagem);
   }
 
   /**

@@ -369,6 +369,35 @@
       </ul>
     </article>
     </div>
+
+    <!-- Feed de rolagens da campanha (m3-27): rolagens PUBLICA de todo membro + as PRIVADA a que
+         o solicitante tem direito (autor ou mestre), mais recente primeiro. Tempo real via
+         `rolagemRegistrada$` (só PUBLICA broadcasta — §9); privadas exigem refresh da tela. -->
+    <article class="card detalhe__rolagens">
+      <header class="detalhe__secao">
+        <h2 class="detalhe__secao-titulo">Rolagens Recentes</h2>
+        <span class="detalhe__secao-regua"></span>
+        <span class="detalhe__secao-contagem" aria-hidden="true">{{ rolagensFeed().length }}</span>
+      </header>
+
+      @if (carregandoRolagens()) {
+        <p class="detalhe__rolagens-vazio">Carregando…</p>
+      } @else if (rolagensFeed().length === 0) {
+        <p class="detalhe__rolagens-vazio">Nenhuma rolagem ainda.</p>
+      } @else {
+        <ul class="detalhe__rolagens-lista" appOverflowFade>
+          @for (rolagem of rolagensFeed(); track rolagem.id) {
+            <li class="detalhe__rolagens-item">
+              <header class="detalhe__rolagens-cabecalho">
+                <span class="detalhe__rolagens-rotulo">{{ rolagem.rotulo }}</span>
+                <span class="detalhe__rolagens-autor">{{ rolagem.nomeAutor }} · {{ rolagem.nomeFicha }}</span>
+              </header>
+              <app-resultado-rolagem [resultado]="rolagem.resultado" />
+            </li>
+          }
+        </ul>
+      }
+    </article>
   }
 
   <p class="detalhe__voltar">

@@ -32,6 +32,10 @@
       "types": "./dist/dtos/ficha/index.d.ts",
       "default": "./dist/dtos/ficha/index.js"
     },
+    "./dtos/rolagem": {
+      "types": "./dist/dtos/rolagem/index.d.ts",
+      "default": "./dist/dtos/rolagem/index.js"
+    },
     "./regras/dados": {
       "types": "./dist/regras/dados/index.d.ts",
       "default": "./dist/regras/dados/index.js"

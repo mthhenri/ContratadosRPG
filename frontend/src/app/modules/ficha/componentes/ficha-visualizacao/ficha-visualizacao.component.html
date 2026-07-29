@@ -1100,6 +1100,16 @@
         <button
           type="button"
           class="ficha-status__aba"
+          data-aba-status="historico"
+          [class.ficha-status__aba--ativa]="abaStatusAtiva() === 'historico'"
+          (click)="selecionarAbaStatus('historico')"
+        >
+          <app-icone class="ficha-status__aba-icone" [nome]="'rolagens'" />
+          <span class="ficha-status__aba-texto">Histórico</span>
+        </button>
+        <button
+          type="button"
+          class="ficha-status__aba"
           data-aba-status="extras"
           [class.ficha-status__aba--ativa]="abaStatusAtiva() === 'extras'"
           (click)="selecionarAbaStatus('extras')"
@@ -1251,6 +1261,7 @@
             (ajusteEnergiaFragmento)="aoAjustarEnergiaFragmento($event)"
             (ajusteInventarioMaximo)="ajustarInventarioMaximo($event)"
             (sequelasFragmentoConsumido)="aoConsumirFragmentoSanidade($event)"
+            (rolagemFeita)="registrarRolagem($event)"
           />
         </div>
         }
@@ -1270,6 +1281,21 @@
         }
         @if (abaStatusAtiva() === 'rolagens') {
         <div class="ficha-status__conteudo">
+          @if (podeRolar()) {
+            <!-- Visibilidade das próximas rolagens (m3-27): PUBLICA por padrão; "oculta" grava
+                 PRIVADA (só autor + mestre veem, no histórico e no feed da campanha). -->
+            <button
+              type="button"
+              class="ficha-rolagem-oculta"
+              [class.ficha-rolagem-oculta--ativa]="rolagemOculta()"
+              [attr.aria-pressed]="rolagemOculta()"
+              [appTooltip]="rolagemOculta() ? 'Próximas rolagens: privadas (autor + mestre)' : 'Próximas rolagens: públicas'"
+              (click)="alternarRolagemOculta()"
+            >
+              <app-icone [nome]="rolagemOculta() ? 'olho-fechado' : 'olho'" />
+              <span>Rolagem oculta</span>
+            </button>
+          }
           <app-ficha-rolagens
             [rolagens]="dados().rolagens ?? []"
             [atributos]="atributosEfetivos()"
@@ -1281,7 +1307,13 @@
             [podeRolar]="podeRolar()"
             (rolagensMudou)="ajusteRolagens.emit($event)"
             (energiaGasta)="aoUtilizarHabilidade($event)"
+            (rolagemFeita)="registrarRolagem($event)"
           />
+        </div>
+        }
+        @if (abaStatusAtiva() === 'historico') {
+        <div class="ficha-status__conteudo">
+          <app-ficha-historico [fichaId]="fichaId()" [novaRolagem]="ultimaRolagemRegistrada()" />
         </div>
         }
         @if (abaStatusAtiva() === 'extras') {

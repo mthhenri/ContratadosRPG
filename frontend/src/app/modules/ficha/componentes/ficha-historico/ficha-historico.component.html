@@ -1,0 +1,34 @@
+@if (carregando()) {
+  <p class="ficha-historico__vazio">Carregando histórico…</p>
+} @else if (itens().length === 0) {
+  <p class="ficha-historico__vazio">Nenhuma rolagem registrada ainda.</p>
+} @else {
+  <ul class="ficha-historico__lista" appOverflowFade>
+    @for (item of itens(); track item.id) {
+      <li class="ficha-historico__item">
+        <header class="ficha-historico__cabecalho">
+          <span class="ficha-historico__rotulo">{{ item.rotulo }}</span>
+          <span class="ficha-historico__data">{{ item.createdDate | date: 'dd/MM HH:mm' }}</span>
+        </header>
+        <div class="ficha-historico__meta">
+          <span class="ficha-historico__autor">{{ item.nomeAutor }}</span>
+          @if (item.visibilidade === RolagemVisibilidadeEnum.PRIVADA) {
+            <span class="ficha-historico__privada">privada</span>
+          }
+        </div>
+        <app-resultado-rolagem [resultado]="item.resultado" />
+      </li>
+    }
+  </ul>
+
+  @if (temMais()) {
+    <button
+      type="button"
+      class="ficha-historico__mais"
+      [disabled]="carregandoMais()"
+      (click)="carregarMais()"
+    >
+      {{ carregandoMais() ? 'Carregando…' : 'Carregar mais' }}
+    </button>
+  }
+}

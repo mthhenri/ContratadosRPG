@@ -57,6 +57,7 @@ import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { EFEITO_TIPOS, EfeitoTipoMeta, metaEfeitoTipo } from '../../../../shared/inventario/efeito-modificacao.ui';
+import type { RolagemRealizadaDto } from '../../rolagem-realizada';
 import { rotuloItem } from '../../rotulos-ficha';
 
 /**
@@ -414,6 +415,8 @@ export class FichaInventario {
    * sequela com o teste de Vontade.
    */
   readonly sequelasFragmentoConsumido = output<readonly FichaSequelaDto[]>();
+  /** Rolagem de dano de um item (m3-45) — quem persiste o histórico é `FichaVisualizacao` (m3-27). */
+  readonly rolagemFeita = output<RolagemRealizadaDto>();
 
   /** Abas do catálogo comprável — sem os Fragmentos (achados, montados como item custom). */
   protected readonly categorias = CATALOGO_CATEGORIAS.filter(
@@ -1384,8 +1387,8 @@ export class FichaInventario {
    * (`rolarFormula`, `shared/regras/rolagem`) e bandeja (`BandejaDadosService`) usados pela Visão
    * Geral (`FichaVisualizacao.rolarDano`). Não é gated por `editavel()` — rolar não é uma ação de
    * edição da ficha (mesmo padrão de `rolarTesteAtributo`/`rolarDano` lá) — mas é gated por
-   * `podeRolar()` (m3-51: visualizador não rola dados). Sem histórico ainda (`m3-27` não existe):
-   * fire-and-forget só na bandeja.
+   * `podeRolar()` (m3-51: visualizador não rola dados). Emite `rolagemFeita` (m3-27) — sem
+   * `fichaId` aqui, quem persiste o histórico é `FichaVisualizacao`.
    */
   protected rolarDanoItem(item: ItemInventarioVM): void {
     if (!this.podeRolar() || !item.danoFormula) {
@@ -1399,6 +1402,7 @@ export class FichaInventario {
     });
     if (resultado) {
       this.bandeja.mostrar({ rotulo: item.nomeExibido, formula: item.danoFormula, resultado });
+      this.rolagemFeita.emit({ rotulo: item.nomeExibido, formula: item.danoFormula, resultado });
     }
   }
 
