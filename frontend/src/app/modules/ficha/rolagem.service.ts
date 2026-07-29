@@ -22,7 +22,7 @@ export class RolagemService {
   /**
    * Registra uma rolagem disparada a partir da ficha `fichaId`. Fire-and-forget do ponto de vista
    * de quem rola (o resultado já está na bandeja de dados antes desta chamada terminar) — quem
-   * chama normalmente só assina para reconciliar o histórico local (`FichaHistorico`).
+   * chama normalmente só assina para reconciliar o histórico local (`HistoricoRolagensSidebar`).
    */
   registrar(fichaId: number, dto: RolagemRegistrarDto): Observable<RolagemResumoDto> {
     return this.httpClient

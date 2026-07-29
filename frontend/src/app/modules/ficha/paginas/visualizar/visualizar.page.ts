@@ -71,7 +71,7 @@ import {
 } from '../../componentes/ficha-visualizacao/ficha-visualizacao.component';
 import type { EstadoSanidade } from '../../componentes/ficha-sanidade/ficha-sanidade.component';
 
-/** Tamanho de página do histórico de rolagens da barra lateral (mesmo valor de `FichaHistorico`). */
+/** Tamanho de página do histórico de rolagens da barra lateral. */
 const ITENS_POR_PAGINA_HISTORICO = 20;
 
 /**
@@ -194,10 +194,10 @@ export class FichaVisualizar {
   protected readonly acessos = signal<FichaAcessoResumoDto[]>([]);
 
   /**
-   * Histórico de rolagens desta ficha (`HistoricoRolagensSidebar` no cabeçalho da página) — mesma
-   * paginação de `FichaHistorico` (aba Histórico do card Status), mas carregado aqui porque a
-   * barra lateral fica visível em qualquer aba, não só dentro do card. `fichaId` já é conhecido
-   * de forma síncrona (parâmetro de rota), então a 1ª página carrega direto no constructor.
+   * Histórico de rolagens desta ficha (`HistoricoRolagensSidebar` no cabeçalho da página, gatilho
+   * D20) — carregado aqui, na página, porque a barra lateral fica visível em qualquer aba, não só
+   * numa aba específica do card de Status. `fichaId` já é conhecido de forma síncrona (parâmetro
+   * de rota), então a 1ª página carrega direto no constructor.
    */
   protected readonly historicoRolagens = signal<readonly RolagemResumoDto[]>([]);
   protected readonly historicoCarregando = signal(true);
@@ -268,7 +268,7 @@ export class FichaVisualizar {
 
   constructor() {
     // Histórico de rolagens (barra lateral do cabeçalho) — `fichaId` já é conhecido de forma
-    // síncrona (parâmetro de rota), diferente de `FichaHistorico` (onde é `input.required`).
+    // síncrona (parâmetro de rota), então a 1ª página carrega direto aqui, sem esperar um `effect`.
     this.carregarHistoricoPagina(1);
 
     // Sob `/fichas/:id` (sem `:campanhaId` na URL), o `campanhaId` só é conhecido depois da ficha
@@ -550,8 +550,8 @@ export class FichaVisualizar {
 
   /**
    * Prepend local (`(rolagemRegistrada)` de `FichaVisualizacao`) — uma rolagem feita em qualquer
-   * aba aparece na hora no topo da barra lateral, sem esperar reabri-la. Mesma guarda contra
-   * duplicata de `FichaHistorico` (o `output` pode reemitir o mesmo id se o pai re-renderizar).
+   * aba aparece na hora no topo da barra lateral, sem esperar reabri-la. Guarda contra duplicata:
+   * o `output` pode reemitir o mesmo id se o pai re-renderizar por outro motivo.
    */
   protected onRolagemRegistrada(rolagem: RolagemResumoDto): void {
     this.historicoRolagens.update((atuais) =>

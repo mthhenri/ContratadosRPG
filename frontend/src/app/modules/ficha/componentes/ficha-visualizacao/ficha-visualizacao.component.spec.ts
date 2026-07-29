@@ -1160,7 +1160,7 @@ describe('FichaVisualizacao', () => {
   });
 
   describe('navegação mobile (m3-60) — barra inferior + HUD de vitais', () => {
-    it('a barra inferior tem os sete destinos para dono/mestre, começando pelo Agente', () => {
+    it('a barra inferior tem os seis destinos para dono/mestre, começando pelo Agente', () => {
       const { raiz } = montar(dados, 'Corvo', 42, true, false);
       const destinos = Array.from(raiz.querySelectorAll('.ficha-nav__item')).map((b) =>
         b.getAttribute('data-destino'),
@@ -1171,7 +1171,6 @@ describe('FichaVisualizacao', () => {
         'inventario',
         'habilidades',
         'rolagens',
-        'historico',
         'extras',
         'historia',
       ]);
@@ -1183,7 +1182,7 @@ describe('FichaVisualizacao', () => {
         b.getAttribute('data-destino'),
       );
       expect(destinos).not.toContain('historia');
-      expect(destinos).toHaveLength(7);
+      expect(destinos).toHaveLength(6);
     });
 
     it('todo destino tem rótulo visível no DOM — nenhum é só ícone', () => {
@@ -1197,7 +1196,6 @@ describe('FichaVisualizacao', () => {
         'Invent.',
         'Habilid.',
         'Rolagens',
-        'Histór.',
         'Extras',
         'História',
       ]);
