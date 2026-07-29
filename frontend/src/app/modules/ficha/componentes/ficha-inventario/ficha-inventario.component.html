@@ -90,6 +90,48 @@
         >
           + Item custom
         </button>
+      </div>
+
+      <!-- Filtro de visualização (Equipamentos/Amplificadores/Fragmentos) — controle segmentado de
+           3 opções (revisão de UX): era dois botões-toggle soltos que trocavam o próprio rótulo,
+           quebravam linha sozinhos e não deixavam claro qual filtro estava ativo. Mesmo padrão
+           visual da barra de abas do Status (`ficha-visualizacao` — `.ficha-status__abas`), só com
+           os itens do tamanho do próprio conteúdo (não esticados feito abas de navegação). Fica
+           antes das ações secundárias (Esvaziar/Custos/busca) — filtra primeiro, age depois. -->
+      <div class="ficha-inv__filtro" role="group" aria-label="Filtrar o inventário">
+        <button
+          type="button"
+          class="ficha-inv__filtro-item"
+          [class.ficha-inv__filtro-item--ativo]="filtroInventario() === 'equipamentos'"
+          [attr.aria-pressed]="filtroInventario() === 'equipamentos'"
+          (click)="selecionarFiltroInventario('equipamentos')"
+        >
+          <app-icone nome="corpo-a-corpo" />
+          <span>Equipamentos</span>
+        </button>
+        <button
+          type="button"
+          class="ficha-inv__filtro-item"
+          [class.ficha-inv__filtro-item--ativo]="filtroInventario() === 'amplificadores'"
+          [attr.aria-pressed]="filtroInventario() === 'amplificadores'"
+          (click)="selecionarFiltroInventario('amplificadores')"
+        >
+          <app-icone nome="amplificador" />
+          <span>Amplificadores</span>
+        </button>
+        <button
+          type="button"
+          class="ficha-inv__filtro-item"
+          [class.ficha-inv__filtro-item--ativo]="filtroInventario() === 'fragmentos'"
+          [attr.aria-pressed]="filtroInventario() === 'fragmentos'"
+          (click)="selecionarFiltroInventario('fragmentos')"
+        >
+          <app-icone nome="fragmento" />
+          <span>Fragmentos</span>
+        </button>
+      </div>
+
+      <div class="ficha-inv__acoes">
         @if (!inventarioVazio() && !confirmandoEsvaziar()) {
           <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="esvaziar()">
             Esvaziar
@@ -125,44 +167,6 @@
           (click)="abrirBuscaItens()"
         >
           <app-icone nome="busca" />
-        </button>
-      </div>
-
-      <!-- Filtro de visualização (Equipamentos/Amplificadores/Fragmentos) — controle segmentado de
-           3 opções (revisão de UX): era dois botões-toggle soltos que trocavam o próprio rótulo,
-           quebravam linha sozinhos e não deixavam claro qual filtro estava ativo. Mesmo padrão
-           visual da barra de abas do Status (`ficha-visualizacao` — `.ficha-status__abas`), só com
-           os itens do tamanho do próprio conteúdo (não esticados feito abas de navegação). -->
-      <div class="ficha-inv__filtro" role="group" aria-label="Filtrar o inventário">
-        <button
-          type="button"
-          class="ficha-inv__filtro-item"
-          [class.ficha-inv__filtro-item--ativo]="filtroInventario() === 'equipamentos'"
-          [attr.aria-pressed]="filtroInventario() === 'equipamentos'"
-          (click)="selecionarFiltroInventario('equipamentos')"
-        >
-          <app-icone nome="corpo-a-corpo" />
-          <span>Equipamentos</span>
-        </button>
-        <button
-          type="button"
-          class="ficha-inv__filtro-item"
-          [class.ficha-inv__filtro-item--ativo]="filtroInventario() === 'amplificadores'"
-          [attr.aria-pressed]="filtroInventario() === 'amplificadores'"
-          (click)="selecionarFiltroInventario('amplificadores')"
-        >
-          <app-icone nome="amplificador" />
-          <span>Amplificadores</span>
-        </button>
-        <button
-          type="button"
-          class="ficha-inv__filtro-item"
-          [class.ficha-inv__filtro-item--ativo]="filtroInventario() === 'fragmentos'"
-          [attr.aria-pressed]="filtroInventario() === 'fragmentos'"
-          (click)="selecionarFiltroInventario('fragmentos')"
-        >
-          <app-icone nome="fragmento" />
-          <span>Fragmentos</span>
         </button>
       </div>
     }
