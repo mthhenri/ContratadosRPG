@@ -76,6 +76,12 @@
     @include bp.mobile {
       overflow-x: auto;
       flex-wrap: nowrap;
+
+      // m3-56 follow-up: overflow-x:auto muda o tamanho mínimo automático deste item flex de
+      // "tamanho do conteúdo" para 0 — sem flex-shrink:0 ele passa a competir com &__lista (o
+      // painel que deve mesmo encolher/rolar) pelo espaço quando o modal aperta, e some
+      // (altura 0) em vez do conteúdo só rolar na horizontal. As abas nunca devem encolher.
+      flex-shrink: 0;
     }
   }
 
