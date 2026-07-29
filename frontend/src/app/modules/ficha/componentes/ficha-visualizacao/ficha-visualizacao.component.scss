@@ -1222,6 +1222,14 @@
     // espaço desigual nas laterais) — compensado tirando de Dinheiro, que ainda cabe valor + ✎.
     grid-template-columns: 0.85fr 1fr 1.25fr 1fr;
     gap: 8px;
+
+    // m3-60 follow-up: os 4 boxes numa linha só sobravam apertados no mobile — "Prestígio" cortava
+    // em "PRESTÍ…" e "$4.500" (Salário de 4 dígitos) quebrava em duas linhas dentro do box. 2×2
+    // (Nível/Prestígio na primeira linha, Dinheiro/Salário na segunda — mesma ordem do HTML, o
+    // grid só refluiu) dá a cada box quase o dobro da largura.
+    @include bp.mobile {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 }
 
@@ -2018,6 +2026,22 @@
           grid-column: auto;
           justify-self: stretch;
           width: auto;
+        }
+
+        // m3-60 follow-up: em EDIÇÃO cada box ganha stepper de valor + estrela de Maestria + stepper
+        // de modificador de teste — 3 colunas nos ~110px de sobra por box (medido ao vivo, 360px de
+        // viewport) espremia esses controles quase colados, e o 5º atributo (VIG) sobrava sozinho
+        // numa 2ª linha com um buraco vazio ao lado (a régua de 3 colunas não fecha 5 itens direito).
+        // Volta pro mesmo 2 colunas + 5º centralizado do desktop — os boxes de edição já são
+        // confortáveis nesse arranjo lá (mesma largura de coluna, ~120px).
+        &.ficha-atributos__grade--edicao {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+
+          > *:nth-child(5) {
+            grid-column: 1 / -1;
+            justify-self: center;
+            width: calc(50% - 3px);
+          }
         }
       }
     }

@@ -483,13 +483,15 @@ export class FichaVisualizar {
   }
 
   /**
-   * Reflete a aba escolhida na mini barra do card de Status no `#` (fragmento) da URL (deep-link/
-   * refresh) sem recarregar a ficha — mesmo padrão de `mudarAba`, mas em canal próprio (fragmento).
+   * Reflete o destino escolhido — uma aba de Status ou `'agente'` (m3-60, barra inferior do
+   * mobile) — no `#` (fragmento) da URL (deep-link/refresh) sem recarregar a ficha: mesmo padrão
+   * de `mudarAba`, mas em canal próprio (fragmento). Sem isso, um F5 na aba Agente caía de volta
+   * na última aba de Status marcada (o fragmento nunca tinha sido atualizado para 'agente').
    */
-  protected mudarAbaStatus(aba: AbaStatus): void {
+  protected mudarAbaStatus(destino: AbaStatus | DestinoMobile): void {
     this.router.navigate([], {
       relativeTo: this.rotaAtiva,
-      fragment: aba,
+      fragment: destino,
       queryParamsHandling: 'preserve',
       replaceUrl: true,
     });

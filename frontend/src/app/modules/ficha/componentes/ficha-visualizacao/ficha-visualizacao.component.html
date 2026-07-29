@@ -6,54 +6,58 @@
     <span class="chip-classificacao">{{ classificacao() }}</span>
   </header>
 
-  <!-- HUD de vitais (m3-60) — só no mobile (`display: none` acima de `$bp-mobile`, ver SCSS).
-       Fica `sticky` no topo porque a auditoria ao vivo mediu que, rolando até o Inventário, nem o
-       nome do agente nem a Vida estavam na tela (a topbar do app é `position: static` e some
-       junto). Concentra o que se consulta o tempo todo em mesa; o ajuste continua nos steppers do
-       card de Identidade, para onde este bloco leva com um toque. -->
-  <div class="ficha-hud">
-    <div class="ficha-hud__identidade">
-      <span class="ficha-hud__nome">{{ nome() }}</span>
-      <span class="ficha-hud__meta">{{ patenteTexto() }} · {{ classeTexto() }} · Nível {{ dados().nivel }}</span>
-    </div>
-
-    <button
-      class="ficha-hud__vitais"
-      type="button"
-      aria-label="Ver e ajustar Vida e Energia"
-      (click)="irParaVitais()"
-    >
-      <span class="ficha-hud__vital ficha-hud__vital--vida">
-        <span class="ficha-hud__vital-linha">
-          <span class="ficha-hud__vital-rotulo">Vida</span>
-          <span class="ficha-hud__vital-atual">{{ estado().vidaAtual }}</span>
-          <span class="ficha-hud__vital-max">/ {{ vidaMaximaEfetiva() }}</span>
-        </span>
-        <span class="ficha-hud__trilho">
-          <span class="ficha-hud__preenche" [style.width.%]="percentualVida()"></span>
-        </span>
-      </span>
-
-      <span class="ficha-hud__vital ficha-hud__vital--energia">
-        <span class="ficha-hud__vital-linha">
-          <span class="ficha-hud__vital-rotulo">Energia</span>
-          <span class="ficha-hud__vital-atual">{{ estado().energiaAtual }}</span>
-          <span class="ficha-hud__vital-max">/ {{ energiaMaximaEfetiva() }}</span>
-        </span>
-        <span class="ficha-hud__trilho">
-          <span class="ficha-hud__preenche" [style.width.%]="percentualEnergia()"></span>
-        </span>
-      </span>
-    </button>
-
-    @if (condicoesAtivas().length) {
-      <div class="ficha-hud__condicoes">
-        @for (condicao of condicoesAtivas(); track condicao.chave) {
-          <span class="ficha-hud__selo" [attr.data-selo-condicao]="condicao.chave">{{ condicao.rotulo }}</span>
-        }
+  <!-- HUD de vitais (m3-60) — só no mobile (`display: none` acima de `$bp-mobile`, ver SCSS) e só
+       fora do destino Agente: nele o card de Identidade já mostra nome + Vida/Energia por
+       extenso logo no topo do conteúdo, então o HUD só duplicava a mesma informação (m3-60
+       follow-up). Fica `sticky` no topo porque a auditoria ao vivo mediu que, rolando até o
+       Inventário, nem o nome do agente nem a Vida estavam na tela (a topbar do app é
+       `position: static` e some junto). Concentra o que se consulta o tempo todo em mesa; o
+       ajuste continua nos steppers do card de Identidade, para onde este bloco leva com um toque. -->
+  @if (!mostrandoAgente()) {
+    <div class="ficha-hud">
+      <div class="ficha-hud__identidade">
+        <span class="ficha-hud__nome">{{ nome() }}</span>
+        <span class="ficha-hud__meta">{{ patenteTexto() }} · {{ classeTexto() }} · Nível {{ dados().nivel }}</span>
       </div>
-    }
-  </div>
+
+      <button
+        class="ficha-hud__vitais"
+        type="button"
+        aria-label="Ver e ajustar Vida e Energia"
+        (click)="irParaVitais()"
+      >
+        <span class="ficha-hud__vital ficha-hud__vital--vida">
+          <span class="ficha-hud__vital-linha">
+            <span class="ficha-hud__vital-rotulo">Vida</span>
+            <span class="ficha-hud__vital-atual">{{ estado().vidaAtual }}</span>
+            <span class="ficha-hud__vital-max">/ {{ vidaMaximaEfetiva() }}</span>
+          </span>
+          <span class="ficha-hud__trilho">
+            <span class="ficha-hud__preenche" [style.width.%]="percentualVida()"></span>
+          </span>
+        </span>
+
+        <span class="ficha-hud__vital ficha-hud__vital--energia">
+          <span class="ficha-hud__vital-linha">
+            <span class="ficha-hud__vital-rotulo">Energia</span>
+            <span class="ficha-hud__vital-atual">{{ estado().energiaAtual }}</span>
+            <span class="ficha-hud__vital-max">/ {{ energiaMaximaEfetiva() }}</span>
+          </span>
+          <span class="ficha-hud__trilho">
+            <span class="ficha-hud__preenche" [style.width.%]="percentualEnergia()"></span>
+          </span>
+        </span>
+      </button>
+
+      @if (condicoesAtivas().length) {
+        <div class="ficha-hud__condicoes">
+          @for (condicao of condicoesAtivas(); track condicao.chave) {
+            <span class="ficha-hud__selo" [attr.data-selo-condicao]="condicao.chave">{{ condicao.rotulo }}</span>
+          }
+        </div>
+      }
+    </div>
+  }
 
   <!-- As três colunas da ficha: Identidade+Vitalidade | Atributos | Status com abas. No desktop
        ficam lado a lado (contexto permanente à esquerda, detalhe trocável à direita). Abaixo de
@@ -893,7 +897,10 @@
           @for (grupo of gruposAtributos; track grupo.rotulo) {
             <div class="ficha-atributos__grupo">
               <span class="ficha-atributos__rotulo-grupo">{{ grupo.rotulo }}</span>
-              <div class="ficha-atributos__grade">
+              <div
+                class="ficha-atributos__grade"
+                [class.ficha-atributos__grade--edicao]="editandoAtributos()"
+              >
                 @for (campo of grupo.campos; track campo.chave) {
                   @if (editandoAtributos()) {
                     <div

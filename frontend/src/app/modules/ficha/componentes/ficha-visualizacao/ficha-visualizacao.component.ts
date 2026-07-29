@@ -479,8 +479,12 @@ export class FichaVisualizacao {
    */
   protected readonly abaStatusAtiva = linkedSignal<AbaStatus>(() => this.abaStatusInicial());
 
-  /** Emite a aba escolhida — a página reflete no `#` (fragmento) da URL (deep-link/refresh). */
-  readonly abaStatusMudou = output<AbaStatus>();
+  /**
+   * Emite a aba escolhida, ou `'agente'` (m3-60 — destino próprio da barra inferior, fora de
+   * `AbaStatus`) — a página reflete no `#` (fragmento) da URL (deep-link/refresh), assim um F5 na
+   * aba Agente volta pra ela em vez de cair na aba de Status que estivesse marcada antes.
+   */
+  readonly abaStatusMudou = output<DestinoMobile>();
 
   /** Troca a aba ativa da mini barra do card de Status. */
   protected selecionarAbaStatus(aba: AbaStatus): void {
@@ -519,6 +523,7 @@ export class FichaVisualizacao {
   protected selecionarDestinoMobile(destino: DestinoMobile): void {
     if (destino === 'agente') {
       this.destinoMobile.set('agente');
+      this.abaStatusMudou.emit('agente');
       this.rolarParaTopoDoConteudo();
       return;
     }
@@ -563,6 +568,7 @@ export class FichaVisualizacao {
    */
   protected irParaVitais(): void {
     this.destinoMobile.set('agente');
+    this.abaStatusMudou.emit('agente');
     if (typeof window === 'undefined' || !this.emMobile()) return;
     const reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     requestAnimationFrame(() => {

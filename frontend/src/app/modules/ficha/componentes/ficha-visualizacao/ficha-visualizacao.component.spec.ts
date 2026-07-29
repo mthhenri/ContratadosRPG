@@ -1228,14 +1228,37 @@ describe('FichaVisualizacao', () => {
       );
     });
 
-    it('o HUD ecoa nome, Vida/Energia e só as condições ativas', () => {
-      const { raiz } = montar(
+    it('o HUD não aparece no destino Agente — o card de Identidade já mostra o mesmo Nome/Vida/Energia', () => {
+      const { raiz } = montar(dados, 'Corvo', 42, true, false);
+      expect(raiz.querySelector('.ficha-hud')).toBeNull();
+    });
+
+    it('voltar ao destino Agente (nav inferior ou HUD) emite \'agente\' — um F5 nele não cai numa aba de Status', () => {
+      const { raiz, fixture } = montar(dados, 'Corvo', 42, true, false);
+      fixture.componentRef.setInput('destinoMobileInicial', 'inventario');
+      fixture.detectChanges();
+      const emitidas: string[] = [];
+      fixture.componentInstance.abaStatusMudou.subscribe((destino) => emitidas.push(destino));
+
+      raiz.querySelector<HTMLButtonElement>('[data-destino="agente"]')!.click();
+      fixture.detectChanges();
+
+      expect(emitidas).toEqual(['agente']);
+      expect(raiz.querySelector('.ficha-visao__linha-colunas--agente')).not.toBeNull();
+    });
+
+    it('o HUD ecoa nome, Vida/Energia e só as condições ativas (fora do destino Agente)', () => {
+      const { raiz, fixture } = montar(
         { ...dados, estado: { ...dados.estado, vidaAtual: 12, energiaAtual: 9, machucado: true } },
         'Dra. Marianna Vasconcellos-Ferreira',
         42,
         true,
         false,
       );
+      // O HUD só existe fora do destino Agente (m3-60 follow-up) — lá o card de Identidade já
+      // mostra nome + Vida/Energia por extenso, e o HUD duplicaria a mesma informação.
+      fixture.componentRef.setInput('destinoMobileInicial', 'informacoes');
+      fixture.detectChanges();
 
       expect(raiz.querySelector('.ficha-hud__nome')?.textContent?.trim()).toBe(
         'Dra. Marianna Vasconcellos-Ferreira',
