@@ -350,10 +350,27 @@
     border-radius: var(--radius-control);
   }
 
+  // `align-items: flex-start` (era `center`) — a identidade (nome+chip, abaixo) pode crescer em
+  // altura quando o nome quebra linha; com `center` o avatar e as ações do mestre flutuavam soltos
+  // no meio vertical desse bloco em vez de ancorados no topo, junto da 1ª linha do nome.
   &__membro-linha {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 12px;
+  }
+
+  // Nome + chip de papel em coluna (era tudo numa linha só com o avatar e as ações do mestre) —
+  // um nome de jogador comprido dividia a largura da linha com chip (~90px) e ações de gestão
+  // (2×44px no mobile), sobrando ~68px: menos que a palavra mais longa de um nome comum, o nome
+  // *estourava* a própria caixa e colidia visualmente com o chip ao lado (não só quebrava linha,
+  // sobrepunha). Botar o chip embaixo devolve a largura da linha inteira pro nome.
+  &__membro-identidade {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
   }
 
   // Fichas do membro, inline (m2-16, lar das fichas — substitui a extinta lista plana). No
@@ -486,12 +503,19 @@
     }
   }
 
+  // `flex-start` (era `center`) — mesma razão do &__membro-linha: o nome do personagem pode
+  // quebrar em 2-3 linhas num card ainda mais estreito, e os selos de condição não podem ficar
+  // soltos no meio vertical desse bloco.
   &__ficha-topo {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 8px;
   }
 
+  // Mesmo problema do &__membro-nome acima: nome do personagem sem limite, quebra em vez de
+  // truncar (reticências esconderiam o nome do personagem, informação central da ficha). Aqui o
+  // nome só disputa espaço com os selos de condição (~50px), não com um chip+ações inteiros — sobra
+  // largura de sobra, então não precisou virar coluna como o &__membro-identidade.
   &__ficha-nome {
     flex: 1;
     min-width: 0;
@@ -499,6 +523,7 @@
     font-size: 13px;
     font-weight: 700;
     color: var(--text);
+    overflow-wrap: anywhere;
   }
 
   // As 3 condições, sempre visíveis (item 3) — inativa esmaecida, ativa ganha cor semântica.
@@ -573,6 +598,10 @@
 
   // Ação rápida de Vida/Energia direto no mini-card (m2-16g) — mesma receita visual do
   // `.ficha-passo` da leitura completa da ficha, só que menor (a coluna da grade é mais estreita).
+  // Mobile bumpa pra caixa real de 44px no bloco `bp.mobile` abaixo — mesmo controle, mesma
+  // solução do `.ficha-passo` (`ficha-visualizacao.component.scss`, m3-26): sobra largura de
+  // sobra no mini-card (cada grupo Vida/Energia cabe sozinho na linha), diferente do
+  // `.ficha-atributo__mod-passo` da ficha completa, que fica mesmo em 18px por falta de espaço.
   &__ficha-passo {
     display: inline-flex;
     align-items: center;
@@ -755,12 +784,17 @@
     border: 1px solid var(--border-strong);
   }
 
+  // Nome do membro sem limite — reticências esconderiam parte dele (é identidade de jogador, não
+  // um valor secundário). Quebra em várias linhas em vez de cortar, usando a largura cheia de
+  // `&__membro-identidade` (o chip, agora abaixo, não disputa mais espaço horizontal com o nome).
+  // `overflow-wrap: anywhere` é só rede de segurança para um nome/apelido sem espaço nenhum mais
+  // largo que a coluna — o caso comum quebra só entre palavras.
   &__membro-nome {
-    flex: 1;
     min-width: 0;
     font-family: var(--font-mono);
     font-size: 14px;
     color: var(--text);
+    overflow-wrap: anywhere;
   }
 
   &__voltar {
@@ -809,6 +843,23 @@
     &__ficha-menu-botao {
       width: bp.$alvo-toque;
       height: bp.$alvo-toque;
+    }
+
+    // Passos −/+ de Vida/Energia: caixa real (não só a área de toque) cresce pra 44px, igual ao
+    // `.ficha-passo` da leitura completa — há espaço de sobra aqui (cada grupo Vida/Energia cabe
+    // sozinho na linha do mini-card), diferente da ficha completa onde outros controles ficam
+    // pequenos por falta de espaço.
+    &__ficha-passo {
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
+      font-size: 18px;
+    }
+
+    // Texto "Vida X/Y" / "Energia X/Y" — 11px no desktop (card compacto ao lado de outras 2/3
+    // fichas na grade) lia pequeno ao lado dos passos agora com 44px. Sobe só no mobile, onde a
+    // lista já é 1 coluna e sobra largura.
+    &__ficha-vital {
+      font-size: 13px;
     }
 
     &__nova-ficha {

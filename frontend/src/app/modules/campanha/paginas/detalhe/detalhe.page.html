@@ -154,11 +154,13 @@
           <li class="detalhe__membro">
             <div class="detalhe__membro-linha">
               <span class="detalhe__avatar" aria-hidden="true"></span>
-              <span class="detalhe__membro-nome">{{ membro.nome }}</span>
-              <span class="chip-papel">
-                <app-icone [nome]="membro.papel === TipoCampanhaMembroPapelEnum.MESTRE ? 'coroa' : 'protecoes'" />
-                {{ membro.papel }}
-              </span>
+              <div class="detalhe__membro-identidade">
+                <span class="detalhe__membro-nome">{{ membro.nome }}</span>
+                <span class="chip-papel">
+                  <app-icone [nome]="membro.papel === TipoCampanhaMembroPapelEnum.MESTRE ? 'coroa' : 'protecoes'" />
+                  {{ membro.papel }}
+                </span>
+              </div>
 
               @if (podeGerenciarMembro(membro) && acaoMembro()?.usuarioId !== membro.usuarioId) {
                 <div class="detalhe__membro-acoes">
