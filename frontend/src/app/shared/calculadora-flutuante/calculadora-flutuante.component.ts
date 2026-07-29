@@ -67,9 +67,9 @@ export class CalculadoraFlutuante {
   private redimensionando = false;
   private origemRedimensionamento = { x: 0, y: 0, largura: 0, altura: 0 };
 
-  /** Abre o popup (o "x" é quem fecha — critério de aceite). */
-  protected abrir(): void {
-    this.aberta.set(true);
+  /** Gatilho: abre se fechada, fecha se aberta — o "x" no cabeçalho também fecha. */
+  protected alternar(): void {
+    this.aberta.update((atual) => !atual);
   }
 
   protected fechar(): void {

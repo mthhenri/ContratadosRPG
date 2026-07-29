@@ -1,8 +1,9 @@
 <button
   class="calc-flutuante__gatilho"
   type="button"
-  aria-label="Abrir calculadora"
-  (click)="abrir()"
+  [attr.aria-label]="aberta() ? 'Fechar calculadora' : 'Abrir calculadora'"
+  [attr.aria-expanded]="aberta()"
+  (click)="alternar()"
 >
   <app-icone nome="calculadora" />
 </button>
