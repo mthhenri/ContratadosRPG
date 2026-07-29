@@ -4,7 +4,7 @@
   [class.historico-rolagens__gatilho--ativo]="aberto()"
   [attr.aria-expanded]="aberto()"
   [attr.aria-label]="aberto() ? 'Fechar histórico de rolagens' : 'Abrir histórico de rolagens'"
-  title="Histórico de rolagens"
+  [appTooltip]="'Histórico de rolagens'"
   (click)="alternar()"
 >
   <app-icone nome="d20" />

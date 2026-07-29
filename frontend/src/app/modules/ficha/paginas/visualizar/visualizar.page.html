@@ -26,6 +26,11 @@
     <app-indicador-tempo-real />
 
     @if (ficha()) {
+      <!-- Gatilhos flutuantes (m3-61): no desktop cada um vira um círculo fixo no canto inferior
+           direito (Histórico empilhado ACIMA da Calculadora); no mobile os dois voltam a ser
+           botões inline aqui no cabeçalho, lado a lado — ver `@include bp.mobile` no SCSS de cada
+           um. Precisam ficar juntos no DOM para o `flex` do cabeçalho colocá-los um do lado do
+           outro nessa faixa. -->
       <app-historico-rolagens-sidebar
         titulo="Histórico de Rolagens"
         [itens]="historicoRolagens()"
@@ -35,6 +40,7 @@
         [mostrarFicha]="false"
         (carregarMais)="carregarMaisHistorico()"
       />
+      <app-calculadora-flutuante />
     }
 
     @if (ficha() && podeGerenciar()) {
@@ -292,5 +298,3 @@
     </div>
   </div>
 }
-
-<app-calculadora-flutuante />

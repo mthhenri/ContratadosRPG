@@ -582,3 +582,4 @@ Inegociáveis independente do contexto:
 | 27 | **Nunca alterar fórmula de jogo** sem consultar `docs/core/sistema-v4.1.0.md` / `docs/core/guia_de_mestre-v4.0.0.md` e atualizar os testes — o documento vence o código |
 | 28 | **Nunca duplicar regra de permissão** — a service do módulo dono é o único árbitro; REST e WS consomem a mesma verificação |
 | 29 | **Nunca hardcodar** cor, fonte ou raio em SCSS/template — todo estilo consome os tokens do tema em `docs/design/tema/` (`var(--surface)`, `var(--accent)`, `var(--font-mono)`…); leia `docs/design/DESIGN.md` antes de qualquer UI |
+| 30 | **Nunca usar o atributo `title` nativo do HTML** para tooltip — sempre a diretiva `appTooltip` (`frontend/src/app/shared/tooltip/tooltip.directive.ts`), que já resolve hover/toque/teclado e usa os tokens do tema |

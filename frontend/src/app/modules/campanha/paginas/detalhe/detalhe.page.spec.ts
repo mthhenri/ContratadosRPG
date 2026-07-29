@@ -14,7 +14,6 @@ import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { CampanhaDetalhe } from './detalhe.page';
 import { CampanhaService } from '../../campanha.service';
-import { CampanhaContextoService } from '../../campanha-contexto.service';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { FichaService } from '../../../ficha/ficha.service';
 import { RolagemService } from '../../../ficha/rolagem.service';
@@ -22,9 +21,9 @@ import { TempoRealService } from '../../../../core/services/tempo-real.service';
 
 /**
  * Prova o comportamento de frontend da m2-12 na tela de detalhe: só o mestre vê as ações de
- * editar/excluir; a edição chama `alterarCampanha` e reflete o resultado na tela e no seletor da
- * topbar (`CampanhaContextoService`); a exclusão exige confirmação e leva de volta à lista
- * (`/painel`). A autoridade é sempre o backend (§14) — aqui é só a camada de apresentação.
+ * editar/excluir; a edição chama `alterarCampanha` e reflete o resultado na tela; a exclusão
+ * exige confirmação e leva de volta à lista (`/painel`). A autoridade é sempre o backend (§14) —
+ * aqui é só a camada de apresentação.
  */
 describe('CampanhaDetalhe', () => {
   const CAMPANHA_ID = 8;
@@ -91,7 +90,6 @@ describe('CampanhaDetalhe', () => {
     const rolagemService = {
       listarPorCampanha: vi.fn(() => of(opts.rolagens ?? [])),
     };
-    const contextoService = { definir: vi.fn(), limpar: vi.fn() };
     const sessaoService = { usuario: () => ({ id: opts.usuarioId, login: 'x', nome: 'x' }) };
 
     // Stub do tempo real (m2-16, trazido da extinta FichaLista; +m2-16c item 1: `ficha:alterada`):
@@ -123,7 +121,6 @@ describe('CampanhaDetalhe', () => {
         { provide: CampanhaService, useValue: campanhaService },
         { provide: FichaService, useValue: fichaService },
         { provide: RolagemService, useValue: rolagemService },
-        { provide: CampanhaContextoService, useValue: contextoService },
         { provide: SessaoService, useValue: sessaoService },
         { provide: TempoRealService, useValue: tempoRealService },
       ],
@@ -140,7 +137,6 @@ describe('CampanhaDetalhe', () => {
       campanhaService,
       fichaService,
       rolagemService,
-      contextoService,
       tempoRealService,
       fichaCriada$,
       membroEntrou$,
@@ -170,14 +166,14 @@ describe('CampanhaDetalhe', () => {
     expect(raiz.querySelector('.detalhe__acoes')).toBeNull();
   });
 
-  it('edita nome/descrição e reflete o resultado na tela e na topbar', () => {
+  it('edita nome/descrição e reflete o resultado na tela', () => {
     const alterada: CampanhaAlteradaDto = {
       id: CAMPANHA_ID,
       nome: 'Contenção Ômega',
       descricao: 'Nova diretriz',
       codigoConvite: 'DEF456',
     };
-    const { fixture, raiz, campanhaService, contextoService } = montar({
+    const { fixture, raiz, campanhaService } = montar({
       ...mestre(),
       alterarRetorno: of(alterada),
     });
@@ -199,11 +195,6 @@ describe('CampanhaDetalhe', () => {
     expect(campanhaService.alterarCampanha).toHaveBeenCalledWith(CAMPANHA_ID, {
       nome: 'Contenção Ômega',
       descricao: 'Nova diretriz',
-    });
-    expect(contextoService.definir).toHaveBeenCalledWith({
-      id: CAMPANHA_ID,
-      nome: 'Contenção Ômega',
-      codigoConvite: 'DEF456',
     });
     expect((raiz.querySelector('.card__titulo') as HTMLElement).textContent?.trim()).toBe('Contenção Ômega');
     expect(raiz.querySelector('.detalhe__edicao')).toBeNull();

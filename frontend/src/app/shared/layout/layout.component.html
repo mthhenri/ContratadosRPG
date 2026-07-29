@@ -14,17 +14,6 @@
   <app-marca class="topbar__logo" />
   <span class="topbar__marca">Contratados<span class="topbar__marca-sufixo">RPG</span></span>
 
-  @if (campanhaContextoService.campanhaAtual(); as campanhaAtual) {
-    <span class="topbar__separador" aria-hidden="true"></span>
-    <a class="topbar__campanha" routerLink="/painel">
-      <app-icone nome="campanhas" />
-      <span class="topbar__campanha-texto">
-        <span class="topbar__campanha-nome">{{ campanhaAtual.nome }}</span>
-        <span class="topbar__campanha-codigo">{{ campanhaAtual.codigoConvite }}</span>
-      </span>
-    </a>
-  }
-
   <nav class="topbar__nav" aria-label="Navegação principal">
     @if (sessaoService.autenticado()) {
       <a class="topbar__item" routerLink="/painel" routerLinkActive="topbar__item--ativo">

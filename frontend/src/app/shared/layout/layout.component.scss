@@ -42,11 +42,9 @@
     white-space: nowrap;
 
     // No mobile o logo (app-marca) já ancora a identidade — esconder o wordmark textual libera
-    // espaço. 900px (não `bp.mobile`/560px) porque o gap real é maior: dentro de /painel/:id o
-    // chip de campanha soma largura extra que a topbar de sempre não tinha, e "Calculadora" passa
-    // a colidir com o perfil a partir de ~870px (achado ao vivo, m2-16f). 900px já cobre o 560px
-    // de sempre (é um limiar mais largo, não um segundo breakpoint) — mesmo valor usado em
-    // `ficha-sanidade.component.scss`.
+    // espaço. 900px (não `bp.mobile`/560px) porque "Calculadora" passa a colidir com o perfil a
+    // partir de ~870px (achado ao vivo, m2-16f). 900px já cobre o 560px de sempre (é um limiar
+    // mais largo, não um segundo breakpoint) — mesmo valor usado em `ficha-sanidade.component.scss`.
     @media (max-width: 900px) {
       display: none;
     }
@@ -55,76 +53,6 @@
   &__marca-sufixo {
     margin-left: 0.35em;
     color: var(--accent);
-  }
-
-  &__separador {
-    width: 1px;
-    height: 20px;
-    background: var(--border-strong);
-    flex: none;
-
-    @include bp.mobile {
-      display: none;
-    }
-  }
-
-  // Chip da campanha ativa (m2-09) — link de volta ao painel, aparece só dentro de /painel/:id.
-  &__campanha {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 5px 10px;
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    color: var(--text);
-    text-decoration: none;
-    min-width: 0;
-
-    app-icone {
-      color: var(--accent);
-    }
-
-    &:hover {
-      border-color: var(--accent-border);
-    }
-
-    // Escondido no mobile: colapsado a só o ícone (texto abaixo some), ele duplicava o glifo
-    // "campanhas" do nav Painel logo ao lado — sem valor e confuso. A tela já diz a campanha
-    // ativa e o Painel já volta à lista.
-    @include bp.mobile {
-      display: none;
-    }
-  }
-
-  &__campanha-texto {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    line-height: 1.2;
-
-    // 900px (m2-16f, mesmo racional do `&__marca` acima) — o chip vira só o ícone, ainda leva ao
-    // painel, só perde nome/código (que também aparecem no cabeçalho da própria campanha).
-    @media (max-width: 900px) {
-      display: none;
-    }
-  }
-
-  &__campanha-nome {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  &__campanha-codigo {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    letter-spacing: 0.1em;
-    color: var(--text-mute);
-    margin-top: 2px;
   }
 
   // Nav central (Painel/Calculadora) — mesmo padrão de routerLinkActive do CalculadoraShell.
