@@ -2,6 +2,7 @@
   type="button"
   class="historico-rolagens__gatilho"
   [class.historico-rolagens__gatilho--ativo]="aberto()"
+  [class.historico-rolagens__gatilho--empilhado]="acimaDaCalculadora()"
   [attr.aria-expanded]="aberto()"
   [attr.aria-label]="aberto() ? 'Fechar histórico de rolagens' : 'Abrir histórico de rolagens'"
   [appTooltip]="'Histórico de rolagens'"

@@ -39,6 +39,12 @@ export class HistoricoRolagensSidebar {
   readonly temMais = input(false);
   /** `false` na ficha (o nome dela já é óbvio pelo contexto — evita "· <mesmo nome>" repetido). */
   readonly mostrarFicha = input(true);
+  /**
+   * `true` só na ficha (m3-61) — o gatilho flutuante do desktop empilha 60px mais alto, acima do
+   * gatilho de `CalculadoraFlutuante`, que só existe naquela tela. No painel da campanha (padrão,
+   * `false`) não há calculadora para dar espaço, então o gatilho fica direto no rodapé, sem o vão.
+   */
+  readonly acimaDaCalculadora = input(false);
 
   readonly carregarMais = output<void>();
 
