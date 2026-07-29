@@ -52,7 +52,7 @@ import {
   reducaoCustoPorAfinidade,
 } from '@contratados-rpg/shared/regras/compras';
 import { calcularDtAtributo } from '@contratados-rpg/shared/regras/dt';
-import { rolarFormula, validarFormula } from '@contratados-rpg/shared/regras/rolagem';
+import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
 import {
   experimentoComPeculiaridade,
   FORMACOES,
@@ -533,13 +533,24 @@ export class FichaVisualizacao {
    * as três colunas estão visíveis ao mesmo tempo e mover a página seria gratuito.
    */
   private rolarParaTopoDoConteudo(): void {
-    if (typeof window === 'undefined') return;
-    // "Estou no mobile?" vem do CSS, não de um breakpoint duplicado em TS: a barra inferior é
-    // `display: none` acima de `$bp-mobile`, então `offsetParent` nulo == desktop. Mantém
-    // `_breakpoints.scss` como fonte única do valor (o `$bp-mobile` não vaza para cá).
-    if (!this.navMobile()?.nativeElement.offsetParent) return;
+    if (typeof window === 'undefined' || !this.emMobile()) return;
     const reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     window.scrollTo({ top: 0, behavior: reduzMovimento ? 'auto' : 'smooth' });
+  }
+
+  /**
+   * "Estou no mobile?" — lido do CSS (`display` da barra inferior), não de um breakpoint
+   * duplicado em TS, para `_breakpoints.scss` continuar a única fonte do valor. **Não** dá pra
+   * usar `offsetParent` aqui: por especificação do CSSOM, `offsetParent` retorna `null` para
+   * qualquer elemento `position: fixed` — não é um detalhe de implementação, é o comportamento
+   * definido, e a barra inferior é `fixed`. A checagem anterior sempre lia "desktop" mesmo no
+   * mobile e `rolarParaTopoDoConteudo()` nunca chegava a rodar; passou pelos testes de componente
+   * porque o jsdom não faz layout de verdade (não há geometria real para `offsetParent` refletir)
+   * — só apareceu ao vivo, medindo `scrollY` num navegador de verdade antes/depois da troca.
+   */
+  private emMobile(): boolean {
+    const nav = this.navMobile()?.nativeElement;
+    return !!nav && getComputedStyle(nav).display !== 'none';
   }
 
   /** Barra de navegação inferior (mobile) — usada só para detectar o modo mobile a partir do CSS. */
@@ -552,8 +563,7 @@ export class FichaVisualizacao {
    */
   protected irParaVitais(): void {
     this.destinoMobile.set('agente');
-    if (typeof window === 'undefined') return;
-    if (!this.navMobile()?.nativeElement.offsetParent) return;
+    if (typeof window === 'undefined' || !this.emMobile()) return;
     const reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     requestAnimationFrame(() => {
       const alvo = this.blocoVitalidade()?.nativeElement;

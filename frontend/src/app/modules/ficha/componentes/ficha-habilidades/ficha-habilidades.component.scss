@@ -234,6 +234,15 @@
       grid-template-columns: 1fr;
     }
 
+    // m3-60: no mobile a página inteira rola como uma coisa só — um teto aqui viraria rolagem
+    // dentro de rolagem (476px de janela para 1001px de lista, medidos com ficha cheia), sem barra
+    // visível. Sem teto não há overflow e o `appOverflowFade` não marca o host, então o fade
+    // some junto (fade sem overflow é só ruído).
+    @include bp.mobile {
+      max-height: none;
+      overflow-y: visible;
+    }
+
     --fade-topo: 0px;
     --fade-base: 0px;
     &.overflow-fade--topo,
@@ -790,6 +799,17 @@
     }
 
     &__utilizar {
+      min-height: bp.$alvo-toque;
+    }
+
+    // m3-60: os que a m3-56 não cobriu — os 4 chips de filtro por tipo (Arquétipo/Classe/Geral/
+    // Outra classe) e o campo de busca. São controles de toque como os demais; o desenho (fonte,
+    // cor, glow do estado ativo) fica igual, só o piso de altura entra.
+    &__resumo-item {
+      min-height: bp.$alvo-toque;
+    }
+
+    &__busca-campo {
       min-height: bp.$alvo-toque;
     }
   }

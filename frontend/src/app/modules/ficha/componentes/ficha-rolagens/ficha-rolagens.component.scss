@@ -72,8 +72,13 @@
     // m3-56: era `max-width: 420px` (número mágico) — não cobria os 430px de teste do passe
     // mobile (2 colunas de ~185px ficavam apertadas demais pro cartão de preset). Substituído por
     // `bp.mobile` (560px), mesmo token usado no resto da ficha.
+    // m3-60: além de cair para 1 coluna, o teto sai — no mobile a página inteira rola como uma
+    // coisa só e uma janela de 410px sobre 568px de lista viraria rolagem dentro de rolagem, sem
+    // barra visível. Sem overflow o `appOverflowFade` não marca o host e o fade some junto.
     @include bp.mobile {
       grid-template-columns: 1fr;
+      max-height: none;
+      overflow-y: visible;
     }
 
     --fade-topo: 0px;
@@ -347,6 +352,12 @@
     }
   }
   &__mini-btn {
+    // `width`/`height` explícitos + `box-sizing: border-box` global: `padding` aqui encolheria o
+    // ícone em vez de crescer a caixa (diferente do `apelido-lapis` do inventário, que é
+    // sized-to-content). Por isso a área de toque cresce por `::after`, não por padding — mesmo
+    // padrão de `alvo-de-toque` em `ficha-visualizacao.component.scss` (m3-60), duplicado aqui
+    // porque o mixin não é compartilhado entre componentes standalone (encapsulamento do Angular).
+    position: relative;
     width: 26px;
     height: 26px;
     flex: none;
@@ -356,6 +367,18 @@
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-control);
     cursor: pointer;
+
+    @include bp.mobile {
+      &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: bp.$alvo-toque;
+        height: bp.$alvo-toque;
+      }
+    }
 
     &:hover {
       color: var(--text);
@@ -463,6 +486,11 @@
     }
     &--curta {
       width: 88px;
+    }
+
+    // m3-60: campo de texto também é alvo de toque — a m3-56 só cobriu os botões.
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
     }
   }
   &__dica {

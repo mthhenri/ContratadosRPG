@@ -92,7 +92,48 @@
 > um botão "Rolar" desabilitado, com os presets salvos abaixo e **colapsados**; o editor de
 > atributos com SALVAR/CANCELAR **acima** dos 10 campos), e a dívida de nomenclatura de "Extras"
 > acima. Numa sessão se consulta e usa muito mais do que se cria, e a ordem visual dos painéis
-> ainda não reflete isso.)
+> ainda não reflete isso.
+>
+> **Addendum (mesmo dia) — o bug real por trás do "trocar de aba não move o scroll".** A
+> verificação ao vivo do parágrafo acima tinha medido o sintoma (`scrollTop` sem mudar) mas a
+> primeira implementação do `rolarParaTopoDoConteudo()`/`irParaVitais()` **parecia** corrigi-lo e
+> não corrigia: a checagem de "estou no mobile?" lia `this.navMobile()?.nativeElement.offsetParent`,
+> e por especificação do CSSOM **`offsetParent` retorna `null` para todo elemento
+> `position: fixed`** — não é detalhe de implementação, é o comportamento definido — e a barra
+> inferior é `fixed`. A checagem sempre lia "desktop" mesmo no mobile, o método sempre retornava
+> cedo, e o scroll nunca era de fato disparado. Passou pelos testes de componente porque o jsdom
+> não faz layout de verdade (não há geometria real para `offsetParent` refletir); só apareceu numa
+> verificação ao vivo medindo `window.scrollY` antes/depois da troca num navegador de verdade —
+> confirmado com um teste isolado reproduzindo a sequência exata de navegação (`scrollTo(1200)` →
+> trocar de destino → trocar de volta), que mostrou `scrollY` parado em 307–411px em vez de `0`.
+> Fix: trocar a checagem por `getComputedStyle(nav).display !== 'none'`, que não depende de
+> `position`. **Lição geral, não só deste bug:** `offsetParent` não é um substituto seguro de
+> "está visível?"/"está no breakpoint X?" para qualquer elemento que possa ser `position: fixed`
+> (nem `sticky`, ali funciona normal — só `fixed` degenera para `null`).
+>
+> Também nesta passada, com a árvore livre dos três agentes em paralelo: **`.ficha-passo`** (o
+> stepper de Vida/Energia) não tinha `flex-shrink: 0` — dentro de `.ficha-barra__medidor`
+> (`display: flex`), o padrão `flex-shrink: 1` deixava os 44px encolherem no eixo principal em
+> telas apertadas (medido: 40×44/43×44 a 360-430px) mesmo com `width: bp.$alvo-toque` declarado.
+> **Rótulos da barra inferior cortando a 360px** ("Habilid.", "Rolagens", "História" em 8 chars):
+> reduzido `font-size`/`letter-spacing` do rótulo (8.5px/.04em → 8px/.01em) em vez de abreviar mais
+> os nomes — abreviar mais era repetir o defeito da m3-56 (rótulo que não diz o que é). O `<a
+> class="ficha-pagina__voltar">` (único caminho de volta da tela) media 89×18px, abaixo do alvo.
+> **`.ficha-mini--fino .ficha-mini__valor { overflow: hidden }`** clipava o `::after` do alvo de
+> toque dos valores editáveis (Nível/Prestígio/Dinheiro) — mudado para `overflow-wrap: anywhere`
+> no mobile (também resolve reticência escondendo valor sem aviso, ex. Patente longa). Fechados
+> também: `guia-gatilho` (fórmula), `.sanidade__add`, `.ficha-rol__mini-btn` — nenhum tinha
+> tratamento mobile; corrigidos com a técnica de `::after` (não padding) sempre que o controle tem
+> `width`/`height` explícitos — com `box-sizing: border-box` global, padding em elemento de
+> dimensão fixa **encolhe o conteúdo em vez de crescer a caixa**, o oposto do efeito pretendido.
+> **Trade-off aceito e documentado, não perseguido até o fim:** em fileiras densas (ícones de
+> modificação do inventário, ações de sequela/trauma da Sanidade, o valor de carga ao lado da
+> barra de peso), a zona de toque de 44px de um controle inevitavelmente encosta na do vizinho —
+> a caixa real cresce (confirmado via `getBoundingClientRect`, não só o CSS declarado), mas um
+> toque bem na fronteira ativa o vizinho, não o controle "certo". Isso é esperado em qualquer UI
+> com controles compactos adjacentes (o próprio par −/valor/+ de Vida também tem essa sobreposição,
+> sem prejuízo real porque o stepper — o controle dominante — sempre vence). Não vale inflar a
+> densidade da ficha para eliminar esse último resíduo.
 
 > Última atualização anterior: 2026-07-28 (**m3-56 — Passe mobile + esqueletos de carregamento da
 > ficha**: task `m3-56` do lote de refino `m3-40`…`m3-56` implementada — fecha o lote (falta só

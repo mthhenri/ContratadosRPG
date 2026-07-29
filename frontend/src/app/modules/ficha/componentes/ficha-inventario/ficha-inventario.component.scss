@@ -2,6 +2,7 @@
 // reusando o catálogo e as regras das compras (m1). Só tokens do tema "Terminal de Contenção" — nenhum
 // hex/fonte/raio solto (proibição #29). O padrão de card/controle/botão espelha a aba Compras (m1-10).
 
+@use 'sass:math';
 @use 'tema/breakpoints' as bp;
 
 .ficha-inv {
@@ -882,6 +883,15 @@
     max-height: 360px;
     overflow-y: auto;
     padding-right: 4px;
+
+    // m3-60: no mobile a página inteira rola como uma coisa só — um teto aqui viraria rolagem
+    // dentro de rolagem, sem barra visível (o tema esconde a nativa por design). Sem overflow o
+    // `appOverflowFade` não marca o host, então o fade some junto (fade sem overflow é ruído).
+    @include bp.mobile {
+      max-height: none;
+      overflow-y: visible;
+      padding-right: 0;
+    }
   }
 
   &__cartao {
@@ -1217,6 +1227,13 @@
     max-height: 230px;
     overflow-y: auto;
     padding-right: 4px;
+
+    // Mesmo racional de `&__grade` (m3-60): sem teto no mobile, sem rolagem dentro de rolagem.
+    @include bp.mobile {
+      max-height: none;
+      overflow-y: visible;
+      padding-right: 0;
+    }
   }
   &__mod-entrada {
     display: flex;
@@ -1280,6 +1297,14 @@
     max-height: 420px;
     overflow-y: auto;
     padding-right: 4px;
+
+    // Mesmo racional de `&__grade` (m3-60): a restrição que justifica o teto é caber em 1920×1080
+    // junto com a lista principal — no mobile não existe, e o teto só produz rolagem aninhada.
+    @include bp.mobile {
+      max-height: none;
+      overflow-y: visible;
+      padding-right: 0;
+    }
 
     &-cabecalho {
       display: flex;
@@ -1423,7 +1448,57 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      // m3-60: `&--icone` (lupa da busca, X de remover item) já tinha os 44px de altura vindos
+      // daqui, mas ficava em 28–32px de largura — só o eixo horizontal faltava.
+      min-width: bp.$alvo-toque;
     }
+
+    // === m3-60: alvos de toque que a m3-56 não cobriu ===
+    // Pílulas de ação por item (Modificar / Vestida-Guardada / Equipado-Na mochila / Aplicar /
+    // Consumir) e "Rolar dano": medidos 30×26 e 111×27. Ficam na própria linha de ações
+    // (`&__item-acoes`, que já quebra em várias linhas no mobile), então o piso de 44px não
+    // desloca nada além da própria linha — o desenho da pílula (borda, cor, fonte) segue igual.
+    &__modificar,
+    &__porte,
+    &__item-rolar {
+      min-height: bp.$alvo-toque;
+      min-width: bp.$alvo-toque;
+      justify-content: center;
+    }
+
+    // Toggles "não conta no total/no teto" da mod: 20×20 → 44×44, mesmo tratamento já dado ao
+    // `&__mini-btn` acima. O `gap` sobe junto para os dois alvos vizinhos não se encostarem.
+    &__mod-flags {
+      gap: 8px;
+    }
+    &__mod-flag {
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
+      font-size: 14px;
+    }
+
+    // Lápis de apelido: 14×14 dentro da linha do nome do item. Aqui um piso de altura inflaria a
+    // linha de texto, então a área clicável cresce por padding com margem negativa — a caixa de
+    // toque vira 44×44 de verdade (não só um `::before`), mas a caixa de margem que a linha
+    // enxerga continua sendo a do ícone. A folga é derivada do token (`$alvo-toque` menos o ícone,
+    // dividido pelos dois lados), não um número solto.
+    &__item-apelido-lapis {
+      $folga: math.div(bp.$alvo-toque - 14px, 2);
+
+      padding: $folga;
+      // Esquerda: a folga desconta os 6px de `margin-left` que separam o lápis do nome.
+      margin: (-$folga) (-$folga) (-$folga) (6px - $folga);
+    }
+
+    // Mesmo padrão no valor editável da carga (80×22): o piso de 44px empurraria a barra de
+    // Inventário para baixo; padding com margem negativa mantém a linha na altura de hoje.
+    &__carga-valor--editavel {
+      $folga: math.div(bp.$alvo-toque - 22px, 2);
+
+      padding: $folga 4px;
+      margin: (-$folga) -4px;
+    }
+
     &__item-cabecalho,
     &__mod-tag,
     &__cartao-acoes {
@@ -1506,6 +1581,39 @@
     }
     .ficha-inv__amps {
       max-height: 458px;
+    }
+
+    // === m3-60: o modo compacto no mobile ===
+    // Estas regras precisam vir DEPOIS das do bloco `&--compacto` acima: têm a mesma
+    // especificidade (0,2,0), então quem ganha é a ordem de origem — o media query não soma
+    // especificidade nenhuma.
+    @include bp.mobile {
+      // O teto de 458px existe para não esticar a coluna Status ao lado da de Identidade na
+      // grade de 3 colunas do desktop. No mobile não há coluna vizinha e a página inteira já
+      // rola: medidos 458px de janela para 1895px de lista (24% visível), com a barra de
+      // rolagem escondida pelo tema. Some o teto → some a rolagem aninhada e o fade junto.
+      .ficha-inv__lista,
+      .ficha-inv__amps {
+        max-height: none;
+        overflow-y: visible;
+        padding-right: 0;
+      }
+
+      // Rótulo de volta: sem ele, "Modificar", "Vestida/Guardada", "Equipado/Na mochila",
+      // "Aplicar em..." e "Consumir" viram quatro ícones nus indistinguíveis na mesma linha. O
+      // motivo de escondê-los (coluna estreita da grade de 3 colunas) não vale no mobile, onde o
+      // card ocupa a largura inteira e `&__item-acoes` já quebra linha.
+      // Seletor idêntico ao que esconde (inclusive o `:not(...)`, que conta especificidade de
+      // classe): com (0,3,0) dos dois lados quem decide é a ordem de origem. Um `> span` simples
+      // aqui teria (0,2,0) e perderia — a mesma armadilha do `width` depois do `@extend`.
+      .ficha-inv__modificar > span:not(.ficha-inv__modificar-contagem),
+      .ficha-inv__porte > span {
+        display: inline;
+      }
+      .ficha-inv__modificar,
+      .ficha-inv__porte {
+        padding: 5px 10px;
+      }
     }
   }
 }

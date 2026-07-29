@@ -118,6 +118,7 @@
                       class="ficha-rol__btn ficha-rol__btn--rolar ficha-rol__btn--icone"
                       [disabled]="!passo.interpretacao.valida"
                       [appTooltip]="'Rolar'"
+                      [attr.aria-label]="'Rolar ' + (preset.encadeado ? passo.nome + ' — ' : '') + preset.nome"
                       (click)="rolarPassoDoPreset(preset, indicePasso)"
                     >
                       <app-icone [nome]="'dado'" />
@@ -128,6 +129,7 @@
                         class="ficha-rol__btn ficha-rol__btn--critico ficha-rol__btn--icone"
                         [disabled]="!passo.interpretacao.valida"
                         [appTooltip]="'Rolar crítico — dobra o dano'"
+                        [attr.aria-label]="'Rolar crítico (dobra o dano) — ' + (preset.encadeado ? passo.nome + ' — ' : '') + preset.nome"
                         (click)="rolarPassoDoPreset(preset, indicePasso, true)"
                       >
                         <app-icone [nome]="'dado'" />

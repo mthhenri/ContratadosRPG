@@ -75,6 +75,13 @@
     display: inline-flex;
     align-items: center;
     gap: 7px;
+
+    // m3-60: 89×18px medidos ao vivo — é o único caminho de volta da tela e ficava abaixo do
+    // alvo de toque. Só altura mínima; o desenho (texto + ícone) não muda.
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
+    }
+
     font-family: var(--font-mono);
     font-size: 11px;
     text-transform: uppercase;

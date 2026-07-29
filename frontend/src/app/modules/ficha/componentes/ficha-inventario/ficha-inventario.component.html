@@ -537,7 +537,7 @@
                 <button
                   type="button"
                   class="ficha-inv__item-apelido-lapis"
-                  aria-label="Editar apelido"
+                  [attr.aria-label]="'Editar apelido de ' + item.nomeExibido"
                   [appTooltip]="'Editar apelido'"
                   (click)="editarApelido(item.indice)"
                 >
@@ -563,6 +563,7 @@
                   class="ficha-inv__modificar"
                   [appTooltip]="'Modificar'"
                   [class.ficha-inv__modificar--aberto]="item.painelAberto"
+                  [attr.aria-label]="'Modificar ' + item.nomeExibido"
                   [attr.aria-expanded]="item.painelAberto"
                   (click)="alternarPainel(item.indice)"
                 >
@@ -585,6 +586,7 @@
                   class="ficha-inv__porte"
                   [class.ficha-inv__porte--vestida]="!item.guardada"
                   [appTooltip]="item.guardada ? 'Guardada: ocupa slots, não amplia o inventário' : 'Vestida: amplia o inventário, não ocupa slots'"
+                  [attr.aria-label]="(item.guardada ? 'Guardada' : 'Vestida') + ' — ' + item.nomeExibido + ': alternar porte'"
                   (click)="alternarGuardada(item.indice)"
                 >
                   <app-icone [nome]="item.guardada ? 'guardada' : 'vestida'" />
@@ -598,6 +600,7 @@
                   class="ficha-inv__porte"
                   [class.ficha-inv__porte--vestida]="item.equipado"
                   [appTooltip]="'Só Proteções equipadas somam na resistência da aba Combate'"
+                  [attr.aria-label]="(item.equipado ? 'Equipado' : 'Na mochila') + ' — ' + item.nomeExibido + ': alternar'"
                   (click)="alternarEquipado(item.indice)"
                 >
                   <app-icone [nome]="item.equipado ? 'vestida' : 'guardada'" />
@@ -652,6 +655,7 @@
                   class="ficha-inv__modificar"
                   [appTooltip]="'Aplicar Fragmento'"
                   [class.ficha-inv__modificar--aberto]="aplicandoFragmentoIndice() === item.indice"
+                  [attr.aria-label]="'Aplicar em... — ' + item.nomeExibido"
                   [attr.aria-expanded]="aplicandoFragmentoIndice() === item.indice"
                   (click)="abrirAplicarFragmento(item.indice)"
                 >
@@ -663,6 +667,7 @@
                   class="ficha-inv__modificar"
                   [appTooltip]="'Consumir para benefício pessoal — cobra Preço de Sanidade'"
                   [class.ficha-inv__modificar--aberto]="consumindoFragmentoIndice() === item.indice"
+                  [attr.aria-label]="'Consumir — ' + item.nomeExibido"
                   [attr.aria-expanded]="consumindoFragmentoIndice() === item.indice"
                   (click)="abrirConsumirFragmento(item.indice)"
                 >
@@ -706,7 +711,7 @@
                   type="button"
                   class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
                   [appTooltip]="'Remover'"
-                  aria-label="Remover item"
+                  [attr.aria-label]="'Remover item ' + item.nomeExibido"
                   (click)="removerItem(item.indice)"
                 >
                   ✕
@@ -724,7 +729,7 @@
             <button
               type="button"
               class="ficha-inv__item-rolar"
-              aria-label="Rolar dano"
+              [attr.aria-label]="'Rolar dano de ' + item.nomeExibido"
               [appTooltip]="'Rolar dano'"
               (click)="rolarDanoItem(item)"
             >

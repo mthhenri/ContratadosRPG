@@ -11,8 +11,13 @@
   gap: 16px;
   align-items: start;
 
+  // `minmax(0, 1fr)`, não `1fr`: `1fr` é `minmax(auto, 1fr)` e o piso `auto` deixa a coluna crescer
+  // até o min-content do conteúdo — com o `white-space: nowrap` de `&__descricao` isso media 483px
+  // dentro de uma tela de 390px, e o `overflow-x: clip` do layout escondia o excedente, tornando o
+  // texto da sequela/trauma/lesão **inalcançável** (perda de dado). O piso 0 prende a coluna à
+  // largura da grade; o `min-width: 0` propaga a mesma trava até o texto (grupo → lista → item).
   @media (max-width: 900px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   // Cada categoria é um painel com um filete de cor no topo (identidade visual da marca). A cor da
@@ -30,11 +35,18 @@
     // item (`&__lista` abaixo), então o grupo nunca cresce além disso — independe da altura da
     // caixa de Anotações vizinha (fora deste componente).
     min-height: 260px;
+    min-width: 0;
     padding: 12px 12px 14px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-top: 2px solid var(--marca);
     border-radius: var(--radius-card);
+
+    // Empilhado no mobile não há três colunas para alinhar — o piso vira só vazio (medidos 537px
+    // somados nas três seções). Cada grupo passa a ter a altura do próprio conteúdo.
+    @include bp.mobile {
+      min-height: 0;
+    }
 
     &--sequela {
       --marca: var(--text-mute);
@@ -80,6 +92,7 @@
   // Botão adicionar: veste a cor da própria seção (herdada via `--marca`) — adicionar a Sequelas
   // fica cinza, a Traumas âmbar, a Lesões vermelho, casando com o filete do topo.
   &__add {
+    position: relative;
     flex: 0 0 auto;
     font-family: var(--font-mono);
     font-size: 11px;
@@ -94,6 +107,20 @@
     cursor: pointer;
     transition: background-color 0.15s ease;
 
+    // m3-60: sem alvo de toque mobile — corrigido por `::after` (não por padding) para não
+    // depender do modelo de caixa do conteúdo variável (rótulo "Adicionar sequela/trauma/lesão").
+    @include bp.mobile {
+      &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: bp.$alvo-toque;
+        height: bp.$alvo-toque;
+      }
+    }
+
     &:hover:not(:disabled) {
       background: color-mix(in srgb, var(--marca) 24%, transparent);
     }
@@ -101,6 +128,13 @@
     &:disabled {
       opacity: 0.4;
       cursor: default;
+    }
+
+    // m3-60: a m3-56 só cobriu a variante `--compacto`; o botão com o texto "＋ Adicionar" ficava
+    // com ~26px de altura, abaixo do alvo de toque.
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
+      padding: 5px 14px;
     }
 
     // `apresentacao="dialog"` (coluna estreita, ex.: card de Status): só o "+", sem o texto
@@ -131,8 +165,18 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
+    min-width: 0;
     max-height: 200px;
     overflow-y: auto;
+
+    // No mobile a página inteira já rola como uma coisa só (m3-60): um teto aqui produziria
+    // rolagem dentro de rolagem, sem barra visível (o tema esconde a nativa por design). Sem teto
+    // não há overflow, e o `appOverflowFade` — que só marca o host quando há corte de verdade —
+    // deixa de aplicar a máscara sozinho, sem fade fantasma.
+    @include bp.mobile {
+      max-height: none;
+      overflow-y: visible;
+    }
 
     --fade-topo: 0px;
     --fade-base: 0px;
@@ -162,6 +206,7 @@
   }
 
   &__item {
+    min-width: 0;
     padding: 7px 10px;
     background: var(--surface-2);
     border: 1px solid var(--border);
@@ -241,6 +286,11 @@
   }
 
   &__acao {
+    // `width`/`height` explícitos + `box-sizing: border-box` global: `padding` encolheria o ícone
+    // em vez de crescer a caixa, então a área de toque cresce por `::after` (m3-60) — mesmo padrão
+    // de `alvo-de-toque` em `ficha-visualizacao.component.scss`, duplicado aqui porque o mixin não
+    // é compartilhado entre componentes standalone (encapsulamento do Angular).
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -254,6 +304,18 @@
     border-radius: var(--radius-control);
     cursor: pointer;
     transition: color 0.15s ease, border-color 0.15s ease;
+
+    @include bp.mobile {
+      &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: bp.$alvo-toque;
+        height: bp.$alvo-toque;
+      }
+    }
 
     &:hover {
       color: var(--text);
@@ -275,6 +337,7 @@
   // `title` (tooltip nativo) e no formulário de edição.
   &__descricao {
     display: block;
+    min-width: 0;
     margin-top: 3px;
     overflow: hidden;
     white-space: nowrap;
@@ -282,6 +345,16 @@
     font-family: var(--font-sans);
     font-size: 12px;
     color: var(--text-dim);
+
+    // No mobile o item não precisa mais ter altura previsível (o piso/teto de `&__grupo`/`&__lista`
+    // saem acima), então o texto quebra e é lido por inteiro — a reticência dependia de hover
+    // (`title`/tooltip) para revelar o resto, o que no toque não existe.
+    @include bp.mobile {
+      overflow: visible;
+      white-space: normal;
+      text-overflow: clip;
+      overflow-wrap: anywhere;
+    }
   }
 
   &__vazio {

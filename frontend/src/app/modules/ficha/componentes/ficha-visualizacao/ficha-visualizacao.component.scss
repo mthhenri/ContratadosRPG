@@ -578,7 +578,7 @@
     align-items: center;
     justify-content: center;
     gap: 3px;
-    padding: 5px 2px;
+    padding: 5px 1px;
     background: none;
     border: 1px solid transparent;
     border-radius: var(--radius-control);
@@ -607,9 +607,12 @@
 
   &__rotulo {
     font-family: var(--font-mono);
-    font-size: 8.5px;
+    // 8px com tracking quase zero: a 360px cada destino fica com 48px, e "Habilid.", "Rolagens"
+    // e "História" (8 caracteres) cortavam com 8.5px/0.04em — medido ao vivo. Preferi apertar a
+    // métrica a abreviar os rótulos: rótulo cortado foi exatamente o defeito da m3-56.
+    font-size: 8px;
     font-weight: 600;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.01em;
     text-transform: uppercase;
     line-height: 1.3;
     max-width: 100%;
@@ -1293,6 +1296,24 @@
       text-overflow: ellipsis;
     }
 
+    // m3-60: no mobile o valor quebra linha em vez de cortar com "…". Duas razões, e a segunda
+    // é a que obriga: (a) a reticência aqui esconde informação sem aviso (Patente "Força Tarefa
+    // Especial", Dinheiro com muitos dígitos) e no toque não há hover que a revele; (b) o
+    // `overflow: hidden` acima **clipa o `::after`** com que `alvo-de-toque` estende a área
+    // clicável — medido ao vivo, o valor editável seguia com 17px de altura de toque mesmo com o
+    // mixin aplicado. Especificidade (0,2,0) igual à regra acima, vencendo por ordem.
+    @include bp.mobile {
+      .ficha-mini__valor {
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+
+      .ficha-mini__valor--editavel {
+        overflow: visible;
+        text-overflow: clip;
+      }
+    }
+
     // O campo de digitação segue o mesmo tamanho de texto da leitura — sem isso, o input abria
     // maior que o valor que substituía (o card inteiro "pulava" no clique).
     .ficha-mini__entrada {
@@ -1762,6 +1783,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  // m3-60: sem isso, o `flex-shrink: 1` padrão deixa o botão encolher no eixo principal da linha
+  // (`.ficha-barra__medidor`, `display: flex`) quando o espaço aperta — medido ao vivo a 360px:
+  // 40×44 e 43×44 no mobile, os 44px de largura nunca chegavam a valer apesar do `width` abaixo.
+  // É o stepper de Vida/Energia, o controle mais repetido da ficha em mesa.
+  flex-shrink: 0;
   width: 22px;
   height: 22px;
   padding: 0;

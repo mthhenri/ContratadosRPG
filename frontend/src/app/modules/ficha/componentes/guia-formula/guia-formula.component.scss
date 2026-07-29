@@ -1,6 +1,9 @@
 // Guia de fórmula (m3-22) — modal adaptado do padrão `.ajuda-modal` da calculadora (m1-12).
 // Consome apenas os tokens do tema "Terminal de Contenção" (proibição #29): nenhum hex/fonte/raio solto.
 
+@use 'sass:math';
+@use 'tema/breakpoints' as bp;
+
 // O componente é um gatilho inline (fica ao lado do rótulo "Fórmula").
 :host {
   display: inline-flex;
@@ -22,6 +25,17 @@
   border-radius: var(--radius-control);
   padding: 3px 8px;
   cursor: pointer;
+
+  // m3-60: 71×24px medidos ao vivo (rolagens, atributos) — a área de toque cresce por padding +
+  // margem negativa (mesma técnica de `ficha-inv__item-apelido-lapis`), sem inflar o desenho
+  // compacto do gatilho.
+  @include bp.mobile {
+    $folga-v: math.div(bp.$alvo-toque - 24px, 2);
+
+    padding-top: 3px + $folga-v;
+    padding-bottom: 3px + $folga-v;
+    margin-block: -$folga-v;
+  }
 
   &:hover {
     color: var(--text);
