@@ -11,13 +11,12 @@ import {
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
+import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
-import { ResultadoRolagem } from '../../../../shared/resultado-rolagem/resultado-rolagem.component';
 import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
-import { CampanhaContextoService } from '../../campanha-contexto.service';
 import { CampanhaService } from '../../campanha.service';
 import { FichaService } from '../../../ficha/ficha.service';
 import { construirFichaInicial, type FichaAssistenteResultado } from '../../../ficha/ficha-padrao';
@@ -65,8 +64,7 @@ interface ItemFicha {
  * mestre — o `codigoConvite` com o botão de regenerar. O papel do usuário atual é derivado da
  * lista de membros (não é regra de segurança, só apresentação: a autoridade é sempre o backend,
  * §14 — a regeneração por um jogador seria barrada com 403 e tratada pelo `error-handler`).
- * Estado em Signals; o `id` da campanha é lido do parâmetro de rota. Preenche o
- * `CampanhaContextoService` (m2-09) para o seletor da topbar e o limpa ao desmontar.
+ * Estado em Signals; o `id` da campanha é lido do parâmetro de rota.
  *
  * Só o mestre vê as ações de **editar** (nome/descrição, formulário inline via Reactive Forms)
  * e **excluir** (com confirmação inline) a campanha (m2-12). A UI apenas esconde o que o
@@ -80,7 +78,7 @@ interface ItemFicha {
     ReactiveFormsModule,
     Icone,
     OverflowFade,
-    ResultadoRolagem,
+    HistoricoRolagensSidebar,
     IndicadorTempoReal,
     FichaCriarDialog,
     HoldRepeat,
@@ -94,7 +92,6 @@ export class CampanhaDetalhe {
   private readonly fichaVitalidadeRapidaService = inject(FichaVitalidadeRapidaService);
   private readonly rolagemService = inject(RolagemService);
   private readonly sessaoService = inject(SessaoService);
-  private readonly campanhaContextoService = inject(CampanhaContextoService);
   private readonly tempoRealService = inject(TempoRealService);
   private readonly rotaAtiva = inject(ActivatedRoute);
   private readonly formBuilder = inject(FormBuilder);
@@ -291,7 +288,6 @@ export class CampanhaDetalhe {
       for (const fichaId of this.salasFichaAtivas) {
         this.tempoRealService.sairSalaFicha(fichaId);
       }
-      this.campanhaContextoService.limpar();
     });
 
     merge(
@@ -383,11 +379,6 @@ export class CampanhaDetalhe {
           this.fichas.set(fichas);
           this.sincronizarSalasFicha(fichas);
           this.ultimaAtualizacaoEm.set(Date.now());
-          this.campanhaContextoService.definir({
-            id: campanha.id,
-            nome: campanha.nome,
-            codigoConvite: campanha.codigoConvite,
-          });
         },
       });
   }
@@ -407,14 +398,6 @@ export class CampanhaDetalhe {
               ? { ...campanhaAtual, codigoConvite: conviteRegenerado.codigoConvite }
               : campanhaAtual,
           );
-          const campanhaAtual = this.campanha();
-          if (campanhaAtual) {
-            this.campanhaContextoService.definir({
-              id: campanhaAtual.id,
-              nome: campanhaAtual.nome,
-              codigoConvite: conviteRegenerado.codigoConvite,
-            });
-          }
           // Confirmação visual: o botão vira "Regenerado ✓" e volta ao normal após 1,5 s.
           this.regenerado.set(true);
           setTimeout(() => this.regenerado.set(false), 1500);
@@ -441,7 +424,7 @@ export class CampanhaDetalhe {
     this.editando.set(false);
   }
 
-  /** Persiste nome/descrição via `alterarCampanha` e reflete o resultado na tela e na topbar. */
+  /** Persiste nome/descrição via `alterarCampanha` e reflete o resultado na tela. */
   protected salvarEdicao(): void {
     if (this.formularioEdicao.invalid || this.salvando()) {
       this.formularioEdicao.markAllAsTouched();
@@ -459,11 +442,6 @@ export class CampanhaDetalhe {
               ? { ...campanhaAtual, nome: campanhaAlterada.nome, descricao: campanhaAlterada.descricao }
               : campanhaAtual,
           );
-          this.campanhaContextoService.definir({
-            id: campanhaAlterada.id,
-            nome: campanhaAlterada.nome,
-            codigoConvite: campanhaAlterada.codigoConvite,
-          });
           this.editando.set(false);
         },
       });

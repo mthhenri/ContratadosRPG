@@ -39,8 +39,10 @@ import type {
   FichaRecuperadaDto,
   FichaRolagemDto,
 } from '@contratados-rpg/shared/dtos/ficha';
+import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
+import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
@@ -49,6 +51,7 @@ import { CampanhaService } from '../../../campanha/campanha.service';
 import { FichaService } from '../../ficha.service';
 import { lerParamRota } from '../../ler-param-rota';
 import { mesclarFicha } from '../../mesclar-ficha';
+import { RolagemService } from '../../rolagem.service';
 import { normalizarEntrada, type EntradaAgente } from '../../status-derivado';
 import type { CondicoesFicha } from '../../condicoes-ficha';
 
@@ -67,6 +70,9 @@ import {
   type DestinoMobile,
 } from '../../componentes/ficha-visualizacao/ficha-visualizacao.component';
 import type { EstadoSanidade } from '../../componentes/ficha-sanidade/ficha-sanidade.component';
+
+/** Tamanho de página do histórico de rolagens da barra lateral. */
+const ITENS_POR_PAGINA_HISTORICO = 20;
 
 /**
  * A **ficha** de jogador numa tela só — montada em **duas rotas** (`/painel/:campanhaId/ficha/:id`,
@@ -101,6 +107,7 @@ import type { EstadoSanidade } from '../../componentes/ficha-sanidade/ficha-sani
     FichaVisualizacao,
     IndicadorTempoReal,
     CalculadoraFlutuante,
+    HistoricoRolagensSidebar,
   ],
   templateUrl: './visualizar.page.html',
   styleUrl: './visualizar.page.scss',
@@ -108,6 +115,7 @@ import type { EstadoSanidade } from '../../componentes/ficha-sanidade/ficha-sani
 export class FichaVisualizar {
   private readonly fichaService = inject(FichaService);
   private readonly campanhaService = inject(CampanhaService);
+  private readonly rolagemService = inject(RolagemService);
   private readonly sessaoService = inject(SessaoService);
   private readonly tempoRealService = inject(TempoRealService);
   private readonly messageService = inject(MessageService);
@@ -185,6 +193,18 @@ export class FichaVisualizar {
   private readonly membros = signal<CampanhaMembroResumoDto[]>([]);
   protected readonly acessos = signal<FichaAcessoResumoDto[]>([]);
 
+  /**
+   * Histórico de rolagens desta ficha (`HistoricoRolagensSidebar` no cabeçalho da página, gatilho
+   * D20) — carregado aqui, na página, porque a barra lateral fica visível em qualquer aba, não só
+   * numa aba específica do card de Status. `fichaId` já é conhecido de forma síncrona (parâmetro
+   * de rota), então a 1ª página carrega direto no constructor.
+   */
+  protected readonly historicoRolagens = signal<readonly RolagemResumoDto[]>([]);
+  protected readonly historicoCarregando = signal(true);
+  protected readonly historicoCarregandoMais = signal(false);
+  protected readonly historicoTemMais = signal(false);
+  private readonly historicoPagina = signal(0);
+
   /** Dispara a persistência (debounced) de cada edição no próprio lugar. */
   private readonly ajustePendente = new Subject<void>();
   /**
@@ -247,6 +267,10 @@ export class FichaVisualizar {
   });
 
   constructor() {
+    // Histórico de rolagens (barra lateral do cabeçalho) — `fichaId` já é conhecido de forma
+    // síncrona (parâmetro de rota), então a 1ª página carrega direto aqui, sem esperar um `effect`.
+    this.carregarHistoricoPagina(1);
+
     // Sob `/fichas/:id` (sem `:campanhaId` na URL), o `campanhaId` só é conhecido depois da ficha
     // carregar (m3-28) — daí a ficha vir primeiro e os membros serem buscados só quando há
     // campanha (`switchMap` para `of([])` sem ela: ficha solta ou ainda sem sala de campanha).
@@ -495,6 +519,44 @@ export class FichaVisualizar {
       queryParamsHandling: 'preserve',
       replaceUrl: true,
     });
+  }
+
+  /** Busca uma página do histórico de rolagens e acrescenta ao final (a 1ª já vem mais recente primeiro). */
+  private carregarHistoricoPagina(pagina: number): void {
+    const marcarCarregando = pagina === 1 ? this.historicoCarregando : this.historicoCarregandoMais;
+    marcarCarregando.set(true);
+    this.rolagemService
+      .listarPorFicha(this.fichaId, pagina, ITENS_POR_PAGINA_HISTORICO)
+      .subscribe({
+        next: (paginado) => {
+          this.historicoRolagens.update((atuais) =>
+            pagina === 1 ? paginado.itens : [...atuais, ...paginado.itens],
+          );
+          this.historicoPagina.set(paginado.paginaAtual);
+          this.historicoTemMais.set(paginado.paginaAtual < paginado.totalPaginas);
+          marcarCarregando.set(false);
+        },
+        error: () => marcarCarregando.set(false),
+      });
+  }
+
+  /** "Carregar mais" da barra lateral de histórico. */
+  protected carregarMaisHistorico(): void {
+    if (this.historicoCarregandoMais() || !this.historicoTemMais()) {
+      return;
+    }
+    this.carregarHistoricoPagina(this.historicoPagina() + 1);
+  }
+
+  /**
+   * Prepend local (`(rolagemRegistrada)` de `FichaVisualizacao`) — uma rolagem feita em qualquer
+   * aba aparece na hora no topo da barra lateral, sem esperar reabri-la. Guarda contra duplicata:
+   * o `output` pode reemitir o mesmo id se o pai re-renderizar por outro motivo.
+   */
+  protected onRolagemRegistrada(rolagem: RolagemResumoDto): void {
+    this.historicoRolagens.update((atuais) =>
+      atuais[0]?.id === rolagem.id ? atuais : [rolagem, ...atuais],
+    );
   }
 
   /** (Re)carrega as concessões ativas da ficha — usado no boot e após conceder/revogar. */

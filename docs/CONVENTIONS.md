@@ -330,6 +330,8 @@ DTOs e enums **nunca** são redefinidos dentro de `backend/` ou `frontend/`.
   (nem dentro de CVA — embrulhar controle de terceiros com `FormControl` + `[formControl]`)
 - **Lazy loading** por rota via `loadComponent`/`loadChildren`
 - Calculadora: páginas públicas, 100% client-side via `shared/regras`
+- **Tooltip:** nunca o atributo `title` nativo do HTML — sempre `[appTooltip]="'texto'"`
+  (`shared/tooltip/tooltip.directive.ts`), que já resolve hover/toque/teclado com os tokens do tema
 
 ---
 
@@ -370,6 +372,7 @@ scoped do componente. **Leia `docs/design/DESIGN.md` antes de qualquer trabalho 
 | Extrapolar escopo da task | Implementar exatamente o que a spec define |
 | DTO dentro de `backend/` ou `frontend/` | Sempre em `shared/src/dtos/` |
 | NgModule / `.css` / `style=""` / seletor de ID | standalone / `.scss` / Tailwind+BEM |
+| Atributo `title` nativo do HTML para tooltip | Diretiva `[appTooltip]` (`shared/tooltip/`) |
 | Hex/cor/fonte/raio hardcoded em SCSS | Consumir tokens do tema (`var(--accent)`, `var(--font-mono)`… de `docs/design/`) |
 | Primitivo em service/repository | DTO, mesmo com um único campo |
 | `existe*` em método | `validar*` |

@@ -74,7 +74,6 @@ import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
-import { FichaHistorico } from '../ficha-historico/ficha-historico.component';
 import { FichaInventario, type CustoEnergiaFragmento } from '../ficha-inventario/ficha-inventario.component';
 import { FichaRolagens } from '../ficha-rolagens/ficha-rolagens.component';
 import { FichaSanidade, type EstadoSanidade } from '../ficha-sanidade/ficha-sanidade.component';
@@ -148,16 +147,15 @@ export function ehAbaFicha(valor: string | null | undefined): valor is AbaFicha 
  * `historia` (m3-50) é **condicional** — só dono/mestre veem o botão (`ajustavel()`); o template
  * também gate o painel pelo mesmo sinal, já que a `dados().historia` nem chega ao visualizador
  * (omitida no backend), mas um fragmento de URL manipulado à mão não deve renderizar a caixa vazia.
- * `historico` (m3-27) lista as rolagens persistidas da ficha — entra aqui, e não na (vestigial)
- * `AbaFicha` de página inteira do m3-11 (aposentada pelo layout de 3 colunas do m3-38), que é onde
- * o comentário original de m3-19/m3-37 previa o encaixe antes desse redesenho acontecer.
+ * A antiga aba `historico` (m3-27) saiu daqui: virou a barra lateral `HistoricoRolagensSidebar`
+ * (gatilho D20 no cabeçalho de `FichaVisualizar`, visível em qualquer aba) — mantê-la como aba
+ * duplicava a mesma lista em dois lugares.
  */
 export type AbaStatus =
   | 'informacoes'
   | 'inventario'
   | 'habilidades'
   | 'rolagens'
-  | 'historico'
   | 'extras'
   | 'historia';
 
@@ -167,7 +165,6 @@ const ABAS_STATUS: readonly AbaStatus[] = [
   'inventario',
   'habilidades',
   'rolagens',
-  'historico',
   'extras',
   'historia',
 ];
@@ -201,7 +198,7 @@ function percentualBarra(atual: number, maxima: number): number {
  * barra lê como as três colunas do desktop da esquerda para a direita (Identidade+Atributos,
  * depois as abas do card de Status).
  *
- * Os rótulos são curtos de propósito: com `flex: 1 1 0` os sete itens dividem a largura em partes
+ * Os rótulos são curtos de propósito: com `flex: 1 1 0` os itens dividem a largura em partes
  * iguais (mesmo padrão da barra da calculadora, `calculadora-shell.component.scss`) e a 360px cada
  * item fica com ~48px — "Inventário" por extenso não caberia, e cortar rótulo foi exatamente o
  * defeito da m3-56. `rotuloCompleto` alimenta o `aria-label`, então o leitor de tela ouve o nome
@@ -218,7 +215,6 @@ const DESTINOS_MOBILE: readonly {
   { destino: 'inventario', rotulo: 'Invent.', rotuloCompleto: 'Inventário', icone: 'inventario' },
   { destino: 'habilidades', rotulo: 'Habilid.', rotuloCompleto: 'Habilidades', icone: 'habilidades' },
   { destino: 'rolagens', rotulo: 'Rolagens', rotuloCompleto: 'Rolagens', icone: 'rolagens' },
-  { destino: 'historico', rotulo: 'Histór.', rotuloCompleto: 'Histórico', icone: 'rolagens' },
   { destino: 'extras', rotulo: 'Extras', rotuloCompleto: 'Extras', icone: 'mais' },
   { destino: 'historia', rotulo: 'História', rotuloCompleto: 'História', icone: 'anotacoes' },
 ];
@@ -312,7 +308,6 @@ export interface AjusteClasse {
     FichaInventario,
     FichaHabilidades,
     FichaRolagens,
-    FichaHistorico,
     BandejaDados,
     OverflowFade,
     Tooltip,
@@ -865,13 +860,13 @@ export class FichaVisualizacao {
   }
 
   /**
-   * Última rolagem persistida nesta sessão de leitura (m3-27) — alimenta `FichaHistorico` (aba
-   * Histórico) pra dar **prepend local** sem esperar o próximo carregamento: útil quando a aba já
-   * está aberta na 3ª coluna (Status) enquanto se rola de outra coluna (Atributos) ao mesmo tempo.
-   * Rolagens privadas ou de fichas sem campanha nunca chegam por WebSocket — só este caminho local
-   * garante que o próprio autor sempre vê a própria rolagem aparecer na hora.
+   * Rolagem persistida nesta sessão de leitura (m3-27), emitida como evento — alimenta a barra
+   * lateral de histórico (`HistoricoRolagensSidebar`, no cabeçalho de `FichaVisualizar`) com
+   * **prepend local**, sem esperar reabri-la: útil quando ela já está aberta enquanto se rola de
+   * outra aba/coluna. Rolagens privadas ou de fichas sem campanha nunca chegam por WebSocket — só
+   * este caminho local garante que o próprio autor sempre vê a própria rolagem aparecer na hora.
    */
-  protected readonly ultimaRolagemRegistrada = signal<RolagemResumoDto | null>(null);
+  readonly rolagemRegistrada = output<RolagemResumoDto>();
 
   /**
    * Persiste uma rolagem executada nesta ficha (m3-27) — fire-and-forget, otimista (o resultado já
@@ -890,7 +885,7 @@ export class FichaVisualizacao {
         resultado: entrada.resultado,
       })
       .subscribe({
-        next: (rolagemRegistrada) => this.ultimaRolagemRegistrada.set(rolagemRegistrada),
+        next: (rolagemRegistrada) => this.rolagemRegistrada.emit(rolagemRegistrada),
         error: () => undefined,
       });
   }

@@ -8,9 +8,10 @@
 // (`.ficha-nav`), e a bandeja de dados (`bottom: 20px`) e o gatilho da calculadora
 // (`bottom: 24px`) moravam exatamente nessa faixa — medido ao vivo, a carta da bandeja cobria a
 // barra de abas e o próprio gatilho por 6,35s a cada rolagem. Esta custom property é declarada no
-// `:host` porque `app-calculadora-flutuante` é irmão de `.ficha-pagina` no template da página:
-// declarada no `.ficha-pagina` ela não chegaria lá. Ambos os componentes a consomem com fallback
-// `0px`, então nas outras telas nada muda.
+// `:host` (não em `.ficha-pagina`) porque `app-calculadora-flutuante`/`app-historico-rolagens-
+// sidebar` são `display: contents` — o valor precisa alcançá-los onde quer que a tag esteja no
+// template (hoje dentro de `.ficha-pagina__topo`, m3-61). Todo consumidor lê com fallback `0px`,
+// então nas outras telas nada muda.
 :host {
   --piso-flutuante: 0px;
 
@@ -60,14 +61,29 @@
   &__topo {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 12px;
 
-    // Defensivo: se o selo "tempo real offline" (`app-indicador-tempo-real`) aparecer no mobile
-    // (só depois de ~1,5s desconectado — raro na verificação ao vivo), a linha quebra em vez de
-    // espremer o texto/kebab.
     @include bp.mobile {
       flex-wrap: wrap;
+    }
+  }
+
+  // Grupo de ações do cabeçalho (m3-62): selo de auto-save + selo de tempo real + gatilhos
+  // flutuantes (histórico/calculadora) + kebab, todos num único flex — `margin-left: auto` cola o
+  // grupo na borda direita tanto ao lado de `&__voltar` quanto sozinho numa segunda linha (o
+  // kebab não fica mais isolado grudado na esquerda quando a fileira quebra). No mobile o próprio
+  // grupo quebra internamente se não couber — defensivo pro selo "tempo real offline"
+  // (`app-indicador-tempo-real`, só aparece após ~1,5s desconectado) não espremer os botões.
+  &__acoes {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+
+    @include bp.mobile {
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
     }
   }
 

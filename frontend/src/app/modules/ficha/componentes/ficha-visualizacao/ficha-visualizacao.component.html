@@ -1100,16 +1100,6 @@
         <button
           type="button"
           class="ficha-status__aba"
-          data-aba-status="historico"
-          [class.ficha-status__aba--ativa]="abaStatusAtiva() === 'historico'"
-          (click)="selecionarAbaStatus('historico')"
-        >
-          <app-icone class="ficha-status__aba-icone" [nome]="'rolagens'" />
-          <span class="ficha-status__aba-texto">Histórico</span>
-        </button>
-        <button
-          type="button"
-          class="ficha-status__aba"
           data-aba-status="extras"
           [class.ficha-status__aba--ativa]="abaStatusAtiva() === 'extras'"
           (click)="selecionarAbaStatus('extras')"
@@ -1311,11 +1301,6 @@
           />
         </div>
         }
-        @if (abaStatusAtiva() === 'historico') {
-        <div class="ficha-status__conteudo">
-          <app-ficha-historico [fichaId]="fichaId()" [novaRolagem]="ultimaRolagemRegistrada()" />
-        </div>
-        }
         @if (abaStatusAtiva() === 'extras') {
         <div class="ficha-status__conteudo ficha-extras">
           <!-- Origem (m3-41/m3-49): apresentação — a mecânica (efeito no cálculo) já roda na m3-41. -->
@@ -1437,7 +1422,7 @@
   <!-- Navegação inferior (m3-60) — só no mobile. Fica FORA de `__painel--solo` de propósito: esse
        bloco tem `animation` com `transform`, e um ancestral com transform vira containing block de
        descendente `position: fixed`, o que faria a barra "pular" nos 160ms da animação de entrada.
-       `flex: 1 1 0` (padrão da barra da calculadora) faz os sete destinos dividirem a largura em
+       `flex: 1 1 0` (padrão da barra da calculadora) faz os destinos dividirem a largura em
        partes iguais e caberem sem rolagem horizontal — foi a rolagem lateral, com `flex: 0 0 auto`,
        que cortava rótulo na m3-56. -->
   <nav class="ficha-nav" #navMobile aria-label="Seções da ficha">

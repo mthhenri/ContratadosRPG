@@ -9,6 +9,10 @@
 }
 
 .calc-flutuante {
+  // Gatilho (m3-61): no desktop é flutuante — círculo fixo no canto inferior direito, com o
+  // gatilho do histórico de rolagens (`HistoricoRolagensSidebar`) empilhado logo acima. No
+  // mobile volta a ser um botão inline no cabeçalho da ficha, ao lado daquele (ver
+  // `@include bp.mobile` abaixo) — os dois precisam viver juntos no DOM (ver `visualizar.page.html`).
   &__gatilho {
     position: fixed;
     right: 24px;
@@ -27,10 +31,33 @@
     border-radius: 50%;
     cursor: pointer;
     box-shadow: 0 8px 20px rgb(0 0 0 / 40%);
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
 
     &:hover {
       border-color: var(--accent-border);
       background: var(--surface-2);
+    }
+
+    // Mobile: inline no cabeçalho, ao lado do gatilho do histórico — flutuante nessa faixa
+    // colidiria com a barra de navegação inferior (m3-60) e com a bandeja de dados.
+    @include bp.mobile {
+      position: static;
+      right: auto;
+      bottom: auto;
+      z-index: auto;
+      flex: none;
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
+      font-size: 15px;
+      color: var(--text-dim);
+      background: transparent;
+      border-radius: var(--radius-control);
+      box-shadow: none;
+
+      &:hover {
+        color: var(--text);
+        background: var(--surface-2);
+      }
     }
   }
 
