@@ -25,6 +25,18 @@
 
     <app-indicador-tempo-real />
 
+    @if (ficha()) {
+      <app-historico-rolagens-sidebar
+        titulo="Histórico de Rolagens"
+        [itens]="historicoRolagens()"
+        [carregando]="historicoCarregando()"
+        [carregandoMais]="historicoCarregandoMais()"
+        [temMais]="historicoTemMais()"
+        [mostrarFicha]="false"
+        (carregarMais)="carregarMaisHistorico()"
+      />
+    }
+
     @if (ficha() && podeGerenciar()) {
       <div class="ficha-pagina__menu-container">
         <button
@@ -141,6 +153,7 @@
       [abaStatusInicial]="abaStatusInicial"
       (abaStatusMudou)="mudarAbaStatus($event)"
       [destinoMobileInicial]="destinoMobileInicial"
+      (rolagemRegistrada)="onRolagemRegistrada($event)"
       (ajusteVitalidade)="ajustarVitalidade($event)"
       (ajusteDerivado)="ajustarDerivado($event)"
       (ajusteResistencia)="ajustarResistencia($event)"

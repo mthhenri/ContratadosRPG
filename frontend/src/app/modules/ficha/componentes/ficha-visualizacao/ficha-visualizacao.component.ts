@@ -874,6 +874,14 @@ export class FichaVisualizacao {
   protected readonly ultimaRolagemRegistrada = signal<RolagemResumoDto | null>(null);
 
   /**
+   * Mesma rolagem de `ultimaRolagemRegistrada`, emitida como evento — alimenta a barra lateral de
+   * histórico (`HistoricoRolagensSidebar`, no cabeçalho de `FichaVisualizar`) com prepend local,
+   * já que ela não é um descendente desta árvore (vive no cabeçalho da página, visível em
+   * qualquer aba) e não pode ler o signal `protected` direto.
+   */
+  readonly rolagemRegistrada = output<RolagemResumoDto>();
+
+  /**
    * Persiste uma rolagem executada nesta ficha (m3-27) — fire-and-forget, otimista (o resultado já
    * está na bandeja antes desta chamada terminar). Chamado tanto pelos rolagens diretas daqui
    * (`rolarTesteAtributo`/`rolarDano`) quanto pelo `(rolagemFeita)` dos componentes controlados
@@ -890,7 +898,10 @@ export class FichaVisualizacao {
         resultado: entrada.resultado,
       })
       .subscribe({
-        next: (rolagemRegistrada) => this.ultimaRolagemRegistrada.set(rolagemRegistrada),
+        next: (rolagemRegistrada) => {
+          this.ultimaRolagemRegistrada.set(rolagemRegistrada);
+          this.rolagemRegistrada.emit(rolagemRegistrada);
+        },
         error: () => undefined,
       });
   }

@@ -11,9 +11,9 @@ import {
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
+import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
-import { ResultadoRolagem } from '../../../../shared/resultado-rolagem/resultado-rolagem.component';
 import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
@@ -80,7 +80,7 @@ interface ItemFicha {
     ReactiveFormsModule,
     Icone,
     OverflowFade,
-    ResultadoRolagem,
+    HistoricoRolagensSidebar,
     IndicadorTempoReal,
     FichaCriarDialog,
     HoldRepeat,
