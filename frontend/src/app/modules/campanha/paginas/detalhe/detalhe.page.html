@@ -423,6 +423,16 @@
       class="detalhe__ficha-menu-item"
       type="button"
       role="menuitem"
+      [disabled]="removendo() === menuAberto.id"
+      (click)="removerDaCampanha(menuAberto.id)"
+    >
+      <app-icone nome="voltar" />
+      <span>{{ removendo() === menuAberto.id ? 'Removendo…' : 'Remover da campanha' }}</span>
+    </button>
+    <button
+      class="detalhe__ficha-menu-item"
+      type="button"
+      role="menuitem"
       (click)="pedirExcluirFicha(menuAberto.id, menuAberto.nome)"
     >
       <app-icone nome="excluir" />

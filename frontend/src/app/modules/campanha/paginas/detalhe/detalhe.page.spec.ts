@@ -86,6 +86,7 @@ describe('CampanhaDetalhe', () => {
         of({ id: 100, campanhaId: CAMPANHA_ID, usuarioId: opts.usuarioId, nome: `Clone de ${id} (cópia)` }),
       ),
       excluirFicha: vi.fn(() => of(undefined)),
+      atribuirCampanha: vi.fn((id: number) => of({ id, campanhaId: null })),
     };
     const rolagemService = {
       listarPorCampanha: vi.fn(() => of(opts.rolagens ?? [])),
@@ -792,10 +793,10 @@ describe('CampanhaDetalhe', () => {
       });
     });
 
-    // m3-52: menu de ações (kebab) no mini-card — Duplicar/Excluir, cada um com dialog de
-    // confirmação própria (mesmo padrão do menu do cabeçalho de FichaVisualizar). A ação em si só
-    // no painel da campanha (a m3-28/acervo ainda não existe).
-    describe('menu de ações da ficha (m3-52) — Duplicar/Excluir', () => {
+    // m3-52: menu de ações (kebab) no mini-card — Duplicar/Remover da campanha/Excluir, cada um
+    // com dialog de confirmação própria (mesmo padrão do menu do cabeçalho de FichaVisualizar),
+    // exceto "Remover da campanha", ação direta sem dialog (mesmo padrão de `FichaAcervo`).
+    describe('menu de ações da ficha (m3-52) — Duplicar/Remover da campanha/Excluir', () => {
       function abrirMenu(raiz: HTMLElement, fixture: ReturnType<typeof montar>['fixture'], rotulo: string) {
         (raiz.querySelector(`[aria-label="Ações de ${rotulo}"]`) as HTMLButtonElement).click();
         fixture.detectChanges();
@@ -857,12 +858,26 @@ describe('CampanhaDetalhe', () => {
         });
       });
 
+      describe('remover da campanha', () => {
+        it('chama FichaService.atribuirCampanha(id, null) direto, sem dialog, e some o mini-card na hora', () => {
+          const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+          abrirMenu(raiz, fixture, 'Vera');
+
+          (raiz.querySelectorAll('.detalhe__ficha-menu-item')[1] as HTMLButtonElement).click();
+          fixture.detectChanges();
+
+          expect(fichaService.atribuirCampanha).toHaveBeenCalledWith(4, null);
+          expect(raiz.querySelector('.dialogo')).toBeNull();
+          expect(raiz.textContent).not.toContain('Vera');
+        });
+      });
+
       describe('excluir', () => {
         it('abre a dialog de confirmação com o nome da ficha', () => {
           const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
           abrirMenu(raiz, fixture, 'Vera');
 
-          (raiz.querySelectorAll('.detalhe__ficha-menu-item')[1] as HTMLButtonElement).click();
+          (raiz.querySelectorAll('.detalhe__ficha-menu-item')[2] as HTMLButtonElement).click();
           fixture.detectChanges();
 
           const dialog = raiz.querySelector('.dialogo');
@@ -874,7 +889,7 @@ describe('CampanhaDetalhe', () => {
         it('cancelar fecha a dialog sem chamar o serviço', () => {
           const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
           abrirMenu(raiz, fixture, 'Vera');
-          (raiz.querySelectorAll('.detalhe__ficha-menu-item')[1] as HTMLButtonElement).click();
+          (raiz.querySelectorAll('.detalhe__ficha-menu-item')[2] as HTMLButtonElement).click();
           fixture.detectChanges();
 
           (raiz.querySelector('.dialogo .botao--secundario') as HTMLButtonElement).click();
@@ -887,7 +902,7 @@ describe('CampanhaDetalhe', () => {
         it('confirmar chama FichaService.excluirFicha e remove o mini-card na hora', () => {
           const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
           abrirMenu(raiz, fixture, 'Vera');
-          (raiz.querySelectorAll('.detalhe__ficha-menu-item')[1] as HTMLButtonElement).click();
+          (raiz.querySelectorAll('.detalhe__ficha-menu-item')[2] as HTMLButtonElement).click();
           fixture.detectChanges();
 
           (raiz.querySelector('.dialogo .botao--primario') as HTMLButtonElement).click();

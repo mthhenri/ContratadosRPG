@@ -185,6 +185,8 @@ export class CampanhaDetalhe {
   protected readonly confirmandoExcluirFicha = signal<{ id: number; nome: string } | null>(null);
   /** `id` da ficha cuja exclusão está em voo (m3-52) — desabilita só os botões daquela dialog. */
   protected readonly excluindoFicha = signal<number | null>(null);
+  /** `id` da ficha sendo desatribuída (ação direta, sem dialog) — desabilita só aquele item. */
+  protected readonly removendo = signal<number | null>(null);
 
   /** Donos com o disclosure de fichas expandido no mobile (ignorado no desktop — sempre aberto). */
   protected readonly fichasExpandidas = signal<ReadonlySet<number>>(new Set());
@@ -735,6 +737,29 @@ export class CampanhaDetalhe {
         next: () => {
           this.confirmandoDuplicar.set(null);
           this.recarregarMembrosEFichas();
+        },
+      });
+  }
+
+  /**
+   * Desatribui a ficha da campanha (ela volta ao acervo solto do dono, m3-28) — ação direta, sem
+   * dialog, mesmo padrão de `FichaAcervo.removerDaCampanha`. Permissão já garantida pelo backend
+   * (`validarPermissaoEdicao` — dono ou mestre, mesma regra de `podeAjustarFicha` que já esconde o
+   * kebab); some da lista na hora, sem refetch, já que esta tela só lista fichas **desta**
+   * campanha (`listarFichas(this.id)`).
+   */
+  protected removerDaCampanha(fichaId: number): void {
+    this.fecharMenuFicha();
+    if (this.removendo() !== null) {
+      return;
+    }
+    this.removendo.set(fichaId);
+    this.fichaService
+      .atribuirCampanha(fichaId, null)
+      .pipe(finalize(() => this.removendo.set(null)))
+      .subscribe({
+        next: () => {
+          this.fichas.update((lista) => lista.filter((ficha) => ficha.id !== fichaId));
         },
       });
   }
