@@ -39,6 +39,29 @@
     }
   }
 
+  // Esqueleto de carregamento — grade de silhuetas de cartão (nome + meta + rodapé com chip),
+  // mesma forma dos cartões reais, evitando o "flash" seco de texto "Carregando…" antes da lista.
+  &__esqueleto {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--gap-grid);
+  }
+
+  &__esqueleto-cartao {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 18px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+  }
+
+  &__esqueleto-rodape {
+    display: flex;
+    margin-top: auto;
+  }
+
   // Grade de cartões, rolável com fade topo/base — mesmo padrão de `CampanhaLista` (m2-17).
   &__lista {
     list-style: none;
@@ -342,6 +365,50 @@
   &:disabled {
     opacity: 0.55;
     cursor: default;
+  }
+}
+
+// Blocos de esqueleto — reusados por qualquer estado de carregamento (proibição #29: só tokens).
+.esqueleto-bloco {
+  display: block;
+  border-radius: var(--radius-control);
+  background: var(--border-strong);
+  animation: esqueleto-pulso 1.4s ease-in-out infinite;
+
+  &--titulo {
+    width: 65%;
+    max-width: 180px;
+    height: 16px;
+  }
+
+  &--linha {
+    width: 100%;
+    height: 12px;
+
+    &.esqueleto-bloco--curta {
+      width: 55%;
+    }
+  }
+
+  &--chip {
+    width: 100px;
+    height: 20px;
+  }
+}
+
+@keyframes esqueleto-pulso {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .esqueleto-bloco {
+    animation: none;
   }
 }
 

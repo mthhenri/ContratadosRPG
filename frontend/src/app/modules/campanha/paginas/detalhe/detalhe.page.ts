@@ -22,6 +22,7 @@ import { FichaService } from '../../../ficha/ficha.service';
 import { construirFichaInicial, type FichaAssistenteResultado } from '../../../ficha/ficha-padrao';
 import { FichaCriarDialog } from '../../../ficha/componentes/ficha-criar-dialog/ficha-criar-dialog.component';
 import { rotuloClasseCompleto } from '../../../ficha/rotulos-ficha';
+import { rotuloPatente } from '../../../ficha/status-derivado';
 import { CONDICOES_FICHA, type DescritorCondicao } from '../../../ficha/condicoes-ficha';
 import { clamparVitalidade, type CampoVitalidadeAtual } from '../../../ficha/ajuste-vitalidade';
 import { FichaVitalidadeRapidaService } from '../../../ficha/ficha-vitalidade-rapida.service';
@@ -57,6 +58,20 @@ interface ItemFicha {
    * antes do dono/mestre lembrar de marcar o checkbox).
    */
   readonly critico: boolean;
+  /** Patente legível, derivada do Prestígio no cliente (`rotuloPatente` — mesma fórmula da ficha completa). */
+  readonly patenteTexto: string;
+  /** Defesa/Esquiva/Bloqueio — `undefined` numa ficha sem `derivados` salvo ou de classe Civil (não os possui). */
+  readonly defesa?: number;
+  readonly esquiva?: number;
+  readonly bloqueio?: number;
+  /**
+   * Personalidade + nome da Origem (m3-23) já combinados para exibição ("Frio · Guarda-Costas") —
+   * `null` quando nenhum dos dois está definido (ficha sem Identidade ainda), pra esconder a linha
+   * inteira em vez de deixar um traço solto.
+   */
+  readonly identidadeTexto: string | null;
+  /** Peso do inventário acima do Inventário Máximo (aviso do backend — ver nota em `FichaResumoDto`). */
+  readonly sobrecarregado: boolean;
 }
 
 /**
@@ -185,6 +200,8 @@ export class CampanhaDetalhe {
   protected readonly confirmandoExcluirFicha = signal<{ id: number; nome: string } | null>(null);
   /** `id` da ficha cuja exclusão está em voo (m3-52) — desabilita só os botões daquela dialog. */
   protected readonly excluindoFicha = signal<number | null>(null);
+  /** `id` da ficha sendo desatribuída (ação direta, sem dialog) — desabilita só aquele item. */
+  protected readonly removendo = signal<number | null>(null);
 
   /** Donos com o disclosure de fichas expandido no mobile (ignorado no desktop — sempre aberto). */
   protected readonly fichasExpandidas = signal<ReadonlySet<number>>(new Set());
@@ -259,6 +276,12 @@ export class CampanhaDetalhe {
         energiaMaxima: ficha.energiaMaxima,
         condicoes: CONDICOES_FICHA.map((condicao) => ({ ...condicao, ativa: ficha[condicao.chave] })),
         critico: ficha.vidaAtual <= 0,
+        patenteTexto: rotuloPatente(ficha.prestigio ?? 0),
+        defesa: ficha.defesa,
+        esquiva: ficha.esquiva,
+        bloqueio: ficha.bloqueio,
+        identidadeTexto: [ficha.personalidade, ficha.origemNome].filter(Boolean).join(' · ') || null,
+        sobrecarregado: ficha.sobrecarregado ?? false,
       };
       const listaDoDono = mapa.get(ficha.usuarioId);
       if (listaDoDono) {
@@ -695,6 +718,19 @@ export class CampanhaDetalhe {
     this.menuFichaAberto.set({ id: ficha.id, nome: ficha.nome, donoNome });
   }
 
+  /**
+   * Duplo clique em qualquer ponto "morto" do mini-card (fora dos controles próprios — link,
+   * passos de Vida/Energia, kebab) abre a ficha, mesmo destino do link do nome/meta. `closest`
+   * ignora o duplo clique que caiu num desses controles (ex.: martelar o "+" de Vida) — cada um já
+   * tem sua própria ação, não deveria também navegar.
+   */
+  protected abrirFichaDuploClique(campanhaId: number, fichaId: number, evento: MouseEvent): void {
+    if ((evento.target as HTMLElement).closest('a, button')) {
+      return;
+    }
+    void this.router.navigate(['/painel', campanhaId, 'ficha', fichaId]);
+  }
+
   /** Fecha o menu de ações de ficha aberto. */
   protected fecharMenuFicha(): void {
     this.menuFichaAberto.set(null);
@@ -735,6 +771,29 @@ export class CampanhaDetalhe {
         next: () => {
           this.confirmandoDuplicar.set(null);
           this.recarregarMembrosEFichas();
+        },
+      });
+  }
+
+  /**
+   * Desatribui a ficha da campanha (ela volta ao acervo solto do dono, m3-28) — ação direta, sem
+   * dialog, mesmo padrão de `FichaAcervo.removerDaCampanha`. Permissão já garantida pelo backend
+   * (`validarPermissaoEdicao` — dono ou mestre, mesma regra de `podeAjustarFicha` que já esconde o
+   * kebab); some da lista na hora, sem refetch, já que esta tela só lista fichas **desta**
+   * campanha (`listarFichas(this.id)`).
+   */
+  protected removerDaCampanha(fichaId: number): void {
+    this.fecharMenuFicha();
+    if (this.removendo() !== null) {
+      return;
+    }
+    this.removendo.set(fichaId);
+    this.fichaService
+      .atribuirCampanha(fichaId, null)
+      .pipe(finalize(() => this.removendo.set(null)))
+      .subscribe({
+        next: () => {
+          this.fichas.update((lista) => lista.filter((ficha) => ficha.id !== fichaId));
         },
       });
   }

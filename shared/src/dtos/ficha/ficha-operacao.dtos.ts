@@ -93,6 +93,27 @@ export interface FichaResumoDto {
   readonly morrendo: boolean;
   readonly machucado: boolean;
   readonly inconsciente: boolean;
+  /** Prestígio — alimenta a Patente exibida no mini-card (`rotuloPatente`, calculada no cliente). */
+  readonly prestigio?: number;
+  /**
+   * Defesa/Esquiva/Bloqueio — derivados persistidos (`FichaDerivadosDto`, m3-10), lidos direto do
+   * JSONB sem fallback calculado (o resumo não tem atributos/habilidades para recalcular ao vivo).
+   * `undefined` numa ficha sem `derivados` salvo (retrocompat) ou cuja classe não os possui (Civil).
+   */
+  readonly defesa?: number;
+  readonly esquiva?: number;
+  readonly bloqueio?: number;
+  /** Personalidade e nome da Origem (`FichaIdentidadeDto`, m3-23) — `null`/ausente sem Identidade definida. */
+  readonly personalidade?: string | null;
+  readonly origemNome?: string | null;
+  /**
+   * `true` quando o peso do inventário excede o Inventário Máximo (aviso, não trava —
+   * `sistema-v4.1.0.md`). Aproximação em SQL: soma bruta `peso × quantidade` dos itens, sem o ajuste
+   * fino de modificações/amplificadores/guardado-vestido que a aba Inventário aplica
+   * (`calcularResumoCompras`) — suficiente para o aviso do mini-card; a aba de Inventário continua a
+   * fonte exata. `undefined` numa ficha sem `derivados.inventarioMaximo` salvo (retrocompat).
+   */
+  readonly sobrecarregado?: boolean;
 }
 
 /**

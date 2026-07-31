@@ -86,6 +86,7 @@ describe('CampanhaDetalhe', () => {
         of({ id: 100, campanhaId: CAMPANHA_ID, usuarioId: opts.usuarioId, nome: `Clone de ${id} (cópia)` }),
       ),
       excluirFicha: vi.fn(() => of(undefined)),
+      atribuirCampanha: vi.fn((id: number) => of({ id, campanhaId: null })),
     };
     const rolagemService = {
       listarPorCampanha: vi.fn(() => of(opts.rolagens ?? [])),
@@ -315,6 +316,13 @@ describe('CampanhaDetalhe', () => {
         morrendo: true,
         machucado: false,
         inconsciente: false,
+        prestigio: 5,
+        defesa: 12,
+        esquiva: 15,
+        bloqueio: 14,
+        personalidade: 'Frio',
+        origemNome: 'Guarda-Costas',
+        sobrecarregado: true,
       },
       {
         id: 4,
@@ -526,6 +534,66 @@ describe('CampanhaDetalhe', () => {
 
       const primeiraFichaLink = raiz.querySelector('.detalhe__ficha-link') as HTMLAnchorElement;
       expect(primeiraFichaLink.getAttribute('href')).toBe(`/painel/${CAMPANHA_ID}/ficha/3`);
+    });
+
+    it('duplo clique no cartão abre a ficha', () => {
+      const { raiz, navegar } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      const cartao = raiz.querySelector('.detalhe__ficha-card') as HTMLElement;
+      cartao.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+
+      expect(navegar).toHaveBeenCalledWith(['/painel', CAMPANHA_ID, 'ficha', 3]);
+    });
+
+    it('duplo clique num controle próprio (passo de Vida/Energia) não navega', () => {
+      const { raiz, navegar } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      const passo = raiz.querySelector('.detalhe__ficha-passo') as HTMLElement;
+      passo.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+
+      expect(navegar).not.toHaveBeenCalled();
+    });
+
+    // Patente/Defesa-Esquiva-Bloqueio/Personalidade-Origem/Sobrecarregado: informações extras do
+    // mini-card compacto, lidas do recorte de `FichaResumoDto` (prestígio/derivados/identidade).
+    it('mostra a Patente derivada do Prestígio na meta', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      const cartao = raiz.querySelector('.detalhe__ficha-card') as HTMLElement;
+      expect(cartao.textContent).toContain('Operador');
+    });
+
+    it('mostra Defesa/Esquiva/Bloqueio quando presentes', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      const reacoes = raiz.querySelector('.detalhe__ficha-reacoes');
+      expect(reacoes?.textContent).toContain('Defesa 12');
+      expect(reacoes?.textContent).toContain('Esquiva 15');
+      expect(reacoes?.textContent).toContain('Bloqueio 14');
+    });
+
+    it('mostra Personalidade/Origem combinadas e esconde a linha quando ausentes', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      const cartoes = Array.from(raiz.querySelectorAll('.detalhe__ficha-card'));
+      const kane = cartoes.find((c) => c.textContent?.includes('Kane'));
+      expect(kane?.querySelector('.detalhe__ficha-identidade')?.textContent).toContain(
+        'Frio · Guarda-Costas',
+      );
+
+      // Vera (fixture) não tem prestígio/identidade — a linha some, sem "·" solto.
+      const vera = cartoes.find((c) => c.textContent?.includes('Vera'));
+      expect(vera?.querySelector('.detalhe__ficha-identidade')).toBeNull();
+    });
+
+    it('mostra o aviso de Sobrecarregado só na ficha marcada', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      const cartoes = Array.from(raiz.querySelectorAll('.detalhe__ficha-card'));
+      const kane = cartoes.find((c) => c.textContent?.includes('Kane'));
+      const vera = cartoes.find((c) => c.textContent?.includes('Vera'));
+      expect(kane?.querySelector('[data-condicao="sobrecarregado"]')).not.toBeNull();
+      expect(vera?.querySelector('[data-condicao="sobrecarregado"]')).toBeNull();
     });
 
     it('alterna o disclosure de fichas do membro (efeito só visual no mobile)', () => {
@@ -792,10 +860,10 @@ describe('CampanhaDetalhe', () => {
       });
     });
 
-    // m3-52: menu de ações (kebab) no mini-card — Duplicar/Excluir, cada um com dialog de
-    // confirmação própria (mesmo padrão do menu do cabeçalho de FichaVisualizar). A ação em si só
-    // no painel da campanha (a m3-28/acervo ainda não existe).
-    describe('menu de ações da ficha (m3-52) — Duplicar/Excluir', () => {
+    // m3-52: menu de ações (kebab) no mini-card — Duplicar/Remover da campanha/Excluir, cada um
+    // com dialog de confirmação própria (mesmo padrão do menu do cabeçalho de FichaVisualizar),
+    // exceto "Remover da campanha", ação direta sem dialog (mesmo padrão de `FichaAcervo`).
+    describe('menu de ações da ficha (m3-52) — Duplicar/Remover da campanha/Excluir', () => {
       function abrirMenu(raiz: HTMLElement, fixture: ReturnType<typeof montar>['fixture'], rotulo: string) {
         (raiz.querySelector(`[aria-label="Ações de ${rotulo}"]`) as HTMLButtonElement).click();
         fixture.detectChanges();
@@ -857,12 +925,26 @@ describe('CampanhaDetalhe', () => {
         });
       });
 
+      describe('remover da campanha', () => {
+        it('chama FichaService.atribuirCampanha(id, null) direto, sem dialog, e some o mini-card na hora', () => {
+          const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+          abrirMenu(raiz, fixture, 'Vera');
+
+          (raiz.querySelectorAll('.detalhe__ficha-menu-item')[1] as HTMLButtonElement).click();
+          fixture.detectChanges();
+
+          expect(fichaService.atribuirCampanha).toHaveBeenCalledWith(4, null);
+          expect(raiz.querySelector('.dialogo')).toBeNull();
+          expect(raiz.textContent).not.toContain('Vera');
+        });
+      });
+
       describe('excluir', () => {
         it('abre a dialog de confirmação com o nome da ficha', () => {
           const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
           abrirMenu(raiz, fixture, 'Vera');
 
-          (raiz.querySelectorAll('.detalhe__ficha-menu-item')[1] as HTMLButtonElement).click();
+          (raiz.querySelectorAll('.detalhe__ficha-menu-item')[2] as HTMLButtonElement).click();
           fixture.detectChanges();
 
           const dialog = raiz.querySelector('.dialogo');
@@ -874,7 +956,7 @@ describe('CampanhaDetalhe', () => {
         it('cancelar fecha a dialog sem chamar o serviço', () => {
           const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
           abrirMenu(raiz, fixture, 'Vera');
-          (raiz.querySelectorAll('.detalhe__ficha-menu-item')[1] as HTMLButtonElement).click();
+          (raiz.querySelectorAll('.detalhe__ficha-menu-item')[2] as HTMLButtonElement).click();
           fixture.detectChanges();
 
           (raiz.querySelector('.dialogo .botao--secundario') as HTMLButtonElement).click();
@@ -887,7 +969,7 @@ describe('CampanhaDetalhe', () => {
         it('confirmar chama FichaService.excluirFicha e remove o mini-card na hora', () => {
           const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
           abrirMenu(raiz, fixture, 'Vera');
-          (raiz.querySelectorAll('.detalhe__ficha-menu-item')[1] as HTMLButtonElement).click();
+          (raiz.querySelectorAll('.detalhe__ficha-menu-item')[2] as HTMLButtonElement).click();
           fixture.detectChanges();
 
           (raiz.querySelector('.dialogo .botao--primario') as HTMLButtonElement).click();

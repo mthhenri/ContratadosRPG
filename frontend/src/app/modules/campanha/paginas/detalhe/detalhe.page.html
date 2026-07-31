@@ -1,13 +1,28 @@
 <section class="detalhe">
   @if (carregando()) {
-    <article class="card detalhe__esqueleto-card" role="status" aria-label="Carregando campanha">
-      <div class="detalhe__esqueleto">
-        <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
-        <span class="esqueleto-bloco esqueleto-bloco--convite"></span>
-        <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
-        <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
-      </div>
-    </article>
+    <div class="detalhe__grade" role="status" aria-label="Carregando campanha">
+      <article class="card detalhe__esqueleto-card">
+        <div class="detalhe__esqueleto">
+          <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
+          <span class="esqueleto-bloco esqueleto-bloco--convite"></span>
+          <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+          <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+        </div>
+      </article>
+      <article class="card detalhe__esqueleto-equipe">
+        <div class="detalhe__esqueleto-secao">
+          <span class="esqueleto-bloco esqueleto-bloco--rotulo"></span>
+        </div>
+        <div class="detalhe__esqueleto-membros">
+          @for (i of [0, 1, 2]; track i) {
+            <div class="detalhe__esqueleto-membro">
+              <span class="esqueleto-bloco esqueleto-bloco--avatar"></span>
+              <span class="esqueleto-bloco esqueleto-bloco--nome"></span>
+            </div>
+          }
+        </div>
+      </article>
+    </div>
   } @else if (campanha(); as campanhaAtual) {
     <div class="detalhe__grade">
     <!-- Coluna lateral: identidade, descrição, convite e ações de mestre (m2-17 — era tudo um
@@ -213,7 +228,11 @@
                 >
                   @for (ficha of fichasDoMembro(membro.usuarioId); track ficha.id) {
                     <li>
-                      <div class="detalhe__ficha-card" [class.detalhe__ficha-card--critico]="ficha.critico">
+                      <div
+                        class="detalhe__ficha-card"
+                        [class.detalhe__ficha-card--critico]="ficha.critico"
+                        (dblclick)="abrirFichaDuploClique(campanhaAtual.id, ficha.id, $event)"
+                      >
                         <a
                           class="detalhe__ficha-link"
                           [routerLink]="['/painel', campanhaAtual.id, 'ficha', ficha.id]"
@@ -221,6 +240,15 @@
                           <div class="detalhe__ficha-topo">
                             <span class="detalhe__ficha-nome">{{ ficha.nome }}</span>
                             <span class="detalhe__ficha-condicoes">
+                              @if (ficha.sobrecarregado) {
+                                <app-icone
+                                  nome="alerta"
+                                  class="detalhe__ficha-condicao detalhe__ficha-condicao--ativa"
+                                  data-condicao="sobrecarregado"
+                                  aria-label="Sobrecarregado (inventário acima do máximo)"
+                                  title="Sobrecarregado"
+                                />
+                              }
                               @for (condicao of ficha.condicoes; track condicao.chave) {
                                 <app-icone
                                   [nome]="condicao.icone"
@@ -233,7 +261,12 @@
                               }
                             </span>
                           </div>
-                          <span class="detalhe__ficha-meta">{{ ficha.classeTexto }} · Nível {{ ficha.nivel }}</span>
+                          <span class="detalhe__ficha-meta">
+                            {{ ficha.classeTexto }} · Nível {{ ficha.nivel }} · {{ ficha.patenteTexto }}
+                          </span>
+                          @if (ficha.identidadeTexto) {
+                            <span class="detalhe__ficha-identidade">{{ ficha.identidadeTexto }}</span>
+                          }
                         </a>
                         <div class="detalhe__ficha-vitais">
                           <span class="detalhe__ficha-vital detalhe__ficha-vital--vida">
@@ -280,6 +313,19 @@
                             }
                           </span>
                         </div>
+                        @if (ficha.defesa !== undefined || ficha.esquiva !== undefined || ficha.bloqueio !== undefined) {
+                          <div class="detalhe__ficha-reacoes">
+                            @if (ficha.defesa !== undefined) {
+                              <span>Defesa {{ ficha.defesa }}</span>
+                            }
+                            @if (ficha.esquiva !== undefined) {
+                              <span>Esquiva {{ ficha.esquiva }}</span>
+                            }
+                            @if (ficha.bloqueio !== undefined) {
+                              <span>Bloqueio {{ ficha.bloqueio }}</span>
+                            }
+                          </div>
+                        }
                         @if (podeAjustarFicha(membro.usuarioId)) {
                           <div class="detalhe__ficha-acoes">
                             <button
@@ -418,6 +464,16 @@
     >
       <app-icone nome="duplicar" />
       <span>Duplicar ficha</span>
+    </button>
+    <button
+      class="detalhe__ficha-menu-item"
+      type="button"
+      role="menuitem"
+      [disabled]="removendo() === menuAberto.id"
+      (click)="removerDaCampanha(menuAberto.id)"
+    >
+      <app-icone nome="voltar" />
+      <span>{{ removendo() === menuAberto.id ? 'Removendo…' : 'Remover da campanha' }}</span>
     </button>
     <button
       class="detalhe__ficha-menu-item"
