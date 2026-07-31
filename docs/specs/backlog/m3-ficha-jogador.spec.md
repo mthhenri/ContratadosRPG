@@ -51,6 +51,18 @@
 > layouts). Implementar uma por vez, movendo cada spec `backlog/ → active/ → done/` e atualizando
 > `CONTEXT.md` (fluxo padrão). `m3-27`/`m3-28` seguem à frente na fila.
 >
+> **Cor e imagem de ficha (`m3-61`, `m3-62`)** — duas tasks novas, independentes entre si e do
+> lote de refino acima: `m3-61` dá a cada ficha uma **cor de identidade** (coluna relacional
+> nova, ao lado de `nome`) que tinge as rolagens daquele personagem na bandeja, no histórico e
+> no feed "Rolagens Recentes" do painel de campanha — sem colidir com o `--accent` (esse é a
+> cor de tema **por usuário**, do seletor M1; a cor de ficha é um token novo,
+> `--cor-ficha`). `m3-62` dá upload de **avatar**, guardando só o caminho/URL numa coluna
+> nova (`imagem_url`) — o binário nunca entra no Postgres; o provedor de blob storage de
+> produção é **decisão adiada pelo autor**, então a task entrega uma interface de
+> armazenamento com implementação em disco local por ora. As duas também entram no momento da
+> **criação** da ficha (`FichaCriarDialog` hoje; Passo 01 // BASE do guia quando `m3-57`
+> existir — ver nota na spec da `m3-57`).
+
 > **Guia de criação de ficha (`m3-57`…`m3-59`)** — trio que substitui o assistente-dialog da `m3-16`
 > por uma **tela guiada por passos** (`/painel/:campanhaId/ficha/nova`), conduzindo o jogador pelas
 > escolhas de criação com as travas do documento: `m3-57` (tela, trilha de passos, rascunho em
