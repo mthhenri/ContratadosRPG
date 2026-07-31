@@ -90,9 +90,17 @@ export class FichaRepository extends BaseRepository {
    * compacto do detalhe da campanha): lidos direto do JSONB, sem recalcular nada (o resumo não tem
    * atributos/habilidades pra rodar `shared/regras` ao vivo) — `defesa`/`esquiva`/`bloqueio` vêm do
    * snapshot `derivados` (m3-10), `NULL` em ficha sem o bloco salvo ou classe Civil (não os possui).
-   * `sobrecarregado` é uma **aproximação** em SQL puro (soma bruta `peso × quantidade` dos itens via
-   * `jsonb_array_elements`, sem o ajuste fino de modificações/amplificadores/guardado-vestido que
-   * `calcularResumoCompras` aplica na aba Inventário) — suficiente pro aviso do mini-card.
+   * `sobrecarregado` é uma **aproximação** em SQL puro (soma `peso × quantidade` dos itens via
+   * `jsonb_array_elements`, sem o ajuste fino de modificações/amplificadores que `calcularResumoCompras`
+   * aplica na aba Inventário) — mas replica as duas exclusões que mudam se um item pesa ou não
+   * (`shared/regras/compras` `calcularTotaisCarrinho`, `ocupaPeso`): item de `ARMAZENAMENTO`
+   * **vestida** (`guardada = false`) amplia o inventário em vez de ocupar espaço nele, e item com
+   * `containerId` (m3-44 — dentro de um Pochete/Bolso de Corpo) pesa só contra a capacidade do
+   * container, não contra o inventário principal. Sem essas duas exclusões, uma mochila vestida ou
+   * o conteúdo de uma pochete inflava o peso somado e o mini-card acusava sobrecarga que não existe
+   * de verdade. O que a aproximação ainda não cobre (bônus de inventário do armazenamento vestido,
+   * peso de modificações, overload do próprio container) exigiria o catálogo de itens — fora do
+   * alcance de SQL puro; a aba Inventário continua a fonte exata.
    */
   private colunasResumo(): string {
     return `ficha.id,
@@ -119,6 +127,8 @@ export class FichaRepository extends BaseRepository {
                 ELSE COALESCE((
                   SELECT SUM((item->>'peso')::numeric * (item->>'quantidade')::numeric)
                   FROM jsonb_array_elements(ficha.dados->'inventario'->'itens') AS item
+                  WHERE item->>'containerId' IS NULL
+                    AND NOT (item->>'categoria' = 'ARMAZENAMENTO' AND (item->>'guardada')::boolean = false)
                 ), 0) > (ficha.dados->'derivados'->>'inventarioMaximo')::numeric
               END AS sobrecarregado`;
   }

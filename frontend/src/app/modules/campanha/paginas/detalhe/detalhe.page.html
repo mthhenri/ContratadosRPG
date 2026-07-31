@@ -232,6 +232,7 @@
                         class="detalhe__ficha-card"
                         [class.detalhe__ficha-card--critico]="ficha.critico"
                         (dblclick)="abrirFichaDuploClique(campanhaAtual.id, ficha.id, $event)"
+                        (auxclick)="abrirFichaCliqueDoMeio(campanhaAtual.id, ficha.id, $event)"
                       >
                         <a
                           class="detalhe__ficha-link"
@@ -313,31 +314,33 @@
                             }
                           </span>
                         </div>
-                        @if (ficha.defesa !== undefined || ficha.esquiva !== undefined || ficha.bloqueio !== undefined) {
-                          <div class="detalhe__ficha-reacoes">
-                            @if (ficha.defesa !== undefined) {
-                              <span>Defesa {{ ficha.defesa }}</span>
+                        @if (ficha.defesa !== undefined || ficha.esquiva !== undefined || ficha.bloqueio !== undefined || podeAjustarFicha(membro.usuarioId)) {
+                          <div class="detalhe__ficha-rodape">
+                            @if (ficha.defesa !== undefined || ficha.esquiva !== undefined || ficha.bloqueio !== undefined) {
+                              <div class="detalhe__ficha-reacoes">
+                                @if (ficha.defesa !== undefined) {
+                                  <span>Defesa {{ ficha.defesa }}</span>
+                                }
+                                @if (ficha.esquiva !== undefined) {
+                                  <span>Esquiva {{ ficha.esquiva }}</span>
+                                }
+                                @if (ficha.bloqueio !== undefined) {
+                                  <span>Bloqueio {{ ficha.bloqueio }}</span>
+                                }
+                              </div>
                             }
-                            @if (ficha.esquiva !== undefined) {
-                              <span>Esquiva {{ ficha.esquiva }}</span>
+                            @if (podeAjustarFicha(membro.usuarioId)) {
+                              <button
+                                class="detalhe__ficha-menu-botao"
+                                type="button"
+                                [attr.aria-label]="'Ações de ' + ficha.nome"
+                                aria-haspopup="menu"
+                                [attr.aria-expanded]="menuFichaAberto()?.id === ficha.id"
+                                (click)="alternarMenuFicha(ficha, membro.nome, $event)"
+                              >
+                                ⋯
+                              </button>
                             }
-                            @if (ficha.bloqueio !== undefined) {
-                              <span>Bloqueio {{ ficha.bloqueio }}</span>
-                            }
-                          </div>
-                        }
-                        @if (podeAjustarFicha(membro.usuarioId)) {
-                          <div class="detalhe__ficha-acoes">
-                            <button
-                              class="detalhe__ficha-menu-botao"
-                              type="button"
-                              [attr.aria-label]="'Ações de ' + ficha.nome"
-                              aria-haspopup="menu"
-                              [attr.aria-expanded]="menuFichaAberto()?.id === ficha.id"
-                              (click)="alternarMenuFicha(ficha, membro.nome, $event)"
-                            >
-                              ⋯
-                            </button>
                           </div>
                         }
                       </div>
