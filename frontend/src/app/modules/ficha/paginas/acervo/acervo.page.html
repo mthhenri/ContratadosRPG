@@ -17,7 +17,18 @@
     </div>
 
     @if (carregando()) {
-      <p class="acervo__estado">Carregando fichas…</p>
+      <div class="acervo__esqueleto" role="status" aria-label="Carregando fichas">
+        @for (i of [0, 1, 2]; track i) {
+          <div class="acervo__esqueleto-cartao">
+            <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
+            <span class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"></span>
+            <span class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"></span>
+            <div class="acervo__esqueleto-rodape">
+              <span class="esqueleto-bloco esqueleto-bloco--chip"></span>
+            </div>
+          </div>
+        }
+      </div>
     } @else if (itens().length === 0) {
       <p class="acervo__estado">
         <app-icone nome="agente" />

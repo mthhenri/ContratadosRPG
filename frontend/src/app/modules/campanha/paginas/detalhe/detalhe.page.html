@@ -1,13 +1,28 @@
 <section class="detalhe">
   @if (carregando()) {
-    <article class="card detalhe__esqueleto-card" role="status" aria-label="Carregando campanha">
-      <div class="detalhe__esqueleto">
-        <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
-        <span class="esqueleto-bloco esqueleto-bloco--convite"></span>
-        <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
-        <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
-      </div>
-    </article>
+    <div class="detalhe__grade" role="status" aria-label="Carregando campanha">
+      <article class="card detalhe__esqueleto-card">
+        <div class="detalhe__esqueleto">
+          <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
+          <span class="esqueleto-bloco esqueleto-bloco--convite"></span>
+          <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+          <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+        </div>
+      </article>
+      <article class="card detalhe__esqueleto-equipe">
+        <div class="detalhe__esqueleto-secao">
+          <span class="esqueleto-bloco esqueleto-bloco--rotulo"></span>
+        </div>
+        <div class="detalhe__esqueleto-membros">
+          @for (i of [0, 1, 2]; track i) {
+            <div class="detalhe__esqueleto-membro">
+              <span class="esqueleto-bloco esqueleto-bloco--avatar"></span>
+              <span class="esqueleto-bloco esqueleto-bloco--nome"></span>
+            </div>
+          }
+        </div>
+      </article>
+    </div>
   } @else if (campanha(); as campanhaAtual) {
     <div class="detalhe__grade">
     <!-- Coluna lateral: identidade, descrição, convite e ações de mestre (m2-17 — era tudo um

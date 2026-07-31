@@ -20,8 +20,9 @@
     }
   }
 
-  // Esqueleto de carregamento — mimetiza título + caixa de convite + linhas de membro, evitando
-  // o "flash" seco de texto "Carregando…" antes do conteúdo real.
+  // Esqueleto de carregamento — mimetiza a grade de duas colunas real (`&__grade`): identidade
+  // (título + caixa de convite + linhas) na coluna lateral e "Membros" (avatar + nome por linha)
+  // na coluna principal, em vez de deixá-la vazia enquanto só a identidade carregava.
   &__esqueleto {
     display: flex;
     flex-direction: column;
@@ -32,6 +33,27 @@
   // card carregado não vira uma faixa larga e vazia antes da grade de duas colunas assentar.
   &__esqueleto-card {
     max-width: 340px;
+  }
+
+  &__esqueleto-secao {
+    margin-bottom: 18px;
+  }
+
+  &__esqueleto-membros {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  // Mesma silhueta de `&__membro` (avatar + identidade), uma por linha.
+  &__esqueleto-membro {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
   }
 
   &__descricao {
@@ -1116,6 +1138,26 @@
 
   &--linha {
     height: 44px;
+  }
+
+  // Rótulo da seção "Membros" (título curto, mono, uppercase — mesma silhueta de `&__secao-titulo`).
+  &--rotulo {
+    width: 110px;
+    height: 12px;
+  }
+
+  // Avatar do esqueleto de membro — mesmo tamanho/raio do `&__avatar` real (32×32, não circular).
+  &--avatar {
+    width: 32px;
+    height: 32px;
+    flex: none;
+  }
+
+  // Nome do membro no esqueleto — barra fina ao lado do avatar (não o bloco cheio de `&--linha`).
+  &--nome {
+    flex: 1;
+    max-width: 160px;
+    height: 14px;
   }
 }
 
