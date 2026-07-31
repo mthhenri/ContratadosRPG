@@ -11,11 +11,11 @@ Permitir upload de uma imagem de avatar para a ficha. O binário **não** entra 
 só o caminho/URL da imagem persiste numa coluna nova; o arquivo em si fica num armazenamento
 externo ao banco.
 
-**Decisão adiada pelo autor:** qual provedor de blob storage usar em produção (Supabase
-Storage, Cloudflare R2 ou outro) ainda não foi escolhido. Esta task entrega uma **interface de
-armazenamento** com uma única implementação concreta por ora — disco local do backend —
-projetada para que trocar de provedor depois seja plugar uma segunda implementação atrás da
-mesma interface, sem tocar no resto do fluxo (endpoint, DTOs, coluna, frontend).
+**Provedor de blob storage escolhido pelo autor: Cloudflare R2** (S3-compatible). Em dev
+continua o fallback de disco local — nenhuma credencial real é necessária para rodar
+localmente; em produção, o upload vai para o bucket R2 configurado. As duas implementações
+vivem atrás da mesma **interface de armazenamento**, selecionada por um toggle de ambiente
+(`ARMAZENAMENTO_PROVEDOR`).
 
 ## Entregáveis
 
@@ -30,12 +30,34 @@ mesma interface, sem tocar no resto do fluxo (endpoint, DTOs, coluna, frontend).
 2. Backend — módulo pequeno de armazenamento (local a definir na implementação, ex.
    `backend/src/core/armazenamento/`): interface com dois métodos —
    `salvarImagem(dto): Promise<{ caminho: string }>` e `excluirImagem(dto: { caminho: string })`.
-   **Uma implementação por ora**: disco local (`backend/uploads/ficha/<uuid>.<extensão>`),
-   servida como estático via `app.useStaticAssets` (`NestExpressApplication`, já habilitado
-   por `@nestjs/platform-express` — nenhuma dependência nova) sob o prefixo `/uploads`.
-   **Documentar explicitamente** (comentário no código + nota em `docs/DEPLOY.md`): o disco do
-   Render é **efêmero** — imagens são perdidas a cada redeploy em produção até um provedor de
-   blob storage real ser escolhido e plugado atrás da mesma interface.
+   **Duas implementações**, escolhidas por um **toggle de ambiente** (não por "variável
+   ausente" — todo grupo de config no `ConfigService` é obrigatório uma vez declarado, então a
+   escolha precisa ser explícita):
+   - Nova dependência: `@aws-sdk/client-s3` (R2 é S3-compatible; SDK oficial recomendado pela
+     Cloudflare, só apontando o `endpoint` para o domínio da conta).
+   - Novo grupo de configuração `ConfiguracaoArmazenamento` em `config.service.ts`, seguindo o
+     padrão exato de `ConfiguracaoBanco`/`ConfiguracaoJwt` (getter tipado +
+     `obterVariavelObrigatoria`):
+     - `ARMAZENAMENTO_PROVEDOR` (`local` | `r2`) — sempre obrigatória.
+     - Quando `r2`: `ARMAZENAMENTO_R2_ACCOUNT_ID`, `ARMAZENAMENTO_R2_ACCESS_KEY_ID`,
+       `ARMAZENAMENTO_R2_SECRET_ACCESS_KEY`, `ARMAZENAMENTO_R2_BUCKET`,
+       `ARMAZENAMENTO_R2_URL_PUBLICA` (domínio público do bucket — custom domain ou o padrão
+       `*.r2.dev` habilitado no painel Cloudflare) — só lidas via `obterVariavelObrigatoria`
+       quando o provedor é `r2`; em `local` nenhuma delas é exigida.
+     - `.env.example` ganha `ARMAZENAMENTO_PROVEDOR=local` (dev não precisa de nenhuma
+       credencial R2); `render.yaml` ganha as 6 chaves com `sync: false` (mesmo padrão de
+       `DB_SENHA`/`JWT_SECRETO`), com `ARMAZENAMENTO_PROVEDOR=r2` fixo em produção.
+   - `ArmazenamentoLocalProvedor` (disco local, `backend/uploads/ficha/<uuid>.<extensão>`,
+     servido estático via `app.useStaticAssets` — `NestExpressApplication`, já habilitado por
+     `@nestjs/platform-express`, sem dependência nova — sob o prefixo `/uploads`) e
+     `ArmazenamentoR2Provedor` (novo): `S3Client` do `@aws-sdk/client-s3` com `endpoint:
+     https://<accountId>.r2.cloudflarestorage.com`, `region: 'auto'`; `salvarImagem` →
+     `PutObjectCommand` (chave `ficha/<uuid>.<extensão>`), devolve `imagem_url` = URL pública
+     base + chave; `excluirImagem` → `DeleteObjectCommand`. Um factory/provider escolhe qual
+     implementação injetar com base em `ConfigService.obterConfiguracaoArmazenamento().provedor`.
+   - Nota em `docs/DEPLOY.md`: passo a passo de provisionamento do bucket R2 (criar bucket,
+     habilitar acesso público — custom domain ou `r2.dev` —, criar API token com permissão
+     Object Read & Write escopado ao bucket), mesma seção-runbook de Supabase/JWT hoje.
 3. Endpoint dedicado — não cabe no `PUT /ficha/:id` genérico por ser multipart:
    - `POST /ficha/:id/imagem` (`FileInterceptor('arquivo')`) → controller monta
      `{ id, arquivo }` e chama `FichaService.alterarImagem` (controller continua burra,
@@ -87,14 +109,12 @@ mesma interface, sem tocar no resto do fluxo (endpoint, DTOs, coluna, frontend).
 - Upload fora do tipo ou tamanho permitido é rejeitado com mensagem clara, sem afetar o resto
   da ficha.
 - Nenhum binário de imagem é gravado em coluna do Postgres — só `imagem_url` (caminho/URL).
-- Em dev e em produção (por ora), a imagem é servida do disco do backend; documentado que essa
-  implementação é efêmera em produção até a escolha de um provedor de blob storage real.
+- Em dev, a imagem é servida do disco local (sem credencial real necessária); em produção, o
+  upload vai para o bucket R2 configurado (durável, sobrevive a redeploy) — comportamento
+  escolhido via `ARMAZENAMENTO_PROVEDOR`.
 
 ## Fora de Escopo
 
-- Escolha e integração de um provedor remoto de blob storage (Supabase Storage, R2, etc.) —
-  decisão adiada pelo autor; a interface de armazenamento já nasce pronta para receber uma
-  segunda implementação sem tocar no resto do fluxo.
 - Redimensionamento/compressão da imagem no servidor — sem `sharp` por ora, só validação de
   tipo/tamanho.
 - Crop/editor de imagem no client.
