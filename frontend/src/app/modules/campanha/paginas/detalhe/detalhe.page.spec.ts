@@ -316,6 +316,13 @@ describe('CampanhaDetalhe', () => {
         morrendo: true,
         machucado: false,
         inconsciente: false,
+        prestigio: 5,
+        defesa: 12,
+        esquiva: 15,
+        bloqueio: 14,
+        personalidade: 'Frio',
+        origemNome: 'Guarda-Costas',
+        sobrecarregado: true,
       },
       {
         id: 4,
@@ -527,6 +534,66 @@ describe('CampanhaDetalhe', () => {
 
       const primeiraFichaLink = raiz.querySelector('.detalhe__ficha-link') as HTMLAnchorElement;
       expect(primeiraFichaLink.getAttribute('href')).toBe(`/painel/${CAMPANHA_ID}/ficha/3`);
+    });
+
+    it('duplo clique no cartão abre a ficha', () => {
+      const { raiz, navegar } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      const cartao = raiz.querySelector('.detalhe__ficha-card') as HTMLElement;
+      cartao.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+
+      expect(navegar).toHaveBeenCalledWith(['/painel', CAMPANHA_ID, 'ficha', 3]);
+    });
+
+    it('duplo clique num controle próprio (passo de Vida/Energia) não navega', () => {
+      const { raiz, navegar } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      const passo = raiz.querySelector('.detalhe__ficha-passo') as HTMLElement;
+      passo.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+
+      expect(navegar).not.toHaveBeenCalled();
+    });
+
+    // Patente/Defesa-Esquiva-Bloqueio/Personalidade-Origem/Sobrecarregado: informações extras do
+    // mini-card compacto, lidas do recorte de `FichaResumoDto` (prestígio/derivados/identidade).
+    it('mostra a Patente derivada do Prestígio na meta', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      const cartao = raiz.querySelector('.detalhe__ficha-card') as HTMLElement;
+      expect(cartao.textContent).toContain('Operador');
+    });
+
+    it('mostra Defesa/Esquiva/Bloqueio quando presentes', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      const reacoes = raiz.querySelector('.detalhe__ficha-reacoes');
+      expect(reacoes?.textContent).toContain('Defesa 12');
+      expect(reacoes?.textContent).toContain('Esquiva 15');
+      expect(reacoes?.textContent).toContain('Bloqueio 14');
+    });
+
+    it('mostra Personalidade/Origem combinadas e esconde a linha quando ausentes', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      const cartoes = Array.from(raiz.querySelectorAll('.detalhe__ficha-card'));
+      const kane = cartoes.find((c) => c.textContent?.includes('Kane'));
+      expect(kane?.querySelector('.detalhe__ficha-identidade')?.textContent).toContain(
+        'Frio · Guarda-Costas',
+      );
+
+      // Vera (fixture) não tem prestígio/identidade — a linha some, sem "·" solto.
+      const vera = cartoes.find((c) => c.textContent?.includes('Vera'));
+      expect(vera?.querySelector('.detalhe__ficha-identidade')).toBeNull();
+    });
+
+    it('mostra o aviso de Sobrecarregado só na ficha marcada', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      const cartoes = Array.from(raiz.querySelectorAll('.detalhe__ficha-card'));
+      const kane = cartoes.find((c) => c.textContent?.includes('Kane'));
+      const vera = cartoes.find((c) => c.textContent?.includes('Vera'));
+      expect(kane?.querySelector('[data-condicao="sobrecarregado"]')).not.toBeNull();
+      expect(vera?.querySelector('[data-condicao="sobrecarregado"]')).toBeNull();
     });
 
     it('alterna o disclosure de fichas do membro (efeito só visual no mobile)', () => {

@@ -85,6 +85,14 @@ export class FichaRepository extends BaseRepository {
    * `dados->>'campo'` usada pelas demais colunas. `campanhaId`/`campanhaNome` (m3-28) vêm do
    * `LEFT JOIN campanha` que os três métodos precisam declarar no `FROM` — `LEFT` porque
    * `campanha_id` tolera `NULL` (ficha solta no acervo); nesse caso as duas colunas saem `NULL`.
+   *
+   * `prestigio`/`defesa`/`esquiva`/`bloqueio`/`personalidade`/`origemNome`/`sobrecarregado` (mini-card
+   * compacto do detalhe da campanha): lidos direto do JSONB, sem recalcular nada (o resumo não tem
+   * atributos/habilidades pra rodar `shared/regras` ao vivo) — `defesa`/`esquiva`/`bloqueio` vêm do
+   * snapshot `derivados` (m3-10), `NULL` em ficha sem o bloco salvo ou classe Civil (não os possui).
+   * `sobrecarregado` é uma **aproximação** em SQL puro (soma bruta `peso × quantidade` dos itens via
+   * `jsonb_array_elements`, sem o ajuste fino de modificações/amplificadores/guardado-vestido que
+   * `calcularResumoCompras` aplica na aba Inventário) — suficiente pro aviso do mini-card.
    */
   private colunasResumo(): string {
     return `ficha.id,
@@ -100,7 +108,19 @@ export class FichaRepository extends BaseRepository {
               (ficha.dados->'estado'->>'energiaMaxima')::int AS "energiaMaxima",
               COALESCE((ficha.dados->'estado'->>'morrendo')::boolean, false) AS morrendo,
               COALESCE((ficha.dados->'estado'->>'machucado')::boolean, false) AS machucado,
-              COALESCE((ficha.dados->'estado'->>'inconsciente')::boolean, false) AS inconsciente`;
+              COALESCE((ficha.dados->'estado'->>'inconsciente')::boolean, false) AS inconsciente,
+              (ficha.dados->>'prestigio')::int AS prestigio,
+              (ficha.dados->'derivados'->>'defesa')::int AS defesa,
+              (ficha.dados->'derivados'->>'esquiva')::int AS esquiva,
+              (ficha.dados->'derivados'->>'bloqueio')::int AS bloqueio,
+              ficha.dados->'identidade'->>'personalidade' AS personalidade,
+              ficha.dados->'identidade'->'origem'->>'nome' AS "origemNome",
+              CASE WHEN ficha.dados->'derivados'->>'inventarioMaximo' IS NULL THEN NULL
+                ELSE COALESCE((
+                  SELECT SUM((item->>'peso')::numeric * (item->>'quantidade')::numeric)
+                  FROM jsonb_array_elements(ficha.dados->'inventario'->'itens') AS item
+                ), 0) > (ficha.dados->'derivados'->>'inventarioMaximo')::numeric
+              END AS sobrecarregado`;
   }
 
   /** `LEFT JOIN` que resolve `campanhaNome` em `colunasResumo()` — `campanha_id` tolera `NULL`. */

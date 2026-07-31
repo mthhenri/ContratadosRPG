@@ -228,7 +228,11 @@
                 >
                   @for (ficha of fichasDoMembro(membro.usuarioId); track ficha.id) {
                     <li>
-                      <div class="detalhe__ficha-card" [class.detalhe__ficha-card--critico]="ficha.critico">
+                      <div
+                        class="detalhe__ficha-card"
+                        [class.detalhe__ficha-card--critico]="ficha.critico"
+                        (dblclick)="abrirFichaDuploClique(campanhaAtual.id, ficha.id, $event)"
+                      >
                         <a
                           class="detalhe__ficha-link"
                           [routerLink]="['/painel', campanhaAtual.id, 'ficha', ficha.id]"
@@ -236,6 +240,15 @@
                           <div class="detalhe__ficha-topo">
                             <span class="detalhe__ficha-nome">{{ ficha.nome }}</span>
                             <span class="detalhe__ficha-condicoes">
+                              @if (ficha.sobrecarregado) {
+                                <app-icone
+                                  nome="alerta"
+                                  class="detalhe__ficha-condicao detalhe__ficha-condicao--ativa"
+                                  data-condicao="sobrecarregado"
+                                  aria-label="Sobrecarregado (inventário acima do máximo)"
+                                  title="Sobrecarregado"
+                                />
+                              }
                               @for (condicao of ficha.condicoes; track condicao.chave) {
                                 <app-icone
                                   [nome]="condicao.icone"
@@ -248,7 +261,12 @@
                               }
                             </span>
                           </div>
-                          <span class="detalhe__ficha-meta">{{ ficha.classeTexto }} · Nível {{ ficha.nivel }}</span>
+                          <span class="detalhe__ficha-meta">
+                            {{ ficha.classeTexto }} · Nível {{ ficha.nivel }} · {{ ficha.patenteTexto }}
+                          </span>
+                          @if (ficha.identidadeTexto) {
+                            <span class="detalhe__ficha-identidade">{{ ficha.identidadeTexto }}</span>
+                          }
                         </a>
                         <div class="detalhe__ficha-vitais">
                           <span class="detalhe__ficha-vital detalhe__ficha-vital--vida">
@@ -295,6 +313,19 @@
                             }
                           </span>
                         </div>
+                        @if (ficha.defesa !== undefined || ficha.esquiva !== undefined || ficha.bloqueio !== undefined) {
+                          <div class="detalhe__ficha-reacoes">
+                            @if (ficha.defesa !== undefined) {
+                              <span>Defesa {{ ficha.defesa }}</span>
+                            }
+                            @if (ficha.esquiva !== undefined) {
+                              <span>Esquiva {{ ficha.esquiva }}</span>
+                            }
+                            @if (ficha.bloqueio !== undefined) {
+                              <span>Bloqueio {{ ficha.bloqueio }}</span>
+                            }
+                          </div>
+                        }
                         @if (podeAjustarFicha(membro.usuarioId)) {
                           <div class="detalhe__ficha-acoes">
                             <button

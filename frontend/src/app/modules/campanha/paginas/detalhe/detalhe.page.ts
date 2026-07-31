@@ -22,6 +22,7 @@ import { FichaService } from '../../../ficha/ficha.service';
 import { construirFichaInicial, type FichaAssistenteResultado } from '../../../ficha/ficha-padrao';
 import { FichaCriarDialog } from '../../../ficha/componentes/ficha-criar-dialog/ficha-criar-dialog.component';
 import { rotuloClasseCompleto } from '../../../ficha/rotulos-ficha';
+import { rotuloPatente } from '../../../ficha/status-derivado';
 import { CONDICOES_FICHA, type DescritorCondicao } from '../../../ficha/condicoes-ficha';
 import { clamparVitalidade, type CampoVitalidadeAtual } from '../../../ficha/ajuste-vitalidade';
 import { FichaVitalidadeRapidaService } from '../../../ficha/ficha-vitalidade-rapida.service';
@@ -57,6 +58,20 @@ interface ItemFicha {
    * antes do dono/mestre lembrar de marcar o checkbox).
    */
   readonly critico: boolean;
+  /** Patente legível, derivada do Prestígio no cliente (`rotuloPatente` — mesma fórmula da ficha completa). */
+  readonly patenteTexto: string;
+  /** Defesa/Esquiva/Bloqueio — `undefined` numa ficha sem `derivados` salvo ou de classe Civil (não os possui). */
+  readonly defesa?: number;
+  readonly esquiva?: number;
+  readonly bloqueio?: number;
+  /**
+   * Personalidade + nome da Origem (m3-23) já combinados para exibição ("Frio · Guarda-Costas") —
+   * `null` quando nenhum dos dois está definido (ficha sem Identidade ainda), pra esconder a linha
+   * inteira em vez de deixar um traço solto.
+   */
+  readonly identidadeTexto: string | null;
+  /** Peso do inventário acima do Inventário Máximo (aviso do backend — ver nota em `FichaResumoDto`). */
+  readonly sobrecarregado: boolean;
 }
 
 /**
@@ -261,6 +276,12 @@ export class CampanhaDetalhe {
         energiaMaxima: ficha.energiaMaxima,
         condicoes: CONDICOES_FICHA.map((condicao) => ({ ...condicao, ativa: ficha[condicao.chave] })),
         critico: ficha.vidaAtual <= 0,
+        patenteTexto: rotuloPatente(ficha.prestigio ?? 0),
+        defesa: ficha.defesa,
+        esquiva: ficha.esquiva,
+        bloqueio: ficha.bloqueio,
+        identidadeTexto: [ficha.personalidade, ficha.origemNome].filter(Boolean).join(' · ') || null,
+        sobrecarregado: ficha.sobrecarregado ?? false,
       };
       const listaDoDono = mapa.get(ficha.usuarioId);
       if (listaDoDono) {
@@ -695,6 +716,19 @@ export class CampanhaDetalhe {
         : { top: retangulo.bottom + 6, right },
     );
     this.menuFichaAberto.set({ id: ficha.id, nome: ficha.nome, donoNome });
+  }
+
+  /**
+   * Duplo clique em qualquer ponto "morto" do mini-card (fora dos controles próprios — link,
+   * passos de Vida/Energia, kebab) abre a ficha, mesmo destino do link do nome/meta. `closest`
+   * ignora o duplo clique que caiu num desses controles (ex.: martelar o "+" de Vida) — cada um já
+   * tem sua própria ação, não deveria também navegar.
+   */
+  protected abrirFichaDuploClique(campanhaId: number, fichaId: number, evento: MouseEvent): void {
+    if ((evento.target as HTMLElement).closest('a, button')) {
+      return;
+    }
+    void this.router.navigate(['/painel', campanhaId, 'ficha', fichaId]);
   }
 
   /** Fecha o menu de ações de ficha aberto. */
