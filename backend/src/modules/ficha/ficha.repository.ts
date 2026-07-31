@@ -17,7 +17,7 @@ import type {
   FichaListarDto,
   FichaRecuperadaDto,
   FichaRecuperarDto,
-  FichaResumoDto,
+  FichaResumoInternoDto,
   FichaVisiveisInternoListarDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import { BaseRepository } from '../../core/base/base.repository';
@@ -86,21 +86,21 @@ export class FichaRepository extends BaseRepository {
    * `LEFT JOIN campanha` que os três métodos precisam declarar no `FROM` — `LEFT` porque
    * `campanha_id` tolera `NULL` (ficha solta no acervo); nesse caso as duas colunas saem `NULL`.
    *
-   * `prestigio`/`defesa`/`esquiva`/`bloqueio`/`personalidade`/`origemNome`/`sobrecarregado` (mini-card
-   * compacto do detalhe da campanha): lidos direto do JSONB, sem recalcular nada (o resumo não tem
+   * `prestigio`/`defesa`/`esquiva`/`bloqueio`/`personalidade`/`origemNome` (mini-card compacto do
+   * detalhe da campanha): lidos direto do JSONB, sem recalcular nada (o resumo não tem
    * atributos/habilidades pra rodar `shared/regras` ao vivo) — `defesa`/`esquiva`/`bloqueio` vêm do
    * snapshot `derivados` (m3-10), `NULL` em ficha sem o bloco salvo ou classe Civil (não os possui).
-   * `sobrecarregado` é uma **aproximação** em SQL puro (soma `peso × quantidade` dos itens via
-   * `jsonb_array_elements`, sem o ajuste fino de modificações/amplificadores que `calcularResumoCompras`
-   * aplica na aba Inventário) — mas replica as duas exclusões que mudam se um item pesa ou não
-   * (`shared/regras/compras` `calcularTotaisCarrinho`, `ocupaPeso`): item de `ARMAZENAMENTO`
-   * **vestida** (`guardada = false`) amplia o inventário em vez de ocupar espaço nele, e item com
-   * `containerId` (m3-44 — dentro de um Pochete/Bolso de Corpo) pesa só contra a capacidade do
-   * container, não contra o inventário principal. Sem essas duas exclusões, uma mochila vestida ou
-   * o conteúdo de uma pochete inflava o peso somado e o mini-card acusava sobrecarga que não existe
-   * de verdade. O que a aproximação ainda não cobre (bônus de inventário do armazenamento vestido,
-   * peso de modificações, overload do próprio container) exigiria o catálogo de itens — fora do
-   * alcance de SQL puro; a aba Inventário continua a fonte exata.
+   *
+   * `itens`/`amplificadores`/`dinheiro`/`vontade`/`inventarioMaximo`: **não** entram no
+   * `FichaResumoDto` público — são o material bruto de `FichaResumoInternoDto` que o
+   * `FichaService` usa para computar `sobrecarregado` chamando `calcularResumoCompras`
+   * (`shared/regras/compras`, o mesmo motor da aba Inventário) em vez de aproximar em SQL puro
+   * (uma 1ª tentativa somava `peso × quantidade` direto na query — dava falso positivo em
+   * mochila vestida e falso "conta contra o principal" em item dentro de sub-inventário/container,
+   * m3-44; a fórmula completa já resolve os dois certo, então movida para o service). `itens`/
+   * `amplificadores` saem como `jsonb` — o driver (`pg`) já entrega array/objeto JS, sem parse
+   * manual. `inventarioMaximo` é o snapshot **bruto** de `derivados` (o service soma o ajuste de
+   * amplificador antes de chamar a fórmula, mesmo passo que a aba Inventário já faz no cliente).
    */
   private colunasResumo(): string {
     return `ficha.id,
@@ -123,14 +123,11 @@ export class FichaRepository extends BaseRepository {
               (ficha.dados->'derivados'->>'bloqueio')::int AS bloqueio,
               ficha.dados->'identidade'->>'personalidade' AS personalidade,
               ficha.dados->'identidade'->'origem'->>'nome' AS "origemNome",
-              CASE WHEN ficha.dados->'derivados'->>'inventarioMaximo' IS NULL THEN NULL
-                ELSE COALESCE((
-                  SELECT SUM((item->>'peso')::numeric * (item->>'quantidade')::numeric)
-                  FROM jsonb_array_elements(ficha.dados->'inventario'->'itens') AS item
-                  WHERE item->>'containerId' IS NULL
-                    AND NOT (item->>'categoria' = 'ARMAZENAMENTO' AND (item->>'guardada')::boolean = false)
-                ), 0) > (ficha.dados->'derivados'->>'inventarioMaximo')::numeric
-              END AS sobrecarregado`;
+              COALESCE(ficha.dados->'inventario'->'itens', '[]'::jsonb) AS itens,
+              COALESCE(ficha.dados->'inventario'->'amplificadores', '[]'::jsonb) AS amplificadores,
+              (ficha.dados->>'dinheiro')::numeric AS dinheiro,
+              (ficha.dados->'atributos'->>'vontade')::int AS vontade,
+              (ficha.dados->'derivados'->>'inventarioMaximo')::int AS "inventarioMaximo"`;
   }
 
   /** `LEFT JOIN` que resolve `campanhaNome` em `colunasResumo()` — `campanha_id` tolera `NULL`. */
@@ -142,8 +139,8 @@ export class FichaRepository extends BaseRepository {
    * Lista **todas** as fichas ativas de uma campanha (uso do mestre — §14). Recorte resumido: os
    * campos de jogo `classe`/`nivel` são lidos do JSONB (`dados->>'campo'`, §10.4). Ordena por nome.
    */
-  async listarPorCampanha(dto: FichaListarDto): Promise<FichaResumoDto[]> {
-    return this.executarConsulta<FichaResumoDto>(
+  async listarPorCampanha(dto: FichaListarDto): Promise<FichaResumoInternoDto[]> {
+    return this.executarConsulta<FichaResumoInternoDto>(
       `SELECT ${this.colunasResumo()}
        FROM ficha
        ${this.juncaoCampanhaResumo()}
@@ -158,8 +155,8 @@ export class FichaRepository extends BaseRepository {
    * concedidas por `usuario_ficha_acesso`. Mesmo recorte resumido de `listarPorCampanha`; a
    * concessão é conferida por `EXISTS` sobre `usuario_ficha_acesso` (ativo). Ordena por nome.
    */
-  async listarVisiveisParaUsuario(dto: FichaVisiveisInternoListarDto): Promise<FichaResumoDto[]> {
-    return this.executarConsulta<FichaResumoDto>(
+  async listarVisiveisParaUsuario(dto: FichaVisiveisInternoListarDto): Promise<FichaResumoInternoDto[]> {
+    return this.executarConsulta<FichaResumoInternoDto>(
       `SELECT ${this.colunasResumo()}
        FROM ficha
        ${this.juncaoCampanhaResumo()}
@@ -184,8 +181,8 @@ export class FichaRepository extends BaseRepository {
    * campanha (ou "Sem campanha", resolvido no frontend quando `campanhaId` é `null`). Ordena por
    * nome.
    */
-  async listarPorUsuario(dto: FichaAcervoListarDto): Promise<FichaResumoDto[]> {
-    return this.executarConsulta<FichaResumoDto>(
+  async listarPorUsuario(dto: FichaAcervoListarDto): Promise<FichaResumoInternoDto[]> {
+    return this.executarConsulta<FichaResumoInternoDto>(
       `SELECT ${this.colunasResumo()}
        FROM ficha
        ${this.juncaoCampanhaResumo()}

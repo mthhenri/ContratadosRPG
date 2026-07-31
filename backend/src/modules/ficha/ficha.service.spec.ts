@@ -10,6 +10,7 @@ import {
   ClasseEnum,
   FormacaoBonusEnum,
   HabilidadeCategoriaEnum,
+  ItemCategoriaEnum,
   TipoCampanhaMembroPapelEnum,
   TipoFichaEnum,
 } from '@contratados-rpg/shared/enums';
@@ -18,6 +19,7 @@ import {
   calcularEnergia,
   calcularVida,
 } from '@contratados-rpg/shared/regras/agente';
+import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 import {
   BusinessException,
   ResourceNotFoundException,
@@ -717,7 +719,110 @@ describe('FichaService', () => {
       const resultado = await service.listarAcervo({ usuarioId: usuarioDono.sub });
 
       expect(fichaRepositorio.listarPorUsuario).toHaveBeenCalledWith({ usuarioId: usuarioDono.sub });
-      expect(resultado).toBe(fichas);
+      // `toMatchObject` (não `toBe`/`toEqual`): o service agora reduz cada `FichaResumoInternoDto` a
+      // um `FichaResumoDto` público novo (`paraResumoPublico`) — não a mesma referência — que carrega
+      // campos extras (`prestigio`/`defesa`/.../`sobrecarregado`) ausentes deste fixture enxuto.
+      expect(resultado).toMatchObject(fichas);
+    });
+  });
+
+  // Sobrecarregado do mini-card (m3-52 follow-up): computado com exatidão via
+  // `calcularResumoCompras` (shared/regras/compras), não uma aproximação em SQL — prova as duas
+  // exclusões que o cálculo precisa acertar (Armazenamento vestido, item em sub-inventário) e o
+  // retrocompat de ficha sem `derivados.inventarioMaximo` salvo.
+  describe('sobrecarregado (mini-card do painel)', () => {
+    const item = (sobrescritas: Partial<CarrinhoItemDto>): CarrinhoItemDto => ({
+      nome: 'Item',
+      categoria: ItemCategoriaEnum.CORPO_A_CORPO,
+      custo: 0,
+      peso: 1,
+      quantidade: 1,
+      guardada: true,
+      modificacoes: [],
+      ...sobrescritas,
+    });
+
+    const fichaInterna = (sobrescritas: Record<string, unknown>) => ({
+      id: 5,
+      campanhaId: null,
+      campanhaNome: null,
+      usuarioId: usuarioDono.sub,
+      nome: 'Kane',
+      classe: ClasseEnum.COMBATENTE,
+      arquetipo: null,
+      nivel: 1,
+      vidaAtual: 10,
+      energiaAtual: 5,
+      morrendo: false,
+      machucado: false,
+      inconsciente: false,
+      itens: [] as CarrinhoItemDto[],
+      amplificadores: [],
+      dinheiro: 0,
+      vontade: 2,
+      inventarioMaximo: 5,
+      ...sobrescritas,
+    });
+
+    it('true quando o peso dos itens do inventário principal excede o máximo', async () => {
+      fichaRepositorio.listarPorUsuario.mockResolvedValue([
+        fichaInterna({ itens: [item({ peso: 6 })], inventarioMaximo: 5 }),
+      ]);
+
+      const [resultado] = await service.listarAcervo({ usuarioId: usuarioDono.sub });
+
+      expect(resultado.sobrecarregado).toBe(true);
+    });
+
+    it('false quando o peso não excede o máximo', async () => {
+      fichaRepositorio.listarPorUsuario.mockResolvedValue([
+        fichaInterna({ itens: [item({ peso: 3 })], inventarioMaximo: 5 }),
+      ]);
+
+      const [resultado] = await service.listarAcervo({ usuarioId: usuarioDono.sub });
+
+      expect(resultado.sobrecarregado).toBe(false);
+    });
+
+    it('undefined quando a ficha não tem derivados.inventarioMaximo salvo (retrocompat)', async () => {
+      fichaRepositorio.listarPorUsuario.mockResolvedValue([
+        fichaInterna({ itens: [item({ peso: 999 })], inventarioMaximo: undefined }),
+      ]);
+
+      const [resultado] = await service.listarAcervo({ usuarioId: usuarioDono.sub });
+
+      expect(resultado.sobrecarregado).toBeUndefined();
+    });
+
+    it('não conta o peso de Armazenamento vestido (guardada=false) contra o inventário principal', async () => {
+      // Mochila vestida de peso 10, sozinha, ultrapassaria um máximo de 5 se contasse — mas uma
+      // Armazenamento vestida amplia o inventário, não ocupa espaço nele (mesma regra de
+      // `calcularTotaisCarrinho`/`ocupaPeso`, shared/regras/compras).
+      fichaRepositorio.listarPorUsuario.mockResolvedValue([
+        fichaInterna({
+          itens: [item({ categoria: ItemCategoriaEnum.ARMAZENAMENTO, guardada: false, peso: 10 })],
+          inventarioMaximo: 5,
+        }),
+      ]);
+
+      const [resultado] = await service.listarAcervo({ usuarioId: usuarioDono.sub });
+
+      expect(resultado.sobrecarregado).toBe(false);
+    });
+
+    it('não conta o peso de item dentro de um sub-inventário/container (m3-44) contra o principal', async () => {
+      // Item de peso 10 guardado numa Pochete (containerId) pesaria contra o máximo de 5 se
+      // contasse contra o inventário principal — mas ele só pesa contra a capacidade do container.
+      fichaRepositorio.listarPorUsuario.mockResolvedValue([
+        fichaInterna({
+          itens: [item({ peso: 10, containerId: 'pochete-1' })],
+          inventarioMaximo: 5,
+        }),
+      ]);
+
+      const [resultado] = await service.listarAcervo({ usuarioId: usuarioDono.sub });
+
+      expect(resultado.sobrecarregado).toBe(false);
     });
   });
 
@@ -733,7 +838,9 @@ describe('FichaService', () => {
 
       expect(fichaRepositorio.listarPorCampanha).toHaveBeenCalledWith({ campanhaId: 3 });
       expect(fichaRepositorio.listarVisiveisParaUsuario).not.toHaveBeenCalled();
-      expect(resultado).toBe(fichas);
+      // `toMatchObject` (não `toBe`): o service reduz cada `FichaResumoInternoDto` a um
+      // `FichaResumoDto` público novo (`paraResumoPublico`), com campos extras não presentes aqui.
+      expect(resultado).toMatchObject(fichas);
     });
 
     it('devolve só as fichas visíveis quando o autor é um membro comum', async () => {
@@ -750,7 +857,9 @@ describe('FichaService', () => {
         usuarioId: usuarioMembro.sub,
       });
       expect(fichaRepositorio.listarPorCampanha).not.toHaveBeenCalled();
-      expect(resultado).toBe(fichas);
+      // `toMatchObject` (não `toBe`): o service reduz cada `FichaResumoInternoDto` a um
+      // `FichaResumoDto` público novo (`paraResumoPublico`), com campos extras não presentes aqui.
+      expect(resultado).toMatchObject(fichas);
     });
 
     it('lança UnauthorizedAccessException quando o autor não é membro da campanha', async () => {
