@@ -610,9 +610,23 @@
     color: var(--text-mute);
   }
 
+  // Rodapé do card (m3-52 → ajuste pós-review): reações + kebab na **mesma linha**, não uma linha
+  // cada — o kebab sozinho numa `&__ficha-acoes` própria desperdiçava uma linha inteira por um
+  // botão de 22px. `justify-content: space-between` deixa as reações à esquerda e o kebab colado
+  // à direita quando os dois existem; quando só um existe, o outro lado fica vazio e ocupa a
+  // largura toda mesmo assim (`min-height` evita o salto de altura entre os dois casos).
+  &__ficha-rodape {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 22px;
+    margin-top: 2px;
+  }
+
   // Defesa/Esquiva/Bloqueio (derivados, m3-10) — mesma receita visual/densidade de `&__ficha-vitais`
   // (mono, flex-wrap), mas sem cor semântica própria (não é vital) e sem os passos −/+ (só leitura
-  // aqui; ajustar é na própria ficha). Bloco inteiro condicional — ficha Civil não tem Defesa.
+  // aqui; ajustar é na própria ficha). Bloco condicional — ficha Civil não tem Defesa.
   &__ficha-reacoes {
     display: flex;
     flex-wrap: wrap;
@@ -701,14 +715,11 @@
   // Botão do menu de ações (kebab) de uma ficha no mini-card (m3-52) — o dropdown em si
   // (`&__ficha-menu*`, estilizado abaixo, fora do `.detalhe`) mora na raiz do template, não aqui
   // dentro — ver a nota em `menuFichaAberto` no componente sobre por quê. Só dono/mestre da ficha
-  // (`podeAjustarFicha`, mesma checagem já usada nos passos de Vida/Energia).
-  &__ficha-acoes {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 2px;
-  }
-
+  // (`podeAjustarFicha`, mesma checagem já usada nos passos de Vida/Energia). Vive em `&__ficha-rodape`
+  // (ver acima), não mais numa linha própria.
   &__ficha-menu-botao {
+    flex: none;
+    margin-left: auto;
     display: inline-flex;
     align-items: center;
     justify-content: center;

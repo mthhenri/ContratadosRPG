@@ -554,6 +554,45 @@ describe('CampanhaDetalhe', () => {
       expect(navegar).not.toHaveBeenCalled();
     });
 
+    // `window.open` é global — cada teste restaura o spy no fim (`mockRestore`), senão o segundo
+    // `vi.spyOn` reaproveitaria o mesmo mock (com a chamada do teste anterior já registrada nele)
+    // em vez de nascer zerado.
+    it('clique do meio no cartão abre a ficha numa nova aba', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+      const abrirNovaAba = vi.spyOn(window, 'open').mockReturnValue(null);
+      try {
+        const cartao = raiz.querySelector('.detalhe__ficha-card') as HTMLElement;
+        cartao.dispatchEvent(new MouseEvent('auxclick', { bubbles: true, button: 1 }));
+
+        expect(abrirNovaAba).toHaveBeenCalledWith(`/painel/${CAMPANHA_ID}/ficha/3`, '_blank', 'noopener');
+      } finally {
+        abrirNovaAba.mockRestore();
+      }
+    });
+
+    it('clique do meio num controle próprio (kebab) não abre nova aba', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+      const abrirNovaAba = vi.spyOn(window, 'open').mockReturnValue(null);
+      try {
+        const kebab = raiz.querySelector('.detalhe__ficha-menu-botao') as HTMLElement;
+        kebab.dispatchEvent(new MouseEvent('auxclick', { bubbles: true, button: 1 }));
+
+        expect(abrirNovaAba).not.toHaveBeenCalled();
+      } finally {
+        abrirNovaAba.mockRestore();
+      }
+    });
+
+    it('botão de ações (kebab) fica na mesma linha das reações, não numa linha própria', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      const cartoes = Array.from(raiz.querySelectorAll('.detalhe__ficha-card'));
+      const kane = cartoes.find((c) => c.textContent?.includes('Kane')) as HTMLElement;
+      const rodape = kane.querySelector('.detalhe__ficha-rodape');
+      expect(rodape?.querySelector('.detalhe__ficha-reacoes')).not.toBeNull();
+      expect(rodape?.querySelector('.detalhe__ficha-menu-botao')).not.toBeNull();
+    });
+
     // Patente/Defesa-Esquiva-Bloqueio/Personalidade-Origem/Sobrecarregado: informações extras do
     // mini-card compacto, lidas do recorte de `FichaResumoDto` (prestígio/derivados/identidade).
     it('mostra a Patente derivada do Prestígio na meta', () => {

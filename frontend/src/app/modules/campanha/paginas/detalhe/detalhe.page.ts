@@ -718,17 +718,43 @@ export class CampanhaDetalhe {
     this.menuFichaAberto.set({ id: ficha.id, nome: ficha.nome, donoNome });
   }
 
+  /** Rota da ficha — reusada pelo duplo clique (mesma aba) e pelo clique do meio (nova aba). */
+  private caminhoFicha(campanhaId: number, fichaId: number): (string | number)[] {
+    return ['/painel', campanhaId, 'ficha', fichaId];
+  }
+
   /**
-   * Duplo clique em qualquer ponto "morto" do mini-card (fora dos controles próprios — link,
-   * passos de Vida/Energia, kebab) abre a ficha, mesmo destino do link do nome/meta. `closest`
-   * ignora o duplo clique que caiu num desses controles (ex.: martelar o "+" de Vida) — cada um já
-   * tem sua própria ação, não deveria também navegar.
+   * `true` quando o clique (duplo ou do meio) caiu num controle próprio do mini-card (link, passos
+   * de Vida/Energia, kebab) — cada um já tem sua própria ação e não deveria também abrir a ficha
+   * (ex.: martelar o "+" de Vida bem rápido não pode contar como duplo clique no card).
    */
+  private cliqueEmControlePropio(evento: MouseEvent): boolean {
+    return (evento.target as HTMLElement).closest('a, button') !== null;
+  }
+
+  /** Duplo clique em qualquer ponto "morto" do mini-card abre a ficha, mesmo destino do link do nome/meta. */
   protected abrirFichaDuploClique(campanhaId: number, fichaId: number, evento: MouseEvent): void {
-    if ((evento.target as HTMLElement).closest('a, button')) {
+    if (this.cliqueEmControlePropio(evento)) {
       return;
     }
-    void this.router.navigate(['/painel', campanhaId, 'ficha', fichaId]);
+    void this.router.navigate(this.caminhoFicha(campanhaId, fichaId));
+  }
+
+  /**
+   * Clique do meio (roda do mouse) em qualquer ponto "morto" do mini-card abre a ficha numa nova
+   * aba — mesmo comportamento nativo que o clique do meio já tem sobre o link do nome/meta (um
+   * `<a>` de verdade), estendido ao resto do card (`<div>`, sem `href` próprio pra abrir sozinho).
+   * `auxclick` só dispara para botões não-primários (aqui, filtrado a `button === 1`); `evento.target`
+   * sobre o próprio link seria redundante com o comportamento nativo do navegador, daí o mesmo guard
+   * de `cliqueEmControlePropio`.
+   */
+  protected abrirFichaCliqueDoMeio(campanhaId: number, fichaId: number, evento: MouseEvent): void {
+    if (evento.button !== 1 || this.cliqueEmControlePropio(evento)) {
+      return;
+    }
+    evento.preventDefault();
+    const url = this.router.serializeUrl(this.router.createUrlTree(this.caminhoFicha(campanhaId, fichaId)));
+    window.open(url, '_blank', 'noopener');
   }
 
   /** Fecha o menu de ações de ficha aberto. */

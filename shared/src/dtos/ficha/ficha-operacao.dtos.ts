@@ -108,10 +108,13 @@ export interface FichaResumoDto {
   readonly origemNome?: string | null;
   /**
    * `true` quando o peso do inventário excede o Inventário Máximo (aviso, não trava —
-   * `sistema-v4.1.0.md`). Aproximação em SQL: soma bruta `peso × quantidade` dos itens, sem o ajuste
-   * fino de modificações/amplificadores/guardado-vestido que a aba Inventário aplica
-   * (`calcularResumoCompras`) — suficiente para o aviso do mini-card; a aba de Inventário continua a
-   * fonte exata. `undefined` numa ficha sem `derivados.inventarioMaximo` salvo (retrocompat).
+   * `sistema-v4.1.0.md`). Aproximação em SQL: soma `peso × quantidade` dos itens do inventário
+   * principal — exclui item de Armazenamento **vestido** (amplia o inventário, não pesa nele) e
+   * item dentro de sub-inventário/container (m3-44, pesa só contra a capacidade do container) —
+   * mas sem o ajuste fino de modificações/amplificadores/bônus de armazenamento vestido que a aba
+   * Inventário aplica (`calcularResumoCompras`); suficiente para o aviso do mini-card, a aba de
+   * Inventário continua a fonte exata. `undefined` numa ficha sem `derivados.inventarioMaximo`
+   * salvo (retrocompat).
    */
   readonly sobrecarregado?: boolean;
 }
