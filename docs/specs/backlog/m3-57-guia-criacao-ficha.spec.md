@@ -69,7 +69,10 @@ Monetário e **não** coleta Identidade. O motor já tem o necessário: `calcula
 3. **Passos 01–04, 07 e 09.** Os números abaixo são os do **fluxo final** (com a `m3-58` e a
    `m3-59` no lugar); entregue só esta task, o guia tem **7 passos numerados em sequência** na
    trilha — 06 e 08 não existem ainda.
-   - **01 // BASE** — dono (`<select>` de membros, só mestre) + Codinome/Agente.
+   - **01 // BASE** — dono (`<select>` de membros, só mestre) + Codinome/Agente. Quando
+     `m3-61`/`m3-62` já existirem no código, este passo também coleta a **cor de identidade**
+     (swatch) e o **avatar** (upload) da ficha — enriquecimento opcional, o passo funciona sem
+     eles se ainda não existirem.
    - **02 // CLASSE** — classe → subclasse/arquétipo, mostrando o bônus fixo de atributos e
      **qual Habilidade Inicial vem de graça** (`habilidadesIniciais`).
    - **03 // NOVO AGENTE** — motivo de entrada (`MotivoEntradaAgenteEnum`) + médias de Nível e
@@ -142,3 +145,5 @@ Monetário e **não** coleta Identidade. O motor já tem o necessário: `calcula
   (Identidade), `m3-41` (Experimento + Peculiaridade), `m2-16` (fichas por membro na campanha),
   `m1-08` (calculadora Novo Agente — mesmo motor), `m1-11` (padrão de persistência em
   `localStorage`), `m3-26` (breakpoints e alvos de toque).
+- `m3-61`/`m3-62` (cor e imagem de ficha) — dependência de **enriquecimento**, não bloqueante:
+  o Passo 01 // BASE funciona sem elas e ganha os dois campos a mais quando existirem.
