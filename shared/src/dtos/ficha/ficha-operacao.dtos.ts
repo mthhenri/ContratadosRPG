@@ -1,4 +1,5 @@
 import type { ArquetipoEnum, ClasseEnum, TipoFichaEnum } from '../../enums';
+import type { AmplificadorAplicadoDto, CarrinhoItemDto } from '../../regras/compras';
 import type { FichaJogadorDadosDto } from './ficha.dtos';
 
 /**
@@ -108,15 +109,34 @@ export interface FichaResumoDto {
   readonly origemNome?: string | null;
   /**
    * `true` quando o peso do inventário excede o Inventário Máximo (aviso, não trava —
-   * `sistema-v4.1.0.md`). Aproximação em SQL: soma `peso × quantidade` dos itens do inventário
-   * principal — exclui item de Armazenamento **vestido** (amplia o inventário, não pesa nele) e
-   * item dentro de sub-inventário/container (m3-44, pesa só contra a capacidade do container) —
-   * mas sem o ajuste fino de modificações/amplificadores/bônus de armazenamento vestido que a aba
-   * Inventário aplica (`calcularResumoCompras`); suficiente para o aviso do mini-card, a aba de
-   * Inventário continua a fonte exata. `undefined` numa ficha sem `derivados.inventarioMaximo`
-   * salvo (retrocompat).
+   * `sistema-v4.1.0.md`). Calculado com exatidão pelo `FichaService` via `calcularResumoCompras`
+   * (`shared/regras/compras`) — o mesmo motor que a aba Inventário usa —, não uma aproximação: o
+   * `FichaResumoInternoDto` que a repository devolve carrega os campos brutos (itens/amplificadores/
+   * dinheiro/vontade/inventário base) que a fórmula precisa, e o service os reduz a este único
+   * booleano antes de expor o resumo público. `undefined` numa ficha sem `derivados.inventarioMaximo`
+   * salvo (retrocompat) — sem o máximo não há o que comparar.
    */
   readonly sobrecarregado?: boolean;
+}
+
+/**
+ * Recorte **interno** de `FichaResumoDto` (nunca chega ao frontend) que a repository devolve ao
+ * service — carrega, além de tudo que o resumo público já tem, os campos brutos que
+ * `FichaService` precisa pra chamar `calcularResumoCompras` (`shared/regras/compras`) e produzir o
+ * `sobrecarregado` **exato** do resumo público (mesmo motor que a aba Inventário usa, não uma
+ * aproximação em SQL). `itens`/`amplificadores` vêm do JSONB tal qual (`CarrinhoItemDto[]`/
+ * `AmplificadorAplicadoDto[]`); `inventarioMaximo` é o snapshot **bruto** de `derivados` (sem o
+ * ajuste de amplificador — `ajusteInventarioAmplificadores` — que o service aplica antes de chamar
+ * `calcularResumoCompras`, mesmo passo que a aba Inventário já faz no cliente). `dinheiro`/`vontade`
+ * só alimentam a fórmula (o resumo público não os expõe). O `sobrecarregado` herdado de
+ * `FichaResumoDto` sai `undefined` neste recorte — quem o preenche é o service, na conversão final.
+ */
+export interface FichaResumoInternoDto extends FichaResumoDto {
+  readonly itens: readonly CarrinhoItemDto[];
+  readonly amplificadores: readonly AmplificadorAplicadoDto[];
+  readonly dinheiro?: number;
+  readonly vontade: number;
+  readonly inventarioMaximo?: number;
 }
 
 /**

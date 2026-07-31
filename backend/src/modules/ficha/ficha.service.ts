@@ -24,6 +24,7 @@ import type {
   FichaRecuperadaDto,
   FichaRecuperarDto,
   FichaResumoDto,
+  FichaResumoInternoDto,
   FichaRolagemDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
@@ -33,11 +34,13 @@ import {
 } from '@contratados-rpg/shared/enums';
 import {
   MAESTRIA_PONTOS_MINIMO,
+  ajusteInventarioAmplificadores,
   calcularDerivados,
   calcularEnergia,
   calcularVida,
   maestriaValida,
 } from '@contratados-rpg/shared/regras/agente';
+import { calcularResumoCompras } from '@contratados-rpg/shared/regras/compras';
 import {
   aplicarFormacaoAosDerivados,
   experimentoComPeculiaridade,
@@ -166,13 +169,15 @@ export class FichaService {
     }
 
     if (membroEncontrado.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
-      return this.fichaRepositorio.listarPorCampanha(dto);
+      const fichas = await this.fichaRepositorio.listarPorCampanha(dto);
+      return fichas.map((ficha) => this.paraResumoPublico(ficha));
     }
 
-    return this.fichaRepositorio.listarVisiveisParaUsuario({
+    const fichas = await this.fichaRepositorio.listarVisiveisParaUsuario({
       campanhaId: dto.campanhaId,
       usuarioId: usuarioAtivo.sub,
     });
+    return fichas.map((ficha) => this.paraResumoPublico(ficha));
   }
 
   /**
@@ -181,7 +186,67 @@ export class FichaService {
    * vem do autenticado, montado pela controller).
    */
   async listarAcervo(dto: FichaAcervoListarDto): Promise<FichaResumoDto[]> {
-    return this.fichaRepositorio.listarPorUsuario(dto);
+    const fichas = await this.fichaRepositorio.listarPorUsuario(dto);
+    return fichas.map((ficha) => this.paraResumoPublico(ficha));
+  }
+
+  /**
+   * Reduz o `FichaResumoInternoDto` (repository) ao `FichaResumoDto` público, computando
+   * `sobrecarregado` com exatidão (`calcularResumoCompras`, `shared/regras/compras` — o mesmo
+   * motor da aba Inventário) em vez da aproximação em SQL da 1ª tentativa. Monta o objeto público
+   * campo a campo (não um spread) para não vazar `itens`/`amplificadores`/`dinheiro`/`vontade`/
+   * `inventarioMaximo` bruto pra fora do backend — esses só existem pra alimentar este cálculo.
+   */
+  private paraResumoPublico(fichaInterna: FichaResumoInternoDto): FichaResumoDto {
+    return {
+      id: fichaInterna.id,
+      campanhaId: fichaInterna.campanhaId,
+      campanhaNome: fichaInterna.campanhaNome,
+      usuarioId: fichaInterna.usuarioId,
+      nome: fichaInterna.nome,
+      classe: fichaInterna.classe,
+      arquetipo: fichaInterna.arquetipo,
+      nivel: fichaInterna.nivel,
+      vidaAtual: fichaInterna.vidaAtual,
+      vidaMaxima: fichaInterna.vidaMaxima,
+      energiaAtual: fichaInterna.energiaAtual,
+      energiaMaxima: fichaInterna.energiaMaxima,
+      morrendo: fichaInterna.morrendo,
+      machucado: fichaInterna.machucado,
+      inconsciente: fichaInterna.inconsciente,
+      prestigio: fichaInterna.prestigio,
+      defesa: fichaInterna.defesa,
+      esquiva: fichaInterna.esquiva,
+      bloqueio: fichaInterna.bloqueio,
+      personalidade: fichaInterna.personalidade,
+      origemNome: fichaInterna.origemNome,
+      sobrecarregado: this.calcularSobrecarregado(fichaInterna),
+    };
+  }
+
+  /**
+   * `true` quando o peso do inventário principal excede o Inventário Máximo efetivo (aviso, não
+   * trava — `sistema-v4.1.0.md`). Soma o ajuste de amplificador (`ajusteInventarioAmplificadores`)
+   * ao snapshot bruto de `inventarioMaximo` antes de chamar `calcularResumoCompras` — mesmo passo
+   * que a aba Inventário já faz no cliente (`inventarioMaximoEfetivo`) antes de montar o resumo de
+   * compras. `undefined` numa ficha sem `derivados.inventarioMaximo` salvo (retrocompat) — sem o
+   * máximo não há o que comparar.
+   */
+  private calcularSobrecarregado(fichaInterna: FichaResumoInternoDto): boolean | undefined {
+    if (fichaInterna.inventarioMaximo === undefined) {
+      return undefined;
+    }
+    const inventarioMaximoEfetivo =
+      fichaInterna.inventarioMaximo + ajusteInventarioAmplificadores(fichaInterna.amplificadores);
+    const resumoCompras = calcularResumoCompras({
+      itens: fichaInterna.itens,
+      amplificadores: fichaInterna.amplificadores,
+      dinheiro: fichaInterna.dinheiro ?? 0,
+      prestigio: fichaInterna.prestigio ?? 0,
+      inventario: inventarioMaximoEfetivo,
+      vontade: fichaInterna.vontade,
+    });
+    return resumoCompras.pesoUsado > resumoCompras.inventarioEfetivo;
   }
 
   /**
