@@ -31,7 +31,7 @@ describe('calcularDerivados', () => {
     expect(derivados.esquiva).toBe(defesa?.esquiva);
     expect(derivados.bloqueio).toBe(defesa?.bloqueio);
     expect(derivados.inventarioMaximo).toBe(
-      calcularInventario({ classe: ClasseEnum.COMBATENTE, nivel: 3, forca: 3 }),
+      calcularInventario({ classe: ClasseEnum.COMBATENTE, forca: 3 }),
     );
     expect(typeof derivados.deslocamento).toBe('number');
     expect(typeof derivados.percepcao).toBe('number');
