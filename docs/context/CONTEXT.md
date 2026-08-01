@@ -98,13 +98,15 @@ campo/Alertas), alerta visual + nome da ficha crítica por linha, resumo da pró
 (Vida atual/máxima, jogador) e convite copiável direto na linha (mestre), sem abrir o detalhe. O
 detalhe (`/painel/:id`, visão do **mestre** — m2-19; a do jogador é a `m2-20`) tem banner de alerta
 condicional no topo (ficha crítica, com link direto pra ela), tira de estatísticas (Membros/
-Fichas/Convite/Alertas), tira horizontal de rolagens recentes (teaser do feed; a lista completa só
-na sidebar de histórico, aberta pelo seu próprio gatilho D20) e duas colunas — **Membros** (450px
+Fichas/Convite/Alertas), tira horizontal rolável de rolagens da última hora (sem limite fixo de
+itens — a lista completa/sem limite de tempo só na sidebar de histórico, aberta pelo seu próprio
+gatilho D20) e duas colunas — **Membros** (450px
 no desktop; nome/papel/gestão, sem fichas; mestre sempre primeiro, depois jogadores em ordem
 alfabética) e **Esquadrão** (grid fixo de 2 colunas — 1 no mobile, e antes de Membros quando a
 grade empilha; segue a mesma ordem mestre→alfabética da coluna Membros — com todas as fichas da
 campanha achatadas, nome do dono em cada mini-card, Vida/Energia com ajuste rápido ± sem abrir a
-ficha, reações e o kebab de ações da ficha — duplicar/remover-da-campanha/excluir). O cabeçalho tem
+ficha, reações (Defesa/Esquiva/Bloqueio/Contra-ataque, cada uma só aparece se a ficha tiver o valor)
+e o kebab de ações da ficha — duplicar/remover-da-campanha/excluir). O cabeçalho tem
 nome da campanha em linha própria (mais
 destaque no mobile) e, abaixo/ao lado, indicador de tempo real, botão "Voltar às campanhas",
 gatilho de histórico de rolagens e (mestre) o menu kebab de ações da campanha (editar nome/

@@ -389,6 +389,7 @@ describe('CampanhaDetalhe', () => {
       defesa: 12,
       esquiva: 15,
       bloqueio: 14,
+      contraAtaque: 8,
       personalidade: 'Frio',
       origemNome: 'Guarda-Costas',
       sobrecarregado: true,
@@ -522,14 +523,34 @@ describe('CampanhaDetalhe', () => {
       expect(pill?.querySelector('.rolagem-pill__meta')?.textContent).toContain('Mestre');
     });
 
-    it('mostra no máximo 4 pills mesmo com mais rolagens no feed', () => {
+    it('mostra todas as rolagens da última hora, sem limite fixo de itens', () => {
       const { raiz } = montar({
         usuarioId: 1,
         membros: membrosDois(),
         rolagens: [1, 2, 3, 4, 5, 6].map((id) => rolagem({ id, rotulo: `Rolagem ${id}` })),
       });
 
-      expect(raiz.querySelectorAll('.rolagem-pill')).toHaveLength(4);
+      expect(raiz.querySelectorAll('.rolagem-pill')).toHaveLength(6);
+    });
+
+    it('esconde rolagens feitas há mais de 1 hora', () => {
+      const { raiz } = montar({
+        usuarioId: 1,
+        membros: membrosDois(),
+        rolagens: [
+          rolagem({ id: 1, rotulo: 'Recente', createdDate: new Date().toISOString() }),
+          rolagem({
+            id: 2,
+            rotulo: 'Antiga',
+            createdDate: new Date(Date.now() - 61 * 60 * 1000).toISOString(),
+          }),
+        ],
+      });
+
+      const rotulos = Array.from(raiz.querySelectorAll('.rolagem-pill__rotulo')).map((el) =>
+        el.textContent?.trim(),
+      );
+      expect(rotulos).toEqual(['Recente']);
     });
 
     it('some quando o feed está vazio', () => {
@@ -760,13 +781,36 @@ describe('CampanhaDetalhe', () => {
       expect(cartao.textContent).toContain('Operador');
     });
 
-    it('mostra Defesa/Esquiva/Bloqueio quando presentes', () => {
+    it('mostra Defesa/Esquiva/Bloqueio/Contra-ataque quando presentes', () => {
       const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
 
       const reacoes = raiz.querySelector('.detalhe__ficha-reacoes');
       expect(reacoes?.textContent).toContain('Defesa 12');
       expect(reacoes?.textContent).toContain('Esquiva 15');
       expect(reacoes?.textContent).toContain('Bloqueio 14');
+      expect(reacoes?.textContent).toContain('Contra-ataque 8');
+    });
+
+    it('esconde Contra-ataque numa ficha sem habilidade que o conceda', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      const cartoes = Array.from(raiz.querySelectorAll('.detalhe__ficha-card'));
+      const vera = cartoes.find((c) => c.textContent?.includes('Vera')) as HTMLElement;
+      expect(vera.querySelector('.detalhe__ficha-reacoes')).toBeNull();
+    });
+
+    it('esconde Defesa/Esquiva/Bloqueio/Contra-ataque quando a API devolve null (não a chave ausente — o JSON de rede não omite `undefined`, só chega como null)', () => {
+      const fichaComNulos: FichaResumoDto = {
+        ...fichas[1],
+        defesa: null as unknown as undefined,
+        esquiva: null as unknown as undefined,
+        bloqueio: null as unknown as undefined,
+        contraAtaque: null as unknown as undefined,
+      };
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas: [fichaComNulos] });
+
+      const cartao = raiz.querySelector('.detalhe__ficha-card') as HTMLElement;
+      expect(cartao.querySelector('.detalhe__ficha-reacoes')).toBeNull();
     });
 
     it('mostra Personalidade/Origem combinadas e esconde a linha quando ausentes', () => {

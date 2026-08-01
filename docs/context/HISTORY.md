@@ -21,6 +21,60 @@
 
 ## Registro por task (mais recente primeiro)
 
+## Ajuste pós-m2-19 (3) — janela de 1h nas Rolagens Recentes + Contra-ataque no mini-card (2026-08-01)
+
+Dois pedidos do autor na visão do mestre em `/painel/:id`, ambos sobre o card do detalhe.
+
+**Rolagens Recentes vira janela de tempo, não recorte fixo** — `rolagensRecentes` (`detalhe.page.ts`)
+trocou `this.rolagensFeed().slice(0, 4)` (top-4 fixo) por um filtro pela última hora:
+`rolagensFeed().filter((item) => new Date(item.createdDate).getTime() >= agora() - UMA_HORA_MS)`.
+Reavalia a cada tick do relógio de 5s (`agora()`, o mesmo que já alimentava "Atualizado há Xs"),
+então uma rolagem sai da tira sozinha ao completar 1h, sem novo fetch. O pedido inicial era trocar
+o layout pra um grid que sempre preenche a largura (sem espaço vazio à direita com poucos itens);
+o autor recuou nisso a meio da implementação ("pode ser uma linha com scroll mesmo") — a tira
+horizontal rolável (`overflow-x: auto` + `appOverflowFade`) **não mudou**, só o filtro de dados.
+Spec atualizada: `mostra no máximo 4 pills mesmo com mais rolagens no feed` virou duas — uma
+confirmando que 6 rolagens recentes aparecem todas (sem teto fixo) e outra que uma rolagem há 61
+min some.
+
+**Contra-ataque na linha de reações do mini-card do Esquadrão** — mesmo padrão de
+Defesa/Esquiva/Bloqueio (item 5 da `m2-19`), lido do mesmo snapshot `dados.derivados` (persistido
+por `calcularDerivados`, `shared/regras/agente/derivados`), só que `undefined` na maioria das
+fichas (só existe com a habilidade "Contra-Ataque"). Layers tocadas, de baixo pra cima:
+`FichaResumoDto`/`FichaResumoInternoDto` (`shared/dtos/ficha/ficha-operacao.dtos.ts`, novo campo
+opcional `contraAtaque?: number`) → `FichaRepository.colunasResumo()` (nova coluna
+`(ficha.dados->'derivados'->>'contraAtaque')::int AS "contraAtaque"`) → `FichaService.paraResumoPublico`
+(repassa o campo) → `ItemFicha`/`fichasPorMembro` (`detalhe.page.ts`) → template (`detalhe.page.html`,
+novo `@if (ficha.contraAtaque !== undefined)` dentro de `.detalhe__ficha-reacoes`, mesma regra das
+outras três reações — só mostra a linha inteira se ao menos uma das quatro existir). `shared` precisou
+rebuild (`npm run build` em `shared/`) pra `dist/index.d.ts` pegar o campo novo — sem isso o eslint
+type-aware do backend reclamava (`no-unsafe-assignment`) porque `fichaInterna.contraAtaque` ainda
+resolvia pra `any` contra o `.d.ts` antigo.
+
+**Bug pré-existente achado na verificação ao vivo, não introduzido por esta task:** o template usava
+`!== undefined` pra decidir mostrar Defesa/Esquiva/Bloqueio — mas o valor que chega do backend via
+JSON **nunca** é a chave ausente quando `derivados.campo` não existe no JSONB (o `JSON.stringify` do
+lado do backend *dropa* uma chave com valor `undefined` na hora de persistir, então o SQL
+`dados->'derivados'->>'campo'` de uma ficha sem aquele campo devolve `NULL`, que o driver `pg`
+entrega como `null` em JS — nunca `undefined`). `null !== undefined` é `true`, então o mini-card
+mostrava "Defesa " em branco (rótulo sem valor) pra qualquer ficha Civil (que não tem
+defesa/esquiva/bloqueio calculados) — achado ao vivo criando uma ficha via REST sem esses campos e
+vendo o rótulo vazar. Corrigido normalizando `null → undefined` num único ponto,
+`fichasPorMembro` (`ficha.defesa ?? undefined`, e o mesmo pros outros três), em vez de trocar os
+quatro `@if` do template pra `!= null` (evita igualdade solta espalhada pelo HTML). Nova spec cobre
+isso direto: fixture com os quatro campos setados como `null as unknown as undefined` (simulando o
+JSON de rede) e confirma que `.detalhe__ficha-reacoes` some por completo.
+
+**Verificação:** unitários — `detalhe.page.spec.ts` 71/71 (4 novos: filtro de 1h ×2, mostra/esconde
+Contra-ataque, esconde tudo com `null` vindo da API); backend `ficha.service.spec.ts` 96/96, suíte
+completa do backend 167/167; suíte completa do frontend 633/634 (1 falha pré-existente e não
+relacionada em `ficha-inventario.component.spec.ts`, já documentada). `tsc --noEmit` do backend e
+`ng build` do frontend limpos após o rebuild do `shared`. Ao vivo (Playwright + REST + `psql` direto
+pro Postgres pra forjar uma rolagem "há 90 min" e criar fichas mínimas via `POST /ficha` bypassando o
+assistente): campanha com duas fichas (uma com `derivados.contraAtaque`, outra sem) e duas rolagens
+(uma agora, uma retroativa) — screenshot confirma "Contra-ataque 7" só no card com a habilidade, e
+a tira de rolagens mostrando só a rolagem recente.
+
 ## Ajuste pós-m2-19 (2) — coluna Membros mais larga e ordenada (2026-08-01)
 
 Segundo pedido de ajuste do autor na visão do mestre em `/painel/:id`, desta vez sobre a coluna

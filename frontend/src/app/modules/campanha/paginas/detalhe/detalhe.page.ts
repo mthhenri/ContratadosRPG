@@ -30,6 +30,9 @@ import { FichaVitalidadeRapidaService } from '../../../ficha/ficha-vitalidade-ra
 import { RolagemService } from '../../../ficha/rolagem.service';
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
 
+/** Janela da tira "Rolagens Recentes" (item 3) — só rolagens feitas na última hora. */
+const UMA_HORA_MS = 60 * 60 * 1000;
+
 /** Uma das 3 condições no mini-card — sempre as 3, com `ativa` dizendo se está marcada (item 3). */
 interface ItemFichaCondicao extends DescritorCondicao {
   readonly ativa: boolean;
@@ -67,6 +70,8 @@ interface ItemFicha {
   readonly defesa?: number;
   readonly esquiva?: number;
   readonly bloqueio?: number;
+  /** Contra-Ataque — `undefined` numa ficha sem nenhuma habilidade que o conceda. */
+  readonly contraAtaque?: number;
   /**
    * Personalidade + nome da Origem (m3-23) já combinados para exibição ("Frio · Guarda-Costas") —
    * `null` quando nenhum dos dois está definido (ficha sem Identidade ainda), pra esconder a linha
@@ -308,9 +313,13 @@ export class CampanhaDetalhe {
         condicoes: CONDICOES_FICHA.map((condicao) => ({ ...condicao, ativa: ficha[condicao.chave] })),
         critico: ficha.vidaAtual <= 0,
         patenteTexto: rotuloPatente(ficha.prestigio ?? 0),
-        defesa: ficha.defesa,
-        esquiva: ficha.esquiva,
-        bloqueio: ficha.bloqueio,
+        // `?? undefined`: o JSON vindo da API traz `null` (não a chave ausente) quando a ficha não
+        // tem o campo salvo em `derivados` — o template abaixo só sabe esconder a linha com
+        // `!== undefined`, então normaliza aqui pra nunca vazar um "Defesa " em branco.
+        defesa: ficha.defesa ?? undefined,
+        esquiva: ficha.esquiva ?? undefined,
+        bloqueio: ficha.bloqueio ?? undefined,
+        contraAtaque: ficha.contraAtaque ?? undefined,
         identidadeTexto: [ficha.personalidade, ficha.origemNome].filter(Boolean).join(' · ') || null,
         sobrecarregado: ficha.sobrecarregado ?? false,
       };
@@ -361,11 +370,15 @@ export class CampanhaDetalhe {
   protected readonly alertasCount = computed(() => this.fichasCriticas().length);
 
   /**
-   * As 3-4 rolagens mais recentes do feed (item 3) — `rolagensFeed()` já vem mais recente
-   * primeiro (m3-27), então é só um recorte; a lista completa continua só na sidebar de
-   * histórico, aberta pelo próprio gatilho D20 dela no cabeçalho.
+   * Rolagens da última hora (item 3) — `rolagensFeed()` já vem mais recente primeiro (m3-27), então
+   * é só um filtro por janela de tempo; a lista completa (sem limite de tempo) continua só na
+   * sidebar de histórico, aberta pelo próprio gatilho D20 dela no cabeçalho. Reavalia a cada tick de
+   * `agora()` (5s) pra rolagens saírem da tira sozinhas ao completar 1h, sem precisar de novo fetch.
    */
-  protected readonly rolagensRecentes = computed(() => this.rolagensFeed().slice(0, 4));
+  protected readonly rolagensRecentes = computed(() => {
+    const limite = this.agora() - UMA_HORA_MS;
+    return this.rolagensFeed().filter((item) => new Date(item.createdDate).getTime() >= limite);
+  });
 
   constructor() {
     this.carregar(true);

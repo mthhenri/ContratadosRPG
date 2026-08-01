@@ -437,9 +437,9 @@
                       }
                     </span>
                   </div>
-                  @if (ficha.defesa !== undefined || ficha.esquiva !== undefined || ficha.bloqueio !== undefined || podeAjustarFicha(ficha.usuarioId)) {
+                  @if (ficha.defesa !== undefined || ficha.esquiva !== undefined || ficha.bloqueio !== undefined || ficha.contraAtaque !== undefined || podeAjustarFicha(ficha.usuarioId)) {
                     <div class="detalhe__ficha-rodape">
-                      @if (ficha.defesa !== undefined || ficha.esquiva !== undefined || ficha.bloqueio !== undefined) {
+                      @if (ficha.defesa !== undefined || ficha.esquiva !== undefined || ficha.bloqueio !== undefined || ficha.contraAtaque !== undefined) {
                         <div class="detalhe__ficha-reacoes">
                           @if (ficha.defesa !== undefined) {
                             <span>Defesa {{ ficha.defesa }}</span>
@@ -449,6 +449,9 @@
                           }
                           @if (ficha.bloqueio !== undefined) {
                             <span>Bloqueio {{ ficha.bloqueio }}</span>
+                          }
+                          @if (ficha.contraAtaque !== undefined) {
+                            <span>Contra-ataque {{ ficha.contraAtaque }}</span>
                           }
                         </div>
                       }

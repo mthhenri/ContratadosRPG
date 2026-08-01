@@ -218,6 +218,7 @@ export class FichaService {
       defesa: fichaInterna.defesa,
       esquiva: fichaInterna.esquiva,
       bloqueio: fichaInterna.bloqueio,
+      contraAtaque: fichaInterna.contraAtaque,
       personalidade: fichaInterna.personalidade,
       origemNome: fichaInterna.origemNome,
       sobrecarregado: this.calcularSobrecarregado(fichaInterna),

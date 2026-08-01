@@ -86,10 +86,11 @@ export class FichaRepository extends BaseRepository {
    * `LEFT JOIN campanha` que os três métodos precisam declarar no `FROM` — `LEFT` porque
    * `campanha_id` tolera `NULL` (ficha solta no acervo); nesse caso as duas colunas saem `NULL`.
    *
-   * `prestigio`/`defesa`/`esquiva`/`bloqueio`/`personalidade`/`origemNome` (mini-card compacto do
-   * detalhe da campanha): lidos direto do JSONB, sem recalcular nada (o resumo não tem
-   * atributos/habilidades pra rodar `shared/regras` ao vivo) — `defesa`/`esquiva`/`bloqueio` vêm do
-   * snapshot `derivados` (m3-10), `NULL` em ficha sem o bloco salvo ou classe Civil (não os possui).
+   * `prestigio`/`defesa`/`esquiva`/`bloqueio`/`contraAtaque`/`personalidade`/`origemNome` (mini-card
+   * compacto do detalhe da campanha): lidos direto do JSONB, sem recalcular nada (o resumo não tem
+   * atributos/habilidades pra rodar `shared/regras` ao vivo) — `defesa`/`esquiva`/`bloqueio`/
+   * `contraAtaque` vêm do snapshot `derivados` (m3-10), `NULL` em ficha sem o bloco salvo, classe
+   * Civil (não possui defesa/esquiva/bloqueio) ou sem habilidade que conceda contra-ataque.
    *
    * `itens`/`amplificadores`/`dinheiro`/`vontade`/`inventarioMaximo`: **não** entram no
    * `FichaResumoDto` público — são o material bruto de `FichaResumoInternoDto` que o
@@ -121,6 +122,7 @@ export class FichaRepository extends BaseRepository {
               (ficha.dados->'derivados'->>'defesa')::int AS defesa,
               (ficha.dados->'derivados'->>'esquiva')::int AS esquiva,
               (ficha.dados->'derivados'->>'bloqueio')::int AS bloqueio,
+              (ficha.dados->'derivados'->>'contraAtaque')::int AS "contraAtaque",
               ficha.dados->'identidade'->>'personalidade' AS personalidade,
               ficha.dados->'identidade'->'origem'->>'nome' AS "origemNome",
               COALESCE(ficha.dados->'inventario'->'itens', '[]'::jsonb) AS itens,

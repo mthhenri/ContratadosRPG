@@ -104,6 +104,11 @@ export interface FichaResumoDto {
   readonly defesa?: number;
   readonly esquiva?: number;
   readonly bloqueio?: number;
+  /**
+   * Contra-Ataque — mesmo snapshot `derivados`; `undefined` numa ficha sem nenhuma habilidade que o
+   * conceda (`calcularContraAtaque`, `shared/regras/agente/derivados`), não só nas sem `derivados`.
+   */
+  readonly contraAtaque?: number;
   /** Personalidade e nome da Origem (`FichaIdentidadeDto`, m3-23) — `null`/ausente sem Identidade definida. */
   readonly personalidade?: string | null;
   readonly origemNome?: string | null;
