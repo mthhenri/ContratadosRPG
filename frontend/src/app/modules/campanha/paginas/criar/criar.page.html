@@ -1,9 +1,11 @@
-<section class="campanha-formulario">
-  <article class="card">
-    <header class="card__cabecalho">
-      <span class="card__indice">//</span>
-      <h1 class="card__titulo">Nova campanha</h1>
-      <span class="card__regua"></span>
+<div class="dialogo" role="dialog" aria-modal="true" aria-label="Nova campanha">
+  <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="fecharDialog()"></button>
+  <div class="dialogo__painel">
+    <header class="dialogo__cabecalho">
+      <span class="dialogo__indice">//</span>
+      <h2 class="dialogo__titulo">Nova campanha</h2>
+      <span class="dialogo__regua"></span>
+      <button class="dialogo__fechar" type="button" aria-label="Fechar" (click)="fecharDialog()">✕</button>
     </header>
 
     <form class="campanha-formulario__corpo" [formGroup]="formulario" (ngSubmit)="enviar()">
@@ -29,9 +31,5 @@
         {{ enviando() ? 'Criando…' : 'Criar campanha' }}
       </button>
     </form>
-
-    <p class="campanha-formulario__alternativa">
-      <a class="campanha-formulario__link" routerLink="/painel">Voltar às campanhas</a>
-    </p>
-  </article>
-</section>
+  </div>
+</div>

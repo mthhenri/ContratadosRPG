@@ -10,14 +10,14 @@
     </header>
 
     <div class="campanhas__acoes">
-      <a class="botao botao--primario campanhas__acao" routerLink="/painel/criar">
+      <button class="botao botao--primario campanhas__acao" type="button" (click)="abrirCriar()">
         <app-icone nome="mais" />
         Criar campanha
-      </a>
-      <a class="botao botao--secundario campanhas__acao" routerLink="/painel/entrar">
+      </button>
+      <button class="botao botao--secundario campanhas__acao" type="button" (click)="abrirEntrar()">
         <app-icone nome="convite" />
         Entrar por código
-      </a>
+      </button>
     </div>
 
     @if (!carregando() && campanhas().length) {
@@ -125,4 +125,10 @@
       </ul>
     }
   </article>
+
+  @if (dialogoAberto() === 'criar') {
+    <app-campanha-criar (fechar)="fecharDialogo()" />
+  } @else if (dialogoAberto() === 'entrar') {
+    <app-campanha-entrar (fechar)="fecharDialogo()" />
+  }
 </section>

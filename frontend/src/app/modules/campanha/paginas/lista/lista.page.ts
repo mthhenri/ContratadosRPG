@@ -8,6 +8,11 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { rotuloRelativo } from '../../../../shared/rotulo-relativo.util';
 import { CampanhaService } from '../../campanha.service';
+import { CampanhaCriar } from '../criar/criar.page';
+import { CampanhaEntrar } from '../entrar/entrar.page';
+
+/** Qual dialog de entrada está aberto no painel — `null` quando nenhum. */
+type DialogoPainel = 'criar' | 'entrar' | null;
 
 /** Estatísticas agregadas do topo (m2-18) — somadas no client a partir da lista já enriquecida pelo backend. */
 interface EstatisticasCampanhas {
@@ -33,7 +38,7 @@ interface EstatisticasCampanhas {
  */
 @Component({
   selector: 'app-campanha-lista',
-  imports: [RouterLink, Icone, OverflowFade],
+  imports: [RouterLink, Icone, OverflowFade, CampanhaCriar, CampanhaEntrar],
   templateUrl: './lista.page.html',
   styleUrl: './lista.page.scss',
 })
@@ -48,6 +53,8 @@ export class CampanhaLista {
   protected readonly carregando = signal(true);
   /** `id` da campanha cujo convite acabou de ser copiado — botão vira "check" por ~1,5s. */
   protected readonly copiadoId = signal<number | null>(null);
+  /** Dialog "Criar campanha"/"Entrar por código" aberto sobre o painel — `null` quando nenhum. */
+  protected readonly dialogoAberto = signal<DialogoPainel>(null);
 
   /** Relógio ticando a cada 5s só pra recomputar `rotuloAtualizacao`, sem novo fetch (mesmo padrão do detalhe). */
   private readonly agora = signal(Date.now());
@@ -74,6 +81,21 @@ export class CampanhaLista {
 
     const relogio = setInterval(() => this.agora.set(Date.now()), 5000);
     this.destroyRef.onDestroy(() => clearInterval(relogio));
+  }
+
+  /** Abre o dialog "Nova campanha". */
+  protected abrirCriar(): void {
+    this.dialogoAberto.set('criar');
+  }
+
+  /** Abre o dialog "Entrar por código". */
+  protected abrirEntrar(): void {
+    this.dialogoAberto.set('entrar');
+  }
+
+  /** Fecha o dialog aberto (fundo, "✕" ou envio bem-sucedido). */
+  protected fecharDialogo(): void {
+    this.dialogoAberto.set(null);
   }
 
   /** "Agora/há Xs/há X min/há X h" para `campanha.atualizadoEm` — recomputado pelo relógio de 5s. */

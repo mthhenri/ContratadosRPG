@@ -1,19 +1,20 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, output, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { CampanhaService } from '../../campanha.service';
 
 /**
- * Tela privada de entrada em campanha por código. Reactive Forms coleta o `codigoConvite`;
- * ao entrar, o usuário vira `JOGADOR` e a navegação segue ao detalhe (`/painel/:id`). Código
+ * Dialog de entrada em campanha por código, aberto a partir do painel (`CampanhaLista`).
+ * Reactive Forms coleta o `codigoConvite`; ao entrar, o usuário vira `JOGADOR` e a navegação
+ * segue ao detalhe (`/painel/:id`), o que já fecha o dialog (sai de `/painel`). Código
  * inexistente (404) ou já-membro (400) chegam como toast pelo `error-handler.interceptor` — a
  * autoridade é o backend (§14); aqui só destravamos o botão ao fim da chamada.
  */
 @Component({
   selector: 'app-campanha-entrar',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule],
   templateUrl: './entrar.page.html',
   styleUrl: './entrar.page.scss',
 })
@@ -21,6 +22,9 @@ export class CampanhaEntrar {
   private readonly formBuilder = inject(FormBuilder);
   private readonly campanhaService = inject(CampanhaService);
   private readonly router = inject(Router);
+
+  /** Fecha o dialog sem entrar. */
+  readonly fechar = output<void>();
 
   protected readonly enviando = signal(false);
 
@@ -42,5 +46,10 @@ export class CampanhaEntrar {
           void this.router.navigate(['/painel', campanhaEntrada.id]);
         },
       });
+  }
+
+  /** Fecha sem entrar (fundo ou "✕"). */
+  protected fecharDialog(): void {
+    this.fechar.emit();
   }
 }
