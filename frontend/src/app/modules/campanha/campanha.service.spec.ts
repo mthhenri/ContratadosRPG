@@ -41,7 +41,19 @@ describe('CampanhaService', () => {
   it('lista as campanhas do usuário', () => {
     const { servico, http } = criar();
     const campanhas: CampanhaResumoDto[] = [
-      { id: 1, nome: 'Contenção Alfa', descricao: null, papel: TipoCampanhaMembroPapelEnum.MESTRE },
+      {
+        id: 1,
+        nome: 'Contenção Alfa',
+        descricao: null,
+        papel: TipoCampanhaMembroPapelEnum.MESTRE,
+        totalMembros: 3,
+        totalFichas: 5,
+        temFichaCritica: false,
+        fichaCriticaNome: null,
+        minhaFichaResumo: null,
+        codigoConvite: 'ABCD1234',
+        atualizadoEm: '2026-07-29T01:48:01.082Z',
+      },
     ];
 
     let recebido: CampanhaResumoDto[] | undefined;

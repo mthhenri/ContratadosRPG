@@ -1,6 +1,6 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-01 · **Última task registrada:** `m3-27` (2026-07-29)
+> **Última revisão:** 2026-08-01 · **Última task registrada:** `m2-18` (2026-08-01)
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -13,20 +13,16 @@
 
 ## 1. Próxima Task
 
-**Declarada no último registro do `HISTORY.md` (fecho da `m3-27`): `m3-53` — ficha: exportar PDF**
-(`docs/specs/backlog/m3-53-ficha-exportar-pdf.spec.md`). É a única pendência do lote de refino
-`m3-40`…`m3-56`. A spec é grande e o próprio texto autoriza quebrá-la em subtasks.
-
-**⚠ A confirmar antes de começar:** o commit mais recente do repositório (`d211803`) adicionou as
-specs `m2-18`/`m2-19`/`m2-20` (redesenho do painel de campanhas), o que sugere que a frente ativa
-mudou de lugar depois que este registro foi escrito. Confirmar com o autor qual das duas frentes
-vale antes de mover spec para `active/`.
+**Declarada no último registro do `HISTORY.md` (fecho da `m2-18`): `m2-19` — painel de
+campanhas: detalhe `/painel/:id` na visão do mestre** (esquadrão) —
+`docs/specs/backlog/m2-19-painel-campanha-detalhe-mestre.spec.md`. Segue a mesma frente de
+redesenho do painel de campanhas iniciada pela `m2-18` (lista → painel de controle); `m2-20`
+(mesma tela na visão do jogador) é a irmã dela, logo depois.
 
 ### Fila do backlog (`docs/specs/backlog/`)
 
 | Spec | Frente | O que é |
 |---|---|---|
-| `m2-18` | painel de campanhas | lista `/painel` vira painel de controle (linhas densas + estatísticas + alerta de ficha crítica) |
 | `m2-19` | painel de campanhas | detalhe `/painel/:id` na visão do **mestre** (esquadrão) |
 | `m2-20` | painel de campanhas | detalhe `/painel/:id` na visão do **jogador** |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
@@ -50,8 +46,10 @@ Deploy em produção por **integração nativa das plataformas**, sem GitHub Act
 `master` → Render (backend) e Cloudflare Pages (frontend) puxam do Git sozinhos; banco no Supabase.
 O GitHub Actions só roda **CI** (lint + testes nos 3 workspaces em todo PR).
 
-**Suítes:** shared 452+ · backend 162/162 · frontend 592/**593** — a 1 falha é conhecida e
-pré-existente, ver [`PROBLEMS.md`](PROBLEMS.md) `P-001`.
+**Suítes:** shared 454+ · backend 167/167 · frontend 621/**622** — a 1 falha é conhecida e
+pré-existente, ver [`PROBLEMS.md`](PROBLEMS.md) `P-001`. `npm run lint` **não fecha limpo** hoje
+em nenhum dos dois workspaces (frontend/backend) — falhas pré-existentes não relacionadas a
+nenhuma task recente, ver `PROBLEMS.md` `P-009`.
 
 ---
 
@@ -61,7 +59,7 @@ pré-existente, ver [`PROBLEMS.md`](PROBLEMS.md) `P-001`.
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, `core/`, CI, deploy) | **concluído** |
 | M1 | Calculadora com paridade | **concluído no código** (`m1-01`…`m1-20`). Restam 2 passos **operacionais** de plataforma — ver `PROBLEMS.md` `P-006` |
-| M2 | Auth + Campanhas | **concluído** (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`). Redesenho `m2-18`…`m2-20` no backlog |
+| M2 | Auth + Campanhas | **concluído** (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`). Redesenho do painel: `m2-18` (lista) feito; `m2-19`/`m2-20` (detalhe mestre/jogador) no backlog |
 | M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; falta `m3-53` do lote de refino + o lote de guia de criação (`m3-57`…`m3-59`) e `m3-61`/`m3-62` |
 | M4 | Ficha de Criatura/NPC | não iniciado |
 | M5 | Guia de Missão | não iniciado |
@@ -94,10 +92,13 @@ nome/login, trocar senha e excluir a própria conta.
 
 CRUD de campanha com papéis (mestre/jogador), entrada por `codigo_convite` com regeneração pelo
 mestre, listagem de membros, remoção de jogador e transferência de mestre. UI sob `/painel`
-(guardada): lista de campanhas em grade de cartões e detalhe (`/painel/:id`) que é o **lar das
-fichas** — cada membro exibe suas fichas em mini-cards com Vida/Energia/condições, ajuste rápido de
-± vitalidade sem abrir a ficha, destaque de ficha crítica, e a seção "Rolagens Recentes" com feed ao
-vivo. Usável em ~360px.
+(guardada): lista de campanhas (`/painel`) é um **painel de controle** (m2-18) — linhas densas por
+campanha com tira de 4 estatísticas agregadas no topo (Campanhas/Você mestra/Fichas em
+campo/Alertas), alerta visual + nome da ficha crítica por linha, resumo da própria ficha
+(Vida atual/máxima, jogador) e convite copiável direto na linha (mestre), sem abrir o detalhe. O
+detalhe (`/painel/:id`) é o **lar das fichas** — cada membro exibe suas fichas em mini-cards com
+Vida/Energia/condições, ajuste rápido de ± vitalidade sem abrir a ficha, destaque de ficha crítica,
+e a seção "Rolagens Recentes" com feed ao vivo. Usável em ~360px.
 
 ### Ficha de jogador — `backend/ficha`, `frontend/ficha`
 
@@ -201,6 +202,10 @@ Armadilhas que já custaram retrabalho neste repositório. Cada uma tem um epis�
 - Todo SELECT precisa de `WHERE [tabela].is_deleted = false`; parâmetros nomeados (`:nome`), nunca
   posicionais nem interpolação; INSERT via `INSERT ... SELECT ... RETURNING`, nunca `VALUES`;
   nenhuma coluna com `DEFAULT`; soft delete sempre, `DELETE` físico nunca.
+- **`COUNT(*)` do Postgres é `bigint`, e o driver `pg` devolve `bigint` como `string`** (evita
+  perda de precisão) — um `COUNT(*)` sem `::int` explícito quebra silenciosamente qualquer DTO
+  tipado `number` (TypeScript não pega; só aparece numa soma/comparação estranha em runtime).
+  Sempre `COUNT(*)::int` quando o resultado alimenta um campo `number`. Achado na `m2-18`.
 - **Controller é burro** — sem lógica, sem `try/catch`, sem `if`. A única micro-inteligência aceita
   é fundir id de `@Param`/`@Query` no DTO.
 

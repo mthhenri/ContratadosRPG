@@ -69,23 +69,101 @@ export class CampanhaRepository extends BaseRepository {
   }
 
   /**
-   * Lista as campanhas de que o usuário é membro, com o `papel` dele em cada uma. Junta
-   * `campanha_membro` → `campanha` → `tipo_campanha_membro_papel`, todas filtrando
-   * `is_deleted = false`. Ordena por nome da campanha.
+   * Lista as campanhas de que o usuário é membro, com o `papel` dele em cada uma, enriquecida
+   * para o painel de controle (m2-18). Base igual à anterior (`campanha_membro` → `campanha` →
+   * `tipo_campanha_membro_papel`); três `LEFT JOIN LATERAL` a mais, cada um correlacionado por
+   * `campanha.id` (e, para fichas, também por `campanha_membro.usuario_id`/`papel` — a mesma
+   * linha de membro que a query já tem à mão, sem precisar de outro `WHERE` externo):
+   *
+   * - `membros_agregado`: `COUNT` de `campanha_membro` ativo da campanha → `totalMembros`.
+   * - `fichas_agregado`: fichas **visíveis ao usuário atual** (mestre vê todas; jogador só as
+   *   próprias + as concedidas via `usuario_ficha_acesso` — mesmo critério de
+   *   `FichaRepository.listarVisiveisParaUsuario`, replicado aqui porque isto é agregação, não
+   *   listagem) → `totalFichas`, `temFichaCritica` (`BOOL_OR` de Vida atual ≤ 0) e
+   *   `fichaCriticaNome` (`MIN(nome) FILTER`, equivalente a "primeira ordenada por nome" já que
+   *   a única ordenação é por nome). O mesmo agregado também alimenta `atualizadoEm`
+   *   (`MAX(ficha.updated_date)`, combinado via `GREATEST` com `campanha.updated_date` — cai só
+   *   na data da campanha quando não há fichas visíveis).
+   * - `minha_ficha`: a própria ficha do jogador nesta campanha (primeira por nome) — o `WHERE`
+   *   já restringe a `papel = 'JOGADOR'`, então para o mestre a linha nunca casa e
+   *   `minhaFichaResumo` sai `null` sem precisar de `CASE` extra por fora.
+   *
+   * `COUNT(*)` sai `bigint` do Postgres (o driver `pg` devolve como `string` para não perder
+   * precisão) — por isso os dois `::int` explícitos, sem os quais `totalMembros`/`totalFichas`
+   * chegariam como texto no DTO tipado `number`. `json_build_object` monta `minhaFichaResumo` já
+   * no formato aninhado do DTO — o `pg` decodifica `json`/`jsonb` para objeto JS sozinho, sem
+   * parse manual na service (que seguiu passthrough, como antes). Todos os `LATERAL` são `LEFT`
+   * (nunca `INNER`) para não descartar campanhas sem ficha nenhuma. Ordena por nome da campanha.
    */
   async listarPorUsuario(dto: CampanhaListarDto): Promise<CampanhaResumoDto[]> {
     return this.executarConsulta<CampanhaResumoDto>(
       `SELECT campanha.id, campanha.nome, campanha.descricao,
-              tipo_campanha_membro_papel.codigo AS papel
+              tipo_campanha_membro_papel.codigo AS papel,
+              membros_agregado.total AS "totalMembros",
+              COALESCE(fichas_agregado.total, 0) AS "totalFichas",
+              COALESCE(fichas_agregado.tem_critica, false) AS "temFichaCritica",
+              fichas_agregado.nome_critica AS "fichaCriticaNome",
+              CASE WHEN minha_ficha.nome IS NOT NULL
+                   THEN json_build_object(
+                          'nome', minha_ficha.nome,
+                          'vidaAtual', minha_ficha."vidaAtual",
+                          'vidaMaxima', minha_ficha."vidaMaxima"
+                        )
+              END AS "minhaFichaResumo",
+              CASE WHEN tipo_campanha_membro_papel.codigo = :papelMestre
+                   THEN campanha.codigo_convite
+              END AS "codigoConvite",
+              GREATEST(
+                campanha.updated_date,
+                COALESCE(fichas_agregado.ultima_atualizacao, campanha.updated_date)
+              ) AS "atualizadoEm"
        FROM campanha_membro
        INNER JOIN campanha
          ON campanha.id = campanha_membro.campanha_id AND campanha.is_deleted = false
        INNER JOIN tipo_campanha_membro_papel
          ON tipo_campanha_membro_papel.id = campanha_membro.tipo_campanha_membro_papel_id
         AND tipo_campanha_membro_papel.is_deleted = false
+       LEFT JOIN LATERAL (
+         SELECT COUNT(*)::int AS total
+         FROM campanha_membro AS membro_contado
+         WHERE membro_contado.campanha_id = campanha.id AND membro_contado.is_deleted = false
+       ) membros_agregado ON true
+       LEFT JOIN LATERAL (
+         SELECT COUNT(*)::int AS total,
+                BOOL_OR((ficha.dados->'estado'->>'vidaAtual')::int <= 0) AS tem_critica,
+                MIN(ficha.nome) FILTER (WHERE (ficha.dados->'estado'->>'vidaAtual')::int <= 0) AS nome_critica,
+                MAX(ficha.updated_date) AS ultima_atualizacao
+         FROM ficha
+         WHERE ficha.campanha_id = campanha.id AND ficha.is_deleted = false
+           AND (
+             tipo_campanha_membro_papel.codigo = :papelMestre
+             OR ficha.usuario_id = campanha_membro.usuario_id
+             OR EXISTS (
+               SELECT 1 FROM usuario_ficha_acesso
+               WHERE usuario_ficha_acesso.ficha_id = ficha.id
+                 AND usuario_ficha_acesso.usuario_id = campanha_membro.usuario_id
+                 AND usuario_ficha_acesso.is_deleted = false
+             )
+           )
+       ) fichas_agregado ON true
+       LEFT JOIN LATERAL (
+         SELECT ficha.nome,
+                (ficha.dados->'estado'->>'vidaAtual')::int AS "vidaAtual",
+                (ficha.dados->'estado'->>'vidaMaxima')::int AS "vidaMaxima"
+         FROM ficha
+         WHERE ficha.campanha_id = campanha.id AND ficha.is_deleted = false
+           AND ficha.usuario_id = campanha_membro.usuario_id
+           AND tipo_campanha_membro_papel.codigo = :papelJogador
+         ORDER BY ficha.nome ASC
+         LIMIT 1
+       ) minha_ficha ON true
        WHERE campanha_membro.usuario_id = :usuarioId AND campanha_membro.is_deleted = false
        ORDER BY campanha.nome ASC`,
-      { usuarioId: dto.usuarioId },
+      {
+        usuarioId: dto.usuarioId,
+        papelMestre: TipoCampanhaMembroPapelEnum.MESTRE,
+        papelJogador: TipoCampanhaMembroPapelEnum.JOGADOR,
+      },
     );
   }
 

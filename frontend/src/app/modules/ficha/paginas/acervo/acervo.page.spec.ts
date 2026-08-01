@@ -38,7 +38,19 @@ describe('FichaAcervo', () => {
   }
 
   const campanhas: CampanhaResumoDto[] = [
-    { id: 9, nome: 'Operação Alfa', descricao: null, papel: TipoCampanhaMembroPapelEnum.MESTRE },
+    {
+      id: 9,
+      nome: 'Operação Alfa',
+      descricao: null,
+      papel: TipoCampanhaMembroPapelEnum.MESTRE,
+      totalMembros: 1,
+      totalFichas: 1,
+      temFichaCritica: false,
+      fichaCriticaNome: null,
+      minhaFichaResumo: null,
+      codigoConvite: 'ALFA1234',
+      atualizadoEm: '2026-07-29T01:48:01.082Z',
+    },
   ];
 
   function montar(opcoes: { fichas?: FichaResumoDto[]; campanhas?: CampanhaResumoDto[] } = {}) {

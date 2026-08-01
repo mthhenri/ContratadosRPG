@@ -129,6 +129,24 @@
 - **Desde:** `m3-60` — **adiado por decisão explícita do dono**, registrado como dívida de
   nomenclatura.
 
+### P-009 — `npm run lint` não fecha limpo em `frontend`/`backend` · `ABERTO` · processo/CI
+
+- **Sintoma:** `npm run lint --workspace=frontend` falha com 3 erros (`autofocus` proibido em
+  [ficha-inventario.component.html:58](../../frontend/src/app/modules/ficha/componentes/ficha-inventario/ficha-inventario.component.html#L58),
+  variável não usada em
+  [ficha-visualizacao.component.spec.ts:1380](../../frontend/src/app/modules/ficha/componentes/ficha-visualizacao/ficha-visualizacao.component.spec.ts#L1380)
+  e em `acervo.page.spec.ts`); `npm run lint --workspace=backend` falha com 1 erro (variável não
+  usada em
+  [ficha.service.spec.ts:914](../../backend/src/modules/ficha/ficha.service.spec.ts#L914)).
+- **Causa:** pré-existente em `master` — confirmado via `git stash` contra o HEAD comitado antes
+  de qualquer mudança desta task. Não investigada a fundo (de qual commit veio, por que o CI não
+  bloqueou o PR que introduziu).
+- **Contorno:** nenhum. Os 4 arquivos não têm relação com nenhuma task em andamento no momento em
+  que isto foi descoberto.
+- **Correção:** remover o `autofocus`/trocar por foco programático; apagar as 3 variáveis não
+  usadas (ou prefixar `_` se forem intencionais). Trivial, mas não é escopo de nenhuma task atual.
+- **Desde:** descoberto durante a `m2-18` (2026-08-01); a raiz é anterior, não determinada.
+
 ---
 
 ## Resolvidos

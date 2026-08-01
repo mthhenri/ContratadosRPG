@@ -20,6 +20,27 @@
       </a>
     </div>
 
+    @if (!carregando() && campanhas().length) {
+      <div class="campanhas__estatisticas">
+        <div class="stat">
+          <span class="stat__rotulo">Campanhas</span>
+          <span class="stat__valor">{{ estatisticas().totalCampanhas }}</span>
+        </div>
+        <div class="stat">
+          <span class="stat__rotulo">Você mestra</span>
+          <span class="stat__valor">{{ estatisticas().vocesMestra }}</span>
+        </div>
+        <div class="stat">
+          <span class="stat__rotulo">Fichas em campo</span>
+          <span class="stat__valor">{{ estatisticas().fichasEmCampo }}</span>
+        </div>
+        <div class="stat" [class.stat--alerta]="estatisticas().alertas > 0">
+          <span class="stat__rotulo">Alertas</span>
+          <span class="stat__valor">{{ estatisticas().alertas }}</span>
+        </div>
+      </div>
+    }
+
     @if (carregando()) {
       <div class="campanhas__esqueleto" role="status" aria-label="Carregando campanhas">
         @for (i of [0, 1]; track i) {
@@ -38,22 +59,67 @@
       <ul class="campanhas__lista" appOverflowFade>
         @for (campanha of campanhas(); track campanha.id) {
           <li class="campanhas__item">
-            <a class="campanhas__cartao" [routerLink]="['/painel', campanha.id]">
-              <div class="campanhas__cartao-topo">
-                <span class="campanhas__avatar" aria-hidden="true"></span>
-                <span class="campanhas__nome">{{ campanha.nome }}</span>
+            <div class="campanhas__linha" [class.campanhas__linha--critico]="campanha.temFichaCritica">
+              <a class="campanhas__linha-principal" [routerLink]="['/painel', campanha.id]">
+                <div class="campanhas__linha-identidade">
+                  <span class="campanhas__avatar" aria-hidden="true"></span>
+                  <div class="campanhas__linha-identidade-texto">
+                    <span class="campanhas__nome">{{ campanha.nome }}</span>
+                    <span class="chip-papel">
+                      <app-icone
+                        [nome]="campanha.papel === TipoCampanhaMembroPapelEnum.MESTRE ? 'coroa' : 'protecoes'"
+                      />
+                      {{ campanha.papel }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="campanhas__linha-meio">
+                  @if (campanha.descricao) {
+                    <p class="campanhas__linha-descricao">{{ campanha.descricao }}</p>
+                  }
+                  <span class="campanhas__linha-contadores">
+                    {{ campanha.totalMembros }} {{ campanha.totalMembros === 1 ? 'membro' : 'membros' }}
+                    ·
+                    {{ campanha.totalFichas }} {{ campanha.totalFichas === 1 ? 'ficha' : 'fichas' }}
+                  </span>
+                  @if (campanha.temFichaCritica) {
+                    <span class="campanhas__linha-alerta">
+                      <app-icone nome="alerta" />
+                      {{ campanha.fichaCriticaNome }} crítica
+                    </span>
+                  } @else if (campanha.minhaFichaResumo; as minhaFicha) {
+                    <span class="campanhas__linha-minha-ficha">
+                      {{ minhaFicha.nome }} · Vida {{ minhaFicha.vidaAtual }}{{
+                        minhaFicha.vidaMaxima !== null ? '/' + minhaFicha.vidaMaxima : ''
+                      }}
+                    </span>
+                  }
+                </div>
+              </a>
+
+              <div class="campanhas__linha-acao">
+                <span class="campanhas__linha-atualizado">{{ rotuloAtualizacao(campanha) }}</span>
+                @if (campanha.papel === TipoCampanhaMembroPapelEnum.MESTRE && campanha.codigoConvite) {
+                  <button
+                    class="campanhas__linha-copiar"
+                    type="button"
+                    [class.campanhas__linha-copiar--copiado]="copiadoId() === campanha.id"
+                    [attr.aria-label]="copiadoId() === campanha.id ? 'Código copiado' : 'Copiar código de convite'"
+                    (click)="copiarConvite(campanha, $event)"
+                  >
+                    <app-icone [nome]="copiadoId() === campanha.id ? 'check' : 'copiar'" />
+                  </button>
+                }
+                <a
+                  class="botao botao--secundario campanhas__linha-abrir"
+                  [routerLink]="['/painel', campanha.id]"
+                >
+                  Abrir
+                  <app-icone nome="entrar" />
+                </a>
               </div>
-              @if (campanha.descricao) {
-                <p class="campanhas__descricao">{{ campanha.descricao }}</p>
-              }
-              <div class="campanhas__cartao-rodape">
-                <span class="campanhas__cartao-regua"></span>
-                <span class="chip-papel">
-                  <app-icone [nome]="campanha.papel === TipoCampanhaMembroPapelEnum.MESTRE ? 'coroa' : 'protecoes'" />
-                  {{ campanha.papel }}
-                </span>
-              </div>
-            </a>
+            </div>
           </li>
         }
       </ul>

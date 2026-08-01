@@ -1,10 +1,14 @@
 @use 'tema/breakpoints' as bp;
 
 .campanhas {
-  // m2-17: era uma coluna única de 680px — a grade de cartões abaixo aproveita a largura real
-  // da tela (alvo de 1160px, mesma escala da ficha de jogador), sem esticar linha de texto solta.
-  max-width: 1160px;
+  // m2-18: painel de controle — mesmo padrão de largura já em produção na visualização de ficha
+  // (`visualizar.page.scss`), que aproveita mais a tela que o teto fixo de 1160px da m2-17.
+  max-width: 80vw;
   margin: 0 auto;
+
+  @include bp.mobile {
+    max-width: 100%;
+  }
 
   &__acoes {
     display: flex;
@@ -38,6 +42,20 @@
     }
   }
 
+  // Tira de 4 estatísticas agregadas (m2-18, item 4) — somadas no client a partir da lista já
+  // enriquecida pelo backend (item 1). Reflui de 4 para 2 colunas no mobile: 4 caixas de 22px de
+  // valor numa linha só ficariam espremidas em ~360px.
+  &__estatisticas {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+
+    @include bp.mobile {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
   &__estado {
     display: flex;
     align-items: center;
@@ -51,17 +69,15 @@
     }
   }
 
-  // Grade de cartões (m2-17 — era uma coluna única de linhas finas): reflui de 1 a N colunas
-  // conforme a largura disponível, sem largura mínima artificial no mobile (o `bp.mobile` cobre
-  // isso à parte). Rolável com fade topo/base quando a lista é longa (`appOverflowFade`).
+  // Lista de linhas (m2-18 — era uma grade de cartões, m2-17): coluna única, cada campanha uma
+  // linha densa. Rolável com fade topo/base quando a lista é longa (`appOverflowFade`).
   &__lista {
     list-style: none;
     margin: 0;
     padding: 2px;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: var(--gap-grid);
-    align-items: start;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     max-height: 640px;
     overflow-y: auto;
 
@@ -92,32 +108,204 @@
     }
   }
 
-  // Cartão inteiro clicável — coluna vertical (era uma linha horizontal): avatar+nome no topo,
-  // descrição no meio, papel no rodapé, cada card com a mesma altura da linha da grade
-  // (`align-items: start` no pai + altura própria por conteúdo, todas esticadas por padrão do
-  // grid quando a linha é a mesma).
-  &__cartao {
+  // Linha inteira (m2-18): identidade | meio | ação, lado a lado. O clique navega tanto pelo link
+  // principal (identidade+meio) quanto pelo botão "Abrir" — dois `<a>` irmãos em vez de um só
+  // envolvendo a linha toda, porque o botão "Copiar convite" (interativo) não pode aninhar dentro
+  // de um `<a>` (mesmo racional de `detalhe__ficha-card`/`detalhe__ficha-link`: interativo nunca
+  // aninha em interativo).
+  &__linha {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-    height: 100%;
-    padding: 16px 18px;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-control);
-    text-decoration: none;
     transition: background-color 0.15s ease, border-color 0.15s ease;
 
     &:hover {
       background: var(--accent-dim);
       border-color: var(--border-strong);
     }
+
+    @include bp.mobile {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+    }
   }
 
-  &__cartao-topo {
+  // Ficha crítica visível nesta campanha (item 3) — mesmo tratamento visual de
+  // `.detalhe__ficha-card--critico`: tingido com o token fixo da stat Vida (não `--accent`,
+  // trocável em runtime — mesmo racional da m3-38 item 7).
+  &__linha--critico {
+    background: color-mix(in srgb, var(--vida) 8%, var(--surface-2));
+    border-color: var(--vida-border);
+
+    &:hover {
+      background: color-mix(in srgb, var(--vida) 14%, var(--surface-2));
+    }
+  }
+
+  // Âncora principal (identidade+meio) — ocupa o espaço que sobra da linha; o texto nunca deve
+  // estourar a largura, daí o `min-width: 0` (regra clássica de filho flex com texto truncável).
+  &__linha-principal {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+    min-width: 0;
+    color: inherit;
+    text-decoration: none;
+
+    @include bp.mobile {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+    }
+  }
+
+  &__linha-identidade {
     display: flex;
     align-items: center;
     gap: 12px;
+    flex: none;
+    width: 220px;
+    min-width: 0;
+
+    @include bp.mobile {
+      width: auto;
+    }
+  }
+
+  &__linha-identidade-texto {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  &__linha-meio {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__linha-descricao {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text-dim);
+    // Uma linha só truncada — a linha é bem mais compacta que o cartão da m2-17.
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__linha-contadores {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-mute);
+  }
+
+  // Alerta de ficha crítica na linha (item 3) — mesmo token fixo `--vida` do card crítico.
+  &__linha-alerta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--vida);
+
+    app-icone {
+      font-size: 13px;
+    }
+  }
+
+  // Resumo da própria ficha (jogador, item 2) — só aparece quando não há alerta (o `@else if` do
+  // template já garante a exclusão mútua).
+  &__linha-minha-ficha {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  &__linha-acao {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: none;
+
+    @include bp.mobile {
+      justify-content: space-between;
+    }
+  }
+
+  &__linha-atualizado {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-mute);
+    white-space: nowrap;
+  }
+
+  // Botão de copiar convite direto na linha (mestre, item 2) — versão compacta do
+  // `detalhe__copiar` (sem o tooltip "Copiado", que não cabe numa linha densa; o ícone já vira
+  // check).
+  &__linha-copiar {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      color: var(--text);
+      background: var(--surface);
+      border-color: var(--accent-border);
+    }
+
+    &--copiado,
+    &--copiado:hover {
+      color: var(--bg);
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    @include bp.mobile {
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
+    }
+  }
+
+  &__linha-abrir {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    white-space: nowrap;
+
+    @include bp.mobile {
+      flex: 1;
+      justify-content: center;
+      min-height: bp.$alvo-toque;
+    }
   }
 
   // Avatar decorativo (placeholder de imagem — sem foto real no domínio ainda). Listras em
@@ -137,38 +325,12 @@
   &__nome {
     min-width: 0;
     font-family: var(--font-mono);
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--text);
-  }
-
-  &__descricao {
-    margin: 0;
-    flex: 1;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--text-dim);
-    // Corta descrições longas em 3 linhas — o cartão não estica indefinidamente na grade.
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
     overflow: hidden;
-  }
-
-  // Rodapé do cartão — régua fina empurra o chip de papel para a direita (mesmo padrão do
-  // cabeçalho de seção: régua + elemento de destaque); `margin-top: auto` gruda o rodapé na base
-  // do cartão mesmo quando a descrição está ausente, mantendo os chips alinhados entre cartões.
-  &__cartao-rodape {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: auto;
-  }
-
-  &__cartao-regua {
-    flex: 1;
-    height: 1px;
-    background: var(--border);
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   // Esqueleto de carregamento — mesma silhueta do `__item` real (avatar + linha), evitando o
@@ -240,6 +402,7 @@
   border: 1px solid var(--accent-border);
   border-radius: 3px;
   padding: 4px 8px;
+  width: fit-content;
 
   app-icone {
     font-size: 11px;
@@ -297,6 +460,42 @@
     font-size: 12px;
     font-weight: 600;
     color: var(--text-mute);
+  }
+}
+
+// Stat box — bloco sancionado copiado de docs/design/tema/_componentes.scss (m2-18).
+.stat {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  padding: 13px 14px;
+
+  &__rotulo {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+    margin-bottom: 7px;
+  }
+
+  &__valor {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  // Alertas > 0 (item 4) — mesmo token fixo `--vida` do card/linha crítica, não `--accent`
+  // (trocável em runtime — mesmo racional da m3-38 item 7).
+  &--alerta {
+    border-color: var(--vida-border);
+
+    .stat__valor {
+      color: var(--vida);
+    }
   }
 }
 

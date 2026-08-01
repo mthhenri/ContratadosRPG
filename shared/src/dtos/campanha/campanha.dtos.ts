@@ -36,13 +36,34 @@ export interface CampanhaListarDto {
 
 /**
  * Item de listagem — a campanha de que o usuário é membro, com o `papel` dele nela
- * (`MESTRE`/`JOGADOR`). Recorte enxuto: sem `codigoConvite` (gestão de convite é m2-05).
+ * (`MESTRE`/`JOGADOR`), enriquecido para o painel de controle (m2-18): estatísticas agregadas
+ * e o recorte de ficha crítica/própria respeitam a mesma regra de visibilidade §14 usada em
+ * `FichaRepository.listarVisiveisParaUsuario` (mestre vê todas as fichas da campanha; jogador só
+ * as próprias + as concedidas via `usuario_ficha_acesso`).
  */
 export interface CampanhaResumoDto {
   readonly id: number;
   readonly nome: string;
   readonly descricao: string | null;
   readonly papel: TipoCampanhaMembroPapelEnum;
+  /** Quantidade de `campanha_membro` ativos na campanha. */
+  readonly totalMembros: number;
+  /** Quantidade de fichas visíveis ao usuário atual nesta campanha (§14). */
+  readonly totalFichas: number;
+  /** `true` quando alguma ficha visível está com Vida atual ≤ 0. */
+  readonly temFichaCritica: boolean;
+  /** Nome da primeira ficha crítica visível (ordenada por nome) — `null` se nenhuma. */
+  readonly fichaCriticaNome: string | null;
+  /**
+   * Resumo da própria ficha do jogador nesta campanha (primeira, se houver mais de uma) — só
+   * preenchido quando `papel === JOGADOR` e ele já tem ficha própria aqui. `null` para `MESTRE`
+   * (não tem "sua ficha" na campanha) e para o jogador que ainda não criou nenhuma.
+   */
+  readonly minhaFichaResumo: { nome: string; vidaAtual: number; vidaMaxima: number | null } | null;
+  /** Código de convite — só preenchido quando `papel === MESTRE`; `null` para `JOGADOR`. */
+  readonly codigoConvite: string | null;
+  /** `GREATEST` entre `campanha.updated_date` e a última ficha visível alterada (ISO). */
+  readonly atualizadoEm: string;
 }
 
 /**

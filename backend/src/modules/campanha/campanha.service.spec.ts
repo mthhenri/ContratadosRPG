@@ -6,7 +6,7 @@ import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 vi.mock('node:crypto', () => ({
   randomBytes: vi.fn(() => Buffer.from([0, 1, 2, 3, 4, 5, 6, 7])),
 }));
-import type { CampanhaRecuperadaDto } from '@contratados-rpg/shared/dtos/campanha';
+import type { CampanhaRecuperadaDto, CampanhaResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import {
   BusinessException,
   ResourceNotFoundException,
@@ -110,13 +110,20 @@ describe('CampanhaService', () => {
   });
 
   describe('listarCampanhas', () => {
-    it('devolve as campanhas de que o usuário é membro', async () => {
-      const campanhas = [
+    it('devolve as campanhas de que o usuário é membro, já enriquecidas pelo repositório', async () => {
+      const campanhas: CampanhaResumoDto[] = [
         {
           id: 3,
           nome: 'Contenção Alfa',
           descricao: null,
           papel: TipoCampanhaMembroPapelEnum.MESTRE,
+          totalMembros: 4,
+          totalFichas: 6,
+          temFichaCritica: false,
+          fichaCriticaNome: null,
+          minhaFichaResumo: null,
+          codigoConvite: 'ABCD2345',
+          atualizadoEm: '2026-07-29T01:48:01.082Z',
         },
       ];
       repositorio.listarPorUsuario.mockResolvedValue(campanhas);

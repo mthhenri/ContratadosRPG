@@ -14,6 +14,7 @@ import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
+import { rotuloRelativo } from '../../../../shared/rotulo-relativo.util';
 import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
@@ -225,18 +226,7 @@ export class CampanhaDetalhe {
     if (em === null) {
       return null;
     }
-    const segundos = Math.max(0, Math.floor((this.agora() - em) / 1000));
-    if (segundos < 5) {
-      return 'Atualizado agora';
-    }
-    if (segundos < 60) {
-      return `Atualizado há ${segundos}s`;
-    }
-    const minutos = Math.floor(segundos / 60);
-    if (minutos < 60) {
-      return `Atualizado há ${minutos} min`;
-    }
-    return `Atualizado há ${Math.floor(minutos / 60)} h`;
+    return `Atualizado ${rotuloRelativo(em, this.agora())}`;
   });
 
   protected readonly formularioEdicao = this.formBuilder.nonNullable.group({

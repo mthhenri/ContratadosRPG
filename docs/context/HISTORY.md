@@ -21,6 +21,103 @@
 
 ## Registro por task (mais recente primeiro)
 
+## m2-18 — Painel de campanhas: lista vira painel de controle (2026-08-01)
+
+Redesenho de `/painel` (`CampanhaLista`): de grade de cartões (m2-17) para **painel de
+controle** — linhas densas por campanha, tira de 4 estatísticas agregadas no topo, alerta visual
+de ficha crítica por linha, resumo da própria ficha (jogador) e convite copiável direto na linha
+(mestre). Spec `docs/specs/done/m2-18-painel-campanhas-lista-dashboard.spec.md`; movida para
+`active/` por uma sessão concorrente antes desta (confirmado via `git status` — ver
+[[sessoes-concorrentes-mesma-branch]]), retomada e fechada nesta task.
+
+**Backend — `CampanhaRepository.listarPorUsuario` enriquecida, sem tabela nova.**
+`CampanhaResumoDto` ganhou `totalMembros`/`totalFichas`/`temFichaCritica`/`fichaCriticaNome`/
+`minhaFichaResumo`/`codigoConvite`/`atualizadoEm`, todos calculados numa única query com três
+`LEFT JOIN LATERAL` correlacionados por `campanha.id` (e, para fichas, também pelo `usuario_id`/
+`papel` da própria linha de `campanha_membro` que a query já tem): um para `COUNT` de membros,
+um para o agregado de fichas **visíveis ao usuário atual** (mestre vê todas; jogador só as
+próprias + as concedidas via `usuario_ficha_acesso` — mesma regra de
+`FichaRepository.listarVisiveisParaUsuario`, replicada porque isto é agregação, não listagem) —
+`totalFichas`, `temFichaCritica` (`BOOL_OR` de Vida ≤ 0) e `fichaCriticaNome`
+(`MIN(nome) FILTER`, equivalente a "primeira por nome" já que a única ordenação é por nome) — e
+um terceiro só para a própria ficha do jogador (`minhaFichaResumo`, via `json_build_object`,
+`null` natural para o mestre porque o `WHERE` do LATERAL já restringe a `papel = 'JOGADOR'`,
+sem precisar de `CASE` por fora). `atualizadoEm` é o `GREATEST` entre `campanha.updated_date` e o
+`MAX(ficha.updated_date)` do mesmo agregado de fichas visíveis. `CampanhaService.listarCampanhas`
+não mudou uma linha — segue passthrough puro, toda a agregação é responsabilidade do repositório
+(SQL only, SYSTEM.SPEC §7.1).
+
+**Pegadinha descoberta e documentada em comentário no código:** `COUNT(*)` do Postgres é
+`bigint`, e o driver `pg` devolve `bigint` como **string** (evita perda de precisão acima de
+`Number.MAX_SAFE_INTEGER`) — sem o `::int` explícito nos dois `COUNT(*)`, `totalMembros`/
+`totalFichas` chegariam como `"4"`/`"3"` no DTO tipado `number`, um bug silencioso (TypeScript
+não pega, `toEqual`/`===` no frontend comparariam string com number e quebrariam sutilmente
+onde houver soma, ex. `estatisticas().fichasEmCampo`). Achado rodando a query de verdade contra o
+Postgres real do dev (ver próximo parágrafo), não em teste unitário.
+
+**Validação da query — direto no Postgres real do ambiente de dev, não só teste com mock.**
+Como este repositório não tem teste de integração de banco (só unit test com repositório
+dublado — `campanha.service.spec.ts`), a query nova foi provada rodando de verdade: (1) contra
+dados reais já existentes no dev (usuário membro de 2 campanhas, um papel em cada, incluindo
+ficha compartilhada via `usuario_ficha_acesso`); (2) contra um cenário sintético construído numa
+transação `BEGIN…ROLLBACK` (nunca commitada) cobrindo o caso mais importante: um jogador dono de
+uma ficha crítica, um mestre (vê a crítica + `totalFichas` corretos), e um **terceiro jogador sem
+acesso** à ficha crítica do primeiro — confirmando que ele nunca vê a contagem/alerta de uma
+ficha que não lhe foi compartilhada (o critério §14 que o item de aceite da spec exige). A string
+SQL final testada é literalmente a que ficou no `campanha.repository.ts` (extraída do arquivo
+editado, não uma cópia solta) — rodada via `knex.raw` com os mesmos bindings nomeados do
+`BaseRepository`, garantindo que o `:papelMestre`/`:papelJogador`/`:usuarioId` reais funcionam.
+
+**Frontend.** `lista.page.html`/`.ts`/`.scss` reescritos: cartões da grade (m2-17) viraram
+`.campanhas__linha` — coluna identidade (avatar+nome+chip-papel) | coluna meio (descrição +
+contadores "N membros"/"N fichas" + alerta-de-crítica-OU-resumo-da-própria-ficha, mutuamente
+exclusivos, alerta tem prioridade) | coluna ação (rótulo relativo de `atualizadoEm` + botão
+copiar convite quando mestre + botão "Abrir"). Estruturado como `<div>` com **dois `<a>` irmãos**
+(um envolvendo identidade+meio, outro só o botão "Abrir") em vez de um `<a>` único envolvendo a
+linha inteira — o botão "Copiar convite" é interativo e não pode aninhar dentro de um `<a>` (o
+mesmo racional já documentado em `detalhe__ficha-card`/`detalhe__ficha-link`). Linha crítica
+reusa o tratamento visual de `.detalhe__ficha-card--critico` (tokens fixos `--vida`/
+`--vida-border`, não `--accent` — trocável em runtime, mesmo racional da m3-38 item 7). Tira de 4
+estatísticas (`Campanhas`/`Você mestra`/`Fichas em campo`/`Alertas`) copiando o bloco `.stat`
+canônico de `docs/design/tema/_componentes.scss`, somada no client a partir da lista já
+enriquecida (sem endpoint próprio), com um modificador local `.stat--alerta` (mesmos tokens fixos
+`--vida`/`--vida-border`). `max-width: 80vw` (era `1160px` fixo), espelhando
+`visualizar.page.scss`.
+
+**Util novo `frontend/src/app/shared/rotulo-relativo.util.ts`** — extraído do cálculo inline que
+já existia em `CampanhaDetalhe.textoAtualizacao` (m2-16, "Atualizado há Xs"), agora reaproveitado
+também pela coluna de ação da lista. Puro (`rotuloRelativo(instanteMs, agoraMs)`), sem o prefixo
+"Atualizado" — cada tela decide o rótulo; a lista ganhou seu próprio relógio de 5s (`agora`
+signal + `setInterval`), mesmo padrão já usado no detalhe.
+
+**Testes novos:** `rotulo-relativo.util.spec.ts` (limites de 5s/1min/1h, nunca negativo);
+`lista.page.spec.ts` (tira de estatísticas, linha crítica, resumo da própria ficha com
+exclusão mútua do alerta, contadores singular/plural, botão de copiar só para mestre com
+convite, estados de carregamento/vazio). Fixtures de `CampanhaResumoDto` em
+`campanha.service.spec.ts` (frontend e backend) e `acervo.page.spec.ts` atualizadas para o DTO
+enriquecido — só ajuste de shape, sem mudança de comportamento nesses arquivos.
+
+**Verificado ao vivo** (Postgres real + backend + frontend já em pé, Playwright): usuário de
+teste descartável criado via REST, MESTRE de uma campanha com 3 fichas (uma crítica, inserida
+direto via SQL) e JOGADOR de outra (com a própria ficha Vida 12/30); tira de estatísticas somou
+`2`/`1`/`4`/`1` corretamente; linha da campanha com a ficha crítica ganhou o tingido vermelho e
+mostrou "Vera (crítica) crítica"; linha da campanha em que é jogador mostrou "Agente Aliado ·
+Vida 12/30"; sem scroll horizontal em 375px nem 360px (`document.documentElement.scrollWidth ===
+clientWidth` nos dois). Dados de teste (2 usuários, 2 campanhas, 5 fichas) removidos do banco de
+dev ao final (`DELETE` direto — throwaway, não é fluxo da aplicação, não precisa de soft delete).
+
+**Achados registrados em `PROBLEMS.md` (não corrigidos, fora do escopo desta task):** 3 erros de
+lint de frontend e 1 de backend já existiam em `master` antes desta task (confirmado via `git
+stash` contra o HEAD comitado) — nenhum nos arquivos tocados aqui (`autofocus` em
+`ficha-inventario.component.html`, variável não usada em `ficha-visualizacao.component.spec.ts`
+e em `ficha.service.spec.ts`, e uma segunda variável não usada em `acervo.page.spec.ts` que já
+existia numa linha diferente antes do meu ajuste de fixture). `npm run lint` portanto **não**
+fecha limpo hoje em `master`, apesar do CI rodar lint em todo PR — não investigado a fundo aqui.
+
+**Próxima task candidata:** `m2-19` (detalhe `/painel/:id` na visão do mestre — "esquadrão"),
+que já está no backlog junto com `m2-20` (mesma tela na visão do jogador), ambas parte da mesma
+frente de redesenho do painel de campanhas iniciada aqui.
+
 > Última atualização: 2026-07-29 (**m3-27 — Histórico de rolagem: persistência + feed em tempo
 > real**: task antiga do backlog (apontada como "próxima" desde a `m3-26`, mas empurrada por dois
 > lotes de refino inteiros — `m3-40`…`m3-56` e depois a `m3-60`) finalmente implementada. Rolagens
