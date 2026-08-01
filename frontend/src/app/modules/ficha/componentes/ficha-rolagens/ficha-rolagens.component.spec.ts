@@ -61,7 +61,7 @@ describe('FichaRolagens', () => {
     fixture.componentInstance.energiaGasta.subscribe((valor) => energias.push(valor));
     fixture.detectChanges();
     const bandeja = TestBed.inject(BandejaDadosService);
-    const mostrar = vi.spyOn(bandeja, 'mostrar').mockImplementation(() => undefined);
+    const mostrar = vi.spyOn(bandeja, 'mostrar').mockImplementation(() => 1);
     return { fixture, componentInstance: fixture.componentInstance, emitidos, energias, mostrar };
   }
 

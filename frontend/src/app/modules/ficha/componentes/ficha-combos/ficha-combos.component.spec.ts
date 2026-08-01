@@ -44,7 +44,7 @@ describe('FichaCombos', () => {
     fixture.componentInstance.combosMudou.subscribe((e) => emitidos.push(e));
     fixture.componentInstance.energiaGasta.subscribe((e) => energias.push(e));
     const bandeja = TestBed.inject(BandejaDadosService);
-    const mostrar = vi.spyOn(bandeja, 'mostrar').mockImplementation(() => undefined);
+    const mostrar = vi.spyOn(bandeja, 'mostrar').mockImplementation(() => 1);
     return {
       fixture,
       componentInstance: fixture.componentInstance,

@@ -11,6 +11,8 @@ import {
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
+import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
+import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
@@ -114,11 +116,13 @@ interface ItemFicha {
     IndicadorTempoReal,
     FichaCriarDialog,
     HoldRepeat,
+    BandejaDados,
   ],
   templateUrl: './detalhe.page.html',
   styleUrl: './detalhe.page.scss',
 })
 export class CampanhaDetalhe {
+  private readonly bandejaDadosService = inject(BandejaDadosService);
   private readonly campanhaService = inject(CampanhaService);
   private readonly fichaService = inject(FichaService);
   private readonly fichaVitalidadeRapidaService = inject(FichaVitalidadeRapidaService);
@@ -257,6 +261,31 @@ export class CampanhaDetalhe {
   /** Tempo relativo de uma rolagem da tira do topo (item 3) — mesmo relógio de 5s do `textoAtualizacao`. */
   protected tempoRolagem(rolagem: RolagemResumoDto): string {
     return rotuloRelativo(new Date(rolagem.createdDate).getTime(), this.agora());
+  }
+
+  /** `id` da prévia atualmente aberta na bandeja de dados (hover no d20 de um pill) — `null` se nenhuma. */
+  private previaRolagemId: number | null = null;
+
+  /**
+   * Hover/foco no dadinho d20 de um pill da tira "Rolagens Recentes" (item 3): mostra o resultado
+   * completo daquela rolagem já registrada na bandeja de dados flutuante (`BandejaDadosService`,
+   * mesmo componente que exibe rolagens ao vivo), sem esperar uma nova rolagem acontecer. Guarda o
+   * `id` devolvido pra fechar cedo em {@link esconderPreviaRolagem}, em vez de deixar os 7s do
+   * auto-sumir correrem — é só uma prévia, não uma rolagem nova.
+   */
+  protected mostrarPreviaRolagem(rolagem: RolagemResumoDto): void {
+    this.previaRolagemId = this.bandejaDadosService.mostrar({
+      rotulo: rolagem.rotulo,
+      resultado: rolagem.resultado,
+    });
+  }
+
+  /** Fim do hover/foco no dadinho d20 — fecha a prévia aberta por {@link mostrarPreviaRolagem}. */
+  protected esconderPreviaRolagem(): void {
+    if (this.previaRolagemId !== null) {
+      this.bandejaDadosService.fechar(this.previaRolagemId);
+      this.previaRolagemId = null;
+    }
   }
 
   protected readonly formularioEdicao = this.formBuilder.nonNullable.group({

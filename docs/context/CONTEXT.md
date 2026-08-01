@@ -100,7 +100,9 @@ detalhe (`/painel/:id`, visão do **mestre** — m2-19; a do jogador é a `m2-20
 condicional no topo (ficha crítica, com link direto pra ela), tira de estatísticas (Membros/
 Fichas/Convite/Alertas), tira horizontal rolável de rolagens da última hora (sem limite fixo de
 itens — a lista completa/sem limite de tempo só na sidebar de histórico, aberta pelo seu próprio
-gatilho D20) e duas colunas — **Membros** (450px
+gatilho D20; cada pill tem seu próprio dadinho d20 no canto — hover/foco mostra o resultado
+completo na bandeja de dados flutuante, `BandejaDados`, a mesma que exibe rolagens ao vivo) e duas
+colunas — **Membros** (450px
 no desktop; nome/papel/gestão, sem fichas; mestre sempre primeiro, depois jogadores em ordem
 alfabética) e **Esquadrão** (grid fixo de 2 colunas — 1 no mobile, e antes de Membros quando a
 grade empilha; segue a mesma ordem mestre→alfabética da coluna Membros — com todas as fichas da

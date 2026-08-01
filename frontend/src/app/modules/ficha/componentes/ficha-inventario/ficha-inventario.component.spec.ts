@@ -67,7 +67,7 @@ describe('FichaInventario', () => {
     const emitidos: FichaInventarioDto[] = [];
     fixture.componentInstance.inventarioMudou.subscribe((e) => emitidos.push(e));
     const bandeja = TestBed.inject(BandejaDadosService);
-    const mostrar = vi.spyOn(bandeja, 'mostrar').mockImplementation(() => undefined);
+    const mostrar = vi.spyOn(bandeja, 'mostrar').mockImplementation(() => 1);
     return {
       fixture,
       componentInstance: fixture.componentInstance,

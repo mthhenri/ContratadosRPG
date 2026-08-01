@@ -533,7 +533,7 @@ describe('FichaVisualizacao', () => {
         inventario: { itens: [], amplificadores: [{ nome: 'Muscular', empilhamentos: 1 }] },
       };
       const alvo = montar(documento, 'Corvo', 42, true);
-      const spy = vi.spyOn(TestBed.inject(BandejaDadosService), 'mostrar').mockImplementation(() => undefined);
+      const spy = vi.spyOn(TestBed.inject(BandejaDadosService), 'mostrar').mockImplementation(() => 1);
       alvo.fixture.componentInstance['rolarTesteAtributo'](campoLuta);
       // manual (+1) + amplificador Muscular (+2) = +3.
       expect(spy.mock.calls[0][0].formula).toBe('lutad20kh1cm1 + PROF + 3');
@@ -808,7 +808,7 @@ describe('FichaVisualizacao', () => {
 
   it('rola teste de atributo normal com kh1 + cm1 (margem de crítico natural; m3-31)', () => {
     const alvo = montar(dados, 'Corvo', 42, true); // Luta 2, sem lesão → normal
-    const spy = vi.spyOn(TestBed.inject(BandejaDadosService), 'mostrar').mockImplementation(() => undefined);
+    const spy = vi.spyOn(TestBed.inject(BandejaDadosService), 'mostrar').mockImplementation(() => 1);
     alvo.fixture.componentInstance['rolarTesteAtributo'](campoLuta);
     expect(spy.mock.calls[0][0].formula).toBe('lutad20kh1cm1 + PROF');
   });
@@ -822,7 +822,7 @@ describe('FichaVisualizacao', () => {
       },
     };
     const alvo = montar(doc, 'Corvo', 42, true); // Luta efetivo 0 → desvantagem (2d20 mantém o menor)
-    const spy = vi.spyOn(TestBed.inject(BandejaDadosService), 'mostrar').mockImplementation(() => undefined);
+    const spy = vi.spyOn(TestBed.inject(BandejaDadosService), 'mostrar').mockImplementation(() => 1);
     alvo.fixture.componentInstance['rolarTesteAtributo'](campoLuta);
     expect(spy.mock.calls[0][0].formula).toBe('2d20kl1cm1 + PROF');
     expect(spy.mock.calls[0][0].resultado.dados[0].desvantagem).toBe(true);
@@ -1401,7 +1401,7 @@ describe('FichaVisualizacao', () => {
       expect(alvo.raiz.querySelector('.ficha-atributo__rolar')).toBeNull();
       const spy = vi
         .spyOn(TestBed.inject(BandejaDadosService), 'mostrar')
-        .mockImplementation(() => undefined);
+        .mockImplementation(() => 1);
       alvo.fixture.componentInstance['rolarTesteAtributo'](campoLuta);
       expect(spy).not.toHaveBeenCalled();
     });
@@ -1411,7 +1411,7 @@ describe('FichaVisualizacao', () => {
       expect(alvo.raiz.querySelector('.ficha-atributo__rolar')).not.toBeNull();
       const spy = vi
         .spyOn(TestBed.inject(BandejaDadosService), 'mostrar')
-        .mockImplementation(() => undefined);
+        .mockImplementation(() => 1);
       alvo.fixture.componentInstance['rolarTesteAtributo'](campoLuta);
       expect(spy).toHaveBeenCalled();
     });
@@ -1420,7 +1420,7 @@ describe('FichaVisualizacao', () => {
       const alvo = montar(dados, 'Corvo', 42, true, false, false);
       const spy = vi
         .spyOn(TestBed.inject(BandejaDadosService), 'mostrar')
-        .mockImplementation(() => undefined);
+        .mockImplementation(() => 1);
       alvo.fixture.componentInstance['rolarDano']({
         chave: 'danoCorpoACorpo',
         rotulo: 'Dano C. a C.',

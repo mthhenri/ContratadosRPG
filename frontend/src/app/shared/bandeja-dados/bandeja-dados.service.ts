@@ -50,18 +50,22 @@ export class BandejaDadosService {
    * Mostra uma rolagem à direita da bandeja (as anteriores deslizam para a esquerda) e agenda o
    * auto-sumir. Repetição `(<fórmula>)#N` (m3-46): quando `resultado.subResultados` tem 2+ rolagens
    * independentes, elas continuam **uma única carta** (o componente `BandejaDados` itera
-   * `subResultados` dentro da mesma carta) — o chamador não precisa saber disso.
+   * `subResultados` dentro da mesma carta) — o chamador não precisa saber disso. Devolve o `id` da
+   * entrada — quem mostra uma prévia efêmera (ex.: hover no d20 de um pill de rolagem já registrada,
+   * item 3 do detalhe da campanha) usa esse `id` pra fechar cedo com {@link fechar}, sem esperar os
+   * {@link duracaoMs} do auto-sumir.
    */
   mostrar(entrada: {
     readonly rotulo: string;
     readonly formula?: string;
     readonly resultado: ResultadoRolagemDto;
-  }): void {
+  }): number {
     this.contador += 1;
     const id = this.contador;
     const nova: EntradaBandeja = { id, saindo: false, ...entrada };
     this._entradas.update((atuais) => [nova, ...atuais].slice(0, LIMITE_ENTRADAS));
     this.agendar(id);
+    return id;
   }
 
   /** Pausa o auto-sumir (mouse sobre a carta) — a barra de tempo congela cheia via `:hover` no SCSS. */

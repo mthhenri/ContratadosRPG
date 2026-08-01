@@ -18,6 +18,7 @@ import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { CampanhaDetalhe } from './detalhe.page';
+import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { CampanhaService } from '../../campanha.service';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { FichaService } from '../../../ficha/ficha.service';
@@ -556,6 +557,40 @@ describe('CampanhaDetalhe', () => {
     it('some quando o feed está vazio', () => {
       const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), rolagens: [] });
       expect(raiz.querySelector('.detalhe__rolagens')).toBeNull();
+    });
+
+    it('hover no dadinho d20 do pill mostra o resultado na bandeja de dados flutuante', () => {
+      const { fixture, raiz } = montar({
+        usuarioId: 1,
+        membros: membrosDois(),
+        rolagens: [rolagem({ id: 1, rotulo: '1d20+5', nomeAutor: 'Mestre' })],
+      });
+      const bandeja = TestBed.inject(BandejaDadosService);
+
+      const d20 = raiz.querySelector('.rolagem-pill__d20') as HTMLButtonElement;
+      d20.dispatchEvent(new Event('mouseenter'));
+      fixture.detectChanges();
+
+      expect(bandeja.entradas()).toHaveLength(1);
+      expect(bandeja.entradas()[0].rotulo).toBe('1d20+5');
+      expect(bandeja.entradas()[0].resultado.total).toBe(17);
+    });
+
+    it('tirar o mouse do dadinho d20 fecha a prévia (não espera o auto-sumir de 7s)', () => {
+      const { fixture, raiz } = montar({
+        usuarioId: 1,
+        membros: membrosDois(),
+        rolagens: [rolagem({ id: 1, rotulo: '1d20+5', nomeAutor: 'Mestre' })],
+      });
+      const bandeja = TestBed.inject(BandejaDadosService);
+
+      const d20 = raiz.querySelector('.rolagem-pill__d20') as HTMLButtonElement;
+      d20.dispatchEvent(new Event('mouseenter'));
+      fixture.detectChanges();
+      d20.dispatchEvent(new Event('mouseleave'));
+      fixture.detectChanges();
+
+      expect(bandeja.entradas()[0].saindo).toBe(true);
     });
 
     it('não duplica a lista completa — só a sidebar de histórico tem "Carregar mais"/paginação', () => {

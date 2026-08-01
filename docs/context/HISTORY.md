@@ -21,6 +21,40 @@
 
 ## Registro por task (mais recente primeiro)
 
+## Ajuste pós-m2-19 (4) — dadinho d20 nos pills de Rolagens Recentes (2026-08-01)
+
+Terceiro pedido do autor na mesma sessão, sobre a tira "Rolagens Recentes" do detalhe da campanha
+(`/painel/:id`, visão do mestre): cada `.rolagem-pill` ganhou um `.rolagem-pill__d20` — um botão
+pequeno com o ícone `d20` (já existente, é o mesmo do gatilho da sidebar de histórico) no canto
+superior direito do pill. Hover ou foco no botão chama `mostrarPreviaRolagem(item)`
+(`detalhe.page.ts`), que repassa `rotulo`/`resultado` da rolagem já registrada pra
+`BandejaDadosService.mostrar()` — a **mesma** bandeja de dados flutuante (`BandejaDados`, m3-22)
+que hoje só aparecia na página de ficha (`ficha-visualizacao`) pra rolagens ao vivo. Sair do hover
+(`mouseleave`/`blur`) chama `esconderPreviaRolagem()`, que fecha a entrada na hora
+(`bandejaDadosService.fechar(id)`) em vez de deixar os 7s do auto-sumir correrem — é só uma prévia
+de algo que já rolou, não uma rolagem nova.
+
+**Duas mudanças de suporte:**
+- `BandejaDadosService.mostrar()` passou a **devolver o `id`** da entrada criada (antes `void`) —
+  sem isso não dava pra fechar a prévia certa no `mouseleave` (a bandeja empilha até 5 entradas, o
+  `id` mais recente não é necessariamente conhecido de fora). Assinatura muda mas é
+  aditivo/compatível: os 6 call-sites que mockavam `mostrar` em specs de outros módulos
+  (`ficha-visualizacao`/`ficha-rolagens`/`ficha-inventario`/`ficha-combos`) precisaram só trocar
+  `mockImplementation(() => undefined)` por `() => 1` pra bater com o novo tipo de retorno — nenhum
+  comportamento real mudou nesses módulos.
+- `<app-bandeja-dados />` (o componente que renderiza a bandeja) precisou ser importado e colocado
+  no template do `detalhe.page.html` — ele só existia em `ficha-visualizacao.component.html` até
+  aqui. O componente é `position: fixed`, então funciona em qualquer página que o importe; a
+  service (`providedIn: 'root'`) já era global.
+
+**Verificação:** `detalhe.page.spec.ts` 73/73 (2 novos: hover mostra a entrada na bandeja com
+`rotulo`/`resultado.total` corretos; `mouseleave` marca a entrada como `saindo`); suíte completa do
+frontend 635/636 (mesma falha pré-existente não relacionada de sempre); `ng build` limpo. Ao vivo
+(Playwright + REST, criando ficha/rolagem mínimas do mesmo jeito da verificação anterior): três
+screenshots — antes do hover (só o dadinho no canto do pill), durante (bandeja aparece no rodapé da
+tela com "TESTE LUTA 1D20+5" / total "20" e a barra de progresso do auto-sumir) e depois de tirar o
+mouse (bandeja já fechada) — confirmam o ciclo completo.
+
 ## Ajuste pós-m2-19 (3) — janela de 1h nas Rolagens Recentes + Contra-ataque no mini-card (2026-08-01)
 
 Dois pedidos do autor na visão do mestre em `/painel/:id`, ambos sobre o card do detalhe.
