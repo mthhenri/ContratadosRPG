@@ -51,11 +51,6 @@ export class HistoricoRolagensSidebar {
   protected readonly RolagemVisibilidadeEnum = RolagemVisibilidadeEnum;
   protected readonly aberto = signal(false);
 
-  /** Abre o painel a partir de um gatilho externo (ex.: "Ver tudo" da tira de rolagens do detalhe da campanha, m2-19) — via referência de template no consumidor. */
-  abrir(): void {
-    this.aberto.set(true);
-  }
-
   protected alternar(): void {
     this.aberto.update((atual) => !atual);
   }

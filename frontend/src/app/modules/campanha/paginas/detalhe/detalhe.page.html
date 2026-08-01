@@ -27,48 +27,55 @@
     </div>
   } @else if (campanha(); as campanhaAtual) {
     <header class="detalhe__cabecalho">
-      <span class="card__indice">//</span>
-      <h1 class="detalhe__titulo">{{ campanhaAtual.nome }}</h1>
-      <span class="card__regua"></span>
-      <app-indicador-tempo-real />
-      <app-historico-rolagens-sidebar
-        #historicoSidebar
-        titulo="Rolagens da Campanha"
-        [itens]="rolagensFeed()"
-        [carregando]="carregandoRolagens()"
-      />
-      @if (ehMestre()) {
-        <div class="detalhe__cabecalho-menu-envoltorio">
-          <button
-            class="detalhe__cabecalho-menu-botao"
-            type="button"
-            aria-haspopup="menu"
-            [attr.aria-expanded]="menuCampanhaAberto()"
-            aria-label="Ações da campanha"
-            (click)="alternarMenuCampanha()"
-          >
-            ⋯
-          </button>
-          @if (menuCampanhaAberto()) {
+      <div class="detalhe__cabecalho-titulo-linha">
+        <span class="card__indice">//</span>
+        <h1 class="detalhe__titulo">{{ campanhaAtual.nome }}</h1>
+        <span class="card__regua"></span>
+      </div>
+      <div class="detalhe__cabecalho-acoes">
+        <app-indicador-tempo-real />
+        <a class="detalhe__cabecalho-voltar" routerLink="/painel" aria-label="Voltar às campanhas" title="Voltar às campanhas">
+          <app-icone nome="voltar" />
+        </a>
+        <app-historico-rolagens-sidebar
+          #historicoSidebar
+          titulo="Rolagens da Campanha"
+          [itens]="rolagensFeed()"
+          [carregando]="carregandoRolagens()"
+        />
+        @if (ehMestre()) {
+          <div class="detalhe__cabecalho-menu-envoltorio">
             <button
-              class="detalhe__cabecalho-menu-fundo"
+              class="detalhe__cabecalho-menu-botao"
               type="button"
-              aria-label="Fechar menu"
-              (click)="fecharMenuCampanha()"
-            ></button>
-            <div class="detalhe__cabecalho-menu" role="menu">
-              <button class="detalhe__cabecalho-menu-item" type="button" role="menuitem" (click)="abrirEdicao()">
-                <app-icone nome="editar" />
-                <span>Editar</span>
-              </button>
-              <button class="detalhe__cabecalho-menu-item" type="button" role="menuitem" (click)="pedirExclusao()">
-                <app-icone nome="excluir" />
-                <span>Excluir</span>
-              </button>
-            </div>
-          }
-        </div>
-      }
+              aria-haspopup="menu"
+              [attr.aria-expanded]="menuCampanhaAberto()"
+              aria-label="Ações da campanha"
+              (click)="alternarMenuCampanha()"
+            >
+              ⋯
+            </button>
+            @if (menuCampanhaAberto()) {
+              <button
+                class="detalhe__cabecalho-menu-fundo"
+                type="button"
+                aria-label="Fechar menu"
+                (click)="fecharMenuCampanha()"
+              ></button>
+              <div class="detalhe__cabecalho-menu" role="menu">
+                <button class="detalhe__cabecalho-menu-item" type="button" role="menuitem" (click)="abrirEdicao()">
+                  <app-icone nome="editar" />
+                  <span>Editar</span>
+                </button>
+                <button class="detalhe__cabecalho-menu-item" type="button" role="menuitem" (click)="pedirExclusao()">
+                  <app-icone nome="excluir" />
+                  <span>Excluir</span>
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
     </header>
 
     @if (campanhaAtual.descricao && !editando()) {
@@ -193,9 +200,6 @@
         <header class="detalhe__secao">
           <h2 class="detalhe__secao-titulo">Rolagens Recentes</h2>
           <span class="detalhe__secao-regua"></span>
-          <button class="detalhe__rolagens-ver-tudo" type="button" (click)="historicoSidebar.abrir()">
-            Ver tudo
-          </button>
         </header>
         <ul class="detalhe__rolagens-tira" appOverflowFade>
           @for (item of rolagensRecentes(); track item.id) {
@@ -470,13 +474,6 @@
       </article>
     </div>
   }
-
-  <p class="detalhe__voltar">
-    <a class="detalhe__link" routerLink="/painel">
-      <app-icone nome="voltar" />
-      Voltar às campanhas
-    </a>
-  </p>
 </section>
 
 @if (dialogCriar()) {

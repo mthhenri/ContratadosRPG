@@ -190,6 +190,13 @@ describe('CampanhaDetalhe', () => {
     fixture.detectChanges();
   }
 
+  it('mostra o botão "Voltar às campanhas" no cabeçalho, apontando para /painel', () => {
+    const { raiz } = montar(mestre());
+    const voltar = raiz.querySelector('.detalhe__cabecalho-voltar');
+    expect(voltar).not.toBeNull();
+    expect(voltar?.getAttribute('href')).toBe('/painel');
+  });
+
   // === Menu kebab de ações da campanha (item 6) — substitui o antigo card "Identidade". ===
   describe('menu de ações da campanha (item 6)', () => {
     it('mostra o kebab de ações só para o mestre', () => {
@@ -514,17 +521,15 @@ describe('CampanhaDetalhe', () => {
       expect(raiz.querySelector('.detalhe__rolagens')).toBeNull();
     });
 
-    it('"Ver tudo" abre a sidebar de histórico sem duplicar a lista', () => {
-      const { fixture, raiz } = montar({
+    it('não duplica a lista completa — só a sidebar de histórico tem "Carregar mais"/paginação', () => {
+      const { raiz } = montar({
         usuarioId: 1,
         membros: membrosDois(),
         rolagens: [rolagem()],
       });
 
+      expect(raiz.querySelector('.detalhe__rolagens-ver-tudo')).toBeNull();
       expect(raiz.querySelector('.historico-rolagens__painel')).toBeNull();
-      (raiz.querySelector('.detalhe__rolagens-ver-tudo') as HTMLButtonElement).click();
-      fixture.detectChanges();
-      expect(raiz.querySelector('.historico-rolagens__painel')).not.toBeNull();
     });
   });
 

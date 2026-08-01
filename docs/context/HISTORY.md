@@ -21,6 +21,42 @@
 
 ## Registro por task (mais recente primeiro)
 
+## Ajuste pós-m2-19 — reflow do cabeçalho no mobile e botão "Voltar" (2026-08-01)
+
+Feedback do autor sobre a visão do mestre em `/painel/:id` logo após a `m2-19` ir ao ar, focado só
+no mobile (`bp.mobile`, ≤560px): o nome da campanha dividia a primeira linha com o indicador de
+tempo real, o gatilho do histórico de rolagens (`app-historico-rolagens-sidebar`, que vira botão
+inline `position: static` nessa faixa — ver comentário em
+`historico-rolagens-sidebar.component.scss`) e o kebab de ações, deixando o nome pouco destacado.
+
+**`&__cabecalho` virou duas linhas lógicas** (`&__cabecalho-titulo-linha` / `&__cabecalho-acoes`),
+lado a lado no desktop (`flex: 1` / `flex: none`) e empilhadas no mobile (`flex-basis: 100%` nos
+dois, dentro do `&__cabecalho` com `flex-wrap: wrap`) — o nome fica sozinho na primeira linha,
+ações (tempo real, voltar, histórico, kebab) na segunda.
+
+**Botão "Voltar às campanhas" migrou do rodapé pro cabeçalho** — era um link de texto
+(`<p class="detalhe__voltar">`) solto depois da grade; virou um botão quadrado
+(`&__cabecalho-voltar`, mesma receita visual do kebab: 26×22 desktop, `bp.$alvo-toque` no mobile)
+ao lado do gatilho de histórico de rolagens, sempre visível (o link antigo dependia de rolar até o
+fim da página). Blocos `&__voltar`/`&__link` removidos.
+
+**"Ver tudo" da tira de rolagens recentes removido** — ficava redundante com o botão de histórico
+agora bem visível no cabeçalho (antes, no mobile, ele nem aparecia ali — era só um botão de texto
+dentro da seção "Rolagens Recentes"). O método público `HistoricoRolagensSidebar.abrir()`,
+adicionado na `m2-19` só pra esse gatilho, foi removido por ficar sem consumidor — a sidebar volta
+a abrir só pelo próprio ícone D20 (`alternar()`, interno).
+
+**Esquadrão passa a vir antes de Membros quando a grade empilha** — `&__coluna--esquadrao` ganhou
+`order: -1` dentro do mesmo `@include bp.tablet` que já colapsa `&__grade` pra 1 coluna (1080px,
+não `bp.mobile`): é o breakpoint onde a ordem visual passa a importar (nas 2 colunas do desktop,
+`order` não muda nada). No desktop a ordem no DOM continua Membros→Esquadrão, inalterada.
+
+**Verificado** com o stack real via Playwright (viewport 375×800): nome sozinho na primeira linha,
+ações na segunda, botão "Voltar" presente com `href="/painel"`, "Ver tudo" ausente, Esquadrão
+antes de Membros — e um viewport 1440×900 confirmando que o desktop não mudou. Suíte do frontend
+629/630 (só a falha pré-existente e não relacionada `P-001`), lint limpo nos arquivos tocados
+(3 erros pré-existentes documentados em `P-009`), `ng build` ok.
+
 ## m2-19 — Painel de campanhas: detalhe vira "banner + estatísticas + esquadrão" (visão do mestre) (2026-08-01)
 
 Redesenho de `/painel/:id` (`CampanhaDetalhe`) — hoje um card "Identidade" (nome/descrição/

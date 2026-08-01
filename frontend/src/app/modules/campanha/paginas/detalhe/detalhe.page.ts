@@ -348,8 +348,7 @@ export class CampanhaDetalhe {
   /**
    * As 3-4 rolagens mais recentes do feed (item 3) — `rolagensFeed()` já vem mais recente
    * primeiro (m3-27), então é só um recorte; a lista completa continua só na sidebar de
-   * histórico, aberta pelo botão "Ver tudo" (`HistoricoRolagensSidebar.abrir()`, via referência de
-   * template).
+   * histórico, aberta pelo próprio gatilho D20 dela no cabeçalho.
    */
   protected readonly rolagensRecentes = computed(() => this.rolagensFeed().slice(0, 4));
 
