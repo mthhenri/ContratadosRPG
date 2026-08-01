@@ -21,6 +21,93 @@
 
 ## Registro por task (mais recente primeiro)
 
+## m2-19 — Painel de campanhas: detalhe vira "banner + estatísticas + esquadrão" (visão do mestre) (2026-08-01)
+
+Redesenho de `/painel/:id` (`CampanhaDetalhe`) — hoje um card "Identidade" (nome/descrição/
+convite/ações) ao lado de "Membros" com fichas aninhadas por dono — para: banner de alerta
+condicional (ficha crítica), tira de 4 estatísticas (Membros/Fichas/Convite/Alertas), tira
+horizontal de rolagens recentes e duas colunas — **Membros** (gestão, sem fichas) e **Esquadrão**
+(grid de mini-cards de toda a campanha). Spec
+`docs/specs/done/m2-19-painel-campanha-detalhe-mestre-esquadrao.spec.md`; cobre só a visão do
+**mestre** — a do jogador é a `m2-20`, próxima da fila. **Só apresentação** (proibições #16/#17):
+nenhum endpoint novo, nenhuma regra de negócio nova — `membros`/`fichas`/`rolagensFeed` já eram
+buscados pelo `CampanhaDetalhe` desde a `m2-16`/`m3-27`.
+
+**`detalhe.page.ts` — dados achatados, não regra nova.** O computed `fichasPorMembro` (agrupado
+por dono, m2-16) continua existindo — só ganhou um `fichasEsquadrao` por cima que itera
+`membros()` e achata as fichas de cada um numa lista só, anexando `donoNome` (a `ItemFicha` ganhou
+o campo `usuarioId`, que o card do Esquadrão precisa pra `podeAjustarFicha`/`alternarMenuFicha` já
+que deixou de estar aninhado sob a linha do dono). `fichaCritica`/`alertasCount` são computeds
+simples sobre `fichas().filter(vidaAtual <= 0)` — o banner mostra a primeira encontrada (a spec não
+exige critério de desempate); `rolagensRecentes` é só `rolagensFeed().slice(0, 4)` (o feed já
+chega mais-recente-primeiro, m3-27). O disclosure "N fichas ⌄" por membro no mobile
+(`fichasExpandidas`/`alternarFichas`) e o estado vazio por membro (`podeAfirmarSemFichas`,
+item 8 da m2-16) foram **removidos**, não adaptados — não fazem mais sentido com as fichas fora da
+coluna "Membros".
+
+**Menu kebab de ações da campanha (item 6).** O card "Identidade" que hospedava
+editar/excluir/convite deixou de existir; um novo `menuCampanhaAberto` (signal simples, sem o
+truque de `position: fixed` calculado no clique do menu de ficha — o cabeçalho não vive dentro de
+nenhum ancestral com `overflow`+`mask-image`, então um dropdown `position: absolute` comum já
+basta) abre um menu no cabeçalho com Editar/Excluir, reaproveitando **sem reescrever** a lógica
+já existente (`abrirEdicao`/`pedirExclusao`/`formularioEdicao`/`confirmandoExclusao`) — só o
+gatilho visual mudou. `regenerarConvite`/`copiarConvite` não se moveram para o kebab: ficaram
+junto do próprio código, agora dentro do tile "Convite" da tira de estatísticas (mais perto do
+dado que operam).
+
+**`HistoricoRolagensSidebar` ganhou um método público `abrir()`** (era só `alternar()`/`fechar()`,
+`protected`) — o botão "Ver tudo" da nova tira de rolagens abre a mesma sidebar já existente no
+cabeçalho via referência de template (`#historicoSidebar`), sem duplicar a lista completa (item 3
+da spec: a tira mostra só um teaser de 3-4 rolagens).
+
+**Grid do Esquadrão é fixo, não dinâmico** — decisão explícita do autor documentada na própria
+spec: o protótipo comparado usava `repeat(auto-fill, minmax(220px, 1fr))`, que rendia 3-4 colunas
+no desktop; o código usa `grid-template-columns: repeat(2, minmax(0, 1fr))` sempre, colapsando pra
+1 coluna só no breakpoint mobile. Isso também aposentou o antigo grid **dinâmico por contagem de
+fichas do membro** (`--grid-2`/`--grid-3` da m2-16), que só fazia sentido quando as fichas viviam
+agrupadas por dono.
+
+**`max-width: 80vw`** (era `1160px` fixo, m2-17) — mesmo padrão de `visualizar.page.scss`/
+`lista.page.scss` (m2-18). Grade de duas colunas (Membros | Esquadrão) empilha abaixo de
+`bp.tablet` (1080px, não um `960px` mágico solto) — ganhou o token porque é exatamente o cenário
+que `$bp-tablet` foi criado pra cobrir (m3-26): 2 colunas de grid ainda apertam antes do
+`bp.mobile`.
+
+**Testes:** `detalhe.page.spec.ts` reescrito quase por inteiro (66 testes) — a suíte antiga testava
+as fichas aninhadas sob cada `.detalhe__membro`; a nova testa o kebab de campanha (mestre-only,
+abre/fecha, editar/excluir reaproveitando o fluxo antigo), o banner crítico (aparece/some), a tira
+de estatísticas (contagens + `stat--alerta`), o tile de convite (mestre-only, copiar/regenerar), a
+tira de rolagens (recorte de 4, "Ver tudo" abre a sidebar) e o Esquadrão achatado (nome do dono por
+card, sem fichas na coluna "Membros", estado vazio). Os testes de ação rápida de Vida/Energia e do
+menu de ficha (m3-52) foram só re-selecionados pro novo DOM, sem mudar o que provam.
+`HistoricoRolagensSidebar` não tinha spec próprio (segue sem — `abrir()` é coberto indiretamente
+pelo teste "Ver tudo" do detalhe).
+
+**Verificado ao vivo** (Postgres real + backend + frontend já em pé, Playwright): usuário
+descartável MESTRE de uma campanha com um JOGADOR convidado, duas fichas criadas pelo próprio
+assistente da UI (não craftadas por REST — o documento de ficha é grande demais pra montar à mão
+sem passar pela mesma validação de `shared/regras` que o assistente já resolve), uma delas com
+`vidaAtual` zerada **direto no Postgres** (mesma técnica da m2-18, pra simular o estado crítico sem
+depender de dano de combate) e 3 rolagens via REST. Confirmado: banner "Vera (crítica) está crítica
+(Vida ≤ 0)" com link pra ficha; tira "Membros 2 / Fichas 2 / Convite + copiar/regenerar
+(clipboard + backend confirmados, com `context.grantPermissions` — o primeiro run bateu num
+`NotAllowedError` de clipboard do Chromium headless sem permissão, não um bug do produto) / Alertas
+1"; tira de rolagens com as 3 mais recentes, "Ver tudo" abrindo a sidebar; grid do Esquadrão em
+`391px 391px` (exatamente 2 colunas iguais) no desktop e `315px` (1 coluna) em 375px, sem scroll
+horizontal; ajuste rápido de Vida no mini-card do Esquadrão (34→33) funcionando igual à m2-16g;
+coluna "Membros" sem nenhum `.detalhe__ficha-card"`. Sessão à parte como **jogador** confirmou o
+gate `ehMestre()`: sem tile de convite, sem kebab de campanha, sem ações de gestão de membro —
+zero erro de console nos dois papéis. Dados de teste (3 usuários, 3 campanhas, 2 fichas, 3
+rolagens) removidos do banco de dev ao final (`DELETE` direto — throwaway).
+
+**Ajuste pós-verificação:** a tira de estatísticas no mobile (`repeat(2, 1fr)`) deixava uma célula
+vazia ao lado de "Alertas" quando o Convite (mestre-only) já ocupava a linha inteira — `.stat:
+last-child { grid-column: 1 / -1 }` dentro do `@include bp.mobile` resolve porque "Alertas" é
+sempre o último tile, mestre ou jogador.
+
+**Próxima task candidata:** `m2-20` — mesmo detalhe `/painel/:id`, agora a visão do **jogador**
+(spec já no backlog, dependente desta).
+
 ## m2-18 — Painel de campanhas: lista vira painel de controle (2026-08-01)
 
 Redesenho de `/painel` (`CampanhaLista`): de grade de cartões (m2-17) para **painel de

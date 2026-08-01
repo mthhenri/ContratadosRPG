@@ -45,6 +45,8 @@ interface ItemFichaCondicao extends DescritorCondicao {
  */
 interface ItemFicha {
   readonly id: number;
+  /** Dono da ficha — só precisou virar campo próprio no m2-19 (Esquadrão achatado, sem o loop por membro que antes dava esse dado de graça). */
+  readonly usuarioId: number;
   readonly nome: string;
   readonly classeTexto: string;
   readonly nivel: number;
@@ -86,6 +88,15 @@ interface ItemFicha {
  * e **excluir** (com confirmação inline) a campanha (m2-12). A UI apenas esconde o que o
  * jogador não pode fazer — a autoridade continua no backend (§14): uma tentativa direta seria
  * barrada com 403/404 e tratada pelo `error-handler.interceptor`.
+ *
+ * **Redesenho m2-17 → m2-19 (visão do mestre — a do jogador é a m2-20):** o antigo card
+ * "Identidade" (nome/descrição/convite/ações) ao lado de "Membros" com fichas aninhadas por dono
+ * virou banner de alerta condicional (ficha crítica), tira de estatísticas (Membros/Fichas/
+ * Convite/Alertas), tira horizontal de rolagens recentes e duas colunas — "Membros" (gestão, sem
+ * fichas) e "Esquadrão" (grid fixo de 2 colunas com todas as fichas da campanha, achatadas por
+ * `fichasEsquadrao`). As ações de campanha (editar/excluir) migraram para um menu kebab no
+ * cabeçalho, já que o card que as hospedava deixou de existir. Só apresentação — nenhum endpoint
+ * novo, nenhuma regra de negócio nova (o dado de `membros`/`fichas`/`rolagensFeed` já era buscado).
  */
 @Component({
   selector: 'app-campanha-detalhe',
@@ -148,8 +159,12 @@ export class CampanhaDetalhe {
   /** Bloqueia os botões enquanto a remoção/transferência do membro está em voo. */
   protected readonly processandoMembro = signal(false);
 
-  /** Fichas visíveis da campanha (m2-16) — o backend já filtra por §14; o front só agrupa. */
-  private readonly fichas = signal<FichaResumoDto[]>([]);
+  /**
+   * Fichas visíveis da campanha (m2-16) — o backend já filtra por §14; o front só agrupa.
+   * `protected` (era `private`) desde o m2-19: `fichas().length` alimenta a tira de estatísticas
+   * direto no template ("Fichas"), sem precisar de um computed só pra contar.
+   */
+  protected readonly fichas = signal<FichaResumoDto[]>([]);
   /**
    * Feed de rolagens da campanha (m3-27) — mais recente primeiro; privadas já filtradas pelo
    * backend (§14: só o autor ou o mestre as veem). `carregandoRolagens` cobre só o esqueleto
@@ -204,8 +219,13 @@ export class CampanhaDetalhe {
   /** `id` da ficha sendo desatribuída (ação direta, sem dialog) — desabilita só aquele item. */
   protected readonly removendo = signal<number | null>(null);
 
-  /** Donos com o disclosure de fichas expandido no mobile (ignorado no desktop — sempre aberto). */
-  protected readonly fichasExpandidas = signal<ReadonlySet<number>>(new Set());
+  /**
+   * Menu de ações da campanha (kebab no cabeçalho, m2-19 item 6) — substitui o antigo card
+   * "Identidade" como lugar das ações de editar/excluir. Ao contrário do menu de ficha
+   * (`menuFichaAberto`), este vive dentro do próprio cabeçalho: nenhum ancestral entre eles tem
+   * `overflow`+`mask-image`, então não precisa do truque de `position: fixed` calculado no clique.
+   */
+  protected readonly menuCampanhaAberto = signal(false);
 
   /**
    * Salas `ficha:<id>` já ingressadas (item 1 — tempo real de `ficha:alterada`) — uma por ficha
@@ -228,6 +248,11 @@ export class CampanhaDetalhe {
     }
     return `Atualizado ${rotuloRelativo(em, this.agora())}`;
   });
+
+  /** Tempo relativo de uma rolagem da tira do topo (item 3) — mesmo relógio de 5s do `textoAtualizacao`. */
+  protected tempoRolagem(rolagem: RolagemResumoDto): string {
+    return rotuloRelativo(new Date(rolagem.createdDate).getTime(), this.agora());
+  }
 
   protected readonly formularioEdicao = this.formBuilder.nonNullable.group({
     nome: ['', [Validators.required]],
@@ -257,6 +282,7 @@ export class CampanhaDetalhe {
     for (const ficha of this.fichas()) {
       const item: ItemFicha = {
         id: ficha.id,
+        usuarioId: ficha.usuarioId,
         nome: ficha.nome,
         classeTexto: rotuloClasseCompleto(ficha.classe, ficha.arquetipo),
         nivel: ficha.nivel,
@@ -282,6 +308,50 @@ export class CampanhaDetalhe {
     }
     return mapa;
   });
+
+  /**
+   * Grid do "Esquadrão" (m2-19, item 5) — todas as fichas visíveis da campanha, achatadas (era
+   * agrupado por dono na coluna "Membros"), cada uma com o nome do dono anexado (`donoNome`, pra
+   * exibir no card já que ele não é mais o cabeçalho do grupo). Itera `membros()` em vez de
+   * `fichas()` para a ordem do grid acompanhar a ordem da coluna "Membros" ao lado — mesmo dado de
+   * `fichasPorMembro()`/`fichas()`, sem mudança de escopo (spec item 5).
+   */
+  protected readonly fichasEsquadrao = computed<readonly (ItemFicha & { readonly donoNome: string })[]>(
+    () => {
+      const porMembro = this.fichasPorMembro();
+      const lista: (ItemFicha & { donoNome: string })[] = [];
+      for (const membro of this.membros()) {
+        for (const ficha of porMembro.get(membro.usuarioId) ?? []) {
+          lista.push({ ...ficha, donoNome: membro.nome });
+        }
+      }
+      return lista;
+    },
+  );
+
+  /** Fichas com Vida ≤ 0 na campanha (mestre vê todas — m2-19 itens 1/2). */
+  private readonly fichasCriticas = computed(() => this.fichas().filter((ficha) => ficha.vidaAtual <= 0));
+
+  /**
+   * Banner de alerta do topo (item 1) — a primeira ficha crítica encontrada, ou `null` quando não
+   * há nenhuma (o banner some). Não há critério de desempate exigido pela spec; a ordem é a que o
+   * backend já devolve.
+   */
+  protected readonly fichaCritica = computed<{ id: number; nome: string } | null>(() => {
+    const critica = this.fichasCriticas()[0];
+    return critica ? { id: critica.id, nome: critica.nome } : null;
+  });
+
+  /** Contagem de fichas críticas — alimenta a tira de estatísticas "Alertas" (item 2). */
+  protected readonly alertasCount = computed(() => this.fichasCriticas().length);
+
+  /**
+   * As 3-4 rolagens mais recentes do feed (item 3) — `rolagensFeed()` já vem mais recente
+   * primeiro (m3-27), então é só um recorte; a lista completa continua só na sidebar de
+   * histórico, aberta pelo botão "Ver tudo" (`HistoricoRolagensSidebar.abrir()`, via referência de
+   * template).
+   */
+  protected readonly rolagensRecentes = computed(() => this.rolagensFeed().slice(0, 4));
 
   constructor() {
     this.carregar(true);
@@ -418,12 +488,23 @@ export class CampanhaDetalhe {
       });
   }
 
+  /** Abre/fecha o menu de ações da campanha (kebab no cabeçalho, item 6). */
+  protected alternarMenuCampanha(): void {
+    this.menuCampanhaAberto.update((atual) => !atual);
+  }
+
+  /** Fecha o menu de ações da campanha — clique fora (fundo) ou ao escolher uma ação. */
+  protected fecharMenuCampanha(): void {
+    this.menuCampanhaAberto.set(false);
+  }
+
   /** Abre o formulário de edição preenchido com o nome/descrição atuais da campanha. */
   protected abrirEdicao(): void {
     const campanhaAtual = this.campanha();
     if (!campanhaAtual) {
       return;
     }
+    this.fecharMenuCampanha();
     this.confirmandoExclusao.set(false);
     this.formularioEdicao.reset({
       nome: campanhaAtual.nome,
@@ -462,6 +543,7 @@ export class CampanhaDetalhe {
 
   /** Pede confirmação antes de excluir — mostra a área de confirmação inline. */
   protected pedirExclusao(): void {
+    this.fecharMenuCampanha();
     this.editando.set(false);
     this.confirmandoExclusao.set(true);
   }
@@ -588,21 +670,6 @@ export class CampanhaDetalhe {
     });
   }
 
-  /** Fichas do membro (`usuarioId`) já enriquecidas para o mini-card — `[]` quando não há nenhuma. */
-  protected fichasDoMembro(usuarioId: number): readonly ItemFicha[] {
-    return this.fichasPorMembro().get(usuarioId) ?? [];
-  }
-
-  /**
-   * `true` quando dá pra afirmar com segurança que o membro **não tem** ficha nenhuma (item 8) —
-   * só quando a visão é autoritativa: a própria linha (você sempre vê as suas) ou o mestre (vê
-   * todas — §14). Pra um jogador olhando a linha de OUTRO jogador, "nenhuma visível" pode só
-   * significar "não compartilhada com você" — aí a UI fica muda, como já era.
-   */
-  protected podeAfirmarSemFichas(membro: CampanhaMembroResumoDto): boolean {
-    return this.ehMestre() || membro.usuarioId === this.usuarioAtivoId();
-  }
-
   /**
    * `true` quando o usuário autenticado pode ajustar a Vida/Energia desta ficha na hora (m2-16g) —
    * mesma regra de edição da própria ficha (§14): dono ou mestre, nunca outro membro com só
@@ -628,19 +695,6 @@ export class CampanhaDetalhe {
       lista.map((item) => (item.id === ficha.id ? { ...item, [campo]: valor } : item)),
     );
     this.fichaVitalidadeRapidaService.ajustar(ficha.id, campo, valor);
-  }
-
-  /** Expande/recolhe o disclosure "N fichas" do membro (só tem efeito visual no mobile — SCSS). */
-  protected alternarFichas(usuarioId: number): void {
-    this.fichasExpandidas.update((atual) => {
-      const proximo = new Set(atual);
-      if (proximo.has(usuarioId)) {
-        proximo.delete(usuarioId);
-      } else {
-        proximo.add(usuarioId);
-      }
-      return proximo;
-    });
   }
 
   /** Abre o assistente de criação de ficha (m3-16), agora disparado do detalhe (m2-16). */
@@ -691,7 +745,7 @@ export class CampanhaDetalhe {
    * posição `fixed` a partir do botão clicado (`getBoundingClientRect`) — ver a nota em
    * `menuFichaAberto` sobre por que o dropdown em si vive fora desta subárvore.
    */
-  protected alternarMenuFicha(ficha: ItemFicha, donoNome: string, evento: MouseEvent): void {
+  protected alternarMenuFicha(ficha: ItemFicha & { donoNome: string }, evento: MouseEvent): void {
     if (this.menuFichaAberto()?.id === ficha.id) {
       this.fecharMenuFicha();
       return;
@@ -705,7 +759,7 @@ export class CampanhaDetalhe {
         ? { bottom: window.innerHeight - retangulo.top + 6, right }
         : { top: retangulo.bottom + 6, right },
     );
-    this.menuFichaAberto.set({ id: ficha.id, nome: ficha.nome, donoNome });
+    this.menuFichaAberto.set({ id: ficha.id, nome: ficha.nome, donoNome: ficha.donoNome });
   }
 
   /** Rota da ficha — reusada pelo duplo clique (mesma aba) e pelo clique do meio (nova aba). */

@@ -1,6 +1,6 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-01 · **Última task registrada:** `m2-18` (2026-08-01)
+> **Última revisão:** 2026-08-01 · **Última task registrada:** `m2-19` (2026-08-01)
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -13,17 +13,17 @@
 
 ## 1. Próxima Task
 
-**Declarada no último registro do `HISTORY.md` (fecho da `m2-18`): `m2-19` — painel de
-campanhas: detalhe `/painel/:id` na visão do mestre** (esquadrão) —
-`docs/specs/backlog/m2-19-painel-campanha-detalhe-mestre.spec.md`. Segue a mesma frente de
-redesenho do painel de campanhas iniciada pela `m2-18` (lista → painel de controle); `m2-20`
-(mesma tela na visão do jogador) é a irmã dela, logo depois.
+**Declarada no último registro do `HISTORY.md` (fecho da `m2-19`): `m2-20` — painel de
+campanhas: detalhe `/painel/:id` na visão do jogador** —
+`docs/specs/backlog/m2-20-painel-campanha-detalhe-jogador.spec.md`. É a irmã da `m2-19` (mesma
+frente de redesenho, mesmo detalhe, visão complementar) — hoje a visão do jogador nessa tela só
+herda o que a `m2-19` deixou visível por trás dos `ehMestre()` (banner/estatísticas/esquadrão sem
+convite/kebab/gestão de membro), sem nenhum polimento dedicado ainda.
 
 ### Fila do backlog (`docs/specs/backlog/`)
 
 | Spec | Frente | O que é |
 |---|---|---|
-| `m2-19` | painel de campanhas | detalhe `/painel/:id` na visão do **mestre** (esquadrão) |
 | `m2-20` | painel de campanhas | detalhe `/painel/:id` na visão do **jogador** |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m3-57` | guia de criação | assistente de criação de ficha |
@@ -46,7 +46,7 @@ Deploy em produção por **integração nativa das plataformas**, sem GitHub Act
 `master` → Render (backend) e Cloudflare Pages (frontend) puxam do Git sozinhos; banco no Supabase.
 O GitHub Actions só roda **CI** (lint + testes nos 3 workspaces em todo PR).
 
-**Suítes:** shared 454+ · backend 167/167 · frontend 621/**622** — a 1 falha é conhecida e
+**Suítes:** shared 454+ · backend 167/167 · frontend 628/**629** — a 1 falha é conhecida e
 pré-existente, ver [`PROBLEMS.md`](PROBLEMS.md) `P-001`. `npm run lint` **não fecha limpo** hoje
 em nenhum dos dois workspaces (frontend/backend) — falhas pré-existentes não relacionadas a
 nenhuma task recente, ver `PROBLEMS.md` `P-009`.
@@ -59,7 +59,7 @@ nenhuma task recente, ver `PROBLEMS.md` `P-009`.
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, `core/`, CI, deploy) | **concluído** |
 | M1 | Calculadora com paridade | **concluído no código** (`m1-01`…`m1-20`). Restam 2 passos **operacionais** de plataforma — ver `PROBLEMS.md` `P-006` |
-| M2 | Auth + Campanhas | **concluído** (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`). Redesenho do painel: `m2-18` (lista) feito; `m2-19`/`m2-20` (detalhe mestre/jogador) no backlog |
+| M2 | Auth + Campanhas | **concluído** (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`). Redesenho do painel: `m2-18` (lista) e `m2-19` (detalhe, visão do mestre) feitos; `m2-20` (detalhe, visão do jogador) no backlog |
 | M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; falta `m3-53` do lote de refino + o lote de guia de criação (`m3-57`…`m3-59`) e `m3-61`/`m3-62` |
 | M4 | Ficha de Criatura/NPC | não iniciado |
 | M5 | Guia de Missão | não iniciado |
@@ -96,9 +96,14 @@ mestre, listagem de membros, remoção de jogador e transferência de mestre. UI
 campanha com tira de 4 estatísticas agregadas no topo (Campanhas/Você mestra/Fichas em
 campo/Alertas), alerta visual + nome da ficha crítica por linha, resumo da própria ficha
 (Vida atual/máxima, jogador) e convite copiável direto na linha (mestre), sem abrir o detalhe. O
-detalhe (`/painel/:id`) é o **lar das fichas** — cada membro exibe suas fichas em mini-cards com
-Vida/Energia/condições, ajuste rápido de ± vitalidade sem abrir a ficha, destaque de ficha crítica,
-e a seção "Rolagens Recentes" com feed ao vivo. Usável em ~360px.
+detalhe (`/painel/:id`, visão do **mestre** — m2-19; a do jogador é a `m2-20`) tem banner de alerta
+condicional no topo (ficha crítica, com link direto pra ela), tira de estatísticas (Membros/
+Fichas/Convite/Alertas), tira horizontal de rolagens recentes (teaser do feed, "Ver tudo" abre a
+sidebar de histórico completa) e duas colunas — **Membros** (nome/papel/gestão, sem fichas) e
+**Esquadrão** (grid fixo de 2 colunas — 1 no mobile — com todas as fichas da campanha achatadas,
+nome do dono em cada mini-card, Vida/Energia com ajuste rápido ± sem abrir a ficha, reações e o
+kebab de ações da ficha — duplicar/remover-da-campanha/excluir). As ações de campanha (editar
+nome/descrição, excluir) vivem num menu kebab no cabeçalho da página. Usável em ~360px.
 
 ### Ficha de jogador — `backend/ficha`, `frontend/ficha`
 

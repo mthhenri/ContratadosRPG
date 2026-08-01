@@ -1,120 +1,238 @@
 @use 'tema/breakpoints' as bp;
 
 .detalhe {
-  // m2-17: era uma coluna única de 680px — a grade abaixo separa identidade/convite (lateral) de
-  // membros+fichas (principal), mesma largura-alvo de 1160px da lista/ficha de jogador.
-  max-width: 1160px;
+  // m2-19: era 1160px fixo (m2-17) — mesmo padrão de `visualizar.page.scss`/`lista.page.scss`
+  // (m2-18), que aproveita mais a tela que o teto fixo.
+  max-width: 80vw;
   margin: 0 auto;
 
-  // Duas colunas no desktop: identidade+convite (largura fixa, cresce só até o teto) e a equipe
-  // (o bloco mais denso, ganha o espaço que sobra). Empilha abaixo de 960px — colunas de ~340px
-  // ficariam espremidas antes da própria `bp.mobile`.
-  &__grade {
-    display: grid;
-    grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
-    gap: var(--gap-grid);
-    align-items: start;
+  @include bp.mobile {
+    max-width: 100%;
+  }
 
-    @media (max-width: 960px) {
-      grid-template-columns: minmax(0, 1fr);
+  // === Cabeçalho da página (m2-19, item 6) — substitui o antigo `card__cabecalho` dentro do card
+  // "Identidade", que deixou de existir. Índice + título + régua + indicador de tempo real +
+  // gatilho do histórico de rolagens + (só mestre) o kebab de ações da campanha.
+  &__cabecalho {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 16px;
+  }
+
+  &__titulo {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text);
+  }
+
+  &__cabecalho-menu-envoltorio {
+    position: relative;
+    flex: none;
+  }
+
+  &__cabecalho-menu-botao {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 22px;
+    font-size: 15px;
+    line-height: 1;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+    &:hover {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--surface-2);
+    }
+
+    @include bp.mobile {
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
     }
   }
 
-  // Esqueleto de carregamento — mimetiza a grade de duas colunas real (`&__grade`): identidade
-  // (título + caixa de convite + linhas) na coluna lateral e "Membros" (avatar + nome por linha)
-  // na coluna principal, em vez de deixá-la vazia enquanto só a identidade carregava.
-  &__esqueleto {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  // Fundo transparente pra fechar o menu com um clique fora — sem clipping ancestral aqui (o
+  // cabeçalho não vive dentro de nenhum `overflow`+`mask-image`), então não precisa do truque de
+  // `position: fixed` calculado no clique que o menu de ficha (`&__ficha-menu*`) usa.
+  &__cabecalho-menu-fundo {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    background: transparent;
+    border: 0;
+    cursor: default;
   }
 
-  // Card do esqueleto — largura da coluna lateral real (identidade), não a página inteira: o
-  // card carregado não vira uma faixa larga e vazia antes da grade de duas colunas assentar.
-  &__esqueleto-card {
-    max-width: 340px;
+  &__cabecalho-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 31;
+    min-width: 160px;
+    padding: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
   }
 
-  &__esqueleto-secao {
-    margin-bottom: 18px;
-  }
-
-  &__esqueleto-membros {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  // Mesma silhueta de `&__membro` (avatar + identidade), uma por linha.
-  &__esqueleto-membro {
+  &__cabecalho-menu-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 14px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
+    gap: 9px;
+    width: 100%;
+    padding: 9px 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text);
+    background: transparent;
+    border: 0;
     border-radius: var(--radius-control);
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      background: var(--surface-2);
+      color: var(--accent);
+    }
+
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
+    }
   }
 
   &__descricao {
-    margin: 0 0 20px;
+    margin: 0 0 16px;
     font-family: var(--font-sans);
     color: var(--text-dim);
   }
 
-  &__convite {
-    margin-bottom: 24px;
-    padding: 14px 16px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
+  // === Banner de alerta (item 1) — só aparece quando há ficha com Vida ≤ 0 na campanha. Mesmo
+  // tratamento de "crítico" já usado em `&__ficha-card--critico`/`.campanhas__linha--critico`
+  // (m2-18): tokens fixos `--vida`/`--vida-border`, não `--accent` (trocável em runtime).
+  &__banner-alerta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: color-mix(in srgb, var(--vida) 10%, var(--surface));
+    border: 1px solid var(--vida-border);
     border-radius: var(--radius-control);
+    color: var(--vida);
+
+    app-icone {
+      flex: none;
+      font-size: 15px;
+    }
   }
 
-  &__rotulo {
-    display: block;
-    margin-bottom: 8px;
+  &__banner-texto {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  &__banner-link {
+    flex: none;
     font-family: var(--font-mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-mute);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--vida);
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    @include bp.mobile {
+      display: inline-flex;
+      align-items: center;
+      min-height: bp.$alvo-toque;
+    }
+  }
+
+  // === Tira de estatísticas (item 2) — Membros / Fichas / Convite (só mestre) / Alertas. Mesmo
+  // bloco `.stat` canônico (abaixo) e mesma grade responsiva já usada em `lista.page.scss` (m2-18).
+  &__estatisticas {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+
+    @include bp.mobile {
+      grid-template-columns: repeat(2, 1fr);
+
+      // Alertas é sempre o último tile (Membros/Fichas/Convite?/Alertas) — ganha a linha
+      // inteira igual ao Convite, senão sobra uma célula vazia ao lado dele em ~360px.
+      .stat:last-child {
+        grid-column: 1 / -1;
+      }
+    }
+  }
+
+  // Tile "Convite" — o código + copiar/regenerar (antes uma caixa própria `&__convite`, agora
+  // dentro da tira de estatísticas). No mobile ganha a linha inteira: código + 2 botões de ícone
+  // não cabem confortavelmente dividindo a metade de ~360px com outro tile ao lado.
+  &__stat-convite {
+    min-width: 0;
+
+    @include bp.mobile {
+      grid-column: 1 / -1;
+    }
   }
 
   &__convite-linha {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    gap: 12px;
+    gap: 6px;
+    margin-top: 2px;
   }
 
-  // Código de convite emoldurado como campo próprio (protótipo lobby): caixa --surface com
-  // borda, o código em mono accent. Dá hierarquia de "credencial" em vez de texto solto.
-  // m2-17: a coluna de identidade agora é sempre estreita (340px, era 680px de página inteira) —
-  // `flex-basis: 100%` bota o código na sua própria linha em qualquer largura (era só no
-  // mobile), senão ele trunca com reticências antes mesmo de mostrar o código inteiro.
   &__codigo {
-    flex: 1 1 100%;
+    flex: 1;
     min-width: 0;
-    padding: 8px 12px;
+    padding: 5px 8px;
     background: var(--surface);
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-control);
     font-family: var(--font-mono);
-    font-size: 18px;
+    font-size: 13px;
     font-weight: 700;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     color: var(--accent);
     text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  &__copiar {
+  &__copiar,
+  &__regenerar {
     position: relative;
     flex: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 34px;
-    height: 34px;
+    width: 28px;
+    height: 28px;
     background: transparent;
     color: var(--text-dim);
     border: 1px solid var(--border-strong);
@@ -122,20 +240,30 @@
     cursor: pointer;
     transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 
-    &:hover {
+    &:hover:not(:disabled) {
       color: var(--text);
       background: var(--surface-2);
       border-color: var(--accent-border);
     }
 
-    // Confirmação de cópia: o botão vira "preenchido" no accent do tema com o check (m3, feedback
-    // visual). Usa --accent (trocável em runtime), não uma cor semântica fixa.
-    &--copiado,
-    &--copiado:hover {
-      color: var(--bg);
-      background: var(--accent);
-      border-color: var(--accent);
+    &:disabled {
+      opacity: 0.55;
+      cursor: default;
     }
+
+    @include bp.mobile {
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
+    }
+  }
+
+  &__copiar--copiado,
+  &__copiar--copiado:hover,
+  &__regenerar--confirmado,
+  &__regenerar--confirmado:hover {
+    color: var(--bg);
+    background: var(--accent);
+    border-color: var(--accent);
   }
 
   // Tooltip efêmero "COPIADO" acima do botão de copiar — surge só no estado copiado.
@@ -165,129 +293,95 @@
     transform: translateX(-50%) translateY(0);
   }
 
-  &__regenerar {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 8px 14px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    transition: color 0.15s ease, border-color 0.15s ease;
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: default;
-    }
+  // === Tira horizontal de rolagens recentes (item 3) — teaser do feed já buscado; a lista
+  // completa continua só na sidebar de histórico (`HistoricoRolagensSidebar`, "Ver tudo").
+  &__rolagens {
+    margin-bottom: 16px;
   }
 
-  // Formulário de edição inline (nome/descrição) — mesmo padrão de campo das telas criar/entrar.
-  &__edicao {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    margin-bottom: 24px;
-  }
-
-  &__campo {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-  }
-
-  &__entrada {
-    width: 100%;
-    padding: 10px 12px;
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
+  &__rolagens-ver-tudo {
+    flex: none;
+    padding: 0;
+    background: transparent;
+    border: 0;
     font-family: var(--font-mono);
-    font-size: 14px;
-    color: var(--text);
-
-    &:focus {
-      outline: none;
-      border-color: var(--accent-border);
-    }
-
-    &--area {
-      resize: vertical;
-      font-family: var(--font-sans);
-    }
-  }
-
-  &__edicao-acoes,
-  &__acoes,
-  &__ficha,
-  &__exclusao-acoes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  &__acoes,
-  &__exclusao {
-    margin-bottom: 24px;
-  }
-
-  &__acao {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 9px 16px;
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: var(--tracking-label);
+    color: var(--text-dim);
+    cursor: pointer;
 
-    &:disabled {
-      opacity: 0.6;
-      cursor: default;
+    &:hover {
+      color: var(--accent);
+    }
+
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
     }
   }
 
-  // Caixa de confirmação de exclusão — realce com a borda accent (ação destrutiva pendente).
-  &__exclusao {
-    padding: 14px 16px;
-    background: var(--accent-dim);
-    border: 1px solid var(--accent-border);
-    border-radius: var(--radius-control);
+  &__rolagens-tira {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 2px;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+
+    --fade-esquerda: 0px;
+    --fade-direita: 0px;
+    &.overflow-fade--esquerda,
+    &.overflow-fade--direita {
+      -webkit-mask-image: linear-gradient(
+        to right,
+        transparent 0,
+        #000 var(--fade-esquerda),
+        #000 calc(100% - var(--fade-direita)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to right,
+        transparent 0,
+        #000 var(--fade-esquerda),
+        #000 calc(100% - var(--fade-direita)),
+        transparent 100%
+      );
+    }
+    &.overflow-fade--esquerda {
+      --fade-esquerda: 18px;
+    }
+    &.overflow-fade--direita {
+      --fade-direita: 18px;
+    }
   }
 
-  &__exclusao-aviso {
-    margin: 0 0 12px;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--text);
+  // === Grade de duas colunas: Membros | Esquadrão (item 5). Empilha abaixo do breakpoint de
+  // tablet (item 8) — colunas de ~300px+grid de fichas ficariam espremidas antes disso.
+  &__grade {
+    display: grid;
+    grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+    gap: var(--gap-grid);
+    align-items: start;
+
+    @include bp.tablet {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 
-  // Cabeçalho da seção de membros — mesmo tratamento do contador de seção dos protótipos
-  // ("ESQUADRÃO 4"): rótulo mono uppercase + régua fina + contagem à direita. Só apresentação.
-  // m2-16: ganhou também a ação "Nova ficha" (a régua flex:1 empurra contagem+botão pra direita).
+  &__coluna {
+    min-width: 0;
+  }
+
+  // Cabeçalho de seção — rótulo mono uppercase + régua fina + contagem, mesmo tratamento em
+  // Membros/Esquadrão/Rolagens. Esquadrão ganha também "Nova ficha" (a régua flex:1 empurra
+  // contagem+botão pra direita).
   &__secao {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 11px;
     margin: 0 0 12px;
-  }
-
-  // Ação "Nova ficha" (m2-16 — trazida da extinta lista plana de fichas para o próprio detalhe).
-  &__nova-ficha {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 8px 14px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: default;
-    }
   }
 
   &__secao-titulo {
@@ -313,8 +407,23 @@
     color: var(--text-mute);
   }
 
-  // "Atualizado há Xs" (item 9) — legenda discreta na própria linha, abaixo do cabeçalho da
-  // seção (flex-basis 100% força a quebra: título/régua/contagem/botão continuam numa só linha).
+  &__nova-ficha {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+  }
+
+  // "Atualizado há Xs" (item 9, m2-16) — legenda discreta na própria linha, abaixo do cabeçalho.
   &__secao-atualizado {
     flex-basis: 100%;
     text-align: right;
@@ -323,8 +432,16 @@
     color: var(--text-mute);
   }
 
-  // Rolável quando a campanha acumula membros (cada linha ficou mais alta com as fichas
-  // inline, m2-16) — fade topo/base só aparece de fato quando há corte (appOverflowFade).
+  &__estado {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-style: italic;
+    color: var(--text-mute);
+  }
+
+  // === Coluna "Membros" (item 4) — simplificada: nome + chip-papel + ações de gestão. As fichas
+  // saíram desta coluna (foram pro "Esquadrão", ao lado).
   &__membros {
     list-style: none;
     margin: 0;
@@ -332,7 +449,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    max-height: 520px;
+    max-height: 640px;
     overflow-y: auto;
 
     --fade-topo: 0px;
@@ -372,20 +489,12 @@
     border-radius: var(--radius-control);
   }
 
-  // `align-items: flex-start` (era `center`) — a identidade (nome+chip, abaixo) pode crescer em
-  // altura quando o nome quebra linha; com `center` o avatar e as ações do mestre flutuavam soltos
-  // no meio vertical desse bloco em vez de ancorados no topo, junto da 1ª linha do nome.
   &__membro-linha {
     display: flex;
     align-items: flex-start;
     gap: 12px;
   }
 
-  // Nome + chip de papel em coluna (era tudo numa linha só com o avatar e as ações do mestre) —
-  // um nome de jogador comprido dividia a largura da linha com chip (~90px) e ações de gestão
-  // (2×44px no mobile), sobrando ~68px: menos que a palavra mais longa de um nome comum, o nome
-  // *estourava* a própria caixa e colidia visualmente com o chip ao lado (não só quebrava linha,
-  // sobrepunha). Botar o chip embaixo devolve a largura da linha inteira pro nome.
   &__membro-identidade {
     display: flex;
     flex-direction: column;
@@ -395,53 +504,86 @@
     min-width: 0;
   }
 
-  // Fichas do membro, inline (m2-16, lar das fichas — substitui a extinta lista plana). No
-  // desktop o disclosure fica escondido e a lista é sempre visível; no mobile é o inverso
-  // (ver o breakpoint no fim do bloco). Fade topo/base só some quando a lista de fato corta.
-  &__membro-fichas {
-    display: flex;
-    flex-direction: column;
+  &__membro-acoes {
+    flex: none;
+    display: inline-flex;
     gap: 8px;
   }
 
-  &__fichas-toggle {
-    display: none;
+  &__membro-acao {
+    flex: none;
+    display: inline-flex;
     align-items: center;
-    gap: 6px;
-    align-self: flex-start;
-    padding: 0;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
     background: transparent;
-    border: 0;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
     color: var(--text-dim);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
     cursor: pointer;
-
-    app-icone {
-      font-size: 11px;
-      transition: transform 0.15s ease;
-    }
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 
     &:hover {
       color: var(--text);
+      background: var(--surface);
+      border-color: var(--accent-border);
     }
 
-    &--aberto app-icone {
-      transform: rotate(180deg);
+    app-icone {
+      font-size: 13px;
     }
   }
 
-  &__fichas-lista {
+  &__membro-confirmacao {
+    padding: 12px 14px;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-control);
+  }
+
+  &__membro-aviso {
+    margin: 0 0 12px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  &__membro-confirmacao-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  &__avatar {
+    width: 32px;
+    height: 32px;
+    flex: none;
+    border-radius: var(--radius-control);
+    background-color: var(--surface-2);
+    background-image: repeating-linear-gradient(135deg, var(--border-strong) 0 3px, transparent 3px 9px);
+    border: 1px solid var(--border-strong);
+  }
+
+  &__membro-nome {
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text);
+    overflow-wrap: anywhere;
+  }
+
+  // === Coluna "Esquadrão" (item 5) — grid FIXO de 2 colunas (não `auto-fill`, decisão do autor:
+  // o protótipo com `auto-fill` rendia 3-4 colunas no desktop). 1 coluna abaixo de `bp.mobile`.
+  &__esquadrao-grid {
     list-style: none;
     margin: 0;
-    padding: 0 0 0 44px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    max-height: 220px;
+    padding: 2px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    align-items: start;
+    max-height: 640px;
     overflow-y: auto;
 
     --fade-topo: 0px;
@@ -470,35 +612,19 @@
       --fade-base: 16px;
     }
 
-    // Grid dinâmica pela quantidade de fichas do membro: 1 mantém a linha (flex column acima),
-    // 2 vira grid de 2 colunas, 3+ vira grid de 3 — só no desktop (mobile força 1 coluna abaixo).
-    &--grid-2 {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      align-items: start;
-    }
-
-    &--grid-3 {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      align-items: start;
+    @include bp.mobile {
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 
-  // m2-16b: virou cartão em coluna (era uma única linha nome+meta) — cabe o topo (nome +
-  // condições), a meta (classe/nível/patente), a identidade (personalidade/origem), a linha de
-  // vitais (Vida/Energia) e a linha de reações (Defesa/Esquiva/Bloqueio). m2-16g: deixou de ser
-  // o próprio `<a>` — os passos rápidos de Vida/Energia (`&__ficha-passo`) não podem viver dentro
-  // de um link (aninhamento inválido / roubaria o clique de navegação), então o card virou um
-  // `<div>` com o link só no topo+meta+identidade (`&__ficha-link`) e o resto como irmão, fora do
-  // link. Gap/padding mais enxutos que o desenho original — o card ganhou 2 linhas de informação
-  // (identidade, reações) e precisou compactar cada uma pra não crescer em altura total.
-  // `cursor: pointer` sinaliza o duplo clique (`abrirFichaDuploClique`, mesmo destino do link).
+  // Card de ficha do Esquadrão — mesma receita da m2-16b/m2-16g/m3-52 (agora fora do agrupamento
+  // por dono, direto no grid): topo (dono+nome / condições), meta (classe/nível/patente),
+  // identidade, vitais com passos −/+ e rodapé (reações + kebab).
   &__ficha-card {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    padding: 7px 10px;
+    padding: 8px 10px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-control);
@@ -520,8 +646,7 @@
     cursor: pointer;
   }
 
-  // Vida ≤ 0 (item 4) — sinaliza mesmo sem "Morrendo" marcado ainda, tingido com o mesmo token
-  // fixo da stat Vida (não é uma cor nova). `color-mix` a partir do token, não hex solto (#29).
+  // Vida ≤ 0 (item 4 da m2-16b, mantido) — tingido com o token fixo da stat Vida.
   &__ficha-card--critico {
     background: color-mix(in srgb, var(--vida) 8%, var(--surface));
     border-color: var(--vida-border);
@@ -531,22 +656,35 @@
     }
   }
 
-  // `flex-start` (era `center`) — mesma razão do &__membro-linha: o nome do personagem pode
-  // quebrar em 2-3 linhas num card ainda mais estreito, e os selos de condição não podem ficar
-  // soltos no meio vertical desse bloco.
   &__ficha-topo {
     display: flex;
     align-items: flex-start;
     gap: 8px;
   }
 
-  // Mesmo problema do &__membro-nome acima: nome do personagem sem limite, quebra em vez de
-  // truncar (reticências esconderiam o nome do personagem, informação central da ficha). Aqui o
-  // nome só disputa espaço com os selos de condição (~50px), não com um chip+ações inteiros — sobra
-  // largura de sobra, então não precisou virar coluna como o &__membro-identidade.
-  &__ficha-nome {
+  // Dono + nome empilhados (m2-19 — o card deixou de viver sob um cabeçalho de grupo por dono no
+  // grid achatado do Esquadrão, então o nome do dono precisa aparecer no próprio card).
+  &__ficha-topo-texto {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  &__ficha-dono {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__ficha-nome {
     font-family: var(--font-mono);
     font-size: 13px;
     font-weight: 700;
@@ -554,7 +692,6 @@
     overflow-wrap: anywhere;
   }
 
-  // As 3 condições, sempre visíveis (item 3) — inativa esmaecida, ativa ganha cor semântica.
   &__ficha-condicoes {
     flex: none;
     display: inline-flex;
@@ -582,9 +719,6 @@
       color: var(--text);
     }
 
-    // Sobrecarregado (aviso do backend, ver `FichaResumoDto.sobrecarregado`) — mesmo token
-    // semântico de "Machucado" (aviso, não falha), mas renderizado condicionalmente (só quando
-    // `true`; as outras 3 aparecem sempre, esmaecidas — este é derivado, não um toggle manual).
     &[data-condicao='sobrecarregado'] {
       color: var(--warning);
     }
@@ -596,10 +730,6 @@
     color: var(--text-dim);
   }
 
-  // Personalidade + Origem (m3-23) — linha extra e discreta abaixo da meta; some inteira quando a
-  // ficha não tem Identidade definida (`identidadeTexto: null`), sem deixar um espaço vazio.
-  // Trunca com reticências (uma linha só) em vez de crescer o card — o nome completo está a um
-  // clique/duplo-clique de distância, na própria ficha.
   &__ficha-identidade {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -610,11 +740,6 @@
     color: var(--text-mute);
   }
 
-  // Rodapé do card (m3-52 → ajuste pós-review): reações + kebab na **mesma linha**, não uma linha
-  // cada — o kebab sozinho numa `&__ficha-acoes` própria desperdiçava uma linha inteira por um
-  // botão de 22px. `justify-content: space-between` deixa as reações à esquerda e o kebab colado
-  // à direita quando os dois existem; quando só um existe, o outro lado fica vazio e ocupa a
-  // largura toda mesmo assim (`min-height` evita o salto de altura entre os dois casos).
   &__ficha-rodape {
     display: flex;
     align-items: center;
@@ -624,9 +749,6 @@
     margin-top: 2px;
   }
 
-  // Defesa/Esquiva/Bloqueio (derivados, m3-10) — mesma receita visual/densidade de `&__ficha-vitais`
-  // (mono, flex-wrap), mas sem cor semântica própria (não é vital) e sem os passos −/+ (só leitura
-  // aqui; ajustar é na própria ficha). Bloco condicional — ficha Civil não tem Defesa.
   &__ficha-reacoes {
     display: flex;
     flex-wrap: wrap;
@@ -636,23 +758,12 @@
     color: var(--text-mute);
   }
 
-  // Estado vazio por membro (item 8) — só aparece quando a visão é autoritativa
-  // (`podeAfirmarSemFichas`: a própria linha, ou o mestre — nunca "adivinha" ausência alheia).
-  &__sem-fichas {
-    margin: 0;
-    font-family: var(--font-sans);
-    font-size: 12px;
-    font-style: italic;
-    color: var(--text-mute);
-  }
-
   &__ficha-vitais {
     display: flex;
     flex-wrap: wrap;
     gap: 4px 10px;
   }
 
-  // m2-16g: cada vital ganhou os passos − / + em volta do texto (só dono/mestre — `podeAjustarFicha`).
   &__ficha-vital {
     display: inline-flex;
     align-items: center;
@@ -671,12 +782,6 @@
     }
   }
 
-  // Ação rápida de Vida/Energia direto no mini-card (m2-16g) — mesma receita visual do
-  // `.ficha-passo` da leitura completa da ficha, só que menor (a coluna da grade é mais estreita).
-  // Mobile bumpa pra caixa real de 44px no bloco `bp.mobile` abaixo — mesmo controle, mesma
-  // solução do `.ficha-passo` (`ficha-visualizacao.component.scss`, m3-26): sobra largura de
-  // sobra no mini-card (cada grupo Vida/Energia cabe sozinho na linha), diferente do
-  // `.ficha-atributo__mod-passo` da ficha completa, que fica mesmo em 18px por falta de espaço.
   &__ficha-passo {
     display: inline-flex;
     align-items: center;
@@ -694,7 +799,6 @@
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-control);
     cursor: pointer;
-    // Segurar para repetir (appHoldRepeat): sem seleção de texto nem scroll/zoom de toque no gesto.
     -webkit-user-select: none;
     user-select: none;
     touch-action: none;
@@ -712,11 +816,6 @@
     }
   }
 
-  // Botão do menu de ações (kebab) de uma ficha no mini-card (m3-52) — o dropdown em si
-  // (`&__ficha-menu*`, estilizado abaixo, fora do `.detalhe`) mora na raiz do template, não aqui
-  // dentro — ver a nota em `menuFichaAberto` no componente sobre por quê. Só dono/mestre da ficha
-  // (`podeAjustarFicha`, mesma checagem já usada nos passos de Vida/Energia). Vive em `&__ficha-rodape`
-  // (ver acima), não mais numa linha própria.
   &__ficha-menu-botao {
     flex: none;
     margin-left: auto;
@@ -750,10 +849,9 @@
     cursor: default;
   }
 
-  // `fixed` (não `absolute`) — os mini-cards vivem dentro de listas com `overflow-y: auto`
-  // (`.detalhe__fichas-lista`/`.detalhe__membros`, m2-16), que cortavam um dropdown `absolute`
-  // comum contra o próprio scroll. `top`/`right` chegam via `[style]`, calculados no clique do
-  // botão (`alternarMenuFicha`) — ver a nota em `menuFichaPosicao` no componente.
+  // `fixed` (não `absolute`) — os mini-cards vivem dentro do `&__esquadrao-grid`, que tem
+  // `overflow-y: auto` (m2-16/m2-19), que cortaria um dropdown `absolute` comum contra o próprio
+  // scroll. `top`/`right` chegam via `[style]`, calculados no clique do botão (`alternarMenuFicha`).
   &__ficha-menu {
     position: fixed;
     z-index: 21;
@@ -787,88 +885,6 @@
     }
   }
 
-  // Ações de gestão do mestre sobre um jogador (transferir mestre / remover) — botões-ícone
-  // discretos, mesmo tratamento do &__copiar (aqui sobre --surface-2, hover pra --surface).
-  &__membro-acoes {
-    flex: none;
-    display: inline-flex;
-    gap: 8px;
-  }
-
-  &__membro-acao {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: transparent;
-    color: var(--text-dim);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-
-    &:hover {
-      color: var(--text);
-      background: var(--surface);
-      border-color: var(--accent-border);
-    }
-
-    app-icone {
-      font-size: 13px;
-    }
-  }
-
-  // Caixa de confirmação da ação de membro — realce com a borda accent (ação pendente), mesmo
-  // tratamento da confirmação de exclusão da campanha.
-  &__membro-confirmacao {
-    padding: 12px 14px;
-    background: var(--accent-dim);
-    border: 1px solid var(--accent-border);
-    border-radius: var(--radius-control);
-  }
-
-  &__membro-aviso {
-    margin: 0 0 12px;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--text);
-  }
-
-  &__membro-confirmacao-acoes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  // Avatar decorativo (placeholder de imagem — sem foto real no domínio ainda). Listras em
-  // --border-strong (não --surface/--surface-2) — esse par é calibrado pra ficar visível sobre
-  // --surface-2 nas duas bases do tema em runtime (m1-13); direto com --surface/--surface-2 o
-  // contraste ficava quase invisível na base clara.
-  &__avatar {
-    width: 32px;
-    height: 32px;
-    flex: none;
-    border-radius: var(--radius-control);
-    background-color: var(--surface-2);
-    background-image: repeating-linear-gradient(135deg, var(--border-strong) 0 3px, transparent 3px 9px);
-    border: 1px solid var(--border-strong);
-  }
-
-  // Nome do membro sem limite — reticências esconderiam parte dele (é identidade de jogador, não
-  // um valor secundário). Quebra em várias linhas em vez de cortar, usando a largura cheia de
-  // `&__membro-identidade` (o chip, agora abaixo, não disputa mais espaço horizontal com o nome).
-  // `overflow-wrap: anywhere` é só rede de segurança para um nome/apelido sem espaço nenhum mais
-  // largo que a coluna — o caso comum quebra só entre palavras.
-  &__membro-nome {
-    min-width: 0;
-    font-family: var(--font-mono);
-    font-size: 14px;
-    color: var(--text);
-    overflow-wrap: anywhere;
-  }
-
   &__voltar {
     margin: 18px 0 0;
     font-family: var(--font-sans);
@@ -888,17 +904,136 @@
     }
   }
 
+  // === Edição inline de nome/descrição (só mestre, aberta pelo kebab do cabeçalho) — ganhou uma
+  // caixa própria (fundo+borda) desde o m2-19: antes vivia dentro do card "Identidade", que
+  // deixou de existir.
+  &__edicao {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 16px;
+    padding: 16px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+  }
+
+  &__campo {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  &__entrada {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text);
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent-border);
+    }
+
+    &--area {
+      resize: vertical;
+      font-family: var(--font-sans);
+    }
+  }
+
+  &__edicao-acoes,
+  &__exclusao-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  &__acao {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+  }
+
+  // Caixa de confirmação de exclusão — realce com a borda accent (ação destrutiva pendente).
+  &__exclusao {
+    margin-bottom: 16px;
+    padding: 14px 16px;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-control);
+  }
+
+  &__exclusao-aviso {
+    margin: 0 0 12px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  // === Esqueleto de carregamento — mimetiza a silhueta real: cabeçalho, tira de 4 estatísticas
+  // e a grade de duas colunas (linhas de membro + cards de ficha).
+  &__esqueleto {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__esqueleto-cabecalho {
+    display: flex;
+  }
+
+  &__esqueleto-estatisticas {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+
+    @include bp.mobile {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  &__esqueleto-membros {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__esqueleto-membro {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+  }
+
+  &__esqueleto-esquadrao {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+
+    @include bp.mobile {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
   // Alvos de toque confortáveis (m1-15 / WCAG 2.5.5) nas ações do mestre e no link de voltar.
   @include bp.mobile {
-    &__copiar {
-      width: bp.$alvo-toque;
-      height: bp.$alvo-toque;
-    }
-
-    &__regenerar {
-      min-height: bp.$alvo-toque;
-    }
-
     &__entrada {
       min-height: bp.$alvo-toque;
     }
@@ -917,19 +1052,12 @@
       height: bp.$alvo-toque;
     }
 
-    // Passos −/+ de Vida/Energia: caixa real (não só a área de toque) cresce pra 44px, igual ao
-    // `.ficha-passo` da leitura completa — há espaço de sobra aqui (cada grupo Vida/Energia cabe
-    // sozinho na linha do mini-card), diferente da ficha completa onde outros controles ficam
-    // pequenos por falta de espaço.
     &__ficha-passo {
       width: bp.$alvo-toque;
       height: bp.$alvo-toque;
       font-size: 18px;
     }
 
-    // Texto "Vida X/Y" / "Energia X/Y" — 11px no desktop (card compacto ao lado de outras 2/3
-    // fichas na grade) lia pequeno ao lado dos passos agora com 44px. Sobe só no mobile, onde a
-    // lista já é 1 coluna e sobra largura.
     &__ficha-vital {
       font-size: 13px;
     }
@@ -938,30 +1066,6 @@
       flex: 1 1 100%;
       justify-content: center;
       min-height: bp.$alvo-toque;
-    }
-
-    // Híbrido por largura (m2-16): no desktop as fichas ficam sempre abertas (regra acima);
-    // no mobile viram disclosure — some a lista, aparece o gatilho "N fichas ⌄" com alvo de
-    // toque confortável, e a lista só aparece com o toggle expandido.
-    &__fichas-toggle {
-      display: inline-flex;
-      min-height: bp.$alvo-toque;
-    }
-
-    &__fichas-lista {
-      display: none;
-      padding-left: 0;
-
-      // Mobile sempre em 1 coluna — a grid de 2/3 colunas é só desktop (a lista já é
-      // disclosure aqui, não precisa competir por espaço horizontal).
-      &--aberta {
-        display: flex;
-      }
-
-      &--grid-2,
-      &--grid-3 {
-        grid-template-columns: none;
-      }
     }
 
     &__link {
@@ -985,9 +1089,44 @@
   border: 1px solid var(--accent-border);
   border-radius: 3px;
   padding: 4px 8px;
+  width: fit-content;
 
   app-icone {
     font-size: 11px;
+  }
+}
+
+// Pill de rolagem (item 3, nome sancionado pela spec) — item da tira horizontal de rolagens
+// recentes do cabeçalho. Não segue o BEM `.detalhe__*` porque é o nome que a própria spec exige.
+.rolagem-pill {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 140px;
+  max-width: 220px;
+  padding: 8px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+
+  &__rotulo {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__meta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-mute);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
@@ -1033,6 +1172,42 @@
     flex: 1;
     height: 1px;
     background: var(--border);
+  }
+}
+
+// Stat box — bloco sancionado copiado de docs/design/tema/_componentes.scss (m2-18/m2-19).
+.stat {
+  min-width: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  padding: 13px 14px;
+
+  &__rotulo {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+    margin-bottom: 7px;
+  }
+
+  &__valor {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  // Alertas > 0 (item 2) — mesmo token fixo `--vida` do card/linha/banner crítico, não `--accent`.
+  &--alerta {
+    border-color: var(--vida-border);
+
+    .stat__valor {
+      color: var(--vida);
+    }
   }
 }
 
@@ -1182,28 +1357,20 @@
     height: 20px;
   }
 
-  &--convite {
+  &--stat {
     height: 64px;
   }
 
-  &--linha {
-    height: 44px;
+  &--ficha {
+    height: 96px;
   }
 
-  // Rótulo da seção "Membros" (título curto, mono, uppercase — mesma silhueta de `&__secao-titulo`).
-  &--rotulo {
-    width: 110px;
-    height: 12px;
-  }
-
-  // Avatar do esqueleto de membro — mesmo tamanho/raio do `&__avatar` real (32×32, não circular).
   &--avatar {
     width: 32px;
     height: 32px;
     flex: none;
   }
 
-  // Nome do membro no esqueleto — barra fina ao lado do avatar (não o bloco cheio de `&--linha`).
   &--nome {
     flex: 1;
     max-width: 160px;

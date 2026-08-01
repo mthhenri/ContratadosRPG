@@ -2,7 +2,12 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, provideRouter } from '@angular/router';
 import { Observable, Subject, of } from 'rxjs';
-import { ArquetipoEnum, ClasseEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import {
+  ArquetipoEnum,
+  ClasseEnum,
+  RolagemVisibilidadeEnum,
+  TipoCampanhaMembroPapelEnum,
+} from '@contratados-rpg/shared/enums';
 import {
   CampanhaAlteradaDto,
   CampanhaMembroEntradaDto,
@@ -20,10 +25,12 @@ import { RolagemService } from '../../../ficha/rolagem.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 
 /**
- * Prova o comportamento de frontend da m2-12 na tela de detalhe: só o mestre vê as ações de
- * editar/excluir; a edição chama `alterarCampanha` e reflete o resultado na tela; a exclusão
- * exige confirmação e leva de volta à lista (`/painel`). A autoridade é sempre o backend (§14) —
- * aqui é só a camada de apresentação.
+ * Prova o redesenho m2-19 da visão do mestre em `/painel/:id`: banner de alerta condicional,
+ * tira de estatísticas (Membros/Fichas/Convite/Alertas), tira de rolagens recentes com "Ver
+ * tudo", coluna "Membros" simplificada (sem fichas) e coluna "Esquadrão" (grid achatado de todas
+ * as fichas, com o nome do dono em cada card) — mais o menu kebab de ações da campanha no
+ * cabeçalho, que substitui o antigo card "Identidade". Toda a permissão continua arbitrada pelo
+ * backend (§14); aqui é só a camada de apresentação.
  */
 describe('CampanhaDetalhe', () => {
   const CAMPANHA_ID = 8;
@@ -37,6 +44,22 @@ describe('CampanhaDetalhe', () => {
 
   function membrosCom(usuarioId: number, papel: TipoCampanhaMembroPapelEnum): CampanhaMembroResumoDto[] {
     return [{ usuarioId, nome: 'Agente', papel }];
+  }
+
+  function rolagem(sobrescritas: Partial<RolagemResumoDto> = {}): RolagemResumoDto {
+    return {
+      id: 1,
+      fichaId: 3,
+      campanhaId: CAMPANHA_ID,
+      usuarioId: 1,
+      nomeAutor: 'Mestre',
+      nomeFicha: 'Kane',
+      rotulo: '1d20+5',
+      visibilidade: RolagemVisibilidadeEnum.PUBLICA,
+      resultado: { dados: [], atributos: [], constante: 5, total: 17 },
+      createdDate: new Date().toISOString(),
+      ...sobrescritas,
+    };
   }
 
   function montar(opts: {
@@ -92,6 +115,11 @@ describe('CampanhaDetalhe', () => {
       listarPorCampanha: vi.fn(() => of(opts.rolagens ?? [])),
     };
     const sessaoService = { usuario: () => ({ id: opts.usuarioId, login: 'x', nome: 'x' }) };
+
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: vi.fn(() => Promise.resolve()) },
+      configurable: true,
+    });
 
     // Stub do tempo real (m2-16, trazido da extinta FichaLista; +m2-16c item 1: `ficha:alterada`):
     // `Subject`s controláveis para os eventos da sala e um Signal de reconexão.
@@ -157,219 +185,371 @@ describe('CampanhaDetalhe', () => {
     { usuarioId: 2, nome: 'Jogador', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
   ];
 
-  it('mostra as ações de editar/excluir só para o mestre', () => {
-    const { raiz } = montar(mestre());
-    expect(raiz.querySelector('.detalhe__acoes')).not.toBeNull();
-  });
+  function abrirMenuCampanha(raiz: HTMLElement, fixture: ReturnType<typeof montar>['fixture']) {
+    (raiz.querySelector('.detalhe__cabecalho-menu-botao') as HTMLButtonElement).click();
+    fixture.detectChanges();
+  }
 
-  it('esconde as ações de editar/excluir do jogador', () => {
-    const { raiz } = montar(jogador());
-    expect(raiz.querySelector('.detalhe__acoes')).toBeNull();
-  });
-
-  it('edita nome/descrição e reflete o resultado na tela', () => {
-    const alterada: CampanhaAlteradaDto = {
-      id: CAMPANHA_ID,
-      nome: 'Contenção Ômega',
-      descricao: 'Nova diretriz',
-      codigoConvite: 'DEF456',
-    };
-    const { fixture, raiz, campanhaService } = montar({
-      ...mestre(),
-      alterarRetorno: of(alterada),
+  // === Menu kebab de ações da campanha (item 6) — substitui o antigo card "Identidade". ===
+  describe('menu de ações da campanha (item 6)', () => {
+    it('mostra o kebab de ações só para o mestre', () => {
+      const { raiz } = montar(mestre());
+      expect(raiz.querySelector('.detalhe__cabecalho-menu-botao')).not.toBeNull();
     });
 
-    // Abre o formulário de edição.
-    (raiz.querySelectorAll('.detalhe__acoes button')[0] as HTMLButtonElement).click();
-    fixture.detectChanges();
-
-    const nome = raiz.querySelector('input.detalhe__entrada') as HTMLInputElement;
-    nome.value = 'Contenção Ômega';
-    nome.dispatchEvent(new Event('input'));
-    const descricao = raiz.querySelector('textarea.detalhe__entrada') as HTMLTextAreaElement;
-    descricao.value = 'Nova diretriz';
-    descricao.dispatchEvent(new Event('input'));
-
-    (raiz.querySelector('.detalhe__edicao') as HTMLFormElement).dispatchEvent(new Event('submit'));
-    fixture.detectChanges();
-
-    expect(campanhaService.alterarCampanha).toHaveBeenCalledWith(CAMPANHA_ID, {
-      nome: 'Contenção Ômega',
-      descricao: 'Nova diretriz',
+    it('esconde o kebab de ações do jogador', () => {
+      const { raiz } = montar(jogador());
+      expect(raiz.querySelector('.detalhe__cabecalho-menu-botao')).toBeNull();
     });
-    expect((raiz.querySelector('.card__titulo') as HTMLElement).textContent?.trim()).toBe('Contenção Ômega');
-    expect(raiz.querySelector('.detalhe__edicao')).toBeNull();
+
+    it('abre o menu com Editar/Excluir e fecha ao clicar no fundo', () => {
+      const { fixture, raiz } = montar(mestre());
+
+      abrirMenuCampanha(raiz, fixture);
+      const itens = raiz.querySelectorAll('.detalhe__cabecalho-menu-item');
+      expect(itens).toHaveLength(2);
+      expect(itens[0].textContent).toContain('Editar');
+      expect(itens[1].textContent).toContain('Excluir');
+
+      (raiz.querySelector('.detalhe__cabecalho-menu-fundo') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(raiz.querySelector('.detalhe__cabecalho-menu')).toBeNull();
+    });
+
+    it('"Editar" abre o formulário, edita nome/descrição, reflete no título e fecha o menu', () => {
+      const alterada: CampanhaAlteradaDto = {
+        id: CAMPANHA_ID,
+        nome: 'Contenção Ômega',
+        descricao: 'Nova diretriz',
+        codigoConvite: 'DEF456',
+      };
+      const { fixture, raiz, campanhaService } = montar({ ...mestre(), alterarRetorno: of(alterada) });
+
+      abrirMenuCampanha(raiz, fixture);
+      (raiz.querySelectorAll('.detalhe__cabecalho-menu-item')[0] as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(raiz.querySelector('.detalhe__cabecalho-menu')).toBeNull();
+
+      const nome = raiz.querySelector('input.detalhe__entrada') as HTMLInputElement;
+      nome.value = 'Contenção Ômega';
+      nome.dispatchEvent(new Event('input'));
+      const descricao = raiz.querySelector('textarea.detalhe__entrada') as HTMLTextAreaElement;
+      descricao.value = 'Nova diretriz';
+      descricao.dispatchEvent(new Event('input'));
+
+      (raiz.querySelector('.detalhe__edicao') as HTMLFormElement).dispatchEvent(new Event('submit'));
+      fixture.detectChanges();
+
+      expect(campanhaService.alterarCampanha).toHaveBeenCalledWith(CAMPANHA_ID, {
+        nome: 'Contenção Ômega',
+        descricao: 'Nova diretriz',
+      });
+      expect((raiz.querySelector('.detalhe__titulo') as HTMLElement).textContent?.trim()).toBe(
+        'Contenção Ômega',
+      );
+      expect(raiz.querySelector('.detalhe__edicao')).toBeNull();
+    });
+
+    it('"Excluir" pede confirmação inline; confirmar exclui e navega de volta à lista', () => {
+      const { fixture, raiz, campanhaService, navegar } = montar(mestre());
+
+      abrirMenuCampanha(raiz, fixture);
+      (raiz.querySelectorAll('.detalhe__cabecalho-menu-item')[1] as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(raiz.querySelector('.detalhe__exclusao')).not.toBeNull();
+      expect(campanhaService.excluirCampanha).not.toHaveBeenCalled();
+
+      (raiz.querySelector('.detalhe__exclusao .botao--primario') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(campanhaService.excluirCampanha).toHaveBeenCalledWith(CAMPANHA_ID);
+      expect(navegar).toHaveBeenCalledWith(['/painel']);
+    });
+
+    it('cancela a exclusão sem chamar o backend', () => {
+      const { fixture, raiz, campanhaService } = montar(mestre());
+
+      abrirMenuCampanha(raiz, fixture);
+      (raiz.querySelectorAll('.detalhe__cabecalho-menu-item')[1] as HTMLButtonElement).click();
+      fixture.detectChanges();
+      (raiz.querySelector('.detalhe__exclusao .botao--secundario') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(raiz.querySelector('.detalhe__exclusao')).toBeNull();
+      expect(campanhaService.excluirCampanha).not.toHaveBeenCalled();
+    });
   });
 
-  it('exclui a campanha após confirmação e navega de volta à lista', () => {
-    const { fixture, raiz, campanhaService, navegar } = montar(mestre());
+  // === Gestão de membros (m2-13) — inalterada pelo m2-19, só sem fichas na coluna. ===
+  describe('gestão de membros (m2-13)', () => {
+    it('mostra a gestão só na linha do jogador (nunca na própria do mestre)', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois() });
+      expect(raiz.querySelectorAll('.detalhe__membro-acoes')).toHaveLength(1);
+    });
 
-    // "Excluir" (2ª ação) abre a confirmação inline — sem excluir ainda.
-    (raiz.querySelectorAll('.detalhe__acoes button')[1] as HTMLButtonElement).click();
-    fixture.detectChanges();
-    expect(raiz.querySelector('.detalhe__exclusao')).not.toBeNull();
-    expect(campanhaService.excluirCampanha).not.toHaveBeenCalled();
+    it('esconde a gestão de membros do jogador comum', () => {
+      const { raiz } = montar({ usuarioId: 2, membros: membrosDois() });
+      expect(raiz.querySelector('.detalhe__membro-acoes')).toBeNull();
+    });
 
-    // Confirma a exclusão.
-    (raiz.querySelector('.detalhe__exclusao .botao--primario') as HTMLButtonElement).click();
-    fixture.detectChanges();
+    it('remove um jogador após confirmação e o tira da lista', () => {
+      const { fixture, raiz, campanhaService } = montar({ usuarioId: 1, membros: membrosDois() });
 
-    expect(campanhaService.excluirCampanha).toHaveBeenCalledWith(CAMPANHA_ID);
-    expect(navegar).toHaveBeenCalledWith(['/painel']);
+      (raiz.querySelectorAll('.detalhe__membro-acoes button')[1] as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(raiz.querySelector('.detalhe__membro-confirmacao')).not.toBeNull();
+      expect(campanhaService.removerMembro).not.toHaveBeenCalled();
+
+      (raiz.querySelector('.detalhe__membro-confirmacao .botao--primario') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(campanhaService.removerMembro).toHaveBeenCalledWith(CAMPANHA_ID, 2);
+      const nomes = Array.from(raiz.querySelectorAll('.detalhe__membro-nome')).map((el) =>
+        el.textContent?.trim(),
+      );
+      expect(nomes).toEqual(['Mestre']);
+    });
+
+    it('transfere o mestre e perde as ações de gestão/o kebab de campanha na hora', () => {
+      const { fixture, raiz, campanhaService } = montar({ usuarioId: 1, membros: membrosDois() });
+
+      campanhaService.listarMembros.mockReturnValue(
+        of([
+          { usuarioId: 1, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
+          { usuarioId: 2, nome: 'Jogador', papel: TipoCampanhaMembroPapelEnum.MESTRE },
+        ]),
+      );
+
+      (raiz.querySelectorAll('.detalhe__membro-acoes button')[0] as HTMLButtonElement).click();
+      fixture.detectChanges();
+      (raiz.querySelector('.detalhe__membro-confirmacao .botao--primario') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(campanhaService.transferirMestre).toHaveBeenCalledWith(CAMPANHA_ID, 2);
+      expect(raiz.querySelector('.detalhe__membro-acoes')).toBeNull();
+      expect(raiz.querySelector('.detalhe__cabecalho-menu-botao')).toBeNull();
+    });
+
+    it('cancela a ação de membro sem chamar o backend', () => {
+      const { fixture, raiz, campanhaService } = montar({ usuarioId: 1, membros: membrosDois() });
+
+      (raiz.querySelectorAll('.detalhe__membro-acoes button')[1] as HTMLButtonElement).click();
+      fixture.detectChanges();
+      (raiz.querySelector('.detalhe__membro-confirmacao .botao--secundario') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(raiz.querySelector('.detalhe__membro-confirmacao')).toBeNull();
+      expect(raiz.querySelector('.detalhe__membro-acoes')).not.toBeNull();
+      expect(campanhaService.removerMembro).not.toHaveBeenCalled();
+    });
   });
 
-  it('cancela a exclusão sem chamar o backend', () => {
-    const { fixture, raiz, campanhaService } = montar(mestre());
+  // Fixture compartilhada de fichas — Kane (mestre, crítico), Vera e Zeta (jogador).
+  const fichas: FichaResumoDto[] = [
+    {
+      id: 3,
+      campanhaId: CAMPANHA_ID,
+      campanhaNome: null,
+      usuarioId: 1,
+      nome: 'Kane',
+      classe: ClasseEnum.COMBATENTE,
+      arquetipo: ArquetipoEnum.LUTADOR,
+      nivel: 2,
+      vidaAtual: 0,
+      vidaMaxima: 49,
+      energiaAtual: 10,
+      energiaMaxima: 27,
+      morrendo: true,
+      machucado: false,
+      inconsciente: false,
+      prestigio: 5,
+      defesa: 12,
+      esquiva: 15,
+      bloqueio: 14,
+      personalidade: 'Frio',
+      origemNome: 'Guarda-Costas',
+      sobrecarregado: true,
+    },
+    {
+      id: 4,
+      campanhaId: CAMPANHA_ID,
+      campanhaNome: null,
+      usuarioId: 2,
+      nome: 'Vera',
+      classe: ClasseEnum.SUPORTE,
+      arquetipo: ArquetipoEnum.PARAMEDICO,
+      nivel: 1,
+      vidaAtual: 15,
+      vidaMaxima: 34,
+      energiaAtual: 18,
+      energiaMaxima: 18,
+      morrendo: false,
+      machucado: true,
+      inconsciente: false,
+    },
+    {
+      id: 5,
+      campanhaId: CAMPANHA_ID,
+      campanhaNome: null,
+      usuarioId: 2,
+      nome: 'Zeta',
+      classe: ClasseEnum.ESPECIALISTA,
+      arquetipo: ArquetipoEnum.ACADEMICO,
+      nivel: 3,
+      vidaAtual: 40,
+      vidaMaxima: 40,
+      energiaAtual: 5,
+      energiaMaxima: 20,
+      morrendo: false,
+      machucado: false,
+      inconsciente: true,
+    },
+  ];
 
-    (raiz.querySelectorAll('.detalhe__acoes button')[1] as HTMLButtonElement).click();
-    fixture.detectChanges();
-    (raiz.querySelector('.detalhe__exclusao .botao--secundario') as HTMLButtonElement).click();
-    fixture.detectChanges();
-
-    expect(raiz.querySelector('.detalhe__exclusao')).toBeNull();
-    expect(raiz.querySelector('.detalhe__acoes')).not.toBeNull();
-    expect(campanhaService.excluirCampanha).not.toHaveBeenCalled();
-  });
-
-  it('mostra a gestão só na linha do jogador (nunca na própria do mestre)', () => {
-    const { raiz } = montar({ usuarioId: 1, membros: membrosDois() });
-    // Um único conjunto de ações (transferir/remover), na linha do jogador.
-    expect(raiz.querySelectorAll('.detalhe__membro-acoes')).toHaveLength(1);
-  });
-
-  it('esconde a gestão de membros do jogador comum', () => {
-    const { raiz } = montar({ usuarioId: 2, membros: membrosDois() });
-    expect(raiz.querySelector('.detalhe__membro-acoes')).toBeNull();
-  });
-
-  it('remove um jogador após confirmação e o tira da lista', () => {
-    const { fixture, raiz, campanhaService } = montar({ usuarioId: 1, membros: membrosDois() });
-
-    // Botão "remover" (2ª ação da linha do jogador) abre a confirmação — sem remover ainda.
-    (raiz.querySelectorAll('.detalhe__membro-acoes button')[1] as HTMLButtonElement).click();
-    fixture.detectChanges();
-    expect(raiz.querySelector('.detalhe__membro-confirmacao')).not.toBeNull();
-    expect(campanhaService.removerMembro).not.toHaveBeenCalled();
-
-    (raiz.querySelector('.detalhe__membro-confirmacao .botao--primario') as HTMLButtonElement).click();
-    fixture.detectChanges();
-
-    expect(campanhaService.removerMembro).toHaveBeenCalledWith(CAMPANHA_ID, 2);
-    const nomes = Array.from(raiz.querySelectorAll('.detalhe__membro-nome')).map((el) =>
-      el.textContent?.trim(),
-    );
-    expect(nomes).toEqual(['Mestre']);
-  });
-
-  it('transfere o mestre e perde as ações de gestão na hora', () => {
-    const { fixture, raiz, campanhaService } = montar({ usuarioId: 1, membros: membrosDois() });
-
-    // Após transferir, o usuário 1 vira JOGADOR e o 2 vira MESTRE.
-    campanhaService.listarMembros.mockReturnValue(
-      of([
-        { usuarioId: 1, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
-        { usuarioId: 2, nome: 'Jogador', papel: TipoCampanhaMembroPapelEnum.MESTRE },
-      ]),
-    );
-
-    // Botão "transferir" (1ª ação) abre a confirmação; confirmar promove o jogador.
-    (raiz.querySelectorAll('.detalhe__membro-acoes button')[0] as HTMLButtonElement).click();
-    fixture.detectChanges();
-    (raiz.querySelector('.detalhe__membro-confirmacao .botao--primario') as HTMLButtonElement).click();
-    fixture.detectChanges();
-
-    expect(campanhaService.transferirMestre).toHaveBeenCalledWith(CAMPANHA_ID, 2);
-    // Perdeu o papel: some a gestão de membros e as ações de editar/excluir da campanha.
-    expect(raiz.querySelector('.detalhe__membro-acoes')).toBeNull();
-    expect(raiz.querySelector('.detalhe__acoes')).toBeNull();
-  });
-
-  it('cancela a ação de membro sem chamar o backend', () => {
-    const { fixture, raiz, campanhaService } = montar({ usuarioId: 1, membros: membrosDois() });
-
-    (raiz.querySelectorAll('.detalhe__membro-acoes button')[1] as HTMLButtonElement).click();
-    fixture.detectChanges();
-    (raiz.querySelector('.detalhe__membro-confirmacao .botao--secundario') as HTMLButtonElement).click();
-    fixture.detectChanges();
-
-    expect(raiz.querySelector('.detalhe__membro-confirmacao')).toBeNull();
-    expect(raiz.querySelector('.detalhe__membro-acoes')).not.toBeNull();
-    expect(campanhaService.removerMembro).not.toHaveBeenCalled();
-  });
-
-  // m2-16 — fichas dos membros vivem inline no detalhe (a extinta FichaLista aposentada).
-  describe('fichas inline (m2-16)', () => {
-    const fichas: FichaResumoDto[] = [
-      {
-        id: 3,
-        campanhaId: CAMPANHA_ID,
-        campanhaNome: null,
-        usuarioId: 1,
-        nome: 'Kane',
-        classe: ClasseEnum.COMBATENTE,
-        arquetipo: ArquetipoEnum.LUTADOR,
-        nivel: 2,
-        vidaAtual: 0,
-        vidaMaxima: 49,
-        energiaAtual: 10,
-        energiaMaxima: 27,
-        morrendo: true,
-        machucado: false,
-        inconsciente: false,
-        prestigio: 5,
-        defesa: 12,
-        esquiva: 15,
-        bloqueio: 14,
-        personalidade: 'Frio',
-        origemNome: 'Guarda-Costas',
-        sobrecarregado: true,
-      },
-      {
-        id: 4,
-        campanhaId: CAMPANHA_ID,
-        campanhaNome: null,
-        usuarioId: 2,
-        nome: 'Vera',
-        classe: ClasseEnum.SUPORTE,
-        arquetipo: ArquetipoEnum.PARAMEDICO,
-        nivel: 1,
-        vidaAtual: 15,
-        vidaMaxima: 34,
-        energiaAtual: 18,
-        energiaMaxima: 18,
-        morrendo: false,
-        machucado: true,
-        inconsciente: false,
-      },
-      {
-        id: 5,
-        campanhaId: CAMPANHA_ID,
-        campanhaNome: null,
-        usuarioId: 2,
-        nome: 'Zeta',
-        classe: ClasseEnum.ESPECIALISTA,
-        arquetipo: ArquetipoEnum.ACADEMICO,
-        nivel: 3,
-        vidaAtual: 40,
-        vidaMaxima: 40,
-        energiaAtual: 5,
-        energiaMaxima: 20,
-        morrendo: false,
-        machucado: false,
-        inconsciente: true,
-      },
-    ];
-
-    it('mostra as fichas de cada membro agrupadas sob a sua linha', () => {
+  // === Banner de alerta (item 1) ===
+  describe('banner de alerta (item 1)', () => {
+    it('aparece com o nome da ficha crítica e um link "Ver ficha →"', () => {
       const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
 
-      const blocos = raiz.querySelectorAll('.detalhe__membro');
-      const fichasMestre = blocos[0].querySelectorAll('.detalhe__ficha-card');
-      const fichasJogador = blocos[1].querySelectorAll('.detalhe__ficha-card');
-      expect(fichasMestre).toHaveLength(1);
-      expect(fichasMestre[0].textContent).toContain('Kane');
-      expect(fichasJogador).toHaveLength(2);
-      expect(raiz.textContent).toContain('Suporte - Paramédico · Nível 1');
+      const banner = raiz.querySelector('.detalhe__banner-alerta');
+      expect(banner).not.toBeNull();
+      expect(banner?.textContent).toContain('Kane');
+      const link = banner?.querySelector('.detalhe__banner-link') as HTMLAnchorElement;
+      expect(link.getAttribute('href')).toBe(`/painel/${CAMPANHA_ID}/ficha/3`);
+    });
+
+    it('some quando nenhuma ficha está crítica', () => {
+      const { raiz } = montar({
+        usuarioId: 1,
+        membros: membrosDois(),
+        fichas: fichas.filter((ficha) => ficha.id !== 3),
+      });
+
+      expect(raiz.querySelector('.detalhe__banner-alerta')).toBeNull();
+    });
+  });
+
+  // === Tira de estatísticas (item 2) ===
+  describe('tira de estatísticas (item 2)', () => {
+    it('mostra Membros/Fichas corretos e marca Alertas quando há ficha crítica', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      const stats = Array.from(raiz.querySelectorAll('.detalhe__estatisticas .stat'));
+      const valores = (rotulo: string) =>
+        stats
+          .find((stat) => stat.querySelector('.stat__rotulo')?.textContent?.trim() === rotulo)
+          ?.querySelector('.stat__valor')?.textContent?.trim();
+
+      expect(valores('Membros')).toBe('2');
+      expect(valores('Fichas')).toBe('3');
+      expect(valores('Alertas')).toBe('1');
+
+      const statAlertas = stats.find((stat) => stat.querySelector('.stat__rotulo')?.textContent?.trim() === 'Alertas');
+      expect(statAlertas?.classList.contains('stat--alerta')).toBe(true);
+    });
+
+    it('Alertas fica em 0 e sem destaque quando não há ficha crítica', () => {
+      const { raiz } = montar({
+        usuarioId: 1,
+        membros: membrosDois(),
+        fichas: fichas.filter((ficha) => ficha.id !== 3),
+      });
+
+      const stats = Array.from(raiz.querySelectorAll('.detalhe__estatisticas .stat'));
+      const statAlertas = stats.find((stat) => stat.querySelector('.stat__rotulo')?.textContent?.trim() === 'Alertas');
+      expect(statAlertas?.querySelector('.stat__valor')?.textContent?.trim()).toBe('0');
+      expect(statAlertas?.classList.contains('stat--alerta')).toBe(false);
+    });
+
+    it('mostra o tile de Convite para o mestre', () => {
+      const { raiz } = montar(mestre());
+      expect(raiz.querySelector('.detalhe__stat-convite')).not.toBeNull();
+    });
+
+    it('esconde o tile de Convite do jogador', () => {
+      const { raiz } = montar(jogador());
+      expect(raiz.querySelector('.detalhe__stat-convite')).toBeNull();
+    });
+
+    it('copiar convite chama o clipboard e regenerar chama o backend', async () => {
+      const { fixture, raiz, campanhaService } = montar(mestre());
+
+      (raiz.querySelector('.detalhe__copiar') as HTMLButtonElement).click();
+      await Promise.resolve();
+      fixture.detectChanges();
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith('DEF456');
+
+      (raiz.querySelector('.detalhe__regenerar') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(campanhaService.regenerarConvite).toHaveBeenCalledWith(CAMPANHA_ID);
+    });
+  });
+
+  // === Tira de rolagens recentes (item 3) ===
+  describe('tira de rolagens recentes (item 3)', () => {
+    it('mostra as mais recentes do feed com rótulo, autor e tempo relativo', () => {
+      const { raiz } = montar({
+        usuarioId: 1,
+        membros: membrosDois(),
+        rolagens: [rolagem({ id: 1, rotulo: '1d20+5', nomeAutor: 'Mestre' })],
+      });
+
+      const pill = raiz.querySelector('.rolagem-pill');
+      expect(pill?.querySelector('.rolagem-pill__rotulo')?.textContent).toContain('1d20+5');
+      expect(pill?.querySelector('.rolagem-pill__meta')?.textContent).toContain('Mestre');
+    });
+
+    it('mostra no máximo 4 pills mesmo com mais rolagens no feed', () => {
+      const { raiz } = montar({
+        usuarioId: 1,
+        membros: membrosDois(),
+        rolagens: [1, 2, 3, 4, 5, 6].map((id) => rolagem({ id, rotulo: `Rolagem ${id}` })),
+      });
+
+      expect(raiz.querySelectorAll('.rolagem-pill')).toHaveLength(4);
+    });
+
+    it('some quando o feed está vazio', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), rolagens: [] });
+      expect(raiz.querySelector('.detalhe__rolagens')).toBeNull();
+    });
+
+    it('"Ver tudo" abre a sidebar de histórico sem duplicar a lista', () => {
+      const { fixture, raiz } = montar({
+        usuarioId: 1,
+        membros: membrosDois(),
+        rolagens: [rolagem()],
+      });
+
+      expect(raiz.querySelector('.historico-rolagens__painel')).toBeNull();
+      (raiz.querySelector('.detalhe__rolagens-ver-tudo') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(raiz.querySelector('.historico-rolagens__painel')).not.toBeNull();
+    });
+  });
+
+  // === Coluna "Esquadrão" (item 5, m2-16/m2-16b/m2-16g/m3-52 reaproveitados achatados) ===
+  describe('esquadrão (item 5)', () => {
+    it('mostra todas as fichas da campanha, achatadas, com o nome do dono em cada card', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      const cartoes = raiz.querySelectorAll('.detalhe__esquadrao-grid .detalhe__ficha-card');
+      expect(cartoes).toHaveLength(3);
+      const kane = Array.from(cartoes).find((c) => c.textContent?.includes('Kane'));
+      expect(kane?.querySelector('.detalhe__ficha-dono')?.textContent?.trim()).toBe('Mestre');
+      const vera = Array.from(cartoes).find((c) => c.textContent?.includes('Vera'));
+      expect(vera?.querySelector('.detalhe__ficha-dono')?.textContent?.trim()).toBe('Jogador');
+    });
+
+    it('mostra o estado vazio quando a campanha não tem nenhuma ficha visível', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas: [] });
+      expect(raiz.querySelector('.detalhe__estado')).not.toBeNull();
+      expect(raiz.querySelector('.detalhe__esquadrao-grid')).toBeNull();
+    });
+
+    it('a coluna "Membros" não mostra mais fichas (foram para o Esquadrão)', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+      expect(raiz.querySelector('.detalhe__membros .detalhe__ficha-card')).toBeNull();
     });
 
     it('mostra "Classe - Arquétipo" no mini-card quando a ficha tem arquétipo', () => {
@@ -405,45 +585,6 @@ describe('CampanhaDetalhe', () => {
       expect(raiz.textContent).toContain('Civil · Nível 2');
     });
 
-    it('vira grid dinâmica pela quantidade de fichas: 1 mantém a linha, 2 vira grid-2, 3+ vira grid-3', () => {
-      const { raiz } = montar({
-        usuarioId: 1,
-        membros: membrosDois(),
-        fichas: [...fichas, { ...fichas[2], id: 6, nome: 'Orin' }],
-      });
-
-      const listas = raiz.querySelectorAll('.detalhe__fichas-lista');
-      const listaMestre = listas[0]; // 1 ficha (Kane) — sem grid
-      const listaJogador = listas[1]; // 3 fichas (Vera, Zeta, Orin) — grid-3
-
-      expect(listaMestre.classList.contains('detalhe__fichas-lista--grid-2')).toBe(false);
-      expect(listaMestre.classList.contains('detalhe__fichas-lista--grid-3')).toBe(false);
-      expect(listaJogador.classList.contains('detalhe__fichas-lista--grid-2')).toBe(false);
-      expect(listaJogador.classList.contains('detalhe__fichas-lista--grid-3')).toBe(true);
-    });
-
-    it('mantém grid-2 quando o membro tem exatamente 2 fichas', () => {
-      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
-
-      const listas = raiz.querySelectorAll('.detalhe__fichas-lista');
-      const listaJogador = listas[1]; // Vera + Zeta
-
-      expect(listaJogador.classList.contains('detalhe__fichas-lista--grid-2')).toBe(true);
-      expect(listaJogador.classList.contains('detalhe__fichas-lista--grid-3')).toBe(false);
-    });
-
-    it('não mostra o bloco de fichas para um membro sem nenhuma visível', () => {
-      const { raiz } = montar({
-        usuarioId: 1,
-        membros: membrosDois(),
-        fichas: [fichas[0]],
-      });
-
-      const blocos = raiz.querySelectorAll('.detalhe__membro');
-      expect(blocos[0].querySelector('.detalhe__membro-fichas')).not.toBeNull();
-      expect(blocos[1].querySelector('.detalhe__membro-fichas')).toBeNull();
-    });
-
     it('mostra Vida/Energia e a condição ativa em cada mini-card (m2-16b)', () => {
       const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
 
@@ -462,7 +603,7 @@ describe('CampanhaDetalhe', () => {
       expect(zeta.querySelector('[data-condicao="inconsciente"].detalhe__ficha-condicao--ativa')).not.toBeNull();
     });
 
-    it('sempre mostra as 3 condições, esmaecidas quando nenhuma está marcada (item 3)', () => {
+    it('sempre mostra as 3 condições, esmaecidas quando nenhuma está marcada (item 3 da m2-16b)', () => {
       const { raiz } = montar({
         usuarioId: 1,
         membros: membrosDois(),
@@ -492,7 +633,7 @@ describe('CampanhaDetalhe', () => {
       expect(cartao.querySelectorAll('.detalhe__ficha-condicao--ativa')).toHaveLength(0);
     });
 
-    it('destaca o cartão quando a Vida está zerada/negativa, mesmo sem Morrendo marcado (item 4)', () => {
+    it('destaca o cartão quando a Vida está zerada/negativa, mesmo sem Morrendo marcado', () => {
       const { raiz } = montar({
         usuarioId: 1,
         membros: membrosDois(),
@@ -523,7 +664,6 @@ describe('CampanhaDetalhe', () => {
 
     it('não destaca o cartão quando a Vida está positiva', () => {
       const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
-      // Vera tem vidaAtual 15 (positiva) no fixture — não deve ganhar o destaque de crítico.
       const cartoes = Array.from(raiz.querySelectorAll('.detalhe__ficha-card'));
       const vera = cartoes.find((c) => c.textContent?.includes('Vida 15/34'));
       expect(vera?.classList.contains('detalhe__ficha-card--critico')).toBe(false);
@@ -555,8 +695,7 @@ describe('CampanhaDetalhe', () => {
     });
 
     // `window.open` é global — cada teste restaura o spy no fim (`mockRestore`), senão o segundo
-    // `vi.spyOn` reaproveitaria o mesmo mock (com a chamada do teste anterior já registrada nele)
-    // em vez de nascer zerado.
+    // `vi.spyOn` reaproveitaria o mesmo mock (com a chamada do teste anterior já registrada nele).
     it('clique do meio no cartão abre a ficha numa nova aba', () => {
       const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
       const abrirNovaAba = vi.spyOn(window, 'open').mockReturnValue(null);
@@ -593,8 +732,6 @@ describe('CampanhaDetalhe', () => {
       expect(rodape?.querySelector('.detalhe__ficha-menu-botao')).not.toBeNull();
     });
 
-    // Patente/Defesa-Esquiva-Bloqueio/Personalidade-Origem/Sobrecarregado: informações extras do
-    // mini-card compacto, lidas do recorte de `FichaResumoDto` (prestígio/derivados/identidade).
     it('mostra a Patente derivada do Prestígio na meta', () => {
       const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
 
@@ -620,7 +757,6 @@ describe('CampanhaDetalhe', () => {
         'Frio · Guarda-Costas',
       );
 
-      // Vera (fixture) não tem prestígio/identidade — a linha some, sem "·" solto.
       const vera = cartoes.find((c) => c.textContent?.includes('Vera'));
       expect(vera?.querySelector('.detalhe__ficha-identidade')).toBeNull();
     });
@@ -633,22 +769,6 @@ describe('CampanhaDetalhe', () => {
       const vera = cartoes.find((c) => c.textContent?.includes('Vera'));
       expect(kane?.querySelector('[data-condicao="sobrecarregado"]')).not.toBeNull();
       expect(vera?.querySelector('[data-condicao="sobrecarregado"]')).toBeNull();
-    });
-
-    it('alterna o disclosure de fichas do membro (efeito só visual no mobile)', () => {
-      const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
-
-      const toggle = raiz.querySelector('.detalhe__fichas-toggle') as HTMLButtonElement;
-      expect(toggle.classList.contains('detalhe__fichas-toggle--aberto')).toBe(false);
-
-      toggle.click();
-      fixture.detectChanges();
-      expect(toggle.classList.contains('detalhe__fichas-toggle--aberto')).toBe(true);
-      expect(raiz.querySelector('.detalhe__fichas-lista--aberta')).not.toBeNull();
-
-      toggle.click();
-      fixture.detectChanges();
-      expect(toggle.classList.contains('detalhe__fichas-toggle--aberto')).toBe(false);
     });
 
     it('"Nova ficha" abre o assistente de criação, sem criar de imediato', () => {
@@ -682,125 +802,7 @@ describe('CampanhaDetalhe', () => {
       expect(raiz.querySelector('app-ficha-criar-dialog')).toBeNull();
     });
 
-    it('entra na sala da campanha ao abrir e a esquece ao destruir', () => {
-      const { fixture, tempoRealService } = montar({ usuarioId: 1, membros: membrosDois() });
-
-      expect(tempoRealService.conectar).toHaveBeenCalled();
-      expect(tempoRealService.entrarSalaCampanha).toHaveBeenCalledWith(CAMPANHA_ID);
-      fixture.destroy();
-      expect(tempoRealService.sairSalaCampanha).toHaveBeenCalledWith(CAMPANHA_ID);
-    });
-
-    it('refaz o fetch de membros/fichas ao receber ficha:criada ou membro:entrou', () => {
-      const { fichaService, campanhaService, fichaCriada$, membroEntrou$ } = montar({
-        usuarioId: 1,
-        membros: membrosDois(),
-      });
-      expect(fichaService.listarFichas).toHaveBeenCalledTimes(1);
-      expect(campanhaService.listarMembros).toHaveBeenCalledTimes(1);
-
-      fichaCriada$.next({
-        id: 9,
-        campanhaId: CAMPANHA_ID,
-        campanhaNome: null,
-        usuarioId: 2,
-        nome: 'Nova',
-        classe: ClasseEnum.COMBATENTE,
-        arquetipo: ArquetipoEnum.LUTADOR,
-        nivel: 0,
-        vidaAtual: 20,
-        vidaMaxima: 20,
-        energiaAtual: 10,
-        energiaMaxima: 10,
-        morrendo: false,
-        machucado: false,
-        inconsciente: false,
-      });
-      expect(fichaService.listarFichas).toHaveBeenCalledTimes(2);
-      expect(campanhaService.listarMembros).toHaveBeenCalledTimes(2);
-
-      membroEntrou$.next({ campanhaId: CAMPANHA_ID, usuarioId: 3 });
-      expect(fichaService.listarFichas).toHaveBeenCalledTimes(3);
-      expect(campanhaService.listarMembros).toHaveBeenCalledTimes(3);
-    });
-
-    it('ressincroniza membros/fichas ao reconectar (§9)', () => {
-      const { fixture, fichaService, reconexao } = montar({ usuarioId: 1, membros: membrosDois() });
-      expect(fichaService.listarFichas).toHaveBeenCalledTimes(1);
-
-      reconexao.set(1);
-      fixture.detectChanges();
-
-      expect(fichaService.listarFichas).toHaveBeenCalledTimes(2);
-    });
-
-    // Item 1 — ficha:alterada propagado à tela de campanha.
-    describe('tempo real de ficha:alterada (item 1)', () => {
-      it('entra na sala ficha:<id> de cada ficha visível após o fetch', () => {
-        const { tempoRealService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
-
-        expect(tempoRealService.entrarSalaFicha).toHaveBeenCalledWith(3);
-        expect(tempoRealService.entrarSalaFicha).toHaveBeenCalledWith(4);
-        expect(tempoRealService.entrarSalaFicha).toHaveBeenCalledWith(5);
-      });
-
-      it('sai de todas as salas de ficha ao destruir', () => {
-        const { fixture, tempoRealService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
-
-        fixture.destroy();
-
-        expect(tempoRealService.sairSalaFicha).toHaveBeenCalledWith(3);
-        expect(tempoRealService.sairSalaFicha).toHaveBeenCalledWith(4);
-        expect(tempoRealService.sairSalaFicha).toHaveBeenCalledWith(5);
-      });
-
-      it('refaz o fetch ao receber ficha:alterada (Vida/Energia/condição mudou em outra aba)', () => {
-        const { fichaService, campanhaService, fichaAlterada$ } = montar({
-          usuarioId: 1,
-          membros: membrosDois(),
-          fichas,
-        });
-        expect(fichaService.listarFichas).toHaveBeenCalledTimes(1);
-
-        fichaAlterada$.next({ id: 3, campanhaId: CAMPANHA_ID, usuarioId: 1, nome: 'Kane', dados: {} });
-
-        expect(fichaService.listarFichas).toHaveBeenCalledTimes(2);
-        expect(campanhaService.listarMembros).toHaveBeenCalledTimes(2);
-      });
-    });
-
-    // Item 8 — estado vazio por membro, só quando a visão é autoritativa.
-    describe('estado vazio por membro (item 8)', () => {
-      it('mostra "ainda sem ficha" na própria linha quando você não tem nenhuma', () => {
-        const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas: [] });
-
-        const blocoMestre = raiz.querySelectorAll('.detalhe__membro')[0];
-        expect(blocoMestre.querySelector('.detalhe__sem-fichas')?.textContent).toContain(
-          'Você ainda não tem uma ficha',
-        );
-      });
-
-      it('mestre vê "ainda sem ficha" também na linha de outro membro (visão autoritativa)', () => {
-        const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas: [] });
-
-        const blocoJogador = raiz.querySelectorAll('.detalhe__membro')[1];
-        expect(blocoJogador.querySelector('.detalhe__sem-fichas')?.textContent).toContain(
-          'Ainda sem ficha',
-        );
-      });
-
-      it('jogador comum NÃO afirma ausência na linha de outro membro (pode só estar oculta)', () => {
-        const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas: [] });
-
-        const blocoMestre = raiz.querySelectorAll('.detalhe__membro')[0];
-        expect(blocoMestre.querySelector('.detalhe__sem-fichas')).toBeNull();
-        // Mas a própria linha do jogador (a dele mesmo) continua autoritativa.
-        const blocoJogador = raiz.querySelectorAll('.detalhe__membro')[1];
-        expect(blocoJogador.querySelector('.detalhe__sem-fichas')).not.toBeNull();
-      });
-    });
-
-    // Item 9 — "Atualizado há Xs".
+    // Item 9 — "Atualizado há Xs", agora no cabeçalho da seção "Esquadrão".
     describe('legenda de frescor "Atualizado há Xs" (item 9)', () => {
       it('mostra "Atualizado agora" logo após o primeiro fetch', () => {
         const { raiz } = montar({ usuarioId: 1, membros: membrosDois() });
@@ -819,28 +821,142 @@ describe('CampanhaDetalhe', () => {
         }
       });
     });
+  });
 
-    // m2-16g: ações rápidas de Vida/Energia direto no mini-card, sem abrir a ficha.
-    describe('ações rápidas de Vida/Energia no mini-card (m2-16g)', () => {
-      it('mostra os passos − / + só pra dono ou mestre — mestre vê em qualquer ficha', () => {
-        const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+  it('entra na sala da campanha ao abrir e a esquece ao destruir', () => {
+    const { fixture, tempoRealService } = montar({ usuarioId: 1, membros: membrosDois() });
 
-        // Kane (dono: mestre), Vera e Zeta (dona: jogador) — o mestre ajusta as três.
-        expect(raiz.querySelector('[aria-label="Aumentar Vida de Kane"]')).not.toBeNull();
-        expect(raiz.querySelector('[aria-label="Aumentar Vida de Vera"]')).not.toBeNull();
-        expect(raiz.querySelector('[aria-label="Aumentar Vida de Zeta"]')).not.toBeNull();
+    expect(tempoRealService.conectar).toHaveBeenCalled();
+    expect(tempoRealService.entrarSalaCampanha).toHaveBeenCalledWith(CAMPANHA_ID);
+    fixture.destroy();
+    expect(tempoRealService.sairSalaCampanha).toHaveBeenCalledWith(CAMPANHA_ID);
+  });
+
+  it('refaz o fetch de membros/fichas ao receber ficha:criada ou membro:entrou', () => {
+    const { fichaService, campanhaService, fichaCriada$, membroEntrou$ } = montar({
+      usuarioId: 1,
+      membros: membrosDois(),
+    });
+    expect(fichaService.listarFichas).toHaveBeenCalledTimes(1);
+    expect(campanhaService.listarMembros).toHaveBeenCalledTimes(1);
+
+    fichaCriada$.next({
+      id: 9,
+      campanhaId: CAMPANHA_ID,
+      campanhaNome: null,
+      usuarioId: 2,
+      nome: 'Nova',
+      classe: ClasseEnum.COMBATENTE,
+      arquetipo: ArquetipoEnum.LUTADOR,
+      nivel: 0,
+      vidaAtual: 20,
+      vidaMaxima: 20,
+      energiaAtual: 10,
+      energiaMaxima: 10,
+      morrendo: false,
+      machucado: false,
+      inconsciente: false,
+    });
+    expect(fichaService.listarFichas).toHaveBeenCalledTimes(2);
+    expect(campanhaService.listarMembros).toHaveBeenCalledTimes(2);
+
+    membroEntrou$.next({ campanhaId: CAMPANHA_ID, usuarioId: 3 });
+    expect(fichaService.listarFichas).toHaveBeenCalledTimes(3);
+    expect(campanhaService.listarMembros).toHaveBeenCalledTimes(3);
+  });
+
+  it('ressincroniza membros/fichas ao reconectar (§9)', () => {
+    const { fixture, fichaService, reconexao } = montar({ usuarioId: 1, membros: membrosDois() });
+    expect(fichaService.listarFichas).toHaveBeenCalledTimes(1);
+
+    reconexao.set(1);
+    fixture.detectChanges();
+
+    expect(fichaService.listarFichas).toHaveBeenCalledTimes(2);
+  });
+
+  // Item 1 (m2-16c) — ficha:alterada propagado à tela de campanha.
+  describe('tempo real de ficha:alterada', () => {
+    it('entra na sala ficha:<id> de cada ficha visível após o fetch', () => {
+      const { tempoRealService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      expect(tempoRealService.entrarSalaFicha).toHaveBeenCalledWith(3);
+      expect(tempoRealService.entrarSalaFicha).toHaveBeenCalledWith(4);
+      expect(tempoRealService.entrarSalaFicha).toHaveBeenCalledWith(5);
+    });
+
+    it('sai de todas as salas de ficha ao destruir', () => {
+      const { fixture, tempoRealService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      fixture.destroy();
+
+      expect(tempoRealService.sairSalaFicha).toHaveBeenCalledWith(3);
+      expect(tempoRealService.sairSalaFicha).toHaveBeenCalledWith(4);
+      expect(tempoRealService.sairSalaFicha).toHaveBeenCalledWith(5);
+    });
+
+    it('refaz o fetch ao receber ficha:alterada (Vida/Energia/condição mudou em outra aba)', () => {
+      const { fichaService, campanhaService, fichaAlterada$ } = montar({
+        usuarioId: 1,
+        membros: membrosDois(),
+        fichas,
       });
+      expect(fichaService.listarFichas).toHaveBeenCalledTimes(1);
 
-      it('jogador comum só vê os passos nas próprias fichas, nunca na do mestre', () => {
-        const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+      fichaAlterada$.next({ id: 3, campanhaId: CAMPANHA_ID, usuarioId: 1, nome: 'Kane', dados: {} });
 
-        expect(raiz.querySelector('[aria-label="Aumentar Vida de Vera"]')).not.toBeNull();
-        expect(raiz.querySelector('[aria-label="Aumentar Vida de Zeta"]')).not.toBeNull();
-        expect(raiz.querySelector('[aria-label="Aumentar Vida de Kane"]')).toBeNull();
-      });
+      expect(fichaService.listarFichas).toHaveBeenCalledTimes(2);
+      expect(campanhaService.listarMembros).toHaveBeenCalledTimes(2);
+    });
+  });
 
-      it('clique em + soma 1 na Vida na hora (otimista, sem esperar a rede)', () => {
-        const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+  // m2-16g: ações rápidas de Vida/Energia direto no mini-card, sem abrir a ficha.
+  describe('ações rápidas de Vida/Energia no mini-card (m2-16g)', () => {
+    it('mostra os passos − / + só pra dono ou mestre — mestre vê em qualquer ficha', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      expect(raiz.querySelector('[aria-label="Aumentar Vida de Kane"]')).not.toBeNull();
+      expect(raiz.querySelector('[aria-label="Aumentar Vida de Vera"]')).not.toBeNull();
+      expect(raiz.querySelector('[aria-label="Aumentar Vida de Zeta"]')).not.toBeNull();
+    });
+
+    it('jogador comum só vê os passos nas próprias fichas, nunca na do mestre', () => {
+      const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+
+      expect(raiz.querySelector('[aria-label="Aumentar Vida de Vera"]')).not.toBeNull();
+      expect(raiz.querySelector('[aria-label="Aumentar Vida de Zeta"]')).not.toBeNull();
+      expect(raiz.querySelector('[aria-label="Aumentar Vida de Kane"]')).toBeNull();
+    });
+
+    it('clique em + soma 1 na Vida na hora (otimista, sem esperar a rede)', () => {
+      const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      const botaoMais = raiz.querySelector(
+        '[aria-label="Aumentar Vida de Vera"]',
+      ) as HTMLButtonElement;
+      botaoMais.dispatchEvent(new MouseEvent('pointerdown', { button: 0 }));
+      botaoMais.dispatchEvent(new MouseEvent('pointerup'));
+      fixture.detectChanges();
+
+      const cartaoVera = [...raiz.querySelectorAll('.detalhe__ficha-card')].find((cartao) =>
+        cartao.textContent?.includes('Vera'),
+      );
+      expect(cartaoVera?.textContent).toContain('Vida 16/34');
+    });
+
+    it('desabilita o passo de reduzir Vida quando a Vida já está em 0', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      const botaoMenos = raiz.querySelector(
+        '[aria-label="Reduzir Vida de Kane"]',
+      ) as HTMLButtonElement;
+      expect(botaoMenos.disabled).toBe(true);
+    });
+
+    it('agenda a persistência em lote: busca o documento completo e grava só depois do debounce', () => {
+      vi.useFakeTimers();
+      try {
+        const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
 
         const botaoMais = raiz.querySelector(
           '[aria-label="Aumentar Vida de Vera"]',
@@ -848,176 +964,148 @@ describe('CampanhaDetalhe', () => {
         botaoMais.dispatchEvent(new MouseEvent('pointerdown', { button: 0 }));
         botaoMais.dispatchEvent(new MouseEvent('pointerup'));
         fixture.detectChanges();
-
-        const cartaoVera = [...raiz.querySelectorAll('.detalhe__ficha-card')].find((cartao) =>
-          cartao.textContent?.includes('Vera'),
-        );
-        expect(cartaoVera?.textContent).toContain('Vida 16/34');
-      });
-
-      it('desabilita o passo de reduzir Vida quando a Vida já está em 0', () => {
-        const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
-
-        const botaoMenos = raiz.querySelector(
-          '[aria-label="Reduzir Vida de Kane"]',
-        ) as HTMLButtonElement;
-        expect(botaoMenos.disabled).toBe(true);
-      });
-
-      it('agenda a persistência em lote: busca o documento completo e grava só depois do debounce', () => {
-        vi.useFakeTimers();
-        try {
-          const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
-
-          const botaoMais = raiz.querySelector(
-            '[aria-label="Aumentar Vida de Vera"]',
-          ) as HTMLButtonElement;
-          botaoMais.dispatchEvent(new MouseEvent('pointerdown', { button: 0 }));
+        botaoMais.dispatchEvent(new MouseEvent('pointerdown', { button: 0 }));
         botaoMais.dispatchEvent(new MouseEvent('pointerup'));
-          fixture.detectChanges();
-          botaoMais.dispatchEvent(new MouseEvent('pointerdown', { button: 0 }));
-        botaoMais.dispatchEvent(new MouseEvent('pointerup'));
-          fixture.detectChanges();
+        fixture.detectChanges();
 
-          vi.advanceTimersByTime(300);
-          expect(fichaService.alterarFicha).not.toHaveBeenCalled();
+        vi.advanceTimersByTime(300);
+        expect(fichaService.alterarFicha).not.toHaveBeenCalled();
 
-          vi.advanceTimersByTime(300);
-          expect(fichaService.recuperarFicha).toHaveBeenCalledWith(4);
-          expect(fichaService.alterarFicha).toHaveBeenCalledTimes(1);
-          expect(fichaService.alterarFicha).toHaveBeenCalledWith(
-            4,
-            expect.objectContaining({
-              dados: expect.objectContaining({
-                estado: expect.objectContaining({ vidaAtual: 17 }),
-              }),
+        vi.advanceTimersByTime(300);
+        expect(fichaService.recuperarFicha).toHaveBeenCalledWith(4);
+        expect(fichaService.alterarFicha).toHaveBeenCalledTimes(1);
+        expect(fichaService.alterarFicha).toHaveBeenCalledWith(
+          4,
+          expect.objectContaining({
+            dados: expect.objectContaining({
+              estado: expect.objectContaining({ vidaAtual: 17 }),
             }),
-          );
-        } finally {
-          vi.useRealTimers();
-        }
+          }),
+        );
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+
+  // m3-52: menu de ações (kebab) no mini-card — Duplicar/Remover da campanha/Excluir, cada um
+  // com dialog de confirmação própria (mesmo padrão do menu do cabeçalho de FichaVisualizar),
+  // exceto "Remover da campanha", ação direta sem dialog (mesmo padrão de `FichaAcervo`).
+  describe('menu de ações da ficha (m3-52) — Duplicar/Remover da campanha/Excluir', () => {
+    function abrirMenu(raiz: HTMLElement, fixture: ReturnType<typeof montar>['fixture'], rotulo: string) {
+      (raiz.querySelector(`[aria-label="Ações de ${rotulo}"]`) as HTMLButtonElement).click();
+      fixture.detectChanges();
+    }
+
+    it('mestre vê o menu de ações em qualquer ficha', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      expect(raiz.querySelector('[aria-label="Ações de Kane"]')).not.toBeNull();
+      expect(raiz.querySelector('[aria-label="Ações de Vera"]')).not.toBeNull();
+    });
+
+    it('jogador comum só vê o menu de ações na própria ficha, nunca na do mestre', () => {
+      const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+
+      expect(raiz.querySelector('[aria-label="Ações de Vera"]')).not.toBeNull();
+      expect(raiz.querySelector('[aria-label="Ações de Kane"]')).toBeNull();
+    });
+
+    describe('duplicar', () => {
+      it('abre a dialog de confirmação com o nome da ficha e do dono', () => {
+        const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+        abrirMenu(raiz, fixture, 'Kane');
+
+        (raiz.querySelector('.detalhe__ficha-menu-item') as HTMLButtonElement).click();
+        fixture.detectChanges();
+
+        const dialog = raiz.querySelector('.dialogo');
+        expect(dialog).not.toBeNull();
+        expect(dialog?.textContent).toContain('Deseja mesmo duplicar a ficha "Kane" de "Mestre"?');
+      });
+
+      it('cancelar fecha a dialog sem chamar o serviço', () => {
+        const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+        abrirMenu(raiz, fixture, 'Kane');
+        (raiz.querySelector('.detalhe__ficha-menu-item') as HTMLButtonElement).click();
+        fixture.detectChanges();
+
+        (raiz.querySelector('.dialogo__fundo') as HTMLButtonElement).click();
+        fixture.detectChanges();
+
+        expect(raiz.querySelector('.dialogo')).toBeNull();
+        expect(fichaService.duplicarFicha).not.toHaveBeenCalled();
+      });
+
+      it('confirmar chama FichaService.duplicarFicha e recarrega a lista', () => {
+        const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+        expect(fichaService.listarFichas).toHaveBeenCalledTimes(1);
+        abrirMenu(raiz, fixture, 'Kane');
+        (raiz.querySelector('.detalhe__ficha-menu-item') as HTMLButtonElement).click();
+        fixture.detectChanges();
+
+        (raiz.querySelector('.dialogo .botao--primario') as HTMLButtonElement).click();
+        fixture.detectChanges();
+
+        expect(fichaService.duplicarFicha).toHaveBeenCalledWith(3);
+        expect(fichaService.listarFichas).toHaveBeenCalledTimes(2);
+        expect(raiz.querySelector('.dialogo')).toBeNull();
       });
     });
 
-    // m3-52: menu de ações (kebab) no mini-card — Duplicar/Remover da campanha/Excluir, cada um
-    // com dialog de confirmação própria (mesmo padrão do menu do cabeçalho de FichaVisualizar),
-    // exceto "Remover da campanha", ação direta sem dialog (mesmo padrão de `FichaAcervo`).
-    describe('menu de ações da ficha (m3-52) — Duplicar/Remover da campanha/Excluir', () => {
-      function abrirMenu(raiz: HTMLElement, fixture: ReturnType<typeof montar>['fixture'], rotulo: string) {
-        (raiz.querySelector(`[aria-label="Ações de ${rotulo}"]`) as HTMLButtonElement).click();
+    describe('remover da campanha', () => {
+      it('chama FichaService.atribuirCampanha(id, null) direto, sem dialog, e some o mini-card na hora', () => {
+        const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+        abrirMenu(raiz, fixture, 'Vera');
+
+        (raiz.querySelectorAll('.detalhe__ficha-menu-item')[1] as HTMLButtonElement).click();
         fixture.detectChanges();
-      }
 
-      it('mestre vê o menu de ações em qualquer ficha', () => {
-        const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+        expect(fichaService.atribuirCampanha).toHaveBeenCalledWith(4, null);
+        expect(raiz.querySelector('.dialogo')).toBeNull();
+        expect(raiz.textContent).not.toContain('Vera');
+      });
+    });
 
-        expect(raiz.querySelector('[aria-label="Ações de Kane"]')).not.toBeNull();
-        expect(raiz.querySelector('[aria-label="Ações de Vera"]')).not.toBeNull();
+    describe('excluir', () => {
+      it('abre a dialog de confirmação com o nome da ficha', () => {
+        const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+        abrirMenu(raiz, fixture, 'Vera');
+
+        (raiz.querySelectorAll('.detalhe__ficha-menu-item')[2] as HTMLButtonElement).click();
+        fixture.detectChanges();
+
+        const dialog = raiz.querySelector('.dialogo');
+        expect(dialog).not.toBeNull();
+        expect(dialog?.textContent).toContain('Excluir');
+        expect(dialog?.textContent).toContain('Vera');
       });
 
-      it('jogador comum só vê o menu de ações na própria ficha, nunca na do mestre', () => {
-        const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+      it('cancelar fecha a dialog sem chamar o serviço', () => {
+        const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+        abrirMenu(raiz, fixture, 'Vera');
+        (raiz.querySelectorAll('.detalhe__ficha-menu-item')[2] as HTMLButtonElement).click();
+        fixture.detectChanges();
 
-        expect(raiz.querySelector('[aria-label="Ações de Vera"]')).not.toBeNull();
-        expect(raiz.querySelector('[aria-label="Ações de Kane"]')).toBeNull();
+        (raiz.querySelector('.dialogo .botao--secundario') as HTMLButtonElement).click();
+        fixture.detectChanges();
+
+        expect(raiz.querySelector('.dialogo')).toBeNull();
+        expect(fichaService.excluirFicha).not.toHaveBeenCalled();
       });
 
-      describe('duplicar', () => {
-        it('abre a dialog de confirmação com o nome da ficha e do dono', () => {
-          const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
-          abrirMenu(raiz, fixture, 'Kane');
+      it('confirmar chama FichaService.excluirFicha e remove o mini-card na hora', () => {
+        const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+        abrirMenu(raiz, fixture, 'Vera');
+        (raiz.querySelectorAll('.detalhe__ficha-menu-item')[2] as HTMLButtonElement).click();
+        fixture.detectChanges();
 
-          (raiz.querySelector('.detalhe__ficha-menu-item') as HTMLButtonElement).click();
-          fixture.detectChanges();
+        (raiz.querySelector('.dialogo .botao--primario') as HTMLButtonElement).click();
+        fixture.detectChanges();
 
-          const dialog = raiz.querySelector('.dialogo');
-          expect(dialog).not.toBeNull();
-          expect(dialog?.textContent).toContain('Deseja mesmo duplicar a ficha "Kane" de "Mestre"?');
-        });
-
-        it('cancelar fecha a dialog sem chamar o serviço', () => {
-          const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
-          abrirMenu(raiz, fixture, 'Kane');
-          (raiz.querySelector('.detalhe__ficha-menu-item') as HTMLButtonElement).click();
-          fixture.detectChanges();
-
-          (raiz.querySelector('.dialogo__fundo') as HTMLButtonElement).click();
-          fixture.detectChanges();
-
-          expect(raiz.querySelector('.dialogo')).toBeNull();
-          expect(fichaService.duplicarFicha).not.toHaveBeenCalled();
-        });
-
-        it('confirmar chama FichaService.duplicarFicha e recarrega a lista', () => {
-          const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
-          expect(fichaService.listarFichas).toHaveBeenCalledTimes(1);
-          abrirMenu(raiz, fixture, 'Kane');
-          (raiz.querySelector('.detalhe__ficha-menu-item') as HTMLButtonElement).click();
-          fixture.detectChanges();
-
-          (raiz.querySelector('.dialogo .botao--primario') as HTMLButtonElement).click();
-          fixture.detectChanges();
-
-          expect(fichaService.duplicarFicha).toHaveBeenCalledWith(3);
-          expect(fichaService.listarFichas).toHaveBeenCalledTimes(2);
-          expect(raiz.querySelector('.dialogo')).toBeNull();
-        });
-      });
-
-      describe('remover da campanha', () => {
-        it('chama FichaService.atribuirCampanha(id, null) direto, sem dialog, e some o mini-card na hora', () => {
-          const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
-          abrirMenu(raiz, fixture, 'Vera');
-
-          (raiz.querySelectorAll('.detalhe__ficha-menu-item')[1] as HTMLButtonElement).click();
-          fixture.detectChanges();
-
-          expect(fichaService.atribuirCampanha).toHaveBeenCalledWith(4, null);
-          expect(raiz.querySelector('.dialogo')).toBeNull();
-          expect(raiz.textContent).not.toContain('Vera');
-        });
-      });
-
-      describe('excluir', () => {
-        it('abre a dialog de confirmação com o nome da ficha', () => {
-          const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
-          abrirMenu(raiz, fixture, 'Vera');
-
-          (raiz.querySelectorAll('.detalhe__ficha-menu-item')[2] as HTMLButtonElement).click();
-          fixture.detectChanges();
-
-          const dialog = raiz.querySelector('.dialogo');
-          expect(dialog).not.toBeNull();
-          expect(dialog?.textContent).toContain('Excluir');
-          expect(dialog?.textContent).toContain('Vera');
-        });
-
-        it('cancelar fecha a dialog sem chamar o serviço', () => {
-          const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
-          abrirMenu(raiz, fixture, 'Vera');
-          (raiz.querySelectorAll('.detalhe__ficha-menu-item')[2] as HTMLButtonElement).click();
-          fixture.detectChanges();
-
-          (raiz.querySelector('.dialogo .botao--secundario') as HTMLButtonElement).click();
-          fixture.detectChanges();
-
-          expect(raiz.querySelector('.dialogo')).toBeNull();
-          expect(fichaService.excluirFicha).not.toHaveBeenCalled();
-        });
-
-        it('confirmar chama FichaService.excluirFicha e remove o mini-card na hora', () => {
-          const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
-          abrirMenu(raiz, fixture, 'Vera');
-          (raiz.querySelectorAll('.detalhe__ficha-menu-item')[2] as HTMLButtonElement).click();
-          fixture.detectChanges();
-
-          (raiz.querySelector('.dialogo .botao--primario') as HTMLButtonElement).click();
-          fixture.detectChanges();
-
-          expect(fichaService.excluirFicha).toHaveBeenCalledWith(4);
-          expect(raiz.querySelector('.dialogo')).toBeNull();
-          expect(raiz.textContent).not.toContain('Vera');
-        });
+        expect(fichaService.excluirFicha).toHaveBeenCalledWith(4);
+        expect(raiz.querySelector('.dialogo')).toBeNull();
+        expect(raiz.textContent).not.toContain('Vera');
       });
     });
   });
