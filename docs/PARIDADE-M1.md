@@ -85,7 +85,7 @@ Estes dois itens dependem de ação nas plataformas (fora do que o código contr
   automaticamente. Runbook em [DEPLOY.md](DEPLOY.md). Validar a calculadora no ar **com o
   Render dormindo** (deve funcionar).
 - [ ] **Arquivar `contratados-calculadora`:** marcar o repositório antigo como *Archived* no
-  GitHub. As referências na documentação deste repo (`README.md`, `docs/CONTEXT.md`) já
+  GitHub. As referências na documentação deste repo (`README.md`, `docs/context/HISTORY.md`) já
   descrevem o repo antigo como arquivado após o M1.
 
 Enquanto esses dois passos de plataforma não forem executados pelo autor, o M1 está

@@ -5,8 +5,8 @@ import { Routes } from '@angular/router';
  * hash do site antigo (`switchTab`/`VALID_TABS`): cada aba é uma URL própria em
  * `/calculadora/<aba>`. O shell (`CalculadoraShell`) renderiza a navegação de abas + o
  * `router-outlet`; cada página é standalone e carregada de forma lazy (`loadComponent`). Tudo
- * client-side e público (sem guard) — funciona sem backend. As páginas são stubs nesta task
- * (m1-06); o cálculo de cada aba entra em tasks posteriores do M1 (ver docs/CONTEXT.md).
+ * client-side e público (sem guard) — funciona sem backend. As seis abas estão completas desde o
+ * fecho do M1 (`m1-01`…`m1-20`); ver docs/context/CONTEXT.md.
  */
 export const calculadoraRoutes: Routes = [
   {

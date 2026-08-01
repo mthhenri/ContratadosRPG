@@ -7,7 +7,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Before any implementation, read these files in order:
 1. `docs/SYSTEM.SPEC.md` — constitution of the project, takes precedence over everything
 2. `docs/CONVENTIONS.md` — quick reference for code conventions
-3. `docs/CONTEXT.md` — current project state and next task
+3. `docs/context/CONTEXT.md` — current project state and next task
+
+Then read whichever of the other four files in `docs/context/` the task calls for — see
+"Context Directory" below. `PROBLEMS.md` is worth a look on almost any task: it is what
+stops you from re-diagnosing a known defect from scratch.
 
 **Before ANY frontend / UI / styling work, additionally read `docs/design/DESIGN.md` and
 consume the theme handoff in `docs/design/tema/`** (see "Visual Design Source of Truth"
@@ -41,6 +45,49 @@ Rules: component styles **consume these tokens** (`var(--surface)`, `var(--accen
 identity; only `--accent` is swappable, and runtime theming (presets + color picker) is M1.
 The `TEMA VISUAL` block below is the human-readable summary of this same theme.
 
+## Context Directory (`docs/context/`)
+
+Project state lives in five files, each answering exactly one question. **Never let two of them
+answer the same question** — duplicated facts diverge on the first day one of them changes, and
+then nobody knows which is lying.
+
+| File | Answers | Lifecycle |
+|---|---|---|
+| `CONTEXT.md` | **What is true now** — state, feature catalogue, standing decisions, next task | **Rewritten** in place. Hard cap ~400 lines |
+| `HISTORY.md` | **What happened and why** — the full account of every task | **Appended**, newest first. Never rewritten, never trimmed |
+| `PROBLEMS.md` | **What is broken now** — known defects, debt, accepted gaps | Item leaves the file when the problem is gone |
+| `MEMORY.md` | **Where things live** — map of rules, code and docs | Pointers only. Never restates a rule |
+| `IDEAS.md` | **What is not the system yet** — insights that might become work | Item leaves "Abertas" when it becomes a spec |
+
+Read the file that matches your question:
+
+- *"What am I building on top of?"* → `CONTEXT.md`
+- *"Why is this code shaped this way?"* → `HISTORY.md` (grep it by task code — `m3-27` — or by
+  filename; never read it top to bottom, it is thousands of lines by design)
+- *"Is this failure already known?"* → `PROBLEMS.md` **before** debugging anything
+- *"Where does X live / what must I read first?"* → `MEMORY.md`
+- *"Was this already considered?"* → `IDEAS.md`
+
+### Writing rules
+
+**`CONTEXT.md` is rewritten, never appended.** This is the rule that matters. The old
+`docs/CONTEXT.md` reached 4,450 lines because every task prepended a paragraph and nothing was
+ever edited out — it became unreadable, which defeats the entire purpose of a context file. When
+you close a task:
+
+1. The **full narrative** — what you did, **why**, what you verified, what broke on the way —
+   goes to `HISTORY.md`, appended at the top.
+2. `CONTEXT.md` gets **edits to the affected sections** (state, feature catalogue, next task).
+   Do not add a new paragraph recording that the task happened; that is what `HISTORY.md` is for.
+3. If `CONTEXT.md` passes ~400 lines, **condense it before continuing**. Detail that no longer
+   changes a decision belongs in `HISTORY.md`.
+
+Anything discovered along the way that outlives the task gets filed: a defect or accepted gap in
+`PROBLEMS.md`, an idea in `IDEAS.md`, a new important location in `MEMORY.md`. A problem you fixed
+**leaves** `PROBLEMS.md` — its story stays in `HISTORY.md`.
+
+Content is Portuguese, matching the rest of `docs/`.
+
 ## Development Commands
 
 ```bash
@@ -68,11 +115,20 @@ npm run test --workspace=backend
 1. Move spec: docs/specs/backlog/<task>.spec.md → docs/specs/active/
 2. Implement exactly what the spec defines — do not extrapolate
 3. Move spec: docs/specs/active/<task>.spec.md → docs/specs/done/
-4. Update docs/CONTEXT.md (implemented items, module status, next task)
+4. Record it in docs/context/ (see "Context Directory" above):
+     HISTORY.md   append the full account at the top
+     CONTEXT.md   edit state / feature catalogue / next task — do not append
+     PROBLEMS.md  file anything found broken; remove anything fixed
+     IDEAS.md     file anything raised but not built
 ```
 
 Milestone specs (`m0-*` … `m5-*`) live in the backlog and are broken down into numbered
 task specs (`m1-01-<nome>.spec.md`) before implementation.
+
+Specs in `docs/specs/done/` are **historical record** — do not rewrite them to match later
+reality, even when they cite paths that have since moved. One spec is a deliberate exception to
+"active/ = the task in this session": `m3-38` documents an ongoing front and stays active; see
+`docs/context/CONTEXT.md` §5.
 
 ## Architecture Overview
 

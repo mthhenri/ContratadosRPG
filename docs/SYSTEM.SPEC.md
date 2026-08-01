@@ -113,7 +113,12 @@ contratados-rpg/
     SYSTEM.SPEC.md              → este arquivo — lido no início de toda sessão
     CONVENTIONS.md              → referência rápida de convenções
     SCHEMA.md                   → schema SQL alvo + forma dos documentos JSONB
-    CONTEXT.md                  → estado atual do projeto (atualizado após cada sessão)
+    context/                    → estado do projeto (atualizado após cada task)
+      CONTEXT.md                → o que é verdade agora (REESCRITO, teto ~400 linhas)
+      HISTORY.md                → o que aconteceu e por quê (ACUMULA, nunca reescrito)
+      PROBLEMS.md               → problemas conhecidos (item sai quando é resolvido)
+      MEMORY.md                 → mapa: onde fica o quê / onde estão as regras
+      IDEAS.md                  → ideias que ainda não viraram spec
     design/                     → fonte da verdade VISUAL (tema "Terminal de Contenção")
       DESIGN.md                 → guia do tema + mapa de tokens + como ligar
       tema/                     → _tokens/_base/_componentes.scss + contencao.preset.ts

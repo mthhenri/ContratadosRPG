@@ -12,7 +12,11 @@ Sucessor da [contratados-calculadora](https://github.com/mthhenri/contratados-ca
 |---|---|
 | [docs/SYSTEM.SPEC.md](docs/SYSTEM.SPEC.md) | Constituição do projeto — precede tudo |
 | [docs/CONVENTIONS.md](docs/CONVENTIONS.md) | Referência rápida de convenções de código |
-| [docs/CONTEXT.md](docs/CONTEXT.md) | Estado atual e próxima task |
+| [docs/context/CONTEXT.md](docs/context/CONTEXT.md) | Estado atual e próxima task |
+| [docs/context/HISTORY.md](docs/context/HISTORY.md) | Histórico completo — o que aconteceu e por quê |
+| [docs/context/PROBLEMS.md](docs/context/PROBLEMS.md) | Problemas conhecidos do sistema |
+| [docs/context/MEMORY.md](docs/context/MEMORY.md) | Mapa: onde fica o quê e onde estão as regras |
+| [docs/context/IDEAS.md](docs/context/IDEAS.md) | Ideias levantadas que ainda não viraram spec |
 | [docs/SCHEMA.md](docs/SCHEMA.md) | Schema SQL alvo + forma dos documentos JSONB |
 | [docs/DEPLOY.md](docs/DEPLOY.md) | Runbook de deploy em produção (Cloudflare + Render + Supabase) |
 | [docs/PARIDADE-M1.md](docs/PARIDADE-M1.md) | Verificação de paridade da calculadora (fecha o M1) |

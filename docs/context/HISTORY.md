@@ -1,4 +1,25 @@
-# CONTEXT.md — Estado Atual do Projeto
+# HISTORY.md — Histórico do Projeto
+
+> **Nota de migração (2026-08-01).** Este arquivo era `docs/CONTEXT.md`. Ele havia crescido para
+> 4.450 linhas / 476KB — grande demais para ser lido de uma vez, que é justamente o que se espera
+> de um arquivo de contexto. O conteúdo foi movido para cá **inteiro e sem cortes** (`git mv`,
+> histórico preservado) e passou a ser o **registro histórico** do projeto: acumula, nunca é
+> reescrito. O estado atual do sistema agora vive em `docs/context/CONTEXT.md`, que é **reescrito**
+> a cada task e tem teto de ~400 linhas. Ver `CLAUDE.md` → "Context Directory".
+>
+> **Como usar este arquivo:** não leia do começo ao fim — busque dentro dele (`grep` por código de
+> task `m3-27`, por arquivo, ou por termo). Cada entrada abaixo é o relato completo de uma task:
+> o que foi feito, **por que** foi feito assim, o que foi verificado e o que quebrou no caminho.
+> As seções `Estado Geral`, `Status dos Milestones`, `Status dos Módulos`, `Próxima Task`,
+> `Implementado`, `Decisões Pendentes` e `Referências` mais abaixo são um **retrato congelado de
+> 2026-07-29**, preservado como estava; a versão viva delas está em `CONTEXT.md`.
+>
+> Especificações em `docs/specs/done/` que citam `docs/CONTEXT.md` referem-se a este arquivo. Elas
+> **não** foram reescritas: são registro histórico e devem continuar dizendo o que diziam.
+
+---
+
+## Registro por task (mais recente primeiro)
 
 > Última atualização: 2026-07-29 (**m3-27 — Histórico de rolagem: persistência + feed em tempo
 > real**: task antiga do backlog (apontada como "próxima" desde a `m3-26`, mas empurrada por dois
