@@ -19,7 +19,9 @@
     // `--piso-flutuante` (m3-60): idem bandeja — sobe acima da barra de navegação da ficha no
     // mobile, sem efeito nas telas que não declaram a custom property.
     bottom: calc(24px + var(--piso-flutuante, 0px));
-    z-index: 55;
+    // Abaixo do popup próprio (66), mas segue o mesmo raciocínio: fica acima do backdrop do
+    // histórico (64) para não desaparecer atrás do véu quando o histórico abre por cima.
+    z-index: 66;
     width: 48px;
     height: 48px;
     display: flex;
@@ -65,7 +67,9 @@
     position: fixed;
     right: 24px;
     bottom: calc(84px + var(--piso-flutuante, 0px));
-    z-index: 60;
+    // Acima do backdrop (64) e do painel (65) de `HistoricoRolagensSidebar` — abrir o histórico com
+    // a calculadora já aberta não pode escondê-la atrás do véu escuro nem do painel deslizante.
+    z-index: 66;
     width: 280px;
     display: flex;
     flex-direction: column;
