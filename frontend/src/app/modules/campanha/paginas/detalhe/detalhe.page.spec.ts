@@ -197,6 +197,22 @@ describe('CampanhaDetalhe', () => {
     expect(voltar?.getAttribute('href')).toBe('/painel');
   });
 
+  it('ordena a coluna "Membros" com o mestre primeiro, depois jogadores em ordem alfabética', () => {
+    const { raiz } = montar({
+      usuarioId: 1,
+      membros: [
+        { usuarioId: 2, nome: 'Zeca', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
+        { usuarioId: 1, nome: 'Ômega', papel: TipoCampanhaMembroPapelEnum.MESTRE },
+        { usuarioId: 3, nome: 'Ana', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
+      ],
+    });
+
+    const nomes = Array.from(raiz.querySelectorAll('.detalhe__membro-nome')).map((el) =>
+      el.textContent?.trim(),
+    );
+    expect(nomes).toEqual(['Ômega', 'Ana', 'Zeca']);
+  });
+
   // === Menu kebab de ações da campanha (item 6) — substitui o antigo card "Identidade". ===
   describe('menu de ações da campanha (item 6)', () => {
     it('mostra o kebab de ações só para o mestre', () => {

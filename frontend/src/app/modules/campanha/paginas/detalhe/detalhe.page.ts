@@ -272,6 +272,21 @@ export class CampanhaDetalhe {
   });
 
   /**
+   * Membros ordenados para a coluna "Membros" (item 4 — mestre primeiro, depois jogadores em
+   * ordem alfabética pelo nome). O grid do "Esquadrão" ao lado acompanha esta mesma ordem
+   * (`fichasEsquadrao` itera esta lista, não `membros()` cru), mantendo a decisão de design
+   * original de que os dois ficam sincronizados.
+   */
+  protected readonly membrosOrdenados = computed<readonly CampanhaMembroResumoDto[]>(() => {
+    return [...this.membros()].sort((a, b) => {
+      if (a.papel !== b.papel) {
+        return a.papel === TipoCampanhaMembroPapelEnum.MESTRE ? -1 : 1;
+      }
+      return a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' });
+    });
+  });
+
+  /**
    * Fichas visíveis agrupadas por dono (`usuarioId`), enriquecidas com o rótulo de classe e as
    * três condições — sempre as 3, com `ativa` (item 3: mostra também as inativas, esmaecidas, em
    * vez de sumir quando nada está marcado). O backend já resolve `morrendo`/`machucado`/
@@ -312,15 +327,15 @@ export class CampanhaDetalhe {
   /**
    * Grid do "Esquadrão" (m2-19, item 5) — todas as fichas visíveis da campanha, achatadas (era
    * agrupado por dono na coluna "Membros"), cada uma com o nome do dono anexado (`donoNome`, pra
-   * exibir no card já que ele não é mais o cabeçalho do grupo). Itera `membros()` em vez de
-   * `fichas()` para a ordem do grid acompanhar a ordem da coluna "Membros" ao lado — mesmo dado de
-   * `fichasPorMembro()`/`fichas()`, sem mudança de escopo (spec item 5).
+   * exibir no card já que ele não é mais o cabeçalho do grupo). Itera `membrosOrdenados()` (não
+   * `fichas()` nem `membros()` cru) para a ordem do grid acompanhar a ordem da coluna "Membros" ao
+   * lado — mesmo dado de `fichasPorMembro()`/`fichas()`, sem mudança de escopo (spec item 5).
    */
   protected readonly fichasEsquadrao = computed<readonly (ItemFicha & { readonly donoNome: string })[]>(
     () => {
       const porMembro = this.fichasPorMembro();
       const lista: (ItemFicha & { donoNome: string })[] = [];
-      for (const membro of this.membros()) {
+      for (const membro of this.membrosOrdenados()) {
         for (const ficha of porMembro.get(membro.usuarioId) ?? []) {
           lista.push({ ...ficha, donoNome: membro.nome });
         }

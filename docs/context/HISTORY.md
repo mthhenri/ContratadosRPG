@@ -21,6 +21,33 @@
 
 ## Registro por task (mais recente primeiro)
 
+## Ajuste pós-m2-19 (2) — coluna Membros mais larga e ordenada (2026-08-01)
+
+Segundo pedido de ajuste do autor na visão do mestre em `/painel/:id`, desta vez sobre a coluna
+"Membros" (item 4 da `m2-19`).
+
+**Largura no desktop** — `&__grade` (grid de duas colunas Membros|Esquadrão) tinha
+`grid-template-columns: minmax(0, 300px) minmax(0, 1fr)`; a coluna Membros passou para
+`minmax(0, 450px)` (+50%, 300px→450px), sobrando mais espaço para nome/chip-papel/ações de gestão
+sem apertar. Só afeta o desktop — abaixo de `bp.tablet` a grade já colapsa para 1 coluna
+(`minmax(0, 1fr)`), onde a largura fixa não se aplica.
+
+**Ordenação mestre-primeiro/alfabética, mobile e desktop** — novo computed
+`membrosOrdenados` (`detalhe.page.ts`) ordena `membros()`: papel `MESTRE` sempre primeiro, depois
+`JOGADOR` em ordem alfabética pelo nome (`localeCompare` com locale `pt-BR`, `sensitivity: 'base'`
+pra acentos/maiúsculas não afetarem a ordem). O `@for` da coluna "Membros" no template passou a
+iterar `membrosOrdenados()` em vez de `membros()` cru. O grid do "Esquadrão" ao lado **também**
+passou a acompanhar essa ordem — `fichasEsquadrao` já iterava `membros()` só para espelhar a ordem
+da coluna vizinha (decisão de design da própria `m2-19`, documentada no computed), então trocar a
+fonte para `membrosOrdenados()` manteve os dois sincronizados sem precisar de lógica nova.
+
+**Verificado** com o stack real via Playwright: mestre + 2 jogadores (nomes fora de ordem
+alfabética de propósito) numa campanha nova, confirmando via `boundingBox()` que a coluna Membros
+mede 450px no desktop (Esquadrão ficou com 686px, o resto do espaço) e via `textContent` que a
+ordem renderizada é mestre→alfabética tanto em 1440×900 quanto em 375×800. Suíte do frontend
+630/631 (mesma falha pré-existente e não relacionada `P-001`; passou de 629/630 porque um teste
+novo de ordenação foi adicionado), lint limpo nos arquivos tocados, `ng build` ok.
+
 ## Ajuste pós-m2-19 — reflow do cabeçalho no mobile e botão "Voltar" (2026-08-01)
 
 Feedback do autor sobre a visão do mestre em `/painel/:id` logo após a `m2-19` ir ao ar, focado só

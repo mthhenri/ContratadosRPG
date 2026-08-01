@@ -397,10 +397,11 @@
   }
 
   // === Grade de duas colunas: Membros | Esquadrão (item 5). Empilha abaixo do breakpoint de
-  // tablet (item 8) — colunas de ~300px+grid de fichas ficariam espremidas antes disso.
+  // tablet (item 8) — colunas de ~450px+grid de fichas ficariam espremidas antes disso.
+  // Membros a 450px (era 300px) — +50% a pedido do autor, mais espaço pro nome/chip-papel/ações.
   &__grade {
     display: grid;
-    grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 450px) minmax(0, 1fr);
     gap: var(--gap-grid);
     align-items: start;
 

@@ -220,7 +220,7 @@
           <span class="detalhe__secao-contagem" aria-hidden="true">{{ membros().length }}</span>
         </header>
         <ul class="detalhe__membros" appOverflowFade>
-          @for (membro of membros(); track membro.usuarioId) {
+          @for (membro of membrosOrdenados(); track membro.usuarioId) {
             <li class="detalhe__membro">
               <div class="detalhe__membro-linha">
                 <span class="detalhe__avatar" aria-hidden="true"></span>
