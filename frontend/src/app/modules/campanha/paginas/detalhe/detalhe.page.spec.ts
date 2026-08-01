@@ -574,6 +574,9 @@ describe('CampanhaDetalhe', () => {
       expect(bandeja.entradas()).toHaveLength(1);
       expect(bandeja.entradas()[0].rotulo).toBe('1d20+5');
       expect(bandeja.entradas()[0].resultado.total).toBe(17);
+      // `semAutoSumir` (ajuste pós-m2-19): a prévia é atrelada ao hover, não a uma rolagem nova — sem
+      // timer nem a barra de tempo que o anuncia; só o `mouseleave`/`blur` fecha (próximo teste).
+      expect(bandeja.entradas()[0].semAutoSumir).toBe(true);
     });
 
     it('tirar o mouse do dadinho d20 fecha a prévia (não espera o auto-sumir de 7s)', () => {
@@ -591,6 +594,29 @@ describe('CampanhaDetalhe', () => {
       fixture.detectChanges();
 
       expect(bandeja.entradas()[0].saindo).toBe(true);
+    });
+
+    it('a prévia continua enquanto o mouse fica no dadinho, mesmo além dos 7s do auto-sumir padrão', () => {
+      vi.useFakeTimers();
+      try {
+        const { fixture, raiz } = montar({
+          usuarioId: 1,
+          membros: membrosDois(),
+          rolagens: [rolagem({ id: 1, rotulo: '1d20+5', nomeAutor: 'Mestre' })],
+        });
+        const bandeja = TestBed.inject(BandejaDadosService);
+
+        const d20 = raiz.querySelector('.rolagem-pill__d20') as HTMLButtonElement;
+        d20.dispatchEvent(new Event('mouseenter'));
+        fixture.detectChanges();
+
+        vi.advanceTimersByTime(bandeja.duracaoMs + 1000);
+
+        expect(bandeja.entradas()).toHaveLength(1);
+        expect(bandeja.entradas()[0].saindo).toBe(false);
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it('não duplica a lista completa — só a sidebar de histórico tem "Carregar mais"/paginação', () => {

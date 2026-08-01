@@ -25,6 +25,13 @@ export interface EntradaBandeja {
   readonly resultado: ResultadoRolagemDto;
   /** `true` durante a transição de saída (fade + colapso) — a entrada só sai do array ao fim dela. */
   readonly saindo: boolean;
+  /**
+   * `true` numa prévia efêmera (hover no d20 de um pill já registrado, item 3 do detalhe da
+   * campanha): sem timer de auto-sumir nem a barra de tempo que o anuncia — quem mostrou decide
+   * quando fecha (`fechar`, no `mouseleave`), então a barra ficaria só marcando um prazo que nunca
+   * dispara sozinho.
+   */
+  readonly semAutoSumir?: boolean;
 }
 
 /**
@@ -53,18 +60,22 @@ export class BandejaDadosService {
    * `subResultados` dentro da mesma carta) — o chamador não precisa saber disso. Devolve o `id` da
    * entrada — quem mostra uma prévia efêmera (ex.: hover no d20 de um pill de rolagem já registrada,
    * item 3 do detalhe da campanha) usa esse `id` pra fechar cedo com {@link fechar}, sem esperar os
-   * {@link duracaoMs} do auto-sumir.
+   * {@link duracaoMs} do auto-sumir. `semAutoSumir` (mesmo cenário do hover no d20): não agenda
+   * timer nenhum — quem mostrou é quem fecha, via {@link fechar} no `mouseleave`.
    */
   mostrar(entrada: {
     readonly rotulo: string;
     readonly formula?: string;
     readonly resultado: ResultadoRolagemDto;
+    readonly semAutoSumir?: boolean;
   }): number {
     this.contador += 1;
     const id = this.contador;
     const nova: EntradaBandeja = { id, saindo: false, ...entrada };
     this._entradas.update((atuais) => [nova, ...atuais].slice(0, LIMITE_ENTRADAS));
-    this.agendar(id);
+    if (!entrada.semAutoSumir) {
+      this.agendar(id);
+    }
     return id;
   }
 
@@ -73,9 +84,16 @@ export class BandejaDadosService {
     this.cancelarTimer(id);
   }
 
-  /** Ao sair o mouse, reinicia o auto-sumir **do tempo cheio** (se a carta ainda existe e não está saindo). */
+  /**
+   * Ao sair o mouse, reinicia o auto-sumir **do tempo cheio** (se a carta ainda existe, não está
+   * saindo e não é uma prévia `semAutoSumir` — essa nunca teve timer pra reiniciar).
+   */
   retomar(id: number): void {
-    if (this._entradas().some((entrada) => entrada.id === id && !entrada.saindo)) {
+    if (
+      this._entradas().some(
+        (entrada) => entrada.id === id && !entrada.saindo && !entrada.semAutoSumir,
+      )
+    ) {
       this.agendar(id);
     }
   }

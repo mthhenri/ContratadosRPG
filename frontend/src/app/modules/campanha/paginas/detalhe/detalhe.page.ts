@@ -270,13 +270,15 @@ export class CampanhaDetalhe {
    * Hover/foco no dadinho d20 de um pill da tira "Rolagens Recentes" (item 3): mostra o resultado
    * completo daquela rolagem já registrada na bandeja de dados flutuante (`BandejaDadosService`,
    * mesmo componente que exibe rolagens ao vivo), sem esperar uma nova rolagem acontecer. Guarda o
-   * `id` devolvido pra fechar cedo em {@link esconderPreviaRolagem}, em vez de deixar os 7s do
-   * auto-sumir correrem — é só uma prévia, não uma rolagem nova.
+   * `id` devolvido pra fechar cedo em {@link esconderPreviaRolagem}. `semAutoSumir: true` — é só uma
+   * prévia atrelada ao hover, não uma rolagem nova: sem timer nem a barra de tempo que o anuncia
+   * (`BandejaDadosService.mostrar`), já que quem fecha é sempre o `mouseleave`/`blur`, nunca sozinha.
    */
   protected mostrarPreviaRolagem(rolagem: RolagemResumoDto): void {
     this.previaRolagemId = this.bandejaDadosService.mostrar({
       rotulo: rolagem.rotulo,
       resultado: rolagem.resultado,
+      semAutoSumir: true,
     });
   }
 

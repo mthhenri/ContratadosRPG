@@ -21,6 +21,59 @@
 
 ## Registro por task (mais recente primeiro)
 
+## Ajuste pós-m2-19 (5) — revisão do dadinho d20/Contra-ataque: bug de snapshot, barra de tempo e alinhamento (2026-08-01)
+
+Revisão pedida pelo autor sobre os dois ajustes anteriores (itens 3 e 4 desta mesma sequência),
+três achados corrigidos:
+
+**1. Contra-ataque sumia no mini-card para fichas que o tinham.** Causa raiz: `derivados.contraAtaque`
+é gravado como **snapshot** só na **criação** da ficha (`aplicarSnapshotDeMaximos`,
+`ficha.service.ts`), mas a habilidade "Contra-Ataque" normalmente entra **depois**
+(`ajustarHabilidades`, `visualizar.page.ts`) — e essa edição não recalcula `derivados` ("sem
+cascata/progressão", m3-13, anterior à fórmula de Contra-ataque do m3-39). A tela da própria ficha
+nunca notava porque `montarInformacoesExtras` já cai no calculado ao vivo quando o stored vem
+`undefined` ("stored > calculado", m3-10); o mini-card do painel, adicionado no item 3 desta
+sequência, só lia a coluna SQL bruta (`ficha.dados->'derivados'->>'contraAtaque'`) — sem onde
+recalcular, ficava permanentemente em branco pra qualquer ficha que ganhou a habilidade após
+nascer. **Corrigido no backend**, não no fluxo de edição: `FichaRepository.colunasResumo()` passou
+a selecionar também `atributos`/`habilidades` brutos (novos campos em `FichaResumoInternoDto`,
+nunca expostos ao público); `FichaService.paraResumoPublico` aplica o mesmo fallback "stored >
+calculado" da tela da ficha — `fichaInterna.contraAtaque ?? calcularContraAtaqueAoVivo(...)`, que
+chama `calcularDerivados` (mesma fonte única do m3-39) e extrai `.contraAtaque`. Corrige
+retroativamente **toda** ficha existente, sem precisar de "tocar" a edição de habilidades pra
+seed­ar o valor.
+
+**2. Barra de tempo (auto-sumir) aparecia na prévia do d20, mas nunca deveria ter existido ali** — a
+prévia é "mostra enquanto o mouse está em cima, fecha quando sai", sem prazo próprio. Antes, o
+`mostrar()` da `BandejaDadosService` sempre agendava o timer de 7s e o SCSS sempre desenhava a
+barra, então a prévia corria o risco de sumir sozinha mesmo com o mouse ainda no dadinho.
+`EntradaBandeja` ganhou `semAutoSumir?: boolean`; `mostrar()` só chama `agendar()` quando ausente;
+`retomar()` ganhou o mesmo guard (senão o hover na própria carta da bandeja recriaria um timer que
+nunca deveria existir); o template só renderiza `.bandeja__barra` quando `!entrada.semAutoSumir`.
+`mostrarPreviaRolagem` (`detalhe.page.ts`) passa `semAutoSumir: true`.
+
+**3. Ícone d20 desalinhado verticalmente do rótulo do pill** — o `.rolagem-pill__d20` era
+`position: absolute` (`top: 6px`), fora do fluxo, então seu centro vertical não acompanhava a
+métrica de fonte do `.rolagem-pill__rotulo` ao lado (3px de diferença medida ao vivo). Trocado por
+uma linha flex própria (`.rolagem-pill__topo`, `display: flex; align-items: center`) contendo
+rótulo + botão d20 lado a lado — o `meta` continua abaixo, fora dessa linha. `align-items: center`
+resolve porque agora os dois **compartilham o mesmo eixo cruzado do flex**, ao contrário do
+posicionamento absoluto anterior.
+
+**Verificação:** backend 170/170 (3 casos novos: recalcula ao vivo batendo com `calcularDerivados`
+direto; snapshot persistido vence o calculado quando presente; `undefined` sem habilidade mesmo sem
+snapshot — mais 3 fixtures existentes que precisaram de `atributos`/`habilidades` mínimos pra não
+quebrar com o novo fallback); frontend 639/640 (mesma falha pré-existente não relacionada de
+sempre; 4 novos: 3 em `bandeja-dados.service.spec.ts` sobre `semAutoSumir`, 1 em
+`detalhe.page.spec.ts` provando que a prévia sobrevive além de `duracaoMs` com o hover mantido);
+`tsc --noEmit`/`ng build`/eslint limpos nos arquivos tocados. Ao vivo (Playwright, ficha criada via
+REST com atributos completos, habilidade "Contra-Ataque" mas **sem** `derivados.contraAtaque`
+salvo — reproduzindo o bug exato): API já devolve `contraAtaque: 17` calculado ao vivo (bate com o
+exemplo do m3-39, Lutador Melhorada Nível 3 Luta 4 → Defesa Base 13 + 4); mini-card mostra
+"Contra-ataque 17"; hover no d20 mostra a bandeja sem nenhum `.bandeja__barra` no DOM; 8s de hover
+contínuo (mais que os 7s padrão) não fecha a carta; tirar o mouse fecha na hora; screenshot com
+zoom no pill confirma ícone e texto centralizados na mesma linha.
+
 ## Ajuste pós-m2-19 (4) — dadinho d20 nos pills de Rolagens Recentes (2026-08-01)
 
 Terceiro pedido do autor na mesma sessão, sobre a tira "Rolagens Recentes" do detalhe da campanha

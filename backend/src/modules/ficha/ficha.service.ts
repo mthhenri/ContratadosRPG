@@ -218,11 +218,29 @@ export class FichaService {
       defesa: fichaInterna.defesa,
       esquiva: fichaInterna.esquiva,
       bloqueio: fichaInterna.bloqueio,
-      contraAtaque: fichaInterna.contraAtaque,
+      contraAtaque: fichaInterna.contraAtaque ?? this.calcularContraAtaqueAoVivo(fichaInterna),
       personalidade: fichaInterna.personalidade,
       origemNome: fichaInterna.origemNome,
       sobrecarregado: this.calcularSobrecarregado(fichaInterna),
     };
+  }
+
+  /**
+   * Contra-ataque **ao vivo** (fallback do resumo, ajuste pós-m2-19): o snapshot `derivados` gravado
+   * na criação da ficha nunca ganha a habilidade "Contra-Ataque" sozinho quando ela entra depois
+   * (`ajustarHabilidades`/`visualizar.page.ts` não recalcula `derivados` — m3-13, "sem cascata"). A
+   * tela da própria ficha já cobre a lacuna caindo no calculado (`montarInformacoesExtras`,
+   * "stored > calculado" — m3-10); o mini-card do painel da campanha só lê este resumo, sem onde
+   * recalcular no cliente, daí o mesmo fallback aqui — `calcularDerivados` é a mesma fonte única que
+   * a tela usa (m3-39), então o valor bate exatamente com o que apareceria na ficha aberta.
+   */
+  private calcularContraAtaqueAoVivo(fichaInterna: FichaResumoInternoDto): number | undefined {
+    return calcularDerivados(
+      fichaInterna.classe,
+      fichaInterna.nivel,
+      fichaInterna.atributos,
+      fichaInterna.habilidades,
+    ).contraAtaque;
   }
 
   /**

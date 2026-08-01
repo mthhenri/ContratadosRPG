@@ -115,6 +115,14 @@ function comSnapshot(dados: FichaJogadorDadosDto): FichaJogadorDadosDto {
   };
 }
 
+/**
+ * Atributos mínimos para fixtures de `FichaResumoInternoDto` (ajuste pós-m2-19) — o `paraResumoPublico`
+ * agora chama `calcularContraAtaqueAoVivo` (`calcularDerivados`) sempre que o fixture não define
+ * `contraAtaque`, então qualquer resumo passado por ele precisa de `atributos`/`habilidades` válidos,
+ * mesmo quando o teste não se importa com o resultado de Contra-ataque em si.
+ */
+const ATRIBUTOS_RESUMO = criarDados().atributos;
+
 /** Origem válida (m3-24) — 2 Formações, uma com parâmetro exigido e outra sem, Especialidade e Saber de Campo. */
 function criarOrigem(overrides: Partial<FichaOrigemDto> = {}): FichaOrigemDto {
   return {
@@ -714,7 +722,9 @@ describe('FichaService', () => {
         { id: 5, campanhaId: 3, campanhaNome: 'Operação Alfa', usuarioId: usuarioDono.sub, nome: 'Kane' },
         { id: 6, campanhaId: null, campanhaNome: null, usuarioId: usuarioDono.sub, nome: 'Solta' },
       ];
-      fichaRepositorio.listarPorUsuario.mockResolvedValue(fichas);
+      fichaRepositorio.listarPorUsuario.mockResolvedValue(
+        fichas.map((ficha) => ({ ...ficha, atributos: ATRIBUTOS_RESUMO, habilidades: [] })),
+      );
 
       const resultado = await service.listarAcervo({ usuarioId: usuarioDono.sub });
 
@@ -756,6 +766,8 @@ describe('FichaService', () => {
       morrendo: false,
       machucado: false,
       inconsciente: false,
+      atributos: ATRIBUTOS_RESUMO,
+      habilidades: [],
       itens: [] as CarrinhoItemDto[],
       amplificadores: [],
       dinheiro: 0,
@@ -826,13 +838,76 @@ describe('FichaService', () => {
     });
   });
 
+  // Contra-ataque ao vivo (ajuste pós-m2-19): o snapshot `derivados.contraAtaque` gravado na
+  // criação nunca ganha a habilidade "Contra-Ataque" sozinho quando ela entra depois
+  // (`ajustarHabilidades` não recalcula `derivados`, m3-13) — prova que o resumo cai no calculado
+  // ao vivo (mesma fonte da tela da ficha, `calcularDerivados`) quando o snapshot vem `undefined`.
+  describe('contraAtaque (mini-card do painel)', () => {
+    const fichaSemSnapshot = (sobrescritas: Record<string, unknown> = {}) => ({
+      id: 5,
+      campanhaId: 3,
+      campanhaNome: 'Operação Alfa',
+      usuarioId: usuarioDono.sub,
+      nome: 'Kane',
+      classe: ClasseEnum.COMBATENTE,
+      arquetipo: null,
+      nivel: 3,
+      vidaAtual: 10,
+      energiaAtual: 5,
+      morrendo: false,
+      machucado: false,
+      inconsciente: false,
+      atributos: { ...ATRIBUTOS_RESUMO, luta: 4, vigor: 3 },
+      habilidades: [
+        { nome: 'Contra-Ataque', categoria: HabilidadeCategoriaEnum.GERAL, custoEnergia: 0, descricao: 'x' },
+      ],
+      itens: [] as CarrinhoItemDto[],
+      amplificadores: [],
+      // `contraAtaque` de propósito ausente — simula o snapshot de criação sem a habilidade.
+      ...sobrescritas,
+    });
+
+    it('recalcula ao vivo quando o snapshot não tem contraAtaque salvo, mesma fórmula de calcularDerivados', async () => {
+      fichaRepositorio.listarPorUsuario.mockResolvedValue([fichaSemSnapshot()]);
+
+      const [resultado] = await service.listarAcervo({ usuarioId: usuarioDono.sub });
+
+      const esperado = calcularDerivados(
+        ClasseEnum.COMBATENTE,
+        3,
+        { ...ATRIBUTOS_RESUMO, luta: 4, vigor: 3 },
+        [{ nome: 'Contra-Ataque', categoria: HabilidadeCategoriaEnum.GERAL, custoEnergia: 0, descricao: 'x' }],
+      ).contraAtaque;
+      expect(esperado).toBeDefined();
+      expect(resultado.contraAtaque).toBe(esperado);
+    });
+
+    it('o snapshot persistido vence o calculado ao vivo quando presente (m3-10)', async () => {
+      fichaRepositorio.listarPorUsuario.mockResolvedValue([fichaSemSnapshot({ contraAtaque: 99 })]);
+
+      const [resultado] = await service.listarAcervo({ usuarioId: usuarioDono.sub });
+
+      expect(resultado.contraAtaque).toBe(99);
+    });
+
+    it('undefined quando nenhuma habilidade concede contra-ataque, mesmo sem snapshot', async () => {
+      fichaRepositorio.listarPorUsuario.mockResolvedValue([fichaSemSnapshot({ habilidades: [] })]);
+
+      const [resultado] = await service.listarAcervo({ usuarioId: usuarioDono.sub });
+
+      expect(resultado.contraAtaque).toBeUndefined();
+    });
+  });
+
   describe('listarFichas', () => {
     it('devolve todas as fichas da campanha quando o autor é o mestre', async () => {
       const fichas = [{ id: 5, usuarioId: usuarioDono.sub, nome: 'Agente Alfa', classe: ClasseEnum.COMBATENTE, nivel: 1 }];
       campanhaRepositorio.recuperarMembro.mockResolvedValue({
         papel: TipoCampanhaMembroPapelEnum.MESTRE,
       });
-      fichaRepositorio.listarPorCampanha.mockResolvedValue(fichas);
+      fichaRepositorio.listarPorCampanha.mockResolvedValue(
+        fichas.map((ficha) => ({ ...ficha, atributos: ATRIBUTOS_RESUMO, habilidades: [] })),
+      );
 
       const resultado = await service.listarFichas({ campanhaId: 3 }, usuarioMestre);
 
@@ -848,7 +923,9 @@ describe('FichaService', () => {
       campanhaRepositorio.recuperarMembro.mockResolvedValue({
         papel: TipoCampanhaMembroPapelEnum.JOGADOR,
       });
-      fichaRepositorio.listarVisiveisParaUsuario.mockResolvedValue(fichas);
+      fichaRepositorio.listarVisiveisParaUsuario.mockResolvedValue(
+        fichas.map((ficha) => ({ ...ficha, atributos: ATRIBUTOS_RESUMO, habilidades: [] })),
+      );
 
       const resultado = await service.listarFichas({ campanhaId: 3 }, usuarioMembro);
 

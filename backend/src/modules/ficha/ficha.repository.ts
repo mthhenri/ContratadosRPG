@@ -87,10 +87,17 @@ export class FichaRepository extends BaseRepository {
    * `campanha_id` tolera `NULL` (ficha solta no acervo); nesse caso as duas colunas saem `NULL`.
    *
    * `prestigio`/`defesa`/`esquiva`/`bloqueio`/`contraAtaque`/`personalidade`/`origemNome` (mini-card
-   * compacto do detalhe da campanha): lidos direto do JSONB, sem recalcular nada (o resumo não tem
-   * atributos/habilidades pra rodar `shared/regras` ao vivo) — `defesa`/`esquiva`/`bloqueio`/
-   * `contraAtaque` vêm do snapshot `derivados` (m3-10), `NULL` em ficha sem o bloco salvo, classe
-   * Civil (não possui defesa/esquiva/bloqueio) ou sem habilidade que conceda contra-ataque.
+   * compacto do detalhe da campanha): lidos direto do JSONB, sem recalcular nada aqui — `defesa`/
+   * `esquiva`/`bloqueio`/`contraAtaque` vêm do snapshot `derivados` (m3-10), `NULL` em ficha sem o
+   * bloco salvo ou classe Civil (não possui defesa/esquiva/bloqueio).
+   *
+   * `atributos`/`habilidades` (ajuste pós-m2-19/m3-39): material bruto só para o `FichaService`
+   * recalcular `contraAtaque` **ao vivo** quando o snapshot vem `NULL` — a habilidade "Contra-Ataque"
+   * normalmente entra na ficha **depois** da criação (`ajustarHabilidades`, `visualizar.page.ts`, "sem
+   * cascata/progressão"), então o snapshot gravado na criação nunca ganha o valor sozinho; a tela da
+   * própria ficha já cobre essa lacuna caindo no calculado ao vivo (`montarInformacoesExtras`,
+   * "stored > calculado"), mas o mini-card só lê este resumo — sem o fallback aqui, ficaria
+   * permanentemente em branco para qualquer ficha que ganhou a habilidade após nascer.
    *
    * `itens`/`amplificadores`/`dinheiro`/`vontade`/`inventarioMaximo`: **não** entram no
    * `FichaResumoDto` público — são o material bruto de `FichaResumoInternoDto` que o
@@ -125,6 +132,8 @@ export class FichaRepository extends BaseRepository {
               (ficha.dados->'derivados'->>'contraAtaque')::int AS "contraAtaque",
               ficha.dados->'identidade'->>'personalidade' AS personalidade,
               ficha.dados->'identidade'->'origem'->>'nome' AS "origemNome",
+              ficha.dados->'atributos' AS atributos,
+              COALESCE(ficha.dados->'habilidades', '[]'::jsonb) AS habilidades,
               COALESCE(ficha.dados->'inventario'->'itens', '[]'::jsonb) AS itens,
               COALESCE(ficha.dados->'inventario'->'amplificadores', '[]'::jsonb) AS amplificadores,
               (ficha.dados->>'dinheiro')::numeric AS dinheiro,

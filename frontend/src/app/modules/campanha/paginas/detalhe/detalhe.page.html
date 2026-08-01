@@ -204,18 +204,20 @@
         <ul class="detalhe__rolagens-tira" appOverflowFade>
           @for (item of rolagensRecentes(); track item.id) {
             <li class="rolagem-pill">
-              <button
-                type="button"
-                class="rolagem-pill__d20"
-                [attr.aria-label]="'Ver resultado de ' + item.rotulo"
-                (mouseenter)="mostrarPreviaRolagem(item)"
-                (mouseleave)="esconderPreviaRolagem()"
-                (focus)="mostrarPreviaRolagem(item)"
-                (blur)="esconderPreviaRolagem()"
-              >
-                <app-icone nome="d20" />
-              </button>
-              <span class="rolagem-pill__rotulo">{{ item.rotulo }}</span>
+              <div class="rolagem-pill__topo">
+                <span class="rolagem-pill__rotulo">{{ item.rotulo }}</span>
+                <button
+                  type="button"
+                  class="rolagem-pill__d20"
+                  [attr.aria-label]="'Ver resultado de ' + item.rotulo"
+                  (mouseenter)="mostrarPreviaRolagem(item)"
+                  (mouseleave)="esconderPreviaRolagem()"
+                  (focus)="mostrarPreviaRolagem(item)"
+                  (blur)="esconderPreviaRolagem()"
+                >
+                  <app-icone nome="d20" />
+                </button>
+              </div>
               <span class="rolagem-pill__meta">{{ item.nomeAutor }} · {{ tempoRolagem(item) }}</span>
             </li>
           }

@@ -1,6 +1,6 @@
 import type { ArquetipoEnum, ClasseEnum, TipoFichaEnum } from '../../enums';
 import type { AmplificadorAplicadoDto, CarrinhoItemDto } from '../../regras/compras';
-import type { FichaJogadorDadosDto } from './ficha.dtos';
+import type { FichaAtributosDto, FichaHabilidadeDto, FichaJogadorDadosDto } from './ficha.dtos';
 
 /**
  * DTOs de **operação** do módulo `ficha` — o CRUD da ficha de jogador (m3-03). Seguem a
@@ -105,8 +105,11 @@ export interface FichaResumoDto {
   readonly esquiva?: number;
   readonly bloqueio?: number;
   /**
-   * Contra-Ataque — mesmo snapshot `derivados`; `undefined` numa ficha sem nenhuma habilidade que o
-   * conceda (`calcularContraAtaque`, `shared/regras/agente/derivados`), não só nas sem `derivados`.
+   * Contra-Ataque — snapshot `derivados` **ou**, se `undefined` (a habilidade "Contra-Ataque" entrou
+   * na ficha depois da criação, sem cascata de `ajustarHabilidades` — m3-13), o `FichaService`
+   * recalcula ao vivo (`calcularDerivados`, `shared/regras/agente/derivados`) a partir de
+   * `FichaResumoInternoDto.atributos`/`habilidades` — mesmo fallback "stored > calculado" da tela da
+   * própria ficha (m3-10). `undefined` só quando nenhuma habilidade concede contra-ataque.
    */
   readonly contraAtaque?: number;
   /** Personalidade e nome da Origem (`FichaIdentidadeDto`, m3-23) — `null`/ausente sem Identidade definida. */
@@ -135,8 +138,17 @@ export interface FichaResumoDto {
  * `calcularResumoCompras`, mesmo passo que a aba Inventário já faz no cliente). `dinheiro`/`vontade`
  * só alimentam a fórmula (o resumo público não os expõe). O `sobrecarregado` herdado de
  * `FichaResumoDto` sai `undefined` neste recorte — quem o preenche é o service, na conversão final.
+ *
+ * `atributos`/`habilidades`: material bruto para o service recalcular `contraAtaque` **ao vivo**
+ * (`calcularDerivados`, `shared/regras/agente`) quando o snapshot `contraAtaque` herdado de
+ * `FichaResumoDto` vem `undefined` — mesmo fallback "stored > calculado" que a tela da própria
+ * ficha já aplica (m3-10), necessário aqui porque o snapshot gravado na criação da ficha nunca
+ * ganha a habilidade "Contra-Ataque" sozinho quando ela é adicionada depois (`ajustarHabilidades`
+ * não recalcula `derivados`, m3-13).
  */
 export interface FichaResumoInternoDto extends FichaResumoDto {
+  readonly atributos: FichaAtributosDto;
+  readonly habilidades: readonly FichaHabilidadeDto[];
   readonly itens: readonly CarrinhoItemDto[];
   readonly amplificadores: readonly AmplificadorAplicadoDto[];
   readonly dinheiro?: number;

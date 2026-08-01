@@ -1125,25 +1125,32 @@
 // Pill de rolagem (item 3, nome sancionado pela spec) — item da tira horizontal de rolagens
 // recentes do cabeçalho. Não segue o BEM `.detalhe__*` porque é o nome que a própria spec exige.
 .rolagem-pill {
-  position: relative;
   flex: none;
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 140px;
   max-width: 220px;
-  padding: 8px 26px 8px 12px;
+  padding: 8px 12px;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--radius-control);
 
+  // Linha do topo: rótulo + dadinho d20 lado a lado — `align-items: center` alinha o centro vertical
+  // dos dois (o d20 sozinho como `position: absolute` desalinhava do texto por alguns px, dependendo
+  // da métrica da fonte; numa linha flex comum os dois compartilham o mesmo eixo cruzado).
+  &__topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
   // Dadinho d20 (item 3, ajuste pós-m2-19): hover/foco mostra o resultado completo da rolagem na
   // bandeja de dados flutuante (`BandejaDadosService`, o mesmo container das rolagens ao vivo).
   &__d20 {
-    position: absolute;
-    top: 6px;
-    right: 6px;
     display: inline-flex;
+    flex-shrink: 0;
     align-items: center;
     justify-content: center;
     width: 16px;

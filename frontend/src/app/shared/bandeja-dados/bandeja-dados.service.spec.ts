@@ -99,4 +99,59 @@ describe('BandejaDadosService', () => {
     bandeja.limpar();
     expect(bandeja.entradas()).toHaveLength(0);
   });
+
+  /**
+   * Prévia efêmera do d20 (ajuste pós-m2-19, item 3 do detalhe da campanha): `semAutoSumir: true`
+   * não agenda timer nenhum — sem isso a entrada some sozinha após `duracaoMs` mesmo com o mouse
+   * ainda sobre o dadinho, contradizendo "só fecha quando eu tirar o mouse".
+   */
+  describe('semAutoSumir (prévia efêmera do d20)', () => {
+    it('não agenda auto-sumir — a entrada continua depois de duracaoMs sem ninguém fechar', () => {
+      vi.useFakeTimers();
+      try {
+        const bandeja = montar();
+        bandeja.mostrar({ rotulo: 'Teste', resultado, semAutoSumir: true });
+
+        vi.advanceTimersByTime(bandeja.duracaoMs + 1000);
+
+        expect(bandeja.entradas()).toHaveLength(1);
+        expect(bandeja.entradas()[0].saindo).toBe(false);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('retomar não reagenda um timer para uma entrada semAutoSumir', () => {
+      vi.useFakeTimers();
+      try {
+        const bandeja = montar();
+        bandeja.mostrar({ rotulo: 'Teste', resultado, semAutoSumir: true });
+        const id = bandeja.entradas()[0].id;
+
+        bandeja.pausar(id); // no-op — nunca houve timer
+        bandeja.retomar(id); // não deveria criar um timer novo
+
+        vi.advanceTimersByTime(bandeja.duracaoMs + 1000);
+        expect(bandeja.entradas()).toHaveLength(1);
+        expect(bandeja.entradas()[0].saindo).toBe(false);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('fechar encerra a prévia normalmente (mouseleave do d20)', () => {
+      vi.useFakeTimers();
+      try {
+        const bandeja = montar();
+        const id = bandeja.mostrar({ rotulo: 'Teste', resultado, semAutoSumir: true });
+
+        bandeja.fechar(id);
+        vi.advanceTimersByTime(280);
+
+        expect(bandeja.entradas()).toHaveLength(0);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
 });
