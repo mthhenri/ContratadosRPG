@@ -5,7 +5,7 @@ import type {
   FichaRolagemDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
-  calcularAtributosEfetivos,
+  calcularAtributosParaDados,
   calcularProficiencia,
 } from '@contratados-rpg/shared/regras/agente';
 
@@ -54,9 +54,9 @@ export class FichaRolagensPainel {
   /** Flag "Rolagem oculta" + caminho de registro, compartilhados com o card da ficha (item 5). */
   protected readonly registro = inject(FichaRolagemRegistroService);
 
-  /** Atributos **efetivos** (base − pontos de lesão) — a mesma base que o card rola. */
-  protected readonly atributosEfetivos = computed(() =>
-    calcularAtributosEfetivos(this.dados().atributos, this.dados().estado.lesoes),
+  /** Atributos **para dados** (lesão + ajuste manual) — a mesma base que o teste de atributo rola. */
+  protected readonly atributosParaDados = computed(() =>
+    calcularAtributosParaDados(this.dados().atributos, this.dados().estado.lesoes, this.dados().dadosTeste ?? {}),
   );
 
   /** Proficiência derivada (nível; `null` para Civil) — fonte `PROF` das fórmulas (m3-22). */
