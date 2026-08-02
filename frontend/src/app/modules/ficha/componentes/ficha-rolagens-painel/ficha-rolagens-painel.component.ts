@@ -26,7 +26,7 @@ import { FichaRolagens } from '../ficha-rolagens/ficha-rolagens.component';
  * histórico da sessão. Sem este componente, os três `computed` derivados teriam de ser duplicados
  * na página.
  *
- * **Nenhuma regra de jogo vive aqui** (proibições #26/#27): `calcularAtributosEfetivos` e
+ * **Nenhuma regra de jogo vive aqui** (proibições #26/#27): `calcularAtributosParaDados` e
  * `calcularProficiencia` são de `shared/regras/agente`, e `normalizarEntrada`/
  * `montarInformacoesExtras` são as mesmas funções de `status-derivado` que `FichaVisualizacao`
  * chama — nenhuma delas mudou de lugar. O registro do histórico (m3-27) e a visibilidade das
