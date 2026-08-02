@@ -177,6 +177,7 @@ export class FichaEdicaoService {
       atributos: ajuste.atributos,
       maestria: ajuste.maestria,
       modificadoresTeste: ajuste.modificadoresTeste,
+      dadosTeste: ajuste.dadosTeste,
     };
     this.ficha.set({ ...fichaAtual, dados: this.aplicarProgressao(fichaAtual.dados, dadosNovos) });
     this.agendarPersistencia();
