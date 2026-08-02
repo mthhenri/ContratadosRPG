@@ -125,7 +125,7 @@ export interface ModificacaoDados {
 export const MODIFICACOES: Partial<Record<ItemCategoriaEnum, readonly ModificacaoDados[]>> = {
   [ItemCategoriaEnum.CORPO_A_CORPO]: [
     { nome: 'Balanceada', empilhamentosIniciais: 1, empilhamentoMaximo: 1, bloqueia: [], descricao: '+1 dado nos testes' },
-    { nome: 'Confortável', empilhamentosIniciais: 3, empilhamentoMaximo: 4, bloqueia: [], descricao: 'Concede Ataque Duplo (+1E). Extras: −1E/stack' },
+    { nome: 'Confortável', empilhamentosIniciais: 3, empilhamentoMaximo: 5, bloqueia: [], descricao: 'Concede Ataque Duplo (+1E). Extras: −1E/stack' },
     { nome: 'Empunhadura Sofisticada', empilhamentosIniciais: 1, empilhamentoMaximo: 5, bloqueia: [], descricao: '+2 nos testes de ataque por stack' },
     { nome: 'Explosiva', empilhamentosIniciais: 1, empilhamentoMaximo: 5, bloqueia: ['Fervente', 'Furtiva', 'Plasma'], descricao: '+1D4 [Explosão] por stack' },
     { nome: 'Fervente', empilhamentosIniciais: 1, empilhamentoMaximo: 5, bloqueia: ['Explosiva'], descricao: '+1D4 [Químico] por stack' },
@@ -154,7 +154,7 @@ export const MODIFICACOES: Partial<Record<ItemCategoriaEnum, readonly Modificaca
   ],
   [ItemCategoriaEnum.ARMAS_DE_FOGO]: [
     { nome: 'Alcance', empilhamentosIniciais: 1, empilhamentoMaximo: 1, bloqueia: [], descricao: '+1 nível de alcance' },
-    { nome: 'Estabilizador', empilhamentosIniciais: 3, empilhamentoMaximo: 4, bloqueia: [], descricao: 'Concede Ataque Duplo (+1E). Extras: −1E/stack' },
+    { nome: 'Estabilizador', empilhamentosIniciais: 3, empilhamentoMaximo: 5, bloqueia: [], descricao: 'Concede Ataque Duplo (+1E). Extras: −1E/stack' },
     { nome: 'Explosiva', empilhamentosIniciais: 1, empilhamentoMaximo: 5, bloqueia: ['Furtiva', 'Silenciada', 'Plasma'], descricao: '+1D6 [Explosão] por stack' },
     { nome: 'Furtiva', empilhamentosIniciais: 1, empilhamentoMaximo: 2, bloqueia: ['Plasma', 'Explosiva'], descricao: '−1 peso (mín. 1), sem acréscimo de peso da mod', peso: 0 },
     { nome: 'Mira Dot', empilhamentosIniciais: 1, empilhamentoMaximo: 5, bloqueia: [], descricao: '+2 nos testes de ataque por stack' },

@@ -1,5 +1,6 @@
 import { ArquetipoEnum, ClasseEnum, HabilidadeCategoriaEnum } from '../../enums';
-import { calcularStatItem, type CarrinhoItemDto } from '../compras';
+import type { FichaAtributosDto } from '../../dtos/ficha';
+import { calcularStatItem, resolverDadosItem, type CarrinhoItemDto } from '../compras';
 import { ContraAtaqueCalcularDto, DefesaCalcularDto, DefesaDto, ProficienciaCalcularDto } from './agente.dtos';
 
 /**
@@ -101,4 +102,30 @@ export function calcularBonusDefesaEquipamento(itens: readonly CarrinhoItemDto[]
     });
 
   return { esquiva, bloqueio, defesa };
+}
+
+/**
+ * Ajuste de **dados** em testes de atributo vindo de **itens equipados** (hoje só Armadura Pesada —
+ * doc: "Penalidade: [...] −1 dado em Destreza"). Soma **por cima** do ajuste manual de `dadosTeste`
+ * na ficha, nunca escreve nele (mesma filosofia "manual + equipamento" de
+ * `calcularBonusDefesaEquipamento`/`resistencia.ts`/`amplificador.ts`) — quem consome mescla este
+ * resultado com `dadosTeste` antes de chamar `calcularAtributosParaDados`.
+ *
+ * Fonte: docs/core/sistema-v4.1.0.md — "Proteções e Escudos" (coluna "Penalidade").
+ */
+export function calcularAjusteDadosEquipamento(
+  itens: readonly CarrinhoItemDto[],
+): Partial<Record<keyof FichaAtributosDto, number>> {
+  let destreza = 0;
+
+  itens
+    .filter((item) => item.equipado === true)
+    .forEach((item) => {
+      const penalidade = resolverDadosItem(item)?.penalidadeDadoDestreza;
+      if (penalidade) {
+        destreza -= penalidade;
+      }
+    });
+
+  return destreza !== 0 ? { destreza } : {};
 }

@@ -436,6 +436,14 @@ describe('calcularTotaisCarrinho', () => {
       expect(totais.pesoUsado).toBe(0);
     });
 
+    it('vestida, não soma o bônus de uma Mochila Médica no inventário principal (restrita a Medicinal)', () => {
+      const totais = calcularTotaisCarrinho({
+        itens: [montarItem({ nome: 'Mochila Médica', categoria: ItemCategoriaEnum.ARMAZENAMENTO, custo: 1600, peso: 0.5, id: 'med-1' })],
+        amplificadores: [],
+      });
+      expect(totais.bonusInventario).toBe(0);
+    });
+
     it('Mochila comum (sem inventarioProprio) continua ampliando o principal normalmente', () => {
       const totais = calcularTotaisCarrinho({
         itens: [montarItem({ nome: 'Mochila Pequena', categoria: ItemCategoriaEnum.ARMAZENAMENTO, custo: 300, peso: 0.3 })],
@@ -515,6 +523,31 @@ describe('listarSubInventarios (m3-44)', () => {
     const subInventarios = listarSubInventarios([pochete, municao, deOutraPochete]);
     expect(subInventarios[0].pesoUsado).toBe(1.5);
     expect(subInventarios[0].itens).toEqual([municao]);
+  });
+
+  it('Mochila Médica: abre sub-inventário só p/ Medicinal, capacidade 5, e reduz 0,5 de peso por item (piso 0)', () => {
+    const mochila = montarItem({ nome: 'Mochila Médica', categoria: ItemCategoriaEnum.ARMAZENAMENTO, id: 'med-1' });
+    const desfibrilador = montarItem({
+      nome: 'Desfibrilador',
+      categoria: ItemCategoriaEnum.MEDICINAL,
+      peso: 1,
+      containerId: 'med-1',
+    });
+    const calmante = montarItem({
+      nome: 'Calmante',
+      categoria: ItemCategoriaEnum.MEDICINAL,
+      peso: 0.5,
+      quantidade: 2,
+      containerId: 'med-1',
+    });
+    const subInventarios = listarSubInventarios([mochila, desfibrilador, calmante]);
+    expect(subInventarios[0]).toMatchObject({
+      containerId: 'med-1',
+      capacidade: 5,
+      categoriasPermitidas: [ItemCategoriaEnum.MEDICINAL],
+      // Desfibrilador: max(0, 1 − 0,5) × 1 = 0,5; Calmante: max(0, 0,5 − 0,5) × 2 = 0 (piso).
+      pesoUsado: 0.5,
+    });
   });
 
   it('um Bolso de Corpo vestido abre sub-inventário com capacidade 1 e sem restrição de categoria', () => {

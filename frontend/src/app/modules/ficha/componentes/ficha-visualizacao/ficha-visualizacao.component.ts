@@ -36,6 +36,7 @@ import {
   MAESTRIA_PONTOS_MINIMO,
   ajusteEnergiaAmplificadores,
   ajusteVidaAmplificadores,
+  calcularAjusteDadosEquipamento,
   calcularAtributosEfetivos,
   calcularAtributosParaDados,
   calcularEnergia,
@@ -920,14 +921,29 @@ export class FichaVisualizacao {
   );
 
   /**
-   * Atributos **para dados** = efetivo (lesão) + ajuste manual de `dadosTeste` — usado **só** como
-   * contagem de dados de rolagem (`rolarTesteAtributo`, presets em `FichaRolagensPainel`). Energia/
-   * Deslocamento/Vida/Maestria e o valor exibido na ficha continuam em `atributosEfetivos`/`atributos`,
-   * intocados por este ajuste.
+   * Ajuste de dados vindo de **itens equipados** (`shared/regras/agente/defesa` — hoje só Armadura
+   * Pesada: "−1 dado em Destreza") — soma por cima do ajuste manual (`dadosTeste`) só na leitura,
+   * nunca escreve nele (mesmo motivo de `modificadoresTesteAmplificador`).
    */
-  protected readonly atributosParaDados = computed(() =>
-    calcularAtributosParaDados(this.atributos(), this.estado().lesoes, this.dados().dadosTeste ?? {}),
+  protected readonly ajusteDadosEquipamento = computed(() =>
+    calcularAjusteDadosEquipamento(this.dados().inventario.itens),
   );
+
+  /**
+   * Atributos **para dados** = efetivo (lesão) + ajuste manual de `dadosTeste` + ajuste de
+   * equipamento (`ajusteDadosEquipamento`) — usado **só** como contagem de dados de rolagem
+   * (`rolarTesteAtributo`, presets em `FichaRolagensPainel`). Energia/Deslocamento/Vida/Maestria e o
+   * valor exibido na ficha continuam em `atributosEfetivos`/`atributos`, intocados por este ajuste.
+   */
+  protected readonly atributosParaDados = computed(() => {
+    const manual = this.dados().dadosTeste ?? {};
+    const equipamento = this.ajusteDadosEquipamento();
+    const combinado: Partial<Record<ChaveAtributo, number>> = { ...manual };
+    (Object.keys(equipamento) as ChaveAtributo[]).forEach((chave) => {
+      combinado[chave] = (combinado[chave] ?? 0) + (equipamento[chave] ?? 0);
+    });
+    return calcularAtributosParaDados(this.atributos(), this.estado().lesoes, combinado);
+  });
 
   /**
    * DT (Dificuldade de Teste) do atributo `chave` quando **este agente** é o causador do teste —

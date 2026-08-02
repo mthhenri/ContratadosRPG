@@ -18,6 +18,7 @@ const ROTULO_ABA: Record<GrupoHabilidades['id'], string> = {
   gerais: 'Gerais',
   classe: 'Classe',
   arquetipo: 'Arquétipo',
+  civil: 'Civil',
 };
 
 const VALORES_CLASSE = new Set<string>(Object.values(ClasseEnum));
@@ -100,8 +101,11 @@ export class FichaHabilidadeSeletor {
     return termo ? lista.filter((habilidade) => habilidade.nome.toLowerCase().includes(termo)) : lista;
   });
 
-  /** `true` quando a aba tem sub-filtro (Classe/Arquétipo); Gerais tem subgrupo único. */
-  protected readonly temSubfiltro = computed(() => this.abaAtiva() !== 'gerais');
+  /** `true` quando a aba tem sub-filtro (Classe/Arquétipo); Gerais e Civil têm subgrupo único. */
+  protected readonly temSubfiltro = computed(() => {
+    const aba = this.abaAtiva();
+    return aba !== 'gerais' && aba !== 'civil';
+  });
 
   protected rotuloAba(id: GrupoHabilidades['id']): string {
     return ROTULO_ABA[id];

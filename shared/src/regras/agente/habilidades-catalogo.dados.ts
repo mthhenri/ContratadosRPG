@@ -9,7 +9,8 @@ import { ArquetipoEnum, ClasseEnum } from '../../enums';
  *
  * Custo: número em Energia; `null` para custo variável (`[X E]` no documento).
  *
- * Fora do catálogo (só criadas, sem lista no sistema): Personalidade, Especialidade e Civil.
+ * Fora do catálogo (só criadas, sem lista no sistema): Personalidade e Especialidade. Civil TEM
+ * lista fechada própria (`HABILIDADES_CIVIL`, abaixo) — não confundir com essas duas.
  *
  * **Efeito mecânico:** habilidades vinculadas a um passo de rolagem só contam **Energia** (m3-31); a
  * aplicação automática de efeitos na fórmula foi aposentada — o jogador lê a descrição e aplica na mão.
@@ -85,10 +86,44 @@ export const HABILIDADES_GERAIS: readonly HabilidadeBaseDto[] = [
 ];
 
 /**
+ * Habilidades de Civil (`sistema-v4.1.0.md` — "⬥ Habilidades de Civíl"): lista fechada e exclusiva
+ * de agentes Civis — "Civis não possuem classes, arquétipos ou habilidades gerais. Possuem acesso
+ * exclusivo à lista de habilidades civis. Ao criar a ficha, o civil escolhe 3 habilidades civis."
+ * (a escolha de 3 é manual, sem trava no seletor — mesma filosofia "aviso, não trava" do resto do
+ * sistema).
+ */
+export const HABILIDADES_CIVIL: readonly HabilidadeBaseDto[] = [
+  { nome: 'Agir Natural', custoEnergia: 1, descricao: 'Quando já está furtivo e precisa realizar uma ação mundana não exige novo teste de Destreza para manter a furtividade.' },
+  { nome: 'Andar nas Pontas dos Pés', custoEnergia: 1, descricao: 'Caso esteja furtivo, não precisa realizar teste de Destreza para mantê-la, mas, move-se apenas metade do deslocamento.' },
+  { nome: 'Camuflagem Social', custoEnergia: 1, descricao: 'Em ambientes com presença de outros civis ou multidão, pode se misturar ao ambiente, usando Social no lugar de Destreza para o teste de furtividade.' },
+  { nome: 'Covarde', custoEnergia: 2, descricao: 'Ao ser alvo de um ataque, pode puxar um ser adjacente à você para receber metade do dano contigo. O ser pode resistir com um teste de Força contra sua Vontade.' },
+  { nome: 'Desaparecer', custoEnergia: 2, descricao: 'Uma vez por cena, ao ser detectado enquanto furtivo, pode refazer imediatamente o teste de Destreza para tentar se manter escondido.' },
+  { nome: 'Desespero', custoEnergia: 2, descricao: 'Troca o teste de uma arma corpo a corpo de Luta para Força, mas bloqueia qualquer chance de crítico.' },
+  { nome: 'Escudo Improvisado', custoEnergia: 2, descricao: 'Usa um objeto do inventário com peso inferior ou igual à 1 como escudo improvisado. Recebendo peso × 5 adicionais ao teste de Bloquear. O objeto é destruído ou inutilizado após o uso.' },
+  { nome: 'Estabilizar', custoEnergia: 3, descricao: 'Realiza um teste de Vontade DT 20. Em caso de sucesso, a DT do próximo teste de Vigor do aliado não aumenta naquele turno. Pode ser usado apenas uma vez por aliado por cena.' },
+  { nome: 'Eu Não Quero Morrer', custoEnergia: 2, descricao: 'Durante uma perseguição, corre sem se importar com aliados ou seres à frente, aumentando seu deslocamento em 1×. Caso trombe com algum ser, realiza a ação "Atrapalhar".' },
+  { nome: 'Farejador', custoEnergia: 1, descricao: 'Uma vez por cena, ao examinar uma pista, recebe +1 dado no teste de Sentidos ou Intelecto.' },
+  { nome: 'Fingir a Morte', custoEnergia: 3, descricao: 'Simula estar morto de forma convincente. Qualquer ser que vasculhar a área realiza um teste de Sentidos contra a DT Social do civil.' },
+  { nome: 'Fuga Desesperada', custoEnergia: 1, descricao: 'Recebe +2 em um teste de Corrida.' },
+  { nome: 'Instinto', custoEnergia: 1, descricao: 'Uma vez por cena, ao falhar em um teste de Sentidos ou Intelecto durante uma investigação, pode refazê-lo com 1 dado a menos.' },
+  { nome: '"Internet"', custoEnergia: 1, descricao: 'Recebe +1 em um teste (exceto Luta e Pontaria).' },
+  { nome: 'Limpeza de Ferida', custoEnergia: 1, descricao: 'Usando qualquer material disponível, limpa e estanca uma ferida aberta de um ser. Removendo a condição de Sangramento.' },
+  { nome: 'Morder e Arranhar', custoEnergia: 2, descricao: 'Quando Agarrado ou Imobilizado, o civil resiste usando desespero puro. Usa Vontade no lugar de Luta ou Força para o teste de soltar. Em caso de sucesso, além de se soltar, causa 1D3 de dano Físico no ser que o segurava e em si mesmo.' },
+  { nome: 'Oportunista', custoEnergia: 2, descricao: 'Quando um aliado em alcance curto for alvo de um ataque, recebe +1 dado em um teste à escolha contra o ser que o atacou.' },
+  { nome: 'Presença Perturbadora', custoEnergia: 0, descricao: 'Sente quando uma criatura (exceto ameaças Nulas) estiver em alcance médio de você.' },
+  { nome: 'Primeiros Socorros', custoEnergia: 2, descricao: 'Usando materiais improvisados, tenta estancar os ferimentos de um aliado. Vontade DT 15. Recupera 1D4 de Vida. Não pode ser usado durante combates.' },
+  { nome: 'Sem Pensar', custoEnergia: 2, descricao: 'Troca o teste de uma arma de fogo de Pontaria para Destreza, mas bloqueia qualquer chance de crítico.' },
+  { nome: 'Sobreviver é Suficiente', custoEnergia: 4, descricao: 'Uma vez por missão, caso esteja machucado ou com metade da vida máxima, recebe +2 em todos os testes até o fim da cena.' },
+  { nome: 'Tolerância à Dor', custoEnergia: 2, descricao: 'Uma vez por cena, ao receber um golpe que causaria a condição Machucado, o civil realiza um teste de Vigor DT 10 + dano recebido.' },
+  { nome: 'Último Impulso', custoEnergia: 2, descricao: 'Ao estar Morrendo, ignora a penalidade de redução de deslocamento neste turno.' },
+];
+
+/**
  * Habilidades de Classe por classe-base (`sistema-v4.1.0.md` — tabelas de classe). Só as três
  * classes-base têm lista própria; Experimentos acessam a lista da classe-base correspondente
- * (resolvido em `habilidades-catalogo.ts`) e Civil não tem lista.
- * PLACEHOLDER — preenchido na fase de transcrição.
+ * (resolvido em `habilidades-catalogo.ts`). `CIVIL` fica vazio aqui **de propósito** — Civil não
+ * tem habilidades de "Classe"; a lista própria dele é `HABILIDADES_CIVIL` (categoria `CIVIL`,
+ * acima), resolvida à parte em `habilidades-catalogo.ts` (`grupoCivil`).
  */
 export const HABILIDADES_CLASSE: Readonly<Record<ClasseEnum, readonly HabilidadeBaseDto[]>> = {
   [ClasseEnum.COMBATENTE]: [
@@ -160,7 +195,7 @@ export const HABILIDADES_CLASSE: Readonly<Record<ClasseEnum, readonly Habilidade
 };
 
 /**
- * Habilidades de Arquétipo (inclui a Habilidade Inicial de arquétipo). PLACEHOLDER.
+ * Habilidades de Arquétipo (inclui a Habilidade Inicial de arquétipo).
  */
 export const HABILIDADES_ARQUETIPO: Readonly<Record<ArquetipoEnum, readonly HabilidadeBaseDto[]>> = {
   [ArquetipoEnum.LUTADOR]: [
@@ -248,7 +283,7 @@ export const HABILIDADES_ARQUETIPO: Readonly<Record<ArquetipoEnum, readonly Habi
 
 /**
  * Gerais Melhoradas por arquétipo — versão buffada de uma Geral, exclusiva daquele arquétipo
- * (`sistema-v4.1.0.md`). Só aparecem para o próprio arquétipo da ficha. PLACEHOLDER.
+ * (`sistema-v4.1.0.md`). Só aparecem para o próprio arquétipo da ficha.
  */
 export const HABILIDADES_GERAIS_MELHORADAS: Readonly<
   Record<ArquetipoEnum, readonly HabilidadeBaseDto[]>
@@ -293,7 +328,7 @@ export const HABILIDADES_GERAIS_MELHORADAS: Readonly<
 
 /**
  * Habilidades de Subclasse (Experimentos) — inclui a Habilidade Inicial como primeiro item. Só
- * aparecem para a própria subclasse da ficha. PLACEHOLDER.
+ * aparecem para a própria subclasse da ficha.
  */
 export const HABILIDADES_SUBCLASSE: Partial<
   Record<ClasseEnum, readonly HabilidadeBaseDto[]>

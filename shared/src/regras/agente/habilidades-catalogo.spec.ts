@@ -10,6 +10,7 @@ import {
 } from './habilidades-catalogo';
 import {
   HABILIDADES_ARQUETIPO,
+  HABILIDADES_CIVIL,
   HABILIDADES_GERAIS,
   HABILIDADES_SUBCLASSE,
 } from './habilidades-catalogo.dados';
@@ -126,9 +127,14 @@ describe('catálogo de habilidades → grupos de filtro', () => {
     expect(temMelhorada).toBe(false);
   });
 
-  it('Civil: só o grupo Gerais (sem Classe nem Arquétipo)', () => {
+  it('Civil: só o grupo Civil (sem Gerais/Classe/Arquétipo) — doc: "não possuem classes, arquétipos ou habilidades gerais"', () => {
     const grupos = catalogoHabilidades(ClasseEnum.CIVIL, null);
-    expect(grupos.map((g) => g.id)).toEqual(['gerais']);
+    expect(grupos.map((g) => g.id)).toEqual(['civil']);
+    const civil = grupo(grupos, 'civil');
+    expect(civil.subgrupos).toHaveLength(1);
+    expect(civil.subgrupos[0].chave).toBeNull();
+    expect(civil.subgrupos[0].habilidades).toHaveLength(HABILIDADES_CIVIL.length);
+    expect(civil.subgrupos[0].habilidades.every((h) => h.categoria === HabilidadeCategoriaEnum.CIVIL)).toBe(true);
   });
 
   it('classe-base sem arquétipo selecionado: mostra os arquétipos da classe, nenhum marcado, sem melhoradas', () => {

@@ -565,12 +565,13 @@ export function calcularStatItem(dto: StatItemCalcularDto): StatItemDto | null {
     statResistencia = notacao || undefined;
   }
 
-  // ── DEFESA (Proteções — m3-43: mods "Flexível"/"Resistente" por nome + efeito DEFESA custom) ──
+  // ── DEFESA (Proteções — m3-43: mods "Flexível"/"Resistente" por nome + efeito DEFESA custom;
+  // + penalidade base de Esquiva do catálogo, ex. Armadura Pesada/Escudo-Barreira Móvel) ──
   let statBonusEsquiva: number | undefined;
   let statBonusBloqueio: number | undefined;
   let statBonusDefesa: number | undefined;
   if (item.categoria === ItemCategoriaEnum.PROTECOES) {
-    let esquiva = comprasDe('Flexível');
+    let esquiva = comprasDe('Flexível') - (itemCatalogo.penalidadeEsquiva ?? 0);
     let bloqueio = comprasDe('Resistente');
     let defesa = 0;
 
@@ -684,13 +685,15 @@ export function calcularTotaisCarrinho(dto: TotaisCarrinhoCalcularDto): TotaisCa
 }
 
 /**
- * Sub-inventários próprios (m3-44 — doc: "Possui inventário separado", Pochete/Bolso de Corpo):
- * um container vestido, cujo catálogo marca `inventarioProprio`, com `id` atribuído, abre sua
- * própria lista — os itens com `containerId` igual a esse `id` pesam só contra a capacidade do
- * container (o bônus dele, via `calcularBonusArmazenamentoItem`), nunca contra o pool principal.
- * Containers sem `id` (de antes desta task) e itens `guardada = true` (não vestidos) não abrem
- * sub-inventário. Espelha `renderCmpSummary`/`getCmpTotals` na mesma filosofia "aviso, não trava" —
- * `categoriasPermitidas`/capacidade excedida são só sinalização da UI.
+ * Sub-inventários próprios (m3-44 — doc: "Possui inventário separado", Pochete/Bolso de Corpo;
+ * Mochila Médica: "Apenas Itens Medicinais"): um container vestido, cujo catálogo marca
+ * `inventarioProprio`, com `id` atribuído, abre sua própria lista — os itens com `containerId`
+ * igual a esse `id` pesam só contra a capacidade do container (o bônus dele, via
+ * `calcularBonusArmazenamentoItem`), nunca contra o pool principal. Quando o container tem
+ * `reducaoPeso` (Mochila Médica: 0,5), cada item contido pesa `peso − reducaoPeso` (piso 0) nessa
+ * soma. Containers sem `id` (de antes desta task) e itens `guardada = true` (não vestidos) não
+ * abrem sub-inventário. Espelha `renderCmpSummary`/`getCmpTotals` na mesma filosofia "aviso, não
+ * trava" — `categoriasPermitidas`/capacidade excedida são só sinalização da UI.
  */
 export function listarSubInventarios(itens: readonly CarrinhoItemDto[]): readonly SubInventarioDto[] {
   const subInventarios: SubInventarioDto[] = [];
@@ -704,12 +707,14 @@ export function listarSubInventarios(itens: readonly CarrinhoItemDto[]): readonl
       return;
     }
     const itensContidos = itens.filter((item) => item.containerId === container.id);
+    const reducaoPeso = itemCatalogo.inventarioProprio.reducaoPeso ?? 0;
     const pesoUsado = itensContidos.reduce((total, item) => {
       const pesoMods = item.modificacoes.reduce(
         (soma, modificacao) => soma + modificacao.empilhamentos * obterPesoModificacao({ item, modificacao: modificacao.nome }),
         0,
       );
-      return total + (item.peso + pesoMods) * item.quantidade;
+      const pesoEfetivo = Math.max(0, item.peso - reducaoPeso) + pesoMods;
+      return total + pesoEfetivo * item.quantidade;
     }, 0);
 
     subInventarios.push({

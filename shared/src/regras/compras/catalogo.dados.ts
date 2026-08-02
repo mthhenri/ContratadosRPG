@@ -29,15 +29,22 @@ export interface ItemCatalogo {
   readonly categoriaEmprestada?: ItemCategoriaEnum;
   readonly ehEscudo?: boolean;
   /**
-   * Só `Bolso de Corpo`/`Pochete` (m3-44 — doc: "Possui inventário separado"): marca este
-   * armazenamento como **sub-inventário próprio**, não um que amplia o pool principal. Vestido, o
-   * `bonus` do catálogo vira a **capacidade** desse pool próprio (não soma em `bonusInventario`); os
-   * itens que o jogador colocar dentro (`CarrinhoItemDto.containerId`) pesam só contra essa
-   * capacidade, nunca contra o inventário principal. `categoriasPermitidas` (Pochete: Munições,
-   * Operacional, Medicinal) é só **aviso** (não trava — mesma filosofia de peso excedente).
+   * `Bolso de Corpo`/`Pochete`/`Mochila Médica` (m3-44 — doc: "Possui inventário separado";
+   * Mochila Médica: "Apenas Itens Medicinais"): marca este armazenamento como **sub-inventário
+   * próprio**, não um que amplia o pool principal. Vestido, o `bonus` do catálogo vira a
+   * **capacidade** desse pool próprio (não soma em `bonusInventario`); os itens que o jogador
+   * colocar dentro (`CarrinhoItemDto.containerId`) pesam só contra essa capacidade, nunca contra o
+   * inventário principal. `categoriasPermitidas` (Pochete: Munições, Operacional, Medicinal;
+   * Mochila Médica: só Medicinal) é só **aviso** (não trava — mesma filosofia de peso excedente).
    */
   readonly inventarioProprio?: {
     readonly categoriasPermitidas?: readonly ItemCategoriaEnum[];
+    /**
+     * Reduz o peso de cada item contido em `reducaoPeso` (doc — Mochila Médica: "Reduz o peso dos
+     * itens em 0,5"), piso 0 por item. Só afeta o peso somado em `listarSubInventarios` (a
+     * capacidade do próprio container, via `bonus`, é fixa e não muda).
+     */
+    readonly reducaoPeso?: number;
   };
   /**
    * Restringe as modificações que **este** item aceita, pelo nome — as demais da categoria não
@@ -47,6 +54,20 @@ export interface ItemCatalogo {
    * afetadas.
    */
   readonly modificacoesPermitidas?: readonly string[];
+  /**
+   * Penalidade de **Esquiva** aplicada automaticamente enquanto este item (Proteções) está
+   * equipado (doc — coluna "Penalidade" de Armadura Pesada/Escudo-Barreira Móvel). Soma (negativo)
+   * por cima do bônus de Flexível/efeito custom em `calcularStatItem`, mesma filosofia "manual +
+   * equipamento, nunca escreve de volta" de `calcularBonusDefesaEquipamento`.
+   */
+  readonly penalidadeEsquiva?: number;
+  /**
+   * Penalidade de **dados** em testes de Destreza aplicada automaticamente enquanto este item está
+   * equipado (doc — Armadura Pesada: "−1 dado em Destreza"). Consumida por
+   * `calcularAjusteDadosEquipamento` (`regras/agente/defesa`), que soma por cima do ajuste manual de
+   * `dadosTeste` na ficha, nunca escreve nele.
+   */
+  readonly penalidadeDadoDestreza?: number;
 }
 
 export const CATALOGO_ITENS: Readonly<Record<ItemCategoriaEnum, readonly ItemCatalogo[]>> = {
@@ -75,29 +96,36 @@ export const CATALOGO_ITENS: Readonly<Record<ItemCategoriaEnum, readonly ItemCat
     { nome: 'Metralhadora', custo: 2000, peso: 4, dano: '4D4 [Balístico]', informacao: 'Médio · Mun: 12.7mm', descricao: 'Alta cadência, enorme poder de fogo — 2 mãos' },
   ],
   [ItemCategoriaEnum.MUNICOES]: [
-    { nome: '9mm', custo: 100, peso: 0.5, descricao: 'Para pistolas e SMGs' },
-    { nome: '10mm', custo: 180, peso: 0.7, descricao: 'Para submetralhadoras' },
-    { nome: 'Cartuchos 12GA', custo: 100, peso: 0.5, descricao: 'Para escopetas' },
-    { nome: '5.56mm', custo: 200, peso: 1, descricao: 'Para fuzis de assalto' },
-    { nome: '7.62mm', custo: 300, peso: 1, descricao: 'Para rifles de precisão' },
-    { nome: '12.7mm', custo: 450, peso: 1.5, descricao: 'Para metralhadoras e torretas' },
-    { nome: 'Granadas Simples', custo: 500, peso: 1.5, descricao: 'Para lança-granadas' },
-    { nome: 'Tanque de Propano', custo: 500, peso: 1, descricao: 'Combustível para lança-chamas' },
-    { nome: 'Míssil', custo: 1000, peso: 3, descricao: 'Para bazucas' },
-    { nome: 'Virotes', custo: 130, peso: 1, descricao: 'Para balestras' },
-    { nome: 'Células de Plasma', custo: 400, peso: 1.5, descricao: 'Para o Quebra-Átomos e armas Plasma' },
-    { nome: 'Gasolina', custo: 300, peso: 2, descricao: 'Combustível para a Motoserra. Mods: Calibre, Explosiva, Incendiária, Perfurante, Selante, Supressora, Tóxica' },
+    { nome: '9mm', custo: 100, peso: 0.5, informacao: 'Dura 3 cenas', descricao: 'Para pistolas e SMGs' },
+    { nome: '10mm', custo: 180, peso: 0.7, informacao: 'Dura 4 cenas', descricao: 'Para submetralhadoras' },
+    { nome: 'Cartuchos 12GA', custo: 100, peso: 0.5, informacao: 'Dura 2 cenas', descricao: 'Para escopetas' },
+    { nome: '5.56mm', custo: 200, peso: 1, informacao: 'Dura 2 cenas', descricao: 'Para fuzis de assalto' },
+    { nome: '7.62mm', custo: 300, peso: 1, informacao: 'Dura 2 cenas', descricao: 'Para rifles de precisão' },
+    { nome: '12.7mm', custo: 450, peso: 1.5, informacao: 'Dura 3 cenas', descricao: 'Para metralhadoras e torretas' },
+    { nome: 'Granadas Simples', custo: 500, peso: 1.5, informacao: 'Dura 1 cena', descricao: 'Para lança-granadas' },
+    { nome: 'Tanque de Propano', custo: 500, peso: 1, informacao: 'Dura 2 cenas', descricao: 'Combustível para lança-chamas' },
+    { nome: 'Míssil', custo: 1000, peso: 3, informacao: 'Dura 1 disparo', descricao: 'Para bazucas' },
+    { nome: 'Virotes', custo: 130, peso: 1, informacao: 'Dura 3 cenas', descricao: 'Para balestras' },
+    { nome: 'Células de Plasma', custo: 400, peso: 1.5, informacao: 'Dura 2 cenas', descricao: 'Para o Quebra-Átomos e armas Plasma' },
+    {
+      nome: 'Gasolina',
+      custo: 300,
+      peso: 2,
+      informacao: 'Dura 2 cenas',
+      descricao: 'Combustível para a Motoserra. Mods: Calibre, Explosiva, Incendiária, Perfurante, Selante, Supressora, Tóxica',
+      modificacoesPermitidas: ['Calibre', 'Explosiva', 'Incendiária', 'Perfurante', 'Selante', 'Supressora', 'Tóxica'],
+    },
   ],
   [ItemCategoriaEnum.PROTECOES]: [
     { nome: 'Colete Leve', custo: 500, peso: 0.5, resistencia: '2 [Físico]', descricao: 'Proteção básica, leve e discreta' },
     { nome: 'Colete Tático', custo: 1000, peso: 1, resistencia: '4 [Físico]', descricao: 'Proteção tática balanceada' },
     { nome: 'Colete de Kevlar', custo: 1500, peso: 2, resistencia: '5 [Físico], 3 [Balístico]', descricao: 'Proteção contra projéteis e impactos' },
     { nome: 'Roupa Anti-Químico', custo: 2500, peso: 2, resistencia: '6 [Químico]', descricao: 'Proteção total contra agentes químicos e gases' },
-    { nome: 'Armadura Pesada', custo: 3000, peso: 4, resistencia: '10 [Físico], 6 [Balístico]', descricao: 'Máxima proteção. Penalidade: −1 dado DES' },
+    { nome: 'Armadura Pesada', custo: 3000, peso: 4, resistencia: '10 [Físico], 6 [Balístico]', descricao: 'Máxima proteção. Penalidade: −3 Esquivar, −1 dado DES', penalidadeEsquiva: 3, penalidadeDadoDestreza: 1 },
     { nome: 'Escudo Leve', custo: 300, peso: 1, resistencia: '1 [Físico/Balístico]', ehEscudo: true, descricao: 'Escudo compacto para bloqueio rápido — 1 mão' },
     { nome: 'Escudo Médio', custo: 750, peso: 2, resistencia: '3 [Físico/Balístico]', ehEscudo: true, descricao: 'Equilíbrio entre proteção e mobilidade — 1 mão' },
     { nome: 'Escudo Pesado', custo: 1250, peso: 3, resistencia: '5 [Físico/Balístico]', ehEscudo: true, descricao: 'Proteção robusta — 2 mãos' },
-    { nome: 'Escudo-Barreira Móvel', custo: 1750, peso: 4, resistencia: '7 [Físico/Balístico]', ehEscudo: true, descricao: 'Barreira de combate. Penalidade: −1 dado DES — 2 mãos' },
+    { nome: 'Escudo-Barreira Móvel', custo: 1750, peso: 4, resistencia: '7 [Físico/Balístico]', ehEscudo: true, descricao: 'Barreira de combate. Penalidade: −1 Esquivar — 2 mãos', penalidadeEsquiva: 1 },
   ],
   [ItemCategoriaEnum.EXOTICOS]: [
     { nome: 'Lança-Granada', custo: 3000, peso: 3, dano: '4D8 [Explosão]', informacao: 'Médio · 3m · Mun: Granadas', descricao: 'Lança granadas explosivas em área — 2 mãos', categoriaEmprestada: ItemCategoriaEnum.ARMAS_DE_FOGO },
@@ -133,7 +161,17 @@ export const CATALOGO_ITENS: Readonly<Record<ItemCategoriaEnum, readonly ItemCat
     { nome: 'Mochila Grande', custo: 1200, peso: 0.7, bonus: '+9 inv.', descricao: 'Mochila de grande capacidade' },
     { nome: 'Mochila Cargueira', custo: 2000, peso: 1.0, bonus: '+12 inv.', descricao: 'Mochila de capacidade máxima' },
     { nome: 'Mochila Kevlar', custo: 1200, peso: 0.7, bonus: '+4,5 inv.', resistencia: '2 [Físico], 2 [Balístico]', descricao: 'Proteção para conteúdo + armazenamento médio' },
-    { nome: 'Mochila Médica', custo: 1600, peso: 0.5, bonus: '+5 inv.', descricao: 'Bolsas organizadas para kits médicos' },
+    {
+      nome: 'Mochila Médica',
+      custo: 1600,
+      peso: 0.5,
+      bonus: '+5 inv.',
+      descricao: 'Bolsas organizadas para kits médicos',
+      inventarioProprio: {
+        categoriasPermitidas: [ItemCategoriaEnum.MEDICINAL],
+        reducaoPeso: 0.5,
+      },
+    },
   ],
   [ItemCategoriaEnum.OPERACIONAL]: [
     { nome: 'Energético', custo: 50, peso: 0.5, descricao: 'Recupera 50% da Energia máxima (2×/missão)' },
@@ -141,8 +179,8 @@ export const CATALOGO_ITENS: Readonly<Record<ItemCategoriaEnum, readonly ItemCat
     { nome: 'Carga Vital', custo: 450, peso: 1, descricao: 'Reduz custo de habilidades −2E por 2D4t. Depois: −1 dado DES/FOR' },
     { nome: 'Refeição', custo: 50, peso: 0.5, descricao: 'Usada em descanso para aumentar recuperação de Vida e Energia' },
     { nome: 'Equipamento de Descanso', custo: 400, peso: 2.5, descricao: '+1 nível de qualidade de descanso (ou +1 dado se já Confortável)' },
-    { nome: 'Lanterna', custo: 50, peso: 0.5, descricao: 'Remove Escuridão até alcance Curto — 1 mão' },
-    { nome: 'Lanterna Tática', custo: 200, peso: 0.3, descricao: 'Remove Escuridão até alcance Médio (corporal)' },
+    { nome: 'Lanterna', custo: 50, peso: 0.5, descricao: 'Reduz Escuridão para Breu até alcance Curto — 1 mão' },
+    { nome: 'Lanterna Tática', custo: 200, peso: 0.3, descricao: 'Reduz Escuridão para Breu até alcance Médio (corporal)' },
     { nome: 'Binóculos', custo: 250, peso: 1, descricao: 'Visão precisa a até 50 metros de distância' },
     { nome: 'Lockpick', custo: 50, peso: 0.5, descricao: 'Abre fechaduras (DES/INT). 3 usos; falha remove 1 uso' },
     { nome: 'Óculos de Visão Noturna', custo: 1250, peso: 1, descricao: 'Remove penalidade de Escuridão até alcance Médio (corporal)' },
@@ -163,7 +201,7 @@ export const CATALOGO_ITENS: Readonly<Record<ItemCategoriaEnum, readonly ItemCat
   [ItemCategoriaEnum.MEDICINAL]: [
     { nome: 'Calmante', custo: 300, peso: 0.5, descricao: 'Suprime 1 sequela à escolha por 1 cena' },
     { nome: 'Inalador Medicinal', custo: 100, peso: 0.5, descricao: 'Suprime 1 sequela à escolha por 3 turnos' },
-    { nome: 'Ampola Estímulo Neurológico', custo: 1150, peso: 1, descricao: 'Suprime 1 sequela à escolha por 3 cenas' },
+    { nome: 'Ampola de Estímulo Neurológico', custo: 1150, peso: 1, descricao: 'Suprime 1 sequela à escolha por 3 cenas' },
     { nome: 'Bandagem', custo: 50, peso: 0.2, descricao: 'Cura: 2D4 Vida' },
     { nome: 'Gel Cicatrizante', custo: 250, peso: 0.5, descricao: 'Cura: 2D6 Vida' },
     { nome: 'Spray Medicinal', custo: 150, peso: 0.3, descricao: 'Cura: 1D8 Vida (ação de Movimento)' },
@@ -177,7 +215,7 @@ export const CATALOGO_ITENS: Readonly<Record<ItemCategoriaEnum, readonly ItemCat
     { nome: 'Solução Energizante', custo: 1000, peso: 0.5, descricao: '+VIG de resist. [Físico] por 1D8t. DT 10' },
     { nome: 'Adrenalina', custo: 1000, peso: 0.5, descricao: '+1 tipo dado CaC, remove Inconsciente. Depois: Cansado 1t. DT 10' },
     { nome: 'Morfina', custo: 1000, peso: 0.5, descricao: 'Nega 1D4 testes em Morrendo. Depois: Inconsciente. DT 10' },
-    { nome: 'Desfibrilador', custo: 1500, peso: 1, descricao: '−1D6×5 da DT de Morrendo. Teste INT DT 15 (falha: inutiliza). DT 10' },
+    { nome: 'Desfibrilador', custo: 1500, peso: 1, descricao: '−1D6×5 da DT de Morrendo. Teste INT DT 15+5/uso (falha: inutiliza). Medicina DT 10' },
     { nome: 'Esterilizante Medicinal', custo: 1250, peso: 1, descricao: 'Junto a outro item de cura: +1 tipo de dado na cura. DT 10' },
     { nome: 'Analgésico', custo: 1500, peso: 1, descricao: '−1 nível de DT de lesão por 1D6+1t. DT 10' },
     { nome: 'Anestesia', custo: 1250, peso: 1, descricao: 'Ignora dano recebido por 1D4+1t; recebe tudo depois (sem lesões). DT 10' },

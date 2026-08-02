@@ -1,6 +1,7 @@
 import { ArquetipoEnum, ClasseEnum, HabilidadeCategoriaEnum } from '../../enums';
 import {
   HABILIDADES_ARQUETIPO,
+  HABILIDADES_CIVIL,
   HABILIDADES_CLASSE,
   HABILIDADES_GERAIS,
   HABILIDADES_GERAIS_MELHORADAS,
@@ -41,9 +42,9 @@ export interface SubgrupoHabilidades {
   readonly habilidades: readonly HabilidadeCatalogoItemDto[];
 }
 
-/** Grupo do seletor — uma aba (Gerais / Classe / Arquétipo). */
+/** Grupo do seletor — uma aba (Gerais / Classe / Arquétipo / Civil). */
 export interface GrupoHabilidades {
-  readonly id: 'gerais' | 'classe' | 'arquetipo';
+  readonly id: 'gerais' | 'classe' | 'arquetipo' | 'civil';
   readonly subgrupos: readonly SubgrupoHabilidades[];
 }
 
@@ -184,6 +185,24 @@ function grupoArquetipo(
   };
 }
 
+/**
+ * Grupo **Civil** — subgrupo único (chave `null`), lista fechada exclusiva de fichas Civis (doc:
+ * "Civis não possuem classes, arquétipos ou habilidades gerais. Possuem acesso exclusivo à lista
+ * de habilidades civis."). Nunca aparece para agentes.
+ */
+function grupoCivil(): GrupoHabilidades {
+  return {
+    id: 'civil',
+    subgrupos: [
+      {
+        chave: null,
+        ehDaFicha: true,
+        habilidades: comCategoria(HABILIDADES_CIVIL, HabilidadeCategoriaEnum.CIVIL),
+      },
+    ],
+  };
+}
+
 /** Ordena os subgrupos com o(s) da ficha na frente, preservando a ordem relativa do resto. */
 function ordenarDaFichaPrimeiro(subgrupos: SubgrupoHabilidades[]): SubgrupoHabilidades[] {
   return [
@@ -193,13 +212,17 @@ function ordenarDaFichaPrimeiro(subgrupos: SubgrupoHabilidades[]): SubgrupoHabil
 }
 
 /**
- * Grupos de filtro do seletor de habilidades para a ficha (classe + arquétipo). Grupos sem
- * conteúdo são omitidos (ex.: Civil não tem Classe/Arquétipo).
+ * Grupos de filtro do seletor de habilidades para a ficha (classe + arquétipo). Civil é **exclusivo**
+ * (doc: "não possuem classes, arquétipos ou habilidades gerais") — recebe só o grupo Civil, nunca
+ * Gerais/Classe/Arquétipo. Para os demais, grupos sem conteúdo são omitidos.
  */
 export function catalogoHabilidades(
   classe: ClasseEnum,
   arquetipo: ArquetipoEnum | null,
 ): GrupoHabilidades[] {
+  if (classe === ClasseEnum.CIVIL) {
+    return [grupoCivil()];
+  }
   return [grupoGerais(), grupoClasse(classe), grupoArquetipo(classe, arquetipo)].filter(
     (grupo) => grupo.subgrupos.length > 0,
   );

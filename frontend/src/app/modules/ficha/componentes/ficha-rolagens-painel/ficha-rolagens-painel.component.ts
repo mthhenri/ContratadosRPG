@@ -1,10 +1,12 @@
 import { Component, computed, inject, input, output } from '@angular/core';
 
 import type {
+  FichaAtributosDto,
   FichaJogadorDadosDto,
   FichaRolagemDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
+  calcularAjusteDadosEquipamento,
   calcularAtributosParaDados,
   calcularProficiencia,
 } from '@contratados-rpg/shared/regras/agente';
@@ -54,10 +56,21 @@ export class FichaRolagensPainel {
   /** Flag "Rolagem oculta" + caminho de registro, compartilhados com o card da ficha (item 5). */
   protected readonly registro = inject(FichaRolagemRegistroService);
 
-  /** Atributos **para dados** (lesão + ajuste manual) — a mesma base que o teste de atributo rola. */
-  protected readonly atributosParaDados = computed(() =>
-    calcularAtributosParaDados(this.dados().atributos, this.dados().estado.lesoes, this.dados().dadosTeste ?? {}),
+  /** Ajuste de dados vindo de itens equipados (`shared/regras/agente/defesa`) — soma por cima do manual. */
+  private readonly ajusteDadosEquipamento = computed(() =>
+    calcularAjusteDadosEquipamento(this.dados().inventario.itens),
   );
+
+  /** Atributos **para dados** (lesão + ajuste manual + ajuste de equipamento) — a mesma base que o teste de atributo rola. */
+  protected readonly atributosParaDados = computed(() => {
+    const manual = this.dados().dadosTeste ?? {};
+    const equipamento = this.ajusteDadosEquipamento();
+    const combinado: Partial<Record<keyof FichaAtributosDto, number>> = { ...manual };
+    (Object.keys(equipamento) as (keyof FichaAtributosDto)[]).forEach((chave) => {
+      combinado[chave] = (combinado[chave] ?? 0) + (equipamento[chave] ?? 0);
+    });
+    return calcularAtributosParaDados(this.dados().atributos, this.dados().estado.lesoes, combinado);
+  });
 
   /** Proficiência derivada (nível; `null` para Civil) — fonte `PROF` das fórmulas (m3-22). */
   protected readonly proficiencia = computed(() =>
