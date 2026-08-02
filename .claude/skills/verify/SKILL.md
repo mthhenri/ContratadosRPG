@@ -35,6 +35,22 @@ APP_PORTA=3101 APP_FRONTEND_ORIGEM=http://localhost:4301 npm run backend:dev
 npm run start --workspace=frontend -- --port 4301 --proxy-config <proxy apontando p/ 3101>
 ```
 
+## Viewports padrão
+
+Toda verificação visual usa um destes dois tamanhos fixos — nunca a janela padrão do
+navegador nem um tamanho arbitrário:
+
+- **Mobile:** `360×800` (Galaxy S20 FE) — telefone de referência do projeto.
+- **Desktop:** `1920×1080` (FullHD).
+
+```js
+await browser.newContext({ viewport: { width: 360, height: 800 } });  // mobile
+await browser.newContext({ viewport: { width: 1920, height: 1080 } }); // desktop
+```
+
+O breakpoint mobile do CSS (`$bp-mobile`) é `560px` — 360px está bem dentro dele, então
+qualquer verificação em 360×800 já exercita o layout mobile real, não uma zona intermediária.
+
 ## Dirigir a UI
 
 Playwright está **global** (`npm root -g`), não em `node_modules`. Chromium já em cache.
