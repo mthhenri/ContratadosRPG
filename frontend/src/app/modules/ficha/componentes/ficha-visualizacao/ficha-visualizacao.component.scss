@@ -2226,22 +2226,6 @@
           justify-self: stretch;
           width: auto;
         }
-
-        // m3-60 follow-up: em EDIÇÃO cada box ganha stepper de valor + estrela de Maestria + stepper
-        // de modificador de teste — 3 colunas nos ~110px de sobra por box (medido ao vivo, 360px de
-        // viewport) espremia esses controles quase colados, e o 5º atributo (VIG) sobrava sozinho
-        // numa 2ª linha com um buraco vazio ao lado (a régua de 3 colunas não fecha 5 itens direito).
-        // Volta pro mesmo 2 colunas + 5º centralizado do desktop — os boxes de edição já são
-        // confortáveis nesse arranjo lá (mesma largura de coluna, ~120px).
-        &.ficha-atributos__grade--edicao {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-
-          > *:nth-child(5) {
-            grid-column: 1 / -1;
-            justify-self: center;
-            width: calc(50% - 3px);
-          }
-        }
       }
     }
 
@@ -2267,6 +2251,80 @@
       font-size: 10px;
       line-height: 1;
     }
+  }
+}
+
+// Lista vertical em edição do card de Atributos (troca a grade de caixas — ver design em
+// docs/superpowers/specs/2026-08-02-layout-lista-edicao-atributos-design.md): cada atributo é uma
+// linha de duas sub-linhas. Reusa as classes de stepper/maestria/modificador/dados já existentes em
+// `.ficha-atributo` (mod-passo, dados-passo, maestria, stepper) — só a moldura da linha é nova.
+.ficha-atributos__lista {
+  display: flex;
+  flex-direction: column;
+}
+
+.ficha-atributo-linha {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 2px;
+
+  // Separador fino entre atributos (substitui a borda por caixa da grade) — o primeiro item do
+  // grupo não ganha borda: já é delimitado pelo rótulo do grupo acima.
+  & + & {
+    border-top: 1px solid var(--border);
+  }
+
+  &__principal {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__nome {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  &__valor {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    min-width: 20px;
+    text-align: center;
+  }
+
+  &__secundaria {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-left: 28px; // alinha com o nome, depois da largura da estrela de Maestria
+
+    // Mobile: empilha as duas mini-steppers só se não couberem lado a lado — desktop nunca empilha
+    // (ver design, seção Responsivo).
+    @include bp.mobile {
+      flex-wrap: wrap;
+      padding-left: 0;
+    }
+  }
+
+  &__mini {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__rotulo-mini {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-dim);
   }
 }
 
@@ -2363,16 +2421,6 @@
     font-family: var(--font-mono);
     font-size: 10px;
     color: var(--text-dim);
-  }
-
-  // Box em edição: valor menor (dá lugar ao stepper) + estrela de Maestria.
-  &--edicao {
-    gap: 7px;
-    .ficha-atributo__valor {
-      font-size: 18px;
-      min-width: 22px;
-      text-align: center;
-    }
   }
 
   // Box do atributo com Maestria: borda accent discreta.

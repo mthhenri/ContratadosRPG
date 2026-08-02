@@ -937,109 +937,119 @@
           @for (grupo of gruposAtributos; track grupo.rotulo) {
             <div class="ficha-atributos__grupo">
               <span class="ficha-atributos__rotulo-grupo">{{ grupo.rotulo }}</span>
-              <div
-                class="ficha-atributos__grade"
-                [class.ficha-atributos__grade--edicao]="editandoAtributos()"
-              >
-                @for (campo of grupo.campos; track campo.chave) {
-                  @if (editandoAtributos()) {
-                    <div
-                      class="ficha-atributo ficha-atributo--edicao"
-                      [appTooltip]="campo.nome"
-                      [class.ficha-atributo--maestria]="rascunhoMaestria() === campo.chave"
-                    >
-                      <span class="ficha-atributo__abrev">{{ campo.abrev }}</span>
-                      <div class="ficha-atributo__stepper">
+              @if (editandoAtributos()) {
+                <!-- Lista vertical em edição (troca a grade de caixas — só neste modo, ver
+                     docs/superpowers/specs/2026-08-02-layout-lista-edicao-atributos-design.md):
+                     cada atributo é uma linha de duas sub-linhas, sem grid, sem 5º item órfão. -->
+                <div class="ficha-atributos__lista">
+                  @for (campo of grupo.campos; track campo.chave) {
+                    <div class="ficha-atributo-linha">
+                      <div class="ficha-atributo-linha__principal">
                         <button
-                          class="ficha-passo"
+                          class="ficha-atributo__maestria"
                           type="button"
-                          appHoldRepeat
-                          [attr.aria-label]="'Reduzir ' + campo.nome"
-                          (passo)="ajustarAtributoRascunho(campo.chave, -1)"
+                          [class.ficha-atributo__maestria--ativa]="rascunhoMaestria() === campo.chave"
+                          [disabled]="!maestriaHabilitada(campo.chave)"
+                          [attr.aria-label]="'Maestria em ' + campo.nome"
+                          [appTooltip]="'Maestria em ' + campo.nome + ' — requer ' + limiteMaestria + '+ pontos'"
+                          (click)="alternarMaestria(campo.chave)"
                         >
-                          −
+                          ★
                         </button>
-                        <span class="ficha-atributo__valor">{{ rascunhoAtributos()?.[campo.chave] }}</span>
-                        <button
-                          class="ficha-passo"
-                          type="button"
-                          appHoldRepeat
-                          [attr.aria-label]="'Aumentar ' + campo.nome"
-                          (passo)="ajustarAtributoRascunho(campo.chave, 1)"
-                        >
-                          +
-                        </button>
+                        <span class="ficha-atributo-linha__nome">{{ campo.nome }}</span>
+                        <div class="ficha-atributo__stepper">
+                          <button
+                            class="ficha-passo"
+                            type="button"
+                            appHoldRepeat
+                            [attr.aria-label]="'Reduzir ' + campo.nome"
+                            (passo)="ajustarAtributoRascunho(campo.chave, -1)"
+                          >
+                            −
+                          </button>
+                          <span class="ficha-atributo-linha__valor">{{ rascunhoAtributos()?.[campo.chave] }}</span>
+                          <button
+                            class="ficha-passo"
+                            type="button"
+                            appHoldRepeat
+                            [attr.aria-label]="'Aumentar ' + campo.nome"
+                            (passo)="ajustarAtributoRascunho(campo.chave, 1)"
+                          >
+                            +
+                          </button>
+                        </div>
                       </div>
-                      <button
-                        class="ficha-atributo__maestria"
-                        type="button"
-                        [class.ficha-atributo__maestria--ativa]="rascunhoMaestria() === campo.chave"
-                        [disabled]="!maestriaHabilitada(campo.chave)"
-                        [attr.aria-label]="'Maestria em ' + campo.nome"
-                        [appTooltip]="'Maestria em ' + campo.nome + ' — requer ' + limiteMaestria + '+ pontos'"
-                        (click)="alternarMaestria(campo.chave)"
-                      >
-                        ★
-                      </button>
-                      <!-- Modificador de teste (soma na fórmula rolada, ex.: Amplificador aplicado) —
-                           só editável aqui, na mesma tela de edição dos atributos. -->
-                      <div class="ficha-atributo__modificador">
-                        <button
-                          class="ficha-atributo__mod-passo"
-                          type="button"
-                          appHoldRepeat
-                          [attr.aria-label]="'Reduzir modificador de teste de ' + campo.nome"
-                          (passo)="ajustarModificadorTesteRascunho(campo.chave, -1)"
-                        >
-                          −
-                        </button>
-                        <span
-                          class="ficha-atributo__mod-valor"
-                          [class.ficha-atributo__mod-valor--ativo]="rascunhoModificadoresTeste()?.[campo.chave] !== 0"
-                        >
-                          {{ (rascunhoModificadoresTeste()?.[campo.chave] ?? 0) >= 0 ? '+' : '' }}{{ rascunhoModificadoresTeste()?.[campo.chave] ?? 0 }}
-                        </span>
-                        <button
-                          class="ficha-atributo__mod-passo"
-                          type="button"
-                          appHoldRepeat
-                          [attr.aria-label]="'Aumentar modificador de teste de ' + campo.nome"
-                          (passo)="ajustarModificadorTesteRascunho(campo.chave, 1)"
-                        >
-                          +
-                        </button>
-                      </div>
-                      <!-- Ajuste manual de dados: quantos D20 o atributo rola nos testes/rolagens,
-                           sem alterar o valor base (Energia/Deslocamento/Vida/Maestria intocados). -->
-                      <div class="ficha-atributo__dados">
-                        <app-icone [nome]="'dado'" class="ficha-atributo__dados-icone" />
-                        <button
-                          class="ficha-atributo__dados-passo"
-                          type="button"
-                          appHoldRepeat
-                          [attr.aria-label]="'Reduzir dados de teste de ' + campo.nome"
-                          (passo)="ajustarDadosTesteRascunho(campo.chave, -1)"
-                        >
-                          −
-                        </button>
-                        <span
-                          class="ficha-atributo__dados-valor"
-                          [class.ficha-atributo__dados-valor--ativo]="rascunhoDadosTeste()?.[campo.chave] !== 0"
-                        >
-                          {{ (rascunhoDadosTeste()?.[campo.chave] ?? 0) >= 0 ? '+' : '' }}{{ rascunhoDadosTeste()?.[campo.chave] ?? 0 }}
-                        </span>
-                        <button
-                          class="ficha-atributo__dados-passo"
-                          type="button"
-                          appHoldRepeat
-                          [attr.aria-label]="'Aumentar dados de teste de ' + campo.nome"
-                          (passo)="ajustarDadosTesteRascunho(campo.chave, 1)"
-                        >
-                          +
-                        </button>
+                      <div class="ficha-atributo-linha__secundaria">
+                        <!-- Modificador de teste (soma na fórmula rolada, ex.: Amplificador aplicado) —
+                             só editável aqui, na mesma tela de edição dos atributos. -->
+                        <div class="ficha-atributo-linha__mini">
+                          <span class="ficha-atributo-linha__rotulo-mini">Mod.</span>
+                          <div class="ficha-atributo__modificador">
+                            <button
+                              class="ficha-atributo__mod-passo"
+                              type="button"
+                              appHoldRepeat
+                              [attr.aria-label]="'Reduzir modificador de teste de ' + campo.nome"
+                              (passo)="ajustarModificadorTesteRascunho(campo.chave, -1)"
+                            >
+                              −
+                            </button>
+                            <span
+                              class="ficha-atributo__mod-valor"
+                              [class.ficha-atributo__mod-valor--ativo]="rascunhoModificadoresTeste()?.[campo.chave] !== 0"
+                            >
+                              {{ (rascunhoModificadoresTeste()?.[campo.chave] ?? 0) >= 0 ? '+' : '' }}{{ rascunhoModificadoresTeste()?.[campo.chave] ?? 0 }}
+                            </span>
+                            <button
+                              class="ficha-atributo__mod-passo"
+                              type="button"
+                              appHoldRepeat
+                              [attr.aria-label]="'Aumentar modificador de teste de ' + campo.nome"
+                              (passo)="ajustarModificadorTesteRascunho(campo.chave, 1)"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                        <!-- Ajuste manual de dados: quantos D20 o atributo rola nos testes/rolagens,
+                             sem alterar o valor base (Energia/Deslocamento/Vida/Maestria intocados). -->
+                        <div class="ficha-atributo-linha__mini">
+                          <span class="ficha-atributo-linha__rotulo-mini">Dados</span>
+                          <div class="ficha-atributo__dados">
+                            <app-icone [nome]="'dado'" class="ficha-atributo__dados-icone" />
+                            <button
+                              class="ficha-atributo__dados-passo"
+                              type="button"
+                              appHoldRepeat
+                              [attr.aria-label]="'Reduzir dados de teste de ' + campo.nome"
+                              (passo)="ajustarDadosTesteRascunho(campo.chave, -1)"
+                            >
+                              −
+                            </button>
+                            <span
+                              class="ficha-atributo__dados-valor"
+                              [class.ficha-atributo__dados-valor--ativo]="rascunhoDadosTeste()?.[campo.chave] !== 0"
+                            >
+                              {{ (rascunhoDadosTeste()?.[campo.chave] ?? 0) >= 0 ? '+' : '' }}{{ rascunhoDadosTeste()?.[campo.chave] ?? 0 }}
+                            </span>
+                            <button
+                              class="ficha-atributo__dados-passo"
+                              type="button"
+                              appHoldRepeat
+                              [attr.aria-label]="'Aumentar dados de teste de ' + campo.nome"
+                              (passo)="ajustarDadosTesteRascunho(campo.chave, 1)"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  } @else {
+                  }
+                </div>
+              } @else {
+                <div class="ficha-atributos__grade">
+                  @for (campo of grupo.campos; track campo.chave) {
                     <div
                       class="ficha-atributo"
                       [class.ficha-atributo--maestria]="maestriaAtual() === campo.chave"
@@ -1094,10 +1104,6 @@
                           </span>
                         }
                       </span>
-                      <!-- Modificador de teste — só leitura aqui; a edição fica atrás do lápis de
-                           Atributos. Linha própria (não a mesma da lesão: são selos parecidos —
-                           mono, negrito, accent quando ativos — e colados no valor ficam
-                           indistinguíveis). Sempre visível, inclusive em +0. -->
                       <span
                         class="ficha-atributo__mod-valor"
                         [class.ficha-atributo__mod-valor--ativo]="modificadorTeste(campo.chave) !== 0"
@@ -1105,9 +1111,6 @@
                       >
                         {{ modificadorTeste(campo.chave) >= 0 ? '+' : '' }}{{ modificadorTeste(campo.chave) }}
                       </span>
-                      <!-- Ajuste manual de dados — só aparece quando há algo ativo (±N); a maioria
-                           das fichas nunca mexe nisso, então fica invisível por padrão em vez de
-                           somar mais um elemento sempre-visível ao card. -->
                       @if (dadosTesteDe(campo.chave) !== 0) {
                         <span
                           class="ficha-atributo__dados-badge"
@@ -1128,8 +1131,8 @@
                       }
                     </div>
                   }
-                }
-              </div>
+                </div>
+              }
             </div>
           }
         </div>
