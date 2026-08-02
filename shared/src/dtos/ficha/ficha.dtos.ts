@@ -421,6 +421,16 @@ export interface FichaJogadorDadosDto {
    */
   readonly modificadoresTeste?: Partial<Record<keyof FichaAtributosDto, number>>;
   /**
+   * Ajuste manual de quantos **dados** o atributo rola em testes/rolagens (distinto de
+   * `modificadoresTeste`, que soma no **resultado**) — some ao atributo efetivo (lesão) só na
+   * contagem de dados do pool, sem alterar o atributo base nem Energia/Deslocamento/Vida/Maestria.
+   * Manual apenas — Lesões/Sequelas/Condições não o alimentam automaticamente. Sem piso: pode
+   * zerar/negativar, disparando a desvantagem intrínseca já existente no motor de rolagem
+   * (atributo ≤ 0 → rola `2+|attr|` dados e mantém o menor). **Opcional** por retrocompatibilidade
+   * e parcial — atributo ausente cai em 0.
+   */
+  readonly dadosTeste?: Partial<Record<keyof FichaAtributosDto, number>>;
+  /**
    * Número do Contrato do agente (m3-40) — texto livre, exibido como "CONTRATO — 0000" ao lado do
    * nome no cabeçalho da Identidade. Editável **só pelo mestre** da campanha (`ehMestre()` no
    * `FichaVisualizacao`; o backend trava o dono em `alterarFicha`). **Opcional** — ausente em
