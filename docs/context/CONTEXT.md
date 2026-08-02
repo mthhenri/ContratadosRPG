@@ -153,7 +153,9 @@ contra `shared/regras` antes de persistir, e concessão/revogação de acesso de
 
 A tela de visualização (`FichaVisualizacao`, componente reusável) é um **layout de três colunas**
 (Identidade · Atributos · Status com abas internas), com **toda edição no próprio lugar** — nada
-de página de formulário separada. Editores prontos: atributos e maestria, vitais, sanidade e
+de página de formulário separada. Editores prontos: atributos e maestria (com modificador de teste
+e ajuste manual de dados/`dadosTeste` por atributo, este último só afetando a contagem de dados
+rolada, nunca o valor exibido nem os derivados), vitais, sanidade e
 lesões, habilidades (com filtro e contador), inventário completo (itens, modificações,
 amplificadores, sub-inventários, custom), identidade (origem, personalidade, afinidade de
 fragmentos), história privada, anotações e dinheiro. Persistência **otimista + em lote**, com

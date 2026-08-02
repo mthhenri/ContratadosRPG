@@ -21,6 +21,50 @@
 
 ## Registro por task (mais recente primeiro)
 
+## ajuste-manual-dados-atributo — ajuste manual de dados de teste por atributo (2026-08-02)
+
+Sem código de task de milestone (nenhuma task do plano em curso era dona do item) — plano em
+`docs/superpowers/plans/2026-08-02-ajuste-manual-dados-atributo.md`, design em
+`docs/superpowers/specs/2026-08-02-ajuste-manual-dados-atributo-design.md`.
+
+**O problema.** Cada atributo da ficha fazia dupla função: era a fonte dos derivados (Energia,
+Deslocamento, Vida, Maestria) **e** a contagem de dados rolada nos testes desse atributo. Não havia
+como ajustar só a contagem de dados (pensando num futuro sequela/condição que reduza dados sem tocar
+no atributo em si) sem também mexer nesses derivados. Uma feature irmã já existente,
+`modificadoresTeste`, resolvia o problema equivalente pro **resultado** da rolagem (soma/subtrai no
+final), mas nada cobria a **contagem de dados** do pool.
+
+**O desenho.** Campo novo `FichaJogadorDadosDto.dadosTeste?: Partial<Record<keyof FichaAtributosDto,
+number>>` (`shared/src/dtos/ficha/ficha.dtos.ts`) — manual apenas, nada alimenta automaticamente
+ainda, sem piso/clamp (mesma liberdade dos outros steppers). Nova função pura
+`calcularAtributosParaDados` em `shared/src/regras/agente/lesao.ts`, que compõe o
+`calcularAtributosEfetivos` já existente (lesão) com o ajuste manual por cima. Usada **só** como
+fonte de contagem de dados — nunca para o valor exibido do atributo, para o cálculo de DT, nem para o
+bake de lesão permanente: esses três continuam de propósito presos a `atributosEfetivos`/
+`calcularAtributosEfetivos`.
+
+**Onde entrou.** Um quarto stepper por atributo no card de edição de `FichaVisualizacao` (ao lado do
+já existente modificador de teste, terceiro stepper), um badge só-leitura que só aparece quando o
+ajuste é diferente de zero, o `rolarTesteAtributo` do próprio card (dadinho de rolar do atributo) e o
+`FichaRolagensPainel` → `FichaRolagens` (presets salvos + rolagem avulsa/"livre"). Vale registrar
+explicitamente: o preset "Iniciativa" semeado automaticamente na criação da ficha
+(`PRESET_INICIATIVA_PADRAO`, fórmula `DESd6`, `backend/src/modules/ficha/ficha.service.ts`, m3-47) é
+só um `FichaRolagemDto` como qualquer preset criado pelo jogador — passa pelo mesmíssimo pipeline de
+`FichaRolagensPainel`/`FichaRolagens`, então ganhou o ajuste de dados de graça, sem nenhuma linha de
+código dedicada. Isso corrige uma suposição errada feita durante o design/planejamento (as
+Global Constraints do plano chegaram a dizer que "não existe feature de Iniciativa no módulo
+`ficha`") — existe sim, só que não como UI própria: é um preset comum como outro qualquer.
+
+**Verificação.** Verificado ao vivo (stack real) nos dois viewports fixos do projeto (mobile
+360×800/Galaxy S20 FE, desktop 1920×1080/FullHD): zero scroll horizontal, alvo de toque real
+44×44 confirmado por clique fora do centro do botão, sem colisão visual entre o badge novo e os
+badges de lesão/modificador já existentes na mesma caixa de atributo, e uma rolagem de preset ao
+vivo provando a composição da contagem de dados ponta a ponta. Testes novos:
+`shared/src/regras/agente/lesao.spec.ts` (`calcularAtributosParaDados` — soma manual, combinação com
+lesão, sem piso, ajuste vazio) e `ficha-visualizacao.component.spec.ts` (ciclo de rascunho/salvar,
+leitura do valor persistido fora da edição, divergência entre `atributosParaDados` e
+`atributosEfetivos`).
+
 ## m2-21 — painel do jogador: abas no card compacto, Rolagens na lateral e menu de ficha (2026-08-02)
 
 Continuação direta da `m2-20`, que entregou a visão do jogador de `/painel/:id` mas deixou duas

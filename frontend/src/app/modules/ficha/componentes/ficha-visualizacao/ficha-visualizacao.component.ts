@@ -280,8 +280,8 @@ export interface AjusteResistencia {
 /**
  * Edição em grupo dos atributos + Maestria + modificadores de teste + ajuste manual de dados — a
  * página persiste os quatro em `atributos`, `maestria`, `modificadoresTeste` e `dadosTeste`
- * (redesenho de comparação visual: os três ajustes só são editáveis junto, na mesma tela — não há
- * canal separado).
+ * (redesenho de comparação visual: Maestria, modificador de teste e ajuste de dados só são
+ * editáveis junto com o atributo, na mesma tela — não há canal separado).
  */
 export interface AjusteAtributos {
   readonly atributos: FichaAtributosDto;
@@ -932,8 +932,9 @@ export class FichaVisualizacao {
   /**
    * DT (Dificuldade de Teste) do atributo `chave` quando **este agente** é o causador do teste —
    * `shared/regras/dt` (mesma fórmula da página de DT da calculadora, m1-08): `10 + Nível +
-   * Atributo×2`. Usa o atributo **efetivo** (já com a penalidade de lesão descontada), a mesma base
-   * que `rolarTesteAtributo` rola (m3-55, hover/foco no atributo).
+   * Atributo×2`. Usa o atributo **efetivo** (já com a penalidade de lesão descontada) — de propósito
+   * **não** inclui o ajuste manual de dados (`dadosTeste`): DT é um alvo derivado, não uma fonte de
+   * dados de rolagem, então diverge de `rolarTesteAtributo` (que usa `atributosParaDados`) por design.
    */
   protected dtAtributo(chave: ChaveAtributo): number {
     return calcularDtAtributo({ nivel: this.dados().nivel, atributo: this.atributosEfetivos()[chave] });
@@ -1072,13 +1073,15 @@ export class FichaVisualizacao {
 
   /**
    * Rola o teste de um atributo direto da Visão Geral (m3-22; gramática v3 m3-29; margem de crítico
-   * natural em m3-31; dado extra de Formação em m3-41): a fórmula explícita
-   * `(Atributo efetivo)d20kh1cm1 + PROF` — pool de D20, pega o maior, **conta a margem de crítico
-   * natural** (`cm1` = crita no 20; regra 1216) e soma a Proficiência. Usa os atributos **efetivos**
-   * (pós-lesão, **+ dado de Formação da Origem** quando a linha `PERICIA_DADO_ATRIBUTO` mira este
-   * atributo) — a lesão reduz e a Formação aumenta quantos D20 entram no pool; atributo efetivo
-   * 0/negativo vira desvantagem intrínseca do motor (rola 2+|attr| dados e mantém o menor; regra 270).
-   * O modificador de teste (coluna de Atributos, já com o bônus **plano** de Formação embutido em
+   * natural em m3-31; dado extra de Formação em m3-41; ajuste manual de dados via
+   * `atributosParaDados`): a fórmula explícita `(Atributo para dados)d20kh1cm1 + PROF` — pool de
+   * D20, pega o maior, **conta a margem de crítico natural** (`cm1` = crita no 20; regra 1216) e soma
+   * a Proficiência. A contagem do pool vem de `atributosParaDados` (atributo **efetivo**, pós-lesão,
+   * **+ o ajuste manual de `dadosTeste`**), **+ dado de Formação da Origem** quando a linha
+   * `PERICIA_DADO_ATRIBUTO` mira este atributo — lesão reduz, `dadosTeste` e Formação aumentam (ou
+   * `dadosTeste` também pode reduzir, é livre) quantos D20 entram no pool; contagem final 0/negativa
+   * vira desvantagem intrínseca do motor (rola 2+|attr| dados e mantém o menor; regra 270). O
+   * modificador de teste (coluna de Atributos, já com o bônus **plano** de Formação embutido em
    * `modificadorTeste`) some no final, como uma constante da fórmula.
    */
   protected rolarTesteAtributo(campo: CampoAtributo): void {

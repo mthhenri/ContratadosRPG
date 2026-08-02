@@ -1097,6 +1097,11 @@
                             (dadosTesteDe(campo.chave) > 0 ? '+' : '') +
                             dadosTesteDe(campo.chave)
                           "
+                          [attr.aria-label]="
+                            'Ajuste manual de dados: ' +
+                            (dadosTesteDe(campo.chave) > 0 ? '+' : '') +
+                            dadosTesteDe(campo.chave)
+                          "
                         >
                           <app-icone [nome]="'dado'" />
                           {{ dadosTesteDe(campo.chave) > 0 ? '+' : '' }}{{ dadosTesteDe(campo.chave) }}
