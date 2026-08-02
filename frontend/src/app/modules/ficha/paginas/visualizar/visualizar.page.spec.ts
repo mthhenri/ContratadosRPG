@@ -285,12 +285,12 @@ describe('FichaVisualizar', () => {
       const { fixture, fichaService } = montar({ usuarioLogadoId: 7 });
       const componente = fixture.componentInstance;
 
-      componente['ajustarVitalidade']({ campo: 'vidaAtual', valor: 3 });
+      componente['fichaEdicao'].ajustarVitalidade({ campo: 'vidaAtual', valor: 3 });
       // Otimista: a tela já reflete o novo valor, sem esperar o backend.
       expect(componente['ficha']()?.dados.estado.vidaAtual).toBe(3);
       expect(fichaService.alterarFicha).not.toHaveBeenCalled();
 
-      componente['ajustarVitalidade']({ campo: 'vidaAtual', valor: 2 });
+      componente['fichaEdicao'].ajustarVitalidade({ campo: 'vidaAtual', valor: 2 });
       vi.advanceTimersByTime(500);
 
       // Cliques seguidos viram um único PUT, com o último valor.
@@ -311,7 +311,7 @@ describe('FichaVisualizar', () => {
       const componente = fixture.componentInstance;
 
       const novasSequelas = [{ nome: 'Vertigem' }];
-      componente['ajustarSanidade']({
+      componente['fichaEdicao'].ajustarSanidade({
         sequelas: novasSequelas,
         traumas: dados.estado.traumas,
         lesoes: dados.estado.lesoes,
@@ -337,7 +337,7 @@ describe('FichaVisualizar', () => {
       const { fixture, fichaService } = montar({ usuarioLogadoId: 99 });
       const componente = fixture.componentInstance;
 
-      componente['ajustarCondicoes']({ morrendo: true, machucado: false, inconsciente: false });
+      componente['fichaEdicao'].ajustarCondicoes({ morrendo: true, machucado: false, inconsciente: false });
 
       // Otimista: reflete na hora, sem esperar o backend.
       expect(componente['ficha']()?.dados.estado.morrendo).toBe(true);
@@ -366,7 +366,7 @@ describe('FichaVisualizar', () => {
       const novasHabilidades = [
         { nome: 'Investida', categoria: HabilidadeCategoriaEnum.GERAL, custoEnergia: null, descricao: '' },
       ];
-      componente['ajustarHabilidades'](novasHabilidades);
+      componente['fichaEdicao'].ajustarHabilidades(novasHabilidades);
 
       // Otimista: a lista entra em dados.habilidades sem esperar o backend.
       expect(componente['ficha']()?.dados.habilidades).toEqual(novasHabilidades);
@@ -417,7 +417,7 @@ describe('FichaVisualizar', () => {
       severidade: SeveridadeLesaoEnum.LEVE,
       permanente: true,
     };
-    componente['ajustarSanidade']({ sequelas: [], traumas: [], lesoes: [lesao] });
+    componente['fichaEdicao'].ajustarSanidade({ sequelas: [], traumas: [], lesoes: [lesao] });
 
     const esperado =
       vidaMaxima + (calcularVida({ classe, nivel, vigor: 3 }) - calcularVida({ classe, nivel, vigor: 4 }));
@@ -428,7 +428,7 @@ describe('FichaVisualizar', () => {
 
     // A MESMA lesão como TEMPORÁRIA não mexe nas máximas (documento: não reduz Vida/Energia).
     componente['ficha'].set(rico);
-    componente['ajustarSanidade']({
+    componente['fichaEdicao'].ajustarSanidade({
       sequelas: [],
       traumas: [],
       lesoes: [{ ...lesao, permanente: false }],
@@ -451,7 +451,7 @@ describe('FichaVisualizar', () => {
     });
 
     const nivelAntigo = carregada.dados.nivel; // 2
-    componente['ajustarCampoDados']({ campo: 'nivel', valor: nivelAntigo + 1 });
+    componente['fichaEdicao'].ajustarCampoDados({ campo: 'nivel', valor: nivelAntigo + 1 });
 
     const deltaVida =
       calcularVida({ classe: dados.classe, nivel: nivelAntigo + 1, vigor: dados.atributos.vigor }) -
@@ -487,7 +487,7 @@ describe('FichaVisualizar', () => {
       },
     });
 
-    componente['ajustarCampoDados']({ campo: 'nivel', valor: 4 });
+    componente['fichaEdicao'].ajustarCampoDados({ campo: 'nivel', valor: 4 });
 
     const novos = componente['ficha']()!.dados.derivados!;
     // Defesa 10+Nível: +2 ao subir 2→4; Esquiva/Bloqueio idem (10+Nível+atributo).
@@ -542,7 +542,7 @@ describe('FichaVisualizar', () => {
       destreza: 5,
       forca: 6,
     };
-    componente['ajustarAtributos']({
+    componente['fichaEdicao'].ajustarAtributos({
       atributos: novosAtributos,
       maestria: null,
       modificadoresTeste: {} as AjusteAtributos['modificadoresTeste'],
@@ -595,7 +595,7 @@ describe('FichaVisualizar', () => {
       },
     });
 
-    componente['ajustarAtributos']({
+    componente['fichaEdicao'].ajustarAtributos({
       atributos: { ...carregada.dados.atributos, forca: 6, vigor: 4 },
       maestria: null,
       modificadoresTeste: {} as AjusteAtributos['modificadoresTeste'],
@@ -621,7 +621,7 @@ describe('FichaVisualizar', () => {
       },
     });
 
-    componente['ajustarClasse']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.MERCENARIO });
+    componente['fichaEdicao'].ajustarClasse({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.MERCENARIO });
 
     const a = componente['ficha']()!.dados.atributos;
     // Sai +1 Luta / +1 Força (Lutador); entra +1 Pontaria / +1 Destreza (Mercenário).
@@ -649,7 +649,7 @@ describe('FichaVisualizar', () => {
       },
     });
 
-    componente['ajustarClasse']({ classe, arquetipo: ArquetipoEnum.LUTADOR });
+    componente['fichaEdicao'].ajustarClasse({ classe, arquetipo: ArquetipoEnum.LUTADOR });
 
     const d = componente['ficha']()!.dados;
     // Lutador: +1 Luta, +1 Força.
@@ -682,7 +682,7 @@ describe('FichaVisualizar', () => {
       },
     });
 
-    componente['ajustarClasse']({
+    componente['fichaEdicao'].ajustarClasse({
       classe: ClasseEnum.ESPECIALISTA,
       arquetipo: ArquetipoEnum.ENGENHEIRO,
     });
@@ -720,7 +720,7 @@ describe('FichaVisualizar', () => {
       const { fixture } = montar({ usuarioLogadoId: 7 });
       const componente = fixture.componentInstance;
 
-      componente['ajustarPersonalidade']('Valente');
+      componente['fichaEdicao'].ajustarPersonalidade('Valente');
 
       expect(componente['ficha']()!.dados.identidade).toEqual({ personalidade: 'Valente', origem: null });
     });
@@ -733,7 +733,7 @@ describe('FichaVisualizar', () => {
       componente['ficha'].set({ ...carregada, dados: { ...carregada.dados, derivados: derivadosBase } });
 
       const origem = origemComFormacao(FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO);
-      componente['ajustarOrigem'](origem);
+      componente['fichaEdicao'].ajustarOrigem(origem);
 
       const d = componente['ficha']()!.dados;
       expect(d.identidade).toEqual({ personalidade: null, origem });
@@ -758,7 +758,7 @@ describe('FichaVisualizar', () => {
       });
 
       const origemNova = origemComFormacao(FormacaoBonusEnum.LOGISTICA_INVENTARIO_MAXIMO, 'Ex-Policial');
-      componente['ajustarOrigem'](origemNova);
+      componente['fichaEdicao'].ajustarOrigem(origemNova);
 
       const d = componente['ficha']()!.dados;
       expect(d.identidade!.origem).toEqual(origemNova);
@@ -775,7 +775,7 @@ describe('FichaVisualizar', () => {
       componente['ficha'].set({ ...carregada, dados: { ...carregada.dados, derivados: derivadosBase } });
 
       const origem = origemComFormacao(FormacaoBonusEnum.PERICIA_DADO_ATRIBUTO);
-      componente['ajustarOrigem'](origem);
+      componente['fichaEdicao'].ajustarOrigem(origem);
 
       // ROLAGEM ainda não tem consumidor (m3-23) — o registro é gravado, mas nenhum derivado muda.
       expect(componente['ficha']()!.dados.derivados).toEqual(derivadosBase);
@@ -789,7 +789,7 @@ describe('FichaVisualizar', () => {
       componente['ficha'].set({ ...carregada, dados: { ...carregada.dados, derivados: undefined } });
 
       const origem = origemComFormacao(FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO);
-      expect(() => componente['ajustarOrigem'](origem)).not.toThrow();
+      expect(() => componente['fichaEdicao'].ajustarOrigem(origem)).not.toThrow();
       expect(componente['ficha']()!.dados.derivados).toBeUndefined();
       expect(componente['ficha']()!.dados.identidade!.origem).toEqual(origem);
     });
@@ -858,7 +858,7 @@ describe('FichaVisualizar', () => {
       const componente = fixture.componentInstance;
 
       // O mestre ajusta a Vida (edição local pendente, debounce de 500ms em voo).
-      componente['ajustarVitalidade']({ campo: 'vidaAtual', valor: 4 });
+      componente['fichaEdicao'].ajustarVitalidade({ campo: 'vidaAtual', valor: 4 });
       expect(componente['ficha']()?.dados.estado.vidaAtual).toBe(4);
 
       // Dentro da janela, o jogador renomeia a ficha — campo que o mestre NÃO está editando.
@@ -884,7 +884,7 @@ describe('FichaVisualizar', () => {
       const { fixture, fichaAlterada$, fichaService } = montar({ usuarioLogadoId: 99 });
       const componente = fixture.componentInstance;
 
-      componente['ajustarVitalidade']({ campo: 'vidaAtual', valor: 4 });
+      componente['fichaEdicao'].ajustarVitalidade({ campo: 'vidaAtual', valor: 4 });
       fichaAlterada$.next({
         id: 42,
         campanhaId: 9,
@@ -925,7 +925,7 @@ describe('FichaVisualizar', () => {
       expect(componente['ficha']()?.nome).toBe('Kane');
 
       // Mesmo campo (`nome`) editado nos dois lados: o local vence até salvar (m3-17).
-      componente['ajustarNome']('Editando');
+      componente['fichaEdicao'].ajustarNome('Editando');
       fichaAlterada$.next({
         id: 42,
         campanhaId: 9,
@@ -958,7 +958,7 @@ describe('FichaVisualizar', () => {
 
       // O próximo save falha (ex.: 400/403 revalidado pelo backend).
       fichaService.alterarFicha.mockReturnValueOnce(throwError(() => new Error('400')));
-      componente['ajustarNome']('Tentativa');
+      componente['fichaEdicao'].ajustarNome('Tentativa');
       vi.advanceTimersByTime(500); // dispara o save → erro → catchError libera a flag
 
       // Com a flag liberada, um ficha:alterada remoto volta a ser aplicado (não fica congelado).
@@ -981,7 +981,7 @@ describe('FichaVisualizar', () => {
 
     // Um save que nunca resolve mantém `edicaoPendente` verdadeiro (PUT em voo).
     fichaService.alterarFicha.mockReturnValueOnce(NEVER);
-    componente['ajustarVitalidade']({ campo: 'vidaAtual', valor: 4 });
+    componente['fichaEdicao'].ajustarVitalidade({ campo: 'vidaAtual', valor: 4 });
 
     // A reconexão traz um documento com o nome mudado por outro usuário.
     fichaService.recuperarFicha.mockReturnValueOnce(

@@ -1,5 +1,24 @@
 @use 'tema/breakpoints' as bp;
 
+// Piso reservado no rodapé (mesmo problema do m3-60 em `visualizar.page.scss`, só que chegou aqui
+// depois, no m2-20): a visão do JOGADOR embute `<app-ficha-visualizacao modo="compacto">`, que tem
+// sua própria `.ficha-nav` fixa no rodapé no mobile — sem reservar o piso, a bandeja de dados
+// (`app-bandeja-dados`, raiz do template, fora de `.detalhe__jogador`) cobria a barra inteira ao
+// rolar um dado (medido ao vivo: carta descendo até y=824 por cima da barra em y=785–844). Mesma
+// custom property, mesmo valor (44px de alvo + 6px de padding + 1px de borda) — os gatilhos
+// flutuantes de histórico/calculadora não precisam dela porque no mobile eles já viram botões
+// inline no cabeçalho (`position: static`), só a bandeja continua fixa. Declarado incondicional
+// (não só na visão do jogador): a visão do MESTRE não tem `.ficha-nav` pra desviar, então o único
+// efeito ali é a bandeja flutuar 57px acima do canto — inofensivo, e mais simples que sinalizar a
+// visão ativa só para isto.
+:host {
+  --piso-flutuante: 0px;
+
+  @include bp.mobile {
+    --piso-flutuante: 57px;
+  }
+}
+
 .detalhe {
   // m2-19: era 1160px fixo (m2-17) — mesmo padrão de `visualizar.page.scss`/`lista.page.scss`
   // (m2-18), que aproveita mais a tela que o teto fixo.
@@ -419,6 +438,255 @@
       @include bp.tablet {
         order: -1;
       }
+    }
+  }
+
+  // === Visão do JOGADOR (m2-20) — a irmã de `&__grade` acima (só mestre): coluna principal com a
+  // ficha embutida (sem largura fixa aqui, o `<app-ficha-visualizacao modo="compacto">` já trava
+  // as próprias colunas internas, sempre — própria ficha ou de colega) e uma lateral larga de
+  // 450px (era 260px, depois 500px, ~10% mais estreita a pedido do autor) com Equipe + Sessão.
+  // Empilha abaixo de `bp.tablet` — mesma ficha primeiro (ordem do DOM, sem `order`), lateral
+  // depois (item 10).
+  &__jogador {
+    display: flex;
+    align-items: start;
+    gap: var(--gap-grid);
+
+    @include bp.tablet {
+      flex-direction: column;
+    }
+
+    // m2-20: a ficha embutida (`modo="compacto"`) tem sua própria `.ficha-nav` fixa no rodapé no
+    // mobile (herdada de `FichaVisualizacao`) — sem este respiro, o fim da coluna lateral (Sessão)
+    // ficava por baixo da barra ao rolar até o final da página.
+    @include bp.mobile {
+      padding-bottom: calc(var(--piso-flutuante) + env(safe-area-inset-bottom, 0px));
+    }
+  }
+
+  &__jogador-principal {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  &__jogador-lateral {
+    flex: 0 0 450px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-grid);
+    min-width: 0;
+
+    @include bp.tablet {
+      flex-basis: auto;
+      width: 100%;
+    }
+  }
+
+  // Card da ficha embutida — cabeçalho próprio (nome + "Abrir completa") no topo do
+  // `<app-ficha-visualizacao modo="compacto">` (item 6); o card canônico já dá fundo/borda/padding.
+  &__ficha-embutida {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__abrir-completa {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    font-size: 10px;
+    text-decoration: none;
+  }
+
+  &__abrir-completa-rodape {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin-top: 16px;
+    padding: 9px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    text-decoration: none;
+
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
+    }
+  }
+
+  // === "Equipe" (item 8) — roster compacto da lateral: por colega com ficha visível, um item por
+  // ficha (item 7 — "Ver ficha"); colega sem nenhuma ficha visível nem entra na lista.
+  &__equipe-lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 420px;
+    overflow-y: auto;
+
+    --fade-topo: 0px;
+    --fade-base: 0px;
+    &.overflow-fade--topo,
+    &.overflow-fade--base {
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+    }
+    &.overflow-fade--topo {
+      --fade-topo: 16px;
+    }
+    &.overflow-fade--base {
+      --fade-base: 16px;
+    }
+  }
+
+  &__equipe-membro {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+  }
+
+  &__equipe-membro-corpo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__equipe-nome {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    overflow-wrap: anywhere;
+  }
+
+  // Botão "Ver ficha" (item 7) — um por ficha visível do colega; destaque de borda/accent na que
+  // está exibida agora na coluna principal.
+  &__equipe-ficha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 8px;
+    background: var(--surface);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+    app-icone {
+      flex: none;
+      font-size: 12px;
+    }
+
+    &:hover {
+      color: var(--text);
+      border-color: var(--accent-border);
+    }
+
+    &--ativa {
+      color: var(--accent);
+      background: var(--accent-dim);
+      border-color: var(--accent-border);
+    }
+
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
+    }
+  }
+
+  &__equipe-ficha-corpo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__equipe-ficha-nome {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__equipe-ficha-vitais {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-mute);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // === "Sessão" (item 8) — mesmas rolagens da última hora da tira do topo (`rolagensRecentes()`),
+  // reaproveitando o `.rolagem-pill` canônico (abaixo), só empilhado em vez de rolar na horizontal
+  // (a lateral é estreita demais para uma tira).
+  &__sessao-lista {
+    list-style: none;
+    margin: 0;
+    padding: 2px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 420px;
+    overflow-y: auto;
+
+    --fade-topo: 0px;
+    --fade-base: 0px;
+    &.overflow-fade--topo,
+    &.overflow-fade--base {
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+    }
+    &.overflow-fade--topo {
+      --fade-topo: 16px;
+    }
+    &.overflow-fade--base {
+      --fade-base: 16px;
+    }
+
+    .rolagem-pill {
+      min-width: 0;
+      max-width: none;
+      width: 100%;
     }
   }
 

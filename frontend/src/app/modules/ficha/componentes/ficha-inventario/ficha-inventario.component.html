@@ -1,4 +1,8 @@
-<div class="ficha-inv" [class.ficha-inv--compacto]="apresentacao() === 'dialog'">
+<div
+  class="ficha-inv"
+  [class.ficha-inv--compacto]="apresentacao() === 'dialog'"
+  [class.ficha-inv--card-compacto]="compacto()"
+>
   <!-- Linha "Inventário": peso usado / máximo (Força × 5, editável no próprio lugar) — mesma barra de
        preenchimento de Vida/Energia (`ficha-barra` na visualização), só que compacta. Aviso, não trava.
        (`ficha-inv__carga*`, não `__peso*` — essa já é a badge de peso por item/carta abaixo.) -->
@@ -70,6 +74,75 @@
         >
           ✕
         </button>
+      </div>
+    } @else if (compacto()) {
+      <!-- Card compacto (m2-20 — `app-ficha-visualizacao[modo="compacto"]`): toolbar resumida, só
+           ícone, numa linha só (`justify-content: space-between`) e sem Esvaziar/Custos — a coluna
+           é estreita demais pros botões de texto + o filtro + Esvaziar/Custos por extenso (a pedido
+           do autor). Esvaziar/Custos continuam disponíveis na ficha completa (branch `@else` abaixo);
+           não fazem falta no "card de equipe", que é só uma prévia. -->
+      <div class="ficha-inv__acoes ficha-inv__acoes--linha">
+        <div class="ficha-inv__acoes-grupo">
+          <button
+            type="button"
+            class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--quadrado"
+            [attr.aria-expanded]="catalogoAberto()"
+            [attr.aria-label]="catalogoAberto() ? 'Fechar catálogo' : 'Adicionar itens'"
+            [appTooltip]="catalogoAberto() ? 'Fechar catálogo' : 'Adicionar itens'"
+            (click)="alternarCatalogo()"
+          >
+            <app-icone nome="mais" />
+          </button>
+          <button
+            type="button"
+            class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--quadrado"
+            [class.ficha-inv__btn--ativo]="criandoItem()"
+            [attr.aria-expanded]="criandoItem()"
+            aria-label="Item custom"
+            [appTooltip]="'Item custom'"
+            (click)="alternarCriarItem()"
+          >
+            <app-icone nome="mais" />
+          </button>
+        </div>
+
+        <div class="ficha-inv__filtro" role="group" aria-label="Filtrar o inventário">
+          <button
+            type="button"
+            class="ficha-inv__filtro-item ficha-inv__filtro-item--compacto"
+            [class.ficha-inv__filtro-item--ativo]="filtroInventario() === 'equipamentos'"
+            [attr.aria-pressed]="filtroInventario() === 'equipamentos'"
+            aria-label="Equipamentos"
+            [appTooltip]="'Equipamentos'"
+            (click)="selecionarFiltroInventario('equipamentos')"
+          >
+            <app-icone nome="corpo-a-corpo" />
+          </button>
+          <button
+            type="button"
+            class="ficha-inv__filtro-item ficha-inv__filtro-item--compacto"
+            [class.ficha-inv__filtro-item--ativo]="filtroInventario() === 'amplificadores'"
+            [attr.aria-pressed]="filtroInventario() === 'amplificadores'"
+            aria-label="Amplificadores"
+            [appTooltip]="'Amplificadores'"
+            (click)="selecionarFiltroInventario('amplificadores')"
+          >
+            <app-icone nome="amplificador" />
+          </button>
+          <button
+            type="button"
+            class="ficha-inv__filtro-item ficha-inv__filtro-item--compacto"
+            [class.ficha-inv__filtro-item--ativo]="filtroInventario() === 'fragmentos'"
+            [attr.aria-pressed]="filtroInventario() === 'fragmentos'"
+            aria-label="Fragmentos"
+            [appTooltip]="'Fragmentos'"
+            (click)="selecionarFiltroInventario('fragmentos')"
+          >
+            <app-icone nome="fragmento" />
+          </button>
+        </div>
+
+        <ng-container [ngTemplateOutlet]="botaoBuscaTemplate" />
       </div>
     } @else {
       <div class="ficha-inv__acoes">
@@ -159,17 +232,21 @@
           <app-icone [nome]="mostrarCustos() ? 'olho' : 'olho-fechado'" />
           <span>Custos</span>
         </button>
-        <button
-          type="button"
-          class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
-          aria-label="Pesquisar no inventário"
-          [appTooltip]="'Pesquisar no inventário'"
-          (click)="abrirBuscaItens()"
-        >
-          <app-icone nome="busca" />
-        </button>
+        <ng-container [ngTemplateOutlet]="botaoBuscaTemplate" />
       </div>
     }
+
+    <ng-template #botaoBuscaTemplate>
+      <button
+        type="button"
+        class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
+        aria-label="Pesquisar no inventário"
+        [appTooltip]="'Pesquisar no inventário'"
+        (click)="abrirBuscaItens()"
+      >
+        <app-icone nome="busca" />
+      </button>
+    </ng-template>
 
     <!-- Formulário de item custom (nome obrigatório; categoria/custo/peso) — no modo `inline` abre na
          própria lista (aqui embaixo); no modo `dialog` o mesmo template abre num `p-dialog` (fim do

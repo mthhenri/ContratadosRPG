@@ -813,6 +813,26 @@
       min-height: bp.$alvo-toque;
     }
   }
+
+  // === Card compacto (m2-20 — `app-ficha-visualizacao[modo="compacto"]`) ===
+  // A lista tem teto de 476px por padrão (linha ~230 acima) — no card compacto esse teto ainda
+  // deixa a coluna Status alta demais frente ao agrupador Identidade+Atributos ao lado (que a
+  // esticaria por `align-items:stretch` na `&__linha-colunas`, reabrindo o vão vazio que o
+  // wrapper `coluna-agente` resolveu — ver `ficha-visualizacao.component.scss`). Teto mais baixo
+  // só aqui, a pedido do autor.
+  &--compacto {
+    .habilidades__lista {
+      max-height: 250px;
+    }
+
+    // Mesmo raciocínio do teto padrão (m3-60, acima): no mobile não há coluna vizinha, a página
+    // inteira já rola, e um teto aqui vira rolagem aninhada sem barra visível.
+    @include bp.mobile {
+      .habilidades__lista {
+        max-height: none;
+      }
+    }
+  }
 }
 
 // Feedback visual do Utilizar (pulso de cor do botão + "−N E" flutuante). Sem transform de escala:

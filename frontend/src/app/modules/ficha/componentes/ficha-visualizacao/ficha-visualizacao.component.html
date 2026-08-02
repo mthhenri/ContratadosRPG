@@ -1,4 +1,4 @@
-<div class="ficha-visao">
+<div class="ficha-visao" [class.ficha-visao--compacto]="modo() === 'compacto'">
   <!-- Barra superior: rótulo + chip de classificação -->
   <header class="ficha-visao__topo">
     <span class="ficha-visao__rotulo-secao">Ficha de Jogador</span>
@@ -68,13 +68,19 @@
       class="ficha-visao__linha-colunas"
       [class.ficha-visao__linha-colunas--agente]="mostrandoAgente()"
     >
+    <!-- Agrupa Identidade+Atributos num único item de flex/grid da linha (só o `modo="compacto"`
+         usa isso pra empilhar as duas — ver SCSS): sem o agrupamento, a Status (mais alta, sem
+         abas) faz o motor de grid inflar a linha de Identidade sozinha pra "encaixar" a Status ao
+         lado, sobrando um vão vazio enorme antes de Atributos. Nos outros modos é `display:contents`
+         (não afeta nada — Identidade/Atributos continuam item-a-item da linha, como sempre foram). -->
+    <div class="ficha-visao__coluna-agente">
     <div class="ficha-visao__coluna ficha-visao__coluna--identidade">
       <section class="ficha-cartao">
         <div class="ficha-ident">
           <span class="ficha-ident__avatar" aria-hidden="true"></span>
           <div class="ficha-ident__texto">
             <span class="ficha-ident__rotulo">Agente</span>
-            @if (ajustavel() && editandoIdentidade() === 'nome') {
+            @if (ajustavelAmplo() && editandoIdentidade() === 'nome') {
               <input
                 #entradaIdentidade
                 class="ficha-ident__entrada"
@@ -85,7 +91,7 @@
                 (keydown.escape)="cancelarIdentidade()"
                 (blur)="confirmarIdentidade('nome', entradaIdentidade.value)"
               />
-            } @else if (ajustavel()) {
+            } @else if (ajustavelAmplo()) {
               <button
                 class="ficha-ident__nome ficha-ident__nome--editavel"
                 type="button"
@@ -336,7 +342,7 @@
           }
         </p-dialog>
 
-        @if (ajustavel() && editandoClasse()) {
+        @if (ajustavelAmplo() && editandoClasse()) {
           <div class="ficha-ident__classe-editor">
             <div class="ficha-ident__classe-linha">
               <select
@@ -388,7 +394,7 @@
             @if (arquetipoTexto(); as arquetipo) {
               <span class="chip">{{ arquetipo }}</span>
             }
-            @if (ajustavel()) {
+            @if (ajustavelAmplo()) {
               <button
                 class="ficha-ident__chip-lapis"
                 type="button"
@@ -404,6 +410,7 @@
 
         <div class="ficha-ident__stats">
           <div class="ficha-ident__stats-linha">
+            @if (modo() !== 'compacto') {
             <div class="ficha-mini ficha-mini--fino">
               <span class="ficha-mini__rotulo">{{ rotuloNivel() }}</span>
               @if (ajustavel() && editandoIdentidade() === 'nivel') {
@@ -433,33 +440,36 @@
                 <span class="ficha-mini__valor ficha-mini__valor--warning">{{ dados().nivel }}</span>
               }
             </div>
-            <div class="ficha-mini ficha-mini--fino">
-              <span class="ficha-mini__rotulo">Prestígio</span>
-              @if (ajustavel() && editandoIdentidade() === 'prestigio') {
-                <input
-                  #entradaIdentidade
-                  class="ficha-mini__entrada"
-                  type="number"
-                  inputmode="numeric"
-                  [value]="dados().prestigio"
-                  aria-label="Prestígio"
-                  (keydown.enter)="confirmarIdentidade('prestigio', entradaIdentidade.value)"
-                  (keydown.escape)="cancelarIdentidade()"
-                  (blur)="confirmarIdentidade('prestigio', entradaIdentidade.value)"
-                />
-              } @else if (ajustavel()) {
-                <button
-                  class="ficha-mini__valor ficha-mini__valor--editavel"
-                  type="button"
-                  aria-label="Editar prestígio"
-                  (click)="editarIdentidade('prestigio')"
-                >
-                  {{ dados().prestigio }}
-                </button>
-              } @else {
-                <span class="ficha-mini__valor">{{ dados().prestigio }}</span>
-              }
-            </div>
+            }
+            @if (modo() !== 'compacto') {
+              <div class="ficha-mini ficha-mini--fino">
+                <span class="ficha-mini__rotulo">Prestígio</span>
+                @if (ajustavel() && editandoIdentidade() === 'prestigio') {
+                  <input
+                    #entradaIdentidade
+                    class="ficha-mini__entrada"
+                    type="number"
+                    inputmode="numeric"
+                    [value]="dados().prestigio"
+                    aria-label="Prestígio"
+                    (keydown.enter)="confirmarIdentidade('prestigio', entradaIdentidade.value)"
+                    (keydown.escape)="cancelarIdentidade()"
+                    (blur)="confirmarIdentidade('prestigio', entradaIdentidade.value)"
+                  />
+                } @else if (ajustavel()) {
+                  <button
+                    class="ficha-mini__valor ficha-mini__valor--editavel"
+                    type="button"
+                    aria-label="Editar prestígio"
+                    (click)="editarIdentidade('prestigio')"
+                  >
+                    {{ dados().prestigio }}
+                  </button>
+                } @else {
+                  <span class="ficha-mini__valor">{{ dados().prestigio }}</span>
+                }
+              </div>
+            }
             <div class="ficha-mini ficha-mini--fino">
               <span class="ficha-mini__rotulo">Dinheiro</span>
               @if (ajustavel() && editandoDinheiro()) {
@@ -716,15 +726,15 @@
              "Reações" (não só "Defesa") porque a linha já inclui Contra-ataque. -->
         <p class="ficha-cartao__subrotulo ficha-cartao__subrotulo--meta">
           <span>Reações</span>
-          @if (!ajustavel()) {
+          @if (!ajustavelAmplo()) {
             <span class="ficha-cartao__subrotulo-nota">só leitura</span>
           }
         </p>
         <div class="ficha-combate-rapido ficha-combate-rapido--com-contra">
           @for (linha of defesaRapida(); track linha.chave) {
-            <div class="ficha-mini ficha-mini--fino ficha-mini--centralizado" [class.ficha-mini--somente-leitura]="!ajustavel()">
+            <div class="ficha-mini ficha-mini--fino ficha-mini--centralizado" [class.ficha-mini--somente-leitura]="!ajustavelAmplo()">
               <span class="ficha-mini__rotulo">{{ linha.rotulo }}</span>
-              @if (ajustavel() && editandoDerivado() === linha.chave) {
+              @if (ajustavelAmplo() && editandoDerivado() === linha.chave) {
                 <input
                   #entradaDerivado
                   class="ficha-mini__entrada"
@@ -736,7 +746,7 @@
                   (keydown.escape)="cancelarDerivado()"
                   (blur)="confirmarDerivado(linha, entradaDerivado.value)"
                 />
-              } @else if (ajustavel()) {
+              } @else if (ajustavelAmplo()) {
                 <button
                   type="button"
                   class="ficha-mini__valor ficha-mini__valor--editavel"
@@ -755,7 +765,7 @@
                tem a habilidade; sem ela, segue o placeholder tracejado. -->
           <div
             class="ficha-mini ficha-mini--fino ficha-mini--centralizado"
-            [class.ficha-mini--somente-leitura]="!ajustavel() || !temHabilidadeContraAtaque()"
+            [class.ficha-mini--somente-leitura]="!ajustavelAmplo() || !temHabilidadeContraAtaque()"
             [class.ficha-mini--contra]="!temHabilidadeContraAtaque()"
             [appTooltip]="
               temHabilidadeContraAtaque()
@@ -765,7 +775,7 @@
           >
             <span class="ficha-mini__rotulo">Contra-ataque</span>
             @if (temHabilidadeContraAtaque()) {
-              @if (ajustavel() && editandoDerivado() === 'contraAtaque') {
+              @if (ajustavelAmplo() && editandoDerivado() === 'contraAtaque') {
                 <input
                   #entradaDerivado
                   class="ficha-mini__entrada"
@@ -777,7 +787,7 @@
                   (keydown.escape)="cancelarDerivado()"
                   (blur)="confirmarDerivado(contraAtaqueLinha(), entradaDerivado.value)"
                 />
-              } @else if (ajustavel()) {
+              } @else if (ajustavelAmplo()) {
                 <button
                   type="button"
                   class="ficha-mini__valor ficha-mini__valor--editavel"
@@ -801,7 +811,7 @@
              exibido soma essa base com o que vem do equipamento (`shared/regras`, m3-36). -->
         <p class="ficha-cartao__subrotulo ficha-cartao__subrotulo--meta">
           <span>Resistências</span>
-          @if (!ajustavel()) {
+          @if (!ajustavelAmplo()) {
             <span class="ficha-cartao__subrotulo-nota">só leitura</span>
           }
         </p>
@@ -809,7 +819,7 @@
           @for (resistencia of resistencias(); track resistencia.tipo) {
             <div class="ficha-resistencia">
               <span class="ficha-resistencia__abrev">{{ abreviacaoResistencia[resistencia.tipo] }}</span>
-              @if (ajustavel() && editandoResistencia() === resistencia.tipo) {
+              @if (ajustavelAmplo() && editandoResistencia() === resistencia.tipo) {
                 <input
                   #entradaResistencia
                   class="ficha-resistencia__entrada"
@@ -821,7 +831,7 @@
                   (keydown.escape)="cancelarResistencia()"
                   (blur)="confirmarResistencia(resistencia.tipo, entradaResistencia.value)"
                 />
-              } @else if (ajustavel()) {
+              } @else if (ajustavelAmplo()) {
                 <button
                   type="button"
                   class="ficha-resistencia__valor ficha-resistencia__valor--editavel"
@@ -852,7 +862,7 @@
         <header class="ficha-cartao__cabecalho">
           <h3 class="ficha-cartao__titulo ficha-cartao__titulo--forte">Atributos</h3>
           <span class="ficha-cartao__regua"></span>
-          @if (!editandoAtributos() && ajustavel()) {
+          @if (!editandoAtributos() && ajustavelAmplo()) {
             <button
               class="ficha-cartao__lapis"
               type="button"
@@ -878,18 +888,22 @@
             </button>
           </div>
         } @else {
-          <div class="ficha-atributos__formula">
-            <span class="chip-formula">{{ formulaDt }}</span>
-          </div>
+          @if (modo() !== 'compacto') {
+            <div class="ficha-atributos__formula">
+              <span class="chip-formula">{{ formulaDt }}</span>
+            </div>
+          }
 
-          <div class="ficha-mini ficha-proficiencia">
-            <span class="ficha-mini__rotulo">Proficiência</span>
-            <span class="ficha-mini__valor">{{ proficienciaLinha().display }}</span>
-          </div>
+          <div class="ficha-atributos__prof-maestria">
+            <div class="ficha-mini ficha-proficiencia">
+              <span class="ficha-mini__rotulo">Proficiência</span>
+              <span class="ficha-mini__valor">{{ proficienciaLinha().display }}</span>
+            </div>
 
-          <div class="ficha-mini ficha-maestria-resumo">
-            <span class="ficha-mini__rotulo">Maestria</span>
-            <span class="ficha-mini__valor">{{ maestriaNomeAtual() ?? 'Nenhuma' }}</span>
+            <div class="ficha-mini ficha-maestria-resumo">
+              <span class="ficha-mini__rotulo">Maestria</span>
+              <span class="ficha-mini__valor">{{ maestriaNomeAtual() ?? 'Nenhuma' }}</span>
+            </div>
           </div>
         }
 
@@ -1043,7 +1057,47 @@
             </div>
           }
         </div>
+
+        <!-- m2-20 (card de equipe, restrição pós-entrega): o compacto perdeu a aba Informações, então
+             o glance de Deslocamento/Hab. por Turno/Percepção/Dano Furtivo/Dano C. a C. muda de casa
+             pra cá — mesmas linhas de `statusRapido()`, só leitura (sem clique pra editar; a fórmula
+             de dano ainda rola direto, como no card de Status original). -->
+        @if (modo() === 'compacto') {
+          <div class="ficha-cartao__divisor"></div>
+          <p class="ficha-cartao__subrotulo">Combate</p>
+          <div class="ficha-combate-rapido ficha-combate-rapido--cinco">
+            @for (linha of statusRapido(); track linha.chave) {
+              <div
+                class="ficha-mini ficha-mini--fino"
+                [class.ficha-mini--com-rolar]="
+                  podeRolar() &&
+                  (linha.chave === 'danoCorpoACorpo' || linha.chave === 'danoFurtivo') &&
+                  linha.bruto !== null
+                "
+              >
+                @if (
+                  podeRolar() &&
+                  (linha.chave === 'danoCorpoACorpo' || linha.chave === 'danoFurtivo') &&
+                  linha.bruto !== null
+                ) {
+                  <button
+                    class="ficha-mini__rolar"
+                    type="button"
+                    [attr.aria-label]="'Rolar ' + linha.rotulo"
+                    [appTooltip]="'Rolar ' + linha.rotulo"
+                    (click)="rolarDano(linha)"
+                  >
+                    <app-icone [nome]="'dado'" />
+                  </button>
+                }
+                <span class="ficha-mini__rotulo">{{ linha.rotulo }}</span>
+                <span class="ficha-mini__valor">{{ linha.display }}</span>
+              </div>
+            }
+          </div>
+        }
       </section>
+    </div>
     </div>
 
     <!-- Status — terceira coluna (redesenho de comparação visual): Informações (glance de
@@ -1056,6 +1110,7 @@
            cabem na coluna Status) com fade nas bordas onde há mais conteúdo pra rolar
            (appOverflowFade, mesmo padrão de `.compras-fragmentos` da calculadora) — o `effect`
            de `abasStatusContainer` no componente traz a aba ativa pra dentro da área visível. -->
+      @if (modo() !== 'compacto') {
       <div class="ficha-status__abas" #abasStatusContainer appOverflowFade>
         <button
           type="button"
@@ -1121,9 +1176,10 @@
           </button>
         }
       </div>
+      }
 
       <section class="ficha-cartao ficha-cartao--status">
-        @if (abaStatusAtiva() === 'informacoes') {
+        @if (modo() !== 'compacto' && abaStatusAtiva() === 'informacoes') {
         <div class="ficha-status__conteudo">
           <div class="ficha-combate-rapido ficha-combate-rapido--cinco">
             @for (linha of statusRapido(); track linha.chave) {
@@ -1230,7 +1286,7 @@
           }
         </div>
         }
-        @if (abaStatusAtiva() === 'inventario') {
+        @if (modo() === 'compacto' || abaStatusAtiva() === 'inventario') {
         <div class="ficha-status__conteudo">
           <app-ficha-inventario
             [inventario]="dados().inventario"
@@ -1247,6 +1303,7 @@
             [proficiencia]="proficiencia()"
             [nivel]="dados().nivel"
             [apresentacao]="'dialog'"
+            [compacto]="modo() === 'compacto'"
             (inventarioMudou)="ajusteInventario.emit($event)"
             (ajusteEnergiaFragmento)="aoAjustarEnergiaFragmento($event)"
             (ajusteInventarioMaximo)="ajustarInventarioMaximo($event)"
@@ -1255,22 +1312,29 @@
           />
         </div>
         }
-        @if (abaStatusAtiva() === 'habilidades') {
+        @if (modo() === 'compacto' || abaStatusAtiva() === 'habilidades') {
         <div class="ficha-status__conteudo">
           <app-ficha-habilidades
             [habilidades]="dados().habilidades"
-            [editavel]="ajustavel()"
+            [editavel]="ajustavelAmplo()"
             [classe]="dados().classe"
             [arquetipo]="dados().arquetipo"
             [energiaAtual]="estado().energiaAtual"
             [amplificadores]="dados().inventario.amplificadores"
+            [compacto]="modo() === 'compacto'"
             (habilidadesMudou)="ajusteHabilidades.emit($event)"
             (habilidadeUtilizada)="aoUtilizarHabilidade($event)"
           />
         </div>
         }
-        @if (abaStatusAtiva() === 'rolagens') {
+        @if (modo() === 'compacto' || abaStatusAtiva() === 'rolagens') {
         <div class="ficha-status__conteudo">
+          @if (modo() === 'compacto') {
+            <!-- m2-20: esta aba é só o preset/rolagem avulsa (nunca teve feed próprio) — no modo
+                 compacto (CampanhaDetalhe), a coluna "Sessão" ao lado já cobre o histórico recente;
+                 esta nota evita a tentação de duplicá-lo aqui. -->
+            <p class="ficha-rolagem-nota">Histórico da sessão na coluna "Sessão", ao lado.</p>
+          }
           @if (podeRolar()) {
             <!-- Visibilidade das próximas rolagens (m3-27): PUBLICA por padrão; "oculta" grava
                  PRIVADA (só autor + mestre veem, no histórico e no feed da campanha). -->
@@ -1293,7 +1357,7 @@
             [nivel]="dados().nivel"
             [habilidadesDisponiveis]="dados().habilidades"
             [atalhosDano]="atalhosDano()"
-            [editavel]="ajustavel()"
+            [editavel]="ajustavelAmplo()"
             [podeRolar]="podeRolar()"
             (rolagensMudou)="ajusteRolagens.emit($event)"
             (energiaGasta)="aoUtilizarHabilidade($event)"
@@ -1301,7 +1365,7 @@
           />
         </div>
         }
-        @if (abaStatusAtiva() === 'extras') {
+        @if (modo() !== 'compacto' && abaStatusAtiva() === 'extras') {
         <div class="ficha-status__conteudo ficha-extras">
           <!-- Origem (m3-41/m3-49): apresentação — a mecânica (efeito no cálculo) já roda na m3-41. -->
           <div class="ficha-extras__secao">
@@ -1378,7 +1442,7 @@
         <!-- História (m3-50): aba própria, só dono/mestre — o botão já não aparece pra quem não
              pode, e `ajustavel()` regate o painel também (fragmento de URL manipulado à mão não
              renderiza a caixa; a `dados().historia` nem chega ao visualizador). -->
-        @if (abaStatusAtiva() === 'historia' && ajustavel()) {
+        @if (modo() !== 'compacto' && abaStatusAtiva() === 'historia' && ajustavel()) {
         <div class="ficha-status__conteudo">
           <div class="ficha-status__anotacoes-caixa">
             <div class="ficha-status__anotacoes-cabecalho">
@@ -1426,7 +1490,7 @@
        partes iguais e caberem sem rolagem horizontal — foi a rolagem lateral, com `flex: 0 0 auto`,
        que cortava rótulo na m3-56. -->
   <nav class="ficha-nav" #navMobile aria-label="Seções da ficha">
-    @for (item of destinosMobile; track item.destino) {
+    @for (item of destinosMobile(); track item.destino) {
       @if (item.destino !== 'historia' || ajustavel()) {
         <button
           class="ficha-nav__item"

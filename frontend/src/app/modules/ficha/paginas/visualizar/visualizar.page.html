@@ -19,13 +19,13 @@
          ao vivo bagunçava a fileira). Ver `&__acoes` no SCSS. -->
     <div class="ficha-pagina__acoes">
       <!-- Estado do auto-save (m3-60): antes o sucesso era mudo — nenhum sinal de que salvou. -->
-      @if (estadoPersistencia() !== 'ocioso') {
+      @if (fichaEdicao.estadoPersistencia() !== 'ocioso') {
         <span
           class="ficha-pagina__persistencia"
-          [class.ficha-pagina__persistencia--salvo]="estadoPersistencia() === 'salvo'"
+          [class.ficha-pagina__persistencia--salvo]="fichaEdicao.estadoPersistencia() === 'salvo'"
           role="status"
         >
-          {{ estadoPersistencia() === 'salvando' ? 'Salvando…' : 'Salvo' }}
+          {{ fichaEdicao.estadoPersistencia() === 'salvando' ? 'Salvando…' : 'Salvo' }}
         </span>
       }
 
@@ -168,24 +168,24 @@
       (abaStatusMudou)="mudarAbaStatus($event)"
       [destinoMobileInicial]="destinoMobileInicial"
       (rolagemRegistrada)="onRolagemRegistrada($event)"
-      (ajusteVitalidade)="ajustarVitalidade($event)"
-      (ajusteDerivado)="ajustarDerivado($event)"
-      (ajusteResistencia)="ajustarResistencia($event)"
-      (ajusteAtributos)="ajustarAtributos($event)"
-      (ajusteNome)="ajustarNome($event)"
-      (ajusteCampoDados)="ajustarCampoDados($event)"
-      (ajusteClasse)="ajustarClasse($event)"
-      (ajusteSanidade)="ajustarSanidade($event)"
-      (ajusteCondicoes)="ajustarCondicoes($event)"
-      (ajusteHabilidades)="ajustarHabilidades($event)"
-      (ajusteInventario)="ajustarInventario($event)"
-      (ajusteRolagens)="ajustarRolagens($event)"
-      (ajusteCombos)="ajustarCombos($event)"
-      (ajusteAnotacoes)="ajustarAnotacoes($event)"
-      (ajusteHistoria)="ajustarHistoria($event)"
-      (ajustePersonalidade)="ajustarPersonalidade($event)"
-      (ajusteOrigem)="ajustarOrigem($event)"
-      (ajusteContrato)="ajustarContrato($event)"
+      (ajusteVitalidade)="fichaEdicao.ajustarVitalidade($event)"
+      (ajusteDerivado)="fichaEdicao.ajustarDerivado($event)"
+      (ajusteResistencia)="fichaEdicao.ajustarResistencia($event)"
+      (ajusteAtributos)="fichaEdicao.ajustarAtributos($event)"
+      (ajusteNome)="fichaEdicao.ajustarNome($event)"
+      (ajusteCampoDados)="fichaEdicao.ajustarCampoDados($event)"
+      (ajusteClasse)="fichaEdicao.ajustarClasse($event)"
+      (ajusteSanidade)="fichaEdicao.ajustarSanidade($event)"
+      (ajusteCondicoes)="fichaEdicao.ajustarCondicoes($event)"
+      (ajusteHabilidades)="fichaEdicao.ajustarHabilidades($event)"
+      (ajusteInventario)="fichaEdicao.ajustarInventario($event)"
+      (ajusteRolagens)="fichaEdicao.ajustarRolagens($event)"
+      (ajusteCombos)="fichaEdicao.ajustarCombos($event)"
+      (ajusteAnotacoes)="fichaEdicao.ajustarAnotacoes($event)"
+      (ajusteHistoria)="fichaEdicao.ajustarHistoria($event)"
+      (ajustePersonalidade)="fichaEdicao.ajustarPersonalidade($event)"
+      (ajusteOrigem)="fichaEdicao.ajustarOrigem($event)"
+      (ajusteContrato)="fichaEdicao.ajustarContrato($event)"
     />
   } @else {
     <p class="ficha-pagina__carregando">Ficha não encontrada.</p>

@@ -154,11 +154,31 @@
     gap: 8px;
     flex-wrap: wrap;
 
-    // Modo busca (botão de lupa ao lado de "Custos"): a linha inteira vira busca + "X" pra sair.
+    // Modo busca (botão de lupa): a linha inteira vira busca + "X" pra sair.
     &--busca {
       flex-wrap: nowrap;
       align-items: center;
     }
+
+    // Adicionar/Item custom + filtro + busca juntos numa linha só, pontas opostas (a pedido do
+    // autor) — antes eram 3 blocos empilhados (herdados do `flex-direction:column` do `.ficha-inv`).
+    &--linha {
+      justify-content: space-between;
+      align-items: center;
+
+      // Sobrescreve o `align-self:flex-start` do `&__filtro` abaixo: aquele valor existe pro
+      // filtro não esticar na largura quando é filho direto do `.ficha-inv` (coluna) — aqui,
+      // dentro da linha, o eixo cruzado é vertical e o alvo é centralizar com os botões vizinhos.
+      .ficha-inv__filtro {
+        align-self: center;
+      }
+    }
+  }
+  // Agrupa Adicionar itens + Item custom como uma unidade só dentro da `&--linha` (senão o
+  // `justify-content: space-between` do pai trataria os dois botões como pontas isoladas).
+  &__acoes-grupo {
+    display: flex;
+    gap: 8px;
   }
   &__busca--flex {
     flex: 1;
@@ -233,8 +253,22 @@
       background: var(--accent);
     }
 
+    // Card compacto (m2-20): só o ícone, botão quadrado — mesmo tratamento pedido para
+    // Adicionar/Item custom (ver `&--quadrado` abaixo). Coluna estreita demais pro rótulo.
+    &--compacto {
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      gap: 0;
+    }
+
     @include bp.mobile {
       min-height: bp.$alvo-toque;
+
+      &--compacto {
+        min-width: bp.$alvo-toque;
+      }
     }
   }
 
@@ -265,6 +299,18 @@
     }
     &--icone {
       padding: 4px 8px;
+    }
+    // "+ Adicionar itens" / "+ Item custom": botão quadrado só com o ícone (a pedido do autor —
+    // eram botões de texto largos demais pra caber lado a lado numa coluna estreita).
+    &--quadrado {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      flex: 0 0 auto;
+      font-size: 15px;
     }
     &--pequeno {
       padding: 5px 8px;
@@ -1619,6 +1665,30 @@
       .ficha-inv__modificar,
       .ficha-inv__porte {
         padding: 5px 10px;
+      }
+    }
+  }
+
+  // === Card compacto (m2-20 — `app-ficha-visualizacao[modo="compacto"]`) ===
+  // Independente do `&--compacto` acima (que é sobre `apresentacao === 'dialog'`, sempre ativo
+  // nesta visualização em todos os modos — padrão/embutido/compacto). Este aqui é só o card de
+  // equipe: teto mais baixo que o padrão de 458px, porque a coluna Status ali compete de perto
+  // com o agrupador Identidade+Atributos ao lado (ver `ficha-visualizacao.component.scss` —
+  // `&__coluna-agente`) — sem um teto apertado, a lista de itens sozinha já estica a coluna
+  // inteira bem além da altura do agrupador.
+  &--card-compacto {
+    // Precisa vir DEPOIS do `&--compacto` acima: mesma especificidade (0,2,0) na `.ficha-inv__lista`
+    // (`.ficha-inv--compacto .ficha-inv__lista` vs `.ficha-inv--card-compacto .ficha-inv__lista`) —
+    // quem ganha é a ordem de origem, e as duas classes convivem no mesmo elemento raiz.
+    .ficha-inv__lista {
+      max-height: 230px;
+    }
+
+    // Mesmo raciocínio do `&--compacto` (acima): no mobile não há coluna vizinha e a página
+    // inteira já rola — um teto aqui viraria rolagem aninhada sem barra visível.
+    @include bp.mobile {
+      .ficha-inv__lista {
+        max-height: none;
       }
     }
   }

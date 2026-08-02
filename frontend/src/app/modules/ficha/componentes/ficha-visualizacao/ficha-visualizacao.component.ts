@@ -219,6 +219,18 @@ const DESTINOS_MOBILE: readonly {
   { destino: 'historia', rotulo: 'História', rotuloCompleto: 'História', icone: 'anotacoes' },
 ];
 
+/**
+ * Subconjunto de `DESTINOS_MOBILE` válido no `modo="compacto"` (m2-20) — Informações/Extras/
+ * História ficam de fora (só a ficha completa os tem); Inventário/Habilidades/Rolagens sobram
+ * porque no compacto eles já são sempre visíveis, sem aba, então continuam alcançáveis da barra.
+ */
+const COMPACTO_DESTINOS_MOBILE = new Set<DestinoMobile>([
+  'agente',
+  'inventario',
+  'habilidades',
+  'rolagens',
+]);
+
 /** Derivados do painel **Combate**, na ordem de exibição — todos editáveis no próprio lugar (m3-10). */
 const CHAVES_COMBATE: readonly ChaveInfoExtra[] = [
   'defesa',
@@ -346,6 +358,28 @@ export class FichaVisualizacao {
    * imutabilidade (m3-24) libera o mestre e prende o dono depois da primeira definição.
    */
   readonly ehMestre = input(false);
+
+  /**
+   * `'padrao'` (default) segue o breakpoint real de *viewport* (`$bp-tablet`/`$bp-mobile`, ver
+   * SCSS) — o comportamento de sempre em `FichaVisualizar`. `'compacto'` (m2-20, "card de
+   * equipe") é o modo usado por `CampanhaDetalhe` pra qualquer ficha exibida na coluna principal
+   * da visão do jogador (própria ou de colega): reduz as 3 colunas do layout `'padrao'` (Identidade
+   * 420 + Atributos 260 + Status mín. 420 ≈ 1130px, mais do que a coluna principal tem) pra 2 —
+   * Identidade+Atributos empilhados num agrupador único (`&__coluna-agente`, 500px) ao lado da
+   * Status (min. 260px) — esconde Prestígio e troca as abas de Status por Inventário/Habilidades/
+   * Rolagens sempre visíveis, sem seletor (Informações/Extras/História ficam só na ficha completa,
+   * via "Abrir ficha completa").
+   */
+  readonly modo = input<'padrao' | 'compacto'>('padrao');
+
+  /**
+   * Gate da edição "completa" (identidade/classe/reações/contra-ataque/resistências/atributos em
+   * grupo/anotações/história) — no modo `'compacto'` (m2-20, restrição pós-entrega) essas ficam
+   * **só leitura** mesmo pro dono/mestre: o card de equipe só edita Dinheiro, Vida/Energia,
+   * Condições (Morrendo/Machucado/Inconsciente) e Inventário (add/remover item), que continuam no
+   * `ajustavel()` puro — o resto exige "Abrir ficha completa" (`modo="padrao"`).
+   */
+  protected readonly ajustavelAmplo = computed(() => this.ajustavel() && this.modo() !== 'compacto');
 
   /** Novo valor de Vida/Energia atual após um passo − / + ou digitação (já clampado). A página persiste. */
   readonly ajusteVitalidade = output<AjusteVitalidade>();
@@ -523,8 +557,20 @@ export class FichaVisualizacao {
    */
   protected readonly destinoMobile = linkedSignal<DestinoMobile>(() => this.destinoMobileInicial());
 
-  /** Destinos da barra inferior, na ordem de exibição (mobile). */
-  protected readonly destinosMobile = DESTINOS_MOBILE;
+  /**
+   * Destinos da barra inferior, na ordem de exibição (mobile). No `modo="compacto"` (m2-20) o
+   * card de equipe não tem abas de Informações/Extras/História (ver `&--compacto` no SCSS e os
+   * `@if (modo() !== 'compacto')` no card de Status abaixo) — sem filtrar aqui, esses três
+   * destinos ainda apareciam na barra e, ao tocar neles, escondiam Identidade+Atributos+Combate
+   * (o único conteúdo "Agente" do compacto) sem nada de correspondente pra mostrar no lugar
+   * (Informações nem renderiza; Extras/História renderizavam por baixo do Inventário/Habilidades/
+   * Rolagens sempre visíveis, fora da aba que o rótulo dizia estar mostrando).
+   */
+  protected readonly destinosMobile = computed(() =>
+    this.modo() === 'compacto'
+      ? DESTINOS_MOBILE.filter((item) => COMPACTO_DESTINOS_MOBILE.has(item.destino))
+      : DESTINOS_MOBILE,
+  );
 
   /** `true` quando o destino mobile ativo é o agente (Identidade + Atributos). */
   protected readonly mostrandoAgente = computed(() => this.destinoMobile() === 'agente');
@@ -1338,7 +1384,7 @@ export class FichaVisualizacao {
    * independente uma da outra.
    */
   protected readonly personalidadeEditavel = computed(
-    () => this.ajustavel() && (this.ehMestre() || !this.personalidadeDefinida()),
+    () => this.ajustavelAmplo() && (this.ehMestre() || !this.personalidadeDefinida()),
   );
   /**
    * `true` quando a classe é uma subclasse de Experimento com a habilidade "Peculiaridade" tomada
@@ -1352,7 +1398,7 @@ export class FichaVisualizacao {
   );
   protected readonly origemEditavel = computed(
     () =>
-      this.ajustavel() &&
+      this.ajustavelAmplo() &&
       !this.origemBloqueadaPorPeculiaridade() &&
       (this.ehMestre() || !this.origemDefinida()),
   );
@@ -1362,7 +1408,7 @@ export class FichaVisualizacao {
    * (diferente de Personalidade/Origem, não há liberação para o dono nem antes da 1ª definição).
    * O backend é o árbitro final (`validarContratoSomenteMestre`, `alterarFicha`).
    */
-  protected readonly contratoEditavel = computed(() => this.ajustavel() && this.ehMestre());
+  protected readonly contratoEditavel = computed(() => this.ajustavelAmplo() && this.ehMestre());
   /** Texto de exibição do Contrato — "CONTRATO — 0000" quando ainda não definido (placeholder). */
   protected readonly contratoTexto = computed(() => `CONTRATO — ${this.dados().contrato || '0000'}`);
 

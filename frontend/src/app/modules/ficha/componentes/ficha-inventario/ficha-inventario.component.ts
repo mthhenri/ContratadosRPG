@@ -378,6 +378,14 @@ export class FichaInventario {
    * de `FichaSanidade.apresentacao`).
    */
   readonly apresentacao = input<'inline' | 'dialog'>('inline');
+  /**
+   * `true` no card compacto (m2-20 — `app-ficha-visualizacao[modo="compacto"]`): a toolbar
+   * (Adicionar itens/Item custom/filtro) fica resumida (só ícone, sem Esvaziar/Custos) e a lista
+   * ganha um teto mais baixo — ver SCSS. Independente de `apresentacao`: esta aqui é sempre
+   * `'dialog'` na visualização (padrão/embutido/compacto usam o mesmo `p-dialog` pro catálogo),
+   * então não dá pra reaproveitá-la pra diferenciar só o card compacto dos outros dois modos.
+   */
+  readonly compacto = input(false);
   /** Prestígio da ficha — determina a patente e, por ela, os limites de modificação (via `shared/regras`). */
   readonly prestigio = input.required<number>();
   /** Inventário máximo (`Força × 5`, stored/derivado) — referência do peso usado; exceder é aviso, não trava. */

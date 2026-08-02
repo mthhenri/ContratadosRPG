@@ -109,6 +109,8 @@ export class FichaHabilidades {
   readonly energiaAtual = input.required<number>();
   /** Amplificadores portados — hoje só `Conservador` mexe aqui (desconto no custo de Energia). */
   readonly amplificadores = input<readonly AmplificadorAplicadoDto[]>([]);
+  /** `true` no card compacto (m2-20) — `&__lista` ganha um teto mais baixo (ver SCSS). */
+  readonly compacto = input(false);
 
   /** Emite a lista inteira após qualquer mutação — a página persiste. */
   readonly habilidadesMudou = output<readonly FichaHabilidadeDto[]>();

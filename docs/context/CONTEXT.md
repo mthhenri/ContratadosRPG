@@ -1,6 +1,6 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-01 · **Última task registrada:** `m2-19` (2026-08-01)
+> **Última revisão:** 2026-08-01 · **Última task registrada:** `m2-20` (2026-08-01)
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -13,18 +13,15 @@
 
 ## 1. Próxima Task
 
-**Declarada no último registro do `HISTORY.md` (fecho da `m2-19`): `m2-20` — painel de
-campanhas: detalhe `/painel/:id` na visão do jogador** —
-`docs/specs/backlog/m2-20-painel-campanha-detalhe-jogador.spec.md`. É a irmã da `m2-19` (mesma
-frente de redesenho, mesmo detalhe, visão complementar) — hoje a visão do jogador nessa tela só
-herda o que a `m2-19` deixou visível por trás dos `ehMestre()` (banner/estatísticas/esquadrão sem
-convite/kebab/gestão de membro), sem nenhum polimento dedicado ainda.
+**Declarada no último registro do `HISTORY.md` (fecho da `m2-20`):** nenhuma task de milestone
+aberto está explicitamente encadeada; a fila do backlog abaixo é a referência. `m2-20` fechou a
+frente de redesenho do painel de campanhas iniciada na `m2-18`/`m2-19` — `/painel/:id` agora tem
+layout dedicado tanto para mestre quanto para jogador.
 
 ### Fila do backlog (`docs/specs/backlog/`)
 
 | Spec | Frente | O que é |
 |---|---|---|
-| `m2-20` | painel de campanhas | detalhe `/painel/:id` na visão do **jogador** |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m3-57` | guia de criação | assistente de criação de ficha |
 | `m3-58` | guia de criação | melhorias de nível |
@@ -59,7 +56,7 @@ nenhuma task recente, ver `PROBLEMS.md` `P-009`.
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, `core/`, CI, deploy) | **concluído** |
 | M1 | Calculadora com paridade | **concluído no código** (`m1-01`…`m1-20`). Restam 2 passos **operacionais** de plataforma — ver `PROBLEMS.md` `P-006` |
-| M2 | Auth + Campanhas | **concluído** (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`). Redesenho do painel: `m2-18` (lista) e `m2-19` (detalhe, visão do mestre) feitos; `m2-20` (detalhe, visão do jogador) no backlog |
+| M2 | Auth + Campanhas | **concluído**, incluindo o redesenho do painel (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`; `m2-18` lista, `m2-19` detalhe/mestre, `m2-20` detalhe/jogador) |
 | M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; falta `m3-53` do lote de refino + o lote de guia de criação (`m3-57`…`m3-59`) e `m3-61`/`m3-62` |
 | M4 | Ficha de Criatura/NPC | não iniciado |
 | M5 | Guia de Missão | não iniciado |
@@ -96,27 +93,44 @@ mestre, listagem de membros, remoção de jogador e transferência de mestre. UI
 campanha com tira de 4 estatísticas agregadas no topo (Campanhas/Você mestra/Fichas em
 campo/Alertas), alerta visual + nome da ficha crítica por linha, resumo da própria ficha
 (Vida atual/máxima, jogador) e convite copiável direto na linha (mestre), sem abrir o detalhe. O
-detalhe (`/painel/:id`, visão do **mestre** — m2-19; a do jogador é a `m2-20`) tem banner de alerta
-condicional no topo (ficha crítica, com link direto pra ela), tira de estatísticas (Membros/
-Fichas/Convite/Alertas), tira horizontal rolável de rolagens da última hora (sem limite fixo de
-itens — a lista completa/sem limite de tempo só na sidebar de histórico, aberta pelo seu próprio
-gatilho D20; cada pill tem rótulo + dadinho d20 lado a lado na mesma linha flex — hover/foco no d20
-mostra o resultado completo na bandeja de dados flutuante, `BandejaDados`, a mesma que exibe
-rolagens ao vivo, mas sem timer/barra de auto-sumir — `semAutoSumir`, a prévia só fecha no
-`mouseleave`/`blur`) e duas
-colunas — **Membros** (450px
-no desktop; nome/papel/gestão, sem fichas; mestre sempre primeiro, depois jogadores em ordem
-alfabética) e **Esquadrão** (grid fixo de 2 colunas — 1 no mobile, e antes de Membros quando a
-grade empilha; segue a mesma ordem mestre→alfabética da coluna Membros — com todas as fichas da
-campanha achatadas, nome do dono em cada mini-card, Vida/Energia com ajuste rápido ± sem abrir a
-ficha, reações (Defesa/Esquiva/Bloqueio/Contra-ataque, cada uma só aparece se a ficha tiver o valor
-— Contra-ataque recalculado ao vivo no backend quando o snapshot não foi persistido, já que a
-habilidade que o concede normalmente entra na ficha depois da criação) e o kebab de ações da ficha
-— duplicar/remover-da-campanha/excluir). O cabeçalho tem
-nome da campanha em linha própria (mais
-destaque no mobile) e, abaixo/ao lado, indicador de tempo real, botão "Voltar às campanhas",
-gatilho de histórico de rolagens e (mestre) o menu kebab de ações da campanha (editar nome/
-descrição, excluir). Usável em ~360px.
+detalhe (`/painel/:id`) tem banner de alerta condicional no topo (ficha crítica, com link direto
+pra ela), tira de estatísticas (Membros/Fichas/Convite [só mestre]/Alertas) e tira horizontal
+rolável de rolagens da última hora (sem limite fixo de itens — a lista completa/sem limite de
+tempo só na sidebar de histórico, aberta pelo seu próprio gatilho D20; cada pill tem rótulo +
+dadinho d20 lado a lado na mesma linha flex — hover/foco no d20 mostra o resultado completo na
+bandeja de dados flutuante, `BandejaDados`, a mesma que exibe rolagens ao vivo, mas sem timer/
+barra de auto-sumir — `semAutoSumir`, a prévia só fecha no `mouseleave`/`blur`) — compartilhados
+pelos dois papéis. Abaixo disso, o corpo diverge por papel (`@if (ehMestre())`/`@else`):
+
+- **Mestre** (m2-19) — duas colunas: **Membros** (450px no desktop; nome/papel/gestão, sem
+  fichas; mestre sempre primeiro, depois jogadores em ordem alfabética) e **Esquadrão** (grid fixo
+  de 2 colunas — 1 no mobile, e antes de Membros quando a grade empilha; segue a mesma ordem
+  mestre→alfabética da coluna Membros — com todas as fichas da campanha achatadas, nome do dono em
+  cada mini-card, Vida/Energia com ajuste rápido ± sem abrir a ficha, reações
+  (Defesa/Esquiva/Bloqueio/Contra-ataque, cada uma só aparece se a ficha tiver o valor — Contra-
+  ataque recalculado ao vivo no backend quando o snapshot não foi persistido) e o kebab de ações da
+  ficha — duplicar/remover-da-campanha/excluir).
+- **Jogador** (m2-20) — a ficha exibida na coluna principal (a própria, por padrão, ou a de um
+  colega via "Ver ficha") como card embutido (`<app-ficha-visualizacao modo="compacto">`, o
+  componente real da tela de ficha, não uma réplica — sempre condensado, própria ficha ou de
+  colega): 2 colunas — Identidade+Atributos empilhados à esquerda, Status à direita sem abas
+  (só Inventário/Habilidades/Rolagens, sempre visíveis; Informações/Extras/História e Prestígio
+  ficam de fora), com "Abrir ficha completa" (link no cabeçalho do card + botão no rodapé) pra
+  `/painel/:campanhaId/ficha/:id` (`modo="padrao"`, sem nenhum corte) sempre que precisar da ficha
+  inteira — e uma coluna lateral de 450px: **Equipe** (roster compacto — Vida/Energia resumidas +
+  um botão "Ver ficha" por ficha visível de cada colega, trocando a ficha exibida sem navegar; a
+  mesma ficha do usuário reaparece no roster pra voltar) e **Sessão** (as mesmas rolagens da última
+  hora, empilhadas em vez da tira horizontal). No mobile a barra inferior (`.ficha-nav`, m3-60) só
+  lista os destinos que o compacto realmente tem (Agente/Inventário/Habilidades/Rolagens). Os
+  handlers de edição (`ajustar*`) vêm de `FichaEdicaoService`, um composable reusado com
+  `VisualizarPage` (sem duplicar as ~18 chamadas ao `FichaService`) — a ficha de um colega aparece
+  só leitura (`ajustavel=false`) quando o usuário não é dono nem mestre. O cabeçalho da página
+  também traz `<app-calculadora-flutuante>` ao lado do gatilho de histórico de rolagens, pros dois
+  papéis.
+
+O cabeçalho tem nome da campanha em linha própria (mais destaque no mobile) e, abaixo/ao lado,
+indicador de tempo real, botão "Voltar às campanhas", gatilho de histórico de rolagens e (mestre)
+o menu kebab de ações da campanha (editar nome/descrição, excluir). Usável em ~360px.
 
 ### Ficha de jogador — `backend/ficha`, `frontend/ficha`
 
@@ -124,13 +138,22 @@ CRUD completo com a matriz de permissões §14 arbitrada **só no service**, val
 contra `shared/regras` antes de persistir, e concessão/revogação de acesso de visualização
 (`usuario_ficha_acesso`).
 
-A tela de visualização é um **layout de três colunas** (Identidade · Atributos · Status com abas
-internas), com **toda edição no próprio lugar** — nada de página de formulário separada. Editores
-prontos: atributos e maestria, vitais, sanidade e lesões, habilidades (com filtro e contador),
-inventário completo (itens, modificações, amplificadores, sub-inventários, custom), identidade
-(origem, personalidade, afinidade de fragmentos), história privada, anotações e dinheiro.
-Persistência **otimista + em lote**, com merge de edição concorrente. No mobile a tela vira **HUD
-fixo no topo + barra de navegação no rodapé** (não empilhamento de colunas).
+A tela de visualização (`FichaVisualizacao`, componente reusável) é um **layout de três colunas**
+(Identidade · Atributos · Status com abas internas), com **toda edição no próprio lugar** — nada
+de página de formulário separada. Editores prontos: atributos e maestria, vitais, sanidade e
+lesões, habilidades (com filtro e contador), inventário completo (itens, modificações,
+amplificadores, sub-inventários, custom), identidade (origem, personalidade, afinidade de
+fragmentos), história privada, anotações e dinheiro. Persistência **otimista + em lote**, com
+merge de edição concorrente — a lógica (~18 handlers `ajustar*` + progressão) mora em
+`FichaEdicaoService` (`@Injectable()` sem `providedIn: 'root'`, uma instância por página via
+`providers: []`), reusado por `VisualizarPage` (`/painel/:campanhaId/ficha/:id` e `/fichas/:id`) e
+por `CampanhaDetalhe` (m2-20, ficha embutida na visão do jogador). Input `modo: 'padrao' |
+'compacto'` no componente: `'compacto'` reduz as 3 colunas pra 2 (Identidade+Atributos empilhados
+num agrupador único ao lado da Status sem abas) e some com Prestígio/Informações/Extras/História
+(uso de `CampanhaDetalhe`, coluna estreita numa tela larga — ver seção "Painel de campanhas"
+acima). No mobile a tela vira **HUD fixo no topo + barra de navegação no rodapé** (não
+empilhamento de colunas) — por breakpoint real de viewport, não pelo `modo`; em `'compacto'` a
+barra some com os destinos que não existem nesse modo.
 
 Rolagem de dados: gramática v4, presets, teste de atributo, dano de item, iniciativa automática,
 calculadora flutuante e **histórico persistido** com visibilidade `PUBLICA`/`PRIVADA`.

@@ -109,6 +109,14 @@
     }
   }
 
+  // Agrupador de Identidade+Atributos (ver comentário no HTML) — em `modo="padrao"` fica
+  // transparente pro layout: `display: contents` remove a própria caixa, então Identidade e
+  // Atributos continuam item-a-item direto da `&__linha-colunas`, exatamente como antes de existir
+  // este wrapper. Só o `&--compacto` (abaixo) vira uma caixa de verdade.
+  &__coluna-agente {
+    display: contents;
+  }
+
   // Fileira das colunas do painel solo (redesenho de comparação visual) — `stretch` faz as colunas
   // mais baixas esticarem até o comprimento da mais alta.
   &__linha-colunas {
@@ -144,6 +152,119 @@
 
         .ficha-visao__coluna--status {
           display: none;
+        }
+      }
+    }
+  }
+
+  // === `modo="compacto"` (m2-20, "card de equipe") — usado por `CampanhaDetalhe` pra qualquer
+  // ficha exibida na coluna principal da visão do jogador (própria ou de colega). Duas colunas
+  // lado a lado (não três): a esquerda empilha Identidade em cima de Atributos — resumido, com o
+  // glance de Combate que a aba Informações escondeu (`statusRapido()`, ver HTML) — e a direita é
+  // o card de Status, sem abas (só Inventário/Habilidades/Rolagens, sempre visíveis — Informações/
+  // Extras/História ficam só na ficha completa). Continua herdando o empilhamento de `bp.tablet`
+  // pra telas estreitas de verdade — não é uma classe "sempre empilhada".
+  &--compacto {
+    // Vira a caixa de verdade (era `display: contents` na regra base acima): Identidade+Atributos
+    // passam a ser UM item só da `&__linha-colunas`, empilhados aqui dentro por conta própria — a
+    // Status (o outro item da linha, mais alta, sem abas) nunca enxerga Identidade/Atributos
+    // individualmente, então não tem como "puxar" a altura de um dos dois pra caber do lado dela.
+    // Motivo: um grid/flex que trata as três como itens irmãos da mesma fileira precisa que a
+    // fileira toda cresça até caber a Status inteira — como Identidade e Atributos são as únicas
+    // duas fileiras que sobram pra crescer, cresciam os DOIS mesmo sem precisar, sobrando um vão
+    // vazio enorme antes de Atributos (medido ao vivo: Status 2000px de conteúdo simulado deixava
+    // ~730px de vão). Com o agrupador, só a caixa dele cresce (invisível, sem cartão/fundo) — o
+    // conteúdo real (Identidade, Atributos) fica compacto no topo, sem vão entre os dois.
+    .ficha-visao__coluna-agente {
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap-grid);
+      // 500px: a Identidade toma o espaço inteiro da linha (a pedido do autor) já que a
+      // Atributos deixou de ficar ao lado dela.
+      flex: 0 0 500px;
+      width: 500px;
+
+      @include bp.tablet {
+        // Mesmo empilhamento vertical de sempre (herdado da `&__linha-colunas` base) — só a largura
+        // fixa de 500px precisa sair do caminho pra virar 100% da linha.
+        flex: 1 1 auto;
+        width: 100%;
+      }
+    }
+
+    .ficha-visao__coluna--identidade,
+    .ficha-visao__coluna--atributos {
+      // Preenche a largura toda do agrupador (500px) em vez da largura fixa da regra base
+      // (420px/260px, pensada pras três colunas lado a lado do card padrão).
+      width: 100%;
+    }
+
+    .ficha-visao__coluna--status {
+      min-width: 260px;
+    }
+
+    // Nível/Prestígio somem no compacto (ver HTML) — só Dinheiro/Salário sobram na linha; a grade
+    // de 4 colunas do `&__stats-linha` (mais estreita pro Nível) deixaria os dois com metade da
+    // linha vazia. 2 colunas iguais ocupam o espaço todo.
+    .ficha-ident__stats-linha {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    // Atributos "resumida": antes ficava ao lado da Identidade (mesma altura, coluna própria);
+    // empilhada embaixo agora, então aperta mais um degrau que o `--2col` padrão — valor um pouco
+    // menor e o glance de Combate (`ficha-combate-rapido--cinco`, ver HTML) mais denso também.
+    .ficha-cartao--atributos {
+      // Proficiência + Maestria lado a lado (a pedido do autor) — a coluna larga do compacto
+      // (500px) sobra espaço de sobra pra isso, ao contrário do `--atributos` estreito (260px) do
+      // card padrão, que continua empilhado.
+      .ficha-atributos__prof-maestria {
+        display: flex;
+        gap: 8px;
+
+        > * {
+          flex: 1;
+        }
+      }
+
+      .ficha-atributos--2col {
+        // 5 colunas em vez das 2 do `--2col` padrão (a pedido do autor) — a mesma folga de largura
+        // do bloco acima permite a grade "original" (`&__grade` sem modificador, ver base) em vez
+        // da versão estreita. O 5º atributo não é mais órfão (enche a linha), então a centralização
+        // do `--2col` desktop precisa ser desfeita aqui — senão ele pula pra uma 2ª linha sozinho.
+        .ficha-atributos__grade {
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+
+          > *:nth-child(5) {
+            grid-column: auto;
+            justify-self: stretch;
+            width: auto;
+          }
+
+          // No destino "Agente" do mobile (m3-60) a coluna vira a largura inteira do viewport
+          // (~360-430px) — 5 colunas ali ficam finas demais pro abrev+valor+modificador. Volta pro
+          // mesmo fallback de 3 que o `--2col` já usa no mobile fora do compacto.
+          @include bp.mobile {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+          }
+        }
+
+        .ficha-atributo__valor {
+          font-size: 18px;
+        }
+      }
+
+      .ficha-combate-rapido--cinco {
+        margin-top: 2px;
+        // A régua `max-content` do `--cinco` original conta com a largura do card de Status
+        // (mín. 420px) sobrando pro último box (Dano C. a C., o de valor mais longo); aqui o card
+        // inteiro tem ~480px de conteúdo — medido ao vivo, os quatro primeiros boxes já comiam
+        // quase tudo e Dano C. a C. sobrava com 72px pra "DANO C. A C." + "1D6 [Físico]" (cortava
+        // os dois). 2 colunas iguais (mesma régua do `bp.mobile` do `--cinco` original) garantem
+        // espaço de sobra pra qualquer um dos cinco, ao custo de uma 3ª linha.
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+
+        .ficha-mini__valor {
+          font-size: 12px;
         }
       }
     }
@@ -2300,6 +2421,16 @@
 
 // Toggle "rolagem oculta" (m3-27) — mesma receita visual do `.ficha-condicoes__item`, num bloco
 // próprio (é uma decisão de visibilidade de rolagem, não uma condição de saúde).
+// Nota do `modo="compacto"` (m2-20) na mini-aba Rolagens — aponta pra coluna "Sessão" do
+// `CampanhaDetalhe` em vez de duplicar o feed ali dentro.
+.ficha-rolagem-nota {
+  margin: 0 0 12px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text-mute);
+}
+
 .ficha-rolagem-oculta {
   display: inline-flex;
   align-items: center;

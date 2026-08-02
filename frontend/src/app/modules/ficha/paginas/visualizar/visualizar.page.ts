@@ -3,42 +3,12 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { EMPTY, Subject, catchError, debounceTime, filter, finalize, map, of, switchMap } from 'rxjs';
+import { filter, finalize, map, of, switchMap } from 'rxjs';
 
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
-import {
-  calcularAreaPercepcao,
-  calcularAtributosEfetivos,
-  calcularDanoCorpo,
-  calcularDefesa,
-  calcularDerivados,
-  calcularDeslocamento,
-  calcularEnergia,
-  calcularInventario,
-  calcularLimiteHabilidadesPorTurno,
-  calcularProficiencia,
-  calcularVida,
-  contarMarcosDanoFurtivo,
-  incrementarDanoFurtivo,
-  obterBonusAtributos,
-  type BonusAtributos,
-} from '@contratados-rpg/shared/regras/agente';
 import { normalizarPresetLegado } from '@contratados-rpg/shared/regras/rolagem';
-import { aplicarFormacaoAosDerivados, removerFormacaoDosDerivados } from '@contratados-rpg/shared/regras/identidade';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
-import type {
-  FichaAcessoResumoDto,
-  FichaAtributosDto,
-  FichaComboDto,
-  FichaDerivadosDto,
-  FichaHabilidadeDto,
-  FichaIdentidadeDto,
-  FichaInventarioDto,
-  FichaJogadorDadosDto,
-  FichaOrigemDto,
-  FichaRecuperadaDto,
-  FichaRolagemDto,
-} from '@contratados-rpg/shared/dtos/ficha';
+import type { FichaAcessoResumoDto, FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
@@ -49,27 +19,19 @@ import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { FichaService } from '../../ficha.service';
+import { FichaEdicaoService } from '../../ficha-edicao.service';
 import { lerParamRota } from '../../ler-param-rota';
 import { mesclarFicha } from '../../mesclar-ficha';
 import { RolagemService } from '../../rolagem.service';
-import { normalizarEntrada, type EntradaAgente } from '../../status-derivado';
-import type { CondicoesFicha } from '../../condicoes-ficha';
 
 import {
   AbaFicha,
   AbaStatus,
-  AjusteAtributos,
-  AjusteCampoDados,
-  AjusteClasse,
-  AjusteDerivado,
-  AjusteResistencia,
-  AjusteVitalidade,
   FichaVisualizacao,
   ehAbaFicha,
   ehAbaStatus,
   type DestinoMobile,
 } from '../../componentes/ficha-visualizacao/ficha-visualizacao.component';
-import type { EstadoSanidade } from '../../componentes/ficha-sanidade/ficha-sanidade.component';
 
 /** Tamanho de página do histórico de rolagens da barra lateral. */
 const ITENS_POR_PAGINA_HISTORICO = 20;
@@ -109,11 +71,14 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
     CalculadoraFlutuante,
     HistoricoRolagensSidebar,
   ],
+  providers: [FichaEdicaoService],
   templateUrl: './visualizar.page.html',
   styleUrl: './visualizar.page.scss',
 })
 export class FichaVisualizar {
   private readonly fichaService = inject(FichaService);
+  /** Handlers `ajustar*` (m2-20) — reusados por `CampanhaDetalhe` na visão do jogador. */
+  protected readonly fichaEdicao = inject(FichaEdicaoService);
   private readonly campanhaService = inject(CampanhaService);
   private readonly rolagemService = inject(RolagemService);
   private readonly sessaoService = inject(SessaoService);
@@ -173,21 +138,6 @@ export class FichaVisualizar {
     return ehAbaStatus(fragmento) ? fragmento : 'agente';
   })();
 
-  /**
-   * Estado do auto-save exposto ao template (m3-60). O `edicaoPendente` já existia mas nunca era
-   * referenciado na view: o sucesso do salvamento era completamente mudo — sem toast, sem
-   * "salvando…", nada além do formulário fechar. `'salvo'` some sozinho depois de um respiro para
-   * não virar ruído permanente no cabeçalho.
-   */
-  protected readonly estadoPersistencia = signal<'ocioso' | 'salvando' | 'salvo'>('ocioso');
-  private temporizadorSalvo: ReturnType<typeof setTimeout> | null = null;
-
-  private marcarSalvo(): void {
-    this.estadoPersistencia.set('salvo');
-    if (this.temporizadorSalvo) clearTimeout(this.temporizadorSalvo);
-    this.temporizadorSalvo = setTimeout(() => this.estadoPersistencia.set('ocioso'), 2000);
-  }
-
   protected readonly carregando = signal(true);
   protected readonly ficha = signal<FichaRecuperadaDto | null>(null);
   private readonly membros = signal<CampanhaMembroResumoDto[]>([]);
@@ -204,21 +154,6 @@ export class FichaVisualizar {
   protected readonly historicoCarregandoMais = signal(false);
   protected readonly historicoTemMais = signal(false);
   private readonly historicoPagina = signal(0);
-
-  /** Dispara a persistência (debounced) de cada edição no próprio lugar. */
-  private readonly ajustePendente = new Subject<void>();
-  /**
-   * `true` enquanto há uma edição local não persistida (do disparo até a resposta do `alterarFicha`).
-   * Enquanto verdadeiro, um `ficha:alterada` recebido por WebSocket é **mesclado** com a edição em
-   * curso (m3-17) — nunca descartado, ou o `PUT` de documento inteiro apagaria a edição concorrente.
-   */
-  private readonly edicaoPendente = signal(false);
-  /**
-   * Último documento **vindo do servidor** (carga, resposta de save, refetch, evento remoto sem
-   * edição pendente). É a `base` do merge de três vias: um campo em que `ficha()` divergiu dela é,
-   * por definição, um campo que o usuário editou.
-   */
-  private readonly fichaBase = signal<FichaRecuperadaDto | null>(null);
 
   /** Menu de ações no cabeçalho (kebab) aberto. */
   protected readonly menuAberto = signal(false);
@@ -290,7 +225,7 @@ export class FichaVisualizar {
         next: ({ ficha, membros }) => {
           const normalizada = this.normalizarRolagens(ficha);
           this.ficha.set(normalizada);
-          this.fichaBase.set(normalizada);
+          this.fichaEdicao.definirBase(normalizada);
           this.membros.set(membros);
           if (this.podeGerenciar()) {
             this.carregarAcessos();
@@ -298,38 +233,11 @@ export class FichaVisualizar {
         },
       });
 
-    // Ajustes rápidos de Vida/Energia (passos − / + na leitura) são otimistas na tela e persistidos
-    // em lote após um respiro: cliques seguidos viram um único `alterarFicha` (o `switchMap` descarta
-    // a requisição anterior, e o backend revalida o teto). A resposta reconcilia a tela.
-    this.ajustePendente
-      .pipe(
-        debounceTime(500),
-        switchMap(() => {
-          const fichaAtual = this.ficha()!;
-          return this.fichaService
-            .alterarFicha(this.fichaId, { nome: fichaAtual.nome, dados: fichaAtual.dados })
-            .pipe(
-              // Um erro de save (403/400) não pode matar o stream nem prender `edicaoPendente` — isso
-              // congelaria a persistência e os live-updates. Libera a flag e segue ouvindo.
-              catchError(() => {
-                this.edicaoPendente.set(false);
-                // O toast de erro já vem do interceptor global; aqui só devolve o indicador ao
-                // repouso para não ficar preso em "salvando…" para sempre.
-                this.estadoPersistencia.set('ocioso');
-                return EMPTY;
-              }),
-            );
-        }),
-        takeUntilDestroyed(),
-      )
-      .subscribe({
-        next: (fichaAlterada) => {
-          this.ficha.set(fichaAlterada);
-          this.fichaBase.set(fichaAlterada);
-          this.edicaoPendente.set(false);
-          this.marcarSalvo();
-        },
-      });
+    // Handlers `ajustar*` (Vida/Energia, atributos, inventário…) e a persistência debounced em lote
+    // moraram aqui até a m2-20 — extraídos para `FichaEdicaoService` (reusado por `CampanhaDetalhe`
+    // na visão do jogador). `inicializar` liga o composable a este `ficha` signal e ao `fichaId`
+    // (síncrono, parâmetro de rota — daí a função constante em vez de um signal).
+    this.fichaEdicao.inicializar(this.ficha, () => this.fichaId);
 
     // Tempo real (m3-08): entra na sala `ficha:<id>` e reage a `ficha:alterada`. O mestre com a ficha
     // aberta vê a edição do jogador **sem recarregar** (critério de aceite). A permissão da sala é
@@ -385,13 +293,13 @@ export class FichaVisualizar {
    */
   private absorverRemoto(remotoBruto: FichaRecuperadaDto): void {
     const remoto = this.normalizarRolagens(remotoBruto);
-    const base = this.fichaBase();
+    const base = this.fichaEdicao.fichaBase();
     const local = this.ficha();
 
     this.ficha.set(
-      this.edicaoPendente() && base && local ? mesclarFicha(base, local, remoto) : remoto,
+      this.fichaEdicao.edicaoPendente() && base && local ? mesclarFicha(base, local, remoto) : remoto,
     );
-    this.fichaBase.set(remoto);
+    this.fichaEdicao.definirBase(remoto);
   }
 
   /**
@@ -424,13 +332,6 @@ export class FichaVisualizar {
       detail: 'Seu acesso a esta ficha foi revogado.',
     });
     void this.router.navigate(this.rotaDeSaida());
-  }
-
-  /** Marca uma edição local pendente e agenda a persistência em lote (debounced). */
-  private agendarPersistencia(): void {
-    this.edicaoPendente.set(true);
-    this.estadoPersistencia.set('salvando');
-    this.ajustePendente.next();
   }
 
   /** Abre/fecha o menu de ações do cabeçalho. */
@@ -567,498 +468,10 @@ export class FichaVisualizar {
   }
 
 
-  /**
-   * Ajuste rápido de Vida/Energia atual na leitura (passo − / +): reflete na hora (otimista) e
-   * agenda a persistência em lote. Só dono/mestre chega aqui — a leitura só mostra os passos a eles;
-   * o backend revalida o teto no `alterarFicha`.
-   */
-  protected ajustarVitalidade(ajuste: AjusteVitalidade): void {
-    const fichaAtual = this.ficha();
-    if (!fichaAtual) {
-      return;
-    }
-    const estado = { ...fichaAtual.dados.estado, [ajuste.campo]: ajuste.valor };
-    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, estado } });
-    this.agendarPersistencia();
-  }
-
-  /**
-   * Edição de um derivado (Informações Extras): grava o override em `derivados[chave]`, otimista na
-   * tela, e agenda a persistência em lote (mesmo `ajustePendente` da vitalidade). Só dono/mestre
-   * chega aqui; o backend não trava faixa (m3-10).
-   */
-  protected ajustarDerivado(ajuste: AjusteDerivado): void {
-    const fichaAtual = this.ficha();
-    if (!fichaAtual) {
-      return;
-    }
-    const derivados = { ...(fichaAtual.dados.derivados ?? {}), [ajuste.chave]: ajuste.valor };
-    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, derivados } });
-    this.agendarPersistencia();
-  }
-
-  /**
-   * Edição da base manual de uma Resistência (ajuste pós-m3-36): grava em
-   * `derivados.resistencias[tipo]`, otimista na tela, e agenda a persistência em lote. O total
-   * exibido soma isso ao equipamento (`montarResistencias`, calculado no próprio componente).
-   */
-  protected ajustarResistencia(ajuste: AjusteResistencia): void {
-    const fichaAtual = this.ficha();
-    if (!fichaAtual) {
-      return;
-    }
-    const derivadosAtuais = fichaAtual.dados.derivados ?? {};
-    const resistencias = { ...(derivadosAtuais.resistencias ?? {}), [ajuste.tipo]: ajuste.valor };
-    const derivados = { ...derivadosAtuais, resistencias };
-    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, derivados } });
-    this.agendarPersistencia();
-  }
-
-  /**
-   * Edição em grupo dos atributos + Maestria (m3-10): reflete na hora (otimista) e persiste em lote.
-   * Aplica a **progressão** — os derivados que dependem de atributo acompanham a mudança: Vigor →
-   * Vida máxima e Bloqueio; Destreza → Energia máxima, Esquiva e Deslocamento; Sentidos → Percepção;
-   * Força → Inventário e Dano C.a.C. Só dono/mestre chega aqui; o backend valida a Maestria e não
-   * trava faixa.
-   */
-  protected ajustarAtributos(ajuste: AjusteAtributos): void {
-    const fichaAtual = this.ficha();
-    if (!fichaAtual) {
-      return;
-    }
-    const dadosNovos: FichaJogadorDadosDto = {
-      ...fichaAtual.dados,
-      atributos: ajuste.atributos,
-      maestria: ajuste.maestria,
-      modificadoresTeste: ajuste.modificadoresTeste,
-    };
-    this.ficha.set({ ...fichaAtual, dados: this.aplicarProgressao(fichaAtual.dados, dadosNovos) });
-    this.agendarPersistencia();
-  }
-
-  /**
-   * Edita Classe/Arquétipo (arquétipo já coerente com a classe). Sempre aplica o **delta dos Atributos
-   * Bônus fixos** (doc — "Classes e Arquétipos"): remove o bônus do arquétipo/subclasse anterior e
-   * soma o do novo (ex.: Lutador → Mercenário tira +1 Força/+1 Luta e põe +1 Pontaria/+1 Destreza),
-   * preservando ajustes manuais. Depois:
-   * - **Troca de arquétipo (mesma classe)** → `aplicarProgressao`: os derivados/máximas acompanham a
-   *   variação de atributo por **delta**, preservando ajustes.
-   * - **Troca de classe** → **recalcula** Vida/Energia máximas e o bloco de derivados **do zero** para
-   *   a classe nova (as fórmulas de saúde e os campos disponíveis mudam) — ajustes manuais de saúde
-   *   são descartados no reset, e a Vida/Energia atuais são clampadas ao novo teto.
-   * Otimista + em lote.
-   */
-  protected ajustarClasse(ajuste: AjusteClasse): void {
-    const fichaAtual = this.ficha();
-    if (!fichaAtual) {
-      return;
-    }
-    const bonusAntes = obterBonusAtributos({
-      classe: fichaAtual.dados.classe,
-      arquetipo: fichaAtual.dados.arquetipo,
-    });
-    const bonusDepois = obterBonusAtributos({ classe: ajuste.classe, arquetipo: ajuste.arquetipo });
-    const dadosNovos: FichaJogadorDadosDto = {
-      ...fichaAtual.dados,
-      classe: ajuste.classe,
-      arquetipo: ajuste.arquetipo,
-      atributos: this.aplicarDeltaBonus(fichaAtual.dados.atributos, bonusAntes, bonusDepois),
-    };
-    const dados =
-      ajuste.classe === fichaAtual.dados.classe
-        ? this.aplicarProgressao(fichaAtual.dados, dadosNovos)
-        : this.recalcularSaude(dadosNovos);
-    this.ficha.set({ ...fichaAtual, dados });
-    this.agendarPersistencia();
-  }
-
-  /**
-   * Recomputa Vida/Energia máximas e o bloco de derivados **do zero** para a classe/nível/atributos
-   * atuais — usado na **troca de classe**, onde as fórmulas de saúde e os campos disponíveis mudam
-   * (ex.: Civil perde Defesa/Furtivo). Reusa `calcularVida/Energia/Derivados` (a mesma fonte do
-   * snapshot de criação — proibições #26/#27); a Vida/Energia **atuais** são clampadas ao novo teto.
-   */
-  private recalcularSaude(dados: FichaJogadorDadosDto): FichaJogadorDadosDto {
-    const entrada = normalizarEntrada(dados.classe, dados.nivel, dados.atributos);
-    const vidaMaxima = calcularVida(entrada);
-    const energiaMaxima = calcularEnergia(entrada);
-    return {
-      ...dados,
-      estado: {
-        ...dados.estado,
-        vidaMaxima,
-        energiaMaxima,
-        vidaAtual: Math.min(dados.estado.vidaAtual, vidaMaxima),
-        energiaAtual: Math.min(dados.estado.energiaAtual, energiaMaxima),
-      },
-      derivados: calcularDerivados(dados.classe, dados.nivel, dados.atributos, dados.habilidades),
-    };
-  }
-
-  /** Atributos com o delta de Atributos Bônus do arquétipo/subclasse (remove o antigo, soma o novo). */
-  private aplicarDeltaBonus(
-    atributos: FichaAtributosDto,
-    bonusAntes: BonusAtributos,
-    bonusDepois: BonusAtributos,
-  ): FichaAtributosDto {
-    const resultado = { ...atributos };
-    (Object.keys(resultado) as (keyof FichaAtributosDto)[]).forEach((chave) => {
-      resultado[chave] = resultado[chave] - (bonusAntes[chave] ?? 0) + (bonusDepois[chave] ?? 0);
-    });
-    return resultado;
-  }
-
-  /**
-   * Edita as listas de Sanidade (sequelas/traumas/lesões, m3-12): substitui os três blocos em `estado`
-   * de uma vez (o editor emite o trio inteiro), otimista na tela + persistência em lote. Só dono/mestre
-   * chega aqui; o backend valida forma (camada 1) — sem trava de faixa (m3-10).
-   *
-   * **Lesões permanentes** afetam **todos** os cálculos que usam o atributo (`sistema-v4.1.0.md` —
-   * "⬥ Lesões Permanentes": Vigor removeria vida e inventário; Destreza, deslocamento e energia). A
-   * cascata usa a **mesma progressão por delta** de m3-10 (`aplicarProgressao`), tomando como entrada
-   * os atributos **efetivos apenas pelas lesões permanentes** — antes vs. depois da edição —, então as
-   * máximas e os derivados stored acompanham a variação preservando ajustes manuais. O valor **base**
-   * (`atributos`) **nunca** é mutado — a Maestria (ligada ao base) sobrevive. Lesões **não** permanentes
-   * só reduzem o atributo efetivo exibido (documento: lesão em atributo de saúde não reduz Vida/Energia).
-   */
-  protected ajustarSanidade(sanidade: EstadoSanidade): void {
-    const fichaAtual = this.ficha();
-    if (!fichaAtual) {
-      return;
-    }
-    const dadosAtuais = fichaAtual.dados;
-    const estado = {
-      ...dadosAtuais.estado,
-      sequelas: sanidade.sequelas,
-      traumas: sanidade.traumas,
-      lesoes: sanidade.lesoes,
-    };
-    let dados: FichaJogadorDadosDto = { ...dadosAtuais, estado };
-
-    // Cascata das lesões PERMANENTES: base − pontos permanentes, antes e depois; se mudou, progride.
-    const permanentesAntes = dadosAtuais.estado.lesoes.filter((lesao) => lesao.permanente);
-    const permanentesDepois = sanidade.lesoes.filter((lesao) => lesao.permanente);
-    const efetivoAntes = calcularAtributosEfetivos(dadosAtuais.atributos, permanentesAntes);
-    const efetivoDepois = calcularAtributosEfetivos(dadosAtuais.atributos, permanentesDepois);
-    if (!this.mesmoMapaAtributos(efetivoAntes, efetivoDepois)) {
-      const progredido = this.aplicarProgressao(
-        { ...dadosAtuais, atributos: efetivoAntes },
-        { ...dados, atributos: efetivoDepois },
-      );
-      // `aplicarProgressao` já traz o estado (listas novas + máximas) e os derivados; só devolve o base.
-      dados = { ...progredido, atributos: dadosAtuais.atributos };
-    }
-
-    this.ficha.set({ ...fichaAtual, dados });
-    this.agendarPersistencia();
-  }
-
-  /**
-   * Alterna uma das três condições (Morrendo/Machucado/Inconsciente, m2-16b): reflete na hora
-   * (otimista) e agenda a persistência em lote. Sem cascata — as condições não recalculam nenhuma
-   * outra stat (documento: são refletidas manualmente, não derivadas de Vida/Energia).
-   */
-  protected ajustarCondicoes(condicoes: CondicoesFicha): void {
-    const fichaAtual = this.ficha();
-    if (!fichaAtual) {
-      return;
-    }
-    const estado = { ...fichaAtual.dados.estado, ...condicoes };
-    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, estado } });
-    this.agendarPersistencia();
-  }
-
-  /** `true` se dois mapas de atributos são iguais em todas as chaves. */
-  private mesmoMapaAtributos(a: FichaAtributosDto, b: FichaAtributosDto): boolean {
-    return (Object.keys(a) as (keyof FichaAtributosDto)[]).every((chave) => a[chave] === b[chave]);
-  }
-
-  /**
-   * Edita a lista de habilidades (m3-13): substitui `dados.habilidades` inteira (o editor emite a lista
-   * completa), otimista na tela + persistência em lote. Só dono/mestre chega aqui; o backend valida
-   * forma. Sem cascata/progressão — o custo de Energia é só registro (fora de escopo o efeito em play).
-   */
-  protected ajustarHabilidades(habilidades: readonly FichaHabilidadeDto[]): void {
-    const fichaAtual = this.ficha();
-    if (!fichaAtual) {
-      return;
-    }
-    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, habilidades } });
-    this.agendarPersistencia();
-  }
-
-  /**
-   * Edita o inventário (itens + amplificadores, m3-14): substitui `dados.inventario` inteiro (o editor
-   * emite o `FichaInventarioDto` completo), otimista na tela + persistência em lote. Só dono/mestre
-   * chega aqui; o backend valida forma. Sem cascata/progressão — o inventário não altera derivados; o
-   * Inventário máximo (`Força × 5`) é referência editável à parte (m3-10) e exceder o peso é só aviso.
-   */
-  protected ajustarInventario(inventario: FichaInventarioDto): void {
-    const fichaAtual = this.ficha();
-    if (!fichaAtual) {
-      return;
-    }
-    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, inventario } });
-    this.agendarPersistencia();
-  }
-
-  /**
-   * Edita os presets de rolagem (m3-15): substitui `dados.rolagens` inteiro (o editor emite a lista
-   * completa), otimista na tela + persistência em lote. Só dono/mestre chega aqui; sem cascata/derivados
-   * (presets não alteram nada calculado).
-   */
-  protected ajustarRolagens(rolagens: readonly FichaRolagemDto[]): void {
-    const fichaAtual = this.ficha();
-    if (!fichaAtual) {
-      return;
-    }
-    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, rolagens } });
-    this.agendarPersistencia();
-  }
-
-  /**
-   * Edita os Combos (m3-37): substitui `dados.combos` inteiro, otimista na tela + persistência em
-   * lote. Só dono/mestre chega aqui; sem cascata/derivados (combos não alteram nada calculado — cada
-   * passo só referencia um preset de `rolagens` já existente, validado em tempo de execução).
-   */
-  protected ajustarCombos(combos: readonly FichaComboDto[]): void {
-    const fichaAtual = this.ficha();
-    if (!fichaAtual) {
-      return;
-    }
-    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, combos } });
-    this.agendarPersistencia();
-  }
-
-  /**
-   * Edita as Anotações livres (m3-32): substitui `dados.anotacoes` inteiro, otimista na tela +
-   * persistência em lote. Só dono/mestre chega aqui; sem regra de domínio (texto livre).
-   */
-  protected ajustarAnotacoes(anotacoes: string): void {
-    const fichaAtual = this.ficha();
-    if (!fichaAtual) {
-      return;
-    }
-    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, anotacoes } });
-    this.agendarPersistencia();
-  }
-
-  /**
-   * Edita a História livre (m3-50): substitui `dados.historia` inteiro, otimista na tela +
-   * persistência em lote — mesmo padrão de `ajustarAnotacoes`. Só dono/mestre chega aqui (a aba
-   * nem aparece pra quem não pode); o backend é quem de fato garante o sigilo (omite o campo pro
-   * visualizador em `recuperarFicha`/broadcast, não só esconde no front).
-   */
-  protected ajustarHistoria(historia: string): void {
-    const fichaAtual = this.ficha();
-    if (!fichaAtual) {
-      return;
-    }
-    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, historia } });
-    this.agendarPersistencia();
-  }
-
-  /** Edita o Codinome (relacional) — otimista + persistência em lote. */
-  protected ajustarNome(nome: string): void {
-    const fichaAtual = this.ficha();
-    if (!fichaAtual) {
-      return;
-    }
-    this.ficha.set({ ...fichaAtual, nome });
-    this.agendarPersistencia();
-  }
-
-  /**
-   * Define/altera a Personalidade (m3-25): sem cascata (não deriva nenhuma stat) — o backend arbitra
-   * a trava de imutabilidade (m3-24); o front só esconde o lápis quando já sabe que vai travar.
-   */
-  protected ajustarPersonalidade(personalidade: string): void {
-    const fichaAtual = this.ficha();
-    if (!fichaAtual) {
-      return;
-    }
-    const identidade: FichaIdentidadeDto = { ...this.identidadeAtual(fichaAtual), personalidade };
-    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, identidade } });
-    this.agendarPersistencia();
-  }
-
-  /**
-   * Define/altera o Contrato (m3-40): só o mestre chega aqui (`contratoEditavel()` esconde o
-   * lápis pro dono/visualizador); o backend arbitra a trava (`validarContratoSomenteMestre`).
-   * Sem cascata — texto livre, não deriva nenhuma stat.
-   */
-  protected ajustarContrato(contrato: string): void {
-    const fichaAtual = this.ficha();
-    if (!fichaAtual) {
-      return;
-    }
-    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, contrato } });
-    this.agendarPersistencia();
-  }
-
-  /**
-   * Define/troca a Origem (m3-25): aplica o **delta de Formação** aos derivados
-   * (`aplicarFormacaoAosDerivados`/`removerFormacaoDosDerivados`, m3-23) — remove o delta da Origem
-   * anterior (se havia) antes de somar o da nova, exatamente como `ajustarClasse` faz com o bônus de
-   * arquétipo (`aplicarDeltaBonus`), preservando ajustes manuais fora dos campos que a Formação toca.
-   * Sem derivados stored (ficha antiga), não há o que ajustar. Otimista + em lote.
-   */
-  protected ajustarOrigem(origem: FichaOrigemDto): void {
-    const fichaAtual = this.ficha();
-    if (!fichaAtual) {
-      return;
-    }
-    const origemAnterior = this.identidadeAtual(fichaAtual).origem;
-    const derivadosAtuais = fichaAtual.dados.derivados;
-    const derivados = derivadosAtuais
-      ? aplicarFormacaoAosDerivados(
-          origemAnterior ? removerFormacaoDosDerivados(derivadosAtuais, origemAnterior.formacao) : derivadosAtuais,
-          origem.formacao,
-        )
-      : derivadosAtuais;
-    const identidade: FichaIdentidadeDto = { ...this.identidadeAtual(fichaAtual), origem };
-    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, identidade, derivados } });
-    this.agendarPersistencia();
-  }
-
-  /** Identidade atual da ficha — ausente em fichas anteriores à m3-23 cai em "nada definido". */
-  private identidadeAtual(ficha: FichaRecuperadaDto): FichaIdentidadeDto {
-    return ficha.dados.identidade ?? { personalidade: null, origem: null };
-  }
-
-  /**
-   * Edita Nível/Prestígio/**Dinheiro** (m3-34). **Nível** aplica a **progressão** (m3-10): as
-   * máximas (Vida/Energia) e os derivados stored que dependem do Nível — Defesa/Esquiva/Bloqueio,
-   * Proficiência, Hab./Turno e Dano Furtivo (+1D6+1 por marco cruzado) — acompanham a mudança.
-   * Dinheiro/Prestígio não disparam cascata. Otimista + em lote.
-   */
-  protected ajustarCampoDados(ajuste: AjusteCampoDados): void {
-    const fichaAtual = this.ficha();
-    if (!fichaAtual) {
-      return;
-    }
-    let dados: FichaJogadorDadosDto = { ...fichaAtual.dados, [ajuste.campo]: ajuste.valor };
-    if (ajuste.campo === 'nivel') {
-      dados = this.aplicarProgressao(fichaAtual.dados, dados);
-    }
-    this.ficha.set({ ...fichaAtual, dados });
-    this.agendarPersistencia();
-  }
-
-  /**
-   * Recalcula estado (máximas) e derivados aplicando a **variação de progressão** entre `antigos` e
-   * `novos` (Nível e/ou atributos mudaram). Cada campo **stored** acompanha a mudança preservando
-   * ajustes manuais (m3-10): números somam `calcular(novo) − calcular(antigo)`; o Dano Furtivo soma
-   * os marcos de Nível cruzados (D6 com D6, fixo com fixo); o Dano C.a.C. (tabela não-linear)
-   * recalcula só quando não foi customizado. Campo ausente fica ausente (fallback ao cálculo). Fonte
-   * única: fórmulas de `shared/regras` sobre a entrada já normalizada à classe (base da exibição).
-   */
-  private aplicarProgressao(
-    antigos: FichaJogadorDadosDto,
-    novos: FichaJogadorDadosDto,
-  ): FichaJogadorDadosDto {
-    const antes = normalizarEntrada(antigos.classe, antigos.nivel, antigos.atributos);
-    const depois = normalizarEntrada(novos.classe, novos.nivel, novos.atributos);
-    return {
-      ...novos,
-      estado: this.progredirEstado(novos.estado, antes, depois),
-      derivados: this.progredirDerivados(novos.derivados, antes, depois),
-    };
-  }
-
-  /** Máximas de Vida/Energia stored somadas do delta de progressão (Vigor/Destreza × Nível). */
-  private progredirEstado(
-    estado: FichaJogadorDadosDto['estado'],
-    antes: EntradaAgente,
-    depois: EntradaAgente,
-  ): FichaJogadorDadosDto['estado'] {
-    const deltaVida = calcularVida(depois) - calcularVida(antes);
-    const deltaEnergia = calcularEnergia(depois) - calcularEnergia(antes);
-    return {
-      ...estado,
-      vidaMaxima: estado.vidaMaxima === undefined ? undefined : estado.vidaMaxima + deltaVida,
-      energiaMaxima:
-        estado.energiaMaxima === undefined ? undefined : estado.energiaMaxima + deltaEnergia,
-    };
-  }
-
-  /**
-   * Derivados stored acompanhando a progressão: números por delta (Defesa/Esquiva/Bloqueio,
-   * Deslocamento, Proficiência, Percepção, Inventário, Hab./Turno); Dano Furtivo e Dano C.a.C. por
-   * regra própria. `derivados` ausente → mantém ausente; cada campo ausente idem.
-   */
-  private progredirDerivados(
-    derivados: FichaDerivadosDto | undefined,
-    antes: EntradaAgente,
-    depois: EntradaAgente,
-  ): FichaDerivadosDto | undefined {
-    if (!derivados) {
-      return undefined;
-    }
-    const defesaAntes = calcularDefesa(antes);
-    const defesaDepois = calcularDefesa(depois);
-    const somar = (valor: number | undefined, delta: number): number | undefined =>
-      valor === undefined ? undefined : valor + delta;
-    return {
-      ...derivados,
-      defesa: somar(derivados.defesa, (defesaDepois?.defesa ?? 0) - (defesaAntes?.defesa ?? 0)),
-      esquiva: somar(derivados.esquiva, (defesaDepois?.esquiva ?? 0) - (defesaAntes?.esquiva ?? 0)),
-      bloqueio: somar(
-        derivados.bloqueio,
-        (defesaDepois?.bloqueio ?? 0) - (defesaAntes?.bloqueio ?? 0),
-      ),
-      deslocamento: somar(
-        derivados.deslocamento,
-        calcularDeslocamento(depois) - calcularDeslocamento(antes),
-      ),
-      proficiencia: somar(
-        derivados.proficiencia,
-        (calcularProficiencia(depois) ?? 0) - (calcularProficiencia(antes) ?? 0),
-      ),
-      percepcao: somar(
-        derivados.percepcao,
-        calcularAreaPercepcao(depois) - calcularAreaPercepcao(antes),
-      ),
-      inventarioMaximo: somar(
-        derivados.inventarioMaximo,
-        calcularInventario(depois) - calcularInventario(antes),
-      ),
-      habilidadesPorTurno: somar(
-        derivados.habilidadesPorTurno,
-        calcularLimiteHabilidadesPorTurno(depois) - calcularLimiteHabilidadesPorTurno(antes),
-      ),
-      danoFurtivo: this.progredirDanoFurtivo(derivados.danoFurtivo, antes, depois),
-      danoCorpoACorpo: this.progredirDanoCorpo(derivados.danoCorpoACorpo, antes, depois),
-    };
-  }
-
-  /** Dano Furtivo stored + os marcos de Nível cruzados (cada marco = +1D6+1; só depende do Nível). */
-  private progredirDanoFurtivo(
-    stored: string | undefined,
-    antes: EntradaAgente,
-    depois: EntradaAgente,
-  ): string | undefined {
-    if (stored === undefined) {
-      return undefined;
-    }
-    const marcos = contarMarcosDanoFurtivo(depois.nivel) - contarMarcosDanoFurtivo(antes.nivel);
-    return marcos === 0 ? stored : incrementarDanoFurtivo(stored, marcos);
-  }
-
-  /**
-   * Dano C.a.C. (tabela não-linear de Força+Vigor): sem delta somável, recalcula **só quando não foi
-   * customizado** (stored igual ao calculado do estado anterior); um valor editado à mão é preservado.
-   */
-  private progredirDanoCorpo(
-    stored: string | undefined,
-    antes: EntradaAgente,
-    depois: EntradaAgente,
-  ): string | undefined {
-    if (stored === undefined) {
-      return undefined;
-    }
-    return stored === calcularDanoCorpo(antes) ? calcularDanoCorpo(depois) : stored;
-  }
+  // Os ~19 handlers `ajustar*` (Vida/Energia, atributos, classe, sanidade, condições, inventário…)
+  // e os helpers de progressão (`aplicarProgressao`/`recalcularSaude`/`progredir*`) moraram aqui
+  // até a m2-20 — extraídos para `FichaEdicaoService` (`../../ficha-edicao.service.ts`), reusado
+  // por `CampanhaDetalhe` na visão do jogador. O template chama `fichaEdicao.ajustar*($event)`.
 
   /** Concede a visualização ao membro selecionado e recarrega a lista de acessos. */
   protected conceder(): void {

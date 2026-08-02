@@ -1,18 +1,19 @@
-import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { finalize, forkJoin, merge } from 'rxjs';
+import { filter, finalize, forkJoin, merge } from 'rxjs';
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import {
   CampanhaMembroResumoDto,
   CampanhaRecuperadaDto,
 } from '@contratados-rpg/shared/dtos/campanha';
-import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { FichaRecuperadaDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
 import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
@@ -22,8 +23,11 @@ import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaService } from '../../campanha.service';
 import { FichaService } from '../../../ficha/ficha.service';
+import { FichaEdicaoService } from '../../../ficha/ficha-edicao.service';
+import { mesclarFicha } from '../../../ficha/mesclar-ficha';
 import { construirFichaInicial, type FichaAssistenteResultado } from '../../../ficha/ficha-padrao';
 import { FichaCriarDialog } from '../../../ficha/componentes/ficha-criar-dialog/ficha-criar-dialog.component';
+import { FichaVisualizacao } from '../../../ficha/componentes/ficha-visualizacao/ficha-visualizacao.component';
 import { rotuloClasseCompleto } from '../../../ficha/rotulos-ficha';
 import { rotuloPatente } from '../../../ficha/status-derivado';
 import { CONDICOES_FICHA, type DescritorCondicao } from '../../../ficha/condicoes-ficha';
@@ -117,7 +121,10 @@ interface ItemFicha {
     FichaCriarDialog,
     HoldRepeat,
     BandejaDados,
+    CalculadoraFlutuante,
+    FichaVisualizacao,
   ],
+  providers: [FichaEdicaoService],
   templateUrl: './detalhe.page.html',
   styleUrl: './detalhe.page.scss',
 })
@@ -125,6 +132,8 @@ export class CampanhaDetalhe {
   private readonly bandejaDadosService = inject(BandejaDadosService);
   private readonly campanhaService = inject(CampanhaService);
   private readonly fichaService = inject(FichaService);
+  /** Handlers `ajustar*` (m2-20) da ficha embutida na visão do jogador — mesmo composable de `VisualizarPage`. */
+  protected readonly fichaEdicao = inject(FichaEdicaoService);
   private readonly fichaVitalidadeRapidaService = inject(FichaVitalidadeRapidaService);
   private readonly rolagemService = inject(RolagemService);
   private readonly sessaoService = inject(SessaoService);
@@ -328,7 +337,7 @@ export class CampanhaDetalhe {
    * vez de sumir quando nada está marcado). O backend já resolve `morrendo`/`machucado`/
    * `inconsciente` para `false` quando ausentes (`FichaResumoDto`).
    */
-  private readonly fichasPorMembro = computed<ReadonlyMap<number, readonly ItemFicha[]>>(() => {
+  protected readonly fichasPorMembro = computed<ReadonlyMap<number, readonly ItemFicha[]>>(() => {
     const mapa = new Map<number, ItemFicha[]>();
     for (const ficha of this.fichas()) {
       const item: ItemFicha = {
@@ -411,9 +420,97 @@ export class CampanhaDetalhe {
     return this.rolagensFeed().filter((item) => new Date(item.createdDate).getTime() >= limite);
   });
 
+  /**
+   * `id` da ficha exibida na coluna principal da visão do **jogador** (m2-20) — inicializada com a
+   * própria ficha do usuário assim que `fichas()` carrega (ver `carregar`); trocada pelo "Ver
+   * ficha" de um colega (item 7). `null` antes do primeiro carregamento, ou quando o usuário não
+   * tem nenhuma ficha visível na campanha.
+   */
+  protected readonly fichaExibidaId = signal<number | null>(null);
+  /**
+   * Documento completo (`FichaRecuperadaDto`) da ficha exibida — buscado via `recuperarFicha`
+   * (item 4) sempre que `fichaExibidaId` muda; `fichas()`/`FichaResumoDto` não basta pra alimentar
+   * `<app-ficha-visualizacao>`.
+   */
+  protected readonly fichaExibidaDados = signal<FichaRecuperadaDto | null>(null);
+  protected readonly carregandoFichaExibida = signal(false);
+
+  /**
+   * `true` quando o usuário autenticado pode editar a ficha exibida (item 5) — mesma regra de
+   * `podeAjustarFicha`: dono ou mestre. `false` (só leitura) quando o jogador está vendo a ficha
+   * compartilhada de um colega via "Ver ficha".
+   */
+  protected readonly podeAjustarFichaExibida = computed(() => {
+    const fichaExibida = this.fichaExibidaDados();
+    return fichaExibida !== null && this.podeAjustarFicha(fichaExibida.usuarioId);
+  });
+
+  /** Troca a ficha exibida na coluna principal (item 7 — "Ver ficha") — dispara o fetch do item 4. */
+  protected selecionarFichaExibida(fichaId: number): void {
+    if (this.fichaExibidaId() === fichaId) {
+      return;
+    }
+    this.fichaExibidaId.set(fichaId);
+  }
+
+  /**
+   * Absorve um documento vindo do servidor (broadcast `ficha:alterada` da ficha exibida agora) —
+   * mesmo merge de `VisualizarPage.absorverRemoto`: sem edição local pendente, substitui; com
+   * pendência, mescla campo a campo (o que o usuário mexeu no card compacto prevalece, o resto do
+   * documento remoto entra) — o `alterarFicha` debounced do `FichaEdicaoService` serializa o
+   * resultado, então o `PUT` local não sobrescreve a edição concorrente de outra tela/usuário.
+   */
+  private absorverFichaExibidaRemota(remoto: FichaRecuperadaDto): void {
+    const base = this.fichaEdicao.fichaBase();
+    const local = this.fichaExibidaDados();
+    this.fichaExibidaDados.set(
+      this.fichaEdicao.edicaoPendente() && base && local ? mesclarFicha(base, local, remoto) : remoto,
+    );
+    this.fichaEdicao.definirBase(remoto);
+  }
+
+  /**
+   * Prepend local de uma rolagem feita na própria ficha embutida (mesmo padrão de
+   * `VisualizarPage.onRolagemRegistrada`) — feedback imediato na coluna "Sessão" (item 8) sem
+   * esperar o broadcast (que nunca chega para rolagens `PRIVADA`, §9).
+   */
+  protected onRolagemRegistradaEmbutida(rolagem: RolagemResumoDto): void {
+    this.rolagensFeed.update((atuais) =>
+      atuais[0]?.id === rolagem.id ? atuais : [rolagem, ...atuais],
+    );
+  }
+
   constructor() {
     this.carregar(true);
     this.carregarRolagens();
+
+    // Handlers `ajustar*` da ficha embutida (item 5) — mesmo composable de `VisualizarPage`
+    // (`FichaEdicaoService`, m2-20). `fichaExibidaId` muda sem recriar o componente, daí a função
+    // constante em vez de capturar o valor síncrono do parâmetro de rota.
+    this.fichaEdicao.inicializar(this.fichaExibidaDados, () => this.fichaExibidaId()!);
+
+    // Fetch da ficha completa (item 4) sempre que `fichaExibidaId` muda (seleção inicial da
+    // própria ficha, ou troca via "Ver ficha") — `fichas()`/`FichaResumoDto` não tem `dados`
+    // completo pra alimentar `<app-ficha-visualizacao>`. `untracked`: o `.subscribe` só resolve
+    // depois deste `effect` já ter terminado de rodar (chamada HTTP real, nunca síncrona), mas o
+    // guard evita qualquer dependência acidental do que ele mesmo escreve.
+    effect(() => {
+      const fichaId = this.fichaExibidaId();
+      if (fichaId === null) {
+        return;
+      }
+      this.carregandoFichaExibida.set(true);
+      this.fichaService
+        .recuperarFicha(fichaId)
+        .pipe(finalize(() => this.carregandoFichaExibida.set(false)))
+        .subscribe({
+          next: (ficha) =>
+            untracked(() => {
+              this.fichaExibidaDados.set(ficha);
+              this.fichaEdicao.definirBase(ficha);
+            }),
+        });
+    });
 
     // Tempo real (m3-05/m3-08, trazido da extinta FichaLista pela m2-16): entra na sala
     // `campanha:<id>` para as fichas inline e novos membros atualizarem ao vivo. Uma ficha criada
@@ -438,6 +535,17 @@ export class CampanhaDetalhe {
     )
       .pipe(takeUntilDestroyed())
       .subscribe({ next: () => this.recarregarMembrosEFichas() });
+
+    // Ficha exibida na coluna principal (m2-20, "card de equipe") em tempo real: o merge acima só
+    // atualiza a lista leve (`FichaResumoDto[]`, sidebar Equipe); sem isto, editar a ficha na tela
+    // completa (`VisualizarPage`, outra aba/dispositivo) nunca refletia no card compacto aqui —
+    // mesmo padrão de `VisualizarPage.absorverRemoto`.
+    this.tempoRealService.fichaAlterada$
+      .pipe(
+        filter((ficha) => ficha.id === this.fichaExibidaId()),
+        takeUntilDestroyed(),
+      )
+      .subscribe({ next: (fichaAlterada) => this.absorverFichaExibidaRemota(fichaAlterada) });
 
     // Feed de rolagens em tempo real (m3-27): só rolagens `PUBLICA` chegam por aqui (o backend não
     // broadcasta privadas — §9); prepend direto, sem refetch (o payload já vem completo).
@@ -520,6 +628,15 @@ export class CampanhaDetalhe {
           this.fichas.set(fichas);
           this.sincronizarSalasFicha(fichas);
           this.ultimaAtualizacaoEm.set(Date.now());
+          // Visão do jogador (m2-20, item 2): semeia `fichaExibidaId` com a própria ficha assim
+          // que `fichas()` carrega pela 1ª vez — só quando ainda não há seleção (não sobrescreve
+          // uma troca via "Ver ficha" numa ressincronização em tempo real posterior).
+          if (!this.ehMestre() && this.fichaExibidaId() === null) {
+            const propria = fichas.find((ficha) => ficha.usuarioId === this.usuarioAtivoId());
+            if (propria) {
+              this.fichaExibidaId.set(propria.id);
+            }
+          }
         },
       });
   }

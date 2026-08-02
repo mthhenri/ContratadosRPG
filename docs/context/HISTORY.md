@@ -21,6 +21,87 @@
 
 ## Registro por task (mais recente primeiro)
 
+## m2-20 — painel de campanhas: detalhe `/painel/:id` na visão do jogador (2026-08-01)
+
+Irmã da `m2-19` (mesmo detalhe, visão complementar): até aqui a visão do jogador em `/painel/:id`
+herdava **o mesmo template** do mestre, só escondendo blocos via `@if (ehMestre())` — banner/
+estatísticas/tira de rolagens continuam assim (compartilhados), mas a grade "Membros | Esquadrão"
+(`.detalhe__grade`) agora só renderiza para o mestre; um `@else` novo renderiza o layout dedicado
+do jogador (direção **A · Ficha em Primeiro Plano**, aprovada em protótipo comparativo contra
+"Meu Posto" e "Abas do Jogador"): a ficha exibida (a própria, por padrão, ou a de um colega via
+"Ver ficha") como conteúdo principal, num card condensado (`<app-ficha-visualizacao
+modo="compacto">`, o componente real, não uma réplica — 2 colunas, sem abas de Informações/
+Extras/História, com "Abrir ficha completa" pra ver a ficha inteira sem corte) e uma coluna
+lateral de 450px — "Equipe" (roster compacto com Vida/Energia + botão "Ver ficha" por ficha
+visível de cada colega) e "Sessão" (rolagens da última hora, mesma fonte da tira do topo).
+
+**Novo `signal<number | null> fichaExibidaId`** em `CampanhaDetalhe`, semeado com a própria ficha
+do usuário assim que `fichas()` carrega pela 1ª vez (só quando ainda `null` — uma troca via "Ver
+ficha" sobrevive a uma ressincronização em tempo real posterior). Um `effect()` busca o documento
+completo (`fichaService.recuperarFicha`, já que `fichas()`/`FichaResumoDto` não tem `dados`
+completo) sempre que o `id` muda — mesma chamada que `VisualizarPage` já fazia. "Ver ficha" na
+coluna Equipe é só `fichaExibidaId.set(novoId)`, sem navegação: o conjunto de fichas com botão é
+exatamente `fichasPorMembro()` (já filtrado pelo backend via `listarVisiveisParaUsuario`, §14) —
+nenhuma mudança de backend, nenhuma regra de permissão nova no front.
+
+**Handlers `ajustar*` extraídos para `FichaEdicaoService`** (`frontend/src/app/modules/ficha/
+ficha-edicao.service.ts`, `@Injectable()` **sem** `providedIn: 'root'` — cada página que precisa
+dele declara `providers: [FichaEdicaoService]` para ganhar sua própria instância). Os ~18 métodos
+`ajustar*` (Vida/Energia, atributos, classe, sanidade, condições, inventário, presets, combos,
+anotações, história, nome, personalidade, contrato, origem, campo de dados) e os helpers de
+progressão (`aplicarProgressao`/`recalcularSaude`/`progredir*`) saíram de `VisualizarPage`
+(`visualizar.page.ts:575-935` antes da extração) — `CampanhaDetalhe` consome o mesmo composable
+via `fichaEdicao.ajustar*($event)` no template, zero duplicação. O composable também assumiu
+`estadoPersistencia`/`edicaoPendente`/`fichaBase` (a base do merge de três vias de `VisualizarPage.
+absorverRemoto`, m3-17) — `CampanhaDetalhe` não precisa do merge (não tem tempo real por-ficha
+alterada em edição concorrente própria), só chama `definirBase` a cada fetch novo.
+
+**Novo input `modo: 'padrao' | 'compacto'`** em `FichaVisualizacao` — quando `'compacto'`, uma
+classe de host (`.ficha-visao--compacto`, seletor irmão de maior especificidade, não precisa de
+`@media`) reduz as 3 colunas do layout `'padrao'` (Identidade 420 + Atributos 260 + Status mín.
+420 ≈ 1130px, mais do que a coluna principal do `CampanhaDetalhe` tem — ~900px numa tela de
+1600px) pra 2, **independente da largura real da janela**: Identidade+Atributos empilhados num
+agrupador único (`&__coluna-agente`) ao lado da Status sem abas (só Inventário/Habilidades/
+Rolagens, sempre visíveis — Informações/Extras/História ficam só na ficha completa) — some
+também com Prestígio. **Não** força o recorte de `$bp-mobile` (HUD/barra inferior do m3-60) —
+esse continua só de viewport real; numa tela pequena de verdade os dois efeitos se somam
+sozinhos. A barra inferior do m3-60, nesse modo, também só lista os destinos que o compacto tem
+(Agente/Inventário/Habilidades/Rolagens — Informações/Extras/História somem da barra junto com os
+painéis). `VisualizarPage` continua com `modo="padrao"` (default, omitido no template) —
+comportamento inalterado lá.
+
+A mini-aba **Rolagens** do card de Status ganhou uma nota condicional (`modo() === 'compacto'`)
+apontando para a coluna "Sessão" — a aba nunca teve feed próprio (só preset/rolagem avulsa), a nota
+só documenta a decisão de não duplicar nada ali.
+
+**Verificação ao vivo** (Playwright, dois usuários reais — mestre + jogador, campanha + 3 fichas
+via REST, uma delas compartilhada via `usuario_ficha_acesso`): mestre continua vendo `.detalhe__
+grade` (visão antiga intacta); jogador vê `.detalhe__jogador` com a ficha compacta, os 3 botões
+"Ver ficha" na Equipe (a própria + a compartilhada do mestre); trocar de ficha via clique **não
+navega** (sentinela sobreviveu) e o `fichaService.recuperarFicha` é chamado com o novo `id`; a
+ficha do mestre aparece **sem** nenhum stepper de Vida/Energia (só leitura) e a própria ficha, ao
+reselecionar, volta a ter o stepper. Depois, num segundo passe focado em mobile (viewport 390×844,
+mestre e jogador): a barra inferior mostra só os 4 destinos válidos do compacto; o gatilho da
+calculadora flutuante (`<app-calculadora-flutuante>`, adicionada no cabeçalho ao lado do gatilho
+de histórico, `[acimaDaCalculadora]="true"` nele pra empilhar os dois círculos no desktop) aparece
+pros dois papéis; a bandeja de dados (resultado de rolagem) e o fim da coluna "Sessão" não ficam
+mais escondidos atrás da `.ficha-nav` fixa (reserva de piso via `--piso-flutuante`, mesma receita
+do m3-60 em `visualizar.page.scss`, replicada em `detalhe.page.scss` + `padding-bottom` só na
+visão do jogador); no viewport `'padrao'` (`/painel/:campanhaId/ficha/:id`), confirmado sem
+nenhuma mudança — larguras de coluna, Prestígio e as 7 abas continuam intactos.
+
+`frontend/src/app/modules/campanha/paginas/detalhe/detalhe.page.spec.ts`: os dois testes que
+verificavam "jogador comum só vê os passos/menu na própria ficha" dentro do grid Esquadrão ficaram
+obsoletos (esse grid não renderiza mais pra jogador) — substituídos por um novo
+`describe('visão do jogador (m2-20)')` cobrindo a troca de ficha, a permissão (`podeAjustarFichaExibida`)
+e o link "Abrir completa" apontando pra ficha certa. O mock de `fichaService.recuperarFicha` no
+mesmo arquivo (usado antes só pelo `FichaVitalidadeRapidaService`) ganhou o `FichaJogadorDadosDto`
+completo (atributos/maestria/habilidades/inventário/estado) — sem isso `<app-ficha-visualizacao>`
+quebrava lendo `atributos.vigor` de um objeto incompleto.
+
+`lint`/`test`/`build` do frontend verdes (mesma falha pré-existente de sempre, `ficha-inventario.
+component.spec.ts`, P-001).
+
 ## Ajuste pós-m2-19 (5) — revisão do dadinho d20/Contra-ataque: bug de snapshot, barra de tempo e alinhamento (2026-08-01)
 
 Revisão pedida pelo autor sobre os dois ajustes anteriores (itens 3 e 4 desta mesma sequência),

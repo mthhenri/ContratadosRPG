@@ -42,7 +42,9 @@
           titulo="Rolagens da Campanha"
           [itens]="rolagensFeed()"
           [carregando]="carregandoRolagens()"
+          [acimaDaCalculadora]="true"
         />
+        <app-calculadora-flutuante />
         @if (ehMestre()) {
           <div class="detalhe__cabecalho-menu-envoltorio">
             <button
@@ -151,16 +153,16 @@
       </div>
     }
 
-    <div class="detalhe__estatisticas">
-      <div class="stat">
-        <span class="stat__rotulo">Membros</span>
-        <span class="stat__valor">{{ membros().length }}</span>
-      </div>
-      <div class="stat">
-        <span class="stat__rotulo">Fichas</span>
-        <span class="stat__valor">{{ fichas().length }}</span>
-      </div>
-      @if (ehMestre()) {
+    @if (ehMestre()) {
+      <div class="detalhe__estatisticas">
+        <div class="stat">
+          <span class="stat__rotulo">Membros</span>
+          <span class="stat__valor">{{ membros().length }}</span>
+        </div>
+        <div class="stat">
+          <span class="stat__rotulo">Fichas</span>
+          <span class="stat__valor">{{ fichas().length }}</span>
+        </div>
         <div class="stat detalhe__stat-convite">
           <span class="stat__rotulo">Convite</span>
           <div class="detalhe__convite-linha">
@@ -188,43 +190,44 @@
             </button>
           </div>
         </div>
-      }
-      <div class="stat" [class.stat--alerta]="alertasCount() > 0">
-        <span class="stat__rotulo">Alertas</span>
-        <span class="stat__valor">{{ alertasCount() }}</span>
+        <div class="stat" [class.stat--alerta]="alertasCount() > 0">
+          <span class="stat__rotulo">Alertas</span>
+          <span class="stat__valor">{{ alertasCount() }}</span>
+        </div>
       </div>
-    </div>
 
-    @if (rolagensRecentes().length) {
-      <section class="detalhe__rolagens">
-        <header class="detalhe__secao">
-          <h2 class="detalhe__secao-titulo">Rolagens Recentes</h2>
-          <span class="detalhe__secao-regua"></span>
-        </header>
-        <ul class="detalhe__rolagens-tira" appOverflowFade>
-          @for (item of rolagensRecentes(); track item.id) {
-            <li class="rolagem-pill">
-              <div class="rolagem-pill__topo">
-                <span class="rolagem-pill__rotulo">{{ item.rotulo }}</span>
-                <button
-                  type="button"
-                  class="rolagem-pill__d20"
-                  [attr.aria-label]="'Ver resultado de ' + item.rotulo"
-                  (mouseenter)="mostrarPreviaRolagem(item)"
-                  (mouseleave)="esconderPreviaRolagem()"
-                  (focus)="mostrarPreviaRolagem(item)"
-                  (blur)="esconderPreviaRolagem()"
-                >
-                  <app-icone nome="d20" />
-                </button>
-              </div>
-              <span class="rolagem-pill__meta">{{ item.nomeAutor }} · {{ tempoRolagem(item) }}</span>
-            </li>
-          }
-        </ul>
-      </section>
+      @if (rolagensRecentes().length) {
+        <section class="detalhe__rolagens">
+          <header class="detalhe__secao">
+            <h2 class="detalhe__secao-titulo">Rolagens Recentes</h2>
+            <span class="detalhe__secao-regua"></span>
+          </header>
+          <ul class="detalhe__rolagens-tira" appOverflowFade>
+            @for (item of rolagensRecentes(); track item.id) {
+              <li class="rolagem-pill">
+                <div class="rolagem-pill__topo">
+                  <span class="rolagem-pill__rotulo">{{ item.rotulo }}</span>
+                  <button
+                    type="button"
+                    class="rolagem-pill__d20"
+                    [attr.aria-label]="'Ver resultado de ' + item.rotulo"
+                    (mouseenter)="mostrarPreviaRolagem(item)"
+                    (mouseleave)="esconderPreviaRolagem()"
+                    (focus)="mostrarPreviaRolagem(item)"
+                    (blur)="esconderPreviaRolagem()"
+                  >
+                    <app-icone nome="d20" />
+                  </button>
+                </div>
+                <span class="rolagem-pill__meta">{{ item.nomeAutor }} · {{ tempoRolagem(item) }}</span>
+              </li>
+            }
+          </ul>
+        </section>
+      }
     }
 
+    @if (ehMestre()) {
     <div class="detalhe__grade">
       <article class="card detalhe__coluna detalhe__coluna--membros">
         <header class="detalhe__secao">
@@ -489,6 +492,141 @@
         }
       </article>
     </div>
+    } @else {
+    <div class="detalhe__jogador">
+      <div class="detalhe__jogador-principal">
+        @if (fichaExibidaDados(); as fichaExibida) {
+          <article class="card detalhe__ficha-embutida">
+            <header class="card__cabecalho">
+              <span class="card__indice"><app-icone nome="agente" /></span>
+              <h2 class="card__titulo">{{ fichaExibida.nome }}</h2>
+              <span class="card__regua"></span>
+              <a
+                class="botao botao--secundario detalhe__abrir-completa"
+                [routerLink]="['/painel', campanhaAtual.id, 'ficha', fichaExibida.id]"
+              >
+                <app-icone nome="visao-geral" />
+                Abrir completa
+              </a>
+            </header>
+
+            <app-ficha-visualizacao
+              [fichaId]="fichaExibida.id"
+              [nome]="fichaExibida.nome"
+              [dados]="fichaExibida.dados"
+              [ajustavel]="podeAjustarFichaExibida()"
+              [podeRolar]="podeAjustarFichaExibida()"
+              [ehMestre]="false"
+              modo="compacto"
+              (rolagemRegistrada)="onRolagemRegistradaEmbutida($event)"
+              (ajusteVitalidade)="fichaEdicao.ajustarVitalidade($event)"
+              (ajusteDerivado)="fichaEdicao.ajustarDerivado($event)"
+              (ajusteResistencia)="fichaEdicao.ajustarResistencia($event)"
+              (ajusteAtributos)="fichaEdicao.ajustarAtributos($event)"
+              (ajusteNome)="fichaEdicao.ajustarNome($event)"
+              (ajusteCampoDados)="fichaEdicao.ajustarCampoDados($event)"
+              (ajusteClasse)="fichaEdicao.ajustarClasse($event)"
+              (ajusteSanidade)="fichaEdicao.ajustarSanidade($event)"
+              (ajusteCondicoes)="fichaEdicao.ajustarCondicoes($event)"
+              (ajusteHabilidades)="fichaEdicao.ajustarHabilidades($event)"
+              (ajusteInventario)="fichaEdicao.ajustarInventario($event)"
+              (ajusteRolagens)="fichaEdicao.ajustarRolagens($event)"
+              (ajusteCombos)="fichaEdicao.ajustarCombos($event)"
+              (ajusteAnotacoes)="fichaEdicao.ajustarAnotacoes($event)"
+              (ajusteHistoria)="fichaEdicao.ajustarHistoria($event)"
+              (ajustePersonalidade)="fichaEdicao.ajustarPersonalidade($event)"
+              (ajusteOrigem)="fichaEdicao.ajustarOrigem($event)"
+              (ajusteContrato)="fichaEdicao.ajustarContrato($event)"
+            />
+
+            <a
+              class="botao botao--secundario detalhe__abrir-completa-rodape"
+              [routerLink]="['/painel', campanhaAtual.id, 'ficha', fichaExibida.id]"
+            >
+              Abrir ficha completa
+            </a>
+          </article>
+        } @else if (carregandoFichaExibida()) {
+          <p class="detalhe__estado">Carregando ficha…</p>
+        } @else {
+          <p class="detalhe__estado">Você ainda não tem uma ficha nesta campanha.</p>
+        }
+      </div>
+
+      <div class="detalhe__jogador-lateral">
+        <article class="card detalhe__equipe">
+          <header class="detalhe__secao">
+            <h2 class="detalhe__secao-titulo">Equipe</h2>
+            <span class="detalhe__secao-regua"></span>
+          </header>
+          <ul class="detalhe__equipe-lista" appOverflowFade>
+            @for (membro of membrosOrdenados(); track membro.usuarioId) {
+              @let fichasDoMembro = fichasPorMembro().get(membro.usuarioId);
+              @if (fichasDoMembro && fichasDoMembro.length) {
+                <li class="detalhe__equipe-membro">
+                  <span class="detalhe__avatar" aria-hidden="true"></span>
+                  <div class="detalhe__equipe-membro-corpo">
+                    <span class="detalhe__equipe-nome">{{ membro.nome }}</span>
+                    @for (ficha of fichasDoMembro; track ficha.id) {
+                      <button
+                        type="button"
+                        class="detalhe__equipe-ficha"
+                        [class.detalhe__equipe-ficha--ativa]="fichaExibidaId() === ficha.id"
+                        [attr.aria-pressed]="fichaExibidaId() === ficha.id"
+                        [attr.aria-label]="'Ver ficha de ' + ficha.nome + ' (' + membro.nome + ')'"
+                        (click)="selecionarFichaExibida(ficha.id)"
+                      >
+                        <app-icone nome="olho" />
+                        <span class="detalhe__equipe-ficha-corpo">
+                          <span class="detalhe__equipe-ficha-nome">{{ ficha.nome }}</span>
+                          <span class="detalhe__equipe-ficha-vitais">
+                            Vida {{ ficha.vidaAtual }}/{{ ficha.vidaMaxima ?? '—' }} · Energia
+                            {{ ficha.energiaAtual }}/{{ ficha.energiaMaxima ?? '—' }}
+                          </span>
+                        </span>
+                      </button>
+                    }
+                  </div>
+                </li>
+              }
+            }
+          </ul>
+        </article>
+
+        <article class="card detalhe__sessao">
+          <header class="detalhe__secao">
+            <h2 class="detalhe__secao-titulo">Sessão</h2>
+            <span class="detalhe__secao-regua"></span>
+          </header>
+          @if (rolagensRecentes().length === 0) {
+            <p class="detalhe__estado">Nenhuma rolagem na última hora.</p>
+          } @else {
+            <ul class="detalhe__sessao-lista" appOverflowFade>
+              @for (item of rolagensRecentes(); track item.id) {
+                <li class="rolagem-pill">
+                  <div class="rolagem-pill__topo">
+                    <span class="rolagem-pill__rotulo">{{ item.rotulo }}</span>
+                    <button
+                      type="button"
+                      class="rolagem-pill__d20"
+                      [attr.aria-label]="'Ver resultado de ' + item.rotulo"
+                      (mouseenter)="mostrarPreviaRolagem(item)"
+                      (mouseleave)="esconderPreviaRolagem()"
+                      (focus)="mostrarPreviaRolagem(item)"
+                      (blur)="esconderPreviaRolagem()"
+                    >
+                      <app-icone nome="d20" />
+                    </button>
+                  </div>
+                  <span class="rolagem-pill__meta">{{ item.nomeAutor }} · {{ tempoRolagem(item) }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </article>
+      </div>
+    </div>
+    }
   }
 </section>
 

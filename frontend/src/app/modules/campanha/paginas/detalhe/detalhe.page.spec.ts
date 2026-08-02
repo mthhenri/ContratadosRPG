@@ -94,11 +94,35 @@ describe('CampanhaDetalhe', () => {
           dados: {
             nivel: ficha?.nivel ?? 1,
             classe: ficha?.classe ?? ClasseEnum.COMBATENTE,
+            arquetipo: ficha?.arquetipo ?? null,
+            prestigio: ficha?.prestigio ?? 0,
+            // `<app-ficha-visualizacao>` embutida na visão do jogador (m2-20) precisa do
+            // documento completo — os campos abaixo não existiam neste mock (usado antes só
+            // para o `FichaVitalidadeRapidaService`, que só lê `estado`).
+            atributos: {
+              destreza: 1,
+              forca: 1,
+              luta: 1,
+              pontaria: 1,
+              vigor: 1,
+              intelecto: 1,
+              medicina: 1,
+              sentidos: 1,
+              social: 1,
+              vontade: 1,
+            },
+            maestria: null,
+            habilidades: [],
+            inventario: { itens: [], amplificadores: [] },
+            anotacoes: '',
             estado: {
               vidaAtual: ficha?.vidaAtual ?? 0,
               vidaMaxima: ficha?.vidaMaxima,
               energiaAtual: ficha?.energiaAtual ?? 0,
               energiaMaxima: ficha?.energiaMaxima,
+              sequelas: [],
+              traumas: [],
+              lesoes: [],
             },
           },
         });
@@ -1046,13 +1070,9 @@ describe('CampanhaDetalhe', () => {
       expect(raiz.querySelector('[aria-label="Aumentar Vida de Zeta"]')).not.toBeNull();
     });
 
-    it('jogador comum só vê os passos nas próprias fichas, nunca na do mestre', () => {
-      const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
-
-      expect(raiz.querySelector('[aria-label="Aumentar Vida de Vera"]')).not.toBeNull();
-      expect(raiz.querySelector('[aria-label="Aumentar Vida de Zeta"]')).not.toBeNull();
-      expect(raiz.querySelector('[aria-label="Aumentar Vida de Kane"]')).toBeNull();
-    });
+    // m2-20: jogador comum não vê mais o grid "Esquadrão" (substituído pela própria ficha
+    // embutida + coluna "Equipe") — a mesma regra de permissão (`podeAjustarFicha`) agora se
+    // expressa em `podeAjustarFichaExibida()`, consumido pelo `[ajustavel]` da ficha embutida.
 
     it('clique em + soma 1 na Vida na hora (otimista, sem esperar a rede)', () => {
       const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
@@ -1130,12 +1150,8 @@ describe('CampanhaDetalhe', () => {
       expect(raiz.querySelector('[aria-label="Ações de Vera"]')).not.toBeNull();
     });
 
-    it('jogador comum só vê o menu de ações na própria ficha, nunca na do mestre', () => {
-      const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
-
-      expect(raiz.querySelector('[aria-label="Ações de Vera"]')).not.toBeNull();
-      expect(raiz.querySelector('[aria-label="Ações de Kane"]')).toBeNull();
-    });
+    // m2-20: idem — o menu kebab do mini-card só existe no grid "Esquadrão" (visão do mestre);
+    // ver a visão do jogador em `describe('visão do jogador (m2-20)')`.
 
     describe('duplicar', () => {
       it('abre a dialog de confirmação com o nome da ficha e do dono', () => {
@@ -1233,6 +1249,73 @@ describe('CampanhaDetalhe', () => {
         expect(raiz.querySelector('.dialogo')).toBeNull();
         expect(raiz.textContent).not.toContain('Vera');
       });
+    });
+  });
+
+  // === Visão do JOGADOR (m2-20) — substitui o grid "Esquadrão" por: a própria ficha completa
+  // embutida na coluna principal, e uma coluna lateral estreita (Equipe + Sessão). ===
+  describe('visão do jogador (m2-20)', () => {
+    it('mestre continua vendo o grid "Esquadrão" (@if ehMestre), não a visão do jogador', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      expect(raiz.querySelector('.detalhe__esquadrao-grid')).not.toBeNull();
+      expect(raiz.querySelector('.detalhe__jogador')).toBeNull();
+    });
+
+    it('jogador vê a própria ficha embutida (não o grid "Esquadrão") e "Equipe" com os colegas visíveis', () => {
+      const { raiz, fichaService } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+
+      expect(raiz.querySelector('.detalhe__grade')).toBeNull();
+      expect(raiz.querySelector('.detalhe__jogador')).not.toBeNull();
+      // Seleção inicial (item 2): a própria ficha (Vera, `usuarioId: 2`, a 1ª na lista).
+      expect(fichaService.recuperarFicha).toHaveBeenCalledWith(4);
+      expect(raiz.querySelector('app-ficha-visualizacao')).not.toBeNull();
+
+      // "Ver ficha" (item 7) — um botão por ficha visível de cada colega (Kane do mestre, Vera e
+      // Zeta, as duas do próprio jogador).
+      const botoes = Array.from(raiz.querySelectorAll('.detalhe__equipe-ficha')).map((el) =>
+        el.textContent?.replace(/\s+/g, ' ').trim(),
+      );
+      expect(botoes.some((texto) => texto?.includes('Kane'))).toBe(true);
+      expect(botoes.some((texto) => texto?.includes('Vera'))).toBe(true);
+      expect(botoes.some((texto) => texto?.includes('Zeta'))).toBe(true);
+    });
+
+    it('"Ver ficha" troca a ficha exibida sem navegar, e a de um colega vira só leitura', () => {
+      const { fixture, raiz, fichaService, navegar } = montar({
+        usuarioId: 2,
+        membros: membrosDois(),
+        fichas,
+      });
+      const componente = fixture.componentInstance;
+
+      // Própria ficha (Vera, dona) — editável.
+      expect(componente['podeAjustarFichaExibida']()).toBe(true);
+
+      const botaoKane = Array.from(raiz.querySelectorAll<HTMLButtonElement>('.detalhe__equipe-ficha')).find(
+        (botao) => botao.textContent?.includes('Kane'),
+      );
+      botaoKane?.click();
+      fixture.detectChanges();
+
+      expect(navegar).not.toHaveBeenCalled();
+      expect(fichaService.recuperarFicha).toHaveBeenCalledWith(3);
+      expect(componente['fichaExibidaId']()).toBe(3);
+      // Ficha do mestre, vista pelo jogador comum — só leitura.
+      expect(componente['podeAjustarFichaExibida']()).toBe(false);
+    });
+
+    it('"Abrir completa" aponta para a rota dedicada da ficha exibida no momento', () => {
+      const { fixture, raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+
+      const botaoZeta = Array.from(raiz.querySelectorAll<HTMLButtonElement>('.detalhe__equipe-ficha')).find(
+        (botao) => botao.textContent?.includes('Zeta'),
+      );
+      botaoZeta?.click();
+      fixture.detectChanges();
+
+      const link = raiz.querySelector('.detalhe__abrir-completa-rodape');
+      expect(link?.getAttribute('href')).toBe(`/painel/${CAMPANHA_ID}/ficha/5`);
     });
   });
 });
