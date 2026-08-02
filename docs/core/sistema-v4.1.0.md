@@ -28,7 +28,7 @@
 
  *Você é nossa prioridade.*
 
-| VERSÃO 4.0.0 |
+| VERSÃO 4.1.0 |
 | :---: |
 
 **Contratados**  
@@ -106,131 +106,131 @@
 
 [⬡ Prestígio e Patentes	28](#⬡-prestígio-e-patentes)
 
-[⬡ Informações Adicionais	29](#⬡-informações-adicionais)
+[⬡ Informações Adicionais	30](#⬡-informações-adicionais)
 
-[⬥ Inventário	29](#⬥-inventário)
+[⬥ Inventário	30](#⬥-inventário)
 
-[⬥ Defesa	29](#⬥-defesa)
+[⬥ Defesa	30](#⬥-defesa)
 
-[⬥ Área de Percepção	29](#⬥-área-de-percepção)
+[⬥ Área de Percepção	30](#⬥-área-de-percepção)
 
-[⬥ Deslocamento	29](#⬥-deslocamento)
+[⬥ Deslocamento	30](#⬥-deslocamento)
 
-[⬥ Corpo e Pontuação Corporal	30](#⬥-corpo-e-pontuação-corporal)
+[⬥ Corpo e Pontuação Corporal	31](#⬥-corpo-e-pontuação-corporal)
 
-[⬥ Dinheiro	30](#⬥-dinheiro)
+[⬥ Dinheiro	31](#⬥-dinheiro)
 
-[⬥ Equipamento Inicial	30](#⬥-equipamento-inicial)
+[⬥ Equipamento Inicial	31](#⬥-equipamento-inicial)
 
-[⬡ Iniciando um Novo Agente	31](#⬡-iniciando-um-novo-agente)
+[⬡ Iniciando um Novo Agente	32](#⬡-iniciando-um-novo-agente)
 
-[⬥ Nível Inicial	31](#⬥-nível-inicial)
+[⬥ Nível Inicial	32](#⬥-nível-inicial)
 
-[⬥ Prestígio Inicial	31](#⬥-prestígio-inicial)
+[⬥ Prestígio Inicial	32](#⬥-prestígio-inicial)
 
-[⬥ Bônus Monetário	32](#⬥-bônus-monetário)
+[⬥ Bônus Monetário	33](#⬥-bônus-monetário)
 
-[⬡ Jogando como um Civil	33](#⬡-jogando-como-um-civil)
+[⬡ Jogando como um Civil	34](#⬡-jogando-como-um-civil)
 
-[**⬢ Equipamentos	35**](#⬢-equipamentos)
+[**⬢ Equipamentos	36**](#⬢-equipamentos)
 
-[⬡ Definições	35](#⬡-definições)
+[⬡ Definições	36](#⬡-definições)
 
-[⬡ Corpo a Corpo	37](#heading)
+[⬡ Corpo a Corpo	38](#heading)
 
-[⬡ Explosivos	39](#⬡-explosivos)
+[⬡ Explosivos	40](#⬡-explosivos)
 
-[⬡ Armas de Fogo	40](#⬡-armas-de-fogo)
+[⬡ Armas de Fogo	41](#⬡-armas-de-fogo)
 
-[⬡ Munições	41](#⬡-munições)
+[⬡ Munições	42](#⬡-munições)
 
-[⬡ Proteções e Escudos	43](#⬡-proteções-e-escudos)
+[⬡ Proteções e Escudos	44](#⬡-proteções-e-escudos)
 
-[⬡ Exóticos	44](#⬡-exóticos)
+[⬡ Exóticos	45](#⬡-exóticos)
 
-[⬡ Armazenamento	45](#⬡-armazenamento)
+[⬡ Armazenamento	46](#⬡-armazenamento)
 
-[⬡ Itens Operacionais	46](#⬡-itens-operacionais)
+[⬡ Itens Operacionais	47](#⬡-itens-operacionais)
 
-[⬡ Itens Medicinais	47](#⬡-itens-medicinais)
+[⬡ Itens Medicinais	48](#⬡-itens-medicinais)
 
-[**⬢ Regras	48**](#⬢-regras)
+[**⬢ Regras	49**](#⬢-regras)
 
-[⬡ Gerais	48](#⬡-gerais)
+[⬡ Gerais	49](#⬡-gerais)
 
-[⬥ Testes	48](#⬥-testes)
+[⬥ Testes	49](#⬥-testes)
 
-[⬥ Crítico e Margem de Crítico	48](#⬥-crítico-e-margem-de-crítico)
+[⬥ Crítico e Margem de Crítico	49](#⬥-crítico-e-margem-de-crítico)
 
-[⬥ Tipos de Dano	49](#⬥-tipos-de-dano)
+[⬥ Tipos de Dano	50](#⬥-tipos-de-dano)
 
-[⬥ Ações	50](#⬥-ações)
+[⬥ Ações	51](#⬥-ações)
 
-[⬥ Descanso	52](#⬥-descanso)
+[⬥ Descanso	53](#⬥-descanso)
 
-[⬥ Cálculos	53](#⬥-cálculos)
+[⬥ Cálculos	54](#⬥-cálculos)
 
-[⬡ Base da Fundação	54](#⬡-base-da-fundação)
+[⬡ Base da Fundação	55](#⬡-base-da-fundação)
 
-[⬡ Missões	55](#⬡-missões)
+[⬡ Missões	56](#⬡-missões)
 
-[⬡ A Morte	57](#⬡-a-morte)
+[⬡ A Morte	58](#⬡-a-morte)
 
-[⬡ Cenas	58](#⬡-cenas)
+[⬡ Cenas	59](#⬡-cenas)
 
-[⬥ Investigação	58](#⬥-investigação)
+[⬥ Investigação	59](#⬥-investigação)
 
-[⬥ Combate	60](#⬥-combate)
+[⬥ Combate	61](#⬥-combate)
 
-[⬥ Furtiva	62](#⬥-furtiva)
+[⬥ Furtiva	63](#⬥-furtiva)
 
-[⬥ Perseguição	63](#⬥-perseguição)
+[⬥ Perseguição	64](#⬥-perseguição)
 
-[⬥ Resistência	64](#⬥-resistência)
+[⬥ Resistência	65](#⬥-resistência)
 
-[⬡ Condições	65](#⬡-condições)
+[⬡ Condições	66](#⬡-condições)
 
-[⬡ Lesões	66](#⬡-lesões)
+[⬡ Lesões	67](#⬡-lesões)
 
-[⬥ Reabilitação em Missão	66](#⬥-reabilitação-em-missão)
+[⬥ Reabilitação em Missão	67](#⬥-reabilitação-em-missão)
 
-[⬥ Tratamento de Lesões	67](#⬥-tratamento-de-lesões)
+[⬥ Tratamento de Lesões	68](#⬥-tratamento-de-lesões)
 
-[⬥ Lesões Permanentes	67](#⬥-lesões-permanentes)
+[⬥ Lesões Permanentes	68](#⬥-lesões-permanentes)
 
-[⬡ Aposentadoria	68](#⬡-aposentadoria)
+[⬡ Aposentadoria	69](#⬡-aposentadoria)
 
-[⬥ Se Tornar um Funcionário	68](#⬥-se-tornar-um-funcionário)
+[⬥ Se Tornar um Funcionário	69](#⬥-se-tornar-um-funcionário)
 
-[⬥ Sair da Fundação SCP	70](#⬥-sair-da-fundação-scp)
+[⬥ Sair da Fundação SCP	71](#⬥-sair-da-fundação-scp)
 
-[⬥ Abandonar a Fundação SCP	70](#⬥-abandonar-a-fundação-scp)
+[⬥ Abandonar a Fundação SCP	71](#⬥-abandonar-a-fundação-scp)
 
-[⬥ Contido ou Exterminado	71](#⬥-contido-ou-exterminado)
+[⬥ Contido ou Exterminado	72](#⬥-contido-ou-exterminado)
 
-[**⬢ Fundação SCP	72**](#⬢-fundação-scp)
+[**⬢ Fundação SCP	73**](#⬢-fundação-scp)
 
-[⬡ Criaturas e Anomalias	72](#⬡-criaturas-e-anomalias)
+[⬡ Criaturas e Anomalias	73](#⬡-criaturas-e-anomalias)
 
-[⬡ Fragmentos	73](#⬡-fragmentos)
+[⬡ Fragmentos	74](#⬡-fragmentos)
 
-[⬥ Módulos	73](#⬥-módulos)
+[⬥ Módulos	74](#⬥-módulos)
 
-[⬥ Identificação de Poder	73](#⬥-identificação-de-poder)
+[⬥ Identificação de Poder	74](#⬥-identificação-de-poder)
 
-[⬥ Acoplamento	73](#⬥-acoplamento)
+[⬥ Acoplamento	74](#⬥-acoplamento)
 
-[⬥ Função	74](#⬥-função)
+[⬥ Função	75](#⬥-função)
 
-[⬥ Afinidade com Fragmentos	75](#⬥-afinidade-com-fragmentos)
+[⬥ Afinidade com Fragmentos	76](#⬥-afinidade-com-fragmentos)
 
-[⬥ Venda de Fragmentos	76](#⬥-venda-de-fragmentos)
+[⬥ Venda de Fragmentos	77](#⬥-venda-de-fragmentos)
 
-[⬥ Reduzindo Módulos	77](#⬥-reduzindo-módulos)
+[⬥ Reduzindo Módulos	78](#⬥-reduzindo-módulos)
 
-[⬥ Forja de Fragmentos	77](#⬥-forja-de-fragmentos)
+[⬥ Forja de Fragmentos	78](#⬥-forja-de-fragmentos)
 
-[⬡ Amplificadores	78](#⬡-amplificadores)
+[⬡ Amplificadores	79](#⬡-amplificadores)
 
 # **⬢ Introdução** {#⬢-introdução}
 
@@ -705,20 +705,33 @@ Todos os agentes **iniciam** no Nível 0, sem nenhuma proficiência. Seu **dano 
 	O **Salário** recebido por missão também é relacionado a sua patente. Quanto mais você representa para a *Fundação SCP*, mais alto será o valor de seus serviços.  
 	O **Limite de Modificações** representa a confiança da *Fundação SCP* em seus serviços. RTe oferecendo cada vez mais limite de equipamentos para que você continue à sobreviver nessa guerra bizarra.
 
-| Patente |  | Prestígio | Limite de Modificações | Salário |
-| :---- | :---- | :---: | :---: | :---: |
-| *1º* | *Agente* | 0 \- 2 | 1 nível de empilhamento até 2 modificações no item | $ 1000 |
-| *2º* | *Operador* | 3 \- 5 | 2 níveis de empilhamento até 4 modificações no item | $ 1500 |
-| *3º* | *Experiente* | 6 \- 11 | 2 níveis de empilhamento até 6 modificações no item | $ 2500 |
-| *4º* | *Veterano* | 12 \- 20 | 3 níveis de empilhamento até 9 modificações no item | $ 3500 |
-| *5º* | *Força Tarefa* | 21 \- 32 | 3 níveis de empilhamento até 12 modificações no item | $ 4500 |
-| *6º* | *Força Tarefa Especial* | 33 \- 47 | 4 níveis de empilhamento até 15 modificações no item | $ 5250 |
-| *7º* | *Operações Especiais* | 48 \- 65 | 4 níveis de empilhamento até 18 modificações no item | $ 6250 |
-| *8º* | *Líder Operacional* | 66+ | 5 níveis de empilhamento até 20 modificações no item | $ 7500 |
+| Patente |  | Prestígio | Limite de Crédito | Limite de Modificações | Salário |
+| :---- | :---- | :---: | :---: | :---: | :---: |
+| *1º* | *Agente* | 0 \- 2 | Baixo | 1 nível de empilhamento até 2 modificações no item | $ 1000 |
+| *2º* | *Operador* | 3 \- 5 | Médio | 2 níveis de empilhamento até 4 modificações no item | $ 1500 |
+| *3º* | *Experiente* | 6 \- 11 | Confortável | 2 níveis de empilhamento até 6 modificações no item | $ 2500 |
+| *4º* | *Veterano* | 12 \- 20 | Alto | 3 níveis de empilhamento até 9 modificações no item | $ 3500 |
+| *5º* | *Força Tarefa* | 21 \- 32 | Elevado | 3 níveis de empilhamento até 12 modificações no item | $ 4500 |
+| *6º* | *Força Tarefa Especial* | 33 \- 47 | Prestigiado | 4 níveis de empilhamento até 15 modificações no item | $ 5250 |
+| *7º* | *Operações Especiais* | 48 \- 65 | Exclusivo | 4 níveis de empilhamento até 18 modificações no item | $ 6250 |
+| *8º* | *Líder Operacional* | 66+ | Ilimitado | 5 níveis de empilhamento até 20 modificações no item | $ 7500 |
 
 **⬥ Caindo de Patente**  
 Quando você perde prestígio a ponto de perder sua patente atual (Exemplo: Ir de 23 de prestígio para 19 de prestígio), você entra numa espécie de “segunda chance”. Você **ainda** não perde sua patente atual, podendo seguir **dois caminhos** para isto.  
-Você pode escolher entre: **Aceitar a queda** e vender seus equipamentos que precisavam da sua patente para serem liberados, como por exemplo a quantidade de modificações limite, e obter metade do valor original do equipamento, ou você pode **Tentar recobrar seu prestígio**, indo para uma nova missão e tentando obter sucesso. Caso você tente e falhe e/ou não ganhe prestígio o suficiente para voltar a sua patente atual, você **perderá** os equipamentos s**em qualquer retorno monetário**, ou seja, uma modificação de uma arma de fogo seria retirada de sua arma sem nenhum retorno do dinheiro investido.
+Você pode escolher entre: **Aceitar a queda** e vender seus equipamentos que precisavam da sua patente para serem liberados, como por exemplo a quantidade de modificações limite, e obter metade do valor original do equipamento, ou você pode **Tentar recobrar seu prestígio**, indo para uma nova missão e tentando obter sucesso. Caso você tente e falhe e/ou não ganhe prestígio o suficiente para voltar a sua patente atual, você **perderá** os equipamentos s**em qualquer retorno monetário**, ou seja, uma modificação de uma arma de fogo seria retirada de sua arma sem nenhum retorno do dinheiro investido.  
+**⬥ Limite de Crédito**  
+Diferente de dentro da *Fundação SCP*, seu dinheiro “no mundo mundano” é categorizado de forma especial. Toda patente possui um **Limite de Crédito** que é um valor coberto pela *Fundação SCP* para sua vivência no mundo externo. Existe um limite de crédito para cada patente, sendo cada vez maior a cada promoção recebida. A interpretação do que representa cada limite de crédito é do Mestre da Mesa, mas nada impede dos jogadores de barganharem e convencerem o mesmo de permitir algo que eles acham que faz sentido para o limite de crédito usado.
+
+| Limite | Descrição |
+| :---- | :---- |
+| **Baixo** | Subsistência mínima. Moradia em áreas de baixo custo, transporte público e foco absoluto na sobrevivência básica entre missões. |
+| **Médio** | Padrão classe média. Residência funcional, transporte próprio decente e capacidade de manter uma rotina civil sem preocupações imediatas. |
+| **Confortável** | Estabilidade sólida. Acesso a bens de qualidade, serviços de saúde privados e capacidade de financiar itens duráveis ou lazer. |
+| **Alto** | Status de "cliente vip". Residências bem localizadas, veículos de alto padrão e facilidade de acesso a bens de consumo de luxo. |
+| **Elevado** | Elite logística. Acesso a clubes exclusivos, propriedades de luxo e liquidez imediata para qualquer capricho ou necessidade não planejada. |
+| **Prestigiado** | Estilo de vida aristocrático. Propriedades privadas com segurança, viagens internacionais e conexões sociais de alta influência no mundo civil. |
+| **Exclusivo** | Status de celebridade/magnata. Qualquer luxo comum está ao alcance. Conexões mundanas profundas e poder de decisão financeira pessoal ilimitado. |
+| **Ilimitado** | Influência global. Dinheiro é irrelevante; acesso total a recursos, infraestrutura e serviços em qualquer lugar do mundo. |
 
 ## **⬡ Informações Adicionais** {#⬡-informações-adicionais}
 
@@ -951,7 +964,7 @@ Algumas modificações possuem **Restrições**, indicadas pela coluna “Bloque
 **⬦ Empilhamento**  
 Empilhamento é a **aplicação da mesma modificação múltiplas vezes**. A marcação de □ (quadrado vazio) ao lado do nome indica o limite máximo, já o ■ (quadrado preenchido) marca quantos níveis são aplicados na primeira compra. Assim, ■□□□□ indica limite 5 com 1 nível inicial, enquanto ■■□ indica limite 3 com 2 níveis iniciais.  
 Mesmo que uma modificação conceda vários níveis na primeira compra, ela ainda custa apenas $ 750\. Entretanto, para fins de limite por Patente, **cada nível concedido é contabilizado como uma modificação**. Portanto, adquirir uma modificação com 3 níveis iniciais possui o valor de uma modificação (750 $) mas ocupa três espaços do limite de modificações do item.  
-Naturalmente, cada empilhamento **reaplica o efeito descrito**. Quando o comportamento for diferente, isso estará especificado no próprio efeito. **Os níveis concedidos pela primeira compra (■■ ou mais) contam como uma única reaplicação do efeito** — o bônus não dobra só porque a modificação já nasce empilhada (ex.: Flexível, ■■, concede +1 ao Esquivar na primeira compra, não +2). Só os níveis pagos **depois** da primeira compra reaplicam o efeito, um a um.  
+Naturalmente, cada empilhamento **reaplica o efeito descrito**. Quando o comportamento for diferente, isso estará especificado no próprio efeito.  
 A quantidade máxima de empilhamentos que você pode realizar de uma modificação é descrito em sua Patente ([Página 26](#⬡-prestígio-e-patentes)), esse limite não pode ser ultrapassado em compras **dentro da base**. Modificações encontradas por fora podem ser utilizadas por você, mas ao fim da missão, quaisquer equipamentos **fora da regulamentação** serão ajustados pela *Fundação SCP*. Isso significa que você receberá metade do valor de mercado por aquela modificação fora de acesso.
 
 **⬦ Aplicação de Modificações**  
@@ -1997,14 +2010,7 @@ Dentro da *Fundação SCP*, muitos agentes utilizam **Amplificadores**, disposit
 Um amplificador é uma peça ou módulo biotecnológico que é **acoplado ao seu agente**, de forma que, ele se torne algo natural de seu ser, sendo usado como se fosse uma parte de seu corpo desde sempre, mas, **há um custo**.  
 Amplificadores são muito similares à modificações, mas o alvo dessa vez é **você**. Eles também possuem empilhamento, mas seu limite máximo de amplificadores (contando seus empilhamentos) segue o seu atributo de **Vontade**, sendo **Vontade** × 3\.  
 O primeiro empilhamento de cada amplificador não tem efeitos de sanidade em seu agente, mas, à partir dele, cada empilhamento aplica **\-2 em testes de Vontade** do agente. Em questões monetárias, o primeiro empilhamento de um amplificador tem o custo de $ 3000, já seus demais empilhamentos custam $ 1000\.  
-Amplificadores que iniciam em ■■ já aplicam a penalidade de \-2 em testes de **Vontade**.  
-O **bônus principal** de cada amplificador segue a mesma regra das modificações de item (ver
-"⬦ Empilhamento", acima): não dobra pelos níveis da primeira compra. Um amplificador que já nasce
-em ■■ (`Conservador`, `Veloz`) tem sua primeira compra valendo uma única aplicação do efeito — o
-desconto de `Conservador` continua −1 (não −2), e o Deslocamento de `Veloz` continua +3 metros (não
-+4) na primeira compra, mesmo já vindo com dois níveis. Isso vale só para o bônus; a penalidade de
-Vontade acima (e a penalidade cruzada própria de cada amplificador, quando houver) continuam
-contando o empilhamento literal, já ativas desde a primeira compra.
+Amplificadores que iniciam em ■■ já aplicam a penalidade de \-2 em testes de **Vontade**.
 
 A única forma de remover um amplificador é entre missões.
 

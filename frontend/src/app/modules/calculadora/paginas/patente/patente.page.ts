@@ -23,6 +23,7 @@ interface LinhaPatente {
   readonly faixa: string;
   readonly salario: string;
   readonly modificacoes: string;
+  readonly credito: string;
   readonly atual: boolean;
 }
 
@@ -89,6 +90,7 @@ export class PatentePage {
       faixa: formatarFaixa(patente.prestigioMinimo, patente.prestigioMaximo),
       salario: `$${patente.salario.toLocaleString('pt-BR')}`,
       modificacoes: patente.limiteModificacoes,
+      credito: patente.limiteCredito,
     };
   });
 
@@ -101,6 +103,7 @@ export class PatentePage {
       faixa: formatarFaixa(patente.prestigioMinimo, patente.prestigioMaximo),
       salario: `$${patente.salario.toLocaleString('pt-BR')}`,
       modificacoes: patente.limiteModificacoes,
+      credito: patente.limiteCredito,
       atual: patente.patente === patenteAtual,
     }));
   });

@@ -30,6 +30,10 @@
         <div class="calc-stat__rotulo">Limite de Modificações</div>
         <div class="calc-stat__valor calc-stat__valor--texto">{{ atual().modificacoes }}</div>
       </div>
+      <div class="calc-stat">
+        <div class="calc-stat__rotulo">Limite de Crédito</div>
+        <div class="calc-stat__valor calc-stat__valor--texto">{{ atual().credito }}</div>
+      </div>
     </div>
   </section>
 
@@ -49,6 +53,7 @@
             <th>Prestígio</th>
             <th>Salário</th>
             <th>Mods</th>
+            <th>Crédito</th>
           </tr>
         </thead>
         <tbody>
@@ -58,6 +63,7 @@
               <td>{{ linha.faixa }}</td>
               <td class="calc-tabela__celula-valor">{{ linha.salario }}</td>
               <td>{{ linha.modificacoes }}</td>
+              <td>{{ linha.credito }}</td>
             </tr>
           }
         </tbody>

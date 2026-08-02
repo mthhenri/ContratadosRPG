@@ -2,9 +2,10 @@ import { PatenteEnum } from '../../enums';
 
 /**
  * Uma linha da tabela de patentes: faixa de Prestígio, salário por missão,
- * multiplicador do bônus monetário de novo agente (m1-03) e limite de
- * modificações por item. Fonte: docs/core/sistema-v4.1.0.md — "Prestígio e
- * Patentes" e "Bônus Monetário".
+ * multiplicador do bônus monetário de novo agente (m1-03), limite de
+ * modificações por item e limite de crédito (padrão de vida fora da
+ * Fundação). Fonte: docs/core/sistema-v4.1.0.md — "Prestígio e Patentes" e
+ * "Bônus Monetário".
  */
 export interface PatenteDados {
   readonly patente: PatenteEnum;
@@ -14,6 +15,8 @@ export interface PatenteDados {
   readonly salario: number;
   readonly multiplicador: number;
   readonly limiteModificacoes: string;
+  /** Rótulo do padrão de vida coberto pela Fundação fora de missão (doc — "Limite de Crédito"), de Baixo a Ilimitado. */
+  readonly limiteCredito: string;
 }
 
 /**
@@ -32,6 +35,7 @@ export const PATENTES: readonly PatenteDados[] = [
     salario: 1000,
     multiplicador: 1.0,
     limiteModificacoes: '1 nível de empilhamento até 2 modificações no item',
+    limiteCredito: 'Baixo',
   },
   {
     patente: PatenteEnum.OPERADOR,
@@ -40,6 +44,7 @@ export const PATENTES: readonly PatenteDados[] = [
     salario: 1500,
     multiplicador: 1.5,
     limiteModificacoes: '2 níveis de empilhamento até 4 modificações no item',
+    limiteCredito: 'Médio',
   },
   {
     patente: PatenteEnum.EXPERIENTE,
@@ -48,6 +53,7 @@ export const PATENTES: readonly PatenteDados[] = [
     salario: 2500,
     multiplicador: 2.0,
     limiteModificacoes: '2 níveis de empilhamento até 6 modificações no item',
+    limiteCredito: 'Confortável',
   },
   {
     patente: PatenteEnum.VETERANO,
@@ -56,6 +62,7 @@ export const PATENTES: readonly PatenteDados[] = [
     salario: 3500,
     multiplicador: 2.5,
     limiteModificacoes: '3 níveis de empilhamento até 9 modificações no item',
+    limiteCredito: 'Alto',
   },
   {
     patente: PatenteEnum.FORCA_TAREFA,
@@ -64,6 +71,7 @@ export const PATENTES: readonly PatenteDados[] = [
     salario: 4500,
     multiplicador: 3.0,
     limiteModificacoes: '3 níveis de empilhamento até 12 modificações no item',
+    limiteCredito: 'Elevado',
   },
   {
     patente: PatenteEnum.FORCA_TAREFA_ESPECIAL,
@@ -72,6 +80,7 @@ export const PATENTES: readonly PatenteDados[] = [
     salario: 5250,
     multiplicador: 3.5,
     limiteModificacoes: '4 níveis de empilhamento até 15 modificações no item',
+    limiteCredito: 'Prestigiado',
   },
   {
     patente: PatenteEnum.OPERACOES_ESPECIAIS,
@@ -80,6 +89,7 @@ export const PATENTES: readonly PatenteDados[] = [
     salario: 6250,
     multiplicador: 4.0,
     limiteModificacoes: '4 níveis de empilhamento até 18 modificações no item',
+    limiteCredito: 'Exclusivo',
   },
   {
     patente: PatenteEnum.LIDER_OPERACIONAL,
@@ -88,5 +98,6 @@ export const PATENTES: readonly PatenteDados[] = [
     salario: 7500,
     multiplicador: 4.5,
     limiteModificacoes: '5 níveis de empilhamento até 20 modificações no item',
+    limiteCredito: 'Ilimitado',
   },
 ];
