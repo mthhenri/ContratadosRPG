@@ -1,6 +1,6 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-01 · **Última task registrada:** `m2-20` (2026-08-01)
+> **Última revisão:** 2026-08-02 · **Última task registrada:** `m2-21` (2026-08-02)
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -13,10 +13,12 @@
 
 ## 1. Próxima Task
 
-**Declarada no último registro do `HISTORY.md` (fecho da `m2-20`):** nenhuma task de milestone
-aberto está explicitamente encadeada; a fila do backlog abaixo é a referência. `m2-20` fechou a
-frente de redesenho do painel de campanhas iniciada na `m2-18`/`m2-19` — `/painel/:id` agora tem
-layout dedicado tanto para mestre quanto para jogador.
+**Declarada no último registro do `HISTORY.md` (fecho da `m2-21`):** nenhuma task de milestone
+aberto está explicitamente encadeada; a fila do backlog abaixo é a referência. `m2-18`/`m2-19`/
+`m2-20`/`m2-21` fecharam a frente de redesenho do painel de campanhas — `/painel/:id` tem layout
+dedicado para mestre e para jogador. Fica **em aberto, por decisão do autor**: um recorte de UI
+pensado especificamente para o **mobile** da visão do jogador (a `m2-21` só adaptou o visual de
+desktop).
 
 ### Fila do backlog (`docs/specs/backlog/`)
 
@@ -43,7 +45,7 @@ Deploy em produção por **integração nativa das plataformas**, sem GitHub Act
 `master` → Render (backend) e Cloudflare Pages (frontend) puxam do Git sozinhos; banco no Supabase.
 O GitHub Actions só roda **CI** (lint + testes nos 3 workspaces em todo PR).
 
-**Suítes:** shared 454+ · backend 167/167 · frontend 628/**629** — a 1 falha é conhecida e
+**Suítes:** shared 454+ · backend 167/167 · frontend 641/**642** — a 1 falha é conhecida e
 pré-existente, ver [`PROBLEMS.md`](PROBLEMS.md) `P-001`. `npm run lint` **não fecha limpo** hoje
 em nenhum dos dois workspaces (frontend/backend) — falhas pré-existentes não relacionadas a
 nenhuma task recente, ver `PROBLEMS.md` `P-009`.
@@ -56,7 +58,7 @@ nenhuma task recente, ver `PROBLEMS.md` `P-009`.
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, `core/`, CI, deploy) | **concluído** |
 | M1 | Calculadora com paridade | **concluído no código** (`m1-01`…`m1-20`). Restam 2 passos **operacionais** de plataforma — ver `PROBLEMS.md` `P-006` |
-| M2 | Auth + Campanhas | **concluído**, incluindo o redesenho do painel (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`; `m2-18` lista, `m2-19` detalhe/mestre, `m2-20` detalhe/jogador) |
+| M2 | Auth + Campanhas | **concluído**, incluindo o redesenho do painel (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`; `m2-18` lista, `m2-19` detalhe/mestre, `m2-20` detalhe/jogador, `m2-21` abas + Rolagens na lateral + menu de ficha do jogador) |
 | M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; falta `m3-53` do lote de refino + o lote de guia de criação (`m3-57`…`m3-59`) e `m3-61`/`m3-62` |
 | M4 | Ficha de Criatura/NPC | não iniciado |
 | M5 | Guia de Missão | não iniciado |
@@ -110,21 +112,32 @@ pelos dois papéis. Abaixo disso, o corpo diverge por papel (`@if (ehMestre())`/
   (Defesa/Esquiva/Bloqueio/Contra-ataque, cada uma só aparece se a ficha tiver o valor — Contra-
   ataque recalculado ao vivo no backend quando o snapshot não foi persistido) e o kebab de ações da
   ficha — duplicar/remover-da-campanha/excluir).
-- **Jogador** (m2-20) — a ficha exibida na coluna principal (a própria, por padrão, ou a de um
-  colega via "Ver ficha") como card embutido (`<app-ficha-visualizacao modo="compacto">`, o
-  componente real da tela de ficha, não uma réplica — sempre condensado, própria ficha ou de
-  colega): 2 colunas — Identidade+Atributos empilhados à esquerda, Status à direita sem abas
-  (só Inventário/Habilidades/Rolagens, sempre visíveis; Informações/Extras/História e Prestígio
-  ficam de fora), com "Abrir ficha completa" (link no cabeçalho do card + botão no rodapé) pra
-  `/painel/:campanhaId/ficha/:id` (`modo="padrao"`, sem nenhum corte) sempre que precisar da ficha
-  inteira — e uma coluna lateral de 450px: **Equipe** (roster compacto — Vida/Energia resumidas +
-  um botão "Ver ficha" por ficha visível de cada colega, trocando a ficha exibida sem navegar; a
-  mesma ficha do usuário reaparece no roster pra voltar) e **Sessão** (as mesmas rolagens da última
-  hora, empilhadas em vez da tira horizontal). No mobile a barra inferior (`.ficha-nav`, m3-60) só
-  lista os destinos que o compacto realmente tem (Agente/Inventário/Habilidades/Rolagens). Os
-  handlers de edição (`ajustar*`) vêm de `FichaEdicaoService`, um composable reusado com
-  `VisualizarPage` (sem duplicar as ~18 chamadas ao `FichaService`) — a ficha de um colega aparece
-  só leitura (`ajustavel=false`) quando o usuário não é dono nem mestre. O cabeçalho da página
+- **Jogador** (m2-20 + m2-21) — a ficha exibida na coluna principal (a própria, por padrão, ou a de
+  um colega via "Ver ficha") como card embutido (`<app-ficha-visualizacao modo="compacto">`, o
+  componente real da tela de ficha, não uma réplica): 2 colunas que **repartem a linha** —
+  Identidade/Vitalidade/Reações/Resistências à esquerda, card de Status à direita com uma barra de
+  **3 abas** (Informações · Inventário · Habilidades). **Informações** = Atributos (o mesmo bloco
+  que o `modo="padrao"` põe na coluna própria, via `ng-template`) + glance de Combate só leitura
+  (com os dadinhos de rolar dano) + Anotações editáveis inline; Sanidade, Extras, História e
+  Prestígio ficam de fora, alcançáveis por "Abrir ficha completa" (link no cabeçalho do card +
+  botão no rodapé) → `/painel/:campanhaId/ficha/:id` (`modo="padrao"`, sem corte). Inventário e
+  Habilidades rolam por dentro com teto de 420px (subiu de 230/250px pós-m2-21, a pedido do autor —
+  o teto antigo datava de quando Atributos ainda morava na coluna ao lado). Ao lado, uma coluna
+  lateral de 450px com **três** cards: **Equipe** (roster compacto — Vida/Energia resumidas + um
+  botão "Ver ficha" por ficha visível de cada colega, trocando a ficha exibida sem navegar),
+  **Rolagens** (`<app-ficha-rolagens-painel>` — presets/rolagem avulsa + o toggle "Rolagem oculta";
+  saiu do card na m2-21 pra ficar ao lado do histórico; **só rola** os presets existentes —
+  `editavel` fixo em `false` aqui, criar/duplicar/editar/remover preset continua exclusivo da
+  ficha completa) e **Sessão** (as mesmas rolagens da última hora, empilhadas em vez da tira
+  horizontal, com teto de 3 pills — 179px — antes de rolar). O cabeçalho dá ao jogador um menu "⋯" próprio (mesmo
+  lugar do kebab do mestre) com **Criar nova ficha** e **Vincular ficha existente** (`PUT
+  /ficha/:id/campanha` da m3-28, só fichas com `campanhaId === null`); as duas ações também
+  aparecem no estado vazio, e nenhuma delas tira o jogador da página. No mobile a barra inferior
+  (`.ficha-nav`, m3-60) lista 5 destinos (Agente/Status/Inventário/Habilidades/Rolagens) — e
+  `Rolagens` é o **único que não é uma aba**: rola a página até o card da lateral. Os handlers de
+  edição (`ajustar*`) vêm de `FichaEdicaoService` e a flag/registro de rolagem de
+  `FichaRolagemRegistroService`, os dois composables reusados com `VisualizarPage` — a ficha de um
+  colega aparece só leitura (`ajustavel=false`) quando o usuário não é dono nem mestre. O cabeçalho
   também traz `<app-calculadora-flutuante>` ao lado do gatilho de histórico de rolagens, pros dois
   papéis.
 
@@ -147,13 +160,18 @@ fragmentos), história privada, anotações e dinheiro. Persistência **otimista
 merge de edição concorrente — a lógica (~18 handlers `ajustar*` + progressão) mora em
 `FichaEdicaoService` (`@Injectable()` sem `providedIn: 'root'`, uma instância por página via
 `providers: []`), reusado por `VisualizarPage` (`/painel/:campanhaId/ficha/:id` e `/fichas/:id`) e
-por `CampanhaDetalhe` (m2-20, ficha embutida na visão do jogador). Input `modo: 'padrao' |
-'compacto'` no componente: `'compacto'` reduz as 3 colunas pra 2 (Identidade+Atributos empilhados
-num agrupador único ao lado da Status sem abas) e some com Prestígio/Informações/Extras/História
-(uso de `CampanhaDetalhe`, coluna estreita numa tela larga — ver seção "Painel de campanhas"
-acima). No mobile a tela vira **HUD fixo no topo + barra de navegação no rodapé** (não
-empilhamento de colunas) — por breakpoint real de viewport, não pelo `modo`; em `'compacto'` a
-barra some com os destinos que não existem nesse modo.
+por `CampanhaDetalhe` (m2-20, ficha embutida na visão do jogador). O mesmo padrão vale para
+`FichaRolagemRegistroService` (m2-21): a flag "Rolagem oculta" e o registro do histórico (m3-27)
+moram na página porque no painel do jogador o toggle está **fora** do card (coluna lateral)
+enquanto o teste de atributo e o dano continuam sendo rolados de dentro dele.
+
+Input `modo: 'padrao' | 'compacto'` no componente: `'compacto'` reduz as 3 colunas pra 2
+(Identidade/Vitalidade/Reações/Resistências ao lado do card de Status) e corta a barra de abas ao
+trio Informações/Inventário/Habilidades, some com Prestígio, Sanidade, Extras e História, e leva
+Atributos + Combate pra aba Informações (uso de `CampanhaDetalhe`, coluna estreita numa tela larga
+— ver seção "Painel de campanhas" acima). No mobile a tela vira **HUD fixo no topo + barra de
+navegação no rodapé** (não empilhamento de colunas) — por breakpoint real de viewport, não pelo
+`modo`; em `'compacto'` a barra some com os destinos que não existem nesse modo.
 
 Rolagem de dados: gramática v4, presets, teste de atributo, dano de item, iniciativa automática,
 calculadora flutuante e **histórico persistido** com visibilidade `PUBLICA`/`PRIVADA`.
@@ -232,6 +250,12 @@ Armadilhas que já custaram retrabalho neste repositório. Cada uma tem um epis�
   **dentro** do bloco do modificador, empatando a especificidade.
 - **Nunca hardcodar hex/fonte/raio** (proibição #29) — sempre `var(--token)`. O tema troca em
   runtime; um hex solto não acompanha.
+- **Base fixa + `min-width` num flex row transborda em silêncio.** `flex: 0 0 500px` numa coluna e
+  `min-width: 260px` na irmã pedem 776px; numa linha de 644px o flexbox **não** encolhe nenhuma das
+  duas — a segunda simplesmente sai por baixo do que estiver à direita, sem barra de rolagem e sem
+  erro. Achado na `m2-21` (o card de Status do painel do jogador ficava por baixo da coluna lateral
+  desde a m2-20). Em duas colunas que dividem uma linha de largura desconhecida, use `flex: 1 1
+  <base>` + `min-width: 0` nas duas e trave o teto com `max-width`, nunca o piso.
 
 **Angular**
 

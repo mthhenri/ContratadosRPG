@@ -20,6 +20,7 @@ import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { FichaService } from '../../ficha.service';
 import { FichaEdicaoService } from '../../ficha-edicao.service';
+import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
 import { lerParamRota } from '../../ler-param-rota';
 import { mesclarFicha } from '../../mesclar-ficha';
 import { RolagemService } from '../../rolagem.service';
@@ -71,7 +72,7 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
     CalculadoraFlutuante,
     HistoricoRolagensSidebar,
   ],
-  providers: [FichaEdicaoService],
+  providers: [FichaEdicaoService, FichaRolagemRegistroService],
   templateUrl: './visualizar.page.html',
   styleUrl: './visualizar.page.scss',
 })
@@ -79,6 +80,8 @@ export class FichaVisualizar {
   private readonly fichaService = inject(FichaService);
   /** Handlers `ajustar*` (m2-20) — reusados por `CampanhaDetalhe` na visão do jogador. */
   protected readonly fichaEdicao = inject(FichaEdicaoService);
+  /** Flag "Rolagem oculta" + registro do histórico (m3-27), compartilhados na página (m2-21). */
+  private readonly fichaRolagemRegistro = inject(FichaRolagemRegistroService);
   private readonly campanhaService = inject(CampanhaService);
   private readonly rolagemService = inject(RolagemService);
   private readonly sessaoService = inject(SessaoService);
@@ -238,6 +241,15 @@ export class FichaVisualizar {
     // na visão do jogador). `inicializar` liga o composable a este `ficha` signal e ao `fichaId`
     // (síncrono, parâmetro de rota — daí a função constante em vez de um signal).
     this.fichaEdicao.inicializar(this.ficha, () => this.fichaId);
+
+    // Registro do histórico de rolagens (m3-27) — extraído de `FichaVisualizacao` na m2-21 pelo
+    // mesmo motivo do `FichaEdicaoService`: o painel de Rolagens passou a ter dois lugares. Aqui a
+    // ficha é uma só, então `inicializar` recebe o `fichaId` da rota; o prepend local no histórico
+    // da barra lateral, que antes vinha do output `(rolagemRegistrada)`, agora chega por aqui.
+    this.fichaRolagemRegistro.inicializar(() => this.fichaId);
+    this.fichaRolagemRegistro.registrada$
+      .pipe(takeUntilDestroyed())
+      .subscribe({ next: (rolagem) => this.onRolagemRegistrada(rolagem) });
 
     // Tempo real (m3-08): entra na sala `ficha:<id>` e reage a `ficha:alterada`. O mestre com a ficha
     // aberta vê a edição do jogador **sem recarregar** (critério de aceite). A permissão da sala é
@@ -450,11 +462,11 @@ export class FichaVisualizar {
   }
 
   /**
-   * Prepend local (`(rolagemRegistrada)` de `FichaVisualizacao`) — uma rolagem feita em qualquer
-   * aba aparece na hora no topo da barra lateral, sem esperar reabri-la. Guarda contra duplicata:
-   * o `output` pode reemitir o mesmo id se o pai re-renderizar por outro motivo.
+   * Prepend local (`registrada$` do {@link FichaRolagemRegistroService}, m2-21 — antes era o output
+   * `(rolagemRegistrada)` de `FichaVisualizacao`) — uma rolagem feita em qualquer aba aparece na
+   * hora no topo da barra lateral, sem esperar reabri-la. Guarda contra duplicata do mesmo id.
    */
-  protected onRolagemRegistrada(rolagem: RolagemResumoDto): void {
+  private onRolagemRegistrada(rolagem: RolagemResumoDto): void {
     this.historicoRolagens.update((atuais) =>
       atuais[0]?.id === rolagem.id ? atuais : [rolagem, ...atuais],
     );

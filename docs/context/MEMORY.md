@@ -70,7 +70,8 @@ Fluxo obrigatório: **controller (burro) → service (regra) → repository (só
 | Quero mexer em | Fica em |
 |---|---|
 | Módulos de tela | `frontend/src/app/modules/` — `autenticacao/`, `calculadora/`, `campanha/`, `ficha/`, `usuario/` |
-| Componentes da ficha | `frontend/src/app/modules/ficha/componentes/` — `ficha-visualizacao/`, `ficha-inventario/`, `ficha-habilidades/`, `ficha-sanidade/`, `ficha-rolagens/`, `ficha-combos/`, `ficha-criar-dialog/`, `guia-formula/` |
+| Componentes da ficha | `frontend/src/app/modules/ficha/componentes/` — `ficha-visualizacao/`, `ficha-inventario/`, `ficha-habilidades/`, `ficha-sanidade/`, `ficha-rolagens/`, `ficha-rolagens-painel/`, `ficha-combos/`, `ficha-criar-dialog/`, `guia-formula/` |
+| Composables de página da ficha (uma instância por página, `providers: []`) | `frontend/src/app/modules/ficha/` — `ficha-edicao.service.ts` (handlers `ajustar*`), `ficha-rolagem-registro.service.ts` (flag "Rolagem oculta" + registro do histórico) |
 | Componentes reutilizáveis | `frontend/src/app/shared/` — `layout/`, `icone/`, `bandeja-dados/`, `historico-rolagens-sidebar/`, `calculadora-flutuante/`, `tempo-real/`, `tooltip/`, `overflow-fade/`, `hold-repeat/`, `marca/`… |
 | Services, guards, interceptors | `frontend/src/app/core/` |
 | **Tokens e tema em runtime** | `frontend/src/styles/tema/` — `_tokens.scss`, `_base.scss`, `_breakpoints.scss`, `contencao.preset.ts` |

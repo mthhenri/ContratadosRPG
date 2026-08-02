@@ -138,19 +138,25 @@
     // e viram destinos da barra inferior: `--agente` mostra Identidade + Atributos, qualquer outro
     // destino mostra só o card de Status. Entre `$bp-mobile` e `$bp-tablet` o empilhamento antigo
     // continua valendo (tablet tem altura de sobra e não ganha barra inferior).
+    //
+    // m2-21: os seletores são de **filho direto** (`>`) de propósito. No `modo="compacto"` a coluna
+    // de Atributos deixou de morar no `&__coluna-agente` e passou a ser renderizada DENTRO da aba
+    // Informações do card de Status — com o descendente solto de antes, ela era escondida junto,
+    // e a aba Informações do celular nascia vazia. Como o `>` só alcança a instância que é filha do
+    // agrupador (o caso do `modo="padrao"`), a do card de Status segue as regras da própria aba.
     @include bp.mobile {
-      .ficha-visao__coluna--identidade,
-      .ficha-visao__coluna--atributos {
+      > .ficha-visao__coluna-agente > .ficha-visao__coluna--identidade,
+      > .ficha-visao__coluna-agente > .ficha-visao__coluna--atributos {
         display: none;
       }
 
       &.ficha-visao__linha-colunas--agente {
-        .ficha-visao__coluna--identidade,
-        .ficha-visao__coluna--atributos {
+        > .ficha-visao__coluna-agente > .ficha-visao__coluna--identidade,
+        > .ficha-visao__coluna-agente > .ficha-visao__coluna--atributos {
           display: block;
         }
 
-        .ficha-visao__coluna--status {
+        > .ficha-visao__coluna--status {
           display: none;
         }
       }
@@ -179,28 +185,38 @@
       display: flex;
       flex-direction: column;
       gap: var(--gap-grid);
-      // 500px: a Identidade toma o espaço inteiro da linha (a pedido do autor) já que a
-      // Atributos deixou de ficar ao lado dela.
-      flex: 0 0 500px;
-      width: 500px;
+      // m2-21: era `flex: 0 0 500px` + `width: 500px` (m2-20, quando esta coluna ainda empilhava
+      // Atributos embaixo da Identidade). Com os 500px travados, `agente 500 + gap 16 + status
+      // (min-width 260)` pedia 776px numa linha que a 1440px de viewport tem 644 — medido ao vivo,
+      // o card de Status **transbordava por baixo da coluna lateral** de 450px (x=681→941 contra
+      // uma lateral começando em x=846). Agora as duas colunas dividem a linha: `max-width` mantém
+      // o teto de 500px de antes nas telas largas (onde sobra espaço), e nas estreitas a Identidade
+      // cede em vez de empurrar o Status pra fora.
+      flex: 1 1 340px;
+      min-width: 0;
+      max-width: 500px;
 
       @include bp.tablet {
-        // Mesmo empilhamento vertical de sempre (herdado da `&__linha-colunas` base) — só a largura
-        // fixa de 500px precisa sair do caminho pra virar 100% da linha.
+        // Mesmo empilhamento vertical de sempre (herdado da `&__linha-colunas` base) — só o teto de
+        // 500px precisa sair do caminho pra coluna virar 100% da linha.
         flex: 1 1 auto;
-        width: 100%;
+        max-width: none;
       }
     }
 
     .ficha-visao__coluna--identidade,
     .ficha-visao__coluna--atributos {
-      // Preenche a largura toda do agrupador (500px) em vez da largura fixa da regra base
-      // (420px/260px, pensada pras três colunas lado a lado do card padrão).
+      // Preenche a largura toda do agrupador em vez da largura fixa da regra base (420px/260px,
+      // pensada pras três colunas lado a lado do card padrão).
       width: 100%;
     }
 
     .ficha-visao__coluna--status {
-      min-width: 260px;
+      // Sem o `min-width: 420px` da regra base (três colunas do padrão) e sem o 260px que a m2-20
+      // pôs aqui: agora é `flex: 1 1 340px` igual ao agrupador de Identidade, e as duas repartem a
+      // linha. Um mínimo rígido é justamente o que fazia a coluna transbordar (ver acima).
+      flex: 1 1 340px;
+      min-width: 0;
     }
 
     // Nível/Prestígio somem no compacto (ver HTML) — só Dinheiro/Salário sobram na linha; a grade
@@ -219,10 +235,17 @@
       // card padrão, que continua empilhado.
       .ficha-atributos__prof-maestria {
         display: flex;
+        // `wrap` + base de 150px (m2-21): a m2-20 pôs os dois minis lado a lado contando com a
+        // coluna de 500px que este bloco tinha então; hoje ele mora no card de Status, que varia de
+        // ~250 a ~510px conforme o viewport. Com `flex: 1` puro os rótulos (`white-space: nowrap`)
+        // vazavam a borda a 1280px. Em 150px de base eles seguem lado a lado sempre que a coluna
+        // comporta os dois (≥308px) e empilham quando não comporta, em vez de transbordar.
+        flex-wrap: wrap;
         gap: 8px;
 
         > * {
-          flex: 1;
+          flex: 1 1 150px;
+          min-width: 0;
         }
       }
 
@@ -253,19 +276,36 @@
         }
       }
 
-      .ficha-combate-rapido--cinco {
-        margin-top: 2px;
-        // A régua `max-content` do `--cinco` original conta com a largura do card de Status
-        // (mín. 420px) sobrando pro último box (Dano C. a C., o de valor mais longo); aqui o card
-        // inteiro tem ~480px de conteúdo — medido ao vivo, os quatro primeiros boxes já comiam
-        // quase tudo e Dano C. a C. sobrava com 72px pra "DANO C. A C." + "1D6 [Físico]" (cortava
-        // os dois). 2 colunas iguais (mesma régua do `bp.mobile` do `--cinco` original) garantem
-        // espaço de sobra pra qualquer um dos cinco, ao custo de uma 3ª linha.
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 
-        .ficha-mini__valor {
-          font-size: 12px;
-        }
+    // Glance de Combate na aba Informações (m2-21). A régua `repeat(4, max-content) 1fr` do
+    // `--cinco` (regra base) conta com a largura do card de Status do `modo="padrao"` — lá ele fica
+    // com o resto de uma página larga. Aqui a coluna divide a linha com a Identidade e fica entre
+    // ~250 e ~510px: medido ao vivo, os quatro primeiros boxes comiam a largura toda e o Dano
+    // C. a C. transbordava a borda do card. 2 colunas iguais (mesma régua que o `bp.mobile` do
+    // `--cinco` já usa) cabem em qualquer uma dessas larguras, ao custo de uma 3ª linha.
+    .ficha-combate-rapido--cinco {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+
+      .ficha-mini__valor {
+        font-size: 12px;
+      }
+    }
+
+    // m2-21: o bloco de Atributos passou a ser renderizado dentro da aba **Informações** do card
+    // de Status (`#blocoAtributos`, ver HTML) em vez da coluna 1. Aqui ele perde a moldura de card
+    // — senão vira um cartão dentro de outro, com fundo e borda repetidos a 1px de distância — e
+    // vira uma seção do painel, como o glance de Combate logo abaixo dele.
+    .ficha-status__bloco-atributos {
+      .ficha-visao__coluna--atributos {
+        width: 100%;
+      }
+
+      .ficha-cartao--atributos {
+        background: none;
+        border: 0;
+        border-radius: 0;
+        padding: 0;
       }
     }
   }
@@ -2419,52 +2459,8 @@
   @include alvo-de-toque;
 }
 
-// Toggle "rolagem oculta" (m3-27) — mesma receita visual do `.ficha-condicoes__item`, num bloco
-// próprio (é uma decisão de visibilidade de rolagem, não uma condição de saúde).
-// Nota do `modo="compacto"` (m2-20) na mini-aba Rolagens — aponta pra coluna "Sessão" do
-// `CampanhaDetalhe` em vez de duplicar o feed ali dentro.
-.ficha-rolagem-nota {
-  margin: 0 0 12px;
-  font-family: var(--font-sans);
-  font-size: 12px;
-  font-style: italic;
-  color: var(--text-mute);
-}
-
-.ficha-rolagem-oculta {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 12px;
-  padding: 6px 10px;
-  background: var(--surface-2);
-  color: var(--text-dim);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-control);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-label);
-  cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-
-  app-icone {
-    font-size: 13px;
-  }
-
-  &:hover {
-    border-color: var(--accent-border);
-    color: var(--text);
-  }
-
-  &--ativa {
-    color: var(--accent);
-    border-color: var(--accent-border);
-    background: var(--accent-dim);
-  }
-
-  @include bp.mobile {
-    min-height: bp.$alvo-toque;
-  }
-}
+// m2-21: `.ficha-rolagem-oculta` (toggle de visibilidade) mudou de arquivo junto com a marcação —
+// vive em `ficha-rolagens-painel.component.scss`, o componente que agora renderiza o botão nos dois
+// lugares (aba Rolagens da ficha completa e coluna lateral do painel de campanha). A
+// `.ficha-rolagem-nota` ("Histórico da sessão na coluna Sessão, ao lado") foi removida: no compacto
+// não existe mais aba Rolagens pra hospedá-la.

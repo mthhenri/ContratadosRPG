@@ -1,4 +1,14 @@
-import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -24,10 +34,15 @@ import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaService } from '../../campanha.service';
 import { FichaService } from '../../../ficha/ficha.service';
 import { FichaEdicaoService } from '../../../ficha/ficha-edicao.service';
+import { FichaRolagemRegistroService } from '../../../ficha/ficha-rolagem-registro.service';
 import { mesclarFicha } from '../../../ficha/mesclar-ficha';
 import { construirFichaInicial, type FichaAssistenteResultado } from '../../../ficha/ficha-padrao';
 import { FichaCriarDialog } from '../../../ficha/componentes/ficha-criar-dialog/ficha-criar-dialog.component';
-import { FichaVisualizacao } from '../../../ficha/componentes/ficha-visualizacao/ficha-visualizacao.component';
+import { FichaRolagensPainel } from '../../../ficha/componentes/ficha-rolagens-painel/ficha-rolagens-painel.component';
+import {
+  FichaVisualizacao,
+  type DestinoMobile,
+} from '../../../ficha/componentes/ficha-visualizacao/ficha-visualizacao.component';
 import { rotuloClasseCompleto } from '../../../ficha/rotulos-ficha';
 import { rotuloPatente } from '../../../ficha/status-derivado';
 import { CONDICOES_FICHA, type DescritorCondicao } from '../../../ficha/condicoes-ficha';
@@ -123,8 +138,9 @@ interface ItemFicha {
     BandejaDados,
     CalculadoraFlutuante,
     FichaVisualizacao,
+    FichaRolagensPainel,
   ],
-  providers: [FichaEdicaoService],
+  providers: [FichaEdicaoService, FichaRolagemRegistroService],
   templateUrl: './detalhe.page.html',
   styleUrl: './detalhe.page.scss',
 })
@@ -134,6 +150,12 @@ export class CampanhaDetalhe {
   private readonly fichaService = inject(FichaService);
   /** Handlers `ajustar*` (m2-20) da ficha embutida na visão do jogador — mesmo composable de `VisualizarPage`. */
   protected readonly fichaEdicao = inject(FichaEdicaoService);
+  /**
+   * Flag "Rolagem oculta" + registro do histórico (m2-21, item 5) — **uma instância por página**,
+   * compartilhada pelo card da ficha (teste de atributo, dano) e pelo painel de Rolagens da coluna
+   * lateral, que é onde o toggle mora agora.
+   */
+  protected readonly fichaRolagemRegistro = inject(FichaRolagemRegistroService);
   private readonly fichaVitalidadeRapidaService = inject(FichaVitalidadeRapidaService);
   private readonly rolagemService = inject(RolagemService);
   private readonly sessaoService = inject(SessaoService);
@@ -445,6 +467,46 @@ export class CampanhaDetalhe {
     return fichaExibida !== null && this.podeAjustarFicha(fichaExibida.usuarioId);
   });
 
+  /**
+   * Card "Rolagens" da coluna lateral (m2-21, item 3) — alvo do destino `'rolagens'` da barra
+   * inferior do mobile. `viewChild` opcional: o card só existe quando há ficha exibida.
+   */
+  private readonly cardRolagens = viewChild<ElementRef<HTMLElement>>('cardRolagens');
+
+  /**
+   * Destino escolhido na barra inferior do card compacto (m3-60/m2-21). Só `'rolagens'` interessa
+   * à página: no compacto ele **não** é uma aba do card (o painel vive aqui na lateral), então o
+   * componente só avisa e quem move a tela é esta página. Os demais destinos já trocaram a aba lá
+   * dentro e o próprio componente rolou pro topo.
+   */
+  protected aoMudarDestinoFicha(destino: DestinoMobile): void {
+    if (destino !== 'rolagens') {
+      return;
+    }
+    const alvo = this.cardRolagens()?.nativeElement;
+    if (!alvo || typeof window === 'undefined') {
+      return;
+    }
+    const reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    alvo.scrollIntoView({ behavior: reduzMovimento ? 'auto' : 'smooth', block: 'start' });
+  }
+
+  /**
+   * Energia gasta por um passo de preset rolado no painel da lateral (m2-21, item 3) — mesmo
+   * caminho de `FichaVisualizacao.aoUtilizarHabilidade`: reusa a persistência de vitalidade (m3-10)
+   * em vez de abrir um canal novo. Pode **negativar** — regra do documento.
+   */
+  protected gastarEnergiaFichaExibida(custo: number): void {
+    const ficha = this.fichaExibidaDados();
+    if (!ficha) {
+      return;
+    }
+    this.fichaEdicao.ajustarVitalidade({
+      campo: 'energiaAtual',
+      valor: ficha.dados.estado.energiaAtual - custo,
+    });
+  }
+
   /** Troca a ficha exibida na coluna principal (item 7 — "Ver ficha") — dispara o fetch do item 4. */
   protected selecionarFichaExibida(fichaId: number): void {
     if (this.fichaExibidaId() === fichaId) {
@@ -470,11 +532,12 @@ export class CampanhaDetalhe {
   }
 
   /**
-   * Prepend local de uma rolagem feita na própria ficha embutida (mesmo padrão de
-   * `VisualizarPage.onRolagemRegistrada`) — feedback imediato na coluna "Sessão" (item 8) sem
-   * esperar o broadcast (que nunca chega para rolagens `PRIVADA`, §9).
+   * Prepend local de uma rolagem feita na ficha exibida — pelo card **ou** pelo painel de Rolagens
+   * da coluna lateral (m2-21), os dois via `FichaRolagemRegistroService.registrada$`. Feedback
+   * imediato na coluna "Sessão" (item 8) sem esperar o broadcast (que nunca chega para rolagens
+   * `PRIVADA`, §9).
    */
-  protected onRolagemRegistradaEmbutida(rolagem: RolagemResumoDto): void {
+  private onRolagemRegistradaEmbutida(rolagem: RolagemResumoDto): void {
     this.rolagensFeed.update((atuais) =>
       atuais[0]?.id === rolagem.id ? atuais : [rolagem, ...atuais],
     );
@@ -488,6 +551,15 @@ export class CampanhaDetalhe {
     // (`FichaEdicaoService`, m2-20). `fichaExibidaId` muda sem recriar o componente, daí a função
     // constante em vez de capturar o valor síncrono do parâmetro de rota.
     this.fichaEdicao.inicializar(this.fichaExibidaDados, () => this.fichaExibidaId()!);
+
+    // Registro do histórico de rolagens (m2-21, item 5) — mesma ficha exibida, mesmo motivo da
+    // função constante acima. O prepend local na coluna "Sessão", que antes vinha do output
+    // `(rolagemRegistrada)` do card, agora chega por aqui: assim a rolagem feita **pela lateral**
+    // (fora do card) também aparece na hora no feed.
+    this.fichaRolagemRegistro.inicializar(() => this.fichaExibidaId());
+    this.fichaRolagemRegistro.registrada$
+      .pipe(takeUntilDestroyed())
+      .subscribe({ next: (rolagem) => this.onRolagemRegistradaEmbutida(rolagem) });
 
     // Fetch da ficha completa (item 4) sempre que `fichaExibidaId` muda (seleção inicial da
     // própria ficha, ou troca via "Ver ficha") — `fichas()`/`FichaResumoDto` não tem `dados`
@@ -874,7 +946,75 @@ export class CampanhaDetalhe {
 
   /** Abre o assistente de criação de ficha (m3-16), agora disparado do detalhe (m2-16). */
   protected abrirCriarFicha(): void {
+    this.fecharMenuCampanha();
     this.dialogCriar.set(true);
+  }
+
+  // === Vincular ficha existente (m2-21, itens 6-8) — o jogador que chega numa campanha sem ficha
+  // (ou que quer trazer outra do acervo) resolve pelo menu "⋯" do cabeçalho, sem sair da página.
+  // Nenhum endpoint novo: `listarMinhasFichas` + `atribuirCampanha` são da m3-28.
+
+  /** Dialog "Vincular ficha existente" aberto. */
+  protected readonly dialogVincular = signal(false);
+  /** Fichas do acervo **sem campanha** (`campanhaId === null`) — as únicas vinculáveis. */
+  protected readonly fichasSoltas = signal<readonly FichaResumoDto[]>([]);
+  protected readonly carregandoFichasSoltas = signal(false);
+  /** `id` escolhido no seletor, ou `null` enquanto nada foi escolhido. */
+  protected readonly fichaParaVincular = signal<number | null>(null);
+  /** `true` enquanto o `atribuirCampanha` está em voo (desabilita os botões da dialog). */
+  protected readonly vinculando = signal(false);
+
+  /**
+   * Abre a dialog e busca o acervo. O filtro por `campanhaId === null` é de **apresentação** — o
+   * backend continua sendo a autoridade (§14): mover uma ficha que não é sua é barrado com 403.
+   */
+  protected abrirVincularFicha(): void {
+    this.fecharMenuCampanha();
+    this.fichaParaVincular.set(null);
+    this.dialogVincular.set(true);
+    this.carregandoFichasSoltas.set(true);
+    this.fichaService
+      .listarMinhasFichas()
+      .pipe(finalize(() => this.carregandoFichasSoltas.set(false)))
+      .subscribe({
+        next: (minhas) => this.fichasSoltas.set(minhas.filter((ficha) => ficha.campanhaId === null)),
+        error: () => this.fichasSoltas.set([]),
+      });
+  }
+
+  /** Fecha a dialog (Cancelar/✕) — inócuo enquanto o vínculo está em voo. */
+  protected fecharVincularFicha(): void {
+    if (!this.vinculando()) {
+      this.dialogVincular.set(false);
+    }
+  }
+
+  /** Guarda a escolha do `<select>` (o valor do DOM é string). */
+  protected escolherFichaParaVincular(valor: string): void {
+    this.fichaParaVincular.set(valor === '' ? null : Number(valor));
+  }
+
+  /**
+   * Move a ficha escolhida do acervo para esta campanha e a exibe na coluna principal (item 8) —
+   * sem recarregar a página: `recarregarMembrosEFichas` traz a ficha nova pra Equipe e
+   * `fichaExibidaId` dispara o fetch de `recuperarFicha` que a m2-20 já wireou.
+   */
+  protected confirmarVincularFicha(): void {
+    const fichaId = this.fichaParaVincular();
+    if (fichaId === null || this.vinculando()) {
+      return;
+    }
+    this.vinculando.set(true);
+    this.fichaService
+      .atribuirCampanha(fichaId, this.id)
+      .pipe(finalize(() => this.vinculando.set(false)))
+      .subscribe({
+        next: () => {
+          this.dialogVincular.set(false);
+          this.recarregarMembrosEFichas();
+          this.fichaExibidaId.set(fichaId);
+        },
+      });
   }
 
   /** Fecha o assistente de criação (Cancelar/✕) — inócuo enquanto uma criação está em voo. */
@@ -889,9 +1029,13 @@ export class CampanhaDetalhe {
    * arquétipo) e cria via `FichaService`. `usuarioId` só vem preenchido quando o mestre escolheu
    * outro dono no seletor do assistente (§14 — jogador comum sempre cria a própria); o backend
    * valida a autoria/permissão e revalida forma/Maestria, um erro chega pelo
-   * `error-handler.interceptor`. Ao criar, navega direto para a ficha (edição no próprio lugar,
-   * sem tela de criação separada — m3-10) — o mestre pode continuar preenchendo a ficha do jogador
-   * ali mesmo, já que edita qualquer ficha da campanha.
+   * `error-handler.interceptor`.
+   *
+   * **Mestre:** navega direto para a ficha (edição no próprio lugar, sem tela de criação separada —
+   * m3-10) — ele pode continuar preenchendo a ficha do jogador ali mesmo, já que edita qualquer
+   * ficha da campanha. **Jogador (m2-21, item 8):** fica na página — a visão dele já tem a ficha
+   * embutida na coluna principal, então tirá-lo do painel pra mostrar a mesma ficha noutra tela
+   * seria um desvio. Recarrega a Equipe e aponta `fichaExibidaId` pra ficha nova.
    */
   protected criarFicha(resultado: FichaAssistenteResultado): void {
     if (this.criando()) {
@@ -910,7 +1054,12 @@ export class CampanhaDetalhe {
       .subscribe({
         next: (fichaCriada) => {
           this.dialogCriar.set(false);
-          void this.router.navigate(['/painel', this.id, 'ficha', fichaCriada.id]);
+          if (this.ehMestre()) {
+            void this.router.navigate(['/painel', this.id, 'ficha', fichaCriada.id]);
+            return;
+          }
+          this.recarregarMembrosEFichas();
+          this.fichaExibidaId.set(fichaCriada.id);
         },
       });
   }

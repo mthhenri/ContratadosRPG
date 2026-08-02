@@ -856,7 +856,14 @@
     <!-- Atributos — versão compacta (redesenho de comparação visual): Proficiência + resumo de
          Maestria + os 10 atributos em no máximo 2 colunas internas, cada um com o modificador de
          teste (não persistido). A edição em grupo do atributo base (lápis/rascunho) saiu daqui —
-         só a leitura + o teste rolado ficaram nesta rodada de recorte. -->
+         só a leitura + o teste rolado ficaram nesta rodada de recorte.
+
+         m2-21: o bloco virou `ng-template` porque agora tem DOIS lugares — no `modo="padrao"`
+         continua sendo a 2ª das três colunas (outlet logo abaixo); no `'compacto'` ele deixa a
+         coluna 1 (que passa a terminar em Resistências) e é renderizado dentro da aba
+         **Informações** do card de Status (outlet lá embaixo). Um `ng-template` em vez de duplicar
+         ~240 linhas de marcação em dois ramos. -->
+    <ng-template #blocoAtributos>
     <div class="ficha-visao__coluna ficha-visao__coluna--atributos">
       <section class="ficha-cartao ficha-cartao--atributos">
         <header class="ficha-cartao__cabecalho">
@@ -1058,46 +1065,17 @@
           }
         </div>
 
-        <!-- m2-20 (card de equipe, restrição pós-entrega): o compacto perdeu a aba Informações, então
-             o glance de Deslocamento/Hab. por Turno/Percepção/Dano Furtivo/Dano C. a C. muda de casa
-             pra cá — mesmas linhas de `statusRapido()`, só leitura (sem clique pra editar; a fórmula
-             de dano ainda rola direto, como no card de Status original). -->
-        @if (modo() === 'compacto') {
-          <div class="ficha-cartao__divisor"></div>
-          <p class="ficha-cartao__subrotulo">Combate</p>
-          <div class="ficha-combate-rapido ficha-combate-rapido--cinco">
-            @for (linha of statusRapido(); track linha.chave) {
-              <div
-                class="ficha-mini ficha-mini--fino"
-                [class.ficha-mini--com-rolar]="
-                  podeRolar() &&
-                  (linha.chave === 'danoCorpoACorpo' || linha.chave === 'danoFurtivo') &&
-                  linha.bruto !== null
-                "
-              >
-                @if (
-                  podeRolar() &&
-                  (linha.chave === 'danoCorpoACorpo' || linha.chave === 'danoFurtivo') &&
-                  linha.bruto !== null
-                ) {
-                  <button
-                    class="ficha-mini__rolar"
-                    type="button"
-                    [attr.aria-label]="'Rolar ' + linha.rotulo"
-                    [appTooltip]="'Rolar ' + linha.rotulo"
-                    (click)="rolarDano(linha)"
-                  >
-                    <app-icone [nome]="'dado'" />
-                  </button>
-                }
-                <span class="ficha-mini__rotulo">{{ linha.rotulo }}</span>
-                <span class="ficha-mini__valor">{{ linha.display }}</span>
-              </div>
-            }
-          </div>
-        }
+        <!-- m2-21: o glance de Combate que a m2-20 tinha enfiado aqui dentro (o compacto não tinha
+             aba Informações pra hospedá-lo) voltou a ser seção própria — agora na aba Informações
+             do card de Status, junto deste mesmo bloco de Atributos. Ver o `--compacto` lá embaixo. -->
       </section>
     </div>
+    </ng-template>
+
+    <!-- Outlet do `modo="padrao"`: Atributos segue sendo a 2ª coluna, ao lado de Identidade. -->
+    @if (modo() !== 'compacto') {
+      <ng-container [ngTemplateOutlet]="blocoAtributos" />
+    }
     </div>
 
     <!-- Status — terceira coluna (redesenho de comparação visual): Informações (glance de
@@ -1110,13 +1088,17 @@
            cabem na coluna Status) com fade nas bordas onde há mais conteúdo pra rolar
            (appOverflowFade, mesmo padrão de `.compras-fragmentos` da calculadora) — o `effect`
            de `abasStatusContainer` no componente traz a aba ativa pra dentro da área visível. -->
-      @if (modo() !== 'compacto') {
+      <!-- m2-21: a barra vale nos DOIS modos. A m2-20 a tinha desligado no compacto e empilhado
+           Inventário/Habilidades/Rolagens de uma vez (uma coluna que rolava sem fim); agora o
+           compacto tem o trio Informações · Inventário · Habilidades (`abasStatusVisiveis()`) e
+           Rolagens/Extras/História somem — a primeira porque foi pra coluna lateral da página, as
+           outras duas porque seguem exclusivas da ficha completa. -->
       <div class="ficha-status__abas" #abasStatusContainer appOverflowFade>
         <button
           type="button"
           class="ficha-status__aba"
           data-aba-status="informacoes"
-          [class.ficha-status__aba--ativa]="abaStatusAtiva() === 'informacoes'"
+          [class.ficha-status__aba--ativa]="abaStatusEfetiva() === 'informacoes'"
           (click)="selecionarAbaStatus('informacoes')"
         >
           <app-icone class="ficha-status__aba-icone" [nome]="'visao-geral'" />
@@ -1126,7 +1108,7 @@
           type="button"
           class="ficha-status__aba"
           data-aba-status="inventario"
-          [class.ficha-status__aba--ativa]="abaStatusAtiva() === 'inventario'"
+          [class.ficha-status__aba--ativa]="abaStatusEfetiva() === 'inventario'"
           (click)="selecionarAbaStatus('inventario')"
         >
           <app-icone class="ficha-status__aba-icone" [nome]="'inventario'" />
@@ -1136,39 +1118,43 @@
           type="button"
           class="ficha-status__aba"
           data-aba-status="habilidades"
-          [class.ficha-status__aba--ativa]="abaStatusAtiva() === 'habilidades'"
+          [class.ficha-status__aba--ativa]="abaStatusEfetiva() === 'habilidades'"
           (click)="selecionarAbaStatus('habilidades')"
         >
           <app-icone class="ficha-status__aba-icone" [nome]="'habilidades'" />
           <span class="ficha-status__aba-texto">Habilidades</span>
         </button>
-        <button
-          type="button"
-          class="ficha-status__aba"
-          data-aba-status="rolagens"
-          [class.ficha-status__aba--ativa]="abaStatusAtiva() === 'rolagens'"
-          (click)="selecionarAbaStatus('rolagens')"
-        >
-          <app-icone class="ficha-status__aba-icone" [nome]="'rolagens'" />
-          <span class="ficha-status__aba-texto">Rolagens</span>
-        </button>
-        <button
-          type="button"
-          class="ficha-status__aba"
-          data-aba-status="extras"
-          [class.ficha-status__aba--ativa]="abaStatusAtiva() === 'extras'"
-          (click)="selecionarAbaStatus('extras')"
-        >
-          <app-icone class="ficha-status__aba-icone" [nome]="'mais'" />
-          <span class="ficha-status__aba-texto">Extras</span>
-        </button>
-        @if (ajustavel()) {
+        @if (mostraAbaStatus('rolagens')) {
+          <button
+            type="button"
+            class="ficha-status__aba"
+            data-aba-status="rolagens"
+            [class.ficha-status__aba--ativa]="abaStatusEfetiva() === 'rolagens'"
+            (click)="selecionarAbaStatus('rolagens')"
+          >
+            <app-icone class="ficha-status__aba-icone" [nome]="'rolagens'" />
+            <span class="ficha-status__aba-texto">Rolagens</span>
+          </button>
+        }
+        @if (mostraAbaStatus('extras')) {
+          <button
+            type="button"
+            class="ficha-status__aba"
+            data-aba-status="extras"
+            [class.ficha-status__aba--ativa]="abaStatusEfetiva() === 'extras'"
+            (click)="selecionarAbaStatus('extras')"
+          >
+            <app-icone class="ficha-status__aba-icone" [nome]="'mais'" />
+            <span class="ficha-status__aba-texto">Extras</span>
+          </button>
+        }
+        @if (mostraAbaStatus('historia') && ajustavel()) {
           <!-- Só dono/mestre (m3-50) — o backend já nem manda `dados.historia` pro visualizador. -->
           <button
             type="button"
             class="ficha-status__aba"
             data-aba-status="historia"
-            [class.ficha-status__aba--ativa]="abaStatusAtiva() === 'historia'"
+            [class.ficha-status__aba--ativa]="abaStatusEfetiva() === 'historia'"
             (click)="selecionarAbaStatus('historia')"
           >
             <app-icone class="ficha-status__aba-icone" [nome]="'anotacoes'" />
@@ -1176,11 +1162,20 @@
           </button>
         }
       </div>
-      }
 
       <section class="ficha-cartao ficha-cartao--status">
-        @if (modo() !== 'compacto' && abaStatusAtiva() === 'informacoes') {
+        @if (abaStatusEfetiva() === 'informacoes') {
         <div class="ficha-status__conteudo">
+          <!-- m2-21, aba Informações do compacto: Atributos (o mesmo bloco que no `'padrao'` fica
+               na coluna 1 — ver `#blocoAtributos`) + o glance de Combate como seção própria. Sem
+               `app-ficha-sanidade` nem Nível/Prestígio: continuam exclusivos da ficha completa. -->
+          @if (modo() === 'compacto') {
+            <div class="ficha-status__bloco-atributos">
+              <ng-container [ngTemplateOutlet]="blocoAtributos" />
+            </div>
+            <div class="ficha-cartao__divisor"></div>
+            <p class="ficha-cartao__subrotulo">Combate</p>
+          }
           <div class="ficha-combate-rapido ficha-combate-rapido--cinco">
             @for (linha of statusRapido(); track linha.chave) {
               <div
@@ -1210,7 +1205,11 @@
                   </button>
                 }
                 <span class="ficha-mini__rotulo">{{ linha.rotulo }}</span>
-                @if (ajustavel() && editandoDerivado() === linha.chave) {
+                <!-- m2-21: `ajustavelAmplo()` (não `ajustavel()`) — no compacto o glance é só
+                     leitura, mantendo a restrição pós-entrega da m2-20 (o card de equipe edita
+                     Dinheiro/Vida/Energia/Condições/Inventário; o resto exige "Abrir ficha
+                     completa"). O dadinho de rolar dano acima segue valendo nos dois modos. -->
+                @if (ajustavelAmplo() && editandoDerivado() === linha.chave) {
                   <input
                     #entradaDerivado
                     class="ficha-mini__entrada"
@@ -1223,7 +1222,7 @@
                     (keydown.escape)="cancelarDerivado()"
                     (blur)="confirmarDerivado(linha, entradaDerivado.value)"
                   />
-                } @else if (ajustavel() && linha.bruto !== null) {
+                } @else if (ajustavelAmplo() && linha.bruto !== null) {
                   <button
                     type="button"
                     class="ficha-mini__valor ficha-mini__valor--editavel"
@@ -1239,14 +1238,18 @@
             }
           </div>
 
-          <app-ficha-sanidade
-            [sequelas]="estado().sequelas"
-            [traumas]="estado().traumas"
-            [lesoes]="estado().lesoes"
-            [editavel]="ajustavel()"
-            [apresentacao]="'dialog'"
-            (sanidadeMudou)="ajusteSanidade.emit($event)"
-          />
+          <!-- Sequelas/Traumas/Lesões seguem exclusivas da ficha completa (m2-21, fora de escopo
+               do card de equipe) — o compacto pula direto do glance de Combate pras Anotações. -->
+          @if (modo() !== 'compacto') {
+            <app-ficha-sanidade
+              [sequelas]="estado().sequelas"
+              [traumas]="estado().traumas"
+              [lesoes]="estado().lesoes"
+              [editavel]="ajustavel()"
+              [apresentacao]="'dialog'"
+              (sanidadeMudou)="ajusteSanidade.emit($event)"
+            />
+          }
 
           <!-- Anotações (m3-51): gate de visualização igual à História (m3-50) — só dono/mestre; o
                backend já nem manda `dados.anotacoes` pro visualizador (`omitirCamposPrivados`). -->
@@ -1286,7 +1289,7 @@
           }
         </div>
         }
-        @if (modo() === 'compacto' || abaStatusAtiva() === 'inventario') {
+        @if (abaStatusEfetiva() === 'inventario') {
         <div class="ficha-status__conteudo">
           <app-ficha-inventario
             [inventario]="dados().inventario"
@@ -1312,7 +1315,7 @@
           />
         </div>
         }
-        @if (modo() === 'compacto' || abaStatusAtiva() === 'habilidades') {
+        @if (abaStatusEfetiva() === 'habilidades') {
         <div class="ficha-status__conteudo">
           <app-ficha-habilidades
             [habilidades]="dados().habilidades"
@@ -1327,45 +1330,22 @@
           />
         </div>
         }
-        @if (modo() === 'compacto' || abaStatusAtiva() === 'rolagens') {
+        <!-- m2-21: a aba só existe no `modo="padrao"` (`abaStatusEfetiva()` nunca devolve
+             `'rolagens'` no compacto) e o conteúdo saiu daqui pro `FichaRolagensPainel`, que a
+             coluna lateral de `CampanhaDetalhe` também renderiza — nenhum derivado de rolagem
+             (atributos efetivos/proficiência/atalhos de dano) duplicado entre os dois lugares. -->
+        @if (abaStatusEfetiva() === 'rolagens') {
         <div class="ficha-status__conteudo">
-          @if (modo() === 'compacto') {
-            <!-- m2-20: esta aba é só o preset/rolagem avulsa (nunca teve feed próprio) — no modo
-                 compacto (CampanhaDetalhe), a coluna "Sessão" ao lado já cobre o histórico recente;
-                 esta nota evita a tentação de duplicá-lo aqui. -->
-            <p class="ficha-rolagem-nota">Histórico da sessão na coluna "Sessão", ao lado.</p>
-          }
-          @if (podeRolar()) {
-            <!-- Visibilidade das próximas rolagens (m3-27): PUBLICA por padrão; "oculta" grava
-                 PRIVADA (só autor + mestre veem, no histórico e no feed da campanha). -->
-            <button
-              type="button"
-              class="ficha-rolagem-oculta"
-              [class.ficha-rolagem-oculta--ativa]="rolagemOculta()"
-              [attr.aria-pressed]="rolagemOculta()"
-              [appTooltip]="rolagemOculta() ? 'Próximas rolagens: privadas (autor + mestre)' : 'Próximas rolagens: públicas'"
-              (click)="alternarRolagemOculta()"
-            >
-              <app-icone [nome]="rolagemOculta() ? 'olho-fechado' : 'olho'" />
-              <span>Rolagem oculta</span>
-            </button>
-          }
-          <app-ficha-rolagens
-            [rolagens]="dados().rolagens ?? []"
-            [atributos]="atributosEfetivos()"
-            [proficiencia]="proficiencia()"
-            [nivel]="dados().nivel"
-            [habilidadesDisponiveis]="dados().habilidades"
-            [atalhosDano]="atalhosDano()"
+          <app-ficha-rolagens-painel
+            [dados]="dados()"
             [editavel]="ajustavelAmplo()"
             [podeRolar]="podeRolar()"
             (rolagensMudou)="ajusteRolagens.emit($event)"
             (energiaGasta)="aoUtilizarHabilidade($event)"
-            (rolagemFeita)="registrarRolagem($event)"
           />
         </div>
         }
-        @if (modo() !== 'compacto' && abaStatusAtiva() === 'extras') {
+        @if (abaStatusEfetiva() === 'extras') {
         <div class="ficha-status__conteudo ficha-extras">
           <!-- Origem (m3-41/m3-49): apresentação — a mecânica (efeito no cálculo) já roda na m3-41. -->
           <div class="ficha-extras__secao">
@@ -1442,7 +1422,7 @@
         <!-- História (m3-50): aba própria, só dono/mestre — o botão já não aparece pra quem não
              pode, e `ajustavel()` regate o painel também (fragmento de URL manipulado à mão não
              renderiza a caixa; a `dados().historia` nem chega ao visualizador). -->
-        @if (modo() !== 'compacto' && abaStatusAtiva() === 'historia' && ajustavel()) {
+        @if (abaStatusEfetiva() === 'historia' && ajustavel()) {
         <div class="ficha-status__conteudo">
           <div class="ficha-status__anotacoes-caixa">
             <div class="ficha-status__anotacoes-cabecalho">

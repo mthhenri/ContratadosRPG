@@ -21,6 +21,143 @@
 
 ## Registro por task (mais recente primeiro)
 
+## m2-21 — painel do jogador: abas no card compacto, Rolagens na lateral e menu de ficha (2026-08-02)
+
+Continuação direta da `m2-20`, que entregou a visão do jogador de `/painel/:id` mas deixou duas
+colunas desequilibradas: a coluna 1 do card compacto acumulava Identidade + Vitalidade + Reações +
+Resistências + Atributos + Combate, enquanto a 2 empilhava Inventário/Habilidades/Rolagens **de uma
+vez** (a m2-20 tinha desligado a barra de abas no compacto) e rolava sem fim. Esta task **religa as
+abas** com um trio reduzido e redistribui o conteúdo.
+
+**Abas no `modo="compacto"`.** Não é mecanismo novo: é o mesmo `abaStatusAtiva`/`selecionarAbaStatus`
+que o `'padrao'` já usava, apenas desligado por `@if (modo() !== 'compacto')`. O compacto passou a
+expor **Informações · Inventário · Habilidades** (`ABAS_STATUS_COMPACTO`); `rolagens` saiu porque o
+painel foi pra coluna lateral da página, `extras`/`historia` seguem exclusivas da ficha completa. Um
+`abaStatusEfetiva` computed protege o card de um `#` de URL antigo/manipulado apontando pra uma aba
+que não existe neste modo (cai em Informações em vez de renderizar nada). O `modo="padrao"` mantém
+as seis abas, sem regressão.
+
+**Aba Informações do compacto = Atributos + Combate + Anotações.** O `.ficha-visao__coluna--atributos`
+inteiro **migrou da coluna 1 pra dentro da aba** — virou um `<ng-template #blocoAtributos>` com dois
+outlets (coluna 1 no `'padrao'`, aba Informações no `'compacto'`), em vez de duplicar ~240 linhas de
+marcação. O glance de Combate (`statusRapido()`) saiu de dentro do card de Atributos, onde a m2-20 o
+tinha enfiado por falta de aba pra hospedá-lo, e voltou a ser seção própria — **só leitura** no
+compacto (os gates do valor clicável passaram de `ajustavel()` pra `ajustavelAmplo()`, mantendo a
+restrição pós-entrega da m2-20), com os dadinhos de rolar dano preservados. Anotações são editáveis
+inline (`ajustavel()` puro — ficha de colega em leitura nem vê a caixa, o backend não manda
+`dados.anotacoes` pro visualizador, m3-51). Sanidade/Nível/Prestígio continuam fora. A coluna 1
+termina em Resistências.
+
+**Card "Rolagens" na lateral, entre Equipe e Sessão** (a pedido do autor: "manter as coisas tudo num
+lugar só" — rolar e ler o histórico recente na mesma coluna). `max-height: 420px` + `appOverflowFade`,
+a mesma régua dos dois vizinhos, pra que os três caibam sem empurrar Sessão pra fora da tela. A nota
+`ficha-rolagem-nota` ("Histórico da sessão na coluna Sessão, ao lado") foi removida — sem aba
+Rolagens no compacto, perdeu o motivo de existir.
+
+**Dois componentes novos, os dois nascidos de necessidade e não de estética:**
+
+- **`FichaRolagensPainel`** (`frontend/src/app/modules/ficha/componentes/ficha-rolagens-painel/`) —
+  o toggle "Rolagem oculta" + `<app-ficha-rolagens>` com os derivados que ele consome
+  (`atributosEfetivos`/`proficiencia`/`atalhosDano`) calculados a partir do `dados`. Existe porque o
+  painel passou a ter **dois** consumidores: a aba Rolagens da ficha completa (que passou a delegar)
+  e a lateral de `CampanhaDetalhe`. Sem ele, os três `computed` seriam duplicados na página.
+  `atalhosDano` **saiu** de `FichaVisualizacao` (não tinha mais consumidor lá).
+- **`FichaRolagemRegistroService`** (`frontend/src/app/modules/ficha/ficha-rolagem-registro.service.ts`,
+  `@Injectable()` sem `providedIn: 'root'`, mesma disciplina do `FichaEdicaoService` da m2-20: a
+  **página** provê a instância). Carrega o signal `oculta` + o `registrar()` que viviam em
+  `FichaVisualizacao`. A extração **não é cosmética**: o toggle mudou pra lateral enquanto
+  `rolarTesteAtributo`/`rolarDano` continuam disparando de dentro do card — sem a flag compartilhada,
+  marcar "oculta" na lateral deixaria de afetar o teste de atributo, um bug silencioso. O output
+  `(rolagemRegistrada)` de `FichaVisualizacao` foi **removido** em favor de `registrada$` do serviço:
+  agora `VisualizarPage` e `CampanhaDetalhe` escutam o mesmo canal, e a rolagem feita **pela lateral**
+  (fora do card) também aparece na hora no feed da coluna Sessão.
+
+**Menu "⋯" do jogador no cabeçalho**, ao lado do voltar, mesma marcação do kebab do mestre (reusa
+`menuCampanhaAberto` — os dois são mutuamente exclusivos por `ehMestre()`), com "Criar nova ficha" e
+"Vincular ficha existente". Aparece sempre, não só quando o jogador está sem ficha: trazer uma
+segunda ficha do acervo é legítimo (a Equipe suporta várias por membro desde a m2-20). O estado vazio
+da coluna principal ganhou atalhos pras mesmas duas ações. **Zero backend** — "criar" reusa o
+`<app-ficha-criar-dialog>` que já estava montado na página (`[podeEscolherDono]="ehMestre()"` já
+resolvia o `false`), e "vincular" usa `listarMinhasFichas()` + `atribuirCampanha()` da m3-28,
+filtrando `campanhaId === null` (acervo vazio mostra estado vazio, não um `<select>` sem opções). Ao
+criar ou vincular, o **jogador fica na página** (a visão dele já embute a ficha; recarrega a Equipe e
+aponta `fichaExibidaId` pra ficha nova) — o mestre continua navegando pra ficha, como antes.
+
+**Mobile — só adaptação do visual atual** (um recorte pensado pra celular é task futura).
+`COMPACTO_DESTINOS_MOBILE` ganhou `'informacoes'`: cinco destinos. `'rolagens'` virou o **único
+destino da barra que não é uma aba** — no compacto ele não altera `abaStatusAtiva`, só emite
+`abaStatusMudou`, e `CampanhaDetalhe` reage rolando até o card da lateral (`scrollIntoView`).
+
+**Bug pré-existente da m2-20 corrigido no caminho:** o card de Status **transbordava por baixo da
+coluna lateral**. Medido ao vivo a 1440px de viewport: `coluna-agente` travada em `flex: 0 0 500px`
+mais `--status` com `min-width: 260px` pediam 776px numa linha de 644 — o Status ia de x=681 a 941
+contra uma lateral começando em x=846. Passava despercebido enquanto a coluna 2 tinha só listas;
+com Atributos dentro dela ficou gritante. As duas viraram `flex: 1 1 340px` (`max-width: 500px` no
+agrupador preserva o teto de antes nas telas largas), e mais dois ajustes de contenção: o glance de
+Combate usa 2 colunas iguais no compacto (a régua `repeat(4, max-content) 1fr` da regra base conta
+com a largura do Status do `'padrao'`) e Proficiência/Maestria ganharam `flex-wrap` com base de
+150px, em vez de vazar o rótulo `nowrap` pela borda a 1280px. Também no SCSS, os seletores de
+recorte mobile do `&__linha-colunas` viraram **filho direto** (`> .ficha-visao__coluna-agente >`) —
+como descendente solto, escondiam também a instância de Atributos que agora vive no card de Status,
+e a aba Informações do celular nascia vazia.
+
+**Verificação ao vivo** (Playwright, dois usuários reais criados por REST, campanha + convite): 29
+checagens, todas verdes — trio de abas com um painel por vez; Atributos e Combate na aba Informações
+(glance só leitura, sem lápis) e Anotações presentes; Sanidade fora; coluna 1 sem Atributos; lateral
+Equipe→Rolagens→Sessão com o card do meio rolando por dentro (`overflow-y: auto`, 293px) e Sessão
+ainda visível a y=676 numa tela de 900; **toggle da lateral ligado → a rolagem disparada de dentro do
+card sai `PRIVADA`** (POST capturado) e aparece na coluna Sessão; criar e vincular ficha sem
+recarregar a página (sentinela sobreviveu), seletor listando só a ficha sem campanha, ficha vinculada
+virando a exibida e entrando na Equipe; mobile a 360px com os 5 destinos, sem scroll horizontal, e
+tocar em Rolagens rolando até a lateral **sem** trocar a aba do card; regressão do `'padrao'` com as
+seis abas, Atributos na coluna própria e a aba Rolagens renderizada pelo componente novo. Screenshots
+a 1280/1440/1920 confirmaram o fim do transbordo.
+
+`detalhe.page.spec.ts`: os dois testes que afirmavam "o jogador não tem kebab" ficaram obsoletos
+(agora tem, com as ações de ficha) — reescritos pra afirmar o que continua verdadeiro: ele nunca vê
+Editar/Excluir da campanha. `ficha-visualizacao.component.spec.ts` passou a prover
+`FichaRolagemRegistroService` no TestBed, fazendo o papel da página.
+
+`build`/`test` do frontend verdes (641/642 — a falha é a de sempre, `ficha-inventario.component.
+spec.ts`, P-001). `lint` com os mesmos 3 erros pré-existentes de antes da task (P-009), nenhum nos
+arquivos alterados. O budget de `anyComponentStyle` continua estourado (P-004), mas a task **reduziu**
+o excedente de 1,16 kB para 632 bytes.
+
+### Ajuste pós-m2-21 — altura das listas, Rolagens só-leitura na lateral, Sessão a 3 pills (2026-08-02)
+
+Três pedidos do autor sobre a entrega acima, direto em conversa (sem spec própria — ajuste fino da
+mesma frente):
+
+**1. Inventário/Habilidades no compacto voltaram a ocupar espaço de verdade.** O teto de
+`.ficha-inv__lista`/`.habilidades__lista` no card compacto (230px/250px) datava de quando o
+agrupador Identidade+Atributos ao lado era alto — pós-m2-21, sem Atributos, ele encolheu pra
+Identidade+Vitalidade+Reações+Resistências (739px, medido ao vivo), e o teto antigo desperdiçava a
+maior parte disso. Os dois subiram pra **420px** (a mesma régua já usada nos cards da lateral e no
+teto irmão `.ficha-inv__amps`) — com uma ficha de 10 itens/10 habilidades, o card de Status passou
+a fechar quase exatamente na altura da Identidade (antes sobrava ~500px de card praticamente vazio
+abaixo de 3-4 itens). Achado no caminho: `POST /ficha` com um item de inventário sem
+`modificacoes` (campo obrigatório de `CarrinhoItemDto`, não opcional) derruba `listarFichas` com
+500 — útil registrar aqui porque não há validação de schema no backend (DTOs são interface, sem
+`class-validator` — decisão vigente) que pegasse isso antes de chegar no cálculo.
+
+**2. O painel de Rolagens da lateral virou só-leitura.** `<app-ficha-rolagens-painel
+[editavel]="false">` no `detalhe.page.html` (era `podeAjustarFichaExibida()`) — a lateral existe
+pra rolar os presets que a ficha já tem + a rolagem rápida, não pra gerenciar o catálogo de
+presets; "+ Novo preset" e os ícones de duplicar/editar/remover por preset somem (o próprio
+`FichaRolagens` já gateava tudo isso por `editavel()`, então foi só essa uma linha). Criar/editar
+preset continua exclusivo da ficha completa (`FichaVisualizacao`, que passa `ajustavelAmplo()`)
+— único outro consumidor do mesmo `FichaRolagensPainel`, que manteve seu input `editavel` normal.
+
+**3. "Sessão" mostra só 3 rolagens antes de rolar.** `.detalhe__sessao-lista` tinha `max-height:
+420px` (a régua "lista longa" padrão do arquivo) — pra uma tira de rolagens recentes, 420px cabiam
+~8 pills, empurrando a lateral (e o resto do scroll da página) bem mais que os outros dois cards
+vizinhos. Cada `.rolagem-pill` mede exatamente 53px (2 linhas de texto fixas — medido ao vivo,
+constante independente do conteúdo); com `gap: 8px` e os 4px de padding do container, o teto virou
+`53×3 + 8×2 + 4 = 179px`.
+
+Nenhuma mudança de TS além da única linha do item 2. `build`/`test`/`lint` do frontend seguem nos
+mesmos números do fecho da `m2-21` (nenhuma regressão introduzida).
+
 ## m2-20 — painel de campanhas: detalhe `/painel/:id` na visão do jogador (2026-08-01)
 
 Irmã da `m2-19` (mesmo detalhe, visão complementar): até aqui a visão do jogador em `/painel/:id`

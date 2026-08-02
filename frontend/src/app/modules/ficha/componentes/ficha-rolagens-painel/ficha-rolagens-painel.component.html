@@ -1,0 +1,30 @@
+@if (podeRolar()) {
+  <!-- Visibilidade das próximas rolagens (m3-27): PUBLICA por padrão; "oculta" grava PRIVADA (só
+       autor + mestre veem, no histórico e no feed da campanha). Desde a m2-21 a flag mora no
+       `FichaRolagemRegistroService` da página — então marcá-la aqui, na lateral do painel de
+       campanha, também vale pro teste de atributo e pro dano rolados de dentro do card. -->
+  <button
+    type="button"
+    class="ficha-rolagem-oculta"
+    [class.ficha-rolagem-oculta--ativa]="registro.oculta()"
+    [attr.aria-pressed]="registro.oculta()"
+    [appTooltip]="registro.oculta() ? 'Próximas rolagens: privadas (autor + mestre)' : 'Próximas rolagens: públicas'"
+    (click)="registro.alternarOculta()"
+  >
+    <app-icone [nome]="registro.oculta() ? 'olho-fechado' : 'olho'" />
+    <span>Rolagem oculta</span>
+  </button>
+}
+<app-ficha-rolagens
+  [rolagens]="dados().rolagens ?? []"
+  [atributos]="atributosEfetivos()"
+  [proficiencia]="proficiencia()"
+  [nivel]="dados().nivel"
+  [habilidadesDisponiveis]="dados().habilidades"
+  [atalhosDano]="atalhosDano()"
+  [editavel]="editavel()"
+  [podeRolar]="podeRolar()"
+  (rolagensMudou)="rolagensMudou.emit($event)"
+  (energiaGasta)="energiaGasta.emit($event)"
+  (rolagemFeita)="registro.registrar($event)"
+/>

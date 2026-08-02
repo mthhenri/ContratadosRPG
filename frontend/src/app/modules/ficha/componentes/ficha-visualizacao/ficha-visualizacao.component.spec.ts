@@ -18,6 +18,7 @@ import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { FichaVisualizacao } from './ficha-visualizacao.component';
+import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
 
 /**
  * Prova a exibição read-only da ficha (m3-07): apresenta identidade (codinome, classe/arquétipo,
@@ -70,7 +71,14 @@ describe('FichaVisualizacao', () => {
     // visualizador não) — testes que precisam dissociar os dois passam o valor explicitamente.
     podeRolar = ajustavel,
   ) {
-    TestBed.configureTestingModule({ imports: [FichaVisualizacao] });
+    // `FichaRolagemRegistroService` (m2-21) é provido pela **página** que hospeda a ficha
+    // (`VisualizarPage`/`CampanhaDetalhe`, `providers: []`), nunca em `root`: a flag "Rolagem
+    // oculta" e o caminho de registro são compartilhados entre o card e o painel de Rolagens da
+    // lateral, mas presos a uma ficha só. Aqui o TestBed faz o papel da página.
+    TestBed.configureTestingModule({
+      imports: [FichaVisualizacao],
+      providers: [FichaRolagemRegistroService],
+    });
     const fixture = TestBed.createComponent(FichaVisualizacao);
     fixture.componentRef.setInput('fichaId', fichaId);
     fixture.componentRef.setInput('nome', nome);

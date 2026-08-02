@@ -482,6 +482,26 @@
     }
   }
 
+  // Estado vazio da coluna principal (m2-21, item 8) — "você ainda não tem ficha" + os dois
+  // atalhos do menu "⋯". Os botões empilham no mobile, onde 2 rótulos longos não cabem lado a lado.
+  &__jogador-vazio {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  &__jogador-vazio-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    @include bp.mobile {
+      width: 100%;
+      flex-direction: column;
+    }
+  }
+
   // Card da ficha embutida — cabeçalho próprio (nome + "Abrir completa") no topo do
   // `<app-ficha-visualizacao modo="compacto">` (item 6); o card canônico já dá fundo/borda/padding.
   &__ficha-embutida {
@@ -644,9 +664,55 @@
     white-space: nowrap;
   }
 
+  // === "Rolagens" (m2-21, item 3) — o painel de presets/rolagem avulsa que era a aba "Rolagens"
+  // do card compacto, agora entre Equipe e Sessão: rolar e ler o histórico recente na mesma coluna.
+  // Nome com sufixo `-painel` de propósito — `&__rolagens` (bem acima) já é a tira horizontal do
+  // topo, compartilhada pelos dois papéis.
+  //
+  // O corpo rola por dentro pelo mesmo motivo (e com a mesma receita) de Equipe/Sessão: com os três
+  // cards empilhados, um painel de presets alto empurraria Sessão pra fora da tela. 420px é a régua
+  // que os dois vizinhos já usam.
+  &__rolagens-painel-corpo {
+    max-height: 420px;
+    overflow-y: auto;
+    padding: 2px;
+
+    --fade-topo: 0px;
+    --fade-base: 0px;
+    &.overflow-fade--topo,
+    &.overflow-fade--base {
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--fade-topo),
+        #000 calc(100% - var(--fade-base)),
+        transparent 100%
+      );
+    }
+    &.overflow-fade--topo {
+      --fade-topo: 16px;
+    }
+    &.overflow-fade--base {
+      --fade-base: 16px;
+    }
+  }
+
   // === "Sessão" (item 8) — mesmas rolagens da última hora da tira do topo (`rolagensRecentes()`),
   // reaproveitando o `.rolagem-pill` canônico (abaixo), só empilhado em vez de rolar na horizontal
   // (a lateral é estreita demais para uma tira).
+  //
+  // Teto de 3 pills (a pedido do autor — antes 420px, ~8 pills, empurrava a lateral pra baixo e
+  // exagerava o scroll da página). `.rolagem-pill` mede 53px de altura (medido ao vivo, sempre
+  // igual — 2 linhas de texto fixas: rótulo + meta); com `gap: 8px` entre eles e os 4px de
+  // `padding` do container, 3 pills fecham em 53×3 + 8×2 + 4 = 179px. Mais rolagens continuam
+  // alcançáveis pelo scroll (fade + `appOverflowFade`, sem mudar).
   &__sessao-lista {
     list-style: none;
     margin: 0;
@@ -654,7 +720,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    max-height: 420px;
+    max-height: 179px;
     overflow-y: auto;
 
     --fade-topo: 0px;

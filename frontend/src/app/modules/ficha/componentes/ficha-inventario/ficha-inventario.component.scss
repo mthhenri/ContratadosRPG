@@ -1672,16 +1672,19 @@
   // === Card compacto (m2-20 — `app-ficha-visualizacao[modo="compacto"]`) ===
   // Independente do `&--compacto` acima (que é sobre `apresentacao === 'dialog'`, sempre ativo
   // nesta visualização em todos os modos — padrão/embutido/compacto). Este aqui é só o card de
-  // equipe: teto mais baixo que o padrão de 458px, porque a coluna Status ali compete de perto
-  // com o agrupador Identidade+Atributos ao lado (ver `ficha-visualizacao.component.scss` —
-  // `&__coluna-agente`) — sem um teto apertado, a lista de itens sozinha já estica a coluna
-  // inteira bem além da altura do agrupador.
+  // equipe: até a m2-21 tinha um teto mais baixo (230px) que o padrão de 458px, porque a coluna
+  // Status competia de perto com o agrupador Identidade+Atributos ao lado. A m2-21 tirou Atributos
+  // desse agrupador (foi pra dentro da aba Informações do card de Status) — ele agora é só
+  // Identidade+Vitalidade+Reações+Resistências, bem mais baixo, e o teto apertado passou a
+  // desperdiçar a maior parte da altura disponível na aba (a pedido do autor, pós-m2-21). 420px é
+  // a mesma régua já usada nos cards da lateral (`detalhe.page.scss`) para "lista longa, rola por
+  // dentro" — mais que o dobro do que cabia antes, sem soltar a lista sem teto nenhum.
   &--card-compacto {
     // Precisa vir DEPOIS do `&--compacto` acima: mesma especificidade (0,2,0) na `.ficha-inv__lista`
     // (`.ficha-inv--compacto .ficha-inv__lista` vs `.ficha-inv--card-compacto .ficha-inv__lista`) —
     // quem ganha é a ordem de origem, e as duas classes convivem no mesmo elemento raiz.
     .ficha-inv__lista {
-      max-height: 230px;
+      max-height: 490px;
     }
 
     // Mesmo raciocínio do `&--compacto` (acima): no mobile não há coluna vizinha e a página

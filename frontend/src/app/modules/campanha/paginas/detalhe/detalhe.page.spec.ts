@@ -245,9 +245,18 @@ describe('CampanhaDetalhe', () => {
       expect(raiz.querySelector('.detalhe__cabecalho-menu-botao')).not.toBeNull();
     });
 
-    it('esconde o kebab de ações do jogador', () => {
-      const { raiz } = montar(jogador());
-      expect(raiz.querySelector('.detalhe__cabecalho-menu-botao')).toBeNull();
+    // m2-21 (item 6): o jogador deixou de ficar sem kebab — ganhou o dele, no mesmo lugar, com as
+    // ações de FICHA (criar/vincular). O que ele continua não vendo são as ações de CAMPANHA.
+    it('dá ao jogador o kebab de ficha, nunca o de campanha (Editar/Excluir)', () => {
+      const { fixture, raiz } = montar(jogador());
+      const botao = raiz.querySelector('.detalhe__cabecalho-menu-botao');
+      expect(botao?.getAttribute('aria-label')).toBe('Ações de ficha');
+
+      abrirMenuCampanha(raiz, fixture);
+      const itens = Array.from(raiz.querySelectorAll('.detalhe__cabecalho-menu-item')).map((item) =>
+        item.textContent?.trim(),
+      );
+      expect(itens).toEqual(['Criar nova ficha', 'Vincular ficha existente']);
     });
 
     it('abre o menu com Editar/Excluir e fecha ao clicar no fundo', () => {
@@ -375,7 +384,11 @@ describe('CampanhaDetalhe', () => {
 
       expect(campanhaService.transferirMestre).toHaveBeenCalledWith(CAMPANHA_ID, 2);
       expect(raiz.querySelector('.detalhe__membro-acoes')).toBeNull();
-      expect(raiz.querySelector('.detalhe__cabecalho-menu-botao')).toBeNull();
+      // m2-21: o kebab não some — vira o do jogador (ações de ficha), já que quem transferiu o
+      // mestre virou jogador. O que sai são as ações de campanha.
+      expect(
+        raiz.querySelector('.detalhe__cabecalho-menu-botao')?.getAttribute('aria-label'),
+      ).toBe('Ações de ficha');
     });
 
     it('cancela a ação de membro sem chamar o backend', () => {

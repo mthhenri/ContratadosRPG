@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import {
   Component,
   ElementRef,
@@ -18,7 +19,6 @@ import {
   FormacaoParametroEnum,
   FragmentoModuloEnum,
   HabilidadeCategoriaEnum,
-  RolagemVisibilidadeEnum,
   TipoDanoEnum,
 } from '@contratados-rpg/shared/enums';
 import type {
@@ -32,7 +32,6 @@ import type {
   FichaRolagemDto,
   FichaSequelaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
-import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import {
   MAESTRIA_PONTOS_MINIMO,
   ajusteEnergiaAmplificadores,
@@ -75,13 +74,13 @@ import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.com
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
 import { FichaInventario, type CustoEnergiaFragmento } from '../ficha-inventario/ficha-inventario.component';
-import { FichaRolagens } from '../ficha-rolagens/ficha-rolagens.component';
+import { FichaRolagensPainel } from '../ficha-rolagens-painel/ficha-rolagens-painel.component';
 import { FichaSanidade, type EstadoSanidade } from '../ficha-sanidade/ficha-sanidade.component';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
 import { GRUPOS_FORMACAO, rotuloParametroFormacao } from '../../opcoes-formacao';
 import { CONDICOES_FICHA, type CondicoesFicha } from '../../condicoes-ficha';
 import { clamparVitalidade, type CampoVitalidadeAtual } from '../../ajuste-vitalidade';
-import { RolagemService } from '../../rolagem.service';
+import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
 import type { RolagemRealizadaDto } from '../../rolagem-realizada';
 import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
 import {
@@ -175,6 +174,15 @@ export function ehAbaStatus(valor: string | null | undefined): valor is AbaStatu
 }
 
 /**
+ * Abas do card de Status no `modo="compacto"` (m2-21) — o trio reduzido do card de equipe. A m2-20
+ * tinha **desligado** a barra no compacto e empilhado Inventário/Habilidades/Rolagens de uma vez;
+ * a m2-21 religa o mesmo mecanismo com este recorte. `rolagens` sai porque o painel foi morar na
+ * coluna lateral da página (`CampanhaDetalhe`, ao lado do histórico da sessão); `extras`/`historia`
+ * continuam exclusivas da ficha completa.
+ */
+const ABAS_STATUS_COMPACTO: readonly AbaStatus[] = ['informacoes', 'inventario', 'habilidades'];
+
+/**
  * Destino da barra de navegação **inferior** do mobile (m3-60). É `AbaStatus` mais `'agente'`,
  * porque no celular as colunas Identidade e Atributos do desktop deixam de ser blocos empilhados
  * acima do Status e viram um destino próprio. `'agente'` **não** entra em `AbaStatus` de propósito:
@@ -220,12 +228,16 @@ const DESTINOS_MOBILE: readonly {
 ];
 
 /**
- * Subconjunto de `DESTINOS_MOBILE` válido no `modo="compacto"` (m2-20) — Informações/Extras/
- * História ficam de fora (só a ficha completa os tem); Inventário/Habilidades/Rolagens sobram
- * porque no compacto eles já são sempre visíveis, sem aba, então continuam alcançáveis da barra.
+ * Subconjunto de `DESTINOS_MOBILE` válido no `modo="compacto"` — cinco destinos (m2-21): os quatro
+ * da m2-20 mais `informacoes`, que voltou a existir quando a barra de abas do compacto foi religada
+ * (Atributos + Combate + Anotações migraram pra ela). Extras/História seguem de fora — só a ficha
+ * completa os tem. `rolagens` continua na barra, mas é o **único destino que não é uma aba**: o
+ * painel vive na coluna lateral da página, então tocá-lo só avisa `CampanhaDetalhe`, que rola até
+ * lá (ver `selecionarDestinoMobile`).
  */
 const COMPACTO_DESTINOS_MOBILE = new Set<DestinoMobile>([
   'agente',
+  'informacoes',
   'inventario',
   'habilidades',
   'rolagens',
@@ -314,12 +326,13 @@ export interface AjusteClasse {
 @Component({
   selector: 'app-ficha-visualizacao',
   imports: [
+    NgTemplateOutlet,
     HoldRepeat,
     Icone,
     FichaSanidade,
     FichaInventario,
     FichaHabilidades,
-    FichaRolagens,
+    FichaRolagensPainel,
     BandejaDados,
     OverflowFade,
     Tooltip,
@@ -365,19 +378,21 @@ export class FichaVisualizacao {
    * equipe") é o modo usado por `CampanhaDetalhe` pra qualquer ficha exibida na coluna principal
    * da visão do jogador (própria ou de colega): reduz as 3 colunas do layout `'padrao'` (Identidade
    * 420 + Atributos 260 + Status mín. 420 ≈ 1130px, mais do que a coluna principal tem) pra 2 —
-   * Identidade+Atributos empilhados num agrupador único (`&__coluna-agente`, 500px) ao lado da
-   * Status (min. 260px) — esconde Prestígio e troca as abas de Status por Inventário/Habilidades/
-   * Rolagens sempre visíveis, sem seletor (Informações/Extras/História ficam só na ficha completa,
-   * via "Abrir ficha completa").
+   * a coluna 1 (`&__coluna-agente`, 500px) fica só com Identidade/Vitalidade/Reações/Resistências e
+   * a 2 é o card de Status. Esconde Prestígio e reduz a barra de abas ao trio **Informações ·
+   * Inventário · Habilidades** (m2-21, {@link ABAS_STATUS_COMPACTO}): Atributos e o glance de
+   * Combate migram pra aba Informações, Rolagens vai pra coluna lateral da página, e Extras/
+   * História seguem só na ficha completa (via "Abrir ficha completa").
    */
   readonly modo = input<'padrao' | 'compacto'>('padrao');
 
   /**
    * Gate da edição "completa" (identidade/classe/reações/contra-ataque/resistências/atributos em
-   * grupo/anotações/história) — no modo `'compacto'` (m2-20, restrição pós-entrega) essas ficam
-   * **só leitura** mesmo pro dono/mestre: o card de equipe só edita Dinheiro, Vida/Energia,
-   * Condições (Morrendo/Machucado/Inconsciente) e Inventário (add/remover item), que continuam no
-   * `ajustavel()` puro — o resto exige "Abrir ficha completa" (`modo="padrao"`).
+   * grupo/derivados de Combate/história) — no modo `'compacto'` (m2-20, restrição pós-entrega)
+   * essas ficam **só leitura** mesmo pro dono/mestre: o card de equipe edita Dinheiro, Vida/
+   * Energia, Condições (Morrendo/Machucado/Inconsciente), Inventário (add/remover item) e as
+   * **Anotações** (m2-21, quando a aba Informações passou a existir no compacto) — todas no
+   * `ajustavel()` puro. O resto exige "Abrir ficha completa" (`modo="padrao"`).
    */
   protected readonly ajustavelAmplo = computed(() => this.ajustavel() && this.modo() !== 'compacto');
 
@@ -533,6 +548,31 @@ export class FichaVisualizacao {
    */
   readonly abaStatusMudou = output<DestinoMobile>();
 
+  /**
+   * Aba efetivamente **renderizada** no card. Igual a `abaStatusAtiva` no `modo="padrao"`; no
+   * `'compacto'` (m2-21) o card só tem o trio de {@link ABAS_STATUS_COMPACTO}, então uma aba fora
+   * dele — `rolagens` (o painel foi pra lateral), `extras`/`historia` (só na ficha completa),
+   * chegando por um `#` de URL antigo ou manipulado à mão — cai em Informações em vez de deixar o
+   * card vazio.
+   */
+  protected readonly abaStatusEfetiva = computed<AbaStatus>(() => {
+    const aba = this.abaStatusAtiva();
+    if (this.modo() !== 'compacto') {
+      return aba;
+    }
+    return ABAS_STATUS_COMPACTO.includes(aba) ? aba : 'informacoes';
+  });
+
+  /** Abas exibidas na barra do card — o trio reduzido no compacto (m2-21), as seis no padrão. */
+  protected readonly abasStatusVisiveis = computed<readonly AbaStatus[]>(() =>
+    this.modo() === 'compacto' ? ABAS_STATUS_COMPACTO : ABAS_STATUS,
+  );
+
+  /** `true` quando a aba `aba` deve aparecer na barra deste modo (atalho de template). */
+  protected mostraAbaStatus(aba: AbaStatus): boolean {
+    return this.abasStatusVisiveis().includes(aba);
+  }
+
   /** Troca a aba ativa da mini barra do card de Status. */
   protected selecionarAbaStatus(aba: AbaStatus): void {
     this.abaStatusAtiva.set(aba);
@@ -584,6 +624,15 @@ export class FichaVisualizacao {
       this.destinoMobile.set('agente');
       this.abaStatusMudou.emit('agente');
       this.rolarParaTopoDoConteudo();
+      return;
+    }
+    // m2-21: no compacto, "Rolagens" é o único destino da barra que **não** é uma aba do card — o
+    // painel mora na coluna lateral da página. Marca o item como ativo e avisa `CampanhaDetalhe`
+    // (que rola até o card de lá), sem tocar em `abaStatusAtiva` nem no `#` da URL: trocar a aba
+    // aqui esconderia o Inventário/Habilidades por uma aba que não existe neste modo.
+    if (destino === 'rolagens' && this.modo() === 'compacto') {
+      this.destinoMobile.set('rolagens');
+      this.abaStatusMudou.emit('rolagens');
       return;
     }
     this.selecionarAbaStatus(destino);
@@ -762,7 +811,7 @@ export class FichaVisualizacao {
     // também garante a borda oposta certa nos dois sentidos (botão parcialmente fora à esquerda
     // ou à direita).
     effect(() => {
-      const aba = this.abaStatusAtiva();
+      const aba = this.abaStatusEfetiva();
       const container = this.abasStatusContainer()?.nativeElement;
       if (!container) {
         return;
@@ -889,51 +938,25 @@ export class FichaVisualizacao {
 
   /** Bandeja de dados global — onde o teste rolado aqui aparece. */
   private readonly bandeja = inject(BandejaDadosService);
-  /** Persistência do histórico de rolagens (m3-27) — chamada direto daqui, fire-and-forget. */
-  private readonly rolagemService = inject(RolagemService);
 
   /**
-   * Visibilidade das próximas rolagens (m3-27): `true` = `PRIVADA` (só o autor e o mestre veem —
-   * o mesmo toggle serve ao mestre pra rolar "só para si", já que aí autor = mestre). Default
-   * `false` (`PUBLICA`) — visível a estado local, não persistido (reflete a decisão do momento em
-   * que se rola, não um ajuste da ficha).
+   * Visibilidade das próximas rolagens + persistência do histórico (m3-27) — extraídos deste
+   * componente na m2-21 (item 5) porque o toggle "Rolagem oculta" passou a morar **fora** do card
+   * no `modo="compacto"` (coluna lateral de `CampanhaDetalhe`) enquanto o teste de atributo e o
+   * dano continuam sendo rolados daqui de dentro: os dois precisam da mesma flag e do mesmo
+   * caminho de registro. A página é quem provê a instância (`providers: []`) e quem escuta
+   * `registrada$` pro prepend local no histórico/feed.
    */
-  protected readonly rolagemOculta = signal(false);
-
-  /** Alterna a visibilidade das próximas rolagens desta sessão de leitura. */
-  protected alternarRolagemOculta(): void {
-    this.rolagemOculta.update((oculta) => !oculta);
-  }
+  protected readonly registro = inject(FichaRolagemRegistroService);
 
   /**
-   * Rolagem persistida nesta sessão de leitura (m3-27), emitida como evento — alimenta a barra
-   * lateral de histórico (`HistoricoRolagensSidebar`, no cabeçalho de `FichaVisualizar`) com
-   * **prepend local**, sem esperar reabri-la: útil quando ela já está aberta enquanto se rola de
-   * outra aba/coluna. Rolagens privadas ou de fichas sem campanha nunca chegam por WebSocket — só
-   * este caminho local garante que o próprio autor sempre vê a própria rolagem aparecer na hora.
-   */
-  readonly rolagemRegistrada = output<RolagemResumoDto>();
-
-  /**
-   * Persiste uma rolagem executada nesta ficha (m3-27) — fire-and-forget, otimista (o resultado já
-   * está na bandeja antes desta chamada terminar). Chamado tanto pelos rolagens diretas daqui
-   * (`rolarTesteAtributo`/`rolarDano`) quanto pelo `(rolagemFeita)` dos componentes controlados
-   * (`FichaRolagens`/`FichaInventario`), que não conhecem o `fichaId`. Um erro (403/rede) só perde
-   * o registro — a rolagem já apareceu na bandeja e não trava a leitura; o toast global já avisa.
+   * Persiste uma rolagem executada nesta ficha (m3-27) — delega ao
+   * {@link FichaRolagemRegistroService} da página. Chamado tanto pelas rolagens diretas daqui
+   * (`rolarTesteAtributo`/`rolarDano`) quanto pelo `(rolagemFeita)` do `FichaInventario`, que não
+   * conhece o `fichaId`.
    */
   protected registrarRolagem(entrada: RolagemRealizadaDto): void {
-    this.rolagemService
-      .registrar(this.fichaId(), {
-        rotulo: entrada.rotulo,
-        visibilidade: this.rolagemOculta()
-          ? RolagemVisibilidadeEnum.PRIVADA
-          : RolagemVisibilidadeEnum.PUBLICA,
-        resultado: entrada.resultado,
-      })
-      .subscribe({
-        next: (rolagemRegistrada) => this.rolagemRegistrada.emit(rolagemRegistrada),
-        error: () => undefined,
-      });
+    this.registro.registrar(entrada);
   }
 
   /**
@@ -1062,23 +1085,6 @@ export class FichaVisualizacao {
       this.registrarRolagem({ rotulo: linha.rotulo, formula: linha.bruto, resultado });
     }
   }
-
-  /**
-   * Dano C. a C./Furtivo **atuais** (stored vence calculado, m3-10) — alimentam os atalhos de
-   * fórmula `CORPO`/`FURTIVO` (`expandirAtalhosDano`, consumidos por `FichaRolagens` na rolagem
-   * avulsa): quem digita escreve só a palavra em vez de copiar a notação de dado, e o resultado
-   * acompanha o agente (sobe de nível, o valor mudou, a próxima rolagem já usa o novo sem editar
-   * nada). Civil não tem Furtivo — vira `null`.
-   */
-  protected readonly atalhosDano = computed(() => {
-    const mapa = new Map(this.informacoesExtras().map((info) => [info.chave, info] as const));
-    const corpo = mapa.get('danoCorpoACorpo')?.bruto;
-    const furtivo = mapa.get('danoFurtivo')?.bruto;
-    return {
-      corpo: typeof corpo === 'string' ? corpo : null,
-      furtivo: typeof furtivo === 'string' ? furtivo : null,
-    };
-  });
 
   /** Penalidade de lesão por atributo (0 quando não lesionado) — badge "−N" na leitura. */
   protected readonly penalidadesLesao = computed<Record<ChaveAtributo, number>>(() => {

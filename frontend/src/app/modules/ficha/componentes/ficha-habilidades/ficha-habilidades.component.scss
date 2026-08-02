@@ -815,14 +815,17 @@
   }
 
   // === Card compacto (m2-20 — `app-ficha-visualizacao[modo="compacto"]`) ===
-  // A lista tem teto de 476px por padrão (linha ~230 acima) — no card compacto esse teto ainda
-  // deixa a coluna Status alta demais frente ao agrupador Identidade+Atributos ao lado (que a
-  // esticaria por `align-items:stretch` na `&__linha-colunas`, reabrindo o vão vazio que o
-  // wrapper `coluna-agente` resolveu — ver `ficha-visualizacao.component.scss`). Teto mais baixo
-  // só aqui, a pedido do autor.
+  // A lista tem teto de 476px por padrão (linha ~230 acima) — até a m2-21 o card compacto usava um
+  // teto bem mais baixo (250px) porque a coluna Status competia de perto com o agrupador
+  // Identidade+Atributos ao lado (esticado por `align-items:stretch` na `&__linha-colunas`). A
+  // m2-21 tirou Atributos desse agrupador (foi pra dentro da aba Informações do card de Status) —
+  // ele agora é só Identidade+Vitalidade+Reações+Resistências, bem mais baixo, e o teto antigo
+  // desperdiçava a maior parte da altura disponível na aba (a pedido do autor, pós-m2-21). 420px é
+  // a mesma régua já usada nos cards da lateral (`detalhe.page.scss`, "lista longa, rola por
+  // dentro") e no teto irmão de `ficha-inv__lista` (mesma restrição, mesmo card).
   &--compacto {
     .habilidades__lista {
-      max-height: 250px;
+      max-height: 490px;
     }
 
     // Mesmo raciocínio do teto padrão (m3-60, acima): no mobile não há coluna vizinha, a página

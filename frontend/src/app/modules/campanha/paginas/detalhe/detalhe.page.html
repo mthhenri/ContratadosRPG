@@ -76,6 +76,52 @@
               </div>
             }
           </div>
+        } @else {
+          <!-- m2-21 (item 6): o jogador ganha o mesmo "⋯" do mestre, no mesmo lugar (ao lado do
+               voltar), com as ações que faltavam pra ele resolver a própria ficha sem sair da
+               página. Aparece sempre, não só quando ele está sem ficha — trazer uma segunda ficha
+               do acervo é legítimo (a Equipe já suporta várias por membro desde a m2-20). Reusa o
+               `menuCampanhaAberto` porque os dois menus são mutuamente exclusivos (`ehMestre()`). -->
+          <div class="detalhe__cabecalho-menu-envoltorio">
+            <button
+              class="detalhe__cabecalho-menu-botao"
+              type="button"
+              aria-haspopup="menu"
+              [attr.aria-expanded]="menuCampanhaAberto()"
+              aria-label="Ações de ficha"
+              (click)="alternarMenuCampanha()"
+            >
+              ⋯
+            </button>
+            @if (menuCampanhaAberto()) {
+              <button
+                class="detalhe__cabecalho-menu-fundo"
+                type="button"
+                aria-label="Fechar menu"
+                (click)="fecharMenuCampanha()"
+              ></button>
+              <div class="detalhe__cabecalho-menu" role="menu">
+                <button
+                  class="detalhe__cabecalho-menu-item"
+                  type="button"
+                  role="menuitem"
+                  (click)="abrirCriarFicha()"
+                >
+                  <app-icone nome="agente" />
+                  <span>Criar nova ficha</span>
+                </button>
+                <button
+                  class="detalhe__cabecalho-menu-item"
+                  type="button"
+                  role="menuitem"
+                  (click)="abrirVincularFicha()"
+                >
+                  <app-icone nome="duplicar" />
+                  <span>Vincular ficha existente</span>
+                </button>
+              </div>
+            }
+          </div>
         }
       </div>
     </header>
@@ -518,7 +564,7 @@
               [podeRolar]="podeAjustarFichaExibida()"
               [ehMestre]="false"
               modo="compacto"
-              (rolagemRegistrada)="onRolagemRegistradaEmbutida($event)"
+              (abaStatusMudou)="aoMudarDestinoFicha($event)"
               (ajusteVitalidade)="fichaEdicao.ajustarVitalidade($event)"
               (ajusteDerivado)="fichaEdicao.ajustarDerivado($event)"
               (ajusteResistencia)="fichaEdicao.ajustarResistencia($event)"
@@ -549,7 +595,21 @@
         } @else if (carregandoFichaExibida()) {
           <p class="detalhe__estado">Carregando ficha…</p>
         } @else {
-          <p class="detalhe__estado">Você ainda não tem uma ficha nesta campanha.</p>
+          <!-- m2-21 (item 8): o estado vazio deixou de ser um beco — repete as duas ações do menu
+               "⋯" do cabeçalho, que é onde elas moram. -->
+          <div class="detalhe__jogador-vazio">
+            <p class="detalhe__estado">Você ainda não tem uma ficha nesta campanha.</p>
+            <div class="detalhe__jogador-vazio-acoes">
+              <button class="botao botao--primario detalhe__acao" type="button" (click)="abrirCriarFicha()">
+                <app-icone nome="agente" />
+                Criar nova ficha
+              </button>
+              <button class="botao botao--secundario detalhe__acao" type="button" (click)="abrirVincularFicha()">
+                <app-icone nome="duplicar" />
+                Vincular ficha existente
+              </button>
+            </div>
+          </div>
         }
       </div>
 
@@ -593,6 +653,33 @@
           </ul>
         </article>
 
+        <!-- Rolagens (m2-21, item 3) — entre Equipe e Sessão de propósito: rolar e ler o histórico
+             recente ficam lado a lado, na mesma coluna. Saiu de dentro do card da ficha (era a aba
+             "Rolagens" do compacto), então o toggle "Rolagem oculta" mora aqui — mas continua sendo
+             a MESMA flag do teste de atributo/dano rolados lá dentro (`FichaRolagemRegistroService`,
+             provido pela página). Só existe quando há ficha exibida: sem ficha, não há o que rolar. -->
+        @if (fichaExibidaDados(); as fichaParaRolar) {
+          <article class="card detalhe__rolagens-painel" #cardRolagens>
+            <header class="detalhe__secao">
+              <h2 class="detalhe__secao-titulo">Rolagens</h2>
+              <span class="detalhe__secao-regua"></span>
+            </header>
+            <div class="detalhe__rolagens-painel-corpo" appOverflowFade>
+              <!-- `editavel` fixo em `false` (a pedido do autor): a lateral é só pra ROLAR os
+                   presets que a ficha já tem + a rolagem rápida — criar/duplicar/editar/remover
+                   preset continua exclusivo da ficha completa (`FichaVisualizacao`, que passa
+                   `ajustavelAmplo()`). `podeRolar` segue a permissão normal. -->
+              <app-ficha-rolagens-painel
+                [dados]="fichaParaRolar.dados"
+                [editavel]="false"
+                [podeRolar]="podeAjustarFichaExibida()"
+                (rolagensMudou)="fichaEdicao.ajustarRolagens($event)"
+                (energiaGasta)="gastarEnergiaFichaExibida($event)"
+              />
+            </div>
+          </article>
+        }
+
         <article class="card detalhe__sessao">
           <header class="detalhe__secao">
             <h2 class="detalhe__secao-titulo">Sessão</h2>
@@ -631,6 +718,75 @@
 </section>
 
 <app-bandeja-dados />
+
+@if (dialogVincular()) {
+  <!-- Vincular ficha existente (m2-21, item 7) — só fichas do acervo **sem campanha** (m3-28). Sem
+       endpoint novo: `listarMinhasFichas` + `atribuirCampanha`. Acervo vazio mostra estado vazio,
+       não um `<select>` sem opções. -->
+  <div class="dialogo" role="dialog" aria-modal="true" aria-label="Vincular ficha existente">
+    <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="fecharVincularFicha()"></button>
+    <div class="dialogo__painel">
+      <header class="dialogo__cabecalho">
+        <span class="card__indice"><app-icone nome="duplicar" /></span>
+        <h2 class="dialogo__titulo">Vincular Ficha</h2>
+        <span class="card__regua"></span>
+        <button
+          class="dialogo__fechar"
+          type="button"
+          aria-label="Fechar"
+          [disabled]="vinculando()"
+          (click)="fecharVincularFicha()"
+        >
+          ✕
+        </button>
+      </header>
+
+      @if (carregandoFichasSoltas()) {
+        <p class="detalhe__estado">Carregando seu acervo…</p>
+      } @else if (fichasSoltas().length === 0) {
+        <p class="dialogo__aviso">
+          Você não tem fichas fora de campanha. Crie uma nova por aqui, ou libere uma no
+          <a routerLink="/fichas">seu acervo</a>.
+        </p>
+      } @else {
+        <label class="detalhe__campo">
+          <span class="detalhe__rotulo">Ficha do acervo</span>
+          <select
+            class="detalhe__entrada"
+            #seletorFicha
+            [disabled]="vinculando()"
+            (change)="escolherFichaParaVincular(seletorFicha.value)"
+          >
+            <option value="">Escolha uma ficha…</option>
+            @for (ficha of fichasSoltas(); track ficha.id) {
+              <option [value]="ficha.id">{{ ficha.nome }}</option>
+            }
+          </select>
+        </label>
+      }
+
+      <div class="dialogo__acoes">
+        <button
+          class="botao botao--primario dialogo__acao"
+          type="button"
+          [disabled]="vinculando() || fichaParaVincular() === null"
+          (click)="confirmarVincularFicha()"
+        >
+          <app-icone nome="duplicar" />
+          {{ vinculando() ? 'Vinculando…' : 'Vincular à campanha' }}
+        </button>
+        <button
+          class="botao botao--secundario dialogo__acao"
+          type="button"
+          [disabled]="vinculando()"
+          (click)="fecharVincularFicha()"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+}
 
 @if (dialogCriar()) {
   <app-ficha-criar-dialog
