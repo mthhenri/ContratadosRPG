@@ -708,6 +708,44 @@ describe('FichaVisualizacao', () => {
     expect(ajustes[0].maestria).toBe('vigor');
   });
 
+  it('ajusta dados de teste de um atributo no rascunho e emite junto com o resto do grupo ao salvar', () => {
+    const componente = montar(dados, 'Corvo', 42, true).fixture.componentInstance;
+    const ajustes: { dadosTeste: Record<string, number> }[] = [];
+    componente.ajusteAtributos.subscribe((a) => ajustes.push(a));
+
+    componente['editarAtributos']();
+    // Antes de qualquer ajuste, o rascunho completo nasce zerado (as 10 chaves).
+    expect(componente['rascunhoDadosTeste']()!.destreza).toBe(0);
+
+    componente['ajustarDadosTesteRascunho']('destreza', 1);
+    componente['ajustarDadosTesteRascunho']('destreza', 1);
+    componente['ajustarDadosTesteRascunho']('forca', -1);
+    componente['confirmarAtributos']();
+
+    expect(ajustes).toHaveLength(1);
+    expect(ajustes[0].dadosTeste['destreza']).toBe(2);
+    expect(ajustes[0].dadosTeste['forca']).toBe(-1);
+    expect(ajustes[0].dadosTeste['luta']).toBe(0);
+  });
+
+  it('lê o ajuste de dados de teste persistido fora da edição (dadosTesteDe)', () => {
+    const documento = { ...dados, dadosTeste: { destreza: -1 } };
+    const componente = montar(documento, 'Corvo', 42, true).fixture.componentInstance;
+
+    expect(componente['dadosTesteDe']('destreza')).toBe(-1);
+    expect(componente['dadosTesteDe']('forca')).toBe(0);
+  });
+
+  it('o teste de atributo rola com o ajuste manual de dados somado ao efetivo (sem mexer no atributo exibido)', () => {
+    // Destreza base 2, sem lesão, ajuste manual +1 → pool de 3 dados no teste, mas o valor
+    // exibido na ficha (atributosEfetivos) continua 2.
+    const documento = { ...dados, dadosTeste: { destreza: 1 } };
+    const componente = montar(documento, 'Corvo', 42, true).fixture.componentInstance;
+
+    expect(componente['atributosEfetivos']().destreza).toBe(2);
+    expect(componente['atributosParaDados']().destreza).toBe(3);
+  });
+
   it('desmarca a Maestria se o atributo cair abaixo de 6 durante a edição', () => {
     const documento = { ...dados, atributos: { ...dados.atributos, forca: 6 }, maestria: 'forca' as const };
     const componente = montar(documento, 'Corvo', 42, true).fixture.componentInstance;

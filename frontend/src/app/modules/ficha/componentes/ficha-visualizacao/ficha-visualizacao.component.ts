@@ -37,6 +37,7 @@ import {
   ajusteEnergiaAmplificadores,
   ajusteVidaAmplificadores,
   calcularAtributosEfetivos,
+  calcularAtributosParaDados,
   calcularEnergia,
   calcularInventario,
   calcularProficiencia,
@@ -277,14 +278,16 @@ export interface AjusteResistencia {
 }
 
 /**
- * Edição em grupo dos atributos + Maestria + modificadores de teste — a página persiste os três em
- * `atributos`, `maestria` e `modificadoresTeste` (redesenho de comparação visual: o modificador de
- * teste só é editável junto com o resto, na mesma tela de edição — não há um canal separado).
+ * Edição em grupo dos atributos + Maestria + modificadores de teste + ajuste manual de dados — a
+ * página persiste os quatro em `atributos`, `maestria`, `modificadoresTeste` e `dadosTeste`
+ * (redesenho de comparação visual: os três ajustes só são editáveis junto, na mesma tela — não há
+ * canal separado).
  */
 export interface AjusteAtributos {
   readonly atributos: FichaAtributosDto;
   readonly maestria: keyof FichaAtributosDto | null;
   readonly modificadoresTeste: Record<keyof FichaAtributosDto, number>;
+  readonly dadosTeste: Record<keyof FichaAtributosDto, number>;
 }
 
 /**
@@ -917,6 +920,16 @@ export class FichaVisualizacao {
   );
 
   /**
+   * Atributos **para dados** = efetivo (lesão) + ajuste manual de `dadosTeste` — usado **só** como
+   * contagem de dados de rolagem (`rolarTesteAtributo`, presets em `FichaRolagensPainel`). Energia/
+   * Deslocamento/Vida/Maestria e o valor exibido na ficha continuam em `atributosEfetivos`/`atributos`,
+   * intocados por este ajuste.
+   */
+  protected readonly atributosParaDados = computed(() =>
+    calcularAtributosParaDados(this.atributos(), this.estado().lesoes, this.dados().dadosTeste ?? {}),
+  );
+
+  /**
    * DT (Dificuldade de Teste) do atributo `chave` quando **este agente** é o causador do teste —
    * `shared/regras/dt` (mesma fórmula da página de DT da calculadora, m1-08): `10 + Nível +
    * Atributo×2`. Usa o atributo **efetivo** (já com a penalidade de lesão descontada), a mesma base
@@ -967,6 +980,17 @@ export class FichaVisualizacao {
   protected readonly modificadoresTeste = computed(() => this.dados().modificadoresTeste ?? {});
 
   /**
+   * Ajuste manual de dados por atributo (ex.: sequela/condição reduzindo dados sem mexer no
+   * atributo — hoje só editável manualmente aqui) — persistido em `dados.dadosTeste`.
+   */
+  protected readonly dadosTeste = computed(() => this.dados().dadosTeste ?? {});
+
+  /** Ajuste manual de dados de um atributo, resolvido a 0 quando ausente. */
+  protected dadosTesteDe(chave: ChaveAtributo): number {
+    return this.dadosTeste()[chave] ?? 0;
+  }
+
+  /**
    * Modificadores de teste vindos dos amplificadores portados (`shared/regras/agente/amplificador`)
    * — somam por cima do manual (`modificadoresTeste`) só na leitura, nunca substituem nem são
    * commitados de volta ao editar (mesmo motivo de `informacoesExtras`/`vidaMaximaEfetiva`).
@@ -997,9 +1021,22 @@ export class FichaVisualizacao {
   /** Rascunho dos modificadores de teste durante a edição — completo (as 10 chaves, 0 onde ausente). */
   protected readonly rascunhoModificadoresTeste = signal<Record<ChaveAtributo, number> | null>(null);
 
+  /** Rascunho do ajuste manual de dados durante a edição — completo (as 10 chaves, 0 onde ausente). */
+  protected readonly rascunhoDadosTeste = signal<Record<ChaveAtributo, number> | null>(null);
+
   /** Record completo (as 10 chaves) dos modificadores persistidos, preenchendo 0 onde ausente. */
   private modificadoresTesteCompletos(): Record<ChaveAtributo, number> {
     const persistidos = this.modificadoresTeste();
+    const completo = {} as Record<ChaveAtributo, number>;
+    (Object.keys(this.atributos()) as ChaveAtributo[]).forEach((chave) => {
+      completo[chave] = persistidos[chave] ?? 0;
+    });
+    return completo;
+  }
+
+  /** Record completo (as 10 chaves) do ajuste manual de dados persistido, preenchendo 0 onde ausente. */
+  private dadosTesteCompletos(): Record<ChaveAtributo, number> {
+    const persistidos = this.dadosTeste();
     const completo = {} as Record<ChaveAtributo, number>;
     (Object.keys(this.atributos()) as ChaveAtributo[]).forEach((chave) => {
       completo[chave] = persistidos[chave] ?? 0;
@@ -1014,6 +1051,15 @@ export class FichaVisualizacao {
       return;
     }
     this.rascunhoModificadoresTeste.set({ ...atual, [chave]: atual[chave] + delta });
+  }
+
+  /** Passo −/+ no ajuste manual de dados do rascunho (sem clamp — mesma liberdade dos demais). */
+  protected ajustarDadosTesteRascunho(chave: ChaveAtributo, delta: number): void {
+    const atual = this.rascunhoDadosTeste();
+    if (!atual) {
+      return;
+    }
+    this.rascunhoDadosTeste.set({ ...atual, [chave]: atual[chave] + delta });
   }
 
   /** Sufixo `" + N"`/`" − N"` do modificador de teste na fórmula — vazio quando zerado. */
@@ -1040,15 +1086,16 @@ export class FichaVisualizacao {
       return;
     }
     const dadosFormacao = this.bonusRolagemAtributoFormacao(campo.chave).dados;
-    const atributosEfetivos = this.atributosEfetivos();
-    const atributo = atributosEfetivos[campo.chave] + dadosFormacao;
+    const atributosParaDados = this.atributosParaDados();
+    const atributo = atributosParaDados[campo.chave] + dadosFormacao;
     const sufixo = this.sufixoModificador(this.modificadorTeste(campo.chave));
     // A fórmula que vai ao **motor** mantém `kh1` — é o gatilho da desvantagem intrínseca (atributo ≤ 0).
     const formula = `${campo.chave}d20kh1cm1 + PROF${sufixo}`;
-    // O motor lê a contagem do pool direto do mapa de atributos — o dado de Formação entra ajustando
-    // só a chave deste teste, sem alterar o atributo exibido em nenhum outro lugar da ficha.
+    // O motor lê a contagem do pool direto do mapa de atributos — o dado de Formação e o ajuste
+    // manual entram ajustando só a chave deste teste, sem alterar o atributo exibido em nenhum
+    // outro lugar da ficha.
     const atributosParaRolagem =
-      dadosFormacao !== 0 ? { ...atributosEfetivos, [campo.chave]: atributo } : atributosEfetivos;
+      dadosFormacao !== 0 ? { ...atributosParaDados, [campo.chave]: atributo } : atributosParaDados;
     const resultado = rolarFormula({
       formula,
       atributos: atributosParaRolagem,
@@ -1697,6 +1744,7 @@ export class FichaVisualizacao {
     this.rascunhoAtributos.set({ ...this.atributos() });
     this.rascunhoMaestria.set(this.dados().maestria);
     this.rascunhoModificadoresTeste.set(this.modificadoresTesteCompletos());
+    this.rascunhoDadosTeste.set(this.dadosTesteCompletos());
     this.editandoAtributos.set(true);
   }
 
@@ -1705,6 +1753,7 @@ export class FichaVisualizacao {
     this.editandoAtributos.set(false);
     this.rascunhoAtributos.set(null);
     this.rascunhoModificadoresTeste.set(null);
+    this.rascunhoDadosTeste.set(null);
   }
 
   /** Passo − / + num atributo do rascunho (sem clamp — liberdade total, m3-10). */
@@ -1739,13 +1788,15 @@ export class FichaVisualizacao {
   protected confirmarAtributos(): void {
     const atributos = this.rascunhoAtributos();
     const modificadoresTeste = this.rascunhoModificadoresTeste();
-    if (!atributos || !modificadoresTeste) {
+    const dadosTeste = this.rascunhoDadosTeste();
+    if (!atributos || !modificadoresTeste || !dadosTeste) {
       return;
     }
     this.editandoAtributos.set(false);
     this.rascunhoAtributos.set(null);
     this.rascunhoModificadoresTeste.set(null);
-    this.ajusteAtributos.emit({ atributos, maestria: this.rascunhoMaestria(), modificadoresTeste });
+    this.rascunhoDadosTeste.set(null);
+    this.ajusteAtributos.emit({ atributos, maestria: this.rascunhoMaestria(), modificadoresTeste, dadosTeste });
   }
 
   /**

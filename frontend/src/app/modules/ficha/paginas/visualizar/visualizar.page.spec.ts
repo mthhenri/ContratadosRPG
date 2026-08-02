@@ -546,6 +546,7 @@ describe('FichaVisualizar', () => {
       atributos: novosAtributos,
       maestria: null,
       modificadoresTeste: {} as AjusteAtributos['modificadoresTeste'],
+      dadosTeste: {} as AjusteAtributos['dadosTeste'],
     });
     const d = componente['ficha']()!.dados;
 
@@ -599,6 +600,7 @@ describe('FichaVisualizar', () => {
       atributos: { ...carregada.dados.atributos, forca: 6, vigor: 4 },
       maestria: null,
       modificadoresTeste: {} as AjusteAtributos['modificadoresTeste'],
+      dadosTeste: {} as AjusteAtributos['dadosTeste'],
     });
 
     // Valor editado à mão diverge do calculado → preservado.
