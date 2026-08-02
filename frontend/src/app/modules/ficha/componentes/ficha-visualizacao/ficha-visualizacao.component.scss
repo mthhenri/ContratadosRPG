@@ -2222,6 +2222,13 @@
       font-size: 10px;
       line-height: 1;
     }
+
+    // Ajuste manual de dados: mesma compactação do modificador — a grade de 5 linhas x 2 colunas
+    // não pode empurrar o card além da altura da coluna de Identidade.
+    .ficha-atributo__dados-valor {
+      font-size: 10px;
+      line-height: 1;
+    }
   }
 }
 
@@ -2377,6 +2384,60 @@
     }
   }
 
+  // Ajuste manual de dados (m3-6x): passo -/+ que soma na CONTAGEM de dados do pool, não no
+  // atributo nem no resultado — mesmo tratamento visual do `__modificador`, só com um ícone de
+  // dado pra não confundir as duas linhas (uma soma no resultado, a outra na quantidade de dados).
+  &__dados {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+  }
+
+  &__dados-icone {
+    width: 10px;
+    height: 10px;
+    color: var(--text-mute);
+  }
+
+  &__dados-passo {
+    @extend .ficha-passo;
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+  }
+
+  &__dados-valor {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-mute);
+    min-width: 17px;
+    text-align: center;
+
+    &--ativo {
+      color: var(--accent);
+    }
+  }
+
+  // Badge de leitura (só renderizado quando há ajuste ativo — ver template) — mesmo tratamento
+  // discreto do `__lesao`, com o ícone de dado pra diferenciar da penalidade de lesão.
+  &__dados-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+
+    app-icone {
+      width: 10px;
+      height: 10px;
+    }
+  }
+
   // Estrelas de Maestria flanqueando a abreviação do atributo (★ PON ★).
   &__estrela {
     font-size: 10px;
@@ -2444,6 +2505,12 @@
 // vencia dentro do media query — parecia corrigido pela m3-56 e não estava. Aqui a caixa segue
 // 18px de propósito (44px reais espremeriam o card compacto de Atributos) e quem cresce é a área.
 .ficha-atributo__mod-passo {
+  @include alvo-de-toque;
+}
+
+// − / + do ajuste manual de dados do atributo — mesmo raciocínio do `__mod-passo` logo acima:
+// caixa visual de 18px, área de toque de 44px por cima.
+.ficha-atributo__dados-passo {
   @include alvo-de-toque;
 }
 

@@ -990,6 +990,35 @@
                           +
                         </button>
                       </div>
+                      <!-- Ajuste manual de dados: quantos D20 o atributo rola nos testes/rolagens,
+                           sem alterar o valor base (Energia/Deslocamento/Vida/Maestria intocados). -->
+                      <div class="ficha-atributo__dados">
+                        <app-icone [nome]="'dado'" class="ficha-atributo__dados-icone" />
+                        <button
+                          class="ficha-atributo__dados-passo"
+                          type="button"
+                          appHoldRepeat
+                          [attr.aria-label]="'Reduzir dados de teste de ' + campo.nome"
+                          (passo)="ajustarDadosTesteRascunho(campo.chave, -1)"
+                        >
+                          −
+                        </button>
+                        <span
+                          class="ficha-atributo__dados-valor"
+                          [class.ficha-atributo__dados-valor--ativo]="rascunhoDadosTeste()?.[campo.chave] !== 0"
+                        >
+                          {{ (rascunhoDadosTeste()?.[campo.chave] ?? 0) >= 0 ? '+' : '' }}{{ rascunhoDadosTeste()?.[campo.chave] ?? 0 }}
+                        </span>
+                        <button
+                          class="ficha-atributo__dados-passo"
+                          type="button"
+                          appHoldRepeat
+                          [attr.aria-label]="'Aumentar dados de teste de ' + campo.nome"
+                          (passo)="ajustarDadosTesteRascunho(campo.chave, 1)"
+                        >
+                          +
+                        </button>
+                      </div>
                     </div>
                   } @else {
                     <div
@@ -1057,6 +1086,22 @@
                       >
                         {{ modificadorTeste(campo.chave) >= 0 ? '+' : '' }}{{ modificadorTeste(campo.chave) }}
                       </span>
+                      <!-- Ajuste manual de dados — só aparece quando há algo ativo (±N); a maioria
+                           das fichas nunca mexe nisso, então fica invisível por padrão em vez de
+                           somar mais um elemento sempre-visível ao card. -->
+                      @if (dadosTesteDe(campo.chave) !== 0) {
+                        <span
+                          class="ficha-atributo__dados-badge"
+                          [appTooltip]="
+                            'Ajuste manual de dados: ' +
+                            (dadosTesteDe(campo.chave) > 0 ? '+' : '') +
+                            dadosTesteDe(campo.chave)
+                          "
+                        >
+                          <app-icone [nome]="'dado'" />
+                          {{ dadosTesteDe(campo.chave) > 0 ? '+' : '' }}{{ dadosTesteDe(campo.chave) }}
+                        </span>
+                      }
                     </div>
                   }
                 }
