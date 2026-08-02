@@ -5,6 +5,7 @@ import type { FichaAtributosDto, FichaLesaoDto } from '../../dtos/ficha';
 import {
   calcularAtributoEfetivo,
   calcularAtributosEfetivos,
+  calcularAtributosParaDados,
   somarLesoesAtributo,
 } from './lesao';
 import { maestriaValida } from './maestria';
@@ -88,5 +89,51 @@ describe('lesão → atributo efetivo', () => {
     expect(maestriaValida(base, 'forca')).toBe(true);
     // (Se rodasse sobre o efetivo, cairia — o que NÃO deve acontecer.)
     expect(maestriaValida(efetivos, 'forca')).toBe(false);
+  });
+});
+
+describe('atributo para dados (lesão + ajuste manual)', () => {
+  const base: FichaAtributosDto = {
+    destreza: 2,
+    forca: 6,
+    luta: 2,
+    pontaria: 1,
+    vigor: 4,
+    intelecto: 1,
+    medicina: 1,
+    sentidos: 2,
+    social: 1,
+    vontade: 2,
+  };
+
+  const lesao = (
+    atributo: keyof FichaAtributosDto,
+    pontos: number,
+  ): FichaLesaoDto => ({ atributo, pontos, severidade: SeveridadeLesaoEnum.LEVE, permanente: false });
+
+  it('soma o ajuste manual ao atributo efetivo (sem lesão = ajuste direto sobre o base)', () => {
+    const paraDados = calcularAtributosParaDados(base, [], { destreza: 1, forca: -2 });
+    expect(paraDados.destreza).toBe(3);
+    expect(paraDados.forca).toBe(4);
+    // Atributo sem entrada no ajuste → igual ao base (cai em 0).
+    expect(paraDados.luta).toBe(2);
+  });
+
+  it('combina lesão (efetivo) com o ajuste manual', () => {
+    // Força 6 base, −2 lesão → 4 efetivo, −1 manual → 3.
+    const paraDados = calcularAtributosParaDados(base, [lesao('forca', 2)], { forca: -1 });
+    expect(paraDados.forca).toBe(3);
+  });
+
+  it('sem piso — o ajuste manual pode negativar além do que a lesão já negativou', () => {
+    // Força 6 base, −5 lesão → 1 efetivo, −3 manual → −2.
+    const paraDados = calcularAtributosParaDados(base, [lesao('forca', 5)], { forca: -3 });
+    expect(paraDados.forca).toBe(-2);
+  });
+
+  it('ajuste vazio devolve o mapa efetivo intacto e não muta o base', () => {
+    const paraDados = calcularAtributosParaDados(base, [], {});
+    expect(paraDados).toEqual(base);
+    expect(base.forca).toBe(6);
   });
 });

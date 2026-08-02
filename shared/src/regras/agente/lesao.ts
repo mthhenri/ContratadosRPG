@@ -49,3 +49,22 @@ export function calcularAtributosEfetivos(
   });
   return efetivos;
 }
+
+/**
+ * Atributo efetivo (lesão) + ajuste manual de dados (`dadosTeste`, `FichaJogadorDadosDto`) — usado
+ * **só** como contagem de dados de rolagem (teste de atributo, presets). Energia/Deslocamento/Vida/
+ * Maestria continuam calculados sobre o atributo base, nunca sobre este mapa. Sem piso — pode
+ * negativar além do que a lesão já negativou; atributo ausente em `dadosTeste` cai em 0 (sem ajuste).
+ */
+export function calcularAtributosParaDados(
+  atributos: FichaAtributosDto,
+  lesoes: readonly FichaLesaoDto[],
+  dadosTeste: Partial<Record<keyof FichaAtributosDto, number>>,
+): FichaAtributosDto {
+  const efetivos = calcularAtributosEfetivos(atributos, lesoes);
+  const paraDados = { ...efetivos };
+  (Object.keys(paraDados) as (keyof FichaAtributosDto)[]).forEach((chave) => {
+    paraDados[chave] = efetivos[chave] + (dadosTeste[chave] ?? 0);
+  });
+  return paraDados;
+}
