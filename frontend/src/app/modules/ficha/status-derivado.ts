@@ -26,6 +26,7 @@ import {
   obterLimitesClasse,
 } from '@contratados-rpg/shared/regras/agente';
 import type { AmplificadorAplicadoDto, CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
+import type { PatenteDados } from '@contratados-rpg/shared/regras/dados';
 import { obterPatente } from '@contratados-rpg/shared/regras/patente';
 
 import { ROTULOS_PATENTE } from '../calculadora/rotulos';
@@ -238,4 +239,15 @@ export function rotuloPatente(prestigio: number): string {
 /** Salário da patente derivada do Prestígio (m3-34) — nunca persistido, só exibição. */
 export function salarioPatente(prestigio: number): number {
   return obterPatente({ prestigio }).salario;
+}
+
+/** Linha completa da tabela de patentes (faixa, salário, limites) derivada do Prestígio — Extras. */
+export function patenteDetalhada(prestigio: number): PatenteDados {
+  return obterPatente({ prestigio });
+}
+
+/** Faixa de Prestígio da patente, com `∞` no teto sem limite superior (Líder Operacional). */
+export function faixaPrestigioPatente(patente: PatenteDados): string {
+  const teto = patente.prestigioMaximo === Number.POSITIVE_INFINITY ? '∞' : String(patente.prestigioMaximo);
+  return `${patente.prestigioMinimo}–${teto}`;
 }

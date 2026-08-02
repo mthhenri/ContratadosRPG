@@ -219,11 +219,11 @@
       min-width: 0;
     }
 
-    // Nível/Prestígio somem no compacto (ver HTML) — só Dinheiro/Salário sobram na linha; a grade
-    // de 4 colunas do `&__stats-linha` (mais estreita pro Nível) deixaria os dois com metade da
-    // linha vazia. 2 colunas iguais ocupam o espaço todo.
+    // Nível/Prestígio somem no compacto (ver HTML) — Dinheiro/Salário/Crédito sobram na linha; a
+    // grade de 4 colunas do `&__stats-linha` (mais estreita pro Nível) deixaria os três com espaço
+    // desigual. 3 colunas iguais ocupam o espaço todo (m3-6x: Crédito entrou como 3º item aqui).
     .ficha-ident__stats-linha {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     // Atributos "resumida": antes ficava ao lado da Identidade (mesma altura, coluna própria);
@@ -1536,6 +1536,44 @@
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--text-mute);
+  }
+
+  // Rótulo + ízinho de descrição (Crédito, no compacto — m3-6x): a palavra sozinha ("Confortável")
+  // não diz nada sem a frase da tabela "Limite de Crédito" do doc, que não cabe no box "fino".
+  &__rotulo-linha {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+
+    .ficha-mini__rotulo {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+  }
+
+  &__info {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    padding: 0;
+    font-size: 10px;
+    line-height: 1;
+    color: var(--text-mute);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--accent);
+      border-color: var(--accent-border);
+    }
   }
 
   &__valor {

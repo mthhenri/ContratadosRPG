@@ -17,6 +17,8 @@ export interface PatenteDados {
   readonly limiteModificacoes: string;
   /** Rótulo do padrão de vida coberto pela Fundação fora de missão (doc — "Limite de Crédito"), de Baixo a Ilimitado. */
   readonly limiteCredito: string;
+  /** Descrição do padrão de vida de `limiteCredito` — doc, tabela "Limite | Descrição" da seção "Limite de Crédito". */
+  readonly descricaoLimiteCredito: string;
 }
 
 /**
@@ -36,6 +38,8 @@ export const PATENTES: readonly PatenteDados[] = [
     multiplicador: 1.0,
     limiteModificacoes: '1 nível de empilhamento até 2 modificações no item',
     limiteCredito: 'Baixo',
+    descricaoLimiteCredito:
+      'Subsistência mínima. Moradia em áreas de baixo custo, transporte público e foco absoluto na sobrevivência básica entre missões.',
   },
   {
     patente: PatenteEnum.OPERADOR,
@@ -45,6 +49,8 @@ export const PATENTES: readonly PatenteDados[] = [
     multiplicador: 1.5,
     limiteModificacoes: '2 níveis de empilhamento até 4 modificações no item',
     limiteCredito: 'Médio',
+    descricaoLimiteCredito:
+      'Padrão classe média. Residência funcional, transporte próprio decente e capacidade de manter uma rotina civil sem preocupações imediatas.',
   },
   {
     patente: PatenteEnum.EXPERIENTE,
@@ -54,6 +60,8 @@ export const PATENTES: readonly PatenteDados[] = [
     multiplicador: 2.0,
     limiteModificacoes: '2 níveis de empilhamento até 6 modificações no item',
     limiteCredito: 'Confortável',
+    descricaoLimiteCredito:
+      'Estabilidade sólida. Acesso a bens de qualidade, serviços de saúde privados e capacidade de financiar itens duráveis ou lazer.',
   },
   {
     patente: PatenteEnum.VETERANO,
@@ -63,6 +71,8 @@ export const PATENTES: readonly PatenteDados[] = [
     multiplicador: 2.5,
     limiteModificacoes: '3 níveis de empilhamento até 9 modificações no item',
     limiteCredito: 'Alto',
+    descricaoLimiteCredito:
+      'Status de "cliente vip". Residências bem localizadas, veículos de alto padrão e facilidade de acesso a bens de consumo de luxo.',
   },
   {
     patente: PatenteEnum.FORCA_TAREFA,
@@ -72,6 +82,8 @@ export const PATENTES: readonly PatenteDados[] = [
     multiplicador: 3.0,
     limiteModificacoes: '3 níveis de empilhamento até 12 modificações no item',
     limiteCredito: 'Elevado',
+    descricaoLimiteCredito:
+      'Elite logística. Acesso a clubes exclusivos, propriedades de luxo e liquidez imediata para qualquer capricho ou necessidade não planejada.',
   },
   {
     patente: PatenteEnum.FORCA_TAREFA_ESPECIAL,
@@ -81,6 +93,8 @@ export const PATENTES: readonly PatenteDados[] = [
     multiplicador: 3.5,
     limiteModificacoes: '4 níveis de empilhamento até 15 modificações no item',
     limiteCredito: 'Prestigiado',
+    descricaoLimiteCredito:
+      'Estilo de vida aristocrático. Propriedades privadas com segurança, viagens internacionais e conexões sociais de alta influência no mundo civil.',
   },
   {
     patente: PatenteEnum.OPERACOES_ESPECIAIS,
@@ -90,6 +104,8 @@ export const PATENTES: readonly PatenteDados[] = [
     multiplicador: 4.0,
     limiteModificacoes: '4 níveis de empilhamento até 18 modificações no item',
     limiteCredito: 'Exclusivo',
+    descricaoLimiteCredito:
+      'Status de celebridade/magnata. Qualquer luxo comum está ao alcance. Conexões mundanas profundas e poder de decisão financeira pessoal ilimitado.',
   },
   {
     patente: PatenteEnum.LIDER_OPERACIONAL,
@@ -99,5 +115,7 @@ export const PATENTES: readonly PatenteDados[] = [
     multiplicador: 4.5,
     limiteModificacoes: '5 níveis de empilhamento até 20 modificações no item',
     limiteCredito: 'Ilimitado',
+    descricaoLimiteCredito:
+      'Influência global. Dinheiro é irrelevante; acesso total a recursos, infraestrutura e serviços em qualquer lugar do mundo.',
   },
 ];

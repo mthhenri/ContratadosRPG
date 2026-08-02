@@ -197,6 +197,28 @@ describe('FichaVisualizacao', () => {
 
       expect(campos).toEqual([{ campo: 'dinheiro', valor: 4200 }]);
     });
+
+    it('modo compacto: mostra o Limite de Crédito ao lado de Dinheiro/Salário, com ízinho de descrição', () => {
+      // No `modo="compacto"` (card de equipe) não há aba Extras pra mostrar a seção Patente
+      // inteira — o Limite de Crédito precisa caber aqui, com a descrição no balão do ízinho.
+      const alvo = montar({ ...dados, prestigio: 12 });
+      alvo.fixture.componentRef.setInput('modo', 'compacto');
+      alvo.fixture.detectChanges();
+
+      const boxCredito = boxDoRotulo(alvo.raiz, 'Crédito');
+      expect(boxCredito?.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('Alto');
+      const botaoInfo = boxCredito?.querySelector<HTMLButtonElement>('.ficha-mini__info');
+      expect(botaoInfo?.getAttribute('aria-label')).toBe('Descrição do Limite de Crédito');
+      const dica = botaoInfo && alvo.fixture.debugElement
+        .query(By.css('.ficha-mini__info'))
+        .injector.get(Tooltip).appTooltip();
+      expect(dica).toContain('Status de "cliente vip".');
+    });
+
+    it('modo padrão: não mostra o Limite de Crédito na linha de Identidade (só no compacto)', () => {
+      const { raiz } = montar({ ...dados, prestigio: 12 });
+      expect(boxDoRotulo(raiz, 'Crédito')).toBeUndefined();
+    });
   });
 
   describe('Defesa/Resistências em miniatura (glance, redesenho de comparação visual)', () => {
@@ -1089,14 +1111,33 @@ describe('FichaVisualizacao', () => {
     it('mostra nome/descrição/Saber de Campo/Especialidade/Formação da Origem definida', () => {
       const { raiz } = montarExtras({ ...dados, identidade: { personalidade: null, origem: origemExemplo } });
 
-      expect(raiz.querySelector('.ficha-extras__titulo')?.textContent?.trim()).toBe('Ex-Militar');
-      expect(raiz.textContent).toContain('Serviu nas forças armadas antes de ser recrutado.');
-      expect(raiz.textContent).toContain('Táticas de combate urbano');
-      expect(raiz.textContent).toContain('Sob fogo direto — +1 dado em um teste');
-      const chips = Array.from(raiz.querySelectorAll('.ficha-extras__chips .chip')).map((c) =>
+      // A seção "Patente" (m3-6x) entrou acima de Origem na aba Extras e reusa a mesma
+      // `.ficha-extras__titulo` — escopar por seção em vez de pegar o primeiro título da página.
+      const secaoOrigem = Array.from(raiz.querySelectorAll('.ficha-extras__secao')).find((secao) =>
+        secao.querySelector('.ficha-cartao__subrotulo')?.textContent?.trim() === 'Origem',
+      );
+      expect(secaoOrigem?.querySelector('.ficha-extras__titulo')?.textContent?.trim()).toBe('Ex-Militar');
+      expect(secaoOrigem?.textContent).toContain('Serviu nas forças armadas antes de ser recrutado.');
+      expect(secaoOrigem?.textContent).toContain('Táticas de combate urbano');
+      expect(secaoOrigem?.textContent).toContain('Sob fogo direto — +1 dado em um teste');
+      const chips = Array.from(secaoOrigem?.querySelectorAll('.ficha-extras__chips .chip') ?? []).map((c) =>
         c.textContent?.trim(),
       );
       expect(chips).toContain('+1m de Deslocamento');
+    });
+
+    it('mostra a seção Patente acima de Origem: nome, faixa de Prestígio, salário e os dois limites', () => {
+      const { raiz } = montarExtras({ ...dados, prestigio: 12 });
+
+      const secaoPatente = Array.from(raiz.querySelectorAll('.ficha-extras__secao')).find((secao) =>
+        secao.querySelector('.ficha-cartao__subrotulo')?.textContent?.trim() === 'Patente',
+      );
+      expect(secaoPatente?.querySelector('.ficha-extras__titulo')?.textContent?.trim()).toBe('Veterano');
+      expect(secaoPatente?.textContent).toContain('12–20');
+      expect(secaoPatente?.textContent).toContain('$3.500');
+      expect(secaoPatente?.textContent).toContain('3 níveis de empilhamento até 9 modificações no item');
+      expect(secaoPatente?.textContent).toContain('Alto');
+      expect(secaoPatente?.textContent).toContain('Status de "cliente vip".');
     });
 
     it('Origem ainda não definida mostra a mensagem de vazio', () => {

@@ -6,6 +6,7 @@ import { map } from 'rxjs';
 import { PatenteEnum } from '@contratados-rpg/shared/enums';
 import { calcularPatente } from '@contratados-rpg/shared/regras/patente';
 
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { AjudaCalculadora } from '../../componentes/ajuda-calculadora/ajuda-calculadora.component';
 import { StepInput } from '../../componentes/step-input/step-input.component';
 import { EstadoAbasCalculadoraService } from '../../estado-abas-calculadora.service';
@@ -24,6 +25,7 @@ interface LinhaPatente {
   readonly salario: string;
   readonly modificacoes: string;
   readonly credito: string;
+  readonly creditoDescricao: string;
   readonly atual: boolean;
 }
 
@@ -42,7 +44,7 @@ function formatarFaixa(prestigioMinimo: number, prestigioMaximo: number): string
  */
 @Component({
   selector: 'app-patente-page',
-  imports: [ReactiveFormsModule, StepInput, AjudaCalculadora],
+  imports: [ReactiveFormsModule, StepInput, AjudaCalculadora, Tooltip],
   templateUrl: './patente.page.html',
   styleUrl: './patente.page.scss',
 })
@@ -91,6 +93,7 @@ export class PatentePage {
       salario: `$${patente.salario.toLocaleString('pt-BR')}`,
       modificacoes: patente.limiteModificacoes,
       credito: patente.limiteCredito,
+      creditoDescricao: patente.descricaoLimiteCredito,
     };
   });
 
@@ -104,6 +107,7 @@ export class PatentePage {
       salario: `$${patente.salario.toLocaleString('pt-BR')}`,
       modificacoes: patente.limiteModificacoes,
       credito: patente.limiteCredito,
+      creditoDescricao: patente.descricaoLimiteCredito,
       atual: patente.patente === patenteAtual,
     }));
   });

@@ -31,7 +31,17 @@
         <div class="calc-stat__valor calc-stat__valor--texto">{{ atual().modificacoes }}</div>
       </div>
       <div class="calc-stat">
-        <div class="calc-stat__rotulo">Limite de Crédito</div>
+        <div class="calc-stat__rotulo-linha">
+          <span class="calc-stat__rotulo">Limite de Crédito</span>
+          <button
+            type="button"
+            class="calc-stat__info"
+            aria-label="Descrição do Limite de Crédito"
+            [appTooltip]="atual().creditoDescricao"
+          >
+            ⓘ
+          </button>
+        </div>
         <div class="calc-stat__valor calc-stat__valor--texto">{{ atual().credito }}</div>
       </div>
     </div>

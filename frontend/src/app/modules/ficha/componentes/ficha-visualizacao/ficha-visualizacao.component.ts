@@ -87,9 +87,11 @@ import type { RolagemRealizadaDto } from '../../rolagem-realizada';
 import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
 import {
   ChaveInfoExtra,
+  faixaPrestigioPatente,
   InfoExtra,
   montarInformacoesExtras,
   normalizarEntrada,
+  patenteDetalhada,
   rotuloPatente,
   salarioPatente,
 } from '../../status-derivado';
@@ -893,6 +895,10 @@ export class FichaVisualizacao {
   protected readonly dinheiro = computed(() => this.dados().dinheiro ?? 0);
   /** Salário da patente atual (m3-34) — derivado do Prestígio, nunca persistido. */
   protected readonly salario = computed(() => salarioPatente(this.dados().prestigio));
+  /** Linha completa da tabela de patentes (faixa, limites) derivada do Prestígio — seção Patente (Extras). */
+  protected readonly patenteInfo = computed(() => patenteDetalhada(this.dados().prestigio));
+  /** Faixa de Prestígio da patente atual, formatada ("0–2", "66–∞"). */
+  protected readonly patenteFaixaPrestigio = computed(() => faixaPrestigioPatente(this.patenteInfo()));
   protected readonly rotuloNivel = computed(() => (this.ehCivil() ? 'Treinamentos' : 'Nível'));
   /** Bounds de Nível pra classe atual (0–20 Agente / 0–5 Civil) — hint nativo do input + clamp no confirmar. */
   protected readonly limitesNivel = computed(() => obterLimitesClasse({ classe: this.dados().classe }));

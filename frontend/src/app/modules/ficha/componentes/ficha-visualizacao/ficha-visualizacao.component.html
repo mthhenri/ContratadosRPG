@@ -502,6 +502,25 @@
               <span class="ficha-mini__rotulo">Salário</span>
               <span class="ficha-mini__valor ficha-mini__valor--warning">${{ salario().toLocaleString('pt-BR') }}</span>
             </div>
+            @if (modo() === 'compacto') {
+              <!-- Só no compacto (m3-6x): o card de equipe não tem aba Extras pra mostrar a seção
+                   Patente inteira, então o Limite de Crédito ganha um lugar aqui — com o ízinho
+                   pra descrição, já que o box "fino" não cabe a frase inteira. -->
+              <div class="ficha-mini ficha-mini--fino">
+                <span class="ficha-mini__rotulo-linha">
+                  <span class="ficha-mini__rotulo">Crédito</span>
+                  <button
+                    type="button"
+                    class="ficha-mini__info"
+                    aria-label="Descrição do Limite de Crédito"
+                    [appTooltip]="patenteInfo().descricaoLimiteCredito"
+                  >
+                    ⓘ
+                  </button>
+                </span>
+                <span class="ficha-mini__valor ficha-mini__valor--accent">{{ patenteInfo().limiteCredito }}</span>
+              </div>
+            }
           </div>
           <div class="ficha-mini ficha-mini--fino ficha-mini--largo">
             <span class="ficha-mini__rotulo">Patente</span>
@@ -1397,6 +1416,33 @@
         }
         @if (abaStatusEfetiva() === 'extras') {
         <div class="ficha-status__conteudo ficha-extras">
+          <!-- Patente: nome, faixa de Prestígio, salário e os dois limites da patente atual (doc —
+               "Prestígio e Patentes"/"Limite de Crédito") — tudo derivado do Prestígio, nunca
+               persistido (mesma fonte de `patenteTexto()`/`salario()` do glance de Identidade). -->
+          <div class="ficha-extras__secao">
+            <p class="ficha-cartao__subrotulo">Patente</p>
+            <h4 class="ficha-extras__titulo">{{ patenteTexto() }}</h4>
+            <div class="ficha-extras__linha">
+              <span class="ficha-extras__rotulo">Prestígio</span>
+              <span class="ficha-extras__valor">{{ patenteFaixaPrestigio() }}</span>
+            </div>
+            <div class="ficha-extras__linha">
+              <span class="ficha-extras__rotulo">Salário</span>
+              <span class="ficha-extras__valor">${{ salario().toLocaleString('pt-BR') }}</span>
+            </div>
+            <div class="ficha-extras__linha">
+              <span class="ficha-extras__rotulo">Limite de Modificações</span>
+              <span class="ficha-extras__valor">{{ patenteInfo().limiteModificacoes }}</span>
+            </div>
+            <div class="ficha-extras__linha">
+              <span class="ficha-extras__rotulo">Limite de Crédito</span>
+              <span class="ficha-extras__valor">{{ patenteInfo().limiteCredito }}</span>
+            </div>
+            <p class="ficha-extras__texto">{{ patenteInfo().descricaoLimiteCredito }}</p>
+          </div>
+
+          <div class="ficha-cartao__divisor"></div>
+
           <!-- Origem (m3-41/m3-49): apresentação — a mecânica (efeito no cálculo) já roda na m3-41. -->
           <div class="ficha-extras__secao">
             <p class="ficha-cartao__subrotulo">Origem</p>
