@@ -87,26 +87,38 @@
     }
   }
 
+  // Botão quadrado só-ícone (mesmo tratamento de `.detalhe__cabecalho-voltar` na tela de
+  // campanha) — antes era ícone+texto ("Voltar à campanha") sempre visível, que com o grupo de
+  // ações (m3-62) somado no mesmo `&__topo` não cabia mais numa linha em 360px e forçava o
+  // cabeçalho a duas linhas. Ícone-only libera espaço horizontal em qualquer largura; o rótulo
+  // sobrevive via `aria-label`/`title`.
   &__voltar {
+    flex: none;
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-
-    // m3-60: 89×18px medidos ao vivo — é o único caminho de volta da tela e ficava abaixo do
-    // alvo de toque. Só altura mínima; o desenho (texto + ícone) não muda.
-    @include bp.mobile {
-      min-height: bp.$alvo-toque;
-    }
-
-    font-family: var(--font-mono);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    justify-content: center;
+    width: 30px;
+    height: 26px;
     color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
     text-decoration: none;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+    app-icone {
+      font-size: 13px;
+    }
 
     &:hover {
       color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--surface-2);
+    }
+
+    @include bp.mobile {
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
     }
   }
 

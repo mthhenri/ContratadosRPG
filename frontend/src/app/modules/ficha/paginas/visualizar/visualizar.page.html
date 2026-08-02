@@ -1,14 +1,17 @@
 <section class="ficha-pagina">
   <header class="ficha-pagina__topo">
     @if (campanhaId(); as campanhaAtualId) {
-      <a class="ficha-pagina__voltar" [routerLink]="['/painel', campanhaAtualId]">
+      <a
+        class="ficha-pagina__voltar"
+        [routerLink]="['/painel', campanhaAtualId]"
+        aria-label="Voltar à campanha"
+        title="Voltar à campanha"
+      >
         <app-icone nome="voltar" />
-        <span>Voltar à campanha</span>
       </a>
     } @else {
-      <a class="ficha-pagina__voltar" routerLink="/fichas">
+      <a class="ficha-pagina__voltar" routerLink="/fichas" aria-label="Voltar ao acervo" title="Voltar ao acervo">
         <app-icone nome="voltar" />
-        <span>Voltar ao acervo</span>
       </a>
     }
 

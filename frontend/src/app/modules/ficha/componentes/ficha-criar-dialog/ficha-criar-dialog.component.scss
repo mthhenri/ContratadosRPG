@@ -15,6 +15,10 @@
   padding: 48px 20px;
   overflow-y: auto;
 
+  @include bp.mobile {
+    padding: 24px 12px;
+  }
+
   &__fundo {
     position: fixed;
     inset: 0;
@@ -23,23 +27,35 @@
     cursor: default;
   }
 
+  // O assistente tem 8 steppers de atributo + prévia — mais alto que o viewport em qualquer
+  // tamanho de tela. Antes o painel inteiro (cabeçalho+corpo+rodapé) rolava dentro do overlay, o
+  // que enterrava os botões Cancelar/Criar ficha no fim de ~1500px de rolagem. Agora só
+  // `&__corpo` rola; cabeçalho e rodapé (`.criar__acoes`) ficam sempre visíveis.
   &__painel {
     position: relative;
     z-index: 1;
     width: 100%;
     max-width: 560px;
+    max-height: calc(100vh - 96px);
+    display: flex;
+    flex-direction: column;
     background: var(--surface);
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-card);
-    padding: var(--pad-card);
     box-shadow: 0 16px 48px rgb(0 0 0 / 45%);
+    overflow: hidden;
+
+    @include bp.mobile {
+      max-height: calc(100vh - 48px);
+    }
   }
 
   &__cabecalho {
     display: flex;
     align-items: center;
     gap: 11px;
-    margin-bottom: 6px;
+    flex: 0 0 auto;
+    padding: var(--pad-card) var(--pad-card) 6px;
   }
 
   &__indice {
@@ -86,6 +102,13 @@
 
 // === Corpo do assistente ===
 .criar {
+  &__corpo {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0 var(--pad-card) 16px;
+  }
+
   &__ajuda {
     font-family: var(--font-sans);
     font-size: 13px;
@@ -240,11 +263,16 @@
     }
   }
 
+  // Rodapé fixo (não rola com `&__corpo`) — Cancelar/Criar ficha ficam sempre alcançáveis, mesmo
+  // com os 8 steppers de atributo acima exigindo rolagem.
   &__acoes {
     display: flex;
+    flex: 0 0 auto;
     justify-content: flex-end;
     gap: 10px;
-    margin-top: 22px;
+    padding: 12px var(--pad-card) var(--pad-card);
+    border-top: 1px solid var(--border);
+    background: var(--surface);
   }
 }
 
