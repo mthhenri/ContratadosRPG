@@ -67,7 +67,7 @@
 - **Ideia:** dar ao inventário da ficha um botão "Vender" num fragmento portado, usando o cálculo de
   `shared/regras/compras/venda.ts` (`obterValorFragmento`/`calcularVendaFragmentos`) que já existe e
   já é testado — hoje só está acoplado à calculadora M1 de criação de personagem.
-- **Origem:** auditoria de fragmentos (`m3-63`…`m3-68`) — a regra e a tabela de preços existem, só
+- **Origem:** auditoria de fragmentos (`m3-63`…`m3-67`) — a regra e a tabela de preços existem, só
   não há caminho de UI na ficha viva.
 - **Por quê:** um agente em campanha acumula fragmentos que não pretende usar; hoje a única forma de
   convertê-los em dinheiro é sair da ficha e recalcular na tela de criação.
@@ -78,7 +78,7 @@
 
 - **Ideia:** modelar o estado "fragmento não identificado" e o teste de Intelecto (DT 15 + 5 por
   módulo acima de V) que o doc exige para revelar o que um fragmento faz.
-- **Origem:** auditoria de fragmentos (`m3-63`…`m3-68`) — hoje todo fragmento nasce "identificado":
+- **Origem:** auditoria de fragmentos (`m3-63`…`m3-67`) — hoje todo fragmento nasce "identificado":
   módulo, tipo e função ficam visíveis assim que o item existe na ficha.
 - **Por quê:** é uma peça de suspense/risco do sistema original (o doc — "⬥ Identificação de Poder")
   que a implementação atual pula inteiramente, achatando a descoberta de fragmentos a uma decisão
@@ -91,7 +91,7 @@
 - **Ideia:** quando o item hospedeiro de um fragmento Potencializador "perde seu uso" (destruído/
   quebrado/gasto — o doc não define o gatilho exato para itens não-consumíveis), o fragmento deveria
   se desacoplar sozinho e cair 1 módulo, mantendo o custo de Energia do módulo antigo.
-- **Origem:** auditoria de fragmentos (`m3-63`…`m3-68`) — doc `sistema-v4.1.0.md:1934`.
+- **Origem:** auditoria de fragmentos (`m3-63`…`m3-67`) — doc `sistema-v4.1.0.md:1934`.
 - **Por quê:** hoje um fragmento acoplado fica preso ao item para sempre (só remoção manual), e a
   ficha não rastreia "uso"/durabilidade de item nenhum — implementar isso exigiria primeiro decidir
   o que "perder o uso" significa mecanicamente para itens não-consumíveis, o que o doc não deixa
@@ -103,7 +103,7 @@
 
 - **Ideia:** a cadeia final da Afinidade — morrer em Anomalia Biológica leva a "Colapso", e o
   agente se transforma numa criatura conforme a faixa de Afinidade (Ameaça Baixa a Apocalíptica).
-- **Origem:** auditoria de fragmentos (`m3-63`…`m3-68`) — doc `sistema-v4.1.0.md:1962-1968`. A
+- **Origem:** auditoria de fragmentos (`m3-63`…`m3-67`) — doc `sistema-v4.1.0.md:1962-1968`. A
   `m3-67` cobre o Limite Mínimo de Energia e a Anomalia Biológica, mas para explicitamente antes
   desta parte.
 - **Por quê:** é essencialmente "fim da ficha de jogador" — sai do modelo de ficha de agente para
@@ -116,12 +116,27 @@
 
 - **Ideia:** um local de base (Forja) onde combinar N fragmentos de um módulo em 1 de módulo
   superior, e a receita especial do Fragmento Módulo ∅ (propriedades negociadas com o Mestre).
-- **Origem:** auditoria de fragmentos (`m3-63`…`m3-68`) — doc `sistema-v4.1.0.md:1990-2005`.
+- **Origem:** auditoria de fragmentos (`m3-63`…`m3-67`) — doc `sistema-v4.1.0.md:1990-2005`.
 - **Por quê:** é um sistema de crafting inteiro (gate de patente, consumo de N itens, custo em
   dinheiro, uma tela/local novo) que não cabe dentro do componente de inventário atual — mais perto
   de merecer sua própria spec de UI (tela de "Base"/LDA) do que de ser espremido na ficha.
 - **Custo aparente:** alto — motor (fácil, tabela de proporções) + UI nova (uma tela de base que
   ainda não existe no app).
+
+### I-009 — Redução de Módulo de fragmentos · ficha/fragmentos
+
+- **Ideia:** as duas formas do doc de reduzir o módulo de um fragmento: via uso em item consumível
+  (ex.: granada — reduz 1 módulo, mas mantém o custo de Energia do módulo acima) e via redução
+  sintética no LDA (patente Força Tarefa+, 50% do valor de venda + espera de uma missão, gera 2
+  fragmentos do módulo inferior).
+- **Origem:** auditoria de fragmentos (`m3-63`…`m3-67`) — doc `sistema-v4.1.0.md:1982-1988`. Chegou
+  a ter uma spec dedicada (`m3-68`), removida do backlog por decisão do autor.
+- **Por quê:** a via do item consumível é cálculo puro simples, mas a via do LDA depende de "esperar
+  uma missão" — conceito que não existe em nenhum outro lugar do app hoje (sem sistema de missões).
+  Modelar isso exigiria inventar uma simplificação (ex.: liberação manual pelo Mestre) sem um
+  sistema de missão real para ancorar a decisão.
+- **Custo aparente:** médio — motor fácil (duas funções puras + tabela de custo do LDA reusando
+  `venda.ts`); a parte incerta é a UI/estado da espera do LDA sem um sistema de missão existente.
 
 ---
 

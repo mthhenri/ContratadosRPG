@@ -63,7 +63,7 @@
 > **criação** da ficha (`FichaCriarDialog` hoje; Passo 01 // BASE do guia quando `m3-57`
 > existir — ver nota na spec da `m3-57`).
 
-> **Fechamento de Fragmentos (`m3-63`…`m3-68`)** — seis tasks que fecham o que `m3-35`/`m3-42`
+> **Fechamento de Fragmentos (`m3-63`…`m3-67`)** — cinco tasks que fecham o que `m3-35`/`m3-42`
 > deixaram parcial ou deferido, a partir de uma auditoria completa da seção "⬡ Fragmentos" do
 > `sistema-v4.1.0.md` contra o código: `m3-63` (cardápio do Potencializador: 5ª opção "N× maior
 > dado do item", regra de função única por item, restrição de alvo corrigida), `m3-64` (bônus
@@ -73,12 +73,10 @@
 > modificações do Construtor), `m3-66` (exibição detalhada de Afinidade: chips por fragmento, custo
 > já reduzido no catálogo e nos paineis de ação, hoje sempre bruto), `m3-67` (Limite mínimo de
 > Energia `(Vigor+Destreza)×2` e o estado "Anomalia Biológica" — efeitos exibidos, não empurrados
-> automaticamente no motor de Defesa/testes; Colapso fica de fora, ver `IDEAS.md` `I-007`), `m3-68`
-> (Redução de Módulo via item consumível e via LDA/Força Tarefa+, sem sistema de missão real —
-> espera liberada manualmente pelo Mestre). Identificação de Poder, auto-desacoplamento por perda
-> de uso, Colapso e Forja de Fragmentos ficaram de fora por decisão do autor — registrados em
-> `IDEAS.md` `I-005`…`I-008`. Venda de fragmentos na ficha (a regra já existe, só falta o botão) fica
-> em `I-004`.
+> automaticamente no motor de Defesa/testes; Colapso fica de fora, ver `IDEAS.md` `I-007`).
+> Identificação de Poder, auto-desacoplamento por perda de uso, Redução de Módulo, Colapso e Forja
+> de Fragmentos ficaram de fora por decisão do autor — registrados em `IDEAS.md` `I-005`…`I-009`.
+> Venda de fragmentos na ficha (a regra já existe, só falta o botão) fica em `I-004`.
 
 > **Guia de criação de ficha (`m3-57`…`m3-59`)** — trio que substitui o assistente-dialog da `m3-16`
 > por uma **tela guiada por passos** (`/painel/:campanhaId/ficha/nova`), conduzindo o jogador pelas
