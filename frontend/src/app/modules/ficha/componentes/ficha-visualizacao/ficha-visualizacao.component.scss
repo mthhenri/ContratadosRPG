@@ -2303,16 +2303,16 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding-left: 28px; // alinha com o nome, depois da largura da estrela de Maestria
 
     // "Nunca empilha" no desktop só é seguro porque a edição de atributos é inacessível no card
     // estreito (`modo="compacto"`) — `ajustavelAmplo()` (que trava o lápis de edição) exige
     // `modo() !== 'compacto'`. Se a edição um dia for liberada no compacto, revisitar esta regra.
     // Mobile: empilha as duas mini-steppers só se não couberem lado a lado — desktop nunca empilha
-    // (ver design, seção Responsivo).
+    // (ver design, seção Responsivo). Sem `padding-left`: a coluna de Atributos é estreita mesmo
+    // no desktop (uma de 3 colunas lado a lado) — o recuo pra alinhar com o nome da sub-linha 1
+    // estourava a largura disponível com os dois mini-steppers lado a lado.
     @include bp.mobile {
       flex-wrap: wrap;
-      padding-left: 0;
     }
   }
 
@@ -2451,6 +2451,16 @@
     width: 18px;
     height: 18px;
     font-size: 12px;
+
+    // Na lista de edição (ao contrário da antiga caixa de grade, onde 44px reais espremeriam o
+    // card) sobra espaço vertical de sobra por atributo — o botão cresce de verdade no mobile,
+    // não só a área invisível de toque (`alvo-de-toque`, mais abaixo). Se a sub-linha 2 não couber
+    // lado a lado nesse tamanho, ela empilha (`&__secundaria` já trata isso).
+    @include bp.mobile {
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
+      font-size: 18px;
+    }
   }
 
   &__mod-valor {
@@ -2486,6 +2496,14 @@
     width: 18px;
     height: 18px;
     font-size: 12px;
+
+    // Mesmo raciocínio do `__mod-passo` acima: cresce de verdade no mobile (não só a área de
+    // toque), já que a lista de edição tem espaço de sobra por atributo.
+    @include bp.mobile {
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
+      font-size: 18px;
+    }
   }
 
   &__dados-valor {
