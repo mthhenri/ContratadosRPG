@@ -2320,6 +2320,14 @@
     display: flex;
     align-items: center;
     gap: 4px;
+
+    // Rótulo em cima do stepper (não do lado) no mobile: com os botões maiores (40px) o rótulo
+    // colado do lado ficava espremido contra eles na mesma linha.
+    @include bp.mobile {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+    }
   }
 
   &__rotulo-mini {
