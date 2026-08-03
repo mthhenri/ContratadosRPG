@@ -550,6 +550,88 @@
       font-family: var(--font-sans);
     }
   }
+  // === Dropdown de Categoria do item custom (popover próprio, mesmo motivo do "Mover para" mais
+  // abaixo: o `<select>` nativo não suporta ícone por `<option>` em nenhum browser). Visualmente
+  // casa com `&__entrada` (mesma altura/borda dos campos vizinhos Nome/Custo/Peso da mesma linha).
+  &__categoria-select {
+    position: relative;
+  }
+  &__categoria-select-gatilho {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    color: var(--text);
+    font-family: var(--font-mono);
+    padding: 9px 10px;
+    font-size: 13px;
+    cursor: pointer;
+
+    span {
+      flex: 1;
+      text-align: left;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    app-icone {
+      display: inline-flex;
+      flex: none;
+    }
+    &[aria-expanded='true'] {
+      border-color: var(--accent-border);
+    }
+  }
+  &__categoria-select-chevron {
+    color: var(--text-mute);
+    width: 14px;
+    height: 14px;
+  }
+  &__categoria-select-lista {
+    position: absolute;
+    z-index: 5;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    max-height: 260px;
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 4px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  }
+  &__categoria-select-opcao {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-control);
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 7px 8px;
+    cursor: pointer;
+
+    app-icone {
+      flex: none;
+    }
+    &:hover {
+      background: var(--surface-2);
+      color: var(--text);
+    }
+    &--ativa {
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+  }
   &__stepper {
     display: flex;
     align-items: center;

@@ -10,8 +10,11 @@ import { Component, input } from '@angular/core';
  * `infinito`, marca de lesão permanente na aba Sanidade; `alerta`, sinal de sobrecarga na linha
  * "Inventário"; `camadas`/`teto`, toggles "não conta no total/teto" das modificações de item; e
  * `busca`, botão de busca de itens na aba Inventário; `duplicar`, ação de clonar uma ficha no
- * painel da campanha (m3-52); e `d20`, gatilho da barra lateral de histórico de rolagens
- * (campanha e ficha).
+ * painel da campanha (m3-52); `d20`, gatilho da barra lateral de histórico de rolagens
+ * (campanha e ficha); e `fragmento-construtor`/`fragmento-potencializador`, variantes do
+ * diamante genérico `fragmento` com um selo no canto inferior direito (martelo/estrela) —
+ * usadas só onde a categoria específica importa (abas do catálogo, select de item custom);
+ * o `fragmento` genérico continua valendo pros demais usos (filtro, ações, badge "de Fragmento").
  */
 export type IconeNome =
   | 'agente'
@@ -58,6 +61,8 @@ export type IconeNome =
   | 'vestida'
   | 'guardada'
   | 'fragmento'
+  | 'fragmento-construtor'
+  | 'fragmento-potencializador'
   | 'dado'
   | 'morrendo'
   | 'machucado'

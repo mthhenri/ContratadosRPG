@@ -59,6 +59,6 @@ export const ICONES_CATEGORIA: Readonly<Record<ItemCategoriaEnum, IconeNome>> = 
   [ItemCategoriaEnum.OPERACIONAL]: 'operacional',
   [ItemCategoriaEnum.MEDICINAL]: 'medicinal',
   [ItemCategoriaEnum.AMPLIFICADOR]: 'amplificador',
-  [ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR]: 'fragmento',
-  [ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR]: 'fragmento',
+  [ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR]: 'fragmento-construtor',
+  [ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR]: 'fragmento-potencializador',
 };

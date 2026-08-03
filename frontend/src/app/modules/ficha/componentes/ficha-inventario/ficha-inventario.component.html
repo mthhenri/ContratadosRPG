@@ -258,14 +258,38 @@
             <span class="ficha-inv__campo-rotulo">Nome</span>
             <input class="ficha-inv__entrada" type="text" formControlName="nome" placeholder="Nome do item" />
           </label>
-          <label class="ficha-inv__campo">
+          <div class="ficha-inv__campo">
             <span class="ficha-inv__campo-rotulo">Categoria</span>
-            <select class="ficha-inv__entrada" formControlName="categoria">
-              @for (categoria of categoriasItem; track categoria.categoria) {
-                <option [value]="categoria.categoria">{{ categoria.rotulo }}</option>
+            <div class="ficha-inv__categoria-select">
+              <button
+                type="button"
+                class="ficha-inv__categoria-select-gatilho"
+                [attr.aria-expanded]="categoriaItemSelectAberta()"
+                (click)="alternarCategoriaItemSelect()"
+              >
+                <app-icone [nome]="iconesCategoria[categoriaCustom()]" />
+                <span>{{ rotuloCategoria(categoriaCustom()) }}</span>
+                <app-icone nome="chevron" class="ficha-inv__categoria-select-chevron" />
+              </button>
+              @if (categoriaItemSelectAberta()) {
+                <div class="ficha-inv__categoria-select-lista" role="listbox" aria-label="Categoria">
+                  @for (categoria of categoriasItem; track categoria.categoria) {
+                    <button
+                      type="button"
+                      class="ficha-inv__categoria-select-opcao"
+                      [class.ficha-inv__categoria-select-opcao--ativa]="categoriaCustom() === categoria.categoria"
+                      role="option"
+                      [attr.aria-selected]="categoriaCustom() === categoria.categoria"
+                      (click)="escolherCategoriaItem(categoria.categoria)"
+                    >
+                      <app-icone [nome]="iconesCategoria[categoria.categoria]" />
+                      <span>{{ categoria.rotulo }}</span>
+                    </button>
+                  }
+                </div>
               }
-            </select>
-          </label>
+            </div>
+          </div>
         </div>
         <div class="ficha-inv__form-linha">
           <div class="ficha-inv__campo">

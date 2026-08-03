@@ -77,8 +77,8 @@ const ICONES_CATEGORIA: Readonly<Record<ItemCategoriaEnum, IconeNome>> = {
   [ItemCategoriaEnum.OPERACIONAL]: 'operacional',
   [ItemCategoriaEnum.MEDICINAL]: 'medicinal',
   [ItemCategoriaEnum.AMPLIFICADOR]: 'amplificador',
-  [ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR]: 'fragmento',
-  [ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR]: 'fragmento',
+  [ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR]: 'fragmento-construtor',
+  [ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR]: 'fragmento-potencializador',
 };
 
 /** Categorias com item comprável separadamente empilhável (várias unidades do mesmo item). */
@@ -516,9 +516,16 @@ export class FichaInventario {
     modulo: new FormControl('', { nonNullable: true }),
   });
 
-  private readonly categoriaCustom = toSignal(this.itemCustomForm.controls.categoria.valueChanges, {
+  /** Categoria atual do form de item custom — também alimenta o gatilho do dropdown de categoria (com ícone). */
+  protected readonly categoriaCustom = toSignal(this.itemCustomForm.controls.categoria.valueChanges, {
     initialValue: this.itemCustomForm.controls.categoria.value,
   });
+  /**
+   * `true` com o dropdown de Categoria do item custom aberto — popover próprio (mesmo motivo do
+   * "Mover para": o popup nativo de `<select>` não é temável), mas com ícone por opção, o que um
+   * `<select>` nativo não suporta em nenhum browser.
+   */
+  protected readonly categoriaItemSelectAberta = signal(false);
   protected readonly mostraDano = computed(() => CATEGORIAS_COM_DANO.includes(this.categoriaCustom()));
   protected readonly mostraResistencia = computed(() =>
     CATEGORIAS_COM_RESISTENCIA.includes(this.categoriaCustom()),
@@ -953,6 +960,7 @@ export class FichaInventario {
     this.catalogoAberto.set(false);
     this.catalogoFragmentosAtivo.set(false);
     this.criandoItem.set(true);
+    this.categoriaItemSelectAberta.set(false);
   }
 
   protected adicionarItem(vm: CartaoItemVM): void {
@@ -970,6 +978,7 @@ export class FichaInventario {
 
   /** Abre/fecha o formulário de item custom. */
   protected alternarCriarItem(): void {
+    this.categoriaItemSelectAberta.set(false);
     if (this.criandoItem()) {
       this.criandoItem.set(false);
       return;
@@ -992,6 +1001,18 @@ export class FichaInventario {
 
   protected cancelarCriarItem(): void {
     this.criandoItem.set(false);
+    this.categoriaItemSelectAberta.set(false);
+  }
+
+  /** Abre/fecha o dropdown de Categoria do item custom (popover próprio, ver `categoriaItemSelectAberta`). */
+  protected alternarCategoriaItemSelect(): void {
+    this.categoriaItemSelectAberta.update((aberto) => !aberto);
+  }
+
+  /** Escolhe uma categoria no dropdown do item custom e fecha o popover. */
+  protected escolherCategoriaItem(categoria: ItemCategoriaEnum): void {
+    this.itemCustomForm.controls.categoria.setValue(categoria);
+    this.categoriaItemSelectAberta.set(false);
   }
 
   /**
@@ -1009,6 +1030,7 @@ export class FichaInventario {
     this.inserirItem(item);
     this.sinalizarAdicao(this.chaveCartao(item.categoria, item.nome));
     this.criandoItem.set(false);
+    this.categoriaItemSelectAberta.set(false);
     this.debitarAquisicaoFragmento(item, itensAntes);
   }
 
