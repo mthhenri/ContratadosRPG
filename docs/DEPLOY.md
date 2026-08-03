@@ -125,8 +125,9 @@ conecta ao Git e reimplanta no push.
    | **Root directory**          | *(vazio — raiz do repo)*                            |
 
 3. Deploy. Anote a URL: `https://<seu-projeto>.pages.dev`. O `frontend/public/_redirects`
-   (`/* /index.html 200`, copiado para a raiz do build pelo `assets` glob) garante o fallback
-   de SPA do Angular.
+   (`/* /app.html 200`, copiado para a raiz do build pelo `assets` glob) garante o fallback
+   de SPA do Angular. O documento raiz é emitido como `app.html` (não `index.html`) — ver
+   comentário no próprio `_redirects` para o motivo (bugs conhecidos da Cloudflare).
 4. **Feche o CORS:** confirme que `APP_FRONTEND_ORIGEM` no Render é exatamente essa URL
    (`https://<seu-projeto>.pages.dev`, sem barra no fim). Se ajustar, o Render reinicia sozinho.
 

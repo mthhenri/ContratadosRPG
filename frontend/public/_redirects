@@ -1,10 +1,17 @@
 # Cloudflare Pages: fallback de SPA. Toda rota não correspondente a um asset estático é
-# reescrita para "/" (200), que a Cloudflare resolve para o index.html, deixando o
-# roteamento client-side do Angular assumir a partir daí. Aponta para "/" em vez de
-# "/index.html" porque esse padrão dispara um falso positivo de "infinite loop" no
-# validador da Cloudflare (bug conhecido: cloudflare/workers-sdk#10992 e #11824),
-# fazendo o deploy falhar com "Failed to publish your Function. Unknown internal error".
+# servida pelo conteúdo de "app.html" (200 = rewrite, mantém a URL original), deixando o
+# roteamento client-side do Angular assumir a partir daí. O documento raiz do Angular é
+# emitido como "app.html" em vez de "index.html" (ver "index.output" em angular.json) porque:
+# 1) apontar para "/index.html" dispara um falso positivo de "infinite loop" no validador
+#    da Cloudflare (bug conhecido: cloudflare/workers-sdk#10992 e #11824), derrubando o
+#    deploy com "Failed to publish your Function. Unknown internal error";
+# 2) apontar para "/" (o workaround anterior) contorna o validador, mas faz a Cloudflare
+#    aplicar a regra também a assets estáticos existentes (main-*.js, chunk-*.js, styles-*.css),
+#    servindo-os com Content-Type text/html e quebrando o carregamento dos module scripts.
+# Usar um nome de arquivo real que não seja "index.html"/"/" evita as duas falhas: o
+# validador não reconhece o padrão, e a Cloudflare continua servindo os assets estáticos
+# diretamente (sem passar pela reescrita) por corresponderem a um arquivo real no build.
 # O `assets` glob do angular.json (input: public) copia este arquivo para a raiz do build,
 # onde a Cloudflare Pages o lê. Chamadas à API não passam por aqui: vão direto à URL do
 # backend no Render (environment.apiBase), com CORS liberado.
-/*    /   200
+/*    /app.html   200
