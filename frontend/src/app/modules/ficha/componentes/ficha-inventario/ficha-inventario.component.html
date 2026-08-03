@@ -952,10 +952,17 @@
             Aplicar consome o fragmento (some do inventário) e debita o custo de Energia do módulo
             (Energia atual + Energia Máxima).
           </p>
+          @if (conflitoFuncaoFragmento()) {
+            <p class="ficha-inv__aviso">
+              O alvo já tem um fragmento nessa função — um item/ser só pode ter um fragmento por
+              função (dano, teste ou resistência). Escolha outro bônus ou outro alvo.
+            </p>
+          }
           <div class="ficha-inv__form-acoes">
             <button
               type="button"
               class="ficha-inv__btn ficha-inv__btn--principal"
+              [disabled]="conflitoFuncaoFragmento()"
               (click)="confirmarAplicarFragmento(item.indice)"
             >
               Aplicar

@@ -14,8 +14,10 @@ import {
   custoAquisicaoFragmento,
   custoRemoverFragmento,
   custoSanidadeConsumirFragmento,
+  existeFragmentoNaMesmaFuncao,
   listarBonusFragmentoPotencializador,
   listarModulosFragmentosPortados,
+  maiorDadoItem,
   reducaoCustoPorAfinidade,
   valorAfinidadeFragmento,
 } from './fragmento';
@@ -81,6 +83,145 @@ describe('listarBonusFragmentoPotencializador', () => {
     expect(opcoes[0].efeito.valor).toBe(7);
     expect(opcoes[3].efeito.valor).toBe(10);
     expect(opcoes[4].efeito.valor).toBe(10);
+  });
+
+  it('com o maior dado do alvo, insere a 5ª opção "N× maior dado" logo após a 1ª (m3-63)', () => {
+    const opcoes = listarBonusFragmentoPotencializador(FragmentoModuloEnum.V, 8);
+    expect(opcoes).toHaveLength(6);
+    expect(opcoes.map((opcao) => opcao.efeito.tipo)).toEqual([
+      ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE,
+      ModificacaoEfeitoTipoEnum.DANO_FIXO,
+      ModificacaoEfeitoTipoEnum.BONUS_TESTE,
+      ModificacaoEfeitoTipoEnum.BONUS_TESTE,
+      ModificacaoEfeitoTipoEnum.DANO_FIXO,
+      ModificacaoEfeitoTipoEnum.RESISTENCIA,
+    ]);
+    // Módulo V multiplica 1×; D8 → +8 de dano.
+    expect(opcoes[1].efeito.valor).toBe(8);
+  });
+
+  it('módulo I multiplica 5×; D10 do alvo vira +50 de dano', () => {
+    const opcoes = listarBonusFragmentoPotencializador(FragmentoModuloEnum.I, 10);
+    expect(opcoes[1].efeito.valor).toBe(50);
+  });
+
+  it('sem maior dado (alvo sem dano, ou nenhum alvo escolhido), a opção não aparece', () => {
+    expect(listarBonusFragmentoPotencializador(FragmentoModuloEnum.V, null)).toHaveLength(5);
+    expect(listarBonusFragmentoPotencializador(FragmentoModuloEnum.V)).toHaveLength(5);
+  });
+});
+
+describe('maiorDadoItem', () => {
+  it('extrai o maior tipo de dado (mais faces) de uma notação com vários dados', () => {
+    const item: CarrinhoItemDto = {
+      nome: 'Espada customizada',
+      categoria: ItemCategoriaEnum.CORPO_A_CORPO,
+      custo: 0,
+      peso: 0,
+      quantidade: 1,
+      guardada: false,
+      dano: '1D6+1D8+FOR [Físico]',
+      modificacoes: [],
+    };
+    expect(maiorDadoItem(item)).toBe(8);
+  });
+
+  it('lê minúsculo e uma única notação simples ("2D8+3")', () => {
+    const item: CarrinhoItemDto = {
+      nome: 'Item achado',
+      categoria: ItemCategoriaEnum.EXPLOSIVOS,
+      custo: 0,
+      peso: 0,
+      quantidade: 1,
+      guardada: false,
+      dano: '2d8+3',
+      modificacoes: [],
+    };
+    expect(maiorDadoItem(item)).toBe(8);
+  });
+
+  it('resolve o dano do catálogo quando o item não é custom ("Mediana": 3D4+FOR → D4)', () => {
+    const item: CarrinhoItemDto = {
+      nome: 'Mediana',
+      categoria: ItemCategoriaEnum.CORPO_A_CORPO,
+      custo: 0,
+      peso: 0,
+      quantidade: 1,
+      guardada: false,
+      modificacoes: [],
+    };
+    expect(maiorDadoItem(item)).toBe(4);
+  });
+
+  it('devolve null sem dado no campo (ausente ou notação sem D<n>, ex.: "— (fumaça)")', () => {
+    const semCampo: CarrinhoItemDto = {
+      nome: 'Colete',
+      categoria: ItemCategoriaEnum.PROTECOES,
+      custo: 0,
+      peso: 0,
+      quantidade: 1,
+      guardada: false,
+      modificacoes: [],
+    };
+    const semDadoNaNotacao: CarrinhoItemDto = {
+      nome: 'Item achado',
+      categoria: ItemCategoriaEnum.EXPLOSIVOS,
+      custo: 0,
+      peso: 0,
+      quantidade: 1,
+      guardada: false,
+      dano: '— (fumaça)',
+      modificacoes: [],
+    };
+    expect(maiorDadoItem(semCampo)).toBeNull();
+    expect(maiorDadoItem(semDadoNaNotacao)).toBeNull();
+  });
+});
+
+describe('existeFragmentoNaMesmaFuncao', () => {
+  it('bloqueia um 2º fragmento na mesma função (dano), mesmo com efeitos diferentes (dados vs fixo)', () => {
+    const modificacoes = [
+      {
+        nome: 'Fragmento Potencializador — Módulo V',
+        empilhamentos: 1,
+        efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: 2 }],
+        origemFragmento: { tipo: FragmentoTipoEnum.POTENCIALIZADOR, modulo: FragmentoModuloEnum.V },
+      },
+    ];
+    expect(
+      existeFragmentoNaMesmaFuncao(modificacoes, { tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: 4 }),
+    ).toBe(true);
+  });
+
+  it('não bloqueia funções diferentes (dano já ocupado, teste livre)', () => {
+    const modificacoes = [
+      {
+        nome: 'Fragmento Potencializador — Módulo V',
+        empilhamentos: 1,
+        efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: 2 }],
+        origemFragmento: { tipo: FragmentoTipoEnum.POTENCIALIZADOR, modulo: FragmentoModuloEnum.V },
+      },
+    ];
+    expect(
+      existeFragmentoNaMesmaFuncao(modificacoes, {
+        tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE,
+        valor: 1,
+        variante: 'DADO',
+      }),
+    ).toBe(false);
+  });
+
+  it('ignora modificações sem origemFragmento (a regra é só entre fragmentos)', () => {
+    const modificacoes = [
+      {
+        nome: 'Reforçado',
+        empilhamentos: 1,
+        efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: 1 }],
+      },
+    ];
+    expect(
+      existeFragmentoNaMesmaFuncao(modificacoes, { tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: 4 }),
+    ).toBe(false);
   });
 });
 

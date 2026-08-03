@@ -1,6 +1,6 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-02 · **Última task registrada:** `m2-21` (2026-08-02)
+> **Última revisão:** 2026-08-03 · **Última task registrada:** `m3-63` (2026-08-03)
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -45,9 +45,9 @@ Deploy em produção por **integração nativa das plataformas**, sem GitHub Act
 `master` → Render (backend) e Cloudflare Pages (frontend) puxam do Git sozinhos; banco no Supabase.
 O GitHub Actions só roda **CI** (lint + testes nos 3 workspaces em todo PR).
 
-**Suítes:** shared 454+ · backend 167/167 · frontend 641/**642** — a 1 falha é conhecida e
-pré-existente, ver [`PROBLEMS.md`](PROBLEMS.md) `P-001`. `npm run lint` **não fecha limpo** hoje
-em nenhum dos dois workspaces (frontend/backend) — falhas pré-existentes não relacionadas a
+**Suítes:** shared 477/477 · backend 167/167 · frontend 655/**657** — as 2 falhas são conhecidas e
+pré-existentes, ver [`PROBLEMS.md`](PROBLEMS.md) `P-001`/`P-010`. `npm run lint` **não fecha limpo**
+hoje em nenhum dos dois workspaces (frontend/backend) — falhas pré-existentes não relacionadas a
 nenhuma task recente, ver `PROBLEMS.md` `P-009`.
 
 ---

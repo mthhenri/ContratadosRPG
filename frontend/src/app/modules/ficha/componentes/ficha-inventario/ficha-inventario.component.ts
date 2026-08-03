@@ -30,12 +30,14 @@ import {
   custoRemoverFragmento,
   custoSanidadeConsumirFragmento,
   descreverEfeitosModificacao,
+  existeFragmentoNaMesmaFuncao,
   ItemCatalogo,
   listarBonusFragmentoPotencializador,
   listarModificacoesCategoria,
   listarModificacoesDisponiveis,
   listarModulosFragmentosPortados,
   listarSubInventarios,
+  maiorDadoItem,
   ModificacaoDados,
   ModificacaoEfeitoDto,
   obterCategoriaEmprestada,
@@ -868,16 +870,31 @@ export class FichaInventario {
     return item.containerId === null || !this.containerIdsAtivos().has(item.containerId);
   }
 
-  /** Alvos válidos pro "Aplicar em..." de um fragmento Potencializador — qualquer item, menos fragmentos. */
+  /**
+   * Alvos válidos pro "Aplicar em..." de um fragmento Potencializador — qualquer item ou ser,
+   * exceto fragmentos Construtor (doc — "⬦ Potencializador": "podem ser usados em qualquer item ou
+   * ser, exceto em fragmentos construtores"; `m3-63`). Um Potencializador **pode** ser alvo de
+   * outro Potencializador; o único item excluído além do Construtor é o próprio fragmento sendo
+   * aplicado (não faz sentido acoplar um fragmento nele mesmo).
+   */
   protected readonly alvosFragmentoDisponiveis = computed<readonly { indice: number; rotulo: string }[]>(
-    () =>
-      this.inventario()
+    () => {
+      const fragmentoIndice = this.aplicandoFragmentoIndice();
+      return this.inventario()
         .itens.map((item, indice) => ({ item, indice }))
-        .filter(({ item }) => tipoFragmentoDaCategoria(item.categoria) === null)
-        .map(({ item, indice }) => ({ indice, rotulo: rotuloItem(item) })),
+        .filter(
+          ({ item, indice }) =>
+            item.categoria !== ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR && indice !== fragmentoIndice,
+        )
+        .map(({ item, indice }) => ({ indice, rotulo: rotuloItem(item) }));
+    },
   );
 
-  /** Cardápio de bônus do fragmento com o painel "Aplicar em..." aberto (m3-35), vazio se nenhum. */
+  /**
+   * Cardápio de bônus do fragmento com o painel "Aplicar em..." aberto (m3-35), vazio se nenhum. A
+   * 5ª opção ("N× maior dado", `m3-63`) só entra depois que o alvo é escolhido e só quando ele tem
+   * dado no campo `dano` (`maiorDadoItem`) — por isso recalcula a cada troca de `alvoFragmento`.
+   */
   protected readonly opcoesBonusFragmento = computed<readonly OpcaoBonusFragmentoDto[]>(() => {
     const indice = this.aplicandoFragmentoIndice();
     if (indice === null) {
@@ -887,7 +904,28 @@ export class FichaInventario {
     if (!fragmento?.modulo) {
       return [];
     }
-    return listarBonusFragmentoPotencializador(fragmento.modulo);
+    const alvoIndice = this.alvoFragmento();
+    const alvo = alvoIndice === null ? null : this.inventario().itens[alvoIndice];
+    const maiorDado = alvo ? maiorDadoItem(alvo) : null;
+    return listarBonusFragmentoPotencializador(fragmento.modulo, maiorDado);
+  });
+
+  /**
+   * `true` quando o bônus escolhido cumpre a mesma função (dano/teste/resistência) de um fragmento
+   * já aplicado no alvo — bloqueia a confirmação (doc: "uma única função" por item/ser, `m3-63`).
+   */
+  protected readonly conflitoFuncaoFragmento = computed<boolean>(() => {
+    const alvoIndice = this.alvoFragmento();
+    const opcaoIndice = this.opcaoBonusFragmento();
+    if (alvoIndice === null || opcaoIndice === null) {
+      return false;
+    }
+    const alvo = this.inventario().itens[alvoIndice];
+    const opcao = this.opcoesBonusFragmento()[opcaoIndice];
+    if (!alvo || !opcao) {
+      return false;
+    }
+    return existeFragmentoNaMesmaFuncao(alvo.modificacoes, opcao.efeito);
   });
 
   protected readonly amplificadoresInventario = computed<readonly AmpInventarioVM[]>(() => {
@@ -1228,10 +1266,15 @@ export class FichaInventario {
     this.aplicandoFragmentoIndice.set(null);
   }
 
-  /** Escolhe o item-alvo do `<select>` do painel "Aplicar em...". */
+  /**
+   * Escolhe o item-alvo do `<select>` do painel "Aplicar em...". Zera o bônus escolhido — a lista
+   * de opções muda de tamanho conforme o alvo (5ª opção "N× maior dado", `m3-63`), então o índice
+   * antigo pode não corresponder mais à mesma opção.
+   */
   protected escolherAlvoFragmento(evento: Event): void {
     const valor = (evento.target as HTMLSelectElement).value;
     this.alvoFragmento.set(valor === '' ? null : Number(valor));
+    this.opcaoBonusFragmento.set(null);
   }
 
   /** Escolhe a opção de bônus do `<select>` do painel "Aplicar em...". */
@@ -1253,7 +1296,7 @@ export class FichaInventario {
   protected confirmarAplicarFragmento(fragmentoIndice: number): void {
     const alvoIndice = this.alvoFragmento();
     const opcaoIndice = this.opcaoBonusFragmento();
-    if (alvoIndice === null || opcaoIndice === null) {
+    if (alvoIndice === null || opcaoIndice === null || this.conflitoFuncaoFragmento()) {
       return;
     }
     const itens = this.inventario().itens;
