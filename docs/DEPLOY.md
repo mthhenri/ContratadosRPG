@@ -124,9 +124,19 @@ conecta ao Git e reimplanta no push.
    | **Build output directory**  | `frontend/dist/frontend/browser`                   |
    | **Root directory**          | *(vazio — raiz do repo)*                            |
 
-3. Deploy. Anote a URL: `https://<seu-projeto>.pages.dev`. O `frontend/public/_redirects`
-   (`/* /index.html 200`, copiado para a raiz do build pelo `assets` glob) garante o fallback
-   de SPA do Angular.
+3. Deploy. Anote a URL: `https://<seu-projeto>.pages.dev`. O fallback de SPA usa a convenção
+   nativa da Cloudflare Pages: o `npm run build` do frontend gera um `404.html` (cópia do
+   `index.html`) no output — a Cloudflare serve esse arquivo (preservando a URL) para qualquer
+   rota sem asset correspondente, sem precisar de `_redirects`. **Não** use `_redirects` com
+   `/* /index.html 200` (ou qualquer variação `/*` → `*.html`/`/`/nome dedicado) para isso: já
+   quebrou a produção duas vezes — (1) a Cloudflare rejeita `/index.html` como alvo no deploy
+   como falso positivo de "infinite loop" (bug conhecido: cloudflare/workers-sdk#10992 e
+   #11824); (2) mesmo contornando isso com outro alvo, o rewrite via `_redirects` intercepta
+   também os assets estáticos reais (main-*.js, chunk-*.js, styles-*.css), servindo-os com
+   Content-Type errado e quebrando o carregamento dos module scripts — a Cloudflare aplica a
+   regra do `_redirects` antes de checar se o path bate com um asset real, então isso acontece
+   com **qualquer** alvo de rewrite. O `404.html` nativo não tem esse problema porque só entra
+   em ação quando nenhum asset real corresponde ao path.
 4. **Feche o CORS:** confirme que `APP_FRONTEND_ORIGEM` no Render é exatamente essa URL
    (`https://<seu-projeto>.pages.dev`, sem barra no fim). Se ajustar, o Render reinicia sozinho.
 
