@@ -1104,6 +1104,10 @@
                           </span>
                         }
                       </span>
+                      <!-- Modificador de teste — só leitura aqui; a edição fica atrás do lápis de
+                           Atributos. Linha própria (não a mesma da lesão: são selos parecidos —
+                           mono, negrito, accent quando ativos — e colados no valor ficam
+                           indistinguíveis). Sempre visível, inclusive em +0. -->
                       <span
                         class="ficha-atributo__mod-valor"
                         [class.ficha-atributo__mod-valor--ativo]="modificadorTeste(campo.chave) !== 0"
@@ -1111,6 +1115,9 @@
                       >
                         {{ modificadorTeste(campo.chave) >= 0 ? '+' : '' }}{{ modificadorTeste(campo.chave) }}
                       </span>
+                      <!-- Ajuste manual de dados — só aparece quando há algo ativo (±N); a maioria
+                           das fichas nunca mexe nisso, então fica invisível por padrão em vez de
+                           somar mais um elemento sempre-visível ao card. -->
                       @if (dadosTesteDe(campo.chave) !== 0) {
                         <span
                           class="ficha-atributo__dados-badge"

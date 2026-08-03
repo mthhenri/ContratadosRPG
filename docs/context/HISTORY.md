@@ -21,6 +21,46 @@
 
 ## Registro por task (mais recente primeiro)
 
+## layout-lista-edicao-atributos — lista vertical na edição de atributos (2026-08-02)
+
+Sem código de task de milestone — plano em
+`docs/superpowers/plans/2026-08-02-layout-lista-edicao-atributos.md`, design em
+`docs/superpowers/specs/2026-08-02-layout-lista-edicao-atributos-design.md`.
+
+**O problema.** O card de edição de atributos (`FichaVisualizacao`) usava uma grade de caixas
+compactas (2 colunas), cada uma empilhando verticalmente abreviação, valor com stepper `−`/`+`,
+estrela de Maestria e os dois mini-steppers (modificador de teste, ajuste de dados) numa caixa
+estreita — denso, e a leitura de "qual stepper é qual" dependia só de ícone/posição. Além disso, o
+grupo Físicos (5 atributos, número ímpar) exigia CSS especial pra centralizar o item órfão na grade
+de 2 colunas.
+
+**O desenho.** Mudança puramente visual, só no modo de edição — o modo leitura (a mesma grade
+compacta) fica byte-a-byte idêntico, mesma marcação, mesmo CSS. Reusa 100% do estado/métodos já
+existentes (`rascunhoAtributos`, `rascunhoMaestria`, `rascunhoModificadoresTeste`,
+`rascunhoDadosTeste`, `ajustarAtributoRascunho`, `ajustarModificadorTesteRascunho`,
+`ajustarDadosTesteRascunho`, `alternarMaestria`, `maestriaHabilitada`) — nenhum signal, computed ou
+método novo. O `@if (editandoAtributos())`, que antes decidia por atributo (dentro da mesma grade),
+subiu pra decidir por grupo (Físicos/Mentais): em edição, o grupo renderiza `.ficha-atributos__lista`
+de `.ficha-atributo-linha`, cada uma com duas sub-linhas — a 1ª com a estrela de Maestria, o **nome
+completo** do atributo (não mais a abreviação, já que a linha tem largura de sobra) e o valor com
+`−`/`+` alinhado à direita; a 2ª com os dois mini-steppers existentes (modificador de teste e ajuste
+de dados), cada um agora com um rótulo de texto curto ("Mod."/"Dados"), sempre lado a lado no
+desktop e empilhando só no mobile quando não cabem (`flex-wrap`, não um `flex-direction: column`
+forçado). O CSS do "5º atributo órfão" foi removido, mas só do seletor de edição
+(`.ficha-atributos__grade--edicao`) — a regra de órfão do modo leitura (tanto a versão base de 2
+colunas quanto a variante do card compacto) ficou intocada.
+
+**Onde entrou.** Só `ficha-visualizacao.component.html`/`.scss` (o card de edição de atributos
+dentro de `FichaVisualizacao`). Nenhuma mudança em DTO, service ou `.ts` — 100% apresentação.
+
+**Verificação.** Verificado ao vivo (stack real, via Playwright) nos dois viewports fixos do
+projeto — mobile 360×800 (Galaxy S20 FE) e desktop 1920×1080 (FullHD): a lista renderiza
+corretamente com os mini-steppers lado a lado nos dois tamanhos, sem estouro de largura, e o modo
+leitura confirmado bit-a-bit idêntico ao anterior (grade de 2 colunas com o 5º item centralizado no
+desktop, grade de 3 colunas no mobile) — zero regressão. Nenhum teste novo foi necessário (mudança
+puramente de apresentação; `ficha-visualizacao.component.spec.ts` só testa signals/métodos do
+componente, nenhum depende da marcação alterada, e todos continuaram passando sem alteração).
+
 ## ajuste-manual-dados-atributo — ajuste manual de dados de teste por atributo (2026-08-02)
 
 Sem código de task de milestone (nenhuma task do plano em curso era dona do item) — plano em

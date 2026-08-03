@@ -155,7 +155,8 @@ A tela de visualização (`FichaVisualizacao`, componente reusável) é um **lay
 (Identidade · Atributos · Status com abas internas), com **toda edição no próprio lugar** — nada
 de página de formulário separada. Editores prontos: atributos e maestria (com modificador de teste
 e ajuste manual de dados/`dadosTeste` por atributo, este último só afetando a contagem de dados
-rolada, nunca o valor exibido nem os derivados), vitais, sanidade e
+rolada, nunca o valor exibido nem os derivados; em edição, os atributos viram uma lista vertical —
+nome completo + steppers — em vez da grade compacta do modo leitura), vitais, sanidade e
 lesões, habilidades (com filtro e contador), inventário completo (itens, modificações,
 amplificadores, sub-inventários, custom), identidade (origem, personalidade, afinidade de
 fragmentos), história privada, anotações e dinheiro. Persistência **otimista + em lote**, com

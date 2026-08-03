@@ -2305,6 +2305,9 @@
     gap: 12px;
     padding-left: 28px; // alinha com o nome, depois da largura da estrela de Maestria
 
+    // "Nunca empilha" no desktop só é seguro porque a edição de atributos é inacessível no card
+    // estreito (`modo="compacto"`) — `ajustavelAmplo()` (que trava o lápis de edição) exige
+    // `modo() !== 'compacto'`. Se a edição um dia for liberada no compacto, revisitar esta regra.
     // Mobile: empilha as duas mini-steppers só se não couberem lado a lado — desktop nunca empilha
     // (ver design, seção Responsivo).
     @include bp.mobile {
@@ -2417,12 +2420,6 @@
     line-height: 1;
   }
 
-  &__nome {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-dim);
-  }
-
   // Box do atributo com Maestria: borda accent discreta.
   &--maestria {
     border-color: var(--accent-border);
@@ -2447,7 +2444,6 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    margin-top: 2px;
   }
 
   &__mod-passo {
@@ -2477,7 +2473,6 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    margin-top: 2px;
   }
 
   &__dados-icone {
