@@ -14,7 +14,9 @@ import { Component, input } from '@angular/core';
  * (campanha e ficha); e `fragmento-construtor`/`fragmento-potencializador`, variantes do
  * diamante genérico `fragmento` com um selo no canto inferior direito (martelo/estrela) —
  * usadas só onde a categoria específica importa (abas do catálogo, select de item custom);
- * o `fragmento` genérico continua valendo pros demais usos (filtro, ações, badge "de Fragmento").
+ * o `fragmento` genérico continua valendo pros demais usos (filtro, ações, badge "de Fragmento");
+ * e `modificador` (±), rótulo do stepper de modificador de teste na edição de atributos — mesmo
+ * papel que `dado` cumpre pro rótulo do stepper de ajuste de dados, ao lado.
  */
 export type IconeNome =
   | 'agente'
@@ -73,7 +75,8 @@ export type IconeNome =
   | 'teto'
   | 'busca'
   | 'duplicar'
-  | 'd20';
+  | 'd20'
+  | 'modificador';
 
 /**
  * Ícone monocromático de linha (SVG inline, `stroke: currentColor`) — reutilizado nos menus de

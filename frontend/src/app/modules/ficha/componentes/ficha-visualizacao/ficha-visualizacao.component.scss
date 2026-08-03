@@ -2302,7 +2302,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    // Sem `gap` fixo: `justify-content: space-between` já separa os dois grupos quando sobra
+    // largura; um `gap` mínimo forçava overflow na coluna estreita do desktop quando os rótulos
+    // ganharam ícone (conteúdo já preenche 100% da largura disponível, sem folga pro gap).
 
     // "Nunca empilha" no desktop só é seguro porque a edição de atributos é inacessível no card
     // estreito (`modo="compacto"`) — `ajustavelAmplo()` (que trava o lápis de edição) exige
@@ -2313,6 +2315,7 @@
     // estourava a largura disponível com os dois mini-steppers lado a lado.
     @include bp.mobile {
       flex-wrap: wrap;
+      gap: 8px; // mobile é largura cheia (não a coluna estreita do desktop) — sobra espaço pro gap
     }
   }
 
@@ -2331,6 +2334,9 @@
   }
 
   &__rotulo-mini {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
     font-family: var(--font-mono);
     font-size: 9px;
     text-transform: uppercase;
@@ -2340,6 +2346,18 @@
     // No mobile os steppers ao lado crescem (40px) — rótulo de 9px ficava minúsculo perto deles.
     @include bp.mobile {
       font-size: 11px;
+    }
+  }
+
+  // Ícone do rótulo (± pro modificador, dado pro ajuste de dados) — mesma cor discreta do texto,
+  // acompanha o tamanho dele.
+  &__rotulo-icone {
+    width: 10px;
+    height: 10px;
+
+    @include bp.mobile {
+      width: 12px;
+      height: 12px;
     }
   }
 }
@@ -2503,17 +2521,6 @@
     display: flex;
     align-items: center;
     gap: 4px;
-  }
-
-  &__dados-icone {
-    width: 10px;
-    height: 10px;
-    color: var(--text-mute);
-
-    @include bp.mobile {
-      width: 14px;
-      height: 14px;
-    }
   }
 
   &__dados-passo {

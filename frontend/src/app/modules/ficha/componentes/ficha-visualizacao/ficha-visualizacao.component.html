@@ -983,7 +983,10 @@
                         <!-- Modificador de teste (soma na fórmula rolada, ex.: Amplificador aplicado) —
                              só editável aqui, na mesma tela de edição dos atributos. -->
                         <div class="ficha-atributo-linha__mini">
-                          <span class="ficha-atributo-linha__rotulo-mini">Mod.</span>
+                          <span class="ficha-atributo-linha__rotulo-mini">
+                            <app-icone [nome]="'modificador'" class="ficha-atributo-linha__rotulo-icone" />
+                            Mod.
+                          </span>
                           <div class="ficha-atributo__modificador">
                             <button
                               class="ficha-atributo__mod-passo"
@@ -1014,9 +1017,11 @@
                         <!-- Ajuste manual de dados: quantos D20 o atributo rola nos testes/rolagens,
                              sem alterar o valor base (Energia/Deslocamento/Vida/Maestria intocados). -->
                         <div class="ficha-atributo-linha__mini">
-                          <span class="ficha-atributo-linha__rotulo-mini">Dados</span>
+                          <span class="ficha-atributo-linha__rotulo-mini">
+                            <app-icone [nome]="'dado'" class="ficha-atributo-linha__rotulo-icone" />
+                            Dados
+                          </span>
                           <div class="ficha-atributo__dados">
-                            <app-icone [nome]="'dado'" class="ficha-atributo__dados-icone" />
                             <button
                               class="ficha-atributo__dados-passo"
                               type="button"
