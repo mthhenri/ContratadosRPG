@@ -2328,6 +2328,11 @@
     text-transform: uppercase;
     letter-spacing: var(--tracking-label);
     color: var(--text-dim);
+
+    // No mobile os steppers ao lado crescem (40px) — rótulo de 9px ficava minúsculo perto deles.
+    @include bp.mobile {
+      font-size: 11px;
+    }
   }
 }
 
@@ -2453,13 +2458,14 @@
     font-size: 12px;
 
     // Na lista de edição (ao contrário da antiga caixa de grade, onde 44px reais espremeriam o
-    // card) sobra espaço vertical de sobra por atributo — o botão cresce de verdade no mobile,
-    // não só a área invisível de toque (`alvo-de-toque`, mais abaixo). Se a sub-linha 2 não couber
-    // lado a lado nesse tamanho, ela empilha (`&__secundaria` já trata isso).
+    // card) sobra espaço vertical de sobra por atributo — o botão cresce de verdade no mobile, não
+    // só a área invisível de toque (`alvo-de-toque`, mais abaixo). 40px (não os 44px cheios do
+    // `alvo-toque`): full size deixava a proporção botão/texto estranha e forçava a sub-linha 2 a
+    // empilhar sempre; 40 ainda é bem maior que os 18px antigos e cabe lado a lado com mais folga.
     @include bp.mobile {
-      width: bp.$alvo-toque;
-      height: bp.$alvo-toque;
-      font-size: 18px;
+      width: 40px;
+      height: 40px;
+      font-size: 16px;
     }
   }
 
@@ -2473,6 +2479,12 @@
 
     &--ativo {
       color: var(--accent);
+    }
+
+    // Acompanha o crescimento do stepper no mobile — 11px ficava perdido ao lado de um botão 40px.
+    @include bp.mobile {
+      font-size: 14px;
+      min-width: 22px;
     }
   }
 
@@ -2489,6 +2501,11 @@
     width: 10px;
     height: 10px;
     color: var(--text-mute);
+
+    @include bp.mobile {
+      width: 14px;
+      height: 14px;
+    }
   }
 
   &__dados-passo {
@@ -2498,11 +2515,12 @@
     font-size: 12px;
 
     // Mesmo raciocínio do `__mod-passo` acima: cresce de verdade no mobile (não só a área de
-    // toque), já que a lista de edição tem espaço de sobra por atributo.
+    // toque, e não os 44px cheios do `alvo-toque` — 40px mantém a proporção com o texto e cabe
+    // lado a lado com mais folga), já que a lista de edição tem espaço de sobra por atributo.
     @include bp.mobile {
-      width: bp.$alvo-toque;
-      height: bp.$alvo-toque;
-      font-size: 18px;
+      width: 40px;
+      height: 40px;
+      font-size: 16px;
     }
   }
 
@@ -2513,6 +2531,12 @@
     color: var(--text-mute);
     min-width: 17px;
     text-align: center;
+
+    // Acompanha o crescimento do stepper no mobile — mesmo ajuste do `__mod-valor`.
+    @include bp.mobile {
+      font-size: 14px;
+      min-width: 22px;
+    }
 
     &--ativo {
       color: var(--accent);
