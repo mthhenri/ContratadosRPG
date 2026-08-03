@@ -21,10 +21,6 @@
           "builder": "@angular/build:application",
           "options": {
             "browser": "src/main.ts",
-            "index": {
-              "input": "src/index.html",
-              "output": "app.html"
-            },
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "stylePreprocessorOptions": {
