@@ -868,12 +868,14 @@ describe('FichaInventario', () => {
       ]);
     });
 
-    it('declarando que evitou com o teste de Vontade: não emite sequela nenhuma, mas ainda debita a Energia', () => {
+    it('declarando que evitou com o teste de Vontade: não emite sequela nenhuma, mas ainda debita a Energia e ainda registra o consumo (m3-64)', () => {
       const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.III)], amplificadores: [] });
       const sequelas: (readonly unknown[])[] = [];
       alvo.fixture.componentInstance.sequelasFragmentoConsumido.subscribe((s) => sequelas.push(s));
       const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
       alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+      const registros: { modulo: string; bonusEscolhido: string }[] = [];
+      alvo.fixture.componentInstance.fragmentoConsumido.subscribe((r) => registros.push(r));
 
       alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
       alvo.fixture.componentInstance['opcaoConsumoFragmento'].set(1); // "+3 em Defesa"
@@ -882,6 +884,8 @@ describe('FichaInventario', () => {
 
       expect(sequelas).toEqual([]);
       expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 26 }]);
+      // O rastro do consumo (m3-64) é incondicional — evitar a sequela não apaga o registro.
+      expect(registros).toEqual([{ modulo: FragmentoModuloEnum.III, bonusEscolhido: '+3 em Defesa' }]);
     });
 
     it('cancelar fecha o painel sem alterar o inventário nem emitir nada', () => {
@@ -958,6 +962,24 @@ describe('FichaInventario', () => {
       alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
 
       expect(bonus).toEqual([{ opcao: expect.objectContaining({ tipo: 'TESTE' }), atributoEscolhido: 'vontade' }]);
+    });
+
+    it('emite fragmentoConsumido incondicionalmente, com o módulo e o texto do bônus escolhido (m3-64)', () => {
+      const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.I)], amplificadores: [] });
+      const registros: { modulo: string; bonusEscolhido: string }[] = [];
+      alvo.fixture.componentInstance.fragmentoConsumido.subscribe((r) => registros.push(r));
+
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['opcaoConsumoFragmento'].set(0); // "TESTE"
+      alvo.fixture.componentInstance['atributoConsumoFragmento'].set('intelecto');
+      alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
+
+      expect(registros).toEqual([
+        {
+          modulo: FragmentoModuloEnum.I,
+          bonusEscolhido: '+5 em todos os testes de Intelecto e +1 ponto no atributo',
+        },
+      ]);
     });
 
     it('módulo I: bônus de teste carrega concedePontoAtributo, e a descrição da sequela menciona o ponto de atributo', () => {

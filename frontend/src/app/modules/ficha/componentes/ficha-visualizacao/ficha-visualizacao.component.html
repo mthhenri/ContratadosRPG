@@ -1396,6 +1396,7 @@
             (ajusteInventarioMaximo)="ajustarInventarioMaximo($event)"
             (sequelasFragmentoConsumido)="aoConsumirFragmentoSanidade($event)"
             (bonusConsumoFragmento)="aoConsumirFragmentoBonus($event)"
+            (fragmentoConsumido)="aoRegistrarFragmentoConsumido($event)"
             (rolagemFeita)="registrarRolagem($event)"
           />
         </div>
@@ -1502,6 +1503,27 @@
               }
             } @else {
               <p class="ficha-visao__vazio">Personalidade ainda não definida.</p>
+            }
+          </div>
+
+          <div class="ficha-cartao__divisor"></div>
+
+          <!-- Fragmentos Consumidos (m3-64): rastro incondicional — existe mesmo quando o jogador
+               evita a sequela "Rejeição Biológica" com o teste de Vontade, por isso fica na própria
+               ficha (Extras), não só na descrição da sequela. -->
+          <div class="ficha-extras__secao">
+            <p class="ficha-cartao__subrotulo">Fragmentos Consumidos</p>
+            @if (fragmentosConsumidos().length > 0) {
+              <ul class="ficha-extras__lista">
+                @for (registro of fragmentosConsumidos(); track $index) {
+                  <li class="ficha-extras__linha">
+                    <span class="ficha-extras__rotulo">Módulo {{ registro.modulo }}</span>
+                    <span class="ficha-extras__valor">{{ registro.bonusEscolhido }}</span>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="ficha-visao__vazio">Nenhum fragmento consumido ainda.</p>
             }
           </div>
 

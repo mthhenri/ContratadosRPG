@@ -24,6 +24,7 @@ import {
 import type {
   FichaAtributosDto,
   FichaComboDto,
+  FichaFragmentoConsumidoDto,
   FichaHabilidadeDto,
   FichaIdentidadeDto,
   FichaInventarioDto,
@@ -446,6 +447,12 @@ export class FichaVisualizacao {
   /** Combos editados (m3-37) — a página persiste em `dados.combos`. */
   readonly ajusteCombos = output<readonly FichaComboDto[]>();
 
+  /**
+   * Histórico de Fragmentos consumidos (m3-64) — a página persiste em `dados.fragmentosConsumidos`.
+   * Emitido por `aoRegistrarFragmentoConsumido`, que prepende o novo registro à lista existente.
+   */
+  readonly ajusteFragmentosConsumidos = output<readonly FichaFragmentoConsumidoDto[]>();
+
   /** Anotações livres editadas (m3-32) — a página persiste em `dados.anotacoes`. */
   readonly ajusteAnotacoes = output<string>();
 
@@ -545,6 +552,20 @@ export class FichaVisualizacao {
     if (valor !== undefined) {
       this.ajusteDerivado.emit({ chave, valor });
     }
+  }
+
+  /** Histórico de Fragmentos consumidos (m3-64), mais recente primeiro — aba Extras, acima da Afinidade. */
+  protected readonly fragmentosConsumidos = computed<readonly FichaFragmentoConsumidoDto[]>(
+    () => this.dados().fragmentosConsumidos ?? [],
+  );
+
+  /**
+   * Registra o consumo de um fragmento na aba Extras (m3-64) — **incondicional**, ao contrário da
+   * sequela "Rejeição Biológica" (evitável com o teste de Vontade, `aoConsumirFragmentoSanidade`):
+   * este rastro nunca some.
+   */
+  protected aoRegistrarFragmentoConsumido(registro: FichaFragmentoConsumidoDto): void {
+    this.ajusteFragmentosConsumidos.emit([registro, ...this.fragmentosConsumidos()]);
   }
 
   /** Alterna uma condição (Morrendo/Machucado/Inconsciente) e emite o conjunto atualizado. */

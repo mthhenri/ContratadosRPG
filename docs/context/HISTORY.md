@@ -81,26 +81,39 @@ item some do inventário e só resta uma sequela genérica sem indicar de qual f
    relevante pro caso Módulo I) pro tipo `TESTE`, `ajusteDerivado` pros outros dois — em vez de abrir
    um canal de persistência paralelo (mesmo espírito de `aoAjustarEnergiaFragmento`/
    `aoConsumirFragmentoSanidade`, que já reusam `ajusteVitalidade`/`ajusteSanidade`).
-5. **Rastro do consumo** — `descreverConsumoFragmento` (privado, em `ficha-inventario.component.ts`;
-   deliberadamente **não** em `shared` — é formatação de texto de UI, não regra) monta a `descricao`
-   da sequela "Rejeição Biológica" com o módulo do fragmento e o bônus escolhido (ex.: `"Fragmento
-   Potencializador Módulo III consumido — +3 em Defesa"`; pro teste, inclui o nome do atributo e,
-   no Módulo I, "e +1 ponto no atributo"). Decisão da spec: reaproveitar a sequela como registro, sem
-   criar uma tabela/lista dedicada de histórico de fragmentos consumidos (ideia registrada em
-   `IDEAS.md` como upgrade futuro) — mesma lógica de "sanidade materializa-se como sequelas/traumas"
-   da `m3-42`. Quando o jogador evita a sequela com o teste de Vontade, não há sequela pra carregar a
-   descrição — aceito, é a mesma troca que a spec já fazia.
+5. **Rastro do consumo** — `textoBonusConsumoFragmento` (privado, em `ficha-inventario.component.ts`;
+   deliberadamente **não** em `shared` — é formatação de texto de UI, não regra) monta o texto do
+   bônus escolhido (ex.: `"+3 em Defesa"`; pro teste, inclui o nome do atributo e, no Módulo I, "e +1
+   ponto no atributo"). Alimenta a `descricao` da sequela "Rejeição Biológica" quando ela é gerada.
 
-**Verificação.** `shared`: 479/479 (13 testes novos — 4 em `fragmento.spec.ts` pro cardápio, 9 em
-`fragmento-consumo.spec.ts` novo pra `aplicarBonusConsumoFragmento`, cobrindo os 3 tipos, a guarda
-Civil/sem-dano-persistido e o caso Módulo I). `backend`: 170/170 (sem mudança nesta task).
-`frontend`: 659/661 — as 2 falhas são as já conhecidas e pré-existentes `P-001`/`P-010`, confirmadas
-via `git diff --stat` (nenhum arquivo delas tocado por esta task). `npx tsc --noEmit` e `eslint`
-limpos em todos os arquivos tocados (o `npm run lint --workspace=frontend` continua batendo nos 3
-erros pré-existentes e não relacionados de `P-009`, confirmados pelos números de linha nos arquivos
-certos). Os 4 testes pré-existentes do painel "Consumir" que confirmavam antes sem escolher bônus
-foram ajustados pra escolher "Defesa" antes de confirmar — comportamento antigo intencionalmente
-substituído pelo critério de aceite "exige escolher um dos 3 bônus antes de confirmar".
+**Correção pós-entrega, mesmo dia:** a 1ª versão desta task deixava o rastro **só** na `descricao`
+da sequela — e a sequela é evitável com o teste de Vontade (`m3-42`), então evitá-la também apagava
+o rastro do consumo. Rejeitado pelo autor em revisão: um registro que existe *condicionalmente* não é
+um registro. Correção: novo campo `FichaJogadorDadosDto.fragmentosConsumidos?:
+readonly FichaFragmentoConsumidoDto[]` (`shared/dtos/ficha`, `{ modulo, bonusEscolhido }`) — a aba
+**Extras**, logo **acima de "Afinidade de Fragmentos"**, ganhou a seção "Fragmentos Consumidos"
+(mais recente primeiro, lista rolável a partir de 195px, mesma filosofia de teto de
+`.ficha-status__anotacoes`). `FichaInventario` emite o novo output `fragmentoConsumido`
+**incondicionalmente** em `confirmarConsumirFragmento` (sempre, independente de
+`evitouSequelaConsumo()`) — diferente de `bonusConsumoFragmento`/`sequelasFragmentoConsumido`, que
+seguem com suas semânticas de sempre. `FichaVisualizacao.aoRegistrarFragmentoConsumido` prepende o
+registro e emite `ajusteFragmentosConsumidos`, reusando o mesmo padrão array-completo de
+`ajustarCombos`/`ajustarRolagens` (`FichaEdicaoService.ajustarFragmentosConsumidos`, novo, wireado
+em `visualizar.page.html` e `detalhe.page.html`); o merge de edição concorrente (`mesclar-ficha.ts`)
+já cobre a chave nova de graça — o reducer é genérico sobre `Object.keys`, nenhuma mudança lá. A
+`descricao` da sequela continua existindo (redundante, mas inofensiva) — o registro em Extras é que
+virou a fonte de verdade do rastro. A ideia `I-010` (`IDEAS.md`, "histórico dedicado de fragmentos
+consumidos") foi removida de "Abertas" — a correção a implementou no mesmo dia em que foi escrita.
+
+**Verificação.** `shared`: 479/479 (sem mudança de teste — o novo campo é só tipo, sem lógica nova;
+os 13 testes da entrega original seguem valendo). `backend`: 170/170 (sem mudança). `frontend`:
+663/665 — as 2 falhas são as já conhecidas e pré-existentes `P-001`/`P-010`, confirmadas via `git
+diff --stat` (nenhum arquivo delas tocado por esta task). `npx tsc --noEmit`, `eslint` e `ng build`
+(orçamento de bundle) limpos em todos os arquivos tocados — o `npm run lint --workspace=frontend`
+continua batendo só nos mesmos 3 erros pré-existentes e não relacionados de `P-009`. Os 4 testes
+pré-existentes do painel "Consumir" que confirmavam antes sem escolher bônus foram ajustados pra
+escolher "Defesa" antes de confirmar — comportamento antigo intencionalmente substituído pelo
+critério de aceite "exige escolher um dos 3 bônus antes de confirmar".
 
 ## layout-lista-edicao-atributos — lista vertical na edição de atributos (2026-08-02)
 

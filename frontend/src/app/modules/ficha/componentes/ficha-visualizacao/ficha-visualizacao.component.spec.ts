@@ -1321,6 +1321,63 @@ describe('FichaVisualizacao', () => {
       expect(fixture.componentInstance['afinidadeFragmentos']()).toBe(30);
       expect(raiz.textContent).toContain('Afinidade acima de 10: −10 de Energia no custo de fragmentos.');
     });
+
+    it('rastro de Fragmentos Consumidos aparece acima de "Afinidade de Fragmentos", mais recente primeiro (m3-64)', () => {
+      const documento = {
+        ...dados,
+        fragmentosConsumidos: [
+          { modulo: FragmentoModuloEnum.III, bonusEscolhido: '+3 em Defesa' },
+          { modulo: FragmentoModuloEnum.V, bonusEscolhido: '+2 de dano do Corpo' },
+        ],
+      };
+      const { raiz } = montarExtras(documento);
+
+      const secoes = Array.from(raiz.querySelectorAll('.ficha-extras__secao'));
+      const titulos = secoes.map((s) => s.querySelector('.ficha-cartao__subrotulo')?.textContent?.trim());
+      const indiceConsumidos = titulos.indexOf('Fragmentos Consumidos');
+      const indiceAfinidade = titulos.indexOf('Afinidade de Fragmentos');
+      expect(indiceConsumidos).toBeGreaterThanOrEqual(0);
+      expect(indiceConsumidos).toBeLessThan(indiceAfinidade);
+
+      const linhas = Array.from(secoes[indiceConsumidos].querySelectorAll('.ficha-extras__linha')).map((linha) => ({
+        rotulo: linha.querySelector('.ficha-extras__rotulo')?.textContent?.trim(),
+        valor: linha.querySelector('.ficha-extras__valor')?.textContent?.trim(),
+      }));
+      expect(linhas).toEqual([
+        { rotulo: 'Módulo III', valor: '+3 em Defesa' },
+        { rotulo: 'Módulo V', valor: '+2 de dano do Corpo' },
+      ]);
+    });
+
+    it('sem fragmentos consumidos: mensagem de vazio na seção "Fragmentos Consumidos"', () => {
+      const { raiz } = montarExtras(dados);
+      const secao = Array.from(raiz.querySelectorAll('.ficha-extras__secao')).find(
+        (s) => s.querySelector('.ficha-cartao__subrotulo')?.textContent?.trim() === 'Fragmentos Consumidos',
+      );
+      expect(secao?.textContent).toContain('Nenhum fragmento consumido ainda.');
+    });
+
+    it('aoRegistrarFragmentoConsumido prepende o novo registro à lista existente e emite ajusteFragmentosConsumidos', () => {
+      const documento = {
+        ...dados,
+        fragmentosConsumidos: [{ modulo: FragmentoModuloEnum.V, bonusEscolhido: '+1 em Defesa' }],
+      };
+      const alvo = montar(documento, 'Corvo', 42, true);
+      const ajustes: (readonly { modulo: string; bonusEscolhido: string }[])[] = [];
+      alvo.fixture.componentInstance.ajusteFragmentosConsumidos.subscribe((a) => ajustes.push(a));
+
+      alvo.fixture.componentInstance['aoRegistrarFragmentoConsumido']({
+        modulo: FragmentoModuloEnum.I,
+        bonusEscolhido: '+10 de dano do Corpo',
+      });
+
+      expect(ajustes).toEqual([
+        [
+          { modulo: FragmentoModuloEnum.I, bonusEscolhido: '+10 de dano do Corpo' },
+          { modulo: FragmentoModuloEnum.V, bonusEscolhido: '+1 em Defesa' },
+        ],
+      ]);
+    });
   });
 
   describe('navegação mobile (m3-60) — barra inferior + HUD de vitais', () => {

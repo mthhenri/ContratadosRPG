@@ -2,6 +2,7 @@ import type {
   ArquetipoEnum,
   ClasseEnum,
   FormacaoBonusEnum,
+  FragmentoModuloEnum,
   HabilidadeCategoriaEnum,
   RolagemPresetTipoEnum,
   SeveridadeLesaoEnum,
@@ -96,6 +97,19 @@ export interface FichaTraumaDto {
   readonly descricao?: string;
   /** `true` se já recebeu tratamento (penalidade reduzida). O trauma permanece na ficha. */
   readonly tratado: boolean;
+}
+
+/**
+ * Registro de um Fragmento Potencializador **consumido** (`sistema-v4.1.0.md` — "⬦ Consumo de
+ * Fragmentos"; m3-64). O consumo destrói o fragmento e não deixa mais nenhum rastro estruturado na
+ * ficha — a sequela "Rejeição Biológica" carrega o mesmo texto na `descricao`, mas só é gerada
+ * quando o jogador **não** evita o Preço de Sanidade com o teste de Vontade. Este registro é
+ * incondicional: existe sempre que um fragmento é consumido, independente da sequela.
+ */
+export interface FichaFragmentoConsumidoDto {
+  readonly modulo: FragmentoModuloEnum;
+  /** Bônus "Consumido" escolhido, já formatado (ex.: "+3 em Defesa"). Só exibição — não é regra. */
+  readonly bonusEscolhido: string;
 }
 
 /**
@@ -397,6 +411,12 @@ export interface FichaJogadorDadosDto {
    * referenciando um preset de `rolagens`. Opcional; ausente = sem combos.
    */
   readonly combos?: readonly FichaComboDto[];
+  /**
+   * Histórico de Fragmentos Potencializador **consumidos** (m3-64) — registro permanente, na aba
+   * Extras, que não depende da sequela "Rejeição Biológica" (evitável com Vontade). Mais recente
+   * primeiro. Opcional; ausente = nenhum fragmento consumido ainda.
+   */
+  readonly fragmentosConsumidos?: readonly FichaFragmentoConsumidoDto[];
   /**
    * Anotações livres do jogador/mestre sobre a ficha — visíveis e editáveis só por **dono** e
    * **mestre** (m3-51, mesmo tratamento de `historia`/m3-50); um visualizador só-acesso nunca as

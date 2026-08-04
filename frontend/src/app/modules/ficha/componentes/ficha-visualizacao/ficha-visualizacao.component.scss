@@ -1031,6 +1031,19 @@
     gap: 6px;
   }
 
+  // Histórico de Fragmentos Consumidos (m3-64) — lista que só cresce (nunca some), então rola por
+  // dentro em vez de esticar a aba indefinidamente; reset de `<ul>` pra reusar `__linha` como item.
+  &__lista {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-height: 195px;
+    overflow-y: auto;
+  }
+
   &__nota {
     font-family: var(--font-sans);
     font-size: 12px;

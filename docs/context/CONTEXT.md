@@ -45,7 +45,7 @@ Deploy em produção por **integração nativa das plataformas**, sem GitHub Act
 `master` → Render (backend) e Cloudflare Pages (frontend) puxam do Git sozinhos; banco no Supabase.
 O GitHub Actions só roda **CI** (lint + testes nos 3 workspaces em todo PR).
 
-**Suítes:** shared 479/479 · backend 170/170 · frontend 659/**661** — as 2 falhas são conhecidas e
+**Suítes:** shared 479/479 · backend 170/170 · frontend 663/**665** — as 2 falhas são conhecidas e
 pré-existentes, ver [`PROBLEMS.md`](PROBLEMS.md) `P-001`/`P-010`. `npm run lint` **não fecha limpo**
 hoje em nenhum dos dois workspaces (frontend/backend) — falhas pré-existentes não relacionadas a
 nenhuma task recente, ver `PROBLEMS.md` `P-009`.
@@ -159,9 +159,10 @@ rolada, nunca o valor exibido nem os derivados; em edição, os atributos viram 
 nome completo + steppers — em vez da grade compacta do modo leitura), vitais, sanidade e
 lesões, habilidades (com filtro e contador), inventário completo (itens, modificações,
 amplificadores, fragmentos Potencializador — "Aplicar em..." num item (`m3-35`) ou "Consumir" pro
-bônus permanente do agente (teste/Defesa/dano do Corpo, cardápio fechado por módulo, `m3-64`) —,
-sub-inventários, custom), identidade (origem, personalidade, afinidade de fragmentos), história
-privada, anotações e dinheiro. Persistência **otimista + em lote**, com
+bônus permanente do agente (teste/Defesa/dano do Corpo, cardápio fechado por módulo, `m3-64`;
+consumir sempre deixa um registro incondicional na aba Extras, acima da Afinidade — não depende da
+sequela "Rejeição Biológica", que é evitável) —, sub-inventários, custom), identidade (origem,
+personalidade, afinidade de fragmentos), história privada, anotações e dinheiro. Persistência **otimista + em lote**, com
 merge de edição concorrente — a lógica (~18 handlers `ajustar*` + progressão) mora em
 `FichaEdicaoService` (`@Injectable()` sem `providedIn: 'root'`, uma instância por página via
 `providers: []`), reusado por `VisualizarPage` (`/painel/:campanhaId/ficha/:id` e `/fichas/:id`) e

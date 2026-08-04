@@ -10,7 +10,12 @@ import {
   ItemCategoriaEnum,
   ModificacaoEfeitoTipoEnum,
 } from '@contratados-rpg/shared/enums';
-import type { FichaAtributosDto, FichaInventarioDto, FichaSequelaDto } from '@contratados-rpg/shared/dtos/ficha';
+import type {
+  FichaAtributosDto,
+  FichaFragmentoConsumidoDto,
+  FichaInventarioDto,
+  FichaSequelaDto,
+} from '@contratados-rpg/shared/dtos/ficha';
 import { ajusteInventarioAmplificadores } from '@contratados-rpg/shared/regras/agente';
 import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
 import {
@@ -456,6 +461,12 @@ export class FichaInventario {
    * aplica ao agente (teste/Defesa/dano do Corpo, via `aplicarBonusConsumoFragmento`).
    */
   readonly bonusConsumoFragmento = output<BonusConsumoFragmentoEscolhidoDto>();
+  /**
+   * Registro incondicional do consumo (m3-64) — emitido **sempre**, mesmo quando o jogador evita a
+   * sequela "Rejeição Biológica" com o teste de Vontade (a sequela é opcional; este rastro não).
+   * A página acrescenta à aba Extras, acima da Afinidade.
+   */
+  readonly fragmentoConsumido = output<FichaFragmentoConsumidoDto>();
   /** Rolagem de dano de um item (m3-45) — quem persiste o histórico é `FichaVisualizacao` (m3-27). */
   readonly rolagemFeita = output<RolagemRealizadaDto>();
 
@@ -1419,8 +1430,14 @@ export class FichaInventario {
 
     this.bonusConsumoFragmento.emit({ opcao, atributoEscolhido: opcao.tipo === 'TESTE' ? atributoEscolhido : null });
 
+    // Rastro incondicional (m3-64) — ao contrário da sequela abaixo, este registro entra sempre,
+    // mesmo quando o jogador evita "Rejeição Biológica" com o teste de Vontade. É o único lugar que
+    // garante o rastro do consumo em todo caso.
+    const bonusEscolhido = this.textoBonusConsumoFragmento(opcao, atributoEscolhido);
+    this.fragmentoConsumido.emit({ modulo: item.modulo, bonusEscolhido });
+
     if (!this.evitouSequelaConsumo()) {
-      const descricao = this.descreverConsumoFragmento(item.modulo, opcao, atributoEscolhido);
+      const descricao = `Fragmento Potencializador Módulo ${item.modulo} consumido — ${bonusEscolhido}`;
       this.sequelasFragmentoConsumido.emit(
         Array.from({ length: preco.multiplicadorSequela }, () => ({
           nome: SEQUELA_CONSUMO_FRAGMENTO,
@@ -1433,23 +1450,20 @@ export class FichaInventario {
   }
 
   /**
-   * Texto da `descricao` da sequela "Rejeição Biológica" — módulo/tipo do fragmento consumido e o
-   * bônus escolhido (m3-64), ex.: `"Fragmento Potencializador Módulo III consumido — +3 em
-   * Defesa"`. Só um detalhe de exibição — não é regra de jogo, fica na UI (`shared` cobre a tabela e
-   * o cardápio, não a formatação do texto da sequela).
+   * Texto do bônus "Consumido" escolhido (m3-64), ex.: `"+3 em Defesa"` ou, pro tipo teste, `"+5 em
+   * todos os testes de Intelecto e +1 ponto no atributo"` (Módulo I). Alimenta tanto o registro
+   * incondicional (`fragmentoConsumido`) quanto a `descricao` da sequela — só formatação de UI, não
+   * é regra de jogo (`shared` cobre a tabela e o cardápio).
    */
-  private descreverConsumoFragmento(
-    modulo: FragmentoModuloEnum,
+  private textoBonusConsumoFragmento(
     opcao: OpcaoBonusConsumoFragmentoDto,
     atributoEscolhido: keyof FichaAtributosDto | null,
   ): string {
-    const detalhe =
-      opcao.tipo === 'TESTE' && atributoEscolhido
-        ? `+${opcao.valor} em todos os testes de ${this.rotulosAtributo[atributoEscolhido]}${
-            opcao.concedePontoAtributo ? ' e +1 ponto no atributo' : ''
-          }`
-        : opcao.rotulo;
-    return `Fragmento Potencializador Módulo ${modulo} consumido — ${detalhe}`;
+    return opcao.tipo === 'TESTE' && atributoEscolhido
+      ? `+${opcao.valor} em todos os testes de ${this.rotulosAtributo[atributoEscolhido]}${
+          opcao.concedePontoAtributo ? ' e +1 ponto no atributo' : ''
+        }`
+      : opcao.rotulo;
   }
 
   /**
