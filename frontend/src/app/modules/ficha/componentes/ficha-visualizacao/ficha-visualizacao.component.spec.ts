@@ -11,7 +11,11 @@ import {
   SeveridadeLesaoEnum,
   TipoDanoEnum,
 } from '@contratados-rpg/shared/enums';
-import type { FichaJogadorDadosDto, FichaOrigemDto } from '@contratados-rpg/shared/dtos/ficha';
+import type {
+  FichaFragmentoConsumidoDto,
+  FichaJogadorDadosDto,
+  FichaOrigemDto,
+} from '@contratados-rpg/shared/dtos/ficha';
 import { calcularVida } from '@contratados-rpg/shared/regras/agente';
 import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 
@@ -1166,6 +1170,152 @@ describe('FichaVisualizacao', () => {
     });
   });
 
+  describe('remover um fragmento consumido (m3-64, correção) — desfaz bônus, Energia Máxima e devolve o item', () => {
+    function itemFragmento(modulo: FragmentoModuloEnum): CarrinhoItemDto {
+      return {
+        nome: 'Fragmento achado',
+        categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+        custo: 0,
+        peso: 0,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        modulo,
+      };
+    }
+
+    it('tipo TESTE: reverte o modificador de teste (e o +1 de atributo do Módulo I), restitui a Energia Máxima e devolve o item', () => {
+      const registro: FichaFragmentoConsumidoDto = {
+        modulo: FragmentoModuloEnum.I,
+        bonusEscolhido: '+5 em todos os testes de Intelecto e +1 ponto no atributo',
+        opcao: {
+          rotulo: '+5 em todos os testes do atributo à escolha e +1 ponto no atributo',
+          tipo: 'TESTE',
+          valor: 5,
+          concedePontoAtributo: true,
+        },
+        atributoEscolhido: 'intelecto',
+        deltaEnergiaMaxima: -40,
+        item: itemFragmento(FragmentoModuloEnum.I),
+      };
+      const documento: FichaJogadorDadosDto = {
+        ...dados,
+        modificadoresTeste: { intelecto: 5 },
+        atributos: { ...dados.atributos, intelecto: dados.atributos.intelecto + 1 },
+        estado: { ...dados.estado, energiaMaxima: 10 },
+        fragmentosConsumidos: [registro],
+      };
+      const alvo = montar(documento, 'Corvo', 42, true);
+
+      const atributosAjustes: { atributos: { intelecto: number }; modificadoresTeste: Record<string, number> }[] = [];
+      alvo.fixture.componentInstance.ajusteAtributos.subscribe((a) => atributosAjustes.push(a));
+      const vitalidadeAjustes: { campo: string; valor: number }[] = [];
+      alvo.fixture.componentInstance.ajusteVitalidade.subscribe((a) => vitalidadeAjustes.push(a));
+      const inventarioAjustes: { itens: readonly CarrinhoItemDto[] }[] = [];
+      alvo.fixture.componentInstance.ajusteInventario.subscribe((a) => inventarioAjustes.push(a));
+      const fragmentosAjustes: (readonly FichaFragmentoConsumidoDto[])[] = [];
+      alvo.fixture.componentInstance.ajusteFragmentosConsumidos.subscribe((a) => fragmentosAjustes.push(a));
+
+      alvo.fixture.componentInstance['confirmarRemocaoFragmentoConsumido'](0);
+
+      expect(atributosAjustes[0].modificadoresTeste['intelecto']).toBe(0);
+      expect(atributosAjustes[0].atributos.intelecto).toBe(dados.atributos.intelecto);
+      // Delta original foi 10 (Módulo I) − 40 = −40 pra chegar a 10; reverter soma de volta: 50.
+      expect(vitalidadeAjustes).toEqual([{ campo: 'energiaMaxima', valor: 50 }]);
+      expect(inventarioAjustes).toEqual([{ itens: [registro.item], amplificadores: [] }]);
+      expect(fragmentosAjustes).toEqual([[]]);
+    });
+
+    it('tipo DEFESA: reverte o derivado somado', () => {
+      const registro: FichaFragmentoConsumidoDto = {
+        modulo: FragmentoModuloEnum.III,
+        bonusEscolhido: '+3 em Defesa',
+        opcao: { rotulo: '+3 em Defesa', tipo: 'DEFESA', valor: 3 },
+        atributoEscolhido: null,
+        deltaEnergiaMaxima: -24,
+        item: itemFragmento(FragmentoModuloEnum.III),
+      };
+      const documento: FichaJogadorDadosDto = {
+        ...dados,
+        derivados: { defesa: 16 },
+        fragmentosConsumidos: [registro],
+      };
+      const alvo = montar(documento, 'Corvo', 42, true);
+      const derivadoAjustes: { chave: string; valor: number | string }[] = [];
+      alvo.fixture.componentInstance.ajusteDerivado.subscribe((a) => derivadoAjustes.push(a));
+
+      alvo.fixture.componentInstance['confirmarRemocaoFragmentoConsumido'](0);
+
+      expect(derivadoAjustes).toEqual([{ chave: 'defesa', valor: 13 }]);
+    });
+
+    it('tipo DANO_CORPO: reverte o fixo do dano do Corpo somado via somarDanoFixo', () => {
+      const registro: FichaFragmentoConsumidoDto = {
+        modulo: FragmentoModuloEnum.III,
+        bonusEscolhido: '+6 de dano do Corpo',
+        opcao: { rotulo: '+6 de dano do Corpo', tipo: 'DANO_CORPO', valor: 6 },
+        atributoEscolhido: null,
+        deltaEnergiaMaxima: -24,
+        item: itemFragmento(FragmentoModuloEnum.III),
+      };
+      const documento: FichaJogadorDadosDto = {
+        ...dados,
+        derivados: { danoCorpoACorpo: '1D3+6 [Físico]' },
+        fragmentosConsumidos: [registro],
+      };
+      const alvo = montar(documento, 'Corvo', 42, true);
+      const derivadoAjustes: { chave: string; valor: number | string }[] = [];
+      alvo.fixture.componentInstance.ajusteDerivado.subscribe((a) => derivadoAjustes.push(a));
+
+      alvo.fixture.componentInstance['confirmarRemocaoFragmentoConsumido'](0);
+
+      expect(derivadoAjustes).toEqual([{ chave: 'danoCorpoACorpo', valor: '1D3 [Físico]' }]);
+    });
+
+    it('remove só o registro pedido, preservando os demais (mais recente primeiro)', () => {
+      const registroA: FichaFragmentoConsumidoDto = {
+        modulo: FragmentoModuloEnum.V,
+        bonusEscolhido: '+1 em Defesa',
+        opcao: { rotulo: '+1 em Defesa', tipo: 'DEFESA', valor: 1 },
+        atributoEscolhido: null,
+        deltaEnergiaMaxima: 0,
+        item: itemFragmento(FragmentoModuloEnum.V),
+      };
+      const registroB: FichaFragmentoConsumidoDto = {
+        modulo: FragmentoModuloEnum.IV,
+        bonusEscolhido: '+2 em Defesa',
+        opcao: { rotulo: '+2 em Defesa', tipo: 'DEFESA', valor: 2 },
+        atributoEscolhido: null,
+        deltaEnergiaMaxima: 0,
+        item: itemFragmento(FragmentoModuloEnum.IV),
+      };
+      const documento: FichaJogadorDadosDto = {
+        ...dados,
+        derivados: { defesa: 13 },
+        fragmentosConsumidos: [registroA, registroB],
+      };
+      const alvo = montar(documento, 'Corvo', 42, true);
+      const fragmentosAjustes: (readonly FichaFragmentoConsumidoDto[])[] = [];
+      alvo.fixture.componentInstance.ajusteFragmentosConsumidos.subscribe((a) => fragmentosAjustes.push(a));
+
+      alvo.fixture.componentInstance['confirmarRemocaoFragmentoConsumido'](0);
+
+      expect(fragmentosAjustes).toEqual([[registroB]]);
+    });
+
+    it('índice inexistente: não emite nada', () => {
+      const alvo = montar({ ...dados, fragmentosConsumidos: [] }, 'Corvo', 42, true);
+      const emitidos: unknown[] = [];
+      alvo.fixture.componentInstance.ajusteFragmentosConsumidos.subscribe((a) => emitidos.push(a));
+      alvo.fixture.componentInstance.ajusteInventario.subscribe((a) => emitidos.push(a));
+      alvo.fixture.componentInstance.ajusteVitalidade.subscribe((a) => emitidos.push(a));
+
+      alvo.fixture.componentInstance['confirmarRemocaoFragmentoConsumido'](0);
+
+      expect(emitidos).toEqual([]);
+    });
+  });
+
   describe('Extras (m3-49) — Origem/Personalidade/afinidade de fragmentos na aba "Extras" do Status', () => {
     const origemExemplo: FichaOrigemDto = {
       nome: 'Ex-Militar',
@@ -1183,6 +1333,34 @@ describe('FichaVisualizacao', () => {
       alvo.fixture.componentRef.setInput('abaStatusInicial', 'extras');
       alvo.fixture.detectChanges();
       return alvo;
+    }
+
+    /**
+     * Registro de `fragmentosConsumidos` completo (m3-64, correção) — os campos além de
+     * `modulo`/`bonusEscolhido` só importam para os testes de remoção; aqui bastam valores válidos
+     * e reconhecíveis pra não poluir os testes de exibição/prepend que não olham pra eles.
+     */
+    function registroFragmentoConsumido(
+      modulo: FragmentoModuloEnum,
+      bonusEscolhido: string,
+    ): FichaFragmentoConsumidoDto {
+      return {
+        modulo,
+        bonusEscolhido,
+        opcao: { rotulo: bonusEscolhido, tipo: 'DEFESA', valor: 1 },
+        atributoEscolhido: null,
+        deltaEnergiaMaxima: 0,
+        item: {
+          nome: 'Fragmento achado',
+          categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+          custo: 0,
+          peso: 0,
+          quantidade: 1,
+          guardada: false,
+          modificacoes: [],
+          modulo,
+        },
+      };
     }
 
     it('mostra nome/descrição/Saber de Campo/Especialidade/Formação da Origem definida', () => {
@@ -1326,8 +1504,8 @@ describe('FichaVisualizacao', () => {
       const documento = {
         ...dados,
         fragmentosConsumidos: [
-          { modulo: FragmentoModuloEnum.III, bonusEscolhido: '+3 em Defesa' },
-          { modulo: FragmentoModuloEnum.V, bonusEscolhido: '+2 de dano do Corpo' },
+          registroFragmentoConsumido(FragmentoModuloEnum.III, '+3 em Defesa'),
+          registroFragmentoConsumido(FragmentoModuloEnum.V, '+2 de dano do Corpo'),
         ],
       };
       const { raiz } = montarExtras(documento);
@@ -1358,25 +1536,68 @@ describe('FichaVisualizacao', () => {
     });
 
     it('aoRegistrarFragmentoConsumido prepende o novo registro à lista existente e emite ajusteFragmentosConsumidos', () => {
-      const documento = {
-        ...dados,
-        fragmentosConsumidos: [{ modulo: FragmentoModuloEnum.V, bonusEscolhido: '+1 em Defesa' }],
-      };
+      const registroExistente = registroFragmentoConsumido(FragmentoModuloEnum.V, '+1 em Defesa');
+      const documento = { ...dados, fragmentosConsumidos: [registroExistente] };
       const alvo = montar(documento, 'Corvo', 42, true);
-      const ajustes: (readonly { modulo: string; bonusEscolhido: string }[])[] = [];
+      const ajustes: (readonly FichaFragmentoConsumidoDto[])[] = [];
       alvo.fixture.componentInstance.ajusteFragmentosConsumidos.subscribe((a) => ajustes.push(a));
 
-      alvo.fixture.componentInstance['aoRegistrarFragmentoConsumido']({
-        modulo: FragmentoModuloEnum.I,
-        bonusEscolhido: '+10 de dano do Corpo',
-      });
+      const registroNovo = registroFragmentoConsumido(FragmentoModuloEnum.I, '+10 de dano do Corpo');
+      alvo.fixture.componentInstance['aoRegistrarFragmentoConsumido'](registroNovo);
 
-      expect(ajustes).toEqual([
-        [
-          { modulo: FragmentoModuloEnum.I, bonusEscolhido: '+10 de dano do Corpo' },
-          { modulo: FragmentoModuloEnum.V, bonusEscolhido: '+1 em Defesa' },
-        ],
-      ]);
+      expect(ajustes).toEqual([[registroNovo, registroExistente]]);
+    });
+
+    it('visualizador (não ajustável): sem botão de remover no registro', () => {
+      const registro = registroFragmentoConsumido(FragmentoModuloEnum.V, '+1 em Defesa');
+      const { raiz } = montarExtras({ ...dados, fragmentosConsumidos: [registro] });
+      expect(raiz.querySelector('.ficha-extras__mini-btn')).toBeNull();
+    });
+
+    it('dono/mestre: botão ✕ abre a confirmação "Remover?"; cancelar fecha sem remover; confirmar retira a linha', () => {
+      const registro = registroFragmentoConsumido(FragmentoModuloEnum.V, '+1 em Defesa');
+      const alvo = montar({ ...dados, fragmentosConsumidos: [registro] }, 'Corvo', 42, true);
+      alvo.fixture.componentRef.setInput('abaStatusInicial', 'extras');
+      alvo.fixture.detectChanges();
+      const secao = () =>
+        Array.from(alvo.raiz.querySelectorAll('.ficha-extras__secao')).find(
+          (s) => s.querySelector('.ficha-cartao__subrotulo')?.textContent?.trim() === 'Fragmentos Consumidos',
+        )!;
+      const linha = () => secao().querySelector('.ficha-extras__linha') as HTMLElement;
+
+      const ajustes: (readonly FichaFragmentoConsumidoDto[])[] = [];
+      alvo.fixture.componentInstance.ajusteFragmentosConsumidos.subscribe((a) => ajustes.push(a));
+
+      const botaoRemover = () =>
+        Array.from(linha().querySelectorAll('.ficha-extras__mini-btn')).find(
+          (b) => b.getAttribute('aria-label') === 'Remover fragmento consumido',
+        ) as HTMLButtonElement | undefined;
+      expect(botaoRemover()).toBeDefined();
+      botaoRemover()!.click();
+      alvo.fixture.detectChanges();
+      expect(linha().textContent).toContain('Remover?');
+
+      const botaoCancelar = () =>
+        Array.from(linha().querySelectorAll('.ficha-extras__mini-btn')).find(
+          (b) => b.getAttribute('aria-label') === 'Cancelar remoção do fragmento consumido',
+        ) as HTMLButtonElement;
+      botaoCancelar().click();
+      alvo.fixture.detectChanges();
+      expect(linha().textContent).not.toContain('Remover?');
+      expect(ajustes).toEqual([]);
+
+      botaoRemover()!.click();
+      alvo.fixture.detectChanges();
+      const botaoConfirmar = () =>
+        Array.from(linha().querySelectorAll('.ficha-extras__mini-btn')).find(
+          (b) => b.getAttribute('aria-label') === 'Confirmar remoção do fragmento consumido',
+        ) as HTMLButtonElement;
+      botaoConfirmar().click();
+      alvo.fixture.detectChanges();
+
+      // Componente controlado (m3-10): o próprio `dados()` só muda quando o hospedeiro re-emite o
+      // input após persistir — aqui só cabe conferir o que foi emitido, não o DOM pós-emissão.
+      expect(ajustes).toEqual([[]]);
     });
   });
 

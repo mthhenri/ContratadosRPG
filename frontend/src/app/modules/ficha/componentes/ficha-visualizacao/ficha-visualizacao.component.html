@@ -1510,7 +1510,9 @@
 
           <!-- Fragmentos Consumidos (m3-64): rastro incondicional — existe mesmo quando o jogador
                evita a sequela "Rejeição Biológica" com o teste de Vontade, por isso fica na própria
-               ficha (Extras), não só na descrição da sequela. -->
+               ficha (Extras), não só na descrição da sequela. Removível (m3-64, correção): desfaz o
+               bônus, a Energia Máxima e devolve o item ao inventário — mesmo padrão de confirmação
+               inline de combos/sequelas/traumas/lesões. -->
           <div class="ficha-extras__secao">
             <p class="ficha-cartao__subrotulo">Fragmentos Consumidos</p>
             @if (fragmentosConsumidos().length > 0) {
@@ -1519,6 +1521,43 @@
                   <li class="ficha-extras__linha">
                     <span class="ficha-extras__rotulo">Módulo {{ registro.modulo }}</span>
                     <span class="ficha-extras__valor">{{ registro.bonusEscolhido }}</span>
+                    @if (ajustavel()) {
+                      @if (removendoFragmentoConsumidoIndice() === $index) {
+                        <span class="ficha-extras__acoes">
+                          <span class="ficha-extras__remover-texto">Remover?</span>
+                          <button
+                            type="button"
+                            class="ficha-extras__mini-btn ficha-extras__mini-btn--perigo"
+                            [appTooltip]="'Confirmar — desfaz o bônus, a Energia Máxima e devolve o item'"
+                            aria-label="Confirmar remoção do fragmento consumido"
+                            (click)="confirmarRemocaoFragmentoConsumido($index)"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            type="button"
+                            class="ficha-extras__mini-btn"
+                            [appTooltip]="'Cancelar'"
+                            aria-label="Cancelar remoção do fragmento consumido"
+                            (click)="cancelarRemocaoFragmentoConsumido()"
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      } @else {
+                        <span class="ficha-extras__acoes">
+                          <button
+                            type="button"
+                            class="ficha-extras__mini-btn"
+                            [appTooltip]="'Remover — desfaz o bônus, a Energia Máxima e devolve o item ao inventário'"
+                            aria-label="Remover fragmento consumido"
+                            (click)="pedirRemocaoFragmentoConsumido($index)"
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      }
+                    }
                   </li>
                 }
               </ul>

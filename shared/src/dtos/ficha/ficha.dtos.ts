@@ -8,7 +8,7 @@ import type {
   SeveridadeLesaoEnum,
   TipoDanoEnum,
 } from '../../enums';
-import type { AmplificadorAplicadoDto, CarrinhoItemDto } from '../../regras/compras';
+import type { AmplificadorAplicadoDto, CarrinhoItemDto, OpcaoBonusConsumoFragmentoDto } from '../../regras/compras';
 import type { FichaComboDto } from './ficha-combo.dtos';
 
 /**
@@ -101,15 +101,29 @@ export interface FichaTraumaDto {
 
 /**
  * Registro de um Fragmento Potencializador **consumido** (`sistema-v4.1.0.md` — "⬦ Consumo de
- * Fragmentos"; m3-64). O consumo destrói o fragmento e não deixa mais nenhum rastro estruturado na
- * ficha — a sequela "Rejeição Biológica" carrega o mesmo texto na `descricao`, mas só é gerada
- * quando o jogador **não** evita o Preço de Sanidade com o teste de Vontade. Este registro é
+ * Fragmentos"; m3-64). A sequela "Rejeição Biológica" carrega o mesmo texto na `descricao`, mas só é
+ * gerada quando o jogador **não** evita o Preço de Sanidade com o teste de Vontade. Este registro é
  * incondicional: existe sempre que um fragmento é consumido, independente da sequela.
+ *
+ * Guarda também o suficiente para **reverter** o consumo (m3-64, correção — "remover um fragmento
+ * consumido"): o bônus estruturado (`opcao`/`atributoEscolhido`, entrada de
+ * `reverterBonusConsumoFragmento`), o delta de Energia Máxima que o consumo aplicou
+ * (`custoAquisicao - energiaMaximaExtra` do Preço de Sanidade) e o próprio item removido do
+ * inventário, para devolvê-lo. Sem isso o registro seria só um texto de exibição, incapaz de desfazer
+ * o que descreve.
  */
 export interface FichaFragmentoConsumidoDto {
   readonly modulo: FragmentoModuloEnum;
   /** Bônus "Consumido" escolhido, já formatado (ex.: "+3 em Defesa"). Só exibição — não é regra. */
   readonly bonusEscolhido: string;
+  /** Opção estruturada escolhida — entrada de `reverterBonusConsumoFragmento` ao remover o registro. */
+  readonly opcao: OpcaoBonusConsumoFragmentoDto;
+  /** Atributo-alvo quando `opcao.tipo === 'TESTE'`; `null` nos demais tipos. */
+  readonly atributoEscolhido: keyof FichaAtributosDto | null;
+  /** Delta de Energia Máxima que o consumo aplicou (pode ser negativo) — subtraído ao reverter. */
+  readonly deltaEnergiaMaxima: number;
+  /** Snapshot do item de fragmento removido do inventário ao consumir — devolvido ao reverter. */
+  readonly item: CarrinhoItemDto;
 }
 
 /**

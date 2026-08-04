@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import type { FichaAtributosDto, FichaDerivadosDto } from '../../dtos/ficha';
 import { FragmentoModuloEnum } from '../../enums';
 import { listarBonusConsumoFragmentoPotencializador } from '../compras';
-import { aplicarBonusConsumoFragmento, type EfeitoConsumoFragmentoDto } from './fragmento-consumo';
+import {
+  aplicarBonusConsumoFragmento,
+  reverterBonusConsumoFragmento,
+  type EfeitoConsumoFragmentoDto,
+} from './fragmento-consumo';
 
 /**
  * `aplicarBonusConsumoFragmento` conferida contra `docs/core/sistema-v4.1.0.md` — "⬦
@@ -102,5 +106,45 @@ describe('aplicarBonusConsumoFragmento — TESTE', () => {
     const resultado = aplicarBonusConsumoFragmento(agente(), opcao, 'intelecto');
     expect(resultado.atributos.intelecto).toBe(2);
     expect(resultado.modificadoresTeste).toEqual({ intelecto: 5 });
+  });
+});
+
+describe('reverterBonusConsumoFragmento (m3-64, correção — remover um fragmento consumido)', () => {
+  it('DEFESA: subtrai de volta exatamente o que aplicarBonusConsumoFragmento somou', () => {
+    const opcao = listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.III)[1];
+    const aplicado = aplicarBonusConsumoFragmento(agente(), opcao, null);
+    const revertido = reverterBonusConsumoFragmento(aplicado, opcao, null);
+    expect(revertido).toEqual(agente());
+  });
+
+  it('DANO_CORPO: desfaz o fixo somado via somarDanoFixo', () => {
+    const opcao = listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.III)[2];
+    const aplicado = aplicarBonusConsumoFragmento(agente(), opcao, null);
+    const revertido = reverterBonusConsumoFragmento(aplicado, opcao, null);
+    expect(revertido.derivados.danoCorpoACorpo).toBe('1D3 [Físico]');
+  });
+
+  it('TESTE: subtrai o modificador de teste somado', () => {
+    const opcao = listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.III)[0];
+    const aplicado = aplicarBonusConsumoFragmento(agente(), opcao, 'destreza');
+    const revertido = reverterBonusConsumoFragmento(aplicado, opcao, 'destreza');
+    expect(revertido.modificadoresTeste).toEqual({ destreza: 0 });
+    expect(revertido.atributos).toBe(ATRIBUTOS);
+  });
+
+  it('TESTE módulo I: também desfaz o +1 ponto de atributo concedido', () => {
+    const opcao = listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.I)[0];
+    const aplicado = aplicarBonusConsumoFragmento(agente(), opcao, 'vontade');
+    const revertido = reverterBonusConsumoFragmento(aplicado, opcao, 'vontade');
+    expect(revertido.atributos.vontade).toBe(2);
+    expect(revertido.modificadoresTeste).toEqual({ vontade: 0 });
+  });
+
+  it('preserva um modificador de teste pré-existente ao reverter só o delta do fragmento', () => {
+    const opcao = listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.III)[0];
+    const comModificadorPrevio = { ...agente(), modificadoresTeste: { destreza: 1 } };
+    const aplicado = aplicarBonusConsumoFragmento(comModificadorPrevio, opcao, 'destreza');
+    const revertido = reverterBonusConsumoFragmento(aplicado, opcao, 'destreza');
+    expect(revertido.modificadoresTeste).toEqual({ destreza: 1 });
   });
 });

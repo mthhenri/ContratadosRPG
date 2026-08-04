@@ -49,12 +49,15 @@ import {
   calcularVida,
   maestriaAtingivel,
   obterLimitesClasse,
+  reverterBonusConsumoFragmento,
   somarLesoesAtributo,
+  type EfeitoConsumoFragmentoDto,
 } from '@contratados-rpg/shared/regras/agente';
 import {
   calcularAfinidade,
   listarModulosFragmentosPortados,
   reducaoCustoPorAfinidade,
+  type OpcaoBonusConsumoFragmentoDto,
 } from '@contratados-rpg/shared/regras/compras';
 import { calcularDtAtributo } from '@contratados-rpg/shared/regras/dt';
 import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
@@ -535,8 +538,21 @@ export class FichaVisualizacao {
       efeito.opcao,
       efeito.atributoEscolhido,
     );
+    this.emitirEfeitoBonusFragmento(efeito.opcao, resultado);
+  }
 
-    if (efeito.opcao.tipo === 'TESTE') {
+  /**
+   * Traduz o `resultado` (de `aplicarBonusConsumoFragmento`/`reverterBonusConsumoFragmento`) nos
+   * canais de persistência de edição manual já existentes (`ajusteAtributos`/`ajusteDerivado`,
+   * m3-10) — compartilhado entre aplicar (`aoConsumirFragmentoBonus`) e reverter
+   * (`removerFragmentoConsumido`, m3-64 correção), já que os dois só diferem no sinal do delta.
+   */
+  private emitirEfeitoBonusFragmento(
+    opcao: OpcaoBonusConsumoFragmentoDto,
+    resultado: EfeitoConsumoFragmentoDto,
+  ): void {
+    const dados = this.dados();
+    if (opcao.tipo === 'TESTE') {
       const modificadoresTeste = {} as Record<keyof FichaAtributosDto, number>;
       const dadosTeste = {} as Record<keyof FichaAtributosDto, number>;
       (Object.keys(dados.atributos) as (keyof FichaAtributosDto)[]).forEach((chave) => {
@@ -547,7 +563,7 @@ export class FichaVisualizacao {
       return;
     }
 
-    const chave = efeito.opcao.tipo === 'DEFESA' ? 'defesa' : 'danoCorpoACorpo';
+    const chave = opcao.tipo === 'DEFESA' ? 'defesa' : 'danoCorpoACorpo';
     const valor = resultado.derivados[chave];
     if (valor !== undefined) {
       this.ajusteDerivado.emit({ chave, valor });
@@ -566,6 +582,56 @@ export class FichaVisualizacao {
    */
   protected aoRegistrarFragmentoConsumido(registro: FichaFragmentoConsumidoDto): void {
     this.ajusteFragmentosConsumidos.emit([registro, ...this.fragmentosConsumidos()]);
+  }
+
+  /** Índice do registro de `fragmentosConsumidos` com a confirmação "Remover?" aberta, ou `null`. */
+  protected readonly removendoFragmentoConsumidoIndice = signal<number | null>(null);
+
+  /** Abre a confirmação inline de remoção de um registro (mesmo padrão de combos/sequelas/traumas/lesões). */
+  protected pedirRemocaoFragmentoConsumido(indice: number): void {
+    this.removendoFragmentoConsumidoIndice.set(indice);
+  }
+
+  /** Fecha a confirmação inline sem remover nada. */
+  protected cancelarRemocaoFragmentoConsumido(): void {
+    this.removendoFragmentoConsumidoIndice.set(null);
+  }
+
+  /**
+   * Remove um registro de `fragmentosConsumidos` (m3-64, correção — "eu posso remover um fragmento
+   * consumido também, isso tem que ser possível") e desfaz **tudo** que o consumo aplicou: o bônus no
+   * agente (`reverterBonusConsumoFragmento`, sinal oposto de `aplicarBonusConsumoFragmento`), o
+   * delta de Energia Máxima (restituição da aquisição − Preço de Sanidade físico) e devolve o item ao
+   * inventário avulso. A(s) sequela(s) "Rejeição Biológica" eventualmente geradas **não** são
+   * tocadas — ficam sob o mesmo controle manual de qualquer outra sequela (painel de Sanidade).
+   */
+  protected confirmarRemocaoFragmentoConsumido(indice: number): void {
+    const registro = this.fragmentosConsumidos()[indice];
+    this.removendoFragmentoConsumidoIndice.set(null);
+    if (!registro) {
+      return;
+    }
+
+    const dados = this.dados();
+    const resultado = reverterBonusConsumoFragmento(
+      {
+        atributos: dados.atributos,
+        derivados: dados.derivados ?? {},
+        modificadoresTeste: dados.modificadoresTeste ?? {},
+      },
+      registro.opcao,
+      registro.atributoEscolhido,
+    );
+    this.emitirEfeitoBonusFragmento(registro.opcao, resultado);
+
+    this.ajusteVitalidade.emit({
+      campo: 'energiaMaxima',
+      valor: this.energiaMaxima() - registro.deltaEnergiaMaxima,
+    });
+
+    this.ajusteInventario.emit({ ...dados.inventario, itens: [...dados.inventario.itens, registro.item] });
+
+    this.ajusteFragmentosConsumidos.emit(this.fragmentosConsumidos().filter((_, i) => i !== indice));
   }
 
   /** Alterna uma condição (Morrendo/Machucado/Inconsciente) e emite o conjunto atualizado. */

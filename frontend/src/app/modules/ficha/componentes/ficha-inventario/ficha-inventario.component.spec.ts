@@ -8,7 +8,11 @@ import {
   ItemCategoriaEnum,
   ModificacaoEfeitoTipoEnum,
 } from '@contratados-rpg/shared/enums';
-import type { FichaAtributosDto, FichaInventarioDto } from '@contratados-rpg/shared/dtos/ficha';
+import type {
+  FichaAtributosDto,
+  FichaFragmentoConsumidoDto,
+  FichaInventarioDto,
+} from '@contratados-rpg/shared/dtos/ficha';
 import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
@@ -874,7 +878,7 @@ describe('FichaInventario', () => {
       alvo.fixture.componentInstance.sequelasFragmentoConsumido.subscribe((s) => sequelas.push(s));
       const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
       alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
-      const registros: { modulo: string; bonusEscolhido: string }[] = [];
+      const registros: FichaFragmentoConsumidoDto[] = [];
       alvo.fixture.componentInstance.fragmentoConsumido.subscribe((r) => registros.push(r));
 
       alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
@@ -884,8 +888,19 @@ describe('FichaInventario', () => {
 
       expect(sequelas).toEqual([]);
       expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 26 }]);
-      // O rastro do consumo (m3-64) é incondicional — evitar a sequela não apaga o registro.
-      expect(registros).toEqual([{ modulo: FragmentoModuloEnum.III, bonusEscolhido: '+3 em Defesa' }]);
+      // O rastro do consumo (m3-64) é incondicional — evitar a sequela não apaga o registro. Carrega
+      // também o suficiente para reverter (m3-64, correção): opção, atributo, delta de Energia
+      // Máxima (26 − 50 = −24, mesma conta do teste de `ajusteEnergiaFragmento` acima) e o item.
+      expect(registros).toEqual([
+        {
+          modulo: FragmentoModuloEnum.III,
+          bonusEscolhido: '+3 em Defesa',
+          opcao: { rotulo: '+3 em Defesa', tipo: 'DEFESA', valor: 3 },
+          atributoEscolhido: null,
+          deltaEnergiaMaxima: -24,
+          item: fragmento(FragmentoModuloEnum.III),
+        },
+      ]);
     });
 
     it('cancelar fecha o painel sem alterar o inventário nem emitir nada', () => {
@@ -966,7 +981,7 @@ describe('FichaInventario', () => {
 
     it('emite fragmentoConsumido incondicionalmente, com o módulo e o texto do bônus escolhido (m3-64)', () => {
       const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.I)], amplificadores: [] });
-      const registros: { modulo: string; bonusEscolhido: string }[] = [];
+      const registros: FichaFragmentoConsumidoDto[] = [];
       alvo.fixture.componentInstance.fragmentoConsumido.subscribe((r) => registros.push(r));
 
       alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
@@ -974,10 +989,20 @@ describe('FichaInventario', () => {
       alvo.fixture.componentInstance['atributoConsumoFragmento'].set('intelecto');
       alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
 
+      // Módulo I: aquisição custava 20 (restituídos); preço físico extra = 20 × 3 = 60 → delta −40.
       expect(registros).toEqual([
         {
           modulo: FragmentoModuloEnum.I,
           bonusEscolhido: '+5 em todos os testes de Intelecto e +1 ponto no atributo',
+          opcao: {
+            rotulo: '+5 em todos os testes do atributo à escolha e +1 ponto no atributo',
+            tipo: 'TESTE',
+            valor: 5,
+            concedePontoAtributo: true,
+          },
+          atributoEscolhido: 'intelecto',
+          deltaEnergiaMaxima: -40,
+          item: fragmento(FragmentoModuloEnum.I),
         },
       ]);
     });

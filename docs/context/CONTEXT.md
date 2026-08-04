@@ -45,7 +45,7 @@ Deploy em produção por **integração nativa das plataformas**, sem GitHub Act
 `master` → Render (backend) e Cloudflare Pages (frontend) puxam do Git sozinhos; banco no Supabase.
 O GitHub Actions só roda **CI** (lint + testes nos 3 workspaces em todo PR).
 
-**Suítes:** shared 479/479 · backend 170/170 · frontend 663/**665** — as 2 falhas são conhecidas e
+**Suítes:** shared 484/484 · backend 170/170 · frontend 670/**672** — as 2 falhas são conhecidas e
 pré-existentes, ver [`PROBLEMS.md`](PROBLEMS.md) `P-001`/`P-010`. `npm run lint` **não fecha limpo**
 hoje em nenhum dos dois workspaces (frontend/backend) — falhas pré-existentes não relacionadas a
 nenhuma task recente, ver `PROBLEMS.md` `P-009`.
@@ -161,7 +161,8 @@ lesões, habilidades (com filtro e contador), inventário completo (itens, modif
 amplificadores, fragmentos Potencializador — "Aplicar em..." num item (`m3-35`) ou "Consumir" pro
 bônus permanente do agente (teste/Defesa/dano do Corpo, cardápio fechado por módulo, `m3-64`;
 consumir sempre deixa um registro incondicional na aba Extras, acima da Afinidade — não depende da
-sequela "Rejeição Biológica", que é evitável) —, sub-inventários, custom), identidade (origem,
+sequela "Rejeição Biológica", que é evitável — e é **removível**: desfaz o bônus, a Energia Máxima e
+devolve o item ao inventário, mas não mexe na sequela já gerada) —, sub-inventários, custom), identidade (origem,
 personalidade, afinidade de fragmentos), história privada, anotações e dinheiro. Persistência **otimista + em lote**, com
 merge de edição concorrente — a lógica (~18 handlers `ajustar*` + progressão) mora em
 `FichaEdicaoService` (`@Injectable()` sem `providedIn: 'root'`, uma instância por página via

@@ -1401,8 +1401,8 @@ export class FichaInventario {
    * da aquisição (doc — "⬥ Módulos": "esse gasto cessa ao remover o fragmento de seu inventário") e
    * debita o Preço de Sanidade — preço físico (Energia Máxima extra, sempre) e mental (sequela
    * "Rejeição Biológica" × multiplicador, só se o jogador não evitou com Vontade). A sequela, quando
-   * emitida, carrega o módulo/tipo do fragmento e o bônus escolhido na `descricao` (m3-64) — não há
-   * histórico dedicado de fragmentos consumidos, ela é o registro.
+   * emitida, carrega o módulo/tipo do fragmento e o bônus escolhido na `descricao` (m3-64). O
+   * histórico dedicado (`dados.fragmentosConsumidos`, `fragmentoConsumido`) é incondicional e reversível.
    */
   protected confirmarConsumirFragmento(fragmentoIndice: number): void {
     const itensAntes = this.inventario().itens;
@@ -1432,9 +1432,18 @@ export class FichaInventario {
 
     // Rastro incondicional (m3-64) — ao contrário da sequela abaixo, este registro entra sempre,
     // mesmo quando o jogador evita "Rejeição Biológica" com o teste de Vontade. É o único lugar que
-    // garante o rastro do consumo em todo caso.
+    // garante o rastro do consumo em todo caso. Carrega também o suficiente para reverter o consumo
+    // (m3-64, correção — "remover um fragmento consumido"): a opção estruturada, o delta de Energia
+    // Máxima que este consumo aplicou e o próprio item, para devolvê-lo ao inventário.
     const bonusEscolhido = this.textoBonusConsumoFragmento(opcao, atributoEscolhido);
-    this.fragmentoConsumido.emit({ modulo: item.modulo, bonusEscolhido });
+    this.fragmentoConsumido.emit({
+      modulo: item.modulo,
+      bonusEscolhido,
+      opcao,
+      atributoEscolhido: opcao.tipo === 'TESTE' ? atributoEscolhido : null,
+      deltaEnergiaMaxima: custoAquisicao - preco.energiaMaximaExtra,
+      item,
+    });
 
     if (!this.evitouSequelaConsumo()) {
       const descricao = `Fragmento Potencializador Módulo ${item.modulo} consumido — ${bonusEscolhido}`;

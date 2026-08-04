@@ -105,15 +105,38 @@ já cobre a chave nova de graça — o reducer é genérico sobre `Object.keys`,
 virou a fonte de verdade do rastro. A ideia `I-010` (`IDEAS.md`, "histórico dedicado de fragmentos
 consumidos") foi removida de "Abertas" — a correção a implementou no mesmo dia em que foi escrita.
 
-**Verificação.** `shared`: 479/479 (sem mudança de teste — o novo campo é só tipo, sem lógica nova;
-os 13 testes da entrega original seguem valendo). `backend`: 170/170 (sem mudança). `frontend`:
-663/665 — as 2 falhas são as já conhecidas e pré-existentes `P-001`/`P-010`, confirmadas via `git
-diff --stat` (nenhum arquivo delas tocado por esta task). `npx tsc --noEmit`, `eslint` e `ng build`
-(orçamento de bundle) limpos em todos os arquivos tocados — o `npm run lint --workspace=frontend`
-continua batendo só nos mesmos 3 erros pré-existentes e não relacionados de `P-009`. Os 4 testes
-pré-existentes do painel "Consumir" que confirmavam antes sem escolher bônus foram ajustados pra
-escolher "Defesa" antes de confirmar — comportamento antigo intencionalmente substituído pelo
-critério de aceite "exige escolher um dos 3 bônus antes de confirmar".
+**2ª correção pós-entrega, mesmo dia:** o registro de "Fragmentos Consumidos" era só exibição —
+uma vez lançado, ficava preso na ficha para sempre. Pedido do autor: "eu posso remover um fragmento
+consumido também, isso tem que ser possível" — e, esclarecido em seguida, remover não é só apagar a
+linha: tem que **desfazer o consumo por inteiro** (bônus no agente, Energia Máxima e devolução do
+item ao inventário), mas **sem** mexer na(s) sequela(s) "Rejeição Biológica" já geradas (essas
+continuam sob o controle manual de sempre, painel de Sanidade). `FichaFragmentoConsumidoDto` ganhou
+os campos que faltavam pra isso ser possível — `opcao` (a `OpcaoBonusConsumoFragmentoDto` estruturada,
+não só o texto), `atributoEscolhido`, `deltaEnergiaMaxima` (o delta que o consumo aplicou à Energia
+Máxima: restituição da aquisição − Preço de Sanidade físico) e `item` (o snapshot do próprio
+fragmento removido do inventário) — sem isso o registro seria incapaz de desfazer o que descreve.
+`aplicarBonusConsumoFragmento` (`shared/regras/agente/fragmento-consumo.ts`) ganhou um parâmetro
+`sinal: 1 | -1 = 1` e uma nova `reverterBonusConsumoFragmento` (`sinal: -1`) — mesmo padrão de
+`aplicarFormacaoAosDerivados`/`removerFormacaoDosDerivados` (`identidade/formacoes.ts`, m3-23), só
+generalizado aqui pro Consumo de Fragmentos. `FichaInventario` passou a emitir o registro completo
+em `confirmarConsumirFragmento` (antes só `{ modulo, bonusEscolhido }`). `FichaVisualizacao` ganhou
+`confirmarRemocaoFragmentoConsumido` (com confirmação inline `pedirRemocaoFragmentoConsumido`/
+`cancelarRemocaoFragmentoConsumido` — mesmo padrão ✕→"Remover?"→✓/✕ de `ficha-combos`): reverte o
+bônus (reusando `ajusteAtributos`/`ajusteDerivado` via um helper `emitirEfeitoBonusFragmento`
+extraído de `aoConsumirFragmentoBonus`, já que aplicar/reverter só diferem no sinal do delta), reverte
+`estado.energiaMaxima` (`ajusteVitalidade`) e devolve o item ao array de `inventario.itens`
+(`ajusteInventario`) — três canais de persistência **já existentes**, nenhum novo. O botão "Remover"
+só aparece com `ajustavel()` (dono/mestre), mesma trava do resto da aba Extras.
+
+**Verificação.** `shared`: 484/484 (479 da entrega original + 5 novos testes de
+`reverterBonusConsumoFragmento`). `backend`: 170/170 (sem mudança — nada em `backend/` referencia
+`FichaFragmentoConsumidoDto`). `frontend`: 670/672 — as 2 falhas são as já conhecidas e
+pré-existentes `P-001`/`P-010`, confirmadas via `git diff --stat` (nenhum arquivo delas tocado por
+esta task). `npx tsc --noEmit`, `eslint` e `ng build` (orçamento de bundle) limpos em todos os
+arquivos tocados — `npm run lint --workspace=frontend` continua batendo só nos mesmos 3 erros
+pré-existentes e não relacionados de `P-009`. Testes pré-existentes que montavam
+`FichaFragmentoConsumidoDto` com o shape antigo (`{ modulo, bonusEscolhido }`) foram atualizados pro
+shape novo — comportamento antigo intencionalmente estendido, não um regression fix.
 
 ## layout-lista-edicao-atributos — lista vertical na edição de atributos (2026-08-02)
 
