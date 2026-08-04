@@ -8,9 +8,11 @@ import {
   BONUS_CONSUMIDO,
   BONUS_POTENCIALIZADOR,
   CUSTO_ENERGIA_MAXIMA_MODULO,
+  MULTIPLICADOR_MAIOR_DADO_MODULO,
   VALOR_AFINIDADE_MODULO,
 } from './fragmento.dados';
-import { CarrinhoItemDto, ModificacaoEfeitoDto } from './compras.dtos';
+import { resolverDadosItem } from './compras';
+import { CarrinhoItemDto, ModificacaoAplicadaDto, ModificacaoEfeitoDto } from './compras.dtos';
 
 /**
  * Custos de Energia, Afinidade e Preço de Sanidade dos Fragmentos (m3-35/m3-42) — funções puras
@@ -48,6 +50,23 @@ export function custoRemoverFragmento(modulo: FragmentoModuloEnum): number {
   return CUSTO_ENERGIA_MAXIMA_MODULO[modulo] * 2;
 }
 
+/**
+ * Maior tipo de dado (faces) do campo `dano` (string livre, ex.: `"2D8+3"`, `"1D6+1D8 [Físico]"`)
+ * de um item de inventário — primitiva da 5ª opção do cardápio do Potencializador, "N× valor
+ * máximo do maior tipo de dado" (doc — tabela "⬦ Potencializador"; `m3-63`). Resolve o `dano` tanto
+ * de um item do catálogo quanto de um item custom (via `resolverDadosItem`, mesma fonte de
+ * `calcularStatItem`). Casa toda ocorrência `D<n>` no texto e devolve a maior; `null` quando o item
+ * não tem dado algum no campo (ausente ou notação sem nenhum `D<n>`, ex.: `"— (fumaça)"`).
+ */
+export function maiorDadoItem(item: CarrinhoItemDto): number | null {
+  const dano = resolverDadosItem(item)?.dano;
+  if (!dano) {
+    return null;
+  }
+  const faces = [...dano.matchAll(/D(\d+)/gi)].map((correspondencia) => Number(correspondencia[1]));
+  return faces.length > 0 ? Math.max(...faces) : null;
+}
+
 /** Uma opção selecionável do cardápio de bônus "em um item" do Potencializador. */
 export interface OpcaoBonusFragmentoDto {
   readonly rotulo: string;
@@ -59,16 +78,32 @@ export interface OpcaoBonusFragmentoDto {
  * UMA opção ao aplicar (doc — "⬦ Potencializador", tabela). Mapeado aos `ModificacaoEfeitoTipoEnum`
  * já existentes (`DANO_DADOS_BASE`/`BONUS_TESTE`/`DANO_FIXO`/`RESISTENCIA`) — zero motor novo em
  * `calcularStatItem`, que já soma esses tipos vindos de qualquer modificação custom.
+ *
+ * `maiorDado` (faces do maior dado do **alvo** já escolhido, `maiorDadoItem` — `m3-63`) liga a 5ª
+ * opção da tabela, "N× valor máximo do maior tipo de dado" ao dano (mesmo `DANO_FIXO` da opção "de
+ * dano (efeito)", só que o valor vem de `multiplicador × faces` em vez do `valorFixo` do módulo):
+ * `null` (nenhum alvo escolhido ainda, ou alvo sem dado no campo `dano`) omite a opção — "não faz
+ * sentido '1× o maior dado' de um item sem dado de dano" (spec).
  */
 export function listarBonusFragmentoPotencializador(
   modulo: FragmentoModuloEnum,
+  maiorDado: number | null = null,
 ): readonly OpcaoBonusFragmentoDto[] {
   const valores = BONUS_POTENCIALIZADOR[modulo];
-  return [
+  const opcoes: OpcaoBonusFragmentoDto[] = [
     {
       rotulo: `+${valores.dadosBase} dados no dado base (dano)`,
       efeito: { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: valores.dadosBase },
     },
+  ];
+  if (maiorDado !== null) {
+    const multiplicador = MULTIPLICADOR_MAIOR_DADO_MODULO[modulo];
+    opcoes.push({
+      rotulo: `${multiplicador}× o maior dado do alvo (D${maiorDado}) — +${multiplicador * maiorDado} de dano`,
+      efeito: { tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: multiplicador * maiorDado },
+    });
+  }
+  opcoes.push(
     {
       rotulo: `+${valores.dadoTeste} dado(s) no teste`,
       efeito: { tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: valores.dadoTeste, variante: 'DADO' },
@@ -85,7 +120,53 @@ export function listarBonusFragmentoPotencializador(
       rotulo: `+${valores.valorFixo} de resistência`,
       efeito: { tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: valores.valorFixo },
     },
-  ];
+  );
+  return opcoes;
+}
+
+/**
+ * "Função" que um efeito de fragmento cumpre — dano, teste ou resistência (doc — "⬦
+ * Potencializador": "um item/ser pode conter mais de um fragmento, mas para apenas uma única
+ * função... uma arma não pode ter 2 fragmentos aumentando seu dano... mas pode ter 2 fragmentos,
+ * uma para o dano e outro para o teste"). `DANO_DADOS_BASE` e `DANO_FIXO` contam como a mesma
+ * função "dano" (dados a mais ou valor fixo a mais são as duas formas do cardápio de "aumentar o
+ * dano"); `BONUS_TESTE` conta como "teste" independente da `variante` (dado ou fixo, mesma
+ * função); `null` para efeitos fora do cardápio do Potencializador (não participam da checagem).
+ */
+function funcaoFragmento(efeito: ModificacaoEfeitoDto): 'DANO' | 'TESTE' | 'RESISTENCIA' | null {
+  switch (efeito.tipo) {
+    case ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE:
+    case ModificacaoEfeitoTipoEnum.DANO_FIXO:
+      return 'DANO';
+    case ModificacaoEfeitoTipoEnum.BONUS_TESTE:
+      return 'TESTE';
+    case ModificacaoEfeitoTipoEnum.RESISTENCIA:
+      return 'RESISTENCIA';
+    default:
+      return null;
+  }
+}
+
+/**
+ * `true` quando o `efeito` escolhido no cardápio colide em função com um fragmento **já aplicado**
+ * no alvo (`origemFragmento` presente na modificação — doc: "uma única função" por item/ser,
+ * `m3-63`). Só compara contra modificações de origem Fragmento; uma modificação comum (comprada do
+ * catálogo ou custom sem `origemFragmento`) com o mesmo tipo de efeito nunca bloqueia — a regra é
+ * só entre fragmentos.
+ */
+export function existeFragmentoNaMesmaFuncao(
+  modificacoesAlvo: readonly ModificacaoAplicadaDto[],
+  efeito: ModificacaoEfeitoDto,
+): boolean {
+  const funcao = funcaoFragmento(efeito);
+  if (!funcao) {
+    return false;
+  }
+  return modificacoesAlvo.some(
+    (modificacao) =>
+      !!modificacao.origemFragmento &&
+      (modificacao.efeitos ?? []).some((efeitoExistente) => funcaoFragmento(efeitoExistente) === funcao),
+  );
 }
 
 /** A qual stat do agente uma opção do cardápio "Consumido" se destina (m3-64). */

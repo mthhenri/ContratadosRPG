@@ -823,6 +823,194 @@ describe('FichaInventario', () => {
     });
   });
 
+  describe('cardápio, restrição de alvo e função única do Potencializador (m3-63)', () => {
+    function fragmento(modulo: FragmentoModuloEnum): CarrinhoItemDto {
+      return {
+        nome: 'Fragmento achado',
+        categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+        custo: 0,
+        peso: 0,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        modulo,
+      };
+    }
+
+    it('o alvo com dado (dano) ganha a 5ª opção do cardápio, na posição logo após a 1ª', () => {
+      const alvo = montar({
+        itens: [itemLeve, fragmento(FragmentoModuloEnum.V)],
+        amplificadores: [],
+      });
+      alvo.componentInstance['abrirAplicarFragmento'](1);
+
+      alvo.componentInstance['alvoFragmento'].set(0);
+      expect(alvo.componentInstance['opcoesBonusFragmento']()).toHaveLength(6);
+      expect(alvo.componentInstance['opcoesBonusFragmento']()[1].efeito.tipo).toBe(
+        ModificacaoEfeitoTipoEnum.DANO_FIXO,
+      );
+    });
+
+    it('o alvo sem dado (ex.: proteção) fica com o cardápio de 5 opções (sem a 5ª)', () => {
+      const protecao: CarrinhoItemDto = {
+        nome: 'Colete',
+        categoria: ItemCategoriaEnum.PROTECOES,
+        custo: 0,
+        peso: 1,
+        quantidade: 1,
+        guardada: false,
+        equipado: true,
+        resistencia: '10 [Físico]',
+        modificacoes: [],
+      };
+      const alvo = montar({
+        itens: [protecao, fragmento(FragmentoModuloEnum.V)],
+        amplificadores: [],
+      });
+      alvo.componentInstance['abrirAplicarFragmento'](1);
+
+      alvo.componentInstance['alvoFragmento'].set(0);
+      expect(alvo.componentInstance['opcoesBonusFragmento']()).toHaveLength(5);
+    });
+
+    it('trocar de alvo zera o bônus escolhido (o índice da opção pode não corresponder mais)', () => {
+      const alvo = montar({
+        itens: [itemLeve, fragmento(FragmentoModuloEnum.V)],
+        amplificadores: [],
+      });
+      alvo.componentInstance['abrirAplicarFragmento'](1);
+      alvo.componentInstance['opcaoBonusFragmento'].set(2);
+
+      alvo.componentInstance['escolherAlvoFragmento']({ target: { value: '0' } } as unknown as Event);
+
+      expect(alvo.componentInstance['opcaoBonusFragmento']()).toBeNull();
+    });
+
+    it('um fragmento Potencializador pode ser alvo de outro (só Construtor é proibido)', () => {
+      const alvo = montar({
+        itens: [fragmento(FragmentoModuloEnum.V), fragmento(FragmentoModuloEnum.IV)],
+        amplificadores: [],
+      });
+      alvo.componentInstance['abrirAplicarFragmento'](0);
+
+      const alvos = alvo.componentInstance['alvosFragmentoDisponiveis']();
+      expect(alvos.map((a) => a.indice)).toEqual([1]);
+    });
+
+    it('um fragmento Construtor nunca aparece como alvo disponível', () => {
+      const construtor: CarrinhoItemDto = {
+        nome: 'Faca de Ossos',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        custo: 0,
+        peso: 1,
+        quantidade: 1,
+        guardada: false,
+        modulo: FragmentoModuloEnum.III,
+        categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+        modificacoes: [],
+      };
+      const alvo = montar({
+        itens: [itemLeve, construtor, fragmento(FragmentoModuloEnum.V)],
+        amplificadores: [],
+      });
+      alvo.componentInstance['abrirAplicarFragmento'](2);
+
+      const alvos = alvo.componentInstance['alvosFragmentoDisponiveis']();
+      expect(alvos.map((a) => a.indice)).toEqual([0]);
+    });
+
+    it('o fragmento sendo aplicado nunca aparece como o próprio alvo', () => {
+      const alvo = montar({
+        itens: [fragmento(FragmentoModuloEnum.V)],
+        amplificadores: [],
+      });
+      alvo.componentInstance['abrirAplicarFragmento'](0);
+
+      expect(alvo.componentInstance['alvosFragmentoDisponiveis']()).toEqual([]);
+    });
+
+    it('bloqueia aplicar um 2º fragmento na mesma função (dano) do mesmo item: não emite e sinaliza o conflito', () => {
+      const itemComFragmentoDeDano: CarrinhoItemDto = {
+        ...itemLeve,
+        modificacoes: [
+          {
+            nome: 'Fragmento Potencializador — Módulo V',
+            empilhamentos: 1,
+            efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: 2 }],
+            ignoraLimiteTotal: true,
+            ignoraLimiteProprio: true,
+            origemFragmento: { tipo: FragmentoTipoEnum.POTENCIALIZADOR, modulo: FragmentoModuloEnum.V },
+          },
+        ],
+      };
+      const alvo = montar({
+        itens: [itemComFragmentoDeDano, fragmento(FragmentoModuloEnum.IV)],
+        amplificadores: [],
+      });
+      alvo.componentInstance['abrirAplicarFragmento'](1);
+      alvo.componentInstance['alvoFragmento'].set(0);
+      // Opção 0 é sempre "+N dados no dado base (dano)" — mesma função "dano" do fragmento já aplicado.
+      alvo.componentInstance['opcaoBonusFragmento'].set(0);
+
+      expect(alvo.componentInstance['conflitoFuncaoFragmento']()).toBe(true);
+
+      alvo.componentInstance['confirmarAplicarFragmento'](1);
+
+      expect(alvo.emitidos).toHaveLength(0);
+    });
+
+    it('não bloqueia uma função diferente (dano ocupado, teste livre) no mesmo item', () => {
+      const itemComFragmentoDeDano: CarrinhoItemDto = {
+        ...itemLeve,
+        modificacoes: [
+          {
+            nome: 'Fragmento Potencializador — Módulo V',
+            empilhamentos: 1,
+            efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: 2 }],
+            ignoraLimiteTotal: true,
+            ignoraLimiteProprio: true,
+            origemFragmento: { tipo: FragmentoTipoEnum.POTENCIALIZADOR, modulo: FragmentoModuloEnum.V },
+          },
+        ],
+      };
+      const alvo = montar({
+        itens: [itemComFragmentoDeDano, fragmento(FragmentoModuloEnum.IV)],
+        amplificadores: [],
+      });
+      alvo.componentInstance['abrirAplicarFragmento'](1);
+      alvo.componentInstance['alvoFragmento'].set(0);
+      // Índice 2 (com a 5ª opção presente, "Leve" tem dado): "+N dado(s) no teste" — função "teste".
+      const opcoes = alvo.componentInstance['opcoesBonusFragmento']();
+      const indiceTeste = opcoes.findIndex(
+        (opcao: { efeito: { tipo: ModificacaoEfeitoTipoEnum } }) =>
+          opcao.efeito.tipo === ModificacaoEfeitoTipoEnum.BONUS_TESTE,
+      );
+      alvo.componentInstance['opcaoBonusFragmento'].set(indiceTeste);
+
+      expect(alvo.componentInstance['conflitoFuncaoFragmento']()).toBe(false);
+
+      alvo.componentInstance['confirmarAplicarFragmento'](1);
+
+      expect(alvo.emitidos).toHaveLength(1);
+    });
+
+    it('uma modificação comum (sem origemFragmento) com o mesmo tipo de efeito nunca bloqueia — a regra é só entre fragmentos', () => {
+      const itemComModComum: CarrinhoItemDto = {
+        ...itemLeve,
+        modificacoes: [{ nome: 'Reforçada', empilhamentos: 1, efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: 1 }] }],
+      };
+      const alvo = montar({
+        itens: [itemComModComum, fragmento(FragmentoModuloEnum.IV)],
+        amplificadores: [],
+      });
+      alvo.componentInstance['abrirAplicarFragmento'](1);
+      alvo.componentInstance['alvoFragmento'].set(0);
+      alvo.componentInstance['opcaoBonusFragmento'].set(0);
+
+      expect(alvo.componentInstance['conflitoFuncaoFragmento']()).toBe(false);
+    });
+  });
+
   describe('consumir fragmento — Preço de Sanidade (m3-42)', () => {
     function fragmento(modulo: FragmentoModuloEnum): CarrinhoItemDto {
       return {

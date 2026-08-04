@@ -138,6 +138,65 @@ pré-existentes e não relacionados de `P-009`. Testes pré-existentes que monta
 `FichaFragmentoConsumidoDto` com o shape antigo (`{ modulo, bonusEscolhido }`) foram atualizados pro
 shape novo — comportamento antigo intencionalmente estendido, não um regression fix.
 
+## m3-63 — Fragmentos: 5ª opção do cardápio do Potencializador, alvo mais largo e função única (2026-08-03)
+
+Fechou as três lacunas que a `m3-35`/`m3-42` deixaram no fluxo "Aplicar em..." do fragmento
+Potencializador (`shared/src/regras/compras/fragmento.ts`,
+`frontend/.../ficha-inventario.component.ts`).
+
+**Maior dado do item + 5ª opção.** Nova `maiorDadoItem(item)` (`fragmento.ts`) resolve o `dano` do
+item (catálogo ou custom, via `resolverDadosItem` — mesma fonte de `calcularStatItem`) e casa toda
+notação `D<n>` no texto, devolvendo a maior; `null` sem dado no campo. `listarBonusFragmentoPotencializador`
+ganhou um 2º parâmetro opcional `maiorDado: number | null` — quando não-`null`, insere a opção "N×
+maior dado" (novo `MULTIPLICADOR_MAIOR_DADO_MODULO` em `fragmento.dados.ts`, V=1×...I=5×; efeito
+`DANO_FIXO`, valor = multiplicador × faces) logo após a 1ª opção (dadosBase), na ordem em que o doc
+lista as 4 alternativas de "Em um item". O componente resolve `maiorDado` do alvo **escolhido** no
+painel (`opcoesBonusFragmento` passou a depender de `alvoFragmento`, não só do módulo) — sem alvo ou
+com alvo sem dado, cai pra trás pro cardápio antigo. Trocar de alvo zera `opcaoBonusFragmento` (o
+índice deixa de ser estável quando a lista muda de tamanho).
+
+**Nota de contagem (divergência com a spec).** A spec (e o comentário desatualizado que ela cita,
+escrito na `m3-35`) descreve o cardápio "hoje" como tendo 4 das 5 opções e o critério de aceite pede
+"5 quando o alvo tem dado, 4 quando não". Na prática, `listarBonusFragmentoPotencializador` **já**
+devolvia 5 entradas antes desta task (a doc agrupa "+N no valor" com 3 destinos — teste/efeito/
+resistência — num só "OU", mas a `m3-35` optou por expandir isso em 3 entradas de cardápio
+separadas, uma por destino, pra reusar `ModificacaoEfeitoTipoEnum` sem motor novo — ver teste
+`toHaveLength(5)` preexistente). Adicionar é o verbo do entregável #2 ("Adicionar a
+`BONUS_POTENCIALIZADOR`/`listarBonusFragmentoPotencializador` a opção..."), não substituir; encolher
+o baseline pra 4 exigiria remover uma das 3 entradas de "valor fixo" já testadas e usadas, o que a
+spec não pede em lugar nenhum. Resolução: o baseline continua 5 (inalterado, testes antigos passam
+sem tocar), e a 5ª opção **da tabela do documento** (a 6ª entrada do cardápio, já que "valor fixo"
+por si só ocupa 3) entra condicionada ao alvo ter dado — 6 no total quando presente, 5 quando
+ausente. O comportamento pedido pela spec (opção nova só aparece com dado no alvo) está implementado
+por inteiro; só o dígito literal do critério de aceite não bate com o array real, por essa
+divergência de contagem herdada do comentário antigo. Documentado aqui em vez de silenciado.
+
+**Restrição de alvo.** `alvosFragmentoDisponiveis` trocou o filtro de "qualquer categoria de
+Fragmento" para só `ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR` (doc: "podem ser usados em qualquer item
+ou ser, exceto em fragmentos construtores") — um Potencializador agora pode ser alvo de outro
+Potencializador. Passou a excluir também o próprio índice do fragmento sendo aplicado (antes o
+filtro genérico de "qualquer Fragmento" cobria isso de graça; precisou virar explícito).
+
+**Função única.** Nova `existeFragmentoNaMesmaFuncao(modificacoesAlvo, efeito)` (`fragmento.ts`)
+agrupa `DANO_DADOS_BASE`/`DANO_FIXO` na função "DANO", `BONUS_TESTE` (qualquer `variante`) em
+"TESTE" e `RESISTENCIA` em "RESISTENCIA" (doc: "não pode haver 2 fragmentos... aumentando seu dano",
+tratado como função única independente do mecanismo — dados a mais ou valor fixo a mais são a mesma
+função). Só compara contra modificações com `origemFragmento` preenchido — uma mod comum do mesmo
+tipo nunca bloqueia. O componente expõe `conflitoFuncaoFragmento` (computed), que desabilita o botão
+Aplicar e mostra um segundo `<p class="ficha-inv__aviso">` explicando o bloqueio; `confirmarAplicarFragmento`
+também checa no código (defesa em profundidade, não só UI).
+
+**Testes.** `shared`: `maiorDadoItem` (várias notações, minúsculo, catálogo vs custom, ausente/
+malformado), `listarBonusFragmentoPotencializador` com/sem `maiorDado`, `existeFragmentoNaMesmaFuncao`
+(bloqueia mesma função mesmo com efeitos diferentes, libera função diferente, ignora mod sem origem).
+`frontend`: alvo com/sem dado (6 vs 5 opções), troca de alvo zera o bônus, Potencializador como alvo
+de outro, Construtor nunca aparece como alvo, fragmento não aparece como o próprio alvo, bloqueio de
+função duplicada (não emite `inventarioMudou`), função diferente libera, mod comum não bloqueia.
+Suíte cheia rodada depois: shared 477/477 verde; frontend 655/657 — as 2 falhas são preexistentes e
+alheias a este diff (`P-001`, `ResizeObserver`; e um teste de link "Voltar" em
+`visualizar.page.spec.ts` que falha isolado, sem nenhuma linha tocada por esta task — não registrado
+em `PROBLEMS.md` antes, mas confirmado independente do diff).
+
 ## layout-lista-edicao-atributos — lista vertical na edição de atributos (2026-08-02)
 
 Sem código de task de milestone — plano em

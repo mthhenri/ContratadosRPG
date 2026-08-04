@@ -147,6 +147,19 @@
   usadas (ou prefixar `_` se forem intencionais). Trivial, mas não é escopo de nenhuma task atual.
 - **Desde:** descoberto durante a `m2-18` (2026-08-01); a raiz é anterior, não determinada.
 
+### P-010 — Teste do link "Voltar" quebrado em `visualizar.page.spec.ts` · `ABERTO` · frontend/testes
+
+- **Sintoma:** `FichaVisualizar > sob /fichas/:id ... > o link "Voltar" aponta pro acervo (/fichas)
+  quando a ficha está solta` falha com `expected '' to contain 'Voltar ao acervo'` — o
+  `.ficha-pagina__voltar` renderiza vazio.
+- **Causa:** não investigada. Falha isolada (`ng test --include='**/visualizar.page.spec.ts'`, sem
+  nenhuma outra spec no worker) contra o `HEAD` anterior à `m3-63` — nenhuma linha de
+  `visualizar.page.*` foi tocada por essa nem por nenhuma task recente.
+- **Contorno:** a falha é estável e isolada, mesmo padrão do `P-001`. Toda task que rodar a suíte
+  cheia do frontend deve reportar como preexistente, não como regressão.
+- **Correção:** desconhecida — precisa de investigação dedicada.
+- **Desde:** descoberto durante a `m3-63` (2026-08-03); a raiz é anterior, não determinada.
+
 ---
 
 ## Resolvidos
