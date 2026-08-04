@@ -9,14 +9,17 @@ import type { CarrinhoItemDto } from './compras.dtos';
 import { calcularStatItem } from './compras';
 import {
   aplicarReducaoAfinidade,
+  bonusMunicaoConstrutor,
   calcularAfinidade,
   custoAcoplarFragmento,
   custoAquisicaoFragmento,
   custoRemoverFragmento,
   custoSanidadeConsumirFragmento,
   existeFragmentoNaMesmaFuncao,
+  formaFixaConstrutor,
   listarBonusConsumoFragmentoPotencializador,
   listarBonusFragmentoPotencializador,
+  listarEfeitosFixosConstrutor,
   listarModulosFragmentosPortados,
   maiorDadoItem,
   reducaoCustoPorAfinidade,
@@ -457,5 +460,86 @@ describe('custoSanidadeConsumirFragmento', () => {
       dtEvitarVontade: 32,
       energiaMaximaExtra: 60,
     });
+  });
+});
+
+/**
+ * Bônus fixo do Construtor (m3-65) — doc: "⬦ Construtor", tabela ~1950. "ele é a arma em si...
+ * concede bônus adicionais de dano e testes de acordo com seu módulo" — Arma/Proteção ganham a
+ * modificação automática; Munição é a ação própria "Recarregar".
+ */
+describe('formaFixaConstrutor', () => {
+  it('Corpo a Corpo, Armas de Fogo e Exóticos são a forma ARMA', () => {
+    expect(formaFixaConstrutor(ItemCategoriaEnum.CORPO_A_CORPO)).toBe('ARMA');
+    expect(formaFixaConstrutor(ItemCategoriaEnum.ARMAS_DE_FOGO)).toBe('ARMA');
+    expect(formaFixaConstrutor(ItemCategoriaEnum.EXOTICOS)).toBe('ARMA');
+  });
+
+  it('Proteções é a forma PROTECAO', () => {
+    expect(formaFixaConstrutor(ItemCategoriaEnum.PROTECOES)).toBe('PROTECAO');
+  });
+
+  it('Munições e categorias fora da lista do doc (ou ausente) devolvem null', () => {
+    expect(formaFixaConstrutor(ItemCategoriaEnum.MUNICOES)).toBeNull();
+    expect(formaFixaConstrutor(ItemCategoriaEnum.ARMAZENAMENTO)).toBeNull();
+    expect(formaFixaConstrutor(undefined)).toBeNull();
+  });
+});
+
+describe('listarEfeitosFixosConstrutor', () => {
+  it('Arma, módulo V: +1D8 de dano e +1 de teste (exemplo do documento)', () => {
+    expect(listarEfeitosFixosConstrutor(FragmentoModuloEnum.V, 'ARMA')).toEqual([
+      { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS, valor: 1, faces: 8 },
+      { tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: 1, variante: 'FIXO' },
+    ]);
+  });
+
+  it('Arma, módulo II: +2D12 de dano, +1 dado no dado base e +7 de teste (só II/I somam o dado base)', () => {
+    expect(listarEfeitosFixosConstrutor(FragmentoModuloEnum.II, 'ARMA')).toEqual([
+      { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS, valor: 2, faces: 12 },
+      { tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: 7, variante: 'FIXO' },
+      { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: 1 },
+    ]);
+  });
+
+  it('Arma, módulo I: +4D12 de dano, +2 dados no dado base e +10 de teste', () => {
+    expect(listarEfeitosFixosConstrutor(FragmentoModuloEnum.I, 'ARMA')).toEqual([
+      { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS, valor: 4, faces: 12 },
+      { tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: 10, variante: 'FIXO' },
+      { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: 2 },
+    ]);
+  });
+
+  it('Proteção, módulo V: só +2 de resistência (sem Esquiva/Bloqueio/Defesa neste módulo)', () => {
+    expect(listarEfeitosFixosConstrutor(FragmentoModuloEnum.V, 'PROTECAO')).toEqual([
+      { tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: 2 },
+    ]);
+  });
+
+  it('Proteção, módulo IV: +3 de resistência e +1 em Esquiva e Bloqueio (sem Defesa ainda)', () => {
+    expect(listarEfeitosFixosConstrutor(FragmentoModuloEnum.IV, 'PROTECAO')).toEqual([
+      { tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: 3 },
+      { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 1, variante: 'Esquiva' },
+      { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 1, variante: 'Bloqueio' },
+    ]);
+  });
+
+  it('Proteção, módulo I: +10 de resistência, +5 em Esquiva e Bloqueio e +2 em Defesa (exemplo do documento)', () => {
+    expect(listarEfeitosFixosConstrutor(FragmentoModuloEnum.I, 'PROTECAO')).toEqual([
+      { tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: 10 },
+      { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 5, variante: 'Esquiva' },
+      { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 5, variante: 'Bloqueio' },
+      { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 2, variante: 'Defesa' },
+    ]);
+  });
+});
+
+describe('bonusMunicaoConstrutor', () => {
+  it('módulo V: Recarregar custa 3 de Energia, concede +5 de dano (exemplo do documento)', () => {
+    expect(bonusMunicaoConstrutor(FragmentoModuloEnum.V)).toEqual({ custoRecarregar: 3, dano: 5 });
+  });
+
+  it('módulo I (mais forte): Recarregar custa 20 de Energia, concede +32 de dano', () => {
+    expect(bonusMunicaoConstrutor(FragmentoModuloEnum.I)).toEqual({ custoRecarregar: 20, dano: 32 });
   });
 });

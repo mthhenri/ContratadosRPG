@@ -6,7 +6,9 @@ import {
 } from '../../enums';
 import {
   BONUS_CONSUMIDO,
+  BONUS_FIXO_CONSTRUTOR,
   BONUS_POTENCIALIZADOR,
+  BonusFixoMunicaoConstrutorDados,
   CUSTO_ENERGIA_MAXIMA_MODULO,
   MULTIPLICADOR_MAIOR_DADO_MODULO,
   VALOR_AFINIDADE_MODULO,
@@ -293,4 +295,75 @@ export function custoSanidadeConsumirFragmento(modulo: FragmentoModuloEnum): Pre
     dtEvitarVontade: 7 + multiplicadorSequela * 5,
     energiaMaximaExtra: CUSTO_ENERGIA_MAXIMA_MODULO[modulo] * 3,
   };
+}
+
+// === Bônus fixo do Construtor (m3-65) ===
+
+/** Forma "de dano" do bônus fixo do Construtor — Arma ou Proteção; Munição não modifica um item. */
+export type FormaFixaConstrutor = 'ARMA' | 'PROTECAO';
+
+/**
+ * A forma do bônus fixo do Construtor (Arma/Proteção) a partir da `categoriaEmprestada` declarada
+ * no item (doc — "⬦ Construtor": "só pode tomar a forma de Armas Corpo a Corpo, Armas de Fogo, Armas
+ * Exóticas, Munições ou Proteções"). `null` para Munição (ação "Recarregar", `bonusMunicaoConstrutor`
+ * — não gera modificação) e para qualquer categoria fora da lista do doc.
+ */
+export function formaFixaConstrutor(
+  categoriaEmprestada: ItemCategoriaEnum | undefined,
+): FormaFixaConstrutor | null {
+  switch (categoriaEmprestada) {
+    case ItemCategoriaEnum.CORPO_A_CORPO:
+    case ItemCategoriaEnum.ARMAS_DE_FOGO:
+    case ItemCategoriaEnum.EXOTICOS:
+      return 'ARMA';
+    case ItemCategoriaEnum.PROTECOES:
+      return 'PROTECAO';
+    default:
+      return null;
+  }
+}
+
+/**
+ * Efeitos mecânicos do bônus fixo automático de um Fragmento Construtor de `modulo`, para a `forma`
+ * (Arma/Proteção) que ele tomou (doc — tabela "⬦ Construtor" ~1950; `m3-65`) — ver
+ * `BonusFixoArmaConstrutorDados`/`BonusFixoProtecaoConstrutorDados` para o porquê de cada mapeamento
+ * de tipo. Empurrado como uma `ModificacaoAplicadaDto` (com `origemFragmento`) pela página, mesmo
+ * padrão do bônus "em item" do Potencializador (`listarBonusFragmentoPotencializador`).
+ */
+export function listarEfeitosFixosConstrutor(
+  modulo: FragmentoModuloEnum,
+  forma: FormaFixaConstrutor,
+): readonly ModificacaoEfeitoDto[] {
+  const valores = BONUS_FIXO_CONSTRUTOR[modulo];
+  if (forma === 'ARMA') {
+    const efeitos: ModificacaoEfeitoDto[] = [
+      { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS, valor: valores.arma.danoDados, faces: valores.arma.danoFaces },
+      { tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: valores.arma.teste, variante: 'FIXO' },
+    ];
+    if (valores.arma.dadoTeste) {
+      efeitos.push({ tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: valores.arma.dadoTeste });
+    }
+    return efeitos;
+  }
+  const efeitos: ModificacaoEfeitoDto[] = [
+    { tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: valores.protecao.resistencia },
+  ];
+  if (valores.protecao.esquivaBloqueio) {
+    efeitos.push(
+      { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: valores.protecao.esquivaBloqueio, variante: 'Esquiva' },
+      { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: valores.protecao.esquivaBloqueio, variante: 'Bloqueio' },
+    );
+  }
+  if (valores.protecao.defesa) {
+    efeitos.push({ tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: valores.protecao.defesa, variante: 'Defesa' });
+  }
+  return efeitos;
+}
+
+/**
+ * Bônus fixo de Munição de um Fragmento Construtor de `modulo` (doc — "⬦ Construtor": "Recarregar"
+ * custa Energia e concede dano por 1 cena, `m3-65`) — a página usa isto na ação "Recarregar".
+ */
+export function bonusMunicaoConstrutor(modulo: FragmentoModuloEnum): BonusFixoMunicaoConstrutorDados {
+  return BONUS_FIXO_CONSTRUTOR[modulo].municao;
 }

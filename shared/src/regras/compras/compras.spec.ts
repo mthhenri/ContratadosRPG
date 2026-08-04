@@ -146,6 +146,23 @@ describe('obterCustoModificacao', () => {
     expect(obterCategoriaEmprestada(motoserra)).toBe(ItemCategoriaEnum.CORPO_A_CORPO);
     expect(obterCustoModificacao({ item: motoserra, modificacao: 'Pesada' })).toBe(750);
   });
+
+  it('Fragmento Construtor cobra o dobro do custo (doc — "⬦ Construtor", m3-65)', () => {
+    const espadaConstrutor = montarItem({
+      nome: 'Espada de Ossos',
+      categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+      categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+    });
+    // Empresta Corpo a Corpo ($750/mod) → dobrado pelo Construtor = $1500.
+    expect(obterCustoModificacao({ item: espadaConstrutor, modificacao: 'Letal' })).toBe(1500);
+
+    const coleteConstrutor = montarItem({
+      nome: 'Colete de Vísceras',
+      categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+      categoriaEmprestada: ItemCategoriaEnum.PROTECOES,
+    });
+    expect(obterCustoModificacao({ item: coleteConstrutor, modificacao: 'Blindada' })).toBe(1500);
+  });
 });
 
 describe('obterPesoModificacao', () => {
@@ -163,6 +180,15 @@ describe('obterPesoModificacao', () => {
     // docs/core/sistema-v4.1.0.md — "Estas modificações não agregam nenhum peso ao item".
     // O site antigo somava 0,2/stack aqui; corrigido em favor do documento (proibição #27).
     expect(obterPesoModificacao({ item: montarItem({ nome: 'Mochila Mediana', categoria: ItemCategoriaEnum.ARMAZENAMENTO }), modificacao: 'Compartimentos Extras' })).toBe(0);
+  });
+
+  it('Fragmento Construtor nunca pesa por modificação, mesmo "Pesada" (doc — "⬦ Construtor", m3-65)', () => {
+    const espadaConstrutor = montarItem({
+      nome: 'Espada de Ossos',
+      categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+      categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+    });
+    expect(obterPesoModificacao({ item: espadaConstrutor, modificacao: 'Pesada' })).toBe(0);
   });
 });
 

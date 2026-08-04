@@ -22,6 +22,7 @@ import {
   AMPLIFICADORES,
   AmplificadorAplicadoDto,
   aplicarReducaoAfinidade,
+  bonusMunicaoConstrutor,
   calcularAfinidade,
   calcularCustoAmplificador,
   calcularResumoCompras,
@@ -36,9 +37,11 @@ import {
   custoSanidadeConsumirFragmento,
   descreverEfeitosModificacao,
   existeFragmentoNaMesmaFuncao,
+  formaFixaConstrutor,
   ItemCatalogo,
   listarBonusConsumoFragmentoPotencializador,
   listarBonusFragmentoPotencializador,
+  listarEfeitosFixosConstrutor,
   listarModificacoesCategoria,
   listarModificacoesDisponiveis,
   listarModulosFragmentosPortados,
@@ -311,6 +314,12 @@ interface ItemInventarioVM {
   readonly podeApelidar: boolean;
   /** `true` para fragmento Potencializador — mostra a ação "Aplicar em..." (m3-35). */
   readonly fragmentoPotencializador: boolean;
+  /** `true` para fragmento Construtor na forma Munição — mostra a ação "Recarregar" (m3-65). */
+  readonly fragmentoConstrutorMunicao: boolean;
+  /** `true` quando a Munição Construtor está recarregada nesta cena (m3-65). `false` fora dela. */
+  readonly recarregada: boolean;
+  /** Texto do bônus "Recarregar" (custo de Energia + dano concedido), ou `null` fora da Munição Construtor (m3-65). */
+  readonly bonusMunicaoTexto: string | null;
   readonly categoria: ItemCategoriaEnum;
   readonly categoriaRotulo: string;
   readonly quantidade: number;
@@ -1128,13 +1137,41 @@ export class FichaInventario {
     if (this.itemCustomForm.invalid) {
       return;
     }
-    const item = this.montarItemCustom();
+    const item = this.comBonusFixoConstrutorSeNecessario(this.montarItemCustom());
     const itensAntes = this.inventario().itens;
     this.inserirItem(item);
     this.sinalizarAdicao(this.chaveCartao(item.categoria, item.nome));
     this.criandoItem.set(false);
     this.categoriaItemSelectAberta.set(false);
     this.debitarAquisicaoFragmento(item, itensAntes);
+  }
+
+  /**
+   * Bônus fixo automático de um Fragmento Construtor recém-criado (m3-65 — doc: "concede bônus
+   * adicionais de dano e testes de acordo com seu módulo"): Arma (Corpo a Corpo/Fogo/Exótica) e
+   * Proteção já nascem com a modificação da tabela (`listarEfeitosFixosConstrutor`) aplicada, com
+   * `origemFragmento` (mesmo padrão do Potencializador — badge de origem no card) e fora do limite
+   * de mods da patente (não é uma modificação comprada). Munição não modifica um item (ação própria
+   * "Recarregar", ver `recarregarMunicaoConstrutor`); item sem `categoriaEmprestada` reconhecida
+   * pelo doc devolve o item como veio.
+   */
+  private comBonusFixoConstrutorSeNecessario(item: CarrinhoItemDto): CarrinhoItemDto {
+    if (item.categoria !== ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR || !item.modulo) {
+      return item;
+    }
+    const forma = formaFixaConstrutor(item.categoriaEmprestada);
+    if (!forma) {
+      return item;
+    }
+    const modificacao: CarrinhoItemDto['modificacoes'][number] = {
+      nome: `Fragmento Construtor — Módulo ${item.modulo}`,
+      empilhamentos: 1,
+      efeitos: listarEfeitosFixosConstrutor(item.modulo, forma),
+      ignoraLimiteTotal: true,
+      ignoraLimiteProprio: true,
+      origemFragmento: { tipo: FragmentoTipoEnum.CONSTRUTOR, modulo: item.modulo },
+    };
+    return { ...item, modificacoes: [...item.modificacoes, modificacao] };
   }
 
   /**
@@ -1518,6 +1555,39 @@ export class FichaInventario {
       : opcao.rotulo;
   }
 
+  // === Recarregar Munição de Fragmento Construtor (m3-65) ===
+  /**
+   * "Recarregar" (doc — "⬦ Construtor", linha Munição: "Dura 1 cena. 'Recarregar' custa N de
+   * Energia. Concede +N de dano.") — debita a Energia **atual** do módulo (custo de uma ação em
+   * combate/cena, mesmo tipo de débito do custo de acoplar um Potencializador) e marca o item como
+   * `recarregada`. Sem efeito se o item já está recarregada (evita debitar de novo sem antes
+   * encerrar a cena — ver `resetarMunicaoConstrutor`).
+   */
+  protected recarregarMunicaoConstrutor(indice: number): void {
+    const item = this.inventario().itens[indice];
+    if (!item?.modulo || item.recarregada) {
+      return;
+    }
+    this.emitirItens(
+      this.inventario().itens.map((atual, i) => (i === indice ? { ...atual, recarregada: true } : atual)),
+    );
+    this.ajusteEnergiaFragmento.emit({
+      energiaAtual: this.energiaAtual() - bonusMunicaoConstrutor(item.modulo).custoRecarregar,
+      energiaMaxima: this.energiaMaxima(),
+    });
+  }
+
+  /**
+   * Encerra a cena pra esta munição (reset manual — doc: "Dura 1 cena"; sem sistema de cena
+   * automatizado no app, `m3-65`): volta `recarregada` a `false`, sem reembolsar a Energia (já foi o
+   * custo da cena que passou).
+   */
+  protected resetarMunicaoConstrutor(indice: number): void {
+    this.emitirItens(
+      this.inventario().itens.map((atual, i) => (i === indice ? { ...atual, recarregada: false } : atual)),
+    );
+  }
+
   /**
    * Passo − / + na quantidade a remover no dialog de stack (limitado a 1..quantidade do item).
    */
@@ -1707,9 +1777,12 @@ export class FichaInventario {
   }
 
   /**
-   * Remove um empilhamento de uma modificação (ou o último, sumindo com ela). Uma mod de
-   * **origem fragmento** (m3-35/m3-42) some sempre inteira (1× só) e vira `desacoplarFragmento` —
-   * um caso à parte porque o fragmento **volta como item avulso** ao inventário, não é destruído.
+   * Remove um empilhamento de uma modificação (ou o último, sumindo com ela). Uma mod de **origem
+   * fragmento Potencializador** (m3-35/m3-42) some sempre inteira (1× só) e vira
+   * `desacoplarFragmento` — um caso à parte porque o fragmento **volta como item avulso** ao
+   * inventário, não é destruído. O bônus fixo automático de um fragmento Construtor (m3-65) também
+   * carrega `origemFragmento`, mas não "desacopla" — o fragmento **é** o item (não há outro alvo pra
+   * devolver um Construtor avulso); some pelo caminho comum, como qualquer mod.
    */
   protected removerModificacao(indice: number, modNome: string): void {
     const item = this.inventario().itens[indice];
@@ -1725,7 +1798,7 @@ export class FichaInventario {
     // Custom (sem definição): decrementa de 1 em 1 até sumir; de catálogo: piso nos iniciais.
     const minInicial = definicao ? definicao.empilhamentosIniciais : 1;
     const novos = atuais <= minInicial ? 0 : atuais - 1;
-    if (novos === 0 && aplicada?.origemFragmento) {
+    if (novos === 0 && aplicada?.origemFragmento?.tipo === FragmentoTipoEnum.POTENCIALIZADOR) {
       this.desacoplarFragmento(indice, modNome, aplicada.nome, aplicada.origemFragmento.tipo, aplicada.origemFragmento.modulo);
       return;
     }
@@ -2144,6 +2217,11 @@ export class FichaInventario {
       };
     });
 
+    const construtorMunicao =
+      item.categoria === ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR &&
+      item.categoriaEmprestada === ItemCategoriaEnum.MUNICOES;
+    const bonusMunicao = construtorMunicao && item.modulo ? bonusMunicaoConstrutor(item.modulo) : null;
+
     return {
       indice,
       nome: item.nome,
@@ -2151,6 +2229,11 @@ export class FichaInventario {
       nomeExibido: rotuloItem(item),
       podeApelidar: !CATEGORIAS_EMPILHAVEIS.includes(item.categoria),
       fragmentoPotencializador: item.categoria === ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+      fragmentoConstrutorMunicao: construtorMunicao,
+      recarregada: item.recarregada === true,
+      bonusMunicaoTexto: bonusMunicao
+        ? `Recarregar: ${bonusMunicao.custoRecarregar} Energia → +${bonusMunicao.dano} de dano (1 cena)`
+        : null,
       categoria: item.categoria,
       categoriaRotulo: this.rotuloCategoria(item.categoria),
       quantidade: item.quantidade,

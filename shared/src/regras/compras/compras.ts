@@ -287,9 +287,14 @@ export function contarComprasModificacao(dto: ComprasModificacaoContarDto): numb
 /**
  * Peso somado por empilhamento de uma modificação num item: o `peso` próprio da
  * modificação quando definido, senão o `PESO_MODIFICACAO_PADRAO` (+0,2). Espelha
- * `getModPeso` do site antigo.
+ * `getModPeso` do site antigo. Um Fragmento Construtor nunca pesa por modificação (doc — "⬦
+ * Construtor": "podem receber modificações como sua arma base... sem acréscimo de peso padrão das
+ * modificações", `m3-65`).
  */
 export function obterPesoModificacao(dto: ModificacaoItemDto): number {
+  if (dto.item.categoria === ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR) {
+    return 0;
+  }
   const definicao = listarModificacoesDisponiveis(dto.item).find((modificacao) => modificacao.nome === dto.modificacao);
   return definicao && definicao.peso !== undefined ? definicao.peso : PESO_MODIFICACAO_PADRAO;
 }
@@ -298,20 +303,23 @@ export function obterPesoModificacao(dto: ModificacaoItemDto): number {
  * Custo por empilhamento de uma modificação num item. Modificações emprestadas
  * (via "Faz Parte" / "Combativo") custam o preço da categoria de origem; as
  * demais, o preço da categoria do item (ou o `CUSTO_MODIFICACAO_PADRAO`).
- * Espelha `getModCusto` do site antigo.
+ * Espelha `getModCusto` do site antigo. Um Fragmento Construtor custa o **dobro** por modificação
+ * (doc — "⬦ Construtor": "podem receber modificações como sua arma base, com o dobro do custo",
+ * `m3-65`).
  *
  * Fonte: docs/core/sistema-v4.1.0.md — "$ 750 por modificação" (exceções:
  * Explosivos/Munições $ 250, Armazenamento $ 300).
  */
 export function obterCustoModificacao(dto: ModificacaoItemDto): number {
   const categoriaEmprestada = obterCategoriaEmprestada(dto.item);
+  let custo = CUSTO_MODIFICACAO[dto.item.categoria] ?? CUSTO_MODIFICACAO_PADRAO;
   if (categoriaEmprestada) {
     const emprestada = (MODIFICACOES[categoriaEmprestada] ?? []).some((modificacao) => modificacao.nome === dto.modificacao);
     if (emprestada) {
-      return CUSTO_MODIFICACAO[categoriaEmprestada] ?? CUSTO_MODIFICACAO_PADRAO;
+      custo = CUSTO_MODIFICACAO[categoriaEmprestada] ?? CUSTO_MODIFICACAO_PADRAO;
     }
   }
-  return CUSTO_MODIFICACAO[dto.item.categoria] ?? CUSTO_MODIFICACAO_PADRAO;
+  return dto.item.categoria === ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR ? custo * 2 : custo;
 }
 
 /**

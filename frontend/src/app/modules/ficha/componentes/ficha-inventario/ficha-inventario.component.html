@@ -780,6 +780,20 @@
                   <span>Consumir</span>
                 </button>
               }
+
+              @if (item.fragmentoConstrutorMunicao) {
+                <button
+                  type="button"
+                  class="ficha-inv__modificar"
+                  [class.ficha-inv__modificar--aberto]="item.recarregada"
+                  [appTooltip]="item.recarregada ? 'Recarregada nesta cena — clique para encerrar a cena' : (item.bonusMunicaoTexto ?? 'Recarregar')"
+                  [attr.aria-label]="(item.recarregada ? 'Encerrar cena de ' : 'Recarregar ') + item.nomeExibido"
+                  (click)="item.recarregada ? resetarMunicaoConstrutor(item.indice) : recarregarMunicaoConstrutor(item.indice)"
+                >
+                  <app-icone nome="fragmento" />
+                  <span>{{ item.recarregada ? 'Recarregada' : 'Recarregar' }}</span>
+                </button>
+              }
             </div>
           }
           <div class="ficha-inv__item-meta">
@@ -846,6 +860,11 @@
       }
       @if (item.descricao) {
         <div class="ficha-inv__item-desc">{{ item.descricao }}</div>
+      }
+      @if (item.bonusMunicaoTexto) {
+        <div class="ficha-inv__item-stat">
+          {{ item.bonusMunicaoTexto }} — {{ item.recarregada ? 'recarregada nesta cena' : 'não recarregada' }}
+        </div>
       }
 
       @if (item.modsAtivas.length > 0) {

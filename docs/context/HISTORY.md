@@ -21,6 +21,78 @@
 
 ## Registro por task (mais recente primeiro)
 
+## m3-65 — Fragmentos: tabela de bônus fixos do Construtor (2026-08-04)
+
+Spec: `docs/specs/done/m3-65-fragmentos-tabela-construtor.spec.md`. Continuação do lote de
+Fragmentos (`m3-35`, `m3-42`, `m3-63`, `m3-64`), desenvolvida em cima da branch que já tinha as duas
+últimas (mesma sessão, `git merge` prévio de `m3-63` para dentro da branch de `m3-64`).
+
+**O problema.** Um fragmento Construtor virava só uma arma/proteção comum digitada à mão pelo
+jogador — nenhum dos bônus fixos por módulo da tabela do doc (dano/teste da arma, recarga+dano da
+munição, resistência+Esquiva/Bloqueio/Defesa da proteção) era aplicado automaticamente, e
+modificações adicionadas a ele não recebiam o dobro de custo / isenção de peso que o doc garante
+("⬦ Construtor": "podem receber modificações como sua arma base, com o dobro do custo e sem
+acréscimo de peso").
+
+**O que foi feito.**
+
+1. `BONUS_FIXO_CONSTRUTOR` (`shared/regras/compras/fragmento.dados.ts`) — tabela por módulo × 3
+   formas (Arma/Munição/Proteção), lida direto da tabela do doc (~1950). **Decisão de mapeamento**
+   (ambígua na spec, resolvida a favor do doc — proibição #27): "Adiciona +1D8 de dano" não é o dado
+   base do item (o jogador continua declarando a base, `dano`/`informacao`, como em qualquer item
+   custom — "concede bônus **adicionais**" e "ele é a arma em si" contrastam com "aprimorar" só no
+   sentido de não se acoplar a um item externo, não no sentido de dispensar uma base própria);
+   virou `DANO_DADOS` (pool de dado separado, com a face fixa do módulo — não `DANO_DADOS_BASE`, que
+   reusaria a face do dado base, contradizendo a face explícita crescente D8→D12 da tabela). O termo
+   à parte "+1 dado"/"+2 dados" (só Módulo II/I, sem face própria) é que soma ao dado **base** —
+   esse sim virou `DANO_DADOS_BASE`. "+N de teste" virou `BONUS_TESTE` variante `FIXO` (mesmo
+   raciocínio de `BONUS_POTENCIALIZADOR`: é campo descritivo/chip, o motor não "usa" o bônus de
+   teste em nenhum cálculo, mesmo comportamento já existente pro bônus "em item" do Potencializador).
+   Proteção: `RESISTENCIA` + `DEFESA` (variantes `Esquiva`/`Bloqueio`/`Defesa`, cada uma só a partir
+   do módulo em que a tabela a introduz) — bateu exatamente com a sugestão da própria spec.
+2. `formaFixaConstrutor`/`listarEfeitosFixosConstrutor` (`fragmento.ts`) — função pura que resolve a
+   forma (Arma/Proteção) a partir da `categoriaEmprestada` do item e devolve os `ModificacaoEfeitoDto`
+   correspondentes; Munição devolve `null` (não modifica item, ver item 4). `bonusMunicaoConstrutor`
+   expõe só o par `{ custoRecarregar, dano }` da tabela.
+3. **Aplicação automática** — `FichaInventario.comBonusFixoConstrutorSeNecessario` (chamado por
+   `confirmarCriarItem`, antes de `inserirItem`) empurra a modificação já calculada pro item recém
+   criado, com `origemFragmento: { tipo: CONSTRUTOR, modulo }` (mesmo padrão do bônus "em item" do
+   Potencializador — badge de origem no card) e `ignoraLimiteTotal`/`ignoraLimiteProprio` (não é uma
+   modificação comprada). **Cuidado descoberto ao implementar:** `removerModificacao` já tinha uma
+   ramificação que trata **qualquer** `origemFragmento` como "desacoplar" (o fragmento Potencializador
+   volta como item avulso ao inventário) — reusar isso pro bônus fixo do Construtor geraria um item
+   fantasma (o "alvo" do desacoplamento seria o próprio item Construtor, e o código empurraria um
+   segundo Fragmento Construtor avulso duplicado). Corrigido restringindo essa ramificação a
+   `origemFragmento.tipo === POTENCIALIZADOR`; o bônus fixo do Construtor agora só some pelo caminho
+   comum (como qualquer mod), sem "desacoplar" — não existe pra onde desacoplar, o fragmento **é** o
+   item.
+4. **Munição Construtor** — ação própria "Recarregar" (botão no card, mesmo padrão de "Aplicar
+   em.../Consumir"): debita a Energia **atual** do módulo (custo de ação, não de aquisição) e marca
+   `item.recarregada = true` (campo novo em `CarrinhoItemDto`, `m3-65`). "Dura 1 cena" modelado como
+   reset manual — um segundo botão ("encerrar a cena") volta `recarregada` a `false` sem mexer em
+   Energia; sem sistema de cena automatizado no app hoje, então o reset é decisão do jogador/mestre.
+   Sem efeito se já está recarregada (evita debitar Energia de novo sem passar pelo reset).
+5. **Dobro de custo/peso zero** — `obterCustoModificacao`/`obterPesoModificacao`
+   (`shared/regras/compras/compras.ts`) reconhecem `item.categoria === FRAGMENTO_CONSTRUTOR`: dobram
+   o custo (calculado normalmente por baixo — inclusive o caminho "emprestada" de categoria — só
+   dobrado no fim) e zeram o peso incondicionalmente. Vale tanto pro bônus fixo automático quanto
+   pra qualquer modificação comum que o jogador adicionar depois (o "cuidado" da spec sobre
+   modificações de Potencializador nem se aplica — Construtor já não pode receber Potencializador,
+   `m3-63`).
+
+**Testes.** `shared`: `formaFixaConstrutor` (Arma/Proteção/Munição/null), `listarEfeitosFixosConstrutor`
+(todos os 5 módulos de Arma incl. o termo extra de dado em II/I, Proteção em V/IV/I cobrindo a
+progressão de Esquiva-Bloqueio-Defesa), `bonusMunicaoConstrutor`, e o dobro de custo/peso zero em
+`compras.spec.ts`. `frontend`: criação automática da modificação (Arma, Proteção, Munição sem
+modificação), custo dobrado/peso zero tanto no bônus automático quanto numa mod comum adicionada
+depois, e o fluxo completo de "Recarregar" (débito de Energia, marca `recarregada`, não debita de
+novo, reset manual sem debitar).
+
+**Verificação.** `shared`: typecheck limpo, 507/507 (13 novos), lint limpo. `backend`: 170/170
+inalterado (fora do escopo). `frontend`: build limpo, 688/690 (12 novos; as 2 falhas são as
+conhecidas `P-001`/`P-010`, confirmadas pré-existentes e não relacionadas via `git diff --stat`),
+lint com os mesmos 3 erros pré-existentes (`P-009`). Spec movida de `backlog/` pra `done/`.
+
 ## m3-64 — Fragmentos: cardápio "Consumido" e rastro do consumo (2026-08-04)
 
 Spec: `docs/specs/done/m3-64-fragmentos-consumo-bonus-historico.spec.md`. Continuação do lote de

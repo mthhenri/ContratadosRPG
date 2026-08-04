@@ -823,6 +823,174 @@ describe('FichaInventario', () => {
     });
   });
 
+  describe('bônus fixo automático do Fragmento Construtor (m3-65)', () => {
+    it('Arma (Corpo a Corpo): nasce com a modificação do módulo já aplicada, com origemFragmento', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Espada de Ossos',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        modulo: FragmentoModuloEnum.V,
+        categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+      });
+      alvo.componentInstance['confirmarCriarItem']();
+
+      const item = alvo.emitidos[0].itens[0];
+      expect(item.modificacoes).toEqual([
+        {
+          nome: 'Fragmento Construtor — Módulo V',
+          empilhamentos: 1,
+          efeitos: [
+            { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS, valor: 1, faces: 8 },
+            { tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: 1, variante: 'FIXO' },
+          ],
+          ignoraLimiteTotal: true,
+          ignoraLimiteProprio: true,
+          origemFragmento: { tipo: FragmentoTipoEnum.CONSTRUTOR, modulo: FragmentoModuloEnum.V },
+        },
+      ]);
+    });
+
+    it('Proteção: nasce com Resistência + Esquiva/Bloqueio/Defesa do módulo (módulo I, exemplo do documento)', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Colete de Vísceras',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        modulo: FragmentoModuloEnum.I,
+        categoriaEmprestada: ItemCategoriaEnum.PROTECOES,
+      });
+      alvo.componentInstance['confirmarCriarItem']();
+
+      const item = alvo.emitidos[0].itens[0];
+      expect(item.modificacoes[0].efeitos).toEqual([
+        { tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: 10 },
+        { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 5, variante: 'Esquiva' },
+        { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 5, variante: 'Bloqueio' },
+        { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 2, variante: 'Defesa' },
+      ]);
+    });
+
+    it('Munição não modifica um item: sem categoriaEmprestada reconhecida, nasce sem modificação', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Bala de Ossos',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        modulo: FragmentoModuloEnum.III,
+        categoriaEmprestada: ItemCategoriaEnum.MUNICOES,
+      });
+      alvo.componentInstance['confirmarCriarItem']();
+
+      expect(alvo.emitidos[0].itens[0].modificacoes).toEqual([]);
+    });
+
+    it('a modificação automática custa o dobro e não pesa (dobro de custo do Construtor, mesma task)', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Espada de Ossos',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        peso: 0,
+        modulo: FragmentoModuloEnum.V,
+        categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+      });
+      alvo.componentInstance['confirmarCriarItem']();
+      alvo.fixture.componentRef.setInput('inventario', alvo.emitidos[0]);
+      alvo.fixture.detectChanges();
+
+      const vm = alvo.componentInstance['itensInventario']()[0];
+      // Corpo a Corpo custa $750/mod (padrão) — dobrado pelo Construtor = $1500; peso 0 (não soma nos "slots").
+      expect(vm.modsAtivas[0].custoTexto).toBe('$1.500');
+      expect(vm.pesoTexto).toBe('0 slots');
+    });
+
+    it('uma modificação comum adicionada depois (não vinda de fragmento) também custa o dobro', () => {
+      const construtor: CarrinhoItemDto = {
+        nome: 'Espada de Ossos',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        custo: 0,
+        peso: 1,
+        quantidade: 1,
+        guardada: false,
+        modulo: FragmentoModuloEnum.V,
+        categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+        modificacoes: [],
+      };
+      const alvo = montar({ itens: [construtor], amplificadores: [] });
+      alvo.componentInstance['adicionarModificacao'](0, 'Letal');
+      alvo.fixture.componentRef.setInput('inventario', alvo.emitidos[0]);
+      alvo.fixture.detectChanges();
+
+      const vm = alvo.componentInstance['itensInventario']()[0];
+      expect(vm.modsAtivas[0].nome).toBe('Letal');
+      expect(vm.modsAtivas[0].custoTexto).toBe('$1.500');
+    });
+  });
+
+  describe('"Recarregar" Munição de Fragmento Construtor (m3-65)', () => {
+    function municaoConstrutor(modulo: FragmentoModuloEnum): CarrinhoItemDto {
+      return {
+        nome: 'Bala de Ossos',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        custo: 0,
+        peso: 0,
+        quantidade: 1,
+        guardada: false,
+        modulo,
+        categoriaEmprestada: ItemCategoriaEnum.MUNICOES,
+        modificacoes: [],
+      };
+    }
+
+    it('mostra o botão "Recarregar" só na Munição Construtor', () => {
+      const construtorArma: CarrinhoItemDto = {
+        nome: 'Espada de Ossos',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        custo: 0,
+        peso: 1,
+        quantidade: 1,
+        guardada: false,
+        modulo: FragmentoModuloEnum.V,
+        categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+        modificacoes: [],
+      };
+      const alvo = montar({ itens: [itemLeve, construtorArma, municaoConstrutor(FragmentoModuloEnum.V)], amplificadores: [] });
+      const botoes = Array.from(alvo.raiz.querySelectorAll('button')).filter((botao) => botao.textContent?.trim() === 'Recarregar');
+      expect(botoes).toHaveLength(1);
+    });
+
+    it('clicar "Recarregar" (módulo V) debita 3 de Energia atual e marca "recarregada" — exemplo do documento', () => {
+      const alvo = montar({ itens: [municaoConstrutor(FragmentoModuloEnum.V)], amplificadores: [] });
+      const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
+      alvo.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+
+      const botao = Array.from(alvo.raiz.querySelectorAll('button')).find((b) => b.textContent?.trim() === 'Recarregar');
+      botao?.dispatchEvent(new Event('click'));
+
+      expect(custos).toEqual([{ energiaAtual: 47, energiaMaxima: 50 }]);
+      expect(alvo.emitidos[0].itens[0].recarregada).toBe(true);
+    });
+
+    it('recarregar de novo sem antes encerrar a cena não debita Energia outra vez', () => {
+      const alvo = montar({ itens: [{ ...municaoConstrutor(FragmentoModuloEnum.V), recarregada: true }], amplificadores: [] });
+      const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
+      alvo.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+
+      alvo.componentInstance['recarregarMunicaoConstrutor'](0);
+
+      expect(custos).toEqual([]);
+      expect(alvo.emitidos).toHaveLength(0);
+    });
+
+    it('encerrar a cena (reset manual) volta "recarregada" a false sem alterar Energia', () => {
+      const alvo = montar({ itens: [{ ...municaoConstrutor(FragmentoModuloEnum.IV), recarregada: true }], amplificadores: [] });
+      const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
+      alvo.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+
+      alvo.componentInstance['resetarMunicaoConstrutor'](0);
+
+      expect(custos).toEqual([]);
+      expect(alvo.emitidos[0].itens[0].recarregada).toBe(false);
+    });
+  });
+
   describe('cardápio, restrição de alvo e função única do Potencializador (m3-63)', () => {
     function fragmento(modulo: FragmentoModuloEnum): CarrinhoItemDto {
       return {
