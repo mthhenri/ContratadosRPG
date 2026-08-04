@@ -138,6 +138,19 @@
 - **Custo aparente:** médio — motor fácil (duas funções puras + tabela de custo do LDA reusando
   `venda.ts`); a parte incerta é a UI/estado da espera do LDA sem um sistema de missão existente.
 
+### I-010 — Histórico dedicado de fragmentos consumidos · ficha/fragmentos
+
+- **Ideia:** uma tela/lista própria de "fragmentos consumidos" (módulo, bônus escolhido, quando),
+  separada da lista de Sequelas.
+- **Origem:** `m3-64` — "Fora de Escopo" da spec. A `descricao` da sequela "Rejeição Biológica"
+  passou a carregar módulo + bônus escolhido (`"Fragmento Potencializador Módulo III consumido —
+  +3 em Defesa"`), reaproveitando a sequela como o único registro que existe hoje.
+- **Por quê:** reaproveitar a sequela funciona, mas não é pesquisável/filtrável como um histórico de
+  verdade seria, e quando o jogador evita a sequela com o teste de Vontade (m3-42) **não sobra
+  registro nenhum** do consumo — nem módulo, nem bônus escolhido.
+- **Custo aparente:** schema novo (uma lista/tabela de eventos de consumo na ficha) + UI de exibição;
+  sem motor novo (a formatação do texto já existe em `ficha-inventario.component.ts`).
+
 ---
 
 ## Promovidas

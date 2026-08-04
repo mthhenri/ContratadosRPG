@@ -5,6 +5,7 @@ import {
   ModificacaoEfeitoTipoEnum,
 } from '../../enums';
 import {
+  BONUS_CONSUMIDO,
   BONUS_POTENCIALIZADOR,
   CUSTO_ENERGIA_MAXIMA_MODULO,
   VALOR_AFINIDADE_MODULO,
@@ -84,6 +85,47 @@ export function listarBonusFragmentoPotencializador(
       rotulo: `+${valores.valorFixo} de resistência`,
       efeito: { tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: valores.valorFixo },
     },
+  ];
+}
+
+/** A qual stat do agente uma opção do cardápio "Consumido" se destina (m3-64). */
+export type TipoBonusConsumoFragmento = 'TESTE' | 'DEFESA' | 'DANO_CORPO';
+
+/** Uma opção selecionável do cardápio de bônus "Consumido" do Potencializador. */
+export interface OpcaoBonusConsumoFragmentoDto {
+  readonly rotulo: string;
+  readonly tipo: TipoBonusConsumoFragmento;
+  readonly valor: number;
+  /**
+   * Só `true` em `tipo === 'TESTE'` do Módulo I — doc: "única forma de ultrapassar limite de 6
+   * pontos em um atributo é consumindo um Fragmento de Módulo I". Ausente (não só `false`) nos
+   * demais módulos/tipos.
+   */
+  readonly concedePontoAtributo?: boolean;
+}
+
+/**
+ * Cardápio de bônus **Consumido** de um fragmento Potencializador de `modulo` — o jogador escolhe
+ * UMA opção ao consumir (doc — "⬦ Potencializador", tabela, coluna "Consumido"). Função pura irmã
+ * de `listarBonusFragmentoPotencializador`; ao contrário dela, o bônus aqui não vira Modificação de
+ * item — é aplicado direto ao agente (`shared/regras/agente/fragmento-consumo`).
+ */
+export function listarBonusConsumoFragmentoPotencializador(
+  modulo: FragmentoModuloEnum,
+): readonly OpcaoBonusConsumoFragmentoDto[] {
+  const valores = BONUS_CONSUMIDO[modulo];
+  const concedePontoAtributo = modulo === FragmentoModuloEnum.I;
+  return [
+    {
+      rotulo: `+${valores.teste} em todos os testes do atributo à escolha${
+        concedePontoAtributo ? ' e +1 ponto no atributo' : ''
+      }`,
+      tipo: 'TESTE',
+      valor: valores.teste,
+      ...(concedePontoAtributo ? { concedePontoAtributo: true as const } : {}),
+    },
+    { rotulo: `+${valores.defesa} em Defesa`, tipo: 'DEFESA', valor: valores.defesa },
+    { rotulo: `+${valores.danoCorpo} de dano do Corpo`, tipo: 'DANO_CORPO', valor: valores.danoCorpo },
   ];
 }
 

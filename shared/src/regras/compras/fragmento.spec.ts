@@ -14,6 +14,7 @@ import {
   custoAquisicaoFragmento,
   custoRemoverFragmento,
   custoSanidadeConsumirFragmento,
+  listarBonusConsumoFragmentoPotencializador,
   listarBonusFragmentoPotencializador,
   listarModulosFragmentosPortados,
   reducaoCustoPorAfinidade,
@@ -81,6 +82,38 @@ describe('listarBonusFragmentoPotencializador', () => {
     expect(opcoes[0].efeito.valor).toBe(7);
     expect(opcoes[3].efeito.valor).toBe(10);
     expect(opcoes[4].efeito.valor).toBe(10);
+  });
+});
+
+/**
+ * Cardápio "Consumido" (m3-64) — doc: "⬦ Potencializador", tabela, coluna "Consumido". Só o Módulo
+ * I soma "+1 ponto no atributo", além do teste (doc: "única forma de ultrapassar limite de 6 pontos
+ * em um atributo é consumindo um Fragmento de Módulo I").
+ */
+describe('listarBonusConsumoFragmentoPotencializador', () => {
+  it('módulo V devolve as 3 opções do cardápio "Consumido", sem concedePontoAtributo', () => {
+    const opcoes = listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.V);
+    expect(opcoes).toHaveLength(3);
+    expect(opcoes.map((opcao) => opcao.tipo)).toEqual(['TESTE', 'DEFESA', 'DANO_CORPO']);
+    expect(opcoes.map((opcao) => opcao.valor)).toEqual([1, 1, 2]);
+    expect(opcoes[0].concedePontoAtributo).toBeUndefined();
+  });
+
+  it('módulo III tem os valores da tabela (+3 testes, +3 Defesa, +6 dano do Corpo)', () => {
+    const opcoes = listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.III);
+    expect(opcoes.map((opcao) => opcao.valor)).toEqual([3, 3, 6]);
+  });
+
+  it('módulo I: opção de teste concede também +1 ponto no atributo (única exceção)', () => {
+    const opcoes = listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.I);
+    expect(opcoes[0]).toMatchObject({ tipo: 'TESTE', valor: 5, concedePontoAtributo: true });
+    expect(opcoes[0].rotulo).toContain('+1 ponto no atributo');
+    expect(opcoes[1]).toEqual({ rotulo: '+5 em Defesa', tipo: 'DEFESA', valor: 5 });
+    expect(opcoes[2]).toEqual({ rotulo: '+10 de dano do Corpo', tipo: 'DANO_CORPO', valor: 10 });
+  });
+
+  it('módulo II não concede ponto de atributo (só o I concede)', () => {
+    expect(listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.II)[0].concedePontoAtributo).toBeUndefined();
   });
 });
 

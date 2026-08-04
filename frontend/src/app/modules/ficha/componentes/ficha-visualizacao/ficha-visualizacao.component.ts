@@ -36,6 +36,7 @@ import {
   MAESTRIA_PONTOS_MINIMO,
   ajusteEnergiaAmplificadores,
   ajusteVidaAmplificadores,
+  aplicarBonusConsumoFragmento,
   calcularAjusteDadosEquipamento,
   calcularAtributosEfetivos,
   calcularAtributosParaDados,
@@ -75,7 +76,11 @@ import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
-import { FichaInventario, type CustoEnergiaFragmento } from '../ficha-inventario/ficha-inventario.component';
+import {
+  FichaInventario,
+  type BonusConsumoFragmentoEscolhidoDto,
+  type CustoEnergiaFragmento,
+} from '../ficha-inventario/ficha-inventario.component';
 import { FichaRolagensPainel } from '../ficha-rolagens-painel/ficha-rolagens-painel.component';
 import { FichaSanidade, type EstadoSanidade } from '../ficha-sanidade/ficha-sanidade.component';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
@@ -502,6 +507,44 @@ export class FichaVisualizacao {
       traumas: estado.traumas,
       lesoes: estado.lesoes,
     });
+  }
+
+  /**
+   * Bônus "Consumido" de um Fragmento Potencializador (m3-64): aplica ao **agente**, permanente —
+   * `aplicarBonusConsumoFragmento` (fonte única) resolve onde cada tipo aterrissa
+   * (`modificadoresTeste`/`atributos` para TESTE, `derivados` para DEFESA/DANO_CORPO). Reusa os
+   * mesmos canais de persistência de edição manual (`ajusteAtributos`/`ajusteDerivado`, m3-10) em
+   * vez de abrir um novo — `ajusteAtributos` também re-deriva vida/energia quando o atributo muda
+   * (Módulo I), mesmo caminho de uma edição manual de atributo.
+   */
+  protected aoConsumirFragmentoBonus(efeito: BonusConsumoFragmentoEscolhidoDto): void {
+    const dados = this.dados();
+    const resultado = aplicarBonusConsumoFragmento(
+      {
+        atributos: dados.atributos,
+        derivados: dados.derivados ?? {},
+        modificadoresTeste: dados.modificadoresTeste ?? {},
+      },
+      efeito.opcao,
+      efeito.atributoEscolhido,
+    );
+
+    if (efeito.opcao.tipo === 'TESTE') {
+      const modificadoresTeste = {} as Record<keyof FichaAtributosDto, number>;
+      const dadosTeste = {} as Record<keyof FichaAtributosDto, number>;
+      (Object.keys(dados.atributos) as (keyof FichaAtributosDto)[]).forEach((chave) => {
+        modificadoresTeste[chave] = resultado.modificadoresTeste[chave] ?? 0;
+        dadosTeste[chave] = dados.dadosTeste?.[chave] ?? 0;
+      });
+      this.ajusteAtributos.emit({ atributos: resultado.atributos, maestria: dados.maestria, modificadoresTeste, dadosTeste });
+      return;
+    }
+
+    const chave = efeito.opcao.tipo === 'DEFESA' ? 'defesa' : 'danoCorpoACorpo';
+    const valor = resultado.derivados[chave];
+    if (valor !== undefined) {
+      this.ajusteDerivado.emit({ chave, valor });
+    }
   }
 
   /** Alterna uma condição (Morrendo/Machucado/Inconsciente) e emite o conjunto atualizado. */

@@ -21,6 +21,87 @@
 
 ## Registro por task (mais recente primeiro)
 
+## m3-64 — Fragmentos: cardápio "Consumido" e rastro do consumo (2026-08-04)
+
+Spec: `docs/specs/done/m3-64-fragmentos-consumo-bonus-historico.spec.md`. Continuação do lote de
+Fragmentos (`m3-35`, `m3-42`); fechado **independente** de `m3-63` (ambas as tasks vieram da mesma
+spec de milestone dividida em `m3-63..m3-68`, mas `m3-64` foi implementada numa branch cortada
+direto de `origin/master`, sem as mudanças de `m3-63` — que ainda não tinha sido mergeada — porque
+o "Fora de Escopo" da própria spec já deixa isso explícito: "Cardápio 'em item' do Potencializador
+(`m3-63`)").
+
+**O problema.** O painel "Consumir" (`ficha-inventario.component.ts`) cobrava o Preço de Sanidade do
+Consumo (`m3-42`: sequela "Rejeição Biológica" × multiplicador + Energia Máxima extra) mas dizia "o
+benefício pessoal do Consumo é narrativo — combine com o Mestre". O documento (`sistema-v4.1.0.md`,
+"⬦ Potencializador", coluna "Consumido") define um cardápio **fechado** de 3 bônus por módulo — isso
+não é narrativo, é mecânico, e estava sendo ignorado. Consumir também não deixava rastro nenhum: o
+item some do inventário e só resta uma sequela genérica sem indicar de qual fragmento veio.
+
+**O que foi feito.**
+
+1. `BONUS_CONSUMIDO` (`shared/regras/compras/fragmento.dados.ts`) — tabela por módulo (`teste`/
+   `defesa`/`danoCorpo`), espelhando `BONUS_POTENCIALIZADOR`. `listarBonusConsumoFragmentoPotencializador`
+   (`fragmento.ts`, função pura irmã de `listarBonusFragmentoPotencializador`) monta as 3 opções; só
+   Módulo I marca `concedePontoAtributo: true` na opção de teste (doc: "única forma de ultrapassar
+   limite de 6 pontos em um atributo é consumindo um Fragmento de Módulo I").
+2. **Onde o bônus aterrissa** — decisão explícita pedida pela spec. Ao contrário do bônus "em item"
+   (vira `ModificacaoAplicadaDto` de um item), o bônus "Consumido" é do **agente** e **permanente**
+   (o fragmento é destruído ao ser consumido — não há "desacoplar" pra desfazer, diferente do bônus
+   em item). Isso descartou o padrão "soma por cima só na leitura, nunca persistido" que
+   `amplificador.ts`/`calcularBonusDefesaEquipamento` usam (eles recalculam ao vivo a partir de uma
+   lista de itens/amplificadores **ainda portados** — aqui não há lista, o fragmento já não existe
+   mais pra reprocessar). Achei precedente melhor em `identidade/formacoes.ts`
+   (`aplicarEfeitoUnico`, m3-23): Origem também aplica um **delta único, permanente**, direto nos
+   campos persistidos (`derivados[campo] += valor`, `somarDanoFixo` pro dano do Corpo). Generalizei
+   esse padrão numa função nova, `aplicarBonusConsumoFragmento`
+   (`shared/regras/agente/fragmento-consumo.ts`, **não** `compras/` — o motivo é de dependência: o
+   arquivo toca `FichaAtributosDto`/`FichaDerivadosDto` e `agente/*` já importa de `compras/fragmento`
+   pra outras coisas, então ficar em `agente/` evita inverter a direção e criar ciclo). Ela resolve
+   os 3 tipos: `TESTE` soma em `modificadoresTeste[atributoEscolhido]` (o campo que a spec já apontava
+   como "candidato natural" — o mesmo usado pra modificador temporário de teste por atributo) e, só
+   quando `concedePontoAtributo`, soma **+1** também em `atributos[atributoEscolhido]` (sem clamp — a
+   ficha já não trava `atributos` em lugar nenhum do runtime, o "limite de 6" do doc é uma convenção
+   de mesa reforçada só na UI de criação; nada precisou ser "destravado" de propósito). `DEFESA`/
+   `DANO_CORPO` somam em `derivados.defesa`/`derivados.danoCorpoACorpo`, com a mesma guarda de
+   `aplicarEfeitoUnico` ("`!== undefined`"/truthy — não fabricar uma stat que a classe não tem, ex.
+   Civil sem Defesa).
+3. **UI de escolha** — `FichaInventario` ganhou `opcaoConsumoFragmento`/`atributoConsumoFragmento`
+   (signals) e `opcoesConsumoFragmento`/`opcaoConsumoFragmentoEscolhida` (computeds); o painel
+   "Consumir" ganhou um `<select>` "Bônus 'Consumido'" (3 opções) e um segundo `<select>` "Atributo",
+   condicional a `tipo === 'TESTE'`. O botão "Consumir" trava (`[disabled]`) até um bônus estar
+   escolhido (e o atributo, quando for TESTE) — a mesma trava já existe em `confirmarConsumirFragmento`
+   como guarda defensiva, não só no template. O texto "combine com o Mestre" saiu.
+4. **Onde o componente entrega o resultado** — `FichaInventario` **não** aplica o efeito sozinho: ele
+   não recebe `derivados`/`modificadoresTeste`/`maestria`/`dadosTeste` como input (só `atributos`, pra
+   outra coisa — fórmula de dano de item). Em vez disso emite um novo output,
+   `bonusConsumoFragmento` (`{ opcao, atributoEscolhido }`), e quem aplica é `FichaVisualizacao`
+   (`aoConsumirFragmentoBonus`), que já tem o `dados()` inteiro. Ela chama
+   `aplicarBonusConsumoFragmento` e reusa os canais de persistência **já existentes** — `ajusteAtributos`
+   (que também re-deriva Vida/Energia quando o atributo muda, mesmo caminho de uma edição manual,
+   relevante pro caso Módulo I) pro tipo `TESTE`, `ajusteDerivado` pros outros dois — em vez de abrir
+   um canal de persistência paralelo (mesmo espírito de `aoAjustarEnergiaFragmento`/
+   `aoConsumirFragmentoSanidade`, que já reusam `ajusteVitalidade`/`ajusteSanidade`).
+5. **Rastro do consumo** — `descreverConsumoFragmento` (privado, em `ficha-inventario.component.ts`;
+   deliberadamente **não** em `shared` — é formatação de texto de UI, não regra) monta a `descricao`
+   da sequela "Rejeição Biológica" com o módulo do fragmento e o bônus escolhido (ex.: `"Fragmento
+   Potencializador Módulo III consumido — +3 em Defesa"`; pro teste, inclui o nome do atributo e,
+   no Módulo I, "e +1 ponto no atributo"). Decisão da spec: reaproveitar a sequela como registro, sem
+   criar uma tabela/lista dedicada de histórico de fragmentos consumidos (ideia registrada em
+   `IDEAS.md` como upgrade futuro) — mesma lógica de "sanidade materializa-se como sequelas/traumas"
+   da `m3-42`. Quando o jogador evita a sequela com o teste de Vontade, não há sequela pra carregar a
+   descrição — aceito, é a mesma troca que a spec já fazia.
+
+**Verificação.** `shared`: 479/479 (13 testes novos — 4 em `fragmento.spec.ts` pro cardápio, 9 em
+`fragmento-consumo.spec.ts` novo pra `aplicarBonusConsumoFragmento`, cobrindo os 3 tipos, a guarda
+Civil/sem-dano-persistido e o caso Módulo I). `backend`: 170/170 (sem mudança nesta task).
+`frontend`: 659/661 — as 2 falhas são as já conhecidas e pré-existentes `P-001`/`P-010`, confirmadas
+via `git diff --stat` (nenhum arquivo delas tocado por esta task). `npx tsc --noEmit` e `eslint`
+limpos em todos os arquivos tocados (o `npm run lint --workspace=frontend` continua batendo nos 3
+erros pré-existentes e não relacionados de `P-009`, confirmados pelos números de linha nos arquivos
+certos). Os 4 testes pré-existentes do painel "Consumir" que confirmavam antes sem escolher bônus
+foram ajustados pra escolher "Defesa" antes de confirmar — comportamento antigo intencionalmente
+substituído pelo critério de aceite "exige escolher um dos 3 bônus antes de confirmar".
+
 ## layout-lista-edicao-atributos — lista vertical na edição de atributos (2026-08-02)
 
 Sem código de task de milestone — plano em

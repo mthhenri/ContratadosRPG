@@ -31,6 +31,7 @@ import {
   custoSanidadeConsumirFragmento,
   descreverEfeitosModificacao,
   ItemCatalogo,
+  listarBonusConsumoFragmentoPotencializador,
   listarBonusFragmentoPotencializador,
   listarModificacoesCategoria,
   listarModificacoesDisponiveis,
@@ -42,6 +43,7 @@ import {
   obterCustoModificacao,
   obterLimiteModificacoes,
   obterPesoModificacao,
+  OpcaoBonusConsumoFragmentoDto,
   OpcaoBonusFragmentoDto,
   PENALIDADE_VONTADE_POR_EMPILHAMENTO,
   PrecoSanidadeConsumoDto,
@@ -259,6 +261,32 @@ export interface CustoEnergiaFragmento {
 }
 
 /**
+ * Bônus "Consumido" escolhido no painel "Consumir" de um fragmento Potencializador (m3-64) —
+ * `atributoEscolhido` só é relevante (e exigido antes de confirmar) quando `opcao.tipo === 'TESTE'`.
+ * A página aplica o efeito ao agente via `aplicarBonusConsumoFragmento`
+ * (`shared/regras/agente/fragmento-consumo`) — este componente só sabe o que foi escolhido, não onde
+ * o bônus aterrissa na ficha.
+ */
+export interface BonusConsumoFragmentoEscolhidoDto {
+  readonly opcao: OpcaoBonusConsumoFragmentoDto;
+  readonly atributoEscolhido: keyof FichaAtributosDto | null;
+}
+
+/** Rótulo por extenso de cada atributo — opções do `<select>` "Atributo" do painel "Consumir". */
+const ROTULOS_ATRIBUTO: Readonly<Record<keyof FichaAtributosDto, string>> = {
+  destreza: 'Destreza',
+  forca: 'Força',
+  luta: 'Luta',
+  pontaria: 'Pontaria',
+  vigor: 'Vigor',
+  intelecto: 'Intelecto',
+  medicina: 'Medicina',
+  sentidos: 'Sentidos',
+  social: 'Social',
+  vontade: 'Vontade',
+};
+
+/**
  * Filtro de visualização da lista do Inventário — controle segmentado de 3 opções (revisão de UX
  * do filtro "ver só amplificadores"/"ver só fragmentos"). `'equipamentos'` é o padrão (mostra tudo).
  */
@@ -423,6 +451,11 @@ export class FichaInventario {
    * sequela com o teste de Vontade.
    */
   readonly sequelasFragmentoConsumido = output<readonly FichaSequelaDto[]>();
+  /**
+   * Emite o bônus "Consumido" escolhido ao confirmar o consumo de um fragmento (m3-64) — a página
+   * aplica ao agente (teste/Defesa/dano do Corpo, via `aplicarBonusConsumoFragmento`).
+   */
+  readonly bonusConsumoFragmento = output<BonusConsumoFragmentoEscolhidoDto>();
   /** Rolagem de dano de um item (m3-45) — quem persiste o histórico é `FichaVisualizacao` (m3-27). */
   readonly rolagemFeita = output<RolagemRealizadaDto>();
 
@@ -566,6 +599,27 @@ export class FichaInventario {
     const indice = this.consumindoFragmentoIndice();
     const item = indice === null ? null : this.inventario().itens[indice];
     return item?.modulo ? custoSanidadeConsumirFragmento(item.modulo) : null;
+  });
+  /** Índice da opção de bônus "Consumido" escolhida (em `opcoesConsumoFragmento()`), ou `null` (m3-64). */
+  protected readonly opcaoConsumoFragmento = signal<number | null>(null);
+  /** Atributo escolhido pro bônus "Consumido" quando `tipo === 'TESTE'`, ou `null` (m3-64). */
+  protected readonly atributoConsumoFragmento = signal<keyof FichaAtributosDto | null>(null);
+  /** Rótulos de atributo pro `<select>` "Atributo" do painel "Consumir" (m3-64). */
+  protected readonly rotulosAtributo = ROTULOS_ATRIBUTO;
+  /** As 10 chaves de atributo, na ordem do `<select>` "Atributo" (m3-64). */
+  protected readonly atributosSelecionaveis = Object.keys(ROTULOS_ATRIBUTO) as readonly (keyof FichaAtributosDto)[];
+
+  /** Cardápio de bônus "Consumido" do fragmento com o painel "Consumir" aberto (m3-64), vazio se nenhum. */
+  protected readonly opcoesConsumoFragmento = computed<readonly OpcaoBonusConsumoFragmentoDto[]>(() => {
+    const indice = this.consumindoFragmentoIndice();
+    const item = indice === null ? null : this.inventario().itens[indice];
+    return item?.modulo ? listarBonusConsumoFragmentoPotencializador(item.modulo) : [];
+  });
+
+  /** Opção de bônus "Consumido" escolhida no painel "Consumir", ou `null` se nenhuma (m3-64). */
+  protected readonly opcaoConsumoFragmentoEscolhida = computed<OpcaoBonusConsumoFragmentoDto | null>(() => {
+    const indice = this.opcaoConsumoFragmento();
+    return indice === null ? null : (this.opcoesConsumoFragmento()[indice] ?? null);
   });
 
   /** Índice do item cujo formulário de modificação custom está aberto, ou `null`. */
@@ -1298,11 +1352,13 @@ export class FichaInventario {
     this.aplicandoFragmentoIndice.set(null);
   }
 
-  // === Consumir fragmento Potencializador (m3-42) ===
-  /** Abre o painel "Consumir" de um fragmento Potencializador, zerando a declaração de Vontade. */
+  // === Consumir fragmento Potencializador (m3-42/m3-64) ===
+  /** Abre o painel "Consumir" de um fragmento Potencializador, zerando a declaração de Vontade e a escolha de bônus. */
   protected abrirConsumirFragmento(indice: number): void {
     this.consumindoFragmentoIndice.set(indice);
     this.evitouSequelaConsumo.set(false);
+    this.opcaoConsumoFragmento.set(null);
+    this.atributoConsumoFragmento.set(null);
   }
 
   /** Fecha o painel "Consumir" sem alterar nada. */
@@ -1315,18 +1371,36 @@ export class FichaInventario {
     this.evitouSequelaConsumo.update((valor) => !valor);
   }
 
+  /** Escolhe a opção de bônus "Consumido" do `<select>` do painel "Consumir" (m3-64). */
+  protected escolherOpcaoConsumoFragmento(evento: Event): void {
+    const valor = (evento.target as HTMLSelectElement).value;
+    this.opcaoConsumoFragmento.set(valor === '' ? null : Number(valor));
+    this.atributoConsumoFragmento.set(null);
+  }
+
+  /** Escolhe o atributo-alvo do `<select>` "Atributo" do painel "Consumir", quando `tipo === 'TESTE'` (m3-64). */
+  protected escolherAtributoConsumoFragmento(evento: Event): void {
+    const valor = (evento.target as HTMLSelectElement).value;
+    this.atributoConsumoFragmento.set(valor === '' ? null : (valor as keyof FichaAtributosDto));
+  }
+
   /**
-   * Confirma o **consumo**: remove o fragmento do inventário avulso, restitui o dreno de Energia
-   * Máxima da aquisição (doc — "⬥ Módulos": "esse gasto cessa ao remover o fragmento de seu
-   * inventário") e debita o Preço de Sanidade — preço físico (Energia Máxima extra, sempre) e
-   * mental (sequela "Rejeição Biológica" × multiplicador, só se o jogador não evitou com Vontade).
+   * Confirma o **consumo**: exige um bônus "Consumido" escolhido (e um atributo-alvo quando o bônus
+   * é de teste, m3-64), remove o fragmento do inventário avulso, restitui o dreno de Energia Máxima
+   * da aquisição (doc — "⬥ Módulos": "esse gasto cessa ao remover o fragmento de seu inventário") e
+   * debita o Preço de Sanidade — preço físico (Energia Máxima extra, sempre) e mental (sequela
+   * "Rejeição Biológica" × multiplicador, só se o jogador não evitou com Vontade). A sequela, quando
+   * emitida, carrega o módulo/tipo do fragmento e o bônus escolhido na `descricao` (m3-64) — não há
+   * histórico dedicado de fragmentos consumidos, ela é o registro.
    */
   protected confirmarConsumirFragmento(fragmentoIndice: number): void {
     const itensAntes = this.inventario().itens;
     const item = itensAntes[fragmentoIndice];
     const tipo = item ? tipoFragmentoDaCategoria(item.categoria) : null;
     const preco = this.precoSanidadeConsumo();
-    if (!item?.modulo || !tipo || !preco) {
+    const opcao = this.opcaoConsumoFragmentoEscolhida();
+    const atributoEscolhido = this.atributoConsumoFragmento();
+    if (!item?.modulo || !tipo || !preco || !opcao || (opcao.tipo === 'TESTE' && !atributoEscolhido)) {
       return;
     }
 
@@ -1343,13 +1417,39 @@ export class FichaInventario {
       energiaMaxima: this.energiaMaxima() + custoAquisicao - preco.energiaMaximaExtra,
     });
 
+    this.bonusConsumoFragmento.emit({ opcao, atributoEscolhido: opcao.tipo === 'TESTE' ? atributoEscolhido : null });
+
     if (!this.evitouSequelaConsumo()) {
+      const descricao = this.descreverConsumoFragmento(item.modulo, opcao, atributoEscolhido);
       this.sequelasFragmentoConsumido.emit(
-        Array.from({ length: preco.multiplicadorSequela }, () => ({ nome: SEQUELA_CONSUMO_FRAGMENTO })),
+        Array.from({ length: preco.multiplicadorSequela }, () => ({
+          nome: SEQUELA_CONSUMO_FRAGMENTO,
+          descricao,
+        })),
       );
     }
 
     this.consumindoFragmentoIndice.set(null);
+  }
+
+  /**
+   * Texto da `descricao` da sequela "Rejeição Biológica" — módulo/tipo do fragmento consumido e o
+   * bônus escolhido (m3-64), ex.: `"Fragmento Potencializador Módulo III consumido — +3 em
+   * Defesa"`. Só um detalhe de exibição — não é regra de jogo, fica na UI (`shared` cobre a tabela e
+   * o cardápio, não a formatação do texto da sequela).
+   */
+  private descreverConsumoFragmento(
+    modulo: FragmentoModuloEnum,
+    opcao: OpcaoBonusConsumoFragmentoDto,
+    atributoEscolhido: keyof FichaAtributosDto | null,
+  ): string {
+    const detalhe =
+      opcao.tipo === 'TESTE' && atributoEscolhido
+        ? `+${opcao.valor} em todos os testes de ${this.rotulosAtributo[atributoEscolhido]}${
+            opcao.concedePontoAtributo ? ' e +1 ponto no atributo' : ''
+          }`
+        : opcao.rotulo;
+    return `Fragmento Potencializador Módulo ${modulo} consumido — ${detalhe}`;
   }
 
   /**

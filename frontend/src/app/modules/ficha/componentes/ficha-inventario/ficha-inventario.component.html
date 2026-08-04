@@ -1004,7 +1004,7 @@
             <p class="ficha-inv__aviso">
               Preço de Sanidade: sequela "Rejeição Biológica" ×{{ preco.multiplicadorSequela }}
               (evitável com teste de Vontade DT {{ preco.dtEvitarVontade }}) + {{ preco.energiaMaximaExtra }}
-              de Energia Máxima extra, sempre. O benefício pessoal do Consumo é narrativo — combine com o Mestre.
+              de Energia Máxima extra, sempre.
             </p>
             <div class="ficha-inv__mod-flags">
               <button
@@ -1022,10 +1022,36 @@
               <span class="ficha-inv__campo-rotulo">Evitei a sequela com o teste de Vontade</span>
             </div>
           }
+          <div class="ficha-inv__form-linha">
+            <label class="ficha-inv__campo ficha-inv__campo--largo">
+              <span class="ficha-inv__campo-rotulo">Bônus "Consumido" (escolha um)</span>
+              <select class="ficha-inv__entrada" (change)="escolherOpcaoConsumoFragmento($event)">
+                <option value="">— Escolha o bônus —</option>
+                @for (opcao of opcoesConsumoFragmento(); track opcao.tipo; let i = $index) {
+                  <option [value]="i">{{ opcao.rotulo }}</option>
+                }
+              </select>
+            </label>
+            @if (opcaoConsumoFragmentoEscolhida()?.tipo === 'TESTE') {
+              <label class="ficha-inv__campo ficha-inv__campo--largo">
+                <span class="ficha-inv__campo-rotulo">Atributo</span>
+                <select class="ficha-inv__entrada" (change)="escolherAtributoConsumoFragmento($event)">
+                  <option value="">— Escolha o atributo —</option>
+                  @for (atributo of atributosSelecionaveis; track atributo) {
+                    <option [value]="atributo">{{ rotulosAtributo[atributo] }}</option>
+                  }
+                </select>
+              </label>
+            }
+          </div>
           <div class="ficha-inv__form-acoes">
             <button
               type="button"
               class="ficha-inv__btn ficha-inv__btn--principal"
+              [disabled]="
+                !opcaoConsumoFragmentoEscolhida() ||
+                (opcaoConsumoFragmentoEscolhida()?.tipo === 'TESTE' && !atributoConsumoFragmento())
+              "
               (click)="confirmarConsumirFragmento(item.indice)"
             >
               Consumir

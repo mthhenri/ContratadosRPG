@@ -1,6 +1,6 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-02 · **Última task registrada:** `m2-21` (2026-08-02)
+> **Última revisão:** 2026-08-04 · **Última task registrada:** `m3-64` (2026-08-04)
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -45,9 +45,9 @@ Deploy em produção por **integração nativa das plataformas**, sem GitHub Act
 `master` → Render (backend) e Cloudflare Pages (frontend) puxam do Git sozinhos; banco no Supabase.
 O GitHub Actions só roda **CI** (lint + testes nos 3 workspaces em todo PR).
 
-**Suítes:** shared 454+ · backend 167/167 · frontend 641/**642** — a 1 falha é conhecida e
-pré-existente, ver [`PROBLEMS.md`](PROBLEMS.md) `P-001`. `npm run lint` **não fecha limpo** hoje
-em nenhum dos dois workspaces (frontend/backend) — falhas pré-existentes não relacionadas a
+**Suítes:** shared 479/479 · backend 170/170 · frontend 659/**661** — as 2 falhas são conhecidas e
+pré-existentes, ver [`PROBLEMS.md`](PROBLEMS.md) `P-001`/`P-010`. `npm run lint` **não fecha limpo**
+hoje em nenhum dos dois workspaces (frontend/backend) — falhas pré-existentes não relacionadas a
 nenhuma task recente, ver `PROBLEMS.md` `P-009`.
 
 ---
@@ -158,8 +158,10 @@ e ajuste manual de dados/`dadosTeste` por atributo, este último só afetando a 
 rolada, nunca o valor exibido nem os derivados; em edição, os atributos viram uma lista vertical —
 nome completo + steppers — em vez da grade compacta do modo leitura), vitais, sanidade e
 lesões, habilidades (com filtro e contador), inventário completo (itens, modificações,
-amplificadores, sub-inventários, custom), identidade (origem, personalidade, afinidade de
-fragmentos), história privada, anotações e dinheiro. Persistência **otimista + em lote**, com
+amplificadores, fragmentos Potencializador — "Aplicar em..." num item (`m3-35`) ou "Consumir" pro
+bônus permanente do agente (teste/Defesa/dano do Corpo, cardápio fechado por módulo, `m3-64`) —,
+sub-inventários, custom), identidade (origem, personalidade, afinidade de fragmentos), história
+privada, anotações e dinheiro. Persistência **otimista + em lote**, com
 merge de edição concorrente — a lógica (~18 handlers `ajustar*` + progressão) mora em
 `FichaEdicaoService` (`@Injectable()` sem `providedIn: 'root'`, uma instância por página via
 `providers: []`), reusado por `VisualizarPage` (`/painel/:campanhaId/ficha/:id` e `/fichas/:id`) e

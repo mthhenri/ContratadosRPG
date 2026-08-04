@@ -1,19 +1,16 @@
 import { FragmentoModuloEnum } from '../../enums';
 
 /**
- * Dados tipados de Fragmentos (m3-35/m3-42) — custo em Energia por módulo, o cardápio de bônus do
- * Potencializador "em um item", a Afinidade e o Preço de Sanidade do Consumo. Conferidos contra
- * `docs/core/sistema-v4.1.0.md` — "⬡ Fragmentos" (⬥ Módulos, ⬥ Acoplamento, ⬥ Função >
- * Potencializador > Consumo de Fragmentos, ⬥ Afinidade com Fragmentos). Em conflito, o documento
- * vence (proibição #27).
+ * Dados tipados de Fragmentos (m3-35/m3-42/m3-63/m3-64) — custo em Energia por módulo, os cardápios
+ * de bônus do Potencializador "em um item" e "Consumido", a Afinidade e o Preço de Sanidade do
+ * Consumo. Conferidos contra `docs/core/sistema-v4.1.0.md` — "⬡ Fragmentos" (⬥ Módulos, ⬥
+ * Acoplamento, ⬥ Função > Potencializador > Consumo de Fragmentos, ⬥ Afinidade com Fragmentos). Em
+ * conflito, o documento vence (proibição #27).
  *
- * **Recorte desta task (núcleo, decisão do autor):** só o custo de Energia de
- * adquirir/acoplar/remover, o bônus "em um item" do Potencializador (a opção "N× valor máximo do
- * maior tipo de dado" fica de fora — depende de resolver o maior dado do item-alvo, uma primitiva
- * que ainda não existe em `shared/regras`), a Afinidade e o Preço de Sanidade do Consumo. Anomalia
- * Biológica, Colapso, Redução de Módulo, Forja, os bônus "Consumido" da tabela do Potencializador
- * (concessão de +1 em testes/Defesa/dano do Corpo — sem catálogo/UI nesta task) e a tabela de
- * bônus fixos do Construtor (arma/proteção por módulo) ficam de fora — specs futuras.
+ * **Recorte (núcleo, decisão do autor):** o custo de Energia de adquirir/acoplar/remover, os dois
+ * cardápios de bônus do Potencializador (em item e Consumido), a Afinidade e o Preço de Sanidade do
+ * Consumo. Anomalia Biológica, Colapso, Redução de Módulo, Forja e a tabela de bônus fixos do
+ * Construtor (arma/proteção por módulo) ficam de fora — specs futuras.
  */
 
 /**
@@ -71,3 +68,24 @@ export const VALOR_AFINIDADE_MODULO: Readonly<Record<FragmentoModuloEnum, number
  * "a adição da sequela 'Rejeição Biológica'").
  */
 export const SEQUELA_CONSUMO_FRAGMENTO = 'Rejeição Biológica';
+
+/** Uma opção do cardápio de bônus "Consumido" do Potencializador para um módulo (m3-64). */
+export interface OpcaoBonusConsumidoDados {
+  /** "+N em todos os testes do atributo à escolha" — Módulo I soma também +1 ponto no atributo. */
+  readonly teste: number;
+  readonly defesa: number;
+  readonly danoCorpo: number;
+}
+
+/**
+ * Bônus "Consumido" do Fragmento Potencializador por módulo (doc — tabela "⬦ Potencializador",
+ * coluna "Consumido"). Ao contrário do bônus "em item", este é do **agente**, permanente — o
+ * fragmento é destruído ao ser consumido, não há como desfazer.
+ */
+export const BONUS_CONSUMIDO: Readonly<Record<FragmentoModuloEnum, OpcaoBonusConsumidoDados>> = {
+  [FragmentoModuloEnum.V]: { teste: 1, defesa: 1, danoCorpo: 2 },
+  [FragmentoModuloEnum.IV]: { teste: 2, defesa: 2, danoCorpo: 4 },
+  [FragmentoModuloEnum.III]: { teste: 3, defesa: 3, danoCorpo: 6 },
+  [FragmentoModuloEnum.II]: { teste: 5, defesa: 4, danoCorpo: 8 },
+  [FragmentoModuloEnum.I]: { teste: 5, defesa: 5, danoCorpo: 10 },
+};

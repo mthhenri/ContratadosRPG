@@ -1089,6 +1089,83 @@ describe('FichaVisualizacao', () => {
     });
   });
 
+  describe('bônus "Consumido" de Fragmento Potencializador (m3-64)', () => {
+    it('tipo TESTE: emite ajusteAtributos com o modificador somado ao atributo escolhido, atributos intactos', () => {
+      const documento = { ...dados, modificadoresTeste: { vontade: 1 } };
+      const alvo = montar(documento, 'Corvo', 42, true);
+      const ajustes: { atributos: { vontade: number }; modificadoresTeste: Record<string, number> }[] = [];
+      alvo.fixture.componentInstance.ajusteAtributos.subscribe((a) => ajustes.push(a));
+
+      alvo.fixture.componentInstance['aoConsumirFragmentoBonus']({
+        opcao: { rotulo: '+3 em todos os testes do atributo à escolha', tipo: 'TESTE', valor: 3 },
+        atributoEscolhido: 'vontade',
+      });
+
+      expect(ajustes).toHaveLength(1);
+      expect(ajustes[0].modificadoresTeste['vontade']).toBe(4);
+      expect(ajustes[0].atributos.vontade).toBe(documento.atributos.vontade);
+    });
+
+    it('módulo I (concedePontoAtributo): soma também +1 no atributo base escolhido', () => {
+      const alvo = montar(dados, 'Corvo', 42, true);
+      const ajustes: { atributos: { intelecto: number } }[] = [];
+      alvo.fixture.componentInstance.ajusteAtributos.subscribe((a) => ajustes.push(a));
+
+      alvo.fixture.componentInstance['aoConsumirFragmentoBonus']({
+        opcao: {
+          rotulo: '+5 em todos os testes do atributo à escolha e +1 ponto no atributo',
+          tipo: 'TESTE',
+          valor: 5,
+          concedePontoAtributo: true,
+        },
+        atributoEscolhido: 'intelecto',
+      });
+
+      expect(ajustes[0].atributos.intelecto).toBe(dados.atributos.intelecto + 1);
+    });
+
+    it('tipo DEFESA: emite ajusteDerivado somando ao defesa persistido', () => {
+      const documento = { ...dados, derivados: { defesa: 13 } };
+      const alvo = montar(documento, 'Corvo', 42, true);
+      const ajustes: { chave: string; valor: number | string }[] = [];
+      alvo.fixture.componentInstance.ajusteDerivado.subscribe((a) => ajustes.push(a));
+
+      alvo.fixture.componentInstance['aoConsumirFragmentoBonus']({
+        opcao: { rotulo: '+3 em Defesa', tipo: 'DEFESA', valor: 3 },
+        atributoEscolhido: null,
+      });
+
+      expect(ajustes).toEqual([{ chave: 'defesa', valor: 16 }]);
+    });
+
+    it('tipo DEFESA sem derivados.defesa persistido (classe sem Defesa): não emite nada', () => {
+      const alvo = montar(dados, 'Corvo', 42, true);
+      const ajustes: unknown[] = [];
+      alvo.fixture.componentInstance.ajusteDerivado.subscribe((a) => ajustes.push(a));
+
+      alvo.fixture.componentInstance['aoConsumirFragmentoBonus']({
+        opcao: { rotulo: '+3 em Defesa', tipo: 'DEFESA', valor: 3 },
+        atributoEscolhido: null,
+      });
+
+      expect(ajustes).toEqual([]);
+    });
+
+    it('tipo DANO_CORPO: emite ajusteDerivado com o fixo somado via somarDanoFixo', () => {
+      const documento = { ...dados, derivados: { danoCorpoACorpo: '1D3 [Físico]' } };
+      const alvo = montar(documento, 'Corvo', 42, true);
+      const ajustes: { chave: string; valor: number | string }[] = [];
+      alvo.fixture.componentInstance.ajusteDerivado.subscribe((a) => ajustes.push(a));
+
+      alvo.fixture.componentInstance['aoConsumirFragmentoBonus']({
+        opcao: { rotulo: '+6 de dano do Corpo', tipo: 'DANO_CORPO', valor: 6 },
+        atributoEscolhido: null,
+      });
+
+      expect(ajustes).toEqual([{ chave: 'danoCorpoACorpo', valor: '1D3+6 [Físico]' }]);
+    });
+  });
+
   describe('Extras (m3-49) — Origem/Personalidade/afinidade de fragmentos na aba "Extras" do Status', () => {
     const origemExemplo: FichaOrigemDto = {
       nome: 'Ex-Militar',

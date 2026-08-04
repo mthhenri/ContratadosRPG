@@ -839,6 +839,7 @@ describe('FichaInventario', () => {
       alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
 
       alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['opcaoConsumoFragmento'].set(1); // "+3 em Defesa"
       alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
 
       // Módulo III: aquisição custava 12 (restituídos); preço físico extra = 12 × 3 = 36.
@@ -847,20 +848,22 @@ describe('FichaInventario', () => {
       expect(alvo.emitidos[0].itens).toHaveLength(0);
     });
 
-    it('consumir sem declarar que evitou: emite a sequela "Rejeição Biológica" ×multiplicador do módulo', () => {
+    it('consumir sem declarar que evitou: emite a sequela "Rejeição Biológica" ×multiplicador do módulo, com a descrição do fragmento e do bônus', () => {
       const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.III)], amplificadores: [] });
-      const sequelas: (readonly { nome: string }[])[] = [];
+      const sequelas: (readonly { nome: string; descricao?: string }[])[] = [];
       alvo.fixture.componentInstance.sequelasFragmentoConsumido.subscribe((s) => sequelas.push(s));
 
       alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['opcaoConsumoFragmento'].set(1); // "+3 em Defesa"
       alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
 
       // Módulo III: multiplicador 3 (doc: "3× mais forte").
+      const descricao = 'Fragmento Potencializador Módulo III consumido — +3 em Defesa';
       expect(sequelas).toEqual([
         [
-          { nome: 'Rejeição Biológica' },
-          { nome: 'Rejeição Biológica' },
-          { nome: 'Rejeição Biológica' },
+          { nome: 'Rejeição Biológica', descricao },
+          { nome: 'Rejeição Biológica', descricao },
+          { nome: 'Rejeição Biológica', descricao },
         ],
       ]);
     });
@@ -873,6 +876,7 @@ describe('FichaInventario', () => {
       alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
 
       alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['opcaoConsumoFragmento'].set(1); // "+3 em Defesa"
       alvo.fixture.componentInstance['alternarEvitouSequelaConsumo']();
       alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
 
@@ -887,6 +891,113 @@ describe('FichaInventario', () => {
 
       expect(alvo.fixture.componentInstance['consumindoFragmentoIndice']()).toBeNull();
       expect(alvo.emitidos).toHaveLength(0);
+    });
+  });
+
+  describe('consumir fragmento — cardápio "Consumido" e bônus permanente do agente (m3-64)', () => {
+    function fragmento(modulo: FragmentoModuloEnum): CarrinhoItemDto {
+      return {
+        nome: 'Fragmento achado',
+        categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+        custo: 0,
+        peso: 0,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        modulo,
+      };
+    }
+
+    it('abrir o painel oferece as 3 opções do cardápio "Consumido" do módulo do fragmento', () => {
+      const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.III)], amplificadores: [] });
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+
+      const opcoes = alvo.fixture.componentInstance['opcoesConsumoFragmento']();
+      expect(opcoes.map((opcao: { tipo: string }) => opcao.tipo)).toEqual(['TESTE', 'DEFESA', 'DANO_CORPO']);
+    });
+
+    it('sem escolher um bônus: confirmar não faz nada (nem remove o item, nem emite)', () => {
+      const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.III)], amplificadores: [] });
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
+
+      expect(alvo.emitidos).toHaveLength(0);
+    });
+
+    it('bônus de teste escolhido sem escolher o atributo: confirmar não faz nada', () => {
+      const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.III)], amplificadores: [] });
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['opcaoConsumoFragmento'].set(0); // "TESTE"
+      alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
+
+      expect(alvo.emitidos).toHaveLength(0);
+    });
+
+    it('escolher um bônus de Defesa e confirmar emite bonusConsumoFragmento com a opção, sem atributo', () => {
+      const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.III)], amplificadores: [] });
+      const bonus: unknown[] = [];
+      alvo.fixture.componentInstance.bonusConsumoFragmento.subscribe((b) => bonus.push(b));
+
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['opcaoConsumoFragmento'].set(1); // "+3 em Defesa"
+      alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
+
+      expect(bonus).toEqual([
+        { opcao: { rotulo: '+3 em Defesa', tipo: 'DEFESA', valor: 3 }, atributoEscolhido: null },
+      ]);
+    });
+
+    it('escolher o bônus de teste e um atributo emite bonusConsumoFragmento com o atributo escolhido', () => {
+      const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.III)], amplificadores: [] });
+      const bonus: { opcao: { tipo: string }; atributoEscolhido: string | null }[] = [];
+      alvo.fixture.componentInstance.bonusConsumoFragmento.subscribe((b) => bonus.push(b));
+
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['opcaoConsumoFragmento'].set(0); // "TESTE"
+      alvo.fixture.componentInstance['atributoConsumoFragmento'].set('vontade');
+      alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
+
+      expect(bonus).toEqual([{ opcao: expect.objectContaining({ tipo: 'TESTE' }), atributoEscolhido: 'vontade' }]);
+    });
+
+    it('módulo I: bônus de teste carrega concedePontoAtributo, e a descrição da sequela menciona o ponto de atributo', () => {
+      const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.I)], amplificadores: [] });
+      const sequelas: (readonly { descricao?: string }[])[] = [];
+      alvo.fixture.componentInstance.sequelasFragmentoConsumido.subscribe((s) => sequelas.push(s));
+
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['opcaoConsumoFragmento'].set(0); // "TESTE"
+      alvo.fixture.componentInstance['atributoConsumoFragmento'].set('intelecto');
+      alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
+
+      expect(sequelas[0][0].descricao).toBe(
+        'Fragmento Potencializador Módulo I consumido — +5 em todos os testes de Intelecto e +1 ponto no atributo',
+      );
+    });
+
+    it('trocar a opção de bônus (via <select>) zera o atributo escolhido anteriormente', () => {
+      const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.III)], amplificadores: [] });
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['escolherOpcaoConsumoFragmento']({ target: { value: '0' } } as unknown as Event);
+      alvo.fixture.componentInstance['atributoConsumoFragmento'].set('vontade');
+
+      alvo.fixture.componentInstance['escolherOpcaoConsumoFragmento']({ target: { value: '1' } } as unknown as Event);
+
+      expect(alvo.fixture.componentInstance['atributoConsumoFragmento']()).toBeNull();
+    });
+
+    it('reabrir o painel (abrirConsumirFragmento) zera a opção e o atributo escolhidos', () => {
+      const alvo = montar(
+        { itens: [fragmento(FragmentoModuloEnum.III), fragmento(FragmentoModuloEnum.V)], amplificadores: [] },
+      );
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['opcaoConsumoFragmento'].set(0);
+      alvo.fixture.componentInstance['atributoConsumoFragmento'].set('vontade');
+
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](1);
+
+      expect(alvo.fixture.componentInstance['opcaoConsumoFragmento']()).toBeNull();
+      expect(alvo.fixture.componentInstance['atributoConsumoFragmento']()).toBeNull();
     });
   });
 
