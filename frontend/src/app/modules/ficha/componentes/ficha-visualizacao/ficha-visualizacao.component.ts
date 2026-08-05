@@ -44,13 +44,20 @@ import {
   calcularEnergia,
   calcularInventario,
   calcularProficiencia,
+  emAnomaliaBiologica,
+  limiteMinimoEnergiaMaximaFragmentos,
   modificadoresTesteAmplificadores,
   montarResistencias,
   calcularVida,
   maestriaAtingivel,
   obterLimitesClasse,
+  PENALIDADE_DEFESA_ANOMALIA_BIOLOGICA,
+  PENALIDADE_TESTES_ANOMALIA_BIOLOGICA,
   reverterBonusConsumoFragmento,
   somarLesoesAtributo,
+  tetoVidaAnomaliaBiologica,
+  TRAUMA_LIMIAR_HUMANIDADE_DESCRICAO,
+  TRAUMA_LIMIAR_HUMANIDADE_NOME,
   type EfeitoConsumoFragmentoDto,
 } from '@contratados-rpg/shared/regras/agente';
 import {
@@ -2190,4 +2197,66 @@ export class FichaVisualizacao {
   protected readonly reducaoAfinidade = computed(() =>
     reducaoCustoPorAfinidade(this.afinidadeFragmentos()),
   );
+
+  // === Limite mínimo de Energia / Anomalia Biológica (m3-67) ===
+
+  /** Limite mínimo de Energia Máxima pro Vigor/Destreza do agente (doc — "⬦ Limite mínimo de Energia"). */
+  protected readonly limiteMinimoEnergia = computed(() =>
+    limiteMinimoEnergiaMaximaFragmentos(this.dados().atributos),
+  );
+
+  /**
+   * Estado derivado "Anomalia Biológica" (doc, m3-67): `true` quando a Energia Máxima **atual**
+   * (`energiaMaxima()` — já reduzida pelos fragmentos portados) está abaixo do limite mínimo. 100%
+   * derivado, sem campo persistido de "decisão do jogador" — mesma filosofia de `m3-10`.
+   */
+  protected readonly anomaliaBiologica = computed(() =>
+    emAnomaliaBiologica(this.energiaMaxima(), this.limiteMinimoEnergia()),
+  );
+
+  /** Penalidades fixas do doc — texto informativo, nunca aplicado ao motor de rolagem/`calcularDefesa`. */
+  protected readonly penalidadeTestesAnomalia = PENALIDADE_TESTES_ANOMALIA_BIOLOGICA;
+  protected readonly penalidadeDefesaAnomalia = PENALIDADE_DEFESA_ANOMALIA_BIOLOGICA;
+
+  /** Teto de Vida atual em Anomalia Biológica — "trava em X de Y" (doc: 10% da Vida Máxima). */
+  protected readonly tetoVidaAnomalia = computed(() => tetoVidaAnomaliaBiologica(this.vidaMaxima()));
+
+  /** `true` com a confirmação inline do atalho de registro do trauma "Limiar da Humanidade" aberta. */
+  protected readonly confirmandoTraumaLimiar = signal(false);
+
+  protected readonly nomeTraumaLimiar = TRAUMA_LIMIAR_HUMANIDADE_NOME;
+  protected readonly descricaoTraumaLimiar = TRAUMA_LIMIAR_HUMANIDADE_DESCRICAO;
+
+  /**
+   * Abre a confirmação inline do atalho (mesmo padrão de `pedirRemocaoFragmentoConsumido`) — nunca
+   * registra o trauma sozinho: o doc condiciona "Limiar da Humanidade" a "passar uma cena" em
+   * Anomalia Biológica, julgamento do Mestre, então o atalho só pré-preenche pro jogador/mestre
+   * confirmar.
+   */
+  protected abrirAtalhoTraumaLimiar(): void {
+    this.confirmandoTraumaLimiar.set(true);
+  }
+
+  /** Fecha a confirmação sem registrar nada. */
+  protected cancelarAtalhoTraumaLimiar(): void {
+    this.confirmandoTraumaLimiar.set(false);
+  }
+
+  /**
+   * Confirma o atalho: registra o trauma "Limiar da Humanidade" pré-preenchido (nome + descrição do
+   * doc, `tratado: false`) no topo de `estado.traumas`, reusando o mesmo canal `ajusteSanidade`
+   * (m3-12) que a aba Sanidade usa pra qualquer edição — mesmo trio persistido, sem caminho paralelo.
+   */
+  protected confirmarAtalhoTraumaLimiar(): void {
+    this.confirmandoTraumaLimiar.set(false);
+    const estado = this.estado();
+    this.ajusteSanidade.emit({
+      sequelas: estado.sequelas,
+      traumas: [
+        { nome: this.nomeTraumaLimiar, descricao: this.descricaoTraumaLimiar, tratado: false },
+        ...estado.traumas,
+      ],
+      lesoes: estado.lesoes,
+    });
+  }
 }

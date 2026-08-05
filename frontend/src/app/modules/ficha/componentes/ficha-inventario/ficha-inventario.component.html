@@ -346,6 +346,14 @@
               item na lista do inventário.
             }
           </p>
+          @if (avisoLimiteEnergiaAquisicao(); as aviso) {
+            <p class="ficha-inv__aviso">
+              <strong>Aviso:</strong> adicionar este fragmento levaria a Energia Máxima a
+              {{ aviso.projecao }} — abaixo do limite mínimo ({{ limiteMinimoEnergia() }} = (Vigor +
+              Destreza) × 2). O agente entraria em Anomalia Biológica. Isso não trava a ação — a
+              decisão de largar ou continuar é sua.
+            </p>
+          }
         }
         @if (mostraDano()) {
           <div class="ficha-inv__form-linha">

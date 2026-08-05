@@ -1,6 +1,6 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-04 · **Última task registrada:** `m3-65` (2026-08-04)
+> **Última revisão:** 2026-08-05 · **Última task registrada:** `m3-67` (2026-08-05)
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -45,7 +45,7 @@ Deploy em produção por **integração nativa das plataformas**, sem GitHub Act
 `master` → Render (backend) e Cloudflare Pages (frontend) puxam do Git sozinhos; banco no Supabase.
 O GitHub Actions só roda **CI** (lint + testes nos 3 workspaces em todo PR).
 
-**Suítes:** shared 507/507 · backend 170/170 · frontend 688/**690** — as 2 falhas são conhecidas e
+**Suítes:** shared 517/517 · backend 170/170 · frontend 704/**706** — as 2 falhas são conhecidas e
 pré-existentes, ver [`PROBLEMS.md`](PROBLEMS.md) `P-001`/`P-010`. `npm run lint` **não fecha limpo**
 hoje em nenhum dos dois workspaces (frontend/backend) — falhas pré-existentes não relacionadas a
 nenhuma task recente, ver `PROBLEMS.md` `P-009`.
@@ -166,7 +166,11 @@ devolve o item ao inventário, mas não mexe na sequela já gerada) — e fragme
 com o bônus fixo do módulo já aplicado como modificação automática — Arma ganha dano/teste, Proteção
 ganha resistência/Esquiva/Bloqueio/Defesa, `m3-65`; Munição não modifica item, tem a ação própria
 "Recarregar" que debita Energia e concede dano por 1 cena, reset manual; modificações comuns
-adicionadas a um Construtor custam o dobro e não pesam) —, sub-inventários, custom), identidade (origem,
+adicionadas a um Construtor custam o dobro e não pesam) —, sub-inventários, custom), Limite mínimo
+de Energia/Anomalia Biológica (`m3-67`: `(Vigor + Destreza) × 2` — abaixo dele, aviso não-bloqueante
+na aquisição de fragmento e, na aba Extras, os efeitos calculados como texto informativo (−15
+testes, −10 Defesa, teto de 10% da Vida Máxima) + atalho pra pré-preencher o trauma "Limiar da
+Humanidade" na aba Sanidade, sem nunca disparar sozinho), identidade (origem,
 personalidade, afinidade de fragmentos), história privada, anotações e dinheiro. Persistência **otimista + em lote**, com
 merge de edição concorrente — a lógica (~18 handlers `ajustar*` + progressão) mora em
 `FichaEdicaoService` (`@Injectable()` sem `providedIn: 'root'`, uma instância por página via

@@ -1606,6 +1606,121 @@ describe('FichaVisualizacao', () => {
     });
   });
 
+  describe('Limite mínimo de Energia / Anomalia Biológica (m3-67)', () => {
+    /** Monta já na aba "Extras" (mesmo helper de `montarExtras` acima). */
+    function montarExtras(documento: FichaJogadorDadosDto, ajustavel = false) {
+      const alvo = montar(documento, 'Corvo', 42, ajustavel);
+      alvo.fixture.componentRef.setInput('abaStatusInicial', 'extras');
+      alvo.fixture.detectChanges();
+      return alvo;
+    }
+
+    function secaoAnomalia(raiz: HTMLElement) {
+      return Array.from(raiz.querySelectorAll('.ficha-extras__secao')).find(
+        (s) => s.querySelector('.ficha-cartao__subrotulo')?.textContent?.trim() === 'Anomalia Biológica',
+      )!;
+    }
+
+    // `dados`: Vigor 4, Destreza 2 → limite mínimo (4+2)×2 = 12. Energia Máxima derivada (sem
+    // override) do Combatente nível 3/Destreza 2 é 43 — bem acima do limite, então fora do estado.
+    it('limite mínimo é (Vigor + Destreza) × 2; Energia Máxima acima dele: sem Anomalia Biológica', () => {
+      const { raiz, fixture } = montarExtras(dados);
+      expect(fixture.componentInstance['limiteMinimoEnergia']()).toBe(12);
+      expect(fixture.componentInstance['anomaliaBiologica']()).toBe(false);
+      const secao = secaoAnomalia(raiz);
+      expect(secao.textContent).toContain('12');
+      expect(secao.textContent).toContain('dentro do limite');
+      expect(secao.textContent).not.toContain('todos os testes');
+    });
+
+    it('Energia Máxima atual abaixo do limite: estado derivado true e mostra os efeitos calculados', () => {
+      const documento = { ...dados, estado: { ...dados.estado, energiaMaxima: 5 } };
+      const { raiz, fixture } = montarExtras(documento);
+      expect(fixture.componentInstance['anomaliaBiologica']()).toBe(true);
+
+      const secao = secaoAnomalia(raiz);
+      expect(secao.textContent).toContain('Energia Máxima (5)');
+      const linhas = Array.from(secao.querySelectorAll('.ficha-extras__linha')).map((linha) => ({
+        rotulo: linha.querySelector('.ficha-extras__rotulo')?.textContent?.trim(),
+        valor: linha.querySelector('.ficha-extras__valor')?.textContent?.trim(),
+      }));
+      // Vida Máxima derivada (Combatente nível 3, Vigor 4) = 91 → teto de 10% = 9 (floor).
+      expect(linhas).toEqual([
+        { rotulo: 'Testes', valor: '-15 em todos os testes' },
+        { rotulo: 'Defesa', valor: '-10 em Defesa' },
+        { rotulo: 'Vida atual', valor: 'trava em 9 de 91' },
+      ]);
+    });
+
+    it('Energia Máxima atual igual ao limite: ainda fora do estado (só abaixo entra)', () => {
+      const documento = { ...dados, estado: { ...dados.estado, energiaMaxima: 12 } };
+      const { fixture } = montarExtras(documento);
+      expect(fixture.componentInstance['anomaliaBiologica']()).toBe(false);
+    });
+
+    it('visualizador (não ajustável) em Anomalia Biológica: sem o atalho de registrar o trauma', () => {
+      const documento = { ...dados, estado: { ...dados.estado, energiaMaxima: 5 } };
+      const { raiz } = montarExtras(documento, false);
+      expect(secaoAnomalia(raiz).textContent).not.toContain('Limiar da Humanidade');
+    });
+
+    it('dono/mestre em Anomalia Biológica: atalho pré-preenche nome/descrição e não dispara sozinho', () => {
+      const documento = { ...dados, estado: { ...dados.estado, energiaMaxima: 5 } };
+      const alvo = montarExtras(documento, true);
+      const ajustes: unknown[] = [];
+      alvo.fixture.componentInstance.ajusteSanidade.subscribe((a) => ajustes.push(a));
+
+      const secao = () => secaoAnomalia(alvo.raiz);
+      const botaoAbrir = () =>
+        Array.from(secao().querySelectorAll('button')).find((b) =>
+          b.textContent?.includes('Limiar da Humanidade'),
+        ) as HTMLButtonElement;
+      expect(botaoAbrir()).toBeDefined();
+      // Só abrir o atalho não emite nada — precisa da confirmação explícita.
+      expect(ajustes).toEqual([]);
+
+      botaoAbrir().click();
+      alvo.fixture.detectChanges();
+      expect(secao().textContent).toContain('+2');
+      expect(secao().textContent).toContain('-5');
+      expect(secao().textContent).toContain('3×');
+      expect(ajustes).toEqual([]);
+
+      const botaoCancelar = () =>
+        Array.from(secao().querySelectorAll('button')).find((b) => b.textContent?.trim() === 'Cancelar') as
+          | HTMLButtonElement
+          | undefined;
+      botaoCancelar()!.click();
+      alvo.fixture.detectChanges();
+      expect(secao().textContent).not.toContain('+2 ao custo');
+      expect(ajustes).toEqual([]);
+
+      botaoAbrir().click();
+      alvo.fixture.detectChanges();
+      const botaoConfirmar = () =>
+        Array.from(secao().querySelectorAll('button')).find(
+          (b) => b.textContent?.trim() === 'Registrar trauma',
+        ) as HTMLButtonElement;
+      botaoConfirmar().click();
+      alvo.fixture.detectChanges();
+
+      expect(ajustes).toEqual([
+        {
+          sequelas: dados.estado.sequelas,
+          traumas: [
+            {
+              nome: 'Limiar da Humanidade',
+              descricao: expect.stringContaining('+2'),
+              tratado: false,
+            },
+            ...dados.estado.traumas,
+          ],
+          lesoes: dados.estado.lesoes,
+        },
+      ]);
+    });
+  });
+
   describe('navegação mobile (m3-60) — barra inferior + HUD de vitais', () => {
     it('a barra inferior tem os seis destinos para dono/mestre, começando pelo Agente', () => {
       const { raiz } = montar(dados, 'Corvo', 42, true, false);

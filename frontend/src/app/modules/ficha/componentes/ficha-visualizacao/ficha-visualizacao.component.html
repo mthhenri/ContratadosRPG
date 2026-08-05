@@ -1594,6 +1594,66 @@
               </p>
             }
           </div>
+
+          <div class="ficha-cartao__divisor"></div>
+
+          <!-- Limite mínimo de Energia / Anomalia Biológica (m3-67): estado 100% derivado da Energia
+               Máxima atual vs. (Vigor + Destreza) × 2 — sem trava, sem campo persistido. Efeitos são
+               texto informativo calculado, aplicação manual (mesmo padrão de sequelas/traumas). -->
+          <div class="ficha-extras__secao">
+            <p class="ficha-cartao__subrotulo">Anomalia Biológica</p>
+            <div class="ficha-mini">
+              <span class="ficha-mini__rotulo">Limite mínimo de Energia</span>
+              <span class="ficha-mini__valor">{{ limiteMinimoEnergia() }}</span>
+            </div>
+            @if (anomaliaBiologica()) {
+              <p class="ficha-extras__nota">
+                Energia Máxima ({{ energiaMaxima() }}) abaixo do limite mínimo — o agente está em
+                Anomalia Biológica.
+              </p>
+              <ul class="ficha-extras__lista">
+                <li class="ficha-extras__linha">
+                  <span class="ficha-extras__rotulo">Testes</span>
+                  <span class="ficha-extras__valor">{{ penalidadeTestesAnomalia }} em todos os testes</span>
+                </li>
+                <li class="ficha-extras__linha">
+                  <span class="ficha-extras__rotulo">Defesa</span>
+                  <span class="ficha-extras__valor">{{ penalidadeDefesaAnomalia }} em Defesa</span>
+                </li>
+                <li class="ficha-extras__linha">
+                  <span class="ficha-extras__rotulo">Vida atual</span>
+                  <span class="ficha-extras__valor">trava em {{ tetoVidaAnomalia() }} de {{ vidaMaxima() }}</span>
+                </li>
+              </ul>
+              @if (ajustavel()) {
+                @if (confirmandoTraumaLimiar()) {
+                  <p class="ficha-extras__nota">
+                    "{{ nomeTraumaLimiar }}": {{ descricaoTraumaLimiar }}
+                  </p>
+                  <div class="ficha-extras__acoes">
+                    <button
+                      type="button"
+                      class="ficha-cartao__acao ficha-cartao__acao--confirmar"
+                      (click)="confirmarAtalhoTraumaLimiar()"
+                    >
+                      Registrar trauma
+                    </button>
+                    <button type="button" class="ficha-cartao__acao" (click)="cancelarAtalhoTraumaLimiar()">
+                      Cancelar
+                    </button>
+                  </div>
+                } @else {
+                  <button type="button" class="ficha-cartao__acao" (click)="abrirAtalhoTraumaLimiar()">
+                    + Registrar trauma "Limiar da Humanidade"
+                  </button>
+                }
+              }
+            } @else {
+              <p class="ficha-visao__vazio">
+                Energia Máxima ({{ energiaMaxima() }}) dentro do limite — sem Anomalia Biológica.
+              </p>
+            }
+          </div>
         </div>
         }
         <!-- História (m3-50): aba própria, só dono/mestre — o botão já não aparece pra quem não

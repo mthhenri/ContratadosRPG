@@ -21,6 +21,67 @@
 
 ## Registro por task (mais recente primeiro)
 
+## m3-67 — Fragmentos: Limite mínimo de Energia e Anomalia Biológica (2026-08-05)
+
+Spec: `docs/specs/done/m3-67-fragmentos-limite-energia-anomalia-biologica.spec.md`. Continuação do
+lote de Fragmentos (`m3-35`, `m3-42`), desenvolvida em cima da branch que já tinha `m3-63`…`m3-66`
+(mesma sessão de trabalho; `m3-66`/`m3-68`/`m3-69` chegaram já commitadas ao puxar a branch, sem
+registro próprio neste arquivo — dívida de outra sessão, não coberta aqui).
+
+**O problema.** Nada modelava o "Limite mínimo de Energia" do doc (`(Vigor + Destreza) × 2`): um
+agente podia portar fragmentos suficientes pra zerar a Energia Máxima sem aviso nem consequência —
+faltava o estado "Anomalia Biológica" (efeitos: −15 testes, −10 Defesa, vida atual travada em 10%
+da máxima) e o atalho pro trauma "Limiar da Humanidade".
+
+**O que foi feito.**
+
+1. **`limiteMinimoEnergiaMaximaFragmentos`** (`shared/regras/agente/fragmento-limite-energia.ts`,
+   novo arquivo) — `(Vigor + Destreza) × 2`. Nomeada de propósito pra não colidir com
+   `calcularLimiteEnergia` (`saude.ts`), que é outro conceito (quanto a Energia **atual** pode
+   negativar, `Destreza × 2`/`Destreza`) — os dois docstrings agora se referenciam um ao outro pra
+   não repetir a confusão que a spec avisou já ter acontecido uma vez.
+2. **`emAnomaliaBiologica`** — estado 100% derivado (Energia Máxima atual, já reduzida pelos
+   fragmentos, `<` o limite), sem campo persistido — mesma filosofia de "nada é travado pelo motor,
+   o narrativo é refletido por quem joga" (`m3-10`). Mais `tetoVidaAnomaliaBiologica` (10% da Vida
+   Máxima, `Math.floor`) e as constantes `PENALIDADE_TESTES_ANOMALIA_BIOLOGICA`/`_DEFESA_` (−15/−10,
+   texto informativo — **não** tocam `calcularDefesa`/motor de rolagem, fora de escopo por pedido
+   explícito da spec) e `TRAUMA_LIMIAR_HUMANIDADE_NOME`/`_DESCRICAO` (nome/descrição prontos, mesmo
+   padrão de `SEQUELA_CONSUMO_FRAGMENTO`).
+3. **Aviso na aquisição** (`FichaInventario`) — `avisoLimiteEnergiaAquisicao`, computed que projeta a
+   Energia Máxima após adquirir o fragmento do form custom (categoria + módulo já escolhidos, mesma
+   conta de `debitarAquisicaoFragmento`, só sem debitar) e mostra um `ficha-inv__aviso` quando a
+   projeção cairia abaixo do limite. **Não trava** — a ação de confirmar o item continua livre,
+   exatamente como a spec pediu.
+4. **Exibição na aba Extras** (`FichaVisualizacao`) — nova seção "Anomalia Biológica" ao lado de
+   "Afinidade de Fragmentos": limite mínimo sempre visível; em Anomalia Biológica, lista os três
+   efeitos calculados (mesmo padrão visual de sequelas/traumas — nome/descrição, aplicação manual).
+5. **Atalho do trauma "Limiar da Humanidade"** — confirmação inline (abrir → mostra nome/descrição
+   pré-preenchidos → "Registrar trauma"/"Cancelar", mesmo padrão de `pedirRemocaoFragmentoConsumido`)
+   só visível pra quem edita (`ajustavel()`) e só em Anomalia Biológica; nunca dispara sozinho —
+   reusa o canal `ajusteSanidade` (m3-12) já existente, sem persistência paralela. **Decisão:**
+   implementado como painel próprio na aba Extras (não uma chamada imperativa pro `FichaSanidade`
+   embutido noutra sub-aba do card de Status) — evita acoplar componentes por `viewChild` através de
+   uma troca de sub-aba assíncrona só pra abrir um dialog; o resultado (registrar no trio
+   `sequelas/traumas/lesoes` via `ajusteSanidade`) é idêntico ao que o editor de Sanidade faria.
+
+**Testes.** `shared`: `limiteMinimoEnergiaMaximaFragmentos`, `emAnomaliaBiologica` (abaixo/igual/
+acima do limite), `tetoVidaAnomaliaBiologica`, constantes. `frontend`: `FichaVisualizacao` — limite
+exibido, estado ligado/desligado, efeitos calculados corretos (vida: Vida Máxima derivada × 10%
+`floor`), atalho do trauma escondido pra visualizador, fluxo completo abrir/cancelar/confirmar do
+atalho (não dispara sozinho, emite o trio esperado). `FichaInventario` — sem aviso sem módulo
+escolhido, sem aviso quando o custo não cruza o limite, aviso presente e correto num Fragmento
+Construtor módulo I (custa o dobro) que cruza o limite, e a aquisição confirmando normalmente
+(não trava).
+
+**Verificação.** `shared`: 517/517 (10 novos), lint limpo. `backend`: 170/170 inalterado (fora do
+escopo). `frontend`: build limpo, 704/706 (18 novos; as 2 falhas são as conhecidas `P-001`/`P-010`,
+confirmadas pré-existentes via `git stash`/lint antes da mudança), lint limpo nos arquivos tocados
+(o único erro de lint do repo, em `ficha-visualizacao.component.spec.ts:1942`, é pré-existente —
+confirmado via `git stash`). Sem stack local (Postgres/Docker indisponível neste ambiente) pra
+verificação end-to-end no navegador real — a UI foi conferida via `TestBed` (DOM/template reais,
+change detection real, eventos emitidos reais), não apenas lógica isolada. Spec movida de
+`backlog/` pra `done/`.
+
 ## m3-65 — Fragmentos: tabela de bônus fixos do Construtor (2026-08-04)
 
 Spec: `docs/specs/done/m3-65-fragmentos-tabela-construtor.spec.md`. Continuação do lote de

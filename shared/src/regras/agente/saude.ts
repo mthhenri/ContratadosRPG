@@ -92,6 +92,10 @@ export function calcularEnergia(dto: EnergiaCalcularDto): number {
  * "Jogando como um Civil" > "Informações Adicionais". Diverge de
  * `contratados-calculadora/src/script.js`, que usava `(Vigor + Destreza) × 2`
  * para agentes — o documento vence (proibição #27).
+ *
+ * **Não confundir** com `limiteMinimoEnergiaMaximaFragmentos` (`fragmento-limite-energia.ts`,
+ * m3-67): aquela usa `(Vigor + Destreza) × 2` de verdade, mas é sobre o teto da Energia **Máxima**
+ * no contexto específico de portar Fragmentos — conceito diferente, mesma sopa de letrinhas.
  */
 export function calcularLimiteEnergia(dto: LimiteEnergiaCalcularDto): number {
   return ehCivil(dto.classe) ? dto.destreza : dto.destreza * 2;

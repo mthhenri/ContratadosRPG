@@ -1585,6 +1585,61 @@ describe('FichaInventario', () => {
     });
   });
 
+  // `atributos`: Vigor 4, Destreza 2 → limite mínimo (4+2)×2 = 12 (doc — "⬦ Limite mínimo de
+  // Energia"). `energiaMaxima` default do `montar` é 50.
+  describe('aviso de Limite mínimo de Energia na aquisição de Fragmento (m3-67)', () => {
+    it('sem módulo escolhido ainda: sem aviso', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.fixture.componentInstance['alternarCriarItem']();
+      alvo.fixture.componentInstance['itemCustomForm'].controls.categoria.setValue(
+        ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+      );
+      alvo.fixture.detectChanges();
+
+      expect(alvo.componentInstance['avisoLimiteEnergiaAquisicao']()).toBeNull();
+      expect(alvo.raiz.textContent).not.toContain('Anomalia Biológica');
+    });
+
+    it('módulo cujo custo não leva abaixo do limite: sem aviso', () => {
+      // Potencializador módulo V custa 3 de Energia Máxima: 50 − 3 = 47, bem acima de 12.
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.fixture.componentInstance['alternarCriarItem']();
+      alvo.fixture.componentInstance['itemCustomForm'].patchValue({
+        categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+        modulo: FragmentoModuloEnum.V,
+      });
+      alvo.fixture.detectChanges();
+
+      expect(alvo.componentInstance['avisoLimiteEnergiaAquisicao']()).toBeNull();
+      expect(alvo.raiz.textContent).not.toContain('Anomalia Biológica');
+    });
+
+    it('Fragmento Construtor módulo I (custa o dobro, 40): projeta 10 — abaixo do limite (12), mostra o aviso sem travar', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.fixture.componentInstance['alternarCriarItem']();
+      alvo.fixture.componentInstance['itemCustomForm'].patchValue({
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        modulo: FragmentoModuloEnum.I,
+      });
+      alvo.fixture.detectChanges();
+
+      expect(alvo.componentInstance['limiteMinimoEnergia']()).toBe(12);
+      expect(alvo.componentInstance['avisoLimiteEnergiaAquisicao']()).toEqual({ projecao: 10 });
+      const aviso = Array.from(alvo.raiz.querySelectorAll('.ficha-inv__aviso')).find((p) =>
+        p.textContent?.includes('Anomalia Biológica'),
+      );
+      expect(aviso?.textContent).toContain('10');
+      expect(aviso?.textContent).toContain('12');
+
+      // Não trava: confirmar o item ainda funciona normalmente.
+      alvo.fixture.componentInstance['itemCustomForm'].controls.nome.setValue('Fragmento achado');
+      const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
+      alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+      alvo.fixture.componentInstance['confirmarCriarItem']();
+      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 10 }]);
+    });
+  });
+
   describe('catálogo — atalho "Fragmentos" (grade de módulos, botões Construtor/Potencializador direto)', () => {
     it('a aba "Fragmentos" aparece nas categorias do catálogo, ao lado das demais', () => {
       const { raiz, fixture, componentInstance } = montar({ itens: [], amplificadores: [] });

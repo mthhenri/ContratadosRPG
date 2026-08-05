@@ -16,7 +16,11 @@ import type {
   FichaInventarioDto,
   FichaSequelaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
-import { ajusteInventarioAmplificadores } from '@contratados-rpg/shared/regras/agente';
+import {
+  ajusteInventarioAmplificadores,
+  emAnomaliaBiologica,
+  limiteMinimoEnergiaMaximaFragmentos,
+} from '@contratados-rpg/shared/regras/agente';
 import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
 import {
   AMPLIFICADORES,
@@ -611,6 +615,45 @@ export class FichaInventario {
   );
   protected readonly categoriasEmprestaveis = CATEGORIAS_EMPRESTAVEIS;
   protected readonly modulosFragmento = MODULOS_FRAGMENTO;
+
+  /** Módulo escolhido no form de item custom, ao vivo (alimenta o aviso de Limite mínimo de Energia). */
+  private readonly moduloCustom = toSignal(this.itemCustomForm.controls.modulo.valueChanges, {
+    initialValue: this.itemCustomForm.controls.modulo.value,
+  });
+
+  /** Limite mínimo de Energia Máxima pro Vigor/Destreza do agente (doc — "⬦ Limite mínimo de Energia"; m3-67). */
+  protected readonly limiteMinimoEnergia = computed(() =>
+    limiteMinimoEnergiaMaximaFragmentos(this.atributos()),
+  );
+
+  /**
+   * Aviso do painel de aquisição (m3-67): projeta a Energia Máxima **após** adquirir o Fragmento do
+   * form custom (categoria + módulo já escolhidos) e devolve `{ projecao }` quando ela ficaria
+   * abaixo do Limite mínimo de Energia — `null` fora do fluxo de fragmento, sem módulo escolhido
+   * ainda, ou quando a aquisição não levaria à Anomalia Biológica. **Não trava** a ação (doc: "só
+   * avisa antes"); mesma conta de `debitarAquisicaoFragmento` (proibição #26), só sem debitar de
+   * verdade. Envelope `{ projecao }` (não `number` cru) de propósito — o template usa `@if (...; as
+   * x)`, que trata `0` como falso; uma projeção de Energia Máxima exatamente 0 é um caso real (e
+   * abaixo do limite) que um `number | null` esconderia silenciosamente.
+   */
+  protected readonly avisoLimiteEnergiaAquisicao = computed<{ readonly projecao: number } | null>(() => {
+    if (!this.mostraModulo()) {
+      return null;
+    }
+    const modulo = this.moduloCustom() as FragmentoModuloEnum | '';
+    if (!modulo) {
+      return null;
+    }
+    const tipo = tipoFragmentoDaCategoria(this.categoriaCustom());
+    if (!tipo) {
+      return null;
+    }
+    const itens = this.inventario().itens;
+    const afinidade = afinidadeConsiderando(itens, modulo);
+    const custo = aplicarReducaoAfinidade(custoAquisicaoFragmento(tipo, modulo), afinidade);
+    const projecao = this.energiaMaxima() - custo;
+    return emAnomaliaBiologica(projecao, this.limiteMinimoEnergia()) ? { projecao } : null;
+  });
 
   /**
    * Índice do item com o menu "Mover para" (m3-44) aberto, ou `null`. Popover próprio (não
