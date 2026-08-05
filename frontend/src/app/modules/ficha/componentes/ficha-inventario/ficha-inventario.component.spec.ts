@@ -97,6 +97,44 @@ describe('FichaInventario', () => {
     expect(modificares.length).toBe(1);
   });
 
+  it('não oferece "Modificar" num Fragmento Potencializador solto — só "Aplicar em..."/"Consumir" (doc: só o Construtor recebe modificação como a arma base)', () => {
+    const potencializador: CarrinhoItemDto = {
+      nome: 'Fragmento achado',
+      categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+      custo: 0,
+      peso: 0,
+      quantidade: 1,
+      guardada: false,
+      modificacoes: [],
+      modulo: FragmentoModuloEnum.V,
+    };
+    const { raiz } = montar({ itens: [potencializador, itemLeve], amplificadores: [] }, true);
+    const botoesModificar = Array.from(raiz.querySelectorAll('.ficha-inv__modificar')).filter((b) =>
+      b.getAttribute('aria-label')?.startsWith('Modificar '),
+    );
+    // Só o item "Leve" tem "Modificar"; o Potencializador só oferece "Aplicar em..."/"Consumir".
+    expect(botoesModificar).toHaveLength(1);
+    expect(botoesModificar[0].getAttribute('aria-label')).toBe('Modificar Leve');
+    expect(raiz.querySelector('[aria-label^="Aplicar em..."]')).toBeTruthy();
+    expect(raiz.querySelector('[aria-label^="Consumir —"]')).toBeTruthy();
+  });
+
+  it('um Fragmento Construtor continua modificável — recebe modificações como a própria arma base (m3-65)', () => {
+    const construtor: CarrinhoItemDto = {
+      nome: 'Espada de Ossos',
+      categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+      custo: 0,
+      peso: 1,
+      quantidade: 1,
+      guardada: false,
+      modulo: FragmentoModuloEnum.V,
+      categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+      modificacoes: [],
+    };
+    const { raiz } = montar({ itens: [construtor], amplificadores: [] }, true);
+    expect(raiz.querySelector('[aria-label^="Modificar "]')).toBeTruthy();
+  });
+
   it('é só leitura quando não editável: lista os itens sem botões de ação nem catálogo', () => {
     const { raiz } = montar({ itens: [itemLeve], amplificadores: [] }, false);
     const nomes = Array.from(raiz.querySelectorAll('.ficha-inv__item-nome')).map((n) =>

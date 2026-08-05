@@ -116,10 +116,16 @@ const ORDEM_CATEGORIAS_LISTA: readonly ItemCategoriaEnum[] = [
   ItemCategoriaEnum.ARMAZENAMENTO,
 ];
 
-/** Categorias que **não aceitam modificação** alguma (nem do catálogo, nem custom): consumíveis. */
+/**
+ * Categorias que **não aceitam modificação** alguma (nem do catálogo, nem custom): consumíveis e o
+ * Fragmento Potencializador — o doc só concede "receber modificações como a arma base" ao
+ * Construtor (doc — "⬦ Construtor"); o Potencializador só melhora OUTRO item/ser (via "Aplicar
+ * em..."/`fragmentoPotencializador`) ou é consumido, nunca recebe modificação nele mesmo.
+ */
 const CATEGORIAS_NAO_MODIFICAVEIS: readonly ItemCategoriaEnum[] = [
   ItemCategoriaEnum.OPERACIONAL,
   ItemCategoriaEnum.MEDICINAL,
+  ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
 ];
 
 /** Categorias que possuem **dano** (o form custom mostra Dano + Informação). */
