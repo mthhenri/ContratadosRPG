@@ -10,13 +10,23 @@ import {
   ItemCategoriaEnum,
   ModificacaoEfeitoTipoEnum,
 } from '@contratados-rpg/shared/enums';
-import type { FichaAtributosDto, FichaInventarioDto, FichaSequelaDto } from '@contratados-rpg/shared/dtos/ficha';
-import { ajusteInventarioAmplificadores } from '@contratados-rpg/shared/regras/agente';
+import type {
+  FichaAtributosDto,
+  FichaFragmentoConsumidoDto,
+  FichaInventarioDto,
+  FichaSequelaDto,
+} from '@contratados-rpg/shared/dtos/ficha';
+import {
+  ajusteInventarioAmplificadores,
+  emAnomaliaBiologica,
+  limiteMinimoEnergiaMaximaFragmentos,
+} from '@contratados-rpg/shared/regras/agente';
 import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
 import {
   AMPLIFICADORES,
   AmplificadorAplicadoDto,
   aplicarReducaoAfinidade,
+  bonusMunicaoConstrutor,
   calcularAfinidade,
   calcularCustoAmplificador,
   calcularResumoCompras,
@@ -30,18 +40,24 @@ import {
   custoRemoverFragmento,
   custoSanidadeConsumirFragmento,
   descreverEfeitosModificacao,
+  existeFragmentoNaMesmaFuncao,
+  formaFixaConstrutor,
   ItemCatalogo,
+  listarBonusConsumoFragmentoPotencializador,
   listarBonusFragmentoPotencializador,
+  listarEfeitosFixosConstrutor,
   listarModificacoesCategoria,
   listarModificacoesDisponiveis,
   listarModulosFragmentosPortados,
   listarSubInventarios,
+  maiorDadoItem,
   ModificacaoDados,
   ModificacaoEfeitoDto,
   obterCategoriaEmprestada,
   obterCustoModificacao,
   obterLimiteModificacoes,
   obterPesoModificacao,
+  OpcaoBonusConsumoFragmentoDto,
   OpcaoBonusFragmentoDto,
   PENALIDADE_VONTADE_POR_EMPILHAMENTO,
   PrecoSanidadeConsumoDto,
@@ -104,10 +120,16 @@ const ORDEM_CATEGORIAS_LISTA: readonly ItemCategoriaEnum[] = [
   ItemCategoriaEnum.ARMAZENAMENTO,
 ];
 
-/** Categorias que **não aceitam modificação** alguma (nem do catálogo, nem custom): consumíveis. */
+/**
+ * Categorias que **não aceitam modificação** alguma (nem do catálogo, nem custom): consumíveis e o
+ * Fragmento Potencializador — o doc só concede "receber modificações como a arma base" ao
+ * Construtor (doc — "⬦ Construtor"); o Potencializador só melhora OUTRO item/ser (via "Aplicar
+ * em..."/`fragmentoPotencializador`) ou é consumido, nunca recebe modificação nele mesmo.
+ */
 const CATEGORIAS_NAO_MODIFICAVEIS: readonly ItemCategoriaEnum[] = [
   ItemCategoriaEnum.OPERACIONAL,
   ItemCategoriaEnum.MEDICINAL,
+  ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
 ];
 
 /** Categorias que possuem **dano** (o form custom mostra Dano + Informação). */
@@ -195,12 +217,18 @@ interface CartaoItemVM {
   readonly descricao: string | null;
 }
 
-/** Cartão de um módulo (I–V) na grade de Fragmentos do catálogo — atalho pra montar o item custom. */
+/**
+ * Cartão de um módulo (I–V) na grade de Fragmentos do catálogo — atalho pra montar o item custom.
+ * Custo `*Reduzido` já aplica a Afinidade atual do agente (m3-66) — igual ao `*` bruto quando a
+ * Afinidade não reduz nada (o template só mostra o bruto riscado quando os dois divergem).
+ */
 interface CartaoModuloFragmentoVM {
   readonly modulo: FragmentoModuloEnum;
   readonly afinidade: number;
   readonly custoPotencializador: number;
   readonly custoConstrutor: number;
+  readonly custoPotencializadorReduzido: number;
+  readonly custoConstrutorReduzido: number;
 }
 
 /** Cartão de amplificador do catálogo. */
@@ -229,6 +257,13 @@ interface ModAtivaVM {
   readonly descricao: string | null;
   /** `true` quando esta mod veio de um Fragmento aplicado (m3-35) — mostra o badge/ícone de origem. */
   readonly deFragmento: boolean;
+  /**
+   * `true` só pro bônus fixo automático de um Fragmento Construtor (`m3-65`) — não é uma modificação
+   * comprada, não tem stack pra ajustar: some junto do item, nunca sozinha. Esconde o stepper −/+ e
+   * os toggles "não conta" (que já vêm forçados `true` na criação — soltá-los quebraria a garantia
+   * "fora do limite de mods da patente" do doc).
+   */
+  readonly fixa: boolean;
 }
 
 /** Uma entrada do painel de modificações (mod disponível para o item). */
@@ -259,6 +294,32 @@ export interface CustoEnergiaFragmento {
 }
 
 /**
+ * Bônus "Consumido" escolhido no painel "Consumir" de um fragmento Potencializador (m3-64) —
+ * `atributoEscolhido` só é relevante (e exigido antes de confirmar) quando `opcao.tipo === 'TESTE'`.
+ * A página aplica o efeito ao agente via `aplicarBonusConsumoFragmento`
+ * (`shared/regras/agente/fragmento-consumo`) — este componente só sabe o que foi escolhido, não onde
+ * o bônus aterrissa na ficha.
+ */
+export interface BonusConsumoFragmentoEscolhidoDto {
+  readonly opcao: OpcaoBonusConsumoFragmentoDto;
+  readonly atributoEscolhido: keyof FichaAtributosDto | null;
+}
+
+/** Rótulo por extenso de cada atributo — opções do `<select>` "Atributo" do painel "Consumir". */
+const ROTULOS_ATRIBUTO: Readonly<Record<keyof FichaAtributosDto, string>> = {
+  destreza: 'Destreza',
+  forca: 'Força',
+  luta: 'Luta',
+  pontaria: 'Pontaria',
+  vigor: 'Vigor',
+  intelecto: 'Intelecto',
+  medicina: 'Medicina',
+  sentidos: 'Sentidos',
+  social: 'Social',
+  vontade: 'Vontade',
+};
+
+/**
  * Filtro de visualização da lista do Inventário — controle segmentado de 3 opções (revisão de UX
  * do filtro "ver só amplificadores"/"ver só fragmentos"). `'equipamentos'` é o padrão (mostra tudo).
  */
@@ -272,10 +333,19 @@ interface ItemInventarioVM {
   readonly apelido: string | null;
   /** `apelido ?? nome` — o que o card exibe em destaque. */
   readonly nomeExibido: string;
+  /** "Mod. <módulo>" pra fragmento sem apelido (o nome vira a categoria — "Fragmento X" — e o
+   *  módulo some pro rodapé do card), ou `null` fora de Fragmento. */
+  readonly fragmentoModuloTexto: string | null;
   /** `false` para categorias empilháveis (munição, medicinal, operacional) — pilha, não instância. */
   readonly podeApelidar: boolean;
   /** `true` para fragmento Potencializador — mostra a ação "Aplicar em..." (m3-35). */
   readonly fragmentoPotencializador: boolean;
+  /** `true` para fragmento Construtor na forma Munição — mostra a ação "Recarregar" (m3-65). */
+  readonly fragmentoConstrutorMunicao: boolean;
+  /** `true` quando a Munição Construtor está recarregada nesta cena (m3-65). `false` fora dela. */
+  readonly recarregada: boolean;
+  /** Texto do bônus "Recarregar" (custo de Energia + dano concedido), ou `null` fora da Munição Construtor (m3-65). */
+  readonly bonusMunicaoTexto: string | null;
   readonly categoria: ItemCategoriaEnum;
   readonly categoriaRotulo: string;
   readonly quantidade: number;
@@ -423,6 +493,17 @@ export class FichaInventario {
    * sequela com o teste de Vontade.
    */
   readonly sequelasFragmentoConsumido = output<readonly FichaSequelaDto[]>();
+  /**
+   * Emite o bônus "Consumido" escolhido ao confirmar o consumo de um fragmento (m3-64) — a página
+   * aplica ao agente (teste/Defesa/dano do Corpo, via `aplicarBonusConsumoFragmento`).
+   */
+  readonly bonusConsumoFragmento = output<BonusConsumoFragmentoEscolhidoDto>();
+  /**
+   * Registro incondicional do consumo (m3-64) — emitido **sempre**, mesmo quando o jogador evita a
+   * sequela "Rejeição Biológica" com o teste de Vontade (a sequela é opcional; este rastro não).
+   * A página acrescenta à aba Extras, acima da Afinidade.
+   */
+  readonly fragmentoConsumido = output<FichaFragmentoConsumidoDto>();
   /** Rolagem de dano de um item (m3-45) — quem persiste o histórico é `FichaVisualizacao` (m3-27). */
   readonly rolagemFeita = output<RolagemRealizadaDto>();
 
@@ -514,6 +595,14 @@ export class FichaInventario {
     categoriaEmprestada: new FormControl('', { nonNullable: true }),
     /** `''` = nenhum; senão `I`–`V` (só fragmentos). */
     modulo: new FormControl('', { nonNullable: true }),
+    /**
+     * `''` = "Outra" (texto livre, como sempre foi); senão o `nome` de um item de
+     * `CATALOGO_ITENS[categoriaEmprestada]` escolhido como Base do Fragmento Construtor
+     * (`m3-69` — doc: "ele é a arma em si"). Só relevante quando `mostraBaseConstrutor()`;
+     * não entra no `CarrinhoItemDto` (é só estado de UI — `escolherBaseConstrutor` já grava o
+     * resultado em dano/informação/resistência/peso).
+     */
+    baseConstrutor: new FormControl('', { nonNullable: true }),
   });
 
   /** Categoria atual do form de item custom — também alimenta o gatilho do dropdown de categoria (com ícone). */
@@ -542,6 +631,77 @@ export class FichaInventario {
   protected readonly categoriasEmprestaveis = CATEGORIAS_EMPRESTAVEIS;
   protected readonly modulosFragmento = MODULOS_FRAGMENTO;
 
+  /** Módulo escolhido no form de item custom, ao vivo (alimenta o aviso de Limite mínimo de Energia). */
+  private readonly moduloCustom = toSignal(this.itemCustomForm.controls.modulo.valueChanges, {
+    initialValue: this.itemCustomForm.controls.modulo.value,
+  });
+
+  /** "Encaixa em" do form de item custom, ao vivo (alimenta o seletor "Base" do Construtor, `m3-69`). */
+  private readonly categoriaEmprestadaCustom = toSignal(
+    this.itemCustomForm.controls.categoriaEmprestada.valueChanges,
+    { initialValue: this.itemCustomForm.controls.categoriaEmprestada.value },
+  );
+
+  /**
+   * `'ARMA' | 'PROTECAO' | null` — mesma resolução de `comBonusFixoConstrutorSeNecessario`, usada
+   * aqui só pra decidir se o seletor "Base" aparece (`m3-69`): um Fragmento Construtor com
+   * "Encaixa em" reconhecido pelo doc tem uma base real de catálogo a herdar.
+   */
+  protected readonly formaBaseConstrutor = computed(() => {
+    if (this.categoriaCustom() !== ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR) {
+      return null;
+    }
+    const categoriaEmprestada = this.categoriaEmprestadaCustom();
+    return formaFixaConstrutor(categoriaEmprestada ? (categoriaEmprestada as ItemCategoriaEnum) : undefined);
+  });
+  protected readonly mostraBaseConstrutor = computed(() => this.formaBaseConstrutor() !== null);
+
+  /**
+   * Itens de `CATALOGO_ITENS[categoriaEmprestada]` oferecidos no seletor "Base" (`m3-69` — doc:
+   * "ele é a arma em si"). Vazio fora de `mostraBaseConstrutor()`.
+   */
+  protected readonly opcoesBaseConstrutor = computed<readonly ItemCatalogo[]>(() => {
+    if (!this.mostraBaseConstrutor()) {
+      return [];
+    }
+    const categoria = this.categoriaEmprestadaCustom() as ItemCategoriaEnum;
+    return CATALOGO_ITENS[categoria];
+  });
+
+  /** Limite mínimo de Energia Máxima pro Vigor/Destreza do agente (doc — "⬦ Limite mínimo de Energia"; m3-67). */
+  protected readonly limiteMinimoEnergia = computed(() =>
+    limiteMinimoEnergiaMaximaFragmentos(this.atributos()),
+  );
+
+  /**
+   * Aviso do painel de aquisição (m3-67): projeta a Energia Máxima **após** adquirir o Fragmento do
+   * form custom (categoria + módulo já escolhidos) e devolve `{ projecao }` quando ela ficaria
+   * abaixo do Limite mínimo de Energia — `null` fora do fluxo de fragmento, sem módulo escolhido
+   * ainda, ou quando a aquisição não levaria à Anomalia Biológica. **Não trava** a ação (doc: "só
+   * avisa antes"); mesma conta de `debitarAquisicaoFragmento` (proibição #26), só sem debitar de
+   * verdade. Envelope `{ projecao }` (não `number` cru) de propósito — o template usa `@if (...; as
+   * x)`, que trata `0` como falso; uma projeção de Energia Máxima exatamente 0 é um caso real (e
+   * abaixo do limite) que um `number | null` esconderia silenciosamente.
+   */
+  protected readonly avisoLimiteEnergiaAquisicao = computed<{ readonly projecao: number } | null>(() => {
+    if (!this.mostraModulo()) {
+      return null;
+    }
+    const modulo = this.moduloCustom() as FragmentoModuloEnum | '';
+    if (!modulo) {
+      return null;
+    }
+    const tipo = tipoFragmentoDaCategoria(this.categoriaCustom());
+    if (!tipo) {
+      return null;
+    }
+    const itens = this.inventario().itens;
+    const afinidade = afinidadeConsiderando(itens, modulo);
+    const custo = aplicarReducaoAfinidade(custoAquisicaoFragmento(tipo, modulo), afinidade);
+    const projecao = this.energiaMaxima() - custo;
+    return emAnomaliaBiologica(projecao, this.limiteMinimoEnergia()) ? { projecao } : null;
+  });
+
   /**
    * Índice do item com o menu "Mover para" (m3-44) aberto, ou `null`. Popover próprio (não
    * `<select>` nativo — o popup nativo não é temável, destoa do tema dark-first) na mesma linha
@@ -566,6 +726,66 @@ export class FichaInventario {
     const indice = this.consumindoFragmentoIndice();
     const item = indice === null ? null : this.inventario().itens[indice];
     return item?.modulo ? custoSanidadeConsumirFragmento(item.modulo) : null;
+  });
+
+  /**
+   * Prévia do custo líquido de **consumir** o fragmento com o painel "Consumir" aberto (m3-66):
+   * `restituicaoAquisicao` (Energia Máxima da aquisição, devolvida, já reduzida pela Afinidade
+   * atual) e `deltaEnergiaMaxima` (líquido — restituição menos o Preço de Sanidade físico,
+   * `precoSanidadeConsumo().energiaMaximaExtra`, que não é reduzido por Afinidade). Mesma conta de
+   * `custoAquisicaoReduzidoConsumo`, usada por `confirmarConsumirFragmento` (proibição #26).
+   */
+  protected readonly custoPreviaConsumirFragmento = computed<{
+    readonly restituicaoAquisicao: number;
+    readonly deltaEnergiaMaxima: number;
+  } | null>(() => {
+    const indice = this.consumindoFragmentoIndice();
+    if (indice === null) {
+      return null;
+    }
+    const itensAntes = this.inventario().itens;
+    const item = itensAntes[indice];
+    const tipo = item ? tipoFragmentoDaCategoria(item.categoria) : null;
+    const preco = this.precoSanidadeConsumo();
+    if (!item?.modulo || !tipo || !preco) {
+      return null;
+    }
+    const restituicaoAquisicao = this.custoAquisicaoReduzidoConsumo(tipo, item.modulo, itensAntes);
+    return { restituicaoAquisicao, deltaEnergiaMaxima: restituicaoAquisicao - preco.energiaMaximaExtra };
+  });
+
+  /**
+   * Custo de aquisição do fragmento (Energia Máxima), já reduzido pela Afinidade atual — a parte
+   * restituída ao consumir (m3-42/m3-49). Extraído pra `confirmarConsumirFragmento` e a prévia do
+   * painel (`custoPreviaConsumirFragmento`, m3-66) usarem a mesma conta (proibição #26).
+   */
+  private custoAquisicaoReduzidoConsumo(
+    tipo: FragmentoTipoEnum,
+    modulo: FragmentoModuloEnum,
+    itensAntes: readonly CarrinhoItemDto[],
+  ): number {
+    return aplicarReducaoAfinidade(custoAquisicaoFragmento(tipo, modulo), afinidadeConsiderando(itensAntes));
+  }
+  /** Índice da opção de bônus "Consumido" escolhida (em `opcoesConsumoFragmento()`), ou `null` (m3-64). */
+  protected readonly opcaoConsumoFragmento = signal<number | null>(null);
+  /** Atributo escolhido pro bônus "Consumido" quando `tipo === 'TESTE'`, ou `null` (m3-64). */
+  protected readonly atributoConsumoFragmento = signal<keyof FichaAtributosDto | null>(null);
+  /** Rótulos de atributo pro `<select>` "Atributo" do painel "Consumir" (m3-64). */
+  protected readonly rotulosAtributo = ROTULOS_ATRIBUTO;
+  /** As 10 chaves de atributo, na ordem do `<select>` "Atributo" (m3-64). */
+  protected readonly atributosSelecionaveis = Object.keys(ROTULOS_ATRIBUTO) as readonly (keyof FichaAtributosDto)[];
+
+  /** Cardápio de bônus "Consumido" do fragmento com o painel "Consumir" aberto (m3-64), vazio se nenhum. */
+  protected readonly opcoesConsumoFragmento = computed<readonly OpcaoBonusConsumoFragmentoDto[]>(() => {
+    const indice = this.consumindoFragmentoIndice();
+    const item = indice === null ? null : this.inventario().itens[indice];
+    return item?.modulo ? listarBonusConsumoFragmentoPotencializador(item.modulo) : [];
+  });
+
+  /** Opção de bônus "Consumido" escolhida no painel "Consumir", ou `null` se nenhuma (m3-64). */
+  protected readonly opcaoConsumoFragmentoEscolhida = computed<OpcaoBonusConsumoFragmentoDto | null>(() => {
+    const indice = this.opcaoConsumoFragmento();
+    return indice === null ? null : (this.opcoesConsumoFragmento()[indice] ?? null);
   });
 
   /** Índice do item cujo formulário de modificação custom está aberto, ou `null`. */
@@ -714,15 +934,28 @@ export class FichaInventario {
    * Potencializador. Ordem **V → I** (do módulo mais fraco/comum pro mais forte/raro — o jogador
    * tende a achar os fracos primeiro; a ordem crescente de força faz mais sentido de leitura que a
    * ordem "I é o mais forte" usada no `<select>` do item custom).
+   *
+   * Custo `*Reduzido` (m3-66) usa a mesma `afinidadeConsiderando`/`aplicarReducaoAfinidade` de
+   * `debitarAquisicaoFragmento` (proibição #26 — uma só conta), com o próprio módulo do cartão como
+   * `moduloExtra` — o catálogo antes só mostrava o custo cheio, mesmo quando a Afinidade atual do
+   * agente já reduziria o que ele vai pagar.
    */
-  protected readonly cartaoModulosFragmento = computed<readonly CartaoModuloFragmentoVM[]>(() =>
-    MODULOS_FRAGMENTO.map((modulo) => ({
-      modulo,
-      afinidade: valorAfinidadeFragmento(modulo),
-      custoPotencializador: custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, modulo),
-      custoConstrutor: custoAquisicaoFragmento(FragmentoTipoEnum.CONSTRUTOR, modulo),
-    })).reverse(),
-  );
+  protected readonly cartaoModulosFragmento = computed<readonly CartaoModuloFragmentoVM[]>(() => {
+    const itens = this.inventario().itens;
+    return MODULOS_FRAGMENTO.map((modulo) => {
+      const afinidade = afinidadeConsiderando(itens, modulo);
+      const custoPotencializador = custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, modulo);
+      const custoConstrutor = custoAquisicaoFragmento(FragmentoTipoEnum.CONSTRUTOR, modulo);
+      return {
+        modulo,
+        afinidade: valorAfinidadeFragmento(modulo),
+        custoPotencializador,
+        custoConstrutor,
+        custoPotencializadorReduzido: aplicarReducaoAfinidade(custoPotencializador, afinidade),
+        custoConstrutorReduzido: aplicarReducaoAfinidade(custoConstrutor, afinidade),
+      };
+    }).reverse();
+  });
 
   /** Cartões de amplificador do catálogo, filtrados pela busca quando houver. */
   protected readonly amplificadoresCatalogo = computed<readonly CartaoAmpVM[]>(() => {
@@ -868,16 +1101,32 @@ export class FichaInventario {
     return item.containerId === null || !this.containerIdsAtivos().has(item.containerId);
   }
 
-  /** Alvos válidos pro "Aplicar em..." de um fragmento Potencializador — qualquer item, menos fragmentos. */
+  /**
+   * Alvos válidos pro "Aplicar em..." de um fragmento Potencializador — qualquer item ou ser,
+   * exceto outro fragmento (Construtor ou Potencializador): um fragmento não acopla em outro
+   * fragmento. O único item excluído além dos fragmentos é o próprio fragmento sendo aplicado
+   * (não faz sentido acoplar um fragmento nele mesmo, mas isso já cai na regra geral acima).
+   */
   protected readonly alvosFragmentoDisponiveis = computed<readonly { indice: number; rotulo: string }[]>(
-    () =>
-      this.inventario()
+    () => {
+      const fragmentoIndice = this.aplicandoFragmentoIndice();
+      return this.inventario()
         .itens.map((item, indice) => ({ item, indice }))
-        .filter(({ item }) => tipoFragmentoDaCategoria(item.categoria) === null)
-        .map(({ item, indice }) => ({ indice, rotulo: rotuloItem(item) })),
+        .filter(
+          ({ item, indice }) =>
+            item.categoria !== ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR &&
+            item.categoria !== ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR &&
+            indice !== fragmentoIndice,
+        )
+        .map(({ item, indice }) => ({ indice, rotulo: rotuloItem(item) }));
+    },
   );
 
-  /** Cardápio de bônus do fragmento com o painel "Aplicar em..." aberto (m3-35), vazio se nenhum. */
+  /**
+   * Cardápio de bônus do fragmento com o painel "Aplicar em..." aberto (m3-35), vazio se nenhum. A
+   * 5ª opção ("N× maior dado", `m3-63`) só entra depois que o alvo é escolhido e só quando ele tem
+   * dado no campo `dano` (`maiorDadoItem`) — por isso recalcula a cada troca de `alvoFragmento`.
+   */
   protected readonly opcoesBonusFragmento = computed<readonly OpcaoBonusFragmentoDto[]>(() => {
     const indice = this.aplicandoFragmentoIndice();
     if (indice === null) {
@@ -887,7 +1136,28 @@ export class FichaInventario {
     if (!fragmento?.modulo) {
       return [];
     }
-    return listarBonusFragmentoPotencializador(fragmento.modulo);
+    const alvoIndice = this.alvoFragmento();
+    const alvo = alvoIndice === null ? null : this.inventario().itens[alvoIndice];
+    const maiorDado = alvo ? maiorDadoItem(alvo) : null;
+    return listarBonusFragmentoPotencializador(fragmento.modulo, maiorDado);
+  });
+
+  /**
+   * `true` quando o bônus escolhido cumpre a mesma função (dano/teste/resistência) de um fragmento
+   * já aplicado no alvo — bloqueia a confirmação (doc: "uma única função" por item/ser, `m3-63`).
+   */
+  protected readonly conflitoFuncaoFragmento = computed<boolean>(() => {
+    const alvoIndice = this.alvoFragmento();
+    const opcaoIndice = this.opcaoBonusFragmento();
+    if (alvoIndice === null || opcaoIndice === null) {
+      return false;
+    }
+    const alvo = this.inventario().itens[alvoIndice];
+    const opcao = this.opcoesBonusFragmento()[opcaoIndice];
+    if (!alvo || !opcao) {
+      return false;
+    }
+    return existeFragmentoNaMesmaFuncao(alvo.modificacoes, opcao.efeito);
   });
 
   protected readonly amplificadoresInventario = computed<readonly AmpInventarioVM[]>(() => {
@@ -944,7 +1214,7 @@ export class FichaInventario {
       tipo === FragmentoTipoEnum.CONSTRUTOR
         ? ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR
         : ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR;
-    this.itemCustomForm.reset({
+    this.resetarItemCustomForm({
       nome: '',
       categoria,
       custo: 0,
@@ -983,7 +1253,7 @@ export class FichaInventario {
       this.criandoItem.set(false);
       return;
     }
-    this.itemCustomForm.reset({
+    this.resetarItemCustomForm({
       nome: '',
       categoria: ItemCategoriaEnum.OPERACIONAL,
       custo: 0,
@@ -997,6 +1267,19 @@ export class FichaInventario {
       modulo: '',
     });
     this.criandoItem.set(true);
+  }
+
+  /**
+   * Reseta o form de item custom pro `valores` dado — reabilita dano/informação/resistência antes
+   * (uma Base do Construtor pode tê-los travado, `m3-69`; `FormControl.reset()` sozinho não desfaz
+   * `disable()`) e zera a Base escolhida, sempre voltando a "Outra" (texto livre).
+   */
+  private resetarItemCustomForm(valores: Omit<ReturnType<FichaInventario['itemCustomForm']['getRawValue']>, 'baseConstrutor'>): void {
+    const controles = this.itemCustomForm.controls;
+    controles.dano.enable();
+    controles.informacao.enable();
+    controles.resistencia.enable();
+    this.itemCustomForm.reset({ ...valores, baseConstrutor: '' });
   }
 
   protected cancelarCriarItem(): void {
@@ -1025,13 +1308,41 @@ export class FichaInventario {
     if (this.itemCustomForm.invalid) {
       return;
     }
-    const item = this.montarItemCustom();
+    const item = this.comBonusFixoConstrutorSeNecessario(this.montarItemCustom());
     const itensAntes = this.inventario().itens;
     this.inserirItem(item);
     this.sinalizarAdicao(this.chaveCartao(item.categoria, item.nome));
     this.criandoItem.set(false);
     this.categoriaItemSelectAberta.set(false);
     this.debitarAquisicaoFragmento(item, itensAntes);
+  }
+
+  /**
+   * Bônus fixo automático de um Fragmento Construtor recém-criado (m3-65 — doc: "concede bônus
+   * adicionais de dano e testes de acordo com seu módulo"): Arma (Corpo a Corpo/Fogo/Exótica) e
+   * Proteção já nascem com a modificação da tabela (`listarEfeitosFixosConstrutor`) aplicada, com
+   * `origemFragmento` (mesmo padrão do Potencializador — badge de origem no card) e fora do limite
+   * de mods da patente (não é uma modificação comprada). Munição não modifica um item (ação própria
+   * "Recarregar", ver `recarregarMunicaoConstrutor`); item sem `categoriaEmprestada` reconhecida
+   * pelo doc devolve o item como veio.
+   */
+  private comBonusFixoConstrutorSeNecessario(item: CarrinhoItemDto): CarrinhoItemDto {
+    if (item.categoria !== ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR || !item.modulo) {
+      return item;
+    }
+    const forma = formaFixaConstrutor(item.categoriaEmprestada);
+    if (!forma) {
+      return item;
+    }
+    const modificacao: CarrinhoItemDto['modificacoes'][number] = {
+      nome: `Fragmento Construtor — Módulo ${item.modulo}`,
+      empilhamentos: 1,
+      efeitos: listarEfeitosFixosConstrutor(item.modulo, forma),
+      ignoraLimiteTotal: true,
+      ignoraLimiteProprio: true,
+      origemFragmento: { tipo: FragmentoTipoEnum.CONSTRUTOR, modulo: item.modulo },
+    };
+    return { ...item, modificacoes: [...item.modificacoes, modificacao] };
   }
 
   /**
@@ -1088,6 +1399,45 @@ export class FichaInventario {
         ? { modulo: bruto.modulo as FragmentoModuloEnum }
         : {}),
     };
+  }
+
+  /**
+   * Resumo de dano/resistência de um item do catálogo, pra opção do seletor "Base" (`m3-69`) —
+   * mesma formatação do cartão do catálogo (`formatarStatCatalogo`), sem repetir "Dano "/"Resist. ".
+   */
+  protected resumoBase(item: ItemCatalogo): string {
+    return item.dano ?? item.resistencia ?? '';
+  }
+
+  /**
+   * Reage ao `(change)` do seletor "Base" do Fragmento Construtor (`m3-69` — doc: "ele é a arma em
+   * si"): escolher um item do catálogo preenche e **trava** (read-only) dano/informação/resistência
+   * com os valores daquele item, e pré-preenche o peso (o Construtor "é" aquele item, ocupa o mesmo
+   * espaço) — custo segue livre (fragmentos são achados, não comprados, `m3-49`). Voltar pra "Outra"
+   * (`nome === ''`) destrava os campos e limpa o texto, do mesmo jeito que o form sempre funcionou
+   * antes desta task. Ligado a `(change)` (não a uma subscription de `valueChanges`) de propósito:
+   * só deve reagir a uma escolha de verdade no `<select>`, nunca a um `reset`/`setValue` em lote do
+   * form (que também passa por `baseConstrutor` e não pode disparar este efeito colateral).
+   */
+  protected escolherBaseConstrutor(nome: string): void {
+    const controles = this.itemCustomForm.controls;
+    const item = nome ? this.opcoesBaseConstrutor().find((candidato) => candidato.nome === nome) : undefined;
+    if (item) {
+      controles.dano.setValue(item.dano ?? '');
+      controles.informacao.setValue(item.informacao ?? '');
+      controles.resistencia.setValue(item.resistencia ?? '');
+      controles.peso.setValue(item.peso);
+      controles.dano.disable();
+      controles.informacao.disable();
+      controles.resistencia.disable();
+      return;
+    }
+    controles.dano.enable();
+    controles.informacao.enable();
+    controles.resistencia.enable();
+    controles.dano.setValue('');
+    controles.informacao.setValue('');
+    controles.resistencia.setValue('');
   }
 
   /** Passo − / + num campo numérico do formulário de item custom (piso 0). */
@@ -1228,10 +1578,15 @@ export class FichaInventario {
     this.aplicandoFragmentoIndice.set(null);
   }
 
-  /** Escolhe o item-alvo do `<select>` do painel "Aplicar em...". */
+  /**
+   * Escolhe o item-alvo do `<select>` do painel "Aplicar em...". Zera o bônus escolhido — a lista
+   * de opções muda de tamanho conforme o alvo (5ª opção "N× maior dado", `m3-63`), então o índice
+   * antigo pode não corresponder mais à mesma opção.
+   */
   protected escolherAlvoFragmento(evento: Event): void {
     const valor = (evento.target as HTMLSelectElement).value;
     this.alvoFragmento.set(valor === '' ? null : Number(valor));
+    this.opcaoBonusFragmento.set(null);
   }
 
   /** Escolhe a opção de bônus do `<select>` do painel "Aplicar em...". */
@@ -1253,7 +1608,7 @@ export class FichaInventario {
   protected confirmarAplicarFragmento(fragmentoIndice: number): void {
     const alvoIndice = this.alvoFragmento();
     const opcaoIndice = this.opcaoBonusFragmento();
-    if (alvoIndice === null || opcaoIndice === null) {
+    if (alvoIndice === null || opcaoIndice === null || this.conflitoFuncaoFragmento()) {
       return;
     }
     const itens = this.inventario().itens;
@@ -1280,29 +1635,65 @@ export class FichaInventario {
     // Afinidade (m3-42/m3-49): o fragmento já está portado em `itens` (ainda solto, antes do
     // acoplamento) — mesma Afinidade reduz os dois lados (aquisição restituída e acoplamento
     // debitado), preservando o líquido zero do Potencializador (docstring acima).
-    const afinidade = afinidadeConsiderando(itens);
-    const custoAquisicao = aplicarReducaoAfinidade(
-      custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, fragmento.modulo),
-      afinidade,
-    );
-    const custoBruto = custoAcoplarFragmento(fragmento.modulo);
-    const custo = {
-      energia: aplicarReducaoAfinidade(custoBruto.energia, afinidade),
-      energiaMaxima: aplicarReducaoAfinidade(custoBruto.energiaMaxima, afinidade),
-    };
+    const custo = this.custoLiquidoAplicarFragmento(fragmento.modulo, itens);
     this.ajusteEnergiaFragmento.emit({
       energiaAtual: this.energiaAtual() - custo.energia,
-      energiaMaxima: this.energiaMaxima() + custoAquisicao - custo.energiaMaxima,
+      energiaMaxima: this.energiaMaxima() + custo.energiaMaxima,
     });
 
     this.aplicandoFragmentoIndice.set(null);
   }
 
-  // === Consumir fragmento Potencializador (m3-42) ===
-  /** Abre o painel "Consumir" de um fragmento Potencializador, zerando a declaração de Vontade. */
+  /**
+   * Custo líquido de **acoplar** um fragmento Potencializador de `modulo`, já reduzido pela
+   * Afinidade atual (m3-42/m3-49) — `energia` é o débito de Energia atual; `energiaMaxima` é o
+   * delta líquido em Energia Máxima (restituição da aquisição menos o custo do acoplamento; ambos
+   * usam o mesmo custo base do módulo, então costuma fechar em 0). Extraído de
+   * `confirmarAplicarFragmento` pra a prévia de custo do painel (m3-66) usar exatamente a mesma
+   * conta, sem duplicar (proibição #26).
+   */
+  private custoLiquidoAplicarFragmento(
+    modulo: FragmentoModuloEnum,
+    itens: readonly CarrinhoItemDto[],
+  ): { readonly energia: number; readonly energiaMaxima: number } {
+    const afinidade = afinidadeConsiderando(itens);
+    const custoAquisicao = aplicarReducaoAfinidade(
+      custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, modulo),
+      afinidade,
+    );
+    const custoBruto = custoAcoplarFragmento(modulo);
+    const energia = aplicarReducaoAfinidade(custoBruto.energia, afinidade);
+    const energiaMaximaAcoplamento = aplicarReducaoAfinidade(custoBruto.energiaMaxima, afinidade);
+    return { energia, energiaMaxima: custoAquisicao - energiaMaximaAcoplamento };
+  }
+
+  /**
+   * Prévia do custo de acoplar o fragmento com o painel "Aplicar em..." aberto (m3-66) — mesma
+   * conta de `custoLiquidoAplicarFragmento` usada por `confirmarAplicarFragmento`, antecipada pra
+   * exibição antes do jogador confirmar. `null` com o painel fechado.
+   */
+  protected readonly custoPreviaAplicarFragmento = computed<{
+    readonly energia: number;
+    readonly energiaMaxima: number;
+  } | null>(() => {
+    const indice = this.aplicandoFragmentoIndice();
+    if (indice === null) {
+      return null;
+    }
+    const fragmento = this.inventario().itens[indice];
+    if (!fragmento?.modulo) {
+      return null;
+    }
+    return this.custoLiquidoAplicarFragmento(fragmento.modulo, this.inventario().itens);
+  });
+
+  // === Consumir fragmento Potencializador (m3-42/m3-64) ===
+  /** Abre o painel "Consumir" de um fragmento Potencializador, zerando a declaração de Vontade e a escolha de bônus. */
   protected abrirConsumirFragmento(indice: number): void {
     this.consumindoFragmentoIndice.set(indice);
     this.evitouSequelaConsumo.set(false);
+    this.opcaoConsumoFragmento.set(null);
+    this.atributoConsumoFragmento.set(null);
   }
 
   /** Fecha o painel "Consumir" sem alterar nada. */
@@ -1315,18 +1706,36 @@ export class FichaInventario {
     this.evitouSequelaConsumo.update((valor) => !valor);
   }
 
+  /** Escolhe a opção de bônus "Consumido" do `<select>` do painel "Consumir" (m3-64). */
+  protected escolherOpcaoConsumoFragmento(evento: Event): void {
+    const valor = (evento.target as HTMLSelectElement).value;
+    this.opcaoConsumoFragmento.set(valor === '' ? null : Number(valor));
+    this.atributoConsumoFragmento.set(null);
+  }
+
+  /** Escolhe o atributo-alvo do `<select>` "Atributo" do painel "Consumir", quando `tipo === 'TESTE'` (m3-64). */
+  protected escolherAtributoConsumoFragmento(evento: Event): void {
+    const valor = (evento.target as HTMLSelectElement).value;
+    this.atributoConsumoFragmento.set(valor === '' ? null : (valor as keyof FichaAtributosDto));
+  }
+
   /**
-   * Confirma o **consumo**: remove o fragmento do inventário avulso, restitui o dreno de Energia
-   * Máxima da aquisição (doc — "⬥ Módulos": "esse gasto cessa ao remover o fragmento de seu
-   * inventário") e debita o Preço de Sanidade — preço físico (Energia Máxima extra, sempre) e
-   * mental (sequela "Rejeição Biológica" × multiplicador, só se o jogador não evitou com Vontade).
+   * Confirma o **consumo**: exige um bônus "Consumido" escolhido (e um atributo-alvo quando o bônus
+   * é de teste, m3-64), remove o fragmento do inventário avulso, restitui o dreno de Energia Máxima
+   * da aquisição (doc — "⬥ Módulos": "esse gasto cessa ao remover o fragmento de seu inventário") e
+   * debita o Preço de Sanidade — preço físico (Energia Máxima extra, sempre) e mental (sequela
+   * "Rejeição Biológica" × multiplicador, só se o jogador não evitou com Vontade). A sequela, quando
+   * emitida, carrega o módulo/tipo do fragmento e o bônus escolhido na `descricao` (m3-64). O
+   * histórico dedicado (`dados.fragmentosConsumidos`, `fragmentoConsumido`) é incondicional e reversível.
    */
   protected confirmarConsumirFragmento(fragmentoIndice: number): void {
     const itensAntes = this.inventario().itens;
     const item = itensAntes[fragmentoIndice];
     const tipo = item ? tipoFragmentoDaCategoria(item.categoria) : null;
     const preco = this.precoSanidadeConsumo();
-    if (!item?.modulo || !tipo || !preco) {
+    const opcao = this.opcaoConsumoFragmentoEscolhida();
+    const atributoEscolhido = this.atributoConsumoFragmento();
+    if (!item?.modulo || !tipo || !preco || !opcao || (opcao.tipo === 'TESTE' && !atributoEscolhido)) {
       return;
     }
 
@@ -1334,22 +1743,90 @@ export class FichaInventario {
 
     // Afinidade (m3-42/m3-49) só reduz a restituição da aquisição — o Preço de Sanidade
     // (`energiaMaximaExtra`) é o preço físico de consumir o fragmento, não um "custo de fragmento".
-    const custoAquisicao = aplicarReducaoAfinidade(
-      custoAquisicaoFragmento(tipo, item.modulo),
-      afinidadeConsiderando(itensAntes),
-    );
+    const custoAquisicao = this.custoAquisicaoReduzidoConsumo(tipo, item.modulo, itensAntes);
     this.ajusteEnergiaFragmento.emit({
       energiaAtual: this.energiaAtual(),
       energiaMaxima: this.energiaMaxima() + custoAquisicao - preco.energiaMaximaExtra,
     });
 
+    this.bonusConsumoFragmento.emit({ opcao, atributoEscolhido: opcao.tipo === 'TESTE' ? atributoEscolhido : null });
+
+    // Rastro incondicional (m3-64) — ao contrário da sequela abaixo, este registro entra sempre,
+    // mesmo quando o jogador evita "Rejeição Biológica" com o teste de Vontade. É o único lugar que
+    // garante o rastro do consumo em todo caso. Carrega também o suficiente para reverter o consumo
+    // (m3-64, correção — "remover um fragmento consumido"): a opção estruturada, o delta de Energia
+    // Máxima que este consumo aplicou e o próprio item, para devolvê-lo ao inventário.
+    const bonusEscolhido = this.textoBonusConsumoFragmento(opcao, atributoEscolhido);
+    this.fragmentoConsumido.emit({
+      modulo: item.modulo,
+      bonusEscolhido,
+      opcao,
+      atributoEscolhido: opcao.tipo === 'TESTE' ? atributoEscolhido : null,
+      deltaEnergiaMaxima: custoAquisicao - preco.energiaMaximaExtra,
+      item,
+    });
+
     if (!this.evitouSequelaConsumo()) {
+      const descricao = `Fragmento Potencializador Módulo ${item.modulo} consumido — ${bonusEscolhido}`;
       this.sequelasFragmentoConsumido.emit(
-        Array.from({ length: preco.multiplicadorSequela }, () => ({ nome: SEQUELA_CONSUMO_FRAGMENTO })),
+        Array.from({ length: preco.multiplicadorSequela }, () => ({
+          nome: SEQUELA_CONSUMO_FRAGMENTO,
+          descricao,
+        })),
       );
     }
 
     this.consumindoFragmentoIndice.set(null);
+  }
+
+  /**
+   * Texto do bônus "Consumido" escolhido (m3-64), ex.: `"+3 em Defesa"` ou, pro tipo teste, `"+5 em
+   * todos os testes de Intelecto e +1 ponto no atributo"` (Módulo I). Alimenta tanto o registro
+   * incondicional (`fragmentoConsumido`) quanto a `descricao` da sequela — só formatação de UI, não
+   * é regra de jogo (`shared` cobre a tabela e o cardápio).
+   */
+  private textoBonusConsumoFragmento(
+    opcao: OpcaoBonusConsumoFragmentoDto,
+    atributoEscolhido: keyof FichaAtributosDto | null,
+  ): string {
+    return opcao.tipo === 'TESTE' && atributoEscolhido
+      ? `+${opcao.valor} em todos os testes de ${this.rotulosAtributo[atributoEscolhido]}${
+          opcao.concedePontoAtributo ? ' e +1 ponto no atributo' : ''
+        }`
+      : opcao.rotulo;
+  }
+
+  // === Recarregar Munição de Fragmento Construtor (m3-65) ===
+  /**
+   * "Recarregar" (doc — "⬦ Construtor", linha Munição: "Dura 1 cena. 'Recarregar' custa N de
+   * Energia. Concede +N de dano.") — debita a Energia **atual** do módulo (custo de uma ação em
+   * combate/cena, mesmo tipo de débito do custo de acoplar um Potencializador) e marca o item como
+   * `recarregada`. Sem efeito se o item já está recarregada (evita debitar de novo sem antes
+   * encerrar a cena — ver `resetarMunicaoConstrutor`).
+   */
+  protected recarregarMunicaoConstrutor(indice: number): void {
+    const item = this.inventario().itens[indice];
+    if (!item?.modulo || item.recarregada) {
+      return;
+    }
+    this.emitirItens(
+      this.inventario().itens.map((atual, i) => (i === indice ? { ...atual, recarregada: true } : atual)),
+    );
+    this.ajusteEnergiaFragmento.emit({
+      energiaAtual: this.energiaAtual() - bonusMunicaoConstrutor(item.modulo).custoRecarregar,
+      energiaMaxima: this.energiaMaxima(),
+    });
+  }
+
+  /**
+   * Encerra a cena pra esta munição (reset manual — doc: "Dura 1 cena"; sem sistema de cena
+   * automatizado no app, `m3-65`): volta `recarregada` a `false`, sem reembolsar a Energia (já foi o
+   * custo da cena que passou).
+   */
+  protected resetarMunicaoConstrutor(indice: number): void {
+    this.emitirItens(
+      this.inventario().itens.map((atual, i) => (i === indice ? { ...atual, recarregada: false } : atual)),
+    );
   }
 
   /**
@@ -1541,9 +2018,12 @@ export class FichaInventario {
   }
 
   /**
-   * Remove um empilhamento de uma modificação (ou o último, sumindo com ela). Uma mod de
-   * **origem fragmento** (m3-35/m3-42) some sempre inteira (1× só) e vira `desacoplarFragmento` —
-   * um caso à parte porque o fragmento **volta como item avulso** ao inventário, não é destruído.
+   * Remove um empilhamento de uma modificação (ou o último, sumindo com ela). Uma mod de **origem
+   * fragmento Potencializador** (m3-35/m3-42) some sempre inteira (1× só) e vira
+   * `desacoplarFragmento` — um caso à parte porque o fragmento **volta como item avulso** ao
+   * inventário, não é destruído. O bônus fixo automático de um fragmento Construtor (m3-65) também
+   * carrega `origemFragmento`, mas não "desacopla" — o fragmento **é** o item (não há outro alvo pra
+   * devolver um Construtor avulso); some pelo caminho comum, como qualquer mod.
    */
   protected removerModificacao(indice: number, modNome: string): void {
     const item = this.inventario().itens[indice];
@@ -1559,7 +2039,7 @@ export class FichaInventario {
     // Custom (sem definição): decrementa de 1 em 1 até sumir; de catálogo: piso nos iniciais.
     const minInicial = definicao ? definicao.empilhamentosIniciais : 1;
     const novos = atuais <= minInicial ? 0 : atuais - 1;
-    if (novos === 0 && aplicada?.origemFragmento) {
+    if (novos === 0 && aplicada?.origemFragmento?.tipo === FragmentoTipoEnum.POTENCIALIZADOR) {
       this.desacoplarFragmento(indice, modNome, aplicada.nome, aplicada.origemFragmento.tipo, aplicada.origemFragmento.modulo);
       return;
     }
@@ -1975,16 +2455,34 @@ export class FichaInventario {
             .filter((parte): parte is string => !!parte)
             .join(' — ') || null,
         deFragmento: !!modificacao.origemFragmento,
+        fixa: modificacao.origemFragmento?.tipo === FragmentoTipoEnum.CONSTRUTOR,
       };
     });
+
+    const construtorMunicao =
+      item.categoria === ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR &&
+      item.categoriaEmprestada === ItemCategoriaEnum.MUNICOES;
+    const bonusMunicao = construtorMunicao && item.modulo ? bonusMunicaoConstrutor(item.modulo) : null;
+    const ehFragmento =
+      item.categoria === ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR ||
+      item.categoria === ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR;
+    const apelido = item.apelido?.trim() || null;
 
     return {
       indice,
       nome: item.nome,
-      apelido: item.apelido?.trim() || null,
-      nomeExibido: rotuloItem(item),
+      apelido,
+      // Sem apelido, o card destaca a categoria ("Fragmento Potencializador") em vez do nome
+      // mecânico completo — o módulo vai pro `fragmentoModuloTexto`, exibido logo abaixo.
+      nomeExibido: apelido || (ehFragmento ? this.rotuloCategoria(item.categoria) : item.nome),
+      fragmentoModuloTexto: ehFragmento && item.modulo ? `Mod. ${item.modulo}` : null,
       podeApelidar: !CATEGORIAS_EMPILHAVEIS.includes(item.categoria),
       fragmentoPotencializador: item.categoria === ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+      fragmentoConstrutorMunicao: construtorMunicao,
+      recarregada: item.recarregada === true,
+      bonusMunicaoTexto: bonusMunicao
+        ? `Recarregar: ${bonusMunicao.custoRecarregar} Energia → +${bonusMunicao.dano} de dano (1 cena)`
+        : null,
       categoria: item.categoria,
       categoriaRotulo: this.rotuloCategoria(item.categoria),
       quantidade: item.quantidade,

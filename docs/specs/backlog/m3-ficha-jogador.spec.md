@@ -73,7 +73,11 @@
 > modificações do Construtor), `m3-66` (exibição detalhada de Afinidade: chips por fragmento, custo
 > já reduzido no catálogo e nos paineis de ação, hoje sempre bruto), `m3-67` (Limite mínimo de
 > Energia `(Vigor+Destreza)×2` e o estado "Anomalia Biológica" — efeitos exibidos, não empurrados
-> automaticamente no motor de Defesa/testes; Colapso fica de fora, ver `IDEAS.md` `I-007`).
+> automaticamente no motor de Defesa/testes; Colapso fica de fora, ver `IDEAS.md` `I-007`), `m3-68`
+> (correção: destino "efeito" do cardápio "em item" do Potencializador estava mapeado como dano —
+> novo tipo `EFEITO` descritivo, função única por item passa a reconhecer "efeito" também), `m3-69`
+> (Fragmento Construtor Arma/Proteção passa a escolher uma base real do catálogo, com "Outra" como
+> texto livre — o bônus fixo do módulo soma em cima da base, em vez de um dano inventado do zero).
 > Identificação de Poder, auto-desacoplamento por perda de uso, Redução de Módulo, Colapso e Forja
 > de Fragmentos ficaram de fora por decisão do autor — registrados em `IDEAS.md` `I-005`…`I-009`.
 > Venda de fragmentos na ficha (a regra já existe, só falta o botão) fica em `I-004`.

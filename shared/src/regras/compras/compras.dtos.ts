@@ -129,6 +129,13 @@ export interface CarrinhoItemDto {
    * não conta. Ignorado nas demais categorias.
    */
   readonly equipado?: boolean;
+  /**
+   * Só para Munição de Fragmento Construtor (`m3-65`, doc — "⬦ Construtor": "Dura 1 cena.
+   * 'Recarregar' custa N de Energia. Concede +N de dano"): `true` = recarregada nesta cena (o
+   * bônus de dano da munição está ativo). Reset manual pelo jogador/mestre ao encerrar a cena — sem
+   * sistema de cena automatizado no app. Ignorado nas demais categorias.
+   */
+  readonly recarregada?: boolean;
   readonly modificacoes: readonly ModificacaoAplicadaDto[];
   /**
    * Descrição em texto livre — **só nos itens custom** (os do catálogo têm a descrição em

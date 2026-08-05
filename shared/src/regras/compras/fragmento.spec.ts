@@ -9,13 +9,19 @@ import type { CarrinhoItemDto } from './compras.dtos';
 import { calcularStatItem } from './compras';
 import {
   aplicarReducaoAfinidade,
+  bonusMunicaoConstrutor,
   calcularAfinidade,
   custoAcoplarFragmento,
   custoAquisicaoFragmento,
   custoRemoverFragmento,
   custoSanidadeConsumirFragmento,
+  existeFragmentoNaMesmaFuncao,
+  formaFixaConstrutor,
+  listarBonusConsumoFragmentoPotencializador,
   listarBonusFragmentoPotencializador,
+  listarEfeitosFixosConstrutor,
   listarModulosFragmentosPortados,
+  maiorDadoItem,
   reducaoCustoPorAfinidade,
   valorAfinidadeFragmento,
 } from './fragmento';
@@ -62,16 +68,18 @@ describe('custoRemoverFragmento', () => {
 });
 
 describe('listarBonusFragmentoPotencializador', () => {
-  it('módulo V devolve as 5 opções do cardápio "em um item"', () => {
+  it('módulo V devolve as 5 opções do cardápio "em um item" (m3-68: efeito ≠ dano)', () => {
     const opcoes = listarBonusFragmentoPotencializador(FragmentoModuloEnum.V);
     expect(opcoes).toHaveLength(5);
     expect(opcoes.map((opcao) => opcao.efeito.tipo)).toEqual([
-      ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE,
+      ModificacaoEfeitoTipoEnum.EFEITO,
       ModificacaoEfeitoTipoEnum.BONUS_TESTE,
       ModificacaoEfeitoTipoEnum.BONUS_TESTE,
-      ModificacaoEfeitoTipoEnum.DANO_FIXO,
+      ModificacaoEfeitoTipoEnum.EFEITO,
       ModificacaoEfeitoTipoEnum.RESISTENCIA,
     ]);
+    expect(opcoes[0].efeito.variante).toBe('DADO');
+    expect(opcoes[3].efeito.variante).toBe('FIXO');
     expect(opcoes[0].efeito.valor).toBe(2);
     expect(opcoes[3].efeito.valor).toBe(2);
   });
@@ -81,6 +89,195 @@ describe('listarBonusFragmentoPotencializador', () => {
     expect(opcoes[0].efeito.valor).toBe(7);
     expect(opcoes[3].efeito.valor).toBe(10);
     expect(opcoes[4].efeito.valor).toBe(10);
+  });
+
+  it('com o maior dado do alvo, insere a 5ª opção "N× maior dado" logo após a 1ª (m3-63) — só ela é dano de verdade', () => {
+    const opcoes = listarBonusFragmentoPotencializador(FragmentoModuloEnum.V, 8);
+    expect(opcoes).toHaveLength(6);
+    expect(opcoes.map((opcao) => opcao.efeito.tipo)).toEqual([
+      ModificacaoEfeitoTipoEnum.EFEITO,
+      ModificacaoEfeitoTipoEnum.DANO_FIXO,
+      ModificacaoEfeitoTipoEnum.BONUS_TESTE,
+      ModificacaoEfeitoTipoEnum.BONUS_TESTE,
+      ModificacaoEfeitoTipoEnum.EFEITO,
+      ModificacaoEfeitoTipoEnum.RESISTENCIA,
+    ]);
+    // Módulo V multiplica 1×; D8 → +8 de dano.
+    expect(opcoes[1].efeito.valor).toBe(8);
+  });
+
+  it('módulo I multiplica 5×; D10 do alvo vira +50 de dano', () => {
+    const opcoes = listarBonusFragmentoPotencializador(FragmentoModuloEnum.I, 10);
+    expect(opcoes[1].efeito.valor).toBe(50);
+  });
+
+  it('sem maior dado (alvo sem dano, ou nenhum alvo escolhido), a opção não aparece', () => {
+    expect(listarBonusFragmentoPotencializador(FragmentoModuloEnum.V, null)).toHaveLength(5);
+    expect(listarBonusFragmentoPotencializador(FragmentoModuloEnum.V)).toHaveLength(5);
+  });
+});
+
+describe('maiorDadoItem', () => {
+  it('extrai o maior tipo de dado (mais faces) de uma notação com vários dados', () => {
+    const item: CarrinhoItemDto = {
+      nome: 'Espada customizada',
+      categoria: ItemCategoriaEnum.CORPO_A_CORPO,
+      custo: 0,
+      peso: 0,
+      quantidade: 1,
+      guardada: false,
+      dano: '1D6+1D8+FOR [Físico]',
+      modificacoes: [],
+    };
+    expect(maiorDadoItem(item)).toBe(8);
+  });
+
+  it('lê minúsculo e uma única notação simples ("2D8+3")', () => {
+    const item: CarrinhoItemDto = {
+      nome: 'Item achado',
+      categoria: ItemCategoriaEnum.EXPLOSIVOS,
+      custo: 0,
+      peso: 0,
+      quantidade: 1,
+      guardada: false,
+      dano: '2d8+3',
+      modificacoes: [],
+    };
+    expect(maiorDadoItem(item)).toBe(8);
+  });
+
+  it('resolve o dano do catálogo quando o item não é custom ("Mediana": 3D4+FOR → D4)', () => {
+    const item: CarrinhoItemDto = {
+      nome: 'Mediana',
+      categoria: ItemCategoriaEnum.CORPO_A_CORPO,
+      custo: 0,
+      peso: 0,
+      quantidade: 1,
+      guardada: false,
+      modificacoes: [],
+    };
+    expect(maiorDadoItem(item)).toBe(4);
+  });
+
+  it('devolve null sem dado no campo (ausente ou notação sem D<n>, ex.: "— (fumaça)")', () => {
+    const semCampo: CarrinhoItemDto = {
+      nome: 'Colete',
+      categoria: ItemCategoriaEnum.PROTECOES,
+      custo: 0,
+      peso: 0,
+      quantidade: 1,
+      guardada: false,
+      modificacoes: [],
+    };
+    const semDadoNaNotacao: CarrinhoItemDto = {
+      nome: 'Item achado',
+      categoria: ItemCategoriaEnum.EXPLOSIVOS,
+      custo: 0,
+      peso: 0,
+      quantidade: 1,
+      guardada: false,
+      dano: '— (fumaça)',
+      modificacoes: [],
+    };
+    expect(maiorDadoItem(semCampo)).toBeNull();
+    expect(maiorDadoItem(semDadoNaNotacao)).toBeNull();
+  });
+});
+
+describe('existeFragmentoNaMesmaFuncao', () => {
+  it('bloqueia um 2º fragmento na mesma função (dano)', () => {
+    const modificacoes = [
+      {
+        nome: 'Fragmento Potencializador — Módulo V',
+        empilhamentos: 1,
+        efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: 8 }],
+        origemFragmento: { tipo: FragmentoTipoEnum.POTENCIALIZADOR, modulo: FragmentoModuloEnum.V },
+      },
+    ];
+    expect(
+      existeFragmentoNaMesmaFuncao(modificacoes, { tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: 4 }),
+    ).toBe(true);
+  });
+
+  it('bloqueia um 2º fragmento na mesma função (efeito), mesmo com variantes diferentes (dados vs fixo) — m3-68', () => {
+    const modificacoes = [
+      {
+        nome: 'Fragmento Potencializador — Módulo V',
+        empilhamentos: 1,
+        efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.EFEITO, valor: 2, variante: 'DADO' }],
+        origemFragmento: { tipo: FragmentoTipoEnum.POTENCIALIZADOR, modulo: FragmentoModuloEnum.V },
+      },
+    ];
+    expect(
+      existeFragmentoNaMesmaFuncao(modificacoes, {
+        tipo: ModificacaoEfeitoTipoEnum.EFEITO,
+        valor: 3,
+        variante: 'FIXO',
+      }),
+    ).toBe(true);
+  });
+
+  it('não bloqueia funções diferentes (dano já ocupado, efeito livre) — m3-68', () => {
+    const modificacoes = [
+      {
+        nome: 'Fragmento Potencializador — Módulo V',
+        empilhamentos: 1,
+        efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: 8 }],
+        origemFragmento: { tipo: FragmentoTipoEnum.POTENCIALIZADOR, modulo: FragmentoModuloEnum.V },
+      },
+    ];
+    expect(
+      existeFragmentoNaMesmaFuncao(modificacoes, {
+        tipo: ModificacaoEfeitoTipoEnum.EFEITO,
+        valor: 2,
+        variante: 'DADO',
+      }),
+    ).toBe(false);
+  });
+
+  it('ignora modificações sem origemFragmento (a regra é só entre fragmentos)', () => {
+    const modificacoes = [
+      {
+        nome: 'Reforçado',
+        empilhamentos: 1,
+        efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: 1 }],
+      },
+    ];
+    expect(
+      existeFragmentoNaMesmaFuncao(modificacoes, { tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: 4 }),
+    ).toBe(false);
+  });
+});
+
+/**
+ * Cardápio "Consumido" (m3-64) — doc: "⬦ Potencializador", tabela, coluna "Consumido". Só o Módulo
+ * I soma "+1 ponto no atributo", além do teste (doc: "única forma de ultrapassar limite de 6 pontos
+ * em um atributo é consumindo um Fragmento de Módulo I").
+ */
+describe('listarBonusConsumoFragmentoPotencializador', () => {
+  it('módulo V devolve as 3 opções do cardápio "Consumido", sem concedePontoAtributo', () => {
+    const opcoes = listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.V);
+    expect(opcoes).toHaveLength(3);
+    expect(opcoes.map((opcao) => opcao.tipo)).toEqual(['TESTE', 'DEFESA', 'DANO_CORPO']);
+    expect(opcoes.map((opcao) => opcao.valor)).toEqual([1, 1, 2]);
+    expect(opcoes[0].concedePontoAtributo).toBeUndefined();
+  });
+
+  it('módulo III tem os valores da tabela (+3 testes, +3 Defesa, +6 dano do Corpo)', () => {
+    const opcoes = listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.III);
+    expect(opcoes.map((opcao) => opcao.valor)).toEqual([3, 3, 6]);
+  });
+
+  it('módulo I: opção de teste concede também +1 ponto no atributo (única exceção)', () => {
+    const opcoes = listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.I);
+    expect(opcoes[0]).toMatchObject({ tipo: 'TESTE', valor: 5, concedePontoAtributo: true });
+    expect(opcoes[0].rotulo).toContain('+1 ponto no atributo');
+    expect(opcoes[1]).toEqual({ rotulo: '+5 em Defesa', tipo: 'DEFESA', valor: 5 });
+    expect(opcoes[2]).toEqual({ rotulo: '+10 de dano do Corpo', tipo: 'DANO_CORPO', valor: 10 });
+  });
+
+  it('módulo II não concede ponto de atributo (só o I concede)', () => {
+    expect(listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.II)[0].concedePontoAtributo).toBeUndefined();
   });
 });
 
@@ -283,5 +480,86 @@ describe('custoSanidadeConsumirFragmento', () => {
       dtEvitarVontade: 32,
       energiaMaximaExtra: 60,
     });
+  });
+});
+
+/**
+ * Bônus fixo do Construtor (m3-65) — doc: "⬦ Construtor", tabela ~1950. "ele é a arma em si...
+ * concede bônus adicionais de dano e testes de acordo com seu módulo" — Arma/Proteção ganham a
+ * modificação automática; Munição é a ação própria "Recarregar".
+ */
+describe('formaFixaConstrutor', () => {
+  it('Corpo a Corpo, Armas de Fogo e Exóticos são a forma ARMA', () => {
+    expect(formaFixaConstrutor(ItemCategoriaEnum.CORPO_A_CORPO)).toBe('ARMA');
+    expect(formaFixaConstrutor(ItemCategoriaEnum.ARMAS_DE_FOGO)).toBe('ARMA');
+    expect(formaFixaConstrutor(ItemCategoriaEnum.EXOTICOS)).toBe('ARMA');
+  });
+
+  it('Proteções é a forma PROTECAO', () => {
+    expect(formaFixaConstrutor(ItemCategoriaEnum.PROTECOES)).toBe('PROTECAO');
+  });
+
+  it('Munições e categorias fora da lista do doc (ou ausente) devolvem null', () => {
+    expect(formaFixaConstrutor(ItemCategoriaEnum.MUNICOES)).toBeNull();
+    expect(formaFixaConstrutor(ItemCategoriaEnum.ARMAZENAMENTO)).toBeNull();
+    expect(formaFixaConstrutor(undefined)).toBeNull();
+  });
+});
+
+describe('listarEfeitosFixosConstrutor', () => {
+  it('Arma, módulo V: +1D8 de dano e +1 de teste (exemplo do documento)', () => {
+    expect(listarEfeitosFixosConstrutor(FragmentoModuloEnum.V, 'ARMA')).toEqual([
+      { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS, valor: 1, faces: 8 },
+      { tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: 1, variante: 'FIXO' },
+    ]);
+  });
+
+  it('Arma, módulo II: +2D12 de dano, +1 dado no dado base e +7 de teste (só II/I somam o dado base)', () => {
+    expect(listarEfeitosFixosConstrutor(FragmentoModuloEnum.II, 'ARMA')).toEqual([
+      { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS, valor: 2, faces: 12 },
+      { tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: 7, variante: 'FIXO' },
+      { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: 1 },
+    ]);
+  });
+
+  it('Arma, módulo I: +4D12 de dano, +2 dados no dado base e +10 de teste', () => {
+    expect(listarEfeitosFixosConstrutor(FragmentoModuloEnum.I, 'ARMA')).toEqual([
+      { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS, valor: 4, faces: 12 },
+      { tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: 10, variante: 'FIXO' },
+      { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: 2 },
+    ]);
+  });
+
+  it('Proteção, módulo V: só +2 de resistência (sem Esquiva/Bloqueio/Defesa neste módulo)', () => {
+    expect(listarEfeitosFixosConstrutor(FragmentoModuloEnum.V, 'PROTECAO')).toEqual([
+      { tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: 2 },
+    ]);
+  });
+
+  it('Proteção, módulo IV: +3 de resistência e +1 em Esquiva e Bloqueio (sem Defesa ainda)', () => {
+    expect(listarEfeitosFixosConstrutor(FragmentoModuloEnum.IV, 'PROTECAO')).toEqual([
+      { tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: 3 },
+      { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 1, variante: 'Esquiva' },
+      { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 1, variante: 'Bloqueio' },
+    ]);
+  });
+
+  it('Proteção, módulo I: +10 de resistência, +5 em Esquiva e Bloqueio e +2 em Defesa (exemplo do documento)', () => {
+    expect(listarEfeitosFixosConstrutor(FragmentoModuloEnum.I, 'PROTECAO')).toEqual([
+      { tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: 10 },
+      { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 5, variante: 'Esquiva' },
+      { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 5, variante: 'Bloqueio' },
+      { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 2, variante: 'Defesa' },
+    ]);
+  });
+});
+
+describe('bonusMunicaoConstrutor', () => {
+  it('módulo V: Recarregar custa 3 de Energia, concede +5 de dano (exemplo do documento)', () => {
+    expect(bonusMunicaoConstrutor(FragmentoModuloEnum.V)).toEqual({ custoRecarregar: 3, dano: 5 });
+  });
+
+  it('módulo I (mais forte): Recarregar custa 20 de Energia, concede +32 de dano', () => {
+    expect(bonusMunicaoConstrutor(FragmentoModuloEnum.I)).toEqual({ custoRecarregar: 20, dano: 32 });
   });
 });

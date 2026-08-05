@@ -35,6 +35,17 @@ export interface LimiteEnergiaCalcularDto {
   readonly destreza: number;
 }
 
+/**
+ * Entrada de `limiteMinimoEnergiaMaximaFragmentos`: (Vigor + Destreza) × 2 — **não confundir** com
+ * `LimiteEnergiaCalcularDto`/`calcularLimiteEnergia` (Destreza × 2 pra agente, só Destreza pra
+ * Civil; conceito de o quanto a Energia **atual** pode negativar). Este DTO é do teto de Energia
+ * **Máxima** no contexto de portar Fragmentos (m3-67) — ver `fragmento-limite-energia.ts`.
+ */
+export interface LimiteMinimoEnergiaMaximaFragmentosCalcularDto {
+  readonly vigor: number;
+  readonly destreza: number;
+}
+
 /** Entrada de `calcularDefesa`: Defesa Base = 10 + Nível; Esquiva soma Destreza, Bloqueio soma Vigor. */
 export interface DefesaCalcularDto {
   readonly classe: ClasseEnum;

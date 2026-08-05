@@ -21,6 +21,444 @@
 
 ## Registro por task (mais recente primeiro)
 
+## m3-69 — Fragmento Construtor: item custom ganha "Base" do catálogo (2026-08-05)
+
+Spec: `docs/specs/done/m3-69-fragmento-construtor-base-do-catalogo.spec.md`. Continuação do
+"Fechamento de Fragmentos" (`m3-63`…`m3-68`) — ajuste de UX discutido com o autor ao revisar o card
+do Fragmento Construtor na ficha. Task de **frontend**; `docs/design/DESIGN.md` relido antes da UI
+nova (proibição #29).
+
+**O problema.** Criar um Fragmento Construtor sempre pedia dano/resistência **digitados do zero**
+(`itemCustomForm`) — o bônus fixo do módulo (`listarEfeitosFixosConstrutor`, `m3-65`) entrava como
+Modificação em cima de um texto livre desconectado de qualquer item real. O doc diz "ele é a arma em
+si" (`sistema-v4.1.0.md` ~1945): um Construtor Módulo I sendo uma "Mediana" (`3D4+FOR`) deveria somar
+o bônus do módulo (`+4D12`, doc) **sobre** o dano real daquela arma, não sobre um texto inventado.
+
+**O que foi feito.**
+1. Novo `<select>` "Base" no form de item custom, visível só quando a categoria é
+   `FRAGMENTO_CONSTRUTOR` e `formaFixaConstrutor(categoriaEmprestada)` resolve `'ARMA'`/`'PROTECAO'`
+   (Corpo a Corpo/Armas de Fogo/Proteções, na prática — Explosivos/Munições não têm forma reconhecida
+   e ficam de fora, mesmo padrão de "Recarregar" pra Munições). Lista `CATALOGO_ITENS[categoriaEmprestada]`
+   + "Outra (digitar)" como última opção — o texto livre continua existindo, só deixou de ser único
+   caminho.
+2. Escolher uma Base preenche e **trava** (`FormControl.disable()`) dano/informação (Arma) ou
+   resistência (Proteção) com os valores daquele item do catálogo, e pré-preenche o peso (o
+   Construtor "é" aquele item — ocupa o mesmo espaço; custo segue livre, fragmentos são achados,
+   `m3-49`). Voltar pra "Outra" destrava e limpa os campos, exatamente como o form sempre funcionou.
+3. A lógica de auto-preenchimento (`escolherBaseConstrutor`) está ligada ao `(change)` do `<select>`
+   no template — **não** a uma subscription de `valueChanges` no construtor. Uma subscription
+   reativa parecia mais robusta a princípio, mas quebrou um teste existente: `FormGroup.setValue()`
+   emite `valueChanges` pra **todo** campo, mesmo os que não mudaram de valor — um `.setValue({...,
+   baseConstrutor: ''})` de teste disparava o "efeito Outra" *depois* de setar `dano`/`informacao`,
+   sobrescrevendo os dois de volta pra `''`. `(change)` só dispara numa interação de verdade no
+   `<select>`, nunca num `reset`/`setValue` em lote.
+4. `resetarItemCustomForm` (novo helper, substitui as duas chamadas de `.itemCustomForm.reset(...)`
+   em `escolherTipoFragmento`/`alternarCriarItem`): reabilita dano/informação/resistência antes do
+   `reset()` (que sozinho **não** desfaz um `disable()` anterior) e sempre volta `baseConstrutor` pra
+   `''` ("Outra").
+5. **Achado durante os testes, corrigido:** `calcularStatItem` (`shared/regras/compras/compras.ts`)
+   já fundia dano de qualquer categoria com `itemCatalogo.dano` presente (sem gate de categoria), mas
+   o bloco de **Resistência** só rodava pra `PROTECOES`/`ARMAZENAMENTO` — excluía
+   `FRAGMENTO_CONSTRUTOR`. Resultado: um Construtor forma Proteção nunca teve a Resistência
+   computada fundida com o bônus do módulo (o stat ficava `null`), mesmo a modificação automática
+   (`m3-65`) já carregando o efeito `RESISTENCIA` certo nos dados — a UI simplesmente nunca mostrava
+   o resultado combinado. A spec listava "o motor de fusão do `calcularStatItem`" como Fora de
+   Escopo ("já correto"), mas os Critérios de Aceite exigem explicitamente que "o dano/resistência
+   final... combina a base... com o bônus fixo do módulo, num único stat computado" — sem essa
+   correção o critério não se sustentava pro caso Proteção. Ajuste mínimo: adicionar
+   `FRAGMENTO_CONSTRUTOR` ao gate de categoria do bloco de Resistência (os sub-blocos de
+   Blindada/Reforçada/Camuflada/Hazmat/Antibombas/Camadas Extras têm seus próprios gates de
+   categoria, então continuam restritos a Proteções/Armazenamento como antes).
+6. `montarItemCustom` não mudou — já lia `dano`/`informacao`/`resistencia`/`peso` do form (agora
+   preenchidos pela Base, quando houver uma).
+
+**Testes.** `shared`: 1 teste novo em `compras.spec.ts` provando a fusão de Resistência do Construtor
+(Colete Tático `4 [Físico]` + Módulo I `RESISTENCIA` 10 → `14 [Físico]`). `frontend`: novo describe
+`'seletor "Base" do Fragmento Construtor (m3-69)'` em `ficha-inventario.component.spec.ts` — Arma
+(Mediana + Módulo I: dano final `5D4+4D12+FOR [Físico]`, base 3+2 dados fundida com o `DANO_DADOS_BASE`
+do módulo e o grupo extra `4D12` sobrevivendo junto, peso 2), Proteção (Colete Tático + Módulo I:
+`14 [Físico]`, peso 1), "Outra" mantém texto livre (padrão, sem trava), trocar de Base recalcula os
+campos travados, categoria sem base reconhecida (Munições) não mostra o seletor.
+
+**Fora de escopo, confirmado nesta revisão:** `listarEfeitosFixosConstrutor`/`BONUS_FIXO_CONSTRUTOR`
+em si (dados já corretos, só a origem do texto base mudou); Munição do Construtor (`m3-65`, mantém
+"Recarregar"); validação de texto livre sem colchete `[Tipo]` na opção "Outra" (comportamento já
+existente pra qualquer item custom).
+
+**Verificação final:** `shared` 519/519 (era 518/518) · lint limpo · build limpo. `backend` 170/170
+(inalterado). `frontend` 709/711 (era 706 antes da suíte crescer 5 testes novos; as 2 falhas restantes
+são as pré-existentes `P-001`/`P-010`, sem novas quebras) · lint só os 3 erros pré-existentes
+(`P-009`) · `ng build --configuration development` limpo. **Não verificado num browser real** — a
+cobertura de componente (`ficha-inventario.component.spec.ts`) já exercita DOM/estado travado/computed
+diretamente, mas o fluxo completo (abrir o form, clicar no `<select>`, ver o campo travado
+visualmente) não foi clicado manualmente nesta sessão.
+
+## m3-68 — Fragmentos: "efeito" do Potencializador não é dano (2026-08-05)
+
+Spec: `docs/specs/done/m3-68-fragmento-potencializador-efeito-nao-e-dano.spec.md`. Correção sobre o
+"Fechamento de Fragmentos" (`m3-63`…`m3-67`) — auditoria adicional encontrada ao revisar o cardápio
+do Potencializador com o autor. A spec (`bedec37`) já tinha sido registrada por outra sessão;
+implementação feita agora.
+
+**O problema.** `listarBonusFragmentoPotencializador` (`shared/regras/compras/fragmento.ts`) mapeava
+**errado** duas das quatro opções do cardápio "em um item" (doc — "⬦ Potencializador", tabela ~1938):
+a opção "+N dados (efeito)" ia para `DANO_DADOS_BASE` e a opção "+N no valor" de efeito (dentro do
+sub-cardápio "teste, efeito ou resistência") ia para `DANO_FIXO`, tratando **efeito** como se fosse
+**dano**. O doc rotula essas duas opções explicitamente como "(efeito)" — numa granada incendiária
+com dano e efeito "Em Chamas" separados, esses dados deveriam reforçar o "Em Chamas", nunca o dano.
+Só a opção "N× valor máximo do maior tipo de dado" É dano de verdade (pega o maior dado do item,
+soma como dano fixo) — essa e "+1 dado no teste" já estavam certas e não mudaram.
+
+**O que foi feito.**
+
+1. **Novo tipo `EFEITO`** em `ModificacaoEfeitoTipoEnum` (`shared/enums/modificacao-efeito-tipo.enum.ts`),
+   com `variante` `'DADO'`/`'FIXO'` (mesmo padrão de `BONUS_TESTE`). É puramente descritivo — não
+   funde em `calcularStatItem` (mesmo grupo de `ALCANCE`/`RAIO`/`DURACAO`/`CONDICAO`; o `switch` de
+   `calcularStatItem` já ignora tipos não tratados, então nenhuma mudança foi necessária lá).
+   Precedente: `m3-31` já trata bônus que o motor não computa como descritivo, jogador aplica na mão.
+2. **`listarBonusFragmentoPotencializador` corrigida**: "+N dados" → `EFEITO` variante `DADO`
+   (rótulo "+N dados de efeito (não é dano)"); "+N no valor" de efeito → `EFEITO` variante `FIXO`
+   (rótulo "+N no efeito"). As opções de "N× maior dado" (`DANO_FIXO`) e "+dado no teste"
+   (`BONUS_TESTE`) ficaram inalteradas.
+3. **`funcaoFragmento` ganhou a função `'EFEITO'`** — antes, `EFEITO` (então inexistente) caía em
+   `null` e não participava de `existeFragmentoNaMesmaFuncao`, um furo real: dois fragmentos ambos
+   mirando "efeito" no mesmo item não eram bloqueados pela regra de "uma única função" (doc — "⬦
+   Potencializador": "um item/ser pode conter mais de um fragmento, mas para apenas uma única
+   função"). Removido também o caso `DANO_DADOS_BASE` do switch (não é mais produzido pelo cardápio
+   do Potencializador — Construtor ainda usa esse tipo pro seu próprio bônus fixo, `m3-65`, mas
+   Potencializador nunca acopla num item Construtor, doc: "exceto em fragmentos construtores", então
+   as duas frentes nunca colidem nesse `switch`).
+4. **`descreverEfeitoModificacao`** (`compras.ts`) ganhou o `case EFEITO` (dado vs fixo), no mesmo
+   padrão do `case BONUS_TESTE` — chip da mod nunca mais menciona "dano" pra um bônus de efeito.
+5. **Testes**: `fragmento.spec.ts` — reescrito o mapeamento esperado de `listarBonusFragmentoPotencializador`
+   (3 testes ajustados) e `existeFragmentoNaMesmaFuncao` ganhou um teste de colisão "efeito vs efeito"
+   (variantes diferentes, dado vs fixo, ainda bloqueiam) além dos ajustes nos 2 testes de dano/comum;
+   `compras.spec.ts` ganhou 3 asserts pro rótulo do chip `EFEITO` (fixo, 1 dado, N dados — plural).
+   No frontend, 3 testes de `ficha-inventario.component.spec.ts` que simulavam um fragmento já
+   aplicado com `DANO_DADOS_BASE` (representando "dano ocupado") foram reescritos para `EFEITO`
+   variante `DADO` — passam a testar de fato a colisão de função "efeito" pedida pela spec, em vez de
+   um cenário que o motor não produz mais.
+
+**Fora de escopo, confirmado nesta revisão.** Cardápio "Consumido" (`BONUS_CONSUMIDO`, `m3-64`) — já
+correto, não mexido. Fundir `EFEITO` num stat computado (dado de cura, de status) — o sistema não
+define um motor de "efeito" genérico hoje; fica descritivo, mesmo tratamento de `m3-31`. Bônus fixo
+do Construtor (`m3-65`) — tabela própria, não usa este cardápio.
+
+**Verificação final.** `shared` 518/518 (era 517/517 — rede de +1 após reescrever os testes
+quebrados pela correção do mapeamento e acrescentar os novos de colisão/rótulo). `backend` 170/170,
+inalterado (não toca essa camada). `frontend` 704/706 (as 2 falhas são as pré-existentes conhecidas,
+`PROBLEMS.md` `P-001`/`P-010`, nenhuma nova). `npm run lint` limpo em `shared`; `frontend` só os 3
+erros pré-existentes de `P-009`, nenhum novo. `ng build --configuration development` limpo.
+
+## m3-67 — Fragmentos: Limite mínimo de Energia e Anomalia Biológica (2026-08-05)
+
+Spec: `docs/specs/done/m3-67-fragmentos-limite-energia-anomalia-biologica.spec.md`. Continuação do
+lote de Fragmentos (`m3-35`, `m3-42`), desenvolvida em cima da branch que já tinha `m3-63`…`m3-66`
+(mesma sessão de trabalho; `m3-66`/`m3-68`/`m3-69` chegaram já commitadas ao puxar a branch, sem
+registro próprio neste arquivo — dívida de outra sessão, não coberta aqui).
+
+**O problema.** Nada modelava o "Limite mínimo de Energia" do doc (`(Vigor + Destreza) × 2`): um
+agente podia portar fragmentos suficientes pra zerar a Energia Máxima sem aviso nem consequência —
+faltava o estado "Anomalia Biológica" (efeitos: −15 testes, −10 Defesa, vida atual travada em 10%
+da máxima) e o atalho pro trauma "Limiar da Humanidade".
+
+**O que foi feito.**
+
+1. **`limiteMinimoEnergiaMaximaFragmentos`** (`shared/regras/agente/fragmento-limite-energia.ts`,
+   novo arquivo) — `(Vigor + Destreza) × 2`. Nomeada de propósito pra não colidir com
+   `calcularLimiteEnergia` (`saude.ts`), que é outro conceito (quanto a Energia **atual** pode
+   negativar, `Destreza × 2`/`Destreza`) — os dois docstrings agora se referenciam um ao outro pra
+   não repetir a confusão que a spec avisou já ter acontecido uma vez.
+2. **`emAnomaliaBiologica`** — estado 100% derivado (Energia Máxima atual, já reduzida pelos
+   fragmentos, `<` o limite), sem campo persistido — mesma filosofia de "nada é travado pelo motor,
+   o narrativo é refletido por quem joga" (`m3-10`). Mais `tetoVidaAnomaliaBiologica` (10% da Vida
+   Máxima, `Math.floor`) e as constantes `PENALIDADE_TESTES_ANOMALIA_BIOLOGICA`/`_DEFESA_` (−15/−10,
+   texto informativo — **não** tocam `calcularDefesa`/motor de rolagem, fora de escopo por pedido
+   explícito da spec) e `TRAUMA_LIMIAR_HUMANIDADE_NOME`/`_DESCRICAO` (nome/descrição prontos, mesmo
+   padrão de `SEQUELA_CONSUMO_FRAGMENTO`).
+3. **Aviso na aquisição** (`FichaInventario`) — `avisoLimiteEnergiaAquisicao`, computed que projeta a
+   Energia Máxima após adquirir o fragmento do form custom (categoria + módulo já escolhidos, mesma
+   conta de `debitarAquisicaoFragmento`, só sem debitar) e mostra um `ficha-inv__aviso` quando a
+   projeção cairia abaixo do limite. **Não trava** — a ação de confirmar o item continua livre,
+   exatamente como a spec pediu.
+4. **Exibição na aba Extras** (`FichaVisualizacao`) — nova seção "Anomalia Biológica" ao lado de
+   "Afinidade de Fragmentos": limite mínimo sempre visível; em Anomalia Biológica, lista os três
+   efeitos calculados (mesmo padrão visual de sequelas/traumas — nome/descrição, aplicação manual).
+5. **Atalho do trauma "Limiar da Humanidade"** — confirmação inline (abrir → mostra nome/descrição
+   pré-preenchidos → "Registrar trauma"/"Cancelar", mesmo padrão de `pedirRemocaoFragmentoConsumido`)
+   só visível pra quem edita (`ajustavel()`) e só em Anomalia Biológica; nunca dispara sozinho —
+   reusa o canal `ajusteSanidade` (m3-12) já existente, sem persistência paralela. **Decisão:**
+   implementado como painel próprio na aba Extras (não uma chamada imperativa pro `FichaSanidade`
+   embutido noutra sub-aba do card de Status) — evita acoplar componentes por `viewChild` através de
+   uma troca de sub-aba assíncrona só pra abrir um dialog; o resultado (registrar no trio
+   `sequelas/traumas/lesoes` via `ajusteSanidade`) é idêntico ao que o editor de Sanidade faria.
+
+**Testes.** `shared`: `limiteMinimoEnergiaMaximaFragmentos`, `emAnomaliaBiologica` (abaixo/igual/
+acima do limite), `tetoVidaAnomaliaBiologica`, constantes. `frontend`: `FichaVisualizacao` — limite
+exibido, estado ligado/desligado, efeitos calculados corretos (vida: Vida Máxima derivada × 10%
+`floor`), atalho do trauma escondido pra visualizador, fluxo completo abrir/cancelar/confirmar do
+atalho (não dispara sozinho, emite o trio esperado). `FichaInventario` — sem aviso sem módulo
+escolhido, sem aviso quando o custo não cruza o limite, aviso presente e correto num Fragmento
+Construtor módulo I (custa o dobro) que cruza o limite, e a aquisição confirmando normalmente
+(não trava).
+
+**Verificação.** `shared`: 517/517 (10 novos), lint limpo. `backend`: 170/170 inalterado (fora do
+escopo). `frontend`: build limpo, 704/706 (18 novos; as 2 falhas são as conhecidas `P-001`/`P-010`,
+confirmadas pré-existentes via `git stash`/lint antes da mudança), lint limpo nos arquivos tocados
+(o único erro de lint do repo, em `ficha-visualizacao.component.spec.ts:1942`, é pré-existente —
+confirmado via `git stash`). Sem stack local (Postgres/Docker indisponível neste ambiente) pra
+verificação end-to-end no navegador real — a UI foi conferida via `TestBed` (DOM/template reais,
+change detection real, eventos emitidos reais), não apenas lógica isolada. Spec movida de
+`backlog/` pra `done/`.
+
+## m3-65 — Fragmentos: tabela de bônus fixos do Construtor (2026-08-04)
+
+Spec: `docs/specs/done/m3-65-fragmentos-tabela-construtor.spec.md`. Continuação do lote de
+Fragmentos (`m3-35`, `m3-42`, `m3-63`, `m3-64`), desenvolvida em cima da branch que já tinha as duas
+últimas (mesma sessão, `git merge` prévio de `m3-63` para dentro da branch de `m3-64`).
+
+**O problema.** Um fragmento Construtor virava só uma arma/proteção comum digitada à mão pelo
+jogador — nenhum dos bônus fixos por módulo da tabela do doc (dano/teste da arma, recarga+dano da
+munição, resistência+Esquiva/Bloqueio/Defesa da proteção) era aplicado automaticamente, e
+modificações adicionadas a ele não recebiam o dobro de custo / isenção de peso que o doc garante
+("⬦ Construtor": "podem receber modificações como sua arma base, com o dobro do custo e sem
+acréscimo de peso").
+
+**O que foi feito.**
+
+1. `BONUS_FIXO_CONSTRUTOR` (`shared/regras/compras/fragmento.dados.ts`) — tabela por módulo × 3
+   formas (Arma/Munição/Proteção), lida direto da tabela do doc (~1950). **Decisão de mapeamento**
+   (ambígua na spec, resolvida a favor do doc — proibição #27): "Adiciona +1D8 de dano" não é o dado
+   base do item (o jogador continua declarando a base, `dano`/`informacao`, como em qualquer item
+   custom — "concede bônus **adicionais**" e "ele é a arma em si" contrastam com "aprimorar" só no
+   sentido de não se acoplar a um item externo, não no sentido de dispensar uma base própria);
+   virou `DANO_DADOS` (pool de dado separado, com a face fixa do módulo — não `DANO_DADOS_BASE`, que
+   reusaria a face do dado base, contradizendo a face explícita crescente D8→D12 da tabela). O termo
+   à parte "+1 dado"/"+2 dados" (só Módulo II/I, sem face própria) é que soma ao dado **base** —
+   esse sim virou `DANO_DADOS_BASE`. "+N de teste" virou `BONUS_TESTE` variante `FIXO` (mesmo
+   raciocínio de `BONUS_POTENCIALIZADOR`: é campo descritivo/chip, o motor não "usa" o bônus de
+   teste em nenhum cálculo, mesmo comportamento já existente pro bônus "em item" do Potencializador).
+   Proteção: `RESISTENCIA` + `DEFESA` (variantes `Esquiva`/`Bloqueio`/`Defesa`, cada uma só a partir
+   do módulo em que a tabela a introduz) — bateu exatamente com a sugestão da própria spec.
+2. `formaFixaConstrutor`/`listarEfeitosFixosConstrutor` (`fragmento.ts`) — função pura que resolve a
+   forma (Arma/Proteção) a partir da `categoriaEmprestada` do item e devolve os `ModificacaoEfeitoDto`
+   correspondentes; Munição devolve `null` (não modifica item, ver item 4). `bonusMunicaoConstrutor`
+   expõe só o par `{ custoRecarregar, dano }` da tabela.
+3. **Aplicação automática** — `FichaInventario.comBonusFixoConstrutorSeNecessario` (chamado por
+   `confirmarCriarItem`, antes de `inserirItem`) empurra a modificação já calculada pro item recém
+   criado, com `origemFragmento: { tipo: CONSTRUTOR, modulo }` (mesmo padrão do bônus "em item" do
+   Potencializador — badge de origem no card) e `ignoraLimiteTotal`/`ignoraLimiteProprio` (não é uma
+   modificação comprada). **Cuidado descoberto ao implementar:** `removerModificacao` já tinha uma
+   ramificação que trata **qualquer** `origemFragmento` como "desacoplar" (o fragmento Potencializador
+   volta como item avulso ao inventário) — reusar isso pro bônus fixo do Construtor geraria um item
+   fantasma (o "alvo" do desacoplamento seria o próprio item Construtor, e o código empurraria um
+   segundo Fragmento Construtor avulso duplicado). Corrigido restringindo essa ramificação a
+   `origemFragmento.tipo === POTENCIALIZADOR`; o bônus fixo do Construtor agora só some pelo caminho
+   comum (como qualquer mod), sem "desacoplar" — não existe pra onde desacoplar, o fragmento **é** o
+   item.
+4. **Munição Construtor** — ação própria "Recarregar" (botão no card, mesmo padrão de "Aplicar
+   em.../Consumir"): debita a Energia **atual** do módulo (custo de ação, não de aquisição) e marca
+   `item.recarregada = true` (campo novo em `CarrinhoItemDto`, `m3-65`). "Dura 1 cena" modelado como
+   reset manual — um segundo botão ("encerrar a cena") volta `recarregada` a `false` sem mexer em
+   Energia; sem sistema de cena automatizado no app hoje, então o reset é decisão do jogador/mestre.
+   Sem efeito se já está recarregada (evita debitar Energia de novo sem passar pelo reset).
+5. **Dobro de custo/peso zero** — `obterCustoModificacao`/`obterPesoModificacao`
+   (`shared/regras/compras/compras.ts`) reconhecem `item.categoria === FRAGMENTO_CONSTRUTOR`: dobram
+   o custo (calculado normalmente por baixo — inclusive o caminho "emprestada" de categoria — só
+   dobrado no fim) e zeram o peso incondicionalmente. Vale tanto pro bônus fixo automático quanto
+   pra qualquer modificação comum que o jogador adicionar depois (o "cuidado" da spec sobre
+   modificações de Potencializador nem se aplica — Construtor já não pode receber Potencializador,
+   `m3-63`).
+
+**Testes.** `shared`: `formaFixaConstrutor` (Arma/Proteção/Munição/null), `listarEfeitosFixosConstrutor`
+(todos os 5 módulos de Arma incl. o termo extra de dado em II/I, Proteção em V/IV/I cobrindo a
+progressão de Esquiva-Bloqueio-Defesa), `bonusMunicaoConstrutor`, e o dobro de custo/peso zero em
+`compras.spec.ts`. `frontend`: criação automática da modificação (Arma, Proteção, Munição sem
+modificação), custo dobrado/peso zero tanto no bônus automático quanto numa mod comum adicionada
+depois, e o fluxo completo de "Recarregar" (débito de Energia, marca `recarregada`, não debita de
+novo, reset manual sem debitar).
+
+**Verificação.** `shared`: typecheck limpo, 507/507 (13 novos), lint limpo. `backend`: 170/170
+inalterado (fora do escopo). `frontend`: build limpo, 688/690 (12 novos; as 2 falhas são as
+conhecidas `P-001`/`P-010`, confirmadas pré-existentes e não relacionadas via `git diff --stat`),
+lint com os mesmos 3 erros pré-existentes (`P-009`). Spec movida de `backlog/` pra `done/`.
+
+## m3-64 — Fragmentos: cardápio "Consumido" e rastro do consumo (2026-08-04)
+
+Spec: `docs/specs/done/m3-64-fragmentos-consumo-bonus-historico.spec.md`. Continuação do lote de
+Fragmentos (`m3-35`, `m3-42`); fechado **independente** de `m3-63` (ambas as tasks vieram da mesma
+spec de milestone dividida em `m3-63..m3-68`, mas `m3-64` foi implementada numa branch cortada
+direto de `origin/master`, sem as mudanças de `m3-63` — que ainda não tinha sido mergeada — porque
+o "Fora de Escopo" da própria spec já deixa isso explícito: "Cardápio 'em item' do Potencializador
+(`m3-63`)").
+
+**O problema.** O painel "Consumir" (`ficha-inventario.component.ts`) cobrava o Preço de Sanidade do
+Consumo (`m3-42`: sequela "Rejeição Biológica" × multiplicador + Energia Máxima extra) mas dizia "o
+benefício pessoal do Consumo é narrativo — combine com o Mestre". O documento (`sistema-v4.1.0.md`,
+"⬦ Potencializador", coluna "Consumido") define um cardápio **fechado** de 3 bônus por módulo — isso
+não é narrativo, é mecânico, e estava sendo ignorado. Consumir também não deixava rastro nenhum: o
+item some do inventário e só resta uma sequela genérica sem indicar de qual fragmento veio.
+
+**O que foi feito.**
+
+1. `BONUS_CONSUMIDO` (`shared/regras/compras/fragmento.dados.ts`) — tabela por módulo (`teste`/
+   `defesa`/`danoCorpo`), espelhando `BONUS_POTENCIALIZADOR`. `listarBonusConsumoFragmentoPotencializador`
+   (`fragmento.ts`, função pura irmã de `listarBonusFragmentoPotencializador`) monta as 3 opções; só
+   Módulo I marca `concedePontoAtributo: true` na opção de teste (doc: "única forma de ultrapassar
+   limite de 6 pontos em um atributo é consumindo um Fragmento de Módulo I").
+2. **Onde o bônus aterrissa** — decisão explícita pedida pela spec. Ao contrário do bônus "em item"
+   (vira `ModificacaoAplicadaDto` de um item), o bônus "Consumido" é do **agente** e **permanente**
+   (o fragmento é destruído ao ser consumido — não há "desacoplar" pra desfazer, diferente do bônus
+   em item). Isso descartou o padrão "soma por cima só na leitura, nunca persistido" que
+   `amplificador.ts`/`calcularBonusDefesaEquipamento` usam (eles recalculam ao vivo a partir de uma
+   lista de itens/amplificadores **ainda portados** — aqui não há lista, o fragmento já não existe
+   mais pra reprocessar). Achei precedente melhor em `identidade/formacoes.ts`
+   (`aplicarEfeitoUnico`, m3-23): Origem também aplica um **delta único, permanente**, direto nos
+   campos persistidos (`derivados[campo] += valor`, `somarDanoFixo` pro dano do Corpo). Generalizei
+   esse padrão numa função nova, `aplicarBonusConsumoFragmento`
+   (`shared/regras/agente/fragmento-consumo.ts`, **não** `compras/` — o motivo é de dependência: o
+   arquivo toca `FichaAtributosDto`/`FichaDerivadosDto` e `agente/*` já importa de `compras/fragmento`
+   pra outras coisas, então ficar em `agente/` evita inverter a direção e criar ciclo). Ela resolve
+   os 3 tipos: `TESTE` soma em `modificadoresTeste[atributoEscolhido]` (o campo que a spec já apontava
+   como "candidato natural" — o mesmo usado pra modificador temporário de teste por atributo) e, só
+   quando `concedePontoAtributo`, soma **+1** também em `atributos[atributoEscolhido]` (sem clamp — a
+   ficha já não trava `atributos` em lugar nenhum do runtime, o "limite de 6" do doc é uma convenção
+   de mesa reforçada só na UI de criação; nada precisou ser "destravado" de propósito). `DEFESA`/
+   `DANO_CORPO` somam em `derivados.defesa`/`derivados.danoCorpoACorpo`, com a mesma guarda de
+   `aplicarEfeitoUnico` ("`!== undefined`"/truthy — não fabricar uma stat que a classe não tem, ex.
+   Civil sem Defesa).
+3. **UI de escolha** — `FichaInventario` ganhou `opcaoConsumoFragmento`/`atributoConsumoFragmento`
+   (signals) e `opcoesConsumoFragmento`/`opcaoConsumoFragmentoEscolhida` (computeds); o painel
+   "Consumir" ganhou um `<select>` "Bônus 'Consumido'" (3 opções) e um segundo `<select>` "Atributo",
+   condicional a `tipo === 'TESTE'`. O botão "Consumir" trava (`[disabled]`) até um bônus estar
+   escolhido (e o atributo, quando for TESTE) — a mesma trava já existe em `confirmarConsumirFragmento`
+   como guarda defensiva, não só no template. O texto "combine com o Mestre" saiu.
+4. **Onde o componente entrega o resultado** — `FichaInventario` **não** aplica o efeito sozinho: ele
+   não recebe `derivados`/`modificadoresTeste`/`maestria`/`dadosTeste` como input (só `atributos`, pra
+   outra coisa — fórmula de dano de item). Em vez disso emite um novo output,
+   `bonusConsumoFragmento` (`{ opcao, atributoEscolhido }`), e quem aplica é `FichaVisualizacao`
+   (`aoConsumirFragmentoBonus`), que já tem o `dados()` inteiro. Ela chama
+   `aplicarBonusConsumoFragmento` e reusa os canais de persistência **já existentes** — `ajusteAtributos`
+   (que também re-deriva Vida/Energia quando o atributo muda, mesmo caminho de uma edição manual,
+   relevante pro caso Módulo I) pro tipo `TESTE`, `ajusteDerivado` pros outros dois — em vez de abrir
+   um canal de persistência paralelo (mesmo espírito de `aoAjustarEnergiaFragmento`/
+   `aoConsumirFragmentoSanidade`, que já reusam `ajusteVitalidade`/`ajusteSanidade`).
+5. **Rastro do consumo** — `textoBonusConsumoFragmento` (privado, em `ficha-inventario.component.ts`;
+   deliberadamente **não** em `shared` — é formatação de texto de UI, não regra) monta o texto do
+   bônus escolhido (ex.: `"+3 em Defesa"`; pro teste, inclui o nome do atributo e, no Módulo I, "e +1
+   ponto no atributo"). Alimenta a `descricao` da sequela "Rejeição Biológica" quando ela é gerada.
+
+**Correção pós-entrega, mesmo dia:** a 1ª versão desta task deixava o rastro **só** na `descricao`
+da sequela — e a sequela é evitável com o teste de Vontade (`m3-42`), então evitá-la também apagava
+o rastro do consumo. Rejeitado pelo autor em revisão: um registro que existe *condicionalmente* não é
+um registro. Correção: novo campo `FichaJogadorDadosDto.fragmentosConsumidos?:
+readonly FichaFragmentoConsumidoDto[]` (`shared/dtos/ficha`, `{ modulo, bonusEscolhido }`) — a aba
+**Extras**, logo **acima de "Afinidade de Fragmentos"**, ganhou a seção "Fragmentos Consumidos"
+(mais recente primeiro, lista rolável a partir de 195px, mesma filosofia de teto de
+`.ficha-status__anotacoes`). `FichaInventario` emite o novo output `fragmentoConsumido`
+**incondicionalmente** em `confirmarConsumirFragmento` (sempre, independente de
+`evitouSequelaConsumo()`) — diferente de `bonusConsumoFragmento`/`sequelasFragmentoConsumido`, que
+seguem com suas semânticas de sempre. `FichaVisualizacao.aoRegistrarFragmentoConsumido` prepende o
+registro e emite `ajusteFragmentosConsumidos`, reusando o mesmo padrão array-completo de
+`ajustarCombos`/`ajustarRolagens` (`FichaEdicaoService.ajustarFragmentosConsumidos`, novo, wireado
+em `visualizar.page.html` e `detalhe.page.html`); o merge de edição concorrente (`mesclar-ficha.ts`)
+já cobre a chave nova de graça — o reducer é genérico sobre `Object.keys`, nenhuma mudança lá. A
+`descricao` da sequela continua existindo (redundante, mas inofensiva) — o registro em Extras é que
+virou a fonte de verdade do rastro. A ideia `I-010` (`IDEAS.md`, "histórico dedicado de fragmentos
+consumidos") foi removida de "Abertas" — a correção a implementou no mesmo dia em que foi escrita.
+
+**2ª correção pós-entrega, mesmo dia:** o registro de "Fragmentos Consumidos" era só exibição —
+uma vez lançado, ficava preso na ficha para sempre. Pedido do autor: "eu posso remover um fragmento
+consumido também, isso tem que ser possível" — e, esclarecido em seguida, remover não é só apagar a
+linha: tem que **desfazer o consumo por inteiro** (bônus no agente, Energia Máxima e devolução do
+item ao inventário), mas **sem** mexer na(s) sequela(s) "Rejeição Biológica" já geradas (essas
+continuam sob o controle manual de sempre, painel de Sanidade). `FichaFragmentoConsumidoDto` ganhou
+os campos que faltavam pra isso ser possível — `opcao` (a `OpcaoBonusConsumoFragmentoDto` estruturada,
+não só o texto), `atributoEscolhido`, `deltaEnergiaMaxima` (o delta que o consumo aplicou à Energia
+Máxima: restituição da aquisição − Preço de Sanidade físico) e `item` (o snapshot do próprio
+fragmento removido do inventário) — sem isso o registro seria incapaz de desfazer o que descreve.
+`aplicarBonusConsumoFragmento` (`shared/regras/agente/fragmento-consumo.ts`) ganhou um parâmetro
+`sinal: 1 | -1 = 1` e uma nova `reverterBonusConsumoFragmento` (`sinal: -1`) — mesmo padrão de
+`aplicarFormacaoAosDerivados`/`removerFormacaoDosDerivados` (`identidade/formacoes.ts`, m3-23), só
+generalizado aqui pro Consumo de Fragmentos. `FichaInventario` passou a emitir o registro completo
+em `confirmarConsumirFragmento` (antes só `{ modulo, bonusEscolhido }`). `FichaVisualizacao` ganhou
+`confirmarRemocaoFragmentoConsumido` (com confirmação inline `pedirRemocaoFragmentoConsumido`/
+`cancelarRemocaoFragmentoConsumido` — mesmo padrão ✕→"Remover?"→✓/✕ de `ficha-combos`): reverte o
+bônus (reusando `ajusteAtributos`/`ajusteDerivado` via um helper `emitirEfeitoBonusFragmento`
+extraído de `aoConsumirFragmentoBonus`, já que aplicar/reverter só diferem no sinal do delta), reverte
+`estado.energiaMaxima` (`ajusteVitalidade`) e devolve o item ao array de `inventario.itens`
+(`ajusteInventario`) — três canais de persistência **já existentes**, nenhum novo. O botão "Remover"
+só aparece com `ajustavel()` (dono/mestre), mesma trava do resto da aba Extras.
+
+**Verificação.** `shared`: 484/484 (479 da entrega original + 5 novos testes de
+`reverterBonusConsumoFragmento`). `backend`: 170/170 (sem mudança — nada em `backend/` referencia
+`FichaFragmentoConsumidoDto`). `frontend`: 670/672 — as 2 falhas são as já conhecidas e
+pré-existentes `P-001`/`P-010`, confirmadas via `git diff --stat` (nenhum arquivo delas tocado por
+esta task). `npx tsc --noEmit`, `eslint` e `ng build` (orçamento de bundle) limpos em todos os
+arquivos tocados — `npm run lint --workspace=frontend` continua batendo só nos mesmos 3 erros
+pré-existentes e não relacionados de `P-009`. Testes pré-existentes que montavam
+`FichaFragmentoConsumidoDto` com o shape antigo (`{ modulo, bonusEscolhido }`) foram atualizados pro
+shape novo — comportamento antigo intencionalmente estendido, não um regression fix.
+
+## m3-63 — Fragmentos: 5ª opção do cardápio do Potencializador, alvo mais largo e função única (2026-08-03)
+
+Fechou as três lacunas que a `m3-35`/`m3-42` deixaram no fluxo "Aplicar em..." do fragmento
+Potencializador (`shared/src/regras/compras/fragmento.ts`,
+`frontend/.../ficha-inventario.component.ts`).
+
+**Maior dado do item + 5ª opção.** Nova `maiorDadoItem(item)` (`fragmento.ts`) resolve o `dano` do
+item (catálogo ou custom, via `resolverDadosItem` — mesma fonte de `calcularStatItem`) e casa toda
+notação `D<n>` no texto, devolvendo a maior; `null` sem dado no campo. `listarBonusFragmentoPotencializador`
+ganhou um 2º parâmetro opcional `maiorDado: number | null` — quando não-`null`, insere a opção "N×
+maior dado" (novo `MULTIPLICADOR_MAIOR_DADO_MODULO` em `fragmento.dados.ts`, V=1×...I=5×; efeito
+`DANO_FIXO`, valor = multiplicador × faces) logo após a 1ª opção (dadosBase), na ordem em que o doc
+lista as 4 alternativas de "Em um item". O componente resolve `maiorDado` do alvo **escolhido** no
+painel (`opcoesBonusFragmento` passou a depender de `alvoFragmento`, não só do módulo) — sem alvo ou
+com alvo sem dado, cai pra trás pro cardápio antigo. Trocar de alvo zera `opcaoBonusFragmento` (o
+índice deixa de ser estável quando a lista muda de tamanho).
+
+**Nota de contagem (divergência com a spec).** A spec (e o comentário desatualizado que ela cita,
+escrito na `m3-35`) descreve o cardápio "hoje" como tendo 4 das 5 opções e o critério de aceite pede
+"5 quando o alvo tem dado, 4 quando não". Na prática, `listarBonusFragmentoPotencializador` **já**
+devolvia 5 entradas antes desta task (a doc agrupa "+N no valor" com 3 destinos — teste/efeito/
+resistência — num só "OU", mas a `m3-35` optou por expandir isso em 3 entradas de cardápio
+separadas, uma por destino, pra reusar `ModificacaoEfeitoTipoEnum` sem motor novo — ver teste
+`toHaveLength(5)` preexistente). Adicionar é o verbo do entregável #2 ("Adicionar a
+`BONUS_POTENCIALIZADOR`/`listarBonusFragmentoPotencializador` a opção..."), não substituir; encolher
+o baseline pra 4 exigiria remover uma das 3 entradas de "valor fixo" já testadas e usadas, o que a
+spec não pede em lugar nenhum. Resolução: o baseline continua 5 (inalterado, testes antigos passam
+sem tocar), e a 5ª opção **da tabela do documento** (a 6ª entrada do cardápio, já que "valor fixo"
+por si só ocupa 3) entra condicionada ao alvo ter dado — 6 no total quando presente, 5 quando
+ausente. O comportamento pedido pela spec (opção nova só aparece com dado no alvo) está implementado
+por inteiro; só o dígito literal do critério de aceite não bate com o array real, por essa
+divergência de contagem herdada do comentário antigo. Documentado aqui em vez de silenciado.
+
+**Restrição de alvo.** `alvosFragmentoDisponiveis` trocou o filtro de "qualquer categoria de
+Fragmento" para só `ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR` (doc: "podem ser usados em qualquer item
+ou ser, exceto em fragmentos construtores") — um Potencializador agora pode ser alvo de outro
+Potencializador. Passou a excluir também o próprio índice do fragmento sendo aplicado (antes o
+filtro genérico de "qualquer Fragmento" cobria isso de graça; precisou virar explícito).
+
+**Função única.** Nova `existeFragmentoNaMesmaFuncao(modificacoesAlvo, efeito)` (`fragmento.ts`)
+agrupa `DANO_DADOS_BASE`/`DANO_FIXO` na função "DANO", `BONUS_TESTE` (qualquer `variante`) em
+"TESTE" e `RESISTENCIA` em "RESISTENCIA" (doc: "não pode haver 2 fragmentos... aumentando seu dano",
+tratado como função única independente do mecanismo — dados a mais ou valor fixo a mais são a mesma
+função). Só compara contra modificações com `origemFragmento` preenchido — uma mod comum do mesmo
+tipo nunca bloqueia. O componente expõe `conflitoFuncaoFragmento` (computed), que desabilita o botão
+Aplicar e mostra um segundo `<p class="ficha-inv__aviso">` explicando o bloqueio; `confirmarAplicarFragmento`
+também checa no código (defesa em profundidade, não só UI).
+
+**Testes.** `shared`: `maiorDadoItem` (várias notações, minúsculo, catálogo vs custom, ausente/
+malformado), `listarBonusFragmentoPotencializador` com/sem `maiorDado`, `existeFragmentoNaMesmaFuncao`
+(bloqueia mesma função mesmo com efeitos diferentes, libera função diferente, ignora mod sem origem).
+`frontend`: alvo com/sem dado (6 vs 5 opções), troca de alvo zera o bônus, Potencializador como alvo
+de outro, Construtor nunca aparece como alvo, fragmento não aparece como o próprio alvo, bloqueio de
+função duplicada (não emite `inventarioMudou`), função diferente libera, mod comum não bloqueia.
+Suíte cheia rodada depois: shared 477/477 verde; frontend 655/657 — as 2 falhas são preexistentes e
+alheias a este diff (`P-001`, `ResizeObserver`; e um teste de link "Voltar" em
+`visualizar.page.spec.ts` que falha isolado, sem nenhuma linha tocada por esta task — não registrado
+em `PROBLEMS.md` antes, mas confirmado independente do diff).
+
 ## layout-lista-edicao-atributos — lista vertical na edição de atributos (2026-08-02)
 
 Sem código de task de milestone — plano em

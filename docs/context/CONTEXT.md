@@ -1,6 +1,6 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-02 · **Última task registrada:** `m2-21` (2026-08-02)
+> **Última revisão:** 2026-08-05 · **Última task registrada:** `m3-69` (2026-08-05)
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -45,9 +45,9 @@ Deploy em produção por **integração nativa das plataformas**, sem GitHub Act
 `master` → Render (backend) e Cloudflare Pages (frontend) puxam do Git sozinhos; banco no Supabase.
 O GitHub Actions só roda **CI** (lint + testes nos 3 workspaces em todo PR).
 
-**Suítes:** shared 454+ · backend 167/167 · frontend 641/**642** — a 1 falha é conhecida e
-pré-existente, ver [`PROBLEMS.md`](PROBLEMS.md) `P-001`. `npm run lint` **não fecha limpo** hoje
-em nenhum dos dois workspaces (frontend/backend) — falhas pré-existentes não relacionadas a
+**Suítes:** shared 519/519 · backend 170/170 · frontend 709/**711** — as 2 falhas são conhecidas e
+pré-existentes, ver [`PROBLEMS.md`](PROBLEMS.md) `P-001`/`P-010`. `npm run lint` **não fecha limpo**
+hoje em nenhum dos dois workspaces (frontend/backend) — falhas pré-existentes não relacionadas a
 nenhuma task recente, ver `PROBLEMS.md` `P-009`.
 
 ---
@@ -158,8 +158,29 @@ e ajuste manual de dados/`dadosTeste` por atributo, este último só afetando a 
 rolada, nunca o valor exibido nem os derivados; em edição, os atributos viram uma lista vertical —
 nome completo + steppers — em vez da grade compacta do modo leitura), vitais, sanidade e
 lesões, habilidades (com filtro e contador), inventário completo (itens, modificações,
-amplificadores, sub-inventários, custom), identidade (origem, personalidade, afinidade de
-fragmentos), história privada, anotações e dinheiro. Persistência **otimista + em lote**, com
+amplificadores, fragmentos Potencializador — "Aplicar em..." num item (`m3-35`; cardápio "em um
+item" com 4 destinos exclusivos — dano [`N× maior dado do alvo`, dano de verdade], teste, **efeito**
+[`m3-68`: tipo `EFEITO` próprio, descritivo — reforça o efeito do item, ex.: "Em Chamas" de uma
+granada, nunca soma no dano] e resistência; "uma única função" por item, checado por
+`existeFragmentoNaMesmaFuncao`) ou "Consumir" pro bônus permanente do agente (teste/Defesa/dano do
+Corpo, cardápio fechado por módulo, `m3-64`;
+consumir sempre deixa um registro incondicional na aba Extras, acima da Afinidade — não depende da
+sequela "Rejeição Biológica", que é evitável — e é **removível**: desfaz o bônus, a Energia Máxima e
+devolve o item ao inventário, mas não mexe na sequela já gerada) — e fragmentos Construtor (nascem
+com o bônus fixo do módulo já aplicado como modificação automática — Arma ganha dano/teste, Proteção
+ganha resistência/Esquiva/Bloqueio/Defesa, `m3-65`; Munição não modifica item, tem a ação própria
+"Recarregar" que debita Energia e concede dano por 1 cena, reset manual; modificações comuns
+adicionadas a um Construtor custam o dobro e não pesam; `m3-69`: o form de item custom ganhou um
+seletor "Base" — escolher uma arma/proteção real de `CATALOGO_ITENS[categoriaEmprestada]` trava
+dano/informação/resistência com os valores daquele item e pré-preenche o peso, "Outra" continua livre
+pra homebrew; `calcularStatItem` funde a Resistência de um Construtor Proteção com o bônus do módulo
+desde essa task — antes só Proteções/Armazenamento eram elegíveis a esse bloco) —, sub-inventários,
+custom), Limite mínimo
+de Energia/Anomalia Biológica (`m3-67`: `(Vigor + Destreza) × 2` — abaixo dele, aviso não-bloqueante
+na aquisição de fragmento e, na aba Extras, os efeitos calculados como texto informativo (−15
+testes, −10 Defesa, teto de 10% da Vida Máxima) + atalho pra pré-preencher o trauma "Limiar da
+Humanidade" na aba Sanidade, sem nunca disparar sozinho), identidade (origem,
+personalidade, afinidade de fragmentos), história privada, anotações e dinheiro. Persistência **otimista + em lote**, com
 merge de edição concorrente — a lógica (~18 handlers `ajustar*` + progressão) mora em
 `FichaEdicaoService` (`@Injectable()` sem `providedIn: 'root'`, uma instância por página via
 `providers: []`), reusado por `VisualizarPage` (`/painel/:campanhaId/ficha/:id` e `/fichas/:id`) e

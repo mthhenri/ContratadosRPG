@@ -20,3 +20,5 @@ export * from './habilidades-catalogo.dados';
 export * from './habilidades-catalogo';
 export * from './resistencia';
 export * from './amplificador';
+export * from './fragmento-consumo';
+export * from './fragmento-limite-energia';

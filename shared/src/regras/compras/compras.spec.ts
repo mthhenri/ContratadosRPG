@@ -146,6 +146,23 @@ describe('obterCustoModificacao', () => {
     expect(obterCategoriaEmprestada(motoserra)).toBe(ItemCategoriaEnum.CORPO_A_CORPO);
     expect(obterCustoModificacao({ item: motoserra, modificacao: 'Pesada' })).toBe(750);
   });
+
+  it('Fragmento Construtor cobra o dobro do custo (doc — "⬦ Construtor", m3-65)', () => {
+    const espadaConstrutor = montarItem({
+      nome: 'Espada de Ossos',
+      categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+      categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+    });
+    // Empresta Corpo a Corpo ($750/mod) → dobrado pelo Construtor = $1500.
+    expect(obterCustoModificacao({ item: espadaConstrutor, modificacao: 'Letal' })).toBe(1500);
+
+    const coleteConstrutor = montarItem({
+      nome: 'Colete de Vísceras',
+      categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+      categoriaEmprestada: ItemCategoriaEnum.PROTECOES,
+    });
+    expect(obterCustoModificacao({ item: coleteConstrutor, modificacao: 'Blindada' })).toBe(1500);
+  });
 });
 
 describe('obterPesoModificacao', () => {
@@ -163,6 +180,15 @@ describe('obterPesoModificacao', () => {
     // docs/core/sistema-v4.1.0.md — "Estas modificações não agregam nenhum peso ao item".
     // O site antigo somava 0,2/stack aqui; corrigido em favor do documento (proibição #27).
     expect(obterPesoModificacao({ item: montarItem({ nome: 'Mochila Mediana', categoria: ItemCategoriaEnum.ARMAZENAMENTO }), modificacao: 'Compartimentos Extras' })).toBe(0);
+  });
+
+  it('Fragmento Construtor nunca pesa por modificação, mesmo "Pesada" (doc — "⬦ Construtor", m3-65)', () => {
+    const espadaConstrutor = montarItem({
+      nome: 'Espada de Ossos',
+      categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+      categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+    });
+    expect(obterPesoModificacao({ item: espadaConstrutor, modificacao: 'Pesada' })).toBe(0);
   });
 });
 
@@ -258,6 +284,27 @@ describe('calcularStatItem', () => {
 
   it('devolve null para item fora do catálogo', () => {
     expect(calcularStatItem({ item: item('Item Inexistente', ItemCategoriaEnum.CORPO_A_CORPO) })).toBeNull();
+  });
+
+  it('Fragmento Construtor forma Proteção: a Resistência da Base escolhida funde com o bônus fixo do módulo (m3-69)', () => {
+    // Mesmo padrão do bloco de DANO (roda pra qualquer categoria com `itemCatalogo.dano`) — antes
+    // desta task o gate de Resistência excluía FRAGMENTO_CONSTRUTOR e o stat computado ficava
+    // `null`, mesmo com a Resistência do item e o efeito RESISTENCIA da modificação automática
+    // corretos nos dados (a UI nunca fundia os dois num único stat visível).
+    const construtor = montarItem({
+      nome: 'Colete de Vísceras',
+      categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+      resistencia: '4 [Físico]',
+      categoriaEmprestada: ItemCategoriaEnum.PROTECOES,
+      modificacoes: [
+        {
+          nome: 'Fragmento Construtor — Módulo I',
+          empilhamentos: 1,
+          efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: 10 }],
+        },
+      ],
+    });
+    expect(calcularStatItem({ item: construtor })?.resistencia).toBe('14 [Físico]');
   });
 
   /**
@@ -810,6 +857,15 @@ describe('coerência do catálogo e das tabelas', () => {
         '+2 nos testes',
       );
       expect(descreverEfeitoModificacao({ tipo: ModificacaoEfeitoTipoEnum.ALCANCE, valor: 1 })).toBe('+1 nível de alcance');
+      expect(descreverEfeitoModificacao({ tipo: ModificacaoEfeitoTipoEnum.EFEITO, valor: 3, variante: 'FIXO' })).toBe(
+        '+3 no efeito',
+      );
+      expect(descreverEfeitoModificacao({ tipo: ModificacaoEfeitoTipoEnum.EFEITO, valor: 1, variante: 'DADO' })).toBe(
+        '+1 dado de efeito',
+      );
+      expect(descreverEfeitoModificacao({ tipo: ModificacaoEfeitoTipoEnum.EFEITO, valor: 2, variante: 'DADO' })).toBe(
+        '+2 dados de efeito',
+      );
       expect(
         descreverEfeitoModificacao({ tipo: ModificacaoEfeitoTipoEnum.CONDICAO, condicao: 'Sangramento', duracaoTurnos: 2, atributoDt: 'Força' }),
       ).toBe('aplica Sangramento por 2t (DT Força)');

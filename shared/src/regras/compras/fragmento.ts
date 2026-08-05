@@ -5,11 +5,16 @@ import {
   ModificacaoEfeitoTipoEnum,
 } from '../../enums';
 import {
+  BONUS_CONSUMIDO,
+  BONUS_FIXO_CONSTRUTOR,
   BONUS_POTENCIALIZADOR,
+  BonusFixoMunicaoConstrutorDados,
   CUSTO_ENERGIA_MAXIMA_MODULO,
+  MULTIPLICADOR_MAIOR_DADO_MODULO,
   VALOR_AFINIDADE_MODULO,
 } from './fragmento.dados';
-import { CarrinhoItemDto, ModificacaoEfeitoDto } from './compras.dtos';
+import { resolverDadosItem } from './compras';
+import { CarrinhoItemDto, ModificacaoAplicadaDto, ModificacaoEfeitoDto } from './compras.dtos';
 
 /**
  * Custos de Energia, Afinidade e Preço de Sanidade dos Fragmentos (m3-35/m3-42) — funções puras
@@ -47,6 +52,23 @@ export function custoRemoverFragmento(modulo: FragmentoModuloEnum): number {
   return CUSTO_ENERGIA_MAXIMA_MODULO[modulo] * 2;
 }
 
+/**
+ * Maior tipo de dado (faces) do campo `dano` (string livre, ex.: `"2D8+3"`, `"1D6+1D8 [Físico]"`)
+ * de um item de inventário — primitiva da 5ª opção do cardápio do Potencializador, "N× valor
+ * máximo do maior tipo de dado" (doc — tabela "⬦ Potencializador"; `m3-63`). Resolve o `dano` tanto
+ * de um item do catálogo quanto de um item custom (via `resolverDadosItem`, mesma fonte de
+ * `calcularStatItem`). Casa toda ocorrência `D<n>` no texto e devolve a maior; `null` quando o item
+ * não tem dado algum no campo (ausente ou notação sem nenhum `D<n>`, ex.: `"— (fumaça)"`).
+ */
+export function maiorDadoItem(item: CarrinhoItemDto): number | null {
+  const dano = resolverDadosItem(item)?.dano;
+  if (!dano) {
+    return null;
+  }
+  const faces = [...dano.matchAll(/D(\d+)/gi)].map((correspondencia) => Number(correspondencia[1]));
+  return faces.length > 0 ? Math.max(...faces) : null;
+}
+
 /** Uma opção selecionável do cardápio de bônus "em um item" do Potencializador. */
 export interface OpcaoBonusFragmentoDto {
   readonly rotulo: string;
@@ -56,18 +78,39 @@ export interface OpcaoBonusFragmentoDto {
 /**
  * Cardápio de bônus "em um item" de um fragmento Potencializador de `modulo` — o jogador escolhe
  * UMA opção ao aplicar (doc — "⬦ Potencializador", tabela). Mapeado aos `ModificacaoEfeitoTipoEnum`
- * já existentes (`DANO_DADOS_BASE`/`BONUS_TESTE`/`DANO_FIXO`/`RESISTENCIA`) — zero motor novo em
- * `calcularStatItem`, que já soma esses tipos vindos de qualquer modificação custom.
+ * já existentes (`EFEITO`/`BONUS_TESTE`/`DANO_FIXO`/`RESISTENCIA`) — zero motor novo em
+ * `calcularStatItem`, que já soma os tipos de dano vindos de qualquer modificação custom (`EFEITO`
+ * é descritivo, como `BONUS_TESTE`).
+ *
+ * **Efeito é diferente de dano** (`m3-68`, correção sobre `m3-63`): as opções "+N dados" e "+N no
+ * valor → efeito" do doc reforçam o **efeito** do item (ex.: "Em Chamas" de uma granada, separado do
+ * dano), nunca somam a `dano` — por isso usam `EFEITO`, não `DANO_DADOS_BASE`/`DANO_FIXO`. Só "N×
+ * valor máximo do maior tipo de dado" é dano de verdade (`DANO_FIXO`).
+ *
+ * `maiorDado` (faces do maior dado do **alvo** já escolhido, `maiorDadoItem` — `m3-63`) liga a
+ * opção "N× valor máximo do maior tipo de dado" ao dano: `null` (nenhum alvo escolhido ainda, ou
+ * alvo sem dado no campo `dano`) omite a opção — "não faz sentido '1× o maior dado' de um item sem
+ * dado de dano" (spec).
  */
 export function listarBonusFragmentoPotencializador(
   modulo: FragmentoModuloEnum,
+  maiorDado: number | null = null,
 ): readonly OpcaoBonusFragmentoDto[] {
   const valores = BONUS_POTENCIALIZADOR[modulo];
-  return [
+  const opcoes: OpcaoBonusFragmentoDto[] = [
     {
-      rotulo: `+${valores.dadosBase} dados no dado base (dano)`,
-      efeito: { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: valores.dadosBase },
+      rotulo: `+${valores.dadosBase} dados de efeito`,
+      efeito: { tipo: ModificacaoEfeitoTipoEnum.EFEITO, valor: valores.dadosBase, variante: 'DADO' },
     },
+  ];
+  if (maiorDado !== null) {
+    const multiplicador = MULTIPLICADOR_MAIOR_DADO_MODULO[modulo];
+    opcoes.push({
+      rotulo: `${multiplicador}× o maior dado do alvo (D${maiorDado}) — +${multiplicador * maiorDado} de dano`,
+      efeito: { tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: multiplicador * maiorDado },
+    });
+  }
+  opcoes.push(
     {
       rotulo: `+${valores.dadoTeste} dado(s) no teste`,
       efeito: { tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: valores.dadoTeste, variante: 'DADO' },
@@ -77,13 +120,102 @@ export function listarBonusFragmentoPotencializador(
       efeito: { tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: valores.valorFixo, variante: 'FIXO' },
     },
     {
-      rotulo: `+${valores.valorFixo} de dano (efeito)`,
-      efeito: { tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: valores.valorFixo },
+      rotulo: `+${valores.valorFixo} no efeito`,
+      efeito: { tipo: ModificacaoEfeitoTipoEnum.EFEITO, valor: valores.valorFixo, variante: 'FIXO' },
     },
     {
       rotulo: `+${valores.valorFixo} de resistência`,
       efeito: { tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: valores.valorFixo },
     },
+  );
+  return opcoes;
+}
+
+/**
+ * "Função" que um efeito de fragmento cumpre — dano, teste, efeito ou resistência (doc — "⬦
+ * Potencializador": "um item/ser pode conter mais de um fragmento, mas para apenas uma única
+ * função... uma arma não pode ter 2 fragmentos aumentando seu dano... mas pode ter 2 fragmentos,
+ * uma para o dano e outro para o teste"). `DANO_FIXO` (só a opção "N× maior dado", dano de
+ * verdade) é a função "dano"; `BONUS_TESTE` conta como "teste" independente da `variante` (dado ou
+ * fixo); `EFEITO` conta como sua própria função "efeito" (`m3-68` — corrige furo em que dois
+ * fragmentos ambos mirando "efeito" no mesmo alvo não eram bloqueados, porque caíam em `null`);
+ * `null` para efeitos fora do cardápio do Potencializador (não participam da checagem).
+ */
+function funcaoFragmento(efeito: ModificacaoEfeitoDto): 'DANO' | 'TESTE' | 'EFEITO' | 'RESISTENCIA' | null {
+  switch (efeito.tipo) {
+    case ModificacaoEfeitoTipoEnum.DANO_FIXO:
+      return 'DANO';
+    case ModificacaoEfeitoTipoEnum.BONUS_TESTE:
+      return 'TESTE';
+    case ModificacaoEfeitoTipoEnum.EFEITO:
+      return 'EFEITO';
+    case ModificacaoEfeitoTipoEnum.RESISTENCIA:
+      return 'RESISTENCIA';
+    default:
+      return null;
+  }
+}
+
+/**
+ * `true` quando o `efeito` escolhido no cardápio colide em função com um fragmento **já aplicado**
+ * no alvo (`origemFragmento` presente na modificação — doc: "uma única função" por item/ser,
+ * `m3-63`). Só compara contra modificações de origem Fragmento; uma modificação comum (comprada do
+ * catálogo ou custom sem `origemFragmento`) com o mesmo tipo de efeito nunca bloqueia — a regra é
+ * só entre fragmentos.
+ */
+export function existeFragmentoNaMesmaFuncao(
+  modificacoesAlvo: readonly ModificacaoAplicadaDto[],
+  efeito: ModificacaoEfeitoDto,
+): boolean {
+  const funcao = funcaoFragmento(efeito);
+  if (!funcao) {
+    return false;
+  }
+  return modificacoesAlvo.some(
+    (modificacao) =>
+      !!modificacao.origemFragmento &&
+      (modificacao.efeitos ?? []).some((efeitoExistente) => funcaoFragmento(efeitoExistente) === funcao),
+  );
+}
+
+/** A qual stat do agente uma opção do cardápio "Consumido" se destina (m3-64). */
+export type TipoBonusConsumoFragmento = 'TESTE' | 'DEFESA' | 'DANO_CORPO';
+
+/** Uma opção selecionável do cardápio de bônus "Consumido" do Potencializador. */
+export interface OpcaoBonusConsumoFragmentoDto {
+  readonly rotulo: string;
+  readonly tipo: TipoBonusConsumoFragmento;
+  readonly valor: number;
+  /**
+   * Só `true` em `tipo === 'TESTE'` do Módulo I — doc: "única forma de ultrapassar limite de 6
+   * pontos em um atributo é consumindo um Fragmento de Módulo I". Ausente (não só `false`) nos
+   * demais módulos/tipos.
+   */
+  readonly concedePontoAtributo?: boolean;
+}
+
+/**
+ * Cardápio de bônus **Consumido** de um fragmento Potencializador de `modulo` — o jogador escolhe
+ * UMA opção ao consumir (doc — "⬦ Potencializador", tabela, coluna "Consumido"). Função pura irmã
+ * de `listarBonusFragmentoPotencializador`; ao contrário dela, o bônus aqui não vira Modificação de
+ * item — é aplicado direto ao agente (`shared/regras/agente/fragmento-consumo`).
+ */
+export function listarBonusConsumoFragmentoPotencializador(
+  modulo: FragmentoModuloEnum,
+): readonly OpcaoBonusConsumoFragmentoDto[] {
+  const valores = BONUS_CONSUMIDO[modulo];
+  const concedePontoAtributo = modulo === FragmentoModuloEnum.I;
+  return [
+    {
+      rotulo: `+${valores.teste} em todos os testes do atributo à escolha${
+        concedePontoAtributo ? ' e +1 ponto no atributo' : ''
+      }`,
+      tipo: 'TESTE',
+      valor: valores.teste,
+      ...(concedePontoAtributo ? { concedePontoAtributo: true as const } : {}),
+    },
+    { rotulo: `+${valores.defesa} em Defesa`, tipo: 'DEFESA', valor: valores.defesa },
+    { rotulo: `+${valores.danoCorpo} de dano do Corpo`, tipo: 'DANO_CORPO', valor: valores.danoCorpo },
   ];
 }
 
@@ -170,4 +302,75 @@ export function custoSanidadeConsumirFragmento(modulo: FragmentoModuloEnum): Pre
     dtEvitarVontade: 7 + multiplicadorSequela * 5,
     energiaMaximaExtra: CUSTO_ENERGIA_MAXIMA_MODULO[modulo] * 3,
   };
+}
+
+// === Bônus fixo do Construtor (m3-65) ===
+
+/** Forma "de dano" do bônus fixo do Construtor — Arma ou Proteção; Munição não modifica um item. */
+export type FormaFixaConstrutor = 'ARMA' | 'PROTECAO';
+
+/**
+ * A forma do bônus fixo do Construtor (Arma/Proteção) a partir da `categoriaEmprestada` declarada
+ * no item (doc — "⬦ Construtor": "só pode tomar a forma de Armas Corpo a Corpo, Armas de Fogo, Armas
+ * Exóticas, Munições ou Proteções"). `null` para Munição (ação "Recarregar", `bonusMunicaoConstrutor`
+ * — não gera modificação) e para qualquer categoria fora da lista do doc.
+ */
+export function formaFixaConstrutor(
+  categoriaEmprestada: ItemCategoriaEnum | undefined,
+): FormaFixaConstrutor | null {
+  switch (categoriaEmprestada) {
+    case ItemCategoriaEnum.CORPO_A_CORPO:
+    case ItemCategoriaEnum.ARMAS_DE_FOGO:
+    case ItemCategoriaEnum.EXOTICOS:
+      return 'ARMA';
+    case ItemCategoriaEnum.PROTECOES:
+      return 'PROTECAO';
+    default:
+      return null;
+  }
+}
+
+/**
+ * Efeitos mecânicos do bônus fixo automático de um Fragmento Construtor de `modulo`, para a `forma`
+ * (Arma/Proteção) que ele tomou (doc — tabela "⬦ Construtor" ~1950; `m3-65`) — ver
+ * `BonusFixoArmaConstrutorDados`/`BonusFixoProtecaoConstrutorDados` para o porquê de cada mapeamento
+ * de tipo. Empurrado como uma `ModificacaoAplicadaDto` (com `origemFragmento`) pela página, mesmo
+ * padrão do bônus "em item" do Potencializador (`listarBonusFragmentoPotencializador`).
+ */
+export function listarEfeitosFixosConstrutor(
+  modulo: FragmentoModuloEnum,
+  forma: FormaFixaConstrutor,
+): readonly ModificacaoEfeitoDto[] {
+  const valores = BONUS_FIXO_CONSTRUTOR[modulo];
+  if (forma === 'ARMA') {
+    const efeitos: ModificacaoEfeitoDto[] = [
+      { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS, valor: valores.arma.danoDados, faces: valores.arma.danoFaces },
+      { tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: valores.arma.teste, variante: 'FIXO' },
+    ];
+    if (valores.arma.dadoTeste) {
+      efeitos.push({ tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: valores.arma.dadoTeste });
+    }
+    return efeitos;
+  }
+  const efeitos: ModificacaoEfeitoDto[] = [
+    { tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: valores.protecao.resistencia },
+  ];
+  if (valores.protecao.esquivaBloqueio) {
+    efeitos.push(
+      { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: valores.protecao.esquivaBloqueio, variante: 'Esquiva' },
+      { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: valores.protecao.esquivaBloqueio, variante: 'Bloqueio' },
+    );
+  }
+  if (valores.protecao.defesa) {
+    efeitos.push({ tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: valores.protecao.defesa, variante: 'Defesa' });
+  }
+  return efeitos;
+}
+
+/**
+ * Bônus fixo de Munição de um Fragmento Construtor de `modulo` (doc — "⬦ Construtor": "Recarregar"
+ * custa Energia e concede dano por 1 cena, `m3-65`) — a página usa isto na ação "Recarregar".
+ */
+export function bonusMunicaoConstrutor(modulo: FragmentoModuloEnum): BonusFixoMunicaoConstrutorDados {
+  return BONUS_FIXO_CONSTRUTOR[modulo].municao;
 }

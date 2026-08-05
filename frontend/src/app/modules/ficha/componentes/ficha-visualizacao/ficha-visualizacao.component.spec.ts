@@ -11,7 +11,11 @@ import {
   SeveridadeLesaoEnum,
   TipoDanoEnum,
 } from '@contratados-rpg/shared/enums';
-import type { FichaJogadorDadosDto, FichaOrigemDto } from '@contratados-rpg/shared/dtos/ficha';
+import type {
+  FichaFragmentoConsumidoDto,
+  FichaJogadorDadosDto,
+  FichaOrigemDto,
+} from '@contratados-rpg/shared/dtos/ficha';
 import { calcularVida } from '@contratados-rpg/shared/regras/agente';
 import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 
@@ -1089,6 +1093,229 @@ describe('FichaVisualizacao', () => {
     });
   });
 
+  describe('bônus "Consumido" de Fragmento Potencializador (m3-64)', () => {
+    it('tipo TESTE: emite ajusteAtributos com o modificador somado ao atributo escolhido, atributos intactos', () => {
+      const documento = { ...dados, modificadoresTeste: { vontade: 1 } };
+      const alvo = montar(documento, 'Corvo', 42, true);
+      const ajustes: { atributos: { vontade: number }; modificadoresTeste: Record<string, number> }[] = [];
+      alvo.fixture.componentInstance.ajusteAtributos.subscribe((a) => ajustes.push(a));
+
+      alvo.fixture.componentInstance['aoConsumirFragmentoBonus']({
+        opcao: { rotulo: '+3 em todos os testes do atributo à escolha', tipo: 'TESTE', valor: 3 },
+        atributoEscolhido: 'vontade',
+      });
+
+      expect(ajustes).toHaveLength(1);
+      expect(ajustes[0].modificadoresTeste['vontade']).toBe(4);
+      expect(ajustes[0].atributos.vontade).toBe(documento.atributos.vontade);
+    });
+
+    it('módulo I (concedePontoAtributo): soma também +1 no atributo base escolhido', () => {
+      const alvo = montar(dados, 'Corvo', 42, true);
+      const ajustes: { atributos: { intelecto: number } }[] = [];
+      alvo.fixture.componentInstance.ajusteAtributos.subscribe((a) => ajustes.push(a));
+
+      alvo.fixture.componentInstance['aoConsumirFragmentoBonus']({
+        opcao: {
+          rotulo: '+5 em todos os testes do atributo à escolha e +1 ponto no atributo',
+          tipo: 'TESTE',
+          valor: 5,
+          concedePontoAtributo: true,
+        },
+        atributoEscolhido: 'intelecto',
+      });
+
+      expect(ajustes[0].atributos.intelecto).toBe(dados.atributos.intelecto + 1);
+    });
+
+    it('tipo DEFESA: emite ajusteDerivado somando ao defesa persistido', () => {
+      const documento = { ...dados, derivados: { defesa: 13 } };
+      const alvo = montar(documento, 'Corvo', 42, true);
+      const ajustes: { chave: string; valor: number | string }[] = [];
+      alvo.fixture.componentInstance.ajusteDerivado.subscribe((a) => ajustes.push(a));
+
+      alvo.fixture.componentInstance['aoConsumirFragmentoBonus']({
+        opcao: { rotulo: '+3 em Defesa', tipo: 'DEFESA', valor: 3 },
+        atributoEscolhido: null,
+      });
+
+      expect(ajustes).toEqual([{ chave: 'defesa', valor: 16 }]);
+    });
+
+    it('tipo DEFESA sem derivados.defesa persistido (classe sem Defesa): não emite nada', () => {
+      const alvo = montar(dados, 'Corvo', 42, true);
+      const ajustes: unknown[] = [];
+      alvo.fixture.componentInstance.ajusteDerivado.subscribe((a) => ajustes.push(a));
+
+      alvo.fixture.componentInstance['aoConsumirFragmentoBonus']({
+        opcao: { rotulo: '+3 em Defesa', tipo: 'DEFESA', valor: 3 },
+        atributoEscolhido: null,
+      });
+
+      expect(ajustes).toEqual([]);
+    });
+
+    it('tipo DANO_CORPO: emite ajusteDerivado com o fixo somado via somarDanoFixo', () => {
+      const documento = { ...dados, derivados: { danoCorpoACorpo: '1D3 [Físico]' } };
+      const alvo = montar(documento, 'Corvo', 42, true);
+      const ajustes: { chave: string; valor: number | string }[] = [];
+      alvo.fixture.componentInstance.ajusteDerivado.subscribe((a) => ajustes.push(a));
+
+      alvo.fixture.componentInstance['aoConsumirFragmentoBonus']({
+        opcao: { rotulo: '+6 de dano do Corpo', tipo: 'DANO_CORPO', valor: 6 },
+        atributoEscolhido: null,
+      });
+
+      expect(ajustes).toEqual([{ chave: 'danoCorpoACorpo', valor: '1D3+6 [Físico]' }]);
+    });
+  });
+
+  describe('remover um fragmento consumido (m3-64, correção) — desfaz bônus, Energia Máxima e devolve o item', () => {
+    function itemFragmento(modulo: FragmentoModuloEnum): CarrinhoItemDto {
+      return {
+        nome: 'Fragmento achado',
+        categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+        custo: 0,
+        peso: 0,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        modulo,
+      };
+    }
+
+    it('tipo TESTE: reverte o modificador de teste (e o +1 de atributo do Módulo I), restitui a Energia Máxima e devolve o item', () => {
+      const registro: FichaFragmentoConsumidoDto = {
+        modulo: FragmentoModuloEnum.I,
+        bonusEscolhido: '+5 em todos os testes de Intelecto e +1 ponto no atributo',
+        opcao: {
+          rotulo: '+5 em todos os testes do atributo à escolha e +1 ponto no atributo',
+          tipo: 'TESTE',
+          valor: 5,
+          concedePontoAtributo: true,
+        },
+        atributoEscolhido: 'intelecto',
+        deltaEnergiaMaxima: -40,
+        item: itemFragmento(FragmentoModuloEnum.I),
+      };
+      const documento: FichaJogadorDadosDto = {
+        ...dados,
+        modificadoresTeste: { intelecto: 5 },
+        atributos: { ...dados.atributos, intelecto: dados.atributos.intelecto + 1 },
+        estado: { ...dados.estado, energiaMaxima: 10 },
+        fragmentosConsumidos: [registro],
+      };
+      const alvo = montar(documento, 'Corvo', 42, true);
+
+      const atributosAjustes: { atributos: { intelecto: number }; modificadoresTeste: Record<string, number> }[] = [];
+      alvo.fixture.componentInstance.ajusteAtributos.subscribe((a) => atributosAjustes.push(a));
+      const vitalidadeAjustes: { campo: string; valor: number }[] = [];
+      alvo.fixture.componentInstance.ajusteVitalidade.subscribe((a) => vitalidadeAjustes.push(a));
+      const inventarioAjustes: { itens: readonly CarrinhoItemDto[] }[] = [];
+      alvo.fixture.componentInstance.ajusteInventario.subscribe((a) => inventarioAjustes.push(a));
+      const fragmentosAjustes: (readonly FichaFragmentoConsumidoDto[])[] = [];
+      alvo.fixture.componentInstance.ajusteFragmentosConsumidos.subscribe((a) => fragmentosAjustes.push(a));
+
+      alvo.fixture.componentInstance['confirmarRemocaoFragmentoConsumido'](0);
+
+      expect(atributosAjustes[0].modificadoresTeste['intelecto']).toBe(0);
+      expect(atributosAjustes[0].atributos.intelecto).toBe(dados.atributos.intelecto);
+      // Delta original foi 10 (Módulo I) − 40 = −40 pra chegar a 10; reverter soma de volta: 50.
+      expect(vitalidadeAjustes).toEqual([{ campo: 'energiaMaxima', valor: 50 }]);
+      expect(inventarioAjustes).toEqual([{ itens: [registro.item], amplificadores: [] }]);
+      expect(fragmentosAjustes).toEqual([[]]);
+    });
+
+    it('tipo DEFESA: reverte o derivado somado', () => {
+      const registro: FichaFragmentoConsumidoDto = {
+        modulo: FragmentoModuloEnum.III,
+        bonusEscolhido: '+3 em Defesa',
+        opcao: { rotulo: '+3 em Defesa', tipo: 'DEFESA', valor: 3 },
+        atributoEscolhido: null,
+        deltaEnergiaMaxima: -24,
+        item: itemFragmento(FragmentoModuloEnum.III),
+      };
+      const documento: FichaJogadorDadosDto = {
+        ...dados,
+        derivados: { defesa: 16 },
+        fragmentosConsumidos: [registro],
+      };
+      const alvo = montar(documento, 'Corvo', 42, true);
+      const derivadoAjustes: { chave: string; valor: number | string }[] = [];
+      alvo.fixture.componentInstance.ajusteDerivado.subscribe((a) => derivadoAjustes.push(a));
+
+      alvo.fixture.componentInstance['confirmarRemocaoFragmentoConsumido'](0);
+
+      expect(derivadoAjustes).toEqual([{ chave: 'defesa', valor: 13 }]);
+    });
+
+    it('tipo DANO_CORPO: reverte o fixo do dano do Corpo somado via somarDanoFixo', () => {
+      const registro: FichaFragmentoConsumidoDto = {
+        modulo: FragmentoModuloEnum.III,
+        bonusEscolhido: '+6 de dano do Corpo',
+        opcao: { rotulo: '+6 de dano do Corpo', tipo: 'DANO_CORPO', valor: 6 },
+        atributoEscolhido: null,
+        deltaEnergiaMaxima: -24,
+        item: itemFragmento(FragmentoModuloEnum.III),
+      };
+      const documento: FichaJogadorDadosDto = {
+        ...dados,
+        derivados: { danoCorpoACorpo: '1D3+6 [Físico]' },
+        fragmentosConsumidos: [registro],
+      };
+      const alvo = montar(documento, 'Corvo', 42, true);
+      const derivadoAjustes: { chave: string; valor: number | string }[] = [];
+      alvo.fixture.componentInstance.ajusteDerivado.subscribe((a) => derivadoAjustes.push(a));
+
+      alvo.fixture.componentInstance['confirmarRemocaoFragmentoConsumido'](0);
+
+      expect(derivadoAjustes).toEqual([{ chave: 'danoCorpoACorpo', valor: '1D3 [Físico]' }]);
+    });
+
+    it('remove só o registro pedido, preservando os demais (mais recente primeiro)', () => {
+      const registroA: FichaFragmentoConsumidoDto = {
+        modulo: FragmentoModuloEnum.V,
+        bonusEscolhido: '+1 em Defesa',
+        opcao: { rotulo: '+1 em Defesa', tipo: 'DEFESA', valor: 1 },
+        atributoEscolhido: null,
+        deltaEnergiaMaxima: 0,
+        item: itemFragmento(FragmentoModuloEnum.V),
+      };
+      const registroB: FichaFragmentoConsumidoDto = {
+        modulo: FragmentoModuloEnum.IV,
+        bonusEscolhido: '+2 em Defesa',
+        opcao: { rotulo: '+2 em Defesa', tipo: 'DEFESA', valor: 2 },
+        atributoEscolhido: null,
+        deltaEnergiaMaxima: 0,
+        item: itemFragmento(FragmentoModuloEnum.IV),
+      };
+      const documento: FichaJogadorDadosDto = {
+        ...dados,
+        derivados: { defesa: 13 },
+        fragmentosConsumidos: [registroA, registroB],
+      };
+      const alvo = montar(documento, 'Corvo', 42, true);
+      const fragmentosAjustes: (readonly FichaFragmentoConsumidoDto[])[] = [];
+      alvo.fixture.componentInstance.ajusteFragmentosConsumidos.subscribe((a) => fragmentosAjustes.push(a));
+
+      alvo.fixture.componentInstance['confirmarRemocaoFragmentoConsumido'](0);
+
+      expect(fragmentosAjustes).toEqual([[registroB]]);
+    });
+
+    it('índice inexistente: não emite nada', () => {
+      const alvo = montar({ ...dados, fragmentosConsumidos: [] }, 'Corvo', 42, true);
+      const emitidos: unknown[] = [];
+      alvo.fixture.componentInstance.ajusteFragmentosConsumidos.subscribe((a) => emitidos.push(a));
+      alvo.fixture.componentInstance.ajusteInventario.subscribe((a) => emitidos.push(a));
+      alvo.fixture.componentInstance.ajusteVitalidade.subscribe((a) => emitidos.push(a));
+
+      alvo.fixture.componentInstance['confirmarRemocaoFragmentoConsumido'](0);
+
+      expect(emitidos).toEqual([]);
+    });
+  });
+
   describe('Extras (m3-49) — Origem/Personalidade/afinidade de fragmentos na aba "Extras" do Status', () => {
     const origemExemplo: FichaOrigemDto = {
       nome: 'Ex-Militar',
@@ -1106,6 +1333,34 @@ describe('FichaVisualizacao', () => {
       alvo.fixture.componentRef.setInput('abaStatusInicial', 'extras');
       alvo.fixture.detectChanges();
       return alvo;
+    }
+
+    /**
+     * Registro de `fragmentosConsumidos` completo (m3-64, correção) — os campos além de
+     * `modulo`/`bonusEscolhido` só importam para os testes de remoção; aqui bastam valores válidos
+     * e reconhecíveis pra não poluir os testes de exibição/prepend que não olham pra eles.
+     */
+    function registroFragmentoConsumido(
+      modulo: FragmentoModuloEnum,
+      bonusEscolhido: string,
+    ): FichaFragmentoConsumidoDto {
+      return {
+        modulo,
+        bonusEscolhido,
+        opcao: { rotulo: bonusEscolhido, tipo: 'DEFESA', valor: 1 },
+        atributoEscolhido: null,
+        deltaEnergiaMaxima: 0,
+        item: {
+          nome: 'Fragmento achado',
+          categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+          custo: 0,
+          peso: 0,
+          quantidade: 1,
+          guardada: false,
+          modificacoes: [],
+          modulo,
+        },
+      };
     }
 
     it('mostra nome/descrição/Saber de Campo/Especialidade/Formação da Origem definida', () => {
@@ -1211,11 +1466,12 @@ describe('FichaVisualizacao', () => {
         (b) => b.querySelector('.ficha-mini__rotulo')?.textContent?.trim() === 'Afinidade',
       );
       expect(box?.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('4');
+      // m3-66: agrupado por módulo (quantidade + Afinidade individual), não mais um chip repetido
+      // por unidade — "2× Módulo V" reforça a composição da soma, em vez de dois chips idênticos.
       const chips = Array.from(raiz.querySelectorAll('.ficha-extras__chips .chip')).map((c) =>
         c.textContent?.trim(),
       );
-      expect(chips.filter((c) => c === 'Módulo V')).toHaveLength(2);
-      expect(chips).toContain('Módulo IV');
+      expect(chips).toEqual(['2× Módulo V (2)', 'Módulo IV (2)']);
     });
 
     it('sem fragmentos portados: afinidade 0 e mensagem de vazio, sem nota de redução', () => {
@@ -1243,6 +1499,225 @@ describe('FichaVisualizacao', () => {
 
       expect(fixture.componentInstance['afinidadeFragmentos']()).toBe(30);
       expect(raiz.textContent).toContain('Afinidade acima de 10: −10 de Energia no custo de fragmentos.');
+      const chips = Array.from(raiz.querySelectorAll('.ficha-extras__chips .chip')).map((c) =>
+        c.textContent?.trim(),
+      );
+      expect(chips).toEqual(['6× Módulo I (30)']);
+    });
+
+    it('rastro de Fragmentos Consumidos aparece acima de "Afinidade de Fragmentos", mais recente primeiro (m3-64)', () => {
+      const documento = {
+        ...dados,
+        fragmentosConsumidos: [
+          registroFragmentoConsumido(FragmentoModuloEnum.III, '+3 em Defesa'),
+          registroFragmentoConsumido(FragmentoModuloEnum.V, '+2 de dano do Corpo'),
+        ],
+      };
+      const { raiz } = montarExtras(documento);
+
+      const secoes = Array.from(raiz.querySelectorAll('.ficha-extras__secao'));
+      const titulos = secoes.map((s) => s.querySelector('.ficha-cartao__subrotulo')?.textContent?.trim());
+      const indiceConsumidos = titulos.indexOf('Fragmentos Consumidos');
+      const indiceAfinidade = titulos.indexOf('Afinidade de Fragmentos');
+      expect(indiceConsumidos).toBeGreaterThanOrEqual(0);
+      expect(indiceConsumidos).toBeLessThan(indiceAfinidade);
+
+      const linhas = Array.from(secoes[indiceConsumidos].querySelectorAll('.ficha-extras__linha')).map((linha) => ({
+        rotulo: linha.querySelector('.ficha-extras__rotulo')?.textContent?.trim(),
+        valor: linha.querySelector('.ficha-extras__valor')?.textContent?.trim(),
+      }));
+      expect(linhas).toEqual([
+        { rotulo: 'Módulo III', valor: '+3 em Defesa' },
+        { rotulo: 'Módulo V', valor: '+2 de dano do Corpo' },
+      ]);
+    });
+
+    it('sem fragmentos consumidos: mensagem de vazio na seção "Fragmentos Consumidos"', () => {
+      const { raiz } = montarExtras(dados);
+      const secao = Array.from(raiz.querySelectorAll('.ficha-extras__secao')).find(
+        (s) => s.querySelector('.ficha-cartao__subrotulo')?.textContent?.trim() === 'Fragmentos Consumidos',
+      );
+      expect(secao?.textContent).toContain('Nenhum fragmento consumido ainda.');
+    });
+
+    it('aoRegistrarFragmentoConsumido prepende o novo registro à lista existente e emite ajusteFragmentosConsumidos', () => {
+      const registroExistente = registroFragmentoConsumido(FragmentoModuloEnum.V, '+1 em Defesa');
+      const documento = { ...dados, fragmentosConsumidos: [registroExistente] };
+      const alvo = montar(documento, 'Corvo', 42, true);
+      const ajustes: (readonly FichaFragmentoConsumidoDto[])[] = [];
+      alvo.fixture.componentInstance.ajusteFragmentosConsumidos.subscribe((a) => ajustes.push(a));
+
+      const registroNovo = registroFragmentoConsumido(FragmentoModuloEnum.I, '+10 de dano do Corpo');
+      alvo.fixture.componentInstance['aoRegistrarFragmentoConsumido'](registroNovo);
+
+      expect(ajustes).toEqual([[registroNovo, registroExistente]]);
+    });
+
+    it('visualizador (não ajustável): sem botão de remover no registro', () => {
+      const registro = registroFragmentoConsumido(FragmentoModuloEnum.V, '+1 em Defesa');
+      const { raiz } = montarExtras({ ...dados, fragmentosConsumidos: [registro] });
+      expect(raiz.querySelector('.ficha-extras__mini-btn')).toBeNull();
+    });
+
+    it('dono/mestre: botão ✕ abre a confirmação "Remover?"; cancelar fecha sem remover; confirmar retira a linha', () => {
+      const registro = registroFragmentoConsumido(FragmentoModuloEnum.V, '+1 em Defesa');
+      const alvo = montar({ ...dados, fragmentosConsumidos: [registro] }, 'Corvo', 42, true);
+      alvo.fixture.componentRef.setInput('abaStatusInicial', 'extras');
+      alvo.fixture.detectChanges();
+      const secao = () =>
+        Array.from(alvo.raiz.querySelectorAll('.ficha-extras__secao')).find(
+          (s) => s.querySelector('.ficha-cartao__subrotulo')?.textContent?.trim() === 'Fragmentos Consumidos',
+        )!;
+      const linha = () => secao().querySelector('.ficha-extras__linha') as HTMLElement;
+
+      const ajustes: (readonly FichaFragmentoConsumidoDto[])[] = [];
+      alvo.fixture.componentInstance.ajusteFragmentosConsumidos.subscribe((a) => ajustes.push(a));
+
+      const botaoRemover = () =>
+        Array.from(linha().querySelectorAll('.ficha-extras__mini-btn')).find(
+          (b) => b.getAttribute('aria-label') === 'Remover fragmento consumido',
+        ) as HTMLButtonElement | undefined;
+      expect(botaoRemover()).toBeDefined();
+      botaoRemover()!.click();
+      alvo.fixture.detectChanges();
+      expect(linha().textContent).toContain('Remover?');
+
+      const botaoCancelar = () =>
+        Array.from(linha().querySelectorAll('.ficha-extras__mini-btn')).find(
+          (b) => b.getAttribute('aria-label') === 'Cancelar remoção do fragmento consumido',
+        ) as HTMLButtonElement;
+      botaoCancelar().click();
+      alvo.fixture.detectChanges();
+      expect(linha().textContent).not.toContain('Remover?');
+      expect(ajustes).toEqual([]);
+
+      botaoRemover()!.click();
+      alvo.fixture.detectChanges();
+      const botaoConfirmar = () =>
+        Array.from(linha().querySelectorAll('.ficha-extras__mini-btn')).find(
+          (b) => b.getAttribute('aria-label') === 'Confirmar remoção do fragmento consumido',
+        ) as HTMLButtonElement;
+      botaoConfirmar().click();
+      alvo.fixture.detectChanges();
+
+      // Componente controlado (m3-10): o próprio `dados()` só muda quando o hospedeiro re-emite o
+      // input após persistir — aqui só cabe conferir o que foi emitido, não o DOM pós-emissão.
+      expect(ajustes).toEqual([[]]);
+    });
+  });
+
+  describe('Limite mínimo de Energia / Anomalia Biológica (m3-67)', () => {
+    /** Monta já na aba "Extras" (mesmo helper de `montarExtras` acima). */
+    function montarExtras(documento: FichaJogadorDadosDto, ajustavel = false) {
+      const alvo = montar(documento, 'Corvo', 42, ajustavel);
+      alvo.fixture.componentRef.setInput('abaStatusInicial', 'extras');
+      alvo.fixture.detectChanges();
+      return alvo;
+    }
+
+    function secaoAnomalia(raiz: HTMLElement) {
+      return Array.from(raiz.querySelectorAll('.ficha-extras__secao')).find(
+        (s) => s.querySelector('.ficha-cartao__subrotulo')?.textContent?.trim() === 'Anomalia Biológica',
+      )!;
+    }
+
+    // `dados`: Vigor 4, Destreza 2 → limite mínimo (4+2)×2 = 12. Energia Máxima derivada (sem
+    // override) do Combatente nível 3/Destreza 2 é 43 — bem acima do limite, então fora do estado.
+    it('limite mínimo é (Vigor + Destreza) × 2; Energia Máxima acima dele: sem Anomalia Biológica', () => {
+      const { raiz, fixture } = montarExtras(dados);
+      expect(fixture.componentInstance['limiteMinimoEnergia']()).toBe(12);
+      expect(fixture.componentInstance['anomaliaBiologica']()).toBe(false);
+      const secao = secaoAnomalia(raiz);
+      expect(secao.textContent).toContain('12');
+      expect(secao.textContent).toContain('dentro do limite');
+      expect(secao.textContent).not.toContain('todos os testes');
+    });
+
+    it('Energia Máxima atual abaixo do limite: estado derivado true e mostra os efeitos calculados', () => {
+      const documento = { ...dados, estado: { ...dados.estado, energiaMaxima: 5 } };
+      const { raiz, fixture } = montarExtras(documento);
+      expect(fixture.componentInstance['anomaliaBiologica']()).toBe(true);
+
+      const secao = secaoAnomalia(raiz);
+      expect(secao.textContent).toContain('Energia Máxima (5)');
+      const linhas = Array.from(secao.querySelectorAll('.ficha-extras__linha')).map((linha) => ({
+        rotulo: linha.querySelector('.ficha-extras__rotulo')?.textContent?.trim(),
+        valor: linha.querySelector('.ficha-extras__valor')?.textContent?.trim(),
+      }));
+      // Vida Máxima derivada (Combatente nível 3, Vigor 4) = 91 → teto de 10% = 9 (floor).
+      expect(linhas).toEqual([
+        { rotulo: 'Testes', valor: '-15 em todos os testes' },
+        { rotulo: 'Defesa', valor: '-10 em Defesa' },
+        { rotulo: 'Vida atual', valor: 'trava em 9 de 91' },
+      ]);
+    });
+
+    it('Energia Máxima atual igual ao limite: ainda fora do estado (só abaixo entra)', () => {
+      const documento = { ...dados, estado: { ...dados.estado, energiaMaxima: 12 } };
+      const { fixture } = montarExtras(documento);
+      expect(fixture.componentInstance['anomaliaBiologica']()).toBe(false);
+    });
+
+    it('visualizador (não ajustável) em Anomalia Biológica: sem o atalho de registrar o trauma', () => {
+      const documento = { ...dados, estado: { ...dados.estado, energiaMaxima: 5 } };
+      const { raiz } = montarExtras(documento, false);
+      expect(secaoAnomalia(raiz).textContent).not.toContain('Limiar da Humanidade');
+    });
+
+    it('dono/mestre em Anomalia Biológica: atalho pré-preenche nome/descrição e não dispara sozinho', () => {
+      const documento = { ...dados, estado: { ...dados.estado, energiaMaxima: 5 } };
+      const alvo = montarExtras(documento, true);
+      const ajustes: unknown[] = [];
+      alvo.fixture.componentInstance.ajusteSanidade.subscribe((a) => ajustes.push(a));
+
+      const secao = () => secaoAnomalia(alvo.raiz);
+      const botaoAbrir = () =>
+        Array.from(secao().querySelectorAll('button')).find((b) =>
+          b.textContent?.includes('Limiar da Humanidade'),
+        ) as HTMLButtonElement;
+      expect(botaoAbrir()).toBeDefined();
+      // Só abrir o atalho não emite nada — precisa da confirmação explícita.
+      expect(ajustes).toEqual([]);
+
+      botaoAbrir().click();
+      alvo.fixture.detectChanges();
+      expect(secao().textContent).toContain('+2');
+      expect(secao().textContent).toContain('-5');
+      expect(secao().textContent).toContain('3×');
+      expect(ajustes).toEqual([]);
+
+      const botaoCancelar = () =>
+        Array.from(secao().querySelectorAll('button')).find((b) => b.textContent?.trim() === 'Cancelar') as
+          | HTMLButtonElement
+          | undefined;
+      botaoCancelar()!.click();
+      alvo.fixture.detectChanges();
+      expect(secao().textContent).not.toContain('+2 ao custo');
+      expect(ajustes).toEqual([]);
+
+      botaoAbrir().click();
+      alvo.fixture.detectChanges();
+      const botaoConfirmar = () =>
+        Array.from(secao().querySelectorAll('button')).find(
+          (b) => b.textContent?.trim() === 'Registrar trauma',
+        ) as HTMLButtonElement;
+      botaoConfirmar().click();
+      alvo.fixture.detectChanges();
+
+      expect(ajustes).toEqual([
+        {
+          sequelas: dados.estado.sequelas,
+          traumas: [
+            {
+              nome: 'Limiar da Humanidade',
+              descricao: expect.stringContaining('+2'),
+              tratado: false,
+            },
+            ...dados.estado.traumas,
+          ],
+          lesoes: dados.estado.lesoes,
+        },
+      ]);
     });
   });
 

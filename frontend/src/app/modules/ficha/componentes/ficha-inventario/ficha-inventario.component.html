@@ -346,6 +346,31 @@
               item na lista do inventário.
             }
           </p>
+          @if (avisoLimiteEnergiaAquisicao(); as aviso) {
+            <p class="ficha-inv__aviso">
+              <strong>Aviso:</strong> adicionar este fragmento levaria a Energia Máxima a
+              {{ aviso.projecao }} — abaixo do limite mínimo ({{ limiteMinimoEnergia() }} = (Vigor +
+              Destreza) × 2). O agente entraria em Anomalia Biológica. Isso não trava a ação — a
+              decisão de largar ou continuar é sua.
+            </p>
+          }
+        }
+        @if (mostraBaseConstrutor()) {
+          <div class="ficha-inv__form-linha">
+            <label class="ficha-inv__campo ficha-inv__campo--largo">
+              <span class="ficha-inv__campo-rotulo">Base (arma/proteção do catálogo)</span>
+              <select
+                class="ficha-inv__entrada"
+                formControlName="baseConstrutor"
+                (change)="escolherBaseConstrutor($any($event.target).value)"
+              >
+                @for (base of opcoesBaseConstrutor(); track base.nome) {
+                  <option [value]="base.nome">{{ base.nome }} — {{ resumoBase(base) }}</option>
+                }
+                <option value="">Outra (digitar)</option>
+              </select>
+            </label>
+          </div>
         }
         @if (mostraDano()) {
           <div class="ficha-inv__form-linha">
@@ -452,11 +477,21 @@
                 </div>
                 <div class="ficha-inv__cartao-fragmento-custo">
                   <span>Potencializador</span>
-                  <span class="ficha-inv__custo">{{ cartao.custoPotencializador }} Energia</span>
+                  <span>
+                    @if (cartao.custoPotencializadorReduzido !== cartao.custoPotencializador) {
+                      <span class="ficha-inv__custo ficha-inv__custo--bruto">{{ cartao.custoPotencializador }}</span>
+                    }
+                    <span class="ficha-inv__custo">{{ cartao.custoPotencializadorReduzido }} Energia</span>
+                  </span>
                 </div>
                 <div class="ficha-inv__cartao-fragmento-custo">
                   <span>Construtor</span>
-                  <span class="ficha-inv__custo">{{ cartao.custoConstrutor }} Energia</span>
+                  <span>
+                    @if (cartao.custoConstrutorReduzido !== cartao.custoConstrutor) {
+                      <span class="ficha-inv__custo ficha-inv__custo--bruto">{{ cartao.custoConstrutor }}</span>
+                    }
+                    <span class="ficha-inv__custo">{{ cartao.custoConstrutorReduzido }} Energia</span>
+                  </span>
                 </div>
                 <div class="ficha-inv__cartao-acoes ficha-inv__cartao-acoes--coluna">
                   <button
@@ -651,11 +686,11 @@
               }
             </span>
             @if (item.apelido) {
-              <span class="ficha-inv__item-nome-mecanico">{{ item.nome }} — {{ item.categoriaRotulo }}</span>
+              <span class="ficha-inv__item-nome-mecanico">{{ item.fragmentoModuloTexto ?? item.nome }} — {{ item.categoriaRotulo }}</span>
             }
           }
           @if (!item.apelido) {
-            <span class="ficha-inv__item-categoria">{{ item.categoriaRotulo }}</span>
+            <span class="ficha-inv__item-categoria">{{ item.fragmentoModuloTexto ?? item.categoriaRotulo }}</span>
           }
         </div>
         <div class="ficha-inv__item-controles">
@@ -764,7 +799,7 @@
                   [attr.aria-expanded]="aplicandoFragmentoIndice() === item.indice"
                   (click)="abrirAplicarFragmento(item.indice)"
                 >
-                  <app-icone nome="fragmento" />
+                  <app-icone nome="link" />
                   <span>Aplicar em...</span>
                 </button>
                 <button
@@ -776,8 +811,22 @@
                   [attr.aria-expanded]="consumindoFragmentoIndice() === item.indice"
                   (click)="abrirConsumirFragmento(item.indice)"
                 >
-                  <app-icone nome="fragmento" />
+                  <app-icone nome="chama" />
                   <span>Consumir</span>
+                </button>
+              }
+
+              @if (item.fragmentoConstrutorMunicao) {
+                <button
+                  type="button"
+                  class="ficha-inv__modificar"
+                  [class.ficha-inv__modificar--aberto]="item.recarregada"
+                  [appTooltip]="item.recarregada ? 'Recarregada nesta cena — clique para encerrar a cena' : (item.bonusMunicaoTexto ?? 'Recarregar')"
+                  [attr.aria-label]="(item.recarregada ? 'Encerrar cena de ' : 'Recarregar ') + item.nomeExibido"
+                  (click)="item.recarregada ? resetarMunicaoConstrutor(item.indice) : recarregarMunicaoConstrutor(item.indice)"
+                >
+                  <app-icone nome="fragmento" />
+                  <span>{{ item.recarregada ? 'Recarregada' : 'Recarregar' }}</span>
                 </button>
               }
             </div>
@@ -847,6 +896,11 @@
       @if (item.descricao) {
         <div class="ficha-inv__item-desc">{{ item.descricao }}</div>
       }
+      @if (item.bonusMunicaoTexto) {
+        <div class="ficha-inv__item-stat">
+          {{ item.bonusMunicaoTexto }} — {{ item.recarregada ? 'recarregada nesta cena' : 'não recarregada' }}
+        </div>
+      }
 
       @if (item.modsAtivas.length > 0) {
         <div class="ficha-inv__mods-ativas">
@@ -874,7 +928,7 @@
                 @if (mod.descricao) {
                   <span class="ficha-inv__mod-tag-desc">{{ mod.descricao }}</span>
                 }
-                @if (editavel()) {
+                @if (editavel() && !mod.fixa) {
                   <div class="ficha-inv__mod-flags">
                     <button
                       type="button"
@@ -903,7 +957,7 @@
                   </div>
                 }
               </div>
-              @if (editavel()) {
+              @if (editavel() && !mod.fixa) {
                 <div class="ficha-inv__mod-tag-botoes">
                   <button type="button" class="ficha-inv__mini-btn" aria-label="Remover empilhamento" (click)="removerModificacao(item.indice, mod.nome)">−</button>
                   <button
@@ -952,10 +1006,23 @@
             Aplicar consome o fragmento (some do inventário) e debita o custo de Energia do módulo
             (Energia atual + Energia Máxima).
           </p>
+          @if (custoPreviaAplicarFragmento(); as custo) {
+            <p class="ficha-inv__aviso">
+              Custo já com a Afinidade atual: −{{ custo.energia }} de Energia agora; Energia Máxima
+              líquida: {{ custo.energiaMaxima > 0 ? '+' : '' }}{{ custo.energiaMaxima }}.
+            </p>
+          }
+          @if (conflitoFuncaoFragmento()) {
+            <p class="ficha-inv__aviso">
+              O alvo já tem um fragmento nessa função — um item/ser só pode ter um fragmento por
+              função (dano, teste ou resistência). Escolha outro bônus ou outro alvo.
+            </p>
+          }
           <div class="ficha-inv__form-acoes">
             <button
               type="button"
               class="ficha-inv__btn ficha-inv__btn--principal"
+              [disabled]="conflitoFuncaoFragmento()"
               (click)="confirmarAplicarFragmento(item.indice)"
             >
               Aplicar
@@ -1004,8 +1071,15 @@
             <p class="ficha-inv__aviso">
               Preço de Sanidade: sequela "Rejeição Biológica" ×{{ preco.multiplicadorSequela }}
               (evitável com teste de Vontade DT {{ preco.dtEvitarVontade }}) + {{ preco.energiaMaximaExtra }}
-              de Energia Máxima extra, sempre. O benefício pessoal do Consumo é narrativo — combine com o Mestre.
+              de Energia Máxima extra, sempre.
             </p>
+            @if (custoPreviaConsumirFragmento(); as custo) {
+              <p class="ficha-inv__aviso">
+                Custo já com a Afinidade atual: +{{ custo.restituicaoAquisicao }} de Energia Máxima
+                restituída da aquisição − {{ preco.energiaMaximaExtra }} do Preço de Sanidade = líquido
+                {{ custo.deltaEnergiaMaxima >= 0 ? '+' : '' }}{{ custo.deltaEnergiaMaxima }} de Energia Máxima.
+              </p>
+            }
             <div class="ficha-inv__mod-flags">
               <button
                 type="button"
@@ -1022,10 +1096,36 @@
               <span class="ficha-inv__campo-rotulo">Evitei a sequela com o teste de Vontade</span>
             </div>
           }
+          <div class="ficha-inv__form-linha">
+            <label class="ficha-inv__campo ficha-inv__campo--largo">
+              <span class="ficha-inv__campo-rotulo">Bônus "Consumido" (escolha um)</span>
+              <select class="ficha-inv__entrada" (change)="escolherOpcaoConsumoFragmento($event)">
+                <option value="">— Escolha o bônus —</option>
+                @for (opcao of opcoesConsumoFragmento(); track opcao.tipo; let i = $index) {
+                  <option [value]="i">{{ opcao.rotulo }}</option>
+                }
+              </select>
+            </label>
+            @if (opcaoConsumoFragmentoEscolhida()?.tipo === 'TESTE') {
+              <label class="ficha-inv__campo ficha-inv__campo--largo">
+                <span class="ficha-inv__campo-rotulo">Atributo</span>
+                <select class="ficha-inv__entrada" (change)="escolherAtributoConsumoFragmento($event)">
+                  <option value="">— Escolha o atributo —</option>
+                  @for (atributo of atributosSelecionaveis; track atributo) {
+                    <option [value]="atributo">{{ rotulosAtributo[atributo] }}</option>
+                  }
+                </select>
+              </label>
+            }
+          </div>
           <div class="ficha-inv__form-acoes">
             <button
               type="button"
               class="ficha-inv__btn ficha-inv__btn--principal"
+              [disabled]="
+                !opcaoConsumoFragmentoEscolhida() ||
+                (opcaoConsumoFragmentoEscolhida()?.tipo === 'TESTE' && !atributoConsumoFragmento())
+              "
               (click)="confirmarConsumirFragmento(item.indice)"
             >
               Consumir

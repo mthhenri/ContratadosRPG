@@ -24,6 +24,7 @@ import {
 import type {
   FichaAtributosDto,
   FichaComboDto,
+  FichaFragmentoConsumidoDto,
   FichaHabilidadeDto,
   FichaIdentidadeDto,
   FichaInventarioDto,
@@ -36,23 +37,35 @@ import {
   MAESTRIA_PONTOS_MINIMO,
   ajusteEnergiaAmplificadores,
   ajusteVidaAmplificadores,
+  aplicarBonusConsumoFragmento,
   calcularAjusteDadosEquipamento,
   calcularAtributosEfetivos,
   calcularAtributosParaDados,
   calcularEnergia,
   calcularInventario,
   calcularProficiencia,
+  emAnomaliaBiologica,
+  limiteMinimoEnergiaMaximaFragmentos,
   modificadoresTesteAmplificadores,
   montarResistencias,
   calcularVida,
   maestriaAtingivel,
   obterLimitesClasse,
+  PENALIDADE_DEFESA_ANOMALIA_BIOLOGICA,
+  PENALIDADE_TESTES_ANOMALIA_BIOLOGICA,
+  reverterBonusConsumoFragmento,
   somarLesoesAtributo,
+  tetoVidaAnomaliaBiologica,
+  TRAUMA_LIMIAR_HUMANIDADE_DESCRICAO,
+  TRAUMA_LIMIAR_HUMANIDADE_NOME,
+  type EfeitoConsumoFragmentoDto,
 } from '@contratados-rpg/shared/regras/agente';
 import {
   calcularAfinidade,
   listarModulosFragmentosPortados,
   reducaoCustoPorAfinidade,
+  valorAfinidadeFragmento,
+  type OpcaoBonusConsumoFragmentoDto,
 } from '@contratados-rpg/shared/regras/compras';
 import { calcularDtAtributo } from '@contratados-rpg/shared/regras/dt';
 import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
@@ -75,7 +88,11 @@ import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
-import { FichaInventario, type CustoEnergiaFragmento } from '../ficha-inventario/ficha-inventario.component';
+import {
+  FichaInventario,
+  type BonusConsumoFragmentoEscolhidoDto,
+  type CustoEnergiaFragmento,
+} from '../ficha-inventario/ficha-inventario.component';
 import { FichaRolagensPainel } from '../ficha-rolagens-painel/ficha-rolagens-painel.component';
 import { FichaSanidade, type EstadoSanidade } from '../ficha-sanidade/ficha-sanidade.component';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
@@ -110,6 +127,17 @@ interface CampoAtributo {
 interface GrupoAtributos {
   readonly rotulo: string;
   readonly campos: readonly CampoAtributo[];
+}
+
+/**
+ * Fragmentos portados de um mesmo módulo, agrupados (m3-66): antes cada unidade virava um chip
+ * "Módulo X" repetido e idêntico, sem mostrar quantos fragmentos daquele módulo o agente carrega
+ * nem quanto cada grupo contribui pra Afinidade total.
+ */
+interface GrupoFragmentoPortado {
+  readonly modulo: FragmentoModuloEnum;
+  readonly quantidade: number;
+  readonly afinidade: number;
 }
 
 /** Lembrete da fórmula da DT — exibido como chip informativo no card de Atributos (como no protótipo). */
@@ -441,6 +469,12 @@ export class FichaVisualizacao {
   /** Combos editados (m3-37) — a página persiste em `dados.combos`. */
   readonly ajusteCombos = output<readonly FichaComboDto[]>();
 
+  /**
+   * Histórico de Fragmentos consumidos (m3-64) — a página persiste em `dados.fragmentosConsumidos`.
+   * Emitido por `aoRegistrarFragmentoConsumido`, que prepende o novo registro à lista existente.
+   */
+  readonly ajusteFragmentosConsumidos = output<readonly FichaFragmentoConsumidoDto[]>();
+
   /** Anotações livres editadas (m3-32) — a página persiste em `dados.anotacoes`. */
   readonly ajusteAnotacoes = output<string>();
 
@@ -502,6 +536,121 @@ export class FichaVisualizacao {
       traumas: estado.traumas,
       lesoes: estado.lesoes,
     });
+  }
+
+  /**
+   * Bônus "Consumido" de um Fragmento Potencializador (m3-64): aplica ao **agente**, permanente —
+   * `aplicarBonusConsumoFragmento` (fonte única) resolve onde cada tipo aterrissa
+   * (`modificadoresTeste`/`atributos` para TESTE, `derivados` para DEFESA/DANO_CORPO). Reusa os
+   * mesmos canais de persistência de edição manual (`ajusteAtributos`/`ajusteDerivado`, m3-10) em
+   * vez de abrir um novo — `ajusteAtributos` também re-deriva vida/energia quando o atributo muda
+   * (Módulo I), mesmo caminho de uma edição manual de atributo.
+   */
+  protected aoConsumirFragmentoBonus(efeito: BonusConsumoFragmentoEscolhidoDto): void {
+    const dados = this.dados();
+    const resultado = aplicarBonusConsumoFragmento(
+      {
+        atributos: dados.atributos,
+        derivados: dados.derivados ?? {},
+        modificadoresTeste: dados.modificadoresTeste ?? {},
+      },
+      efeito.opcao,
+      efeito.atributoEscolhido,
+    );
+    this.emitirEfeitoBonusFragmento(efeito.opcao, resultado);
+  }
+
+  /**
+   * Traduz o `resultado` (de `aplicarBonusConsumoFragmento`/`reverterBonusConsumoFragmento`) nos
+   * canais de persistência de edição manual já existentes (`ajusteAtributos`/`ajusteDerivado`,
+   * m3-10) — compartilhado entre aplicar (`aoConsumirFragmentoBonus`) e reverter
+   * (`removerFragmentoConsumido`, m3-64 correção), já que os dois só diferem no sinal do delta.
+   */
+  private emitirEfeitoBonusFragmento(
+    opcao: OpcaoBonusConsumoFragmentoDto,
+    resultado: EfeitoConsumoFragmentoDto,
+  ): void {
+    const dados = this.dados();
+    if (opcao.tipo === 'TESTE') {
+      const modificadoresTeste = {} as Record<keyof FichaAtributosDto, number>;
+      const dadosTeste = {} as Record<keyof FichaAtributosDto, number>;
+      (Object.keys(dados.atributos) as (keyof FichaAtributosDto)[]).forEach((chave) => {
+        modificadoresTeste[chave] = resultado.modificadoresTeste[chave] ?? 0;
+        dadosTeste[chave] = dados.dadosTeste?.[chave] ?? 0;
+      });
+      this.ajusteAtributos.emit({ atributos: resultado.atributos, maestria: dados.maestria, modificadoresTeste, dadosTeste });
+      return;
+    }
+
+    const chave = opcao.tipo === 'DEFESA' ? 'defesa' : 'danoCorpoACorpo';
+    const valor = resultado.derivados[chave];
+    if (valor !== undefined) {
+      this.ajusteDerivado.emit({ chave, valor });
+    }
+  }
+
+  /** Histórico de Fragmentos consumidos (m3-64), mais recente primeiro — aba Extras, acima da Afinidade. */
+  protected readonly fragmentosConsumidos = computed<readonly FichaFragmentoConsumidoDto[]>(
+    () => this.dados().fragmentosConsumidos ?? [],
+  );
+
+  /**
+   * Registra o consumo de um fragmento na aba Extras (m3-64) — **incondicional**, ao contrário da
+   * sequela "Rejeição Biológica" (evitável com o teste de Vontade, `aoConsumirFragmentoSanidade`):
+   * este rastro nunca some.
+   */
+  protected aoRegistrarFragmentoConsumido(registro: FichaFragmentoConsumidoDto): void {
+    this.ajusteFragmentosConsumidos.emit([registro, ...this.fragmentosConsumidos()]);
+  }
+
+  /** Índice do registro de `fragmentosConsumidos` com a confirmação "Remover?" aberta, ou `null`. */
+  protected readonly removendoFragmentoConsumidoIndice = signal<number | null>(null);
+
+  /** Abre a confirmação inline de remoção de um registro (mesmo padrão de combos/sequelas/traumas/lesões). */
+  protected pedirRemocaoFragmentoConsumido(indice: number): void {
+    this.removendoFragmentoConsumidoIndice.set(indice);
+  }
+
+  /** Fecha a confirmação inline sem remover nada. */
+  protected cancelarRemocaoFragmentoConsumido(): void {
+    this.removendoFragmentoConsumidoIndice.set(null);
+  }
+
+  /**
+   * Remove um registro de `fragmentosConsumidos` (m3-64, correção — "eu posso remover um fragmento
+   * consumido também, isso tem que ser possível") e desfaz **tudo** que o consumo aplicou: o bônus no
+   * agente (`reverterBonusConsumoFragmento`, sinal oposto de `aplicarBonusConsumoFragmento`), o
+   * delta de Energia Máxima (restituição da aquisição − Preço de Sanidade físico) e devolve o item ao
+   * inventário avulso. A(s) sequela(s) "Rejeição Biológica" eventualmente geradas **não** são
+   * tocadas — ficam sob o mesmo controle manual de qualquer outra sequela (painel de Sanidade).
+   */
+  protected confirmarRemocaoFragmentoConsumido(indice: number): void {
+    const registro = this.fragmentosConsumidos()[indice];
+    this.removendoFragmentoConsumidoIndice.set(null);
+    if (!registro) {
+      return;
+    }
+
+    const dados = this.dados();
+    const resultado = reverterBonusConsumoFragmento(
+      {
+        atributos: dados.atributos,
+        derivados: dados.derivados ?? {},
+        modificadoresTeste: dados.modificadoresTeste ?? {},
+      },
+      registro.opcao,
+      registro.atributoEscolhido,
+    );
+    this.emitirEfeitoBonusFragmento(registro.opcao, resultado);
+
+    this.ajusteVitalidade.emit({
+      campo: 'energiaMaxima',
+      valor: this.energiaMaxima() - registro.deltaEnergiaMaxima,
+    });
+
+    this.ajusteInventario.emit({ ...dados.inventario, itens: [...dados.inventario.itens, registro.item] });
+
+    this.ajusteFragmentosConsumidos.emit(this.fragmentosConsumidos().filter((_, i) => i !== indice));
   }
 
   /** Alterna uma condição (Morrendo/Machucado/Inconsciente) e emite o conjunto atualizado. */
@@ -2019,6 +2168,26 @@ export class FichaVisualizacao {
     listarModulosFragmentosPortados(this.dados().inventario.itens),
   );
 
+  /**
+   * Módulos portados agrupados (m3-66) — quantidade e Afinidade individual de cada grupo, pra o
+   * chip mostrar "2× Módulo V" em vez de duas entradas idênticas "Módulo V". Ordem de primeira
+   * ocorrência em `modulosFragmentosPortados()` (soltos antes de acoplados, na ordem do inventário).
+   */
+  protected readonly gruposFragmentosPortados = computed<readonly GrupoFragmentoPortado[]>(() => {
+    const ordem: FragmentoModuloEnum[] = [];
+    const contagem = new Map<FragmentoModuloEnum, number>();
+    for (const modulo of this.modulosFragmentosPortados()) {
+      if (!contagem.has(modulo)) {
+        ordem.push(modulo);
+      }
+      contagem.set(modulo, (contagem.get(modulo) ?? 0) + 1);
+    }
+    return ordem.map((modulo) => {
+      const quantidade = contagem.get(modulo)!;
+      return { modulo, quantidade, afinidade: valorAfinidadeFragmento(modulo) * quantidade };
+    });
+  });
+
   /** Afinidade total de Fragmentos do agente (`shared/regras/compras/fragmento`, m3-42 — função pura). */
   protected readonly afinidadeFragmentos = computed(() =>
     calcularAfinidade(this.modulosFragmentosPortados()),
@@ -2028,4 +2197,66 @@ export class FichaVisualizacao {
   protected readonly reducaoAfinidade = computed(() =>
     reducaoCustoPorAfinidade(this.afinidadeFragmentos()),
   );
+
+  // === Limite mínimo de Energia / Anomalia Biológica (m3-67) ===
+
+  /** Limite mínimo de Energia Máxima pro Vigor/Destreza do agente (doc — "⬦ Limite mínimo de Energia"). */
+  protected readonly limiteMinimoEnergia = computed(() =>
+    limiteMinimoEnergiaMaximaFragmentos(this.dados().atributos),
+  );
+
+  /**
+   * Estado derivado "Anomalia Biológica" (doc, m3-67): `true` quando a Energia Máxima **atual**
+   * (`energiaMaxima()` — já reduzida pelos fragmentos portados) está abaixo do limite mínimo. 100%
+   * derivado, sem campo persistido de "decisão do jogador" — mesma filosofia de `m3-10`.
+   */
+  protected readonly anomaliaBiologica = computed(() =>
+    emAnomaliaBiologica(this.energiaMaxima(), this.limiteMinimoEnergia()),
+  );
+
+  /** Penalidades fixas do doc — texto informativo, nunca aplicado ao motor de rolagem/`calcularDefesa`. */
+  protected readonly penalidadeTestesAnomalia = PENALIDADE_TESTES_ANOMALIA_BIOLOGICA;
+  protected readonly penalidadeDefesaAnomalia = PENALIDADE_DEFESA_ANOMALIA_BIOLOGICA;
+
+  /** Teto de Vida atual em Anomalia Biológica — "trava em X de Y" (doc: 10% da Vida Máxima). */
+  protected readonly tetoVidaAnomalia = computed(() => tetoVidaAnomaliaBiologica(this.vidaMaxima()));
+
+  /** `true` com a confirmação inline do atalho de registro do trauma "Limiar da Humanidade" aberta. */
+  protected readonly confirmandoTraumaLimiar = signal(false);
+
+  protected readonly nomeTraumaLimiar = TRAUMA_LIMIAR_HUMANIDADE_NOME;
+  protected readonly descricaoTraumaLimiar = TRAUMA_LIMIAR_HUMANIDADE_DESCRICAO;
+
+  /**
+   * Abre a confirmação inline do atalho (mesmo padrão de `pedirRemocaoFragmentoConsumido`) — nunca
+   * registra o trauma sozinho: o doc condiciona "Limiar da Humanidade" a "passar uma cena" em
+   * Anomalia Biológica, julgamento do Mestre, então o atalho só pré-preenche pro jogador/mestre
+   * confirmar.
+   */
+  protected abrirAtalhoTraumaLimiar(): void {
+    this.confirmandoTraumaLimiar.set(true);
+  }
+
+  /** Fecha a confirmação sem registrar nada. */
+  protected cancelarAtalhoTraumaLimiar(): void {
+    this.confirmandoTraumaLimiar.set(false);
+  }
+
+  /**
+   * Confirma o atalho: registra o trauma "Limiar da Humanidade" pré-preenchido (nome + descrição do
+   * doc, `tratado: false`) no topo de `estado.traumas`, reusando o mesmo canal `ajusteSanidade`
+   * (m3-12) que a aba Sanidade usa pra qualquer edição — mesmo trio persistido, sem caminho paralelo.
+   */
+  protected confirmarAtalhoTraumaLimiar(): void {
+    this.confirmandoTraumaLimiar.set(false);
+    const estado = this.estado();
+    this.ajusteSanidade.emit({
+      sequelas: estado.sequelas,
+      traumas: [
+        { nome: this.nomeTraumaLimiar, descricao: this.descricaoTraumaLimiar, tratado: false },
+        ...estado.traumas,
+      ],
+      lesoes: estado.lesoes,
+    });
+  }
 }

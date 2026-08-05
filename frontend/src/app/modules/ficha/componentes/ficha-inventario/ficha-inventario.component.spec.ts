@@ -8,7 +8,11 @@ import {
   ItemCategoriaEnum,
   ModificacaoEfeitoTipoEnum,
 } from '@contratados-rpg/shared/enums';
-import type { FichaAtributosDto, FichaInventarioDto } from '@contratados-rpg/shared/dtos/ficha';
+import type {
+  FichaAtributosDto,
+  FichaFragmentoConsumidoDto,
+  FichaInventarioDto,
+} from '@contratados-rpg/shared/dtos/ficha';
 import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
@@ -91,6 +95,44 @@ describe('FichaInventario', () => {
     const modificares = raiz.querySelectorAll('.ficha-inv__modificar');
     // Só o item "Leve" (Corpo a Corpo) tem "Modificar"; o consumível não.
     expect(modificares.length).toBe(1);
+  });
+
+  it('não oferece "Modificar" num Fragmento Potencializador solto — só "Aplicar em..."/"Consumir" (doc: só o Construtor recebe modificação como a arma base)', () => {
+    const potencializador: CarrinhoItemDto = {
+      nome: 'Fragmento achado',
+      categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+      custo: 0,
+      peso: 0,
+      quantidade: 1,
+      guardada: false,
+      modificacoes: [],
+      modulo: FragmentoModuloEnum.V,
+    };
+    const { raiz } = montar({ itens: [potencializador, itemLeve], amplificadores: [] }, true);
+    const botoesModificar = Array.from(raiz.querySelectorAll('.ficha-inv__modificar')).filter((b) =>
+      b.getAttribute('aria-label')?.startsWith('Modificar '),
+    );
+    // Só o item "Leve" tem "Modificar"; o Potencializador só oferece "Aplicar em..."/"Consumir".
+    expect(botoesModificar).toHaveLength(1);
+    expect(botoesModificar[0].getAttribute('aria-label')).toBe('Modificar Leve');
+    expect(raiz.querySelector('[aria-label^="Aplicar em..."]')).toBeTruthy();
+    expect(raiz.querySelector('[aria-label^="Consumir —"]')).toBeTruthy();
+  });
+
+  it('um Fragmento Construtor continua modificável — recebe modificações como a própria arma base (m3-65)', () => {
+    const construtor: CarrinhoItemDto = {
+      nome: 'Espada de Ossos',
+      categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+      custo: 0,
+      peso: 1,
+      quantidade: 1,
+      guardada: false,
+      modulo: FragmentoModuloEnum.V,
+      categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+      modificacoes: [],
+    };
+    const { raiz } = montar({ itens: [construtor], amplificadores: [] }, true);
+    expect(raiz.querySelector('[aria-label^="Modificar "]')).toBeTruthy();
   });
 
   it('é só leitura quando não editável: lista os itens sem botões de ação nem catálogo', () => {
@@ -199,6 +241,7 @@ describe('FichaInventario', () => {
       bonus: '',
       categoriaEmprestada: '',
       modulo: '',
+      baseConstrutor: '',
     });
     alvo.componentInstance['confirmarCriarItem']();
     expect(alvo.emitidos[0].itens).toEqual([
@@ -230,6 +273,7 @@ describe('FichaInventario', () => {
       bonus: '',
       categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
       modulo: '',
+      baseConstrutor: '',
     });
     alvo.componentInstance['confirmarCriarItem']();
     const item = alvo.emitidos[0].itens[0];
@@ -819,6 +863,510 @@ describe('FichaInventario', () => {
     });
   });
 
+  describe('bônus fixo automático do Fragmento Construtor (m3-65)', () => {
+    it('Arma (Corpo a Corpo): nasce com a modificação do módulo já aplicada, com origemFragmento', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Espada de Ossos',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        modulo: FragmentoModuloEnum.V,
+        categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+      });
+      alvo.componentInstance['confirmarCriarItem']();
+
+      const item = alvo.emitidos[0].itens[0];
+      expect(item.modificacoes).toEqual([
+        {
+          nome: 'Fragmento Construtor — Módulo V',
+          empilhamentos: 1,
+          efeitos: [
+            { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS, valor: 1, faces: 8 },
+            { tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: 1, variante: 'FIXO' },
+          ],
+          ignoraLimiteTotal: true,
+          ignoraLimiteProprio: true,
+          origemFragmento: { tipo: FragmentoTipoEnum.CONSTRUTOR, modulo: FragmentoModuloEnum.V },
+        },
+      ]);
+    });
+
+    it('Proteção: nasce com Resistência + Esquiva/Bloqueio/Defesa do módulo (módulo I, exemplo do documento)', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Colete de Vísceras',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        modulo: FragmentoModuloEnum.I,
+        categoriaEmprestada: ItemCategoriaEnum.PROTECOES,
+      });
+      alvo.componentInstance['confirmarCriarItem']();
+
+      const item = alvo.emitidos[0].itens[0];
+      expect(item.modificacoes[0].efeitos).toEqual([
+        { tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: 10 },
+        { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 5, variante: 'Esquiva' },
+        { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 5, variante: 'Bloqueio' },
+        { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 2, variante: 'Defesa' },
+      ]);
+    });
+
+    it('Munição não modifica um item: sem categoriaEmprestada reconhecida, nasce sem modificação', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Bala de Ossos',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        modulo: FragmentoModuloEnum.III,
+        categoriaEmprestada: ItemCategoriaEnum.MUNICOES,
+      });
+      alvo.componentInstance['confirmarCriarItem']();
+
+      expect(alvo.emitidos[0].itens[0].modificacoes).toEqual([]);
+    });
+
+    it('a modificação automática custa o dobro e não pesa (dobro de custo do Construtor, mesma task)', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Espada de Ossos',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        peso: 0,
+        modulo: FragmentoModuloEnum.V,
+        categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+      });
+      alvo.componentInstance['confirmarCriarItem']();
+      alvo.fixture.componentRef.setInput('inventario', alvo.emitidos[0]);
+      alvo.fixture.detectChanges();
+
+      const vm = alvo.componentInstance['itensInventario']()[0];
+      // Corpo a Corpo custa $750/mod (padrão) — dobrado pelo Construtor = $1500; peso 0 (não soma nos "slots").
+      expect(vm.modsAtivas[0].custoTexto).toBe('$1.500');
+      expect(vm.pesoTexto).toBe('0 slots');
+    });
+
+    it('uma modificação comum adicionada depois (não vinda de fragmento) também custa o dobro', () => {
+      const construtor: CarrinhoItemDto = {
+        nome: 'Espada de Ossos',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        custo: 0,
+        peso: 1,
+        quantidade: 1,
+        guardada: false,
+        modulo: FragmentoModuloEnum.V,
+        categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+        modificacoes: [],
+      };
+      const alvo = montar({ itens: [construtor], amplificadores: [] });
+      alvo.componentInstance['adicionarModificacao'](0, 'Letal');
+      alvo.fixture.componentRef.setInput('inventario', alvo.emitidos[0]);
+      alvo.fixture.detectChanges();
+
+      const vm = alvo.componentInstance['itensInventario']()[0];
+      expect(vm.modsAtivas[0].nome).toBe('Letal');
+      expect(vm.modsAtivas[0].custoTexto).toBe('$1.500');
+    });
+
+    it('o bônus fixo é ineditável: sem stepper −/+ nem toggles "não conta" no chip (só na mod comum ao lado)', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Espada de Ossos',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        modulo: FragmentoModuloEnum.V,
+        categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+      });
+      alvo.componentInstance['confirmarCriarItem']();
+      alvo.fixture.componentRef.setInput('inventario', alvo.emitidos[0]);
+      alvo.fixture.detectChanges();
+
+      alvo.componentInstance['adicionarModificacao'](0, 'Letal');
+      alvo.fixture.componentRef.setInput('inventario', alvo.emitidos[1]);
+      alvo.fixture.detectChanges();
+
+      const vm = alvo.componentInstance['itensInventario']()[0];
+      expect(vm.modsAtivas.find((m) => m.nome.startsWith('Fragmento Construtor'))?.fixa).toBe(true);
+      expect(vm.modsAtivas.find((m) => m.nome === 'Letal')?.fixa).toBe(false);
+
+      const chips = Array.from(alvo.raiz.querySelectorAll('.ficha-inv__mod-tag'));
+      const chipFixo = chips.find((chip) => chip.textContent?.includes('Fragmento Construtor'));
+      const chipComum = chips.find((chip) => chip.textContent?.includes('Letal'));
+      expect(chipFixo?.querySelector('.ficha-inv__mod-tag-botoes')).toBeNull();
+      expect(chipFixo?.querySelector('.ficha-inv__mod-flags')).toBeNull();
+      expect(chipComum?.querySelector('.ficha-inv__mod-tag-botoes')).toBeTruthy();
+      expect(chipComum?.querySelector('.ficha-inv__mod-flags')).toBeTruthy();
+    });
+  });
+
+  describe('seletor "Base" do Fragmento Construtor (m3-69)', () => {
+    it('Arma: escolher uma Base do catálogo trava dano/informação e o dano final combina base + bônus do módulo', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Espada de Ossos',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        modulo: FragmentoModuloEnum.I,
+        categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+      });
+      expect(alvo.componentInstance['mostraBaseConstrutor']()).toBe(true);
+      expect(alvo.componentInstance['opcoesBaseConstrutor']().map((i: { nome: string }) => i.nome)).toContain(
+        'Mediana',
+      );
+
+      alvo.componentInstance['escolherBaseConstrutor']('Mediana');
+      const controles = alvo.componentInstance['itemCustomForm'].controls;
+      expect(controles.dano.value).toBe('3D4+FOR [Físico]');
+      expect(controles.dano.disabled).toBe(true);
+      expect(controles.informacao.disabled).toBe(true);
+      expect(controles.peso.value).toBe(2); // peso da Mediana no catálogo
+
+      alvo.componentInstance['confirmarCriarItem']();
+      const item = alvo.emitidos[0].itens[0];
+      expect(item.dano).toBe('3D4+FOR [Físico]');
+      expect(item.peso).toBe(2);
+
+      alvo.fixture.componentRef.setInput('inventario', alvo.emitidos[0]);
+      alvo.fixture.detectChanges();
+      const stat = alvo.componentInstance['itensInventario']()[0].stat;
+      // Base real (Mediana, 3D4) + bônus fixo do Módulo I (+2 dados na base, +4D12 à parte, doc:
+      // "+4D12 de dano, +2 dados e +10 de teste") — 3+2=5D4 na base, mais o grupo extra 4D12; nenhum
+      // dos dois grupos de dado desaparece.
+      expect(stat).toContain('5D4');
+      expect(stat).toContain('4D12');
+    });
+
+    it('Proteção: mesmo padrão — trava resistência e o motor funde a resistência da Base com o bônus do módulo', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Colete de Vísceras',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        modulo: FragmentoModuloEnum.I,
+        categoriaEmprestada: ItemCategoriaEnum.PROTECOES,
+      });
+      alvo.componentInstance['escolherBaseConstrutor']('Colete Tático');
+      const controles = alvo.componentInstance['itemCustomForm'].controls;
+      expect(controles.resistencia.value).toBe('4 [Físico]');
+      expect(controles.resistencia.disabled).toBe(true);
+      expect(controles.peso.value).toBe(1); // peso do Colete Tático no catálogo
+
+      alvo.componentInstance['confirmarCriarItem']();
+      const item = alvo.emitidos[0].itens[0];
+      expect(item.resistencia).toBe('4 [Físico]');
+      expect(item.peso).toBe(1);
+
+      alvo.fixture.componentRef.setInput('inventario', alvo.emitidos[0]);
+      alvo.fixture.detectChanges();
+      // Base real (4 [Físico]) + bônus fixo de Resistência do Módulo I (10) = 14 [Físico].
+      expect(alvo.componentInstance['itensInventario']()[0].stat).toContain('14 [Físico]');
+    });
+
+    it('"Outra" (padrão) mantém dano/resistência como texto livre, exatamente como antes desta task', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Machado Improvisado',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        modulo: FragmentoModuloEnum.V,
+        categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+      });
+      const controles = alvo.componentInstance['itemCustomForm'].controls;
+      expect(controles.baseConstrutor.value).toBe('');
+      expect(controles.dano.disabled).toBe(false);
+
+      controles.dano.setValue('2D6+FOR [Físico]');
+      alvo.componentInstance['confirmarCriarItem']();
+      expect(alvo.emitidos[0].itens[0].dano).toBe('2D6+FOR [Físico]');
+    });
+
+    it('trocar de Base recalcula os campos travados', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Espada de Ossos',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        modulo: FragmentoModuloEnum.I,
+        categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+      });
+      const controles = alvo.componentInstance['itemCustomForm'].controls;
+
+      alvo.componentInstance['escolherBaseConstrutor']('Mediana');
+      expect(controles.dano.value).toBe('3D4+FOR [Físico]');
+      expect(controles.peso.value).toBe(2);
+
+      alvo.componentInstance['escolherBaseConstrutor']('Grande');
+      expect(controles.dano.value).toBe('3D6+FOR [Físico]');
+      expect(controles.peso.value).toBe(3);
+
+      // Voltar pra "Outra" destrava os campos e limpa o texto herdado da Base anterior.
+      alvo.componentInstance['escolherBaseConstrutor']('');
+      expect(controles.dano.value).toBe('');
+      expect(controles.dano.disabled).toBe(false);
+    });
+
+    it('categoria sem base reconhecida pelo doc (Munições/Explosivos) não mostra o seletor', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.componentInstance['itemCustomForm'].patchValue({
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        categoriaEmprestada: ItemCategoriaEnum.MUNICOES,
+      });
+      expect(alvo.componentInstance['mostraBaseConstrutor']()).toBe(false);
+      expect(alvo.componentInstance['opcoesBaseConstrutor']()).toEqual([]);
+    });
+  });
+
+  describe('"Recarregar" Munição de Fragmento Construtor (m3-65)', () => {
+    function municaoConstrutor(modulo: FragmentoModuloEnum): CarrinhoItemDto {
+      return {
+        nome: 'Bala de Ossos',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        custo: 0,
+        peso: 0,
+        quantidade: 1,
+        guardada: false,
+        modulo,
+        categoriaEmprestada: ItemCategoriaEnum.MUNICOES,
+        modificacoes: [],
+      };
+    }
+
+    it('mostra o botão "Recarregar" só na Munição Construtor', () => {
+      const construtorArma: CarrinhoItemDto = {
+        nome: 'Espada de Ossos',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        custo: 0,
+        peso: 1,
+        quantidade: 1,
+        guardada: false,
+        modulo: FragmentoModuloEnum.V,
+        categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+        modificacoes: [],
+      };
+      const alvo = montar({ itens: [itemLeve, construtorArma, municaoConstrutor(FragmentoModuloEnum.V)], amplificadores: [] });
+      const botoes = Array.from(alvo.raiz.querySelectorAll('button')).filter((botao) => botao.textContent?.trim() === 'Recarregar');
+      expect(botoes).toHaveLength(1);
+    });
+
+    it('clicar "Recarregar" (módulo V) debita 3 de Energia atual e marca "recarregada" — exemplo do documento', () => {
+      const alvo = montar({ itens: [municaoConstrutor(FragmentoModuloEnum.V)], amplificadores: [] });
+      const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
+      alvo.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+
+      const botao = Array.from(alvo.raiz.querySelectorAll('button')).find((b) => b.textContent?.trim() === 'Recarregar');
+      botao?.dispatchEvent(new Event('click'));
+
+      expect(custos).toEqual([{ energiaAtual: 47, energiaMaxima: 50 }]);
+      expect(alvo.emitidos[0].itens[0].recarregada).toBe(true);
+    });
+
+    it('recarregar de novo sem antes encerrar a cena não debita Energia outra vez', () => {
+      const alvo = montar({ itens: [{ ...municaoConstrutor(FragmentoModuloEnum.V), recarregada: true }], amplificadores: [] });
+      const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
+      alvo.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+
+      alvo.componentInstance['recarregarMunicaoConstrutor'](0);
+
+      expect(custos).toEqual([]);
+      expect(alvo.emitidos).toHaveLength(0);
+    });
+
+    it('encerrar a cena (reset manual) volta "recarregada" a false sem alterar Energia', () => {
+      const alvo = montar({ itens: [{ ...municaoConstrutor(FragmentoModuloEnum.IV), recarregada: true }], amplificadores: [] });
+      const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
+      alvo.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+
+      alvo.componentInstance['resetarMunicaoConstrutor'](0);
+
+      expect(custos).toEqual([]);
+      expect(alvo.emitidos[0].itens[0].recarregada).toBe(false);
+    });
+  });
+
+  describe('cardápio, restrição de alvo e função única do Potencializador (m3-63)', () => {
+    function fragmento(modulo: FragmentoModuloEnum): CarrinhoItemDto {
+      return {
+        nome: 'Fragmento achado',
+        categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+        custo: 0,
+        peso: 0,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        modulo,
+      };
+    }
+
+    it('o alvo com dado (dano) ganha a 5ª opção do cardápio, na posição logo após a 1ª', () => {
+      const alvo = montar({
+        itens: [itemLeve, fragmento(FragmentoModuloEnum.V)],
+        amplificadores: [],
+      });
+      alvo.componentInstance['abrirAplicarFragmento'](1);
+
+      alvo.componentInstance['alvoFragmento'].set(0);
+      expect(alvo.componentInstance['opcoesBonusFragmento']()).toHaveLength(6);
+      expect(alvo.componentInstance['opcoesBonusFragmento']()[1].efeito.tipo).toBe(
+        ModificacaoEfeitoTipoEnum.DANO_FIXO,
+      );
+    });
+
+    it('o alvo sem dado (ex.: proteção) fica com o cardápio de 5 opções (sem a 5ª)', () => {
+      const protecao: CarrinhoItemDto = {
+        nome: 'Colete',
+        categoria: ItemCategoriaEnum.PROTECOES,
+        custo: 0,
+        peso: 1,
+        quantidade: 1,
+        guardada: false,
+        equipado: true,
+        resistencia: '10 [Físico]',
+        modificacoes: [],
+      };
+      const alvo = montar({
+        itens: [protecao, fragmento(FragmentoModuloEnum.V)],
+        amplificadores: [],
+      });
+      alvo.componentInstance['abrirAplicarFragmento'](1);
+
+      alvo.componentInstance['alvoFragmento'].set(0);
+      expect(alvo.componentInstance['opcoesBonusFragmento']()).toHaveLength(5);
+    });
+
+    it('trocar de alvo zera o bônus escolhido (o índice da opção pode não corresponder mais)', () => {
+      const alvo = montar({
+        itens: [itemLeve, fragmento(FragmentoModuloEnum.V)],
+        amplificadores: [],
+      });
+      alvo.componentInstance['abrirAplicarFragmento'](1);
+      alvo.componentInstance['opcaoBonusFragmento'].set(2);
+
+      alvo.componentInstance['escolherAlvoFragmento']({ target: { value: '0' } } as unknown as Event);
+
+      expect(alvo.componentInstance['opcaoBonusFragmento']()).toBeNull();
+    });
+
+    it('um fragmento Potencializador nunca aparece como alvo disponível de outro fragmento', () => {
+      const alvo = montar({
+        itens: [fragmento(FragmentoModuloEnum.V), fragmento(FragmentoModuloEnum.IV)],
+        amplificadores: [],
+      });
+      alvo.componentInstance['abrirAplicarFragmento'](0);
+
+      const alvos = alvo.componentInstance['alvosFragmentoDisponiveis']();
+      expect(alvos.map((a) => a.indice)).toEqual([]);
+    });
+
+    it('um fragmento Construtor nunca aparece como alvo disponível', () => {
+      const construtor: CarrinhoItemDto = {
+        nome: 'Faca de Ossos',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        custo: 0,
+        peso: 1,
+        quantidade: 1,
+        guardada: false,
+        modulo: FragmentoModuloEnum.III,
+        categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+        modificacoes: [],
+      };
+      const alvo = montar({
+        itens: [itemLeve, construtor, fragmento(FragmentoModuloEnum.V)],
+        amplificadores: [],
+      });
+      alvo.componentInstance['abrirAplicarFragmento'](2);
+
+      const alvos = alvo.componentInstance['alvosFragmentoDisponiveis']();
+      expect(alvos.map((a) => a.indice)).toEqual([0]);
+    });
+
+    it('o fragmento sendo aplicado nunca aparece como o próprio alvo', () => {
+      const alvo = montar({
+        itens: [fragmento(FragmentoModuloEnum.V)],
+        amplificadores: [],
+      });
+      alvo.componentInstance['abrirAplicarFragmento'](0);
+
+      expect(alvo.componentInstance['alvosFragmentoDisponiveis']()).toEqual([]);
+    });
+
+    it('bloqueia aplicar um 2º fragmento na mesma função (efeito) do mesmo item: não emite e sinaliza o conflito (m3-68)', () => {
+      const itemComFragmentoDeEfeito: CarrinhoItemDto = {
+        ...itemLeve,
+        modificacoes: [
+          {
+            nome: 'Fragmento Potencializador — Módulo V',
+            empilhamentos: 1,
+            efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.EFEITO, valor: 2, variante: 'DADO' }],
+            ignoraLimiteTotal: true,
+            ignoraLimiteProprio: true,
+            origemFragmento: { tipo: FragmentoTipoEnum.POTENCIALIZADOR, modulo: FragmentoModuloEnum.V },
+          },
+        ],
+      };
+      const alvo = montar({
+        itens: [itemComFragmentoDeEfeito, fragmento(FragmentoModuloEnum.IV)],
+        amplificadores: [],
+      });
+      alvo.componentInstance['abrirAplicarFragmento'](1);
+      alvo.componentInstance['alvoFragmento'].set(0);
+      // Opção 0 é sempre "+N dados de efeito" — mesma função "efeito" do fragmento já aplicado.
+      alvo.componentInstance['opcaoBonusFragmento'].set(0);
+
+      expect(alvo.componentInstance['conflitoFuncaoFragmento']()).toBe(true);
+
+      alvo.componentInstance['confirmarAplicarFragmento'](1);
+
+      expect(alvo.emitidos).toHaveLength(0);
+    });
+
+    it('não bloqueia uma função diferente (efeito ocupado, teste livre) no mesmo item', () => {
+      const itemComFragmentoDeEfeito: CarrinhoItemDto = {
+        ...itemLeve,
+        modificacoes: [
+          {
+            nome: 'Fragmento Potencializador — Módulo V',
+            empilhamentos: 1,
+            efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.EFEITO, valor: 2, variante: 'DADO' }],
+            ignoraLimiteTotal: true,
+            ignoraLimiteProprio: true,
+            origemFragmento: { tipo: FragmentoTipoEnum.POTENCIALIZADOR, modulo: FragmentoModuloEnum.V },
+          },
+        ],
+      };
+      const alvo = montar({
+        itens: [itemComFragmentoDeEfeito, fragmento(FragmentoModuloEnum.IV)],
+        amplificadores: [],
+      });
+      alvo.componentInstance['abrirAplicarFragmento'](1);
+      alvo.componentInstance['alvoFragmento'].set(0);
+      // Índice 2 (com a 5ª opção presente, "Leve" tem dado): "+N dado(s) no teste" — função "teste".
+      const opcoes = alvo.componentInstance['opcoesBonusFragmento']();
+      const indiceTeste = opcoes.findIndex(
+        (opcao: { efeito: { tipo: ModificacaoEfeitoTipoEnum } }) =>
+          opcao.efeito.tipo === ModificacaoEfeitoTipoEnum.BONUS_TESTE,
+      );
+      alvo.componentInstance['opcaoBonusFragmento'].set(indiceTeste);
+
+      expect(alvo.componentInstance['conflitoFuncaoFragmento']()).toBe(false);
+
+      alvo.componentInstance['confirmarAplicarFragmento'](1);
+
+      expect(alvo.emitidos).toHaveLength(1);
+    });
+
+    it('uma modificação comum (sem origemFragmento) com o mesmo tipo de efeito nunca bloqueia — a regra é só entre fragmentos', () => {
+      const itemComModComum: CarrinhoItemDto = {
+        ...itemLeve,
+        modificacoes: [
+          {
+            nome: 'Reforçada',
+            empilhamentos: 1,
+            efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.EFEITO, valor: 1, variante: 'DADO' }],
+          },
+        ],
+      };
+      const alvo = montar({
+        itens: [itemComModComum, fragmento(FragmentoModuloEnum.IV)],
+        amplificadores: [],
+      });
+      alvo.componentInstance['abrirAplicarFragmento'](1);
+      alvo.componentInstance['alvoFragmento'].set(0);
+      alvo.componentInstance['opcaoBonusFragmento'].set(0);
+
+      expect(alvo.componentInstance['conflitoFuncaoFragmento']()).toBe(false);
+    });
+  });
+
   describe('consumir fragmento — Preço de Sanidade (m3-42)', () => {
     function fragmento(modulo: FragmentoModuloEnum): CarrinhoItemDto {
       return {
@@ -839,6 +1387,7 @@ describe('FichaInventario', () => {
       alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
 
       alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['opcaoConsumoFragmento'].set(1); // "+3 em Defesa"
       alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
 
       // Módulo III: aquisição custava 12 (restituídos); preço físico extra = 12 × 3 = 36.
@@ -847,37 +1396,55 @@ describe('FichaInventario', () => {
       expect(alvo.emitidos[0].itens).toHaveLength(0);
     });
 
-    it('consumir sem declarar que evitou: emite a sequela "Rejeição Biológica" ×multiplicador do módulo', () => {
+    it('consumir sem declarar que evitou: emite a sequela "Rejeição Biológica" ×multiplicador do módulo, com a descrição do fragmento e do bônus', () => {
       const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.III)], amplificadores: [] });
-      const sequelas: (readonly { nome: string }[])[] = [];
+      const sequelas: (readonly { nome: string; descricao?: string }[])[] = [];
       alvo.fixture.componentInstance.sequelasFragmentoConsumido.subscribe((s) => sequelas.push(s));
 
       alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['opcaoConsumoFragmento'].set(1); // "+3 em Defesa"
       alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
 
       // Módulo III: multiplicador 3 (doc: "3× mais forte").
+      const descricao = 'Fragmento Potencializador Módulo III consumido — +3 em Defesa';
       expect(sequelas).toEqual([
         [
-          { nome: 'Rejeição Biológica' },
-          { nome: 'Rejeição Biológica' },
-          { nome: 'Rejeição Biológica' },
+          { nome: 'Rejeição Biológica', descricao },
+          { nome: 'Rejeição Biológica', descricao },
+          { nome: 'Rejeição Biológica', descricao },
         ],
       ]);
     });
 
-    it('declarando que evitou com o teste de Vontade: não emite sequela nenhuma, mas ainda debita a Energia', () => {
+    it('declarando que evitou com o teste de Vontade: não emite sequela nenhuma, mas ainda debita a Energia e ainda registra o consumo (m3-64)', () => {
       const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.III)], amplificadores: [] });
       const sequelas: (readonly unknown[])[] = [];
       alvo.fixture.componentInstance.sequelasFragmentoConsumido.subscribe((s) => sequelas.push(s));
       const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
       alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+      const registros: FichaFragmentoConsumidoDto[] = [];
+      alvo.fixture.componentInstance.fragmentoConsumido.subscribe((r) => registros.push(r));
 
       alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['opcaoConsumoFragmento'].set(1); // "+3 em Defesa"
       alvo.fixture.componentInstance['alternarEvitouSequelaConsumo']();
       alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
 
       expect(sequelas).toEqual([]);
       expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 26 }]);
+      // O rastro do consumo (m3-64) é incondicional — evitar a sequela não apaga o registro. Carrega
+      // também o suficiente para reverter (m3-64, correção): opção, atributo, delta de Energia
+      // Máxima (26 − 50 = −24, mesma conta do teste de `ajusteEnergiaFragmento` acima) e o item.
+      expect(registros).toEqual([
+        {
+          modulo: FragmentoModuloEnum.III,
+          bonusEscolhido: '+3 em Defesa',
+          opcao: { rotulo: '+3 em Defesa', tipo: 'DEFESA', valor: 3 },
+          atributoEscolhido: null,
+          deltaEnergiaMaxima: -24,
+          item: fragmento(FragmentoModuloEnum.III),
+        },
+      ]);
     });
 
     it('cancelar fecha o painel sem alterar o inventário nem emitir nada', () => {
@@ -887,6 +1454,141 @@ describe('FichaInventario', () => {
 
       expect(alvo.fixture.componentInstance['consumindoFragmentoIndice']()).toBeNull();
       expect(alvo.emitidos).toHaveLength(0);
+    });
+  });
+
+  describe('consumir fragmento — cardápio "Consumido" e bônus permanente do agente (m3-64)', () => {
+    function fragmento(modulo: FragmentoModuloEnum): CarrinhoItemDto {
+      return {
+        nome: 'Fragmento achado',
+        categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+        custo: 0,
+        peso: 0,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        modulo,
+      };
+    }
+
+    it('abrir o painel oferece as 3 opções do cardápio "Consumido" do módulo do fragmento', () => {
+      const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.III)], amplificadores: [] });
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+
+      const opcoes = alvo.fixture.componentInstance['opcoesConsumoFragmento']();
+      expect(opcoes.map((opcao: { tipo: string }) => opcao.tipo)).toEqual(['TESTE', 'DEFESA', 'DANO_CORPO']);
+    });
+
+    it('sem escolher um bônus: confirmar não faz nada (nem remove o item, nem emite)', () => {
+      const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.III)], amplificadores: [] });
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
+
+      expect(alvo.emitidos).toHaveLength(0);
+    });
+
+    it('bônus de teste escolhido sem escolher o atributo: confirmar não faz nada', () => {
+      const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.III)], amplificadores: [] });
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['opcaoConsumoFragmento'].set(0); // "TESTE"
+      alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
+
+      expect(alvo.emitidos).toHaveLength(0);
+    });
+
+    it('escolher um bônus de Defesa e confirmar emite bonusConsumoFragmento com a opção, sem atributo', () => {
+      const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.III)], amplificadores: [] });
+      const bonus: unknown[] = [];
+      alvo.fixture.componentInstance.bonusConsumoFragmento.subscribe((b) => bonus.push(b));
+
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['opcaoConsumoFragmento'].set(1); // "+3 em Defesa"
+      alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
+
+      expect(bonus).toEqual([
+        { opcao: { rotulo: '+3 em Defesa', tipo: 'DEFESA', valor: 3 }, atributoEscolhido: null },
+      ]);
+    });
+
+    it('escolher o bônus de teste e um atributo emite bonusConsumoFragmento com o atributo escolhido', () => {
+      const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.III)], amplificadores: [] });
+      const bonus: { opcao: { tipo: string }; atributoEscolhido: string | null }[] = [];
+      alvo.fixture.componentInstance.bonusConsumoFragmento.subscribe((b) => bonus.push(b));
+
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['opcaoConsumoFragmento'].set(0); // "TESTE"
+      alvo.fixture.componentInstance['atributoConsumoFragmento'].set('vontade');
+      alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
+
+      expect(bonus).toEqual([{ opcao: expect.objectContaining({ tipo: 'TESTE' }), atributoEscolhido: 'vontade' }]);
+    });
+
+    it('emite fragmentoConsumido incondicionalmente, com o módulo e o texto do bônus escolhido (m3-64)', () => {
+      const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.I)], amplificadores: [] });
+      const registros: FichaFragmentoConsumidoDto[] = [];
+      alvo.fixture.componentInstance.fragmentoConsumido.subscribe((r) => registros.push(r));
+
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['opcaoConsumoFragmento'].set(0); // "TESTE"
+      alvo.fixture.componentInstance['atributoConsumoFragmento'].set('intelecto');
+      alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
+
+      // Módulo I: aquisição custava 20 (restituídos); preço físico extra = 20 × 3 = 60 → delta −40.
+      expect(registros).toEqual([
+        {
+          modulo: FragmentoModuloEnum.I,
+          bonusEscolhido: '+5 em todos os testes de Intelecto e +1 ponto no atributo',
+          opcao: {
+            rotulo: '+5 em todos os testes do atributo à escolha e +1 ponto no atributo',
+            tipo: 'TESTE',
+            valor: 5,
+            concedePontoAtributo: true,
+          },
+          atributoEscolhido: 'intelecto',
+          deltaEnergiaMaxima: -40,
+          item: fragmento(FragmentoModuloEnum.I),
+        },
+      ]);
+    });
+
+    it('módulo I: bônus de teste carrega concedePontoAtributo, e a descrição da sequela menciona o ponto de atributo', () => {
+      const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.I)], amplificadores: [] });
+      const sequelas: (readonly { descricao?: string }[])[] = [];
+      alvo.fixture.componentInstance.sequelasFragmentoConsumido.subscribe((s) => sequelas.push(s));
+
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['opcaoConsumoFragmento'].set(0); // "TESTE"
+      alvo.fixture.componentInstance['atributoConsumoFragmento'].set('intelecto');
+      alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
+
+      expect(sequelas[0][0].descricao).toBe(
+        'Fragmento Potencializador Módulo I consumido — +5 em todos os testes de Intelecto e +1 ponto no atributo',
+      );
+    });
+
+    it('trocar a opção de bônus (via <select>) zera o atributo escolhido anteriormente', () => {
+      const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.III)], amplificadores: [] });
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['escolherOpcaoConsumoFragmento']({ target: { value: '0' } } as unknown as Event);
+      alvo.fixture.componentInstance['atributoConsumoFragmento'].set('vontade');
+
+      alvo.fixture.componentInstance['escolherOpcaoConsumoFragmento']({ target: { value: '1' } } as unknown as Event);
+
+      expect(alvo.fixture.componentInstance['atributoConsumoFragmento']()).toBeNull();
+    });
+
+    it('reabrir o painel (abrirConsumirFragmento) zera a opção e o atributo escolhidos', () => {
+      const alvo = montar(
+        { itens: [fragmento(FragmentoModuloEnum.III), fragmento(FragmentoModuloEnum.V)], amplificadores: [] },
+      );
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.componentInstance['opcaoConsumoFragmento'].set(0);
+      alvo.fixture.componentInstance['atributoConsumoFragmento'].set('vontade');
+
+      alvo.fixture.componentInstance['abrirConsumirFragmento'](1);
+
+      expect(alvo.fixture.componentInstance['opcaoConsumoFragmento']()).toBeNull();
+      expect(alvo.fixture.componentInstance['atributoConsumoFragmento']()).toBeNull();
     });
   });
 
@@ -1033,6 +1735,61 @@ describe('FichaInventario', () => {
     });
   });
 
+  // `atributos`: Vigor 4, Destreza 2 → limite mínimo (4+2)×2 = 12 (doc — "⬦ Limite mínimo de
+  // Energia"). `energiaMaxima` default do `montar` é 50.
+  describe('aviso de Limite mínimo de Energia na aquisição de Fragmento (m3-67)', () => {
+    it('sem módulo escolhido ainda: sem aviso', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.fixture.componentInstance['alternarCriarItem']();
+      alvo.fixture.componentInstance['itemCustomForm'].controls.categoria.setValue(
+        ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+      );
+      alvo.fixture.detectChanges();
+
+      expect(alvo.componentInstance['avisoLimiteEnergiaAquisicao']()).toBeNull();
+      expect(alvo.raiz.textContent).not.toContain('Anomalia Biológica');
+    });
+
+    it('módulo cujo custo não leva abaixo do limite: sem aviso', () => {
+      // Potencializador módulo V custa 3 de Energia Máxima: 50 − 3 = 47, bem acima de 12.
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.fixture.componentInstance['alternarCriarItem']();
+      alvo.fixture.componentInstance['itemCustomForm'].patchValue({
+        categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+        modulo: FragmentoModuloEnum.V,
+      });
+      alvo.fixture.detectChanges();
+
+      expect(alvo.componentInstance['avisoLimiteEnergiaAquisicao']()).toBeNull();
+      expect(alvo.raiz.textContent).not.toContain('Anomalia Biológica');
+    });
+
+    it('Fragmento Construtor módulo I (custa o dobro, 40): projeta 10 — abaixo do limite (12), mostra o aviso sem travar', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.fixture.componentInstance['alternarCriarItem']();
+      alvo.fixture.componentInstance['itemCustomForm'].patchValue({
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        modulo: FragmentoModuloEnum.I,
+      });
+      alvo.fixture.detectChanges();
+
+      expect(alvo.componentInstance['limiteMinimoEnergia']()).toBe(12);
+      expect(alvo.componentInstance['avisoLimiteEnergiaAquisicao']()).toEqual({ projecao: 10 });
+      const aviso = Array.from(alvo.raiz.querySelectorAll('.ficha-inv__aviso')).find((p) =>
+        p.textContent?.includes('Anomalia Biológica'),
+      );
+      expect(aviso?.textContent).toContain('10');
+      expect(aviso?.textContent).toContain('12');
+
+      // Não trava: confirmar o item ainda funciona normalmente.
+      alvo.fixture.componentInstance['itemCustomForm'].controls.nome.setValue('Fragmento achado');
+      const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
+      alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+      alvo.fixture.componentInstance['confirmarCriarItem']();
+      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 10 }]);
+    });
+  });
+
   describe('catálogo — atalho "Fragmentos" (grade de módulos, botões Construtor/Potencializador direto)', () => {
     it('a aba "Fragmentos" aparece nas categorias do catálogo, ao lado das demais', () => {
       const { raiz, fixture, componentInstance } = montar({ itens: [], amplificadores: [] });
@@ -1104,6 +1861,108 @@ describe('FichaInventario', () => {
 
       expect(componentInstance['catalogoFragmentosAtivo']()).toBe(false);
       expect(raiz.querySelector('.ficha-inv__cartao--fragmento')).toBeNull();
+    });
+  });
+
+  describe('custo já reduzido pela Afinidade (m3-66)', () => {
+    function fragmento(categoria: ItemCategoriaEnum, modulo: FragmentoModuloEnum): CarrinhoItemDto {
+      return {
+        nome: 'Fragmento achado',
+        categoria,
+        custo: 0,
+        peso: 0,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        modulo,
+      };
+    }
+
+    it('catálogo de Fragmentos: Afinidade zero mostra só o custo (sem riscado — bruto e reduzido coincidem)', () => {
+      const { raiz, fixture, componentInstance } = montar({ itens: [], amplificadores: [] });
+      componentInstance['alternarCatalogo']();
+      componentInstance['selecionarCategoriaFragmentos']();
+      fixture.detectChanges();
+
+      const cartoes = Array.from(raiz.querySelectorAll('.ficha-inv__cartao--fragmento'));
+      expect(cartoes.length).toBe(5);
+      expect(cartoes.every((c) => c.querySelector('.ficha-inv__custo--bruto') === null)).toBe(true);
+      const cartaoV = cartoes.find((c) =>
+        c.querySelector('.ficha-inv__cartao-nome')?.textContent?.trim().startsWith('Módulo V'),
+      )!;
+      expect(cartaoV.textContent).toContain('3 Energia');
+    });
+
+    it('catálogo de Fragmentos: Afinidade alta (30, acima de 6× módulo I) mostra o reduzido em destaque e o bruto riscado', () => {
+      const itens: CarrinhoItemDto[] = [
+        { ...fragmento(ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR, FragmentoModuloEnum.I), quantidade: 6 },
+      ];
+      const { raiz, fixture, componentInstance } = montar({ itens, amplificadores: [] });
+      componentInstance['alternarCatalogo']();
+      componentInstance['selecionarCategoriaFragmentos']();
+      fixture.detectChanges();
+
+      const cartaoV = Array.from(raiz.querySelectorAll('.ficha-inv__cartao--fragmento')).find((c) =>
+        c.querySelector('.ficha-inv__cartao-nome')?.textContent?.trim().startsWith('Módulo V'),
+      )!;
+      const [linhaPotencializador, linhaConstrutor] = Array.from(
+        cartaoV.querySelectorAll('.ficha-inv__cartao-fragmento-custo'),
+      );
+      // Módulo V: aquisição bruta 3 (Potencializador) / 6 (Construtor, dobro). Afinidade já
+      // considerando o próprio módulo V (30 dos 6× módulo I + 1 do V = 31) reduz em 10 — piso 1.
+      expect(linhaPotencializador.querySelector('.ficha-inv__custo--bruto')?.textContent?.trim()).toBe('3');
+      expect(linhaPotencializador.textContent).toContain('1 Energia');
+      expect(linhaConstrutor.querySelector('.ficha-inv__custo--bruto')?.textContent?.trim()).toBe('6');
+      expect(linhaConstrutor.textContent).toContain('1 Energia');
+    });
+
+    it('painel "Aplicar em...": mostra o custo de Energia (e a Energia Máxima líquida) antes de confirmar', () => {
+      const alvo = montar({
+        itens: [itemLeve, fragmento(ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR, FragmentoModuloEnum.IV)],
+        amplificadores: [],
+      });
+      alvo.componentInstance['abrirAplicarFragmento'](1);
+      alvo.fixture.detectChanges();
+
+      // Módulo IV: acoplar custa 7 de Energia; a Energia Máxima fecha em líquido 0 (restitui a
+      // aquisição e debita o mesmo valor no acoplamento — mesma conta do teste de confirmação).
+      expect(alvo.componentInstance['custoPreviaAplicarFragmento']()).toEqual({ energia: 7, energiaMaxima: 0 });
+      expect(alvo.raiz.textContent).toContain('Custo já com a Afinidade atual: −7 de Energia agora');
+      expect(alvo.raiz.textContent).toContain('Energia Máxima líquida: 0');
+    });
+
+    it('painel "Aplicar em...": some com o painel fechado (custoPreviaAplicarFragmento null)', () => {
+      const alvo = montar({
+        itens: [itemLeve, fragmento(ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR, FragmentoModuloEnum.IV)],
+        amplificadores: [],
+      });
+      expect(alvo.componentInstance['custoPreviaAplicarFragmento']()).toBeNull();
+    });
+
+    it('painel "Consumir": mostra a restituição da aquisição e o líquido de Energia Máxima antes de confirmar (módulo III)', () => {
+      const alvo = montar({
+        itens: [fragmento(ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR, FragmentoModuloEnum.III)],
+        amplificadores: [],
+      });
+      alvo.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.detectChanges();
+
+      // Módulo III: aquisição restituída = 12 (sem redução — Afinidade só 3); Preço de Sanidade
+      // físico = 36 (12 × 3); líquido = 12 − 36 = −24 (mesma conta do teste de confirmação, m3-42).
+      expect(alvo.componentInstance['custoPreviaConsumirFragmento']()).toEqual({
+        restituicaoAquisicao: 12,
+        deltaEnergiaMaxima: -24,
+      });
+      expect(alvo.raiz.textContent).toContain('+12 de Energia Máxima restituída da aquisição');
+      expect(alvo.raiz.textContent).toContain('líquido -24 de Energia Máxima');
+    });
+
+    it('painel "Consumir": some com o painel fechado (custoPreviaConsumirFragmento null)', () => {
+      const alvo = montar({
+        itens: [fragmento(ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR, FragmentoModuloEnum.III)],
+        amplificadores: [],
+      });
+      expect(alvo.componentInstance['custoPreviaConsumirFragmento']()).toBeNull();
     });
   });
 

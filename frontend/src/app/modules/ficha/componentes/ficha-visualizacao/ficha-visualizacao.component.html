@@ -1395,6 +1395,8 @@
             (ajusteEnergiaFragmento)="aoAjustarEnergiaFragmento($event)"
             (ajusteInventarioMaximo)="ajustarInventarioMaximo($event)"
             (sequelasFragmentoConsumido)="aoConsumirFragmentoSanidade($event)"
+            (bonusConsumoFragmento)="aoConsumirFragmentoBonus($event)"
+            (fragmentoConsumido)="aoRegistrarFragmentoConsumido($event)"
             (rolagemFeita)="registrarRolagem($event)"
           />
         </div>
@@ -1506,6 +1508,66 @@
 
           <div class="ficha-cartao__divisor"></div>
 
+          <!-- Fragmentos Consumidos (m3-64): rastro incondicional — existe mesmo quando o jogador
+               evita a sequela "Rejeição Biológica" com o teste de Vontade, por isso fica na própria
+               ficha (Extras), não só na descrição da sequela. Removível (m3-64, correção): desfaz o
+               bônus, a Energia Máxima e devolve o item ao inventário — mesmo padrão de confirmação
+               inline de combos/sequelas/traumas/lesões. -->
+          <div class="ficha-extras__secao">
+            <p class="ficha-cartao__subrotulo">Fragmentos Consumidos</p>
+            @if (fragmentosConsumidos().length > 0) {
+              <ul class="ficha-extras__lista">
+                @for (registro of fragmentosConsumidos(); track $index) {
+                  <li class="ficha-extras__linha">
+                    <span class="ficha-extras__rotulo">Módulo {{ registro.modulo }}</span>
+                    <span class="ficha-extras__valor">{{ registro.bonusEscolhido }}</span>
+                    @if (ajustavel()) {
+                      @if (removendoFragmentoConsumidoIndice() === $index) {
+                        <span class="ficha-extras__acoes">
+                          <span class="ficha-extras__remover-texto">Remover?</span>
+                          <button
+                            type="button"
+                            class="ficha-extras__mini-btn ficha-extras__mini-btn--perigo"
+                            [appTooltip]="'Confirmar — desfaz o bônus, a Energia Máxima e devolve o item'"
+                            aria-label="Confirmar remoção do fragmento consumido"
+                            (click)="confirmarRemocaoFragmentoConsumido($index)"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            type="button"
+                            class="ficha-extras__mini-btn"
+                            [appTooltip]="'Cancelar'"
+                            aria-label="Cancelar remoção do fragmento consumido"
+                            (click)="cancelarRemocaoFragmentoConsumido()"
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      } @else {
+                        <span class="ficha-extras__acoes">
+                          <button
+                            type="button"
+                            class="ficha-extras__mini-btn"
+                            [appTooltip]="'Remover — desfaz o bônus, a Energia Máxima e devolve o item ao inventário'"
+                            aria-label="Remover fragmento consumido"
+                            (click)="pedirRemocaoFragmentoConsumido($index)"
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      }
+                    }
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="ficha-visao__vazio">Nenhum fragmento consumido ainda.</p>
+            }
+          </div>
+
+          <div class="ficha-cartao__divisor"></div>
+
           <!-- Afinidade de Fragmentos (m3-42/m3-49): mecânica pronta na m3-42 — aqui só a exibição. -->
           <div class="ficha-extras__secao">
             <p class="ficha-cartao__subrotulo">Afinidade de Fragmentos</p>
@@ -1513,10 +1575,14 @@
               <span class="ficha-mini__rotulo">Afinidade</span>
               <span class="ficha-mini__valor ficha-mini__valor--accent">{{ afinidadeFragmentos() }}</span>
             </div>
-            @if (modulosFragmentosPortados().length > 0) {
+            @if (gruposFragmentosPortados().length > 0) {
               <div class="ficha-extras__chips">
-                @for (modulo of modulosFragmentosPortados(); track $index) {
-                  <span class="chip">Módulo {{ modulo }}</span>
+                @for (grupo of gruposFragmentosPortados(); track grupo.modulo) {
+                  <span class="chip"
+                    >{{ grupo.quantidade > 1 ? grupo.quantidade + '× ' : '' }}Módulo {{ grupo.modulo }} ({{
+                      grupo.afinidade
+                    }})</span
+                  >
                 }
               </div>
             } @else {
@@ -1525,6 +1591,66 @@
             @if (reducaoAfinidade() > 0) {
               <p class="ficha-extras__nota">
                 Afinidade acima de 10: −{{ reducaoAfinidade() }} de Energia no custo de fragmentos.
+              </p>
+            }
+          </div>
+
+          <div class="ficha-cartao__divisor"></div>
+
+          <!-- Limite mínimo de Energia / Anomalia Biológica (m3-67): estado 100% derivado da Energia
+               Máxima atual vs. (Vigor + Destreza) × 2 — sem trava, sem campo persistido. Efeitos são
+               texto informativo calculado, aplicação manual (mesmo padrão de sequelas/traumas). -->
+          <div class="ficha-extras__secao">
+            <p class="ficha-cartao__subrotulo">Anomalia Biológica</p>
+            <div class="ficha-mini">
+              <span class="ficha-mini__rotulo">Limite mínimo de Energia</span>
+              <span class="ficha-mini__valor">{{ limiteMinimoEnergia() }}</span>
+            </div>
+            @if (anomaliaBiologica()) {
+              <p class="ficha-extras__nota">
+                Energia Máxima ({{ energiaMaxima() }}) abaixo do limite mínimo — o agente está em
+                Anomalia Biológica.
+              </p>
+              <ul class="ficha-extras__lista">
+                <li class="ficha-extras__linha">
+                  <span class="ficha-extras__rotulo">Testes</span>
+                  <span class="ficha-extras__valor">{{ penalidadeTestesAnomalia }} em todos os testes</span>
+                </li>
+                <li class="ficha-extras__linha">
+                  <span class="ficha-extras__rotulo">Defesa</span>
+                  <span class="ficha-extras__valor">{{ penalidadeDefesaAnomalia }} em Defesa</span>
+                </li>
+                <li class="ficha-extras__linha">
+                  <span class="ficha-extras__rotulo">Vida atual</span>
+                  <span class="ficha-extras__valor">trava em {{ tetoVidaAnomalia() }} de {{ vidaMaxima() }}</span>
+                </li>
+              </ul>
+              @if (ajustavel()) {
+                @if (confirmandoTraumaLimiar()) {
+                  <p class="ficha-extras__nota">
+                    "{{ nomeTraumaLimiar }}": {{ descricaoTraumaLimiar }}
+                  </p>
+                  <div class="ficha-extras__acoes">
+                    <button
+                      type="button"
+                      class="ficha-cartao__acao ficha-cartao__acao--confirmar"
+                      (click)="confirmarAtalhoTraumaLimiar()"
+                    >
+                      Registrar trauma
+                    </button>
+                    <button type="button" class="ficha-cartao__acao" (click)="cancelarAtalhoTraumaLimiar()">
+                      Cancelar
+                    </button>
+                  </div>
+                } @else {
+                  <button type="button" class="ficha-cartao__acao" (click)="abrirAtalhoTraumaLimiar()">
+                    + Registrar trauma "Limiar da Humanidade"
+                  </button>
+                }
+              }
+            } @else {
+              <p class="ficha-visao__vazio">
+                Energia Máxima ({{ energiaMaxima() }}) dentro do limite — sem Anomalia Biológica.
               </p>
             }
           </div>

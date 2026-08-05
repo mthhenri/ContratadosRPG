@@ -14,9 +14,13 @@ import { Component, input } from '@angular/core';
  * (campanha e ficha); e `fragmento-construtor`/`fragmento-potencializador`, variantes do
  * diamante genérico `fragmento` com um selo no canto inferior direito (martelo/estrela) —
  * usadas só onde a categoria específica importa (abas do catálogo, select de item custom);
- * o `fragmento` genérico continua valendo pros demais usos (filtro, ações, badge "de Fragmento");
- * e `modificador` (±), rótulo do stepper de modificador de teste na edição de atributos — mesmo
- * papel que `dado` cumpre pro rótulo do stepper de ajuste de dados, ao lado.
+ * o `fragmento` genérico continua valendo pros demais usos (filtro, badge "de Fragmento"); as
+ * duas AÇÕES do fragmento Potencializador seguem o mesmo padrão "2 ícones em 1" de
+ * `fragmento-construtor`/`fragmento-potencializador` (diamante menor + selo no canto inferior
+ * direito), pra não repetir o diamante puro: `link` (Aplicar em... — selo de elo de corrente) e
+ * `chama` (Consumir — selo de chama, o fragmento é destruído); e `modificador` (±), rótulo do
+ * stepper de modificador de teste na edição de atributos — mesmo papel que `dado` cumpre pro
+ * rótulo do stepper de ajuste de dados, ao lado.
  */
 export type IconeNome =
   | 'agente'
@@ -65,6 +69,8 @@ export type IconeNome =
   | 'fragmento'
   | 'fragmento-construtor'
   | 'fragmento-potencializador'
+  | 'link'
+  | 'chama'
   | 'dado'
   | 'morrendo'
   | 'machucado'

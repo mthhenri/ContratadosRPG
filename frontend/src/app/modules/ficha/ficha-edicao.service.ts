@@ -24,6 +24,7 @@ import type {
   FichaAtributosDto,
   FichaComboDto,
   FichaDerivadosDto,
+  FichaFragmentoConsumidoDto,
   FichaHabilidadeDto,
   FichaIdentidadeDto,
   FichaInventarioDto,
@@ -313,6 +314,16 @@ export class FichaEdicaoService {
       return;
     }
     this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, combos } });
+    this.agendarPersistencia();
+  }
+
+  /** Histórico de Fragmentos Potencializador consumidos (m3-64) — aba Extras, acima da Afinidade. */
+  ajustarFragmentosConsumidos(fragmentosConsumidos: readonly FichaFragmentoConsumidoDto[]): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) {
+      return;
+    }
+    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, fragmentosConsumidos } });
     this.agendarPersistencia();
   }
 
