@@ -532,6 +532,13 @@
     &:focus {
       border-color: var(--accent-border);
     }
+    // Campo travado por uma Base do Fragmento Construtor escolhida no catálogo (m3-69) — mesmo
+    // racional visual de "preenchido pelo motor, não editável" do resto do tema.
+    &:disabled {
+      background: var(--surface-2);
+      color: var(--text-dim);
+      cursor: not-allowed;
+    }
     &--num {
       text-align: center;
       // Remove as setas nativas do number para casar com o stepper − / +.

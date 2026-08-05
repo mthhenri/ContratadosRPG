@@ -522,9 +522,16 @@ export function calcularStatItem(dto: StatItemCalcularDto): StatItemDto | null {
 
   // ── RESISTÊNCIA (Proteções e Armazenamento — m3-43: um item de armazenamento pode ter
   // resistência embutida, ex. Mochila Kevlar, ou por mod "Camadas Extras", independente de ter
-  // resistência de catálogo) ────────────────────────────────────────────────────
+  // resistência de catálogo; Fragmento Construtor forma Proteção — m3-69: mesmo padrão do bloco de
+  // DANO logo acima, que já roda pra qualquer categoria com `itemCatalogo.dano` — sem isto, a
+  // Resistência da Base escolhida no catálogo nunca se fundia com o bônus fixo do módulo, ficando
+  // stat computado `null` mesmo com os dois valores certos nos dados) ─────────────────────────────
   let statResistencia: string | undefined;
-  if (item.categoria === ItemCategoriaEnum.PROTECOES || item.categoria === ItemCategoriaEnum.ARMAZENAMENTO) {
+  if (
+    item.categoria === ItemCategoriaEnum.PROTECOES ||
+    item.categoria === ItemCategoriaEnum.ARMAZENAMENTO ||
+    item.categoria === ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR
+  ) {
     const entradas = itemCatalogo.resistencia
       ? interpretarNotacaoResistencia(itemCatalogo.resistencia).map((entrada) => ({ ...entrada }))
       : [];

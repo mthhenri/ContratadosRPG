@@ -241,6 +241,7 @@ describe('FichaInventario', () => {
       bonus: '',
       categoriaEmprestada: '',
       modulo: '',
+      baseConstrutor: '',
     });
     alvo.componentInstance['confirmarCriarItem']();
     expect(alvo.emitidos[0].itens).toEqual([
@@ -272,6 +273,7 @@ describe('FichaInventario', () => {
       bonus: '',
       categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
       modulo: '',
+      baseConstrutor: '',
     });
     alvo.componentInstance['confirmarCriarItem']();
     const item = alvo.emitidos[0].itens[0];
@@ -959,6 +961,119 @@ describe('FichaInventario', () => {
       const vm = alvo.componentInstance['itensInventario']()[0];
       expect(vm.modsAtivas[0].nome).toBe('Letal');
       expect(vm.modsAtivas[0].custoTexto).toBe('$1.500');
+    });
+  });
+
+  describe('seletor "Base" do Fragmento Construtor (m3-69)', () => {
+    it('Arma: escolher uma Base do catálogo trava dano/informação e o dano final combina base + bônus do módulo', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Espada de Ossos',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        modulo: FragmentoModuloEnum.I,
+        categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+      });
+      expect(alvo.componentInstance['mostraBaseConstrutor']()).toBe(true);
+      expect(alvo.componentInstance['opcoesBaseConstrutor']().map((i: { nome: string }) => i.nome)).toContain(
+        'Mediana',
+      );
+
+      alvo.componentInstance['escolherBaseConstrutor']('Mediana');
+      const controles = alvo.componentInstance['itemCustomForm'].controls;
+      expect(controles.dano.value).toBe('3D4+FOR [Físico]');
+      expect(controles.dano.disabled).toBe(true);
+      expect(controles.informacao.disabled).toBe(true);
+      expect(controles.peso.value).toBe(2); // peso da Mediana no catálogo
+
+      alvo.componentInstance['confirmarCriarItem']();
+      const item = alvo.emitidos[0].itens[0];
+      expect(item.dano).toBe('3D4+FOR [Físico]');
+      expect(item.peso).toBe(2);
+
+      alvo.fixture.componentRef.setInput('inventario', alvo.emitidos[0]);
+      alvo.fixture.detectChanges();
+      const stat = alvo.componentInstance['itensInventario']()[0].stat;
+      // Base real (Mediana, 3D4) + bônus fixo do Módulo I (+2 dados na base, +4D12 à parte, doc:
+      // "+4D12 de dano, +2 dados e +10 de teste") — 3+2=5D4 na base, mais o grupo extra 4D12; nenhum
+      // dos dois grupos de dado desaparece.
+      expect(stat).toContain('5D4');
+      expect(stat).toContain('4D12');
+    });
+
+    it('Proteção: mesmo padrão — trava resistência e o motor funde a resistência da Base com o bônus do módulo', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Colete de Vísceras',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        modulo: FragmentoModuloEnum.I,
+        categoriaEmprestada: ItemCategoriaEnum.PROTECOES,
+      });
+      alvo.componentInstance['escolherBaseConstrutor']('Colete Tático');
+      const controles = alvo.componentInstance['itemCustomForm'].controls;
+      expect(controles.resistencia.value).toBe('4 [Físico]');
+      expect(controles.resistencia.disabled).toBe(true);
+      expect(controles.peso.value).toBe(1); // peso do Colete Tático no catálogo
+
+      alvo.componentInstance['confirmarCriarItem']();
+      const item = alvo.emitidos[0].itens[0];
+      expect(item.resistencia).toBe('4 [Físico]');
+      expect(item.peso).toBe(1);
+
+      alvo.fixture.componentRef.setInput('inventario', alvo.emitidos[0]);
+      alvo.fixture.detectChanges();
+      // Base real (4 [Físico]) + bônus fixo de Resistência do Módulo I (10) = 14 [Físico].
+      expect(alvo.componentInstance['itensInventario']()[0].stat).toContain('14 [Físico]');
+    });
+
+    it('"Outra" (padrão) mantém dano/resistência como texto livre, exatamente como antes desta task', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Machado Improvisado',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        modulo: FragmentoModuloEnum.V,
+        categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+      });
+      const controles = alvo.componentInstance['itemCustomForm'].controls;
+      expect(controles.baseConstrutor.value).toBe('');
+      expect(controles.dano.disabled).toBe(false);
+
+      controles.dano.setValue('2D6+FOR [Físico]');
+      alvo.componentInstance['confirmarCriarItem']();
+      expect(alvo.emitidos[0].itens[0].dano).toBe('2D6+FOR [Físico]');
+    });
+
+    it('trocar de Base recalcula os campos travados', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Espada de Ossos',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        modulo: FragmentoModuloEnum.I,
+        categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+      });
+      const controles = alvo.componentInstance['itemCustomForm'].controls;
+
+      alvo.componentInstance['escolherBaseConstrutor']('Mediana');
+      expect(controles.dano.value).toBe('3D4+FOR [Físico]');
+      expect(controles.peso.value).toBe(2);
+
+      alvo.componentInstance['escolherBaseConstrutor']('Grande');
+      expect(controles.dano.value).toBe('3D6+FOR [Físico]');
+      expect(controles.peso.value).toBe(3);
+
+      // Voltar pra "Outra" destrava os campos e limpa o texto herdado da Base anterior.
+      alvo.componentInstance['escolherBaseConstrutor']('');
+      expect(controles.dano.value).toBe('');
+      expect(controles.dano.disabled).toBe(false);
+    });
+
+    it('categoria sem base reconhecida pelo doc (Munições/Explosivos) não mostra o seletor', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.componentInstance['itemCustomForm'].patchValue({
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        categoriaEmprestada: ItemCategoriaEnum.MUNICOES,
+      });
+      expect(alvo.componentInstance['mostraBaseConstrutor']()).toBe(false);
+      expect(alvo.componentInstance['opcoesBaseConstrutor']()).toEqual([]);
     });
   });
 

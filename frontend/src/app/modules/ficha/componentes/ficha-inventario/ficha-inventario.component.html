@@ -355,6 +355,23 @@
             </p>
           }
         }
+        @if (mostraBaseConstrutor()) {
+          <div class="ficha-inv__form-linha">
+            <label class="ficha-inv__campo ficha-inv__campo--largo">
+              <span class="ficha-inv__campo-rotulo">Base (arma/proteção do catálogo)</span>
+              <select
+                class="ficha-inv__entrada"
+                formControlName="baseConstrutor"
+                (change)="escolherBaseConstrutor($any($event.target).value)"
+              >
+                @for (base of opcoesBaseConstrutor(); track base.nome) {
+                  <option [value]="base.nome">{{ base.nome }} — {{ resumoBase(base) }}</option>
+                }
+                <option value="">Outra (digitar)</option>
+              </select>
+            </label>
+          </div>
+        }
         @if (mostraDano()) {
           <div class="ficha-inv__form-linha">
             <label class="ficha-inv__campo">

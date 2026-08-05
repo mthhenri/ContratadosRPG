@@ -588,6 +588,14 @@ export class FichaInventario {
     categoriaEmprestada: new FormControl('', { nonNullable: true }),
     /** `''` = nenhum; senão `I`–`V` (só fragmentos). */
     modulo: new FormControl('', { nonNullable: true }),
+    /**
+     * `''` = "Outra" (texto livre, como sempre foi); senão o `nome` de um item de
+     * `CATALOGO_ITENS[categoriaEmprestada]` escolhido como Base do Fragmento Construtor
+     * (`m3-69` — doc: "ele é a arma em si"). Só relevante quando `mostraBaseConstrutor()`;
+     * não entra no `CarrinhoItemDto` (é só estado de UI — `escolherBaseConstrutor` já grava o
+     * resultado em dano/informação/resistência/peso).
+     */
+    baseConstrutor: new FormControl('', { nonNullable: true }),
   });
 
   /** Categoria atual do form de item custom — também alimenta o gatilho do dropdown de categoria (com ícone). */
@@ -619,6 +627,38 @@ export class FichaInventario {
   /** Módulo escolhido no form de item custom, ao vivo (alimenta o aviso de Limite mínimo de Energia). */
   private readonly moduloCustom = toSignal(this.itemCustomForm.controls.modulo.valueChanges, {
     initialValue: this.itemCustomForm.controls.modulo.value,
+  });
+
+  /** "Encaixa em" do form de item custom, ao vivo (alimenta o seletor "Base" do Construtor, `m3-69`). */
+  private readonly categoriaEmprestadaCustom = toSignal(
+    this.itemCustomForm.controls.categoriaEmprestada.valueChanges,
+    { initialValue: this.itemCustomForm.controls.categoriaEmprestada.value },
+  );
+
+  /**
+   * `'ARMA' | 'PROTECAO' | null` — mesma resolução de `comBonusFixoConstrutorSeNecessario`, usada
+   * aqui só pra decidir se o seletor "Base" aparece (`m3-69`): um Fragmento Construtor com
+   * "Encaixa em" reconhecido pelo doc tem uma base real de catálogo a herdar.
+   */
+  protected readonly formaBaseConstrutor = computed(() => {
+    if (this.categoriaCustom() !== ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR) {
+      return null;
+    }
+    const categoriaEmprestada = this.categoriaEmprestadaCustom();
+    return formaFixaConstrutor(categoriaEmprestada ? (categoriaEmprestada as ItemCategoriaEnum) : undefined);
+  });
+  protected readonly mostraBaseConstrutor = computed(() => this.formaBaseConstrutor() !== null);
+
+  /**
+   * Itens de `CATALOGO_ITENS[categoriaEmprestada]` oferecidos no seletor "Base" (`m3-69` — doc:
+   * "ele é a arma em si"). Vazio fora de `mostraBaseConstrutor()`.
+   */
+  protected readonly opcoesBaseConstrutor = computed<readonly ItemCatalogo[]>(() => {
+    if (!this.mostraBaseConstrutor()) {
+      return [];
+    }
+    const categoria = this.categoriaEmprestadaCustom() as ItemCategoriaEnum;
+    return CATALOGO_ITENS[categoria];
   });
 
   /** Limite mínimo de Energia Máxima pro Vigor/Destreza do agente (doc — "⬦ Limite mínimo de Energia"; m3-67). */
@@ -1167,7 +1207,7 @@ export class FichaInventario {
       tipo === FragmentoTipoEnum.CONSTRUTOR
         ? ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR
         : ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR;
-    this.itemCustomForm.reset({
+    this.resetarItemCustomForm({
       nome: '',
       categoria,
       custo: 0,
@@ -1206,7 +1246,7 @@ export class FichaInventario {
       this.criandoItem.set(false);
       return;
     }
-    this.itemCustomForm.reset({
+    this.resetarItemCustomForm({
       nome: '',
       categoria: ItemCategoriaEnum.OPERACIONAL,
       custo: 0,
@@ -1220,6 +1260,19 @@ export class FichaInventario {
       modulo: '',
     });
     this.criandoItem.set(true);
+  }
+
+  /**
+   * Reseta o form de item custom pro `valores` dado — reabilita dano/informação/resistência antes
+   * (uma Base do Construtor pode tê-los travado, `m3-69`; `FormControl.reset()` sozinho não desfaz
+   * `disable()`) e zera a Base escolhida, sempre voltando a "Outra" (texto livre).
+   */
+  private resetarItemCustomForm(valores: Omit<ReturnType<FichaInventario['itemCustomForm']['getRawValue']>, 'baseConstrutor'>): void {
+    const controles = this.itemCustomForm.controls;
+    controles.dano.enable();
+    controles.informacao.enable();
+    controles.resistencia.enable();
+    this.itemCustomForm.reset({ ...valores, baseConstrutor: '' });
   }
 
   protected cancelarCriarItem(): void {
@@ -1339,6 +1392,45 @@ export class FichaInventario {
         ? { modulo: bruto.modulo as FragmentoModuloEnum }
         : {}),
     };
+  }
+
+  /**
+   * Resumo de dano/resistência de um item do catálogo, pra opção do seletor "Base" (`m3-69`) —
+   * mesma formatação do cartão do catálogo (`formatarStatCatalogo`), sem repetir "Dano "/"Resist. ".
+   */
+  protected resumoBase(item: ItemCatalogo): string {
+    return item.dano ?? item.resistencia ?? '';
+  }
+
+  /**
+   * Reage ao `(change)` do seletor "Base" do Fragmento Construtor (`m3-69` — doc: "ele é a arma em
+   * si"): escolher um item do catálogo preenche e **trava** (read-only) dano/informação/resistência
+   * com os valores daquele item, e pré-preenche o peso (o Construtor "é" aquele item, ocupa o mesmo
+   * espaço) — custo segue livre (fragmentos são achados, não comprados, `m3-49`). Voltar pra "Outra"
+   * (`nome === ''`) destrava os campos e limpa o texto, do mesmo jeito que o form sempre funcionou
+   * antes desta task. Ligado a `(change)` (não a uma subscription de `valueChanges`) de propósito:
+   * só deve reagir a uma escolha de verdade no `<select>`, nunca a um `reset`/`setValue` em lote do
+   * form (que também passa por `baseConstrutor` e não pode disparar este efeito colateral).
+   */
+  protected escolherBaseConstrutor(nome: string): void {
+    const controles = this.itemCustomForm.controls;
+    const item = nome ? this.opcoesBaseConstrutor().find((candidato) => candidato.nome === nome) : undefined;
+    if (item) {
+      controles.dano.setValue(item.dano ?? '');
+      controles.informacao.setValue(item.informacao ?? '');
+      controles.resistencia.setValue(item.resistencia ?? '');
+      controles.peso.setValue(item.peso);
+      controles.dano.disable();
+      controles.informacao.disable();
+      controles.resistencia.disable();
+      return;
+    }
+    controles.dano.enable();
+    controles.informacao.enable();
+    controles.resistencia.enable();
+    controles.dano.setValue('');
+    controles.informacao.setValue('');
+    controles.resistencia.setValue('');
   }
 
   /** Passo − / + num campo numérico do formulário de item custom (piso 0). */

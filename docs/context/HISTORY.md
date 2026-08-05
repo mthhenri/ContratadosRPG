@@ -21,6 +21,78 @@
 
 ## Registro por task (mais recente primeiro)
 
+## m3-69 — Fragmento Construtor: item custom ganha "Base" do catálogo (2026-08-05)
+
+Spec: `docs/specs/done/m3-69-fragmento-construtor-base-do-catalogo.spec.md`. Continuação do
+"Fechamento de Fragmentos" (`m3-63`…`m3-68`) — ajuste de UX discutido com o autor ao revisar o card
+do Fragmento Construtor na ficha. Task de **frontend**; `docs/design/DESIGN.md` relido antes da UI
+nova (proibição #29).
+
+**O problema.** Criar um Fragmento Construtor sempre pedia dano/resistência **digitados do zero**
+(`itemCustomForm`) — o bônus fixo do módulo (`listarEfeitosFixosConstrutor`, `m3-65`) entrava como
+Modificação em cima de um texto livre desconectado de qualquer item real. O doc diz "ele é a arma em
+si" (`sistema-v4.1.0.md` ~1945): um Construtor Módulo I sendo uma "Mediana" (`3D4+FOR`) deveria somar
+o bônus do módulo (`+4D12`, doc) **sobre** o dano real daquela arma, não sobre um texto inventado.
+
+**O que foi feito.**
+1. Novo `<select>` "Base" no form de item custom, visível só quando a categoria é
+   `FRAGMENTO_CONSTRUTOR` e `formaFixaConstrutor(categoriaEmprestada)` resolve `'ARMA'`/`'PROTECAO'`
+   (Corpo a Corpo/Armas de Fogo/Proteções, na prática — Explosivos/Munições não têm forma reconhecida
+   e ficam de fora, mesmo padrão de "Recarregar" pra Munições). Lista `CATALOGO_ITENS[categoriaEmprestada]`
+   + "Outra (digitar)" como última opção — o texto livre continua existindo, só deixou de ser único
+   caminho.
+2. Escolher uma Base preenche e **trava** (`FormControl.disable()`) dano/informação (Arma) ou
+   resistência (Proteção) com os valores daquele item do catálogo, e pré-preenche o peso (o
+   Construtor "é" aquele item — ocupa o mesmo espaço; custo segue livre, fragmentos são achados,
+   `m3-49`). Voltar pra "Outra" destrava e limpa os campos, exatamente como o form sempre funcionou.
+3. A lógica de auto-preenchimento (`escolherBaseConstrutor`) está ligada ao `(change)` do `<select>`
+   no template — **não** a uma subscription de `valueChanges` no construtor. Uma subscription
+   reativa parecia mais robusta a princípio, mas quebrou um teste existente: `FormGroup.setValue()`
+   emite `valueChanges` pra **todo** campo, mesmo os que não mudaram de valor — um `.setValue({...,
+   baseConstrutor: ''})` de teste disparava o "efeito Outra" *depois* de setar `dano`/`informacao`,
+   sobrescrevendo os dois de volta pra `''`. `(change)` só dispara numa interação de verdade no
+   `<select>`, nunca num `reset`/`setValue` em lote.
+4. `resetarItemCustomForm` (novo helper, substitui as duas chamadas de `.itemCustomForm.reset(...)`
+   em `escolherTipoFragmento`/`alternarCriarItem`): reabilita dano/informação/resistência antes do
+   `reset()` (que sozinho **não** desfaz um `disable()` anterior) e sempre volta `baseConstrutor` pra
+   `''` ("Outra").
+5. **Achado durante os testes, corrigido:** `calcularStatItem` (`shared/regras/compras/compras.ts`)
+   já fundia dano de qualquer categoria com `itemCatalogo.dano` presente (sem gate de categoria), mas
+   o bloco de **Resistência** só rodava pra `PROTECOES`/`ARMAZENAMENTO` — excluía
+   `FRAGMENTO_CONSTRUTOR`. Resultado: um Construtor forma Proteção nunca teve a Resistência
+   computada fundida com o bônus do módulo (o stat ficava `null`), mesmo a modificação automática
+   (`m3-65`) já carregando o efeito `RESISTENCIA` certo nos dados — a UI simplesmente nunca mostrava
+   o resultado combinado. A spec listava "o motor de fusão do `calcularStatItem`" como Fora de
+   Escopo ("já correto"), mas os Critérios de Aceite exigem explicitamente que "o dano/resistência
+   final... combina a base... com o bônus fixo do módulo, num único stat computado" — sem essa
+   correção o critério não se sustentava pro caso Proteção. Ajuste mínimo: adicionar
+   `FRAGMENTO_CONSTRUTOR` ao gate de categoria do bloco de Resistência (os sub-blocos de
+   Blindada/Reforçada/Camuflada/Hazmat/Antibombas/Camadas Extras têm seus próprios gates de
+   categoria, então continuam restritos a Proteções/Armazenamento como antes).
+6. `montarItemCustom` não mudou — já lia `dano`/`informacao`/`resistencia`/`peso` do form (agora
+   preenchidos pela Base, quando houver uma).
+
+**Testes.** `shared`: 1 teste novo em `compras.spec.ts` provando a fusão de Resistência do Construtor
+(Colete Tático `4 [Físico]` + Módulo I `RESISTENCIA` 10 → `14 [Físico]`). `frontend`: novo describe
+`'seletor "Base" do Fragmento Construtor (m3-69)'` em `ficha-inventario.component.spec.ts` — Arma
+(Mediana + Módulo I: dano final `5D4+4D12+FOR [Físico]`, base 3+2 dados fundida com o `DANO_DADOS_BASE`
+do módulo e o grupo extra `4D12` sobrevivendo junto, peso 2), Proteção (Colete Tático + Módulo I:
+`14 [Físico]`, peso 1), "Outra" mantém texto livre (padrão, sem trava), trocar de Base recalcula os
+campos travados, categoria sem base reconhecida (Munições) não mostra o seletor.
+
+**Fora de escopo, confirmado nesta revisão:** `listarEfeitosFixosConstrutor`/`BONUS_FIXO_CONSTRUTOR`
+em si (dados já corretos, só a origem do texto base mudou); Munição do Construtor (`m3-65`, mantém
+"Recarregar"); validação de texto livre sem colchete `[Tipo]` na opção "Outra" (comportamento já
+existente pra qualquer item custom).
+
+**Verificação final:** `shared` 519/519 (era 518/518) · lint limpo · build limpo. `backend` 170/170
+(inalterado). `frontend` 709/711 (era 706 antes da suíte crescer 5 testes novos; as 2 falhas restantes
+são as pré-existentes `P-001`/`P-010`, sem novas quebras) · lint só os 3 erros pré-existentes
+(`P-009`) · `ng build --configuration development` limpo. **Não verificado num browser real** — a
+cobertura de componente (`ficha-inventario.component.spec.ts`) já exercita DOM/estado travado/computed
+diretamente, mas o fluxo completo (abrir o form, clicar no `<select>`, ver o campo travado
+visualmente) não foi clicado manualmente nesta sessão.
+
 ## m3-68 — Fragmentos: "efeito" do Potencializador não é dano (2026-08-05)
 
 Spec: `docs/specs/done/m3-68-fragmento-potencializador-efeito-nao-e-dano.spec.md`. Correção sobre o
