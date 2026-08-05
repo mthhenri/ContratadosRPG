@@ -257,6 +257,13 @@ interface ModAtivaVM {
   readonly descricao: string | null;
   /** `true` quando esta mod veio de um Fragmento aplicado (m3-35) — mostra o badge/ícone de origem. */
   readonly deFragmento: boolean;
+  /**
+   * `true` só pro bônus fixo automático de um Fragmento Construtor (`m3-65`) — não é uma modificação
+   * comprada, não tem stack pra ajustar: some junto do item, nunca sozinha. Esconde o stepper −/+ e
+   * os toggles "não conta" (que já vêm forçados `true` na criação — soltá-los quebraria a garantia
+   * "fora do limite de mods da patente" do doc).
+   */
+  readonly fixa: boolean;
 }
 
 /** Uma entrada do painel de modificações (mod disponível para o item). */
@@ -2448,6 +2455,7 @@ export class FichaInventario {
             .filter((parte): parte is string => !!parte)
             .join(' — ') || null,
         deFragmento: !!modificacao.origemFragmento,
+        fixa: modificacao.origemFragmento?.tipo === FragmentoTipoEnum.CONSTRUTOR,
       };
     });
 

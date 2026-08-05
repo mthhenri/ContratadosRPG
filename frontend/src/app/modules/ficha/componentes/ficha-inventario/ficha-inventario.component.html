@@ -928,7 +928,7 @@
                 @if (mod.descricao) {
                   <span class="ficha-inv__mod-tag-desc">{{ mod.descricao }}</span>
                 }
-                @if (editavel()) {
+                @if (editavel() && !mod.fixa) {
                   <div class="ficha-inv__mod-flags">
                     <button
                       type="button"
@@ -957,7 +957,7 @@
                   </div>
                 }
               </div>
-              @if (editavel()) {
+              @if (editavel() && !mod.fixa) {
                 <div class="ficha-inv__mod-tag-botoes">
                   <button type="button" class="ficha-inv__mini-btn" aria-label="Remover empilhamento" (click)="removerModificacao(item.indice, mod.nome)">−</button>
                   <button

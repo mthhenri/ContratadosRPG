@@ -962,6 +962,35 @@ describe('FichaInventario', () => {
       expect(vm.modsAtivas[0].nome).toBe('Letal');
       expect(vm.modsAtivas[0].custoTexto).toBe('$1.500');
     });
+
+    it('o bônus fixo é ineditável: sem stepper −/+ nem toggles "não conta" no chip (só na mod comum ao lado)', () => {
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Espada de Ossos',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        modulo: FragmentoModuloEnum.V,
+        categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+      });
+      alvo.componentInstance['confirmarCriarItem']();
+      alvo.fixture.componentRef.setInput('inventario', alvo.emitidos[0]);
+      alvo.fixture.detectChanges();
+
+      alvo.componentInstance['adicionarModificacao'](0, 'Letal');
+      alvo.fixture.componentRef.setInput('inventario', alvo.emitidos[1]);
+      alvo.fixture.detectChanges();
+
+      const vm = alvo.componentInstance['itensInventario']()[0];
+      expect(vm.modsAtivas.find((m) => m.nome.startsWith('Fragmento Construtor'))?.fixa).toBe(true);
+      expect(vm.modsAtivas.find((m) => m.nome === 'Letal')?.fixa).toBe(false);
+
+      const chips = Array.from(alvo.raiz.querySelectorAll('.ficha-inv__mod-tag'));
+      const chipFixo = chips.find((chip) => chip.textContent?.includes('Fragmento Construtor'));
+      const chipComum = chips.find((chip) => chip.textContent?.includes('Letal'));
+      expect(chipFixo?.querySelector('.ficha-inv__mod-tag-botoes')).toBeNull();
+      expect(chipFixo?.querySelector('.ficha-inv__mod-flags')).toBeNull();
+      expect(chipComum?.querySelector('.ficha-inv__mod-tag-botoes')).toBeTruthy();
+      expect(chipComum?.querySelector('.ficha-inv__mod-flags')).toBeTruthy();
+    });
   });
 
   describe('seletor "Base" do Fragmento Construtor (m3-69)', () => {
