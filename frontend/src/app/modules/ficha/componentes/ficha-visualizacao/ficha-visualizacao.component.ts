@@ -57,6 +57,7 @@ import {
   calcularAfinidade,
   listarModulosFragmentosPortados,
   reducaoCustoPorAfinidade,
+  valorAfinidadeFragmento,
   type OpcaoBonusConsumoFragmentoDto,
 } from '@contratados-rpg/shared/regras/compras';
 import { calcularDtAtributo } from '@contratados-rpg/shared/regras/dt';
@@ -119,6 +120,17 @@ interface CampoAtributo {
 interface GrupoAtributos {
   readonly rotulo: string;
   readonly campos: readonly CampoAtributo[];
+}
+
+/**
+ * Fragmentos portados de um mesmo módulo, agrupados (m3-66): antes cada unidade virava um chip
+ * "Módulo X" repetido e idêntico, sem mostrar quantos fragmentos daquele módulo o agente carrega
+ * nem quanto cada grupo contribui pra Afinidade total.
+ */
+interface GrupoFragmentoPortado {
+  readonly modulo: FragmentoModuloEnum;
+  readonly quantidade: number;
+  readonly afinidade: number;
 }
 
 /** Lembrete da fórmula da DT — exibido como chip informativo no card de Atributos (como no protótipo). */
@@ -2148,6 +2160,26 @@ export class FichaVisualizacao {
   protected readonly modulosFragmentosPortados = computed<readonly FragmentoModuloEnum[]>(() =>
     listarModulosFragmentosPortados(this.dados().inventario.itens),
   );
+
+  /**
+   * Módulos portados agrupados (m3-66) — quantidade e Afinidade individual de cada grupo, pra o
+   * chip mostrar "2× Módulo V" em vez de duas entradas idênticas "Módulo V". Ordem de primeira
+   * ocorrência em `modulosFragmentosPortados()` (soltos antes de acoplados, na ordem do inventário).
+   */
+  protected readonly gruposFragmentosPortados = computed<readonly GrupoFragmentoPortado[]>(() => {
+    const ordem: FragmentoModuloEnum[] = [];
+    const contagem = new Map<FragmentoModuloEnum, number>();
+    for (const modulo of this.modulosFragmentosPortados()) {
+      if (!contagem.has(modulo)) {
+        ordem.push(modulo);
+      }
+      contagem.set(modulo, (contagem.get(modulo) ?? 0) + 1);
+    }
+    return ordem.map((modulo) => {
+      const quantidade = contagem.get(modulo)!;
+      return { modulo, quantidade, afinidade: valorAfinidadeFragmento(modulo) * quantidade };
+    });
+  });
 
   /** Afinidade total de Fragmentos do agente (`shared/regras/compras/fragmento`, m3-42 — função pura). */
   protected readonly afinidadeFragmentos = computed(() =>

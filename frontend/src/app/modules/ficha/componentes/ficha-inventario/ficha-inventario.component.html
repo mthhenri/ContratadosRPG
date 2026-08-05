@@ -452,11 +452,21 @@
                 </div>
                 <div class="ficha-inv__cartao-fragmento-custo">
                   <span>Potencializador</span>
-                  <span class="ficha-inv__custo">{{ cartao.custoPotencializador }} Energia</span>
+                  <span>
+                    @if (cartao.custoPotencializadorReduzido !== cartao.custoPotencializador) {
+                      <span class="ficha-inv__custo ficha-inv__custo--bruto">{{ cartao.custoPotencializador }}</span>
+                    }
+                    <span class="ficha-inv__custo">{{ cartao.custoPotencializadorReduzido }} Energia</span>
+                  </span>
                 </div>
                 <div class="ficha-inv__cartao-fragmento-custo">
                   <span>Construtor</span>
-                  <span class="ficha-inv__custo">{{ cartao.custoConstrutor }} Energia</span>
+                  <span>
+                    @if (cartao.custoConstrutorReduzido !== cartao.custoConstrutor) {
+                      <span class="ficha-inv__custo ficha-inv__custo--bruto">{{ cartao.custoConstrutor }}</span>
+                    }
+                    <span class="ficha-inv__custo">{{ cartao.custoConstrutorReduzido }} Energia</span>
+                  </span>
                 </div>
                 <div class="ficha-inv__cartao-acoes ficha-inv__cartao-acoes--coluna">
                   <button
@@ -651,11 +661,11 @@
               }
             </span>
             @if (item.apelido) {
-              <span class="ficha-inv__item-nome-mecanico">{{ item.nome }} — {{ item.categoriaRotulo }}</span>
+              <span class="ficha-inv__item-nome-mecanico">{{ item.fragmentoModuloTexto ?? item.nome }} — {{ item.categoriaRotulo }}</span>
             }
           }
           @if (!item.apelido) {
-            <span class="ficha-inv__item-categoria">{{ item.categoriaRotulo }}</span>
+            <span class="ficha-inv__item-categoria">{{ item.fragmentoModuloTexto ?? item.categoriaRotulo }}</span>
           }
         </div>
         <div class="ficha-inv__item-controles">
@@ -971,6 +981,12 @@
             Aplicar consome o fragmento (some do inventário) e debita o custo de Energia do módulo
             (Energia atual + Energia Máxima).
           </p>
+          @if (custoPreviaAplicarFragmento(); as custo) {
+            <p class="ficha-inv__aviso">
+              Custo já com a Afinidade atual: −{{ custo.energia }} de Energia agora; Energia Máxima
+              líquida: {{ custo.energiaMaxima > 0 ? '+' : '' }}{{ custo.energiaMaxima }}.
+            </p>
+          }
           @if (conflitoFuncaoFragmento()) {
             <p class="ficha-inv__aviso">
               O alvo já tem um fragmento nessa função — um item/ser só pode ter um fragmento por
@@ -1032,6 +1048,13 @@
               (evitável com teste de Vontade DT {{ preco.dtEvitarVontade }}) + {{ preco.energiaMaximaExtra }}
               de Energia Máxima extra, sempre.
             </p>
+            @if (custoPreviaConsumirFragmento(); as custo) {
+              <p class="ficha-inv__aviso">
+                Custo já com a Afinidade atual: +{{ custo.restituicaoAquisicao }} de Energia Máxima
+                restituída da aquisição − {{ preco.energiaMaximaExtra }} do Preço de Sanidade = líquido
+                {{ custo.deltaEnergiaMaxima >= 0 ? '+' : '' }}{{ custo.deltaEnergiaMaxima }} de Energia Máxima.
+              </p>
+            }
             <div class="ficha-inv__mod-flags">
               <button
                 type="button"

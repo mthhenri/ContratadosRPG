@@ -1054,7 +1054,7 @@ describe('FichaInventario', () => {
       expect(alvo.componentInstance['opcaoBonusFragmento']()).toBeNull();
     });
 
-    it('um fragmento Potencializador pode ser alvo de outro (só Construtor é proibido)', () => {
+    it('um fragmento Potencializador nunca aparece como alvo disponível de outro fragmento', () => {
       const alvo = montar({
         itens: [fragmento(FragmentoModuloEnum.V), fragmento(FragmentoModuloEnum.IV)],
         amplificadores: [],
@@ -1062,7 +1062,7 @@ describe('FichaInventario', () => {
       alvo.componentInstance['abrirAplicarFragmento'](0);
 
       const alvos = alvo.componentInstance['alvosFragmentoDisponiveis']();
-      expect(alvos.map((a) => a.indice)).toEqual([1]);
+      expect(alvos.map((a) => a.indice)).toEqual([]);
     });
 
     it('um fragmento Construtor nunca aparece como alvo disponível', () => {
@@ -1618,6 +1618,108 @@ describe('FichaInventario', () => {
 
       expect(componentInstance['catalogoFragmentosAtivo']()).toBe(false);
       expect(raiz.querySelector('.ficha-inv__cartao--fragmento')).toBeNull();
+    });
+  });
+
+  describe('custo já reduzido pela Afinidade (m3-66)', () => {
+    function fragmento(categoria: ItemCategoriaEnum, modulo: FragmentoModuloEnum): CarrinhoItemDto {
+      return {
+        nome: 'Fragmento achado',
+        categoria,
+        custo: 0,
+        peso: 0,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        modulo,
+      };
+    }
+
+    it('catálogo de Fragmentos: Afinidade zero mostra só o custo (sem riscado — bruto e reduzido coincidem)', () => {
+      const { raiz, fixture, componentInstance } = montar({ itens: [], amplificadores: [] });
+      componentInstance['alternarCatalogo']();
+      componentInstance['selecionarCategoriaFragmentos']();
+      fixture.detectChanges();
+
+      const cartoes = Array.from(raiz.querySelectorAll('.ficha-inv__cartao--fragmento'));
+      expect(cartoes.length).toBe(5);
+      expect(cartoes.every((c) => c.querySelector('.ficha-inv__custo--bruto') === null)).toBe(true);
+      const cartaoV = cartoes.find((c) =>
+        c.querySelector('.ficha-inv__cartao-nome')?.textContent?.trim().startsWith('Módulo V'),
+      )!;
+      expect(cartaoV.textContent).toContain('3 Energia');
+    });
+
+    it('catálogo de Fragmentos: Afinidade alta (30, acima de 6× módulo I) mostra o reduzido em destaque e o bruto riscado', () => {
+      const itens: CarrinhoItemDto[] = [
+        { ...fragmento(ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR, FragmentoModuloEnum.I), quantidade: 6 },
+      ];
+      const { raiz, fixture, componentInstance } = montar({ itens, amplificadores: [] });
+      componentInstance['alternarCatalogo']();
+      componentInstance['selecionarCategoriaFragmentos']();
+      fixture.detectChanges();
+
+      const cartaoV = Array.from(raiz.querySelectorAll('.ficha-inv__cartao--fragmento')).find((c) =>
+        c.querySelector('.ficha-inv__cartao-nome')?.textContent?.trim().startsWith('Módulo V'),
+      )!;
+      const [linhaPotencializador, linhaConstrutor] = Array.from(
+        cartaoV.querySelectorAll('.ficha-inv__cartao-fragmento-custo'),
+      );
+      // Módulo V: aquisição bruta 3 (Potencializador) / 6 (Construtor, dobro). Afinidade já
+      // considerando o próprio módulo V (30 dos 6× módulo I + 1 do V = 31) reduz em 10 — piso 1.
+      expect(linhaPotencializador.querySelector('.ficha-inv__custo--bruto')?.textContent?.trim()).toBe('3');
+      expect(linhaPotencializador.textContent).toContain('1 Energia');
+      expect(linhaConstrutor.querySelector('.ficha-inv__custo--bruto')?.textContent?.trim()).toBe('6');
+      expect(linhaConstrutor.textContent).toContain('1 Energia');
+    });
+
+    it('painel "Aplicar em...": mostra o custo de Energia (e a Energia Máxima líquida) antes de confirmar', () => {
+      const alvo = montar({
+        itens: [itemLeve, fragmento(ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR, FragmentoModuloEnum.IV)],
+        amplificadores: [],
+      });
+      alvo.componentInstance['abrirAplicarFragmento'](1);
+      alvo.fixture.detectChanges();
+
+      // Módulo IV: acoplar custa 7 de Energia; a Energia Máxima fecha em líquido 0 (restitui a
+      // aquisição e debita o mesmo valor no acoplamento — mesma conta do teste de confirmação).
+      expect(alvo.componentInstance['custoPreviaAplicarFragmento']()).toEqual({ energia: 7, energiaMaxima: 0 });
+      expect(alvo.raiz.textContent).toContain('Custo já com a Afinidade atual: −7 de Energia agora');
+      expect(alvo.raiz.textContent).toContain('Energia Máxima líquida: 0');
+    });
+
+    it('painel "Aplicar em...": some com o painel fechado (custoPreviaAplicarFragmento null)', () => {
+      const alvo = montar({
+        itens: [itemLeve, fragmento(ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR, FragmentoModuloEnum.IV)],
+        amplificadores: [],
+      });
+      expect(alvo.componentInstance['custoPreviaAplicarFragmento']()).toBeNull();
+    });
+
+    it('painel "Consumir": mostra a restituição da aquisição e o líquido de Energia Máxima antes de confirmar (módulo III)', () => {
+      const alvo = montar({
+        itens: [fragmento(ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR, FragmentoModuloEnum.III)],
+        amplificadores: [],
+      });
+      alvo.componentInstance['abrirConsumirFragmento'](0);
+      alvo.fixture.detectChanges();
+
+      // Módulo III: aquisição restituída = 12 (sem redução — Afinidade só 3); Preço de Sanidade
+      // físico = 36 (12 × 3); líquido = 12 − 36 = −24 (mesma conta do teste de confirmação, m3-42).
+      expect(alvo.componentInstance['custoPreviaConsumirFragmento']()).toEqual({
+        restituicaoAquisicao: 12,
+        deltaEnergiaMaxima: -24,
+      });
+      expect(alvo.raiz.textContent).toContain('+12 de Energia Máxima restituída da aquisição');
+      expect(alvo.raiz.textContent).toContain('líquido -24 de Energia Máxima');
+    });
+
+    it('painel "Consumir": some com o painel fechado (custoPreviaConsumirFragmento null)', () => {
+      const alvo = montar({
+        itens: [fragmento(ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR, FragmentoModuloEnum.III)],
+        amplificadores: [],
+      });
+      expect(alvo.componentInstance['custoPreviaConsumirFragmento']()).toBeNull();
     });
   });
 

@@ -1575,10 +1575,14 @@
               <span class="ficha-mini__rotulo">Afinidade</span>
               <span class="ficha-mini__valor ficha-mini__valor--accent">{{ afinidadeFragmentos() }}</span>
             </div>
-            @if (modulosFragmentosPortados().length > 0) {
+            @if (gruposFragmentosPortados().length > 0) {
               <div class="ficha-extras__chips">
-                @for (modulo of modulosFragmentosPortados(); track $index) {
-                  <span class="chip">Módulo {{ modulo }}</span>
+                @for (grupo of gruposFragmentosPortados(); track grupo.modulo) {
+                  <span class="chip"
+                    >{{ grupo.quantidade > 1 ? grupo.quantidade + '× ' : '' }}Módulo {{ grupo.modulo }} ({{
+                      grupo.afinidade
+                    }})</span
+                  >
                 }
               </div>
             } @else {

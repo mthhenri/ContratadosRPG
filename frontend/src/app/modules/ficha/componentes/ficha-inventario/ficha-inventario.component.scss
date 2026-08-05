@@ -1086,6 +1086,14 @@
     color: var(--warning);
     font-weight: 700;
   }
+  // Custo bruto quando a Afinidade já reduz o que será cobrado (m3-66) — secundário e riscado,
+  // ao lado do reduzido (o que de fato será debitado) em destaque.
+  &__custo--bruto {
+    color: var(--text-mute);
+    font-weight: 400;
+    text-decoration: line-through;
+    margin-right: 4px;
+  }
   &__peso {
     color: var(--text-mute);
   }

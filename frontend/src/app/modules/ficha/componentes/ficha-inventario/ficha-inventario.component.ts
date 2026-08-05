@@ -207,12 +207,18 @@ interface CartaoItemVM {
   readonly descricao: string | null;
 }
 
-/** Cartão de um módulo (I–V) na grade de Fragmentos do catálogo — atalho pra montar o item custom. */
+/**
+ * Cartão de um módulo (I–V) na grade de Fragmentos do catálogo — atalho pra montar o item custom.
+ * Custo `*Reduzido` já aplica a Afinidade atual do agente (m3-66) — igual ao `*` bruto quando a
+ * Afinidade não reduz nada (o template só mostra o bruto riscado quando os dois divergem).
+ */
 interface CartaoModuloFragmentoVM {
   readonly modulo: FragmentoModuloEnum;
   readonly afinidade: number;
   readonly custoPotencializador: number;
   readonly custoConstrutor: number;
+  readonly custoPotencializadorReduzido: number;
+  readonly custoConstrutorReduzido: number;
 }
 
 /** Cartão de amplificador do catálogo. */
@@ -310,6 +316,9 @@ interface ItemInventarioVM {
   readonly apelido: string | null;
   /** `apelido ?? nome` — o que o card exibe em destaque. */
   readonly nomeExibido: string;
+  /** "Mod. <módulo>" pra fragmento sem apelido (o nome vira a categoria — "Fragmento X" — e o
+   *  módulo some pro rodapé do card), ou `null` fora de Fragmento. */
+  readonly fragmentoModuloTexto: string | null;
   /** `false` para categorias empilháveis (munição, medicinal, operacional) — pilha, não instância. */
   readonly podeApelidar: boolean;
   /** `true` para fragmento Potencializador — mostra a ação "Aplicar em..." (m3-35). */
@@ -622,6 +631,45 @@ export class FichaInventario {
     const item = indice === null ? null : this.inventario().itens[indice];
     return item?.modulo ? custoSanidadeConsumirFragmento(item.modulo) : null;
   });
+
+  /**
+   * Prévia do custo líquido de **consumir** o fragmento com o painel "Consumir" aberto (m3-66):
+   * `restituicaoAquisicao` (Energia Máxima da aquisição, devolvida, já reduzida pela Afinidade
+   * atual) e `deltaEnergiaMaxima` (líquido — restituição menos o Preço de Sanidade físico,
+   * `precoSanidadeConsumo().energiaMaximaExtra`, que não é reduzido por Afinidade). Mesma conta de
+   * `custoAquisicaoReduzidoConsumo`, usada por `confirmarConsumirFragmento` (proibição #26).
+   */
+  protected readonly custoPreviaConsumirFragmento = computed<{
+    readonly restituicaoAquisicao: number;
+    readonly deltaEnergiaMaxima: number;
+  } | null>(() => {
+    const indice = this.consumindoFragmentoIndice();
+    if (indice === null) {
+      return null;
+    }
+    const itensAntes = this.inventario().itens;
+    const item = itensAntes[indice];
+    const tipo = item ? tipoFragmentoDaCategoria(item.categoria) : null;
+    const preco = this.precoSanidadeConsumo();
+    if (!item?.modulo || !tipo || !preco) {
+      return null;
+    }
+    const restituicaoAquisicao = this.custoAquisicaoReduzidoConsumo(tipo, item.modulo, itensAntes);
+    return { restituicaoAquisicao, deltaEnergiaMaxima: restituicaoAquisicao - preco.energiaMaximaExtra };
+  });
+
+  /**
+   * Custo de aquisição do fragmento (Energia Máxima), já reduzido pela Afinidade atual — a parte
+   * restituída ao consumir (m3-42/m3-49). Extraído pra `confirmarConsumirFragmento` e a prévia do
+   * painel (`custoPreviaConsumirFragmento`, m3-66) usarem a mesma conta (proibição #26).
+   */
+  private custoAquisicaoReduzidoConsumo(
+    tipo: FragmentoTipoEnum,
+    modulo: FragmentoModuloEnum,
+    itensAntes: readonly CarrinhoItemDto[],
+  ): number {
+    return aplicarReducaoAfinidade(custoAquisicaoFragmento(tipo, modulo), afinidadeConsiderando(itensAntes));
+  }
   /** Índice da opção de bônus "Consumido" escolhida (em `opcoesConsumoFragmento()`), ou `null` (m3-64). */
   protected readonly opcaoConsumoFragmento = signal<number | null>(null);
   /** Atributo escolhido pro bônus "Consumido" quando `tipo === 'TESTE'`, ou `null` (m3-64). */
@@ -790,15 +838,28 @@ export class FichaInventario {
    * Potencializador. Ordem **V → I** (do módulo mais fraco/comum pro mais forte/raro — o jogador
    * tende a achar os fracos primeiro; a ordem crescente de força faz mais sentido de leitura que a
    * ordem "I é o mais forte" usada no `<select>` do item custom).
+   *
+   * Custo `*Reduzido` (m3-66) usa a mesma `afinidadeConsiderando`/`aplicarReducaoAfinidade` de
+   * `debitarAquisicaoFragmento` (proibição #26 — uma só conta), com o próprio módulo do cartão como
+   * `moduloExtra` — o catálogo antes só mostrava o custo cheio, mesmo quando a Afinidade atual do
+   * agente já reduziria o que ele vai pagar.
    */
-  protected readonly cartaoModulosFragmento = computed<readonly CartaoModuloFragmentoVM[]>(() =>
-    MODULOS_FRAGMENTO.map((modulo) => ({
-      modulo,
-      afinidade: valorAfinidadeFragmento(modulo),
-      custoPotencializador: custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, modulo),
-      custoConstrutor: custoAquisicaoFragmento(FragmentoTipoEnum.CONSTRUTOR, modulo),
-    })).reverse(),
-  );
+  protected readonly cartaoModulosFragmento = computed<readonly CartaoModuloFragmentoVM[]>(() => {
+    const itens = this.inventario().itens;
+    return MODULOS_FRAGMENTO.map((modulo) => {
+      const afinidade = afinidadeConsiderando(itens, modulo);
+      const custoPotencializador = custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, modulo);
+      const custoConstrutor = custoAquisicaoFragmento(FragmentoTipoEnum.CONSTRUTOR, modulo);
+      return {
+        modulo,
+        afinidade: valorAfinidadeFragmento(modulo),
+        custoPotencializador,
+        custoConstrutor,
+        custoPotencializadorReduzido: aplicarReducaoAfinidade(custoPotencializador, afinidade),
+        custoConstrutorReduzido: aplicarReducaoAfinidade(custoConstrutor, afinidade),
+      };
+    }).reverse();
+  });
 
   /** Cartões de amplificador do catálogo, filtrados pela busca quando houver. */
   protected readonly amplificadoresCatalogo = computed<readonly CartaoAmpVM[]>(() => {
@@ -946,10 +1007,9 @@ export class FichaInventario {
 
   /**
    * Alvos válidos pro "Aplicar em..." de um fragmento Potencializador — qualquer item ou ser,
-   * exceto fragmentos Construtor (doc — "⬦ Potencializador": "podem ser usados em qualquer item ou
-   * ser, exceto em fragmentos construtores"; `m3-63`). Um Potencializador **pode** ser alvo de
-   * outro Potencializador; o único item excluído além do Construtor é o próprio fragmento sendo
-   * aplicado (não faz sentido acoplar um fragmento nele mesmo).
+   * exceto outro fragmento (Construtor ou Potencializador): um fragmento não acopla em outro
+   * fragmento. O único item excluído além dos fragmentos é o próprio fragmento sendo aplicado
+   * (não faz sentido acoplar um fragmento nele mesmo, mas isso já cai na regra geral acima).
    */
   protected readonly alvosFragmentoDisponiveis = computed<readonly { indice: number; rotulo: string }[]>(
     () => {
@@ -958,7 +1018,9 @@ export class FichaInventario {
         .itens.map((item, indice) => ({ item, indice }))
         .filter(
           ({ item, indice }) =>
-            item.categoria !== ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR && indice !== fragmentoIndice,
+            item.categoria !== ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR &&
+            item.categoria !== ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR &&
+            indice !== fragmentoIndice,
         )
         .map(({ item, indice }) => ({ indice, rotulo: rotuloItem(item) }));
     },
@@ -1425,23 +1487,57 @@ export class FichaInventario {
     // Afinidade (m3-42/m3-49): o fragmento já está portado em `itens` (ainda solto, antes do
     // acoplamento) — mesma Afinidade reduz os dois lados (aquisição restituída e acoplamento
     // debitado), preservando o líquido zero do Potencializador (docstring acima).
-    const afinidade = afinidadeConsiderando(itens);
-    const custoAquisicao = aplicarReducaoAfinidade(
-      custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, fragmento.modulo),
-      afinidade,
-    );
-    const custoBruto = custoAcoplarFragmento(fragmento.modulo);
-    const custo = {
-      energia: aplicarReducaoAfinidade(custoBruto.energia, afinidade),
-      energiaMaxima: aplicarReducaoAfinidade(custoBruto.energiaMaxima, afinidade),
-    };
+    const custo = this.custoLiquidoAplicarFragmento(fragmento.modulo, itens);
     this.ajusteEnergiaFragmento.emit({
       energiaAtual: this.energiaAtual() - custo.energia,
-      energiaMaxima: this.energiaMaxima() + custoAquisicao - custo.energiaMaxima,
+      energiaMaxima: this.energiaMaxima() + custo.energiaMaxima,
     });
 
     this.aplicandoFragmentoIndice.set(null);
   }
+
+  /**
+   * Custo líquido de **acoplar** um fragmento Potencializador de `modulo`, já reduzido pela
+   * Afinidade atual (m3-42/m3-49) — `energia` é o débito de Energia atual; `energiaMaxima` é o
+   * delta líquido em Energia Máxima (restituição da aquisição menos o custo do acoplamento; ambos
+   * usam o mesmo custo base do módulo, então costuma fechar em 0). Extraído de
+   * `confirmarAplicarFragmento` pra a prévia de custo do painel (m3-66) usar exatamente a mesma
+   * conta, sem duplicar (proibição #26).
+   */
+  private custoLiquidoAplicarFragmento(
+    modulo: FragmentoModuloEnum,
+    itens: readonly CarrinhoItemDto[],
+  ): { readonly energia: number; readonly energiaMaxima: number } {
+    const afinidade = afinidadeConsiderando(itens);
+    const custoAquisicao = aplicarReducaoAfinidade(
+      custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, modulo),
+      afinidade,
+    );
+    const custoBruto = custoAcoplarFragmento(modulo);
+    const energia = aplicarReducaoAfinidade(custoBruto.energia, afinidade);
+    const energiaMaximaAcoplamento = aplicarReducaoAfinidade(custoBruto.energiaMaxima, afinidade);
+    return { energia, energiaMaxima: custoAquisicao - energiaMaximaAcoplamento };
+  }
+
+  /**
+   * Prévia do custo de acoplar o fragmento com o painel "Aplicar em..." aberto (m3-66) — mesma
+   * conta de `custoLiquidoAplicarFragmento` usada por `confirmarAplicarFragmento`, antecipada pra
+   * exibição antes do jogador confirmar. `null` com o painel fechado.
+   */
+  protected readonly custoPreviaAplicarFragmento = computed<{
+    readonly energia: number;
+    readonly energiaMaxima: number;
+  } | null>(() => {
+    const indice = this.aplicandoFragmentoIndice();
+    if (indice === null) {
+      return null;
+    }
+    const fragmento = this.inventario().itens[indice];
+    if (!fragmento?.modulo) {
+      return null;
+    }
+    return this.custoLiquidoAplicarFragmento(fragmento.modulo, this.inventario().itens);
+  });
 
   // === Consumir fragmento Potencializador (m3-42/m3-64) ===
   /** Abre o painel "Consumir" de um fragmento Potencializador, zerando a declaração de Vontade e a escolha de bônus. */
@@ -1499,10 +1595,7 @@ export class FichaInventario {
 
     // Afinidade (m3-42/m3-49) só reduz a restituição da aquisição — o Preço de Sanidade
     // (`energiaMaximaExtra`) é o preço físico de consumir o fragmento, não um "custo de fragmento".
-    const custoAquisicao = aplicarReducaoAfinidade(
-      custoAquisicaoFragmento(tipo, item.modulo),
-      afinidadeConsiderando(itensAntes),
-    );
+    const custoAquisicao = this.custoAquisicaoReduzidoConsumo(tipo, item.modulo, itensAntes);
     this.ajusteEnergiaFragmento.emit({
       energiaAtual: this.energiaAtual(),
       energiaMaxima: this.energiaMaxima() + custoAquisicao - preco.energiaMaximaExtra,
@@ -2221,12 +2314,19 @@ export class FichaInventario {
       item.categoria === ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR &&
       item.categoriaEmprestada === ItemCategoriaEnum.MUNICOES;
     const bonusMunicao = construtorMunicao && item.modulo ? bonusMunicaoConstrutor(item.modulo) : null;
+    const ehFragmento =
+      item.categoria === ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR ||
+      item.categoria === ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR;
+    const apelido = item.apelido?.trim() || null;
 
     return {
       indice,
       nome: item.nome,
-      apelido: item.apelido?.trim() || null,
-      nomeExibido: rotuloItem(item),
+      apelido,
+      // Sem apelido, o card destaca a categoria ("Fragmento Potencializador") em vez do nome
+      // mecânico completo — o módulo vai pro `fragmentoModuloTexto`, exibido logo abaixo.
+      nomeExibido: apelido || (ehFragmento ? this.rotuloCategoria(item.categoria) : item.nome),
+      fragmentoModuloTexto: ehFragmento && item.modulo ? `Mod. ${item.modulo}` : null,
       podeApelidar: !CATEGORIAS_EMPILHAVEIS.includes(item.categoria),
       fragmentoPotencializador: item.categoria === ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
       fragmentoConstrutorMunicao: construtorMunicao,

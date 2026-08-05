@@ -1466,11 +1466,12 @@ describe('FichaVisualizacao', () => {
         (b) => b.querySelector('.ficha-mini__rotulo')?.textContent?.trim() === 'Afinidade',
       );
       expect(box?.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('4');
+      // m3-66: agrupado por módulo (quantidade + Afinidade individual), não mais um chip repetido
+      // por unidade — "2× Módulo V" reforça a composição da soma, em vez de dois chips idênticos.
       const chips = Array.from(raiz.querySelectorAll('.ficha-extras__chips .chip')).map((c) =>
         c.textContent?.trim(),
       );
-      expect(chips.filter((c) => c === 'Módulo V')).toHaveLength(2);
-      expect(chips).toContain('Módulo IV');
+      expect(chips).toEqual(['2× Módulo V (2)', 'Módulo IV (2)']);
     });
 
     it('sem fragmentos portados: afinidade 0 e mensagem de vazio, sem nota de redução', () => {
@@ -1498,6 +1499,10 @@ describe('FichaVisualizacao', () => {
 
       expect(fixture.componentInstance['afinidadeFragmentos']()).toBe(30);
       expect(raiz.textContent).toContain('Afinidade acima de 10: −10 de Energia no custo de fragmentos.');
+      const chips = Array.from(raiz.querySelectorAll('.ficha-extras__chips .chip')).map((c) =>
+        c.textContent?.trim(),
+      );
+      expect(chips).toEqual(['6× Módulo I (30)']);
     });
 
     it('rastro de Fragmentos Consumidos aparece acima de "Afinidade de Fragmentos", mais recente primeiro (m3-64)', () => {
