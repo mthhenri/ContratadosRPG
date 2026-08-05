@@ -99,7 +99,7 @@ export function listarBonusFragmentoPotencializador(
   const valores = BONUS_POTENCIALIZADOR[modulo];
   const opcoes: OpcaoBonusFragmentoDto[] = [
     {
-      rotulo: `+${valores.dadosBase} dados de efeito (não é dano)`,
+      rotulo: `+${valores.dadosBase} dados de efeito`,
       efeito: { tipo: ModificacaoEfeitoTipoEnum.EFEITO, valor: valores.dadosBase, variante: 'DADO' },
     },
   ];
