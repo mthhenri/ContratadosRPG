@@ -21,6 +21,63 @@
 
 ## Registro por task (mais recente primeiro)
 
+## m3-68 — Fragmentos: "efeito" do Potencializador não é dano (2026-08-05)
+
+Spec: `docs/specs/done/m3-68-fragmento-potencializador-efeito-nao-e-dano.spec.md`. Correção sobre o
+"Fechamento de Fragmentos" (`m3-63`…`m3-67`) — auditoria adicional encontrada ao revisar o cardápio
+do Potencializador com o autor. A spec (`bedec37`) já tinha sido registrada por outra sessão;
+implementação feita agora.
+
+**O problema.** `listarBonusFragmentoPotencializador` (`shared/regras/compras/fragmento.ts`) mapeava
+**errado** duas das quatro opções do cardápio "em um item" (doc — "⬦ Potencializador", tabela ~1938):
+a opção "+N dados (efeito)" ia para `DANO_DADOS_BASE` e a opção "+N no valor" de efeito (dentro do
+sub-cardápio "teste, efeito ou resistência") ia para `DANO_FIXO`, tratando **efeito** como se fosse
+**dano**. O doc rotula essas duas opções explicitamente como "(efeito)" — numa granada incendiária
+com dano e efeito "Em Chamas" separados, esses dados deveriam reforçar o "Em Chamas", nunca o dano.
+Só a opção "N× valor máximo do maior tipo de dado" É dano de verdade (pega o maior dado do item,
+soma como dano fixo) — essa e "+1 dado no teste" já estavam certas e não mudaram.
+
+**O que foi feito.**
+
+1. **Novo tipo `EFEITO`** em `ModificacaoEfeitoTipoEnum` (`shared/enums/modificacao-efeito-tipo.enum.ts`),
+   com `variante` `'DADO'`/`'FIXO'` (mesmo padrão de `BONUS_TESTE`). É puramente descritivo — não
+   funde em `calcularStatItem` (mesmo grupo de `ALCANCE`/`RAIO`/`DURACAO`/`CONDICAO`; o `switch` de
+   `calcularStatItem` já ignora tipos não tratados, então nenhuma mudança foi necessária lá).
+   Precedente: `m3-31` já trata bônus que o motor não computa como descritivo, jogador aplica na mão.
+2. **`listarBonusFragmentoPotencializador` corrigida**: "+N dados" → `EFEITO` variante `DADO`
+   (rótulo "+N dados de efeito (não é dano)"); "+N no valor" de efeito → `EFEITO` variante `FIXO`
+   (rótulo "+N no efeito"). As opções de "N× maior dado" (`DANO_FIXO`) e "+dado no teste"
+   (`BONUS_TESTE`) ficaram inalteradas.
+3. **`funcaoFragmento` ganhou a função `'EFEITO'`** — antes, `EFEITO` (então inexistente) caía em
+   `null` e não participava de `existeFragmentoNaMesmaFuncao`, um furo real: dois fragmentos ambos
+   mirando "efeito" no mesmo item não eram bloqueados pela regra de "uma única função" (doc — "⬦
+   Potencializador": "um item/ser pode conter mais de um fragmento, mas para apenas uma única
+   função"). Removido também o caso `DANO_DADOS_BASE` do switch (não é mais produzido pelo cardápio
+   do Potencializador — Construtor ainda usa esse tipo pro seu próprio bônus fixo, `m3-65`, mas
+   Potencializador nunca acopla num item Construtor, doc: "exceto em fragmentos construtores", então
+   as duas frentes nunca colidem nesse `switch`).
+4. **`descreverEfeitoModificacao`** (`compras.ts`) ganhou o `case EFEITO` (dado vs fixo), no mesmo
+   padrão do `case BONUS_TESTE` — chip da mod nunca mais menciona "dano" pra um bônus de efeito.
+5. **Testes**: `fragmento.spec.ts` — reescrito o mapeamento esperado de `listarBonusFragmentoPotencializador`
+   (3 testes ajustados) e `existeFragmentoNaMesmaFuncao` ganhou um teste de colisão "efeito vs efeito"
+   (variantes diferentes, dado vs fixo, ainda bloqueiam) além dos ajustes nos 2 testes de dano/comum;
+   `compras.spec.ts` ganhou 3 asserts pro rótulo do chip `EFEITO` (fixo, 1 dado, N dados — plural).
+   No frontend, 3 testes de `ficha-inventario.component.spec.ts` que simulavam um fragmento já
+   aplicado com `DANO_DADOS_BASE` (representando "dano ocupado") foram reescritos para `EFEITO`
+   variante `DADO` — passam a testar de fato a colisão de função "efeito" pedida pela spec, em vez de
+   um cenário que o motor não produz mais.
+
+**Fora de escopo, confirmado nesta revisão.** Cardápio "Consumido" (`BONUS_CONSUMIDO`, `m3-64`) — já
+correto, não mexido. Fundir `EFEITO` num stat computado (dado de cura, de status) — o sistema não
+define um motor de "efeito" genérico hoje; fica descritivo, mesmo tratamento de `m3-31`. Bônus fixo
+do Construtor (`m3-65`) — tabela própria, não usa este cardápio.
+
+**Verificação final.** `shared` 518/518 (era 517/517 — rede de +1 após reescrever os testes
+quebrados pela correção do mapeamento e acrescentar os novos de colisão/rótulo). `backend` 170/170,
+inalterado (não toca essa camada). `frontend` 704/706 (as 2 falhas são as pré-existentes conhecidas,
+`PROBLEMS.md` `P-001`/`P-010`, nenhuma nova). `npm run lint` limpo em `shared`; `frontend` só os 3
+erros pré-existentes de `P-009`, nenhum novo. `ng build --configuration development` limpo.
+
 ## m3-67 — Fragmentos: Limite mínimo de Energia e Anomalia Biológica (2026-08-05)
 
 Spec: `docs/specs/done/m3-67-fragmentos-limite-energia-anomalia-biologica.spec.md`. Continuação do

@@ -836,6 +836,15 @@ describe('coerência do catálogo e das tabelas', () => {
         '+2 nos testes',
       );
       expect(descreverEfeitoModificacao({ tipo: ModificacaoEfeitoTipoEnum.ALCANCE, valor: 1 })).toBe('+1 nível de alcance');
+      expect(descreverEfeitoModificacao({ tipo: ModificacaoEfeitoTipoEnum.EFEITO, valor: 3, variante: 'FIXO' })).toBe(
+        '+3 no efeito',
+      );
+      expect(descreverEfeitoModificacao({ tipo: ModificacaoEfeitoTipoEnum.EFEITO, valor: 1, variante: 'DADO' })).toBe(
+        '+1 dado de efeito',
+      );
+      expect(descreverEfeitoModificacao({ tipo: ModificacaoEfeitoTipoEnum.EFEITO, valor: 2, variante: 'DADO' })).toBe(
+        '+2 dados de efeito',
+      );
       expect(
         descreverEfeitoModificacao({ tipo: ModificacaoEfeitoTipoEnum.CONDICAO, condicao: 'Sangramento', duracaoTurnos: 2, atributoDt: 'Força' }),
       ).toBe('aplica Sangramento por 2t (DT Força)');

@@ -129,6 +129,10 @@ export function descreverEfeitoModificacao(efeito: ModificacaoEfeitoDto): string
       return efeito.variante === 'FIXO'
         ? `+${valor} nos testes`
         : `+${valor} ${plural(valor, 'dado', 'dados')} nos testes`;
+    case ModificacaoEfeitoTipoEnum.EFEITO:
+      return efeito.variante === 'FIXO'
+        ? `+${valor} no efeito`
+        : `+${valor} ${plural(valor, 'dado', 'dados')} de efeito`;
     case ModificacaoEfeitoTipoEnum.RESISTENCIA:
       return `${comSinal(valor)} de resist.${tipoEntre || ' (todas)'}`;
     case ModificacaoEfeitoTipoEnum.DEFESA:

@@ -11,7 +11,11 @@
  * como as mods do catálogo: `DANO_FIXO`, `DANO_DADOS`, `DANO_DADOS_BASE`,
  * `ELEVAR_DADO` (dano) · `RESISTENCIA` (proteção) · `INVENTARIO` (armazenamento).
  * Os demais são **descritivos** (aparecem no chip da mod, como a coluna de efeito
- * do catálogo faz com Perfuração, condições, alcance, etc.).
+ * do catálogo faz com Perfuração, condições, alcance, etc.) — inclui `EFEITO`
+ * (m3-68): bônus que reforça o **efeito** de um item (ex.: "Em Chamas" de uma
+ * granada incendiária), nunca o dano; o sistema não define um motor genérico de
+ * efeito hoje, então fica descritivo, jogador aplica na mão (mesmo tratamento de
+ * `ALCANCE`/`RAIO`/`DURACAO`/`CONDICAO`, precedente `m3-31`).
  */
 export enum ModificacaoEfeitoTipoEnum {
   /** +N de dano fixo (ex.: Letal, Potência). */
@@ -26,6 +30,12 @@ export enum ModificacaoEfeitoTipoEnum {
   PERFURACAO = 'PERFURACAO',
   /** +N em teste — `variante` `DADO` (dados) ou `FIXO` (bônus) (ex.: Balanceada, Mira Dot). */
   BONUS_TESTE = 'BONUS_TESTE',
+  /**
+   * +N no **efeito** do item (não dano) — `variante` `DADO` (dados) ou `FIXO` (bônus), mesmo padrão
+   * de `BONUS_TESTE` (ex.: Potencializador "em item", opções "+N dados (efeito)" e "+N no valor →
+   * efeito", `m3-68`).
+   */
+  EFEITO = 'EFEITO',
   /** +N de resistência — `tipoDano` vazio = todas; senão o tipo (ex.: Blindada, Hazmat, Antibombas). */
   RESISTENCIA = 'RESISTENCIA',
   /** +N em `variante` `Esquiva` / `Bloqueio` / `Defesa` (ex.: Flexível, Resistente). */

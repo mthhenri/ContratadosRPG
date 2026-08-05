@@ -1135,14 +1135,14 @@ describe('FichaInventario', () => {
       expect(alvo.componentInstance['alvosFragmentoDisponiveis']()).toEqual([]);
     });
 
-    it('bloqueia aplicar um 2º fragmento na mesma função (dano) do mesmo item: não emite e sinaliza o conflito', () => {
-      const itemComFragmentoDeDano: CarrinhoItemDto = {
+    it('bloqueia aplicar um 2º fragmento na mesma função (efeito) do mesmo item: não emite e sinaliza o conflito (m3-68)', () => {
+      const itemComFragmentoDeEfeito: CarrinhoItemDto = {
         ...itemLeve,
         modificacoes: [
           {
             nome: 'Fragmento Potencializador — Módulo V',
             empilhamentos: 1,
-            efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: 2 }],
+            efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.EFEITO, valor: 2, variante: 'DADO' }],
             ignoraLimiteTotal: true,
             ignoraLimiteProprio: true,
             origemFragmento: { tipo: FragmentoTipoEnum.POTENCIALIZADOR, modulo: FragmentoModuloEnum.V },
@@ -1150,12 +1150,12 @@ describe('FichaInventario', () => {
         ],
       };
       const alvo = montar({
-        itens: [itemComFragmentoDeDano, fragmento(FragmentoModuloEnum.IV)],
+        itens: [itemComFragmentoDeEfeito, fragmento(FragmentoModuloEnum.IV)],
         amplificadores: [],
       });
       alvo.componentInstance['abrirAplicarFragmento'](1);
       alvo.componentInstance['alvoFragmento'].set(0);
-      // Opção 0 é sempre "+N dados no dado base (dano)" — mesma função "dano" do fragmento já aplicado.
+      // Opção 0 é sempre "+N dados de efeito" — mesma função "efeito" do fragmento já aplicado.
       alvo.componentInstance['opcaoBonusFragmento'].set(0);
 
       expect(alvo.componentInstance['conflitoFuncaoFragmento']()).toBe(true);
@@ -1165,14 +1165,14 @@ describe('FichaInventario', () => {
       expect(alvo.emitidos).toHaveLength(0);
     });
 
-    it('não bloqueia uma função diferente (dano ocupado, teste livre) no mesmo item', () => {
-      const itemComFragmentoDeDano: CarrinhoItemDto = {
+    it('não bloqueia uma função diferente (efeito ocupado, teste livre) no mesmo item', () => {
+      const itemComFragmentoDeEfeito: CarrinhoItemDto = {
         ...itemLeve,
         modificacoes: [
           {
             nome: 'Fragmento Potencializador — Módulo V',
             empilhamentos: 1,
-            efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: 2 }],
+            efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.EFEITO, valor: 2, variante: 'DADO' }],
             ignoraLimiteTotal: true,
             ignoraLimiteProprio: true,
             origemFragmento: { tipo: FragmentoTipoEnum.POTENCIALIZADOR, modulo: FragmentoModuloEnum.V },
@@ -1180,7 +1180,7 @@ describe('FichaInventario', () => {
         ],
       };
       const alvo = montar({
-        itens: [itemComFragmentoDeDano, fragmento(FragmentoModuloEnum.IV)],
+        itens: [itemComFragmentoDeEfeito, fragmento(FragmentoModuloEnum.IV)],
         amplificadores: [],
       });
       alvo.componentInstance['abrirAplicarFragmento'](1);
@@ -1203,7 +1203,13 @@ describe('FichaInventario', () => {
     it('uma modificação comum (sem origemFragmento) com o mesmo tipo de efeito nunca bloqueia — a regra é só entre fragmentos', () => {
       const itemComModComum: CarrinhoItemDto = {
         ...itemLeve,
-        modificacoes: [{ nome: 'Reforçada', empilhamentos: 1, efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: 1 }] }],
+        modificacoes: [
+          {
+            nome: 'Reforçada',
+            empilhamentos: 1,
+            efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.EFEITO, valor: 1, variante: 'DADO' }],
+          },
+        ],
       };
       const alvo = montar({
         itens: [itemComModComum, fragmento(FragmentoModuloEnum.IV)],

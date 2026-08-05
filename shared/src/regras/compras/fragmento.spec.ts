@@ -68,16 +68,18 @@ describe('custoRemoverFragmento', () => {
 });
 
 describe('listarBonusFragmentoPotencializador', () => {
-  it('módulo V devolve as 5 opções do cardápio "em um item"', () => {
+  it('módulo V devolve as 5 opções do cardápio "em um item" (m3-68: efeito ≠ dano)', () => {
     const opcoes = listarBonusFragmentoPotencializador(FragmentoModuloEnum.V);
     expect(opcoes).toHaveLength(5);
     expect(opcoes.map((opcao) => opcao.efeito.tipo)).toEqual([
-      ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE,
+      ModificacaoEfeitoTipoEnum.EFEITO,
       ModificacaoEfeitoTipoEnum.BONUS_TESTE,
       ModificacaoEfeitoTipoEnum.BONUS_TESTE,
-      ModificacaoEfeitoTipoEnum.DANO_FIXO,
+      ModificacaoEfeitoTipoEnum.EFEITO,
       ModificacaoEfeitoTipoEnum.RESISTENCIA,
     ]);
+    expect(opcoes[0].efeito.variante).toBe('DADO');
+    expect(opcoes[3].efeito.variante).toBe('FIXO');
     expect(opcoes[0].efeito.valor).toBe(2);
     expect(opcoes[3].efeito.valor).toBe(2);
   });
@@ -89,15 +91,15 @@ describe('listarBonusFragmentoPotencializador', () => {
     expect(opcoes[4].efeito.valor).toBe(10);
   });
 
-  it('com o maior dado do alvo, insere a 5ª opção "N× maior dado" logo após a 1ª (m3-63)', () => {
+  it('com o maior dado do alvo, insere a 5ª opção "N× maior dado" logo após a 1ª (m3-63) — só ela é dano de verdade', () => {
     const opcoes = listarBonusFragmentoPotencializador(FragmentoModuloEnum.V, 8);
     expect(opcoes).toHaveLength(6);
     expect(opcoes.map((opcao) => opcao.efeito.tipo)).toEqual([
-      ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE,
+      ModificacaoEfeitoTipoEnum.EFEITO,
       ModificacaoEfeitoTipoEnum.DANO_FIXO,
       ModificacaoEfeitoTipoEnum.BONUS_TESTE,
       ModificacaoEfeitoTipoEnum.BONUS_TESTE,
-      ModificacaoEfeitoTipoEnum.DANO_FIXO,
+      ModificacaoEfeitoTipoEnum.EFEITO,
       ModificacaoEfeitoTipoEnum.RESISTENCIA,
     ]);
     // Módulo V multiplica 1×; D8 → +8 de dano.
@@ -183,12 +185,12 @@ describe('maiorDadoItem', () => {
 });
 
 describe('existeFragmentoNaMesmaFuncao', () => {
-  it('bloqueia um 2º fragmento na mesma função (dano), mesmo com efeitos diferentes (dados vs fixo)', () => {
+  it('bloqueia um 2º fragmento na mesma função (dano)', () => {
     const modificacoes = [
       {
         nome: 'Fragmento Potencializador — Módulo V',
         empilhamentos: 1,
-        efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: 2 }],
+        efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: 8 }],
         origemFragmento: { tipo: FragmentoTipoEnum.POTENCIALIZADOR, modulo: FragmentoModuloEnum.V },
       },
     ];
@@ -197,19 +199,37 @@ describe('existeFragmentoNaMesmaFuncao', () => {
     ).toBe(true);
   });
 
-  it('não bloqueia funções diferentes (dano já ocupado, teste livre)', () => {
+  it('bloqueia um 2º fragmento na mesma função (efeito), mesmo com variantes diferentes (dados vs fixo) — m3-68', () => {
     const modificacoes = [
       {
         nome: 'Fragmento Potencializador — Módulo V',
         empilhamentos: 1,
-        efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: 2 }],
+        efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.EFEITO, valor: 2, variante: 'DADO' }],
         origemFragmento: { tipo: FragmentoTipoEnum.POTENCIALIZADOR, modulo: FragmentoModuloEnum.V },
       },
     ];
     expect(
       existeFragmentoNaMesmaFuncao(modificacoes, {
-        tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE,
-        valor: 1,
+        tipo: ModificacaoEfeitoTipoEnum.EFEITO,
+        valor: 3,
+        variante: 'FIXO',
+      }),
+    ).toBe(true);
+  });
+
+  it('não bloqueia funções diferentes (dano já ocupado, efeito livre) — m3-68', () => {
+    const modificacoes = [
+      {
+        nome: 'Fragmento Potencializador — Módulo V',
+        empilhamentos: 1,
+        efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: 8 }],
+        origemFragmento: { tipo: FragmentoTipoEnum.POTENCIALIZADOR, modulo: FragmentoModuloEnum.V },
+      },
+    ];
+    expect(
+      existeFragmentoNaMesmaFuncao(modificacoes, {
+        tipo: ModificacaoEfeitoTipoEnum.EFEITO,
+        valor: 2,
         variante: 'DADO',
       }),
     ).toBe(false);
@@ -220,7 +240,7 @@ describe('existeFragmentoNaMesmaFuncao', () => {
       {
         nome: 'Reforçado',
         empilhamentos: 1,
-        efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: 1 }],
+        efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: 1 }],
       },
     ];
     expect(

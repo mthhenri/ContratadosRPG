@@ -1,6 +1,6 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-05 · **Última task registrada:** `m3-67` (2026-08-05)
+> **Última revisão:** 2026-08-05 · **Última task registrada:** `m3-68` (2026-08-05)
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -45,7 +45,7 @@ Deploy em produção por **integração nativa das plataformas**, sem GitHub Act
 `master` → Render (backend) e Cloudflare Pages (frontend) puxam do Git sozinhos; banco no Supabase.
 O GitHub Actions só roda **CI** (lint + testes nos 3 workspaces em todo PR).
 
-**Suítes:** shared 517/517 · backend 170/170 · frontend 704/**706** — as 2 falhas são conhecidas e
+**Suítes:** shared 518/518 · backend 170/170 · frontend 704/**706** — as 2 falhas são conhecidas e
 pré-existentes, ver [`PROBLEMS.md`](PROBLEMS.md) `P-001`/`P-010`. `npm run lint` **não fecha limpo**
 hoje em nenhum dos dois workspaces (frontend/backend) — falhas pré-existentes não relacionadas a
 nenhuma task recente, ver `PROBLEMS.md` `P-009`.
@@ -158,8 +158,12 @@ e ajuste manual de dados/`dadosTeste` por atributo, este último só afetando a 
 rolada, nunca o valor exibido nem os derivados; em edição, os atributos viram uma lista vertical —
 nome completo + steppers — em vez da grade compacta do modo leitura), vitais, sanidade e
 lesões, habilidades (com filtro e contador), inventário completo (itens, modificações,
-amplificadores, fragmentos Potencializador — "Aplicar em..." num item (`m3-35`) ou "Consumir" pro
-bônus permanente do agente (teste/Defesa/dano do Corpo, cardápio fechado por módulo, `m3-64`;
+amplificadores, fragmentos Potencializador — "Aplicar em..." num item (`m3-35`; cardápio "em um
+item" com 4 destinos exclusivos — dano [`N× maior dado do alvo`, dano de verdade], teste, **efeito**
+[`m3-68`: tipo `EFEITO` próprio, descritivo — reforça o efeito do item, ex.: "Em Chamas" de uma
+granada, nunca soma no dano] e resistência; "uma única função" por item, checado por
+`existeFragmentoNaMesmaFuncao`) ou "Consumir" pro bônus permanente do agente (teste/Defesa/dano do
+Corpo, cardápio fechado por módulo, `m3-64`;
 consumir sempre deixa um registro incondicional na aba Extras, acima da Afinidade — não depende da
 sequela "Rejeição Biológica", que é evitável — e é **removível**: desfaz o bônus, a Energia Máxima e
 devolve o item ao inventário, mas não mexe na sequela já gerada) — e fragmentos Construtor (nascem

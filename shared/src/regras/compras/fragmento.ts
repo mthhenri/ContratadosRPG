@@ -78,14 +78,19 @@ export interface OpcaoBonusFragmentoDto {
 /**
  * Cardápio de bônus "em um item" de um fragmento Potencializador de `modulo` — o jogador escolhe
  * UMA opção ao aplicar (doc — "⬦ Potencializador", tabela). Mapeado aos `ModificacaoEfeitoTipoEnum`
- * já existentes (`DANO_DADOS_BASE`/`BONUS_TESTE`/`DANO_FIXO`/`RESISTENCIA`) — zero motor novo em
- * `calcularStatItem`, que já soma esses tipos vindos de qualquer modificação custom.
+ * já existentes (`EFEITO`/`BONUS_TESTE`/`DANO_FIXO`/`RESISTENCIA`) — zero motor novo em
+ * `calcularStatItem`, que já soma os tipos de dano vindos de qualquer modificação custom (`EFEITO`
+ * é descritivo, como `BONUS_TESTE`).
  *
- * `maiorDado` (faces do maior dado do **alvo** já escolhido, `maiorDadoItem` — `m3-63`) liga a 5ª
- * opção da tabela, "N× valor máximo do maior tipo de dado" ao dano (mesmo `DANO_FIXO` da opção "de
- * dano (efeito)", só que o valor vem de `multiplicador × faces` em vez do `valorFixo` do módulo):
- * `null` (nenhum alvo escolhido ainda, ou alvo sem dado no campo `dano`) omite a opção — "não faz
- * sentido '1× o maior dado' de um item sem dado de dano" (spec).
+ * **Efeito é diferente de dano** (`m3-68`, correção sobre `m3-63`): as opções "+N dados" e "+N no
+ * valor → efeito" do doc reforçam o **efeito** do item (ex.: "Em Chamas" de uma granada, separado do
+ * dano), nunca somam a `dano` — por isso usam `EFEITO`, não `DANO_DADOS_BASE`/`DANO_FIXO`. Só "N×
+ * valor máximo do maior tipo de dado" é dano de verdade (`DANO_FIXO`).
+ *
+ * `maiorDado` (faces do maior dado do **alvo** já escolhido, `maiorDadoItem` — `m3-63`) liga a
+ * opção "N× valor máximo do maior tipo de dado" ao dano: `null` (nenhum alvo escolhido ainda, ou
+ * alvo sem dado no campo `dano`) omite a opção — "não faz sentido '1× o maior dado' de um item sem
+ * dado de dano" (spec).
  */
 export function listarBonusFragmentoPotencializador(
   modulo: FragmentoModuloEnum,
@@ -94,8 +99,8 @@ export function listarBonusFragmentoPotencializador(
   const valores = BONUS_POTENCIALIZADOR[modulo];
   const opcoes: OpcaoBonusFragmentoDto[] = [
     {
-      rotulo: `+${valores.dadosBase} dados no dado base (dano)`,
-      efeito: { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: valores.dadosBase },
+      rotulo: `+${valores.dadosBase} dados de efeito (não é dano)`,
+      efeito: { tipo: ModificacaoEfeitoTipoEnum.EFEITO, valor: valores.dadosBase, variante: 'DADO' },
     },
   ];
   if (maiorDado !== null) {
@@ -115,8 +120,8 @@ export function listarBonusFragmentoPotencializador(
       efeito: { tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: valores.valorFixo, variante: 'FIXO' },
     },
     {
-      rotulo: `+${valores.valorFixo} de dano (efeito)`,
-      efeito: { tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: valores.valorFixo },
+      rotulo: `+${valores.valorFixo} no efeito`,
+      efeito: { tipo: ModificacaoEfeitoTipoEnum.EFEITO, valor: valores.valorFixo, variante: 'FIXO' },
     },
     {
       rotulo: `+${valores.valorFixo} de resistência`,
@@ -127,21 +132,23 @@ export function listarBonusFragmentoPotencializador(
 }
 
 /**
- * "Função" que um efeito de fragmento cumpre — dano, teste ou resistência (doc — "⬦
+ * "Função" que um efeito de fragmento cumpre — dano, teste, efeito ou resistência (doc — "⬦
  * Potencializador": "um item/ser pode conter mais de um fragmento, mas para apenas uma única
  * função... uma arma não pode ter 2 fragmentos aumentando seu dano... mas pode ter 2 fragmentos,
- * uma para o dano e outro para o teste"). `DANO_DADOS_BASE` e `DANO_FIXO` contam como a mesma
- * função "dano" (dados a mais ou valor fixo a mais são as duas formas do cardápio de "aumentar o
- * dano"); `BONUS_TESTE` conta como "teste" independente da `variante` (dado ou fixo, mesma
- * função); `null` para efeitos fora do cardápio do Potencializador (não participam da checagem).
+ * uma para o dano e outro para o teste"). `DANO_FIXO` (só a opção "N× maior dado", dano de
+ * verdade) é a função "dano"; `BONUS_TESTE` conta como "teste" independente da `variante` (dado ou
+ * fixo); `EFEITO` conta como sua própria função "efeito" (`m3-68` — corrige furo em que dois
+ * fragmentos ambos mirando "efeito" no mesmo alvo não eram bloqueados, porque caíam em `null`);
+ * `null` para efeitos fora do cardápio do Potencializador (não participam da checagem).
  */
-function funcaoFragmento(efeito: ModificacaoEfeitoDto): 'DANO' | 'TESTE' | 'RESISTENCIA' | null {
+function funcaoFragmento(efeito: ModificacaoEfeitoDto): 'DANO' | 'TESTE' | 'EFEITO' | 'RESISTENCIA' | null {
   switch (efeito.tipo) {
-    case ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE:
     case ModificacaoEfeitoTipoEnum.DANO_FIXO:
       return 'DANO';
     case ModificacaoEfeitoTipoEnum.BONUS_TESTE:
       return 'TESTE';
+    case ModificacaoEfeitoTipoEnum.EFEITO:
+      return 'EFEITO';
     case ModificacaoEfeitoTipoEnum.RESISTENCIA:
       return 'RESISTENCIA';
     default:
