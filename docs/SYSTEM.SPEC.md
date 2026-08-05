@@ -368,7 +368,7 @@ DB_SENHA=postgres
 
 # JWT
 JWT_SECRETO=troque-em-producao
-JWT_EXPIRACAO=8h
+JWT_EXPIRACAO=7d
 
 # Aplicação
 APP_PORTA=3100

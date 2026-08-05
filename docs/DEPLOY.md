@@ -87,7 +87,7 @@ conecta ao Git e reimplanta no push.
    |-------------------------------|----------------------------------------------------------|
    | `DB_HOST` … `DB_SENHA`        | do passo 1                                               |
    | `JWT_SECRETO`                 | **valor forte e único** (ex.: `openssl rand -hex 32`) — diferente do `.env.example` |
-   | `JWT_EXPIRACAO`               | `8h`                                                     |
+   | `JWT_EXPIRACAO`               | `7d`                                                     |
    | `APP_PORTA`                   | `10000` — precisa casar com a porta que o Render expõe (`PORT`, default `10000`); o backend lê `APP_PORTA` via `ConfigService` |
    | `APP_AMBIENTE`                | `production`                                             |
    | `APP_FRONTEND_ORIGEM`         | `https://<projeto>.pages.dev` — **obrigatória no boot**; use já a URL determinística das Pages (passo 3) |

@@ -21,9 +21,9 @@ import { JwtStrategy } from './jwt.strategy';
       inject: [ConfigService],
       useFactory: (configService: ConfigService): JwtModuleOptions => {
         const { secreto, expiracao } = configService.obterConfiguracaoJwt();
-        // `expiracao` vem do .env como string (ex.: "8h"); a tipagem do @nestjs/jwt aceita o
+        // `expiracao` vem do .env como string (ex.: "7d"); a tipagem do @nestjs/jwt aceita o
         // formato de duração do pacote `ms`, mas só como literal — daí o cast controlado.
-        return { secret: secreto, signOptions: { expiresIn: expiracao as `${number}h` } };
+        return { secret: secreto, signOptions: { expiresIn: expiracao as `${number}d` } };
       },
     }),
   ],

@@ -29,7 +29,7 @@ services:
       - key: JWT_SECRETO
         sync: false
       - key: JWT_EXPIRACAO
-        value: 8h
+        value: 7d
       # Conexão do Postgres de produção (Supabase). Preenchidas no dashboard a partir das
       # credenciais do projeto Supabase — nunca hardcodadas. (SSL + queries: a partir do M2.)
       - key: DB_HOST
