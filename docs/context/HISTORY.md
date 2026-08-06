@@ -1,5 +1,19 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-06 — Subnavegação e rolagem interna de Extras da ficha
+
+A aba **Extras** da `FichaVisualizacao` passou a ter uma subbarra persistente com **Identidade**
+(Patente, Origem e Personalidade) e **Fragmentos** (Fragmentos Consumidos, Afinidade de Fragmentos e
+Anomalia Biológica). Os controles usam os ícones canônicos de agente e fragmento, expõem o estado
+ativo por `aria-pressed` e preservam a seleção enquanto o componente permanece montado. A subbarra
+fica fixa e o conteúdo de cada recorte rola separadamente; no desktop, Status acompanha exatamente
+a altura das colunas de Agente/Atributos.
+
+**Verificado:** spec focada da `FichaVisualizacao` com 124/124 testes, build de produção e
+`git diff --check`. Na aplicação real, em 1920×1080 as três colunas mediram 714,28px, sem overflow
+horizontal e com a navegação fora do painel rolável. Em 360×800, os dois controles mediram 44px de
+altura, mantiveram ícones e rótulos completos e não produziram overflow horizontal.
+
 ## 2026-08-05 — Alinhamento desktop dos filtros do inventário
 
 Na barra principal do inventário, `+ Adicionar itens` e `+ Item custom` permanecem à esquerda e o

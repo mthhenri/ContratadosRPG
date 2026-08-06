@@ -180,7 +180,10 @@ de Energia/Anomalia Biológica (`m3-67`: `(Vigor + Destreza) × 2` — abaixo de
 na aquisição de fragmento e, na aba Extras, os efeitos calculados como texto informativo (−15
 testes, −10 Defesa, teto de 10% da Vida Máxima) + atalho pra pré-preencher o trauma "Limiar da
 Humanidade" na aba Sanidade, sem nunca disparar sozinho), identidade (origem,
-personalidade, afinidade de fragmentos), história privada, anotações e dinheiro. Persistência **otimista + em lote**, com
+personalidade, afinidade de fragmentos), história privada, anotações e dinheiro. Extras possui a
+subnavegação persistente **Identidade / Fragmentos** (`m3-71`), com ícones canônicos e painel interno
+rolável limitado à altura de Agente/Atributos no desktop e ao viewport em telas empilhadas.
+Persistência **otimista + em lote**, com
 merge de edição concorrente — a lógica (~18 handlers `ajustar*` + progressão) mora em
 `FichaEdicaoService` (`@Injectable()` sem `providedIn: 'root'`, uma instância por página via
 `providers: []`), reusado por `VisualizarPage` (`/painel/:campanhaId/ficha/:id` e `/fichas/:id`) e

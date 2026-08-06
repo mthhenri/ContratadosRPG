@@ -190,6 +190,9 @@ export type AbaStatus =
   | 'extras'
   | 'historia';
 
+/** Recorte local da aba Extras — estado efêmero de apresentação, sem reflexo na URL ou na ficha. */
+type AbaExtras = 'identidade' | 'fragmentos';
+
 /** Todas as abas do card de Status, na ordem de exibição da barra. */
 const ABAS_STATUS: readonly AbaStatus[] = [
   'informacoes',
@@ -696,6 +699,9 @@ export class FichaVisualizacao {
    */
   protected readonly abaStatusAtiva = linkedSignal<AbaStatus>(() => this.abaStatusInicial());
 
+  /** Subaba de Extras; preservada enquanto esta instância da visualização permanecer montada. */
+  protected readonly abaExtrasAtiva = signal<AbaExtras>('identidade');
+
   /**
    * Emite a aba escolhida, ou `'agente'` (m3-60 — destino próprio da barra inferior, fora de
    * `AbaStatus`) — a página reflete no `#` (fragmento) da URL (deep-link/refresh), assim um F5 na
@@ -733,6 +739,11 @@ export class FichaVisualizacao {
     this.abaStatusAtiva.set(aba);
     this.destinoMobile.set(aba);
     this.abaStatusMudou.emit(aba);
+  }
+
+  /** Troca somente o recorte apresentado dentro de Extras. */
+  protected selecionarAbaExtras(aba: AbaExtras): void {
+    this.abaExtrasAtiva.set(aba);
   }
 
   /**

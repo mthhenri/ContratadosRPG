@@ -981,6 +981,89 @@
 
 // === Extras: Origem/Personalidade/afinidade de Fragmentos (m3-49, aba "Extras" do Status) ===
 .ficha-extras {
+  min-height: 0;
+
+  &__navegacao {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2px;
+    min-width: 0;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    padding: 4px;
+  }
+
+  // No painel padrão largo, o conteúdo de Status não define a altura da fileira: ela é medida
+  // pelas colunas de Agente/Atributos e Status apenas acompanha essa altura. Assim, abas longas
+  // como Extras rolam por dentro sem empurrar as três colunas para baixo.
+  @media (min-width: (bp.$bp-tablet + 1px)) {
+    &:not(&--compacto) &__coluna--status {
+      contain: size;
+      overflow: hidden;
+    }
+
+    &:not(&--compacto) .ficha-cartao--status {
+      min-height: 0;
+      overflow: hidden;
+    }
+  }
+
+  &__navegacao-botao {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+    min-height: bp.$alvo-toque;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: var(--radius-control);
+    padding: 6px 10px;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      color 0.12s ease,
+      background 0.12s ease,
+      border-color 0.12s ease;
+
+    &--ativa {
+      border-bottom-color: var(--accent);
+      background: var(--accent-dim);
+      color: var(--accent);
+      font-weight: 700;
+    }
+  }
+
+  &__navegacao-icone {
+    flex: 0 0 auto;
+    font-size: 13px;
+  }
+
+  &__painel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-inline-end: 4px;
+
+    // Quando as colunas já estão empilhadas, não existe uma coluna lateral cuja altura possa ser
+    // compartilhada. O teto passa a ser o viewport disponível, preservando uma área útil de toque
+    // para a navegação da ficha e para a subbarra fixa de Extras.
+    @include bp.tablet {
+      max-height: calc(100dvh - #{bp.$alvo-toque * 3});
+    }
+  }
+
   &__secao {
     display: flex;
     flex-direction: column;

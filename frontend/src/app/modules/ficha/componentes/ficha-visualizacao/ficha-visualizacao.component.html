@@ -1433,6 +1433,31 @@
         }
         @if (abaStatusEfetiva() === 'extras') {
         <div class="ficha-status__conteudo ficha-extras">
+          <nav class="ficha-extras__navegacao" aria-label="Seções de Extras">
+            <button
+              type="button"
+              class="ficha-extras__navegacao-botao"
+              [class.ficha-extras__navegacao-botao--ativa]="abaExtrasAtiva() === 'identidade'"
+              [attr.aria-pressed]="abaExtrasAtiva() === 'identidade'"
+              (click)="selecionarAbaExtras('identidade')"
+            >
+              <app-icone class="ficha-extras__navegacao-icone" nome="agente" />
+              <span>Identidade</span>
+            </button>
+            <button
+              type="button"
+              class="ficha-extras__navegacao-botao"
+              [class.ficha-extras__navegacao-botao--ativa]="abaExtrasAtiva() === 'fragmentos'"
+              [attr.aria-pressed]="abaExtrasAtiva() === 'fragmentos'"
+              (click)="selecionarAbaExtras('fragmentos')"
+            >
+              <app-icone class="ficha-extras__navegacao-icone" nome="fragmento" />
+              <span>Fragmentos</span>
+            </button>
+          </nav>
+
+          <div class="ficha-extras__painel">
+          @if (abaExtrasAtiva() === 'identidade') {
           <!-- Patente: nome, faixa de Prestígio, salário e os dois limites da patente atual (doc —
                "Prestígio e Patentes"/"Limite de Crédito") — tudo derivado do Prestígio, nunca
                persistido (mesma fonte de `patenteTexto()`/`salario()` do glance de Identidade). -->
@@ -1506,8 +1531,8 @@
             }
           </div>
 
-          <div class="ficha-cartao__divisor"></div>
-
+          }
+          @if (abaExtrasAtiva() === 'fragmentos') {
           <!-- Fragmentos Consumidos (m3-64): rastro incondicional — existe mesmo quando o jogador
                evita a sequela "Rejeição Biológica" com o teste de Vontade, por isso fica na própria
                ficha (Extras), não só na descrição da sequela. Removível (m3-64, correção): desfaz o
@@ -1653,6 +1678,8 @@
                 Energia Máxima ({{ energiaMaxima() }}) dentro do limite — sem Anomalia Biológica.
               </p>
             }
+          </div>
+          }
           </div>
         </div>
         }

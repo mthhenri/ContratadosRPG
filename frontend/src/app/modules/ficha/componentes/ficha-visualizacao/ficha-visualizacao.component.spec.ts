@@ -1328,12 +1328,97 @@ describe('FichaVisualizacao', () => {
     };
 
     /** Monta já na aba "Extras" (evita depender de clique na barra do card de Status). */
-    function montarExtras(documento: FichaJogadorDadosDto) {
-      const alvo = montar(documento);
+    function montarExtras(documento: FichaJogadorDadosDto, ajustavel = false) {
+      const alvo = montar(documento, 'Corvo', 42, ajustavel);
       alvo.fixture.componentRef.setInput('abaStatusInicial', 'extras');
       alvo.fixture.detectChanges();
       return alvo;
     }
+
+    function selecionarAbaExtras(raiz: HTMLElement, rotulo: 'Identidade' | 'Fragmentos'): void {
+      const botao = Array.from(
+        raiz.querySelectorAll<HTMLButtonElement>('.ficha-extras__navegacao-botao'),
+      ).find((item) => item.textContent?.trim() === rotulo);
+      expect(botao).toBeTruthy();
+      botao!.click();
+    }
+
+    function montarFragmentos(documento: FichaJogadorDadosDto, ajustavel = false) {
+      const alvo = montarExtras(documento, ajustavel);
+      selecionarAbaExtras(alvo.raiz, 'Fragmentos');
+      alvo.fixture.detectChanges();
+      return alvo;
+    }
+
+    it('inicia Extras em Identidade e anuncia a seleção na subbarra', () => {
+      const { raiz } = montarExtras({
+        ...dados,
+        identidade: { personalidade: 'Destemido', origem: origemExemplo },
+      });
+      const extras = raiz.querySelector('.ficha-extras') as HTMLElement;
+      const botoes = Array.from(
+        extras.querySelectorAll<HTMLButtonElement>('.ficha-extras__navegacao-botao'),
+      );
+
+      expect(botoes.map((botao) => botao.textContent?.trim())).toEqual(['Identidade', 'Fragmentos']);
+      expect(botoes.map((botao) => botao.getAttribute('aria-pressed'))).toEqual(['true', 'false']);
+      expect(extras.textContent).toContain('Patente');
+      expect(extras.textContent).toContain('Origem');
+      expect(extras.textContent).toContain('Personalidade');
+      expect(extras.textContent).not.toContain('Fragmentos Consumidos');
+      expect(extras.textContent).not.toContain('Afinidade de Fragmentos');
+      expect(extras.textContent).not.toContain('Anomalia Biológica');
+    });
+
+    it('mantém a subbarra com ícones fora do painel rolável', () => {
+      const { raiz } = montarExtras(dados);
+      const extras = raiz.querySelector('.ficha-extras') as HTMLElement;
+      const navegacao = extras.querySelector('.ficha-extras__navegacao') as HTMLElement;
+      const painel = extras.querySelector('.ficha-extras__painel') as HTMLElement;
+
+      expect(navegacao.querySelectorAll('.ficha-extras__navegacao-icone')).toHaveLength(2);
+      expect(painel).toBeTruthy();
+      expect(painel.contains(navegacao)).toBe(false);
+      expect(painel.textContent).toContain('Patente');
+      expect(painel.textContent).toContain('Origem');
+      expect(painel.textContent).toContain('Personalidade');
+    });
+
+    it('troca para Fragmentos e renderiza somente as seções desse recorte', () => {
+      const alvo = montarExtras(dados);
+
+      selecionarAbaExtras(alvo.raiz, 'Fragmentos');
+      alvo.fixture.detectChanges();
+
+      const extras = alvo.raiz.querySelector('.ficha-extras') as HTMLElement;
+      const botoes = Array.from(
+        extras.querySelectorAll<HTMLButtonElement>('.ficha-extras__navegacao-botao'),
+      );
+      expect(botoes.map((botao) => botao.getAttribute('aria-pressed'))).toEqual(['false', 'true']);
+      expect(extras.textContent).not.toContain('Patente');
+      expect(extras.textContent).not.toContain('Origem');
+      expect(extras.textContent).not.toContain('Personalidade');
+      expect(extras.textContent).toContain('Fragmentos Consumidos');
+      expect(extras.textContent).toContain('Afinidade de Fragmentos');
+      expect(extras.textContent).toContain('Anomalia Biológica');
+    });
+
+    it('preserva Fragmentos ao sair de Extras e voltar enquanto o componente permanece montado', () => {
+      const alvo = montarExtras(dados);
+      selecionarAbaExtras(alvo.raiz, 'Fragmentos');
+      alvo.fixture.detectChanges();
+
+      alvo.fixture.componentInstance['selecionarAbaStatus']('informacoes');
+      alvo.fixture.detectChanges();
+      alvo.fixture.componentInstance['selecionarAbaStatus']('extras');
+      alvo.fixture.detectChanges();
+
+      const extras = alvo.raiz.querySelector('.ficha-extras') as HTMLElement;
+      expect(extras.textContent).toContain('Fragmentos Consumidos');
+      expect(
+        extras.querySelector<HTMLButtonElement>('.ficha-extras__navegacao-botao--ativa')?.textContent?.trim(),
+      ).toBe('Fragmentos');
+    });
 
     /**
      * Registro de `fragmentosConsumidos` completo (m3-64, correção) — os campos além de
@@ -1458,7 +1543,7 @@ describe('FichaVisualizacao', () => {
           ],
         },
       ];
-      const { raiz, fixture } = montarExtras({ ...dados, inventario: { itens, amplificadores: [] } });
+      const { raiz, fixture } = montarFragmentos({ ...dados, inventario: { itens, amplificadores: [] } });
 
       // Doc — "⬥ Afinidade com Fragmentos": 2× módulo V (1 cada) + 1× módulo IV (2) = 4.
       expect(fixture.componentInstance['afinidadeFragmentos']()).toBe(4);
@@ -1475,7 +1560,7 @@ describe('FichaVisualizacao', () => {
     });
 
     it('sem fragmentos portados: afinidade 0 e mensagem de vazio, sem nota de redução', () => {
-      const { raiz, fixture } = montarExtras(dados);
+      const { raiz, fixture } = montarFragmentos(dados);
       expect(fixture.componentInstance['afinidadeFragmentos']()).toBe(0);
       expect(raiz.textContent).toContain('Nenhum fragmento portado.');
       expect(raiz.textContent).not.toContain('Afinidade acima de 10');
@@ -1495,7 +1580,7 @@ describe('FichaVisualizacao', () => {
           modulo: FragmentoModuloEnum.I,
         },
       ];
-      const { raiz, fixture } = montarExtras({ ...dados, inventario: { itens, amplificadores: [] } });
+      const { raiz, fixture } = montarFragmentos({ ...dados, inventario: { itens, amplificadores: [] } });
 
       expect(fixture.componentInstance['afinidadeFragmentos']()).toBe(30);
       expect(raiz.textContent).toContain('Afinidade acima de 10: −10 de Energia no custo de fragmentos.');
@@ -1513,7 +1598,7 @@ describe('FichaVisualizacao', () => {
           registroFragmentoConsumido(FragmentoModuloEnum.V, '+2 de dano do Corpo'),
         ],
       };
-      const { raiz } = montarExtras(documento);
+      const { raiz } = montarFragmentos(documento);
 
       const secoes = Array.from(raiz.querySelectorAll('.ficha-extras__secao'));
       const titulos = secoes.map((s) => s.querySelector('.ficha-cartao__subrotulo')?.textContent?.trim());
@@ -1533,7 +1618,7 @@ describe('FichaVisualizacao', () => {
     });
 
     it('sem fragmentos consumidos: mensagem de vazio na seção "Fragmentos Consumidos"', () => {
-      const { raiz } = montarExtras(dados);
+      const { raiz } = montarFragmentos(dados);
       const secao = Array.from(raiz.querySelectorAll('.ficha-extras__secao')).find(
         (s) => s.querySelector('.ficha-cartao__subrotulo')?.textContent?.trim() === 'Fragmentos Consumidos',
       );
@@ -1555,15 +1640,13 @@ describe('FichaVisualizacao', () => {
 
     it('visualizador (não ajustável): sem botão de remover no registro', () => {
       const registro = registroFragmentoConsumido(FragmentoModuloEnum.V, '+1 em Defesa');
-      const { raiz } = montarExtras({ ...dados, fragmentosConsumidos: [registro] });
+      const { raiz } = montarFragmentos({ ...dados, fragmentosConsumidos: [registro] });
       expect(raiz.querySelector('.ficha-extras__mini-btn')).toBeNull();
     });
 
     it('dono/mestre: botão ✕ abre a confirmação "Remover?"; cancelar fecha sem remover; confirmar retira a linha', () => {
       const registro = registroFragmentoConsumido(FragmentoModuloEnum.V, '+1 em Defesa');
-      const alvo = montar({ ...dados, fragmentosConsumidos: [registro] }, 'Corvo', 42, true);
-      alvo.fixture.componentRef.setInput('abaStatusInicial', 'extras');
-      alvo.fixture.detectChanges();
+      const alvo = montarFragmentos({ ...dados, fragmentosConsumidos: [registro] }, true);
       const secao = () =>
         Array.from(alvo.raiz.querySelectorAll('.ficha-extras__secao')).find(
           (s) => s.querySelector('.ficha-cartao__subrotulo')?.textContent?.trim() === 'Fragmentos Consumidos',
@@ -1611,6 +1694,7 @@ describe('FichaVisualizacao', () => {
     function montarExtras(documento: FichaJogadorDadosDto, ajustavel = false) {
       const alvo = montar(documento, 'Corvo', 42, ajustavel);
       alvo.fixture.componentRef.setInput('abaStatusInicial', 'extras');
+      alvo.fixture.componentInstance['selecionarAbaExtras']('fragmentos');
       alvo.fixture.detectChanges();
       return alvo;
     }
