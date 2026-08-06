@@ -18,7 +18,7 @@
 
 ---
 
-### Task 1: Ancorar responsivamente o grupo de filtros
+### Task 1: Ancorar responsivamente o grupo de filtros — concluída
 
 **Files:**
 
@@ -32,7 +32,7 @@
 - Consumes: a barra `.ficha-inv__acoes` flexível e o grupo `.ficha-inv__filtro` já existentes.
 - Produces: margem inicial automática no desktop, removida no `bp.mobile`; nenhum contrato TypeScript é criado ou alterado.
 
-- [ ] **Step 1: Escrever o teste de estilo para o filtro em desktop**
+- [x] **Step 1: Escrever o teste de estilo para o filtro em desktop**
 
 ```typescript
 it('ancora o grupo de filtros à direita da barra de adição no desktop', () => {
@@ -43,13 +43,13 @@ it('ancora o grupo de filtros à direita da barra de adição no desktop', () =>
 });
 ```
 
-- [ ] **Step 2: Rodar o teste e confirmar a falha sem a margem automática**
+- [x] **Step 2: Rodar o teste e confirmar a falha sem a margem automática**
 
 Run: `npm run test --workspace=frontend -- --include='**/ficha-inventario.component.spec.ts'`
 
 Expected: o teste novo falha porque `marginInlineStart` ainda não é `auto`; a falha preexistente `P-001` pode continuar separadamente.
 
-- [ ] **Step 3: Aplicar o alinhamento no SCSS**
+- [x] **Step 3: Aplicar o alinhamento no SCSS**
 
 ```scss
 &__filtro {
@@ -63,19 +63,19 @@ Expected: o teste novo falha porque `marginInlineStart` ainda não é `auto`; a 
 }
 ```
 
-- [ ] **Step 4: Rodar o teste novamente e conferir o comportamento preservado**
+- [x] **Step 4: Rodar o teste novamente e conferir o comportamento preservado**
 
 Run: `npm run test --workspace=frontend -- --include='**/ficha-inventario.component.spec.ts'`
 
 Expected: o novo teste passa, e a única falha possível da suíte segue sendo a preexistente `P-001`.
 
-- [ ] **Step 5: Verificar a UI real nos dois viewports**
+- [x] **Step 5: Verificar a UI real nos dois viewports**
 
 Run: abrir uma ficha editável em 1920×1080 e 360×800.
 
 Expected: em desktop, os dois botões de adição ficam à esquerda e o grupo completo de filtros na ponta direita, na mesma linha; em mobile, os filtros continuam abaixo, à esquerda, em uma linha e abreviados.
 
-- [ ] **Step 6: Registrar e revisar o resultado**
+- [x] **Step 6: Registrar e revisar o resultado**
 
 Run: `git diff --check`, `npm run build --workspace=frontend` e `git diff -- frontend/src/app/modules/ficha/componentes/ficha-inventario docs/context`.
 

@@ -2318,6 +2318,13 @@ describe('FichaInventario', () => {
       expect(botaoFiltro(raiz, 'Equipamentos').getAttribute('aria-pressed')).toBe('false');
       expect(componentInstance['filtroInventario']()).toBe('fragmentos');
     });
+
+    it('ancora o grupo de filtros à direita da barra de adição no desktop', () => {
+      const { raiz } = montar({ itens: [fragmentoAvulso()], amplificadores: [] });
+      const filtro = raiz.querySelector('.ficha-inv__filtro') as HTMLElement;
+
+      expect(getComputedStyle(filtro).marginInlineStart).toBe('auto');
+    });
   });
 
   describe('podeRolar (m3-51) — rolar dano da arma (m3-45) gated', () => {

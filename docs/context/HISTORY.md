@@ -1,5 +1,18 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-05 — Alinhamento desktop dos filtros do inventário
+
+Na barra principal do inventário, `+ Adicionar itens` e `+ Item custom` permanecem à esquerda e o
+grupo **Equipamentos / Amplificadores / Fragmentos** agora fica ancorado à direita da mesma linha no
+desktop. O SCSS usa `margin-inline-start: auto` no grupo do filtro, em vez de criar wrappers ou
+alterar o template. Em `bp.mobile`, a margem volta a `0`, preservando a segunda linha à esquerda,
+os rótulos abreviados e a ausência de overflow.
+
+**Verificado:** o novo teste de estilo passou; a spec do componente ficou em 135/136, com apenas a
+falha P-001 preexistente. Na aplicação real, em 1920×1080 os botões de adição e o filtro tiveram o
+mesmo `top` (292,94px), com o filtro na ponta direita; em 360×800, o filtro começou à esquerda da
+linha própria (`left = 40px`) e manteve `scrollWidth = clientWidth = 258px`.
+
 ## 2026-08-05 — Ajuste da barra de filtros do inventário
 
 O controle segmentado de **Equipamentos / Amplificadores / Fragmentos** passou a integrar a mesma

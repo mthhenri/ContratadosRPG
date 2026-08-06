@@ -1,6 +1,6 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-05 · **Última task registrada:** ajuste da barra de filtros do inventário
+> **Última revisão:** 2026-08-05 · **Última task registrada:** alinhamento desktop dos filtros do inventário
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).

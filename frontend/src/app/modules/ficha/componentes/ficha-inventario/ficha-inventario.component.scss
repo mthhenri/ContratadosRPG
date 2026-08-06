@@ -203,6 +203,8 @@
   &__filtro {
     display: inline-flex;
     align-self: flex-start;
+    // Consome o espaço livre da barra no desktop e fixa o grupo de filtros na ponta direita.
+    margin-inline-start: auto;
     gap: 4px;
     padding: 4px;
     background: var(--surface-2);
@@ -211,6 +213,8 @@
 
     // Rótulos compactos mantêm os três filtros na mesma linha no mobile, sem overflow.
     @include bp.mobile {
+      // No mobile o filtro já ocupa sua linha própria abaixo das ações de adição.
+      margin-inline-start: 0;
       flex-wrap: nowrap;
       max-width: 100%;
     }
