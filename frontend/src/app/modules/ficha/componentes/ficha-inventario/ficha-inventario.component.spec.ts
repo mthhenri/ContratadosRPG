@@ -2241,10 +2241,10 @@ describe('FichaInventario', () => {
       };
     }
 
-    /** Localiza o botão do filtro (grupo `.ficha-inv__filtro`) pelo rótulo — nunca troca de texto. */
+    /** Localiza o botão pelo nome acessível, que permanece por extenso nos dois viewports. */
     function botaoFiltro(raiz: HTMLElement, rotulo: string): HTMLButtonElement {
       return Array.from(raiz.querySelectorAll('.ficha-inv__filtro-item')).find(
-        (b) => b.textContent?.trim() === rotulo,
+        (b) => b.getAttribute('aria-label') === rotulo,
       ) as HTMLButtonElement;
     }
 
@@ -2297,18 +2297,25 @@ describe('FichaInventario', () => {
       expect(componentInstance['mostrandoSoFragmentos']()).toBe(false);
     });
 
-    it('os 3 botões existem sempre visíveis (rótulo fixo) e refletem o estado ativo em aria-pressed', () => {
+    it('mantém o filtro ao lado das ações de adição e expõe rótulos compactos no mobile', () => {
       const { raiz, fixture, componentInstance } = montar({ itens: [fragmentoAvulso()], amplificadores: [] });
       expect(botaoFiltro(raiz, 'Equipamentos')).toBeTruthy();
       expect(botaoFiltro(raiz, 'Amplificadores')).toBeTruthy();
       expect(botaoFiltro(raiz, 'Fragmentos')).toBeTruthy();
+      expect(botaoFiltro(raiz, 'Equipamentos').closest('.ficha-inv__acoes')?.querySelector('.ficha-inv__btn--principal'))
+        .toBeTruthy();
+      expect(botaoFiltro(raiz, 'Equipamentos').querySelector('.ficha-inv__filtro-texto--mobile')?.textContent)
+        .toBe('Equip.');
+      expect(botaoFiltro(raiz, 'Amplificadores').querySelector('.ficha-inv__filtro-texto--mobile')?.textContent)
+        .toBe('Amplif.');
+      expect(botaoFiltro(raiz, 'Fragmentos').querySelector('.ficha-inv__filtro-texto--mobile')?.textContent)
+        .toBe('Frag.');
 
       botaoFiltro(raiz, 'Fragmentos').click();
       fixture.detectChanges();
 
       expect(botaoFiltro(raiz, 'Fragmentos').getAttribute('aria-pressed')).toBe('true');
       expect(botaoFiltro(raiz, 'Equipamentos').getAttribute('aria-pressed')).toBe('false');
-      expect(botaoFiltro(raiz, 'Fragmentos').textContent?.trim()).toBe('Fragmentos');
       expect(componentInstance['filtroInventario']()).toBe('fragmentos');
     });
   });

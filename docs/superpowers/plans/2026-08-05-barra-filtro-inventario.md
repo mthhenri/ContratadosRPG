@@ -30,7 +30,7 @@
 - Consumes: `filtroInventario(): FiltroInventario` e `selecionarFiltroInventario(filtro)` existentes.
 - Produces: mesma barra de filtro, agora adjacente aos botões de adição no desktop e com rótulos compactos no mobile.
 
-- [ ] **Step 1: Escrever o teste que define os dois rótulos de apresentação por filtro**
+- [x] **Step 1: Escrever o teste que define os dois rótulos de apresentação por filtro**
 
 ```typescript
 expect(botaoFiltro(raiz, 'Equipamentos').querySelector('.ficha-inv__filtro-texto--mobile')?.textContent)
@@ -41,13 +41,13 @@ expect(botaoFiltro(raiz, 'Fragmentos').querySelector('.ficha-inv__filtro-texto--
   .toBe('Frag.');
 ```
 
-- [ ] **Step 2: Rodar o teste e confirmar a falha pelos rótulos abreviados ausentes**
+- [x] **Step 2: Rodar o teste e confirmar a falha pelos rótulos abreviados ausentes**
 
 Run: `npm run test --workspace=frontend -- --include='**/ficha-inventario.component.spec.ts'`
 
 Expected: FAIL porque o template ainda não contém as variantes `.ficha-inv__filtro-texto--mobile`.
 
-- [ ] **Step 3: Reagrupar o filtro e adicionar rótulos desktop/mobile**
+- [x] **Step 3: Reagrupar o filtro e adicionar rótulos desktop/mobile**
 
 ```html
 <div class="ficha-inv__acoes">
@@ -70,19 +70,19 @@ Expected: FAIL porque o template ainda não contém as variantes `.ficha-inv__fi
 }
 ```
 
-- [ ] **Step 4: Rodar o teste novamente e confirmar que passa**
+- [x] **Step 4: Rodar o teste novamente e confirmar que passa**
 
 Run: `npm run test --workspace=frontend -- --include='**/ficha-inventario.component.spec.ts'`
 
 Expected: PASS, exceto falha pré-existente P-001 caso ela ainda ocorra.
 
-- [ ] **Step 5: Verificar a UI real**
+- [x] **Step 5: Verificar a UI real**
 
 Run: usar Playwright com viewports 1920×1080 e 360×800 na ficha editável.
 
 Expected: no desktop o filtro segue os botões de adição; no mobile há duas linhas e os três filtros ficam integralmente na segunda, com os rótulos abreviados e sem overflow horizontal.
 
-- [ ] **Step 6: Atualizar o histórico e revisar o diff**
+- [x] **Step 6: Atualizar o histórico e revisar o diff**
 
 Run: `git diff --check` e `git diff -- frontend/src/app/modules/ficha/componentes/ficha-inventario docs/context/HISTORY.md`
 

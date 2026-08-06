@@ -163,45 +163,47 @@
         >
           + Item custom
         </button>
-      </div>
-
-      <!-- Filtro de visualização (Equipamentos/Amplificadores/Fragmentos) — controle segmentado de
-           3 opções (revisão de UX): era dois botões-toggle soltos que trocavam o próprio rótulo,
-           quebravam linha sozinhos e não deixavam claro qual filtro estava ativo. Mesmo padrão
-           visual da barra de abas do Status (`ficha-visualizacao` — `.ficha-status__abas`), só com
-           os itens do tamanho do próprio conteúdo (não esticados feito abas de navegação). Fica
-           antes das ações secundárias (Esvaziar/Custos/busca) — filtra primeiro, age depois. -->
+      <!-- Controle segmentado: acompanha as ações de adição no desktop e usa rótulos compactos
+           em uma linha própria no mobile, antes de Esvaziar/Custos/busca. -->
       <div class="ficha-inv__filtro" role="group" aria-label="Filtrar o inventário">
         <button
           type="button"
           class="ficha-inv__filtro-item"
           [class.ficha-inv__filtro-item--ativo]="filtroInventario() === 'equipamentos'"
           [attr.aria-pressed]="filtroInventario() === 'equipamentos'"
+          aria-label="Equipamentos"
           (click)="selecionarFiltroInventario('equipamentos')"
         >
           <app-icone nome="corpo-a-corpo" />
-          <span>Equipamentos</span>
+          <span class="ficha-inv__filtro-texto ficha-inv__filtro-texto--desktop">Equipamentos</span>
+          <span class="ficha-inv__filtro-texto ficha-inv__filtro-texto--mobile">Equip.</span>
         </button>
         <button
           type="button"
           class="ficha-inv__filtro-item"
           [class.ficha-inv__filtro-item--ativo]="filtroInventario() === 'amplificadores'"
           [attr.aria-pressed]="filtroInventario() === 'amplificadores'"
+          aria-label="Amplificadores"
           (click)="selecionarFiltroInventario('amplificadores')"
         >
           <app-icone nome="amplificador" />
-          <span>Amplificadores</span>
+          <span class="ficha-inv__filtro-texto ficha-inv__filtro-texto--desktop">Amplificadores</span>
+          <span class="ficha-inv__filtro-texto ficha-inv__filtro-texto--mobile">Amplif.</span>
         </button>
         <button
           type="button"
           class="ficha-inv__filtro-item"
           [class.ficha-inv__filtro-item--ativo]="filtroInventario() === 'fragmentos'"
           [attr.aria-pressed]="filtroInventario() === 'fragmentos'"
+          aria-label="Fragmentos"
           (click)="selecionarFiltroInventario('fragmentos')"
         >
           <app-icone nome="fragmento" />
-          <span>Fragmentos</span>
+          <span class="ficha-inv__filtro-texto ficha-inv__filtro-texto--desktop">Fragmentos</span>
+          <span class="ficha-inv__filtro-texto ficha-inv__filtro-texto--mobile">Frag.</span>
         </button>
+      </div>
+
       </div>
 
       <div class="ficha-inv__acoes">

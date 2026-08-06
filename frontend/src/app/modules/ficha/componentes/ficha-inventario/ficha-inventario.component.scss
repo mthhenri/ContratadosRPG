@@ -209,14 +209,15 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
 
-    // m3-56: os 3 itens (Equipamentos/Fragmentos/Amplificadores) numa linha só passavam da
-    // largura da coluna Status a 360-390px — como é `inline-flex` sem limite próprio, o excesso
-    // vazava pra fora do card (escondido pelo `overflow-x: clip` de segurança do `html`, que
-    // evita scroll do body mas não evita o corte/perda de clique). Quebra em linha no mobile.
+    // Rótulos compactos mantêm os três filtros na mesma linha no mobile, sem overflow.
     @include bp.mobile {
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       max-width: 100%;
     }
+  }
+
+  &__filtro-texto--mobile {
+    display: none;
   }
 
   &__filtro-item {
@@ -265,6 +266,13 @@
 
     @include bp.mobile {
       min-height: bp.$alvo-toque;
+
+      .ficha-inv__filtro-texto--desktop {
+        display: none;
+      }
+      .ficha-inv__filtro-texto--mobile {
+        display: inline;
+      }
 
       &--compacto {
         min-width: bp.$alvo-toque;

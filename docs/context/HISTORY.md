@@ -1,5 +1,18 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-05 — Ajuste da barra de filtros do inventário
+
+O controle segmentado de **Equipamentos / Amplificadores / Fragmentos** passou a integrar a mesma
+linha de `+ Adicionar itens` e `+ Item custom` no desktop. Em `bp.mobile`, a barra ocupa a segunda
+linha e troca somente os rótulos visíveis para `Equip.`, `Amplif.` e `Frag.`, preservando ícones,
+os nomes acessíveis completos, `aria-pressed` e o comportamento dos filtros. Esvaziar, Custos e
+busca continuam na linha de ações secundárias.
+
+**Verificado:** o teste do componente teve 134/135 casos aprovados; a única falha é a P-001
+preexistente de apelido/`ResizeObserver`. Na aplicação real, a barra mediu uma única linha sem
+overflow a 360×800 (`scrollWidth = clientWidth = 258px`) e ficou alinhada aos botões de adição a
+1920×1080. A seleção de Fragmentos também preservou corretamente `aria-pressed`.
+
 ## 2026-08-05 — Gate obrigatório de qualidade e conclusão
 
 Por decisão do autor, `AGENTS.md` passa a conter a definição de pronto obrigatória para qualquer
