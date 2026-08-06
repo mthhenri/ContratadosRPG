@@ -1,5 +1,17 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-05 — Gate obrigatório de qualidade e conclusão
+
+Por decisão do autor, `AGENTS.md` passa a conter a definição de pronto obrigatória para qualquer
+tarefa de código. Antes de mudar, o agente identifica as fontes de verdade, separa regra pura de
+UI/orquestração e avalia extração ao ampliar componente extenso. Antes de declarar conclusão, revisa
+o diff contra a spec, executa verificações proporcionais e, em UI, observa a aplicação real com a
+skill `verify` nos cenários e viewports exigidos. Toda evidência e pendência deve ser reportada; uma
+verificação obrigatória ausente mantém a tarefa aberta.
+
+O registro vivo da decisão está em `CONTEXT.md` §5; o checklist canônico, carregado pelos agentes
+no início do trabalho, está em `AGENTS.md` “Gate obrigatório de qualidade e conclusão”.
+
 ## 2026-08-05 — m3-70: contagem persistida de munição
 
 Munições do catálogo agora declaram duração tipada (`CENA`/`DISPARO`) no motor compartilhado e podem persistir `contagemMunicao { atual, maxima, unidade }` no inventário. A 9mm nasce com 3 cenas, o Míssil com 1 disparo e a Munição de Fragmento Construtor conta 1 cena. O card exibe o saldo, permite reduzir uma unidade e editar Atual/Máxima; ao zerar, recebe o estado textual e visual “Vazia”. A UI usa tokens e `bp.mobile`, preservando o alvo de toque de 44px.

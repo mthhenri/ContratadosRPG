@@ -253,6 +253,10 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
 - **A ficha permite estado incoerente de propósito** — a validação do backend só checa **teto**
   (Vida ≤ máximo, Nível no intervalo da classe). Condições (Morrendo/Machucado/Inconsciente) são
   alternadas à mão e nunca validadas; exceder o Inventário máximo é **aviso**, não trava.
+- **Gate de qualidade é definição de pronto** — toda tarefa exige evidência contra a spec e as
+  convenções, revisão do diff e verificação proporcional. UI exige verificação ao vivo conforme
+  `verify`; item sem uma verificação obrigatória permanece aberto. O checklist canônico está em
+  `AGENTS.md` “Gate obrigatório de qualidade e conclusão”.
 
 ---
 

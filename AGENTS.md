@@ -65,6 +65,43 @@ Specs de milestone (`m0-*` a `m5-*`) devem ser divididas em tarefas numeradas
 antes da implementação. Specs em `done/` são registro histórico e não devem ser
 reescritas.
 
+## Gate obrigatório de qualidade e conclusão
+
+Uma tarefa de código **não está concluída** enquanto não houver evidência de que
+ela respeita a especificação, a arquitetura e, quando aplicável, o contrato
+visual. Não declare sucesso apenas porque compila ou porque um teste unitário
+passou.
+
+Antes de alterar código:
+
+1. Identifique a fonte de verdade da mudança: spec ativa, documento de regra,
+   convenção e, para UI, `docs/design/` e um componente análogo já aprovado.
+2. Delimite a responsabilidade: regras puras e contratos compartilhados vivem
+   em `shared/`; orquestração e permissão no service; UI só apresenta estado e
+   encaminha interações. Não duplique uma regra de domínio no frontend ou
+   backend.
+3. Ao tocar um componente já extenso, não acrescente uma nova responsabilidade
+   sem antes avaliar extraí-la para componente, composable/service ou função
+   pura. Se a extração não for proporcional ao escopo, registre no fecho da
+   tarefa por que o acréscimo local é seguro.
+
+Antes de declarar uma tarefa pronta:
+
+1. Revise o diff completo contra a spec e as convenções; confirme que não há
+   hardcodes ou atalhos que contornem a fonte de verdade.
+2. Rode build, testes, lint e checagens proporcionais ao risco. Relate os
+   comandos, os resultados e qualquer falha preexistente separadamente.
+3. Para UI, verifique a aplicação real com a skill `verify`, nos viewports e
+   cenários exigidos pela spec. Confirme responsividade, ausência de overflow,
+   acessibilidade básica, foco e contraste; testes e lint não substituem essa
+   etapa.
+4. No fecho, liste de forma auditável o que foi verificado e o que permaneceu
+   pendente. Um item sem verificação obrigatória fica **aberto**, não "concluído".
+
+Esta regra é deliberadamente mais forte que uma preferência de estilo: ela é a
+definição de pronto do repositório e prevalece sobre a pressa de entregar uma
+feature.
+
 ## Estrutura e arquitetura
 
 Este é um monorepo com três workspaces:
