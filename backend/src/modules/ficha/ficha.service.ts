@@ -29,6 +29,7 @@ import type {
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
   ClasseEnum,
+  ItemCategoriaEnum,
   TipoCampanhaMembroPapelEnum,
   TipoFichaEnum,
 } from '@contratados-rpg/shared/enums';
@@ -601,6 +602,22 @@ export class FichaService {
     }
 
     this.validarFormaIdentidade(dados.identidade, dados.classe, dados.habilidades);
+    this.validarContagensMunicao(dados);
+  }
+
+  /** Protege o JSONB contra saldo impossível de munição, inclusive clientes externos. */
+  private validarContagensMunicao(dados: FichaJogadorDadosDto): void {
+    for (const item of dados.inventario.itens) {
+      const contagem = item.contagemMunicao;
+      if (!contagem) continue;
+      const elegivel = item.categoria === ItemCategoriaEnum.MUNICOES ||
+        (item.categoria === ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR && item.categoriaEmprestada === ItemCategoriaEnum.MUNICOES);
+      if (!elegivel || !Number.isInteger(contagem.atual) || !Number.isInteger(contagem.maxima) ||
+        contagem.atual < 0 || contagem.maxima < 0 || contagem.atual > contagem.maxima ||
+        (contagem.unidade !== 'CENA' && contagem.unidade !== 'DISPARO')) {
+        throw new BusinessException('Contagem de munição inválida');
+      }
+    }
   }
 
   /**

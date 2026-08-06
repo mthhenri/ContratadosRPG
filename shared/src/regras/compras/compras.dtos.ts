@@ -97,6 +97,16 @@ export interface AmplificadorAplicadoDto {
   readonly empilhamentos: number;
 }
 
+/** Unidade de consumo de uma munição persistida no inventário. */
+export type MunicaoContagemUnidade = 'CENA' | 'DISPARO';
+
+/** Saldo persistido de uma munição: sempre `0 <= atual <= maxima`. */
+export interface MunicaoContagemDto {
+  readonly atual: number;
+  readonly maxima: number;
+  readonly unidade: MunicaoContagemUnidade;
+}
+
 /**
  * Um item no carrinho de compras. Reúne o item do catálogo (nome, categoria,
  * custo e peso base), a quantidade, o modo de porte de armazenamento e as
@@ -136,6 +146,8 @@ export interface CarrinhoItemDto {
    * sistema de cena automatizado no app. Ignorado nas demais categorias.
    */
   readonly recarregada?: boolean;
+  /** Saldo manual de cenas/disparos, aplicável a Munições e Munição Construtor. */
+  readonly contagemMunicao?: MunicaoContagemDto;
   readonly modificacoes: readonly ModificacaoAplicadaDto[];
   /**
    * Descrição em texto livre — **só nos itens custom** (os do catálogo têm a descrição em

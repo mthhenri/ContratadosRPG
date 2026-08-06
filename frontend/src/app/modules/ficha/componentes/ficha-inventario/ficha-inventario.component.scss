@@ -757,6 +757,99 @@
     color: var(--text-dim);
     margin-top: 8px;
   }
+  &__municao {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 5px;
+    padding: 4px 6px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    background: var(--surface-2);
+    font-family: var(--font-mono);
+    font-size: 11px;
+
+    &--vazia {
+      border-color: var(--vida-border);
+      color: var(--vida);
+    }
+  }
+
+  &__municao-valor {
+    font: inherit;
+    font-weight: 700;
+  }
+
+  &__municao-valor--editavel {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    text-decoration: underline dotted var(--border-strong);
+    text-underline-offset: 3px;
+  }
+
+  &__municao-separador,
+  &__municao-unidade {
+    color: var(--text-mute);
+  }
+
+  &__municao-vazia {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+  }
+
+  &__municao-consumir {
+    margin-right: 6px;
+    color: var(--vida);
+    border-color: var(--vida-border);
+    transition:
+      color 0.12s ease,
+      background 0.12s ease,
+      border-color 0.12s ease,
+      transform 0.12s ease;
+  }
+
+  // Mesma força do `__mini-btn` base: sem isso o fundo transparente posterior apagava a confirmação.
+  &__mini-btn.ficha-inv__municao-consumir--feito {
+    color: var(--bg);
+    background: var(--accent);
+    border-color: var(--accent);
+    transform: scale(1.08);
+  }
+
+  &__municao-entrada {
+    width: 32px;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid var(--accent-border);
+    border-radius: 0;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-weight: 700;
+    text-align: center;
+    outline: 0;
+  }
+
+  @include bp.mobile {
+    &__municao {
+      align-items: center;
+    }
+
+    &__municao-consumir {
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
+      margin: -6px 6px -6px 0;
+    }
+
+    &__municao-valor--editavel {
+      position: relative;
+    }
+  }
   &__mod-tag-desc {
     font-family: var(--font-sans);
     color: var(--text-dim);

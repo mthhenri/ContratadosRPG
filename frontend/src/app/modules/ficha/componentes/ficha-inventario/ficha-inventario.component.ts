@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, DestroyRef, computed, inject, input, output, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Dialog } from 'primeng/dialog';
@@ -24,6 +24,7 @@ import {
 import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
 import {
   AMPLIFICADORES,
+  alterarContagemMunicao,
   AmplificadorAplicadoDto,
   aplicarReducaoAfinidade,
   bonusMunicaoConstrutor,
@@ -31,6 +32,7 @@ import {
   calcularCustoAmplificador,
   calcularResumoCompras,
   calcularStatItem,
+  criarContagemMunicao,
   CarrinhoItemDto,
   CATALOGO_CATEGORIAS,
   CATALOGO_ITENS,
@@ -346,6 +348,8 @@ interface ItemInventarioVM {
   readonly recarregada: boolean;
   /** Texto do bônus "Recarregar" (custo de Energia + dano concedido), ou `null` fora da Munição Construtor (m3-65). */
   readonly bonusMunicaoTexto: string | null;
+  readonly contagemMunicao: CarrinhoItemDto['contagemMunicao'] | null;
+  readonly municaoVazia: boolean;
   readonly categoria: ItemCategoriaEnum;
   readonly categoriaRotulo: string;
   readonly quantidade: number;
@@ -556,6 +560,12 @@ export class FichaInventario {
 
   /** Índice do item com a edição de apelido aberta (m3-33), ou `null`. */
   protected readonly editandoApelidoIndice = signal<number | null>(null);
+  /** Único número de munição em edição direta no card. */
+  protected readonly contagemMunicaoEditando = signal<{ readonly indice: number; readonly campo: 'atual' | 'maxima' } | null>(null);
+  /** Feedback breve depois de consumir uma cena/disparo, igual à confirmação de cópia. */
+  protected readonly contagemMunicaoConsumidaIndice = signal<number | null>(null);
+  private temporizadorContagemMunicao: ReturnType<typeof setTimeout> | null = null;
+  private readonly entradaContagemMunicao = viewChild<ElementRef<HTMLInputElement>>('entradaContagemMunicao');
 
   /** Categorias disponíveis para um item custom (todas menos Amplificador, que não é item). */
   protected readonly categoriasItem = CATALOGO_CATEGORIAS.filter(
@@ -811,6 +821,16 @@ export class FichaInventario {
     inject(DestroyRef).onDestroy(() => {
       if (this.temporizadorAdicionado !== null) {
         clearTimeout(this.temporizadorAdicionado);
+      }
+      if (this.temporizadorContagemMunicao !== null) {
+        clearTimeout(this.temporizadorContagemMunicao);
+      }
+    });
+    effect(() => {
+      if (this.contagemMunicaoEditando() !== null) {
+        const entrada = this.entradaContagemMunicao()?.nativeElement;
+        entrada?.focus();
+        entrada?.select();
       }
     });
   }
@@ -1234,7 +1254,7 @@ export class FichaInventario {
   }
 
   protected adicionarItem(vm: CartaoItemVM): void {
-    this.inserirItem({
+    const item: CarrinhoItemDto = {
       nome: vm.item.nome,
       categoria: vm.categoria,
       custo: vm.item.custo,
@@ -1242,7 +1262,8 @@ export class FichaInventario {
       quantidade: 1,
       guardada: false,
       modificacoes: [],
-    });
+    };
+    this.inserirItem({ ...item, contagemMunicao: criarContagemMunicao(item) ?? undefined });
     this.sinalizarAdicao(this.chaveCartao(vm.categoria, vm.item.nome));
   }
 
@@ -1827,6 +1848,46 @@ export class FichaInventario {
     this.emitirItens(
       this.inventario().itens.map((atual, i) => (i === indice ? { ...atual, recarregada: false } : atual)),
     );
+  }
+
+  /** Consome uma cena/disparo persistido, sem permitir saldo negativo. */
+  protected consumirMunicao(indice: number): void {
+    this.emitirItens(this.inventario().itens.map((item, i) =>
+      i === indice && (item.contagemMunicao ?? criarContagemMunicao(item))
+        ? { ...item, contagemMunicao: alterarContagemMunicao(item.contagemMunicao ?? criarContagemMunicao(item)!, -1) }
+        : item,
+    ));
+    if (this.temporizadorContagemMunicao !== null) clearTimeout(this.temporizadorContagemMunicao);
+    this.contagemMunicaoConsumidaIndice.set(indice);
+    this.temporizadorContagemMunicao = setTimeout(() => {
+      this.contagemMunicaoConsumidaIndice.update((atual) => atual === indice ? null : atual);
+      this.temporizadorContagemMunicao = null;
+    }, 900);
+  }
+
+  protected editarContagemMunicao(indice: number, campo: 'atual' | 'maxima'): void {
+    this.contagemMunicaoEditando.set({ indice, campo });
+  }
+
+  protected confirmarContagemMunicao(indice: number, campo: 'atual' | 'maxima', valor: string): void {
+    this.alterarContagemMunicao(indice, campo, Number(valor));
+    this.contagemMunicaoEditando.set(null);
+  }
+
+  protected cancelarEdicaoContagemMunicao(): void {
+    this.contagemMunicaoEditando.set(null);
+  }
+
+  /** Edição manual de Atual/Máxima: preserva o invariante do contrato. */
+  protected alterarContagemMunicao(indice: number, campo: 'atual' | 'maxima', valor: number): void {
+    this.emitirItens(this.inventario().itens.map((item, i) => {
+      const contagem = item.contagemMunicao ?? criarContagemMunicao(item);
+      if (i !== indice || !contagem) return item;
+      const numero = Math.max(0, Math.trunc(valor));
+      const maxima = campo === 'maxima' ? numero : contagem.maxima;
+      const atual = campo === 'atual' ? Math.min(numero, maxima) : Math.min(contagem.atual, maxima);
+      return { ...item, contagemMunicao: { ...contagem, atual, maxima } };
+    }));
   }
 
   /**
@@ -2463,6 +2524,7 @@ export class FichaInventario {
       item.categoria === ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR &&
       item.categoriaEmprestada === ItemCategoriaEnum.MUNICOES;
     const bonusMunicao = construtorMunicao && item.modulo ? bonusMunicaoConstrutor(item.modulo) : null;
+    const contagemMunicao = item.contagemMunicao ?? criarContagemMunicao(item);
     const ehFragmento =
       item.categoria === ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR ||
       item.categoria === ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR;
@@ -2478,6 +2540,8 @@ export class FichaInventario {
       fragmentoModuloTexto: ehFragmento && item.modulo ? `Mod. ${item.modulo}` : null,
       podeApelidar: !CATEGORIAS_EMPILHAVEIS.includes(item.categoria),
       fragmentoPotencializador: item.categoria === ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+      contagemMunicao,
+      municaoVazia: contagemMunicao?.atual === 0,
       fragmentoConstrutorMunicao: construtorMunicao,
       recarregada: item.recarregada === true,
       bonusMunicaoTexto: bonusMunicao
@@ -2603,7 +2667,15 @@ export class FichaInventario {
         } else {
           modificacoes = [...item.modificacoes, { nome: modNome, empilhamentos }];
         }
-        return { ...item, modificacoes };
+        const contagem = item.contagemMunicao ?? criarContagemMunicao(item);
+        const tinhaMunicaoExtra = modNome === 'Munição Extra' && (existente?.empilhamentos ?? 0) > 0;
+        const temMunicaoExtra = modNome === 'Munição Extra' && empilhamentos > 0;
+        if (!contagem || contagem.unidade !== 'CENA' || tinhaMunicaoExtra === temMunicaoExtra) {
+          return { ...item, modificacoes };
+        }
+        const delta = temMunicaoExtra ? 1 : -1;
+        const maxima = Math.max(0, contagem.maxima + delta);
+        return { ...item, modificacoes, contagemMunicao: { ...contagem, maxima, atual: Math.min(maxima, Math.max(0, contagem.atual + delta)) } };
       }),
     );
   }

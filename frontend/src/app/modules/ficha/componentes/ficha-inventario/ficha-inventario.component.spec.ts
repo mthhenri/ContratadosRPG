@@ -81,6 +81,17 @@ describe('FichaInventario', () => {
     };
   }
 
+  it('consome a cena de uma munição sem ultrapassar zero', () => {
+    const municao: CarrinhoItemDto = {
+      nome: '9mm', categoria: ItemCategoriaEnum.MUNICOES, custo: 100, peso: 0.5,
+      quantidade: 1, guardada: false, modificacoes: [], contagemMunicao: { atual: 1, maxima: 3, unidade: 'CENA' },
+    };
+    const alvo = montar({ itens: [municao], amplificadores: [] });
+    alvo.componentInstance['consumirMunicao'](0);
+    alvo.componentInstance['consumirMunicao'](0);
+    expect(alvo.emitidos.at(-1)?.itens[0].contagemMunicao).toEqual({ atual: 0, maxima: 3, unidade: 'CENA' });
+  });
+
   it('não oferece "Modificar" em itens Operacional/Medicinal (consumíveis)', () => {
     const operacional: CarrinhoItemDto = {
       nome: 'Kit Médico',

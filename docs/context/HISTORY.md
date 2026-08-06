@@ -1,5 +1,13 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-05 — m3-70: contagem persistida de munição
+
+Munições do catálogo agora declaram duração tipada (`CENA`/`DISPARO`) no motor compartilhado e podem persistir `contagemMunicao { atual, maxima, unidade }` no inventário. A 9mm nasce com 3 cenas, o Míssil com 1 disparo e a Munição de Fragmento Construtor conta 1 cena. O card exibe o saldo, permite reduzir uma unidade e editar Atual/Máxima; ao zerar, recebe o estado textual e visual “Vazia”. A UI usa tokens e `bp.mobile`, preservando o alvo de toque de 44px.
+
+Munição Extra altera máximo e saldo em uma cena somente para munição por cena; os valores são persistidos e não são recalculados ao renderizar. O backend valida elegibilidade, inteiros, unidade e `0 <= atual <= maxima`. Não há automação de combate/cena, nem mudança no Recarregar do Construtor.
+
+**Verificado:** shared 78/78; `tsc --noEmit` de shared, frontend e backend. A suíte Angular completa mantém apenas as falhas preexistentes P-001 e P-010.
+
 > **Nota de migração (2026-08-01).** Este arquivo era `docs/CONTEXT.md`. Ele havia crescido para
 > 4.450 linhas / 476KB — grande demais para ser lido de uma vez, que é justamente o que se espera
 > de um arquivo de contexto. O conteúdo foi movido para cá **inteiro e sem cortes** (`git mv`,

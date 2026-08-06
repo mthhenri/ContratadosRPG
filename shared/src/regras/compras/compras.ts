@@ -25,6 +25,7 @@ import {
   LimiteModificacoesObterDto,
   ModificacaoEfeitoDto,
   ModificacaoItemDto,
+  MunicaoContagemDto,
   ResumoComprasCalcularDto,
   ResumoComprasDto,
   StatItemCalcularDto,
@@ -33,6 +34,23 @@ import {
   TotaisCarrinhoCalcularDto,
   TotaisCarrinhoDto,
 } from './compras.dtos';
+
+/** Cria a contagem cheia de uma munição conhecida; Construtor-Munição dura uma cena. */
+export function criarContagemMunicao(item: CarrinhoItemDto): MunicaoContagemDto | null {
+  if (item.categoria === ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR && item.categoriaEmprestada === ItemCategoriaEnum.MUNICOES) {
+    return { atual: 1, maxima: 1, unidade: 'CENA' };
+  }
+  if (item.categoria !== ItemCategoriaEnum.MUNICOES) {
+    return null;
+  }
+  const duracao = resolverDadosItem(item)?.duracaoMunicao;
+  return duracao ? { atual: duracao.maxima, ...duracao } : null;
+}
+
+/** Aplica um delta ao saldo atual, sempre limitado ao intervalo persistível. */
+export function alterarContagemMunicao(contagem: MunicaoContagemDto, delta: number): MunicaoContagemDto {
+  return { ...contagem, atual: Math.min(contagem.maxima, Math.max(0, contagem.atual + delta)) };
+}
 
 /**
  * Motor de regras da aba compras (m1-05): funções puras de limite por patente,

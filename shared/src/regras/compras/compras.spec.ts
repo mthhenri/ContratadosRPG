@@ -5,6 +5,7 @@ import { CATALOGO_ITENS } from './catalogo.dados';
 import { CarrinhoItemDto, ModificacaoAplicadaDto } from './compras.dtos';
 import {
   calcularCustoAmplificador,
+  alterarContagemMunicao,
   calcularResumoCompras,
   calcularStatItem,
   calcularTotaisCarrinho,
@@ -12,6 +13,7 @@ import {
   descreverEfeitoModificacao,
   descreverEfeitosModificacao,
   interpretarBonusArmazenamento,
+  criarContagemMunicao,
   listarModificacoesDisponiveis,
   listarSubInventarios,
   obterCategoriaEmprestada,
@@ -43,6 +45,20 @@ function montarItem(parcial: Partial<CarrinhoItemDto> & Pick<CarrinhoItemDto, 'n
 }
 
 const mod = (nome: string, empilhamentos: number): ModificacaoAplicadaDto => ({ nome, empilhamentos });
+
+describe('contagem de munição', () => {
+  it('cria 9mm cheia, consome sem ficar negativa e mantém o Míssil como disparo', () => {
+    const noveMm = criarContagemMunicao(montarItem({ nome: '9mm', categoria: ItemCategoriaEnum.MUNICOES }));
+    expect(noveMm).toEqual({ atual: 3, maxima: 3, unidade: 'CENA' });
+    expect(alterarContagemMunicao(noveMm!, -9)).toEqual({ atual: 0, maxima: 3, unidade: 'CENA' });
+
+    expect(criarContagemMunicao(montarItem({ nome: 'Míssil', categoria: ItemCategoriaEnum.MUNICOES }))).toEqual({
+      atual: 1,
+      maxima: 1,
+      unidade: 'DISPARO',
+    });
+  });
+});
 
 describe('listarModificacoesDisponiveis — "Apenas escudos" (Combativo/Arremesso)', () => {
   // docs/core/sistema-v4.1.0.md — Proteções: "Combativo" e "Arremesso" são "Apenas para escudos".

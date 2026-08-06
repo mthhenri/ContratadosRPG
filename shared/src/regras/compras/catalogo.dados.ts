@@ -1,4 +1,5 @@
 import { ItemCategoriaEnum } from '../../enums';
+import type { MunicaoContagemDto } from './compras.dtos';
 
 /**
  * Catálogo de itens da loja (`CATALOGO_ITENS` do site antigo), migrado de
@@ -28,6 +29,8 @@ export interface ItemCatalogo {
   readonly descricao?: string;
   readonly categoriaEmprestada?: ItemCategoriaEnum;
   readonly ehEscudo?: boolean;
+  /** Duração tipada de Munições; `informacao` continua sendo só texto de apresentação. */
+  readonly duracaoMunicao?: Pick<MunicaoContagemDto, 'maxima' | 'unidade'>;
   /**
    * `Bolso de Corpo`/`Pochete`/`Mochila Médica` (m3-44 — doc: "Possui inventário separado";
    * Mochila Médica: "Apenas Itens Medicinais"): marca este armazenamento como **sub-inventário
@@ -96,23 +99,24 @@ export const CATALOGO_ITENS: Readonly<Record<ItemCategoriaEnum, readonly ItemCat
     { nome: 'Metralhadora', custo: 2000, peso: 4, dano: '4D4 [Balístico]', informacao: 'Médio · Mun: 12.7mm', descricao: 'Alta cadência, enorme poder de fogo — 2 mãos' },
   ],
   [ItemCategoriaEnum.MUNICOES]: [
-    { nome: '9mm', custo: 100, peso: 0.5, informacao: 'Dura 3 cenas', descricao: 'Para pistolas e SMGs' },
-    { nome: '10mm', custo: 180, peso: 0.7, informacao: 'Dura 4 cenas', descricao: 'Para submetralhadoras' },
-    { nome: 'Cartuchos 12GA', custo: 100, peso: 0.5, informacao: 'Dura 2 cenas', descricao: 'Para escopetas' },
-    { nome: '5.56mm', custo: 200, peso: 1, informacao: 'Dura 2 cenas', descricao: 'Para fuzis de assalto' },
-    { nome: '7.62mm', custo: 300, peso: 1, informacao: 'Dura 2 cenas', descricao: 'Para rifles de precisão' },
-    { nome: '12.7mm', custo: 450, peso: 1.5, informacao: 'Dura 3 cenas', descricao: 'Para metralhadoras e torretas' },
-    { nome: 'Granadas Simples', custo: 500, peso: 1.5, informacao: 'Dura 1 cena', descricao: 'Para lança-granadas' },
-    { nome: 'Tanque de Propano', custo: 500, peso: 1, informacao: 'Dura 2 cenas', descricao: 'Combustível para lança-chamas' },
-    { nome: 'Míssil', custo: 1000, peso: 3, informacao: 'Dura 1 disparo', descricao: 'Para bazucas' },
-    { nome: 'Virotes', custo: 130, peso: 1, informacao: 'Dura 3 cenas', descricao: 'Para balestras' },
-    { nome: 'Células de Plasma', custo: 400, peso: 1.5, informacao: 'Dura 2 cenas', descricao: 'Para o Quebra-Átomos e armas Plasma' },
+    { nome: '9mm', custo: 100, peso: 0.5, informacao: 'Dura 3 cenas', descricao: 'Para pistolas e SMGs', duracaoMunicao: { maxima: 3, unidade: 'CENA' } },
+    { nome: '10mm', custo: 180, peso: 0.7, informacao: 'Dura 4 cenas', descricao: 'Para submetralhadoras', duracaoMunicao: { maxima: 4, unidade: 'CENA' } },
+    { nome: 'Cartuchos 12GA', custo: 100, peso: 0.5, informacao: 'Dura 2 cenas', descricao: 'Para escopetas', duracaoMunicao: { maxima: 2, unidade: 'CENA' } },
+    { nome: '5.56mm', custo: 200, peso: 1, informacao: 'Dura 2 cenas', descricao: 'Para fuzis de assalto', duracaoMunicao: { maxima: 2, unidade: 'CENA' } },
+    { nome: '7.62mm', custo: 300, peso: 1, informacao: 'Dura 2 cenas', descricao: 'Para rifles de precisão', duracaoMunicao: { maxima: 2, unidade: 'CENA' } },
+    { nome: '12.7mm', custo: 450, peso: 1.5, informacao: 'Dura 3 cenas', descricao: 'Para metralhadoras e torretas', duracaoMunicao: { maxima: 3, unidade: 'CENA' } },
+    { nome: 'Granadas Simples', custo: 500, peso: 1.5, informacao: 'Dura 1 cena', descricao: 'Para lança-granadas', duracaoMunicao: { maxima: 1, unidade: 'CENA' } },
+    { nome: 'Tanque de Propano', custo: 500, peso: 1, informacao: 'Dura 2 cenas', descricao: 'Combustível para lança-chamas', duracaoMunicao: { maxima: 2, unidade: 'CENA' } },
+    { nome: 'Míssil', custo: 1000, peso: 3, informacao: 'Dura 1 disparo', descricao: 'Para bazucas', duracaoMunicao: { maxima: 1, unidade: 'DISPARO' } },
+    { nome: 'Virotes', custo: 130, peso: 1, informacao: 'Dura 3 cenas', descricao: 'Para balestras', duracaoMunicao: { maxima: 3, unidade: 'CENA' } },
+    { nome: 'Células de Plasma', custo: 400, peso: 1.5, informacao: 'Dura 2 cenas', descricao: 'Para o Quebra-Átomos e armas Plasma', duracaoMunicao: { maxima: 2, unidade: 'CENA' } },
     {
       nome: 'Gasolina',
       custo: 300,
       peso: 2,
       informacao: 'Dura 2 cenas',
       descricao: 'Combustível para a Motoserra. Mods: Calibre, Explosiva, Incendiária, Perfurante, Selante, Supressora, Tóxica',
+      duracaoMunicao: { maxima: 2, unidade: 'CENA' },
       modificacoesPermitidas: ['Calibre', 'Explosiva', 'Incendiária', 'Perfurante', 'Selante', 'Supressora', 'Tóxica'],
     },
   ],

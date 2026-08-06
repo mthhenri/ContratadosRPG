@@ -901,6 +901,32 @@
           {{ item.bonusMunicaoTexto }} — {{ item.recarregada ? 'recarregada nesta cena' : 'não recarregada' }}
         </div>
       }
+      @if (item.contagemMunicao) {
+        <div class="ficha-inv__municao" [class.ficha-inv__municao--vazia]="item.municaoVazia">
+          @if (!editavel()) {
+            <span class="ficha-inv__municao-valor">{{ item.contagemMunicao.atual }} / {{ item.contagemMunicao.maxima }}</span>
+          }
+          @if (item.municaoVazia) {
+            <span class="ficha-inv__municao-vazia">Vazia</span>
+          } @else if (editavel()) {
+            <button type="button" class="ficha-inv__mini-btn ficha-inv__municao-consumir" [class.ficha-inv__municao-consumir--feito]="contagemMunicaoConsumidaIndice() === item.indice" [appTooltip]="contagemMunicaoConsumidaIndice() === item.indice ? (item.contagemMunicao.unidade === 'CENA' ? 'Cena consumida' : 'Disparo consumido') : ('Consumir uma ' + (item.contagemMunicao.unidade === 'CENA' ? 'cena' : 'disparo'))" [attr.aria-label]="'Reduzir uma ' + (item.contagemMunicao.unidade === 'CENA' ? 'cena de ' : 'disparo de ') + item.nomeExibido" (click)="consumirMunicao(item.indice)">{{ contagemMunicaoConsumidaIndice() === item.indice ? '✓' : '−' }}</button>
+          }
+          @if (editavel()) {
+            @if (contagemMunicaoEditando()?.indice === item.indice && contagemMunicaoEditando()?.campo === 'atual') {
+              <input #entradaContagemMunicao class="ficha-inv__municao-entrada" type="number" min="0" [value]="item.contagemMunicao.atual" aria-label="Contagem atual" (keydown.enter)="confirmarContagemMunicao(item.indice, 'atual', entradaContagemMunicao.value)" (keydown.escape)="cancelarEdicaoContagemMunicao()" (blur)="confirmarContagemMunicao(item.indice, 'atual', entradaContagemMunicao.value)" />
+            } @else {
+              <button type="button" class="ficha-inv__municao-valor ficha-inv__municao-valor--editavel" [attr.aria-label]="'Editar contagem atual de ' + item.nomeExibido" (click)="editarContagemMunicao(item.indice, 'atual')">{{ item.contagemMunicao.atual }}</button>
+            }
+            <span class="ficha-inv__municao-separador">/</span>
+            @if (contagemMunicaoEditando()?.indice === item.indice && contagemMunicaoEditando()?.campo === 'maxima') {
+              <input #entradaContagemMunicao class="ficha-inv__municao-entrada" type="number" min="0" [value]="item.contagemMunicao.maxima" aria-label="Contagem máxima" (keydown.enter)="confirmarContagemMunicao(item.indice, 'maxima', entradaContagemMunicao.value)" (keydown.escape)="cancelarEdicaoContagemMunicao()" (blur)="confirmarContagemMunicao(item.indice, 'maxima', entradaContagemMunicao.value)" />
+            } @else {
+              <button type="button" class="ficha-inv__municao-valor ficha-inv__municao-valor--editavel" [attr.aria-label]="'Editar contagem máxima de ' + item.nomeExibido" (click)="editarContagemMunicao(item.indice, 'maxima')">{{ item.contagemMunicao.maxima }}</button>
+            }
+          }
+          <span class="ficha-inv__municao-unidade">{{ item.contagemMunicao.unidade === 'CENA' ? 'cena(s)' : 'disparo(s)' }}</span>
+        </div>
+      }
 
       @if (item.modsAtivas.length > 0) {
         <div class="ficha-inv__mods-ativas">
