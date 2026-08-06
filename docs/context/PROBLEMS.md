@@ -160,6 +160,19 @@
 - **Correção:** desconhecida — precisa de investigação dedicada.
 - **Desde:** descoberto durante a `m3-63` (2026-08-03); a raiz é anterior, não determinada.
 
+### P-011 — Suíte de `shared` coleta specs compiladas de `dist` · `ABERTO` · shared/testes
+
+- **Sintoma:** `npm test` no monorepo executa os **520** testes fonte de `shared` com sucesso, mas
+  também descobre 29 arquivos `shared/dist/**/*.spec.js`. Esses artefatos CommonJS falham ao carregar
+  o Vitest (`Vitest cannot be imported in a CommonJS module using require()`), encerrando a suíte com
+  erro apesar de nenhum teste fonte falhar.
+- **Causa:** a configuração do Vitest de `shared` não exclui `dist/`; o output da compilação contém
+  cópias dos arquivos de teste e entra no padrão de descoberta.
+- **Contorno:** executar a suíte somente sobre os fontes ou excluir `dist/**` na invocação local.
+- **Correção:** excluir `dist/**` da descoberta padrão do Vitest de `shared` (preferencialmente no
+  arquivo de configuração, para que `npm test` volte a ser confiável).
+- **Desde:** descoberto na verificação final do ajuste da barra de filtros do inventário (2026-08-05).
+
 ---
 
 ## Resolvidos
