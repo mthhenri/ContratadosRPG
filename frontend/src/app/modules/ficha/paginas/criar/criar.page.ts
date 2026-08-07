@@ -6,7 +6,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ArquetipoEnum, ClasseEnum, FormacaoBonusEnum, FormacaoParametroEnum, HabilidadeCategoriaEnum, MotivoEntradaAgenteEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaAtributosDto, FichaHabilidadeDto, FichaOrigemDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
-import { calcularDerivados, calcularEnergia, calcularOrcamentoAtributos, calcularProgressaoAcumulada, calcularVida, catalogoHabilidades, habilidadesIniciais, obterBonusAtributos, validarDistribuicaoAtributos } from '@contratados-rpg/shared/regras/agente';
+import { calcularDerivados, calcularEnergia, calcularOrcamentoAtributos, calcularProgressaoAcumulada, calcularVida, catalogoHabilidades, habilidadesIniciais, obterBonusAtributos, obterSaudeClasse, validarDistribuicaoAtributos } from '@contratados-rpg/shared/regras/agente';
 import type { GrupoHabilidades, HabilidadeCatalogoItemDto } from '@contratados-rpg/shared/regras/agente';
 import { calcularDinheiroInicial, calcularNovoAgente } from '@contratados-rpg/shared/regras/novo-agente';
 import { rolarDados } from '@contratados-rpg/shared/regras/descanso';
@@ -111,6 +111,9 @@ export class FichaCriar {
   protected readonly atributosFinais = computed(() => { const bonus = this.bonusAtributos(); const atributos = { ...this.estado().atributos }; this.campos.forEach(({ chave }) => atributos[chave] += bonus[chave] ?? 0); return atributos; });
   protected readonly vida = computed(() => calcularVida({ classe: this.classeCalculada(), nivel: this.novoAgente().nivelInicial, vigor: this.atributosFinais().vigor }));
   protected readonly energia = computed(() => calcularEnergia({ classe: this.classeCalculada(), nivel: this.novoAgente().nivelInicial, destreza: this.atributosFinais().destreza }));
+  /** Base de Vida/Energia da classe (sem Nível/atributos) — passo // CLASSE, antes de `vida()`/`energia()`
+   * fazerem sentido: ali o jogador ainda não escolheu atributos, só tem o valor de fábrica (1 em cada). */
+  protected readonly saudeClasse = computed(() => obterSaudeClasse({ classe: this.classeCalculada() }));
   protected readonly atributosDestaque = computed(() => this.campos
     .map((campo) => ({ nome: campo.nome, valor: this.atributosFinais()[campo.chave] }))
     .filter(({ valor }) => valor > 1)

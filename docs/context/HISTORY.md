@@ -1,5 +1,23 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-07 — Passo // CLASSE não deve calcular Vida/Energia (atributos ainda não escolhidos)
+
+Feedback do usuário sobre o passo **02 // CLASSE**: o bloco "Saúde de partida (atributos atuais)"
+mostrava `vida()`/`energia()` já calculados (ex.: Vida 88, Energia 53) — mas `atributosFinais()`
+naquele passo ainda é só o valor de fábrica (1 em cada atributo, `ATRIBUTOS_BASE_PADRAO`) mais o
+bônus fixo do arquétipo; o jogador só distribui atributos de verdade no passo **04 // ATRIBUTOS**.
+O número exibido parecia definitivo mas era baseado em atributos que o jogador nem escolheu ainda.
+
+**Correção:** o bloco virou "Saúde base (antes dos Atributos)" e mostra só o que é fixo da classe —
+Vida/Energia base e a progressão por Nível/atributo (ex.: "30, +7/nível, +4 por Vigor") — sem aplicar
+Nível nem atributo nenhum. Nova função `obterSaudeClasse` (`shared/regras/agente/saude.ts`) expõe os
+mesmos coeficientes de `calcularVida`/`calcularEnergia` (`SAUDE_POR_CLASSE`) sem a parte de
+Nível/atributo, evitando duplicar as constantes no frontend (fonte única). `vida()`/`energia()`
+continuam usados sem mudança nos passos que já têm atributos definidos (Resumo Operacional a partir
+do passo 04, Revisão) — só o bloco do passo // CLASSE mudou. Verificado ao vivo (stack real +
+Playwright) em 1920×1080 e 360×800; sem regressão nos 13 testes de `criar.page.spec.ts` nem nos 19 de
+`saude.spec.ts` (2 novos para `obterSaudeClasse`).
+
 ## 2026-08-07 — Ajuste de UX pós-m3-58: passo // MELHORIAS ficava enorme verticalmente
 
 Revisão visual pedida logo após a entrega da `m3-58`: com as vagas preenchidas (ex.: Combatente

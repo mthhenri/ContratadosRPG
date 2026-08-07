@@ -174,10 +174,18 @@
                       </div>
 
                       <div class="guia__briefing-bloco">
-                        <span>Saúde de partida (atributos atuais)</span>
+                        <span>Saúde base (antes dos Atributos)</span>
                         <div class="guia__briefing-saude">
-                          <div class="stat stat--vida"><span class="stat__rotulo">Vida</span><span class="stat__valor">{{ vida() }}</span></div>
-                          <div class="stat stat--energia"><span class="stat__rotulo">Energia</span><span class="stat__valor">{{ energia() }}</span></div>
+                          <div class="stat stat--vida">
+                            <span class="stat__rotulo">Vida</span>
+                            <span class="stat__valor">{{ saudeClasse().vidaBase }}</span>
+                            <small class="stat__nota">+{{ saudeClasse().vidaPorNivel }}/nível, +{{ saudeClasse().vidaPorVigor }} por Vigor</small>
+                          </div>
+                          <div class="stat stat--energia">
+                            <span class="stat__rotulo">Energia</span>
+                            <span class="stat__valor">{{ saudeClasse().energiaBase }}</span>
+                            <small class="stat__nota">+{{ saudeClasse().energiaPorNivel }}/nível, +{{ saudeClasse().energiaPorDestreza }} por Destreza</small>
+                          </div>
                         </div>
                       </div>
 

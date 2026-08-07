@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ClasseEnum } from '../../enums';
-import { calcularEnergia, calcularLimiteEnergia, calcularVida } from './saude';
+import { calcularEnergia, calcularLimiteEnergia, calcularVida, obterSaudeClasse } from './saude';
 
 /**
  * Fórmulas de saúde do agente conferidas contra docs/core/sistema-v4.1.0.md —
@@ -107,5 +107,21 @@ describe('calcularLimiteEnergia', () => {
 
   it('civil: Limite de Energia = Destreza', () => {
     expect(calcularLimiteEnergia({ classe: ClasseEnum.CIVIL, destreza: 3 })).toBe(3);
+  });
+});
+
+describe('obterSaudeClasse', () => {
+  it('Combatente: expõe os mesmos coeficientes usados por calcularVida/calcularEnergia', () => {
+    expect(obterSaudeClasse({ classe: ClasseEnum.COMBATENTE })).toEqual({
+      vidaBase: 30, vidaPorNivel: 7, vidaPorVigor: 4,
+      energiaBase: 15, energiaPorNivel: 4, energiaPorDestreza: 2,
+    });
+  });
+
+  it('Civil: base e progressão bem menores que qualquer classe de agente', () => {
+    expect(obterSaudeClasse({ classe: ClasseEnum.CIVIL })).toEqual({
+      vidaBase: 10, vidaPorNivel: 0, vidaPorVigor: 1,
+      energiaBase: 5, energiaPorNivel: 0, energiaPorDestreza: 2,
+    });
   });
 });
