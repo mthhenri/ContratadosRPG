@@ -1,4 +1,4 @@
-import { Component, DestroyRef, HostListener, computed, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, HostListener, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize, forkJoin, timer } from 'rxjs';
@@ -86,8 +86,9 @@ export class FichaCriar {
   protected readonly membros = signal<CampanhaMembroResumoDto[]>([]); protected readonly fichas = signal<FichaResumoDto[]>([]);
   protected readonly carregando = signal(true); protected readonly criando = signal(false); protected readonly rolandoRecursos = signal(false); protected readonly erro = signal('');
   protected readonly resumoAberto = signal(false); protected readonly visitado = signal(0); protected readonly temRascunho = signal(false);
-  /** Confirmação de saída do guia — substitui o `confirm()` nativo do navegador. */
+  /** Confirmação de saída do guia — substitui o `confirm()` nativo do navegador por um `<dialog>`. */
   protected readonly confirmandoSaida = signal(false);
+  private readonly sairDialog = viewChild<ElementRef<HTMLDialogElement>>('sairDialog');
   /** Vaga com o seletor do sistema aberto (`null` = fechado) — m3-58. */
   protected readonly vagaAberta = signal<TipoVagaMelhoria | null>(null);
   protected readonly estado = signal<EstadoGuiaCriacao>({ passo: 0, nome: '', usuarioId: null, classe: null,
@@ -213,6 +214,15 @@ export class FichaCriar {
     // A trilha ganha/perde o passo Melhorias conforme o Nível inicial muda (voltar ao passo 03 e
     // editar as médias) — mantém `passo`/`visitado` dentro dos limites da trilha atual.
     effect(() => { const max = this.passos().length - 1; if (this.estado().passo > max) this.atualizar({ passo: max }); if (this.visitado() > max) this.visitado.set(max); });
+    // Sincroniza o `<dialog>` nativo de saída com `confirmandoSaida()` — `showModal()`/`close()` são
+    // imperativos, não têm equivalente declarativo em template. `close()` num dialog já fechado (ex.:
+    // Esc, que o navegador fecha sozinho antes deste efeito rodar) é um no-op — seguro de chamar
+    // sempre. O `typeof` guarda o ambiente de teste (jsdom não implementa `HTMLDialogElement`).
+    effect(() => {
+      const dialog = this.sairDialog()?.nativeElement;
+      if (!dialog || typeof dialog.showModal !== 'function' || typeof dialog.close !== 'function') return;
+      if (this.confirmandoSaida()) { if (!dialog.open) dialog.showModal(); } else { dialog.close(); }
+    });
   }
   protected retomar(): void { const salvo = this.rascunhos.recuperar<EstadoGuiaCriacao>(this.campanhaId); if (salvo) { const normalizado = normalizarEstado(salvo); this.estado.set(normalizado); this.visitado.set(normalizado.passo); } this.temRascunho.set(false); }
   protected recomecar(): void { this.rascunhos.limpar(this.campanhaId); this.temRascunho.set(false); }
@@ -327,6 +337,8 @@ export class FichaCriar {
   protected sair(): void { this.confirmandoSaida.set(true); }
   protected confirmarSaida(): void { this.confirmandoSaida.set(false); void this.router.navigate(['/painel', this.campanhaId]); }
   protected cancelarSaida(): void { this.confirmandoSaida.set(false); }
+  /** Clique no `::backdrop` do `<dialog>` cai no próprio elemento (não num filho) — fecha como "Continuar aqui". */
+  protected fecharAoClicarFora(evento: MouseEvent): void { if (evento.target === evento.currentTarget) this.cancelarSaida(); }
   protected criar(): void {
     const e = this.estado();
     if (this.criando() || !e.classe || !e.dinheiro.rolado) return;

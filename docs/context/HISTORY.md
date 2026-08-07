@@ -1,5 +1,28 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-07 — Confirmação de saída vira `<dialog>` nativo, com texto explicando que o rascunho não se perde
+
+Refinamento do fix anterior (mesmo dia): a confirmação de saída tinha virado um painel inline
+(`.guia__sair-confirmar`, `role="alertdialog"`) empurrando o conteúdo da página para baixo — não
+era de fato uma "dialog". Pedido do usuário: usar uma dialog de verdade, e deixar claro no texto que
+o progresso não se perde.
+
+Trocado por um `<dialog>` HTML nativo (`.guia__sair-dialog`), aberto via `showModal()`/fechado via
+`close()` num `effect()` que sincroniza com o signal `confirmandoSaida()` (esses métodos são
+imperativos — sem equivalente declarativo em template). Ganha de graça o comportamento padrão do
+elemento: overlay no top layer, `::backdrop` esmaecendo o resto da página, Esc fecha sozinho, foco
+preso dentro do diálogo. Clique no backdrop também fecha (checagem `event.target ===
+event.currentTarget` no clique do próprio `<dialog>`, já que o clique fora do conteúdo cai nele
+mesmo). Texto novo: "Seu progresso foi salvo neste dispositivo. Você não vai perder nada — ao voltar
+para esta tela, pode continuar exatamente de onde parou" — reforça que dá pra sair e retomar depois
+(o rascunho que o fix anterior já garantiu não sumir mais).
+
+jsdom (ambiente de teste) não implementa `HTMLDialogElement.showModal`/`close` — o efeito checa
+`typeof` antes de chamar, então os testes continuam passando sem exercitar o `<dialog>` de verdade;
+o comportamento real (abre, Esc fecha, backdrop fecha, confirmar navega, nenhum `confirm()`/`alert()`
+nativo aparece) foi conferido ao vivo (stack real + Playwright) em 1920×1080 e 360×800. 17 testes de
+`criar.page.spec.ts` continuam passando.
+
 ## 2026-08-07 — Confirmação de saída sem `confirm()` nativo + rascunho não some mais antes da decisão
 
 Dois problemas reportados no guia de criação de ficha:

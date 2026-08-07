@@ -150,7 +150,10 @@ describe('FichaCriar', () => {
 
       expect(componente['confirmandoSaida']()).toBe(true);
       expect(navegar).not.toHaveBeenCalled();
-      expect(raiz.querySelector('.guia__sair-confirmar')).not.toBeNull();
+      const dialogo = raiz.querySelector('.guia__sair-dialog') as HTMLDialogElement;
+      expect(dialogo).not.toBeNull();
+      expect(dialogo.tagName).toBe('DIALOG');
+      expect(dialogo.textContent).toContain('não vai perder nada');
     });
 
     it('navega para o painel só depois de confirmar, e "Continuar aqui" cancela sem navegar', () => {
