@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { FichaHabilidadeDto } from '../../dtos/ficha';
 import { ClasseEnum, HabilidadeCategoriaEnum } from '../../enums';
-import { experimentoComPeculiaridade } from './experimento';
+import { ehClasseExperimento, experimentoComPeculiaridade } from './experimento';
 
 const peculiaridade: FichaHabilidadeDto = {
   nome: 'Peculiaridade',
@@ -30,4 +30,20 @@ describe('experimentoComPeculiaridade', () => {
     const custom: FichaHabilidadeDto = { ...peculiaridade, categoria: HabilidadeCategoriaEnum.GERAL };
     expect(experimentoComPeculiaridade(ClasseEnum.EXPERIMENTO_BESTIAL, [custom])).toBe(false);
   });
+});
+
+describe('ehClasseExperimento', () => {
+  it.each([ClasseEnum.EXPERIMENTO_BESTIAL, ClasseEnum.EXPERIMENTO_ARTIFICIAL, ClasseEnum.EXPERIMENTO_HIBRIDO])(
+    'true para %s',
+    (classe) => {
+      expect(ehClasseExperimento(classe)).toBe(true);
+    },
+  );
+
+  it.each([ClasseEnum.COMBATENTE, ClasseEnum.ESPECIALISTA, ClasseEnum.SUPORTE, ClasseEnum.CIVIL])(
+    'false para %s',
+    (classe) => {
+      expect(ehClasseExperimento(classe)).toBe(false);
+    },
+  );
 });
