@@ -362,6 +362,55 @@ describe('FichaCriar', () => {
 
       expect(componente['passoValido']()).toBe(false);
     });
+
+    it('escolher Peculiaridade dispensa Origem no passoValido de Identidade', () => {
+      const { componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['abrirSeletorMelhoria']('classeOuArquetipo');
+      const peculiaridade = componente['gruposVagaAberta']().flatMap((g) => g.subgrupos).flatMap((s) => s.habilidades).find((h) => h.nome === 'Peculiaridade')!;
+      componente['adicionarMelhoria'](peculiaridade);
+      componente['fecharSeletorMelhoria']();
+
+      componente['atualizar']({ passo: componente['passos']().indexOf('Identidade'), personalidade: 'Instável' });
+
+      expect(componente['temPeculiaridade']()).toBe(true);
+      expect(componente['passoValido']()).toBe(true); // sem nenhum campo de Origem preenchido
+    });
+
+    it('sem Peculiaridade, o passo Identidade de um Experimento continua exigindo Origem completa', () => {
+      const { componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL, passo: 0 });
+      componente['abrirSeletorMelhoria']('classeOuArquetipo');
+      const outra = componente['gruposVagaAberta']().flatMap((g) => g.subgrupos).flatMap((s) => s.habilidades).find((h) => h.nome !== 'Peculiaridade')!;
+      componente['adicionarMelhoria'](outra);
+      componente['fecharSeletorMelhoria']();
+
+      componente['atualizar']({ passo: componente['passos']().indexOf('Identidade'), personalidade: 'Instável' });
+
+      expect(componente['temPeculiaridade']()).toBe(false);
+      expect(componente['passoValido']()).toBe(false); // Origem continua obrigatória
+    });
+
+    it('cria a ficha de um Experimento com Peculiaridade sem enviar Origem (origem: null)', () => {
+      const { fixture, componente } = montar();
+      const router = TestBed.inject(Router);
+      vi.spyOn(router, 'navigate').mockResolvedValue(true);
+      componente['atualizar']({ nome: 'Espécime-7', classe: ClasseEnum.EXPERIMENTO_ARTIFICIAL, dinheiro: { dados: [1, 1, 1, 1], inicial: 1000, rolado: true } });
+      componente['abrirSeletorMelhoria']('classeOuArquetipo');
+      const peculiaridade = componente['gruposVagaAberta']().flatMap((g) => g.subgrupos).flatMap((s) => s.habilidades).find((h) => h.nome === 'Peculiaridade')!;
+      componente['adicionarMelhoria'](peculiaridade);
+      componente['fecharSeletorMelhoria']();
+      componente['atualizar']({ personalidade: 'Instável' });
+      fixture.detectChanges();
+
+      componente['criar']();
+
+      const fichaService = TestBed.inject(FichaService) as unknown as { criarFicha: ReturnType<typeof vi.fn> };
+      const payload = fichaService.criarFicha.mock.calls[0][0];
+      expect(payload.dados.identidade.origem).toBeNull();
+      expect(payload.dados.identidade.personalidade).toBe('Instável');
+      expect(payload.dados.habilidades.some((h: { nome: string }) => h.nome === 'Peculiaridade')).toBe(true);
+    });
   });
 
   describe('m3-59 — passo // EQUIPAMENTO INICIAL', () => {

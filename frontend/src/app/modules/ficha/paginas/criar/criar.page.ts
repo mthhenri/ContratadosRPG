@@ -213,6 +213,11 @@ export class FichaCriar {
       .map((f) => ({ nome: f.nome.trim(), categoria: HabilidadeCategoriaEnum.PERSONALIDADE, custoEnergia: 0, descricao: f.descricao.trim() }));
     return [...daCatalogo, ...fortificacoes];
   });
+  /** `true` quando a Peculiaridade já foi escolhida no passo // Habilidades — Experimento com ela não tem Origem (m3-41). */
+  protected readonly temPeculiaridade = computed(() => {
+    const classe = this.estado().classe;
+    return classe !== null && experimentoComPeculiaridade(classe, this.habilidadesDoNivel());
+  });
   /** `true` quando todas as vagas (catálogo + Fortificações) do passo estão preenchidas — trava dura da m3-58. */
   protected readonly melhoriasCompletas = computed(() => {
     const vagasOk = this.vagasMelhoria().every((v) => this.preenchidasNaVaga(v.tipo) >= v.alvo);
@@ -347,14 +352,16 @@ export class FichaCriar {
       case 'Atributos': return e.modoLivre || (this.distribuicao().saldo === 0 && this.distribuicao().violacoes.length === 0);
       case 'Identidade': return e.personalidade.trim().length > 0
         && !/\s/.test(e.personalidade.trim())
-        && e.origem.nome.trim().length > 0
-        && e.origem.descricao.trim().length > 0
-        && e.origem.formacao.every((item, indice) => (item.bonus !== null || e.formacoesCustomizadas[indice])
-          && item.texto.trim().length > 0
-          && (!this.definicaoFormacao(indice)?.parametro || Boolean(item.parametro?.trim())))
-        && e.origem.especialidade.gatilho.trim().length > 0
-        && e.origem.especialidade.efeito.trim().length > 0
-        && e.origem.saberDeCampo.trim().length > 0;
+        && (this.temPeculiaridade() || (
+          e.origem.nome.trim().length > 0
+          && e.origem.descricao.trim().length > 0
+          && e.origem.formacao.every((item, indice) => (item.bonus !== null || e.formacoesCustomizadas[indice])
+            && item.texto.trim().length > 0
+            && (!this.definicaoFormacao(indice)?.parametro || Boolean(item.parametro?.trim())))
+          && e.origem.especialidade.gatilho.trim().length > 0
+          && e.origem.especialidade.efeito.trim().length > 0
+          && e.origem.saberDeCampo.trim().length > 0
+        ));
       case 'Habilidades': return e.modoLivre || this.melhoriasCompletas();
       case 'Recursos': return e.dinheiro.rolado && !this.rolandoRecursos();
       case 'Equipamento inicial': return e.modoLivre || this.kitValido();
@@ -382,7 +389,7 @@ export class FichaCriar {
     if (this.criando() || !e.classe || !e.dinheiro.rolado) return;
     this.criando.set(true);
     this.erro.set('');
-    const resultado = construirFichaInicial({ nome: e.nome, classe: e.classe, arquetipo: e.arquetipo, nivel: this.fichas().length ? this.novoAgente().nivelInicial : 0, prestigio: this.fichas().length ? this.novoAgente().prestigio.prestigioInicial : 0, atributos: e.atributos, maestria: e.maestria, identidade: { personalidade: e.personalidade, origem: e.origem }, dinheiro: this.totalDinheiro(), anotacoes: this.novoAgente().recebeAmaldicoadoPeloPassado ? 'Amaldiçoado pelo Passado' : '', habilidadesExtras: this.habilidadesDoNivel(), equipamentoInicial: e.kit });
+    const resultado = construirFichaInicial({ nome: e.nome, classe: e.classe, arquetipo: e.arquetipo, nivel: this.fichas().length ? this.novoAgente().nivelInicial : 0, prestigio: this.fichas().length ? this.novoAgente().prestigio.prestigioInicial : 0, atributos: e.atributos, maestria: e.maestria, identidade: { personalidade: e.personalidade, origem: this.temPeculiaridade() ? null : e.origem }, dinheiro: this.totalDinheiro(), anotacoes: this.novoAgente().recebeAmaldicoadoPeloPassado ? 'Amaldiçoado pelo Passado' : '', habilidadesExtras: this.habilidadesDoNivel(), equipamentoInicial: e.kit });
     const campanhaId = this.campanhaId;
     this.fichaService.criarFicha({ ...(campanhaId !== null ? { campanhaId } : {}), usuarioId: this.ehMestre() ? (e.usuarioId ?? undefined) : undefined, ...resultado })
       .pipe(finalize(() => this.criando.set(false)))
