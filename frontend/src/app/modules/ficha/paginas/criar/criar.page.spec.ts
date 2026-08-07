@@ -240,7 +240,7 @@ describe('FichaCriar', () => {
     it('não existe na trilha quando o Nível inicial é 0', () => {
       const { componente } = montar();
       expect(componente['temMelhorias']()).toBe(false);
-      expect(componente['passos']()).not.toContain('Melhorias');
+      expect(componente['passos']()).not.toContain('Habilidades');
       expect(componente['passos']()).toHaveLength(8);
     });
 
@@ -250,7 +250,7 @@ describe('FichaCriar', () => {
       fixture.detectChanges();
       expect(componente['novoAgente']().nivelInicial).toBe(5);
 
-      const indice = componente['passos']().indexOf('Melhorias');
+      const indice = componente['passos']().indexOf('Habilidades');
       expect(indice).toBeGreaterThan(-1);
       componente['atualizar']({ passo: indice, modoLivre: false });
       fixture.detectChanges();

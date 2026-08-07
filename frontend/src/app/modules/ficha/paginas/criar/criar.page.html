@@ -298,78 +298,88 @@
                 </label>
               </section>
 
-              <section class="guia__identidade-bloco guia__identidade-bloco--origem">
-                <header class="guia__identidade-cabecalho">
-                  <span class="guia__identidade-marca">O</span>
-                  <div><strong>Origem</strong><small>Passado, treinamento e conhecimento anterior ao recrutamento.</small></div>
-                </header>
-                <div class="guia__campos guia__campos--duas-colunas">
-                  <label class="campo">
-                    <span class="campo__rotulo">Nome da origem</span>
-                    <input class="campo__controle" [value]="estado().origem.nome" (input)="atualizarOrigem('nome', valor($event))" placeholder="Ex.: Ex-militar" />
-                  </label>
-                  <label class="campo">
-                    <span class="campo__rotulo">Descrição da origem</span>
-                    <textarea class="campo__controle campo__controle--area" rows="3" [value]="estado().origem.descricao" (input)="atualizarOrigem('descricao', valor($event))"></textarea>
-                  </label>
-                </div>
+              @if (!temPeculiaridade()) {
+                <section class="guia__identidade-bloco guia__identidade-bloco--origem">
+                  <header class="guia__identidade-cabecalho">
+                    <span class="guia__identidade-marca">O</span>
+                    <div><strong>Origem</strong><small>Passado, treinamento e conhecimento anterior ao recrutamento.</small></div>
+                  </header>
+                  <div class="guia__campos guia__campos--duas-colunas">
+                    <label class="campo">
+                      <span class="campo__rotulo">Nome da origem</span>
+                      <input class="campo__controle" [value]="estado().origem.nome" (input)="atualizarOrigem('nome', valor($event))" placeholder="Ex.: Ex-militar" />
+                    </label>
+                    <label class="campo">
+                      <span class="campo__rotulo">Descrição da origem</span>
+                      <textarea class="campo__controle campo__controle--area" rows="3" [value]="estado().origem.descricao" (input)="atualizarOrigem('descricao', valor($event))"></textarea>
+                    </label>
+                  </div>
 
-                <div class="guia__subsecao"><span>Formações</span><i></i></div>
-                <p class="guia__subsecao-ajuda">Escolha uma formação do sistema ou selecione “Outra” para registrar uma opção autorizada pelo Mestre.</p>
-                <div class="guia__formacoes">
-                  @for (linha of estado().origem.formacao; track $index) {
-                    <div class="guia__formacao">
-                      <label class="campo">
-                        <span class="campo__rotulo">Formação {{ $index + 1 | number: '2.0-0' }}</span>
-                        <select class="campo__controle" [attr.aria-label]="'Formação ' + ($index + 1)" [value]="linha.bonus ?? (estado().formacoesCustomizadas[$index] ? '__OUTRA__' : '')" (change)="mudarBonusFormacao($index, $event)">
-                          <option value="">Selecione uma formação</option>
-                          @for (grupo of gruposFormacao; track grupo.rotulo) {
-                            <optgroup [label]="grupo.rotulo">
-                              @for (opcao of grupo.opcoes; track opcao.codigo) {
-                                <option [value]="opcao.codigo">{{ opcao.rotulo }}</option>
-                              }
-                            </optgroup>
+                  <div class="guia__subsecao"><span>Formações</span><i></i></div>
+                  <p class="guia__subsecao-ajuda">Escolha uma formação do sistema ou selecione “Outra” para registrar uma opção autorizada pelo Mestre.</p>
+                  <div class="guia__formacoes">
+                    @for (linha of estado().origem.formacao; track $index) {
+                      <div class="guia__formacao">
+                        <label class="campo">
+                          <span class="campo__rotulo">Formação {{ $index + 1 | number: '2.0-0' }}</span>
+                          <select class="campo__controle" [attr.aria-label]="'Formação ' + ($index + 1)" [value]="linha.bonus ?? (estado().formacoesCustomizadas[$index] ? '__OUTRA__' : '')" (change)="mudarBonusFormacao($index, $event)">
+                            <option value="">Selecione uma formação</option>
+                            @for (grupo of gruposFormacao; track grupo.rotulo) {
+                              <optgroup [label]="grupo.rotulo">
+                                @for (opcao of grupo.opcoes; track opcao.codigo) {
+                                  <option [value]="opcao.codigo">{{ opcao.rotulo }}</option>
+                                }
+                              </optgroup>
+                            }
+                            <option value="__OUTRA__">Outra (autorizada pelo Mestre)</option>
+                          </select>
+                        </label>
+                        @if (definicaoFormacao($index); as definicao) {
+                          @if (definicao.parametro === parametroEsquivaOuBloqueio) {
+                            <label class="campo">
+                              <span class="campo__rotulo">Escolha o benefício</span>
+                              <select class="campo__controle" [value]="linha.parametro ?? ''" (change)="atualizarParametroFormacao($index, valor($event))">
+                                <option value="">Selecione</option>
+                                <option value="Esquiva">Esquiva</option>
+                                <option value="Bloqueio">Bloqueio</option>
+                              </select>
+                            </label>
+                          } @else if (definicao.parametro) {
+                            <label class="campo">
+                              <span class="campo__rotulo">{{ rotuloParametroFormacao(definicao.parametro) }}</span>
+                              <input class="campo__controle" [value]="linha.parametro ?? ''" (input)="atualizarParametroFormacao($index, valor($event))" />
+                            </label>
                           }
-                          <option value="__OUTRA__">Outra (autorizada pelo Mestre)</option>
-                        </select>
-                      </label>
-                      @if (definicaoFormacao($index); as definicao) {
-                        @if (definicao.parametro === parametroEsquivaOuBloqueio) {
-                          <label class="campo">
-                            <span class="campo__rotulo">Escolha o benefício</span>
-                            <select class="campo__controle" [value]="linha.parametro ?? ''" (change)="atualizarParametroFormacao($index, valor($event))">
-                              <option value="">Selecione</option>
-                              <option value="Esquiva">Esquiva</option>
-                              <option value="Bloqueio">Bloqueio</option>
-                            </select>
-                          </label>
-                        } @else if (definicao.parametro) {
-                          <label class="campo">
-                            <span class="campo__rotulo">{{ rotuloParametroFormacao(definicao.parametro) }}</span>
-                            <input class="campo__controle" [value]="linha.parametro ?? ''" (input)="atualizarParametroFormacao($index, valor($event))" />
-                          </label>
                         }
-                      }
-                      <label class="campo">
-                        <span class="campo__rotulo">Texto registrado</span>
-                        <input class="campo__controle" [value]="linha.texto" (input)="atualizarTextoFormacao($index, valor($event))" [placeholder]="estado().formacoesCustomizadas[$index] ? 'Descreva a formação autorizada' : 'Preenchido pela formação escolhida'" />
-                      </label>
-                    </div>
-                  }
-                </div>
+                        <label class="campo">
+                          <span class="campo__rotulo">Texto registrado</span>
+                          <input class="campo__controle" [value]="linha.texto" (input)="atualizarTextoFormacao($index, valor($event))" [placeholder]="estado().formacoesCustomizadas[$index] ? 'Descreva a formação autorizada' : 'Preenchido pela formação escolhida'" />
+                        </label>
+                      </div>
+                    }
+                  </div>
 
-                <div class="guia__subsecao"><span>Especialidade</span><i></i></div>
-                <p class="guia__subsecao-ajuda">A Especialidade é escrita livremente: defina quando ativa e qual efeito mecânico ela concede.</p>
-                <div class="guia__campos guia__campos--duas-colunas">
-                  <label class="campo"><span class="campo__rotulo">Gatilho</span><input class="campo__controle" [value]="estado().origem.especialidade.gatilho" (input)="atualizarEspecialidade('gatilho', valor($event))" placeholder="Ex.: Ao agir sob fogo direto" /></label>
-                  <label class="campo"><span class="campo__rotulo">Efeito</span><input class="campo__controle" [value]="estado().origem.especialidade.efeito" (input)="atualizarEspecialidade('efeito', valor($event))" placeholder="Ex.: +1 dado em um teste" /></label>
-                </div>
-                <label class="campo"><span class="campo__rotulo">Saber de campo</span><textarea class="campo__controle campo__controle--area" rows="3" [value]="estado().origem.saberDeCampo" (input)="atualizarOrigem('saberDeCampo', valor($event))" placeholder="Conhecimento prático que o agente traz de sua vida anterior."></textarea></label>
-              </section>
+                  <div class="guia__subsecao"><span>Especialidade</span><i></i></div>
+                  <p class="guia__subsecao-ajuda">A Especialidade é escrita livremente: defina quando ativa e qual efeito mecânico ela concede.</p>
+                  <div class="guia__campos guia__campos--duas-colunas">
+                    <label class="campo"><span class="campo__rotulo">Gatilho</span><input class="campo__controle" [value]="estado().origem.especialidade.gatilho" (input)="atualizarEspecialidade('gatilho', valor($event))" placeholder="Ex.: Ao agir sob fogo direto" /></label>
+                    <label class="campo"><span class="campo__rotulo">Efeito</span><input class="campo__controle" [value]="estado().origem.especialidade.efeito" (input)="atualizarEspecialidade('efeito', valor($event))" placeholder="Ex.: +1 dado em um teste" /></label>
+                  </div>
+                  <label class="campo"><span class="campo__rotulo">Saber de campo</span><textarea class="campo__controle campo__controle--area" rows="3" [value]="estado().origem.saberDeCampo" (input)="atualizarOrigem('saberDeCampo', valor($event))" placeholder="Conhecimento prático que o agente traz de sua vida anterior."></textarea></label>
+                </section>
+              } @else {
+                <section class="guia__identidade-bloco guia__identidade-bloco--origem">
+                  <header class="guia__identidade-cabecalho">
+                    <span class="guia__identidade-marca">O</span>
+                    <div><strong>Peculiaridade</strong><small>Substitui a Origem — este agente não tem Formação, Especialidade nem Saber de Campo.</small></div>
+                  </header>
+                  <p class="guia__subsecao-ajuda">A Peculiaridade concede um bônus e uma penalidade desconhecida — o Mestre define os dois em jogo, fora deste guia.</p>
+                </section>
+              }
             }
-            @case ('Melhorias') {
+            @case ('Habilidades') {
               <div class="guia__introducao">
-                <span class="guia__introducao-codigo">PROGRESSÃO // MELHORIAS DE NÍVEL</span>
+                <span class="guia__introducao-codigo">PROGRESSÃO // HABILIDADES</span>
                 <p>Gaste as vagas de habilidade acumuladas do Nível 1 até o Nível {{ novoAgente().nivelInicial }}. A Habilidade Inicial do passo Classe já está garantida e não consome vaga.</p>
               </div>
 
@@ -516,8 +526,8 @@
                 <div><dt>Classe / Arquétipo</dt><dd>{{ perfilRotulo() }}</dd></div>
                 <div><dt>Nível / Prestígio</dt><dd>{{ fichas().length ? novoAgente().nivelInicial : 0 }} / {{ fichas().length ? novoAgente().prestigio.prestigioInicial : 0 }}</dd></div>
                 <div><dt>Personalidade / Origem</dt><dd>{{ estado().personalidade }} · {{ estado().origem.nome }}</dd></div>
-                @if (temMelhorias()) {
-                  <div><dt>Melhorias de nível</dt><dd>{{ melhoriasPreenchidasTotal() }}/{{ melhoriasAlvoTotal() }} vagas</dd></div>
+                @if (comHabilidades()) {
+                  <div><dt>Habilidades</dt><dd>{{ melhoriasPreenchidasTotal() }}/{{ melhoriasAlvoTotal() }} vagas</dd></div>
                 }
                 <div><dt>Recursos iniciais</dt><dd>{{ totalDinheiro() | currency: 'BRL' : 'symbol' : '1.0-0' }}</dd></div>
                 <div>
@@ -609,13 +619,13 @@
               }
             }
 
-            @if ((estado().passo >= 4 || visitado() >= 4) && estado().personalidade.trim()) {
+            @if ((estado().passo >= passos().indexOf('Identidade') || visitado() >= passos().indexOf('Identidade')) && estado().personalidade.trim()) {
               <div class="guia__resumo-linha"><span>Personalidade</span><b>{{ estado().personalidade }}</b></div>
             }
-            @if ((estado().passo >= 4 || visitado() >= 4) && estado().origem.nome.trim()) {
-              <div class="guia__resumo-linha"><span>Origem</span><b>{{ estado().origem.nome }}</b></div>
+            @if ((estado().passo >= passos().indexOf('Identidade') || visitado() >= passos().indexOf('Identidade')) && (temPeculiaridade() || estado().origem.nome.trim())) {
+              <div class="guia__resumo-linha"><span>Origem</span><b>{{ temPeculiaridade() ? 'Peculiaridade' : estado().origem.nome }}</b></div>
             }
-            @if ((estado().passo >= 4 || visitado() >= 4) && formacoesPreenchidas().length) {
+            @if ((estado().passo >= passos().indexOf('Identidade') || visitado() >= passos().indexOf('Identidade')) && !temPeculiaridade() && formacoesPreenchidas().length) {
               <div class="guia__destaques">
                 <span>Formações</span>
                 <div>
@@ -623,8 +633,8 @@
                 </div>
               </div>
             }
-            @if (temMelhorias() && (estado().passo >= passos().indexOf('Melhorias') || visitado() >= passos().indexOf('Melhorias'))) {
-              <div class="guia__resumo-linha"><span>Melhorias</span><b>{{ melhoriasPreenchidasTotal() }}/{{ melhoriasAlvoTotal() }} vagas</b></div>
+            @if (comHabilidades() && (estado().passo >= passos().indexOf('Habilidades') || visitado() >= passos().indexOf('Habilidades'))) {
+              <div class="guia__resumo-linha"><span>Habilidades</span><b>{{ melhoriasPreenchidasTotal() }}/{{ melhoriasAlvoTotal() }} vagas</b></div>
             }
             @if (estado().dinheiro.rolado) {
               <div class="guia__resumo-linha guia__resumo-linha--recursos"><span>Recursos</span><b>{{ totalDinheiro() | currency: 'BRL' : 'symbol' : '1.0-0' }}</b></div>
