@@ -76,14 +76,6 @@
   </article>
 </section>
 
-@if (dialogCriar()) {
-  <app-ficha-criar-dialog
-    [criando]="criando()"
-    (criar)="criarFicha($event)"
-    (cancelar)="fecharCriarFicha()"
-  />
-}
-
 <!--
   Menu de ações (kebab) — na RAIZ do template, fora de `.acervo__lista` (`overflow-y` +
   `mask-image` via `appOverflowFade`, que cortaria um `position: fixed` comum na pintura —

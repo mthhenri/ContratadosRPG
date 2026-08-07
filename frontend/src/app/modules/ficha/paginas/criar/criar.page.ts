@@ -1,7 +1,7 @@
 import { Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { finalize, forkJoin, timer } from 'rxjs';
+import { finalize, forkJoin, of, timer } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ArquetipoEnum, ClasseEnum, FormacaoBonusEnum, FormacaoParametroEnum, HabilidadeCategoriaEnum, MotivoEntradaAgenteEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
@@ -73,7 +73,14 @@ export class FichaCriar {
   private readonly rota = inject(ActivatedRoute); private readonly router = inject(Router);
   private readonly campanhaService = inject(CampanhaService); private readonly fichaService = inject(FichaService);
   private readonly sessaoService = inject(SessaoService); private readonly rascunhos = inject(GuiaCriacaoRascunhoService);
-  protected readonly campanhaId = Number(lerParamRota(this.rota, 'campanhaId'));
+  private readonly campanhaIdRota = lerParamRota(this.rota, 'campanhaId');
+  /**
+   * `null` sob `/fichas/nova` (m3-28, ficha avulsa) — sob `/painel/:campanhaId/ficha/nova` vem do
+   * parâmetro de rota, como sempre. Sem campanha não há esquadrão: o construtor pula
+   * `listarMembros`/`listarFichas` e o guia sempre segue o caminho "primeiro agente" (Nível 0,
+   * Prestígio 0, sem bônus monetário) — não existe média para calcular sem fichas de campanha.
+   */
+  protected readonly campanhaId: number | null = this.campanhaIdRota !== null ? Number(this.campanhaIdRota) : null;
   protected readonly gruposClasse = GRUPOS_CLASSE;
   protected readonly gruposFormacao = GRUPOS_FORMACAO;
   protected readonly parametroEsquivaOuBloqueio = FormacaoParametroEnum.ESQUIVA_OU_BLOQUEIO;
@@ -220,7 +227,11 @@ export class FichaCriar {
 
   constructor() {
     const existente = this.rascunhos.recuperar<EstadoGuiaCriacao>(this.campanhaId); this.temRascunho.set(existente !== null);
-    forkJoin({ membros: this.campanhaService.listarMembros(this.campanhaId), fichas: this.fichaService.listarFichas(this.campanhaId) })
+    const campanhaId = this.campanhaId;
+    forkJoin({
+      membros: campanhaId !== null ? this.campanhaService.listarMembros(campanhaId) : of([]),
+      fichas: campanhaId !== null ? this.fichaService.listarFichas(campanhaId) : of([]),
+    })
       .pipe(finalize(() => this.carregando.set(false))).subscribe(({ membros, fichas }) => { this.membros.set(membros); this.fichas.set(fichas); if (!fichas.length) return; this.atualizar({ mediaNivel: fichas.reduce((s, f) => s + f.nivel, 0) / fichas.length, mediaPrestigio: fichas.reduce((s, f) => s + (f.prestigio ?? 0), 0) / fichas.length }); });
     // `!this.temRascunho()` evita sobrescrever o rascunho salvo antes do jogador decidir "Retomar"
     // ou "Começar do zero": sem essa trava, este efeito salvava o estado inicial (vazio) assim que
@@ -353,7 +364,7 @@ export class FichaCriar {
     });
   }
   protected sair(): void { this.confirmandoSaida.set(true); }
-  protected confirmarSaida(): void { this.confirmandoSaida.set(false); void this.router.navigate(['/painel', this.campanhaId]); }
+  protected confirmarSaida(): void { this.confirmandoSaida.set(false); void this.router.navigate(this.campanhaId !== null ? ['/painel', this.campanhaId] : ['/fichas']); }
   protected cancelarSaida(): void { this.confirmandoSaida.set(false); }
   /** Clique no `::backdrop` do `<dialog>` cai no próprio elemento (não num filho) — fecha como "Continuar aqui". */
   protected fecharAoClicarFora(evento: MouseEvent): void { if (evento.target === evento.currentTarget) this.cancelarSaida(); }
@@ -363,8 +374,9 @@ export class FichaCriar {
     this.criando.set(true);
     this.erro.set('');
     const resultado = construirFichaInicial({ nome: e.nome, classe: e.classe, arquetipo: e.arquetipo, nivel: this.fichas().length ? this.novoAgente().nivelInicial : 0, prestigio: this.fichas().length ? this.novoAgente().prestigio.prestigioInicial : 0, atributos: e.atributos, maestria: e.maestria, identidade: { personalidade: e.personalidade, origem: e.origem }, dinheiro: this.totalDinheiro(), anotacoes: this.novoAgente().recebeAmaldicoadoPeloPassado ? 'Amaldiçoado pelo Passado' : '', habilidadesExtras: this.habilidadesDoNivel(), equipamentoInicial: e.kit });
-    this.fichaService.criarFicha({ campanhaId: this.campanhaId, usuarioId: this.ehMestre() ? (e.usuarioId ?? undefined) : undefined, ...resultado })
+    const campanhaId = this.campanhaId;
+    this.fichaService.criarFicha({ ...(campanhaId !== null ? { campanhaId } : {}), usuarioId: this.ehMestre() ? (e.usuarioId ?? undefined) : undefined, ...resultado })
       .pipe(finalize(() => this.criando.set(false)))
-      .subscribe({ next: (ficha) => { this.rascunhos.limpar(this.campanhaId); void this.router.navigate(['/painel', this.campanhaId, 'ficha', ficha.id]); }, error: (erro) => this.erro.set(erro?.error?.mensagem ?? 'Não foi possível criar a ficha.') });
+      .subscribe({ next: (ficha) => { this.rascunhos.limpar(campanhaId); void this.router.navigate(campanhaId !== null ? ['/painel', campanhaId, 'ficha', ficha.id] : ['/fichas', ficha.id]); }, error: (erro) => this.erro.set(erro?.error?.mensagem ?? 'Não foi possível criar a ficha.') });
   }
 }

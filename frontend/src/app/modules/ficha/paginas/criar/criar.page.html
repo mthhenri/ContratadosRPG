@@ -103,13 +103,13 @@
             @case ('Base') {
               <div class="guia__introducao">
                 <span class="guia__introducao-codigo">REGISTRO // IDENTIFICAÇÃO</span>
-                <p>Defina como o agente será identificado nos registros da campanha.</p>
+                <p>{{ campanhaId !== null ? 'Defina como o agente será identificado nos registros da campanha.' : 'Defina como o agente será identificado nos registros — esta ficha nasce avulsa, sem campanha.' }}</p>
               </div>
               <div class="guia__campos">
                 <label class="campo">
                   <span class="campo__rotulo">Codinome / Agente</span>
                   <input class="campo__controle" [value]="estado().nome" (input)="atualizar({ nome: valor($event) })" />
-                  <small class="campo__ajuda">Nome operacional exibido na ficha e no esquadrão.</small>
+                  <small class="campo__ajuda">{{ campanhaId !== null ? 'Nome operacional exibido na ficha e no esquadrão.' : 'Nome operacional exibido na ficha.' }}</small>
                 </label>
                 @if (ehMestre()) {
                   <label class="campo">
@@ -219,7 +219,11 @@
               @if (!fichas().length) {
                 <div class="guia__aviso guia__aviso--informacao">
                   <app-icone nome="novo-agente" />
-                  <div><strong>Primeiro agente da campanha</strong><span>Nível 0, Prestígio 0 e sem bônus monetário.</span></div>
+                  @if (campanhaId !== null) {
+                    <div><strong>Primeiro agente da campanha</strong><span>Nível 0, Prestígio 0 e sem bônus monetário.</span></div>
+                  } @else {
+                    <div><strong>Ficha avulsa, sem campanha</strong><span>Sem esquadrão para calcular médias — nasce no Nível 0, Prestígio 0 e sem bônus monetário.</span></div>
+                  }
                 </div>
               } @else {
                 <label class="campo">

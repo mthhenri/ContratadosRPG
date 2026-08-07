@@ -1,8 +1,8 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-07 · **Última decisão registrada:** guia de criação de ficha completo
-> (`m3-57`–`m3-59`); Equipamento Inicial usa a mesma regra $2500/peso 5 para todas as classes —
-> Civil incluso, a variante própria do documento ficou fora de escopo
+> **Última revisão:** 2026-08-07 · **Última decisão registrada:** o guia de criação de ficha
+> (`m3-57`–`m3-59`) também atende `/fichas/nova` (acervo, sem campanha) — `FichaCriarDialog` foi
+> removido do código, era o último consumidor
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -50,8 +50,8 @@ Deploy em produção por **integração nativa das plataformas**, sem GitHub Act
 `master` → Render (backend) e Cloudflare Pages (frontend) puxam do Git sozinhos; banco no Supabase.
 O GitHub Actions só roda **CI** (lint + testes nos 3 workspaces em todo PR).
 
-**Suítes:** shared 530 testes fonte aprovados (o comando completo ainda coleta `dist`, `P-011`) ·
-backend 170/170 · frontend 728/**730** — as 2 falhas são conhecidas e pré-existentes, ver
+**Suítes:** shared 532 testes fonte aprovados (o comando completo ainda coleta `dist`, `P-011`) ·
+backend 170/170 · frontend 733/**735** — as 2 falhas são conhecidas e pré-existentes, ver
 [`PROBLEMS.md`](PROBLEMS.md) `P-001`/`P-010`. `npm run lint` **não fecha limpo**
 hoje em nenhum dos dois workspaces (frontend/backend) — falhas pré-existentes não relacionadas a
 nenhuma task recente, ver `PROBLEMS.md` `P-009`.
@@ -211,14 +211,22 @@ calculadora flutuante e **histórico persistido** com visibilidade `PUBLICA`/`PR
 
 ### Guia de criação de ficha — `frontend/src/app/modules/ficha/paginas/criar/`
 
-Rota `/painel/:campanhaId/ficha/nova` (`m3-57`/`m3-58`/`m3-59`), substitui o antigo
-`FichaCriarDialog`: tela única por passos — trilha vertical + resumo operacional progressivo que
-nunca antecipa classe/Nível/dinheiro antes da escolha real —, rodando sobre `shared/regras` sem
-nenhuma chamada ao backend até o "Criar ficha" final. Passos: **01 Base** (dono, só mestre, +
-codinome) · **02 Classe** (classe/arquétipo, bônus fixo de atributos, Habilidade Inicial, Saúde
-base sem Nível/atributos ainda) · **03 Novo agente** (motivo de entrada + médias de Nível/Prestígio
-pré-calculadas da campanha, `calcularNovoAgente`, memorial de cálculo; primeira ficha da campanha
-pula direto para Nível/Prestígio 0) · **04 Atributos** (orçamento de 4 pontos de criação,
+Rota `/painel/:campanhaId/ficha/nova` (`m3-57`/`m3-58`/`m3-59`) — mesmo componente `FichaCriar`
+montado de novo, sem `campanhaId`, em `/fichas/nova` (acervo, m3-28: ficha avulsa, sem campanha).
+`FichaCriarDialog` (o formulário único antigo) **não existe mais no código**: era a última
+consumidora quem faltava migrar. Tela única por passos — trilha vertical + resumo operacional
+progressivo que nunca antecipa classe/Nível/dinheiro antes da escolha real —, rodando sobre
+`shared/regras` sem nenhuma chamada ao backend até o "Criar ficha" final. Sem `campanhaId`
+(`null`), o guia pula `listarMembros`/`listarFichas` (sem esquadrão, sem seletor de dono no passo
+01) e o passo 03 sempre segue o caminho "primeiro agente" (Nível 0, Prestígio 0, sem bônus — o
+mesmo já usado para uma campanha ainda sem fichas), com o aviso trocando "Primeiro agente da
+campanha" por "Ficha avulsa, sem campanha"; ao final, `POST /ficha` sai sem a chave `campanhaId` e
+o guia termina em `/fichas/:id`, não em `/painel/.../ficha/:id`. Passos: **01 Base** (dono, só
+mestre — não aparece sem campanha —, + codinome) · **02 Classe** (classe/arquétipo, bônus fixo de
+atributos, Habilidade Inicial, Saúde base sem Nível/atributos ainda) · **03 Novo agente** (motivo
+de entrada + médias de Nível/Prestígio pré-calculadas da campanha, `calcularNovoAgente`, memorial
+de cálculo; primeira ficha da campanha, ou ficha sem campanha, pula direto para Nível/Prestígio 0)
+· **04 Atributos** (orçamento de 4 pontos de criação,
 `calcularOrcamentoAtributos`/`validarDistribuicaoAtributos`) · **05 Identidade** (Personalidade +
 Origem com catálogo de Formações e `Outra`, imutáveis para o dono após a criação) · **06 Melhorias**
 (só existe com Nível inicial > 0 — vagas de habilidade da progressão acumulada,

@@ -1,5 +1,57 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-07 — Acervo (`/fichas`) ganha o guia de criação; `FichaCriarDialog` aposentado
+
+Pedido direto do autor (não numerado — sem spec no backlog): o "Criar ficha" da tela `/fichas`
+(acervo, m3-28) ainda abria o `FichaCriarDialog` antigo (m3-16) — um formulário único sem
+orçamento de atributos, sem Identidade, sem rolagem de Recursos e sem o Passo // EQUIPAMENTO
+INICIAL da `m3-59`, recém-fechada. A `m3-57` já havia declarado isso "Fora de Escopo"
+("ficha sem campanha segue pelo caminho atual") porque o guia (`FichaCriar`,
+`modules/ficha/paginas/criar/`) nasceu inteiro em cima de `campanhaId` — membros da campanha
+(seletor de dono), fichas da campanha (médias de Nível/Prestígio do passo Novo Agente), rascunho
+em `localStorage` por campanha e `POST /ficha` com `campanhaId`. Esta task fecha esse buraco.
+
+**`campanhaId: number | null`.** Mesmo padrão já usado por `FichaVisualizar` (m3-28): o parâmetro
+de rota vem de `lerParamRota` e, ausente, o componente trata como `null` em vez de inventar um
+`Number(null) === 0`. Com `campanhaId` nulo, o construtor pula `listarMembros`/`listarFichas`
+(`of([])` no lugar da chamada HTTP) — sem membros, o seletor "Operador responsável" já some
+sozinho (mesmo gate `ehMestre()` de sempre); sem fichas, o passo // NOVO AGENTE cai no caminho
+"primeiro agente" que já existia para campanha vazia (Nível 0, Prestígio 0, sem bônus monetário) —
+zero UI nova, só o texto do aviso virou condicional ("Ficha avulsa, sem campanha" em vez de
+"Primeiro agente da campanha", já que não existe "campanha" nesse contexto). `criar()` monta o DTO
+sem a chave `campanhaId` quando nulo (o backend já aceitava isso — é o mesmo formato que
+`FichaCriarDialog` sempre enviou) e navega para `/fichas/:id` em vez de `/painel/:campanhaId/ficha/:id`;
+"Sair" confirmado volta para `/fichas`. `GuiaCriacaoRascunhoService` (rascunho em `localStorage`)
+passou a aceitar `campanhaId: number | null`, com `null` caindo numa chave fixa (`...guia-criacao.acervo`)
+que nunca colide com um `campanhaId` numérico real.
+
+**Rota:** `nova` foi montada de novo em `ficha-acervo.routes.ts` (antes de `:id`, mesmo cuidado de
+sempre — senão `nova` casa como id), carregando o **mesmo** componente `FichaCriar` já usado em
+`/painel/:campanhaId/ficha/nova`. Nenhuma tela nova — a mesma implementação atende os dois
+contextos, igual ao padrão que `FichaVisualizar` já usava para `/fichas/:id` vs.
+`/painel/:campanhaId/ficha/:id`.
+
+**`FichaCriarDialog` removido.** Última consumidora era `FichaAcervo`; com ela migrada para
+`router.navigate(['/fichas', 'nova'])` (mesmo padrão de `CampanhaDetalhe.abrirCriarFicha`, que já
+navegava para o guia desde a `m3-57`), o componente (`.ts`/`.html`/`.scss`/`.spec.ts`) não tinha
+mais consumidor — apagado por inteiro, fechando o que o critério de aceite da `m3-57` já pedia
+("o dialog antigo não existe mais no código") e que só não tinha sido cumprido para o caminho sem
+campanha.
+
+**Verificação ao vivo** (stack real + Playwright, 1920×1080 e 360×800): em `/fichas`, "Criar
+ficha" navega para `/fichas/nova` sem abrir mais `app-ficha-criar-dialog`; passo 01 // BASE não
+mostra seletor de dono; passo 03 // NOVO AGENTE mostra "Ficha avulsa, sem campanha" (nunca
+"Primeiro agente da campanha"); guia completo (Base → Classe → Novo agente → Atributos →
+Identidade → Recursos → Equipamento inicial, com 1 item "Leve" → Revisão → Criar ficha) termina em
+`/fichas/:id`, não em `/painel/...`; Postgres confirma `campanha_id NULL`, `dinheiro` intocado pelo
+kit (rolagem à parte) e `inventario.itens` com o item escolhido; a ficha aparece em `/fichas` com o
+chip "Sem campanha". Repetido em mobile (360×800): mesma trilha "GUIA · 03/08"/"07/08"/"08/08",
+sem scroll horizontal em nenhum passo, kit deixado vazio (passo pulável) chega em Revisão como
+"Nenhum item — inventário nasce vazio" e cria a ficha normalmente. Nenhum `alert`/`confirm`/`dialog`
+nativo disparou em nenhum dos dois passes. `shared` 532/532, `frontend` 733/735 (as mesmas duas
+falhas pré-existentes documentadas em `P-001`/`P-010` — nenhuma delas tocada por esta mudança) e
+lint sem novas violações (mesmas 7 pré-existentes do `HEAD` anterior).
+
 ## 2026-08-07 — `m3-59`: Passo // EQUIPAMENTO INICIAL fecha o trio do guia de criação
 
 Terceira e última task do trio `m3-57`…`m3-59`: o guia ganha o **Passo 08 // EQUIPAMENTO

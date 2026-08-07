@@ -20,14 +20,14 @@ describe('FichaCriar', () => {
     vidaAtual: 1, energiaAtual: 1, morrendo: false, machucado: false, inconsciente: false,
   } satisfies FichaResumoDto;
 
-  function montar(fichas: FichaResumoDto[] = [], rascunhoExistente: unknown = null) {
+  function montar(fichas: FichaResumoDto[] = [], rascunhoExistente: unknown = null, campanhaId: number | null = CAMPANHA_ID) {
     const membros: CampanhaMembroResumoDto[] = [
       { usuarioId: 1, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.MESTRE },
     ];
     const campanhaService = { listarMembros: vi.fn(() => of(membros)) };
     const fichaService = {
       listarFichas: vi.fn(() => of(fichas)),
-      criarFicha: vi.fn(() => of({ id: 99, campanhaId: CAMPANHA_ID, usuarioId: 1, nome: 'Teste' })),
+      criarFicha: vi.fn(() => of({ id: 99, campanhaId: campanhaId ?? undefined, usuarioId: 1, nome: 'Teste' })),
     };
     const rascunhos = {
       recuperar: vi.fn(() => rascunhoExistente),
@@ -38,7 +38,7 @@ describe('FichaCriar', () => {
     TestBed.configureTestingModule({
       imports: [FichaCriar],
       providers: [
-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => String(CAMPANHA_ID) } }, parent: null } },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => campanhaId !== null ? String(campanhaId) : null } }, parent: null } },
         { provide: CampanhaService, useValue: campanhaService },
         { provide: FichaService, useValue: fichaService },
         { provide: SessaoService, useValue: { usuario: () => ({ id: 1, login: 'mestre', nome: 'Mestre' }) } },
@@ -48,7 +48,7 @@ describe('FichaCriar', () => {
 
     const fixture = TestBed.createComponent(FichaCriar);
     fixture.detectChanges();
-    return { fixture, raiz: fixture.nativeElement as HTMLElement, componente: fixture.componentInstance, rascunhos };
+    return { fixture, raiz: fixture.nativeElement as HTMLElement, componente: fixture.componentInstance, rascunhos, fichaService, campanhaService };
   }
 
   afterEach(() => TestBed.resetTestingModule());
@@ -349,6 +349,52 @@ describe('FichaCriar', () => {
       const payload = fichaService.criarFicha.mock.calls[0][0];
       expect(payload.dados.inventario.itens).toEqual(kit);
       expect(payload.dados.dinheiro).toBe(2500);
+    });
+  });
+
+  describe('guia sem campanha (/fichas/nova) — ficha avulsa do acervo', () => {
+    it('sem campanhaId, pula listarMembros/listarFichas e segue "primeiro agente"', () => {
+      const { componente, campanhaService, fichaService } = montar([], null, null);
+
+      expect(campanhaService.listarMembros).not.toHaveBeenCalled();
+      expect(fichaService.listarFichas).not.toHaveBeenCalled();
+      expect(componente['campanhaId']).toBeNull();
+      expect(componente['fichas']()).toEqual([]);
+    });
+
+    it('sem campanhaId, o passo Novo agente mostra "Ficha avulsa" em vez de "Primeiro agente da campanha"', () => {
+      const { fixture, raiz, componente } = montar([], null, null);
+      componente['atualizar']({ passo: 2 });
+      fixture.detectChanges();
+
+      expect(raiz.textContent).toContain('Ficha avulsa, sem campanha');
+      expect(raiz.textContent).not.toContain('Primeiro agente da campanha');
+    });
+
+    it('sem campanhaId, "Sair" confirmado navega para /fichas', () => {
+      const { componente } = montar([], null, null);
+      const router = TestBed.inject(Router);
+      const navegar = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+      componente['sair']();
+      componente['confirmarSaida']();
+
+      expect(navegar).toHaveBeenCalledWith(['/fichas']);
+    });
+
+    it('sem campanhaId, criar() envia o DTO sem campanhaId e navega para /fichas/:id', () => {
+      const { fixture, componente } = montar([], null, null);
+      const router = TestBed.inject(Router);
+      const navegar = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+      componente['atualizar']({ nome: 'Agente Solto', classe: ClasseEnum.COMBATENTE, dinheiro: { dados: [1, 1, 1, 1], inicial: 1250, rolado: true } });
+      fixture.detectChanges();
+
+      componente['criar']();
+
+      const fichaService = TestBed.inject(FichaService) as unknown as { criarFicha: ReturnType<typeof vi.fn> };
+      const payload = fichaService.criarFicha.mock.calls[0][0];
+      expect(payload).not.toHaveProperty('campanhaId');
+      expect(navegar).toHaveBeenCalledWith(['/fichas', 99]);
     });
   });
 });
