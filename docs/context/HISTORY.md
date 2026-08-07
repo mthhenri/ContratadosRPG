@@ -1,5 +1,32 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-07 — Ajuste de UX pós-m3-58: passo // MELHORIAS ficava enorme verticalmente
+
+Revisão visual pedida logo após a entrega da `m3-58`: com as vagas preenchidas (ex.: Combatente
+Nível 7, 11/12 vagas), o passo **06 // MELHORIAS** passava de 1467px de altura em 1920×1080 (36%
+além de uma tela cheia) e no mobile (360×800) já nascia esticado mesmo vazio, por dois motivos
+independentes.
+
+**Causa 1 — `.guia__vagas` esticava as 4 cartas para a altura da mais cheia da mesma linha.** Grid
+usa `align-items: stretch` por padrão; uma carta com 1 vaga (ex.: "Outra classe/outro arquétipo
+1/1") ficava tão alta quanto a vizinha com 4 (ex.: "Habilidade Geral 4/4"), sobrando espaço vazio.
+Corrigido com `align-items: start` — cada carta agora cresce só com o próprio conteúdo.
+
+**Causa 2 — `.guia__vaga-lista` era uma coluna única (uma habilidade por linha), sem limite.** Em
+níveis altos (a tabela de progressão chega a conceder bem mais que 4 vagas de um tipo em Nível 20)
+essa lista cresceria sem parar, e mesmo em Nível 7 as 11 habilidades escolhidas já ocupavam 11
+linhas cheias. Trocada de `display: grid` (coluna única) para `display: flex; flex-wrap: wrap`
+— os nomes viram chips que quebram linha conforme a largura da carta (mesmo padrão já usado em
+`.guia__briefing-chips`/`.guia__destaques`), sem introduzir rolagem aninhada dentro da página.
+Nenhuma mudança de template/lógica — só CSS; a trava de "Escolher" some no alvo e o botão de
+remover (`✕`) continuam ≥44px no mobile, herdado das regras já existentes.
+
+Também aparado o padding do painel "Ganhos automáticos do nível" (`--ganhos`) e o espaçamento entre
+as cartas de vaga no mobile, para devolver mais um pouco de altura sem mudar a informação exibida.
+**Resultado:** o mesmo cenário (Combatente Nível 7, 11/12 vagas) caiu de 1467px para 1263px em
+1920×1080 — verificado ao vivo (stack real + Playwright, skill `verify`) nos dois breakpoints antes
+e depois do ajuste; nenhuma regressão nos 13 testes de `criar.page.spec.ts`.
+
 ## 2026-08-07 — m3-58: passo // MELHORIAS do guia de criação (habilidades de nível + Fortificação de Personalidade)
 
 Segunda perna do trio do guia de criação: o passo **06 // MELHORIAS**, entre Identidade e
