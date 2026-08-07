@@ -1,4 +1,4 @@
-import { Component, DestroyRef, ElementRef, HostListener, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize, forkJoin, timer } from 'rxjs';
@@ -349,5 +349,4 @@ export class FichaCriar {
       .pipe(finalize(() => this.criando.set(false)))
       .subscribe({ next: (ficha) => { this.rascunhos.limpar(this.campanhaId); void this.router.navigate(['/painel', this.campanhaId, 'ficha', ficha.id]); }, error: (erro) => this.erro.set(erro?.error?.mensagem ?? 'Não foi possível criar a ficha.') });
   }
-  @HostListener('window:beforeunload', ['$event']) protected antesDeSair(evento: BeforeUnloadEvent): void { if (!this.criando()) evento.preventDefault(); }
 }

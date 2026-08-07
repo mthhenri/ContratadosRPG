@@ -1,5 +1,30 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-07 — Remove o aviso nativo de `beforeunload`; espaçamento entre Motivo de entrada e as médias
+
+**F5/fechar aba não avisa mais.** Pedido do usuário: fazer o F5 abrir a mesma `<dialog>` do botão
+"Sair do guia". Não dá — `beforeunload` é um evento síncrono e o navegador proíbe UI customizada
+ou decidir de forma assíncrona se cancela a navegação; só existe o prompt nativo genérico
+("Esta página pede que você confirme se quer sair"), texto fixo, sem tema. Como o rascunho agora é
+salvo de forma confiável a cada mudança e recuperável ao reabrir a página (fix anterior), esse aviso
+também tinha ficado **incorreto** — dizia "Informações inseridas podem não ser salvas", o que não é
+mais verdade. Removido o `@HostListener('window:beforeunload', ...)` (`antesDeSair`) de
+`criar.page.ts` inteiro: F5/fechar aba agora são silenciosos, como o resto do site — o mesmo banner
+"Rascunho encontrado" que já existia cobre a recuperação. Confirmado com o usuário via pergunta
+direta antes de remover.
+
+**Espaçamento entre "Motivo de entrada" e a grade de médias.** No passo // NOVO AGENTE, o `<label
+class="campo">` do Motivo de entrada ficava colado na grade de Média de Nível/Prestígio logo abaixo
+— só existia a regra inversa (`&__campos + .campo`), não essa ordem. Adicionado `.campo +
+&__campos { margin-top: 16px; }` em `criar.page.scss`, mesmo valor já usado no sentido oposto. Não
+afeta as outras 4 ocorrências de `.guia__campos` no arquivo — todas precedidas por `.guia__introducao`
+ou `<section>`, nunca por um `.campo` solto.
+
+Verificado ao vivo (stack real + Playwright) em 1920×1080: `page.reload()` completa sem travar,
+nenhum diálogo nativo aparece, o rascunho é oferecido para retomar e o nome digitado volta certinho;
+o espaçamento entre as duas linhas do Novo agente ficou em 16px. 17 testes de `criar.page.spec.ts`
+continuam passando.
+
 ## 2026-08-07 — Confirmação de saída vira `<dialog>` nativo, com texto explicando que o rascunho não se perde
 
 Refinamento do fix anterior (mesmo dia): a confirmação de saída tinha virado um painel inline
