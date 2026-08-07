@@ -1,5 +1,32 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-07 — Confirmação de saída sem `confirm()` nativo + rascunho não some mais antes da decisão
+
+Dois problemas reportados no guia de criação de ficha:
+
+**1. `sair()` usava `confirm()` nativo do navegador.** Botão de voltar do cabeçalho (`.guia__sair`)
+chamava `confirm('Seu progresso foi salvo. Deseja sair do guia?')` — caixa de diálogo do navegador,
+fora do tema, sem acessibilidade/estilo controlados pela aplicação. Trocado por um painel inline no
+próprio tema (`.guia__sair-confirmar`, `role="alertdialog"`), mesmo padrão já usado em
+`perfil.page` para excluir conta (`confirmandoExclusao`) — nada de `confirm()`/`alert()` nativos.
+`sair()` agora só abre o painel; `confirmarSaida()`/`cancelarSaida()` decidem.
+
+**2. Rascunho podia ser apagado antes do jogador decidir "Retomar" ou "Começar do zero".** O efeito
+de auto-save (`effect(() => { if (!carregando()) rascunhos.salvar(...) })`) salvava o `estado()`
+assim que `carregando()` virava `false` — o que acontecia **antes** de qualquer clique no banner
+"Rascunho encontrado", sobrescrevendo o rascunho de verdade com o estado inicial (quase vazio) do
+formulário recém-aberto. Na prática, o rascunho exibido no banner já estava corrompido pelo tempo
+que o jogador levava para ler a pergunta e clicar. Corrigido acrescentando `&& !temRascunho()` à
+condição do efeito: enquanto o banner está pendente de decisão, nada é salvo; assim que
+`retomar()`/`recomecar()` zera `temRascunho`, o auto-save volta a rodar normalmente.
+
+Verificado ao vivo (stack real + Playwright) em 1920×1080 e 360×800: nenhum diálogo nativo do
+Chromium aparece ao clicar em Sair; o rascunho permanece intacto no `localStorage` mesmo depois de
+esperar com o banner "Rascunho encontrado" na tela, e "Retomar" restaura o nome digitado
+corretamente. 4 testes novos em `criar.page.spec.ts` (17 no total, todos passando) cobrindo os dois
+casos — inclusive o cenário exato do bug (rascunho existente + nenhuma decisão ainda + efeito não
+deve ter salvo nada).
+
 ## 2026-08-07 — Passo // CLASSE não deve calcular Vida/Energia (atributos ainda não escolhidos)
 
 Feedback do usuário sobre o passo **02 // CLASSE**: o bloco "Saúde de partida (atributos atuais)"

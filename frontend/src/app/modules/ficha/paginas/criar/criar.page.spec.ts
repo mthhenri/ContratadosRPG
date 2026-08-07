@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { ArquetipoEnum, ClasseEnum, FormacaoBonusEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
@@ -19,7 +19,7 @@ describe('FichaCriar', () => {
     vidaAtual: 1, energiaAtual: 1, morrendo: false, machucado: false, inconsciente: false,
   } satisfies FichaResumoDto;
 
-  function montar(fichas: FichaResumoDto[] = []) {
+  function montar(fichas: FichaResumoDto[] = [], rascunhoExistente: unknown = null) {
     const membros: CampanhaMembroResumoDto[] = [
       { usuarioId: 1, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.MESTRE },
     ];
@@ -29,7 +29,7 @@ describe('FichaCriar', () => {
       criarFicha: vi.fn(() => of({ id: 99, campanhaId: CAMPANHA_ID, usuarioId: 1, nome: 'Teste' })),
     };
     const rascunhos = {
-      recuperar: vi.fn(() => null),
+      recuperar: vi.fn(() => rascunhoExistente),
       salvar: vi.fn(),
       limpar: vi.fn(),
     };
@@ -47,7 +47,7 @@ describe('FichaCriar', () => {
 
     const fixture = TestBed.createComponent(FichaCriar);
     fixture.detectChanges();
-    return { fixture, raiz: fixture.nativeElement as HTMLElement, componente: fixture.componentInstance };
+    return { fixture, raiz: fixture.nativeElement as HTMLElement, componente: fixture.componentInstance, rascunhos };
   }
 
   afterEach(() => TestBed.resetTestingModule());
@@ -137,6 +137,59 @@ describe('FichaCriar', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  describe('confirmação de saída do guia', () => {
+    it('não navega ao clicar em Sair sem confirmar, e não usa o confirm() nativo do navegador', () => {
+      const { fixture, raiz, componente } = montar();
+      const router = TestBed.inject(Router);
+      const navegar = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+      (raiz.querySelector('.guia__sair') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(componente['confirmandoSaida']()).toBe(true);
+      expect(navegar).not.toHaveBeenCalled();
+      expect(raiz.querySelector('.guia__sair-confirmar')).not.toBeNull();
+    });
+
+    it('navega para o painel só depois de confirmar, e "Continuar aqui" cancela sem navegar', () => {
+      const { fixture, componente } = montar();
+      const router = TestBed.inject(Router);
+      const navegar = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+      componente['sair']();
+      componente['cancelarSaida']();
+      fixture.detectChanges();
+      expect(componente['confirmandoSaida']()).toBe(false);
+      expect(navegar).not.toHaveBeenCalled();
+
+      componente['sair']();
+      componente['confirmarSaida']();
+      fixture.detectChanges();
+      expect(componente['confirmandoSaida']()).toBe(false);
+      expect(navegar).toHaveBeenCalledWith(['/painel', CAMPANHA_ID]);
+    });
+  });
+
+  describe('rascunho salvo neste dispositivo', () => {
+    it('não sobrescreve o rascunho salvo antes do jogador decidir "Retomar" ou "Começar do zero"', () => {
+      const { fixture, componente, rascunhos } = montar([], { nome: 'Agente salvo antes' });
+
+      expect(componente['temRascunho']()).toBe(true);
+      expect(rascunhos.salvar).not.toHaveBeenCalled();
+
+      componente['recomecar']();
+      fixture.detectChanges();
+
+      expect(componente['temRascunho']()).toBe(false);
+      expect(rascunhos.salvar).toHaveBeenCalled();
+    });
+
+    it('sem rascunho existente, salva o estado normalmente assim que a página termina de carregar', () => {
+      const { rascunhos } = montar();
+      expect(rascunhos.salvar).toHaveBeenCalled();
+    });
   });
 
   it.each([

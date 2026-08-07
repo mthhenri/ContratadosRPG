@@ -86,6 +86,8 @@ export class FichaCriar {
   protected readonly membros = signal<CampanhaMembroResumoDto[]>([]); protected readonly fichas = signal<FichaResumoDto[]>([]);
   protected readonly carregando = signal(true); protected readonly criando = signal(false); protected readonly rolandoRecursos = signal(false); protected readonly erro = signal('');
   protected readonly resumoAberto = signal(false); protected readonly visitado = signal(0); protected readonly temRascunho = signal(false);
+  /** Confirmação de saída do guia — substitui o `confirm()` nativo do navegador. */
+  protected readonly confirmandoSaida = signal(false);
   /** Vaga com o seletor do sistema aberto (`null` = fechado) — m3-58. */
   protected readonly vagaAberta = signal<TipoVagaMelhoria | null>(null);
   protected readonly estado = signal<EstadoGuiaCriacao>({ passo: 0, nome: '', usuarioId: null, classe: null,
@@ -203,7 +205,11 @@ export class FichaCriar {
     const existente = this.rascunhos.recuperar<EstadoGuiaCriacao>(this.campanhaId); this.temRascunho.set(existente !== null);
     forkJoin({ membros: this.campanhaService.listarMembros(this.campanhaId), fichas: this.fichaService.listarFichas(this.campanhaId) })
       .pipe(finalize(() => this.carregando.set(false))).subscribe(({ membros, fichas }) => { this.membros.set(membros); this.fichas.set(fichas); if (!fichas.length) return; this.atualizar({ mediaNivel: fichas.reduce((s, f) => s + f.nivel, 0) / fichas.length, mediaPrestigio: fichas.reduce((s, f) => s + (f.prestigio ?? 0), 0) / fichas.length }); });
-    effect(() => { if (!this.carregando()) this.rascunhos.salvar(this.campanhaId, this.estado()); });
+    // `!this.temRascunho()` evita sobrescrever o rascunho salvo antes do jogador decidir "Retomar"
+    // ou "Começar do zero": sem essa trava, este efeito salvava o estado inicial (vazio) assim que
+    // `carregando()` virava `false` — antes de qualquer clique — apagando o rascunho que o banner
+    // "Rascunho encontrado" ainda estava oferecendo para retomar.
+    effect(() => { if (!this.carregando() && !this.temRascunho()) this.rascunhos.salvar(this.campanhaId, this.estado()); });
     // A trilha ganha/perde o passo Melhorias conforme o Nível inicial muda (voltar ao passo 03 e
     // editar as médias) — mantém `passo`/`visitado` dentro dos limites da trilha atual.
     effect(() => { const max = this.passos().length - 1; if (this.estado().passo > max) this.atualizar({ passo: max }); if (this.visitado() > max) this.visitado.set(max); });
@@ -318,7 +324,9 @@ export class FichaCriar {
       this.rolandoRecursos.set(false);
     });
   }
-  protected sair(): void { if (confirm('Seu progresso foi salvo. Deseja sair do guia?')) void this.router.navigate(['/painel', this.campanhaId]); }
+  protected sair(): void { this.confirmandoSaida.set(true); }
+  protected confirmarSaida(): void { this.confirmandoSaida.set(false); void this.router.navigate(['/painel', this.campanhaId]); }
+  protected cancelarSaida(): void { this.confirmandoSaida.set(false); }
   protected criar(): void {
     const e = this.estado();
     if (this.criando() || !e.classe || !e.dinheiro.rolado) return;

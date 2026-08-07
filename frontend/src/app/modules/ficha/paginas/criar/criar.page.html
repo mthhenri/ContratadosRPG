@@ -17,6 +17,16 @@
     <span class="guia__classificacao">CLASSE-E // CONFIDENCIAL</span>
   </header>
 
+  @if (confirmandoSaida()) {
+    <section class="guia__sair-confirmar" role="alertdialog" aria-label="Confirmar saída do guia">
+      <p>Seu progresso foi salvo. Deseja sair do guia?</p>
+      <div class="guia__sair-confirmar-acoes">
+        <button class="botao botao--primario" type="button" (click)="confirmarSaida()">Sair</button>
+        <button class="botao botao--secundario" type="button" (click)="cancelarSaida()">Continuar aqui</button>
+      </div>
+    </section>
+  }
+
   @if (temRascunho()) {
     <section class="guia__retomar" role="dialog" aria-label="Rascunho encontrado">
       <div class="guia__retomar-icone"><app-icone nome="atualizar" /></div>
