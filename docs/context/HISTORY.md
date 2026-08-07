@@ -1,5 +1,41 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-07 — m3-57: briefing de Classe (bônus, Habilidade Inicial), rótulo "Classe - Arquétipo" e resumo mobile em overlay
+
+O Passo 02 // CLASSE prometia ("os bônus fixos serão aplicados após a distribuição dos atributos")
+sem nunca mostrar quais eram — nem ali, nem no Passo 04 // ATRIBUTOS, onde os steppers exibiam só o
+valor base, escondendo o que `construirFichaInicial` já persistia corretamente (bônus fixo somado e
+clampado). O gap era só de exibição: o motor sempre aplicou `obterBonusAtributos` certo. O Passo 02
+agora traz um briefing completo por classe/arquétipo/subclasse — a descrição de flavor do documento
+(`guia-briefing.ts`, citação literal de "Classes e Arquétipos"/"Jogando como um Civil"), os chips de
+bônus fixo de `obterBonusAtributos`, Vida/Energia de partida via `calcularVida`/`calcularEnergia` (os
+mesmos computeds já existentes, sem fórmula nova) e a Habilidade Inicial de `habilidadesIniciais` —
+só aparece depois que classe **e** arquétipo/subclasse estão definitivos. O Passo 04 ganhou o mesmo
+bônus por atributo (`+N fixo · final X`) ao lado da base editável.
+
+Separadamente, "Perfil selecionado" (Passo 02), o card do resumo lateral e a linha "Classe /
+Arquétipo" da Revisão usavam `estado().arquetipo || estado().classe` — mostrava só um dos dois, cru
+(`COMBATENTE`, não "Combatente"), e nunca "Classe - Arquétipo". O guia é o único lugar da ficha que
+não passava por `rotuloClasseCompleto` (`rotulos-ficha.ts`), já usado pelo mini-card da campanha e
+pelo acervo — os três pontos agora reusam essa mesma função central, sem novo mapa de rótulos.
+
+No mobile, o "Resumo operacional" expandia **inline**, empurrando o rodapé fixo para baixo do
+conteúdo do passo. Ele passa a abrir como uma folha (bottom sheet) por cima da tela — fundo
+semitransparente clicável para fechar, botão "×" dedicado, `max-height: 82dvh` com rolagem própria —
+só via CSS (`@include bp.mobile`), sem novo estado no componente: o mesmo `resumoAberto` de sempre
+já bastava.
+
+**Verificado:** `tsc --noEmit`, `ng build` de produção e `eslint` limpos nos arquivos tocados. A
+suíte completa do frontend manteve as mesmas duas falhas preexistentes fora do guia (apelido de
+equipamento e "Voltar ao acervo") — nenhuma nova falha, `criar.page.spec.ts` sem regressão. Na
+aplicação real (Postgres 16 nativo + backend + frontend, sem Docker disponível neste ambiente): guia
+percorrido em 1920×1080 para Combatente-Lutador, Experimento Bestial e Civil (bônus, Habilidade
+Inicial e Vida/Energia corretos para os três; "nenhum bônus fixo" no Civil, sem card de Habilidade
+Inicial) e em 360×800 para o mesmo fluxo, incluindo abrir/fechar o resumo pelo botão e pelo fundo. Uma
+ficha completa foi criada de ponta a ponta (Combatente-Lutador) e a leitura direta do PostgreSQL
+confirmou `forca`/`luta` em 2 (base 1 + bônus 1) e Vida/Energia (34/17) idênticos ao que o guia
+mostrou antes da criação.
+
 ## 2026-08-07 — m3-57: fluxo convencional, Identidade, Recursos e resumo progressivo
 
 O validador de Atributos tratava a restrição dos quatro pontos de criação como se ela também

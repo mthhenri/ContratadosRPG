@@ -145,8 +145,51 @@
               @if (estado().classe) {
                 <div class="guia__protocolo-info">
                   <app-icone nome="agente" />
-                  <div><span>Perfil selecionado</span><strong>{{ estado().arquetipo || estado().classe }}</strong></div>
-                  <small>Os bônus fixos serão aplicados após a distribuição dos atributos.</small>
+                  <div><span>Perfil selecionado</span><strong>{{ perfilRotulo() }}</strong></div>
+                  <small>{{ perfilDefinido() ? 'Bônus, habilidade inicial e saúde de partida abaixo.' : 'Selecione um arquétipo para revelar bônus, habilidade inicial e saúde de partida.' }}</small>
+                </div>
+
+                <div class="guia__briefing">
+                  <p class="guia__briefing-texto">{{ descricaoClasse() }}</p>
+                  @if (focoArquetipo()) {
+                    <p class="guia__briefing-texto guia__briefing-texto--arquetipo">{{ focoArquetipo() }}</p>
+                  }
+
+                  @if (perfilDefinido()) {
+                    <div class="guia__briefing-grade">
+                      <div class="guia__briefing-bloco">
+                        <span>Bônus fixo de atributos</span>
+                        @if (bonusAtributosLista().length) {
+                          <div class="guia__briefing-chips">
+                            @for (bonus of bonusAtributosLista(); track bonus.nome) {
+                              <b>+{{ bonus.valor }} {{ bonus.nome }}</b>
+                            }
+                          </div>
+                        } @else {
+                          <p>Este perfil não recebe bônus fixo de atributo.</p>
+                        }
+                      </div>
+
+                      <div class="guia__briefing-bloco">
+                        <span>Saúde de partida (atributos atuais)</span>
+                        <div class="guia__briefing-saude">
+                          <div class="stat stat--vida"><span class="stat__rotulo">Vida</span><span class="stat__valor">{{ vida() }}</span></div>
+                          <div class="stat stat--energia"><span class="stat__rotulo">Energia</span><span class="stat__valor">{{ energia() }}</span></div>
+                        </div>
+                      </div>
+
+                      @if (habilidadeInicial(); as habilidade) {
+                        <div class="guia__briefing-bloco guia__briefing-bloco--habilidade">
+                          <span>Habilidade inicial (vem de graça)</span>
+                          <div class="guia__briefing-habilidade">
+                            <b>{{ habilidade.nome }}</b>
+                            <small>{{ habilidade.custoEnergia === null ? 'Custo variável' : habilidade.custoEnergia + ' E' }}</small>
+                            <p>{{ habilidade.descricao }}</p>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  }
                 </div>
               }
             }
@@ -187,13 +230,16 @@
             @case (3) {
               <div class="guia__orcamento" [class.guia__orcamento--erro]="distribuicao().saldo !== 0">
                 <div><span>Saldo de distribuição</span><strong>{{ distribuicao().saldo }}</strong></div>
-                <small>{{ orcamento().pontosTotais }} pontos disponíveis · base 1 não consome orçamento</small>
+                <small>{{ orcamento().pontosTotais }} pontos disponíveis · base 1 não consome orçamento{{ bonusAtributosLista().length ? ' · bônus fixo de ' + perfilRotulo() + ' soma depois da distribuição' : '' }}</small>
               </div>
               <div class="guia__atributos">
                 @for (campo of campos; track campo.chave) {
                   <div class="atributo" [class.atributo--desvantagem]="estado().atributos[campo.chave] === 0">
                     <div class="atributo__identidade">
                       <span>{{ campo.nome }}</span>
+                      @if (bonusAtributos()[campo.chave]) {
+                        <small class="atributo__bonus">+{{ bonusAtributos()[campo.chave] }} fixo · final {{ atributosFinais()[campo.chave] }}</small>
+                      }
                       @if (estado().atributos[campo.chave] === 0) { <small>Desvantagem · 2D20, menor</small> }
                     </div>
                     <div class="stepper">
@@ -335,7 +381,7 @@
               </div>
               <dl class="guia__revisao">
                 <div><dt>Agente</dt><dd>{{ estado().nome }}</dd></div>
-                <div><dt>Classe / Arquétipo</dt><dd>{{ estado().classe }}{{ estado().arquetipo ? ' · ' + estado().arquetipo : '' }}</dd></div>
+                <div><dt>Classe / Arquétipo</dt><dd>{{ perfilRotulo() }}</dd></div>
                 <div><dt>Nível / Prestígio</dt><dd>{{ fichas().length ? novoAgente().nivelInicial : 0 }} / {{ fichas().length ? novoAgente().prestigio.prestigioInicial : 0 }}</dd></div>
                 <div><dt>Personalidade / Origem</dt><dd>{{ estado().personalidade }} · {{ estado().origem.nome }}</dd></div>
                 <div><dt>Recursos iniciais</dt><dd>{{ totalDinheiro() | currency: 'BRL' : 'symbol' : '1.0-0' }}</dd></div>
@@ -353,7 +399,9 @@
         <button class="guia__resumo-toggle" type="button" [attr.aria-expanded]="resumoAberto()" (click)="resumoAberto.set(!resumoAberto())">
           <span>Resumo operacional</span><app-icone nome="chevron" />
         </button>
-        <div class="guia__resumo-corpo">
+        <div class="guia__resumo-fundo" (click)="resumoAberto.set(false)"></div>
+        <div class="guia__resumo-corpo" role="dialog" aria-modal="true" aria-label="Resumo operacional">
+          <button class="guia__resumo-fechar" type="button" aria-label="Fechar resumo operacional" (click)="resumoAberto.set(false)">×</button>
           @if (!estado().nome.trim()) {
             <div class="guia__resumo-vazio">
               <app-icone nome="agente" />
@@ -363,7 +411,7 @@
           } @else {
             <div class="guia__agente">
               <span class="guia__agente-avatar"><app-icone nome="agente" /></span>
-              <div><small>Agente em recrutamento</small><strong>{{ estado().nome }}</strong><span>{{ estado().arquetipo || estado().classe || 'FUNÇÃO NÃO DEFINIDA' }}</span></div>
+              <div><small>Agente em recrutamento</small><strong>{{ estado().nome }}</strong><span>{{ perfilRotulo() || 'FUNÇÃO NÃO DEFINIDA' }}</span></div>
             </div>
 
             @if (estado().passo >= 2 || visitado() >= 2) {

@@ -6,7 +6,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ArquetipoEnum, ClasseEnum, FormacaoBonusEnum, FormacaoParametroEnum, MotivoEntradaAgenteEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaAtributosDto, FichaOrigemDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
-import { calcularEnergia, calcularOrcamentoAtributos, calcularVida, obterBonusAtributos, validarDistribuicaoAtributos } from '@contratados-rpg/shared/regras/agente';
+import { calcularEnergia, calcularOrcamentoAtributos, calcularVida, habilidadesIniciais, obterBonusAtributos, validarDistribuicaoAtributos } from '@contratados-rpg/shared/regras/agente';
+import type { HabilidadeCatalogoItemDto } from '@contratados-rpg/shared/regras/agente';
 import { calcularDinheiroInicial, calcularNovoAgente } from '@contratados-rpg/shared/regras/novo-agente';
 import { rolarDados } from '@contratados-rpg/shared/regras/descanso';
 import { FORMACOES } from '@contratados-rpg/shared/regras/identidade';
@@ -17,6 +18,8 @@ import { FichaService } from '../../ficha.service';
 import { ATRIBUTOS_BASE_PADRAO, construirFichaInicial } from '../../ficha-padrao';
 import { arquetiposDaClasse, GRUPOS_CLASSE, ehClasseBase } from '../../opcoes-ficha';
 import { GRUPOS_FORMACAO, rotuloParametroFormacao } from '../../opcoes-formacao';
+import { rotuloClasseCompleto } from '../../rotulos-ficha';
+import { descricaoClasse as textoGuiaClasse, focoArquetipo as textoFocoArquetipo } from '../../guia-briefing';
 import { lerParamRota } from '../../ler-param-rota';
 import { GuiaCriacaoRascunhoService } from '../../guia-criacao-rascunho.service';
 import { Icone } from '../../../../shared/icone/icone.component';
@@ -79,7 +82,12 @@ export class FichaCriar {
   protected readonly orcamento = computed(() => calcularOrcamentoAtributos({ classe: this.classeCalculada(), nivel: this.novoAgente().nivelInicial }));
   protected readonly bonusMonetario = computed(() => this.fichas().length ? this.novoAgente().bonus.bonus : 0);
   protected readonly totalDinheiro = computed(() => this.estado().dinheiro.rolado ? this.estado().dinheiro.inicial + this.bonusMonetario() : 0);
-  protected readonly atributosFinais = computed(() => { const bonus = obterBonusAtributos({ classe: this.classeCalculada(), arquetipo: this.estado().arquetipo }); const atributos = { ...this.estado().atributos }; this.campos.forEach(({ chave }) => atributos[chave] += bonus[chave] ?? 0); return atributos; });
+  /** Bônus fixo de atributos do perfil (arquétipo/subclasse) atual — `{}` sem perfil definitivo. */
+  protected readonly bonusAtributos = computed(() => obterBonusAtributos({ classe: this.classeCalculada(), arquetipo: this.estado().arquetipo }));
+  protected readonly bonusAtributosLista = computed(() => this.campos
+    .map((campo) => ({ nome: campo.nome, valor: this.bonusAtributos()[campo.chave] ?? 0 }))
+    .filter(({ valor }) => valor !== 0));
+  protected readonly atributosFinais = computed(() => { const bonus = this.bonusAtributos(); const atributos = { ...this.estado().atributos }; this.campos.forEach(({ chave }) => atributos[chave] += bonus[chave] ?? 0); return atributos; });
   protected readonly vida = computed(() => calcularVida({ classe: this.classeCalculada(), nivel: this.novoAgente().nivelInicial, vigor: this.atributosFinais().vigor }));
   protected readonly energia = computed(() => calcularEnergia({ classe: this.classeCalculada(), nivel: this.novoAgente().nivelInicial, destreza: this.atributosFinais().destreza }));
   protected readonly atributosDestaque = computed(() => this.campos
@@ -87,6 +95,19 @@ export class FichaCriar {
     .filter(({ valor }) => valor > 1)
     .sort((a, b) => b.valor - a.valor)
     .slice(0, 3));
+  /** `true` quando a classe já tem um perfil definitivo (arquétipo escolhido, ou classe sem arquétipo). */
+  protected readonly perfilDefinido = computed(() => { const classe = this.estado().classe; return classe !== null && (!ehClasseBase(classe) || this.estado().arquetipo !== null); });
+  /** Rótulo "Classe - Arquétipo/Subclasse" do perfil em construção — vazio sem classe escolhida. */
+  protected readonly perfilRotulo = computed(() => { const classe = this.estado().classe; return classe ? rotuloClasseCompleto(classe, this.estado().arquetipo) : ''; });
+  protected readonly descricaoClasse = computed(() => { const classe = this.estado().classe; return classe ? textoGuiaClasse(classe) : ''; });
+  protected readonly focoArquetipo = computed(() => { const arquetipo = this.estado().arquetipo; return arquetipo ? textoFocoArquetipo(arquetipo) : ''; });
+  /** Habilidade Inicial do arquétipo/subclasse — vem de graça, só existe com o perfil definitivo. */
+  protected readonly habilidadeInicial = computed<HabilidadeCatalogoItemDto | null>(() => {
+    const classe = this.estado().classe;
+    if (!classe || !this.perfilDefinido()) return null;
+    const arquetipo = ehClasseBase(classe) ? this.estado().arquetipo : null;
+    return habilidadesIniciais(classe, arquetipo)[0] ?? null;
+  });
 
   constructor() {
     const existente = this.rascunhos.recuperar<EstadoGuiaCriacao>(this.campanhaId); this.temRascunho.set(existente !== null);
