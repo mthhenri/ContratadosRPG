@@ -230,21 +230,21 @@
             @case (3) {
               <div class="guia__orcamento" [class.guia__orcamento--erro]="distribuicao().saldo !== 0">
                 <div><span>Saldo de distribuição</span><strong>{{ distribuicao().saldo }}</strong></div>
-                <small>{{ orcamento().pontosTotais }} pontos disponíveis · base 1 não consome orçamento{{ bonusAtributosLista().length ? ' · bônus fixo de ' + perfilRotulo() + ' soma depois da distribuição' : '' }}</small>
+                <small>{{ orcamento().pontosTotais }} pontos disponíveis · base 1 não consome orçamento{{ bonusAtributosLista().length ? ' · valores já somam o bônus fixo de ' + rotuloOrigemBonus() : '' }}</small>
               </div>
               <div class="guia__atributos">
                 @for (campo of campos; track campo.chave) {
                   <div class="atributo" [class.atributo--desvantagem]="estado().atributos[campo.chave] === 0">
                     <div class="atributo__identidade">
                       <span>{{ campo.nome }}</span>
-                      @if (bonusAtributos()[campo.chave]) {
-                        <small class="atributo__bonus">+{{ bonusAtributos()[campo.chave] }} fixo · final {{ atributosFinais()[campo.chave] }}</small>
+                      @if (bonusAtributos()[campo.chave]; as bonus) {
+                        <small class="atributo__bonus">+{{ bonus }} {{ rotuloOrigemBonus() }}</small>
                       }
-                      @if (estado().atributos[campo.chave] === 0) { <small>Desvantagem · 2D20, menor</small> }
+                      @if (estado().atributos[campo.chave] === 0) { <small>Base zerada · 2D20, menor</small> }
                     </div>
                     <div class="stepper">
                       <button class="stepper__botao" type="button" [attr.aria-label]="'Diminuir ' + campo.nome" (click)="passoAtributo(campo.chave, -1)">−</button>
-                      <b class="stepper__valor">{{ estado().atributos[campo.chave] }}</b>
+                      <b class="stepper__valor">{{ atributosFinais()[campo.chave] }}</b>
                       <button class="stepper__botao" type="button" [attr.aria-label]="'Aumentar ' + campo.nome" (click)="passoAtributo(campo.chave, 1)">+</button>
                     </div>
                   </div>

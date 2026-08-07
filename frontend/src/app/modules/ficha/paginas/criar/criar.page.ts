@@ -18,7 +18,7 @@ import { FichaService } from '../../ficha.service';
 import { ATRIBUTOS_BASE_PADRAO, construirFichaInicial } from '../../ficha-padrao';
 import { arquetiposDaClasse, GRUPOS_CLASSE, ehClasseBase } from '../../opcoes-ficha';
 import { GRUPOS_FORMACAO, rotuloParametroFormacao } from '../../opcoes-formacao';
-import { rotuloClasseCompleto } from '../../rotulos-ficha';
+import { rotuloArquetipo, rotuloClasse, rotuloClasseCompleto } from '../../rotulos-ficha';
 import { descricaoClasse as textoGuiaClasse, focoArquetipo as textoFocoArquetipo } from '../../guia-briefing';
 import { lerParamRota } from '../../ler-param-rota';
 import { GuiaCriacaoRascunhoService } from '../../guia-criacao-rascunho.service';
@@ -99,6 +99,14 @@ export class FichaCriar {
   protected readonly perfilDefinido = computed(() => { const classe = this.estado().classe; return classe !== null && (!ehClasseBase(classe) || this.estado().arquetipo !== null); });
   /** Rótulo "Classe - Arquétipo/Subclasse" do perfil em construção — vazio sem classe escolhida. */
   protected readonly perfilRotulo = computed(() => { const classe = this.estado().classe; return classe ? rotuloClasseCompleto(classe, this.estado().arquetipo) : ''; });
+  /** Rótulo curto da fonte do bônus fixo (só o arquétipo/subclasse, sem a classe) — rótulo do marcador "+N Nome". */
+  protected readonly rotuloOrigemBonus = computed(() => {
+    const classe = this.estado().classe;
+    if (!classe) return '';
+    if (!ehClasseBase(classe)) return rotuloClasse(classe);
+    const arquetipo = this.estado().arquetipo;
+    return arquetipo ? rotuloArquetipo(arquetipo) : '';
+  });
   protected readonly descricaoClasse = computed(() => { const classe = this.estado().classe; return classe ? textoGuiaClasse(classe) : ''; });
   protected readonly focoArquetipo = computed(() => { const arquetipo = this.estado().arquetipo; return arquetipo ? textoFocoArquetipo(arquetipo) : ''; });
   /** Habilidade Inicial do arquétipo/subclasse — vem de graça, só existe com o perfil definitivo. */
