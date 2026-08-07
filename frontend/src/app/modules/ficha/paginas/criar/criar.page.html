@@ -11,6 +11,9 @@
       </div>
       <span class="guia__regua"></span>
     </div>
+    <button class="guia__resumo-abrir" type="button" [class.guia__resumo-abrir--ativo]="resumoAberto()" [attr.aria-expanded]="resumoAberto()" aria-label="Abrir resumo operacional" (click)="resumoAberto.set(!resumoAberto())">
+      <app-icone nome="visao-geral" /> <span>Resumo</span>
+    </button>
     <span class="guia__classificacao">CLASSE-E // CONFIDENCIAL</span>
   </header>
 
