@@ -1,5 +1,54 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-07 — m3-57: resumo operacional some no mobile (botão no cabeçalho), alinhamento do cabeçalho, respiro em Identidade e resumo com mais informação
+
+Três pedidos encadeados sobre o guia de criação. **(1)** No mobile, o "Resumo operacional" saiu da
+barra inline colapsável — que ainda empurrava o rodapé fixo e ocupava espaço mesmo fechada — para um
+botão dedicado no cabeçalho, ao lado de "Novo agente" (`.guia__resumo-abrir`); o corpo do resumo fica
+100% oculto por padrão e só abre como a mesma folha (bottom sheet) do registro anterior, reusando o
+signal `resumoAberto` já existente. **(2)** O botão "Voltar" (`.guia__sair`), o título "Novo agente" e
+o novo botão "Resumo" aterrissavam em alturas diferentes no cabeçalho mobile — os dois `margin-top:
+13px` que empurravam manualmente o `h1` e o botão para compensar o kicker escondido (`display:none`)
+deixavam o botão de resumo 13px mais baixo que o "Voltar", já que ambos têm a mesma altura de alvo de
+toque (44px) mas só um carregava a margem. Trocado por `align-items: center` no `.guia__cabecalho` e
+remoção das duas margens — a centralização vertical do flexbox faz o alinhamento sozinha. O botão de
+resumo também deixou de ser um pill sólido (`background: var(--surface-2)`) inconsistente com os
+demais controles e passou a seguir o padrão visual de `.botao--secundario` (fundo transparente, borda
+`--border-strong`, hover para `--surface-2`), mantendo só o estado `--ativo` (accent) que já existia.
+**(3)** Os campos do Passo 05 // IDENTIDADE estavam com pouco respiro (`padding`/`gap` de 10–16px
+entre blocos e sub-seções) — aumentados moderadamente (`.guia__campos` 14→18px, `.guia__identidade-
+bloco` 16→20px de padding e 14→20px entre blocos, `.guia__subsecao` 20→26px de margem superior,
+`.guia__formacoes`/`.guia__formacao` +2–4px de gap/padding) e adicionada uma regra genérica
+(`.guia__campos + .campo`) para o par Gatilho/Efeito da Especialidade não colar no textarea "Saber de
+campo" logo abaixo, que antes não tinha nenhuma margem entre os dois.
+
+O "Resumo operacional" também ganhou mais conteúdo, sem introduzir estado novo — tudo reusa
+computeds/signals já existentes: uma tira de progresso no topo (`passo`/`passos`, a mesma fonte da
+trilha de passos e da barra mobile), o bônus fixo de atributos e a Habilidade Inicial do perfil
+(reusa `.guia__destaques`, o mesmo componente visual dos "Destaques" de atributo, e `bonusAtributosLista`/
+`habilidadeInicial`, já computados para o briefing do Passo 02), o Motivo de entrada (novo
+`rotuloMotivoEntrada` em `rotulos-ficha.ts`, espelhando o texto de `calculadora/rotulos.ts` já que os
+módulos de feature não se importam entre si), o aviso "Amaldiçoado pelo Passado" (`novoAgente().
+recebeAmaldicoadoPeloPassado`, hoje só aparecia na Revisão) e as Formações escolhidas com texto
+preenchido (`formacoesPreenchidas`, mesmo padrão de chips). Um ajuste de CSS entrou no caminho: a
+grade da faixa de tablet (`@include bp.tablet`) redefine `.guia__resumo-linha` para `display: grid` e
+esse estilo "vazava" para o breakpoint mobile também (`bp.tablet`/`bp.mobile` são os dois
+`max-width`, então ambos batem a ≤560px) — sem um `display: flex` explícito dentro de `bp.mobile`,
+as linhas do resumo (inclusive as três que já existiam antes: Personalidade/Origem/Recursos) ficavam
+grudadas umas nas outras sem o `border-top` de separação. Corrigido com um `&__resumo-linha` dedicado
+dentro do bloco mobile restaurando `display: flex` e o separador.
+
+**Verificado:** `tsc --noEmit`, `ng build` de produção, `eslint` e a suíte de testes (`criar.page.
+spec.ts`, 9/9) limpos. Na aplicação real (Postgres 16 nativo + backend + frontend): em 1920×1080, o
+Passo 05 mostrou o respiro maior entre os blocos de Identidade e o resumo lateral com a tira de
+progresso, bônus, Habilidade Inicial, Personalidade/Origem e as duas Formações escolhidas como chips;
+uma segunda ficha na mesma campanha (`fichas().length > 0`) com motivo "Contenção ou extermínio"
+mostrou a linha "Motivo de entrada" e o aviso "Amaldiçoado pelo Passado" no resumo, batendo com o
+memorial de cálculo do próprio passo. Em 360×800: cabeçalho com "Voltar"/"Novo agente"/"Resumo"
+alinhados na mesma linha, resumo oculto por padrão, folha do resumo abrindo por cima com as linhas
+devidamente separadas (sem o vazamento do grid de tablet) e nada sobrepondo o botão "×" fixo no topo
+da folha.
+
 ## 2026-08-07 — m3-57: stepper de Atributos exibe o valor final somado, não só a nota
 
 Seguindo o pedido do autor logo após o registro anterior: o Passo 04 // ATRIBUTOS ainda mostrava

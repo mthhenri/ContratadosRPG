@@ -18,7 +18,7 @@ import { FichaService } from '../../ficha.service';
 import { ATRIBUTOS_BASE_PADRAO, construirFichaInicial } from '../../ficha-padrao';
 import { arquetiposDaClasse, GRUPOS_CLASSE, ehClasseBase } from '../../opcoes-ficha';
 import { GRUPOS_FORMACAO, rotuloParametroFormacao } from '../../opcoes-formacao';
-import { rotuloArquetipo, rotuloClasse, rotuloClasseCompleto } from '../../rotulos-ficha';
+import { rotuloArquetipo, rotuloClasse, rotuloClasseCompleto, rotuloMotivoEntrada } from '../../rotulos-ficha';
 import { descricaoClasse as textoGuiaClasse, focoArquetipo as textoFocoArquetipo } from '../../guia-briefing';
 import { lerParamRota } from '../../ler-param-rota';
 import { GuiaCriacaoRascunhoService } from '../../guia-criacao-rascunho.service';
@@ -116,6 +116,10 @@ export class FichaCriar {
     const arquetipo = ehClasseBase(classe) ? this.estado().arquetipo : null;
     return habilidadesIniciais(classe, arquetipo)[0] ?? null;
   });
+  /** Rótulo legível do motivo de entrada escolhido no passo 03, usado no Resumo Operacional. */
+  protected readonly motivoRotulo = computed(() => rotuloMotivoEntrada(this.estado().motivo));
+  /** Formações com texto já registrado — usadas no Resumo Operacional (m3-57). */
+  protected readonly formacoesPreenchidas = computed(() => this.estado().origem.formacao.filter((item) => item.texto.trim().length > 0));
 
   constructor() {
     const existente = this.rascunhos.recuperar<EstadoGuiaCriacao>(this.campanhaId); this.temRascunho.set(existente !== null);

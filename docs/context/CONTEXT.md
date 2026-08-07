@@ -15,13 +15,18 @@
 
 **Task ativa:** `m3-57-guia-criacao-ficha.spec.md`. O núcleo do guia e sua revisão visual estão no
 workspace. O fluxo convencional de atributos foi validado nos Níveis 1, 5, 10, 15 e 20; Identidade
-agora separa Personalidade e Origem, oferece o catálogo de Formações com `Outra`; Recursos têm uma
-única rolagem animada; e o resumo operacional começa vazio e cresce apenas com escolhas reais. O
-Passo 02 // CLASSE agora mostra o bônus fixo de atributos, a Habilidade Inicial e Vida/Energia de
-partida assim que classe e arquétipo/subclasse estão definitivos (o Passo 04 // ATRIBUTOS reflete o
-mesmo bônus por atributo); "Perfil selecionado", o resumo lateral e a Revisão usam
-`rotuloClasseCompleto` ("Classe - Arquétipo/Subclasse"); e no mobile o resumo operacional abre como
-overlay (bottom sheet) por cima do passo atual em vez de expandir inline. A spec continua em
+agora separa Personalidade e Origem, oferece o catálogo de Formações com `Outra` e tem mais respiro
+entre blocos/sub-seções; Recursos têm uma única rolagem animada; e o resumo operacional começa vazio
+e cresce apenas com escolhas reais. O Passo 02 // CLASSE mostra o bônus fixo de atributos, a
+Habilidade Inicial e Vida/Energia de partida assim que classe e arquétipo/subclasse estão
+definitivos (o Passo 04 // ATRIBUTOS reflete o mesmo bônus por atributo); "Perfil selecionado", o
+resumo lateral e a Revisão usam `rotuloClasseCompleto` ("Classe - Arquétipo/Subclasse"). No mobile,
+o resumo operacional fica oculto por padrão (sem barra inline) e abre como overlay (bottom sheet)
+via um botão dedicado no cabeçalho, ao lado de "Novo agente" — cabeçalho, título e esse botão
+compartilham a mesma altura de alvo de toque e ficam alinhados. O resumo (desktop, tablet e mobile)
+agora também traz: tira de progresso do passo atual, bônus fixo + Habilidade Inicial do perfil,
+Motivo de entrada (`rotuloMotivoEntrada` em `rotulos-ficha.ts`), aviso "Amaldiçoado pelo Passado" e
+as Formações escolhidas — tudo reusando computeds já existentes, sem estado novo. A spec continua em
 `docs/specs/active/` até o fechamento dos gaps funcionais e arquiteturais restantes.
 
 **Declarada no último registro do `HISTORY.md` (fecho da `m2-21`):** nenhuma task de milestone

@@ -405,6 +405,13 @@
         <div class="guia__resumo-fundo" (click)="resumoAberto.set(false)"></div>
         <div class="guia__resumo-corpo" role="dialog" aria-modal="true" aria-label="Resumo operacional">
           <button class="guia__resumo-fechar" type="button" aria-label="Fechar resumo operacional" (click)="resumoAberto.set(false)">×</button>
+          <div class="guia__resumo-progresso">
+            <div class="guia__resumo-progresso-topo">
+              <span>Progresso</span>
+              <b>{{ estado().passo + 1 | number: '2.0-0' }}/07 · {{ passos[estado().passo] }}</b>
+            </div>
+            <div class="guia__resumo-trilho"><i [style.width.%]="((estado().passo + 1) / 7) * 100"></i></div>
+          </div>
           @if (!estado().nome.trim()) {
             <div class="guia__resumo-vazio">
               <app-icone nome="agente" />
@@ -417,9 +424,28 @@
               <div><small>Agente em recrutamento</small><strong>{{ estado().nome }}</strong><span>{{ perfilRotulo() || 'FUNÇÃO NÃO DEFINIDA' }}</span></div>
             </div>
 
+            @if (perfilDefinido()) {
+              <div class="guia__destaques">
+                <span>Bônus de perfil</span>
+                <div>
+                  @for (bonus of bonusAtributosLista(); track bonus.nome) { <b>+{{ bonus.valor }} {{ bonus.nome }}</b> }
+                  @if (!bonusAtributosLista().length) { <b>Sem bônus fixo</b> }
+                </div>
+              </div>
+              @if (habilidadeInicial(); as habilidade) {
+                <div class="guia__resumo-linha guia__resumo-linha--completa"><span>Habilidade inicial</span><b>{{ habilidade.nome }}</b></div>
+              }
+            }
+
             @if (estado().passo >= 2 || visitado() >= 2) {
               <div class="guia__resumo-linha"><span>Nível inicial</span><b>{{ fichas().length ? novoAgente().nivelInicial : 0 }}</b></div>
               <div class="guia__resumo-linha"><span>Prestígio</span><b>{{ fichas().length ? novoAgente().prestigio.prestigioInicial : 0 }}</b></div>
+              @if (fichas().length) {
+                <div class="guia__resumo-linha guia__resumo-linha--completa"><span>Motivo de entrada</span><b>{{ motivoRotulo() }}</b></div>
+              }
+              @if (novoAgente().recebeAmaldicoadoPeloPassado) {
+                <div class="guia__resumo-alerta"><app-icone nome="alerta" /> Amaldiçoado pelo Passado</div>
+              }
             }
 
             @if (estado().passo >= 3 || visitado() >= 3) {
@@ -446,6 +472,14 @@
             }
             @if ((estado().passo >= 4 || visitado() >= 4) && estado().origem.nome.trim()) {
               <div class="guia__resumo-linha"><span>Origem</span><b>{{ estado().origem.nome }}</b></div>
+            }
+            @if ((estado().passo >= 4 || visitado() >= 4) && formacoesPreenchidas().length) {
+              <div class="guia__destaques">
+                <span>Formações</span>
+                <div>
+                  @for (formacao of formacoesPreenchidas(); track $index) { <b>{{ formacao.texto }}</b> }
+                </div>
+              </div>
             }
             @if (estado().dinheiro.rolado) {
               <div class="guia__resumo-linha guia__resumo-linha--recursos"><span>Recursos</span><b>{{ totalDinheiro() | currency: 'BRL' : 'symbol' : '1.0-0' }}</b></div>

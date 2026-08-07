@@ -1,4 +1,4 @@
-import { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
+import { ArquetipoEnum, ClasseEnum, MotivoEntradaAgenteEnum } from '@contratados-rpg/shared/enums';
 import { classeBaseDeHabilidades } from '@contratados-rpg/shared/regras/agente';
 import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 
@@ -40,6 +40,25 @@ export function rotuloClasse(classe: ClasseEnum): string {
 /** Rótulo legível de um arquétipo. */
 export function rotuloArquetipo(arquetipo: ArquetipoEnum): string {
   return ROTULO_ARQUETIPO[arquetipo];
+}
+
+/**
+ * Rótulos legíveis do motivo de entrada (mesmo texto de `calculadora/rotulos.ts`
+ * `ROTULOS_MOTIVO_ENTRADA` — módulos não se importam entre si, então o mapa é replicado aqui
+ * para o resumo do guia de criação).
+ */
+const ROTULO_MOTIVO_ENTRADA: Record<MotivoEntradaAgenteEnum, string> = {
+  [MotivoEntradaAgenteEnum.MORTE_OU_INICIO_DO_ZERO]: 'Morte / Entrada do zero',
+  [MotivoEntradaAgenteEnum.APOSENTADORIA]: 'Aposentadoria',
+  [MotivoEntradaAgenteEnum.EXPERIMENTO_SUCESSOR_CONVENCIONAL]: 'Sucessor de experimento (convencional)',
+  [MotivoEntradaAgenteEnum.EXPERIMENTO_SUCESSOR_EXPERIMENTO]: 'Sucessor de experimento (Experimento)',
+  [MotivoEntradaAgenteEnum.CONTIDO_OU_EXTERMINADO_SUCESSOR_CONVENCIONAL]: 'Contenção ou extermínio (convencional)',
+  [MotivoEntradaAgenteEnum.CONTIDO_OU_EXTERMINADO_SUCESSOR_EXPERIMENTO]: 'Contenção ou extermínio (Experimento)',
+};
+
+/** Rótulo legível do motivo de entrada do agente. */
+export function rotuloMotivoEntrada(motivo: MotivoEntradaAgenteEnum): string {
+  return ROTULO_MOTIVO_ENTRADA[motivo];
 }
 
 
