@@ -1,6 +1,6 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-05 · **Última task registrada:** alinhamento desktop dos filtros do inventário
+> **Última revisão:** 2026-08-07 · **Última decisão registrada:** qualidade acima de velocidade e gate visual inviolável
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -12,6 +12,12 @@
 ---
 
 ## 1. Próxima Task
+
+**Task ativa:** `m3-57-guia-criacao-ficha.spec.md`. O núcleo do guia e sua revisão visual estão no
+workspace. O fluxo convencional de atributos foi validado nos Níveis 1, 5, 10, 15 e 20; Identidade
+agora separa Personalidade e Origem, oferece o catálogo de Formações com `Outra`; Recursos têm uma
+única rolagem animada; e o resumo operacional começa vazio e cresce apenas com escolhas reais. A
+spec continua em `docs/specs/active/` até o fechamento dos gaps funcionais e arquiteturais restantes.
 
 **Declarada no último registro do `HISTORY.md` (fecho da `m2-21`):** nenhuma task de milestone
 aberto está explicitamente encadeada; a fila do backlog abaixo é a referência. `m2-18`/`m2-19`/
@@ -25,7 +31,6 @@ desktop).
 | Spec | Frente | O que é |
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m3-57` | guia de criação | assistente de criação de ficha |
 | `m3-58` | guia de criação | melhorias de nível |
 | `m3-59` | guia de criação | equipamento inicial |
 | `m3-61` | ficha | cor de tema por ficha |
@@ -45,8 +50,9 @@ Deploy em produção por **integração nativa das plataformas**, sem GitHub Act
 `master` → Render (backend) e Cloudflare Pages (frontend) puxam do Git sozinhos; banco no Supabase.
 O GitHub Actions só roda **CI** (lint + testes nos 3 workspaces em todo PR).
 
-**Suítes:** shared 519/519 · backend 170/170 · frontend 709/**711** — as 2 falhas são conhecidas e
-pré-existentes, ver [`PROBLEMS.md`](PROBLEMS.md) `P-001`/`P-010`. `npm run lint` **não fecha limpo**
+**Suítes:** shared 530 testes fonte aprovados (o comando completo ainda coleta `dist`, `P-011`) ·
+backend 170/170 · frontend 724/**726** — as 2 falhas são conhecidas e pré-existentes, ver
+[`PROBLEMS.md`](PROBLEMS.md) `P-001`/`P-010`. `npm run lint` **não fecha limpo**
 hoje em nenhum dos dois workspaces (frontend/backend) — falhas pré-existentes não relacionadas a
 nenhuma task recente, ver `PROBLEMS.md` `P-009`.
 
@@ -59,7 +65,7 @@ nenhuma task recente, ver `PROBLEMS.md` `P-009`.
 | M0 | Fundação (workspaces, docs, Docker, `core/`, CI, deploy) | **concluído** |
 | M1 | Calculadora com paridade | **concluído no código** (`m1-01`…`m1-20`). Restam 2 passos **operacionais** de plataforma — ver `PROBLEMS.md` `P-006` |
 | M2 | Auth + Campanhas | **concluído**, incluindo o redesenho do painel (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`; `m2-18` lista, `m2-19` detalhe/mestre, `m2-20` detalhe/jogador, `m2-21` abas + Rolagens na lateral + menu de ficha do jogador) |
-| M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; falta `m3-53` do lote de refino + o lote de guia de criação (`m3-57`…`m3-59`) e `m3-61`/`m3-62` |
+| M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; `m3-57` ativa (fluxo convencional, Identidade, Recursos, resumo progressivo e visual validados; ainda há gaps fora desse recorte); faltam seu fechamento, `m3-53`, `m3-58`/`m3-59` e `m3-61`/`m3-62` |
 | M4 | Ficha de Criatura/NPC | não iniciado |
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | não iniciado |
@@ -258,8 +264,11 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
   alternadas à mão e nunca validadas; exceder o Inventário máximo é **aviso**, não trava.
 - **Gate de qualidade é definição de pronto** — toda tarefa exige evidência contra a spec e as
   convenções, revisão do diff e verificação proporcional. UI exige verificação ao vivo conforme
-  `verify`; item sem uma verificação obrigatória permanece aberto. O checklist canônico está em
-  `AGENTS.md` “Gate obrigatório de qualidade e conclusão”.
+  `verify`; item sem uma verificação obrigatória permanece aberto. **Qualidade acima de velocidade**
+  é decisão expressa do autor: nenhuma pressa, delegação ou limite de execução autoriza atalhos. UI
+  exige análogo aprovado e inspeção pessoal do agente principal em 1920×1080 e 360×800; build,
+  testes, tokens e relato de subagente não substituem a comparação visual. O checklist canônico está
+  em `AGENTS.md` “Gate obrigatório de qualidade e conclusão”.
 
 ---
 

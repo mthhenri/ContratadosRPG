@@ -12,6 +12,10 @@ import { Routes } from '@angular/router';
  */
 export const fichaRoutes: Routes = [
   {
+    path: 'nova',
+    loadComponent: () => import('./paginas/criar/criar.page').then((modulo) => modulo.FichaCriar),
+  },
+  {
     path: ':id',
     loadComponent: () =>
       import('./paginas/visualizar/visualizar.page').then((modulo) => modulo.FichaVisualizar),

@@ -1,0 +1,419 @@
+<main class="ficha-pagina guia">
+  <header class="guia__cabecalho">
+    <div class="guia__cabecalho-titulo">
+      <button class="guia__sair" type="button" aria-label="Sair do guia" (click)="sair()">
+        <app-icone nome="voltar" />
+      </button>
+      <span class="guia__indice">//</span>
+      <div class="guia__titulo-grupo">
+        <span class="guia__kicker">Protocolo de recrutamento</span>
+        <h1>Novo agente</h1>
+      </div>
+      <span class="guia__regua"></span>
+    </div>
+    <span class="guia__classificacao">CLASSE-E // CONFIDENCIAL</span>
+  </header>
+
+  @if (temRascunho()) {
+    <section class="guia__retomar" role="dialog" aria-label="Rascunho encontrado">
+      <div class="guia__retomar-icone"><app-icone nome="atualizar" /></div>
+      <div class="guia__retomar-texto">
+        <h2>Rascunho de recrutamento encontrado</h2>
+        <p>Continue do último registro ou descarte os dados locais para iniciar outro agente.</p>
+      </div>
+      <div class="guia__retomar-acoes">
+        <button class="botao botao--primario" type="button" (click)="retomar()">Retomar</button>
+        <button class="botao botao--secundario" type="button" (click)="recomecar()">Começar do zero</button>
+      </div>
+    </section>
+  }
+
+  @if (carregando()) {
+    <div class="guia__carregando" role="status">
+      <span class="guia__carregando-marca"></span>
+      <span>Preparando protocolo de criação…</span>
+    </div>
+  } @else {
+    <div class="guia__progresso-mobile">
+      <div class="guia__progresso-mobile-topo">
+        <span>GUIA · {{ estado().passo + 1 | number: '2.0-0' }}/07</span>
+        <strong>{{ passos[estado().passo] }}</strong>
+      </div>
+      <div class="guia__progresso-trilho"><i [style.width.%]="((estado().passo + 1) / 7) * 100"></i></div>
+    </div>
+
+    <div class="guia__layout">
+      <nav class="guia__trilha" aria-label="Passos da criação">
+        <header class="guia__painel-cabecalho">
+          <span>Sequência</span>
+          <b>{{ estado().passo + 1 | number: '2.0-0' }}/07</b>
+        </header>
+        <div class="guia__passos">
+          @for (titulo of passos; track $index) {
+            <button
+              class="guia__passo"
+              type="button"
+              [class.guia__passo--ativo]="$index === estado().passo"
+              [class.guia__passo--concluido]="$index < estado().passo || ($index < visitado() && $index !== estado().passo)"
+              [class.guia__passo--bloqueado]="$index > visitado()"
+              [disabled]="$index > visitado()"
+              [attr.aria-current]="$index === estado().passo ? 'step' : null"
+              (click)="ir($index)"
+            >
+              <span class="guia__passo-indice">{{ $index + 1 | number: '2.0-0' }}</span>
+              <span class="guia__passo-texto">
+                <b>{{ titulo }}</b>
+                <small>{{ $index === estado().passo ? 'Em preenchimento' : $index < visitado() ? 'Disponível' : 'Aguardando' }}</small>
+              </span>
+              @if ($index < visitado() && $index !== estado().passo) {
+                <app-icone nome="check" />
+              }
+            </button>
+          }
+        </div>
+        <p class="guia__salvamento"><span></span> Rascunho salvo neste dispositivo</p>
+      </nav>
+
+      <section class="guia__conteudo">
+        <header class="guia__secao">
+          <span class="guia__secao-indice">{{ estado().passo + 1 | number: '2.0-0' }}</span>
+          <div>
+            <span>Etapa atual</span>
+            <h2>{{ passos[estado().passo] }}</h2>
+          </div>
+          <span class="guia__secao-regua"></span>
+        </header>
+
+        <div class="guia__corpo">
+          @switch (estado().passo) {
+            @case (0) {
+              <div class="guia__introducao">
+                <span class="guia__introducao-codigo">REGISTRO // IDENTIFICAÇÃO</span>
+                <p>Defina como o agente será identificado nos registros da campanha.</p>
+              </div>
+              <div class="guia__campos">
+                <label class="campo">
+                  <span class="campo__rotulo">Codinome / Agente</span>
+                  <input class="campo__controle" [value]="estado().nome" (input)="atualizar({ nome: valor($event) })" />
+                  <small class="campo__ajuda">Nome operacional exibido na ficha e no esquadrão.</small>
+                </label>
+                @if (ehMestre()) {
+                  <label class="campo">
+                    <span class="campo__rotulo">Operador responsável</span>
+                    <select class="campo__controle" [value]="estado().usuarioId ?? ''" (change)="atualizar({ usuarioId: numero($event) })">
+                      <option value="">Você</option>
+                      @for (membro of membros(); track membro.usuarioId) {
+                        <option [value]="membro.usuarioId">{{ membro.nome }}</option>
+                      }
+                    </select>
+                    <small class="campo__ajuda">O mestre pode criar a ficha em nome de outro membro.</small>
+                  </label>
+                }
+              </div>
+            }
+            @case (1) {
+              <div class="guia__introducao">
+                <span class="guia__introducao-codigo">PROTOCOLO // FUNÇÃO TÁTICA</span>
+                <p>A classe define progressão, recursos e o teto operacional do agente.</p>
+              </div>
+              <div class="guia__campos guia__campos--duas-colunas">
+                <label class="campo">
+                  <span class="campo__rotulo">Classe</span>
+                  <select class="campo__controle" [value]="estado().classe ?? ''" (change)="mudarClasse($event)">
+                    <option value="">Selecione uma classe</option>
+                    @for (grupo of gruposClasse; track grupo.rotulo) {
+                      <optgroup [label]="grupo.rotulo">
+                        @for (opcao of grupo.opcoes; track opcao.valor) {
+                          <option [value]="opcao.valor">{{ opcao.rotulo }}</option>
+                        }
+                      </optgroup>
+                    }
+                  </select>
+                </label>
+                @if (arquetipos().length) {
+                  <label class="campo">
+                    <span class="campo__rotulo">Arquétipo</span>
+                    <select class="campo__controle" [value]="estado().arquetipo ?? ''" (change)="mudarArquetipo($event)">
+                      <option value="">Selecione</option>
+                      @for (opcao of arquetipos(); track opcao.valor) {
+                        <option [value]="opcao.valor">{{ opcao.rotulo }}</option>
+                      }
+                    </select>
+                  </label>
+                }
+              </div>
+              @if (estado().classe) {
+                <div class="guia__protocolo-info">
+                  <app-icone nome="agente" />
+                  <div><span>Perfil selecionado</span><strong>{{ estado().arquetipo || estado().classe }}</strong></div>
+                  <small>Os bônus fixos serão aplicados após a distribuição dos atributos.</small>
+                </div>
+              }
+            }
+            @case (2) {
+              @if (!fichas().length) {
+                <div class="guia__aviso guia__aviso--informacao">
+                  <app-icone nome="novo-agente" />
+                  <div><strong>Primeiro agente da campanha</strong><span>Nível 0, Prestígio 0 e sem bônus monetário.</span></div>
+                </div>
+              } @else {
+                <label class="campo">
+                  <span class="campo__rotulo">Motivo de entrada</span>
+                  <select class="campo__controle" [value]="estado().motivo" (change)="mudarMotivo($event)">
+                    <option value="MORTE_OU_INICIO_DO_ZERO">Morte ou início do zero</option>
+                    <option value="APOSENTADORIA">Aposentadoria</option>
+                    <option value="EXPERIMENTO_SUCESSOR_CONVENCIONAL">Sucessor de experimento</option>
+                    <option value="CONTIDO_OU_EXTERMINADO_SUCESSOR_CONVENCIONAL">Contenção ou extermínio</option>
+                  </select>
+                </label>
+                <div class="guia__campos guia__campos--duas-colunas">
+                  <label class="campo">
+                    <span class="campo__rotulo">Média de nível</span>
+                    <input class="campo__controle campo__controle--numero" type="number" [value]="estado().mediaNivel" (input)="atualizar({ mediaNivel: numero($event) })" />
+                  </label>
+                  <label class="campo">
+                    <span class="campo__rotulo">Média de prestígio</span>
+                    <input class="campo__controle campo__controle--numero" type="number" [value]="estado().mediaPrestigio" (input)="atualizar({ mediaPrestigio: numero($event) })" />
+                  </label>
+                </div>
+                <div class="guia__memorial">
+                  <header><span>Memorial de cálculo</span><b>RESULTADO AUTOMÁTICO</b></header>
+                  <div><span>Nível inicial</span><code>arredonda {{ estado().mediaNivel }} − 1</code><strong>{{ novoAgente().nivelInicial }}</strong></div>
+                  <div><span>Prestígio inicial</span><code>{{ estado().mediaPrestigio }} − ⌊{{ estado().mediaPrestigio }} ÷ {{ novoAgente().prestigio.divisor }}⌋</code><strong>{{ novoAgente().prestigio.prestigioInicial }}</strong></div>
+                  <footer>Piso da patente aplicado: {{ novoAgente().prestigio.patenteCapMinimo.prestigioMinimo }}</footer>
+                </div>
+              }
+            }
+            @case (3) {
+              <div class="guia__orcamento" [class.guia__orcamento--erro]="distribuicao().saldo !== 0">
+                <div><span>Saldo de distribuição</span><strong>{{ distribuicao().saldo }}</strong></div>
+                <small>{{ orcamento().pontosTotais }} pontos disponíveis · base 1 não consome orçamento</small>
+              </div>
+              <div class="guia__atributos">
+                @for (campo of campos; track campo.chave) {
+                  <div class="atributo" [class.atributo--desvantagem]="estado().atributos[campo.chave] === 0">
+                    <div class="atributo__identidade">
+                      <span>{{ campo.nome }}</span>
+                      @if (estado().atributos[campo.chave] === 0) { <small>Desvantagem · 2D20, menor</small> }
+                    </div>
+                    <div class="stepper">
+                      <button class="stepper__botao" type="button" [attr.aria-label]="'Diminuir ' + campo.nome" (click)="passoAtributo(campo.chave, -1)">−</button>
+                      <b class="stepper__valor">{{ estado().atributos[campo.chave] }}</b>
+                      <button class="stepper__botao" type="button" [attr.aria-label]="'Aumentar ' + campo.nome" (click)="passoAtributo(campo.chave, 1)">+</button>
+                    </div>
+                  </div>
+                }
+              </div>
+              <label class="guia__modo-livre">
+                <input type="checkbox" [checked]="estado().modoLivre" (change)="atualizar({ modoLivre: !estado().modoLivre })" />
+                <span><b>Modo livre</b><small>Ignora as travas do protocolo de criação.</small></span>
+              </label>
+            }
+            @case (4) {
+              <div class="guia__introducao">
+                <span class="guia__introducao-codigo">DOSSIÊ // IDENTIDADE</span>
+                <p>Personalidade e origem tornam-se permanentes para o dono após a criação.</p>
+              </div>
+              <section class="guia__identidade-bloco guia__identidade-bloco--personalidade">
+                <header class="guia__identidade-cabecalho">
+                  <span class="guia__identidade-marca">P</span>
+                  <div><strong>Personalidade</strong><small>O traço que define como o agente age sob pressão.</small></div>
+                </header>
+                <label class="campo">
+                  <span class="campo__rotulo">Traço de personalidade</span>
+                  <input data-testid="personalidade" class="campo__controle" [value]="estado().personalidade" (input)="atualizar({ personalidade: valor($event) })" placeholder="Ex.: Atento" />
+                  <small class="campo__ajuda">Use uma única palavra, no formato de adjetivo.</small>
+                </label>
+              </section>
+
+              <section class="guia__identidade-bloco guia__identidade-bloco--origem">
+                <header class="guia__identidade-cabecalho">
+                  <span class="guia__identidade-marca">O</span>
+                  <div><strong>Origem</strong><small>Passado, treinamento e conhecimento anterior ao recrutamento.</small></div>
+                </header>
+                <div class="guia__campos guia__campos--duas-colunas">
+                  <label class="campo">
+                    <span class="campo__rotulo">Nome da origem</span>
+                    <input class="campo__controle" [value]="estado().origem.nome" (input)="atualizarOrigem('nome', valor($event))" placeholder="Ex.: Ex-militar" />
+                  </label>
+                  <label class="campo">
+                    <span class="campo__rotulo">Descrição da origem</span>
+                    <textarea class="campo__controle campo__controle--area" rows="3" [value]="estado().origem.descricao" (input)="atualizarOrigem('descricao', valor($event))"></textarea>
+                  </label>
+                </div>
+
+                <div class="guia__subsecao"><span>Formações</span><i></i></div>
+                <p class="guia__subsecao-ajuda">Escolha uma formação do sistema ou selecione “Outra” para registrar uma opção autorizada pelo Mestre.</p>
+                <div class="guia__formacoes">
+                  @for (linha of estado().origem.formacao; track $index) {
+                    <div class="guia__formacao">
+                      <label class="campo">
+                        <span class="campo__rotulo">Formação {{ $index + 1 | number: '2.0-0' }}</span>
+                        <select class="campo__controle" [attr.aria-label]="'Formação ' + ($index + 1)" [value]="linha.bonus ?? (estado().formacoesCustomizadas[$index] ? '__OUTRA__' : '')" (change)="mudarBonusFormacao($index, $event)">
+                          <option value="">Selecione uma formação</option>
+                          @for (grupo of gruposFormacao; track grupo.rotulo) {
+                            <optgroup [label]="grupo.rotulo">
+                              @for (opcao of grupo.opcoes; track opcao.codigo) {
+                                <option [value]="opcao.codigo">{{ opcao.rotulo }}</option>
+                              }
+                            </optgroup>
+                          }
+                          <option value="__OUTRA__">Outra (autorizada pelo Mestre)</option>
+                        </select>
+                      </label>
+                      @if (definicaoFormacao($index); as definicao) {
+                        @if (definicao.parametro === parametroEsquivaOuBloqueio) {
+                          <label class="campo">
+                            <span class="campo__rotulo">Escolha o benefício</span>
+                            <select class="campo__controle" [value]="linha.parametro ?? ''" (change)="atualizarParametroFormacao($index, valor($event))">
+                              <option value="">Selecione</option>
+                              <option value="Esquiva">Esquiva</option>
+                              <option value="Bloqueio">Bloqueio</option>
+                            </select>
+                          </label>
+                        } @else if (definicao.parametro) {
+                          <label class="campo">
+                            <span class="campo__rotulo">{{ rotuloParametroFormacao(definicao.parametro) }}</span>
+                            <input class="campo__controle" [value]="linha.parametro ?? ''" (input)="atualizarParametroFormacao($index, valor($event))" />
+                          </label>
+                        }
+                      }
+                      <label class="campo">
+                        <span class="campo__rotulo">Texto registrado</span>
+                        <input class="campo__controle" [value]="linha.texto" (input)="atualizarTextoFormacao($index, valor($event))" [placeholder]="estado().formacoesCustomizadas[$index] ? 'Descreva a formação autorizada' : 'Preenchido pela formação escolhida'" />
+                      </label>
+                    </div>
+                  }
+                </div>
+
+                <div class="guia__subsecao"><span>Especialidade</span><i></i></div>
+                <p class="guia__subsecao-ajuda">A Especialidade é escrita livremente: defina quando ativa e qual efeito mecânico ela concede.</p>
+                <div class="guia__campos guia__campos--duas-colunas">
+                  <label class="campo"><span class="campo__rotulo">Gatilho</span><input class="campo__controle" [value]="estado().origem.especialidade.gatilho" (input)="atualizarEspecialidade('gatilho', valor($event))" placeholder="Ex.: Ao agir sob fogo direto" /></label>
+                  <label class="campo"><span class="campo__rotulo">Efeito</span><input class="campo__controle" [value]="estado().origem.especialidade.efeito" (input)="atualizarEspecialidade('efeito', valor($event))" placeholder="Ex.: +1 dado em um teste" /></label>
+                </div>
+                <label class="campo"><span class="campo__rotulo">Saber de campo</span><textarea class="campo__controle campo__controle--area" rows="3" [value]="estado().origem.saberDeCampo" (input)="atualizarOrigem('saberDeCampo', valor($event))" placeholder="Conhecimento prático que o agente traz de sua vida anterior."></textarea></label>
+              </section>
+            }
+            @case (5) {
+              <div class="guia__recursos" [class.guia__recursos--rolando]="rolandoRecursos()">
+                <div class="guia__dados-cabecalho">
+                  <span>Fundos operacionais</span>
+                  <small>1000 + 4D4 × 250</small>
+                </div>
+                @if (!estado().dinheiro.rolado) {
+                  <div class="guia__recursos-vazio">
+                    <app-icone nome="dado" />
+                    <strong>{{ rolandoRecursos() ? 'Rolando fundos operacionais…' : 'Nenhuma rolagem realizada' }}</strong>
+                    <span>{{ rolandoRecursos() ? 'Os quatro dados estão em movimento.' : 'Esta rolagem é definitiva e poderá ser feita uma única vez.' }}</span>
+                  </div>
+                  <button data-testid="rolar-recursos" class="botao botao--primario guia__rolar" type="button" [disabled]="rolandoRecursos()" (click)="iniciarRolagemRecursos()">
+                    <app-icone nome="dado" /> {{ rolandoRecursos() ? 'Rolando…' : 'Rolar dados' }}
+                  </button>
+                } @else {
+                  <div class="guia__dados-lista" aria-label="Resultado dos quatro dados">
+                    @for (dado of estado().dinheiro.dados; track $index) {
+                      <span class="guia__dado"><small>D4.{{ $index + 1 }}</small><b>{{ dado }}</b></span>
+                    }
+                  </div>
+                  <div class="guia__dinheiro-inicial">
+                    <span>Rolagem registrada</span>
+                    <strong>{{ estado().dinheiro.inicial | currency: 'BRL' : 'symbol' : '1.0-0' }}</strong>
+                  </div>
+                  <p class="guia__rolagem-fechada"><app-icone nome="check" /> Resultado definitivo salvo no rascunho.</p>
+                }
+              </div>
+              <div class="guia__fechamento-recursos">
+                <div><span>Bônus monetário</span><b>{{ bonusMonetario() | currency: 'BRL' : 'symbol' : '1.0-0' }}</b></div>
+                <div class="guia__fechamento-total"><span>Total na ficha</span><strong>{{ estado().dinheiro.rolado ? (totalDinheiro() | currency: 'BRL' : 'symbol' : '1.0-0') : '—' }}</strong></div>
+              </div>
+            }
+            @case (6) {
+              <div class="guia__revisao-cabecalho">
+                <app-icone nome="check" />
+                <div><span>Dossiê pronto para registro</span><p>Confira os dados antes de criar a ficha. O estado do guia será preservado se a API rejeitar a operação.</p></div>
+              </div>
+              <dl class="guia__revisao">
+                <div><dt>Agente</dt><dd>{{ estado().nome }}</dd></div>
+                <div><dt>Classe / Arquétipo</dt><dd>{{ estado().classe }}{{ estado().arquetipo ? ' · ' + estado().arquetipo : '' }}</dd></div>
+                <div><dt>Nível / Prestígio</dt><dd>{{ fichas().length ? novoAgente().nivelInicial : 0 }} / {{ fichas().length ? novoAgente().prestigio.prestigioInicial : 0 }}</dd></div>
+                <div><dt>Personalidade / Origem</dt><dd>{{ estado().personalidade }} · {{ estado().origem.nome }}</dd></div>
+                <div><dt>Recursos iniciais</dt><dd>{{ totalDinheiro() | currency: 'BRL' : 'symbol' : '1.0-0' }}</dd></div>
+              </dl>
+              @if (novoAgente().recebeAmaldicoadoPeloPassado) {
+                <div class="guia__aviso"><app-icone nome="alerta" /><div><strong>Amaldiçoado pelo Passado</strong><span>Será registrado nas anotações da ficha.</span></div></div>
+              }
+              @if (erro()) { <p class="guia__erro" role="alert"><app-icone nome="alerta" /> {{ erro() }}</p> }
+            }
+          }
+        </div>
+      </section>
+
+      <aside class="guia__resumo" [class.guia__resumo--aberto]="resumoAberto()">
+        <button class="guia__resumo-toggle" type="button" [attr.aria-expanded]="resumoAberto()" (click)="resumoAberto.set(!resumoAberto())">
+          <span>Resumo operacional</span><app-icone nome="chevron" />
+        </button>
+        <div class="guia__resumo-corpo">
+          @if (!estado().nome.trim()) {
+            <div class="guia__resumo-vazio">
+              <app-icone nome="agente" />
+              <strong>Preencha o codinome para iniciar</strong>
+              <span>O dossiê será montado aqui conforme cada etapa for definida.</span>
+            </div>
+          } @else {
+            <div class="guia__agente">
+              <span class="guia__agente-avatar"><app-icone nome="agente" /></span>
+              <div><small>Agente em recrutamento</small><strong>{{ estado().nome }}</strong><span>{{ estado().arquetipo || estado().classe || 'FUNÇÃO NÃO DEFINIDA' }}</span></div>
+            </div>
+
+            @if (estado().passo >= 2 || visitado() >= 2) {
+              <div class="guia__resumo-linha"><span>Nível inicial</span><b>{{ fichas().length ? novoAgente().nivelInicial : 0 }}</b></div>
+              <div class="guia__resumo-linha"><span>Prestígio</span><b>{{ fichas().length ? novoAgente().prestigio.prestigioInicial : 0 }}</b></div>
+            }
+
+            @if (estado().passo >= 3 || visitado() >= 3) {
+              <div class="guia__stats">
+                <div class="stat stat--vida"><span class="stat__rotulo">Vida</span><span class="stat__valor">{{ vida() }}</span></div>
+                <div class="stat stat--energia"><span class="stat__rotulo">Energia</span><span class="stat__valor">{{ energia() }}</span></div>
+                <div class="stat"><span class="stat__rotulo">Defesa</span><span class="stat__valor">{{ novoAgente().nivelInicial + 10 }}</span></div>
+                <div class="stat" [class.stat--alerta]="distribuicao().saldo !== 0"><span class="stat__rotulo">Saldo</span><span class="stat__valor">{{ distribuicao().saldo }}</span></div>
+              </div>
+              @if (atributosDestaque().length) {
+                <div class="guia__destaques">
+                  <span>Destaques</span>
+                  <div>
+                    @for (atributo of atributosDestaque(); track atributo.nome) {
+                      <b>{{ atributo.nome }} {{ atributo.valor }}</b>
+                    }
+                  </div>
+                </div>
+              }
+            }
+
+            @if ((estado().passo >= 4 || visitado() >= 4) && estado().personalidade.trim()) {
+              <div class="guia__resumo-linha"><span>Personalidade</span><b>{{ estado().personalidade }}</b></div>
+            }
+            @if ((estado().passo >= 4 || visitado() >= 4) && estado().origem.nome.trim()) {
+              <div class="guia__resumo-linha"><span>Origem</span><b>{{ estado().origem.nome }}</b></div>
+            }
+            @if (estado().dinheiro.rolado) {
+              <div class="guia__resumo-linha guia__resumo-linha--recursos"><span>Recursos</span><b>{{ totalDinheiro() | currency: 'BRL' : 'symbol' : '1.0-0' }}</b></div>
+            }
+          }
+        </div>
+      </aside>
+    </div>
+
+    <footer class="guia__rodape">
+      <button class="botao botao--secundario guia__acao" type="button" [disabled]="estado().passo === 0" (click)="voltar()">
+        <app-icone nome="voltar" /> Voltar
+      </button>
+      <span class="guia__rodape-status">ETAPA {{ estado().passo + 1 | number: '2.0-0' }} // {{ passos[estado().passo] | uppercase }}</span>
+      @if (estado().passo < 6) {
+        <button class="botao botao--primario guia__acao" type="button" [disabled]="!passoValido()" (click)="avancar()">Avançar <app-icone nome="entrar" /></button>
+      } @else {
+        <button class="botao botao--primario guia__acao" type="button" [disabled]="criando()" (click)="criar()"><app-icone nome="check" /> {{ criando() ? 'Criando…' : 'Criar ficha' }}</button>
+      }
+    </footer>
+  }
+</main>

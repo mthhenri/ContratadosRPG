@@ -393,11 +393,10 @@
           <button
             class="botao botao--primario detalhe__nova-ficha"
             type="button"
-            [disabled]="criando()"
             (click)="abrirCriarFicha()"
           >
             <app-icone nome="novo-agente" />
-            {{ criando() ? 'Criando…' : 'Nova ficha' }}
+            Nova ficha
           </button>
           @if (textoAtualizacao(); as texto) {
             <span class="detalhe__secao-atualizado">{{ texto }}</span>
@@ -787,17 +786,6 @@
       </div>
     </div>
   </div>
-}
-
-@if (dialogCriar()) {
-  <app-ficha-criar-dialog
-    [criando]="criando()"
-    [podeEscolherDono]="ehMestre()"
-    [membros]="membros()"
-    [usuarioAtivoId]="usuarioAtivoId()"
-    (criar)="criarFicha($event)"
-    (cancelar)="fecharCriarFicha()"
-  />
 }
 
 <!--

@@ -22,3 +22,4 @@ export * from './resistencia';
 export * from './amplificador';
 export * from './fragmento-consumo';
 export * from './fragmento-limite-energia';
+export * from './criacao';

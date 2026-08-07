@@ -36,8 +36,6 @@ import { FichaService } from '../../../ficha/ficha.service';
 import { FichaEdicaoService } from '../../../ficha/ficha-edicao.service';
 import { FichaRolagemRegistroService } from '../../../ficha/ficha-rolagem-registro.service';
 import { mesclarFicha } from '../../../ficha/mesclar-ficha';
-import { construirFichaInicial, type FichaAssistenteResultado } from '../../../ficha/ficha-padrao';
-import { FichaCriarDialog } from '../../../ficha/componentes/ficha-criar-dialog/ficha-criar-dialog.component';
 import { FichaRolagensPainel } from '../../../ficha/componentes/ficha-rolagens-painel/ficha-rolagens-painel.component';
 import {
   FichaVisualizacao,
@@ -133,7 +131,6 @@ interface ItemFicha {
     OverflowFade,
     HistoricoRolagensSidebar,
     IndicadorTempoReal,
-    FichaCriarDialog,
     HoldRepeat,
     BandejaDados,
     CalculadoraFlutuante,
@@ -213,9 +210,7 @@ export class CampanhaDetalhe {
   protected readonly rolagensFeed = signal<readonly RolagemResumoDto[]>([]);
   protected readonly carregandoRolagens = signal(true);
   /** `true` enquanto a criação da nova ficha está em voo (desabilita o botão do assistente). */
-  protected readonly criando = signal(false);
   /** Assistente de criação (m3-16) aberto — agora disparado do próprio detalhe (m2-16). */
-  protected readonly dialogCriar = signal(false);
 
   /**
    * Ficha cujo menu de ações (kebab) está aberto no mini-card (m3-52) — guarda `id`/`nome`/
@@ -947,7 +942,7 @@ export class CampanhaDetalhe {
   /** Abre o assistente de criação de ficha (m3-16), agora disparado do detalhe (m2-16). */
   protected abrirCriarFicha(): void {
     this.fecharMenuCampanha();
-    this.dialogCriar.set(true);
+    void this.router.navigate(['/painel', this.id, 'ficha', 'nova']);
   }
 
   // === Vincular ficha existente (m2-21, itens 6-8) — o jogador que chega numa campanha sem ficha
@@ -1018,12 +1013,6 @@ export class CampanhaDetalhe {
   }
 
   /** Fecha o assistente de criação (Cancelar/✕) — inócuo enquanto uma criação está em voo. */
-  protected fecharCriarFicha(): void {
-    if (!this.criando()) {
-      this.dialogCriar.set(false);
-    }
-  }
-
   /**
    * Confirma o assistente: monta a ficha (`construirFichaInicial` — snapshot + bônus de
    * arquétipo) e cria via `FichaService`. `usuarioId` só vem preenchido quando o mestre escolheu
@@ -1037,33 +1026,6 @@ export class CampanhaDetalhe {
    * embutida na coluna principal, então tirá-lo do painel pra mostrar a mesma ficha noutra tela
    * seria um desvio. Recarrega a Equipe e aponta `fichaExibidaId` pra ficha nova.
    */
-  protected criarFicha(resultado: FichaAssistenteResultado): void {
-    if (this.criando()) {
-      return;
-    }
-    this.criando.set(true);
-    const ficha = construirFichaInicial(resultado.opcoes);
-    this.fichaService
-      .criarFicha({
-        campanhaId: this.id,
-        usuarioId: resultado.usuarioId,
-        nome: ficha.nome,
-        dados: ficha.dados,
-      })
-      .pipe(finalize(() => this.criando.set(false)))
-      .subscribe({
-        next: (fichaCriada) => {
-          this.dialogCriar.set(false);
-          if (this.ehMestre()) {
-            void this.router.navigate(['/painel', this.id, 'ficha', fichaCriada.id]);
-            return;
-          }
-          this.recarregarMembrosEFichas();
-          this.fichaExibidaId.set(fichaCriada.id);
-        },
-      });
-  }
-
   /**
    * Abre/fecha o menu de ações (kebab) de uma ficha específica no mini-card (m3-52). Calcula a
    * posição `fixed` a partir do botão clicado (`getBoundingClientRect`) — ver a nota em

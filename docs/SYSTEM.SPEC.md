@@ -271,6 +271,11 @@ Idênticos ao padrão de referência do autor (ver `CONVENTIONS.md`):
   consomem os tokens de `docs/design/tema/_tokens.scss` (nunca hex solto). A spec de M1 cobre
   a troca de tema em **runtime** (presets + color picker com trava de contraste), não a
   definição da identidade — essa já está feita.
+- **Qualidade visual acima de velocidade:** toda criação ou alteração de UI exige escolher um
+  componente análogo aprovado, mapear seus padrões além dos tokens e comparar a implementação na
+  aplicação real. A skill `verify` é obrigatória em `1920×1080` e `360×800`, além dos cenários da
+  spec. Build, testes, lint, tokens corretos, screenshot ou relato de subagente não substituem a
+  inspeção pessoal do agente principal. Sem aplicação real observada, a tarefa visual fica aberta.
 
 ---
 
@@ -588,3 +593,4 @@ Inegociáveis independente do contexto:
 | 28 | **Nunca duplicar regra de permissão** — a service do módulo dono é o único árbitro; REST e WS consomem a mesma verificação |
 | 29 | **Nunca hardcodar** cor, fonte ou raio em SCSS/template — todo estilo consome os tokens do tema em `docs/design/tema/` (`var(--surface)`, `var(--accent)`, `var(--font-mono)`…); leia `docs/design/DESIGN.md` antes de qualquer UI |
 | 30 | **Nunca usar o atributo `title` nativo do HTML** para tooltip — sempre a diretiva `appTooltip` (`frontend/src/app/shared/tooltip/tooltip.directive.ts`), que já resolve hover/toque/teclado e usa os tokens do tema |
+| 31 | **Nunca declarar UI pronta sem verificação visual ao vivo** — comparar pessoalmente com um componente análogo aprovado em `1920×1080` e `360×800` (mais os cenários da spec) usando `verify`; build, testes, tokens, pressa ou relato de subagente não substituem esse gate |

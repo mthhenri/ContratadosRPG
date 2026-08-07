@@ -20,6 +20,7 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 | **Regras do jogo — jogador** | [`docs/core/sistema-v4.1.0.md`](../core/sistema-v4.1.0.md) | tocar em **qualquer** fórmula, tabela de progressão ou regra de domínio |
 | **Regras do jogo — ameaças/criaturas** | [`docs/core/guia_de_mestre-v4.0.0.md`](../core/guia_de_mestre-v4.0.0.md) | criar ou alterar criatura/NPC (M4) |
 | **Identidade visual** — guia e mapa de tokens | [`docs/design/DESIGN.md`](../design/DESIGN.md) | **qualquer** trabalho de frontend/UI/estilo |
+| Gate visual e qualidade acima de velocidade | [`AGENTS.md`](../../AGENTS.md) “Gate obrigatório de qualidade e conclusão” + [`SYSTEM.SPEC.md`](../SYSTEM.SPEC.md) §8/§16.31 | planejar, implementar ou concluir **qualquer** UI/estilo |
 | Tokens CSS (fonte da verdade em runtime) | [`docs/design/tema/_tokens.scss`](../design/tema/_tokens.scss) | escolher cor, fonte, raio ou espaçamento |
 | Padrões BEM canônicos de componente | [`docs/design/tema/_componentes.scss`](../design/tema/_componentes.scss) | criar um card, stat, stepper, chip… |
 | Protótipos aprovados (fidelidade 1:1) | [`docs/design/examples/`](../design/examples/) | montar uma tela nova |

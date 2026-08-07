@@ -935,34 +935,13 @@ describe('CampanhaDetalhe', () => {
     });
 
     it('"Nova ficha" abre o assistente de criação, sem criar de imediato', () => {
-      const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois() });
+      const { raiz, fichaService, navegar } = montar({ usuarioId: 1, membros: membrosDois() });
 
       expect(raiz.querySelector('app-ficha-criar-dialog')).toBeNull();
 
       (raiz.querySelector('.detalhe__nova-ficha') as HTMLButtonElement).click();
-      fixture.detectChanges();
-
-      expect(raiz.querySelector('app-ficha-criar-dialog')).not.toBeNull();
       expect(fichaService.criarFicha).not.toHaveBeenCalled();
-    });
-
-    it('confirmar no assistente cria a ficha e navega para ela', () => {
-      const { fixture, raiz, fichaService, navegar } = montar({
-        usuarioId: 1,
-        membros: membrosDois(),
-      });
-
-      (raiz.querySelector('.detalhe__nova-ficha') as HTMLButtonElement).click();
-      fixture.detectChanges();
-      (raiz.querySelector('app-ficha-criar-dialog .botao--primario') as HTMLButtonElement).click();
-
-      expect(fichaService.criarFicha).toHaveBeenCalledTimes(1);
-      expect(fichaService.criarFicha).toHaveBeenCalledWith(
-        expect.objectContaining({ campanhaId: CAMPANHA_ID }),
-      );
-      expect(navegar).toHaveBeenCalledWith(['/painel', CAMPANHA_ID, 'ficha', 42]);
-      fixture.detectChanges();
-      expect(raiz.querySelector('app-ficha-criar-dialog')).toBeNull();
+      expect(navegar).toHaveBeenCalledWith(['/painel', CAMPANHA_ID, 'ficha', 'nova']);
     });
 
     // Item 9 — "Atualizado há Xs", agora no cabeçalho da seção "Esquadrão".

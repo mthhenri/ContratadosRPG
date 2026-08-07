@@ -1,5 +1,66 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-07 — m3-57: fluxo convencional, Identidade, Recursos e resumo progressivo
+
+O validador de Atributos tratava a restrição dos quatro pontos de criação como se ela também
+limitasse os pontos recebidos pela progressão: por isso agentes de Nível maior ficavam impedidos de
+avançar sem “modo livre”. A regra pura agora confirma que a distribuição final contém uma base de
+criação legal e, separadamente, respeita orçamento e teto da progressão. Casos convencionais dos
+Níveis 1, 5, 10, 15 e 20 passaram a ter cobertura explícita no `shared` e no componente do guia.
+
+Na Identidade, Personalidade e Origem ganharam blocos distintos; Personalidade passou a ser
+preenchível, as duas Formações usam o catálogo completo do sistema com alternativa `Outra`, e a
+seleção catalogada preenche seu efeito e parâmetro quando houver. Especialidade permanece texto
+livre por ser esse o contrato do sistema. Recursos agora começam realmente vazios: um único botão
+executa a rolagem, anima e revela os quatro dados, registra o resultado definitivo e não permite
+rerrolar. O resumo operacional também deixou de fabricar Combatente, Nível, Prestígio e dinheiro
+antes das escolhas; ele nasce vazio e passa a mostrar classe, progressão, destaques de atributos,
+Identidade e Recursos somente quando esses dados existem.
+
+**Verificado:** testes focais com 10/10 casos em `shared` e 9/9 no guia, lint dos arquivos tocados e
+build Angular de produção. Na aplicação real foram criados e persistidos, sem “modo livre”, cinco
+agentes convencionais: Níveis 1, 5, 10, 15 e 20. O percurso alternou 1920×1080 e 360×800, cobriu o
+estado vazio, bloqueio antes da rolagem, animação, revelação única, Identidade e revisão; no mobile
+não houve overflow horizontal e os botões do rodapé mediram 44px. A leitura do PostgreSQL confirmou
+Nível, dinheiro, Personalidade, Origem e atributos persistidos para as cinco fichas. A suíte completa
+do frontend manteve somente `P-001`/`P-010`; a de `shared` aprovou os 530 testes fonte e ainda esbarra
+na coleta conhecida de `dist` (`P-011`). A `m3-57` permanece ativa pelos gaps de escopo restantes.
+
+## 2026-08-07 — Qualidade acima de velocidade e gate visual inviolável
+
+Por decisão explícita do autor, qualidade, fidelidade ao sistema e cumprimento integral das regras
+passam a prevalecer formalmente sobre velocidade. Prazo, tamanho da spec, delegação, limite de
+contexto ou custo de execução não autorizam atalhos. Se não houver tempo ou ambiente para verificar,
+a tarefa permanece aberta; é preferível levar o dobro do tempo a entregar uma primeira versão que
+precise ser refeita por divergências previsíveis.
+
+Para toda UI, `AGENTS.md` agora exige antes da edição um componente análogo aprovado e um mapeamento
+de shell, densidade, hierarquia, controles, estados, iconografia e responsividade — conformidade com
+tokens isoladamente não prova fidelidade. Antes da entrega, o agente principal deve executar e
+inspecionar pessoalmente a aplicação real com `verify` em 1920×1080 e 360×800, percorrer os estados
+relevantes e comparar a tela renderizada com o análogo. Build, testes, lint, screenshot ou relato de
+subagente são complementares e não substituem o gate. A regra também entrou em `SYSTEM.SPEC.md` como
+proibição absoluta nº 31.
+
+## 2026-08-07 — m3-57: revisão visual do guia de criação
+
+O primeiro corte da tela `/painel/:campanhaId/ficha/nova` usava os tokens corretos, mas ainda se
+comportava visualmente como um formulário genérico: hierarquia rasa, controles indiferenciados e
+pouca relação com os painéis densos já aprovados. O shell foi reconstruído a partir dos padrões do
+painel de campanhas e de `docs/design/tema/_componentes.scss`: cabeçalho técnico com índice e régua,
+trilha vertical com estados explícitos, conteúdo em card, memorial de cálculo, steppers canônicos,
+resumo operacional com stat boxes, alertas semânticos e ações primária/secundária. Ícones agora usam
+`app-icone`; cores, tipografia, raios e superfícies continuam integralmente baseados nos tokens do
+tema. No mobile, a trilha vira progresso compacto, o resumo é colapsável e o rodapé permanece fixo.
+
+**Verificado:** build Angular de produção aprovado (permanece apenas o warning conhecido de bundle
+inicial em 615,45 kB para o teto de 610 kB), teste focado de rotas 8/8 e lint dos arquivos TS/HTML
+tocados. Na aplicação real, o guia foi percorrido até Atributos em 360×800 e inspecionado em
+1920×1080; não houve overflow horizontal nem erro de console, e os botões dos steppers mediram
+44×44px no mobile. A suíte completa manteve duas falhas preexistentes fora do guia: apelido do
+inventário e texto do link de retorno ao acervo. A `m3-57` continua ativa porque seus demais gaps
+funcionais/arquiteturais ainda não foram fechados.
+
 ## 2026-08-06 — Subnavegação e rolagem interna de Extras da ficha
 
 A aba **Extras** da `FichaVisualizacao` passou a ter uma subbarra persistente com **Identidade**

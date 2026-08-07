@@ -14,6 +14,7 @@ import {
   obterLimitesClasse,
 } from '@contratados-rpg/shared/regras/agente';
 import { rolarDinheiroInicial } from '@contratados-rpg/shared/regras/novo-agente';
+import { aplicarFormacaoAosDerivados } from '@contratados-rpg/shared/regras/identidade';
 
 import { ehClasseBase } from './opcoes-ficha';
 
@@ -41,6 +42,10 @@ export interface OpcoesFichaInicial {
   /** Atributos **base** (antes do bônus fixo de arquétipo/subclasse). */
   readonly atributos: FichaAtributosDto;
   readonly maestria: keyof FichaAtributosDto | null;
+  readonly identidade?: FichaJogadorDadosDto['identidade'];
+  /** Total já rolado no guia (dinheiro inicial + bônus). Ausente mantém o fallback legado. */
+  readonly dinheiro?: number;
+  readonly anotacoes?: string;
 }
 
 /**
@@ -103,6 +108,11 @@ export function construirFichaInicial(
     ...(item.origem === undefined ? {} : { origem: item.origem }),
   }));
 
+  const derivadosBase = calcularDerivados(classe, nivel, atributos, habilidades);
+  const derivados = opcoes.identidade?.origem?.formacao.length
+    ? aplicarFormacaoAosDerivados(derivadosBase, opcoes.identidade.origem.formacao)
+    : derivadosBase;
+
   return {
     nome: opcoes.nome.trim() || 'Novo agente',
     dados: {
@@ -112,6 +122,7 @@ export function construirFichaInicial(
       prestigio,
       atributos,
       maestria,
+      ...(opcoes.identidade === undefined ? {} : { identidade: opcoes.identidade }),
       estado: {
         vidaAtual: vidaMaxima,
         energiaAtual: energiaMaxima,
@@ -121,12 +132,12 @@ export function construirFichaInicial(
         traumas: [],
         lesoes: [],
       },
-      derivados: calcularDerivados(classe, nivel, atributos, habilidades),
+      derivados,
       habilidades,
       inventario: { itens: [], amplificadores: [] },
       rolagens: [],
-      anotacoes: '',
-      dinheiro: rolarDinheiroInicial().dinheiro,
+      anotacoes: opcoes.anotacoes ?? '',
+      dinheiro: opcoes.dinheiro ?? rolarDinheiroInicial().dinheiro,
     },
   };
 }
