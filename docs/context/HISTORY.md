@@ -1,5 +1,19 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-07 — m3-57: stepper de Atributos exibe o valor final somado, não só a nota
+
+Seguindo o pedido do autor logo após o registro anterior: o Passo 04 // ATRIBUTOS ainda mostrava
+o valor **base** no número grande do stepper, deixando o bônus só numa nota ao lado ("+1 fixo ·
+final 2") — o jogador tinha que somar de cabeça. O número do stepper agora é `atributosFinais()`
+(base + bônus já clampado, o mesmo valor que `construirFichaInicial` persiste); os botões +/-
+continuam incrementando a base em 1 a cada clique — e o orçamento/saldo continuam validando só a
+base, sem mudança de regra. O marcador junto ao nome do atributo trocou "fixo" pelo nome real da
+fonte do bônus (`rotuloOrigemBonus`, de `rotulos-ficha.ts`): "+1 Lutador", "+1 Experimento
+Bestial". **Verificado:** `tsc --noEmit`, `ng build` e `eslint` limpos; na aplicação real (mesmo
+setup do registro acima), Força foi incrementada duas vezes em 1920×1080 e 360×800 — o saldo caiu
+de 4 para 2 e o stepper foi de "2" para "4" (base 1→3 + bônus 1), confirmando que base, saldo e
+valor final andam juntos.
+
 ## 2026-08-07 — m3-57: briefing de Classe (bônus, Habilidade Inicial), rótulo "Classe - Arquétipo" e resumo mobile em overlay
 
 O Passo 02 // CLASSE prometia ("os bônus fixos serão aplicados após a distribuição dos atributos")
