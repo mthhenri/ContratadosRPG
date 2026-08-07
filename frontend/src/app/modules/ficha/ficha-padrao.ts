@@ -15,6 +15,7 @@ import {
 } from '@contratados-rpg/shared/regras/agente';
 import { rolarDinheiroInicial } from '@contratados-rpg/shared/regras/novo-agente';
 import { aplicarFormacaoAosDerivados } from '@contratados-rpg/shared/regras/identidade';
+import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 
 import { ehClasseBase } from './opcoes-ficha';
 
@@ -52,6 +53,11 @@ export interface OpcoesFichaInicial {
    * Ausente/vazio para Nível 0 (o passo não existe nesse caso).
    */
   readonly habilidadesExtras?: readonly FichaHabilidadeDto[];
+  /**
+   * Itens escolhidos no passo // EQUIPAMENTO INICIAL (m3-59) — orçamento **à parte** do dinheiro
+   * (`dinheiro` acima), nunca descontado dele. Ausente/vazio nasce com o inventário vazio.
+   */
+  readonly equipamentoInicial?: readonly CarrinhoItemDto[];
 }
 
 /**
@@ -78,6 +84,7 @@ function restringir(valor: number, minimo: number, maximo: number): number {
  * grava o **snapshot** de Vida/Energia máximas + `derivados` de `shared/regras` (proibições #26/#27 —
  * nenhuma fórmula nova aqui; o backend também revalida forma e Maestria). Vida/Energia atuais nascem
  * cheias. Dinheiro inicial (m3-34) é rolado uma vez aqui (`rolarDinheiroInicial`, `1000 + 4D4 × 250`).
+ * `equipamentoInicial` (m3-59) vira `dados.inventario.itens` sem tocar `dinheiro` — orçamento à parte.
  * Só orquestra `shared/regras`.
  */
 export function construirFichaInicial(
@@ -143,7 +150,7 @@ export function construirFichaInicial(
       },
       derivados,
       habilidades,
-      inventario: { itens: [], amplificadores: [] },
+      inventario: { itens: opcoes.equipamentoInicial ?? [], amplificadores: [] },
       rolagens: [],
       anotacoes: opcoes.anotacoes ?? '',
       dinheiro: opcoes.dinheiro ?? rolarDinheiroInicial().dinheiro,

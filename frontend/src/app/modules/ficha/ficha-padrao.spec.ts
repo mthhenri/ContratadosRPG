@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
+import { ArquetipoEnum, ClasseEnum, ItemCategoriaEnum } from '@contratados-rpg/shared/enums';
 import { calcularEnergia, calcularVida } from '@contratados-rpg/shared/regras/agente';
+import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 
 import {
   ATRIBUTOS_BASE_PADRAO,
@@ -97,6 +98,21 @@ describe('construirFichaInicial', () => {
     const { dados } = construirFichaInicial(base());
     expect(dados.dinheiro).toBeGreaterThanOrEqual(2000);
     expect(dados.dinheiro).toBeLessThanOrEqual(5000);
+  });
+
+  it('sem equipamentoInicial, nasce com o inventário vazio', () => {
+    const { dados } = construirFichaInicial(base());
+    expect(dados.inventario).toEqual({ itens: [], amplificadores: [] });
+  });
+
+  it('equipamentoInicial (m3-59) vira dados.inventario.itens sem descontar dinheiro', () => {
+    const kit: readonly CarrinhoItemDto[] = [
+      { nome: 'Leve', categoria: ItemCategoriaEnum.CORPO_A_CORPO, custo: 500, peso: 1, quantidade: 1, guardada: false, modificacoes: [] },
+    ];
+    const { dados } = construirFichaInicial(base({ dinheiro: 3000, equipamentoInicial: kit }));
+    expect(dados.inventario.itens).toEqual(kit);
+    expect(dados.inventario.amplificadores).toEqual([]);
+    expect(dados.dinheiro).toBe(3000); // orçamento do kit é à parte, nunca desconta do dinheiro
   });
 });
 

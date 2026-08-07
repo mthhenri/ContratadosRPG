@@ -12,6 +12,7 @@ import { calcularDinheiroInicial, calcularNovoAgente } from '@contratados-rpg/sh
 import { rolarDados } from '@contratados-rpg/shared/regras/descanso';
 import { FORMACOES } from '@contratados-rpg/shared/regras/identidade';
 import type { FormacaoDefinicaoDto } from '@contratados-rpg/shared/regras/identidade';
+import { calcularTotaisCarrinho, KIT_INICIAL_ORCAMENTO_MAXIMO, KIT_INICIAL_PESO_MAXIMO, type CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { FichaService } from '../../ficha.service';
@@ -24,6 +25,7 @@ import { lerParamRota } from '../../ler-param-rota';
 import { GuiaCriacaoRascunhoService } from '../../guia-criacao-rascunho.service';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { FichaHabilidadeSeletor } from '../../componentes/ficha-habilidade-seletor/ficha-habilidade-seletor.component';
+import { GuiaEquipamentoLoja } from '../../componentes/guia-equipamento-loja/guia-equipamento-loja.component';
 
 /** Vaga de melhoria de nível (m3-58) — cada uma casa com um campo de `ProgressaoAcumuladaDto`. */
 type TipoVagaMelhoria = 'geral' | 'classe' | 'classeOuArquetipo' | 'outraClasse' | 'civil';
@@ -45,6 +47,8 @@ interface EstadoGuiaCriacao {
   readonly melhorias: readonly MelhoriaEscolhida[];
   /** Sempre 2 posições (mesmo padrão de `origem.formacao`); só as `alvoFortificacoes()` primeiras contam. */
   readonly fortificacoes: readonly FortificacaoRascunho[];
+  /** Itens do passo // EQUIPAMENTO INICIAL (m3-59) — orçamento à parte do dinheiro, nunca descontado dele. */
+  readonly kit: readonly CarrinhoItemDto[];
 }
 
 const origemVazia = (): FichaOrigemDto => ({ nome: '', descricao: '', formacao: [{ bonus: null, parametro: null, texto: '' }, { bonus: null, parametro: null, texto: '' }], especialidade: { gatilho: '', efeito: '' }, saberDeCampo: '' });
@@ -59,10 +63,11 @@ function normalizarEstado(estado: EstadoGuiaCriacao): EstadoGuiaCriacao {
     dinheiro: { ...estado.dinheiro, rolado: estado.dinheiro.rolado ?? estado.dinheiro.dados.length === 4 },
     melhorias: estado.melhorias ?? [],
     fortificacoes: estado.fortificacoes ?? fortificacoesVazias(),
+    kit: estado.kit ?? [],
   };
 }
 
-@Component({ selector: 'app-ficha-criar', imports: [CommonModule, Icone, FichaHabilidadeSeletor], templateUrl: './criar.page.html', styleUrl: './criar.page.scss' })
+@Component({ selector: 'app-ficha-criar', imports: [CommonModule, Icone, FichaHabilidadeSeletor, GuiaEquipamentoLoja], templateUrl: './criar.page.html', styleUrl: './criar.page.scss' })
 export class FichaCriar {
   private readonly destroyRef = inject(DestroyRef);
   private readonly rota = inject(ActivatedRoute); private readonly router = inject(Router);
@@ -94,7 +99,7 @@ export class FichaCriar {
   protected readonly estado = signal<EstadoGuiaCriacao>({ passo: 0, nome: '', usuarioId: null, classe: null,
     arquetipo: null, motivo: MotivoEntradaAgenteEnum.MORTE_OU_INICIO_DO_ZERO, mediaNivel: 0, mediaPrestigio: 0,
     atributos: { ...ATRIBUTOS_BASE_PADRAO }, maestria: null, modoLivre: false, personalidade: '', origem: origemVazia(),
-    formacoesCustomizadas: [false, false], dinheiro: dinheiroVazio(), melhorias: [], fortificacoes: fortificacoesVazias() });
+    formacoesCustomizadas: [false, false], dinheiro: dinheiroVazio(), melhorias: [], fortificacoes: fortificacoesVazias(), kit: [] });
   protected readonly ehMestre = computed(() => this.membros().find((m) => m.usuarioId === this.sessaoService.usuario()?.id)?.papel === TipoCampanhaMembroPapelEnum.MESTRE);
   protected readonly arquetipos = computed(() => {
     const classe = this.estado().classe;
@@ -150,10 +155,10 @@ export class FichaCriar {
 
   /** `true` quando o Nível/Treinamento inicial (passo 03) é maior que 0 — só então o passo // MELHORIAS existe (m3-58). */
   protected readonly temMelhorias = computed(() => this.fichas().length > 0 && this.novoAgente().nivelInicial > 0);
-  /** Trilha de passos — 7 posições sem Melhorias, 8 com ela (entre Identidade e Recursos). */
+  /** Trilha de passos — 8 posições sem Melhorias, 9 com ela (Equipamento inicial sempre entre Recursos e Revisão). */
   protected readonly passos = computed<readonly string[]>(() => {
     const base = ['Base', 'Classe', 'Novo agente', 'Atributos', 'Identidade'];
-    return this.temMelhorias() ? [...base, 'Melhorias', 'Recursos', 'Revisão'] : [...base, 'Recursos', 'Revisão'];
+    return this.temMelhorias() ? [...base, 'Melhorias', 'Recursos', 'Equipamento inicial', 'Revisão'] : [...base, 'Recursos', 'Equipamento inicial', 'Revisão'];
   });
   /** Contagem acumulada de vagas do Nível 1 até o Nível inicial (`shared/regras`) — fonte única, proibição #26. */
   protected readonly progressaoAcumulada = computed(() => calcularProgressaoAcumulada({ classe: this.classeCalculada(), nivel: this.novoAgente().nivelInicial }));
@@ -201,6 +206,17 @@ export class FichaCriar {
   /** Total de vagas (catálogo + Fortificações) e quantas já foram preenchidas — só para o resumo lateral. */
   protected readonly melhoriasAlvoTotal = computed(() => this.vagasMelhoria().reduce((soma, v) => soma + v.alvo, 0) + this.alvoFortificacoes());
   protected readonly melhoriasPreenchidasTotal = computed(() => this.estado().melhorias.length + this.estado().fortificacoes.slice(0, this.alvoFortificacoes()).filter((f) => f.nome.trim() && f.descricao.trim()).length);
+
+  /** Tetos do Equipamento Inicial (m3-59) — `shared/regras`, doc: soma ≤ $2500 e peso ≤ 5. */
+  protected readonly kitOrcamentoMaximo = KIT_INICIAL_ORCAMENTO_MAXIMO;
+  protected readonly kitPesoMaximo = KIT_INICIAL_PESO_MAXIMO;
+  /** Gasto/peso do kit — mesma função do motor de compras que soma o carrinho da Loja (m1-10) e do Inventário (m3-14). */
+  protected readonly kitTotais = computed(() => calcularTotaisCarrinho({ itens: this.estado().kit, amplificadores: [] }));
+  /** Trava dura do passo // EQUIPAMENTO INICIAL — kit vazio (0/0) sempre válido, então o passo é pulável. */
+  protected readonly kitValido = computed(() => this.kitTotais().gasto <= KIT_INICIAL_ORCAMENTO_MAXIMO && this.kitTotais().pesoUsado <= KIT_INICIAL_PESO_MAXIMO);
+  /** Preenchimento dos medidores (0–100%) — trilho nunca estoura a barra mesmo estourado o teto. */
+  protected readonly kitGastoPercentual = computed(() => Math.min(100, (this.kitTotais().gasto / KIT_INICIAL_ORCAMENTO_MAXIMO) * 100));
+  protected readonly kitPesoPercentual = computed(() => Math.min(100, (this.kitTotais().pesoUsado / KIT_INICIAL_PESO_MAXIMO) * 100));
 
   constructor() {
     const existente = this.rascunhos.recuperar<EstadoGuiaCriacao>(this.campanhaId); this.temRascunho.set(existente !== null);
@@ -302,6 +318,7 @@ export class FichaCriar {
     const fortificacoes = this.estado().fortificacoes.map((f, i) => i === indice ? { ...f, [campo]: valor } : f);
     this.atualizar({ fortificacoes });
   }
+  protected mudarKit(itens: readonly CarrinhoItemDto[]): void { this.atualizar({ kit: itens }); }
   protected passoValido(): boolean {
     const e = this.estado();
     switch (this.passos()[e.passo]) {
@@ -320,6 +337,7 @@ export class FichaCriar {
         && e.origem.saberDeCampo.trim().length > 0;
       case 'Melhorias': return e.modoLivre || this.melhoriasCompletas();
       case 'Recursos': return e.dinheiro.rolado && !this.rolandoRecursos();
+      case 'Equipamento inicial': return e.modoLivre || this.kitValido();
       default: return true;
     }
   }
@@ -344,7 +362,7 @@ export class FichaCriar {
     if (this.criando() || !e.classe || !e.dinheiro.rolado) return;
     this.criando.set(true);
     this.erro.set('');
-    const resultado = construirFichaInicial({ nome: e.nome, classe: e.classe, arquetipo: e.arquetipo, nivel: this.fichas().length ? this.novoAgente().nivelInicial : 0, prestigio: this.fichas().length ? this.novoAgente().prestigio.prestigioInicial : 0, atributos: e.atributos, maestria: e.maestria, identidade: { personalidade: e.personalidade, origem: e.origem }, dinheiro: this.totalDinheiro(), anotacoes: this.novoAgente().recebeAmaldicoadoPeloPassado ? 'Amaldiçoado pelo Passado' : '', habilidadesExtras: this.habilidadesDoNivel() });
+    const resultado = construirFichaInicial({ nome: e.nome, classe: e.classe, arquetipo: e.arquetipo, nivel: this.fichas().length ? this.novoAgente().nivelInicial : 0, prestigio: this.fichas().length ? this.novoAgente().prestigio.prestigioInicial : 0, atributos: e.atributos, maestria: e.maestria, identidade: { personalidade: e.personalidade, origem: e.origem }, dinheiro: this.totalDinheiro(), anotacoes: this.novoAgente().recebeAmaldicoadoPeloPassado ? 'Amaldiçoado pelo Passado' : '', habilidadesExtras: this.habilidadesDoNivel(), equipamentoInicial: e.kit });
     this.fichaService.criarFicha({ campanhaId: this.campanhaId, usuarioId: this.ehMestre() ? (e.usuarioId ?? undefined) : undefined, ...resultado })
       .pipe(finalize(() => this.criando.set(false)))
       .subscribe({ next: (ficha) => { this.rascunhos.limpar(this.campanhaId); void this.router.navigate(['/painel', this.campanhaId, 'ficha', ficha.id]); }, error: (erro) => this.erro.set(erro?.error?.mensagem ?? 'Não foi possível criar a ficha.') });

@@ -1,10 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of } from 'rxjs';
-import { ArquetipoEnum, ClasseEnum, FormacaoBonusEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { ArquetipoEnum, ClasseEnum, FormacaoBonusEnum, ItemCategoriaEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import { FORMACOES } from '@contratados-rpg/shared/regras/identidade';
+import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { FichaService } from '../../ficha.service';
@@ -240,7 +241,7 @@ describe('FichaCriar', () => {
       const { componente } = montar();
       expect(componente['temMelhorias']()).toBe(false);
       expect(componente['passos']()).not.toContain('Melhorias');
-      expect(componente['passos']()).toHaveLength(7);
+      expect(componente['passos']()).toHaveLength(8);
     });
 
     it('entra na trilha, trava Avançar com vaga sobrando e libera com modo livre', () => {
@@ -298,6 +299,56 @@ describe('FichaCriar', () => {
 
       const habilidades = componente['habilidadesDoNivel']();
       expect(habilidades.some((h) => h.nome === 'Determinado+' && h.categoria === 'PERSONALIDADE')).toBe(true);
+    });
+  });
+
+  describe('m3-59 — passo // EQUIPAMENTO INICIAL', () => {
+    const indiceEquipamento = (componente: FichaCriar) => componente['passos']().indexOf('Equipamento inicial');
+
+    it('kit vazio é válido — o passo é pulável', () => {
+      const { componente } = montar();
+      const indice = indiceEquipamento(componente);
+      expect(indice).toBeGreaterThan(-1);
+      componente['atualizar']({ passo: indice });
+      expect(componente['passoValido']()).toBe(true);
+    });
+
+    it('trava Avançar acima de $2500 ou peso 5 e libera com modo livre', () => {
+      const { fixture, componente } = montar();
+      const indice = indiceEquipamento(componente);
+      const kit: CarrinhoItemDto[] = [{ nome: 'Pesada', categoria: ItemCategoriaEnum.CORPO_A_CORPO, custo: 1500, peso: 5, quantidade: 2, guardada: false, modificacoes: [] }];
+      componente['atualizar']({ passo: indice, modoLivre: false, kit });
+      fixture.detectChanges();
+      expect(componente['kitTotais']().gasto).toBe(3000); // > 2500
+      expect(componente['passoValido']()).toBe(false);
+
+      componente['atualizar']({ modoLivre: true });
+      fixture.detectChanges();
+      expect(componente['passoValido']()).toBe(true);
+    });
+
+    it('mudarKit substitui o kit inteiro e recalcula os totais', () => {
+      const { fixture, componente } = montar();
+      const kit: CarrinhoItemDto[] = [{ nome: 'Molotov', categoria: ItemCategoriaEnum.EXPLOSIVOS, custo: 400, peso: 1, quantidade: 3, guardada: false, modificacoes: [] }];
+      componente['mudarKit'](kit);
+      fixture.detectChanges();
+      expect(componente['kitTotais']()).toEqual(expect.objectContaining({ gasto: 1200, pesoUsado: 3 }));
+    });
+
+    it('cria a ficha com o kit em dados.inventario sem tocar no dinheiro rolado', () => {
+      const { fixture, componente } = montar();
+      const router = TestBed.inject(Router);
+      vi.spyOn(router, 'navigate').mockResolvedValue(true);
+      const kit: CarrinhoItemDto[] = [{ nome: 'Molotov', categoria: ItemCategoriaEnum.EXPLOSIVOS, custo: 400, peso: 1, quantidade: 1, guardada: false, modificacoes: [] }];
+      componente['atualizar']({ nome: 'Agente Kit', classe: ClasseEnum.COMBATENTE, kit, dinheiro: { dados: [1, 2, 3, 4], inicial: 2500, rolado: true } });
+      fixture.detectChanges();
+
+      componente['criar']();
+
+      const fichaService = TestBed.inject(FichaService) as unknown as { criarFicha: ReturnType<typeof vi.fn> };
+      const payload = fichaService.criarFicha.mock.calls[0][0];
+      expect(payload.dados.inventario.itens).toEqual(kit);
+      expect(payload.dados.dinheiro).toBe(2500);
     });
   });
 });

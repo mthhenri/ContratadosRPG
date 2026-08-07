@@ -1,6 +1,8 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-07 · **Última decisão registrada:** qualidade acima de velocidade e gate visual inviolável
+> **Última revisão:** 2026-08-07 · **Última decisão registrada:** guia de criação de ficha completo
+> (`m3-57`–`m3-59`); Equipamento Inicial usa a mesma regra $2500/peso 5 para todas as classes —
+> Civil incluso, a variante própria do documento ficou fora de escopo
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -13,46 +15,24 @@
 
 ## 1. Próxima Task
 
-**Task ativa:** `m3-57-guia-criacao-ficha.spec.md` (segue em `docs/specs/active/` — trio do guia
-de criação: `m3-57` base, `m3-58` melhorias de nível, `m3-59` equipamento inicial). O núcleo do
-guia e sua revisão visual estão no workspace. O fluxo convencional de atributos foi validado nos
-Níveis 1, 5, 10, 15 e 20; Identidade separa Personalidade e Origem, oferece o catálogo de Formações
-com `Outra` e tem respiro entre blocos/sub-seções; Recursos têm uma única rolagem animada; e o
-resumo operacional começa vazio e cresce apenas com escolhas reais. O Passo 02 // CLASSE mostra o
-bônus fixo de atributos, a Habilidade Inicial e Vida/Energia de partida assim que classe e
-arquétipo/subclasse estão definitivos; "Perfil selecionado", o resumo lateral e a Revisão usam
-`rotuloClasseCompleto`. No mobile, o resumo operacional fica oculto por padrão e abre como overlay
-(bottom sheet) via um botão dedicado no cabeçalho, ao lado de "Novo agente", alinhado com "Voltar".
+Nenhuma task de milestone aberto está explicitamente encadeada; a fila do backlog abaixo é a
+referência. O trio do guia de criação (`m3-57` base, `m3-58` melhorias de nível, `m3-59`
+equipamento inicial) **concluiu** — as três specs estão em `docs/specs/done/`; o que o guia faz
+hoje de ponta a ponta está descrito na seção 4, em "Guia de criação de ficha". Registrado em
+`PROBLEMS.md` (`P-012`, `CONTORNADO`): o pacote de habilidades **de criação** (Nível/Treinamento 0)
+do documento — separado da tabela de progressão por nível e nunca modelado em `shared/regras` —
+não tem consumidor no guia; contorno via edição livre da ficha (`m3-13`).
 
-`m3-58` (**concluída**, guia ganhou o **Passo 06 // MELHORIAS**) acrescentou o gasto das vagas de
-habilidade que a progressão de Nível já concede (Geral/Classe/Classe ou Arquétipo/Outra classe/
-Civil, via `calcularProgressaoAcumulada`) e as Fortificações de Personalidade (níveis 7/14, texto
-livre) — passo só existe com Nível/Treinamento inicial > 0; a trilha de passos (`passos`) virou
-`computed` dinâmico (7 ou 8 posições) chaveado por **nome**, não mais índice fixo. Reusa o seletor
-de habilidades da `m3-13` (`FichaHabilidadeSeletor`) com os grupos do catálogo recortados por vaga,
-e o painel "Memorial de cálculo" para os ganhos automáticos do nível (Proficiência/Defesa/Dano
-furtivo/Habilidades por turno). `OpcoesFichaInicial`/`construirFichaInicial` (`ficha-padrao.ts`)
-ganharam `habilidadesExtras`. Registrado em `PROBLEMS.md` (`P-012`): o pacote de habilidades **de
-criação** (Nível/Treinamento 0) do documento — separado da tabela de progressão por nível e nunca
-modelado em `shared/regras` — não tem consumidor nem na `m3-57` nem na `m3-58`; fora de escopo desta
-task por decisão de "não extrapole", com contorno via edição livre da ficha (`m3-13`).
-
-A spec `m3-57` continua em `docs/specs/active/` até `m3-59` (equipamento inicial) fechar o trio e o
-fechamento dos gaps funcionais e arquiteturais restantes da base do guia.
-
-**Declarada no último registro do `HISTORY.md` (fecho da `m2-21`):** nenhuma task de milestone
-aberto está explicitamente encadeada; a fila do backlog abaixo é a referência. `m2-18`/`m2-19`/
-`m2-20`/`m2-21` fecharam a frente de redesenho do painel de campanhas — `/painel/:id` tem layout
-dedicado para mestre e para jogador. Fica **em aberto, por decisão do autor**: um recorte de UI
-pensado especificamente para o **mobile** da visão do jogador (a `m2-21` só adaptou o visual de
-desktop).
+`m2-18`/`m2-19`/`m2-20`/`m2-21` fecharam a frente de redesenho do painel de campanhas —
+`/painel/:id` tem layout dedicado para mestre e para jogador. Fica **em aberto, por decisão do
+autor**: um recorte de UI pensado especificamente para o **mobile** da visão do jogador (a `m2-21`
+só adaptou o visual de desktop).
 
 ### Fila do backlog (`docs/specs/backlog/`)
 
 | Spec | Frente | O que é |
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m3-59` | guia de criação | equipamento inicial |
 | `m3-61` | ficha | cor de tema por ficha |
 | `m3-62` | ficha | imagem/avatar da ficha (blob storage: **Cloudflare R2**, fixado na spec) |
 
@@ -85,7 +65,7 @@ nenhuma task recente, ver `PROBLEMS.md` `P-009`.
 | M0 | Fundação (workspaces, docs, Docker, `core/`, CI, deploy) | **concluído** |
 | M1 | Calculadora com paridade | **concluído no código** (`m1-01`…`m1-20`). Restam 2 passos **operacionais** de plataforma — ver `PROBLEMS.md` `P-006` |
 | M2 | Auth + Campanhas | **concluído**, incluindo o redesenho do painel (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`; `m2-18` lista, `m2-19` detalhe/mestre, `m2-20` detalhe/jogador, `m2-21` abas + Rolagens na lateral + menu de ficha do jogador) |
-| M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; `m3-57` ativa (fluxo convencional, Identidade, Recursos, Melhorias de nível — `m3-58` — resumo progressivo e visual validados; ainda há gaps fora desse recorte); faltam seu fechamento, `m3-53`, `m3-59` e `m3-61`/`m3-62` |
+| M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; guia de criação completo (`m3-57`/`m3-58`/`m3-59` — base, melhorias de nível, equipamento inicial); faltam `m3-53` e `m3-61`/`m3-62` |
 | M4 | Ficha de Criatura/NPC | não iniciado |
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | não iniciado |
@@ -228,6 +208,34 @@ navegação no rodapé** (não empilhamento de colunas) — por breakpoint real 
 
 Rolagem de dados: gramática v4, presets, teste de atributo, dano de item, iniciativa automática,
 calculadora flutuante e **histórico persistido** com visibilidade `PUBLICA`/`PRIVADA`.
+
+### Guia de criação de ficha — `frontend/src/app/modules/ficha/paginas/criar/`
+
+Rota `/painel/:campanhaId/ficha/nova` (`m3-57`/`m3-58`/`m3-59`), substitui o antigo
+`FichaCriarDialog`: tela única por passos — trilha vertical + resumo operacional progressivo que
+nunca antecipa classe/Nível/dinheiro antes da escolha real —, rodando sobre `shared/regras` sem
+nenhuma chamada ao backend até o "Criar ficha" final. Passos: **01 Base** (dono, só mestre, +
+codinome) · **02 Classe** (classe/arquétipo, bônus fixo de atributos, Habilidade Inicial, Saúde
+base sem Nível/atributos ainda) · **03 Novo agente** (motivo de entrada + médias de Nível/Prestígio
+pré-calculadas da campanha, `calcularNovoAgente`, memorial de cálculo; primeira ficha da campanha
+pula direto para Nível/Prestígio 0) · **04 Atributos** (orçamento de 4 pontos de criação,
+`calcularOrcamentoAtributos`/`validarDistribuicaoAtributos`) · **05 Identidade** (Personalidade +
+Origem com catálogo de Formações e `Outra`, imutáveis para o dono após a criação) · **06 Melhorias**
+(só existe com Nível inicial > 0 — vagas de habilidade da progressão acumulada,
+`calcularProgressaoAcumulada`, reusa `FichaHabilidadeSeletor` da `m3-13`, Fortificações de
+Personalidade nos níveis 7/14) · **07 Recursos** (rolagem única e definitiva de `1000 + 4D4×250` +
+Bônus Monetário) · **08 Equipamento inicial** (kit da loja, orçamento **à parte** do dinheiro —
+nunca descontado —, teto $2500/peso 5 do documento — mesma regra para toda classe, inclusive Civil
+—, sem modificação; componente próprio `GuiaEquipamentoLoja`, catálogo + carrinho sobre
+`CATALOGO_ITENS`/`calcularTotaisCarrinho` de `shared/regras/compras`; pulável, kit vazio é válido) ·
+**09 Revisão** (resumo completo + `POST /ficha`, erro do backend não perde o estado do guia). Os
+passos 04/06/08 têm **trava dura** por padrão (não avança com saldo/vaga/orçamento em aberto) com
+um "modo livre" que ignora as travas (sempre disponível ao mestre) — regra só do guia, client-side;
+o backend segue com a liberdade de edição da `m3-10`. Rascunho (`GuiaCriacaoRascunhoService`)
+serializa o estado em `localStorage` por campanha, oferece "retomar"/"começar do zero" ao reabrir e
+some ao concluir; sair do guia usa um `<dialog>` nativo (não `confirm()` nem `beforeunload`, que não
+permite UI customizada), com aviso de que o progresso está salvo. Mobile: trilha vira barra de
+progresso no topo, resumo operacional vira bottom sheet aberto por um botão dedicado no cabeçalho.
 
 ### Tempo real — `backend/core/gateway`
 

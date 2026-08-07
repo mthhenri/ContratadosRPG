@@ -1,5 +1,79 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-07 — `m3-59`: Passo // EQUIPAMENTO INICIAL fecha o trio do guia de criação
+
+Terceira e última task do trio `m3-57`…`m3-59`: o guia ganha o **Passo 08 // EQUIPAMENTO
+INICIAL**, entre Recursos e Revisão (sempre presente, ao contrário de Melhorias — kit inicial
+existe mesmo no Nível 0). O jogador escolhe o kit na loja dentro de dois tetos do documento — soma
+até **$2500** e peso até **5** —, sem poder modificar itens; um kit vazio é válido e não trava o
+guia.
+
+**Decisão de arquitetura — componente novo, não reuso literal de `FichaInventario`/`ComprasPage`.**
+A spec pedia para "reusar o componente de compras/carrinho da `m3-14`", mas nem a Loja pública
+(`ComprasPage`, m1-10) nem o editor de Inventário (`FichaInventario`, m3-14) expõem um
+catálogo/carrinho **standalone** — os dois são componentes monolíticos (2786/1666 linhas de TS)
+com responsabilidades irrelevantes ao kit inicial (modificações, amplificadores, fragmentos,
+edição de item já existente, "Aplicar em.../Consumir"). Embutir qualquer um dos dois só para
+desabilitar a maior parte do que oferecem contrariaria a regra do `AGENTS.md` de avaliar extração
+antes de acrescentar responsabilidade a um componente já extenso. A leitura adotada: reusar o
+**motor** (nunca uma segunda tabela de itens ou uma segunda fórmula de totais) e construir uma UI
+nova, focada, para a fatia realmente necessária aqui. Nasceu `GuiaEquipamentoLoja`
+(`frontend/.../ficha/componentes/guia-equipamento-loja/`) — componente burro (input `itens`/output
+`itensMudaram`, mesmo contrato de `FichaHabilidadeSeletor` na m3-58): catálogo por categoria + busca
++ carrinho com stepper de quantidade, sem noção alguma de orçamento — a trava dura, o "modo livre"
+e os medidores são do **passo** (`criar.page.ts`), não do componente, replicando a separação já
+estabelecida entre `FichaHabilidadeSeletor` (não sabe quantas vagas existem) e o passo Melhorias.
+Os totais usam `calcularTotaisCarrinho` (mesma função de `ComprasPage`/`FichaInventario`) sobre
+`CarrinhoItemDto[]`/`CATALOGO_ITENS` (`shared/regras/compras`) — nenhuma fórmula nova, nenhum
+catálogo duplicado.
+
+**Novo em `shared/regras/compras`:** `KIT_INICIAL_ORCAMENTO_MAXIMO` (2500) e
+`KIT_INICIAL_PESO_MAXIMO` (5), ao lado das demais constantes de regra do módulo — os dois tetos do
+documento ("Informações Adicionais > Equipamento Inicial") viram fonte única em vez de número
+mágico espalhado no componente do passo.
+
+**Decisão de escopo — variante de Civil não implementada.** O documento tem uma seção à parte
+("Jogando como um Civil > Equipamento Inicial") com regra **diferente**: kit de $1000 (não $2500),
+sem teto de peso descrito, e proibição de Proteção/Explosivos/modificação. A spec da `m3-59`,
+porém, lista para leitura só "Informações Adicionais > Equipamento Inicial", "> Dinheiro" e o
+capítulo "Equipamentos" — deliberadamente **sem** apontar para o capítulo do Civil, que é um
+subsistema de criação inteiro à parte (atributos, saúde, defesa e habilidades todos diferentes,
+nada disso modelado no guia hoje). Resolvido como fora de escopo desta task por "não extrapole": o
+Civil usa a mesma regra $2500/peso 5 de qualquer outra classe no guia por ora. Registrado o gap
+para uma spec futura se o autor decidir modelar Civil de ponta a ponta no guia.
+
+**`ficha-padrao.ts`:** `OpcoesFichaInicial` ganhou `equipamentoInicial?: readonly CarrinhoItemDto[]`
+(mesmo padrão do `habilidadesExtras` da `m3-58`); `construirFichaInicial` passou a usar
+`opcoes.equipamentoInicial ?? []` em `dados.inventario.itens` em vez do array vazio hardcoded —
+`dados.dinheiro` continua vindo só de `opcoes.dinheiro`, nunca descontado do kit (orçamento à
+parte, conferido em teste e ao vivo).
+
+**`criar.page.ts`/`.html`/`.scss`:** `EstadoGuiaCriacao.kit` (novo campo, default `[]`,
+normalizado em rascunhos antigos via `normalizarEstado`); `passos()` sempre insere "Equipamento
+inicial" entre "Recursos" e "Revisão" (8 posições sem Melhorias, 9 com); `passoValido()` ganhou o
+`case` correspondente (`modoLivre || kitValido()`); Revisão e o resumo lateral ganharam uma linha
+de kit (contagem, gasto, peso). Os dois medidores ("Gasto"/"Peso") reusam o padrão visual de trilho
+fino já usado no progresso do guia (`guia__resumo-trilho`), com variante `--erro` (token `--vida`)
+quando o total ultrapassa o teto — nunca hex solto.
+
+**Verificação ao vivo** (stack real + Playwright, 1920×1080 e 360×800): fluxo completo do guia até
+criar a ficha, com o kit estourando ambos os tetos (2× "Pesada", $3000/peso10 — os dois medidores
+acendem em vermelho e "Avançar" desabilita), "Modo livre" liberando, remoção de item levando
+exatamente ao teto ($1500/peso5, ambos "≤" — válido sem modo livre), Revisão exibindo o resumo do
+kit, e o Postgres confirmando `dados.inventario.itens` idêntico ao escolhido e `dados.dinheiro`
+intocado (igual ao total do passo Recursos). Conferido também que o item aparece na aba Inventário
+da ficha recém-criada com o peso correto. No mobile: catálogo/carrinho em coluna única, sem scroll
+horizontal, alvo de toque do botão "+" em 44×44, kit vazio pulável sem travar o guia, nenhum dialog
+nativo do navegador em nenhum passo. Troca de categoria e busca no catálogo conferidas
+separadamente. Testes: `shared` 532/532, `frontend` 738/740 (as 2 falhas são as pré-existentes
+`P-001`/`P-010`, não relacionadas a esta task); `criar.page.spec.ts` ganhou o describe `m3-59`
+(trava dura, modo livre, `mudarKit`, kit chegando em `dados.inventario` sem tocar `dinheiro`);
+`ficha-padrao.spec.ts` ganhou 2 testes cobrindo `equipamentoInicial`. Lint sem novas violações
+(comparado par a par contra o baseline da branch).
+
+Com isso o trio `m3-57`/`m3-58`/`m3-59` fecha a base funcional do guia de criação de ficha — a
+spec `m3-57` (que documentava as três tasks) e a `m3-59` movem para `docs/specs/done/`.
+
 ## 2026-08-07 — Remove o aviso nativo de `beforeunload`; espaçamento entre Motivo de entrada e as médias
 
 **F5/fechar aba não avisa mais.** Pedido do usuário: fazer o F5 abrir a mesma `<dialog>` do botão

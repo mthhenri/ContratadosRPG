@@ -476,6 +476,32 @@
                 <div class="guia__fechamento-total"><span>Total na ficha</span><strong>{{ estado().dinheiro.rolado ? (totalDinheiro() | currency: 'BRL' : 'symbol' : '1.0-0') : '—' }}</strong></div>
               </div>
             }
+            @case ('Equipamento inicial') {
+              <div class="guia__introducao">
+                <span class="guia__introducao-codigo">SUPRIMENTOS // KIT INICIAL</span>
+                <p>Escolha o kit na loja — orçamento à parte do dinheiro do passo anterior, nunca descontado dele. O passo é opcional: um kit vazio é válido.</p>
+              </div>
+
+              <div class="guia__medidores">
+                <div class="guia__medidor" [class.guia__medidor--erro]="kitTotais().gasto > kitOrcamentoMaximo">
+                  <span>Gasto</span>
+                  <div class="guia__medidor-valor"><strong>{{ kitTotais().gasto | currency: 'BRL' : 'symbol' : '1.0-0' }}</strong><small>/ {{ kitOrcamentoMaximo | currency: 'BRL' : 'symbol' : '1.0-0' }}</small></div>
+                  <div class="guia__medidor-trilho"><i [style.width.%]="kitGastoPercentual()"></i></div>
+                </div>
+                <div class="guia__medidor" [class.guia__medidor--erro]="kitTotais().pesoUsado > kitPesoMaximo">
+                  <span>Peso</span>
+                  <div class="guia__medidor-valor"><strong>{{ kitTotais().pesoUsado }}</strong><small>/ {{ kitPesoMaximo }}</small></div>
+                  <div class="guia__medidor-trilho"><i [style.width.%]="kitPesoPercentual()"></i></div>
+                </div>
+              </div>
+
+              <app-guia-equipamento-loja [itens]="estado().kit" (itensMudaram)="mudarKit($event)" />
+
+              <label class="guia__modo-livre">
+                <input type="checkbox" [checked]="estado().modoLivre" (change)="atualizar({ modoLivre: !estado().modoLivre })" />
+                <span><b>Modo livre</b><small>Ignora as travas do protocolo de criação.</small></span>
+              </label>
+            }
             @case ('Revisão') {
               <div class="guia__revisao-cabecalho">
                 <app-icone nome="check" />
@@ -490,6 +516,16 @@
                   <div><dt>Melhorias de nível</dt><dd>{{ melhoriasPreenchidasTotal() }}/{{ melhoriasAlvoTotal() }} vagas</dd></div>
                 }
                 <div><dt>Recursos iniciais</dt><dd>{{ totalDinheiro() | currency: 'BRL' : 'symbol' : '1.0-0' }}</dd></div>
+                <div>
+                  <dt>Equipamento inicial</dt>
+                  <dd>
+                    @if (estado().kit.length) {
+                      {{ estado().kit.length }} {{ estado().kit.length === 1 ? 'item' : 'itens' }} · {{ kitTotais().gasto | currency: 'BRL' : 'symbol' : '1.0-0' }} · {{ kitTotais().pesoUsado }} de peso
+                    } @else {
+                      Nenhum item — inventário nasce vazio
+                    }
+                  </dd>
+                </div>
               </dl>
               @if (novoAgente().recebeAmaldicoadoPeloPassado) {
                 <div class="guia__aviso"><app-icone nome="alerta" /><div><strong>Amaldiçoado pelo Passado</strong><span>Será registrado nas anotações da ficha.</span></div></div>
@@ -588,6 +624,9 @@
             }
             @if (estado().dinheiro.rolado) {
               <div class="guia__resumo-linha guia__resumo-linha--recursos"><span>Recursos</span><b>{{ totalDinheiro() | currency: 'BRL' : 'symbol' : '1.0-0' }}</b></div>
+            }
+            @if (estado().passo >= passos().indexOf('Equipamento inicial') || visitado() >= passos().indexOf('Equipamento inicial')) {
+              <div class="guia__resumo-linha"><span>Equipamento inicial</span><b>{{ estado().kit.length ? estado().kit.length + ' itens' : 'Vazio' }}</b></div>
             }
           }
         </div>
