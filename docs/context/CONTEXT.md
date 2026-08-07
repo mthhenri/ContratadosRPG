@@ -13,21 +13,32 @@
 
 ## 1. Próxima Task
 
-**Task ativa:** `m3-57-guia-criacao-ficha.spec.md`. O núcleo do guia e sua revisão visual estão no
-workspace. O fluxo convencional de atributos foi validado nos Níveis 1, 5, 10, 15 e 20; Identidade
-agora separa Personalidade e Origem, oferece o catálogo de Formações com `Outra` e tem mais respiro
-entre blocos/sub-seções; Recursos têm uma única rolagem animada; e o resumo operacional começa vazio
-e cresce apenas com escolhas reais. O Passo 02 // CLASSE mostra o bônus fixo de atributos, a
-Habilidade Inicial e Vida/Energia de partida assim que classe e arquétipo/subclasse estão
-definitivos (o Passo 04 // ATRIBUTOS reflete o mesmo bônus por atributo); "Perfil selecionado", o
-resumo lateral e a Revisão usam `rotuloClasseCompleto` ("Classe - Arquétipo/Subclasse"). No mobile,
-o resumo operacional fica oculto por padrão (sem barra inline) e abre como overlay (bottom sheet)
-via um botão dedicado no cabeçalho, ao lado de "Novo agente" — cabeçalho, título e esse botão
-compartilham a mesma altura de alvo de toque e ficam alinhados. O resumo (desktop, tablet e mobile)
-agora também traz: tira de progresso do passo atual, bônus fixo + Habilidade Inicial do perfil,
-Motivo de entrada (`rotuloMotivoEntrada` em `rotulos-ficha.ts`), aviso "Amaldiçoado pelo Passado" e
-as Formações escolhidas — tudo reusando computeds já existentes, sem estado novo. A spec continua em
-`docs/specs/active/` até o fechamento dos gaps funcionais e arquiteturais restantes.
+**Task ativa:** `m3-57-guia-criacao-ficha.spec.md` (segue em `docs/specs/active/` — trio do guia
+de criação: `m3-57` base, `m3-58` melhorias de nível, `m3-59` equipamento inicial). O núcleo do
+guia e sua revisão visual estão no workspace. O fluxo convencional de atributos foi validado nos
+Níveis 1, 5, 10, 15 e 20; Identidade separa Personalidade e Origem, oferece o catálogo de Formações
+com `Outra` e tem respiro entre blocos/sub-seções; Recursos têm uma única rolagem animada; e o
+resumo operacional começa vazio e cresce apenas com escolhas reais. O Passo 02 // CLASSE mostra o
+bônus fixo de atributos, a Habilidade Inicial e Vida/Energia de partida assim que classe e
+arquétipo/subclasse estão definitivos; "Perfil selecionado", o resumo lateral e a Revisão usam
+`rotuloClasseCompleto`. No mobile, o resumo operacional fica oculto por padrão e abre como overlay
+(bottom sheet) via um botão dedicado no cabeçalho, ao lado de "Novo agente", alinhado com "Voltar".
+
+`m3-58` (**concluída**, guia ganhou o **Passo 06 // MELHORIAS**) acrescentou o gasto das vagas de
+habilidade que a progressão de Nível já concede (Geral/Classe/Classe ou Arquétipo/Outra classe/
+Civil, via `calcularProgressaoAcumulada`) e as Fortificações de Personalidade (níveis 7/14, texto
+livre) — passo só existe com Nível/Treinamento inicial > 0; a trilha de passos (`passos`) virou
+`computed` dinâmico (7 ou 8 posições) chaveado por **nome**, não mais índice fixo. Reusa o seletor
+de habilidades da `m3-13` (`FichaHabilidadeSeletor`) com os grupos do catálogo recortados por vaga,
+e o painel "Memorial de cálculo" para os ganhos automáticos do nível (Proficiência/Defesa/Dano
+furtivo/Habilidades por turno). `OpcoesFichaInicial`/`construirFichaInicial` (`ficha-padrao.ts`)
+ganharam `habilidadesExtras`. Registrado em `PROBLEMS.md` (`P-012`): o pacote de habilidades **de
+criação** (Nível/Treinamento 0) do documento — separado da tabela de progressão por nível e nunca
+modelado em `shared/regras` — não tem consumidor nem na `m3-57` nem na `m3-58`; fora de escopo desta
+task por decisão de "não extrapole", com contorno via edição livre da ficha (`m3-13`).
+
+A spec `m3-57` continua em `docs/specs/active/` até `m3-59` (equipamento inicial) fechar o trio e o
+fechamento dos gaps funcionais e arquiteturais restantes da base do guia.
 
 **Declarada no último registro do `HISTORY.md` (fecho da `m2-21`):** nenhuma task de milestone
 aberto está explicitamente encadeada; a fila do backlog abaixo é a referência. `m2-18`/`m2-19`/
@@ -41,7 +52,6 @@ desktop).
 | Spec | Frente | O que é |
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m3-58` | guia de criação | melhorias de nível |
 | `m3-59` | guia de criação | equipamento inicial |
 | `m3-61` | ficha | cor de tema por ficha |
 | `m3-62` | ficha | imagem/avatar da ficha (blob storage: **Cloudflare R2**, fixado na spec) |
@@ -61,7 +71,7 @@ Deploy em produção por **integração nativa das plataformas**, sem GitHub Act
 O GitHub Actions só roda **CI** (lint + testes nos 3 workspaces em todo PR).
 
 **Suítes:** shared 530 testes fonte aprovados (o comando completo ainda coleta `dist`, `P-011`) ·
-backend 170/170 · frontend 724/**726** — as 2 falhas são conhecidas e pré-existentes, ver
+backend 170/170 · frontend 728/**730** — as 2 falhas são conhecidas e pré-existentes, ver
 [`PROBLEMS.md`](PROBLEMS.md) `P-001`/`P-010`. `npm run lint` **não fecha limpo**
 hoje em nenhum dos dois workspaces (frontend/backend) — falhas pré-existentes não relacionadas a
 nenhuma task recente, ver `PROBLEMS.md` `P-009`.
@@ -75,7 +85,7 @@ nenhuma task recente, ver `PROBLEMS.md` `P-009`.
 | M0 | Fundação (workspaces, docs, Docker, `core/`, CI, deploy) | **concluído** |
 | M1 | Calculadora com paridade | **concluído no código** (`m1-01`…`m1-20`). Restam 2 passos **operacionais** de plataforma — ver `PROBLEMS.md` `P-006` |
 | M2 | Auth + Campanhas | **concluído**, incluindo o redesenho do painel (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`; `m2-18` lista, `m2-19` detalhe/mestre, `m2-20` detalhe/jogador, `m2-21` abas + Rolagens na lateral + menu de ficha do jogador) |
-| M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; `m3-57` ativa (fluxo convencional, Identidade, Recursos, resumo progressivo e visual validados; ainda há gaps fora desse recorte); faltam seu fechamento, `m3-53`, `m3-58`/`m3-59` e `m3-61`/`m3-62` |
+| M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; `m3-57` ativa (fluxo convencional, Identidade, Recursos, Melhorias de nível — `m3-58` — resumo progressivo e visual validados; ainda há gaps fora desse recorte); faltam seu fechamento, `m3-53`, `m3-59` e `m3-61`/`m3-62` |
 | M4 | Ficha de Criatura/NPC | não iniciado |
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | não iniciado |

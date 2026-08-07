@@ -46,6 +46,12 @@ export interface OpcoesFichaInicial {
   /** Total já rolado no guia (dinheiro inicial + bônus). Ausente mantém o fallback legado. */
   readonly dinheiro?: number;
   readonly anotacoes?: string;
+  /**
+   * Habilidades de nível (gerais/classe/arquétipo/outra classe/civis) e Fortificações de
+   * Personalidade escolhidas no passo // MELHORIAS (m3-58) — anexadas após a Habilidade Inicial.
+   * Ausente/vazio para Nível 0 (o passo não existe nesse caso).
+   */
+  readonly habilidadesExtras?: readonly FichaHabilidadeDto[];
 }
 
 /**
@@ -100,13 +106,16 @@ export function construirFichaInicial(
 
   // O agente já nasce com a Habilidade Inicial do seu arquétipo/subclasse (doc — vem de graça, não
   // é escolhida). `habilidadesIniciais` devolve os itens do catálogo já com categoria/origem.
-  const habilidades: FichaHabilidadeDto[] = habilidadesIniciais(classe, arquetipo).map((item) => ({
-    nome: item.nome,
-    categoria: item.categoria,
-    custoEnergia: item.custoEnergia,
-    descricao: item.descricao,
-    ...(item.origem === undefined ? {} : { origem: item.origem }),
-  }));
+  const habilidades: FichaHabilidadeDto[] = [
+    ...habilidadesIniciais(classe, arquetipo).map((item) => ({
+      nome: item.nome,
+      categoria: item.categoria,
+      custoEnergia: item.custoEnergia,
+      descricao: item.descricao,
+      ...(item.origem === undefined ? {} : { origem: item.origem }),
+    })),
+    ...(opcoes.habilidadesExtras ?? []),
+  ];
 
   const derivadosBase = calcularDerivados(classe, nivel, atributos, habilidades);
   const derivados = opcoes.identidade?.origem?.formacao.length

@@ -1,5 +1,86 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-07 — m3-58: passo // MELHORIAS do guia de criação (habilidades de nível + Fortificação de Personalidade)
+
+Segunda perna do trio do guia de criação: o passo **06 // MELHORIAS**, entre Identidade e
+Recursos, gasta as vagas de habilidade que a progressão do Nível já concede mas que a `m3-57`
+deixava sem consumidor. Só existe quando o Nível/Treinamento inicial (passo 03) é maior que 0 — a
+trilha (`passos`) virou um `computed<readonly string[]>` derivado de `temMelhorias()` em vez do
+array fixo de 7 posições; `passoValido()`, `avancar()` e o `@switch` do template passaram a chavear
+pelo **nome** do passo (`passos()[estado().passo]`), não mais por índice numérico — a inserção
+condicional de um passo no meio da sequência tornaria qualquer `case` numérico frágil. Um `effect`
+novo grampeia `passo`/`visitado` dentro do tamanho atual da trilha, para o caso raro de o autor
+voltar ao passo 03 e mudar as médias depois de já ter visitado passos além do que a nova contagem
+de passos comporta.
+
+**Vagas** vêm direto de `calcularProgressaoAcumulada` (Habilidade Geral, de Classe, Classe ou
+Arquétipo, Outra classe/outro arquétipo, Civil) — nenhuma tabela nova, só orquestração. Cada vaga
+abre o **mesmo seletor de catálogo da `m3-13`** (`FichaHabilidadeSeletor`), mas com os `grupos()`
+recortados por vaga num novo método privado `gruposParaVaga`: 'geral' é a aba Gerais inteira;
+'classe'/'classeOuArquetipo' mostram só o(s) subgrupo(s) **da própria ficha** (`ehDaFicha`);
+'outraClasse' mostra os demais — as duas outras classes-base e os outros arquétipos da mesma
+classe, que é exatamente o "outra classe/outro arquétipo da sua classe" do documento, já que
+`catalogoHabilidades` inclui as três classes e todos os arquétipos da classe-base na mesma
+chamada. O caso à parte é um Civil no Treinamento Elite ("1 Habilidade de Classe... não é possível
+escolher uma habilidade de arquétipo"): usa `catalogoHabilidades(COMBATENTE, null)` só para pegar
+a lista das 3 classes e zera `ehDaFicha` em todas (Civil não tem classe própria a destacar). A
+Habilidade Inicial do passo Classe entra em `nomesNaFicha` do seletor (não consome vaga, mas
+também não pode ser escolhida de novo) e a mesma habilidade não pode ser escolhida duas vezes
+entre vagas (o seletor já resolve isso nativamente).
+
+**Fortificação de Personalidade** (níveis 7/14, 0–2 vagas) não usa o catálogo — é um mini-formulário
+por vaga (nome + efeito), reusando literalmente as classes `.guia__formacoes`/`.guia__formacao` do
+Passo 05 (mesmo padrão visual de "N cartões de formulário curto", já aprovado). Cada uma vira, na
+criação, uma `FichaHabilidadeDto` com `categoria: PERSONALIDADE` — o contrato já suportava (`m3-01`/
+`m3-23`), só faltava um produtor. `OpcoesFichaInicial` (`ficha-padrao.ts`) ganhou
+`habilidadesExtras?: readonly FichaHabilidadeDto[]`, anexado depois da Habilidade Inicial em
+`construirFichaInicial`.
+
+**Ganhos automáticos do nível** (Proficiência, Defesa, Dano furtivo, Habilidades por turno) — só
+informação, nada escolhido — reusam o painel "Memorial de cálculo" do Passo 03 (`.guia__memorial`)
+alimentado por `calcularDerivados(classe, nivelInicial, atributosFinais, habilidadesDoNivel)`, sem
+fórmula nova (proibição #26); campos que a classe não possui (Civil não tem Defesa/Proficiência/
+Dano furtivo) somem via `@if`.
+
+**Trava dura**: reusa o mesmo `estado().modoLivre` do Passo 04 // ATRIBUTOS (um único interruptor
+para o guia inteiro) — sem ele, `passoValido()` exige todas as vagas preenchidas e as Fortificações
+com nome+efeito; com ele, avança mesmo faltando. **Achado na verificação ao vivo**: a primeira
+versão também deixava o botão "Escolher" de uma vaga visível **além** do alvo quando modo livre
+estava ligado, e um teste manual de ponta a ponta produziu uma vaga "20/4" ao clicar repetidamente
+— nada travava o excesso. Corrigido para o botão sempre sumir ao atingir o alvo, **independente**
+de modo livre (o mesmo comportamento dos steppers de Atributos, cujo clamp nunca depende do
+interruptor — modo livre só destrava a validação de avançar, nunca o campo em si).
+
+**Segundo achado da verificação ao vivo**: o painel "Ganhos automáticos" reaproveitou
+`.guia__memorial`, cuja 3ª coluna (`strong`) é fixa em `38px` — dimensionada para números curtos
+como "17" ou "7", mas "Dano furtivo" é notação de dado (`3D6+3`), que estourava a coluna e cortava
+visualmente tanto no desktop quanto no mobile. Corrigido com um modificador `--ganhos` que troca a
+3ª coluna para `auto` nos dois breakpoints, sem afetar o memorial original de Novo Agente.
+
+**Fora de escopo, registrado em `PROBLEMS.md` (P-012):** lendo `docs/core/sistema-v4.1.0.md` —
+"Habilidades" para esta task, apareceu um pacote de habilidades **de criação** (Nível/Treinamento
+0), narrado à parte da tabela de progressão por nível e nunca modelado em `shared/regras` — nem
+`calcularProgressaoAcumulada` nem a `m3-58` o cobrem, então uma ficha criada no Nível 0 (o caminho
+"primeiro agente" e a maioria das entradas num Civil) nasce sem esse pacote. É uma regra de domínio
+nova, fora do que esta spec definiu; registrado para não se perder, com contorno (editor de
+habilidades da própria ficha) e não implementado por decisão de escopo — "não extrapole".
+
+**Verificado:** `tsc --noEmit` limpo; `ng build` (development) e `eslint` sobre os arquivos tocados
+sem erros novos (os 2 pré-existentes de `.guia__resumo-fundo`, ver `P-009`, continuam); suíte de
+`criar.page.spec.ts` com 9 testes prévios + 4 novos (passo ausente no Nível 0; trava dura e modo
+livre; preenchimento das vagas pelo catálogo sem repetir a Inicial nem uma já escolhida; exigência
+de nome+efeito da Fortificação mesmo com as vagas do catálogo cheias) — 13/13 verdes; suíte inteira
+do frontend (724/726, as 2 falhas conhecidas de `P-001`/`P-010`) e de `shared` (530/530) sem
+regressão. Ao vivo (stack real + Playwright, skill `verify`): criada uma ficha "primeiro agente"
+(Nível 0) confirmando a ausência do passo; criada uma segunda ficha de Combatente/Lutador cuja
+média de esquadrão (uma ficha elevada a Nível 8 direto no Postgres) resultou em Nível inicial 7,
+passando pelas 4 vagas de catálogo (Geral 4/4, Classe 2/2, Classe ou Arquétipo 4/4, Outra classe
+1/1 — bate exatamente com a soma manual da tabela do documento do Nível 1 ao 7) e 1 Fortificação,
+em 1920×1080 e 360×800 (seletor do sistema, formulário de Fortificação, "Escolher" some ao encher
+mesmo em modo livre, `3D6+3` sem corte); a ficha criada foi conferida na própria aba Habilidades
+(`Arquétipo 1` — a Inicial, sem consumir vaga — `Classe 6`, `Geral 4`, `Outras classes/arquétipos
+1`, e a Fortificação nomeada aparecendo com o chip "Personalidade").
+
 ## 2026-08-07 — m3-57: resumo operacional some no mobile (botão no cabeçalho), alinhamento do cabeçalho, respiro em Identidade e resumo com mais informação
 
 Três pedidos encadeados sobre o guia de criação. **(1)** No mobile, o "Resumo operacional" saiu da

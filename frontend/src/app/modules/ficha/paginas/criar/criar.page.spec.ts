@@ -163,4 +163,85 @@ describe('FichaCriar', () => {
     expect(componente['passoValido']()).toBe(true);
     expect((raiz.querySelector('.guia__rodape .botao--primario') as HTMLButtonElement).disabled).toBe(false);
   });
+
+  /** Preenche todas as vagas de catálogo do passo Melhorias com habilidades distintas (m3-58). */
+  function preencherVagasDeMelhoria(componente: FichaCriar): void {
+    for (const vaga of componente['vagasMelhoria']()) {
+      while (componente['preenchidasNaVaga'](vaga.tipo) < vaga.alvo) {
+        componente['abrirSeletorMelhoria'](vaga.tipo);
+        const nomesEscolhidos = componente['nomesEscolhidosMelhoria']() as Set<string>;
+        const habilidades = componente['gruposVagaAberta']().flatMap((grupo) => grupo.subgrupos).flatMap((subgrupo) => subgrupo.habilidades);
+        const escolhido = habilidades.find((habilidade) => !nomesEscolhidos.has(habilidade.nome));
+        if (!escolhido) throw new Error(`Sem habilidade livre para a vaga ${vaga.tipo}`);
+        componente['adicionarMelhoria'](escolhido);
+      }
+    }
+    componente['fecharSeletorMelhoria']();
+  }
+
+  describe('m3-58 — passo // MELHORIAS', () => {
+    it('não existe na trilha quando o Nível inicial é 0', () => {
+      const { componente } = montar();
+      expect(componente['temMelhorias']()).toBe(false);
+      expect(componente['passos']()).not.toContain('Melhorias');
+      expect(componente['passos']()).toHaveLength(7);
+    });
+
+    it('entra na trilha, trava Avançar com vaga sobrando e libera com modo livre', () => {
+      const { fixture, componente } = montar([fichaExistente]);
+      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR, mediaNivel: 6 });
+      fixture.detectChanges();
+      expect(componente['novoAgente']().nivelInicial).toBe(5);
+
+      const indice = componente['passos']().indexOf('Melhorias');
+      expect(indice).toBeGreaterThan(-1);
+      componente['atualizar']({ passo: indice, modoLivre: false });
+      fixture.detectChanges();
+      expect(componente['passoValido']()).toBe(false);
+
+      componente['atualizar']({ modoLivre: true });
+      fixture.detectChanges();
+      expect(componente['passoValido']()).toBe(true);
+    });
+
+    it('preenche as vagas pelo catálogo do sistema e não deixa repetir a Habilidade Inicial nem uma já escolhida', () => {
+      const { fixture, componente } = montar([fichaExistente]);
+      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR, mediaNivel: 2 });
+      fixture.detectChanges();
+      expect(componente['novoAgente']().nivelInicial).toBe(1);
+
+      const habilidadeInicial = componente['habilidadeInicial']();
+      expect(componente['nomesEscolhidosMelhoria']().has(habilidadeInicial!.nome)).toBe(true);
+
+      preencherVagasDeMelhoria(componente);
+      fixture.detectChanges();
+      for (const vaga of componente['vagasMelhoria']()) {
+        expect(componente['preenchidasNaVaga'](vaga.tipo)).toBe(vaga.alvo);
+      }
+      const nomesEscolhidos = componente['estado']().melhorias.map((m) => m.habilidade.nome);
+      expect(new Set(nomesEscolhidos).size).toBe(nomesEscolhidos.length);
+      expect(componente['estado']().modoLivre).toBe(false);
+      expect(componente['melhoriasCompletas']()).toBe(true);
+    });
+
+    it('exige nome e efeito da Fortificação de Personalidade a partir do Nível 7 (mesmo com as vagas do catálogo preenchidas)', () => {
+      const { fixture, componente } = montar([fichaExistente]);
+      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR, mediaNivel: 8 });
+      fixture.detectChanges();
+      expect(componente['novoAgente']().nivelInicial).toBe(7);
+      expect(componente['alvoFortificacoes']()).toBe(1);
+
+      preencherVagasDeMelhoria(componente);
+      fixture.detectChanges();
+      expect(componente['melhoriasCompletas']()).toBe(false);
+
+      componente['atualizarFortificacao'](0, 'nome', 'Determinado+');
+      componente['atualizarFortificacao'](0, 'descricao', 'Mais um dado ao forçar o teste.');
+      fixture.detectChanges();
+      expect(componente['melhoriasCompletas']()).toBe(true);
+
+      const habilidades = componente['habilidadesDoNivel']();
+      expect(habilidades.some((h) => h.nome === 'Determinado+' && h.categoria === 'PERSONALIDADE')).toBe(true);
+    });
+  });
 });

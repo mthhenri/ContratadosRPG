@@ -39,20 +39,20 @@
   } @else {
     <div class="guia__progresso-mobile">
       <div class="guia__progresso-mobile-topo">
-        <span>GUIA · {{ estado().passo + 1 | number: '2.0-0' }}/07</span>
-        <strong>{{ passos[estado().passo] }}</strong>
+        <span>GUIA · {{ estado().passo + 1 | number: '2.0-0' }}/{{ passos().length | number: '2.0-0' }}</span>
+        <strong>{{ passos()[estado().passo] }}</strong>
       </div>
-      <div class="guia__progresso-trilho"><i [style.width.%]="((estado().passo + 1) / 7) * 100"></i></div>
+      <div class="guia__progresso-trilho"><i [style.width.%]="((estado().passo + 1) / passos().length) * 100"></i></div>
     </div>
 
     <div class="guia__layout">
       <nav class="guia__trilha" aria-label="Passos da criação">
         <header class="guia__painel-cabecalho">
           <span>Sequência</span>
-          <b>{{ estado().passo + 1 | number: '2.0-0' }}/07</b>
+          <b>{{ estado().passo + 1 | number: '2.0-0' }}/{{ passos().length | number: '2.0-0' }}</b>
         </header>
         <div class="guia__passos">
-          @for (titulo of passos; track $index) {
+          @for (titulo of passos(); track $index) {
             <button
               class="guia__passo"
               type="button"
@@ -82,14 +82,14 @@
           <span class="guia__secao-indice">{{ estado().passo + 1 | number: '2.0-0' }}</span>
           <div>
             <span>Etapa atual</span>
-            <h2>{{ passos[estado().passo] }}</h2>
+            <h2>{{ passos()[estado().passo] }}</h2>
           </div>
           <span class="guia__secao-regua"></span>
         </header>
 
         <div class="guia__corpo">
-          @switch (estado().passo) {
-            @case (0) {
+          @switch (passos()[estado().passo]) {
+            @case ('Base') {
               <div class="guia__introducao">
                 <span class="guia__introducao-codigo">REGISTRO // IDENTIFICAÇÃO</span>
                 <p>Defina como o agente será identificado nos registros da campanha.</p>
@@ -114,7 +114,7 @@
                 }
               </div>
             }
-            @case (1) {
+            @case ('Classe') {
               <div class="guia__introducao">
                 <span class="guia__introducao-codigo">PROTOCOLO // FUNÇÃO TÁTICA</span>
                 <p>A classe define progressão, recursos e o teto operacional do agente.</p>
@@ -196,7 +196,7 @@
                 </div>
               }
             }
-            @case (2) {
+            @case ('Novo agente') {
               @if (!fichas().length) {
                 <div class="guia__aviso guia__aviso--informacao">
                   <app-icone nome="novo-agente" />
@@ -230,7 +230,7 @@
                 </div>
               }
             }
-            @case (3) {
+            @case ('Atributos') {
               <div class="guia__orcamento" [class.guia__orcamento--erro]="distribuicao().saldo !== 0">
                 <div><span>Saldo de distribuição</span><strong>{{ distribuicao().saldo }}</strong></div>
                 <small>{{ orcamento().pontosTotais }} pontos disponíveis · base 1 não consome orçamento{{ bonusAtributosLista().length ? ' · valores já somam o bônus fixo de ' + rotuloOrigemBonus() : '' }}</small>
@@ -258,7 +258,7 @@
                 <span><b>Modo livre</b><small>Ignora as travas do protocolo de criação.</small></span>
               </label>
             }
-            @case (4) {
+            @case ('Identidade') {
               <div class="guia__introducao">
                 <span class="guia__introducao-codigo">DOSSIÊ // IDENTIDADE</span>
                 <p>Personalidade e origem tornam-se permanentes para o dono após a criação.</p>
@@ -344,7 +344,87 @@
                 <label class="campo"><span class="campo__rotulo">Saber de campo</span><textarea class="campo__controle campo__controle--area" rows="3" [value]="estado().origem.saberDeCampo" (input)="atualizarOrigem('saberDeCampo', valor($event))" placeholder="Conhecimento prático que o agente traz de sua vida anterior."></textarea></label>
               </section>
             }
-            @case (5) {
+            @case ('Melhorias') {
+              <div class="guia__introducao">
+                <span class="guia__introducao-codigo">PROGRESSÃO // MELHORIAS DE NÍVEL</span>
+                <p>Gaste as vagas de habilidade acumuladas do Nível 1 até o Nível {{ novoAgente().nivelInicial }}. A Habilidade Inicial do passo Classe já está garantida e não consome vaga.</p>
+              </div>
+
+              <div class="guia__memorial guia__memorial--ganhos">
+                <header><span>Ganhos automáticos do nível</span><b>SEM ESCOLHA</b></header>
+                @if (derivadosNivel().proficiencia !== undefined) {
+                  <div><span>Proficiência</span><code>todos os testes</code><strong>+{{ derivadosNivel().proficiencia }}</strong></div>
+                }
+                @if (derivadosNivel().defesa !== undefined) {
+                  <div><span>Defesa</span><code>10 + Nível</code><strong>{{ derivadosNivel().defesa }}</strong></div>
+                }
+                @if (derivadosNivel().danoFurtivo !== undefined) {
+                  <div><span>Dano furtivo</span><code>ataques furtivos</code><strong>{{ derivadosNivel().danoFurtivo }}</strong></div>
+                }
+                <div><span>Habilidades por turno</span><code>limite por turno</code><strong>{{ derivadosNivel().habilidadesPorTurno }}</strong></div>
+              </div>
+
+              <div class="guia__subsecao"><span>Vagas de habilidade</span><i></i></div>
+              <p class="guia__subsecao-ajuda">Escolha do catálogo do sistema até preencher cada vaga. A mesma habilidade não pode ser escolhida duas vezes.</p>
+              <div class="guia__vagas">
+                @for (vaga of vagasMelhoria(); track vaga.tipo) {
+                  <div class="guia__vaga" [class.guia__vaga--completa]="preenchidasNaVaga(vaga.tipo) >= vaga.alvo">
+                    <div class="guia__vaga-cabecalho">
+                      <span>{{ vaga.rotulo }}</span>
+                      <b>{{ preenchidasNaVaga(vaga.tipo) }}/{{ vaga.alvo }}</b>
+                    </div>
+                    @if (melhoriasDaVaga(vaga.tipo).length) {
+                      <ul class="guia__vaga-lista">
+                        @for (habilidade of melhoriasDaVaga(vaga.tipo); track habilidade.nome) {
+                          <li class="guia__vaga-item">
+                            {{ habilidade.nome }}
+                            <button type="button" [attr.aria-label]="'Remover ' + habilidade.nome" (click)="removerMelhoria(habilidade.nome)">✕</button>
+                          </li>
+                        }
+                      </ul>
+                    }
+                    @if (preenchidasNaVaga(vaga.tipo) < vaga.alvo) {
+                      <button class="botao botao--secundario guia__vaga-escolher" type="button" (click)="abrirSeletorMelhoria(vaga.tipo)">+ Escolher {{ vaga.rotulo }}</button>
+                    }
+                  </div>
+                }
+              </div>
+
+              @if (alvoFortificacoes() > 0) {
+                <div class="guia__subsecao"><span>Fortificações de Personalidade</span><i></i></div>
+                <p class="guia__subsecao-ajuda">Uma melhoria da Habilidade de Personalidade — o Mestre define o efeito final em conjunto com você.</p>
+                <div class="guia__formacoes">
+                  @for (fortificacao of estado().fortificacoes.slice(0, alvoFortificacoes()); track $index) {
+                    <div class="guia__formacao">
+                      <label class="campo">
+                        <span class="campo__rotulo">{{ $index + 1 }}ª Fortificação</span>
+                        <input class="campo__controle" [value]="fortificacao.nome" (input)="atualizarFortificacao($index, 'nome', valor($event))" placeholder="Nome da melhoria" />
+                      </label>
+                      <label class="campo">
+                        <span class="campo__rotulo">Efeito</span>
+                        <textarea class="campo__controle campo__controle--area" rows="2" [value]="fortificacao.descricao" (input)="atualizarFortificacao($index, 'descricao', valor($event))" placeholder="Descreva a melhoria combinada com o Mestre"></textarea>
+                      </label>
+                    </div>
+                  }
+                </div>
+              }
+
+              <label class="guia__modo-livre">
+                <input type="checkbox" [checked]="estado().modoLivre" (change)="atualizar({ modoLivre: !estado().modoLivre })" />
+                <span><b>Modo livre</b><small>Ignora as travas do protocolo de criação.</small></span>
+              </label>
+
+              @if (vagaAberta(); as vaga) {
+                <app-ficha-habilidade-seletor
+                  [grupos]="gruposVagaAberta()"
+                  [nomesNaFicha]="nomesEscolhidosMelhoria()"
+                  (adicionar)="adicionarMelhoria($event)"
+                  (remover)="removerMelhoria($event)"
+                  (fechar)="fecharSeletorMelhoria()"
+                />
+              }
+            }
+            @case ('Recursos') {
               <div class="guia__recursos" [class.guia__recursos--rolando]="rolandoRecursos()">
                 <div class="guia__dados-cabecalho">
                   <span>Fundos operacionais</span>
@@ -377,7 +457,7 @@
                 <div class="guia__fechamento-total"><span>Total na ficha</span><strong>{{ estado().dinheiro.rolado ? (totalDinheiro() | currency: 'BRL' : 'symbol' : '1.0-0') : '—' }}</strong></div>
               </div>
             }
-            @case (6) {
+            @case ('Revisão') {
               <div class="guia__revisao-cabecalho">
                 <app-icone nome="check" />
                 <div><span>Dossiê pronto para registro</span><p>Confira os dados antes de criar a ficha. O estado do guia será preservado se a API rejeitar a operação.</p></div>
@@ -387,6 +467,9 @@
                 <div><dt>Classe / Arquétipo</dt><dd>{{ perfilRotulo() }}</dd></div>
                 <div><dt>Nível / Prestígio</dt><dd>{{ fichas().length ? novoAgente().nivelInicial : 0 }} / {{ fichas().length ? novoAgente().prestigio.prestigioInicial : 0 }}</dd></div>
                 <div><dt>Personalidade / Origem</dt><dd>{{ estado().personalidade }} · {{ estado().origem.nome }}</dd></div>
+                @if (temMelhorias()) {
+                  <div><dt>Melhorias de nível</dt><dd>{{ melhoriasPreenchidasTotal() }}/{{ melhoriasAlvoTotal() }} vagas</dd></div>
+                }
                 <div><dt>Recursos iniciais</dt><dd>{{ totalDinheiro() | currency: 'BRL' : 'symbol' : '1.0-0' }}</dd></div>
               </dl>
               @if (novoAgente().recebeAmaldicoadoPeloPassado) {
@@ -408,9 +491,9 @@
           <div class="guia__resumo-progresso">
             <div class="guia__resumo-progresso-topo">
               <span>Progresso</span>
-              <b>{{ estado().passo + 1 | number: '2.0-0' }}/07 · {{ passos[estado().passo] }}</b>
+              <b>{{ estado().passo + 1 | number: '2.0-0' }}/{{ passos().length | number: '2.0-0' }} · {{ passos()[estado().passo] }}</b>
             </div>
-            <div class="guia__resumo-trilho"><i [style.width.%]="((estado().passo + 1) / 7) * 100"></i></div>
+            <div class="guia__resumo-trilho"><i [style.width.%]="((estado().passo + 1) / passos().length) * 100"></i></div>
           </div>
           @if (!estado().nome.trim()) {
             <div class="guia__resumo-vazio">
@@ -481,6 +564,9 @@
                 </div>
               </div>
             }
+            @if (temMelhorias() && (estado().passo >= passos().indexOf('Melhorias') || visitado() >= passos().indexOf('Melhorias'))) {
+              <div class="guia__resumo-linha"><span>Melhorias</span><b>{{ melhoriasPreenchidasTotal() }}/{{ melhoriasAlvoTotal() }} vagas</b></div>
+            }
             @if (estado().dinheiro.rolado) {
               <div class="guia__resumo-linha guia__resumo-linha--recursos"><span>Recursos</span><b>{{ totalDinheiro() | currency: 'BRL' : 'symbol' : '1.0-0' }}</b></div>
             }
@@ -493,8 +579,8 @@
       <button class="botao botao--secundario guia__acao" type="button" [disabled]="estado().passo === 0" (click)="voltar()">
         <app-icone nome="voltar" /> Voltar
       </button>
-      <span class="guia__rodape-status">ETAPA {{ estado().passo + 1 | number: '2.0-0' }} // {{ passos[estado().passo] | uppercase }}</span>
-      @if (estado().passo < 6) {
+      <span class="guia__rodape-status">ETAPA {{ estado().passo + 1 | number: '2.0-0' }} // {{ passos()[estado().passo] | uppercase }}</span>
+      @if (estado().passo < passos().length - 1) {
         <button class="botao botao--primario guia__acao" type="button" [disabled]="!passoValido()" (click)="avancar()">Avançar <app-icone nome="entrar" /></button>
       } @else {
         <button class="botao botao--primario guia__acao" type="button" [disabled]="criando()" (click)="criar()"><app-icone nome="check" /> {{ criando() ? 'Criando…' : 'Criar ficha' }}</button>
