@@ -10,7 +10,7 @@ import { calcularDerivados, calcularEnergia, calcularOrcamentoAtributos, calcula
 import type { GrupoHabilidades, HabilidadeCatalogoItemDto } from '@contratados-rpg/shared/regras/agente';
 import { calcularDinheiroInicial, calcularNovoAgente } from '@contratados-rpg/shared/regras/novo-agente';
 import { rolarDados } from '@contratados-rpg/shared/regras/descanso';
-import { FORMACOES } from '@contratados-rpg/shared/regras/identidade';
+import { FORMACOES, ehClasseExperimento, experimentoComPeculiaridade } from '@contratados-rpg/shared/regras/identidade';
 import type { FormacaoDefinicaoDto } from '@contratados-rpg/shared/regras/identidade';
 import { calcularTotaisCarrinho, KIT_INICIAL_ORCAMENTO_MAXIMO, KIT_INICIAL_PESO_MAXIMO, type CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 import { CampanhaService } from '../../../campanha/campanha.service';
@@ -162,21 +162,30 @@ export class FichaCriar {
 
   /** `true` quando o Nível/Treinamento inicial (passo 03) é maior que 0 — só então o passo // MELHORIAS existe (m3-58). */
   protected readonly temMelhorias = computed(() => this.fichas().length > 0 && this.novoAgente().nivelInicial > 0);
-  /** Trilha de passos — 8 posições sem Melhorias, 9 com ela (Equipamento inicial sempre entre Recursos e Revisão). */
+  /** `true` quando a classe é uma subclasse de Experimento — precisa da vaga garantida mesmo no Nível 0 (doc: "ao criar seu agente, escolha uma característica anômala"). */
+  protected readonly ehExperimento = computed(() => { const classe = this.estado().classe; return classe !== null && ehClasseExperimento(classe); });
+  /** `true` quando o passo // HABILIDADES existe na trilha: Nível inicial > 0 (m3-58) OU Experimento (vaga garantida, mesmo no Nível 0). */
+  protected readonly comHabilidades = computed(() => this.temMelhorias() || this.ehExperimento());
+  /** Trilha de passos — // Habilidades (quando existe) vem antes de // Identidade: só depois de escolher habilidades o guia sabe se um Experimento vai ter Peculiaridade (e portanto não vai ter Origem). */
   protected readonly passos = computed<readonly string[]>(() => {
-    const base = ['Base', 'Classe', 'Novo agente', 'Atributos', 'Identidade'];
-    return this.temMelhorias() ? [...base, 'Melhorias', 'Recursos', 'Equipamento inicial', 'Revisão'] : [...base, 'Recursos', 'Equipamento inicial', 'Revisão'];
+    const base = ['Base', 'Classe', 'Novo agente', 'Atributos'];
+    return this.comHabilidades()
+      ? [...base, 'Habilidades', 'Identidade', 'Recursos', 'Equipamento inicial', 'Revisão']
+      : [...base, 'Identidade', 'Recursos', 'Equipamento inicial', 'Revisão'];
   });
   /** Contagem acumulada de vagas do Nível 1 até o Nível inicial (`shared/regras`) — fonte única, proibição #26. */
   protected readonly progressaoAcumulada = computed(() => calcularProgressaoAcumulada({ classe: this.classeCalculada(), nivel: this.novoAgente().nivelInicial }));
-  /** Vagas de habilidade do passo // MELHORIAS, só as com alvo > 0 — Civil nunca vê Geral/Classe própria/Arquétipo/Outra classe. */
+  /** Vagas de habilidade do passo // HABILIDADES, só as com alvo > 0 — Civil nunca vê Geral/Classe própria/Arquétipo/Outra classe.
+   * Experimento ganha +1 fixo em 'classeOuArquetipo' na criação (vaga garantida, mesmo padrão da Habilidade Inicial) — é essa
+   * vaga que já dá acesso à lista "Habilidades de Subclasse" (Peculiaridade incluída, `habilidades-catalogo.ts` grupo 'arquetipo'). */
   protected readonly vagasMelhoria = computed<readonly VagaMelhoria[]>(() => {
     const p = this.progressaoAcumulada();
     const civil = this.classeCalculada() === ClasseEnum.CIVIL;
+    const bonusExperimento = this.ehExperimento() ? 1 : 0;
     const vaga = (tipo: TipoVagaMelhoria, alvo: number): VagaMelhoria | null => alvo > 0 ? { tipo, rotulo: FichaCriar.ROTULOS_VAGA[tipo], alvo } : null;
     const vagas = civil
       ? [vaga('classe', p.habilidadesClasse), vaga('civil', p.habilidadesCivis)]
-      : [vaga('geral', p.habilidadesGerais), vaga('classe', p.habilidadesClasse), vaga('classeOuArquetipo', p.habilidadesClasseOuArquetipo), vaga('outraClasse', p.habilidadesOutraClasse)];
+      : [vaga('geral', p.habilidadesGerais), vaga('classe', p.habilidadesClasse), vaga('classeOuArquetipo', p.habilidadesClasseOuArquetipo + bonusExperimento), vaga('outraClasse', p.habilidadesOutraClasse)];
     return vagas.filter((v): v is VagaMelhoria => v !== null);
   });
   /** Vagas de Fortificação de Personalidade (níveis 7/14) — 0, 1 ou 2. */
@@ -196,7 +205,7 @@ export class FichaCriar {
   });
   /** Habilidades do catálogo + Fortificações preenchidas — o que vai para `dados.habilidades` além da Inicial. */
   protected readonly habilidadesDoNivel = computed<readonly FichaHabilidadeDto[]>(() => {
-    if (!this.temMelhorias()) return [];
+    if (!this.comHabilidades()) return [];
     const daCatalogo = this.estado().melhorias.map((m) => m.habilidade);
     const fortificacoes: FichaHabilidadeDto[] = this.estado().fortificacoes
       .slice(0, this.alvoFortificacoes())
@@ -346,7 +355,7 @@ export class FichaCriar {
         && e.origem.especialidade.gatilho.trim().length > 0
         && e.origem.especialidade.efeito.trim().length > 0
         && e.origem.saberDeCampo.trim().length > 0;
-      case 'Melhorias': return e.modoLivre || this.melhoriasCompletas();
+      case 'Habilidades': return e.modoLivre || this.melhoriasCompletas();
       case 'Recursos': return e.dinheiro.rolado && !this.rolandoRecursos();
       case 'Equipamento inicial': return e.modoLivre || this.kitValido();
       default: return true;

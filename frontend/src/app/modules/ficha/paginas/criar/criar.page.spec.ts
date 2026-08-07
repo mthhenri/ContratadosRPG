@@ -302,6 +302,68 @@ describe('FichaCriar', () => {
     });
   });
 
+  describe('Experimento — vaga garantida de Habilidade de Subclasse (m3-58 + Peculiaridade)', () => {
+    it('passo // Habilidades existe no Nível 0 para as três subclasses de Experimento', () => {
+      const { componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+
+      expect(componente['comHabilidades']()).toBe(true);
+      expect(componente['passos']()).toContain('Habilidades');
+      expect(componente['passos']().indexOf('Habilidades')).toBeLessThan(componente['passos']().indexOf('Identidade'));
+    });
+
+    it('sem classe Experimento e sem Melhorias, // Habilidades não existe (comportamento de hoje)', () => {
+      const { componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.COMBATENTE });
+
+      expect(componente['comHabilidades']()).toBe(false);
+      expect(componente['passos']()).not.toContain('Habilidades');
+    });
+
+    it('vaga classeOuArquetipo ganha +1 fixo no Nível 0 para Experimento — nenhuma outra vaga aparece', () => {
+      const { componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_ARTIFICIAL });
+
+      const vagas = componente['vagasMelhoria']();
+      expect(vagas).toEqual([{ tipo: 'classeOuArquetipo', rotulo: 'Classe ou Arquétipo', alvo: 1 }]);
+    });
+
+    it('vaga classeOuArquetipo soma o +1 fixo às vagas normais do Nível (Experimento nível > 0)', () => {
+      const { componente } = montar([fichaExistente]);
+      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_HIBRIDO, mediaNivel: 6 }); // nivelInicial 5
+      const semExperimento = componente['progressaoAcumulada']().habilidadesClasseOuArquetipo;
+
+      const vaga = componente['vagasMelhoria']().find((v) => v.tipo === 'classeOuArquetipo');
+      expect(vaga?.alvo).toBe(semExperimento + 1);
+    });
+
+    it('escolher Peculiaridade na vaga garantida do Nível 0 conta como melhoria completa', () => {
+      const { componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+
+      componente['abrirSeletorMelhoria']('classeOuArquetipo');
+      const peculiaridade = componente['gruposVagaAberta']()
+        .flatMap((g) => g.subgrupos)
+        .flatMap((s) => s.habilidades)
+        .find((h) => h.nome === 'Peculiaridade');
+      expect(peculiaridade).toBeDefined();
+
+      componente['adicionarMelhoria'](peculiaridade!);
+      componente['fecharSeletorMelhoria']();
+
+      expect(componente['melhoriasCompletas']()).toBe(true);
+      expect(componente['habilidadesDoNivel']().some((h) => h.nome === 'Peculiaridade')).toBe(true);
+    });
+
+    it('sem escolher nenhuma habilidade, o Nível 0 de Experimento fica com a vaga garantida pendente', () => {
+      const { componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['atualizar']({ passo: componente['passos']().indexOf('Habilidades') });
+
+      expect(componente['passoValido']()).toBe(false);
+    });
+  });
+
   describe('m3-59 — passo // EQUIPAMENTO INICIAL', () => {
     const indiceEquipamento = (componente: FichaCriar) => componente['passos']().indexOf('Equipamento inicial');
 
