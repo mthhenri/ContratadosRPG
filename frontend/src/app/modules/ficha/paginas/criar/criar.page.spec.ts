@@ -411,6 +411,67 @@ describe('FichaCriar', () => {
       expect(payload.dados.identidade.personalidade).toBe('Instável');
       expect(payload.dados.habilidades.some((h: { nome: string }) => h.nome === 'Peculiaridade')).toBe(true);
     });
+
+    it('DOM: com Peculiaridade escolhida, o passo Identidade some com o formulário de Origem e mostra a nota', () => {
+      const { fixture, raiz, componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['abrirSeletorMelhoria']('classeOuArquetipo');
+      const peculiaridade = componente['gruposVagaAberta']().flatMap((g) => g.subgrupos).flatMap((s) => s.habilidades).find((h) => h.nome === 'Peculiaridade')!;
+      componente['adicionarMelhoria'](peculiaridade);
+      componente['fecharSeletorMelhoria']();
+      componente['atualizar']({ passo: componente['passos']().indexOf('Identidade') });
+      fixture.detectChanges();
+
+      const blocoOrigem = raiz.querySelector('.guia__identidade-bloco--origem');
+      expect(blocoOrigem?.querySelector('input')).toBeNull();
+      expect(blocoOrigem?.querySelector('textarea')).toBeNull();
+      expect(blocoOrigem?.querySelector('select')).toBeNull();
+      expect(blocoOrigem?.textContent).toContain('Substitui a Origem');
+      expect(blocoOrigem?.textContent).toContain('A Peculiaridade concede um bônus e uma penalidade desconhecida');
+    });
+
+    it('DOM: com outra Habilidade de Subclasse escolhida, o passo Identidade mantém o formulário de Origem', () => {
+      const { fixture, raiz, componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['abrirSeletorMelhoria']('classeOuArquetipo');
+      const outra = componente['gruposVagaAberta']().flatMap((g) => g.subgrupos).flatMap((s) => s.habilidades).find((h) => h.nome !== 'Peculiaridade')!;
+      componente['adicionarMelhoria'](outra);
+      componente['fecharSeletorMelhoria']();
+      componente['atualizar']({ passo: componente['passos']().indexOf('Identidade') });
+      fixture.detectChanges();
+
+      const blocoOrigem = raiz.querySelector('.guia__identidade-bloco--origem');
+      expect(blocoOrigem?.querySelector('input')).not.toBeNull();
+      expect(blocoOrigem?.querySelector('[aria-label="Formação 1"]')).not.toBeNull();
+      expect(blocoOrigem?.textContent).not.toContain('Substitui a Origem');
+    });
+
+    it('DOM: o passo // Habilidades renderiza o título "Habilidades" (não "Melhorias")', () => {
+      const { fixture, raiz, componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['atualizar']({ passo: componente['passos']().indexOf('Habilidades') });
+      fixture.detectChanges();
+
+      expect(raiz.querySelector('.guia__secao h2')?.textContent?.trim()).toBe('Habilidades');
+      expect(raiz.querySelector('.guia__rodape-status')?.textContent).toContain('HABILIDADES');
+      expect(raiz.querySelector('.guia__rodape-status')?.textContent).not.toContain('MELHORIAS');
+      // conteúdo dentro do próprio @case — só renderiza se o @switch casar com 'Habilidades'
+      expect(raiz.querySelector('.guia__introducao-codigo')?.textContent).toBe('PROGRESSÃO // HABILIDADES');
+    });
+
+    it('DOM: resumo lateral mostra "Peculiaridade" no lugar da Origem em branco', () => {
+      const { fixture, raiz, componente } = montar();
+      componente['atualizar']({ nome: 'Espécime-7', classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['abrirSeletorMelhoria']('classeOuArquetipo');
+      const peculiaridade = componente['gruposVagaAberta']().flatMap((g) => g.subgrupos).flatMap((s) => s.habilidades).find((h) => h.nome === 'Peculiaridade')!;
+      componente['adicionarMelhoria'](peculiaridade);
+      componente['fecharSeletorMelhoria']();
+      componente['atualizar']({ passo: componente['passos']().indexOf('Identidade') });
+      fixture.detectChanges();
+
+      const linhaOrigem = Array.from(raiz.querySelectorAll('.guia__resumo-linha')).find((linha) => linha.querySelector('span')?.textContent === 'Origem');
+      expect(linhaOrigem?.querySelector('b')?.textContent).toBe('Peculiaridade');
+    });
   });
 
   describe('m3-59 — passo // EQUIPAMENTO INICIAL', () => {
