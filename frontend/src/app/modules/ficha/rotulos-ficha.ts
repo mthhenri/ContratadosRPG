@@ -42,6 +42,20 @@ export function rotuloArquetipo(arquetipo: ArquetipoEnum): string {
   return ROTULO_ARQUETIPO[arquetipo];
 }
 
+export interface PerfilClasseRotulos {
+  readonly classeBase: string;
+  readonly subclasse: string | null;
+}
+
+/** Separa a classe-base do arquétipo/subclasse para interfaces que exibem os dois conceitos. */
+export function perfilClasseRotulos(classe: ClasseEnum, arquetipo: ArquetipoEnum | null): PerfilClasseRotulos {
+  const classeBase = classeBaseDeHabilidades(classe);
+  if (classeBase !== null && classeBase !== classe) {
+    return { classeBase: rotuloClasse(classeBase), subclasse: rotuloClasse(classe) };
+  }
+  return { classeBase: rotuloClasse(classe), subclasse: arquetipo === null ? null : rotuloArquetipo(arquetipo) };
+}
+
 /**
  * Rótulos legíveis do motivo de entrada (mesmo texto de `calculadora/rotulos.ts`
  * `ROTULOS_MOTIVO_ENTRADA` — módulos não se importam entre si, então o mapa é replicado aqui
@@ -72,14 +86,8 @@ export function rotuloMotivoEntrada(motivo: MotivoEntradaAgenteEnum): string {
  * duplicado aqui). `CIVIL` (sem classe-base, sem arquétipo): só `"Civil"`.
  */
 export function rotuloClasseCompleto(classe: ClasseEnum, arquetipo: ArquetipoEnum | null): string {
-  const classeBase = classeBaseDeHabilidades(classe);
-  if (classeBase !== null && classeBase !== classe) {
-    return `${rotuloClasse(classeBase)} - ${rotuloClasse(classe)}`;
-  }
-  if (arquetipo === null) {
-    return rotuloClasse(classe);
-  }
-  return `${rotuloClasse(classe)} - ${rotuloArquetipo(arquetipo)}`;
+  const perfil = perfilClasseRotulos(classe, arquetipo);
+  return perfil.subclasse === null ? perfil.classeBase : `${perfil.classeBase} - ${perfil.subclasse}`;
 }
 
 /**

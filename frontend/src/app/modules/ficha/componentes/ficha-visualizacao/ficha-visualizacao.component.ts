@@ -101,7 +101,7 @@ import { CONDICOES_FICHA, type CondicoesFicha } from '../../condicoes-ficha';
 import { clamparVitalidade, type CampoVitalidadeAtual } from '../../ajuste-vitalidade';
 import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
 import type { RolagemRealizadaDto } from '../../rolagem-realizada';
-import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
+import { perfilClasseRotulos } from '../../rotulos-ficha';
 import {
   ChaveInfoExtra,
   faixaPrestigioPatente,
@@ -1046,12 +1046,9 @@ export class FichaVisualizacao {
 
   protected readonly ehCivil = computed(() => this.dados().classe === ClasseEnum.CIVIL);
 
-  protected readonly classeTexto = computed(() => rotuloClasse(this.dados().classe));
-  /** Rótulo do arquétipo, ou `null` quando a ficha não tem (Experimento/Civil) — o chip é omitido. */
-  protected readonly arquetipoTexto = computed(() => {
-    const arquetipo = this.dados().arquetipo;
-    return arquetipo === null ? null : rotuloArquetipo(arquetipo);
-  });
+  protected readonly perfilClasse = computed(() => perfilClasseRotulos(this.dados().classe, this.dados().arquetipo));
+  protected readonly classeTexto = computed(() => this.perfilClasse().classeBase);
+  protected readonly subclasseTexto = computed(() => this.perfilClasse().subclasse);
   /** Patente derivada do Prestígio (`shared/regras/patente`) — não é persistida. */
   protected readonly patenteTexto = computed(() => rotuloPatente(this.dados().prestigio));
   /** Dinheiro atual (m3-34) — ausente em fichas anteriores cai em 0 (retrocompat). */

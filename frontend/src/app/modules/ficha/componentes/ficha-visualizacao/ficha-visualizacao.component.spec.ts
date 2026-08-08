@@ -1043,6 +1043,19 @@ describe('FichaVisualizacao', () => {
         descricao: '...',
       };
 
+      it('mostra Origem somente como substituída quando a ficha já tem Peculiaridade', () => {
+        const alvo = montar({
+          ...dadosExperimentoComOrigem,
+          identidade: { personalidade: 'Instável', origem: null },
+          habilidades: [peculiaridade],
+        }, 'Espécime', 42, true, true);
+        const linhaOrigem = Array.from(alvo.raiz.querySelectorAll('.ficha-ident__meta-linha')).find((linha) => linha.textContent?.includes('Origem'));
+
+        expect(linhaOrigem?.textContent).toContain('Substituída pela Peculiaridade');
+        expect(linhaOrigem?.textContent).not.toContain('Não definida');
+        expect(linhaOrigem?.querySelector('[aria-label="Editar origem"]')).toBeNull();
+      });
+
       it('mestre adiciona Peculiaridade com Origem definida: fica pendente de confirmação, não emite nada ainda', () => {
         const alvo = montar(dadosExperimentoComOrigem, 'Espécime', 42, true, true);
         const habilidadesEmitidas: unknown[] = [];
