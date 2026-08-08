@@ -1028,7 +1028,7 @@ describe('FichaVisualizacao', () => {
       expect(componente['editandoOrigem']()).toBe(true);
     });
 
-    describe('m3-XX — oferta de limpar Origem ao adicionar Peculiaridade (mestre-only)', () => {
+    describe('oferta de limpar Origem ao adicionar Peculiaridade (mestre-only)', () => {
       const dadosExperimentoComOrigem: FichaJogadorDadosDto = {
         ...dados,
         classe: ClasseEnum.EXPERIMENTO_BESTIAL,
@@ -1122,11 +1122,13 @@ describe('FichaVisualizacao', () => {
         alvo.fixture.componentInstance['habilidadesPendentesPeculiaridade'].set([peculiaridade]);
         alvo.fixture.detectChanges();
 
-        const dialogo = alvo.raiz.querySelector('.ficha-ident__aviso-peculiaridade');
+        // [appendTo]="'body'" tira o diálogo da subárvore de `alvo.raiz` (necessário para não ficar
+        // preso num painel `display: none` no mobile) — por isso a busca é em `document.body`.
+        const dialogo = document.body.querySelector('.ficha-ident__aviso-peculiaridade');
         expect(dialogo?.textContent).toContain('substituir a Origem atual');
 
         const confirmar = vi.spyOn(alvo.fixture.componentInstance as unknown as { confirmarLimparOrigemEHabilidade: () => void }, 'confirmarLimparOrigemEHabilidade');
-        (alvo.raiz.querySelector('[data-testid="confirmar-limpar-origem"]') as HTMLButtonElement).click();
+        (document.body.querySelector('[data-testid="confirmar-limpar-origem"]') as HTMLButtonElement).click();
         expect(confirmar).toHaveBeenCalled();
       });
 

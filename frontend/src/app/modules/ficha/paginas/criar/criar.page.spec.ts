@@ -236,7 +236,7 @@ describe('FichaCriar', () => {
     componente['fecharSeletorMelhoria']();
   }
 
-  describe('m3-58 — passo // MELHORIAS', () => {
+  describe('m3-58 — passo // HABILIDADES', () => {
     it('não existe na trilha quando o Nível inicial é 0', () => {
       const { componente } = montar();
       expect(componente['temMelhorias']()).toBe(false);
@@ -379,7 +379,7 @@ describe('FichaCriar', () => {
 
     it('sem Peculiaridade, o passo Identidade de um Experimento continua exigindo Origem completa', () => {
       const { componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL, passo: 0 });
+      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
       componente['abrirSeletorMelhoria']('classeOuArquetipo');
       const outra = componente['gruposVagaAberta']().flatMap((g) => g.subgrupos).flatMap((s) => s.habilidades).find((h) => h.nome !== 'Peculiaridade')!;
       componente['adicionarMelhoria'](outra);

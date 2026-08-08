@@ -380,7 +380,15 @@
             @case ('Habilidades') {
               <div class="guia__introducao">
                 <span class="guia__introducao-codigo">PROGRESSÃO // HABILIDADES</span>
-                <p>Gaste as vagas de habilidade acumuladas do Nível 1 até o Nível {{ novoAgente().nivelInicial }}. A Habilidade Inicial do passo Classe já está garantida e não consome vaga.</p>
+                <p>
+                  @if (novoAgente().nivelInicial > 0) {
+                    Gaste as vagas de habilidade acumuladas do Nível 1 até o Nível {{ novoAgente().nivelInicial }}.
+                  }
+                  @if (ehExperimento()) {
+                    Como Experimento, você tem uma vaga garantida de Habilidade de Subclasse — mesmo no Nível 0.
+                  }
+                  A Habilidade Inicial do passo Classe já está garantida e não consome vaga.
+                </p>
               </div>
 
               <div class="guia__memorial guia__memorial--ganhos">
@@ -525,7 +533,7 @@
                 <div><dt>Agente</dt><dd>{{ estado().nome }}</dd></div>
                 <div><dt>Classe / Arquétipo</dt><dd>{{ perfilRotulo() }}</dd></div>
                 <div><dt>Nível / Prestígio</dt><dd>{{ fichas().length ? novoAgente().nivelInicial : 0 }} / {{ fichas().length ? novoAgente().prestigio.prestigioInicial : 0 }}</dd></div>
-                <div><dt>Personalidade / Origem</dt><dd>{{ estado().personalidade }} · {{ estado().origem.nome }}</dd></div>
+                <div><dt>Personalidade / Origem</dt><dd>{{ estado().personalidade }} · {{ temPeculiaridade() ? 'Peculiaridade' : estado().origem.nome }}</dd></div>
                 @if (comHabilidades()) {
                   <div><dt>Habilidades</dt><dd>{{ melhoriasPreenchidasTotal() }}/{{ melhoriasAlvoTotal() }} vagas</dd></div>
                 }

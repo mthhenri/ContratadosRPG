@@ -43,7 +43,7 @@ interface EstadoGuiaCriacao {
   readonly atributos: FichaAtributosDto; readonly maestria: ChaveAtributo | null; readonly modoLivre: boolean;
   readonly personalidade: string; readonly origem: FichaOrigemDto; readonly formacoesCustomizadas: readonly boolean[];
   readonly dinheiro: DinheiroRolado;
-  /** Habilidades de nível escolhidas no passo // MELHORIAS (m3-58) — vazio até o passo existir. */
+  /** Habilidades de nível escolhidas no passo // HABILIDADES (m3-58) — vazio até o passo existir. */
   readonly melhorias: readonly MelhoriaEscolhida[];
   /** Sempre 2 posições (mesmo padrão de `origem.formacao`); só as `alvoFortificacoes()` primeiras contam. */
   readonly fortificacoes: readonly FortificacaoRascunho[];
@@ -160,7 +160,7 @@ export class FichaCriar {
   /** Formações com texto já registrado — usadas no Resumo Operacional (m3-57). */
   protected readonly formacoesPreenchidas = computed(() => this.estado().origem.formacao.filter((item) => item.texto.trim().length > 0));
 
-  /** `true` quando o Nível/Treinamento inicial (passo 03) é maior que 0 — só então o passo // MELHORIAS existe (m3-58). */
+  /** `true` quando o Nível/Treinamento inicial (passo 03) é maior que 0 — só então o passo // HABILIDADES existe (m3-58). */
   protected readonly temMelhorias = computed(() => this.fichas().length > 0 && this.novoAgente().nivelInicial > 0);
   /** `true` quando a classe é uma subclasse de Experimento — precisa da vaga garantida mesmo no Nível 0 (doc: "ao criar seu agente, escolha uma característica anômala"). */
   protected readonly ehExperimento = computed(() => { const classe = this.estado().classe; return classe !== null && ehClasseExperimento(classe); });
@@ -305,7 +305,7 @@ export class FichaCriar {
 
   /**
    * Grupos do catálogo de habilidades (`shared/regras`) filtrados para uma vaga do passo //
-   * MELHORIAS: 'geral' é sempre a Aba Gerais inteira; 'classe'/'classeOuArquetipo' mostram só o(s)
+   * HABILIDADES: 'geral' é sempre a Aba Gerais inteira; 'classe'/'classeOuArquetipo' mostram só o(s)
    * subgrupo(s) **da própria ficha**; 'outraClasse' mostra os demais (as duas outras classes-base +
    * os outros arquétipos da mesma classe — exatamente o pick de "outra classe/outro arquétipo da
    * sua classe" do documento); 'civil' é a lista fechada de Habilidades Civis. O caso especial é o
