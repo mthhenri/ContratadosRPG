@@ -54,3 +54,67 @@ export function obterBonusAtributos(dto: BonusAtributosObterDto): BonusAtributos
   }
   return dto.arquetipo ? BONUS_ARQUETIPO[dto.arquetipo] : {};
 }
+
+/** Um "slot" de bônus "à escolha": as chaves de atributo elegíveis para aquele ponto. */
+export type SlotEscolhaAtributo = readonly (keyof FichaAtributosDto)[];
+
+const TODOS_ATRIBUTOS: readonly (keyof FichaAtributosDto)[] = [
+  'destreza', 'forca', 'luta', 'pontaria', 'vigor',
+  'intelecto', 'medicina', 'sentidos', 'social', 'vontade',
+];
+const SEM_LUTA_OU_PONTARIA: SlotEscolhaAtributo = TODOS_ATRIBUTOS.filter(
+  (atributo) => atributo !== 'luta' && atributo !== 'pontaria',
+);
+
+/**
+ * Slots "à escolha" de cada arquétipo (doc — "Classes e Arquétipos"): Engenheiro e Assassino têm
+ * um slot fechado com 2 opções; Acadêmico tem um slot livre (qualquer atributo, exceto Luta ou
+ * Pontaria). Arquétipos sem ponto "à escolha" ficam de fora do mapa (`[]` no retorno da função).
+ */
+const SLOTS_ARQUETIPO: Partial<Record<ArquetipoEnum, readonly SlotEscolhaAtributo[]>> = {
+  [ArquetipoEnum.ENGENHEIRO]: [['forca', 'destreza']],
+  [ArquetipoEnum.ASSASSINO]: [['luta', 'pontaria']],
+  [ArquetipoEnum.ACADEMICO]: [SEM_LUTA_OU_PONTARIA],
+};
+
+/**
+ * Slots "à escolha" das subclasses (doc — "Subclasses"): só o Híbrido tem — os dois pontos de
+ * `BONUS_SUBCLASSE[EXPERIMENTO_HIBRIDO]` (`{}`, todo "à escolha"). As duas escolhas são
+ * independentes: repetir o mesmo atributo nas duas empilha +2 nele (não há "sem repetir" anotado
+ * nessa linha do doc, ao contrário da habilidade "Mutável" da mesma subclasse).
+ */
+const SLOTS_SUBCLASSE: Partial<Record<ClasseEnum, readonly SlotEscolhaAtributo[]>> = {
+  [ClasseEnum.EXPERIMENTO_HIBRIDO]: [SEM_LUTA_OU_PONTARIA, SEM_LUTA_OU_PONTARIA],
+};
+
+/**
+ * Slots de bônus "à escolha" do perfil atual — mesma precedência de `obterBonusAtributos`
+ * (subclasse vence arquétipo). `[]` quando o perfil não tem nenhum ponto "à escolha".
+ */
+export function obterSlotsEscolhaBonus(dto: BonusAtributosObterDto): readonly SlotEscolhaAtributo[] {
+  const daSubclasse = SLOTS_SUBCLASSE[dto.classe];
+  if (daSubclasse) {
+    return daSubclasse;
+  }
+  return (dto.arquetipo ? SLOTS_ARQUETIPO[dto.arquetipo] : undefined) ?? [];
+}
+
+/**
+ * Combina o bônus fixo (`obterBonusAtributos`) com as escolhas do jogador — uma por slot, na mesma
+ * ordem de `obterSlotsEscolhaBonus`. Escolha `null` ou fora das opções do slot correspondente não
+ * soma nada nesse slot (nunca lança; a validação de "escolha obrigatória" é do chamador).
+ */
+export function obterBonusAtributosComEscolha(
+  dto: BonusAtributosObterDto,
+  escolhas: readonly (keyof FichaAtributosDto | null)[],
+): BonusAtributos {
+  const bonus: { [chave in keyof FichaAtributosDto]?: number } = { ...obterBonusAtributos(dto) };
+  const slots = obterSlotsEscolhaBonus(dto);
+  slots.forEach((slot, indice) => {
+    const escolha = escolhas[indice];
+    if (escolha && slot.includes(escolha)) {
+      bonus[escolha] = (bonus[escolha] ?? 0) + 1;
+    }
+  });
+  return bonus;
+}
