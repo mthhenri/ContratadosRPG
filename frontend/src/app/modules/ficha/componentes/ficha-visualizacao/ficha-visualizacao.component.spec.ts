@@ -24,6 +24,7 @@ import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-da
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { FichaVisualizacao } from './ficha-visualizacao.component';
 import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
+import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
 
 /**
  * Prova a exibição read-only da ficha (m3-07): apresenta identidade (codinome, classe/arquétipo,
@@ -1127,6 +1128,19 @@ describe('FichaVisualizacao', () => {
         const confirmar = vi.spyOn(alvo.fixture.componentInstance as unknown as { confirmarLimparOrigemEHabilidade: () => void }, 'confirmarLimparOrigemEHabilidade');
         (alvo.raiz.querySelector('[data-testid="confirmar-limpar-origem"]') as HTMLButtonElement).click();
         expect(confirmar).toHaveBeenCalled();
+      });
+
+      it('a reconexão é real: o evento `habilidadesMudou` disparado pelo `FichaHabilidades` de verdade (não uma chamada direta a `mudarHabilidades`) deixa a oferta pendente', () => {
+        const alvo = montar(dadosExperimentoComOrigem, 'Espécime', 42, true, true);
+        alvo.fixture.componentRef.setInput('abaStatusInicial', 'habilidades');
+        alvo.fixture.detectChanges();
+
+        const fichaHabilidades = alvo.fixture.debugElement.query(By.directive(FichaHabilidades));
+        expect(fichaHabilidades).toBeTruthy();
+
+        fichaHabilidades.triggerEventHandler('habilidadesMudou', [peculiaridade]);
+
+        expect(alvo.fixture.componentInstance['habilidadesPendentesPeculiaridade']()).toEqual([peculiaridade]);
       });
     });
   });
