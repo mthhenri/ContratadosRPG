@@ -279,7 +279,7 @@
             @case ('Atributos') {
               <div class="guia__orcamento" [class.guia__orcamento--erro]="distribuicao().saldo !== 0">
                 <div><span>Saldo de distribuição</span><strong>{{ distribuicao().saldo }}</strong></div>
-                <small>{{ orcamento().pontosTotais }} pontos disponíveis · base 1 não consome orçamento · máximo {{ limiteAtributo() }} por atributo{{ bonusAtributosLista().length ? ' · valores já somam o bônus fixo de ' + rotuloOrigemBonus() : '' }}</small>
+                <small>{{ orcamento().pontosTotais }} pontos disponíveis · base 1 não consome orçamento · máximo {{ atributoMaximoGuia }} por atributo (com bônus incluso){{ bonusAtributosLista().length ? ' · valores já somam o bônus fixo de ' + rotuloOrigemBonus() : '' }}</small>
               </div>
               <div class="guia__atributos">
                 @for (campo of campos; track campo.chave) {
@@ -304,7 +304,7 @@
                     <div class="stepper">
                       <button class="stepper__botao" type="button" [attr.aria-label]="'Diminuir ' + campo.nome" (click)="passoAtributo(campo.chave, -1)">−</button>
                       <b class="stepper__valor">{{ atributosFinais()[campo.chave] }}</b>
-                      <button class="stepper__botao" type="button" [attr.aria-label]="'Aumentar ' + campo.nome" [disabled]="estado().atributos[campo.chave] >= limiteAtributo()" (click)="passoAtributo(campo.chave, 1)">+</button>
+                      <button class="stepper__botao" type="button" [attr.aria-label]="'Aumentar ' + campo.nome" [disabled]="estado().atributos[campo.chave] >= limiteAtributo(campo.chave)" (click)="passoAtributo(campo.chave, 1)">+</button>
                     </div>
                   </div>
                 }

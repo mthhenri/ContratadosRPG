@@ -99,7 +99,8 @@ export class FichaCriar {
   protected readonly gruposClasse = GRUPOS_CLASSE;
   protected readonly gruposFormacao = GRUPOS_FORMACAO;
   protected readonly parametroEsquivaOuBloqueio = FormacaoParametroEnum.ESQUIVA_OU_BLOQUEIO;
-  /** Limiar e custo de Maestria expostos ao template (doc — "⬥ Maestrias"). */
+  /** Teto de atributo e limiar/custo de Maestria expostos ao template (doc — "⬥ Maestrias"). */
+  protected readonly atributoMaximoGuia = ATRIBUTO_MAXIMO_GUIA;
   protected readonly limiteMaestria = MAESTRIA_PONTOS_MINIMO;
   protected readonly custoMaestriaPontos = MAESTRIA_PONTOS_CUSTO;
   protected readonly campos: readonly { chave: ChaveAtributo; nome: string }[] = [
@@ -148,14 +149,14 @@ export class FichaCriar {
   protected readonly distribuicao = computed(() => {
     const base = validarDistribuicaoAtributos({ classe: this.classeCalculada(), nivel: this.nivelInicial(), atributos: this.estado().atributos });
     const maestria = this.estado().maestria;
-    const violacoes = maestria !== null && !maestriaAtingivel(this.estado().atributos[maestria])
+    // A Maestria vale sobre o atributo **final** (base + bônus fixo de arquétipo/subclasse) — mesmo
+    // valor que `construirFichaInicial` persiste e valida, não o investimento bruto do jogador.
+    const violacoes = maestria !== null && !maestriaAtingivel(this.atributosFinais()[maestria])
       ? [...base.violacoes, `${maestria}: maestria requer ${MAESTRIA_PONTOS_MINIMO}+ pontos`]
       : base.violacoes;
     return { gastos: base.gastos + this.custoMaestria(), saldo: base.saldo - this.custoMaestria(), violacoes };
   });
   protected readonly orcamento = computed(() => calcularOrcamentoAtributos({ classe: this.classeCalculada(), nivel: this.nivelInicial() }));
-  /** Teto efetivo por atributo no guia — nunca acima de 6, e respeita tetos mais baixos (ex.: Civil). */
-  protected readonly limiteAtributo = computed(() => Math.min(ATRIBUTO_MAXIMO_GUIA, this.orcamento().maximoFinal));
   protected readonly bonusMonetario = computed(() => calcularBonusMonetario({ prestigioInicial: this.prestigioInicial() }).bonus);
   protected readonly totalDinheiro = computed(() => this.estado().dinheiro.rolado ? this.estado().dinheiro.inicial + this.bonusMonetario() : 0);
   /** Bônus fixo de atributos do perfil (arquétipo/subclasse) atual — `{}` sem perfil definitivo. */
@@ -164,6 +165,10 @@ export class FichaCriar {
     .map((campo) => ({ nome: campo.nome, valor: this.bonusAtributos()[campo.chave] ?? 0 }))
     .filter(({ valor }) => valor !== 0));
   protected readonly atributosFinais = computed(() => { const bonus = this.bonusAtributos(); const atributos = { ...this.estado().atributos }; this.campos.forEach(({ chave }) => atributos[chave] += bonus[chave] ?? 0); return atributos; });
+  /** Teto de investimento **bruto** por atributo — garante que o valor final (com o bônus fixo de arquétipo/subclasse já somado) nunca passe de 6. */
+  protected limiteAtributo(chave: ChaveAtributo): number {
+    return Math.max(0, Math.min(ATRIBUTO_MAXIMO_GUIA, this.orcamento().maximoFinal) - (this.bonusAtributos()[chave] ?? 0));
+  }
   protected readonly vida = computed(() => calcularVida({ classe: this.classeCalculada(), nivel: this.nivelInicial(), vigor: this.atributosFinais().vigor }));
   protected readonly energia = computed(() => calcularEnergia({ classe: this.classeCalculada(), nivel: this.nivelInicial(), destreza: this.atributosFinais().destreza }));
   /** Base de Vida/Energia da classe (sem Nível/atributos) — passo // CLASSE, antes de `vida()`/`energia()`
@@ -352,12 +357,13 @@ export class FichaCriar {
   protected rotuloParametroFormacao(parametro: FormacaoParametroEnum): string { return rotuloParametroFormacao(parametro); }
   protected passoAtributo(chave: ChaveAtributo, delta: number): void {
     const atual = this.estado();
-    const valor = Math.max(0, Math.min(this.limiteAtributo(), atual.atributos[chave] + delta));
-    const maestria = atual.maestria === chave && !maestriaAtingivel(valor) ? null : atual.maestria;
+    const valor = Math.max(0, Math.min(this.limiteAtributo(chave), atual.atributos[chave] + delta));
+    const valorFinal = valor + (this.bonusAtributos()[chave] ?? 0);
+    const maestria = atual.maestria === chave && !maestriaAtingivel(valorFinal) ? null : atual.maestria;
     this.atualizar({ atributos: { ...atual.atributos, [chave]: valor }, maestria });
   }
-  /** `true` se o atributo já tem os 6 pontos exigidos para receber a Maestria (doc — "⬥ Maestrias"). */
-  protected maestriaHabilitada(chave: ChaveAtributo): boolean { return maestriaAtingivel(this.estado().atributos[chave]); }
+  /** `true` se o atributo já tem os 6 pontos exigidos para receber a Maestria (doc — "⬥ Maestrias") no valor **final** (com o bônus fixo já somado — mesmo valor que `construirFichaInicial` valida). */
+  protected maestriaHabilitada(chave: ChaveAtributo): boolean { return maestriaAtingivel(this.atributosFinais()[chave]); }
   /** Marca/desmarca a Maestria num atributo — única na ficha, só disponível com 6+ pontos e custa 2 pontos extras do orçamento. */
   protected alternarMaestria(chave: ChaveAtributo): void {
     if (!this.maestriaHabilitada(chave)) return;

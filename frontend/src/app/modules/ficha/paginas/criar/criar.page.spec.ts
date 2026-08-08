@@ -290,6 +290,32 @@ describe('FichaCriar', () => {
       expect(componente['estado']().atributos.destreza).toBe(5);
       expect(componente['estado']().maestria).toBeNull();
     });
+
+    it('com bônus fixo de arquétipo (Lutador: +1 Luta/Força), o valor final nunca passa de 6', () => {
+      const { fixture, raiz, componente } = montar([fichaExistente]);
+      componente['atualizar']({ passo: 3, classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
+      fixture.detectChanges();
+
+      expect(componente['bonusAtributos']().luta).toBe(1);
+
+      for (let i = 0; i < 10; i++) componente['passoAtributo']('luta', 1);
+      fixture.detectChanges();
+
+      // investimento bruto para em 5, mas o valor final (com o bônus) para em 6, nunca 7.
+      expect(componente['estado']().atributos.luta).toBe(5);
+      expect(componente['atributosFinais']().luta).toBe(6);
+      expect((raiz.querySelector('[aria-label="Aumentar Luta"]') as HTMLButtonElement).disabled).toBe(true);
+    });
+
+    it('com bônus fixo de arquétipo, a Maestria já habilita com 5 pontos brutos (6 no valor final)', () => {
+      const { fixture, raiz, componente } = montar([fichaExistente]);
+      componente['atualizar']({ passo: 3, classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
+      componente['atualizar']({ atributos: { ...componente['estado']().atributos, luta: 5 } });
+      fixture.detectChanges();
+
+      expect(componente['atributosFinais']().luta).toBe(6);
+      expect((raiz.querySelector('[aria-label="Maestria em Luta"]') as HTMLButtonElement).disabled).toBe(false);
+    });
   });
 
   /** Preenche todas as vagas de catálogo do passo Melhorias com habilidades distintas (m3-58). */
