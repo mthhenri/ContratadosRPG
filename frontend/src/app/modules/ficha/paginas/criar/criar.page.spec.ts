@@ -259,14 +259,14 @@ describe('FichaCriar', () => {
       expect(componente['vagasMelhoria']().map(({ tipo, alvo }) => ({ tipo, alvo }))).toEqual([{ tipo: 'civil', alvo: 3 }]);
     });
 
-    it('soma ao Experimento a vaga adicional de Classe/Arquétipo', () => {
+    it('Experimento compõe o pacote inicial como qualquer outra classe, sem vaga extra', () => {
       const { componente } = montar();
       componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_ARTIFICIAL });
       componente['selecionarPacoteHabilidades']('DUAS_GERAIS_UMA_CLASSE_OU_ARQUETIPO');
 
       expect(componente['vagasMelhoria']().map(({ tipo, alvo }) => ({ tipo, alvo }))).toEqual([
         { tipo: 'geral', alvo: 2 },
-        { tipo: 'classeOuArquetipo', alvo: 2 },
+        { tipo: 'classeOuArquetipo', alvo: 1 },
       ]);
     });
 
@@ -374,7 +374,7 @@ describe('FichaCriar', () => {
     });
   });
 
-  describe('Experimento — vaga garantida de Habilidade de Subclasse (m3-58 + Peculiaridade)', () => {
+  describe('Experimento — Peculiaridade dispensa a Origem (m3-58 + Peculiaridade)', () => {
     it('passo // Habilidades existe no Nível 0 para as três subclasses de Experimento', () => {
       const { componente } = montar();
       componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
@@ -392,27 +392,10 @@ describe('FichaCriar', () => {
       expect(componente['passos']()).toContain('Habilidades');
     });
 
-    it('vaga classeOuArquetipo ganha +1 fixo no Nível 0 para Experimento — nenhuma outra vaga aparece', () => {
-      const { componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_ARTIFICIAL });
-
-      const vagas = componente['vagasMelhoria']();
-      expect(vagas).toEqual([{ tipo: 'classeOuArquetipo', rotulo: 'Classe ou Arquétipo', alvo: 1 }]);
-    });
-
-    it('vaga classeOuArquetipo soma o +1 fixo às vagas normais do Nível (Experimento nível > 0)', () => {
-      const { componente } = montar([fichaExistente]);
-      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_HIBRIDO, mediaNivel: 6 }); // nivelInicial 5
-      const semExperimento = componente['progressaoAcumulada']().habilidadesClasseOuArquetipo;
-
-      const vaga = componente['vagasMelhoria']().find((v) => v.tipo === 'classeOuArquetipo');
-      expect(vaga?.alvo).toBe(semExperimento + 1);
-    });
-
-    it('escolher Peculiaridade na vaga garantida do Nível 0 conta como melhoria completa', () => {
+    it('escolher Peculiaridade num pacote de Classe/Arquétipo conta como melhoria completa', () => {
       const { componente } = montar();
       componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
-      componente['selecionarPacoteHabilidades']('QUATRO_GERAIS');
+      componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
 
       componente['abrirSeletorMelhoria']('classeOuArquetipo');
       const peculiaridade = componente['gruposVagaAberta']()
@@ -429,7 +412,7 @@ describe('FichaCriar', () => {
       expect(componente['habilidadesDoNivel']().some((h) => h.nome === 'Peculiaridade')).toBe(true);
     });
 
-    it('sem escolher nenhuma habilidade, o Nível 0 de Experimento fica com a vaga garantida pendente', () => {
+    it('sem escolher o pacote inicial, o Nível 0 de Experimento fica com o passo // Habilidades pendente', () => {
       const { componente } = montar();
       componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
       componente['atualizar']({ passo: componente['passos']().indexOf('Habilidades') });
@@ -440,6 +423,7 @@ describe('FichaCriar', () => {
     it('escolher Peculiaridade dispensa Origem no passoValido de Identidade', () => {
       const { componente } = montar();
       componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
       componente['abrirSeletorMelhoria']('classeOuArquetipo');
       const peculiaridade = componente['gruposVagaAberta']().flatMap((g) => g.subgrupos).flatMap((s) => s.habilidades).find((h) => h.nome === 'Peculiaridade')!;
       componente['adicionarMelhoria'](peculiaridade);
@@ -454,6 +438,7 @@ describe('FichaCriar', () => {
     it('sem Peculiaridade, o passo Identidade de um Experimento continua exigindo Origem completa', () => {
       const { componente } = montar();
       componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
       componente['abrirSeletorMelhoria']('classeOuArquetipo');
       const outra = componente['gruposVagaAberta']().flatMap((g) => g.subgrupos).flatMap((s) => s.habilidades).find((h) => h.nome !== 'Peculiaridade')!;
       componente['adicionarMelhoria'](outra);
@@ -470,6 +455,7 @@ describe('FichaCriar', () => {
       const router = TestBed.inject(Router);
       vi.spyOn(router, 'navigate').mockResolvedValue(true);
       componente['atualizar']({ nome: 'Espécime-7', classe: ClasseEnum.EXPERIMENTO_ARTIFICIAL, dinheiro: { dados: [1, 1, 1, 1], inicial: 1000, rolado: true } });
+      componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
       componente['abrirSeletorMelhoria']('classeOuArquetipo');
       const peculiaridade = componente['gruposVagaAberta']().flatMap((g) => g.subgrupos).flatMap((s) => s.habilidades).find((h) => h.nome === 'Peculiaridade')!;
       componente['adicionarMelhoria'](peculiaridade);
@@ -489,6 +475,7 @@ describe('FichaCriar', () => {
     it('DOM: com Peculiaridade escolhida, o passo Identidade some com o formulário de Origem e mostra a nota', () => {
       const { fixture, raiz, componente } = montar();
       componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
       componente['abrirSeletorMelhoria']('classeOuArquetipo');
       const peculiaridade = componente['gruposVagaAberta']().flatMap((g) => g.subgrupos).flatMap((s) => s.habilidades).find((h) => h.nome === 'Peculiaridade')!;
       componente['adicionarMelhoria'](peculiaridade);
@@ -507,6 +494,7 @@ describe('FichaCriar', () => {
     it('DOM: com outra Habilidade de Subclasse escolhida, o passo Identidade mantém o formulário de Origem', () => {
       const { fixture, raiz, componente } = montar();
       componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
       componente['abrirSeletorMelhoria']('classeOuArquetipo');
       const outra = componente['gruposVagaAberta']().flatMap((g) => g.subgrupos).flatMap((s) => s.habilidades).find((h) => h.nome !== 'Peculiaridade')!;
       componente['adicionarMelhoria'](outra);
@@ -536,6 +524,7 @@ describe('FichaCriar', () => {
     it('DOM: resumo lateral mostra "Peculiaridade" no lugar da Origem em branco', () => {
       const { fixture, raiz, componente } = montar();
       componente['atualizar']({ nome: 'Espécime-7', classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
       componente['abrirSeletorMelhoria']('classeOuArquetipo');
       const peculiaridade = componente['gruposVagaAberta']().flatMap((g) => g.subgrupos).flatMap((s) => s.habilidades).find((h) => h.nome === 'Peculiaridade')!;
       componente['adicionarMelhoria'](peculiaridade);

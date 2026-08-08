@@ -10,7 +10,7 @@ import { calcularDerivados, calcularEnergia, calcularOrcamentoAtributos, calcula
 import type { GrupoHabilidades, HabilidadeCatalogoItemDto, HabilidadesPacoteInicialId, TipoVagaHabilidade } from '@contratados-rpg/shared/regras/agente';
 import { calcularBonusMonetario, calcularDinheiroInicial, calcularNovoAgente } from '@contratados-rpg/shared/regras/novo-agente';
 import { rolarDados } from '@contratados-rpg/shared/regras/descanso';
-import { FORMACOES, ehClasseExperimento, experimentoComPeculiaridade } from '@contratados-rpg/shared/regras/identidade';
+import { FORMACOES, experimentoComPeculiaridade } from '@contratados-rpg/shared/regras/identidade';
 import type { FormacaoDefinicaoDto } from '@contratados-rpg/shared/regras/identidade';
 import { calcularTotaisCarrinho, KIT_INICIAL_ORCAMENTO_MAXIMO, KIT_INICIAL_PESO_MAXIMO, type CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 import { CampanhaService } from '../../../campanha/campanha.service';
@@ -176,9 +176,7 @@ export class FichaCriar {
 
   /** `true` quando o Nível/Treinamento inicial (passo 03) é maior que 0 — só então o passo // HABILIDADES existe (m3-58). */
   protected readonly temMelhorias = computed(() => this.nivelInicial() > 0);
-  /** `true` quando a classe é uma subclasse de Experimento — precisa da vaga garantida mesmo no Nível 0 (doc: "ao criar seu agente, escolha uma característica anômala"). */
-  protected readonly ehExperimento = computed(() => { const classe = this.estado().classe; return classe !== null && ehClasseExperimento(classe); });
-  /** `true` quando o passo // HABILIDADES existe na trilha: Nível inicial > 0 (m3-58) OU Experimento (vaga garantida, mesmo no Nível 0). */
+  /** `true` quando o passo // HABILIDADES existe na trilha: sempre que há classe escolhida, já que agora ele também cobre o pacote de Habilidades iniciais. */
   protected readonly comHabilidades = computed(() => this.estado().classe !== null);
   /** Trilha de passos — // Habilidades (quando existe) vem antes de // Identidade: só depois de escolher habilidades o guia sabe se um Experimento vai ter Peculiaridade (e portanto não vai ter Origem). */
   protected readonly passos = computed<readonly string[]>(() => {
@@ -192,18 +190,17 @@ export class FichaCriar {
   protected readonly pacotesHabilidadesIniciais = computed(() => listarPacotesHabilidadesIniciais(this.classeCalculada()));
   protected readonly pacoteHabilidadesSelecionado = computed(() => this.pacotesHabilidadesIniciais().find((pacote) => pacote.id === this.estado().pacoteHabilidadesId) ?? null);
   /** Vagas de habilidade do passo // HABILIDADES, só as com alvo > 0 — Civil nunca vê Geral/Classe própria/Arquétipo/Outra classe.
-   * Experimento ganha +1 fixo em 'classeOuArquetipo' na criação (vaga garantida, mesmo padrão da Habilidade Inicial) — é essa
-   * vaga que já dá acesso à lista "Habilidades de Subclasse" (Peculiaridade incluída, `habilidades-catalogo.ts` grupo 'arquetipo'). */
+   * A vaga 'classeOuArquetipo' já dá acesso à lista "Habilidades de Subclasse" (Peculiaridade incluída,
+   * `habilidades-catalogo.ts` grupo 'arquetipo') — inclusive para Experimento, via o pacote de Habilidades iniciais. */
   protected readonly vagasMelhoria = computed<readonly VagaMelhoria[]>(() => {
     const p = this.progressaoAcumulada();
     const civil = this.classeCalculada() === ClasseEnum.CIVIL;
-    const bonusExperimento = this.ehExperimento() ? 1 : 0;
     const pacote = this.pacoteHabilidadesSelecionado();
     const quantidadeInicial = (tipo: TipoVagaMelhoria): number => pacote?.vagas.find((vagaInicial) => vagaInicial.tipo === tipo)?.quantidade ?? 0;
     const vaga = (tipo: TipoVagaMelhoria, alvo: number): VagaMelhoria | null => alvo > 0 ? { tipo, rotulo: FichaCriar.ROTULOS_VAGA[tipo], alvo } : null;
     const vagas = civil
       ? [vaga('classe', p.habilidadesClasse), vaga('civil', p.habilidadesCivis + quantidadeInicial('civil'))]
-      : [vaga('geral', p.habilidadesGerais + quantidadeInicial('geral')), vaga('classe', p.habilidadesClasse + quantidadeInicial('classe')), vaga('classeOuArquetipo', p.habilidadesClasseOuArquetipo + quantidadeInicial('classeOuArquetipo') + bonusExperimento), vaga('outraClasse', p.habilidadesOutraClasse + quantidadeInicial('outraClasse'))];
+      : [vaga('geral', p.habilidadesGerais + quantidadeInicial('geral')), vaga('classe', p.habilidadesClasse + quantidadeInicial('classe')), vaga('classeOuArquetipo', p.habilidadesClasseOuArquetipo + quantidadeInicial('classeOuArquetipo')), vaga('outraClasse', p.habilidadesOutraClasse + quantidadeInicial('outraClasse'))];
     return vagas.filter((v): v is VagaMelhoria => v !== null);
   });
   /** Vagas de Fortificação de Personalidade (níveis 7/14) — 0, 1 ou 2. */
