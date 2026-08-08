@@ -445,6 +445,7 @@ describe('FichaCriar', () => {
 
     it('ficha final (criar()) persiste o bônus escolhido nos atributos', () => {
       const { fixture, componente } = montar();
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
       componente['atualizar']({
         nome: 'Agente-9', classe: ClasseEnum.ESPECIALISTA, arquetipo: ArquetipoEnum.ENGENHEIRO,
         dinheiro: { dados: [1, 1, 1, 1], inicial: 1000, rolado: true },
