@@ -236,6 +236,76 @@ describe('FichaCriar', () => {
     componente['fecharSeletorMelhoria']();
   }
 
+  describe('pacote inicial de habilidades', () => {
+    it.each([
+      ['QUATRO_GERAIS', [{ tipo: 'geral', alvo: 4 }]],
+      ['DUAS_GERAIS_UMA_CLASSE_OU_ARQUETIPO', [{ tipo: 'geral', alvo: 2 }, { tipo: 'classeOuArquetipo', alvo: 1 }]],
+      ['DUAS_CLASSE_OU_ARQUETIPO', [{ tipo: 'classeOuArquetipo', alvo: 2 }]],
+    ])('compõe %s no Nível 0', (pacote, alvos) => {
+      const { componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
+      componente['selecionarPacoteHabilidades'](pacote as never);
+
+      expect(componente['comHabilidades']()).toBe(true);
+      expect(componente['vagasMelhoria']().map(({ tipo, alvo }) => ({ tipo, alvo }))).toEqual(alvos);
+    });
+
+    it('oferece somente o pacote de 3 habilidades civis ao Civil', () => {
+      const { componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.CIVIL });
+
+      expect(componente['pacotesHabilidadesIniciais']().map((pacote) => pacote.id)).toEqual(['TRES_CIVIS']);
+      componente['selecionarPacoteHabilidades']('TRES_CIVIS');
+      expect(componente['vagasMelhoria']().map(({ tipo, alvo }) => ({ tipo, alvo }))).toEqual([{ tipo: 'civil', alvo: 3 }]);
+    });
+
+    it('soma ao Experimento a vaga adicional de Classe/Arquétipo', () => {
+      const { componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_ARTIFICIAL });
+      componente['selecionarPacoteHabilidades']('DUAS_GERAIS_UMA_CLASSE_OU_ARQUETIPO');
+
+      expect(componente['vagasMelhoria']().map(({ tipo, alvo }) => ({ tipo, alvo }))).toEqual([
+        { tipo: 'geral', alvo: 2 },
+        { tipo: 'classeOuArquetipo', alvo: 2 },
+      ]);
+    });
+
+    it('bloqueia o passo Habilidades até escolher e preencher o pacote', () => {
+      const { componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR, passo: 4 });
+      expect(componente['passoValido']()).toBe(false);
+
+      componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
+      preencherVagasDeMelhoria(componente);
+      expect(componente['passoValido']()).toBe(true);
+    });
+
+    it('não adiciona a mesma habilidade duas vezes por chamadas repetidas do seletor', () => {
+      const { componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
+      componente['selecionarPacoteHabilidades']('QUATRO_GERAIS');
+      componente['abrirSeletorMelhoria']('geral');
+      const habilidade = componente['gruposVagaAberta']()[0].subgrupos[0].habilidades[0];
+
+      componente['adicionarMelhoria'](habilidade);
+      componente['adicionarMelhoria'](habilidade);
+
+      expect(componente['estado']().melhorias.filter((melhoria) => melhoria.habilidade.nome === habilidade.nome)).toHaveLength(1);
+    });
+
+    it('remove escolhas excedentes ao trocar para um pacote menor', () => {
+      const { componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
+      componente['selecionarPacoteHabilidades']('QUATRO_GERAIS');
+      preencherVagasDeMelhoria(componente);
+      expect(componente['preenchidasNaVaga']('geral')).toBe(4);
+
+      componente['selecionarPacoteHabilidades']('DUAS_GERAIS_UMA_CLASSE_OU_ARQUETIPO');
+
+      expect(componente['preenchidasNaVaga']('geral')).toBe(2);
+    });
+  });
+
   describe('m3-58 — passo // HABILIDADES', () => {
     it('não existe na trilha quando o Nível inicial é 0', () => {
       const { componente } = montar();
@@ -270,6 +340,7 @@ describe('FichaCriar', () => {
       const habilidadeInicial = componente['habilidadeInicial']();
       expect(componente['nomesEscolhidosMelhoria']().has(habilidadeInicial!.nome)).toBe(true);
 
+      componente['selecionarPacoteHabilidades']('QUATRO_GERAIS');
       preencherVagasDeMelhoria(componente);
       fixture.detectChanges();
       for (const vaga of componente['vagasMelhoria']()) {
@@ -288,6 +359,7 @@ describe('FichaCriar', () => {
       expect(componente['novoAgente']().nivelInicial).toBe(7);
       expect(componente['alvoFortificacoes']()).toBe(1);
 
+      componente['selecionarPacoteHabilidades']('QUATRO_GERAIS');
       preencherVagasDeMelhoria(componente);
       fixture.detectChanges();
       expect(componente['melhoriasCompletas']()).toBe(false);
@@ -316,8 +388,8 @@ describe('FichaCriar', () => {
       const { componente } = montar();
       componente['atualizar']({ classe: ClasseEnum.COMBATENTE });
 
-      expect(componente['comHabilidades']()).toBe(false);
-      expect(componente['passos']()).not.toContain('Habilidades');
+      expect(componente['comHabilidades']()).toBe(true);
+      expect(componente['passos']()).toContain('Habilidades');
     });
 
     it('vaga classeOuArquetipo ganha +1 fixo no Nível 0 para Experimento — nenhuma outra vaga aparece', () => {
@@ -340,6 +412,7 @@ describe('FichaCriar', () => {
     it('escolher Peculiaridade na vaga garantida do Nível 0 conta como melhoria completa', () => {
       const { componente } = montar();
       componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['selecionarPacoteHabilidades']('QUATRO_GERAIS');
 
       componente['abrirSeletorMelhoria']('classeOuArquetipo');
       const peculiaridade = componente['gruposVagaAberta']()
@@ -350,6 +423,7 @@ describe('FichaCriar', () => {
 
       componente['adicionarMelhoria'](peculiaridade!);
       componente['fecharSeletorMelhoria']();
+      preencherVagasDeMelhoria(componente);
 
       expect(componente['melhoriasCompletas']()).toBe(true);
       expect(componente['habilidadesDoNivel']().some((h) => h.nome === 'Peculiaridade')).toBe(true);

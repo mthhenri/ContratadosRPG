@@ -399,6 +399,24 @@
                 </p>
               </div>
 
+              <div class="guia__subsecao"><span>Habilidades iniciais</span><i></i></div>
+              <p class="guia__subsecao-ajuda">Escolha um pacote obrigatório da criação. As vagas recebidas por Nível ou Treinamento são somadas depois.</p>
+              <div class="guia__pacotes" role="radiogroup" aria-label="Pacote inicial de habilidades">
+                @for (pacote of pacotesHabilidadesIniciais(); track pacote.id) {
+                  <button
+                    type="button"
+                    class="guia__pacote"
+                    role="radio"
+                    [class.guia__pacote--ativo]="estado().pacoteHabilidadesId === pacote.id"
+                    [attr.aria-checked]="estado().pacoteHabilidadesId === pacote.id"
+                    (click)="selecionarPacoteHabilidades(pacote.id)"
+                  >
+                    <span>Pacote de criação</span>
+                    <strong>{{ pacote.rotulo }}</strong>
+                  </button>
+                }
+              </div>
+
               <div class="guia__memorial guia__memorial--ganhos">
                 <header><span>Ganhos automáticos do nível</span><b>SEM ESCOLHA</b></header>
                 @if (derivadosNivel().proficiencia !== undefined) {
@@ -413,7 +431,7 @@
                 <div><span>Habilidades por turno</span><code>limite por turno</code><strong>{{ derivadosNivel().habilidadesPorTurno }}</strong></div>
               </div>
 
-              <div class="guia__subsecao"><span>Vagas de habilidade</span><i></i></div>
+              <div class="guia__subsecao"><span>Vagas combinadas</span><i></i></div>
               <p class="guia__subsecao-ajuda">Escolha do catálogo do sistema até preencher cada vaga. A mesma habilidade não pode ser escolhida duas vezes.</p>
               <div class="guia__vagas">
                 @for (vaga of vagasMelhoria(); track vaga.tipo) {

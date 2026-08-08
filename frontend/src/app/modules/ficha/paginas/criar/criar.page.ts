@@ -6,8 +6,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ArquetipoEnum, ClasseEnum, FormacaoBonusEnum, FormacaoParametroEnum, HabilidadeCategoriaEnum, MotivoEntradaAgenteEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaAtributosDto, FichaHabilidadeDto, FichaOrigemDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
-import { calcularDerivados, calcularEnergia, calcularOrcamentoAtributos, calcularProgressaoAcumulada, calcularVida, catalogoHabilidades, habilidadesIniciais, obterBonusAtributos, obterSaudeClasse, validarDistribuicaoAtributos } from '@contratados-rpg/shared/regras/agente';
-import type { GrupoHabilidades, HabilidadeCatalogoItemDto } from '@contratados-rpg/shared/regras/agente';
+import { calcularDerivados, calcularEnergia, calcularOrcamentoAtributos, calcularProgressaoAcumulada, calcularVida, catalogoHabilidades, habilidadesIniciais, listarPacotesHabilidadesIniciais, obterBonusAtributos, obterSaudeClasse, validarDistribuicaoAtributos } from '@contratados-rpg/shared/regras/agente';
+import type { GrupoHabilidades, HabilidadeCatalogoItemDto, HabilidadesPacoteInicialId, TipoVagaHabilidade } from '@contratados-rpg/shared/regras/agente';
 import { calcularBonusMonetario, calcularDinheiroInicial, calcularNovoAgente } from '@contratados-rpg/shared/regras/novo-agente';
 import { rolarDados } from '@contratados-rpg/shared/regras/descanso';
 import { FORMACOES, ehClasseExperimento, experimentoComPeculiaridade } from '@contratados-rpg/shared/regras/identidade';
@@ -28,7 +28,7 @@ import { FichaHabilidadeSeletor } from '../../componentes/ficha-habilidade-selet
 import { GuiaEquipamentoLoja } from '../../componentes/guia-equipamento-loja/guia-equipamento-loja.component';
 
 /** Vaga de melhoria de nível (m3-58) — cada uma casa com um campo de `ProgressaoAcumuladaDto`. */
-type TipoVagaMelhoria = 'geral' | 'classe' | 'classeOuArquetipo' | 'outraClasse' | 'civil';
+type TipoVagaMelhoria = TipoVagaHabilidade;
 interface VagaMelhoria { readonly tipo: TipoVagaMelhoria; readonly rotulo: string; readonly alvo: number; }
 interface MelhoriaEscolhida { readonly vaga: TipoVagaMelhoria; readonly habilidade: FichaHabilidadeDto; }
 /** Rascunho de uma Fortificação de Personalidade (níveis 7/14) — vira `FichaHabilidadeDto` na criação. */
@@ -41,6 +41,7 @@ interface EstadoGuiaCriacao {
   readonly classe: ClasseEnum | null; readonly arquetipo: ArquetipoEnum | null;
   readonly motivo: MotivoEntradaAgenteEnum; readonly mediaNivel: number; readonly mediaPrestigio: number;
   readonly sobrescreverProgressao: boolean; readonly nivelManual: number; readonly prestigioManual: number;
+  readonly pacoteHabilidadesId: HabilidadesPacoteInicialId | null;
   readonly atributos: FichaAtributosDto; readonly maestria: ChaveAtributo | null; readonly modoLivre: boolean;
   readonly personalidade: string; readonly origem: FichaOrigemDto; readonly formacoesCustomizadas: readonly boolean[];
   readonly dinheiro: DinheiroRolado;
@@ -66,6 +67,7 @@ function normalizarEstado(estado: EstadoGuiaCriacao): EstadoGuiaCriacao {
     sobrescreverProgressao: estado.sobrescreverProgressao ?? false,
     nivelManual: estado.nivelManual ?? 0,
     prestigioManual: estado.prestigioManual ?? 0,
+    pacoteHabilidadesId: estado.pacoteHabilidadesId ?? null,
     fortificacoes: estado.fortificacoes ?? fortificacoesVazias(),
     kit: estado.kit ?? [],
   };
@@ -110,6 +112,7 @@ export class FichaCriar {
   protected readonly estado = signal<EstadoGuiaCriacao>({ passo: 0, nome: '', usuarioId: null, classe: null,
     arquetipo: null, motivo: MotivoEntradaAgenteEnum.MORTE_OU_INICIO_DO_ZERO, mediaNivel: 0, mediaPrestigio: 0,
     sobrescreverProgressao: this.campanhaId === null, nivelManual: 0, prestigioManual: 0,
+    pacoteHabilidadesId: null,
     atributos: { ...ATRIBUTOS_BASE_PADRAO }, maestria: null, modoLivre: false, personalidade: '', origem: origemVazia(),
     formacoesCustomizadas: [false, false], dinheiro: dinheiroVazio(), melhorias: [], fortificacoes: fortificacoesVazias(), kit: [] });
   protected readonly ehMestre = computed(() => this.membros().find((m) => m.usuarioId === this.sessaoService.usuario()?.id)?.papel === TipoCampanhaMembroPapelEnum.MESTRE);
@@ -176,7 +179,7 @@ export class FichaCriar {
   /** `true` quando a classe é uma subclasse de Experimento — precisa da vaga garantida mesmo no Nível 0 (doc: "ao criar seu agente, escolha uma característica anômala"). */
   protected readonly ehExperimento = computed(() => { const classe = this.estado().classe; return classe !== null && ehClasseExperimento(classe); });
   /** `true` quando o passo // HABILIDADES existe na trilha: Nível inicial > 0 (m3-58) OU Experimento (vaga garantida, mesmo no Nível 0). */
-  protected readonly comHabilidades = computed(() => this.temMelhorias() || this.ehExperimento());
+  protected readonly comHabilidades = computed(() => this.estado().classe !== null);
   /** Trilha de passos — // Habilidades (quando existe) vem antes de // Identidade: só depois de escolher habilidades o guia sabe se um Experimento vai ter Peculiaridade (e portanto não vai ter Origem). */
   protected readonly passos = computed<readonly string[]>(() => {
     const base = ['Base', 'Classe', 'Novo agente', 'Atributos'];
@@ -186,6 +189,8 @@ export class FichaCriar {
   });
   /** Contagem acumulada de vagas do Nível 1 até o Nível inicial (`shared/regras`) — fonte única, proibição #26. */
   protected readonly progressaoAcumulada = computed(() => calcularProgressaoAcumulada({ classe: this.classeCalculada(), nivel: this.nivelInicial() }));
+  protected readonly pacotesHabilidadesIniciais = computed(() => listarPacotesHabilidadesIniciais(this.classeCalculada()));
+  protected readonly pacoteHabilidadesSelecionado = computed(() => this.pacotesHabilidadesIniciais().find((pacote) => pacote.id === this.estado().pacoteHabilidadesId) ?? null);
   /** Vagas de habilidade do passo // HABILIDADES, só as com alvo > 0 — Civil nunca vê Geral/Classe própria/Arquétipo/Outra classe.
    * Experimento ganha +1 fixo em 'classeOuArquetipo' na criação (vaga garantida, mesmo padrão da Habilidade Inicial) — é essa
    * vaga que já dá acesso à lista "Habilidades de Subclasse" (Peculiaridade incluída, `habilidades-catalogo.ts` grupo 'arquetipo'). */
@@ -193,10 +198,12 @@ export class FichaCriar {
     const p = this.progressaoAcumulada();
     const civil = this.classeCalculada() === ClasseEnum.CIVIL;
     const bonusExperimento = this.ehExperimento() ? 1 : 0;
+    const pacote = this.pacoteHabilidadesSelecionado();
+    const quantidadeInicial = (tipo: TipoVagaMelhoria): number => pacote?.vagas.find((vagaInicial) => vagaInicial.tipo === tipo)?.quantidade ?? 0;
     const vaga = (tipo: TipoVagaMelhoria, alvo: number): VagaMelhoria | null => alvo > 0 ? { tipo, rotulo: FichaCriar.ROTULOS_VAGA[tipo], alvo } : null;
     const vagas = civil
-      ? [vaga('classe', p.habilidadesClasse), vaga('civil', p.habilidadesCivis)]
-      : [vaga('geral', p.habilidadesGerais), vaga('classe', p.habilidadesClasse), vaga('classeOuArquetipo', p.habilidadesClasseOuArquetipo + bonusExperimento), vaga('outraClasse', p.habilidadesOutraClasse)];
+      ? [vaga('classe', p.habilidadesClasse), vaga('civil', p.habilidadesCivis + quantidadeInicial('civil'))]
+      : [vaga('geral', p.habilidadesGerais + quantidadeInicial('geral')), vaga('classe', p.habilidadesClasse + quantidadeInicial('classe')), vaga('classeOuArquetipo', p.habilidadesClasseOuArquetipo + quantidadeInicial('classeOuArquetipo') + bonusExperimento), vaga('outraClasse', p.habilidadesOutraClasse + quantidadeInicial('outraClasse'))];
     return vagas.filter((v): v is VagaMelhoria => v !== null);
   });
   /** Vagas de Fortificação de Personalidade (níveis 7/14) — 0, 1 ou 2. */
@@ -233,7 +240,7 @@ export class FichaCriar {
   protected readonly melhoriasCompletas = computed(() => {
     const vagasOk = this.vagasMelhoria().every((v) => this.preenchidasNaVaga(v.tipo) >= v.alvo);
     const fortOk = this.estado().fortificacoes.slice(0, this.alvoFortificacoes()).every((f) => f.nome.trim().length > 0 && f.descricao.trim().length > 0);
-    return vagasOk && fortOk;
+    return this.pacoteHabilidadesSelecionado() !== null && vagasOk && fortOk;
   });
   /** Total de vagas (catálogo + Fortificações) e quantas já foram preenchidas — só para o resumo lateral. */
   protected readonly melhoriasAlvoTotal = computed(() => this.vagasMelhoria().reduce((soma, v) => soma + v.alvo, 0) + this.alvoFortificacoes());
@@ -281,7 +288,7 @@ export class FichaCriar {
   protected atualizar(parcial: Partial<EstadoGuiaCriacao>): void { this.estado.update((atual) => ({ ...atual, ...parcial })); }
   protected valor(evento: Event): string { return (evento.target as HTMLInputElement).value; }
   protected numero(evento: Event): number { return Number(this.valor(evento)); }
-  protected mudarClasse(evento: Event): void { const valor = this.valor(evento); this.atualizar({ classe: valor ? valor as ClasseEnum : null, arquetipo: null }); }
+  protected mudarClasse(evento: Event): void { const valor = this.valor(evento); this.atualizar({ classe: valor ? valor as ClasseEnum : null, arquetipo: null, pacoteHabilidadesId: null, melhorias: [] }); }
   protected mudarMotivo(evento: Event): void { this.atualizar({ motivo: this.valor(evento) as MotivoEntradaAgenteEnum }); }
   protected mudarArquetipo(evento: Event): void { const valor = this.valor(evento); this.atualizar({ arquetipo: valor ? valor as ArquetipoEnum : null }); }
   protected atualizarOrigem(campo: 'nome' | 'descricao' | 'saberDeCampo', valor: string): void { this.atualizar({ origem: { ...this.estado().origem, [campo]: valor } }); }
@@ -313,6 +320,19 @@ export class FichaCriar {
   }
   protected rotuloParametroFormacao(parametro: FormacaoParametroEnum): string { return rotuloParametroFormacao(parametro); }
   protected passoAtributo(chave: ChaveAtributo, delta: number): void { const atual = this.estado(); const limite = this.orcamento().maximoFinal; this.atualizar({ atributos: { ...atual.atributos, [chave]: Math.max(0, Math.min(limite, atual.atributos[chave] + delta)) } }); }
+  protected selecionarPacoteHabilidades(id: HabilidadesPacoteInicialId): void {
+    if (!this.pacotesHabilidadesIniciais().some((pacote) => pacote.id === id)) return;
+    this.atualizar({ pacoteHabilidadesId: id });
+    const limites = new Map(this.vagasMelhoria().map((vaga) => [vaga.tipo, vaga.alvo]));
+    const contagem = new Map<TipoVagaMelhoria, number>();
+    const melhorias = this.estado().melhorias.filter((melhoria) => {
+      const atual = contagem.get(melhoria.vaga) ?? 0;
+      if (atual >= (limites.get(melhoria.vaga) ?? 0)) return false;
+      contagem.set(melhoria.vaga, atual + 1);
+      return true;
+    });
+    this.atualizar({ melhorias });
+  }
 
   /**
    * Grupos do catálogo de habilidades (`shared/regras`) filtrados para uma vaga do passo //
@@ -346,6 +366,9 @@ export class FichaCriar {
   protected adicionarMelhoria(item: HabilidadeCatalogoItemDto): void {
     const vaga = this.vagaAberta();
     if (!vaga) return;
+    if (this.nomesEscolhidosMelhoria().has(item.nome)) return;
+    const alvo = this.vagasMelhoria().find((vagaDisponivel) => vagaDisponivel.tipo === vaga)?.alvo ?? 0;
+    if (this.preenchidasNaVaga(vaga) >= alvo) return;
     const habilidade: FichaHabilidadeDto = { nome: item.nome, categoria: item.categoria, custoEnergia: item.custoEnergia, descricao: item.descricao, ...(item.origem === undefined ? {} : { origem: item.origem }) };
     this.atualizar({ melhorias: [...this.estado().melhorias, { vaga, habilidade }] });
   }
