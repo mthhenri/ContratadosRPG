@@ -1,8 +1,7 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-07 · **Última decisão registrada:** o guia de criação de ficha
-> (`m3-57`–`m3-59`) também atende `/fichas/nova` (acervo, sem campanha) — `FichaCriarDialog` foi
-> removido do código, era o último consumidor
+> **Última revisão:** 2026-08-08 · **Última decisão registrada:** a `m3-64` incorporou ao guia os
+> pacotes iniciais de habilidades e Nível/Prestígio exatos, inclusive para fichas avulsas
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -17,11 +16,10 @@
 
 Nenhuma task de milestone aberto está explicitamente encadeada; a fila do backlog abaixo é a
 referência. O trio do guia de criação (`m3-57` base, `m3-58` melhorias de nível, `m3-59`
-equipamento inicial) **concluiu** — as três specs estão em `docs/specs/done/`; o que o guia faz
-hoje de ponta a ponta está descrito na seção 4, em "Guia de criação de ficha". Registrado em
-`PROBLEMS.md` (`P-012`, `CONTORNADO`): o pacote de habilidades **de criação** (Nível/Treinamento 0)
-do documento — separado da tabela de progressão por nível e nunca modelado em `shared/regras` —
-não tem consumidor no guia; contorno via edição livre da ficha (`m3-13`).
+equipamento inicial) e o complemento `m3-64` **concluíram** — as specs estão em
+`docs/specs/done/`; o que o guia faz hoje de ponta a ponta está descrito na seção 4, em "Guia de
+criação de ficha". A `m3-64` resolveu o antigo `P-012`: o pacote inicial agora é uma regra pura em
+`shared/regras/agente` e tem consumidor obrigatório no guia.
 
 `m2-18`/`m2-19`/`m2-20`/`m2-21` fecharam a frente de redesenho do painel de campanhas —
 `/painel/:id` tem layout dedicado para mestre e para jogador. Fica **em aberto, por decisão do
@@ -218,19 +216,21 @@ consumidora quem faltava migrar. Tela única por passos — trilha vertical + re
 progressivo que nunca antecipa classe/Nível/dinheiro antes da escolha real —, rodando sobre
 `shared/regras` sem nenhuma chamada ao backend até o "Criar ficha" final. Sem `campanhaId`
 (`null`), o guia pula `listarMembros`/`listarFichas` (sem esquadrão, sem seletor de dono no passo
-01) e o passo 03 sempre segue o caminho "primeiro agente" (Nível 0, Prestígio 0, sem bônus — o
-mesmo já usado para uma campanha ainda sem fichas), com o aviso trocando "Primeiro agente da
-campanha" por "Ficha avulsa, sem campanha"; ao final, `POST /ficha` sai sem a chave `campanhaId` e
+01) e o passo 03 solicita Nível e Prestígio exatos; em campanha, as médias calculadas continuam
+como padrão e podem ser sobrescritas manualmente. Ao final, `POST /ficha` sai sem a chave
+`campanhaId` quando a ficha é avulsa e
 o guia termina em `/fichas/:id`, não em `/painel/.../ficha/:id`. Passos: **01 Base** (dono, só
 mestre — não aparece sem campanha —, + codinome) · **02 Classe** (classe/arquétipo, bônus fixo de
 atributos, Habilidade Inicial, Saúde base sem Nível/atributos ainda) · **03 Novo agente** (motivo
 de entrada + médias de Nível/Prestígio pré-calculadas da campanha, `calcularNovoAgente`, memorial
-de cálculo; primeira ficha da campanha, ou ficha sem campanha, pula direto para Nível/Prestígio 0)
+de cálculo e sobrescrita exata; sem campanha, valores exatos informados diretamente)
 · **04 Atributos** (orçamento de 4 pontos de criação,
 `calcularOrcamentoAtributos`/`validarDistribuicaoAtributos`) · **05 Identidade** (Personalidade +
-Origem com catálogo de Formações e `Outra`, imutáveis para o dono após a criação) · **06 Melhorias**
-(só existe com Nível inicial > 0 — vagas de habilidade da progressão acumulada,
-`calcularProgressaoAcumulada`, reusa `FichaHabilidadeSeletor` da `m3-13`, Fortificações de
+Origem com catálogo de Formações e `Outra`, imutáveis para o dono após a criação) · **06
+Habilidades** (sempre presente: pacote inicial obrigatório de 4 Gerais, 2 Gerais + 1 de
+Classe/Arquétipo ou 2 de Classe/Arquétipo; Civil escolhe 3 Civis; compõe ainda as vagas de
+`calcularProgressaoAcumulada`, sem duplicatas — Experimento não ganha vaga extra, escolhe
+Peculiaridade pelo mesmo pacote de qualquer outra classe; Fortificações de
 Personalidade nos níveis 7/14) · **07 Recursos** (rolagem única e definitiva de `1000 + 4D4×250` +
 Bônus Monetário) · **08 Equipamento inicial** (kit da loja, orçamento **à parte** do dinheiro —
 nunca descontado —, teto $2500/peso 5 do documento — mesma regra para toda classe, inclusive Civil

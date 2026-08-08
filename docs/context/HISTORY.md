@@ -1,5 +1,43 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-08 — Guia de criação: remove a vaga extra de Experimento no passo Habilidades
+
+Pedido direto do autor logo após a `m3-64`: o passo Habilidades já garante a todo agente (inclusive
+Experimento) um pacote inicial obrigatório que pode incluir vagas de Classe/Arquétipo — a vaga fixa
+adicional que a `m3-64` dava só a Experimento ficou redundante e foi removida de
+`FichaCriar.vagasMelhoria` (`frontend/.../criar.page.ts`). Experimento com Peculiaridade continua
+possível, só que pelo mesmo pacote de qualquer outra classe, não por uma vaga garantida à parte. O
+texto do passo que anunciava essa vaga garantida também saiu do template.
+
+## 2026-08-08 — `m3-64`: habilidades iniciais, progressão exata e identidade legível
+
+Pedido direto do autor para fechar quatro lacunas do guia e do resumo da ficha. O pacote de
+habilidades da criação, antes registrado como `P-012`, passou a ser regra pura em
+`shared/regras/agente/habilidades-iniciais.ts`: agentes convencionais escolhem exatamente um entre
+**4 Gerais**, **2 Gerais + 1 de Classe/Arquétipo** ou **2 de Classe/Arquétipo**; Civil recebe
+**3 habilidades civis**. O passo Habilidades agora existe desde o Nível 0 e compõe o pacote com a
+vaga adicional de Experimento e as vagas acumuladas da progressão, impedindo duplicatas e removendo
+escolhas excedentes quando classe, pacote, Nível ou modo mudam. A tabela de progressão permaneceu
+intacta: criação e evolução continuam conceitos separados.
+
+O passo Novo Agente ganhou valores finais exatos. Em campanha, Nível e Prestígio médios continuam
+selecionados por padrão, com controle explícito para sobrescrever os dois valores; fora de campanha,
+os campos manuais são o caminho padrão. Esses valores alimentam derivados, vagas, revisão, resumo e
+o payload final, permitindo criar diretamente uma ficha avulsa de nível alto.
+
+Na apresentação da ficha, uma subclasse passa a preservar também a classe-base — por exemplo,
+**Especialista** e **Experimento Artificial** aparecem como identificadores separados. Quando uma
+Peculiaridade substitui a Origem, o resumo mostra somente **Substituída pela Peculiaridade**, sem o
+estado concorrente “Não definida” nem ação de edição; o chip ganhou quebra interna segura nos
+viewports estreitos.
+
+**Verificação:** `shared` compilou e passou 546 testes; os 49 testes do guia e os 136 testes do
+componente de ficha/rotulagem passaram; o frontend compilou. Na aplicação real, o fluxo completo foi
+percorrido em 1920×1080 e 360×800 com Experimento Artificial, Peculiaridade, pacote de 4 Gerais,
+Nível 12 e Prestígio 37. O resumo e a ficha persistida exibiram classe-base + subclasse, Origem
+substituída e valores exatos sem overflow horizontal. O lint mantém sete violações preexistentes,
+fora dos trechos alterados; o build mantém o aviso preexistente de orçamento do bundle inicial.
+
 ## 2026-08-07 — Acervo (`/fichas`) ganha o guia de criação; `FichaCriarDialog` aposentado
 
 Pedido direto do autor (não numerado — sem spec no backlog): o "Criar ficha" da tela `/fichas`

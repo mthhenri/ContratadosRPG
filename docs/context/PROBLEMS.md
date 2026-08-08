@@ -173,37 +173,6 @@
   arquivo de configuração, para que `npm test` volte a ser confiável).
 - **Desde:** descoberto na verificação final do ajuste da barra de filtros do inventário (2026-08-05).
 
-### P-012 — Pacote de habilidades de Nível 0 (criação) não tem consumidor · `CONTORNADO` · shared/regras (M1) · guia de criação
-
-- **Sintoma:** `docs/core/sistema-v4.1.0.md` — "Habilidades" descreve um pacote **na criação**,
-  independente da tabela de progressão por nível: o agente escolhe **um** de três combos ("2
-  Gerais + 1 Classe/Arquétipo", "4 Gerais" ou "2 Classe/Arquétipo"); "Jogando como um Civil" —
-  "Habilidades de Civíl" descreve, à parte, "ao criar a ficha, o civil escolhe **3** habilidades
-  civis". Nenhum dos dois está representado em `calcularProgressaoAcumulada` (`shared/regras/
-  agente/progressao.ts`), que soma benefícios do **Nível 1** em diante — no Nível/Treinamento 0 o
-  resultado é sempre zero em todos os campos. Uma ficha criada pelo guia (`m3-57`/`m3-58`) no
-  Nível 0 nasce **sem nenhuma habilidade além da Inicial** (e um Civil de Treinamento 0, sem
-  nenhuma habilidade civil), quando o documento promete o pacote de criação em ambos os casos.
-- **Causa:** o pacote de criação nunca foi modelado como campo de `ProgressaoAcumuladaDto` (nasceu
-  antes da `m1-02`, aparentemente nunca reconciliado com a tabela `dadosAgente`/`dadosCivil` — ver
-  o comentário de divergências corrigidas em `progressao-agente.dados.ts`). A `m3-58` (passo //
-  MELHORIAS do guia) consome exclusivamente `calcularProgressaoAcumulada` por definição de escopo
-  ("Implemente exatamente o que a especificação define; não extrapole") — não é o lugar certo para
-  inventar a regra por conta própria; o pacote de criação **é uma regra de domínio nova**, precisa
-  nascer em `shared/regras` com a mesma leitura cuidadosa do documento que toda fórmula de jogo
-  exige, e a escolha entre os três combos é interação de jogador que o passo // MELHORIAS (vagas
-  fixas por tipo) não foi desenhado para oferecer.
-- **Contorno:** o editor de habilidades da própria ficha (`m3-13`, liberdade de edição da `m3-10`)
-  permite adicionar manualmente as habilidades do pacote de criação depois que a ficha existe —
-  nenhum dado fica inacessível, só não é oferecido dentro do guia.
-- **Correção:** modelar o pacote de criação em `shared/regras/agente` (provavelmente um novo campo
-  ou função ao lado de `calcularProgressaoAcumulada`, ativo só no Nível/Treinamento 0) e um passo
-  (ou sub-seção do passo // MELHORIAS) que ofereça a escolha entre os combos — merece spec própria,
-  não um acréscimo lateral a uma task já fechada.
-- **Desde:** descoberto lendo o documento-fonte para a `m3-58` (2026-08-07); a raiz é da `m1-02`.
-
----
-
 ## Resolvidos
 
 Itens resolvidos **saem daqui**. O relato da correção fica no [`HISTORY.md`](HISTORY.md), junto da
