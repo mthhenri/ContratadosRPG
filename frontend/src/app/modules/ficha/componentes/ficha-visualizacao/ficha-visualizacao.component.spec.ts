@@ -13,6 +13,7 @@ import {
 } from '@contratados-rpg/shared/enums';
 import type {
   FichaFragmentoConsumidoDto,
+  FichaHabilidadeDto,
   FichaJogadorDadosDto,
   FichaOrigemDto,
 } from '@contratados-rpg/shared/dtos/ficha';
@@ -1024,6 +1025,96 @@ describe('FichaVisualizacao', () => {
       expect(origens).toEqual([]);
       // O editor continua aberto — não fecha num rascunho inválido.
       expect(componente['editandoOrigem']()).toBe(true);
+    });
+
+    describe('m3-XX — oferta de limpar Origem ao adicionar Peculiaridade (mestre-only)', () => {
+      const dadosExperimentoComOrigem: FichaJogadorDadosDto = {
+        ...dados,
+        classe: ClasseEnum.EXPERIMENTO_BESTIAL,
+        arquetipo: null,
+        habilidades: [],
+        identidade: { personalidade: 'Instável', origem: origemExemplo },
+      };
+      const peculiaridade: FichaHabilidadeDto = {
+        nome: 'Peculiaridade',
+        categoria: HabilidadeCategoriaEnum.SUBCLASSE,
+        custoEnergia: 0,
+        descricao: '...',
+      };
+
+      it('mestre adiciona Peculiaridade com Origem definida: fica pendente de confirmação, não emite nada ainda', () => {
+        const alvo = montar(dadosExperimentoComOrigem, 'Espécime', 42, true, true);
+        const habilidadesEmitidas: unknown[] = [];
+        const origensLimpas: void[] = [];
+        alvo.fixture.componentInstance.ajusteHabilidades.subscribe((h) => habilidadesEmitidas.push(h));
+        alvo.fixture.componentInstance.origemLimpa.subscribe(() => origensLimpas.push(undefined));
+
+        alvo.fixture.componentInstance['mudarHabilidades']([peculiaridade]);
+
+        expect(habilidadesEmitidas).toEqual([]);
+        expect(origensLimpas).toEqual([]);
+        expect(alvo.fixture.componentInstance['habilidadesPendentesPeculiaridade']()).toEqual([peculiaridade]);
+      });
+
+      it('confirmar a oferta emite as duas mudanças — habilidades e origemLimpa — no mesmo gesto', () => {
+        const alvo = montar(dadosExperimentoComOrigem, 'Espécime', 42, true, true);
+        const habilidadesEmitidas: unknown[] = [];
+        let origemLimpaChamadas = 0;
+        alvo.fixture.componentInstance.ajusteHabilidades.subscribe((h) => habilidadesEmitidas.push(h));
+        alvo.fixture.componentInstance.origemLimpa.subscribe(() => origemLimpaChamadas++);
+
+        alvo.fixture.componentInstance['mudarHabilidades']([peculiaridade]);
+        alvo.fixture.componentInstance['confirmarLimparOrigemEHabilidade']();
+
+        expect(habilidadesEmitidas).toEqual([[peculiaridade]]);
+        expect(origemLimpaChamadas).toBe(1);
+        expect(alvo.fixture.componentInstance['habilidadesPendentesPeculiaridade']()).toBeNull();
+      });
+
+      it('cancelar a oferta descarta a mudança de habilidade — nada é emitido', () => {
+        const alvo = montar(dadosExperimentoComOrigem, 'Espécime', 42, true, true);
+        const habilidadesEmitidas: unknown[] = [];
+        alvo.fixture.componentInstance.ajusteHabilidades.subscribe((h) => habilidadesEmitidas.push(h));
+
+        alvo.fixture.componentInstance['mudarHabilidades']([peculiaridade]);
+        alvo.fixture.componentInstance['cancelarLimparOrigem']();
+
+        expect(habilidadesEmitidas).toEqual([]);
+        expect(alvo.fixture.componentInstance['habilidadesPendentesPeculiaridade']()).toBeNull();
+      });
+
+      it('dono (não-mestre) adiciona Peculiaridade com Origem definida: passa direto, sem oferta', () => {
+        const alvo = montar(dadosExperimentoComOrigem, 'Espécime', 42, true, false);
+        const habilidadesEmitidas: unknown[] = [];
+        alvo.fixture.componentInstance.ajusteHabilidades.subscribe((h) => habilidadesEmitidas.push(h));
+
+        alvo.fixture.componentInstance['mudarHabilidades']([peculiaridade]);
+
+        expect(habilidadesEmitidas).toEqual([[peculiaridade]]);
+        expect(alvo.fixture.componentInstance['habilidadesPendentesPeculiaridade']()).toBeNull();
+      });
+
+      it('mestre adiciona Peculiaridade sem Origem definida: passa direto, nada para limpar', () => {
+        const semOrigem: FichaJogadorDadosDto = { ...dadosExperimentoComOrigem, identidade: { personalidade: 'Instável', origem: null } };
+        const alvo = montar(semOrigem, 'Espécime', 42, true, true);
+        const habilidadesEmitidas: unknown[] = [];
+        alvo.fixture.componentInstance.ajusteHabilidades.subscribe((h) => habilidadesEmitidas.push(h));
+
+        alvo.fixture.componentInstance['mudarHabilidades']([peculiaridade]);
+
+        expect(habilidadesEmitidas).toEqual([[peculiaridade]]);
+      });
+
+      it('mudança de habilidade que não introduz Peculiaridade passa direto, mesmo com Origem definida', () => {
+        const alvo = montar(dadosExperimentoComOrigem, 'Espécime', 42, true, true);
+        const habilidadesEmitidas: unknown[] = [];
+        alvo.fixture.componentInstance.ajusteHabilidades.subscribe((h) => habilidadesEmitidas.push(h));
+        const outraHabilidade: FichaHabilidadeDto = { nome: 'Foco', categoria: HabilidadeCategoriaEnum.GERAL, custoEnergia: 1, descricao: '...' };
+
+        alvo.fixture.componentInstance['mudarHabilidades']([outraHabilidade]);
+
+        expect(habilidadesEmitidas).toEqual([[outraHabilidade]]);
+      });
     });
   });
 

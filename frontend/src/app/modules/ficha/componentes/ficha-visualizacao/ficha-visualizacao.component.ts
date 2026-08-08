@@ -463,6 +463,9 @@ export class FichaVisualizacao {
   /** Lista de habilidades editada — a página persiste em `dados.habilidades` (m3-13). */
   readonly ajusteHabilidades = output<readonly FichaHabilidadeDto[]>();
 
+  /** Emite quando o mestre confirma a limpeza de Origem ao adicionar Peculiaridade (`mudarHabilidades`). */
+  readonly origemLimpa = output<void>();
+
   /** Inventário (itens + amplificadores) editado — a página persiste em `dados.inventario` (m3-14). */
   readonly ajusteInventario = output<FichaInventarioDto>();
 
@@ -1640,6 +1643,45 @@ export class FichaVisualizacao {
       !this.origemBloqueadaPorPeculiaridade() &&
       (this.ehMestre() || !this.origemDefinida()),
   );
+
+  /**
+   * Lista de habilidades pendente de confirmação — só fica não-`null` quando o **mestre** acabou de
+   * adicionar "Peculiaridade" a um Experimento que já tem Origem definida (`origemBloqueadaPorPeculiaridade`
+   * ainda `false` antes desta mudança). `null` = nenhuma oferta em aberto.
+   */
+  protected readonly habilidadesPendentesPeculiaridade = signal<readonly FichaHabilidadeDto[] | null>(null);
+
+  /**
+   * Intercepta toda mudança de habilidades vinda de `FichaHabilidades` (`habilidadesMudou`). Só quando
+   * a mudança **introduz** a Peculiaridade (não estava lá antes) numa ficha de Experimento que **já tem**
+   * Origem definida e quem edita é o **mestre**, a mudança fica pendente de confirmação — a Origem seria
+   * apagada no mesmo salvamento (`confirmarLimparOrigemEHabilidade`). Em qualquer outro caso, passa direto.
+   */
+  protected mudarHabilidades(novasHabilidades: readonly FichaHabilidadeDto[]): void {
+    const tinhaPeculiaridade = this.origemBloqueadaPorPeculiaridade();
+    const teraPeculiaridade = experimentoComPeculiaridade(this.dados().classe, novasHabilidades);
+    if (!tinhaPeculiaridade && teraPeculiaridade && this.ehMestre() && this.origemAtual() !== null) {
+      this.habilidadesPendentesPeculiaridade.set(novasHabilidades);
+      return;
+    }
+    this.ajusteHabilidades.emit(novasHabilidades);
+  }
+
+  /** Confirma a oferta — emite a mudança de habilidades e a limpeza de Origem no mesmo gesto (mesmo salvamento, debounced juntos em `FichaEdicaoService`). */
+  protected confirmarLimparOrigemEHabilidade(): void {
+    const pendente = this.habilidadesPendentesPeculiaridade();
+    this.habilidadesPendentesPeculiaridade.set(null);
+    if (!pendente) {
+      return;
+    }
+    this.ajusteHabilidades.emit(pendente);
+    this.origemLimpa.emit();
+  }
+
+  /** Cancela a oferta — descarta a mudança de habilidade pendente, nada é emitido. */
+  protected cancelarLimparOrigem(): void {
+    this.habilidadesPendentesPeculiaridade.set(null);
+  }
 
   /**
    * Contrato (m3-40) — texto livre no cabeçalho da Identidade, editável **só pelo mestre**
