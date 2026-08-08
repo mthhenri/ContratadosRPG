@@ -279,22 +279,32 @@
             @case ('Atributos') {
               <div class="guia__orcamento" [class.guia__orcamento--erro]="distribuicao().saldo !== 0">
                 <div><span>Saldo de distribuição</span><strong>{{ distribuicao().saldo }}</strong></div>
-                <small>{{ orcamento().pontosTotais }} pontos disponíveis · base 1 não consome orçamento{{ bonusAtributosLista().length ? ' · valores já somam o bônus fixo de ' + rotuloOrigemBonus() : '' }}</small>
+                <small>{{ orcamento().pontosTotais }} pontos disponíveis · base 1 não consome orçamento · máximo {{ limiteAtributo() }} por atributo{{ bonusAtributosLista().length ? ' · valores já somam o bônus fixo de ' + rotuloOrigemBonus() : '' }}</small>
               </div>
               <div class="guia__atributos">
                 @for (campo of campos; track campo.chave) {
                   <div class="atributo" [class.atributo--desvantagem]="estado().atributos[campo.chave] === 0">
+                    <button
+                      class="atributo__maestria"
+                      type="button"
+                      [class.atributo__maestria--ativa]="estado().maestria === campo.chave"
+                      [disabled]="!maestriaHabilitada(campo.chave)"
+                      [attr.aria-label]="'Maestria em ' + campo.nome"
+                      [attr.title]="'Maestria em ' + campo.nome + ' — requer ' + limiteMaestria + '+ pontos, custa ' + custoMaestriaPontos + ' pontos extras'"
+                      (click)="alternarMaestria(campo.chave)"
+                    >★</button>
                     <div class="atributo__identidade">
                       <span>{{ campo.nome }}</span>
                       @if (bonusAtributos()[campo.chave]; as bonus) {
                         <small class="atributo__bonus">+{{ bonus }} {{ rotuloOrigemBonus() }}</small>
                       }
+                      @if (estado().maestria === campo.chave) { <small class="atributo__bonus">Maestria · −{{ custoMaestriaPontos }} pontos</small> }
                       @if (estado().atributos[campo.chave] === 0) { <small>Base zerada · 2D20, menor</small> }
                     </div>
                     <div class="stepper">
                       <button class="stepper__botao" type="button" [attr.aria-label]="'Diminuir ' + campo.nome" (click)="passoAtributo(campo.chave, -1)">−</button>
                       <b class="stepper__valor">{{ atributosFinais()[campo.chave] }}</b>
-                      <button class="stepper__botao" type="button" [attr.aria-label]="'Aumentar ' + campo.nome" (click)="passoAtributo(campo.chave, 1)">+</button>
+                      <button class="stepper__botao" type="button" [attr.aria-label]="'Aumentar ' + campo.nome" [disabled]="estado().atributos[campo.chave] >= limiteAtributo()" (click)="passoAtributo(campo.chave, 1)">+</button>
                     </div>
                   </div>
                 }

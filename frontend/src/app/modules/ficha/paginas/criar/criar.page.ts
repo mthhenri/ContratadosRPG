@@ -6,7 +6,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ArquetipoEnum, ClasseEnum, FormacaoBonusEnum, FormacaoParametroEnum, HabilidadeCategoriaEnum, MotivoEntradaAgenteEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaAtributosDto, FichaHabilidadeDto, FichaOrigemDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
-import { calcularDerivados, calcularEnergia, calcularOrcamentoAtributos, calcularProgressaoAcumulada, calcularVida, catalogoHabilidades, habilidadesIniciais, listarPacotesHabilidadesIniciais, obterBonusAtributosComEscolha, obterSaudeClasse, obterSlotsEscolhaBonus, validarDistribuicaoAtributos } from '@contratados-rpg/shared/regras/agente';
+import { calcularDerivados, calcularEnergia, calcularOrcamentoAtributos, calcularProgressaoAcumulada, calcularVida, catalogoHabilidades, habilidadesIniciais, listarPacotesHabilidadesIniciais, MAESTRIA_PONTOS_MINIMO, maestriaAtingivel, obterBonusAtributosComEscolha, obterSaudeClasse, obterSlotsEscolhaBonus, validarDistribuicaoAtributos } from '@contratados-rpg/shared/regras/agente';
 import type { GrupoHabilidades, HabilidadeCatalogoItemDto, HabilidadesPacoteInicialId, SlotEscolhaAtributo, TipoVagaHabilidade } from '@contratados-rpg/shared/regras/agente';
 import { calcularBonusMonetario, calcularDinheiroInicial, calcularNovoAgente } from '@contratados-rpg/shared/regras/novo-agente';
 import { rolarDados } from '@contratados-rpg/shared/regras/descanso';
@@ -61,6 +61,10 @@ const origemVazia = (): FichaOrigemDto => ({ nome: '', descricao: '', formacao: 
 const dinheiroVazio = (): DinheiroRolado => ({ dados: [], inicial: 0, rolado: false });
 const fortificacoesVazias = (): FortificacaoRascunho[] => [{ nome: '', descricao: '' }, { nome: '', descricao: '' }];
 const rolarDinheiro = (): DinheiroRolado => { const dados = rolarDados({ quantidade: 4, faces: 4 }); const rolagem = calcularDinheiroInicial({ somaDados: dados.reduce((soma, dado) => soma + dado, 0) }); return { dados, inicial: rolagem.dinheiro, rolado: true }; };
+/** Teto de atributo no guia (doc — "⬡ Atributos": 6 pontos fora da criação; acima disso só via Fragmento de Módulo I, fora do escopo deste guia). */
+const ATRIBUTO_MAXIMO_GUIA = 6;
+/** Custo em pontos de atributo da Maestria (doc — "⬥ Maestrias"), além do ponto que já leva o atributo a 6. */
+const MAESTRIA_PONTOS_CUSTO = 2;
 
 function normalizarEstado(estado: EstadoGuiaCriacao): EstadoGuiaCriacao {
   return {
@@ -95,6 +99,9 @@ export class FichaCriar {
   protected readonly gruposClasse = GRUPOS_CLASSE;
   protected readonly gruposFormacao = GRUPOS_FORMACAO;
   protected readonly parametroEsquivaOuBloqueio = FormacaoParametroEnum.ESQUIVA_OU_BLOQUEIO;
+  /** Limiar e custo de Maestria expostos ao template (doc — "⬥ Maestrias"). */
+  protected readonly limiteMaestria = MAESTRIA_PONTOS_MINIMO;
+  protected readonly custoMaestriaPontos = MAESTRIA_PONTOS_CUSTO;
   protected readonly campos: readonly { chave: ChaveAtributo; nome: string }[] = [
     { chave: 'destreza', nome: 'Destreza' }, { chave: 'forca', nome: 'Força' }, { chave: 'luta', nome: 'Luta' },
     { chave: 'pontaria', nome: 'Pontaria' }, { chave: 'vigor', nome: 'Vigor' }, { chave: 'intelecto', nome: 'Intelecto' },
@@ -136,8 +143,19 @@ export class FichaCriar {
     ? Math.max(0, Math.trunc(this.estado().prestigioManual))
     : this.novoAgente().prestigio.prestigioInicial);
   protected readonly classeCalculada = computed(() => this.estado().classe ?? ClasseEnum.COMBATENTE);
-  protected readonly distribuicao = computed(() => validarDistribuicaoAtributos({ classe: this.classeCalculada(), nivel: this.nivelInicial(), atributos: this.estado().atributos }));
+  /** Custo extra da Maestria (doc — "⬥ Maestrias"): 2 pontos de atributo além dos 5 já gastos para chegar a 6. */
+  protected readonly custoMaestria = computed(() => this.estado().maestria !== null ? MAESTRIA_PONTOS_CUSTO : 0);
+  protected readonly distribuicao = computed(() => {
+    const base = validarDistribuicaoAtributos({ classe: this.classeCalculada(), nivel: this.nivelInicial(), atributos: this.estado().atributos });
+    const maestria = this.estado().maestria;
+    const violacoes = maestria !== null && !maestriaAtingivel(this.estado().atributos[maestria])
+      ? [...base.violacoes, `${maestria}: maestria requer ${MAESTRIA_PONTOS_MINIMO}+ pontos`]
+      : base.violacoes;
+    return { gastos: base.gastos + this.custoMaestria(), saldo: base.saldo - this.custoMaestria(), violacoes };
+  });
   protected readonly orcamento = computed(() => calcularOrcamentoAtributos({ classe: this.classeCalculada(), nivel: this.nivelInicial() }));
+  /** Teto efetivo por atributo no guia — nunca acima de 6, e respeita tetos mais baixos (ex.: Civil). */
+  protected readonly limiteAtributo = computed(() => Math.min(ATRIBUTO_MAXIMO_GUIA, this.orcamento().maximoFinal));
   protected readonly bonusMonetario = computed(() => calcularBonusMonetario({ prestigioInicial: this.prestigioInicial() }).bonus);
   protected readonly totalDinheiro = computed(() => this.estado().dinheiro.rolado ? this.estado().dinheiro.inicial + this.bonusMonetario() : 0);
   /** Bônus fixo de atributos do perfil (arquétipo/subclasse) atual — `{}` sem perfil definitivo. */
@@ -332,7 +350,19 @@ export class FichaCriar {
     return bonus ? FORMACOES[bonus] : null;
   }
   protected rotuloParametroFormacao(parametro: FormacaoParametroEnum): string { return rotuloParametroFormacao(parametro); }
-  protected passoAtributo(chave: ChaveAtributo, delta: number): void { const atual = this.estado(); const limite = this.orcamento().maximoFinal; this.atualizar({ atributos: { ...atual.atributos, [chave]: Math.max(0, Math.min(limite, atual.atributos[chave] + delta)) } }); }
+  protected passoAtributo(chave: ChaveAtributo, delta: number): void {
+    const atual = this.estado();
+    const valor = Math.max(0, Math.min(this.limiteAtributo(), atual.atributos[chave] + delta));
+    const maestria = atual.maestria === chave && !maestriaAtingivel(valor) ? null : atual.maestria;
+    this.atualizar({ atributos: { ...atual.atributos, [chave]: valor }, maestria });
+  }
+  /** `true` se o atributo já tem os 6 pontos exigidos para receber a Maestria (doc — "⬥ Maestrias"). */
+  protected maestriaHabilitada(chave: ChaveAtributo): boolean { return maestriaAtingivel(this.estado().atributos[chave]); }
+  /** Marca/desmarca a Maestria num atributo — única na ficha, só disponível com 6+ pontos e custa 2 pontos extras do orçamento. */
+  protected alternarMaestria(chave: ChaveAtributo): void {
+    if (!this.maestriaHabilitada(chave)) return;
+    this.atualizar({ maestria: this.estado().maestria === chave ? null : chave });
+  }
   protected selecionarPacoteHabilidades(id: HabilidadesPacoteInicialId): void {
     if (!this.pacotesHabilidadesIniciais().some((pacote) => pacote.id === id)) return;
     this.atualizar({ pacoteHabilidadesId: id });

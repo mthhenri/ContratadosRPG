@@ -221,6 +221,77 @@ describe('FichaCriar', () => {
     expect((raiz.querySelector('.guia__rodape .botao--primario') as HTMLButtonElement).disabled).toBe(false);
   });
 
+  describe('Atributos: teto de 6 pontos e Maestria', () => {
+    function irParaAtributos(componente: ReturnType<typeof montar>['componente']): void {
+      componente['atualizar']({ passo: 3, classe: ClasseEnum.COMBATENTE });
+    }
+
+    it('o botão "+" para de aumentar o atributo assim que ele chega a 6, mesmo com orçamento restante', () => {
+      const { fixture, raiz, componente } = montar([fichaExistente]);
+      irParaAtributos(componente);
+      fixture.detectChanges();
+
+      for (let i = 0; i < 10; i++) componente['passoAtributo']('destreza', 1);
+      fixture.detectChanges();
+
+      expect(componente['estado']().atributos.destreza).toBe(6);
+      expect((raiz.querySelector('[aria-label="Aumentar Destreza"]') as HTMLButtonElement).disabled).toBe(true);
+    });
+
+    it('o botão de Maestria só habilita com 6+ pontos no atributo', () => {
+      const { fixture, raiz, componente } = montar([fichaExistente]);
+      irParaAtributos(componente);
+      fixture.detectChanges();
+
+      const botaoMaestria = () => raiz.querySelector('[aria-label="Maestria em Destreza"]') as HTMLButtonElement;
+      expect(botaoMaestria().disabled).toBe(true);
+
+      componente['atualizar']({ atributos: { ...componente['estado']().atributos, destreza: 6 } });
+      fixture.detectChanges();
+
+      expect(botaoMaestria().disabled).toBe(false);
+    });
+
+    it('aplicar Maestria custa 2 pontos de atributo além dos já gastos para chegar a 6, e é alternável/única', () => {
+      const { fixture, raiz, componente } = montar([fichaExistente]);
+      irParaAtributos(componente);
+      componente['atualizar']({ atributos: { ...componente['estado']().atributos, destreza: 6, forca: 6 } });
+      fixture.detectChanges();
+
+      const saldoSemMaestria = componente['distribuicao']().saldo;
+      (raiz.querySelector('[aria-label="Maestria em Destreza"]') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(componente['estado']().maestria).toBe('destreza');
+      expect(componente['distribuicao']().saldo).toBe(saldoSemMaestria - 2);
+
+      // única na ficha: marcar em outro atributo substitui, não acumula o custo.
+      (raiz.querySelector('[aria-label="Maestria em Força"]') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(componente['estado']().maestria).toBe('forca');
+      expect(componente['distribuicao']().saldo).toBe(saldoSemMaestria - 2);
+
+      // clicar de novo no mesmo atributo desmarca a Maestria.
+      (raiz.querySelector('[aria-label="Maestria em Força"]') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(componente['estado']().maestria).toBeNull();
+      expect(componente['distribuicao']().saldo).toBe(saldoSemMaestria);
+    });
+
+    it('reduzir abaixo de 6 o atributo com Maestria remove a Maestria automaticamente', () => {
+      const { fixture, componente } = montar([fichaExistente]);
+      irParaAtributos(componente);
+      componente['atualizar']({ atributos: { ...componente['estado']().atributos, destreza: 6 }, maestria: 'destreza' });
+      fixture.detectChanges();
+
+      componente['passoAtributo']('destreza', -1);
+      fixture.detectChanges();
+
+      expect(componente['estado']().atributos.destreza).toBe(5);
+      expect(componente['estado']().maestria).toBeNull();
+    });
+  });
+
   /** Preenche todas as vagas de catálogo do passo Melhorias com habilidades distintas (m3-58). */
   function preencherVagasDeMelhoria(componente: FichaCriar): void {
     for (const vaga of componente['vagasMelhoria']()) {
