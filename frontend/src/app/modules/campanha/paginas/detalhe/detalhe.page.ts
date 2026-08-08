@@ -598,6 +598,12 @@ export class CampanhaDetalhe {
     // guard evita qualquer dependência acidental do que ele mesmo escreve.
     effect(() => {
       const fichaId = this.fichaExibidaId();
+      // Acesso de visualização (menu do jogador): as concessões carregadas por
+      // `carregarAcessosFichaExibida` ficam presas à ficha antiga se não forem limpas aqui — sem
+      // isto, o badge de contagem do menu continuaria mostrando o número da ficha anterior depois
+      // de trocar de ficha exibida sem reabrir a dialog. Só escreve (nunca lê) `acessosFichaExibida`
+      // aqui — sem risco de loop reativo.
+      this.acessosFichaExibida.set([]);
       if (fichaId === null) {
         return;
       }
@@ -1264,6 +1270,10 @@ export class CampanhaDetalhe {
     }
     this.fecharMenuCampanha();
     this.membroParaConcederAcesso.setValue(null);
+    // Limpa antes de abrir: a busca abaixo é assíncrona, e sem isto a dialog abriria mostrando
+    // (por uma janela) a lista de concessões da ficha exibida ANTERIOR — risco real de "Revogar"
+    // acertar o usuário errado se clicado nesse intervalo (achado da revisão final, m3-52+).
+    this.acessosFichaExibida.set([]);
     this.dialogAcessoFicha.set(true);
     this.carregarAcessosFichaExibida(ficha.id);
   }

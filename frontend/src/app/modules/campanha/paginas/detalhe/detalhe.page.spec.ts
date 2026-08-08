@@ -1515,5 +1515,30 @@ describe('CampanhaDetalhe', () => {
       );
       expect(contagem?.textContent?.trim()).toBe('1');
     });
+
+    it('reseta a contagem do badge (e a lista da dialog) ao trocar de ficha exibida, mesmo sem reabrir "Acesso de visualização"', () => {
+      const { fixture, raiz, fichaService } = montar({ usuarioId: 2, membros: membrosTres(), fichas });
+      // Ficha exibida inicial (Vera, id 4) tem 1 concessão.
+      fichaService.listarAcessos.mockReturnValue(of([{ usuarioId: 3, nome: 'Colega' }]));
+      abrirMenuCampanha(raiz, fixture);
+      encontrarItemMenu(raiz, 'Acesso de visualização').click();
+      fixture.detectChanges();
+      (raiz.querySelector('.dialogo__fundo') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      // Troca para a outra ficha própria (Zeta, id 5) via "Ver ficha" — sem reabrir a dialog. Sem o
+      // reset do achado da revisão final, o badge continuaria mostrando a contagem "1" de Vera.
+      const botaoZeta = Array.from(raiz.querySelectorAll<HTMLButtonElement>('.detalhe__equipe-ficha')).find(
+        (botao) => botao.textContent?.includes('Zeta'),
+      );
+      botaoZeta?.click();
+      fixture.detectChanges();
+
+      abrirMenuCampanha(raiz, fixture);
+      const contagem = encontrarItemMenu(raiz, 'Acesso de visualização').querySelector(
+        '.detalhe__cabecalho-menu-contagem',
+      );
+      expect(contagem).toBeNull();
+    });
   });
 });
