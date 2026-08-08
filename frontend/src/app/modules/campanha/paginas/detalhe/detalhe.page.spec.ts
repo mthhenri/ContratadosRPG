@@ -14,7 +14,7 @@ import {
   CampanhaMembroResumoDto,
   CampanhaRecuperadaDto,
 } from '@contratados-rpg/shared/dtos/campanha';
-import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { FichaAcessoResumoDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { CampanhaDetalhe } from './detalhe.page';
@@ -135,6 +135,9 @@ describe('CampanhaDetalhe', () => {
       ),
       excluirFicha: vi.fn(() => of(undefined)),
       atribuirCampanha: vi.fn((id: number) => of({ id, campanhaId: null })),
+      listarAcessos: vi.fn(() => of([] as FichaAcessoResumoDto[])),
+      concederAcesso: vi.fn((fichaId: number, usuarioId: number) => of({ id: 1, fichaId, usuarioId })),
+      revogarAcesso: vi.fn((fichaId: number, usuarioId: number) => of({ fichaId, usuarioId })),
     };
     const rolagemService = {
       listarPorCampanha: vi.fn(() => of(opts.rolagens ?? [])),
@@ -210,6 +213,15 @@ describe('CampanhaDetalhe', () => {
     { usuarioId: 2, nome: 'Jogador', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
   ];
 
+  // Campanha com mestre + dois jogadores — base dos testes de "Acesso de visualização" (só o
+  // 3º membro é elegível a receber acesso da ficha do jogador `usuarioId: 2`: o mestre já vê tudo,
+  // e o próprio dono não concede acesso a si mesmo).
+  const membrosTres = (): CampanhaMembroResumoDto[] => [
+    { usuarioId: 1, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.MESTRE },
+    { usuarioId: 2, nome: 'Jogador', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
+    { usuarioId: 3, nome: 'Colega', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
+  ];
+
   function abrirMenuCampanha(raiz: HTMLElement, fixture: ReturnType<typeof montar>['fixture']) {
     (raiz.querySelector('.detalhe__cabecalho-menu-botao') as HTMLButtonElement).click();
     fixture.detectChanges();
@@ -269,6 +281,7 @@ describe('CampanhaDetalhe', () => {
       expect(itens).toEqual([
         'Criar nova ficha',
         'Vincular ficha existente',
+        'Acesso de visualização',
         'Remover da campanha',
         'Excluir ficha',
       ]);
@@ -1328,7 +1341,7 @@ describe('CampanhaDetalhe', () => {
 
   // === Ações de ficha no menu do cabeçalho do jogador — remover/excluir agem sobre a ficha
   // exibida na coluna principal, não sobre uma ficha escolhida no menu (que não existe aqui). ===
-  describe('ações de ficha no menu do jogador (remover/excluir)', () => {
+  describe('ações de ficha no menu do jogador (remover/excluir/acesso)', () => {
     it('desabilita "Remover da campanha"/"Excluir ficha" quando a ficha exibida é de um colega, habilita na própria', () => {
       const { fixture, raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
       abrirMenuCampanha(raiz, fixture);
@@ -1406,6 +1419,101 @@ describe('CampanhaDetalhe', () => {
       expect(fichaService.excluirFicha).toHaveBeenCalledWith(4);
       expect(raiz.querySelector('.dialogo')).toBeNull();
       expect(fichaService.recuperarFicha).toHaveBeenCalledWith(5);
+    });
+
+    it('desabilita "Acesso de visualização" quando a ficha exibida é de um colega, habilita na própria', () => {
+      const { fixture, raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+      abrirMenuCampanha(raiz, fixture);
+      expect(encontrarItemMenu(raiz, 'Acesso de visualização').disabled).toBe(false);
+
+      const botaoKane = Array.from(raiz.querySelectorAll<HTMLButtonElement>('.detalhe__equipe-ficha')).find(
+        (botao) => botao.textContent?.includes('Kane'),
+      );
+      botaoKane?.click();
+      fixture.detectChanges();
+
+      expect(encontrarItemMenu(raiz, 'Acesso de visualização').disabled).toBe(true);
+    });
+
+    it('"Acesso de visualização" abre a dialog, busca e lista as concessões da ficha exibida, e fecha o menu', () => {
+      const { fixture, raiz, fichaService } = montar({ usuarioId: 2, membros: membrosTres(), fichas });
+      fichaService.listarAcessos.mockReturnValue(of([{ usuarioId: 3, nome: 'Colega' }]));
+      abrirMenuCampanha(raiz, fixture);
+
+      encontrarItemMenu(raiz, 'Acesso de visualização').click();
+      fixture.detectChanges();
+
+      expect(fichaService.listarAcessos).toHaveBeenCalledWith(4);
+      expect(raiz.querySelector('.detalhe__cabecalho-menu')).toBeNull();
+      const dialog = raiz.querySelector('.dialogo');
+      expect(dialog?.textContent).toContain('Colega');
+    });
+
+    it('a lista de membros elegíveis exclui o mestre, o próprio dono e quem já tem acesso', () => {
+      const { fixture, raiz, fichaService } = montar({ usuarioId: 2, membros: membrosTres(), fichas });
+      fichaService.listarAcessos.mockReturnValue(of([{ usuarioId: 3, nome: 'Colega' }]));
+      abrirMenuCampanha(raiz, fixture);
+      encontrarItemMenu(raiz, 'Acesso de visualização').click();
+      fixture.detectChanges();
+
+      const opcoes = Array.from(raiz.querySelectorAll('.acesso__select option')).map((opcao) =>
+        opcao.textContent?.trim(),
+      );
+      expect(opcoes).toEqual(['Selecione um membro…']);
+      expect(raiz.querySelector('.acesso__vazio-elegiveis')).not.toBeNull();
+    });
+
+    it('conceder acesso chama FichaService.concederAcesso e recarrega a lista', () => {
+      const { fixture, raiz, fichaService } = montar({ usuarioId: 2, membros: membrosTres(), fichas });
+      abrirMenuCampanha(raiz, fixture);
+      encontrarItemMenu(raiz, 'Acesso de visualização').click();
+      fixture.detectChanges();
+
+      // `[ngValue]` codifica o `value` do `<option>` no DOM como um id interno do
+      // `SelectControlValueAccessor` (não o valor bruto `3`) — seleciona pelo rótulo visível e usa
+      // o `.value` real do `<option>` renderizado, em vez de um `seletor.value = '3'` que nunca
+      // bateria com nenhum id interno (mesma armadilha que `visualizar.page.spec.ts` evita ao
+      // manipular o `FormControl` direto em vez de simular o `<select>`).
+      const seletor = raiz.querySelector('.acesso__select') as HTMLSelectElement;
+      const opcaoColega = Array.from(seletor.options).find((opcao) => opcao.textContent?.trim() === 'Colega');
+      seletor.value = opcaoColega!.value;
+      seletor.dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+      (raiz.querySelector('.acesso__acao') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(fichaService.concederAcesso).toHaveBeenCalledWith(4, 3);
+      expect(fichaService.listarAcessos).toHaveBeenCalledTimes(2);
+    });
+
+    it('revogar acesso chama FichaService.revogarAcesso e recarrega a lista', () => {
+      const { fixture, raiz, fichaService } = montar({ usuarioId: 2, membros: membrosTres(), fichas });
+      fichaService.listarAcessos.mockReturnValue(of([{ usuarioId: 3, nome: 'Colega' }]));
+      abrirMenuCampanha(raiz, fixture);
+      encontrarItemMenu(raiz, 'Acesso de visualização').click();
+      fixture.detectChanges();
+
+      (raiz.querySelector('.acesso__revogar') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(fichaService.revogarAcesso).toHaveBeenCalledWith(4, 3);
+      expect(fichaService.listarAcessos).toHaveBeenCalledTimes(2);
+    });
+
+    it('mostra a contagem de acessos concedidos no item do menu', () => {
+      const { fixture, raiz, fichaService } = montar({ usuarioId: 2, membros: membrosTres(), fichas });
+      fichaService.listarAcessos.mockReturnValue(of([{ usuarioId: 3, nome: 'Colega' }]));
+      abrirMenuCampanha(raiz, fixture);
+      encontrarItemMenu(raiz, 'Acesso de visualização').click();
+      fixture.detectChanges();
+      (raiz.querySelector('.dialogo__fundo') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      abrirMenuCampanha(raiz, fixture);
+
+      const contagem = encontrarItemMenu(raiz, 'Acesso de visualização').querySelector(
+        '.detalhe__cabecalho-menu-contagem',
+      );
+      expect(contagem?.textContent?.trim()).toBe('1');
     });
   });
 });

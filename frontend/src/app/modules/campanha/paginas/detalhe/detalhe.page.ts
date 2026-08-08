@@ -10,7 +10,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { filter, finalize, forkJoin, merge } from 'rxjs';
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
@@ -18,7 +18,7 @@ import {
   CampanhaMembroResumoDto,
   CampanhaRecuperadaDto,
 } from '@contratados-rpg/shared/dtos/campanha';
-import type { FichaRecuperadaDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { FichaAcessoResumoDto, FichaRecuperadaDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
@@ -470,6 +470,31 @@ export class CampanhaDetalhe {
   protected readonly minhaFichaExibida = computed<FichaRecuperadaDto | null>(() => {
     const fichaExibida = this.fichaExibidaDados();
     return fichaExibida && fichaExibida.usuarioId === this.usuarioAtivoId() ? fichaExibida : null;
+  });
+
+  /** Dialog "Acesso de visualização" da ficha exibida (menu do cabeçalho do jogador) aberta. */
+  protected readonly dialogAcessoFicha = signal(false);
+  /** Concessões ativas da ficha exibida — carregadas ao abrir a dialog e após conceder/revogar. */
+  protected readonly acessosFichaExibida = signal<readonly FichaAcessoResumoDto[]>([]);
+  /** Membro selecionado para receber acesso (Reactive Forms — sem `ngModel`). */
+  protected readonly membroParaConcederAcesso = new FormControl<number | null>(null);
+  protected readonly concedendoAcesso = signal(false);
+  /** `usuarioId` cuja revogação está em voo — desabilita só a linha correspondente. */
+  protected readonly revogandoAcesso = signal<number | null>(null);
+
+  /**
+   * Membros elegíveis a receber acesso à ficha exibida: exclui o mestre (já vê tudo), o próprio
+   * dono (é sempre `usuarioAtivoId()` aqui — `minhaFichaExibida` só existe pra própria ficha) e
+   * quem já tem concessão ativa. Mesma regra de `membrosElegiveis` de `visualizar.page.ts`.
+   */
+  protected readonly membrosElegiveisAcesso = computed<readonly CampanhaMembroResumoDto[]>(() => {
+    const jaConcedido = new Set(this.acessosFichaExibida().map((acesso) => acesso.usuarioId));
+    return this.membros().filter(
+      (membro) =>
+        membro.usuarioId !== this.usuarioAtivoId() &&
+        membro.papel !== TipoCampanhaMembroPapelEnum.MESTRE &&
+        !jaConcedido.has(membro.usuarioId),
+    );
   });
 
   /**
@@ -1224,6 +1249,68 @@ export class CampanhaDetalhe {
           this.fichas.update((lista) => lista.filter((ficha) => ficha.id !== pendente.id));
           this.avancarFichaExibidaApos(pendente.id);
         },
+      });
+  }
+
+  /**
+   * Abre a dialog "Acesso de visualização" da ficha exibida (menu do cabeçalho do jogador) e busca
+   * as concessões atuais — mesma API de `visualizar.page.ts` (`listarAcessos`), escopada à ficha
+   * exibida em vez do `fichaId` de rota.
+   */
+  protected abrirAcessoFicha(): void {
+    const ficha = this.minhaFichaExibida();
+    if (!ficha) {
+      return;
+    }
+    this.fecharMenuCampanha();
+    this.membroParaConcederAcesso.setValue(null);
+    this.dialogAcessoFicha.set(true);
+    this.carregarAcessosFichaExibida(ficha.id);
+  }
+
+  /** Fecha a dialog "Acesso de visualização". */
+  protected fecharAcessoFicha(): void {
+    this.dialogAcessoFicha.set(false);
+  }
+
+  /** (Re)carrega as concessões ativas da ficha exibida — usado ao abrir e após conceder/revogar. */
+  private carregarAcessosFichaExibida(fichaId: number): void {
+    this.fichaService
+      .listarAcessos(fichaId)
+      .subscribe({ next: (acessos) => this.acessosFichaExibida.set(acessos) });
+  }
+
+  /** Concede a visualização da ficha exibida ao membro selecionado e recarrega a lista. */
+  protected concederAcessoFicha(): void {
+    const ficha = this.minhaFichaExibida();
+    const usuarioId = this.membroParaConcederAcesso.value;
+    if (!ficha || usuarioId === null || this.concedendoAcesso()) {
+      return;
+    }
+    this.concedendoAcesso.set(true);
+    this.fichaService
+      .concederAcesso(ficha.id, usuarioId)
+      .pipe(finalize(() => this.concedendoAcesso.set(false)))
+      .subscribe({
+        next: () => {
+          this.membroParaConcederAcesso.setValue(null);
+          this.carregarAcessosFichaExibida(ficha.id);
+        },
+      });
+  }
+
+  /** Revoga a visualização da ficha exibida de um membro e recarrega a lista. */
+  protected revogarAcessoFicha(usuarioId: number): void {
+    const ficha = this.minhaFichaExibida();
+    if (!ficha || this.revogandoAcesso() !== null) {
+      return;
+    }
+    this.revogandoAcesso.set(usuarioId);
+    this.fichaService
+      .revogarAcesso(ficha.id, usuarioId)
+      .pipe(finalize(() => this.revogandoAcesso.set(null)))
+      .subscribe({
+        next: () => this.carregarAcessosFichaExibida(ficha.id),
       });
   }
 }

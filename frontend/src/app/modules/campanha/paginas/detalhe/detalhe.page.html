@@ -123,6 +123,19 @@
                   class="detalhe__cabecalho-menu-item"
                   type="button"
                   role="menuitem"
+                  [disabled]="!minhaFichaExibida()"
+                  (click)="abrirAcessoFicha()"
+                >
+                  <app-icone nome="olho" />
+                  <span>Acesso de visualização</span>
+                  @if (acessosFichaExibida().length) {
+                    <span class="detalhe__cabecalho-menu-contagem">{{ acessosFichaExibida().length }}</span>
+                  }
+                </button>
+                <button
+                  class="detalhe__cabecalho-menu-item"
+                  type="button"
+                  role="menuitem"
                   [disabled]="!minhaFichaExibida() || removendo() === minhaFichaExibida()?.id"
                   (click)="removerDaCampanha(minhaFichaExibida()!.id)"
                 >
@@ -947,6 +960,75 @@
           Cancelar
         </button>
       </div>
+    </div>
+  </div>
+}
+
+@if (dialogAcessoFicha()) {
+  <div class="dialogo" role="dialog" aria-modal="true" aria-label="Acesso de visualização">
+    <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="fecharAcessoFicha()"></button>
+    <div class="dialogo__painel acesso">
+      <header class="dialogo__cabecalho">
+        <span class="card__indice"><app-icone nome="olho" /></span>
+        <h2 class="dialogo__titulo">Acesso de Visualização</h2>
+        <span class="card__regua"></span>
+        <button class="dialogo__fechar" type="button" aria-label="Fechar" (click)="fecharAcessoFicha()">
+          ✕
+        </button>
+      </header>
+
+      <p class="acesso__ajuda">
+        Conceda a visualização desta ficha a outros membros da campanha. Eles poderão vê-la, mas não
+        editá-la; você pode revogar a qualquer momento.
+      </p>
+
+      <div class="acesso__conceder">
+        <select
+          class="acesso__select"
+          aria-label="Membro para conceder acesso"
+          [formControl]="membroParaConcederAcesso"
+        >
+          <option [ngValue]="null" disabled>Selecione um membro…</option>
+          @for (membro of membrosElegiveisAcesso(); track membro.usuarioId) {
+            <option [ngValue]="membro.usuarioId">{{ membro.nome }}</option>
+          }
+        </select>
+        <button
+          class="botao botao--primario acesso__acao"
+          type="button"
+          [disabled]="membroParaConcederAcesso.value === null || concedendoAcesso()"
+          (click)="concederAcessoFicha()"
+        >
+          <app-icone nome="mais" />
+          {{ concedendoAcesso() ? 'Concedendo…' : 'Conceder' }}
+        </button>
+      </div>
+
+      @if (membrosElegiveisAcesso().length === 0) {
+        <p class="acesso__vazio-elegiveis">Nenhum outro membro disponível para conceder acesso.</p>
+      }
+
+      @if (acessosFichaExibida().length) {
+        <ul class="acesso__lista">
+          @for (acesso of acessosFichaExibida(); track acesso.usuarioId) {
+            <li class="acesso__item">
+              <span class="acesso__avatar" aria-hidden="true"></span>
+              <span class="acesso__nome">{{ acesso.nome }}</span>
+              <button
+                class="botao botao--secundario acesso__revogar"
+                type="button"
+                [disabled]="revogandoAcesso() !== null"
+                (click)="revogarAcessoFicha(acesso.usuarioId)"
+              >
+                <app-icone nome="excluir" />
+                {{ revogandoAcesso() === acesso.usuarioId ? 'Revogando…' : 'Revogar' }}
+              </button>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="acesso__vazio">Nenhum acesso concedido ainda.</p>
+      }
     </div>
   </div>
 }
