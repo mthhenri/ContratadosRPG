@@ -543,6 +543,36 @@ describe('FichaCriar', () => {
       expect(raiz.textContent).not.toContain('Primeiro agente da campanha');
     });
 
+    it('usa Nível e Prestígio exatos informados na ficha avulsa', () => {
+      const { fixture, componente } = montar([], null, null);
+      componente['atualizar']({ nivelManual: 12, prestigioManual: 37 });
+      fixture.detectChanges();
+
+      expect(componente['nivelInicial']()).toBe(12);
+      expect(componente['prestigioInicial']()).toBe(37);
+      expect(componente['progressaoAcumulada']().atributos).toBeGreaterThan(0);
+    });
+
+    it('envia Nível e Prestígio exatos no payload da ficha avulsa', () => {
+      const { fixture, componente, fichaService } = montar([], null, null);
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      componente['atualizar']({
+        nome: 'Agente Veterano',
+        classe: ClasseEnum.COMBATENTE,
+        nivelManual: 12,
+        prestigioManual: 37,
+        dinheiro: { dados: [1, 1, 1, 1], inicial: 1250, rolado: true },
+      });
+      fixture.detectChanges();
+
+      componente['criar']();
+
+      const criarFicha = fichaService.criarFicha as ReturnType<typeof vi.fn>;
+      const payload = criarFicha.mock.calls[0][0];
+      expect(payload.dados.nivel).toBe(12);
+      expect(payload.dados.prestigio).toBe(37);
+    });
+
     it('sem campanhaId, "Sair" confirmado navega para /fichas', () => {
       const { componente } = montar([], null, null);
       const router = TestBed.inject(Router);
@@ -567,6 +597,21 @@ describe('FichaCriar', () => {
       const payload = fichaService.criarFicha.mock.calls[0][0];
       expect(payload).not.toHaveProperty('campanhaId');
       expect(navegar).toHaveBeenCalledWith(['/fichas', 99]);
+    });
+  });
+
+  describe('progressão manual em campanha', () => {
+    it('mantém as médias como padrão e usa os valores exatos ao sobrescrever', () => {
+      const { componente } = montar([fichaExistente]);
+      componente['atualizar']({ mediaNivel: 8, mediaPrestigio: 30 });
+
+      expect(componente['nivelInicial']()).toBe(7);
+      expect(componente['prestigioInicial']()).toBe(26);
+
+      componente['atualizar']({ sobrescreverProgressao: true, nivelManual: 15, prestigioManual: 42 });
+
+      expect(componente['nivelInicial']()).toBe(15);
+      expect(componente['prestigioInicial']()).toBe(42);
     });
   });
 });

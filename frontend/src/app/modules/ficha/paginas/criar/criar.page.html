@@ -222,10 +222,11 @@
                   @if (campanhaId !== null) {
                     <div><strong>Primeiro agente da campanha</strong><span>Nível 0, Prestígio 0 e sem bônus monetário.</span></div>
                   } @else {
-                    <div><strong>Ficha avulsa, sem campanha</strong><span>Sem esquadrão para calcular médias — nasce no Nível 0, Prestígio 0 e sem bônus monetário.</span></div>
+                    <div><strong>Ficha avulsa, sem campanha</strong><span>Informe diretamente o Nível e o Prestígio iniciais desta ficha.</span></div>
                   }
                 </div>
-              } @else {
+              }
+              @if (campanhaId !== null && fichas().length) {
                 <label class="campo">
                   <span class="campo__rotulo">Motivo de entrada</span>
                   <select class="campo__controle" [value]="estado().motivo" (change)="mudarMotivo($event)">
@@ -235,21 +236,28 @@
                     <option value="CONTIDO_OU_EXTERMINADO_SUCESSOR_CONVENCIONAL">Contenção ou extermínio</option>
                   </select>
                 </label>
+              }
+              @if (campanhaId !== null) {
+                <label class="guia__modo-livre">
+                  <input type="checkbox" [checked]="estado().sobrescreverProgressao" (change)="atualizar({ sobrescreverProgressao: !estado().sobrescreverProgressao })" />
+                  <span><b>Sobrescrever Nível e Prestígio</b><small>Informe os valores iniciais exatos em vez de usar a média da campanha.</small></span>
+                </label>
+              }
+              @if (campanhaId !== null && fichas().length && !estado().sobrescreverProgressao) {
                 <div class="guia__campos guia__campos--duas-colunas">
-                  <label class="campo">
-                    <span class="campo__rotulo">Média de nível</span>
-                    <input class="campo__controle campo__controle--numero" type="number" [value]="estado().mediaNivel" (input)="atualizar({ mediaNivel: numero($event) })" />
-                  </label>
-                  <label class="campo">
-                    <span class="campo__rotulo">Média de prestígio</span>
-                    <input class="campo__controle campo__controle--numero" type="number" [value]="estado().mediaPrestigio" (input)="atualizar({ mediaPrestigio: numero($event) })" />
-                  </label>
+                  <label class="campo"><span class="campo__rotulo">Média de nível</span><input class="campo__controle campo__controle--numero" type="number" min="0" [value]="estado().mediaNivel" (input)="atualizar({ mediaNivel: numero($event) })" /></label>
+                  <label class="campo"><span class="campo__rotulo">Média de prestígio</span><input class="campo__controle campo__controle--numero" type="number" min="0" [value]="estado().mediaPrestigio" (input)="atualizar({ mediaPrestigio: numero($event) })" /></label>
                 </div>
                 <div class="guia__memorial">
                   <header><span>Memorial de cálculo</span><b>RESULTADO AUTOMÁTICO</b></header>
-                  <div><span>Nível inicial</span><code>arredonda {{ estado().mediaNivel }} − 1</code><strong>{{ novoAgente().nivelInicial }}</strong></div>
-                  <div><span>Prestígio inicial</span><code>{{ estado().mediaPrestigio }} − ⌊{{ estado().mediaPrestigio }} ÷ {{ novoAgente().prestigio.divisor }}⌋</code><strong>{{ novoAgente().prestigio.prestigioInicial }}</strong></div>
+                  <div><span>Nível inicial</span><code>arredonda {{ estado().mediaNivel }} − 1</code><strong>{{ nivelInicial() }}</strong></div>
+                  <div><span>Prestígio inicial</span><code>{{ estado().mediaPrestigio }} − ⌊{{ estado().mediaPrestigio }} ÷ {{ novoAgente().prestigio.divisor }}⌋</code><strong>{{ prestigioInicial() }}</strong></div>
                   <footer>Piso da patente aplicado: {{ novoAgente().prestigio.patenteCapMinimo.prestigioMinimo }}</footer>
+                </div>
+              } @else if (estado().sobrescreverProgressao) {
+                <div class="guia__campos guia__campos--duas-colunas">
+                  <label class="campo"><span class="campo__rotulo">Nível inicial exato</span><input data-testid="nivel-inicial-exato" class="campo__controle campo__controle--numero" type="number" min="0" max="20" [value]="estado().nivelManual" (input)="atualizar({ nivelManual: numero($event) })" /><small class="campo__ajuda">De 0 a 20.</small></label>
+                  <label class="campo"><span class="campo__rotulo">Prestígio inicial exato</span><input data-testid="prestigio-inicial-exato" class="campo__controle campo__controle--numero" type="number" min="0" [value]="estado().prestigioManual" (input)="atualizar({ prestigioManual: numero($event) })" /><small class="campo__ajuda">Valor final da ficha, sem cálculo por média.</small></label>
                 </div>
               }
             }
@@ -381,8 +389,8 @@
               <div class="guia__introducao">
                 <span class="guia__introducao-codigo">PROGRESSÃO // HABILIDADES</span>
                 <p>
-                  @if (novoAgente().nivelInicial > 0) {
-                    Gaste as vagas de habilidade acumuladas do Nível 1 até o Nível {{ novoAgente().nivelInicial }}.
+                  @if (nivelInicial() > 0) {
+                    Gaste as vagas de habilidade acumuladas do Nível 1 até o Nível {{ nivelInicial() }}.
                   }
                   @if (ehExperimento()) {
                     Como Experimento, você tem uma vaga garantida de Habilidade de Subclasse — mesmo no Nível 0.
@@ -532,7 +540,7 @@
               <dl class="guia__revisao">
                 <div><dt>Agente</dt><dd>{{ estado().nome }}</dd></div>
                 <div><dt>Classe / Arquétipo</dt><dd>{{ perfilRotulo() }}</dd></div>
-                <div><dt>Nível / Prestígio</dt><dd>{{ fichas().length ? novoAgente().nivelInicial : 0 }} / {{ fichas().length ? novoAgente().prestigio.prestigioInicial : 0 }}</dd></div>
+                <div><dt>Nível / Prestígio</dt><dd>{{ nivelInicial() }} / {{ prestigioInicial() }}</dd></div>
                 <div><dt>Personalidade / Origem</dt><dd>{{ estado().personalidade }} · {{ temPeculiaridade() ? 'Peculiaridade' : estado().origem.nome }}</dd></div>
                 @if (comHabilidades()) {
                   <div><dt>Habilidades</dt><dd>{{ melhoriasPreenchidasTotal() }}/{{ melhoriasAlvoTotal() }} vagas</dd></div>
@@ -598,8 +606,8 @@
             }
 
             @if (estado().passo >= 2 || visitado() >= 2) {
-              <div class="guia__resumo-linha"><span>Nível inicial</span><b>{{ fichas().length ? novoAgente().nivelInicial : 0 }}</b></div>
-              <div class="guia__resumo-linha"><span>Prestígio</span><b>{{ fichas().length ? novoAgente().prestigio.prestigioInicial : 0 }}</b></div>
+              <div class="guia__resumo-linha"><span>Nível inicial</span><b>{{ nivelInicial() }}</b></div>
+              <div class="guia__resumo-linha"><span>Prestígio</span><b>{{ prestigioInicial() }}</b></div>
               @if (fichas().length) {
                 <div class="guia__resumo-linha guia__resumo-linha--completa"><span>Motivo de entrada</span><b>{{ motivoRotulo() }}</b></div>
               }
@@ -612,7 +620,7 @@
               <div class="guia__stats">
                 <div class="stat stat--vida"><span class="stat__rotulo">Vida</span><span class="stat__valor">{{ vida() }}</span></div>
                 <div class="stat stat--energia"><span class="stat__rotulo">Energia</span><span class="stat__valor">{{ energia() }}</span></div>
-                <div class="stat"><span class="stat__rotulo">Defesa</span><span class="stat__valor">{{ novoAgente().nivelInicial + 10 }}</span></div>
+                <div class="stat"><span class="stat__rotulo">Defesa</span><span class="stat__valor">{{ nivelInicial() + 10 }}</span></div>
                 <div class="stat" [class.stat--alerta]="distribuicao().saldo !== 0"><span class="stat__rotulo">Saldo</span><span class="stat__valor">{{ distribuicao().saldo }}</span></div>
               </div>
               @if (atributosDestaque().length) {

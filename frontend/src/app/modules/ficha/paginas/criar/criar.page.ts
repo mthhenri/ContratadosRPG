@@ -8,7 +8,7 @@ import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campa
 import type { FichaAtributosDto, FichaHabilidadeDto, FichaOrigemDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import { calcularDerivados, calcularEnergia, calcularOrcamentoAtributos, calcularProgressaoAcumulada, calcularVida, catalogoHabilidades, habilidadesIniciais, obterBonusAtributos, obterSaudeClasse, validarDistribuicaoAtributos } from '@contratados-rpg/shared/regras/agente';
 import type { GrupoHabilidades, HabilidadeCatalogoItemDto } from '@contratados-rpg/shared/regras/agente';
-import { calcularDinheiroInicial, calcularNovoAgente } from '@contratados-rpg/shared/regras/novo-agente';
+import { calcularBonusMonetario, calcularDinheiroInicial, calcularNovoAgente } from '@contratados-rpg/shared/regras/novo-agente';
 import { rolarDados } from '@contratados-rpg/shared/regras/descanso';
 import { FORMACOES, ehClasseExperimento, experimentoComPeculiaridade } from '@contratados-rpg/shared/regras/identidade';
 import type { FormacaoDefinicaoDto } from '@contratados-rpg/shared/regras/identidade';
@@ -40,6 +40,7 @@ interface EstadoGuiaCriacao {
   readonly passo: number; readonly nome: string; readonly usuarioId: number | null;
   readonly classe: ClasseEnum | null; readonly arquetipo: ArquetipoEnum | null;
   readonly motivo: MotivoEntradaAgenteEnum; readonly mediaNivel: number; readonly mediaPrestigio: number;
+  readonly sobrescreverProgressao: boolean; readonly nivelManual: number; readonly prestigioManual: number;
   readonly atributos: FichaAtributosDto; readonly maestria: ChaveAtributo | null; readonly modoLivre: boolean;
   readonly personalidade: string; readonly origem: FichaOrigemDto; readonly formacoesCustomizadas: readonly boolean[];
   readonly dinheiro: DinheiroRolado;
@@ -62,6 +63,9 @@ function normalizarEstado(estado: EstadoGuiaCriacao): EstadoGuiaCriacao {
     formacoesCustomizadas: estado.formacoesCustomizadas ?? estado.origem.formacao.map((item) => item.bonus === null && item.texto.trim().length > 0),
     dinheiro: { ...estado.dinheiro, rolado: estado.dinheiro.rolado ?? estado.dinheiro.dados.length === 4 },
     melhorias: estado.melhorias ?? [],
+    sobrescreverProgressao: estado.sobrescreverProgressao ?? false,
+    nivelManual: estado.nivelManual ?? 0,
+    prestigioManual: estado.prestigioManual ?? 0,
     fortificacoes: estado.fortificacoes ?? fortificacoesVazias(),
     kit: estado.kit ?? [],
   };
@@ -105,6 +109,7 @@ export class FichaCriar {
   protected readonly vagaAberta = signal<TipoVagaMelhoria | null>(null);
   protected readonly estado = signal<EstadoGuiaCriacao>({ passo: 0, nome: '', usuarioId: null, classe: null,
     arquetipo: null, motivo: MotivoEntradaAgenteEnum.MORTE_OU_INICIO_DO_ZERO, mediaNivel: 0, mediaPrestigio: 0,
+    sobrescreverProgressao: this.campanhaId === null, nivelManual: 0, prestigioManual: 0,
     atributos: { ...ATRIBUTOS_BASE_PADRAO }, maestria: null, modoLivre: false, personalidade: '', origem: origemVazia(),
     formacoesCustomizadas: [false, false], dinheiro: dinheiroVazio(), melhorias: [], fortificacoes: fortificacoesVazias(), kit: [] });
   protected readonly ehMestre = computed(() => this.membros().find((m) => m.usuarioId === this.sessaoService.usuario()?.id)?.papel === TipoCampanhaMembroPapelEnum.MESTRE);
@@ -113,10 +118,16 @@ export class FichaCriar {
     return classe ? arquetiposDaClasse(classe) : [];
   });
   protected readonly novoAgente = computed(() => calcularNovoAgente({ motivo: this.estado().motivo, mediaNivel: this.estado().mediaNivel, mediaPrestigio: this.estado().mediaPrestigio }));
+  protected readonly nivelInicial = computed(() => this.estado().sobrescreverProgressao
+    ? Math.max(0, Math.min(20, Math.trunc(this.estado().nivelManual)))
+    : this.novoAgente().nivelInicial);
+  protected readonly prestigioInicial = computed(() => this.estado().sobrescreverProgressao
+    ? Math.max(0, Math.trunc(this.estado().prestigioManual))
+    : this.novoAgente().prestigio.prestigioInicial);
   protected readonly classeCalculada = computed(() => this.estado().classe ?? ClasseEnum.COMBATENTE);
-  protected readonly distribuicao = computed(() => validarDistribuicaoAtributos({ classe: this.classeCalculada(), nivel: this.novoAgente().nivelInicial, atributos: this.estado().atributos }));
-  protected readonly orcamento = computed(() => calcularOrcamentoAtributos({ classe: this.classeCalculada(), nivel: this.novoAgente().nivelInicial }));
-  protected readonly bonusMonetario = computed(() => this.fichas().length ? this.novoAgente().bonus.bonus : 0);
+  protected readonly distribuicao = computed(() => validarDistribuicaoAtributos({ classe: this.classeCalculada(), nivel: this.nivelInicial(), atributos: this.estado().atributos }));
+  protected readonly orcamento = computed(() => calcularOrcamentoAtributos({ classe: this.classeCalculada(), nivel: this.nivelInicial() }));
+  protected readonly bonusMonetario = computed(() => calcularBonusMonetario({ prestigioInicial: this.prestigioInicial() }).bonus);
   protected readonly totalDinheiro = computed(() => this.estado().dinheiro.rolado ? this.estado().dinheiro.inicial + this.bonusMonetario() : 0);
   /** Bônus fixo de atributos do perfil (arquétipo/subclasse) atual — `{}` sem perfil definitivo. */
   protected readonly bonusAtributos = computed(() => obterBonusAtributos({ classe: this.classeCalculada(), arquetipo: this.estado().arquetipo }));
@@ -124,8 +135,8 @@ export class FichaCriar {
     .map((campo) => ({ nome: campo.nome, valor: this.bonusAtributos()[campo.chave] ?? 0 }))
     .filter(({ valor }) => valor !== 0));
   protected readonly atributosFinais = computed(() => { const bonus = this.bonusAtributos(); const atributos = { ...this.estado().atributos }; this.campos.forEach(({ chave }) => atributos[chave] += bonus[chave] ?? 0); return atributos; });
-  protected readonly vida = computed(() => calcularVida({ classe: this.classeCalculada(), nivel: this.novoAgente().nivelInicial, vigor: this.atributosFinais().vigor }));
-  protected readonly energia = computed(() => calcularEnergia({ classe: this.classeCalculada(), nivel: this.novoAgente().nivelInicial, destreza: this.atributosFinais().destreza }));
+  protected readonly vida = computed(() => calcularVida({ classe: this.classeCalculada(), nivel: this.nivelInicial(), vigor: this.atributosFinais().vigor }));
+  protected readonly energia = computed(() => calcularEnergia({ classe: this.classeCalculada(), nivel: this.nivelInicial(), destreza: this.atributosFinais().destreza }));
   /** Base de Vida/Energia da classe (sem Nível/atributos) — passo // CLASSE, antes de `vida()`/`energia()`
    * fazerem sentido: ali o jogador ainda não escolheu atributos, só tem o valor de fábrica (1 em cada). */
   protected readonly saudeClasse = computed(() => obterSaudeClasse({ classe: this.classeCalculada() }));
@@ -161,7 +172,7 @@ export class FichaCriar {
   protected readonly formacoesPreenchidas = computed(() => this.estado().origem.formacao.filter((item) => item.texto.trim().length > 0));
 
   /** `true` quando o Nível/Treinamento inicial (passo 03) é maior que 0 — só então o passo // HABILIDADES existe (m3-58). */
-  protected readonly temMelhorias = computed(() => this.fichas().length > 0 && this.novoAgente().nivelInicial > 0);
+  protected readonly temMelhorias = computed(() => this.nivelInicial() > 0);
   /** `true` quando a classe é uma subclasse de Experimento — precisa da vaga garantida mesmo no Nível 0 (doc: "ao criar seu agente, escolha uma característica anômala"). */
   protected readonly ehExperimento = computed(() => { const classe = this.estado().classe; return classe !== null && ehClasseExperimento(classe); });
   /** `true` quando o passo // HABILIDADES existe na trilha: Nível inicial > 0 (m3-58) OU Experimento (vaga garantida, mesmo no Nível 0). */
@@ -174,7 +185,7 @@ export class FichaCriar {
       : [...base, 'Identidade', 'Recursos', 'Equipamento inicial', 'Revisão'];
   });
   /** Contagem acumulada de vagas do Nível 1 até o Nível inicial (`shared/regras`) — fonte única, proibição #26. */
-  protected readonly progressaoAcumulada = computed(() => calcularProgressaoAcumulada({ classe: this.classeCalculada(), nivel: this.novoAgente().nivelInicial }));
+  protected readonly progressaoAcumulada = computed(() => calcularProgressaoAcumulada({ classe: this.classeCalculada(), nivel: this.nivelInicial() }));
   /** Vagas de habilidade do passo // HABILIDADES, só as com alvo > 0 — Civil nunca vê Geral/Classe própria/Arquétipo/Outra classe.
    * Experimento ganha +1 fixo em 'classeOuArquetipo' na criação (vaga garantida, mesmo padrão da Habilidade Inicial) — é essa
    * vaga que já dá acesso à lista "Habilidades de Subclasse" (Peculiaridade incluída, `habilidades-catalogo.ts` grupo 'arquetipo'). */
@@ -191,7 +202,7 @@ export class FichaCriar {
   /** Vagas de Fortificação de Personalidade (níveis 7/14) — 0, 1 ou 2. */
   protected readonly alvoFortificacoes = computed(() => this.progressaoAcumulada().fortificacoes);
   /** Ganhos automáticos do nível (sem escolha) — reusa `calcularDerivados`, nenhuma fórmula nova aqui. */
-  protected readonly derivadosNivel = computed(() => calcularDerivados(this.classeCalculada(), this.novoAgente().nivelInicial, this.atributosFinais(), this.habilidadesDoNivel()));
+  protected readonly derivadosNivel = computed(() => calcularDerivados(this.classeCalculada(), this.nivelInicial(), this.atributosFinais(), this.habilidadesDoNivel()));
   /** Nomes já indisponíveis para escolha: a Habilidade Inicial (não consome vaga) + o que já foi escolhido no passo. */
   protected readonly nomesEscolhidosMelhoria = computed(() => {
     const nomes = this.estado().melhorias.map((m) => m.habilidade.nome);
@@ -389,7 +400,7 @@ export class FichaCriar {
     if (this.criando() || !e.classe || !e.dinheiro.rolado) return;
     this.criando.set(true);
     this.erro.set('');
-    const resultado = construirFichaInicial({ nome: e.nome, classe: e.classe, arquetipo: e.arquetipo, nivel: this.fichas().length ? this.novoAgente().nivelInicial : 0, prestigio: this.fichas().length ? this.novoAgente().prestigio.prestigioInicial : 0, atributos: e.atributos, maestria: e.maestria, identidade: { personalidade: e.personalidade, origem: this.temPeculiaridade() ? null : e.origem }, dinheiro: this.totalDinheiro(), anotacoes: this.novoAgente().recebeAmaldicoadoPeloPassado ? 'Amaldiçoado pelo Passado' : '', habilidadesExtras: this.habilidadesDoNivel(), equipamentoInicial: e.kit });
+    const resultado = construirFichaInicial({ nome: e.nome, classe: e.classe, arquetipo: e.arquetipo, nivel: this.nivelInicial(), prestigio: this.prestigioInicial(), atributos: e.atributos, maestria: e.maestria, identidade: { personalidade: e.personalidade, origem: this.temPeculiaridade() ? null : e.origem }, dinheiro: this.totalDinheiro(), anotacoes: this.novoAgente().recebeAmaldicoadoPeloPassado ? 'Amaldiçoado pelo Passado' : '', habilidadesExtras: this.habilidadesDoNivel(), equipamentoInicial: e.kit });
     const campanhaId = this.campanhaId;
     this.fichaService.criarFicha({ ...(campanhaId !== null ? { campanhaId } : {}), usuarioId: this.ehMestre() ? (e.usuarioId ?? undefined) : undefined, ...resultado })
       .pipe(finalize(() => this.criando.set(false)))
