@@ -1104,7 +1104,7 @@ describe('FichaVisualizar', () => {
       const { raiz } = montar({ usuarioLogadoId: 7, semCampanhaNaRota: true, fichaCampanhaId: null });
 
       const voltar = raiz.querySelector('.ficha-pagina__voltar');
-      expect(voltar?.textContent).toContain('Voltar ao acervo');
+      expect(voltar?.getAttribute('aria-label')).toBe('Voltar ao acervo');
       expect(voltar?.getAttribute('href')).toBe('/fichas');
     });
 
