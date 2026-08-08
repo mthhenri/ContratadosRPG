@@ -374,6 +374,131 @@ describe('FichaCriar', () => {
     });
   });
 
+  describe('bônus de atributo à escolha (Engenheiro/Assassino/Acadêmico/Híbrido)', () => {
+    it('Engenheiro: passoValido(Classe) bloqueia sem escolha e libera com a escolha feita', () => {
+      const { componente } = montar();
+      componente['atualizar']({ passo: componente['passos']().indexOf('Classe'), classe: ClasseEnum.ESPECIALISTA, arquetipo: ArquetipoEnum.ENGENHEIRO });
+      expect(componente['slotsEscolhaBonus']()).toEqual([['forca', 'destreza']]);
+      expect(componente['passoValido']()).toBe(false);
+
+      componente['escolherBonusAtributo'](0, { target: { value: 'destreza' } } as unknown as Event);
+      expect(componente['estado']().bonusEscolhido).toEqual(['destreza']);
+      expect(componente['passoValido']()).toBe(true);
+      expect(componente['bonusAtributos']()).toEqual({ intelecto: 1, destreza: 1 });
+    });
+
+    it('Assassino: bonusAtributos() combina fixo + escolha em Luta/Pontaria', () => {
+      const { componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.ESPECIALISTA, arquetipo: ArquetipoEnum.ASSASSINO });
+      componente['escolherBonusAtributo'](0, { target: { value: 'luta' } } as unknown as Event);
+      expect(componente['bonusAtributos']()).toEqual({ destreza: 1, luta: 1 });
+    });
+
+    it('Acadêmico: slot livre sem Luta/Pontaria', () => {
+      const { componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.ESPECIALISTA, arquetipo: ArquetipoEnum.ACADEMICO });
+      expect(componente['slotsEscolhaBonus']()[0]).not.toContain('luta');
+      expect(componente['slotsEscolhaBonus']()[0]).not.toContain('pontaria');
+
+      componente['escolherBonusAtributo'](0, { target: { value: 'vontade' } } as unknown as Event);
+      expect(componente['bonusAtributos']()).toEqual({ intelecto: 1, vontade: 1 });
+    });
+
+    it('Experimento Híbrido: dois slots independentes, permite repetir o mesmo atributo', () => {
+      const { componente } = montar();
+      componente['atualizar']({ passo: componente['passos']().indexOf('Classe'), classe: ClasseEnum.EXPERIMENTO_HIBRIDO });
+      expect(componente['slotsEscolhaBonus']()).toHaveLength(2);
+      expect(componente['passoValido']()).toBe(false);
+
+      componente['escolherBonusAtributo'](0, { target: { value: 'vigor' } } as unknown as Event);
+      expect(componente['passoValido']()).toBe(false); // falta a 2ª escolha
+
+      componente['escolherBonusAtributo'](1, { target: { value: 'vigor' } } as unknown as Event);
+      expect(componente['passoValido']()).toBe(true);
+      expect(componente['bonusAtributos']()).toEqual({ vigor: 2 });
+    });
+
+    it('perfil sem ponto à escolha (Lutador) não exige nada além do arquétipo', () => {
+      const { componente } = montar();
+      componente['atualizar']({ passo: componente['passos']().indexOf('Classe'), classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
+      expect(componente['slotsEscolhaBonus']()).toEqual([]);
+      expect(componente['passoValido']()).toBe(true);
+    });
+
+    it('trocar de arquétipo reseta a escolha anterior', () => {
+      const { componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.ESPECIALISTA, arquetipo: ArquetipoEnum.ENGENHEIRO });
+      componente['escolherBonusAtributo'](0, { target: { value: 'forca' } } as unknown as Event);
+      expect(componente['estado']().bonusEscolhido).toEqual(['forca']);
+
+      componente['mudarArquetipo']({ target: { value: ArquetipoEnum.ASSASSINO } } as unknown as Event);
+      expect(componente['estado']().bonusEscolhido).toEqual([]);
+      expect(componente['passoValido']()).toBe(false);
+    });
+
+    it('trocar de classe reseta a escolha anterior', () => {
+      const { componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_HIBRIDO, bonusEscolhido: ['vigor', 'vigor'] });
+      componente['mudarClasse']({ target: { value: ClasseEnum.COMBATENTE } } as unknown as Event);
+      expect(componente['estado']().bonusEscolhido).toEqual([]);
+    });
+
+    it('ficha final (criar()) persiste o bônus escolhido nos atributos', () => {
+      const { fixture, componente } = montar();
+      componente['atualizar']({
+        nome: 'Agente-9', classe: ClasseEnum.ESPECIALISTA, arquetipo: ArquetipoEnum.ENGENHEIRO,
+        dinheiro: { dados: [1, 1, 1, 1], inicial: 1000, rolado: true },
+        personalidade: 'Firme',
+      });
+      componente['escolherBonusAtributo'](0, { target: { value: 'forca' } } as unknown as Event);
+      fixture.detectChanges();
+
+      componente['criar']();
+
+      const fichaService = TestBed.inject(FichaService) as unknown as { criarFicha: ReturnType<typeof vi.fn> };
+      const payload = fichaService.criarFicha.mock.calls[0][0];
+      // base 1 + fixo (intelecto 1) / base 1 + fixo (0) + escolha (1) em força
+      expect(payload.dados.atributos.intelecto).toBe(2);
+      expect(payload.dados.atributos.forca).toBe(2);
+    });
+
+    it('DOM: Engenheiro mostra um select "Bônus à escolha" com só Força/Destreza', () => {
+      const { fixture, raiz, componente } = montar();
+      componente['atualizar']({ passo: componente['passos']().indexOf('Classe'), classe: ClasseEnum.ESPECIALISTA, arquetipo: ArquetipoEnum.ENGENHEIRO });
+      fixture.detectChanges();
+
+      const select = raiz.querySelector('[data-testid="bonus-escolha-0"]') as HTMLSelectElement;
+      expect(select).not.toBeNull();
+      const opcoes = Array.from(select.options).map((o) => o.value).filter(Boolean);
+      expect(opcoes.sort()).toEqual(['destreza', 'forca'].sort());
+
+      select.value = 'destreza';
+      select.dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+      expect(componente['estado']().bonusEscolhido).toEqual(['destreza']);
+    });
+
+    it('DOM: Experimento Híbrido mostra dois selects rotulados "1ª escolha" e "2ª escolha"', () => {
+      const { fixture, raiz, componente } = montar();
+      componente['atualizar']({ passo: componente['passos']().indexOf('Classe'), classe: ClasseEnum.EXPERIMENTO_HIBRIDO });
+      fixture.detectChanges();
+
+      expect(raiz.querySelector('[data-testid="bonus-escolha-0"]')).not.toBeNull();
+      expect(raiz.querySelector('[data-testid="bonus-escolha-1"]')).not.toBeNull();
+      const rotulos = Array.from(raiz.querySelectorAll('.campo__rotulo')).map((r) => r.textContent?.trim());
+      expect(rotulos).toContain('1ª escolha de bônus');
+      expect(rotulos).toContain('2ª escolha de bônus');
+    });
+
+    it('DOM: perfil sem ponto à escolha (Lutador) não mostra select nenhum de bônus', () => {
+      const { fixture, raiz, componente } = montar();
+      componente['atualizar']({ passo: componente['passos']().indexOf('Classe'), classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
+      fixture.detectChanges();
+
+      expect(raiz.querySelector('[data-testid="bonus-escolha-0"]')).toBeNull();
+    });
+  });
+
   describe('Experimento — Peculiaridade dispensa a Origem (m3-58 + Peculiaridade)', () => {
     it('passo // Habilidades existe no Nível 0 para as três subclasses de Experimento', () => {
       const { componente } = montar();

@@ -6,8 +6,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ArquetipoEnum, ClasseEnum, FormacaoBonusEnum, FormacaoParametroEnum, HabilidadeCategoriaEnum, MotivoEntradaAgenteEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaAtributosDto, FichaHabilidadeDto, FichaOrigemDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
-import { calcularDerivados, calcularEnergia, calcularOrcamentoAtributos, calcularProgressaoAcumulada, calcularVida, catalogoHabilidades, habilidadesIniciais, listarPacotesHabilidadesIniciais, obterBonusAtributos, obterSaudeClasse, validarDistribuicaoAtributos } from '@contratados-rpg/shared/regras/agente';
-import type { GrupoHabilidades, HabilidadeCatalogoItemDto, HabilidadesPacoteInicialId, TipoVagaHabilidade } from '@contratados-rpg/shared/regras/agente';
+import { calcularDerivados, calcularEnergia, calcularOrcamentoAtributos, calcularProgressaoAcumulada, calcularVida, catalogoHabilidades, habilidadesIniciais, listarPacotesHabilidadesIniciais, obterBonusAtributosComEscolha, obterSaudeClasse, obterSlotsEscolhaBonus, validarDistribuicaoAtributos } from '@contratados-rpg/shared/regras/agente';
+import type { GrupoHabilidades, HabilidadeCatalogoItemDto, HabilidadesPacoteInicialId, SlotEscolhaAtributo, TipoVagaHabilidade } from '@contratados-rpg/shared/regras/agente';
 import { calcularBonusMonetario, calcularDinheiroInicial, calcularNovoAgente } from '@contratados-rpg/shared/regras/novo-agente';
 import { rolarDados } from '@contratados-rpg/shared/regras/descanso';
 import { FORMACOES, experimentoComPeculiaridade } from '@contratados-rpg/shared/regras/identidade';
@@ -39,6 +39,10 @@ interface DinheiroRolado { readonly dados: readonly number[]; readonly inicial: 
 interface EstadoGuiaCriacao {
   readonly passo: number; readonly nome: string; readonly usuarioId: number | null;
   readonly classe: ClasseEnum | null; readonly arquetipo: ArquetipoEnum | null;
+  /** Escolha do jogador para os pontos "à escolha" do bônus de atributo do perfil (Engenheiro/
+   * Assassino/Acadêmico: 1 posição; Experimento Híbrido: 2 posições) — mesma ordem de
+   * `obterSlotsEscolhaBonus`. `[]` quando o perfil não tem nenhum ponto assim, ou ainda não escolhido. */
+  readonly bonusEscolhido: readonly (ChaveAtributo | null)[];
   readonly motivo: MotivoEntradaAgenteEnum; readonly mediaNivel: number; readonly mediaPrestigio: number;
   readonly sobrescreverProgressao: boolean; readonly nivelManual: number; readonly prestigioManual: number;
   readonly pacoteHabilidadesId: HabilidadesPacoteInicialId | null;
@@ -62,6 +66,7 @@ function normalizarEstado(estado: EstadoGuiaCriacao): EstadoGuiaCriacao {
   return {
     ...estado,
     formacoesCustomizadas: estado.formacoesCustomizadas ?? estado.origem.formacao.map((item) => item.bonus === null && item.texto.trim().length > 0),
+    bonusEscolhido: estado.bonusEscolhido ?? [],
     dinheiro: { ...estado.dinheiro, rolado: estado.dinheiro.rolado ?? estado.dinheiro.dados.length === 4 },
     melhorias: estado.melhorias ?? [],
     sobrescreverProgressao: estado.sobrescreverProgressao ?? false,
@@ -110,7 +115,7 @@ export class FichaCriar {
   /** Vaga com o seletor do sistema aberto (`null` = fechado) — m3-58. */
   protected readonly vagaAberta = signal<TipoVagaMelhoria | null>(null);
   protected readonly estado = signal<EstadoGuiaCriacao>({ passo: 0, nome: '', usuarioId: null, classe: null,
-    arquetipo: null, motivo: MotivoEntradaAgenteEnum.MORTE_OU_INICIO_DO_ZERO, mediaNivel: 0, mediaPrestigio: 0,
+    arquetipo: null, bonusEscolhido: [], motivo: MotivoEntradaAgenteEnum.MORTE_OU_INICIO_DO_ZERO, mediaNivel: 0, mediaPrestigio: 0,
     sobrescreverProgressao: this.campanhaId === null, nivelManual: 0, prestigioManual: 0,
     pacoteHabilidadesId: null,
     atributos: { ...ATRIBUTOS_BASE_PADRAO }, maestria: null, modoLivre: false, personalidade: '', origem: origemVazia(),
@@ -120,6 +125,9 @@ export class FichaCriar {
     const classe = this.estado().classe;
     return classe ? arquetiposDaClasse(classe) : [];
   });
+  /** Slots de bônus "à escolha" do perfil atual (`shared/regras`) — `[]` sem nenhum ponto assim. */
+  protected readonly slotsEscolhaBonus = computed<readonly SlotEscolhaAtributo[]>(() =>
+    obterSlotsEscolhaBonus({ classe: this.classeCalculada(), arquetipo: this.estado().arquetipo }));
   protected readonly novoAgente = computed(() => calcularNovoAgente({ motivo: this.estado().motivo, mediaNivel: this.estado().mediaNivel, mediaPrestigio: this.estado().mediaPrestigio }));
   protected readonly nivelInicial = computed(() => this.estado().sobrescreverProgressao
     ? Math.max(0, Math.min(20, Math.trunc(this.estado().nivelManual)))
@@ -133,7 +141,7 @@ export class FichaCriar {
   protected readonly bonusMonetario = computed(() => calcularBonusMonetario({ prestigioInicial: this.prestigioInicial() }).bonus);
   protected readonly totalDinheiro = computed(() => this.estado().dinheiro.rolado ? this.estado().dinheiro.inicial + this.bonusMonetario() : 0);
   /** Bônus fixo de atributos do perfil (arquétipo/subclasse) atual — `{}` sem perfil definitivo. */
-  protected readonly bonusAtributos = computed(() => obterBonusAtributos({ classe: this.classeCalculada(), arquetipo: this.estado().arquetipo }));
+  protected readonly bonusAtributos = computed(() => obterBonusAtributosComEscolha({ classe: this.classeCalculada(), arquetipo: this.estado().arquetipo }, this.estado().bonusEscolhido));
   protected readonly bonusAtributosLista = computed(() => this.campos
     .map((campo) => ({ nome: campo.nome, valor: this.bonusAtributos()[campo.chave] ?? 0 }))
     .filter(({ valor }) => valor !== 0));
@@ -285,9 +293,17 @@ export class FichaCriar {
   protected atualizar(parcial: Partial<EstadoGuiaCriacao>): void { this.estado.update((atual) => ({ ...atual, ...parcial })); }
   protected valor(evento: Event): string { return (evento.target as HTMLInputElement).value; }
   protected numero(evento: Event): number { return Number(this.valor(evento)); }
-  protected mudarClasse(evento: Event): void { const valor = this.valor(evento); this.atualizar({ classe: valor ? valor as ClasseEnum : null, arquetipo: null, pacoteHabilidadesId: null, melhorias: [] }); }
+  protected mudarClasse(evento: Event): void { const valor = this.valor(evento); this.atualizar({ classe: valor ? valor as ClasseEnum : null, arquetipo: null, bonusEscolhido: [], pacoteHabilidadesId: null, melhorias: [] }); }
   protected mudarMotivo(evento: Event): void { this.atualizar({ motivo: this.valor(evento) as MotivoEntradaAgenteEnum }); }
-  protected mudarArquetipo(evento: Event): void { const valor = this.valor(evento); this.atualizar({ arquetipo: valor ? valor as ArquetipoEnum : null }); }
+  protected mudarArquetipo(evento: Event): void { const valor = this.valor(evento); this.atualizar({ arquetipo: valor ? valor as ArquetipoEnum : null, bonusEscolhido: [] }); }
+  /** Grava a escolha do jogador na posição `indice` de `bonusEscolhido` (substitui, não acumula).
+   * Recebe o `Event` bruto do `<select>` e faz o cast — mesmo padrão de `mudarArquetipo`. */
+  protected escolherBonusAtributo(indice: number, evento: Event): void {
+    const valor = this.valor(evento);
+    const chave = valor ? valor as ChaveAtributo : null;
+    const bonusEscolhido = this.slotsEscolhaBonus().map((_, i) => (i === indice ? chave : this.estado().bonusEscolhido[i] ?? null));
+    this.atualizar({ bonusEscolhido });
+  }
   protected atualizarOrigem(campo: 'nome' | 'descricao' | 'saberDeCampo', valor: string): void { this.atualizar({ origem: { ...this.estado().origem, [campo]: valor } }); }
   protected atualizarEspecialidade(campo: 'gatilho' | 'efeito', valor: string): void { const origem = this.estado().origem; this.atualizar({ origem: { ...origem, especialidade: { ...origem.especialidade, [campo]: valor } } }); }
   protected mudarBonusFormacao(indice: number, evento: Event): void {
@@ -379,7 +395,8 @@ export class FichaCriar {
     const e = this.estado();
     switch (this.passos()[e.passo]) {
       case 'Base': return e.nome.trim().length > 0;
-      case 'Classe': return e.classe !== null && (!ehClasseBase(e.classe) || e.arquetipo !== null);
+      case 'Classe': return e.classe !== null && (!ehClasseBase(e.classe) || e.arquetipo !== null)
+        && this.slotsEscolhaBonus().every((_, indice) => e.bonusEscolhido[indice] != null);
       case 'Atributos': return e.modoLivre || (this.distribuicao().saldo === 0 && this.distribuicao().violacoes.length === 0);
       case 'Identidade': return e.personalidade.trim().length > 0
         && !/\s/.test(e.personalidade.trim())
@@ -420,7 +437,7 @@ export class FichaCriar {
     if (this.criando() || !e.classe || !e.dinheiro.rolado) return;
     this.criando.set(true);
     this.erro.set('');
-    const resultado = construirFichaInicial({ nome: e.nome, classe: e.classe, arquetipo: e.arquetipo, nivel: this.nivelInicial(), prestigio: this.prestigioInicial(), atributos: e.atributos, maestria: e.maestria, identidade: { personalidade: e.personalidade, origem: this.temPeculiaridade() ? null : e.origem }, dinheiro: this.totalDinheiro(), anotacoes: this.novoAgente().recebeAmaldicoadoPeloPassado ? 'Amaldiçoado pelo Passado' : '', habilidadesExtras: this.habilidadesDoNivel(), equipamentoInicial: e.kit });
+    const resultado = construirFichaInicial({ nome: e.nome, classe: e.classe, arquetipo: e.arquetipo, bonusEscolhido: e.bonusEscolhido, nivel: this.nivelInicial(), prestigio: this.prestigioInicial(), atributos: e.atributos, maestria: e.maestria, identidade: { personalidade: e.personalidade, origem: this.temPeculiaridade() ? null : e.origem }, dinheiro: this.totalDinheiro(), anotacoes: this.novoAgente().recebeAmaldicoadoPeloPassado ? 'Amaldiçoado pelo Passado' : '', habilidadesExtras: this.habilidadesDoNivel(), equipamentoInicial: e.kit });
     const campanhaId = this.campanhaId;
     this.fichaService.criarFicha({ ...(campanhaId !== null ? { campanhaId } : {}), usuarioId: this.ehMestre() ? (e.usuarioId ?? undefined) : undefined, ...resultado })
       .pipe(finalize(() => this.criando.set(false)))
