@@ -1115,6 +1115,19 @@ describe('FichaVisualizacao', () => {
 
         expect(habilidadesEmitidas).toEqual([[outraHabilidade]]);
       });
+
+      it('a UI mostra a confirmação quando a oferta fica pendente, e os dois botões chamam os métodos certos', () => {
+        const alvo = montar(dadosExperimentoComOrigem, 'Espécime', 42, true, true);
+        alvo.fixture.componentInstance['habilidadesPendentesPeculiaridade'].set([peculiaridade]);
+        alvo.fixture.detectChanges();
+
+        const dialogo = alvo.raiz.querySelector('.ficha-ident__aviso-peculiaridade');
+        expect(dialogo?.textContent).toContain('substituir a Origem atual');
+
+        const confirmar = vi.spyOn(alvo.fixture.componentInstance as unknown as { confirmarLimparOrigemEHabilidade: () => void }, 'confirmarLimparOrigemEHabilidade');
+        (alvo.raiz.querySelector('[data-testid="confirmar-limpar-origem"]') as HTMLButtonElement).click();
+        expect(confirmar).toHaveBeenCalled();
+      });
     });
   });
 

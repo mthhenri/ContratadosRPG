@@ -342,6 +342,32 @@
           }
         </p-dialog>
 
+        <p-dialog
+          [visible]="habilidadesPendentesPeculiaridade() !== null"
+          [modal]="true"
+          [draggable]="false"
+          [resizable]="false"
+          [dismissableMask]="true"
+          header="Confirmar Peculiaridade"
+          styleClass="ficha-ident__aviso-peculiaridade"
+          (onHide)="cancelarLimparOrigem()"
+        >
+          <p>Isso vai substituir a Origem atual, que será apagada. Confirma?</p>
+          <div class="ficha-ident__classe-acoes">
+            <button
+              class="ficha-cartao__acao ficha-cartao__acao--confirmar"
+              type="button"
+              data-testid="confirmar-limpar-origem"
+              (click)="confirmarLimparOrigemEHabilidade()"
+            >
+              Confirmar
+            </button>
+            <button class="ficha-cartao__acao" type="button" (click)="cancelarLimparOrigem()">
+              Cancelar
+            </button>
+          </div>
+        </p-dialog>
+
         @if (ajustavelAmplo() && editandoClasse()) {
           <div class="ficha-ident__classe-editor">
             <div class="ficha-ident__classe-linha">
@@ -1411,7 +1437,7 @@
             [energiaAtual]="estado().energiaAtual"
             [amplificadores]="dados().inventario.amplificadores"
             [compacto]="modo() === 'compacto'"
-            (habilidadesMudou)="ajusteHabilidades.emit($event)"
+            (habilidadesMudou)="mudarHabilidades($event)"
             (habilidadeUtilizada)="aoUtilizarHabilidade($event)"
           />
         </div>
