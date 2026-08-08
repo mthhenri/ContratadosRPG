@@ -233,3 +233,12 @@ Preserve alterações existentes do usuário. Antes de qualquer comando destruti
 confirme o alvo e a necessidade. Não use reset destrutivo nem apague arquivos
 fora do escopo. Após alterar código, rode a verificação proporcional ao risco e
 relate claramente o que foi validado.
+
+## Coautoria de commits
+
+Todo commit criado por um agente neste repositório deve incluir um trailer
+`Co-authored-by:` que identifique o agente responsável, usando a identidade
+apropriada à ferramenta (por exemplo, `Codex <noreply@openai.com>` ou a
+identidade configurada para Claude). A regra vale em qualquer chat, sessão ou
+momento de trabalho; antes de concluir um commit, confira a mensagem efetivamente
+gravada com `git log` ou `git show`.
