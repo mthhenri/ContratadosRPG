@@ -795,6 +795,36 @@ describe('FichaVisualizar', () => {
       expect(componente['ficha']()!.dados.derivados).toBeUndefined();
       expect(componente['ficha']()!.dados.identidade!.origem).toEqual(origem);
     });
+
+    it('limparOrigem: remove a Origem e o delta de Formação dela, sem tocar Personalidade', () => {
+      const { fixture } = montar({ usuarioLogadoId: 99 }); // mestre
+      const componente = fixture.componentInstance;
+      const carregada = componente['ficha']()!;
+      const derivadosBase = calcularDerivados(carregada.dados.classe, carregada.dados.nivel, carregada.dados.atributos);
+      const origem = origemComFormacao(FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO);
+      componente['ficha'].set({
+        ...carregada,
+        dados: {
+          ...carregada.dados,
+          identidade: { personalidade: 'Instável', origem },
+          derivados: { ...derivadosBase, deslocamento: derivadosBase.deslocamento! + 1 },
+        },
+      });
+
+      componente['fichaEdicao'].limparOrigem();
+
+      const d = componente['ficha']()!.dados;
+      expect(d.identidade).toEqual({ personalidade: 'Instável', origem: null });
+      expect(d.derivados!.deslocamento).toBe(derivadosBase.deslocamento);
+    });
+
+    it('limparOrigem sem Origem definida é um no-op seguro', () => {
+      const { fixture } = montar({ usuarioLogadoId: 99 });
+      const componente = fixture.componentInstance;
+
+      expect(() => componente['fichaEdicao'].limparOrigem()).not.toThrow();
+      expect(componente['ficha']()!.dados.identidade?.origem ?? null).toBeNull();
+    });
   });
 
   it('concede acesso ao membro selecionado e recarrega os acessos', () => {

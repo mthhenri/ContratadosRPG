@@ -391,6 +391,22 @@ export class FichaEdicaoService {
     this.agendarPersistencia();
   }
 
+  /** Limpa a Origem (Peculiaridade a substitui, m3-41) — mestre-only: o output que dispara isto só emite sob essa trava (`ficha-visualizacao.component.ts`). */
+  limparOrigem(): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) {
+      return;
+    }
+    const origemAnterior = this.identidadeAtual(fichaAtual).origem;
+    const derivadosAtuais = fichaAtual.dados.derivados;
+    const derivados = derivadosAtuais && origemAnterior
+      ? removerFormacaoDosDerivados(derivadosAtuais, origemAnterior.formacao)
+      : derivadosAtuais;
+    const identidade: FichaIdentidadeDto = { ...this.identidadeAtual(fichaAtual), origem: null };
+    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, identidade, derivados } });
+    this.agendarPersistencia();
+  }
+
   private identidadeAtual(ficha: FichaRecuperadaDto): FichaIdentidadeDto {
     return ficha.dados.identidade ?? { personalidade: null, origem: null };
   }
