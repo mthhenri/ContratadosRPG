@@ -123,7 +123,7 @@
                   class="detalhe__cabecalho-menu-item"
                   type="button"
                   role="menuitem"
-                  [disabled]="!minhaFichaExibida()"
+                  [disabled]="!minhaFichaExibida() || removendo() === minhaFichaExibida()?.id"
                   (click)="removerDaCampanha(minhaFichaExibida()!.id)"
                 >
                   <app-icone nome="voltar" />
