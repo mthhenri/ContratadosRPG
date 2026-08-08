@@ -155,6 +155,19 @@
                     </select>
                   </label>
                 }
+                @for (slot of slotsEscolhaBonus(); track $index) {
+                  <label class="campo">
+                    <span class="campo__rotulo">{{ slotsEscolhaBonus().length > 1 ? ($index + 1 === 1 ? '1ª' : '2ª') + ' escolha de bônus' : 'Bônus à escolha' }}</span>
+                    <select class="campo__controle" [attr.data-testid]="'bonus-escolha-' + $index" [value]="estado().bonusEscolhido[$index] ?? ''" (change)="escolherBonusAtributo($index, $event)">
+                      <option value="">Selecione</option>
+                      @for (campo of campos; track campo.chave) {
+                        @if (slot.includes(campo.chave)) {
+                          <option [value]="campo.chave">{{ campo.nome }}</option>
+                        }
+                      }
+                    </select>
+                  </label>
+                }
               </div>
               @if (estado().classe) {
                 <div class="guia__protocolo-info">
@@ -172,7 +185,7 @@
                   @if (perfilDefinido()) {
                     <div class="guia__briefing-grade">
                       <div class="guia__briefing-bloco">
-                        <span>Bônus fixo de atributos</span>
+                        <span>Bônus de atributos</span>
                         @if (bonusAtributosLista().length) {
                           <div class="guia__briefing-chips">
                             @for (bonus of bonusAtributosLista(); track bonus.nome) {
