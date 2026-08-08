@@ -192,6 +192,8 @@
                               <b>+{{ bonus.valor }} {{ bonus.nome }}</b>
                             }
                           </div>
+                        } @else if (slotsEscolhaBonus().length) {
+                          <p>Escolha o bônus acima para revelar.</p>
                         } @else {
                           <p>Este perfil não recebe bônus fixo de atributo.</p>
                         }
