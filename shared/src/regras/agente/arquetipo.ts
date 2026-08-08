@@ -108,7 +108,7 @@ export function obterBonusAtributosComEscolha(
   dto: BonusAtributosObterDto,
   escolhas: readonly (keyof FichaAtributosDto | null)[],
 ): BonusAtributos {
-  const bonus: { [chave in keyof FichaAtributosDto]?: number } = { ...obterBonusAtributos(dto) };
+  const bonus: Partial<Record<keyof FichaAtributosDto, number>> = { ...obterBonusAtributos(dto) };
   const slots = obterSlotsEscolhaBonus(dto);
   slots.forEach((slot, indice) => {
     const escolha = escolhas[indice];
