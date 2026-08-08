@@ -119,6 +119,28 @@
                   <app-icone nome="duplicar" />
                   <span>Vincular ficha existente</span>
                 </button>
+                <button
+                  class="detalhe__cabecalho-menu-item"
+                  type="button"
+                  role="menuitem"
+                  [disabled]="!minhaFichaExibida()"
+                  (click)="removerDaCampanha(minhaFichaExibida()!.id)"
+                >
+                  <app-icone nome="voltar" />
+                  <span>
+                    {{ rotuloRemoverDaCampanha() }}
+                  </span>
+                </button>
+                <button
+                  class="detalhe__cabecalho-menu-item"
+                  type="button"
+                  role="menuitem"
+                  [disabled]="!minhaFichaExibida()"
+                  (click)="pedirExcluirFicha(minhaFichaExibida()!.id, minhaFichaExibida()!.nome)"
+                >
+                  <app-icone nome="excluir" />
+                  <span>Excluir ficha</span>
+                </button>
               </div>
             }
           </div>

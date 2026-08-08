@@ -215,6 +215,16 @@ describe('CampanhaDetalhe', () => {
     fixture.detectChanges();
   }
 
+  function encontrarItemMenu(raiz: HTMLElement, texto: string): HTMLButtonElement {
+    const item = Array.from(raiz.querySelectorAll<HTMLButtonElement>('.detalhe__cabecalho-menu-item')).find(
+      (botao) => botao.textContent?.replace(/\s+/g, ' ').trim().includes(texto),
+    );
+    if (!item) {
+      throw new Error(`Item de menu "${texto}" não encontrado`);
+    }
+    return item;
+  }
+
   it('mostra o botão "Voltar às campanhas" no cabeçalho, apontando para /painel', () => {
     const { raiz } = montar(mestre());
     const voltar = raiz.querySelector('.detalhe__cabecalho-voltar');
@@ -254,9 +264,14 @@ describe('CampanhaDetalhe', () => {
 
       abrirMenuCampanha(raiz, fixture);
       const itens = Array.from(raiz.querySelectorAll('.detalhe__cabecalho-menu-item')).map((item) =>
-        item.textContent?.trim(),
+        item.textContent?.replace(/\s+/g, ' ').trim(),
       );
-      expect(itens).toEqual(['Criar nova ficha', 'Vincular ficha existente']);
+      expect(itens).toEqual([
+        'Criar nova ficha',
+        'Vincular ficha existente',
+        'Remover da campanha',
+        'Excluir ficha',
+      ]);
     });
 
     it('abre o menu com Editar/Excluir e fecha ao clicar no fundo', () => {
@@ -1308,6 +1323,89 @@ describe('CampanhaDetalhe', () => {
 
       const link = raiz.querySelector('.detalhe__abrir-completa-rodape');
       expect(link?.getAttribute('href')).toBe(`/painel/${CAMPANHA_ID}/ficha/5`);
+    });
+  });
+
+  // === Ações de ficha no menu do cabeçalho do jogador — remover/excluir agem sobre a ficha
+  // exibida na coluna principal, não sobre uma ficha escolhida no menu (que não existe aqui). ===
+  describe('ações de ficha no menu do jogador (remover/excluir)', () => {
+    it('desabilita "Remover da campanha"/"Excluir ficha" quando a ficha exibida é de um colega, habilita na própria', () => {
+      const { fixture, raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+      abrirMenuCampanha(raiz, fixture);
+
+      expect(encontrarItemMenu(raiz, 'Remover da campanha').disabled).toBe(false);
+      expect(encontrarItemMenu(raiz, 'Excluir ficha').disabled).toBe(false);
+
+      const botaoKane = Array.from(raiz.querySelectorAll<HTMLButtonElement>('.detalhe__equipe-ficha')).find(
+        (botao) => botao.textContent?.includes('Kane'),
+      );
+      botaoKane?.click();
+      fixture.detectChanges();
+
+      expect(encontrarItemMenu(raiz, 'Remover da campanha').disabled).toBe(true);
+      expect(encontrarItemMenu(raiz, 'Excluir ficha').disabled).toBe(true);
+    });
+
+    it('"Remover da campanha" age sobre a ficha exibida, fecha o menu e troca para outra ficha própria', () => {
+      const { fixture, raiz, fichaService } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+      abrirMenuCampanha(raiz, fixture);
+
+      encontrarItemMenu(raiz, 'Remover da campanha').click();
+      fixture.detectChanges();
+
+      // Ficha exibida inicial é Vera (id 4, primeira própria de `usuarioId: 2`).
+      expect(fichaService.atribuirCampanha).toHaveBeenCalledWith(4, null);
+      expect(raiz.querySelector('.detalhe__cabecalho-menu')).toBeNull();
+      // Zeta (id 5) é a outra ficha própria restante — o painel troca para ela sozinho.
+      expect(fichaService.recuperarFicha).toHaveBeenCalledWith(5);
+    });
+
+    it('"Remover da campanha" sem outra ficha própria restante cai no estado vazio do jogador', () => {
+      const { fixture, raiz, fichaService } = montar({
+        usuarioId: 2,
+        membros: membrosDois(),
+        fichas: fichas.filter((ficha) => ficha.id !== 5),
+      });
+      abrirMenuCampanha(raiz, fixture);
+
+      encontrarItemMenu(raiz, 'Remover da campanha').click();
+      fixture.detectChanges();
+
+      expect(fichaService.atribuirCampanha).toHaveBeenCalledWith(4, null);
+      expect(raiz.querySelector('.detalhe__jogador-vazio')).not.toBeNull();
+    });
+
+    it('"Excluir ficha" abre a confirmação da ficha exibida e fecha o menu; cancelar não chama o serviço', () => {
+      const { fixture, raiz, fichaService } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+      abrirMenuCampanha(raiz, fixture);
+
+      encontrarItemMenu(raiz, 'Excluir ficha').click();
+      fixture.detectChanges();
+
+      expect(raiz.querySelector('.detalhe__cabecalho-menu')).toBeNull();
+      const dialog = raiz.querySelector('.dialogo');
+      expect(dialog?.textContent).toContain('Vera');
+      expect(fichaService.excluirFicha).not.toHaveBeenCalled();
+
+      (raiz.querySelector('.dialogo .botao--secundario') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(raiz.querySelector('.dialogo')).toBeNull();
+      expect(fichaService.excluirFicha).not.toHaveBeenCalled();
+    });
+
+    it('confirmar "Excluir ficha" chama FichaService.excluirFicha e troca para outra ficha própria', () => {
+      const { fixture, raiz, fichaService } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+      abrirMenuCampanha(raiz, fixture);
+      encontrarItemMenu(raiz, 'Excluir ficha').click();
+      fixture.detectChanges();
+
+      (raiz.querySelector('.dialogo .botao--primario') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(fichaService.excluirFicha).toHaveBeenCalledWith(4);
+      expect(raiz.querySelector('.dialogo')).toBeNull();
+      expect(fichaService.recuperarFicha).toHaveBeenCalledWith(5);
     });
   });
 });

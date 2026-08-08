@@ -186,9 +186,14 @@
     text-align: left;
     transition: background-color 0.15s ease, color 0.15s ease;
 
-    &:hover {
+    &:hover:not(:disabled) {
       background: var(--surface-2);
       color: var(--accent);
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: default;
     }
 
     @include bp.mobile {

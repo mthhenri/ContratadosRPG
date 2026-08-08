@@ -463,6 +463,16 @@ export class CampanhaDetalhe {
   });
 
   /**
+   * Ficha exibida quando ela é sua (dono) — controla o `[disabled]` das ações de ficha do menu do
+   * cabeçalho do jogador (remover da campanha/excluir/acesso de visualização): elas só fazem
+   * sentido para a própria ficha, nunca para a de um colega vista via "Ver ficha".
+   */
+  protected readonly minhaFichaExibida = computed<FichaRecuperadaDto | null>(() => {
+    const fichaExibida = this.fichaExibidaDados();
+    return fichaExibida && fichaExibida.usuarioId === this.usuarioAtivoId() ? fichaExibida : null;
+  });
+
+  /**
    * Card "Rolagens" da coluna lateral (m2-21, item 3) — alvo do destino `'rolagens'` da barra
    * inferior do mobile. `viewChild` opcional: o card só existe quando há ficha exibida.
    */
@@ -1132,6 +1142,31 @@ export class CampanhaDetalhe {
   }
 
   /**
+   * Depois de remover/excluir a ficha exibida (`fichaExibidaId`), aponta para outra ficha própria
+   * restante na campanha, se houver, ou limpa a seleção — o template cai no estado vazio do
+   * jogador. Não faz nada se a ficha removida não era a exibida (ação vinda do kebab do mestre,
+   * onde `fichaExibidaId` nunca é setado).
+   */
+  private avancarFichaExibidaApos(fichaRemovidaId: number): void {
+    if (this.fichaExibidaId() !== fichaRemovidaId) {
+      return;
+    }
+    const restante = this.fichas().find((ficha) => ficha.usuarioId === this.usuarioAtivoId());
+    if (restante) {
+      this.fichaExibidaId.set(restante.id);
+    } else {
+      this.fichaExibidaId.set(null);
+      this.fichaExibidaDados.set(null);
+    }
+  }
+
+  /** Retorna o rótulo do botão "Remover da campanha" considerando o estado de remoção. */
+  protected rotuloRemoverDaCampanha(): string {
+    const minha = this.minhaFichaExibida();
+    return minha && this.removendo() === minha.id ? 'Removendo…' : 'Remover da campanha';
+  }
+
+  /**
    * Desatribui a ficha da campanha (ela volta ao acervo solto do dono, m3-28) — ação direta, sem
    * dialog, mesmo padrão de `FichaAcervo.removerDaCampanha`. Permissão já garantida pelo backend
    * (`validarPermissaoEdicao` — dono ou mestre, mesma regra de `podeAjustarFicha` que já esconde o
@@ -1140,6 +1175,7 @@ export class CampanhaDetalhe {
    */
   protected removerDaCampanha(fichaId: number): void {
     this.fecharMenuFicha();
+    this.fecharMenuCampanha();
     if (this.removendo() !== null) {
       return;
     }
@@ -1150,6 +1186,7 @@ export class CampanhaDetalhe {
       .subscribe({
         next: () => {
           this.fichas.update((lista) => lista.filter((ficha) => ficha.id !== fichaId));
+          this.avancarFichaExibidaApos(fichaId);
         },
       });
   }
@@ -1157,6 +1194,7 @@ export class CampanhaDetalhe {
   /** Abre a confirmação de exclusão a partir do menu da ficha (m3-52). */
   protected pedirExcluirFicha(fichaId: number, fichaNome: string): void {
     this.fecharMenuFicha();
+    this.fecharMenuCampanha();
     this.confirmandoExcluirFicha.set({ id: fichaId, nome: fichaNome });
   }
 
@@ -1184,6 +1222,7 @@ export class CampanhaDetalhe {
         next: () => {
           this.confirmandoExcluirFicha.set(null);
           this.fichas.update((lista) => lista.filter((ficha) => ficha.id !== pendente.id));
+          this.avancarFichaExibidaApos(pendente.id);
         },
       });
   }
