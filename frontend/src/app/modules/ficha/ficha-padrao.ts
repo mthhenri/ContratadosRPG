@@ -10,7 +10,7 @@ import {
   calcularVida,
   habilidadesIniciais,
   maestriaAtingivel,
-  obterBonusAtributos,
+  obterBonusAtributosComEscolha,
   obterLimitesClasse,
 } from '@contratados-rpg/shared/regras/agente';
 import { rolarDinheiroInicial } from '@contratados-rpg/shared/regras/novo-agente';
@@ -43,6 +43,12 @@ export interface OpcoesFichaInicial {
   /** Atributos **base** (antes do bônus fixo de arquétipo/subclasse). */
   readonly atributos: FichaAtributosDto;
   readonly maestria: keyof FichaAtributosDto | null;
+  /**
+   * Escolha do jogador para os pontos "à escolha" do perfil (Engenheiro/Assassino: 1 posição;
+   * Acadêmico: 1 posição; Experimento Híbrido: 2 posições) — mesma ordem de
+   * `obterSlotsEscolhaBonus`. Ausente/posição `null` não soma nada além do bônus fixo.
+   */
+  readonly bonusEscolhido?: readonly (keyof FichaAtributosDto | null)[];
   readonly identidade?: FichaJogadorDadosDto['identidade'];
   /** Total já rolado no guia (dinheiro inicial + bônus). Ausente mantém o fallback legado. */
   readonly dinheiro?: number;
@@ -95,7 +101,7 @@ export function construirFichaInicial(
   const arquetipo = ehClasseBase(classe) ? opcoes.arquetipo : null;
 
   // Atributos = base + bônus fixo do arquétipo/subclasse, cada um clampado aos limites da classe.
-  const bonus = obterBonusAtributos({ classe, arquetipo });
+  const bonus = obterBonusAtributosComEscolha({ classe, arquetipo }, opcoes.bonusEscolhido ?? []);
   const atributos = { ...opcoes.atributos };
   (Object.keys(atributos) as (keyof FichaAtributosDto)[]).forEach((chave) => {
     const bruto = opcoes.atributos[chave] + (bonus[chave] ?? 0);

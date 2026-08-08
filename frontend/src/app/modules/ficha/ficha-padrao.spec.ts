@@ -50,6 +50,30 @@ describe('construirFichaInicial', () => {
     expect(dados.arquetipo).toBe(ArquetipoEnum.LUTADOR);
   });
 
+  it('soma a escolha do jogador ao bônus fixo (Engenheiro: Intelecto fixo + Destreza escolhida)', () => {
+    const { dados } = construirFichaInicial(
+      base({
+        classe: ClasseEnum.ESPECIALISTA,
+        arquetipo: ArquetipoEnum.ENGENHEIRO,
+        atributos: { ...ATRIBUTOS_BASE_PADRAO, intelecto: 2, destreza: 2 },
+        bonusEscolhido: ['destreza'],
+      }),
+    );
+    expect(dados.atributos.intelecto).toBe(3);
+    expect(dados.atributos.destreza).toBe(3);
+  });
+
+  it('sem bonusEscolhido, perfil com ponto à escolha recebe só o fixo (comportamento anterior)', () => {
+    const { dados } = construirFichaInicial(
+      base({
+        classe: ClasseEnum.ESPECIALISTA,
+        arquetipo: ArquetipoEnum.ACADEMICO,
+        atributos: { ...ATRIBUTOS_BASE_PADRAO, intelecto: 2 },
+      }),
+    );
+    expect(dados.atributos.intelecto).toBe(3); // só o fixo, sem escolha
+  });
+
   it('normaliza Nível e atributos aos limites do Civil e descarta o arquétipo', () => {
     const { dados } = construirFichaInicial(
       base({
