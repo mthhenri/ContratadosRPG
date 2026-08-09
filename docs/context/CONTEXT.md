@@ -1,6 +1,7 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-05 · **Última task registrada:** alinhamento desktop dos filtros do inventário
+> **Última revisão:** 2026-08-08 · **Última decisão registrada:** a `m3-64` incorporou ao guia os
+> pacotes iniciais de habilidades e Nível/Prestígio exatos, inclusive para fichas avulsas
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -13,21 +14,23 @@
 
 ## 1. Próxima Task
 
-**Declarada no último registro do `HISTORY.md` (fecho da `m2-21`):** nenhuma task de milestone
-aberto está explicitamente encadeada; a fila do backlog abaixo é a referência. `m2-18`/`m2-19`/
-`m2-20`/`m2-21` fecharam a frente de redesenho do painel de campanhas — `/painel/:id` tem layout
-dedicado para mestre e para jogador. Fica **em aberto, por decisão do autor**: um recorte de UI
-pensado especificamente para o **mobile** da visão do jogador (a `m2-21` só adaptou o visual de
-desktop).
+Nenhuma task de milestone aberto está explicitamente encadeada; a fila do backlog abaixo é a
+referência. O trio do guia de criação (`m3-57` base, `m3-58` melhorias de nível, `m3-59`
+equipamento inicial) e o complemento `m3-64` **concluíram** — as specs estão em
+`docs/specs/done/`; o que o guia faz hoje de ponta a ponta está descrito na seção 4, em "Guia de
+criação de ficha". A `m3-64` resolveu o antigo `P-012`: o pacote inicial agora é uma regra pura em
+`shared/regras/agente` e tem consumidor obrigatório no guia.
+
+`m2-18`/`m2-19`/`m2-20`/`m2-21` fecharam a frente de redesenho do painel de campanhas —
+`/painel/:id` tem layout dedicado para mestre e para jogador. Fica **em aberto, por decisão do
+autor**: um recorte de UI pensado especificamente para o **mobile** da visão do jogador (a `m2-21`
+só adaptou o visual de desktop).
 
 ### Fila do backlog (`docs/specs/backlog/`)
 
 | Spec | Frente | O que é |
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m3-57` | guia de criação | assistente de criação de ficha |
-| `m3-58` | guia de criação | melhorias de nível |
-| `m3-59` | guia de criação | equipamento inicial |
 | `m3-61` | ficha | cor de tema por ficha |
 | `m3-62` | ficha | imagem/avatar da ficha (blob storage: **Cloudflare R2**, fixado na spec) |
 
@@ -45,8 +48,9 @@ Deploy em produção por **integração nativa das plataformas**, sem GitHub Act
 `master` → Render (backend) e Cloudflare Pages (frontend) puxam do Git sozinhos; banco no Supabase.
 O GitHub Actions só roda **CI** (lint + testes nos 3 workspaces em todo PR).
 
-**Suítes:** shared 519/519 · backend 170/170 · frontend 709/**711** — as 2 falhas são conhecidas e
-pré-existentes, ver [`PROBLEMS.md`](PROBLEMS.md) `P-001`/`P-010`. `npm run lint` **não fecha limpo**
+**Suítes:** shared 532 testes fonte aprovados (o comando completo ainda coleta `dist`, `P-011`) ·
+backend 170/170 · frontend 733/**735** — as 2 falhas são conhecidas e pré-existentes, ver
+[`PROBLEMS.md`](PROBLEMS.md) `P-001`/`P-010`. `npm run lint` **não fecha limpo**
 hoje em nenhum dos dois workspaces (frontend/backend) — falhas pré-existentes não relacionadas a
 nenhuma task recente, ver `PROBLEMS.md` `P-009`.
 
@@ -59,7 +63,7 @@ nenhuma task recente, ver `PROBLEMS.md` `P-009`.
 | M0 | Fundação (workspaces, docs, Docker, `core/`, CI, deploy) | **concluído** |
 | M1 | Calculadora com paridade | **concluído no código** (`m1-01`…`m1-20`). Restam 2 passos **operacionais** de plataforma — ver `PROBLEMS.md` `P-006` |
 | M2 | Auth + Campanhas | **concluído**, incluindo o redesenho do painel (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`; `m2-18` lista, `m2-19` detalhe/mestre, `m2-20` detalhe/jogador, `m2-21` abas + Rolagens na lateral + menu de ficha do jogador) |
-| M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; falta `m3-53` do lote de refino + o lote de guia de criação (`m3-57`…`m3-59`) e `m3-61`/`m3-62` |
+| M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; guia de criação completo (`m3-57`/`m3-58`/`m3-59` — base, melhorias de nível, equipamento inicial); faltam `m3-53` e `m3-61`/`m3-62` |
 | M4 | Ficha de Criatura/NPC | não iniciado |
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | não iniciado |
@@ -203,6 +207,44 @@ navegação no rodapé** (não empilhamento de colunas) — por breakpoint real 
 Rolagem de dados: gramática v4, presets, teste de atributo, dano de item, iniciativa automática,
 calculadora flutuante e **histórico persistido** com visibilidade `PUBLICA`/`PRIVADA`.
 
+### Guia de criação de ficha — `frontend/src/app/modules/ficha/paginas/criar/`
+
+Rota `/painel/:campanhaId/ficha/nova` (`m3-57`/`m3-58`/`m3-59`) — mesmo componente `FichaCriar`
+montado de novo, sem `campanhaId`, em `/fichas/nova` (acervo, m3-28: ficha avulsa, sem campanha).
+`FichaCriarDialog` (o formulário único antigo) **não existe mais no código**: era a última
+consumidora quem faltava migrar. Tela única por passos — trilha vertical + resumo operacional
+progressivo que nunca antecipa classe/Nível/dinheiro antes da escolha real —, rodando sobre
+`shared/regras` sem nenhuma chamada ao backend até o "Criar ficha" final. Sem `campanhaId`
+(`null`), o guia pula `listarMembros`/`listarFichas` (sem esquadrão, sem seletor de dono no passo
+01) e o passo 03 solicita Nível e Prestígio exatos; em campanha, as médias calculadas continuam
+como padrão e podem ser sobrescritas manualmente. Ao final, `POST /ficha` sai sem a chave
+`campanhaId` quando a ficha é avulsa e
+o guia termina em `/fichas/:id`, não em `/painel/.../ficha/:id`. Passos: **01 Base** (dono, só
+mestre — não aparece sem campanha —, + codinome) · **02 Classe** (classe/arquétipo, bônus fixo de
+atributos, Habilidade Inicial, Saúde base sem Nível/atributos ainda) · **03 Novo agente** (motivo
+de entrada + médias de Nível/Prestígio pré-calculadas da campanha, `calcularNovoAgente`, memorial
+de cálculo e sobrescrita exata; sem campanha, valores exatos informados diretamente)
+· **04 Atributos** (orçamento de 4 pontos de criação,
+`calcularOrcamentoAtributos`/`validarDistribuicaoAtributos`) · **05 Identidade** (Personalidade +
+Origem com catálogo de Formações e `Outra`, imutáveis para o dono após a criação) · **06
+Habilidades** (sempre presente: pacote inicial obrigatório de 4 Gerais, 2 Gerais + 1 de
+Classe/Arquétipo ou 2 de Classe/Arquétipo; Civil escolhe 3 Civis; compõe ainda as vagas de
+`calcularProgressaoAcumulada`, sem duplicatas — Experimento não ganha vaga extra, escolhe
+Peculiaridade pelo mesmo pacote de qualquer outra classe; Fortificações de
+Personalidade nos níveis 7/14) · **07 Recursos** (rolagem única e definitiva de `1000 + 4D4×250` +
+Bônus Monetário) · **08 Equipamento inicial** (kit da loja, orçamento **à parte** do dinheiro —
+nunca descontado —, teto $2500/peso 5 do documento — mesma regra para toda classe, inclusive Civil
+—, sem modificação; componente próprio `GuiaEquipamentoLoja`, catálogo + carrinho sobre
+`CATALOGO_ITENS`/`calcularTotaisCarrinho` de `shared/regras/compras`; pulável, kit vazio é válido) ·
+**09 Revisão** (resumo completo + `POST /ficha`, erro do backend não perde o estado do guia). Os
+passos 04/06/08 têm **trava dura** por padrão (não avança com saldo/vaga/orçamento em aberto) com
+um "modo livre" que ignora as travas (sempre disponível ao mestre) — regra só do guia, client-side;
+o backend segue com a liberdade de edição da `m3-10`. Rascunho (`GuiaCriacaoRascunhoService`)
+serializa o estado em `localStorage` por campanha, oferece "retomar"/"começar do zero" ao reabrir e
+some ao concluir; sair do guia usa um `<dialog>` nativo (não `confirm()` nem `beforeunload`, que não
+permite UI customizada), com aviso de que o progresso está salvo. Mobile: trilha vira barra de
+progresso no topo, resumo operacional vira bottom sheet aberto por um botão dedicado no cabeçalho.
+
 ### Tempo real — `backend/core/gateway`
 
 Gateway Socket.IO **broadcast-only**: toda mutação passa por REST, o gateway nunca recebe escrita.
@@ -258,8 +300,11 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
   alternadas à mão e nunca validadas; exceder o Inventário máximo é **aviso**, não trava.
 - **Gate de qualidade é definição de pronto** — toda tarefa exige evidência contra a spec e as
   convenções, revisão do diff e verificação proporcional. UI exige verificação ao vivo conforme
-  `verify`; item sem uma verificação obrigatória permanece aberto. O checklist canônico está em
-  `AGENTS.md` “Gate obrigatório de qualidade e conclusão”.
+  `verify`; item sem uma verificação obrigatória permanece aberto. **Qualidade acima de velocidade**
+  é decisão expressa do autor: nenhuma pressa, delegação ou limite de execução autoriza atalhos. UI
+  exige análogo aprovado e inspeção pessoal do agente principal em 1920×1080 e 360×800; build,
+  testes, tokens e relato de subagente não substituem a comparação visual. O checklist canônico está
+  em `AGENTS.md` “Gate obrigatório de qualidade e conclusão”.
 
 ---
 

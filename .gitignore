@@ -26,3 +26,6 @@ Thumbs.db
 
 # Claude Code — configuração local/pessoal (a skill do projeto fica versionada)
 .claude/settings.local.json
+
+# Superpowers — workspace de scratch (ledgers, briefs, diffs de revisão, sessões de brainstorm)
+.superpowers/

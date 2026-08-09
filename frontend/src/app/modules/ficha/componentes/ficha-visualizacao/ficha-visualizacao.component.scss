@@ -1360,8 +1360,13 @@
   &__meta-valor-linha {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 6px;
+
+    &--substituida { align-items: flex-start; }
   }
+
+  &__origem-substituida { max-width: 100%; white-space: normal; overflow-wrap: anywhere; line-height: 1.35; }
 
   // Caixa de uma linha de Formação no editor de Origem — mesmo visual de `.ficha-mini`.
   &__caixa {

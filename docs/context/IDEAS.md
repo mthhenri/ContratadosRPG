@@ -138,6 +138,24 @@
 - **Custo aparente:** médio — motor fácil (duas funções puras + tabela de custo do LDA reusando
   `venda.ts`); a parte incerta é a UI/estado da espera do LDA sem um sistema de missão existente.
 
+### I-010 — Granularidade na permissão de visualização de ficha · ficha/acesso
+
+- **Ideia:** hoje o "Acesso de Visualização" (`FichaAcessoResumoDto`, m3-04) é binário — quem
+  recebe acesso vê a ficha inteira (exceto `CAMPOS_PRIVADOS_FICHA`, sempre omitidos) ou não vê
+  nada. Dar ao dono/mestre controle mais fino sobre o que cada concessão libera (ex.: só
+  status/vitalidade, sem inventário/anotações; ou histórico/identidade escondidos de alguns
+  membros).
+- **Origem:** pedido do autor ao revisar o menu "⋯" do painel de campanha (2026-08-08) — junto do
+  pedido de trazer as ações de ficha (remover/excluir) e o "Acesso de visualização" para fora da
+  ficha completa, para o painel do jogador (ver
+  `docs/superpowers/specs/2026-08-08-painel-jogador-acoes-ficha-design.md`).
+- **Por quê:** a granularidade atual força tudo-ou-nada; um dono que quer compartilhar só parte da
+  ficha (ex.: vitalidade para o grupo, mas não o histórico pessoal) não tem opção hoje.
+- **Custo aparente:** médio-alto — schema (uma concessão precisaria guardar quais seções/campos
+  libera, não só o `usuarioId`) + UI de seleção nos dois lugares que hoje mostram a dialog de
+  acesso (`visualizar.page` e, desde este pedido, `campanha/detalhe.page`) + `validarPermissaoVisualizacao`
+  no backend teria que aplicar o recorte por seção, não só por `CAMPOS_PRIVADOS_FICHA` fixo.
+
 ---
 
 ## Promovidas

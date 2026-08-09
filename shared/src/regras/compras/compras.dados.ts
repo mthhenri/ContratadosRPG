@@ -30,6 +30,15 @@ export const PENALIDADE_VONTADE_POR_EMPILHAMENTO = 2;
 /** Limite total de empilhamentos de amplificador = Vontade × este multiplicador (doc — "Vontade × 3"). */
 export const MULTIPLICADOR_LIMITE_AMPLIFICADOR = 3;
 
+/**
+ * Teto de gasto do **Equipamento Inicial** (m3-59) — orçamento à parte do dinheiro rolado (doc —
+ * "Informações Adicionais > Equipamento Inicial": "a soma total não supere 2500 de dinheiro").
+ */
+export const KIT_INICIAL_ORCAMENTO_MAXIMO = 2500;
+
+/** Teto de peso do Equipamento Inicial (doc — mesma seção: "não ultrapasse 5 de peso"). */
+export const KIT_INICIAL_PESO_MAXIMO = 5;
+
 // ── Categorias do catálogo ───────────────────────────────────────────────────
 
 /** Uma categoria do catálogo: a chave de enum, o rótulo e o ícone exibidos na UI. */

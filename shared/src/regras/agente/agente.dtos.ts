@@ -35,6 +35,26 @@ export interface LimiteEnergiaCalcularDto {
   readonly destreza: number;
 }
 
+/** Entrada de `obterSaudeClasse`: só a classe — sem Nível/atributos, ver `SaudeClasseDto`. */
+export interface SaudeClasseObterDto {
+  readonly classe: ClasseEnum;
+}
+
+/**
+ * Coeficientes de Vida/Energia da classe, sem depender de Nível ou atributos ainda não
+ * escolhidos pelo jogador. Usado no passo // CLASSE do assistente de criação, onde
+ * `calcularVida`/`calcularEnergia` ainda não fazem sentido (Vigor/Destreza são só o valor
+ * de fábrica, não a escolha do jogador — mostrar o resultado ali seria um número inventado).
+ */
+export interface SaudeClasseDto {
+  readonly vidaBase: number;
+  readonly vidaPorNivel: number;
+  readonly vidaPorVigor: number;
+  readonly energiaBase: number;
+  readonly energiaPorNivel: number;
+  readonly energiaPorDestreza: number;
+}
+
 /**
  * Entrada de `limiteMinimoEnergiaMaximaFragmentos`: (Vigor + Destreza) × 2 — **não confundir** com
  * `LimiteEnergiaCalcularDto`/`calcularLimiteEnergia` (Destreza × 2 pra agente, só Destreza pra

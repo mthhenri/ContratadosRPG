@@ -55,9 +55,13 @@ Monetário e **não** coleta Identidade. O motor já tem o necessário: `calcula
      `FichaCriarDialog` (componente, HTML, SCSS e spec) é **removido** e o seletor de dono
      (só mestre, §14) migra para o passo 01. Caminho único de criação.
    - **Shell:** trilha vertical de passos à esquerda (índice mono + título UPPERCASE, padrão de
-     cabeçalho de seção do tema), conteúdo do passo ativo e **resumo vivo** (Vida/Energia/Defesa e
-     saldo de pontos) à direita; rodapé com Voltar/Avançar. Passo já visitado é clicável; passo à
-     frente só com o atual válido. Sair do guia pede confirmação.
+     cabeçalho de seção do tema), conteúdo do passo ativo e **resumo vivo progressivo** à direita;
+     o resumo começa vazio e só mostra fatos já informados ou confirmados no fluxo — nunca inventa
+     classe, Nível, Prestígio, dinheiro ou qualquer outro valor padrão. À medida que o agente toma
+     forma, ele expõe sua classe/subclasse, progressão, atributos de destaque, Identidade e
+     Recursos, de modo que seja possível entender o personagem sendo construído. Rodapé com
+     Voltar/Avançar. Passo já visitado é clicável; passo à frente só com o atual válido. Sair do
+     guia pede confirmação.
    - **Rascunho:** `guia-criacao-rascunho.service.ts` serializa o estado em `localStorage` por
      campanha (mesmo padrão do carrinho da `m1-11`); ao entrar com rascunho existente, oferecer
      "retomar" ou "começar do zero"; ao concluir com sucesso, limpar.
@@ -93,13 +97,18 @@ Monetário e **não** coleta Identidade. O motor já tem o necessário: `calcula
      **Trava dura por padrão**: não avança com saldo diferente de zero nem com violação. Um botão
      **"modo livre"** destrava os limites (sempre disponível ao mestre) — a trava é do guia,
      client-side; o backend segue com a liberdade de edição da `m3-10`, sem regra nova.
-   - **07 // RECURSOS** — rola `1000 + 4D4 × 250` (`rolarDinheiroInicial`) com os **4 dados
-     visíveis**, permitindo rerolar enquanto o passo não é confirmado; soma o Bônus Monetário do
-     passo 03 e mostra o total que vai para `dados.dinheiro`.
+   - **07 // RECURSOS** — começa sem dados nem valores calculados e oferece um único botão destacado
+     para rolar `1000 + 4D4 × 250` (`rolarDinheiroInicial`). O clique anima os **4 dados**, revela os
+     resultados, soma o Bônus Monetário do passo 03 e mostra o total que vai para `dados.dinheiro`.
+     A rolagem é definitiva: não existe rerrolagem nem reabertura desse estado no mesmo rascunho.
    - **09 // REVISÃO** — resumo completo da ficha montada + "Criar ficha" (`POST /ficha`), com erro
      do backend exibido sem perder o estado do guia.
 4. **Passo 05 // IDENTIDADE.** Personalidade (traços) + Origem (Formações, Especialidade e
-   gatilho), reusando os editores da ficha (`m3-25`) em vez de duplicar. É o momento certo: depois
+   gatilho), em blocos visualmente separados para não fundir os dois conceitos. Personalidade é
+   preenchível no guia. Cada Formação usa o catálogo integral do sistema e oferece `Outra` para
+   texto customizado; a seleção de catálogo preenche seu efeito mecânico e solicita o parâmetro
+   quando aplicável. Especialidade continua sendo texto livre, como determina o sistema. Reusar os
+   editores e contratos da ficha (`m3-25`) em vez de redefinir as regras. É o momento certo: depois
    de definidas, Personalidade e Origem ficam **imutáveis para o dono** (`m3-24`). Para as três
    subclasses de **Experimento**, o passo oferece **Peculiaridade _ou_ Origem** — nunca as duas
    (`m3-41`: `experimentoComPeculiaridade` zera a Origem); escolher Peculiaridade adiciona a
@@ -118,10 +127,17 @@ Monetário e **não** coleta Identidade. O motor já tem o necessário: `calcula
 - "Nova ficha" abre `/painel/:campanhaId/ficha/nova`; o dialog antigo não existe mais no código.
 - Não é possível concluir o guia com pontos de atributo sobrando ou estourados, nem com um atributo
   acima do teto — salvo com "modo livre" ligado.
+- O caminho convencional, sem "modo livre", aceita distribuições válidas nos Níveis 1, 5, 10, 15
+  e 20; os pontos de progressão não são confundidos com a restrição dos 4 pontos de criação.
 - Numa campanha com fichas, o passo Novo Agente chega com as médias preenchidas e produz o mesmo
   Nível/Prestígio/Bônus que a calculadora Novo Agente da M1 para as mesmas entradas.
 - O dinheiro da ficha criada é `1000 + 4D4×250` **mais** o Bônus Monetário quando o Prestígio
-  inicial é maior que zero — e é exatamente o total exibido no passo 07.
+  inicial é maior que zero — e é exatamente o total exibido no passo 07. Antes da ação não há dados
+  nem saldo; depois da animação, os quatro resultados aparecem e não podem ser rolados novamente.
+- O resumo operacional começa vazio e nunca antecipa classe, progressão ou Recursos; depois passa a
+  refletir somente escolhas efetivamente feitas, incluindo atributos de destaque e Identidade.
+- As Formações são selecionáveis no catálogo completo, com alternativa `Outra`; Personalidade é
+  editável e ocupa seção distinta da Origem, enquanto Especialidade permanece em texto livre.
 - Personalidade e Origem definidas no guia chegam persistidas e já imutáveis para o dono; um
   Experimento com Peculiaridade não sai do guia com Origem.
 - F5 no meio do guia oferece retomar de onde parou; concluir limpa o rascunho.

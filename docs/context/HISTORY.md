@@ -1,5 +1,530 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-08 — Guia de criação: remove a vaga extra de Experimento no passo Habilidades
+
+Pedido direto do autor logo após a `m3-64`: o passo Habilidades já garante a todo agente (inclusive
+Experimento) um pacote inicial obrigatório que pode incluir vagas de Classe/Arquétipo — a vaga fixa
+adicional que a `m3-64` dava só a Experimento ficou redundante e foi removida de
+`FichaCriar.vagasMelhoria` (`frontend/.../criar.page.ts`). Experimento com Peculiaridade continua
+possível, só que pelo mesmo pacote de qualquer outra classe, não por uma vaga garantida à parte. O
+texto do passo que anunciava essa vaga garantida também saiu do template.
+
+## 2026-08-08 — `m3-64`: habilidades iniciais, progressão exata e identidade legível
+
+Pedido direto do autor para fechar quatro lacunas do guia e do resumo da ficha. O pacote de
+habilidades da criação, antes registrado como `P-012`, passou a ser regra pura em
+`shared/regras/agente/habilidades-iniciais.ts`: agentes convencionais escolhem exatamente um entre
+**4 Gerais**, **2 Gerais + 1 de Classe/Arquétipo** ou **2 de Classe/Arquétipo**; Civil recebe
+**3 habilidades civis**. O passo Habilidades agora existe desde o Nível 0 e compõe o pacote com a
+vaga adicional de Experimento e as vagas acumuladas da progressão, impedindo duplicatas e removendo
+escolhas excedentes quando classe, pacote, Nível ou modo mudam. A tabela de progressão permaneceu
+intacta: criação e evolução continuam conceitos separados.
+
+O passo Novo Agente ganhou valores finais exatos. Em campanha, Nível e Prestígio médios continuam
+selecionados por padrão, com controle explícito para sobrescrever os dois valores; fora de campanha,
+os campos manuais são o caminho padrão. Esses valores alimentam derivados, vagas, revisão, resumo e
+o payload final, permitindo criar diretamente uma ficha avulsa de nível alto.
+
+Na apresentação da ficha, uma subclasse passa a preservar também a classe-base — por exemplo,
+**Especialista** e **Experimento Artificial** aparecem como identificadores separados. Quando uma
+Peculiaridade substitui a Origem, o resumo mostra somente **Substituída pela Peculiaridade**, sem o
+estado concorrente “Não definida” nem ação de edição; o chip ganhou quebra interna segura nos
+viewports estreitos.
+
+**Verificação:** `shared` compilou e passou 546 testes; os 49 testes do guia e os 136 testes do
+componente de ficha/rotulagem passaram; o frontend compilou. Na aplicação real, o fluxo completo foi
+percorrido em 1920×1080 e 360×800 com Experimento Artificial, Peculiaridade, pacote de 4 Gerais,
+Nível 12 e Prestígio 37. O resumo e a ficha persistida exibiram classe-base + subclasse, Origem
+substituída e valores exatos sem overflow horizontal. O lint mantém sete violações preexistentes,
+fora dos trechos alterados; o build mantém o aviso preexistente de orçamento do bundle inicial.
+
+## 2026-08-07 — Acervo (`/fichas`) ganha o guia de criação; `FichaCriarDialog` aposentado
+
+Pedido direto do autor (não numerado — sem spec no backlog): o "Criar ficha" da tela `/fichas`
+(acervo, m3-28) ainda abria o `FichaCriarDialog` antigo (m3-16) — um formulário único sem
+orçamento de atributos, sem Identidade, sem rolagem de Recursos e sem o Passo // EQUIPAMENTO
+INICIAL da `m3-59`, recém-fechada. A `m3-57` já havia declarado isso "Fora de Escopo"
+("ficha sem campanha segue pelo caminho atual") porque o guia (`FichaCriar`,
+`modules/ficha/paginas/criar/`) nasceu inteiro em cima de `campanhaId` — membros da campanha
+(seletor de dono), fichas da campanha (médias de Nível/Prestígio do passo Novo Agente), rascunho
+em `localStorage` por campanha e `POST /ficha` com `campanhaId`. Esta task fecha esse buraco.
+
+**`campanhaId: number | null`.** Mesmo padrão já usado por `FichaVisualizar` (m3-28): o parâmetro
+de rota vem de `lerParamRota` e, ausente, o componente trata como `null` em vez de inventar um
+`Number(null) === 0`. Com `campanhaId` nulo, o construtor pula `listarMembros`/`listarFichas`
+(`of([])` no lugar da chamada HTTP) — sem membros, o seletor "Operador responsável" já some
+sozinho (mesmo gate `ehMestre()` de sempre); sem fichas, o passo // NOVO AGENTE cai no caminho
+"primeiro agente" que já existia para campanha vazia (Nível 0, Prestígio 0, sem bônus monetário) —
+zero UI nova, só o texto do aviso virou condicional ("Ficha avulsa, sem campanha" em vez de
+"Primeiro agente da campanha", já que não existe "campanha" nesse contexto). `criar()` monta o DTO
+sem a chave `campanhaId` quando nulo (o backend já aceitava isso — é o mesmo formato que
+`FichaCriarDialog` sempre enviou) e navega para `/fichas/:id` em vez de `/painel/:campanhaId/ficha/:id`;
+"Sair" confirmado volta para `/fichas`. `GuiaCriacaoRascunhoService` (rascunho em `localStorage`)
+passou a aceitar `campanhaId: number | null`, com `null` caindo numa chave fixa (`...guia-criacao.acervo`)
+que nunca colide com um `campanhaId` numérico real.
+
+**Rota:** `nova` foi montada de novo em `ficha-acervo.routes.ts` (antes de `:id`, mesmo cuidado de
+sempre — senão `nova` casa como id), carregando o **mesmo** componente `FichaCriar` já usado em
+`/painel/:campanhaId/ficha/nova`. Nenhuma tela nova — a mesma implementação atende os dois
+contextos, igual ao padrão que `FichaVisualizar` já usava para `/fichas/:id` vs.
+`/painel/:campanhaId/ficha/:id`.
+
+**`FichaCriarDialog` removido.** Última consumidora era `FichaAcervo`; com ela migrada para
+`router.navigate(['/fichas', 'nova'])` (mesmo padrão de `CampanhaDetalhe.abrirCriarFicha`, que já
+navegava para o guia desde a `m3-57`), o componente (`.ts`/`.html`/`.scss`/`.spec.ts`) não tinha
+mais consumidor — apagado por inteiro, fechando o que o critério de aceite da `m3-57` já pedia
+("o dialog antigo não existe mais no código") e que só não tinha sido cumprido para o caminho sem
+campanha.
+
+**Verificação ao vivo** (stack real + Playwright, 1920×1080 e 360×800): em `/fichas`, "Criar
+ficha" navega para `/fichas/nova` sem abrir mais `app-ficha-criar-dialog`; passo 01 // BASE não
+mostra seletor de dono; passo 03 // NOVO AGENTE mostra "Ficha avulsa, sem campanha" (nunca
+"Primeiro agente da campanha"); guia completo (Base → Classe → Novo agente → Atributos →
+Identidade → Recursos → Equipamento inicial, com 1 item "Leve" → Revisão → Criar ficha) termina em
+`/fichas/:id`, não em `/painel/...`; Postgres confirma `campanha_id NULL`, `dinheiro` intocado pelo
+kit (rolagem à parte) e `inventario.itens` com o item escolhido; a ficha aparece em `/fichas` com o
+chip "Sem campanha". Repetido em mobile (360×800): mesma trilha "GUIA · 03/08"/"07/08"/"08/08",
+sem scroll horizontal em nenhum passo, kit deixado vazio (passo pulável) chega em Revisão como
+"Nenhum item — inventário nasce vazio" e cria a ficha normalmente. Nenhum `alert`/`confirm`/`dialog`
+nativo disparou em nenhum dos dois passes. `shared` 532/532, `frontend` 733/735 (as mesmas duas
+falhas pré-existentes documentadas em `P-001`/`P-010` — nenhuma delas tocada por esta mudança) e
+lint sem novas violações (mesmas 7 pré-existentes do `HEAD` anterior).
+
+## 2026-08-07 — `m3-59`: Passo // EQUIPAMENTO INICIAL fecha o trio do guia de criação
+
+Terceira e última task do trio `m3-57`…`m3-59`: o guia ganha o **Passo 08 // EQUIPAMENTO
+INICIAL**, entre Recursos e Revisão (sempre presente, ao contrário de Melhorias — kit inicial
+existe mesmo no Nível 0). O jogador escolhe o kit na loja dentro de dois tetos do documento — soma
+até **$2500** e peso até **5** —, sem poder modificar itens; um kit vazio é válido e não trava o
+guia.
+
+**Decisão de arquitetura — componente novo, não reuso literal de `FichaInventario`/`ComprasPage`.**
+A spec pedia para "reusar o componente de compras/carrinho da `m3-14`", mas nem a Loja pública
+(`ComprasPage`, m1-10) nem o editor de Inventário (`FichaInventario`, m3-14) expõem um
+catálogo/carrinho **standalone** — os dois são componentes monolíticos (2786/1666 linhas de TS)
+com responsabilidades irrelevantes ao kit inicial (modificações, amplificadores, fragmentos,
+edição de item já existente, "Aplicar em.../Consumir"). Embutir qualquer um dos dois só para
+desabilitar a maior parte do que oferecem contrariaria a regra do `AGENTS.md` de avaliar extração
+antes de acrescentar responsabilidade a um componente já extenso. A leitura adotada: reusar o
+**motor** (nunca uma segunda tabela de itens ou uma segunda fórmula de totais) e construir uma UI
+nova, focada, para a fatia realmente necessária aqui. Nasceu `GuiaEquipamentoLoja`
+(`frontend/.../ficha/componentes/guia-equipamento-loja/`) — componente burro (input `itens`/output
+`itensMudaram`, mesmo contrato de `FichaHabilidadeSeletor` na m3-58): catálogo por categoria + busca
++ carrinho com stepper de quantidade, sem noção alguma de orçamento — a trava dura, o "modo livre"
+e os medidores são do **passo** (`criar.page.ts`), não do componente, replicando a separação já
+estabelecida entre `FichaHabilidadeSeletor` (não sabe quantas vagas existem) e o passo Melhorias.
+Os totais usam `calcularTotaisCarrinho` (mesma função de `ComprasPage`/`FichaInventario`) sobre
+`CarrinhoItemDto[]`/`CATALOGO_ITENS` (`shared/regras/compras`) — nenhuma fórmula nova, nenhum
+catálogo duplicado.
+
+**Novo em `shared/regras/compras`:** `KIT_INICIAL_ORCAMENTO_MAXIMO` (2500) e
+`KIT_INICIAL_PESO_MAXIMO` (5), ao lado das demais constantes de regra do módulo — os dois tetos do
+documento ("Informações Adicionais > Equipamento Inicial") viram fonte única em vez de número
+mágico espalhado no componente do passo.
+
+**Decisão de escopo — variante de Civil não implementada.** O documento tem uma seção à parte
+("Jogando como um Civil > Equipamento Inicial") com regra **diferente**: kit de $1000 (não $2500),
+sem teto de peso descrito, e proibição de Proteção/Explosivos/modificação. A spec da `m3-59`,
+porém, lista para leitura só "Informações Adicionais > Equipamento Inicial", "> Dinheiro" e o
+capítulo "Equipamentos" — deliberadamente **sem** apontar para o capítulo do Civil, que é um
+subsistema de criação inteiro à parte (atributos, saúde, defesa e habilidades todos diferentes,
+nada disso modelado no guia hoje). Resolvido como fora de escopo desta task por "não extrapole": o
+Civil usa a mesma regra $2500/peso 5 de qualquer outra classe no guia por ora. Registrado o gap
+para uma spec futura se o autor decidir modelar Civil de ponta a ponta no guia.
+
+**`ficha-padrao.ts`:** `OpcoesFichaInicial` ganhou `equipamentoInicial?: readonly CarrinhoItemDto[]`
+(mesmo padrão do `habilidadesExtras` da `m3-58`); `construirFichaInicial` passou a usar
+`opcoes.equipamentoInicial ?? []` em `dados.inventario.itens` em vez do array vazio hardcoded —
+`dados.dinheiro` continua vindo só de `opcoes.dinheiro`, nunca descontado do kit (orçamento à
+parte, conferido em teste e ao vivo).
+
+**`criar.page.ts`/`.html`/`.scss`:** `EstadoGuiaCriacao.kit` (novo campo, default `[]`,
+normalizado em rascunhos antigos via `normalizarEstado`); `passos()` sempre insere "Equipamento
+inicial" entre "Recursos" e "Revisão" (8 posições sem Melhorias, 9 com); `passoValido()` ganhou o
+`case` correspondente (`modoLivre || kitValido()`); Revisão e o resumo lateral ganharam uma linha
+de kit (contagem, gasto, peso). Os dois medidores ("Gasto"/"Peso") reusam o padrão visual de trilho
+fino já usado no progresso do guia (`guia__resumo-trilho`), com variante `--erro` (token `--vida`)
+quando o total ultrapassa o teto — nunca hex solto.
+
+**Verificação ao vivo** (stack real + Playwright, 1920×1080 e 360×800): fluxo completo do guia até
+criar a ficha, com o kit estourando ambos os tetos (2× "Pesada", $3000/peso10 — os dois medidores
+acendem em vermelho e "Avançar" desabilita), "Modo livre" liberando, remoção de item levando
+exatamente ao teto ($1500/peso5, ambos "≤" — válido sem modo livre), Revisão exibindo o resumo do
+kit, e o Postgres confirmando `dados.inventario.itens` idêntico ao escolhido e `dados.dinheiro`
+intocado (igual ao total do passo Recursos). Conferido também que o item aparece na aba Inventário
+da ficha recém-criada com o peso correto. No mobile: catálogo/carrinho em coluna única, sem scroll
+horizontal, alvo de toque do botão "+" em 44×44, kit vazio pulável sem travar o guia, nenhum dialog
+nativo do navegador em nenhum passo. Troca de categoria e busca no catálogo conferidas
+separadamente. Testes: `shared` 532/532, `frontend` 738/740 (as 2 falhas são as pré-existentes
+`P-001`/`P-010`, não relacionadas a esta task); `criar.page.spec.ts` ganhou o describe `m3-59`
+(trava dura, modo livre, `mudarKit`, kit chegando em `dados.inventario` sem tocar `dinheiro`);
+`ficha-padrao.spec.ts` ganhou 2 testes cobrindo `equipamentoInicial`. Lint sem novas violações
+(comparado par a par contra o baseline da branch).
+
+Com isso o trio `m3-57`/`m3-58`/`m3-59` fecha a base funcional do guia de criação de ficha — a
+spec `m3-57` (que documentava as três tasks) e a `m3-59` movem para `docs/specs/done/`.
+
+## 2026-08-07 — Remove o aviso nativo de `beforeunload`; espaçamento entre Motivo de entrada e as médias
+
+**F5/fechar aba não avisa mais.** Pedido do usuário: fazer o F5 abrir a mesma `<dialog>` do botão
+"Sair do guia". Não dá — `beforeunload` é um evento síncrono e o navegador proíbe UI customizada
+ou decidir de forma assíncrona se cancela a navegação; só existe o prompt nativo genérico
+("Esta página pede que você confirme se quer sair"), texto fixo, sem tema. Como o rascunho agora é
+salvo de forma confiável a cada mudança e recuperável ao reabrir a página (fix anterior), esse aviso
+também tinha ficado **incorreto** — dizia "Informações inseridas podem não ser salvas", o que não é
+mais verdade. Removido o `@HostListener('window:beforeunload', ...)` (`antesDeSair`) de
+`criar.page.ts` inteiro: F5/fechar aba agora são silenciosos, como o resto do site — o mesmo banner
+"Rascunho encontrado" que já existia cobre a recuperação. Confirmado com o usuário via pergunta
+direta antes de remover.
+
+**Espaçamento entre "Motivo de entrada" e a grade de médias.** No passo // NOVO AGENTE, o `<label
+class="campo">` do Motivo de entrada ficava colado na grade de Média de Nível/Prestígio logo abaixo
+— só existia a regra inversa (`&__campos + .campo`), não essa ordem. Adicionado `.campo +
+&__campos { margin-top: 16px; }` em `criar.page.scss`, mesmo valor já usado no sentido oposto. Não
+afeta as outras 4 ocorrências de `.guia__campos` no arquivo — todas precedidas por `.guia__introducao`
+ou `<section>`, nunca por um `.campo` solto.
+
+Verificado ao vivo (stack real + Playwright) em 1920×1080: `page.reload()` completa sem travar,
+nenhum diálogo nativo aparece, o rascunho é oferecido para retomar e o nome digitado volta certinho;
+o espaçamento entre as duas linhas do Novo agente ficou em 16px. 17 testes de `criar.page.spec.ts`
+continuam passando.
+
+## 2026-08-07 — Confirmação de saída vira `<dialog>` nativo, com texto explicando que o rascunho não se perde
+
+Refinamento do fix anterior (mesmo dia): a confirmação de saída tinha virado um painel inline
+(`.guia__sair-confirmar`, `role="alertdialog"`) empurrando o conteúdo da página para baixo — não
+era de fato uma "dialog". Pedido do usuário: usar uma dialog de verdade, e deixar claro no texto que
+o progresso não se perde.
+
+Trocado por um `<dialog>` HTML nativo (`.guia__sair-dialog`), aberto via `showModal()`/fechado via
+`close()` num `effect()` que sincroniza com o signal `confirmandoSaida()` (esses métodos são
+imperativos — sem equivalente declarativo em template). Ganha de graça o comportamento padrão do
+elemento: overlay no top layer, `::backdrop` esmaecendo o resto da página, Esc fecha sozinho, foco
+preso dentro do diálogo. Clique no backdrop também fecha (checagem `event.target ===
+event.currentTarget` no clique do próprio `<dialog>`, já que o clique fora do conteúdo cai nele
+mesmo). Texto novo: "Seu progresso foi salvo neste dispositivo. Você não vai perder nada — ao voltar
+para esta tela, pode continuar exatamente de onde parou" — reforça que dá pra sair e retomar depois
+(o rascunho que o fix anterior já garantiu não sumir mais).
+
+jsdom (ambiente de teste) não implementa `HTMLDialogElement.showModal`/`close` — o efeito checa
+`typeof` antes de chamar, então os testes continuam passando sem exercitar o `<dialog>` de verdade;
+o comportamento real (abre, Esc fecha, backdrop fecha, confirmar navega, nenhum `confirm()`/`alert()`
+nativo aparece) foi conferido ao vivo (stack real + Playwright) em 1920×1080 e 360×800. 17 testes de
+`criar.page.spec.ts` continuam passando.
+
+## 2026-08-07 — Confirmação de saída sem `confirm()` nativo + rascunho não some mais antes da decisão
+
+Dois problemas reportados no guia de criação de ficha:
+
+**1. `sair()` usava `confirm()` nativo do navegador.** Botão de voltar do cabeçalho (`.guia__sair`)
+chamava `confirm('Seu progresso foi salvo. Deseja sair do guia?')` — caixa de diálogo do navegador,
+fora do tema, sem acessibilidade/estilo controlados pela aplicação. Trocado por um painel inline no
+próprio tema (`.guia__sair-confirmar`, `role="alertdialog"`), mesmo padrão já usado em
+`perfil.page` para excluir conta (`confirmandoExclusao`) — nada de `confirm()`/`alert()` nativos.
+`sair()` agora só abre o painel; `confirmarSaida()`/`cancelarSaida()` decidem.
+
+**2. Rascunho podia ser apagado antes do jogador decidir "Retomar" ou "Começar do zero".** O efeito
+de auto-save (`effect(() => { if (!carregando()) rascunhos.salvar(...) })`) salvava o `estado()`
+assim que `carregando()` virava `false` — o que acontecia **antes** de qualquer clique no banner
+"Rascunho encontrado", sobrescrevendo o rascunho de verdade com o estado inicial (quase vazio) do
+formulário recém-aberto. Na prática, o rascunho exibido no banner já estava corrompido pelo tempo
+que o jogador levava para ler a pergunta e clicar. Corrigido acrescentando `&& !temRascunho()` à
+condição do efeito: enquanto o banner está pendente de decisão, nada é salvo; assim que
+`retomar()`/`recomecar()` zera `temRascunho`, o auto-save volta a rodar normalmente.
+
+Verificado ao vivo (stack real + Playwright) em 1920×1080 e 360×800: nenhum diálogo nativo do
+Chromium aparece ao clicar em Sair; o rascunho permanece intacto no `localStorage` mesmo depois de
+esperar com o banner "Rascunho encontrado" na tela, e "Retomar" restaura o nome digitado
+corretamente. 4 testes novos em `criar.page.spec.ts` (17 no total, todos passando) cobrindo os dois
+casos — inclusive o cenário exato do bug (rascunho existente + nenhuma decisão ainda + efeito não
+deve ter salvo nada).
+
+## 2026-08-07 — Passo // CLASSE não deve calcular Vida/Energia (atributos ainda não escolhidos)
+
+Feedback do usuário sobre o passo **02 // CLASSE**: o bloco "Saúde de partida (atributos atuais)"
+mostrava `vida()`/`energia()` já calculados (ex.: Vida 88, Energia 53) — mas `atributosFinais()`
+naquele passo ainda é só o valor de fábrica (1 em cada atributo, `ATRIBUTOS_BASE_PADRAO`) mais o
+bônus fixo do arquétipo; o jogador só distribui atributos de verdade no passo **04 // ATRIBUTOS**.
+O número exibido parecia definitivo mas era baseado em atributos que o jogador nem escolheu ainda.
+
+**Correção:** o bloco virou "Saúde base (antes dos Atributos)" e mostra só o que é fixo da classe —
+Vida/Energia base e a progressão por Nível/atributo (ex.: "30, +7/nível, +4 por Vigor") — sem aplicar
+Nível nem atributo nenhum. Nova função `obterSaudeClasse` (`shared/regras/agente/saude.ts`) expõe os
+mesmos coeficientes de `calcularVida`/`calcularEnergia` (`SAUDE_POR_CLASSE`) sem a parte de
+Nível/atributo, evitando duplicar as constantes no frontend (fonte única). `vida()`/`energia()`
+continuam usados sem mudança nos passos que já têm atributos definidos (Resumo Operacional a partir
+do passo 04, Revisão) — só o bloco do passo // CLASSE mudou. Verificado ao vivo (stack real +
+Playwright) em 1920×1080 e 360×800; sem regressão nos 13 testes de `criar.page.spec.ts` nem nos 19 de
+`saude.spec.ts` (2 novos para `obterSaudeClasse`).
+
+## 2026-08-07 — Ajuste de UX pós-m3-58: passo // MELHORIAS ficava enorme verticalmente
+
+Revisão visual pedida logo após a entrega da `m3-58`: com as vagas preenchidas (ex.: Combatente
+Nível 7, 11/12 vagas), o passo **06 // MELHORIAS** passava de 1467px de altura em 1920×1080 (36%
+além de uma tela cheia) e no mobile (360×800) já nascia esticado mesmo vazio, por dois motivos
+independentes.
+
+**Causa 1 — `.guia__vagas` esticava as 4 cartas para a altura da mais cheia da mesma linha.** Grid
+usa `align-items: stretch` por padrão; uma carta com 1 vaga (ex.: "Outra classe/outro arquétipo
+1/1") ficava tão alta quanto a vizinha com 4 (ex.: "Habilidade Geral 4/4"), sobrando espaço vazio.
+Corrigido com `align-items: start` — cada carta agora cresce só com o próprio conteúdo.
+
+**Causa 2 — `.guia__vaga-lista` era uma coluna única (uma habilidade por linha), sem limite.** Em
+níveis altos (a tabela de progressão chega a conceder bem mais que 4 vagas de um tipo em Nível 20)
+essa lista cresceria sem parar, e mesmo em Nível 7 as 11 habilidades escolhidas já ocupavam 11
+linhas cheias. Trocada de `display: grid` (coluna única) para `display: flex; flex-wrap: wrap`
+— os nomes viram chips que quebram linha conforme a largura da carta (mesmo padrão já usado em
+`.guia__briefing-chips`/`.guia__destaques`), sem introduzir rolagem aninhada dentro da página.
+Nenhuma mudança de template/lógica — só CSS; a trava de "Escolher" some no alvo e o botão de
+remover (`✕`) continuam ≥44px no mobile, herdado das regras já existentes.
+
+Também aparado o padding do painel "Ganhos automáticos do nível" (`--ganhos`) e o espaçamento entre
+as cartas de vaga no mobile, para devolver mais um pouco de altura sem mudar a informação exibida.
+**Resultado:** o mesmo cenário (Combatente Nível 7, 11/12 vagas) caiu de 1467px para 1263px em
+1920×1080 — verificado ao vivo (stack real + Playwright, skill `verify`) nos dois breakpoints antes
+e depois do ajuste; nenhuma regressão nos 13 testes de `criar.page.spec.ts`.
+
+## 2026-08-07 — m3-58: passo // MELHORIAS do guia de criação (habilidades de nível + Fortificação de Personalidade)
+
+Segunda perna do trio do guia de criação: o passo **06 // MELHORIAS**, entre Identidade e
+Recursos, gasta as vagas de habilidade que a progressão do Nível já concede mas que a `m3-57`
+deixava sem consumidor. Só existe quando o Nível/Treinamento inicial (passo 03) é maior que 0 — a
+trilha (`passos`) virou um `computed<readonly string[]>` derivado de `temMelhorias()` em vez do
+array fixo de 7 posições; `passoValido()`, `avancar()` e o `@switch` do template passaram a chavear
+pelo **nome** do passo (`passos()[estado().passo]`), não mais por índice numérico — a inserção
+condicional de um passo no meio da sequência tornaria qualquer `case` numérico frágil. Um `effect`
+novo grampeia `passo`/`visitado` dentro do tamanho atual da trilha, para o caso raro de o autor
+voltar ao passo 03 e mudar as médias depois de já ter visitado passos além do que a nova contagem
+de passos comporta.
+
+**Vagas** vêm direto de `calcularProgressaoAcumulada` (Habilidade Geral, de Classe, Classe ou
+Arquétipo, Outra classe/outro arquétipo, Civil) — nenhuma tabela nova, só orquestração. Cada vaga
+abre o **mesmo seletor de catálogo da `m3-13`** (`FichaHabilidadeSeletor`), mas com os `grupos()`
+recortados por vaga num novo método privado `gruposParaVaga`: 'geral' é a aba Gerais inteira;
+'classe'/'classeOuArquetipo' mostram só o(s) subgrupo(s) **da própria ficha** (`ehDaFicha`);
+'outraClasse' mostra os demais — as duas outras classes-base e os outros arquétipos da mesma
+classe, que é exatamente o "outra classe/outro arquétipo da sua classe" do documento, já que
+`catalogoHabilidades` inclui as três classes e todos os arquétipos da classe-base na mesma
+chamada. O caso à parte é um Civil no Treinamento Elite ("1 Habilidade de Classe... não é possível
+escolher uma habilidade de arquétipo"): usa `catalogoHabilidades(COMBATENTE, null)` só para pegar
+a lista das 3 classes e zera `ehDaFicha` em todas (Civil não tem classe própria a destacar). A
+Habilidade Inicial do passo Classe entra em `nomesNaFicha` do seletor (não consome vaga, mas
+também não pode ser escolhida de novo) e a mesma habilidade não pode ser escolhida duas vezes
+entre vagas (o seletor já resolve isso nativamente).
+
+**Fortificação de Personalidade** (níveis 7/14, 0–2 vagas) não usa o catálogo — é um mini-formulário
+por vaga (nome + efeito), reusando literalmente as classes `.guia__formacoes`/`.guia__formacao` do
+Passo 05 (mesmo padrão visual de "N cartões de formulário curto", já aprovado). Cada uma vira, na
+criação, uma `FichaHabilidadeDto` com `categoria: PERSONALIDADE` — o contrato já suportava (`m3-01`/
+`m3-23`), só faltava um produtor. `OpcoesFichaInicial` (`ficha-padrao.ts`) ganhou
+`habilidadesExtras?: readonly FichaHabilidadeDto[]`, anexado depois da Habilidade Inicial em
+`construirFichaInicial`.
+
+**Ganhos automáticos do nível** (Proficiência, Defesa, Dano furtivo, Habilidades por turno) — só
+informação, nada escolhido — reusam o painel "Memorial de cálculo" do Passo 03 (`.guia__memorial`)
+alimentado por `calcularDerivados(classe, nivelInicial, atributosFinais, habilidadesDoNivel)`, sem
+fórmula nova (proibição #26); campos que a classe não possui (Civil não tem Defesa/Proficiência/
+Dano furtivo) somem via `@if`.
+
+**Trava dura**: reusa o mesmo `estado().modoLivre` do Passo 04 // ATRIBUTOS (um único interruptor
+para o guia inteiro) — sem ele, `passoValido()` exige todas as vagas preenchidas e as Fortificações
+com nome+efeito; com ele, avança mesmo faltando. **Achado na verificação ao vivo**: a primeira
+versão também deixava o botão "Escolher" de uma vaga visível **além** do alvo quando modo livre
+estava ligado, e um teste manual de ponta a ponta produziu uma vaga "20/4" ao clicar repetidamente
+— nada travava o excesso. Corrigido para o botão sempre sumir ao atingir o alvo, **independente**
+de modo livre (o mesmo comportamento dos steppers de Atributos, cujo clamp nunca depende do
+interruptor — modo livre só destrava a validação de avançar, nunca o campo em si).
+
+**Segundo achado da verificação ao vivo**: o painel "Ganhos automáticos" reaproveitou
+`.guia__memorial`, cuja 3ª coluna (`strong`) é fixa em `38px` — dimensionada para números curtos
+como "17" ou "7", mas "Dano furtivo" é notação de dado (`3D6+3`), que estourava a coluna e cortava
+visualmente tanto no desktop quanto no mobile. Corrigido com um modificador `--ganhos` que troca a
+3ª coluna para `auto` nos dois breakpoints, sem afetar o memorial original de Novo Agente.
+
+**Fora de escopo, registrado em `PROBLEMS.md` (P-012):** lendo `docs/core/sistema-v4.1.0.md` —
+"Habilidades" para esta task, apareceu um pacote de habilidades **de criação** (Nível/Treinamento
+0), narrado à parte da tabela de progressão por nível e nunca modelado em `shared/regras` — nem
+`calcularProgressaoAcumulada` nem a `m3-58` o cobrem, então uma ficha criada no Nível 0 (o caminho
+"primeiro agente" e a maioria das entradas num Civil) nasce sem esse pacote. É uma regra de domínio
+nova, fora do que esta spec definiu; registrado para não se perder, com contorno (editor de
+habilidades da própria ficha) e não implementado por decisão de escopo — "não extrapole".
+
+**Verificado:** `tsc --noEmit` limpo; `ng build` (development) e `eslint` sobre os arquivos tocados
+sem erros novos (os 2 pré-existentes de `.guia__resumo-fundo`, ver `P-009`, continuam); suíte de
+`criar.page.spec.ts` com 9 testes prévios + 4 novos (passo ausente no Nível 0; trava dura e modo
+livre; preenchimento das vagas pelo catálogo sem repetir a Inicial nem uma já escolhida; exigência
+de nome+efeito da Fortificação mesmo com as vagas do catálogo cheias) — 13/13 verdes; suíte inteira
+do frontend (724/726, as 2 falhas conhecidas de `P-001`/`P-010`) e de `shared` (530/530) sem
+regressão. Ao vivo (stack real + Playwright, skill `verify`): criada uma ficha "primeiro agente"
+(Nível 0) confirmando a ausência do passo; criada uma segunda ficha de Combatente/Lutador cuja
+média de esquadrão (uma ficha elevada a Nível 8 direto no Postgres) resultou em Nível inicial 7,
+passando pelas 4 vagas de catálogo (Geral 4/4, Classe 2/2, Classe ou Arquétipo 4/4, Outra classe
+1/1 — bate exatamente com a soma manual da tabela do documento do Nível 1 ao 7) e 1 Fortificação,
+em 1920×1080 e 360×800 (seletor do sistema, formulário de Fortificação, "Escolher" some ao encher
+mesmo em modo livre, `3D6+3` sem corte); a ficha criada foi conferida na própria aba Habilidades
+(`Arquétipo 1` — a Inicial, sem consumir vaga — `Classe 6`, `Geral 4`, `Outras classes/arquétipos
+1`, e a Fortificação nomeada aparecendo com o chip "Personalidade").
+
+## 2026-08-07 — m3-57: resumo operacional some no mobile (botão no cabeçalho), alinhamento do cabeçalho, respiro em Identidade e resumo com mais informação
+
+Três pedidos encadeados sobre o guia de criação. **(1)** No mobile, o "Resumo operacional" saiu da
+barra inline colapsável — que ainda empurrava o rodapé fixo e ocupava espaço mesmo fechada — para um
+botão dedicado no cabeçalho, ao lado de "Novo agente" (`.guia__resumo-abrir`); o corpo do resumo fica
+100% oculto por padrão e só abre como a mesma folha (bottom sheet) do registro anterior, reusando o
+signal `resumoAberto` já existente. **(2)** O botão "Voltar" (`.guia__sair`), o título "Novo agente" e
+o novo botão "Resumo" aterrissavam em alturas diferentes no cabeçalho mobile — os dois `margin-top:
+13px` que empurravam manualmente o `h1` e o botão para compensar o kicker escondido (`display:none`)
+deixavam o botão de resumo 13px mais baixo que o "Voltar", já que ambos têm a mesma altura de alvo de
+toque (44px) mas só um carregava a margem. Trocado por `align-items: center` no `.guia__cabecalho` e
+remoção das duas margens — a centralização vertical do flexbox faz o alinhamento sozinha. O botão de
+resumo também deixou de ser um pill sólido (`background: var(--surface-2)`) inconsistente com os
+demais controles e passou a seguir o padrão visual de `.botao--secundario` (fundo transparente, borda
+`--border-strong`, hover para `--surface-2`), mantendo só o estado `--ativo` (accent) que já existia.
+**(3)** Os campos do Passo 05 // IDENTIDADE estavam com pouco respiro (`padding`/`gap` de 10–16px
+entre blocos e sub-seções) — aumentados moderadamente (`.guia__campos` 14→18px, `.guia__identidade-
+bloco` 16→20px de padding e 14→20px entre blocos, `.guia__subsecao` 20→26px de margem superior,
+`.guia__formacoes`/`.guia__formacao` +2–4px de gap/padding) e adicionada uma regra genérica
+(`.guia__campos + .campo`) para o par Gatilho/Efeito da Especialidade não colar no textarea "Saber de
+campo" logo abaixo, que antes não tinha nenhuma margem entre os dois.
+
+O "Resumo operacional" também ganhou mais conteúdo, sem introduzir estado novo — tudo reusa
+computeds/signals já existentes: uma tira de progresso no topo (`passo`/`passos`, a mesma fonte da
+trilha de passos e da barra mobile), o bônus fixo de atributos e a Habilidade Inicial do perfil
+(reusa `.guia__destaques`, o mesmo componente visual dos "Destaques" de atributo, e `bonusAtributosLista`/
+`habilidadeInicial`, já computados para o briefing do Passo 02), o Motivo de entrada (novo
+`rotuloMotivoEntrada` em `rotulos-ficha.ts`, espelhando o texto de `calculadora/rotulos.ts` já que os
+módulos de feature não se importam entre si), o aviso "Amaldiçoado pelo Passado" (`novoAgente().
+recebeAmaldicoadoPeloPassado`, hoje só aparecia na Revisão) e as Formações escolhidas com texto
+preenchido (`formacoesPreenchidas`, mesmo padrão de chips). Um ajuste de CSS entrou no caminho: a
+grade da faixa de tablet (`@include bp.tablet`) redefine `.guia__resumo-linha` para `display: grid` e
+esse estilo "vazava" para o breakpoint mobile também (`bp.tablet`/`bp.mobile` são os dois
+`max-width`, então ambos batem a ≤560px) — sem um `display: flex` explícito dentro de `bp.mobile`,
+as linhas do resumo (inclusive as três que já existiam antes: Personalidade/Origem/Recursos) ficavam
+grudadas umas nas outras sem o `border-top` de separação. Corrigido com um `&__resumo-linha` dedicado
+dentro do bloco mobile restaurando `display: flex` e o separador.
+
+**Verificado:** `tsc --noEmit`, `ng build` de produção, `eslint` e a suíte de testes (`criar.page.
+spec.ts`, 9/9) limpos. Na aplicação real (Postgres 16 nativo + backend + frontend): em 1920×1080, o
+Passo 05 mostrou o respiro maior entre os blocos de Identidade e o resumo lateral com a tira de
+progresso, bônus, Habilidade Inicial, Personalidade/Origem e as duas Formações escolhidas como chips;
+uma segunda ficha na mesma campanha (`fichas().length > 0`) com motivo "Contenção ou extermínio"
+mostrou a linha "Motivo de entrada" e o aviso "Amaldiçoado pelo Passado" no resumo, batendo com o
+memorial de cálculo do próprio passo. Em 360×800: cabeçalho com "Voltar"/"Novo agente"/"Resumo"
+alinhados na mesma linha, resumo oculto por padrão, folha do resumo abrindo por cima com as linhas
+devidamente separadas (sem o vazamento do grid de tablet) e nada sobrepondo o botão "×" fixo no topo
+da folha.
+
+## 2026-08-07 — m3-57: stepper de Atributos exibe o valor final somado, não só a nota
+
+Seguindo o pedido do autor logo após o registro anterior: o Passo 04 // ATRIBUTOS ainda mostrava
+o valor **base** no número grande do stepper, deixando o bônus só numa nota ao lado ("+1 fixo ·
+final 2") — o jogador tinha que somar de cabeça. O número do stepper agora é `atributosFinais()`
+(base + bônus já clampado, o mesmo valor que `construirFichaInicial` persiste); os botões +/-
+continuam incrementando a base em 1 a cada clique — e o orçamento/saldo continuam validando só a
+base, sem mudança de regra. O marcador junto ao nome do atributo trocou "fixo" pelo nome real da
+fonte do bônus (`rotuloOrigemBonus`, de `rotulos-ficha.ts`): "+1 Lutador", "+1 Experimento
+Bestial". **Verificado:** `tsc --noEmit`, `ng build` e `eslint` limpos; na aplicação real (mesmo
+setup do registro acima), Força foi incrementada duas vezes em 1920×1080 e 360×800 — o saldo caiu
+de 4 para 2 e o stepper foi de "2" para "4" (base 1→3 + bônus 1), confirmando que base, saldo e
+valor final andam juntos.
+
+## 2026-08-07 — m3-57: briefing de Classe (bônus, Habilidade Inicial), rótulo "Classe - Arquétipo" e resumo mobile em overlay
+
+O Passo 02 // CLASSE prometia ("os bônus fixos serão aplicados após a distribuição dos atributos")
+sem nunca mostrar quais eram — nem ali, nem no Passo 04 // ATRIBUTOS, onde os steppers exibiam só o
+valor base, escondendo o que `construirFichaInicial` já persistia corretamente (bônus fixo somado e
+clampado). O gap era só de exibição: o motor sempre aplicou `obterBonusAtributos` certo. O Passo 02
+agora traz um briefing completo por classe/arquétipo/subclasse — a descrição de flavor do documento
+(`guia-briefing.ts`, citação literal de "Classes e Arquétipos"/"Jogando como um Civil"), os chips de
+bônus fixo de `obterBonusAtributos`, Vida/Energia de partida via `calcularVida`/`calcularEnergia` (os
+mesmos computeds já existentes, sem fórmula nova) e a Habilidade Inicial de `habilidadesIniciais` —
+só aparece depois que classe **e** arquétipo/subclasse estão definitivos. O Passo 04 ganhou o mesmo
+bônus por atributo (`+N fixo · final X`) ao lado da base editável.
+
+Separadamente, "Perfil selecionado" (Passo 02), o card do resumo lateral e a linha "Classe /
+Arquétipo" da Revisão usavam `estado().arquetipo || estado().classe` — mostrava só um dos dois, cru
+(`COMBATENTE`, não "Combatente"), e nunca "Classe - Arquétipo". O guia é o único lugar da ficha que
+não passava por `rotuloClasseCompleto` (`rotulos-ficha.ts`), já usado pelo mini-card da campanha e
+pelo acervo — os três pontos agora reusam essa mesma função central, sem novo mapa de rótulos.
+
+No mobile, o "Resumo operacional" expandia **inline**, empurrando o rodapé fixo para baixo do
+conteúdo do passo. Ele passa a abrir como uma folha (bottom sheet) por cima da tela — fundo
+semitransparente clicável para fechar, botão "×" dedicado, `max-height: 82dvh` com rolagem própria —
+só via CSS (`@include bp.mobile`), sem novo estado no componente: o mesmo `resumoAberto` de sempre
+já bastava.
+
+**Verificado:** `tsc --noEmit`, `ng build` de produção e `eslint` limpos nos arquivos tocados. A
+suíte completa do frontend manteve as mesmas duas falhas preexistentes fora do guia (apelido de
+equipamento e "Voltar ao acervo") — nenhuma nova falha, `criar.page.spec.ts` sem regressão. Na
+aplicação real (Postgres 16 nativo + backend + frontend, sem Docker disponível neste ambiente): guia
+percorrido em 1920×1080 para Combatente-Lutador, Experimento Bestial e Civil (bônus, Habilidade
+Inicial e Vida/Energia corretos para os três; "nenhum bônus fixo" no Civil, sem card de Habilidade
+Inicial) e em 360×800 para o mesmo fluxo, incluindo abrir/fechar o resumo pelo botão e pelo fundo. Uma
+ficha completa foi criada de ponta a ponta (Combatente-Lutador) e a leitura direta do PostgreSQL
+confirmou `forca`/`luta` em 2 (base 1 + bônus 1) e Vida/Energia (34/17) idênticos ao que o guia
+mostrou antes da criação.
+
+## 2026-08-07 — m3-57: fluxo convencional, Identidade, Recursos e resumo progressivo
+
+O validador de Atributos tratava a restrição dos quatro pontos de criação como se ela também
+limitasse os pontos recebidos pela progressão: por isso agentes de Nível maior ficavam impedidos de
+avançar sem “modo livre”. A regra pura agora confirma que a distribuição final contém uma base de
+criação legal e, separadamente, respeita orçamento e teto da progressão. Casos convencionais dos
+Níveis 1, 5, 10, 15 e 20 passaram a ter cobertura explícita no `shared` e no componente do guia.
+
+Na Identidade, Personalidade e Origem ganharam blocos distintos; Personalidade passou a ser
+preenchível, as duas Formações usam o catálogo completo do sistema com alternativa `Outra`, e a
+seleção catalogada preenche seu efeito e parâmetro quando houver. Especialidade permanece texto
+livre por ser esse o contrato do sistema. Recursos agora começam realmente vazios: um único botão
+executa a rolagem, anima e revela os quatro dados, registra o resultado definitivo e não permite
+rerrolar. O resumo operacional também deixou de fabricar Combatente, Nível, Prestígio e dinheiro
+antes das escolhas; ele nasce vazio e passa a mostrar classe, progressão, destaques de atributos,
+Identidade e Recursos somente quando esses dados existem.
+
+**Verificado:** testes focais com 10/10 casos em `shared` e 9/9 no guia, lint dos arquivos tocados e
+build Angular de produção. Na aplicação real foram criados e persistidos, sem “modo livre”, cinco
+agentes convencionais: Níveis 1, 5, 10, 15 e 20. O percurso alternou 1920×1080 e 360×800, cobriu o
+estado vazio, bloqueio antes da rolagem, animação, revelação única, Identidade e revisão; no mobile
+não houve overflow horizontal e os botões do rodapé mediram 44px. A leitura do PostgreSQL confirmou
+Nível, dinheiro, Personalidade, Origem e atributos persistidos para as cinco fichas. A suíte completa
+do frontend manteve somente `P-001`/`P-010`; a de `shared` aprovou os 530 testes fonte e ainda esbarra
+na coleta conhecida de `dist` (`P-011`). A `m3-57` permanece ativa pelos gaps de escopo restantes.
+
+## 2026-08-07 — Qualidade acima de velocidade e gate visual inviolável
+
+Por decisão explícita do autor, qualidade, fidelidade ao sistema e cumprimento integral das regras
+passam a prevalecer formalmente sobre velocidade. Prazo, tamanho da spec, delegação, limite de
+contexto ou custo de execução não autorizam atalhos. Se não houver tempo ou ambiente para verificar,
+a tarefa permanece aberta; é preferível levar o dobro do tempo a entregar uma primeira versão que
+precise ser refeita por divergências previsíveis.
+
+Para toda UI, `AGENTS.md` agora exige antes da edição um componente análogo aprovado e um mapeamento
+de shell, densidade, hierarquia, controles, estados, iconografia e responsividade — conformidade com
+tokens isoladamente não prova fidelidade. Antes da entrega, o agente principal deve executar e
+inspecionar pessoalmente a aplicação real com `verify` em 1920×1080 e 360×800, percorrer os estados
+relevantes e comparar a tela renderizada com o análogo. Build, testes, lint, screenshot ou relato de
+subagente são complementares e não substituem o gate. A regra também entrou em `SYSTEM.SPEC.md` como
+proibição absoluta nº 31.
+
+## 2026-08-07 — m3-57: revisão visual do guia de criação
+
+O primeiro corte da tela `/painel/:campanhaId/ficha/nova` usava os tokens corretos, mas ainda se
+comportava visualmente como um formulário genérico: hierarquia rasa, controles indiferenciados e
+pouca relação com os painéis densos já aprovados. O shell foi reconstruído a partir dos padrões do
+painel de campanhas e de `docs/design/tema/_componentes.scss`: cabeçalho técnico com índice e régua,
+trilha vertical com estados explícitos, conteúdo em card, memorial de cálculo, steppers canônicos,
+resumo operacional com stat boxes, alertas semânticos e ações primária/secundária. Ícones agora usam
+`app-icone`; cores, tipografia, raios e superfícies continuam integralmente baseados nos tokens do
+tema. No mobile, a trilha vira progresso compacto, o resumo é colapsável e o rodapé permanece fixo.
+
+**Verificado:** build Angular de produção aprovado (permanece apenas o warning conhecido de bundle
+inicial em 615,45 kB para o teto de 610 kB), teste focado de rotas 8/8 e lint dos arquivos TS/HTML
+tocados. Na aplicação real, o guia foi percorrido até Atributos em 360×800 e inspecionado em
+1920×1080; não houve overflow horizontal nem erro de console, e os botões dos steppers mediram
+44×44px no mobile. A suíte completa manteve duas falhas preexistentes fora do guia: apelido do
+inventário e texto do link de retorno ao acervo. A `m3-57` continua ativa porque seus demais gaps
+funcionais/arquiteturais ainda não foram fechados.
+
 ## 2026-08-06 — Subnavegação e rolagem interna de Extras da ficha
 
 A aba **Extras** da `FichaVisualizacao` passou a ter uma subbarra persistente com **Identidade**

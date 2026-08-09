@@ -1,5 +1,5 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
 
 import type { CampanhaResumoDto } from '@contratados-rpg/shared/dtos/campanha';
@@ -9,8 +9,6 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { FichaService } from '../../ficha.service';
-import { FichaCriarDialog } from '../../componentes/ficha-criar-dialog/ficha-criar-dialog.component';
-import { construirFichaInicial, type FichaAssistenteResultado } from '../../ficha-padrao';
 import { rotuloClasseCompleto } from '../../rotulos-ficha';
 
 /** Ficha do acervo já enriquecida pro cartão — recorte de `FichaResumoDto` + o rótulo de classe. */
@@ -29,13 +27,14 @@ interface ItemAcervo {
 
 /**
  * O **acervo** de fichas do usuário (`/fichas`, m3-28) — todas as fichas do autenticado, com e
- * sem campanha, cada uma num bloquinho com o chip da campanha atual (ou "Sem campanha"). Cria
- * ficha **solta** reusando o mesmo `FichaCriarDialog` do painel da campanha (que já não conhece
- * campanha — `criarFicha` sem `campanhaId`); a ação move a ficha entre o acervo e uma campanha
- * (`atribuirCampanha`, PUT `/ficha/:id/campanha`) via o menu de ações (kebab) de cada cartão,
- * mesmo padrão visual de `CampanhaDetalhe` (m3-52): o dropdown mora na raiz do template, fora da
- * lista com `overflow-y`/`mask-image` (`appOverflowFade`), que cortaria um `position: fixed`
- * comum na pintura.
+ * sem campanha, cada uma num bloquinho com o chip da campanha atual (ou "Sem campanha"). "Criar
+ * ficha" navega pro mesmo guia de criação passo a passo campanha-scoped (`FichaCriar`,
+ * `m3-57`/`m3-58`/`m3-59`), montado de novo aqui sob `/fichas/nova` (sem `:campanhaId` na rota —
+ * o guia lê `null` e pula os passos de esquadrão), mesmo padrão de `CampanhaDetalhe.abrirCriarFicha`;
+ * a ação move a ficha entre o acervo e uma campanha (`atribuirCampanha`, PUT `/ficha/:id/campanha`)
+ * via o menu de ações (kebab) de cada cartão, mesmo padrão visual de `CampanhaDetalhe` (m3-52): o
+ * dropdown mora na raiz do template, fora da lista com `overflow-y`/`mask-image`
+ * (`appOverflowFade`), que cortaria um `position: fixed` comum na pintura.
  *
  * A visualização (`/fichas/:id`) reusa o `FichaVisualizar` campanha-scoped — ver a nota na rota
  * (`ficha-acervo.routes.ts`) e no próprio componente sobre como ele resolve `campanhaId` sem o
@@ -43,21 +42,19 @@ interface ItemAcervo {
  */
 @Component({
   selector: 'app-ficha-acervo',
-  imports: [RouterLink, Icone, OverflowFade, FichaCriarDialog],
+  imports: [RouterLink, Icone, OverflowFade],
   templateUrl: './acervo.page.html',
   styleUrl: './acervo.page.scss',
 })
 export class FichaAcervo {
   private readonly fichaService = inject(FichaService);
   private readonly campanhaService = inject(CampanhaService);
+  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly carregando = signal(true);
   private readonly fichas = signal<readonly FichaResumoDto[]>([]);
   protected readonly campanhas = signal<readonly CampanhaResumoDto[]>([]);
-
-  protected readonly dialogCriar = signal(false);
-  protected readonly criando = signal(false);
 
   /** Ficha cujo menu de ações (kebab) está aberto — mesmo padrão de `CampanhaDetalhe` (m3-52). */
   protected readonly menuFichaAberto = signal<{
@@ -140,37 +137,9 @@ export class FichaAcervo {
       });
   }
 
+  /** Navega pro guia de criação campanha-less (`/fichas/nova`) — mesmo padrão de `CampanhaDetalhe.abrirCriarFicha`. */
   protected abrirCriarFicha(): void {
-    this.dialogCriar.set(true);
-  }
-
-  /** Fecha o assistente de criação (Cancelar/✕) — inócuo enquanto uma criação está em voo. */
-  protected fecharCriarFicha(): void {
-    if (!this.criando()) {
-      this.dialogCriar.set(false);
-    }
-  }
-
-  /**
-   * Confirma o assistente: monta a ficha (`construirFichaInicial`) e cria **sem campanha**
-   * (m3-28 — nasce solta no acervo). Sem seletor de dono aqui (`podeEscolherDono` fica em
-   * `false`): sem campanha não há mestre para criar em nome de outro membro (§14).
-   */
-  protected criarFicha(resultado: FichaAssistenteResultado): void {
-    if (this.criando()) {
-      return;
-    }
-    this.criando.set(true);
-    const ficha = construirFichaInicial(resultado.opcoes);
-    this.fichaService
-      .criarFicha({ nome: ficha.nome, dados: ficha.dados })
-      .pipe(finalize(() => this.criando.set(false)))
-      .subscribe({
-        next: () => {
-          this.dialogCriar.set(false);
-          this.carregar();
-        },
-      });
+    void this.router.navigate(['/fichas', 'nova']);
   }
 
   /**

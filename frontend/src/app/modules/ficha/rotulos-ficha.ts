@@ -1,4 +1,4 @@
-import { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
+import { ArquetipoEnum, ClasseEnum, MotivoEntradaAgenteEnum } from '@contratados-rpg/shared/enums';
 import { classeBaseDeHabilidades } from '@contratados-rpg/shared/regras/agente';
 import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 
@@ -42,6 +42,39 @@ export function rotuloArquetipo(arquetipo: ArquetipoEnum): string {
   return ROTULO_ARQUETIPO[arquetipo];
 }
 
+export interface PerfilClasseRotulos {
+  readonly classeBase: string;
+  readonly subclasse: string | null;
+}
+
+/** Separa a classe-base do arquétipo/subclasse para interfaces que exibem os dois conceitos. */
+export function perfilClasseRotulos(classe: ClasseEnum, arquetipo: ArquetipoEnum | null): PerfilClasseRotulos {
+  const classeBase = classeBaseDeHabilidades(classe);
+  if (classeBase !== null && classeBase !== classe) {
+    return { classeBase: rotuloClasse(classeBase), subclasse: rotuloClasse(classe) };
+  }
+  return { classeBase: rotuloClasse(classe), subclasse: arquetipo === null ? null : rotuloArquetipo(arquetipo) };
+}
+
+/**
+ * Rótulos legíveis do motivo de entrada (mesmo texto de `calculadora/rotulos.ts`
+ * `ROTULOS_MOTIVO_ENTRADA` — módulos não se importam entre si, então o mapa é replicado aqui
+ * para o resumo do guia de criação).
+ */
+const ROTULO_MOTIVO_ENTRADA: Record<MotivoEntradaAgenteEnum, string> = {
+  [MotivoEntradaAgenteEnum.MORTE_OU_INICIO_DO_ZERO]: 'Morte / Entrada do zero',
+  [MotivoEntradaAgenteEnum.APOSENTADORIA]: 'Aposentadoria',
+  [MotivoEntradaAgenteEnum.EXPERIMENTO_SUCESSOR_CONVENCIONAL]: 'Sucessor de experimento (convencional)',
+  [MotivoEntradaAgenteEnum.EXPERIMENTO_SUCESSOR_EXPERIMENTO]: 'Sucessor de experimento (Experimento)',
+  [MotivoEntradaAgenteEnum.CONTIDO_OU_EXTERMINADO_SUCESSOR_CONVENCIONAL]: 'Contenção ou extermínio (convencional)',
+  [MotivoEntradaAgenteEnum.CONTIDO_OU_EXTERMINADO_SUCESSOR_EXPERIMENTO]: 'Contenção ou extermínio (Experimento)',
+};
+
+/** Rótulo legível do motivo de entrada do agente. */
+export function rotuloMotivoEntrada(motivo: MotivoEntradaAgenteEnum): string {
+  return ROTULO_MOTIVO_ENTRADA[motivo];
+}
+
 
 /**
  * Rótulo combinado "Classe - Arquétipo/Subclasse" para exibição compacta (mini-card da campanha).
@@ -53,14 +86,8 @@ export function rotuloArquetipo(arquetipo: ArquetipoEnum): string {
  * duplicado aqui). `CIVIL` (sem classe-base, sem arquétipo): só `"Civil"`.
  */
 export function rotuloClasseCompleto(classe: ClasseEnum, arquetipo: ArquetipoEnum | null): string {
-  const classeBase = classeBaseDeHabilidades(classe);
-  if (classeBase !== null && classeBase !== classe) {
-    return `${rotuloClasse(classeBase)} - ${rotuloClasse(classe)}`;
-  }
-  if (arquetipo === null) {
-    return rotuloClasse(classe);
-  }
-  return `${rotuloClasse(classe)} - ${rotuloArquetipo(arquetipo)}`;
+  const perfil = perfilClasseRotulos(classe, arquetipo);
+  return perfil.subclasse === null ? perfil.classeBase : `${perfil.classeBase} - ${perfil.subclasse}`;
 }
 
 /**

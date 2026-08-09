@@ -10,7 +10,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { filter, finalize, forkJoin, merge } from 'rxjs';
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
@@ -18,7 +18,7 @@ import {
   CampanhaMembroResumoDto,
   CampanhaRecuperadaDto,
 } from '@contratados-rpg/shared/dtos/campanha';
-import type { FichaRecuperadaDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { FichaAcessoResumoDto, FichaRecuperadaDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
@@ -36,8 +36,6 @@ import { FichaService } from '../../../ficha/ficha.service';
 import { FichaEdicaoService } from '../../../ficha/ficha-edicao.service';
 import { FichaRolagemRegistroService } from '../../../ficha/ficha-rolagem-registro.service';
 import { mesclarFicha } from '../../../ficha/mesclar-ficha';
-import { construirFichaInicial, type FichaAssistenteResultado } from '../../../ficha/ficha-padrao';
-import { FichaCriarDialog } from '../../../ficha/componentes/ficha-criar-dialog/ficha-criar-dialog.component';
 import { FichaRolagensPainel } from '../../../ficha/componentes/ficha-rolagens-painel/ficha-rolagens-painel.component';
 import {
   FichaVisualizacao,
@@ -133,7 +131,6 @@ interface ItemFicha {
     OverflowFade,
     HistoricoRolagensSidebar,
     IndicadorTempoReal,
-    FichaCriarDialog,
     HoldRepeat,
     BandejaDados,
     CalculadoraFlutuante,
@@ -213,9 +210,7 @@ export class CampanhaDetalhe {
   protected readonly rolagensFeed = signal<readonly RolagemResumoDto[]>([]);
   protected readonly carregandoRolagens = signal(true);
   /** `true` enquanto a criação da nova ficha está em voo (desabilita o botão do assistente). */
-  protected readonly criando = signal(false);
   /** Assistente de criação (m3-16) aberto — agora disparado do próprio detalhe (m2-16). */
-  protected readonly dialogCriar = signal(false);
 
   /**
    * Ficha cujo menu de ações (kebab) está aberto no mini-card (m3-52) — guarda `id`/`nome`/
@@ -468,6 +463,41 @@ export class CampanhaDetalhe {
   });
 
   /**
+   * Ficha exibida quando ela é sua (dono) — controla o `[disabled]` das ações de ficha do menu do
+   * cabeçalho do jogador (remover da campanha/excluir/acesso de visualização): elas só fazem
+   * sentido para a própria ficha, nunca para a de um colega vista via "Ver ficha".
+   */
+  protected readonly minhaFichaExibida = computed<FichaRecuperadaDto | null>(() => {
+    const fichaExibida = this.fichaExibidaDados();
+    return fichaExibida && fichaExibida.usuarioId === this.usuarioAtivoId() ? fichaExibida : null;
+  });
+
+  /** Dialog "Acesso de visualização" da ficha exibida (menu do cabeçalho do jogador) aberta. */
+  protected readonly dialogAcessoFicha = signal(false);
+  /** Concessões ativas da ficha exibida — carregadas ao abrir a dialog e após conceder/revogar. */
+  protected readonly acessosFichaExibida = signal<readonly FichaAcessoResumoDto[]>([]);
+  /** Membro selecionado para receber acesso (Reactive Forms — sem `ngModel`). */
+  protected readonly membroParaConcederAcesso = new FormControl<number | null>(null);
+  protected readonly concedendoAcesso = signal(false);
+  /** `usuarioId` cuja revogação está em voo — desabilita só a linha correspondente. */
+  protected readonly revogandoAcesso = signal<number | null>(null);
+
+  /**
+   * Membros elegíveis a receber acesso à ficha exibida: exclui o mestre (já vê tudo), o próprio
+   * dono (é sempre `usuarioAtivoId()` aqui — `minhaFichaExibida` só existe pra própria ficha) e
+   * quem já tem concessão ativa. Mesma regra de `membrosElegiveis` de `visualizar.page.ts`.
+   */
+  protected readonly membrosElegiveisAcesso = computed<readonly CampanhaMembroResumoDto[]>(() => {
+    const jaConcedido = new Set(this.acessosFichaExibida().map((acesso) => acesso.usuarioId));
+    return this.membros().filter(
+      (membro) =>
+        membro.usuarioId !== this.usuarioAtivoId() &&
+        membro.papel !== TipoCampanhaMembroPapelEnum.MESTRE &&
+        !jaConcedido.has(membro.usuarioId),
+    );
+  });
+
+  /**
    * Card "Rolagens" da coluna lateral (m2-21, item 3) — alvo do destino `'rolagens'` da barra
    * inferior do mobile. `viewChild` opcional: o card só existe quando há ficha exibida.
    */
@@ -568,6 +598,12 @@ export class CampanhaDetalhe {
     // guard evita qualquer dependência acidental do que ele mesmo escreve.
     effect(() => {
       const fichaId = this.fichaExibidaId();
+      // Acesso de visualização (menu do jogador): as concessões carregadas por
+      // `carregarAcessosFichaExibida` ficam presas à ficha antiga se não forem limpas aqui — sem
+      // isto, o badge de contagem do menu continuaria mostrando o número da ficha anterior depois
+      // de trocar de ficha exibida sem reabrir a dialog. Só escreve (nunca lê) `acessosFichaExibida`
+      // aqui — sem risco de loop reativo.
+      this.acessosFichaExibida.set([]);
       if (fichaId === null) {
         return;
       }
@@ -947,7 +983,7 @@ export class CampanhaDetalhe {
   /** Abre o assistente de criação de ficha (m3-16), agora disparado do detalhe (m2-16). */
   protected abrirCriarFicha(): void {
     this.fecharMenuCampanha();
-    this.dialogCriar.set(true);
+    void this.router.navigate(['/painel', this.id, 'ficha', 'nova']);
   }
 
   // === Vincular ficha existente (m2-21, itens 6-8) — o jogador que chega numa campanha sem ficha
@@ -1018,12 +1054,6 @@ export class CampanhaDetalhe {
   }
 
   /** Fecha o assistente de criação (Cancelar/✕) — inócuo enquanto uma criação está em voo. */
-  protected fecharCriarFicha(): void {
-    if (!this.criando()) {
-      this.dialogCriar.set(false);
-    }
-  }
-
   /**
    * Confirma o assistente: monta a ficha (`construirFichaInicial` — snapshot + bônus de
    * arquétipo) e cria via `FichaService`. `usuarioId` só vem preenchido quando o mestre escolheu
@@ -1037,33 +1067,6 @@ export class CampanhaDetalhe {
    * embutida na coluna principal, então tirá-lo do painel pra mostrar a mesma ficha noutra tela
    * seria um desvio. Recarrega a Equipe e aponta `fichaExibidaId` pra ficha nova.
    */
-  protected criarFicha(resultado: FichaAssistenteResultado): void {
-    if (this.criando()) {
-      return;
-    }
-    this.criando.set(true);
-    const ficha = construirFichaInicial(resultado.opcoes);
-    this.fichaService
-      .criarFicha({
-        campanhaId: this.id,
-        usuarioId: resultado.usuarioId,
-        nome: ficha.nome,
-        dados: ficha.dados,
-      })
-      .pipe(finalize(() => this.criando.set(false)))
-      .subscribe({
-        next: (fichaCriada) => {
-          this.dialogCriar.set(false);
-          if (this.ehMestre()) {
-            void this.router.navigate(['/painel', this.id, 'ficha', fichaCriada.id]);
-            return;
-          }
-          this.recarregarMembrosEFichas();
-          this.fichaExibidaId.set(fichaCriada.id);
-        },
-      });
-  }
-
   /**
    * Abre/fecha o menu de ações (kebab) de uma ficha específica no mini-card (m3-52). Calcula a
    * posição `fixed` a partir do botão clicado (`getBoundingClientRect`) — ver a nota em
@@ -1170,6 +1173,31 @@ export class CampanhaDetalhe {
   }
 
   /**
+   * Depois de remover/excluir a ficha exibida (`fichaExibidaId`), aponta para outra ficha própria
+   * restante na campanha, se houver, ou limpa a seleção — o template cai no estado vazio do
+   * jogador. Não faz nada se a ficha removida não era a exibida (ação vinda do kebab do mestre,
+   * onde `fichaExibidaId` nunca é setado).
+   */
+  private avancarFichaExibidaApos(fichaRemovidaId: number): void {
+    if (this.fichaExibidaId() !== fichaRemovidaId) {
+      return;
+    }
+    const restante = this.fichas().find((ficha) => ficha.usuarioId === this.usuarioAtivoId());
+    if (restante) {
+      this.fichaExibidaId.set(restante.id);
+    } else {
+      this.fichaExibidaId.set(null);
+      this.fichaExibidaDados.set(null);
+    }
+  }
+
+  /** Retorna o rótulo do botão "Remover da campanha" considerando o estado de remoção. */
+  protected rotuloRemoverDaCampanha(): string {
+    const minha = this.minhaFichaExibida();
+    return minha && this.removendo() === minha.id ? 'Removendo…' : 'Remover da campanha';
+  }
+
+  /**
    * Desatribui a ficha da campanha (ela volta ao acervo solto do dono, m3-28) — ação direta, sem
    * dialog, mesmo padrão de `FichaAcervo.removerDaCampanha`. Permissão já garantida pelo backend
    * (`validarPermissaoEdicao` — dono ou mestre, mesma regra de `podeAjustarFicha` que já esconde o
@@ -1178,6 +1206,7 @@ export class CampanhaDetalhe {
    */
   protected removerDaCampanha(fichaId: number): void {
     this.fecharMenuFicha();
+    this.fecharMenuCampanha();
     if (this.removendo() !== null) {
       return;
     }
@@ -1188,6 +1217,7 @@ export class CampanhaDetalhe {
       .subscribe({
         next: () => {
           this.fichas.update((lista) => lista.filter((ficha) => ficha.id !== fichaId));
+          this.avancarFichaExibidaApos(fichaId);
         },
       });
   }
@@ -1195,6 +1225,7 @@ export class CampanhaDetalhe {
   /** Abre a confirmação de exclusão a partir do menu da ficha (m3-52). */
   protected pedirExcluirFicha(fichaId: number, fichaNome: string): void {
     this.fecharMenuFicha();
+    this.fecharMenuCampanha();
     this.confirmandoExcluirFicha.set({ id: fichaId, nome: fichaNome });
   }
 
@@ -1222,7 +1253,74 @@ export class CampanhaDetalhe {
         next: () => {
           this.confirmandoExcluirFicha.set(null);
           this.fichas.update((lista) => lista.filter((ficha) => ficha.id !== pendente.id));
+          this.avancarFichaExibidaApos(pendente.id);
         },
+      });
+  }
+
+  /**
+   * Abre a dialog "Acesso de visualização" da ficha exibida (menu do cabeçalho do jogador) e busca
+   * as concessões atuais — mesma API de `visualizar.page.ts` (`listarAcessos`), escopada à ficha
+   * exibida em vez do `fichaId` de rota.
+   */
+  protected abrirAcessoFicha(): void {
+    const ficha = this.minhaFichaExibida();
+    if (!ficha) {
+      return;
+    }
+    this.fecharMenuCampanha();
+    this.membroParaConcederAcesso.setValue(null);
+    // Limpa antes de abrir: a busca abaixo é assíncrona, e sem isto a dialog abriria mostrando
+    // (por uma janela) a lista de concessões da ficha exibida ANTERIOR — risco real de "Revogar"
+    // acertar o usuário errado se clicado nesse intervalo (achado da revisão final, m3-52+).
+    this.acessosFichaExibida.set([]);
+    this.dialogAcessoFicha.set(true);
+    this.carregarAcessosFichaExibida(ficha.id);
+  }
+
+  /** Fecha a dialog "Acesso de visualização". */
+  protected fecharAcessoFicha(): void {
+    this.dialogAcessoFicha.set(false);
+  }
+
+  /** (Re)carrega as concessões ativas da ficha exibida — usado ao abrir e após conceder/revogar. */
+  private carregarAcessosFichaExibida(fichaId: number): void {
+    this.fichaService
+      .listarAcessos(fichaId)
+      .subscribe({ next: (acessos) => this.acessosFichaExibida.set(acessos) });
+  }
+
+  /** Concede a visualização da ficha exibida ao membro selecionado e recarrega a lista. */
+  protected concederAcessoFicha(): void {
+    const ficha = this.minhaFichaExibida();
+    const usuarioId = this.membroParaConcederAcesso.value;
+    if (!ficha || usuarioId === null || this.concedendoAcesso()) {
+      return;
+    }
+    this.concedendoAcesso.set(true);
+    this.fichaService
+      .concederAcesso(ficha.id, usuarioId)
+      .pipe(finalize(() => this.concedendoAcesso.set(false)))
+      .subscribe({
+        next: () => {
+          this.membroParaConcederAcesso.setValue(null);
+          this.carregarAcessosFichaExibida(ficha.id);
+        },
+      });
+  }
+
+  /** Revoga a visualização da ficha exibida de um membro e recarrega a lista. */
+  protected revogarAcessoFicha(usuarioId: number): void {
+    const ficha = this.minhaFichaExibida();
+    if (!ficha || this.revogandoAcesso() !== null) {
+      return;
+    }
+    this.revogandoAcesso.set(usuarioId);
+    this.fichaService
+      .revogarAcesso(ficha.id, usuarioId)
+      .pipe(finalize(() => this.revogandoAcesso.set(null)))
+      .subscribe({
+        next: () => this.carregarAcessosFichaExibida(ficha.id),
       });
   }
 }

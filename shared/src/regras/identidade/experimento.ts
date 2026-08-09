@@ -18,6 +18,15 @@ const CLASSES_EXPERIMENTO: readonly ClasseEnum[] = [
 ];
 
 /**
+ * `true` quando `classe` é uma das três subclasses de Experimento (`docs/core/sistema-v4.1.0.md` —
+ * "⬡ Subclasse"). Reusado pelo guia de criação para conceder a vaga garantida de Habilidade de
+ * Subclasse mesmo no Nível 0 (m3-58 só concede vagas a partir do Nível 1).
+ */
+export function ehClasseExperimento(classe: ClasseEnum): boolean {
+  return CLASSES_EXPERIMENTO.includes(classe);
+}
+
+/**
  * `true` quando `classe` é uma subclasse de Experimento **e** `habilidades` contém a "Peculiaridade"
  * de Subclasse — nesse caso a ficha não pode ter `identidade.origem` definida (`FichaService`
  * bloqueia salvar; o mini-editor de Origem trava no frontend, `ficha-visualizacao.component.ts`).
@@ -26,7 +35,7 @@ export function experimentoComPeculiaridade(
   classe: ClasseEnum,
   habilidades: readonly FichaHabilidadeDto[],
 ): boolean {
-  if (!CLASSES_EXPERIMENTO.includes(classe)) {
+  if (!ehClasseExperimento(classe)) {
     return false;
   }
   return habilidades.some(

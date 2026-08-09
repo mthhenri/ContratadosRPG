@@ -186,14 +186,25 @@
     text-align: left;
     transition: background-color 0.15s ease, color 0.15s ease;
 
-    &:hover {
+    &:hover:not(:disabled) {
       background: var(--surface-2);
       color: var(--accent);
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: default;
     }
 
     @include bp.mobile {
       min-height: bp.$alvo-toque;
     }
+  }
+
+  &__cabecalho-menu-contagem {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--text-mute);
   }
 
   &__descricao {
@@ -1737,6 +1748,113 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
+  }
+}
+
+// === Painel "Acesso de visualização" (dentro de `.dialogo__painel.acesso`) — mesmo bloco de
+// `visualizar.page.scss`, copiado aqui (view encapsulation não deixa reusar o `.scss` de outro
+// componente). ===
+.acesso {
+  &__ajuda {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-dim);
+    margin: 0 0 16px;
+  }
+
+  &__conceder {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  &__select {
+    flex: 1;
+    min-width: 200px;
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 11px 12px;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    outline: none;
+
+    &:focus {
+      border-color: var(--accent-border);
+    }
+  }
+
+  &__acao {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 11px 18px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  &__vazio-elegiveis,
+  &__vazio {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-style: italic;
+    color: var(--text-mute);
+    margin: 12px 0 0;
+  }
+
+  &__lista {
+    list-style: none;
+    margin: 16px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+  }
+
+  &__avatar {
+    width: 30px;
+    height: 30px;
+    flex: none;
+    border-radius: var(--radius-control);
+    background-color: var(--surface-2);
+    background-image: repeating-linear-gradient(135deg, var(--border-strong) 0 3px, transparent 3px 9px);
+    border: 1px solid var(--border-strong);
+  }
+
+  &__nome {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  &__revogar {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    flex: none;
   }
 }
 

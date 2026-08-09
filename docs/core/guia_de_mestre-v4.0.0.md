@@ -27,85 +27,121 @@
 
 [**⬢ Sumário	3**](#⬢-sumário)
 
-[**⬢ Introdução	4**](#⬢-introdução)
+[**⬢ Introdução	5**](#⬢-introdução)
 
-[**⬢ Guia de Criação de Ameaças	5**](#⬢-guia-de-criação-de-ameaças)
+[**⬢ Guia de Criação de Ameaças	6**](#⬢-guia-de-criação-de-ameaças)
 
-[⬡ Roteiro de Criação	5](#⬡-roteiro-de-criação)
+[⬡ Roteiro de Criação	6](#⬡-roteiro-de-criação)
 
-[⬡ Identidade e Classificação	6](#⬡-identidade-e-classificação)
+[⬡ Identidade e Classificação	7](#⬡-identidade-e-classificação)
 
-[⬥ Ficha de Identidade	6](#⬥-ficha-de-identidade)
+[⬥ Ficha de Identidade	7](#⬥-ficha-de-identidade)
 
-[⬥ Conceito	7](#⬥-conceito)
+[⬥ Conceito	8](#⬥-conceito)
 
-[⬥ Comportamento e Motivação	8](#⬥-comportamento-e-motivação)
+[⬥ Comportamento e Motivação	9](#⬥-comportamento-e-motivação)
 
-[⬥ Gancho Único	8](#⬥-gancho-único)
+[⬥ Gancho Único	9](#⬥-gancho-único)
 
-[⬥ Definindo o Nível de Ameaça (NA)	9](#⬥-definindo-o-nível-de-ameaça-\(na\))
+[⬥ Definindo o Nível de Ameaça (NA)	10](#⬥-definindo-o-nível-de-ameaça-\(na\))
 
-[⬥ Definindo o Valor de Desafio (VD)	10](#⬥-definindo-o-valor-de-desafio-\(vd\))
+[⬥ Definindo o Valor de Desafio (VD)	11](#⬥-definindo-o-valor-de-desafio-\(vd\))
 
-[⬥ Usando SCPs Existentes	11](#⬥-usando-scps-existentes)
+[⬥ Usando SCPs Existentes	12](#⬥-usando-scps-existentes)
 
-[⬥ Criações Originais	12](#⬥-criações-originais)
+[⬥ Criações Originais	13](#⬥-criações-originais)
 
-[⬥ Exemplo de Criatura	12](#⬥-exemplo-de-criatura)
+[⬥ Exemplo de Criatura	13](#⬥-exemplo-de-criatura)
 
-[⬡ Atributos	13](#⬡-atributos)
+[⬡ Atributos	14](#⬡-atributos)
 
-[⬥ Base, Limite e Pontos de Ajuste	13](#⬥-base,-limite-e-pontos-de-ajuste)
+[⬥ Base, Limite e Pontos de Ajuste	14](#⬥-base,-limite-e-pontos-de-ajuste)
 
-[⬥ Realocação de Pontos	13](#⬥-realocação-de-pontos)
+[⬥ Realocação de Pontos	14](#⬥-realocação-de-pontos)
 
-[⬥ Relevância dos Atributos	13](#⬥-relevância-dos-atributos)
+[⬥ Relevância dos Atributos	14](#⬥-relevância-dos-atributos)
 
-[⬡ Modificadores	14](#⬡-modificadores)
+[⬡ Modificadores	15](#⬡-modificadores)
 
-[⬥ Distribuição	14](#⬥-distribuição)
+[⬥ Distribuição	15](#⬥-distribuição)
 
-[⬥ Valores	14](#⬥-valores)
+[⬥ Valores	15](#⬥-valores)
 
-[⬡ Saúde	15](#⬡-saúde)
+[⬡ Saúde	16](#⬡-saúde)
 
-[⬡ Defesa	16](#⬡-defesa)
+[⬡ Defesa	17](#⬡-defesa)
 
-[⬥ Contra-Ataque	16](#⬥-contra-ataque)
+[⬥ Contra-Ataque	17](#⬥-contra-ataque)
 
-[⬡ Resistências e Fraquezas	17](#⬡-resistências-e-fraquezas)
+[⬡ Resistências e Fraquezas	18](#⬡-resistências-e-fraquezas)
 
-[⬥ Limite de Resistências	17](#⬥-limite-de-resistências)
+[⬥ Limite de Resistências	18](#⬥-limite-de-resistências)
 
-[⬥ Fraquezas	17](#⬥-fraquezas)
+[⬥ Fraquezas	18](#⬥-fraquezas)
 
-[⬥ Crítico em Fraquezas	17](#⬥-crítico-em-fraquezas)
+[⬥ Crítico em Fraquezas	18](#⬥-crítico-em-fraquezas)
 
-[⬥ Múltiplas Fraquezas	17](#⬥-múltiplas-fraquezas)
+[⬥ Múltiplas Fraquezas	18](#⬥-múltiplas-fraquezas)
 
-[⬡ Regeneração Natural	18](#⬡-regeneração-natural)
+[⬡ Regeneração Natural	19](#⬡-regeneração-natural)
 
-[⬥ Intensidades	18](#⬥-intensidades)
+[⬥ Intensidades	19](#⬥-intensidades)
 
-[⬥ Regeneração Passiva	18](#⬥-regeneração-passiva)
+[⬥ Regeneração Passiva	19](#⬥-regeneração-passiva)
 
-[⬥ Regeneração Condicional	18](#⬥-regeneração-condicional)
+[⬥ Regeneração Condicional	19](#⬥-regeneração-condicional)
 
-[⬥ Supressão por Fraqueza	18](#⬥-supressão-por-fraqueza)
+[⬥ Supressão por Fraqueza	19](#⬥-supressão-por-fraqueza)
 
-[⬡ Porte	19](#⬡-porte)
+[⬡ Porte	20](#⬡-porte)
 
-[⬡ Deslocamento	20](#⬡-deslocamento)
+[⬡ Deslocamento	21](#⬡-deslocamento)
 
-[⬡ Ações e Habilidades	22](#⬡-ações-e-habilidades)
+[⬡ Ações e Habilidades	23](#⬡-ações-e-habilidades)
 
-[⬥ Cadência	22](#⬥-cadência)
+[⬥ Cadência	23](#⬥-cadência)
 
-[⬥ Ataques	23](#⬥-ataques)
+[⬥ Ataques	24](#⬥-ataques)
 
-[⬥ Habilidades	25](#⬥-habilidades)
+[⬥ Habilidades	26](#⬥-habilidades)
 
-[⬡ Exemplo de Ficha Completa	27](#⬡-exemplo-de-ficha-completa)
+[⬡ Exemplo de Ficha Completa	28](#⬡-exemplo-de-ficha-completa)
+
+[**⬢ Guia de Criação de NPCs	31**](#⬢-guia-de-criação-de-npcs)
+
+[⬡ Roteiro de Criação	31](#⬡-roteiro-de-criação-1)
+
+[⬡ Identidade	32](#⬡-identidade)
+
+[⬥ Categoria	32](#⬥-categoria)
+
+[⬥ Nível de Cooperação	33](#⬥-nível-de-cooperação)
+
+[⬡ Construção Mecânica	34](#⬡-construção-mecânica)
+
+[⬥ Nível	34](#⬥-nível)
+
+[⬥ Atributos	34](#⬥-atributos)
+
+[⬥ Vida	34](#⬥-vida)
+
+[⬥ Energia	35](#⬥-energia)
+
+[⬥ Defesa	35](#⬥-defesa)
+
+[⬥ DTs de Atributos	35](#⬥-dts-de-atributos)
+
+[⬥ Sanidade	35](#⬥-sanidade)
+
+[⬡ Habilidades	36](#⬡-habilidades)
+
+[⬥ Volume de Habilidades	36](#⬥-volume-de-habilidades)
+
+[⬥ Criando Habilidades Únicas	36](#⬥-criando-habilidades-únicas)
+
+[⬥ Biblioteca de Referência	38](#⬥-biblioteca-de-referência)
+
+[**⬢ Guia de Criação de Missões	41**](#⬢-guia-de-criação-de-missões)
 
 # **⬢ Introdução** {#⬢-introdução}
 
@@ -122,41 +158,41 @@ Lembre-se, como mestre, o livro de regras é **seu guia**, não sua lei. Se regr
 
 Um registro da ordem de decisão. Cada etapa depende das anteriores: não avance sem ter definido o que a etapa atual exige.
 
-1. **Ficha de Identidade**  
-   *Designação, Conceito, Comportamento, Motivação, Gancho Único. A criatura precisa existir antes de ter números.*  
-     
-2. **Nível de Ameaça (NA)**  
-   *Qual é o impacto real desta criatura se agir livremente por 24 horas?*  
-     
-3. **Valor de Desafio (VD)**  
-   *Soma dos níveis do grupo alvo. Meta de design que orienta todas as escolhas seguintes.*  
-     
-4. **Atributos**  
-   *Base pelo VD, distribuição dos Pontos de Ajuste, Realocação opcional de até 3 pontos.*  
-     
-5. **Modificadores**  
-   *Dois Fortes, três Médios, três Fracos, dois Frágeis. Distribua de acordo com a identidade da criatura.*  
-     
-6. **Saúde**  
-   *Escolha a Tenacidade e calcule a Vida Máxima (VD × Multiplicador).*  
-     
-7. **Defesa**  
-   *15 \+ VD ÷ 2\. Verifique se há Contra-Ataque (Luta com modificador Forte).*  
-     
-8. **Resistências e Fraquezas**  
-   *Distribua dentro do Limite (2 × VD) e declare ao menos uma Fraqueza.*  
-     
-9. **Regeneração Natural**  
-   *Opcional. Se presente, defina intensidade, tipo e condição.*  
-     
-10. **Porte e Deslocamento**  
-    *Tamanho físico, modos de movimento e valores de deslocamento.*  
-      
-11. **Ataques**  
-    *Cada ataque: nome, atributo, dano da tabela de referência, custo de ação e tipo de dano.*  
-      
-12. **Habilidades Especiais**  
-    *Passivas, Ativas, De Gatilho. Apenas as que mudam como o grupo pensa sobre o confronto.*
+**Ficha de Identidade**  
+*Designação, Conceito, Comportamento, Motivação, Gancho Único. A criatura precisa existir antes de ter números.*
+
+**Nível de Ameaça (NA)**  
+*Qual é o impacto real desta criatura se agir livremente por 24 horas?*
+
+**Valor de Desafio (VD)**  
+*Soma dos níveis do grupo alvo. Meta de design que orienta todas as escolhas seguintes.*
+
+**Atributos**  
+*Base pelo VD, distribuição dos Pontos de Ajuste, Realocação opcional de até 3 pontos.*
+
+**Modificadores**  
+*Dois Fortes, três Médios, três Fracos, dois Frágeis. Distribua de acordo com a identidade da criatura.*
+
+**Saúde**  
+*Escolha a Tenacidade e calcule a Vida Máxima (VD × Multiplicador).*
+
+**Defesa**  
+*15 \+ VD ÷ 2\. Verifique se há Contra-Ataque (Luta com modificador Forte).*
+
+**Resistências e Fraquezas**  
+*Distribua dentro do Limite (2 × VD) e declare ao menos uma Fraqueza.*
+
+**Regeneração Natural**  
+*Opcional. Se presente, defina intensidade, tipo e condição.*
+
+**Porte e Deslocamento**  
+*Tamanho físico, modos de movimento e valores de deslocamento.*
+
+**Ataques**  
+*Cada ataque: nome, atributo, dano da tabela de referência, custo de ação e tipo de dano.*
+
+**Habilidades Especiais**  
+*Passivas, Ativas, De Gatilho. Apenas as que mudam como o grupo pensa sobre o confronto.*
 
 Ao final, revise se a criatura faz o que a Ficha de Identidade prometia. Se a mecânica não captura o conceito, ajuste antes de jogar.
 
@@ -628,6 +664,12 @@ A maioria das criaturas age uma vez por rodada, como qualquer agente. Algumas, n
 
 Cada turno da criatura é **independente**: ela possui sua Ação Padrão, sua Ação de Movimento e suas Ações Livres completas em cada um. Uma criatura com Cadência Dupla pode atacar duas vezes por rodada, deslocar-se em ambos os turnos e usar habilidades em cada um deles separadamente.
 
+**⬦ Iniciativa**  
+Algumas criaturas são concebidas para agir antes de qualquer coisa no campo, não pela sorte da rolagem, mas pela própria natureza da ameaça. Para essas criaturas, o Mestre pode registrar uma **Habilidade Especial Passiva** que soma um valor fixo ao resultado final da Iniciativa, após a rolagem normal de XD6 de Destreza.  
+Este valor é definido diretamente pelo Mestre, mas em caso de dúvidas, a VD sempre é um bom parâmetro para isso. Naturalmente, o aumento de Iniciativa é igual à 10% da VD. Exemplo: Uma criatura de VD 37 teria \+3 em sua Iniciativa.
+
+**Este valor adicional com base na VD é uma sugestão.**
+
 **⬦ Intercalação na Iniciativa**  
 Os turnos extras de uma criatura não se acumulam em sequência: eles são distribuídos entre os turnos dos agentes. O segundo turno de uma criatura cai sempre no **próximo slot disponível** abaixo de sua posição na ordem de iniciativa, independente de qual seja.
 
@@ -757,7 +799,8 @@ A criatura não tem fala, inteligência social ou capacidade médica relevante. 
 **⬦ Saúde, Defesa e Resistências**  
 Saúde  
 *Tenacidade Padrão (×35). A Estátua é uma ameaça convencional de confronto: resiste o suficiente para tornar o combate tenso, mas pode ser derrubada sem precisar explorar fraquezas se o grupo coordenar pressão suficiente. Em espaços fechados, onde sua habilidade passiva é dominante, o confronto se estende muito além da expectativa normal.*  
-*Vida Máxima: 30 × 35 \= 1.050*  
+*Vida Máxima: 30 × 35 \= 1.050*
+
 Defesa  
 *Defesa Base \= 15 \+ VD ÷ 2 \= 30*
 
@@ -797,3 +840,309 @@ Velocidade Impossível \[Passiva\]
 
 Ruptura de Observação \[De Gatilho\]  
 *Quando o número de agentes com contato visual direto com a criatura cai para zero por qualquer motivo, ela age imediatamente fora da ordem de iniciativa com uma Ação Padrão.*
+
+# **⬢ Guia de Criação de NPCs** {#⬢-guia-de-criação-de-npcs}
+
+Os **NPCs** representam o componente humano que compartilha a realidade de *Contratados \- RPG* com os agentes. Enquanto **Ameaças** surgem de naturezas anômalas e jogadores operam sob progressão contínua, estas figuras possuem propósitos narrativos flexíveis: podem ser desde **civis irrelevantes** em relatórios de campo até **líderes de facções** que ditam o ritmo de um arco inteiro.  
+Em termos de sistema, eles operam como uma **versão otimizada** da estrutura dos agentes. Possuem os mesmos dez atributos, saúde e reações, mas são projetados para **simplificar o controle** por parte do **SUPERVISOR**. O objetivo é permitir que indivíduos relevantes sejam gerados com agilidade, preservando a tensão mecânica necessária para que cada interação tenha impacto e propósito dentro da operação.
+
+## **⬡ Roteiro de Criação** {#⬡-roteiro-de-criação-1}
+
+**Identidade Narrativa**  
+*Estabelecer o propósito do indivíduo: qual sua função operacional e relevância no arco?*
+
+**Categoria e Nível**  
+*Definir o teto de competência baseado no perfil narrativo e no Nível do grupo de agentes.*
+
+**Nível de Cooperação**  
+*Determinar a inclinação comportamental inicial perante o esquadrão.*
+
+**Atributos**  
+*Distribuição de pontos respeitando o limite e o cap de cada Categoria.*
+
+**Saúde**  
+*Cálculo da Vida Máxima: Base \+ (Nível \+ VIG) × Multiplicador de Categoria.*
+
+**Defesa**  
+*Estabelecer a Defesa Base (10 \+ Nível) e calcular Bloqueio e Esquiva.*
+
+**Energia**  
+*Definir o modelo de recurso (Reserva Fixa ou Pool \+ Recarga) conforme a Categoria.*
+
+**Dificuldade de Teste (DT)**  
+*10 \+ Nível \+ (Atributo × 2\) para cada contexto de interação relevante.*
+
+**Habilidades**  
+*Criação de Passivas e Ativas respeitando o volume e o limite por turno.*
+
+**Assinatura Mecânica**  
+*Garantir que ao menos uma Passiva comunique a identidade biográfica do NPC.*
+
+**Calibração de Custo**  
+*Verificar se o consumo de Energia das Ativas é proporcional à frequência de uso esperada.*
+
+**Impacto Tático**  
+*Validar se as habilidades criam novas variáveis ou apenas replicam ataques padrão.*
+
+**Conduta de Combate***: Registro de gatilhos de fuga, prioridades de alvo e reações ao ferimento severo.*
+
+## **⬡ Identidade** {#⬡-identidade}
+
+A identidade de um NPC se fundamenta em dois **eixos independentes**: a **Categoria**, que dita o teto de sua competência e vivência, e o **Nível de Cooperação**, que estabelece como ele reage à presença dos agentes. Tais dimensões operam sem subordinação entre si, permitindo que um Civil atue com hostilidade absoluta enquanto um ser de nível Lendário se torne um aliado estratégico incondicional.
+
+### **⬥ Categoria** {#⬥-categoria}
+
+Este eixo estabelece o **teto de poder**, o arcabouço mecânico e a função dramática do NPC. Sua lógica de design é **espelhada na hierarquia de Patentes**, garantindo uma percepção imediata sobre a relevância e o peso que o indivíduo exerce na ordem narrativa da Fundação.
+
+| Categoria | Patente Equivalente | Perfil Narrativo | Nível Sugerido |
+| :---- | :---- | :---- | :---- |
+| Civil | Abaixo de Agente | Indivíduos civis, acadêmicos teóricos e observadores passivos. | 1 à 4 |
+| Operativo | Agente / Operador | Operadores táticos convencionais, forças de contenção e combatentes qualificados. | 3 à 8 |
+| Veterano | Experiente / Veterano | Especialistas de alto escalão, ativos da COG e antagonistas regionais. | 6 à 12 |
+| Elite | Força Tarefa / Operações Especiais | Comandantes de operações especiais e a cúpula estratégica da Fundação. | 10 à 16 |
+| Lendário | Líder Operacional ou superior | Entidades narrativas definidoras, arquitetos de facções e o ápice da performance humana. | 14 à 20 |
+
+O Nível do NPC **não é restrito** pela Categoria, mas a faixa sugerida indica onde aquela Categoria geralmente opera. Um Lendário de Nível 10 terá a estrutura mecânica completa de um Lendário com o poder correspondente a esse Nível.
+
+### **⬥ Nível de Cooperação** {#⬥-nível-de-cooperação}
+
+O **Nível de Cooperação** consiste na métrica que estabelece a inclinação comportamental do indivíduo perante o esquadrão. Tal parâmetro funciona como o fundamento que rege tanto a interação social quanto a conduta tática padrão em cenários de combate.
+
+| Nível | Social | Combate |
+| :---- | :---- | :---- |
+| 10 — Amigável | Fornece tudo que sabe, incluindo o que não achava relevante | Luta ao lado do grupo se solicitado |
+| 9 \- 7 — Colaborativo | Responde perguntas diretas com honestidade | Auxilia em combate; não ataca sem provocação |
+| 6 \- 4 — Neutro | Confirma ou nega; fornece informações gerais | Não inicia combate; reage apenas se atacado ou ameaçado |
+| 3 \- 2 — Desconfiado | Respostas vagas; pode omitir partes importantes | Postura defensiva; foge se possível, luta se encurralado |
+| 1 — Evasivo | Tecnicamente responde, mas de forma enganosa | Ataca apenas para abrir fuga |
+| 0 — Hostil | Recusa ou mente deliberadamente | Engaja combate ativamente; não recua sem motivo externo |
+
+O Nível de Cooperação atribuído na criação representa o **estado inicial** do NPC. Ações dos jogadores durante investigação ou combate **podem alterar esse valor** conforme as regras padrão do sistema.
+
+## **⬡ Construção Mecânica** {#⬡-construção-mecânica}
+
+### **⬥ Nível** {#⬥-nível}
+
+O Nível do NPC funciona como **Proficiência** em todos os contextos, seja para testes de ataque, cálculo de Defesa e DT. Ele também é a variável principal das fórmulas de Vida e Energia. O nível do NPC possui o mesmo limite de um agente convencional: De 0 à 20\.
+
+### **⬥ Atributos** {#⬥-atributos}
+
+Todos os dez atributos partem de 1\. O Mestre distribui os pontos abaixo livremente, respeitando o cap por Categoria. Civis têm **Luta** e **Pontaria** bloqueados em 0 por padrão.
+
+| Categoria | Pontos a distribuir | Limite por Atributo |
+| :---- | :---: | :---: |
+| Civil | \+2 | 2 |
+| Operativo | \+6 | 3 |
+| Veterano | \+11 | 4 |
+| Elite | \+17 | 5 |
+| Lendário | \+24 | 6 |
+
+Se a narrativa exigir um Civil com treinamento de combate, como um ex-militar pressionado, o Mestre pode desbloquear **Luta** ou **Pontaria** como exceção justificada.
+
+### **⬥ Vida** {#⬥-vida}
+
+*Vida \= Base \+ (Nível \+ **VIG**) × Multiplicador*
+
+| Categoria | Base | Multiplicador |
+| :---- | :---: | :---: |
+| Civil | 10 | 3 |
+| Operativo | 15 | 10 |
+| Veterano | 25 | 20 |
+| Elite | 40 | 35 |
+| Lendário | 60 | 60 |
+
+NPCs entram na condição **Morrendo** ao chegar a **0 de Vida**, seguindo as mesmas regras dos agentes. Diferente das criaturas, NPCs não colapsam automaticamente ao atingir 0\.
+
+### **⬥ Energia** {#⬥-energia}
+
+*A recarga de energia não pode ultrapassar o valor máximo definido pela Pool.*
+
+| Categoria | Modelo | Fórmula |
+| :---- | :---: | :---: |
+| Civil | \- | 0 |
+| Operativo | Reserva Fixa | 8 \+ **DES** × 2 |
+| Veterano | Reserva Fixa | 12 \+ **DES** × 3 |
+| Elite | Pool \+ Recarga | Pool: 18 \+ **DES** × 3 / Recarga: **DES** por turno |
+| Lendário | Pool \+ Recarga | Pool: 25 \+ **DES** × 4 / Recarga: (**DES** × 2\) por turno |
+
+### **⬥ Defesa** {#⬥-defesa}
+
+*Defesa Base \= 10 \+ Nível*  
+*Bloquear \= Defesa Base \+ **VIG***  
+*Esquivar \= Defesa Base \+ **DES***
+
+### **⬥ DTs de Atributos** {#⬥-dts-de-atributos}
+
+*DT \= 10 \+ Nível \+ (Atributo × 2\)*
+
+O atributo usado é sempre o relevante para a situação: **Vontade** para resistir a manipulação, **VIG** para suportar pressão física, **Intelecto** para detectar blefes, e assim por diante.
+
+### **⬥ Sanidade** {#⬥-sanidade}
+
+NPCs possuem um esquema de sanidade extremamente similar aos agentes, mas seus efeitos mecânicos e narrativos podem se diferenciar de acordo com a interpretação do mestre perante seu efeito sob aquele NPC.
+
+## **⬡ Habilidades** {#⬡-habilidades}
+
+As habilidades especiais de um **NPC** constituem o diferencial que o torna memorável na ordem narrativa. Enquanto em ameaças tais recursos emanam de uma **natureza anômala**, nos indivíduos humanos elas são **extensões de sua biografia**, treinamento e método operacional. Tais perícias devem descrever a identidade do sujeito antes mesmo de sua designação ser revelada ao esquadrão.
+
+**Passiva**: Funciona sempre ou quando uma condição específica é satisfeita. Não tem custo de Energia e não consome o limite de habilidades por turno. Passivas com condição de ativação funcionam como De Gatilho: acontecem como resposta automática, sem declaração ou ação.
+
+**Ativa**: Requer declaração e consome Energia. É uma ação especial que o NPC escolhe usar no turno.
+
+### **⬥ Volume de Habilidades** {#⬥-volume-de-habilidades}
+
+| Categoria | Total | Passivas (mínimo) | Ativas (Máximo) | Limite por turno |
+| :---- | :---: | :---: | :---: | :---: |
+| Civil | \- | \- | \- | \- |
+| Operativo | 2-3 | 1 | 2 | 4 |
+| Veterano | 3-4 | 2 | 2 | 4 |
+| Elite | 4-6 | 3 | 3 | 5 |
+| Lendário | 6-8 | 4 | 4 | 6 |
+
+O limite por turno é o máximo de habilidades Ativas que o NPC pode usar no mesmo turno. Passivas não contam para esse limite. O buffer de \+2 acima das Ativas máximas permite que habilidades com múltiplos usos ou aprimoramentos sejam aplicadas no mesmo turno quando a descrição permitir.
+
+### **⬥ Criando Habilidades Únicas** {#⬥-criando-habilidades-únicas}
+
+**⬦ Princípio**  
+Toda habilidade de NPC deve ser a extensão mecânica de quem aquela pessoa é. Se o Mestre consegue reconhecer a função do NPC lendo só a lista de habilidades, sem ver o nome ou o perfil, o design funcionou.
+
+**⬦ Anatomia de uma Habilidade**  
+Toda habilidade segue o mesmo formato:
+
+**Nome Neutro** \[Ex.: Nome Narrativo\] \[X E\]  
+**Tipo** — Descrição do efeito. Restrição se houver.
+
+| Componente | Função | Obrigatório |
+| :---- | ----- | :---: |
+| Nome Neutro | Descreve o que a habilidade faz funcionalmente | Sim |
+| Nome Narrativo | Apelido com sabor para aquele NPC específico | Opcional |
+| \[X E\] | Custo de Energia. Apenas Ativas têm custo. | Ativas: Sim |
+| Tipo | Passiva ou Ativa | Sim |
+| Descrição | Efeito mecânico claro e aplicável imediatamente | Sim |
+| Restrição | Limite de frequência ou condição de uso | Depende |
+|  |  |  |
+
+**⬦ Processo de Criação**
+
+1. **Comece pela identidade**. Antes do efeito, responda: o que essa pessoa faz que ninguém mais faz do mesmo jeito? Não é profissão, é método. Não é "soldado", é "soldado que usa aliados como distração para se reposicionar". Essa especificidade é o que transforma uma habilidade genérica em algo memorável.  
+     
+2. **Escolha o tipo**. É uma propriedade permanente de como este NPC existe no combate? Passiva, sempre ativa. Acontece como resposta a algo que o grupo fez? Passiva com gatilho definido. É uma decisão ativa que o NPC toma no turno? Ativa. Se precisar de gatilho, ele deve ser reconhecível instantaneamente. Se o Mestre precisar pausar para verificar se disparou, é complexo demais.  
+     
+3. **Defina o efeito**. Use a tabela de Calibração de Efeito por Categoria como teto de poder. O efeito precisa caber em uma frase. Se precisar de duas frases para explicar o que aconteceu, simplifique ou quebre em duas habilidades separadas. Prefira efeitos que mudem como os jogadores pensam no confronto.  
+     
+4. **Calibre o custo (apenas Ativas)**. Parta do pool de Energia da Categoria e decida quantas vezes a habilidade deve ser utilizável num confronto típico.  
+   
+
+| Papel da habilidade | Usos esperados | Custo relativo ao pool |
+| :---- | :---: | :---: |
+| Golpe definitivo, marca do NPC | 1-2 vezes | 30-50% do pool |
+| Ferramenta tática recorrente | 3-4 vezes | 15-25% do pool |
+| Utilitário frequente | 5+ vezes | 5-15% do pool |
+
+   
+
+5. **Adicione restrições se necessário**. Nem toda habilidade precisa de restrição. Restrição existe quando o efeito dominaria o combate se repetido livremente. Escolha a restrição mínima necessária: uma vez por rodada, uma vez por cena ou recarga de X turnos.  
+     
+6. **Verifique a legibilidade**. O Mestre consegue aplicá-la imediatamente sem cálculo adicional? Os jogadores têm ao menos uma forma de contornar ou reagir a ela? O efeito ainda faz sentido se disparar num contexto inesperado?
+
+**⬦ Calibração de Efeito por Categoria**
+
+| Categoria | Custo típico (Ativa) | Escala de Efeito | Fora de Alcance |
+| :---- | :---- | :---- | :---- |
+| Operativo | 3-6 E | \+1 dado, condição leve de 1 turno, negação de ação | AoE, alvos múltiplos, condições longas |
+| Veterano | 5-9 E | \+1D8, controle de área pequeno, condição de 2 turnos | Dano massivo, efeitos de cena inteira |
+| Elite | 8-14 E | \+2D10, zona de controle, redução de Cooperação | Efeitos permanentes, imunidades |
+| Lendário | 12-20 E | Efeitos de cena, dano massivo, controle psicológico amplo | Sem restrição de tier  |
+
+**⬦ O que Evitar**  
+**Habilidades sem contrapartida**. Qualquer efeito que remova completamente a agência dos jogadores sem uma forma de contorná-lo cria frustração, não tensão. Se o efeito for forte, o gatilho precisa ser evitável ou o custo precisa ser alto.
+
+**Passivas genéricas**. "Este NPC é melhor em combate" não é uma habilidade, é um bônus de atributo disfarçado. Passivas precisam de especificidade: sob qual condição, contra qual alvo, em qual contexto.
+
+**Ativas que replicam ataques normais**. Uma Ativa que simplesmente causa mais dano do que um ataque padrão desperdiça um slot de habilidade. Ativas devem criar situações que um ataque normal não criaria.
+
+**Gatilhos inevitáveis com efeitos severos**. Se o grupo não tem como impedir o gatilho e o efeito é forte, o resultado é inevitável, não desafiador. Ajuste a severidade do efeito ou adicione uma condição que o grupo possa gerenciar.
+
+**Habilidades que dependem de informação oculta**. Se o efeito exige que o Mestre rastreie algo que os jogadores não veem e que afeta o resultado, o combate perde a legibilidade.
+
+### **⬥ Biblioteca de Referência** {#⬥-biblioteca-de-referência}
+
+As habilidades abaixo são modelos prontos para uso ou adaptação. O Nome Neutro descreve a função; o Nome Narrativo é um exemplo de como aquela habilidade poderia soar para um NPC específico.
+
+**⬦ Operativo**
+
+Treinamento de Campo \[Ex.: Segunda Natureza\]  
+Passiva — Este NPC ignora penalidades de \-1 dado decorrentes de movimento. Pode atacar após se deslocar sem redução no teste.
+
+Alerta Constante \[Ex.: Olhos nas Costas\]  
+Passiva — Quando alvo de um ataque Furtivo, este NPC realiza um teste de Sentidos DT 14\. Em caso de sucesso, o atacante perde a vantagem Furtiva para esse ataque.
+
+Disparo de Supressão \[Ex.: Cabeça Abaixada\] \[4 E\]  
+Ativa — O NPC dispara em direção ao alvo sem necessariamente acertá-lo. O alvo realiza um teste de Vontade DT 12 \+ Pontaria do NPC. Em caso de falha, sua próxima ação deve ser mover-se para cobertura em vez de atacar.
+
+Reposicionamento Tático \[Ex.: Sombra em Movimento\] \[3 E\]  
+Ativa — O NPC se move até DES metros sem provocar reações. Pode realizar um ataque padrão ao fim deste deslocamento com \-1 dado.
+
+**⬦ Veterano**
+
+Resistência Forjada \[Ex.: Linha Dura\]  
+Passiva — No início de cada combate, este NPC ganha pontos de vida temporários iguais a VIG × 3\.
+
+Adaptação em Campo \[Ex.: Lição Aprendida\]  
+Passiva — Quando um NPC aliado dentro de 10 metros é derrotado, este NPC ganha \+1 dado em todos os testes por 2 turnos.
+
+Ponto de Pressão \[Ex.: Onde Dói Mais\] \[6 E\]  
+Ativa — O NPC realiza um ataque que ignora Nível ÷ 2 pontos de qualquer resistência do alvo. Se o alvo já possui uma condição ativa, causa \+1D8 de dano adicional.
+
+Coordenação \[Ex.: Voz de Mando\] \[7 E\]  
+Ativa (uma vez por rodada) — Até 2 NPCs aliados dentro de 10 metros realizam imediatamente um reposicionamento de até DES metros cada ou um ataque padrão. Isso não consome as ações desses NPCs.
+
+**⬦ Elite**
+
+Condicionamento Extremo \[Ex.: Corpo de Elite\]  
+Passiva — Este NPC possui resistência igual a Nível ÷ 3 (mínimo 2\) a um tipo de dano definido na criação.
+
+Presença de Comando \[Ex.: O Nome Que Paralisa\]  
+Passiva — Quando este NPC entra em combate ou derrota um oponente, todos os inimigos com Nível de Cooperação 2 ou menos realizam um teste de Vontade DT 16 \+ Social do NPC. Em caso de falha, perdem a primeira reação desta rodada.
+
+Reflexos Superiores \[Ex.: Sétimo Sentido\]  
+Passiva (uma vez por rodada) — Quando este NPC normalmente não poderia reagir a um ataque (surpresa, Furtivo sem chance de Sentidos), ainda pode tentar uma reação de Defesa com \-2.
+
+Protocolo Ofensivo \[Ex.: Modo de Eliminação\] \[10 E\]  
+Ativa — O NPC realiza um único ataque com \+2 dados e adiciona Nível ao total de dano. Em caso de crítico, o alvo fica Atordoado por 1 turno.
+
+Zona de Controle \[Ex.: Território Marcado\] \[12 E\]  
+Ativa — O NPC designa uma área de até 6 metros de raio visível a ele. Por 2 turnos, todos os inimigos dentro ou que entrem nessa área sofrem \-1 dado em testes de ataque.
+
+Pressão Interrogatória \[Ex.: Sem Saída\] \[8 E\]  
+Ativa (uma vez por cena) — O alvo realiza um teste de Vontade DT 18 \+ Social do NPC. Em caso de falha, seu Nível de Cooperação cai em 3 ou ele revela involuntariamente uma informação definida pelo Mestre. Pode ser usada em combate ou fora dele.
+
+**⬦ Lendário**
+
+Ápice Humano \[Ex.: Além do Alcançável\]  
+Passiva — Quando penalidades reduziriam o pool de dados deste NPC a 0, ele ainda rola com o mínimo de 2 dados.
+
+Lenda Viva \[Ex.: Mito com Pulso\]  
+Passiva (uma vez por combate) — Na primeira vez que este NPC cair abaixo de 50% de Vida, recupera imediatamente Recarga × 3 de Energia e ganha \+2 em todos os testes por 2 turnos.
+
+Percepção Absoluta \[Ex.: Nada Escapa\]  
+Passiva — Imune a bônus de ataques Furtivos. Não pode ser flanqueado. Inimigos não conseguem surpreender este NPC por meios convencionais.
+
+Resistência de Lenda \[Ex.: O Que Não Derruba\]  
+Passiva — Quando este NPC entra em Morrendo, todos os NPCs aliados dentro de 10 metros realizam imediatamente uma ação livre de ataque ou movimento. Este NPC ganha vida temporária igual a VIG × 2 antes dos cálculos de Morrendo.
+
+Golpe Irreversível \[Ex.: Fim de Conversa\] \[18 E\]  
+Ativa — O NPC realiza um único ataque usando seu pool completo de dados \+ Proficiência. Este ataque não pode ser Esquivado, apenas Bloqueado. Em caso de acerto, causa Nível de dano adicional e aplica uma condição definida na criação por 2 turnos.
+
+Comando Total \[Ex.: A Palavra Que Move Exércitos\] \[15 E\]  
+Ativa (uma vez por combate) — Todos os NPCs aliados na cena realizam imediatamente uma ação completa gratuita. Por 1 turno, todos os aliados ganham \+1 dado em testes de ataque.
+
+Foco de Predador \[Ex.: Alvo Marcado\] \[14 E\]  
+Ativa — O Lendário designa um alvo como objetivo primário pelo resto da cena. Todos os ataques contra esse alvo ganham \+2 dados e Nível de dano adicional. O foco só pode ser redirecionado se o alvo for derrotado ou escapar da cena.
+
+Presença Devastadora \[Ex.: O Peso de um Legado\] \[20 E\]  
+Ativa (uma vez por combate) — Todos os inimigos com Nível de Cooperação 4 ou menos realizam um teste de Vontade DT 20 \+ Social do NPC. Em caso de falha, perdem seu próximo turno. Em caso de falha crítica (falhar por 5 ou mais), o Nível de Cooperação cai para 1 pelo resto da cena.
+
+# **⬢ Guia de Criação de Missões** {#⬢-guia-de-criação-de-missões}
+
+	EM BREVE…

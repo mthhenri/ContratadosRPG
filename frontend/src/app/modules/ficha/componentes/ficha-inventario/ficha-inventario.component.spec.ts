@@ -656,7 +656,7 @@ describe('FichaInventario', () => {
         'Espada Excalibur',
       );
       expect(raiz.querySelector('.ficha-inv__item-nome-mecanico')?.textContent?.trim()).toBe(
-        'Leve',
+        'Leve — Corpo a Corpo',
       );
     });
 

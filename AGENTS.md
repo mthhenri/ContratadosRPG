@@ -72,6 +72,19 @@ ela respeita a especificação, a arquitetura e, quando aplicável, o contrato
 visual. Não declare sucesso apenas porque compila ou porque um teste unitário
 passou.
 
+### Prioridade absoluta: qualidade acima de velocidade
+
+Qualidade, fidelidade ao sistema e aderência às regras do projeto têm prioridade
+sobre velocidade de entrega. Prazo, pressa, tamanho da spec, limite de contexto,
+delegação ou custo de execução **nunca** justificam pular leitura, extração,
+testes, revisão ou verificação visual. É preferível levar o dobro do tempo e
+entregar uma implementação completa e coerente a entregar cedo e obrigar o
+autor a pedir uma segunda implementação para corrigir atalhos previsíveis.
+
+Quando não houver tempo ou ambiente suficiente para cumprir todos os gates, a
+tarefa permanece **aberta**. Relate o avanço e a pendência; não reduza o padrão
+de qualidade para produzir uma aparência de conclusão.
+
 Antes de alterar código:
 
 1. Identifique a fonte de verdade da mudança: spec ativa, documento de regra,
@@ -85,22 +98,53 @@ Antes de alterar código:
    pura. Se a extração não for proporcional ao escopo, registre no fecho da
    tarefa por que o acréscimo local é seguro.
 
+### Processo obrigatório para qualquer UI ou estilo
+
+Toda mudança que crie ou altere UI, layout, componente visual ou estilo segue
+este processo, sem exceção:
+
+1. Antes de editar, escolha e registre o **componente análogo aprovado** que
+   servirá de referência. “Usar os tokens” não basta: mapeie também shell,
+   densidade, hierarquia, espaçamento, controles, estados, iconografia e
+   comportamento responsivo.
+2. Inspecione o análogo no código e, quando disponível, na aplicação real.
+   Reutilize componentes e padrões existentes antes de criar uma variação.
+3. Construa primeiro um corte visual representativo. Não cubra um formulário
+   HTML genérico com tokens e trate isso como fidelidade ao design.
+4. Rode a aplicação real e use obrigatoriamente a skill `verify`. Verifique no
+   mínimo `1920×1080` e `360×800`, além de todos os viewports e estados exigidos
+   pela spec. Percorra os estados relevantes; uma captura só do estado inicial
+   não valida uma tela interativa.
+5. Compare visualmente a implementação renderizada com o análogo escolhido.
+   Confirme explicitamente: parece parte do mesmo produto; tem a mesma densidade
+   e hierarquia; usa os controles, ícones e estados canônicos; não parece HTML
+   genérico; não tem overflow; foco, contraste e alvos de toque estão corretos.
+6. Corrija qualquer divergência **antes** de apresentar a implementação ao
+   autor. Build, testes, lint, uso correto de tokens e ausência de overflow são
+   necessários, mas não substituem essa comparação visual.
+
+Se o trabalho foi delegado, o relato ou screenshot do subagente não encerra o
+gate. O agente principal deve inspecionar pessoalmente a UI renderizada nos
+viewports obrigatórios antes de entregá-la. Se a aplicação real não puder ser
+executada ou observada, a tarefa visual permanece aberta; nunca declare que a
+UI está pronta com base apenas no código.
+
 Antes de declarar uma tarefa pronta:
 
 1. Revise o diff completo contra a spec e as convenções; confirme que não há
    hardcodes ou atalhos que contornem a fonte de verdade.
 2. Rode build, testes, lint e checagens proporcionais ao risco. Relate os
    comandos, os resultados e qualquer falha preexistente separadamente.
-3. Para UI, verifique a aplicação real com a skill `verify`, nos viewports e
-   cenários exigidos pela spec. Confirme responsividade, ausência de overflow,
-   acessibilidade básica, foco e contraste; testes e lint não substituem essa
-   etapa.
+3. Para UI, cumpra integralmente o processo visual obrigatório acima. Registre
+   o análogo usado, os viewports e estados observados, a comparação visual e as
+   correções feitas durante a inspeção. Testes, lint e relato de subagente não
+   substituem essa etapa.
 4. No fecho, liste de forma auditável o que foi verificado e o que permaneceu
    pendente. Um item sem verificação obrigatória fica **aberto**, não "concluído".
 
 Esta regra é deliberadamente mais forte que uma preferência de estilo: ela é a
-definição de pronto do repositório e prevalece sobre a pressa de entregar uma
-feature.
+definição de pronto do repositório. **Qualidade acima de velocidade** é uma
+decisão do autor e prevalece sobre a pressa de entregar uma feature.
 
 ## Estrutura e arquitetura
 
@@ -189,3 +233,12 @@ Preserve alterações existentes do usuário. Antes de qualquer comando destruti
 confirme o alvo e a necessidade. Não use reset destrutivo nem apague arquivos
 fora do escopo. Após alterar código, rode a verificação proporcional ao risco e
 relate claramente o que foi validado.
+
+## Coautoria de commits
+
+Todo commit criado por um agente neste repositório deve incluir um trailer
+`Co-authored-by:` que identifique o agente responsável, usando a identidade
+apropriada à ferramenta (por exemplo, `Codex <noreply@openai.com>` ou a
+identidade configurada para Claude). A regra vale em qualquer chat, sessão ou
+momento de trabalho; antes de concluir um commit, confira a mensagem efetivamente
+gravada com `git log` ou `git show`.

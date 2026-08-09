@@ -1,0 +1,108 @@
+// Catálogo + carrinho do Equipamento Inicial (m3-59). Componente embutido no passo do guia — sem
+// modal, sem backdrop (contraste com `ficha-habilidade-seletor`, que é overlay). Só tokens do tema
+// "Terminal de Contenção" (proibição #29); `.stepper` espelha o bloco já em uso no passo Atributos.
+
+@use 'tema/breakpoints' as bp;
+
+:host { display: block; }
+
+.loja {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 14px;
+  align-items: start;
+}
+
+// === Catálogo ===
+.loja__catalogo { min-width: 0; }
+
+.loja__categorias { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.loja__categoria {
+  font: 600 10px var(--font-mono); text-transform: uppercase; letter-spacing: .04em;
+  color: var(--text-dim); background: var(--surface-2); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control); padding: 7px 10px; cursor: pointer; transition: .15s ease;
+  &:hover { color: var(--text); border-color: var(--accent-border); }
+  &--ativa { color: var(--accent); background: var(--accent-dim); border-color: var(--accent); }
+}
+
+.loja__busca {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding: 0 11px;
+  background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: var(--radius-control);
+  &:focus-within { border-color: var(--accent); }
+}
+.loja__busca-icone { font-size: 14px; color: var(--text-mute); }
+.loja__busca-campo {
+  flex: 1; padding: 9px 0; font: 13px var(--font-sans); color: var(--text); background: transparent; border: 0;
+  &:focus { outline: 0; } &::placeholder { color: var(--text-mute); }
+}
+
+.loja__grade {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px;
+  margin: 0; padding: 0 2px 4px; list-style: none; max-height: 360px; overflow-y: auto; align-content: start;
+  --fade-topo: 0px; --fade-base: 0px;
+  &.overflow-fade--topo, &.overflow-fade--base {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-topo), #000 calc(100% - var(--fade-base)), transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-topo), #000 calc(100% - var(--fade-base)), transparent 100%);
+  }
+  &.overflow-fade--topo { --fade-topo: 16px; }
+  &.overflow-fade--base { --fade-base: 16px; }
+}
+
+.loja__item {
+  display: flex; align-items: flex-start; gap: 8px; padding: 10px 11px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control);
+  &:hover { border-color: var(--border-strong); }
+}
+.loja__item-corpo { flex: 1; min-width: 0; display: grid; gap: 3px; }
+.loja__item-nome { font: 600 12px var(--font-mono); color: var(--text); }
+.loja__item-stat { font: 11px var(--font-sans); color: var(--energy); }
+.loja__item-tag {
+  justify-self: start; font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .06em;
+  color: var(--accent); background: var(--accent-dim); border: 1px solid var(--accent-border);
+  border-radius: var(--radius-control); padding: 1px 6px;
+}
+.loja__item-desc { font: 11px/1.4 var(--font-sans); color: var(--text-mute); }
+.loja__item-meta { display: flex; gap: 10px; margin-top: 2px; font: 600 10px var(--font-mono); color: var(--text-dim); }
+.loja__item-add {
+  flex: none; align-self: center; font: 16px var(--font-mono); color: var(--accent); background: transparent;
+  border: 0; cursor: pointer;
+  @include bp.mobile { min-width: bp.$alvo-toque; min-height: bp.$alvo-toque; }
+}
+.loja__vazio { grid-column: 1 / -1; padding: 18px 10px; font: italic 12px var(--font-sans); color: var(--text-mute); text-align: center; }
+
+// === Carrinho ===
+.loja__carrinho { position: sticky; top: 0; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-control); }
+.loja__carrinho-cabecalho {
+  display: flex; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--border);
+  font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text-mute);
+  b { color: var(--accent); }
+}
+.loja__carrinho-vazio { margin: 0; padding: 16px 12px; font: 11px/1.45 var(--font-sans); color: var(--text-mute); }
+.loja__carrinho-lista { display: grid; gap: 8px; margin: 0; padding: 10px; list-style: none; max-height: 360px; overflow-y: auto; }
+.loja__carrinho-item { display: grid; gap: 8px; padding: 9px 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); }
+.loja__carrinho-item-identidade { display: grid; gap: 2px; min-width: 0; }
+.loja__carrinho-item-nome { font: 600 11px var(--font-mono); color: var(--text); overflow-wrap: anywhere; }
+.loja__carrinho-item-categoria { font: 9px var(--font-mono); text-transform: uppercase; letter-spacing: .04em; color: var(--text-mute); }
+.loja__carrinho-item-controles { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.loja__carrinho-item-remover {
+  flex: none; padding: 0; font-size: 12px; color: var(--text-mute); background: transparent; border: 0; cursor: pointer;
+  &:hover { color: var(--accent); }
+  @include bp.mobile { min-width: bp.$alvo-toque; min-height: bp.$alvo-toque; }
+}
+
+.stepper {
+  display: grid; grid-template-columns: 26px 32px 26px; min-height: 28px; overflow: hidden;
+  background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control);
+  &__botao { padding: 0; font: 14px var(--font-mono); color: var(--text-dim); background: transparent; border: 0; cursor: pointer; &:hover { color: var(--text); background: var(--accent-dim); } }
+  &__valor { display: grid; place-items: center; font: 700 12px var(--font-mono); color: var(--text); border-inline: 1px solid var(--border); }
+}
+
+@include bp.mobile {
+  .loja { grid-template-columns: 1fr; }
+  .loja__carrinho { position: static; }
+  .loja__grade { max-height: 320px; }
+  .loja__categoria { min-height: bp.$alvo-toque; }
+  .loja__busca-campo { min-height: bp.$alvo-toque; padding: 0; }
+  .stepper { grid-template-columns: bp.$alvo-toque 40px bp.$alvo-toque; min-height: bp.$alvo-toque; }
+  .stepper__botao { min-height: bp.$alvo-toque; }
+}

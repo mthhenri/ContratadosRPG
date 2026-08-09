@@ -10,10 +10,12 @@ import {
   calcularVida,
   habilidadesIniciais,
   maestriaAtingivel,
-  obterBonusAtributos,
+  obterBonusAtributosComEscolha,
   obterLimitesClasse,
 } from '@contratados-rpg/shared/regras/agente';
 import { rolarDinheiroInicial } from '@contratados-rpg/shared/regras/novo-agente';
+import { aplicarFormacaoAosDerivados } from '@contratados-rpg/shared/regras/identidade';
+import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 
 import { ehClasseBase } from './opcoes-ficha';
 
@@ -41,6 +43,27 @@ export interface OpcoesFichaInicial {
   /** Atributos **base** (antes do bônus fixo de arquétipo/subclasse). */
   readonly atributos: FichaAtributosDto;
   readonly maestria: keyof FichaAtributosDto | null;
+  /**
+   * Escolha do jogador para os pontos "à escolha" do perfil (Engenheiro/Assassino: 1 posição;
+   * Acadêmico: 1 posição; Experimento Híbrido: 2 posições) — mesma ordem de
+   * `obterSlotsEscolhaBonus`. Ausente/posição `null` não soma nada além do bônus fixo.
+   */
+  readonly bonusEscolhido?: readonly (keyof FichaAtributosDto | null)[];
+  readonly identidade?: FichaJogadorDadosDto['identidade'];
+  /** Total já rolado no guia (dinheiro inicial + bônus). Ausente mantém o fallback legado. */
+  readonly dinheiro?: number;
+  readonly anotacoes?: string;
+  /**
+   * Habilidades de nível (gerais/classe/arquétipo/outra classe/civis) e Fortificações de
+   * Personalidade escolhidas no passo // MELHORIAS (m3-58) — anexadas após a Habilidade Inicial.
+   * Ausente/vazio para Nível 0 (o passo não existe nesse caso).
+   */
+  readonly habilidadesExtras?: readonly FichaHabilidadeDto[];
+  /**
+   * Itens escolhidos no passo // EQUIPAMENTO INICIAL (m3-59) — orçamento **à parte** do dinheiro
+   * (`dinheiro` acima), nunca descontado dele. Ausente/vazio nasce com o inventário vazio.
+   */
+  readonly equipamentoInicial?: readonly CarrinhoItemDto[];
 }
 
 /**
@@ -67,6 +90,7 @@ function restringir(valor: number, minimo: number, maximo: number): number {
  * grava o **snapshot** de Vida/Energia máximas + `derivados` de `shared/regras` (proibições #26/#27 —
  * nenhuma fórmula nova aqui; o backend também revalida forma e Maestria). Vida/Energia atuais nascem
  * cheias. Dinheiro inicial (m3-34) é rolado uma vez aqui (`rolarDinheiroInicial`, `1000 + 4D4 × 250`).
+ * `equipamentoInicial` (m3-59) vira `dados.inventario.itens` sem tocar `dinheiro` — orçamento à parte.
  * Só orquestra `shared/regras`.
  */
 export function construirFichaInicial(
@@ -77,7 +101,7 @@ export function construirFichaInicial(
   const arquetipo = ehClasseBase(classe) ? opcoes.arquetipo : null;
 
   // Atributos = base + bônus fixo do arquétipo/subclasse, cada um clampado aos limites da classe.
-  const bonus = obterBonusAtributos({ classe, arquetipo });
+  const bonus = obterBonusAtributosComEscolha({ classe, arquetipo }, opcoes.bonusEscolhido ?? []);
   const atributos = { ...opcoes.atributos };
   (Object.keys(atributos) as (keyof FichaAtributosDto)[]).forEach((chave) => {
     const bruto = opcoes.atributos[chave] + (bonus[chave] ?? 0);
@@ -95,13 +119,21 @@ export function construirFichaInicial(
 
   // O agente já nasce com a Habilidade Inicial do seu arquétipo/subclasse (doc — vem de graça, não
   // é escolhida). `habilidadesIniciais` devolve os itens do catálogo já com categoria/origem.
-  const habilidades: FichaHabilidadeDto[] = habilidadesIniciais(classe, arquetipo).map((item) => ({
-    nome: item.nome,
-    categoria: item.categoria,
-    custoEnergia: item.custoEnergia,
-    descricao: item.descricao,
-    ...(item.origem === undefined ? {} : { origem: item.origem }),
-  }));
+  const habilidades: FichaHabilidadeDto[] = [
+    ...habilidadesIniciais(classe, arquetipo).map((item) => ({
+      nome: item.nome,
+      categoria: item.categoria,
+      custoEnergia: item.custoEnergia,
+      descricao: item.descricao,
+      ...(item.origem === undefined ? {} : { origem: item.origem }),
+    })),
+    ...(opcoes.habilidadesExtras ?? []),
+  ];
+
+  const derivadosBase = calcularDerivados(classe, nivel, atributos, habilidades);
+  const derivados = opcoes.identidade?.origem?.formacao.length
+    ? aplicarFormacaoAosDerivados(derivadosBase, opcoes.identidade.origem.formacao)
+    : derivadosBase;
 
   return {
     nome: opcoes.nome.trim() || 'Novo agente',
@@ -112,6 +144,7 @@ export function construirFichaInicial(
       prestigio,
       atributos,
       maestria,
+      ...(opcoes.identidade === undefined ? {} : { identidade: opcoes.identidade }),
       estado: {
         vidaAtual: vidaMaxima,
         energiaAtual: energiaMaxima,
@@ -121,12 +154,12 @@ export function construirFichaInicial(
         traumas: [],
         lesoes: [],
       },
-      derivados: calcularDerivados(classe, nivel, atributos, habilidades),
+      derivados,
       habilidades,
-      inventario: { itens: [], amplificadores: [] },
+      inventario: { itens: opcoes.equipamentoInicial ?? [], amplificadores: [] },
       rolagens: [],
-      anotacoes: '',
-      dinheiro: rolarDinheiroInicial().dinheiro,
+      anotacoes: opcoes.anotacoes ?? '',
+      dinheiro: opcoes.dinheiro ?? rolarDinheiroInicial().dinheiro,
     },
   };
 }

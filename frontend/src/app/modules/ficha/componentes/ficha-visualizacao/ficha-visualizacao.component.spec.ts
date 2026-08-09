@@ -13,6 +13,7 @@ import {
 } from '@contratados-rpg/shared/enums';
 import type {
   FichaFragmentoConsumidoDto,
+  FichaHabilidadeDto,
   FichaJogadorDadosDto,
   FichaOrigemDto,
 } from '@contratados-rpg/shared/dtos/ficha';
@@ -23,6 +24,7 @@ import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-da
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { FichaVisualizacao } from './ficha-visualizacao.component';
 import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
+import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
 
 /**
  * Prova a exibição read-only da ficha (m3-07): apresenta identidade (codinome, classe/arquétipo,
@@ -1024,6 +1026,137 @@ describe('FichaVisualizacao', () => {
       expect(origens).toEqual([]);
       // O editor continua aberto — não fecha num rascunho inválido.
       expect(componente['editandoOrigem']()).toBe(true);
+    });
+
+    describe('oferta de limpar Origem ao adicionar Peculiaridade (mestre-only)', () => {
+      const dadosExperimentoComOrigem: FichaJogadorDadosDto = {
+        ...dados,
+        classe: ClasseEnum.EXPERIMENTO_BESTIAL,
+        arquetipo: null,
+        habilidades: [],
+        identidade: { personalidade: 'Instável', origem: origemExemplo },
+      };
+      const peculiaridade: FichaHabilidadeDto = {
+        nome: 'Peculiaridade',
+        categoria: HabilidadeCategoriaEnum.SUBCLASSE,
+        custoEnergia: 0,
+        descricao: '...',
+      };
+
+      it('mostra Origem somente como substituída quando a ficha já tem Peculiaridade', () => {
+        const alvo = montar({
+          ...dadosExperimentoComOrigem,
+          identidade: { personalidade: 'Instável', origem: null },
+          habilidades: [peculiaridade],
+        }, 'Espécime', 42, true, true);
+        const linhaOrigem = Array.from(alvo.raiz.querySelectorAll('.ficha-ident__meta-linha')).find((linha) => linha.textContent?.includes('Origem'));
+
+        expect(linhaOrigem?.textContent).toContain('Substituída pela Peculiaridade');
+        expect(linhaOrigem?.textContent).not.toContain('Não definida');
+        expect(linhaOrigem?.querySelector('[aria-label="Editar origem"]')).toBeNull();
+      });
+
+      it('mestre adiciona Peculiaridade com Origem definida: fica pendente de confirmação, não emite nada ainda', () => {
+        const alvo = montar(dadosExperimentoComOrigem, 'Espécime', 42, true, true);
+        const habilidadesEmitidas: unknown[] = [];
+        const origensLimpas: void[] = [];
+        alvo.fixture.componentInstance.ajusteHabilidades.subscribe((h) => habilidadesEmitidas.push(h));
+        alvo.fixture.componentInstance.origemLimpa.subscribe(() => origensLimpas.push(undefined));
+
+        alvo.fixture.componentInstance['mudarHabilidades']([peculiaridade]);
+
+        expect(habilidadesEmitidas).toEqual([]);
+        expect(origensLimpas).toEqual([]);
+        expect(alvo.fixture.componentInstance['habilidadesPendentesPeculiaridade']()).toEqual([peculiaridade]);
+      });
+
+      it('confirmar a oferta emite as duas mudanças — habilidades e origemLimpa — no mesmo gesto', () => {
+        const alvo = montar(dadosExperimentoComOrigem, 'Espécime', 42, true, true);
+        const habilidadesEmitidas: unknown[] = [];
+        let origemLimpaChamadas = 0;
+        alvo.fixture.componentInstance.ajusteHabilidades.subscribe((h) => habilidadesEmitidas.push(h));
+        alvo.fixture.componentInstance.origemLimpa.subscribe(() => origemLimpaChamadas++);
+
+        alvo.fixture.componentInstance['mudarHabilidades']([peculiaridade]);
+        alvo.fixture.componentInstance['confirmarLimparOrigemEHabilidade']();
+
+        expect(habilidadesEmitidas).toEqual([[peculiaridade]]);
+        expect(origemLimpaChamadas).toBe(1);
+        expect(alvo.fixture.componentInstance['habilidadesPendentesPeculiaridade']()).toBeNull();
+      });
+
+      it('cancelar a oferta descarta a mudança de habilidade — nada é emitido', () => {
+        const alvo = montar(dadosExperimentoComOrigem, 'Espécime', 42, true, true);
+        const habilidadesEmitidas: unknown[] = [];
+        alvo.fixture.componentInstance.ajusteHabilidades.subscribe((h) => habilidadesEmitidas.push(h));
+
+        alvo.fixture.componentInstance['mudarHabilidades']([peculiaridade]);
+        alvo.fixture.componentInstance['cancelarLimparOrigem']();
+
+        expect(habilidadesEmitidas).toEqual([]);
+        expect(alvo.fixture.componentInstance['habilidadesPendentesPeculiaridade']()).toBeNull();
+      });
+
+      it('dono (não-mestre) adiciona Peculiaridade com Origem definida: passa direto, sem oferta', () => {
+        const alvo = montar(dadosExperimentoComOrigem, 'Espécime', 42, true, false);
+        const habilidadesEmitidas: unknown[] = [];
+        alvo.fixture.componentInstance.ajusteHabilidades.subscribe((h) => habilidadesEmitidas.push(h));
+
+        alvo.fixture.componentInstance['mudarHabilidades']([peculiaridade]);
+
+        expect(habilidadesEmitidas).toEqual([[peculiaridade]]);
+        expect(alvo.fixture.componentInstance['habilidadesPendentesPeculiaridade']()).toBeNull();
+      });
+
+      it('mestre adiciona Peculiaridade sem Origem definida: passa direto, nada para limpar', () => {
+        const semOrigem: FichaJogadorDadosDto = { ...dadosExperimentoComOrigem, identidade: { personalidade: 'Instável', origem: null } };
+        const alvo = montar(semOrigem, 'Espécime', 42, true, true);
+        const habilidadesEmitidas: unknown[] = [];
+        alvo.fixture.componentInstance.ajusteHabilidades.subscribe((h) => habilidadesEmitidas.push(h));
+
+        alvo.fixture.componentInstance['mudarHabilidades']([peculiaridade]);
+
+        expect(habilidadesEmitidas).toEqual([[peculiaridade]]);
+      });
+
+      it('mudança de habilidade que não introduz Peculiaridade passa direto, mesmo com Origem definida', () => {
+        const alvo = montar(dadosExperimentoComOrigem, 'Espécime', 42, true, true);
+        const habilidadesEmitidas: unknown[] = [];
+        alvo.fixture.componentInstance.ajusteHabilidades.subscribe((h) => habilidadesEmitidas.push(h));
+        const outraHabilidade: FichaHabilidadeDto = { nome: 'Foco', categoria: HabilidadeCategoriaEnum.GERAL, custoEnergia: 1, descricao: '...' };
+
+        alvo.fixture.componentInstance['mudarHabilidades']([outraHabilidade]);
+
+        expect(habilidadesEmitidas).toEqual([[outraHabilidade]]);
+      });
+
+      it('a UI mostra a confirmação quando a oferta fica pendente, e os dois botões chamam os métodos certos', () => {
+        const alvo = montar(dadosExperimentoComOrigem, 'Espécime', 42, true, true);
+        alvo.fixture.componentInstance['habilidadesPendentesPeculiaridade'].set([peculiaridade]);
+        alvo.fixture.detectChanges();
+
+        // [appendTo]="'body'" tira o diálogo da subárvore de `alvo.raiz` (necessário para não ficar
+        // preso num painel `display: none` no mobile) — por isso a busca é em `document.body`.
+        const dialogo = document.body.querySelector('.ficha-ident__aviso-peculiaridade');
+        expect(dialogo?.textContent).toContain('substituir a Origem atual');
+
+        const confirmar = vi.spyOn(alvo.fixture.componentInstance as unknown as { confirmarLimparOrigemEHabilidade: () => void }, 'confirmarLimparOrigemEHabilidade');
+        (document.body.querySelector('[data-testid="confirmar-limpar-origem"]') as HTMLButtonElement).click();
+        expect(confirmar).toHaveBeenCalled();
+      });
+
+      it('a reconexão é real: o evento `habilidadesMudou` disparado pelo `FichaHabilidades` de verdade (não uma chamada direta a `mudarHabilidades`) deixa a oferta pendente', () => {
+        const alvo = montar(dadosExperimentoComOrigem, 'Espécime', 42, true, true);
+        alvo.fixture.componentRef.setInput('abaStatusInicial', 'habilidades');
+        alvo.fixture.detectChanges();
+
+        const fichaHabilidades = alvo.fixture.debugElement.query(By.directive(FichaHabilidades));
+        expect(fichaHabilidades).toBeTruthy();
+
+        fichaHabilidades.triggerEventHandler('habilidadesMudou', [peculiaridade]);
+
+        expect(alvo.fixture.componentInstance['habilidadesPendentesPeculiaridade']()).toEqual([peculiaridade]);
+      });
     });
   });
 

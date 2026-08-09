@@ -1,5 +1,5 @@
 import { ClasseEnum } from '../../enums';
-import { EnergiaCalcularDto, LimiteEnergiaCalcularDto, VidaCalcularDto } from './agente.dtos';
+import { EnergiaCalcularDto, LimiteEnergiaCalcularDto, SaudeClasseDto, SaudeClasseObterDto, VidaCalcularDto } from './agente.dtos';
 
 /**
  * Coeficientes de saúde por classe. Vida e Energia seguem a mesma forma:
@@ -99,4 +99,21 @@ export function calcularEnergia(dto: EnergiaCalcularDto): number {
  */
 export function calcularLimiteEnergia(dto: LimiteEnergiaCalcularDto): number {
   return ehCivil(dto.classe) ? dto.destreza : dto.destreza * 2;
+}
+
+/**
+ * Base de Vida/Energia da classe e quanto cada uma sobe por Nível/atributo — sem aplicar
+ * Nível nem Vigor/Destreza. Para o passo // CLASSE do assistente de criação, antes do
+ * jogador escolher atributos (ver `SaudeClasseDto`).
+ */
+export function obterSaudeClasse(dto: SaudeClasseObterDto): SaudeClasseDto {
+  const coeficientes = SAUDE_POR_CLASSE[dto.classe];
+  return {
+    vidaBase: coeficientes.vidaBase,
+    vidaPorNivel: coeficientes.vidaPorNivel,
+    vidaPorVigor: coeficientes.vidaPorVigor,
+    energiaBase: coeficientes.energiaBase,
+    energiaPorNivel: coeficientes.energiaPorNivel,
+    energiaPorDestreza: coeficientes.energiaPorDestreza,
+  };
 }

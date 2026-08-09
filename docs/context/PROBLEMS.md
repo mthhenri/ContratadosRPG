@@ -173,8 +173,6 @@
   arquivo de configuração, para que `npm test` volte a ser confiável).
 - **Desde:** descoberto na verificação final do ajuste da barra de filtros do inventário (2026-08-05).
 
----
-
 ## Resolvidos
 
 Itens resolvidos **saem daqui**. O relato da correção fica no [`HISTORY.md`](HISTORY.md), junto da

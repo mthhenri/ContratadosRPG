@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 
 import { ArquetipoEnum, ClasseEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
@@ -12,8 +12,8 @@ import { CampanhaService } from '../../../campanha/campanha.service';
 
 /**
  * Prova o acervo de fichas (m3-28, `/fichas`): lista todas as fichas do usuário (com e sem
- * campanha), cria uma ficha solta pelo assistente reusado, e move fichas entre o acervo e uma
- * campanha via o menu de ações de cada cartão.
+ * campanha), navega pro guia de criação campanha-less em `/fichas/nova`, e move fichas entre o
+ * acervo e uma campanha via o menu de ações de cada cartão.
  */
 describe('FichaAcervo', () => {
   function fichaResumo(overrides: Partial<FichaResumoDto> = {}): FichaResumoDto {
@@ -78,9 +78,12 @@ describe('FichaAcervo', () => {
       ],
     });
 
+    const router = TestBed.inject(Router);
+    const navegar = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
     const fixture = TestBed.createComponent(FichaAcervo);
     fixture.detectChanges();
-    return { fixture, raiz: fixture.nativeElement as HTMLElement, fichaService, campanhaService };
+    return { fixture, raiz: fixture.nativeElement as HTMLElement, fichaService, campanhaService, navegar };
   }
 
   it('carrega e lista as fichas do acervo', () => {
@@ -119,43 +122,16 @@ describe('FichaAcervo', () => {
     expect(raiz.querySelector('.acervo__cartao-link')?.getAttribute('href')).toBe('/fichas/42');
   });
 
-  it('abre o assistente e cria a ficha sem campanhaId', () => {
-    const { fixture, raiz, fichaService } = montar();
+  it('"Criar ficha" navega pro guia de criação campanha-less, sem criar de imediato', () => {
+    const { raiz, fichaService, navegar } = montar();
     const botaoCriar = Array.from(raiz.querySelectorAll('button')).find((botao) =>
       botao.textContent?.includes('Criar ficha'),
     ) as HTMLButtonElement;
+
     botaoCriar.click();
-    fixture.detectChanges();
-    expect(raiz.querySelector('app-ficha-criar-dialog')).not.toBeNull();
 
-    fixture.componentInstance['criarFicha']({
-      opcoes: {
-        nome: 'Novo agente',
-        classe: ClasseEnum.COMBATENTE,
-        arquetipo: null,
-        nivel: 0,
-        prestigio: 0,
-        atributos: {
-          destreza: 1,
-          forca: 1,
-          luta: 1,
-          pontaria: 1,
-          vigor: 1,
-          intelecto: 1,
-          medicina: 1,
-          sentidos: 1,
-          social: 1,
-          vontade: 1,
-        },
-        maestria: null,
-      },
-    });
-
-    expect(fichaService.criarFicha).toHaveBeenCalledWith(
-      expect.objectContaining({ nome: 'Novo agente' }),
-    );
-    const dtoEnviado = fichaService.criarFicha.mock.calls[0][0];
-    expect(dtoEnviado).not.toHaveProperty('campanhaId');
+    expect(navegar).toHaveBeenCalledWith(['/fichas', 'nova']);
+    expect(fichaService.criarFicha).not.toHaveBeenCalled();
   });
 
   it('mostra o menu de ações mesmo sem campanhas nem ficha atribuída (duplicar/excluir sempre disponíveis)', () => {
