@@ -58,9 +58,15 @@ Cloudflare Pages           Render (Web Service)          Supabase
 > `/health` não consulta o banco e o Knex conecta sob demanda, então o backend sobe mesmo sem
 > nenhuma query.
 >
-> **Heads-up M2:** quando as primeiras queries entrarem (M2), o Postgres do Supabase exige
-> **SSL** e as **migrations** passam a rodar no deploy — isso entra no M2 (config de SSL no
-> Knex + migration no build), não agora.
+> **Migrations rodam no build (desde o `P-017`).** O `buildCommand` do Render encadeia
+> `npm run db:migrate --workspace=backend` depois de compilar — toda migration pendente aplica
+> sozinha a cada deploy, contra o Supabase de produção, com as mesmas `DB_*` do passo 2. Isso só
+> é seguro porque a convenção de migration do projeto (proibição #7) proíbe `DEFAULT` e coluna
+> `NOT NULL` sem valor: a versão do código **anterior** ao deploy continua rodando contra o schema
+> **novo** por alguns segundos (build acontece antes do processo antigo ser substituído) sem
+> quebrar. Antes do `P-017`, migration era um passo manual pós-deploy — foi esquecido na `m3-61`
+> (`0012 - Ficha cor.sql`) e derrubou toda leitura/escrita de ficha em produção com `column "cor"
+> does not exist` até ser corrigido.
 
 ---
 
@@ -76,7 +82,7 @@ conecta ao Git e reimplanta no push.
    |--------------------|----------------------------------------------------------|
    | **Root Directory** | *(vazio — raiz do repo; o symlink do workspace `shared` depende disso)* |
    | **Runtime**        | Node                                                     |
-   | **Build Command**  | `npm install && npm run build --workspace=backend`       |
+   | **Build Command**  | `npm install && npm run build --workspace=backend && npm run db:migrate --workspace=backend` |
    | **Start Command**  | `npm run start:prod --workspace=backend`                 |
    | **Auto-Deploy**    | **On** (reimplanta no push à `master`)                   |
    | **Health Check Path** | `/health`                                             |
@@ -155,7 +161,7 @@ conecta ao Git e reimplanta no push.
 ## Checklist rápido
 
 - [ ] Supabase criado; credenciais do banco copiadas para as `DB_*`
-- [ ] Render: Build `npm install && npm run build --workspace=backend`, Start `start:prod`, Auto-Deploy On, Health `/health`
+- [ ] Render: Build `npm install && npm run build --workspace=backend && npm run db:migrate --workspace=backend`, Start `start:prod`, Auto-Deploy On, Health `/health`
 - [ ] Render: envs preenchidas; `JWT_SECRETO` forte; **sem** `NODE_ENV=production`; `APP_FRONTEND_ORIGEM` = URL das Pages
 - [ ] `environment.production.ts` com o `apiBase` da URL do Render (commitado)
 - [ ] Cloudflare Pages conectado ao Git; **Production branch = `master`**; output `frontend/dist/frontend/browser`

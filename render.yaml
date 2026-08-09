@@ -8,8 +8,11 @@ services:
     runtime: node
     plan: free
     # rootDir é a raiz do repositório: `npm install` instala os 3 workspaces (o postinstall
-    # compila o shared, do qual o backend depende) antes de compilar o backend.
-    buildCommand: npm install && npm run build --workspace=backend
+    # compila o shared, do qual o backend depende) antes de compilar o backend. `db:migrate`
+    # roda por último, contra o Supabase de produção (DB_* já disponíveis no build) — migrations
+    # nunca têm DEFAULT nem coluna NOT NULL sem valor (proibição #7), então rodar antes do código
+    # novo assumir tráfego é seguro para a versão anterior ainda em pé (P-017).
+    buildCommand: npm install && npm run build --workspace=backend && npm run db:migrate --workspace=backend
     startCommand: npm run start:prod --workspace=backend
     healthCheckPath: /health
     # Auto-deploy nativo no push à master (padrão do Render; explícito aqui por clareza).
