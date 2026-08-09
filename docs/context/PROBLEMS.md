@@ -257,31 +257,12 @@
   `custoAquisicaoFragmento`/`CUSTO_ENERGIA_MAXIMA_MODULO` para cobrar só no acoplamento.
 - **Desde:** reportado pelo dono em 2026-08-09.
 
-### P-017 — Migration `0012` (coluna `cor`) nunca rodou em produção · `CONTORNADO` · deploy
-
-- **Sintoma:** abrir qualquer ficha em produção (ex.: `/painel/1/ficha/8`) dava toast "erro
-  interno no servidor". O log do Render mostrava `column "cor" does not exist` na query de
-  `ficha.repository.ts` (`SELECT id, campanha_id, usuario_id, nome, cor, dados FROM ficha`).
-- **Causa:** a `m3-61` trouxe `backend/src/database/migrations/0012 - Ficha cor.sql` (`ALTER TABLE
-  ficha ADD COLUMN cor VARCHAR`), mas o deploy nativo (Render/Cloudflare puxando do Git) nunca
-  incluiu `npm run db:migrate --workspace=backend` no `buildCommand` — aplicar migration em
-  produção sempre foi um passo manual, e dessa vez ficou pendente. Toda leitura/escrita de ficha
-  quebrava, não só a 8.
-- **Contorno:** o `buildCommand` do `render.yaml` agora encadeia
-  `npm run db:migrate --workspace=backend` depois do build (ver `docs/DEPLOY.md`), então toda
-  migration pendente aplica sozinha a cada deploy daqui pra frente. Isso resolve a **causa raiz**
-  (a lacuna no pipeline), mas a migration `0012` especificamente só aplica em produção quando este
-  commit for mergeado em `master` e o Render reimplantar — até lá, ou se o merge demorar, rodar
-  manualmente `npm run db:migrate --workspace=backend` de uma máquina com as credenciais `DB_*` de
-  produção (o Render free tier não tem Shell).
-- **Correção:** confirmar, após o merge, que o Render reimplantou com a migration `0012` aplicada
-  (log de build sem erro, `/painel/1/ficha/8` abrindo) — só então mover este item para
-  `Resolvidos`.
-- **Desde:** `m3-61` (migration nasceu ali); descoberto e diagnosticado em 2026-08-09.
-
 ## Resolvidos
 
 Itens resolvidos **saem daqui**. O relato da correção fica no [`HISTORY.md`](HISTORY.md), junto da
 task que a fez.
+
+- **P-017** — migration `0012` (coluna `cor`) nunca rodou em produção. Resolvido em 2026-08-09,
+  ver `HISTORY.md`.
 
 *(Nenhum item foi resolvido desde a criação deste arquivo em 2026-08-01.)*
