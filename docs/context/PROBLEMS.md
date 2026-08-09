@@ -173,6 +173,21 @@
   arquivo de configuração, para que `npm test` volte a ser confiável).
 - **Desde:** descoberto na verificação final do ajuste da barra de filtros do inventário (2026-08-05).
 
+### P-012 — Descrição de habilidade corta sem aviso no seletor · `ABERTO` · frontend/CSS
+
+- **Sintoma:** no seletor de habilidades
+  ([ficha-habilidade-seletor.component.scss:311](../../frontend/src/app/modules/ficha/componentes/ficha-habilidade-seletor/ficha-habilidade-seletor.component.scss#L311)),
+  `&__opcao-desc` usa `-webkit-line-clamp: 2` sem `text-overflow: ellipsis`. Habilidades com
+  descrição mais longa têm o texto cortado no meio da palavra/frase, sem "…" nem qualquer sinal de
+  que falta conteúdo. Fica mais evidente no mobile (card mais estreito cabe menos texto por linha),
+  mas algumas habilidades com descrição longa cortam mesmo no desktop.
+- **Causa:** clamp de 2 linhas fixo aplicado a um campo de tamanho variável, sem reticências nem
+  affordance de "ver mais".
+- **Contorno:** nenhum.
+- **Correção:** não determinada — candidatos: adicionar `text-overflow: ellipsis` (mitiga mas não
+  resolve), permitir expandir a descrição, ou rever o clamp por breakpoint.
+- **Desde:** reportado pelo dono em 2026-08-09.
+
 ## Resolvidos
 
 Itens resolvidos **saem daqui**. O relato da correção fica no [`HISTORY.md`](HISTORY.md), junto da
