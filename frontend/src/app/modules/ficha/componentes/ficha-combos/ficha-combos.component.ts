@@ -64,6 +64,8 @@ export class FichaCombos {
   readonly habilidadesDisponiveis = input<readonly FichaHabilidadeDto[]>([]);
   /** Dono/mestre edita; para os demais é só leitura + executar. */
   readonly editavel = input(false);
+  /** Cor de identidade visual da ficha (m3-61) — repassada à bandeja de dados ao executar um passo. */
+  readonly cor = input<string | null>(null);
 
   /** Emite a lista inteira após qualquer mutação — a página persiste. */
   readonly combosMudou = output<readonly FichaComboDto[]>();
@@ -149,6 +151,7 @@ export class FichaCombos {
             rotulo: `${passo.nome} (${preset.nome})`,
             formula: executado.formula,
             resultado: executado.resultado,
+            corFicha: this.cor(),
           });
           if (executado.energiaGasta > 0) {
             this.energiaGasta.emit(executado.energiaGasta);

@@ -33,12 +33,16 @@
     }
   }
 
+  // Total/crítico usam a cor de identidade da FICHA (m3-61), não o accent do viewer — cai no
+  // accent (`var(--accent)`) quando a ficha não tem `--cor-ficha` definida (fallback explícito,
+  // fichas antigas sem quebra). Não confundir com `--accent` puro: os dados escolhidos/pool
+  // continuam no accent do viewer (o "tema" da mesa), só total/crítico ganham a cor da ficha.
   &__total {
     font-family: var(--font-mono);
     font-weight: 700;
     font-size: 44px;
     line-height: 1;
-    color: var(--accent);
+    color: var(--cor-ficha, var(--accent));
     display: inline-flex;
     flex-direction: column;
     gap: 5px;
@@ -46,8 +50,8 @@
     // Crítico (m3-30): brilho no número — destaque maior quando bate crítico ou dobra o dano.
     &--critico {
       text-shadow:
-        0 0 16px color-mix(in srgb, var(--accent) 80%, transparent),
-        0 0 5px color-mix(in srgb, var(--accent) 60%, transparent);
+        0 0 16px color-mix(in srgb, var(--cor-ficha, var(--accent)) 80%, transparent),
+        0 0 5px color-mix(in srgb, var(--cor-ficha, var(--accent)) 60%, transparent);
     }
   }
 
@@ -57,7 +61,7 @@
     font-weight: 700;
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
-    color: var(--accent);
+    color: var(--cor-ficha, var(--accent));
     text-shadow: none;
   }
 
@@ -128,10 +132,10 @@
     font-family: var(--font-mono);
     font-size: 14px;
     font-weight: 700;
-    color: var(--accent);
+    color: var(--cor-ficha, var(--accent));
     text-transform: uppercase;
     letter-spacing: var(--tracking-label);
-    text-shadow: 0 0 10px color-mix(in srgb, var(--accent) 70%, transparent);
+    text-shadow: 0 0 10px color-mix(in srgb, var(--cor-ficha, var(--accent)) 70%, transparent);
   }
 
   &__legenda {

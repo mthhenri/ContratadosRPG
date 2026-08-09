@@ -29,7 +29,7 @@
               <code class="bandeja__formula">{{ entrada.formula }}</code>
             }
 
-            <app-resultado-rolagem [resultado]="entrada.resultado" />
+            <app-resultado-rolagem [resultado]="entrada.resultado" [corFicha]="entrada.corFicha" />
 
             @if (!entrada.semAutoSumir) {
               <span class="bandeja__barra" aria-hidden="true"></span>

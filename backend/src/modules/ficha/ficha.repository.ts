@@ -46,16 +46,17 @@ export class FichaRepository extends BaseRepository {
    */
   async criarFicha(dto: FichaInternoCriarDto): Promise<FichaCriadaDto> {
     const [fichaCriada] = await this.executarConsulta<FichaCriadaDto>(
-      `INSERT INTO ficha (campanha_id, usuario_id, tipo_ficha_id, nome, dados, created_date, updated_date, is_deleted)
+      `INSERT INTO ficha (campanha_id, usuario_id, tipo_ficha_id, nome, cor, dados, created_date, updated_date, is_deleted)
        SELECT :campanhaId, :usuarioId,
               (SELECT id FROM tipo_ficha WHERE codigo = :tipo AND is_deleted = false),
-              :nome, :dados::jsonb, NOW(), NOW(), false
-       RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, dados`,
+              :nome, :cor, :dados::jsonb, NOW(), NOW(), false
+       RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, dados`,
       {
         campanhaId: dto.campanhaId,
         usuarioId: dto.usuarioId,
         tipo: dto.tipo,
         nome: dto.nome,
+        cor: dto.cor,
         dados: JSON.stringify(dto.dados),
       },
     );
@@ -65,7 +66,7 @@ export class FichaRepository extends BaseRepository {
   /** Recupera a ficha ativa pelo `id` (ou `null`) — inclui posse/campanha para a checagem de permissão. */
   async recuperarPorId(dto: FichaRecuperarDto): Promise<FichaRecuperadaDto | null> {
     const [fichaEncontrada] = await this.executarConsulta<FichaRecuperadaDto>(
-      `SELECT id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, dados
+      `SELECT id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, dados
        FROM ficha
        WHERE id = :id AND is_deleted = false`,
       { id: dto.id },
@@ -277,10 +278,10 @@ export class FichaRepository extends BaseRepository {
   async alterarFicha(dto: FichaInternoAlterarDto): Promise<FichaRecuperadaDto> {
     const [fichaAlterada] = await this.executarConsulta<FichaRecuperadaDto>(
       `UPDATE ficha
-       SET nome = :nome, dados = :dados::jsonb, updated_date = NOW()
+       SET nome = :nome, cor = :cor, dados = :dados::jsonb, updated_date = NOW()
        WHERE id = :id AND is_deleted = false
-       RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, dados`,
-      { id: dto.id, nome: dto.nome, dados: JSON.stringify(dto.dados) },
+       RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, dados`,
+      { id: dto.id, nome: dto.nome, cor: dto.cor ?? null, dados: JSON.stringify(dto.dados) },
     );
     return fichaAlterada;
   }
@@ -301,7 +302,7 @@ export class FichaRepository extends BaseRepository {
       `UPDATE ficha
        SET campanha_id = :campanhaId, updated_date = NOW()
        WHERE id = :id AND is_deleted = false
-       RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, dados`,
+       RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, dados`,
       { id: dto.id, campanhaId: dto.campanhaId },
     );
     return fichaAtribuida;

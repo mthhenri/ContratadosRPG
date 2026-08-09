@@ -49,6 +49,7 @@ describe('mesclarFicha', () => {
     campanhaId: 14,
     usuarioId: 51,
     nome,
+    cor: null,
     dados: dados(parcial),
   });
 

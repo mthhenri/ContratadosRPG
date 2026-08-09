@@ -1,5 +1,72 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-09 — `m3-61`: cor de identidade visual por ficha
+
+Fechou o item mais antigo da fila do backlog (`m3-53`/`m3-61`/`m3-62`): dono ou mestre agora
+escolhem uma cor por ficha, e as rolagens daquele personagem aparecem coloridas com ela — na
+bandeja de dados, no histórico e no feed "Rolagens Recentes" do painel de campanha, tanto via REST
+quanto ao vivo por WebSocket. Migration `0012 - Ficha cor.sql`: coluna `ficha.cor` (`VARCHAR`
+nullable, sem `DEFAULT`) ao lado de `nome` — nunca dentro do JSONB `dados`.
+
+**Threading de ponta a ponta, sem tocar no gateway.** `cor` entra nos DTOs de operação que já
+carregam `nome` (`FichaCriarDto`/`FichaCriadaDto`/`FichaAlterarDto`/`FichaAlteradaDto`/
+`FichaRecuperadaDto`) e no `INSERT`/`SELECT`/`UPDATE` de `FichaRepository`, mesmo padrão relacional
+de `nome`. A `FichaService` valida o formato (hex de 6 dígitos, `#RRGGBB`) como regra de negócio —
+**não** como `class-validator`: o projeto não liga `ValidationPipe` (decisão vigente, §5 do
+CONTEXT.md) e DTOs continuam `interface readonly`, então a validação estrutural do item 3 da spec
+virou um método privado (`validarCor`) em vez de decorator. O ponto central é
+`RolagemRepository.colunasResumo()`: soma `ficha.cor AS "corFicha"` na mesma query que já resolve
+`nomeFicha`/`nomeAutor` via `INNER JOIN ficha` — o campo "pega carona" no `RolagemResumoDto` que já
+trafega tanto no REST quanto no evento `rolagem:registrada`, sem mudar `RolagemService` nem o
+gateway.
+
+**Token novo, independente do `--accent`.** `--cor-ficha` (+ `--cor-ficha-dim`/`--cor-ficha-border`
+via `color-mix()`) documentado em `DESIGN.md`: nunca ganha valor em `_tokens.scss` (só
+`[style.--cor-ficha]` inline por instância), e todo consumo lê `var(--cor-ficha, var(--accent))` —
+ficha sem cor cai no accent de quem visualiza. `ResultadoRolagem` ganhou `input() corFicha` e seta a
+própria `--cor-ficha` no container (self-contido, funciona tanto na bandeja quanto no histórico sem
+depender de um ancestral já ter setado a variável); só `__total`/`__critico-badge`/`__critico`
+trocaram de `--accent` — o pool de dados e os controles da tela continuam no accent do viewer. Os
+quatro chamadores ficha-scoped que jogam resultado na bandeja (`FichaVisualizacao`, `FichaRolagens`
+via `FichaRolagensPainel`, `FichaInventario`, `FichaCombos` — este último sem consumidor no
+template ainda, mas atualizado por completude) ganharam `input() cor` e passam `corFicha` a cada
+`bandeja.mostrar(...)`. `HistoricoRolagensSidebar` lê `item.corFicha` por linha.
+
+**Cabeçalho da ficha.** Swatch `<input type="color">` embrulhado em `FormControl` (mesmo padrão de
+`configuracoes-tema.component`) ao lado do avatar, visível só quando `ajustavelAmplo()` (mesmo gate
+do Codinome); sem `cor` definida, o picker nasce no hex de fábrica do tema (`#d53030`) sem persistir
+sozinho — só emite `ajusteCor` quando o dono/mestre efetivamente escolhe uma. `ajusteCor` segue o
+padrão de `ajusteNome`: `visualizar.page.html`/`detalhe.page.html` ligam no mesmo
+`FichaEdicaoService.ajustarCor`, que agora inclui `cor` no `PUT /ficha/:id` debounced.
+
+**Guia de criação.** A spec previa o swatch no `FichaCriarDialog` "hoje" e no Passo 01 do guia
+"quando `m3-57` existir" — mas `FichaCriarDialog` não existe mais no código (aposentado em
+2026-08-07) e `m3-57` já tinha fechado antes desta task. O swatch entrou direto no Passo 01 //
+BASE (`criar.page.html`), ao lado do Codinome, seguindo o idioma nativo do arquivo (`atualizar()` +
+`(input)`, sem Reactive Forms — o arquivo inteiro não usa) em vez do padrão FormControl do item 5.
+`construirFichaInicial` (`ficha-padrao.ts`) passou a devolver `{ nome, cor, dados }`; `criar()` já
+espalhava `...resultado` no `POST /ficha`, então `cor` chegou de graça.
+
+**Duplicar herda a cor.** Não estava na spec, mas `duplicarFicha` já clona `nome` (com sufixo " –
+cópia") — deixar `cor` de fora criaria uma inconsistência nova entre os dois campos relacionais
+irmãos; a duplicação agora repassa `fichaOriginal.cor` para o `criarFicha` interno.
+
+**Verificação.** `shared` (557), `backend` (170) e `frontend` (802) passaram; lint limpo nos
+arquivos tocados. Sem Docker disponível no ambiente desta sessão, o Postgres 16 nativo do container
+serviu de banco (`service postgresql start` + `createdb`) — mesmas 12 migrations, incluindo a nova.
+Aplicação real dirigida por Playwright em 1920×1080 e 360×800: ficha criada com cor via `POST
+/ficha` nasceu com o swatch já preenchido; troca pelo picker persistiu (`GET /ficha/:id` confirmou
+o novo hex); ficha sem cor mostrou o swatch no padrão de fábrica sem quebrar o resto da tela;
+navegar entre uma ficha com cor e uma sem cor, na mesma aba, provou que o `FormControl` resincroniza
+por ficha (sem herdar o valor da anterior). Uma rolagem de `3d6` na ficha azul (`#3a86ff`) resultou
+no total pintado em `rgb(58, 134, 255)` na bandeja **e** no histórico (`getComputedStyle`,
+não só inspeção visual); a mesma rolagem numa ficha sem cor caiu em `rgb(213, 48, 48)` — o
+`--accent` de fábrica —, confirmando o fallback. O picker/gatilho de tema (`--accent`) permaneceu
+vermelho em ambas as telas, provando que os dois tokens não se pisam. O Passo 01 do guia renderizou
+o swatch em 1920×1080 e 360×800 sem overflow, seguindo a mesma densidade dos demais campos
+(`.campo__controle`, 42px de altura — igual ao Codinome ao lado, nenhuma regressão de alvo de
+toque).
+
 ## 2026-08-08 — Guia de criação: remove a vaga extra de Experimento no passo Habilidades
 
 Pedido direto do autor logo após a `m3-64`: o passo Habilidades já garante a todo agente (inclusive

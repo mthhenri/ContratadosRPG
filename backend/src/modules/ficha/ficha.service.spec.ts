@@ -165,6 +165,7 @@ describe('FichaService', () => {
     campanhaId: 3,
     usuarioId: usuarioDono.sub,
     nome: 'Agente Alfa',
+    cor: null,
     dados: criarDados(),
   };
 
@@ -214,6 +215,7 @@ describe('FichaService', () => {
         usuarioId: usuarioDono.sub,
         tipo: TipoFichaEnum.JOGADOR,
         nome: 'Agente Alfa',
+        cor: null,
         // m3-10: o backend grava o snapshot de Vida/Energia máximas na criação.
         dados: comSnapshot(criarDados()),
       });
@@ -679,6 +681,7 @@ describe('FichaService', () => {
           usuarioId: usuarioDono.sub,
           tipo: TipoFichaEnum.JOGADOR,
           nome: 'Solta',
+          cor: null,
           dados: comSnapshot(criarDados()),
         });
         expect(campanhaGateway.emitirFichaCriada).not.toHaveBeenCalled();
@@ -1430,6 +1433,7 @@ describe('FichaService', () => {
         usuarioId: usuarioDono.sub,
         tipo: TipoFichaEnum.JOGADOR,
         nome: 'Agente Alfa (cópia)',
+        cor: null,
         dados: comSnapshot(criarDados()),
       });
       expect(resultado).toBe(fichaClonada);

@@ -1,7 +1,8 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-08 · **Última decisão registrada:** a `m3-64` incorporou ao guia os
-> pacotes iniciais de habilidades e Nível/Prestígio exatos, inclusive para fichas avulsas
+> **Última revisão:** 2026-08-09 · **Última decisão registrada:** a `m3-61` deu à ficha uma cor de
+> identidade visual própria (`--cor-ficha`, independente do `--accent` de tema por usuário), que
+> colore suas rolagens onde quer que apareçam
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -16,10 +17,10 @@
 
 Nenhuma task de milestone aberto está explicitamente encadeada; a fila do backlog abaixo é a
 referência. O trio do guia de criação (`m3-57` base, `m3-58` melhorias de nível, `m3-59`
-equipamento inicial) e o complemento `m3-64` **concluíram** — as specs estão em
-`docs/specs/done/`; o que o guia faz hoje de ponta a ponta está descrito na seção 4, em "Guia de
-criação de ficha". A `m3-64` resolveu o antigo `P-012`: o pacote inicial agora é uma regra pura em
-`shared/regras/agente` e tem consumidor obrigatório no guia.
+equipamento inicial), o complemento `m3-64` e a `m3-61` (cor de ficha) **concluíram** — as specs
+estão em `docs/specs/done/`; o que o guia faz hoje de ponta a ponta está descrito na seção 4, em
+"Guia de criação de ficha". A `m3-64` resolveu o antigo `P-012`: o pacote inicial agora é uma regra
+pura em `shared/regras/agente` e tem consumidor obrigatório no guia.
 
 `m2-18`/`m2-19`/`m2-20`/`m2-21` fecharam a frente de redesenho do painel de campanhas —
 `/painel/:id` tem layout dedicado para mestre e para jogador. Fica **em aberto, por decisão do
@@ -31,7 +32,6 @@ só adaptou o visual de desktop).
 | Spec | Frente | O que é |
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m3-61` | ficha | cor de tema por ficha |
 | `m3-62` | ficha | imagem/avatar da ficha (blob storage: **Cloudflare R2**, fixado na spec) |
 
 Milestones ainda não abertos: `m4-ficha-criatura-npc`, `m5-guia-missao`, `m6-gestao-usuarios-papeis`.
@@ -63,7 +63,7 @@ nenhuma task recente, ver `PROBLEMS.md` `P-009`.
 | M0 | Fundação (workspaces, docs, Docker, `core/`, CI, deploy) | **concluído** |
 | M1 | Calculadora com paridade | **concluído no código** (`m1-01`…`m1-20`). Restam 2 passos **operacionais** de plataforma — ver `PROBLEMS.md` `P-006` |
 | M2 | Auth + Campanhas | **concluído**, incluindo o redesenho do painel (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`; `m2-18` lista, `m2-19` detalhe/mestre, `m2-20` detalhe/jogador, `m2-21` abas + Rolagens na lateral + menu de ficha do jogador) |
-| M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; guia de criação completo (`m3-57`/`m3-58`/`m3-59` — base, melhorias de nível, equipamento inicial); faltam `m3-53` e `m3-61`/`m3-62` |
+| M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; guia de criação completo (`m3-57`/`m3-58`/`m3-59` — base, melhorias de nível, equipamento inicial); cor de identidade por ficha pronta (`m3-61`); faltam `m3-53`/`m3-62` |
 | M4 | Ficha de Criatura/NPC | não iniciado |
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | não iniciado |
@@ -205,7 +205,11 @@ navegação no rodapé** (não empilhamento de colunas) — por breakpoint real 
 `modo`; em `'compacto'` a barra some com os destinos que não existem nesse modo.
 
 Rolagem de dados: gramática v4, presets, teste de atributo, dano de item, iniciativa automática,
-calculadora flutuante e **histórico persistido** com visibilidade `PUBLICA`/`PRIVADA`.
+calculadora flutuante e **histórico persistido** com visibilidade `PUBLICA`/`PRIVADA`. Cada ficha
+tem uma **cor de identidade** própria (`m3-61`, coluna `ficha.cor`, swatch no cabeçalho —
+`ajustavelAmplo()`), independente do `--accent` de tema por usuário: colore o total/crítico de toda
+rolagem daquela ficha (bandeja de dados, histórico, feed "Rolagens Recentes" do painel de
+campanha), via REST e WebSocket; sem cor definida, cai no `--accent` de quem visualiza.
 
 ### Guia de criação de ficha — `frontend/src/app/modules/ficha/paginas/criar/`
 
@@ -220,7 +224,7 @@ progressivo que nunca antecipa classe/Nível/dinheiro antes da escolha real —,
 como padrão e podem ser sobrescritas manualmente. Ao final, `POST /ficha` sai sem a chave
 `campanhaId` quando a ficha é avulsa e
 o guia termina em `/fichas/:id`, não em `/painel/.../ficha/:id`. Passos: **01 Base** (dono, só
-mestre — não aparece sem campanha —, + codinome) · **02 Classe** (classe/arquétipo, bônus fixo de
+mestre — não aparece sem campanha —, + codinome + cor de identidade, `m3-61`) · **02 Classe** (classe/arquétipo, bônus fixo de
 atributos, Habilidade Inicial, Saúde base sem Nível/atributos ainda) · **03 Novo agente** (motivo
 de entrada + médias de Nível/Prestígio pré-calculadas da campanha, `calcularNovoAgente`, memorial
 de cálculo e sobrescrita exata; sem campanha, valores exatos informados diretamente)
@@ -262,6 +266,9 @@ antiga confirmada.
 
 "Terminal de Contenção" dark-first com **troca em runtime** (`TemaService`: presets + color picker
 com trava de contraste). Tokens CSS + preset PrimeNG + Tailwind apontando para os tokens.
+`--cor-ficha` (`m3-61`) é um token **separado**, por personagem, não por usuário — nunca ganha
+valor fixo em `_tokens.scss`, sempre `[style.--cor-ficha]` inline por instância; ver "Ficha de
+jogador" acima e `docs/design/DESIGN.md`.
 
 ### Infraestrutura
 

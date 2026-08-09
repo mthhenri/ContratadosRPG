@@ -105,6 +105,8 @@ export class FichaRolagens {
   readonly podeRolar = input(false);
   /** Dano C. a C./Furtivo atuais — expandem os atalhos `corpo`/`furtivo` na rolagem avulsa. */
   readonly atalhosDano = input<{ readonly corpo?: string | null; readonly furtivo?: string | null }>({});
+  /** Cor de identidade visual da ficha (m3-61) — repassada à bandeja de dados em cada rolagem. */
+  readonly cor = input<string | null>(null);
 
   /** Emite a lista inteira após qualquer mutação — a página persiste. */
   readonly rolagensMudou = output<readonly FichaRolagemDto[]>();
@@ -424,7 +426,7 @@ export class FichaRolagens {
       nivel: this.nivel(),
     });
     if (resultado) {
-      this.bandeja.mostrar({ rotulo: 'Rolagem rápida', formula, resultado });
+      this.bandeja.mostrar({ rotulo: 'Rolagem rápida', formula, resultado, corFicha: this.cor() });
       this.rolagemFeita.emit({ rotulo: 'Rolagem rápida', formula, resultado });
     }
   }
@@ -456,7 +458,12 @@ export class FichaRolagens {
     if (!executado) {
       return;
     }
-    this.bandeja.mostrar({ rotulo: executado.rotulo, formula: executado.formula, resultado: executado.resultado });
+    this.bandeja.mostrar({
+      rotulo: executado.rotulo,
+      formula: executado.formula,
+      resultado: executado.resultado,
+      corFicha: this.cor(),
+    });
     this.rolagemFeita.emit({ rotulo: executado.rotulo, formula: executado.formula, resultado: executado.resultado });
     if (executado.energiaGasta > 0) {
       this.energiaGasta.emit(executado.energiaGasta);

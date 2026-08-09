@@ -55,6 +55,12 @@ export interface RolagemResumoDto {
   readonly visibilidade: RolagemVisibilidadeEnum;
   readonly resultado: ResultadoRolagemDto;
   readonly createdDate: string;
+  /**
+   * Cor de identidade visual da ficha autora (m3-61) — "pega carona" no mesmo `JOIN ficha` que já
+   * resolve `nomeFicha` (`RolagemRepository`). `null` sem cor definida: quem exibe cai no
+   * `--accent` de quem visualiza (`var(--cor-ficha, var(--accent))`).
+   */
+  readonly corFicha: string | null;
 }
 
 /**

@@ -51,7 +51,7 @@
       } @else {
         <ul class="historico-rolagens__lista">
           @for (item of itens(); track item.id) {
-            <li class="historico-rolagens__item">
+            <li class="historico-rolagens__item" [style.--cor-ficha]="item.corFicha">
               <header class="historico-rolagens__item-cabecalho">
                 <span class="historico-rolagens__rotulo">{{ item.rotulo }}</span>
                 <span class="historico-rolagens__data">{{ item.createdDate | date: 'dd/MM HH:mm' }}</span>
@@ -62,7 +62,7 @@
                   <span class="historico-rolagens__privada">privada</span>
                 }
               </div>
-              <app-resultado-rolagem [resultado]="item.resultado" />
+              <app-resultado-rolagem [resultado]="item.resultado" [corFicha]="item.corFicha" />
             </li>
           }
         </ul>

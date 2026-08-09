@@ -11,6 +11,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 import {
   ArquetipoEnum,
@@ -142,6 +143,14 @@ interface GrupoFragmentoPortado {
 
 /** Lembrete da fórmula da DT — exibido como chip informativo no card de Atributos (como no protótipo). */
 const FORMULA_DT = 'DT = 10 + NÍVEL + ATR×2';
+
+/**
+ * Valor exibido no `<input type="color">` do cabeçalho (m3-61) enquanto a ficha não tem `cor`
+ * definida — o picker nativo não representa "sem cor". Mesmo hex do `--accent`/`--vida` de fábrica
+ * (`_tokens.scss`) — só o ponto de partida do picker, não persiste sozinho (a ficha só ganha cor
+ * quando o dono/mestre efetivamente escolhe uma).
+ */
+const COR_FICHA_PADRAO = '#d53030';
 
 /**
  * Aba da ficha (m3-11). **Combate** (m3-37) absorveu **Rolagens** — hoje hospeda os stats de
@@ -364,6 +373,7 @@ export interface AjusteClasse {
   selector: 'app-ficha-visualizacao',
   imports: [
     NgTemplateOutlet,
+    ReactiveFormsModule,
     HoldRepeat,
     Icone,
     FichaSanidade,
@@ -385,6 +395,14 @@ export class FichaVisualizacao {
   readonly nome = input.required<string>();
   /** Documento de jogo da ficha a exibir. */
   readonly dados = input.required<FichaJogadorDadosDto>();
+
+  /**
+   * Cor de identidade visual da ficha (m3-61) — coluna relacional, ao lado de `nome`, **não**
+   * confundir com o `--accent` de tema (por usuário, `TemaService`). `null`/ausente: sem cor
+   * definida, cai no accent de quem visualiza. Alimenta o swatch do cabeçalho e é repassada a toda
+   * rolagem desta ficha (bandeja de dados, histórico, feed da campanha).
+   */
+  readonly cor = input<string | null>(null);
 
   /**
    * Habilita os passos − / + de Vida e Energia direto na leitura — ajuste rápido do estado em jogo,
@@ -447,6 +465,9 @@ export class FichaVisualizacao {
 
   /** Novo Codinome (relacional — fora do `dados`) — a página persiste `ficha.nome`. */
   readonly ajusteNome = output<string>();
+
+  /** Nova cor de identidade visual (m3-61, relacional — fora do `dados`) — a página persiste `ficha.cor`. */
+  readonly ajusteCor = output<string | null>();
 
   /** Novo Nível/Prestígio — a página persiste (Nível também aplica o delta de progressão às máximas). */
   readonly ajusteCampoDados = output<AjusteCampoDados>();
@@ -918,7 +939,25 @@ export class FichaVisualizacao {
 
   protected readonly formulaDt = FORMULA_DT;
 
+  /**
+   * Cor do color picker do cabeçalho (m3-61) — `<input type="color">` embrulhado em Reactive Forms
+   * (mesmo padrão de `configuracoes-tema.component`). Nativamente o picker não representa "sem
+   * cor": sem `cor()` definida, mostra {@link COR_FICHA_PADRAO} até o dono/mestre escolher uma —
+   * o documento continua `null` enquanto o formulário não emitir (a ficha só ganha cor quando
+   * alguém realmente escolhe uma no picker).
+   */
+  protected readonly corFichaForm = new FormControl<string>(COR_FICHA_PADRAO, { nonNullable: true });
+
   constructor() {
+    // Sincroniza o picker com a cor persistida (troca de ficha exibida, ex.: `CampanhaDetalhe`).
+    effect(() => {
+      const corAtual = this.cor() ?? COR_FICHA_PADRAO;
+      if (this.corFichaForm.value !== corAtual) {
+        this.corFichaForm.setValue(corAtual, { emitEvent: false });
+      }
+    });
+    this.corFichaForm.valueChanges.subscribe((cor) => this.ajusteCor.emit(cor));
+
     // Ao abrir a digitação direta (Vida/Energia ou um derivado), foca e seleciona para trocar já.
     effect(() => {
       if (this.editandoVitalidade() !== null) {
@@ -1292,7 +1331,7 @@ export class FichaVisualizacao {
       // mantém o **menor** — então a fórmula exibida troca `kh1`→`kl1` e mostra a contagem real, em vez de
       // exibir `kh1` (mantém o maior) numa rolagem que na verdade manteve o menor.
       const formulaExibida = atributo <= 0 ? `${2 - atributo}d20kl1cm1 + PROF${sufixo}` : formula;
-      this.bandeja.mostrar({ rotulo: campo.nome, formula: formulaExibida, resultado });
+      this.bandeja.mostrar({ rotulo: campo.nome, formula: formulaExibida, resultado, corFicha: this.cor() });
       this.registrarRolagem({ rotulo: campo.nome, formula: formulaExibida, resultado });
     }
   }
@@ -1313,7 +1352,7 @@ export class FichaVisualizacao {
       nivel: this.dados().nivel,
     });
     if (resultado) {
-      this.bandeja.mostrar({ rotulo: linha.rotulo, formula: linha.bruto, resultado });
+      this.bandeja.mostrar({ rotulo: linha.rotulo, formula: linha.bruto, resultado, corFicha: this.cor() });
       this.registrarRolagem({ rotulo: linha.rotulo, formula: linha.bruto, resultado });
     }
   }

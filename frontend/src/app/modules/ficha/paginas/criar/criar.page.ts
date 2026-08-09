@@ -37,7 +37,10 @@ interface FortificacaoRascunho { readonly nome: string; readonly descricao: stri
 type ChaveAtributo = keyof FichaAtributosDto;
 interface DinheiroRolado { readonly dados: readonly number[]; readonly inicial: number; readonly rolado: boolean; }
 interface EstadoGuiaCriacao {
-  readonly passo: number; readonly nome: string; readonly usuarioId: number | null;
+  readonly passo: number; readonly nome: string;
+  /** Cor de identidade visual (m3-61), escolhida junto do Codinome — `null` sem cor definida. */
+  readonly cor: string | null;
+  readonly usuarioId: number | null;
   readonly classe: ClasseEnum | null; readonly arquetipo: ArquetipoEnum | null;
   /** Escolha do jogador para os pontos "à escolha" do bônus de atributo do perfil (Engenheiro/
    * Assassino/Acadêmico: 1 posição; Experimento Híbrido: 2 posições) — mesma ordem de
@@ -69,6 +72,7 @@ const MAESTRIA_PONTOS_CUSTO = 2;
 function normalizarEstado(estado: EstadoGuiaCriacao): EstadoGuiaCriacao {
   return {
     ...estado,
+    cor: estado.cor ?? null,
     formacoesCustomizadas: estado.formacoesCustomizadas ?? estado.origem.formacao.map((item) => item.bonus === null && item.texto.trim().length > 0),
     bonusEscolhido: estado.bonusEscolhido ?? [],
     dinheiro: { ...estado.dinheiro, rolado: estado.dinheiro.rolado ?? estado.dinheiro.dados.length === 4 },
@@ -122,7 +126,7 @@ export class FichaCriar {
   private readonly sairDialog = viewChild<ElementRef<HTMLDialogElement>>('sairDialog');
   /** Vaga com o seletor do sistema aberto (`null` = fechado) — m3-58. */
   protected readonly vagaAberta = signal<TipoVagaMelhoria | null>(null);
-  protected readonly estado = signal<EstadoGuiaCriacao>({ passo: 0, nome: '', usuarioId: null, classe: null,
+  protected readonly estado = signal<EstadoGuiaCriacao>({ passo: 0, nome: '', cor: null, usuarioId: null, classe: null,
     arquetipo: null, bonusEscolhido: [], motivo: MotivoEntradaAgenteEnum.MORTE_OU_INICIO_DO_ZERO, mediaNivel: 0, mediaPrestigio: 0,
     sobrescreverProgressao: this.campanhaId === null, nivelManual: 0, prestigioManual: 0,
     pacoteHabilidadesId: null,
@@ -473,7 +477,7 @@ export class FichaCriar {
     if (this.criando() || !e.classe || !e.dinheiro.rolado) return;
     this.criando.set(true);
     this.erro.set('');
-    const resultado = construirFichaInicial({ nome: e.nome, classe: e.classe, arquetipo: e.arquetipo, bonusEscolhido: e.bonusEscolhido, nivel: this.nivelInicial(), prestigio: this.prestigioInicial(), atributos: e.atributos, maestria: e.maestria, identidade: { personalidade: e.personalidade, origem: this.temPeculiaridade() ? null : e.origem }, dinheiro: this.totalDinheiro(), anotacoes: this.novoAgente().recebeAmaldicoadoPeloPassado ? 'Amaldiçoado pelo Passado' : '', habilidadesExtras: this.habilidadesDoNivel(), equipamentoInicial: e.kit });
+    const resultado = construirFichaInicial({ nome: e.nome, cor: e.cor, classe: e.classe, arquetipo: e.arquetipo, bonusEscolhido: e.bonusEscolhido, nivel: this.nivelInicial(), prestigio: this.prestigioInicial(), atributos: e.atributos, maestria: e.maestria, identidade: { personalidade: e.personalidade, origem: this.temPeculiaridade() ? null : e.origem }, dinheiro: this.totalDinheiro(), anotacoes: this.novoAgente().recebeAmaldicoadoPeloPassado ? 'Amaldiçoado pelo Passado' : '', habilidadesExtras: this.habilidadesDoNivel(), equipamentoInicial: e.kit });
     const campanhaId = this.campanhaId;
     this.fichaService.criarFicha({ ...(campanhaId !== null ? { campanhaId } : {}), usuarioId: this.ehMestre() ? (e.usuarioId ?? undefined) : undefined, ...resultado })
       .pipe(finalize(() => this.criando.set(false)))

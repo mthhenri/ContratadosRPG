@@ -32,6 +32,7 @@ export class RolagemRepository extends BaseRepository {
   private colunasResumo(): string {
     return `rolagem.id, rolagem.ficha_id AS "fichaId", rolagem.campanha_id AS "campanhaId",
             rolagem.usuario_id AS "usuarioId", usuario.nome AS "nomeAutor", ficha.nome AS "nomeFicha",
+            ficha.cor AS "corFicha",
             rolagem.rotulo, tipo_rolagem_visibilidade.codigo AS visibilidade,
             rolagem.resultado, rolagem.created_date AS "createdDate"`;
   }

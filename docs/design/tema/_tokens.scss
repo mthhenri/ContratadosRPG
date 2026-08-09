@@ -24,6 +24,15 @@
   --accent-dim: color-mix(in srgb, var(--accent) 12%, transparent);
   --accent-border: color-mix(in srgb, var(--accent) 40%, transparent);
 
+  /* --- Cor de ficha (identidade visual POR PERSONAGEM — m3-61) ---
+     Independente do --accent (que é a cor de tema por USUÁRIO, TemaService): `--cor-ficha` NUNCA
+     ganha valor aqui — é sempre setada inline por instância ([style.--cor-ficha]), no componente
+     que já tem a ficha em escopo. As variantes dim/border seguem a mesma receita do accent, mas o
+     fallback (`var(--cor-ficha, var(--accent))`) cai no accent de quem visualiza quando a ficha não
+     tem cor definida — sem quebra para fichas existentes. */
+  --cor-ficha-dim: color-mix(in srgb, var(--cor-ficha, var(--accent)) 12%, transparent);
+  --cor-ficha-border: color-mix(in srgb, var(--cor-ficha, var(--accent)) 40%, transparent);
+
   /* --- Cores semânticas de domínio (mesma chroma/lightness, só varia o matiz) --- */
   /* Vida é vermelho FIXO da identidade — não acompanha a troca de `--accent` (que só
      coincide com este valor na base padrão). Usado pela stat Vida nas abas agente/descanso. */

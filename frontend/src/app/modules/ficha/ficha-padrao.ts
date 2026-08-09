@@ -36,6 +36,8 @@ export const ATRIBUTOS_BASE_PADRAO: FichaAtributosDto = {
 /** Escolhas cruciais coletadas no assistente de criação, antes de montar a ficha. */
 export interface OpcoesFichaInicial {
   readonly nome: string;
+  /** Cor de identidade visual (m3-61), escolhida no Passo 01 // BASE. `null`/ausente = sem cor. */
+  readonly cor?: string | null;
   readonly classe: ClasseEnum;
   readonly arquetipo: ArquetipoEnum | null;
   readonly nivel: number;
@@ -95,7 +97,7 @@ function restringir(valor: number, minimo: number, maximo: number): number {
  */
 export function construirFichaInicial(
   opcoes: OpcoesFichaInicial,
-): { readonly nome: string; readonly dados: FichaJogadorDadosDto } {
+): { readonly nome: string; readonly cor: string | null; readonly dados: FichaJogadorDadosDto } {
   const classe = opcoes.classe;
   const limites = obterLimitesClasse({ classe });
   const arquetipo = ehClasseBase(classe) ? opcoes.arquetipo : null;
@@ -137,6 +139,7 @@ export function construirFichaInicial(
 
   return {
     nome: opcoes.nome.trim() || 'Novo agente',
+    cor: opcoes.cor ?? null,
     dados: {
       classe,
       arquetipo,

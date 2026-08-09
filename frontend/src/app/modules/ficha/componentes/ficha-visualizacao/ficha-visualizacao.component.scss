@@ -1247,6 +1247,28 @@
     border: 1px solid var(--border-strong);
   }
 
+  // Cor de identidade visual da ficha (m3-61) — swatch compacto ao lado do avatar; o picker nativo
+  // já mostra a cor atual em si mesmo (sem amostra separada, ao contrário de `.config-swatch`).
+  &__cor {
+    flex: none;
+    display: flex;
+    cursor: pointer;
+  }
+
+  &__cor-entrada {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--accent-border);
+    }
+  }
+
   &__texto {
     display: flex;
     flex-direction: column;

@@ -16,6 +16,13 @@ import type { DadosRoladosDto, ResultadoRolagemDto } from '@contratados-rpg/shar
 })
 export class ResultadoRolagem {
   readonly resultado = input.required<ResultadoRolagemDto>();
+  /**
+   * Cor de identidade visual da ficha autora (m3-61) — seta `--cor-ficha` inline no container
+   * próprio, para o componente funcionar sozinho (bandeja) sem depender de um ancestral já ter
+   * setado a variável. `null`/ausente: sem `--cor-ficha` no estilo, o SCSS cai no `--accent` de
+   * quem visualiza (`var(--cor-ficha, var(--accent))`).
+   */
+  readonly corFicha = input<string | null | undefined>(null);
 
   /**
    * Resultados a exibir (m3-46): sem repetição `#N`, é só o próprio resultado; com `subResultados`

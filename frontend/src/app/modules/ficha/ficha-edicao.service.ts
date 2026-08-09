@@ -98,7 +98,11 @@ export class FichaEdicaoService {
         switchMap(() => {
           const fichaAtual = this.ficha()!;
           return this.fichaService
-            .alterarFicha(this.obterFichaId(), { nome: fichaAtual.nome, dados: fichaAtual.dados })
+            .alterarFicha(this.obterFichaId(), {
+              nome: fichaAtual.nome,
+              cor: fichaAtual.cor,
+              dados: fichaAtual.dados,
+            })
             .pipe(
               catchError(() => {
                 this.edicaoPendente.set(false);
@@ -351,6 +355,16 @@ export class FichaEdicaoService {
       return;
     }
     this.ficha.set({ ...fichaAtual, nome });
+    this.agendarPersistencia();
+  }
+
+  /** Cor de identidade visual (m3-61, relacional — fora do `dados`) — mesmo padrão de {@link ajustarNome}. */
+  ajustarCor(cor: string | null): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) {
+      return;
+    }
+    this.ficha.set({ ...fichaAtual, cor });
     this.agendarPersistencia();
   }
 

@@ -23,6 +23,8 @@ export interface EntradaBandeja {
   /** Fórmula executada (texto), exibida como legenda mono (m3-30). Ausente quando quem rola não a informa. */
   readonly formula?: string;
   readonly resultado: ResultadoRolagemDto;
+  /** Cor de identidade visual da ficha autora (m3-61) — repassada ao `ResultadoRolagem` aninhado. */
+  readonly corFicha?: string | null;
   /** `true` durante a transição de saída (fade + colapso) — a entrada só sai do array ao fim dela. */
   readonly saindo: boolean;
   /**
@@ -67,6 +69,7 @@ export class BandejaDadosService {
     readonly rotulo: string;
     readonly formula?: string;
     readonly resultado: ResultadoRolagemDto;
+    readonly corFicha?: string | null;
     readonly semAutoSumir?: boolean;
   }): number {
     this.contador += 1;
