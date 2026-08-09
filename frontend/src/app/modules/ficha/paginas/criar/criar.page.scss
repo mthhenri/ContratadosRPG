@@ -151,7 +151,8 @@
 
   .campo__cor-inline {
     flex: none;
-    width: 40px;
+    width: 80px; // o dobro do quadradinho original — mais fácil de mirar e de ler a cor
+    height: 42px; // mesma altura de `.campo__controle` (min-height 42px) — caixa única, sem degrau
     padding: 6px;
     background: none;
     border: 1px solid var(--border-strong);
