@@ -1,5 +1,25 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-09 — `P-017`: migration `0012` (coluna `cor`) nunca rodou em produção
+
+O dono reportou "erro interno no servidor" ao abrir `/painel/1/ficha/8`. O log do Render
+identificou a causa: `column "cor" does not exist` na query de `FichaRepository.recuperarPorId`
+— toda leitura/escrita de ficha em produção estava quebrada, não só a 8. A migration `0012 - Ficha
+cor.sql` (coluna `ficha.cor`, `m3-61`, entrada abaixo) tinha sido commitada e deployada junto do
+código novo, mas nunca foi **aplicada** ao Postgres de produção (Supabase): o deploy nativo
+(Render/Cloudflare puxando do Git) nunca incluiu `npm run db:migrate --workspace=backend` — sempre
+foi um passo manual, e dessa vez ficou pendente.
+
+**Causa raiz corrigida no pipeline, não só no incidente.** `render.yaml`: `buildCommand` passou a
+encadear `npm run db:migrate --workspace=backend` depois de `nest build`, então toda migration
+pendente aplica sozinha a cada deploy daqui pra frente — seguro porque a convenção de migration do
+projeto (proibição #7) proíbe `DEFAULT`/`NOT NULL` sem valor, então o código da versão anterior
+continua rodando contra o schema novo sem quebrar durante a janela do deploy. `docs/DEPLOY.md`
+atualizado (nota do M2 trocada pela explicação do `buildCommand` novo, tabela do Web Service manual
+e checklist). Mergeado (`PR #18`) e confirmado pelo dono: Render reimplantou aplicando a `0012`,
+`/painel/1/ficha/8` abre normal e o picker de cor (`m3-61`) funciona de ponta a ponta em produção.
+Sem mudança de código de aplicação — só pipeline de deploy e documentação.
+
 ## 2026-08-09 — `m3-61`: cor de identidade visual por ficha
 
 Fechou o item mais antigo da fila do backlog (`m3-53`/`m3-61`/`m3-62`): dono ou mestre agora
