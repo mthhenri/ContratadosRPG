@@ -484,6 +484,8 @@ export class FichaInventario {
   readonly proficiencia = input<number | null>(null);
   /** Nível atual — idem `proficiencia` (m3-45). */
   readonly nivel = input(0);
+  /** Cor de identidade visual da ficha (m3-61) — repassada à bandeja de dados ao rolar dano de item. */
+  readonly cor = input<string | null>(null);
 
   /** Emite o inventário inteiro após qualquer mutação — a página persiste. */
   readonly inventarioMudou = output<FichaInventarioDto>();
@@ -1969,7 +1971,12 @@ export class FichaInventario {
       nivel: this.nivel(),
     });
     if (resultado) {
-      this.bandeja.mostrar({ rotulo: item.nomeExibido, formula: item.danoFormula, resultado });
+      this.bandeja.mostrar({
+        rotulo: item.nomeExibido,
+        formula: item.danoFormula,
+        resultado,
+        corFicha: this.cor(),
+      });
       this.rolagemFeita.emit({ rotulo: item.nomeExibido, formula: item.danoFormula, resultado });
     }
   }

@@ -90,6 +90,7 @@ describe('FichaVisualizar', () => {
       campanhaId: opcoes.semCampanhaNaRota ? (opcoes.fichaCampanhaId ?? null) : 9,
       usuarioId: 7,
       nome: 'Kane',
+      cor: null,
       dados,
     };
     const fichaService = {
@@ -297,6 +298,7 @@ describe('FichaVisualizar', () => {
       expect(fichaService.alterarFicha).toHaveBeenCalledTimes(1);
       expect(fichaService.alterarFicha).toHaveBeenCalledWith(42, {
         nome: 'Kane',
+        cor: null,
         dados: { ...dados, estado: { ...dados.estado, vidaAtual: 2 } },
       });
     } finally {
@@ -324,6 +326,7 @@ describe('FichaVisualizar', () => {
       expect(fichaService.alterarFicha).toHaveBeenCalledTimes(1);
       expect(fichaService.alterarFicha).toHaveBeenCalledWith(42, {
         nome: 'Kane',
+        cor: null,
         dados: { ...dados, estado: { ...dados.estado, sequelas: novasSequelas } },
       });
     } finally {
@@ -347,6 +350,7 @@ describe('FichaVisualizar', () => {
       expect(fichaService.alterarFicha).toHaveBeenCalledTimes(1);
       expect(fichaService.alterarFicha).toHaveBeenCalledWith(42, {
         nome: 'Kane',
+        cor: null,
         dados: {
           ...dados,
           estado: { ...dados.estado, morrendo: true, machucado: false, inconsciente: false },
@@ -375,6 +379,7 @@ describe('FichaVisualizar', () => {
       expect(fichaService.alterarFicha).toHaveBeenCalledTimes(1);
       expect(fichaService.alterarFicha).toHaveBeenCalledWith(42, {
         nome: 'Kane',
+        cor: null,
         dados: { ...dados, habilidades: novasHabilidades },
       });
     } finally {
@@ -392,6 +397,7 @@ describe('FichaVisualizar', () => {
       campanhaId: 9,
       usuarioId: 7,
       nome: 'Kane',
+      cor: null,
       dados: {
         ...dados,
         classe,
@@ -873,6 +879,7 @@ describe('FichaVisualizar', () => {
       campanhaId: 9,
       usuarioId: 7,
       nome: 'Kane Ferido',
+      cor: null,
       dados: { ...dados, estado: { ...dados.estado, vidaAtual: 1 } },
     };
     fichaAlterada$.next(remota);

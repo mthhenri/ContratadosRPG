@@ -34,6 +34,13 @@ export interface FichaCriarDto {
   readonly campanhaId?: number;
   readonly usuarioId?: number;
   readonly nome: string;
+  /**
+   * Cor de identidade visual da ficha (m3-61) — hex de 6 dígitos (`#rrggbb`) ou `null`/ausente
+   * (cai no `--accent` de quem visualiza). Coluna relacional, ao lado de `nome` — nunca dentro do
+   * JSONB `dados`. **Não confundir com `--accent`**: aquele é a cor de tema por **usuário**
+   * (`TemaService`); esta é a identidade visual da **ficha**, igual para todo mundo que a vê.
+   */
+  readonly cor?: string | null;
   readonly dados: FichaJogadorDadosDto;
 }
 
@@ -46,6 +53,8 @@ export interface FichaCriadaDto {
   readonly campanhaId: number | null;
   readonly usuarioId: number;
   readonly nome: string;
+  /** Cor de identidade visual (m3-61) — ver {@link FichaCriarDto.cor}. */
+  readonly cor: string | null;
   readonly dados: FichaJogadorDadosDto;
 }
 
@@ -183,6 +192,8 @@ export interface FichaRecuperadaDto {
   readonly campanhaId: number | null;
   readonly usuarioId: number;
   readonly nome: string;
+  /** Cor de identidade visual (m3-61) — ver {@link FichaCriarDto.cor}. */
+  readonly cor: string | null;
   readonly dados: FichaJogadorDadosDto;
 }
 
@@ -193,6 +204,8 @@ export interface FichaRecuperadaDto {
  */
 export interface FichaAlterarDto {
   readonly nome: string;
+  /** Cor de identidade visual (m3-61) — ver {@link FichaCriarDto.cor}. Sem trava de imutabilidade. */
+  readonly cor?: string | null;
   readonly dados: FichaJogadorDadosDto;
 }
 
@@ -202,6 +215,8 @@ export interface FichaAlteradaDto {
   readonly campanhaId: number | null;
   readonly usuarioId: number;
   readonly nome: string;
+  /** Cor de identidade visual (m3-61) — ver {@link FichaCriarDto.cor}. */
+  readonly cor: string | null;
   readonly dados: FichaJogadorDadosDto;
 }
 
@@ -261,6 +276,8 @@ export interface FichaInternoCriarDto {
   readonly usuarioId: number;
   readonly tipo: TipoFichaEnum;
   readonly nome: string;
+  /** Cor de identidade visual (m3-61) — ver {@link FichaCriarDto.cor}. */
+  readonly cor: string | null;
   readonly dados: FichaJogadorDadosDto;
 }
 
@@ -271,6 +288,8 @@ export interface FichaInternoCriarDto {
 export interface FichaInternoAlterarDto {
   readonly id: number;
   readonly nome: string;
+  /** Cor de identidade visual (m3-61) — ver {@link FichaCriarDto.cor}. Ausente equivale a `null`. */
+  readonly cor?: string | null;
   readonly dados: FichaJogadorDadosDto;
 }
 

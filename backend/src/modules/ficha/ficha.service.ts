@@ -116,11 +116,13 @@ export class FichaService {
     // `duplicarFicha`, que lê `campanhaId` de uma `FichaRecuperadaDto` já tipada `number | null`).
     if (dto.campanhaId == null) {
       this.validarDadosContraRegras(dto.dados);
+      this.validarCor(dto.cor);
       return this.fichaRepositorio.criarFicha({
         campanhaId: null,
         usuarioId: usuarioAtivo.sub,
         tipo: TipoFichaEnum.JOGADOR,
         nome: dto.nome,
+        cor: dto.cor ?? null,
         dados: this.aplicarPresetIniciativa(this.aplicarSnapshotDeMaximos(dto.dados)),
       });
     }
@@ -142,12 +144,14 @@ export class FichaService {
     }
 
     this.validarDadosContraRegras(dto.dados);
+    this.validarCor(dto.cor);
 
     const fichaCriada = await this.fichaRepositorio.criarFicha({
       campanhaId: dto.campanhaId,
       usuarioId: donoId,
       tipo: TipoFichaEnum.JOGADOR,
       nome: dto.nome,
+      cor: dto.cor ?? null,
       dados: this.aplicarPresetIniciativa(this.aplicarSnapshotDeMaximos(dto.dados)),
     });
 
@@ -314,6 +318,7 @@ export class FichaService {
 
     await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
     this.validarDadosContraRegras(dto.dados);
+    this.validarCor(dto.cor);
     if (fichaEncontrada.usuarioId === usuarioAtivo.sub) {
       this.validarImutabilidadeIdentidade(fichaEncontrada.dados.identidade, dto.dados.identidade);
       this.validarContratoSomenteMestre(fichaEncontrada.dados.contrato, dto.dados.contrato);
@@ -369,6 +374,7 @@ export class FichaService {
       {
         campanhaId: fichaOriginal.campanhaId ?? undefined,
         nome: `${fichaOriginal.nome} (cópia)`,
+        cor: fichaOriginal.cor,
         dados: fichaOriginal.dados,
       },
       usuarioAtivo,
@@ -603,6 +609,21 @@ export class FichaService {
 
     this.validarFormaIdentidade(dados.identidade, dados.classe, dados.habilidades);
     this.validarContagensMunicao(dados);
+  }
+
+  /**
+   * Valida a **forma** da cor de identidade visual da ficha (m3-61, §11 camada 1): ausente/`null`
+   * é sempre válido (sem cor definida); presente, precisa ser hex de 6 dígitos (`#rrggbb`) — o
+   * mesmo formato que `<input type="color">` sempre produz no frontend. Sem trava de contraste
+   * (ao contrário do accent de tema, M1) — decisão explícita da spec, o picker é livre.
+   */
+  private validarCor(cor: string | null | undefined): void {
+    if (cor == null) {
+      return;
+    }
+    if (!/^#[0-9A-Fa-f]{6}$/.test(cor)) {
+      throw new BusinessException('Cor inválida: use o formato hexadecimal #RRGGBB');
+    }
   }
 
   /** Protege o JSONB contra saldo impossível de munição, inclusive clientes externos. */

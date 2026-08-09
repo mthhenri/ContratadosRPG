@@ -1,4 +1,4 @@
-<div class="resultado-rolagem">
+<div class="resultado-rolagem" [style.--cor-ficha]="corFicha()">
   @for (resultado of resultadosExibidos(); track $index) {
     <div class="resultado-rolagem__corpo">
       <span class="resultado-rolagem__total" [class.resultado-rolagem__total--critico]="ehCritico(resultado)">

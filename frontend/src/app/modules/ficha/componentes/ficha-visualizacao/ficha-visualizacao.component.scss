@@ -1237,14 +1237,34 @@
   gap: 14px;
   margin-bottom: 16px;
 
+  // Cor de identidade visual da ficha (m3-61): a borda do avatar carrega a cor (onde a foto do
+  // agente entra, m3-62) — `var(--cor-ficha, var(--border-strong))` mantém a moldura neutra de
+  // sempre quando a ficha não tem cor definida, sem forçar um anel colorido em toda ficha antiga.
   &__avatar {
     width: 52px;
     height: 52px;
     flex: none;
+    position: relative; // ancora o <input type="color"> invisível, quando editável (--editavel)
     border-radius: var(--radius-control);
     background-color: var(--surface-2);
     background-image: repeating-linear-gradient(135deg, var(--border-strong) 0 3px, transparent 3px 9px);
-    border: 1px solid var(--border-strong);
+    border: 2px solid var(--cor-ficha, var(--border-strong));
+
+    &--editavel {
+      cursor: pointer;
+    }
+  }
+
+  // Input nativo invisível cobrindo o avatar por inteiro (editável) — clicar em qualquer ponto da
+  // caixa abre o picker; o alvo de toque já nasce 52×52, acima do mínimo de 44px, nas duas telas.
+  &__cor-entrada {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    opacity: 0;
+    cursor: pointer;
   }
 
   &__texto {

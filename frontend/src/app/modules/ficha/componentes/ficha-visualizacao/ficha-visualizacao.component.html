@@ -81,7 +81,27 @@
     <div class="ficha-visao__coluna ficha-visao__coluna--identidade">
       <section class="ficha-cartao">
         <div class="ficha-ident">
-          <span class="ficha-ident__avatar" aria-hidden="true"></span>
+          <!-- Cor de identidade visual da ficha (m3-61) — token independente do --accent do
+               viewer; colore as rolagens desta ficha na bandeja/histórico/feed da campanha.
+               A borda do próprio avatar carrega a cor (onde a foto do agente vai entrar, m3-62) —
+               editável vira o <label> do picker nativo (input cobre a caixa, invisível); sem
+               permissão é só a moldura, decorativa. -->
+          @if (ajustavelAmplo()) {
+            <label
+              class="ficha-ident__avatar ficha-ident__avatar--editavel"
+              [style.--cor-ficha]="cor()"
+              [appTooltip]="'Cor de identidade da ficha'"
+            >
+              <input
+                type="color"
+                class="ficha-ident__cor-entrada"
+                aria-label="Cor de identidade da ficha"
+                [formControl]="corFichaForm"
+              />
+            </label>
+          } @else {
+            <span class="ficha-ident__avatar" aria-hidden="true" [style.--cor-ficha]="cor()"></span>
+          }
           <div class="ficha-ident__texto">
             <span class="ficha-ident__rotulo">Agente</span>
             @if (ajustavelAmplo() && editandoIdentidade() === 'nome') {
@@ -1415,6 +1435,7 @@
             [atributos]="atributosEfetivos()"
             [proficiencia]="proficiencia()"
             [nivel]="dados().nivel"
+            [cor]="cor()"
             [apresentacao]="'dialog'"
             [compacto]="modo() === 'compacto'"
             (inventarioMudou)="ajusteInventario.emit($event)"
@@ -1452,6 +1473,7 @@
             [dados]="dados()"
             [editavel]="ajustavelAmplo()"
             [podeRolar]="podeRolar()"
+            [cor]="cor()"
             (rolagensMudou)="ajusteRolagens.emit($event)"
             (energiaGasta)="aoUtilizarHabilidade($event)"
           />

@@ -56,11 +56,33 @@ Assumindo o app Angular em `apps/web/` (ajuste ao seu layout de monorepo):
 - Superfícies: `--bg` fundo · `--surface` cards · `--surface-2` caixas internas/inputs
 - Bordas hairline: `--border` · controle: `--border-strong`
 - Texto: `--text` · `--text-dim` · `--text-mute`
-- Accent (trocável): `--accent` + `--accent-dim` (12%) + `--accent-border` (40%)
+- Accent (trocável por usuário): `--accent` + `--accent-dim` (12%) + `--accent-border` (40%)
+- Cor de ficha (por personagem, m3-61): `--cor-ficha` (só inline por instância) + `--cor-ficha-dim`
+  (12%) + `--cor-ficha-border` (40%) — ver seção dedicada abaixo
 - Semânticas: `--energy` #4c8dd0 · `--positive` #4a9d6b · `--warning` #d9a441
 - Tipografia: `--font-mono` (dados/títulos/rótulos) · `--font-sans` (corpo)
 - Forma: `--radius-card` 6px · `--radius-control` 4px
 - Densidade confortável: `--pad-card` 20px · `--gap-grid` 16px
+
+## Cor de ficha (identidade por personagem, m3-61)
+
+`--cor-ficha` é um token **independente** de `--accent`: `--accent` é a cor de tema escolhida por
+**usuário** (`TemaService`, persistida em `localStorage`, aplicada uma vez no `<html>`); `--cor-
+ficha` é a identidade visual de uma **ficha**, igual para todo mundo que olha uma rolagem daquele
+personagem — nunca substitui nem interfere no `--accent` do viewer.
+
+- **Nunca um valor global fixo no SCSS.** `--cor-ficha` não ganha valor em `_tokens.scss` — é
+  sempre setada **inline por instância** (`[style.--cor-ficha]="fichaCor()"`), no componente que já
+  tem a ficha em escopo (`ResultadoRolagem`, o item de `HistoricoRolagensSidebar`…). Isso permite
+  várias fichas com cores diferentes coexistirem na mesma tela (ex.: feed de campanha) sem colidir.
+- **Variantes dim/border já existem em `_tokens.scss`**, mesma receita do accent
+  (`--cor-ficha-dim` 12%, `--cor-ficha-border` 40%, via `color-mix()`) — não recalcule a fórmula
+  por componente.
+- **Fallback sempre explícito no consumo**: todo uso lê `var(--cor-ficha, var(--accent))` (nunca
+  `var(--cor-ficha)` sozinho) — ficha sem cor definida (`null`) cai no accent de quem visualiza,
+  comportamento de hoje, sem quebra para fichas existentes.
+- **Sem trava de contraste** (ao contrário do accent do seletor de tema, M1) — o color-picker da
+  ficha é livre.
 
 ## Scrollbar (padrão global)
 

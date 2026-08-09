@@ -161,6 +161,7 @@
     <app-ficha-visualizacao
       [fichaId]="fichaAtual.id"
       [nome]="fichaAtual.nome"
+      [cor]="fichaAtual.cor"
       [dados]="fichaAtual.dados"
       [ajustavel]="podeGerenciar()"
       [podeRolar]="podeGerenciar()"
@@ -175,6 +176,7 @@
       (ajusteResistencia)="fichaEdicao.ajustarResistencia($event)"
       (ajusteAtributos)="fichaEdicao.ajustarAtributos($event)"
       (ajusteNome)="fichaEdicao.ajustarNome($event)"
+      (ajusteCor)="fichaEdicao.ajustarCor($event)"
       (ajusteCampoDados)="fichaEdicao.ajustarCampoDados($event)"
       (ajusteClasse)="fichaEdicao.ajustarClasse($event)"
       (ajusteSanidade)="fichaEdicao.ajustarSanidade($event)"

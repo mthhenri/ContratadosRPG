@@ -59,6 +59,7 @@ describe('CampanhaDetalhe', () => {
       visibilidade: RolagemVisibilidadeEnum.PUBLICA,
       resultado: { dados: [], atributos: [], constante: 5, total: 17 },
       createdDate: new Date().toISOString(),
+      corFicha: null,
       ...sobrescritas,
     };
   }

@@ -47,6 +47,8 @@ export class FichaRolagensPainel {
   readonly editavel = input(false);
   /** `true` quando o autor pode **rolar** (m3-51) — gate do toggle e de cada passo. */
   readonly podeRolar = input(false);
+  /** Cor de identidade visual da ficha (m3-61) — repassada ao editor `FichaRolagens`. */
+  readonly cor = input<string | null>(null);
 
   /** Presets editados — a página persiste em `dados.rolagens` (m3-15). */
   readonly rolagensMudou = output<readonly FichaRolagemDto[]>();
