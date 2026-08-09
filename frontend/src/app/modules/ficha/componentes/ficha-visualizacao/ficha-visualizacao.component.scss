@@ -1247,22 +1247,43 @@
     border: 1px solid var(--border-strong);
   }
 
-  // Cor de identidade visual da ficha (m3-61) — swatch compacto ao lado do avatar; o picker nativo
-  // já mostra a cor atual em si mesmo (sem amostra separada, ao contrário de `.config-swatch`).
+  // Cor de identidade visual da ficha (m3-61) — um simples ponto de cor, discreto (não um controle
+  // com o mesmo peso visual do resto do cabeçalho); o picker nativo já mostra a cor atual em si
+  // mesmo, sem amostra separada (ao contrário de `.config-swatch`).
   &__cor {
     flex: none;
+    align-self: center;
     display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
+
+    // O ponto visual fica pequeno (discreto) nas duas telas; o alvo de toque cresce só no mobile,
+    // sem inflar a aparência (mesmo padrão de `.config-custom__picker`, m1-13).
+    @include bp.mobile {
+      min-width: bp.$alvo-toque;
+      min-height: bp.$alvo-toque;
+    }
   }
 
   &__cor-entrada {
-    width: 28px;
-    height: 28px;
+    width: 18px;
+    height: 18px;
     padding: 0;
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    overflow: hidden; // clipa o swatch nativo (quadrado) ao círculo do border-radius
     cursor: pointer;
+    transition: border-color 0.15s ease;
+
+    &::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+
+    &::-webkit-color-swatch {
+      border: 0;
+    }
 
     &:hover {
       border-color: var(--accent-border);

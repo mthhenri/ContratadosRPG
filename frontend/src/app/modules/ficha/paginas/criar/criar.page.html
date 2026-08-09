@@ -111,15 +111,17 @@
                   <input class="campo__controle" [value]="estado().nome" (input)="atualizar({ nome: valor($event) })" />
                   <small class="campo__ajuda">{{ campanhaId !== null ? 'Nome operacional exibido na ficha e no esquadrão.' : 'Nome operacional exibido na ficha.' }}</small>
                 </label>
-                <label class="campo">
+                <label class="campo campo--cor">
                   <span class="campo__rotulo">Cor de identidade</span>
-                  <input
-                    type="color"
-                    class="campo__controle campo__controle--cor"
-                    [value]="estado().cor ?? '#d53030'"
-                    (input)="atualizar({ cor: valor($event) })"
-                  />
-                  <small class="campo__ajuda">Colore as rolagens deste agente na bandeja de dados, no histórico e no feed da campanha.</small>
+                  <span class="campo__cor-linha">
+                    <input
+                      type="color"
+                      class="campo__controle campo__controle--cor"
+                      [value]="estado().cor ?? '#d53030'"
+                      (input)="atualizar({ cor: valor($event) })"
+                    />
+                    <small class="campo__ajuda">Colore as rolagens deste agente.</small>
+                  </span>
                 </label>
                 @if (ehMestre()) {
                   <label class="campo">
