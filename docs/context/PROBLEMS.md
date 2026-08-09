@@ -173,6 +173,90 @@
   arquivo de configuração, para que `npm test` volte a ser confiável).
 - **Desde:** descoberto na verificação final do ajuste da barra de filtros do inventário (2026-08-05).
 
+### P-012 — Descrição de habilidade corta sem aviso no seletor · `ABERTO` · frontend/CSS
+
+- **Sintoma:** no seletor de habilidades
+  ([ficha-habilidade-seletor.component.scss:311](../../frontend/src/app/modules/ficha/componentes/ficha-habilidade-seletor/ficha-habilidade-seletor.component.scss#L311)),
+  `&__opcao-desc` usa `-webkit-line-clamp: 2` sem `text-overflow: ellipsis`. Habilidades com
+  descrição mais longa têm o texto cortado no meio da palavra/frase, sem "…" nem qualquer sinal de
+  que falta conteúdo. Fica mais evidente no mobile (card mais estreito cabe menos texto por linha),
+  mas algumas habilidades com descrição longa cortam mesmo no desktop.
+- **Causa:** clamp de 2 linhas fixo aplicado a um campo de tamanho variável, sem reticências nem
+  affordance de "ver mais".
+- **Contorno:** nenhum.
+- **Correção:** não determinada — candidatos: adicionar `text-overflow: ellipsis` (mitiga mas não
+  resolve), permitir expandir a descrição, ou rever o clamp por breakpoint.
+- **Desde:** reportado pelo dono em 2026-08-09.
+
+### P-013 — Habilidade "Anomalia" (Experimento Artificial) não dobra custo/efeito dos Fragmentos · `ABERTO` · shared/regras
+
+- **Sintoma:** a habilidade "Anomalia" diz "Fragmentos custam o dobro de Energia em seu uso, mas
+  têm todos os seus efeitos dobrados", mas nenhuma das duas coisas acontece nos números do agente.
+- **Causa:** a habilidade existe só como texto no catálogo
+  ([habilidades-catalogo.dados.ts:351](../../shared/src/regras/agente/habilidades-catalogo.dados.ts#L351)).
+  Nenhuma função de custo/efeito de Fragmento em `fragmento.ts` (`custoAquisicaoFragmento`,
+  `custoAcoplarFragmento`, cardápios de bônus do Potencializador) recebe ou considera se o agente
+  tem "Anomalia" — é puro texto descritivo sem motor por trás.
+- **Contorno:** nenhum — aplicação manual/narrativa pelo mestre.
+- **Correção:** não determinada — decidir onde a flag "possui Anomalia" entra no motor de
+  Fragmentos e dobrar tanto o custo em Energia quanto os valores de efeito das opções do cardápio.
+- **Desde:** reportado pelo dono em 2026-08-09.
+
+### P-014 — Label "Arquétipo" no seletor de habilidades não vira "Subclasse" para subclasses de Experimento · `ABERTO` · frontend
+
+- **Sintoma:** no seletor de habilidades e no resumo por categoria da aba Habilidades, o rótulo que
+  deveria virar "Subclasse" quando o agente é uma subclasse de Experimento (Bestial/Artificial/
+  Híbrido) continua fixo em "Arquétipo". O dono pediu o mesmo ajuste "pro civil também" — escopo
+  exato a confirmar com ele: Civil já tem grupo próprio (`id: 'civil'`, rótulo "Civil") separado de
+  "Arquétipo", não está claro qual rótulo especificamente precisa mudar nesse caso.
+- **Causa:** rótulo fixo, não deriva de `perfilClasseRotulos`/`classeBaseDeHabilidades` (que já
+  sabem diferenciar arquétipo de subclasse — ver
+  [rotulos-ficha.ts:51](../../frontend/src/app/modules/ficha/rotulos-ficha.ts#L51)). Dois pontos
+  com o mesmo texto fixo:
+  [ficha-habilidade-seletor.component.ts:20](../../frontend/src/app/modules/ficha/componentes/ficha-habilidade-seletor/ficha-habilidade-seletor.component.ts#L20)
+  (`ROTULO_ABA.arquetipo = 'Arquétipo'`) e
+  [ficha-habilidades.component.ts:56](../../frontend/src/app/modules/ficha/componentes/ficha-habilidades/ficha-habilidades.component.ts#L56)
+  (`ROTULO_FILTRO_RESUMO.arquetipo = 'Arquétipo'`, com chip estático em
+  [ficha-habilidades.component.html:37](../../frontend/src/app/modules/ficha/componentes/ficha-habilidades/ficha-habilidades.component.html#L37)).
+- **Contorno:** nenhum.
+- **Correção:** tornar o rótulo dinâmico por classe do agente (mesma lógica de
+  `perfilClasseRotulos`), trocando para "Subclasse" quando `classeBaseDeHabilidades(classe) !==
+  classe`; confirmar com o dono o que muda para Civil antes de mexer.
+- **Desde:** reportado pelo dono em 2026-08-09.
+
+### P-015 — Fragmento consumido some da Afinidade (e da redução de Energia que ela dá) · `ABERTO` · shared/regras
+
+- **Sintoma:** ao consumir um fragmento (cardápio "Consumido"), ele deveria continuar contando pra
+  Afinidade do agente — e, por consequência, contribuir pra redução de Energia nos custos dos
+  fragmentos restantes — mas atualmente não conta mais.
+- **Causa:**
+  [`listarModulosFragmentosPortados`](../../shared/src/regras/compras/fragmento.ts#L243) só soma
+  módulos de fragmentos "soltos" no inventário e "acoplados" como modificação
+  (`origemFragmento`); um fragmento consumido vira só um bônus de stat e não sobra em nenhuma das
+  duas listas, então cai fora de `calcularAfinidade` e de `aplicarReducaoAfinidade`.
+- **Contorno:** nenhum.
+- **Correção:** manter/registrar o módulo dos fragmentos já consumidos em algum lugar da ficha para
+  que `listarModulosFragmentosPortados` (ou equivalente) continue contando-os na Afinidade.
+- **Desde:** reportado pelo dono em 2026-08-09.
+
+### P-016 — Fragmento Potencializador solto no inventário consome Energia sem estar aplicado · `ABERTO` · shared/regras
+
+- **Sintoma:** o dono espera que um fragmento Potencializador só drene Energia Máxima quando for de
+  fato aplicado (acoplado) em um item/ser — parado no inventário, sem uso, não deveria custar nada.
+- **Causa:** o custo atual
+  ([`CUSTO_ENERGIA_MAXIMA_MODULO`](../../shared/src/regras/compras/fragmento.dados.ts#L22), usado
+  por `custoAquisicaoFragmento`) drena assim que o fragmento é adquirido/portado, mesmo solto —
+  além do custo separado de `custoAcoplarFragmento` cobrado depois, ao aplicar. O próprio código
+  cita a doc como fonte dessa regra ("Cada um dos módulos gasta sua Energia ao entrar em contato
+  com você", `docs/core/sistema-v4.1.0.md:1915`): o comportamento reportado como indesejado é o que
+  o documento descreve hoje. Ou seja, o pedido é uma revisão de regra, não só um bug de
+  implementação isolado.
+- **Contorno:** nenhum.
+- **Correção:** decisão do dono necessária — se a regra muda, atualizar
+  `docs/core/sistema-v4.1.0.md` §"⬥ Módulos"/"⬥ Acoplamento" e só então mexer em
+  `custoAquisicaoFragmento`/`CUSTO_ENERGIA_MAXIMA_MODULO` para cobrar só no acoplamento.
+- **Desde:** reportado pelo dono em 2026-08-09.
+
 ## Resolvidos
 
 Itens resolvidos **saem daqui**. O relato da correção fica no [`HISTORY.md`](HISTORY.md), junto da
