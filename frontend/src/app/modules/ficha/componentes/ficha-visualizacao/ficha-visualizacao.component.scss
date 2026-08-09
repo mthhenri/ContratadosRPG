@@ -1237,57 +1237,34 @@
   gap: 14px;
   margin-bottom: 16px;
 
+  // Cor de identidade visual da ficha (m3-61): a borda do avatar carrega a cor (onde a foto do
+  // agente entra, m3-62) — `var(--cor-ficha, var(--border-strong))` mantém a moldura neutra de
+  // sempre quando a ficha não tem cor definida, sem forçar um anel colorido em toda ficha antiga.
   &__avatar {
     width: 52px;
     height: 52px;
     flex: none;
+    position: relative; // ancora o <input type="color"> invisível, quando editável (--editavel)
     border-radius: var(--radius-control);
     background-color: var(--surface-2);
     background-image: repeating-linear-gradient(135deg, var(--border-strong) 0 3px, transparent 3px 9px);
-    border: 1px solid var(--border-strong);
-  }
+    border: 2px solid var(--cor-ficha, var(--border-strong));
 
-  // Cor de identidade visual da ficha (m3-61) — um simples ponto de cor, discreto (não um controle
-  // com o mesmo peso visual do resto do cabeçalho); o picker nativo já mostra a cor atual em si
-  // mesmo, sem amostra separada (ao contrário de `.config-swatch`).
-  &__cor {
-    flex: none;
-    align-self: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-
-    // O ponto visual fica pequeno (discreto) nas duas telas; o alvo de toque cresce só no mobile,
-    // sem inflar a aparência (mesmo padrão de `.config-custom__picker`, m1-13).
-    @include bp.mobile {
-      min-width: bp.$alvo-toque;
-      min-height: bp.$alvo-toque;
+    &--editavel {
+      cursor: pointer;
     }
   }
 
+  // Input nativo invisível cobrindo o avatar por inteiro (editável) — clicar em qualquer ponto da
+  // caixa abre o picker; o alvo de toque já nasce 52×52, acima do mínimo de 44px, nas duas telas.
   &__cor-entrada {
-    width: 18px;
-    height: 18px;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     padding: 0;
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    overflow: hidden; // clipa o swatch nativo (quadrado) ao círculo do border-radius
+    opacity: 0;
     cursor: pointer;
-    transition: border-color 0.15s ease;
-
-    &::-webkit-color-swatch-wrapper {
-      padding: 0;
-    }
-
-    &::-webkit-color-swatch {
-      border: 0;
-    }
-
-    &:hover {
-      border-color: var(--accent-border);
-    }
   }
 
   &__texto {

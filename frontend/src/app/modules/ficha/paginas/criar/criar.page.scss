@@ -138,7 +138,59 @@
   &__progresso-mobile { display: none; }
 }
 
-.campo { display: grid; gap: 7px; min-width: 0; margin: 0; &__rotulo { font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .11em; color: var(--text-dim); } &__controle { width: 100%; min-height: 42px; padding: 9px 11px; font: 13px var(--font-sans); color: var(--text); background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: var(--radius-control); outline: 0; transition: .15s ease; &:hover { border-color: var(--accent-border); } &:focus { border-color: var(--accent); background: var(--surface); } &--numero { font-family: var(--font-mono); font-weight: 700; } &--area { min-height: 78px; resize: vertical; } &--cor { width: 22px; height: 22px; min-height: 0; padding: 0; background: none; border: 1px solid var(--border); border-radius: 50%; overflow: hidden; cursor: pointer; &::-webkit-color-swatch-wrapper { padding: 0; } &::-webkit-color-swatch { border: 0; } &:hover { border-color: var(--accent-border); } } } &__ajuda { font: 10px var(--font-sans); color: var(--text-mute); } &__cor-linha { display: flex; align-items: center; gap: 9px; } }
+.campo { display: grid; gap: 7px; min-width: 0; margin: 0; &__rotulo { font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .11em; color: var(--text-dim); } &__controle { width: 100%; min-height: 42px; padding: 9px 11px; font: 13px var(--font-sans); color: var(--text); background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: var(--radius-control); outline: 0; transition: .15s ease; &:hover { border-color: var(--accent-border); } &:focus { border-color: var(--accent); background: var(--surface); } &--numero { font-family: var(--font-mono); font-weight: 700; } &--area { min-height: 78px; resize: vertical; } } &__ajuda { font: 10px var(--font-sans); color: var(--text-mute); } }
+
+// Codinome + cor de identidade (m3-61) juntos: no desktop a cor é um quadradinho colado no fim da
+// caixa de texto (par visual único); no mobile vira uma barra colorida abaixo do campo — nunca um
+// campo à parte. `.campo__controle--codinome` perde os cantos do lado da cor pra fechar como um
+// grupo único; `.campo__cor-inline` reusa o `<input type="color">` nativo, só a casca muda.
+.campo--codinome {
+  .campo__codinome-linha { display: flex; align-items: stretch; }
+
+  .campo__controle--codinome { flex: 1; min-width: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+
+  .campo__cor-inline {
+    flex: none;
+    width: 40px;
+    padding: 6px;
+    background: none;
+    border: 1px solid var(--border-strong);
+    border-left: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-right-radius: var(--radius-control);
+    border-bottom-right-radius: var(--radius-control);
+    cursor: pointer;
+    transition: border-color .15s ease;
+
+    &::-webkit-color-swatch-wrapper { padding: 0; }
+    &::-webkit-color-swatch { border: 0; border-radius: 2px; }
+    &:hover { border-color: var(--accent-border); }
+  }
+
+  @include bp.mobile {
+    .campo__codinome-linha { flex-direction: column; }
+
+    .campo__controle--codinome { border-radius: var(--radius-control); }
+
+    .campo__cor-inline {
+      width: 100%;
+      // Caixa real com o alvo de toque de 44px; o swatch nativo fica visualmente fino (barra),
+      // encolhido pelo padding vertical do pseudo-elemento — clicar em qualquer ponto da caixa
+      // (não só na faixa colorida) já abre o picker.
+      height: bp.$alvo-toque;
+      min-height: 0;
+      margin-top: 6px;
+      padding: 0;
+      background: none;
+      border: 0;
+      border-radius: 4px;
+
+      &::-webkit-color-swatch-wrapper { padding: 17px 0; }
+      &::-webkit-color-swatch { border-radius: 4px; }
+    }
+  }
+}
 .atributo { display: grid; grid-template-columns: auto minmax(0, 1fr) 116px; align-items: center; gap: 10px; min-height: 56px; padding: 8px 9px 8px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); &__identidade { display: grid; gap: 3px; span { font: 600 10px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; } small { font-size: 9px; color: var(--warning); } small.atributo__bonus { color: var(--accent); } } &--desvantagem { border-color: color-mix(in srgb, var(--warning) 35%, transparent); } &__maestria { flex: none; padding: 2px 6px; font: 13px var(--font-mono); line-height: 1; color: var(--text-mute); background: transparent; border: 1px solid var(--border-strong); border-radius: var(--radius-control); cursor: pointer; transition: .15s ease; &:hover:not(:disabled) { color: var(--accent); border-color: var(--accent-border); } &--ativa { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); } &:disabled { opacity: .3; cursor: not-allowed; } } }
 .stepper { display: grid; grid-template-columns: 34px 48px 34px; min-height: 36px; overflow: hidden; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control); &__botao { padding: 0; font: 18px var(--font-mono); color: var(--text-dim); background: transparent; border: 0; cursor: pointer; &:hover { color: var(--text); background: var(--accent-dim); } } &__valor { display: grid; place-items: center; font: 700 17px var(--font-mono); color: var(--text); border-inline: 1px solid var(--border); } }
 .stat { min-width: 0; padding: 10px 11px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); &__rotulo { display: block; margin-bottom: 5px; font: 9px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text-mute); } &__valor { font: 700 19px/1 var(--font-mono); } &__nota { display: block; margin-top: 4px; font: 9px var(--font-mono); color: var(--text-mute); } &--vida { border-color: var(--vida-border); .stat__valor { color: var(--vida); } } &--energia { border-color: color-mix(in srgb, var(--energy) 35%, transparent); .stat__valor { color: var(--energy); } } &--alerta { border-color: var(--accent-border); .stat__valor { color: var(--accent); } } }

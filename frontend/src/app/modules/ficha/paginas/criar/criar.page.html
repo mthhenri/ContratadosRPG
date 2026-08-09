@@ -106,22 +106,25 @@
                 <p>{{ campanhaId !== null ? 'Defina como o agente será identificado nos registros da campanha.' : 'Defina como o agente será identificado nos registros — esta ficha nasce avulsa, sem campanha.' }}</p>
               </div>
               <div class="guia__campos">
-                <label class="campo">
+                <label class="campo campo--codinome">
                   <span class="campo__rotulo">Codinome / Agente</span>
-                  <input class="campo__controle" [value]="estado().nome" (input)="atualizar({ nome: valor($event) })" />
-                  <small class="campo__ajuda">{{ campanhaId !== null ? 'Nome operacional exibido na ficha e no esquadrão.' : 'Nome operacional exibido na ficha.' }}</small>
-                </label>
-                <label class="campo campo--cor">
-                  <span class="campo__rotulo">Cor de identidade</span>
-                  <span class="campo__cor-linha">
+                  <span class="campo__codinome-linha">
+                    <input
+                      class="campo__controle campo__controle--codinome"
+                      [value]="estado().nome"
+                      (input)="atualizar({ nome: valor($event) })"
+                    />
+                    <!-- Cor de identidade (m3-61): quadradinho no fim da caixa no desktop, barra
+                         abaixo dela no mobile (ver SCSS) — nunca um campo separado. -->
                     <input
                       type="color"
-                      class="campo__controle campo__controle--cor"
+                      class="campo__cor-inline"
+                      aria-label="Cor de identidade do agente"
                       [value]="estado().cor ?? '#d53030'"
                       (input)="atualizar({ cor: valor($event) })"
                     />
-                    <small class="campo__ajuda">Colore as rolagens deste agente.</small>
                   </span>
+                  <small class="campo__ajuda">{{ campanhaId !== null ? 'Nome operacional exibido na ficha e no esquadrão.' : 'Nome operacional exibido na ficha.' }} A cor identifica as rolagens deste agente.</small>
                 </label>
                 @if (ehMestre()) {
                   <label class="campo">
