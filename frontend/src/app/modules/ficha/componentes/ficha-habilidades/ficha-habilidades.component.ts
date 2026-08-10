@@ -111,6 +111,12 @@ export class FichaHabilidades {
   readonly amplificadores = input<readonly AmplificadorAplicadoDto[]>([]);
   /** `true` no card compacto (m2-20) — `&__lista` ganha um teto mais baixo (ver SCSS). */
   readonly compacto = input(false);
+  /**
+   * Cor de identidade visual da ficha (m3-61) — alimenta `--cor-ficha` (ver SCSS), que a categoria
+   * Personalidade usa em vez do `--accent` fixo de tema por usuário. `null`/ausente: sem cor
+   * definida, o token cai no `--accent` de quem visualiza (mesmo fallback do avatar da ficha).
+   */
+  readonly cor = input<string | null>(null);
 
   /** Emite a lista inteira após qualquer mutação — a página persiste. */
   readonly habilidadesMudou = output<readonly FichaHabilidadeDto[]>();

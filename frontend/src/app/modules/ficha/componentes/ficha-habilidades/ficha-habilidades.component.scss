@@ -293,8 +293,10 @@
       border-left-color: var(--energy);
     }
 
+    // Personalidade segue a cor de identidade da ficha (m3-61); sem cor definida, cai no --accent
+    // de quem visualiza (mesmo fallback do avatar/`--cor-ficha-*`, ver `_tokens.scss`).
     &--personalidade {
-      border-left-color: var(--accent);
+      border-left-color: var(--cor-ficha, var(--accent));
     }
 
     // Editor no próprio lugar: fica só na coluna do item sendo editado (não estica pelas duas).
@@ -327,7 +329,8 @@
     flex: 0 0 auto;
     white-space: nowrap;
 
-    // Cores por origem (só tokens do tema). Personalidade segue o accent do usuário.
+    // Cores por origem (só tokens do tema). Personalidade segue a cor da ficha, com fallback pro
+    // accent do usuário (`--cor-ficha`/`--cor-ficha-border`, ver `_tokens.scss`).
     &--classe {
       color: var(--warning);
       border-color: color-mix(in srgb, var(--warning) 40%, transparent);
@@ -344,8 +347,8 @@
     }
 
     &--personalidade {
-      color: var(--accent);
-      border-color: var(--accent-border);
+      color: var(--cor-ficha, var(--accent));
+      border-color: var(--cor-ficha-border);
     }
 
     // Habilidade Inicial (a que vem de graça do arquétipo/subclasse): preenche com a própria cor
