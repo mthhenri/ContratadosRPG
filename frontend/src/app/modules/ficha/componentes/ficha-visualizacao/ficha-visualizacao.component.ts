@@ -155,6 +155,10 @@ const FORMULA_DT = 'DT = 10 + NÍVEL + ATR×2';
  */
 const COR_FICHA_PADRAO = '#d53030';
 
+/** Avatar da ficha (m3-62) — mesmos limites validados no backend (`FichaService.alterarImagem`). */
+const TIPOS_IMAGEM_ACEITOS = ['image/jpeg', 'image/png', 'image/webp'];
+const TAMANHO_MAXIMO_IMAGEM_BYTES = 2 * 1024 * 1024;
+
 /**
  * Aba da ficha (m3-11). **Combate** (m3-37) absorveu **Rolagens** — hoje hospeda os stats de
  * combate, Resistências (m3-36), o editor de Rolagens e os Combos, todos na mesma aba; o `id`
@@ -408,6 +412,12 @@ export class FichaVisualizacao {
   readonly cor = input<string | null>(null);
 
   /**
+   * URL do avatar da ficha (m3-62) — coluna relacional, ao lado de `nome`/`cor`. `null`/ausente:
+   * sem avatar definido, cai no placeholder decorativo (a borda continua colorida por {@link cor}).
+   */
+  readonly imagemUrl = input<string | null>(null);
+
+  /**
    * Habilita os passos − / + de Vida e Energia direto na leitura — ajuste rápido do estado em jogo,
    * sem entrar em edição. A página só liga para dono/mestre; o backend revalida o `alterarFicha`.
    */
@@ -471,6 +481,17 @@ export class FichaVisualizacao {
 
   /** Nova cor de identidade visual (m3-61, relacional — fora do `dados`) — a página persiste `ficha.cor`. */
   readonly ajusteCor = output<string | null>();
+
+  /**
+   * Novo avatar escolhido pelo `<input type="file">` do cabeçalho (m3-62, relacional — fora do
+   * `dados`) — a página envia via `FormData` (`FichaService.alterarImagem`) e atualiza
+   * `imagemUrl` **imediatamente**, sem passar pelo `agendarPersistencia` debounced (o upload em
+   * si já é a persistência).
+   */
+  readonly ajusteImagem = output<File>();
+
+  /** Remove o avatar da ficha (m3-62) — mesmo modelo imediato de {@link ajusteImagem}. */
+  readonly removerImagem = output<void>();
 
   /** Novo Nível/Prestígio — a página persiste (Nível também aplica o delta de progressão às máximas). */
   readonly ajusteCampoDados = output<AjusteCampoDados>();
@@ -950,6 +971,32 @@ export class FichaVisualizacao {
    * alguém realmente escolhe uma no picker).
    */
   protected readonly corFichaForm = new FormControl<string>(COR_FICHA_PADRAO, { nonNullable: true });
+
+  /** Mensagem de validação do avatar (m3-62) — feedback imediato no client; o backend revalida. */
+  protected readonly erroImagem = signal<string | null>(null);
+
+  /**
+   * Valida o avatar escolhido **no client** (tipo/tamanho) antes de enviar — feedback imediato,
+   * sem esperar o round-trip; a validação autoritativa continua no backend
+   * (`FichaService.alterarImagem`). Mesmos limites de `FichaService` (backend): jpeg/png/webp, 2MB.
+   */
+  protected aoSelecionarImagem(evento: Event): void {
+    const arquivo = (evento.target as HTMLInputElement).files?.[0] ?? null;
+    (evento.target as HTMLInputElement).value = '';
+    if (!arquivo) {
+      return;
+    }
+    if (!TIPOS_IMAGEM_ACEITOS.includes(arquivo.type)) {
+      this.erroImagem.set('Formato inválido: use JPEG, PNG ou WEBP');
+      return;
+    }
+    if (arquivo.size > TAMANHO_MAXIMO_IMAGEM_BYTES) {
+      this.erroImagem.set('Imagem maior que o limite permitido (2MB)');
+      return;
+    }
+    this.erroImagem.set(null);
+    this.ajusteImagem.emit(arquivo);
+  }
 
   constructor() {
     // Sincroniza o picker com a cor persistida (troca de ficha exibida, ex.: `CampanhaDetalhe`).

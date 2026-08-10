@@ -40,11 +40,19 @@
           <li>
             <div class="acervo__cartao">
               <a class="acervo__cartao-link" [routerLink]="['/fichas', item.id]">
-                <span class="acervo__cartao-nome">{{ item.nome }}</span>
-                <span class="acervo__cartao-meta">{{ item.classeTexto }} · Nível {{ item.nivel }}</span>
-                <span class="acervo__cartao-vitais">
-                  <span>Vida {{ item.vidaAtual }}/{{ item.vidaMaxima ?? '—' }}</span>
-                  <span>Energia {{ item.energiaAtual }}/{{ item.energiaMaxima ?? '—' }}</span>
+                <!-- Avatar da ficha (m3-62) — placeholder decorativo sem imagem definida. -->
+                <span class="acervo__cartao-avatar" aria-hidden="true">
+                  @if (item.imagemUrl; as urlImagem) {
+                    <img class="acervo__cartao-avatar-imagem" [src]="urlImagem" alt="" />
+                  }
+                </span>
+                <span class="acervo__cartao-texto">
+                  <span class="acervo__cartao-nome">{{ item.nome }}</span>
+                  <span class="acervo__cartao-meta">{{ item.classeTexto }} · Nível {{ item.nivel }}</span>
+                  <span class="acervo__cartao-vitais">
+                    <span>Vida {{ item.vidaAtual }}/{{ item.vidaMaxima ?? '—' }}</span>
+                    <span>Energia {{ item.energiaAtual }}/{{ item.energiaMaxima ?? '—' }}</span>
+                  </span>
                 </span>
               </a>
               <div class="acervo__cartao-rodape">

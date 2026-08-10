@@ -20,6 +20,7 @@ import {
   calcularVida,
 } from '@contratados-rpg/shared/regras/agente';
 import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
+import type { ArmazenamentoProvedor } from '../../core/armazenamento';
 import {
   BusinessException,
   ResourceNotFoundException,
@@ -42,8 +43,14 @@ interface FichaRepositorioDublado {
   revogarAcesso: ReturnType<typeof vi.fn>;
   listarAcessos: ReturnType<typeof vi.fn>;
   alterarFicha: ReturnType<typeof vi.fn>;
+  alterarImagem: ReturnType<typeof vi.fn>;
   excluirFicha: ReturnType<typeof vi.fn>;
   atribuirCampanha: ReturnType<typeof vi.fn>;
+}
+
+interface ArmazenamentoProvedorDublado {
+  salvarImagem: ReturnType<typeof vi.fn>;
+  excluirImagem: ReturnType<typeof vi.fn>;
 }
 
 interface CampanhaRepositorioDublado {
@@ -154,6 +161,7 @@ describe('FichaService', () => {
   let fichaRepositorio: FichaRepositorioDublado;
   let campanhaRepositorio: CampanhaRepositorioDublado;
   let campanhaGateway: CampanhaGatewayDublado;
+  let armazenamentoProvedor: ArmazenamentoProvedorDublado;
   let service: FichaService;
 
   const usuarioDono: JwtPayload = { sub: 10, login: 'agente.dono' };
@@ -166,6 +174,7 @@ describe('FichaService', () => {
     usuarioId: usuarioDono.sub,
     nome: 'Agente Alfa',
     cor: null,
+    imagemUrl: null,
     dados: criarDados(),
   };
 
@@ -181,6 +190,7 @@ describe('FichaService', () => {
       revogarAcesso: vi.fn(),
       listarAcessos: vi.fn(),
       alterarFicha: vi.fn(),
+      alterarImagem: vi.fn(),
       excluirFicha: vi.fn(),
       atribuirCampanha: vi.fn(),
     };
@@ -190,10 +200,12 @@ describe('FichaService', () => {
       emitirFichaAlterada: vi.fn(),
       emitirAcessoRevogado: vi.fn(),
     };
+    armazenamentoProvedor = { salvarImagem: vi.fn(), excluirImagem: vi.fn() };
     service = new FichaService(
       fichaRepositorio as unknown as FichaRepository,
       campanhaRepositorio as unknown as CampanhaRepository,
       campanhaGateway as unknown as CampanhaGateway,
+      armazenamentoProvedor as unknown as ArmazenamentoProvedor,
     );
   });
 
@@ -1755,6 +1767,144 @@ describe('FichaService', () => {
       );
 
       expect(fichaRepositorio.listarAcessos).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('alterarImagem', () => {
+    const arquivoJpeg = { conteudo: new Uint8Array([1, 2, 3]), mimetype: 'image/jpeg', tamanho: 1024 };
+
+    it('salva a imagem e persiste a nova imagemUrl quando a ficha ainda não tinha avatar', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue({ ...fichaPersistida, imagemUrl: null });
+      armazenamentoProvedor.salvarImagem.mockResolvedValue({ caminho: '/uploads/agentes/nova.jpg' });
+      fichaRepositorio.alterarImagem.mockResolvedValue({ imagemUrl: '/uploads/agentes/nova.jpg' });
+
+      const resultado = await service.alterarImagem({ id: 5, arquivo: arquivoJpeg }, usuarioDono);
+
+      expect(armazenamentoProvedor.salvarImagem).toHaveBeenCalledWith({
+        conteudo: arquivoJpeg.conteudo,
+        mimetype: 'image/jpeg',
+        extensao: 'jpg',
+      });
+      expect(armazenamentoProvedor.excluirImagem).not.toHaveBeenCalled();
+      expect(fichaRepositorio.alterarImagem).toHaveBeenCalledWith({
+        id: 5,
+        imagemUrl: '/uploads/agentes/nova.jpg',
+      });
+      expect(resultado).toEqual({ imagemUrl: '/uploads/agentes/nova.jpg' });
+    });
+
+    it('exclui o arquivo anterior do armazenamento ao trocar de imagem', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue({
+        ...fichaPersistida,
+        imagemUrl: '/uploads/agentes/antiga.jpg',
+      });
+      armazenamentoProvedor.salvarImagem.mockResolvedValue({ caminho: '/uploads/agentes/nova.jpg' });
+      fichaRepositorio.alterarImagem.mockResolvedValue({ imagemUrl: '/uploads/agentes/nova.jpg' });
+
+      await service.alterarImagem({ id: 5, arquivo: arquivoJpeg }, usuarioDono);
+
+      expect(armazenamentoProvedor.excluirImagem).toHaveBeenCalledWith({
+        caminho: '/uploads/agentes/antiga.jpg',
+      });
+    });
+
+    it('lança BusinessException para MIME fora de jpeg/png/webp, sem tocar o armazenamento', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+
+      await expect(
+        service.alterarImagem(
+          { id: 5, arquivo: { ...arquivoJpeg, mimetype: 'image/gif' } },
+          usuarioDono,
+        ),
+      ).rejects.toThrow(BusinessException);
+
+      expect(armazenamentoProvedor.salvarImagem).not.toHaveBeenCalled();
+      expect(fichaRepositorio.alterarImagem).not.toHaveBeenCalled();
+    });
+
+    it('lança BusinessException quando o arquivo excede 2MB', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+
+      await expect(
+        service.alterarImagem(
+          { id: 5, arquivo: { ...arquivoJpeg, tamanho: 2 * 1024 * 1024 + 1 } },
+          usuarioDono,
+        ),
+      ).rejects.toThrow(BusinessException);
+
+      expect(armazenamentoProvedor.salvarImagem).not.toHaveBeenCalled();
+    });
+
+    it('lança ResourceNotFoundException quando a ficha não existe', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(null);
+
+      await expect(
+        service.alterarImagem({ id: 99, arquivo: arquivoJpeg }, usuarioDono),
+      ).rejects.toThrow(ResourceNotFoundException);
+    });
+
+    it('lança UnauthorizedAccessException quando o autor não é dono nem mestre', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+
+      await expect(
+        service.alterarImagem({ id: 5, arquivo: arquivoJpeg }, usuarioMembro),
+      ).rejects.toThrow(UnauthorizedAccessException);
+
+      expect(armazenamentoProvedor.salvarImagem).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('excluirImagem', () => {
+    it('exclui o arquivo do armazenamento e limpa imagemUrl', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue({
+        ...fichaPersistida,
+        imagemUrl: '/uploads/agentes/antiga.jpg',
+      });
+      fichaRepositorio.alterarImagem.mockResolvedValue({ imagemUrl: null });
+
+      const resultado = await service.excluirImagem({ id: 5 }, usuarioDono);
+
+      expect(armazenamentoProvedor.excluirImagem).toHaveBeenCalledWith({
+        caminho: '/uploads/agentes/antiga.jpg',
+      });
+      expect(fichaRepositorio.alterarImagem).toHaveBeenCalledWith({ id: 5, imagemUrl: null });
+      expect(resultado).toEqual({ imagemUrl: null });
+    });
+
+    it('não toca o armazenamento quando a ficha já não tinha avatar', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue({ ...fichaPersistida, imagemUrl: null });
+      fichaRepositorio.alterarImagem.mockResolvedValue({ imagemUrl: null });
+
+      await service.excluirImagem({ id: 5 }, usuarioDono);
+
+      expect(armazenamentoProvedor.excluirImagem).not.toHaveBeenCalled();
+    });
+
+    it('lança ResourceNotFoundException quando a ficha não existe', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(null);
+
+      await expect(service.excluirImagem({ id: 99 }, usuarioDono)).rejects.toThrow(
+        ResourceNotFoundException,
+      );
+    });
+
+    it('lança UnauthorizedAccessException quando o autor não é dono nem mestre', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue({
+        ...fichaPersistida,
+        imagemUrl: '/uploads/agentes/antiga.jpg',
+      });
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+
+      await expect(service.excluirImagem({ id: 5 }, usuarioMembro)).rejects.toThrow(
+        UnauthorizedAccessException,
+      );
+
+      expect(armazenamentoProvedor.excluirImagem).not.toHaveBeenCalled();
     });
   });
 });

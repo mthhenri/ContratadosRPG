@@ -55,6 +55,12 @@ export interface FichaCriadaDto {
   readonly nome: string;
   /** Cor de identidade visual (m3-61) — ver {@link FichaCriarDto.cor}. */
   readonly cor: string | null;
+  /**
+   * URL do avatar da ficha (m3-62) — sempre `null` na criação: a ficha nasce sem `id` para o
+   * endpoint dedicado (`POST /ficha/:id/imagem`), então o upload é um segundo request, em
+   * sequência, feito pelo cliente logo após este retornar.
+   */
+  readonly imagemUrl: string | null;
   readonly dados: FichaJogadorDadosDto;
 }
 
@@ -124,6 +130,8 @@ export interface FichaResumoDto {
   /** Personalidade e nome da Origem (`FichaIdentidadeDto`, m3-23) — `null`/ausente sem Identidade definida. */
   readonly personalidade?: string | null;
   readonly origemNome?: string | null;
+  /** URL do avatar da ficha (m3-62) — `null` sem imagem definida (cai no placeholder decorativo). */
+  readonly imagemUrl: string | null;
   /**
    * `true` quando o peso do inventário excede o Inventário Máximo (aviso, não trava —
    * `sistema-v4.1.0.md`). Calculado com exatidão pelo `FichaService` via `calcularResumoCompras`
@@ -194,6 +202,8 @@ export interface FichaRecuperadaDto {
   readonly nome: string;
   /** Cor de identidade visual (m3-61) — ver {@link FichaCriarDto.cor}. */
   readonly cor: string | null;
+  /** URL do avatar da ficha (m3-62) — ver {@link FichaCriadaDto.imagemUrl}. */
+  readonly imagemUrl: string | null;
   readonly dados: FichaJogadorDadosDto;
 }
 
@@ -217,12 +227,65 @@ export interface FichaAlteradaDto {
   readonly nome: string;
   /** Cor de identidade visual (m3-61) — ver {@link FichaCriarDto.cor}. */
   readonly cor: string | null;
+  /** URL do avatar da ficha (m3-62) — ver {@link FichaCriadaDto.imagemUrl}. Preservado — `alterarFicha` nunca o toca. */
+  readonly imagemUrl: string | null;
   readonly dados: FichaJogadorDadosDto;
 }
 
 /** Entrada da exclusão (soft delete) — o `id` vem do `@Param`. Só o dono ou o mestre podem. */
 export interface FichaExcluirDto {
   readonly id: number;
+}
+
+/**
+ * ── Avatar da ficha (m3-62) ──────────────────────────────────────────────────
+ * O binário **não** entra no Postgres — só `imagem_url` (coluna relacional, ao lado de
+ * `nome`/`cor`) persiste; o arquivo em si vive num armazenamento externo (disco local em dev,
+ * Cloudflare R2 em produção — `backend/src/core/armazenamento/`, selecionado por
+ * `ARMAZENAMENTO_PROVEDOR`). Endpoint dedicado (`POST`/`DELETE /ficha/:id/imagem`) por ser
+ * multipart — não cabe no `PUT /ficha/:id` genérico. Só o dono ou o mestre alteram/removem
+ * (`validarPermissaoEdicao`, §14). Trocar a imagem exclui a anterior do armazenamento.
+ */
+
+/**
+ * Conteúdo bruto de um arquivo enviado por upload — value-object sem entidade nem verbo
+ * (`dto-conventions`). `conteudo` é `Uint8Array` (não `Buffer`, tipo Node-only) — o mesmo dado
+ * do buffer do Multer, que é uma `Buffer` (subtipo estrutural de `Uint8Array`).
+ */
+export interface FichaImagemArquivoDto {
+  readonly conteudo: Uint8Array;
+  readonly mimetype: string;
+  readonly tamanho: number;
+}
+
+/**
+ * Entrada da troca de avatar — o `id` vem do `@Param`; `arquivo` é montado pela controller a
+ * partir do `Express.Multer.File` (`FileInterceptor('arquivo')`). MIME (`image/jpeg`/`png`/
+ * `webp`) e tamanho máximo são validados na service (`BusinessException` se falhar).
+ */
+export interface FichaImagemAlterarDto {
+  readonly id: number;
+  readonly arquivo: FichaImagemArquivoDto;
+}
+
+/** Entrada da remoção do avatar — o `id` vem do `@Param`. Só o dono ou o mestre podem. */
+export interface FichaImagemExcluirDto {
+  readonly id: number;
+}
+
+/** Saída da troca/remoção do avatar — a nova `imagemUrl` (`null` após remover). */
+export interface FichaImagemAlteradaDto {
+  readonly imagemUrl: string | null;
+}
+
+/**
+ * Entrada interna do `FichaRepository.alterarImagem` — `UPDATE` dedicado, fora do
+ * `alterarFicha` genérico (que continua só `nome`/`cor`/`dados`). Reusado tanto para setar
+ * quanto para limpar (`imagemUrl: null`) o avatar. Só service ↔ repository.
+ */
+export interface FichaImagemInternoAlterarDto {
+  readonly id: number;
+  readonly imagemUrl: string | null;
 }
 
 /**

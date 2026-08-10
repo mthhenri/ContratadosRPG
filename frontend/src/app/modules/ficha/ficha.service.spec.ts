@@ -9,6 +9,7 @@ import {
   FichaAcessoRevogadoDto,
   FichaAlteradaDto,
   FichaCriadaDto,
+  FichaImagemAlteradaDto,
   FichaJogadorDadosDto,
   FichaRecuperadaDto,
   FichaResumoDto,
@@ -64,7 +65,7 @@ describe('FichaService', () => {
 
   it('cria uma ficha na campanha informada', () => {
     const { servico, http } = criar();
-    const criada: FichaCriadaDto = { id: 3, campanhaId: 9, usuarioId: 7, nome: 'Kane', cor: null, dados };
+    const criada: FichaCriadaDto = { id: 3, campanhaId: 9, usuarioId: 7, nome: 'Kane', cor: null, imagemUrl: null, dados };
 
     let recebido: FichaCriadaDto | undefined;
     servico.criarFicha({ campanhaId: 9, nome: 'Kane', dados }).subscribe((r) => (recebido = r));
@@ -78,7 +79,7 @@ describe('FichaService', () => {
 
   it('cria uma ficha solta no acervo, sem campanhaId (m3-28)', () => {
     const { servico, http } = criar();
-    const criada: FichaCriadaDto = { id: 6, campanhaId: null, usuarioId: 7, nome: 'Solta', cor: null, dados };
+    const criada: FichaCriadaDto = { id: 6, campanhaId: null, usuarioId: 7, nome: 'Solta', cor: null, imagemUrl: null, dados };
 
     let recebido: FichaCriadaDto | undefined;
     servico.criarFicha({ nome: 'Solta', dados }).subscribe((r) => (recebido = r));
@@ -91,7 +92,7 @@ describe('FichaService', () => {
 
   it('recupera uma ficha pelo id', () => {
     const { servico, http } = criar();
-    const recuperada: FichaRecuperadaDto = { id: 3, campanhaId: 9, usuarioId: 7, nome: 'Kane', cor: null, dados };
+    const recuperada: FichaRecuperadaDto = { id: 3, campanhaId: 9, usuarioId: 7, nome: 'Kane', cor: null, imagemUrl: null, dados };
 
     let recebido: FichaRecuperadaDto | undefined;
     servico.recuperarFicha(3).subscribe((r) => (recebido = r));
@@ -104,7 +105,7 @@ describe('FichaService', () => {
 
   it('altera nome/dados de uma ficha', () => {
     const { servico, http } = criar();
-    const alterada: FichaAlteradaDto = { id: 3, campanhaId: 9, usuarioId: 7, nome: 'Novo', cor: null, dados };
+    const alterada: FichaAlteradaDto = { id: 3, campanhaId: 9, usuarioId: 7, nome: 'Novo', cor: null, imagemUrl: null, dados };
 
     let recebido: FichaAlteradaDto | undefined;
     servico.alterarFicha(3, { nome: 'Novo', dados }).subscribe((r) => (recebido = r));
@@ -125,6 +126,7 @@ describe('FichaService', () => {
         campanhaNome: 'Operação Alfa',
         usuarioId: 7,
         nome: 'Kane',
+        imagemUrl: null,
         classe: ClasseEnum.COMBATENTE,
         arquetipo: ArquetipoEnum.LUTADOR,
         nivel: 2,
@@ -157,6 +159,7 @@ describe('FichaService', () => {
         campanhaNome: null,
         usuarioId: 7,
         nome: 'Solta',
+        imagemUrl: null,
         classe: ClasseEnum.COMBATENTE,
         arquetipo: null,
         nivel: 1,
@@ -260,7 +263,7 @@ describe('FichaService', () => {
 
   it('duplica uma ficha pela rota ficha/:id/duplicar (m3-52)', () => {
     const { servico, http } = criar();
-    const clonada: FichaCriadaDto = { id: 8, campanhaId: 9, usuarioId: 7, nome: 'Kane (cópia)', cor: null, dados };
+    const clonada: FichaCriadaDto = { id: 8, campanhaId: 9, usuarioId: 7, nome: 'Kane (cópia)', cor: null, imagemUrl: null, dados };
 
     let recebido: FichaCriadaDto | undefined;
     servico.duplicarFicha(3).subscribe((r) => (recebido = r));
@@ -269,5 +272,34 @@ describe('FichaService', () => {
     requisicao.flush(envelope(clonada));
 
     expect(recebido).toEqual(clonada);
+  });
+
+  it('troca o avatar via FormData na rota ficha/:id/imagem (m3-62)', () => {
+    const { servico, http } = criar();
+    const arquivo = new File(['conteudo'], 'avatar.png', { type: 'image/png' });
+    const alterada: FichaImagemAlteradaDto = { imagemUrl: '/uploads/agentes/novo.png' };
+
+    let recebido: FichaImagemAlteradaDto | undefined;
+    servico.alterarImagem(3, arquivo).subscribe((r) => (recebido = r));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/ficha/3/imagem'));
+    expect(requisicao.request.method).toBe('POST');
+    expect(requisicao.request.body).toBeInstanceOf(FormData);
+    expect((requisicao.request.body as FormData).get('arquivo')).toBe(arquivo);
+    requisicao.flush(envelope(alterada));
+
+    expect(recebido).toEqual(alterada);
+  });
+
+  it('remove o avatar pela rota ficha/:id/imagem (m3-62)', () => {
+    const { servico, http } = criar();
+    const removida: FichaImagemAlteradaDto = { imagemUrl: null };
+
+    let recebido: FichaImagemAlteradaDto | undefined;
+    servico.excluirImagem(3).subscribe((r) => (recebido = r));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/ficha/3/imagem'));
+    expect(requisicao.request.method).toBe('DELETE');
+    requisicao.flush(envelope(removida));
+
+    expect(recebido).toEqual(removida);
   });
 });

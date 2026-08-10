@@ -8,7 +8,10 @@ import {
   Post,
   Put,
   Query,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import type {
   FichaAcessoConcederDto,
   FichaAcessoConcedidoDto,
@@ -20,6 +23,7 @@ import type {
   FichaCampanhaAtribuirDto,
   FichaCriadaDto,
   FichaCriarDto,
+  FichaImagemAlteradaDto,
   FichaRecuperadaDto,
   FichaResumoDto,
 } from '@contratados-rpg/shared/dtos/ficha';
@@ -74,6 +78,38 @@ export class FichaController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<FichaAlteradaDto> {
     return this.fichaService.alterarFicha({ ...dto, id }, usuarioAtivo);
+  }
+
+  /**
+   * Troca o avatar da ficha (m3-62) — multipart, por isso um endpoint dedicado fora do
+   * `PUT /ficha/:id` genérico. `arquivo` chega em memória (`FileInterceptor`, sem `dest` —
+   * `Express.Multer.File.buffer`); a controller só monta o DTO com o `id`/conteúdo bruto do
+   * upload (microinteligência sancionada — §7.1). Validação de MIME/tamanho e permissão vivem
+   * na service.
+   */
+  @Post(':id/imagem')
+  @UseInterceptors(FileInterceptor('arquivo'))
+  alterarImagem(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() arquivo: Express.Multer.File,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<FichaImagemAlteradaDto> {
+    return this.fichaService.alterarImagem(
+      {
+        id,
+        arquivo: { conteudo: arquivo.buffer, mimetype: arquivo.mimetype, tamanho: arquivo.size },
+      },
+      usuarioAtivo,
+    );
+  }
+
+  /** Remove o avatar da ficha (m3-62) — exclui o arquivo do armazenamento e limpa `imagemUrl`. */
+  @Delete(':id/imagem')
+  excluirImagem(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<FichaImagemAlteradaDto> {
+    return this.fichaService.excluirImagem({ id }, usuarioAtivo);
   }
 
   @Delete(':id')

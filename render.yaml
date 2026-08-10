@@ -45,3 +45,16 @@ services:
         sync: false
       - key: DB_SENHA
         sync: false
+      # Avatar da ficha (m3-62): produção sempre usa Cloudflare R2 — provisionamento em docs/DEPLOY.md.
+      - key: ARMAZENAMENTO_PROVEDOR
+        value: r2
+      - key: ARMAZENAMENTO_R2_ACCOUNT_ID
+        sync: false
+      - key: ARMAZENAMENTO_R2_ACCESS_KEY_ID
+        sync: false
+      - key: ARMAZENAMENTO_R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: ARMAZENAMENTO_R2_BUCKET
+        sync: false
+      - key: ARMAZENAMENTO_R2_URL_PUBLICA
+        sync: false

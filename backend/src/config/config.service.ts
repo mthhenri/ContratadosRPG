@@ -25,6 +25,22 @@ export interface ConfiguracaoAplicacao {
 }
 
 /**
+ * Armazenamento de blob (avatar da ficha, m3-62) — toggle explícito entre disco local (dev) e
+ * Cloudflare R2 (produção). Union discriminada por `provedor`: as credenciais R2 só existem —
+ * e só são lidas via `obterVariavelObrigatoria` — quando `provedor === 'r2'`.
+ */
+export type ConfiguracaoArmazenamento =
+  | { provedor: 'local' }
+  | {
+      provedor: 'r2';
+      r2AccountId: string;
+      r2AccessKeyId: string;
+      r2SecretAccessKey: string;
+      r2Bucket: string;
+      r2UrlPublica: string;
+    };
+
+/**
  * Único ponto de leitura de variáveis de ambiente da aplicação (Proibição #10 —
  * `process.env` nunca direto fora daqui). Carrega o `.env` da raiz do repositório (mesmo
  * arquivo lido pelo Docker Compose e pelo `knexfile.ts`) e expõe getters tipados por
@@ -61,6 +77,31 @@ export class ConfigService {
       porta: Number(this.obterVariavelObrigatoria('APP_PORTA')),
       ambiente: this.obterVariavelObrigatoria('APP_AMBIENTE'),
       frontendOrigem: this.obterVariavelObrigatoria('APP_FRONTEND_ORIGEM'),
+    };
+  }
+
+  /**
+   * Retorna a configuração de armazenamento de blob (`ARMAZENAMENTO_*`, m3-62). `provedor` é
+   * sempre obrigatória; as cinco variáveis `ARMAZENAMENTO_R2_*` só são lidas (e exigidas) quando
+   * `provedor === 'r2'` — em `local` nenhuma delas é necessária para rodar.
+   */
+  obterConfiguracaoArmazenamento(): ConfiguracaoArmazenamento {
+    const provedor = this.obterVariavelObrigatoria('ARMAZENAMENTO_PROVEDOR');
+    if (provedor !== 'local' && provedor !== 'r2') {
+      throw new Error(
+        `Variável de ambiente ARMAZENAMENTO_PROVEDOR inválida: "${provedor}" (esperado "local" ou "r2")`,
+      );
+    }
+    if (provedor === 'local') {
+      return { provedor };
+    }
+    return {
+      provedor,
+      r2AccountId: this.obterVariavelObrigatoria('ARMAZENAMENTO_R2_ACCOUNT_ID'),
+      r2AccessKeyId: this.obterVariavelObrigatoria('ARMAZENAMENTO_R2_ACCESS_KEY_ID'),
+      r2SecretAccessKey: this.obterVariavelObrigatoria('ARMAZENAMENTO_R2_SECRET_ACCESS_KEY'),
+      r2Bucket: this.obterVariavelObrigatoria('ARMAZENAMENTO_R2_BUCKET'),
+      r2UrlPublica: this.obterVariavelObrigatoria('ARMAZENAMENTO_R2_URL_PUBLICA'),
     };
   }
 

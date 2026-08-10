@@ -174,6 +174,20 @@
   que hoje é renderizado sem saber a qual grupo de dano pertence. Autor **não decidiu ainda se
   quer** — considerar se o realce visual compensa a poluição de mais cor por rolagem.
 
+### I-012 — Foto de contrato, separada do avatar do jogador · ficha/avatar
+
+- **Ideia:** um segundo campo de imagem na ficha, a "foto de contrato" — só o **mestre** define/
+  troca essa foto (nunca o dono), distinta do avatar (`imagem_url`, `m3-62`) que o **jogador**
+  escolhe e que todo mundo vê hoje. As duas convivem na mesma ficha, com dono de escrita diferente.
+- **Origem:** pedido do autor logo após a `m3-62` (avatar da ficha) entrar no ar.
+- **Por quê:** hoje só existe um avatar, editável por dono ou mestre — não há como o mestre registrar
+  uma imagem "oficial"/de dossiê sem sobrescrever a que o próprio jogador escolheu (ou vice-versa).
+- **Custo aparente:** médio — reusa a maior parte do que a `m3-62` já construiu (armazenamento,
+  validação de MIME/tamanho, endpoint multipart), mas precisa de uma segunda coluna
+  (`ficha.imagem_contrato_url`?), um segundo par de endpoint dedicado com permissão **mestre-only**
+  (distinta de `validarPermissaoEdicao`, que hoje deixa dono e mestre editarem igual) e decidir onde
+  ela aparece na UI (cabeçalho? aba própria?) — ainda não especificado.
+
 ---
 
 ## Promovidas

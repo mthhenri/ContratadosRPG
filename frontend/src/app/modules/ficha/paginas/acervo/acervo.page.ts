@@ -15,6 +15,8 @@ import { rotuloClasseCompleto } from '../../rotulos-ficha';
 interface ItemAcervo {
   readonly id: number;
   readonly nome: string;
+  /** Avatar da ficha (m3-62) — `null` sem imagem definida (cai no placeholder decorativo do cartão). */
+  readonly imagemUrl: string | null;
   readonly classeTexto: string;
   readonly nivel: number;
   readonly vidaAtual: number;
@@ -97,6 +99,7 @@ export class FichaAcervo {
     this.fichas().map((ficha) => ({
       id: ficha.id,
       nome: ficha.nome,
+      imagemUrl: ficha.imagemUrl,
       classeTexto: rotuloClasseCompleto(ficha.classe, ficha.arquetipo),
       nivel: ficha.nivel,
       vidaAtual: ficha.vidaAtual,

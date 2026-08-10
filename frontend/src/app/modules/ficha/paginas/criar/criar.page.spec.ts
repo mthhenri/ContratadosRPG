@@ -16,6 +16,7 @@ describe('FichaCriar', () => {
   const CAMPANHA_ID = 57;
   const fichaExistente = {
     id: 1, campanhaId: CAMPANHA_ID, campanhaNome: 'Teste', usuarioId: 1, nome: 'Base',
+    imagemUrl: null,
     classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR, nivel: 1, prestigio: 0,
     vidaAtual: 1, energiaAtual: 1, morrendo: false, machucado: false, inconsciente: false,
   } satisfies FichaResumoDto;

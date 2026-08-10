@@ -17,6 +17,9 @@ import type {
   FichaExcluirDto,
   FichaHabilidadeDto,
   FichaIdentidadeDto,
+  FichaImagemAlteradaDto,
+  FichaImagemAlterarDto,
+  FichaImagemExcluirDto,
   FichaInternoAlterarDto,
   FichaJogadorDadosDto,
   FichaListarDto,
@@ -48,6 +51,7 @@ import {
   FORMACOES,
   type FormacaoDefinicaoDto,
 } from '@contratados-rpg/shared/regras/identidade';
+import { ARMAZENAMENTO_PROVEDOR, type ArmazenamentoProvedor } from '../../core/armazenamento';
 import {
   BusinessException,
   ResourceNotFoundException,
@@ -58,6 +62,19 @@ import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { CampanhaRepository } from '../campanha/campanha.repository';
 import { omitirCamposPrivados } from './ficha-campos-privados.util';
 import { FichaRepository } from './ficha.repository';
+
+/**
+ * MIME permitido para o avatar da ficha (m3-62) → extensão de arquivo correspondente — cobre a
+ * validação de formato e a nomeação do blob (`agentes/<uuid>.<extensão>`) num só lugar.
+ */
+const EXTENSAO_POR_MIME_IMAGEM: Readonly<Record<string, string>> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+};
+
+/** Tamanho máximo do avatar da ficha (m3-62) — 2MB. */
+const TAMANHO_MAXIMO_IMAGEM_BYTES = 2 * 1024 * 1024;
 
 /**
  * Preset de rolagem de Iniciativa (m3-47), gerado automaticamente em toda criação de ficha —
@@ -95,6 +112,8 @@ export class FichaService {
     private readonly campanhaRepositorio: CampanhaRepository,
     @Inject(forwardRef(() => CampanhaGateway))
     private readonly campanhaGateway: CampanhaGateway,
+    @Inject(ARMAZENAMENTO_PROVEDOR)
+    private readonly armazenamentoProvedor: ArmazenamentoProvedor,
   ) {}
 
   /**
@@ -209,6 +228,7 @@ export class FichaService {
       campanhaNome: fichaInterna.campanhaNome,
       usuarioId: fichaInterna.usuarioId,
       nome: fichaInterna.nome,
+      imagemUrl: fichaInterna.imagemUrl,
       classe: fichaInterna.classe,
       arquetipo: fichaInterna.arquetipo,
       nivel: fichaInterna.nivel,
@@ -327,6 +347,69 @@ export class FichaService {
     const fichaAlterada = await this.fichaRepositorio.alterarFicha(dto);
     this.campanhaGateway.emitirFichaAlterada(fichaAlterada);
     return fichaAlterada;
+  }
+
+  /**
+   * Troca o avatar da ficha (m3-62), exigindo permissão de **edição** (§14). Valida MIME
+   * (`jpeg`/`png`/`webp`) e tamanho (2MB) — `BusinessException` se falhar, sem afetar o resto da
+   * ficha. Ao trocar, exclui o arquivo anterior do armazenamento (não acumula lixo) **antes** de
+   * persistir a nova URL — se a ficha já tinha avatar, o antigo já era um blob órfão assim que o
+   * novo é gravado, então a ordem (excluir → `UPDATE`) só importa para não vazar exceção de
+   * armazenamento com o banco já desatualizado. `ResourceNotFoundException` se a ficha não
+   * existir; `UnauthorizedAccessException` se o autor não puder editá-la.
+   */
+  async alterarImagem(
+    dto: FichaImagemAlterarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<FichaImagemAlteradaDto> {
+    const fichaEncontrada = await this.fichaRepositorio.recuperarPorId({ id: dto.id });
+    if (!fichaEncontrada) {
+      throw new ResourceNotFoundException('Ficha');
+    }
+    await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
+
+    const extensao = EXTENSAO_POR_MIME_IMAGEM[dto.arquivo.mimetype];
+    if (!extensao) {
+      throw new BusinessException('Formato de imagem inválido: use JPEG, PNG ou WEBP');
+    }
+    if (dto.arquivo.tamanho > TAMANHO_MAXIMO_IMAGEM_BYTES) {
+      throw new BusinessException('Imagem maior que o limite permitido (2MB)');
+    }
+
+    const imagemSalva = await this.armazenamentoProvedor.salvarImagem({
+      conteudo: dto.arquivo.conteudo,
+      mimetype: dto.arquivo.mimetype,
+      extensao,
+    });
+
+    if (fichaEncontrada.imagemUrl) {
+      await this.armazenamentoProvedor.excluirImagem({ caminho: fichaEncontrada.imagemUrl });
+    }
+
+    return this.fichaRepositorio.alterarImagem({ id: dto.id, imagemUrl: imagemSalva.caminho });
+  }
+
+  /**
+   * Remove o avatar da ficha (m3-62): exclui o arquivo do armazenamento e limpa `imagemUrl`, exigindo
+   * permissão de **edição** (§14). No-op no armazenamento se a ficha já não tinha avatar.
+   * `ResourceNotFoundException` se a ficha não existir; `UnauthorizedAccessException` se o autor
+   * não puder editá-la.
+   */
+  async excluirImagem(
+    dto: FichaImagemExcluirDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<FichaImagemAlteradaDto> {
+    const fichaEncontrada = await this.fichaRepositorio.recuperarPorId({ id: dto.id });
+    if (!fichaEncontrada) {
+      throw new ResourceNotFoundException('Ficha');
+    }
+    await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
+
+    if (fichaEncontrada.imagemUrl) {
+      await this.armazenamentoProvedor.excluirImagem({ caminho: fichaEncontrada.imagemUrl });
+    }
+
+    return this.fichaRepositorio.alterarImagem({ id: dto.id, imagemUrl: null });
   }
 
   /**

@@ -60,8 +60,9 @@ consomem os dois o mesmo motor — nunca reimplemente uma fórmula de um lado s�
 | Exceções de negócio | `backend/src/core/exceptions/` — `BusinessException`, `ResourceNotFoundException`, `UnauthorizedAccessException` |
 | Filtro global + interceptor de resposta | `backend/src/core/filters/`, `backend/src/core/interceptors/` |
 | **Gateway WebSocket** (broadcast-only) | `backend/src/core/gateway/` — `CampanhaGateway`, `WsIoAdapter` |
+| **Armazenamento de blob** (avatar da ficha, local/R2) | `backend/src/core/armazenamento/` — `ArmazenamentoProvedor`, `ArmazenamentoLocalProvedor`/`ArmazenamentoR2Provedor`, toggle via `ConfigService.obterConfiguracaoArmazenamento()` |
 | Conexão Knex em runtime | `backend/src/database/` |
-| **Migrations** | `backend/src/database/migrations/` — `0001`…`0011`, nome numerado |
+| **Migrations** | `backend/src/database/migrations/` — `0001`…`0013`, nome numerado |
 | Leitura de env (nunca `process.env` direto) | `backend/src/config/` — `ConfigService` |
 
 Fluxo obrigatório: **controller (burro) → service (regra) → repository (só SQL)**.

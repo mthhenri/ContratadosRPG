@@ -368,6 +368,60 @@ export class FichaEdicaoService {
     this.agendarPersistencia();
   }
 
+  /**
+   * Avatar da ficha (m3-62) — **imediato**, não passa pelo `agendarPersistencia` debounced: o
+   * upload em si já é a persistência (`FichaService.alterarImagem`, multipart), não uma edição de
+   * campo em lote. Atualiza o signal local só com a `imagemUrl` devolvida pelo backend ao concluir.
+   */
+  ajustarImagem(arquivo: File): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) {
+      return;
+    }
+    this.estadoPersistencia.set('salvando');
+    this.fichaService
+      .alterarImagem(this.obterFichaId(), arquivo)
+      .pipe(
+        catchError(() => {
+          this.estadoPersistencia.set('ocioso');
+          return EMPTY;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((resultado) => {
+        const fichaAgora = this.ficha();
+        if (fichaAgora) {
+          this.ficha.set({ ...fichaAgora, imagemUrl: resultado.imagemUrl });
+        }
+        this.marcarSalvo();
+      });
+  }
+
+  /** Remove o avatar da ficha (m3-62) — mesmo modelo imediato de {@link ajustarImagem}. */
+  removerImagem(): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) {
+      return;
+    }
+    this.estadoPersistencia.set('salvando');
+    this.fichaService
+      .excluirImagem(this.obterFichaId())
+      .pipe(
+        catchError(() => {
+          this.estadoPersistencia.set('ocioso');
+          return EMPTY;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((resultado) => {
+        const fichaAgora = this.ficha();
+        if (fichaAgora) {
+          this.ficha.set({ ...fichaAgora, imagemUrl: resultado.imagemUrl });
+        }
+        this.marcarSalvo();
+      });
+  }
+
   ajustarPersonalidade(personalidade: string): void {
     const fichaAtual = this.ficha();
     if (!fichaAtual) {

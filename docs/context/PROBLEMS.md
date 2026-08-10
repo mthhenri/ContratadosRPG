@@ -138,13 +138,21 @@
   e em `acervo.page.spec.ts`); `npm run lint --workspace=backend` falha com 1 erro (variável não
   usada em
   [ficha.service.spec.ts:914](../../backend/src/modules/ficha/ficha.service.spec.ts#L914)).
+  **Achado na `m3-62`:** o frontend também falha com mais 2 erros de acessibilidade
+  (`click-events-have-key-events`/`interactive-supports-focus`) em
+  [criar.page.html](../../frontend/src/app/modules/ficha/paginas/criar/criar.page.html) — o
+  `<dialog>` de saída (`(click)="fecharAoClicarFora($event)"`) e o fundo do resumo operacional
+  (`<div class="guia__resumo-fundo" (click)="...">`), confirmados pré-existentes por diff contra
+  `HEAD` antes de qualquer mudança da task, mesma causa/contorno abaixo — a contagem de "3 erros"
+  do frontend estava desatualizada.
 - **Causa:** pré-existente em `master` — confirmado via `git stash` contra o HEAD comitado antes
   de qualquer mudança desta task. Não investigada a fundo (de qual commit veio, por que o CI não
   bloqueou o PR que introduziu).
-- **Contorno:** nenhum. Os 4 arquivos não têm relação com nenhuma task em andamento no momento em
+- **Contorno:** nenhum. Os arquivos não têm relação com nenhuma task em andamento no momento em
   que isto foi descoberto.
-- **Correção:** remover o `autofocus`/trocar por foco programático; apagar as 3 variáveis não
-  usadas (ou prefixar `_` se forem intencionais). Trivial, mas não é escopo de nenhuma task atual.
+- **Correção:** remover o `autofocus`/trocar por foco programático; apagar as variáveis não usadas
+  (ou prefixar `_` se forem intencionais); dar aos dois elementos clicáveis de `criar.page.html`
+  um `role`/`tabindex`/handler de teclado equivalente. Trivial, mas não é escopo de nenhuma task atual.
 - **Desde:** descoberto durante a `m2-18` (2026-08-01); a raiz é anterior, não determinada.
 
 ### P-010 — Teste do link "Voltar" quebrado em `visualizar.page.spec.ts` · `ABERTO` · frontend/testes
