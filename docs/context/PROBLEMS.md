@@ -196,20 +196,6 @@
   resolve), permitir expandir a descrição, ou rever o clamp por breakpoint.
 - **Desde:** reportado pelo dono em 2026-08-09.
 
-### P-013 — Habilidade "Anomalia" (Experimento Artificial) não dobra custo/efeito dos Fragmentos · `ABERTO` · shared/regras
-
-- **Sintoma:** a habilidade "Anomalia" diz "Fragmentos custam o dobro de Energia em seu uso, mas
-  têm todos os seus efeitos dobrados", mas nenhuma das duas coisas acontece nos números do agente.
-- **Causa:** a habilidade existe só como texto no catálogo
-  ([habilidades-catalogo.dados.ts:351](../../shared/src/regras/agente/habilidades-catalogo.dados.ts#L351)).
-  Nenhuma função de custo/efeito de Fragmento em `fragmento.ts` (`custoAquisicaoFragmento`,
-  `custoAcoplarFragmento`, cardápios de bônus do Potencializador) recebe ou considera se o agente
-  tem "Anomalia" — é puro texto descritivo sem motor por trás.
-- **Contorno:** nenhum — aplicação manual/narrativa pelo mestre.
-- **Correção:** não determinada — decidir onde a flag "possui Anomalia" entra no motor de
-  Fragmentos e dobrar tanto o custo em Energia quanto os valores de efeito das opções do cardápio.
-- **Desde:** reportado pelo dono em 2026-08-09.
-
 ### P-014 — Label "Arquétipo" no seletor de habilidades não vira "Subclasse" para subclasses de Experimento · `ABERTO` · frontend
 
 - **Sintoma:** no seletor de habilidades e no resumo por categoria da aba Habilidades, o rótulo que
@@ -272,5 +258,5 @@ task que a fez.
 
 - **P-017** — migration `0012` (coluna `cor`) nunca rodou em produção. Resolvido em 2026-08-09,
   ver `HISTORY.md`.
-
-*(Nenhum item foi resolvido desde a criação deste arquivo em 2026-08-01.)*
+- **P-013** — habilidade "Anomalia" não dobrava custo/efeito de Fragmentos. Resolvido em
+  2026-08-10, ver `HISTORY.md`.

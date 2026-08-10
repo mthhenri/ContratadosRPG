@@ -42,3 +42,25 @@ export function experimentoComPeculiaridade(
     (habilidade) => habilidade.nome === 'Peculiaridade' && habilidade.categoria === HabilidadeCategoriaEnum.SUBCLASSE,
   );
 }
+
+/**
+ * `true` quando `classe` é Experimento Artificial **e** `habilidades` contém a "Anomalia" de
+ * Subclasse (`docs/core/sistema-v4.1.0.md` — "⬦ Habilidades de Subclasse": "Fragmentos custam o
+ * dobro de Energia em seu uso, mas têm todos os seus efeitos dobrados"). Diferente de
+ * `experimentoComPeculiaridade`, a habilidade só existe no catálogo de Artificial (`P-013`) — as
+ * outras duas subclasses de Experimento não a têm, então não há por que checar `ehClasseExperimento`
+ * aqui. Consumida por `shared/regras/compras/fragmento` (custo em Energia e cardápio de bônus do
+ * Potencializador), que recebe o booleano já resolvido — mantém as funções de fragmento puras, sem
+ * import de `identidade/`.
+ */
+export function experimentoComAnomalia(
+  classe: ClasseEnum,
+  habilidades: readonly FichaHabilidadeDto[],
+): boolean {
+  if (classe !== ClasseEnum.EXPERIMENTO_ARTIFICIAL) {
+    return false;
+  }
+  return habilidades.some(
+    (habilidade) => habilidade.nome === 'Anomalia' && habilidade.categoria === HabilidadeCategoriaEnum.SUBCLASSE,
+  );
+}

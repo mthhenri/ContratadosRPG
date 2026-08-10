@@ -45,6 +45,23 @@ describe('custoAquisicaoFragmento', () => {
     expect(custoAquisicaoFragmento(FragmentoTipoEnum.CONSTRUTOR, FragmentoModuloEnum.IV)).toBe(14);
     expect(custoAquisicaoFragmento(FragmentoTipoEnum.CONSTRUTOR, FragmentoModuloEnum.I)).toBe(40);
   });
+
+  /**
+   * Habilidade "Anomalia" (Experimento Artificial, `P-013`) — doc: "Fragmentos custam o dobro de
+   * Energia em seu uso". Dobra por cima do que já é cobrado, inclusive o dobro já aplicado ao
+   * Construtor (a doc não abre exceção).
+   */
+  it('com Anomalia, dobra o custo do Potencializador', () => {
+    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.IV, true)).toBe(14);
+  });
+
+  it('com Anomalia, o dobro do Construtor se acumula com o dobro da Anomalia (4×)', () => {
+    expect(custoAquisicaoFragmento(FragmentoTipoEnum.CONSTRUTOR, FragmentoModuloEnum.IV, true)).toBe(28);
+  });
+
+  it('sem Anomalia (padrão), o comportamento não muda', () => {
+    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.IV, false)).toBe(7);
+  });
 });
 
 describe('custoAcoplarFragmento', () => {
@@ -55,6 +72,10 @@ describe('custoAcoplarFragmento', () => {
   it('módulo I custa 20 + 20', () => {
     expect(custoAcoplarFragmento(FragmentoModuloEnum.I)).toEqual({ energia: 20, energiaMaxima: 20 });
   });
+
+  it('com Anomalia (P-013), dobra os dois valores', () => {
+    expect(custoAcoplarFragmento(FragmentoModuloEnum.IV, true)).toEqual({ energia: 14, energiaMaxima: 14 });
+  });
 });
 
 describe('custoRemoverFragmento', () => {
@@ -64,6 +85,10 @@ describe('custoRemoverFragmento', () => {
 
   it('módulo V custa 6', () => {
     expect(custoRemoverFragmento(FragmentoModuloEnum.V)).toBe(6);
+  });
+
+  it('com Anomalia (P-013), dobra por cima do Energia × 2 já existente', () => {
+    expect(custoRemoverFragmento(FragmentoModuloEnum.IV, true)).toBe(28);
   });
 });
 
@@ -114,6 +139,27 @@ describe('listarBonusFragmentoPotencializador', () => {
   it('sem maior dado (alvo sem dano, ou nenhum alvo escolhido), a opção não aparece', () => {
     expect(listarBonusFragmentoPotencializador(FragmentoModuloEnum.V, null)).toHaveLength(5);
     expect(listarBonusFragmentoPotencializador(FragmentoModuloEnum.V)).toHaveLength(5);
+  });
+
+  /**
+   * Habilidade "Anomalia" (Experimento Artificial, `P-013`) — doc: "têm todos os seus efeitos
+   * dobrados". Dobra o valor de cada opção do cardápio, incluindo o dano "N× maior dado".
+   */
+  describe('com Anomalia (P-013)', () => {
+    it('dobra os valores das 5 opções sem alvo escolhido (base módulo V: 2/1/2/2/2)', () => {
+      const opcoes = listarBonusFragmentoPotencializador(FragmentoModuloEnum.V, null, true);
+      expect(opcoes.map((opcao) => opcao.efeito.valor)).toEqual([4, 2, 4, 4, 4]);
+    });
+
+    it('dobra também a opção "N× maior dado" (módulo V, D8 → +16 em vez de +8)', () => {
+      const opcoes = listarBonusFragmentoPotencializador(FragmentoModuloEnum.V, 8, true);
+      expect(opcoes[1].efeito.valor).toBe(16);
+    });
+
+    it('sem Anomalia (padrão), os valores não mudam', () => {
+      const opcoes = listarBonusFragmentoPotencializador(FragmentoModuloEnum.V, null, false);
+      expect(opcoes.map((opcao) => opcao.efeito.valor)).toEqual([2, 1, 2, 2, 2]);
+    });
   });
 });
 
@@ -278,6 +324,29 @@ describe('listarBonusConsumoFragmentoPotencializador', () => {
 
   it('módulo II não concede ponto de atributo (só o I concede)', () => {
     expect(listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.II)[0].concedePontoAtributo).toBeUndefined();
+  });
+
+  /**
+   * Habilidade "Anomalia" (Experimento Artificial, `P-013`) — doc: "têm todos os seus efeitos
+   * dobrados". `concedePontoAtributo` não dobra: é a regra estrutural do Módulo I, não um "valor".
+   */
+  describe('com Anomalia (P-013)', () => {
+    it('dobra os 3 valores (módulo III: 3/3/6 → 6/6/12)', () => {
+      const opcoes = listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.III, true);
+      expect(opcoes.map((opcao) => opcao.valor)).toEqual([6, 6, 12]);
+    });
+
+    it('módulo I dobra o valor de teste, mas concedePontoAtributo continua +1 (não dobra)', () => {
+      const opcoes = listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.I, true);
+      expect(opcoes[0]).toMatchObject({ tipo: 'TESTE', valor: 10, concedePontoAtributo: true });
+      expect(opcoes[0].rotulo).toContain('+1 ponto no atributo');
+    });
+
+    it('sem Anomalia (padrão), os valores não mudam', () => {
+      expect(listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.III, false).map((o) => o.valor)).toEqual([
+        3, 3, 6,
+      ]);
+    });
   });
 });
 

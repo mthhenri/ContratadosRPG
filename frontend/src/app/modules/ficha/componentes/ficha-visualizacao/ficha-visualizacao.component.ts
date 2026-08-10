@@ -72,6 +72,7 @@ import {
 import { calcularDtAtributo } from '@contratados-rpg/shared/regras/dt';
 import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
 import {
+  experimentoComAnomalia,
   experimentoComPeculiaridade,
   FORMACOES,
   listarEfeitosPendentes,
@@ -1780,6 +1781,14 @@ export class FichaVisualizacao {
    */
   protected readonly origemBloqueadaPorPeculiaridade = computed(() =>
     experimentoComPeculiaridade(this.dados().classe, this.dados().habilidades),
+  );
+  /**
+   * `true` quando o agente (Experimento Artificial) tem a habilidade "Anomalia" (`P-013`) — repassado
+   * a `app-ficha-inventario`, que dobra por ela o custo em Energia de Fragmentos e os valores de
+   * efeito dos cardápios do Potencializador.
+   */
+  protected readonly possuiAnomalia = computed(() =>
+    experimentoComAnomalia(this.dados().classe, this.dados().habilidades),
   );
   protected readonly origemEditavel = computed(
     () =>

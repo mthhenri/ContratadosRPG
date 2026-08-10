@@ -54,6 +54,7 @@ describe('FichaInventario', () => {
     editavel = true,
     prestigio = 100,
     podeRolar = true,
+    possuiAnomalia = false,
   ) {
     TestBed.configureTestingModule({ imports: [FichaInventario] });
     const fixture = TestBed.createComponent(FichaInventario);
@@ -67,6 +68,7 @@ describe('FichaInventario', () => {
     fixture.componentRef.setInput('energiaAtual', 50);
     fixture.componentRef.setInput('energiaMaxima', 50);
     fixture.componentRef.setInput('atributos', atributos);
+    fixture.componentRef.setInput('possuiAnomalia', possuiAnomalia);
     fixture.detectChanges();
     const emitidos: FichaInventarioDto[] = [];
     fixture.componentInstance.inventarioMudou.subscribe((e) => emitidos.push(e));
@@ -871,6 +873,87 @@ describe('FichaInventario', () => {
       expect(fragmentoAvulso.nome).toBe('Fragmento Potencializador — Módulo IV');
       expect(fragmentoAvulso.categoria).toBe(ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR);
       expect(fragmentoAvulso.modulo).toBe(FragmentoModuloEnum.IV);
+    });
+  });
+
+  /**
+   * Habilidade "Anomalia" (Experimento Artificial, `P-013`) — doc: "Fragmentos custam o dobro de
+   * Energia em seu uso, mas têm todos os seus efeitos dobrados". A página resolve o booleano
+   * (`experimentoComAnomalia`) e repassa via `[possuiAnomalia]`; aqui prova que o componente usa o
+   * input em todo custo/cardápio de Fragmento, não só no motor (`fragmento.spec.ts`).
+   */
+  describe('possuiAnomalia (P-013)', () => {
+    function fragmento(categoria: ItemCategoriaEnum, modulo: FragmentoModuloEnum): CarrinhoItemDto {
+      return {
+        nome: 'Fragmento achado',
+        categoria,
+        custo: 0,
+        peso: 0,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        modulo,
+      };
+    }
+
+    it('adquirir um fragmento Potencializador (módulo V) debita o dobro (6, não 3) de Energia Máxima', () => {
+      const alvo = montar({ itens: [], amplificadores: [] }, true, 100, true, true);
+      const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
+      alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+
+      alvo.fixture.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Fragmento achado',
+        categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+        modulo: FragmentoModuloEnum.V,
+      });
+      alvo.fixture.componentInstance['confirmarCriarItem']();
+
+      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 44 }]);
+    });
+
+    it('remover um fragmento avulso restaura o dobro da Energia Máxima drenada na aquisição', () => {
+      const alvo = montar(
+        { itens: [fragmento(ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR, FragmentoModuloEnum.IV)], amplificadores: [] },
+        true,
+        100,
+        true,
+        true,
+      );
+      const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
+      alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+
+      alvo.fixture.componentInstance['confirmarRemocaoItem'](0);
+
+      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 64 }]);
+    });
+
+    it('cardápio "Aplicar em..." (módulo V, sem alvo) vem com os valores dobrados', () => {
+      const alvo = montar(
+        {
+          itens: [itemLeve, fragmento(ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR, FragmentoModuloEnum.V)],
+          amplificadores: [],
+        },
+        true,
+        100,
+        true,
+        true,
+      );
+      alvo.fixture.componentInstance['abrirAplicarFragmento'](1);
+      const opcoes = alvo.fixture.componentInstance['opcoesBonusFragmento']();
+      expect(opcoes[0].efeito.valor).toBe(4);
+    });
+
+    it('cardápio "Consumir" (módulo V) vem com os valores dobrados', () => {
+      const alvo = montar(
+        { itens: [fragmento(ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR, FragmentoModuloEnum.V)], amplificadores: [] },
+        true,
+        100,
+        true,
+        true,
+      );
+      alvo.fixture.componentInstance['consumindoFragmentoIndice'].set(0);
+      const opcoes = alvo.fixture.componentInstance['opcoesConsumoFragmento']();
+      expect(opcoes.map((opcao) => opcao.valor)).toEqual([2, 2, 4]);
     });
   });
 

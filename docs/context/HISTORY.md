@@ -1,5 +1,45 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-10 — `P-013`: habilidade "Anomalia" agora dobra custo/efeito de Fragmentos
+
+A habilidade "Anomalia" (Experimento Artificial) sempre existiu só como texto no catálogo
+(`habilidades-catalogo.dados.ts`): "Fragmentos custam o dobro de Energia em seu uso, mas têm todos
+os seus efeitos dobrados". Nenhuma função de `fragmento.ts` considerava se o agente a possuía —
+puro texto descritivo sem motor por trás.
+
+**Onde a flag entra.** `shared/regras/identidade/experimento.ts` ganhou `experimentoComAnomalia`
+(gêmea de `experimentoComPeculiaridade`, mas fechada em `EXPERIMENTO_ARTIFICIAL` — a habilidade só
+existe no catálogo dessa subclasse, as outras duas não a têm). A página (`FichaVisualizacao`)
+resolve o booleano num `computed` (`possuiAnomalia`, a partir de `dados().classe`/`habilidades`) e
+repassa a `FichaInventario` via `[possuiAnomalia]` — as funções de `fragmento.ts` continuam puras,
+recebendo o booleano já resolvido em vez de importar `identidade/` (evita o ciclo entre
+`compras/` e `identidade/`).
+
+**Escopo dobrado.** Cinco funções de `shared/regras/compras/fragmento.ts` ganharam o parâmetro
+opcional `possuiAnomalia = false`: `custoAquisicaoFragmento`, `custoAcoplarFragmento` (energia e
+energiaMaxima) e `custoRemoverFragmento` dobram o custo em Energia por cima do que já cobravam —
+inclusive o dobro que o Construtor já paga, já que o doc não abre exceção para ele.
+`listarBonusFragmentoPotencializador` e `listarBonusConsumoFragmentoPotencializador` dobram o valor
+de toda opção do cardápio (em item/Consumido), incluindo a opção "N× maior dado" — **exceto**
+`concedePontoAtributo` (Módulo I), que continua concedendo +1 ponto: é regra estrutural de
+ultrapassar o limite de 6 pontos, não um "valor de efeito" do cardápio. `custoRemoverFragmento`
+entrou no escopo por consistência (a doc trata remoção como "uso" de Energia do Fragmento) mesmo
+sem estar citada nominalmente no relato original do `P-013`; o preço de Sanidade do consumo
+(`custoSanidadeConsumirFragmento.energiaMaximaExtra`) e os efeitos fixos do Construtor
+(`listarEfeitosFixosConstrutor`/`bonusMunicaoConstrutor`) ficaram **fora** — não são "cardápio do
+Potencializador" nem custo de aquisição/acoplamento/remoção, e dobrá-los sem pedido seria
+extrapolar a spec.
+
+`FichaInventario` (`ficha-inventario.component.ts`) ganhou `input() possuiAnomalia` e passa o valor
+em todos os 12 pontos onde chamava as cinco funções — inclusive nos dois lados de operações
+simétricas (aplicar/desacoplar fragmento, adquirir/remover) para preservar os invariantes de
+"líquido zero" já comentados no código; um lado dobrado e o outro não teria destravado um novo bug
+de Energia Máxima incoerente. Testes novos em `fragmento.spec.ts`/`experimento.spec.ts` (motor) e
+em `ficha-inventario.component.spec.ts`/`ficha-visualizacao.component.spec.ts` (fiação
+classe/habilidades → input → cardápio/custo). Suítes cheias sem regressão: shared 587/587
+(+17 sobre 570), frontend 813/813 (+6 sobre 807), backend 190/190 (sem alteração — o backend nunca
+tocou custo/efeito de Fragmento).
+
 ## 2026-08-10 — Habilidade de Personalidade segue a cor da ficha, não mais o accent fixo do usuário
 
 Pós-`m3-61`: a categoria Personalidade em `FichaHabilidades` (borda do item + chip) estava
