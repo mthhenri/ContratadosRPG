@@ -13,6 +13,9 @@ build/
 .env.*
 !.env.example
 
+# Avatar da ficha em ArmazenamentoLocalProvedor (m3-62, dev) — nunca commitado
+backend/uploads/
+
 # Testes e cobertura
 coverage/
 
