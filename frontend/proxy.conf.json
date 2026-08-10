@@ -28,6 +28,11 @@
     "secure": false,
     "changeOrigin": true
   },
+  "/uploads": {
+    "target": "http://localhost:3100",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/socket.io": {
     "target": "http://localhost:3100",
     "secure": false,
