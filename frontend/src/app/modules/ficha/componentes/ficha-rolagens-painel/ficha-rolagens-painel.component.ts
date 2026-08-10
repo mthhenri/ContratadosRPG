@@ -6,13 +6,16 @@ import type {
   FichaRolagemDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
+  ajusteDadoIniciativaAmplificadores,
   calcularAjusteDadosEquipamento,
   calcularAtributosParaDados,
   calcularProficiencia,
 } from '@contratados-rpg/shared/regras/agente';
+import { obterDadoExtraIniciativaFormacao } from '@contratados-rpg/shared/regras/identidade';
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { NOME_PRESET_INICIATIVA } from '../../executar-rolagem';
 import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
 import { montarInformacoesExtras, normalizarEntrada } from '../../status-derivado';
 import { FichaRolagens } from '../ficha-rolagens/ficha-rolagens.component';
@@ -49,6 +52,13 @@ export class FichaRolagensPainel {
   readonly podeRolar = input(false);
   /** Cor de identidade visual da ficha (m3-61) — repassada ao editor `FichaRolagens`. */
   readonly cor = input<string | null>(null);
+  /**
+   * `true` esconde o preset "Iniciativa" da lista editável do `FichaRolagens` (redesenho — a ficha
+   * completa passou a rolar Iniciativa direto da aba Informações, `FichaVisualizacao.rolarIniciativa`).
+   * Só a ficha completa liga essa flag: a coluna lateral de `CampanhaDetalhe` não tem aba Informações
+   * pra hospedar o preset, então continua mostrando-o aqui normalmente (default `false`).
+   */
+  readonly esconderIniciativa = input(false);
 
   /** Presets editados — a página persiste em `dados.rolagens` (m3-15). */
   readonly rolagensMudou = output<readonly FichaRolagemDto[]>();
@@ -78,6 +88,37 @@ export class FichaRolagensPainel {
   protected readonly proficiencia = computed(() =>
     calcularProficiencia({ classe: this.dados().classe, nivel: this.dados().nivel }),
   );
+
+  /**
+   * Dado extra de Iniciativa: amplificador `Atento` (`inventario.amplificadores`) + Formação da
+   * Origem `PERICIA_DADO_INICIATIVA` (`identidade.origem.formacao`) — repassado ao editor, que só o
+   * aplica quando o preset rolado se chama "Iniciativa" (`executarPassoPreset`).
+   */
+  protected readonly dadoExtraIniciativa = computed(
+    () =>
+      ajusteDadoIniciativaAmplificadores(this.dados().inventario.amplificadores) +
+      obterDadoExtraIniciativaFormacao(this.dados().identidade?.origem?.formacao ?? []),
+  );
+
+  /** Presets passados ao editor — sem o "Iniciativa" quando `esconderIniciativa()` (ver docstring do input). */
+  protected readonly rolagensExibidas = computed(() => {
+    const todas = this.dados().rolagens ?? [];
+    return this.esconderIniciativa() ? todas.filter((preset) => preset.nome !== NOME_PRESET_INICIATIVA) : todas;
+  });
+
+  /**
+   * Repassa a lista editada pro consumidor persistir. Quando "Iniciativa" está escondida, ela nunca
+   * chega ao `FichaRolagens` — sem isso, qualquer edição (reordenar, adicionar outro preset) devolveria
+   * a lista **sem** ela e a apagaria da ficha. Reinjeta o preset original de volta antes de emitir.
+   */
+  protected aoRolagensMudou(presets: readonly FichaRolagemDto[]): void {
+    if (!this.esconderIniciativa()) {
+      this.rolagensMudou.emit(presets);
+      return;
+    }
+    const iniciativa = this.dados().rolagens?.find((preset) => preset.nome === NOME_PRESET_INICIATIVA);
+    this.rolagensMudou.emit(iniciativa ? [...presets, iniciativa] : presets);
+  }
 
   /** Status derivado do documento — só o recorte de dano interessa aqui (ver `atalhosDano`). */
   private readonly informacoesExtras = computed(() => {

@@ -7,6 +7,7 @@ import {
   aplicarFormacaoAosDerivados,
   listarEfeitosPendentes,
   obterBonusRolagemAtributoFormacao,
+  obterDadoExtraIniciativaFormacao,
   obterResistenciaFormacao,
   obterToleranciaSobrecargaFormacao,
   removerFormacaoDosDerivados,
@@ -245,15 +246,16 @@ describe('removerFormacaoDosDerivados', () => {
 });
 
 describe('listarEfeitosPendentes', () => {
-  it('devolve exatamente as 12 linhas ainda sem consumidor (m3-41 deu consumidor a 4 das 16)', () => {
+  it('devolve exatamente as 11 linhas ainda sem consumidor (5 já cobertas fora do bloco derivados)', () => {
     const pendentes = listarEfeitosPendentes(FORMACOES);
-    expect(pendentes).toHaveLength(12);
+    expect(pendentes).toHaveLength(11);
     expect(pendentes.every((definicao) => !ALVOS_APLICAVEIS.has(definicao.efeito.alvo))).toBe(true);
     const codigosCobertos = [
       FormacaoBonusEnum.COMBATE_RESISTENCIA_TIPO_DANO,
       FormacaoBonusEnum.LOGISTICA_SOBRECARGA,
       FormacaoBonusEnum.PERICIA_DADO_ATRIBUTO,
       FormacaoBonusEnum.PERICIA_BONUS_ATRIBUTO,
+      FormacaoBonusEnum.PERICIA_DADO_INICIATIVA,
     ];
     expect(pendentes.some((definicao) => codigosCobertos.includes(definicao.codigo))).toBe(false);
   });
@@ -289,6 +291,23 @@ describe('obterToleranciaSobrecargaFormacao (m3-41)', () => {
   it('devolve 0 sem a linha, sem quebrar com outros bônus', () => {
     expect(obterToleranciaSobrecargaFormacao([formacao(FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO)])).toBe(0);
     expect(obterToleranciaSobrecargaFormacao([])).toBe(0);
+  });
+});
+
+describe('obterDadoExtraIniciativaFormacao', () => {
+  it('soma +1 dado por linha de PERICIA_DADO_INICIATIVA', () => {
+    expect(obterDadoExtraIniciativaFormacao([formacao(FormacaoBonusEnum.PERICIA_DADO_INICIATIVA)])).toBe(1);
+    expect(
+      obterDadoExtraIniciativaFormacao([
+        formacao(FormacaoBonusEnum.PERICIA_DADO_INICIATIVA),
+        formacao(FormacaoBonusEnum.PERICIA_DADO_INICIATIVA),
+      ]),
+    ).toBe(2);
+  });
+
+  it('devolve 0 sem a linha, sem quebrar com outros bônus', () => {
+    expect(obterDadoExtraIniciativaFormacao([formacao(FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO)])).toBe(0);
+    expect(obterDadoExtraIniciativaFormacao([])).toBe(0);
   });
 });
 

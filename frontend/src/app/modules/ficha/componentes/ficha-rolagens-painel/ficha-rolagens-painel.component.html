@@ -16,16 +16,17 @@
   </button>
 }
 <app-ficha-rolagens
-  [rolagens]="dados().rolagens ?? []"
+  [rolagens]="rolagensExibidas()"
   [atributos]="atributosParaDados()"
   [proficiencia]="proficiencia()"
   [nivel]="dados().nivel"
   [habilidadesDisponiveis]="dados().habilidades"
   [atalhosDano]="atalhosDano()"
+  [dadoExtraIniciativa]="dadoExtraIniciativa()"
   [editavel]="editavel()"
   [podeRolar]="podeRolar()"
   [cor]="cor()"
-  (rolagensMudou)="rolagensMudou.emit($event)"
+  (rolagensMudou)="aoRolagensMudou($event)"
   (energiaGasta)="energiaGasta.emit($event)"
   (rolagemFeita)="registro.registrar($event)"
 />

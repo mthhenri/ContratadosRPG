@@ -8,6 +8,14 @@ import { resolverPreset, rolarPasso, type ResultadoRolagemDto } from '@contratad
  * orquestra a chamada e monta o rótulo/energia — nenhuma regra nova.
  */
 
+/**
+ * Nome do preset de Iniciativa (m3-47) — mesmo identificador de `PRESET_INICIATIVA_PADRAO.nome` no
+ * backend. Exportado porque também é usado fora daqui: `FichaRolagensPainel` o esconde da lista de
+ * presets editável dentro da ficha completa (agora rolado direto da aba Informações,
+ * `FichaVisualizacao.rolarIniciativa`) e o filtra de volta antes de persistir qualquer edição.
+ */
+export const NOME_PRESET_INICIATIVA = 'Iniciativa';
+
 /** Entrada de `executarPassoPreset`. */
 export interface ExecutarPassoPresetDto {
   readonly preset: FichaRolagemDto;
@@ -21,6 +29,14 @@ export interface ExecutarPassoPresetDto {
   readonly energiaVariavel?: number;
   /** `true` quando o passo é rolado em modo **crítico** (dobra o dano; m3-30). */
   readonly critico?: boolean;
+  /**
+   * Dado extra de Iniciativa (amplificador `Atento` + Formação `PERICIA_DADO_INICIATIVA`) — soma na
+   * contagem de `DESd6` só quando `preset.nome` é `"Iniciativa"` (mesmo padrão pontual de
+   * `rolarTesteAtributo`: bumpa só a Destreza desta rolagem, sem alterar `atributos` em nenhum outro
+   * lugar da ficha). Ignorado para qualquer outro preset — o bônus é específico da Iniciativa, não de
+   * toda rolagem que use Destreza.
+   */
+  readonly dadoExtraIniciativa?: number;
 }
 
 /** Saída de `executarPassoPreset` — pronta pra jogar na `BandejaDadosService` e debitar Energia. */
@@ -48,7 +64,11 @@ export function executarPassoPreset(dto: ExecutarPassoPresetDto): PassoExecutado
   if (!passo) {
     return null;
   }
-  const resultado = rolarPasso(passo, dto.atributos, dto.proficiencia, dto.nivel, undefined, dto.critico ?? false);
+  const atributosParaRolar =
+    dto.preset.nome === NOME_PRESET_INICIATIVA && dto.dadoExtraIniciativa
+      ? { ...dto.atributos, destreza: dto.atributos.destreza + dto.dadoExtraIniciativa }
+      : dto.atributos;
+  const resultado = rolarPasso(passo, atributosParaRolar, dto.proficiencia, dto.nivel, undefined, dto.critico ?? false);
   if (!resultado) {
     return null;
   }

@@ -228,7 +228,7 @@
 
     // Atributos "resumida": antes ficava ao lado da Identidade (mesma altura, coluna própria);
     // empilhada embaixo agora, então aperta mais um degrau que o `--2col` padrão — valor um pouco
-    // menor e o glance de Combate (`ficha-combate-rapido--cinco`, ver HTML) mais denso também.
+    // menor e o glance de Combate (`ficha-combate-rapido--seis`, ver HTML) mais denso também.
     .ficha-cartao--atributos {
       // Proficiência + Maestria lado a lado (a pedido do autor) — a coluna larga do compacto
       // (500px) sobra espaço de sobra pra isso, ao contrário do `--atributos` estreito (260px) do
@@ -278,13 +278,13 @@
 
     }
 
-    // Glance de Combate na aba Informações (m2-21). A régua `repeat(4, max-content) 1fr` do
-    // `--cinco` (regra base) conta com a largura do card de Status do `modo="padrao"` — lá ele fica
+    // Glance de Combate na aba Informações (m2-21). A régua `repeat(5, max-content) 1fr` do
+    // `--seis` (regra base) conta com a largura do card de Status do `modo="padrao"` — lá ele fica
     // com o resto de uma página larga. Aqui a coluna divide a linha com a Identidade e fica entre
-    // ~250 e ~510px: medido ao vivo, os quatro primeiros boxes comiam a largura toda e o Dano
-    // C. a C. transbordava a borda do card. 2 colunas iguais (mesma régua que o `bp.mobile` do
-    // `--cinco` já usa) cabem em qualquer uma dessas larguras, ao custo de uma 3ª linha.
-    .ficha-combate-rapido--cinco {
+    // ~250 e ~510px: medido ao vivo, os cinco primeiros boxes comiam a largura toda e o Dano
+    // C. a C. transbordava a borda do card. 3 colunas iguais (mesma régua que o `bp.mobile` do
+    // `--seis` já usa) cabem em qualquer uma dessas larguras, ao custo de uma 2ª linha.
+    .ficha-combate-rapido--seis {
       grid-template-columns: repeat(3, minmax(0, 1fr));
 
       .ficha-mini__valor {
@@ -1823,7 +1823,7 @@
     }
 
     // Dano C. a C.: exceção à regra "largura no tamanho do texto" acima — é o box mais largo da
-    // fileira (`--cinco` estica ele até o fim da grade), mas o valor por extenso (ex.
+    // fileira (`--seis` estica ele até o fim da grade), mas o valor por extenso (ex.
     // "2D6 [Físico]") ainda estourava os 9ch da `--larga` e ficava cortado/pouco visível. Aqui o
     // box já tem espaço de sobra, então o input pode ocupar até o fim dele.
     &--cheia {
@@ -2215,18 +2215,18 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  // Status: Deslocamento/Hab. por Turno/Percepção têm valor curto (ex. "9m", "16") — a coluna
-  // encolhe pro conteúdo (`max-content`) em vez de dividir a fileira em 5 partes iguais, senão
-  // sobra vão morto entre o valor e a borda direita da caixa. O espaço que sobra vai inteiro pra
-  // Dano C. a C. (`1fr`, última da fileira — valor mais longo, ex. "2D6 [Físico]"); Dano Furtivo
-  // fica no meio, do tamanho do próprio conteúdo.
-  &--cinco {
-    grid-template-columns: repeat(4, max-content) minmax(0, 1fr);
+  // Status: Deslocamento/Hab. por Turno/Percepção/Dano Furtivo/Iniciativa têm valor curto (ex.
+  // "9m", "16", "3d6") — a coluna encolhe pro conteúdo (`max-content`) em vez de dividir a fileira
+  // em 6 partes iguais, senão sobra vão morto entre o valor e a borda direita da caixa. O espaço
+  // que sobra vai inteiro pra Dano C. a C. (`1fr`, última da fileira — valor mais longo, ex.
+  // "2D6 [Físico]"); Dano Furtivo fica no meio, do tamanho do próprio conteúdo.
+  &--seis {
+    grid-template-columns: repeat(5, max-content) minmax(0, 1fr);
   }
 
   &--com-contra,
   &--quatro,
-  &--cinco {
+  &--seis {
     @include bp.mobile {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }

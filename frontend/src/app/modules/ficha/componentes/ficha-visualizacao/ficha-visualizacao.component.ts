@@ -36,6 +36,7 @@ import type {
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
   MAESTRIA_PONTOS_MINIMO,
+  ajusteDadoIniciativaAmplificadores,
   ajusteEnergiaAmplificadores,
   ajusteVidaAmplificadores,
   aplicarBonusConsumoFragmento,
@@ -75,6 +76,7 @@ import {
   FORMACOES,
   listarEfeitosPendentes,
   obterBonusRolagemAtributoFormacao,
+  obterDadoExtraIniciativaFormacao,
   obterResistenciaFormacao,
   obterToleranciaSobrecargaFormacao,
   type FormacaoDefinicaoDto,
@@ -100,6 +102,7 @@ import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-fi
 import { GRUPOS_FORMACAO, rotuloParametroFormacao } from '../../opcoes-formacao';
 import { CONDICOES_FICHA, type CondicoesFicha } from '../../condicoes-ficha';
 import { clamparVitalidade, type CampoVitalidadeAtual } from '../../ajuste-vitalidade';
+import { executarPassoPreset, NOME_PRESET_INICIATIVA } from '../../executar-rolagem';
 import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
 import type { RolagemRealizadaDto } from '../../rolagem-realizada';
 import { perfilClasseRotulos } from '../../rotulos-ficha';
@@ -1357,6 +1360,60 @@ export class FichaVisualizacao {
     }
   }
 
+  /**
+   * Preset "Iniciativa" seedado no backend em toda ficha nova (`PRESET_INICIATIVA_PADRAO`, m3-47) —
+   * `null` só em fichas antigas cujo preset foi apagado manualmente antes deste redesenho (o box de
+   * Iniciativa de Informações some nesse caso; `editavel()` pode recriá-lo na aba Rolagens de novo,
+   * o botão "+" de lá continua livre pra qualquer nome).
+   */
+  protected readonly presetIniciativa = computed(
+    () => this.dados().rolagens?.find((preset) => preset.nome === NOME_PRESET_INICIATIVA) ?? null,
+  );
+
+  /**
+   * Dado extra de Iniciativa: amplificador `Atento` + Formação da Origem `PERICIA_DADO_INICIATIVA`
+   * — mesma soma de `FichaRolagensPainel.dadoExtraIniciativa` (fonte única, `shared/regras`).
+   */
+  protected readonly dadoExtraIniciativa = computed(
+    () =>
+      ajusteDadoIniciativaAmplificadores(this.dados().inventario.amplificadores) +
+      obterDadoExtraIniciativaFormacao(this.formacaoOrigem()),
+  );
+
+  /** Total de d6 rolados em Iniciativa (Destreza para dados + o dado extra acima) — só leitura no glance. */
+  protected readonly dadosIniciativa = computed(() => this.atributosParaDados().destreza + this.dadoExtraIniciativa());
+
+  /**
+   * Rola Iniciativa direto do glance de Informações (redesenho — saiu da aba Rolagens, que agora
+   * some com ela na ficha completa): mesmo `executarPassoPreset` dos presets, com o dado extra de
+   * amplificador/Formação já embutido (mesma lógica de `FichaRolagensPainel`/`FichaRolagens`).
+   */
+  protected rolarIniciativa(): void {
+    const preset = this.presetIniciativa();
+    if (!this.podeRolar() || !preset) {
+      return;
+    }
+    const executado = executarPassoPreset({
+      preset,
+      atributos: this.atributosParaDados(),
+      proficiencia: this.proficiencia(),
+      nivel: this.dados().nivel,
+      habilidadesDisponiveis: this.dados().habilidades,
+      indicePasso: 0,
+      dadoExtraIniciativa: this.dadoExtraIniciativa(),
+    });
+    if (!executado) {
+      return;
+    }
+    this.bandeja.mostrar({
+      rotulo: executado.rotulo,
+      formula: executado.formula,
+      resultado: executado.resultado,
+      corFicha: this.cor(),
+    });
+    this.registrarRolagem({ rotulo: executado.rotulo, formula: executado.formula, resultado: executado.resultado });
+  }
+
   /** Penalidade de lesão por atributo (0 quando não lesionado) — badge "−N" na leitura. */
   protected readonly penalidadesLesao = computed<Record<ChaveAtributo, number>>(() => {
     const lesoes = this.estado().lesoes;
@@ -1575,10 +1632,14 @@ export class FichaVisualizacao {
   ];
 
   /**
-   * Glance de Deslocamento/Hab. por Turno/Percepção/Dano Furtivo/Dano C. a C. no novo card de
-   * Status — mesmas linhas editáveis de `Informações Extras` (m3-10), só reorganizadas; nenhum
-   * cálculo novo. Dano C. a C. por último de propósito: é o box maior da fileira (grade
-   * `--cinco` abaixo), então fica melhor encostado na borda de fora do card.
+   * Glance de Deslocamento/Hab. por Turno/Percepção/Dano Furtivo/Dano C. a C. no card de Status —
+   * mesmas linhas editáveis de `Informações Extras` (m3-10), só reorganizadas; nenhum cálculo novo.
+   * Dano C. a C. por último de propósito (grade `--seis` no HTML/SCSS: 5 colunas `max-content` +
+   * 1 `1fr` no fim) — é o box mais longo da fileira (ex. "2D6 [Físico]"), então fica melhor com o
+   * espaço que sobra depois dos curtos, em vez de repartir tudo em partes iguais. O 6º box da
+   * fileira é o de Iniciativa (`presetIniciativa`/`dadosIniciativa` acima), montado à parte logo
+   * depois do `@for` no HTML porque não é um derivado de `FichaDerivadosDto` — é um preset de
+   * rolagem.
    */
   protected readonly statusRapido = computed<readonly InfoExtra[]>(() => {
     const mapa = new Map(this.informacoesExtras().map((info) => [info.chave, info] as const));
@@ -2234,7 +2295,9 @@ export class FichaVisualizacao {
    * (`shared/regras` — fonte única). Referência do peso usado; exceder é aviso, não trava.
    */
   protected readonly inventarioMaximoValor = computed(
-    () => this.dados().derivados?.inventarioMaximo ?? calcularInventario(this.entrada()),
+    () =>
+      this.dados().derivados?.inventarioMaximo ??
+      calcularInventario({ ...this.entrada(), habilidades: this.dados().habilidades }),
   );
 
   // === Extras (m3-49): Origem/Personalidade/afinidade de fragmentos, aba "Extras" do Status ===

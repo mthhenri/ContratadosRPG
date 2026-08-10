@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { AmplificadorAplicadoDto } from '../compras';
 import {
   ajusteBloqueioAmplificadores,
+  ajusteDadoIniciativaAmplificadores,
   ajusteDanoFurtivoAmplificadores,
   ajusteDefesaAmplificadores,
   ajusteDeslocamentoAmplificadores,
@@ -132,6 +133,17 @@ describe('ajusteInventarioAmplificadores', () => {
 
   it('Veloz penaliza -2 por empilhamento além do 1º', () => {
     expect(ajusteInventarioAmplificadores(porta('Veloz', 3))).toBe(-4);
+  });
+});
+
+describe('ajusteDadoIniciativaAmplificadores', () => {
+  it('Atento concede +1 dado por compra (escala normal, empilhamento inicial 1)', () => {
+    expect(ajusteDadoIniciativaAmplificadores(porta('Atento', 1))).toBe(1);
+    expect(ajusteDadoIniciativaAmplificadores(porta('Atento', 3))).toBe(3);
+  });
+
+  it('devolve 0 sem o amplificador', () => {
+    expect(ajusteDadoIniciativaAmplificadores([])).toBe(0);
   });
 });
 

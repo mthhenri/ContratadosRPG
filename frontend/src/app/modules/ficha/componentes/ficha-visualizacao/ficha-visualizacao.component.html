@@ -1306,7 +1306,7 @@
             <div class="ficha-cartao__divisor"></div>
             <p class="ficha-cartao__subrotulo">Combate</p>
           }
-          <div class="ficha-combate-rapido ficha-combate-rapido--cinco">
+          <div class="ficha-combate-rapido ficha-combate-rapido--seis">
             @for (linha of statusRapido(); track linha.chave) {
               <div
                 class="ficha-mini ficha-mini--fino"
@@ -1364,6 +1364,37 @@
                 } @else {
                   <span class="ficha-mini__valor">{{ linha.display }}</span>
                 }
+              </div>
+            }
+            <!-- Iniciativa (redesenho — saiu da aba Rolagens, que agora esconde este preset na
+                 ficha completa): não é um derivado de `FichaDerivadosDto`, então não passa pelo
+                 `@for` de `statusRapido()` acima — é o preset "Iniciativa" (m3-47) + o dado extra de
+                 amplificador/Formação (`dadoExtraIniciativa`). Some se o preset foi apagado
+                 manualmente (ficha antiga). -->
+            @if (presetIniciativa()) {
+              <div class="ficha-mini ficha-mini--fino" [class.ficha-mini--com-rolar]="podeRolar()">
+                @if (podeRolar()) {
+                  <button
+                    class="ficha-mini__rolar"
+                    type="button"
+                    aria-label="Rolar Iniciativa"
+                    [appTooltip]="'Rolar Iniciativa'"
+                    (click)="rolarIniciativa()"
+                  >
+                    <app-icone [nome]="'dado'" />
+                  </button>
+                }
+                <span class="ficha-mini__rotulo">Iniciativa</span>
+                <span
+                  class="ficha-mini__valor"
+                  [appTooltip]="
+                    dadoExtraIniciativa() > 0
+                      ? 'Destreza ' + atributosParaDados().destreza + ' + ' + dadoExtraIniciativa() + ' (amplificador/Formação)'
+                      : 'Destreza ' + atributosParaDados().destreza
+                  "
+                >
+                  {{ dadosIniciativa() }}d6
+                </span>
               </div>
             }
           </div>
@@ -1474,6 +1505,7 @@
             [editavel]="ajustavelAmplo()"
             [podeRolar]="podeRolar()"
             [cor]="cor()"
+            [esconderIniciativa]="true"
             (rolagensMudou)="ajusteRolagens.emit($event)"
             (energiaGasta)="aoUtilizarHabilidade($event)"
           />

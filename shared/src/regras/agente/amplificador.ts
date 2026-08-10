@@ -133,6 +133,15 @@ export function modificadoresTesteAmplificadores(
 }
 
 /**
+ * Ajuste de **dado extra de Iniciativa**: `Atento` concede +1 dado por compra (escala normal,
+ * sem penalidade cruzada) — soma na contagem de `DESd6` do preset "Iniciativa" (m3-47), ao lado
+ * do bônus de Formação da Origem (`PERICIA_DADO_INICIATIVA`, `shared/regras/identidade/formacoes`).
+ */
+export function ajusteDadoIniciativaAmplificadores(amplificadores: readonly AmplificadorAplicadoDto[]): number {
+  return bonusEscalado(amplificadores, 'Atento', 1);
+}
+
+/**
  * Ajuste de **Deslocamento**: `Veloz` concede +3m na 1ª compra (mesmo já nascendo em ■■ — não
  * dobra) e +1m por compra adicional (única exceção com ritmo de escala diferente — doc:
  * "Empilhamentos adicionais aumentam apenas em +1 metro"); `Inventário` penaliza −1m por

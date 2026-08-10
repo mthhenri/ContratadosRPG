@@ -107,6 +107,11 @@ export class FichaRolagens {
   readonly atalhosDano = input<{ readonly corpo?: string | null; readonly furtivo?: string | null }>({});
   /** Cor de identidade visual da ficha (m3-61) — repassada à bandeja de dados em cada rolagem. */
   readonly cor = input<string | null>(null);
+  /**
+   * Dado extra de Iniciativa (amplificador `Atento` + Formação `PERICIA_DADO_INICIATIVA`) — repassado
+   * a `executarPassoPreset`, que só o aplica quando o preset rolado se chama "Iniciativa" (m3-47).
+   */
+  readonly dadoExtraIniciativa = input<number>(0);
 
   /** Emite a lista inteira após qualquer mutação — a página persiste. */
   readonly rolagensMudou = output<readonly FichaRolagemDto[]>();
@@ -454,6 +459,7 @@ export class FichaRolagens {
       indicePasso,
       energiaVariavel: this.energiaVariavelDe(preset.indice, indicePasso),
       critico,
+      dadoExtraIniciativa: this.dadoExtraIniciativa(),
     });
     if (!executado) {
       return;

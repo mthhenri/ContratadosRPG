@@ -12,9 +12,10 @@ export type FormacaoGrupo = 'Combate' | 'Movimento' | 'Perícia' | 'Equipamento'
 /**
  * O efeito mecânico de uma linha de Formação — um descritor declarativo, não uma função sob medida
  * (m3-23). `DERIVADO`/`DERIVADO_ESCOLHA`/`DANO_CORPO`/`DANO_FURTIVO_DADO` têm campo hoje em
- * `FichaDerivadosDto` e são aplicados por `aplicarFormacaoAosDerivados`. `ROLAGEM`/`DURACAO_EFEITO`/
- * `RESISTENCIA`/`SOBRECARGA`/`INICIATIVA`/`DT_REPARO` **não têm consumidor ainda** — ficam modelados e corretos,
- * aguardando os campos/motor que os aplicarão (ver aviso em `formacoes.dados.ts`).
+ * `FichaDerivadosDto` e são aplicados por `aplicarFormacaoAosDerivados`; `RESISTENCIA`/`SOBRECARGA`/
+ * `INICIATIVA` têm consumidor dedicado fora do bloco `derivados` (`formacoes.ts`). `ROLAGEM`/
+ * `DURACAO_EFEITO`/`DT_REPARO` **não têm consumidor ainda** — ficam modelados e corretos, aguardando
+ * os campos/motor que os aplicarão (ver aviso em `formacoes.dados.ts`).
  */
 export type EfeitoFormacao =
   | { readonly alvo: 'DERIVADO'; readonly campo: 'deslocamento' | 'inventarioMaximo'; readonly valor: number }

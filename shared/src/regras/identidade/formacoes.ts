@@ -99,24 +99,27 @@ export function removerFormacaoDosDerivados(
 }
 
 /**
- * Códigos de Formação com consumidor **fora** do bloco `derivados` (m3-41): não passam por
+ * Códigos de Formação com consumidor **fora** do bloco `derivados`: não passam por
  * `aplicarFormacaoAosDerivados`/`aplicarEfeitoUnico` — cada um tem sua própria função abaixo,
  * chamada direto de onde o valor é exibido/rolado (resistência da aba Combate, limiar de
- * "Sobrecarregado" do Inventário, teste de atributo da Visão Geral). As demais linhas de `ROLAGEM`
- * (categoria de arma/condição) e `INICIATIVA`/`DT_REPARO`/`DURACAO_EFEITO` continuam pendentes — não
- * há tela/motor de categoria de arma, iniciativa, reparo ou duração de efeito na ficha ainda.
+ * "Sobrecarregado" do Inventário, teste de atributo da Visão Geral, dado extra do preset
+ * "Iniciativa" — `obterDadoExtraIniciativaFormacao`, consumido por `executarPassoPreset` no
+ * frontend). As demais linhas de `ROLAGEM` (categoria de arma/condição) e `DT_REPARO`/
+ * `DURACAO_EFEITO` continuam pendentes — não há tela/motor de categoria de arma, reparo ou duração
+ * de efeito na ficha ainda.
  */
 const CODIGOS_APLICAVEIS_FORA_DERIVADOS = new Set<FormacaoBonusEnum>([
   FormacaoBonusEnum.COMBATE_RESISTENCIA_TIPO_DANO,
   FormacaoBonusEnum.LOGISTICA_SOBRECARGA,
   FormacaoBonusEnum.PERICIA_DADO_ATRIBUTO,
   FormacaoBonusEnum.PERICIA_BONUS_ATRIBUTO,
+  FormacaoBonusEnum.PERICIA_DADO_INICIATIVA,
 ]);
 
 /**
  * Devolve, estruturadas, as linhas de `formacoes` cujo efeito ainda **não tem consumidor algum**
- * (nem no bloco `derivados`, nem nas funções dedicadas de m3-41) — útil para auditar a cobertura da
- * tabela. Chamada com `FORMACOES` inteira devolve as 12 pendentes.
+ * (nem no bloco `derivados`, nem nas funções dedicadas fora dele) — útil para auditar a cobertura da
+ * tabela. Chamada com `FORMACOES` inteira devolve as 11 pendentes.
  */
 export function listarEfeitosPendentes(
   formacoes: Readonly<Record<FormacaoBonusEnum, FormacaoDefinicaoDto>>,
@@ -200,6 +203,20 @@ export function obterResistenciaFormacao(
 export function obterToleranciaSobrecargaFormacao(formacoes: readonly FichaFormacaoDto[]): number {
   return formacoes.reduce((total, formacao) => {
     if (formacao.bonus !== FormacaoBonusEnum.LOGISTICA_SOBRECARGA) {
+      return total;
+    }
+    return total + FORMACOES[formacao.bonus].efeito.valor;
+  }, 0);
+}
+
+/**
+ * Soma o dado extra de Iniciativa (`PERICIA_DADO_INICIATIVA`: "+1 dado em Iniciativa") — consumido
+ * pelo preset "Iniciativa" (m3-47) como bônus na contagem de dados de `DESd6`, ao lado do bônus do
+ * amplificador `Atento` (`ajusteDadoIniciativaAmplificadores`, `shared/regras/agente/amplificador`).
+ */
+export function obterDadoExtraIniciativaFormacao(formacoes: readonly FichaFormacaoDto[]): number {
+  return formacoes.reduce((total, formacao) => {
+    if (formacao.bonus !== FormacaoBonusEnum.PERICIA_DADO_INICIATIVA) {
       return total;
     }
     return total + FORMACOES[formacao.bonus].efeito.valor;

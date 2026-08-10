@@ -7,11 +7,13 @@ import type { FormacaoDefinicaoDto } from './identidade.dtos';
  * linhas que exigem escolha do jogador (categoria de arma, tipo de dano, atributo, condição,
  * esquiva/bloqueio).
  *
- * **Cobertura real: 5 de 21.** Só as linhas com `efeito.alvo` em `DERIVADO`/`DERIVADO_ESCOLHA`/
+ * **Cobertura real: 10 de 21** — 5 linhas com `efeito.alvo` em `DERIVADO`/`DERIVADO_ESCOLHA`/
  * `DANO_CORPO`/`DANO_FURTIVO_DADO` têm campo hoje em `FichaDerivadosDto` e são aplicadas por
- * `aplicarFormacaoAosDerivados`. As outras 16 (`ROLAGEM`/`DURACAO_EFEITO`/`RESISTENCIA`/`SOBRECARGA`/`INICIATIVA`/
- * `DT_REPARO`) **não têm consumidor ainda** — o motor de rolagem só nasce na `m3-15` (backlog) e a
- * ficha não modela resistências/Sobrecarga/Iniciativa/DT de reparo.
+ * `aplicarFormacaoAosDerivados`; outras 5 (`COMBATE_RESISTENCIA_TIPO_DANO`, `LOGISTICA_SOBRECARGA`,
+ * `PERICIA_DADO_ATRIBUTO`, `PERICIA_BONUS_ATRIBUTO`, `PERICIA_DADO_INICIATIVA`) têm consumidor
+ * dedicado fora do bloco `derivados` (`formacoes.ts`). As outras 11 (`ROLAGEM`/`DURACAO_EFEITO`/
+ * `DT_REPARO`) continuam sem consumidor — o motor de categoria de arma/condição, duração de efeito
+ * e DT de reparo ainda não existem na ficha.
  *
  * **Aviso à sessão futura — isto não é código morto.** Ao fim da `m3-23`, os alvos `ROLAGEM`,
  * `DURACAO_EFEITO`, `RESISTENCIA`, `SOBRECARGA`, `INICIATIVA` e `DT_REPARO` estão **corretos, testados e sem nenhum
