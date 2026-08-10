@@ -43,6 +43,28 @@
   --positive: #4a9d6b;  /* dano furtivo / ganho */
   --warning: #d9a441;   /* aviso / prestígio */
 
+  /* --- Cores por tipo de dano — só o "quadradinho" de resumo por tipo num resultado de
+     rolagem (`resultado-rolagem__grupo`), NUNCA a rolagem inteira. Independentes de --vida/--energy/
+     --positive/--warning (mesmo quando o matiz é próximo) porque o domínio é outro: tipo de dano
+     causado, não stat do agente — trocar um não deve mexer no outro. Mesma receita dim/border (12%/
+     40%) do --accent para o preenchimento/borda do chip; o glow (text-shadow/box-shadow) é calculado
+     inline no SCSS do componente, igual ao --cor-ficha do crítico, sem token dedicado. */
+  --dano-fisico: #ef4444;      /* Físico */
+  --dano-fisico-border: color-mix(in srgb, var(--dano-fisico) 40%, transparent);
+  --dano-fisico-dim: color-mix(in srgb, var(--dano-fisico) 12%, transparent);
+  --dano-balistico: #3b82f6;   /* Balístico */
+  --dano-balistico-border: color-mix(in srgb, var(--dano-balistico) 40%, transparent);
+  --dano-balistico-dim: color-mix(in srgb, var(--dano-balistico) 12%, transparent);
+  --dano-explosao: #f97316;    /* Explosão */
+  --dano-explosao-border: color-mix(in srgb, var(--dano-explosao) 40%, transparent);
+  --dano-explosao-dim: color-mix(in srgb, var(--dano-explosao) 12%, transparent);
+  --dano-quimico: #22c55e;     /* Químico */
+  --dano-quimico-border: color-mix(in srgb, var(--dano-quimico) 40%, transparent);
+  --dano-quimico-dim: color-mix(in srgb, var(--dano-quimico) 12%, transparent);
+  --dano-geral: #e5e7eb;       /* Geral (irredutível) — quase branco, não confundir com --text */
+  --dano-geral-border: color-mix(in srgb, var(--dano-geral) 40%, transparent);
+  --dano-geral-dim: color-mix(in srgb, var(--dano-geral) 12%, transparent);
+
   /* --- Tipografia --- */
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace; /* dados, títulos, rótulos, números */
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;    /* corpo, textos longos */

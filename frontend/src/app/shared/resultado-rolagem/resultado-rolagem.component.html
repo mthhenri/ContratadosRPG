@@ -39,7 +39,7 @@
         @if (resultado.grupos; as grupos) {
           <div class="resultado-rolagem__grupos">
             @for (grupo of grupos; track grupo.tipoDano) {
-              <span class="resultado-rolagem__grupo">{{ grupo.tipoDano }} {{ grupo.total }}</span>
+              <span [class]="classeGrupo(grupo.tipoDano)">{{ grupo.tipoDano }} {{ grupo.total }}</span>
             }
           </div>
         }

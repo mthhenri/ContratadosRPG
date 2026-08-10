@@ -157,12 +157,26 @@
     gap: 8px;
   }
 
+  // Chip de resumo por tipo de dano ("Físico 12", "Balístico 6"...) — cor dedicada por tipo
+  // (`--dano-*` em _tokens.scss), com glow sutil pra realçar sem competir com o total da rolagem
+  // (que continua na cor de identidade da ficha, `--cor-ficha`). Só o chip muda de cor — o resto
+  // do resultado (pool de dados, total) não é afetado pelo tipo de dano.
   &__grupo {
     font-family: var(--font-mono);
     font-size: 15px;
+    font-weight: 700;
     color: var(--text-dim);
     border: 1px solid var(--border);
     border-radius: var(--radius-control);
     padding: 2px 9px;
+
+    @each $tipo in fisico, balistico, explosao, quimico, geral {
+      &--#{$tipo} {
+        color: var(--dano-#{$tipo});
+        border-color: var(--dano-#{$tipo}-border);
+        background: var(--dano-#{$tipo}-dim);
+        text-shadow: 0 0 8px color-mix(in srgb, var(--dano-#{$tipo}) 55%, transparent);
+      }
+    }
   }
 }

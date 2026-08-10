@@ -1,6 +1,21 @@
 import { Component, computed, input } from '@angular/core';
 
+import { TipoDanoEnum } from '@contratados-rpg/shared/enums';
 import type { DadosRoladosDto, ResultadoRolagemDto } from '@contratados-rpg/shared/regras/rolagem';
+
+/**
+ * Modificador BEM (`resultado-rolagem__grupo--<sufixo>`) por tipo de dano — cor dedicada por tipo
+ * no chip de resumo (`--dano-fisico`/`--dano-balistico`/`--dano-explosao`/`--dano-quimico`/
+ * `--dano-geral` em `_tokens.scss`), só ali; a rolagem inteira (total, pool de dados) continua na
+ * cor de identidade da ficha (`--cor-ficha`), sem mudar.
+ */
+const SUFIXO_TIPO_DANO: Record<TipoDanoEnum, string> = {
+  [TipoDanoEnum.FISICO]: 'fisico',
+  [TipoDanoEnum.BALISTICO]: 'balistico',
+  [TipoDanoEnum.EXPLOSAO]: 'explosao',
+  [TipoDanoEnum.QUIMICO]: 'quimico',
+  [TipoDanoEnum.GERAL]: 'geral',
+};
 
 /**
  * Renderização do **resultado** de uma rolagem (total, pool de dados, grupos de dano, modificadores)
@@ -38,6 +53,11 @@ export class ResultadoRolagem {
    */
   protected ehCritico(resultado: ResultadoRolagemDto): boolean {
     return resultado.critico === true || resultado.dados.some((dado) => (dado.criticos ?? 0) > 0);
+  }
+
+  /** Classe do chip de um grupo de dano — combina o modificador base com o sufixo do tipo. */
+  protected classeGrupo(tipoDano: TipoDanoEnum): string {
+    return `resultado-rolagem__grupo resultado-rolagem__grupo--${SUFIXO_TIPO_DANO[tipoDano]}`;
   }
 
   /**
