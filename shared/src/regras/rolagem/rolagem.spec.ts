@@ -227,6 +227,24 @@ describe('dano tipado e Composto (m3-18)', () => {
     expect(interpretarFormula('2d6 [quimico]').formula?.dados[0].tipoDano).toBe(TipoDanoEnum.QUIMICO);
   });
 
+  it('resolve siglas de 1 letra (`[F]`/`[B]`/`[E]`/`[Q]`/`[G]`)', () => {
+    expect(interpretarFormula('2d6 [F]').formula?.dados[0].tipoDano).toBe(TipoDanoEnum.FISICO);
+    expect(interpretarFormula('2d6 [B]').formula?.dados[0].tipoDano).toBe(TipoDanoEnum.BALISTICO);
+    expect(interpretarFormula('2d6 [E]').formula?.dados[0].tipoDano).toBe(TipoDanoEnum.EXPLOSAO);
+    expect(interpretarFormula('2d6 [Q]').formula?.dados[0].tipoDano).toBe(TipoDanoEnum.QUIMICO);
+    expect(interpretarFormula('2d6 [G]').formula?.dados[0].tipoDano).toBe(TipoDanoEnum.GERAL);
+    // Minúscula também — mesma tolerância de caixa das tags por extenso.
+    expect(interpretarFormula('2d6 [f]').formula?.dados[0].tipoDano).toBe(TipoDanoEnum.FISICO);
+  });
+
+  it('siglas também valem no Composto (`[F-Q]`)', () => {
+    const resultado = rolarFormula({ formula: '2d10 [F-Q]', atributos }, sequencia([10, 5]));
+    expect(resultado?.grupos).toEqual([
+      { tipoDano: TipoDanoEnum.FISICO, total: 8, composto: true },
+      { tipoDano: TipoDanoEnum.QUIMICO, total: 7, composto: true },
+    ]);
+  });
+
   it('rejeita tipo desconhecido, Composto com Geral, 3 tipos e tipos iguais', () => {
     expect(interpretarFormula('2d6 [Xyz]').valida).toBe(false);
     expect(interpretarFormula('2d6 [Físico-Geral]').valida).toBe(false);

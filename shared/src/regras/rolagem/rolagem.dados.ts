@@ -46,12 +46,25 @@ const normalizarTipoDano = (texto: string): string =>
     .trim()
     .toUpperCase();
 
-/** Nome normalizado → `TipoDanoEnum` (m3-18). Os valores do enum já são as strings de exibição. */
-const MAPA_TIPO_DANO: Readonly<Record<string, TipoDanoEnum>> = Object.fromEntries(
-  Object.values(TipoDanoEnum).map((tipo) => [normalizarTipoDano(tipo), tipo]),
-);
+/**
+ * Sigla de 1 letra → `TipoDanoEnum`, pra tag `[Tipo]` de uma fórmula aceitar a forma curta
+ * (`[F]` valendo o mesmo que `[Fisico]`/`[Físico]`) além do nome por extenso.
+ */
+const SIGLAS_TIPO_DANO: Readonly<Record<string, TipoDanoEnum>> = {
+  F: TipoDanoEnum.FISICO,
+  B: TipoDanoEnum.BALISTICO,
+  E: TipoDanoEnum.EXPLOSAO,
+  Q: TipoDanoEnum.QUIMICO,
+  G: TipoDanoEnum.GERAL,
+};
 
-/** Resolve um nome de tipo de dano (tolerante a caixa/acentos), ou `null` se desconhecido. */
+/** Nome normalizado (por extenso ou sigla) → `TipoDanoEnum` (m3-18). */
+const MAPA_TIPO_DANO: Readonly<Record<string, TipoDanoEnum>> = {
+  ...Object.fromEntries(Object.values(TipoDanoEnum).map((tipo) => [normalizarTipoDano(tipo), tipo])),
+  ...SIGLAS_TIPO_DANO,
+};
+
+/** Resolve um nome de tipo de dano por extenso ou sigla de 1 letra (tolerante a caixa/acentos), ou `null` se desconhecido. */
 export function resolverTipoDanoSimples(texto: string): TipoDanoEnum | null {
   return MAPA_TIPO_DANO[normalizarTipoDano(texto)] ?? null;
 }

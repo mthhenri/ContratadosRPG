@@ -98,6 +98,7 @@ const SECOES: readonly SecaoGuia[] = [
     titulo: 'Tipo de dano',
     linhas: [
       { codigo: '2d8 [Balístico]', texto: 'Marca o dano como Balístico; o total sai separado por tipo.' },
+      { codigo: '2d8 [B]', texto: 'Sigla de 1 letra também vale: F/B/E/Q/G (Físico/Balístico/Explosão/Químico/Geral).' },
       { codigo: '[Físico-Químico]', texto: 'Dano Composto: metade de cada tipo (a sobra vai para o primeiro).' },
     ],
   },
