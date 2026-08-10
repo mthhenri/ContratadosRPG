@@ -1524,6 +1524,7 @@
             [energiaAtual]="estado().energiaAtual"
             [amplificadores]="dados().inventario.amplificadores"
             [compacto]="modo() === 'compacto'"
+            [cor]="cor()"
             (habilidadesMudou)="mudarHabilidades($event)"
             (habilidadeUtilizada)="aoUtilizarHabilidade($event)"
           />

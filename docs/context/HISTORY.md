@@ -1,5 +1,18 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-10 — Habilidade de Personalidade segue a cor da ficha, não mais o accent fixo do usuário
+
+Pós-`m3-61`: a categoria Personalidade em `FichaHabilidades` (borda do item + chip) estava
+hardcoded em `var(--accent)` — "Personalidade segue o accent do usuário", comentário que o próprio
+`m3-61` deixou para trás sem perceber que já existia um token dedicado para isso. O componente não
+recebia `cor` nenhuma; ganhou `input() cor` (mesmo padrão de `FichaInventario`/`FichaCombos`) e seta
+`[style.--cor-ficha]` no próprio elemento raiz (self-contido, como `ResultadoRolagem` — não depende
+de um ancestral já ter setado a variável). `ficha-visualizacao.component.html` passa `[cor]="cor()"`
+ao `<app-ficha-habilidades>`. O SCSS trocou `var(--accent)`/`var(--accent-border)` por
+`var(--cor-ficha, var(--accent))`/`var(--cor-ficha-border)` (este já embute o mesmo fallback) —
+ficha sem cor definida cai no accent de quem visualiza, igual a todo outro consumo de `--cor-ficha`
+no app.
+
 ## 2026-08-10 — `m3-62`: avatar da ficha (blob storage local/Cloudflare R2)
 
 Fecha o último item da fila do backlog aberta desde `m3-53`. Dono ou mestre agora sobem uma
