@@ -304,6 +304,7 @@ export class CampanhaDetalhe {
     this.previaRolagemId = this.bandejaDadosService.mostrar({
       rotulo: rolagem.rotulo,
       resultado: rolagem.resultado,
+      corFicha: rolagem.corFicha,
       semAutoSumir: true,
     });
   }
