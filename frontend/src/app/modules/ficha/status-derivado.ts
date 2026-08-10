@@ -77,13 +77,15 @@ export interface InfoExtra {
 
 /**
  * Entrada já normalizada aos limites da classe (os cinco atributos que a maioria das fórmulas
- * consome, `+ luta` — usado só por `calcularContraAtaque`; clampado aqui do mesmo jeito, mas fora
- * de `aplicarLimitesPorClasse` porque essa função também serve a Calculadora pública, que não tem
- * campo de Luta no formulário).
+ * consome, `+ luta`/`+ intelecto` — usados só por `calcularContraAtaque`/`calcularInventario`
+ * ("Mochileiro"); clampados aqui do mesmo jeito, mas fora de `aplicarLimitesPorClasse` porque essa
+ * função também serve a Calculadora pública, que não tem campo de Luta no formulário).
  */
-export type EntradaAgente = { readonly classe: ClasseEnum; readonly luta: number } & ReturnType<
-  typeof aplicarLimitesPorClasse
->;
+export type EntradaAgente = {
+  readonly classe: ClasseEnum;
+  readonly luta: number;
+  readonly intelecto: number;
+} & ReturnType<typeof aplicarLimitesPorClasse>;
 
 /**
  * Normaliza classe/nível/atributos aos limites da classe, devolvendo só o recorte que
@@ -108,7 +110,11 @@ export function normalizarEntrada(
     limitesAtributo.atributoMaximo,
     Math.max(limitesAtributo.atributoMinimo, atributos.luta),
   );
-  return { classe, luta, ...normalizado };
+  const intelecto = Math.min(
+    limitesAtributo.atributoMaximo,
+    Math.max(limitesAtributo.atributoMinimo, atributos.intelecto),
+  );
+  return { classe, luta, intelecto, ...normalizado };
 }
 
 /**
@@ -218,7 +224,7 @@ export function montarInformacoesExtras(
     linhaNumero(
       'inventarioMaximo',
       'Inventário',
-      calcularInventario(entrada),
+      calcularInventario({ ...entrada, habilidades }),
       (valor) => `${valor} máx`,
       ajusteInventarioAmplificadores(amplificadores),
     ),

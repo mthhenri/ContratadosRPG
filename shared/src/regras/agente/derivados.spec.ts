@@ -76,3 +76,33 @@ describe('calcularDerivados — contraAtaque', () => {
     );
   });
 });
+
+describe('calcularDerivados — inventário com "Mochileiro"', () => {
+  it('sem a habilidade → inventário segue Força (comportamento atual)', () => {
+    const derivados = calcularDerivados(ClasseEnum.COMBATENTE, 3, atributos);
+    expect(derivados.inventarioMaximo).toBe(
+      calcularInventario({ classe: ClasseEnum.COMBATENTE, forca: atributos.forca }),
+    );
+  });
+
+  it('com "Mochileiro" → troca Força por (Intelecto − 1) no inventário', () => {
+    const habilidades: FichaHabilidadeDto[] = [
+      {
+        nome: 'Mochileiro',
+        categoria: HabilidadeCategoriaEnum.GERAL,
+        custoEnergia: 0,
+        descricao: 'Muda o atributo de cálculo do inventário de Força para Intelecto - 1.',
+      },
+    ];
+    const derivados = calcularDerivados(ClasseEnum.COMBATENTE, 3, atributos, habilidades);
+    expect(derivados.inventarioMaximo).toBe(
+      calcularInventario({
+        classe: ClasseEnum.COMBATENTE,
+        forca: atributos.forca,
+        intelecto: atributos.intelecto,
+        habilidades,
+      }),
+    );
+    expect(derivados.inventarioMaximo).not.toBe(atributos.forca * 5);
+  });
+});

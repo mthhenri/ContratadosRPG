@@ -16,9 +16,10 @@ import { calcularAreaPercepcao } from './percepcao';
  * fórmula nova aqui (fonte única, proibições #26/#27). Import do DTO é **type-only** (zero-dep em
  * runtime; regras não passa a depender de dtos).
  *
- * `habilidades` (opcional, `[]` por padrão) só alimenta `calcularContraAtaque` — na prática quase
- * sempre vazio aqui, já que a habilidade "Contra-Ataque" normalmente só entra na ficha depois da
- * criação (via seletor de habilidades, m3-13), não durante o assistente.
+ * `habilidades` (opcional, `[]` por padrão) alimenta `calcularContraAtaque` ("Contra-Ataque") e
+ * `calcularInventario` ("Mochileiro") — na prática quase sempre vazio aqui, já que essas
+ * habilidades normalmente só entram na ficha depois da criação (via seletor de habilidades,
+ * m3-13), não durante o assistente.
  */
 export function calcularDerivados(
   classe: ClasseEnum,
@@ -42,6 +43,10 @@ export function calcularDerivados(
     limitesAtributo.atributoMaximo,
     Math.max(limitesAtributo.atributoMinimo, atributos.luta),
   );
+  const intelecto = Math.min(
+    limitesAtributo.atributoMaximo,
+    Math.max(limitesAtributo.atributoMinimo, atributos.intelecto),
+  );
 
   const defesa = calcularDefesa(entrada);
   const proficiencia = calcularProficiencia(entrada);
@@ -63,7 +68,7 @@ export function calcularDerivados(
     danoCorpoACorpo: calcularDanoCorpo(entrada),
     danoFurtivo: danoFurtivo ?? undefined,
     percepcao: calcularAreaPercepcao(entrada),
-    inventarioMaximo: calcularInventario(entrada),
+    inventarioMaximo: calcularInventario({ ...entrada, intelecto, habilidades }),
     habilidadesPorTurno: calcularLimiteHabilidadesPorTurno(entrada),
   };
 }

@@ -447,7 +447,7 @@ export class FichaEdicaoService {
     return {
       ...novos,
       estado: this.progredirEstado(novos.estado, antes, depois),
-      derivados: this.progredirDerivados(novos.derivados, antes, depois),
+      derivados: this.progredirDerivados(novos.derivados, antes, depois, novos.habilidades),
     };
   }
 
@@ -470,6 +470,7 @@ export class FichaEdicaoService {
     derivados: FichaDerivadosDto | undefined,
     antes: EntradaAgente,
     depois: EntradaAgente,
+    habilidades: readonly FichaHabilidadeDto[],
   ): FichaDerivadosDto | undefined {
     if (!derivados) {
       return undefined;
@@ -500,7 +501,7 @@ export class FichaEdicaoService {
       ),
       inventarioMaximo: somar(
         derivados.inventarioMaximo,
-        calcularInventario(depois) - calcularInventario(antes),
+        calcularInventario({ ...depois, habilidades }) - calcularInventario({ ...antes, habilidades }),
       ),
       habilidadesPorTurno: somar(
         derivados.habilidadesPorTurno,

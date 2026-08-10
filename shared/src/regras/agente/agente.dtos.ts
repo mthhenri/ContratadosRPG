@@ -114,10 +114,17 @@ export interface DanoFurtivoCalcularDto {
   readonly nivel: number;
 }
 
-/** Entrada de `calcularInventario`: Força × 5 (agente) ou Força × 3 (civil). */
+/**
+ * Entrada de `calcularInventario`: Força × 5 (agente) ou Força × 3 (civil). `intelecto` e
+ * `habilidades` são opcionais e só entram na conta quando a ficha tem a habilidade "Mochileiro"
+ * (doc — "Habilidades Gerais": troca o atributo de cálculo de Força para Intelecto − 1; versão
+ * Geral Melhorada do Engenheiro não tem a penalidade) — ausentes, o cálculo usa Força normalmente.
+ */
 export interface InventarioCalcularDto {
   readonly classe: ClasseEnum;
   readonly forca: number;
+  readonly intelecto?: number;
+  readonly habilidades?: readonly FichaHabilidadeDto[];
 }
 
 /** Entrada de `calcularAreaPercepcao`: 5 + Sentidos × 5 (≤ 0 vira 3 m). */
