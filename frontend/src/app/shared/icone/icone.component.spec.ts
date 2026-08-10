@@ -35,4 +35,15 @@ describe('Icone', () => {
   it('desenha formas distintas para nomes distintos', () => {
     expect(assinatura('descanso')).not.toBe(assinatura('compras'));
   });
+
+  it('renderiza o glifo monocromático próprio de documentos', () => {
+    const nome: IconeNome = 'documentos';
+    const raiz = montar(nome);
+    const svg = raiz.querySelector('svg');
+
+    expect(svg?.getAttribute('stroke')).toBe('currentColor');
+    expect(svg?.getAttribute('aria-hidden')).toBe('true');
+    expect(assinatura(nome)).not.toBe('');
+    expect(assinatura(nome)).not.toBe(assinatura('anotacoes'));
+  });
 });

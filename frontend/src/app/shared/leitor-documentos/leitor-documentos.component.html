@@ -1,0 +1,99 @@
+@if (estado().aberto) {
+  @if (estado().recolhido) {
+    <button
+      #gatilho
+      class="leitor-documentos__gatilho utilitario-flutuante utilitario-flutuante--documentos"
+      type="button"
+      aria-label="Reabrir documentos"
+      aria-expanded="false"
+      (click)="reabrir()"
+    >
+      <app-icone nome="documentos" />
+    </button>
+  }
+
+  <section
+    #janela
+    class="leitor-documentos__janela"
+    [class.leitor-documentos__janela--mobile]="ehMobile()"
+    [class.leitor-documentos__janela--maximizada]="maximizada()"
+    [hidden]="estado().recolhido"
+    [style.left.px]="ehMobile() ? null : estado().geometria.x"
+    [style.top.px]="ehMobile() ? null : estado().geometria.y"
+    [style.width.px]="ehMobile() ? null : estado().geometria.largura"
+    [style.height.px]="ehMobile() ? null : estado().geometria.altura"
+    role="dialog"
+    aria-label="Documentos do sistema"
+    (keydown)="aoTecladoJanela($event)"
+  >
+    <header
+      #cabecalho
+      class="leitor-documentos__cabecalho"
+      tabindex="-1"
+      (pointerdown)="iniciarArraste($event)"
+    >
+      <div class="leitor-documentos__identidade">
+        <span class="leitor-documentos__marca" aria-hidden="true">//</span>
+        <div class="leitor-documentos__titulo-grupo">
+          <span class="leitor-documentos__kicker">Arquivo de contenção</span>
+          <h2>Documentos do sistema</h2>
+        </div>
+        <span class="leitor-documentos__regua" aria-hidden="true"></span>
+      </div>
+      <div class="leitor-documentos__acoes-janela">
+        <button type="button" aria-label="Recolher documentos" (click)="recolher()">
+          <span aria-hidden="true">−</span>
+        </button>
+        @if (!ehMobile()) {
+          <button
+            type="button"
+            [attr.aria-label]="
+              maximizada() ? 'Restaurar tamanho dos documentos' : 'Maximizar documentos'
+            "
+            [attr.title]="maximizada() ? 'Restaurar tamanho' : 'Maximizar'"
+            (click)="alternarMaximizacao()"
+          >
+            <span aria-hidden="true">{{ maximizada() ? '❐' : '□' }}</span>
+          </button>
+        }
+        <button type="button" aria-label="Fechar documentos" (click)="fechar()">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="leitor-documentos__toolbar" role="toolbar" aria-label="Escolher documento">
+      <div class="leitor-documentos__segmentado" role="group" aria-label="Documento">
+        <button
+          type="button"
+          [class.leitor-documentos__segmentado-item--ativo]="estado().documentoAtivo === 'sistema'"
+          [attr.aria-pressed]="estado().documentoAtivo === 'sistema'"
+          aria-label="Selecionar Sistema"
+          (click)="selecionarDocumento('sistema')"
+        >Sistema</button>
+        <button
+          type="button"
+          [class.leitor-documentos__segmentado-item--ativo]="estado().documentoAtivo === 'guia-mestre'"
+          [attr.aria-pressed]="estado().documentoAtivo === 'guia-mestre'"
+          aria-label="Selecionar Guia do Mestre"
+          (click)="selecionarDocumento('guia-mestre')"
+        >Guia do Mestre</button>
+      </div>
+      <span class="leitor-documentos__dica">Busca, páginas e zoom ficam na barra do PDF.</span>
+    </div>
+
+    <iframe
+      class="leitor-documentos__pdf"
+      [src]="documentoUrl()"
+      [title]="documentoConfiguracao().titulo"
+    ></iframe>
+
+    @if (!ehMobile() && !maximizada()) {
+      <span
+        class="leitor-documentos__redimensionar"
+        aria-hidden="true"
+        (pointerdown)="iniciarRedimensionamento($event)"
+      ></span>
+    }
+  </section>
+}

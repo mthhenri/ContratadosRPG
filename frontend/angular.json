@@ -29,7 +29,21 @@
             "assets": [
               {
                 "glob": "**/*",
-                "input": "public"
+                "input": "public",
+                "ignore": [
+                  "documentos/sistema-v4.1.0.pdf",
+                  "documentos/guia_de_mestre-v4.0.0.pdf"
+                ]
+              },
+              {
+                "glob": "sistema-v4.1.0.pdf",
+                "input": "public/documentos",
+                "output": "documentos"
+              },
+              {
+                "glob": "guia_de_mestre-v4.0.0.pdf",
+                "input": "public/documentos",
+                "output": "documentos"
               }
             ],
             "styles": [
@@ -41,7 +55,7 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "620kB",
+                  "maximumWarning": "630kB",
                   "maximumError": "1MB"
                 },
                 {

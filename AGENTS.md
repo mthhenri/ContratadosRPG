@@ -81,6 +81,32 @@ testes, revisão ou verificação visual. É preferível levar o dobro do tempo 
 entregar uma implementação completa e coerente a entregar cedo e obrigar o
 autor a pedir uma segunda implementação para corrigir atalhos previsíveis.
 
+### Rigor com eficiência
+
+Qualidade acima de velocidade não significa maximizar etapas, agentes, chamadas
+ou consumo de contexto. O caminho preferido é o menor processo que produza
+evidência suficiente e confiável de conformidade. Seja rigoroso com as regras e
+eficiente na forma de cumpri-las.
+
+- Use subagentes somente quando houver trabalho independente e paralelismo
+  realmente útil. Envie a cada um apenas o contexto necessário para sua
+  responsabilidade e evite que vários agentes investiguem ou validem o mesmo
+  recorte sem uma justificativa concreta.
+- Não replique documentos extensos, histórico completo ou saídas de ferramentas
+  quando um resumo preciso, referências a arquivos e intervalos relevantes forem
+  suficientes.
+- Durante a implementação, prefira testes focados e proporcionais ao risco.
+  Execute suítes amplas nos gates de integração e conclusão, sem repetir builds,
+  lint ou testes idênticos quando nenhuma mudança relevante ocorreu.
+- Consolide revisões e verificações. Uma UI deve receber a verificação visual
+  completa exigida, normalmente ao final de um corte integrado; não multiplique
+  inspeções visuais preventivas se uma única sessão puder cobrir todos os
+  viewports e estados. Repita apenas para confirmar correções encontradas.
+- Limite logs, snapshots, árvores de acessibilidade e outras saídas ao trecho
+  necessário para decidir ou comprovar o resultado.
+- Cada etapa adicional deve responder a um risco, requisito ou evidência real.
+  Quantidade de atividade não é evidência de qualidade.
+
 Quando não houver tempo ou ambiente suficiente para cumprir todos os gates, a
 tarefa permanece **aberta**. Relate o avanço e a pendência; não reduza o padrão
 de qualidade para produzir uma aparência de conclusão.

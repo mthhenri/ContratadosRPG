@@ -29,6 +29,15 @@
       <app-icone nome="calculadora" />
       <span>Calculadora</span>
     </a>
+    <button
+      class="topbar__item"
+      type="button"
+      aria-label="Abrir documentos"
+      (click)="abrirDocumentos()"
+    >
+      <app-icone nome="documentos" />
+      <span>Documentos</span>
+    </button>
   </nav>
 
   <div class="topbar__acoes">
@@ -102,3 +111,5 @@
 <main class="conteudo">
   <router-outlet />
 </main>
+
+<ng-container #leitorDocumentosContainer />

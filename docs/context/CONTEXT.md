@@ -1,8 +1,7 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-10 · **Última decisão registrada:** a `m3-62` deu à ficha um avatar
-> (upload de imagem, blob storage local em dev / Cloudflare R2 em produção, atrás de uma interface
-> escolhida por toggle de ambiente)
+> **Última revisão:** 2026-08-10 · **Última decisão registrada:** a `m3-72` adicionou o leitor
+> global de regras usando o viewer nativo do navegador, sem manter renderização ou busca PDF própria
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -21,6 +20,9 @@ equipamento inicial), o complemento `m3-64`, a `m3-61` (cor de ficha) e a `m3-62
 **concluíram** — as specs estão em `docs/specs/done/`; o que o guia faz hoje de ponta a ponta está
 descrito na seção 4, em "Guia de criação de ficha". A `m3-64` resolveu o antigo `P-012`: o pacote
 inicial agora é uma regra pura em `shared/regras/agente` e tem consumidor obrigatório no guia.
+
+A `m3-72` também concluiu: Sistema e Guia do Mestre agora abrem pelo mesmo acesso global
+**Documentos**, em janela flutuante no desktop e tela cheia no mobile.
 
 `m2-18`/`m2-19`/`m2-20`/`m2-21` fecharam a frente de redesenho do painel de campanhas —
 `/painel/:id` tem layout dedicado para mestre e para jogador. Fica **em aberto, por decisão do
@@ -270,6 +272,14 @@ reusando a permissão §14 das services. Eventos: `ficha:criada`, `ficha:alterad
 Seis abas públicas e 100% client-side (consomem `shared/regras` direto, sem backend): `agente`,
 `dt`, `novo-agente`, `patente`, `descanso`, `compras` (com modo Vender). Paridade com a calculadora
 antiga confirmada.
+
+### Documentos de regras — `frontend/shared/leitor-documentos`
+
+Sistema e Guia do Mestre são públicos e acessíveis globalmente pelo mesmo leitor. O shell do sistema
+controla documento, abertura, recolhimento e geometria; o PDF fica em um `iframe` e usa o viewer
+nativo do navegador para nitidez, busca, seleção, páginas e zoom. O leitor próprio baseado em PDF.js
+foi removido após a validação visual revelar baixa nitidez e texto duplicado. Os PDFs canônicos vivem
+somente em `docs/core/` e o build os publica em `/documentos/`.
 
 ### Tema — `frontend/tema`
 

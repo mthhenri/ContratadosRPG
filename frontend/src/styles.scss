@@ -3,6 +3,11 @@
 @use './styles/tema/tokens';
 @use './styles/tema/base';
 @use './styles/tema/breakpoints' as bp;
+@use './app/shared/utilitario-flutuante/utilitario-flutuante' as utilitario-flutuante;
+
+// Contrato global dos utilitários que atravessam o encapsulamento dos componentes standalone.
+// A presença de Documentos recolhido abre uma vaga; aberto/fechado remove-a sem depender do DOM.
+@include utilitario-flutuante.registrar-estado-documentos();
 
 // Tailwind — utilitários de layout/espaçamento, coexistindo com SCSS + tokens do tema.
 // A configuração (frontend/tailwind.config.ts) aponta as cores/fontes/raios utilitários para

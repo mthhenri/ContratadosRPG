@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, Injector, ViewContainerRef, inject, signal, viewChild } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Toast } from 'primeng/toast';
 
@@ -18,14 +18,27 @@ import { Marca } from '../marca/marca.component';
  */
 @Component({
   selector: 'app-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Toast, ConfiguracoesTema, Icone, Marca],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    Toast,
+    ConfiguracoesTema,
+    Icone,
+    Marca,
+  ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',
 })
 export class Layout {
   protected readonly loadingService = inject(LoadingService);
   protected readonly sessaoService = inject(SessaoService);
+  private readonly injector = inject(Injector);
   private readonly router = inject(Router);
+  private readonly leitorDocumentosContainer = viewChild.required('leitorDocumentosContainer', {
+    read: ViewContainerRef,
+  });
+  private leitorDocumentosMontado = false;
 
   /** Se o dropdown de perfil está aberto (fecha só por botão/ação — mesmo padrão do tema). */
   protected readonly perfilAberto = signal(false);
@@ -36,6 +49,19 @@ export class Layout {
 
   protected fecharPerfil(): void {
     this.perfilAberto.set(false);
+  }
+
+  /** Abre o leitor global sem navegar nem alterar os demais utilitários da topbar. */
+  protected async abrirDocumentos(): Promise<void> {
+    const [{ LeitorDocumentos }, { LeitorDocumentosService }] = await Promise.all([
+      import('../leitor-documentos/leitor-documentos.component'),
+      import('../leitor-documentos/leitor-documentos.service'),
+    ]);
+    if (!this.leitorDocumentosMontado) {
+      this.leitorDocumentosContainer().createComponent(LeitorDocumentos);
+      this.leitorDocumentosMontado = true;
+    }
+    this.injector.get(LeitorDocumentosService).abrir();
   }
 
   /** Encerra a sessão e leva o usuário de volta à tela de login. */

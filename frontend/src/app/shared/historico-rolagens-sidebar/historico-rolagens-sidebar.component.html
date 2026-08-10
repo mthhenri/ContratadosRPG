@@ -1,8 +1,9 @@
 <button
   type="button"
-  class="historico-rolagens__gatilho"
+  class="historico-rolagens__gatilho utilitario-flutuante utilitario-flutuante--historico utilitario-flutuante--inline-mobile"
   [class.historico-rolagens__gatilho--ativo]="aberto()"
   [class.historico-rolagens__gatilho--empilhado]="acimaDaCalculadora()"
+  [class.utilitario-flutuante--acima]="acimaDaCalculadora()"
   [attr.aria-expanded]="aberto()"
   [attr.aria-label]="aberto() ? 'Fechar histórico de rolagens' : 'Abrir histórico de rolagens'"
   [appTooltip]="'Histórico de rolagens'"

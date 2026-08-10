@@ -3,6 +3,7 @@
 // tokens do tema "Terminal de Contenção" (proibição #29).
 
 @use 'tema/breakpoints' as bp;
+@use '../utilitario-flutuante/utilitario-flutuante' as utilitario-flutuante;
 
 :host {
   display: contents;
@@ -16,20 +17,15 @@
   // vertical que o popup dela já usa. No mobile volta a ser um botão inline no cabeçalho — ver
   // `@include bp.mobile` abaixo.
   &__gatilho {
-    position: fixed;
-    right: 24px;
-    bottom: calc(24px + var(--piso-flutuante, 0px));
+    @include utilitario-flutuante.gatilho-utilitario-flutuante();
+    @include utilitario-flutuante.posicionar-utilitario-flutuante();
+    @include utilitario-flutuante.utilitario-inline-mobile();
+
     z-index: 55;
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     background: var(--surface);
     color: var(--accent);
     border: 1px solid var(--border-strong);
     border-radius: 50%;
-    cursor: pointer;
     box-shadow: 0 8px 20px rgb(0 0 0 / 40%);
     transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
 
@@ -45,20 +41,15 @@
     }
 
     &--empilhado {
-      bottom: calc(84px + var(--piso-flutuante, 0px));
+      @include utilitario-flutuante.posicionar-utilitario-flutuante(1);
     }
 
     // Mobile: inline no cabeçalho (mesma receita de `.detalhe__membro-acao`/
     // `.ficha-pagina__menu-botao`) — flutuante nessa faixa colidiria com a barra de navegação
     // inferior da ficha (m3-60) e com a bandeja de dados.
     @include bp.mobile {
-      position: static;
-      right: auto;
-      bottom: auto;
       z-index: auto;
       flex: none;
-      width: bp.$alvo-toque;
-      height: bp.$alvo-toque;
       font-size: 15px;
       color: var(--text-dim);
       background: transparent;

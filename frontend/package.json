@@ -3,8 +3,10 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
+    "prestart": "node scripts/preparar-documentos.mjs",
     "start": "ng serve",
-    "build": "ng build && node -e \"require('fs').copyFileSync('dist/frontend/browser/index.html','dist/frontend/browser/404.html')\"",
+    "prebuild": "node scripts/preparar-documentos.mjs",
+    "build": "ng build && node -e \"require('fs').copyFileSync('dist/frontend/browser/index.html','dist/frontend/browser/404.html')\" && node scripts/verificar-documentos-publicados.mjs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "eslint .",

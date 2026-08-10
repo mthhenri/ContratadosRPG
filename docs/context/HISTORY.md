@@ -1,5 +1,29 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-10 — `m3-72`: leitor global dos documentos de regras
+
+Sistema e Guia do Mestre passaram a ser públicos em um único acesso **Documentos**, disponível no
+`Layout` em qualquer rota. No desktop, o shell é uma janela não modal móvel, redimensionável,
+recolhível, maximizável e capaz de passar sobre a topbar; no mobile, ocupa a tela inteira. Maximizar
+usa a viewport da aplicação e restaurar recupera a geometria anterior, sem acionar a Fullscreen API.
+O estado global conserva documento ativo e geometria, e o gatilho recolhido integra a pilha de
+calculadora e histórico.
+
+A primeira implementação criou um leitor completo com PDF.js, canvas, camada textual, links,
+virtualização e busca própria. A validação visual mostrou que essa complexidade piorou o resultado:
+o PDF perdeu nitidez e a camada textual sobreposta duplicou trechos. Por decisão do autor, o pipeline
+foi removido e cada PDF passou a usar o viewer nativo do navegador dentro de um `iframe`. Busca,
+seleção, páginas, zoom, impressão e download pertencem agora ao navegador; a aplicação preserva
+somente o shell e mantém o `iframe` montado ao recolher. A escolha reduz código, dependências e
+superfície de falha, aceitando variações do viewer entre navegadores.
+
+Os artefatos canônicos continuam em `docs/core/`. Scripts de pré-build/pré-start os publicam em
+`/documentos/` e o pós-build verifica os dois arquivos. Testes focados do leitor e Layout ficaram
+20/20; lint focado e build de produção passaram, com os dois PDFs verificados. A inspeção real em
+1920×1080 e 360×800 confirmou shell sem overflow, viewer nítido no desktop, alvos mobile de 44px,
+troca de documento e recolhimento sem desmontar o iframe. O bundle inicial de 625,76 kB motivou a
+atualização do teto de warning para 630 kB; o limite de erro permanece 1 MB.
+
 ## 2026-08-10 — `P-013`: habilidade "Anomalia" agora dobra custo/efeito de Fragmentos
 
 A habilidade "Anomalia" (Experimento Artificial) sempre existiu só como texto no catálogo

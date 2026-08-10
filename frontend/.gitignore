@@ -11,6 +11,10 @@
 npm-debug.log
 yarn-error.log
 
+# Documentos de regras preparados a partir de docs/core para os assets do Angular
+/public/documentos/sistema-v4.1.0.pdf
+/public/documentos/guia_de_mestre-v4.0.0.pdf
+
 # IDEs and editors
 .idea/
 .project
