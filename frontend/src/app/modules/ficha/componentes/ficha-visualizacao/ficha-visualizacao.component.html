@@ -82,25 +82,60 @@
       <section class="ficha-cartao">
         <div class="ficha-ident">
           <!-- Cor de identidade visual da ficha (m3-61) — token independente do --accent do
-               viewer; colore as rolagens desta ficha na bandeja/histórico/feed da campanha.
-               A borda do próprio avatar carrega a cor (onde a foto do agente vai entrar, m3-62) —
-               editável vira o <label> do picker nativo (input cobre a caixa, invisível); sem
-               permissão é só a moldura, decorativa. -->
+               viewer; colore as rolagens desta ficha na bandeja/histórico/feed da campanha. A
+               borda do próprio avatar carrega a cor; o `<img>` do avatar (m3-62) some por cima do
+               fundo tracejado decorativo quando `imagemUrl()` existe, em qualquer permissão.
+               Editável, o `<input type="color">` cobre a caixa por inteiro e invisível (clicar em
+               qualquer ponto abre o picker nativo, sem precisar de `<label>` — o input já cobre a
+               área inteira); um `<label>` à parte, sobreposto no canto (selo de lápis), abre o
+               `<input type="file">` do upload (`aoSelecionarImagem`, valida tamanho/tipo no
+               client antes de emitir) — os dois não se aninham, cada um seu próprio alvo de clique. -->
           @if (ajustavelAmplo()) {
-            <label
-              class="ficha-ident__avatar ficha-ident__avatar--editavel"
-              [style.--cor-ficha]="cor()"
-              [appTooltip]="'Cor de identidade da ficha'"
-            >
-              <input
-                type="color"
-                class="ficha-ident__cor-entrada"
-                aria-label="Cor de identidade da ficha"
-                [formControl]="corFichaForm"
-              />
-            </label>
+            <div class="ficha-ident__avatar-coluna">
+              <div
+                class="ficha-ident__avatar ficha-ident__avatar--editavel"
+                [style.--cor-ficha]="cor()"
+                [appTooltip]="'Cor de identidade da ficha'"
+              >
+                @if (imagemUrl(); as urlImagem) {
+                  <img class="ficha-ident__avatar-imagem" [src]="urlImagem" alt="" />
+                  <button
+                    type="button"
+                    class="ficha-ident__avatar-remover"
+                    aria-label="Remover avatar"
+                    [appTooltip]="'Remover avatar'"
+                    (click)="removerImagem.emit()"
+                  >
+                    <app-icone nome="excluir" />
+                  </button>
+                }
+                <input
+                  type="color"
+                  class="ficha-ident__cor-entrada"
+                  aria-label="Cor de identidade da ficha"
+                  [formControl]="corFichaForm"
+                />
+                <label class="ficha-ident__avatar-upload" [appTooltip]="'Trocar avatar'">
+                  <input
+                    type="file"
+                    class="ficha-ident__avatar-upload-entrada"
+                    accept="image/jpeg,image/png,image/webp"
+                    aria-label="Trocar avatar"
+                    (change)="aoSelecionarImagem($event)"
+                  />
+                  <app-icone nome="editar" />
+                </label>
+              </div>
+              @if (erroImagem(); as mensagemErro) {
+                <span class="ficha-ident__aviso-obrigatorio">{{ mensagemErro }}</span>
+              }
+            </div>
           } @else {
-            <span class="ficha-ident__avatar" aria-hidden="true" [style.--cor-ficha]="cor()"></span>
+            <span class="ficha-ident__avatar" aria-hidden="true" [style.--cor-ficha]="cor()">
+              @if (imagemUrl(); as urlImagem) {
+                <img class="ficha-ident__avatar-imagem" [src]="urlImagem" alt="" />
+              }
+            </span>
           }
           <div class="ficha-ident__texto">
             <span class="ficha-ident__rotulo">Agente</span>

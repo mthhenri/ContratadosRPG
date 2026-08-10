@@ -1,7 +1,7 @@
 import { Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { finalize, forkJoin, of, timer } from 'rxjs';
+import { catchError, finalize, forkJoin, of, timer } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ArquetipoEnum, ClasseEnum, FormacaoBonusEnum, FormacaoParametroEnum, HabilidadeCategoriaEnum, MotivoEntradaAgenteEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
@@ -68,6 +68,9 @@ const rolarDinheiro = (): DinheiroRolado => { const dados = rolarDados({ quantid
 const ATRIBUTO_MAXIMO_GUIA = 6;
 /** Custo em pontos de atributo da Maestria (doc — "⬥ Maestrias"), além do ponto que já leva o atributo a 6. */
 const MAESTRIA_PONTOS_CUSTO = 2;
+/** Avatar do guia (m3-62) — mesmos limites validados no backend (`FichaService.alterarImagem`). */
+const TIPOS_IMAGEM_ACEITOS = ['image/jpeg', 'image/png', 'image/webp'];
+const TAMANHO_MAXIMO_IMAGEM_BYTES = 2 * 1024 * 1024;
 
 function normalizarEstado(estado: EstadoGuiaCriacao): EstadoGuiaCriacao {
   return {
@@ -120,6 +123,44 @@ export class FichaCriar {
   };
   protected readonly membros = signal<CampanhaMembroResumoDto[]>([]); protected readonly fichas = signal<FichaResumoDto[]>([]);
   protected readonly carregando = signal(true); protected readonly criando = signal(false); protected readonly rolandoRecursos = signal(false); protected readonly erro = signal('');
+
+  /**
+   * Avatar do guia (m3-62) — nunca entra em `EstadoGuiaCriacao`/no rascunho persistido (`File` não
+   * é serializável em JSON); fica só em memória até o passo Revisão. `POST /ficha` cria a ficha
+   * antes de existir um `id` para `POST /ficha/:id/imagem`, então o upload real é um segundo
+   * request, em sequência, disparado por `criar()` depois que a ficha existir.
+   */
+  protected readonly imagemArquivo = signal<File | null>(null);
+  protected readonly imagemPreviewUrl = signal<string | null>(null);
+  protected readonly erroImagemGuia = signal<string | null>(null);
+
+  /** Valida o avatar escolhido no client (tipo/tamanho) — mesmos limites de `FichaService` (backend). */
+  protected aoSelecionarImagemGuia(evento: Event): void {
+    const arquivo = (evento.target as HTMLInputElement).files?.[0] ?? null;
+    (evento.target as HTMLInputElement).value = '';
+    if (!arquivo) {
+      return;
+    }
+    if (!TIPOS_IMAGEM_ACEITOS.includes(arquivo.type)) {
+      this.erroImagemGuia.set('Formato inválido: use JPEG, PNG ou WEBP');
+      return;
+    }
+    if (arquivo.size > TAMANHO_MAXIMO_IMAGEM_BYTES) {
+      this.erroImagemGuia.set('Imagem maior que o limite permitido (2MB)');
+      return;
+    }
+    this.erroImagemGuia.set(null);
+    this.revogarPreviewImagem();
+    this.imagemArquivo.set(arquivo);
+    this.imagemPreviewUrl.set(URL.createObjectURL(arquivo));
+  }
+
+  private revogarPreviewImagem(): void {
+    const anterior = this.imagemPreviewUrl();
+    if (anterior) {
+      URL.revokeObjectURL(anterior);
+    }
+  }
   protected readonly resumoAberto = signal(false); protected readonly visitado = signal(0); protected readonly temRascunho = signal(false);
   /** Confirmação de saída do guia — substitui o `confirm()` nativo do navegador por um `<dialog>`. */
   protected readonly confirmandoSaida = signal(false);
@@ -290,6 +331,7 @@ export class FichaCriar {
   protected readonly kitPesoPercentual = computed(() => Math.min(100, (this.kitTotais().pesoUsado / KIT_INICIAL_PESO_MAXIMO) * 100));
 
   constructor() {
+    this.destroyRef.onDestroy(() => this.revogarPreviewImagem());
     const existente = this.rascunhos.recuperar<EstadoGuiaCriacao>(this.campanhaId); this.temRascunho.set(existente !== null);
     const campanhaId = this.campanhaId;
     forkJoin({
@@ -481,6 +523,23 @@ export class FichaCriar {
     const campanhaId = this.campanhaId;
     this.fichaService.criarFicha({ ...(campanhaId !== null ? { campanhaId } : {}), usuarioId: this.ehMestre() ? (e.usuarioId ?? undefined) : undefined, ...resultado })
       .pipe(finalize(() => this.criando.set(false)))
-      .subscribe({ next: (ficha) => { this.rascunhos.limpar(campanhaId); void this.router.navigate(campanhaId !== null ? ['/painel', campanhaId, 'ficha', ficha.id] : ['/fichas', ficha.id]); }, error: (erro) => this.erro.set(erro?.error?.mensagem ?? 'Não foi possível criar a ficha.') });
+      .subscribe({
+        next: (ficha) => {
+          this.rascunhos.limpar(campanhaId);
+          const destino = campanhaId !== null ? ['/painel', campanhaId, 'ficha', ficha.id] : ['/fichas', ficha.id];
+          const arquivo = this.imagemArquivo();
+          // Avatar (m3-62): a ficha já existe — segundo request, em sequência. Falha no upload não
+          // desfaz a ficha criada nem trava a navegação; só fica sem avatar, subível depois pelo cabeçalho.
+          if (!arquivo) {
+            void this.router.navigate(destino);
+            return;
+          }
+          this.fichaService
+            .alterarImagem(ficha.id, arquivo)
+            .pipe(catchError(() => of(null)))
+            .subscribe(() => void this.router.navigate(destino));
+        },
+        error: (erro) => this.erro.set(erro?.error?.mensagem ?? 'Não foi possível criar a ficha.'),
+      });
   }
 }

@@ -12,6 +12,8 @@ import type {
   FichaCampanhaInternoAtribuirDto,
   FichaCriadaDto,
   FichaExcluirDto,
+  FichaImagemAlteradaDto,
+  FichaImagemInternoAlterarDto,
   FichaInternoAlterarDto,
   FichaInternoCriarDto,
   FichaListarDto,
@@ -46,17 +48,20 @@ export class FichaRepository extends BaseRepository {
    */
   async criarFicha(dto: FichaInternoCriarDto): Promise<FichaCriadaDto> {
     const [fichaCriada] = await this.executarConsulta<FichaCriadaDto>(
-      `INSERT INTO ficha (campanha_id, usuario_id, tipo_ficha_id, nome, cor, dados, created_date, updated_date, is_deleted)
+      `INSERT INTO ficha (campanha_id, usuario_id, tipo_ficha_id, nome, cor, imagem_url, dados, created_date, updated_date, is_deleted)
        SELECT :campanhaId, :usuarioId,
               (SELECT id FROM tipo_ficha WHERE codigo = :tipo AND is_deleted = false),
-              :nome, :cor, :dados::jsonb, NOW(), NOW(), false
-       RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, dados`,
+              :nome, :cor, :imagemUrl, :dados::jsonb, NOW(), NOW(), false
+       RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, imagem_url AS "imagemUrl", dados`,
       {
         campanhaId: dto.campanhaId,
         usuarioId: dto.usuarioId,
         tipo: dto.tipo,
         nome: dto.nome,
         cor: dto.cor,
+        // A ficha sempre nasce sem avatar (m3-62): não há `id` ainda para o endpoint dedicado de
+        // upload — o cliente sobe a imagem num segundo request, logo após este retornar.
+        imagemUrl: null,
         dados: JSON.stringify(dto.dados),
       },
     );
@@ -66,7 +71,7 @@ export class FichaRepository extends BaseRepository {
   /** Recupera a ficha ativa pelo `id` (ou `null`) — inclui posse/campanha para a checagem de permissão. */
   async recuperarPorId(dto: FichaRecuperarDto): Promise<FichaRecuperadaDto | null> {
     const [fichaEncontrada] = await this.executarConsulta<FichaRecuperadaDto>(
-      `SELECT id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, dados
+      `SELECT id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, imagem_url AS "imagemUrl", dados
        FROM ficha
        WHERE id = :id AND is_deleted = false`,
       { id: dto.id },
@@ -116,6 +121,7 @@ export class FichaRepository extends BaseRepository {
               ficha.campanha_id AS "campanhaId",
               campanha.nome AS "campanhaNome",
               ficha.usuario_id AS "usuarioId", ficha.nome,
+              ficha.imagem_url AS "imagemUrl",
               ficha.dados->>'classe' AS classe,
               ficha.dados->>'arquetipo' AS arquetipo,
               (ficha.dados->>'nivel')::int AS nivel,
@@ -280,8 +286,24 @@ export class FichaRepository extends BaseRepository {
       `UPDATE ficha
        SET nome = :nome, cor = :cor, dados = :dados::jsonb, updated_date = NOW()
        WHERE id = :id AND is_deleted = false
-       RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, dados`,
+       RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, imagem_url AS "imagemUrl", dados`,
       { id: dto.id, nome: dto.nome, cor: dto.cor ?? null, dados: JSON.stringify(dto.dados) },
+    );
+    return fichaAlterada;
+  }
+
+  /**
+   * `UPDATE` dedicado só para `imagem_url` (m3-62) — fora do `alterarFicha` genérico, que
+   * continua só `nome`/`cor`/`dados`. Reusado tanto para setar (`POST /ficha/:id/imagem`) quanto
+   * para limpar (`imagemUrl: null`, `DELETE /ficha/:id/imagem`) o avatar.
+   */
+  async alterarImagem(dto: FichaImagemInternoAlterarDto): Promise<FichaImagemAlteradaDto> {
+    const [fichaAlterada] = await this.executarConsulta<FichaImagemAlteradaDto>(
+      `UPDATE ficha
+       SET imagem_url = :imagemUrl, updated_date = NOW()
+       WHERE id = :id AND is_deleted = false
+       RETURNING imagem_url AS "imagemUrl"`,
+      { id: dto.id, imagemUrl: dto.imagemUrl },
     );
     return fichaAlterada;
   }
@@ -302,7 +324,7 @@ export class FichaRepository extends BaseRepository {
       `UPDATE ficha
        SET campanha_id = :campanhaId, updated_date = NOW()
        WHERE id = :id AND is_deleted = false
-       RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, dados`,
+       RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, imagem_url AS "imagemUrl", dados`,
       { id: dto.id, campanhaId: dto.campanhaId },
     );
     return fichaAtribuida;

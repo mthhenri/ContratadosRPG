@@ -23,6 +23,7 @@ describe('FichaAcervo', () => {
       campanhaNome: null,
       usuarioId: 7,
       nome: 'Kane',
+      imagemUrl: null,
       classe: ClasseEnum.COMBATENTE,
       arquetipo: ArquetipoEnum.LUTADOR,
       nivel: 2,

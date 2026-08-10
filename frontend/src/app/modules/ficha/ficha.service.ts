@@ -11,6 +11,7 @@ import {
   FichaCampanhaAtribuidaDto,
   FichaCriadaDto,
   FichaCriarDto,
+  FichaImagemAlteradaDto,
   FichaRecuperadaDto,
   FichaResumoDto,
 } from '@contratados-rpg/shared/dtos/ficha';
@@ -83,6 +84,27 @@ export class FichaService {
     return this.httpClient
       .put<StandardResponse<FichaAlteradaDto>>(`${this.base}/${id}`, dto)
       .pipe(map((resposta) => resposta.dados as FichaAlteradaDto));
+  }
+
+  /**
+   * Troca o avatar da ficha (m3-62) — multipart via `FormData`, por isso fora do `alterarFicha`
+   * genérico. Só o dono ou o mestre trocam (§14; barrado com 403 no backend), que também valida
+   * MIME (jpeg/png/webp) e tamanho (2MB) — o client só valida o tamanho antes de enviar, pra
+   * feedback imediato (a validação autoritativa é sempre a do backend).
+   */
+  alterarImagem(id: number, arquivo: File): Observable<FichaImagemAlteradaDto> {
+    const formData = new FormData();
+    formData.append('arquivo', arquivo);
+    return this.httpClient
+      .post<StandardResponse<FichaImagemAlteradaDto>>(`${this.base}/${id}/imagem`, formData)
+      .pipe(map((resposta) => resposta.dados as FichaImagemAlteradaDto));
+  }
+
+  /** Remove o avatar da ficha (m3-62) — exclui o arquivo do armazenamento e limpa `imagemUrl`. */
+  excluirImagem(id: number): Observable<FichaImagemAlteradaDto> {
+    return this.httpClient
+      .delete<StandardResponse<FichaImagemAlteradaDto>>(`${this.base}/${id}/imagem`)
+      .pipe(map((resposta) => resposta.dados as FichaImagemAlteradaDto));
   }
 
   /**

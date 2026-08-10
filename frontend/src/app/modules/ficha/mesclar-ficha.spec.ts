@@ -50,6 +50,7 @@ describe('mesclarFicha', () => {
     usuarioId: 51,
     nome,
     cor: null,
+    imagemUrl: null,
     dados: dados(parcial),
   });
 

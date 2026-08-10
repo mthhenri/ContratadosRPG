@@ -1267,6 +1267,80 @@
     cursor: pointer;
   }
 
+  // Avatar da ficha (m3-62) — coluna só para acomodar o aviso de validação abaixo da caixa 52×52
+  // sem desalinhar o `.ficha-ident` (flex-row, align-items: center).
+  &__avatar-coluna {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  // A foto propriamente dita, por cima do fundo tracejado decorativo — mesmo raio da caixa
+  // (2px a menos por causa da borda de 2px do avatar) para não vazar quina quadrada.
+  &__avatar-imagem {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: calc(var(--radius-control) - 2px);
+  }
+
+  // Selo de lápis no canto inferior direito — alvo de clique próprio para o `<input type="file">`,
+  // por cima do `<input type="color">` que cobre o resto da caixa (não aninha `<label>`s).
+  &__avatar-upload {
+    position: absolute;
+    right: -4px;
+    bottom: -4px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    color: var(--text-dim);
+    font-size: 10px;
+    cursor: pointer;
+  }
+
+  &__avatar-upload-entrada {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  // Selo de remover no canto superior direito — só existe junto do `<img>` (sem imagem, nada a remover).
+  &__avatar-remover {
+    position: absolute;
+    right: -4px;
+    top: -4px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    color: var(--text-dim);
+    font-size: 9px;
+    padding: 0;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--text);
+      border-color: var(--accent);
+    }
+  }
+
   &__texto {
     display: flex;
     flex-direction: column;

@@ -1,5 +1,60 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-10 — `m3-62`: avatar da ficha (blob storage local/Cloudflare R2)
+
+Fecha o último item da fila do backlog aberta desde `m3-53`. Dono ou mestre agora sobem uma
+imagem (jpg/png/webp, até 2MB) pela ficha — ela substitui o avatar decorativo no cabeçalho e no
+card do acervo, e também pode ser escolhida no Passo 01 do guia de criação (`FichaCriar`,
+`m3-57`). Migration `0013 - Ficha imagem.sql`: coluna `ficha.imagem_url` (`VARCHAR` nullable, sem
+`DEFAULT`) ao lado de `nome`/`cor` — o binário nunca entra no Postgres, só o caminho/URL.
+
+**Armazenamento atrás de uma interface, escolhida por toggle de ambiente.** Módulo novo
+`backend/src/core/armazenamento/` (técnico, fora de `shared/` — nunca cruza pro frontend):
+`ArmazenamentoProvedor` (`salvarImagem`/`excluirImagem`) com duas implementações —
+`ArmazenamentoLocalProvedor` (disco, `backend/uploads/ficha/<uuid>.<extensão>`, servido estático
+via `app.useStaticAssets` sob `/uploads` — `main.ts` trocou para `NestExpressApplication`) e
+`ArmazenamentoR2Provedor` (`@aws-sdk/client-s3` apontando `endpoint` pro domínio da conta R2,
+`region: 'auto'`). `ArmazenamentoModule.useFactory` lê `ConfigService.obterConfiguracaoArmazenamento()`
+(novo grupo `ConfiguracaoArmazenamento`, union discriminada por `provedor: 'local' | 'r2'`) e só
+**instancia** a implementação escolhida — em `local`, `ArmazenamentoR2Provedor` (e as cinco
+`ARMAZENAMENTO_R2_*`) nunca é construído, então nenhuma credencial R2 é exigida em dev.
+`ARMAZENAMENTO_PROVEDOR` é sempre obrigatória (mesmo padrão de todo grupo do `ConfigService` —
+nunca "variável ausente" como sinal); `.env.example` ganhou `ARMAZENAMENTO_PROVEDOR=local`;
+`render.yaml` ganhou as seis chaves, `ARMAZENAMENTO_PROVEDOR=r2` fixo em produção e as cinco `R2_*`
+com `sync: false`; `DEPLOY.md` ganhou uma seção-runbook nova (criar bucket, habilitar acesso
+público, gerar API token Object Read & Write escopado ao bucket) entre Supabase e Render, com a
+renumeração das seções seguintes.
+
+**Endpoint dedicado, fora do `PUT /ficha/:id` genérico.** `POST /ficha/:id/imagem`
+(`FileInterceptor('arquivo')`, memória) e `DELETE /ficha/:id/imagem` — `FichaService.alterarImagem`/
+`excluirImagem` validam MIME (jpeg/png/webp) e tamanho (2MB) como `BusinessException`, reusam
+`validarPermissaoEdicao` (dono ou mestre) e excluem o arquivo anterior do armazenamento ao trocar
+(nunca acumula lixo). `FichaRepository.alterarImagem` é um `UPDATE` dedicado só para
+`imagem_url` — o `alterarFicha` genérico continua só `nome`/`cor`/`dados`. DTOs novos em
+`shared/src/dtos/ficha/ficha-operacao.dtos.ts`: `FichaImagemArquivoDto` (value-object,
+`conteudo: Uint8Array` — não `Buffer`, tipo Node-only que quebraria o `tsconfig` do frontend, que
+importa o `.ts` fonte do `shared` direto via path mapping), `FichaImagemAlterarDto`/
+`FichaImagemExcluirDto`/`FichaImagemInternoAlterarDto`/`FichaImagemAlteradaDto`; `imagemUrl:
+string | null` somado a `FichaCriadaDto`/`FichaAlteradaDto`/`FichaRecuperadaDto`/`FichaResumoDto`
+(sempre `null` na criação — a ficha só ganha `id` depois do `POST /ficha`, então o upload é sempre
+um segundo request, em sequência).
+
+**Frontend — três superfícies.** `ficha-ident__avatar` (cabeçalho, `FichaVisualizacao`) ganhou um
+`<img>` real quando `imagemUrl()` existe, cobrindo o fundo tracejado decorativo; editável
+(`ajustavelAmplo()`), o `<input type="color">` continua cobrindo a caixa inteira (picker de cor,
+m3-61) e ganhou dois selos sobrepostos — lápis (canto inferior, abre `<input type="file">`) e "×"
+(canto superior, só com avatar definido) — sem aninhar `<label>`s (cada um seu próprio alvo de
+clique). Novos outputs `ajusteImagem`/`removerImagem` chamam `FichaEdicaoService.ajustarImagem`/
+`removerImagem`, que persistem **imediato** via `FichaService.alterarImagem`/`excluirImagem`
+(`FormData`) — **não** passam pelo `agendarPersistencia` debounced que os demais `ajustar*` usam,
+porque o upload em si já é a persistência. Validação de tipo/tamanho no client antes de enviar
+(feedback imediato; a autoritativa continua no backend). Card do acervo (`acervo.page.html`) ganhou
+o mesmo tratamento — thumbnail 36px, sem a cor da ficha (o `FichaResumoDto` do acervo nunca teve
+`cor`). Guia de criação (`criar.page.ts`, Passo 01 // Base): o `File` escolhido nunca entra em
+`EstadoGuiaCriacao`/no rascunho salvo em `localStorage` (não é serializável em JSON) — fica num
+signal à parte até `criar()` chamar `criarFicha` e, com o `id` em mãos, encadear
+`alterarImagem`; falha nesse segundo request não desfaz a ficha nem trava a navegação.
+
 ## 2026-08-09 — `P-017`: migration `0012` (coluna `cor`) nunca rodou em produção
 
 O dono reportou "erro interno no servidor" ao abrir `/painel/1/ficha/8`. O log do Render

@@ -1,8 +1,8 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-09 · **Última decisão registrada:** a `m3-61` deu à ficha uma cor de
-> identidade visual própria (`--cor-ficha`, independente do `--accent` de tema por usuário), que
-> colore suas rolagens onde quer que apareçam
+> **Última revisão:** 2026-08-10 · **Última decisão registrada:** a `m3-62` deu à ficha um avatar
+> (upload de imagem, blob storage local em dev / Cloudflare R2 em produção, atrás de uma interface
+> escolhida por toggle de ambiente)
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -17,10 +17,10 @@
 
 Nenhuma task de milestone aberto está explicitamente encadeada; a fila do backlog abaixo é a
 referência. O trio do guia de criação (`m3-57` base, `m3-58` melhorias de nível, `m3-59`
-equipamento inicial), o complemento `m3-64` e a `m3-61` (cor de ficha) **concluíram** — as specs
-estão em `docs/specs/done/`; o que o guia faz hoje de ponta a ponta está descrito na seção 4, em
-"Guia de criação de ficha". A `m3-64` resolveu o antigo `P-012`: o pacote inicial agora é uma regra
-pura em `shared/regras/agente` e tem consumidor obrigatório no guia.
+equipamento inicial), o complemento `m3-64`, a `m3-61` (cor de ficha) e a `m3-62` (avatar de ficha)
+**concluíram** — as specs estão em `docs/specs/done/`; o que o guia faz hoje de ponta a ponta está
+descrito na seção 4, em "Guia de criação de ficha". A `m3-64` resolveu o antigo `P-012`: o pacote
+inicial agora é uma regra pura em `shared/regras/agente` e tem consumidor obrigatório no guia.
 
 `m2-18`/`m2-19`/`m2-20`/`m2-21` fecharam a frente de redesenho do painel de campanhas —
 `/painel/:id` tem layout dedicado para mestre e para jogador. Fica **em aberto, por decisão do
@@ -32,9 +32,9 @@ só adaptou o visual de desktop).
 | Spec | Frente | O que é |
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m3-62` | ficha | imagem/avatar da ficha (blob storage: **Cloudflare R2**, fixado na spec) |
 
-Milestones ainda não abertos: `m4-ficha-criatura-npc`, `m5-guia-missao`, `m6-gestao-usuarios-papeis`.
+Único item da fila; único frente de M3 ainda sem spec `done/`. Milestones ainda não abertos:
+`m4-ficha-criatura-npc`, `m5-guia-missao`, `m6-gestao-usuarios-papeis`.
 
 ---
 
@@ -48,11 +48,12 @@ Deploy em produção por **integração nativa das plataformas**, sem GitHub Act
 `master` → Render (backend) e Cloudflare Pages (frontend) puxam do Git sozinhos; banco no Supabase.
 O GitHub Actions só roda **CI** (lint + testes nos 3 workspaces em todo PR).
 
-**Suítes:** shared 532 testes fonte aprovados (o comando completo ainda coleta `dist`, `P-011`) ·
-backend 170/170 · frontend 733/**735** — as 2 falhas são conhecidas e pré-existentes, ver
-[`PROBLEMS.md`](PROBLEMS.md) `P-001`/`P-010`. `npm run lint` **não fecha limpo**
-hoje em nenhum dos dois workspaces (frontend/backend) — falhas pré-existentes não relacionadas a
-nenhuma task recente, ver `PROBLEMS.md` `P-009`.
+**Suítes (checadas na `m3-62`):** shared 570/570 · backend 190/190 · frontend 807/807 — os 3
+workspaces fecham a suíte completa hoje (`npm run test`, sem `--watch`); `P-001`/`P-010`/`P-011`
+descrevem falhas que só reproduzem isoladas (arquivo único), não na suíte completa — ver
+[`PROBLEMS.md`](PROBLEMS.md). `npm run lint` **não fecha limpo** hoje em nenhum dos dois
+workspaces (frontend/backend) — falhas pré-existentes não relacionadas a nenhuma task recente, ver
+`PROBLEMS.md` `P-009`.
 
 ---
 
@@ -63,7 +64,7 @@ nenhuma task recente, ver `PROBLEMS.md` `P-009`.
 | M0 | Fundação (workspaces, docs, Docker, `core/`, CI, deploy) | **concluído** |
 | M1 | Calculadora com paridade | **concluído no código** (`m1-01`…`m1-20`). Restam 2 passos **operacionais** de plataforma — ver `PROBLEMS.md` `P-006` |
 | M2 | Auth + Campanhas | **concluído**, incluindo o redesenho do painel (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`; `m2-18` lista, `m2-19` detalhe/mestre, `m2-20` detalhe/jogador, `m2-21` abas + Rolagens na lateral + menu de ficha do jogador) |
-| M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; guia de criação completo (`m3-57`/`m3-58`/`m3-59` — base, melhorias de nível, equipamento inicial); cor de identidade por ficha pronta (`m3-61`); faltam `m3-53`/`m3-62` |
+| M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; guia de criação completo (`m3-57`/`m3-58`/`m3-59` — base, melhorias de nível, equipamento inicial); cor (`m3-61`) e avatar (`m3-62`) de identidade por ficha prontos; falta só `m3-53` |
 | M4 | Ficha de Criatura/NPC | não iniciado |
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | não iniciado |
@@ -209,7 +210,13 @@ calculadora flutuante e **histórico persistido** com visibilidade `PUBLICA`/`PR
 tem uma **cor de identidade** própria (`m3-61`, coluna `ficha.cor`, swatch no cabeçalho —
 `ajustavelAmplo()`), independente do `--accent` de tema por usuário: colore o total/crítico de toda
 rolagem daquela ficha (bandeja de dados, histórico, feed "Rolagens Recentes" do painel de
-campanha), via REST e WebSocket; sem cor definida, cai no `--accent` de quem visualiza.
+campanha), via REST e WebSocket; sem cor definida, cai no `--accent` de quem visualiza. Cada ficha
+também tem um **avatar** opcional (`m3-62`, coluna `ficha.imagem_url`): `<img>` real no lugar do
+placeholder decorativo no cabeçalho (com selos de trocar/remover, `ajustavelAmplo()`) e no card do
+acervo — upload/remoção via `POST`/`DELETE /ficha/:id/imagem` (multipart, endpoint dedicado fora do
+`PUT` genérico), persistidos **imediatamente** (sem o debounce dos demais campos), com o arquivo
+guardado em disco local (dev) ou Cloudflare R2 (produção) atrás de `ArmazenamentoProvedor`
+(`backend/src/core/armazenamento/`), escolhido por `ARMAZENAMENTO_PROVEDOR`.
 
 ### Guia de criação de ficha — `frontend/src/app/modules/ficha/paginas/criar/`
 
@@ -224,7 +231,9 @@ progressivo que nunca antecipa classe/Nível/dinheiro antes da escolha real —,
 como padrão e podem ser sobrescritas manualmente. Ao final, `POST /ficha` sai sem a chave
 `campanhaId` quando a ficha é avulsa e
 o guia termina em `/fichas/:id`, não em `/painel/.../ficha/:id`. Passos: **01 Base** (dono, só
-mestre — não aparece sem campanha —, + codinome + cor de identidade, `m3-61`) · **02 Classe** (classe/arquétipo, bônus fixo de
+mestre — não aparece sem campanha —, + codinome + cor de identidade, `m3-61`, + avatar opcional,
+`m3-62`: o `File` fica só num signal local até "Criar ficha" — nunca no rascunho salvo em
+`localStorage` — e sobe num segundo request, em sequência, logo após o `POST /ficha`) · **02 Classe** (classe/arquétipo, bônus fixo de
 atributos, Habilidade Inicial, Saúde base sem Nível/atributos ainda) · **03 Novo agente** (motivo
 de entrada + médias de Nível/Prestígio pré-calculadas da campanha, `calcularNovoAgente`, memorial
 de cálculo e sobrescrita exata; sem campanha, valores exatos informados diretamente)

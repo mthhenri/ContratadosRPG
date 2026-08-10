@@ -126,6 +126,27 @@
                   </span>
                   <small class="campo__ajuda">{{ campanhaId !== null ? 'Nome operacional exibido na ficha e no esquadrão.' : 'Nome operacional exibido na ficha.' }} A cor identifica as rolagens deste agente.</small>
                 </label>
+                <!-- Avatar (m3-62): o arquivo só fica guardado localmente até o passo Revisão — a
+                     ficha só existe de fato após "Criar ficha"; o upload real é um segundo request,
+                     em sequência, logo depois do POST /ficha. -->
+                <label class="campo">
+                  <span class="campo__rotulo">Avatar</span>
+                  <span class="guia__avatar-caixa">
+                    @if (imagemPreviewUrl(); as previewUrl) {
+                      <img class="guia__avatar-imagem" [src]="previewUrl" alt="" />
+                    } @else {
+                      <app-icone nome="agente" />
+                    }
+                    <input
+                      type="file"
+                      class="guia__avatar-entrada"
+                      accept="image/jpeg,image/png,image/webp"
+                      aria-label="Escolher avatar"
+                      (change)="aoSelecionarImagemGuia($event)"
+                    />
+                  </span>
+                  <small class="campo__ajuda">{{ erroImagemGuia() ?? 'Opcional. JPEG, PNG ou WEBP, até 2MB — sobe logo após criar a ficha.' }}</small>
+                </label>
                 @if (ehMestre()) {
                   <label class="campo">
                     <span class="campo__rotulo">Operador responsável</span>

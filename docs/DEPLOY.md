@@ -15,8 +15,9 @@ Cloudflare Pages           Render (Web Service)          Supabase
 > **Ordem obrigatória:** há dependência circular de URLs (o front precisa da URL do back; o
 > back precisa da origem do front no CORS — e **não sobe sem `APP_FRONTEND_ORIGEM`**). A URL
 > das Pages é determinística (`https://<projeto>.pages.dev`), o que quebra a circularidade:
-> **escolha o nome do projeto Pages → 1. Supabase → 2. Render (já com `APP_FRONTEND_ORIGEM` =
-> `https://<projeto>.pages.dev`) → 3. Cloudflare Pages com esse nome e branch de produção `master`.**
+> **escolha o nome do projeto Pages → 1. Supabase → 2. Cloudflare R2 (avatar da ficha, sem
+> dependência de URL — pode ficar em qualquer ordem) → 3. Render (já com `APP_FRONTEND_ORIGEM` =
+> `https://<projeto>.pages.dev`) → 4. Cloudflare Pages com esse nome e branch de produção `master`.**
 
 ---
 
@@ -44,7 +45,7 @@ Cloudflare Pages           Render (Web Service)          Supabase
 1. Crie um projeto em <https://supabase.com> (região próxima; guarde a senha do banco).
 2. **Project Settings → Database → Connection info** (ou a Connection string do **Session
    pooler**, compatível com o pool do Knex). Extraia os campos para as variáveis do Render
-   (passo 2):
+   (passo 3):
 
    | Variável     | Valor                                    |
    |--------------|------------------------------------------|
@@ -60,7 +61,7 @@ Cloudflare Pages           Render (Web Service)          Supabase
 >
 > **Migrations rodam no build (desde o `P-017`).** O `buildCommand` do Render encadeia
 > `npm run db:migrate --workspace=backend` depois de compilar — toda migration pendente aplica
-> sozinha a cada deploy, contra o Supabase de produção, com as mesmas `DB_*` do passo 2. Isso só
+> sozinha a cada deploy, contra o Supabase de produção, com as mesmas `DB_*` do passo 3. Isso só
 > é seguro porque a convenção de migration do projeto (proibição #7) proíbe `DEFAULT` e coluna
 > `NOT NULL` sem valor: a versão do código **anterior** ao deploy continua rodando contra o schema
 > **novo** por alguns segundos (build acontece antes do processo antigo ser substituído) sem
@@ -70,7 +71,44 @@ Cloudflare Pages           Render (Web Service)          Supabase
 
 ---
 
-## 2. Backend — Render
+## 2. Armazenamento de blob — Cloudflare R2 (avatar da ficha)
+
+O avatar da ficha (m3-62) nunca entra no Postgres — só a URL persiste; o arquivo em si vive num
+armazenamento externo, atrás de um toggle de ambiente (`ARMAZENAMENTO_PROVEDOR`). Em **dev** o
+padrão é `local` (disco, sem credencial nenhuma); em **produção** é sempre `r2`.
+
+1. <https://dash.cloudflare.com> → **R2 Object Storage → Create bucket** — dê um nome (ex.:
+   `contratados-rpg-avatares`) e crie no plano gratuito.
+2. **Habilite o acesso público** ao bucket — duas opções:
+   - **Rápido:** aba **Settings** do bucket → **Public access → Allow Access** (domínio
+     `pub-<hash>.r2.dev`);
+   - **Domínio próprio:** aba **Settings → Custom Domains → Connect Domain** (requer o domínio já
+     na Cloudflare).
+
+   A URL pública resultante (com ou sem `https://`, sem barra no fim) é `ARMAZENAMENTO_R2_URL_PUBLICA`.
+3. **Crie o token de API** — **R2 → Manage API tokens → Create API token**: permissão
+   **Object Read & Write**, escopo restrito a **este bucket** (não "todos os buckets" da conta).
+   Anote o **Access Key ID** e o **Secret Access Key** exibidos (o segredo só aparece uma vez).
+4. **Account ID** — qualquer página do painel R2 mostra o ID da conta na barra lateral direita
+   (`ARMAZENAMENTO_R2_ACCOUNT_ID`).
+5. No Render (passo 3), preencha as seis variáveis:
+
+   | Variável                          | Valor                                              |
+   |------------------------------------|-----------------------------------------------------|
+   | `ARMAZENAMENTO_PROVEDOR`           | `r2` (já fixo no `render.yaml`)                     |
+   | `ARMAZENAMENTO_R2_ACCOUNT_ID`      | do passo 4                                          |
+   | `ARMAZENAMENTO_R2_ACCESS_KEY_ID`   | do passo 3                                          |
+   | `ARMAZENAMENTO_R2_SECRET_ACCESS_KEY` | do passo 3                                        |
+   | `ARMAZENAMENTO_R2_BUCKET`          | nome do bucket do passo 1                           |
+   | `ARMAZENAMENTO_R2_URL_PUBLICA`     | domínio público do passo 2                          |
+
+> Sem nenhuma das cinco `ARMAZENAMENTO_R2_*`, o backend **não sobe** em produção
+> (`ARMAZENAMENTO_PROVEDOR=r2` fixo no `render.yaml` exige todas via `obterVariavelObrigatoria`) —
+> mesmo padrão de `DB_*`/`JWT_SECRETO`, que também travam o boot.
+
+---
+
+## 3. Backend — Render
 
 Duas formas: **Blueprint** (lê o `render.yaml` da raiz) ou **Web Service manual**. Qualquer uma
 conecta ao Git e reimplanta no push.
@@ -96,7 +134,7 @@ conecta ao Git e reimplanta no push.
    | `JWT_EXPIRACAO`               | `7d`                                                     |
    | `APP_PORTA`                   | `10000` — precisa casar com a porta que o Render expõe (`PORT`, default `10000`); o backend lê `APP_PORTA` via `ConfigService` |
    | `APP_AMBIENTE`                | `production`                                             |
-   | `APP_FRONTEND_ORIGEM`         | `https://<projeto>.pages.dev` — **obrigatória no boot**; use já a URL determinística das Pages (passo 3) |
+   | `APP_FRONTEND_ORIGEM`         | `https://<projeto>.pages.dev` — **obrigatória no boot**; use já a URL determinística das Pages (passo 4) |
 
    > **Não** defina `NODE_ENV=production`: o `nest build` precisa das devDependencies
    > (`@nestjs/cli`, `typescript`) na fase de build, e `NODE_ENV=production` faria o
@@ -116,7 +154,7 @@ conecta ao Git e reimplanta no push.
 
 ---
 
-## 3. Frontend — Cloudflare Pages
+## 4. Frontend — Cloudflare Pages
 
 1. <https://dash.cloudflare.com> → **Workers & Pages → Create → Pages → Connect to Git**
    (conecte o repositório). *Se você já tinha um projeto por Direct Upload, recrie-o conectado
@@ -148,7 +186,7 @@ conecta ao Git e reimplanta no push.
 
 ---
 
-## 4. Pós-deploy
+## 5. Pós-deploy
 
 - Abra `https://<seu-projeto>.pages.dev`: a rota raiz redireciona ao `/login` (destino padrão
   é o `/painel`, guardado). Registre uma conta de teste — completar sem erro de CORS prova a
@@ -161,8 +199,9 @@ conecta ao Git e reimplanta no push.
 ## Checklist rápido
 
 - [ ] Supabase criado; credenciais do banco copiadas para as `DB_*`
+- [ ] Bucket R2 criado, acesso público habilitado e API token (Object Read & Write, escopado ao bucket) gerado; as seis `ARMAZENAMENTO_*` anotadas
 - [ ] Render: Build `npm install && npm run build --workspace=backend && npm run db:migrate --workspace=backend`, Start `start:prod`, Auto-Deploy On, Health `/health`
-- [ ] Render: envs preenchidas; `JWT_SECRETO` forte; **sem** `NODE_ENV=production`; `APP_FRONTEND_ORIGEM` = URL das Pages
+- [ ] Render: envs preenchidas (incluindo `ARMAZENAMENTO_*`); `JWT_SECRETO` forte; **sem** `NODE_ENV=production`; `APP_FRONTEND_ORIGEM` = URL das Pages
 - [ ] `environment.production.ts` com o `apiBase` da URL do Render (commitado)
 - [ ] Cloudflare Pages conectado ao Git; **Production branch = `master`**; output `frontend/dist/frontend/browser`
 - [ ] URL das Pages redireciona a `/login` e um registro de teste completa sem erro de CORS

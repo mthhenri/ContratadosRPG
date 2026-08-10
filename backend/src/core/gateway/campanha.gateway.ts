@@ -165,6 +165,7 @@ export class CampanhaGateway implements OnGatewayConnection {
       campanhaNome: null,
       usuarioId: ficha.usuarioId,
       nome: ficha.nome,
+      imagemUrl: ficha.imagemUrl,
       classe: ficha.dados.classe,
       arquetipo: ficha.dados.arquetipo,
       nivel: ficha.dados.nivel,

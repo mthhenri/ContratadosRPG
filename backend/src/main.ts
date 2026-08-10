@@ -1,10 +1,16 @@
+import { resolve } from 'node:path';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { ConfigService } from './config/config.service';
 import { WsIoAdapter } from './core/gateway/ws-io.adapter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // Avatar da ficha em `ArmazenamentoLocalProvedor` (m3-62, dev sem credencial R2): serve
+  // `backend/uploads/` estático sob `/uploads` — `NestExpressApplication`, já habilitado por
+  // `@nestjs/platform-express`, sem dependência nova.
+  app.useStaticAssets(resolve(__dirname, '..', 'uploads'), { prefix: '/uploads' });
   const configService = app.get(ConfigService);
   const { porta, frontendOrigem } = configService.obterConfiguracaoAplicacao();
   // Gateway de tempo real (SYSTEM.SPEC §9): a origem do Socket.IO é travada em
