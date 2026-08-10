@@ -12,7 +12,7 @@ const PREFIXO_PUBLICO = '/uploads';
 
 /**
  * Armazenamento em disco local (dev, `ARMAZENAMENTO_PROVEDOR=local`) — sem credencial real
- * necessária para rodar. Grava em `backend/uploads/ficha/<uuid>.<extensão>`, servido estático
+ * necessária para rodar. Grava em `backend/uploads/agentes/<uuid>.<extensão>`, servido estático
  * pelo Express (`app.useStaticAssets`, `main.ts`) sob o prefixo `/uploads`.
  */
 export class ArmazenamentoLocalProvedor implements ArmazenamentoProvedor {

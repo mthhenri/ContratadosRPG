@@ -65,7 +65,7 @@ import { FichaRepository } from './ficha.repository';
 
 /**
  * MIME permitido para o avatar da ficha (m3-62) → extensão de arquivo correspondente — cobre a
- * validação de formato e a nomeação do blob (`ficha/<uuid>.<extensão>`) num só lugar.
+ * validação de formato e a nomeação do blob (`agentes/<uuid>.<extensão>`) num só lugar.
  */
 const EXTENSAO_POR_MIME_IMAGEM: Readonly<Record<string, string>> = {
   'image/jpeg': 'jpg',

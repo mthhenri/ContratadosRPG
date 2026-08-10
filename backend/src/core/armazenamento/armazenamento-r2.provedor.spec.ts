@@ -38,14 +38,14 @@ describe('ArmazenamentoR2Provedor (m3-62)', () => {
     construtoresComandoRecebidos.length = 0;
   });
 
-  it('salva via PutObjectCommand na chave ficha/<uuid>.<extensão> e devolve a URL pública', async () => {
+  it('salva via PutObjectCommand na chave agentes/<uuid>.<extensão> e devolve a URL pública', async () => {
     const provedor = new ArmazenamentoR2Provedor(configuracaoR2);
     const conteudo = new Uint8Array([1, 2, 3]);
 
     const salvo = await provedor.salvarImagem({ conteudo, mimetype: 'image/webp', extensao: 'webp' });
 
     expect(salvo.caminho).toMatch(
-      /^https:\/\/pub-hash\.r2\.dev\/ficha\/[0-9a-f-]+\.webp$/,
+      /^https:\/\/pub-hash\.r2\.dev\/agentes\/[0-9a-f-]+\.webp$/,
     );
     expect(enviarMock).toHaveBeenCalledTimes(1);
     const comando = construtoresComandoRecebidos[0] as {
@@ -55,7 +55,7 @@ describe('ArmazenamentoR2Provedor (m3-62)', () => {
       ContentType: string;
     };
     expect(comando.Bucket).toBe('bucket-fichas');
-    expect(comando.Key).toMatch(/^ficha\/[0-9a-f-]+\.webp$/);
+    expect(comando.Key).toMatch(/^agentes\/[0-9a-f-]+\.webp$/);
     expect(comando.Body).toBe(conteudo);
     expect(comando.ContentType).toBe('image/webp');
   });
@@ -63,11 +63,11 @@ describe('ArmazenamentoR2Provedor (m3-62)', () => {
   it('exclui via DeleteObjectCommand extraindo a chave da URL pública', async () => {
     const provedor = new ArmazenamentoR2Provedor(configuracaoR2);
 
-    await provedor.excluirImagem({ caminho: 'https://pub-hash.r2.dev/ficha/abc-123.png' });
+    await provedor.excluirImagem({ caminho: 'https://pub-hash.r2.dev/agentes/abc-123.png' });
 
     expect(enviarMock).toHaveBeenCalledTimes(1);
     const comando = construtoresComandoRecebidos[0] as { Bucket: string; Key: string };
     expect(comando.Bucket).toBe('bucket-fichas');
-    expect(comando.Key).toBe('ficha/abc-123.png');
+    expect(comando.Key).toBe('agentes/abc-123.png');
   });
 });

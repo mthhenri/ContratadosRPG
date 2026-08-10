@@ -277,7 +277,7 @@ describe('FichaService', () => {
   it('troca o avatar via FormData na rota ficha/:id/imagem (m3-62)', () => {
     const { servico, http } = criar();
     const arquivo = new File(['conteudo'], 'avatar.png', { type: 'image/png' });
-    const alterada: FichaImagemAlteradaDto = { imagemUrl: '/uploads/ficha/novo.png' };
+    const alterada: FichaImagemAlteradaDto = { imagemUrl: '/uploads/agentes/novo.png' };
 
     let recebido: FichaImagemAlteradaDto | undefined;
     servico.alterarImagem(3, arquivo).subscribe((r) => (recebido = r));

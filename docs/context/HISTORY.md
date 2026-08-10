@@ -11,10 +11,13 @@ card do acervo, e também pode ser escolhida no Passo 01 do guia de criação (`
 **Armazenamento atrás de uma interface, escolhida por toggle de ambiente.** Módulo novo
 `backend/src/core/armazenamento/` (técnico, fora de `shared/` — nunca cruza pro frontend):
 `ArmazenamentoProvedor` (`salvarImagem`/`excluirImagem`) com duas implementações —
-`ArmazenamentoLocalProvedor` (disco, `backend/uploads/ficha/<uuid>.<extensão>`, servido estático
+`ArmazenamentoLocalProvedor` (disco, `backend/uploads/agentes/<uuid>.<extensão>`, servido estático
 via `app.useStaticAssets` sob `/uploads` — `main.ts` trocou para `NestExpressApplication`) e
 `ArmazenamentoR2Provedor` (`@aws-sdk/client-s3` apontando `endpoint` pro domínio da conta R2,
-`region: 'auto'`). `ArmazenamentoModule.useFactory` lê `ConfigService.obterConfiguracaoArmazenamento()`
+`region: 'auto'`) — `agentes/` é a pasta que o autor já tinha criado dentro do bucket R2 antes da
+implementação (separada de futuras pastas para outros tipos de imagem, ex. avatar de usuário), daí
+`construirChaveImagemFicha` fixar esse prefixo em vez de `ficha/`. `ArmazenamentoModule.useFactory`
+lê `ConfigService.obterConfiguracaoArmazenamento()`
 (novo grupo `ConfiguracaoArmazenamento`, union discriminada por `provedor: 'local' | 'r2'`) e só
 **instancia** a implementação escolhida — em `local`, `ArmazenamentoR2Provedor` (e as cinco
 `ARMAZENAMENTO_R2_*`) nunca é construído, então nenhuma credencial R2 é exigida em dev.

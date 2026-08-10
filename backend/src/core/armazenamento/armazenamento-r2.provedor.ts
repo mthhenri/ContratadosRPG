@@ -14,8 +14,10 @@ type ConfiguracaoArmazenamentoR2 = Extract<ConfiguracaoArmazenamento, { provedor
 /**
  * Armazenamento no Cloudflare R2 (produção, `ARMAZENAMENTO_PROVEDOR=r2`) — S3-compatible via
  * `@aws-sdk/client-s3`, apontando o `endpoint` para o domínio da conta (SDK oficial recomendado
- * pela Cloudflare). Grava sob a chave `ficha/<uuid>.<extensão>` e devolve a URL pública
- * (domínio custom ou `*.r2.dev`) — durável, sobrevive a redeploy.
+ * pela Cloudflare). Grava sob a chave `agentes/<uuid>.<extensão>` — `agentes/` é a pasta que o
+ * autor já criou dentro do bucket (separada de futuras pastas para outros tipos de imagem, ex.
+ * avatar de usuário) — e devolve a URL pública (domínio custom ou `*.r2.dev`) — durável, sobrevive
+ * a redeploy.
  */
 export class ArmazenamentoR2Provedor implements ArmazenamentoProvedor {
   private readonly clienteS3: S3Client;
