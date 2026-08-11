@@ -1,5 +1,39 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-11 — `P-019`: seletor de Classe do guia de criação vira dois passos (base → arquétipo/subclasse)
+
+O `<select>` único do passo // Classe misturava, nos mesmos `<optgroup>`, as três classes-base, as
+três subclasses de Experimento e Civil — todos como opções de primeiro nível. O dono pediu o fluxo
+que o próprio doc já descreve (`sistema-v4.1.0.md` — "⬡ Subclasse": "Após escolher a sua classe você
+pode escolher tomar uma subclasse e abdicar de ganhar o seu arquétipo"): primeiro escolher a
+classe-base (Combatente/Especialista/Suporte) ou Civil; só então, se não for Civil, uma segunda
+etapa escolhe entre os arquétipos regulares **e** a subclasse de Experimento daquela base.
+
+- `shared/regras/agente/habilidades-catalogo.ts`: novo export `subclasseExperimentoDaClasseBase`,
+  o inverso de `classeBaseDeHabilidades` — devolve a subclasse de Experimento de uma classe-base
+  (`null` pra Civil ou pra quem já é subclasse). Reusa o mapa `CLASSE_BASE_DA_SUBCLASSE` já existente,
+  nenhuma tabela nova duplicada.
+- `frontend/.../opcoes-ficha.ts`: `GRUPOS_CLASSE_BASE` (primeira etapa: só as três bases + Civil,
+  sem Experimento) e `gruposPerfilDaClasseBase(base)` (segunda etapa: optgroup "Arquétipos" + optgroup
+  "Subclasse" quando existe) — `GRUPOS_CLASSE` original ficou intacto pro editor de classe da ficha
+  já existente (`ficha-visualizacao.component.ts`), fora do escopo pedido. `classeBaseDoSeletor(classe)`
+  resolve a base "efetiva" de uma classe já definitiva (a própria, se base/Civil; a base da subclasse,
+  se Experimento) — usada pra reabrir o primeiro select no valor certo.
+- `frontend/.../criar.page.ts`: `EstadoGuiaCriacao` ganhou `classeBase` (a escolha da primeira etapa,
+  guardada à parte de `classe` porque ela existe antes da segunda etapa fechar o perfil). Computeds
+  novos: `classeBaseAtual()` (cai pra derivar de `classe` quando `classeBase` está ausente — cobre
+  rascunhos salvos antes desta mudança e os vários testes que montam estado direto via
+  `atualizar({classe, arquetipo})`), `gruposPerfil()`, `perfilSelecionado()`. `mudarClasse`/
+  `mudarArquetipo` viraram `mudarClasseBase`/`mudarPerfil`; trocar a base sempre reseta tudo (igual
+  antes); trocar entre arquétipo ↔ subclasse na segunda etapa só reseta o pacote de Habilidades
+  iniciais e as melhorias quando a `classe` final de fato muda — entre dois arquétipos da mesma base,
+  preserva as duas coisas (mesmo comportamento de sempre).
+- Testado: `habilidades-catalogo.spec.ts` ganhou testes de `subclasseExperimentoDaClasseBase`.
+  `criar.page.spec.ts` ganhou um describe novo (8 testes: DOM das duas etapas, escolha de
+  arquétipo/subclasse, reset ao trocar de base, preservação/reset do pacote inicial). `shared`:
+  601/601 (+2). `frontend`: 896/896 (+8). `backend`: 196/196 (não mudou). `lint`/`build` limpos nos
+  três workspaces.
+
 ## 2026-08-11 — `P-014` follow-up 2: rótulo dos pacotes de Habilidades iniciais também vira "Classe/Subclasse"
 
 Mais um ponto que o `P-014` tinha deixado fixo em "Arquétipo": os cards de **Pacote de criação** do

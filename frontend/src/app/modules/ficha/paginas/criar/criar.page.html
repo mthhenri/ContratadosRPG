@@ -169,9 +169,9 @@
               <div class="guia__campos guia__campos--duas-colunas">
                 <label class="campo">
                   <span class="campo__rotulo">Classe</span>
-                  <select class="campo__controle" [value]="estado().classe ?? ''" (change)="mudarClasse($event)">
+                  <select class="campo__controle" [value]="classeBaseAtual() ?? ''" (change)="mudarClasseBase($event)">
                     <option value="">Selecione uma classe</option>
-                    @for (grupo of gruposClasse; track grupo.rotulo) {
+                    @for (grupo of gruposClasseBase; track grupo.rotulo) {
                       <optgroup [label]="grupo.rotulo">
                         @for (opcao of grupo.opcoes; track opcao.valor) {
                           <option [value]="opcao.valor">{{ opcao.rotulo }}</option>
@@ -180,13 +180,17 @@
                     }
                   </select>
                 </label>
-                @if (arquetipos().length) {
+                @if (gruposPerfil().length) {
                   <label class="campo">
-                    <span class="campo__rotulo">Arquétipo</span>
-                    <select class="campo__controle" [value]="estado().arquetipo ?? ''" (change)="mudarArquetipo($event)">
+                    <span class="campo__rotulo">Arquétipo ou Subclasse</span>
+                    <select class="campo__controle" [value]="perfilSelecionado()" (change)="mudarPerfil($event)">
                       <option value="">Selecione</option>
-                      @for (opcao of arquetipos(); track opcao.valor) {
-                        <option [value]="opcao.valor">{{ opcao.rotulo }}</option>
+                      @for (grupo of gruposPerfil(); track grupo.rotulo) {
+                        <optgroup [label]="grupo.rotulo">
+                          @for (opcao of grupo.opcoes; track opcao.valor) {
+                            <option [value]="opcao.valor">{{ opcao.rotulo }}</option>
+                          }
+                        </optgroup>
                       }
                     </select>
                   </label>

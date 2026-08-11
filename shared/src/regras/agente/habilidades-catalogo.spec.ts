@@ -5,6 +5,7 @@ import {
   catalogoHabilidades,
   ehHabilidadeInicial,
   habilidadesIniciais,
+  subclasseExperimentoDaClasseBase,
   type GrupoHabilidades,
   type SubgrupoHabilidades,
 } from './habilidades-catalogo';
@@ -222,6 +223,23 @@ describe('habilidadesIniciais', () => {
   it('classe-base sem arquétipo, e Civil: nenhuma inicial', () => {
     expect(habilidadesIniciais(ClasseEnum.COMBATENTE, null)).toEqual([]);
     expect(habilidadesIniciais(ClasseEnum.CIVIL, null)).toEqual([]);
+  });
+});
+
+/**
+ * `subclasseExperimentoDaClasseBase` — o inverso de `classeBaseDeHabilidades`, usado pela segunda
+ * etapa do seletor de Classe em dois passos do guia de criação (P-019).
+ */
+describe('subclasseExperimentoDaClasseBase', () => {
+  it('devolve a subclasse de Experimento de cada classe-base', () => {
+    expect(subclasseExperimentoDaClasseBase(ClasseEnum.COMBATENTE)).toBe(ClasseEnum.EXPERIMENTO_BESTIAL);
+    expect(subclasseExperimentoDaClasseBase(ClasseEnum.ESPECIALISTA)).toBe(ClasseEnum.EXPERIMENTO_ARTIFICIAL);
+    expect(subclasseExperimentoDaClasseBase(ClasseEnum.SUPORTE)).toBe(ClasseEnum.EXPERIMENTO_HIBRIDO);
+  });
+
+  it('devolve null para Civil e para uma subclasse (ela mesma não tem subclasse)', () => {
+    expect(subclasseExperimentoDaClasseBase(ClasseEnum.CIVIL)).toBeNull();
+    expect(subclasseExperimentoDaClasseBase(ClasseEnum.EXPERIMENTO_BESTIAL)).toBeNull();
   });
 });
 

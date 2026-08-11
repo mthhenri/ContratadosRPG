@@ -102,6 +102,21 @@ export function classeBaseDeHabilidades(classe: ClasseEnum): ClasseEnum | null {
 }
 
 /**
+ * O inverso de `classeBaseDeHabilidades` restrito às subclasses: a subclasse de Experimento de uma
+ * classe-base (`sistema-v4.1.0.md` — "⬡ Subclasse", cada uma nasce "⬡ CLASSE - <base>"). `null` para
+ * Civil ou para uma classe que já é ela mesma uma subclasse. Cada base tem hoje exatamente uma
+ * subclasse. Consumida pelo seletor de Classe em dois passos do guia de criação (P-019): a segunda
+ * etapa combina os arquétipos da base com esta subclasse, como o doc descreve — "após escolher sua
+ * classe você pode escolher tomar uma subclasse e abdicar de ganhar o seu arquétipo".
+ */
+export function subclasseExperimentoDaClasseBase(classeBase: ClasseEnum): ClasseEnum | null {
+  const entrada = (Object.entries(CLASSE_BASE_DA_SUBCLASSE) as [ClasseEnum, ClasseEnum][]).find(
+    ([, base]) => base === classeBase,
+  );
+  return entrada?.[0] ?? null;
+}
+
+/**
  * Grupo **Gerais** — subgrupo único (chave `null`), sempre disponível. Quando a ficha tem
  * arquétipo, cada Geral com uma melhorada daquele arquétipo é **substituída** pela melhorada na
  * mesma posição: ela conta como a habilidade geral, só que com outra descrição/custo — o dono da

@@ -135,31 +135,13 @@
   correção.
 - **Desde:** reportado pelo dono em 2026-08-11.
 
-### P-019 — Seletor de Classe não segue o padrão de dois passos (base → arquétipo/subclasse) · `ABERTO` · frontend/UX
-
-- **Sintoma:** o `<select>` único do passo // Classe
-  ([criar.page.html:172](../../frontend/src/app/modules/ficha/paginas/criar/criar.page.html#L172))
-  mistura, nos mesmos `<optgroup>`, as três classes-base, as três subclasses de Experimento e Civil
-  — todas como opções de primeiro nível (`GRUPOS_CLASSE` —
-  [opcoes-ficha.ts:22](../../frontend/src/app/modules/ficha/opcoes-ficha.ts#L22)). O dono quer um
-  fluxo em dois passos: primeiro escolher a classe-base (Combatente/Especialista/Suporte) ou Civil;
-  só então, se não for Civil, um segundo `<select>` escolhe entre os arquétipos regulares **e** a
-  subclasse de Experimento daquela classe-base.
-- **Causa:** o modelo de dados atual já trata Experimento como uma `ClasseEnum` própria e paralela
-  (`EXPERIMENTO_BESTIAL`/`ARTIFICIAL`/`HIBRIDO`), não como "Combatente + subclasse Experimento" — é
-  esse desenho que faz o `<select>` de Classe ter que listar Experimento junto das bases, em vez de
-  como uma opção dentro do segundo seletor.
-- **Contorno:** nenhum — hoje dá pra escolher tudo, só não no fluxo de dois passos pedido.
-- **Correção:** não determinada — muda a experiência de seleção (dois `<select>` em cascata) e
-  possivelmente como Experimento se relaciona com a classe-base no modelo; desenhar com o dono antes
-  de mexer.
-- **Desde:** reportado pelo dono em 2026-08-11.
-
 ## Resolvidos
 
 Itens resolvidos **saem daqui**. O relato da correção fica no [`HISTORY.md`](HISTORY.md), junto da
 task que a fez.
 
+- **P-019** — Seletor de Classe não seguia o padrão de dois passos (base → arquétipo/subclasse).
+  Resolvido em 2026-08-11, ver `HISTORY.md`.
 - **P-017** — migration `0012` (coluna `cor`) nunca rodou em produção. Resolvido em 2026-08-09,
   ver `HISTORY.md`.
 - **P-013** — habilidade "Anomalia" não dobrava custo/efeito de Fragmentos. Resolvido em

@@ -540,15 +540,15 @@ describe('FichaCriar', () => {
       componente['escolherBonusAtributo'](0, { target: { value: 'forca' } } as unknown as Event);
       expect(componente['estado']().bonusEscolhido).toEqual(['forca']);
 
-      componente['mudarArquetipo']({ target: { value: ArquetipoEnum.ASSASSINO } } as unknown as Event);
+      componente['mudarPerfil']({ target: { value: ArquetipoEnum.ASSASSINO } } as unknown as Event);
       expect(componente['estado']().bonusEscolhido).toEqual([]);
       expect(componente['passoValido']()).toBe(false);
     });
 
-    it('trocar de classe reseta a escolha anterior', () => {
+    it('trocar de classe-base (primeira etapa) reseta a escolha anterior', () => {
       const { componente } = montar();
       componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_HIBRIDO, bonusEscolhido: ['vigor', 'vigor'] });
-      componente['mudarClasse']({ target: { value: ClasseEnum.COMBATENTE } } as unknown as Event);
+      componente['mudarClasseBase']({ target: { value: ClasseEnum.COMBATENTE } } as unknown as Event);
       expect(componente['estado']().bonusEscolhido).toEqual([]);
     });
 
@@ -606,6 +606,109 @@ describe('FichaCriar', () => {
       fixture.detectChanges();
 
       expect(raiz.querySelector('[data-testid="bonus-escolha-0"]')).toBeNull();
+    });
+  });
+
+  describe('seletor de Classe em dois passos (P-019)', () => {
+    const irParaClasse = (componente: FichaCriar) => componente['atualizar']({ passo: componente['passos']().indexOf('Classe') });
+    const selects = (raiz: HTMLElement) => Array.from(raiz.querySelectorAll('.guia__campos--duas-colunas select')) as HTMLSelectElement[];
+
+    it('DOM: a primeira etapa só lista as três classes-base e Civil — nada de Experimento junto', () => {
+      const { fixture, raiz, componente } = montar();
+      irParaClasse(componente);
+      fixture.detectChanges();
+
+      const [classeSelect] = selects(raiz);
+      const opcoes = Array.from(classeSelect.options).map((o) => o.value).filter(Boolean);
+      expect(opcoes.sort()).toEqual(
+        [ClasseEnum.COMBATENTE, ClasseEnum.ESPECIALISTA, ClasseEnum.SUPORTE, ClasseEnum.CIVIL].sort(),
+      );
+    });
+
+    it('DOM: escolher Combatente revela a segunda etapa com Arquétipos + Subclasse (Experimento Bestial) lado a lado', () => {
+      const { fixture, raiz, componente } = montar();
+      irParaClasse(componente);
+      fixture.detectChanges();
+
+      const [classeSelect] = selects(raiz);
+      classeSelect.value = ClasseEnum.COMBATENTE;
+      classeSelect.dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+
+      const [, perfilSelect] = selects(raiz);
+      expect(perfilSelect).not.toBeUndefined();
+      const grupos = Array.from(perfilSelect.querySelectorAll('optgroup')).map((g) => g.getAttribute('label'));
+      expect(grupos).toEqual(['Arquétipos', 'Subclasse']);
+      const opcoes = Array.from(perfilSelect.options).map((o) => o.value).filter(Boolean);
+      expect(opcoes.sort()).toEqual(
+        [ArquetipoEnum.LUTADOR, ArquetipoEnum.MERCENARIO, ArquetipoEnum.VANGUARDA, ClasseEnum.EXPERIMENTO_BESTIAL].sort(),
+      );
+    });
+
+    it('escolher um arquétipo na segunda etapa define classe = a base e arquetipo = o escolhido', () => {
+      const { componente } = montar();
+      componente['mudarClasseBase']({ target: { value: ClasseEnum.COMBATENTE } } as unknown as Event);
+      componente['mudarPerfil']({ target: { value: ArquetipoEnum.MERCENARIO } } as unknown as Event);
+
+      expect(componente['estado']().classe).toBe(ClasseEnum.COMBATENTE);
+      expect(componente['estado']().arquetipo).toBe(ArquetipoEnum.MERCENARIO);
+    });
+
+    it('escolher a Subclasse na segunda etapa define classe = a subclasse de Experimento e arquetipo = null', () => {
+      const { componente } = montar();
+      componente['mudarClasseBase']({ target: { value: ClasseEnum.ESPECIALISTA } } as unknown as Event);
+      componente['mudarPerfil']({ target: { value: ClasseEnum.EXPERIMENTO_ARTIFICIAL } } as unknown as Event);
+
+      expect(componente['estado']().classe).toBe(ClasseEnum.EXPERIMENTO_ARTIFICIAL);
+      expect(componente['estado']().arquetipo).toBeNull();
+    });
+
+    it('DOM: escolher Civil fecha a classe direto na primeira etapa, sem segunda etapa', () => {
+      const { fixture, raiz, componente } = montar();
+      irParaClasse(componente);
+      fixture.detectChanges();
+
+      const [classeSelect] = selects(raiz);
+      classeSelect.value = ClasseEnum.CIVIL;
+      classeSelect.dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+
+      expect(componente['estado']().classe).toBe(ClasseEnum.CIVIL);
+      expect(selects(raiz)).toHaveLength(1);
+    });
+
+    it('trocar a classe-base na primeira etapa reseta a segunda etapa (classe e arquétipo)', () => {
+      const { componente } = montar();
+      componente['mudarClasseBase']({ target: { value: ClasseEnum.COMBATENTE } } as unknown as Event);
+      componente['mudarPerfil']({ target: { value: ArquetipoEnum.LUTADOR } } as unknown as Event);
+      expect(componente['estado']().classe).toBe(ClasseEnum.COMBATENTE);
+
+      componente['mudarClasseBase']({ target: { value: ClasseEnum.SUPORTE } } as unknown as Event);
+      expect(componente['estado']().classe).toBeNull();
+      expect(componente['estado']().arquetipo).toBeNull();
+      expect(componente['classeBaseAtual']()).toBe(ClasseEnum.SUPORTE);
+    });
+
+    it('trocar de arquétipo para a Subclasse na mesma base zera o pacote de Habilidades e as melhorias já escolhidas', () => {
+      const { componente } = montar();
+      componente['mudarClasseBase']({ target: { value: ClasseEnum.COMBATENTE } } as unknown as Event);
+      componente['mudarPerfil']({ target: { value: ArquetipoEnum.LUTADOR } } as unknown as Event);
+      componente['atualizar']({ pacoteHabilidadesId: 'QUATRO_GERAIS' });
+
+      componente['mudarPerfil']({ target: { value: ClasseEnum.EXPERIMENTO_BESTIAL } } as unknown as Event);
+
+      expect(componente['estado']().pacoteHabilidadesId).toBeNull();
+    });
+
+    it('trocar entre dois arquétipos da mesma base preserva o pacote de Habilidades já escolhido', () => {
+      const { componente } = montar();
+      componente['mudarClasseBase']({ target: { value: ClasseEnum.COMBATENTE } } as unknown as Event);
+      componente['mudarPerfil']({ target: { value: ArquetipoEnum.LUTADOR } } as unknown as Event);
+      componente['atualizar']({ pacoteHabilidadesId: 'QUATRO_GERAIS' });
+
+      componente['mudarPerfil']({ target: { value: ArquetipoEnum.MERCENARIO } } as unknown as Event);
+
+      expect(componente['estado']().pacoteHabilidadesId).toBe('QUATRO_GERAIS');
     });
   });
 
