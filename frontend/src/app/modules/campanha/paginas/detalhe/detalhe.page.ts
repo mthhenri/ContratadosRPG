@@ -69,6 +69,8 @@ interface ItemFicha {
   readonly id: number;
   /** Dono da ficha — só precisou virar campo próprio no m2-19 (Esquadrão achatado, sem o loop por membro que antes dava esse dado de graça). */
   readonly usuarioId: number;
+  /** URL do avatar da ficha (m3-62) — `null` sem imagem definida (cai no placeholder decorativo). */
+  readonly imagemUrl: string | null;
   readonly nome: string;
   readonly classeTexto: string;
   readonly nivel: number;
@@ -361,6 +363,7 @@ export class CampanhaDetalhe {
       const item: ItemFicha = {
         id: ficha.id,
         usuarioId: ficha.usuarioId,
+        imagemUrl: ficha.imagemUrl,
         nome: ficha.nome,
         classeTexto: rotuloClasseCompleto(ficha.classe, ficha.arquetipo),
         nivel: ficha.nivel,

@@ -450,6 +450,12 @@
                   (dblclick)="abrirFichaDuploClique(campanhaAtual.id, ficha.id, $event)"
                   (auxclick)="abrirFichaCliqueDoMeio(campanhaAtual.id, ficha.id, $event)"
                 >
+                  <span class="detalhe__ficha-avatar" aria-hidden="true">
+                    @if (ficha.imagemUrl; as urlImagem) {
+                      <img class="detalhe__ficha-avatar-imagem" [src]="urlImagem" alt="" />
+                    }
+                  </span>
+                  <div class="detalhe__ficha-conteudo">
                   <a
                     class="detalhe__ficha-link"
                     [routerLink]="['/painel', campanhaAtual.id, 'ficha', ficha.id]"
@@ -565,6 +571,7 @@
                       }
                     </div>
                   }
+                  </div>
                 </div>
               </li>
             }

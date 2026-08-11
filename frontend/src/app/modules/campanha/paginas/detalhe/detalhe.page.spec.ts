@@ -968,6 +968,26 @@ describe('CampanhaDetalhe', () => {
       expect(vera?.querySelector('[data-condicao="sobrecarregado"]')).toBeNull();
     });
 
+    it('mostra o avatar da ficha quando ela tem imagemUrl, e o placeholder quando não tem', () => {
+      const { raiz } = montar({
+        usuarioId: 1,
+        membros: membrosDois(),
+        fichas: [{ ...fichas[0], imagemUrl: 'https://exemplo.com/kane.png' }, fichas[1]],
+      });
+
+      const cartoes = Array.from(raiz.querySelectorAll('.detalhe__ficha-card'));
+      const kane = cartoes.find((c) => c.textContent?.includes('Kane'))!;
+      const vera = cartoes.find((c) => c.textContent?.includes('Vera'))!;
+
+      expect(kane.querySelector('.detalhe__ficha-avatar')).not.toBeNull();
+      const imagemKane = kane.querySelector('.detalhe__ficha-avatar-imagem') as HTMLImageElement;
+      expect(imagemKane).not.toBeNull();
+      expect(imagemKane.getAttribute('src')).toBe('https://exemplo.com/kane.png');
+
+      expect(vera.querySelector('.detalhe__ficha-avatar')).not.toBeNull();
+      expect(vera.querySelector('.detalhe__ficha-avatar-imagem')).toBeNull();
+    });
+
     it('"Nova ficha" abre o assistente de criação, sem criar de imediato', () => {
       const { raiz, fichaService, navegar } = montar({ usuarioId: 1, membros: membrosDois() });
 
