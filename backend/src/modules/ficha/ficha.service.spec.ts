@@ -175,6 +175,7 @@ describe('FichaService', () => {
     nome: 'Agente Alfa',
     cor: null,
     imagemUrl: null,
+    oculta: false,
     dados: criarDados(),
   };
 

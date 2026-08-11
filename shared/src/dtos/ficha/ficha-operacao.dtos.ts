@@ -206,6 +206,8 @@ export interface FichaRecuperadaDto {
   readonly cor: string | null;
   /** URL do avatar da ficha (m3-62) — ver {@link FichaCriadaDto.imagemUrl}. */
   readonly imagemUrl: string | null;
+  /** Ficha oculta (m3-65) — `true` some completamente de qualquer jogador que não seja o dono ou o mestre. */
+  readonly oculta: boolean;
   readonly dados: FichaJogadorDadosDto;
 }
 
@@ -218,6 +220,8 @@ export interface FichaAlterarDto {
   readonly nome: string;
   /** Cor de identidade visual (m3-61) — ver {@link FichaCriarDto.cor}. Sem trava de imutabilidade. */
   readonly cor?: string | null;
+  /** Ficha oculta (m3-65) — ver {@link FichaRecuperadaDto.oculta}. Ausente equivale a `false`. */
+  readonly oculta?: boolean;
   readonly dados: FichaJogadorDadosDto;
 }
 
@@ -231,6 +235,8 @@ export interface FichaAlteradaDto {
   readonly cor: string | null;
   /** URL do avatar da ficha (m3-62) — ver {@link FichaCriadaDto.imagemUrl}. Preservado — `alterarFicha` nunca o toca. */
   readonly imagemUrl: string | null;
+  /** Ficha oculta (m3-65) — ver {@link FichaRecuperadaDto.oculta}. */
+  readonly oculta: boolean;
   readonly dados: FichaJogadorDadosDto;
 }
 
@@ -355,6 +361,8 @@ export interface FichaInternoAlterarDto {
   readonly nome: string;
   /** Cor de identidade visual (m3-61) — ver {@link FichaCriarDto.cor}. Ausente equivale a `null`. */
   readonly cor?: string | null;
+  /** Ficha oculta (m3-65) — ver {@link FichaRecuperadaDto.oculta}. Ausente equivale a `false`. */
+  readonly oculta?: boolean;
   readonly dados: FichaJogadorDadosDto;
 }
 

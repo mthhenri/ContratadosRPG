@@ -92,7 +92,7 @@ describe('FichaService', () => {
 
   it('recupera uma ficha pelo id', () => {
     const { servico, http } = criar();
-    const recuperada: FichaRecuperadaDto = { id: 3, campanhaId: 9, usuarioId: 7, nome: 'Kane', cor: null, imagemUrl: null, dados };
+    const recuperada: FichaRecuperadaDto = { id: 3, campanhaId: 9, usuarioId: 7, nome: 'Kane', cor: null, imagemUrl: null, oculta: false, dados };
 
     let recebido: FichaRecuperadaDto | undefined;
     servico.recuperarFicha(3).subscribe((r) => (recebido = r));
@@ -105,7 +105,7 @@ describe('FichaService', () => {
 
   it('altera nome/dados de uma ficha', () => {
     const { servico, http } = criar();
-    const alterada: FichaAlteradaDto = { id: 3, campanhaId: 9, usuarioId: 7, nome: 'Novo', cor: null, imagemUrl: null, dados };
+    const alterada: FichaAlteradaDto = { id: 3, campanhaId: 9, usuarioId: 7, nome: 'Novo', cor: null, imagemUrl: null, oculta: false, dados };
 
     let recebido: FichaAlteradaDto | undefined;
     servico.alterarFicha(3, { nome: 'Novo', dados }).subscribe((r) => (recebido = r));

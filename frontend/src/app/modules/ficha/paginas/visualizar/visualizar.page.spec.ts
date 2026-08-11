@@ -92,6 +92,7 @@ describe('FichaVisualizar', () => {
       nome: 'Kane',
       cor: null,
       imagemUrl: null,
+      oculta: false,
       dados,
     };
     const fichaService = {
@@ -400,6 +401,7 @@ describe('FichaVisualizar', () => {
       nome: 'Kane',
       cor: null,
       imagemUrl: null,
+      oculta: false,
       dados: {
         ...dados,
         classe,
@@ -883,6 +885,7 @@ describe('FichaVisualizar', () => {
       nome: 'Kane Ferido',
       cor: null,
       imagemUrl: null,
+      oculta: false,
       dados: { ...dados, estado: { ...dados.estado, vidaAtual: 1 } },
     };
     fichaAlterada$.next(remota);
