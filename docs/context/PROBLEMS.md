@@ -29,21 +29,6 @@
 
 ## Ativos
 
-### P-001 — Teste de "apelido de equipamento" quebrado em `master` · `ABERTO` · frontend/testes
-
-- **Sintoma:** a suíte do frontend fecha em **592/593**. A falha está em
-  [ficha-inventario.component.spec.ts:594](../../frontend/src/app/modules/ficha/componentes/ficha-inventario/ficha-inventario.component.spec.ts#L594),
-  `describe('apelido de equipamento (m3-33)')`.
-- **Causa:** apontada nos registros como `ResizeObserver` no ambiente de teste — **não
-  investigada a fundo**.
-- **Contorno:** a falha é estável e isolada. Toda task desde a `m3-33` confirma que continua
-  quebrada em `master` (via `git diff` vazio no arquivo) e reporta `N-1/N` sem tratar como
-  regressão.
-- **Correção:** desconhecida — precisa de uma investigação dedicada.
-- **Desde:** `m3-33` (o teste nasceu junto com a feature e nunca passou em CI verde).
-- **Custo real:** ele envenena o sinal. Uma suíte que nunca fecha verde faz toda task gastar
-  tempo provando que *a falha dela* não é nova.
-
 ### P-002 — `HISTORY.md` sem registro desde a `m3-27` · `ABERTO` · processo
 
 - **Sintoma:** o último bloco registrado é a `m3-27` (2026-07-29), mas **11 commits de trabalho
@@ -155,19 +140,6 @@
   um `role`/`tabindex`/handler de teclado equivalente. Trivial, mas não é escopo de nenhuma task atual.
 - **Desde:** descoberto durante a `m2-18` (2026-08-01); a raiz é anterior, não determinada.
 
-### P-010 — Teste do link "Voltar" quebrado em `visualizar.page.spec.ts` · `ABERTO` · frontend/testes
-
-- **Sintoma:** `FichaVisualizar > sob /fichas/:id ... > o link "Voltar" aponta pro acervo (/fichas)
-  quando a ficha está solta` falha com `expected '' to contain 'Voltar ao acervo'` — o
-  `.ficha-pagina__voltar` renderiza vazio.
-- **Causa:** não investigada. Falha isolada (`ng test --include='**/visualizar.page.spec.ts'`, sem
-  nenhuma outra spec no worker) contra o `HEAD` anterior à `m3-63` — nenhuma linha de
-  `visualizar.page.*` foi tocada por essa nem por nenhuma task recente.
-- **Contorno:** a falha é estável e isolada, mesmo padrão do `P-001`. Toda task que rodar a suíte
-  cheia do frontend deve reportar como preexistente, não como regressão.
-- **Correção:** desconhecida — precisa de investigação dedicada.
-- **Desde:** descoberto durante a `m3-63` (2026-08-03); a raiz é anterior, não determinada.
-
 ### P-011 — Suíte de `shared` coleta specs compiladas de `dist` · `ABERTO` · shared/testes
 
 - **Sintoma:** `npm test` no monorepo executa os **520** testes fonte de `shared` com sucesso, mas
@@ -260,3 +232,9 @@ task que a fez.
   ver `HISTORY.md`.
 - **P-013** — habilidade "Anomalia" não dobrava custo/efeito de Fragmentos. Resolvido em
   2026-08-10, ver `HISTORY.md`.
+- **P-001** — teste de "apelido de equipamento" quebrado em `master`. Já corrigido pelo commit
+  `0aa92c2` (2026-08-08), que só nunca chegou a ser refletido aqui; achado e fechado em 2026-08-11,
+  ver `HISTORY.md`.
+- **P-010** — teste do link "Voltar" quebrado em `visualizar.page.spec.ts`. Mesma causa e mesmo
+  commit de correção do `P-001` (`0aa92c2`, 2026-08-08); achado e fechado em 2026-08-11, ver
+  `HISTORY.md`.

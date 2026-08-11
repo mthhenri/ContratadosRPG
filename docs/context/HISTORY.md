@@ -1,5 +1,26 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-11 — `PROBLEMS.md`: `P-001` e `P-010` já estavam corrigidos, só nunca foram fechados
+
+Investigação a pedido do autor sobre o `P-001` ("apelido de equipamento" quebrado em
+`ficha-inventario.component.spec.ts`). Rodei a suíte completa do frontend duas vezes
+(`ng test --watch=false`) e as duas fecharam **874/874 testes, 51/51 arquivos**, sem nenhuma
+falha — nem P-001 nem P-010, que sempre eram citadas juntas nos relatos de task anteriores.
+
+`git log` no arquivo mostrou a causa: o commit `0aa92c2` ("test(ficha): corrige expectativas
+defasadas em inventário e visualizar", 2026-08-08) já tinha ajustado as duas asserções
+desatualizadas — o nome mecânico do item passou a incluir "— categoria" (`'Leve'` →
+`'Leve — Corpo a Corpo'`, P-001) e o link "Voltar" virou ícone-só com `aria-label` em vez de
+texto visível (P-010). A causa real nunca foi `ResizeObserver`, como o `P-001` suspeitava — era
+simplesmente uma expectativa de teste que não acompanhou uma mudança de template. `git
+merge-base --is-ancestor 0aa92c2 HEAD` confirma que o commit já está no `HEAD` atual.
+
+O motivo de as duas falhas continuarem aparecendo como "preexistentes" em tantas tasks depois de
+8/ago é que várias branches `claude/*` foram cortadas de commits anteriores ao `0aa92c2` e só
+viram a correção depois de mescladas — exatamente o tipo de atraso que o próprio `P-002`
+descreve. `PROBLEMS.md` nunca foi atualizado para refletir a correção; P-001 e P-010 movidos para
+"Resolvidos".
+
 ## 2026-08-11 — Acervo de fichas passa a mostrar cor e avatar do card, como no Esquadrão
 
 `FichaAcervo` (`/fichas`) já lia `imagemUrl` de `FichaResumoDto` e renderizava a foto, mas nunca
