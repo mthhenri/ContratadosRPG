@@ -836,6 +836,13 @@ export class CampanhaDetalhe {
     this.fichaExibidaId.set(propria?.id ?? null);
   }
 
+  /** Sai do preview "Ver como jogador" e volta ao layout de mestre. */
+  protected sairPreviewJogador(): void {
+    this.previewJogador.set(null);
+    this.fichaExibidaId.set(null);
+    this.fichaExibidaDados.set(null);
+  }
+
   /** Abre o formulário de edição preenchido com o nome/descrição atuais da campanha. */
   protected abrirEdicao(): void {
     const campanhaAtual = this.campanha();

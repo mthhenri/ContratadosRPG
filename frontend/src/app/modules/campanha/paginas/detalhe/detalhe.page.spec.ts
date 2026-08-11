@@ -592,6 +592,48 @@ describe('CampanhaDetalhe', () => {
 
       expect(raiz.querySelector('.detalhe__jogador-vazio')).not.toBeNull();
     });
+
+    it('mostra a barra de "Visualizando como X" e trava a interação do conteúdo', () => {
+      const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      abrirMenuCampanha(raiz, fixture);
+      encontrarItemMenu(raiz, 'Ver como jogador').click();
+      fixture.detectChanges();
+      encontrarItemMenu(raiz, 'Jogador').click();
+      fixture.detectChanges();
+
+      const barra = raiz.querySelector('.detalhe__preview-barra');
+      expect(barra?.textContent).toContain('Visualizando como');
+      expect(barra?.textContent).toContain('Jogador');
+
+      const conteudo = raiz.querySelector('.detalhe__conteudo');
+      expect(conteudo?.classList.contains('detalhe__conteudo--bloqueado')).toBe(true);
+    });
+
+    it('"Sair da visualização" volta ao layout de mestre', () => {
+      const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      abrirMenuCampanha(raiz, fixture);
+      encontrarItemMenu(raiz, 'Ver como jogador').click();
+      fixture.detectChanges();
+      encontrarItemMenu(raiz, 'Jogador').click();
+      fixture.detectChanges();
+
+      (raiz.querySelector('.detalhe__preview-sair') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(raiz.querySelector('.detalhe__preview-barra')).toBeNull();
+      expect(raiz.querySelector('.detalhe__grade')).not.toBeNull();
+      expect(raiz.querySelector('.detalhe__jogador')).toBeNull();
+    });
+
+    it('a área de conteúdo não fica travada fora do preview', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      expect(raiz.querySelector('.detalhe__conteudo')?.classList.contains('detalhe__conteudo--bloqueado')).toBe(
+        false,
+      );
+    });
   });
 
   // === Tira de estatísticas (item 2) ===

@@ -26,6 +26,22 @@
       </div>
     </div>
   } @else if (campanha(); as campanhaAtual) {
+    @if (previewJogador(); as jogadorPreview) {
+      <div class="detalhe__preview-barra" role="status">
+        <app-icone nome="olho" />
+        <span class="detalhe__preview-texto">
+          Visualizando como <strong>{{ jogadorPreview.nome }}</strong> · somente leitura
+        </span>
+        <button
+          class="botao botao--secundario detalhe__preview-sair"
+          type="button"
+          (click)="sairPreviewJogador()"
+        >
+          Sair da visualização
+        </button>
+      </div>
+    }
+    <div class="detalhe__conteudo" [class.detalhe__conteudo--bloqueado]="previewJogador() !== null">
     <header class="detalhe__cabecalho">
       <div class="detalhe__cabecalho-titulo-linha">
         <span class="card__indice">//</span>
@@ -794,6 +810,7 @@
       </div>
     </div>
     }
+    </div>
   }
 </section>
 

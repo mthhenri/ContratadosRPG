@@ -261,6 +261,38 @@
     }
   }
 
+  // === "Ver como jogador" (preview do mestre) — barra fixa fora do container travado (continua
+  // clicável) + o container em si, que trava toda a interação (`pointer-events: none`) enquanto
+  // o preview está ativo. Puro CSS: nenhum handler precisa checar o preview individualmente.
+  &__preview-barra {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding: 10px 16px;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-control);
+    color: var(--accent);
+  }
+
+  &__preview-texto {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  &__preview-sair {
+    flex: none;
+  }
+
+  &__conteudo--bloqueado {
+    pointer-events: none;
+    opacity: 0.92;
+  }
+
   // === Tira de estatísticas (item 2) — Membros / Fichas / Convite (só mestre) / Alertas. Mesmo
   // bloco `.stat` canônico (abaixo) e mesma grade responsiva já usada em `lista.page.scss` (m2-18).
   &__estatisticas {
