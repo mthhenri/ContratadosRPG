@@ -101,6 +101,7 @@ export class FichaEdicaoService {
             .alterarFicha(this.obterFichaId(), {
               nome: fichaAtual.nome,
               cor: fichaAtual.cor,
+              oculta: fichaAtual.oculta,
               dados: fichaAtual.dados,
             })
             .pipe(
@@ -365,6 +366,16 @@ export class FichaEdicaoService {
       return;
     }
     this.ficha.set({ ...fichaAtual, cor });
+    this.agendarPersistencia();
+  }
+
+  /** Ficha oculta (m3-65, relacional — fora do `dados`) — mesmo padrão de {@link ajustarCor}. */
+  ajustarOculta(oculta: boolean): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) {
+      return;
+    }
+    this.ficha.set({ ...fichaAtual, oculta });
     this.agendarPersistencia();
   }
 
