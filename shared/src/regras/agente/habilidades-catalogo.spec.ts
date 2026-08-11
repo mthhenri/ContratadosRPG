@@ -12,13 +12,15 @@ import {
   HABILIDADES_ARQUETIPO,
   HABILIDADES_CIVIL,
   HABILIDADES_GERAIS,
+  HABILIDADES_GERAIS_MELHORADAS,
   HABILIDADES_SUBCLASSE,
 } from './habilidades-catalogo.dados';
 
 /**
  * Prova as regras de visibilidade do seletor de habilidades do sistema (`sistema-v4.1.0.md` —
- * "Habilidades"): Gerais sempre; Classe entre as três classes-base; Arquétipo só os da classe da
- * ficha (o Experimento entra como subclasse), com as Gerais Melhoradas apenas do próprio arquétipo.
+ * "Habilidades"): Gerais sempre (com as melhoradas do arquétipo da ficha substituindo a comum);
+ * Classe entre as três classes-base; Arquétipo só os da classe da ficha (o Experimento entra como
+ * subclasse), sem nenhuma Geral Melhorada (elas vivem só na aba Gerais).
  */
 describe('catálogo de habilidades → grupos de filtro', () => {
   const grupo = (grupos: GrupoHabilidades[], id: GrupoHabilidades['id']): GrupoHabilidades =>
@@ -28,14 +30,48 @@ describe('catálogo de habilidades → grupos de filtro', () => {
   const daFicha = (grupos: GrupoHabilidades[], id: GrupoHabilidades['id']): SubgrupoHabilidades =>
     grupo(grupos, id).subgrupos.find((s) => s.ehDaFicha)!;
 
-  it('Gerais: sempre um subgrupo único com todas as gerais (categoria GERAL, sem origem)', () => {
-    const grupos = catalogoHabilidades(ClasseEnum.COMBATENTE, ArquetipoEnum.LUTADOR);
+  it('Gerais: sempre um subgrupo único com todas as gerais (categoria GERAL, sem origem) quando a ficha não tem arquétipo', () => {
+    const grupos = catalogoHabilidades(ClasseEnum.COMBATENTE, null);
     const gerais = grupo(grupos, 'gerais');
     expect(gerais.subgrupos).toHaveLength(1);
     expect(gerais.subgrupos[0].chave).toBeNull();
     expect(gerais.subgrupos[0].habilidades).toHaveLength(HABILIDADES_GERAIS.length);
     expect(gerais.subgrupos[0].habilidades.every((h) => h.categoria === HabilidadeCategoriaEnum.GERAL)).toBe(true);
     expect(gerais.subgrupos[0].habilidades.every((h) => h.origem === undefined)).toBe(true);
+  });
+
+  it('Gerais: a melhorada do arquétipo da ficha substitui a comum na mesma lista (mesma contagem, mesmo nome)', () => {
+    const grupos = catalogoHabilidades(ClasseEnum.COMBATENTE, ArquetipoEnum.LUTADOR);
+    const habilidades = grupo(grupos, 'gerais').subgrupos[0].habilidades;
+    // A contagem não muda — a melhorada ocupa o lugar da comum, não soma.
+    expect(habilidades).toHaveLength(HABILIDADES_GERAIS.length);
+
+    const melhoradasLutador = HABILIDADES_GERAIS_MELHORADAS[ArquetipoEnum.LUTADOR];
+    for (const melhorada of melhoradasLutador) {
+      const ocorrencias = habilidades.filter((h) => h.nome === melhorada.nome);
+      // Uma só entrada por nome — nunca a comum e a melhorada juntas.
+      expect(ocorrencias).toHaveLength(1);
+      expect(ocorrencias[0].categoria).toBe(HabilidadeCategoriaEnum.GERAL_MELHORADA);
+      expect(ocorrencias[0].origem).toBe(ArquetipoEnum.LUTADOR);
+      expect(ocorrencias[0].descricao).toBe(melhorada.descricao);
+    }
+
+    // Geral sem versão melhorada do Lutador continua normal (categoria GERAL, sem origem).
+    const nomesMelhorados = new Set(melhoradasLutador.map((m) => m.nome));
+    const semMelhoria = habilidades.find((h) => !nomesMelhorados.has(h.nome));
+    expect(semMelhoria?.categoria).toBe(HabilidadeCategoriaEnum.GERAL);
+    expect(semMelhoria?.origem).toBeUndefined();
+  });
+
+  it('Gerais: arquétipo diferente do dono da melhorada continua vendo a versão comum', () => {
+    const grupos = catalogoHabilidades(ClasseEnum.COMBATENTE, ArquetipoEnum.MERCENARIO);
+    const habilidades = grupo(grupos, 'gerais').subgrupos[0].habilidades;
+    const melhoradasLutador = HABILIDADES_GERAIS_MELHORADAS[ArquetipoEnum.LUTADOR];
+    for (const melhorada of melhoradasLutador) {
+      const item = habilidades.find((h) => h.nome === melhorada.nome)!;
+      expect(item.categoria).toBe(HabilidadeCategoriaEnum.GERAL);
+      expect(item.origem).toBeUndefined();
+    }
   });
 
   it('Classe: as três classes-base, a da ficha primeiro e marcada; itens têm origem = a classe', () => {
@@ -63,17 +99,14 @@ describe('catálogo de habilidades → grupos de filtro', () => {
     expect(chaves(grupos, 'arquetipo')).not.toContain(ArquetipoEnum.PARAMEDICO);
   });
 
-  it('Gerais Melhoradas entram só no subgrupo do arquétipo da ficha', () => {
+  it('Gerais Melhoradas nunca aparecem na aba Arquétipo — elas vivem só na aba Gerais', () => {
     const grupos = catalogoHabilidades(ClasseEnum.COMBATENTE, ArquetipoEnum.LUTADOR);
     const arquetipo = grupo(grupos, 'arquetipo');
-    const lutador = arquetipo.subgrupos.find((s) => s.chave === ArquetipoEnum.LUTADOR)!;
-    const mercenario = arquetipo.subgrupos.find((s) => s.chave === ArquetipoEnum.MERCENARIO)!;
-    // O Lutador (da ficha) tem melhoradas; o Mercenário (outro) não.
-    expect(lutador.habilidades.some((h) => h.categoria === HabilidadeCategoriaEnum.GERAL_MELHORADA)).toBe(true);
-    expect(mercenario.habilidades.some((h) => h.categoria === HabilidadeCategoriaEnum.GERAL_MELHORADA)).toBe(false);
-    // As melhoradas do Lutador carregam origem = LUTADOR.
-    const melhoradas = lutador.habilidades.filter((h) => h.categoria === HabilidadeCategoriaEnum.GERAL_MELHORADA);
-    expect(melhoradas.every((h) => h.origem === ArquetipoEnum.LUTADOR)).toBe(true);
+    expect(
+      arquetipo.subgrupos.some((s) =>
+        s.habilidades.some((h) => h.categoria === HabilidadeCategoriaEnum.GERAL_MELHORADA),
+      ),
+    ).toBe(false);
   });
 
   it('Habilidade Inicial (1º item) só aparece no arquétipo da ficha; nos outros ela some da lista', () => {

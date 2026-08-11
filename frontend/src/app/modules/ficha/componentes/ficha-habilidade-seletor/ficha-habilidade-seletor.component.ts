@@ -28,11 +28,12 @@ const VALORES_CLASSE = new Set<string>(Object.values(ClasseEnum));
  * (Gerais / Classe / Arquétipo) + **sub-filtro inline** (chips), com o subgrupo da própria ficha
  * destacado e ativo por padrão. O "＋" **adiciona a habilidade direto na ficha** (o seletor
  * permanece aberto) e a marca como "Na ficha"; o "✕" ali mesmo a remove — dá para montar a lista
- * sem fechar o diálogo. Habilidades gerais melhoradas ganham um selo, pois convivem com as do
- * arquétipo na mesma lista.
+ * sem fechar o diálogo. Uma Geral melhorada pelo arquétipo da ficha aparece na aba **Gerais**, no
+ * lugar da comum, com um selo — ela é a mesma habilidade geral, só que com outra descrição/custo.
  *
- * **Sem regra de jogo aqui**: os grupos e a visibilidade (melhoradas só do próprio arquétipo;
- * subclasses nunca cruzam) vêm prontos de `catalogoHabilidades`. Só tokens do tema (proibição #29).
+ * **Sem regra de jogo aqui**: os grupos e a visibilidade (melhorada só substitui a comum para o
+ * dono do arquétipo; subclasses nunca cruzam) vêm prontos de `catalogoHabilidades`. Só tokens do
+ * tema (proibição #29).
  */
 @Component({
   selector: 'app-ficha-habilidade-seletor',

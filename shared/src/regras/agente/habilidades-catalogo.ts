@@ -16,15 +16,18 @@ import {
  *
  * Alcance de cada aba (definido pelos picks de nível 5/10/15/20 — "outra classe" ou "outro
  * arquétipo da sua classe"):
- * - **Gerais**: sempre (um subgrupo único).
+ * - **Gerais**: sempre (um subgrupo único). Para o arquétipo da ficha, cada Geral com uma
+ *   **versão melhorada** daquele arquétipo aparece **substituída** pela melhorada (mesma posição
+ *   na lista) — ela conta como a mesma habilidade geral, só que com descrição/custo diferentes;
+ *   para qualquer outro arquétipo (ou nenhum), a versão normal continua. Não existe "as duas" para
+ *   o dono da melhorada: a comum simplesmente não é uma opção separada para ele.
  * - **Classe**: as três classes-base (a sua em `ehDaFicha`), para o pick de "outra classe".
  * - **Arquétipo**: **só os arquétipos da classe da ficha** (o pick de "outro arquétipo da sua
- *   classe"); nunca os de outra classe. As **Gerais Melhoradas** aparecem só no subgrupo do
- *   **próprio** arquétipo. A **Habilidade Inicial** (1º item de cada arquétipo/subclasse) só
- *   aparece no subgrupo do **próprio** arquétipo — em qualquer outro ela **some da lista**, pois
- *   "não é possível obtê-la fora a seleção do próprio arquétipo" (doc). Se a ficha é um
- *   **Experimento**, a aba inclui a **própria subclasse** (nível de arquétipo) + os arquétipos da
- *   classe-base, e **nunca** outras subclasses.
+ *   classe"); nunca os de outra classe. A **Habilidade Inicial** (1º item de cada arquétipo/
+ *   subclasse) só aparece no subgrupo do **próprio** arquétipo — em qualquer outro ela **some da
+ *   lista**, pois "não é possível obtê-la fora a seleção do próprio arquétipo" (doc). Se a ficha é
+ *   um **Experimento**, a aba inclui a **própria subclasse** (nível de arquétipo) + os arquétipos
+ *   da classe-base, e **nunca** outras subclasses.
  */
 
 /** Uma habilidade do catálogo já com categoria e origem resolvidas (pronta p/ virar `FichaHabilidadeDto`). */
@@ -94,17 +97,29 @@ export function classeBaseDeHabilidades(classe: ClasseEnum): ClasseEnum | null {
   return CLASSE_BASE_DA_SUBCLASSE[classe] ?? null;
 }
 
-/** Grupo **Gerais** — subgrupo único (chave `null`), sempre disponível. */
-function grupoGerais(): GrupoHabilidades {
+/**
+ * Grupo **Gerais** — subgrupo único (chave `null`), sempre disponível. Quando a ficha tem
+ * arquétipo, cada Geral com uma melhorada daquele arquétipo é **substituída** pela melhorada na
+ * mesma posição: ela conta como a habilidade geral, só que com outra descrição/custo — o dono da
+ * melhorada nunca vê a versão comum ao lado da sua.
+ */
+function grupoGerais(arquetipo: ArquetipoEnum | null): GrupoHabilidades {
+  const melhoradasPorNome = new Map(
+    (arquetipo ? HABILIDADES_GERAIS_MELHORADAS[arquetipo] : []).map((melhorada) => [
+      melhorada.nome,
+      melhorada,
+    ]),
+  );
+  const habilidades: HabilidadeCatalogoItemDto[] = HABILIDADES_GERAIS.map((geral) => {
+    const melhorada = melhoradasPorNome.get(geral.nome);
+    return melhorada
+      ? { ...melhorada, categoria: HabilidadeCategoriaEnum.GERAL_MELHORADA, origem: arquetipo! }
+      : { ...geral, categoria: HabilidadeCategoriaEnum.GERAL };
+  });
+
   return {
     id: 'gerais',
-    subgrupos: [
-      {
-        chave: null,
-        ehDaFicha: true,
-        habilidades: comCategoria(HABILIDADES_GERAIS, HabilidadeCategoriaEnum.GERAL),
-      },
-    ],
+    subgrupos: [{ chave: null, ehDaFicha: true, habilidades }],
   };
 }
 
@@ -132,8 +147,9 @@ function grupoClasse(classe: ClasseEnum): GrupoHabilidades {
 
 /**
  * Grupo **Arquétipo** — só os arquétipos da classe da ficha; a subclasse Experimento entra como um
- * subgrupo próprio. As Gerais Melhoradas e a **Habilidade Inicial** (1º item) só entram no subgrupo
- * do arquétipo da ficha — nos demais, a inicial é removida (obtível só pelo próprio arquétipo).
+ * subgrupo próprio. A **Habilidade Inicial** (1º item) só entra no subgrupo do arquétipo da ficha
+ * — nos demais, ela é removida (obtível só pelo próprio arquétipo). As Gerais Melhoradas **não**
+ * entram aqui — elas vivem na aba Gerais, substituindo a versão comum (`grupoGerais`).
  */
 function grupoArquetipo(
   classe: ClasseEnum,
@@ -156,13 +172,6 @@ function grupoArquetipo(
   if (base) {
     for (const arq of ARQUETIPOS_POR_CLASSE_BASE[base]) {
       const ehDaFicha = arq === arquetipo;
-      const melhoradas = ehDaFicha
-        ? comCategoria(
-            HABILIDADES_GERAIS_MELHORADAS[arq],
-            HabilidadeCategoriaEnum.GERAL_MELHORADA,
-            arq,
-          )
-        : [];
       // A Habilidade Inicial (1º item) só existe para o próprio arquétipo: "não é possível obtê-la
       // fora a seleção do próprio arquétipo" (doc). Em outro arquétipo, ela sequer entra na lista.
       const habilidadesArquetipo = ehDaFicha
@@ -171,10 +180,7 @@ function grupoArquetipo(
       subgrupos.push({
         chave: arq,
         ehDaFicha,
-        habilidades: [
-          ...comCategoria(habilidadesArquetipo, HabilidadeCategoriaEnum.ARQUETIPO, arq),
-          ...melhoradas,
-        ],
+        habilidades: comCategoria(habilidadesArquetipo, HabilidadeCategoriaEnum.ARQUETIPO, arq),
       });
     }
   }
@@ -223,7 +229,7 @@ export function catalogoHabilidades(
   if (classe === ClasseEnum.CIVIL) {
     return [grupoCivil()];
   }
-  return [grupoGerais(), grupoClasse(classe), grupoArquetipo(classe, arquetipo)].filter(
+  return [grupoGerais(arquetipo), grupoClasse(classe), grupoArquetipo(classe, arquetipo)].filter(
     (grupo) => grupo.subgrupos.length > 0,
   );
 }
