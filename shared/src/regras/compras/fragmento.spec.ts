@@ -33,34 +33,32 @@ import {
  * custa 14 de Energia").
  */
 describe('custoAquisicaoFragmento', () => {
-  it('Potencializador custa o valor da tabela por módulo', () => {
-    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.V)).toBe(3);
-    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.IV)).toBe(7);
-    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.III)).toBe(12);
-    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.II)).toBe(16);
-    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.I)).toBe(20);
+  /**
+   * P-016 (revisão de regra, dono, 2026-08-09): um Potencializador solto no inventário, ainda não
+   * acoplado, não está fazendo nada — não deveria custar Energia. Ele só passa a custar ao ser
+   * `custoAcoplarFragmento`. Sempre 0, em qualquer módulo, com ou sem Anomalia.
+   */
+  it('Potencializador não custa nada ao ser só adquirido/portado solto (P-016)', () => {
+    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.V)).toBe(0);
+    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.IV)).toBe(0);
+    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.III)).toBe(0);
+    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.II)).toBe(0);
+    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.I)).toBe(0);
+    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.IV, true)).toBe(0);
   });
 
-  it('Construtor custa o dobro do valor da tabela (doc: "seu valor... é dobrado")', () => {
+  it('Construtor custa o dobro do valor da tabela (doc: "seu valor... é dobrado") — inalterado pelo P-016', () => {
     expect(custoAquisicaoFragmento(FragmentoTipoEnum.CONSTRUTOR, FragmentoModuloEnum.IV)).toBe(14);
     expect(custoAquisicaoFragmento(FragmentoTipoEnum.CONSTRUTOR, FragmentoModuloEnum.I)).toBe(40);
   });
 
   /**
    * Habilidade "Anomalia" (Experimento Artificial, `P-013`) — doc: "Fragmentos custam o dobro de
-   * Energia em seu uso". Dobra por cima do que já é cobrado, inclusive o dobro já aplicado ao
-   * Construtor (a doc não abre exceção).
+   * Energia em seu uso". Dobra por cima do que já é cobrado — só o Construtor paga aqui desde o
+   * P-016 (a doc não abre exceção pra ele).
    */
-  it('com Anomalia, dobra o custo do Potencializador', () => {
-    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.IV, true)).toBe(14);
-  });
-
   it('com Anomalia, o dobro do Construtor se acumula com o dobro da Anomalia (4×)', () => {
     expect(custoAquisicaoFragmento(FragmentoTipoEnum.CONSTRUTOR, FragmentoModuloEnum.IV, true)).toBe(28);
-  });
-
-  it('sem Anomalia (padrão), o comportamento não muda', () => {
-    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.IV, false)).toBe(7);
   });
 });
 
@@ -539,6 +537,11 @@ describe('aplicarReducaoAfinidade', () => {
 
   it('nunca zera o custo — piso de 1 (doc: "no mínimo, 1 de Energia Máxima")', () => {
     expect(aplicarReducaoAfinidade(3, 40)).toBe(1);
+  });
+
+  it('um custo que já é 0 passa direto, sem o piso de 1 inventar uma cobrança (P-016)', () => {
+    expect(aplicarReducaoAfinidade(0, 0)).toBe(0);
+    expect(aplicarReducaoAfinidade(0, 40)).toBe(0);
   });
 });
 

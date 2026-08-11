@@ -478,12 +478,12 @@
                   <span class="ficha-inv__tag">Afinidade +{{ cartao.afinidade }}</span>
                 </div>
                 <div class="ficha-inv__cartao-fragmento-custo">
-                  <span>Potencializador</span>
+                  <span>Potencializador <small>(ao acoplar)</small></span>
                   <span>
-                    @if (cartao.custoPotencializadorReduzido !== cartao.custoPotencializador) {
-                      <span class="ficha-inv__custo ficha-inv__custo--bruto">{{ cartao.custoPotencializador }}</span>
+                    @if (cartao.custoAcoplarPotencializadorReduzido !== cartao.custoAcoplarPotencializador) {
+                      <span class="ficha-inv__custo ficha-inv__custo--bruto">{{ cartao.custoAcoplarPotencializador }}</span>
                     }
-                    <span class="ficha-inv__custo">{{ cartao.custoPotencializadorReduzido }} Energia</span>
+                    <span class="ficha-inv__custo">{{ cartao.custoAcoplarPotencializadorReduzido }} Energia</span>
                   </span>
                 </div>
                 <div class="ficha-inv__cartao-fragmento-custo">

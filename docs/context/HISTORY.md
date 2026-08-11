@@ -1,5 +1,51 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-11 — `P-016` corrigido: Potencializador solto no inventário não custa mais Energia
+
+`P-016` estava marcado como pendente de decisão do dono — o comportamento reportado como
+indesejado (Potencializador drenando Energia Máxima assim que adquirido/portado, mesmo solto e sem
+nunca ter sido acoplado a nada) era exatamente o que `docs/core/sistema-v4.1.0.md` descrevia ("⬥
+Módulos": "Cada um dos módulos gasta sua Energia ao entrar em contato com você"). O dono pediu
+diretamente pra resolver o problema nesta sessão, o que autoriza a revisão de regra que a própria
+entrada do `PROBLEMS.md` já deixava mapeada: cobrar só no acoplamento.
+
+- **Regra nova:** um fragmento Potencializador não custa Energia nenhuma enquanto solto no
+  inventário — só passa a custar ao ser de fato **acoplado** (`custoAcoplarFragmento`, inalterado).
+  O Construtor não muda: ele **é** a arma/proteção assim que existe, então continua pagando na
+  aquisição, dobrado, como sempre.
+- `shared/regras/compras/fragmento.ts`:
+  - `custoAquisicaoFragmento` retorna **0** pro Potencializador em qualquer módulo/Anomalia; o
+    Construtor mantém a fórmula de sempre (base × 2, dobrado de novo com Anomalia).
+  - `aplicarReducaoAfinidade` ganhou uma guarda pro custo `0`: o piso de "no mínimo 1 de Energia
+    Máxima" existe pra não deixar a Afinidade **anular** um custo real — não pra inventar uma
+    cobrança de 1 sobre um custo que já era 0. Sem essa guarda, todo fluxo que agora recebe custo 0
+    do Potencializador (adquirir, remover, consumir, o cartão do catálogo) cobraria 1 de qualquer
+    jeito.
+- `frontend/.../ficha-inventario.component.ts`: `debitarAquisicaoFragmento`/
+  `restaurarAquisicaoFragmento` saem cedo (sem emitir `ajusteEnergiaFragmento`) quando o custo de
+  aquisição é 0, evitando um evento sem efeito nenhum que faria a página persistir à toa.
+  `custoLiquidoAplicarFragmento` (usado por "Aplicar em...") e `desacoplarFragmento` (usado por
+  "remover mod de fragmento") pararam de somar/restituir uma "aquisição" que não existe mais — o
+  acoplamento passou a ser o único débito de Energia Máxima do Potencializador, e desacoplar
+  restitui esse débito por completo (nada continua drenando depois que ele volta a ser avulso). O
+  cartão de módulo no catálogo de Fragmentos (`cartaoModulosFragmento`) trocou o que mostrava pro
+  Potencializador — custo de **acoplar**, rotulado "(ao acoplar)" — em vez do custo de aquisição
+  (que virou sempre 0 e, sem contexto, faria parecer que o Potencializador nunca custa nada).
+- `docs/core/sistema-v4.1.0.md` — "⬥ Módulos" e "⬦ Construtor" reescritos pra descrever o gatilho
+  certo por tipo (Construtor: imediato ao portar; Potencializador: só ao acoplar), sem mudar nenhum
+  valor da tabela de custos nem a seção "⬥ Acoplamento" (que já descrevia o custo de acoplar
+  corretamente).
+- Testado: `shared/regras/compras/fragmento.spec.ts` reescrito pro novo comportamento de
+  `custoAquisicaoFragmento`/`aplicarReducaoAfinidade`. `ficha-inventario.component.spec.ts` — os 17
+  testes que dependiam do valor antigo foram recalculados; onde o teste existia especificamente pra
+  provar "a Afinidade reduz o custo de **adquirir**" um Potencializador (que não existe mais), o
+  fragmento sob teste virou Construtor pra manter a cobertura da mecânica de Afinidade retroativa
+  intacta. Dois testes novos de Anomalia com Construtor preenchem a lacuna deixada pelos
+  equivalentes antigos de Potencializador. `lint`/`build` limpos em `shared`/`frontend`/`backend`;
+  suíte `shared` 595/595 e `frontend` 878/878 verdes.
+- **Ambiente desta rodada:** Postgres via Docker Compose seguiu indisponível (sem daemon no
+  sandbox) — verificação só via suíte de testes/lint/build, sem app real rodando.
+
 ## 2026-08-11 — `P-015` corrigido: fragmento consumido volta a contar pra Afinidade
 
 `listarModulosFragmentosPortados` (`shared/regras/compras/fragmento.ts`) só somava módulos de

@@ -136,24 +136,6 @@
   classe`; confirmar com o dono o que muda para Civil antes de mexer.
 - **Desde:** reportado pelo dono em 2026-08-09.
 
-### P-016 — Fragmento Potencializador solto no inventário consome Energia sem estar aplicado · `ABERTO` · shared/regras
-
-- **Sintoma:** o dono espera que um fragmento Potencializador só drene Energia Máxima quando for de
-  fato aplicado (acoplado) em um item/ser — parado no inventário, sem uso, não deveria custar nada.
-- **Causa:** o custo atual
-  ([`CUSTO_ENERGIA_MAXIMA_MODULO`](../../shared/src/regras/compras/fragmento.dados.ts#L22), usado
-  por `custoAquisicaoFragmento`) drena assim que o fragmento é adquirido/portado, mesmo solto —
-  além do custo separado de `custoAcoplarFragmento` cobrado depois, ao aplicar. O próprio código
-  cita a doc como fonte dessa regra ("Cada um dos módulos gasta sua Energia ao entrar em contato
-  com você", `docs/core/sistema-v4.1.0.md:1915`): o comportamento reportado como indesejado é o que
-  o documento descreve hoje. Ou seja, o pedido é uma revisão de regra, não só um bug de
-  implementação isolado.
-- **Contorno:** nenhum.
-- **Correção:** decisão do dono necessária — se a regra muda, atualizar
-  `docs/core/sistema-v4.1.0.md` §"⬥ Módulos"/"⬥ Acoplamento" e só então mexer em
-  `custoAquisicaoFragmento`/`CUSTO_ENERGIA_MAXIMA_MODULO` para cobrar só no acoplamento.
-- **Desde:** reportado pelo dono em 2026-08-09.
-
 ## Resolvidos
 
 Itens resolvidos **saem daqui**. O relato da correção fica no [`HISTORY.md`](HISTORY.md), junto da
@@ -179,3 +161,5 @@ task que a fez.
   `text-overflow: ellipsis`). Corrigido em 2026-08-11, ver `HISTORY.md`.
 - **P-015** — fragmento consumido sumia da Afinidade (e da redução de Energia que ela dá).
   Corrigido em 2026-08-11, ver `HISTORY.md`.
+- **P-016** — fragmento Potencializador solto no inventário drenava Energia sem estar aplicado;
+  revisão de regra autorizada pelo dono. Corrigido em 2026-08-11, ver `HISTORY.md`.
