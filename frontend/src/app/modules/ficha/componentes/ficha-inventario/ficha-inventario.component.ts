@@ -1373,7 +1373,7 @@ export class FichaInventario {
     const modificacao: CarrinhoItemDto['modificacoes'][number] = {
       nome: `Fragmento Construtor — Módulo ${item.modulo}`,
       empilhamentos: 1,
-      efeitos: listarEfeitosFixosConstrutor(item.modulo, forma),
+      efeitos: listarEfeitosFixosConstrutor(item.modulo, forma, this.possuiAnomalia()),
       ignoraLimiteTotal: true,
       ignoraLimiteProprio: true,
       origemFragmento: { tipo: FragmentoTipoEnum.CONSTRUTOR, modulo: item.modulo },
@@ -1833,7 +1833,9 @@ export class FichaInventario {
   ): string {
     return opcao.tipo === 'TESTE' && atributoEscolhido
       ? `+${opcao.valor} em todos os testes de ${this.rotulosAtributo[atributoEscolhido]}${
-          opcao.concedePontoAtributo ? ' e +1 ponto no atributo' : ''
+          opcao.concedePontoAtributo
+            ? ` e +${opcao.pontosAtributo} ponto${opcao.pontosAtributo === 1 ? '' : 's'} no atributo`
+            : ''
         }`
       : opcao.rotulo;
   }
@@ -1855,7 +1857,7 @@ export class FichaInventario {
       this.inventario().itens.map((atual, i) => (i === indice ? { ...atual, recarregada: true } : atual)),
     );
     this.ajusteEnergiaFragmento.emit({
-      energiaAtual: this.energiaAtual() - bonusMunicaoConstrutor(item.modulo).custoRecarregar,
+      energiaAtual: this.energiaAtual() - bonusMunicaoConstrutor(item.modulo, this.possuiAnomalia()).custoRecarregar,
       energiaMaxima: this.energiaMaxima(),
     });
   }
@@ -2552,7 +2554,8 @@ export class FichaInventario {
     const construtorMunicao =
       item.categoria === ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR &&
       item.categoriaEmprestada === ItemCategoriaEnum.MUNICOES;
-    const bonusMunicao = construtorMunicao && item.modulo ? bonusMunicaoConstrutor(item.modulo) : null;
+    const bonusMunicao =
+      construtorMunicao && item.modulo ? bonusMunicaoConstrutor(item.modulo, this.possuiAnomalia()) : null;
     const contagemMunicao = item.contagemMunicao ?? criarContagemMunicao(item);
     const ehFragmento =
       item.categoria === ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR ||

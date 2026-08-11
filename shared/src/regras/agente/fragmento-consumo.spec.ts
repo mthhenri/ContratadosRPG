@@ -107,6 +107,13 @@ describe('aplicarBonusConsumoFragmento — TESTE', () => {
     expect(resultado.atributos.intelecto).toBe(2);
     expect(resultado.modificadoresTeste).toEqual({ intelecto: 5 });
   });
+
+  it('módulo I com Anomalia (P-013) soma 2 pontos no atributo, não 1', () => {
+    const opcao = listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.I, true)[0];
+    const resultado = aplicarBonusConsumoFragmento(agente(), opcao, 'vontade');
+    expect(resultado.modificadoresTeste).toEqual({ vontade: 10 });
+    expect(resultado.atributos.vontade).toBe(4);
+  });
 });
 
 describe('reverterBonusConsumoFragmento (m3-64, correção — remover um fragmento consumido)', () => {
@@ -134,6 +141,14 @@ describe('reverterBonusConsumoFragmento (m3-64, correção — remover um fragme
 
   it('TESTE módulo I: também desfaz o +1 ponto de atributo concedido', () => {
     const opcao = listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.I)[0];
+    const aplicado = aplicarBonusConsumoFragmento(agente(), opcao, 'vontade');
+    const revertido = reverterBonusConsumoFragmento(aplicado, opcao, 'vontade');
+    expect(revertido.atributos.vontade).toBe(2);
+    expect(revertido.modificadoresTeste).toEqual({ vontade: 0 });
+  });
+
+  it('TESTE módulo I com Anomalia: desfaz os 2 pontos de atributo concedidos', () => {
+    const opcao = listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.I, true)[0];
     const aplicado = aplicarBonusConsumoFragmento(agente(), opcao, 'vontade');
     const revertido = reverterBonusConsumoFragmento(aplicado, opcao, 'vontade');
     expect(revertido.atributos.vontade).toBe(2);
