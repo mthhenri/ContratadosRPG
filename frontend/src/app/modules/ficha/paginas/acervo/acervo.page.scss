@@ -114,7 +114,7 @@
 
   &__cartao-link {
     display: flex;
-    align-items: flex-start;
+    align-items: stretch;
     gap: 10px;
     min-width: 0;
     text-decoration: none;
@@ -124,18 +124,29 @@
     }
   }
 
-  // Avatar da ficha (m3-62) — mesmo fundo tracejado decorativo do cabeçalho da ficha
-  // (`ficha-ident__avatar`) quando não há imagem definida; sem borda colorida aqui (o cartão do
-  // acervo não recebe `cor` — recorte enxuto de `FichaResumoDto`, sem a coluna relacional).
+  // Avatar da ficha (m3-62) — placeholder listrado a 20% de opacidade quando não há imagem
+  // definida; borda/fundo seguem a cor de identidade (m3-61, `--cor-ficha` setada inline no
+  // template), mesmo `color-mix` de `ficha-ident__avatar`/`CampanhaDetalhe.__ficha-avatar`; sem cor
+  // definida, o fallback pra `--border-strong` mantém o visual neutro de sempre. Esticado
+  // (`align-self: stretch` do pai) pra acompanhar a altura do bloco nome+meta+vitais.
   &__cartao-avatar {
     position: relative;
-    width: 36px;
-    height: 36px;
+    width: 52px;
     flex: none;
+    cursor: pointer;
     border-radius: var(--radius-control);
-    background-color: var(--surface);
-    background-image: repeating-linear-gradient(135deg, var(--border-strong) 0 3px, transparent 3px 9px);
-    border: 1px solid var(--border-strong);
+    background-color: color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 14%, var(--surface));
+    background-image: repeating-linear-gradient(
+      135deg,
+      color-mix(
+          in srgb,
+          color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 60%, var(--border-strong)) 20%,
+          transparent
+        )
+        0 3px,
+      transparent 3px 9px
+    );
+    border: 1px solid var(--cor-ficha, var(--border-strong));
     overflow: hidden;
   }
 
@@ -145,6 +156,31 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+
+  // Preview ampliado do avatar (hover sustentado, `agendarPreviewAvatar`) — `fixed` pela mesma
+  // razão do menu (a lista tem overflow/mask-image, cortaria na pintura). `pointer-events: none`:
+  // é só apresentação, não deve roubar o `mouseleave` do avatar por baixo. `object-fit: contain`
+  // (não `cover`, como o avatar do cartão): o preview mostra a foto inteira, sem recorte. Mesma
+  // receita de `CampanhaDetalhe.__avatar-preview`.
+  &__avatar-preview {
+    position: fixed;
+    z-index: 22;
+    width: 200px;
+    height: 200px;
+    padding: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+    pointer-events: none;
+  }
+
+  &__avatar-preview-imagem {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: calc(var(--radius-card) - 4px);
   }
 
   &__cartao-texto {
