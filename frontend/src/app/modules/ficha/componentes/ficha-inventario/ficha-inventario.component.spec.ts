@@ -1769,6 +1769,43 @@ describe('FichaInventario', () => {
       expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 35 }]);
     });
 
+    /** Registro mínimo de `fragmentosConsumidos` (m3-64) — só `modulo` importa pra Afinidade (P-015). */
+    function registroConsumido(modulo: FragmentoModuloEnum): FichaFragmentoConsumidoDto {
+      return {
+        modulo,
+        bonusEscolhido: '+1 em Defesa',
+        opcao: { rotulo: '+1 em Defesa', tipo: 'DEFESA', valor: 1 },
+        atributoEscolhido: null,
+        deltaEnergiaMaxima: 0,
+        item: fragmento(modulo),
+      };
+    }
+
+    it('fragmentos já consumidos também contam pra Afinidade (P-015), mesmo fora do inventário', () => {
+      // 3 já consumidos de módulo I (Afinidade 15) + o novo módulo I sendo comprado agora (+5) = 20 —
+      // mesma conta de "adquirir considera o próprio módulo" acima, só com Afinidade vinda do
+      // histórico de consumo em vez do inventário.
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.fixture.componentRef.setInput('fragmentosConsumidos', [
+        registroConsumido(FragmentoModuloEnum.I),
+        registroConsumido(FragmentoModuloEnum.I),
+        registroConsumido(FragmentoModuloEnum.I),
+      ]);
+      alvo.fixture.detectChanges();
+      const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
+      alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+
+      alvo.fixture.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Fragmento achado',
+        categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+        modulo: FragmentoModuloEnum.I,
+      });
+      alvo.fixture.componentInstance['confirmarCriarItem']();
+
+      // Afinidade 20 → redução −5 (floor((20-10)/2)); custo base 20 → 15. 50 − 15 = 35.
+      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 35 }]);
+    });
+
     it('a Afinidade nunca reduz o custo abaixo de 1 (piso do doc), mesmo muito acima de 10', () => {
       // 6 já portados de módulo I (Afinidade 30) + o novo módulo V sendo comprado agora (+1) = 31.
       const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.I, 6)], amplificadores: [] });

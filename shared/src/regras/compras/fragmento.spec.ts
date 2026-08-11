@@ -491,6 +491,28 @@ describe('listarModulosFragmentosPortados', () => {
     ];
     expect(listarModulosFragmentosPortados(itens)).toEqual([]);
   });
+
+  it('soma os módulos consumidos por cima dos soltos/acoplados (P-015)', () => {
+    const itens: CarrinhoItemDto[] = [
+      {
+        nome: 'Fragmento Potencializador',
+        categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+        custo: 0,
+        peso: 0,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        modulo: FragmentoModuloEnum.V,
+      },
+    ];
+    expect(
+      listarModulosFragmentosPortados(itens, [FragmentoModuloEnum.IV, FragmentoModuloEnum.IV]),
+    ).toEqual([FragmentoModuloEnum.V, FragmentoModuloEnum.IV, FragmentoModuloEnum.IV]);
+  });
+
+  it('conta só os consumidos quando não há nenhum fragmento solto/acoplado', () => {
+    expect(listarModulosFragmentosPortados([], [FragmentoModuloEnum.I])).toEqual([FragmentoModuloEnum.I]);
+  });
 });
 
 describe('reducaoCustoPorAfinidade', () => {

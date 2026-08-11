@@ -199,13 +199,15 @@ function tipoFragmentoDaCategoria(categoria: ItemCategoriaEnum): FragmentoTipoEn
  * da ação (aquisição/remoção/acoplamento/desacoplamento/consumo mudam a lista depois); `moduloExtra`
  * só é necessário na **aquisição**, onde o fragmento ainda não existe em `itens` no momento do
  * débito — nas demais ações o fragmento em questão já está portado (solto ou acoplado) e por isso
- * já vem contado em `itens` sem precisar somar de novo.
+ * já vem contado em `itens` sem precisar somar de novo. `modulosConsumidos` (`P-015`) soma por cima
+ * os fragmentos já consumidos — sempre presentes, independente da ação, porque não estão em `itens`.
  */
 function afinidadeConsiderando(
   itens: readonly CarrinhoItemDto[],
+  modulosConsumidos: readonly FragmentoModuloEnum[],
   moduloExtra?: FragmentoModuloEnum,
 ): number {
-  const modulos = listarModulosFragmentosPortados(itens);
+  const modulos = listarModulosFragmentosPortados(itens, modulosConsumidos);
   return calcularAfinidade(moduloExtra ? [...modulos, moduloExtra] : modulos);
 }
 
@@ -493,6 +495,12 @@ export class FichaInventario {
    * Fragmentos e os valores de efeito dos dois cardápios do Potencializador (em item/Consumido).
    */
   readonly possuiAnomalia = input(false);
+  /**
+   * Fragmentos já **consumidos** (`dados.fragmentosConsumidos`, m3-64) — só os módulos são usados
+   * aqui, pra somar na Afinidade (`afinidadeConsiderando`, `P-015`): consumir não devolve a "energia
+   * anômala" do fragmento, então ele continua contando mesmo depois de sair do inventário.
+   */
+  readonly fragmentosConsumidos = input<readonly FichaFragmentoConsumidoDto[]>([]);
 
   /** Emite o inventário inteiro após qualquer mutação — a página persiste. */
   readonly inventarioMudou = output<FichaInventarioDto>();
@@ -519,6 +527,11 @@ export class FichaInventario {
   readonly fragmentoConsumido = output<FichaFragmentoConsumidoDto>();
   /** Rolagem de dano de um item (m3-45) — quem persiste o histórico é `FichaVisualizacao` (m3-27). */
   readonly rolagemFeita = output<RolagemRealizadaDto>();
+
+  /** Só os módulos de `fragmentosConsumidos()` — a forma que `afinidadeConsiderando` consome (`P-015`). */
+  private readonly modulosConsumidos = computed(() =>
+    this.fragmentosConsumidos().map((registro) => registro.modulo),
+  );
 
   /** Abas do catálogo comprável — sem os Fragmentos (achados, montados como item custom). */
   protected readonly categorias = CATALOGO_CATEGORIAS.filter(
@@ -715,7 +728,7 @@ export class FichaInventario {
       return null;
     }
     const itens = this.inventario().itens;
-    const afinidade = afinidadeConsiderando(itens, modulo);
+    const afinidade = afinidadeConsiderando(itens, this.modulosConsumidos(), modulo);
     const custo = aplicarReducaoAfinidade(custoAquisicaoFragmento(tipo, modulo, this.possuiAnomalia()), afinidade);
     const projecao = this.energiaMaxima() - custo;
     return emAnomaliaBiologica(projecao, this.limiteMinimoEnergia()) ? { projecao } : null;
@@ -785,7 +798,7 @@ export class FichaInventario {
   ): number {
     return aplicarReducaoAfinidade(
       custoAquisicaoFragmento(tipo, modulo, this.possuiAnomalia()),
-      afinidadeConsiderando(itensAntes),
+      afinidadeConsiderando(itensAntes, this.modulosConsumidos()),
     );
   }
   /** Índice da opção de bônus "Consumido" escolhida (em `opcoesConsumoFragmento()`), ou `null` (m3-64). */
@@ -975,7 +988,7 @@ export class FichaInventario {
   protected readonly cartaoModulosFragmento = computed<readonly CartaoModuloFragmentoVM[]>(() => {
     const itens = this.inventario().itens;
     return MODULOS_FRAGMENTO.map((modulo) => {
-      const afinidade = afinidadeConsiderando(itens, modulo);
+      const afinidade = afinidadeConsiderando(itens, this.modulosConsumidos(), modulo);
       const custoPotencializador = custoAquisicaoFragmento(
         FragmentoTipoEnum.POTENCIALIZADOR,
         modulo,
@@ -1394,7 +1407,7 @@ export class FichaInventario {
     if (!tipo || !item.modulo) {
       return;
     }
-    const afinidade = afinidadeConsiderando(itensAntes, item.modulo);
+    const afinidade = afinidadeConsiderando(itensAntes, this.modulosConsumidos(), item.modulo);
     const custo = aplicarReducaoAfinidade(
       custoAquisicaoFragmento(tipo, item.modulo, this.possuiAnomalia()),
       afinidade,
@@ -1597,7 +1610,7 @@ export class FichaInventario {
     if (!tipo || !item.modulo) {
       return;
     }
-    const afinidade = afinidadeConsiderando(itensAntes);
+    const afinidade = afinidadeConsiderando(itensAntes, this.modulosConsumidos());
     const custo = aplicarReducaoAfinidade(
       custoAquisicaoFragmento(tipo, item.modulo, this.possuiAnomalia()),
       afinidade,
@@ -1699,7 +1712,7 @@ export class FichaInventario {
     modulo: FragmentoModuloEnum,
     itens: readonly CarrinhoItemDto[],
   ): { readonly energia: number; readonly energiaMaxima: number } {
-    const afinidade = afinidadeConsiderando(itens);
+    const afinidade = afinidadeConsiderando(itens, this.modulosConsumidos());
     const custoAquisicao = aplicarReducaoAfinidade(
       custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, modulo, this.possuiAnomalia()),
       afinidade,
@@ -2176,7 +2189,7 @@ export class FichaInventario {
 
     // Afinidade (m3-42/m3-49): o fragmento já está portado (acoplado) em `itensAntes` — mesma
     // Afinidade reduz os três termos, preservando o líquido zero de acoplamento↔desacoplamento.
-    const afinidade = afinidadeConsiderando(itensAntes);
+    const afinidade = afinidadeConsiderando(itensAntes, this.modulosConsumidos());
     const custoRemocao = aplicarReducaoAfinidade(custoRemoverFragmento(modulo, this.possuiAnomalia()), afinidade);
     const custoAquisicao = aplicarReducaoAfinidade(
       custoAquisicaoFragmento(tipo, modulo, this.possuiAnomalia()),

@@ -1,5 +1,46 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-11 — `P-015` corrigido: fragmento consumido volta a contar pra Afinidade
+
+`listarModulosFragmentosPortados` (`shared/regras/compras/fragmento.ts`) só somava módulos de
+fragmentos ainda **soltos** no inventário ou já **acoplados** (`origemFragmento` numa
+Modificação) — um fragmento **consumido** (cardápio "Consumido" do Potencializador, m3-64) vira só
+um bônus de stat no agente e não sobrava em nenhuma das duas listas, então caía fora de
+`calcularAfinidade`/`aplicarReducaoAfinidade`, apesar do registro completo do consumo já existir
+em `dados.fragmentosConsumidos` (`FichaFragmentoConsumidoDto`, com `modulo`) desde a m3-64.
+
+- `listarModulosFragmentosPortados` ganhou um segundo parâmetro opcional, `modulosConsumidos:
+  readonly FragmentoModuloEnum[] = []`, somado por cima de soltos/acoplados no array retornado.
+  Recebe só os módulos (não o DTO completo) porque `regras/compras` não pode depender de
+  `dtos/ficha` (evita ciclo — `dtos/ficha` já importa de `regras/compras`); quem lê
+  `dados.fragmentosConsumidos` e extrai os módulos é o chamador.
+- `ficha-visualizacao.component.ts` — `modulosFragmentosPortados` (entrada de `afinidadeFragmentos`
+  e `gruposFragmentosPortados`, os dois já existentes) passou a somar
+  `this.fragmentosConsumidos().map((registro) => registro.modulo)`. Como os três computeds
+  encadeiam da mesma fonte, o chip "Módulo X" da aba Extras e o número de Afinidade exibido também
+  passaram a refletir fragmentos já consumidos, sem precisar de um segundo cálculo em paralelo
+  (proibição #26 — uma fonte só).
+- `ficha-inventario.component.ts` — a Afinidade "retroativa" (`afinidadeConsiderando`, usada nos 7
+  pontos que debitam/restituem Energia de fragmento — adquirir, remover, acoplar, desacoplar, e as
+  prévias dos painéis "Consumir"/"Aplicar em...") ganhou o mesmo parâmetro. Novo input
+  `fragmentosConsumidos` (default `[]`, mesmo formato de `dados.fragmentosConsumidos`) e um
+  computed privado `modulosConsumidos` que extrai só os módulos — repassados em todas as chamadas
+  de `afinidadeConsiderando`. `ficha-visualizacao.component.html` passou a ligar
+  `[fragmentosConsumidos]="fragmentosConsumidos()"` no `<app-ficha-inventario>`.
+- Testado: `shared/regras/compras/fragmento.spec.ts` ganhou 2 casos (soma por cima dos
+  soltos/acoplados; conta só os consumidos quando o inventário está vazio).
+  `ficha-visualizacao.component.spec.ts` ganhou um caso confirmando que a Afinidade exibida soma um
+  fragmento consumido mesmo com o inventário vazio (doc — "Afinidade = 6 - Módulo": módulo IV
+  sozinho = 2). `ficha-inventario.component.spec.ts` ganhou um caso confirmando que 3 fragmentos
+  consumidos de módulo I (Afinidade 15) reduzem o custo de adquirir um novo fragmento módulo I,
+  mesma conta já coberta pra fragmentos soltos. `lint`/`build` limpos nos dois workspaces;
+  suíte `shared` 596/596 e `frontend` 876/876 (874 + 2 novos) verdes.
+- **Ambiente desta rodada:** Postgres via Docker Compose seguiu indisponível (sem daemon no
+  sandbox) — verificação só via suíte de testes/lint, sem app real rodando. Nenhuma decisão de
+  design pendente aqui (diferente do P-014/P-016): o dono já havia descrito o comportamento
+  esperado ao reportar o problema em 2026-08-09, então a correção seguiu direto o que estava
+  registrado no `PROBLEMS.md`.
+
 ## 2026-08-11 — `P-012` corrigido: descrição de habilidade não corta mais sem aviso no seletor
 
 O `PROBLEMS.md` listava três candidatos de correção sem decidir qual ("mitiga mas não resolve",

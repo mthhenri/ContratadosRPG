@@ -136,21 +136,6 @@
   classe`; confirmar com o dono o que muda para Civil antes de mexer.
 - **Desde:** reportado pelo dono em 2026-08-09.
 
-### P-015 — Fragmento consumido some da Afinidade (e da redução de Energia que ela dá) · `ABERTO` · shared/regras
-
-- **Sintoma:** ao consumir um fragmento (cardápio "Consumido"), ele deveria continuar contando pra
-  Afinidade do agente — e, por consequência, contribuir pra redução de Energia nos custos dos
-  fragmentos restantes — mas atualmente não conta mais.
-- **Causa:**
-  [`listarModulosFragmentosPortados`](../../shared/src/regras/compras/fragmento.ts#L243) só soma
-  módulos de fragmentos "soltos" no inventário e "acoplados" como modificação
-  (`origemFragmento`); um fragmento consumido vira só um bônus de stat e não sobra em nenhuma das
-  duas listas, então cai fora de `calcularAfinidade` e de `aplicarReducaoAfinidade`.
-- **Contorno:** nenhum.
-- **Correção:** manter/registrar o módulo dos fragmentos já consumidos em algum lugar da ficha para
-  que `listarModulosFragmentosPortados` (ou equivalente) continue contando-os na Afinidade.
-- **Desde:** reportado pelo dono em 2026-08-09.
-
 ### P-016 — Fragmento Potencializador solto no inventário consome Energia sem estar aplicado · `ABERTO` · shared/regras
 
 - **Sintoma:** o dono espera que um fragmento Potencializador só drene Energia Máxima quando for de
@@ -192,3 +177,5 @@ task que a fez.
   2026-08-11, ver `HISTORY.md`.
 - **P-012** — descrição de habilidade cortava sem aviso no seletor (`-webkit-line-clamp: 2` sem
   `text-overflow: ellipsis`). Corrigido em 2026-08-11, ver `HISTORY.md`.
+- **P-015** — fragmento consumido sumia da Afinidade (e da redução de Energia que ela dá).
+  Corrigido em 2026-08-11, ver `HISTORY.md`.

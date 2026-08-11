@@ -2392,10 +2392,14 @@ export class FichaVisualizacao {
    * Módulos de todos os fragmentos portados pelo agente — `shared/regras/compras/fragmento`
    * (`listarModulosFragmentosPortados`, m3-42/m3-49): mesma função consumida por `FichaInventario`
    * pra aplicar a redução de custo por Afinidade (proibição #26 — uma fonte só pra "o que conta
-   * como portado").
+   * como portado"). Inclui também os módulos já **consumidos** (`P-015`) — continuam contando pra
+   * Afinidade mesmo depois de saírem do inventário.
    */
   protected readonly modulosFragmentosPortados = computed<readonly FragmentoModuloEnum[]>(() =>
-    listarModulosFragmentosPortados(this.dados().inventario.itens),
+    listarModulosFragmentosPortados(
+      this.dados().inventario.itens,
+      this.fragmentosConsumidos().map((registro) => registro.modulo),
+    ),
   );
 
   /**

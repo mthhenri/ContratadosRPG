@@ -1815,6 +1815,21 @@ describe('FichaVisualizacao', () => {
       expect(raiz.textContent).not.toContain('Afinidade acima de 10');
     });
 
+    it('afinidade também soma os fragmentos já consumidos (P-015) — mesmo sem nada no inventário', () => {
+      const documento = {
+        ...dados,
+        fragmentosConsumidos: [registroFragmentoConsumido(FragmentoModuloEnum.IV, '+2 em Defesa')],
+      };
+      const { raiz, fixture } = montarFragmentos(documento);
+
+      // Doc — "Afinidade = 6 - Módulo": módulo IV consumido sozinho vale 2, mesmo com o inventário vazio.
+      expect(fixture.componentInstance['afinidadeFragmentos']()).toBe(2);
+      const box = Array.from(raiz.querySelectorAll('.ficha-mini')).find(
+        (b) => b.querySelector('.ficha-mini__rotulo')?.textContent?.trim() === 'Afinidade',
+      );
+      expect(box?.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('2');
+    });
+
     it('afinidade acima de 10 mostra a nota de redução de custo de Energia (m3-42)', () => {
       // 6 fragmentos módulo I (5 cada) = 30 de afinidade → redução de −10 (floor((30-10)/2)).
       const itens: CarrinhoItemDto[] = [
