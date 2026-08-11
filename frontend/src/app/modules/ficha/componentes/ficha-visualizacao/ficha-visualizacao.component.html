@@ -137,6 +137,7 @@
               }
             </span>
           }
+          <div class="ficha-ident__coluna-texto">
           <div class="ficha-ident__texto">
             <span class="ficha-ident__rotulo">Agente</span>
             @if (ajustavelAmplo() && editandoIdentidade() === 'nome') {
@@ -188,13 +189,15 @@
               <span class="ficha-ident__contrato">{{ contratoTexto() }}</span>
             }
           </div>
-        </div>
 
-        <!-- Personalidade/Origem (m3-23/m3-25) — trava de imutabilidade refletida (m3-24): livre
-             pro mestre sempre, pro dono só até a primeira definição. -->
-        <div class="ficha-ident__meta">
-          <div class="ficha-ident__meta-linha">
-            <span class="ficha-ident__meta-rotulo">Personalidade</span>
+          <!-- Personalidade/Origem (m3-23/m3-25) — trava de imutabilidade refletida (m3-24): livre
+               pro mestre sempre, pro dono só até a primeira definição. Mora dentro de
+               `__coluna-texto` (não mais como irmã de `.ficha-ident`, m3-62 follow-up) pra poder
+               ficar ao lado do avatar (100px, desktop) sem duplicar a marcação editável — só a
+               posição no grid muda entre desktop/mobile, ver SCSS. -->
+          <div class="ficha-ident__meta">
+            <div class="ficha-ident__meta-linha">
+              <span class="ficha-ident__meta-rotulo">Personalidade</span>
             @if (editandoIdentidade() === 'personalidade') {
               <input
                 #entradaIdentidade
@@ -238,6 +241,8 @@
                 }
               </span>
             }
+          </div>
+        </div>
           </div>
         </div>
 

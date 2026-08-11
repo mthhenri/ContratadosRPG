@@ -1237,12 +1237,27 @@
   gap: 14px;
   margin-bottom: 16px;
 
+  // Avatar maior "gira" a Identidade pra um layout de duas colunas (m3-62 follow-up, design
+  // 2026-08-10-avatar-maior-ficha-design.md): no desktop a foto vira uma coluna própria e
+  // `__coluna-texto` (Nome/Contrato + Personalidade/Origem) ocupa o resto da linha ao lado dela —
+  // é por isso que Personalidade/Origem (`__meta`) mudou de irmã de `.ficha-ident` pra filha de
+  // `__coluna-texto` (ver HTML): as duas passam a compartilhar o mesmo eixo vertical do avatar.
+  // No mobile empilha (foto centralizada no topo, nome/contrato centralizados abaixo dela) — a
+  // coluna de texto ao lado do avatar de 100px sobraria estreita demais pra caber com conforto.
+  @include bp.mobile {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
   // Cor de identidade visual da ficha (m3-61): a borda do avatar carrega a cor (onde a foto do
   // agente entra, m3-62) — `var(--cor-ficha, var(--border-strong))` mantém a moldura neutra de
   // sempre quando a ficha não tem cor definida, sem forçar um anel colorido em toda ficha antiga.
+  // 100px (era 52px, m3-62 follow-up) — dobrado a pedido do autor; a foto era pequena demais pra
+  // reconhecer o agente de relance.
   &__avatar {
-    width: 52px;
-    height: 52px;
+    width: 100px;
+    height: 100px;
     flex: none;
     position: relative; // ancora o <input type="color"> invisível, quando editável (--editavel)
     border-radius: var(--radius-control);
@@ -1256,7 +1271,7 @@
   }
 
   // Input nativo invisível cobrindo o avatar por inteiro (editável) — clicar em qualquer ponto da
-  // caixa abre o picker; o alvo de toque já nasce 52×52, acima do mínimo de 44px, nas duas telas.
+  // caixa abre o picker; o alvo de toque já nasce 100×100, acima do mínimo de 44px, nas duas telas.
   &__cor-entrada {
     position: absolute;
     inset: 0;
@@ -1267,12 +1282,28 @@
     cursor: pointer;
   }
 
-  // Avatar da ficha (m3-62) — coluna só para acomodar o aviso de validação abaixo da caixa 52×52
-  // sem desalinhar o `.ficha-ident` (flex-row, align-items: center).
+  // Avatar da ficha (m3-62) — coluna só para acomodar o aviso de validação abaixo da caixa do
+  // avatar sem desalinhar o `.ficha-ident` (flex-row, align-items: center).
   &__avatar-coluna {
     display: flex;
     flex-direction: column;
     gap: 4px;
+  }
+
+  // Nome/Contrato + Personalidade/Origem lado a lado do avatar (m3-62 follow-up) — `gap` (não
+  // margin-bottom em cada filho) espaça `__texto` e `__meta` uniformemente, e é ela quem decide o
+  // quanto a coluna "estica" pra acompanhar a altura do avatar de 100px.
+  &__coluna-texto {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    flex: 1 1 0;
+    min-width: 0;
+
+    @include bp.mobile {
+      width: 100%;
+    }
   }
 
   // A foto propriamente dita, por cima do fundo tracejado decorativo — mesmo raio da caixa
@@ -1287,7 +1318,11 @@
   }
 
   // Selo de lápis no canto inferior direito — alvo de clique próprio para o `<input type="file">`,
-  // por cima do `<input type="color">` que cobre o resto da caixa (não aninha `<label>`s).
+  // por cima do `<input type="color">` que cobre o resto da caixa (não aninha `<label>`s). 28px
+  // (era 20px) — acompanha o avatar de 100px; no mobile ganha só a ÁREA DE TOQUE de 44×44 via
+  // `alvo-de-toque($posicionar: false)` (o host já é `position: absolute`), sem inflar o desenho —
+  // mesmo padrão que o resto do componente já usa pros controles pequenos (m3-62 follow-up: este
+  // selo e o `&__avatar-remover` eram os únicos dois que tinham ficado de fora dessa regra).
   &__avatar-upload {
     position: absolute;
     right: -4px;
@@ -1296,14 +1331,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 20px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     background: var(--surface-2);
     border: 1px solid var(--border-strong);
     color: var(--text-dim);
-    font-size: 10px;
+    font-size: 13px;
     cursor: pointer;
+
+    @include alvo-de-toque($posicionar: false);
   }
 
   &__avatar-upload-entrada {
@@ -1316,7 +1353,8 @@
     cursor: pointer;
   }
 
-  // Selo de remover no canto superior direito — só existe junto do `<img>` (sem imagem, nada a remover).
+  // Selo de remover no canto superior direito — só existe junto do `<img>` (sem imagem, nada a
+  // remover). 24px (era 18px), mesmo racional de tamanho/alvo-de-toque do `&__avatar-upload` acima.
   &__avatar-remover {
     position: absolute;
     right: -4px;
@@ -1325,15 +1363,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 18px;
-    height: 18px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     background: var(--surface-2);
     border: 1px solid var(--border-strong);
     color: var(--text-dim);
-    font-size: 9px;
+    font-size: 11px;
     padding: 0;
     cursor: pointer;
+
+    @include alvo-de-toque($posicionar: false);
 
     &:hover {
       color: var(--text);
@@ -1346,6 +1386,14 @@
     flex-direction: column;
     gap: 3px;
     min-width: 0;
+
+    // Só o Nome/Contrato centraliza no mobile (avatar empilhado em cima, m3-62 follow-up) —
+    // Personalidade/Origem (`__meta`, mais abaixo) fica de fora de propósito: ela mantém a leitura
+    // rótulo-em-cima/valor-embaixo de sempre, à esquerda, ocupando a largura toda do card.
+    @include bp.mobile {
+      align-items: center;
+      text-align: center;
+    }
   }
 
   &__rotulo {
@@ -1401,11 +1449,12 @@
   }
 
   // Personalidade/Origem lado a lado — atalho de leitura (redesenho de comparação visual); a
-  // edição completa continua só no card "Identidade" mais abaixo na página.
+  // edição completa continua só no card "Identidade" mais abaixo na página. Sem margin-bottom
+  // própria (m3-62 follow-up): agora mora dentro de `__coluna-texto`, cujo `gap` já espaça ela do
+  // `__texto` acima — e `.ficha-ident` continua com o `margin-bottom` que separa tudo dos chips.
   &__meta {
     display: flex;
     gap: 16px;
-    margin-bottom: 14px;
   }
 
   &__meta-linha {
