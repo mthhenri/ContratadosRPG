@@ -523,6 +523,77 @@ describe('CampanhaDetalhe', () => {
     });
   });
 
+  // === "Ver como jogador" (preview do mestre) ===
+  describe('"Ver como jogador" (preview do mestre)', () => {
+    it('não mostra a opção quando a campanha não tem jogadores', () => {
+      const { fixture, raiz } = montar(mestre());
+
+      abrirMenuCampanha(raiz, fixture);
+      expect(raiz.querySelectorAll('.detalhe__cabecalho-menu-item')).toHaveLength(2);
+    });
+
+    it('mostra "Ver como jogador" como 3º item quando há jogadores na campanha', () => {
+      const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois() });
+
+      abrirMenuCampanha(raiz, fixture);
+      expect(encontrarItemMenu(raiz, 'Ver como jogador')).not.toBeNull();
+    });
+
+    it('clicar em "Ver como jogador" lista os jogadores da campanha, com "Voltar"', () => {
+      const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosTres() });
+
+      abrirMenuCampanha(raiz, fixture);
+      encontrarItemMenu(raiz, 'Ver como jogador').click();
+      fixture.detectChanges();
+
+      const itens = Array.from(raiz.querySelectorAll('.detalhe__cabecalho-menu-item')).map((item) =>
+        item.textContent?.replace(/\s+/g, ' ').trim(),
+      );
+      expect(itens).toEqual(['Colega', 'Jogador', 'Voltar']);
+    });
+
+    it('"Voltar" volta pras ações normais do menu', () => {
+      const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois() });
+
+      abrirMenuCampanha(raiz, fixture);
+      encontrarItemMenu(raiz, 'Ver como jogador').click();
+      fixture.detectChanges();
+      encontrarItemMenu(raiz, 'Voltar').click();
+      fixture.detectChanges();
+
+      const itens = Array.from(raiz.querySelectorAll('.detalhe__cabecalho-menu-item')).map((item) =>
+        item.textContent?.replace(/\s+/g, ' ').trim(),
+      );
+      expect(itens).toEqual(['Editar', 'Excluir', 'Ver como jogador']);
+    });
+
+    it('escolher um jogador troca para o layout de jogador, mostrando a ficha própria dele', () => {
+      const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      abrirMenuCampanha(raiz, fixture);
+      encontrarItemMenu(raiz, 'Ver como jogador').click();
+      fixture.detectChanges();
+      encontrarItemMenu(raiz, 'Jogador').click();
+      fixture.detectChanges();
+
+      expect(raiz.querySelector('.detalhe__grade')).toBeNull();
+      expect(raiz.querySelector('.detalhe__jogador')).not.toBeNull();
+      expect(raiz.querySelector('.card__titulo')?.textContent?.trim()).toBe('Vera');
+    });
+
+    it('escolher um jogador sem ficha mostra o estado vazio dele', () => {
+      const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosTres(), fichas });
+
+      abrirMenuCampanha(raiz, fixture);
+      encontrarItemMenu(raiz, 'Ver como jogador').click();
+      fixture.detectChanges();
+      encontrarItemMenu(raiz, 'Colega').click();
+      fixture.detectChanges();
+
+      expect(raiz.querySelector('.detalhe__jogador-vazio')).not.toBeNull();
+    });
+  });
+
   // === Tira de estatísticas (item 2) ===
   describe('tira de estatísticas (item 2)', () => {
     it('mostra Membros/Fichas corretos e marca Alertas quando há ficha crítica', () => {

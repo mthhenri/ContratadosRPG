@@ -265,6 +265,12 @@ export class CampanhaDetalhe {
   protected readonly menuCampanhaAberto = signal(false);
 
   /**
+   * `true` enquanto o menu kebab do mestre mostra a lista de jogadores (2º passo de "Ver como
+   * jogador"), em vez das ações normais (Editar/Excluir).
+   */
+  protected readonly escolhendoPreviewJogador = signal(false);
+
+  /**
    * Salas `ficha:<id>` já ingressadas (item 1 — tempo real de `ficha:alterada`) — uma por ficha
    * hoje visível, sincronizada a cada fetch (`sincronizarSalasFicha`). O gateway já reusa a mesma
    * checagem de visualização de `recuperarFicha` (§14) no `ficha:entrar`, então entrar na sala de
@@ -337,6 +343,28 @@ export class CampanhaDetalhe {
   });
 
   /**
+   * Membro sendo emulado pelo "Ver como jogador" — `null` fora do preview. Puro estado de
+   * apresentação do cliente: nenhuma permissão real muda, o backend continua sendo a autoridade
+   * (§14). Não persiste (sem query param/`localStorage`) — um F5 sempre volta ao `null`.
+   */
+  protected readonly previewJogador = signal<CampanhaMembroResumoDto | null>(null);
+
+  /**
+   * Decide o layout mostrado (mestre vs. jogador) — `ehMestre()` continua sendo a role real,
+   * usada nas checagens de permissão de verdade; este computed é só para o template escolher
+   * entre o layout de mestre e o de jogador, considerando o preview ativo.
+   */
+  protected readonly exibirComoMestre = computed(() => this.ehMestre() && !this.previewJogador());
+
+  /**
+   * `id` "efetivo" para checagens de exibição (dono da ficha, `minhaFichaExibida`) — o do
+   * jogador emulado durante o preview, senão o do usuário real.
+   */
+  protected readonly usuarioIdPreview = computed(
+    () => this.previewJogador()?.usuarioId ?? this.usuarioAtivoId(),
+  );
+
+  /**
    * Membros ordenados para a coluna "Membros" (item 4 — mestre primeiro, depois jogadores em
    * ordem alfabética pelo nome). O grid do "Esquadrão" ao lado acompanha esta mesma ordem
    * (`fichasEsquadrao` itera esta lista, não `membros()` cru), mantendo a decisão de design
@@ -350,6 +378,11 @@ export class CampanhaDetalhe {
       return a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' });
     });
   });
+
+  /** Jogadores (papel `JOGADOR`) da campanha — opções do seletor "Ver como jogador". */
+  protected readonly jogadoresDaCampanha = computed<readonly CampanhaMembroResumoDto[]>(() =>
+    this.membrosOrdenados().filter((membro) => membro.papel === TipoCampanhaMembroPapelEnum.JOGADOR),
+  );
 
   /**
    * Fichas visíveis agrupadas por dono (`usuarioId`), enriquecidas com o rótulo de classe e as
@@ -783,6 +816,24 @@ export class CampanhaDetalhe {
   /** Fecha o menu de ações da campanha — clique fora (fundo) ou ao escolher uma ação. */
   protected fecharMenuCampanha(): void {
     this.menuCampanhaAberto.set(false);
+    this.escolhendoPreviewJogador.set(false);
+  }
+
+  /** Abre a lista de jogadores da campanha dentro do menu kebab (1º passo de "Ver como jogador"). */
+  protected abrirEscolhaPreviewJogador(): void {
+    this.escolhendoPreviewJogador.set(true);
+  }
+
+  /**
+   * Entra no preview "Ver como jogador" (2º passo): troca o layout para o do jogador escolhido e
+   * mostra a ficha própria dele, se houver — mesma semeadura que `carregar` já faz para o jogador
+   * real. Puramente de apresentação (ver `previewJogador`); nenhuma chamada ao backend.
+   */
+  protected iniciarPreviewJogador(membro: CampanhaMembroResumoDto): void {
+    this.fecharMenuCampanha();
+    this.previewJogador.set(membro);
+    const propria = this.fichasPorMembro().get(membro.usuarioId)?.[0];
+    this.fichaExibidaId.set(propria?.id ?? null);
   }
 
   /** Abre o formulário de edição preenchido com o nome/descrição atuais da campanha. */
