@@ -1,5 +1,25 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-11 — `PROBLEMS.md`: `P-011` também já estava corrigido, mesmo padrão do `P-001`/`P-010`
+
+Investigação a pedido do autor sobre o `P-011` (suíte de `shared` coletando specs compiladas de
+`dist/**` e quebrando `npm test`). Rodei `vitest run` isolado no workspace `shared`
+(`cd shared && ../node_modules/.bin/vitest run`): **33 arquivos de teste, 594 testes, todos
+passando** — exatamente o número de `*.spec.ts` em `shared/src` (`find shared/src -name
+'*.spec.ts' | wc -l` também deu 33). Nenhum arquivo de `shared/dist` foi coletado, e `shared/dist`
+não contém nenhum `*.spec.js` hoje.
+
+A causa: `shared/tsconfig.build.json` (`git log` mostra o commit `8e3b757`, 2026-08-08, mas o
+arquivo aparentemente já existia informalmente por volta de 2026-08-05) excedeu
+`"src/**/*.spec.ts"` do `exclude`, além de `node_modules` e `dist`. Como o script `build` do
+`shared/package.json` sempre apontou para `tsconfig.build.json` (`tsc --project
+tsconfig.build.json`), a build passou a nunca mais copiar specs para `dist/`, e o Vitest da raiz
+(que roda com `exclude` padrão, cobrindo `**/dist/**`) nunca mais tem o que quebrar.
+`git merge-base --is-ancestor 8e3b757 HEAD` confirma que o commit já está no `HEAD` atual.
+
+Mesmo padrão do achado anterior desta mesma sessão (`P-001`/`P-010`): a correção aconteceu, mas o
+item nunca foi tirado de `PROBLEMS.md`. `P-011` movido para "Resolvidos".
+
 ## 2026-08-11 — `PROBLEMS.md`: `P-001` e `P-010` já estavam corrigidos, só nunca foram fechados
 
 Investigação a pedido do autor sobre o `P-001` ("apelido de equipamento" quebrado em

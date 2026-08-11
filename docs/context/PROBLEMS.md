@@ -140,19 +140,6 @@
   um `role`/`tabindex`/handler de teclado equivalente. Trivial, mas não é escopo de nenhuma task atual.
 - **Desde:** descoberto durante a `m2-18` (2026-08-01); a raiz é anterior, não determinada.
 
-### P-011 — Suíte de `shared` coleta specs compiladas de `dist` · `ABERTO` · shared/testes
-
-- **Sintoma:** `npm test` no monorepo executa os **520** testes fonte de `shared` com sucesso, mas
-  também descobre 29 arquivos `shared/dist/**/*.spec.js`. Esses artefatos CommonJS falham ao carregar
-  o Vitest (`Vitest cannot be imported in a CommonJS module using require()`), encerrando a suíte com
-  erro apesar de nenhum teste fonte falhar.
-- **Causa:** a configuração do Vitest de `shared` não exclui `dist/`; o output da compilação contém
-  cópias dos arquivos de teste e entra no padrão de descoberta.
-- **Contorno:** executar a suíte somente sobre os fontes ou excluir `dist/**` na invocação local.
-- **Correção:** excluir `dist/**` da descoberta padrão do Vitest de `shared` (preferencialmente no
-  arquivo de configuração, para que `npm test` volte a ser confiável).
-- **Desde:** descoberto na verificação final do ajuste da barra de filtros do inventário (2026-08-05).
-
 ### P-012 — Descrição de habilidade corta sem aviso no seletor · `ABERTO` · frontend/CSS
 
 - **Sintoma:** no seletor de habilidades
@@ -238,3 +225,6 @@ task que a fez.
 - **P-010** — teste do link "Voltar" quebrado em `visualizar.page.spec.ts`. Mesma causa e mesmo
   commit de correção do `P-001` (`0aa92c2`, 2026-08-08); achado e fechado em 2026-08-11, ver
   `HISTORY.md`.
+- **P-011** — suíte de `shared` coletava specs compiladas de `dist/`. Já corrigido pelo
+  `shared/tsconfig.build.json` (`8e3b757`, 2026-08-08), que passou a excluir `src/**/*.spec.ts` da
+  build; nunca chegou a ser refletido aqui; achado e fechado em 2026-08-11, ver `HISTORY.md`.
