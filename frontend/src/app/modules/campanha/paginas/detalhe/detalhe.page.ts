@@ -52,6 +52,12 @@ import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive
 /** Janela da tira "Rolagens Recentes" (item 3) — só rolagens feitas na última hora. */
 const UMA_HORA_MS = 60 * 60 * 1000;
 
+/** Hover sustentado antes do preview ampliado do avatar do Esquadrão abrir ("um segundinho"). */
+const MS_PREVIEW_AVATAR = 600;
+
+/** Tamanho do preview ampliado do avatar (px, quadrado) — `object-fit: contain`, sem recorte. */
+const PX_PREVIEW_AVATAR = 200;
+
 /** Uma das 3 condições no mini-card — sempre as 3, com `ativa` dizendo se está marcada (item 3). */
 interface ItemFichaCondicao extends DescritorCondicao {
   readonly ativa: boolean;
@@ -71,6 +77,8 @@ interface ItemFicha {
   readonly usuarioId: number;
   /** URL do avatar da ficha (m3-62) — `null` sem imagem definida (cai no placeholder decorativo). */
   readonly imagemUrl: string | null;
+  /** Cor de identidade visual (m3-61) — colore a borda/fundo listrado do avatar, ver SCSS. */
+  readonly cor: string | null;
   readonly nome: string;
   readonly classeTexto: string;
   readonly nivel: number;
@@ -241,6 +249,20 @@ export class CampanhaDetalhe {
     bottom?: number;
     right: number;
   } | null>(null);
+
+  /**
+   * Preview ampliado do avatar do Esquadrão, sem recorte (item pedido pelo autor: o card usa
+   * `object-fit: cover` 60×60, que esconde boa parte da foto — aqui é a imagem inteira, ~200×200,
+   * `object-fit: contain`). Mesmo padrão de portal-na-raiz do `menuFichaAberto` (comentário acima)
+   * — o grid do Esquadrão tem `overflow`/`mask-image`, cortaria um `position: fixed` filho na
+   * pintura. Abre num hover sustentado (`MS_PREVIEW_AVATAR`) pra não piscar ao só passar o mouse de
+   * raspão pelo grid.
+   */
+  protected readonly previewAvatar = signal<{ url: string; top: number; left: number } | null>(
+    null,
+  );
+  private temporizadorPreviewAvatar: ReturnType<typeof setTimeout> | null = null;
+
   /** Ficha pendente de confirmação de duplicação — guarda o nome dela e do dono pra mensagem. */
   protected readonly confirmandoDuplicar = signal<{
     id: number;
@@ -397,6 +419,7 @@ export class CampanhaDetalhe {
         id: ficha.id,
         usuarioId: ficha.usuarioId,
         imagemUrl: ficha.imagemUrl,
+        cor: ficha.cor ?? null,
         nome: ficha.nome,
         classeTexto: rotuloClasseCompleto(ficha.classe, ficha.arquetipo),
         nivel: ficha.nivel,
@@ -506,7 +529,7 @@ export class CampanhaDetalhe {
    */
   protected readonly minhaFichaExibida = computed<FichaRecuperadaDto | null>(() => {
     const fichaExibida = this.fichaExibidaDados();
-    return fichaExibida && fichaExibida.usuarioId === this.usuarioAtivoId() ? fichaExibida : null;
+    return fichaExibida && fichaExibida.usuarioId === this.usuarioIdPreview() ? fichaExibida : null;
   });
 
   /** Dialog "Acesso de visualização" da ficha exibida (menu do cabeçalho do jogador) aberta. */
@@ -715,6 +738,10 @@ export class CampanhaDetalhe {
     // Relógio do "Atualizado há Xs" (item 9) — só recomputa o texto, nunca refaz fetch.
     const relogio = setInterval(() => this.agora.set(Date.now()), 5000);
     this.destroyRef.onDestroy(() => clearInterval(relogio));
+
+    // Preview ampliado do avatar (ver `previewAvatar`) — cancela o temporizador pendente ao sair
+    // da página, senão um `setTimeout` de hover sustentado ainda dispararia depois do destroy.
+    this.destroyRef.onDestroy(() => this.cancelarPreviewAvatar());
 
     // Menu de ficha (m3-52) é `position: fixed` calculado no clique (ver `menuFichaPosicao`) — se a
     // lista rolar (ou a janela redimensionar) com o menu aberto, ele descolaria visualmente do
@@ -1021,7 +1048,7 @@ export class CampanhaDetalhe {
    * visualização concedida.
    */
   protected podeAjustarFicha(usuarioIdDono: number): boolean {
-    return this.ehMestre() || usuarioIdDono === this.usuarioAtivoId();
+    return this.exibirComoMestre() || usuarioIdDono === this.usuarioIdPreview();
   }
 
   /**
@@ -1194,6 +1221,43 @@ export class CampanhaDetalhe {
   protected fecharMenuFicha(): void {
     this.menuFichaAberto.set(null);
     this.menuFichaPosicao.set(null);
+  }
+
+  /**
+   * Agenda a abertura do preview ampliado do avatar (`MS_PREVIEW_AVATAR` de hover sustentado) —
+   * só quando a ficha tem `imagemUrl` (sem foto, o card mostra só o placeholder listrado, nada pra
+   * ampliar). Posição calculada do card no momento em que o mouse entra (mesmo `getBoundingClientRect`
+   * de `alternarMenuFicha`), centrado sob o avatar e travado dentro da janela nos dois eixos.
+   */
+  protected agendarPreviewAvatar(evento: MouseEvent, imagemUrl: string | null): void {
+    this.cancelarPreviewAvatar();
+    if (!imagemUrl) {
+      return;
+    }
+    const retangulo = (evento.currentTarget as HTMLElement).getBoundingClientRect();
+    this.temporizadorPreviewAvatar = setTimeout(() => {
+      const folga = 8;
+      const centroVertical = retangulo.top + retangulo.height / 2 - PX_PREVIEW_AVATAR / 2;
+      const top = Math.min(
+        Math.max(centroVertical, folga),
+        window.innerHeight - PX_PREVIEW_AVATAR - folga,
+      );
+      const espacoDireita = window.innerWidth - retangulo.right;
+      const left =
+        espacoDireita >= PX_PREVIEW_AVATAR + folga
+          ? retangulo.right + folga
+          : Math.max(retangulo.left - PX_PREVIEW_AVATAR - folga, folga);
+      this.previewAvatar.set({ url: imagemUrl, top, left });
+    }, MS_PREVIEW_AVATAR);
+  }
+
+  /** Cancela o agendamento e fecha o preview ampliado do avatar, se aberto. */
+  protected cancelarPreviewAvatar(): void {
+    if (this.temporizadorPreviewAvatar !== null) {
+      clearTimeout(this.temporizadorPreviewAvatar);
+      this.temporizadorPreviewAvatar = null;
+    }
+    this.previewAvatar.set(null);
   }
 
   /** Abre a confirmação de duplicação a partir do menu da ficha (m3-52). */

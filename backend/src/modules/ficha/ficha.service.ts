@@ -228,6 +228,7 @@ export class FichaService {
       campanhaNome: fichaInterna.campanhaNome,
       usuarioId: fichaInterna.usuarioId,
       nome: fichaInterna.nome,
+      cor: fichaInterna.cor,
       imagemUrl: fichaInterna.imagemUrl,
       classe: fichaInterna.classe,
       arquetipo: fichaInterna.arquetipo,
@@ -356,7 +357,9 @@ export class FichaService {
    * persistir a nova URL — se a ficha já tinha avatar, o antigo já era um blob órfão assim que o
    * novo é gravado, então a ordem (excluir → `UPDATE`) só importa para não vazar exceção de
    * armazenamento com o banco já desatualizado. `ResourceNotFoundException` se a ficha não
-   * existir; `UnauthorizedAccessException` se o autor não puder editá-la.
+   * existir; `UnauthorizedAccessException` se o autor não puder editá-la. Emite `ficha:alterada`
+   * (mesmo evento da edição genérica) após persistir — quem está com a ficha aberta vê o avatar
+   * novo sem F5.
    */
   async alterarImagem(
     dto: FichaImagemAlterarDto,
@@ -386,14 +389,19 @@ export class FichaService {
       await this.armazenamentoProvedor.excluirImagem({ caminho: fichaEncontrada.imagemUrl });
     }
 
-    return this.fichaRepositorio.alterarImagem({ id: dto.id, imagemUrl: imagemSalva.caminho });
+    const imagemAlterada = await this.fichaRepositorio.alterarImagem({
+      id: dto.id,
+      imagemUrl: imagemSalva.caminho,
+    });
+    this.campanhaGateway.emitirFichaAlterada({ ...fichaEncontrada, imagemUrl: imagemAlterada.imagemUrl });
+    return imagemAlterada;
   }
 
   /**
    * Remove o avatar da ficha (m3-62): exclui o arquivo do armazenamento e limpa `imagemUrl`, exigindo
    * permissão de **edição** (§14). No-op no armazenamento se a ficha já não tinha avatar.
    * `ResourceNotFoundException` se a ficha não existir; `UnauthorizedAccessException` se o autor
-   * não puder editá-la.
+   * não puder editá-la. Emite `ficha:alterada` após persistir, mesmo racional de `alterarImagem`.
    */
   async excluirImagem(
     dto: FichaImagemExcluirDto,
@@ -409,7 +417,9 @@ export class FichaService {
       await this.armazenamentoProvedor.excluirImagem({ caminho: fichaEncontrada.imagemUrl });
     }
 
-    return this.fichaRepositorio.alterarImagem({ id: dto.id, imagemUrl: null });
+    const imagemAlterada = await this.fichaRepositorio.alterarImagem({ id: dto.id, imagemUrl: null });
+    this.campanhaGateway.emitirFichaAlterada({ ...fichaEncontrada, imagemUrl: null });
+    return imagemAlterada;
   }
 
   /**

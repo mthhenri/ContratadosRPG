@@ -1066,16 +1066,29 @@
 
   // Avatar à esquerda do card (mesmo padrão visual da tela de Acervo, m3-62) — placeholder
   // listrado quando a ficha não tem `imagemUrl`, esticado pra acompanhar a altura do card
-  // inteiro (que varia com a quantidade de reações/identidade exibidas).
+  // inteiro (que varia com a quantidade de reações/identidade exibidas). Borda/fundo seguem a cor
+  // de identidade da ficha (m3-61, `--cor-ficha` setada inline no template) — mesmo `color-mix`
+  // de `ficha-ident__avatar`; sem cor definida, o fallback pra `--border-strong` mantém o visual
+  // neutro de sempre.
   &__ficha-avatar {
     position: relative;
     width: 60px;
     flex: none;
     align-self: stretch;
     border-radius: var(--radius-control);
-    background-color: var(--surface);
-    background-image: repeating-linear-gradient(135deg, var(--border-strong) 0 3px, transparent 3px 9px);
-    border: 1px solid var(--border-strong);
+    background-color: color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 14%, var(--surface));
+    // Listras a 20% de opacidade — mesmo ajuste de `ficha-ident__avatar` (ficha-visualizacao).
+    background-image: repeating-linear-gradient(
+      135deg,
+      color-mix(
+          in srgb,
+          color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 60%, var(--border-strong)) 20%,
+          transparent
+        )
+        0 3px,
+      transparent 3px 9px
+    );
+    border: 1px solid var(--cor-ficha, var(--border-strong));
     overflow: hidden;
   }
 
@@ -1345,6 +1358,31 @@
       background: var(--surface-2);
       color: var(--accent);
     }
+  }
+
+  // Preview ampliado do avatar do Esquadrão (hover sustentado, `agendarPreviewAvatar`) — `fixed`
+  // pela mesma razão de `&__ficha-menu` (grid com `overflow`/`mask-image` cortaria na pintura).
+  // `pointer-events: none`: é só apresentação, não deve roubar o `mouseleave` do card por baixo.
+  // `object-fit: contain` (não `cover`, como o mini-card 60×60) — o pedido era ver a foto inteira,
+  // sem recorte.
+  &__avatar-preview {
+    position: fixed;
+    z-index: 22;
+    width: 200px;
+    height: 200px;
+    padding: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+    pointer-events: none;
+  }
+
+  &__avatar-preview-imagem {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: calc(var(--radius-card) - 4px);
   }
 
   // === Edição inline de nome/descrição (só mestre, aberta pelo kebab do cabeçalho) — ganhou uma

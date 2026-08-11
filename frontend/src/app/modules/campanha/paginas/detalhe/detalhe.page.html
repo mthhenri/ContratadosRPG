@@ -33,7 +33,7 @@
           Visualizando como <strong>{{ jogadorPreview.nome }}</strong> · somente leitura
         </span>
         <button
-          class="botao botao--secundario detalhe__preview-sair"
+          class="botao botao--secundario detalhe__acao detalhe__preview-sair"
           type="button"
           (click)="sairPreviewJogador()"
         >
@@ -500,7 +500,13 @@
                   (dblclick)="abrirFichaDuploClique(campanhaAtual.id, ficha.id, $event)"
                   (auxclick)="abrirFichaCliqueDoMeio(campanhaAtual.id, ficha.id, $event)"
                 >
-                  <span class="detalhe__ficha-avatar" aria-hidden="true">
+                  <span
+                    class="detalhe__ficha-avatar"
+                    aria-hidden="true"
+                    [style.--cor-ficha]="ficha.cor"
+                    (mouseenter)="agendarPreviewAvatar($event, ficha.imagemUrl)"
+                    (mouseleave)="cancelarPreviewAvatar()"
+                  >
                     @if (ficha.imagemUrl; as urlImagem) {
                       <img class="detalhe__ficha-avatar-imagem" [src]="urlImagem" alt="" />
                     }
@@ -928,6 +934,21 @@
       <app-icone nome="excluir" />
       <span>Excluir ficha</span>
     </button>
+  </div>
+}
+
+<!--
+  Preview ampliado do avatar do Esquadrão — mesma razão de morar na raiz do `menuFichaAberto`
+  acima (o grid tem overflow/mask-image, corta um `position: fixed` filho na pintura).
+-->
+@if (previewAvatar(); as preview) {
+  <div
+    class="detalhe__avatar-preview"
+    [style.top.px]="preview.top"
+    [style.left.px]="preview.left"
+    aria-hidden="true"
+  >
+    <img class="detalhe__avatar-preview-imagem" [src]="preview.url" alt="" />
   </div>
 }
 

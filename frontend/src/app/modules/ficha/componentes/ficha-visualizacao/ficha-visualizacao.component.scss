@@ -1253,6 +1253,12 @@
   // Cor de identidade visual da ficha (m3-61): a borda do avatar carrega a cor (onde a foto do
   // agente entra, m3-62) — `var(--cor-ficha, var(--border-strong))` mantém a moldura neutra de
   // sempre quando a ficha não tem cor definida, sem forçar um anel colorido em toda ficha antiga.
+  // O fundo listrado decorativo (visível na moldura ao redor da foto, ou no lugar dela sem
+  // avatar) segue a mesma cor via `color-mix` — sem `--cor-ficha` definida, `var(--cor-ficha,
+  // var(--border-strong))` resolve para `--border-strong` dos dois lados do mix e o resultado é
+  // idêntico ao cinza neutro de antes; não usa os tokens globais `--cor-ficha-dim`/`-border`
+  // (`_tokens.scss`) porque o fallback deles é `--accent`, não neutro — tingiria o placeholder de
+  // toda ficha sem cor escolhida.
   // 100px (era 52px, m3-62 follow-up) — dobrado a pedido do autor; a foto era pequena demais pra
   // reconhecer o agente de relance.
   &__avatar {
@@ -1261,8 +1267,19 @@
     flex: none;
     position: relative; // ancora o <input type="color"> invisível, quando editável (--editavel)
     border-radius: var(--radius-control);
-    background-color: var(--surface-2);
-    background-image: repeating-linear-gradient(135deg, var(--border-strong) 0 3px, transparent 3px 9px);
+    background-color: color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 14%, var(--surface-2));
+    // As listras em si a 20% de opacidade (era 60% sólido) — a pedido do autor: mais forte que
+    // isso disputava atenção com a foto do agente por cima.
+    background-image: repeating-linear-gradient(
+      135deg,
+      color-mix(
+          in srgb,
+          color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 60%, var(--border-strong)) 20%,
+          transparent
+        )
+        0 3px,
+      transparent 3px 9px
+    );
     border: 2px solid var(--cor-ficha, var(--border-strong));
 
     &--editavel {

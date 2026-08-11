@@ -734,8 +734,8 @@ describe('FichaService', () => {
   describe('listarAcervo', () => {
     it('lista todas as fichas do autenticado, com e sem campanha (m3-28)', async () => {
       const fichas = [
-        { id: 5, campanhaId: 3, campanhaNome: 'Operação Alfa', usuarioId: usuarioDono.sub, nome: 'Kane' },
-        { id: 6, campanhaId: null, campanhaNome: null, usuarioId: usuarioDono.sub, nome: 'Solta' },
+        { id: 5, campanhaId: 3, campanhaNome: 'Operação Alfa', usuarioId: usuarioDono.sub, nome: 'Kane', cor: null },
+        { id: 6, campanhaId: null, campanhaNome: null, usuarioId: usuarioDono.sub, nome: 'Solta', cor: null },
       ];
       fichaRepositorio.listarPorUsuario.mockResolvedValue(
         fichas.map((ficha) => ({ ...ficha, atributos: ATRIBUTOS_RESUMO, habilidades: [] })),
@@ -773,6 +773,7 @@ describe('FichaService', () => {
       campanhaNome: null,
       usuarioId: usuarioDono.sub,
       nome: 'Kane',
+      cor: null,
       classe: ClasseEnum.COMBATENTE,
       arquetipo: null,
       nivel: 1,
@@ -864,6 +865,7 @@ describe('FichaService', () => {
       campanhaNome: 'Operação Alfa',
       usuarioId: usuarioDono.sub,
       nome: 'Kane',
+      cor: null,
       classe: ClasseEnum.COMBATENTE,
       arquetipo: null,
       nivel: 3,
@@ -1791,6 +1793,10 @@ describe('FichaService', () => {
         imagemUrl: '/uploads/agentes/nova.jpg',
       });
       expect(resultado).toEqual({ imagemUrl: '/uploads/agentes/nova.jpg' });
+      expect(campanhaGateway.emitirFichaAlterada).toHaveBeenCalledWith({
+        ...fichaPersistida,
+        imagemUrl: '/uploads/agentes/nova.jpg',
+      });
     });
 
     it('exclui o arquivo anterior do armazenamento ao trocar de imagem', async () => {
@@ -1872,6 +1878,10 @@ describe('FichaService', () => {
       });
       expect(fichaRepositorio.alterarImagem).toHaveBeenCalledWith({ id: 5, imagemUrl: null });
       expect(resultado).toEqual({ imagemUrl: null });
+      expect(campanhaGateway.emitirFichaAlterada).toHaveBeenCalledWith({
+        ...fichaPersistida,
+        imagemUrl: null,
+      });
     });
 
     it('não toca o armazenamento quando a ficha já não tinha avatar', async () => {

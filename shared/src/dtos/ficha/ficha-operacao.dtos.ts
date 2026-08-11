@@ -99,6 +99,8 @@ export interface FichaResumoDto {
   readonly campanhaNome: string | null;
   readonly usuarioId: number;
   readonly nome: string;
+  /** Cor de identidade visual (m3-61) — ver {@link FichaCriarDto.cor}. Alimenta o avatar do mini-card. */
+  readonly cor?: string | null;
   readonly classe: ClasseEnum;
   readonly arquetipo: ArquetipoEnum | null;
   readonly nivel: number;

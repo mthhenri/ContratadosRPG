@@ -634,6 +634,34 @@ describe('CampanhaDetalhe', () => {
         false,
       );
     });
+
+    it('permissão de edição no preview segue o jogador emulado, não o mestre real', () => {
+      const fichasComColega: FichaResumoDto[] = [
+        fichas[0],
+        fichas[1],
+        { ...fichas[1], id: 6, usuarioId: 3, nome: 'Rex' },
+      ];
+      const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosTres(), fichas: fichasComColega });
+
+      abrirMenuCampanha(raiz, fixture);
+      encontrarItemMenu(raiz, 'Ver como jogador').click();
+      fixture.detectChanges();
+      encontrarItemMenu(raiz, 'Jogador').click();
+      fixture.detectChanges();
+
+      // Ficha própria (Vera, do "Jogador" emulado, usuarioId 2): ações de dono habilitadas.
+      abrirMenuCampanha(raiz, fixture);
+      expect(encontrarItemMenu(raiz, 'Excluir ficha').disabled).toBe(false);
+
+      // Troca pra ficha de um colega (Rex, usuarioId 3, via "Ver ficha" na Equipe): sem ações de dono.
+      const botaoRex = Array.from(raiz.querySelectorAll('.detalhe__equipe-ficha')).find((botao) =>
+        botao.textContent?.includes('Rex'),
+      ) as HTMLButtonElement;
+      botaoRex.click();
+      fixture.detectChanges();
+
+      expect(encontrarItemMenu(raiz, 'Excluir ficha').disabled).toBe(true);
+    });
   });
 
   // === Tira de estatísticas (item 2) ===

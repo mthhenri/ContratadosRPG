@@ -120,7 +120,7 @@ export class FichaRepository extends BaseRepository {
     return `ficha.id,
               ficha.campanha_id AS "campanhaId",
               campanha.nome AS "campanhaNome",
-              ficha.usuario_id AS "usuarioId", ficha.nome,
+              ficha.usuario_id AS "usuarioId", ficha.nome, ficha.cor,
               ficha.imagem_url AS "imagemUrl",
               ficha.dados->>'classe' AS classe,
               ficha.dados->>'arquetipo' AS arquetipo,
