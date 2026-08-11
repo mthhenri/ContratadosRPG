@@ -188,6 +188,121 @@
   (distinta de `validarPermissaoEdicao`, que hoje deixa dono e mestre editarem igual) e decidir onde
   ela aparece na UI (cabeçalho? aba própria?) — ainda não especificado.
 
+### I-013 — M7 sugerido: cenas e controle de combate · campanha/sessão
+
+- **Ideia:** ampliar o módulo de campanhas — possivelmente como um novo M7 — com a criação e o
+  controle de cenas. Uma cena poderia organizar os participantes e o estado corrente da sessão;
+  quando fosse uma cena de combate, incluiria a gestão completa da iniciativa: participantes,
+  ordem e rodada atual, turnos, condições aplicadas, duração das condições e eventos ocorridos
+  durante a iniciativa.
+- **Origem:** conversa com o autor em 2026-08-11, ao levantar módulos futuros para a plataforma.
+- **Por quê:** hoje a campanha organiza membros e fichas, mas não oferece ao mestre um espaço para
+  conduzir o que está acontecendo durante a sessão. Cenas dariam contexto à sessão e iniciativas
+  cobririam o fluxo operacional do combate sem depender de uma ferramenta externa.
+- **Custo aparente:** alto — novas entidades e estados de sessão, permissões do mestre, associação
+  de fichas/personagens a cenas, atualização em tempo real e UI própria de condução. A gestão de
+  iniciativa também precisaria modelar condições e seus ciclos de duração, entrada/saída e
+  reordenação de participantes, avanço e retorno de turnos, eventos automáticos e manuais e um
+  histórico auditável do que ocorreu. Ainda precisa decidir se “cena” é a abstração principal, com
+  combate como um tipo/estado, ou se cenas e combates serão recursos separados; e quais condições
+  serão regras estruturadas do sistema ou registros livres controlados pelo mestre. A numeração M7
+  é sugestão, não decisão de roadmap.
+
+### I-014 — M8 sugerido: documentos e anotações de campanha · campanha/documentos
+
+- **Ideia:** criar um módulo de documentos da campanha — possivelmente M8 — no qual o mestre possa
+  cadastrar conteúdo em texto ou imagem, compartilhar documentos selecionados com os jogadores e
+  manter também anotações privadas em sua tela de mestre. Os jogadores teriam uma biblioteca dos
+  documentos recebidos dentro da própria campanha.
+- **Origem:** conversa com o autor em 2026-08-11, ao levantar módulos futuros para a plataforma.
+- **Por quê:** materiais de sessão, pistas, handouts e notas de preparação ficam hoje fora do
+  sistema. Centralizá-los preserva o contexto da campanha e permite controlar claramente o que é
+  privado do mestre e o que já foi revelado aos jogadores.
+- **Custo aparente:** alto — modelo de documento e de compartilhamento/visibilidade, editor de
+  texto, upload e armazenamento de imagens, biblioteca por campanha e área privada do mestre. Todo
+  documento textual seria indexado no **Elasticsearch** para oferecer busca textual e, numa evolução,
+  busca semântica/híbrida. O banco principal continuaria como fonte de verdade; o índice seria uma
+  projeção reconstruível, alimentada na criação/alteração/remoção dos documentos e sempre filtrada
+  pelas permissões da campanha. Ainda precisa decidir estratégia de sincronização e reindexação,
+  divisão do texto em trechos, geração/armazenamento de embeddings e tratamento de exclusões.
+  Também falta decidir se anotações privadas e documentos compartilháveis usam a mesma entidade,
+  quais formatos são aceitos e se haverá versionamento ou organização por pastas/tags. A numeração
+  M8 é sugestão, não decisão de roadmap.
+- **Licenciamento/custo a validar na especificação:** em 2026-08-11, a documentação oficial da
+  Elastic informa que instalações autogerenciadas recebem uma licença Basic gratuita e sem
+  expiração; a matriz Basic inclui busca textual e armazenamento vetorial. Isso não torna a solução
+  inteira gratuita: hospedagem do cluster, capacidade computacional e geração de embeddings — por
+  modelo próprio ou provedor externo — ainda podem ter custo. Antes de promover a ideia, validar a
+  versão escolhida, os recursos exatos cobertos pela licença vigente e o custo operacional esperado.
+- **Upgrade futuro — mesa investigativa/mapa mental:** depois da biblioteca básica, os documentos
+  poderiam existir também numa superfície virtual colaborativa. Os jogadores organizariam textos,
+  imagens e pistas livremente, colocariam itens lado a lado, criariam conexões visuais entre eles e
+  acrescentariam anotações próprias, formando um mapa mental da investigação ou da campanha. Esse
+  upgrade exigiria posicionamento livre, persistência do layout, conexões entre nós, colaboração em
+  tempo real e regras de edição/visibilidade. É uma evolução da M8 centrada em conhecimento e pistas,
+  distinta do tabletop tático da M10, que é centrado em mapas, tokens e posicionamento de cena.
+
+### I-015 — M9 sugerido: assistência por IA · inteligência artificial
+
+- **Ideia:** integrar assistência de IA — possivelmente como M9 — em diferentes pontos do produto:
+  no guia de criação de personagem, como ajuda para dúvidas sobre o sistema e como ferramenta de
+  escrita e preparação para o mestre.
+- **Origem:** conversa com o autor em 2026-08-11, ao levantar módulos futuros para a plataforma.
+- **Por quê:** uma assistência contextual pode reduzir a barreira de entrada nas regras, apoiar a
+  criação de personagens e acelerar a preparação de campanhas, aproveitando os documentos do
+  sistema e o contexto que já existe na plataforma.
+- **Custo aparente:** alto e ainda exploratório — integração com provedor, desenho de contexto e
+  permissões, custos e limites de uso, privacidade dos dados da campanha, prevenção de respostas
+  incorretas sobre regras e UX específica para cada caso. Provedor ainda não definido (Gemini,
+  OpenAI ou outro); também falta decidir se será uma experiência única ou recursos independentes.
+  A numeração M9 é sugestão, não decisão de roadmap.
+
+### I-016 — M10 sugerido: tabletop virtual e biblioteca de tokens · campanha/mapa
+
+- **Ideia:** criar um tabletop virtual — possivelmente como M10 — no qual o mestre possa montar ou
+  carregar um mapa e posicionar, mover e gerenciar os tokens dos participantes da cena. Cada agente
+  teria uma biblioteca própria de imagens de token, com upload de múltiplas opções e seleção do
+  token que será exibido no tabletop em cada momento.
+- **Origem:** conversa com o autor em 2026-08-11, ao levantar módulos futuros para a plataforma.
+- **Por quê:** o controle de cenas e iniciativas organiza o estado narrativo e mecânico, mas ainda
+  deixa a representação espacial fora do sistema. Um tabletop integrado permitiria conduzir
+  posicionamento e movimentação usando diretamente as fichas, cenas e participantes da campanha;
+  múltiplos tokens por agente também cobririam mudanças de aparência, equipamento ou estado sem
+  substituir permanentemente a imagem principal da ficha.
+- **Custo aparente:** muito alto — canvas ou superfície interativa, upload e armazenamento de mapas
+  e tokens, associação dos tokens às fichas, sincronização em tempo real, controles de zoom e
+  movimentação, permissões e UI de mestre/jogador. Ainda precisa decidir suporte a grade e medidas,
+  camadas, obstáculos, áreas, névoa de guerra/visibilidade, vínculo com cenas e iniciativa, quem pode
+  mover cada token e se a escolha do token ativo pertence ao jogador, ao mestre ou a ambos. Também
+  precisa definir limites e tratamento das imagens enviadas. A numeração M10 é sugestão, não decisão
+  de roadmap.
+
+### I-017 — M11 sugerido: Base, esquadrões e histórico operacional · campanha/organização
+
+- **Ideia:** representar a estrutura institucional da Fundação acima das campanhas: uma **Base da
+  Fundação** contém **esquadrões**; um esquadrão reúne seus **agentes** e possui um histórico de
+  **missões/campanhas**. A experiência seria inicialmente mais documental e histórica do que
+  mecânica, dando uma existência concreta ao Esquadrão 251 e à trajetória de suas operações, em vez
+  de transformar a Base desde o começo num conjunto de loja, enfermaria, reparos e outros serviços.
+- **Origem:** conversa com o autor em 2026-08-11, ao refinar a sugestão de uma possível M11.
+- **Por quê:** hoje o esquadrão existe implicitamente dentro da campanha, e a ficha do agente não
+  informa a qual esquadrão ele pertence. Isso inverte a hierarquia percebida: conceitualmente, a
+  Base contém o esquadrão, o esquadrão reúne agentes e participa de missões ou campanhas. Tornar essa
+  estrutura explícita cria identidade coletiva, preserva o histórico entre operações e permite
+  acompanhar o esquadrão mesmo quando campanhas acabam ou agentes mudam.
+- **Custo aparente:** médio-alto — novas entidades/relacionamentos para Base e Esquadrão, vínculo e
+  histórico de participação dos agentes, reorganização da navegação e migração do conceito hoje
+  implícito em campanha. O primeiro corte pode ser essencialmente documental: identidade da Base e
+  do esquadrão, membros atuais e antigos, campanhas/missões associadas e linha histórica. Serviços
+  mecânicos da Base não fazem parte do núcleo e poderiam ser upgrades independentes.
+- **Decisões abertas:** definir se “campanha” e “missão” são a mesma entidade em durações diferentes
+  ou se a campanha contém missões; se um agente pode mudar de esquadrão preservando histórico; se
+  uma campanha pode envolver mais de um esquadrão; e se o vínculo pertence à ficha, ao usuário ou a
+  uma participação histórica própria. Embora chamada provisoriamente de M11, a ideia também pode ser
+  tratada como uma ampliação tardia da M2. A numeração indica agrupamento de escopo, não dependência:
+  M7–M11 podem ser executadas em outra ordem — por exemplo, IA não depende obrigatoriamente de
+  documentos.
+
 ---
 
 ## Promovidas
