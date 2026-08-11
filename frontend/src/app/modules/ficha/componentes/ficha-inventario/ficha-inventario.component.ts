@@ -486,6 +486,12 @@ export class FichaInventario {
   readonly nivel = input(0);
   /** Cor de identidade visual da ficha (m3-61) — repassada à bandeja de dados ao rolar dano de item. */
   readonly cor = input<string | null>(null);
+  /**
+   * `true` quando o agente tem a habilidade "Anomalia" (Experimento Artificial, `P-013`;
+   * `experimentoComAnomalia` na página) — dobra o custo em Energia de adquirir/acoplar/remover
+   * Fragmentos e os valores de efeito dos dois cardápios do Potencializador (em item/Consumido).
+   */
+  readonly possuiAnomalia = input(false);
 
   /** Emite o inventário inteiro após qualquer mutação — a página persiste. */
   readonly inventarioMudou = output<FichaInventarioDto>();
@@ -709,7 +715,7 @@ export class FichaInventario {
     }
     const itens = this.inventario().itens;
     const afinidade = afinidadeConsiderando(itens, modulo);
-    const custo = aplicarReducaoAfinidade(custoAquisicaoFragmento(tipo, modulo), afinidade);
+    const custo = aplicarReducaoAfinidade(custoAquisicaoFragmento(tipo, modulo, this.possuiAnomalia()), afinidade);
     const projecao = this.energiaMaxima() - custo;
     return emAnomaliaBiologica(projecao, this.limiteMinimoEnergia()) ? { projecao } : null;
   });
@@ -776,7 +782,10 @@ export class FichaInventario {
     modulo: FragmentoModuloEnum,
     itensAntes: readonly CarrinhoItemDto[],
   ): number {
-    return aplicarReducaoAfinidade(custoAquisicaoFragmento(tipo, modulo), afinidadeConsiderando(itensAntes));
+    return aplicarReducaoAfinidade(
+      custoAquisicaoFragmento(tipo, modulo, this.possuiAnomalia()),
+      afinidadeConsiderando(itensAntes),
+    );
   }
   /** Índice da opção de bônus "Consumido" escolhida (em `opcoesConsumoFragmento()`), ou `null` (m3-64). */
   protected readonly opcaoConsumoFragmento = signal<number | null>(null);
@@ -791,7 +800,7 @@ export class FichaInventario {
   protected readonly opcoesConsumoFragmento = computed<readonly OpcaoBonusConsumoFragmentoDto[]>(() => {
     const indice = this.consumindoFragmentoIndice();
     const item = indice === null ? null : this.inventario().itens[indice];
-    return item?.modulo ? listarBonusConsumoFragmentoPotencializador(item.modulo) : [];
+    return item?.modulo ? listarBonusConsumoFragmentoPotencializador(item.modulo, this.possuiAnomalia()) : [];
   });
 
   /** Opção de bônus "Consumido" escolhida no painel "Consumir", ou `null` se nenhuma (m3-64). */
@@ -966,8 +975,12 @@ export class FichaInventario {
     const itens = this.inventario().itens;
     return MODULOS_FRAGMENTO.map((modulo) => {
       const afinidade = afinidadeConsiderando(itens, modulo);
-      const custoPotencializador = custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, modulo);
-      const custoConstrutor = custoAquisicaoFragmento(FragmentoTipoEnum.CONSTRUTOR, modulo);
+      const custoPotencializador = custoAquisicaoFragmento(
+        FragmentoTipoEnum.POTENCIALIZADOR,
+        modulo,
+        this.possuiAnomalia(),
+      );
+      const custoConstrutor = custoAquisicaoFragmento(FragmentoTipoEnum.CONSTRUTOR, modulo, this.possuiAnomalia());
       return {
         modulo,
         afinidade: valorAfinidadeFragmento(modulo),
@@ -1161,7 +1174,7 @@ export class FichaInventario {
     const alvoIndice = this.alvoFragmento();
     const alvo = alvoIndice === null ? null : this.inventario().itens[alvoIndice];
     const maiorDado = alvo ? maiorDadoItem(alvo) : null;
-    return listarBonusFragmentoPotencializador(fragmento.modulo, maiorDado);
+    return listarBonusFragmentoPotencializador(fragmento.modulo, maiorDado, this.possuiAnomalia());
   });
 
   /**
@@ -1381,7 +1394,10 @@ export class FichaInventario {
       return;
     }
     const afinidade = afinidadeConsiderando(itensAntes, item.modulo);
-    const custo = aplicarReducaoAfinidade(custoAquisicaoFragmento(tipo, item.modulo), afinidade);
+    const custo = aplicarReducaoAfinidade(
+      custoAquisicaoFragmento(tipo, item.modulo, this.possuiAnomalia()),
+      afinidade,
+    );
     this.ajusteEnergiaFragmento.emit({
       energiaAtual: this.energiaAtual(),
       energiaMaxima: this.energiaMaxima() - custo,
@@ -1581,7 +1597,10 @@ export class FichaInventario {
       return;
     }
     const afinidade = afinidadeConsiderando(itensAntes);
-    const custo = aplicarReducaoAfinidade(custoAquisicaoFragmento(tipo, item.modulo), afinidade);
+    const custo = aplicarReducaoAfinidade(
+      custoAquisicaoFragmento(tipo, item.modulo, this.possuiAnomalia()),
+      afinidade,
+    );
     this.ajusteEnergiaFragmento.emit({
       energiaAtual: this.energiaAtual(),
       energiaMaxima: this.energiaMaxima() + custo,
@@ -1681,10 +1700,10 @@ export class FichaInventario {
   ): { readonly energia: number; readonly energiaMaxima: number } {
     const afinidade = afinidadeConsiderando(itens);
     const custoAquisicao = aplicarReducaoAfinidade(
-      custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, modulo),
+      custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, modulo, this.possuiAnomalia()),
       afinidade,
     );
-    const custoBruto = custoAcoplarFragmento(modulo);
+    const custoBruto = custoAcoplarFragmento(modulo, this.possuiAnomalia());
     const energia = aplicarReducaoAfinidade(custoBruto.energia, afinidade);
     const energiaMaximaAcoplamento = aplicarReducaoAfinidade(custoBruto.energiaMaxima, afinidade);
     return { energia, energiaMaxima: custoAquisicao - energiaMaximaAcoplamento };
@@ -2155,10 +2174,13 @@ export class FichaInventario {
     // Afinidade (m3-42/m3-49): o fragmento já está portado (acoplado) em `itensAntes` — mesma
     // Afinidade reduz os três termos, preservando o líquido zero de acoplamento↔desacoplamento.
     const afinidade = afinidadeConsiderando(itensAntes);
-    const custoRemocao = aplicarReducaoAfinidade(custoRemoverFragmento(modulo), afinidade);
-    const custoAquisicao = aplicarReducaoAfinidade(custoAquisicaoFragmento(tipo, modulo), afinidade);
+    const custoRemocao = aplicarReducaoAfinidade(custoRemoverFragmento(modulo, this.possuiAnomalia()), afinidade);
+    const custoAquisicao = aplicarReducaoAfinidade(
+      custoAquisicaoFragmento(tipo, modulo, this.possuiAnomalia()),
+      afinidade,
+    );
     const energiaMaximaAcoplamento = aplicarReducaoAfinidade(
-      custoAcoplarFragmento(modulo).energiaMaxima,
+      custoAcoplarFragmento(modulo, this.possuiAnomalia()).energiaMaxima,
       afinidade,
     );
     this.ajusteEnergiaFragmento.emit({

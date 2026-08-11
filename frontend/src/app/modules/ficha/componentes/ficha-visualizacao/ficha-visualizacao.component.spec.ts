@@ -1028,6 +1028,30 @@ describe('FichaVisualizacao', () => {
       expect(componente['editandoOrigem']()).toBe(true);
     });
 
+    describe('possuiAnomalia — repassado ao inventário para dobrar custo/efeito de Fragmentos (P-013)', () => {
+      const anomalia: FichaHabilidadeDto = {
+        nome: 'Anomalia',
+        categoria: HabilidadeCategoriaEnum.SUBCLASSE,
+        custoEnergia: 0,
+        descricao: '...',
+      };
+
+      it('true para Experimento Artificial com a habilidade Anomalia', () => {
+        const alvo = montar({
+          ...dados,
+          classe: ClasseEnum.EXPERIMENTO_ARTIFICIAL,
+          arquetipo: null,
+          habilidades: [anomalia],
+        });
+        expect(alvo.fixture.componentInstance['possuiAnomalia']()).toBe(true);
+      });
+
+      it('false por padrão (classe base, sem a habilidade)', () => {
+        const alvo = montar(dados);
+        expect(alvo.fixture.componentInstance['possuiAnomalia']()).toBe(false);
+      });
+    });
+
     describe('oferta de limpar Origem ao adicionar Peculiaridade (mestre-only)', () => {
       const dadosExperimentoComOrigem: FichaJogadorDadosDto = {
         ...dados,

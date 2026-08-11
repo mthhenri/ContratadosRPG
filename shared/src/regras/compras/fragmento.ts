@@ -24,11 +24,18 @@ import { CarrinhoItemDto, ModificacaoAplicadaDto, ModificacaoEfeitoDto } from '.
 
 /**
  * Custo em Energia Máxima de **adquirir** um fragmento — o dobro para Construtor (doc — "⬦
- * Construtor").
+ * Construtor"). `possuiAnomalia` (habilidade de Subclasse do Experimento Artificial, `P-013`;
+ * `experimentoComAnomalia`) dobra o resultado por cima — as duas duplicações se acumulam, doc:
+ * "Fragmentos custam o dobro de Energia em seu uso" não abre exceção para Construtor.
  */
-export function custoAquisicaoFragmento(tipo: FragmentoTipoEnum, modulo: FragmentoModuloEnum): number {
+export function custoAquisicaoFragmento(
+  tipo: FragmentoTipoEnum,
+  modulo: FragmentoModuloEnum,
+  possuiAnomalia = false,
+): number {
   const base = CUSTO_ENERGIA_MAXIMA_MODULO[modulo];
-  return tipo === FragmentoTipoEnum.CONSTRUTOR ? base * 2 : base;
+  const custo = tipo === FragmentoTipoEnum.CONSTRUTOR ? base * 2 : base;
+  return possuiAnomalia ? custo * 2 : custo;
 }
 
 /** Débito de Energia atual **e** Energia Máxima ao **acoplar** um Potencializador a um item/ser. */
@@ -40,16 +47,24 @@ export interface CustoAcoplarFragmentoDto {
 /**
  * Custo de **acoplar** um fragmento Potencializador (doc — "⬥ Acoplamento": "acoplar um fragmento
  * de módulo IV em um item custa 7 de Energia + 7 de Energia Máxima"). Só Potencializador acopla —
- * Construtor **é** a peça, não se prende a outra.
+ * Construtor **é** a peça, não se prende a outra. `possuiAnomalia` dobra os dois valores (`P-013`).
  */
-export function custoAcoplarFragmento(modulo: FragmentoModuloEnum): CustoAcoplarFragmentoDto {
-  const custo = CUSTO_ENERGIA_MAXIMA_MODULO[modulo];
+export function custoAcoplarFragmento(
+  modulo: FragmentoModuloEnum,
+  possuiAnomalia = false,
+): CustoAcoplarFragmentoDto {
+  const custo = CUSTO_ENERGIA_MAXIMA_MODULO[modulo] * (possuiAnomalia ? 2 : 1);
   return { energia: custo, energiaMaxima: custo };
 }
 
-/** Custo de **remover** (desacoplar) um fragmento aplicado: Energia × 2 (doc — "⬥ Acoplamento"). */
-export function custoRemoverFragmento(modulo: FragmentoModuloEnum): number {
-  return CUSTO_ENERGIA_MAXIMA_MODULO[modulo] * 2;
+/**
+ * Custo de **remover** (desacoplar) um fragmento aplicado: Energia × 2 (doc — "⬥ Acoplamento").
+ * `possuiAnomalia` dobra o resultado por cima (`P-013`) — remover também é "uso" de Energia do
+ * Fragmento.
+ */
+export function custoRemoverFragmento(modulo: FragmentoModuloEnum, possuiAnomalia = false): number {
+  const custo = CUSTO_ENERGIA_MAXIMA_MODULO[modulo] * 2;
+  return possuiAnomalia ? custo * 2 : custo;
 }
 
 /**
@@ -91,41 +106,51 @@ export interface OpcaoBonusFragmentoDto {
  * opção "N× valor máximo do maior tipo de dado" ao dano: `null` (nenhum alvo escolhido ainda, ou
  * alvo sem dado no campo `dano`) omite a opção — "não faz sentido '1× o maior dado' de um item sem
  * dado de dano" (spec).
+ *
+ * `possuiAnomalia` (habilidade de Subclasse do Experimento Artificial, `P-013`;
+ * `experimentoComAnomalia`) dobra o valor de **todas** as opções — doc: "têm todos os seus efeitos
+ * dobrados". O multiplicador "N×" do dano fixo é dado do módulo (`MULTIPLICADOR_MAIOR_DADO_MODULO`),
+ * então dobrar o valor final (`multiplicador * maiorDado`) já cobre essa opção.
  */
 export function listarBonusFragmentoPotencializador(
   modulo: FragmentoModuloEnum,
   maiorDado: number | null = null,
+  possuiAnomalia = false,
 ): readonly OpcaoBonusFragmentoDto[] {
+  const dobro = possuiAnomalia ? 2 : 1;
   const valores = BONUS_POTENCIALIZADOR[modulo];
+  const dadosBase = valores.dadosBase * dobro;
+  const dadoTeste = valores.dadoTeste * dobro;
+  const valorFixo = valores.valorFixo * dobro;
   const opcoes: OpcaoBonusFragmentoDto[] = [
     {
-      rotulo: `+${valores.dadosBase} dados de efeito`,
-      efeito: { tipo: ModificacaoEfeitoTipoEnum.EFEITO, valor: valores.dadosBase, variante: 'DADO' },
+      rotulo: `+${dadosBase} dados de efeito`,
+      efeito: { tipo: ModificacaoEfeitoTipoEnum.EFEITO, valor: dadosBase, variante: 'DADO' },
     },
   ];
   if (maiorDado !== null) {
-    const multiplicador = MULTIPLICADOR_MAIOR_DADO_MODULO[modulo];
+    const danoFixo = MULTIPLICADOR_MAIOR_DADO_MODULO[modulo] * maiorDado * dobro;
     opcoes.push({
-      rotulo: `${multiplicador}× o maior dado do alvo (D${maiorDado}) — +${multiplicador * maiorDado} de dano`,
-      efeito: { tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: multiplicador * maiorDado },
+      rotulo: `${MULTIPLICADOR_MAIOR_DADO_MODULO[modulo]}× o maior dado do alvo (D${maiorDado}) — +${danoFixo} de dano`,
+      efeito: { tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: danoFixo },
     });
   }
   opcoes.push(
     {
-      rotulo: `+${valores.dadoTeste} dado(s) no teste`,
-      efeito: { tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: valores.dadoTeste, variante: 'DADO' },
+      rotulo: `+${dadoTeste} dado(s) no teste`,
+      efeito: { tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: dadoTeste, variante: 'DADO' },
     },
     {
-      rotulo: `+${valores.valorFixo} no teste`,
-      efeito: { tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: valores.valorFixo, variante: 'FIXO' },
+      rotulo: `+${valorFixo} no teste`,
+      efeito: { tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: valorFixo, variante: 'FIXO' },
     },
     {
-      rotulo: `+${valores.valorFixo} no efeito`,
-      efeito: { tipo: ModificacaoEfeitoTipoEnum.EFEITO, valor: valores.valorFixo, variante: 'FIXO' },
+      rotulo: `+${valorFixo} no efeito`,
+      efeito: { tipo: ModificacaoEfeitoTipoEnum.EFEITO, valor: valorFixo, variante: 'FIXO' },
     },
     {
-      rotulo: `+${valores.valorFixo} de resistência`,
-      efeito: { tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: valores.valorFixo },
+      rotulo: `+${valorFixo} de resistência`,
+      efeito: { tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: valorFixo },
     },
   );
   return opcoes;
@@ -199,23 +224,33 @@ export interface OpcaoBonusConsumoFragmentoDto {
  * UMA opção ao consumir (doc — "⬦ Potencializador", tabela, coluna "Consumido"). Função pura irmã
  * de `listarBonusFragmentoPotencializador`; ao contrário dela, o bônus aqui não vira Modificação de
  * item — é aplicado direto ao agente (`shared/regras/agente/fragmento-consumo`).
+ *
+ * `possuiAnomalia` (`P-013`) dobra os três valores, mesma regra de
+ * `listarBonusFragmentoPotencializador`. `concedePontoAtributo` (Módulo I, "+1 ponto no atributo")
+ * **não** dobra — é a regra estrutural que ultrapassa o limite de 6 pontos, não um "valor de
+ * efeito" do cardápio.
  */
 export function listarBonusConsumoFragmentoPotencializador(
   modulo: FragmentoModuloEnum,
+  possuiAnomalia = false,
 ): readonly OpcaoBonusConsumoFragmentoDto[] {
+  const dobro = possuiAnomalia ? 2 : 1;
   const valores = BONUS_CONSUMIDO[modulo];
+  const teste = valores.teste * dobro;
+  const defesa = valores.defesa * dobro;
+  const danoCorpo = valores.danoCorpo * dobro;
   const concedePontoAtributo = modulo === FragmentoModuloEnum.I;
   return [
     {
-      rotulo: `+${valores.teste} em todos os testes do atributo à escolha${
+      rotulo: `+${teste} em todos os testes do atributo à escolha${
         concedePontoAtributo ? ' e +1 ponto no atributo' : ''
       }`,
       tipo: 'TESTE',
-      valor: valores.teste,
+      valor: teste,
       ...(concedePontoAtributo ? { concedePontoAtributo: true as const } : {}),
     },
-    { rotulo: `+${valores.defesa} em Defesa`, tipo: 'DEFESA', valor: valores.defesa },
-    { rotulo: `+${valores.danoCorpo} de dano do Corpo`, tipo: 'DANO_CORPO', valor: valores.danoCorpo },
+    { rotulo: `+${defesa} em Defesa`, tipo: 'DEFESA', valor: defesa },
+    { rotulo: `+${danoCorpo} de dano do Corpo`, tipo: 'DANO_CORPO', valor: danoCorpo },
   ];
 }
 
