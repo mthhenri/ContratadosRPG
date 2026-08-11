@@ -1,5 +1,46 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-11 — `P-009` corrigido: `npm run lint` volta a fechar limpo em `frontend`/`backend`
+
+Diferente do `P-001`/`P-010`/`P-011` (que já estavam corrigidos, só não fechados na
+documentação), o `P-009` era um problema de verdade — `npm run lint --workspace=frontend`
+reproduziu os 7 erros documentados e `npm run lint --workspace=backend` reproduziu o 1 erro.
+Corrigido a pedido do autor:
+
+- `ficha-inventario.component.html` — o `autofocus` declarativo do campo de busca virou
+  `appAutoFocus`, a diretiva que já existe no projeto (`shared/auto-focus/`) e faz `.focus()` via
+  script no `afterNextRender` — evita a "autofocus processed flag" da spec HTML, que só honra um
+  `autofocus` por documento (mesmo motivo pelo qual a diretiva foi criada originalmente para
+  outro caso).
+- `ficha-visualizacao.component.spec.ts` e `ficha.service.spec.ts` (backend) — a variável não
+  usada vinha de `const { anotacoes, ...resto } = dados` (destructuring só para excluir uma
+  chave). Prefixar com `_` **não resolve** neste projeto: nenhum dos dois `eslint.config.mjs` tem
+  `varsIgnorePattern`/`ignoreRestSiblings`, confirmado testando ao vivo (`_anotacoesOmitida` já
+  vinha prefixado no backend e ainda assim era flagado). Troquei pelo padrão
+  `{ ...dados, anotacoes: undefined }` — `toEqual` do Vitest ignora chaves com valor `undefined`
+  (mesma semântica do Jest), e o código sob teste já lê `dados.anotacoes ?? ''`, então
+  `undefined` se comporta exatamente como ausente.
+- `acervo.page.spec.ts` — o mock `duplicarFicha: vi.fn((id: number) => ...)` nunca usava `id`;
+  removido o parâmetro (mesmo padrão já usado por `atribuirCampanha` no mesmo arquivo).
+- `criar.page.html` — dois elementos clicáveis sem suporte a teclado:
+  - o `<dialog>` de saída ganhou `tabindex="-1"` e `(keydown.escape)="cancelarSaida()"`. Native
+    `<dialog>` já fecha com Esc via evento `close` nativo (já ligado a `cancelarSaida()`) — o
+    handler novo é redundante em termos de comportamento, só formaliza o par clique/teclado que o
+    lint exige.
+  - `<div class="guia__resumo-fundo" (click)="...">` virou `<button type="button"
+    aria-label="Fechar resumo operacional">`, replicando o padrão `.dialogo__fundo` já usado em
+    6 outras páginas do app (`acervo`, `detalhe`, `visualizar`, `entrar`) — inclusive o reset
+    `border: 0; cursor: default;` no SCSS, copiado do mesmo lugar.
+
+Verificado ao vivo com Playwright (sem Docker disponível neste sandbox remoto, então sem
+Postgres/backend — a rota `/fichas/nova` sem campanha não faz chamada HTTP nenhuma, então dá para
+verificar o `<dialog>` e o drawer de resumo só com `ng serve`): nos dois viewports padrão
+(360×800 e 1920×1080), o diálogo de saída abre, fecha ao clicar no `::backdrop` e fecha com Esc; no
+mobile, o drawer de resumo abre e fecha ao clicar no novo `<button>` de fundo — nenhuma mudança de
+comportamento visível, só a marcação ficou acessível. `npm run lint` limpo nos dois workspaces
+(exit 0) e as suítes completas continuam verdes (frontend 874/874, backend 196/196). `P-009`
+movido para "Resolvidos".
+
 ## 2026-08-11 — `PROBLEMS.md`: `P-011` também já estava corrigido, mesmo padrão do `P-001`/`P-010`
 
 Investigação a pedido do autor sobre o `P-011` (suíte de `shared` coletando specs compiladas de

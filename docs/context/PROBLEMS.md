@@ -114,32 +114,6 @@
 - **Desde:** `m3-60` — **adiado por decisão explícita do dono**, registrado como dívida de
   nomenclatura.
 
-### P-009 — `npm run lint` não fecha limpo em `frontend`/`backend` · `ABERTO` · processo/CI
-
-- **Sintoma:** `npm run lint --workspace=frontend` falha com 3 erros (`autofocus` proibido em
-  [ficha-inventario.component.html:58](../../frontend/src/app/modules/ficha/componentes/ficha-inventario/ficha-inventario.component.html#L58),
-  variável não usada em
-  [ficha-visualizacao.component.spec.ts:1380](../../frontend/src/app/modules/ficha/componentes/ficha-visualizacao/ficha-visualizacao.component.spec.ts#L1380)
-  e em `acervo.page.spec.ts`); `npm run lint --workspace=backend` falha com 1 erro (variável não
-  usada em
-  [ficha.service.spec.ts:914](../../backend/src/modules/ficha/ficha.service.spec.ts#L914)).
-  **Achado na `m3-62`:** o frontend também falha com mais 2 erros de acessibilidade
-  (`click-events-have-key-events`/`interactive-supports-focus`) em
-  [criar.page.html](../../frontend/src/app/modules/ficha/paginas/criar/criar.page.html) — o
-  `<dialog>` de saída (`(click)="fecharAoClicarFora($event)"`) e o fundo do resumo operacional
-  (`<div class="guia__resumo-fundo" (click)="...">`), confirmados pré-existentes por diff contra
-  `HEAD` antes de qualquer mudança da task, mesma causa/contorno abaixo — a contagem de "3 erros"
-  do frontend estava desatualizada.
-- **Causa:** pré-existente em `master` — confirmado via `git stash` contra o HEAD comitado antes
-  de qualquer mudança desta task. Não investigada a fundo (de qual commit veio, por que o CI não
-  bloqueou o PR que introduziu).
-- **Contorno:** nenhum. Os arquivos não têm relação com nenhuma task em andamento no momento em
-  que isto foi descoberto.
-- **Correção:** remover o `autofocus`/trocar por foco programático; apagar as variáveis não usadas
-  (ou prefixar `_` se forem intencionais); dar aos dois elementos clicáveis de `criar.page.html`
-  um `role`/`tabindex`/handler de teclado equivalente. Trivial, mas não é escopo de nenhuma task atual.
-- **Desde:** descoberto durante a `m2-18` (2026-08-01); a raiz é anterior, não determinada.
-
 ### P-012 — Descrição de habilidade corta sem aviso no seletor · `ABERTO` · frontend/CSS
 
 - **Sintoma:** no seletor de habilidades
@@ -228,3 +202,6 @@ task que a fez.
 - **P-011** — suíte de `shared` coletava specs compiladas de `dist/`. Já corrigido pelo
   `shared/tsconfig.build.json` (`8e3b757`, 2026-08-08), que passou a excluir `src/**/*.spec.ts` da
   build; nunca chegou a ser refletido aqui; achado e fechado em 2026-08-11, ver `HISTORY.md`.
+- **P-009** — `npm run lint` não fechava limpo em `frontend`/`backend` (8 erros: `autofocus`,
+  variáveis não usadas em specs, acessibilidade de clique em `criar.page.html`). Corrigido em
+  2026-08-11, ver `HISTORY.md`.

@@ -17,7 +17,7 @@
     <span class="guia__classificacao">CLASSE-E // CONFIDENCIAL</span>
   </header>
 
-  <dialog #sairDialog class="guia__sair-dialog" aria-labelledby="guia-sair-titulo" (close)="cancelarSaida()" (click)="fecharAoClicarFora($event)">
+  <dialog #sairDialog class="guia__sair-dialog" aria-labelledby="guia-sair-titulo" tabindex="-1" (close)="cancelarSaida()" (click)="fecharAoClicarFora($event)" (keydown.escape)="cancelarSaida()">
     <div class="guia__sair-dialog-conteudo">
       <h2 id="guia-sair-titulo">Sair do guia de criação?</h2>
       <p>Seu progresso foi salvo neste dispositivo. Você não vai perder nada — ao voltar para esta tela, pode continuar exatamente de onde parou.</p>
@@ -646,7 +646,7 @@
         <button class="guia__resumo-toggle" type="button" [attr.aria-expanded]="resumoAberto()" (click)="resumoAberto.set(!resumoAberto())">
           <span>Resumo operacional</span><app-icone nome="chevron" />
         </button>
-        <div class="guia__resumo-fundo" (click)="resumoAberto.set(false)"></div>
+        <button class="guia__resumo-fundo" type="button" aria-label="Fechar resumo operacional" (click)="resumoAberto.set(false)"></button>
         <div class="guia__resumo-corpo" role="dialog" aria-modal="true" aria-label="Resumo operacional">
           <button class="guia__resumo-fechar" type="button" aria-label="Fechar resumo operacional" (click)="resumoAberto.set(false)">×</button>
           <div class="guia__resumo-progresso">

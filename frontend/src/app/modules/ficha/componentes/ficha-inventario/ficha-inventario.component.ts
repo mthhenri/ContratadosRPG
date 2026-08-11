@@ -70,6 +70,7 @@ import {
   verificarConflitoModificacao,
 } from '@contratados-rpg/shared/regras/compras';
 
+import { AutoFocus } from '../../../../shared/auto-focus/auto-focus.directive';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
@@ -429,7 +430,7 @@ interface AmpInventarioVM {
  */
 @Component({
   selector: 'app-ficha-inventario',
-  imports: [ReactiveFormsModule, Icone, OverflowFade, Tooltip, Dialog, NgTemplateOutlet],
+  imports: [ReactiveFormsModule, Icone, OverflowFade, Tooltip, Dialog, NgTemplateOutlet, AutoFocus],
   templateUrl: './ficha-inventario.component.html',
   styleUrl: './ficha-inventario.component.scss',
 })

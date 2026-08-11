@@ -2272,7 +2272,7 @@ describe('FichaVisualizacao', () => {
     });
 
     it('anotacoes ausente (omitida no backend pro visualizador) não quebra a leitura', () => {
-      const { anotacoes, ...semAnotacoes } = dados;
+      const semAnotacoes = { ...dados, anotacoes: undefined };
       const { raiz } = montar(semAnotacoes as FichaJogadorDadosDto, 'Corvo', 42, false, false);
       expect(raiz.querySelector('.ficha-status__anotacoes-caixa')).toBeNull();
     });
