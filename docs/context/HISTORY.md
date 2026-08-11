@@ -37,6 +37,19 @@ botão explícito **"Ver mais"/"Ver menos" só no mobile** (onde não existe hov
   passa a bater, classe `--expandida` presente, "…" some) e troca o rótulo pra "Ver menos"; um
   segundo clique volta ao estado cortado. `lint`/`build`/suíte completa (874/874) verdes.
 
+**Addendum (mesmo dia) — verificado também no app de verdade, não só no repro isolado.** O
+Postgres seguiu indisponível, mas dava pra chegar no seletor sem backend: `/fichas/nova` (m3-28,
+ficha avulsa) faz o passo // HABILIDADES existir assim que `classe !== null`, e o rascunho da
+`GuiaCriacaoRascunhoService` fica só no `localStorage` (`contratados-rpg.guia-criacao.acervo`).
+Plantei um rascunho com `passo: 4` (Habilidades), `classe: 'COMBATENTE'`,
+`sobrescreverProgressao: true` + `nivelManual: 5` (dá vagas de melhoria sem precisar de campanha),
+subi só o `ng serve` e cliquei "Retomar" → "+ Escolher Gerais" pra abrir o seletor real, com o
+catálogo de verdade (`shared/regras`). Confirmado com dado real (habilidade "6º Sentido", que
+realmente estoura 2 linhas): mobile mostra "…" + "VER MAIS", expande pro texto inteiro e vira
+"VER MENOS"; desktop mostra "…" sem nenhum botão, e o hover abre o tooltip com o texto completo.
+Habilidades com descrição curta (Analisar Cenário, Arrepio, Ataque Duplo) não ganham botão à toa,
+confirmando que `appClampTruncado` só dispara quando o clamp de fato cortou algo.
+
 ## 2026-08-11 — `P-009` corrigido: `npm run lint` volta a fechar limpo em `frontend`/`backend`
 
 Diferente do `P-001`/`P-010`/`P-011` (que já estavam corrigidos, só não fechados na
