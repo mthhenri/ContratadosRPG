@@ -316,7 +316,7 @@ describe('listarBonusConsumoFragmentoPotencializador', () => {
 
   it('módulo I: opção de teste concede também +1 ponto no atributo (única exceção)', () => {
     const opcoes = listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.I);
-    expect(opcoes[0]).toMatchObject({ tipo: 'TESTE', valor: 5, concedePontoAtributo: true });
+    expect(opcoes[0]).toMatchObject({ tipo: 'TESTE', valor: 5, concedePontoAtributo: true, pontosAtributo: 1 });
     expect(opcoes[0].rotulo).toContain('+1 ponto no atributo');
     expect(opcoes[1]).toEqual({ rotulo: '+5 em Defesa', tipo: 'DEFESA', valor: 5 });
     expect(opcoes[2]).toEqual({ rotulo: '+10 de dano do Corpo', tipo: 'DANO_CORPO', valor: 10 });
@@ -328,7 +328,10 @@ describe('listarBonusConsumoFragmentoPotencializador', () => {
 
   /**
    * Habilidade "Anomalia" (Experimento Artificial, `P-013`) — doc: "têm todos os seus efeitos
-   * dobrados". `concedePontoAtributo` não dobra: é a regra estrutural do Módulo I, não um "valor".
+   * dobrados", sem exceção nenhuma — `pontosAtributo` do Módulo I também dobra (correção sobre a
+   * primeira leitura do `P-013`, que tratava o ponto de atributo como "regra estrutural" imune à
+   * dobra; o autor confirmou que 1 Fragmento de Módulo I consumido com Anomalia deve conceder 2
+   * pontos, não 1).
    */
   describe('com Anomalia (P-013)', () => {
     it('dobra os 3 valores (módulo III: 3/3/6 → 6/6/12)', () => {
@@ -336,10 +339,10 @@ describe('listarBonusConsumoFragmentoPotencializador', () => {
       expect(opcoes.map((opcao) => opcao.valor)).toEqual([6, 6, 12]);
     });
 
-    it('módulo I dobra o valor de teste, mas concedePontoAtributo continua +1 (não dobra)', () => {
+    it('módulo I dobra o valor de teste e também concedePontoAtributo (2 pontos, não 1)', () => {
       const opcoes = listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.I, true);
-      expect(opcoes[0]).toMatchObject({ tipo: 'TESTE', valor: 10, concedePontoAtributo: true });
-      expect(opcoes[0].rotulo).toContain('+1 ponto no atributo');
+      expect(opcoes[0]).toMatchObject({ tipo: 'TESTE', valor: 10, concedePontoAtributo: true, pontosAtributo: 2 });
+      expect(opcoes[0].rotulo).toContain('+2 pontos no atributo');
     });
 
     it('sem Anomalia (padrão), os valores não mudam', () => {
@@ -621,6 +624,31 @@ describe('listarEfeitosFixosConstrutor', () => {
       { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 2, variante: 'Defesa' },
     ]);
   });
+
+  /**
+   * Habilidade "Anomalia" (Experimento Artificial, `P-013`) — o Construtor também é um Fragmento e
+   * o doc não abre exceção nenhuma ("têm todos os seus efeitos dobrados"). `faces` (o tipo de dado)
+   * nunca dobra — só a quantidade de dados/valor fixo, mesmo raciocínio do multiplicador de dano do
+   * Potencializador.
+   */
+  describe('com Anomalia (P-013)', () => {
+    it('Arma, módulo II: dobra dano, dado base e teste — faces (D12) não muda', () => {
+      expect(listarEfeitosFixosConstrutor(FragmentoModuloEnum.II, 'ARMA', true)).toEqual([
+        { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS, valor: 4, faces: 12 },
+        { tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: 14, variante: 'FIXO' },
+        { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: 2 },
+      ]);
+    });
+
+    it('Proteção, módulo I: dobra resistência, Esquiva/Bloqueio e Defesa', () => {
+      expect(listarEfeitosFixosConstrutor(FragmentoModuloEnum.I, 'PROTECAO', true)).toEqual([
+        { tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: 20 },
+        { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 10, variante: 'Esquiva' },
+        { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 10, variante: 'Bloqueio' },
+        { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 4, variante: 'Defesa' },
+      ]);
+    });
+  });
 });
 
 describe('bonusMunicaoConstrutor', () => {
@@ -630,5 +658,9 @@ describe('bonusMunicaoConstrutor', () => {
 
   it('módulo I (mais forte): Recarregar custa 20 de Energia, concede +32 de dano', () => {
     expect(bonusMunicaoConstrutor(FragmentoModuloEnum.I)).toEqual({ custoRecarregar: 20, dano: 32 });
+  });
+
+  it('com Anomalia (P-013): dobra os dois valores (módulo V: 3/5 → 6/10)', () => {
+    expect(bonusMunicaoConstrutor(FragmentoModuloEnum.V, true)).toEqual({ custoRecarregar: 6, dano: 10 });
   });
 });

@@ -955,6 +955,53 @@ describe('FichaInventario', () => {
       const opcoes = alvo.fixture.componentInstance['opcoesConsumoFragmento']();
       expect(opcoes.map((opcao) => opcao.valor)).toEqual([2, 2, 4]);
     });
+
+    it('cardápio "Consumir" (módulo I) concede 2 pontos de atributo, não 1', () => {
+      const alvo = montar(
+        { itens: [fragmento(ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR, FragmentoModuloEnum.I)], amplificadores: [] },
+        true,
+        100,
+        true,
+        true,
+      );
+      alvo.fixture.componentInstance['consumindoFragmentoIndice'].set(0);
+      const opcoes = alvo.fixture.componentInstance['opcoesConsumoFragmento']();
+      expect(opcoes[0]).toMatchObject({ concedePontoAtributo: true, pontosAtributo: 2 });
+      expect(opcoes[0].rotulo).toContain('+2 pontos no atributo');
+    });
+
+    it('Fragmento Construtor (módulo V, Arma) nasce com os efeitos fixos dobrados', () => {
+      const alvo = montar({ itens: [], amplificadores: [] }, true, 100, true, true);
+      alvo.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Espada de Ossos',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        modulo: FragmentoModuloEnum.V,
+        categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+      });
+      alvo.componentInstance['confirmarCriarItem']();
+
+      const item = alvo.emitidos[0].itens[0];
+      expect(item.modificacoes[0].efeitos).toEqual([
+        { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS, valor: 2, faces: 8 },
+        { tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: 2, variante: 'FIXO' },
+      ]);
+    });
+
+    it('"Recarregar" munição do Construtor debita o dobro de Energia (módulo V: 3 → 6)', () => {
+      const alvo = montar(
+        { itens: [fragmento(ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR, FragmentoModuloEnum.V)], amplificadores: [] },
+        true,
+        100,
+        true,
+        true,
+      );
+      const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
+      alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+
+      alvo.fixture.componentInstance['recarregarMunicaoConstrutor'](0);
+
+      expect(custos).toEqual([{ energiaAtual: 44, energiaMaxima: 50 }]);
+    });
   });
 
   describe('bônus fixo automático do Fragmento Construtor (m3-65)', () => {
@@ -1637,6 +1684,7 @@ describe('FichaInventario', () => {
             tipo: 'TESTE',
             valor: 5,
             concedePontoAtributo: true,
+            pontosAtributo: 1,
           },
           atributoEscolhido: 'intelecto',
           deltaEnergiaMaxima: -40,
