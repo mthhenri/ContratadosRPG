@@ -86,6 +86,27 @@
                 }
               </button>
               <button
+                class="ficha-pagina__menu-item ficha-pagina__menu-item--visibilidade"
+                type="button"
+                role="menuitem"
+                (click)="solicitarAlteracaoVisibilidade()"
+              >
+                <app-icone [nome]="ficha()?.oculta ? 'olho' : 'olho-fechado'" />
+                <span>{{ ficha()?.oculta ? 'Exibir ficha' : 'Ocultar ficha' }}</span>
+              </button>
+              @if (campanhaId() !== null) {
+                <button
+                  class="ficha-pagina__menu-item"
+                  type="button"
+                  role="menuitem"
+                  [disabled]="removendoDaCampanha()"
+                  (click)="removerDaCampanha()"
+                >
+                  <app-icone nome="voltar" />
+                  <span>{{ removendoDaCampanha() ? 'Removendo…' : 'Remover da campanha' }}</span>
+                </button>
+              }
+              <button
                 class="ficha-pagina__menu-item"
                 type="button"
                 role="menuitem"

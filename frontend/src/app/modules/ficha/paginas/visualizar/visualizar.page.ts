@@ -1,4 +1,13 @@
-import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -77,6 +86,7 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
   styleUrl: './visualizar.page.scss',
 })
 export class FichaVisualizar {
+  private readonly fichaVisualizacao = viewChild(FichaVisualizacao);
   private readonly fichaService = inject(FichaService);
   /** Handlers `ajustar*` (m2-20) — reusados por `CampanhaDetalhe` na visão do jogador. */
   protected readonly fichaEdicao = inject(FichaEdicaoService);
@@ -164,6 +174,8 @@ export class FichaVisualizar {
   protected readonly dialogAcesso = signal(false);
   /** Dialog de confirmação de exclusão aberta (m3-52). */
   protected readonly dialogExclusao = signal(false);
+  /** Desatribuição da campanha em voo. */
+  protected readonly removendoDaCampanha = signal(false);
   protected readonly excluindo = signal(false);
 
   /** Membro selecionado para receber acesso (Reactive Forms — sem `ngModel`). */
@@ -356,6 +368,12 @@ export class FichaVisualizar {
     this.menuAberto.set(false);
   }
 
+  /** No mobile, encaminha a ação do menu para a mesma confirmação da ficha. */
+  protected solicitarAlteracaoVisibilidade(): void {
+    this.fecharMenu();
+    this.fichaVisualizacao()?.solicitarAlteracaoVisibilidade();
+  }
+
   /** Abre a dialog de gestão de acesso (a partir do menu). */
   protected abrirAcesso(): void {
     this.menuAberto.set(false);
@@ -365,6 +383,22 @@ export class FichaVisualizar {
   /** Fecha a dialog de gestão de acesso. */
   protected fecharAcesso(): void {
     this.dialogAcesso.set(false);
+  }
+
+  /**
+   * Desatribui a ficha da campanha e volta ao acervo solto do dono. Ação direta, igual aos
+   * menus análogos do painel da campanha e do acervo; o backend confirma a permissão de dono/mestre.
+   */
+  protected removerDaCampanha(): void {
+    if (this.campanhaId() === null || this.removendoDaCampanha()) {
+      return;
+    }
+    this.fecharMenu();
+    this.removendoDaCampanha.set(true);
+    this.fichaService
+      .atribuirCampanha(this.fichaId, null)
+      .pipe(finalize(() => this.removendoDaCampanha.set(false)))
+      .subscribe({ next: () => void this.router.navigate(['/fichas']) });
   }
 
   /** Abre a dialog de confirmação de exclusão (a partir do menu, m3-52). */

@@ -437,6 +437,16 @@ export interface FichaAcessoRevogadoDto {
 }
 
 /**
+ * Evento de tempo real que invalida a listagem autorizada de fichas de uma campanha. O payload é
+ * deliberadamente mínimo: não revela nem o novo estado de visibilidade nem dados da ficha a quem
+ * está na sala ampla `campanha:<id>`.
+ */
+export interface FichaVisibilidadeAlteradaDto {
+  readonly fichaId: number;
+  readonly campanhaId: number;
+}
+
+/**
  * Entrada da listagem das concessões ativas de uma ficha — o `fichaId` vem do `@Param`, injetado
  * no DTO pela controller. Só o dono ou o mestre listam (§14). A saída é sempre resumida
  * (`FichaAcessoResumoDto`).

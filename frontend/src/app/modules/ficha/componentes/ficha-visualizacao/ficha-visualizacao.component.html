@@ -129,16 +129,20 @@
               @if (erroImagem(); as mensagemErro) {
                 <span class="ficha-ident__aviso-obrigatorio">{{ mensagemErro }}</span>
               }
-              <label class="ficha-ident__oculta">
-                <input
-                  type="checkbox"
-                  class="ficha-ident__oculta-entrada"
-                  aria-label="Ocultar ficha de outros jogadores"
-                  [checked]="oculta()"
-                  (change)="ajusteOculta.emit($any($event.target).checked)"
-                />
-                Ocultar ficha de outros jogadores
-              </label>
+              <button
+                type="button"
+                class="ficha-ident__visibilidade"
+                [attr.aria-label]="
+                  oculta()
+                    ? 'Exibir ficha para outros jogadores'
+                    : 'Ocultar ficha de outros jogadores'
+                "
+                [appTooltip]="oculta() ? 'Exibir ficha' : 'Ocultar ficha'"
+                (click)="solicitarAlteracaoVisibilidade()"
+              >
+                <app-icone [nome]="oculta() ? 'olho' : 'olho-fechado'" />
+                <span>{{ oculta() ? 'Exibir' : 'Ocultar' }}</span>
+              </button>
             </div>
           } @else {
             <span class="ficha-ident__avatar" aria-hidden="true" [style.--cor-ficha]="cor()">
@@ -255,6 +259,45 @@
         </div>
           </div>
         </div>
+
+        <p-dialog
+          [visible]="confirmandoVisibilidade()"
+          [modal]="true"
+          [draggable]="false"
+          [resizable]="false"
+          [dismissableMask]="true"
+          [appendTo]="'body'"
+          [header]="oculta() ? 'Exibir ficha?' : 'Ocultar ficha?'"
+          styleClass="ficha-ident__dialogo-visibilidade"
+          (onHide)="cancelarAlteracaoVisibilidade()"
+        >
+          <p>
+            @if (oculta()) {
+              Esta ficha voltará a aparecer para os outros jogadores da campanha.
+            } @else {
+              Outros jogadores deixarão de ver esta ficha. Você e o mestre da campanha continuarão
+              com acesso.
+            }
+          </p>
+          <div class="ficha-ident__classe-acoes">
+            <button
+              type="button"
+              class="ficha-cartao__acao ficha-cartao__acao--confirmar"
+              data-testid="confirmar-visibilidade"
+              (click)="confirmarAlteracaoVisibilidade()"
+            >
+              {{ oculta() ? 'Exibir ficha' : 'Ocultar ficha' }}
+            </button>
+            <button
+              type="button"
+              class="ficha-cartao__acao"
+              data-testid="cancelar-visibilidade"
+              (click)="cancelarAlteracaoVisibilidade()"
+            >
+              Cancelar
+            </button>
+          </div>
+        </p-dialog>
 
         <!-- Editor de Origem (m3-23): nome/descrição/Saber de Campo + Especialidade + 2 linhas de
              Formação. Reusa o mesmo mini-editor da Classe/Arquétipo (`ficha-ident__classe-editor`).

@@ -204,6 +204,14 @@
     }
   }
 
+  &__menu-item--visibilidade {
+    display: none;
+
+    @include bp.mobile {
+      display: flex;
+    }
+  }
+
   &__menu-contagem {
     margin-left: auto;
     font-size: 11px;

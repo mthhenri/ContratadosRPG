@@ -1668,20 +1668,41 @@
     margin-bottom: 4px;
   }
 
-  // Toggle "Ocultar ficha" (m3-65) — mesma coluna do avatar/cor, só quando ajustável em amplo.
-  &__oculta {
-    display: flex;
+  // Ação de visibilidade (m3-65a) — mesma receita compacta do toggle "Rolagem oculta", mas com
+  // verbo curto e confirmação antes de persistir. Fica na coluna do avatar para nunca roubar
+  // largura dos textos de Identidade. No mobile, a ação migra para o menu da página.
+  &__visibilidade {
+    display: inline-flex;
     align-items: center;
     gap: 6px;
+    align-self: flex-start;
+    max-width: 100%;
+    padding: 6px 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
     font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-mute);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-dim);
+    white-space: nowrap;
     cursor: pointer;
-  }
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 
-  &__oculta-entrada {
-    accent-color: var(--accent);
-    cursor: pointer;
+    app-icone {
+      font-size: 13px;
+    }
+
+    &:hover {
+      border-color: var(--accent-border);
+      color: var(--text);
+    }
+
+    @include bp.mobile {
+      display: none;
+    }
   }
 
   // Nível/Prestígio/Dinheiro/Salário dividem uma linha de 4 (números curtos); Patente (texto,

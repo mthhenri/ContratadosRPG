@@ -14,7 +14,11 @@ import {
   CampanhaMembroResumoDto,
   CampanhaRecuperadaDto,
 } from '@contratados-rpg/shared/dtos/campanha';
-import type { FichaAcessoResumoDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
+import type {
+  FichaAcessoResumoDto,
+  FichaResumoDto,
+  FichaVisibilidadeAlteradaDto,
+} from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { CampanhaDetalhe } from './detalhe.page';
@@ -177,6 +181,7 @@ describe('CampanhaDetalhe', () => {
     const fichaCriada$ = new Subject<FichaResumoDto>();
     const membroEntrou$ = new Subject<CampanhaMembroEntradaDto>();
     const fichaAlterada$ = new Subject<unknown>();
+    const fichaVisibilidadeAlterada$ = new Subject<FichaVisibilidadeAlteradaDto>();
     const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
     const reconexao = signal(0);
     const tempoRealService = {
@@ -188,6 +193,7 @@ describe('CampanhaDetalhe', () => {
       fichaCriada$: fichaCriada$.asObservable(),
       membroEntrou$: membroEntrou$.asObservable(),
       fichaAlterada$: fichaAlterada$.asObservable(),
+      fichaVisibilidadeAlterada$: fichaVisibilidadeAlterada$.asObservable(),
       rolagemRegistrada$: rolagemRegistrada$.asObservable(),
       reconexao,
       conectado: signal(true),
@@ -221,6 +227,7 @@ describe('CampanhaDetalhe', () => {
       fichaCriada$,
       membroEntrou$,
       fichaAlterada$,
+      fichaVisibilidadeAlterada$,
       rolagemRegistrada$,
       reconexao,
       navegar,
@@ -1272,6 +1279,20 @@ describe('CampanhaDetalhe', () => {
       expect(fichaService.listarFichas).toHaveBeenCalledTimes(1);
 
       fichaAlterada$.next({ id: 3, campanhaId: CAMPANHA_ID, usuarioId: 1, nome: 'Kane', dados: {} });
+
+      expect(fichaService.listarFichas).toHaveBeenCalledTimes(2);
+      expect(campanhaService.listarMembros).toHaveBeenCalledTimes(2);
+    });
+
+    it('refaz o recorte autorizado ao receber ficha:visibilidade-alterada', () => {
+      const { fichaService, campanhaService, fichaVisibilidadeAlterada$ } = montar({
+        usuarioId: 2,
+        membros: membrosDois(),
+        fichas,
+      });
+      expect(fichaService.listarFichas).toHaveBeenCalledTimes(1);
+
+      fichaVisibilidadeAlterada$.next({ fichaId: 3, campanhaId: CAMPANHA_ID });
 
       expect(fichaService.listarFichas).toHaveBeenCalledTimes(2);
       expect(campanhaService.listarMembros).toHaveBeenCalledTimes(2);

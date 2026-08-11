@@ -489,6 +489,22 @@ export class FichaVisualizacao {
   /** Novo valor de "ficha oculta" (m3-65, relacional — fora do `dados`) — a página persiste `ficha.oculta`. */
   readonly ajusteOculta = output<boolean>();
 
+  /** Dialog pendente de confirmação; clicar no controle nunca altera a ficha diretamente. */
+  protected readonly confirmandoVisibilidade = signal(false);
+
+  solicitarAlteracaoVisibilidade(): void {
+    this.confirmandoVisibilidade.set(true);
+  }
+
+  protected cancelarAlteracaoVisibilidade(): void {
+    this.confirmandoVisibilidade.set(false);
+  }
+
+  protected confirmarAlteracaoVisibilidade(): void {
+    this.ajusteOculta.emit(!this.oculta());
+    this.confirmandoVisibilidade.set(false);
+  }
+
   /**
    * Novo avatar escolhido pelo `<input type="file">` do cabeçalho (m3-62, relacional — fora do
    * `dados`) — a página envia via `FormData` (`FichaService.alterarImagem`) e atualiza

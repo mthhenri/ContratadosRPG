@@ -347,6 +347,15 @@ export class FichaService {
 
     const fichaAlterada = await this.fichaRepositorio.alterarFicha(dto);
     this.campanhaGateway.emitirFichaAlterada(fichaAlterada);
+    if (
+      fichaAlterada.campanhaId !== null &&
+      fichaEncontrada.oculta !== fichaAlterada.oculta
+    ) {
+      this.campanhaGateway.emitirFichaVisibilidadeAlterada({
+        fichaId: fichaAlterada.id,
+        campanhaId: fichaAlterada.campanhaId,
+      });
+    }
     return fichaAlterada;
   }
 

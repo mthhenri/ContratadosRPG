@@ -582,30 +582,94 @@ describe('FichaVisualizacao', () => {
   });
 
   describe('ficha oculta (m3-65)', () => {
-    it('reflete oculta() no checkbox quando ajustável', () => {
+    it('mostra Ocultar com nome acessível de ação quando a ficha está visível', () => {
+      const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
+
+      const botao = raiz.querySelector('.ficha-ident__visibilidade') as HTMLButtonElement;
+      expect(botao.textContent?.trim()).toBe('Ocultar');
+      expect(botao.getAttribute('aria-label')).toBe('Ocultar ficha de outros jogadores');
+      const icone = fixture.debugElement.query(By.css('.ficha-ident__visibilidade app-icone'));
+      expect(icone.componentInstance.nome()).toBe('olho-fechado');
+    });
+
+    it('mostra Exibir com nome acessível de ação quando a ficha está oculta', () => {
       const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
       fixture.componentRef.setInput('oculta', true);
       fixture.detectChanges();
 
-      const checkbox = raiz.querySelector('.ficha-ident__oculta-entrada') as HTMLInputElement;
-      expect(checkbox.checked).toBe(true);
+      const botao = raiz.querySelector('.ficha-ident__visibilidade') as HTMLButtonElement;
+      expect(botao.textContent?.trim()).toBe('Exibir');
+      expect(botao.getAttribute('aria-label')).toBe('Exibir ficha para outros jogadores');
+      const icone = fixture.debugElement.query(By.css('.ficha-ident__visibilidade app-icone'));
+      expect(icone.componentInstance.nome()).toBe('olho');
     });
 
-    it('emite ajusteOculta ao alternar o checkbox', () => {
+    it('abre o aviso de ocultar sem emitir antes da confirmação', () => {
       const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
       const emitidos: boolean[] = [];
       fixture.componentInstance.ajusteOculta.subscribe((valor) => emitidos.push(valor));
 
-      const checkbox = raiz.querySelector('.ficha-ident__oculta-entrada') as HTMLInputElement;
-      checkbox.checked = true;
-      checkbox.dispatchEvent(new Event('change'));
+      (raiz.querySelector('.ficha-ident__visibilidade') as HTMLButtonElement).click();
+      fixture.detectChanges();
 
-      expect(emitidos).toEqual([true]);
+      expect(document.body.textContent).toContain('Ocultar ficha?');
+      expect(document.body.textContent).toContain(
+        'Outros jogadores deixarão de ver esta ficha. Você e o mestre da campanha continuarão com acesso.',
+      );
+      expect(emitidos).toEqual([]);
+    });
+
+    it('abre o aviso de exibir com a mensagem correspondente', () => {
+      const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
+      fixture.componentRef.setInput('oculta', true);
+      fixture.detectChanges();
+
+      (raiz.querySelector('.ficha-ident__visibilidade') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(document.body.textContent).toContain('Exibir ficha?');
+      expect(document.body.textContent).toContain(
+        'Esta ficha voltará a aparecer para os outros jogadores da campanha.',
+      );
+    });
+
+    it('cancelar ou fechar a dialog não emite ajusteOculta', () => {
+      const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
+      const emitidos: boolean[] = [];
+      fixture.componentInstance.ajusteOculta.subscribe((valor) => emitidos.push(valor));
+
+      (raiz.querySelector('.ficha-ident__visibilidade') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      (document.body.querySelector('[data-testid="cancelar-visibilidade"]') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      fixture.componentInstance['cancelarAlteracaoVisibilidade']();
+
+      expect(document.body.querySelector('[data-testid="confirmar-visibilidade"]')).toBeNull();
+      expect(emitidos).toEqual([]);
+    });
+
+    it.each([
+      { oculta: false, esperado: true, acao: 'Ocultar ficha' },
+      { oculta: true, esperado: false, acao: 'Exibir ficha' },
+    ])('confirmar $acao emite exatamente o estado oposto e fecha a dialog', ({ oculta, esperado }) => {
+      const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
+      fixture.componentRef.setInput('oculta', oculta);
+      fixture.detectChanges();
+      const emitidos: boolean[] = [];
+      fixture.componentInstance.ajusteOculta.subscribe((valor) => emitidos.push(valor));
+
+      (raiz.querySelector('.ficha-ident__visibilidade') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      (document.body.querySelector('[data-testid="confirmar-visibilidade"]') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(emitidos).toEqual([esperado]);
+      expect(document.body.querySelector('[data-testid="confirmar-visibilidade"]')).toBeNull();
     });
 
     it('não mostra o toggle quando não é ajustável (só leitura)', () => {
       const { raiz } = montar(dados, 'Corvo', 42, false);
-      expect(raiz.querySelector('.ficha-ident__oculta-entrada')).toBeNull();
+      expect(raiz.querySelector('.ficha-ident__visibilidade')).toBeNull();
     });
   });
 

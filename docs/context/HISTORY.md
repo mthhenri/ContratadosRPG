@@ -1,5 +1,36 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-11 — `m3-65a`: visibilidade da ficha com confirmação e tempo real
+
+O checkbox longo da ficha completa virou uma ação `Ocultar`/`Exibir` com ícone e confirmação
+específica para cada sentido. No desktop, o botão compacto permanece junto ao avatar; em 360 px,
+a ação fica no menu de três pontos e usa a mesma dialog, liberando espaço vertical sem duplicar
+estado. Cancelar ou fechar não altera a ficha; confirmar segue o auto-save existente.
+
+Depois da persistência, `FichaService` emite o evento dedicado `ficha:visibilidade-alterada` somente
+quando `oculta` realmente mudou e a ficha pertence a uma campanha. O payload compartilhado contém
+apenas `fichaId` e `campanhaId`. O detalhe da campanha reage refazendo seu recorte REST autorizado,
+portanto a ficha some ou reaparece para os demais jogadores sem reload, enquanto dono e mestre
+mantêm o acesso previsto.
+
+Foram verificados testes focados de shared/backend/frontend, builds e as suítes amplas. O backend
+mantém uma falha preexistente em `config.service.spec.ts` causada pelo `.env`, e o lint amplo mantém
+sete ocorrências preexistentes fora deste recorte. Na aplicação real, 1920×1080 e 360×800 ficaram
+sem overflow; as duas confirmações e os dois estados foram percorridos. Com mestre, dono e observador
+conectados, ocultar e exibir atualizaram o painel do observador na mesma URL, sem F5.
+
+## 2026-08-10 — visualização completa permite remover a ficha da campanha
+
+O menu de ações de `/fichas/:id` e `/painel/:campanhaId/ficha/:id` passou a oferecer **Remover da
+campanha** quando a ficha carregada está vinculada. A ação reutiliza o fluxo direto já aprovado no
+painel da campanha e no acervo: chama `atribuirCampanha(fichaId, null)`, fecha o menu, bloqueia
+reentrada enquanto a requisição está em voo e, após sucesso, leva ao acervo. Fichas já soltas não
+mostram o item.
+
+O teste focado de `visualizar.page.spec.ts` passou com 47/47 casos. A aplicação real foi inspecionada
+em 1920×1080 e 360×800 com uma ficha vinculada temporária: as três ações apareceram na ordem
+esperada, sem overflow do menu ou da página. A fixture local foi removida ao final.
+
 ## 2026-08-10 — `m3-72`: leitor global dos documentos de regras
 
 Sistema e Guia do Mestre passaram a ser públicos em um único acesso **Documentos**, disponível no

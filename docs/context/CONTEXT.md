@@ -198,6 +198,12 @@ por `CampanhaDetalhe` (m2-20, ficha embutida na visão do jogador). O mesmo padr
 `FichaRolagemRegistroService` (m2-21): a flag "Rolagem oculta" e o registro do histórico (m3-27)
 moram na página porque no painel do jogador o toggle está **fora** do card (coluna lateral)
 enquanto o teste de atributo e o dano continuam sendo rolados de dentro dele.
+O controle relacional de visibilidade da ficha completa pede confirmação antes de persistir: fica
+compacto junto ao avatar no desktop e migra para o menu de ações no mobile. Mudanças reais de
+`oculta` em ficha vinculada emitem `ficha:visibilidade-alterada` na sala da campanha; o detalhe
+refaz o recorte REST autorizado, fazendo a ficha sumir ou reaparecer para jogadores sem F5.
+Na visualização completa, o menu de dono/mestre oferece **Remover da campanha** somente para ficha
+vinculada; a desatribuição é direta e retorna ao acervo após o backend confirmar.
 
 Input `modo: 'padrao' | 'compacto'` no componente: `'compacto'` reduz as 3 colunas pra 2
 (Identidade/Vitalidade/Reações/Resistências ao lado do card de Status) e corta a barra de abas ao

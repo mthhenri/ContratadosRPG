@@ -6,12 +6,12 @@ Simplificar o controle de ocultar ou exibir a ficha na visualização completa, 
 
 ## Controle visual
 
-O checkbox com o texto longo "Ocultar ficha de outros jogadores" será substituído por um botão compacto na coluna do avatar. O botão seguirá o padrão visual dos controles compactos já aprovados na ficha e terá alvo de toque mínimo de 44×44 px no mobile.
+O checkbox com o texto longo "Ocultar ficha de outros jogadores" será substituído por uma ação compacta. No desktop, ela fica como botão na coluna do avatar; no mobile, entra no menu de ações da página para preservar a largura e a altura úteis da ficha. As duas posições abrem a mesma confirmação e o item do menu mantém alvo de toque mínimo de 44×44 px.
 
 - Quando a ficha estiver visível: ícone de olho fechado e label `Ocultar`.
 - Quando a ficha estiver oculta: ícone de olho aberto e label `Exibir`.
 - O nome acessível e o tooltip descreverão a ação futura, não apenas o estado atual.
-- O botão continuará disponível somente quando `ajustavelAmplo()` permitir editar a identidade da ficha.
+- A ação continuará disponível somente quando `ajustavelAmplo()` permitir editar a identidade da ficha.
 
 O análogo visual do controle será o toggle compacto "Rolagem oculta". O análogo da confirmação será a dialog de confirmação já usada na visualização da ficha, reaproveitando shell, densidade, hierarquia, botões e comportamento responsivo.
 
@@ -66,4 +66,3 @@ Os testes automatizados cobrirão:
 - detalhe da campanha refazendo a listagem ao recebê-lo.
 
 A verificação manual será feita na aplicação real em `1920×1080` e `360×800`, percorrendo os dois estados e as duas dialogs. Com mestre e jogador conectados, será confirmado que ocultar remove a ficha do painel do jogador sem recarregar a página e que exibir a recoloca automaticamente. Também serão verificados ausência de overflow, foco visível, contraste, alvo de toque e coerência com os análogos escolhidos.
-

@@ -103,6 +103,7 @@ describe('FichaVisualizar', () => {
       alterarFicha: vi.fn(
         () => of({ id: 42, campanhaId: 9, usuarioId: 7, nome: 'Novo', dados } as FichaAlteradaDto),
       ),
+      atribuirCampanha: vi.fn(() => of({ id: 42, campanhaId: null })),
       excluirFicha: vi.fn(() => of(undefined)),
     };
     const campanhaService = { listarMembros: vi.fn(() => of(membros)) };
@@ -216,6 +217,32 @@ describe('FichaVisualizar', () => {
     expect(raiz.querySelector('.dialogo .acesso')).not.toBeNull();
   });
 
+  describe('visibilidade no menu mobile', () => {
+    it('oferece Ocultar ficha no menu quando a ficha está visível', () => {
+      const { raiz, fixture } = montar({ usuarioLogadoId: 7 });
+      fixture.componentInstance['alternarMenu']();
+      fixture.detectChanges();
+
+      const item = raiz.querySelector('.ficha-pagina__menu-item--visibilidade');
+      expect(item?.textContent?.trim()).toBe('Ocultar ficha');
+    });
+
+    it('abre a mesma dialog de confirmação da ficha e fecha o menu', () => {
+      const { raiz, fixture } = montar({ usuarioLogadoId: 7 });
+      fixture.componentInstance['alternarMenu']();
+      fixture.detectChanges();
+
+      (raiz.querySelector('.ficha-pagina__menu-item--visibilidade') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance['menuAberto']()).toBe(false);
+      expect(document.body.textContent).toContain('Ocultar ficha?');
+      expect(document.body.textContent).toContain(
+        'Outros jogadores deixarão de ver esta ficha. Você e o mestre da campanha continuarão com acesso.',
+      );
+    });
+  });
+
   describe('excluir ficha (m3-52)', () => {
     it('não oferece "Excluir ficha" a um membro comum (sem menu de ações)', () => {
       const { raiz } = montar({ usuarioLogadoId: 11 });
@@ -247,6 +274,35 @@ describe('FichaVisualizar', () => {
 
       expect(fichaService.excluirFicha).toHaveBeenCalledWith(42);
       expect(navegarEspiao).toHaveBeenCalledWith(['/painel', 9]);
+    });
+  });
+
+  describe('remover da campanha', () => {
+    it('oferece a ação quando a ficha está vinculada e remove antes de voltar ao acervo', () => {
+      const { raiz, fixture, fichaService, navegarEspiao } = montar({ usuarioLogadoId: 7 });
+      fixture.componentInstance['alternarMenu']();
+      fixture.detectChanges();
+
+      const botao = Array.from(raiz.querySelectorAll<HTMLButtonElement>('.ficha-pagina__menu-item')).find(
+        (item) => item.textContent?.includes('Remover da campanha'),
+      );
+      expect(botao).toBeDefined();
+      botao?.click();
+
+      expect(fichaService.atribuirCampanha).toHaveBeenCalledWith(42, null);
+      expect(navegarEspiao).toHaveBeenCalledWith(['/fichas']);
+    });
+
+    it('não oferece a ação quando a ficha já está solta no acervo', () => {
+      const { raiz, fixture } = montar({
+        usuarioLogadoId: 7,
+        semCampanhaNaRota: true,
+        fichaCampanhaId: null,
+      });
+      fixture.componentInstance['alternarMenu']();
+      fixture.detectChanges();
+
+      expect(raiz.textContent).not.toContain('Remover da campanha');
     });
   });
 

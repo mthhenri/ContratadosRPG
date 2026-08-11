@@ -60,6 +60,7 @@ interface CampanhaRepositorioDublado {
 interface CampanhaGatewayDublado {
   emitirFichaCriada: ReturnType<typeof vi.fn>;
   emitirFichaAlterada: ReturnType<typeof vi.fn>;
+  emitirFichaVisibilidadeAlterada: ReturnType<typeof vi.fn>;
   emitirAcessoRevogado: ReturnType<typeof vi.fn>;
 }
 
@@ -199,6 +200,7 @@ describe('FichaService', () => {
     campanhaGateway = {
       emitirFichaCriada: vi.fn(),
       emitirFichaAlterada: vi.fn(),
+      emitirFichaVisibilidadeAlterada: vi.fn(),
       emitirAcessoRevogado: vi.fn(),
     };
     armazenamentoProvedor = { salvarImagem: vi.fn(), excluirImagem: vi.fn() };
@@ -1169,6 +1171,46 @@ describe('FichaService', () => {
         dados: criarDados(),
       });
       expect(resultado.oculta).toBe(true);
+    });
+
+    it('emite visibilidade na campanha quando oculta realmente muda', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      fichaRepositorio.alterarFicha.mockResolvedValue({ ...fichaPersistida, oculta: true });
+
+      await service.alterarFicha(
+        { id: 5, nome: 'Agente Alfa', oculta: true, dados: criarDados() },
+        usuarioDono,
+      );
+
+      expect(campanhaGateway.emitirFichaVisibilidadeAlterada).toHaveBeenCalledWith({
+        fichaId: 5,
+        campanhaId: 3,
+      });
+    });
+
+    it('não emite visibilidade quando oculta permanece igual', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      fichaRepositorio.alterarFicha.mockResolvedValue(fichaPersistida);
+
+      await service.alterarFicha(
+        { id: 5, nome: 'Agente Alfa', oculta: false, dados: criarDados() },
+        usuarioDono,
+      );
+
+      expect(campanhaGateway.emitirFichaVisibilidadeAlterada).not.toHaveBeenCalled();
+    });
+
+    it('não emite visibilidade para ficha solta no acervo', async () => {
+      const fichaSolta = { ...fichaPersistida, campanhaId: null, oculta: false };
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaSolta);
+      fichaRepositorio.alterarFicha.mockResolvedValue({ ...fichaSolta, oculta: true });
+
+      await service.alterarFicha(
+        { id: 5, nome: 'Agente Alfa', oculta: true, dados: criarDados() },
+        usuarioDono,
+      );
+
+      expect(campanhaGateway.emitirFichaVisibilidadeAlterada).not.toHaveBeenCalled();
     });
 
     it('altera a ficha quando o autor é o mestre da campanha', async () => {

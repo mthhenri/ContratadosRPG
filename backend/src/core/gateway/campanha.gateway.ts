@@ -18,6 +18,7 @@ import type {
   FichaCriadaDto,
   FichaRecuperarDto,
   FichaResumoDto,
+  FichaVisibilidadeAlteradaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import type { Server, Socket } from 'socket.io';
@@ -139,6 +140,16 @@ export class CampanhaGateway implements OnGatewayConnection {
       dados: omitirCamposPrivados(ficha.dados),
     };
     this.servidor.to(this.salaFicha(ficha.id)).emit('ficha:alterada', fichaSemCamposPrivados);
+  }
+
+  /**
+   * Invalida o recorte de fichas de toda a campanha após uma mudança real de visibilidade. O
+   * cliente refaz o GET autorizado; o evento não informa se a ficha foi ocultada ou exibida.
+   */
+  emitirFichaVisibilidadeAlterada(evento: FichaVisibilidadeAlteradaDto): void {
+    this.servidor
+      .to(this.salaCampanha(evento.campanhaId))
+      .emit('ficha:visibilidade-alterada', evento);
   }
 
   /**

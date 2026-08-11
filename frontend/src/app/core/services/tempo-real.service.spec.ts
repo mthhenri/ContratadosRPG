@@ -145,6 +145,17 @@ describe('TempoRealService', () => {
     expect(recebidos).toEqual(['alterada:42', 'criada:7', 'membro:3', 'revogado:5:42']);
   });
 
+  it('repassa ficha:visibilidade-alterada com o payload mínimo da campanha', () => {
+    const { servico } = criar(() => 'jwt');
+    servico.conectar();
+    const recebidos: unknown[] = [];
+    servico.fichaVisibilidadeAlterada$.subscribe((evento) => recebidos.push(evento));
+
+    socketFake.disparar('ficha:visibilidade-alterada', { fichaId: 5, campanhaId: 3 });
+
+    expect(recebidos).toEqual([{ fichaId: 5, campanhaId: 3 }]);
+  });
+
   it('reingressa nas salas e bumpa a reconexão a cada reconexão (§9)', () => {
     const { servico } = criar(() => 'jwt');
     servico.conectar();
