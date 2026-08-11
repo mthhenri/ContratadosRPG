@@ -1152,6 +1152,25 @@ describe('FichaService', () => {
       expect(resultado).toBe(fichaAlterada);
     });
 
+    it('repassa oculta ao repositório quando informado', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      const fichaAlterada = { ...fichaPersistida, oculta: true };
+      fichaRepositorio.alterarFicha.mockResolvedValue(fichaAlterada);
+
+      const resultado = await service.alterarFicha(
+        { id: 5, nome: 'Agente Alfa', oculta: true, dados: criarDados() },
+        usuarioDono,
+      );
+
+      expect(fichaRepositorio.alterarFicha).toHaveBeenCalledWith({
+        id: 5,
+        nome: 'Agente Alfa',
+        oculta: true,
+        dados: criarDados(),
+      });
+      expect(resultado.oculta).toBe(true);
+    });
+
     it('altera a ficha quando o autor é o mestre da campanha', async () => {
       fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
       campanhaRepositorio.recuperarMembro.mockResolvedValue({

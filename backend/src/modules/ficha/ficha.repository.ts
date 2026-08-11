@@ -71,7 +71,8 @@ export class FichaRepository extends BaseRepository {
   /** Recupera a ficha ativa pelo `id` (ou `null`) — inclui posse/campanha para a checagem de permissão. */
   async recuperarPorId(dto: FichaRecuperarDto): Promise<FichaRecuperadaDto | null> {
     const [fichaEncontrada] = await this.executarConsulta<FichaRecuperadaDto>(
-      `SELECT id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, imagem_url AS "imagemUrl", dados
+      `SELECT id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, imagem_url AS "imagemUrl",
+              COALESCE(oculta, false) AS oculta, dados
        FROM ficha
        WHERE id = :id AND is_deleted = false`,
       { id: dto.id },
@@ -278,16 +279,23 @@ export class FichaRepository extends BaseRepository {
   }
 
   /**
-   * Altera `nome` e o documento de jogo `dados` (cast `::jsonb`) da ficha e retorna os dados
-   * atualizados. Só toca ficha ativa (`WHERE is_deleted = false`), sem `DEFAULT`.
+   * Altera `nome`, `oculta` (m3-65) e o documento de jogo `dados` (cast `::jsonb`) da ficha e
+   * retorna os dados atualizados. Só toca ficha ativa (`WHERE is_deleted = false`), sem `DEFAULT`.
    */
   async alterarFicha(dto: FichaInternoAlterarDto): Promise<FichaRecuperadaDto> {
     const [fichaAlterada] = await this.executarConsulta<FichaRecuperadaDto>(
       `UPDATE ficha
-       SET nome = :nome, cor = :cor, dados = :dados::jsonb, updated_date = NOW()
+       SET nome = :nome, cor = :cor, oculta = :oculta, dados = :dados::jsonb, updated_date = NOW()
        WHERE id = :id AND is_deleted = false
-       RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, imagem_url AS "imagemUrl", dados`,
-      { id: dto.id, nome: dto.nome, cor: dto.cor ?? null, dados: JSON.stringify(dto.dados) },
+       RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, imagem_url AS "imagemUrl",
+                 COALESCE(oculta, false) AS oculta, dados`,
+      {
+        id: dto.id,
+        nome: dto.nome,
+        cor: dto.cor ?? null,
+        oculta: dto.oculta ?? false,
+        dados: JSON.stringify(dto.dados),
+      },
     );
     return fichaAlterada;
   }
