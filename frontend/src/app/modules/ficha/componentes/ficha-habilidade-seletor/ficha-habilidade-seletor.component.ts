@@ -9,6 +9,7 @@ import {
   type SubgrupoHabilidades,
 } from '@contratados-rpg/shared/regras/agente';
 
+import { ClampTruncado } from '../../../../shared/clamp-truncado/clamp-truncado.directive';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
@@ -37,7 +38,7 @@ const VALORES_CLASSE = new Set<string>(Object.values(ClasseEnum));
  */
 @Component({
   selector: 'app-ficha-habilidade-seletor',
-  imports: [ReactiveFormsModule, OverflowFade, Tooltip],
+  imports: [ReactiveFormsModule, OverflowFade, Tooltip, ClampTruncado],
   templateUrl: './ficha-habilidade-seletor.component.html',
   styleUrl: './ficha-habilidade-seletor.component.scss',
 })
@@ -134,6 +135,20 @@ export class FichaHabilidadeSeletor {
 
   protected estaNaFicha(nome: string): boolean {
     return this.nomesNaFicha().has(nome);
+  }
+
+  /**
+   * Descrição expandida no mobile (P-012, "ver mais"): no máximo uma por vez — chave é a mesma do
+   * `track` da lista (`nome + categoria`, único mesmo entre a comum e a melhorada de mesmo nome).
+   */
+  protected readonly descricaoExpandida = signal<string | null>(null);
+
+  protected chaveHabilidade(habilidade: HabilidadeCatalogoItemDto): string {
+    return habilidade.nome + habilidade.categoria;
+  }
+
+  protected alternarExpansao(chave: string): void {
+    this.descricaoExpandida.update((atual) => (atual === chave ? null : chave));
   }
 
   /** `true` para uma habilidade geral melhorada — ganha selo por conviver com as do arquétipo. */

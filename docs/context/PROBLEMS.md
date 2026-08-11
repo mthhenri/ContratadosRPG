@@ -114,21 +114,6 @@
 - **Desde:** `m3-60` — **adiado por decisão explícita do dono**, registrado como dívida de
   nomenclatura.
 
-### P-012 — Descrição de habilidade corta sem aviso no seletor · `ABERTO` · frontend/CSS
-
-- **Sintoma:** no seletor de habilidades
-  ([ficha-habilidade-seletor.component.scss:311](../../frontend/src/app/modules/ficha/componentes/ficha-habilidade-seletor/ficha-habilidade-seletor.component.scss#L311)),
-  `&__opcao-desc` usa `-webkit-line-clamp: 2` sem `text-overflow: ellipsis`. Habilidades com
-  descrição mais longa têm o texto cortado no meio da palavra/frase, sem "…" nem qualquer sinal de
-  que falta conteúdo. Fica mais evidente no mobile (card mais estreito cabe menos texto por linha),
-  mas algumas habilidades com descrição longa cortam mesmo no desktop.
-- **Causa:** clamp de 2 linhas fixo aplicado a um campo de tamanho variável, sem reticências nem
-  affordance de "ver mais".
-- **Contorno:** nenhum.
-- **Correção:** não determinada — candidatos: adicionar `text-overflow: ellipsis` (mitiga mas não
-  resolve), permitir expandir a descrição, ou rever o clamp por breakpoint.
-- **Desde:** reportado pelo dono em 2026-08-09.
-
 ### P-014 — Label "Arquétipo" no seletor de habilidades não vira "Subclasse" para subclasses de Experimento · `ABERTO` · frontend
 
 - **Sintoma:** no seletor de habilidades e no resumo por categoria da aba Habilidades, o rótulo que
@@ -205,3 +190,5 @@ task que a fez.
 - **P-009** — `npm run lint` não fechava limpo em `frontend`/`backend` (8 erros: `autofocus`,
   variáveis não usadas em specs, acessibilidade de clique em `criar.page.html`). Corrigido em
   2026-08-11, ver `HISTORY.md`.
+- **P-012** — descrição de habilidade cortava sem aviso no seletor (`-webkit-line-clamp: 2` sem
+  `text-overflow: ellipsis`). Corrigido em 2026-08-11, ver `HISTORY.md`.

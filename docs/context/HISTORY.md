@@ -1,5 +1,42 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-11 — `P-012` corrigido: descrição de habilidade não corta mais sem aviso no seletor
+
+O `PROBLEMS.md` listava três candidatos de correção sem decidir qual ("mitiga mas não resolve",
+"permitir expandir", "rever o clamp por breakpoint") — perguntado ao dono, a escolha foi um
+híbrido: `text-overflow: ellipsis` sempre, **hover com tooltip do texto inteiro no desktop**, e um
+botão explícito **"Ver mais"/"Ver menos" só no mobile** (onde não existe hover).
+
+- `ficha-habilidade-seletor.component.scss` — `&__opcao-desc` ganhou `text-overflow: ellipsis`
+  (resolve o "corta sem nenhum sinal" — agora corta em "…") e um modificador `&--expandida` que
+  zera o `-webkit-line-clamp` pro estado aberto do "ver mais". Novo `&__opcao-ver-mais`: `display:
+  none` por padrão, só reaparece em `@include bp.mobile` — no desktop o hover já resolve, o botão
+  seria redundante.
+- `ficha-habilidade-seletor.component.html` — a `<span>` da descrição ganhou `[appTooltip]` (a
+  diretiva de hover/toque já usada nesta mesma tela, linha do botão "Na ficha ✕") e a nova diretiva
+  `appClampTruncado`, exportada como `#desc="appClampTruncado"`; o botão "ver mais" só é renderizado
+  quando `desc.truncado()` é verdadeiro — uma descrição curta que já cabe nas 2 linhas nunca ganha
+  botão à toa.
+- **Nova diretiva `shared/clamp-truncado/clamp-truncado.directive.ts`**: mede
+  `scrollHeight > clientHeight` do próprio host **uma única vez**, no primeiro render, sem
+  `ResizeObserver`. De propósito: diferente da `OverflowFade` (que precisa remedir toda hora porque
+  a lista rola ao vivo), aqui uma remedição ao expandir zeraria `truncado()` no exato momento em que
+  o clamp é removido — o botão "ver mais" sumiria no meio do próprio clique que ele disparou, sem
+  chance de virar "ver menos" pra fechar de novo. Medição congelada evita esse looping.
+- Estado de expansão: `descricaoExpandida = signal<string | null>(null)` no componente, uma chave
+  por vez (a mesma do `track` da lista — `nome + categoria`, que já precisa ser único entre a
+  habilidade comum e a melhorada de mesmo nome).
+- **Ambiente desta rodada:** Postgres via Docker Compose seguiu indisponível (sem daemon no
+  sandbox) — sem stack real pra abrir o seletor dentro da ficha (ele só é alcançável depois de
+  navegar a criação guiada até uma vaga de melhoria). Verificado por um repro isolado: compilei o
+  SCSS real do componente com o `sass` do próprio repo (fidelidade de tokens/cores) e repliquei a
+  fórmula exata da nova diretiva num script solto (mesma medição `scrollHeight > clientHeight`).
+  Confirmado ao vivo (Playwright, Chromium): a 1920px o botão "ver mais" não aparece nem pra
+  descrição truncada (`display: none` do `bp.mobile`); a 360px aparece só pra descrição que
+  realmente estoura 2 linhas (a curta não ganha botão); clicar expande (`scrollHeight===clientHeight`
+  passa a bater, classe `--expandida` presente, "…" some) e troca o rótulo pra "Ver menos"; um
+  segundo clique volta ao estado cortado. `lint`/`build`/suíte completa (874/874) verdes.
+
 ## 2026-08-11 — `P-009` corrigido: `npm run lint` volta a fechar limpo em `frontend`/`backend`
 
 Diferente do `P-001`/`P-010`/`P-011` (que já estavam corrigidos, só não fechados na
