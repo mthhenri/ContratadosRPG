@@ -18,6 +18,7 @@ import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
 const ROTULO_ABA: Record<GrupoHabilidades['id'], string> = {
   gerais: 'Gerais',
   classe: 'Classe',
+  subclasse: 'Subclasse',
   arquetipo: 'Arquétipo',
   civil: 'Civil',
 };
@@ -26,11 +27,13 @@ const VALORES_CLASSE = new Set<string>(Object.values(ClasseEnum));
 
 /**
  * Seletor **do sistema** (m3-13): navega o catálogo de habilidades (`shared/regras`) por aba
- * (Gerais / Classe / Arquétipo) + **sub-filtro inline** (chips), com o subgrupo da própria ficha
- * destacado e ativo por padrão. O "＋" **adiciona a habilidade direto na ficha** (o seletor
- * permanece aberto) e a marca como "Na ficha"; o "✕" ali mesmo a remove — dá para montar a lista
- * sem fechar o diálogo. Uma Geral melhorada pelo arquétipo da ficha aparece na aba **Gerais**, no
- * lugar da comum, com um selo — ela é a mesma habilidade geral, só que com outra descrição/custo.
+ * (Gerais / Classe / Subclasse / Arquétipo — Subclasse só existe pra Experimento, aba própria
+ * desde o P-014 follow-up) + **sub-filtro inline** (chips) nas abas com mais de um subgrupo, com o
+ * subgrupo da própria ficha destacado e ativo por padrão. O "＋" **adiciona a habilidade direto na
+ * ficha** (o seletor permanece aberto) e a marca como "Na ficha"; o "✕" ali mesmo a remove — dá
+ * para montar a lista sem fechar o diálogo. Uma Geral melhorada pelo arquétipo da ficha aparece na
+ * aba **Gerais**, no lugar da comum, com um selo — ela é a mesma habilidade geral, só que com outra
+ * descrição/custo.
  *
  * **Sem regra de jogo aqui**: os grupos e a visibilidade (melhorada só substitui a comum para o
  * dono do arquétipo; subclasses nunca cruzam) vêm prontos de `catalogoHabilidades`. Só tokens do
@@ -103,29 +106,18 @@ export class FichaHabilidadeSeletor {
     return termo ? lista.filter((habilidade) => habilidade.nome.toLowerCase().includes(termo)) : lista;
   });
 
-  /** `true` quando a aba tem sub-filtro (Classe/Arquétipo); Gerais e Civil têm subgrupo único. */
+  /**
+   * `true` quando a aba tem sub-filtro (Classe/Arquétipo); Gerais, Civil e Subclasse têm subgrupo
+   * único (Subclasse nunca cruza — é sempre só a própria, sem outra opção pra filtrar).
+   */
   protected readonly temSubfiltro = computed(() => {
     const aba = this.abaAtiva();
-    return aba !== 'gerais' && aba !== 'civil';
+    return aba === 'classe' || aba === 'arquetipo';
   });
 
-  /**
-   * Rótulo da aba — "Arquétipo" vira "Subclasse" (P-014) quando o subgrupo da própria ficha naquele
-   * grupo é identificado por uma `ClasseEnum` (a subclasse ocupa o lugar do arquétipo pra Experimento;
-   * `grupoArquetipo` em `habilidades-catalogo.ts` é quem decide isso, aqui só se lê o resultado).
-   */
   protected rotuloAba(id: GrupoHabilidades['id']): string {
-    if (id === 'arquetipo' && this.abaArquetipoEhSubclasse()) {
-      return 'Subclasse';
-    }
     return ROTULO_ABA[id];
   }
-
-  private readonly abaArquetipoEhSubclasse = computed(() => {
-    const grupoArquetipo = this.grupos().find((grupo) => grupo.id === 'arquetipo');
-    const daFicha = grupoArquetipo?.subgrupos.find((subgrupo) => subgrupo.ehDaFicha);
-    return daFicha !== undefined && daFicha.chave !== null && VALORES_CLASSE.has(daFicha.chave);
-  });
 
   /** Rótulo legível de um subgrupo (classe/arquétipo/subclasse). */
   protected rotuloSubgrupo(chave: ClasseEnum | ArquetipoEnum | null): string {

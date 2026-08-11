@@ -22,12 +22,16 @@ import {
  *   para qualquer outro arquétipo (ou nenhum), a versão normal continua. Não existe "as duas" para
  *   o dono da melhorada: a comum simplesmente não é uma opção separada para ele.
  * - **Classe**: as três classes-base (a sua em `ehDaFicha`), para o pick de "outra classe".
- * - **Arquétipo**: **só os arquétipos da classe da ficha** (o pick de "outro arquétipo da sua
- *   classe"); nunca os de outra classe. A **Habilidade Inicial** (1º item de cada arquétipo/
- *   subclasse) só aparece no subgrupo do **próprio** arquétipo — em qualquer outro ela **some da
- *   lista**, pois "não é possível obtê-la fora a seleção do próprio arquétipo" (doc). Se a ficha é
- *   um **Experimento**, a aba inclui a **própria subclasse** (nível de arquétipo) + os arquétipos
- *   da classe-base, e **nunca** outras subclasses.
+ * - **Subclasse**: só existe pra fichas **Experimento** — a **própria subclasse** (nível de
+ *   arquétipo), nunca outra (subclasses nunca cruzam). Aba própria, separada de Arquétipo (P-014
+ *   follow-up: antes vivia junto dele como um sub-chip a mais; a UI já tinha essa distinção pronta
+ *   em `HabilidadeCategoriaEnum.SUBCLASSE` vs. `ARQUETIPO`, só não estava refletida na aba).
+ * - **Arquétipo**: **só os arquétipos da classe-base da ficha** (o pick de "outro arquétipo da sua
+ *   classe"); nunca os de outra classe. A **Habilidade Inicial** (1º item de cada arquétipo) só
+ *   aparece no subgrupo do **próprio** arquétipo — em qualquer outro ela **some da lista**, pois
+ *   "não é possível obtê-la fora a seleção do próprio arquétipo" (doc). Pra um **Experimento**,
+ *   nenhum subgrupo aqui é "da ficha" (a dela é a Subclasse) — a lista segue disponível porque a
+ *   subclasse abdica do **próprio** arquétipo, não do acesso aos da classe-base.
  */
 
 /** Uma habilidade do catálogo já com categoria e origem resolvidas (pronta p/ virar `FichaHabilidadeDto`). */
@@ -45,9 +49,9 @@ export interface SubgrupoHabilidades {
   readonly habilidades: readonly HabilidadeCatalogoItemDto[];
 }
 
-/** Grupo do seletor — uma aba (Gerais / Classe / Arquétipo / Civil). */
+/** Grupo do seletor — uma aba (Gerais / Classe / Subclasse / Arquétipo / Civil). */
 export interface GrupoHabilidades {
-  readonly id: 'gerais' | 'classe' | 'arquetipo' | 'civil';
+  readonly id: 'gerais' | 'classe' | 'subclasse' | 'arquetipo' | 'civil';
   readonly subgrupos: readonly SubgrupoHabilidades[];
 }
 
@@ -146,49 +150,61 @@ function grupoClasse(classe: ClasseEnum): GrupoHabilidades {
 }
 
 /**
- * Grupo **Arquétipo** — só os arquétipos da classe da ficha; a subclasse Experimento entra como um
- * subgrupo próprio. A **Habilidade Inicial** (1º item) só entra no subgrupo do arquétipo da ficha
- * — nos demais, ela é removida (obtível só pelo próprio arquétipo). As Gerais Melhoradas **não**
- * entram aqui — elas vivem na aba Gerais, substituindo a versão comum (`grupoGerais`).
+ * Grupo **Subclasse** — só existe pra fichas Experimento: a própria subclasse (nível de arquétipo),
+ * único subgrupo, sempre `ehDaFicha`. `[]` (aba omitida) pra qualquer classe sem subclasse — outras
+ * subclasses nunca entram, mesmo sendo "outro Experimento" (elas nunca cruzam, doc).
+ */
+function grupoSubclasse(classe: ClasseEnum): GrupoHabilidades {
+  const habilidadesSubclasse = HABILIDADES_SUBCLASSE[classe];
+  if (!habilidadesSubclasse || habilidadesSubclasse.length === 0) {
+    return { id: 'subclasse', subgrupos: [] };
+  }
+  return {
+    id: 'subclasse',
+    subgrupos: [
+      {
+        chave: classe,
+        ehDaFicha: true,
+        habilidades: comCategoria(habilidadesSubclasse, HabilidadeCategoriaEnum.SUBCLASSE, classe),
+      },
+    ],
+  };
+}
+
+/**
+ * Grupo **Arquétipo** — só os arquétipos da classe-base da ficha (a subclasse Experimento vive à
+ * parte, em `grupoSubclasse`). A **Habilidade Inicial** (1º item) só entra no subgrupo do arquétipo
+ * da ficha — nos demais, ela é removida (obtível só pelo próprio arquétipo). As Gerais Melhoradas
+ * **não** entram aqui — elas vivem na aba Gerais, substituindo a versão comum (`grupoGerais`). Pra
+ * um Experimento, nenhum subgrupo é `ehDaFicha` (o dela é a subclasse), mas a lista continua — a
+ * subclasse abdica do próprio arquétipo, não do acesso aos da classe-base.
  */
 function grupoArquetipo(
   classe: ClasseEnum,
   arquetipo: ArquetipoEnum | null,
 ): GrupoHabilidades {
   const base = classeBaseDeHabilidades(classe);
-  const subgrupos: SubgrupoHabilidades[] = [];
-
-  // Ficha Experimento: a própria subclasse primeiro (nível de arquétipo). Outras subclasses nunca entram.
-  const habilidadesSubclasse = HABILIDADES_SUBCLASSE[classe];
-  if (habilidadesSubclasse && habilidadesSubclasse.length > 0) {
-    subgrupos.push({
-      chave: classe,
-      ehDaFicha: true,
-      habilidades: comCategoria(habilidadesSubclasse, HabilidadeCategoriaEnum.SUBCLASSE, classe),
-    });
+  if (!base) {
+    return { id: 'arquetipo', subgrupos: [] };
   }
 
-  // Arquétipos regulares da classe-base.
-  if (base) {
-    for (const arq of ARQUETIPOS_POR_CLASSE_BASE[base]) {
+  const subgrupos = ARQUETIPOS_POR_CLASSE_BASE[base]
+    .map((arq): SubgrupoHabilidades => {
       const ehDaFicha = arq === arquetipo;
       // A Habilidade Inicial (1º item) só existe para o próprio arquétipo: "não é possível obtê-la
       // fora a seleção do próprio arquétipo" (doc). Em outro arquétipo, ela sequer entra na lista.
       const habilidadesArquetipo = ehDaFicha
         ? HABILIDADES_ARQUETIPO[arq]
         : HABILIDADES_ARQUETIPO[arq].slice(1);
-      subgrupos.push({
+      return {
         chave: arq,
         ehDaFicha,
         habilidades: comCategoria(habilidadesArquetipo, HabilidadeCategoriaEnum.ARQUETIPO, arq),
-      });
-    }
-  }
+      };
+    })
+    .filter((subgrupo) => subgrupo.habilidades.length > 0);
 
-  return {
-    id: 'arquetipo',
-    subgrupos: ordenarDaFichaPrimeiro(subgrupos.filter((subgrupo) => subgrupo.habilidades.length > 0)),
-  };
+  return { id: 'arquetipo', subgrupos: ordenarDaFichaPrimeiro(subgrupos) };
 }
 
 /**
@@ -220,7 +236,9 @@ function ordenarDaFichaPrimeiro(subgrupos: SubgrupoHabilidades[]): SubgrupoHabil
 /**
  * Grupos de filtro do seletor de habilidades para a ficha (classe + arquétipo). Civil é **exclusivo**
  * (doc: "não possuem classes, arquétipos ou habilidades gerais") — recebe só o grupo Civil, nunca
- * Gerais/Classe/Arquétipo. Para os demais, grupos sem conteúdo são omitidos.
+ * Gerais/Classe/Subclasse/Arquétipo. Para os demais, grupos sem conteúdo são omitidos — Subclasse só
+ * aparece pra Experimento; Arquétipo aparece pra qualquer agente (inclusive Experimento, que vê os da
+ * classe-base sem nenhum marcado como seu).
  */
 export function catalogoHabilidades(
   classe: ClasseEnum,
@@ -229,9 +247,12 @@ export function catalogoHabilidades(
   if (classe === ClasseEnum.CIVIL) {
     return [grupoCivil()];
   }
-  return [grupoGerais(arquetipo), grupoClasse(classe), grupoArquetipo(classe, arquetipo)].filter(
-    (grupo) => grupo.subgrupos.length > 0,
-  );
+  return [
+    grupoGerais(arquetipo),
+    grupoClasse(classe),
+    grupoSubclasse(classe),
+    grupoArquetipo(classe, arquetipo),
+  ].filter((grupo) => grupo.subgrupos.length > 0);
 }
 
 /**

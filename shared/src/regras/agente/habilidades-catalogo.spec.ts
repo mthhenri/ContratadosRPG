@@ -19,8 +19,9 @@ import {
 /**
  * Prova as regras de visibilidade do seletor de habilidades do sistema (`sistema-v4.1.0.md` —
  * "Habilidades"): Gerais sempre (com as melhoradas do arquétipo da ficha substituindo a comum);
- * Classe entre as três classes-base; Arquétipo só os da classe da ficha (o Experimento entra como
- * subclasse), sem nenhuma Geral Melhorada (elas vivem só na aba Gerais).
+ * Classe entre as três classes-base; Subclasse só existe pra Experimento (aba separada de
+ * Arquétipo — P-014 follow-up); Arquétipo só os da classe-base da ficha, sem nenhuma Geral
+ * Melhorada (elas vivem só na aba Gerais).
  */
 describe('catálogo de habilidades → grupos de filtro', () => {
   const grupo = (grupos: GrupoHabilidades[], id: GrupoHabilidades['id']): GrupoHabilidades =>
@@ -136,28 +137,39 @@ describe('catálogo de habilidades → grupos de filtro', () => {
     }
   });
 
-  it('Experimento: Classe traz a classe-base marcada; Arquétipo traz a subclasse + arquétipos da base, sem outras subclasses e sem melhoradas', () => {
+  it('Experimento: Classe traz a classe-base marcada; Subclasse traz a própria (aba separada); Arquétipo traz os da base, sem nenhum marcado', () => {
     const grupos = catalogoHabilidades(ClasseEnum.EXPERIMENTO_BESTIAL, null);
 
     // Classe: a base (Combatente) é a da ficha.
     expect(daFicha(grupos, 'classe').chave).toBe(ClasseEnum.COMBATENTE);
 
-    // Arquétipo: subclasse Bestial primeiro (da ficha) + arquétipos de Combatente.
-    const chavesArquetipo = chaves(grupos, 'arquetipo');
-    expect(chavesArquetipo[0]).toBe(ClasseEnum.EXPERIMENTO_BESTIAL);
-    expect(chavesArquetipo).toContain(ArquetipoEnum.LUTADOR);
-    // Nenhuma outra subclasse aparece.
-    expect(chavesArquetipo).not.toContain(ClasseEnum.EXPERIMENTO_ARTIFICIAL);
-    expect(chavesArquetipo).not.toContain(ClasseEnum.EXPERIMENTO_HIBRIDO);
-
-    // A subclasse tem categoria SUBCLASSE e origem = a subclasse; sem melhoradas em lugar nenhum.
-    const subclasse = grupo(grupos, 'arquetipo').subgrupos[0];
+    // Subclasse: aba própria (P-014 follow-up), só a subclasse da ficha — sempre ehDaFicha.
+    const subclasseGrupo = grupo(grupos, 'subclasse');
+    expect(subclasseGrupo.subgrupos).toHaveLength(1);
+    const subclasse = subclasseGrupo.subgrupos[0];
+    expect(subclasse.chave).toBe(ClasseEnum.EXPERIMENTO_BESTIAL);
+    expect(subclasse.ehDaFicha).toBe(true);
     expect(subclasse.habilidades.every((h) => h.categoria === HabilidadeCategoriaEnum.SUBCLASSE)).toBe(true);
     expect(subclasse.habilidades.every((h) => h.origem === ClasseEnum.EXPERIMENTO_BESTIAL)).toBe(true);
-    const temMelhorada = grupo(grupos, 'arquetipo').subgrupos.some((s) =>
+
+    // Arquétipo: só os arquétipos de Combatente (a base) — a subclasse não aparece aqui, e nenhuma outra subclasse aparece em lugar nenhum.
+    const chavesArquetipo = chaves(grupos, 'arquetipo');
+    expect(chavesArquetipo).toEqual([ArquetipoEnum.LUTADOR, ArquetipoEnum.MERCENARIO, ArquetipoEnum.VANGUARDA]);
+    expect(chavesArquetipo).not.toContain(ClasseEnum.EXPERIMENTO_BESTIAL);
+    expect(chavesArquetipo).not.toContain(ClasseEnum.EXPERIMENTO_ARTIFICIAL);
+    expect(chavesArquetipo).not.toContain(ClasseEnum.EXPERIMENTO_HIBRIDO);
+    // Nenhum arquétipo é "da ficha" — a dela é a Subclasse, numa aba diferente.
+    expect(grupo(grupos, 'arquetipo').subgrupos.some((s) => s.ehDaFicha)).toBe(false);
+
+    const temMelhorada = [...subclasseGrupo.subgrupos, ...grupo(grupos, 'arquetipo').subgrupos].some((s) =>
       s.habilidades.some((h) => h.categoria === HabilidadeCategoriaEnum.GERAL_MELHORADA),
     );
     expect(temMelhorada).toBe(false);
+  });
+
+  it('classe-base nunca tem a aba Subclasse (só existe pra Experimento)', () => {
+    const grupos = catalogoHabilidades(ClasseEnum.COMBATENTE, ArquetipoEnum.LUTADOR);
+    expect(grupos.map((g) => g.id)).not.toContain('subclasse');
   });
 
   it('Civil: só o grupo Civil (sem Gerais/Classe/Arquétipo) — doc: "não possuem classes, arquétipos ou habilidades gerais"', () => {

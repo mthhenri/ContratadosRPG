@@ -627,7 +627,7 @@ describe('FichaCriar', () => {
       expect(componente['passos']()).toContain('Habilidades');
     });
 
-    it('DOM: a aba do seletor "Do sistema" mostra "Subclasse" (não "Arquétipo") para um Experimento (P-014)', () => {
+    it('DOM: a vaga "classeOuArquetipo" mostra a aba "Subclasse" (não "Arquétipo") pra um Experimento — o pick é só da própria subclasse (P-014 follow-up)', () => {
       const { fixture, raiz, componente } = montar();
       componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
       componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
@@ -637,6 +637,7 @@ describe('FichaCriar', () => {
 
       const rotulosAba = Array.from(raiz.querySelectorAll('.seletor__aba')).map((aba) => aba.textContent?.trim());
       expect(rotulosAba).toContain('Subclasse');
+      // Nenhum arquétipo regular da classe-base é "seu" — essa vaga só oferece Classe/Subclasse próprias.
       expect(rotulosAba).not.toContain('Arquétipo');
     });
 

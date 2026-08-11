@@ -586,4 +586,50 @@ describe('FichaHabilidades', () => {
       expect(nomesFiltrados).toEqual(['Instinto Bestial']);
     });
   });
+
+  /**
+   * Follow-up do P-014: no diálogo "Adicionar do sistema", Subclasse e Arquétipo viraram abas
+   * separadas (antes eram uma só, com o rótulo trocando de nome) — reflete a distinção que
+   * `catalogoHabilidades` (`shared/regras`) já resolve em dois grupos (`grupoSubclasse`/
+   * `grupoArquetipo`).
+   */
+  describe('diálogo "Adicionar do sistema": Subclasse e Arquétipo como abas separadas (P-014 follow-up)', () => {
+    it('numa ficha Experimento, o seletor mostra as duas abas ao mesmo tempo', () => {
+      TestBed.configureTestingModule({ imports: [FichaHabilidades] });
+      const fixture = TestBed.createComponent(FichaHabilidades);
+      fixture.componentRef.setInput('habilidades', []);
+      fixture.componentRef.setInput('editavel', true);
+      fixture.componentRef.setInput('classe', ClasseEnum.EXPERIMENTO_BESTIAL);
+      fixture.componentRef.setInput('arquetipo', null);
+      fixture.componentRef.setInput('energiaAtual', 20);
+      fixture.detectChanges();
+      const raiz = fixture.nativeElement as HTMLElement;
+
+      fixture.componentInstance['abrirSeletor']();
+      fixture.detectChanges();
+
+      const rotulosAba = Array.from(raiz.querySelectorAll('.seletor__aba')).map((aba) => aba.textContent?.trim());
+      expect(rotulosAba).toContain('Subclasse');
+      expect(rotulosAba).toContain('Arquétipo');
+    });
+
+    it('numa ficha de classe base, só a aba Arquétipo aparece (sem Subclasse)', () => {
+      TestBed.configureTestingModule({ imports: [FichaHabilidades] });
+      const fixture = TestBed.createComponent(FichaHabilidades);
+      fixture.componentRef.setInput('habilidades', []);
+      fixture.componentRef.setInput('editavel', true);
+      fixture.componentRef.setInput('classe', ClasseEnum.COMBATENTE);
+      fixture.componentRef.setInput('arquetipo', ArquetipoEnum.LUTADOR);
+      fixture.componentRef.setInput('energiaAtual', 20);
+      fixture.detectChanges();
+      const raiz = fixture.nativeElement as HTMLElement;
+
+      fixture.componentInstance['abrirSeletor']();
+      fixture.detectChanges();
+
+      const rotulosAba = Array.from(raiz.querySelectorAll('.seletor__aba')).map((aba) => aba.textContent?.trim());
+      expect(rotulosAba).toContain('Arquétipo');
+      expect(rotulosAba).not.toContain('Subclasse');
+    });
+  });
 });

@@ -1,5 +1,43 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-11 — `P-014` follow-up: Subclasse ganha aba própria no seletor de habilidades, separada de Arquétipo
+
+Correção sobre a correção do dia: o `P-014` (rótulo "Arquétipo" virando "Subclasse") tinha resolvido
+o diálogo "Adicionar do sistema" trocando o **nome** de uma aba única que carregava os dois
+conceitos juntos (a subclasse do Experimento como um sub-chip a mais dentro da aba "Arquétipo"). O
+dono pediu uma correção mais estrutural: Subclasse e Arquétipo deviam ser **abas separadas**, não
+uma só trocando de nome. Escopo confirmado com o dono: só o diálogo do seletor — o contador do
+resumo da aba Habilidades da ficha e o rótulo da vaga no guia de criação continuam como ficaram no
+`P-014` (um rótulo só, que troca de nome).
+
+- `shared/regras/agente/habilidades-catalogo.ts`: `GrupoHabilidades['id']` ganhou o valor
+  `'subclasse'`. `grupoArquetipo` foi dividido em duas funções — `grupoSubclasse` (só a própria
+  subclasse do Experimento, sempre `ehDaFicha`, `[]` fora de Experimento) e `grupoArquetipo`
+  (só os arquétipos regulares da classe-base, nunca `ehDaFicha` pra um Experimento — a dele é a
+  Subclasse). `catalogoHabilidades` passou a devolver os dois grupos em sequência (Gerais, Classe,
+  Subclasse, Arquétipo), cada um omitido quando vazio.
+- `frontend/.../ficha-habilidade-seletor.component.ts`: revertida a lógica dinâmica do `P-014`
+  (que inspecionava o subgrupo `ehDaFicha` pra decidir se a aba "Arquétipo" virava "Subclasse") —
+  agora `subclasse`/`arquetipo` são ids de aba genuinamente distintos, então o rótulo volta a ser um
+  mapa fixo por id. `temSubfiltro` não mostra chips pra Subclasse (só tem um subgrupo possível, nunca
+  cruza — igual Gerais/Civil).
+- `frontend/.../criar.page.ts` (`gruposParaVaga`, guia de criação): achado no caminho — sem ajuste
+  aqui, a vaga `classeOuArquetipo` teria **perdido acesso à Subclasse inteira** pra um Experimento
+  (o filtro de ids relevantes só conhecia `'classe'`/`'arquetipo'`; com a subclasse morando num id
+  novo, ela simplesmente não apareceria mais nessa vaga — incluindo a Peculiaridade). Corrigido
+  incluindo `'subclasse'` na lista de ids relevantes. Essa vaga continua mostrando só as abas de
+  origem **própria** (Classe/Subclasse) — pra um Experimento, a aba "Arquétipo" nunca aparece aqui
+  mesmo, porque nenhum arquétipo regular da classe-base é "seu" (o dele é a subclasse); isso já era
+  assim antes do follow-up, não é regressão.
+- Testado: `habilidades-catalogo.spec.ts` (shared) reescrito pro grupo dividido, +1 teste novo.
+  `ficha-habilidade-seletor` não tem spec própria (component só de apresentação); a cobertura de DOM
+  vive em quem o abre — `ficha-habilidades.component.spec.ts` ganhou um describe novo provando as
+  duas abas simultâneas numa ficha Experimento (e só Arquétipo numa classe-base) no diálogo livre de
+  "Adicionar do sistema"; `criar.page.spec.ts` teve o teste do `P-014` ajustado pra refletir que a
+  vaga `classeOuArquetipo` mostra só "Subclasse" (não "Arquétipo") pra um Experimento. `shared`:
+  596/596 (+1). `frontend`: 886/886 (+2, um teste do P-014 ajustado no lugar). `backend`: 196/196
+  (não mudou, só roda contra o `shared` publicado). `lint`/`build` limpos nos três workspaces.
+
 ## 2026-08-11 — `P-014` corrigido: rótulo "Arquétipo" agora vira "Subclasse" nas fichas de Experimento
 
 `P-014` estava aberto esperando o dono confirmar o escopo exato — em especial se o Civil também

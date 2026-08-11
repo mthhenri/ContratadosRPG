@@ -275,8 +275,8 @@ export class FichaCriar {
   protected readonly pacotesHabilidadesIniciais = computed(() => listarPacotesHabilidadesIniciais(this.classeCalculada()));
   protected readonly pacoteHabilidadesSelecionado = computed(() => this.pacotesHabilidadesIniciais().find((pacote) => pacote.id === this.estado().pacoteHabilidadesId) ?? null);
   /** Vagas de habilidade do passo // HABILIDADES, só as com alvo > 0 — Civil nunca vê Geral/Classe própria/Arquétipo/Outra classe.
-   * A vaga 'classeOuArquetipo' já dá acesso à lista "Habilidades de Subclasse" (Peculiaridade incluída,
-   * `habilidades-catalogo.ts` grupo 'arquetipo') — inclusive para Experimento, via o pacote de Habilidades iniciais. */
+   * A vaga 'classeOuArquetipo' já dá acesso à lista de Habilidades de Subclasse (Peculiaridade incluída,
+   * `habilidades-catalogo.ts` grupo 'subclasse') — inclusive para Experimento, via o pacote de Habilidades iniciais. */
   protected readonly vagasMelhoria = computed<readonly VagaMelhoria[]>(() => {
     const p = this.progressaoAcumulada();
     const civil = this.classeCalculada() === ClasseEnum.CIVIL;
@@ -456,7 +456,10 @@ export class FichaCriar {
     }
     if (vaga === 'geral') return catalogoHabilidades(classe, this.estado().arquetipo).filter((g) => g.id === 'gerais');
     const arquetipo = ehClasseBase(classe) ? this.estado().arquetipo : null;
-    const idsRelevantes: readonly GrupoHabilidades['id'][] = vaga === 'classe' ? ['classe'] : ['classe', 'arquetipo'];
+    // 'subclasse' entra junto de 'arquetipo' (P-014 follow-up: viraram abas separadas no catálogo,
+    // mas continuam sendo o mesmo pick de "Classe ou Arquétipo/Subclasse" pra quem tem subclasse).
+    const idsRelevantes: readonly GrupoHabilidades['id'][] =
+      vaga === 'classe' ? ['classe'] : ['classe', 'subclasse', 'arquetipo'];
     const propriaOrigem = vaga === 'classe' || vaga === 'classeOuArquetipo';
     return catalogoHabilidades(classe, arquetipo)
       .filter((g) => idsRelevantes.includes(g.id))
