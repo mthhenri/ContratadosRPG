@@ -119,6 +119,7 @@ type EquipeFichaExibicao =
       readonly id: number;
       readonly nome: string;
       readonly imagemUrl: string | null;
+      readonly cor: string | null;
       readonly classeTexto: string;
     };
 
@@ -464,6 +465,8 @@ export class CampanhaDetalhe {
   /**
    * Uma ficha exibida na Equipe (m3-65): `completa` reusa `ItemFicha` (clicável, com vida/energia
    * — mesmo dado de `fichasPorMembro`); `teaser` é só a carteirinha (nome/classe/foto, sem clique).
+   * O mestre nunca mostra ficha nenhuma aqui (nem carteirinha, mesmo que ele tenha alguma e ela não
+   * esteja oculta) — a Equipe é sobre os colegas de time, o card do mestre vira o chip "Mestre".
    */
   protected readonly equipeExibicao = computed<
     readonly { readonly membro: CampanhaMembroResumoDto; readonly fichas: readonly EquipeFichaExibicao[] }[]
@@ -471,21 +474,25 @@ export class CampanhaDetalhe {
     const porMembroCompleto = this.fichasPorMembro();
     return this.membrosOrdenados().map((membro) => ({
       membro,
-      fichas: membro.fichas.map((ficha): EquipeFichaExibicao => {
-        const completa = ficha.acessoCompleto
-          ? porMembroCompleto.get(membro.usuarioId)?.find((item) => item.id === ficha.id)
-          : undefined;
-        if (completa) {
-          return { tipo: 'completa', ...completa };
-        }
-        return {
-          tipo: 'teaser',
-          id: ficha.id,
-          nome: ficha.nome,
-          imagemUrl: ficha.imagemUrl,
-          classeTexto: rotuloClasseCompleto(ficha.classe, ficha.arquetipo),
-        };
-      }),
+      fichas:
+        membro.papel === TipoCampanhaMembroPapelEnum.MESTRE
+          ? []
+          : membro.fichas.map((ficha): EquipeFichaExibicao => {
+              const completa = ficha.acessoCompleto
+                ? porMembroCompleto.get(membro.usuarioId)?.find((item) => item.id === ficha.id)
+                : undefined;
+              if (completa) {
+                return { tipo: 'completa', ...completa };
+              }
+              return {
+                tipo: 'teaser',
+                id: ficha.id,
+                nome: ficha.nome,
+                imagemUrl: ficha.imagemUrl,
+                cor: ficha.cor,
+                classeTexto: rotuloClasseCompleto(ficha.classe, ficha.arquetipo),
+              };
+            }),
     }));
   });
 

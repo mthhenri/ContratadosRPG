@@ -645,6 +645,15 @@
     overflow-wrap: anywhere;
   }
 
+  // Cabeçalho do mestre na Equipe (m3-65) — chip "Mestre" antes do nome, lado a lado (o resto da
+  // lista só tem o nome sozinho, sem precisar desse wrapper em linha).
+  &__equipe-cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
   // Botão "Ver ficha" (item 7) — um por ficha visível do colega; destaque de borda/accent na que
   // está exibida agora na coluna principal.
   &__equipe-ficha {
@@ -712,6 +721,9 @@
     width: 28px;
     height: 28px;
     flex: none;
+    // Cursor de mão só nele (não no card inteiro): é o gatilho do preview ampliado no hover
+    // sustentado (`agendarPreviewAvatar`) — sinaliza que dá pra "ficar em cima" e ver a imagem.
+    cursor: pointer;
     border-radius: var(--radius-control);
     background-color: color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 14%, var(--surface));
     background-image: repeating-linear-gradient(

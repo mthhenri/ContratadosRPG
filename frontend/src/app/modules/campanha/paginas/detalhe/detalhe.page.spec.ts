@@ -89,6 +89,7 @@ describe('CampanhaDetalhe', () => {
                 classe: ficha.classe,
                 arquetipo: ficha.arquetipo,
                 imagemUrl: ficha.imagemUrl,
+                cor: ficha.cor ?? null,
                 acessoCompleto: true,
               })),
     }));
@@ -520,6 +521,14 @@ describe('CampanhaDetalhe', () => {
       inconsciente: true,
     },
   ];
+
+  // m3-65: Kane pertence ao mestre em `fichas` (banner/Esquadrão usam esse dono) — mas a Equipe do
+  // jogador nunca mostra ficha do mestre (nem carteirinha), então os testes que exercitam "ver a
+  // ficha de um colega" pela Equipe precisam de um colega **jogador** de verdade. Reatribui Kane
+  // pro "Colega" (`usuarioId: 3`, de `membrosTres()`) só pra esses testes, sem tocar no fixture
+  // compartilhado (`fichas`) usado pelas telas do mestre.
+  const fichasComColegaJogador = (): FichaResumoDto[] =>
+    fichas.map((ficha) => (ficha.id === 3 ? { ...ficha, usuarioId: 3 } : ficha));
 
   // === Banner de alerta (item 1) ===
   describe('banner de alerta (item 1)', () => {
@@ -1472,7 +1481,11 @@ describe('CampanhaDetalhe', () => {
     });
 
     it('jogador vê a própria ficha embutida (não o grid "Esquadrão") e "Equipe" com os colegas visíveis', () => {
-      const { raiz, fichaService } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+      const { raiz, fichaService } = montar({
+        usuarioId: 2,
+        membros: membrosTres(),
+        fichas: fichasComColegaJogador(),
+      });
 
       expect(raiz.querySelector('.detalhe__grade')).toBeNull();
       expect(raiz.querySelector('.detalhe__jogador')).not.toBeNull();
@@ -1480,8 +1493,8 @@ describe('CampanhaDetalhe', () => {
       expect(fichaService.recuperarFicha).toHaveBeenCalledWith(4);
       expect(raiz.querySelector('app-ficha-visualizacao')).not.toBeNull();
 
-      // "Ver ficha" (item 7) — um botão por ficha visível de cada colega (Kane do mestre, Vera e
-      // Zeta, as duas do próprio jogador).
+      // "Ver ficha" (item 7) — um botão por ficha visível de cada colega (Kane do Colega, Vera e
+      // Zeta, as duas do próprio jogador). O mestre nunca entra aqui (m3-65).
       const botoes = Array.from(raiz.querySelectorAll('.detalhe__equipe-ficha')).map((el) =>
         el.textContent?.replace(/\s+/g, ' ').trim(),
       );
@@ -1493,8 +1506,8 @@ describe('CampanhaDetalhe', () => {
     it('"Ver ficha" troca a ficha exibida sem navegar, e a de um colega vira só leitura', () => {
       const { fixture, raiz, fichaService, navegar } = montar({
         usuarioId: 2,
-        membros: membrosDois(),
-        fichas,
+        membros: membrosTres(),
+        fichas: fichasComColegaJogador(),
       });
       const componente = fixture.componentInstance;
 
@@ -1510,7 +1523,7 @@ describe('CampanhaDetalhe', () => {
       expect(navegar).not.toHaveBeenCalled();
       expect(fichaService.recuperarFicha).toHaveBeenCalledWith(3);
       expect(componente['fichaExibidaId']()).toBe(3);
-      // Ficha do mestre, vista pelo jogador comum — só leitura.
+      // Ficha de um colega (Colega, usuarioId 3), vista por outro jogador — só leitura.
       expect(componente['podeAjustarFichaExibida']()).toBe(false);
     });
 
@@ -1532,7 +1545,11 @@ describe('CampanhaDetalhe', () => {
   // exibida na coluna principal, não sobre uma ficha escolhida no menu (que não existe aqui). ===
   describe('ações de ficha no menu do jogador (remover/excluir/acesso)', () => {
     it('desabilita "Remover da campanha"/"Excluir ficha" quando a ficha exibida é de um colega, habilita na própria', () => {
-      const { fixture, raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+      const { fixture, raiz } = montar({
+        usuarioId: 2,
+        membros: membrosTres(),
+        fichas: fichasComColegaJogador(),
+      });
       abrirMenuCampanha(raiz, fixture);
 
       expect(encontrarItemMenu(raiz, 'Remover da campanha').disabled).toBe(false);
@@ -1611,7 +1628,11 @@ describe('CampanhaDetalhe', () => {
     });
 
     it('desabilita "Acesso de visualização" quando a ficha exibida é de um colega, habilita na própria', () => {
-      const { fixture, raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+      const { fixture, raiz } = montar({
+        usuarioId: 2,
+        membros: membrosTres(),
+        fichas: fichasComColegaJogador(),
+      });
       abrirMenuCampanha(raiz, fixture);
       expect(encontrarItemMenu(raiz, 'Acesso de visualização').disabled).toBe(false);
 
@@ -1745,7 +1766,42 @@ describe('CampanhaDetalhe', () => {
         el.textContent?.trim(),
       );
       expect(nomes).toEqual(['Mestre', 'Jogador']);
-      expect(raiz.querySelectorAll('.detalhe__equipe-vazio')).toHaveLength(2);
+      // O mestre não usa o estado vazio — vira o chip "Mestre" (ver teste dedicado abaixo).
+      expect(raiz.querySelectorAll('.detalhe__equipe-vazio')).toHaveLength(1);
+    });
+
+    it('diferencia o mestre com o chip "Mestre" (coroa), primeiro da lista e sem cards de ficha', () => {
+      const { raiz } = montar({
+        usuarioId: 2,
+        membros: [
+          {
+            usuarioId: 1,
+            nome: 'Mestre',
+            papel: TipoCampanhaMembroPapelEnum.MESTRE,
+            fichas: [
+              {
+                id: 20,
+                nome: 'NPC do mestre',
+                classe: ClasseEnum.COMBATENTE,
+                arquetipo: null,
+                imagemUrl: null,
+                cor: null,
+                acessoCompleto: true,
+              },
+            ],
+          },
+          { usuarioId: 2, nome: 'Jogador', papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] },
+        ],
+      });
+
+      const itens = Array.from(raiz.querySelectorAll('.detalhe__equipe-membro'));
+      expect(itens[0]?.querySelector('.detalhe__equipe-nome')?.textContent?.trim()).toBe('Mestre');
+      const chip = itens[0]?.querySelector('.chip-papel');
+      expect(chip?.textContent).toContain('Mestre');
+      expect(itens[0]?.querySelector('.detalhe__equipe-ficha')).toBeNull();
+      expect(itens[0]?.querySelector('.detalhe__equipe-carteirinha')).toBeNull();
+      // O jogador comum não ganha o chip — só o mestre é diferenciado.
+      expect(itens[1]?.querySelector('.chip-papel')).toBeNull();
     });
 
     it('mostra carteirinha (sem botão) pra ficha de colega sem acesso completo', () => {
@@ -1765,6 +1821,7 @@ describe('CampanhaDetalhe', () => {
                 classe: ClasseEnum.COMBATENTE,
                 arquetipo: null,
                 imagemUrl: null,
+                cor: '#ff0000',
                 acessoCompleto: false,
               },
             ],
@@ -1778,6 +1835,8 @@ describe('CampanhaDetalhe', () => {
       expect(carteirinha?.textContent).toContain('Rex');
       expect(carteirinha?.textContent).toContain('Combatente');
       expect(raiz.querySelector('.detalhe__equipe-ficha')).toBeNull();
+      const avatar = carteirinha?.querySelector('.detalhe__equipe-ficha-avatar') as HTMLElement;
+      expect(avatar.style.getPropertyValue('--cor-ficha')).toBe('#ff0000');
     });
 
     it('mantém o card clicável (completo) pra ficha com acessoCompleto, cruzando com listarFichas', () => {
@@ -1796,6 +1855,7 @@ describe('CampanhaDetalhe', () => {
                 classe: ClasseEnum.COMBATENTE,
                 arquetipo: null,
                 imagemUrl: null,
+                cor: null,
                 acessoCompleto: true,
               },
             ],

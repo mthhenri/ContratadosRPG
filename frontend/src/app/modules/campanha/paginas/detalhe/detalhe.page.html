@@ -725,8 +725,17 @@
             @for (item of equipeExibicao(); track item.membro.usuarioId) {
               <li class="detalhe__equipe-membro">
                 <div class="detalhe__equipe-membro-corpo">
-                  <span class="detalhe__equipe-nome">{{ item.membro.nome }}</span>
-                  @if (item.fichas.length) {
+                  @if (item.membro.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
+                    <div class="detalhe__equipe-cabecalho">
+                      <span class="chip-papel">
+                        <app-icone nome="coroa" />
+                        Mestre
+                      </span>
+                      <span class="detalhe__equipe-nome">{{ item.membro.nome }}</span>
+                    </div>
+                  } @else {
+                    <span class="detalhe__equipe-nome">{{ item.membro.nome }}</span>
+                    @if (item.fichas.length) {
                     @for (ficha of item.fichas; track ficha.id) {
                       @if (ficha.tipo === 'completa') {
                         <button
@@ -737,7 +746,13 @@
                           [attr.aria-label]="'Ver ficha de ' + ficha.nome + ' (' + item.membro.nome + ')'"
                           (click)="selecionarFichaExibida(ficha.id)"
                         >
-                          <span class="detalhe__equipe-ficha-avatar" aria-hidden="true" [style.--cor-ficha]="ficha.cor">
+                          <span
+                            class="detalhe__equipe-ficha-avatar"
+                            aria-hidden="true"
+                            [style.--cor-ficha]="ficha.cor"
+                            (mouseenter)="agendarPreviewAvatar($event, ficha.imagemUrl)"
+                            (mouseleave)="cancelarPreviewAvatar()"
+                          >
                             @if (ficha.imagemUrl; as urlImagem) {
                               <img class="detalhe__equipe-ficha-avatar-imagem" [src]="urlImagem" alt="" />
                             }
@@ -756,7 +771,13 @@
                           class="detalhe__equipe-carteirinha"
                           [attr.aria-label]="'Ficha de ' + ficha.nome + ' (' + item.membro.nome + ') — sem acesso'"
                         >
-                          <span class="detalhe__equipe-ficha-avatar" aria-hidden="true">
+                          <span
+                            class="detalhe__equipe-ficha-avatar"
+                            aria-hidden="true"
+                            [style.--cor-ficha]="ficha.cor"
+                            (mouseenter)="agendarPreviewAvatar($event, ficha.imagemUrl)"
+                            (mouseleave)="cancelarPreviewAvatar()"
+                          >
                             @if (ficha.imagemUrl; as urlImagem) {
                               <img class="detalhe__equipe-ficha-avatar-imagem" [src]="urlImagem" alt="" />
                             }
@@ -768,8 +789,9 @@
                         </span>
                       }
                     }
-                  } @else {
-                    <span class="detalhe__equipe-vazio">Sem ficha nesta campanha</span>
+                    } @else {
+                      <span class="detalhe__equipe-vazio">Sem ficha nesta campanha</span>
+                    }
                   }
                 </div>
               </li>

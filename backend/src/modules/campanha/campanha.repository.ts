@@ -282,6 +282,7 @@ export class CampanhaRepository extends BaseRepository {
                     'classe', ficha.dados->>'classe',
                     'arquetipo', ficha.dados->>'arquetipo',
                     'imagemUrl', ficha.imagem_url,
+                    'cor', ficha.cor,
                     'acessoCompleto', (
                       :usuarioAtivoEhMestre
                       OR ficha.usuario_id = :usuarioAtivoId

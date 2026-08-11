@@ -208,6 +208,8 @@ export interface CampanhaMembroFichaResumoDto {
   readonly classe: ClasseEnum;
   readonly arquetipo: ArquetipoEnum | null;
   readonly imagemUrl: string | null;
+  /** Cor de identidade visual (m3-61) — tinge o avatar da carteirinha, igual ao Esquadrão do mestre. */
+  readonly cor: string | null;
   /** `true` quando o requisitante enxerga a ficha completa (dono, mestre, ou concessão ativa). */
   readonly acessoCompleto: boolean;
 }
