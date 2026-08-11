@@ -1,5 +1,31 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-11 — Acervo de fichas passa a mostrar cor e avatar do card, como no Esquadrão
+
+`FichaAcervo` (`/fichas`) já lia `imagemUrl` de `FichaResumoDto` e renderizava a foto, mas nunca
+lia `cor` — o comentário do SCSS ainda dizia "o cartão do acervo não recebe `cor` — recorte
+enxuto de `FichaResumoDto`, sem a coluna relacional", uma justificativa que ficou obsoleta assim
+que `m3-61` acrescentou `cor` ao mesmo `FichaResumoDto` (o backend já devolvia a coluna; só o
+frontend do acervo nunca foi atualizado). Resultado visível: todo avatar do acervo saía com borda
+e listras neutras (`--border-strong`), sem a identidade de cor da ficha, e sem o preview ampliado
+no hover que o card de ficha do Esquadrão (`CampanhaDetalhe`, `m3-52`) já tinha para a mesma foto.
+
+Correção trouxe a mesma receita do Esquadrão para o card do acervo: `ItemAcervo.cor` mapeado de
+`FichaResumoDto.cor`, `[style.--cor-ficha]` no avatar alimentando o mesmo `color-mix` de borda e
+listras diagonais (fallback pra `--border-strong` sem cor definida), avatar alargado (36px → 52px,
+esticado à altura do bloco nome/meta/vitais) e o hover sustentado (`agendarPreviewAvatar`/
+`cancelarPreviewAvatar`, 600 ms) abrindo um preview 200×200 `object-fit: contain` na raiz do
+template — mesma posição fora de `.acervo__lista` que o menu kebab já ocupava, pela mesma razão
+(overflow + mask-image cortariam um `position: fixed` filho na pintura).
+
+Testes: os 15 de `acervo.page.spec.ts` e os 541 do módulo `ficha` passam; build e lint do
+frontend limpos no recorte tocado. Verificação visual na aplicação real (Postgres local via
+`postgresql-16` do sistema — Docker não disponível neste ambiente) em `1920×1080` e `360×800`,
+com três fichas semeadas via REST (com cor sem foto, com cor e foto, sem nenhuma das duas): borda
+e listras seguem a cor de cada ficha, a terceira cai no neutro esperado, e o hover sustentado sobre
+o avatar com foto abre o preview ampliado. Comparação lado a lado com o card do Esquadrão
+(`/painel/:id`) confirma a mesma receita visual (cor, listras, preview).
+
 ## 2026-08-11 — `P-013`, correção de escopo: Anomalia também dobra o ponto de atributo do Módulo I e o Construtor
 
 Relato direto do autor: consumir um Fragmento Potencializador de Módulo I com a habilidade

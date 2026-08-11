@@ -224,7 +224,13 @@ placeholder decorativo no cabeçalho (com selos de trocar/remover, `ajustavelAmp
 acervo — upload/remoção via `POST`/`DELETE /ficha/:id/imagem` (multipart, endpoint dedicado fora do
 `PUT` genérico), persistidos **imediatamente** (sem o debounce dos demais campos), com o arquivo
 guardado em disco local (dev) ou Cloudflare R2 (produção) atrás de `ArmazenamentoProvedor`
-(`backend/src/core/armazenamento/`), escolhido por `ARMAZENAMENTO_PROVEDOR`.
+(`backend/src/core/armazenamento/`), escolhido por `ARMAZENAMENTO_PROVEDOR`. O card do acervo
+(`/fichas`, `FichaAcervo`) usa a mesma receita visual do card de ficha do Esquadrão
+(`CampanhaDetalhe`, `m3-52`): borda + listras diagonais do avatar seguem `--cor-ficha`
+(`color-mix` sobre `--border-strong` sem cor definida) e o hover sustentado sobre o avatar abre um
+preview 200×200 sem recorte (`agendarPreviewAvatar`/`cancelarPreviewAvatar`) — o acervo lia
+`imagemUrl` mas nunca `cor` nem tinha o preview; corrigido para consumir o mesmo recorte que
+`FichaResumoDto` já expõe.
 
 ### Guia de criação de ficha — `frontend/src/app/modules/ficha/paginas/criar/`
 
