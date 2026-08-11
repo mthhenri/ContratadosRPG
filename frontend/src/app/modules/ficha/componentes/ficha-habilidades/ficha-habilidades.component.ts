@@ -52,6 +52,7 @@ const TIPOS_FILTRO_RESUMO: readonly FiltroCategoriaResumo[] = [
   'outraClasse',
 ];
 
+/** Rótulos fixos do resumo — `arquetipo` vira "Subclasse" numa ficha Experimento (P-014, ver `rotuloResumoArquetipo`). */
 const ROTULO_FILTRO_RESUMO: Readonly<Record<FiltroCategoriaResumo, string>> = {
   arquetipo: 'Arquétipo',
   classe: 'Classe',
@@ -171,6 +172,13 @@ export class FichaHabilidades {
   /** Só oferece a busca quando a lista já é grande o bastante para valer a pena procurar. */
   protected readonly mostrarBusca = computed(() => this.habilidades().length > 4);
 
+  /** Rótulo do bucket "Arquétipo" do resumo — "Subclasse" numa ficha Experimento (P-014). Civil
+   * (`classeBaseDeHabilidades` devolve `null`) não conta como subclasse aqui. */
+  protected readonly rotuloResumoArquetipo = computed(() => {
+    const base = classeBaseDeHabilidades(this.classe());
+    return base !== null && base !== this.classe() ? 'Subclasse' : 'Arquétipo';
+  });
+
   /**
    * Contagem por categoria (resumo acima da busca) — Arquétipo/Classe/Geral/Outra classe. Uma
    * habilidade de Classe/Arquétipo vinda de **outra** origem (`ehDeOutraOrigem` — mesmo critério
@@ -198,8 +206,10 @@ export class FichaHabilidades {
 
   /**
    * Bucket do resumo por categoria (m3-48) a que a habilidade pertence, ou `null` quando não cai em
-   * nenhum dos 4 grupos exibidos (ex.: Subclasse/Personalidade/Especialidade/Civil) — mesmo critério
-   * usado por `contagemPorCategoria` e pelo filtro de `habilidadesFiltradas`.
+   * nenhum dos 4 grupos exibidos (ex.: Personalidade/Especialidade/Civil) — mesmo critério usado por
+   * `contagemPorCategoria` e pelo filtro de `habilidadesFiltradas`. Subclasse (P-014) soma no mesmo
+   * bucket de Arquétipo — é o mesmo conceito, só renomeado na exibição (`rotuloResumoArquetipo`);
+   * subclasses nunca cruzam (doc), então não existe um caso "de outra subclasse" a separar aqui.
    */
   private bucketResumo(habilidade: FichaHabilidadeDto): FiltroCategoriaResumo | null {
     if (
@@ -208,7 +218,10 @@ export class FichaHabilidades {
     ) {
       return 'outraClasse';
     }
-    if (habilidade.categoria === HabilidadeCategoriaEnum.ARQUETIPO) {
+    if (
+      habilidade.categoria === HabilidadeCategoriaEnum.ARQUETIPO ||
+      habilidade.categoria === HabilidadeCategoriaEnum.SUBCLASSE
+    ) {
       return 'arquetipo';
     }
     if (habilidade.categoria === HabilidadeCategoriaEnum.CLASSE) {
@@ -284,8 +297,8 @@ export class FichaHabilidades {
   protected readonly mensagemListaVazia = computed<string>(() => {
     const termo = this.buscaTexto().trim();
     const filtro = this.filtroCategoria();
-    const rotulos = TIPOS_FILTRO_RESUMO.filter((tipo) => filtro.has(tipo)).map(
-      (tipo) => ROTULO_FILTRO_RESUMO[tipo],
+    const rotulos = TIPOS_FILTRO_RESUMO.filter((tipo) => filtro.has(tipo)).map((tipo) =>
+      tipo === 'arquetipo' ? this.rotuloResumoArquetipo() : ROTULO_FILTRO_RESUMO[tipo],
     );
     const rotuloFiltro = rotulos.length ? juntarComOu(rotulos) : null;
     if (termo && rotuloFiltro) {

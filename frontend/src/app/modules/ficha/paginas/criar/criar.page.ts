@@ -116,11 +116,20 @@ export class FichaCriar {
     { chave: 'medicina', nome: 'Medicina' }, { chave: 'sentidos', nome: 'Sentidos' }, { chave: 'social', nome: 'Social' },
     { chave: 'vontade', nome: 'Vontade' },
   ];
-  /** Rótulo de cada vaga de melhoria (m3-58), na ordem de exibição do passo. */
+  /** Rótulo de cada vaga de melhoria (m3-58), na ordem de exibição do passo. `classeOuArquetipo` vira
+   * "Classe ou Subclasse" para as subclasses de Experimento (P-014) — resolvido em `rotuloVaga`. */
   private static readonly ROTULOS_VAGA: Readonly<Record<TipoVagaMelhoria, string>> = {
     geral: 'Habilidade Geral', classe: 'Habilidade de Classe', classeOuArquetipo: 'Classe ou Arquétipo',
     outraClasse: 'Outra classe / outro arquétipo', civil: 'Habilidade Civil',
   };
+  /** Rótulo da vaga, com `classeOuArquetipo` trocado para "Classe ou Subclasse" numa ficha Experimento
+   * (P-014) — mesmo critério de `!ehClasseBase` usado pelo resto do guia para distinguir subclasse. */
+  private rotuloVaga(tipo: TipoVagaMelhoria): string {
+    if (tipo === 'classeOuArquetipo' && !ehClasseBase(this.classeCalculada())) {
+      return 'Classe ou Subclasse';
+    }
+    return FichaCriar.ROTULOS_VAGA[tipo];
+  }
   protected readonly membros = signal<CampanhaMembroResumoDto[]>([]); protected readonly fichas = signal<FichaResumoDto[]>([]);
   protected readonly carregando = signal(true); protected readonly criando = signal(false); protected readonly rolandoRecursos = signal(false); protected readonly erro = signal('');
 
@@ -273,7 +282,7 @@ export class FichaCriar {
     const civil = this.classeCalculada() === ClasseEnum.CIVIL;
     const pacote = this.pacoteHabilidadesSelecionado();
     const quantidadeInicial = (tipo: TipoVagaMelhoria): number => pacote?.vagas.find((vagaInicial) => vagaInicial.tipo === tipo)?.quantidade ?? 0;
-    const vaga = (tipo: TipoVagaMelhoria, alvo: number): VagaMelhoria | null => alvo > 0 ? { tipo, rotulo: FichaCriar.ROTULOS_VAGA[tipo], alvo } : null;
+    const vaga = (tipo: TipoVagaMelhoria, alvo: number): VagaMelhoria | null => alvo > 0 ? { tipo, rotulo: this.rotuloVaga(tipo), alvo } : null;
     const vagas = civil
       ? [vaga('classe', p.habilidadesClasse), vaga('civil', p.habilidadesCivis + quantidadeInicial('civil'))]
       : [vaga('geral', p.habilidadesGerais + quantidadeInicial('geral')), vaga('classe', p.habilidadesClasse + quantidadeInicial('classe')), vaga('classeOuArquetipo', p.habilidadesClasseOuArquetipo + quantidadeInicial('classeOuArquetipo')), vaga('outraClasse', p.habilidadesOutraClasse + quantidadeInicial('outraClasse'))];

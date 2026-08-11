@@ -34,7 +34,7 @@
         (click)="alternarFiltro('arquetipo')"
         (contextmenu)="removerFiltroPorContexto('arquetipo', $event)"
       >
-        <span class="habilidades__resumo-rotulo">Arquétipo</span>
+        <span class="habilidades__resumo-rotulo">{{ rotuloResumoArquetipo() }}</span>
         <span class="habilidades__resumo-valor">{{ contagemPorCategoria().arquetipo }}</span>
       </button>
       <button

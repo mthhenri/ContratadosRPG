@@ -109,9 +109,23 @@ export class FichaHabilidadeSeletor {
     return aba !== 'gerais' && aba !== 'civil';
   });
 
+  /**
+   * Rótulo da aba — "Arquétipo" vira "Subclasse" (P-014) quando o subgrupo da própria ficha naquele
+   * grupo é identificado por uma `ClasseEnum` (a subclasse ocupa o lugar do arquétipo pra Experimento;
+   * `grupoArquetipo` em `habilidades-catalogo.ts` é quem decide isso, aqui só se lê o resultado).
+   */
   protected rotuloAba(id: GrupoHabilidades['id']): string {
+    if (id === 'arquetipo' && this.abaArquetipoEhSubclasse()) {
+      return 'Subclasse';
+    }
     return ROTULO_ABA[id];
   }
+
+  private readonly abaArquetipoEhSubclasse = computed(() => {
+    const grupoArquetipo = this.grupos().find((grupo) => grupo.id === 'arquetipo');
+    const daFicha = grupoArquetipo?.subgrupos.find((subgrupo) => subgrupo.ehDaFicha);
+    return daFicha !== undefined && daFicha.chave !== null && VALORES_CLASSE.has(daFicha.chave);
+  });
 
   /** Rótulo legível de um subgrupo (classe/arquétipo/subclasse). */
   protected rotuloSubgrupo(chave: ClasseEnum | ArquetipoEnum | null): string {

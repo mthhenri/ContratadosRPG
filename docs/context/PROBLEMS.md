@@ -114,28 +114,6 @@
 - **Desde:** `m3-60` — **adiado por decisão explícita do dono**, registrado como dívida de
   nomenclatura.
 
-### P-014 — Label "Arquétipo" no seletor de habilidades não vira "Subclasse" para subclasses de Experimento · `ABERTO` · frontend
-
-- **Sintoma:** no seletor de habilidades e no resumo por categoria da aba Habilidades, o rótulo que
-  deveria virar "Subclasse" quando o agente é uma subclasse de Experimento (Bestial/Artificial/
-  Híbrido) continua fixo em "Arquétipo". O dono pediu o mesmo ajuste "pro civil também" — escopo
-  exato a confirmar com ele: Civil já tem grupo próprio (`id: 'civil'`, rótulo "Civil") separado de
-  "Arquétipo", não está claro qual rótulo especificamente precisa mudar nesse caso.
-- **Causa:** rótulo fixo, não deriva de `perfilClasseRotulos`/`classeBaseDeHabilidades` (que já
-  sabem diferenciar arquétipo de subclasse — ver
-  [rotulos-ficha.ts:51](../../frontend/src/app/modules/ficha/rotulos-ficha.ts#L51)). Dois pontos
-  com o mesmo texto fixo:
-  [ficha-habilidade-seletor.component.ts:20](../../frontend/src/app/modules/ficha/componentes/ficha-habilidade-seletor/ficha-habilidade-seletor.component.ts#L20)
-  (`ROTULO_ABA.arquetipo = 'Arquétipo'`) e
-  [ficha-habilidades.component.ts:56](../../frontend/src/app/modules/ficha/componentes/ficha-habilidades/ficha-habilidades.component.ts#L56)
-  (`ROTULO_FILTRO_RESUMO.arquetipo = 'Arquétipo'`, com chip estático em
-  [ficha-habilidades.component.html:37](../../frontend/src/app/modules/ficha/componentes/ficha-habilidades/ficha-habilidades.component.html#L37)).
-- **Contorno:** nenhum.
-- **Correção:** tornar o rótulo dinâmico por classe do agente (mesma lógica de
-  `perfilClasseRotulos`), trocando para "Subclasse" quando `classeBaseDeHabilidades(classe) !==
-  classe`; confirmar com o dono o que muda para Civil antes de mexer.
-- **Desde:** reportado pelo dono em 2026-08-09.
-
 ## Resolvidos
 
 Itens resolvidos **saem daqui**. O relato da correção fica no [`HISTORY.md`](HISTORY.md), junto da
@@ -163,3 +141,6 @@ task que a fez.
   Corrigido em 2026-08-11, ver `HISTORY.md`.
 - **P-016** — fragmento Potencializador solto no inventário drenava Energia sem estar aplicado;
   revisão de regra autorizada pelo dono. Corrigido em 2026-08-11, ver `HISTORY.md`.
+- **P-014** — rótulo "Arquétipo" ficava fixo (seletor de habilidades, resumo da aba Habilidades,
+  guia de criação) mesmo numa ficha de subclasse de Experimento. Corrigido em 2026-08-11, ver
+  `HISTORY.md`.

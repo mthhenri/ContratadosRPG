@@ -368,6 +368,17 @@ describe('FichaCriar', () => {
       ]);
     });
 
+    it('a vaga "classeOuArquetipo" vira "Classe ou Subclasse" numa classe Experimento, mas continua "Classe ou Arquétipo" numa classe base (P-014)', () => {
+      const { componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
+      componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
+      expect(componente['vagasMelhoria']().find((v) => v.tipo === 'classeOuArquetipo')?.rotulo).toBe('Classe ou Arquétipo');
+
+      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_ARTIFICIAL });
+      componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
+      expect(componente['vagasMelhoria']().find((v) => v.tipo === 'classeOuArquetipo')?.rotulo).toBe('Classe ou Subclasse');
+    });
+
     it('bloqueia o passo Habilidades até escolher e preencher o pacote', () => {
       const { componente } = montar();
       componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR, passo: 4 });
@@ -614,6 +625,32 @@ describe('FichaCriar', () => {
 
       expect(componente['comHabilidades']()).toBe(true);
       expect(componente['passos']()).toContain('Habilidades');
+    });
+
+    it('DOM: a aba do seletor "Do sistema" mostra "Subclasse" (não "Arquétipo") para um Experimento (P-014)', () => {
+      const { fixture, raiz, componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
+      componente['atualizar']({ passo: componente['passos']().indexOf('Habilidades') });
+      componente['abrirSeletorMelhoria']('classeOuArquetipo');
+      fixture.detectChanges();
+
+      const rotulosAba = Array.from(raiz.querySelectorAll('.seletor__aba')).map((aba) => aba.textContent?.trim());
+      expect(rotulosAba).toContain('Subclasse');
+      expect(rotulosAba).not.toContain('Arquétipo');
+    });
+
+    it('DOM: a aba do seletor "Do sistema" continua "Arquétipo" para uma classe base (P-014)', () => {
+      const { fixture, raiz, componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
+      componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
+      componente['atualizar']({ passo: componente['passos']().indexOf('Habilidades') });
+      componente['abrirSeletorMelhoria']('classeOuArquetipo');
+      fixture.detectChanges();
+
+      const rotulosAba = Array.from(raiz.querySelectorAll('.seletor__aba')).map((aba) => aba.textContent?.trim());
+      expect(rotulosAba).toContain('Arquétipo');
+      expect(rotulosAba).not.toContain('Subclasse');
     });
 
     it('escolher Peculiaridade num pacote de Classe/Arquétipo conta como melhoria completa', () => {

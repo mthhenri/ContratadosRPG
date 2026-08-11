@@ -1,5 +1,36 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-11 — `P-014` corrigido: rótulo "Arquétipo" agora vira "Subclasse" nas fichas de Experimento
+
+`P-014` estava aberto esperando o dono confirmar o escopo exato — em especial se o Civil também
+precisava de ajuste, já que ele tem um grupo próprio (`id: 'civil'`, rótulo "Civil") separado de
+"Arquétipo". O dono confirmou nesta sessão: o pedido anterior sobre o Civil foi um engano dele, sem
+bug nenhum aí — o escopo real é só trocar "Arquétipo" por "Subclasse" nos três lugares onde o rótulo
+fica fixo mesmo numa ficha de subclasse de Experimento (Bestial/Artificial/Híbrido).
+
+- `ficha-habilidade-seletor.component.ts` (diálogo "Adicionar do sistema"): a aba que hoje sempre
+  mostra "Arquétipo" agora checa se o subgrupo da própria ficha naquele grupo é identificado por uma
+  `ClasseEnum` (a subclasse ocupa o lugar do arquétipo pra Experimento, mesmo dado que já vinha de
+  `catalogoHabilidades`/`grupoArquetipo`) — se for, o rótulo vira "Subclasse". Nenhuma regra nova:
+  só leitura do que o catálogo já resolvia.
+- `ficha-habilidades.component.ts` (resumo por categoria da aba Habilidades): o chip "Arquétipo"
+  virou dinâmico (`rotuloResumoArquetipo`, mesmo critério de `classeBaseDeHabilidades` usado pelo
+  chip por item) — "Subclasse" numa ficha Experimento, "Arquétipo" nas demais, nunca em Civil
+  (`classeBaseDeHabilidades` devolve `null` pra Civil, tratado à parte pra não virar "Subclasse" por
+  engano). De quebra, corrigido um gap encontrado no caminho: `bucketResumo` nunca somava habilidades
+  de categoria `SUBCLASSE` em bucket nenhum — elas ficavam fora da contagem e do filtro inteiro. Agora
+  somam no mesmo bucket de Arquétipo (é o mesmo conceito, só renomeado na exibição).
+- `criar.page.ts` (guia de criação, passo // Habilidades): a vaga `classeOuArquetipo` tinha rótulo
+  fixo "Classe ou Arquétipo"; agora vira "Classe ou Subclasse" quando a classe da ficha não é de base
+  (`!ehClasseBase`, mesmo critério já usado no resto do guia) — cobre tanto o cabeçalho da vaga quanto
+  o botão "+ Escolher…" e a aba do seletor que abre a partir dela.
+- `docs/core/sistema-v4.1.0.md` não mudou — isto é rótulo de UI, não revisão de regra.
+- Testado: `criar.page.spec.ts` ganhou um teste de rótulo de vaga (`vagasMelhoria()`) e dois testes de
+  DOM abrindo o seletor pra conferir a aba renderizada, Experimento vs. classe base.
+  `ficha-habilidades.component.spec.ts` ganhou um describe novo cobrindo o rótulo dinâmico do resumo
+  e a contagem de uma habilidade `SUBCLASSE`. `shared` não mudou (nenhum teste novo lá). `frontend`:
+  884/884 (era 878/878, +6 testes novos). `lint`/`build` limpos nos dois workspaces.
+
 ## 2026-08-11 — `P-016` corrigido: Potencializador solto no inventário não custa mais Energia
 
 `P-016` estava marcado como pendente de decisão do dono — o comportamento reportado como
