@@ -204,9 +204,11 @@ export class CampanhaService {
   }
 
   /**
-   * Lista os membros da campanha (nome do usuário + papel). Visível a qualquer membro da
-   * campanha (§14). `ResourceNotFoundException` se a campanha não existir;
-   * `UnauthorizedAccessException` se o autor não for membro.
+   * Lista os membros da campanha (nome/papel/fichas — m3-65). Visível a qualquer membro da
+   * campanha (§14). Resolve o papel do requisitante via `recuperarMembro` (precisa dele de
+   * qualquer forma, pra decidir `acessoCompleto`/carteirinha no repositório) — substitui o antigo
+   * `validarMembro` só-checagem por essa mesma chamada. `ResourceNotFoundException` se a campanha
+   * não existir; `UnauthorizedAccessException` se o autor não for membro.
    */
   async listarMembros(
     dto: CampanhaMembrosListarDto,
@@ -219,8 +221,19 @@ export class CampanhaService {
       throw new ResourceNotFoundException('Campanha');
     }
 
-    await this.validarMembro({ campanhaId: dto.campanhaId, usuarioId: usuarioAtivo.sub });
-    return this.campanhaRepositorio.listarMembros(dto);
+    const membroAtivo = await this.campanhaRepositorio.recuperarMembro({
+      campanhaId: dto.campanhaId,
+      usuarioId: usuarioAtivo.sub,
+    });
+    if (!membroAtivo) {
+      throw new UnauthorizedAccessException();
+    }
+
+    return this.campanhaRepositorio.listarMembros({
+      campanhaId: dto.campanhaId,
+      usuarioAtivoId: usuarioAtivo.sub,
+      usuarioAtivoEhMestre: membroAtivo.papel === TipoCampanhaMembroPapelEnum.MESTRE,
+    });
   }
 
   /**

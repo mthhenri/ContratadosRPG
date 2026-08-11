@@ -1,4 +1,4 @@
-import type { TipoCampanhaMembroPapelEnum } from '../../enums';
+import type { ArquetipoEnum, ClasseEnum, TipoCampanhaMembroPapelEnum } from '../../enums';
 
 /**
  * DTOs do módulo `campanha` — CRUD de campanha (m2-04). Seguem a fórmula
@@ -197,13 +197,42 @@ export interface CampanhaMembrosListarDto {
 }
 
 /**
+ * Ficha de um membro, no recorte mínimo pra Equipe (m3-65): quando `acessoCompleto` é `false`,
+ * é só a "carteirinha" — nome/classe/foto, sem vida/energia/etc. (esses continuam vindo, pra quem
+ * tem acesso completo, de `GET /ficha?campanhaId=`, que não muda). Fichas marcadas `oculta` por um
+ * jogador que não seja o dono/mestre requisitante nem entram nesta lista — não tem carteirinha.
+ */
+export interface CampanhaMembroFichaResumoDto {
+  readonly id: number;
+  readonly nome: string;
+  readonly classe: ClasseEnum;
+  readonly arquetipo: ArquetipoEnum | null;
+  readonly imagemUrl: string | null;
+  /** `true` quando o requisitante enxerga a ficha completa (dono, mestre, ou concessão ativa). */
+  readonly acessoCompleto: boolean;
+}
+
+/**
  * Item de listagem de membros — o usuário membro da campanha com o `papel` dele nela
- * (`MESTRE`/`JOGADOR`, `codigo` traduzido de `tipo_campanha_membro_papel` no SQL).
+ * (`MESTRE`/`JOGADOR`, `codigo` traduzido de `tipo_campanha_membro_papel` no SQL) e as fichas
+ * dele visíveis ao requisitante (m3-65 — sempre todos os membros, ficha ou não).
  */
 export interface CampanhaMembroResumoDto {
   readonly usuarioId: number;
   readonly nome: string;
   readonly papel: TipoCampanhaMembroPapelEnum;
+  readonly fichas: readonly CampanhaMembroFichaResumoDto[];
+}
+
+/**
+ * Entrada interna da listagem de membros (m3-65) — o `usuarioAtivoId`/`usuarioAtivoEhMestre` vêm
+ * da service (que já resolveu o papel do requisitante pra validar a permissão) e decidem, por
+ * ficha, `acessoCompleto` e se uma ficha oculta de terceiro entra na lista. Só service ↔ repository.
+ */
+export interface CampanhaMembrosInternoListarDto {
+  readonly campanhaId: number;
+  readonly usuarioAtivoId: number;
+  readonly usuarioAtivoEhMestre: boolean;
 }
 
 /**

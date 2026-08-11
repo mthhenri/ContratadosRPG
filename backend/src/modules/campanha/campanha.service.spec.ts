@@ -345,6 +345,7 @@ describe('CampanhaService', () => {
           usuarioId: usuarioMestre.sub,
           nome: 'Matheus',
           papel: TipoCampanhaMembroPapelEnum.MESTRE,
+          fichas: [],
         },
       ];
       repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
@@ -355,8 +356,28 @@ describe('CampanhaService', () => {
 
       const resultado = await service.listarMembros({ campanhaId: 3 }, usuarioNaoMestre);
 
-      expect(repositorio.listarMembros).toHaveBeenCalledWith({ campanhaId: 3 });
+      expect(repositorio.listarMembros).toHaveBeenCalledWith({
+        campanhaId: 3,
+        usuarioAtivoId: usuarioNaoMestre.sub,
+        usuarioAtivoEhMestre: false,
+      });
       expect(resultado).toBe(membros);
+    });
+
+    it('marca usuarioAtivoEhMestre quando quem pede é o mestre da campanha', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.MESTRE,
+      });
+      repositorio.listarMembros.mockResolvedValue([]);
+
+      await service.listarMembros({ campanhaId: 3 }, usuarioMestre);
+
+      expect(repositorio.listarMembros).toHaveBeenCalledWith({
+        campanhaId: 3,
+        usuarioAtivoId: usuarioMestre.sub,
+        usuarioAtivoEhMestre: true,
+      });
     });
 
     it('lança UnauthorizedAccessException quando o usuário não é membro', async () => {

@@ -15,7 +15,7 @@ import type {
   CampanhaMembroInternoRecuperarDto,
   CampanhaMembroInternoRemoverDto,
   CampanhaMembroResumoDto,
-  CampanhaMembrosListarDto,
+  CampanhaMembrosInternoListarDto,
   CampanhaMestreInternoTransferirDto,
   CampanhaRecuperadaDto,
   CampanhaRecuperarDto,
@@ -256,23 +256,61 @@ export class CampanhaRepository extends BaseRepository {
   }
 
   /**
-   * Lista os membros da campanha com o `nome` do usuário e o `papel` dele
-   * (`MESTRE`/`JOGADOR`). Junta `campanha_membro` → `usuario` (nome) →
-   * `tipo_campanha_membro_papel` (papel), todas filtrando `is_deleted = false`. Ordena por nome.
+   * Lista os membros da campanha com `nome`/`papel` e as fichas de cada um, no recorte de
+   * carteirinha (m3-65): por ficha, `acessoCompleto` é `true` pro mestre, pro dono, ou por
+   * concessão ativa (`usuario_ficha_acesso`) — senão é só carteirinha. Ficha marcada `oculta`
+   * de outro dono nem entra na lista (nem carteirinha), exceto pro mestre ou pro próprio dono.
+   * `json_agg`/`json_build_object` porque o `pg` decodifica JSON pra objeto/array JS sozinho, sem
+   * parse manual (mesmo padrão de `minhaFichaResumo` em `listarPorUsuario`). Ordena por nome.
    */
-  async listarMembros(dto: CampanhaMembrosListarDto): Promise<CampanhaMembroResumoDto[]> {
+  async listarMembros(dto: CampanhaMembrosInternoListarDto): Promise<CampanhaMembroResumoDto[]> {
     return this.executarConsulta<CampanhaMembroResumoDto>(
       `SELECT usuario.id AS "usuarioId", usuario.nome,
-              tipo_campanha_membro_papel.codigo AS papel
+              tipo_campanha_membro_papel.codigo AS papel,
+              COALESCE(fichas_membro.fichas, '[]'::json) AS fichas
        FROM campanha_membro
        INNER JOIN usuario
          ON usuario.id = campanha_membro.usuario_id AND usuario.is_deleted = false
        INNER JOIN tipo_campanha_membro_papel
          ON tipo_campanha_membro_papel.id = campanha_membro.tipo_campanha_membro_papel_id
         AND tipo_campanha_membro_papel.is_deleted = false
+       LEFT JOIN LATERAL (
+         SELECT json_agg(
+                  json_build_object(
+                    'id', ficha.id,
+                    'nome', ficha.nome,
+                    'classe', ficha.dados->>'classe',
+                    'arquetipo', ficha.dados->>'arquetipo',
+                    'imagemUrl', ficha.imagem_url,
+                    'acessoCompleto', (
+                      :usuarioAtivoEhMestre
+                      OR ficha.usuario_id = :usuarioAtivoId
+                      OR EXISTS (
+                        SELECT 1 FROM usuario_ficha_acesso
+                        WHERE usuario_ficha_acesso.ficha_id = ficha.id
+                          AND usuario_ficha_acesso.usuario_id = :usuarioAtivoId
+                          AND usuario_ficha_acesso.is_deleted = false
+                      )
+                    )
+                  )
+                  ORDER BY ficha.nome ASC
+                ) AS fichas
+         FROM ficha
+         WHERE ficha.campanha_id = :campanhaId AND ficha.is_deleted = false
+           AND ficha.usuario_id = campanha_membro.usuario_id
+           AND (
+             :usuarioAtivoEhMestre
+             OR ficha.usuario_id = :usuarioAtivoId
+             OR COALESCE(ficha.oculta, false) = false
+           )
+       ) fichas_membro ON true
        WHERE campanha_membro.campanha_id = :campanhaId AND campanha_membro.is_deleted = false
        ORDER BY usuario.nome ASC`,
-      { campanhaId: dto.campanhaId },
+      {
+        campanhaId: dto.campanhaId,
+        usuarioAtivoId: dto.usuarioAtivoId,
+        usuarioAtivoEhMestre: dto.usuarioAtivoEhMestre,
+      },
     );
   }
 
