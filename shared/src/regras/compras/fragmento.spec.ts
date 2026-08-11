@@ -33,34 +33,32 @@ import {
  * custa 14 de Energia").
  */
 describe('custoAquisicaoFragmento', () => {
-  it('Potencializador custa o valor da tabela por módulo', () => {
-    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.V)).toBe(3);
-    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.IV)).toBe(7);
-    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.III)).toBe(12);
-    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.II)).toBe(16);
-    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.I)).toBe(20);
+  /**
+   * P-016 (revisão de regra, dono, 2026-08-09): um Potencializador solto no inventário, ainda não
+   * acoplado, não está fazendo nada — não deveria custar Energia. Ele só passa a custar ao ser
+   * `custoAcoplarFragmento`. Sempre 0, em qualquer módulo, com ou sem Anomalia.
+   */
+  it('Potencializador não custa nada ao ser só adquirido/portado solto (P-016)', () => {
+    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.V)).toBe(0);
+    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.IV)).toBe(0);
+    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.III)).toBe(0);
+    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.II)).toBe(0);
+    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.I)).toBe(0);
+    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.IV, true)).toBe(0);
   });
 
-  it('Construtor custa o dobro do valor da tabela (doc: "seu valor... é dobrado")', () => {
+  it('Construtor custa o dobro do valor da tabela (doc: "seu valor... é dobrado") — inalterado pelo P-016', () => {
     expect(custoAquisicaoFragmento(FragmentoTipoEnum.CONSTRUTOR, FragmentoModuloEnum.IV)).toBe(14);
     expect(custoAquisicaoFragmento(FragmentoTipoEnum.CONSTRUTOR, FragmentoModuloEnum.I)).toBe(40);
   });
 
   /**
    * Habilidade "Anomalia" (Experimento Artificial, `P-013`) — doc: "Fragmentos custam o dobro de
-   * Energia em seu uso". Dobra por cima do que já é cobrado, inclusive o dobro já aplicado ao
-   * Construtor (a doc não abre exceção).
+   * Energia em seu uso". Dobra por cima do que já é cobrado — só o Construtor paga aqui desde o
+   * P-016 (a doc não abre exceção pra ele).
    */
-  it('com Anomalia, dobra o custo do Potencializador', () => {
-    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.IV, true)).toBe(14);
-  });
-
   it('com Anomalia, o dobro do Construtor se acumula com o dobro da Anomalia (4×)', () => {
     expect(custoAquisicaoFragmento(FragmentoTipoEnum.CONSTRUTOR, FragmentoModuloEnum.IV, true)).toBe(28);
-  });
-
-  it('sem Anomalia (padrão), o comportamento não muda', () => {
-    expect(custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, FragmentoModuloEnum.IV, false)).toBe(7);
   });
 });
 
@@ -316,7 +314,7 @@ describe('listarBonusConsumoFragmentoPotencializador', () => {
 
   it('módulo I: opção de teste concede também +1 ponto no atributo (única exceção)', () => {
     const opcoes = listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.I);
-    expect(opcoes[0]).toMatchObject({ tipo: 'TESTE', valor: 5, concedePontoAtributo: true });
+    expect(opcoes[0]).toMatchObject({ tipo: 'TESTE', valor: 5, concedePontoAtributo: true, pontosAtributo: 1 });
     expect(opcoes[0].rotulo).toContain('+1 ponto no atributo');
     expect(opcoes[1]).toEqual({ rotulo: '+5 em Defesa', tipo: 'DEFESA', valor: 5 });
     expect(opcoes[2]).toEqual({ rotulo: '+10 de dano do Corpo', tipo: 'DANO_CORPO', valor: 10 });
@@ -328,7 +326,10 @@ describe('listarBonusConsumoFragmentoPotencializador', () => {
 
   /**
    * Habilidade "Anomalia" (Experimento Artificial, `P-013`) — doc: "têm todos os seus efeitos
-   * dobrados". `concedePontoAtributo` não dobra: é a regra estrutural do Módulo I, não um "valor".
+   * dobrados", sem exceção nenhuma — `pontosAtributo` do Módulo I também dobra (correção sobre a
+   * primeira leitura do `P-013`, que tratava o ponto de atributo como "regra estrutural" imune à
+   * dobra; o autor confirmou que 1 Fragmento de Módulo I consumido com Anomalia deve conceder 2
+   * pontos, não 1).
    */
   describe('com Anomalia (P-013)', () => {
     it('dobra os 3 valores (módulo III: 3/3/6 → 6/6/12)', () => {
@@ -336,10 +337,10 @@ describe('listarBonusConsumoFragmentoPotencializador', () => {
       expect(opcoes.map((opcao) => opcao.valor)).toEqual([6, 6, 12]);
     });
 
-    it('módulo I dobra o valor de teste, mas concedePontoAtributo continua +1 (não dobra)', () => {
+    it('módulo I dobra o valor de teste e também concedePontoAtributo (2 pontos, não 1)', () => {
       const opcoes = listarBonusConsumoFragmentoPotencializador(FragmentoModuloEnum.I, true);
-      expect(opcoes[0]).toMatchObject({ tipo: 'TESTE', valor: 10, concedePontoAtributo: true });
-      expect(opcoes[0].rotulo).toContain('+1 ponto no atributo');
+      expect(opcoes[0]).toMatchObject({ tipo: 'TESTE', valor: 10, concedePontoAtributo: true, pontosAtributo: 2 });
+      expect(opcoes[0].rotulo).toContain('+2 pontos no atributo');
     });
 
     it('sem Anomalia (padrão), os valores não mudam', () => {
@@ -488,6 +489,28 @@ describe('listarModulosFragmentosPortados', () => {
     ];
     expect(listarModulosFragmentosPortados(itens)).toEqual([]);
   });
+
+  it('soma os módulos consumidos por cima dos soltos/acoplados (P-015)', () => {
+    const itens: CarrinhoItemDto[] = [
+      {
+        nome: 'Fragmento Potencializador',
+        categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+        custo: 0,
+        peso: 0,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        modulo: FragmentoModuloEnum.V,
+      },
+    ];
+    expect(
+      listarModulosFragmentosPortados(itens, [FragmentoModuloEnum.IV, FragmentoModuloEnum.IV]),
+    ).toEqual([FragmentoModuloEnum.V, FragmentoModuloEnum.IV, FragmentoModuloEnum.IV]);
+  });
+
+  it('conta só os consumidos quando não há nenhum fragmento solto/acoplado', () => {
+    expect(listarModulosFragmentosPortados([], [FragmentoModuloEnum.I])).toEqual([FragmentoModuloEnum.I]);
+  });
 });
 
 describe('reducaoCustoPorAfinidade', () => {
@@ -514,6 +537,11 @@ describe('aplicarReducaoAfinidade', () => {
 
   it('nunca zera o custo — piso de 1 (doc: "no mínimo, 1 de Energia Máxima")', () => {
     expect(aplicarReducaoAfinidade(3, 40)).toBe(1);
+  });
+
+  it('um custo que já é 0 passa direto, sem o piso de 1 inventar uma cobrança (P-016)', () => {
+    expect(aplicarReducaoAfinidade(0, 0)).toBe(0);
+    expect(aplicarReducaoAfinidade(0, 40)).toBe(0);
   });
 });
 
@@ -621,6 +649,31 @@ describe('listarEfeitosFixosConstrutor', () => {
       { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 2, variante: 'Defesa' },
     ]);
   });
+
+  /**
+   * Habilidade "Anomalia" (Experimento Artificial, `P-013`) — o Construtor também é um Fragmento e
+   * o doc não abre exceção nenhuma ("têm todos os seus efeitos dobrados"). `faces` (o tipo de dado)
+   * nunca dobra — só a quantidade de dados/valor fixo, mesmo raciocínio do multiplicador de dano do
+   * Potencializador.
+   */
+  describe('com Anomalia (P-013)', () => {
+    it('Arma, módulo II: dobra dano, dado base e teste — faces (D12) não muda', () => {
+      expect(listarEfeitosFixosConstrutor(FragmentoModuloEnum.II, 'ARMA', true)).toEqual([
+        { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS, valor: 4, faces: 12 },
+        { tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: 14, variante: 'FIXO' },
+        { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: 2 },
+      ]);
+    });
+
+    it('Proteção, módulo I: dobra resistência, Esquiva/Bloqueio e Defesa', () => {
+      expect(listarEfeitosFixosConstrutor(FragmentoModuloEnum.I, 'PROTECAO', true)).toEqual([
+        { tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: 20 },
+        { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 10, variante: 'Esquiva' },
+        { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 10, variante: 'Bloqueio' },
+        { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: 4, variante: 'Defesa' },
+      ]);
+    });
+  });
 });
 
 describe('bonusMunicaoConstrutor', () => {
@@ -630,5 +683,9 @@ describe('bonusMunicaoConstrutor', () => {
 
   it('módulo I (mais forte): Recarregar custa 20 de Energia, concede +32 de dano', () => {
     expect(bonusMunicaoConstrutor(FragmentoModuloEnum.I)).toEqual({ custoRecarregar: 20, dano: 32 });
+  });
+
+  it('com Anomalia (P-013): dobra os dois valores (módulo V: 3/5 → 6/10)', () => {
+    expect(bonusMunicaoConstrutor(FragmentoModuloEnum.V, true)).toEqual({ custoRecarregar: 6, dano: 10 });
   });
 });

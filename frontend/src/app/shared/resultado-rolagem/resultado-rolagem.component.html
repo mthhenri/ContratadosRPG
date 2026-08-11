@@ -19,7 +19,7 @@
                 <span class="resultado-rolagem__dado-nota">{{ (dado.sinal < 0 ? '−' : '') + dado.valores.length + 'D' + dado.faces }}</span>
                 @for (marcado of dadosMarcados(dado); track $index) {
                   <span
-                    class="resultado-rolagem__dado"
+                    [class]="classeDado(dado)"
                     [class.resultado-rolagem__dado--escolhido]="dado.mantidos && marcado.mantido"
                     [class.resultado-rolagem__dado--descartado]="dado.mantidos && !marcado.mantido"
                   >

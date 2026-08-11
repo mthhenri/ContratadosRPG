@@ -251,7 +251,7 @@
   &__resumo-toggle { display: none; }
   &__resumo-corpo { display: none; }
   &__resumo--aberto {
-    .guia__resumo-fundo { display: block; position: fixed; z-index: 29; inset: 0; background: color-mix(in srgb, var(--bg) 72%, transparent); animation: aparecer-fundo .15s ease both; }
+    .guia__resumo-fundo { display: block; position: fixed; z-index: 29; inset: 0; background: color-mix(in srgb, var(--bg) 72%, transparent); border: 0; cursor: default; animation: aparecer-fundo .15s ease both; }
     .guia__resumo-corpo { display: block; position: fixed; z-index: 30; inset: auto 0 0; max-height: 82dvh; margin: 0; padding: 56px 16px calc(16px + env(safe-area-inset-bottom)); background: var(--surface); border: 1px solid var(--border-strong); border-bottom: 0; border-radius: var(--radius-card) var(--radius-card) 0 0; overflow-y: auto; box-shadow: 0 -24px 60px -20px rgba(0, 0, 0, .7); animation: subir-resumo .18s ease both; }
     .guia__resumo-fechar { display: grid; place-items: center; position: absolute; z-index: 31; top: 8px; right: 8px; width: bp.$alvo-toque; height: bp.$alvo-toque; font-size: 20px; line-height: 1; color: var(--text-dim); background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: var(--radius-control); }
   }

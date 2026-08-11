@@ -34,6 +34,17 @@ describe('listarPacotesHabilidadesIniciais', () => {
     expect(listarPacotesHabilidadesIniciais(classe)).toHaveLength(3);
   });
 
+  it.each([ClasseEnum.EXPERIMENTO_BESTIAL, ClasseEnum.EXPERIMENTO_ARTIFICIAL, ClasseEnum.EXPERIMENTO_HIBRIDO])(
+    'pra %s, o rótulo do pacote vira "Classe/Subclasse" (não "Classe/Arquétipo")',
+    (classe) => {
+      const pacotes = listarPacotesHabilidadesIniciais(classe);
+      expect(pacotes.find((p) => p.id === 'DUAS_GERAIS_UMA_CLASSE_OU_ARQUETIPO')?.rotulo).toBe(
+        '2 Gerais + 1 de Classe/Subclasse',
+      );
+      expect(pacotes.find((p) => p.id === 'DUAS_CLASSE_OU_ARQUETIPO')?.rotulo).toBe('2 de Classe/Subclasse');
+    },
+  );
+
   it('oferece somente três habilidades civis ao Civil', () => {
     expect(listarPacotesHabilidadesIniciais(ClasseEnum.CIVIL)).toEqual([
       { id: 'TRES_CIVIS', rotulo: '3 Civis', vagas: [{ tipo: 'civil', quantidade: 3 }] },

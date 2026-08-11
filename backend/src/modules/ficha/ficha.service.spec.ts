@@ -1008,7 +1008,7 @@ describe('FichaService', () => {
       });
       // Visualizador só-acesso nunca recebe os campos privados (m3-50/m3-51 — `anotacoes` aqui é
       // `''` na ficha base, então some do payload igual a `historia` ausente.
-      const { anotacoes: _anotacoesOmitida, ...dadosSemAnotacoes } = fichaPersistida.dados;
+      const dadosSemAnotacoes = { ...fichaPersistida.dados, anotacoes: undefined };
       expect(resultado).toEqual({ ...fichaPersistida, dados: dadosSemAnotacoes });
     });
 

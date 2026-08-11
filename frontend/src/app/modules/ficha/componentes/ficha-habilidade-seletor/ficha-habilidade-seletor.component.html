@@ -70,7 +70,26 @@
               <span class="seletor__opcao-selo">Geral melhorada</span>
             }
             @if (habilidade.descricao) {
-              <span class="seletor__opcao-desc">{{ habilidade.descricao }}</span>
+              <span
+                class="seletor__opcao-desc"
+                [class.seletor__opcao-desc--expandida]="
+                  descricaoExpandida() === chaveHabilidade(habilidade)
+                "
+                [appTooltip]="habilidade.descricao"
+                #desc="appClampTruncado"
+                appClampTruncado
+              >
+                {{ habilidade.descricao }}
+              </span>
+              @if (desc.truncado()) {
+                <button
+                  type="button"
+                  class="seletor__opcao-ver-mais"
+                  (click)="alternarExpansao(chaveHabilidade(habilidade))"
+                >
+                  {{ descricaoExpandida() === chaveHabilidade(habilidade) ? 'Ver menos' : 'Ver mais' }}
+                </button>
+              }
             }
           </div>
           @if (estaNaFicha(habilidade.nome)) {

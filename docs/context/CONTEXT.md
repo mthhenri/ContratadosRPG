@@ -50,8 +50,8 @@ Deploy em produção por **integração nativa das plataformas**, sem GitHub Act
 `master` → Render (backend) e Cloudflare Pages (frontend) puxam do Git sozinhos; banco no Supabase.
 O GitHub Actions só roda **CI** (lint + testes nos 3 workspaces em todo PR).
 
-**Suítes (checadas na correção do `P-013`):** shared 587/587 · backend 190/190 · frontend
-813/813 — os 3 workspaces fecham a suíte completa hoje (`npm run test`, sem `--watch`);
+**Suítes (checadas na correção do `P-013b`):** shared 594/594 · backend 196/196 · frontend
+874/874 — os 3 workspaces fecham a suíte completa hoje (`npm run test`, sem `--watch`);
 `P-001`/`P-010`/`P-011` descrevem falhas que só reproduzem isoladas (arquivo único), não na suíte
 completa — ver [`PROBLEMS.md`](PROBLEMS.md). `npm run lint` **não fecha limpo** hoje em nenhum dos
 dois workspaces (frontend/backend) — falhas pré-existentes não relacionadas a nenhuma task recente,
@@ -224,7 +224,13 @@ placeholder decorativo no cabeçalho (com selos de trocar/remover, `ajustavelAmp
 acervo — upload/remoção via `POST`/`DELETE /ficha/:id/imagem` (multipart, endpoint dedicado fora do
 `PUT` genérico), persistidos **imediatamente** (sem o debounce dos demais campos), com o arquivo
 guardado em disco local (dev) ou Cloudflare R2 (produção) atrás de `ArmazenamentoProvedor`
-(`backend/src/core/armazenamento/`), escolhido por `ARMAZENAMENTO_PROVEDOR`.
+(`backend/src/core/armazenamento/`), escolhido por `ARMAZENAMENTO_PROVEDOR`. O card do acervo
+(`/fichas`, `FichaAcervo`) usa a mesma receita visual do card de ficha do Esquadrão
+(`CampanhaDetalhe`, `m3-52`): borda + listras diagonais do avatar seguem `--cor-ficha`
+(`color-mix` sobre `--border-strong` sem cor definida) e o hover sustentado sobre o avatar abre um
+preview 200×200 sem recorte (`agendarPreviewAvatar`/`cancelarPreviewAvatar`) — o acervo lia
+`imagemUrl` mas nunca `cor` nem tinha o preview; corrigido para consumir o mesmo recorte que
+`FichaResumoDto` já expõe.
 
 ### Guia de criação de ficha — `frontend/src/app/modules/ficha/paginas/criar/`
 

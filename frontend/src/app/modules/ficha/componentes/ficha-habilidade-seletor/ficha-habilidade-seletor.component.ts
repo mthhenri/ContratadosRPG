@@ -9,6 +9,7 @@ import {
   type SubgrupoHabilidades,
 } from '@contratados-rpg/shared/regras/agente';
 
+import { ClampTruncado } from '../../../../shared/clamp-truncado/clamp-truncado.directive';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
@@ -17,6 +18,7 @@ import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
 const ROTULO_ABA: Record<GrupoHabilidades['id'], string> = {
   gerais: 'Gerais',
   classe: 'Classe',
+  subclasse: 'Subclasse',
   arquetipo: 'Arquétipo',
   civil: 'Civil',
 };
@@ -25,18 +27,21 @@ const VALORES_CLASSE = new Set<string>(Object.values(ClasseEnum));
 
 /**
  * Seletor **do sistema** (m3-13): navega o catálogo de habilidades (`shared/regras`) por aba
- * (Gerais / Classe / Arquétipo) + **sub-filtro inline** (chips), com o subgrupo da própria ficha
- * destacado e ativo por padrão. O "＋" **adiciona a habilidade direto na ficha** (o seletor
- * permanece aberto) e a marca como "Na ficha"; o "✕" ali mesmo a remove — dá para montar a lista
- * sem fechar o diálogo. Habilidades gerais melhoradas ganham um selo, pois convivem com as do
- * arquétipo na mesma lista.
+ * (Gerais / Classe / Subclasse / Arquétipo — Subclasse só existe pra Experimento, aba própria
+ * desde o P-014 follow-up) + **sub-filtro inline** (chips) nas abas com mais de um subgrupo, com o
+ * subgrupo da própria ficha destacado e ativo por padrão. O "＋" **adiciona a habilidade direto na
+ * ficha** (o seletor permanece aberto) e a marca como "Na ficha"; o "✕" ali mesmo a remove — dá
+ * para montar a lista sem fechar o diálogo. Uma Geral melhorada pelo arquétipo da ficha aparece na
+ * aba **Gerais**, no lugar da comum, com um selo — ela é a mesma habilidade geral, só que com outra
+ * descrição/custo.
  *
- * **Sem regra de jogo aqui**: os grupos e a visibilidade (melhoradas só do próprio arquétipo;
- * subclasses nunca cruzam) vêm prontos de `catalogoHabilidades`. Só tokens do tema (proibição #29).
+ * **Sem regra de jogo aqui**: os grupos e a visibilidade (melhorada só substitui a comum para o
+ * dono do arquétipo; subclasses nunca cruzam) vêm prontos de `catalogoHabilidades`. Só tokens do
+ * tema (proibição #29).
  */
 @Component({
   selector: 'app-ficha-habilidade-seletor',
-  imports: [ReactiveFormsModule, OverflowFade, Tooltip],
+  imports: [ReactiveFormsModule, OverflowFade, Tooltip, ClampTruncado],
   templateUrl: './ficha-habilidade-seletor.component.html',
   styleUrl: './ficha-habilidade-seletor.component.scss',
 })
@@ -101,10 +106,13 @@ export class FichaHabilidadeSeletor {
     return termo ? lista.filter((habilidade) => habilidade.nome.toLowerCase().includes(termo)) : lista;
   });
 
-  /** `true` quando a aba tem sub-filtro (Classe/Arquétipo); Gerais e Civil têm subgrupo único. */
+  /**
+   * `true` quando a aba tem sub-filtro (Classe/Arquétipo); Gerais, Civil e Subclasse têm subgrupo
+   * único (Subclasse nunca cruza — é sempre só a própria, sem outra opção pra filtrar).
+   */
   protected readonly temSubfiltro = computed(() => {
     const aba = this.abaAtiva();
-    return aba !== 'gerais' && aba !== 'civil';
+    return aba === 'classe' || aba === 'arquetipo';
   });
 
   protected rotuloAba(id: GrupoHabilidades['id']): string {
@@ -133,6 +141,20 @@ export class FichaHabilidadeSeletor {
 
   protected estaNaFicha(nome: string): boolean {
     return this.nomesNaFicha().has(nome);
+  }
+
+  /**
+   * Descrição expandida no mobile (P-012, "ver mais"): no máximo uma por vez — chave é a mesma do
+   * `track` da lista (`nome + categoria`, único mesmo entre a comum e a melhorada de mesmo nome).
+   */
+  protected readonly descricaoExpandida = signal<string | null>(null);
+
+  protected chaveHabilidade(habilidade: HabilidadeCatalogoItemDto): string {
+    return habilidade.nome + habilidade.categoria;
+  }
+
+  protected alternarExpansao(chave: string): void {
+    this.descricaoExpandida.update((atual) => (atual === chave ? null : chave));
   }
 
   /** `true` para uma habilidade geral melhorada — ganha selo por conviver com as do arquétipo. */

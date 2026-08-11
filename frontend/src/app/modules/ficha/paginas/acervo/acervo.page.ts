@@ -11,10 +11,18 @@ import { CampanhaService } from '../../../campanha/campanha.service';
 import { FichaService } from '../../ficha.service';
 import { rotuloClasseCompleto } from '../../rotulos-ficha';
 
+/** Hover sustentado antes do preview ampliado do avatar abrir (mesmo tempo de `CampanhaDetalhe`). */
+const MS_PREVIEW_AVATAR = 600;
+
+/** Tamanho do preview ampliado do avatar (px, quadrado) — `object-fit: contain`, sem recorte. */
+const PX_PREVIEW_AVATAR = 200;
+
 /** Ficha do acervo já enriquecida pro cartão — recorte de `FichaResumoDto` + o rótulo de classe. */
 interface ItemAcervo {
   readonly id: number;
   readonly nome: string;
+  /** Cor de identidade visual (m3-61) — alimenta borda/listras do avatar (`--cor-ficha`). */
+  readonly cor: string | null;
   /** Avatar da ficha (m3-62) — `null` sem imagem definida (cai no placeholder decorativo do cartão). */
   readonly imagemUrl: string | null;
   readonly classeTexto: string;
@@ -95,10 +103,17 @@ export class FichaAcervo {
   protected readonly confirmandoExcluirFicha = signal<{ id: number; nome: string } | null>(null);
   protected readonly excluindoFicha = signal<number | null>(null);
 
+  /** Preview ampliado do avatar em hover sustentado (`agendarPreviewAvatar`) — mesmo padrão de `CampanhaDetalhe`. */
+  protected readonly previewAvatar = signal<{ url: string; top: number; left: number } | null>(
+    null,
+  );
+  private temporizadorPreviewAvatar: ReturnType<typeof setTimeout> | null = null;
+
   protected readonly itens = computed<readonly ItemAcervo[]>(() =>
     this.fichas().map((ficha) => ({
       id: ficha.id,
       nome: ficha.nome,
+      cor: ficha.cor ?? null,
       imagemUrl: ficha.imagemUrl,
       classeTexto: rotuloClasseCompleto(ficha.classe, ficha.arquetipo),
       nivel: ficha.nivel,
@@ -123,6 +138,9 @@ export class FichaAcervo {
       window.removeEventListener('scroll', fecharMenuAoRolarOuRedimensionar, true);
       window.removeEventListener('resize', fecharMenuAoRolarOuRedimensionar);
     });
+
+    // Preview ampliado do avatar (ver `previewAvatar`) — cancela o temporizador pendente ao sair.
+    this.destroyRef.onDestroy(() => this.cancelarPreviewAvatar());
   }
 
   private carregar(): void {
@@ -171,6 +189,43 @@ export class FichaAcervo {
   protected fecharMenuFicha(): void {
     this.menuFichaAberto.set(null);
     this.menuFichaPosicao.set(null);
+  }
+
+  /**
+   * Agenda a abertura do preview ampliado do avatar (`MS_PREVIEW_AVATAR` de hover sustentado) —
+   * só quando a ficha tem `imagemUrl` (sem foto, o cartão mostra só o placeholder listrado, nada
+   * pra ampliar). Posição calculada do avatar no momento em que o mouse entra, centrada e travada
+   * dentro da janela nos dois eixos — mesmo cálculo de `CampanhaDetalhe.agendarPreviewAvatar`.
+   */
+  protected agendarPreviewAvatar(evento: MouseEvent, imagemUrl: string | null): void {
+    this.cancelarPreviewAvatar();
+    if (!imagemUrl) {
+      return;
+    }
+    const retangulo = (evento.currentTarget as HTMLElement).getBoundingClientRect();
+    this.temporizadorPreviewAvatar = setTimeout(() => {
+      const folga = 8;
+      const centroVertical = retangulo.top + retangulo.height / 2 - PX_PREVIEW_AVATAR / 2;
+      const top = Math.min(
+        Math.max(centroVertical, folga),
+        window.innerHeight - PX_PREVIEW_AVATAR - folga,
+      );
+      const espacoDireita = window.innerWidth - retangulo.right;
+      const left =
+        espacoDireita >= PX_PREVIEW_AVATAR + folga
+          ? retangulo.right + folga
+          : Math.max(retangulo.left - PX_PREVIEW_AVATAR - folga, folga);
+      this.previewAvatar.set({ url: imagemUrl, top, left });
+    }, MS_PREVIEW_AVATAR);
+  }
+
+  /** Cancela o agendamento e fecha o preview ampliado do avatar, se aberto. */
+  protected cancelarPreviewAvatar(): void {
+    if (this.temporizadorPreviewAvatar !== null) {
+      clearTimeout(this.temporizadorPreviewAvatar);
+      this.temporizadorPreviewAvatar = null;
+    }
+    this.previewAvatar.set(null);
   }
 
   /** Abre a dialog de atribuição, pré-selecionando a primeira campanha do usuário. */

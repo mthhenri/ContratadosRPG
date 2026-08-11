@@ -17,7 +17,7 @@ import { CampanhaService } from '../../../campanha/campanha.service';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { FichaService } from '../../ficha.service';
 import { ATRIBUTOS_BASE_PADRAO, construirFichaInicial } from '../../ficha-padrao';
-import { arquetiposDaClasse, GRUPOS_CLASSE, ehClasseBase } from '../../opcoes-ficha';
+import { classeBaseDoSeletor, ehClasseBase, GRUPOS_CLASSE_BASE, gruposPerfilDaClasseBase } from '../../opcoes-ficha';
 import { GRUPOS_FORMACAO, rotuloParametroFormacao } from '../../opcoes-formacao';
 import { rotuloArquetipo, rotuloClasse, rotuloClasseCompleto, rotuloMotivoEntrada } from '../../rotulos-ficha';
 import { descricaoClasse as textoGuiaClasse, focoArquetipo as textoFocoArquetipo } from '../../guia-briefing';
@@ -42,6 +42,10 @@ interface EstadoGuiaCriacao {
   readonly cor: string | null;
   readonly usuarioId: number | null;
   readonly classe: ClasseEnum | null; readonly arquetipo: ArquetipoEnum | null;
+  /** Primeira etapa do seletor de Classe em dois passos (P-019) — Combatente/Especialista/Suporte
+   * ou Civil. Guarda a escolha mesmo antes da segunda etapa (arquétipo/subclasse) existir, por isso
+   * é um campo à parte de `classe` (que só se fecha quando o perfil fica definitivo). */
+  readonly classeBase: ClasseEnum | null;
   /** Escolha do jogador para os pontos "à escolha" do bônus de atributo do perfil (Engenheiro/
    * Assassino/Acadêmico: 1 posição; Experimento Híbrido: 2 posições) — mesma ordem de
    * `obterSlotsEscolhaBonus`. `[]` quando o perfil não tem nenhum ponto assim, ou ainda não escolhido. */
@@ -76,6 +80,10 @@ function normalizarEstado(estado: EstadoGuiaCriacao): EstadoGuiaCriacao {
   return {
     ...estado,
     cor: estado.cor ?? null,
+    // Rascunhos salvos antes do seletor de Classe virar dois passos (P-019) não têm `classeBase` —
+    // reconstrói a partir da `classe` já escolhida (`classeBaseAtual()` já faz o mesmo em runtime,
+    // isto só mantém o estado persistido coerente daqui pra frente).
+    classeBase: estado.classeBase ?? (estado.classe ? classeBaseDoSeletor(estado.classe) : null),
     formacoesCustomizadas: estado.formacoesCustomizadas ?? estado.origem.formacao.map((item) => item.bonus === null && item.texto.trim().length > 0),
     bonusEscolhido: estado.bonusEscolhido ?? [],
     dinheiro: { ...estado.dinheiro, rolado: estado.dinheiro.rolado ?? estado.dinheiro.dados.length === 4 },
@@ -103,7 +111,7 @@ export class FichaCriar {
    * Prestígio 0, sem bônus monetário) — não existe média para calcular sem fichas de campanha.
    */
   protected readonly campanhaId: number | null = this.campanhaIdRota !== null ? Number(this.campanhaIdRota) : null;
-  protected readonly gruposClasse = GRUPOS_CLASSE;
+  protected readonly gruposClasseBase = GRUPOS_CLASSE_BASE;
   protected readonly gruposFormacao = GRUPOS_FORMACAO;
   protected readonly parametroEsquivaOuBloqueio = FormacaoParametroEnum.ESQUIVA_OU_BLOQUEIO;
   /** Teto de atributo e limiar/custo de Maestria expostos ao template (doc — "⬥ Maestrias"). */
@@ -116,11 +124,20 @@ export class FichaCriar {
     { chave: 'medicina', nome: 'Medicina' }, { chave: 'sentidos', nome: 'Sentidos' }, { chave: 'social', nome: 'Social' },
     { chave: 'vontade', nome: 'Vontade' },
   ];
-  /** Rótulo de cada vaga de melhoria (m3-58), na ordem de exibição do passo. */
+  /** Rótulo de cada vaga de melhoria (m3-58), na ordem de exibição do passo. `classeOuArquetipo` vira
+   * "Classe ou Subclasse" para as subclasses de Experimento (P-014) — resolvido em `rotuloVaga`. */
   private static readonly ROTULOS_VAGA: Readonly<Record<TipoVagaMelhoria, string>> = {
     geral: 'Habilidade Geral', classe: 'Habilidade de Classe', classeOuArquetipo: 'Classe ou Arquétipo',
     outraClasse: 'Outra classe / outro arquétipo', civil: 'Habilidade Civil',
   };
+  /** Rótulo da vaga, com `classeOuArquetipo` trocado para "Classe ou Subclasse" numa ficha Experimento
+   * (P-014) — mesmo critério de `!ehClasseBase` usado pelo resto do guia para distinguir subclasse. */
+  private rotuloVaga(tipo: TipoVagaMelhoria): string {
+    if (tipo === 'classeOuArquetipo' && !ehClasseBase(this.classeCalculada())) {
+      return 'Classe ou Subclasse';
+    }
+    return FichaCriar.ROTULOS_VAGA[tipo];
+  }
   protected readonly membros = signal<CampanhaMembroResumoDto[]>([]); protected readonly fichas = signal<FichaResumoDto[]>([]);
   protected readonly carregando = signal(true); protected readonly criando = signal(false); protected readonly rolandoRecursos = signal(false); protected readonly erro = signal('');
 
@@ -168,15 +185,33 @@ export class FichaCriar {
   /** Vaga com o seletor do sistema aberto (`null` = fechado) — m3-58. */
   protected readonly vagaAberta = signal<TipoVagaMelhoria | null>(null);
   protected readonly estado = signal<EstadoGuiaCriacao>({ passo: 0, nome: '', cor: null, usuarioId: null, classe: null,
+    classeBase: null,
     arquetipo: null, bonusEscolhido: [], motivo: MotivoEntradaAgenteEnum.MORTE_OU_INICIO_DO_ZERO, mediaNivel: 0, mediaPrestigio: 0,
     sobrescreverProgressao: this.campanhaId === null, nivelManual: 0, prestigioManual: 0,
     pacoteHabilidadesId: null,
     atributos: { ...ATRIBUTOS_BASE_PADRAO }, maestria: null, modoLivre: false, personalidade: '', origem: origemVazia(),
     formacoesCustomizadas: [false, false], dinheiro: dinheiroVazio(), melhorias: [], fortificacoes: fortificacoesVazias(), kit: [] });
   protected readonly ehMestre = computed(() => this.membros().find((m) => m.usuarioId === this.sessaoService.usuario()?.id)?.papel === TipoCampanhaMembroPapelEnum.MESTRE);
-  protected readonly arquetipos = computed(() => {
-    const classe = this.estado().classe;
-    return classe ? arquetiposDaClasse(classe) : [];
+  /** Classe-base "efetiva" do seletor de dois passos (P-019): a `classeBase` já escolhida na
+   * primeira etapa, ou — enquanto ela ainda não existir (rascunho antigo, ou estado montado direto
+   * via `atualizar({ classe, arquetipo })`, como em vários testes) — derivada da `classe` já
+   * definitiva. Mantém as duas etapas coerentes mesmo quando só a segunda foi preenchida. */
+  protected readonly classeBaseAtual = computed(() => {
+    const e = this.estado();
+    return e.classeBase ?? (e.classe ? classeBaseDoSeletor(e.classe) : null);
+  });
+  /** Opções da segunda etapa (arquétipos + subclasse de Experimento) para a classe-base atual. */
+  protected readonly gruposPerfil = computed(() => {
+    const base = this.classeBaseAtual();
+    return base ? gruposPerfilDaClasseBase(base) : [];
+  });
+  /** Valor selecionado na segunda etapa — o arquétipo, ou a própria `classe` quando ela é a
+   * subclasse de Experimento da base atual. `''` sem nada escolhido ainda. */
+  protected readonly perfilSelecionado = computed(() => {
+    const e = this.estado();
+    if (e.arquetipo) return e.arquetipo as string;
+    const base = this.classeBaseAtual();
+    return e.classe && base && e.classe !== base ? (e.classe as string) : '';
   });
   /** Slots de bônus "à escolha" do perfil atual (`shared/regras`) — `[]` sem nenhum ponto assim. */
   protected readonly slotsEscolhaBonus = computed<readonly SlotEscolhaAtributo[]>(() =>
@@ -266,14 +301,14 @@ export class FichaCriar {
   protected readonly pacotesHabilidadesIniciais = computed(() => listarPacotesHabilidadesIniciais(this.classeCalculada()));
   protected readonly pacoteHabilidadesSelecionado = computed(() => this.pacotesHabilidadesIniciais().find((pacote) => pacote.id === this.estado().pacoteHabilidadesId) ?? null);
   /** Vagas de habilidade do passo // HABILIDADES, só as com alvo > 0 — Civil nunca vê Geral/Classe própria/Arquétipo/Outra classe.
-   * A vaga 'classeOuArquetipo' já dá acesso à lista "Habilidades de Subclasse" (Peculiaridade incluída,
-   * `habilidades-catalogo.ts` grupo 'arquetipo') — inclusive para Experimento, via o pacote de Habilidades iniciais. */
+   * A vaga 'classeOuArquetipo' já dá acesso à lista de Habilidades de Subclasse (Peculiaridade incluída,
+   * `habilidades-catalogo.ts` grupo 'subclasse') — inclusive para Experimento, via o pacote de Habilidades iniciais. */
   protected readonly vagasMelhoria = computed<readonly VagaMelhoria[]>(() => {
     const p = this.progressaoAcumulada();
     const civil = this.classeCalculada() === ClasseEnum.CIVIL;
     const pacote = this.pacoteHabilidadesSelecionado();
     const quantidadeInicial = (tipo: TipoVagaMelhoria): number => pacote?.vagas.find((vagaInicial) => vagaInicial.tipo === tipo)?.quantidade ?? 0;
-    const vaga = (tipo: TipoVagaMelhoria, alvo: number): VagaMelhoria | null => alvo > 0 ? { tipo, rotulo: FichaCriar.ROTULOS_VAGA[tipo], alvo } : null;
+    const vaga = (tipo: TipoVagaMelhoria, alvo: number): VagaMelhoria | null => alvo > 0 ? { tipo, rotulo: this.rotuloVaga(tipo), alvo } : null;
     const vagas = civil
       ? [vaga('classe', p.habilidadesClasse), vaga('civil', p.habilidadesCivis + quantidadeInicial('civil'))]
       : [vaga('geral', p.habilidadesGerais + quantidadeInicial('geral')), vaga('classe', p.habilidadesClasse + quantidadeInicial('classe')), vaga('classeOuArquetipo', p.habilidadesClasseOuArquetipo + quantidadeInicial('classeOuArquetipo')), vaga('outraClasse', p.habilidadesOutraClasse + quantidadeInicial('outraClasse'))];
@@ -362,9 +397,38 @@ export class FichaCriar {
   protected atualizar(parcial: Partial<EstadoGuiaCriacao>): void { this.estado.update((atual) => ({ ...atual, ...parcial })); }
   protected valor(evento: Event): string { return (evento.target as HTMLInputElement).value; }
   protected numero(evento: Event): number { return Number(this.valor(evento)); }
-  protected mudarClasse(evento: Event): void { const valor = this.valor(evento); this.atualizar({ classe: valor ? valor as ClasseEnum : null, arquetipo: null, bonusEscolhido: [], pacoteHabilidadesId: null, melhorias: [] }); }
+  /** Primeira etapa do seletor de Classe (P-019): trocar a classe-base sempre reseta a segunda
+   * etapa e tudo que dependia dela — mesmo reset completo que a troca de classe fazia no select
+   * único. Civil não tem segunda etapa, então já fecha `classe` aqui mesmo. */
+  protected mudarClasseBase(evento: Event): void {
+    const valor = this.valor(evento);
+    const classeBase = valor ? valor as ClasseEnum : null;
+    const classe = classeBase === ClasseEnum.CIVIL ? classeBase : null;
+    this.atualizar({ classeBase, classe, arquetipo: null, bonusEscolhido: [], pacoteHabilidadesId: null, melhorias: [] });
+  }
   protected mudarMotivo(evento: Event): void { this.atualizar({ motivo: this.valor(evento) as MotivoEntradaAgenteEnum }); }
-  protected mudarArquetipo(evento: Event): void { const valor = this.valor(evento); this.atualizar({ arquetipo: valor ? valor as ArquetipoEnum : null, bonusEscolhido: [] }); }
+  /** Segunda etapa do seletor de Classe (P-019): escolhe um arquétipo regular ou a subclasse de
+   * Experimento da classe-base atual — `gruposPerfil()` já resolve qual é qual. Só reseta o pacote
+   * de Habilidades iniciais e as melhorias já escolhidas quando a `classe` final muda de fato (pick
+   * de subclasse ↔ arquétipo); trocar entre dois arquétipos da mesma base preserva ambos, como o
+   * antigo `mudarArquetipo` já fazia. */
+  protected mudarPerfil(evento: Event): void {
+    const valor = this.valor(evento);
+    const classeBase = this.classeBaseAtual();
+    if (!valor || !classeBase) {
+      this.atualizar({ classe: classeBase, arquetipo: null, bonusEscolhido: [] });
+      return;
+    }
+    const opcao = this.gruposPerfil().flatMap((grupo) => grupo.opcoes).find((o) => o.valor === valor);
+    if (!opcao) return;
+    const classeAnterior = this.estado().classe;
+    const classe = opcao.tipo === 'subclasse' ? opcao.valor as ClasseEnum : classeBase;
+    const arquetipo = opcao.tipo === 'arquetipo' ? opcao.valor as ArquetipoEnum : null;
+    this.atualizar({
+      classe, arquetipo, bonusEscolhido: [],
+      ...(classe !== classeAnterior ? { pacoteHabilidadesId: null, melhorias: [] } : {}),
+    });
+  }
   /** Grava a escolha do jogador na posição `indice` de `bonusEscolhido` (substitui, não acumula).
    * Recebe o `Event` bruto do `<select>` e faz o cast — mesmo padrão de `mudarArquetipo`. */
   protected escolherBonusAtributo(indice: number, evento: Event): void {
@@ -447,7 +511,10 @@ export class FichaCriar {
     }
     if (vaga === 'geral') return catalogoHabilidades(classe, this.estado().arquetipo).filter((g) => g.id === 'gerais');
     const arquetipo = ehClasseBase(classe) ? this.estado().arquetipo : null;
-    const idsRelevantes: readonly GrupoHabilidades['id'][] = vaga === 'classe' ? ['classe'] : ['classe', 'arquetipo'];
+    // 'subclasse' entra junto de 'arquetipo' (P-014 follow-up: viraram abas separadas no catálogo,
+    // mas continuam sendo o mesmo pick de "Classe ou Arquétipo/Subclasse" pra quem tem subclasse).
+    const idsRelevantes: readonly GrupoHabilidades['id'][] =
+      vaga === 'classe' ? ['classe'] : ['classe', 'subclasse', 'arquetipo'];
     const propriaOrigem = vaga === 'classe' || vaga === 'classeOuArquetipo';
     return catalogoHabilidades(classe, arquetipo)
       .filter((g) => idsRelevantes.includes(g.id))

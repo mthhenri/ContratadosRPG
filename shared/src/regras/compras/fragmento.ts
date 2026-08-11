@@ -23,18 +23,29 @@ import { CarrinhoItemDto, ModificacaoAplicadaDto, ModificacaoEfeitoDto } from '.
  */
 
 /**
- * Custo em Energia Máxima de **adquirir** um fragmento — o dobro para Construtor (doc — "⬦
- * Construtor"). `possuiAnomalia` (habilidade de Subclasse do Experimento Artificial, `P-013`;
- * `experimentoComAnomalia`) dobra o resultado por cima — as duas duplicações se acumulam, doc:
- * "Fragmentos custam o dobro de Energia em seu uso" não abre exceção para Construtor.
+ * Custo em Energia Máxima de **adquirir** um fragmento — só o Construtor paga aqui, o dobro do
+ * valor da tabela (doc — "⬦ Construtor": "ao portar um fragmento construtor, ele irá remover
+ * Energia Máxima... dobrado"). Ele **é** a arma/proteção assim que existe ("ao invés de aprimorar a
+ * arma, ele é a arma em si"), então já entra em uso na hora.
+ *
+ * O Potencializador retorna **0**: revisão de regra (`P-016`, a pedido do dono, 2026-08-09) — um
+ * Potencializador sentado solto no inventário, sem ter sido aplicado em nada, não está fazendo
+ * nada, então não deveria drenar Energia. Ele só passa a custar ao ser de fato **acoplado**
+ * (`custoAcoplarFragmento`) a um item/ser — até lá, zero.
+ *
+ * `possuiAnomalia` (habilidade de Subclasse do Experimento Artificial, `P-013`;
+ * `experimentoComAnomalia`) dobra o resultado do Construtor por cima — doc: "Fragmentos custam o
+ * dobro de Energia em seu uso" não abre exceção para ele.
  */
 export function custoAquisicaoFragmento(
   tipo: FragmentoTipoEnum,
   modulo: FragmentoModuloEnum,
   possuiAnomalia = false,
 ): number {
-  const base = CUSTO_ENERGIA_MAXIMA_MODULO[modulo];
-  const custo = tipo === FragmentoTipoEnum.CONSTRUTOR ? base * 2 : base;
+  if (tipo === FragmentoTipoEnum.POTENCIALIZADOR) {
+    return 0;
+  }
+  const custo = CUSTO_ENERGIA_MAXIMA_MODULO[modulo] * 2;
   return possuiAnomalia ? custo * 2 : custo;
 }
 
@@ -217,6 +228,13 @@ export interface OpcaoBonusConsumoFragmentoDto {
    * demais módulos/tipos.
    */
   readonly concedePontoAtributo?: boolean;
+  /**
+   * Quantos pontos `concedePontoAtributo` soma — presente só junto de `concedePontoAtributo: true`.
+   * 1 normalmente, 2 com Anomalia (`possuiAnomalia`): a habilidade não abre exceção nenhuma no doc
+   * ("têm todos os seus efeitos dobrados"), então o ponto de atributo dobra como qualquer outro
+   * valor do cardápio.
+   */
+  readonly pontosAtributo?: number;
 }
 
 /**
@@ -226,9 +244,9 @@ export interface OpcaoBonusConsumoFragmentoDto {
  * item — é aplicado direto ao agente (`shared/regras/agente/fragmento-consumo`).
  *
  * `possuiAnomalia` (`P-013`) dobra os três valores, mesma regra de
- * `listarBonusFragmentoPotencializador`. `concedePontoAtributo` (Módulo I, "+1 ponto no atributo")
- * **não** dobra — é a regra estrutural que ultrapassa o limite de 6 pontos, não um "valor de
- * efeito" do cardápio.
+ * `listarBonusFragmentoPotencializador` — incluindo `pontosAtributo` (Módulo I, "+1 ponto no
+ * atributo"): o doc não abre exceção nenhuma ("têm todos os seus efeitos dobrados"), então 2 pontos
+ * com Anomalia.
  */
 export function listarBonusConsumoFragmentoPotencializador(
   modulo: FragmentoModuloEnum,
@@ -240,14 +258,15 @@ export function listarBonusConsumoFragmentoPotencializador(
   const defesa = valores.defesa * dobro;
   const danoCorpo = valores.danoCorpo * dobro;
   const concedePontoAtributo = modulo === FragmentoModuloEnum.I;
+  const pontosAtributo = concedePontoAtributo ? dobro : undefined;
   return [
     {
       rotulo: `+${teste} em todos os testes do atributo à escolha${
-        concedePontoAtributo ? ' e +1 ponto no atributo' : ''
+        concedePontoAtributo ? ` e +${pontosAtributo} ponto${pontosAtributo === 1 ? '' : 's'} no atributo` : ''
       }`,
       tipo: 'TESTE',
       valor: teste,
-      ...(concedePontoAtributo ? { concedePontoAtributo: true as const } : {}),
+      ...(concedePontoAtributo ? { concedePontoAtributo: true as const, pontosAtributo } : {}),
     },
     { rotulo: `+${defesa} em Defesa`, tipo: 'DEFESA', valor: defesa },
     { rotulo: `+${danoCorpo} de dano do Corpo`, tipo: 'DANO_CORPO', valor: danoCorpo },
@@ -274,9 +293,19 @@ export function calcularAfinidade(modulosPortados: readonly FragmentoModuloEnum[
  * alvo, então só conta aqui, não duas vezes). Um fragmento solto em stack (`quantidade` > 1) conta
  * uma vez por unidade; um acoplado conta uma vez por modificação (nunca empilha — cada acoplamento
  * gera sua própria entrada em `modificacoes`). Entrada de `calcularAfinidade`.
+ *
+ * `modulosConsumidos` (`P-015`) soma por cima os módulos dos fragmentos já **consumidos**
+ * (`FichaFragmentoConsumidoDto.modulo`, `dados.fragmentosConsumidos`): consumir não devolve a
+ * "energia anômala" do fragmento — ela fica retida no corpo do agente ("beira ao desespero",
+ * "corpo operando à 101% da capacidade", doc — "⬦ Consumo de Fragmentos") — então continua contando
+ * pra Afinidade, e por consequência pra redução de Energia dos fragmentos restantes
+ * (`aplicarReducaoAfinidade`), mesmo depois do item sumir do inventário. Passado pelo chamador (não
+ * lido de `CarrinhoItemDto` aqui) porque o registro vive em `dados.fragmentosConsumidos`, fora do
+ * inventário — este módulo (`regras/compras`) não depende de `dtos/ficha` pra evitar ciclo.
  */
 export function listarModulosFragmentosPortados(
   itens: readonly CarrinhoItemDto[],
+  modulosConsumidos: readonly FragmentoModuloEnum[] = [],
 ): FragmentoModuloEnum[] {
   const soltos = itens
     .filter(
@@ -291,7 +320,7 @@ export function listarModulosFragmentosPortados(
       .filter((modificacao) => modificacao.origemFragmento)
       .map((modificacao) => modificacao.origemFragmento!.modulo),
   );
-  return [...soltos, ...acoplados];
+  return [...soltos, ...acoplados, ...modulosConsumidos];
 }
 
 /**
@@ -305,8 +334,14 @@ export function reducaoCustoPorAfinidade(afinidade: number): number {
 /**
  * Aplica a redução de Afinidade a um custo de Energia de fragmento, sem nunca zerá-lo (doc: "Não é
  * possível anular o custo de um fragmento... deve ter o custo de, no mínimo, 1 de Energia Máxima").
+ * O piso de 1 só vale pra um custo que **existe** — passa direto quando `custo` já é `0` (`P-016`:
+ * aquisição de um Potencializador solto, que não é cobrada), sem inventar uma cobrança de 1 que a
+ * Afinidade nunca teria como "anular" porque ela nunca existiu.
  */
 export function aplicarReducaoAfinidade(custo: number, afinidade: number): number {
+  if (custo === 0) {
+    return 0;
+  }
   return Math.max(1, custo - reducaoCustoPorAfinidade(afinidade));
 }
 
@@ -371,33 +406,46 @@ export function formaFixaConstrutor(
  * `BonusFixoArmaConstrutorDados`/`BonusFixoProtecaoConstrutorDados` para o porquê de cada mapeamento
  * de tipo. Empurrado como uma `ModificacaoAplicadaDto` (com `origemFragmento`) pela página, mesmo
  * padrão do bônus "em item" do Potencializador (`listarBonusFragmentoPotencializador`).
+ *
+ * `possuiAnomalia` (`P-013`) dobra todo valor de efeito — "Fragmentos... têm todos os seus efeitos
+ * dobrados" não abre exceção para o Construtor, que também é um Fragmento. `danoFaces` (o tipo de
+ * dado, ex. D12) fica de fora: é a face do dado, não a magnitude do efeito — mesmo raciocínio de
+ * `MULTIPLICADOR_MAIOR_DADO_MODULO` em `listarBonusFragmentoPotencializador`, que dobra o valor
+ * final e nunca as faces do dado alvo.
  */
 export function listarEfeitosFixosConstrutor(
   modulo: FragmentoModuloEnum,
   forma: FormaFixaConstrutor,
+  possuiAnomalia = false,
 ): readonly ModificacaoEfeitoDto[] {
+  const dobro = possuiAnomalia ? 2 : 1;
   const valores = BONUS_FIXO_CONSTRUTOR[modulo];
   if (forma === 'ARMA') {
     const efeitos: ModificacaoEfeitoDto[] = [
-      { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS, valor: valores.arma.danoDados, faces: valores.arma.danoFaces },
-      { tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: valores.arma.teste, variante: 'FIXO' },
+      {
+        tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS,
+        valor: valores.arma.danoDados * dobro,
+        faces: valores.arma.danoFaces,
+      },
+      { tipo: ModificacaoEfeitoTipoEnum.BONUS_TESTE, valor: valores.arma.teste * dobro, variante: 'FIXO' },
     ];
     if (valores.arma.dadoTeste) {
-      efeitos.push({ tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: valores.arma.dadoTeste });
+      efeitos.push({ tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS_BASE, valor: valores.arma.dadoTeste * dobro });
     }
     return efeitos;
   }
   const efeitos: ModificacaoEfeitoDto[] = [
-    { tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: valores.protecao.resistencia },
+    { tipo: ModificacaoEfeitoTipoEnum.RESISTENCIA, valor: valores.protecao.resistencia * dobro },
   ];
   if (valores.protecao.esquivaBloqueio) {
+    const esquivaBloqueio = valores.protecao.esquivaBloqueio * dobro;
     efeitos.push(
-      { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: valores.protecao.esquivaBloqueio, variante: 'Esquiva' },
-      { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: valores.protecao.esquivaBloqueio, variante: 'Bloqueio' },
+      { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: esquivaBloqueio, variante: 'Esquiva' },
+      { tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: esquivaBloqueio, variante: 'Bloqueio' },
     );
   }
   if (valores.protecao.defesa) {
-    efeitos.push({ tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: valores.protecao.defesa, variante: 'Defesa' });
+    efeitos.push({ tipo: ModificacaoEfeitoTipoEnum.DEFESA, valor: valores.protecao.defesa * dobro, variante: 'Defesa' });
   }
   return efeitos;
 }
@@ -405,7 +453,15 @@ export function listarEfeitosFixosConstrutor(
 /**
  * Bônus fixo de Munição de um Fragmento Construtor de `modulo` (doc — "⬦ Construtor": "Recarregar"
  * custa Energia e concede dano por 1 cena, `m3-65`) — a página usa isto na ação "Recarregar".
+ * `possuiAnomalia` (`P-013`) dobra os dois valores: `custoRecarregar` é o custo de "usar" o
+ * Fragmento (doc: "Fragmentos custam o dobro de Energia em seu uso"), `dano` é o efeito que ele
+ * concede — mesma dobra dos dois lados já aplicada em `custoAquisicaoFragmento`.
  */
-export function bonusMunicaoConstrutor(modulo: FragmentoModuloEnum): BonusFixoMunicaoConstrutorDados {
-  return BONUS_FIXO_CONSTRUTOR[modulo].municao;
+export function bonusMunicaoConstrutor(
+  modulo: FragmentoModuloEnum,
+  possuiAnomalia = false,
+): BonusFixoMunicaoConstrutorDados {
+  const dobro = possuiAnomalia ? 2 : 1;
+  const valores = BONUS_FIXO_CONSTRUTOR[modulo].municao;
+  return { custoRecarregar: valores.custoRecarregar * dobro, dano: valores.dano * dobro };
 }

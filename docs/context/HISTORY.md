@@ -1,5 +1,472 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-11 — `I-011`: dadinhos do pool ganham a cor do tipo de dano do próprio termo
+
+Numa fórmula com vários tipos de dano (`4d6[F] + 4d6[Q]`), só os chips de resumo abaixo
+(`resultado-rolagem__grupo`) eram coloridos por tipo — o pool de dados em si ficava todo na mesma
+cor neutra, sem pista visual de qual `NdM` era qual tipo além da ordem na fórmula. Pedido pequeno o
+bastante (só frontend, paleta e dado já existiam) pra implementar direto, sem passar por spec no
+backlog.
+
+- `resultado-rolagem.component.ts`: novo `classeDado(dado: DadosRoladosDto)`, no mesmo padrão do
+  `classeGrupo` já existente — usa o `tipoDano` do próprio termo (`DadosRoladosDto.tipoDano`, já
+  vinha do motor) e o mesmo mapa `SUFIXO_TIPO_DANO`. Termo Composto (`[A-B]`) não tem `tipoDano`
+  (fica no par 50/50, `composto`) — o dado não sabe pra qual metade caiu, então fica só na classe
+  base neutra, sem tentar adivinhar.
+- `resultado-rolagem.component.html`: o `<span>` de cada dadinho trocou a classe estática por
+  `[class]="classeDado(dado)"`, mantendo `[class.resultado-rolagem__dado--escolhido/--descartado]`
+  como bindings à parte — Angular compõe as duas.
+- `resultado-rolagem.component.scss`: novo `@each` dentro de `&__dado` com a mesma paleta de
+  `&__grupo` (`--dano-*`/`-border`/`-dim`). Declarado **antes** de `--escolhido`/`--descartado` no
+  SCSS de propósito: quando um dado também está marcado como mantido (`kh`/`kl`), a cor de
+  "escolhido" (accent) continua prevalecendo — mesma prioridade visual de sempre; "descartado" só
+  mexe em opacidade/risco, então a cor de tipo continua visível por baixo.
+- Testado: componente não tinha spec dedicada — criada `resultado-rolagem.component.spec.ts` (4
+  testes: sem tipo fica neutro, cada termo tipado colore os próprios dados, Composto não colore,
+  escolhido/descartado combinam com a cor de tipo). `frontend`: 900/900 (+4, +1 arquivo). `lint`/
+  `build` limpos.
+- `IDEAS.md`: `I-011` sai de Abertas, registrada em Promovidas apontando pra este relato (sem spec
+  formal — implementação direta).
+
+## 2026-08-11 — `P-019`: seletor de Classe do guia de criação vira dois passos (base → arquétipo/subclasse)
+
+O `<select>` único do passo // Classe misturava, nos mesmos `<optgroup>`, as três classes-base, as
+três subclasses de Experimento e Civil — todos como opções de primeiro nível. O dono pediu o fluxo
+que o próprio doc já descreve (`sistema-v4.1.0.md` — "⬡ Subclasse": "Após escolher a sua classe você
+pode escolher tomar uma subclasse e abdicar de ganhar o seu arquétipo"): primeiro escolher a
+classe-base (Combatente/Especialista/Suporte) ou Civil; só então, se não for Civil, uma segunda
+etapa escolhe entre os arquétipos regulares **e** a subclasse de Experimento daquela base.
+
+- `shared/regras/agente/habilidades-catalogo.ts`: novo export `subclasseExperimentoDaClasseBase`,
+  o inverso de `classeBaseDeHabilidades` — devolve a subclasse de Experimento de uma classe-base
+  (`null` pra Civil ou pra quem já é subclasse). Reusa o mapa `CLASSE_BASE_DA_SUBCLASSE` já existente,
+  nenhuma tabela nova duplicada.
+- `frontend/.../opcoes-ficha.ts`: `GRUPOS_CLASSE_BASE` (primeira etapa: só as três bases + Civil,
+  sem Experimento) e `gruposPerfilDaClasseBase(base)` (segunda etapa: optgroup "Arquétipos" + optgroup
+  "Subclasse" quando existe) — `GRUPOS_CLASSE` original ficou intacto pro editor de classe da ficha
+  já existente (`ficha-visualizacao.component.ts`), fora do escopo pedido. `classeBaseDoSeletor(classe)`
+  resolve a base "efetiva" de uma classe já definitiva (a própria, se base/Civil; a base da subclasse,
+  se Experimento) — usada pra reabrir o primeiro select no valor certo.
+- `frontend/.../criar.page.ts`: `EstadoGuiaCriacao` ganhou `classeBase` (a escolha da primeira etapa,
+  guardada à parte de `classe` porque ela existe antes da segunda etapa fechar o perfil). Computeds
+  novos: `classeBaseAtual()` (cai pra derivar de `classe` quando `classeBase` está ausente — cobre
+  rascunhos salvos antes desta mudança e os vários testes que montam estado direto via
+  `atualizar({classe, arquetipo})`), `gruposPerfil()`, `perfilSelecionado()`. `mudarClasse`/
+  `mudarArquetipo` viraram `mudarClasseBase`/`mudarPerfil`; trocar a base sempre reseta tudo (igual
+  antes); trocar entre arquétipo ↔ subclasse na segunda etapa só reseta o pacote de Habilidades
+  iniciais e as melhorias quando a `classe` final de fato muda — entre dois arquétipos da mesma base,
+  preserva as duas coisas (mesmo comportamento de sempre).
+- Testado: `habilidades-catalogo.spec.ts` ganhou testes de `subclasseExperimentoDaClasseBase`.
+  `criar.page.spec.ts` ganhou um describe novo (8 testes: DOM das duas etapas, escolha de
+  arquétipo/subclasse, reset ao trocar de base, preservação/reset do pacote inicial). `shared`:
+  601/601 (+2). `frontend`: 896/896 (+8). `backend`: 196/196 (não mudou). `lint`/`build` limpos nos
+  três workspaces.
+
+## 2026-08-11 — `P-014` follow-up 2: rótulo dos pacotes de Habilidades iniciais também vira "Classe/Subclasse"
+
+Mais um ponto que o `P-014` tinha deixado fixo em "Arquétipo": os cards de **Pacote de criação** do
+passo // Habilidades ("2 Gerais + 1 de Classe/Arquétipo", "2 de Classe/Arquétipo") são texto de
+`listarPacotesHabilidadesIniciais` (`shared/regras/agente/habilidades-iniciais.ts`), que não tinha
+sido tocado nas duas rodadas anteriores — o dono reportou pelo print da tela.
+
+- `habilidades-iniciais.ts`: `PACOTES_AGENTE` (constante fixa) virou `pacotesAgente(classe)`
+  (função), que monta o rótulo da vaga combinada via `rotuloClasseOuArquetipo` — mesmo critério de
+  `classeBaseDeHabilidades` usado em todo o resto do P-014 (Classe/Subclasse quando a classe é uma
+  subclasse de Experimento; Classe/Arquétipo nas demais). Só os dois pacotes que citam essa vaga
+  mudam (`DUAS_GERAIS_UMA_CLASSE_OU_ARQUETIPO`, `DUAS_CLASSE_OU_ARQUETIPO`); "4 Gerais" e "3 Civis"
+  não citam Arquétipo, ficam como estavam.
+- Testado: `habilidades-iniciais.spec.ts` ganhou um `it.each` novo cobrindo as três subclasses de
+  Experimento. `criar.page.spec.ts` ganhou dois testes de DOM nos cards de pacote (Experimento vs.
+  classe base). `shared`: 599/599 (+3). `frontend`: 888/888 (+2). `backend`: 196/196 (não mudou).
+  `lint`/`build` limpos nos três workspaces.
+
+## 2026-08-11 — `P-014` follow-up: Subclasse ganha aba própria no seletor de habilidades, separada de Arquétipo
+
+Correção sobre a correção do dia: o `P-014` (rótulo "Arquétipo" virando "Subclasse") tinha resolvido
+o diálogo "Adicionar do sistema" trocando o **nome** de uma aba única que carregava os dois
+conceitos juntos (a subclasse do Experimento como um sub-chip a mais dentro da aba "Arquétipo"). O
+dono pediu uma correção mais estrutural: Subclasse e Arquétipo deviam ser **abas separadas**, não
+uma só trocando de nome. Escopo confirmado com o dono: só o diálogo do seletor — o contador do
+resumo da aba Habilidades da ficha e o rótulo da vaga no guia de criação continuam como ficaram no
+`P-014` (um rótulo só, que troca de nome).
+
+- `shared/regras/agente/habilidades-catalogo.ts`: `GrupoHabilidades['id']` ganhou o valor
+  `'subclasse'`. `grupoArquetipo` foi dividido em duas funções — `grupoSubclasse` (só a própria
+  subclasse do Experimento, sempre `ehDaFicha`, `[]` fora de Experimento) e `grupoArquetipo`
+  (só os arquétipos regulares da classe-base, nunca `ehDaFicha` pra um Experimento — a dele é a
+  Subclasse). `catalogoHabilidades` passou a devolver os dois grupos em sequência (Gerais, Classe,
+  Subclasse, Arquétipo), cada um omitido quando vazio.
+- `frontend/.../ficha-habilidade-seletor.component.ts`: revertida a lógica dinâmica do `P-014`
+  (que inspecionava o subgrupo `ehDaFicha` pra decidir se a aba "Arquétipo" virava "Subclasse") —
+  agora `subclasse`/`arquetipo` são ids de aba genuinamente distintos, então o rótulo volta a ser um
+  mapa fixo por id. `temSubfiltro` não mostra chips pra Subclasse (só tem um subgrupo possível, nunca
+  cruza — igual Gerais/Civil).
+- `frontend/.../criar.page.ts` (`gruposParaVaga`, guia de criação): achado no caminho — sem ajuste
+  aqui, a vaga `classeOuArquetipo` teria **perdido acesso à Subclasse inteira** pra um Experimento
+  (o filtro de ids relevantes só conhecia `'classe'`/`'arquetipo'`; com a subclasse morando num id
+  novo, ela simplesmente não apareceria mais nessa vaga — incluindo a Peculiaridade). Corrigido
+  incluindo `'subclasse'` na lista de ids relevantes. Essa vaga continua mostrando só as abas de
+  origem **própria** (Classe/Subclasse) — pra um Experimento, a aba "Arquétipo" nunca aparece aqui
+  mesmo, porque nenhum arquétipo regular da classe-base é "seu" (o dele é a subclasse); isso já era
+  assim antes do follow-up, não é regressão.
+- Testado: `habilidades-catalogo.spec.ts` (shared) reescrito pro grupo dividido, +1 teste novo.
+  `ficha-habilidade-seletor` não tem spec própria (component só de apresentação); a cobertura de DOM
+  vive em quem o abre — `ficha-habilidades.component.spec.ts` ganhou um describe novo provando as
+  duas abas simultâneas numa ficha Experimento (e só Arquétipo numa classe-base) no diálogo livre de
+  "Adicionar do sistema"; `criar.page.spec.ts` teve o teste do `P-014` ajustado pra refletir que a
+  vaga `classeOuArquetipo` mostra só "Subclasse" (não "Arquétipo") pra um Experimento. `shared`:
+  596/596 (+1). `frontend`: 886/886 (+2, um teste do P-014 ajustado no lugar). `backend`: 196/196
+  (não mudou, só roda contra o `shared` publicado). `lint`/`build` limpos nos três workspaces.
+
+## 2026-08-11 — `P-014` corrigido: rótulo "Arquétipo" agora vira "Subclasse" nas fichas de Experimento
+
+`P-014` estava aberto esperando o dono confirmar o escopo exato — em especial se o Civil também
+precisava de ajuste, já que ele tem um grupo próprio (`id: 'civil'`, rótulo "Civil") separado de
+"Arquétipo". O dono confirmou nesta sessão: o pedido anterior sobre o Civil foi um engano dele, sem
+bug nenhum aí — o escopo real é só trocar "Arquétipo" por "Subclasse" nos três lugares onde o rótulo
+fica fixo mesmo numa ficha de subclasse de Experimento (Bestial/Artificial/Híbrido).
+
+- `ficha-habilidade-seletor.component.ts` (diálogo "Adicionar do sistema"): a aba que hoje sempre
+  mostra "Arquétipo" agora checa se o subgrupo da própria ficha naquele grupo é identificado por uma
+  `ClasseEnum` (a subclasse ocupa o lugar do arquétipo pra Experimento, mesmo dado que já vinha de
+  `catalogoHabilidades`/`grupoArquetipo`) — se for, o rótulo vira "Subclasse". Nenhuma regra nova:
+  só leitura do que o catálogo já resolvia.
+- `ficha-habilidades.component.ts` (resumo por categoria da aba Habilidades): o chip "Arquétipo"
+  virou dinâmico (`rotuloResumoArquetipo`, mesmo critério de `classeBaseDeHabilidades` usado pelo
+  chip por item) — "Subclasse" numa ficha Experimento, "Arquétipo" nas demais, nunca em Civil
+  (`classeBaseDeHabilidades` devolve `null` pra Civil, tratado à parte pra não virar "Subclasse" por
+  engano). De quebra, corrigido um gap encontrado no caminho: `bucketResumo` nunca somava habilidades
+  de categoria `SUBCLASSE` em bucket nenhum — elas ficavam fora da contagem e do filtro inteiro. Agora
+  somam no mesmo bucket de Arquétipo (é o mesmo conceito, só renomeado na exibição).
+- `criar.page.ts` (guia de criação, passo // Habilidades): a vaga `classeOuArquetipo` tinha rótulo
+  fixo "Classe ou Arquétipo"; agora vira "Classe ou Subclasse" quando a classe da ficha não é de base
+  (`!ehClasseBase`, mesmo critério já usado no resto do guia) — cobre tanto o cabeçalho da vaga quanto
+  o botão "+ Escolher…" e a aba do seletor que abre a partir dela.
+- `docs/core/sistema-v4.1.0.md` não mudou — isto é rótulo de UI, não revisão de regra.
+- Testado: `criar.page.spec.ts` ganhou um teste de rótulo de vaga (`vagasMelhoria()`) e dois testes de
+  DOM abrindo o seletor pra conferir a aba renderizada, Experimento vs. classe base.
+  `ficha-habilidades.component.spec.ts` ganhou um describe novo cobrindo o rótulo dinâmico do resumo
+  e a contagem de uma habilidade `SUBCLASSE`. `shared` não mudou (nenhum teste novo lá). `frontend`:
+  884/884 (era 878/878, +6 testes novos). `lint`/`build` limpos nos dois workspaces.
+
+## 2026-08-11 — `P-016` corrigido: Potencializador solto no inventário não custa mais Energia
+
+`P-016` estava marcado como pendente de decisão do dono — o comportamento reportado como
+indesejado (Potencializador drenando Energia Máxima assim que adquirido/portado, mesmo solto e sem
+nunca ter sido acoplado a nada) era exatamente o que `docs/core/sistema-v4.1.0.md` descrevia ("⬥
+Módulos": "Cada um dos módulos gasta sua Energia ao entrar em contato com você"). O dono pediu
+diretamente pra resolver o problema nesta sessão, o que autoriza a revisão de regra que a própria
+entrada do `PROBLEMS.md` já deixava mapeada: cobrar só no acoplamento.
+
+- **Regra nova:** um fragmento Potencializador não custa Energia nenhuma enquanto solto no
+  inventário — só passa a custar ao ser de fato **acoplado** (`custoAcoplarFragmento`, inalterado).
+  O Construtor não muda: ele **é** a arma/proteção assim que existe, então continua pagando na
+  aquisição, dobrado, como sempre.
+- `shared/regras/compras/fragmento.ts`:
+  - `custoAquisicaoFragmento` retorna **0** pro Potencializador em qualquer módulo/Anomalia; o
+    Construtor mantém a fórmula de sempre (base × 2, dobrado de novo com Anomalia).
+  - `aplicarReducaoAfinidade` ganhou uma guarda pro custo `0`: o piso de "no mínimo 1 de Energia
+    Máxima" existe pra não deixar a Afinidade **anular** um custo real — não pra inventar uma
+    cobrança de 1 sobre um custo que já era 0. Sem essa guarda, todo fluxo que agora recebe custo 0
+    do Potencializador (adquirir, remover, consumir, o cartão do catálogo) cobraria 1 de qualquer
+    jeito.
+- `frontend/.../ficha-inventario.component.ts`: `debitarAquisicaoFragmento`/
+  `restaurarAquisicaoFragmento` saem cedo (sem emitir `ajusteEnergiaFragmento`) quando o custo de
+  aquisição é 0, evitando um evento sem efeito nenhum que faria a página persistir à toa.
+  `custoLiquidoAplicarFragmento` (usado por "Aplicar em...") e `desacoplarFragmento` (usado por
+  "remover mod de fragmento") pararam de somar/restituir uma "aquisição" que não existe mais — o
+  acoplamento passou a ser o único débito de Energia Máxima do Potencializador, e desacoplar
+  restitui esse débito por completo (nada continua drenando depois que ele volta a ser avulso). O
+  cartão de módulo no catálogo de Fragmentos (`cartaoModulosFragmento`) trocou o que mostrava pro
+  Potencializador — custo de **acoplar**, rotulado "(ao acoplar)" — em vez do custo de aquisição
+  (que virou sempre 0 e, sem contexto, faria parecer que o Potencializador nunca custa nada).
+- `docs/core/sistema-v4.1.0.md` — "⬥ Módulos" e "⬦ Construtor" reescritos pra descrever o gatilho
+  certo por tipo (Construtor: imediato ao portar; Potencializador: só ao acoplar), sem mudar nenhum
+  valor da tabela de custos nem a seção "⬥ Acoplamento" (que já descrevia o custo de acoplar
+  corretamente).
+- Testado: `shared/regras/compras/fragmento.spec.ts` reescrito pro novo comportamento de
+  `custoAquisicaoFragmento`/`aplicarReducaoAfinidade`. `ficha-inventario.component.spec.ts` — os 17
+  testes que dependiam do valor antigo foram recalculados; onde o teste existia especificamente pra
+  provar "a Afinidade reduz o custo de **adquirir**" um Potencializador (que não existe mais), o
+  fragmento sob teste virou Construtor pra manter a cobertura da mecânica de Afinidade retroativa
+  intacta. Dois testes novos de Anomalia com Construtor preenchem a lacuna deixada pelos
+  equivalentes antigos de Potencializador. `lint`/`build` limpos em `shared`/`frontend`/`backend`;
+  suíte `shared` 595/595 e `frontend` 878/878 verdes.
+- **Ambiente desta rodada:** Postgres via Docker Compose seguiu indisponível (sem daemon no
+  sandbox) — verificação só via suíte de testes/lint/build, sem app real rodando.
+
+## 2026-08-11 — `P-015` corrigido: fragmento consumido volta a contar pra Afinidade
+
+`listarModulosFragmentosPortados` (`shared/regras/compras/fragmento.ts`) só somava módulos de
+fragmentos ainda **soltos** no inventário ou já **acoplados** (`origemFragmento` numa
+Modificação) — um fragmento **consumido** (cardápio "Consumido" do Potencializador, m3-64) vira só
+um bônus de stat no agente e não sobrava em nenhuma das duas listas, então caía fora de
+`calcularAfinidade`/`aplicarReducaoAfinidade`, apesar do registro completo do consumo já existir
+em `dados.fragmentosConsumidos` (`FichaFragmentoConsumidoDto`, com `modulo`) desde a m3-64.
+
+- `listarModulosFragmentosPortados` ganhou um segundo parâmetro opcional, `modulosConsumidos:
+  readonly FragmentoModuloEnum[] = []`, somado por cima de soltos/acoplados no array retornado.
+  Recebe só os módulos (não o DTO completo) porque `regras/compras` não pode depender de
+  `dtos/ficha` (evita ciclo — `dtos/ficha` já importa de `regras/compras`); quem lê
+  `dados.fragmentosConsumidos` e extrai os módulos é o chamador.
+- `ficha-visualizacao.component.ts` — `modulosFragmentosPortados` (entrada de `afinidadeFragmentos`
+  e `gruposFragmentosPortados`, os dois já existentes) passou a somar
+  `this.fragmentosConsumidos().map((registro) => registro.modulo)`. Como os três computeds
+  encadeiam da mesma fonte, o chip "Módulo X" da aba Extras e o número de Afinidade exibido também
+  passaram a refletir fragmentos já consumidos, sem precisar de um segundo cálculo em paralelo
+  (proibição #26 — uma fonte só).
+- `ficha-inventario.component.ts` — a Afinidade "retroativa" (`afinidadeConsiderando`, usada nos 7
+  pontos que debitam/restituem Energia de fragmento — adquirir, remover, acoplar, desacoplar, e as
+  prévias dos painéis "Consumir"/"Aplicar em...") ganhou o mesmo parâmetro. Novo input
+  `fragmentosConsumidos` (default `[]`, mesmo formato de `dados.fragmentosConsumidos`) e um
+  computed privado `modulosConsumidos` que extrai só os módulos — repassados em todas as chamadas
+  de `afinidadeConsiderando`. `ficha-visualizacao.component.html` passou a ligar
+  `[fragmentosConsumidos]="fragmentosConsumidos()"` no `<app-ficha-inventario>`.
+- Testado: `shared/regras/compras/fragmento.spec.ts` ganhou 2 casos (soma por cima dos
+  soltos/acoplados; conta só os consumidos quando o inventário está vazio).
+  `ficha-visualizacao.component.spec.ts` ganhou um caso confirmando que a Afinidade exibida soma um
+  fragmento consumido mesmo com o inventário vazio (doc — "Afinidade = 6 - Módulo": módulo IV
+  sozinho = 2). `ficha-inventario.component.spec.ts` ganhou um caso confirmando que 3 fragmentos
+  consumidos de módulo I (Afinidade 15) reduzem o custo de adquirir um novo fragmento módulo I,
+  mesma conta já coberta pra fragmentos soltos. `lint`/`build` limpos nos dois workspaces;
+  suíte `shared` 596/596 e `frontend` 876/876 (874 + 2 novos) verdes.
+- **Ambiente desta rodada:** Postgres via Docker Compose seguiu indisponível (sem daemon no
+  sandbox) — verificação só via suíte de testes/lint, sem app real rodando. Nenhuma decisão de
+  design pendente aqui (diferente do P-014/P-016): o dono já havia descrito o comportamento
+  esperado ao reportar o problema em 2026-08-09, então a correção seguiu direto o que estava
+  registrado no `PROBLEMS.md`.
+
+## 2026-08-11 — `P-012` corrigido: descrição de habilidade não corta mais sem aviso no seletor
+
+O `PROBLEMS.md` listava três candidatos de correção sem decidir qual ("mitiga mas não resolve",
+"permitir expandir", "rever o clamp por breakpoint") — perguntado ao dono, a escolha foi um
+híbrido: `text-overflow: ellipsis` sempre, **hover com tooltip do texto inteiro no desktop**, e um
+botão explícito **"Ver mais"/"Ver menos" só no mobile** (onde não existe hover).
+
+- `ficha-habilidade-seletor.component.scss` — `&__opcao-desc` ganhou `text-overflow: ellipsis`
+  (resolve o "corta sem nenhum sinal" — agora corta em "…") e um modificador `&--expandida` que
+  zera o `-webkit-line-clamp` pro estado aberto do "ver mais". Novo `&__opcao-ver-mais`: `display:
+  none` por padrão, só reaparece em `@include bp.mobile` — no desktop o hover já resolve, o botão
+  seria redundante.
+- `ficha-habilidade-seletor.component.html` — a `<span>` da descrição ganhou `[appTooltip]` (a
+  diretiva de hover/toque já usada nesta mesma tela, linha do botão "Na ficha ✕") e a nova diretiva
+  `appClampTruncado`, exportada como `#desc="appClampTruncado"`; o botão "ver mais" só é renderizado
+  quando `desc.truncado()` é verdadeiro — uma descrição curta que já cabe nas 2 linhas nunca ganha
+  botão à toa.
+- **Nova diretiva `shared/clamp-truncado/clamp-truncado.directive.ts`**: mede
+  `scrollHeight > clientHeight` do próprio host **uma única vez**, no primeiro render, sem
+  `ResizeObserver`. De propósito: diferente da `OverflowFade` (que precisa remedir toda hora porque
+  a lista rola ao vivo), aqui uma remedição ao expandir zeraria `truncado()` no exato momento em que
+  o clamp é removido — o botão "ver mais" sumiria no meio do próprio clique que ele disparou, sem
+  chance de virar "ver menos" pra fechar de novo. Medição congelada evita esse looping.
+- Estado de expansão: `descricaoExpandida = signal<string | null>(null)` no componente, uma chave
+  por vez (a mesma do `track` da lista — `nome + categoria`, que já precisa ser único entre a
+  habilidade comum e a melhorada de mesmo nome).
+- **Ambiente desta rodada:** Postgres via Docker Compose seguiu indisponível (sem daemon no
+  sandbox) — sem stack real pra abrir o seletor dentro da ficha (ele só é alcançável depois de
+  navegar a criação guiada até uma vaga de melhoria). Verificado por um repro isolado: compilei o
+  SCSS real do componente com o `sass` do próprio repo (fidelidade de tokens/cores) e repliquei a
+  fórmula exata da nova diretiva num script solto (mesma medição `scrollHeight > clientHeight`).
+  Confirmado ao vivo (Playwright, Chromium): a 1920px o botão "ver mais" não aparece nem pra
+  descrição truncada (`display: none` do `bp.mobile`); a 360px aparece só pra descrição que
+  realmente estoura 2 linhas (a curta não ganha botão); clicar expande (`scrollHeight===clientHeight`
+  passa a bater, classe `--expandida` presente, "…" some) e troca o rótulo pra "Ver menos"; um
+  segundo clique volta ao estado cortado. `lint`/`build`/suíte completa (874/874) verdes.
+
+**Addendum (mesmo dia) — verificado também no app de verdade, não só no repro isolado.** O
+Postgres seguiu indisponível, mas dava pra chegar no seletor sem backend: `/fichas/nova` (m3-28,
+ficha avulsa) faz o passo // HABILIDADES existir assim que `classe !== null`, e o rascunho da
+`GuiaCriacaoRascunhoService` fica só no `localStorage` (`contratados-rpg.guia-criacao.acervo`).
+Plantei um rascunho com `passo: 4` (Habilidades), `classe: 'COMBATENTE'`,
+`sobrescreverProgressao: true` + `nivelManual: 5` (dá vagas de melhoria sem precisar de campanha),
+subi só o `ng serve` e cliquei "Retomar" → "+ Escolher Gerais" pra abrir o seletor real, com o
+catálogo de verdade (`shared/regras`). Confirmado com dado real (habilidade "6º Sentido", que
+realmente estoura 2 linhas): mobile mostra "…" + "VER MAIS", expande pro texto inteiro e vira
+"VER MENOS"; desktop mostra "…" sem nenhum botão, e o hover abre o tooltip com o texto completo.
+Habilidades com descrição curta (Analisar Cenário, Arrepio, Ataque Duplo) não ganham botão à toa,
+confirmando que `appClampTruncado` só dispara quando o clamp de fato cortou algo.
+
+## 2026-08-11 — `P-009` corrigido: `npm run lint` volta a fechar limpo em `frontend`/`backend`
+
+Diferente do `P-001`/`P-010`/`P-011` (que já estavam corrigidos, só não fechados na
+documentação), o `P-009` era um problema de verdade — `npm run lint --workspace=frontend`
+reproduziu os 7 erros documentados e `npm run lint --workspace=backend` reproduziu o 1 erro.
+Corrigido a pedido do autor:
+
+- `ficha-inventario.component.html` — o `autofocus` declarativo do campo de busca virou
+  `appAutoFocus`, a diretiva que já existe no projeto (`shared/auto-focus/`) e faz `.focus()` via
+  script no `afterNextRender` — evita a "autofocus processed flag" da spec HTML, que só honra um
+  `autofocus` por documento (mesmo motivo pelo qual a diretiva foi criada originalmente para
+  outro caso).
+- `ficha-visualizacao.component.spec.ts` e `ficha.service.spec.ts` (backend) — a variável não
+  usada vinha de `const { anotacoes, ...resto } = dados` (destructuring só para excluir uma
+  chave). Prefixar com `_` **não resolve** neste projeto: nenhum dos dois `eslint.config.mjs` tem
+  `varsIgnorePattern`/`ignoreRestSiblings`, confirmado testando ao vivo (`_anotacoesOmitida` já
+  vinha prefixado no backend e ainda assim era flagado). Troquei pelo padrão
+  `{ ...dados, anotacoes: undefined }` — `toEqual` do Vitest ignora chaves com valor `undefined`
+  (mesma semântica do Jest), e o código sob teste já lê `dados.anotacoes ?? ''`, então
+  `undefined` se comporta exatamente como ausente.
+- `acervo.page.spec.ts` — o mock `duplicarFicha: vi.fn((id: number) => ...)` nunca usava `id`;
+  removido o parâmetro (mesmo padrão já usado por `atribuirCampanha` no mesmo arquivo).
+- `criar.page.html` — dois elementos clicáveis sem suporte a teclado:
+  - o `<dialog>` de saída ganhou `tabindex="-1"` e `(keydown.escape)="cancelarSaida()"`. Native
+    `<dialog>` já fecha com Esc via evento `close` nativo (já ligado a `cancelarSaida()`) — o
+    handler novo é redundante em termos de comportamento, só formaliza o par clique/teclado que o
+    lint exige.
+  - `<div class="guia__resumo-fundo" (click)="...">` virou `<button type="button"
+    aria-label="Fechar resumo operacional">`, replicando o padrão `.dialogo__fundo` já usado em
+    6 outras páginas do app (`acervo`, `detalhe`, `visualizar`, `entrar`) — inclusive o reset
+    `border: 0; cursor: default;` no SCSS, copiado do mesmo lugar.
+
+Verificado ao vivo com Playwright (sem Docker disponível neste sandbox remoto, então sem
+Postgres/backend — a rota `/fichas/nova` sem campanha não faz chamada HTTP nenhuma, então dá para
+verificar o `<dialog>` e o drawer de resumo só com `ng serve`): nos dois viewports padrão
+(360×800 e 1920×1080), o diálogo de saída abre, fecha ao clicar no `::backdrop` e fecha com Esc; no
+mobile, o drawer de resumo abre e fecha ao clicar no novo `<button>` de fundo — nenhuma mudança de
+comportamento visível, só a marcação ficou acessível. `npm run lint` limpo nos dois workspaces
+(exit 0) e as suítes completas continuam verdes (frontend 874/874, backend 196/196). `P-009`
+movido para "Resolvidos".
+
+## 2026-08-11 — `PROBLEMS.md`: `P-011` também já estava corrigido, mesmo padrão do `P-001`/`P-010`
+
+Investigação a pedido do autor sobre o `P-011` (suíte de `shared` coletando specs compiladas de
+`dist/**` e quebrando `npm test`). Rodei `vitest run` isolado no workspace `shared`
+(`cd shared && ../node_modules/.bin/vitest run`): **33 arquivos de teste, 594 testes, todos
+passando** — exatamente o número de `*.spec.ts` em `shared/src` (`find shared/src -name
+'*.spec.ts' | wc -l` também deu 33). Nenhum arquivo de `shared/dist` foi coletado, e `shared/dist`
+não contém nenhum `*.spec.js` hoje.
+
+A causa: `shared/tsconfig.build.json` (`git log` mostra o commit `8e3b757`, 2026-08-08, mas o
+arquivo aparentemente já existia informalmente por volta de 2026-08-05) excedeu
+`"src/**/*.spec.ts"` do `exclude`, além de `node_modules` e `dist`. Como o script `build` do
+`shared/package.json` sempre apontou para `tsconfig.build.json` (`tsc --project
+tsconfig.build.json`), a build passou a nunca mais copiar specs para `dist/`, e o Vitest da raiz
+(que roda com `exclude` padrão, cobrindo `**/dist/**`) nunca mais tem o que quebrar.
+`git merge-base --is-ancestor 8e3b757 HEAD` confirma que o commit já está no `HEAD` atual.
+
+Mesmo padrão do achado anterior desta mesma sessão (`P-001`/`P-010`): a correção aconteceu, mas o
+item nunca foi tirado de `PROBLEMS.md`. `P-011` movido para "Resolvidos".
+
+## 2026-08-11 — `PROBLEMS.md`: `P-001` e `P-010` já estavam corrigidos, só nunca foram fechados
+
+Investigação a pedido do autor sobre o `P-001` ("apelido de equipamento" quebrado em
+`ficha-inventario.component.spec.ts`). Rodei a suíte completa do frontend duas vezes
+(`ng test --watch=false`) e as duas fecharam **874/874 testes, 51/51 arquivos**, sem nenhuma
+falha — nem P-001 nem P-010, que sempre eram citadas juntas nos relatos de task anteriores.
+
+`git log` no arquivo mostrou a causa: o commit `0aa92c2` ("test(ficha): corrige expectativas
+defasadas em inventário e visualizar", 2026-08-08) já tinha ajustado as duas asserções
+desatualizadas — o nome mecânico do item passou a incluir "— categoria" (`'Leve'` →
+`'Leve — Corpo a Corpo'`, P-001) e o link "Voltar" virou ícone-só com `aria-label` em vez de
+texto visível (P-010). A causa real nunca foi `ResizeObserver`, como o `P-001` suspeitava — era
+simplesmente uma expectativa de teste que não acompanhou uma mudança de template. `git
+merge-base --is-ancestor 0aa92c2 HEAD` confirma que o commit já está no `HEAD` atual.
+
+O motivo de as duas falhas continuarem aparecendo como "preexistentes" em tantas tasks depois de
+8/ago é que várias branches `claude/*` foram cortadas de commits anteriores ao `0aa92c2` e só
+viram a correção depois de mescladas — exatamente o tipo de atraso que o próprio `P-002`
+descreve. `PROBLEMS.md` nunca foi atualizado para refletir a correção; P-001 e P-010 movidos para
+"Resolvidos".
+
+## 2026-08-11 — Acervo de fichas passa a mostrar cor e avatar do card, como no Esquadrão
+
+`FichaAcervo` (`/fichas`) já lia `imagemUrl` de `FichaResumoDto` e renderizava a foto, mas nunca
+lia `cor` — o comentário do SCSS ainda dizia "o cartão do acervo não recebe `cor` — recorte
+enxuto de `FichaResumoDto`, sem a coluna relacional", uma justificativa que ficou obsoleta assim
+que `m3-61` acrescentou `cor` ao mesmo `FichaResumoDto` (o backend já devolvia a coluna; só o
+frontend do acervo nunca foi atualizado). Resultado visível: todo avatar do acervo saía com borda
+e listras neutras (`--border-strong`), sem a identidade de cor da ficha, e sem o preview ampliado
+no hover que o card de ficha do Esquadrão (`CampanhaDetalhe`, `m3-52`) já tinha para a mesma foto.
+
+Correção trouxe a mesma receita do Esquadrão para o card do acervo: `ItemAcervo.cor` mapeado de
+`FichaResumoDto.cor`, `[style.--cor-ficha]` no avatar alimentando o mesmo `color-mix` de borda e
+listras diagonais (fallback pra `--border-strong` sem cor definida), avatar alargado (36px → 52px,
+esticado à altura do bloco nome/meta/vitais) e o hover sustentado (`agendarPreviewAvatar`/
+`cancelarPreviewAvatar`, 600 ms) abrindo um preview 200×200 `object-fit: contain` na raiz do
+template — mesma posição fora de `.acervo__lista` que o menu kebab já ocupava, pela mesma razão
+(overflow + mask-image cortariam um `position: fixed` filho na pintura).
+
+Testes: os 15 de `acervo.page.spec.ts` e os 541 do módulo `ficha` passam; build e lint do
+frontend limpos no recorte tocado. Verificação visual na aplicação real (Postgres local via
+`postgresql-16` do sistema — Docker não disponível neste ambiente) em `1920×1080` e `360×800`,
+com três fichas semeadas via REST (com cor sem foto, com cor e foto, sem nenhuma das duas): borda
+e listras seguem a cor de cada ficha, a terceira cai no neutro esperado, e o hover sustentado sobre
+o avatar com foto abre o preview ampliado. Comparação lado a lado com o card do Esquadrão
+(`/painel/:id`) confirma a mesma receita visual (cor, listras, preview).
+
+## 2026-08-11 — `P-013`, correção de escopo: Anomalia também dobra o ponto de atributo do Módulo I e o Construtor
+
+Relato direto do autor: consumir um Fragmento Potencializador de Módulo I com a habilidade
+"Anomalia" (Experimento Artificial) devia conceder **2** pontos de atributo, não 1, e ele suspeitava
+que os fragmentos Construtor também não estavam sendo amplificados. Os dois estavam certos — a
+primeira implementação do `P-013` (2026-08-10) tinha excluído `concedePontoAtributo` e os efeitos
+fixos do Construtor do escopo da dobra, por decisão registrada naquele momento ("regra estrutural,
+não um valor de efeito" / "dobrá-los sem pedido seria extrapolar a spec"). Reler o doc
+(`docs/core/sistema-v4.1.0.md` — "◈ Anomalia": "Fragmentos custam o dobro de Energia em seu uso, mas
+têm todos os seus efeitos dobrados") não abre exceção nenhuma para nenhum dos dois: Construtor
+também é um Fragmento, e o ponto de atributo do Módulo I é um efeito do cardápio "Consumido" como
+qualquer outro. Documento vence o código (proibição #27) — corrigido.
+
+**Ponto de atributo do Módulo I.** `OpcaoBonusConsumoFragmentoDto` (`shared/regras/compras/
+fragmento.ts`) ganhou `pontosAtributo?: number` ao lado de `concedePontoAtributo` — 1 normalmente, 2
+com `possuiAnomalia` (`listarBonusConsumoFragmentoPotencializador` calcula `dobro` igual aos outros
+três valores do cardápio). `aplicarBonusConsumoFragmento`/`reverterBonusConsumoFragmento`
+(`shared/regras/agente/fragmento-consumo.ts`) somam `opcao.pontosAtributo ?? 1` em vez do `1`
+hardcoded (o `?? 1` mantém compatível qualquer opção construída à mão sem o campo, ex. registros
+antigos de `fragmentosConsumidos` persistidos antes desta correção). `FichaInventario` monta o rótulo
+("+N ponto(s) no atributo") a partir de `opcao.pontosAtributo`, não mais um "+1" fixo.
+
+**Efeitos fixos do Construtor.** `listarEfeitosFixosConstrutor`/`bonusMunicaoConstrutor`
+(`shared/regras/compras/fragmento.ts`) ganharam `possuiAnomalia = false` e dobram todo valor de
+efeito (dano, teste, resistência, Esquiva/Bloqueio/Defesa, custo de "Recarregar") — `danoFaces` (o
+tipo de dado, ex. D12) fica de fora, mesmo raciocínio de `MULTIPLICADOR_MAIOR_DADO_MODULO` no
+Potencializador (dobra o valor final, nunca a face do dado alvo). `FichaInventario` repassa
+`this.possuiAnomalia()` nos três pontos que chamavam as duas funções (bônus fixo ao criar o item,
+"Recarregar" munição, exibição do bônus de munição no card).
+
+Testes novos em `fragmento.spec.ts` (cardápio Consumido módulo I com Anomalia, efeitos fixos do
+Construtor com Anomalia, munição com Anomalia), `fragmento-consumo.spec.ts` (aplicar/reverter 2
+pontos) e `ficha-inventario.component.spec.ts` (fiação do input `possuiAnomalia` nos três novos
+pontos, mais o ajuste do teste pré-existente que comparava o `opcao` inteiro do Módulo I e passou a
+incluir `pontosAtributo`). Suítes cheias sem regressão: shared 592/592, backend 196/196, frontend
+874/874 — todos os três workspaces fecham 100%.
+
+## 2026-08-11 — Gerais Melhoradas migram para a aba Gerais, substituindo a comum
+
+Redesenho de correção: as **Gerais Melhoradas** (`GERAL_MELHORADA`) deixaram de aparecer
+misturadas às habilidades do próprio arquétipo, na aba **Arquétipo** do seletor, e passaram a
+viver na aba **Gerais** — no lugar exato da Geral que elas melhoram, para quem é do arquétipo
+dono da melhoria. Um Assassino não vê mais "6º Sentido" (comum) e "6º Sentido melhorada" como
+duas entradas possíveis: a lista Geral dele tem só a versão melhorada, com o selo "Geral
+melhorada"; qualquer outro arquétipo continua vendo a comum. `grupoGerais` (antes sem parâmetros)
+passou a receber o `arquetipo` da ficha, monta um mapa nome→melhorada de
+`HABILIDADES_GERAIS_MELHORADAS[arquetipo]` e substitui a entrada correspondente ao percorrer
+`HABILIDADES_GERAIS`, mantendo a mesma contagem e ordem da lista original — nunca soma as duas.
+`grupoArquetipo` parou de anexar as melhoradas ao subgrupo do próprio arquétipo. Nenhuma mudança
+de categoria/efeito mecânico: `defesa.ts` (contra-ataque) e `inventario.ts` (Mochileiro) já liam
+`categoria === GERAL_MELHORADA` da habilidade gravada na ficha, não de onde o seletor a exibia, e
+continuam funcionando sem alteração. O passo de criação "06 Habilidades" (vaga `'geral'`, que já
+filtra `catalogoHabilidades(...).id === 'gerais'`) herda o comportamento automaticamente: ao
+montar o pacote inicial/de progressão, um Assassino escolhendo uma vaga Geral já recebe a versão
+melhorada quando o nome coincide.
+
+Testes: shared **589/589** (18 no arquivo do catálogo, reescritos para provar a substituição —
+mesma contagem, uma entrada por nome, origem = o arquétipo — e que a aba Arquétipo nunca mais
+carrega `GERAL_MELHORADA`); frontend **871/871**; build/lint de `shared` limpos. `frontend`
+manteve os sete erros de lint pré-existentes de `P-009`, nenhum nos arquivos tocados. Mudança só
+de `shared/regras/agente` (dado/regra pura) + comentários do componente do seletor — a UI já
+renderizava o selo "Geral melhorada" por item de categoria, então nenhuma mudança de template foi
+necessária.
+
+Verificação visual feita na aplicação real (Postgres local via `postgresql-16` do sistema, já que
+o Docker deste ambiente não alcançava o Docker Hub — sem mudança permanente de infra, só para
+esta sessão) em `1920×1080` e `360×800`, com uma ficha Especialista/Assassino: a aba **Gerais**
+do seletor mostra "6º Sentido" com o selo "GERAL MELHORADA" na mesma posição alfabética das
+Gerais comuns (entre "Analisar Cenário" e "Arrepio"), descrição da versão melhorada, sem entrada
+duplicada da comum; a aba **Arquétipo → Assassino** mostra só as 7 habilidades de arquétipo (a
+inicial "Ceifador" com selo "INICIAL"), sem nenhum selo "Geral melhorada" sobrando. Sem overflow
+em nenhum dos dois viewports; visual consistente com o padrão de selo já usado por "Inicial".
+
 ## 2026-08-11 — `m3-65a`: visibilidade da ficha com confirmação e tempo real
 
 O checkbox longo da ficha completa virou uma ação `Ocultar`/`Exibir` com ícone e confirmação
