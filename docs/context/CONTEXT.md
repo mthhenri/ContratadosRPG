@@ -50,8 +50,8 @@ Deploy em produção por **integração nativa das plataformas**, sem GitHub Act
 `master` → Render (backend) e Cloudflare Pages (frontend) puxam do Git sozinhos; banco no Supabase.
 O GitHub Actions só roda **CI** (lint + testes nos 3 workspaces em todo PR).
 
-**Suítes (checadas na correção do `P-013`):** shared 587/587 · backend 190/190 · frontend
-813/813 — os 3 workspaces fecham a suíte completa hoje (`npm run test`, sem `--watch`);
+**Suítes (checadas na correção do `P-013b`):** shared 594/594 · backend 196/196 · frontend
+874/874 — os 3 workspaces fecham a suíte completa hoje (`npm run test`, sem `--watch`);
 `P-001`/`P-010`/`P-011` descrevem falhas que só reproduzem isoladas (arquivo único), não na suíte
 completa — ver [`PROBLEMS.md`](PROBLEMS.md). `npm run lint` **não fecha limpo** hoje em nenhum dos
 dois workspaces (frontend/backend) — falhas pré-existentes não relacionadas a nenhuma task recente,

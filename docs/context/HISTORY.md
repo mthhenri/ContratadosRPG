@@ -1,5 +1,42 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-11 — `P-013`, correção de escopo: Anomalia também dobra o ponto de atributo do Módulo I e o Construtor
+
+Relato direto do autor: consumir um Fragmento Potencializador de Módulo I com a habilidade
+"Anomalia" (Experimento Artificial) devia conceder **2** pontos de atributo, não 1, e ele suspeitava
+que os fragmentos Construtor também não estavam sendo amplificados. Os dois estavam certos — a
+primeira implementação do `P-013` (2026-08-10) tinha excluído `concedePontoAtributo` e os efeitos
+fixos do Construtor do escopo da dobra, por decisão registrada naquele momento ("regra estrutural,
+não um valor de efeito" / "dobrá-los sem pedido seria extrapolar a spec"). Reler o doc
+(`docs/core/sistema-v4.1.0.md` — "◈ Anomalia": "Fragmentos custam o dobro de Energia em seu uso, mas
+têm todos os seus efeitos dobrados") não abre exceção nenhuma para nenhum dos dois: Construtor
+também é um Fragmento, e o ponto de atributo do Módulo I é um efeito do cardápio "Consumido" como
+qualquer outro. Documento vence o código (proibição #27) — corrigido.
+
+**Ponto de atributo do Módulo I.** `OpcaoBonusConsumoFragmentoDto` (`shared/regras/compras/
+fragmento.ts`) ganhou `pontosAtributo?: number` ao lado de `concedePontoAtributo` — 1 normalmente, 2
+com `possuiAnomalia` (`listarBonusConsumoFragmentoPotencializador` calcula `dobro` igual aos outros
+três valores do cardápio). `aplicarBonusConsumoFragmento`/`reverterBonusConsumoFragmento`
+(`shared/regras/agente/fragmento-consumo.ts`) somam `opcao.pontosAtributo ?? 1` em vez do `1`
+hardcoded (o `?? 1` mantém compatível qualquer opção construída à mão sem o campo, ex. registros
+antigos de `fragmentosConsumidos` persistidos antes desta correção). `FichaInventario` monta o rótulo
+("+N ponto(s) no atributo") a partir de `opcao.pontosAtributo`, não mais um "+1" fixo.
+
+**Efeitos fixos do Construtor.** `listarEfeitosFixosConstrutor`/`bonusMunicaoConstrutor`
+(`shared/regras/compras/fragmento.ts`) ganharam `possuiAnomalia = false` e dobram todo valor de
+efeito (dano, teste, resistência, Esquiva/Bloqueio/Defesa, custo de "Recarregar") — `danoFaces` (o
+tipo de dado, ex. D12) fica de fora, mesmo raciocínio de `MULTIPLICADOR_MAIOR_DADO_MODULO` no
+Potencializador (dobra o valor final, nunca a face do dado alvo). `FichaInventario` repassa
+`this.possuiAnomalia()` nos três pontos que chamavam as duas funções (bônus fixo ao criar o item,
+"Recarregar" munição, exibição do bônus de munição no card).
+
+Testes novos em `fragmento.spec.ts` (cardápio Consumido módulo I com Anomalia, efeitos fixos do
+Construtor com Anomalia, munição com Anomalia), `fragmento-consumo.spec.ts` (aplicar/reverter 2
+pontos) e `ficha-inventario.component.spec.ts` (fiação do input `possuiAnomalia` nos três novos
+pontos, mais o ajuste do teste pré-existente que comparava o `opcao` inteiro do Módulo I e passou a
+incluir `pontosAtributo`). Suítes cheias sem regressão: shared 592/592, backend 196/196, frontend
+874/874 — todos os três workspaces fecham 100%.
+
 ## 2026-08-11 — Gerais Melhoradas migram para a aba Gerais, substituindo a comum
 
 Redesenho de correção: as **Gerais Melhoradas** (`GERAL_MELHORADA`) deixaram de aparecer

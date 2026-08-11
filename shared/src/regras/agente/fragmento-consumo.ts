@@ -25,8 +25,9 @@ export interface EfeitoConsumoFragmentoDto {
  * mesmo padrão de `aplicarFormacaoAosDerivados`/`removerFormacaoDosDerivados`,
  * `shared/regras/identidade/formacoes`). `atributoEscolhido` só é usado (e exigido para ter efeito)
  * em `tipo === 'TESTE'` — ignorado nos demais. Módulo I soma também **+1 ponto** no atributo
- * escolhido, além do teste (`opcao.concedePontoAtributo` — doc: "única forma de ultrapassar o
- * limite de 6 pontos em um atributo"). `DEFESA`/`DANO_CORPO` só alteram o derivado correspondente se
+ * escolhido, além do teste (`opcao.concedePontoAtributo`/`opcao.pontosAtributo` — doc: "única forma
+ * de ultrapassar o limite de 6 pontos em um atributo"; `pontosAtributo` já vem dobrado para 2 com
+ * Anomalia, `P-013`). `DEFESA`/`DANO_CORPO` só alteram o derivado correspondente se
  * a classe já o possuir (`defesa !== undefined`/`danoCorpoACorpo` truthy — Civil não tem Defesa;
  * mesma guarda de `aplicarEfeitoUnico`, "não fabricar uma stat que a classe não tem").
  */
@@ -60,7 +61,10 @@ export function aplicarBonusConsumoFragmento(
         [atributoEscolhido]: (agente.modificadoresTeste[atributoEscolhido] ?? 0) + sinal * opcao.valor,
       };
       const atributos = opcao.concedePontoAtributo
-        ? { ...agente.atributos, [atributoEscolhido]: agente.atributos[atributoEscolhido] + sinal * 1 }
+        ? {
+            ...agente.atributos,
+            [atributoEscolhido]: agente.atributos[atributoEscolhido] + sinal * (opcao.pontosAtributo ?? 1),
+          }
         : agente.atributos;
       return { ...agente, modificadoresTeste, atributos };
     }
