@@ -44,7 +44,7 @@ describe('CampanhaDetalhe', () => {
   };
 
   function membrosCom(usuarioId: number, papel: TipoCampanhaMembroPapelEnum): CampanhaMembroResumoDto[] {
-    return [{ usuarioId, nome: 'Agente', papel }];
+    return [{ usuarioId, nome: 'Agente', papel, fichas: [] }];
   }
 
   function rolagem(sobrescritas: Partial<RolagemResumoDto> = {}): RolagemResumoDto {
@@ -71,9 +71,30 @@ describe('CampanhaDetalhe', () => {
     rolagens?: RolagemResumoDto[];
     alterarRetorno?: Observable<CampanhaAlteradaDto>;
   }) {
+    // m3-65: em produção, `membro.fichas` (listarMembros) e `fichas()` (listarFichas) vêm da
+    // mesma visibilidade no backend — nunca inconsistentes. Aqui, quando o teste não declara
+    // `fichas` explicitamente no membro (caso comum: só quer testar comportamento normal, não
+    // carteirinha/oculta), sintetiza a partir de `opts.fichas` como acesso completo, preservando
+    // esse invariante sem precisar repetir a lista em todo teste que já passa `fichas`.
+    const membrosComFichas = opts.membros.map((membro) => ({
+      ...membro,
+      fichas:
+        membro.fichas.length > 0
+          ? membro.fichas
+          : (opts.fichas ?? [])
+              .filter((ficha) => ficha.usuarioId === membro.usuarioId)
+              .map((ficha) => ({
+                id: ficha.id,
+                nome: ficha.nome,
+                classe: ficha.classe,
+                arquetipo: ficha.arquetipo,
+                imagemUrl: ficha.imagemUrl,
+                acessoCompleto: true,
+              })),
+    }));
     const campanhaService = {
       recuperarCampanha: vi.fn(() => of({ ...campanhaBase })),
-      listarMembros: vi.fn(() => of(opts.membros)),
+      listarMembros: vi.fn(() => of(membrosComFichas)),
       alterarCampanha: vi.fn(() => opts.alterarRetorno ?? of({ ...campanhaBase } as CampanhaAlteradaDto)),
       excluirCampanha: vi.fn(() => of(undefined)),
       regenerarConvite: vi.fn(() => of({ id: CAMPANHA_ID, codigoConvite: 'NOVO' })),
@@ -210,17 +231,17 @@ describe('CampanhaDetalhe', () => {
 
   // Campanha com o mestre (id 1) e um jogador (id 2) — base da gestão de membros (m2-13).
   const membrosDois = (): CampanhaMembroResumoDto[] => [
-    { usuarioId: 1, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.MESTRE },
-    { usuarioId: 2, nome: 'Jogador', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
+    { usuarioId: 1, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.MESTRE, fichas: [] },
+    { usuarioId: 2, nome: 'Jogador', papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] },
   ];
 
   // Campanha com mestre + dois jogadores — base dos testes de "Acesso de visualização" (só o
   // 3º membro é elegível a receber acesso da ficha do jogador `usuarioId: 2`: o mestre já vê tudo,
   // e o próprio dono não concede acesso a si mesmo).
   const membrosTres = (): CampanhaMembroResumoDto[] => [
-    { usuarioId: 1, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.MESTRE },
-    { usuarioId: 2, nome: 'Jogador', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
-    { usuarioId: 3, nome: 'Colega', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
+    { usuarioId: 1, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.MESTRE, fichas: [] },
+    { usuarioId: 2, nome: 'Jogador', papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] },
+    { usuarioId: 3, nome: 'Colega', papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] },
   ];
 
   function abrirMenuCampanha(raiz: HTMLElement, fixture: ReturnType<typeof montar>['fixture']) {
@@ -249,9 +270,9 @@ describe('CampanhaDetalhe', () => {
     const { raiz } = montar({
       usuarioId: 1,
       membros: [
-        { usuarioId: 2, nome: 'Zeca', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
-        { usuarioId: 1, nome: 'Ômega', papel: TipoCampanhaMembroPapelEnum.MESTRE },
-        { usuarioId: 3, nome: 'Ana', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
+        { usuarioId: 2, nome: 'Zeca', papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] },
+        { usuarioId: 1, nome: 'Ômega', papel: TipoCampanhaMembroPapelEnum.MESTRE, fichas: [] },
+        { usuarioId: 3, nome: 'Ana', papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] },
       ],
     });
 
@@ -401,8 +422,8 @@ describe('CampanhaDetalhe', () => {
 
       campanhaService.listarMembros.mockReturnValue(
         of([
-          { usuarioId: 1, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
-          { usuarioId: 2, nome: 'Jogador', papel: TipoCampanhaMembroPapelEnum.MESTRE },
+          { usuarioId: 1, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] },
+          { usuarioId: 2, nome: 'Jogador', papel: TipoCampanhaMembroPapelEnum.MESTRE, fichas: [] },
         ]),
       );
 
@@ -1707,6 +1728,106 @@ describe('CampanhaDetalhe', () => {
         '.detalhe__cabecalho-menu-contagem',
       );
       expect(contagem).toBeNull();
+    });
+  });
+
+  describe('Equipe (m3-65 — completa + carteirinha)', () => {
+    it('lista todo mundo, mesmo quem não tem ficha nenhuma na campanha', () => {
+      const { raiz } = montar({
+        usuarioId: 2,
+        membros: [
+          { usuarioId: 1, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.MESTRE, fichas: [] },
+          { usuarioId: 2, nome: 'Jogador', papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] },
+        ],
+      });
+
+      const nomes = Array.from(raiz.querySelectorAll('.detalhe__equipe-nome')).map((el) =>
+        el.textContent?.trim(),
+      );
+      expect(nomes).toEqual(['Mestre', 'Jogador']);
+      expect(raiz.querySelectorAll('.detalhe__equipe-vazio')).toHaveLength(2);
+    });
+
+    it('mostra carteirinha (sem botão) pra ficha de colega sem acesso completo', () => {
+      const { raiz } = montar({
+        usuarioId: 2,
+        membros: [
+          { usuarioId: 1, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.MESTRE, fichas: [] },
+          { usuarioId: 2, nome: 'Jogador', papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] },
+          {
+            usuarioId: 3,
+            nome: 'Colega',
+            papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+            fichas: [
+              {
+                id: 9,
+                nome: 'Rex',
+                classe: ClasseEnum.COMBATENTE,
+                arquetipo: null,
+                imagemUrl: null,
+                acessoCompleto: false,
+              },
+            ],
+          },
+        ],
+      });
+
+      const carteirinha = raiz.querySelector('.detalhe__equipe-carteirinha');
+      expect(carteirinha).not.toBeNull();
+      expect(carteirinha?.tagName).toBe('SPAN');
+      expect(carteirinha?.textContent).toContain('Rex');
+      expect(carteirinha?.textContent).toContain('Combatente');
+      expect(raiz.querySelector('.detalhe__equipe-ficha')).toBeNull();
+    });
+
+    it('mantém o card clicável (completo) pra ficha com acessoCompleto, cruzando com listarFichas', () => {
+      const { raiz } = montar({
+        usuarioId: 2,
+        membros: [
+          { usuarioId: 1, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.MESTRE, fichas: [] },
+          {
+            usuarioId: 2,
+            nome: 'Jogador',
+            papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+            fichas: [
+              {
+                id: 3,
+                nome: 'Kane',
+                classe: ClasseEnum.COMBATENTE,
+                arquetipo: null,
+                imagemUrl: null,
+                acessoCompleto: true,
+              },
+            ],
+          },
+        ],
+        fichas: [
+          {
+            id: 3,
+            campanhaId: CAMPANHA_ID,
+            campanhaNome: null,
+            imagemUrl: null,
+            usuarioId: 2,
+            nome: 'Kane',
+            classe: ClasseEnum.COMBATENTE,
+            arquetipo: null,
+            nivel: 1,
+            vidaAtual: 40,
+            vidaMaxima: 40,
+            energiaAtual: 10,
+            energiaMaxima: 10,
+            morrendo: false,
+            machucado: false,
+            inconsciente: false,
+          },
+        ],
+      });
+
+      const botao = raiz.querySelector('.detalhe__equipe-ficha') as HTMLButtonElement;
+      expect(botao).not.toBeNull();
+      expect(botao.textContent).toContain('Kane');
+      expect(botao.textContent).toContain('Vida 40/40');
+      expect(raiz.querySelector('.detalhe__equipe-carteirinha')).toBeNull();
     });
   });
 });

@@ -23,7 +23,7 @@ describe('FichaCriar', () => {
 
   function montar(fichas: FichaResumoDto[] = [], rascunhoExistente: unknown = null, campanhaId: number | null = CAMPANHA_ID) {
     const membros: CampanhaMembroResumoDto[] = [
-      { usuarioId: 1, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.MESTRE },
+      { usuarioId: 1, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.MESTRE, fichas: [] },
     ];
     const campanhaService = { listarMembros: vi.fn(() => of(membros)) };
     const fichaService = {

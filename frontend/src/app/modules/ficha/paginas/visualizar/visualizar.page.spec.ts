@@ -71,9 +71,9 @@ describe('FichaVisualizar', () => {
   };
 
   const membros: CampanhaMembroResumoDto[] = [
-    { usuarioId: 7, nome: 'Dono', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
-    { usuarioId: 11, nome: 'Vera', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
-    { usuarioId: 99, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.MESTRE },
+    { usuarioId: 7, nome: 'Dono', papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] },
+    { usuarioId: 11, nome: 'Vera', papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] },
+    { usuarioId: 99, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.MESTRE, fichas: [] },
   ];
 
   function montar(opcoes: {

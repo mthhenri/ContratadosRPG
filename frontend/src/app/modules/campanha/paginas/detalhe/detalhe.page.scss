@@ -707,6 +707,56 @@
     white-space: nowrap;
   }
 
+  &__equipe-ficha-avatar {
+    position: relative;
+    width: 28px;
+    height: 28px;
+    flex: none;
+    border-radius: var(--radius-control);
+    background-color: color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 14%, var(--surface));
+    background-image: repeating-linear-gradient(
+      135deg,
+      color-mix(
+          in srgb,
+          color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 60%, var(--border-strong)) 20%,
+          transparent
+        )
+        0 2px,
+      transparent 2px 6px
+    );
+    border: 1px solid var(--cor-ficha, var(--border-strong));
+    overflow: hidden;
+  }
+
+  &__equipe-ficha-avatar-imagem {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  // Carteirinha (m3-65) — mesmo layout de `&__equipe-ficha`, mas `<span>` sem interação: borda
+  // tracejada e texto mais apagado sinalizam "sem acesso" sem precisar de rótulo extra.
+  &__equipe-carteirinha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 8px;
+    background: var(--surface);
+    color: var(--text-mute);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-control);
+  }
+
+  &__equipe-vazio {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-mute);
+    font-style: italic;
+  }
+
   // === "Rolagens" (m2-21, item 3) — o painel de presets/rolagem avulsa que era a aba "Rolagens"
   // do card compacto, agora entre Equipe e Sessão: rolar e ler o histórico recente na mesma coluna.
   // Nome com sufixo `-painel` de propósito — `&__rolagens` (bem acima) já é a tira horizontal do

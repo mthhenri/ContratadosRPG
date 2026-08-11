@@ -722,35 +722,57 @@
             <span class="detalhe__secao-regua"></span>
           </header>
           <ul class="detalhe__equipe-lista" appOverflowFade>
-            @for (membro of membrosOrdenados(); track membro.usuarioId) {
-              @let fichasDoMembro = fichasPorMembro().get(membro.usuarioId);
-              @if (fichasDoMembro && fichasDoMembro.length) {
-                <li class="detalhe__equipe-membro">
-                  <span class="detalhe__avatar" aria-hidden="true"></span>
-                  <div class="detalhe__equipe-membro-corpo">
-                    <span class="detalhe__equipe-nome">{{ membro.nome }}</span>
-                    @for (ficha of fichasDoMembro; track ficha.id) {
-                      <button
-                        type="button"
-                        class="detalhe__equipe-ficha"
-                        [class.detalhe__equipe-ficha--ativa]="fichaExibidaId() === ficha.id"
-                        [attr.aria-pressed]="fichaExibidaId() === ficha.id"
-                        [attr.aria-label]="'Ver ficha de ' + ficha.nome + ' (' + membro.nome + ')'"
-                        (click)="selecionarFichaExibida(ficha.id)"
-                      >
-                        <app-icone nome="olho" />
-                        <span class="detalhe__equipe-ficha-corpo">
-                          <span class="detalhe__equipe-ficha-nome">{{ ficha.nome }}</span>
-                          <span class="detalhe__equipe-ficha-vitais">
-                            Vida {{ ficha.vidaAtual }}/{{ ficha.vidaMaxima ?? '—' }} · Energia
-                            {{ ficha.energiaAtual }}/{{ ficha.energiaMaxima ?? '—' }}
+            @for (item of equipeExibicao(); track item.membro.usuarioId) {
+              <li class="detalhe__equipe-membro">
+                <div class="detalhe__equipe-membro-corpo">
+                  <span class="detalhe__equipe-nome">{{ item.membro.nome }}</span>
+                  @if (item.fichas.length) {
+                    @for (ficha of item.fichas; track ficha.id) {
+                      @if (ficha.tipo === 'completa') {
+                        <button
+                          type="button"
+                          class="detalhe__equipe-ficha"
+                          [class.detalhe__equipe-ficha--ativa]="fichaExibidaId() === ficha.id"
+                          [attr.aria-pressed]="fichaExibidaId() === ficha.id"
+                          [attr.aria-label]="'Ver ficha de ' + ficha.nome + ' (' + item.membro.nome + ')'"
+                          (click)="selecionarFichaExibida(ficha.id)"
+                        >
+                          <span class="detalhe__equipe-ficha-avatar" aria-hidden="true" [style.--cor-ficha]="ficha.cor">
+                            @if (ficha.imagemUrl; as urlImagem) {
+                              <img class="detalhe__equipe-ficha-avatar-imagem" [src]="urlImagem" alt="" />
+                            }
+                          </span>
+                          <app-icone nome="olho" />
+                          <span class="detalhe__equipe-ficha-corpo">
+                            <span class="detalhe__equipe-ficha-nome">{{ ficha.nome }}</span>
+                            <span class="detalhe__equipe-ficha-vitais">
+                              Vida {{ ficha.vidaAtual }}/{{ ficha.vidaMaxima ?? '—' }} · Energia
+                              {{ ficha.energiaAtual }}/{{ ficha.energiaMaxima ?? '—' }}
+                            </span>
+                          </span>
+                        </button>
+                      } @else {
+                        <span
+                          class="detalhe__equipe-carteirinha"
+                          [attr.aria-label]="'Ficha de ' + ficha.nome + ' (' + item.membro.nome + ') — sem acesso'"
+                        >
+                          <span class="detalhe__equipe-ficha-avatar" aria-hidden="true">
+                            @if (ficha.imagemUrl; as urlImagem) {
+                              <img class="detalhe__equipe-ficha-avatar-imagem" [src]="urlImagem" alt="" />
+                            }
+                          </span>
+                          <span class="detalhe__equipe-ficha-corpo">
+                            <span class="detalhe__equipe-ficha-nome">{{ ficha.nome }}</span>
+                            <span class="detalhe__equipe-ficha-vitais">{{ ficha.classeTexto }}</span>
                           </span>
                         </span>
-                      </button>
+                      }
                     }
-                  </div>
-                </li>
-              }
+                  } @else {
+                    <span class="detalhe__equipe-vazio">Sem ficha nesta campanha</span>
+                  }
+                </div>
+              </li>
             }
           </ul>
         </article>

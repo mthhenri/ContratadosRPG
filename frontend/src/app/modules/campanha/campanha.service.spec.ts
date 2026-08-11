@@ -123,8 +123,8 @@ describe('CampanhaService', () => {
   it('lista os membros de uma campanha', () => {
     const { servico, http } = criar();
     const membros: CampanhaMembroResumoDto[] = [
-      { usuarioId: 1, nome: 'Agente A', papel: TipoCampanhaMembroPapelEnum.MESTRE },
-      { usuarioId: 2, nome: 'Agente B', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
+      { usuarioId: 1, nome: 'Agente A', papel: TipoCampanhaMembroPapelEnum.MESTRE, fichas: [] },
+      { usuarioId: 2, nome: 'Agente B', papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] },
     ];
 
     let recebido: CampanhaMembroResumoDto[] | undefined;

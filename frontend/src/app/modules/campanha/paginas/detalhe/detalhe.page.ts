@@ -111,6 +111,17 @@ interface ItemFicha {
   readonly sobrecarregado: boolean;
 }
 
+/** Ficha da Equipe (m3-65) com acesso completo — mesmos campos de {@link ItemFicha}, clicável. */
+type EquipeFichaExibicao =
+  | ({ readonly tipo: 'completa' } & ItemFicha)
+  | {
+      readonly tipo: 'teaser';
+      readonly id: number;
+      readonly nome: string;
+      readonly imagemUrl: string | null;
+      readonly classeTexto: string;
+    };
+
 /**
  * Detalhe de uma campanha (`/painel/:id`): nome/descrição, membros com o papel e — só para o
  * mestre — o `codigoConvite` com o botão de regenerar. O papel do usuário atual é derivado da
@@ -448,6 +459,34 @@ export class CampanhaDetalhe {
       }
     }
     return mapa;
+  });
+
+  /**
+   * Uma ficha exibida na Equipe (m3-65): `completa` reusa `ItemFicha` (clicável, com vida/energia
+   * — mesmo dado de `fichasPorMembro`); `teaser` é só a carteirinha (nome/classe/foto, sem clique).
+   */
+  protected readonly equipeExibicao = computed<
+    readonly { readonly membro: CampanhaMembroResumoDto; readonly fichas: readonly EquipeFichaExibicao[] }[]
+  >(() => {
+    const porMembroCompleto = this.fichasPorMembro();
+    return this.membrosOrdenados().map((membro) => ({
+      membro,
+      fichas: membro.fichas.map((ficha): EquipeFichaExibicao => {
+        const completa = ficha.acessoCompleto
+          ? porMembroCompleto.get(membro.usuarioId)?.find((item) => item.id === ficha.id)
+          : undefined;
+        if (completa) {
+          return { tipo: 'completa', ...completa };
+        }
+        return {
+          tipo: 'teaser',
+          id: ficha.id,
+          nome: ficha.nome,
+          imagemUrl: ficha.imagemUrl,
+          classeTexto: rotuloClasseCompleto(ficha.classe, ficha.arquetipo),
+        };
+      }),
+    }));
   });
 
   /**
