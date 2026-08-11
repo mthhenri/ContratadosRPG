@@ -610,6 +610,26 @@ describe('FichaCriar', () => {
   });
 
   describe('Experimento — Peculiaridade dispensa a Origem (m3-58 + Peculiaridade)', () => {
+    it('DOM: os cards de pacote de Habilidades iniciais mostram "Classe/Subclasse" (não "Classe/Arquétipo") pra um Experimento', () => {
+      const { fixture, raiz, componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['atualizar']({ passo: componente['passos']().indexOf('Habilidades') });
+      fixture.detectChanges();
+
+      const rotulosPacote = Array.from(raiz.querySelectorAll('.guia__pacote strong')).map((n) => n.textContent?.trim());
+      expect(rotulosPacote).toEqual(['4 Gerais', '2 Gerais + 1 de Classe/Subclasse', '2 de Classe/Subclasse']);
+    });
+
+    it('DOM: os cards de pacote continuam "Classe/Arquétipo" pra uma classe base', () => {
+      const { fixture, raiz, componente } = montar();
+      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
+      componente['atualizar']({ passo: componente['passos']().indexOf('Habilidades') });
+      fixture.detectChanges();
+
+      const rotulosPacote = Array.from(raiz.querySelectorAll('.guia__pacote strong')).map((n) => n.textContent?.trim());
+      expect(rotulosPacote).toEqual(['4 Gerais', '2 Gerais + 1 de Classe/Arquétipo', '2 de Classe/Arquétipo']);
+    });
+
     it('passo // Habilidades existe no Nível 0 para as três subclasses de Experimento', () => {
       const { componente } = montar();
       componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });

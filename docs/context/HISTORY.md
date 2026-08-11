@@ -1,5 +1,23 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-11 — `P-014` follow-up 2: rótulo dos pacotes de Habilidades iniciais também vira "Classe/Subclasse"
+
+Mais um ponto que o `P-014` tinha deixado fixo em "Arquétipo": os cards de **Pacote de criação** do
+passo // Habilidades ("2 Gerais + 1 de Classe/Arquétipo", "2 de Classe/Arquétipo") são texto de
+`listarPacotesHabilidadesIniciais` (`shared/regras/agente/habilidades-iniciais.ts`), que não tinha
+sido tocado nas duas rodadas anteriores — o dono reportou pelo print da tela.
+
+- `habilidades-iniciais.ts`: `PACOTES_AGENTE` (constante fixa) virou `pacotesAgente(classe)`
+  (função), que monta o rótulo da vaga combinada via `rotuloClasseOuArquetipo` — mesmo critério de
+  `classeBaseDeHabilidades` usado em todo o resto do P-014 (Classe/Subclasse quando a classe é uma
+  subclasse de Experimento; Classe/Arquétipo nas demais). Só os dois pacotes que citam essa vaga
+  mudam (`DUAS_GERAIS_UMA_CLASSE_OU_ARQUETIPO`, `DUAS_CLASSE_OU_ARQUETIPO`); "4 Gerais" e "3 Civis"
+  não citam Arquétipo, ficam como estavam.
+- Testado: `habilidades-iniciais.spec.ts` ganhou um `it.each` novo cobrindo as três subclasses de
+  Experimento. `criar.page.spec.ts` ganhou dois testes de DOM nos cards de pacote (Experimento vs.
+  classe base). `shared`: 599/599 (+3). `frontend`: 888/888 (+2). `backend`: 196/196 (não mudou).
+  `lint`/`build` limpos nos três workspaces.
+
 ## 2026-08-11 — `P-014` follow-up: Subclasse ganha aba própria no seletor de habilidades, separada de Arquétipo
 
 Correção sobre a correção do dia: o `P-014` (rótulo "Arquétipo" virando "Subclasse") tinha resolvido
