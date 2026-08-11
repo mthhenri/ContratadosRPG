@@ -61,6 +61,19 @@ export class ResultadoRolagem {
   }
 
   /**
+   * Classe base de um dadinho do pool (I-011) — ganha a cor do tipo de dano do termo, mesma paleta
+   * do chip de resumo (`classeGrupo`), quando o termo tem um `tipoDano` único. Sem tag, ou num
+   * termo Composto (`[A-B]`, onde `tipoDano` fica ausente — o dado não sabe pra qual metade do par
+   * ele caiu), fica só na classe base neutra de sempre. `--escolhido`/`--descartado` (m3-29) se
+   * aplicam à parte, via `[class.foo]` no template — Angular compõe as duas.
+   */
+  protected classeDado(dado: DadosRoladosDto): string {
+    return dado.tipoDano
+      ? `resultado-rolagem__dado resultado-rolagem__dado--${SUFIXO_TIPO_DANO[dado.tipoDano]}`
+      : 'resultado-rolagem__dado';
+  }
+
+  /**
    * Marca cada valor rolado de um termo como **mantido** ou **descartado** (m3-29), replicando a
    * separação por multiset do motor (preserva a ordem e trata duplicados). Sem keep (`mantidos`
    * ausente), todos contam como mantidos — a UI então não aplica realce.

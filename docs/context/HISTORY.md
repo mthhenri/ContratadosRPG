@@ -1,5 +1,33 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-11 — `I-011`: dadinhos do pool ganham a cor do tipo de dano do próprio termo
+
+Numa fórmula com vários tipos de dano (`4d6[F] + 4d6[Q]`), só os chips de resumo abaixo
+(`resultado-rolagem__grupo`) eram coloridos por tipo — o pool de dados em si ficava todo na mesma
+cor neutra, sem pista visual de qual `NdM` era qual tipo além da ordem na fórmula. Pedido pequeno o
+bastante (só frontend, paleta e dado já existiam) pra implementar direto, sem passar por spec no
+backlog.
+
+- `resultado-rolagem.component.ts`: novo `classeDado(dado: DadosRoladosDto)`, no mesmo padrão do
+  `classeGrupo` já existente — usa o `tipoDano` do próprio termo (`DadosRoladosDto.tipoDano`, já
+  vinha do motor) e o mesmo mapa `SUFIXO_TIPO_DANO`. Termo Composto (`[A-B]`) não tem `tipoDano`
+  (fica no par 50/50, `composto`) — o dado não sabe pra qual metade caiu, então fica só na classe
+  base neutra, sem tentar adivinhar.
+- `resultado-rolagem.component.html`: o `<span>` de cada dadinho trocou a classe estática por
+  `[class]="classeDado(dado)"`, mantendo `[class.resultado-rolagem__dado--escolhido/--descartado]`
+  como bindings à parte — Angular compõe as duas.
+- `resultado-rolagem.component.scss`: novo `@each` dentro de `&__dado` com a mesma paleta de
+  `&__grupo` (`--dano-*`/`-border`/`-dim`). Declarado **antes** de `--escolhido`/`--descartado` no
+  SCSS de propósito: quando um dado também está marcado como mantido (`kh`/`kl`), a cor de
+  "escolhido" (accent) continua prevalecendo — mesma prioridade visual de sempre; "descartado" só
+  mexe em opacidade/risco, então a cor de tipo continua visível por baixo.
+- Testado: componente não tinha spec dedicada — criada `resultado-rolagem.component.spec.ts` (4
+  testes: sem tipo fica neutro, cada termo tipado colore os próprios dados, Composto não colore,
+  escolhido/descartado combinam com a cor de tipo). `frontend`: 900/900 (+4, +1 arquivo). `lint`/
+  `build` limpos.
+- `IDEAS.md`: `I-011` sai de Abertas, registrada em Promovidas apontando pra este relato (sem spec
+  formal — implementação direta).
+
 ## 2026-08-11 — `P-019`: seletor de Classe do guia de criação vira dois passos (base → arquétipo/subclasse)
 
 O `<select>` único do passo // Classe misturava, nos mesmos `<optgroup>`, as três classes-base, as
