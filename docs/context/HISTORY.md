@@ -1,5 +1,41 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-11 — Gerais Melhoradas migram para a aba Gerais, substituindo a comum
+
+Redesenho de correção: as **Gerais Melhoradas** (`GERAL_MELHORADA`) deixaram de aparecer
+misturadas às habilidades do próprio arquétipo, na aba **Arquétipo** do seletor, e passaram a
+viver na aba **Gerais** — no lugar exato da Geral que elas melhoram, para quem é do arquétipo
+dono da melhoria. Um Assassino não vê mais "6º Sentido" (comum) e "6º Sentido melhorada" como
+duas entradas possíveis: a lista Geral dele tem só a versão melhorada, com o selo "Geral
+melhorada"; qualquer outro arquétipo continua vendo a comum. `grupoGerais` (antes sem parâmetros)
+passou a receber o `arquetipo` da ficha, monta um mapa nome→melhorada de
+`HABILIDADES_GERAIS_MELHORADAS[arquetipo]` e substitui a entrada correspondente ao percorrer
+`HABILIDADES_GERAIS`, mantendo a mesma contagem e ordem da lista original — nunca soma as duas.
+`grupoArquetipo` parou de anexar as melhoradas ao subgrupo do próprio arquétipo. Nenhuma mudança
+de categoria/efeito mecânico: `defesa.ts` (contra-ataque) e `inventario.ts` (Mochileiro) já liam
+`categoria === GERAL_MELHORADA` da habilidade gravada na ficha, não de onde o seletor a exibia, e
+continuam funcionando sem alteração. O passo de criação "06 Habilidades" (vaga `'geral'`, que já
+filtra `catalogoHabilidades(...).id === 'gerais'`) herda o comportamento automaticamente: ao
+montar o pacote inicial/de progressão, um Assassino escolhendo uma vaga Geral já recebe a versão
+melhorada quando o nome coincide.
+
+Testes: shared **589/589** (18 no arquivo do catálogo, reescritos para provar a substituição —
+mesma contagem, uma entrada por nome, origem = o arquétipo — e que a aba Arquétipo nunca mais
+carrega `GERAL_MELHORADA`); frontend **871/871**; build/lint de `shared` limpos. `frontend`
+manteve os sete erros de lint pré-existentes de `P-009`, nenhum nos arquivos tocados. Mudança só
+de `shared/regras/agente` (dado/regra pura) + comentários do componente do seletor — a UI já
+renderizava o selo "Geral melhorada" por item de categoria, então nenhuma mudança de template foi
+necessária.
+
+Verificação visual feita na aplicação real (Postgres local via `postgresql-16` do sistema, já que
+o Docker deste ambiente não alcançava o Docker Hub — sem mudança permanente de infra, só para
+esta sessão) em `1920×1080` e `360×800`, com uma ficha Especialista/Assassino: a aba **Gerais**
+do seletor mostra "6º Sentido" com o selo "GERAL MELHORADA" na mesma posição alfabética das
+Gerais comuns (entre "Analisar Cenário" e "Arrepio"), descrição da versão melhorada, sem entrada
+duplicada da comum; a aba **Arquétipo → Assassino** mostra só as 7 habilidades de arquétipo (a
+inicial "Ceifador" com selo "INICIAL"), sem nenhum selo "Geral melhorada" sobrando. Sem overflow
+em nenhum dos dois viewports; visual consistente com o padrão de selo já usado por "Inicial".
+
 ## 2026-08-11 — `m3-65a`: visibilidade da ficha com confirmação e tempo real
 
 O checkbox longo da ficha completa virou uma ação `Ocultar`/`Exibir` com ícone e confirmação
