@@ -581,6 +581,34 @@ describe('FichaVisualizacao', () => {
     expect(raiz.querySelector('.ficha-passo')).toBeNull();
   });
 
+  describe('ficha oculta (m3-65)', () => {
+    it('reflete oculta() no checkbox quando ajustável', () => {
+      const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
+      fixture.componentRef.setInput('oculta', true);
+      fixture.detectChanges();
+
+      const checkbox = raiz.querySelector('.ficha-ident__oculta-entrada') as HTMLInputElement;
+      expect(checkbox.checked).toBe(true);
+    });
+
+    it('emite ajusteOculta ao alternar o checkbox', () => {
+      const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
+      const emitidos: boolean[] = [];
+      fixture.componentInstance.ajusteOculta.subscribe((valor) => emitidos.push(valor));
+
+      const checkbox = raiz.querySelector('.ficha-ident__oculta-entrada') as HTMLInputElement;
+      checkbox.checked = true;
+      checkbox.dispatchEvent(new Event('change'));
+
+      expect(emitidos).toEqual([true]);
+    });
+
+    it('não mostra o toggle quando não é ajustável (só leitura)', () => {
+      const { raiz } = montar(dados, 'Corvo', 42, false);
+      expect(raiz.querySelector('.ficha-ident__oculta-entrada')).toBeNull();
+    });
+  });
+
   // Condições (m2-16b): Morrendo/Machucado/Inconsciente — sistema-v4.1.0.md "Condições".
   describe('condições', () => {
     it('mostra as três, ativas conforme o estado e inativas quando ausentes do documento', () => {

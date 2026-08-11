@@ -129,6 +129,16 @@
               @if (erroImagem(); as mensagemErro) {
                 <span class="ficha-ident__aviso-obrigatorio">{{ mensagemErro }}</span>
               }
+              <label class="ficha-ident__oculta">
+                <input
+                  type="checkbox"
+                  class="ficha-ident__oculta-entrada"
+                  aria-label="Ocultar ficha de outros jogadores"
+                  [checked]="oculta()"
+                  (change)="ajusteOculta.emit($any($event.target).checked)"
+                />
+                Ocultar ficha de outros jogadores
+              </label>
             </div>
           } @else {
             <span class="ficha-ident__avatar" aria-hidden="true" [style.--cor-ficha]="cor()">

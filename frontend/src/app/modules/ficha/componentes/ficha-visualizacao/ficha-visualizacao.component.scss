@@ -1668,6 +1668,22 @@
     margin-bottom: 4px;
   }
 
+  // Toggle "Ocultar ficha" (m3-65) — mesma coluna do avatar/cor, só quando ajustável em amplo.
+  &__oculta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-mute);
+    cursor: pointer;
+  }
+
+  &__oculta-entrada {
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
   // Nível/Prestígio/Dinheiro/Salário dividem uma linha de 4 (números curtos); Patente (texto,
   // pode ser longa — "Força Tarefa Especial") ocupa a linha inteira abaixo, nunca espremida ao
   // lado de outro box — é a única forma de garantir que não quebre nem corte (redesenho de

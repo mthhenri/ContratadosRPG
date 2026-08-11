@@ -418,6 +418,9 @@ export class FichaVisualizacao {
    */
   readonly imagemUrl = input<string | null>(null);
 
+  /** Ficha oculta (m3-65) — `true` esconde a ficha (nem carteirinha) de quem não é dono/mestre. */
+  readonly oculta = input<boolean>(false);
+
   /**
    * Habilita os passos − / + de Vida e Energia direto na leitura — ajuste rápido do estado em jogo,
    * sem entrar em edição. A página só liga para dono/mestre; o backend revalida o `alterarFicha`.
@@ -482,6 +485,9 @@ export class FichaVisualizacao {
 
   /** Nova cor de identidade visual (m3-61, relacional — fora do `dados`) — a página persiste `ficha.cor`. */
   readonly ajusteCor = output<string | null>();
+
+  /** Novo valor de "ficha oculta" (m3-65, relacional — fora do `dados`) — a página persiste `ficha.oculta`. */
+  readonly ajusteOculta = output<boolean>();
 
   /**
    * Novo avatar escolhido pelo `<input type="file">` do cabeçalho (m3-62, relacional — fora do
