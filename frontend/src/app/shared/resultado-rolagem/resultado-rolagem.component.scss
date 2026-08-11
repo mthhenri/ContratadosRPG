@@ -114,6 +114,20 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-control);
 
+    // Cor por tipo de dano (I-011) — mesma paleta do chip de resumo (`__grupo`), aplicada ao
+    // dadinho individual do pool, pra dar pista visual de qual `NdM` é qual tipo numa fórmula com
+    // vários (ex.: `4d6[F] + 4d6[Q]`). Declarado antes de `--escolhido`/`--descartado`: quando um
+    // dado é mantido, a cor de "escolhido" continua prevalecendo (mesma prioridade de sempre); a
+    // cor de tipo some do texto/borda, mas o dado ainda existe visualmente no grupo certo pela
+    // posição. Descartado só mexe em opacidade/risco, então a cor de tipo continua visível por trás.
+    @each $tipo in fisico, balistico, explosao, quimico, geral {
+      &--#{$tipo} {
+        color: var(--dano-#{$tipo});
+        border-color: var(--dano-#{$tipo}-border);
+        background: var(--dano-#{$tipo}-dim);
+      }
+    }
+
     &--escolhido {
       color: var(--text);
       border-color: var(--accent-border);

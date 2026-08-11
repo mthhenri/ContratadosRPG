@@ -771,7 +771,7 @@ describe('FichaInventario', () => {
       };
     }
 
-    it('adquirir um fragmento Potencializador (módulo V) debita 3 de Energia Máxima', () => {
+    it('adquirir um fragmento Potencializador não debita nada — só custa Energia ao ser acoplado (P-016)', () => {
       const alvo = montar({ itens: [], amplificadores: [] });
       const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
       alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
@@ -783,7 +783,7 @@ describe('FichaInventario', () => {
       });
       alvo.fixture.componentInstance['confirmarCriarItem']();
 
-      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 47 }]);
+      expect(custos).toEqual([]);
     });
 
     it('adquirir um fragmento Construtor (módulo V) debita o dobro (6) de Energia Máxima', () => {
@@ -801,7 +801,7 @@ describe('FichaInventario', () => {
       expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 44 }]);
     });
 
-    it('remover um fragmento avulso (não aplicado) do inventário restaura a Energia Máxima', () => {
+    it('remover um fragmento Potencializador avulso (não aplicado) não restaura nada — nunca custou Energia (P-016)', () => {
       const alvo = montar({
         itens: [fragmento(ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR, FragmentoModuloEnum.IV)],
         amplificadores: [],
@@ -811,11 +811,11 @@ describe('FichaInventario', () => {
 
       alvo.fixture.componentInstance['confirmarRemocaoItem'](0);
 
-      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 57 }]);
+      expect(custos).toEqual([]);
       expect(alvo.emitidos[0].itens).toHaveLength(0);
     });
 
-    it('aplicar um fragmento Potencializador em outro item: soma o efeito, remove o fragmento e debita Energia + Energia Máxima do acoplamento (restituindo a aquisição, m3-42)', () => {
+    it('aplicar um fragmento Potencializador em outro item: soma o efeito, remove o fragmento e debita Energia + Energia Máxima do acoplamento — único custo desde o P-016', () => {
       const alvo = montar({
         itens: [itemLeve, fragmento(ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR, FragmentoModuloEnum.IV)],
         amplificadores: [],
@@ -828,10 +828,9 @@ describe('FichaInventario', () => {
       alvo.fixture.componentInstance['opcaoBonusFragmento'].set(0);
       alvo.fixture.componentInstance['confirmarAplicarFragmento'](1);
 
-      // Módulo IV: acoplar custa 7 de Energia + 7 de Energia Máxima, mas restitui os 7 de Energia
-      // Máxima da aquisição (drenados quando o fragmento entrou solto) — total líquido de Energia
-      // Máxima é 0 (exemplo do documento: só 7 de Energia Máxima ficam drenados, os mesmos de antes).
-      expect(custos).toEqual([{ energiaAtual: 43, energiaMaxima: 50 }]);
+      // Módulo IV: acoplar custa 7 de Energia + 7 de Energia Máxima (exemplo do documento) — desde
+      // o P-016 esse é o único débito, o fragmento não custou nada enquanto esteve solto.
+      expect(custos).toEqual([{ energiaAtual: 43, energiaMaxima: 43 }]);
       expect(alvo.emitidos[0].itens).toHaveLength(1);
       const alvoResultante = alvo.emitidos[0].itens[0];
       expect(alvoResultante.nome).toBe('Leve');
@@ -843,7 +842,7 @@ describe('FichaInventario', () => {
       expect(alvoResultante.modificacoes[0].ignoraLimiteTotal).toBe(true);
     });
 
-    it('remover (desacoplar) uma mod de fragmento debita Energia × 2, mantém a Energia Máxima (líquido 0) e devolve o fragmento como item avulso (m3-42)', () => {
+    it('remover (desacoplar) uma mod de fragmento debita Energia × 2 e restitui por completo a Energia Máxima do acoplamento (P-016)', () => {
       const itemComFragmento: CarrinhoItemDto = {
         ...itemLeve,
         modificacoes: [
@@ -863,9 +862,10 @@ describe('FichaInventario', () => {
 
       alvo.fixture.componentInstance['removerModificacao'](0, 'Fragmento Potencializador — Módulo IV');
 
-      // Módulo IV: remover custa Energia × 2 = 14; Energia Máxima líquida não muda — restitui o
-      // acoplamento (+7) e reaplica a aquisição (−7), já que o fragmento volta a ser avulso.
-      expect(custos).toEqual([{ energiaAtual: 36, energiaMaxima: 50 }]);
+      // Módulo IV: remover custa Energia × 2 = 14; a Energia Máxima é totalmente restituída (+7) —
+      // desde o P-016 o Potencializador não custa nada enquanto solto, então nada continua drenando
+      // depois que ele volta a ser avulso.
+      expect(custos).toEqual([{ energiaAtual: 36, energiaMaxima: 57 }]);
       expect(alvo.emitidos[0].itens[0].modificacoes).toHaveLength(0);
       // O item-alvo continua ali, e o fragmento reaparece como item avulso no fim da lista.
       expect(alvo.emitidos[0].itens).toHaveLength(2);
@@ -896,7 +896,7 @@ describe('FichaInventario', () => {
       };
     }
 
-    it('adquirir um fragmento Potencializador (módulo V) debita o dobro (6, não 3) de Energia Máxima', () => {
+    it('adquirir um fragmento Potencializador não debita nada mesmo com Anomalia — P-016 não abre exceção', () => {
       const alvo = montar({ itens: [], amplificadores: [] }, true, 100, true, true);
       const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
       alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
@@ -908,10 +908,26 @@ describe('FichaInventario', () => {
       });
       alvo.fixture.componentInstance['confirmarCriarItem']();
 
-      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 44 }]);
+      expect(custos).toEqual([]);
     });
 
-    it('remover um fragmento avulso restaura o dobro da Energia Máxima drenada na aquisição', () => {
+    it('adquirir um fragmento Construtor (módulo V) com Anomalia debita o quádruplo (12, não 3)', () => {
+      const alvo = montar({ itens: [], amplificadores: [] }, true, 100, true, true);
+      const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
+      alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+
+      alvo.fixture.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Fragmento achado',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        modulo: FragmentoModuloEnum.V,
+      });
+      alvo.fixture.componentInstance['confirmarCriarItem']();
+
+      // Base 3 × 2 (dobro do Construtor) × 2 (Anomalia) = 12 — as duas duplicações se acumulam.
+      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 38 }]);
+    });
+
+    it('remover um fragmento Potencializador avulso não restaura nada mesmo com Anomalia — nunca custou (P-016)', () => {
       const alvo = montar(
         { itens: [fragmento(ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR, FragmentoModuloEnum.IV)], amplificadores: [] },
         true,
@@ -924,7 +940,24 @@ describe('FichaInventario', () => {
 
       alvo.fixture.componentInstance['confirmarRemocaoItem'](0);
 
-      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 64 }]);
+      expect(custos).toEqual([]);
+    });
+
+    it('remover um fragmento Construtor avulso com Anomalia restaura o quádruplo da Energia Máxima drenada na aquisição', () => {
+      const alvo = montar(
+        { itens: [fragmento(ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR, FragmentoModuloEnum.IV)], amplificadores: [] },
+        true,
+        100,
+        true,
+        true,
+      );
+      const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
+      alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+
+      alvo.fixture.componentInstance['confirmarRemocaoItem'](0);
+
+      // Base 7 × 2 (dobro do Construtor) × 2 (Anomalia) = 28.
+      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 78 }]);
     });
 
     it('cardápio "Aplicar em..." (módulo V, sem alvo) vem com os valores dobrados', () => {
@@ -1522,7 +1555,7 @@ describe('FichaInventario', () => {
       };
     }
 
-    it('consumir remove o fragmento, restitui a Energia Máxima da aquisição e debita o preço físico extra (módulo III)', () => {
+    it('consumir remove o fragmento e debita o preço físico extra (módulo III) — nada a restituir da aquisição desde o P-016', () => {
       const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.III)], amplificadores: [] });
       const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
       alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
@@ -1531,9 +1564,9 @@ describe('FichaInventario', () => {
       alvo.fixture.componentInstance['opcaoConsumoFragmento'].set(1); // "+3 em Defesa"
       alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
 
-      // Módulo III: aquisição custava 12 (restituídos); preço físico extra = 12 × 3 = 36.
-      // 50 (base) + 12 (restitui aquisição) − 36 (preço físico) = 26.
-      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 26 }]);
+      // Módulo III: preço físico extra = 12 × 3 = 36; a aquisição nunca custou nada (P-016), então
+      // não há restituição. 50 (base) + 0 (restituição) − 36 (preço físico) = 14.
+      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 14 }]);
       expect(alvo.emitidos[0].itens).toHaveLength(0);
     });
 
@@ -1572,17 +1605,17 @@ describe('FichaInventario', () => {
       alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
 
       expect(sequelas).toEqual([]);
-      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 26 }]);
+      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 14 }]);
       // O rastro do consumo (m3-64) é incondicional — evitar a sequela não apaga o registro. Carrega
       // também o suficiente para reverter (m3-64, correção): opção, atributo, delta de Energia
-      // Máxima (26 − 50 = −24, mesma conta do teste de `ajusteEnergiaFragmento` acima) e o item.
+      // Máxima (14 − 50 = −36, mesma conta do teste de `ajusteEnergiaFragmento` acima) e o item.
       expect(registros).toEqual([
         {
           modulo: FragmentoModuloEnum.III,
           bonusEscolhido: '+3 em Defesa',
           opcao: { rotulo: '+3 em Defesa', tipo: 'DEFESA', valor: 3 },
           atributoEscolhido: null,
-          deltaEnergiaMaxima: -24,
+          deltaEnergiaMaxima: -36,
           item: fragmento(FragmentoModuloEnum.III),
         },
       ]);
@@ -1674,7 +1707,7 @@ describe('FichaInventario', () => {
       alvo.fixture.componentInstance['atributoConsumoFragmento'].set('intelecto');
       alvo.fixture.componentInstance['confirmarConsumirFragmento'](0);
 
-      // Módulo I: aquisição custava 20 (restituídos); preço físico extra = 20 × 3 = 60 → delta −40.
+      // Módulo I: preço físico extra = 20 × 3 = 60; nada a restituir da aquisição (P-016) → delta −60.
       expect(registros).toEqual([
         {
           modulo: FragmentoModuloEnum.I,
@@ -1687,7 +1720,7 @@ describe('FichaInventario', () => {
             pontosAtributo: 1,
           },
           atributoEscolhido: 'intelecto',
-          deltaEnergiaMaxima: -40,
+          deltaEnergiaMaxima: -60,
           item: fragmento(FragmentoModuloEnum.I),
         },
       ]);
@@ -1750,7 +1783,9 @@ describe('FichaInventario', () => {
     }
 
     it('adquirir um fragmento **considera o próprio módulo** na Afinidade (retroativa) — reduz o custo da própria compra', () => {
-      // 3 já portados de módulo I (Afinidade 15) + o novo módulo I sendo comprado agora (+5) = 20.
+      // 3 Potencializador de módulo I já portados (Afinidade 15) + o novo módulo I sendo comprado
+      // agora (+5) = 20. Precisa ser Construtor: desde o P-016 só ele paga Energia ao adquirir — um
+      // Potencializador sempre custaria 0, sem nada pra Afinidade reduzir.
       const alvo = montar({
         itens: [fragmento(FragmentoModuloEnum.I, 3)],
         amplificadores: [],
@@ -1760,37 +1795,85 @@ describe('FichaInventario', () => {
 
       alvo.fixture.componentInstance['itemCustomForm'].patchValue({
         nome: 'Fragmento achado',
-        categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
         modulo: FragmentoModuloEnum.I,
       });
       alvo.fixture.componentInstance['confirmarCriarItem']();
 
-      // Afinidade 20 → redução −5 (floor((20-10)/2)); custo base 20 → 15. 50 − 15 = 35.
-      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 35 }]);
+      // Afinidade 20 → redução −5 (floor((20-10)/2)); custo base Construtor módulo I = 40 → 35.
+      // 50 − 35 = 15.
+      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 15 }]);
+    });
+
+    /** Registro mínimo de `fragmentosConsumidos` (m3-64) — só `modulo` importa pra Afinidade (P-015). */
+    function registroConsumido(modulo: FragmentoModuloEnum): FichaFragmentoConsumidoDto {
+      return {
+        modulo,
+        bonusEscolhido: '+1 em Defesa',
+        opcao: { rotulo: '+1 em Defesa', tipo: 'DEFESA', valor: 1 },
+        atributoEscolhido: null,
+        deltaEnergiaMaxima: 0,
+        item: fragmento(modulo),
+      };
+    }
+
+    it('fragmentos já consumidos também contam pra Afinidade (P-015), mesmo fora do inventário', () => {
+      // 3 já consumidos de módulo I (Afinidade 15) + o novo Construtor módulo I sendo comprado
+      // agora (+5) = 20 — mesma conta de "adquirir considera o próprio módulo" acima, só com
+      // Afinidade vinda do histórico de consumo em vez do inventário. Precisa ser Construtor pelo
+      // mesmo motivo do teste acima (P-016: Potencializador não paga nada ao adquirir).
+      const alvo = montar({ itens: [], amplificadores: [] });
+      alvo.fixture.componentRef.setInput('fragmentosConsumidos', [
+        registroConsumido(FragmentoModuloEnum.I),
+        registroConsumido(FragmentoModuloEnum.I),
+        registroConsumido(FragmentoModuloEnum.I),
+      ]);
+      alvo.fixture.detectChanges();
+      const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
+      alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
+
+      alvo.fixture.componentInstance['itemCustomForm'].patchValue({
+        nome: 'Fragmento achado',
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+        modulo: FragmentoModuloEnum.I,
+      });
+      alvo.fixture.componentInstance['confirmarCriarItem']();
+
+      // Afinidade 20 → redução −5 (floor((20-10)/2)); custo base Construtor módulo I = 40 → 35.
+      // 50 − 35 = 15.
+      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 15 }]);
     });
 
     it('a Afinidade nunca reduz o custo abaixo de 1 (piso do doc), mesmo muito acima de 10', () => {
-      // 6 já portados de módulo I (Afinidade 30) + o novo módulo V sendo comprado agora (+1) = 31.
+      // 6 já portados de módulo I (Afinidade 30) + o novo Construtor módulo V sendo comprado agora
+      // (+1) = 31. Precisa ser Construtor (P-016) — só ele tem custo de aquisição pra reduzir.
       const alvo = montar({ itens: [fragmento(FragmentoModuloEnum.I, 6)], amplificadores: [] });
       const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
       alvo.fixture.componentInstance.ajusteEnergiaFragmento.subscribe((c) => custos.push(c));
 
       alvo.fixture.componentInstance['itemCustomForm'].patchValue({
         nome: 'Fragmento achado',
-        categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
         modulo: FragmentoModuloEnum.V,
       });
       alvo.fixture.componentInstance['confirmarCriarItem']();
 
-      // Custo base de módulo V é 3; a redução (−10) o levaria a −7, mas o piso é 1. 50 − 1 = 49.
+      // Custo base do Construtor módulo V é 6 (3 × 2); a redução (−10) o levaria a −4, mas o piso é
+      // 1. 50 − 1 = 49.
       expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 49 }]);
     });
 
     it('remover um fragmento restitui a Afinidade ATUAL (retroativa) — pode ser menos do que foi pago na compra', () => {
-      // 3 de módulo I já portados (Afinidade 15) + o item sendo removido, também módulo I (+5) = 20.
-      // Redução −5 → restitui 15, não os 20 cheios que teriam sido cobrados sem nenhum outro fragmento.
+      // 3 Potencializador de módulo I já portados (Afinidade 15) + o Construtor módulo I sendo
+      // removido, também módulo I (+5) = 20. Redução −5 → restitui 35 (40 − 5), não os 40 cheios
+      // que teriam sido cobrados sem nenhum outro fragmento. Precisa ser Construtor (P-016) — só
+      // ele tem algo a restituir.
+      const construtor: CarrinhoItemDto = {
+        ...fragmento(FragmentoModuloEnum.I),
+        categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+      };
       const alvo = montar({
-        itens: [fragmento(FragmentoModuloEnum.I, 3), fragmento(FragmentoModuloEnum.I)],
+        itens: [fragmento(FragmentoModuloEnum.I, 3), construtor],
         amplificadores: [],
       });
       const custos: { energiaAtual: number; energiaMaxima: number }[] = [];
@@ -1798,12 +1881,12 @@ describe('FichaInventario', () => {
 
       alvo.fixture.componentInstance['confirmarRemocaoItem'](1);
 
-      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 65 }]);
+      expect(custos).toEqual([{ energiaAtual: 50, energiaMaxima: 85 }]);
     });
 
-    it('acoplar um Potencializador sob Afinidade alta reduz os dois lados igualmente — líquido de Energia Máxima continua 0', () => {
+    it('acoplar um Potencializador sob Afinidade alta reduz os dois lados igualmente — único débito de Energia Máxima desde o P-016', () => {
       // 3 de módulo I já portados (Afinidade 15) + o próprio fragmento sendo acoplado, módulo IV
-      // (+2) = 17. Redução −3: aquisição restituída 7→4, acoplamento debitado 7→4 (mesmo valor).
+      // (+2) = 17. Redução −3: acoplamento debitado 7 → 4 dos dois lados.
       const alvo = montar({
         itens: [
           itemLeve,
@@ -1820,11 +1903,12 @@ describe('FichaInventario', () => {
       alvo.fixture.componentInstance['opcaoBonusFragmento'].set(0);
       alvo.fixture.componentInstance['confirmarAplicarFragmento'](2);
 
-      // Energia atual debitada já reduzida (7 → 4); Energia Máxima líquida segue 0 apesar da redução.
-      expect(custos).toEqual([{ energiaAtual: 46, energiaMaxima: 50 }]);
+      // Energia atual e Energia Máxima debitadas igualmente, já reduzidas (7 → 4 dos dois lados) —
+      // desde o P-016 não há mais restituição de aquisição pra compensar a Energia Máxima.
+      expect(custos).toEqual([{ energiaAtual: 46, energiaMaxima: 46 }]);
     });
 
-    it('desacoplar sob Afinidade alta reduz o custo de remoção — líquido de Energia Máxima continua 0', () => {
+    it('desacoplar sob Afinidade alta reduz o custo de remoção e restitui por completo o acoplamento reduzido', () => {
       const itemComFragmento: CarrinhoItemDto = {
         ...itemLeve,
         modificacoes: [
@@ -1848,8 +1932,10 @@ describe('FichaInventario', () => {
 
       alvo.fixture.componentInstance['removerModificacao'](0, 'Fragmento Potencializador — Módulo IV');
 
-      // Remover módulo IV custaria 14 sem redução; com −3 vira 11. Energia Máxima líquida segue 0.
-      expect(custos).toEqual([{ energiaAtual: 39, energiaMaxima: 50 }]);
+      // Remover módulo IV custaria 14 sem redução; com −3 vira 11. Energia Máxima: restitui o
+      // acoplamento já reduzido (7 → 4) por completo — desde o P-016 nada continua drenando depois
+      // que o fragmento volta a ser avulso.
+      expect(custos).toEqual([{ energiaAtual: 39, energiaMaxima: 54 }]);
     });
   });
 
@@ -2066,11 +2152,11 @@ describe('FichaInventario', () => {
       alvo.componentInstance['abrirAplicarFragmento'](1);
       alvo.fixture.detectChanges();
 
-      // Módulo IV: acoplar custa 7 de Energia; a Energia Máxima fecha em líquido 0 (restitui a
-      // aquisição e debita o mesmo valor no acoplamento — mesma conta do teste de confirmação).
-      expect(alvo.componentInstance['custoPreviaAplicarFragmento']()).toEqual({ energia: 7, energiaMaxima: 0 });
+      // Módulo IV: acoplar custa 7 de Energia + 7 de Energia Máxima — desde o P-016 esse é o único
+      // débito (mesma conta do teste de confirmação), sem restituição de aquisição pra compensar.
+      expect(alvo.componentInstance['custoPreviaAplicarFragmento']()).toEqual({ energia: 7, energiaMaxima: -7 });
       expect(alvo.raiz.textContent).toContain('Custo já com a Afinidade atual: −7 de Energia agora');
-      expect(alvo.raiz.textContent).toContain('Energia Máxima líquida: 0');
+      expect(alvo.raiz.textContent).toContain('Energia Máxima líquida: -7');
     });
 
     it('painel "Aplicar em...": some com o painel fechado (custoPreviaAplicarFragmento null)', () => {
@@ -2089,14 +2175,15 @@ describe('FichaInventario', () => {
       alvo.componentInstance['abrirConsumirFragmento'](0);
       alvo.fixture.detectChanges();
 
-      // Módulo III: aquisição restituída = 12 (sem redução — Afinidade só 3); Preço de Sanidade
-      // físico = 36 (12 × 3); líquido = 12 − 36 = −24 (mesma conta do teste de confirmação, m3-42).
+      // Módulo III: nada a restituir da aquisição (P-016 — o Potencializador nunca custou nada
+      // solto); Preço de Sanidade físico = 36 (12 × 3); líquido = 0 − 36 = −36 (mesma conta do
+      // teste de confirmação, m3-42).
       expect(alvo.componentInstance['custoPreviaConsumirFragmento']()).toEqual({
-        restituicaoAquisicao: 12,
-        deltaEnergiaMaxima: -24,
+        restituicaoAquisicao: 0,
+        deltaEnergiaMaxima: -36,
       });
-      expect(alvo.raiz.textContent).toContain('+12 de Energia Máxima restituída da aquisição');
-      expect(alvo.raiz.textContent).toContain('líquido -24 de Energia Máxima');
+      expect(alvo.raiz.textContent).toContain('+0 de Energia Máxima restituída da aquisição');
+      expect(alvo.raiz.textContent).toContain('líquido -36 de Energia Máxima');
     });
 
     it('painel "Consumir": some com o painel fechado (custoPreviaConsumirFragmento null)', () => {

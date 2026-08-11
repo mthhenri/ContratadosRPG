@@ -156,24 +156,6 @@
   acesso (`visualizar.page` e, desde este pedido, `campanha/detalhe.page`) + `validarPermissaoVisualizacao`
   no backend teria que aplicar o recorte por seção, não só por `CAMPOS_PRIVADOS_FICHA` fixo.
 
-### I-011 — Colorir os dadinhos do pool por tipo de dano · ficha/rolagens
-
-- **Ideia:** quando uma fórmula tem vários tipos de dano (ex.: `4d6 [F] + 4d6 [B] + 4d6 [E] + 4d6
-  [Q] + 4d6 [G]`), os dadinhos individuais do pool (`resultado-rolagem__dado`) também ganhariam a
-  cor do tipo que representam — hoje só os chips de resumo abaixo (`resultado-rolagem__grupo`) são
-  coloridos; os dados ficam todos na mesma cor neutra, sem pista visual de qual grupo pertence a
-  qual dado, mesmo a ordem sendo a mesma da fórmula.
-- **Origem:** o autor mandou um print da "Rolagem Rápida" com os 5 tipos de dano juntos (após as
-  cores por tipo de dano, sigla `[F]/[B]/[E]/[Q]/[G]` na fórmula) e notou que, olhando só os dados,
-  não dá para saber visualmente qual `4D6` é Físico e qual é Químico.
-- **Por quê:** resolve a mesma falta de "pista visual imediata" que motivou colorir os chips de
-  resumo, mas para o pool de dados em si — hoje a correspondência dado→tipo só existe implicitamente
-  pela ordem em que os termos aparecem na fórmula.
-- **Custo aparente:** só frontend — `ResultadoRolagem` já sabe a cor de cada tipo (`classeGrupo`,
-  tokens `--dano-*`); precisaria só propagar essa cor para o `dado-termo`/`dado` correspondente,
-  que hoje é renderizado sem saber a qual grupo de dano pertence. Autor **não decidiu ainda se
-  quer** — considerar se o realce visual compensa a poluição de mais cor por rolagem.
-
 ### I-012 — Foto de contrato, separada do avatar do jogador · ficha/avatar
 
 - **Ideia:** um segundo campo de imagem na ficha, a "foto de contrato" — só o **mestre** define/
@@ -194,11 +176,9 @@
 
 Ideias que viraram spec. Ficam aqui só para não serem reinventadas.
 
-*(Nenhuma ainda — este arquivo nasceu em 2026-08-01.)*
-
 | Ideia | Virou | Quando |
 |---|---|---|
-| — | — | — |
+| I-011 — Colorir os dadinhos do pool por tipo de dano | implementado direto (pedido pequeno o bastante pra pular a spec formal) — ver `HISTORY.md` | 2026-08-11 |
 
 ---
 

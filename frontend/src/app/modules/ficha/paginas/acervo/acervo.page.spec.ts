@@ -61,7 +61,7 @@ describe('FichaAcervo', () => {
         of({ id: 5, campanhaId: null, usuarioId: 7, nome: dto.nome, dados: dto.dados }),
       ),
       atribuirCampanha: vi.fn(() => of({ id: 1, campanhaId: 9 })),
-      duplicarFicha: vi.fn((id: number) =>
+      duplicarFicha: vi.fn(() =>
         of({ id: 99, campanhaId: null, usuarioId: 7, nome: 'Kane (cópia)', dados: {} }),
       ),
       excluirFicha: vi.fn(() => of(undefined)),

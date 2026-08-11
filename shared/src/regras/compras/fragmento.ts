@@ -23,18 +23,29 @@ import { CarrinhoItemDto, ModificacaoAplicadaDto, ModificacaoEfeitoDto } from '.
  */
 
 /**
- * Custo em Energia Máxima de **adquirir** um fragmento — o dobro para Construtor (doc — "⬦
- * Construtor"). `possuiAnomalia` (habilidade de Subclasse do Experimento Artificial, `P-013`;
- * `experimentoComAnomalia`) dobra o resultado por cima — as duas duplicações se acumulam, doc:
- * "Fragmentos custam o dobro de Energia em seu uso" não abre exceção para Construtor.
+ * Custo em Energia Máxima de **adquirir** um fragmento — só o Construtor paga aqui, o dobro do
+ * valor da tabela (doc — "⬦ Construtor": "ao portar um fragmento construtor, ele irá remover
+ * Energia Máxima... dobrado"). Ele **é** a arma/proteção assim que existe ("ao invés de aprimorar a
+ * arma, ele é a arma em si"), então já entra em uso na hora.
+ *
+ * O Potencializador retorna **0**: revisão de regra (`P-016`, a pedido do dono, 2026-08-09) — um
+ * Potencializador sentado solto no inventário, sem ter sido aplicado em nada, não está fazendo
+ * nada, então não deveria drenar Energia. Ele só passa a custar ao ser de fato **acoplado**
+ * (`custoAcoplarFragmento`) a um item/ser — até lá, zero.
+ *
+ * `possuiAnomalia` (habilidade de Subclasse do Experimento Artificial, `P-013`;
+ * `experimentoComAnomalia`) dobra o resultado do Construtor por cima — doc: "Fragmentos custam o
+ * dobro de Energia em seu uso" não abre exceção para ele.
  */
 export function custoAquisicaoFragmento(
   tipo: FragmentoTipoEnum,
   modulo: FragmentoModuloEnum,
   possuiAnomalia = false,
 ): number {
-  const base = CUSTO_ENERGIA_MAXIMA_MODULO[modulo];
-  const custo = tipo === FragmentoTipoEnum.CONSTRUTOR ? base * 2 : base;
+  if (tipo === FragmentoTipoEnum.POTENCIALIZADOR) {
+    return 0;
+  }
+  const custo = CUSTO_ENERGIA_MAXIMA_MODULO[modulo] * 2;
   return possuiAnomalia ? custo * 2 : custo;
 }
 
@@ -282,9 +293,19 @@ export function calcularAfinidade(modulosPortados: readonly FragmentoModuloEnum[
  * alvo, então só conta aqui, não duas vezes). Um fragmento solto em stack (`quantidade` > 1) conta
  * uma vez por unidade; um acoplado conta uma vez por modificação (nunca empilha — cada acoplamento
  * gera sua própria entrada em `modificacoes`). Entrada de `calcularAfinidade`.
+ *
+ * `modulosConsumidos` (`P-015`) soma por cima os módulos dos fragmentos já **consumidos**
+ * (`FichaFragmentoConsumidoDto.modulo`, `dados.fragmentosConsumidos`): consumir não devolve a
+ * "energia anômala" do fragmento — ela fica retida no corpo do agente ("beira ao desespero",
+ * "corpo operando à 101% da capacidade", doc — "⬦ Consumo de Fragmentos") — então continua contando
+ * pra Afinidade, e por consequência pra redução de Energia dos fragmentos restantes
+ * (`aplicarReducaoAfinidade`), mesmo depois do item sumir do inventário. Passado pelo chamador (não
+ * lido de `CarrinhoItemDto` aqui) porque o registro vive em `dados.fragmentosConsumidos`, fora do
+ * inventário — este módulo (`regras/compras`) não depende de `dtos/ficha` pra evitar ciclo.
  */
 export function listarModulosFragmentosPortados(
   itens: readonly CarrinhoItemDto[],
+  modulosConsumidos: readonly FragmentoModuloEnum[] = [],
 ): FragmentoModuloEnum[] {
   const soltos = itens
     .filter(
@@ -299,7 +320,7 @@ export function listarModulosFragmentosPortados(
       .filter((modificacao) => modificacao.origemFragmento)
       .map((modificacao) => modificacao.origemFragmento!.modulo),
   );
-  return [...soltos, ...acoplados];
+  return [...soltos, ...acoplados, ...modulosConsumidos];
 }
 
 /**
@@ -313,8 +334,14 @@ export function reducaoCustoPorAfinidade(afinidade: number): number {
 /**
  * Aplica a redução de Afinidade a um custo de Energia de fragmento, sem nunca zerá-lo (doc: "Não é
  * possível anular o custo de um fragmento... deve ter o custo de, no mínimo, 1 de Energia Máxima").
+ * O piso de 1 só vale pra um custo que **existe** — passa direto quando `custo` já é `0` (`P-016`:
+ * aquisição de um Potencializador solto, que não é cobrada), sem inventar uma cobrança de 1 que a
+ * Afinidade nunca teria como "anular" porque ela nunca existiu.
  */
 export function aplicarReducaoAfinidade(custo: number, afinidade: number): number {
+  if (custo === 0) {
+    return 0;
+  }
   return Math.max(1, custo - reducaoCustoPorAfinidade(afinidade));
 }
 

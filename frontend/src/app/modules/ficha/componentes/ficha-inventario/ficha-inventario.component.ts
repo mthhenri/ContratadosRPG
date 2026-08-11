@@ -70,6 +70,7 @@ import {
   verificarConflitoModificacao,
 } from '@contratados-rpg/shared/regras/compras';
 
+import { AutoFocus } from '../../../../shared/auto-focus/auto-focus.directive';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
@@ -198,13 +199,15 @@ function tipoFragmentoDaCategoria(categoria: ItemCategoriaEnum): FragmentoTipoEn
  * da ação (aquisição/remoção/acoplamento/desacoplamento/consumo mudam a lista depois); `moduloExtra`
  * só é necessário na **aquisição**, onde o fragmento ainda não existe em `itens` no momento do
  * débito — nas demais ações o fragmento em questão já está portado (solto ou acoplado) e por isso
- * já vem contado em `itens` sem precisar somar de novo.
+ * já vem contado em `itens` sem precisar somar de novo. `modulosConsumidos` (`P-015`) soma por cima
+ * os fragmentos já consumidos — sempre presentes, independente da ação, porque não estão em `itens`.
  */
 function afinidadeConsiderando(
   itens: readonly CarrinhoItemDto[],
+  modulosConsumidos: readonly FragmentoModuloEnum[],
   moduloExtra?: FragmentoModuloEnum,
 ): number {
-  const modulos = listarModulosFragmentosPortados(itens);
+  const modulos = listarModulosFragmentosPortados(itens, modulosConsumidos);
   return calcularAfinidade(moduloExtra ? [...modulos, moduloExtra] : modulos);
 }
 
@@ -223,13 +226,19 @@ interface CartaoItemVM {
  * Cartão de um módulo (I–V) na grade de Fragmentos do catálogo — atalho pra montar o item custom.
  * Custo `*Reduzido` já aplica a Afinidade atual do agente (m3-66) — igual ao `*` bruto quando a
  * Afinidade não reduz nada (o template só mostra o bruto riscado quando os dois divergem).
+ *
+ * O Potencializador mostra o custo de **acoplar** (`custoAcoplarPotencializador`), não o de
+ * adquirir: desde o `P-016`, adquiri-lo solto é sempre grátis (`custoAquisicaoFragmento` retorna 0
+ * pra ele) — mostrar "0 Energia" aqui, sem contexto nenhum, faria o jogador achar que o
+ * Potencializador nunca custa nada, quando na verdade ele só cobra ao ser de fato acoplado a um
+ * item/ser.
  */
 interface CartaoModuloFragmentoVM {
   readonly modulo: FragmentoModuloEnum;
   readonly afinidade: number;
-  readonly custoPotencializador: number;
+  readonly custoAcoplarPotencializador: number;
   readonly custoConstrutor: number;
-  readonly custoPotencializadorReduzido: number;
+  readonly custoAcoplarPotencializadorReduzido: number;
   readonly custoConstrutorReduzido: number;
 }
 
@@ -429,7 +438,7 @@ interface AmpInventarioVM {
  */
 @Component({
   selector: 'app-ficha-inventario',
-  imports: [ReactiveFormsModule, Icone, OverflowFade, Tooltip, Dialog, NgTemplateOutlet],
+  imports: [ReactiveFormsModule, Icone, OverflowFade, Tooltip, Dialog, NgTemplateOutlet, AutoFocus],
   templateUrl: './ficha-inventario.component.html',
   styleUrl: './ficha-inventario.component.scss',
 })
@@ -492,6 +501,12 @@ export class FichaInventario {
    * Fragmentos e os valores de efeito dos dois cardápios do Potencializador (em item/Consumido).
    */
   readonly possuiAnomalia = input(false);
+  /**
+   * Fragmentos já **consumidos** (`dados.fragmentosConsumidos`, m3-64) — só os módulos são usados
+   * aqui, pra somar na Afinidade (`afinidadeConsiderando`, `P-015`): consumir não devolve a "energia
+   * anômala" do fragmento, então ele continua contando mesmo depois de sair do inventário.
+   */
+  readonly fragmentosConsumidos = input<readonly FichaFragmentoConsumidoDto[]>([]);
 
   /** Emite o inventário inteiro após qualquer mutação — a página persiste. */
   readonly inventarioMudou = output<FichaInventarioDto>();
@@ -518,6 +533,11 @@ export class FichaInventario {
   readonly fragmentoConsumido = output<FichaFragmentoConsumidoDto>();
   /** Rolagem de dano de um item (m3-45) — quem persiste o histórico é `FichaVisualizacao` (m3-27). */
   readonly rolagemFeita = output<RolagemRealizadaDto>();
+
+  /** Só os módulos de `fragmentosConsumidos()` — a forma que `afinidadeConsiderando` consome (`P-015`). */
+  private readonly modulosConsumidos = computed(() =>
+    this.fragmentosConsumidos().map((registro) => registro.modulo),
+  );
 
   /** Abas do catálogo comprável — sem os Fragmentos (achados, montados como item custom). */
   protected readonly categorias = CATALOGO_CATEGORIAS.filter(
@@ -699,7 +719,9 @@ export class FichaInventario {
    * avisa antes"); mesma conta de `debitarAquisicaoFragmento` (proibição #26), só sem debitar de
    * verdade. Envelope `{ projecao }` (não `number` cru) de propósito — o template usa `@if (...; as
    * x)`, que trata `0` como falso; uma projeção de Energia Máxima exatamente 0 é um caso real (e
-   * abaixo do limite) que um `number | null` esconderia silenciosamente.
+   * abaixo do limite) que um `number | null` esconderia silenciosamente. Desde o `P-016`, adquirir
+   * um Potencializador nunca projeta risco nenhum (`custo` sempre 0) — só o Construtor, que já paga
+   * na hora, pode acionar este aviso.
    */
   protected readonly avisoLimiteEnergiaAquisicao = computed<{ readonly projecao: number } | null>(() => {
     if (!this.mostraModulo()) {
@@ -714,7 +736,7 @@ export class FichaInventario {
       return null;
     }
     const itens = this.inventario().itens;
-    const afinidade = afinidadeConsiderando(itens, modulo);
+    const afinidade = afinidadeConsiderando(itens, this.modulosConsumidos(), modulo);
     const custo = aplicarReducaoAfinidade(custoAquisicaoFragmento(tipo, modulo, this.possuiAnomalia()), afinidade);
     const projecao = this.energiaMaxima() - custo;
     return emAnomaliaBiologica(projecao, this.limiteMinimoEnergia()) ? { projecao } : null;
@@ -774,8 +796,10 @@ export class FichaInventario {
 
   /**
    * Custo de aquisição do fragmento (Energia Máxima), já reduzido pela Afinidade atual — a parte
-   * restituída ao consumir (m3-42/m3-49). Extraído pra `confirmarConsumirFragmento` e a prévia do
-   * painel (`custoPreviaConsumirFragmento`, m3-66) usarem a mesma conta (proibição #26).
+   * restituída ao consumir (m3-42/m3-49). Desde o `P-016`, sempre 0 pra um Potencializador
+   * (`custoAquisicaoFragmento` não cobra nada dele enquanto solto) — mantido como função própria só
+   * porque `confirmarConsumirFragmento` e a prévia do painel (`custoPreviaConsumirFragmento`,
+   * m3-66) precisam usar exatamente a mesma conta (proibição #26).
    */
   private custoAquisicaoReduzidoConsumo(
     tipo: FragmentoTipoEnum,
@@ -784,7 +808,7 @@ export class FichaInventario {
   ): number {
     return aplicarReducaoAfinidade(
       custoAquisicaoFragmento(tipo, modulo, this.possuiAnomalia()),
-      afinidadeConsiderando(itensAntes),
+      afinidadeConsiderando(itensAntes, this.modulosConsumidos()),
     );
   }
   /** Índice da opção de bônus "Consumido" escolhida (em `opcoesConsumoFragmento()`), ou `null` (m3-64). */
@@ -969,24 +993,23 @@ export class FichaInventario {
    * Custo `*Reduzido` (m3-66) usa a mesma `afinidadeConsiderando`/`aplicarReducaoAfinidade` de
    * `debitarAquisicaoFragmento` (proibição #26 — uma só conta), com o próprio módulo do cartão como
    * `moduloExtra` — o catálogo antes só mostrava o custo cheio, mesmo quando a Afinidade atual do
-   * agente já reduziria o que ele vai pagar.
+   * agente já reduziria o que ele vai pagar. Continua valendo pro Potencializador mesmo que ele
+   * ainda não exista: assim que o jogador o cria, ele passa a contar como portado
+   * (`listarModulosFragmentosPortados` conta o solto), então a Afinidade retroativa da prévia já
+   * "acerta" o valor que vai valer quando ele de fato for acoplado depois.
    */
   protected readonly cartaoModulosFragmento = computed<readonly CartaoModuloFragmentoVM[]>(() => {
     const itens = this.inventario().itens;
     return MODULOS_FRAGMENTO.map((modulo) => {
-      const afinidade = afinidadeConsiderando(itens, modulo);
-      const custoPotencializador = custoAquisicaoFragmento(
-        FragmentoTipoEnum.POTENCIALIZADOR,
-        modulo,
-        this.possuiAnomalia(),
-      );
+      const afinidade = afinidadeConsiderando(itens, this.modulosConsumidos(), modulo);
+      const custoAcoplarPotencializador = custoAcoplarFragmento(modulo, this.possuiAnomalia()).energiaMaxima;
       const custoConstrutor = custoAquisicaoFragmento(FragmentoTipoEnum.CONSTRUTOR, modulo, this.possuiAnomalia());
       return {
         modulo,
         afinidade: valorAfinidadeFragmento(modulo),
-        custoPotencializador,
+        custoAcoplarPotencializador,
         custoConstrutor,
-        custoPotencializadorReduzido: aplicarReducaoAfinidade(custoPotencializador, afinidade),
+        custoAcoplarPotencializadorReduzido: aplicarReducaoAfinidade(custoAcoplarPotencializador, afinidade),
         custoConstrutorReduzido: aplicarReducaoAfinidade(custoConstrutor, afinidade),
       };
     }).reverse();
@@ -1382,22 +1405,26 @@ export class FichaInventario {
   }
 
   /**
-   * Debita a Energia Máxima de adquirir um Fragmento (m3-35) — nenhum custo fora das duas
-   * categorias. Reduzido pela Afinidade acima de 10 (m3-42/m3-49, `aplicarReducaoAfinidade`) — a
-   * Afinidade "considera" o próprio fragmento sendo adquirido (retroativa, ver `afinidadeConsiderando`),
-   * já que ele entra no inventário logo em seguida. `itensAntes` é o inventário **antes** de
-   * `inserirItem` o incluir (evita contar o fragmento duas vezes).
+   * Debita a Energia Máxima de adquirir um Fragmento (m3-35) — só o Construtor paga aqui; desde o
+   * `P-016`, o Potencializador não custa nada enquanto solto (`custoAquisicaoFragmento` retorna 0
+   * pra ele), então a função sai sem emitir nada — evita um `ajusteEnergiaFragmento` sem efeito
+   * nenhum (a página persistiria à toa). Reduzido pela Afinidade acima de 10 (m3-42/m3-49,
+   * `aplicarReducaoAfinidade`) — a Afinidade "considera" o próprio fragmento sendo adquirido
+   * (retroativa, ver `afinidadeConsiderando`), já que ele entra no inventário logo em seguida.
+   * `itensAntes` é o inventário **antes** de `inserirItem` o incluir (evita contar o fragmento duas
+   * vezes).
    */
   private debitarAquisicaoFragmento(item: CarrinhoItemDto, itensAntes: readonly CarrinhoItemDto[]): void {
     const tipo = tipoFragmentoDaCategoria(item.categoria);
     if (!tipo || !item.modulo) {
       return;
     }
-    const afinidade = afinidadeConsiderando(itensAntes, item.modulo);
-    const custo = aplicarReducaoAfinidade(
-      custoAquisicaoFragmento(tipo, item.modulo, this.possuiAnomalia()),
-      afinidade,
-    );
+    const custoBase = custoAquisicaoFragmento(tipo, item.modulo, this.possuiAnomalia());
+    if (custoBase === 0) {
+      return;
+    }
+    const afinidade = afinidadeConsiderando(itensAntes, this.modulosConsumidos(), item.modulo);
+    const custo = aplicarReducaoAfinidade(custoBase, afinidade);
     this.ajusteEnergiaFragmento.emit({
       energiaAtual: this.energiaAtual(),
       energiaMaxima: this.energiaMaxima() - custo,
@@ -1586,21 +1613,23 @@ export class FichaInventario {
   }
 
   /**
-   * Restaura a Energia Máxima drenada por um Fragmento removido do inventário (m3-35). Mesma
-   * redução por Afinidade da aquisição (m3-42/m3-49) — `itensAntes` ainda inclui o próprio
-   * fragmento sendo removido, então a Afinidade "atual" já o conta (retroativa, sem precisar somar
-   * de novo como na aquisição).
+   * Restaura a Energia Máxima drenada por um Fragmento removido do inventário (m3-35) — só o
+   * Construtor drenou algo pra restaurar; um Potencializador solto nunca custou nada (`P-016`), a
+   * função sai sem emitir. Mesma redução por Afinidade da aquisição (m3-42/m3-49) — `itensAntes`
+   * ainda inclui o próprio fragmento sendo removido, então a Afinidade "atual" já o conta
+   * (retroativa, sem precisar somar de novo como na aquisição).
    */
   private restaurarAquisicaoFragmento(item: CarrinhoItemDto, itensAntes: readonly CarrinhoItemDto[]): void {
     const tipo = tipoFragmentoDaCategoria(item.categoria);
     if (!tipo || !item.modulo) {
       return;
     }
-    const afinidade = afinidadeConsiderando(itensAntes);
-    const custo = aplicarReducaoAfinidade(
-      custoAquisicaoFragmento(tipo, item.modulo, this.possuiAnomalia()),
-      afinidade,
-    );
+    const custoBase = custoAquisicaoFragmento(tipo, item.modulo, this.possuiAnomalia());
+    if (custoBase === 0) {
+      return;
+    }
+    const afinidade = afinidadeConsiderando(itensAntes, this.modulosConsumidos());
+    const custo = aplicarReducaoAfinidade(custoBase, afinidade);
     this.ajusteEnergiaFragmento.emit({
       energiaAtual: this.energiaAtual(),
       energiaMaxima: this.energiaMaxima() + custo,
@@ -1641,11 +1670,11 @@ export class FichaInventario {
    * Confirma a aplicação: empurra o bônus escolhido como `ModificacaoAplicadaDto` no item-alvo
    * (`ignoraLimiteTotal`/`ignoraLimiteProprio` — não conta no limite de mods da patente, doc: o
    * fragmento não é uma modificação comprada), remove o fragmento do inventário avulso (consumido) e
-   * debita o custo de **acoplar** (Energia atual + Energia Máxima do módulo — m3-35). A Energia
-   * Máxima da **aquisição** (drenada quando o fragmento entrou solto no inventário) é restituída
-   * antes de aplicar o custo do acoplamento — sem isso, os dois custos se somavam e o total drenado
-   * ficava o dobro do exemplo do documento ("acoplar um fragmento de módulo IV... custa... 7 de
-   * Energia Máxima", não 14).
+   * debita o custo de **acoplar** (Energia atual + Energia Máxima do módulo — m3-35). Desde o
+   * `P-016`, esse é o **único** débito de Energia Máxima do Potencializador — ele não custou nada
+   * enquanto esteve solto (`custoAquisicaoFragmento` retorna 0 pra ele), então não há mais nenhuma
+   * "restituição da aquisição" a compensar aqui (era assim antes do `P-016`, pra não cobrar em
+   * dobro).
    */
   protected confirmarAplicarFragmento(fragmentoIndice: number): void {
     const alvoIndice = this.alvoFragmento();
@@ -1675,8 +1704,8 @@ export class FichaInventario {
     this.emitirItens(novosItens);
 
     // Afinidade (m3-42/m3-49): o fragmento já está portado em `itens` (ainda solto, antes do
-    // acoplamento) — mesma Afinidade reduz os dois lados (aquisição restituída e acoplamento
-    // debitado), preservando o líquido zero do Potencializador (docstring acima).
+    // acoplamento) — a mesma Afinidade atual reduz o custo do acoplamento (P-016: o único débito
+    // que a aplicação gera).
     const custo = this.custoLiquidoAplicarFragmento(fragmento.modulo, itens);
     this.ajusteEnergiaFragmento.emit({
       energiaAtual: this.energiaAtual() - custo.energia,
@@ -1688,25 +1717,22 @@ export class FichaInventario {
 
   /**
    * Custo líquido de **acoplar** um fragmento Potencializador de `modulo`, já reduzido pela
-   * Afinidade atual (m3-42/m3-49) — `energia` é o débito de Energia atual; `energiaMaxima` é o
-   * delta líquido em Energia Máxima (restituição da aquisição menos o custo do acoplamento; ambos
-   * usam o mesmo custo base do módulo, então costuma fechar em 0). Extraído de
-   * `confirmarAplicarFragmento` pra a prévia de custo do painel (m3-66) usar exatamente a mesma
+   * Afinidade atual (m3-42/m3-49/`P-016`) — `energia` é o débito de Energia atual; `energiaMaxima`
+   * é o débito (negativo) de Energia Máxima do próprio acoplamento. Sem nenhuma "restituição da
+   * aquisição" somada por cima: desde o `P-016`, um Potencializador solto nunca chegou a custar
+   * Energia, então não há nada a restituir — o acoplamento é o primeiro (e único) débito. Extraído
+   * de `confirmarAplicarFragmento` pra a prévia de custo do painel (m3-66) usar exatamente a mesma
    * conta, sem duplicar (proibição #26).
    */
   private custoLiquidoAplicarFragmento(
     modulo: FragmentoModuloEnum,
     itens: readonly CarrinhoItemDto[],
   ): { readonly energia: number; readonly energiaMaxima: number } {
-    const afinidade = afinidadeConsiderando(itens);
-    const custoAquisicao = aplicarReducaoAfinidade(
-      custoAquisicaoFragmento(FragmentoTipoEnum.POTENCIALIZADOR, modulo, this.possuiAnomalia()),
-      afinidade,
-    );
+    const afinidade = afinidadeConsiderando(itens, this.modulosConsumidos());
     const custoBruto = custoAcoplarFragmento(modulo, this.possuiAnomalia());
     const energia = aplicarReducaoAfinidade(custoBruto.energia, afinidade);
-    const energiaMaximaAcoplamento = aplicarReducaoAfinidade(custoBruto.energiaMaxima, afinidade);
-    return { energia, energiaMaxima: custoAquisicao - energiaMaximaAcoplamento };
+    const energiaMaxima = aplicarReducaoAfinidade(custoBruto.energiaMaxima, afinidade);
+    return { energia, energiaMaxima: -energiaMaxima };
   }
 
   /**
@@ -1763,12 +1789,14 @@ export class FichaInventario {
 
   /**
    * Confirma o **consumo**: exige um bônus "Consumido" escolhido (e um atributo-alvo quando o bônus
-   * é de teste, m3-64), remove o fragmento do inventário avulso, restitui o dreno de Energia Máxima
-   * da aquisição (doc — "⬥ Módulos": "esse gasto cessa ao remover o fragmento de seu inventário") e
-   * debita o Preço de Sanidade — preço físico (Energia Máxima extra, sempre) e mental (sequela
-   * "Rejeição Biológica" × multiplicador, só se o jogador não evitou com Vontade). A sequela, quando
-   * emitida, carrega o módulo/tipo do fragmento e o bônus escolhido na `descricao` (m3-64). O
-   * histórico dedicado (`dados.fragmentosConsumidos`, `fragmentoConsumido`) é incondicional e reversível.
+   * é de teste, m3-64), remove o fragmento do inventário avulso e debita o Preço de Sanidade — preço
+   * físico (Energia Máxima extra, sempre) e mental (sequela "Rejeição Biológica" × multiplicador, só
+   * se o jogador não evitou com Vontade). `custoAquisicaoReduzidoConsumo` também entra na conta, mas
+   * desde o `P-016` sempre resulta 0 pra um Potencializador (nunca custou nada enquanto solto) — a
+   * conta fica só porque é a mesma usada pela prévia do painel (proibição #26), não porque ainda
+   * exista algo a restituir. A sequela, quando emitida, carrega o módulo/tipo do fragmento e o bônus
+   * escolhido na `descricao` (m3-64). O histórico dedicado (`dados.fragmentosConsumidos`,
+   * `fragmentoConsumido`) é incondicional e reversível.
    */
   protected confirmarConsumirFragmento(fragmentoIndice: number): void {
     const itensAntes = this.inventario().itens;
@@ -2136,13 +2164,14 @@ export class FichaInventario {
   }
 
   /**
-   * Desacopla uma mod de fragmento (m3-42): a mod some do item-alvo e o fragmento **volta como
-   * item avulso** ao inventário — ele continua "no inventário" (doc — "⬥ Módulos": o gasto "cessa
-   * ao remover o fragmento de seu inventário", não ao desacoplá-lo), então a Energia Máxima segue
-   * drenando o mesmo valor de antes: restitui o custo do acoplamento e reaplica a aquisição — como
-   * os dois valem o mesmo pra Potencializador, o líquido é 0. Só debita a Energia atual × 2 do
-   * custo de remoção (doc: "removê-lo do item custa 14 de Energia" pro módulo IV). O fragmento só
-   * para de contar energia quando o jogador de fato o remove do inventário (avulso) ou o consome.
+   * Desacopla uma mod de fragmento (m3-42): a mod some do item-alvo e o Potencializador **volta
+   * como item avulso** ao inventário. Desde o `P-016`, um Potencializador solto não custa Energia
+   * nenhuma — desacoplar por isso **restitui o custo do acoplamento por completo**: nada continua
+   * sendo drenado enquanto ele fica solto de novo (era diferente antes do `P-016`, quando a
+   * restituição só cobria a diferença pra "aquisição", que também já cobrava). Só debita a Energia
+   * atual × 2 do custo de remoção (doc — "⬥ Acoplamento": "removê-lo do item custa 14 de Energia"
+   * pro módulo IV) — esse continua valendo, é o preço de desfazer o acoplamento, não de portar o
+   * fragmento.
    */
   private desacoplarFragmento(
     indiceAlvo: number,
@@ -2174,20 +2203,16 @@ export class FichaInventario {
     this.emitirItens([...itens, fragmentoAvulso]);
 
     // Afinidade (m3-42/m3-49): o fragmento já está portado (acoplado) em `itensAntes` — mesma
-    // Afinidade reduz os três termos, preservando o líquido zero de acoplamento↔desacoplamento.
-    const afinidade = afinidadeConsiderando(itensAntes);
+    // Afinidade reduz os dois termos.
+    const afinidade = afinidadeConsiderando(itensAntes, this.modulosConsumidos());
     const custoRemocao = aplicarReducaoAfinidade(custoRemoverFragmento(modulo, this.possuiAnomalia()), afinidade);
-    const custoAquisicao = aplicarReducaoAfinidade(
-      custoAquisicaoFragmento(tipo, modulo, this.possuiAnomalia()),
-      afinidade,
-    );
     const energiaMaximaAcoplamento = aplicarReducaoAfinidade(
       custoAcoplarFragmento(modulo, this.possuiAnomalia()).energiaMaxima,
       afinidade,
     );
     this.ajusteEnergiaFragmento.emit({
       energiaAtual: this.energiaAtual() - custoRemocao,
-      energiaMaxima: this.energiaMaxima() + energiaMaximaAcoplamento - custoAquisicao,
+      energiaMaxima: this.energiaMaxima() + energiaMaximaAcoplamento,
     });
   }
 

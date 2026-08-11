@@ -534,4 +534,102 @@ describe('FichaHabilidades', () => {
       expect(vazio).toBe('Nenhuma habilidade de Geral ou Outra classe/arquétipo.');
     });
   });
+
+  /**
+   * P-014: o bucket do resumo que hoje se chama "Arquétipo" vira "Subclasse" numa ficha Experimento
+   * — mesmo critério de `classeBaseDeHabilidades` usado pelo resto da ficha (chip por item, rótulo
+   * da aba do seletor). A categoria `SUBCLASSE` (as habilidades de subclasse propriamente ditas)
+   * soma nesse mesmo bucket — antes ficava de fora da contagem inteira.
+   */
+  describe('rótulo do bucket "Arquétipo"/"Subclasse" do resumo (P-014)', () => {
+    function montarExperimento(habilidadesExperimento: readonly FichaHabilidadeDto[]) {
+      TestBed.configureTestingModule({ imports: [FichaHabilidades] });
+      const fixture = TestBed.createComponent(FichaHabilidades);
+      fixture.componentRef.setInput('habilidades', habilidadesExperimento);
+      fixture.componentRef.setInput('editavel', true);
+      fixture.componentRef.setInput('classe', ClasseEnum.EXPERIMENTO_BESTIAL);
+      fixture.componentRef.setInput('arquetipo', null);
+      fixture.componentRef.setInput('energiaAtual', 20);
+      fixture.detectChanges();
+      return { fixture, raiz: fixture.nativeElement as HTMLElement };
+    }
+
+    it('numa ficha Experimento, o resumo mostra "Subclasse" em vez de "Arquétipo"', () => {
+      const { raiz } = montarExperimento([
+        { nome: 'Instinto Bestial', categoria: HabilidadeCategoriaEnum.SUBCLASSE, custoEnergia: 0, descricao: '' },
+      ]);
+      const rotulos = Array.from(raiz.querySelectorAll('.habilidades__resumo-rotulo')).map((n) => n.textContent?.trim());
+      expect(rotulos).toContain('Subclasse');
+      expect(rotulos).not.toContain('Arquétipo');
+    });
+
+    it('numa ficha de classe base, o resumo continua "Arquétipo"', () => {
+      const { raiz } = montar(true); // fixture padrão do describe pai: COMBATENTE/LUTADOR
+      const rotulos = Array.from(raiz.querySelectorAll('.habilidades__resumo-rotulo')).map((n) => n.textContent?.trim());
+      expect(rotulos).toContain('Arquétipo');
+      expect(rotulos).not.toContain('Subclasse');
+    });
+
+    it('uma habilidade categoria SUBCLASSE conta no bucket "Subclasse" (antes ficava fora da contagem)', () => {
+      const { raiz, fixture } = montarExperimento([
+        { nome: 'Instinto Bestial', categoria: HabilidadeCategoriaEnum.SUBCLASSE, custoEnergia: 0, descricao: '' },
+        { nome: 'Primeiros Socorros', categoria: HabilidadeCategoriaEnum.GERAL, custoEnergia: 1, descricao: '' },
+      ]);
+      const botao = Array.from(raiz.querySelectorAll('.habilidades__resumo-item')).find(
+        (b) => b.querySelector('.habilidades__resumo-rotulo')?.textContent?.trim() === 'Subclasse',
+      ) as HTMLButtonElement;
+      expect(botao.querySelector('.habilidades__resumo-valor')?.textContent?.trim()).toBe('1');
+
+      botao.click();
+      fixture.detectChanges();
+      const nomesFiltrados = Array.from(raiz.querySelectorAll('.habilidades__nome')).map((n) => n.textContent?.trim());
+      expect(nomesFiltrados).toEqual(['Instinto Bestial']);
+    });
+  });
+
+  /**
+   * Follow-up do P-014: no diálogo "Adicionar do sistema", Subclasse e Arquétipo viraram abas
+   * separadas (antes eram uma só, com o rótulo trocando de nome) — reflete a distinção que
+   * `catalogoHabilidades` (`shared/regras`) já resolve em dois grupos (`grupoSubclasse`/
+   * `grupoArquetipo`).
+   */
+  describe('diálogo "Adicionar do sistema": Subclasse e Arquétipo como abas separadas (P-014 follow-up)', () => {
+    it('numa ficha Experimento, o seletor mostra as duas abas ao mesmo tempo', () => {
+      TestBed.configureTestingModule({ imports: [FichaHabilidades] });
+      const fixture = TestBed.createComponent(FichaHabilidades);
+      fixture.componentRef.setInput('habilidades', []);
+      fixture.componentRef.setInput('editavel', true);
+      fixture.componentRef.setInput('classe', ClasseEnum.EXPERIMENTO_BESTIAL);
+      fixture.componentRef.setInput('arquetipo', null);
+      fixture.componentRef.setInput('energiaAtual', 20);
+      fixture.detectChanges();
+      const raiz = fixture.nativeElement as HTMLElement;
+
+      fixture.componentInstance['abrirSeletor']();
+      fixture.detectChanges();
+
+      const rotulosAba = Array.from(raiz.querySelectorAll('.seletor__aba')).map((aba) => aba.textContent?.trim());
+      expect(rotulosAba).toContain('Subclasse');
+      expect(rotulosAba).toContain('Arquétipo');
+    });
+
+    it('numa ficha de classe base, só a aba Arquétipo aparece (sem Subclasse)', () => {
+      TestBed.configureTestingModule({ imports: [FichaHabilidades] });
+      const fixture = TestBed.createComponent(FichaHabilidades);
+      fixture.componentRef.setInput('habilidades', []);
+      fixture.componentRef.setInput('editavel', true);
+      fixture.componentRef.setInput('classe', ClasseEnum.COMBATENTE);
+      fixture.componentRef.setInput('arquetipo', ArquetipoEnum.LUTADOR);
+      fixture.componentRef.setInput('energiaAtual', 20);
+      fixture.detectChanges();
+      const raiz = fixture.nativeElement as HTMLElement;
+
+      fixture.componentInstance['abrirSeletor']();
+      fixture.detectChanges();
+
+      const rotulosAba = Array.from(raiz.querySelectorAll('.seletor__aba')).map((aba) => aba.textContent?.trim());
+      expect(rotulosAba).toContain('Arquétipo');
+      expect(rotulosAba).not.toContain('Subclasse');
+    });
+  });
 });
