@@ -114,6 +114,47 @@
 - **Desde:** `m3-60` — **adiado por decisão explícita do dono**, registrado como dívida de
   nomenclatura.
 
+### P-018 — Guia de criação não respeita as regras específicas do Civil · `ABERTO` · frontend
+
+- **Sintoma:** o dono reportou que o guia de criação de personagem não respeita a mecânica de Civil.
+  Um caso concreto encontrado: o passo // Novo agente (nível inicial "arredonda a média da campanha
+  − 1", teto de 20, mais o Prestígio) roda **igual pra Civil** — o rótulo, o range do campo manual
+  (`min=0 max=20` em "Nível inicial exato") e o resumo mostram "Nível"/"Prestígio" pro Civil também,
+  mas `docs/core/sistema-v4.1.0.md` só define Treinamento 0–5 pra Civil (sem noção de Prestígio;
+  `dadosCivil` — `shared/src/regras/dados/progressao-civil.dados.ts` — só tem entradas de 0 a 5). Um
+  Civil que herda uma média de campanha acima de 5 vira um "Nível" fora da tabela, e
+  `calcularProgressaoAcumulada`/`calcularBeneficiosNivel` devolvem lista vazia pra qualquer
+  Treinamento > 5, sem avisar o jogador.
+- **Causa:** não investigada por completo — o pipeline de "Novo agente"/progressão do guia
+  (`criar.page.ts`: `novoAgente`, `nivelInicial`, `prestigioInicial`) não tem nenhum branch pra
+  Civil; trata todas as classes com a mesma fórmula/teto/rótulo. Pode haver mais pontos do guia com
+  o mesmo problema (o dono não detalhou todos) — escopo completo a confirmar com ele.
+- **Contorno:** nenhum.
+- **Correção:** não determinada — depende de mapear com o dono todas as regras de Civil que o guia
+  hoje ignora (a começar pelo Treinamento 0–5 no lugar de Nível/Prestígio) antes de desenhar a
+  correção.
+- **Desde:** reportado pelo dono em 2026-08-11.
+
+### P-019 — Seletor de Classe não segue o padrão de dois passos (base → arquétipo/subclasse) · `ABERTO` · frontend/UX
+
+- **Sintoma:** o `<select>` único do passo // Classe
+  ([criar.page.html:172](../../frontend/src/app/modules/ficha/paginas/criar/criar.page.html#L172))
+  mistura, nos mesmos `<optgroup>`, as três classes-base, as três subclasses de Experimento e Civil
+  — todas como opções de primeiro nível (`GRUPOS_CLASSE` —
+  [opcoes-ficha.ts:22](../../frontend/src/app/modules/ficha/opcoes-ficha.ts#L22)). O dono quer um
+  fluxo em dois passos: primeiro escolher a classe-base (Combatente/Especialista/Suporte) ou Civil;
+  só então, se não for Civil, um segundo `<select>` escolhe entre os arquétipos regulares **e** a
+  subclasse de Experimento daquela classe-base.
+- **Causa:** o modelo de dados atual já trata Experimento como uma `ClasseEnum` própria e paralela
+  (`EXPERIMENTO_BESTIAL`/`ARTIFICIAL`/`HIBRIDO`), não como "Combatente + subclasse Experimento" — é
+  esse desenho que faz o `<select>` de Classe ter que listar Experimento junto das bases, em vez de
+  como uma opção dentro do segundo seletor.
+- **Contorno:** nenhum — hoje dá pra escolher tudo, só não no fluxo de dois passos pedido.
+- **Correção:** não determinada — muda a experiência de seleção (dois `<select>` em cascata) e
+  possivelmente como Experimento se relaciona com a classe-base no modelo; desenhar com o dono antes
+  de mexer.
+- **Desde:** reportado pelo dono em 2026-08-11.
+
 ## Resolvidos
 
 Itens resolvidos **saem daqui**. O relato da correção fica no [`HISTORY.md`](HISTORY.md), junto da
