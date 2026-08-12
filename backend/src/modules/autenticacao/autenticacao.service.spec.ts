@@ -126,6 +126,7 @@ describe('AutenticacaoService', () => {
         id: 7,
         login: 'agente.zero',
         nome: 'Agente Zero',
+        tipo: TipoUsuarioEnum.ADMIN,
       });
       expect(resultado).not.toHaveProperty('senha');
     });

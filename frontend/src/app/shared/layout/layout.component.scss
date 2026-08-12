@@ -169,6 +169,18 @@
     border: 1px solid var(--border-strong);
   }
 
+  &__tipo {
+    font-size: 15px;
+
+    &--admin {
+      color: var(--text) !important;
+    }
+
+    &--tester {
+      color: var(--energy) !important;
+    }
+  }
+
   &__perfil-menu {
     position: absolute;
     right: 0;

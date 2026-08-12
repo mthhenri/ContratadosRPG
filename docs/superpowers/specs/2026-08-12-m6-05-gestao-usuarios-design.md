@@ -24,7 +24,8 @@ O componente análogo aprovado é a tela de campanhas: shell central, cabeçalho
 controles compactos, avatares, chips e ações por registro. A tela terá:
 
 1. cabeçalho `Gestão de Usuários`, com ação para criar conta;
-2. faixa de filtros com busca por nome/login, filtro de tipo e controle de lixeira;
+2. faixa de filtros com uma busca por nome ou login, filtro de tipo e seletor de situação
+   (`Não deletados`, `Deletados`, `Todos`), todos reativos; a busca usa debounce de 300 ms;
 3. listagem paginada com identidade, login, rótulo do tipo, estado e ações;
 4. estados de carregamento, vazio e lixeira vazia coerentes com o produto.
 
@@ -36,8 +37,10 @@ Todos os estilos consomem tokens do tema. Não haverá cores, fontes ou raios ha
 - `Redefinir senha` expande a linha e mostra somente o campo de nova senha, o controle de
   visibilidade já usado no perfil e as ações `Cancelar` e `Salvar nova senha`.
 - A senha atual nunca é exibida ou recuperada.
-- `Trocar tipo` expande a linha com um seletor contendo `Normal`, `Administrador` e
-  `Testador`.
+- O chip de tipo é acionável e inclui um ícone próprio para `Normal`, `Administrador` e
+  `Testador`. Ao clicar, abre um menu contextual com somente os tipos diferentes do atual.
+- Escolher um tipo ainda não persiste: o chip assume a seleção e surge ao lado somente um
+  botão quadrado com check para confirmação explícita.
 - Apenas um editor pode ficar aberto por vez. Salvar ou cancelar recolhe a linha.
 - `Excluir` usa confirmação forte antes da chamada destrutiva.
 - Na visualização da lixeira, a ação principal do registro é `Reativar`.
@@ -52,7 +55,9 @@ evitar uma página separada e manter o mesmo vocabulário de expansão inline.
   perfil do próprio usuário.
 - A página standalone usa Signals para estado de listagem/editor e Reactive Forms para todos
   os formulários.
-- Busca, tipo, lixeira e paginação são enviados por `UsuarioListarDto`; nenhuma filtragem de
+- Busca, tipo, situação e paginação são enviados por `UsuarioListarDto`; a busca textual é
+  aplicada pelo backend como `nome OR login`, e a situação aceita ativos, excluídos ou ambos.
+  Nenhuma filtragem de
   negócio é duplicada no frontend.
 - Os rótulos de tipo vêm de `tipoDescricao` na listagem e de um mapa local explícito no
   seletor, nunca do código cru.

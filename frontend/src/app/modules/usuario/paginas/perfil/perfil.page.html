@@ -16,6 +16,14 @@
       </header>
 
       <form class="perfil__formulario" [formGroup]="formularioPerfil" (ngSubmit)="salvarPerfil()">
+        <div class="perfil__tipo" [attr.data-tipo]="tipoUsuario()">
+          <app-icone [nome]="tipoUsuario() === TipoUsuarioEnum.ADMIN ? 'protecoes' : tipoUsuario() === TipoUsuarioEnum.TESTER ? 'amplificador' : 'agente'" />
+          <div>
+            <strong>{{ tipoUsuario() === TipoUsuarioEnum.ADMIN ? 'Usuário administrador' : tipoUsuario() === TipoUsuarioEnum.TESTER ? 'Usuário tester' : 'Usuário convencional' }}</strong>
+            <span>{{ tipoUsuario() === TipoUsuarioEnum.ADMIN ? 'Você possui acesso às ferramentas administrativas do sistema.' : tipoUsuario() === TipoUsuarioEnum.TESTER ? 'Sua conta participa dos testes e validações do sistema.' : 'Sua conta possui acesso convencional aos recursos do sistema.' }}</span>
+          </div>
+        </div>
+
         <label class="perfil__campo">
           <span class="perfil__rotulo">Nome</span>
           <input class="perfil__entrada" type="text" formControlName="nome" autocomplete="name" />

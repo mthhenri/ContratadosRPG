@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Knex } from 'knex';
-import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
+import { TipoUsuarioEnum, UsuarioSituacaoEnum } from '@contratados-rpg/shared/enums';
 import { UsuarioRepository } from './usuario.repository';
 
 describe('UsuarioRepository', () => {
@@ -41,14 +41,14 @@ describe('UsuarioRepository', () => {
       string,
       Record<string, unknown>,
     ];
-    expect(sqlContagem).toContain('usuario.is_deleted = :apenasExcluidos');
+    expect(sqlContagem).toContain('usuario.is_deleted = :isDeleted');
     expect(sqlContagem).toContain('usuario.login ILIKE :login');
     expect(sqlContagem).toContain('usuario.nome ILIKE :nome');
     expect(sqlContagem).toContain('tipo_usuario.codigo = :tipo');
     expect(sqlListagem).toContain('tipo_usuario.descricao AS "tipoDescricao"');
     expect(sqlListagem).toContain('ORDER BY usuario.nome ASC LIMIT :itensPorPagina OFFSET :deslocamento');
     expect(parametrosContagem).toEqual({
-      apenasExcluidos: true,
+      isDeleted: true,
       login: '%zero%',
       nome: '%Agente%',
       tipo: TipoUsuarioEnum.ADMIN,
@@ -77,10 +77,34 @@ describe('UsuarioRepository', () => {
     });
 
     const [sql, parametros] = raw.mock.calls[1] as [string, Record<string, unknown>];
-    expect(sql).toContain('usuario.is_deleted = :apenasExcluidos');
+    expect(sql).toContain('usuario.is_deleted = :isDeleted');
     expect(sql).toContain('ORDER BY usuario.login DESC');
     expect(sql).not.toContain('LIMIT');
-    expect(parametros).toEqual({ apenasExcluidos: false });
+    expect(parametros).toEqual({ isDeleted: false });
+  });
+
+  it('busca por nome ou login e permite listar todas as situações', async () => {
+    const raw = vi.fn().mockResolvedValueOnce({ rows: [{ total: '0' }] }).mockResolvedValueOnce({ rows: [] });
+    const repositorio = new UsuarioRepository({ raw } as unknown as Knex);
+
+    await repositorio.listar({
+      pagina: 1, itensPorPagina: 20, ordenarPor: 'nome', direcao: 'ASC',
+      busca: 'ana', situacao: UsuarioSituacaoEnum.TODOS,
+    });
+
+    const [sql, parametros] = raw.mock.calls[1] as [string, Record<string, unknown>];
+    expect(sql).toContain('(usuario.login ILIKE :busca OR usuario.nome ILIKE :busca)');
+    expect(sql).not.toContain('WHERE usuario.is_deleted =');
+    expect(parametros).toEqual({ busca: '%ana%', itensPorPagina: 20, deslocamento: 0 });
+  });
+
+  it('lista excluídos quando a situação for EXCLUIDOS', async () => {
+    const raw = vi.fn().mockResolvedValueOnce({ rows: [{ total: '0' }] }).mockResolvedValueOnce({ rows: [] });
+    const repositorio = new UsuarioRepository({ raw } as unknown as Knex);
+    await repositorio.listar({ pagina: 1, itensPorPagina: 20, ordenarPor: 'nome', direcao: 'ASC', situacao: UsuarioSituacaoEnum.EXCLUIDOS });
+    const [sql, parametros] = raw.mock.calls[1] as [string, Record<string, unknown>];
+    expect(sql).toContain('usuario.is_deleted = :isDeleted');
+    expect(parametros.isDeleted).toBe(true);
   });
 
   it('normaliza direção de ordenação desconhecida sem interpolar entrada na query', async () => {

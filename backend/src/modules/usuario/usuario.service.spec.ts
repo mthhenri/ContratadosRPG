@@ -148,6 +148,26 @@ describe('UsuarioService', () => {
       expect(resultado).toEqual({ id: 12, login: 'agente.novo', nome: 'Agente Novo' });
     });
 
+    it('cria conta administrativa com o tipo escolhido', async () => {
+      repositorio.recuperarPorLogin.mockResolvedValue(null);
+      hashDublado.mockResolvedValue('$2b$10$hashadmin' as never);
+      repositorio.criarUsuario.mockResolvedValue({ id: 13, login: 'tester', nome: 'Tester' });
+
+      await service.criarAdministrativo({
+        login: 'tester',
+        senha: 'segredo123',
+        nome: 'Tester',
+        tipo: TipoUsuarioEnum.TESTER,
+      });
+
+      expect(repositorio.criarUsuario).toHaveBeenCalledWith({
+        login: 'tester',
+        senha: '$2b$10$hashadmin',
+        nome: 'Tester',
+        tipo: TipoUsuarioEnum.TESTER,
+      });
+    });
+
     it('rejeita criacao com login duplicado', async () => {
       repositorio.recuperarPorLogin.mockResolvedValue(usuarioPersistido);
 
@@ -282,7 +302,11 @@ describe('UsuarioService', () => {
         senha: '$2b$10$hashresetado',
       });
       expect(repositorio.incrementarTokenVersao).toHaveBeenCalledWith({ id: 7 });
-      expect(resultado).toEqual({ id: 7, login: 'agente.zero', nome: 'Agente Zero' });
+      expect(resultado).toEqual({
+        id: 7,
+        login: 'agente.zero',
+        nome: 'Agente Zero',
+      });
       expect(resultado).not.toHaveProperty('senha');
     });
 
@@ -329,7 +353,12 @@ describe('UsuarioService', () => {
       const resultado = await service.recuperarPerfil({ id: 7 });
 
       expect(repositorio.recuperarPorId).toHaveBeenCalledWith({ id: 7 });
-      expect(resultado).toEqual({ id: 7, login: 'agente.zero', nome: 'Agente Zero' });
+      expect(resultado).toEqual({
+        id: 7,
+        login: 'agente.zero',
+        nome: 'Agente Zero',
+        tipo: TipoUsuarioEnum.NORMAL,
+      });
       expect(resultado).not.toHaveProperty('senha');
     });
 

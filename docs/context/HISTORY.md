@@ -1,5 +1,31 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-12 — `m6-05`: gestão visual administrativa de usuários
+
+A aplicação ganhou `/admin/usuarios`, rota lazy protegida por `adminGuard` e acessível pela topbar
+somente para administradores. A tela reúne listagem paginada e todas as operações das `m6-03` e
+`m6-04` em interações inline, usando a lista de campanhas como análogo visual aprovado.
+
+- A busca única consulta nome ou login com debounce de 300 ms; tipo e situação filtram
+  imediatamente. A situação inicia em “Não deletados”, aceita todos/deletados, e uma vassoura
+  restaura o conjunto padrão em uma consulta.
+- A troca de tipo usa chips com iconografia e cores estáveis, menu contextual que exclui o valor
+  atual, fecha por clique externo e só persiste após o check; o X descarta a seleção. Criação,
+  edição de nome/login e reset de senha permanecem na própria linha, assim como confirmações de
+  exclusão e reativação.
+- A criação administrativa ganhou `UsuarioAdministrativoCriarDto`, separado do registro público:
+  admin escolhe `NORMAL`, `ADMIN` ou `TESTER`, enquanto auto-registro continua forçando `NORMAL`.
+- O perfil agora informa o tipo sem permitir edição; a sessão fornece fallback para instâncias de
+  API antigas que ainda omitam o campo. A topbar sinaliza `ADMIN` com escudo e `TESTER` com o
+  ícone azul, mantendo contas normais sem selo adicional.
+- A listagem backend passou a aceitar busca OR por nome/login e situação ativa/excluída/todas. O
+  login voltou a incluir `tipo` na resposta, alinhando o contrato de sessão ao JWT.
+
+Gates focados cobriram guard, cliente HTTP, service/repository backend, perfil, topbar e interações
+da gestão; as suítes completas fecharam em shared 601/601, backend 275/275 e frontend 921/921,
+com lint e builds dos três workspaces sem falhas. A spec foi movida para `docs/specs/done/`. Próxima
+task: `m6-06-frontend-gate-tester-acesso-negado.spec.md`.
+
 ## 2026-08-12 — `m6-04`: operações sensíveis e invariantes administrativas
 
 A gestão de usuários agora permite trocar o tipo global e resetar a senha de uma conta. As duas

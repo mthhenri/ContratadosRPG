@@ -27,6 +27,51 @@
     gap: 16px;
   }
 
+  &__tipo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-control);
+
+    app-icone {
+      flex: none;
+      font-size: 20px;
+    }
+
+    div {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    strong {
+      font: 600 12px var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: var(--tracking-label);
+    }
+
+    span {
+      color: var(--text-dim);
+      font: 12px var(--font-sans);
+    }
+
+    &[data-tipo='ADMIN'] {
+      color: var(--text);
+      background: color-mix(in srgb, var(--text) 7%, transparent);
+      border-color: color-mix(in srgb, var(--text) 40%, transparent);
+    }
+
+    &[data-tipo='TESTER'] {
+      color: var(--energy);
+      background: color-mix(in srgb, var(--energy) 10%, transparent);
+      border-color: color-mix(in srgb, var(--energy) 40%, transparent);
+    }
+  }
+
   &__campo {
     display: flex;
     flex-direction: column;

@@ -1,4 +1,4 @@
-import type { TipoUsuarioEnum } from '../../enums';
+import type { TipoUsuarioEnum, UsuarioSituacaoEnum } from '../../enums';
 import { PaginatedResult } from '../../interfaces';
 
 /**
@@ -41,6 +41,15 @@ export interface UsuarioAutenticadoDto {
   readonly id: number;
   readonly login: string;
   readonly nome: string;
+  readonly tipo: TipoUsuarioEnum;
+}
+
+/** Entrada administrativa de criação de conta, com escolha explícita do tipo. */
+export interface UsuarioAdministrativoCriarDto {
+  readonly login: string;
+  readonly senha: string;
+  readonly nome: string;
+  readonly tipo: TipoUsuarioEnum;
 }
 
 /**
@@ -99,6 +108,7 @@ export interface UsuarioRecuperadoDto {
   readonly id: number;
   readonly login: string;
   readonly nome: string;
+  readonly tipo: TipoUsuarioEnum;
 }
 
 /**
@@ -173,8 +183,10 @@ export interface UsuarioListarDto {
   readonly allRows?: boolean;
   readonly login?: string;
   readonly nome?: string;
+  readonly busca?: string;
   readonly tipo?: TipoUsuarioEnum;
   readonly apenasExcluidos?: boolean;
+  readonly situacao?: UsuarioSituacaoEnum;
 }
 
 /** Recorte de uma conta exibido na listagem administrativa. */

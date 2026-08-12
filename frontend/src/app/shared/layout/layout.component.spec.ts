@@ -4,6 +4,7 @@ import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { MessageService } from 'primeng/api';
+import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 
 import { TemaService } from '../../core/services/tema.service';
 import { LeitorDocumentosService } from '../leitor-documentos/leitor-documentos.service';
@@ -18,12 +19,12 @@ class RotaLayoutTesteB {}
 describe('Layout — leitor global de documentos', () => {
   const CHAVE_SESSAO = 'contratados-rpg.sessao';
 
-  async function montar(autenticado: boolean) {
+  async function montar(autenticado: boolean, tipo = TipoUsuarioEnum.NORMAL) {
     localStorage.clear();
     if (autenticado) {
       localStorage.setItem(
         CHAVE_SESSAO,
-        JSON.stringify({ token: 'token', id: 1, login: 'agente', nome: 'Agente Teste' }),
+        JSON.stringify({ token: 'token', id: 1, login: 'agente', nome: 'Agente Teste', tipo }),
       );
     }
 
@@ -55,6 +56,31 @@ describe('Layout — leitor global de documentos', () => {
   afterEach(() => {
     localStorage.clear();
     document.documentElement.removeAttribute('style');
+  });
+
+  it('mostra Admin com destino direto somente para administrador', async () => {
+    const { raiz } = await montar(true, TipoUsuarioEnum.ADMIN);
+    const link = raiz.querySelector<HTMLAnchorElement>('.topbar__item--admin');
+    expect(link?.textContent).toContain('Admin');
+    expect(link?.getAttribute('href')).toBe('/admin/usuarios');
+  });
+
+  it.each([TipoUsuarioEnum.NORMAL, TipoUsuarioEnum.TESTER])('oculta Admin para %s', async (tipo) => {
+    const { raiz } = await montar(true, tipo);
+    expect(raiz.querySelector('.topbar__item--admin')).toBeNull();
+  });
+
+  it('mostra selo no gatilho para administrador e tester, mas não para normal', async () => {
+    const admin = await montar(true, TipoUsuarioEnum.ADMIN);
+    expect(admin.raiz.querySelector('.topbar__tipo--admin')).not.toBeNull();
+
+    TestBed.resetTestingModule();
+    const tester = await montar(true, TipoUsuarioEnum.TESTER);
+    expect(tester.raiz.querySelector('.topbar__tipo--tester')).not.toBeNull();
+
+    TestBed.resetTestingModule();
+    const normal = await montar(true, TipoUsuarioEnum.NORMAL);
+    expect(normal.raiz.querySelector('.topbar__tipo')).toBeNull();
   });
 
   it.each([

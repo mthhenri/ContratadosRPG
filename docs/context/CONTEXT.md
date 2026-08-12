@@ -1,7 +1,7 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-12 · **Última decisão registrada:** a `m6-04` fechou as operações
-> sensíveis e invariantes de segurança da gestão administrativa de contas
+> **Última revisão:** 2026-08-12 · **Última decisão registrada:** a `m6-05` entregou a gestão
+> visual administrativa de contas e a identificação do tipo do usuário no perfil
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -15,8 +15,8 @@
 ## 1. Próxima Task
 
 O M6 está aberto. A próxima task encadeada é
-`m6-05-frontend-gestao-usuarios.spec.md`, que entrega a tela administrativa sobre o backend
-fechado pelas `m6-03`/`m6-04`. O trio do guia de criação
+`m6-06-frontend-gate-tester-acesso-negado.spec.md`, que entrega o gate de tester e a tela de
+acesso negado sobre a autorização fechada nas tasks anteriores. O trio do guia de criação
 (`m3-57` base, `m3-58` melhorias de nível, `m3-59`
 equipamento inicial), o complemento `m3-64`, a `m3-61` (cor de ficha) e a `m3-62` (avatar de ficha)
 **concluíram** — as specs estão em `docs/specs/done/`; o que o guia faz hoje de ponta a ponta está
@@ -36,7 +36,7 @@ só adaptou o visual de desktop).
 | Spec | Frente | O que é |
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m6-05`…`m6-07` | usuários | gestão visual de contas e gates/UI de tester |
+| `m6-06`…`m6-07` | usuários | gates e UI de tester |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/`. Milestones ainda não abertos:
 `m4-ficha-criatura-npc` e `m5-guia-missao`.
@@ -53,11 +53,11 @@ Deploy em produção por **integração nativa das plataformas**, sem GitHub Act
 `master` → Render (backend) e Cloudflare Pages (frontend) puxam do Git sozinhos; banco no Supabase.
 O GitHub Actions só roda **CI** (lint + testes nos 3 workspaces em todo PR).
 
-**Suítes (checadas na `m6-04`):** shared 601/601 · backend 272/272 · frontend
-874/874 — os 3 workspaces fecham a suíte completa hoje (`npm run test`, sem `--watch`);
+**Suítes (checadas na `m6-05`):** shared 601/601 · backend 275/275 · frontend
+921/921 — os 3 workspaces fecham a suíte completa hoje (`npm run test`, sem `--watch`);
 `P-001`/`P-010`/`P-011` descrevem falhas que só reproduzem isoladas (arquivo único), não na suíte
-completa — ver [`PROBLEMS.md`](PROBLEMS.md). Na `m6-04`, lint de shared e backend fechou limpo;
-o frontend não foi tocado nem revalidado nessa task. Ver `PROBLEMS.md` `P-009` para o histórico de
+completa — ver [`PROBLEMS.md`](PROBLEMS.md). Na `m6-05`, lint e builds dos três workspaces
+fecharam limpos. Ver `PROBLEMS.md` `P-009` para o histórico de
 falhas isoladas/preexistentes.
 
 ---
@@ -72,7 +72,7 @@ falhas isoladas/preexistentes.
 | M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; guia de criação completo (`m3-57`/`m3-58`/`m3-59` — base, melhorias de nível, equipamento inicial); cor (`m3-61`) e avatar (`m3-62`) de identidade por ficha prontos; falta só `m3-53` |
 | M4 | Ficha de Criatura/NPC | não iniciado |
 | M5 | Guia de Missão | não iniciado |
-| M6 | Gestão de Usuários e Papéis | **em andamento** — `m6-01`…`m6-04` concluídas; próxima `m6-05` |
+| M6 | Gestão de Usuários e Papéis | **em andamento** — `m6-01`…`m6-05` concluídas; próxima `m6-06` |
 
 ---
 
@@ -104,12 +104,17 @@ responde 403 quando ele não está autorizado. Para testar um módulo restrito, 
 `@TiposPermitidos(TipoUsuarioEnum.ADMIN, TipoUsuarioEnum.TESTER)`; remova o decorator para permitir
 qualquer usuário autenticado.
 Desde a `m6-03`, administradores podem listar contas ativas ou excluídas com busca, filtro de tipo,
-ordenação e paginação; criar contas `NORMAL`; alterar nome/login; fazer soft delete; e reativar uma
+ordenação e paginação; criar contas; alterar nome/login; fazer soft delete; e reativar uma
 conta preservando seus dados públicos. A `m6-04` acrescentou troca de tipo e reset administrativo
 de senha, ambos com incremento de `token_versao`; bloqueia auto-exclusão/auto-rebaixamento pela
 gestão, preserva ao menos um `ADMIN` ativo inclusive no self-service e impede excluir mestre de
 campanha ativa antes de transferir o papel ou excluir a campanha. As rotas ficam sob
 `usuario/admin` e permanecem restritas a `ADMIN`.
+Desde a `m6-05`, `/admin/usuarios` expõe essas operações em uma tela inline protegida por
+`adminGuard`: busca única por nome/login com debounce, filtros reativos de tipo e situação,
+criação com escolha de tipo, edição, reset de senha, troca de tipo com confirmação, exclusão e
+reativação. O perfil identifica o tipo atual sem permitir editá-lo, e a topbar sinaliza contas
+`ADMIN`/`TESTER`.
 
 ### Campanhas — `backend/campanha`, `frontend/campanha`
 

@@ -7,6 +7,7 @@ import {
   UsuarioRecuperadoDto,
   UsuarioSenhaAlteradaDto,
 } from '@contratados-rpg/shared/dtos/usuario';
+import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 
 import { UsuarioService } from './usuario.service';
 
@@ -34,7 +35,12 @@ describe('UsuarioService', () => {
 
   it('recupera o perfil do usuário autenticado', () => {
     const { servico, http } = criar();
-    const perfil: UsuarioRecuperadoDto = { id: 7, login: 'agente.007', nome: 'Agente Sete' };
+    const perfil: UsuarioRecuperadoDto = {
+      id: 7,
+      login: 'agente.007',
+      nome: 'Agente Sete',
+      tipo: TipoUsuarioEnum.NORMAL,
+    };
 
     let recebido: UsuarioRecuperadoDto | undefined;
     servico.recuperarPerfil().subscribe((dados) => (recebido = dados));

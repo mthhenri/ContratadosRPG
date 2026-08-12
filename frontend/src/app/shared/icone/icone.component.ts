@@ -83,7 +83,8 @@ export type IconeNome =
   | 'busca'
   | 'duplicar'
   | 'd20'
-  | 'modificador';
+  | 'modificador'
+  | 'vassoura';
 
 /**
  * Ícone monocromático de linha (SVG inline, `stroke: currentColor`) — reutilizado nos menus de

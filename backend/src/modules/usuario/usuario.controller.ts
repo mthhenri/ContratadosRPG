@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import type {
   UsuarioCriadoDto,
-  UsuarioCriarDto,
+  UsuarioAdministrativoCriarDto,
   UsuarioListadosDto,
   UsuarioPerfilAlterarDto,
   UsuarioPerfilAlteradoDto,
@@ -26,7 +26,7 @@ import type {
   UsuarioTipoAlteradoDto,
   UsuarioTipoAlterarDto,
 } from '@contratados-rpg/shared/dtos/usuario';
-import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
+import { TipoUsuarioEnum, UsuarioSituacaoEnum } from '@contratados-rpg/shared/enums';
 import { ActiveUser, TiposPermitidos } from '../../core/decorators';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { UsuarioService } from './usuario.service';
@@ -81,7 +81,9 @@ export class UsuarioController {
     @Query('allRows', new DefaultValuePipe(false), ParseBoolPipe) allRows: boolean,
     @Query('login') login?: string,
     @Query('nome') nome?: string,
+    @Query('busca') busca?: string,
     @Query('tipo') tipo?: TipoUsuarioEnum,
+    @Query('situacao') situacao?: UsuarioSituacaoEnum,
     @Query('apenasExcluidos', new DefaultValuePipe(false), ParseBoolPipe)
     apenasExcluidos?: boolean,
   ): Promise<UsuarioListadosDto> {
@@ -93,14 +95,16 @@ export class UsuarioController {
       allRows,
       login,
       nome,
+      busca,
       tipo,
+      situacao,
       apenasExcluidos,
     });
   }
 
   @Post('admin')
-  criar(@Body() dto: UsuarioCriarDto): Promise<UsuarioCriadoDto> {
-    return this.usuarioService.criar(dto);
+  criar(@Body() dto: UsuarioAdministrativoCriarDto): Promise<UsuarioCriadoDto> {
+    return this.usuarioService.criarAdministrativo(dto);
   }
 
   @Patch('admin/:id')

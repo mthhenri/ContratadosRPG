@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { autenticacaoGuard } from './core/guards/autenticacao.guard';
+import { adminGuard } from './core/guards/admin.guard';
 
 export const routes: Routes = [
   // Rota raiz leva direto ao painel (destino padrão pós-login); sem sessão, o
@@ -49,6 +50,12 @@ export const routes: Routes = [
   },
   // Perfil self-service do usuário autenticado (editar nome/login, trocar senha, excluir a
   // conta), acessível pelo dropdown de perfil da topbar — m2-14.
+  {
+    path: 'admin',
+    canActivate: [adminGuard],
+    loadChildren: () =>
+      import('./modules/usuario/usuario-admin.routes').then((modulo) => modulo.usuarioAdminRoutes),
+  },
   {
     path: 'perfil',
     canActivate: [autenticacaoGuard],

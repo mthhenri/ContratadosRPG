@@ -1,6 +1,7 @@
 import { Component, Injector, ViewContainerRef, inject, signal, viewChild } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Toast } from 'primeng/toast';
+import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 
 import { LoadingService } from '../../core/services/loading.service';
 import { SessaoService } from '../../core/services/sessao.service';
@@ -31,6 +32,7 @@ import { Marca } from '../marca/marca.component';
   styleUrl: './layout.component.scss',
 })
 export class Layout {
+  protected readonly TipoUsuarioEnum = TipoUsuarioEnum;
   protected readonly loadingService = inject(LoadingService);
   protected readonly sessaoService = inject(SessaoService);
   private readonly injector = inject(Injector);

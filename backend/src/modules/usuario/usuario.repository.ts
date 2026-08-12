@@ -20,7 +20,7 @@ import type {
   UsuarioTipoAlteradoDto,
   UsuarioTipoAlterarDto,
 } from '@contratados-rpg/shared/dtos/usuario';
-import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
+import { TipoUsuarioEnum, UsuarioSituacaoEnum } from '@contratados-rpg/shared/enums';
 import { BaseRepository } from '../../core/base/base.repository';
 import { KNEX_CONNECTION } from '../../database/database.provider';
 
@@ -45,10 +45,19 @@ export class UsuarioRepository extends BaseRepository {
     };
     const ordenarPor = colunasOrdenacao[dto.ordenarPor] ?? colunasOrdenacao.nome;
     const direcao = dto.direcao === 'DESC' ? 'DESC' : 'ASC';
-    const filtros = ['usuario.is_deleted = :apenasExcluidos'];
-    const parametrosSql: Record<string, unknown> = {
-      apenasExcluidos: dto.apenasExcluidos ?? false,
-    };
+    const filtros: string[] = [];
+    const parametrosSql: Record<string, unknown> = {};
+    const situacao = dto.situacao ??
+      (dto.apenasExcluidos ? UsuarioSituacaoEnum.EXCLUIDOS : UsuarioSituacaoEnum.ATIVOS);
+    if (situacao !== UsuarioSituacaoEnum.TODOS) {
+      filtros.push('usuario.is_deleted = :isDeleted');
+      parametrosSql.isDeleted = situacao === UsuarioSituacaoEnum.EXCLUIDOS;
+    }
+
+    if (dto.busca) {
+      filtros.push('(usuario.login ILIKE :busca OR usuario.nome ILIKE :busca)');
+      parametrosSql.busca = `%${dto.busca}%`;
+    }
 
     if (dto.login) {
       filtros.push('usuario.login ILIKE :login');
@@ -66,7 +75,7 @@ export class UsuarioRepository extends BaseRepository {
     const juncoesEFiltros = `FROM usuario
       JOIN tipo_usuario ON tipo_usuario.id = usuario.tipo_usuario_id
         AND tipo_usuario.is_deleted = false
-      WHERE ${filtros.join(' AND ')}`;
+      ${filtros.length ? `WHERE ${filtros.join(' AND ')}` : ''}`;
 
     return this.executarConsultaPaginada({
       sqlSelect: `SELECT usuario.id, usuario.login, usuario.nome,

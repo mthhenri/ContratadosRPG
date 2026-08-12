@@ -54,6 +54,7 @@ export class AutenticacaoService {
       id: usuarioEncontrado.id,
       login: usuarioEncontrado.login,
       nome: usuarioEncontrado.nome,
+      tipo: usuarioEncontrado.tipo,
     };
   }
 

@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
+import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
@@ -34,6 +35,10 @@ export class Perfil {
   protected readonly carregando = signal(true);
   protected readonly salvandoPerfil = signal(false);
   protected readonly perfilSalvo = signal(false);
+  protected readonly tipoUsuario = signal(
+    this.sessaoService.usuario()?.tipo ?? TipoUsuarioEnum.NORMAL,
+  );
+  protected readonly TipoUsuarioEnum = TipoUsuarioEnum;
 
   protected readonly salvandoSenha = signal(false);
   protected readonly senhaAlterada = signal(false);
@@ -59,6 +64,9 @@ export class Perfil {
       .pipe(finalize(() => this.carregando.set(false)))
       .subscribe({
         next: (perfil) => {
+          this.tipoUsuario.set(
+            perfil.tipo ?? this.sessaoService.usuario()?.tipo ?? TipoUsuarioEnum.NORMAL,
+          );
           this.formularioPerfil.reset({ nome: perfil.nome, login: perfil.login });
         },
       });

@@ -3,6 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { StandardResponse } from '@contratados-rpg/shared/interfaces';
 import { UsuarioAutenticadoDto, UsuarioCriadoDto } from '@contratados-rpg/shared/dtos/usuario';
+import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 
 import { SessaoService } from './sessao.service';
 
@@ -17,6 +18,7 @@ describe('SessaoService', () => {
     id: 7,
     login: 'agente.007',
     nome: 'Agente Sete',
+    tipo: TipoUsuarioEnum.ADMIN,
   };
 
   function envelope<T>(dados: T): StandardResponse<T> {
@@ -90,12 +92,14 @@ describe('SessaoService', () => {
       id: 7,
       login: 'agente.renomeado',
       nome: 'Agente Renomeado',
+      tipo: TipoUsuarioEnum.ADMIN,
     });
     expect(JSON.parse(localStorage.getItem(CHAVE_SESSAO) ?? 'null')).toEqual({
       token: 'jwt-de-teste',
       id: 7,
       login: 'agente.renomeado',
       nome: 'Agente Renomeado',
+      tipo: TipoUsuarioEnum.ADMIN,
     });
   });
 

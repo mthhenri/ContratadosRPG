@@ -24,6 +24,12 @@
         <app-icone nome="agente" />
         <span>Fichas</span>
       </a>
+      @if (sessaoService.usuario()?.tipo === TipoUsuarioEnum.ADMIN) {
+        <a class="topbar__item topbar__item--admin" routerLink="/admin/usuarios" routerLinkActive="topbar__item--ativo">
+          <app-icone nome="protecoes" />
+          <span>Admin</span>
+        </a>
+      }
     }
     <a class="topbar__item" routerLink="/calculadora" routerLinkActive="topbar__item--ativo">
       <app-icone nome="calculadora" />
@@ -50,6 +56,11 @@
           (click)="alternarPerfil()"
         >
           <span class="topbar__identidade">{{ usuarioAtual.nome }}</span>
+          @if (usuarioAtual.tipo === TipoUsuarioEnum.ADMIN) {
+            <app-icone class="topbar__tipo topbar__tipo--admin" nome="protecoes" />
+          } @else if (usuarioAtual.tipo === TipoUsuarioEnum.TESTER) {
+            <app-icone class="topbar__tipo topbar__tipo--tester" nome="amplificador" />
+          }
           <span class="topbar__avatar" aria-hidden="true"></span>
           <app-icone nome="chevron" />
         </button>

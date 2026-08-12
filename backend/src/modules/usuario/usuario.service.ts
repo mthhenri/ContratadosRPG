@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import type {
   UsuarioCriadoDto,
+  UsuarioAdministrativoCriarDto,
   UsuarioCriarDto,
   UsuarioTipoAlteradoDto,
   UsuarioTipoAlterarDto,
@@ -63,6 +64,18 @@ export class UsuarioService {
       senha: senhaEncriptada,
       nome: dto.nome,
       tipo: TipoUsuarioEnum.NORMAL,
+    });
+  }
+
+  /** Cria uma conta administrativa com o tipo explicitamente escolhido pelo administrador. */
+  async criarAdministrativo(dto: UsuarioAdministrativoCriarDto): Promise<UsuarioCriadoDto> {
+    await this.validarLoginDisponivel({ login: dto.login });
+    const senhaEncriptada = await bcrypt.hash(dto.senha, ROUNDS_BCRYPT);
+    return this.usuarioRepositorio.criarUsuario({
+      login: dto.login,
+      senha: senhaEncriptada,
+      nome: dto.nome,
+      tipo: dto.tipo,
     });
   }
 
@@ -186,6 +199,7 @@ export class UsuarioService {
       id: usuarioEncontrado.id,
       login: usuarioEncontrado.login,
       nome: usuarioEncontrado.nome,
+      tipo: usuarioEncontrado.tipo,
     };
   }
 

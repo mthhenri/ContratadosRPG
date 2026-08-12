@@ -6,6 +6,7 @@ import {
   UsuarioRecuperadoDto,
   UsuarioSenhaAlteradaDto,
 } from '@contratados-rpg/shared/dtos/usuario';
+import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 
 import { Perfil } from './perfil.page';
 import { UsuarioService } from '../../usuario.service';
@@ -18,11 +19,20 @@ import { SessaoService } from '../../../../core/services/sessao.service';
  * `excluirConta`, encerra a sessão e navega ao `/login`. A autoridade é o backend (§14).
  */
 describe('Perfil', () => {
-  const perfilBase: UsuarioRecuperadoDto = { id: 7, login: 'agente.007', nome: 'Agente Sete' };
+  const perfilBase: UsuarioRecuperadoDto = {
+    id: 7,
+    login: 'agente.007',
+    nome: 'Agente Sete',
+    tipo: TipoUsuarioEnum.ADMIN,
+  };
 
-  function montar(opts?: { alterarPerfilRetorno?: Observable<UsuarioPerfilAlteradoDto> }) {
+  function montar(opts?: {
+    alterarPerfilRetorno?: Observable<UsuarioPerfilAlteradoDto>;
+    perfilRetorno?: UsuarioRecuperadoDto;
+    tipoSessao?: TipoUsuarioEnum;
+  }) {
     const usuarioService = {
-      recuperarPerfil: vi.fn(() => of({ ...perfilBase })),
+      recuperarPerfil: vi.fn(() => of({ ...(opts?.perfilRetorno ?? perfilBase) })),
       alterarPerfil: vi.fn(
         () =>
           opts?.alterarPerfilRetorno ??
@@ -33,7 +43,11 @@ describe('Perfil', () => {
       ),
       excluirConta: vi.fn(() => of(undefined)),
     };
-    const sessaoService = { atualizarPerfil: vi.fn(), sair: vi.fn() };
+    const sessaoService = {
+      usuario: vi.fn(() => ({ tipo: opts?.tipoSessao ?? TipoUsuarioEnum.ADMIN })),
+      atualizarPerfil: vi.fn(),
+      sair: vi.fn(),
+    };
 
     TestBed.configureTestingModule({
       imports: [Perfil],
@@ -69,6 +83,29 @@ describe('Perfil', () => {
     const login = raiz.querySelector('input[formControlName="login"]') as HTMLInputElement;
     expect(nome.value).toBe('Agente Sete');
     expect(login.value).toBe('agente.007');
+  });
+
+  it('exibe o tipo da conta como informação somente leitura', () => {
+    const { raiz } = montar();
+    const tipo = raiz.querySelector('.perfil__tipo');
+
+    expect(tipo?.textContent).toContain('Usuário administrador');
+    expect(tipo?.textContent).toContain('ferramentas administrativas');
+    expect(tipo?.querySelector('input, select, button')).toBeNull();
+  });
+
+  it('usa o tipo da sessão se uma instância antiga da API omitir o tipo do perfil', () => {
+    const perfilSemTipo = {
+      id: 8,
+      login: 'tester',
+      nome: 'Testes',
+    } as UsuarioRecuperadoDto;
+    const { raiz } = montar({
+      perfilRetorno: perfilSemTipo,
+      tipoSessao: TipoUsuarioEnum.TESTER,
+    });
+
+    expect(raiz.querySelector('.perfil__tipo')?.textContent).toContain('Usuário tester');
   });
 
   it('salva o perfil e reflete a nova identidade na sessão', () => {
