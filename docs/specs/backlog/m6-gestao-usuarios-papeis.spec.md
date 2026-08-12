@@ -92,10 +92,11 @@ A partir daí o tipo já pode ser atribuído pelo admin e usado em `@TiposPermit
 
 ## Quebra em tasks (proposta — a redigir quando o milestone entrar)
 
-> Ainda **não** redigidas como specs próprias. Seguindo o fluxo do projeto, o milestone é
-> quebrado em tasks numeradas (`m6-01`…) só quando chega a vez. Esta tabela é o plano de
-> intenção; cada linha vira uma `m6-NN-*.spec.md` na hora. **Todas as 7 são obrigatórias** —
-> nenhuma é opcional, incluindo a `m6-07` (validação mobile, ver abaixo).
+> As 7 tasks já foram redigidas como specs próprias em `docs/specs/backlog/` (`m6-01`…`m6-07`),
+> adiantado do fluxo padrão do projeto para permitir planejar o milestone inteiro de uma vez —
+> nenhuma foi movida para `active/` nem implementada. Esta tabela permanece o resumo de
+> intenção; o detalhe normativo de cada task vive no arquivo próprio. **Todas as 7 são
+> obrigatórias** — nenhuma é opcional, incluindo a `m6-07` (validação mobile, ver abaixo).
 
 | Task | Camada | Conteúdo | Depende de |
 |---|---|---|---|
