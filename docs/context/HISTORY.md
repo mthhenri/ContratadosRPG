@@ -20,6 +20,10 @@ somente para administradores. A tela reúne listagem paginada e todas as operaç
   ícone azul, mantendo contas normais sem selo adicional.
 - A listagem backend passou a aceitar busca OR por nome/login e situação ativa/excluída/todas. O
   login voltou a incluir `tipo` na resposta, alinhando o contrato de sessão ao JWT.
+- Refino visual pós-entrega removeu o avatar decorativo listrado da topbar. O gatilho do perfil
+  passou a mostrar o ícone do tipo para contas `NORMAL`, `ADMIN` e `TESTER`, ao lado do nome.
+- No mobile, a troca inline de tipo ganhou uma faixa própria abaixo da identidade; menu, check e
+  cancelamento deixam de disputar largura com o nome em 360 px.
 
 Gates focados cobriram guard, cliente HTTP, service/repository backend, perfil, topbar e interações
 da gestão; as suítes completas fecharam em shared 601/601, backend 275/275 e frontend 921/921,

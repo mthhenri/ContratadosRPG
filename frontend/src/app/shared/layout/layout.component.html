@@ -60,8 +60,9 @@
             <app-icone class="topbar__tipo topbar__tipo--admin" nome="protecoes" />
           } @else if (usuarioAtual.tipo === TipoUsuarioEnum.TESTER) {
             <app-icone class="topbar__tipo topbar__tipo--tester" nome="amplificador" />
+          } @else {
+            <app-icone class="topbar__tipo topbar__tipo--normal" nome="agente" />
           }
-          <span class="topbar__avatar" aria-hidden="true"></span>
           <app-icone nome="chevron" />
         </button>
 

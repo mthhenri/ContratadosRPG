@@ -175,6 +175,16 @@
 }
 
 @include bp.mobile {
+  .gestao__tipo-container {
+    width: 100%;
+    flex: none;
+  }
+
+  .gestao__tipo-menu {
+    right: auto;
+    left: 0;
+  }
+
   .gestao__criacao {
     display: flex;
     flex-direction: column;
@@ -228,5 +238,13 @@
   &:focus-visible {
     color: var(--text);
     border-color: var(--accent-border);
+  }
+}
+
+@include bp.mobile {
+  .gestao__tipo-confirmar,
+  .gestao__tipo-cancelar {
+    width: bp.$alvo-toque;
+    height: bp.$alvo-toque;
   }
 }

@@ -80,7 +80,8 @@ describe('Layout — leitor global de documentos', () => {
 
     TestBed.resetTestingModule();
     const normal = await montar(true, TipoUsuarioEnum.NORMAL);
-    expect(normal.raiz.querySelector('.topbar__tipo')).toBeNull();
+    expect(normal.raiz.querySelector('.topbar__tipo--normal')).not.toBeNull();
+    expect(normal.raiz.querySelector('.topbar__avatar')).toBeNull();
   });
 
   it.each([
