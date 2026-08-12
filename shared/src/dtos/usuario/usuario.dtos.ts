@@ -1,3 +1,5 @@
+import type { TipoUsuarioEnum } from '../../enums';
+
 /**
  * DTOs do módulo `usuario` — entrada/saída da API de autenticação (registro e login,
  * m2-02) e os DTOs internos service ↔ repository. Seguem a fórmula
@@ -48,6 +50,7 @@ export interface UsuarioInternoCriarDto {
   readonly login: string;
   readonly senha: string;
   readonly nome: string;
+  readonly tipo: TipoUsuarioEnum;
 }
 
 /** Entrada interna de busca de usuário pelo `login` (validação de duplicidade e login). */

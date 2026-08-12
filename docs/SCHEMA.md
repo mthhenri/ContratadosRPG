@@ -46,7 +46,20 @@ CREATE TABLE tipo_campanha_membro_papel (
   descricao VARCHAR NOT NULL
 );
 -- uix_tipo_campanha_membro_papel_codigo_ativo: UNIQUE (codigo) WHERE is_deleted = false
+```
 
+### tipo_usuario (M6)
+
+```sql
+CREATE TABLE tipo_usuario (
+  -- BaseEntity...
+  codigo    VARCHAR NOT NULL,   -- NORMAL | ADMIN | TESTER
+  descricao VARCHAR NOT NULL
+);
+-- uix_tipo_usuario_codigo_ativo: UNIQUE (codigo) WHERE is_deleted = false
+```
+
+```sql
 CREATE TABLE tipo_ficha (
   -- BaseEntity...
   codigo    VARCHAR NOT NULL,   -- JOGADOR | CRIATURA | NPC
@@ -62,7 +75,7 @@ CREATE TABLE tipo_rolagem_visibilidade (
 -- uix_tipo_rolagem_visibilidade_codigo_ativo: UNIQUE (codigo) WHERE is_deleted = false
 ```
 
-Enums TS espelhos: `TipoCampanhaMembroPapelEnum`, `TipoFichaEnum`, `RolagemVisibilidadeEnum`
+Enums TS espelhos: `TipoCampanhaMembroPapelEnum`, `TipoUsuarioEnum`, `TipoFichaEnum`, `RolagemVisibilidadeEnum`
 (em `shared/src/enums/`). `RolagemVisibilidadeEnum` é coluna relacional de `rolagem` (não vive no
 JSONB) — a exceção do §10.3 abaixo não se aplica a ela, segue a regra geral §10.2.12.
 
@@ -71,14 +84,16 @@ JSONB) — a exceção do §10.3 abaixo não se aplica a ela, segue a regra gera
 
 ---
 
-## usuario (M2)
+## usuario (M2; tipo e controle de sessão no M6)
 
 ```sql
 CREATE TABLE usuario (
   -- BaseEntity...
-  login   VARCHAR NOT NULL,
-  senha   VARCHAR NOT NULL,   -- hash bcrypt
-  nome    VARCHAR NOT NULL
+  login            VARCHAR NOT NULL,
+  senha            VARCHAR NOT NULL,   -- hash bcrypt
+  nome             VARCHAR NOT NULL,
+  tipo_usuario_id  INTEGER NOT NULL,   -- fk_usuario_tipo_usuario
+  token_versao     INTEGER NOT NULL    -- começa em 1; permite invalidar tokens emitidos
 );
 -- uix_usuario_login_ativo: UNIQUE (login) WHERE is_deleted = false
 -- Seed da conta inicial do autor ('senhor.contratados') criado na migration (senha como hash bcrypt).

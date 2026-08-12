@@ -1,7 +1,7 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-10 · **Última decisão registrada:** a `m3-72` adicionou o leitor
-> global de regras usando o viewer nativo do navegador, sem manter renderização ou busca PDF própria
+> **Última revisão:** 2026-08-11 · **Última decisão registrada:** a `m6-01` abriu o M6 com o tipo
+> global de usuário e a versão de token persistidos, mantendo o registro público sempre `NORMAL`
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -14,8 +14,9 @@
 
 ## 1. Próxima Task
 
-Nenhuma task de milestone aberto está explicitamente encadeada; a fila do backlog abaixo é a
-referência. O trio do guia de criação (`m3-57` base, `m3-58` melhorias de nível, `m3-59`
+O M6 está aberto. A próxima task encadeada é `m6-02-backend-autorizacao-global.spec.md`, que usa
+`tipo_usuario` e `usuario.token_versao` entregues pela `m6-01` para autorizar tipos globais e
+invalidar sessões. O trio do guia de criação (`m3-57` base, `m3-58` melhorias de nível, `m3-59`
 equipamento inicial), o complemento `m3-64`, a `m3-61` (cor de ficha) e a `m3-62` (avatar de ficha)
 **concluíram** — as specs estão em `docs/specs/done/`; o que o guia faz hoje de ponta a ponta está
 descrito na seção 4, em "Guia de criação de ficha". A `m3-64` resolveu o antigo `P-012`: o pacote
@@ -34,9 +35,10 @@ só adaptou o visual de desktop).
 | Spec | Frente | O que é |
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
+| `m6-02`…`m6-07` | usuários | autorização global, gestão admin e gates/UI de tester |
 
-Único item da fila; único frente de M3 ainda sem spec `done/`. Milestones ainda não abertos:
-`m4-ficha-criatura-npc`, `m5-guia-missao`, `m6-gestao-usuarios-papeis`.
+`m3-53` é a única frente de M3 ainda sem spec `done/`. Milestones ainda não abertos:
+`m4-ficha-criatura-npc` e `m5-guia-missao`.
 
 ---
 
@@ -50,12 +52,12 @@ Deploy em produção por **integração nativa das plataformas**, sem GitHub Act
 `master` → Render (backend) e Cloudflare Pages (frontend) puxam do Git sozinhos; banco no Supabase.
 O GitHub Actions só roda **CI** (lint + testes nos 3 workspaces em todo PR).
 
-**Suítes (checadas na correção do `P-013b`):** shared 594/594 · backend 196/196 · frontend
+**Suítes (checadas na `m6-01`):** shared 601/601 · backend 236/236 · frontend
 874/874 — os 3 workspaces fecham a suíte completa hoje (`npm run test`, sem `--watch`);
 `P-001`/`P-010`/`P-011` descrevem falhas que só reproduzem isoladas (arquivo único), não na suíte
-completa — ver [`PROBLEMS.md`](PROBLEMS.md). `npm run lint` **não fecha limpo** hoje em nenhum dos
-dois workspaces (frontend/backend) — falhas pré-existentes não relacionadas a nenhuma task recente,
-ver `PROBLEMS.md` `P-009`.
+completa — ver [`PROBLEMS.md`](PROBLEMS.md). Na `m6-01`, lint de shared e backend fechou limpo;
+o frontend não foi tocado nem revalidado nessa task. Ver `PROBLEMS.md` `P-009` para o histórico de
+falhas isoladas/preexistentes.
 
 ---
 
@@ -69,7 +71,7 @@ ver `PROBLEMS.md` `P-009`.
 | M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; guia de criação completo (`m3-57`/`m3-58`/`m3-59` — base, melhorias de nível, equipamento inicial); cor (`m3-61`) e avatar (`m3-62`) de identidade por ficha prontos; falta só `m3-53` |
 | M4 | Ficha de Criatura/NPC | não iniciado |
 | M5 | Guia de Missão | não iniciado |
-| M6 | Gestão de Usuários e Papéis | não iniciado |
+| M6 | Gestão de Usuários e Papéis | **em andamento** — `m6-01` concluída; próxima `m6-02` |
 
 ---
 
@@ -92,7 +94,9 @@ em nenhum dos dois lados.
 
 Registro e login com JWT (bcrypt, guard global, `@Public()` para abrir rota, `@ActiveUser()` para o
 payload). Telas `/login` e `/registro` (split-panel). Perfil self-service em `/perfil`: alterar
-nome/login, trocar senha e excluir a própria conta.
+nome/login, trocar senha e excluir a própria conta. Desde a `m6-01`, toda conta tem tipo global
+(`NORMAL`, `ADMIN` ou `TESTER`) e `token_versao`; a conta `senhor.contratados` foi promovida a
+`ADMIN`, contas anteriores receberam `NORMAL` e o registro público sempre persiste `NORMAL`.
 
 ### Campanhas — `backend/campanha`, `frontend/campanha`
 

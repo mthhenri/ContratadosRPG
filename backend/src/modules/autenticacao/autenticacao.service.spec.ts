@@ -5,6 +5,7 @@ import type {
   UsuarioCriadoDto,
   UsuarioInternoRecuperadoDto,
 } from '@contratados-rpg/shared/dtos/usuario';
+import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import { BusinessException } from '../../core/exceptions';
 import type { UsuarioRepository } from '../usuario/usuario.repository';
 import { AutenticacaoService } from './autenticacao.service';
@@ -80,6 +81,7 @@ describe('AutenticacaoService', () => {
         login: 'agente.novo',
         senha: '$2b$10$hashgerado',
         nome: 'Agente Novo',
+        tipo: TipoUsuarioEnum.NORMAL,
       });
       expect(resultado).toEqual(criado);
       expect(resultado).not.toHaveProperty('senha');

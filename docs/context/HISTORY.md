@@ -1,5 +1,24 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-11 — `m6-01`: tipo global de usuário e controle de sessão
+
+O M6 foi aberto com a fundação de dados para papéis globais e invalidação futura de sessões. A
+migration `0015` criou `tipo_usuario`, semeou `NORMAL`/`ADMIN`/`TESTER`, adicionou a FK
+`usuario.tipo_usuario_id` e `usuario.token_versao`, e fez o backfill sem `DEFAULT`: a conta
+`senhor.contratados` tornou-se `ADMIN`, as demais `NORMAL`, todas na versão `1`.
+
+- `TipoUsuarioEnum` passou a ser o espelho compartilhado da tabela relacional.
+- O registro público injeta `NORMAL` na service; o repositório traduz o código para a FK ativa e
+  grava a versão `1` como literal, sem permitir que o cliente escolha o próprio tipo.
+- `SCHEMA.md` foi sincronizado com a nova tabela e as colunas de `usuario`.
+- TDD: os testes focados provaram primeiro a ausência do tipo na service e do novo SQL no
+  repositório; depois fecharam verdes. Gate final: shared 601/601, backend 236/236, lint e builds
+  de ambos os workspaces sem falhas.
+- Banco real com quatro contas existentes: `up` confirmou os três seeds, backfill e colunas
+  `NOT NULL` sem `DEFAULT`; `down` removeu tabela/colunas limpo; novo `up` reaplicou. Um
+  `POST /autenticacao/registro` real persistiu `NORMAL` e `token_versao = 1`; a conta temporária
+  de verificação foi removida por soft delete.
+
 ## 2026-08-11 — `dev-01`: stubs ganham fichas nas duas campanhas
 
 O cenário inicial vinculava `jogador.stub.1` e `jogador.stub.2` às duas campanhas, mas criava fichas

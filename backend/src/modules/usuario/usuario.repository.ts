@@ -32,10 +32,12 @@ export class UsuarioRepository extends BaseRepository {
    */
   async criarUsuario(dto: UsuarioInternoCriarDto): Promise<UsuarioCriadoDto> {
     const [usuarioCriado] = await this.executarConsulta<UsuarioCriadoDto>(
-      `INSERT INTO usuario (login, senha, nome, created_date, updated_date, is_deleted)
-       SELECT :login, :senha, :nome, NOW(), NOW(), false
+      `INSERT INTO usuario (login, senha, nome, tipo_usuario_id, token_versao, created_date, updated_date, is_deleted)
+       SELECT :login, :senha, :nome, tipo_usuario.id, 1, NOW(), NOW(), false
+       FROM tipo_usuario
+       WHERE tipo_usuario.codigo = :tipo AND tipo_usuario.is_deleted = false
        RETURNING id, login, nome`,
-      { login: dto.login, senha: dto.senha, nome: dto.nome },
+      { login: dto.login, senha: dto.senha, nome: dto.nome, tipo: dto.tipo },
     );
     return usuarioCriado;
   }

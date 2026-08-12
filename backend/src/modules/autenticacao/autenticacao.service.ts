@@ -9,6 +9,7 @@ import type {
   UsuarioInternoRecuperadoDto,
   UsuarioLoginRecuperarDto,
 } from '@contratados-rpg/shared/dtos/usuario';
+import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import { BusinessException } from '../../core/exceptions';
 import { UsuarioRepository } from '../usuario/usuario.repository';
 import type { JwtPayload } from './jwt-payload.interface';
@@ -40,6 +41,7 @@ export class AutenticacaoService {
       login: dto.login,
       senha: senhaEncriptada,
       nome: dto.nome,
+      tipo: TipoUsuarioEnum.NORMAL,
     });
   }
 
