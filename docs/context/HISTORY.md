@@ -1,5 +1,23 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-12 — `m6-03`: CRUD administrativo básico de contas
+
+O módulo de usuário ganhou uma superfície administrativa sob `usuario/admin`, protegida no
+controller inteiro por `@TiposPermitidos(ADMIN)`. Ela lista contas ativas ou excluídas com busca,
+filtro de tipo, ordenação segura e paginação; cria contas sempre como `NORMAL`; altera nome/login;
+faz soft delete; e reativa uma conta preservando `login` e `nome`.
+
+- Novos contratos compartilhados cobrem filtro/listagem paginada, resumo com descrição do tipo e
+  reativação. A listagem resolve `tipo_usuario.codigo` e `descricao` no SQL e mantém
+  `usuario.is_deleted = :apenasExcluidos` explícito em todas as consultas.
+- A regra de criação passou para `UsuarioService`; o registro público delega a ela, garantindo uma
+  única validação de login e um único fluxo de bcrypt/persistência `NORMAL`.
+- Alteração e exclusão administrativas reutilizam os mesmos pontos centrais do self-service. As
+  invariantes e operações sensíveis seguem deliberadamente fora deste corte, reservadas à `m6-04`.
+- TDD registrou as ausências dos métodos e metadados, além de uma regressão específica que provou e
+  fechou a interpolação insegura da direção de ordenação. Gates finais: shared 601/601, backend
+  259/259, lint e builds de shared/backend sem falhas. O frontend não foi alterado.
+
 ## 2026-08-11 — `m6-02`: autorização global e revogação imediata de sessão
 
 O backend passou a validar o estado persistido da sessão em toda rota não pública. O JWT agora

@@ -1,16 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import type {
+  UsuarioCriadoDto,
+  UsuarioCriarDto,
   UsuarioExcluirDto,
+  UsuarioListarDto,
+  UsuarioListadosDto,
+  UsuarioLoginRecuperarDto,
   UsuarioPerfilAlterarDto,
   UsuarioPerfilAlteradoDto,
   UsuarioRecuperadoDto,
   UsuarioRecuperarDto,
+  UsuarioReativadoDto,
+  UsuarioReativarDto,
   UsuarioSenhaAlterarDto,
   UsuarioSenhaAlteradaDto,
   UsuarioSessaoDto,
   UsuarioSessaoRecuperarDto,
 } from '@contratados-rpg/shared/dtos/usuario';
+import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import { BusinessException, ResourceNotFoundException } from '../../core/exceptions';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { UsuarioRepository } from './usuario.repository';
@@ -31,6 +39,72 @@ export class UsuarioService {
   /** Recupera o estado persistido atual usado pela autorização global. */
   async recuperarSessao(dto: UsuarioSessaoRecuperarDto): Promise<UsuarioSessaoDto | null> {
     return this.usuarioRepositorio.recuperarSessao(dto);
+  }
+
+  /** Lista contas para a superfície administrativa. */
+  async listar(dto: UsuarioListarDto): Promise<UsuarioListadosDto> {
+    return this.usuarioRepositorio.listar(dto);
+  }
+
+  /** Cria uma conta NORMAL, compartilhando a mesma regra com o registro público. */
+  async criar(dto: UsuarioCriarDto): Promise<UsuarioCriadoDto> {
+    await this.validarLoginDisponivel({ login: dto.login });
+    const senhaEncriptada = await bcrypt.hash(dto.senha, ROUNDS_BCRYPT);
+    return this.usuarioRepositorio.criarUsuario({
+      login: dto.login,
+      senha: senhaEncriptada,
+      nome: dto.nome,
+      tipo: TipoUsuarioEnum.NORMAL,
+    });
+  }
+
+  /** Altera nome e login da conta indicada pelo id administrativo. */
+  async alterar(
+    dto: UsuarioPerfilAlterarDto & { readonly id: number },
+  ): Promise<UsuarioPerfilAlteradoDto> {
+    const usuarioEncontrado = await this.usuarioRepositorio.recuperarPorId({ id: dto.id });
+    if (!usuarioEncontrado) {
+      throw new ResourceNotFoundException('Usuário');
+    }
+
+    const usuarioComMesmoLogin = await this.usuarioRepositorio.recuperarPorLogin({
+      login: dto.login,
+    });
+    if (usuarioComMesmoLogin && usuarioComMesmoLogin.id !== usuarioEncontrado.id) {
+      throw new BusinessException('Login já está em uso');
+    }
+
+    return this.usuarioRepositorio.alterarPerfil({
+      id: usuarioEncontrado.id,
+      nome: dto.nome,
+      login: dto.login,
+    });
+  }
+
+  /** Exclui por soft delete a conta administrativa indicada. */
+  async excluir(dto: UsuarioExcluirDto): Promise<void> {
+    const usuarioEncontrado = await this.usuarioRepositorio.recuperarPorId(dto);
+    if (!usuarioEncontrado) {
+      throw new ResourceNotFoundException('Usuário');
+    }
+    await this.usuarioRepositorio.excluirConta({ id: usuarioEncontrado.id });
+  }
+
+  /** Reativa uma conta excluída. Conta ativa ou inexistente é tratada como recurso ausente. */
+  async reativar(dto: UsuarioReativarDto): Promise<UsuarioReativadoDto> {
+    const usuarioReativado = await this.usuarioRepositorio.reativar(dto);
+    if (!usuarioReativado) {
+      throw new ResourceNotFoundException('Usuário');
+    }
+    return usuarioReativado;
+  }
+
+  /** Validação única de disponibilidade de login usada por criação e registro. */
+  async validarLoginDisponivel(dto: UsuarioLoginRecuperarDto): Promise<void> {
+    const usuarioExistente = await this.usuarioRepositorio.recuperarPorLogin(dto);
+    if (usuarioExistente) {
+      throw new BusinessException('Login já está em uso');
+    }
   }
 
   /**
@@ -94,25 +168,7 @@ export class UsuarioService {
     dto: UsuarioPerfilAlterarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<UsuarioPerfilAlteradoDto> {
-    const usuarioEncontrado = await this.usuarioRepositorio.recuperarPorId({
-      id: usuarioAtivo.sub,
-    });
-    if (!usuarioEncontrado) {
-      throw new ResourceNotFoundException('Usuário');
-    }
-
-    const usuarioComMesmoLogin = await this.usuarioRepositorio.recuperarPorLogin({
-      login: dto.login,
-    });
-    if (usuarioComMesmoLogin && usuarioComMesmoLogin.id !== usuarioEncontrado.id) {
-      throw new BusinessException('Login já está em uso');
-    }
-
-    return this.usuarioRepositorio.alterarPerfil({
-      id: usuarioEncontrado.id,
-      nome: dto.nome,
-      login: dto.login,
-    });
+    return this.alterar({ ...dto, id: usuarioAtivo.sub });
   }
 
   /**
@@ -121,11 +177,6 @@ export class UsuarioService {
    * O encerramento da sessão do cliente é responsabilidade do frontend (m2-14).
    */
   async excluirConta(dto: UsuarioExcluirDto): Promise<void> {
-    const usuarioEncontrado = await this.usuarioRepositorio.recuperarPorId({ id: dto.id });
-    if (!usuarioEncontrado) {
-      throw new ResourceNotFoundException('Usuário');
-    }
-
-    await this.usuarioRepositorio.excluirConta({ id: usuarioEncontrado.id });
+    return this.excluir(dto);
   }
 }

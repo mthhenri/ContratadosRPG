@@ -4,6 +4,120 @@ import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import { UsuarioRepository } from './usuario.repository';
 
 describe('UsuarioRepository', () => {
+  it('lista usuarios com filtros combinados e apenas excluidos via paginacao padrao', async () => {
+    const raw = vi
+      .fn()
+      .mockResolvedValueOnce({ rows: [{ total: '1' }] })
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            id: 7,
+            login: 'agente.zero',
+            nome: 'Agente Zero',
+            tipo: TipoUsuarioEnum.ADMIN,
+            tipoDescricao: 'Administrador',
+            isDeleted: true,
+          },
+        ],
+      });
+    const repositorio = new UsuarioRepository({ raw } as unknown as Knex);
+
+    const resultado = await repositorio.listar({
+      pagina: 2,
+      itensPorPagina: 10,
+      ordenarPor: 'nome',
+      direcao: 'ASC',
+      login: 'zero',
+      nome: 'Agente',
+      tipo: TipoUsuarioEnum.ADMIN,
+      apenasExcluidos: true,
+    });
+
+    const [sqlContagem, parametrosContagem] = raw.mock.calls[0] as [
+      string,
+      Record<string, unknown>,
+    ];
+    const [sqlListagem, parametrosListagem] = raw.mock.calls[1] as [
+      string,
+      Record<string, unknown>,
+    ];
+    expect(sqlContagem).toContain('usuario.is_deleted = :apenasExcluidos');
+    expect(sqlContagem).toContain('usuario.login ILIKE :login');
+    expect(sqlContagem).toContain('usuario.nome ILIKE :nome');
+    expect(sqlContagem).toContain('tipo_usuario.codigo = :tipo');
+    expect(sqlListagem).toContain('tipo_usuario.descricao AS "tipoDescricao"');
+    expect(sqlListagem).toContain('ORDER BY usuario.nome ASC LIMIT :itensPorPagina OFFSET :deslocamento');
+    expect(parametrosContagem).toEqual({
+      apenasExcluidos: true,
+      login: '%zero%',
+      nome: '%Agente%',
+      tipo: TipoUsuarioEnum.ADMIN,
+    });
+    expect(parametrosListagem).toEqual({
+      ...parametrosContagem,
+      itensPorPagina: 10,
+      deslocamento: 10,
+    });
+    expect(resultado.totalItens).toBe(1);
+  });
+
+  it('lista somente contas ativas por padrao e suporta allRows', async () => {
+    const raw = vi
+      .fn()
+      .mockResolvedValueOnce({ rows: [{ total: '0' }] })
+      .mockResolvedValueOnce({ rows: [] });
+    const repositorio = new UsuarioRepository({ raw } as unknown as Knex);
+
+    await repositorio.listar({
+      pagina: 1,
+      itensPorPagina: 20,
+      ordenarPor: 'login',
+      direcao: 'DESC',
+      allRows: true,
+    });
+
+    const [sql, parametros] = raw.mock.calls[1] as [string, Record<string, unknown>];
+    expect(sql).toContain('usuario.is_deleted = :apenasExcluidos');
+    expect(sql).toContain('ORDER BY usuario.login DESC');
+    expect(sql).not.toContain('LIMIT');
+    expect(parametros).toEqual({ apenasExcluidos: false });
+  });
+
+  it('normaliza direção de ordenação desconhecida sem interpolar entrada na query', async () => {
+    const raw = vi
+      .fn()
+      .mockResolvedValueOnce({ rows: [{ total: '0' }] })
+      .mockResolvedValueOnce({ rows: [] });
+    const repositorio = new UsuarioRepository({ raw } as unknown as Knex);
+
+    await repositorio.listar({
+      pagina: 1,
+      itensPorPagina: 20,
+      ordenarPor: 'nome',
+      direcao: 'DESC; DROP TABLE usuario' as 'DESC',
+    });
+
+    const [sql] = raw.mock.calls[1] as [string];
+    expect(sql).toContain('ORDER BY usuario.nome ASC');
+    expect(sql).not.toContain('DROP TABLE');
+  });
+
+  it('reativa conta excluida preservando login e nome', async () => {
+    const raw = vi.fn().mockResolvedValue({
+      rows: [{ id: 7, login: 'agente.zero', nome: 'Agente Zero' }],
+    });
+    const repositorio = new UsuarioRepository({ raw } as unknown as Knex);
+
+    const resultado = await repositorio.reativar({ id: 7 });
+
+    const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(sql).toContain('SET is_deleted = false, deleted_date = NULL, updated_date = NOW()');
+    expect(sql).toContain('WHERE id = :id AND is_deleted = true');
+    expect(sql).toContain('RETURNING id, login, nome');
+    expect(parametros).toEqual({ id: 7 });
+    expect(resultado).toEqual({ id: 7, login: 'agente.zero', nome: 'Agente Zero' });
+  });
+
   it('cria usuário resolvendo o tipo ativo e inicia a versão do token em 1', async () => {
     const raw = vi.fn().mockResolvedValue({
       rows: [{ id: 12, login: 'agente.novo', nome: 'Agente Novo' }],

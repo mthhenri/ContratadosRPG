@@ -1,4 +1,5 @@
 import type { TipoUsuarioEnum } from '../../enums';
+import { PaginatedResult } from '../../interfaces';
 
 /**
  * DTOs do módulo `usuario` — entrada/saída da API de autenticação (registro e login,
@@ -161,4 +162,42 @@ export interface UsuarioPerfilInternoAlterarDto {
  */
 export interface UsuarioExcluirDto {
   readonly id: number;
+}
+
+/** Filtros e paginação da gestão administrativa de contas. */
+export interface UsuarioListarDto {
+  readonly pagina: number;
+  readonly itensPorPagina: number;
+  readonly ordenarPor: string;
+  readonly direcao: 'ASC' | 'DESC';
+  readonly allRows?: boolean;
+  readonly login?: string;
+  readonly nome?: string;
+  readonly tipo?: TipoUsuarioEnum;
+  readonly apenasExcluidos?: boolean;
+}
+
+/** Recorte de uma conta exibido na listagem administrativa. */
+export interface UsuarioResumoDto {
+  readonly id: number;
+  readonly login: string;
+  readonly nome: string;
+  readonly tipo: TipoUsuarioEnum;
+  readonly tipoDescricao: string;
+  readonly isDeleted: boolean;
+}
+
+/** Resultado paginado da listagem administrativa. */
+export class UsuarioListadosDto extends PaginatedResult<UsuarioResumoDto> {}
+
+/** Entrada interna para reverter o soft delete de uma conta. */
+export interface UsuarioReativarDto {
+  readonly id: number;
+}
+
+/** Conta reativada, sem qualquer dado de senha. */
+export interface UsuarioReativadoDto {
+  readonly id: number;
+  readonly login: string;
+  readonly nome: string;
 }

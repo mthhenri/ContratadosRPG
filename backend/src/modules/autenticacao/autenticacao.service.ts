@@ -7,15 +7,11 @@ import type {
   UsuarioCriadoDto,
   UsuarioCriarDto,
   UsuarioInternoRecuperadoDto,
-  UsuarioLoginRecuperarDto,
 } from '@contratados-rpg/shared/dtos/usuario';
-import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import { BusinessException } from '../../core/exceptions';
 import { UsuarioRepository } from '../usuario/usuario.repository';
+import { UsuarioService } from '../usuario/usuario.service';
 import type { JwtPayload } from './jwt-payload.interface';
-
-/** Custo (rounds) do bcrypt — mesmo do seed da migration `0003` (cost 10). */
-const ROUNDS_BCRYPT = 10;
 
 /**
  * Regras de autenticação (SYSTEM.SPEC §12): registro com senha encriptada (bcrypt),
@@ -27,6 +23,7 @@ const ROUNDS_BCRYPT = 10;
 export class AutenticacaoService {
   constructor(
     private readonly usuarioRepositorio: UsuarioRepository,
+    private readonly usuarioService: UsuarioService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -35,14 +32,7 @@ export class AutenticacaoService {
    * persiste. Retorna os dados públicos do usuário criado — **sem** a senha.
    */
   async registrar(dto: UsuarioCriarDto): Promise<UsuarioCriadoDto> {
-    await this.validarLogin({ login: dto.login });
-    const senhaEncriptada = await bcrypt.hash(dto.senha, ROUNDS_BCRYPT);
-    return this.usuarioRepositorio.criarUsuario({
-      login: dto.login,
-      senha: senhaEncriptada,
-      nome: dto.nome,
-      tipo: TipoUsuarioEnum.NORMAL,
-    });
+    return this.usuarioService.criar(dto);
   }
 
   /**
@@ -65,17 +55,6 @@ export class AutenticacaoService {
       login: usuarioEncontrado.login,
       nome: usuarioEncontrado.nome,
     };
-  }
-
-  /**
-   * Garante que o login está disponível; se já houver um usuário ativo com ele, lança
-   * `BusinessException` (SYSTEM.SPEC §11). Nunca `existe*` (proibição #20).
-   */
-  private async validarLogin(dto: UsuarioLoginRecuperarDto): Promise<void> {
-    const usuarioExistente = await this.usuarioRepositorio.recuperarPorLogin(dto);
-    if (usuarioExistente) {
-      throw new BusinessException('Login já está em uso');
-    }
   }
 
   /** Assina o JWT com o `id` (subject) e o login do usuário. */

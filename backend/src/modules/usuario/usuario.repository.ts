@@ -5,10 +5,14 @@ import type {
   UsuarioExcluirDto,
   UsuarioInternoCriarDto,
   UsuarioInternoRecuperadoDto,
+  UsuarioListarDto,
+  UsuarioListadosDto,
   UsuarioLoginRecuperarDto,
   UsuarioPerfilAlteradoDto,
   UsuarioPerfilInternoAlterarDto,
   UsuarioRecuperarDto,
+  UsuarioReativadoDto,
+  UsuarioReativarDto,
   UsuarioSenhaInternoAlterarDto,
   UsuarioSessaoDto,
   UsuarioSessaoRecuperarDto,
@@ -25,6 +29,55 @@ import { KNEX_CONNECTION } from '../../database/database.provider';
 export class UsuarioRepository extends BaseRepository {
   constructor(@Inject(KNEX_CONNECTION) conexao: Knex) {
     super(conexao, 'usuario');
+  }
+
+  /** Lista contas ativas ou excluídas com filtros administrativos e paginação padrão. */
+  async listar(dto: UsuarioListarDto): Promise<UsuarioListadosDto> {
+    const colunasOrdenacao: Record<string, string> = {
+      id: 'usuario.id',
+      login: 'usuario.login',
+      nome: 'usuario.nome',
+      tipo: 'tipo_usuario.codigo',
+    };
+    const ordenarPor = colunasOrdenacao[dto.ordenarPor] ?? colunasOrdenacao.nome;
+    const direcao = dto.direcao === 'DESC' ? 'DESC' : 'ASC';
+    const filtros = ['usuario.is_deleted = :apenasExcluidos'];
+    const parametrosSql: Record<string, unknown> = {
+      apenasExcluidos: dto.apenasExcluidos ?? false,
+    };
+
+    if (dto.login) {
+      filtros.push('usuario.login ILIKE :login');
+      parametrosSql.login = `%${dto.login}%`;
+    }
+    if (dto.nome) {
+      filtros.push('usuario.nome ILIKE :nome');
+      parametrosSql.nome = `%${dto.nome}%`;
+    }
+    if (dto.tipo) {
+      filtros.push('tipo_usuario.codigo = :tipo');
+      parametrosSql.tipo = dto.tipo;
+    }
+
+    const juncoesEFiltros = `FROM usuario
+      JOIN tipo_usuario ON tipo_usuario.id = usuario.tipo_usuario_id
+        AND tipo_usuario.is_deleted = false
+      WHERE ${filtros.join(' AND ')}`;
+
+    return this.executarConsultaPaginada({
+      sqlSelect: `SELECT usuario.id, usuario.login, usuario.nome,
+                         tipo_usuario.codigo AS tipo,
+                         tipo_usuario.descricao AS "tipoDescricao",
+                         usuario.is_deleted AS "isDeleted"
+                  ${juncoesEFiltros}`,
+      sqlContagem: `SELECT COUNT(*) AS total ${juncoesEFiltros}`,
+      parametrosSql,
+      pagina: dto.pagina,
+      itensPorPagina: dto.itensPorPagina,
+      ordenarPor,
+      direcao,
+      allRows: dto.allRows,
+    });
   }
 
   /**
@@ -132,5 +185,17 @@ export class UsuarioRepository extends BaseRepository {
   /** Exclui a própria conta via soft delete (nunca `DELETE` físico — proibição #14). */
   async excluirConta(dto: UsuarioExcluirDto): Promise<void> {
     await this.executarSoftDelete(dto.id);
+  }
+
+  /** Reverte o soft delete de uma conta e preserva seus dados públicos. */
+  async reativar(dto: UsuarioReativarDto): Promise<UsuarioReativadoDto> {
+    const [usuarioReativado] = await this.executarConsulta<UsuarioReativadoDto>(
+      `UPDATE usuario
+       SET is_deleted = false, deleted_date = NULL, updated_date = NOW()
+       WHERE id = :id AND is_deleted = true
+       RETURNING id, login, nome`,
+      { id: dto.id },
+    );
+    return usuarioReativado;
   }
 }

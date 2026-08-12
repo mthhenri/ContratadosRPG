@@ -8,6 +8,7 @@ import type {
 import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import { BusinessException } from '../../core/exceptions';
 import type { UsuarioRepository } from '../usuario/usuario.repository';
+import type { UsuarioService } from '../usuario/usuario.service';
 import { AutenticacaoService } from './autenticacao.service';
 import type { JwtPayload } from './jwt-payload.interface';
 
@@ -29,9 +30,14 @@ interface JwtDublado {
   sign: ReturnType<typeof vi.fn>;
 }
 
+interface UsuarioServiceDublado {
+  criar: ReturnType<typeof vi.fn>;
+}
+
 describe('AutenticacaoService', () => {
   let repositorio: RepositorioDublado;
   let jwt: JwtDublado;
+  let usuarioService: UsuarioServiceDublado;
   let service: AutenticacaoService;
 
   const usuarioPersistido: UsuarioInternoRecuperadoDto = {
@@ -46,8 +52,10 @@ describe('AutenticacaoService', () => {
   beforeEach(() => {
     repositorio = { criarUsuario: vi.fn(), recuperarPorLogin: vi.fn() };
     jwt = { sign: vi.fn() };
+    usuarioService = { criar: vi.fn() };
     service = new AutenticacaoService(
       repositorio as unknown as UsuarioRepository,
+      usuarioService as unknown as UsuarioService,
       jwt as unknown as JwtService,
     );
     hashDublado.mockReset();
@@ -55,22 +63,9 @@ describe('AutenticacaoService', () => {
   });
 
   describe('registrar', () => {
-    it('rejeita login já em uso com BusinessException e não persiste', async () => {
-      repositorio.recuperarPorLogin.mockResolvedValue(usuarioPersistido);
-
-      await expect(
-        service.registrar({ login: 'agente.zero', senha: 'segredo123', nome: 'Outro' }),
-      ).rejects.toThrow(new BusinessException('Login já está em uso'));
-
-      expect(hashDublado).not.toHaveBeenCalled();
-      expect(repositorio.criarUsuario).not.toHaveBeenCalled();
-    });
-
-    it('encripta a senha com bcrypt e persiste o novo usuário sem devolver a senha', async () => {
+    it('delega a criação para a regra única do módulo de usuário', async () => {
       const criado: UsuarioCriadoDto = { id: 12, login: 'agente.novo', nome: 'Agente Novo' };
-      repositorio.recuperarPorLogin.mockResolvedValue(null);
-      hashDublado.mockResolvedValue('$2b$10$hashgerado' as never);
-      repositorio.criarUsuario.mockResolvedValue(criado);
+      usuarioService.criar.mockResolvedValue(criado);
 
       const resultado = await service.registrar({
         login: 'agente.novo',
@@ -78,12 +73,10 @@ describe('AutenticacaoService', () => {
         nome: 'Agente Novo',
       });
 
-      expect(hashDublado).toHaveBeenCalledWith('segredo123', 10);
-      expect(repositorio.criarUsuario).toHaveBeenCalledWith({
+      expect(usuarioService.criar).toHaveBeenCalledWith({
         login: 'agente.novo',
-        senha: '$2b$10$hashgerado',
+        senha: 'segredo123',
         nome: 'Agente Novo',
-        tipo: TipoUsuarioEnum.NORMAL,
       });
       expect(resultado).toEqual(criado);
       expect(resultado).not.toHaveProperty('senha');

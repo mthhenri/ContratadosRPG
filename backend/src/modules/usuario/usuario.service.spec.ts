@@ -17,11 +17,14 @@ const hashDublado = vi.mocked(bcrypt.hash);
 const compareDublado = vi.mocked(bcrypt.compare);
 
 interface RepositorioDublado {
+  listar: ReturnType<typeof vi.fn>;
+  criarUsuario: ReturnType<typeof vi.fn>;
   recuperarPorId: ReturnType<typeof vi.fn>;
   recuperarPorLogin: ReturnType<typeof vi.fn>;
   alterarSenha: ReturnType<typeof vi.fn>;
   alterarPerfil: ReturnType<typeof vi.fn>;
   excluirConta: ReturnType<typeof vi.fn>;
+  reativar: ReturnType<typeof vi.fn>;
 }
 
 describe('UsuarioService', () => {
@@ -46,15 +49,139 @@ describe('UsuarioService', () => {
 
   beforeEach(() => {
     repositorio = {
+      listar: vi.fn(),
+      criarUsuario: vi.fn(),
       recuperarPorId: vi.fn(),
       recuperarPorLogin: vi.fn(),
       alterarSenha: vi.fn(),
       alterarPerfil: vi.fn(),
       excluirConta: vi.fn(),
+      reativar: vi.fn(),
     };
     service = new UsuarioService(repositorio as unknown as UsuarioRepository);
     hashDublado.mockReset();
     compareDublado.mockReset();
+  });
+
+  describe('gestao administrativa', () => {
+    it.each([
+      ['login', { login: 'zero' }],
+      ['nome', { nome: 'Agente' }],
+      ['tipo', { tipo: TipoUsuarioEnum.ADMIN }],
+      ['excluidos', { apenasExcluidos: true }],
+      [
+        'filtros combinados',
+        {
+          login: 'zero',
+          nome: 'Agente',
+          tipo: TipoUsuarioEnum.NORMAL,
+          apenasExcluidos: true,
+        },
+      ],
+    ])('repassa o filtro %s para a listagem', async (_cenario, filtros) => {
+      const dto = {
+        pagina: 2,
+        itensPorPagina: 10,
+        ordenarPor: 'nome',
+        direcao: 'ASC' as const,
+        ...filtros,
+      };
+      repositorio.listar.mockResolvedValue({
+        itens: [],
+        totalItens: 0,
+        paginaAtual: 2,
+        totalPaginas: 0,
+      });
+
+      await service.listar(dto);
+
+      expect(repositorio.listar).toHaveBeenCalledWith(dto);
+    });
+
+    it('cria conta NORMAL com senha encriptada quando o login esta disponivel', async () => {
+      repositorio.recuperarPorLogin.mockResolvedValue(null);
+      hashDublado.mockResolvedValue('$2b$10$hashadministrativo' as never);
+      repositorio.criarUsuario.mockResolvedValue({
+        id: 12,
+        login: 'agente.novo',
+        nome: 'Agente Novo',
+      });
+
+      const resultado = await service.criar({
+        login: 'agente.novo',
+        senha: 'segredo123',
+        nome: 'Agente Novo',
+      });
+
+      expect(repositorio.criarUsuario).toHaveBeenCalledWith({
+        login: 'agente.novo',
+        senha: '$2b$10$hashadministrativo',
+        nome: 'Agente Novo',
+        tipo: TipoUsuarioEnum.NORMAL,
+      });
+      expect(resultado).toEqual({ id: 12, login: 'agente.novo', nome: 'Agente Novo' });
+    });
+
+    it('rejeita criacao com login duplicado', async () => {
+      repositorio.recuperarPorLogin.mockResolvedValue(usuarioPersistido);
+
+      await expect(
+        service.criar({ login: 'agente.zero', senha: 'segredo123', nome: 'Outro' }),
+      ).rejects.toThrow(new BusinessException('Login já está em uso'));
+
+      expect(repositorio.criarUsuario).not.toHaveBeenCalled();
+    });
+
+    it('altera nome e login de um alvo por id', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(usuarioPersistido);
+      repositorio.recuperarPorLogin.mockResolvedValue(null);
+      repositorio.alterarPerfil.mockResolvedValue({
+        id: 7,
+        login: 'agente.um',
+        nome: 'Agente Um',
+      });
+
+      await service.alterar({ id: 7, login: 'agente.um', nome: 'Agente Um' });
+
+      expect(repositorio.alterarPerfil).toHaveBeenCalledWith({
+        id: 7,
+        login: 'agente.um',
+        nome: 'Agente Um',
+      });
+    });
+
+    it('rejeita alteracao com login usado por outra conta', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(usuarioPersistido);
+      repositorio.recuperarPorLogin.mockResolvedValue({ ...usuarioPersistido, id: 99 });
+
+      await expect(
+        service.alterar({ id: 7, login: 'agente.zero', nome: 'Agente Zero' }),
+      ).rejects.toThrow(new BusinessException('Login já está em uso'));
+
+      expect(repositorio.alterarPerfil).not.toHaveBeenCalled();
+    });
+
+    it('exclui um alvo ativo e rejeita alvo inexistente', async () => {
+      repositorio.recuperarPorId.mockResolvedValueOnce(usuarioPersistido).mockResolvedValueOnce(null);
+
+      await service.excluir({ id: 7 });
+      await expect(service.excluir({ id: 99 })).rejects.toThrow(ResourceNotFoundException);
+
+      expect(repositorio.excluirConta).toHaveBeenCalledOnce();
+    });
+
+    it('reativa uma conta excluida e rejeita alvo inexistente ou ativo', async () => {
+      repositorio.reativar
+        .mockResolvedValueOnce({ id: 7, login: 'agente.zero', nome: 'Agente Zero' })
+        .mockResolvedValueOnce(undefined);
+
+      await expect(service.reativar({ id: 7 })).resolves.toEqual({
+        id: 7,
+        login: 'agente.zero',
+        nome: 'Agente Zero',
+      });
+      await expect(service.reativar({ id: 99 })).rejects.toThrow(ResourceNotFoundException);
+    });
   });
 
   describe('recuperarPerfil', () => {
