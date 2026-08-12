@@ -30,7 +30,7 @@
         class="habilidades__resumo-item habilidades__resumo-item--arquetipo"
         [class.habilidades__resumo-item--ativo]="filtroCategoria().has('arquetipo')"
         [attr.aria-pressed]="filtroCategoria().has('arquetipo')"
-        title="Clique direito remove só este filtro"
+        [appTooltip]="'Clique direito remove só este filtro'"
         (click)="alternarFiltro('arquetipo')"
         (contextmenu)="removerFiltroPorContexto('arquetipo', $event)"
       >
@@ -42,7 +42,7 @@
         class="habilidades__resumo-item habilidades__resumo-item--classe"
         [class.habilidades__resumo-item--ativo]="filtroCategoria().has('classe')"
         [attr.aria-pressed]="filtroCategoria().has('classe')"
-        title="Clique direito remove só este filtro"
+        [appTooltip]="'Clique direito remove só este filtro'"
         (click)="alternarFiltro('classe')"
         (contextmenu)="removerFiltroPorContexto('classe', $event)"
       >
@@ -54,7 +54,7 @@
         class="habilidades__resumo-item habilidades__resumo-item--geral"
         [class.habilidades__resumo-item--ativo]="filtroCategoria().has('geral')"
         [attr.aria-pressed]="filtroCategoria().has('geral')"
-        title="Clique direito remove só este filtro"
+        [appTooltip]="'Clique direito remove só este filtro'"
         (click)="alternarFiltro('geral')"
         (contextmenu)="removerFiltroPorContexto('geral', $event)"
       >
@@ -66,7 +66,7 @@
         class="habilidades__resumo-item habilidades__resumo-item--outra-classe"
         [class.habilidades__resumo-item--ativo]="filtroCategoria().has('outraClasse')"
         [attr.aria-pressed]="filtroCategoria().has('outraClasse')"
-        title="Clique direito remove só este filtro"
+        [appTooltip]="'Clique direito remove só este filtro'"
         (click)="alternarFiltro('outraClasse')"
         (contextmenu)="removerFiltroPorContexto('outraClasse', $event)"
       >
@@ -78,7 +78,7 @@
           type="button"
           class="habilidades__limpar-filtro"
           aria-label="Limpar filtro de tipos"
-          title="Limpar filtro (clique direito num contador remove só aquele tipo)"
+          [appTooltip]="'Limpar filtro (clique direito num contador remove só aquele tipo)'"
           (click)="limparFiltroCategoria()"
         >
           ↺

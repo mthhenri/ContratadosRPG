@@ -13,6 +13,7 @@ import {
 import { DomSanitizer } from '@angular/platform-browser';
 
 import { Icone } from '../icone/icone.component';
+import { Tooltip } from '../tooltip/tooltip.directive';
 import {
   DOCUMENTOS_REGRAS,
   type DocumentoRegrasId,
@@ -25,7 +26,7 @@ const BREAKPOINT_MOBILE = 560;
 @Component({
   selector: 'app-leitor-documentos',
   standalone: true,
-  imports: [Icone],
+  imports: [Icone, Tooltip],
   templateUrl: './leitor-documentos.component.html',
   styleUrl: './leitor-documentos.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

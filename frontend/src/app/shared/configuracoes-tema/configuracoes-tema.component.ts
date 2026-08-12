@@ -2,6 +2,7 @@ import { Component, effect, inject, input, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 import { Icone } from '../icone/icone.component';
+import { Tooltip } from '../tooltip/tooltip.directive';
 import { BaseTema, TemaService } from '../../core/services/tema.service';
 
 /**
@@ -24,7 +25,7 @@ export type VarianteGatilhoTema = 'topbar' | 'menu';
  */
 @Component({
   selector: 'app-configuracoes-tema',
-  imports: [ReactiveFormsModule, Icone],
+  imports: [ReactiveFormsModule, Icone, Tooltip],
   templateUrl: './configuracoes-tema.component.html',
   styleUrl: './configuracoes-tema.component.scss',
 })

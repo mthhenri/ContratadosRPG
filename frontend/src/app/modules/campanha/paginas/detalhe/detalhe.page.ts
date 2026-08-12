@@ -29,6 +29,7 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { rotuloRelativo } from '../../../../shared/rotulo-relativo.util';
 import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaService } from '../../campanha.service';
@@ -158,6 +159,7 @@ type EquipeFichaExibicao =
     CalculadoraFlutuante,
     FichaVisualizacao,
     FichaRolagensPainel,
+    Tooltip,
   ],
   providers: [FichaEdicaoService, FichaRolagemRegistroService],
   templateUrl: './detalhe.page.html',

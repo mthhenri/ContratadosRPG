@@ -24,6 +24,7 @@ import { descricaoClasse as textoGuiaClasse, focoArquetipo as textoFocoArquetipo
 import { lerParamRota } from '../../ler-param-rota';
 import { GuiaCriacaoRascunhoService } from '../../guia-criacao-rascunho.service';
 import { Icone } from '../../../../shared/icone/icone.component';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { FichaHabilidadeSeletor } from '../../componentes/ficha-habilidade-seletor/ficha-habilidade-seletor.component';
 import { GuiaEquipamentoLoja } from '../../componentes/guia-equipamento-loja/guia-equipamento-loja.component';
 
@@ -97,7 +98,7 @@ function normalizarEstado(estado: EstadoGuiaCriacao): EstadoGuiaCriacao {
   };
 }
 
-@Component({ selector: 'app-ficha-criar', imports: [CommonModule, Icone, FichaHabilidadeSeletor, GuiaEquipamentoLoja], templateUrl: './criar.page.html', styleUrl: './criar.page.scss' })
+@Component({ selector: 'app-ficha-criar', imports: [CommonModule, Icone, FichaHabilidadeSeletor, GuiaEquipamentoLoja, Tooltip], templateUrl: './criar.page.html', styleUrl: './criar.page.scss' })
 export class FichaCriar {
   private readonly destroyRef = inject(DestroyRef);
   private readonly rota = inject(ActivatedRoute); private readonly router = inject(Router);

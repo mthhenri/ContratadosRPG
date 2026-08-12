@@ -50,7 +50,12 @@
       </div>
       <div class="detalhe__cabecalho-acoes">
         <app-indicador-tempo-real />
-        <a class="detalhe__cabecalho-voltar" routerLink="/painel" aria-label="Voltar às campanhas" title="Voltar às campanhas">
+        <a
+          class="detalhe__cabecalho-voltar"
+          routerLink="/painel"
+          aria-label="Voltar às campanhas"
+          [appTooltip]="'Voltar às campanhas'"
+        >
           <app-icone nome="voltar" />
         </a>
         <app-historico-rolagens-sidebar
@@ -303,6 +308,7 @@
               type="button"
               [class.detalhe__copiar--copiado]="copiado()"
               [attr.aria-label]="copiado() ? 'Código copiado' : 'Copiar código de convite'"
+              [appTooltip]="copiado() ? 'Código copiado' : 'Copiar código de convite'"
               (click)="copiarConvite()"
             >
               <app-icone [nome]="copiado() ? 'check' : 'copiar'" />
@@ -314,7 +320,7 @@
               [class.detalhe__regenerar--confirmado]="regenerado()"
               [disabled]="regenerando()"
               [attr.aria-label]="regenerando() ? 'Regenerando código de convite' : 'Regenerar código de convite'"
-              title="Regenerar convite"
+              [appTooltip]="'Regenerar convite'"
               (click)="regenerarConvite()"
             >
               <app-icone [nome]="regenerado() ? 'check' : 'atualizar'" />
@@ -387,7 +393,7 @@
                       class="detalhe__membro-acao"
                       type="button"
                       [attr.aria-label]="'Transferir o papel de mestre para ' + membro.nome"
-                      title="Transferir mestre"
+                      [appTooltip]="'Transferir mestre'"
                       (click)="pedirTransferenciaMestre(membro)"
                     >
                       <app-icone nome="coroa" />
@@ -396,7 +402,7 @@
                       class="detalhe__membro-acao"
                       type="button"
                       [attr.aria-label]="'Remover ' + membro.nome + ' da campanha'"
-                      title="Remover"
+                      [appTooltip]="'Remover'"
                       (click)="pedirRemocaoMembro(membro)"
                     >
                       <app-icone nome="excluir" />
@@ -528,7 +534,7 @@
                             class="detalhe__ficha-condicao detalhe__ficha-condicao--ativa"
                             data-condicao="sobrecarregado"
                             aria-label="Sobrecarregado (inventário acima do máximo)"
-                            title="Sobrecarregado"
+                            [appTooltip]="'Sobrecarregado'"
                           />
                         }
                         @for (condicao of ficha.condicoes; track condicao.chave) {
@@ -538,7 +544,7 @@
                             [class.detalhe__ficha-condicao--ativa]="condicao.ativa"
                             [attr.data-condicao]="condicao.chave"
                             [attr.aria-label]="condicao.rotulo + (condicao.ativa ? ' (ativa)' : ' (inativa)')"
-                            [attr.title]="condicao.rotulo"
+                            [appTooltip]="condicao.rotulo"
                           />
                         }
                       </span>

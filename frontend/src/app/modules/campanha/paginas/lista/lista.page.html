@@ -106,6 +106,7 @@
                     type="button"
                     [class.campanhas__linha-copiar--copiado]="copiadoId() === campanha.id"
                     [attr.aria-label]="copiadoId() === campanha.id ? 'Código copiado' : 'Copiar código de convite'"
+                    [appTooltip]="copiadoId() === campanha.id ? 'Código copiado' : 'Copiar código de convite'"
                     (click)="copiarConvite(campanha, $event)"
                   >
                     <app-icone [nome]="copiadoId() === campanha.id ? 'check' : 'copiar'" />

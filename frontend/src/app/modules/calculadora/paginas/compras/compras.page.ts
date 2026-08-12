@@ -37,6 +37,7 @@ import {
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { EFEITO_TIPOS, EfeitoTipoMeta, metaEfeitoTipo } from '../../../../shared/inventario/efeito-modificacao.ui';
 import { AjudaCalculadora } from '../../componentes/ajuda-calculadora/ajuda-calculadora.component';
 import { StepInput } from '../../componentes/step-input/step-input.component';
@@ -312,7 +313,7 @@ function fragmentosZerados(): GradeFragmentos {
  */
 @Component({
   selector: 'app-compras-page',
-  imports: [ReactiveFormsModule, StepInput, AjudaCalculadora, Icone, OverflowFade],
+  imports: [ReactiveFormsModule, StepInput, AjudaCalculadora, Icone, OverflowFade, Tooltip],
   templateUrl: './compras.page.html',
   styleUrl: './compras.page.scss',
 })

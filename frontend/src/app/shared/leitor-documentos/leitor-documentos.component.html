@@ -50,7 +50,7 @@
             [attr.aria-label]="
               maximizada() ? 'Restaurar tamanho dos documentos' : 'Maximizar documentos'
             "
-            [attr.title]="maximizada() ? 'Restaurar tamanho' : 'Maximizar'"
+            [appTooltip]="maximizada() ? 'Restaurar tamanho' : 'Maximizar'"
             (click)="alternarMaximizacao()"
           >
             <span aria-hidden="true">{{ maximizada() ? '❐' : '□' }}</span>

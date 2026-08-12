@@ -6,6 +6,7 @@ import { UsuarioResumoDto } from '@contratados-rpg/shared/dtos/usuario';
 import { TipoUsuarioEnum, UsuarioSituacaoEnum } from '@contratados-rpg/shared/enums';
 
 import { Icone } from '../../../../shared/icone/icone.component';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { UsuarioAdminService } from '../../usuario-admin.service';
 
 type ModoEditor = 'perfil' | 'senha' | 'tipo';
@@ -20,7 +21,7 @@ export class TipoRotuloPipe implements PipeTransform {
 
 @Component({
   selector: 'app-usuario-gestao',
-  imports: [ReactiveFormsModule, Icone, TipoRotuloPipe],
+  imports: [ReactiveFormsModule, Icone, TipoRotuloPipe, Tooltip],
   templateUrl: './gestao.page.html',
   styleUrl: './gestao.page.scss',
 })

@@ -7,6 +7,7 @@ import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { rotuloRelativo } from '../../../../shared/rotulo-relativo.util';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { CampanhaService } from '../../campanha.service';
 import { CampanhaCriar } from '../criar/criar.page';
 import { CampanhaEntrar } from '../entrar/entrar.page';
@@ -38,7 +39,7 @@ interface EstatisticasCampanhas {
  */
 @Component({
   selector: 'app-campanha-lista',
-  imports: [RouterLink, Icone, OverflowFade, CampanhaCriar, CampanhaEntrar],
+  imports: [RouterLink, Icone, OverflowFade, CampanhaCriar, CampanhaEntrar, Tooltip],
   templateUrl: './lista.page.html',
   styleUrl: './lista.page.scss',
 })

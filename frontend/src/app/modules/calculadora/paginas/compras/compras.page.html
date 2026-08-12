@@ -354,7 +354,7 @@
                     <span
                       class="compras-modificar__contagem"
                       [class.compras-modificar__contagem--excede]="item.excedeModsLimite"
-                      [title]="item.excedeModsLimite ? 'Além do limite da patente (excedente)' : ''"
+                      [appTooltip]="item.excedeModsLimite ? 'Além do limite da patente (excedente)' : null"
                     >{{ item.modsUsados }}/{{ item.maxModificacoes }}</span>
                   }
                   <span class="compras-modificar__chevron">{{ item.painelAberto ? '▴' : '▾' }}</span>
@@ -366,7 +366,7 @@
                   type="button"
                   class="compras-porte"
                   [class.compras-porte--vestida]="!item.guardada"
-                  [title]="item.guardada ? 'Guardada: ocupa slots, não amplia o inventário' : 'Vestida: amplia o inventário, não ocupa slots'"
+                  [appTooltip]="item.guardada ? 'Guardada: ocupa slots, não amplia o inventário' : 'Vestida: amplia o inventário, não ocupa slots'"
                   (click)="alternarGuardada(item.uid)"
                 >
                   <app-icone [nome]="item.guardada ? 'guardada' : 'vestida'" />
@@ -385,7 +385,7 @@
                 <button
                   type="button"
                   class="compras-btn compras-btn--adicionar compras-btn--icone"
-                  title="Confirmar remoção"
+                  [appTooltip]="'Confirmar remoção'"
                   aria-label="Confirmar remoção"
                   (click)="confirmarRemocaoItem(item.uid)"
                 >
@@ -394,7 +394,7 @@
                 <button
                   type="button"
                   class="compras-btn compras-btn--remover compras-btn--icone"
-                  title="Cancelar"
+                  [appTooltip]="'Cancelar'"
                   aria-label="Cancelar remoção"
                   (click)="cancelarRemocao()"
                 >
@@ -404,7 +404,7 @@
                 <button
                   type="button"
                   class="compras-btn compras-btn--remover compras-btn--icone"
-                  title="Remover"
+                  [appTooltip]="'Remover'"
                   aria-label="Remover item"
                   (click)="removerItem(item.uid)"
                 >
@@ -430,7 +430,7 @@
                   <span>
                     {{ mod.nome }} ×{{ mod.empilhamentos }}
                     @if (mod.excedente) {
-                      <span class="compras-excede-tag" title="Além do limite da patente">Excedente</span>
+                      <span class="compras-excede-tag" [appTooltip]="'Além do limite da patente'">Excedente</span>
                     }
                   </span>
                   <span class="compras-mod-tag__custo">{{ mod.custoTexto }}</span>
@@ -444,7 +444,9 @@
                       role="checkbox"
                       [class.compras-mod-flag--ativo]="mod.ignoraTotal"
                       [attr.aria-checked]="mod.ignoraTotal"
-                      title="Quando marcada, esta mod não conta no limite total de empilhamentos da arma"
+                      [appTooltip]="
+                        'Quando marcada, esta mod não conta no limite total de empilhamentos da arma'
+                      "
                       (click)="alternarIgnoraTotal(item.uid, mod.nome)"
                     >
                       <span class="compras-mod-flag__caixa" aria-hidden="true"></span>
@@ -456,7 +458,7 @@
                       role="checkbox"
                       [class.compras-mod-flag--ativo]="mod.ignoraProprio"
                       [attr.aria-checked]="mod.ignoraProprio"
-                      title="Quando marcada, esta mod pode empilhar além do próprio teto"
+                      [appTooltip]="'Quando marcada, esta mod pode empilhar além do próprio teto'"
                       (click)="alternarIgnoraProprio(item.uid, mod.nome)"
                     >
                       <span class="compras-mod-flag__caixa" aria-hidden="true"></span>
@@ -535,7 +537,7 @@
                               type="button"
                               class="compras-efeito__remover"
                               aria-label="Remover efeito"
-                              title="Remover efeito"
+                              [appTooltip]="'Remover efeito'"
                               (click)="removerEfeitoMod($index)"
                             >
                               ×

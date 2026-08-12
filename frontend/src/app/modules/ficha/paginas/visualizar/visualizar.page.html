@@ -5,12 +5,17 @@
         class="ficha-pagina__voltar"
         [routerLink]="['/painel', campanhaAtualId]"
         aria-label="Voltar à campanha"
-        title="Voltar à campanha"
+        [appTooltip]="'Voltar à campanha'"
       >
         <app-icone nome="voltar" />
       </a>
     } @else {
-      <a class="ficha-pagina__voltar" routerLink="/fichas" aria-label="Voltar ao acervo" title="Voltar ao acervo">
+      <a
+        class="ficha-pagina__voltar"
+        routerLink="/fichas"
+        aria-label="Voltar ao acervo"
+        [appTooltip]="'Voltar ao acervo'"
+      >
         <app-icone nome="voltar" />
       </a>
     }

@@ -24,6 +24,7 @@ import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/c
 import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
@@ -80,6 +81,7 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
     IndicadorTempoReal,
     CalculadoraFlutuante,
     HistoricoRolagensSidebar,
+    Tooltip,
   ],
   providers: [FichaEdicaoService, FichaRolagemRegistroService],
   templateUrl: './visualizar.page.html',

@@ -64,6 +64,11 @@
               [attr.aria-label]="
                 preset.rotulo + (preset.travado ? ' (contraste insuficiente nesta base)' : '')
               "
+              [appTooltip]="
+                preset.travado
+                  ? 'Não é possível selecionar essa cor — contraste insuficiente com o fundo nesta base.'
+                  : null
+              "
               (click)="selecionarPreset(preset.id)"
             >
               <span class="config-swatch__amostra" aria-hidden="true"></span>
@@ -118,7 +123,8 @@
         }
         @if (tema.accentAdaptado() && tema.accentCustom()) {
           <p class="config-custom__nota">
-            Cor adaptada para manter a legibilidade nesta base; a cor original permanece guardada.
+            Essa cor não é legível nesta base, então estamos invertendo ela para o espectro oposto
+            (ex.: preto no tema escuro vira branco) — a cor original permanece guardada.
           </p>
         }
       </section>

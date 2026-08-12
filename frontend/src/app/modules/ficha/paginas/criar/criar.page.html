@@ -330,7 +330,9 @@
                       [class.atributo__maestria--ativa]="estado().maestria === campo.chave"
                       [disabled]="!maestriaHabilitada(campo.chave)"
                       [attr.aria-label]="'Maestria em ' + campo.nome"
-                      [attr.title]="'Maestria em ' + campo.nome + ' — requer ' + limiteMaestria + '+ pontos, custa ' + custoMaestriaPontos + ' pontos extras'"
+                      [appTooltip]="
+                        'Maestria em ' + campo.nome + ' — requer ' + limiteMaestria + '+ pontos, custa ' + custoMaestriaPontos + ' pontos extras'
+                      "
                       (click)="alternarMaestria(campo.chave)"
                     >★</button>
                     <div class="atributo__identidade">
