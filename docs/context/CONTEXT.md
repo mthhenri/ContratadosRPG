@@ -1,7 +1,7 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-11 · **Última decisão registrada:** a `m6-01` abriu o M6 com o tipo
-> global de usuário e a versão de token persistidos, mantendo o registro público sempre `NORMAL`
+> **Última revisão:** 2026-08-11 · **Última decisão registrada:** a `m6-02` tornou a sessão
+> revogável no request seguinte e centralizou a autorização global por tipo de usuário
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -14,9 +14,9 @@
 
 ## 1. Próxima Task
 
-O M6 está aberto. A próxima task encadeada é `m6-02-backend-autorizacao-global.spec.md`, que usa
-`tipo_usuario` e `usuario.token_versao` entregues pela `m6-01` para autorizar tipos globais e
-invalidar sessões. O trio do guia de criação (`m3-57` base, `m3-58` melhorias de nível, `m3-59`
+O M6 está aberto. A próxima task encadeada é `m6-03-backend-gestao-usuarios.spec.md`, que aplica a
+infra global entregue pela `m6-02` ao CRUD administrativo de usuários. O trio do guia de criação
+(`m3-57` base, `m3-58` melhorias de nível, `m3-59`
 equipamento inicial), o complemento `m3-64`, a `m3-61` (cor de ficha) e a `m3-62` (avatar de ficha)
 **concluíram** — as specs estão em `docs/specs/done/`; o que o guia faz hoje de ponta a ponta está
 descrito na seção 4, em "Guia de criação de ficha". A `m3-64` resolveu o antigo `P-012`: o pacote
@@ -35,7 +35,7 @@ só adaptou o visual de desktop).
 | Spec | Frente | O que é |
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m6-02`…`m6-07` | usuários | autorização global, gestão admin e gates/UI de tester |
+| `m6-03`…`m6-07` | usuários | gestão admin e gates/UI de tester |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/`. Milestones ainda não abertos:
 `m4-ficha-criatura-npc` e `m5-guia-missao`.
@@ -52,10 +52,10 @@ Deploy em produção por **integração nativa das plataformas**, sem GitHub Act
 `master` → Render (backend) e Cloudflare Pages (frontend) puxam do Git sozinhos; banco no Supabase.
 O GitHub Actions só roda **CI** (lint + testes nos 3 workspaces em todo PR).
 
-**Suítes (checadas na `m6-01`):** shared 601/601 · backend 236/236 · frontend
+**Suítes (checadas na `m6-02`):** shared 601/601 · backend 244/244 · frontend
 874/874 — os 3 workspaces fecham a suíte completa hoje (`npm run test`, sem `--watch`);
 `P-001`/`P-010`/`P-011` descrevem falhas que só reproduzem isoladas (arquivo único), não na suíte
-completa — ver [`PROBLEMS.md`](PROBLEMS.md). Na `m6-01`, lint de shared e backend fechou limpo;
+completa — ver [`PROBLEMS.md`](PROBLEMS.md). Na `m6-02`, lint de shared e backend fechou limpo;
 o frontend não foi tocado nem revalidado nessa task. Ver `PROBLEMS.md` `P-009` para o histórico de
 falhas isoladas/preexistentes.
 
@@ -71,7 +71,7 @@ falhas isoladas/preexistentes.
 | M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; guia de criação completo (`m3-57`/`m3-58`/`m3-59` — base, melhorias de nível, equipamento inicial); cor (`m3-61`) e avatar (`m3-62`) de identidade por ficha prontos; falta só `m3-53` |
 | M4 | Ficha de Criatura/NPC | não iniciado |
 | M5 | Guia de Missão | não iniciado |
-| M6 | Gestão de Usuários e Papéis | **em andamento** — `m6-01` concluída; próxima `m6-02` |
+| M6 | Gestão de Usuários e Papéis | **em andamento** — `m6-01`/`m6-02` concluídas; próxima `m6-03` |
 
 ---
 
@@ -97,6 +97,11 @@ payload). Telas `/login` e `/registro` (split-panel). Perfil self-service em `/p
 nome/login, trocar senha e excluir a própria conta. Desde a `m6-01`, toda conta tem tipo global
 (`NORMAL`, `ADMIN` ou `TESTER`) e `token_versao`; a conta `senhor.contratados` foi promovida a
 `ADMIN`, contas anteriores receberam `NORMAL` e o registro público sempre persiste `NORMAL`.
+Desde a `m6-02`, todo request não público relê tipo, versão e exclusão da conta no banco: sessão
+ausente, excluída ou com versão divergente recebe 401; `@TiposPermitidos(...)` usa o tipo fresco e
+responde 403 quando ele não está autorizado. Para testar um módulo restrito, anote a controller com
+`@TiposPermitidos(TipoUsuarioEnum.ADMIN, TipoUsuarioEnum.TESTER)`; remova o decorator para permitir
+qualquer usuário autenticado.
 
 ### Campanhas — `backend/campanha`, `frontend/campanha`
 

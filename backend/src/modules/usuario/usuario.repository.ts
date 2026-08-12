@@ -10,6 +10,8 @@ import type {
   UsuarioPerfilInternoAlterarDto,
   UsuarioRecuperarDto,
   UsuarioSenhaInternoAlterarDto,
+  UsuarioSessaoDto,
+  UsuarioSessaoRecuperarDto,
 } from '@contratados-rpg/shared/dtos/usuario';
 import { BaseRepository } from '../../core/base/base.repository';
 import { KNEX_CONNECTION } from '../../database/database.provider';
@@ -51,9 +53,13 @@ export class UsuarioRepository extends BaseRepository {
     dto: UsuarioLoginRecuperarDto,
   ): Promise<UsuarioInternoRecuperadoDto | null> {
     const [usuarioEncontrado] = await this.executarConsulta<UsuarioInternoRecuperadoDto>(
-      `SELECT id, login, senha, nome
+      `SELECT usuario.id, usuario.login, usuario.senha, usuario.nome,
+              tipo_usuario.codigo AS tipo,
+              usuario.token_versao AS "tokenVersao"
        FROM usuario
-       WHERE login = :login AND is_deleted = false`,
+       JOIN tipo_usuario ON tipo_usuario.id = usuario.tipo_usuario_id
+         AND tipo_usuario.is_deleted = false
+       WHERE usuario.login = :login AND usuario.is_deleted = false`,
       { login: dto.login },
     );
     return usuarioEncontrado ?? null;
@@ -67,12 +73,31 @@ export class UsuarioRepository extends BaseRepository {
     dto: UsuarioRecuperarDto,
   ): Promise<UsuarioInternoRecuperadoDto | null> {
     const [usuarioEncontrado] = await this.executarConsulta<UsuarioInternoRecuperadoDto>(
-      `SELECT id, login, senha, nome
+      `SELECT usuario.id, usuario.login, usuario.senha, usuario.nome,
+              tipo_usuario.codigo AS tipo,
+              usuario.token_versao AS "tokenVersao"
        FROM usuario
-       WHERE id = :id AND is_deleted = false`,
+       JOIN tipo_usuario ON tipo_usuario.id = usuario.tipo_usuario_id
+         AND tipo_usuario.is_deleted = false
+       WHERE usuario.id = :id AND usuario.is_deleted = false`,
       { id: dto.id },
     );
     return usuarioEncontrado ?? null;
+  }
+
+  /** Consulta leve e atual da sessão; inclui conta excluída para permitir sua revogação. */
+  async recuperarSessao(dto: UsuarioSessaoRecuperarDto): Promise<UsuarioSessaoDto | null> {
+    const [sessao] = await this.executarConsulta<UsuarioSessaoDto>(
+      `SELECT tipo_usuario.codigo AS tipo,
+              usuario.token_versao AS "tokenVersao",
+              usuario.is_deleted AS "isDeleted"
+       FROM usuario
+       JOIN tipo_usuario ON tipo_usuario.id = usuario.tipo_usuario_id
+         AND tipo_usuario.is_deleted = false
+       WHERE usuario.id = :id`,
+      { id: dto.id },
+    );
+    return sessao ?? null;
   }
 
   /**

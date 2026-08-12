@@ -1,5 +1,20 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-11 — `m6-02`: autorização global e revogação imediata de sessão
+
+O backend passou a validar o estado persistido da sessão em toda rota não pública. O JWT agora
+carrega `tipo` e `tokenVersao` como conveniência, enquanto o novo `AutorizacaoGuard`, registrado
+depois do `JwtAuthGuard`, relê tipo, versão e soft delete no banco antes de decidir o acesso.
+
+- Sessão ausente, excluída ou com versão divergente produz 401 no request seguinte; a consulta
+  dedicada é a exceção intencional que enxerga `usuario.is_deleted` para revogar a conta.
+- `@TiposPermitidos(...)` centraliza restrições por `TipoUsuarioEnum` e decide com o tipo fresco;
+  incompatibilidade produz 403. Nenhuma rota M0–M5 foi restringida nesta entrega.
+- `recuperarPorLogin` e `recuperarPorId` passaram a traduzir a FK ativa de `tipo_usuario` e trazer
+  a versão usada na emissão do token.
+- TDD cobriu claims, SQL e guard; gates finais: shared 601/601, backend 244/244, builds de shared e
+  backend e lint dos dois workspaces sem falhas. O frontend não foi alterado.
+
 ## 2026-08-11 — `m6-01`: tipo global de usuário e controle de sessão
 
 O M6 foi aberto com a fundação de dados para papéis globais e invalidação futura de sessões. A

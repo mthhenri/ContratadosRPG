@@ -8,6 +8,8 @@ import type {
   UsuarioRecuperarDto,
   UsuarioSenhaAlterarDto,
   UsuarioSenhaAlteradaDto,
+  UsuarioSessaoDto,
+  UsuarioSessaoRecuperarDto,
 } from '@contratados-rpg/shared/dtos/usuario';
 import { BusinessException, ResourceNotFoundException } from '../../core/exceptions';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
@@ -25,6 +27,11 @@ const ROUNDS_BCRYPT = 10;
 @Injectable()
 export class UsuarioService {
   constructor(private readonly usuarioRepositorio: UsuarioRepository) {}
+
+  /** Recupera o estado persistido atual usado pela autorização global. */
+  async recuperarSessao(dto: UsuarioSessaoRecuperarDto): Promise<UsuarioSessaoDto | null> {
+    return this.usuarioRepositorio.recuperarSessao(dto);
+  }
 
   /**
    * Recupera o perfil do usuário autenticado (o `id` vem do JWT via `@ActiveUser()`).

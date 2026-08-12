@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
-import { RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum, TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import type { ResultadoRolagemDto } from '@contratados-rpg/shared/regras/rolagem';
 import { UnauthorizedAccessException } from '../../core/exceptions';
 import type { CampanhaGateway } from '../../core/gateway/campanha.gateway';
@@ -28,7 +28,7 @@ interface CampanhaGatewayDublado {
   emitirRolagemRegistrada: ReturnType<typeof vi.fn>;
 }
 
-const usuarioAtivo: JwtPayload = { sub: 7, login: 'agente.novato' };
+const usuarioAtivo: JwtPayload = { sub: 7, login: 'agente.novato', tipo: TipoUsuarioEnum.NORMAL, tokenVersao: 1 };
 
 const resultado: ResultadoRolagemDto = {
   dados: [],

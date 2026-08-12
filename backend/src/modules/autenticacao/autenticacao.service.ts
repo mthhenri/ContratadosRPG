@@ -80,7 +80,12 @@ export class AutenticacaoService {
 
   /** Assina o JWT com o `id` (subject) e o login do usuário. */
   private gerarToken(usuario: UsuarioInternoRecuperadoDto): string {
-    const payload: JwtPayload = { sub: usuario.id, login: usuario.login };
+    const payload: JwtPayload = {
+      sub: usuario.id,
+      login: usuario.login,
+      tipo: usuario.tipo,
+      tokenVersao: usuario.tokenVersao,
+    };
     return this.jwtService.sign(payload);
   }
 }

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { TipoCampanhaMembroPapelEnum, TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 
 // randomBytes dublado para tornar o código de convite determinístico no teste. Os bytes
 // 0..7 mapeiam para os 8 primeiros caracteres do alfabeto de convite → 'ABCDEFGH'.
@@ -41,8 +41,8 @@ describe('CampanhaService', () => {
   let campanhaGateway: CampanhaGatewayDublado;
   let service: CampanhaService;
 
-  const usuarioMestre: JwtPayload = { sub: 7, login: 'senhor.contratados' };
-  const usuarioNaoMestre: JwtPayload = { sub: 42, login: 'agente.novato' };
+  const usuarioMestre: JwtPayload = { sub: 7, login: 'senhor.contratados', tipo: TipoUsuarioEnum.NORMAL, tokenVersao: 1 };
+  const usuarioNaoMestre: JwtPayload = { sub: 42, login: 'agente.novato', tipo: TipoUsuarioEnum.NORMAL, tokenVersao: 1 };
 
   const campanhaPersistida: CampanhaRecuperadaDto = {
     id: 3,

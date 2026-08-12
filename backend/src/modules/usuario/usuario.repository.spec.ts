@@ -33,4 +33,31 @@ describe('UsuarioRepository', () => {
       tipo: TipoUsuarioEnum.NORMAL,
     });
   });
+
+  it('recupera login com tipo e versão de token da relação ativa', async () => {
+    const raw = vi.fn().mockResolvedValue({ rows: [] });
+    const repositorio = new UsuarioRepository({ raw } as unknown as Knex);
+
+    await repositorio.recuperarPorLogin({ login: 'agente.zero' });
+
+    const [sql] = raw.mock.calls[0] as [string];
+    expect(sql).toContain('JOIN tipo_usuario');
+    expect(sql).toContain('tipo_usuario.codigo AS tipo');
+    expect(sql).toContain('usuario.token_versao AS "tokenVersao"');
+  });
+
+  it('recupera sessão inclusive de conta excluída para validar revogação', async () => {
+    const raw = vi.fn().mockResolvedValue({
+      rows: [{ tipo: TipoUsuarioEnum.NORMAL, tokenVersao: 2, isDeleted: true }],
+    });
+    const repositorio = new UsuarioRepository({ raw } as unknown as Knex);
+
+    const sessao = await repositorio.recuperarSessao({ id: 7 });
+
+    const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(sql).toContain('usuario.is_deleted AS "isDeleted"');
+    expect(sql).not.toContain('WHERE usuario.is_deleted = false');
+    expect(parametros).toEqual({ id: 7 });
+    expect(sessao).toEqual({ tipo: TipoUsuarioEnum.NORMAL, tokenVersao: 2, isDeleted: true });
+  });
 });

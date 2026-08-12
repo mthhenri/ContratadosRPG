@@ -67,6 +67,20 @@ export interface UsuarioInternoRecuperadoDto {
   readonly login: string;
   readonly senha: string;
   readonly nome: string;
+  readonly tipo: TipoUsuarioEnum;
+  readonly tokenVersao: number;
+}
+
+/** Entrada interna da consulta leve de sessão usada pelo guard global. */
+export interface UsuarioSessaoRecuperarDto {
+  readonly id: number;
+}
+
+/** Estado atual da sessão persistida, consultado a cada requisição autenticada. */
+export interface UsuarioSessaoDto {
+  readonly tipo: TipoUsuarioEnum;
+  readonly tokenVersao: number;
+  readonly isDeleted: boolean;
 }
 
 /**

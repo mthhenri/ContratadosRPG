@@ -10,6 +10,7 @@ import {
   ClasseEnum,
   FormacaoBonusEnum,
   HabilidadeCategoriaEnum,
+  TipoUsuarioEnum,
   ItemCategoriaEnum,
   TipoCampanhaMembroPapelEnum,
   TipoFichaEnum,
@@ -165,9 +166,9 @@ describe('FichaService', () => {
   let armazenamentoProvedor: ArmazenamentoProvedorDublado;
   let service: FichaService;
 
-  const usuarioDono: JwtPayload = { sub: 10, login: 'agente.dono' };
-  const usuarioMestre: JwtPayload = { sub: 7, login: 'mestre.contratados' };
-  const usuarioMembro: JwtPayload = { sub: 42, login: 'agente.novato' };
+  const usuarioDono: JwtPayload = { sub: 10, login: 'agente.dono', tipo: TipoUsuarioEnum.NORMAL, tokenVersao: 1 };
+  const usuarioMestre: JwtPayload = { sub: 7, login: 'mestre.contratados', tipo: TipoUsuarioEnum.NORMAL, tokenVersao: 1 };
+  const usuarioMembro: JwtPayload = { sub: 42, login: 'agente.novato', tipo: TipoUsuarioEnum.NORMAL, tokenVersao: 1 };
 
   const fichaPersistida: FichaRecuperadaDto = {
     id: 5,

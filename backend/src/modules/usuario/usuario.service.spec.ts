@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as bcrypt from 'bcrypt';
 import type { UsuarioInternoRecuperadoDto } from '@contratados-rpg/shared/dtos/usuario';
+import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import { BusinessException, ResourceNotFoundException } from '../../core/exceptions';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import type { UsuarioRepository } from './usuario.repository';
@@ -32,9 +33,16 @@ describe('UsuarioService', () => {
     login: 'agente.zero',
     senha: '$2b$10$hashbcryptdopersistido',
     nome: 'Agente Zero',
+    tipo: TipoUsuarioEnum.NORMAL,
+    tokenVersao: 1,
   };
 
-  const usuarioAtivo: JwtPayload = { sub: 7, login: 'agente.zero' };
+  const usuarioAtivo: JwtPayload = {
+    sub: 7,
+    login: 'agente.zero',
+    tipo: TipoUsuarioEnum.NORMAL,
+    tokenVersao: 1,
+  };
 
   beforeEach(() => {
     repositorio = {

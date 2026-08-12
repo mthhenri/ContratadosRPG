@@ -39,6 +39,8 @@ describe('AutenticacaoService', () => {
     login: 'agente.zero',
     senha: '$2b$10$hashbcryptdopersistido',
     nome: 'Agente Zero',
+    tipo: TipoUsuarioEnum.ADMIN,
+    tokenVersao: 3,
   };
 
   beforeEach(() => {
@@ -119,7 +121,12 @@ describe('AutenticacaoService', () => {
       const resultado = await service.autenticar({ login: 'agente.zero', senha: 'segredo123' });
 
       expect(compareDublado).toHaveBeenCalledWith('segredo123', usuarioPersistido.senha);
-      const payloadEsperado: JwtPayload = { sub: 7, login: 'agente.zero' };
+      const payloadEsperado: JwtPayload = {
+        sub: 7,
+        login: 'agente.zero',
+        tipo: TipoUsuarioEnum.ADMIN,
+        tokenVersao: 3,
+      };
       expect(jwt.sign).toHaveBeenCalledWith(payloadEsperado);
       expect(resultado).toEqual({
         token: 'jwt.token.assinado',

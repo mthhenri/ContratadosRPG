@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { JwtService } from '@nestjs/jwt';
 import type { Server, Socket } from 'socket.io';
+import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import { UnauthorizedAccessException } from '../exceptions';
 import type { JwtPayload } from '../../modules/autenticacao/jwt-payload.interface';
 import type { CampanhaService } from '../../modules/campanha/campanha.service';
@@ -49,7 +50,7 @@ describe('CampanhaGateway', () => {
   let campanhaService: CampanhaServiceDublado;
   let gateway: CampanhaGateway;
 
-  const usuario: JwtPayload = { sub: 42, login: 'agente.novato' };
+  const usuario: JwtPayload = { sub: 42, login: 'agente.novato', tipo: TipoUsuarioEnum.NORMAL, tokenVersao: 1 };
 
   beforeEach(() => {
     jwtService = { verify: vi.fn() };

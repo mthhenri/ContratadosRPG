@@ -9,6 +9,7 @@ import { HealthController } from './health/health.controller';
 import { AutenticacaoModule } from './modules/autenticacao/autenticacao.module';
 import { JwtAuthGuard } from './modules/autenticacao/autenticacao.guard';
 import { UsuarioModule } from './modules/usuario/usuario.module';
+import { AutorizacaoGuard } from './modules/usuario/autorizacao.guard';
 import { CampanhaModule } from './modules/campanha/campanha.module';
 import { FichaModule } from './modules/ficha/ficha.module';
 import { RolagemModule } from './modules/rolagem/rolagem.module';
@@ -38,6 +39,7 @@ import { RolagemModule } from './modules/rolagem/rolagem.module';
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },
     { provide: APP_INTERCEPTOR, useClass: ResponseFormatInterceptor },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: AutorizacaoGuard },
   ],
 })
 export class AppModule {}
