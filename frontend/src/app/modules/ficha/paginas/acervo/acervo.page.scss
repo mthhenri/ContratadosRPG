@@ -1,7 +1,7 @@
 @use 'tema/breakpoints' as bp;
 
 .acervo {
-  max-width: 1160px;
+  max-width: 80vw;
   margin: 0 auto;
 
   &__acoes {
@@ -43,8 +43,16 @@
   // mesma forma dos cartões reais, evitando o "flash" seco de texto "Carregando…" antes da lista.
   &__esqueleto {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: var(--gap-grid);
+
+    @include bp.tablet {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include bp.mobile {
+      grid-template-columns: 1fr;
+    }
   }
 
   &__esqueleto-cartao {
@@ -68,11 +76,19 @@
     margin: 0;
     padding: 2px;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: var(--gap-grid);
     align-items: start;
     max-height: 640px;
     overflow-y: auto;
+
+    @include bp.tablet {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include bp.mobile {
+      grid-template-columns: 1fr;
+    }
 
     --fade-topo: 0px;
     --fade-base: 0px;
@@ -229,14 +245,12 @@
 
   // Chip de campanha (ou "Sem campanha") — variação do chip de classificação do tema.
   &__chip {
-    flex-shrink: 0;
+    flex-shrink: 1;
+    min-width: 0;
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    max-width: 140px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
     font-family: var(--font-mono);
     font-size: 10px;
     font-weight: 600;
