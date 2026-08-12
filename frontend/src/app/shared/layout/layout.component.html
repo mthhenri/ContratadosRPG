@@ -4,6 +4,7 @@
      `p-dialog`) gera a media query mas mira um atributo `pn_id` que não chega a existir no
      elemento renderizado nesta versão (21.2.13) — sem efeito. Fix real em `styles.scss`
      (`.p-toast`, `@include bp.mobile`). -->
+@if (!rotaIsolada()) {
 <p-toast position="bottom-center" />
 
 @if (loadingService.isLoading()) {
@@ -119,8 +120,9 @@
     />
   </div>
 </header>
+}
 
-<main class="conteudo">
+<main class="conteudo" [class.conteudo--isolado]="rotaIsolada()">
   <router-outlet />
 </main>
 

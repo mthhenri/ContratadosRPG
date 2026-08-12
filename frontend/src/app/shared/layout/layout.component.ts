@@ -1,5 +1,7 @@
-import { Component, Injector, ViewContainerRef, inject, signal, viewChild } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, Injector, ViewContainerRef, computed, inject, signal, viewChild } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter, map } from 'rxjs';
 import { Toast } from 'primeng/toast';
 import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 
@@ -37,6 +39,13 @@ export class Layout {
   protected readonly sessaoService = inject(SessaoService);
   private readonly injector = inject(Injector);
   private readonly router = inject(Router);
+  private readonly urlAtual = toSignal(
+    this.router.events.pipe(
+      filter((evento): evento is NavigationEnd => evento instanceof NavigationEnd),
+      map((evento) => evento.urlAfterRedirects),
+    ),
+    { initialValue: this.router.url },
+  );
   private readonly leitorDocumentosContainer = viewChild.required('leitorDocumentosContainer', {
     read: ViewContainerRef,
   });
@@ -44,6 +53,7 @@ export class Layout {
 
   /** Se o dropdown de perfil está aberto (fecha só por botão/ação — mesmo padrão do tema). */
   protected readonly perfilAberto = signal(false);
+  protected readonly rotaIsolada = computed(() => this.urlAtual().startsWith('/acesso-negado'));
 
   protected alternarPerfil(): void {
     this.perfilAberto.update((aberto) => !aberto);

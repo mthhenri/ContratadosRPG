@@ -1,5 +1,37 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-12 — registro expurgado variável
+
+O bloco `REGISTRO` de `/acesso-negado` deixou de usar uma barra contínua. O frontend agora escolhe
+um de oito moldes Lorem Ipsum e converte cada letra em `█`, preservando espaços e pontuação para
+produzir ritmo de palavras e quebras documentais naturais sem expor o texto original no DOM. O
+catálogo institucional passou de 16 para 32 mensagens com aproximadamente o dobro do conteúdo, e
+cada uma recebe um fragmento censurado variável de protocolo, unidade, autoridade ou localização.
+
+Os ajustes visuais feitos pelo autor na classificação, nos avisos, no rodapé e no botão foram
+preservados. Lint, build e a suíte completa do frontend passaram (57 arquivos, 933 testes), com
+apenas o aviso conhecido de budget `P-004` (638,35 kB). A inspeção real em 1920×1080 e 360×800
+confirmou duas e cinco linhas censuradas, respectivamente, sem overflow horizontal. Dez recargas
+produziram dez mensagens e oito registros distintos. O servidor temporário foi encerrado e a porta
+4301 ficou livre.
+
+## 2026-08-12 — acesso negado isolado e reforçado
+
+A rota `/acesso-negado` deixou de renderizar a topbar e os utilitários globais, preservando apenas
+o documento central de contenção. O `Layout` deriva esse estado da URL final do Angular Router,
+inclusive quando a rota possui parâmetros de consulta, sem alterar o shell das demais páginas.
+
+O documento passou a usar a marca oficial do site como selo da Fundação, ganhou largura de 920 px
+no desktop, retorno ao painel com tratamento inequívoco de botão e censuras formadas pelo caractere
+`█`. Um catálogo imutável de 16 mensagens institucionais escolhe uma variação por carregamento;
+em oito recargas da verificação real foram observadas seis mensagens distintas.
+
+Lint, build e a suíte completa do frontend passaram (57 arquivos, 931 testes); o build manteve
+somente o aviso conhecido de budget `P-004` (638,35 kB). A inspeção real em 1920×1080 e 360×800
+confirmou topbar ausente, logo presente, documento sem overflow horizontal e botão de retorno com
+48 px no desktop e 44 px no mobile. O primeiro corte mobile revelou compressão de textos longos;
+os limites flexíveis foram corrigidos antes da segunda captura.
+
 ## 2026-08-12 — `m6-08`: impersonação administrativa implementada, gate visual desktop pendente
 
 A gestão administrativa ganhou a ação **Logar como** para contas ativas diferentes da sessão

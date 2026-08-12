@@ -7,33 +7,43 @@
       <span class="acesso-negado__codigo">403</span>
     </header>
 
-    <div class="acesso-negado__classificacao">CLASSE-4 // CONFIDENCIAL</div>
+    <div class="acesso-negado__classificacao">CLASSE-██ // CONFIDENCIAL</div>
 
     <section class="acesso-negado__conteudo">
-      <div class="acesso-negado__selo" aria-hidden="true">
-        <app-icone nome="alerta" />
+      <div class="acesso-negado__fundacao">
+        <app-marca class="acesso-negado__marca" />
+        <div>
+          <span>FUNDAÇÃO // ARQUIVO CENTRAL</span>
+          <strong>CONTROLE DE ACESSO INSTITUCIONAL</strong>
+        </div>
       </div>
 
       <p class="acesso-negado__rotulo">AUTORIZAÇÃO INSUFICIENTE</p>
       <h1 id="acesso-negado-titulo">Acesso restrito</h1>
+      <p class="acesso-negado__mensagem">{{ mensagemSelecionada }}</p>
       <p>
-        Sua credencial atual não possui a classificação necessária para consultar este material.
-        A natureza e a localização do recurso solicitado permanecem protegidas.
+        Sua credencial atual não possui a classificação necessária. A ████████, a ██████ e a
+        ███████████ do ███████ permanecem protegidas.
       </p>
 
       <div class="acesso-negado__registro" aria-label="Trecho confidencial censurado">
         <span>REGISTRO:</span>
-        <span class="acesso-negado__censura" aria-hidden="true"></span>
-        <strong>[DADOS EXPURGADOS]</strong>
+        <span class="acesso-negado__censura" aria-hidden="true">
+          {{ registroExpurgadoSelecionado }}
+        </span>
+        <strong>[████ DADOS EXPURGADOS ████]</strong>
       </div>
 
       <p class="acesso-negado__aviso">
         Tentativas adicionais poderão ser registradas para análise pela administração do sistema.
       </p>
+      <p class="acesso-negado__aviso">
+        Dentre as medidas tomadas pode haver: █████, ███████████, ███████████, ██████████ ou ███████ ██ ███████ █ █████ █████.
+      </p>
     </section>
 
     <footer class="acesso-negado__rodape">
-      <span>DOCUMENTO PARCIALMENTE REDACTED</span>
+      <span>DOCUMENTO █████ ████████████ REDACTED █████</span>
       <a class="botao botao--primario" routerLink="/painel">
         <app-icone nome="voltar" />
         Retornar ao painel

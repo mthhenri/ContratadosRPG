@@ -36,6 +36,7 @@ describe('Layout — leitor global de documentos', () => {
         provideRouter([
           { path: 'conteudo-a', component: RotaLayoutTesteA },
           { path: 'conteudo-b', component: RotaLayoutTesteB },
+          { path: 'acesso-negado', component: RotaLayoutTesteB },
         ]),
         MessageService,
       ],
@@ -63,6 +64,15 @@ describe('Layout — leitor global de documentos', () => {
     const link = raiz.querySelector<HTMLAnchorElement>('.topbar__item--admin');
     expect(link?.textContent).toContain('Admin');
     expect(link?.getAttribute('href')).toBe('/admin/usuarios');
+  });
+
+  it('não renderiza a topbar na rota isolada de acesso negado', async () => {
+    const { fixture, raiz } = await montar(true, TipoUsuarioEnum.ADMIN);
+    await TestBed.inject(Router).navigateByUrl('/acesso-negado');
+    fixture.detectChanges();
+
+    expect(raiz.querySelector('.topbar')).toBeNull();
+    expect(raiz.querySelector('.conteudo--isolado')).not.toBeNull();
   });
 
   it.each([TipoUsuarioEnum.NORMAL, TipoUsuarioEnum.TESTER])('oculta Admin para %s', async (tipo) => {

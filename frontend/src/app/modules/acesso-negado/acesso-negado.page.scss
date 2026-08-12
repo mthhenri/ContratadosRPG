@@ -1,12 +1,12 @@
 .acesso-negado {
   display: grid;
-  min-height: calc(100dvh - 96px);
+  min-height: 100dvh;
   padding: clamp(16px, 5vw, 64px);
   place-items: center;
 }
 
 .acesso-negado__documento {
-  width: min(100%, 760px);
+  width: min(100%, 920px);
   min-width: 0;
   overflow: hidden;
   background: var(--surface);
@@ -57,21 +57,38 @@
   padding: clamp(24px, 6vw, 52px);
 }
 
-.acesso-negado__selo {
-  display: grid;
-  width: 48px;
-  height: 48px;
-  margin-bottom: 24px;
-  place-items: center;
-  color: var(--accent);
-  background: var(--accent-dim);
-  border: 1px solid var(--accent-border);
-  border-radius: var(--radius-control);
+.acesso-negado__fundacao {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 34px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+
+  div {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  span {
+    color: var(--text-mute);
+    font-size: 9px;
+    letter-spacing: var(--tracking-label);
+  }
+
+  strong {
+    color: var(--text);
+    font-size: 12px;
+    letter-spacing: var(--tracking-label);
+    overflow-wrap: anywhere;
+  }
 }
 
-.acesso-negado__selo app-icone {
-  width: 24px;
-  height: 24px;
+.acesso-negado__marca {
+  font-size: 46px;
 }
 
 .acesso-negado__rotulo,
@@ -103,7 +120,6 @@
 }
 
 .acesso-negado__registro {
-  position: relative;
   display: grid;
   min-width: 0;
   min-height: 74px;
@@ -118,18 +134,22 @@
 }
 
 .acesso-negado__registro strong {
-  position: relative;
-  z-index: 1;
+  max-width: 100%;
   justify-self: end;
   color: var(--text);
   font-size: 11px;
+  overflow-wrap: anywhere;
+  text-align: right;
 }
 
 .acesso-negado__censura {
-  position: absolute;
-  inset: 30px 46px 14px 16px;
-  background: var(--bg);
-  transform: rotate(-0.5deg);
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--text);
+  font-size: clamp(9px, 1.5vw, 13px);
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .acesso-negado__aviso {
@@ -152,9 +172,30 @@
   letter-spacing: var(--tracking-label);
 }
 
+.acesso-negado__rodape .botao {
+  min-height: 48px;
+  padding: 11px 22px;
+  color: var(--text);
+  border: 1px solid var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 0 18px var(--accent-dim);
+  display: flex;
+  align-items: center;
+  column-gap: 8px;
+
+  transition: all 0.2s;
+}
+
+.acesso-negado__rodape .botao:hover {
+  background-color: var(--accent);
+  font-weight: bold;
+  transition: all 0.1s;
+}
+
 @media (max-width: 480px) {
   .acesso-negado {
-    min-height: calc(100dvh - 70px);
+    min-height: 100dvh;
     padding: 12px;
   }
 
@@ -163,7 +204,7 @@
   }
 
   .acesso-negado__documento {
-    width: calc(100vw - 72px);
+    width: 100%;
   }
 
   .acesso-negado__classificacao {
@@ -172,6 +213,18 @@
 
   .acesso-negado__conteudo {
     padding: 24px 20px;
+  }
+
+  .acesso-negado__fundacao {
+    align-items: flex-start;
+  }
+
+  .acesso-negado__fundacao strong {
+    font-size: 10px;
+  }
+
+  .acesso-negado__marca {
+    font-size: 38px;
   }
 
   .acesso-negado__registro strong {
@@ -184,6 +237,8 @@
   }
 
   .acesso-negado__rodape .botao {
+    width: 100%;
+    min-width: 0;
     min-height: 44px;
     justify-content: center;
     white-space: normal;

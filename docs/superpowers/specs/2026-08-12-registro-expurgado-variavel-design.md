@@ -17,6 +17,8 @@ carregamento.
 - O texto do molde nunca será apresentado: cada letra será convertida no caractere `█`, enquanto
   espaços e pontuação serão preservados.
 - A mensagem institucional e o registro expurgado serão selecionados independentemente.
+- Cada mensagem recebe ainda um fragmento contextual censurado, escolhido independentemente entre
+  referências a unidade, protocolo, autoridade, localização, data, artefato, destino ou agente.
 
 ## Implementação
 

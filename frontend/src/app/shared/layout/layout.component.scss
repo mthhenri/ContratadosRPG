@@ -364,4 +364,8 @@
   @include bp.mobile {
     padding: 16px 12px;
   }
+
+  &--isolado {
+    padding: 0;
+  }
 }
