@@ -13,6 +13,8 @@ import {
 } from '@nestjs/common';
 import type {
   UsuarioCriadoDto,
+  UsuarioAutenticadoDto,
+  UsuarioImpersonarDto,
   UsuarioAdministrativoCriarDto,
   UsuarioListadosDto,
   UsuarioPerfilAlterarDto,
@@ -105,6 +107,15 @@ export class UsuarioController {
   @Post('admin')
   criar(@Body() dto: UsuarioAdministrativoCriarDto): Promise<UsuarioCriadoDto> {
     return this.usuarioService.criarAdministrativo(dto);
+  }
+
+  @Post('admin/impersonar')
+  @TiposPermitidos(TipoUsuarioEnum.ADMIN)
+  impersonar(
+    @Body() dto: UsuarioImpersonarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<UsuarioAutenticadoDto> {
+    return this.usuarioService.impersonar(dto, usuarioAtivo);
   }
 
   @Patch('admin/:id')

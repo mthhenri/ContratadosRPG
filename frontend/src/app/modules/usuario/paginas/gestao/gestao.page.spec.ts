@@ -7,6 +7,9 @@ import { UsuarioResumoDto } from '@contratados-rpg/shared/dtos/usuario';
 
 import { UsuarioAdminService } from '../../usuario-admin.service';
 import { UsuarioGestao } from './gestao.page';
+import { SessaoService } from '../../../../core/services/sessao.service';
+import { TempoRealService } from '../../../../core/services/tempo-real.service';
+import { Router } from '@angular/router';
 
 interface GestaoTestApi {
   filtroForm: {
@@ -38,6 +41,9 @@ describe('UsuarioGestao', () => {
     alterarUsuario: vi.fn(() => of({})), resetarSenha: vi.fn(() => of({})),
     alterarTipo: vi.fn(() => of({})), excluirUsuario: vi.fn(() => of(undefined)),
     reativarUsuario: vi.fn(() => of({})),
+    impersonarUsuario: vi.fn(() => of({
+      token: 'token-bia', id: 8, login: 'bia', nome: 'Bia', tipo: TipoUsuarioEnum.NORMAL,
+    })),
   };
 
   beforeEach(async () => {
@@ -136,5 +142,30 @@ describe('UsuarioGestao', () => {
     expect(servico.excluirUsuario).toHaveBeenCalledWith({ id: 7 });
     componente.reativar(lista.itens[0]);
     expect(servico.reativarUsuario).toHaveBeenCalledWith({ id: 7 });
+  });
+
+  it('omite a própria conta e troca integralmente a sessão somente após confirmação', () => {
+    const sessao = TestBed.inject(SessaoService);
+    sessao.substituirSessao({
+      token: 'token-admin', id: 7, login: 'ana', nome: 'Ana', tipo: TipoUsuarioEnum.ADMIN,
+    });
+    const conectar = vi.spyOn(TestBed.inject(TempoRealService), 'conectar').mockImplementation(() => undefined);
+    const navegar = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    fixture.detectChanges();
+
+    const botoes = Array.from(raiz.querySelectorAll<HTMLButtonElement>('button'))
+      .filter((botao) => botao.textContent?.includes('Logar como'));
+    expect(botoes).toHaveLength(1);
+    botoes[0].click();
+    fixture.detectChanges();
+    expect(raiz.textContent).toContain('Logar como Bia (bia)?');
+    expect(servico.impersonarUsuario).not.toHaveBeenCalled();
+
+    raiz.querySelector<HTMLButtonElement>('.gestao__confirmacao--impersonacao .botao--primario')!.click();
+
+    expect(servico.impersonarUsuario).toHaveBeenCalledWith({ id: 8 });
+    expect(sessao.usuario()).toEqual(expect.objectContaining({ token: 'token-bia', id: 8 }));
+    expect(conectar).toHaveBeenCalled();
+    expect(navegar).toHaveBeenCalledWith('/painel');
   });
 });

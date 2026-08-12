@@ -246,3 +246,23 @@ export interface UsuarioSenhaResetadaDto {
 export interface UsuarioAdminAtivoContarDto {
   readonly idExcluido?: number;
 }
+
+/** Entrada administrativa para substituir a sessão atual pela identidade da conta alvo. */
+export interface UsuarioImpersonarDto {
+  readonly id: number;
+}
+
+/** Identidade persistida necessária para emitir uma sessão, sem senha ou hash. */
+export interface UsuarioIdentidadeSessaoDto {
+  readonly id: number;
+  readonly login: string;
+  readonly nome: string;
+  readonly tipo: TipoUsuarioEnum;
+  readonly tokenVersao: number;
+}
+
+/** Dados internos usados para registrar a auditoria de uma impersonação bem-sucedida. */
+export interface UsuarioImpersonacaoInternoRegistrarDto {
+  readonly adminOrigemId: number;
+  readonly usuarioAlvoId: number;
+}

@@ -1,17 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import type {
   UsuarioAutenticadoDto,
   UsuarioAutenticarDto,
   UsuarioCriadoDto,
   UsuarioCriarDto,
-  UsuarioInternoRecuperadoDto,
 } from '@contratados-rpg/shared/dtos/usuario';
 import { BusinessException } from '../../core/exceptions';
 import { UsuarioRepository } from '../usuario/usuario.repository';
 import { UsuarioService } from '../usuario/usuario.service';
-import type { JwtPayload } from './jwt-payload.interface';
+import { SessaoTokenService } from './sessao-token.service';
 
 /**
  * Regras de autenticação (SYSTEM.SPEC §12): registro com senha encriptada (bcrypt),
@@ -24,7 +22,7 @@ export class AutenticacaoService {
   constructor(
     private readonly usuarioRepositorio: UsuarioRepository,
     private readonly usuarioService: UsuarioService,
-    private readonly jwtService: JwtService,
+    private readonly sessaoTokenService: SessaoTokenService,
   ) {}
 
   /**
@@ -49,23 +47,6 @@ export class AutenticacaoService {
       throw new BusinessException('Login ou senha inválidos');
     }
 
-    return {
-      token: this.gerarToken(usuarioEncontrado),
-      id: usuarioEncontrado.id,
-      login: usuarioEncontrado.login,
-      nome: usuarioEncontrado.nome,
-      tipo: usuarioEncontrado.tipo,
-    };
-  }
-
-  /** Assina o JWT com o `id` (subject) e o login do usuário. */
-  private gerarToken(usuario: UsuarioInternoRecuperadoDto): string {
-    const payload: JwtPayload = {
-      sub: usuario.id,
-      login: usuario.login,
-      tipo: usuario.tipo,
-      tokenVersao: usuario.tokenVersao,
-    };
-    return this.jwtService.sign(payload);
+    return this.sessaoTokenService.emitirSessao(usuarioEncontrado);
   }
 }

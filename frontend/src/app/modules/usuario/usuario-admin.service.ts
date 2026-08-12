@@ -3,6 +3,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import {
   UsuarioAdministrativoCriarDto,
+  UsuarioAutenticadoDto,
+  UsuarioImpersonarDto,
   UsuarioCriadoDto,
   UsuarioExcluirDto,
   UsuarioListadosDto,
@@ -87,5 +89,11 @@ export class UsuarioAdminService {
     return this.httpClient
       .patch<StandardResponse<UsuarioReativadoDto>>(`${this.base}/${dto.id}/reativar`, {})
       .pipe(map((resposta) => resposta.dados as UsuarioReativadoDto));
+  }
+
+  impersonarUsuario(dto: UsuarioImpersonarDto): Observable<UsuarioAutenticadoDto> {
+    return this.httpClient
+      .post<StandardResponse<UsuarioAutenticadoDto>>(`${this.base}/impersonar`, dto)
+      .pipe(map((resposta) => resposta.dados as UsuarioAutenticadoDto));
   }
 }

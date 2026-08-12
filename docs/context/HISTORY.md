@@ -1,5 +1,62 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-12 — `m6-08`: impersonação administrativa implementada, gate visual desktop pendente
+
+A gestão administrativa ganhou a ação **Logar como** para contas ativas diferentes da sessão
+atual. A confirmação inline identifica nome/login e explicita que a sessão administrativa será
+substituída; cancelar ou clicar fora não chama o endpoint. No sucesso, `SessaoService` grava o
+`UsuarioAutenticadoDto` retornado como a única sessão, o cliente de tempo real reconecta com o
+novo token e a aplicação navega para `/painel`. A própria conta e contas excluídas não oferecem a
+ação.
+
+No backend, `POST /usuario/admin/impersonar` permanece protegido por `ADMIN`, valida alvo ativo e
+recusa autoimpersonação. O emissor JWT foi extraído para `SessaoTokenService`, usado tanto pelo
+login quanto pela impersonação, garantindo id, login, tipo e `tokenVersao` atuais sem senha/hash.
+A migration `0016` criou `usuario_impersonacao`, com origem, alvo e data; foi aplicada com sucesso
+no banco local. Validações malsucedidas não geram token nem auditoria.
+
+Shared fechou 601 testes, backend 281 e frontend 928; lint e builds dos três workspaces passaram,
+com o aviso conhecido de budget `P-004` (637,08 kB). A inspeção real em 360×800 encontrou e
+corrigiu a quebra de login longo na confirmação, confirmou alvos de 44 px, ausência de overflow,
+omissão na própria conta e preservação da densidade da linha aprovada. A automação Edge usada para
+o segundo viewport ficou bloqueada repetidamente antes da captura de 1920×1080; portanto, pela
+definição de pronto do repositório, a spec permanece em `active/` até esse último gate visual.
+
+## 2026-08-12 — `m6-07`: refinamento mobile da gestão de usuários
+
+O passe responsivo obrigatório do M6 auditou a gestão administrativa, a topbar e a página de
+acesso negado usando o padrão aprovado da `m1-15`/`m2-08`: breakpoint Sass compartilhado,
+densidade por tokens e `$alvo-toque` de 44 px. A gestão ganhou quebra segura para nomes e logins
+longos, alvos adequados no comando de criação, troca de tipo e paginação, além de ações empilhadas
+nos formulários de criação, edição, senha e confirmação de exclusão. DOM, TypeScript, permissões e
+operações administrativas permaneceram intactos.
+
+A verificação ao vivo percorreu listagem, filtros, criação, edição, redefinição de senha, menu e
+confirmação de tipo, exclusão e reativação em 360×800, 390×800 e 430×800; a gestão também foi
+inspecionada em 1920×1080. Em todos os estados, `html` e `body` permaneceram sem overflow
+horizontal e os controles interativos novos mediram ao menos 44 px no mobile. A topbar manteve o
+item Admin dentro da viewport, e a página de acesso negado preservou classificação, censura,
+`[DADOS EXPURGADOS]`, `REDACTED` e retorno ao painel em 360 px. Lint e a suíte completa do frontend
+passaram (56 arquivos, 925 testes); o build de produção passou com o aviso conhecido de budget
+inicial (`P-004`, 637,13 kB para o limite de aviso de 630 kB). Próxima task: `m6-08`.
+
+## 2026-08-12 — `m6-06`: gate frontend por tipo e acesso negado institucional
+
+O frontend ganhou a factory `tipoGuard(tiposPermitidos)`, pronta para proteger rotas de módulos
+futuros por `TipoUsuarioEnum`. Ela preserva a URL pedida ao enviar uma sessão ausente para o login,
+libera tipos autorizados e direciona os demais usuários autenticados a `/acesso-negado`. O JSDoc
+documenta tanto a aplicação do gate quanto sua substituição por `autenticacaoGuard` quando um
+módulo deixar a fase restrita. Nenhuma rota funcional existente recebeu o gate nesta task.
+
+A nova rota pública e lazy apresenta uma negação genérica no tema Terminal de Contenção: shell
+institucional, classificação `CLASSE-4 // CONFIDENCIAL`, censura visual, `[DADOS EXPURGADOS]`,
+marcação `REDACTED` e retorno ao painel. O card da Gestão de Usuários e seus estados de feedback
+serviram como análogos aprovados. Testes focados do guard fecharam 4/4; lint e build do frontend
+passaram, com o aviso conhecido do budget inicial (`P-004`). A inspeção visual desktop confirmou
+hierarquia, densidade e tokens; o primeiro corte mobile revelou largura mínima excessiva e recebeu
+limites responsivos antes do fecho. A spec foi movida para `docs/specs/done/`; próxima task:
+`m6-07-refinamento-mobile-gestao-usuarios.spec.md`.
+
 ## 2026-08-12 — correção do entrypoint de produção do backend
 
 O deploy do Render compilava o backend com sucesso, mas encerrava ao executar `node dist/main`.

@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as bcrypt from 'bcrypt';
-import type { JwtService } from '@nestjs/jwt';
 import type {
   UsuarioCriadoDto,
   UsuarioInternoRecuperadoDto,
@@ -10,7 +9,7 @@ import { BusinessException } from '../../core/exceptions';
 import type { UsuarioRepository } from '../usuario/usuario.repository';
 import type { UsuarioService } from '../usuario/usuario.service';
 import { AutenticacaoService } from './autenticacao.service';
-import type { JwtPayload } from './jwt-payload.interface';
+import type { SessaoTokenService } from './sessao-token.service';
 
 // bcrypt é um addon nativo — dublado para manter o teste unitário (sem hashing real).
 vi.mock('bcrypt', () => ({
@@ -26,8 +25,8 @@ interface RepositorioDublado {
   recuperarPorLogin: ReturnType<typeof vi.fn>;
 }
 
-interface JwtDublado {
-  sign: ReturnType<typeof vi.fn>;
+interface SessaoTokenDublado {
+  emitirSessao: ReturnType<typeof vi.fn>;
 }
 
 interface UsuarioServiceDublado {
@@ -36,7 +35,7 @@ interface UsuarioServiceDublado {
 
 describe('AutenticacaoService', () => {
   let repositorio: RepositorioDublado;
-  let jwt: JwtDublado;
+  let sessaoToken: SessaoTokenDublado;
   let usuarioService: UsuarioServiceDublado;
   let service: AutenticacaoService;
 
@@ -51,12 +50,12 @@ describe('AutenticacaoService', () => {
 
   beforeEach(() => {
     repositorio = { criarUsuario: vi.fn(), recuperarPorLogin: vi.fn() };
-    jwt = { sign: vi.fn() };
+    sessaoToken = { emitirSessao: vi.fn() };
     usuarioService = { criar: vi.fn() };
     service = new AutenticacaoService(
       repositorio as unknown as UsuarioRepository,
       usuarioService as unknown as UsuarioService,
-      jwt as unknown as JwtService,
+      sessaoToken as unknown as SessaoTokenService,
     );
     hashDublado.mockReset();
     compareDublado.mockReset();
@@ -92,7 +91,7 @@ describe('AutenticacaoService', () => {
         service.autenticar({ login: 'agente.zero', senha: 'errada' }),
       ).rejects.toThrow(new BusinessException('Login ou senha inválidos'));
 
-      expect(jwt.sign).not.toHaveBeenCalled();
+      expect(sessaoToken.emitirSessao).not.toHaveBeenCalled();
     });
 
     it('rejeita login inexistente com a mesma mensagem, sem chamar bcrypt.compare', async () => {
@@ -103,24 +102,21 @@ describe('AutenticacaoService', () => {
       ).rejects.toThrow(new BusinessException('Login ou senha inválidos'));
 
       expect(compareDublado).not.toHaveBeenCalled();
-      expect(jwt.sign).not.toHaveBeenCalled();
+      expect(sessaoToken.emitirSessao).not.toHaveBeenCalled();
     });
 
     it('gera um JWT (sub = id, login) e retorna os dados básicos sem a senha', async () => {
       repositorio.recuperarPorLogin.mockResolvedValue(usuarioPersistido);
       compareDublado.mockResolvedValue(true as never);
-      jwt.sign.mockReturnValue('jwt.token.assinado');
+      sessaoToken.emitirSessao.mockReturnValue({
+        token: 'jwt.token.assinado', id: 7, login: 'agente.zero',
+        nome: 'Agente Zero', tipo: TipoUsuarioEnum.ADMIN,
+      });
 
       const resultado = await service.autenticar({ login: 'agente.zero', senha: 'segredo123' });
 
       expect(compareDublado).toHaveBeenCalledWith('segredo123', usuarioPersistido.senha);
-      const payloadEsperado: JwtPayload = {
-        sub: 7,
-        login: 'agente.zero',
-        tipo: TipoUsuarioEnum.ADMIN,
-        tokenVersao: 3,
-      };
-      expect(jwt.sign).toHaveBeenCalledWith(payloadEsperado);
+      expect(sessaoToken.emitirSessao).toHaveBeenCalledWith(usuarioPersistido);
       expect(resultado).toEqual({
         token: 'jwt.token.assinado',
         id: 7,

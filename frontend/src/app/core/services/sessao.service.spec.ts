@@ -123,4 +123,17 @@ describe('SessaoService', () => {
     expect(servico.autenticado()).toBe(false);
     expect(localStorage.getItem(CHAVE_SESSAO)).toBeNull();
   });
+
+  it('substitui integralmente a sessão sem preservar o token administrativo', () => {
+    const { servico } = criar();
+    const alvo = {
+      token: 'token-tester', id: 8, login: 'tester', nome: 'Tester', tipo: TipoUsuarioEnum.TESTER,
+    };
+
+    servico.substituirSessao(alvo);
+
+    expect(servico.usuario()).toEqual(alvo);
+    expect(JSON.parse(localStorage.getItem(CHAVE_SESSAO) ?? 'null')).toEqual(alvo);
+    expect(localStorage.getItem(CHAVE_SESSAO)).not.toContain('jwt-de-teste');
+  });
 });

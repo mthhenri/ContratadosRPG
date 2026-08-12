@@ -1,5 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { CampanhaModule } from '../campanha/campanha.module';
+import { SessaoTokenModule } from '../autenticacao/sessao-token.module';
+import { UsuarioImpersonacaoRepository } from './usuario-impersonacao.repository';
 import { UsuarioController } from './usuario.controller';
 import { UsuarioRepository } from './usuario.repository';
 import { UsuarioService } from './usuario.service';
@@ -10,9 +12,9 @@ import { UsuarioService } from './usuario.service';
  * login). Expõe o repositório para os módulos que o injetam.
  */
 @Module({
-  imports: [forwardRef(() => CampanhaModule)],
+  imports: [forwardRef(() => CampanhaModule), SessaoTokenModule],
   controllers: [UsuarioController],
-  providers: [UsuarioRepository, UsuarioService],
+  providers: [UsuarioRepository, UsuarioImpersonacaoRepository, UsuarioService],
   exports: [UsuarioRepository, UsuarioService],
 })
 export class UsuarioModule {}

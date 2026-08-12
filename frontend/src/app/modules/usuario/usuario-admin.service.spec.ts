@@ -106,4 +106,20 @@ describe('UsuarioAdminService', () => {
     expect(requisicao.request.body).toEqual({});
     requisicao.flush(envelope({ id: 7, login: 'ana', nome: 'Ana' }));
   });
+
+  it('solicita impersonação e devolve a sessão integral do alvo', () => {
+    const { servico, http } = criar();
+    const alvo = {
+      token: 'token-alvo', id: 8, login: 'bia', nome: 'Bia', tipo: TipoUsuarioEnum.NORMAL,
+    };
+    let resultado: typeof alvo | undefined;
+
+    servico.impersonarUsuario({ id: 8 }).subscribe((sessao) => { resultado = sessao; });
+    const requisicao = http.expectOne((req) => req.url.endsWith('/usuario/admin/impersonar'));
+    expect(requisicao.request.method).toBe('POST');
+    expect(requisicao.request.body).toEqual({ id: 8 });
+    requisicao.flush(envelope(alvo));
+
+    expect(resultado).toEqual(alvo);
+  });
 });

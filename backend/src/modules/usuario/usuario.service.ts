@@ -9,6 +9,8 @@ import type {
   UsuarioExcluirDto,
   UsuarioListarDto,
   UsuarioListadosDto,
+  UsuarioAutenticadoDto,
+  UsuarioImpersonarDto,
   UsuarioLoginRecuperarDto,
   UsuarioPerfilAlterarDto,
   UsuarioPerfilAlteradoDto,
@@ -26,8 +28,10 @@ import type {
 import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import { BusinessException, ResourceNotFoundException } from '../../core/exceptions';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
+import { SessaoTokenService } from '../autenticacao/sessao-token.service';
 import { CampanhaRepository } from '../campanha/campanha.repository';
 import { UsuarioRepository } from './usuario.repository';
+import { UsuarioImpersonacaoRepository } from './usuario-impersonacao.repository';
 
 /** Custo (rounds) do bcrypt — mesmo do registro (m2-02) e do seed da migration `0003`. */
 const ROUNDS_BCRYPT = 10;
@@ -43,6 +47,8 @@ export class UsuarioService {
   constructor(
     private readonly usuarioRepositorio: UsuarioRepository,
     private readonly campanhaRepositorio: CampanhaRepository,
+    private readonly usuarioImpersonacaoRepositorio: UsuarioImpersonacaoRepository,
+    private readonly sessaoTokenService: SessaoTokenService,
   ) {}
 
   /** Recupera o estado persistido atual usado pela autorização global. */
@@ -53,6 +59,27 @@ export class UsuarioService {
   /** Lista contas para a superfície administrativa. */
   async listar(dto: UsuarioListarDto): Promise<UsuarioListadosDto> {
     return this.usuarioRepositorio.listar(dto);
+  }
+
+  /** Substitui a identidade administrativa pela conta ativa indicada e registra a auditoria. */
+  async impersonar(
+    dto: UsuarioImpersonarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<UsuarioAutenticadoDto> {
+    const usuarioAlvo = await this.usuarioRepositorio.recuperarPorId(dto);
+    if (!usuarioAlvo) {
+      throw new ResourceNotFoundException('Usuário');
+    }
+    if (usuarioAlvo.id === usuarioAtivo.sub) {
+      throw new BusinessException('Não é permitido logar como a própria conta');
+    }
+
+    const sessao = this.sessaoTokenService.emitirSessao(usuarioAlvo);
+    await this.usuarioImpersonacaoRepositorio.registrar({
+      adminOrigemId: usuarioAtivo.sub,
+      usuarioAlvoId: usuarioAlvo.id,
+    });
+    return sessao;
   }
 
   /** Cria uma conta NORMAL, compartilhando a mesma regra com o registro público. */

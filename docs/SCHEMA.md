@@ -99,6 +99,22 @@ CREATE TABLE usuario (
 -- Seed da conta inicial do autor ('senhor.contratados') criado na migration (senha como hash bcrypt).
 ```
 
+## usuario_impersonacao (M6)
+
+Auditoria append-only de uma troca administrativa de identidade. A linha só nasce depois que
+origem e alvo foram validados; não contém token, senha ou hash.
+
+```sql
+CREATE TABLE usuario_impersonacao (
+  -- BaseEntity...
+  admin_origem_id   INTEGER NOT NULL,      -- fk_usuario_impersonacao_admin_origem
+  usuario_alvo_id   INTEGER NOT NULL,      -- fk_usuario_impersonacao_usuario_alvo
+  impersonacao_data TIMESTAMPTZ NOT NULL
+);
+-- ix_usuario_impersonacao_admin_origem: INDEX (admin_origem_id)
+-- ix_usuario_impersonacao_usuario_alvo: INDEX (usuario_alvo_id)
+```
+
 ## campanha (M2)
 
 ```sql

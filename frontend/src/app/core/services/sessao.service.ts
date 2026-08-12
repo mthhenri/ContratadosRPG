@@ -60,7 +60,7 @@ export class SessaoService {
       .post<StandardResponse<UsuarioAutenticadoDto>>(`${environment.apiBase}/autenticacao/login`, dto)
       .pipe(
         map((resposta) => resposta.dados as UsuarioAutenticadoDto),
-        tap((usuarioAutenticado) => this.abrirSessao(usuarioAutenticado)),
+        tap((usuarioAutenticado) => this.substituirSessao(usuarioAutenticado)),
       );
   }
 
@@ -79,15 +79,16 @@ export class SessaoService {
     }
   }
 
+  /** Substitui integralmente a única sessão do navegador pela identidade recebida. */
+  substituirSessao(usuarioAutenticado: UsuarioAutenticadoDto): void {
+    this.sessaoAtual.set(usuarioAutenticado);
+    localStorage.setItem(CHAVE_SESSAO, JSON.stringify(usuarioAutenticado));
+  }
+
   /** Encerra a sessão: limpa o Signal e o `localStorage`. */
   sair(): void {
     this.sessaoAtual.set(null);
     localStorage.removeItem(CHAVE_SESSAO);
-  }
-
-  private abrirSessao(usuarioAutenticado: UsuarioAutenticadoDto): void {
-    this.sessaoAtual.set(usuarioAutenticado);
-    localStorage.setItem(CHAVE_SESSAO, JSON.stringify(usuarioAutenticado));
   }
 
   /** Restaura a sessão persistida no boot; descarta conteúdo corrompido. */

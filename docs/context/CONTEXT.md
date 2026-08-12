@@ -1,7 +1,7 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-12 · **Última decisão registrada:** a `m6-05` entregou a gestão
-> visual administrativa de contas e a identificação do tipo do usuário no perfil
+> **Última revisão:** 2026-08-12 · **Última decisão registrada:** a `m6-07` fechou o passe
+> responsivo obrigatório da UI administrativa e da página de acesso negado
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -15,8 +15,8 @@
 ## 1. Próxima Task
 
 O M6 está aberto. A próxima task encadeada é
-`m6-06-frontend-gate-tester-acesso-negado.spec.md`, que entrega o gate de tester e a tela de
-acesso negado sobre a autorização fechada nas tasks anteriores. O trio do guia de criação
+`m6-08-impersonacao-administrativa.spec.md`, que adiciona impersonação administrativa auditável.
+O trio do guia de criação
 (`m3-57` base, `m3-58` melhorias de nível, `m3-59`
 equipamento inicial), o complemento `m3-64`, a `m3-61` (cor de ficha) e a `m3-62` (avatar de ficha)
 **concluíram** — as specs estão em `docs/specs/done/`; o que o guia faz hoje de ponta a ponta está
@@ -36,7 +36,7 @@ só adaptou o visual de desktop).
 | Spec | Frente | O que é |
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m6-06`…`m6-08` | usuários | gates/UI de tester, refino mobile e impersonação administrativa |
+| `m6-08` | usuários | impersonação administrativa auditável |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/`. Milestones ainda não abertos:
 `m4-ficha-criatura-npc` e `m5-guia-missao`.
@@ -72,7 +72,7 @@ falhas isoladas/preexistentes.
 | M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; guia de criação completo (`m3-57`/`m3-58`/`m3-59` — base, melhorias de nível, equipamento inicial); cor (`m3-61`) e avatar (`m3-62`) de identidade por ficha prontos; falta só `m3-53` |
 | M4 | Ficha de Criatura/NPC | não iniciado |
 | M5 | Guia de Missão | não iniciado |
-| M6 | Gestão de Usuários e Papéis | **em andamento** — `m6-01`…`m6-05` concluídas; próxima `m6-06`; `m6-08` adiciona impersonação administrativa auditável |
+| M6 | Gestão de Usuários e Papéis | **em andamento** — `m6-01`…`m6-07` concluídas; próxima `m6-08`, com impersonação administrativa auditável |
 
 ---
 
@@ -115,6 +115,11 @@ Desde a `m6-05`, `/admin/usuarios` expõe essas operações em uma tela inline p
 criação com escolha de tipo, edição, reset de senha, troca de tipo com confirmação, exclusão e
 reativação. O perfil identifica o tipo atual sem permitir editá-lo, e a topbar sinaliza contas
 `ADMIN`/`TESTER`.
+Desde a `m6-06`, módulos futuros podem restringir suas rotas com
+`tipoGuard([TipoUsuarioEnum.ADMIN, TipoUsuarioEnum.TESTER])`. Sem sessão, o guard preserva o
+retorno no redirecionamento ao login; uma sessão sem tipo permitido segue para a página pública
+`/acesso-negado`. Ao abrir o módulo para todo usuário autenticado, substitua-o por
+`autenticacaoGuard`; nenhuma rota funcional existente foi restringida pela entrega.
 
 ### Campanhas — `backend/campanha`, `frontend/campanha`
 

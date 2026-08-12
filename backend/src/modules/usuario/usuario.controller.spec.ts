@@ -49,4 +49,21 @@ describe('UsuarioController', () => {
     );
     expect(resetarSenha).toHaveBeenCalledWith({ id: 7, novaSenha: 'novaSenha123' });
   });
+
+  it('repassa alvo e origem no endpoint administrativo de impersonação', async () => {
+    const impersonar = vi.fn().mockResolvedValue({ token: 'alvo' });
+    const controller = new UsuarioController({ impersonar } as unknown as UsuarioService);
+    const adminAtivo = {
+      sub: 1, login: 'administrador', tipo: TipoUsuarioEnum.ADMIN, tokenVersao: 1,
+    };
+
+    await controller.impersonar({ id: 8 }, adminAtivo);
+
+    expect(impersonar).toHaveBeenCalledWith({ id: 8 }, adminAtivo);
+    // O decorator grava a metadata na função do método, não na instância do controller.
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(Reflect.getMetadata(TIPOS_PERMITIDOS_KEY, controller.impersonar)).toEqual([
+      TipoUsuarioEnum.ADMIN,
+    ]);
+  });
 });

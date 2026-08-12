@@ -1,6 +1,7 @@
 import { Component, DestroyRef, HostListener, Pipe, PipeTransform, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { debounceTime, distinctUntilChanged, finalize, Observable } from 'rxjs';
 import { UsuarioResumoDto } from '@contratados-rpg/shared/dtos/usuario';
 import { TipoUsuarioEnum, UsuarioSituacaoEnum } from '@contratados-rpg/shared/enums';
@@ -8,6 +9,8 @@ import { TipoUsuarioEnum, UsuarioSituacaoEnum } from '@contratados-rpg/shared/en
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { UsuarioAdminService } from '../../usuario-admin.service';
+import { SessaoService } from '../../../../core/services/sessao.service';
+import { TempoRealService } from '../../../../core/services/tempo-real.service';
 
 type ModoEditor = 'perfil' | 'senha' | 'tipo';
 interface EditorUsuario { readonly usuarioId: number; readonly modo: ModoEditor }
@@ -29,6 +32,9 @@ export class UsuarioGestao {
   private readonly usuarioAdminService = inject(UsuarioAdminService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly sessaoService = inject(SessaoService);
+  private readonly tempoRealService = inject(TempoRealService);
+  private readonly router = inject(Router);
   protected readonly TipoUsuarioEnum = TipoUsuarioEnum;
   protected readonly UsuarioSituacaoEnum = UsuarioSituacaoEnum;
   protected readonly tipos = [
@@ -47,6 +53,8 @@ export class UsuarioGestao {
   protected readonly exclusaoPendenteId = signal<number | null>(null);
   protected readonly menuTipoUsuarioId = signal<number | null>(null);
   protected readonly tipoPendente = signal<{ usuarioId: number; tipo: TipoUsuarioEnum } | null>(null);
+  protected readonly impersonacaoPendenteId = signal<number | null>(null);
+  protected readonly impersonandoId = signal<number | null>(null);
 
   protected readonly filtroForm = this.formBuilder.nonNullable.group({
     busca: [''], tipo: ['' as TipoUsuarioEnum | ''], situacao: [UsuarioSituacaoEnum.ATIVOS],
@@ -93,6 +101,25 @@ export class UsuarioGestao {
   }
 
   protected aplicarFiltros(): void { this.pagina.set(1); this.fecharEdicao(); this.carregarUsuarios(); }
+  protected podeImpersonar(usuario: UsuarioResumoDto): boolean {
+    return !usuario.isDeleted && usuario.id !== this.sessaoService.usuario()?.id;
+  }
+  protected pedirImpersonacao(usuario: UsuarioResumoDto): void {
+    this.fecharEdicao();
+    this.impersonacaoPendenteId.set(usuario.id);
+  }
+  protected cancelarImpersonacao(): void { this.impersonacaoPendenteId.set(null); }
+  protected confirmarImpersonacao(usuario: UsuarioResumoDto): void {
+    if (this.impersonacaoPendenteId() !== usuario.id || this.impersonandoId() !== null) return;
+    this.impersonandoId.set(usuario.id);
+    this.usuarioAdminService.impersonarUsuario({ id: usuario.id }).pipe(
+      finalize(() => this.impersonandoId.set(null)),
+    ).subscribe((sessao) => {
+      this.sessaoService.substituirSessao(sessao);
+      this.tempoRealService.conectar();
+      void this.router.navigateByUrl('/painel');
+    });
+  }
   protected limparFiltros(): void {
     this.filtroForm.reset(
       { busca: '', tipo: '', situacao: UsuarioSituacaoEnum.ATIVOS },
@@ -109,7 +136,7 @@ export class UsuarioGestao {
     if (modo === 'senha') this.senhaForm.reset({ novaSenha: '' });
     if (modo === 'tipo') this.tipoForm.reset({ tipo: usuario.tipo });
   }
-  protected fecharEdicao(): void { this.editorAberto.set(null); this.exclusaoPendenteId.set(null); }
+  protected fecharEdicao(): void { this.editorAberto.set(null); this.exclusaoPendenteId.set(null); this.impersonacaoPendenteId.set(null); }
   protected alternarSenha(): void { this.senhaVisivel.update((visivel) => !visivel); }
   protected iconeTipo(tipo: TipoUsuarioEnum): 'agente' | 'protecoes' | 'amplificador' {
     if (tipo === TipoUsuarioEnum.ADMIN) return 'protecoes';
@@ -132,6 +159,9 @@ export class UsuarioGestao {
   protected fecharMenuTipoAoClicarFora(evento: MouseEvent): void {
     if (!(evento.target as Element | null)?.closest('.gestao__tipo-container')) {
       this.menuTipoUsuarioId.set(null);
+    }
+    if (!(evento.target as Element | null)?.closest('.gestao__impersonacao-contexto')) {
+      this.impersonacaoPendenteId.set(null);
     }
   }
   protected confirmarTipo(usuario: UsuarioResumoDto): void {
