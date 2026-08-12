@@ -1,7 +1,7 @@
 # m6-gestao-usuarios-papeis.spec.md
 
 > **Milestone M6 — Gestão de Usuários & Papéis Globais.** Este spec fixa o escopo acordado.
-> Quebrar nas tasks numeradas `m6-01`…`m6-07`. Milestone novo (não existia no plano original
+> Quebrar nas tasks numeradas `m6-01`…`m6-08`. Milestone novo (não existia no plano original
 > M0–M5); registrado em `SYSTEM.SPEC.md §15`.
 
 ## Objetivo
@@ -22,6 +22,8 @@ futuro), com:
 5. **Mecânica de "acesso limitado para testers"**: infra pronta para, em cada módulo novo,
    liberar acesso apenas a `ADMIN`/`TESTER` durante a fase de testes e depois abrir para todos —
    **sem** travar nenhum módulo existente nesta entrega.
+6. **Impersonação administrativa**: permitir que um admin substitua sua sessão por uma sessão
+   real de outro usuário para suporte e validação, sem conhecer ou alterar a senha do alvo.
 
 ## Diferença essencial: papel global × papel de campanha
 
@@ -92,10 +94,10 @@ A partir daí o tipo já pode ser atribuído pelo admin e usado em `@TiposPermit
 
 ## Quebra em tasks (proposta — a redigir quando o milestone entrar)
 
-> As 7 tasks já foram redigidas como specs próprias em `docs/specs/backlog/` (`m6-01`…`m6-07`),
+> As 8 tasks foram redigidas como specs próprias (`m6-01`…`m6-08`),
 > adiantado do fluxo padrão do projeto para permitir planejar o milestone inteiro de uma vez —
 > nenhuma foi movida para `active/` nem implementada. Esta tabela permanece o resumo de
-> intenção; o detalhe normativo de cada task vive no arquivo próprio. **Todas as 7 são
+> intenção; o detalhe normativo de cada task vive no arquivo próprio. **Todas as 8 são
 > obrigatórias** — nenhuma é opcional, incluindo a `m6-07` (validação mobile, ver abaixo).
 
 | Task | Camada | Conteúdo | Depende de |
@@ -107,9 +109,10 @@ A partir daí o tipo já pode ser atribuído pelo admin e usado em `@TiposPermit
 | `m6-05` | frontend | Tela de gestão de usuários (service, `adminGuard`, lista+busca/filtro, criar/alterar/reset senha/trocar tipo/excluir/reativar, item de menu), reação a 401. | m6-04 |
 | `m6-06` | frontend | Gate de tester: `tipoGuard` genérico + tela de "acesso negado" SCP (censura/REDACTED/chip). Independente da tela de gestão. | m6-02 |
 | `m6-07` | frontend | **Validação/refinamento mobile (obrigatória)** de toda a UI nova do M6 — tela de gestão (m6-05) e tela de "acesso negado" (m6-06). | m6-05, m6-06 |
+| `m6-08` | banco + backend + frontend | Impersonação administrativa auditável: admin troca integralmente sua sessão pela do usuário ativo selecionado, sem senha e sem privilégio residual. | m6-02, m6-05 |
 
-**Ordem:** `m6-01 → m6-02 →` então em paralelo `m6-03 → m6-04 → m6-05` e `m6-06`; `m6-07` fecha
-o milestone depois que as duas frentes de frontend estiverem prontas.
+**Ordem:** `m6-01 → m6-02 →` então em paralelo `m6-03 → m6-04 → m6-05` e `m6-06`;
+`m6-07` valida a UI dessas frentes e `m6-08` fecha o milestone com a impersonação administrativa.
 
 ### m6-07 é obrigatória — validação mobile não é opcional
 

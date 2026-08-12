@@ -36,7 +36,7 @@ só adaptou o visual de desktop).
 | Spec | Frente | O que é |
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m6-06`…`m6-07` | usuários | gates e UI de tester |
+| `m6-06`…`m6-08` | usuários | gates/UI de tester, refino mobile e impersonação administrativa |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/`. Milestones ainda não abertos:
 `m4-ficha-criatura-npc` e `m5-guia-missao`.
@@ -72,7 +72,7 @@ falhas isoladas/preexistentes.
 | M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; guia de criação completo (`m3-57`/`m3-58`/`m3-59` — base, melhorias de nível, equipamento inicial); cor (`m3-61`) e avatar (`m3-62`) de identidade por ficha prontos; falta só `m3-53` |
 | M4 | Ficha de Criatura/NPC | não iniciado |
 | M5 | Guia de Missão | não iniciado |
-| M6 | Gestão de Usuários e Papéis | **em andamento** — `m6-01`…`m6-05` concluídas; próxima `m6-06` |
+| M6 | Gestão de Usuários e Papéis | **em andamento** — `m6-01`…`m6-05` concluídas; próxima `m6-06`; `m6-08` adiciona impersonação administrativa auditável |
 
 ---
 
