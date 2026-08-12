@@ -37,6 +37,11 @@ export const PRESETS_ACCENT: readonly PresetAccent[] = [
   { id: 'dourado', rotulo: 'Dourado', cor: '#c9a227' },
   { id: 'turquesa', rotulo: 'Turquesa', cor: '#3bb9b3' },
   { id: 'cinza', rotulo: 'Cinza', cor: '#8b929b' },
+  // Extremos neutros (m1-1x): cada um só passa na trava de contraste em uma das bases — branco
+  // fica legível no escuro e travado no claro, preto o inverso — então nunca ficam os dois
+  // disponíveis ao mesmo tempo, mas cada base ganha seu extremo.
+  { id: 'branco', rotulo: 'Branco', cor: '#ffffff' },
+  { id: 'preto', rotulo: 'Preto', cor: '#000000' },
 ];
 
 /** Preset aplicado quando nada foi salvo (o vermelho da identidade). */
@@ -411,6 +416,24 @@ export class TemaService {
       return;
     }
     this._accentCustom.set(salvo);
+    this.aplicar();
+    this.salvar();
+  }
+
+  /**
+   * Remove o slot custom salvo (m1-16 extensão). Se ele for o accent ativo no momento, cai de
+   * volta no preset já selecionado (`_presetId`, preservado mesmo com o custom ativo). Sem efeito
+   * se nada estiver salvo.
+   */
+  removerAccentCustom(): void {
+    const salvo = this._accentCustomSalvo();
+    if (salvo === null) {
+      return;
+    }
+    if (this._accentCustom() === salvo) {
+      this._accentCustom.set(null);
+    }
+    this._accentCustomSalvo.set(null);
     this.aplicar();
     this.salvar();
   }

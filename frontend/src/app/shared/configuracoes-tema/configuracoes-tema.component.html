@@ -71,18 +71,28 @@
             </button>
           }
           @if (tema.accentCustomSalvo(); as corSalva) {
-            <button
-              type="button"
-              class="config-swatch config-swatch--salvo"
-              [class.config-swatch--ativo]="tema.salvoAtivo()"
-              [style.--swatch-cor]="corSalva"
-              [attr.aria-pressed]="tema.salvoAtivo()"
-              [attr.aria-label]="'Cor salva: ' + tema.nomeAccentSalvo() + ' (' + corSalva + ')'"
-              (click)="selecionarSalvo()"
-            >
-              <span class="config-swatch__amostra" aria-hidden="true"></span>
-              <span class="config-swatch__nome">{{ tema.nomeAccentSalvo() }}</span>
-            </button>
+            <div class="config-swatch-slot">
+              <button
+                type="button"
+                class="config-swatch config-swatch--salvo"
+                [class.config-swatch--ativo]="tema.salvoAtivo()"
+                [style.--swatch-cor]="corSalva"
+                [attr.aria-pressed]="tema.salvoAtivo()"
+                [attr.aria-label]="'Cor salva: ' + tema.nomeAccentSalvo() + ' (' + corSalva + ')'"
+                (click)="selecionarSalvo()"
+              >
+                <span class="config-swatch__amostra" aria-hidden="true"></span>
+                <span class="config-swatch__nome">{{ tema.nomeAccentSalvo() }}</span>
+              </button>
+              <button
+                type="button"
+                class="config-swatch-slot__remover"
+                aria-label="Remover cor personalizada salva"
+                (click)="removerSalvo()"
+              >
+                ×
+              </button>
+            </div>
           }
         </div>
       </section>

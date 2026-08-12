@@ -90,4 +90,10 @@ export class ConfiguracoesTema {
     this.contrasteBloqueado.set(false);
     this.tema.selecionarAccentSalvo();
   }
+
+  /** Remove o slot custom salvo. */
+  protected removerSalvo(): void {
+    this.contrasteBloqueado.set(false);
+    this.tema.removerAccentCustom();
+  }
 }
