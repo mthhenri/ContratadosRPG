@@ -201,3 +201,36 @@ export interface UsuarioReativadoDto {
   readonly login: string;
   readonly nome: string;
 }
+
+/** Entrada administrativa para alterar o tipo de uma conta ativa. */
+export interface UsuarioTipoAlterarDto {
+  readonly id: number;
+  readonly tipo: TipoUsuarioEnum;
+}
+
+/** Conta retornada depois da troca administrativa de tipo. */
+export interface UsuarioTipoAlteradoDto {
+  readonly id: number;
+  readonly login: string;
+  readonly nome: string;
+  readonly tipo: TipoUsuarioEnum;
+  readonly tipoDescricao: string;
+}
+
+/** Entrada administrativa para redefinir a senha sem exigir a senha atual. */
+export interface UsuarioSenhaResetarDto {
+  readonly id: number;
+  readonly novaSenha: string;
+}
+
+/** Confirmação pública da redefinição de senha, sem expor senha ou hash. */
+export interface UsuarioSenhaResetadaDto {
+  readonly id: number;
+  readonly login: string;
+  readonly nome: string;
+}
+
+/** Filtro interno da contagem de administradores ativos. */
+export interface UsuarioAdminAtivoContarDto {
+  readonly idExcluido?: number;
+}

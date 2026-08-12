@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { Knex } from 'knex';
 import type {
   UsuarioCriadoDto,
+  UsuarioAdminAtivoContarDto,
   UsuarioExcluirDto,
   UsuarioInternoCriarDto,
   UsuarioInternoRecuperadoDto,
@@ -16,7 +17,10 @@ import type {
   UsuarioSenhaInternoAlterarDto,
   UsuarioSessaoDto,
   UsuarioSessaoRecuperarDto,
+  UsuarioTipoAlteradoDto,
+  UsuarioTipoAlterarDto,
 } from '@contratados-rpg/shared/dtos/usuario';
+import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import { BaseRepository } from '../../core/base/base.repository';
 import { KNEX_CONNECTION } from '../../database/database.provider';
 
@@ -197,5 +201,52 @@ export class UsuarioRepository extends BaseRepository {
       { id: dto.id },
     );
     return usuarioReativado;
+  }
+
+  /** Altera o tipo traduzindo o código público para a referência relacional. */
+  async alterarTipo(dto: UsuarioTipoAlterarDto): Promise<UsuarioTipoAlteradoDto> {
+    const [usuarioAlterado] = await this.executarConsulta<UsuarioTipoAlteradoDto>(
+      `UPDATE usuario
+       SET tipo_usuario_id = tipo_usuario.id, updated_date = NOW()
+       FROM tipo_usuario
+       WHERE usuario.id = :id
+         AND usuario.is_deleted = false
+         AND tipo_usuario.codigo = :tipo
+         AND tipo_usuario.is_deleted = false
+       RETURNING usuario.id, usuario.login, usuario.nome,
+                 tipo_usuario.codigo AS tipo,
+                 tipo_usuario.descricao AS "tipoDescricao"`,
+      { id: dto.id, tipo: dto.tipo },
+    );
+    return usuarioAlterado;
+  }
+
+  /** Revoga tokens emitidos incrementando a versão persistida da conta. */
+  async incrementarTokenVersao(dto: UsuarioRecuperarDto): Promise<void> {
+    await this.executarComando(
+      `UPDATE usuario
+       SET token_versao = token_versao + 1, updated_date = NOW()
+       WHERE id = :id AND is_deleted = false`,
+      { id: dto.id },
+    );
+  }
+
+  /** Conta administradores ativos, opcionalmente desconsiderando a conta alvo. */
+  async contarAdminsAtivos(dto: UsuarioAdminAtivoContarDto): Promise<number> {
+    const filtroAlvo = dto.idExcluido === undefined ? '' : ' AND usuario.id <> :idExcluido';
+    const parametrosSql: Record<string, unknown> = { tipoAdmin: TipoUsuarioEnum.ADMIN };
+    if (dto.idExcluido !== undefined) {
+      parametrosSql.idExcluido = dto.idExcluido;
+    }
+    const [resultado] = await this.executarConsulta<{ total: string }>(
+      `SELECT COUNT(*) AS total
+       FROM usuario
+       JOIN tipo_usuario ON tipo_usuario.id = usuario.tipo_usuario_id
+         AND tipo_usuario.is_deleted = false
+       WHERE usuario.is_deleted = false
+         AND tipo_usuario.codigo = :tipoAdmin${filtroAlvo}`,
+      parametrosSql,
+    );
+    return Number(resultado.total);
   }
 }

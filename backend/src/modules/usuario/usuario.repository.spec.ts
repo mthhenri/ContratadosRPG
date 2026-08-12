@@ -174,4 +174,45 @@ describe('UsuarioRepository', () => {
     expect(parametros).toEqual({ id: 7 });
     expect(sessao).toEqual({ tipo: TipoUsuarioEnum.NORMAL, tokenVersao: 2, isDeleted: true });
   });
+
+  it('altera tipo traduzindo codigo para id e retorna a descricao', async () => {
+    const raw = vi.fn().mockResolvedValue({ rows: [{ id: 7 }] });
+    const repositorio = new UsuarioRepository({ raw } as unknown as Knex);
+
+    await repositorio.alterarTipo({ id: 7, tipo: TipoUsuarioEnum.TESTER });
+
+    const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(sql).toContain('SET tipo_usuario_id = tipo_usuario.id');
+    expect(sql).toContain('FROM tipo_usuario');
+    expect(sql).toContain('tipo_usuario.codigo = :tipo');
+    expect(sql).toContain('usuario.is_deleted = false');
+    expect(parametros).toEqual({ id: 7, tipo: TipoUsuarioEnum.TESTER });
+  });
+
+  it('incrementa a versao do token somente para usuario ativo', async () => {
+    const raw = vi.fn().mockResolvedValue({ rows: [] });
+    const repositorio = new UsuarioRepository({ raw } as unknown as Knex);
+
+    await repositorio.incrementarTokenVersao({ id: 7 });
+
+    const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(sql).toContain('token_versao = token_versao + 1');
+    expect(sql).toContain('updated_date = NOW()');
+    expect(sql).toContain('WHERE id = :id AND is_deleted = false');
+    expect(parametros).toEqual({ id: 7 });
+  });
+
+  it('conta admins ativos excluindo opcionalmente o alvo', async () => {
+    const raw = vi.fn().mockResolvedValue({ rows: [{ total: '2' }] });
+    const repositorio = new UsuarioRepository({ raw } as unknown as Knex);
+
+    const total = await repositorio.contarAdminsAtivos({ idExcluido: 7 });
+
+    const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(sql).toContain('tipo_usuario.codigo = :tipoAdmin');
+    expect(sql).toContain('usuario.is_deleted = false');
+    expect(sql).toContain('usuario.id <> :idExcluido');
+    expect(parametros).toEqual({ tipoAdmin: TipoUsuarioEnum.ADMIN, idExcluido: 7 });
+    expect(total).toBe(2);
+  });
 });

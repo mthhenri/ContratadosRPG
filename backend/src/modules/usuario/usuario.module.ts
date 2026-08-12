@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
+import { CampanhaModule } from '../campanha/campanha.module';
 import { UsuarioController } from './usuario.controller';
 import { UsuarioRepository } from './usuario.repository';
 import { UsuarioService } from './usuario.service';
@@ -9,6 +10,7 @@ import { UsuarioService } from './usuario.service';
  * login). Expõe o repositório para os módulos que o injetam.
  */
 @Module({
+  imports: [forwardRef(() => CampanhaModule)],
   controllers: [UsuarioController],
   providers: [UsuarioRepository, UsuarioService],
   exports: [UsuarioRepository, UsuarioService],

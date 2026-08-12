@@ -21,6 +21,10 @@ import type {
   UsuarioReativadoDto,
   UsuarioSenhaAlterarDto,
   UsuarioSenhaAlteradaDto,
+  UsuarioSenhaResetadaDto,
+  UsuarioSenhaResetarDto,
+  UsuarioTipoAlteradoDto,
+  UsuarioTipoAlterarDto,
 } from '@contratados-rpg/shared/dtos/usuario';
 import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import { ActiveUser, TiposPermitidos } from '../../core/decorators';
@@ -108,12 +112,32 @@ export class UsuarioController {
   }
 
   @Delete('admin/:id')
-  excluir(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.usuarioService.excluir({ id });
+  excluir(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<void> {
+    return this.usuarioService.excluir({ id }, usuarioAtivo);
   }
 
   @Patch('admin/:id/reativar')
   reativar(@Param('id', ParseIntPipe) id: number): Promise<UsuarioReativadoDto> {
     return this.usuarioService.reativar({ id });
+  }
+
+  @Patch('admin/:id/tipo')
+  alterarTipo(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UsuarioTipoAlterarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<UsuarioTipoAlteradoDto> {
+    return this.usuarioService.alterarTipo({ ...dto, id }, usuarioAtivo);
+  }
+
+  @Patch('admin/:id/senha')
+  resetarSenha(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UsuarioSenhaResetarDto,
+  ): Promise<UsuarioSenhaResetadaDto> {
+    return this.usuarioService.resetarSenha({ ...dto, id });
   }
 }

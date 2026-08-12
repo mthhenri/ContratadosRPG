@@ -21,6 +21,7 @@ import type {
   CampanhaRecuperarDto,
   CampanhaResumoDto,
 } from '@contratados-rpg/shared/dtos/campanha';
+import type { UsuarioRecuperarDto } from '@contratados-rpg/shared/dtos/usuario';
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import { BaseRepository } from '../../core/base/base.repository';
 import { KNEX_CONNECTION } from '../../database/database.provider';
@@ -35,6 +36,24 @@ import { KNEX_CONNECTION } from '../../database/database.provider';
 export class CampanhaRepository extends BaseRepository {
   constructor(@Inject(KNEX_CONNECTION) conexao: Knex) {
     super(conexao, 'campanha');
+  }
+
+  /** Conta campanhas ativas em que o usuário mantém vínculo ativo de mestre. */
+  async contarCampanhasComoMestre(dto: UsuarioRecuperarDto): Promise<number> {
+    const [resultado] = await this.executarConsulta<{ total: string }>(
+      `SELECT COUNT(*) AS total
+       FROM campanha
+       JOIN campanha_membro ON campanha_membro.campanha_id = campanha.id
+         AND campanha_membro.is_deleted = false
+       JOIN tipo_campanha_membro_papel
+         ON tipo_campanha_membro_papel.id = campanha_membro.tipo_campanha_membro_papel_id
+        AND tipo_campanha_membro_papel.is_deleted = false
+       WHERE campanha.is_deleted = false
+         AND campanha_membro.usuario_id = :usuarioId
+         AND tipo_campanha_membro_papel.codigo = :papelMestre`,
+      { usuarioId: dto.id, papelMestre: TipoCampanhaMembroPapelEnum.MESTRE },
+    );
+    return Number(resultado.total);
   }
 
   /**

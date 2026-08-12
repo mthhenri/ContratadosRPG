@@ -3,6 +3,8 @@ import * as bcrypt from 'bcrypt';
 import type {
   UsuarioCriadoDto,
   UsuarioCriarDto,
+  UsuarioTipoAlteradoDto,
+  UsuarioTipoAlterarDto,
   UsuarioExcluirDto,
   UsuarioListarDto,
   UsuarioListadosDto,
@@ -15,12 +17,15 @@ import type {
   UsuarioReativarDto,
   UsuarioSenhaAlterarDto,
   UsuarioSenhaAlteradaDto,
+  UsuarioSenhaResetadaDto,
+  UsuarioSenhaResetarDto,
   UsuarioSessaoDto,
   UsuarioSessaoRecuperarDto,
 } from '@contratados-rpg/shared/dtos/usuario';
 import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import { BusinessException, ResourceNotFoundException } from '../../core/exceptions';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
+import { CampanhaRepository } from '../campanha/campanha.repository';
 import { UsuarioRepository } from './usuario.repository';
 
 /** Custo (rounds) do bcrypt — mesmo do registro (m2-02) e do seed da migration `0003`. */
@@ -34,7 +39,10 @@ const ROUNDS_BCRYPT = 10;
  */
 @Injectable()
 export class UsuarioService {
-  constructor(private readonly usuarioRepositorio: UsuarioRepository) {}
+  constructor(
+    private readonly usuarioRepositorio: UsuarioRepository,
+    private readonly campanhaRepositorio: CampanhaRepository,
+  ) {}
 
   /** Recupera o estado persistido atual usado pela autorização global. */
   async recuperarSessao(dto: UsuarioSessaoRecuperarDto): Promise<UsuarioSessaoDto | null> {
@@ -82,12 +90,69 @@ export class UsuarioService {
   }
 
   /** Exclui por soft delete a conta administrativa indicada. */
-  async excluir(dto: UsuarioExcluirDto): Promise<void> {
+  async excluir(dto: UsuarioExcluirDto, usuarioAtivo: JwtPayload): Promise<void> {
     const usuarioEncontrado = await this.usuarioRepositorio.recuperarPorId(dto);
     if (!usuarioEncontrado) {
       throw new ResourceNotFoundException('Usuário');
     }
+    if (usuarioEncontrado.id === usuarioAtivo.sub) {
+      throw new BusinessException(
+        'Use a tela de Perfil para excluir a própria conta administrativa',
+      );
+    }
+    if (usuarioEncontrado.tipo === TipoUsuarioEnum.ADMIN) {
+      await this.validarAdminRestante(usuarioEncontrado.id);
+    }
+    const campanhasComoMestre = await this.campanhaRepositorio.contarCampanhasComoMestre({
+      id: usuarioEncontrado.id,
+    });
+    if (campanhasComoMestre > 0) {
+      throw new BusinessException(
+        'Transfira o mestre ou exclua a campanha antes de excluir este usuário',
+      );
+    }
     await this.usuarioRepositorio.excluirConta({ id: usuarioEncontrado.id });
+  }
+
+  /** Altera o tipo e revoga imediatamente os tokens já emitidos para a conta. */
+  async alterarTipo(
+    dto: UsuarioTipoAlterarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<UsuarioTipoAlteradoDto> {
+    const usuarioEncontrado = await this.usuarioRepositorio.recuperarPorId({ id: dto.id });
+    if (!usuarioEncontrado) {
+      throw new ResourceNotFoundException('Usuário');
+    }
+    if (usuarioEncontrado.id === usuarioAtivo.sub) {
+      throw new BusinessException('Não é permitido alterar o próprio tipo pela gestão');
+    }
+    if (
+      usuarioEncontrado.tipo === TipoUsuarioEnum.ADMIN &&
+      dto.tipo !== TipoUsuarioEnum.ADMIN
+    ) {
+      await this.validarAdminRestante(usuarioEncontrado.id);
+    }
+
+    const usuarioAlterado = await this.usuarioRepositorio.alterarTipo(dto);
+    await this.usuarioRepositorio.incrementarTokenVersao({ id: dto.id });
+    return usuarioAlterado;
+  }
+
+  /** Redefine a senha administrativamente e revoga os tokens da conta. */
+  async resetarSenha(dto: UsuarioSenhaResetarDto): Promise<UsuarioSenhaResetadaDto> {
+    const usuarioEncontrado = await this.usuarioRepositorio.recuperarPorId({ id: dto.id });
+    if (!usuarioEncontrado) {
+      throw new ResourceNotFoundException('Usuário');
+    }
+
+    const senhaEncriptada = await bcrypt.hash(dto.novaSenha, ROUNDS_BCRYPT);
+    await this.usuarioRepositorio.alterarSenha({ id: dto.id, senha: senhaEncriptada });
+    await this.usuarioRepositorio.incrementarTokenVersao({ id: dto.id });
+    return {
+      id: usuarioEncontrado.id,
+      login: usuarioEncontrado.login,
+      nome: usuarioEncontrado.nome,
+    };
   }
 
   /** Reativa uma conta excluída. Conta ativa ou inexistente é tratada como recurso ausente. */
@@ -177,6 +242,23 @@ export class UsuarioService {
    * O encerramento da sessão do cliente é responsabilidade do frontend (m2-14).
    */
   async excluirConta(dto: UsuarioExcluirDto): Promise<void> {
-    return this.excluir(dto);
+    const usuarioEncontrado = await this.usuarioRepositorio.recuperarPorId(dto);
+    if (!usuarioEncontrado) {
+      throw new ResourceNotFoundException('Usuário');
+    }
+    if (usuarioEncontrado.tipo === TipoUsuarioEnum.ADMIN) {
+      await this.validarAdminRestante(usuarioEncontrado.id);
+    }
+    await this.usuarioRepositorio.excluirConta({ id: usuarioEncontrado.id });
+  }
+
+  /** Garante que uma mutação sobre um admin preserve ao menos outro admin ativo. */
+  private async validarAdminRestante(idExcluido: number): Promise<void> {
+    const totalAdminsRestantes = await this.usuarioRepositorio.contarAdminsAtivos({
+      idExcluido,
+    });
+    if (totalAdminsRestantes < 1) {
+      throw new BusinessException('O sistema deve manter ao menos um administrador ativo');
+    }
   }
 }

@@ -4,6 +4,7 @@ import type { UsuarioInternoRecuperadoDto } from '@contratados-rpg/shared/dtos/u
 import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import { BusinessException, ResourceNotFoundException } from '../../core/exceptions';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
+import type { CampanhaRepository } from '../campanha/campanha.repository';
 import type { UsuarioRepository } from './usuario.repository';
 import { UsuarioService } from './usuario.service';
 
@@ -25,10 +26,18 @@ interface RepositorioDublado {
   alterarPerfil: ReturnType<typeof vi.fn>;
   excluirConta: ReturnType<typeof vi.fn>;
   reativar: ReturnType<typeof vi.fn>;
+  alterarTipo: ReturnType<typeof vi.fn>;
+  incrementarTokenVersao: ReturnType<typeof vi.fn>;
+  contarAdminsAtivos: ReturnType<typeof vi.fn>;
+}
+
+interface CampanhaRepositorioDublado {
+  contarCampanhasComoMestre: ReturnType<typeof vi.fn>;
 }
 
 describe('UsuarioService', () => {
   let repositorio: RepositorioDublado;
+  let campanhaRepositorio: CampanhaRepositorioDublado;
   let service: UsuarioService;
 
   const usuarioPersistido: UsuarioInternoRecuperadoDto = {
@@ -57,13 +66,30 @@ describe('UsuarioService', () => {
       alterarPerfil: vi.fn(),
       excluirConta: vi.fn(),
       reativar: vi.fn(),
+      alterarTipo: vi.fn(),
+      incrementarTokenVersao: vi.fn(),
+      contarAdminsAtivos: vi.fn(),
     };
-    service = new UsuarioService(repositorio as unknown as UsuarioRepository);
+    campanhaRepositorio = { contarCampanhasComoMestre: vi.fn() };
+    service = new (UsuarioService as unknown as new (
+      usuarioRepositorio: UsuarioRepository,
+      campanhaRepositorio: CampanhaRepository,
+    ) => UsuarioService)(
+      repositorio as unknown as UsuarioRepository,
+      campanhaRepositorio as unknown as CampanhaRepository,
+    );
     hashDublado.mockReset();
     compareDublado.mockReset();
   });
 
   describe('gestao administrativa', () => {
+    const adminAtivo: JwtPayload = {
+      sub: 1,
+      login: 'administrador',
+      tipo: TipoUsuarioEnum.ADMIN,
+      tokenVersao: 1,
+    };
+
     it.each([
       ['login', { login: 'zero' }],
       ['nome', { nome: 'Agente' }],
@@ -164,10 +190,122 @@ describe('UsuarioService', () => {
     it('exclui um alvo ativo e rejeita alvo inexistente', async () => {
       repositorio.recuperarPorId.mockResolvedValueOnce(usuarioPersistido).mockResolvedValueOnce(null);
 
-      await service.excluir({ id: 7 });
-      await expect(service.excluir({ id: 99 })).rejects.toThrow(ResourceNotFoundException);
+      campanhaRepositorio.contarCampanhasComoMestre.mockResolvedValue(0);
+      await service.excluir({ id: 7 }, adminAtivo);
+      await expect(service.excluir({ id: 99 }, adminAtivo)).rejects.toThrow(
+        ResourceNotFoundException,
+      );
 
       expect(repositorio.excluirConta).toHaveBeenCalledOnce();
+    });
+
+    it('bloqueia rebaixar o unico admin ativo', async () => {
+      repositorio.recuperarPorId.mockResolvedValue({
+        ...usuarioPersistido,
+        id: 2,
+        tipo: TipoUsuarioEnum.ADMIN,
+      });
+      repositorio.contarAdminsAtivos.mockResolvedValue(0);
+
+      await expect(
+        service.alterarTipo({ id: 2, tipo: TipoUsuarioEnum.NORMAL }, adminAtivo),
+      ).rejects.toThrow(BusinessException);
+
+      expect(repositorio.alterarTipo).not.toHaveBeenCalled();
+    });
+
+    it('bloqueia excluir o unico admin ativo', async () => {
+      repositorio.recuperarPorId.mockResolvedValue({
+        ...usuarioPersistido,
+        id: 2,
+        tipo: TipoUsuarioEnum.ADMIN,
+      });
+      repositorio.contarAdminsAtivos.mockResolvedValue(0);
+      campanhaRepositorio.contarCampanhasComoMestre.mockResolvedValue(0);
+
+      await expect(service.excluir({ id: 2 }, adminAtivo)).rejects.toThrow(
+        BusinessException,
+      );
+
+      expect(repositorio.excluirConta).not.toHaveBeenCalled();
+    });
+
+    it('bloqueia auto-exclusao e auto-rebaixamento administrativos', async () => {
+      repositorio.recuperarPorId.mockResolvedValue({
+        ...usuarioPersistido,
+        id: 1,
+        tipo: TipoUsuarioEnum.ADMIN,
+      });
+      repositorio.contarAdminsAtivos.mockResolvedValue(2);
+
+      await expect(service.excluir({ id: 1 }, adminAtivo)).rejects.toThrow(BusinessException);
+      await expect(
+        service.alterarTipo({ id: 1, tipo: TipoUsuarioEnum.NORMAL }, adminAtivo),
+      ).rejects.toThrow(BusinessException);
+
+      expect(repositorio.excluirConta).not.toHaveBeenCalled();
+      expect(repositorio.alterarTipo).not.toHaveBeenCalled();
+    });
+
+    it('troca tipo e incrementa a versao do token', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(usuarioPersistido);
+      repositorio.alterarTipo.mockResolvedValue({
+        id: 7,
+        login: 'agente.zero',
+        nome: 'Agente Zero',
+        tipo: TipoUsuarioEnum.TESTER,
+        tipoDescricao: 'Testador',
+      });
+
+      const resultado = await service.alterarTipo(
+        { id: 7, tipo: TipoUsuarioEnum.TESTER },
+        adminAtivo,
+      );
+
+      expect(repositorio.alterarTipo).toHaveBeenCalledWith({
+        id: 7,
+        tipo: TipoUsuarioEnum.TESTER,
+      });
+      expect(repositorio.incrementarTokenVersao).toHaveBeenCalledWith({ id: 7 });
+      expect(resultado.tipo).toBe(TipoUsuarioEnum.TESTER);
+    });
+
+    it('reseta senha com bcrypt e incrementa a versao do token', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(usuarioPersistido);
+      hashDublado.mockResolvedValue('$2b$10$hashresetado' as never);
+
+      const resultado = await service.resetarSenha({ id: 7, novaSenha: 'novaSenha123' });
+
+      expect(hashDublado).toHaveBeenCalledWith('novaSenha123', 10);
+      expect(repositorio.alterarSenha).toHaveBeenCalledWith({
+        id: 7,
+        senha: '$2b$10$hashresetado',
+      });
+      expect(repositorio.incrementarTokenVersao).toHaveBeenCalledWith({ id: 7 });
+      expect(resultado).toEqual({ id: 7, login: 'agente.zero', nome: 'Agente Zero' });
+      expect(resultado).not.toHaveProperty('senha');
+    });
+
+    it('bloqueia excluir mestre de campanha ativa com orientacao de transferencia', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(usuarioPersistido);
+      campanhaRepositorio.contarCampanhasComoMestre.mockResolvedValue(1);
+
+      let erro: BusinessException | undefined;
+      try {
+        await service.excluir({ id: 7 }, adminAtivo);
+      } catch (excecao: unknown) {
+        if (excecao instanceof BusinessException) {
+          erro = excecao;
+        }
+      }
+
+      expect(erro).toBeInstanceOf(BusinessException);
+      expect(erro?.getResponse()).toEqual({
+        mensagem: 'Transfira o mestre ou exclua a campanha antes de excluir este usuário',
+        erros: [],
+      });
+
+      expect(repositorio.excluirConta).not.toHaveBeenCalled();
     });
 
     it('reativa uma conta excluida e rejeita alvo inexistente ou ativo', async () => {
@@ -329,6 +467,18 @@ describe('UsuarioService', () => {
       await expect(service.excluirConta({ id: 99 })).rejects.toThrow(
         ResourceNotFoundException,
       );
+
+      expect(repositorio.excluirConta).not.toHaveBeenCalled();
+    });
+
+    it('impede que o ultimo admin exclua a propria conta', async () => {
+      repositorio.recuperarPorId.mockResolvedValue({
+        ...usuarioPersistido,
+        tipo: TipoUsuarioEnum.ADMIN,
+      });
+      repositorio.contarAdminsAtivos.mockResolvedValue(0);
+
+      await expect(service.excluirConta({ id: 7 })).rejects.toThrow(BusinessException);
 
       expect(repositorio.excluirConta).not.toHaveBeenCalled();
     });

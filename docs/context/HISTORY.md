@@ -1,5 +1,25 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-12 — `m6-04`: operações sensíveis e invariantes administrativas
+
+A gestão de usuários agora permite trocar o tipo global e resetar a senha de uma conta. As duas
+operações incrementam `token_versao`, fazendo o `AutorizacaoGuard` rejeitar no request seguinte
+qualquer sessão emitida antes da mutação; o reset usa o mesmo custo bcrypt dos fluxos existentes e
+nunca retorna senha ou hash.
+
+- A `UsuarioService` preserva ao menos um `ADMIN` ativo em exclusões administrativas,
+  rebaixamentos e na exclusão self-service. A gestão também bloqueia o admin de excluir ou
+  rebaixar a si próprio, independentemente da quantidade de outros administradores.
+- A exclusão administrativa consulta o `CampanhaRepository`, dono da relação de campanhas, e
+  bloqueia mestres de campanhas ativas com orientação explícita para transferir o papel ou excluir
+  a campanha. O edge histórico do self-service não foi ampliado, conforme o fora de escopo.
+- O SQL traduz `TipoUsuarioEnum` pela tabela `tipo_usuario`, conta administradores ativos com alvo
+  opcionalmente excluído e incrementa a versão do token somente em contas ativas. Novos DTOs
+  compartilhados cobrem troca de tipo, reset de senha e seus retornos sem credenciais.
+- O TDD registrou 7 falhas de service, 4 de repository e 2 de controller antes das implementações.
+  Gates finais: shared 601/601, backend 272/272, lint e builds de shared/backend sem falhas. O
+  frontend não foi alterado.
+
 ## 2026-08-12 — `m6-03`: CRUD administrativo básico de contas
 
 O módulo de usuário ganhou uma superfície administrativa sob `usuario/admin`, protegida no
