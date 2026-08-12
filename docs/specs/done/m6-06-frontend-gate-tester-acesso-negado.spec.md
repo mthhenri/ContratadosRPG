@@ -1,6 +1,6 @@
 # m6-06-frontend-gate-tester-acesso-negado.spec.md
 
-> Task 6/7 do milestone `m6-gestao-usuarios-papeis.spec.md`.
+> Task 6/8 do milestone `m6-gestao-usuarios-papeis.spec.md`.
 
 > **Antes de qualquer UI:** ler `docs/design/DESIGN.md` e a identidade "Terminal de Contenção"
 > em `docs/design/tema/`. Não existe hoje uma tela análoga de negação/erro no projeto — esta é

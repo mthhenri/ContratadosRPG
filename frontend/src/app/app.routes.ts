@@ -4,6 +4,13 @@ import { autenticacaoGuard } from './core/guards/autenticacao.guard';
 import { adminGuard } from './core/guards/admin.guard';
 
 export const routes: Routes = [
+  {
+    path: 'acesso-negado',
+    loadComponent: () =>
+      import('./modules/acesso-negado/acesso-negado.page').then(
+        (pagina) => pagina.AcessoNegadoPage,
+      ),
+  },
   // Rota raiz leva direto ao painel (destino padrão pós-login); sem sessão, o
   // `autenticacaoGuard` de `/painel` redireciona ao `/login` guardando o retorno.
   {
