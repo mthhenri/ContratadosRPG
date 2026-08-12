@@ -1,5 +1,67 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-11 — `dev-01`: stubs ganham fichas nas duas campanhas
+
+O cenário inicial vinculava `jogador.stub.1` e `jogador.stub.2` às duas campanhas, mas criava fichas
+somente para Matheus e Codex. O seed foi ampliado de quatro para oito fichas: cada stub agora possui
+uma ficha diferente em cada campanha, com nome, classe, arquétipo, progressão e cor próprios.
+
+- Campanha do Matheus: `Vanguarda Stub 1` (`#0891B2`) e `Diplomata Stub 2` (`#DB2777`).
+- Campanha do Codex: `Acadêmico Stub 1` (`#0D9488`) e `Lutador Stub 2` (`#DC2626`).
+- O resumo do seed deixou de hardcodar contagens e passou a derivá-las de `CENARIO_DEV`, evitando
+  divergência quando o cenário crescer.
+- O banco local foi apagado novamente sem backup por autorização do autor, recriado com 14
+  migrations e auditado com 4 usuários, 2 campanhas, 8 membros, 8 fichas e 8 cores distintas. Uma
+  segunda execução do seed manteve as mesmas contagens.
+- Após o autor confirmar o login pessoal e os testes manuais do cenário, a spec `dev-01` foi
+  encerrada e movida para `docs/specs/done/`.
+
+## 2026-08-11 — `P-020`: backend volta a carregar o `.env` da raiz em dev
+
+O `ConfigService` resolvia o `.env` subindo três níveis a partir de `__dirname`. Isso funcionava
+durante testes sobre `src/`, mas o JavaScript compilado vive em `backend/dist/src/config/` e chegava
+a `backend/.env`, fazendo `npm run backend:dev` encerrar com `DB_HOST` ausente.
+
+- A resolução agora parte de `process.cwd()` e procura primeiro no diretório de execução e depois
+  em seu pai. Assim cobre tanto execução pela raiz do monorepo quanto pelo workspace `backend`, sem
+  depender de `src` versus `dist`.
+- O spec de configuração ganhou regressão para os dois diretórios e passou a isolar o efeito externo
+  do `dotenv`; o caso de variável obrigatória ausente voltou a testar somente o contrato do service.
+- Verificado com build, lint e suíte backend completos (231/231). O artefato compilado foi iniciado
+  com `DB_HOST` removido do ambiente herdado e respondeu `GET /health` com HTTP 200 numa porta
+  temporária, comprovando a leitura do `.env` real.
+
+## 2026-08-11 — `dev-01`: banco local reproduzível com contas, campanhas e fichas padrão
+
+O banco de desenvolvimento acumulava dados antigos e não havia reset seguro nem um cenário comum
+para testes manuais. A base local foi apagada sem backup por autorização explícita do autor e
+recriada do zero com 14 migrations e fixtures determinísticas.
+
+- `backend/tools/database/reset-dev.guard.ts`: trava anterior a qualquer subprocesso — exige
+  `development`, loopback, banco `contratados_rpg`, usuário `postgres` e armazenamento `local`.
+- `reset-dev.ts`: `npm run db:reset:dev` opera somente sobre o Compose desta raiz, remove o volume,
+  sobe o PostgreSQL, migra e semeia em fail-fast. A primeira integração revelou que Node/Windows
+  devolve `EINVAL` ao executar `npm.cmd` por `execFileSync`; a regressão ganhou teste e o fluxo passou
+  a chamar `node.exe + npm-cli.js`, sem shell.
+- `cenario-dev.ts`/`seed-dev.ts`: seed transacional e idempotente com Matheus, Codex e dois stubs;
+  duas campanhas com mestre/jogadores cruzados; quatro fichas de agente com JSONB derivado por
+  `shared/regras` e cores âmbar/azul/verde/violeta. A senha do autor é preservada; Codex/stubs usam a
+  credencial local documentada. `npm run db:seed:dev` reconcilia somente as fixtures.
+- Banco auditado após reset e duas repetições do seed: 14 migrations, 4 usuários, 2 campanhas,
+  8 vínculos, 4 fichas, 4 cores distintas, somente tipo `JOGADOR`, nenhum dono sem vínculo e hash do
+  autor idêntico ao seed histórico.
+- Verificação real com `codex.dev`: login REST emitindo token; painel e detalhes observados em
+  `1920×1080` e `360×800`; Codex aparece mestre na própria campanha e jogador na do Matheus; quatro
+  membros nas duas; como jogador vê somente a própria ficha, como mestre vê as duas; cores corretas,
+  sem overflow, erro de console ou request inesperado. O login pessoal de `senhor.contratados` ficou
+  para confirmação manual do autor, sem compartilhar credencial nem forjar sessão; por isso a spec
+  permanece em `active/`.
+- Gates: builds `shared`/backend verdes; 34/34 testes focados; lint do backend e das ferramentas
+  verdes; suíte backend completa em 229/230 pela mesma falha baseline de `ConfigService` aceita antes
+  da implementação. A verificação ao vivo também revelou o novo `P-020`.
+- Operação e credenciais documentadas em `docs/DEVELOPMENT.md`; README, `.env.example`, `CONTEXT.md`
+  e `MEMORY.md` sincronizados.
+
 ## 2026-08-11 — `I-011`: dadinhos do pool ganham a cor do tipo de dano do próprio termo
 
 Numa fórmula com vários tipos de dano (`4d6[F] + 4d6[Q]`), só os chips de resumo abaixo

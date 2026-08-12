@@ -28,6 +28,7 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 | Schema SQL + forma dos documentos JSONB | [`docs/SCHEMA.md`](../SCHEMA.md) | escrever migration ou mexer em `ficha.dados` |
 | Nomenclatura de DTO | skill `dto-conventions` + `SYSTEM.SPEC.md` | nomear qualquer classe de entrada/saída |
 | Runbook de deploy | [`docs/DEPLOY.md`](../DEPLOY.md) | mexer em produção |
+| Banco local, reset, fixtures e credenciais dev | [`docs/DEVELOPMENT.md`](../DEVELOPMENT.md) + `backend/tools/database/` | recriar ou popular o ambiente local |
 | Pendências operacionais do M1 | [`docs/PARIDADE-M1.md`](../PARIDADE-M1.md) | fechar o M1 de fato |
 
 **Ordem de leitura no início de sessão** (definida no `CLAUDE.md`): `SYSTEM.SPEC.md` →
@@ -63,8 +64,9 @@ consomem os dois o mesmo motor — nunca reimplemente uma fórmula de um lado s�
 | **Gateway WebSocket** (broadcast-only) | `backend/src/core/gateway/` — `CampanhaGateway`, `WsIoAdapter` |
 | **Armazenamento de blob** (avatar da ficha, local/R2) | `backend/src/core/armazenamento/` — `ArmazenamentoProvedor`, `ArmazenamentoLocalProvedor`/`ArmazenamentoR2Provedor`, toggle via `ConfigService.obterConfiguracaoArmazenamento()` |
 | Conexão Knex em runtime | `backend/src/database/` |
-| **Migrations** | `backend/src/database/migrations/` — `0001`…`0013`, nome numerado |
-| Leitura de env (nunca `process.env` direto) | `backend/src/config/` — `ConfigService` |
+| Reset e seed de desenvolvimento | `backend/tools/database/` + [`docs/DEVELOPMENT.md`](../DEVELOPMENT.md) |
+| **Migrations** | `backend/src/database/migrations/` — `0001`…`0014`, nome numerado |
+| Leitura de env (nunca `process.env` direto) | `backend/src/config/` — `ConfigService`; `.env` resolvido pelo diretório de execução para funcionar em `src` e `dist` |
 
 Fluxo obrigatório: **controller (burro) → service (regra) → repository (só SQL)**.
 
@@ -121,6 +123,8 @@ A lista completa está no [`CLAUDE.md`](../../CLAUDE.md) ("Development Commands"
 |---|---|
 | Subir o banco | `npm run db:up` |
 | Rodar migration | `npm run db:migrate --workspace=backend` |
+| Apagar e recriar o banco local com fixtures | `npm run db:reset:dev` |
+| Reconciliar apenas as fixtures locais | `npm run db:seed:dev` |
 | API (`:3100`) | `npm run backend:dev` |
 | SPA (`:4300`) | `npm run frontend:dev` |
 | **Testar o motor de regras** — antes de tocar em qualquer fórmula | `npm run test --workspace=shared` |

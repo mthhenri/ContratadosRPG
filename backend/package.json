@@ -16,7 +16,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "db:migrate": "knex migrate:latest --knexfile knexfile.ts",
-    "db:rollback": "knex migrate:rollback --knexfile knexfile.ts"
+    "db:rollback": "knex migrate:rollback --knexfile knexfile.ts",
+    "db:seed:dev": "ts-node tools/database/seed-dev.ts",
+    "db:reset:dev": "ts-node tools/database/reset-dev.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1106.0",

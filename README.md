@@ -19,6 +19,7 @@ Sucessor da [contratados-calculadora](https://github.com/mthhenri/contratados-ca
 | [docs/context/IDEAS.md](docs/context/IDEAS.md) | Ideias levantadas que ainda não viraram spec |
 | [docs/SCHEMA.md](docs/SCHEMA.md) | Schema SQL alvo + forma dos documentos JSONB |
 | [docs/DEPLOY.md](docs/DEPLOY.md) | Runbook de deploy em produção (Cloudflare + Render + Supabase) |
+| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Banco local reproduzível, fixtures e credenciais de desenvolvimento |
 | [docs/PARIDADE-M1.md](docs/PARIDADE-M1.md) | Verificação de paridade da calculadora (fecha o M1) |
 | [docs/core/sistema-v4.1.0.md](docs/core/sistema-v4.1.0.md) | Fonte da verdade das regras do jogo |
 | [docs/core/guia_de_mestre-v4.0.0.md](docs/core/guia_de_mestre-v4.0.0.md) | Fonte da verdade de criação de ameaças |
@@ -42,9 +43,14 @@ Monorepo npm workspaces:
 npm install                              # instala os 3 workspaces
 npm run db:up                            # Postgres via Docker Compose
 npm run db:migrate --workspace=backend   # migrations
+npm run db:reset:dev                     # apaga/recria o banco local e aplica fixtures
+npm run db:seed:dev                      # reconcilia somente as fixtures locais
 npm run backend:dev                      # API em http://localhost:3100
 npm run frontend:dev                     # SPA em http://localhost:4300
 ```
+
+O reset é destrutivo e exclusivo do ambiente local. Consulte
+[`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) antes do primeiro uso.
 
 ### Variáveis de ambiente (backend)
 

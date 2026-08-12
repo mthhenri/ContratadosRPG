@@ -21,7 +21,9 @@
     "db:up": "node scripts/db-up.mjs",
     "db:down": "docker compose down",
     "db:migrate": "npm run db:migrate --workspace=backend",
-    "db:rollback": "npm run db:rollback --workspace=backend"
+    "db:rollback": "npm run db:rollback --workspace=backend",
+    "db:seed:dev": "npm run db:seed:dev --workspace=backend",
+    "db:reset:dev": "npm run db:reset:dev --workspace=backend"
   },
   "devDependencies": {
     "concurrently": "^10.0.3"

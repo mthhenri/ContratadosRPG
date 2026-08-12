@@ -1,6 +1,15 @@
+import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Injectable } from '@nestjs/common';
 import { config as carregarVariaveisDeAmbiente } from 'dotenv';
+
+export function resolverCaminhoVariaveisDeAmbiente(
+  diretorioAtual: string,
+  arquivoExiste: (caminho: string) => boolean = existsSync,
+): string {
+  const candidatos = [resolve(diretorioAtual, '.env'), resolve(diretorioAtual, '..', '.env')];
+  return candidatos.find(arquivoExiste) ?? candidatos[0];
+}
 
 /** Conexão com o PostgreSQL local/produção (SYSTEM.SPEC §10.6). */
 export interface ConfiguracaoBanco {
@@ -49,7 +58,7 @@ export type ConfiguracaoArmazenamento =
 @Injectable()
 export class ConfigService {
   constructor() {
-    carregarVariaveisDeAmbiente({ path: resolve(__dirname, '..', '..', '..', '.env') });
+    carregarVariaveisDeAmbiente({ path: resolverCaminhoVariaveisDeAmbiente(process.cwd()) });
   }
 
   /** Retorna a configuração de conexão com o banco (`DB_*`). */

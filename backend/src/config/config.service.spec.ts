@@ -1,5 +1,20 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { ConfigService } from './config.service';
+import { resolve } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('dotenv', () => ({ config: vi.fn() }));
+import { ConfigService, resolverCaminhoVariaveisDeAmbiente } from './config.service';
+
+describe('resolução do .env', () => {
+  it('resolve o .env pela raiz do monorepo ou pelo workspace backend', () => {
+    const raiz = resolve('C:\\projeto');
+    const backend = resolve(raiz, 'backend');
+    const caminhoEnv = resolve(raiz, '.env');
+    const arquivoExiste = (caminho: string): boolean => caminho === caminhoEnv;
+
+    expect(resolverCaminhoVariaveisDeAmbiente(raiz, arquivoExiste)).toBe(caminhoEnv);
+    expect(resolverCaminhoVariaveisDeAmbiente(backend, arquivoExiste)).toBe(caminhoEnv);
+  });
+});
 
 const CHAVES_ARMAZENAMENTO = [
   'ARMAZENAMENTO_PROVEDOR',
