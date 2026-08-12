@@ -1,5 +1,14 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-12 — correção do entrypoint de produção do backend
+
+O deploy do Render compilava o backend com sucesso, mas encerrava ao executar `node dist/main`.
+A inclusão recente das ferramentas locais em `backend/tools/` ampliou implicitamente a raiz comum
+do TypeScript, fazendo o Nest emitir a aplicação em `dist/src/main.js` e também publicar scripts de
+desenvolvimento no artefato de produção. O `tsconfig.build.json` agora inclui explicitamente apenas
+`src/**/*.ts`, restaurando o contrato original `dist/main.js` usado por `start:prod` e mantendo
+`tools/` fora do build de produção.
+
 ## 2026-08-12 — `m6-05`: gestão visual administrativa de usuários
 
 A aplicação ganhou `/admin/usuarios`, rota lazy protegida por `adminGuard` e acessível pela topbar
