@@ -157,6 +157,18 @@
 - **Desde:** reportado pelo dono em 2026-08-12, após revisão manual da gestão administrativa de
   usuários (`m6-05`).
 
+### P-021 — Calculadora e histórico não abrem juntos no mobile da ficha · `ABERTO` · frontend/mobile
+
+- **Sintoma:** dentro da ficha no mobile, se a calculadora não estiver aberta antes de abrir o
+  histórico, não há como abrir a calculadora com o histórico já aberto — nem para abrir, nem para
+  fechar. É preciso abrir a calculadora antes de abrir o histórico; e para fechar, é preciso fechar
+  o histórico primeiro.
+- **Causa:** não investigada.
+- **Contorno:** abrir a calculadora antes do histórico; fechar o histórico antes de mexer na
+  calculadora.
+- **Correção:** não determinada.
+- **Desde:** reportado pelo dono em 2026-08-12.
+
 ## Resolvidos
 
 Itens resolvidos **saem daqui**. O relato da correção fica no [`HISTORY.md`](HISTORY.md), junto da
