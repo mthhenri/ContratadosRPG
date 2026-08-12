@@ -1,6 +1,6 @@
 # m6-07-refinamento-mobile-gestao-usuarios.spec.md
 
-> Task 7/7 do milestone `m6-gestao-usuarios-papeis.spec.md` — **obrigatória, não opcional**
+> Task 7/8 do milestone `m6-gestao-usuarios-papeis.spec.md` — **obrigatória, não opcional**
 > (mesmo padrão de `m1-15`/`m2-08`/`m3-09`: nenhum milestone com UI fecha sem este passe).
 
 > **Antes de qualquer ajuste:** ler `docs/design/DESIGN.md`; reusar
