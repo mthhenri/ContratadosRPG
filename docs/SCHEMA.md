@@ -209,9 +209,11 @@ campanha (`campanha_id NULL`) não tem sala — o emit é guardado (no-op).
 > A forma final de cada documento é definida nas specs de M3 (jogador) e M4 (criatura/NPC),
 > derivada de `docs/core/sistema-v4.1.0.md` e `docs/core/guia_de_mestre-v4.0.0.md`. O
 > contrato tipado vive em `shared/src/dtos/ficha/` (`FichaJogadorDadosDto` — **final**,
-> m3-01; `FichaCriaturaDadosDto` — esboço, fechar no M4) e o backend valida via `shared/regras`
-> (coerência de domínio) + validação estrutural quando o `ValidationPipe` for ligado (m3-02/03).
-> Campos de jogo nunca viram colunas — listagens usam `dados->>'campo'`.
+> m3-01; `FichaCriaturaDadosDto`/`FichaNpcDadosDto` — design fechado a partir dos capítulos
+> "Guia de Criação de Ameaças"/"Guia de Criação de NPCs" do guia de mestre, contrato TS a
+> codificar no M4) e o backend valida via `shared/regras` (coerência de domínio) + validação
+> estrutural quando o `ValidationPipe` for ligado (m3-02/03). Campos de jogo nunca viram
+> colunas — listagens usam `dados->>'campo'`.
 
 ### FichaJogadorDadosDto (final — m3-01)
 
@@ -328,21 +330,116 @@ validação nem trava de imutabilidade ainda (`m3-24`); sem UI ainda (`m3-25`).
 sub-coleções de jogo — **sequelas/traumas/lesões** (Sanidade), **habilidades**, **inventário** e
 **presets de rolagem** (`rolagens`) — moram no `dados` e ganham editores/abas nas tasks `m3-11`…`m3-15`.
 
-### FichaCriaturaDadosDto / NPC (esboço — fechar no M4)
+### FichaCriaturaDadosDto (design fechado — capítulo "Guia de Criação de Ameaças" — codificar no M4)
+
+Criatura e NPC **não compartilham forma** (M4 fecha dois DTOs, não um com variação — a mecânica
+divergiu). Segue a mesma filosofia de `FichaJogadorDadosDto`: tudo que aparece na ficha é
+persistido (`m3-10`), Vida Máxima/Defesa são **snapshot na criação + editáveis depois** (o motor
+não recalcula sobre a edição), sem Maestria (mecânica exclusiva de jogador).
 
 ```jsonc
 {
-  "classificacao": { /* identidade e classificação conforme guia de mestre */ },
-  "atributos": { /* ... */ },
-  "modificadores": { /* ... */ },
-  "saude": { /* vida, limiares */ },
-  "defesa": 14,
-  "resistencias": [ /* tipo + grau */ ],
-  "fraquezas": [ /* ... */ ],
-  "regeneracao": { /* ... */ },
-  "porte": "...",
-  "deslocamento": { /* ... */ },
-  "acoes": [ /* ações e habilidades */ ],
-  "anotacoes": "..."
+  "identidade": {
+    "designacao": "A Estátua",          // nome da criação
+    "origem": "SCP_ADAPTADO",           // OrigemCriaturaEnum: SCP_ADAPTADO | ORIGINAL
+    "conceito": "...",                  // "linha de conceito" — 1 frase, o gancho de criação
+    "naturezaFisica": "...",
+    "comportamento": "CACADORA",        // ComportamentoCriaturaEnum: CACADORA|TERRITORIAL|OPORTUNISTA|INDIFERENTE|INTELIGENTE|CAOTICA
+    "motivacao": "...",
+    "ganchoUnico": "...",
+    "temaHorror": "..."                 // opcional
+  },
+  "na": "MEDIA",                        // NivelAmeacaEnum: NULA|BAIXA|MEDIA|ALTA|EXTREMA|CATASTROFICA|APOCALIPTICA
+  "vd": 30,                             // Valor de Desafio — meta de design que orienta o resto da ficha
+  "atributos": {                        // valor final (Base do VD + Pontos de Ajuste + Realocação); mesmos 10 campos do jogador
+    "forca": 3, "destreza": 4, "luta": 5, "pontaria": 2, "vigor": 3,
+    "intelecto": 2, "medicina": 2, "sentidos": 3, "social": 0, "vontade": 2
+  },
+  "modificadores": {                    // fixo: 2 FORTE / 3 MEDIO / 3 FRACO / 2 FRAGIL, um por atributo — valor atrelado ao VD
+    "forca": "MEDIO", "destreza": "FORTE", "luta": "FORTE", "pontaria": "FRAGIL", "vigor": "MEDIO",
+    "intelecto": "FRACO", "medicina": "FRACO", "sentidos": "MEDIO", "social": "FRAGIL", "vontade": "FRACO"
+  },
+  "tenacidade": "PADRAO",               // TenacidadeEnum: DESCARTAVEL|FRAGIL|PADRAO|ROBUSTA|RESISTENTE|IMPLACAVEL|ABSOLUTA
+  "vidaMaxima": 1050,                   // snapshot: VD × multiplicador de Tenacidade (m3-10: editável depois)
+  "vidaAtual": 1050,
+  "defesa": 30,                         // snapshot: 15 + VD ÷ 2 (m3-10: editável depois) — criatura nunca reage a ataques
+  "resistencias": [ { "tipo": "FISICO", "subtipo": null, "valor": 36 } ],   // soma ≤ Limite (2×VD; +25% por Fraqueza extra além da 1ª)
+  "fraquezas":    [ { "tipo": "EXPLOSAO", "subtipo": null, "valor": 20 } ], // ao menos 1; mínimo 5 ou metade das resistências
+  "regeneracao": {                      // opcional — campo ausente = sem regeneração
+    "modo": "PASSIVA",                  // PASSIVA | CONDICIONAL
+    "intensidade": "MODERADA",          // RESIDUAL|MODERADA|ALTA|SEVERA|IMPARAVEL
+    "valor": 105,                       // absoluto — % da Vida Máxima calculado uma vez na criação
+    "condicao": null                    // texto — obrigatório quando modo = CONDICIONAL
+  },
+  "porte": "MEDIO",                     // PorteCriaturaEnum: MINUSCULO|MEDIO|GRANDE|ENORME|GIGANTE|TITANICO|COLOSSAL
+  "deslocamento": {                     // ao menos um modo declarado; cada campo é opcional
+    "terrestre": 9, "voador": null, "aquatico": null, "sobrenatural": null
+  },
+  "cadencia": "SINGULAR",               // CadenciaEnum: SINGULAR|DUPLA|TRIPLICE|FRENETICA (turnos por rodada)
+  "iniciativaBonus": 0,                 // opcional — Habilidade Especial Passiva de +X somado à Iniciativa (~10% da VD, sugestão)
+  "ataques": [
+    { "nome": "Esmagamento", "atributo": "luta", "custoAcao": "PADRAO", // MOVIMENTO|PADRAO|COMPLETA
+      "dano": "4D12+10", "tipoDano": "FISICO", "area": false,
+      "efeito": "Vigor DT 20 ou Imobilizado por 1 turno" }             // opcional — reduz 1 patamar de dano quando presente
+  ],
+  "habilidades": [
+    { "nome": "Imobilidade Absoluta", "tipo": "PASSIVA",               // PASSIVA|ATIVA|GATILHO
+      "descricao": "...", "restricao": null }
+  ],
+  "anotacoes": "..."                    // opcional, mesmo tratamento privado do jogador (dono/mestre)
 }
 ```
+
+### FichaNpcDadosDto (design fechado — capítulo "Guia de Criação de NPCs" — codificar no M4)
+
+O NPC é descrito no guia como uma "versão otimizada" da estrutura de agente: mesmos dez atributos,
+Vida e reações, mas o teto de tudo vem da **Categoria** em vez de classe/Nível livre. Mesma
+filosofia de `m3-10` — Vida/Defesa/Energia são snapshot editável, nunca recalculados sobre a
+edição.
+
+```jsonc
+{
+  "identidadeNarrativa": {
+    "nome": "...",
+    "funcao": "..."                     // propósito operacional / relevância no arco
+  },
+  "categoria": "VETERANO",              // CategoriaNpcEnum: CIVIL|OPERATIVO|VETERANO|ELITE|LENDARIO — teto de poder
+  "nivel": 8,                           // 0–20; funciona como Proficiência (ataque, Defesa, DT)
+  "cooperacao": 6,                      // 0–10, estado ATUAL — mutável em jogo pelas regras padrão, não fixo pós-criação
+  "atributos": {                        // mesmos 10 campos do jogador; cap por Categoria arbitrado por shared/regras (Veterano: 4)
+    "forca": 2, "destreza": 3, "luta": 4, "pontaria": 2, "vigor": 3,
+    "intelecto": 2, "medicina": 1, "sentidos": 1, "social": 1, "vontade": 2
+    // só a Categoria Civil trava Luta/Pontaria em 0 por padrão; exceção justificada (ex-militar) desbloqueia manualmente
+  },
+  "vidaMaxima": 245,                    // snapshot: Base(25) + (Nível 8 + VIG 3) × Multiplicador(20) da Categoria (m3-10: editável depois)
+  "vidaAtual": 245,
+  "defesaBase": 18,                     // snapshot: 10 + Nível (m3-10: editável depois)
+  "bloquear": 21,                       // snapshot: Defesa Base + VIG
+  "esquivar": 21,                       // snapshot: Defesa Base + DES
+  "energia": {                          // modelo depende da Categoria; ausente/zerado para Civil
+    "maxima": 21,                       // Veterano = Reserva Fixa: 12 + DES × 3; Elite/Lendário usam Pool + Recarga
+    "atual": 21,
+    "recargaPorTurno": null             // só Elite/Lendário (modelo Pool + Recarga); null nos demais
+  },
+  "sanidade": {                         // esquema análogo a estado.sequelas/traumas do jogador; efeito a critério do Mestre
+    "sequelas": [], "traumas": []
+  },
+  "habilidades": [
+    { "nomeNeutro": "Disparo de Supressão", "nomeNarrativo": "Cabeça Abaixada", // narrativo opcional
+      "tipo": "ATIVA",                  // PASSIVA | ATIVA
+      "custoEnergia": 4,                // só Ativas; ausente/null em Passiva
+      "descricao": "...", "restricao": null }
+  ],
+  "condutaCombate": {                   // roteiro "Conduta de Combate" do guia
+    "gatilhosFuga": "...",
+    "prioridadesAlvo": "...",
+    "reacaoFerimentoSevero": "..."
+  },
+  "anotacoes": "..."                    // opcional, mesmo tratamento privado do jogador (dono/mestre)
+}
+```
+
+**DT de atributo não é persistida.** Diferente dos `derivados.dtAtributo` do jogador (um único
+valor stored), a DT de um NPC é `10 + Nível + (Atributo × 2)` e varia por **qual** atributo o
+contexto exige (Vontade para manipulação, VIG para pressão física…) — `shared/regras/npc` calcula
+sob demanda, nunca persiste um valor único.
