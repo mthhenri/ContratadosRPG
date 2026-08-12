@@ -285,6 +285,48 @@
   M7–M11 podem ser executadas em outra ordem — por exemplo, IA não depende obrigatoriamente de
   documentos.
 
+### I-018 — Inventário de esquadrão sem esperar o módulo de Base · campanha/inventário
+
+- **Ideia:** dar um inventário compartilhado ao grupo de agentes de uma campanha (itens de equipe,
+  recursos partilhados, achados de missão) sem depender da modelagem institucional completa de Base
+  + Esquadrão da **I-017**/M11. Caminho mais provável: tratar a própria `campanha` como o container
+  do inventário coletivo — uma lista de itens ligada à campanha, reusando o padrão de componente que
+  `ficha-inventario.component.ts` já usa por ficha — em vez de esperar as entidades de Base,
+  histórico entre campanhas e hierarquia institucional.
+- **Origem:** pergunta do autor em 2026-08-12, ao levantar inventário de esquadrão e questionar se
+  precisa do módulo de Base para viabilizá-lo.
+- **Por quê:** hoje inventário só existe por ficha individual; item que pertence ao grupo (não a um
+  agente específico) não tem onde morar sem forçar posse artificial numa ficha ou esperar o M11
+  inteiro, que é bem mais amplo (identidade institucional, histórico entre operações, serviços de
+  base).
+- **Custo aparente:** baixo-médio se escopado à campanha atual — schema novo (tabela de item de
+  campanha, dono = campanha em vez de ficha) + UI reusando o padrão de painel de item já existente.
+  Fica mais barato que a I-017 porque abre mão da persistência entre campanhas e da identidade de
+  esquadrão como entidade própria; se esse abandono for aceitável é a decisão central antes de virar
+  spec.
+
+### I-019 — Topbar: renomear "Painel" para "Campanhas", ícone próprio de Fichas e limpar o menu de perfil · layout/navegação
+
+- **Ideia:** três ajustes na `layout.component.html` (topbar):
+  1. Renomear o item de nav `/painel` (hoje rotulado **"Painel"**, ícone `campanhas`) para
+     **"Campanhas"** — o rótulo atual não deixa claro o que a tela é.
+  2. Dar a **Fichas** (`/fichas`) um ícone próprio: hoje reusa o glifo `agente`, o **mesmo** usado
+     pelo item **Perfil** dentro do menu de usuário — os dois "parecem a mesma coisa" na UI. Um
+     ícone de "cardzinho de ficha" resolveria a ambiguidade. Como o sistema de ícones do projeto é
+     todo SVG inline desenhado à mão (`icone.component.ts`/`.html`, sem lib externa — ver o
+     comentário de topo do componente), não existe glifo pronto pra puxar: seria um traço novo no
+     mesmo estilo monocromático `stroke: currentColor` dos demais.
+  3. Remover o item **"Campanhas"** de dentro do menu de perfil (dropdown com Perfil/Campanhas/
+     Encerrar sessão) — ele é um link duplicado pra `/painel`, que já está na nav principal da
+     topbar; não ficou claro por que foi posto ali também.
+- **Origem:** observação do autor usando a topbar, 2026-08-12.
+- **Por quê:** "Painel" é um rótulo genérico pra uma tela que é especificamente sobre campanhas;
+  o ícone repetido entre Fichas e Perfil quebra a leitura rápida da nav; e o link duplicado no menu
+  de perfil não agrega nada que a nav principal já não ofereça.
+- **Custo aparente:** baixo — troca de texto/rótulo e remoção de um `<a>` são triviais; o ícone
+  novo é a única peça com trabalho de design (desenhar o SVG no estilo existente e decidir se
+  `campanhas` continua servindo pro nav renomeado ou se merece um glifo próprio também).
+
 ---
 
 ## Promovidas
