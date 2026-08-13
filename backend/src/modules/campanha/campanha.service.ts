@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type {
@@ -13,6 +13,12 @@ import type {
   CampanhaEstadoAlterarDto,
   CampanhaExcluirDto,
   CampanhaInternoAlterarDto,
+  CampanhaInventarioDto,
+  CampanhaInventarioItemAdicionarDto,
+  CampanhaInventarioItemDto,
+  CampanhaInventarioItemQuantidadeAjustarDto,
+  CampanhaInventarioItemRemoverDto,
+  CampanhaInventarioRecuperarDto,
   CampanhaListarDto,
   CampanhaMembroInternoRecuperarDto,
   CampanhaMembroRemoverDto,
@@ -236,6 +242,123 @@ export class CampanhaService {
       usuarioAtivoId: usuarioAtivo.sub,
       usuarioAtivoEhMestre: membroAtivo.papel === TipoCampanhaMembroPapelEnum.MESTRE,
     });
+  }
+
+  /**
+   * Gate único do inventário de esquadrão (proibição #28 — árbitro único desta regra, chamado
+   * também pelo módulo `ficha` nas rotas de transferência): exige que o usuário seja membro da
+   * campanha; se for `JOGADOR`, exige `naBase = true` (o Mestre sempre acessa, mesmo Em Missão).
+   * Devolve a campanha (quem chama já precisa dela, evita reconsultar). `ResourceNotFoundException`
+   * se a campanha não existir; `UnauthorizedAccessException` se não for membro, ou for jogador com
+   * a campanha Em Missão.
+   */
+  async validarAcessoInventario(dto: CampanhaMembroInternoRecuperarDto): Promise<CampanhaRecuperadaDto> {
+    const campanhaEncontrada = await this.campanhaRepositorio.recuperarPorId({ id: dto.campanhaId });
+    if (!campanhaEncontrada) {
+      throw new ResourceNotFoundException('Campanha');
+    }
+
+    const membroEncontrado = await this.campanhaRepositorio.recuperarMembro(dto);
+    if (!membroEncontrado) {
+      throw new UnauthorizedAccessException();
+    }
+    if (membroEncontrado.papel === TipoCampanhaMembroPapelEnum.JOGADOR && !campanhaEncontrada.naBase) {
+      throw new UnauthorizedAccessException(
+        'Inventário de esquadrão só pode ser acessado enquanto a campanha está na Base da Fundação',
+      );
+    }
+
+    return campanhaEncontrada;
+  }
+
+  /** Lista os itens do inventário de esquadrão — respeita o gate Na Base/Em Missão. */
+  async listarInventario(
+    dto: CampanhaInventarioRecuperarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaInventarioDto> {
+    await this.validarAcessoInventario({ campanhaId: dto.campanhaId, usuarioId: usuarioAtivo.sub });
+    const itens = await this.campanhaRepositorio.recuperarInventario({ campanhaId: dto.campanhaId });
+    return { itens };
+  }
+
+  /** Adiciona um item novo ao inventário de esquadrão (id gerado aqui) — respeita o gate. */
+  async adicionarItemInventario(
+    dto: CampanhaInventarioItemAdicionarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaInventarioDto> {
+    await this.validarAcessoInventario({ campanhaId: dto.campanhaId, usuarioId: usuarioAtivo.sub });
+    const itensAtuais = await this.campanhaRepositorio.recuperarInventario({ campanhaId: dto.campanhaId });
+
+    const itemNovo: CampanhaInventarioItemDto = {
+      id: randomUUID(),
+      nome: dto.nome,
+      categoria: dto.categoria,
+      custo: dto.custo,
+      peso: dto.peso,
+      quantidade: dto.quantidade,
+      descricao: dto.descricao,
+      dano: dto.dano,
+      informacao: dto.informacao,
+      resistencia: dto.resistencia,
+      bonus: dto.bonus,
+    };
+
+    const inventarioAlterado = await this.campanhaRepositorio.alterarInventario({
+      campanhaId: dto.campanhaId,
+      itens: [...itensAtuais, itemNovo],
+    });
+    this.campanhaGateway.emitirInventarioAlterado({ campanhaId: dto.campanhaId });
+    return inventarioAlterado;
+  }
+
+  /** Remove um item inteiro do inventário de esquadrão — respeita o gate. */
+  async removerItemInventario(
+    dto: CampanhaInventarioItemRemoverDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaInventarioDto> {
+    await this.validarAcessoInventario({ campanhaId: dto.campanhaId, usuarioId: usuarioAtivo.sub });
+    const itensAtuais = await this.campanhaRepositorio.recuperarInventario({ campanhaId: dto.campanhaId });
+    if (!itensAtuais.some((item) => item.id === dto.itemId)) {
+      throw new ResourceNotFoundException('Item do inventário de esquadrão');
+    }
+
+    const inventarioAlterado = await this.campanhaRepositorio.alterarInventario({
+      campanhaId: dto.campanhaId,
+      itens: itensAtuais.filter((item) => item.id !== dto.itemId),
+    });
+    this.campanhaGateway.emitirInventarioAlterado({ campanhaId: dto.campanhaId });
+    return inventarioAlterado;
+  }
+
+  /**
+   * Ajusta a quantidade de um item por delta (stepper +/-1, mesmo padrão de Vida/Energia da
+   * ficha) — respeita o gate. Quantidade que chega a `<= 0` remove o item.
+   */
+  async ajustarQuantidadeItemInventario(
+    dto: CampanhaInventarioItemQuantidadeAjustarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaInventarioDto> {
+    await this.validarAcessoInventario({ campanhaId: dto.campanhaId, usuarioId: usuarioAtivo.sub });
+    const itensAtuais = await this.campanhaRepositorio.recuperarInventario({ campanhaId: dto.campanhaId });
+    const itemEncontrado = itensAtuais.find((item) => item.id === dto.itemId);
+    if (!itemEncontrado) {
+      throw new ResourceNotFoundException('Item do inventário de esquadrão');
+    }
+
+    const novaQuantidade = itemEncontrado.quantidade + dto.delta;
+    const itensNovos =
+      novaQuantidade <= 0
+        ? itensAtuais.filter((item) => item.id !== dto.itemId)
+        : itensAtuais.map((item) =>
+            item.id === dto.itemId ? { ...item, quantidade: novaQuantidade } : item,
+          );
+
+    const inventarioAlterado = await this.campanhaRepositorio.alterarInventario({
+      campanhaId: dto.campanhaId,
+      itens: itensNovos,
+    });
+    this.campanhaGateway.emitirInventarioAlterado({ campanhaId: dto.campanhaId });
+    return inventarioAlterado;
   }
 
   /**

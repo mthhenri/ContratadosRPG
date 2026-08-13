@@ -10,6 +10,7 @@ import {
 } from '@nestjs/websockets';
 import type {
   CampanhaEstadoAlteradaDto,
+  CampanhaInventarioAlteradoDto,
   CampanhaMembroEntradaDto,
   CampanhaRecuperarDto,
 } from '@contratados-rpg/shared/dtos/campanha';
@@ -208,6 +209,16 @@ export class CampanhaGateway implements OnGatewayConnection {
    */
   emitirEstadoAlterado(evento: CampanhaEstadoAlteradaDto): void {
     this.servidor.to(this.salaCampanha(evento.id)).emit('campanha:estado-alterado', evento);
+  }
+
+  /**
+   * Emite `campanha:inventario-alterado` na sala `campanha:<id>` — sem payload de dados (o
+   * cliente sempre refaz `GET /campanha/:id/inventario`, mesmo padrão dos demais broadcasts).
+   * Chamado pelas mutações de `CampanhaService` e pelas rotas de transferência de `FichaService`
+   * (Task 3) após persistir.
+   */
+  emitirInventarioAlterado(evento: CampanhaInventarioAlteradoDto): void {
+    this.servidor.to(this.salaCampanha(evento.campanhaId)).emit('campanha:inventario-alterado', evento);
   }
 
   /**

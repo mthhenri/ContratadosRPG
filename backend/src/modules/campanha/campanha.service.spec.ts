@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { TipoCampanhaMembroPapelEnum, TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
+import { ItemCategoriaEnum, TipoCampanhaMembroPapelEnum, TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 
 // randomBytes dublado para tornar o código de convite determinístico no teste. Os bytes
-// 0..7 mapeiam para os 8 primeiros caracteres do alfabeto de convite → 'ABCDEFGH'.
+// 0..7 mapeiam para os 8 primeiros caracteres do alfabeto de convite → 'ABCDEFGH'. randomUUID
+// dublado para o id de item novo do inventário de esquadrão (adicionarItemInventario).
 vi.mock('node:crypto', () => ({
   randomBytes: vi.fn(() => Buffer.from([0, 1, 2, 3, 4, 5, 6, 7])),
+  randomUUID: vi.fn(() => 'uuid-fixo-teste'),
 }));
 import type { CampanhaRecuperadaDto, CampanhaResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import {
@@ -31,11 +33,14 @@ interface RepositorioDublado {
   removerMembro: ReturnType<typeof vi.fn>;
   transferirMestre: ReturnType<typeof vi.fn>;
   alterarEstado: ReturnType<typeof vi.fn>;
+  recuperarInventario: ReturnType<typeof vi.fn>;
+  alterarInventario: ReturnType<typeof vi.fn>;
 }
 
 interface CampanhaGatewayDublado {
   emitirMembroEntrou: ReturnType<typeof vi.fn>;
   emitirEstadoAlterado: ReturnType<typeof vi.fn>;
+  emitirInventarioAlterado: ReturnType<typeof vi.fn>;
 }
 
 describe('CampanhaService', () => {
@@ -69,8 +74,14 @@ describe('CampanhaService', () => {
       removerMembro: vi.fn(),
       transferirMestre: vi.fn(),
       alterarEstado: vi.fn(),
+      recuperarInventario: vi.fn(),
+      alterarInventario: vi.fn(),
     };
-    campanhaGateway = { emitirMembroEntrou: vi.fn(), emitirEstadoAlterado: vi.fn() };
+    campanhaGateway = {
+      emitirMembroEntrou: vi.fn(),
+      emitirEstadoAlterado: vi.fn(),
+      emitirInventarioAlterado: vi.fn(),
+    };
     service = new CampanhaService(
       repositorio as unknown as CampanhaRepository,
       campanhaGateway as unknown as CampanhaGateway,
@@ -582,6 +593,146 @@ describe('CampanhaService', () => {
       await expect(
         service.alterarEstado({ id: 99, naBase: false }, usuarioMestre),
       ).rejects.toThrow(ResourceNotFoundException);
+    });
+  });
+
+  describe('validarAcessoInventario (gate Na Base / Em Missão)', () => {
+    it('permite o mestre mesmo com naBase=false', async () => {
+      repositorio.recuperarPorId.mockResolvedValue({ ...campanhaPersistida, naBase: false });
+      repositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE });
+
+      await expect(
+        service.validarAcessoInventario({ campanhaId: 3, usuarioId: usuarioMestre.sub }),
+      ).resolves.not.toThrow();
+    });
+
+    it('bloqueia o jogador quando naBase=false', async () => {
+      repositorio.recuperarPorId.mockResolvedValue({ ...campanhaPersistida, naBase: false });
+      repositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+
+      await expect(
+        service.validarAcessoInventario({ campanhaId: 3, usuarioId: usuarioNaoMestre.sub }),
+      ).rejects.toThrow(UnauthorizedAccessException);
+    });
+
+    it('permite o jogador quando naBase=true', async () => {
+      repositorio.recuperarPorId.mockResolvedValue({ ...campanhaPersistida, naBase: true });
+      repositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+
+      await expect(
+        service.validarAcessoInventario({ campanhaId: 3, usuarioId: usuarioNaoMestre.sub }),
+      ).resolves.not.toThrow();
+    });
+
+    it('lança UnauthorizedAccessException quando não é membro', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro.mockResolvedValue(null);
+
+      await expect(
+        service.validarAcessoInventario({ campanhaId: 3, usuarioId: 999 }),
+      ).rejects.toThrow(UnauthorizedAccessException);
+    });
+  });
+
+  describe('listarInventario', () => {
+    it('devolve os itens quando o acesso é permitido', async () => {
+      repositorio.recuperarPorId.mockResolvedValue({ ...campanhaPersistida, naBase: true });
+      repositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+      repositorio.recuperarInventario.mockResolvedValue([{ id: 'a1', nome: 'Kit Médico' }]);
+
+      const resultado = await service.listarInventario({ campanhaId: 3 }, usuarioNaoMestre);
+
+      expect(resultado).toEqual({ itens: [{ id: 'a1', nome: 'Kit Médico' }] });
+    });
+  });
+
+  describe('adicionarItemInventario', () => {
+    it('gera um id novo e acrescenta o item à lista existente', async () => {
+      repositorio.recuperarPorId.mockResolvedValue({ ...campanhaPersistida, naBase: true });
+      repositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+      repositorio.recuperarInventario.mockResolvedValue([{ id: 'existente', nome: 'Munição 9mm' }]);
+      repositorio.alterarInventario.mockResolvedValue({ itens: [] });
+
+      await service.adicionarItemInventario(
+        {
+          campanhaId: 3,
+          nome: 'Kit Médico Avançado',
+          categoria: ItemCategoriaEnum.MEDICINAL,
+          custo: 10,
+          peso: 1,
+          quantidade: 2,
+        },
+        usuarioNaoMestre,
+      );
+
+      expect(repositorio.alterarInventario).toHaveBeenCalledWith({
+        campanhaId: 3,
+        itens: [
+          { id: 'existente', nome: 'Munição 9mm' },
+          expect.objectContaining({ nome: 'Kit Médico Avançado', quantidade: 2 }),
+        ],
+      });
+      const itemNovo = (repositorio.alterarInventario.mock.calls[0]![0] as { itens: { id: string }[] }).itens[1];
+      expect(typeof itemNovo.id).toBe('string');
+      expect(itemNovo.id.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('removerItemInventario', () => {
+    it('remove o item da lista', async () => {
+      repositorio.recuperarPorId.mockResolvedValue({ ...campanhaPersistida, naBase: true });
+      repositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE });
+      repositorio.recuperarInventario.mockResolvedValue([
+        { id: 'a1', nome: 'Kit Médico' },
+        { id: 'a2', nome: 'Munição' },
+      ]);
+      repositorio.alterarInventario.mockResolvedValue({ itens: [{ id: 'a2', nome: 'Munição' }] });
+
+      const resultado = await service.removerItemInventario({ campanhaId: 3, itemId: 'a1' }, usuarioMestre);
+
+      expect(repositorio.alterarInventario).toHaveBeenCalledWith({
+        campanhaId: 3,
+        itens: [{ id: 'a2', nome: 'Munição' }],
+      });
+      expect(resultado).toEqual({ itens: [{ id: 'a2', nome: 'Munição' }] });
+    });
+
+    it('lança ResourceNotFoundException quando o item não existe', async () => {
+      repositorio.recuperarPorId.mockResolvedValue({ ...campanhaPersistida, naBase: true });
+      repositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE });
+      repositorio.recuperarInventario.mockResolvedValue([]);
+
+      await expect(
+        service.removerItemInventario({ campanhaId: 3, itemId: 'inexistente' }, usuarioMestre),
+      ).rejects.toThrow(ResourceNotFoundException);
+      expect(repositorio.alterarInventario).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('ajustarQuantidadeItemInventario', () => {
+    it('soma o delta à quantidade existente', async () => {
+      repositorio.recuperarPorId.mockResolvedValue({ ...campanhaPersistida, naBase: true });
+      repositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE });
+      repositorio.recuperarInventario.mockResolvedValue([{ id: 'a1', nome: 'Munição', quantidade: 5 }]);
+      repositorio.alterarInventario.mockResolvedValue({ itens: [{ id: 'a1', nome: 'Munição', quantidade: 6 }] });
+
+      await service.ajustarQuantidadeItemInventario({ campanhaId: 3, itemId: 'a1', delta: 1 }, usuarioMestre);
+
+      expect(repositorio.alterarInventario).toHaveBeenCalledWith({
+        campanhaId: 3,
+        itens: [{ id: 'a1', nome: 'Munição', quantidade: 6 }],
+      });
+    });
+
+    it('remove o item quando a quantidade chega a zero ou menos', async () => {
+      repositorio.recuperarPorId.mockResolvedValue({ ...campanhaPersistida, naBase: true });
+      repositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE });
+      repositorio.recuperarInventario.mockResolvedValue([{ id: 'a1', nome: 'Munição', quantidade: 1 }]);
+      repositorio.alterarInventario.mockResolvedValue({ itens: [] });
+
+      await service.ajustarQuantidadeItemInventario({ campanhaId: 3, itemId: 'a1', delta: -1 }, usuarioMestre);
+
+      expect(repositorio.alterarInventario).toHaveBeenCalledWith({ campanhaId: 3, itens: [] });
     });
   });
 });

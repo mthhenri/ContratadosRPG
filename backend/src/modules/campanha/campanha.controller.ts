@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Put } from '@nestjs/common';
 import type {
   CampanhaAlteradaDto,
   CampanhaAlterarDto,
@@ -9,6 +9,8 @@ import type {
   CampanhaEntrarDto,
   CampanhaEstadoAlteradaDto,
   CampanhaEstadoAlterarDto,
+  CampanhaInventarioDto,
+  CampanhaInventarioItemAdicionarDto,
   CampanhaMembroRemovidoDto,
   CampanhaMembroResumoDto,
   CampanhaMestreTransferidoDto,
@@ -117,5 +119,44 @@ export class CampanhaController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<void> {
     return this.campanhaService.excluirCampanha({ id }, usuarioAtivo);
+  }
+
+  @Get(':id/inventario')
+  listarInventario(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaInventarioDto> {
+    return this.campanhaService.listarInventario({ campanhaId: id }, usuarioAtivo);
+  }
+
+  @Post(':id/inventario/item')
+  adicionarItemInventario(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CampanhaInventarioItemAdicionarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaInventarioDto> {
+    return this.campanhaService.adicionarItemInventario({ ...dto, campanhaId: id }, usuarioAtivo);
+  }
+
+  @Delete(':id/inventario/item/:itemId')
+  removerItemInventario(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('itemId') itemId: string,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaInventarioDto> {
+    return this.campanhaService.removerItemInventario({ campanhaId: id, itemId }, usuarioAtivo);
+  }
+
+  @Patch(':id/inventario/item/:itemId/quantidade')
+  ajustarQuantidadeItemInventario(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('itemId') itemId: string,
+    @Body() dto: { delta: number },
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaInventarioDto> {
+    return this.campanhaService.ajustarQuantidadeItemInventario(
+      { campanhaId: id, itemId, delta: dto.delta },
+      usuarioAtivo,
+    );
   }
 }

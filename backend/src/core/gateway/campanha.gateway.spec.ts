@@ -268,6 +268,13 @@ describe('CampanhaGateway', () => {
       expect(emitir).toHaveBeenCalledWith('campanha:estado-alterado', { id: 3, naBase: false });
     });
 
+    it('emite campanha:inventario-alterado na sala da campanha', () => {
+      gateway.emitirInventarioAlterado({ campanhaId: 3 });
+
+      expect(paraSala).toHaveBeenCalledWith('campanha:3');
+      expect(emitir).toHaveBeenCalledWith('campanha:inventario-alterado', { campanhaId: 3 });
+    });
+
     it('emite ficha:acesso-revogado na sala ficha:<id> (m3-51 — expulsão em tempo real)', () => {
       gateway.emitirAcessoRevogado({ fichaId: 5, usuarioId: 42 });
 

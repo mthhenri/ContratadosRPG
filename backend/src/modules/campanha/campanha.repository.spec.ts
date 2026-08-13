@@ -48,4 +48,41 @@ describe('CampanhaRepository', () => {
     expect(parametros).toEqual({ id: 3, naBase: false });
     expect(resultado).toEqual({ id: 3, naBase: false });
   });
+
+  it('recuperarInventario devolve os itens com COALESCE para lista vazia', async () => {
+    const raw = vi.fn().mockResolvedValue({ rows: [{ itens: [{ id: 'a1', nome: 'Kit Médico' }] }] });
+    const repositorio = new CampanhaRepository({ raw } as unknown as Knex);
+
+    const itens = await repositorio.recuperarInventario({ campanhaId: 3 });
+
+    const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(sql).toContain(`COALESCE(inventario, '[]'::jsonb) AS itens`);
+    expect(parametros).toEqual({ campanhaId: 3 });
+    expect(itens).toEqual([{ id: 'a1', nome: 'Kit Médico' }]);
+  });
+
+  it('recuperarInventario devolve lista vazia quando a campanha não existe', async () => {
+    const raw = vi.fn().mockResolvedValue({ rows: [] });
+    const repositorio = new CampanhaRepository({ raw } as unknown as Knex);
+
+    const itens = await repositorio.recuperarInventario({ campanhaId: 99 });
+
+    expect(itens).toEqual([]);
+  });
+
+  it('alterarInventario regrava a lista inteira e devolve os itens atualizados', async () => {
+    const raw = vi.fn().mockResolvedValue({ rows: [{ itens: [{ id: 'a1', quantidade: 2 }] }] });
+    const repositorio = new CampanhaRepository({ raw } as unknown as Knex);
+
+    const resultado = await repositorio.alterarInventario({
+      campanhaId: 3,
+      itens: [{ id: 'a1', quantidade: 2 } as never],
+    });
+
+    const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(sql).toContain('SET inventario = :itens::jsonb');
+    expect(sql).toContain('WHERE id = :campanhaId AND is_deleted = false');
+    expect(parametros).toEqual({ campanhaId: 3, itens: JSON.stringify([{ id: 'a1', quantidade: 2 }]) });
+    expect(resultado).toEqual({ itens: [{ id: 'a1', quantidade: 2 }] });
+  });
 });

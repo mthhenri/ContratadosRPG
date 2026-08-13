@@ -1,4 +1,4 @@
-import type { ArquetipoEnum, ClasseEnum, TipoCampanhaMembroPapelEnum } from '../../enums';
+import type { ArquetipoEnum, ClasseEnum, ItemCategoriaEnum, TipoCampanhaMembroPapelEnum } from '../../enums';
 
 /**
  * DTOs do módulo `campanha` — CRUD de campanha (m2-04). Seguem a fórmula
@@ -353,4 +353,88 @@ export interface CampanhaEstadoAlterarDto {
 export interface CampanhaEstadoAlteradaDto {
   readonly id: number;
   readonly naBase: boolean;
+}
+
+/*
+ * ── Inventário de esquadrão: itens ────────────────────────────────────────────────────────
+ */
+
+/**
+ * Item do inventário de esquadrão — só os campos **descritivos** do catálogo de compras
+ * (`ItemCatalogo`, `shared/regras/compras`), sem `equipado`/`modificacoes`/`containerId`: este
+ * inventário só guarda, não equipa nada. `id` é um uuid gerado no `POST` — identificador estável
+ * para remover/ajustar/transferir o item.
+ */
+export interface CampanhaInventarioItemDto {
+  readonly id: string;
+  readonly nome: string;
+  readonly categoria: ItemCategoriaEnum;
+  readonly custo: number;
+  readonly peso: number;
+  readonly quantidade: number;
+  readonly descricao?: string;
+  readonly dano?: string;
+  readonly informacao?: string;
+  readonly resistencia?: string;
+  readonly bonus?: string;
+}
+
+/** Saída da listagem/mutação do inventário de esquadrão — a lista inteira e atual de itens. */
+export interface CampanhaInventarioDto {
+  readonly itens: readonly CampanhaInventarioItemDto[];
+}
+
+/** Entrada da listagem — o `campanhaId` vem do `@Param`, injetado no DTO pela controller. */
+export interface CampanhaInventarioRecuperarDto {
+  readonly campanhaId: number;
+}
+
+/**
+ * Entrada de adicionar item — o `campanhaId` vem do `@Param`; os demais campos vêm do corpo.
+ * Qualquer membro pode adicionar (respeitando o gate Na Base/Em Missão do jogador).
+ */
+export interface CampanhaInventarioItemAdicionarDto {
+  readonly campanhaId: number;
+  readonly nome: string;
+  readonly categoria: ItemCategoriaEnum;
+  readonly custo: number;
+  readonly peso: number;
+  readonly quantidade: number;
+  readonly descricao?: string;
+  readonly dano?: string;
+  readonly informacao?: string;
+  readonly resistencia?: string;
+  readonly bonus?: string;
+}
+
+/** Entrada de remover item inteiro — `campanhaId`/`itemId` vêm do `@Param`. */
+export interface CampanhaInventarioItemRemoverDto {
+  readonly campanhaId: number;
+  readonly itemId: string;
+}
+
+/**
+ * Entrada de ajustar quantidade por delta (stepper +/-1, mesmo padrão de Vida/Energia da ficha)
+ * — `campanhaId`/`itemId` vêm do `@Param`, `delta` do corpo. Quantidade que chega a `<= 0` remove
+ * o item.
+ */
+export interface CampanhaInventarioItemQuantidadeAjustarDto {
+  readonly campanhaId: number;
+  readonly itemId: string;
+  readonly delta: number;
+}
+
+/**
+ * Entrada interna de `CampanhaRepository.alterarInventario` — substitui a lista inteira de itens
+ * (mesmo padrão de "ler tudo, mutar em TS, regravar tudo" de `FichaRepository.alterarFicha`). Só
+ * service ↔ repository (`ficha` também chama este método do repositório diretamente na Task 3).
+ */
+export interface CampanhaInventarioInternoAlterarDto {
+  readonly campanhaId: number;
+  readonly itens: readonly CampanhaInventarioItemDto[];
+}
+
+/** Payload do evento de tempo real `campanha:inventario-alterado` — o cliente refaz o GET. */
+export interface CampanhaInventarioAlteradoDto {
+  readonly campanhaId: number;
 }

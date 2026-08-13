@@ -11,6 +11,10 @@ import type {
   CampanhaExcluirDto,
   CampanhaInternoAlterarDto,
   CampanhaInternoCriarDto,
+  CampanhaInventarioDto,
+  CampanhaInventarioInternoAlterarDto,
+  CampanhaInventarioItemDto,
+  CampanhaInventarioRecuperarDto,
   CampanhaListarDto,
   CampanhaMembroInternoCriarDto,
   CampanhaMembroInternoRecuperadoDto,
@@ -230,6 +234,36 @@ export class CampanhaRepository extends BaseRepository {
       { id: dto.id, naBase: dto.naBase },
     );
     return estadoAlterado;
+  }
+
+  /**
+   * Recupera os itens ativos do inventário de esquadrão da campanha — lista vazia se a campanha
+   * nunca teve item (`inventario = null`) ou não existir (nenhuma linha casa o `WHERE`).
+   */
+  async recuperarInventario(dto: CampanhaInventarioRecuperarDto): Promise<readonly CampanhaInventarioItemDto[]> {
+    const [resultado] = await this.executarConsulta<{ itens: CampanhaInventarioItemDto[] }>(
+      `SELECT COALESCE(inventario, '[]'::jsonb) AS itens
+       FROM campanha
+       WHERE id = :campanhaId AND is_deleted = false`,
+      { campanhaId: dto.campanhaId },
+    );
+    return resultado?.itens ?? [];
+  }
+
+  /**
+   * Substitui a lista inteira de itens do inventário de esquadrão (mesmo padrão de "ler tudo,
+   * mutar em TS, regravar tudo" de `FichaRepository.alterarFicha` — sem transação/CTE, que não
+   * existem em nenhum lugar do projeto). Só toca campanha ativa, sem `DEFAULT`.
+   */
+  async alterarInventario(dto: CampanhaInventarioInternoAlterarDto): Promise<CampanhaInventarioDto> {
+    const [resultado] = await this.executarConsulta<{ itens: CampanhaInventarioItemDto[] }>(
+      `UPDATE campanha
+       SET inventario = :itens::jsonb, updated_date = NOW()
+       WHERE id = :campanhaId AND is_deleted = false
+       RETURNING COALESCE(inventario, '[]'::jsonb) AS itens`,
+      { campanhaId: dto.campanhaId, itens: JSON.stringify(dto.itens) },
+    );
+    return { itens: resultado.itens };
   }
 
   /**
