@@ -1,0 +1,58 @@
+.inventario-esquadrao {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &__acoes, &__quantidade, &__item-acoes, &__dialogo label { display: flex; align-items: center; }
+  &__acoes { justify-content: space-between; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  &__contagem { color: var(--text-mute); font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); }
+  &__adicionar { display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 6px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: transparent; color: var(--text-dim); font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); cursor: pointer; }
+  &__adicionar app-icone { display: inline-flex; width: 13px; height: 13px; color: var(--accent); }
+  &__adicionar:hover, &__adicionar:focus-visible { color: var(--text); border-color: var(--accent-border); background: var(--surface-2); outline: none; }
+  &__bloqueado { display: flex; gap: 12px; padding: 16px; border: 1px dashed var(--warning); border-radius: var(--radius-control); color: var(--warning); background: var(--surface-2); }
+  &__bloqueado div { display: grid; gap: 4px; }
+  &__bloqueado span { color: var(--text-dim); }
+  &__catalogo { display: grid; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface-2); }
+  &__catalogo label, &__dialogo label { display: grid; gap: 6px; color: var(--text-dim); font: .75rem var(--font-mono); }
+  &__catalogo select, &__dialogo select, &__dialogo input { min-height: 44px; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: var(--surface); color: var(--text); padding: 8px; }
+  &__catalogo-lista { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; max-height: 280px; overflow: auto; }
+  &__catalogo-lista button { display: grid; gap: 4px; padding: 10px; text-align: left; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); color: var(--text); cursor: pointer; }
+  &__catalogo-lista button:hover { border-color: var(--accent-border); background: var(--surface-2); }
+  &__catalogo-lista span, &__item small { color: var(--text-mute); }
+  &__vazio { margin: 0; padding: 32px 20px; border: 1px dashed var(--border-strong); border-radius: var(--radius-control); color: var(--text-mute); font-size: 13px; text-align: center; }
+  &__lista { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  &__item { display: grid; gap: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface-2); }
+  &__item-identidade { display: grid; gap: 3px; min-width: 0; flex: 1; }
+  &__item-identidade strong { color: var(--text); font: 700 14px var(--font-mono); }
+  &__categoria { color: var(--accent); font: 700 10px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); }
+  &__item-acoes { gap: 8px; }
+  &__quantidade { border: 1px solid var(--border-strong); border-radius: var(--radius-control); overflow: hidden; }
+  &__quantidade button, &__remover { width: 32px; height: 32px; border: 0; background: transparent; color: var(--text-dim); cursor: pointer; }
+  &__quantidade button:hover { background: var(--surface); color: var(--accent); }
+  &__quantidade output { min-width: 30px; text-align: center; color: var(--text); font: 600 12px var(--font-mono); }
+  &__pegar { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 5px 10px; border: 1px solid var(--accent-border); border-radius: var(--radius-control); background: var(--accent-dim); color: var(--accent); font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); cursor: pointer; }
+  &__pegar:hover:not(:disabled), &__pegar:focus-visible { background: var(--accent); color: var(--bg); outline: none; }
+  &__pegar:disabled { opacity: .45; cursor: not-allowed; }
+  &__remover { margin-left: auto; border: 1px solid var(--border-strong); border-radius: var(--radius-control); font-size: 16px; }
+  &__remover:hover { color: var(--danger); border-color: var(--danger); background: var(--surface); }
+  &__dialogo { position: fixed; z-index: 101; top: 50%; left: 50%; display: grid; gap: 16px; width: min(380px, calc(100vw - 28px)); max-height: calc(100dvh - 28px); overflow-y: auto; padding: var(--pad-card); border: 1px solid var(--border-strong); border-radius: var(--radius-card); background: var(--surface); box-shadow: var(--shadow-lg); transform: translate(-50%, -50%); }
+  &__dialogo .dialogo__cabecalho { padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  &__dialogo .dialogo__cabecalho h2 { margin: 0; color: var(--text); font: 600 13px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); }
+  &__dialogo .dialogo__acoes { display: flex; justify-content: flex-end; gap: 8px; }
+  &__dialogo .dialogo__acoes .botao { min-height: 36px; padding: 7px 12px; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: transparent; color: var(--text-dim); font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); cursor: pointer; }
+  &__dialogo .dialogo__acoes .botao--primario { border-color: var(--accent-border); background: var(--accent); color: var(--bg); }
+  &__dialogo .dialogo__acoes .botao:hover { border-color: var(--accent-border); color: var(--text); }
+  &__dialogo .dialogo__acoes .botao--primario:hover { color: var(--bg); filter: brightness(1.08); }
+  &__dialogo label { align-items: stretch; }
+}
+
+@media (max-width: 560px) {
+  .inventario-esquadrao {
+    &__acoes { align-items: stretch; flex-direction: column; }
+    &__adicionar { justify-content: center; min-height: 44px; }
+    &__item-acoes { flex-wrap: wrap; }
+    &__catalogo-lista { grid-template-columns: 1fr; }
+    &__quantidade button, &__remover { width: 44px; height: 44px; }
+    &__pegar { flex: 1; justify-content: center; min-height: 44px; }
+  }
+}

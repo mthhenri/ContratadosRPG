@@ -457,6 +457,8 @@ export class FichaVisualizacao {
    * História seguem só na ficha completa (via "Abrir ficha completa").
    */
   readonly modo = input<'padrao' | 'compacto'>('padrao');
+  /** Autoriza oferecer a transferência de itens desta ficha para a base da campanha. */
+  readonly podeMandarParaBase = input(false);
 
   /**
    * Gate da edição "completa" (identidade/classe/reações/contra-ataque/resistências/atributos em
@@ -536,6 +538,8 @@ export class FichaVisualizacao {
 
   /** Inventário (itens + amplificadores) editado — a página persiste em `dados.inventario` (m3-14). */
   readonly ajusteInventario = output<FichaInventarioDto>();
+  /** Solicitação de transferência encaminhada à página, responsável pela chamada REST e recarga. */
+  readonly mandarParaBase = output<{ readonly indice: number; readonly quantidade?: number }>();
 
   /** Presets de rolagem editados — a página persiste em `dados.rolagens` (m3-15). */
   readonly ajusteRolagens = output<readonly FichaRolagemDto[]>();

@@ -108,6 +108,11 @@ describe('CampanhaDetalhe', () => {
       transferirMestre: vi.fn(() =>
         of({ campanhaId: CAMPANHA_ID, mestreAnteriorUsuarioId: 0, novoMestreUsuarioId: 0 }),
       ),
+      recuperarInventario: vi.fn(() => of({ itens: [] })),
+      alterarEstado: vi.fn((_id: number, naBase: boolean) => of({ id: CAMPANHA_ID, naBase })),
+      adicionarItemInventario: vi.fn(() => of({ itens: [] })),
+      ajustarQuantidadeItemInventario: vi.fn(() => of({ itens: [] })),
+      removerItemInventario: vi.fn(() => of({ itens: [] })),
     };
     const fichaService = {
       listarFichas: vi.fn(() => of(opts.fichas ?? [])),
@@ -166,6 +171,8 @@ describe('CampanhaDetalhe', () => {
       listarAcessos: vi.fn(() => of([] as FichaAcessoResumoDto[])),
       concederAcesso: vi.fn((fichaId: number, usuarioId: number) => of({ id: 1, fichaId, usuarioId })),
       revogarAcesso: vi.fn((fichaId: number, usuarioId: number) => of({ fichaId, usuarioId })),
+      pegarItemInventario: vi.fn(() => of({ id: 1 })),
+      mandarItemInventarioParaBase: vi.fn(() => of({ id: 1 })),
     };
     const rolagemService = {
       listarPorCampanha: vi.fn(() => of(opts.rolagens ?? [])),
@@ -184,6 +191,8 @@ describe('CampanhaDetalhe', () => {
     const fichaAlterada$ = new Subject<unknown>();
     const fichaVisibilidadeAlterada$ = new Subject<FichaVisibilidadeAlteradaDto>();
     const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
+    const estadoAlterado$ = new Subject<{ id: number; naBase: boolean }>();
+    const inventarioAlterado$ = new Subject<{ campanhaId: number }>();
     const reconexao = signal(0);
     const tempoRealService = {
       conectar: vi.fn(),
@@ -196,6 +205,8 @@ describe('CampanhaDetalhe', () => {
       fichaAlterada$: fichaAlterada$.asObservable(),
       fichaVisibilidadeAlterada$: fichaVisibilidadeAlterada$.asObservable(),
       rolagemRegistrada$: rolagemRegistrada$.asObservable(),
+      estadoAlterado$: estadoAlterado$.asObservable(),
+      inventarioAlterado$: inventarioAlterado$.asObservable(),
       reconexao,
       conectado: signal(true),
     };
@@ -1910,6 +1921,35 @@ describe('CampanhaDetalhe', () => {
       expect(botao.textContent).toContain('Kane');
       expect(botao.textContent).toContain('Vida 40/40');
       expect(raiz.querySelector('.detalhe__equipe-carteirinha')).toBeNull();
+    });
+  });
+  describe('inventário de esquadrão', () => {
+    it('mestre vê o estado e o drawer; alternar estado chama o backend', () => {
+      const { fixture, raiz, campanhaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+      const estado = raiz.querySelector('.detalhe__estado-operacional') as HTMLButtonElement;
+      expect(estado.textContent).toContain('Na Base');
+      estado.click();
+      fixture.detectChanges();
+      expect(campanhaService.alterarEstado).toHaveBeenCalledWith(CAMPANHA_ID, false);
+      expect(raiz.querySelector('app-inventario-esquadrao-sidebar')).not.toBeNull();
+    });
+
+    it('jogador alterna a lateral para o inventário sem navegar', () => {
+      const { fixture, raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+      const botao = raiz.querySelector('.detalhe__alternar-inventario') as HTMLButtonElement;
+      expect(botao.disabled).toBe(false);
+      botao.click();
+      fixture.detectChanges();
+      expect(raiz.querySelector('.detalhe__inventario-jogador')).not.toBeNull();
+      expect(raiz.querySelector('.detalhe__equipe')).toBeNull();
+    });
+
+    it('jogador manda item da própria ficha para a base e relê os dois inventários', () => {
+      const { fixture, fichaService, campanhaService } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+      fixture.componentInstance['mandarItemFichaParaBase'](3, { indice: 1, quantidade: 2 });
+      expect(fichaService.mandarItemInventarioParaBase).toHaveBeenCalledWith(3, 1, 2);
+      expect(fichaService.recuperarFicha).toHaveBeenCalledWith(3);
+      expect(campanhaService.recuperarInventario).toHaveBeenCalledWith(CAMPANHA_ID);
     });
   });
 });

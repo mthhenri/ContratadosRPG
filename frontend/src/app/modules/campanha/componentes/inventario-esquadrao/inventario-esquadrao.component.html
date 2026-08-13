@@ -1,0 +1,75 @@
+<section class="inventario-esquadrao" aria-label="Inventário de esquadrão">
+  @if (bloqueado()) {
+    <div class="inventario-esquadrao__bloqueado" role="status">
+      <app-icone nome="alerta" />
+      <div><strong>Acesso bloqueado</strong><span>O inventário está indisponível durante a missão.</span></div>
+    </div>
+  } @else {
+    <header class="inventario-esquadrao__acoes">
+      <span class="inventario-esquadrao__contagem">{{ itens().length }} {{ itens().length === 1 ? 'registro' : 'registros' }}</span>
+      <button class="inventario-esquadrao__adicionar" type="button"
+        (click)="catalogoAberto.set(!catalogoAberto())">
+        <app-icone nome="mais" />
+        {{ catalogoAberto() ? 'Fechar catálogo' : 'Adicionar item' }}
+      </button>
+    </header>
+
+    @if (catalogoAberto()) {
+      <div class="inventario-esquadrao__catalogo">
+        <label>Categoria
+          <select [formControl]="categoriaAtiva">
+            @for (categoria of categorias; track categoria.categoria) {
+              <option [ngValue]="categoria.categoria">{{ categoria.rotulo }}</option>
+            }
+          </select>
+        </label>
+        <div class="inventario-esquadrao__catalogo-lista">
+          @for (item of itensCatalogo(); track item.nome) {
+            <button type="button" (click)="adicionar(item)" [disabled]="operando()">
+              <strong>{{ item.nome }}</strong><span>{{ item.peso }} peso · {{ item.custo }} custo</span>
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    @if (itens().length === 0) {
+      <p class="inventario-esquadrao__vazio">Nenhum item armazenado. Adicione equipamento para preparar o esquadrão.</p>
+    } @else {
+      <ul class="inventario-esquadrao__lista">
+        @for (item of itens(); track item.id) {
+          <li class="inventario-esquadrao__item">
+            <div class="inventario-esquadrao__item-identidade">
+              <span class="inventario-esquadrao__categoria">{{ rotuloCategoria(item.categoria) }}</span>
+              <strong>{{ item.nome }}</strong>
+              <small>{{ item.peso }} {{ item.peso === 1 ? 'slot' : 'slots' }} · ${{ item.custo }}</small>
+            </div>
+            <div class="inventario-esquadrao__item-acoes">
+              <div class="inventario-esquadrao__quantidade" aria-label="Quantidade">
+                <button type="button" [attr.aria-label]="'Diminuir quantidade de ' + item.nome" (click)="ajustar(item.id, -1)">−</button>
+                <output>{{ item.quantidade }}</output>
+                <button type="button" [attr.aria-label]="'Aumentar quantidade de ' + item.nome" (click)="ajustar(item.id, 1)">+</button>
+              </div>
+              <button class="inventario-esquadrao__pegar" type="button"
+                [disabled]="fichas().length === 0" (click)="abrirTransferencia(item)">Pegar <span aria-hidden="true">→</span></button>
+              <button class="inventario-esquadrao__remover" type="button" [attr.aria-label]="'Remover ' + item.nome" (click)="remover(item.id)">×</button>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  }
+</section>
+
+@if (transferencia(); as item) {
+  <button class="dialogo__fundo" type="button" aria-label="Cancelar transferência" (click)="transferencia.set(null)"></button>
+  <section class="dialogo inventario-esquadrao__dialogo" role="dialog" aria-modal="true" aria-label="Pegar item">
+    <header class="dialogo__cabecalho"><h2>Pegar {{ item.nome }}</h2></header>
+    <label>Ficha<select [formControl]="fichaDestino">@for (ficha of fichas(); track ficha.id) {<option [ngValue]="ficha.id">{{ ficha.nome }}</option>}</select></label>
+    <label>Quantidade<input type="number" min="1" [max]="item.quantidade" [formControl]="quantidade" /></label>
+    <footer class="dialogo__acoes">
+      <button class="botao botao--secundario" type="button" (click)="transferencia.set(null)">Cancelar</button>
+      <button class="botao botao--primario inventario-esquadrao__confirmar" type="button" [disabled]="operando()" (click)="confirmarTransferencia()">Confirmar</button>
+    </footer>
+  </section>
+}

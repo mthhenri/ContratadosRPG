@@ -8,6 +8,8 @@ import {
   CampanhaConviteRegeneradoDto,
   CampanhaCriadaDto,
   CampanhaEntradaDto,
+  CampanhaEstadoAlteradaDto,
+  CampanhaInventarioDto,
   CampanhaMembroRemovidoDto,
   CampanhaMembroResumoDto,
   CampanhaMestreTransferidoDto,
@@ -212,5 +214,47 @@ describe('CampanhaService', () => {
     requisicao.flush(envelope(transferido));
 
     expect(recebido).toEqual(transferido);
+  });
+  it('altera o estado operacional da campanha', () => {
+    const { servico, http } = criar();
+    const alterada: CampanhaEstadoAlteradaDto = { id: 8, naBase: false };
+    let recebido: CampanhaEstadoAlteradaDto | undefined;
+
+    servico.alterarEstado(8, false).subscribe((dados) => (recebido = dados));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/campanha/8/estado'));
+    expect(requisicao.request.method).toBe('PUT');
+    expect(requisicao.request.body).toEqual({ naBase: false });
+    requisicao.flush(envelope(alterada));
+    expect(recebido).toEqual(alterada);
+  });
+
+  it('recupera e altera o inventário de esquadrão pelas rotas dedicadas', () => {
+    const { servico, http } = criar();
+    const inventario: CampanhaInventarioDto = { itens: [] };
+    servico.recuperarInventario(8).subscribe();
+    const recuperar = http.expectOne((req) => req.url.endsWith('/campanha/8/inventario'));
+    expect(recuperar.request.method).toBe('GET');
+    recuperar.flush(envelope(inventario));
+
+    servico.adicionarItemInventario(8, {
+      nome: 'Kit médico', categoria: 'CONSUMIVEIS' as never, custo: 2, peso: 1, quantidade: 1,
+    }).subscribe();
+    const adicionar = http.expectOne((req) => req.url.endsWith('/campanha/8/inventario/item'));
+    expect(adicionar.request.method).toBe('POST');
+    expect(adicionar.request.body).toEqual({
+      nome: 'Kit médico', categoria: 'CONSUMIVEIS', custo: 2, peso: 1, quantidade: 1,
+    });
+    adicionar.flush(envelope(inventario));
+
+    servico.ajustarQuantidadeItemInventario(8, 'item-1', -1).subscribe();
+    const ajustar = http.expectOne((req) => req.url.endsWith('/campanha/8/inventario/item/item-1/quantidade'));
+    expect(ajustar.request.method).toBe('PATCH');
+    expect(ajustar.request.body).toEqual({ delta: -1 });
+    ajustar.flush(envelope(inventario));
+
+    servico.removerItemInventario(8, 'item-1').subscribe();
+    const remover = http.expectOne((req) => req.url.endsWith('/campanha/8/inventario/item/item-1'));
+    expect(remover.request.method).toBe('DELETE');
+    remover.flush(envelope(inventario));
   });
 });

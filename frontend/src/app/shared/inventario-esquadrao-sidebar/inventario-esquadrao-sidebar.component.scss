@@ -1,0 +1,26 @@
+@use 'tema/breakpoints' as bp;
+@use '../utilitario-flutuante/utilitario-flutuante' as utilitario-flutuante;
+
+:host { display: contents; }
+.inventario-sidebar {
+  &__gatilho { @include utilitario-flutuante.gatilho-utilitario-flutuante(); @include utilitario-flutuante.posicionar-utilitario-flutuante(2); @include utilitario-flutuante.utilitario-inline-mobile(); z-index: 55; color: var(--accent); background: var(--surface); border: 1px solid var(--border-strong); border-radius: 50%; box-shadow: 0 8px 20px rgb(0 0 0 / 40%); }
+  &__gatilho:hover, &__gatilho--ativo { border-color: var(--accent-border); background: var(--accent-dim); }
+  &__fundo { position: fixed; inset: 0; z-index: 64; border: 0; background: rgb(0 0 0 / 55%); }
+  &__painel { position: fixed; z-index: 65; inset: 0 0 0 auto; width: min(420px, 100vw); display: flex; flex-direction: column; border-left: 1px solid var(--border-strong); background: var(--surface); box-shadow: -16px 0 40px rgb(0 0 0 / 45%); outline: none; animation: inventario-sidebar-desliza .22s ease; }
+  &__cabecalho { flex: none; display: flex; align-items: center; gap: 11px; padding: 16px 18px; border-bottom: 1px solid var(--border); }
+  &__cabecalho > app-icone { flex: none; color: var(--accent); }
+  &__titulo { margin: 0; color: var(--text); font: 600 13px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); white-space: nowrap; }
+  &__regua { flex: 1; height: 1px; background: var(--border); }
+  &__fechar { flex: none; width: 26px; height: 26px; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: transparent; color: var(--text-dim); cursor: pointer; }
+  &__fechar:hover { color: var(--accent); border-color: var(--accent-border); background: var(--surface-2); }
+  &__corpo { flex: 1; min-height: 0; overflow-y: auto; padding: 16px 18px; }
+
+  @include bp.mobile {
+    &__gatilho { z-index: auto; color: var(--text-dim); background: transparent; border-radius: var(--radius-control); box-shadow: none; }
+    &__painel { width: 100vw; }
+    &__corpo { padding: 14px; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) { .inventario-sidebar__painel { animation: none; } }
+@keyframes inventario-sidebar-desliza { from { transform: translateX(100%); } to { transform: translateX(0); } }

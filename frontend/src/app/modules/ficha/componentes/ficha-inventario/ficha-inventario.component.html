@@ -699,6 +699,18 @@
           <!-- Ações (Modificar / Vestir-Guardar) → meta ($ e peso) → X de remover, por último. -->
           @if (editavel()) {
             <div class="ficha-inv__item-acoes">
+              @if (podeMandarParaBase() && !item.equipado) {
+                <button
+                  type="button"
+                  class="ficha-inv__mandar-base"
+                  [appTooltip]="'Transferir para o inventário de esquadrão'"
+                  [attr.aria-label]="'Mandar ' + item.nomeExibido + ' pra base'"
+                  (click)="abrirMandarParaBase(item.indice)"
+                >
+                  <app-icone nome="inventario" />
+                  <span>Mandar pra base</span>
+                </button>
+              }
               @if (item.modificavel) {
                 <button
                   type="button"
@@ -1561,6 +1573,27 @@
             <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--flex" (click)="cancelarRemocao()">
               Cancelar
             </button>
+          </div>
+        </div>
+      </div>
+    }
+  }
+
+  @if (indiceMandandoParaBase() !== null) {
+    @let baseIndice = indiceMandandoParaBase()!;
+    @let baseItem = itensInventario()[baseIndice];
+    @if (baseItem) {
+      <div class="ficha-inv__modal-fundo">
+        <div class="ficha-inv__modal" role="dialog" aria-modal="true" aria-label="Mandar para a base">
+          <h4 class="ficha-inv__modal-titulo">Mandar para a base</h4>
+          <p class="ficha-inv__modal-texto">Quantas unidades de “{{ baseItem.nome }}”? (1–{{ baseItem.quantidade }})</p>
+          <div class="ficha-inv__stepper ficha-inv__stepper--modal">
+            <input class="ficha-inv__entrada ficha-inv__entrada--num" type="number" aria-label="Quantidade para a base"
+              [min]="1" [max]="baseItem.quantidade" [formControl]="quantidadeMandarParaBase" />
+          </div>
+          <div class="ficha-inv__modal-acoes">
+            <button type="button" class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--flex" (click)="confirmarMandarParaBase()">Mandar</button>
+            <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--flex" (click)="indiceMandandoParaBase.set(null)">Cancelar</button>
           </div>
         </div>
       </div>

@@ -20,6 +20,24 @@
 }
 
 .detalhe {
+  &__estado-operacional {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 36px;
+    padding: 6px 10px;
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-control);
+    background: var(--accent-dim);
+    color: var(--accent);
+    font: 600 0.72rem var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+
+  &__estado-operacional--leitura { cursor: default; }
+  &__inventario-jogador { min-height: 0; overflow: auto; }
   // m2-19: era 1160px fixo (m2-17) — mesmo padrão de `visualizar.page.scss`/`lista.page.scss`
   // (m2-18), que aproveita mais a tela que o teto fixo.
   max-width: 80vw;
@@ -1609,6 +1627,22 @@
       flex: 1 1 100%;
       justify-content: center;
       min-height: bp.$alvo-toque;
+    }
+
+    &__ficha-embutida .card__cabecalho {
+      flex-wrap: wrap;
+
+      .card__regua {
+        flex-basis: 100%;
+      }
+    }
+
+    &__alternar-inventario,
+    &__abrir-completa {
+      flex: 1 1 calc(50% - 6px);
+      min-width: 0;
+      min-height: bp.$alvo-toque;
+      justify-content: center;
     }
   }
 }

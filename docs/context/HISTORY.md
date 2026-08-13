@@ -1,5 +1,25 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-13 — Frontend do inventário de esquadrão
+
+O painel de campanha passou a expor o estado operacional `Na Base`/`Em Missão` e o inventário
+compartilhado já implementados no backend. O mestre alterna o estado no cabeçalho e acessa o
+inventário por uma sidebar baseada no padrão aprovado do histórico de rolagens; jogadores acessam
+o mesmo conteúdo na coluna lateral quando a campanha está na base. O componente compartilhado
+permite adicionar itens do catálogo, ajustar ou remover quantidades e transferir itens nos dois
+sentidos entre a base e fichas do próprio jogador. Na ficha, itens não equipados oferecem a ação
+`Mandar pra base`; stacks pedem a quantidade antes da transferência. As alterações chegam por
+WebSocket e provocam nova leitura REST, preservando o gateway como broadcast-only.
+
+A inspeção da aplicação real cobriu o estado vazio, catálogo, item preenchido, bloqueio em missão,
+transferência ficha → base → ficha e a visualização do jogador em 1920×1080 e 360×800. O drawer foi
+alinhado ao `HistoricoRolagensSidebar`, os cards/steppers passaram a seguir a densidade do inventário
+da ficha e o diálogo de transferência foi corrigido para ficar centralizado e visível no mobile. O
+cabeçalho compacto também acomoda os dois controles do jogador sem overflow. A suíte completa passou
+com 59 arquivos e 949 testes no frontend e 22 arquivos e 310 testes no backend; lint e build do
+frontend também passaram.
+O build manteve apenas o aviso conhecido do budget inicial (638,35 kB para limite de 630 kB).
+
 ## 2026-08-13 — Resolução tardia de `CampanhaService` em `FichaService`
 
 O backend voltava a falhar ao iniciar com `UndefinedDependencyException` no terceiro argumento de

@@ -22,6 +22,7 @@ import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { FichaInventario } from '../ficha-inventario/ficha-inventario.component';
 import { FichaVisualizacao } from './ficha-visualizacao.component';
 import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
 import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
@@ -105,6 +106,19 @@ describe('FichaVisualizacao', () => {
     expect(raiz.querySelector('.chip-classificacao')?.textContent?.trim()).toBe('FICHA-JGD-0042');
     expect(raiz.querySelector('input')).toBeNull();
     expect(raiz.querySelector('select')).toBeNull();
+  });
+
+  it('repassa a disponibilidade e a solicitação de mandar item para a base', () => {
+    const alvo = montar(dados, 'Corvo', 42, true);
+    alvo.fixture.componentRef.setInput('podeMandarParaBase', true);
+    alvo.fixture.componentRef.setInput('abaStatusInicial', 'inventario');
+    alvo.fixture.detectChanges();
+    const inventario = alvo.fixture.debugElement.query(By.directive(FichaInventario)).componentInstance as FichaInventario;
+    const eventos: { indice: number; quantidade?: number }[] = [];
+    alvo.fixture.componentInstance.mandarParaBase.subscribe((evento) => eventos.push(evento));
+    expect(inventario.podeMandarParaBase()).toBe(true);
+    inventario.mandarParaBase.emit({ indice: 0, quantidade: 2 });
+    expect(eventos).toEqual([{ indice: 0, quantidade: 2 }]);
   });
 
   it('deriva a Vida Máxima via shared/regras (mesma fonte da edição)', () => {

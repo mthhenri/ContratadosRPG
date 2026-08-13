@@ -177,7 +177,11 @@ pelos dois papéis. Abaixo disso, o corpo diverge por papel (`@if (ehMestre())`/
 
 O cabeçalho tem nome da campanha em linha própria (mais destaque no mobile) e, abaixo/ao lado,
 indicador de tempo real, botão "Voltar às campanhas", gatilho de histórico de rolagens e (mestre)
-o menu kebab de ações da campanha (editar nome/descrição, excluir). Usável em ~360px.
+o menu kebab de ações da campanha (editar nome/descrição, excluir). Também mostra o estado
+operacional `Na Base`/`Em Missão`: o mestre pode alterná-lo e abrir o inventário compartilhado numa
+sidebar; o jogador abre o inventário na coluna lateral somente quando está na base. O inventário de
+esquadrão aceita itens do catálogo, ajustes de quantidade e transferência nos dois sentidos com
+fichas próprias (`Pegar`/`Mandar pra base`); em missão fica bloqueado. Usável em ~360px.
 
 ### Ficha de jogador — `backend/ficha`, `frontend/ficha`
 
@@ -304,7 +308,8 @@ progresso no topo, resumo operacional vira bottom sheet aberto por um botão ded
 Gateway Socket.IO **broadcast-only**: toda mutação passa por REST, o gateway nunca recebe escrita.
 Handshake autenticado pelo mesmo `JwtService` do Passport. Salas `ficha:<id>` e `campanha:<id>`,
 reusando a permissão §14 das services. Eventos: `ficha:criada`, `ficha:alterada`, `membro:entrou`,
-`rolagem:registrada`.
+`rolagem:registrada`, `campanha:estado-alterado` e `campanha:inventario-alterado`. Os dois eventos de
+inventário/estado sinalizam o frontend para reler a fonte de verdade por REST.
 
 ### Calculadoras públicas — `frontend/calculadora`
 
