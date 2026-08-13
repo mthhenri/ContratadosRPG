@@ -1,4 +1,6 @@
+import { randomUUID } from 'node:crypto';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import type { CampanhaInventarioItemDto } from '@contratados-rpg/shared/dtos/campanha';
 import type {
   FichaAcervoListarDto,
   FichaAcessoConcederDto,
@@ -21,6 +23,8 @@ import type {
   FichaImagemAlterarDto,
   FichaImagemExcluirDto,
   FichaInternoAlterarDto,
+  FichaInventarioItemMandarParaBaseDto,
+  FichaInventarioItemPegarDto,
   FichaJogadorDadosDto,
   FichaListarDto,
   FichaOrigemDto,
@@ -44,7 +48,7 @@ import {
   calcularVida,
   maestriaValida,
 } from '@contratados-rpg/shared/regras/agente';
-import { calcularResumoCompras } from '@contratados-rpg/shared/regras/compras';
+import { calcularResumoCompras, type CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 import {
   aplicarFormacaoAosDerivados,
   experimentoComPeculiaridade,
@@ -60,6 +64,7 @@ import {
 import { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { CampanhaRepository } from '../campanha/campanha.repository';
+import { CampanhaService } from '../campanha/campanha.service';
 import { omitirCamposPrivados } from './ficha-campos-privados.util';
 import { FichaRepository } from './ficha.repository';
 
@@ -110,6 +115,7 @@ export class FichaService {
   constructor(
     private readonly fichaRepositorio: FichaRepository,
     private readonly campanhaRepositorio: CampanhaRepository,
+    private readonly campanhaService: CampanhaService,
     @Inject(forwardRef(() => CampanhaGateway))
     private readonly campanhaGateway: CampanhaGateway,
     @Inject(ARMAZENAMENTO_PROVEDOR)
@@ -356,6 +362,178 @@ export class FichaService {
         campanhaId: fichaAlterada.campanhaId,
       });
     }
+    return fichaAlterada;
+  }
+
+  /**
+   * "Pegar" um item do inventário de esquadrão pra própria ficha (§ inventário de esquadrão) —
+   * só o dono da ficha pode (não o mestre em nome de outro jogador: quem recebe o item decide).
+   * Reusa o gate único de acesso ao inventário (`CampanhaService.validarAcessoInventario` —
+   * proibição #28). Sem `quantidade`, transfere o item inteiro; com `quantidade`, subtrai do lado
+   * da campanha e soma só essa parte à ficha. `ResourceNotFoundException` se a ficha ou o item da
+   * campanha não existirem; `UnauthorizedAccessException` se a ficha não for do autenticado ou
+   * ele não tiver acesso ao inventário (gate); `BusinessException` se a ficha não tiver campanha
+   * ou a quantidade pedida for inválida.
+   */
+  async pegarItemInventario(
+    dto: FichaInventarioItemPegarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<FichaRecuperadaDto> {
+    const fichaEncontrada = await this.fichaRepositorio.recuperarPorId({ id: dto.fichaId });
+    if (!fichaEncontrada) {
+      throw new ResourceNotFoundException('Ficha');
+    }
+    if (fichaEncontrada.usuarioId !== usuarioAtivo.sub) {
+      throw new UnauthorizedAccessException();
+    }
+    if (fichaEncontrada.campanhaId === null) {
+      throw new BusinessException('Ficha sem campanha não tem inventário de esquadrão');
+    }
+
+    await this.campanhaService.validarAcessoInventario({
+      campanhaId: fichaEncontrada.campanhaId,
+      usuarioId: usuarioAtivo.sub,
+    });
+
+    const itensCampanha = await this.campanhaRepositorio.recuperarInventario({
+      campanhaId: fichaEncontrada.campanhaId,
+    });
+    const itemCampanha = itensCampanha.find((item) => item.id === dto.campanhaItemId);
+    if (!itemCampanha) {
+      throw new ResourceNotFoundException('Item do inventário de esquadrão');
+    }
+
+    const quantidadeTransferida = dto.quantidade ?? itemCampanha.quantidade;
+    if (quantidadeTransferida <= 0 || quantidadeTransferida > itemCampanha.quantidade) {
+      throw new BusinessException('Quantidade inválida para transferência');
+    }
+
+    const itensCampanhaAtualizados =
+      quantidadeTransferida === itemCampanha.quantidade
+        ? itensCampanha.filter((item) => item.id !== itemCampanha.id)
+        : itensCampanha.map((item) =>
+            item.id === itemCampanha.id
+              ? { ...item, quantidade: item.quantidade - quantidadeTransferida }
+              : item,
+          );
+
+    const itemParaFicha: CarrinhoItemDto = {
+      nome: itemCampanha.nome,
+      categoria: itemCampanha.categoria,
+      custo: itemCampanha.custo,
+      peso: itemCampanha.peso,
+      quantidade: quantidadeTransferida,
+      guardada: true,
+      descricao: itemCampanha.descricao,
+      dano: itemCampanha.dano,
+      informacao: itemCampanha.informacao,
+      resistencia: itemCampanha.resistencia,
+      bonus: itemCampanha.bonus,
+      modificacoes: [],
+    };
+
+    const fichaAlterada = await this.fichaRepositorio.alterarInventario({
+      id: dto.fichaId,
+      dados: {
+        ...fichaEncontrada.dados,
+        inventario: {
+          ...fichaEncontrada.dados.inventario,
+          itens: [...fichaEncontrada.dados.inventario.itens, itemParaFicha],
+        },
+      },
+    });
+    await this.campanhaRepositorio.alterarInventario({
+      campanhaId: fichaEncontrada.campanhaId,
+      itens: itensCampanhaAtualizados,
+    });
+
+    this.campanhaGateway.emitirFichaAlterada(fichaAlterada);
+    this.campanhaGateway.emitirInventarioAlterado({ campanhaId: fichaEncontrada.campanhaId });
+
+    return fichaAlterada;
+  }
+
+  /**
+   * "Mandar pra base" um item do inventário da própria ficha (§ inventário de esquadrão) — o
+   * `indice` endereça a posição em `dados.inventario.itens` (mesmo endereçamento por posição do
+   * `ficha-inventario.component.ts`, já que `CarrinhoItemDto.id` só existe em containers de
+   * sub-inventário). Bloqueado se o item estiver `equipado: true` (precisa desequipar primeiro).
+   * Mesmas exceptions de `pegarItemInventario`; `ResourceNotFoundException` também para índice
+   * fora dos limites do array atual.
+   */
+  async mandarItemInventarioParaBase(
+    dto: FichaInventarioItemMandarParaBaseDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<FichaRecuperadaDto> {
+    const fichaEncontrada = await this.fichaRepositorio.recuperarPorId({ id: dto.fichaId });
+    if (!fichaEncontrada) {
+      throw new ResourceNotFoundException('Ficha');
+    }
+    if (fichaEncontrada.usuarioId !== usuarioAtivo.sub) {
+      throw new UnauthorizedAccessException();
+    }
+    if (fichaEncontrada.campanhaId === null) {
+      throw new BusinessException('Ficha sem campanha não tem inventário de esquadrão');
+    }
+
+    await this.campanhaService.validarAcessoInventario({
+      campanhaId: fichaEncontrada.campanhaId,
+      usuarioId: usuarioAtivo.sub,
+    });
+
+    const itensFicha = fichaEncontrada.dados.inventario.itens;
+    const itemOrigem = itensFicha[dto.indice];
+    if (!itemOrigem) {
+      throw new ResourceNotFoundException('Item do inventário da ficha');
+    }
+    if (itemOrigem.equipado) {
+      throw new BusinessException('Desequipe o item antes de mandá-lo para a base');
+    }
+
+    const quantidadeTransferida = dto.quantidade ?? itemOrigem.quantidade;
+    if (quantidadeTransferida <= 0 || quantidadeTransferida > itemOrigem.quantidade) {
+      throw new BusinessException('Quantidade inválida para transferência');
+    }
+
+    const itensFichaAtualizados =
+      quantidadeTransferida === itemOrigem.quantidade
+        ? itensFicha.filter((_item, indiceAtual) => indiceAtual !== dto.indice)
+        : itensFicha.map((item, indiceAtual) =>
+            indiceAtual === dto.indice ? { ...item, quantidade: item.quantidade - quantidadeTransferida } : item,
+          );
+
+    const itensCampanha = await this.campanhaRepositorio.recuperarInventario({
+      campanhaId: fichaEncontrada.campanhaId,
+    });
+    const itemNovoCampanha: CampanhaInventarioItemDto = {
+      id: randomUUID(),
+      nome: itemOrigem.nome,
+      categoria: itemOrigem.categoria,
+      custo: itemOrigem.custo,
+      peso: itemOrigem.peso,
+      quantidade: quantidadeTransferida,
+      descricao: itemOrigem.descricao,
+      dano: itemOrigem.dano,
+      informacao: itemOrigem.informacao,
+      resistencia: itemOrigem.resistencia,
+      bonus: itemOrigem.bonus,
+    };
+
+    const fichaAlterada = await this.fichaRepositorio.alterarInventario({
+      id: dto.fichaId,
+      dados: {
+        ...fichaEncontrada.dados,
+        inventario: { ...fichaEncontrada.dados.inventario, itens: itensFichaAtualizados },
+      },
+    });
+    await this.campanhaRepositorio.alterarInventario({
+      campanhaId: fichaEncontrada.campanhaId,
+      itens: [...itensCampanha, itemNovoCampanha],
+    });
+
+    this.campanhaGateway.emitirFichaAlterada(fichaAlterada);
+    this.campanhaGateway.emitirInventarioAlterado({ campanhaId: fichaEncontrada.campanhaId });
+
     return fichaAlterada;
   }
 

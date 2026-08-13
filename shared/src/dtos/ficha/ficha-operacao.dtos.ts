@@ -463,3 +463,46 @@ export interface FichaAcessoResumoDto {
   readonly usuarioId: number;
   readonly nome: string;
 }
+
+/*
+ * ── Transferência ficha ↔ inventário de esquadrão ─────────────────────────────────────────
+ * As duas rotas moram no módulo `ficha` porque `FichaModule` já depende de `CampanhaModule`
+ * (nunca o contrário) — evita dependência circular. O gate Na Base/Em Missão é o mesmo de
+ * `CampanhaService.validarAcessoInventario` (proibição #28, árbitro único).
+ */
+
+/**
+ * Entrada de "pegar" um item do inventário de esquadrão pra própria ficha — o `fichaId` vem do
+ * `@Param`. `campanhaItemId` é o `id` estável do item no inventário de esquadrão (sempre presente
+ * — gerado no `POST /campanha/:id/inventario/item`). Sem `quantidade`, transfere o item inteiro.
+ */
+export interface FichaInventarioItemPegarDto {
+  readonly fichaId: number;
+  readonly campanhaItemId: string;
+  readonly quantidade?: number;
+}
+
+/**
+ * Entrada de "mandar pra base" um item do inventário da ficha — o `fichaId` vem do `@Param`.
+ * `indice` é a posição do item em `ficha.dados.inventario.itens` **no momento da leitura desta
+ * requisição** (mesmo endereçamento por posição que `ficha-inventario.component.ts` já usa no
+ * frontend — `CarrinhoItemDto.id` só existe em containers de sub-inventário, m3-44, não em
+ * itens comuns). Sem `quantidade`, transfere o item inteiro. Bloqueado se o item estiver
+ * `equipado: true`.
+ */
+export interface FichaInventarioItemMandarParaBaseDto {
+  readonly fichaId: number;
+  readonly indice: number;
+  readonly quantidade?: number;
+}
+
+/**
+ * Entrada interna de `FichaRepository.alterarInventario` — `UPDATE` dedicado só a `dados` (fora
+ * do `alterarFicha` genérico, que também mexe em `nome`/`cor`/`oculta` e roda validação de
+ * identidade/contrato que não se aplica a uma transferência de item — mesmo raciocínio de
+ * `FichaImagemInternoAlterarDto`/`alterarImagem`). Só service ↔ repository.
+ */
+export interface FichaInventarioInternoAlterarDto {
+  readonly id: number;
+  readonly dados: FichaJogadorDadosDto;
+}

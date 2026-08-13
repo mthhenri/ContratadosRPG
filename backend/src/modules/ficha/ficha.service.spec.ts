@@ -30,6 +30,7 @@ import {
 import type { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import type { CampanhaRepository } from '../campanha/campanha.repository';
+import type { CampanhaService } from '../campanha/campanha.service';
 import type { FichaRepository } from './ficha.repository';
 import { FichaService, PRESET_INICIATIVA_PADRAO } from './ficha.service';
 
@@ -45,6 +46,7 @@ interface FichaRepositorioDublado {
   listarAcessos: ReturnType<typeof vi.fn>;
   alterarFicha: ReturnType<typeof vi.fn>;
   alterarImagem: ReturnType<typeof vi.fn>;
+  alterarInventario: ReturnType<typeof vi.fn>;
   excluirFicha: ReturnType<typeof vi.fn>;
   atribuirCampanha: ReturnType<typeof vi.fn>;
 }
@@ -56,6 +58,12 @@ interface ArmazenamentoProvedorDublado {
 
 interface CampanhaRepositorioDublado {
   recuperarMembro: Mock<CampanhaRepository['recuperarMembro']>;
+  recuperarInventario: Mock<CampanhaRepository['recuperarInventario']>;
+  alterarInventario: Mock<CampanhaRepository['alterarInventario']>;
+}
+
+interface CampanhaServiceDublado {
+  validarAcessoInventario: ReturnType<typeof vi.fn>;
 }
 
 interface CampanhaGatewayDublado {
@@ -63,6 +71,7 @@ interface CampanhaGatewayDublado {
   emitirFichaAlterada: ReturnType<typeof vi.fn>;
   emitirFichaVisibilidadeAlterada: ReturnType<typeof vi.fn>;
   emitirAcessoRevogado: ReturnType<typeof vi.fn>;
+  emitirInventarioAlterado: ReturnType<typeof vi.fn>;
 }
 
 /**
@@ -162,6 +171,7 @@ function criarIdentidade(overrides: Partial<FichaIdentidadeDto> = {}): FichaIden
 describe('FichaService', () => {
   let fichaRepositorio: FichaRepositorioDublado;
   let campanhaRepositorio: CampanhaRepositorioDublado;
+  let campanhaServiceDublado: CampanhaServiceDublado;
   let campanhaGateway: CampanhaGatewayDublado;
   let armazenamentoProvedor: ArmazenamentoProvedorDublado;
   let service: FichaService;
@@ -194,20 +204,28 @@ describe('FichaService', () => {
       listarAcessos: vi.fn(),
       alterarFicha: vi.fn(),
       alterarImagem: vi.fn(),
+      alterarInventario: vi.fn(),
       excluirFicha: vi.fn(),
       atribuirCampanha: vi.fn(),
     };
-    campanhaRepositorio = { recuperarMembro: vi.fn() };
+    campanhaRepositorio = {
+      recuperarMembro: vi.fn(),
+      recuperarInventario: vi.fn(),
+      alterarInventario: vi.fn(),
+    };
+    campanhaServiceDublado = { validarAcessoInventario: vi.fn() };
     campanhaGateway = {
       emitirFichaCriada: vi.fn(),
       emitirFichaAlterada: vi.fn(),
       emitirFichaVisibilidadeAlterada: vi.fn(),
       emitirAcessoRevogado: vi.fn(),
+      emitirInventarioAlterado: vi.fn(),
     };
     armazenamentoProvedor = { salvarImagem: vi.fn(), excluirImagem: vi.fn() };
     service = new FichaService(
       fichaRepositorio as unknown as FichaRepository,
       campanhaRepositorio as unknown as CampanhaRepository,
+      campanhaServiceDublado as unknown as CampanhaService,
       campanhaGateway as unknown as CampanhaGateway,
       armazenamentoProvedor as unknown as ArmazenamentoProvedor,
     );
@@ -1978,6 +1996,163 @@ describe('FichaService', () => {
       );
 
       expect(armazenamentoProvedor.excluirImagem).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('pegarItemInventario', () => {
+    const fichaComInventarioVazio = {
+      id: 5,
+      campanhaId: 3,
+      usuarioId: 10,
+      nome: 'Agente Alfa',
+      cor: null,
+      imagemUrl: null,
+      oculta: false,
+      dados: { inventario: { itens: [], amplificadores: [] } },
+    } as unknown as FichaRecuperadaDto;
+
+    it('transfere o item inteiro da campanha pra ficha quando quantidade não é informada', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaComInventarioVazio);
+      campanhaServiceDublado.validarAcessoInventario.mockResolvedValue(undefined);
+      campanhaRepositorio.recuperarInventario.mockResolvedValue([
+        { id: 'item-1', nome: 'Kit Médico', categoria: ItemCategoriaEnum.MEDICINAL, custo: 10, peso: 1, quantidade: 2 },
+      ]);
+      fichaRepositorio.alterarInventario.mockResolvedValue({ ...fichaComInventarioVazio });
+      campanhaRepositorio.alterarInventario.mockResolvedValue({ itens: [] });
+
+      await service.pegarItemInventario(
+        { fichaId: 5, campanhaItemId: 'item-1' },
+        usuarioDono,
+      );
+
+      expect(campanhaServiceDublado.validarAcessoInventario).toHaveBeenCalledWith({
+        campanhaId: 3,
+        usuarioId: usuarioDono.sub,
+      });
+      expect(fichaRepositorio.alterarInventario).toHaveBeenCalledWith({
+        id: 5,
+        dados: {
+          inventario: {
+            itens: [expect.objectContaining({ nome: 'Kit Médico', quantidade: 2, guardada: true })],
+            amplificadores: [],
+          },
+        },
+      });
+      expect(campanhaRepositorio.alterarInventario).toHaveBeenCalledWith({ campanhaId: 3, itens: [] });
+      expect(campanhaGateway.emitirInventarioAlterado).toHaveBeenCalledWith({ campanhaId: 3 });
+    });
+
+    it('transfere só a quantidade pedida, mantendo o resto no inventário de esquadrão', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaComInventarioVazio);
+      campanhaServiceDublado.validarAcessoInventario.mockResolvedValue(undefined);
+      campanhaRepositorio.recuperarInventario.mockResolvedValue([
+        { id: 'item-1', nome: 'Munição 9mm', categoria: ItemCategoriaEnum.MUNICOES, custo: 1, peso: 0.1, quantidade: 40 },
+      ]);
+      fichaRepositorio.alterarInventario.mockResolvedValue({ ...fichaComInventarioVazio });
+      campanhaRepositorio.alterarInventario.mockResolvedValue({ itens: [] });
+
+      await service.pegarItemInventario(
+        { fichaId: 5, campanhaItemId: 'item-1', quantidade: 10 },
+        usuarioDono,
+      );
+
+      expect(campanhaRepositorio.alterarInventario).toHaveBeenCalledWith({
+        campanhaId: 3,
+        itens: [expect.objectContaining({ id: 'item-1', quantidade: 30 })],
+      });
+    });
+
+    it('lança UnauthorizedAccessException quando a ficha não é do usuário', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaComInventarioVazio);
+
+      await expect(
+        service.pegarItemInventario({ fichaId: 5, campanhaItemId: 'item-1' }, usuarioMembro),
+      ).rejects.toThrow(UnauthorizedAccessException);
+      expect(campanhaServiceDublado.validarAcessoInventario).not.toHaveBeenCalled();
+    });
+
+    it('lança BusinessException quando a quantidade pedida excede o disponível', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaComInventarioVazio);
+      campanhaServiceDublado.validarAcessoInventario.mockResolvedValue(undefined);
+      campanhaRepositorio.recuperarInventario.mockResolvedValue([
+        { id: 'item-1', nome: 'Munição', categoria: ItemCategoriaEnum.MUNICOES, custo: 1, peso: 0.1, quantidade: 5 },
+      ]);
+
+      await expect(
+        service.pegarItemInventario({ fichaId: 5, campanhaItemId: 'item-1', quantidade: 6 }, usuarioDono),
+      ).rejects.toThrow(BusinessException);
+      expect(fichaRepositorio.alterarInventario).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('mandarItemInventarioParaBase', () => {
+    const fichaComItem = {
+      id: 5,
+      campanhaId: 3,
+      usuarioId: 10,
+      nome: 'Agente Alfa',
+      cor: null,
+      imagemUrl: null,
+      oculta: false,
+      dados: {
+        inventario: {
+          itens: [
+            { nome: 'Colete Reserva', categoria: ItemCategoriaEnum.PROTECOES, custo: 20, peso: 3, quantidade: 1, guardada: true, modificacoes: [] },
+          ],
+          amplificadores: [],
+        },
+      },
+    } as unknown as FichaRecuperadaDto;
+
+    it('transfere o item da ficha pro inventário de esquadrão', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaComItem);
+      campanhaServiceDublado.validarAcessoInventario.mockResolvedValue(undefined);
+      campanhaRepositorio.recuperarInventario.mockResolvedValue([]);
+      fichaRepositorio.alterarInventario.mockResolvedValue({ ...fichaComItem });
+      campanhaRepositorio.alterarInventario.mockResolvedValue({ itens: [] });
+
+      await service.mandarItemInventarioParaBase({ fichaId: 5, indice: 0 }, usuarioDono);
+
+      expect(fichaRepositorio.alterarInventario).toHaveBeenCalledWith({
+        id: 5,
+        dados: { inventario: { itens: [], amplificadores: [] } },
+      });
+      expect(campanhaRepositorio.alterarInventario).toHaveBeenCalledWith({
+        campanhaId: 3,
+        itens: [expect.objectContaining({ nome: 'Colete Reserva', quantidade: 1 })],
+      });
+      const itemNovo = (campanhaRepositorio.alterarInventario.mock.calls[0]![0] as unknown as {
+        itens: { id: string }[];
+      }).itens[0];
+      expect(typeof itemNovo.id).toBe('string');
+    });
+
+    it('lança BusinessException quando o item está equipado', async () => {
+      const fichaComItemEquipado = {
+        ...fichaComItem,
+        dados: {
+          inventario: {
+            itens: [{ ...fichaComItem.dados.inventario.itens[0], equipado: true }],
+            amplificadores: [],
+          },
+        },
+      } as unknown as FichaRecuperadaDto;
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaComItemEquipado);
+      campanhaServiceDublado.validarAcessoInventario.mockResolvedValue(undefined);
+
+      await expect(
+        service.mandarItemInventarioParaBase({ fichaId: 5, indice: 0 }, usuarioDono),
+      ).rejects.toThrow(BusinessException);
+      expect(fichaRepositorio.alterarInventario).not.toHaveBeenCalled();
+    });
+
+    it('lança ResourceNotFoundException quando o índice está fora dos limites', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaComItem);
+      campanhaServiceDublado.validarAcessoInventario.mockResolvedValue(undefined);
+
+      await expect(
+        service.mandarItemInventarioParaBase({ fichaId: 5, indice: 9 }, usuarioDono),
+      ).rejects.toThrow(ResourceNotFoundException);
     });
   });
 });

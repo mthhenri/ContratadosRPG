@@ -24,6 +24,8 @@ import type {
   FichaCriadaDto,
   FichaCriarDto,
   FichaImagemAlteradaDto,
+  FichaInventarioItemMandarParaBaseDto,
+  FichaInventarioItemPegarDto,
   FichaRecuperadaDto,
   FichaResumoDto,
 } from '@contratados-rpg/shared/dtos/ficha';
@@ -136,6 +138,24 @@ export class FichaController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<FichaCampanhaAtribuidaDto> {
     return this.fichaService.atribuirCampanha({ ...dto, id }, usuarioAtivo);
+  }
+
+  @Post(':id/inventario/item/pegar')
+  pegarItemInventario(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: Omit<FichaInventarioItemPegarDto, 'fichaId'>,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<FichaRecuperadaDto> {
+    return this.fichaService.pegarItemInventario({ ...dto, fichaId: id }, usuarioAtivo);
+  }
+
+  @Post(':id/inventario/item/mandar-para-base')
+  mandarItemInventarioParaBase(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: Omit<FichaInventarioItemMandarParaBaseDto, 'fichaId'>,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<FichaRecuperadaDto> {
+    return this.fichaService.mandarItemInventarioParaBase({ ...dto, fichaId: id }, usuarioAtivo);
   }
 
   @Get(':id/acesso')

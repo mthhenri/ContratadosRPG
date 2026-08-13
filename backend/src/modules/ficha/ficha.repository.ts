@@ -16,6 +16,7 @@ import type {
   FichaImagemInternoAlterarDto,
   FichaInternoAlterarDto,
   FichaInternoCriarDto,
+  FichaInventarioInternoAlterarDto,
   FichaListarDto,
   FichaRecuperadaDto,
   FichaRecuperarDto,
@@ -296,6 +297,23 @@ export class FichaRepository extends BaseRepository {
         oculta: dto.oculta ?? false,
         dados: JSON.stringify(dto.dados),
       },
+    );
+    return fichaAlterada;
+  }
+
+  /**
+   * `UPDATE` dedicado só para `dados` (transferência de item do inventário de esquadrão) — fora
+   * do `alterarFicha` genérico, que também mexe em `nome`/`cor`/`oculta` e roda validação de
+   * identidade/contrato que não se aplica aqui (mesmo raciocínio de `alterarImagem`).
+   */
+  async alterarInventario(dto: FichaInventarioInternoAlterarDto): Promise<FichaRecuperadaDto> {
+    const [fichaAlterada] = await this.executarConsulta<FichaRecuperadaDto>(
+      `UPDATE ficha
+       SET dados = :dados::jsonb, updated_date = NOW()
+       WHERE id = :id AND is_deleted = false
+       RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, imagem_url AS "imagemUrl",
+                 COALESCE(oculta, false) AS oculta, dados`,
+      { id: dto.id, dados: JSON.stringify(dto.dados) },
     );
     return fichaAlterada;
   }
