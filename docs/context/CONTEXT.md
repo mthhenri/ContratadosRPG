@@ -349,6 +349,16 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
   instalar `class-validator` sem pedir.
 - **Deploy nativo, não Actions** — o autor prefere Render/Cloudflare puxando do Git a pipelines de
   deploy no GitHub Actions. O Actions fica só com o CI.
+- **Busca de anotações e documentos começa no PostgreSQL** — usar full-text search nativo
+  (`tsvector`/`websearch_to_tsquery`) com índice GIN, respeitando sempre o recorte de permissões no
+  backend. Elasticsearch não entra na infraestrutura atual; fica como evolução opcional, com
+  PostgreSQL preservado como fonte de verdade e o índice externo reconstruível.
+- **Cadernos de campanha são privados por autor** — cada membro tem conceitualmente um caderno por
+  campanha, composto por páginas Markdown. O autor administra as próprias páginas; o mestre apenas
+  lê e pesquisa páginas dos jogadores; jogadores nunca acessam cadernos entre si. A busca unifica
+  cadernos e anotações de ficha com fontes combináveis conforme o papel. O Caderno será um utilitário
+  flutuante junto de Calculadora e Documentos; design em
+  `docs/superpowers/specs/2026-08-12-cadernos-campanha-busca-design.md`.
 - **Edição no próprio lugar** — toggle inline na mesma tela, nunca uma página de formulário
   separada. Vale para ficha, campanha e perfil.
 - **Enum de coluna relacional é tabela `tipo_*`** (SYSTEM.SPEC §10.2.12, proibição #24). A exceção

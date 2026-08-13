@@ -194,28 +194,24 @@
 
 - **Ideia:** criar um módulo de documentos da campanha — possivelmente M8 — no qual o mestre possa
   cadastrar conteúdo em texto ou imagem, compartilhar documentos selecionados com os jogadores e
-  manter também anotações privadas em sua tela de mestre. Os jogadores teriam uma biblioteca dos
-  documentos recebidos dentro da própria campanha.
+  oferecer aos jogadores uma biblioteca dos documentos recebidos dentro da própria campanha. Os
+  **cadernos privados** que antes faziam parte desta ideia já foram especificados separadamente em
+  `docs/superpowers/specs/2026-08-12-cadernos-campanha-busca-design.md`.
 - **Origem:** conversa com o autor em 2026-08-11, ao levantar módulos futuros para a plataforma.
 - **Por quê:** materiais de sessão, pistas, handouts e notas de preparação ficam hoje fora do
   sistema. Centralizá-los preserva o contexto da campanha e permite controlar claramente o que é
   privado do mestre e o que já foi revelado aos jogadores.
-- **Custo aparente:** alto — modelo de documento e de compartilhamento/visibilidade, editor de
-  texto, upload e armazenamento de imagens, biblioteca por campanha e área privada do mestre. Todo
-  documento textual seria indexado no **Elasticsearch** para oferecer busca textual e, numa evolução,
-  busca semântica/híbrida. O banco principal continuaria como fonte de verdade; o índice seria uma
-  projeção reconstruível, alimentada na criação/alteração/remoção dos documentos e sempre filtrada
-  pelas permissões da campanha. Ainda precisa decidir estratégia de sincronização e reindexação,
-  divisão do texto em trechos, geração/armazenamento de embeddings e tratamento de exclusões.
-  Também falta decidir se anotações privadas e documentos compartilháveis usam a mesma entidade,
-  quais formatos são aceitos e se haverá versionamento ou organização por pastas/tags. A numeração
-  M8 é sugestão, não decisão de roadmap.
-- **Licenciamento/custo a validar na especificação:** em 2026-08-11, a documentação oficial da
-  Elastic informa que instalações autogerenciadas recebem uma licença Basic gratuita e sem
-  expiração; a matriz Basic inclui busca textual e armazenamento vetorial. Isso não torna a solução
-  inteira gratuita: hospedagem do cluster, capacidade computacional e geração de embeddings — por
-  modelo próprio ou provedor externo — ainda podem ter custo. Antes de promover a ideia, validar a
-  versão escolhida, os recursos exatos cobertos pela licença vigente e o custo operacional esperado.
+- **Custo aparente:** alto — modelo de documento e de compartilhamento/visibilidade, upload e
+  armazenamento de imagens e biblioteca por campanha. A
+  busca textual inicial será feita no **PostgreSQL**, que continua como fonte de verdade: `tsvector`,
+  consulta amigável e índice GIN, sempre recortados pelas permissões da campanha. Ainda falta decidir
+  quais formatos de documento são aceitos e se haverá versionamento ou organização por pastas/tags.
+  A numeração M8 é sugestão, não decisão de roadmap.
+- **Evolução futura — Elasticsearch:** permanece uma opção para busca semântica/híbrida, maior
+  sofisticação de relevância ou volume que justifique um índice separado. Nesse cenário, PostgreSQL
+  continua autoritativo e Elasticsearch é projeção reconstruível, sincronizada em criação, alteração
+  e remoção e filtrada pelas permissões antes da consulta. A especificação futura deverá validar
+  hospedagem, sincronização/reindexação, divisão em trechos, embeddings e tratamento de exclusões.
 - **Upgrade futuro — mesa investigativa/mapa mental:** depois da biblioteca básica, os documentos
   poderiam existir também numa superfície virtual colaborativa. Os jogadores organizariam textos,
   imagens e pistas livremente, colocariam itens lado a lado, criariam conexões visuais entre eles e

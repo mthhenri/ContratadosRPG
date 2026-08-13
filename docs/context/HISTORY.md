@@ -1,5 +1,25 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-12 — Design dos cadernos privados e busca unificada
+
+O autor aprovou o design de cadernos por campanha: cada membro possui um caderno conceitual formado
+por várias páginas Markdown, sem imagens ou anexos. O autor administra suas páginas; o mestre lê e
+pesquisa as páginas dos jogadores em modo estritamente somente leitura; jogadores não compartilham
+cadernos entre si. A busca PostgreSQL combina, por filtros permitidos ao papel, páginas de caderno e
+anotações de ficha. Na interface, o Caderno será uma janela não modal na mesma pilha de utilitários
+da Calculadora e dos Documentos, arrastável, redimensionável e minimizável no desktop e adaptada como
+painel no mobile. A especificação de design está em
+`docs/superpowers/specs/2026-08-12-cadernos-campanha-busca-design.md`.
+
+## 2026-08-12 — Busca de documentos e anotações: PostgreSQL primeiro
+
+O autor decidiu que a futura busca de anotações de ficha, campanha e documentos usará inicialmente
+o full-text search nativo do PostgreSQL/Supabase. A implementação deve usar `tsvector`, consulta
+amigável e índice GIN, com a service do backend aplicando as permissões antes de retornar qualquer
+resultado. Elasticsearch não integra a infraestrutura atual: fica registrado como evolução possível
+para busca semântica/híbrida, relevância mais sofisticada ou volume maior. Se adotado, será apenas um
+índice reconstruível; PostgreSQL continua a fonte de verdade.
+
 ## 2026-08-12 — hover temático do retorno ao painel
 
 O botão `Retornar ao painel` da tela de acesso negado passou a seguir o comportamento sancionado
