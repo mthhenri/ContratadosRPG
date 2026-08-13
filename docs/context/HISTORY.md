@@ -1,5 +1,17 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-12 — hover temático do retorno ao painel
+
+O botão `Retornar ao painel` da tela de acesso negado passou a seguir o comportamento sancionado
+dos controles primários: repouso vazado, preenchimento com `--accent` no hover, texto em `--bg`,
+brilho de 1,08 e glow derivado de `--accent-border`. A transição deixou de usar `all` e agora se
+limita a cor, fundo, borda, sombra e filtro, mantendo o peso tipográfico estável.
+
+Lint, teste focado e build do frontend passaram, com apenas o aviso conhecido de budget `P-004`.
+A inspeção real confirmou o hover com os accents vermelho e azul em 1920×1080; em 360×800 o botão
+manteve 44 px de altura e a página permaneceu sem overflow horizontal. O servidor temporário foi
+encerrado e a porta 4301 ficou livre.
+
 ## 2026-08-12 — registro expurgado variável
 
 O bloco `REGISTRO` de `/acesso-negado` deixou de usar uma barra contínua. O frontend agora escolhe
