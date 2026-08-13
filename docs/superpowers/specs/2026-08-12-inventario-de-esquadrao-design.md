@@ -142,7 +142,8 @@ Todas passam por um novo gate,
 `CampanhaService.validarAcessoInventario({ campanhaId, usuarioId })`:
 resolve o papel do usuário (mesma base de `validarMembro` + checar
 `tipo_campanha_membro_papel_id`); se `JOGADOR` e `na_base === false`,
-lança `ForbiddenException`. Mestre sempre passa, independente do estado.
+lança `UnauthorizedAccessException`. Mestre sempre passa, independente do
+estado.
 Diferente de `validarMembro`/`validarMestre` (privados), este método
 precisa ser **público**: o módulo `ficha` também o chama nas duas rotas
 de transferência do §4, já que `FichaModule` importa `CampanhaModule`.
@@ -187,25 +188,41 @@ dependência circular):
   `equipado: true` — a mensagem orienta a desequipar primeiro na aba
   Inventário da ficha.
 
-**Ponto de atenção verificado no código:** hoje não existe nenhum mecanismo
-de transação entre repositórios — `BaseRepository` (`backend/src/core/base/
-base.repository.ts`) só expõe `executarConsulta`/`executarComando`, que
-chamam `this.conexao.raw(...)` direto na conexão Knex injetada no
-construtor; não há `knex.transaction(...)` em uso em lugar nenhum do
-projeto hoje. Construir um wrapper de transação cross-repository do zero
-só para este caso seria infraestrutura nova e arriscada.
+**Ponto de atenção verificado no código:** este projeto não usa transação
+nenhuma, em lugar nenhum, para escrita multi-tabela — nem
+`knex.transaction(...)` (que não aparece em nenhum repositório hoje) nem
+CTE multi-tabela. O padrão real, usado por **todo** módulo (ex.:
+`CampanhaService.criarCampanha` grava `campanha` e depois `campanha_membro`
+em dois `await` sequenciais; `FichaService.alterarFicha` lê o `dados`
+JSONB inteiro, muda em TypeScript, e regrava o documento inteiro) é
+**ler o agregado inteiro, mutar em TypeScript, regravar o documento
+inteiro** — sem lock, sem transação, aceitando a mesma janela de "last
+write wins" que já existe hoje em qualquer edição concorrente de ficha
+(ex.: dois cliques simultâneos no stepper de Vida). A transferência segue
+exatamente esse padrão, só que em dois agregados (`ficha`, `campanha`) em
+vez de um:
 
-Em vez disso, cada sentido da transferência roda como **uma única
-instrução SQL** (CTE) que lê o item de origem, decrementa/remove, e
-escreve no destino — tocando as duas tabelas (`campanha`, `ficha`) num só
-`UPDATE ... FROM` encadeado por `WITH`. Um único statement Postgres é
-atômico por natureza mesmo tocando mais de uma tabela, e o `UPDATE` da
-linha de origem já usa lock de linha padrão do Postgres — então duas
-transferências simultâneas do mesmo item serializam sozinhas (a segunda
-lê o saldo já decrementado pela primeira) sem precisar de infraestrutura
-de transação nova. O service valida `quantidade <= disponível` a partir
-do `RETURNING` desse mesmo statement e lança `ConflictException` (409) se
-o resultado indicar saldo insuficiente.
+1. Lê a ficha (`FichaRepository.recuperarPorId`) e a campanha
+   (`CampanhaRepository.recuperarPorId`, que passa a incluir
+   `inventario`).
+2. Valida em TypeScript: quantidade pedida `<= quantidade disponível` no
+   lado de origem; se for "mandar pra base", o item não pode estar
+   `equipado: true`.
+3. Monta o novo `ficha.dados` (item somado/subtraído de
+   `dados.inventario.itens`) e o novo `campanha.inventario` (item
+   subtraído/somado) em memória.
+4. Grava os dois com dois `await` sequenciais — `FichaRepository.
+   alterarFicha` primeiro, depois `CampanhaRepository.alterarInventario`
+   (mesma ordem "dono da rota escreve primeiro" que
+   `CampanhaService.criarCampanha` já usa entre `campanha`/
+   `campanha_membro`).
+
+Duas transferências simultâneas do mesmíssimo item podem, numa janela
+rara, ambas lerem a mesma quantidade "antes" e uma delas sobrescrever a
+outra — o mesmo risco que já existe hoje em qualquer ajuste concorrente
+de ficha neste projeto. Não introduzo lock/transação nova para este caso
+por não ser o padrão do projeto; fica registrado aqui como risco aceito,
+não como lacuna esquecida.
 
 Ambas exigem `validarAcessoInventario` (mesma regra de Na Base/Em Missão
 do §2) e que `fichaId` pertença ao usuário autenticado (ninguém transfere
@@ -240,14 +257,17 @@ eventos existentes, sem confiar no payload pra permissão.
 
 ### 6. Tratamento de erro
 
-- `ForbiddenException` (403): usuário não é membro; ou é jogador e
-  `naBase === false`.
-- `BadRequestException` (400): quantidade inválida (`<= 0` ou maior que o
-  disponível fora da janela de transação — mensagem amigável); item
-  equipado tentando ser mandado pra base.
-- `NotFoundException` (404): `itemId`/`fichaId`/`campanhaId` inexistente.
-- `ConflictException` (409): saldo insuficiente detectado dentro da
-  transação (corrida entre dois jogadores pegando o mesmo item).
+Reaproveita as três exceptions já existentes em `backend/src/core/
+exceptions/` (nenhuma nova é necessária):
+
+- `UnauthorizedAccessException` (403): usuário não é membro da campanha;
+  ou é jogador e `naBase === false`; ou o `fichaId` informado em
+  `pegar`/`mandar-para-base` não pertence ao usuário autenticado.
+- `BusinessException` (400): quantidade inválida (`<= 0` ou maior que o
+  disponível no momento da leitura); item `equipado: true` tentando ser
+  mandado pra base.
+- `ResourceNotFoundException` (404): `itemId`/`fichaId`/`campanhaId`
+  inexistente ou inativo.
 
 ## Testes
 
@@ -256,8 +276,7 @@ eventos existentes, sem confiar no payload pra permissão.
   false`; Mestre passa nas mesmas condições.
 - Adicionar/remover/ajustar quantidade no inventário de esquadrão.
 - `pegar`: transferência total e parcial; erro se `fichaId` não é do
-  usuário; erro se quantidade pedida > disponível; duas transferências
-  concorrentes na última unidade — só uma sucede.
+  usuário; erro se quantidade pedida > disponível.
 - `mandar-para-base`: bloqueado se item `equipado: true`; transferência
   total e parcial.
 - `alterarEstado`: só Mestre.
