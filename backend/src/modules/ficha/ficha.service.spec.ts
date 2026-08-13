@@ -30,7 +30,7 @@ import {
 import type { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import type { CampanhaRepository } from '../campanha/campanha.repository';
-import type { CampanhaService } from '../campanha/campanha.service';
+import { CampanhaService } from '../campanha/campanha.service';
 import type { FichaRepository } from './ficha.repository';
 import { FichaService, PRESET_INICIATIVA_PADRAO } from './ficha.service';
 
@@ -190,6 +190,17 @@ describe('FichaService', () => {
     oculta: false,
     dados: criarDados(),
   };
+
+  it('adia a resolução de CampanhaService para preservar o ciclo com o gateway', () => {
+    const parametrosInjetados = Reflect.getMetadata('self:paramtypes', FichaService) as Array<{
+      index: number;
+      param: { forwardRef: () => unknown };
+    }>;
+
+    expect(parametrosInjetados.find(({ index }) => index === 2)?.param.forwardRef()).toBe(
+      CampanhaService,
+    );
+  });
 
   beforeEach(() => {
     fichaRepositorio = {

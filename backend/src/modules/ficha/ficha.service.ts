@@ -115,6 +115,7 @@ export class FichaService {
   constructor(
     private readonly fichaRepositorio: FichaRepository,
     private readonly campanhaRepositorio: CampanhaRepository,
+    @Inject(forwardRef(() => CampanhaService))
     private readonly campanhaService: CampanhaService,
     @Inject(forwardRef(() => CampanhaGateway))
     private readonly campanhaGateway: CampanhaGateway,

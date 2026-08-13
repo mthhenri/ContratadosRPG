@@ -1,5 +1,16 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-13 — Resolução tardia de `CampanhaService` em `FichaService`
+
+O backend voltava a falhar ao iniciar com `UndefinedDependencyException` no terceiro argumento de
+`FichaService`. A causa era o ciclo `FichaModule → CampanhaModule → GatewayModule → FichaModule`:
+o token de `CampanhaService` era avaliado antes de o ciclo estar completo. A injeção agora usa
+`@Inject(forwardRef(() => CampanhaService))`, espelhando a resolução já usada para
+`CampanhaGateway`. Um teste de regressão verifica o metadado de injeção adiada. Build e a suíte
+completa do backend passaram (22 arquivos, 310 testes); o lint continua bloqueado por duas
+asserções desnecessárias preexistentes em `campanha.service.spec.ts:675` e
+`ficha.service.spec.ts:2135`, fora deste ajuste.
+
 ## 2026-08-12 — Design dos cadernos privados e busca unificada
 
 O autor aprovou o design de cadernos por campanha: cada membro possui um caderno conceitual formado
