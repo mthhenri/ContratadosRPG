@@ -181,12 +181,21 @@ dependência circular):
 
 - `POST /ficha/:id/inventario/item/pegar` —
   `FichaInventarioItemPegarDto { fichaId: number; campanhaItemId: string;
-  quantidade?: number }`. Sem `quantidade`, transfere o item inteiro.
-- `POST /ficha/:id/inventario/item/:itemId/mandar-para-base` —
-  `FichaInventarioItemMandarParaBaseDto { fichaId: number; itemId: string;
-  quantidade?: number }`. Bloqueia (400) se o item estiver
-  `equipado: true` — a mensagem orienta a desequipar primeiro na aba
-  Inventário da ficha.
+  quantidade?: number }`. Sem `quantidade`, transfere o item inteiro. O
+  item do inventário de esquadrão sempre tem `id` estável (uuid, gerado no
+  `POST` do §2), então referenciá-lo por id é seguro.
+- `POST /ficha/:id/inventario/item/mandar-para-base` —
+  `FichaInventarioItemMandarParaBaseDto { fichaId: number; indice: number;
+  quantidade?: number }`. **Ponto de atenção verificado no código:**
+  `CarrinhoItemDto.id` (o item dentro do inventário da ficha) só é
+  atribuído a Armazenamento com sub-inventário próprio (Pochete/Bolso —
+  m3-44); a maioria dos itens não tem identificador estável. O próprio
+  `ficha-inventario.component.ts` já endereça item por **posição no
+  array** (`indice`), não por id — esta rota segue o mesmo padrão:
+  `indice` é a posição em `ficha.dados.inventario.itens` no momento da
+  leitura (validado contra os limites do array atual dentro da própria
+  chamada). Bloqueia (400) se o item estiver `equipado: true` — a
+  mensagem orienta a desequipar primeiro na aba Inventário da ficha.
 
 **Ponto de atenção verificado no código:** este projeto não usa transação
 nenhuma, em lugar nenhum, para escrita multi-tabela — nem
