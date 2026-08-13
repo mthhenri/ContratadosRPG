@@ -44,14 +44,20 @@ pra base").
 
 ### 1. Estado da campanha: Na Base / Em Missão
 
-Nova coluna em `campanha`:
+Nova coluna em `campanha`, seguindo a mesma convenção já usada em
+"Ficha cor"/"Ficha oculta" (migrations `0012`/`0014`): **nullable, sem
+`DEFAULT`** — proibição #7 do projeto (migrations rodam no build, antes do
+código novo assumir tráfego; `DEFAULT`/`NOT NULL` sem valor quebraria a
+versão anterior ainda rodando contra o schema novo). Campanha existente
+nasce com `na_base = null`, tratado como "Na Base" (`true`) na leitura via
+`COALESCE`:
 
 ```sql
-ALTER TABLE campanha ADD COLUMN na_base BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE campanha ADD COLUMN na_base BOOLEAN;
 ```
 
-(migration `0017 - Campanha na base.sql`, seguindo a numeração sequencial
-atual, cuja última é `0016`).
+(migration `0017 - Campanha na base e inventario.sql`, seguindo a
+numeração sequencial atual, cuja última é `0016`).
 
 - `PUT /campanha/:id/estado` → `CampanhaEstadoAlterarDto { id: number;
   naBase: boolean }`. Só Mestre (`validarMestre`).
@@ -67,10 +73,12 @@ atual, cuja última é `0016`).
 
 ### 2. Inventário: dado e endpoints
 
-Nova coluna em `campanha`, na mesma migration `0017`:
+Nova coluna em `campanha`, na mesma migration `0017`, também nullable e
+sem `DEFAULT` (proibição #7): campanha existente nasce com
+`inventario = null`, tratado como lista vazia na leitura via `COALESCE`.
 
 ```sql
-ALTER TABLE campanha ADD COLUMN inventario JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE campanha ADD COLUMN inventario JSONB;
 ```
 
 DTO novo em `shared/src/dtos/campanha/campanha.dtos.ts`:
