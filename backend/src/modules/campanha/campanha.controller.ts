@@ -7,6 +7,8 @@ import type {
   CampanhaCriarDto,
   CampanhaEntradaDto,
   CampanhaEntrarDto,
+  CampanhaEstadoAlteradaDto,
+  CampanhaEstadoAlterarDto,
   CampanhaMembroRemovidoDto,
   CampanhaMembroResumoDto,
   CampanhaMestreTransferidoDto,
@@ -98,6 +100,15 @@ export class CampanhaController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<CampanhaAlteradaDto> {
     return this.campanhaService.alterarCampanha({ ...dto, id }, usuarioAtivo);
+  }
+
+  @Put(':id/estado')
+  alterarEstado(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CampanhaEstadoAlterarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaEstadoAlteradaDto> {
+    return this.campanhaService.alterarEstado({ ...dto, id }, usuarioAtivo);
   }
 
   @Delete(':id')

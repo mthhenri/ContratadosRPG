@@ -45,6 +45,7 @@ describe('CampanhaDetalhe', () => {
     nome: 'Contenção Delta',
     descricao: 'Operação em curso',
     codigoConvite: 'DEF456',
+    naBase: true,
   };
 
   function membrosCom(usuarioId: number, papel: TipoCampanhaMembroPapelEnum): CampanhaMembroResumoDto[] {

@@ -9,6 +9,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import type {
+  CampanhaEstadoAlteradaDto,
   CampanhaMembroEntradaDto,
   CampanhaRecuperarDto,
 } from '@contratados-rpg/shared/dtos/campanha';
@@ -198,6 +199,15 @@ export class CampanhaGateway implements OnGatewayConnection {
    */
   emitirMembroEntrou(evento: CampanhaMembroEntradaDto): void {
     this.servidor.to(this.salaCampanha(evento.campanhaId)).emit('membro:entrou', evento);
+  }
+
+  /**
+   * Emite `campanha:estado-alterado` na sala `campanha:<id>` (§ inventário de esquadrão).
+   * Chamado por `CampanhaService.alterarEstado` após a mutação ser persistida — os membros
+   * conectados veem o estado Na Base/Em Missão mudar em tempo real.
+   */
+  emitirEstadoAlterado(evento: CampanhaEstadoAlteradaDto): void {
+    this.servidor.to(this.salaCampanha(evento.id)).emit('campanha:estado-alterado', evento);
   }
 
   /**

@@ -21,4 +21,31 @@ describe('CampanhaRepository', () => {
     });
     expect(total).toBe(1);
   });
+
+  it('recuperarPorId seleciona na_base com COALESCE para true', async () => {
+    const raw = vi.fn().mockResolvedValue({
+      rows: [{ id: 3, nome: 'Contenção Alfa', descricao: null, codigoConvite: 'ABCD2345', naBase: true }],
+    });
+    const repositorio = new CampanhaRepository({ raw } as unknown as Knex);
+
+    const campanha = await repositorio.recuperarPorId({ id: 3 });
+
+    const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(sql).toContain(`COALESCE(na_base, true) AS "naBase"`);
+    expect(parametros).toEqual({ id: 3 });
+    expect(campanha?.naBase).toBe(true);
+  });
+
+  it('alterarEstado grava na_base e devolve id/naBase', async () => {
+    const raw = vi.fn().mockResolvedValue({ rows: [{ id: 3, naBase: false }] });
+    const repositorio = new CampanhaRepository({ raw } as unknown as Knex);
+
+    const resultado = await repositorio.alterarEstado({ id: 3, naBase: false });
+
+    const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(sql).toContain('SET na_base = :naBase');
+    expect(sql).toContain('WHERE id = :id AND is_deleted = false');
+    expect(parametros).toEqual({ id: 3, naBase: false });
+    expect(resultado).toEqual({ id: 3, naBase: false });
+  });
 });

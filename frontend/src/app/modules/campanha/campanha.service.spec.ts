@@ -109,6 +109,7 @@ describe('CampanhaService', () => {
       nome: 'Contenção Delta',
       descricao: 'Operação em curso',
       codigoConvite: 'DEF456',
+      naBase: true,
     };
 
     let recebido: CampanhaRecuperadaDto | undefined;

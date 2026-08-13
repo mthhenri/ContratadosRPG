@@ -6,6 +6,8 @@ import type {
   CampanhaConviteRecuperarDto,
   CampanhaConviteRegeneradoDto,
   CampanhaCriadaDto,
+  CampanhaEstadoAlteradaDto,
+  CampanhaEstadoAlterarDto,
   CampanhaExcluirDto,
   CampanhaInternoAlterarDto,
   CampanhaInternoCriarDto,
@@ -206,12 +208,28 @@ export class CampanhaRepository extends BaseRepository {
   /** Recupera a campanha ativa pelo `id` (ou `null`). */
   async recuperarPorId(dto: CampanhaRecuperarDto): Promise<CampanhaRecuperadaDto | null> {
     const [campanhaEncontrada] = await this.executarConsulta<CampanhaRecuperadaDto>(
-      `SELECT id, nome, descricao, codigo_convite AS "codigoConvite"
+      `SELECT id, nome, descricao, codigo_convite AS "codigoConvite",
+              COALESCE(na_base, true) AS "naBase"
        FROM campanha
        WHERE id = :id AND is_deleted = false`,
       { id: dto.id },
     );
     return campanhaEncontrada ?? null;
+  }
+
+  /**
+   * Altera o estado "Na Base"/"Em Missão" da campanha (gate do inventário de esquadrão) — só
+   * toca campanha ativa (`WHERE is_deleted = false`), sem `DEFAULT`.
+   */
+  async alterarEstado(dto: CampanhaEstadoAlterarDto): Promise<CampanhaEstadoAlteradaDto> {
+    const [estadoAlterado] = await this.executarConsulta<CampanhaEstadoAlteradaDto>(
+      `UPDATE campanha
+       SET na_base = :naBase, updated_date = NOW()
+       WHERE id = :id AND is_deleted = false
+       RETURNING id, na_base AS "naBase"`,
+      { id: dto.id, naBase: dto.naBase },
+    );
+    return estadoAlterado;
   }
 
   /**

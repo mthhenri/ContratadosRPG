@@ -9,6 +9,8 @@ import type {
   CampanhaCriarDto,
   CampanhaEntradaDto,
   CampanhaEntrarDto,
+  CampanhaEstadoAlteradaDto,
+  CampanhaEstadoAlterarDto,
   CampanhaExcluirDto,
   CampanhaInternoAlterarDto,
   CampanhaListarDto,
@@ -319,6 +321,29 @@ export class CampanhaService {
       mestreAnteriorUsuarioId: usuarioAtivo.sub,
       novoMestreUsuarioId: dto.novoMestreUsuarioId,
     };
+  }
+
+  /**
+   * Altera o estado "Na Base"/"Em Missão" da campanha — só o mestre pode (gate `validarMestre`,
+   * único árbitro — proibição #28). Gateia o acesso ao inventário de esquadrão: `naBase = false`
+   * bloqueia jogadores em todas as rotas de `§ inventário`, o mestre sempre acessa.
+   * `ResourceNotFoundException` se a campanha não existir; `UnauthorizedAccessException` se o
+   * autor não for o mestre.
+   */
+  async alterarEstado(
+    dto: CampanhaEstadoAlterarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaEstadoAlteradaDto> {
+    const campanhaEncontrada = await this.campanhaRepositorio.recuperarPorId({ id: dto.id });
+    if (!campanhaEncontrada) {
+      throw new ResourceNotFoundException('Campanha');
+    }
+
+    await this.validarMestre({ campanhaId: dto.id, usuarioId: usuarioAtivo.sub });
+
+    const estadoAlterado = await this.campanhaRepositorio.alterarEstado(dto);
+    this.campanhaGateway.emitirEstadoAlterado(estadoAlterado);
+    return estadoAlterado;
   }
 
   /**

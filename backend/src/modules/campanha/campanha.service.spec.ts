@@ -30,10 +30,12 @@ interface RepositorioDublado {
   excluirCampanha: ReturnType<typeof vi.fn>;
   removerMembro: ReturnType<typeof vi.fn>;
   transferirMestre: ReturnType<typeof vi.fn>;
+  alterarEstado: ReturnType<typeof vi.fn>;
 }
 
 interface CampanhaGatewayDublado {
   emitirMembroEntrou: ReturnType<typeof vi.fn>;
+  emitirEstadoAlterado: ReturnType<typeof vi.fn>;
 }
 
 describe('CampanhaService', () => {
@@ -49,6 +51,7 @@ describe('CampanhaService', () => {
     nome: 'Contenção Alfa',
     descricao: 'Missão inaugural',
     codigoConvite: 'ABCD2345',
+    naBase: true,
   };
 
   beforeEach(() => {
@@ -65,8 +68,9 @@ describe('CampanhaService', () => {
       excluirCampanha: vi.fn(),
       removerMembro: vi.fn(),
       transferirMestre: vi.fn(),
+      alterarEstado: vi.fn(),
     };
-    campanhaGateway = { emitirMembroEntrou: vi.fn() };
+    campanhaGateway = { emitirMembroEntrou: vi.fn(), emitirEstadoAlterado: vi.fn() };
     service = new CampanhaService(
       repositorio as unknown as CampanhaRepository,
       campanhaGateway as unknown as CampanhaGateway,
@@ -547,6 +551,37 @@ describe('CampanhaService', () => {
       ).rejects.toThrow(ResourceNotFoundException);
 
       expect(repositorio.recuperarMembro).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('alterarEstado', () => {
+    it('altera o estado quando o usuário é o mestre', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE });
+      repositorio.alterarEstado.mockResolvedValue({ id: 3, naBase: false });
+
+      const resultado = await service.alterarEstado({ id: 3, naBase: false }, usuarioMestre);
+
+      expect(repositorio.alterarEstado).toHaveBeenCalledWith({ id: 3, naBase: false });
+      expect(resultado).toEqual({ id: 3, naBase: false });
+    });
+
+    it('lança UnauthorizedAccessException quando o usuário não é o mestre', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+
+      await expect(
+        service.alterarEstado({ id: 3, naBase: false }, usuarioNaoMestre),
+      ).rejects.toThrow(UnauthorizedAccessException);
+      expect(repositorio.alterarEstado).not.toHaveBeenCalled();
+    });
+
+    it('lança ResourceNotFoundException quando a campanha não existe', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(null);
+
+      await expect(
+        service.alterarEstado({ id: 99, naBase: false }, usuarioMestre),
+      ).rejects.toThrow(ResourceNotFoundException);
     });
   });
 });

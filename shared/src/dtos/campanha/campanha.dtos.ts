@@ -80,6 +80,12 @@ export interface CampanhaRecuperadaDto {
   readonly nome: string;
   readonly descricao: string | null;
   readonly codigoConvite: string;
+  /**
+   * Estado "Na Base da Fundação" (`true`) ou "Em Missão" (`false`) — gate do inventário de
+   * esquadrão (§ inventário). Só o Mestre altera (`alterarEstado`). Campanha existente nasce
+   * `na_base = null` no banco, tratado como `true` na leitura (`COALESCE`).
+   */
+  readonly naBase: boolean;
 }
 
 /** Entrada pública da alteração de campanha (nome/descrição) — só o mestre pode alterar. */
@@ -328,4 +334,23 @@ export interface CampanhaMestreInternoTransferirDto {
   readonly campanhaId: number;
   readonly mestreAtualUsuarioId: number;
   readonly novoMestreUsuarioId: number;
+}
+
+/*
+ * ── Inventário de esquadrão: estado Na Base / Em Missão ──────────────────────────────────
+ */
+
+/**
+ * Entrada da alteração de estado — o `id` vem do `@Param`, injetado no DTO pela controller. Só
+ * o Mestre altera (gate `validarMestre`, único árbitro — proibição #28).
+ */
+export interface CampanhaEstadoAlterarDto {
+  readonly id: number;
+  readonly naBase: boolean;
+}
+
+/** Saída da alteração de estado — também o payload do evento de tempo real `campanha:estado-alterado`. */
+export interface CampanhaEstadoAlteradaDto {
+  readonly id: number;
+  readonly naBase: boolean;
 }
