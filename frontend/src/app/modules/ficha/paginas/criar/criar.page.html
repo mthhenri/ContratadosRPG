@@ -105,33 +105,14 @@
                 <span class="guia__introducao-codigo">REGISTRO // IDENTIFICAÇÃO</span>
                 <p>{{ campanhaId !== null ? 'Defina como o agente será identificado nos registros da campanha.' : 'Defina como o agente será identificado nos registros — esta ficha nasce avulsa, sem campanha.' }}</p>
               </div>
-              <div class="guia__campos">
-                <label class="campo campo--codinome">
-                  <span class="campo__rotulo">Codinome / Agente</span>
-                  <span class="campo__codinome-linha">
-                    <input
-                      class="campo__controle campo__controle--codinome"
-                      [value]="estado().nome"
-                      (input)="atualizar({ nome: valor($event) })"
-                    />
-                    <!-- Cor de identidade (m3-61): quadradinho no fim da caixa no desktop, barra
-                         abaixo dela no mobile (ver SCSS) — nunca um campo separado. -->
-                    <input
-                      type="color"
-                      class="campo__cor-inline"
-                      aria-label="Cor de identidade do agente"
-                      [value]="estado().cor ?? '#d53030'"
-                      (input)="atualizar({ cor: valor($event) })"
-                    />
-                  </span>
-                  <small class="campo__ajuda">{{ campanhaId !== null ? 'Nome operacional exibido na ficha e no esquadrão.' : 'Nome operacional exibido na ficha.' }} A cor identifica as rolagens deste agente.</small>
-                </label>
+              <div class="guia__campos guia__campos--base">
                 <!-- Avatar (m3-62): o arquivo só fica guardado localmente até o passo Revisão — a
                      ficha só existe de fato após "Criar ficha"; o upload real é um segundo request,
-                     em sequência, logo depois do POST /ficha. -->
-                <label class="campo">
-                  <span class="campo__rotulo">Avatar</span>
-                  <span class="guia__avatar-caixa">
+                     em sequência, logo depois do POST /ficha. O `<label>` embrulha só a caixa da
+                     foto (não o rótulo/ajuda) para o alvo de clique ser exatamente o tamanho dela. -->
+                <div class="campo guia__avatar-campo">
+                  <span class="campo__rotulo">Foto de registro</span>
+                  <label class="guia__avatar-caixa">
                     @if (imagemPreviewUrl(); as previewUrl) {
                       <img class="guia__avatar-imagem" [src]="previewUrl" alt="" />
                     } @else {
@@ -144,21 +125,44 @@
                       aria-label="Escolher avatar"
                       (change)="aoSelecionarImagemGuia($event)"
                     />
-                  </span>
-                  <small class="campo__ajuda">{{ erroImagemGuia() ?? 'Opcional. JPEG, PNG ou WEBP, até 2MB — sobe logo após criar a ficha.' }}</small>
-                </label>
-                @if (ehMestre()) {
-                  <label class="campo">
-                    <span class="campo__rotulo">Operador responsável</span>
-                    <select class="campo__controle" [value]="estado().usuarioId ?? ''" (change)="atualizar({ usuarioId: numero($event) })">
-                      <option value="">Você</option>
-                      @for (membro of membros(); track membro.usuarioId) {
-                        <option [value]="membro.usuarioId">{{ membro.nome }}</option>
-                      }
-                    </select>
-                    <small class="campo__ajuda">O mestre pode criar a ficha em nome de outro membro.</small>
                   </label>
-                }
+                  <small class="campo__ajuda">{{ erroImagemGuia() ?? 'Opcional. JPEG, PNG ou WEBP, até 2MB — sobe logo após criar a ficha.' }}</small>
+                </div>
+
+                <div class="guia__base-direita">
+                  @if (ehMestre()) {
+                    <label class="campo">
+                      <span class="campo__rotulo">Operador responsável</span>
+                      <select class="campo__controle" [value]="estado().usuarioId ?? ''" (change)="atualizar({ usuarioId: numero($event) })">
+                        <option value="">Você</option>
+                        @for (membro of membros(); track membro.usuarioId) {
+                          <option [value]="membro.usuarioId">{{ membro.nome }}</option>
+                        }
+                      </select>
+                      <small class="campo__ajuda">O mestre pode criar a ficha em nome de outro membro.</small>
+                    </label>
+                  }
+                  <label class="campo campo--codinome">
+                    <span class="campo__rotulo">Codinome / Agente</span>
+                    <span class="campo__codinome-linha">
+                      <input
+                        class="campo__controle campo__controle--codinome"
+                        [value]="estado().nome"
+                        (input)="atualizar({ nome: valor($event) })"
+                      />
+                      <!-- Cor de identidade (m3-61): quadradinho no fim da caixa no desktop, barra
+                           abaixo dela no mobile (ver SCSS) — nunca um campo separado. -->
+                      <input
+                        type="color"
+                        class="campo__cor-inline"
+                        aria-label="Cor de identidade do agente"
+                        [value]="estado().cor ?? '#d53030'"
+                        (input)="atualizar({ cor: valor($event) })"
+                      />
+                    </span>
+                    <small class="campo__ajuda">{{ campanhaId !== null ? 'Nome operacional exibido na ficha e no esquadrão.' : 'Nome operacional exibido na ficha.' }} A cor identifica as rolagens deste agente.</small>
+                  </label>
+                </div>
               </div>
             }
             @case ('Classe') {
