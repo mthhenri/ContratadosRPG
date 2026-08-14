@@ -73,21 +73,45 @@
               <span class="guia__introducao-codigo">FICHA DE IDENTIDADE // {{ estado().vd > 0 ? 'PRÉ-NÚMEROS' : 'ORIGEM' }}</span>
               <p>Antes de qualquer número, a criatura precisa existir como um conceito coerente.</p>
             </div>
-            <div class="guia__campos guia__campos--duas-colunas">
-              <label class="campo campo--codinome">
-                <span class="campo__rotulo">Designação</span>
-                <span class="campo__codinome-linha">
-                  <input class="campo__controle campo__controle--codinome" [value]="estado().designacao" (input)="atualizar({ designacao: valor($event) })" placeholder="Ex.: A Estátua" />
-                  <input type="color" class="campo__cor-inline" aria-label="Cor de identidade da criatura" [value]="estado().cor ?? '#8a2be2'" (input)="atualizar({ cor: valor($event) })" />
-                </span>
-                <small class="campo__ajuda">Um nome lembrável, direto. Vira também o nome da ficha.</small>
-              </label>
-              <label class="campo">
-                <span class="campo__rotulo">Origem</span>
-                <select class="campo__controle" [value]="estado().origem" (change)="mudarOrigem($event)">
-                  @for (opcao of origens; track opcao) { <option [value]="opcao">{{ rotuloOrigemCriatura(opcao) }}</option> }
-                </select>
-              </label>
+            <div class="guia__campos guia__campos--base">
+              <!-- Imagem de registro: arquivo só fica guardado localmente até o passo Revisão — a
+                   ficha só existe de fato após "Registrar criatura"; o upload real é um segundo
+                   request, em sequência, logo depois do POST. O `<label>` embrulha só a caixa da
+                   foto (não o rótulo/ajuda) para o alvo de clique ser exatamente o tamanho dela. -->
+              <div class="campo guia__avatar-campo">
+                <span class="campo__rotulo">Imagem de registro</span>
+                <label class="guia__avatar-caixa">
+                  @if (imagemPreviewUrl(); as previewUrl) {
+                    <img class="guia__avatar-imagem" [src]="previewUrl" alt="" />
+                  } @else {
+                    <app-icone nome="alerta" />
+                  }
+                  <input
+                    type="file"
+                    class="guia__avatar-entrada"
+                    accept="image/jpeg,image/png,image/webp"
+                    aria-label="Escolher imagem da criatura"
+                    (change)="aoSelecionarImagemGuia($event)"
+                  />
+                </label>
+                <small class="campo__ajuda">{{ erroImagemGuia() ?? 'Opcional. JPEG, PNG ou WEBP, até 2MB — sobe logo após registrar.' }}</small>
+              </div>
+              <div class="guia__base-direita">
+                <label class="campo campo--codinome">
+                  <span class="campo__rotulo">Designação</span>
+                  <span class="campo__codinome-linha">
+                    <input class="campo__controle campo__controle--codinome" [value]="estado().designacao" (input)="atualizar({ designacao: valor($event) })" placeholder="Ex.: A Estátua" />
+                    <input type="color" class="campo__cor-inline" aria-label="Cor de identidade da criatura" [value]="estado().cor ?? '#8a2be2'" (input)="atualizar({ cor: valor($event) })" />
+                  </span>
+                  <small class="campo__ajuda">Um nome lembrável, direto. Vira também o nome da ficha.</small>
+                </label>
+                <label class="campo">
+                  <span class="campo__rotulo">Origem</span>
+                  <select class="campo__controle" [value]="estado().origem" (change)="mudarOrigem($event)">
+                    @for (opcao of origens; track opcao) { <option [value]="opcao">{{ rotuloOrigemCriatura(opcao) }}</option> }
+                  </select>
+                </label>
+              </div>
             </div>
             <label class="campo"><span class="campo__rotulo">Linha de conceito</span><textarea class="campo__controle campo__controle--area" rows="2" [value]="estado().conceito" (input)="atualizar({ conceito: valor($event) })" placeholder='Ex.: "Uma névoa que dissolve qualquer material orgânico ao contato."'></textarea></label>
             <label class="campo"><span class="campo__rotulo">Natureza física</span><textarea class="campo__controle campo__controle--area" rows="2" [value]="estado().naturezaFisica" (input)="atualizar({ naturezaFisica: valor($event) })" placeholder="Tamanho, forma, material..."></textarea></label>

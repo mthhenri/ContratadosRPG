@@ -1,5 +1,98 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-14 — `m4-04b`: polimento de UI do assistente de criatura e do painel do mestre (fora da fila de specs)
+
+Pedido direto do autor, entre a `m4-04` e o início da `m4-05` — não uma task numerada da fila M4,
+mas registrado com o mesmo rigor por tocar código de produção (frontend + um ajuste real de
+backend). Cinco pedidos, todos entregues:
+
+**1. Revisão visual do assistente de criatura.** `.campo` consecutivos fora de um `.guia__campos`
+(ex.: "Linha de conceito" → "Natureza física" na Identidade, ou qualquer par de campos avulsos nos
+demais passos) encostavam um no outro — `.campo` tem `margin: 0` e só existiam regras de
+espaçamento para quando um `.guia__campos` entrava no meio (`&__campos + .campo`/`.campo +
+&__campos`, 16px). Faltava a regra simétrica `.campo + .campo`. Corrigido com uma única linha de
+CSS (`criar-criatura.page.scss`), reaproveitando o mesmo valor de 16px já usado nos vizinhos —
+verificado ao vivo (Playwright mediu 0px → 16px entre "Linha de conceito" e "Natureza física").
+Segundo achado: o botão "+ Adicionar X" (Resistências/Fraquezas/Ataques/Habilidades) encostava
+direto no grid de cards acima dele por falta de margem — `&__formacoes + &__vaga-escolher` (8px
+topo / 18px base) resolve, sem alterar o resto do framework `.guia__*` (compartilhado por
+precedente com o guia de jogador, sem partial comum — ver comentário no topo do `.scss`).
+
+**2. Upload de imagem na criatura.** O passo // Identidade não tinha nenhum campo de imagem — a
+`m4-04` original não trouxe (o guia de jogador tem avatar desde `m3-62`, mas os blocos foram
+removidos do `.scss`/`.html` da criatura "por precedente" ao adaptar o framework). Reintroduzido o
+mesmo padrão exato do guia de jogador: `imagemArquivo`/`imagemPreviewUrl`/`erroImagemGuia`
+(signals), validação client-side de tipo/tamanho (JPEG/PNG/WEBP, 2MB) espelhando os limites do
+backend, preview via `URL.createObjectURL` revogado no `DestroyRef.onDestroy`, e o upload real
+como **segundo request** (`FichaService.alterarImagem`, já existente e agnóstico de tipo de
+ficha — nenhuma rota nova) disparado por `criar()` só depois que o `id` da ficha existir; falha no
+upload não desfaz a criatura nem trava a navegação. Layout: nova modificador `&__campos--base`
+(mesmo grid `minmax(120px,200px) 1fr` do guia de jogador) com a caixa de imagem à esquerda e
+Designação+Origem empilhadas à direita, substituindo a antiga linha de duas colunas
+Designação/Origem. Verificado ao vivo: `setInputFiles` de um PNG 1×1 e o preview aparece na hora
+(`.guia__avatar-imagem`), tanto em 1920×1080 quanto em 360×800 (mobile empilha `--base` para
+`1fr`, mesma regra do jogador).
+
+**3. Botões "Nova Criatura"/"Novo Agente" no painel do mestre.** O cabeçalho da coluna
+"Esquadrão" (`CampanhaDetalhe`) tinha um único botão "Nova ficha" → `abrirCriarFicha()`. Renomeado
+para "Novo Agente" (ícone `novo-agente`, já existia — o nome do ícone antecipava essa renomeação)
+e adicionado "Nova Criatura" (secundário, ícone `alerta` — mesmo usado no avatar do resumo
+operacional do guia de criatura) → novo método `abrirCriarCriatura()`, navega para
+`/painel/:campanhaId/criatura/nova`. Escopo confirmado: este cabeçalho já só renderiza dentro de
+`@if (exibirComoMestre())` — nenhum guard novo necessário, o `mestreCampanhaGuard` da `m4-04` já
+protege a rota de destino contra acesso direto por URL.
+
+**4. Tira de estatísticas reduzida a "Convite".** Os tiles Membros/Fichas/Alertas saíram da tira
+`.detalhe__estatisticas` (ficava só o Convite, a pedido do autor) — a contagem de Membros/Fichas já
+aparece no cabeçalho de cada coluna (`&__secao-contagem`) e o alerta de ficha crítica já tem o
+banner condicional próprio acima (`fichaCritica`/`&__banner-alerta`); nada duplicava informação de
+graça. `alertasCount` (computed que só alimentava o tile removido) foi excluído por não ter mais
+consumidor — `fichasCriticas`/`fichaCritica`, usados pelo banner, ficaram. CSS: a tira virou
+`display: flex` com o tile de Convite em `flex: 0 1 340px` (era um grid fixo de 4 colunas) —
+`flex-basis: 100%` no mobile, mesmo comportamento de antes.
+
+**5. "Esquadrão" dividir a coluna com "Criaturas".** Pedido mais substancial: a coluna
+"Esquadrão" ganhou uma subseção própria "Criaturas" logo abaixo do grid de fichas de jogador —
+**mesma coluna**, não uma terceira (era literalmente o que o autor pediu: "dividir uma coluna",
+não adicionar uma). Isso expôs uma lacuna real: `FichaResumoDto` não carregava `tipo` nenhum —
+`FichaRepository.colunasResumo()` nunca selecionava a coluna `tipo_ficha_id` (nem seu `codigo`), e
+os campos de saúde/defesa da query assumiam sempre o formato de jogador (`dados->'estado'->>...`,
+`dados->'derivados'->>...`) — uma criatura guarda `vidaAtual`/`vidaMaxima`/`defesa` na **raiz** de
+`dados` (`FichaCriaturaDadosDto`), então essas três colunas sempre voltavam `NULL` para uma
+criatura (a mesma lacuna, num raio menor, por trás do `TypeError` do `FichaVisualizacao` já
+registrado como pendência na `m4-04`). Corrigido no `FichaRepository`: `JOIN tipo_ficha` novo
+(`juncaoTipoResumo()`, mesma tradução `codigo ↔ id` que o `criar` já fazia) e `COALESCE` entre os
+dois formatos de `dados` para `vidaAtual`/`vidaMaxima`/`defesa`, mais a coluna `na` (Nível de
+Ameaça, só existe numa criatura). `FichaResumoDto` ganhou `tipo?`/`na?` — **opcionais** de
+propósito (não obrigatórios): a query de produção sempre os preenche (FK `NOT NULL` + `JOIN`
+sem `LEFT`), mas exigir o campo quebraria um número grande de fixtures de teste pré-`m4-04` em
+`acervo`/`criar`/`detalhe`/`ficha.service` que nunca precisaram declará-lo — tratar ausência como
+"não é criatura" é o comportamento correto pra qualquer um desses fixtures legados. `FichaService.
+paraResumoPublico` ganhou um guard de tipo: o fallback "Contra-ataque ao vivo" (`calcularDerivados`,
+assume `classe`/`nivel`/`atributos` de jogador) só roda quando `tipo === JOGADOR` — antes disso ele
+rodaria também para uma criatura (com `classe`/`nivel` sempre `null`), sem sentido e arriscado.
+Frontend (`CampanhaDetalhe`): `fichasPorMembro` passou a pular fichas `CRIATURA` (elas nunca tinham
+`classe`/`energia`/condições de qualquer forma; filtrar cedo evita o item malformado, não só
+escondê-lo depois) e um novo computed `criaturasEsquadrao` monta os cards enxutos (nome, imagem,
+cor, "NA {rótulo}", Vida, Defesa) direto de `fichas()`, ordenados por nome. Os cards **não têm
+link de navegação** — decisão deliberada, não um esquecimento: `FichaVisualizacao` ainda não sabe
+renderizar dados de criatura (a mesma pendência da `m4-04`, ver `CONTEXT.md` seção 7); linkar pra
+lá reproduziria o `TypeError` já documentado, só que a partir de um ponto de entrada novo. Testes
+novos em `detalhe.page.spec.ts` provam a separação (jogador nunca aparece em Criaturas e
+vice-versa) e o estado vazio ("Nenhuma criatura registrada ainda.").
+
+Todos os três testes de workspace passam: shared (build limpo), backend (365/365, incluindo os
+fixtures ajustados para o novo campo `tipo`), frontend (1016/1016 — 2 testes novos líquidos:
+"Novo Agente"/"Nova Criatura" substituíram o antigo teste de "Nova ficha", e a subseção Criaturas
+ganhou 2 testes; a tira de estatísticas ganhou 1 teste substituto para os 2 removidos). Lint
+limpo nos três workspaces. Verificação ao vivo (Postgres nativo + backend + frontend reais, gate
+obrigatório) confirmou tudo: painel do mestre com só o tile Convite, os dois botões com os rótulos
+certos, a subseção Criaturas vazia e depois com "A Estátua"/"Debug*" aparecendo separada do
+Esquadrão, upload de imagem com preview funcionando, gap de 16px entre campos e 8px do botão
+"+ Adicionar" ao grid — em 1920×1080 e 360×800, sem erro de console novo. Painel do jogador
+verificado sem regressão (nenhuma criatura vaza pra "Equipe", que já excluía fichas do mestre) e o
+`mestreCampanhaGuard` da `m4-04` continua barrando acesso direto à rota de criação por um jogador.
+
 ## 2026-08-14 — `m4-04`: assistente de criação de criatura (frontend), reproduz "A Estátua" ponta a ponta
 
 Frontend do `m4-03`: assistente de criação de criatura (Ameaça) para o mestre —

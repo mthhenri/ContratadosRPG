@@ -324,33 +324,22 @@
     opacity: 0.92;
   }
 
-  // === Tira de estatísticas (item 2) — Membros / Fichas / Convite (só mestre) / Alertas. Mesmo
-  // bloco `.stat` canônico (abaixo) e mesma grade responsiva já usada em `lista.page.scss` (m2-18).
+  // === Tira de estatísticas (item 2) — só o tile "Convite" (Membros/Fichas/Alertas removidos: a
+  // contagem de membros/fichas já aparece nos cabeçalhos das colunas ao lado, e o alerta de ficha
+  // crítica já tem o banner próprio acima). Mesmo bloco `.stat` canônico (abaixo).
   &__estatisticas {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    display: flex;
     margin-bottom: 16px;
-
-    @include bp.mobile {
-      grid-template-columns: repeat(2, 1fr);
-
-      // Alertas é sempre o último tile (Membros/Fichas/Convite?/Alertas) — ganha a linha
-      // inteira igual ao Convite, senão sobra uma célula vazia ao lado dele em ~360px.
-      .stat:last-child {
-        grid-column: 1 / -1;
-      }
-    }
   }
 
   // Tile "Convite" — o código + copiar/regenerar (antes uma caixa própria `&__convite`, agora
-  // dentro da tira de estatísticas). No mobile ganha a linha inteira: código + 2 botões de ícone
-  // não cabem confortavelmente dividindo a metade de ~360px com outro tile ao lado.
+  // dentro da tira de estatísticas). Largura contida no desktop; linha inteira no mobile.
   &__stat-convite {
     min-width: 0;
+    flex: 0 1 340px;
 
     @include bp.mobile {
-      grid-column: 1 / -1;
+      flex-basis: 100%;
     }
   }
 
@@ -1142,6 +1131,23 @@
 
     @include bp.mobile {
       grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  // Cabeçalho "Criaturas" — mesma coluna do Esquadrão, seção própria abaixo do grid (m4-04+):
+  // respiro do que está acima (grid de fichas ou o estado vazio), sem virar uma 3ª coluna.
+  &__secao--criaturas {
+    margin-top: 18px;
+  }
+
+  // Card de criatura — mesma receita visual de `&__ficha-card`, mas sem interação (sem link de
+  // navegação: `FichaVisualizacao` ainda não sabe renderizar dados de criatura, m4-09).
+  &__ficha-card--criatura {
+    cursor: default;
+
+    &:hover {
+      background: var(--surface);
+      border-color: var(--border);
     }
   }
 

@@ -13,7 +13,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { filter, finalize, forkJoin, merge } from 'rxjs';
-import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import {
   CampanhaInventarioItemDto,
   CampanhaMembroResumoDto,
@@ -46,6 +46,7 @@ import {
   type DestinoMobile,
 } from '../../../ficha/componentes/ficha-visualizacao/ficha-visualizacao.component';
 import { rotuloClasseCompleto } from '../../../ficha/rotulos-ficha';
+import { rotuloNivelAmeaca } from '../../../ficha/rotulos-criatura';
 import { rotuloPatente } from '../../../ficha/status-derivado';
 import { CONDICOES_FICHA, type DescritorCondicao } from '../../../ficha/condicoes-ficha';
 import { clamparVitalidade, type CampoVitalidadeAtual } from '../../../ficha/ajuste-vitalidade';
@@ -116,6 +117,24 @@ interface ItemFicha {
   readonly sobrecarregado: boolean;
 }
 
+/**
+ * Uma criatura na subseção "Criaturas" do Esquadrão (m4-04+) — recorte enxuto de `FichaResumoDto`
+ * (`tipo === CRIATURA`), sem os campos jogador-específicos de {@link ItemFicha} (`classe`/
+ * `arquetipo`/energia/condições/patente não existem numa criatura). Sem link de navegação de
+ * propósito: `FichaVisualizacao` ainda não sabe renderizar dados de criatura (pendência registrada
+ * no fechamento da m4-04, a resolver em m4-09) — abrir a ficha completa quebraria a tela.
+ */
+interface ItemCriatura {
+  readonly id: number;
+  readonly imagemUrl: string | null;
+  readonly cor: string | null;
+  readonly nome: string;
+  readonly naTexto: string;
+  readonly vidaAtual: number;
+  readonly vidaMaxima?: number;
+  readonly defesa?: number;
+}
+
 /** Ficha da Equipe (m3-65) com acesso completo — mesmos campos de {@link ItemFicha}, clicável. */
 type EquipeFichaExibicao =
   | ({ readonly tipo: 'completa' } & ItemFicha)
@@ -142,12 +161,14 @@ type EquipeFichaExibicao =
  *
  * **Redesenho m2-17 → m2-19 (visão do mestre — a do jogador é a m2-20):** o antigo card
  * "Identidade" (nome/descrição/convite/ações) ao lado de "Membros" com fichas aninhadas por dono
- * virou banner de alerta condicional (ficha crítica), tira de estatísticas (Membros/Fichas/
- * Convite/Alertas), tira horizontal de rolagens recentes e duas colunas — "Membros" (gestão, sem
- * fichas) e "Esquadrão" (grid fixo de 2 colunas com todas as fichas da campanha, achatadas por
- * `fichasEsquadrao`). As ações de campanha (editar/excluir) migraram para um menu kebab no
- * cabeçalho, já que o card que as hospedava deixou de existir. Só apresentação — nenhum endpoint
- * novo, nenhuma regra de negócio nova (o dado de `membros`/`fichas`/`rolagensFeed` já era buscado).
+ * virou banner de alerta condicional (ficha crítica), tira de estatísticas (só "Convite" — os
+ * tiles Membros/Fichas/Alertas saíram depois: a contagem já aparece no cabeçalho de cada coluna e
+ * o alerta já tem o banner próprio), tira horizontal de rolagens recentes e duas colunas —
+ * "Membros" (gestão, sem fichas) e "Esquadrão" (grid fixo de 2 colunas com as fichas de jogador da
+ * campanha + a subseção "Criaturas", achatadas por `fichasEsquadrao`/`criaturasEsquadrao`). As
+ * ações de campanha (editar/excluir) migraram para um menu kebab no cabeçalho, já que o card que
+ * as hospedava deixou de existir. Só apresentação — nenhum endpoint novo, nenhuma regra de negócio
+ * nova (o dado de `membros`/`fichas`/`rolagensFeed` já era buscado).
  */
 @Component({
   selector: 'app-campanha-detalhe',
@@ -443,6 +464,12 @@ export class CampanhaDetalhe {
   protected readonly fichasPorMembro = computed<ReadonlyMap<number, readonly ItemFicha[]>>(() => {
     const mapa = new Map<number, ItemFicha[]>();
     for (const ficha of this.fichas()) {
+      // Criaturas têm forma própria (`ItemCriatura`, ver `criaturasEsquadrao`) — nunca entram
+      // neste mapa de fichas de jogador (Membros/Equipe/Esquadrão as ignorariam de qualquer jeito
+      // por não terem classe/energia/condições, mas filtrar aqui evita o item malformado de saída).
+      if (ficha.tipo === TipoFichaEnum.CRIATURA) {
+        continue;
+      }
       const item: ItemFicha = {
         id: ficha.id,
         usuarioId: ficha.usuarioId,
@@ -532,6 +559,28 @@ export class CampanhaDetalhe {
     },
   );
 
+  /**
+   * Criaturas da campanha (m4-04+) — a subseção "Criaturas" divide a coluna "Esquadrão" com as
+   * fichas de jogador, em vez de uma terceira coluna própria. `na`/`defesa` vêm direto de
+   * `FichaResumoDto` (m4-04: a query de resumo já resolve os dois formatos de `dados`, ver
+   * `FichaRepository.colunasResumo`); ordenado por nome, mesmo critério de `membrosOrdenados`.
+   */
+  protected readonly criaturasEsquadrao = computed<readonly ItemCriatura[]>(() =>
+    this.fichas()
+      .filter((ficha) => ficha.tipo === TipoFichaEnum.CRIATURA)
+      .map((ficha): ItemCriatura => ({
+        id: ficha.id,
+        imagemUrl: ficha.imagemUrl,
+        cor: ficha.cor ?? null,
+        nome: ficha.nome,
+        naTexto: ficha.na ? rotuloNivelAmeaca(ficha.na) : '—',
+        vidaAtual: ficha.vidaAtual,
+        vidaMaxima: ficha.vidaMaxima,
+        defesa: ficha.defesa,
+      }))
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' })),
+  );
+
   /** Fichas com Vida ≤ 0 na campanha (mestre vê todas — m2-19 itens 1/2). */
   private readonly fichasCriticas = computed(() => this.fichas().filter((ficha) => ficha.vidaAtual <= 0));
 
@@ -544,9 +593,6 @@ export class CampanhaDetalhe {
     const critica = this.fichasCriticas()[0];
     return critica ? { id: critica.id, nome: critica.nome } : null;
   });
-
-  /** Contagem de fichas críticas — alimenta a tira de estatísticas "Alertas" (item 2). */
-  protected readonly alertasCount = computed(() => this.fichasCriticas().length);
 
   /**
    * Rolagens da última hora (item 3) — `rolagensFeed()` já vem mais recente primeiro (m3-27), então
@@ -1178,6 +1224,12 @@ export class CampanhaDetalhe {
   protected abrirCriarFicha(): void {
     this.fecharMenuCampanha();
     void this.router.navigate(['/painel', this.id, 'ficha', 'nova']);
+  }
+
+  /** Abre o assistente de criação de criatura (m4-04) — só o mestre vê o botão que dispara isto. */
+  protected abrirCriarCriatura(): void {
+    this.fecharMenuCampanha();
+    void this.router.navigate(['/painel', this.id, 'criatura', 'nova']);
   }
 
   // === Vincular ficha existente (m2-21, itens 6-8) — o jogador que chega numa campanha sem ficha

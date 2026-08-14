@@ -322,14 +322,6 @@
 
     @if (exibirComoMestre()) {
       <div class="detalhe__estatisticas">
-        <div class="stat">
-          <span class="stat__rotulo">Membros</span>
-          <span class="stat__valor">{{ membros().length }}</span>
-        </div>
-        <div class="stat">
-          <span class="stat__rotulo">Fichas</span>
-          <span class="stat__valor">{{ fichas().length }}</span>
-        </div>
         <div class="stat detalhe__stat-convite">
           <span class="stat__rotulo">Convite</span>
           <div class="detalhe__convite-linha">
@@ -357,10 +349,6 @@
               <app-icone [nome]="regenerado() ? 'check' : 'atualizar'" />
             </button>
           </div>
-        </div>
-        <div class="stat" [class.stat--alerta]="alertasCount() > 0">
-          <span class="stat__rotulo">Alertas</span>
-          <span class="stat__valor">{{ alertasCount() }}</span>
         </div>
       </div>
 
@@ -513,12 +501,20 @@
           <span class="detalhe__secao-regua"></span>
           <span class="detalhe__secao-contagem" aria-hidden="true">{{ fichasEsquadrao().length }}</span>
           <button
+            class="botao botao--secundario detalhe__nova-ficha"
+            type="button"
+            (click)="abrirCriarCriatura()"
+          >
+            <app-icone nome="alerta" />
+            Nova Criatura
+          </button>
+          <button
             class="botao botao--primario detalhe__nova-ficha"
             type="button"
             (click)="abrirCriarFicha()"
           >
             <app-icone nome="novo-agente" />
-            Nova ficha
+            Novo Agente
           </button>
           @if (textoAtualizacao(); as texto) {
             <span class="detalhe__secao-atualizado">{{ texto }}</span>
@@ -664,6 +660,57 @@
                       }
                     </div>
                   }
+                  </div>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+
+        <!-- Criaturas (m4-04+) — mesma coluna do Esquadrão, seção própria abaixo (item pedido pelo
+             autor: "o Esquadrão dividir uma coluna com as criaturas", não uma 3ª coluna). Card
+             sem link de navegação: `FichaVisualizacao` ainda não sabe renderizar dados de
+             criatura (pendência registrada no fechamento da m4-04, a resolver em m4-09). -->
+        <header class="detalhe__secao detalhe__secao--criaturas">
+          <h2 class="detalhe__secao-titulo">Criaturas</h2>
+          <span class="detalhe__secao-regua"></span>
+          <span class="detalhe__secao-contagem" aria-hidden="true">{{ criaturasEsquadrao().length }}</span>
+        </header>
+
+        @if (criaturasEsquadrao().length === 0) {
+          <p class="detalhe__estado">Nenhuma criatura registrada ainda.</p>
+        } @else {
+          <ul class="detalhe__esquadrao-grid" appOverflowFade>
+            @for (criatura of criaturasEsquadrao(); track criatura.id) {
+              <li>
+                <div class="detalhe__ficha-card detalhe__ficha-card--criatura">
+                  <span
+                    class="detalhe__ficha-avatar"
+                    aria-hidden="true"
+                    [style.--cor-ficha]="criatura.cor"
+                    (mouseenter)="agendarPreviewAvatar($event, criatura.imagemUrl)"
+                    (mouseleave)="cancelarPreviewAvatar()"
+                  >
+                    @if (criatura.imagemUrl; as urlImagem) {
+                      <img class="detalhe__ficha-avatar-imagem" [src]="urlImagem" alt="" />
+                    }
+                  </span>
+                  <div class="detalhe__ficha-conteudo">
+                    <div class="detalhe__ficha-topo">
+                      <div class="detalhe__ficha-topo-texto">
+                        <span class="detalhe__ficha-dono">Ameaça</span>
+                        <span class="detalhe__ficha-nome">{{ criatura.nome }}</span>
+                      </div>
+                    </div>
+                    <span class="detalhe__ficha-meta">NA {{ criatura.naTexto }}</span>
+                    <div class="detalhe__ficha-vitais">
+                      <span class="detalhe__ficha-vital detalhe__ficha-vital--vida">
+                        Vida {{ criatura.vidaAtual }}/{{ criatura.vidaMaxima ?? '—' }}
+                      </span>
+                      @if (criatura.defesa !== undefined) {
+                        <span class="detalhe__ficha-vital">Defesa {{ criatura.defesa }}</span>
+                      }
+                    </div>
                   </div>
                 </div>
               </li>

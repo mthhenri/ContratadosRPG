@@ -1,8 +1,9 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-14 · **Última decisão registrada:** `m4-04` concluída (assistente
-> de criação de criatura no frontend); reproduz "A Estátua" ponta a ponta com os mesmos valores
-> do documento — ver seção 4
+> **Última revisão:** 2026-08-14 · **Última decisão registrada:** `m4-04b` (polimento de UI fora
+> da fila de specs, a pedido direto do autor) — upload de imagem na criatura, revisão de
+> espaçamento do guia, botões "Nova Criatura"/"Novo Agente" no painel, tira de estatísticas só com
+> "Convite" e a coluna Esquadrão dividida com a subseção "Criaturas" — ver seção 4
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -40,8 +41,13 @@ em `m4-01` para o documento de jogo (ver seção 6). A `m4-04` verificou ao vivo
 ficha recém-criada em `/painel/:campanhaId/ficha/:id` (`FichaVisualizacao`, telas de jogador)
 quebra com `TypeError` — a tela ainda não sabe ler `dados` no formato de criatura; registrado
 como pendência para quem fechar a tela dedicada (§14 já bloqueia jogadores, então o erro só
-afeta o mestre navegando direto após criar — ver seção 7). Próxima da fila M4: **`m4-05`**
-(contrato `FichaNpcDadosDto`, início da frente de NPC).
+afeta o mestre navegando direto após criar — ver seção 7). Entre a `m4-04` e a `m4-05`, uma
+sessão de **polimento de UI** (`m4-04b`, fora da fila de specs — pedido direto do autor, não uma
+task numerada) revisou o assistente de criação de criatura (upload de imagem, espaçamento entre
+campos) e o painel do mestre (botões "Nova Criatura"/"Novo Agente", tira de estatísticas reduzida
+a "Convite", coluna Esquadrão dividida com a subseção "Criaturas" — exigiu expor `tipo`/`na` em
+`FichaResumoDto` e ajustar `FichaRepository.colunasResumo` para os dois formatos de `dados`, ver
+seção 4). Próxima da fila M4: **`m4-05`** (contrato `FichaNpcDadosDto`, início da frente de NPC).
 
 O M6 também está aberto, em paralelo. A próxima task encadeada nessa frente é
 `m6-08-impersonacao-administrativa.spec.md`, que adiciona impersonação administrativa auditável.
@@ -99,7 +105,7 @@ falhas isoladas/preexistentes.
 | M1 | Calculadora com paridade | **concluído no código** (`m1-01`…`m1-20`). Restam 2 passos **operacionais** de plataforma — ver `PROBLEMS.md` `P-006` |
 | M2 | Auth + Campanhas | **concluído**, incluindo o redesenho do painel (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`; `m2-18` lista, `m2-19` detalhe/mestre, `m2-20` detalhe/jogador, `m2-21` abas + Rolagens na lateral + menu de ficha do jogador) |
 | M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; guia de criação completo (`m3-57`/`m3-58`/`m3-59` — base, melhorias de nível, equipamento inicial); cor (`m3-61`) e avatar (`m3-62`) de identidade por ficha prontos; falta só `m3-53` |
-| M4 | Ficha de Criatura/NPC | **iniciado** — dividido em `m4-01`…`m4-10` (`docs/specs/backlog/`); `m4-01` (contrato), `m4-02` (`shared/regras/criatura`), `m4-03` (`backend/ficha` para `CRIATURA`) e `m4-04` (assistente de criação no frontend) concluídas. Próxima: `m4-05` (NPC) |
+| M4 | Ficha de Criatura/NPC | **iniciado** — dividido em `m4-01`…`m4-10` (`docs/specs/backlog/`); `m4-01` (contrato), `m4-02` (`shared/regras/criatura`), `m4-03` (`backend/ficha` para `CRIATURA`) e `m4-04` (assistente de criação no frontend) concluídas; `m4-04b` (polimento de UI fora da fila) também concluída. Próxima: `m4-05` (NPC) |
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | **em andamento** — `m6-01`…`m6-07` concluídas; próxima `m6-08`, com impersonação administrativa auditável |
 
@@ -163,8 +169,9 @@ campanha com tira de 4 estatísticas agregadas no topo (Campanhas/Você mestra/F
 campo/Alertas), alerta visual + nome da ficha crítica por linha, resumo da própria ficha
 (Vida atual/máxima, jogador) e convite copiável direto na linha (mestre), sem abrir o detalhe. O
 detalhe (`/painel/:id`) tem banner de alerta condicional no topo (ficha crítica, com link direto
-pra ela), tira de estatísticas (Membros/Fichas/Convite [só mestre]/Alertas) e tira horizontal
-rolável de rolagens da última hora (sem limite fixo de itens — a lista completa/sem limite de
+pra ela), tira de estatísticas — só o tile **Convite** (só mestre; ajuste pós-m4-04b: Membros/
+Fichas/Alertas saíram da tira — a contagem de cada um já aparece no cabeçalho da própria coluna, e
+o alerta crítico já tem o banner acima) — e tira horizontal rolável de rolagens da última hora (sem limite fixo de itens — a lista completa/sem limite de
 tempo só na sidebar de histórico, aberta pelo seu próprio gatilho D20; cada pill tem rótulo +
 dadinho d20 lado a lado na mesma linha flex — hover/foco no d20 mostra o resultado completo na
 bandeja de dados flutuante, `BandejaDados`, a mesma que exibe rolagens ao vivo, mas sem timer/
@@ -174,13 +181,22 @@ pelos dois papéis. Abaixo disso, o corpo diverge por papel (`@if (ehMestre())`/
 - **Mestre** (m2-19) — duas colunas: **Membros** (450px no desktop; nome/papel/gestão, sem
   fichas; mestre sempre primeiro, depois jogadores em ordem alfabética) e **Esquadrão** (grid fixo
   de 2 colunas — 1 no mobile, e antes de Membros quando a grade empilha; segue a mesma ordem
-  mestre→alfabética da coluna Membros — com todas as fichas da campanha achatadas, nome do dono em
-  cada mini-card, Vida/Energia com ajuste rápido ± sem abrir a ficha (operação dedicada que só
-  altera `dados.estado.vidaAtual`/`energiaAtual`, sem regravar identidade, cor, avatar ou
-  visibilidade), reações
+  mestre→alfabética da coluna Membros — com as fichas de **jogador** (`tipo === JOGADOR`) da
+  campanha achatadas, nome do dono em cada mini-card, Vida/Energia com ajuste rápido ± sem abrir a
+  ficha (operação dedicada que só altera `dados.estado.vidaAtual`/`energiaAtual`, sem regravar
+  identidade, cor, avatar ou visibilidade), reações
   (Defesa/Esquiva/Bloqueio/Contra-ataque, cada uma só aparece se a ficha tiver o valor — Contra-
   ataque recalculado ao vivo no backend quando o snapshot não foi persistido) e o kebab de ações da
-  ficha — duplicar/remover-da-campanha/excluir).
+  ficha — duplicar/remover-da-campanha/excluir). Cabeçalho da coluna tem dois botões — **Nova
+  Criatura** (`/painel/:campanhaId/criatura/nova`) e **Novo Agente** (assistente de jogador,
+  ex-"Nova ficha", m4-04b). Abaixo do grid, a mesma coluna se divide com a subseção **Criaturas**
+  (m4-04b) — todas as fichas `tipo === CRIATURA` da campanha, cards enxutos (nome/imagem/cor/NA/
+  Vida/Defesa, sem classe/energia/condições, que uma criatura não tem) e **sem link de navegação**:
+  `FichaVisualizacao` ainda não sabe renderizar dados de criatura (pendência da `m4-04`, ver seção
+  7) — abrir a ficha completa quebraria a tela. `FichaResumoDto` ganhou `tipo`/`na` (opcionais, para
+  não quebrar fixtures de teste pré-m4-04) e a query de resumo (`FichaRepository.colunasResumo`)
+  passou a resolver `vidaAtual`/`vidaMaxima`/`defesa` também no formato raiz que a criatura usa
+  (`COALESCE` entre os dois formatos de `dados`), além de um `JOIN tipo_ficha` novo.
 - **Jogador** (m2-20 + m2-21) — a ficha exibida na coluna principal (a própria, por padrão, ou a de
   um colega via "Ver ficha") como card embutido (`<app-ficha-visualizacao modo="compacto">`, o
   componente real da tela de ficha, não uma réplica): 2 colunas que **repartem a linha** —
@@ -361,7 +377,9 @@ criatura a todo membro antes de qualquer revelação deliberada, contradizendo a
 invisibilidade; a edição segue transmitindo `ficha:alterada`, seguro porque a sala `ficha:<id>`
 já exige a mesma permissão de visualização para entrar. DTOs de operação próprios
 (`shared/src/dtos/ficha/ficha-criatura-operacao.dtos.ts`) — ver seção 6. Listagem de criaturas
-por campanha fica para quando `m4-09` precisar.
+por campanha (mini-cards, sem abrir a ficha completa) ganhou a subseção "Criaturas" do painel do
+mestre no `m4-04b` — ver o parágrafo do `CampanhaDetalhe` acima; revelação/visibilidade seletiva
+continua em aberto para `m4-09`.
 
 **Assistente de criação** (`frontend/src/app/modules/ficha/paginas/criar-criatura/`,
 `CriaturaCriar`) — rota `/painel/:campanhaId/criatura/nova`, guardada por
@@ -383,6 +401,13 @@ duplicado. Verificado ao vivo (Postgres+backend+frontend reais, dois usuários �
 jogador): reproduz "A Estátua" ponta a ponta com os mesmos valores do documento (Vida Máxima
 1.050, Defesa 30, custo de resistências 52/60, Atributo Efetivo de cada linha), persiste
 corretamente e o jogador sem concessão não a vê (§14). Pendência registrada — ver seção 7.
+
+**Polimento de UI — `m4-04b`:** passo // Identidade ganhou upload de imagem de registro (mesmo
+padrão de avatar do guia de jogador, `FichaService.alterarImagem`, segundo request em sequência
+após criar a ficha — layout `.guia__campos--base`, caixa à esquerda + Designação/Origem à
+direita); revisão de espaçamento entre campos consecutivos fora de um `.guia__campos` (regra
+`.campo + .campo` que faltava — campos ficavam colados sem gap) e entre um grid de cards
+(Resistências/Fraquezas/Ataques/Habilidades) e o botão "+ Adicionar" logo abaixo.
 
 ### Guia de criação de ficha — `frontend/src/app/modules/ficha/paginas/criar/`
 

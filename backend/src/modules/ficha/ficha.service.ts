@@ -247,6 +247,8 @@ export class FichaService {
       nome: fichaInterna.nome,
       cor: fichaInterna.cor,
       imagemUrl: fichaInterna.imagemUrl,
+      tipo: fichaInterna.tipo,
+      na: fichaInterna.na,
       classe: fichaInterna.classe,
       arquetipo: fichaInterna.arquetipo,
       nivel: fichaInterna.nivel,
@@ -261,7 +263,13 @@ export class FichaService {
       defesa: fichaInterna.defesa,
       esquiva: fichaInterna.esquiva,
       bloqueio: fichaInterna.bloqueio,
-      contraAtaque: fichaInterna.contraAtaque ?? this.calcularContraAtaqueAoVivo(fichaInterna),
+      // O fallback "ao vivo" (`calcularDerivados`) assume a forma de ficha de JOGADOR (classe/
+      // nivel/atributos) — uma CRIATURA nunca persiste `contraAtaque` (é sempre derivado, nunca
+      // salvo — `FichaCriaturaDadosDto`), então cai aqui sempre `undefined` sem o guard de tipo,
+      // e sem sentido tentar recalcular com `classe`/`nivel` nulos.
+      contraAtaque:
+        fichaInterna.contraAtaque ??
+        (fichaInterna.tipo === TipoFichaEnum.JOGADOR ? this.calcularContraAtaqueAoVivo(fichaInterna) : undefined),
       personalidade: fichaInterna.personalidade,
       origemNome: fichaInterna.origemNome,
       sobrecarregado: this.calcularSobrecarregado(fichaInterna),

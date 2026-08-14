@@ -1,7 +1,7 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { catchError, finalize, of } from 'rxjs';
 import {
   CadenciaEnum,
   ComportamentoCriaturaEnum,
@@ -58,6 +58,10 @@ import {
 } from '../../rotulos-criatura';
 
 type ChaveAtributo = keyof FichaAtributosDto;
+
+/** Imagem de registro (mesmos limites validados no backend, `FichaService.alterarImagem`). */
+const TIPOS_IMAGEM_ACEITOS = ['image/jpeg', 'image/png', 'image/webp'];
+const TAMANHO_MAXIMO_IMAGEM_BYTES = 2 * 1024 * 1024;
 
 /** Rótulo dos dez atributos (mesma grafia do guia de jogador) — reusa `FichaAtributosDto`, sem redefinir (proibição #21). */
 const CAMPOS: readonly { readonly chave: ChaveAtributo; readonly nome: string }[] = [
@@ -233,6 +237,7 @@ export class CriaturaCriar {
   private readonly rota = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly fichaService = inject(FichaService);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly campanhaId = Number(lerParamRota(this.rota, 'campanhaId'));
   protected readonly passos = PASSOS;
@@ -268,6 +273,47 @@ export class CriaturaCriar {
   protected readonly erro = signal('');
 
   protected readonly estado = signal<EstadoGuiaCriatura>(ESTADO_INICIAL);
+
+  /**
+   * Imagem de registro da criatura — mesmo padrão do guia de jogador (m3-62): fica só em memória
+   * até a ficha existir (`POST /ficha/criatura` não aceita arquivo), então o upload real é um
+   * segundo request, disparado por `criar()` em sequência, depois que o `id` existir.
+   */
+  protected readonly imagemArquivo = signal<File | null>(null);
+  protected readonly imagemPreviewUrl = signal<string | null>(null);
+  protected readonly erroImagemGuia = signal<string | null>(null);
+
+  constructor() {
+    this.destroyRef.onDestroy(() => this.revogarPreviewImagem());
+  }
+
+  /** Valida a imagem escolhida no client (tipo/tamanho) — mesmos limites de `FichaService` (backend). */
+  protected aoSelecionarImagemGuia(evento: Event): void {
+    const arquivo = (evento.target as HTMLInputElement).files?.[0] ?? null;
+    (evento.target as HTMLInputElement).value = '';
+    if (!arquivo) {
+      return;
+    }
+    if (!TIPOS_IMAGEM_ACEITOS.includes(arquivo.type)) {
+      this.erroImagemGuia.set('Formato inválido: use JPEG, PNG ou WEBP');
+      return;
+    }
+    if (arquivo.size > TAMANHO_MAXIMO_IMAGEM_BYTES) {
+      this.erroImagemGuia.set('Imagem maior que o limite permitido (2MB)');
+      return;
+    }
+    this.erroImagemGuia.set(null);
+    this.revogarPreviewImagem();
+    this.imagemArquivo.set(arquivo);
+    this.imagemPreviewUrl.set(URL.createObjectURL(arquivo));
+  }
+
+  private revogarPreviewImagem(): void {
+    const anterior = this.imagemPreviewUrl();
+    if (anterior) {
+      URL.revokeObjectURL(anterior);
+    }
+  }
 
   protected readonly baseLimite = computed(() => obterBaseELimitePorVd({ vd: this.estado().vd }));
   protected readonly vidaMaxima = computed(() => {
@@ -499,7 +545,21 @@ export class CriaturaCriar {
       .criarFichaCriatura({ campanhaId: this.campanhaId, nome: e.designacao.trim(), cor: e.cor, dados: this.construirDados() })
       .pipe(finalize(() => this.criando.set(false)))
       .subscribe({
-        next: (ficha) => void this.router.navigate(['/painel', this.campanhaId, 'ficha', ficha.id]),
+        next: (ficha) => {
+          const destino = ['/painel', this.campanhaId, 'ficha', ficha.id];
+          const arquivo = this.imagemArquivo();
+          // Imagem (mesmo padrão do guia de jogador, m3-62): a ficha já existe — segundo request,
+          // em sequência. Falha no upload não desfaz a criatura criada nem trava a navegação; só
+          // fica sem imagem, subível depois pelo cabeçalho da ficha.
+          if (!arquivo) {
+            void this.router.navigate(destino);
+            return;
+          }
+          this.fichaService
+            .alterarImagem(ficha.id, arquivo)
+            .pipe(catchError(() => of(null)))
+            .subscribe(() => void this.router.navigate(destino));
+        },
         error: (erro) => this.erro.set(erro?.error?.mensagem ?? 'Não foi possível criar a criatura.'),
       });
   }

@@ -100,6 +100,13 @@ export class FichaRepository extends BaseRepository {
    * `esquiva`/`bloqueio`/`contraAtaque` vêm do snapshot `derivados` (m3-10), `NULL` em ficha sem o
    * bloco salvo ou classe Civil (não possui defesa/esquiva/bloqueio).
    *
+   * `tipo` (m4-04): resolvido via `JOIN tipo_ficha` (mesma tradução `codigo ↔ id` do `criar`,
+   * §10.2.12) — alimenta a divisão Esquadrão (`JOGADOR`) × Criaturas (`CRIATURA`) no painel da
+   * campanha. `na` só existe no JSONB de uma `CRIATURA` (`FichaCriaturaDadosDto.na`) — `NULL` numa
+   * ficha `JOGADOR`. `vidaAtual`/`vidaMaxima`/`defesa` usam `COALESCE` entre os dois formatos de
+   * `dados` (jogador aninha em `estado`/`derivados`; criatura guarda os três no nível raiz, ver
+   * `FichaCriaturaDadosDto`) — sem isso, uma criatura sairia sempre com essas colunas `NULL`.
+   *
    * `atributos`/`habilidades` (ajuste pós-m2-19/m3-39): material bruto só para o `FichaService`
    * recalcular `contraAtaque` **ao vivo** quando o snapshot vem `NULL` — a habilidade "Contra-Ataque"
    * normalmente entra na ficha **depois** da criação (`ajustarHabilidades`, `visualizar.page.ts`, "sem
@@ -125,18 +132,20 @@ export class FichaRepository extends BaseRepository {
               campanha.nome AS "campanhaNome",
               ficha.usuario_id AS "usuarioId", ficha.nome, ficha.cor,
               ficha.imagem_url AS "imagemUrl",
+              tipo_ficha.codigo AS tipo,
               ficha.dados->>'classe' AS classe,
               ficha.dados->>'arquetipo' AS arquetipo,
               (ficha.dados->>'nivel')::int AS nivel,
-              (ficha.dados->'estado'->>'vidaAtual')::int AS "vidaAtual",
-              (ficha.dados->'estado'->>'vidaMaxima')::int AS "vidaMaxima",
+              ficha.dados->>'na' AS na,
+              COALESCE((ficha.dados->'estado'->>'vidaAtual')::int, (ficha.dados->>'vidaAtual')::int) AS "vidaAtual",
+              COALESCE((ficha.dados->'estado'->>'vidaMaxima')::int, (ficha.dados->>'vidaMaxima')::int) AS "vidaMaxima",
               (ficha.dados->'estado'->>'energiaAtual')::int AS "energiaAtual",
               (ficha.dados->'estado'->>'energiaMaxima')::int AS "energiaMaxima",
               COALESCE((ficha.dados->'estado'->>'morrendo')::boolean, false) AS morrendo,
               COALESCE((ficha.dados->'estado'->>'machucado')::boolean, false) AS machucado,
               COALESCE((ficha.dados->'estado'->>'inconsciente')::boolean, false) AS inconsciente,
               (ficha.dados->>'prestigio')::int AS prestigio,
-              (ficha.dados->'derivados'->>'defesa')::int AS defesa,
+              COALESCE((ficha.dados->'derivados'->>'defesa')::int, (ficha.dados->>'defesa')::int) AS defesa,
               (ficha.dados->'derivados'->>'esquiva')::int AS esquiva,
               (ficha.dados->'derivados'->>'bloqueio')::int AS bloqueio,
               (ficha.dados->'derivados'->>'contraAtaque')::int AS "contraAtaque",
@@ -156,6 +165,11 @@ export class FichaRepository extends BaseRepository {
     return `LEFT JOIN campanha ON campanha.id = ficha.campanha_id AND campanha.is_deleted = false`;
   }
 
+  /** `JOIN` que resolve `tipo` (`codigo`) em `colunasResumo()` (m4-04) — `tipo_ficha_id` é `NOT NULL`. */
+  private juncaoTipoResumo(): string {
+    return `JOIN tipo_ficha ON tipo_ficha.id = ficha.tipo_ficha_id AND tipo_ficha.is_deleted = false`;
+  }
+
   /**
    * Lista **todas** as fichas ativas de uma campanha (uso do mestre — §14). Recorte resumido: os
    * campos de jogo `classe`/`nivel` são lidos do JSONB (`dados->>'campo'`, §10.4). Ordena por nome.
@@ -165,6 +179,7 @@ export class FichaRepository extends BaseRepository {
       `SELECT ${this.colunasResumo()}
        FROM ficha
        ${this.juncaoCampanhaResumo()}
+       ${this.juncaoTipoResumo()}
        WHERE ficha.campanha_id = :campanhaId AND ficha.is_deleted = false
        ORDER BY ficha.nome ASC`,
       { campanhaId: dto.campanhaId },
@@ -181,6 +196,7 @@ export class FichaRepository extends BaseRepository {
       `SELECT ${this.colunasResumo()}
        FROM ficha
        ${this.juncaoCampanhaResumo()}
+       ${this.juncaoTipoResumo()}
        WHERE ficha.campanha_id = :campanhaId AND ficha.is_deleted = false
          AND (
            ficha.usuario_id = :usuarioId
@@ -207,6 +223,7 @@ export class FichaRepository extends BaseRepository {
       `SELECT ${this.colunasResumo()}
        FROM ficha
        ${this.juncaoCampanhaResumo()}
+       ${this.juncaoTipoResumo()}
        WHERE ficha.usuario_id = :usuarioId AND ficha.is_deleted = false
        ORDER BY ficha.nome ASC`,
       { usuarioId: dto.usuarioId },
