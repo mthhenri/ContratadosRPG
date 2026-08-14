@@ -209,6 +209,10 @@ continua sendo o formato persistido. O autor administra suas
 páginas com salvamento automático e controle de versão; em conflito, o texto local permanece visível
 até o usuário recarregar a versão persistida. O mestre alterna entre o próprio caderno editável e os
 cadernos dos jogadores em modo estritamente somente leitura; jogadores não veem cadernos alheios.
+Sincronizações internas do Milkdown — como a troca da página ativa — não são tratadas como digitação
+e, portanto, não disparam autosave nem avançam indevidamente o controle otimista de versão. As datas
+usadas como versão são devolvidas pelo backend com os seis dígitos de microssegundos do PostgreSQL,
+evitando perda de precisão entre um salvamento e o seguinte.
 No desktop, a janela pode ser arrastada, redimensionada e minimizada e preserva sua geometria no
 navegador. A lista de páginas pode ser recolhida e se recolhe ao criar uma página; em janelas de
 640px ou menos ela se sobrepõe ao editor para não estreitá-lo, e a largura mínima da janela é 440px.

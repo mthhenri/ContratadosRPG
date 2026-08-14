@@ -28,6 +28,8 @@ describe('PaginaCadernoRepository', () => {
     });
 
     const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(sql).toContain(`to_char(pagina_criada.updated_date AT TIME ZONE 'UTC'`);
+    expect(sql).toContain(`'YYYY-MM-DD"T"HH24:MI:SS.US"Z"'`);
     expect(sql).toContain('INSERT INTO pagina_caderno');
     expect(sql).toContain('SELECT :campanhaId, :usuarioAutorId, :titulo, :conteudoMarkdown');
     expect(sql).not.toContain('VALUES');

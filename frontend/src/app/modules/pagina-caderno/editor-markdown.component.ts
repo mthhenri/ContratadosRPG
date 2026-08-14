@@ -179,7 +179,13 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy {
       raiz: this.raiz().nativeElement,
       valorInicial: this.valor(),
       aoAlterar: (markdown) => {
-        if (!this.sincronizando && !this.somenteLeitura()) this.valorChange.emit(markdown);
+        if (
+          !this.sincronizando &&
+          !this.somenteLeitura() &&
+          markdown !== this.valor()
+        ) {
+          this.valorChange.emit(markdown);
+        }
       },
     });
     this.instancia = instancia;

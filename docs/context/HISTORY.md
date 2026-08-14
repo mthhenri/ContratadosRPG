@@ -55,6 +55,14 @@ seleção, formatação direta, salvamento e reabertura do conteúdo formatado f
 Passaram 999 testes do frontend, além de lint e build; o build manteve apenas o aviso conhecido do
 budget inicial (639,63 kB para o limite de 630 kB).
 
+Uma correção posterior separou as alterações reais do usuário das notificações assíncronas emitidas
+pelo Milkdown ao receber outra página. Essas sincronizações internas deixaram de acionar o autosave
+com uma revisão antiga. A investigação na aplicação real também encontrou perda de microssegundos
+quando o PostgreSQL entregava `updated_date` como `Date` do JavaScript: o valor devolvido ao cliente
+já não correspondia exatamente ao armazenado. O repositório passou a serializar as datas das páginas
+em UTC com precisão de microssegundos. Juntas, as correções eliminaram conflitos falsos ao alternar,
+criar e salvar páginas sucessivamente, com regressões automatizadas específicas para os dois casos.
+
 ## 2026-08-14 — Consulta do inventário de esquadrão durante missão
 
 O acesso ao inventário coletivo foi dividido entre leitura e alteração. Qualquer membro da campanha

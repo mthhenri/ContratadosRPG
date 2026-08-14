@@ -28,7 +28,12 @@ export class PaginaCadernoRepository extends BaseRepository {
     return `${alias}.id, ${alias}.campanha_id AS "campanhaId",
             ${alias}.usuario_autor_id AS "usuarioAutorId", usuario.nome AS "autorNome",
             ${alias}.titulo, ${alias}.conteudo_markdown AS "conteudoMarkdown",
-            ${alias}.created_date AS "createdDate", ${alias}.updated_date AS "updatedDate"`;
+            ${this.dataComoTexto(alias, 'created_date')} AS "createdDate",
+            ${this.dataComoTexto(alias, 'updated_date')} AS "updatedDate"`;
+  }
+
+  private dataComoTexto(alias: string, coluna: string): string {
+    return `to_char(${alias}.${coluna} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`;
   }
 
   private juncoesAutorAtivo(alias = 'pagina_caderno'): string {
@@ -81,7 +86,8 @@ export class PaginaCadernoRepository extends BaseRepository {
     return this.executarConsulta<PaginaCadernoResumoDto>(
       `SELECT pagina_caderno.id, pagina_caderno.campanha_id AS "campanhaId",
               pagina_caderno.usuario_autor_id AS "usuarioAutorId", usuario.nome AS "autorNome",
-              pagina_caderno.titulo, pagina_caderno.updated_date AS "updatedDate"
+              pagina_caderno.titulo,
+              ${this.dataComoTexto('pagina_caderno', 'updated_date')} AS "updatedDate"
        FROM pagina_caderno
        ${this.juncoesAutorAtivo()}
        WHERE pagina_caderno.campanha_id = :campanhaId

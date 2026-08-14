@@ -7,7 +7,10 @@ describe('EditorMarkdown', () => {
   let fixture: ComponentFixture<EditorMarkdown>;
   let aoAlterar: (markdown: string) => void;
   let markdownAtual: string;
-  const definirMarkdown = vi.fn((markdown: string) => { markdownAtual = markdown; });
+  const definirMarkdown = vi.fn((markdown: string) => {
+    markdownAtual = markdown;
+    queueMicrotask(() => aoAlterar(markdown));
+  });
   const definirSomenteLeitura = vi.fn();
   const destruir = vi.fn();
 
@@ -56,6 +59,17 @@ describe('EditorMarkdown', () => {
     fixture.detectChanges();
 
     expect(definirMarkdown).toHaveBeenCalledWith('## Outra página');
+  });
+
+  it('não trata a sincronização assíncrona de outra página como digitação', async () => {
+    const alteracoes: string[] = [];
+    fixture.componentInstance.valorChange.subscribe((valor) => alteracoes.push(valor));
+
+    fixture.componentRef.setInput('valor', '## Outra página');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(alteracoes).toEqual([]);
   });
 
   it('bloqueia escrita e emissão quando está somente leitura', () => {
