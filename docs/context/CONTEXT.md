@@ -202,7 +202,10 @@ quanto na ficha. Em viewports mobile, esses controles continuam inline no cabeç
 e as sidebars ocupam toda a largura disponível.
 
 O **Caderno** também integra os utilitários da campanha. Cada membro possui um caderno privado por
-campanha, formado por páginas com título e Markdown, sem imagens ou anexos. O autor administra suas
+campanha, formado por páginas com título e Markdown, sem imagens ou anexos. A página usa Milkdown
+para edição visual direta: o conteúdo formatado é a própria superfície editável, com barra compacta
+para títulos, ênfase, listas, citação e código, sem alternância entre fonte e prévia. O Markdown puro
+continua sendo o formato persistido. O autor administra suas
 páginas com salvamento automático e controle de versão; em conflito, o texto local permanece visível
 até o usuário recarregar a versão persistida. O mestre alterna entre o próprio caderno editável e os
 cadernos dos jogadores em modo estritamente somente leitura; jogadores não veem cadernos alheios.

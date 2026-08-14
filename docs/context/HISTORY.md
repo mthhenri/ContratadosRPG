@@ -44,6 +44,17 @@ das janelas arrastáveis, para nunca sobrepor um diálogo aberto.
 Os 995 testes do frontend, lint e build passaram; o build preservou apenas o aviso conhecido do
 budget inicial (639,41 kB para o limite de 630 kB).
 
+O fluxo de escrita foi simplificado novamente após a validação do autor: a alternância entre
+`Editar` e `Visualizar` saiu, e a própria página formatada passou a ser editável com Milkdown. A
+integração usa o núcleo do editor, sem o pacote visual Crepe, para não carregar recursos fora do
+escopo como imagens, tabelas, matemática e as fontes do KaTeX. Uma barra compacta oferece texto,
+títulos, negrito, itálico, código, listas e citação; atalhos Markdown continuam funcionando e o
+PostgreSQL continua recebendo Markdown puro. A mesma superfície fica bloqueada e sem barra ao
+consultar o caderno de outro jogador. A aplicação real foi percorrida em 1920×1080 e 360×800:
+seleção, formatação direta, salvamento e reabertura do conteúdo formatado funcionaram sem overflow.
+Passaram 999 testes do frontend, além de lint e build; o build manteve apenas o aviso conhecido do
+budget inicial (639,63 kB para o limite de 630 kB).
+
 ## 2026-08-14 — Consulta do inventário de esquadrão durante missão
 
 O acesso ao inventário coletivo foi dividido entre leitura e alteração. Qualquer membro da campanha

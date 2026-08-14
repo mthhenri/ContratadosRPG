@@ -251,37 +251,13 @@
             @if (somenteLeitura()) {
               <span class="caderno__somente-leitura">Somente leitura</span>
             }
-            <div class="caderno__segmentado caderno__segmentado--editor" role="group" aria-label="Modo da página">
-              @if (!somenteLeitura()) {
-                <button
-                  type="button"
-                  [class.caderno__segmentado-item--ativo]="modoEditor() === 'EDITAR'"
-                  [attr.aria-pressed]="modoEditor() === 'EDITAR'"
-                  aria-label="Editar Markdown"
-                  (click)="definirModoEditor('EDITAR')"
-                >Editar</button>
-              }
-              <button
-                type="button"
-                [class.caderno__segmentado-item--ativo]="modoEditor() === 'VISUALIZAR' || somenteLeitura()"
-                [attr.aria-pressed]="modoEditor() === 'VISUALIZAR' || somenteLeitura()"
-                aria-label="Visualizar Markdown"
-                (click)="definirModoEditor('VISUALIZAR')"
-              >Visualizar</button>
-            </div>
           </div>
 
-          @if (modoEditor() === 'EDITAR' && !somenteLeitura()) {
-            <textarea
-              class="caderno__textarea"
-              formControlName="conteudoMarkdown"
-              maxlength="100000"
-              aria-label="Conteúdo Markdown"
-              placeholder="Escreva suas anotações em Markdown…"
-            ></textarea>
-          } @else {
-            <article class="caderno__markdown" [innerHTML]="markdownRenderizado()"></article>
-          }
+          <app-editor-markdown
+            [valor]="store.rascunho().conteudoMarkdown"
+            [somenteLeitura]="somenteLeitura()"
+            (valorChange)="alterarConteudoMarkdown($event)"
+          />
 
           @if (!somenteLeitura()) {
             <footer class="caderno__editor-acoes">

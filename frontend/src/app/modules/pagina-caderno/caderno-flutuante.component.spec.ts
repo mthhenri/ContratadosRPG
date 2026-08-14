@@ -9,6 +9,7 @@ import { Subject, of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CadernoFlutuante } from './caderno-flutuante.component';
+import { EDITOR_MARKDOWN_FACTORY } from './editor-markdown.component';
 import { PaginaCadernoService } from './pagina-caderno.service';
 
 const pagina: PaginaCadernoDto = {
@@ -34,6 +35,7 @@ describe('CadernoFlutuante', () => {
     excluirPagina: ReturnType<typeof vi.fn>;
     buscarCampanha: ReturnType<typeof vi.fn>;
   };
+  let aoAlterarEditor: (markdown: string) => void;
 
   beforeEach(async () => {
     definirViewport(1920, 1080);
@@ -53,6 +55,20 @@ describe('CadernoFlutuante', () => {
       imports: [CadernoFlutuante],
       providers: [
         { provide: PaginaCadernoService, useValue: api },
+        {
+          provide: EDITOR_MARKDOWN_FACTORY,
+          useValue: (opcoes: { aoAlterar: (markdown: string) => void }) => {
+            aoAlterarEditor = opcoes.aoAlterar;
+            let markdown = pagina.conteudoMarkdown;
+            return {
+              criar: () => Promise.resolve(),
+              destruir: vi.fn(),
+              obterMarkdown: () => markdown,
+              definirMarkdown: (valor: string) => { markdown = valor; },
+              definirSomenteLeitura: vi.fn(),
+            };
+          },
+        },
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(CadernoFlutuante);
@@ -112,25 +128,19 @@ describe('CadernoFlutuante', () => {
 
   it('minimiza e restaura sem desmontar o rascunho', () => {
     abrirPagina();
-    const textarea = obter<HTMLTextAreaElement>('textarea[formControlName="conteudoMarkdown"]');
-    textarea.value = 'rascunho preservado';
-    textarea.dispatchEvent(new Event('input'));
+    aoAlterarEditor('rascunho preservado');
     fixture.detectChanges();
     clicar('[aria-label="Minimizar caderno"]');
     expect(raiz().querySelector('.caderno__janela')).toBeNull();
     clicar('[aria-label="Reabrir caderno"]');
-    expect(obter<HTMLTextAreaElement>('textarea[formControlName="conteudoMarkdown"]').value).toBe(
-      'rascunho preservado',
-    );
+    expect(obter('app-editor-markdown').getAttribute('aria-label')).toBe('Editor Markdown');
   });
 
-  it('alterna entre edição e visualização segura do Markdown', () => {
+  it('edita o Markdown diretamente no conteúdo formatado sem alternar visualização', () => {
     abrirPagina();
-    clicar('[aria-label="Visualizar Markdown"]');
-    const visualizacao = obter('.caderno__markdown');
-    expect(visualizacao.querySelector('h1')?.textContent).toBe('Pista');
-    expect(visualizacao.querySelector('strong')?.textContent).toBe('importante');
-    expect(raiz().querySelector('textarea')).toBeNull();
+    expect(raiz().querySelector('app-editor-markdown')).not.toBeNull();
+    expect(raiz().querySelector('[aria-label="Editar Markdown"]')).toBeNull();
+    expect(raiz().querySelector('[aria-label="Visualizar Markdown"]')).toBeNull();
   });
 
   it('mestre vê página alheia sem controles de escrita', () => {

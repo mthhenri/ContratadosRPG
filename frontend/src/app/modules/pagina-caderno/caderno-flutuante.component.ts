@@ -16,7 +16,6 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { DomSanitizer } from '@angular/platform-browser';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { BuscaCampanhaResultadoDto } from '@contratados-rpg/shared/dtos/pagina-caderno';
 import {
@@ -27,21 +26,20 @@ import {
 import { Subject, catchError, debounceTime, distinctUntilChanged, of, switchMap, tap } from 'rxjs';
 
 import { Icone } from '../../shared/icone/icone.component';
-import { renderizarMarkdownSeguro } from './markdown-seguro';
 import type { CadernoGeometria } from './caderno-flutuante.model';
 import { CadernoFlutuanteStore } from './caderno-flutuante.store';
+import { EditorMarkdown } from './editor-markdown.component';
 import { PaginaCadernoService } from './pagina-caderno.service';
 
 const BREAKPOINT_MOBILE = 560;
 let proximoNivelJanela = 1210;
 
 type ModoCaderno = 'MEU' | 'JOGADORES';
-type ModoEditor = 'EDITAR' | 'VISUALIZAR';
 
 @Component({
   selector: 'app-caderno-flutuante',
   standalone: true,
-  imports: [DatePipe, Icone, ReactiveFormsModule],
+  imports: [DatePipe, EditorMarkdown, Icone, ReactiveFormsModule],
   providers: [CadernoFlutuanteStore],
   templateUrl: './caderno-flutuante.component.html',
   styleUrl: './caderno-flutuante.component.scss',
@@ -62,13 +60,11 @@ export class CadernoFlutuante implements OnDestroy {
   readonly abrirFicha = output<number>();
 
   protected readonly store = inject(CadernoFlutuanteStore);
-  private readonly sanitizer = inject(DomSanitizer);
   private readonly api = inject(PaginaCadernoService);
   private readonly documento = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly estado = this.store.estado;
   protected readonly modoCaderno = signal<ModoCaderno>('MEU');
-  protected readonly modoEditor = signal<ModoEditor>('EDITAR');
   protected readonly jogadorSelecionadoId = signal<number | null>(null);
   protected readonly exclusaoPendente = signal(false);
   protected readonly listaRecolhida = signal(false);
@@ -100,9 +96,6 @@ export class CadernoFlutuante implements OnDestroy {
   );
   protected readonly somenteLeitura = computed(
     () => this.store.paginaAtiva()?.somenteLeitura ?? this.modoCaderno() === 'JOGADORES',
-  );
-  protected readonly markdownRenderizado = computed(() =>
-    renderizarMarkdownSeguro(this.store.rascunho().conteudoMarkdown, this.sanitizer),
   );
   protected readonly rotuloSalvamento = computed(() => {
     const rotulos = {
@@ -238,7 +231,6 @@ export class CadernoFlutuante implements OnDestroy {
     this.modoCaderno.set(modo);
     this.jogadorSelecionadoId.set(null);
     this.exclusaoPendente.set(false);
-    this.modoEditor.set('EDITAR');
     if (modo === 'MEU') this.store.carregarMeuCaderno();
     else this.store.iniciarNovaPagina();
     this.store.definirVistaMobile('LISTA');
@@ -254,7 +246,6 @@ export class CadernoFlutuante implements OnDestroy {
 
   protected selecionarPagina(id: number): void {
     this.exclusaoPendente.set(false);
-    this.modoEditor.set('EDITAR');
     this.store.recuperarPagina(id);
   }
 
@@ -264,14 +255,13 @@ export class CadernoFlutuante implements OnDestroy {
 
   protected iniciarNovaPagina(): void {
     this.exclusaoPendente.set(false);
-    this.modoEditor.set('EDITAR');
     this.listaRecolhida.set(true);
     this.store.iniciarNovaPagina();
     setTimeout(() => this.documento.querySelector<HTMLInputElement>('.caderno__titulo-input')?.focus());
   }
 
-  protected definirModoEditor(modo: ModoEditor): void {
-    this.modoEditor.set(modo);
+  protected alterarConteudoMarkdown(conteudoMarkdown: string): void {
+    this.formulario.controls.conteudoMarkdown.setValue(conteudoMarkdown);
   }
 
   protected salvar(): void {
