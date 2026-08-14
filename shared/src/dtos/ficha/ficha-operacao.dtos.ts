@@ -506,3 +506,15 @@ export interface FichaInventarioInternoAlterarDto {
   readonly id: number;
   readonly dados: FichaJogadorDadosDto;
 }
+
+/** Entrada da alteração pontual de Vida/Energia pelos cards da campanha. */
+export interface FichaVitalidadeAlterarDto {
+  readonly vidaAtual?: number;
+  readonly energiaAtual?: number;
+}
+
+/** Contrato interno da alteração pontual de vitalidade; `id` vem da controller. */
+export interface FichaVitalidadeInternoAlterarDto {
+  readonly id: number;
+  readonly estado: FichaVitalidadeAlterarDto;
+}

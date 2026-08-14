@@ -164,6 +164,9 @@ describe('CampanhaDetalhe', () => {
       alterarFicha: vi.fn((id: number, dto: { nome: string; dados: unknown }) =>
         of({ id, campanhaId: CAMPANHA_ID, usuarioId: 0, nome: dto.nome, dados: dto.dados }),
       ),
+      alterarVitalidade: vi.fn((id: number, dto: { vidaAtual?: number; energiaAtual?: number }) =>
+        of({ id, campanhaId: CAMPANHA_ID, usuarioId: 0, dados: { estado: dto } }),
+      ),
       duplicarFicha: vi.fn((id: number) =>
         of({ id: 100, campanhaId: CAMPANHA_ID, usuarioId: opts.usuarioId, nome: `Clone de ${id} (cópia)` }),
       ),
@@ -1351,7 +1354,7 @@ describe('CampanhaDetalhe', () => {
       expect(botaoMenos.disabled).toBe(true);
     });
 
-    it('agenda a persistência em lote: busca o documento completo e grava só depois do debounce', () => {
+    it('agenda a persistência em lote dedicada só depois do debounce', () => {
       vi.useFakeTimers();
       try {
         const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
@@ -1368,18 +1371,13 @@ describe('CampanhaDetalhe', () => {
 
         vi.advanceTimersByTime(300);
         expect(fichaService.alterarFicha).not.toHaveBeenCalled();
+        expect(fichaService.alterarVitalidade).not.toHaveBeenCalled();
 
         vi.advanceTimersByTime(300);
-        expect(fichaService.recuperarFicha).toHaveBeenCalledWith(4);
-        expect(fichaService.alterarFicha).toHaveBeenCalledTimes(1);
-        expect(fichaService.alterarFicha).toHaveBeenCalledWith(
-          4,
-          expect.objectContaining({
-            dados: expect.objectContaining({
-              estado: expect.objectContaining({ vidaAtual: 17 }),
-            }),
-          }),
-        );
+        expect(fichaService.recuperarFicha).not.toHaveBeenCalled();
+        expect(fichaService.alterarFicha).not.toHaveBeenCalled();
+        expect(fichaService.alterarVitalidade).toHaveBeenCalledTimes(1);
+        expect(fichaService.alterarVitalidade).toHaveBeenCalledWith(4, { vidaAtual: 17 });
       } finally {
         vi.useRealTimers();
       }

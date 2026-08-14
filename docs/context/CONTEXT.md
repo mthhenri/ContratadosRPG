@@ -142,7 +142,9 @@ pelos dois papéis. Abaixo disso, o corpo diverge por papel (`@if (ehMestre())`/
   fichas; mestre sempre primeiro, depois jogadores em ordem alfabética) e **Esquadrão** (grid fixo
   de 2 colunas — 1 no mobile, e antes de Membros quando a grade empilha; segue a mesma ordem
   mestre→alfabética da coluna Membros — com todas as fichas da campanha achatadas, nome do dono em
-  cada mini-card, Vida/Energia com ajuste rápido ± sem abrir a ficha, reações
+  cada mini-card, Vida/Energia com ajuste rápido ± sem abrir a ficha (operação dedicada que só
+  altera `dados.estado.vidaAtual`/`energiaAtual`, sem regravar identidade, cor, avatar ou
+  visibilidade), reações
   (Defesa/Esquiva/Bloqueio/Contra-ataque, cada uma só aparece se a ficha tiver o valor — Contra-
   ataque recalculado ao vivo no backend quando o snapshot não foi persistido) e o kebab de ações da
   ficha — duplicar/remover-da-campanha/excluir).

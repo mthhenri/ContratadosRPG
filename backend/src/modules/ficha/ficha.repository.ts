@@ -21,6 +21,7 @@ import type {
   FichaRecuperadaDto,
   FichaRecuperarDto,
   FichaResumoInternoDto,
+  FichaVitalidadeInternoAlterarDto,
   FichaVisiveisInternoListarDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import { BaseRepository } from '../../core/base/base.repository';
@@ -297,6 +298,20 @@ export class FichaRepository extends BaseRepository {
         oculta: dto.oculta ?? false,
         dados: JSON.stringify(dto.dados),
       },
+    );
+    return fichaAlterada;
+  }
+
+  /** Altera apenas os valores informados de `dados.estado`, sem regravar a ficha inteira. */
+  async alterarVitalidade(dto: FichaVitalidadeInternoAlterarDto): Promise<FichaRecuperadaDto> {
+    const [fichaAlterada] = await this.executarConsulta<FichaRecuperadaDto>(
+      `UPDATE ficha
+       SET dados = jsonb_set(dados, '{estado}', dados -> 'estado' || :estado::jsonb, true),
+           updated_date = NOW()
+       WHERE id = :id AND is_deleted = false
+       RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, imagem_url AS "imagemUrl",
+                 COALESCE(oculta, false) AS oculta, dados`,
+      { id: dto.id, estado: JSON.stringify(dto.estado) },
     );
     return fichaAlterada;
   }

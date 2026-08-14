@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { EMPTY, Subject, catchError, switchMap } from 'rxjs';
+import { EMPTY, Subject, catchError, finalize } from 'rxjs';
 
 import type { FichaAlteradaDto } from '@contratados-rpg/shared/dtos/ficha';
 
@@ -11,13 +11,10 @@ const ATRASO_PERSISTENCIA_MS = 500;
 
 /**
  * Ajuste rápido de Vida/Energia **fora** da tela da ficha (m2-16g) — usado pelos mini-cards do
- * detalhe da campanha, onde só o recorte `FichaResumoDto` está carregado (sem o documento
- * completo). Mesmo princípio otimista+em lote de `FichaVisualizar` (`agendarPersistencia`), mas
- * sem manter uma sessão de edição aberta: cada rajada de cliques busca o documento completo só na
- * hora de persistir — não antes, não em cache —, aplica os campos pendentes por cima do que
- * estiver lá (pode ter mudado por outra via desde o último fetch) e faz um único `alterarFicha`
- * por rajada. Quem chama é responsável pelo otimismo na tela (o valor exibido); este serviço só
- * garante que ele acaba persistido, com um passo de rede por vez por ficha.
+ * detalhe da campanha, onde só o recorte `FichaResumoDto` está carregado. Cada rajada envia
+ * somente os valores pendentes para a operação dedicada de vitalidade: não busca nem regrava a
+ * ficha completa. Quem chama é responsável pelo otimismo na tela (o valor exibido); este serviço
+ * só garante que ele acaba persistido, com um passo de rede por vez por ficha.
  */
 @Injectable({ providedIn: 'root' })
 export class FichaVitalidadeRapidaService {
@@ -27,6 +24,8 @@ export class FichaVitalidadeRapidaService {
   private readonly pendencias = new Map<number, Partial<Record<CampoVitalidadeAtual, number>>>();
   /** Temporizador do lote em curso, por ficha (reiniciado a cada novo pedido). */
   private readonly temporizadores = new Map<number, ReturnType<typeof setTimeout>>();
+  /** Impede que dois PATCHes absolutos da mesma ficha se sobreponham e cheguem fora de ordem. */
+  private readonly persistenciasEmAndamento = new Set<number>();
 
   /** Emite a ficha alterada após cada persistência bem-sucedida. */
   readonly persistido$ = new Subject<FichaAlteradaDto>();
@@ -47,23 +46,24 @@ export class FichaVitalidadeRapidaService {
   private persistir(fichaId: number): void {
     const pendente = this.pendencias.get(fichaId);
     this.temporizadores.delete(fichaId);
-    this.pendencias.delete(fichaId);
-    if (!pendente) {
+    if (!pendente || this.persistenciasEmAndamento.has(fichaId)) {
       return;
     }
+    this.pendencias.delete(fichaId);
+    this.persistenciasEmAndamento.add(fichaId);
 
     this.fichaService
-      .recuperarFicha(fichaId)
+      .alterarVitalidade(fichaId, pendente)
       .pipe(
-        switchMap((ficha) =>
-          this.fichaService.alterarFicha(fichaId, {
-            nome: ficha.nome,
-            dados: { ...ficha.dados, estado: { ...ficha.dados.estado, ...pendente } },
-          }),
-        ),
         catchError(() => {
           this.falhou$.next(fichaId);
           return EMPTY;
+        }),
+        finalize(() => {
+          this.persistenciasEmAndamento.delete(fichaId);
+          if (this.pendencias.has(fichaId)) {
+            this.persistir(fichaId);
+          }
         }),
       )
       .subscribe({ next: (alterada) => this.persistido$.next(alterada) });

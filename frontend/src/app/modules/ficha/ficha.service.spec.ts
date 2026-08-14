@@ -117,6 +117,25 @@ describe('FichaService', () => {
     expect(recebido).toEqual(alterada);
   });
 
+  it('altera somente a vitalidade pela rota dedicada', () => {
+    const { servico, http } = criar();
+    servico.alterarVitalidade(3, { vidaAtual: 7 }).subscribe(() => undefined);
+
+    const requisicao = http.expectOne((req) => req.url.endsWith('/ficha/3/vitalidade'));
+    expect(requisicao.request.method).toBe('PATCH');
+    expect(requisicao.request.body).toEqual({ vidaAtual: 7 });
+    requisicao.flush(envelope({
+      id: 3,
+      campanhaId: 9,
+      usuarioId: 7,
+      nome: 'Kane',
+      cor: '#2563EB',
+      imagemUrl: 'https://exemplo.test/kane.webp',
+      oculta: true,
+      dados,
+    } satisfies FichaAlteradaDto));
+  });
+
   it('lista as fichas da campanha pelo campanhaId', () => {
     const { servico, http } = criar();
     const fichas: FichaResumoDto[] = [

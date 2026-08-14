@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Patch,
   Param,
   ParseIntPipe,
   Post,
@@ -28,6 +29,7 @@ import type {
   FichaInventarioItemPegarDto,
   FichaRecuperadaDto,
   FichaResumoDto,
+  FichaVitalidadeAlterarDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import { ActiveUser } from '../../core/decorators';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
@@ -80,6 +82,16 @@ export class FichaController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<FichaAlteradaDto> {
     return this.fichaService.alterarFicha({ ...dto, id }, usuarioAtivo);
+  }
+
+  /** Altera exclusivamente Vida/Energia atual; a service autoriza e restringe o recorte. */
+  @Patch(':id/vitalidade')
+  alterarVitalidade(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: FichaVitalidadeAlterarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<FichaAlteradaDto> {
+    return this.fichaService.alterarVitalidade({ id, estado: dto }, usuarioAtivo);
   }
 
   /**

@@ -5,6 +5,7 @@ import type {
   FichaJogadorDadosDto,
   FichaOrigemDto,
   FichaRecuperadaDto,
+  FichaVitalidadeAlterarDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
   ClasseEnum,
@@ -45,6 +46,7 @@ interface FichaRepositorioDublado {
   revogarAcesso: ReturnType<typeof vi.fn>;
   listarAcessos: ReturnType<typeof vi.fn>;
   alterarFicha: ReturnType<typeof vi.fn>;
+  alterarVitalidade: ReturnType<typeof vi.fn>;
   alterarImagem: ReturnType<typeof vi.fn>;
   alterarInventario: ReturnType<typeof vi.fn>;
   excluirFicha: ReturnType<typeof vi.fn>;
@@ -214,6 +216,7 @@ describe('FichaService', () => {
       revogarAcesso: vi.fn(),
       listarAcessos: vi.fn(),
       alterarFicha: vi.fn(),
+      alterarVitalidade: vi.fn(),
       alterarImagem: vi.fn(),
       alterarInventario: vi.fn(),
       excluirFicha: vi.fn(),
@@ -1161,6 +1164,55 @@ describe('FichaService', () => {
         );
         expect(campanhaRepositorio.recuperarMembro).not.toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('alterarVitalidade', () => {
+    it('aceita Energia atual negativa, regra já aplicada pelos controles da ficha', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      fichaRepositorio.alterarVitalidade.mockResolvedValue(fichaPersistida);
+
+      await expect(
+        service.alterarVitalidade({ id: 5, estado: { energiaAtual: -3 } }, usuarioDono),
+      ).resolves.toBe(fichaPersistida);
+
+      expect(fichaRepositorio.alterarVitalidade).toHaveBeenCalledWith({ id: 5, estado: { energiaAtual: -3 } });
+    });
+
+    it('descarta campos externos que não são Vida/Energia antes de persistir', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      fichaRepositorio.alterarVitalidade.mockResolvedValue(fichaPersistida);
+
+      await service.alterarVitalidade(
+        {
+          id: 5,
+          estado: { vidaAtual: 17, campoExterno: 'nao deve persistir' } as unknown as FichaVitalidadeAlterarDto,
+        },
+        usuarioDono,
+      );
+
+      expect(fichaRepositorio.alterarVitalidade).toHaveBeenCalledWith({ id: 5, estado: { vidaAtual: 17 } });
+    });
+
+    it('preserva a ficha fora de dados.estado e emite a alteracao apos validar permissao', async () => {
+      const fichaColoridaOculta: FichaRecuperadaDto = {
+        ...fichaPersistida,
+        cor: '#2563EB',
+        imagemUrl: 'https://exemplo.test/agente.webp',
+        oculta: true,
+      };
+      const fichaAlterada: FichaRecuperadaDto = {
+        ...fichaColoridaOculta,
+        dados: { ...fichaColoridaOculta.dados, estado: { ...fichaColoridaOculta.dados.estado, vidaAtual: 17 } },
+      };
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaColoridaOculta);
+      fichaRepositorio.alterarVitalidade.mockResolvedValue(fichaAlterada);
+
+      await expect(service.alterarVitalidade({ id: 5, estado: { vidaAtual: 17 } }, usuarioDono)).resolves.toBe(fichaAlterada);
+
+      expect(fichaRepositorio.alterarVitalidade).toHaveBeenCalledWith({ id: 5, estado: { vidaAtual: 17 } });
+      expect(fichaRepositorio.alterarFicha).not.toHaveBeenCalled();
+      expect(campanhaGateway.emitirFichaAlterada).toHaveBeenCalledWith(fichaAlterada);
     });
   });
 

@@ -3,6 +3,21 @@ import type { Knex } from 'knex';
 import { FichaRepository } from './ficha.repository';
 
 describe('FichaRepository', () => {
+  it('exposes a dedicated vitalidade update that does not change relational fields', async () => {
+  const raw = vi.fn().mockResolvedValue({ rows: [{ id: 5 }] });
+  const repositorio = new FichaRepository({ raw } as unknown as Knex);
+  await repositorio.alterarVitalidade({ id: 5, estado: { vidaAtual: 12 } });
+
+  const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+  expect(sql).toContain("SET dados = jsonb_set(dados, '{estado}'");
+  expect(sql).toContain("dados -> 'estado' || :estado::jsonb");
+  expect(sql).not.toContain('nome = :nome');
+  expect(sql).not.toContain('cor = :cor');
+  expect(sql).not.toContain('imagem_url = :imagemUrl');
+  expect(sql).not.toContain('oculta = :oculta');
+  expect(parametros).toEqual({ id: 5, estado: JSON.stringify({ vidaAtual: 12 }) });
+  });
+
   it('alterarInventario regrava só dados e devolve a ficha atualizada', async () => {
     const raw = vi.fn().mockResolvedValue({
       rows: [

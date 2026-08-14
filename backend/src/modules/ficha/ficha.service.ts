@@ -33,6 +33,8 @@ import type {
   FichaResumoDto,
   FichaResumoInternoDto,
   FichaRolagemDto,
+  FichaVitalidadeAlterarDto,
+  FichaVitalidadeInternoAlterarDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
   ClasseEnum,
@@ -538,17 +540,25 @@ export class FichaService {
     return fichaAlterada;
   }
 
-  /**
-   * Troca o avatar da ficha (m3-62), exigindo permissão de **edição** (§14). Valida MIME
-   * (`jpeg`/`png`/`webp`) e tamanho (2MB) — `BusinessException` se falhar, sem afetar o resto da
-   * ficha. Ao trocar, exclui o arquivo anterior do armazenamento (não acumula lixo) **antes** de
-   * persistir a nova URL — se a ficha já tinha avatar, o antigo já era um blob órfão assim que o
-   * novo é gravado, então a ordem (excluir → `UPDATE`) só importa para não vazar exceção de
-   * armazenamento com o banco já desatualizado. `ResourceNotFoundException` se a ficha não
-   * existir; `UnauthorizedAccessException` se o autor não puder editá-la. Emite `ficha:alterada`
-   * (mesmo evento da edição genérica) após persistir — quem está com a ficha aberta vê o avatar
-   * novo sem F5.
-   */
+  /** Altera somente Vida/Energia atual, sem expor o `PUT` completo aos cards da campanha. */
+  async alterarVitalidade(
+    dto: FichaVitalidadeInternoAlterarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<FichaAlteradaDto> {
+    const fichaEncontrada = await this.fichaRepositorio.recuperarPorId({ id: dto.id });
+    if (!fichaEncontrada) {
+      throw new ResourceNotFoundException('Ficha');
+    }
+
+    await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
+    const estado = this.extrairVitalidade(dto.estado);
+    this.validarVitalidade(estado);
+    const fichaAlterada = await this.fichaRepositorio.alterarVitalidade({ id: dto.id, estado });
+    this.campanhaGateway.emitirFichaAlterada(fichaAlterada);
+    return fichaAlterada;
+  }
+
+  /** Troca o avatar da ficha sem alterar os demais campos. */
   async alterarImagem(
     dto: FichaImagemAlterarDto,
     usuarioAtivo: JwtPayload,
@@ -904,6 +914,26 @@ export class FichaService {
     }
     if (!/^#[0-9A-Fa-f]{6}$/.test(cor)) {
       throw new BusinessException('Cor inválida: use o formato hexadecimal #RRGGBB');
+    }
+  }
+
+  private extrairVitalidade(vitalidade: FichaVitalidadeAlterarDto | null | undefined): FichaVitalidadeAlterarDto {
+    return {
+      ...(vitalidade?.vidaAtual !== undefined ? { vidaAtual: vitalidade.vidaAtual } : {}),
+      ...(vitalidade?.energiaAtual !== undefined ? { energiaAtual: vitalidade.energiaAtual } : {}),
+    };
+  }
+
+  private validarVitalidade(vitalidade: FichaVitalidadeAlterarDto): void {
+    const valores = [vitalidade.vidaAtual, vitalidade.energiaAtual].filter(
+      (valor): valor is number => valor !== undefined,
+    );
+    if (
+      !valores.length ||
+      valores.some((valor) => !Number.isInteger(valor)) ||
+      (vitalidade.vidaAtual !== undefined && vitalidade.vidaAtual < 0)
+    ) {
+      throw new BusinessException('Informe Vida atual (não negativa) e/ou Energia atual como inteiros');
     }
   }
 

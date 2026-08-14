@@ -1,5 +1,21 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-14 — Ajuste rápido de vitalidade deixa de regravar a ficha
+
+O ajuste de Vida/Energia dos mini-cards da campanha usava o `PUT /ficha/:id` completo. Como esse
+fluxo enviava apenas `nome` e `dados`, a repository interpretava `cor` e `oculta` ausentes como
+`null` e `false`: um clique de vitalidade podia apagar a cor da ficha e tornar visível uma ficha
+oculta. O avatar não era apagado porque tem endpoint próprio, mas o contrato continuava frágil para
+qualquer novo campo relacional.
+
+O fluxo agora chama `PATCH /ficha/:id/vitalidade`, com somente `vidaAtual` e/ou `energiaAtual`.
+O backend aplica a mesma permissão de edição, preserva a regra de Vida não negativa e Energia
+negativa permitida, mescla exclusivamente esses valores em `dados.estado` via JSONB e emite
+`ficha:alterada`. O cliente serializa os PATCHes de cada ficha para uma resposta antiga não
+sobrescrever o valor mais recente. Cor, avatar, visibilidade, nome e todo o restante do documento
+permanecem intocados. Os testes cobrem o cliente HTTP, o lote dos cards, o recorte SQL, a
+permissão/emissão e a integração do detalhe da campanha.
+
 ## 2026-08-14 — Consulta do inventário de esquadrão durante missão
 
 O acesso ao inventário coletivo foi dividido entre leitura e alteração. Qualquer membro da campanha

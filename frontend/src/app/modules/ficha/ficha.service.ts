@@ -14,6 +14,7 @@ import {
   FichaImagemAlteradaDto,
   FichaRecuperadaDto,
   FichaResumoDto,
+  FichaVitalidadeAlterarDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 
 import { environment } from '../../../environments/environment';
@@ -86,12 +87,14 @@ export class FichaService {
       .pipe(map((resposta) => resposta.dados as FichaAlteradaDto));
   }
 
-  /**
-   * Troca o avatar da ficha (m3-62) — multipart via `FormData`, por isso fora do `alterarFicha`
-   * genérico. Só o dono ou o mestre trocam (§14; barrado com 403 no backend), que também valida
-   * MIME (jpeg/png/webp) e tamanho (2MB) — o client só valida o tamanho antes de enviar, pra
-   * feedback imediato (a validação autoritativa é sempre a do backend).
-   */
+  /** Altera somente Vida/Energia atual; usada pelos controles rapidos dos cards da campanha. */
+  alterarVitalidade(id: number, dto: FichaVitalidadeAlterarDto): Observable<FichaAlteradaDto> {
+    return this.httpClient
+      .patch<StandardResponse<FichaAlteradaDto>>(`${this.base}/${id}/vitalidade`, dto)
+      .pipe(map((resposta) => resposta.dados as FichaAlteradaDto));
+  }
+
+  /** Troca o avatar da ficha sem passar pela alteracao completa. */
   alterarImagem(id: number, arquivo: File): Observable<FichaImagemAlteradaDto> {
     const formData = new FormData();
     formData.append('arquivo', arquivo);

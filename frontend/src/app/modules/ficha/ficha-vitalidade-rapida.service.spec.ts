@@ -1,38 +1,54 @@
 import { TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
-import { ClasseEnum } from '@contratados-rpg/shared/enums';
+import { Subject, of, throwError } from 'rxjs';
 
 import { FichaService } from './ficha.service';
 import { FichaVitalidadeRapidaService } from './ficha-vitalidade-rapida.service';
 
+type FichaAlteradaDublada = {
+  id: number;
+  campanhaId: number;
+  usuarioId: number;
+  nome: string;
+  cor: string;
+  imagemUrl: string;
+  oculta: boolean;
+  dados: { estado: { vidaAtual?: number; energiaAtual?: number } };
+};
+
 /**
  * Prova a orquestração do ajuste rápido de Vida/Energia usado pelos mini-cards do detalhe da
- * campanha (m2-16g): busca o documento completo só na hora de persistir (nunca antes, nunca em
- * cache), mescla os campos pendentes por cima do que vier do servidor, faz um único
- * `alterarFicha` por rajada (debounced) e não deixa uma falha travar o próximo ajuste.
+ * campanha (m2-16g): envia somente Vida/Energia pela operação dedicada, faz um único request por
+ * rajada (debounced) e não deixa uma falha travar o próximo ajuste.
  */
 describe('FichaVitalidadeRapidaService', () => {
-  function montar(opts: { recuperarRetorno?: (id: number) => unknown; alterarErro?: boolean } = {}) {
+  function montar(opts: { alterarErro?: boolean } = {}) {
     const fichaService = {
       recuperarFicha: vi.fn((id: number) =>
-        of(
-          opts.recuperarRetorno?.(id) ?? {
-            id,
-            campanhaId: 1,
-            usuarioId: 9,
-            nome: 'Corvo',
-            dados: {
-              nivel: 1,
-              classe: ClasseEnum.COMBATENTE,
-              estado: { vidaAtual: 10, vidaMaxima: 20, energiaAtual: 5, energiaMaxima: 15 },
-            },
-          },
-        ),
+        of({
+          id,
+          campanhaId: 1,
+          usuarioId: 9,
+          nome: 'Corvo',
+          cor: '#2563EB',
+          imagemUrl: 'https://exemplo.test/corvo.webp',
+          oculta: true,
+          dados: { estado: { vidaAtual: 10, energiaAtual: 5 } },
+        }),
       ),
-      alterarFicha: opts.alterarErro
+      alterarFicha: vi.fn((id: number) => of({ id })),
+      alterarVitalidade: opts.alterarErro
         ? vi.fn(() => throwError(() => new Error('falha simulada')))
-        : vi.fn((id: number, dto: { nome: string; dados: unknown }) =>
-            of({ id, campanhaId: 1, usuarioId: 9, nome: dto.nome, dados: dto.dados }),
+        : vi.fn((id: number, dto: { vidaAtual?: number; energiaAtual?: number }) =>
+            of({
+              id,
+              campanhaId: 1,
+              usuarioId: 9,
+              nome: 'Corvo',
+              cor: '#2563EB',
+              imagemUrl: 'https://exemplo.test/corvo.webp',
+              oculta: true,
+              dados: { estado: dto },
+            }),
           ),
     };
 
@@ -53,9 +69,10 @@ describe('FichaVitalidadeRapidaService', () => {
     vi.advanceTimersByTime(400);
     expect(fichaService.recuperarFicha).not.toHaveBeenCalled();
     expect(fichaService.alterarFicha).not.toHaveBeenCalled();
+    expect(fichaService.alterarVitalidade).not.toHaveBeenCalled();
   });
 
-  it('rajada de cliques na mesma ficha vira um único ciclo de persistência, com o último valor', () => {
+  it('rajada de cliques na mesma ficha vira uma operação dedicada, com o último valor', () => {
     const { servico, fichaService } = montar();
     servico.ajustar(7, 'vidaAtual', 11);
     vi.advanceTimersByTime(200);
@@ -64,24 +81,39 @@ describe('FichaVitalidadeRapidaService', () => {
     servico.ajustar(7, 'vidaAtual', 13);
     vi.advanceTimersByTime(500);
 
-    expect(fichaService.recuperarFicha).toHaveBeenCalledTimes(1);
-    expect(fichaService.recuperarFicha).toHaveBeenCalledWith(7);
-    expect(fichaService.alterarFicha).toHaveBeenCalledTimes(1);
-    expect(fichaService.alterarFicha).toHaveBeenCalledWith(
-      7,
-      expect.objectContaining({
-        dados: expect.objectContaining({ estado: expect.objectContaining({ vidaAtual: 13 }) }),
-      }),
-    );
+    expect(fichaService.recuperarFicha).not.toHaveBeenCalled();
+    expect(fichaService.alterarFicha).not.toHaveBeenCalled();
+    expect(fichaService.alterarVitalidade).toHaveBeenCalledTimes(1);
+    expect(fichaService.alterarVitalidade).toHaveBeenCalledWith(7, { vidaAtual: 13 });
   });
 
-  it('mescla o campo pendente por cima do documento buscado, sem tocar no resto do estado', () => {
+  it('envia somente o campo de vitalidade pendente', () => {
     const { servico, fichaService } = montar();
     servico.ajustar(7, 'vidaAtual', 9);
     vi.advanceTimersByTime(500);
 
-    const [, dto] = fichaService.alterarFicha.mock.calls[0] as [number, { dados: { estado: unknown } }];
-    expect(dto.dados.estado).toEqual({ vidaAtual: 9, vidaMaxima: 20, energiaAtual: 5, energiaMaxima: 15 });
+    expect(fichaService.alterarVitalidade).toHaveBeenCalledWith(7, { vidaAtual: 9 });
+  });
+
+  it('serializa lotes da mesma ficha para o valor mais recente não ser sobrescrito', () => {
+    const { servico, fichaService } = montar();
+    const primeiraResposta = new Subject<FichaAlteradaDublada>();
+    const segundaResposta = new Subject<FichaAlteradaDublada>();
+    fichaService.alterarVitalidade
+      .mockReturnValueOnce(primeiraResposta)
+      .mockReturnValueOnce(segundaResposta);
+
+    servico.ajustar(7, 'vidaAtual', 11);
+    vi.advanceTimersByTime(500);
+    expect(fichaService.alterarVitalidade).toHaveBeenCalledWith(7, { vidaAtual: 11 });
+
+    servico.ajustar(7, 'vidaAtual', 12);
+    vi.advanceTimersByTime(500);
+    expect(fichaService.alterarVitalidade).toHaveBeenCalledTimes(1);
+
+    primeiraResposta.complete();
+    expect(fichaService.alterarVitalidade).toHaveBeenCalledWith(7, { vidaAtual: 12 });
+    expect(fichaService.alterarVitalidade).toHaveBeenCalledTimes(2);
   });
 
   it('ajustes de fichas diferentes são independentes — cada uma com seu próprio debounce', () => {
@@ -91,12 +123,12 @@ describe('FichaVitalidadeRapidaService', () => {
     servico.ajustar(2, 'energiaAtual', 8);
     vi.advanceTimersByTime(300);
     // 600ms desde o ajuste da ficha 1 (assentou), só 300ms desde a ficha 2 (ainda não).
-    expect(fichaService.recuperarFicha).toHaveBeenCalledWith(1);
-    expect(fichaService.recuperarFicha).not.toHaveBeenCalledWith(2);
+    expect(fichaService.alterarVitalidade).toHaveBeenCalledWith(1, { vidaAtual: 5 });
+    expect(fichaService.alterarVitalidade).not.toHaveBeenCalledWith(2, { energiaAtual: 8 });
 
     vi.advanceTimersByTime(300);
-    expect(fichaService.recuperarFicha).toHaveBeenCalledWith(2);
-    expect(fichaService.alterarFicha).toHaveBeenCalledTimes(2);
+    expect(fichaService.alterarVitalidade).toHaveBeenCalledWith(2, { energiaAtual: 8 });
+    expect(fichaService.alterarVitalidade).toHaveBeenCalledTimes(2);
   });
 
   it('emite em persistido$ após um ciclo bem-sucedido', () => {
@@ -122,6 +154,6 @@ describe('FichaVitalidadeRapidaService', () => {
     // Um novo ajuste depois da falha ainda funciona — nada ficou preso.
     servico.ajustar(7, 'vidaAtual', 10);
     vi.advanceTimersByTime(500);
-    expect(fichaService.recuperarFicha).toHaveBeenCalledTimes(2);
+    expect(fichaService.alterarVitalidade).toHaveBeenCalledTimes(2);
   });
 });
