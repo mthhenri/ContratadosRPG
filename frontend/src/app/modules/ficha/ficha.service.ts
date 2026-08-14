@@ -164,4 +164,30 @@ export class FichaService {
       .put<StandardResponse<FichaCampanhaAtribuidaDto>>(`${this.base}/${id}/campanha`, { campanhaId })
       .pipe(map((resposta) => resposta.dados as FichaCampanhaAtribuidaDto));
   }
+
+  pegarItemInventario(
+    fichaId: number,
+    campanhaItemId: string,
+    quantidade?: number,
+  ): Observable<FichaRecuperadaDto> {
+    return this.httpClient
+      .post<StandardResponse<FichaRecuperadaDto>>(`${this.base}/${fichaId}/inventario/item/pegar`, {
+        campanhaItemId,
+        ...(quantidade === undefined ? {} : { quantidade }),
+      })
+      .pipe(map((resposta) => resposta.dados as FichaRecuperadaDto));
+  }
+
+  mandarItemInventarioParaBase(
+    fichaId: number,
+    indice: number,
+    quantidade?: number,
+  ): Observable<FichaRecuperadaDto> {
+    return this.httpClient
+      .post<StandardResponse<FichaRecuperadaDto>>(
+        `${this.base}/${fichaId}/inventario/item/mandar-para-base`,
+        { indice, ...(quantidade === undefined ? {} : { quantidade }) },
+      )
+      .pipe(map((resposta) => resposta.dados as FichaRecuperadaDto));
+  }
 }

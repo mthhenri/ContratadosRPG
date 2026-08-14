@@ -208,4 +208,15 @@ describe('TempoRealService', () => {
     expect(ioMock).toHaveBeenCalledTimes(2);
   });
 
+  it('repassa estado e inventário alterados da campanha', () => {
+    const { servico } = criar(() => 'jwt');
+    servico.conectar();
+    const recebidos: unknown[] = [];
+    servico.estadoAlterado$.subscribe((evento) => recebidos.push(evento));
+    servico.inventarioAlterado$.subscribe((evento) => recebidos.push(evento));
+
+    socketFake.disparar('campanha:estado-alterado', { id: 9, naBase: false });
+    socketFake.disparar('campanha:inventario-alterado', { campanhaId: 9 });
+    expect(recebidos).toEqual([{ id: 9, naBase: false }, { campanhaId: 9 }]);
+  });
 });

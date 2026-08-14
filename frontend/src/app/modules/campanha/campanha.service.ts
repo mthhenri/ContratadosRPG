@@ -9,6 +9,9 @@ import {
   CampanhaCriadaDto,
   CampanhaCriarDto,
   CampanhaEntradaDto,
+  CampanhaEstadoAlteradaDto,
+  CampanhaInventarioDto,
+  CampanhaInventarioItemAdicionarDto,
   CampanhaEntrarDto,
   CampanhaMembroRemovidoDto,
   CampanhaMembroResumoDto,
@@ -102,5 +105,45 @@ export class CampanhaService {
         novoMestreUsuarioId,
       })
       .pipe(map((resposta) => resposta.dados as CampanhaMestreTransferidoDto));
+  }
+
+  alterarEstado(id: number, naBase: boolean): Observable<CampanhaEstadoAlteradaDto> {
+    return this.httpClient
+      .put<StandardResponse<CampanhaEstadoAlteradaDto>>(`${this.base}/${id}/estado`, { naBase })
+      .pipe(map((resposta) => resposta.dados as CampanhaEstadoAlteradaDto));
+  }
+
+  recuperarInventario(id: number): Observable<CampanhaInventarioDto> {
+    return this.httpClient
+      .get<StandardResponse<CampanhaInventarioDto>>(`${this.base}/${id}/inventario`)
+      .pipe(map((resposta) => resposta.dados as CampanhaInventarioDto));
+  }
+
+  adicionarItemInventario(
+    id: number,
+    dto: Omit<CampanhaInventarioItemAdicionarDto, 'campanhaId'>,
+  ): Observable<CampanhaInventarioDto> {
+    return this.httpClient
+      .post<StandardResponse<CampanhaInventarioDto>>(`${this.base}/${id}/inventario/item`, dto)
+      .pipe(map((resposta) => resposta.dados as CampanhaInventarioDto));
+  }
+
+  removerItemInventario(id: number, itemId: string): Observable<CampanhaInventarioDto> {
+    return this.httpClient
+      .delete<StandardResponse<CampanhaInventarioDto>>(`${this.base}/${id}/inventario/item/${itemId}`)
+      .pipe(map((resposta) => resposta.dados as CampanhaInventarioDto));
+  }
+
+  ajustarQuantidadeItemInventario(
+    id: number,
+    itemId: string,
+    delta: number,
+  ): Observable<CampanhaInventarioDto> {
+    return this.httpClient
+      .patch<StandardResponse<CampanhaInventarioDto>>(
+        `${this.base}/${id}/inventario/item/${itemId}/quantidade`,
+        { delta },
+      )
+      .pipe(map((resposta) => resposta.dados as CampanhaInventarioDto));
   }
 }

@@ -24,7 +24,7 @@ function limitar(valor: number, minimo: number, maximo: number): number {
 
 /**
  * Calculadora comum flutuante (m3-54) — aritmética normal, **sem relação** com a calculadora do
- * sistema (M1) ou com os dados da ficha. Ícone fixo no canto inferior direito abre um popup
+ * sistema (M1) ou com os dados da ficha. Ícone fixo no canto inferior esquerdo abre um popup
  * arrastável (drag via pointer events próprios — sem CDK, não instalado neste repo); o histórico
  * de cálculos vive só em memória (Signals), então some no F5 (fora de escopo persistir).
  *
@@ -47,7 +47,7 @@ export class CalculadoraFlutuante {
   protected readonly erro = signal(false);
   protected readonly historico = signal<readonly EntradaHistoricoCalculadora[]>([]);
 
-  /** `null` até o primeiro arraste — o popup nasce ancorado por CSS (canto inferior direito). */
+  /** `null` até o primeiro arraste — o popup nasce ancorado por CSS (canto inferior esquerdo). */
   protected readonly posicao = signal<{ x: number; y: number } | null>(null);
   /** `null` até o primeiro redimensionamento — o popup nasce no tamanho fixo do CSS. */
   protected readonly tamanho = signal<{ width: number; height: number } | null>(null);

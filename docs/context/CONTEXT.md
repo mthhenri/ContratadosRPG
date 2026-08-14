@@ -1,7 +1,7 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-12 · **Última decisão registrada:** a `m6-07` fechou o passe
-> responsivo obrigatório da UI administrativa e da página de acesso negado
+> **Última revisão:** 2026-08-14 · **Última decisão registrada:** jogadores consultam o inventário
+> de esquadrão durante a missão, mas alterações continuam restritas à base
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -177,7 +177,29 @@ pelos dois papéis. Abaixo disso, o corpo diverge por papel (`@if (ehMestre())`/
 
 O cabeçalho tem nome da campanha em linha própria (mais destaque no mobile) e, abaixo/ao lado,
 indicador de tempo real, botão "Voltar às campanhas", gatilho de histórico de rolagens e (mestre)
-o menu kebab de ações da campanha (editar nome/descrição, excluir). Usável em ~360px.
+o menu kebab de ações da campanha (editar nome/descrição, excluir). Também mostra o estado
+operacional `Na Base`/`Em Missão`: o mestre pode alterná-lo e abrir o inventário compartilhado numa
+sidebar; o jogador abre o inventário na coluna lateral somente quando está na base. O inventário de
+esquadrão aceita itens do catálogo, ajustes de quantidade e transferência nos dois sentidos com
+fichas próprias (`Pegar`/`Mandar pra base`). Durante uma missão, jogadores ainda podem consultar os
+itens, mas não podem adicionar, ajustar quantidade, remover ou transferir; essas operações continuam
+restritas à base. O atalho do jogador se chama
+`Inventário do esquadrão`; `Na Base` usa a cor neutra adaptada à base clara/escura e `Em Missão`
+usa o vermelho fixo de Vida. O catálogo repete busca, categorias com quebra de linha e densidade do
+inventário da ficha, sem rolagem horizontal; adicionar preserva o catálogo aberto e sinaliza o card
+acionado. A ação `Item custom` replica o formulário da ficha, com categoria iconográfica, quantidade,
+descrição e campos mecânicos condicionais (`dano`, `informação`, `resistência` e `bônus`) limitados ao
+contrato que o inventário coletivo já preserva. Usável em ~360px.
+Operacionais e Medicinais com todos os campos descritivos idênticos compartilham um stack ao serem
+adicionados; as demais categorias e qualquer variação descritiva permanecem em registros separados.
+Remover um registro exige confirmação inline no próprio card. O suporte estruturado a itens
+modificados no inventário de esquadrão ainda não faz parte do sistema e está registrado como
+**I-020** em `IDEAS.md`.
+No desktop, as sidebars compartilhadas de inventário de esquadrão e histórico de rolagens têm 500px;
+o histórico usa a mesma largura na campanha e na ficha. A pilha de atalhos flutuantes (inventário,
+histórico e calculadora, conforme a tela) fica a 24px do canto inferior esquerdo tanto na campanha
+quanto na ficha. Em viewports mobile, esses controles continuam inline no cabeçalho com alvos de 44px
+e as sidebars ocupam toda a largura disponível.
 
 ### Ficha de jogador — `backend/ficha`, `frontend/ficha`
 
@@ -304,7 +326,8 @@ progresso no topo, resumo operacional vira bottom sheet aberto por um botão ded
 Gateway Socket.IO **broadcast-only**: toda mutação passa por REST, o gateway nunca recebe escrita.
 Handshake autenticado pelo mesmo `JwtService` do Passport. Salas `ficha:<id>` e `campanha:<id>`,
 reusando a permissão §14 das services. Eventos: `ficha:criada`, `ficha:alterada`, `membro:entrou`,
-`rolagem:registrada`.
+`rolagem:registrada`, `campanha:estado-alterado` e `campanha:inventario-alterado`. Os dois eventos de
+inventário/estado sinalizam o frontend para reler a fonte de verdade por REST.
 
 ### Calculadoras públicas — `frontend/calculadora`
 

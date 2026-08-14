@@ -644,6 +644,16 @@ describe('CampanhaService', () => {
 
       expect(resultado).toEqual({ itens: [{ id: 'a1', nome: 'Kit Médico' }] });
     });
+
+    it('permite ao jogador consultar os itens durante a missão', async () => {
+      repositorio.recuperarPorId.mockResolvedValue({ ...campanhaPersistida, naBase: false });
+      repositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+      repositorio.recuperarInventario.mockResolvedValue([{ id: 'a1', nome: 'Lanterna' }]);
+
+      await expect(service.listarInventario({ campanhaId: 3 }, usuarioNaoMestre)).resolves.toEqual({
+        itens: [{ id: 'a1', nome: 'Lanterna' }],
+      });
+    });
   });
 
   describe('adicionarItemInventario', () => {
@@ -675,6 +685,97 @@ describe('CampanhaService', () => {
       const itemNovo = (repositorio.alterarInventario.mock.calls[0]![0] as { itens: { id: string }[] }).itens[1];
       expect(typeof itemNovo.id).toBe('string');
       expect(itemNovo.id.length).toBeGreaterThan(0);
+    });
+
+    it.each([
+      ItemCategoriaEnum.OPERACIONAL,
+      ItemCategoriaEnum.MEDICINAL,
+    ])('empilha item idêntico da categoria %s preservando o id existente', async (categoria) => {
+      repositorio.recuperarPorId.mockResolvedValue({ ...campanhaPersistida, naBase: true });
+      repositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+      repositorio.recuperarInventario.mockResolvedValue([{
+        id: 'item-existente',
+        nome: 'Lanterna',
+        categoria,
+        custo: 50,
+        peso: 0.5,
+        quantidade: 2,
+        descricao: 'Ilumina até alcance Curto',
+      }]);
+      repositorio.alterarInventario.mockResolvedValue({ itens: [] });
+
+      await service.adicionarItemInventario({
+        campanhaId: 3,
+        nome: 'Lanterna',
+        categoria,
+        custo: 50,
+        peso: 0.5,
+        quantidade: 1,
+        descricao: 'Ilumina até alcance Curto',
+      }, usuarioNaoMestre);
+
+      expect(repositorio.alterarInventario).toHaveBeenCalledWith({
+        campanhaId: 3,
+        itens: [{
+          id: 'item-existente',
+          nome: 'Lanterna',
+          categoria,
+          custo: 50,
+          peso: 0.5,
+          quantidade: 3,
+          descricao: 'Ilumina até alcance Curto',
+        }],
+      });
+    });
+
+    it('não empilha itens operacionais com campos descritivos diferentes', async () => {
+      repositorio.recuperarPorId.mockResolvedValue({ ...campanhaPersistida, naBase: true });
+      repositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+      repositorio.recuperarInventario.mockResolvedValue([{
+        id: 'item-existente', nome: 'Lanterna', categoria: ItemCategoriaEnum.OPERACIONAL,
+        custo: 50, peso: 0.5, quantidade: 1, descricao: 'Modelo comum',
+      }]);
+      repositorio.alterarInventario.mockResolvedValue({ itens: [] });
+
+      await service.adicionarItemInventario({
+        campanhaId: 3, nome: 'Lanterna', categoria: ItemCategoriaEnum.OPERACIONAL,
+        custo: 50, peso: 0.5, quantidade: 1, descricao: 'Modelo modificado',
+      }, usuarioNaoMestre);
+
+      expect(repositorio.alterarInventario).toHaveBeenCalledWith({
+        campanhaId: 3,
+        itens: [
+          expect.objectContaining({
+            id: 'item-existente', quantidade: 1, descricao: 'Modelo comum',
+          }),
+          expect.objectContaining({
+            quantidade: 1, descricao: 'Modelo modificado',
+          }),
+        ],
+      });
+    });
+
+    it('mantém itens de outras categorias em registros separados mesmo quando idênticos', async () => {
+      repositorio.recuperarPorId.mockResolvedValue({ ...campanhaPersistida, naBase: true });
+      repositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+      repositorio.recuperarInventario.mockResolvedValue([{
+        id: 'item-existente', nome: 'Pistola', categoria: ItemCategoriaEnum.ARMAS_DE_FOGO,
+        custo: 1000, peso: 1, quantidade: 1, dano: '2D6',
+      }]);
+      repositorio.alterarInventario.mockResolvedValue({ itens: [] });
+
+      await service.adicionarItemInventario({
+        campanhaId: 3, nome: 'Pistola', categoria: ItemCategoriaEnum.ARMAS_DE_FOGO,
+        custo: 1000, peso: 1, quantidade: 1, dano: '2D6',
+      }, usuarioNaoMestre);
+
+      expect(repositorio.alterarInventario).toHaveBeenCalledWith({
+        campanhaId: 3,
+        itens: [
+          expect.objectContaining({ id: 'item-existente', nome: 'Pistola', quantidade: 1 }),
+          expect.objectContaining({ nome: 'Pistola', quantidade: 1 }),
+        ],
+      });
     });
   });
 

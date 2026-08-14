@@ -1,5 +1,138 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-14 — Consulta do inventário de esquadrão durante missão
+
+O acesso ao inventário coletivo foi dividido entre leitura e alteração. Qualquer membro da campanha
+agora pode listar os itens, inclusive durante uma missão; adicionar, ajustar quantidade, remover e
+transferir continuam usando o gate de escrita já existente, que exige `Na Base` para jogadores. O
+Mestre não teve seu acesso alterado.
+
+Na visão do jogador, o atalho deixa de ser desabilitado em missão e o painel mostra os registros em
+modo de consulta, com aviso discreto. Todos os controles de escrita — catálogo, item custom,
+steppers, remoção e transferência — são ocultados e também protegidos nos handlers do componente.
+
+A aplicação real foi validada com jogador em missão em 1920×1080 e 360×800: o item temporário ficou
+visível, nenhum controle de alteração foi exposto e não houve overflow. Ao final, o item foi removido
+e a campanha local voltou a `Na Base`. As suítes passaram com 315 testes no backend e 957 no frontend;
+o lint passou e o build do frontend manteve apenas o aviso conhecido de budget inicial (638,52 kB para
+o limite de 630 kB).
+
+## 2026-08-14 — Sidebars de inventário e rolagens com 500px
+
+As sidebars compartilhadas de Inventário de Esquadrão e Histórico de Rolagens passaram de 420px para
+500px no desktop. Como o histórico é o mesmo componente na campanha e na ficha, a largura se aplica
+aos dois contextos. O inventário coletivo é uma sidebar exclusiva da campanha; a ficha preserva sua
+aba de inventário individual. No mobile, ambos os painéis continuam com largura total da viewport.
+
+A aplicação real foi inspecionada em campanha e ficha nos viewports 1920×1080 e 360×800. No desktop,
+os dois painéis mediram 500px e não provocaram overflow; no mobile, mantiveram 360px sem overflow.
+Lint e build do frontend passaram; o build manteve apenas o aviso conhecido do budget inicial
+(638,52 kB para limite de 630 kB).
+
+## 2026-08-14 — Itens customizados no inventário de esquadrão
+
+O inventário compartilhado passou a oferecer `Item custom` ao lado do catálogo. O formulário
+replica o análogo aprovado do inventário da ficha: mesma superfície, densidade, controles numéricos,
+seletor de categoria com ícones e campos condicionais de dano/informação, resistência ou bônus.
+Também inclui quantidade e descrição, que já fazem parte do contrato coletivo. Catálogo e formulário
+são alternativas mutuamente exclusivas, e o formulário só fecha depois da persistência bem-sucedida.
+
+Fragmentos e modificações estruturadas não foram simulados nem descartados silenciosamente: ficam
+fora das categorias oferecidas porque o DTO coletivo ainda não consegue preservá-los. A ampliação
+continua registrada na **I-020**, incluindo transferência ficha ↔ base e identidade de stacks.
+
+A aplicação real foi comparada ao formulário da ficha em 1920×1080 e 360×800. A inspeção encontrou
+e corrigiu overflow horizontal na linha de custo/peso/quantidade; depois do ajuste, formulário e
+página ficaram sem overflow, e os controles mobile mediram 44px. Foram exercitados abertura,
+categorias, campo condicional de Proteções, criação e remoção de um item temporário. Lint, build e os
+956 testes do frontend passaram. O build manteve somente o aviso conhecido do budget inicial
+(638,52 kB para limite de 630 kB).
+
+## 2026-08-13 — Atalhos flutuantes movidos para a esquerda
+
+O contrato compartilhado de utilitários flutuantes passou a ancorar a pilha desktop a 24px do
+canto inferior esquerdo. A mudança vale conjuntamente para o inventário de esquadrão, o histórico
+de rolagens e a calculadora nas telas de campanha e ficha, preservando ordem, tamanho de 48px e vão
+vertical de 12px. O popup inicial da calculadora acompanha a nova âncora; painéis laterais mantêm
+seu comportamento próprio.
+
+No mobile, os atalhos da campanha e da ficha continuam `static` no cabeçalho, com alvos de 44px e
+sem coordenada esquerda herdada. A aplicação real foi inspecionada em campanha e ficha nos
+viewports 1920×1080 e 360×800: no desktop, os gatilhos mediram `left: 24px`; no mobile ficaram
+inline e não produziram overflow. Não houve erros no navegador. Os 954 testes do frontend, lint e
+build passaram; o build manteve apenas o aviso conhecido do budget inicial (638,35 kB para limite
+de 630 kB).
+
+## 2026-08-13 — Empilhamento e remoção segura no inventário de esquadrão
+
+Adicionar um item Operacional ou Medicinal agora procura um stack com a mesma identidade
+descritiva (`nome`, categoria, custo, peso, descrição, dano, informação, resistência e bônus) e,
+quando encontra, incrementa sua quantidade preservando o identificador existente. Diferenças em
+qualquer um desses campos mantêm registros separados; todas as demais categorias também continuam
+criando registros independentes. A decisão vive no backend, autoridade do inventário, e não foi
+duplicada na interface.
+
+O botão de remoção passou a repetir o padrão aprovado do inventário da ficha: o primeiro clique no
+`×` troca a ação no próprio card por `Remover item?`, com ✓ para confirmar e `×` para cancelar.
+A ampliação necessária para receber, preservar, exibir e transferir itens com modificações
+estruturadas foi separada do ajuste atual e registrada como **I-020** em `IDEAS.md`.
+
+Na aplicação real, dois acionamentos da Lanterna produziram um único registro com quantidade 2;
+cancelar a remoção preservou esse stack e confirmar o removeu. A confirmação foi comparada ao
+padrão da ficha em 1920×1080 e 360×800; no mobile, ocupou uma linha própria sem overflow. O
+navegador não registrou erros. Passaram 314 testes do backend, 953 testes do frontend, os builds dos
+dois workspaces e o lint do frontend. O lint completo do backend permaneceu bloqueado somente pelas
+duas asserções desnecessárias preexistentes em `campanha.service.spec.ts:675` e
+`ficha.service.spec.ts:2135`; as novas ocorrências encontradas durante o desenvolvimento foram
+corrigidas.
+
+## 2026-08-13 — Refino visual do inventário de esquadrão
+
+A visão de jogador passou a nomear o atalho como `Inventário do esquadrão`, preservando a mesma
+caixa, tipografia e iconografia do controle vizinho `Abrir completa`. O estado operacional ficou
+mais fino e deixou de depender do accent: `Na Base` usa o texto neutro do tema, portanto fica claro
+na base escura e escuro na base clara, com o ícone canônico de item guardado; `Em Missão` usa o
+vermelho fixo de Vida e o ícone de combate nas duas bases do tema.
+
+O catálogo do inventário de esquadrão foi alinhado ao inventário da ficha: a busca ocupa uma
+linha inteira antes das categorias; as categorias usam os mesmos botões com ícone, quebra de linha
+e estado ativo, sem faixa rolável horizontal; os nomes dos itens não recebem ícone decorativo; e a
+tipografia dos cards foi reduzida para a densidade canônica. Adicionar um item não fecha mais o
+catálogo e mostra `Adicionado` temporariamente no card acionado.
+
+A verificação na aplicação real cobriu a visão de jogador na base e em missão, temas claro e
+escuro, catálogo vazio/preenchido, busca, categorias e feedback de adição em 1920×1080 e 360×800.
+No celular, as categorias quebraram em linhas sem overflow horizontal; o item criado para provar a
+adição foi removido ao final da inspeção. Lint, build e os 951 testes do frontend passaram. O
+build manteve somente o aviso conhecido do budget inicial (638,35 kB para limite de 630 kB).
+
+## 2026-08-13 — Frontend do inventário de esquadrão
+
+O painel de campanha passou a expor o estado operacional `Na Base`/`Em Missão` e o inventário
+compartilhado já implementados no backend. O mestre alterna o estado no cabeçalho e acessa o
+inventário por uma sidebar baseada no padrão aprovado do histórico de rolagens; jogadores acessam
+o mesmo conteúdo na coluna lateral quando a campanha está na base. O componente compartilhado
+permite adicionar itens do catálogo, ajustar ou remover quantidades e transferir itens nos dois
+sentidos entre a base e fichas do próprio jogador. Na ficha, itens não equipados oferecem a ação
+`Mandar pra base`; stacks pedem a quantidade antes da transferência. As alterações chegam por
+WebSocket e provocam nova leitura REST, preservando o gateway como broadcast-only.
+
+A inspeção da aplicação real cobriu o estado vazio, catálogo, item preenchido, bloqueio em missão,
+transferência ficha → base → ficha e a visualização do jogador em 1920×1080 e 360×800. O drawer foi
+alinhado ao `HistoricoRolagensSidebar`, os cards/steppers passaram a seguir a densidade do inventário
+da ficha e o diálogo de transferência foi corrigido para ficar centralizado e visível no mobile. O
+cabeçalho compacto também acomoda os dois controles do jogador sem overflow. A suíte completa passou
+com 59 arquivos e 949 testes no frontend e 22 arquivos e 310 testes no backend; lint e build do
+frontend também passaram.
+O build manteve apenas o aviso conhecido do budget inicial (638,35 kB para limite de 630 kB).
+
+Uma revisão visual posterior alinhou o gatilho do jogador exatamente ao botão `Abrir completa`
+(mesma caixa, tipografia e ícone nos dois viewports) e substituiu o seletor genérico do catálogo por
+categorias com os ícones canônicos. Os cards de aquisição agora repetem a hierarquia da ficha:
+nome, dado mecânico, descrição, custo/peso e ação compacta. No mobile, a grade acompanha a rolagem
+da página em vez de criar uma rolagem interna. A inspeção confirmou os dois botões com 141,5×44 px,
+texto de 10 px e ícones de 12×12 em 360×800, sem overflow; os 949 testes, lint e build passaram.
+
 ## 2026-08-13 — Resolução tardia de `CampanhaService` em `FichaService`
 
 O backend voltava a falhar ao iniciar com `UndefinedDependencyException` no terceiro argumento de

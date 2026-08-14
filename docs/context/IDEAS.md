@@ -323,6 +323,23 @@
   novo é a única peça com trabalho de design (desenhar o SVG no estilo existente e decidir se
   `campanhas` continua servindo pro nav renomeado ou se merece um glifo próprio também).
 
+### I-020 — Preservar itens modificados no inventário de esquadrão · campanha/inventário
+
+- **Ideia:** ampliar o inventário de esquadrão para receber e preservar itens modificados da ficha,
+  mantendo as modificações estruturadas quando um item for enviado para a base, exibido no acervo
+  coletivo ou retirado por outra ficha.
+- **Origem:** decisão do autor em 2026-08-13, durante o ajuste de empilhamento automático de itens
+  Operacionais e Medicinais.
+- **Por quê:** o contrato atual de `CampanhaInventarioItemDto` guarda apenas os campos descritivos
+  do catálogo e descarta `modificacoes`. Isso impede que uma arma, proteção ou outro equipamento
+  personalizado mantenha sua identidade mecânica durante a passagem pela base.
+- **Escopo esperado:** ampliar o DTO compartilhado e a validação do backend; preservar o dado nas
+  transferências ficha ↔ base; representar as modificações na interface; e definir a identidade de
+  stacks sem fundir itens com modificações diferentes. A implementação deve reutilizar o contrato
+  canônico de `CarrinhoItemDto`, sem criar um segundo formato de modificação.
+- **Custo aparente:** médio — afeta `shared`, backend, os dois sentidos de transferência e a
+  apresentação. Requer spec própria antes de ser implementado.
+
 ---
 
 ## Promovidas

@@ -55,6 +55,7 @@ describe('FichaInventario', () => {
     prestigio = 100,
     podeRolar = true,
     possuiAnomalia = false,
+    podeMandarParaBase = false,
   ) {
     TestBed.configureTestingModule({ imports: [FichaInventario] });
     const fixture = TestBed.createComponent(FichaInventario);
@@ -69,6 +70,7 @@ describe('FichaInventario', () => {
     fixture.componentRef.setInput('energiaMaxima', 50);
     fixture.componentRef.setInput('atributos', atributos);
     fixture.componentRef.setInput('possuiAnomalia', possuiAnomalia);
+    fixture.componentRef.setInput('podeMandarParaBase', podeMandarParaBase);
     fixture.detectChanges();
     const emitidos: FichaInventarioDto[] = [];
     fixture.componentInstance.inventarioMudou.subscribe((e) => emitidos.push(e));
@@ -82,6 +84,41 @@ describe('FichaInventario', () => {
       mostrar,
     };
   }
+
+  it('oferece mandar item não equipado para a base quando habilitado', () => {
+    const alvo = montar({ itens: [itemLeve], amplificadores: [] }, true, 100, true, false, true);
+    const botao = Array.from(alvo.raiz.querySelectorAll('button'))
+      .find((elemento) => elemento.textContent?.includes('Mandar pra base'));
+    expect(botao).toBeTruthy();
+  });
+
+  it('emite imediatamente a transferência integral de item unitário', () => {
+    const alvo = montar({ itens: [itemLeve], amplificadores: [] }, true, 100, true, false, true);
+    const transferencias: { indice: number; quantidade?: number }[] = [];
+    alvo.componentInstance.mandarParaBase.subscribe((evento) => transferencias.push(evento));
+    alvo.componentInstance['abrirMandarParaBase'](0);
+    expect(transferencias).toEqual([{ indice: 0 }]);
+  });
+
+  it('pede quantidade antes de mandar parcialmente um item empilhado', () => {
+    const empilhado = { ...itemLeve, quantidade: 3 };
+    const alvo = montar({ itens: [empilhado], amplificadores: [] }, true, 100, true, false, true);
+    const transferencias: { indice: number; quantidade?: number }[] = [];
+    alvo.componentInstance.mandarParaBase.subscribe((evento) => transferencias.push(evento));
+    alvo.componentInstance['abrirMandarParaBase'](0);
+    alvo.fixture.detectChanges();
+    expect(transferencias).toEqual([]);
+    expect(alvo.raiz.textContent).toContain('Mandar para a base');
+    alvo.componentInstance['quantidadeMandarParaBase'].setValue(2);
+    alvo.componentInstance['confirmarMandarParaBase']();
+    expect(transferencias).toEqual([{ indice: 0, quantidade: 2 }]);
+  });
+
+  it('não oferece mandar item equipado para a base', () => {
+    const equipado = { ...itemLeve, equipado: true };
+    const alvo = montar({ itens: [equipado], amplificadores: [] }, true, 100, true, false, true);
+    expect(alvo.raiz.textContent).not.toContain('Mandar pra base');
+  });
 
   it('consome a cena de uma munição sem ultrapassar zero', () => {
     const municao: CarrinhoItemDto = {

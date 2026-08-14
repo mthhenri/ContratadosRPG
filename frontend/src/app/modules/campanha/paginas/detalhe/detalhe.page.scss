@@ -20,6 +20,37 @@
 }
 
 .detalhe {
+  &__estado-operacional {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 28px;
+    padding: 4px 8px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    background: var(--surface-2);
+    color: var(--text);
+    font: 600 0.66rem var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+
+  &__estado-operacional app-icone {
+    display: inline-flex;
+    width: 12px;
+    height: 12px;
+  }
+
+  &__estado-operacional--base { color: var(--text); }
+  &__estado-operacional--missao {
+    color: var(--vida);
+    border-color: var(--vida-border);
+    background: color-mix(in srgb, var(--vida) 12%, transparent);
+  }
+
+  &__estado-operacional--leitura { cursor: default; }
+  &__inventario-jogador { min-height: 0; overflow: auto; }
   // m2-19: era 1160px fixo (m2-17) — mesmo padrão de `visualizar.page.scss`/`lista.page.scss`
   // (m2-18), que aproveita mais a tela que o teto fixo.
   max-width: 80vw;
@@ -552,14 +583,23 @@
     flex-direction: column;
   }
 
-  &__abrir-completa {
+  &__abrir-completa,
+  &__alternar-inventario {
     flex: none;
     display: inline-flex;
     align-items: center;
     gap: 6px;
     padding: 7px 12px;
     font-size: 10px;
+    line-height: 1;
     text-decoration: none;
+
+    app-icone {
+      display: inline-flex;
+      flex: none;
+      width: 12px;
+      height: 12px;
+    }
   }
 
   &__abrir-completa-rodape {
@@ -1609,6 +1649,22 @@
       flex: 1 1 100%;
       justify-content: center;
       min-height: bp.$alvo-toque;
+    }
+
+    &__ficha-embutida .card__cabecalho {
+      flex-wrap: wrap;
+
+      .card__regua {
+        flex-basis: 100%;
+      }
+    }
+
+    &__alternar-inventario,
+    &__abrir-completa {
+      flex: 1 1 calc(50% - 6px);
+      min-width: 0;
+      min-height: bp.$alvo-toque;
+      justify-content: center;
     }
   }
 }

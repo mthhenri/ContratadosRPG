@@ -469,6 +469,8 @@ export class FichaInventario {
    * então não dá pra reaproveitá-la pra diferenciar só o card compacto dos outros dois modos.
    */
   readonly compacto = input(false);
+  /** Habilita a transferência desta ficha para o inventário compartilhado da campanha. */
+  readonly podeMandarParaBase = input(false);
   /** Prestígio da ficha — determina a patente e, por ela, os limites de modificação (via `shared/regras`). */
   readonly prestigio = input.required<number>();
   /** Inventário máximo (`Força × 5`, stored/derivado) — referência do peso usado; exceder é aviso, não trava. */
@@ -510,6 +512,8 @@ export class FichaInventario {
 
   /** Emite o inventário inteiro após qualquer mutação — a página persiste. */
   readonly inventarioMudou = output<FichaInventarioDto>();
+  /** Solicita ao pai a transferência REST; o componente continua controlado e não persiste sozinho. */
+  readonly mandarParaBase = output<{ readonly indice: number; readonly quantidade?: number }>();
   /** Emite o novo par Energia atual/máxima após um custo de Fragmento — a página persiste. */
   readonly ajusteEnergiaFragmento = output<CustoEnergiaFragmento>();
   /** Emite o novo Inventário máximo editado na linha "Inventário" — a página persiste como derivado. */
@@ -610,6 +614,9 @@ export class FichaInventario {
   protected readonly indiceRemovendoStack = signal<number | null>(null);
   /** Quantas unidades remover no dialog de stack (Reactive Forms). */
   protected readonly quantidadeRemover = new FormControl(1, { nonNullable: true });
+  /** Item empilhado aguardando a escolha de quantas unidades mandar para a base. */
+  protected readonly indiceMandandoParaBase = signal<number | null>(null);
+  protected readonly quantidadeMandarParaBase = new FormControl(1, { nonNullable: true });
   /** `true` quando a confirmação de "Esvaziar" está aberta. */
   protected readonly confirmandoEsvaziar = signal(false);
 
@@ -1588,6 +1595,27 @@ export class FichaInventario {
     }
     this.indiceRemovendoStack.set(null);
     this.indiceConfirmandoRemocao.set(indice);
+  }
+
+  protected abrirMandarParaBase(indice: number): void {
+    const item = this.inventario().itens[indice];
+    if (!this.podeMandarParaBase() || !item || item.equipado) return;
+    if (item.quantidade <= 1) {
+      this.mandarParaBase.emit({ indice });
+      return;
+    }
+    this.quantidadeMandarParaBase.setValue(item.quantidade);
+    this.indiceMandandoParaBase.set(indice);
+  }
+
+  protected confirmarMandarParaBase(): void {
+    const indice = this.indiceMandandoParaBase();
+    if (indice === null) return;
+    const item = this.inventario().itens[indice];
+    const quantidade = this.quantidadeMandarParaBase.value;
+    if (!item || quantidade < 1 || quantidade > item.quantidade) return;
+    this.mandarParaBase.emit({ indice, quantidade });
+    this.indiceMandandoParaBase.set(null);
   }
 
   /** Cancela a confirmação de remoção (inline ou dialog de stack). */

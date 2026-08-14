@@ -2,7 +2,11 @@ import { InjectionToken, Injectable, inject, signal } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
 
-import type { CampanhaMembroEntradaDto } from '@contratados-rpg/shared/dtos/campanha';
+import type {
+  CampanhaEstadoAlteradaDto,
+  CampanhaInventarioAlteradoDto,
+  CampanhaMembroEntradaDto,
+} from '@contratados-rpg/shared/dtos/campanha';
 import type {
   FichaAcessoRevogadoDto,
   FichaAlteradaDto,
@@ -65,6 +69,8 @@ export class TempoRealService {
   private readonly membroEntrouSubject = new Subject<CampanhaMembroEntradaDto>();
   private readonly acessoRevogadoSubject = new Subject<FichaAcessoRevogadoDto>();
   private readonly rolagemRegistradaSubject = new Subject<RolagemResumoDto>();
+  private readonly estadoAlteradoSubject = new Subject<CampanhaEstadoAlteradaDto>();
+  private readonly inventarioAlteradoSubject = new Subject<CampanhaInventarioAlteradoDto>();
 
   /** Uma ficha da campanha foi alterada (na sala `ficha:<id>` em que o cliente está). */
   readonly fichaAlterada$: Observable<FichaAlteradaDto> = this.fichaAlteradaSubject.asObservable();
@@ -90,6 +96,10 @@ export class TempoRealService {
    */
   readonly rolagemRegistrada$: Observable<RolagemResumoDto> =
     this.rolagemRegistradaSubject.asObservable();
+  readonly estadoAlterado$: Observable<CampanhaEstadoAlteradaDto> =
+    this.estadoAlteradoSubject.asObservable();
+  readonly inventarioAlterado$: Observable<CampanhaInventarioAlteradoDto> =
+    this.inventarioAlteradoSubject.asObservable();
 
   /**
    * Abre a conexão Socket.IO com o JWT da sessão. **Idempotente** enquanto a sessão não muda (chamável
@@ -145,6 +155,12 @@ export class TempoRealService {
     );
     this.socket.on('rolagem:registrada', (rolagem: RolagemResumoDto) =>
       this.rolagemRegistradaSubject.next(rolagem),
+    );
+    this.socket.on('campanha:estado-alterado', (evento: CampanhaEstadoAlteradaDto) =>
+      this.estadoAlteradoSubject.next(evento),
+    );
+    this.socket.on('campanha:inventario-alterado', (evento: CampanhaInventarioAlteradoDto) =>
+      this.inventarioAlteradoSubject.next(evento),
     );
   }
 

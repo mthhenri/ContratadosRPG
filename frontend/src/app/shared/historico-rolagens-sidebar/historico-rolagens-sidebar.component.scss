@@ -11,7 +11,7 @@
 
 .historico-rolagens {
   // Gatilho (m3-61): no desktop é flutuante, mesmo tipo do gatilho de `CalculadoraFlutuante`
-  // (círculo fixo no canto inferior direito) — no rodapé por padrão (painel da campanha, sem
+  // (círculo fixo no canto inferior esquerdo) — no rodapé por padrão (painel da campanha, sem
   // calculadora ali pra dar espaço); `--empilhado` (só a ficha, `acimaDaCalculadora`) sobe 60px
   // (48px de altura do botão da calculadora + 12px de vão) pra ficar acima dela, no mesmo ritmo
   // vertical que o popup dela já usa. No mobile volta a ser um botão inline no cabeçalho — ver
@@ -77,7 +77,7 @@
     right: 0;
     bottom: 0;
     z-index: 65;
-    width: min(420px, 100vw);
+    width: min(500px, 100vw);
     display: flex;
     flex-direction: column;
     background: var(--surface);

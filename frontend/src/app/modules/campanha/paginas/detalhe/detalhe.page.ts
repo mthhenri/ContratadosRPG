@@ -15,6 +15,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { filter, finalize, forkJoin, merge } from 'rxjs';
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import {
+  CampanhaInventarioItemDto,
   CampanhaMembroResumoDto,
   CampanhaRecuperadaDto,
 } from '@contratados-rpg/shared/dtos/campanha';
@@ -25,6 +26,8 @@ import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.com
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
 import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component';
+import { InventarioEsquadraoSidebar } from '../../../../shared/inventario-esquadrao-sidebar/inventario-esquadrao-sidebar.component';
+import { InventarioEsquadrao } from '../../componentes/inventario-esquadrao/inventario-esquadrao.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { rotuloRelativo } from '../../../../shared/rotulo-relativo.util';
@@ -153,6 +156,8 @@ type EquipeFichaExibicao =
     Icone,
     OverflowFade,
     HistoricoRolagensSidebar,
+    InventarioEsquadraoSidebar,
+    InventarioEsquadrao,
     IndicadorTempoReal,
     HoldRepeat,
     BandejaDados,
@@ -193,6 +198,8 @@ export class CampanhaDetalhe {
   protected readonly TipoCampanhaMembroPapelEnum = TipoCampanhaMembroPapelEnum;
 
   protected readonly campanha = signal<CampanhaRecuperadaDto | null>(null);
+  protected readonly inventarioEsquadrao = signal<readonly CampanhaInventarioItemDto[]>([]);
+  protected readonly exibindoInventarioJogador = signal(false);
   protected readonly membros = signal<CampanhaMembroResumoDto[]>([]);
   protected readonly carregando = signal(true);
   protected readonly regenerando = signal(false);
@@ -398,6 +405,11 @@ export class CampanhaDetalhe {
    */
   protected readonly usuarioIdPreview = computed(
     () => this.previewJogador()?.usuarioId ?? this.usuarioAtivoId(),
+  );
+  protected readonly fichasDestinoInventario = computed(() =>
+    this.fichas()
+      .filter((ficha) => ficha.usuarioId === this.usuarioIdPreview())
+      .map(({ id, nome }) => ({ id, nome })),
   );
 
   /**
@@ -770,6 +782,13 @@ export class CampanhaDetalhe {
       .pipe(takeUntilDestroyed())
       .subscribe({ next: (rolagem) => this.rolagensFeed.update((atuais) => [rolagem, ...atuais]) });
 
+    this.tempoRealService.estadoAlterado$
+      .pipe(filter((evento) => evento.id === this.id), takeUntilDestroyed())
+      .subscribe({ next: () => this.recarregarCampanhaEInventario() });
+    this.tempoRealService.inventarioAlterado$
+      .pipe(filter((evento) => evento.campanhaId === this.id), takeUntilDestroyed())
+      .subscribe({ next: () => this.carregarInventario() });
+
     // Ressincronização ao reconectar (§9 — o Render dorme e derruba a conexão): refaz o fetch.
     effect(() => {
       if (this.tempoRealService.reconexao() > 0) {
@@ -849,6 +868,7 @@ export class CampanhaDetalhe {
           this.fichas.set(fichas);
           this.sincronizarSalasFicha(fichas);
           this.ultimaAtualizacaoEm.set(Date.now());
+          this.carregarInventario();
           // Visão do jogador (m2-20, item 2): semeia `fichaExibidaId` com a própria ficha assim
           // que `fichas()` carrega pela 1ª vez — só quando ainda não há seleção (não sobrescreve
           // uma troca via "Ver ficha" numa ressincronização em tempo real posterior).
@@ -859,6 +879,40 @@ export class CampanhaDetalhe {
             }
           }
         },
+      });
+  }
+
+  private carregarInventario(): void {
+    this.campanhaService.recuperarInventario(this.id)
+      .subscribe((inventario) => this.inventarioEsquadrao.set(inventario.itens));
+  }
+
+  private recarregarCampanhaEInventario(): void {
+    this.campanhaService.recuperarCampanha(this.id).subscribe((campanha) => {
+      this.campanha.set(campanha);
+      this.carregarInventario();
+    });
+  }
+
+  protected alterarEstadoCampanha(): void {
+    const campanha = this.campanha();
+    if (!campanha || !this.exibirComoMestre()) return;
+    this.campanhaService.alterarEstado(this.id, !campanha.naBase).subscribe((estado) => {
+      this.campanha.update((atual) => atual ? { ...atual, naBase: estado.naBase } : atual);
+    });
+  }
+
+  protected mandarItemFichaParaBase(
+    fichaId: number,
+    evento: { readonly indice: number; readonly quantidade?: number },
+  ): void {
+    this.fichaService.mandarItemInventarioParaBase(fichaId, evento.indice, evento.quantidade)
+      .subscribe(() => {
+        this.fichaService.recuperarFicha(fichaId).subscribe((ficha) => {
+          this.fichaExibidaDados.set(ficha);
+          this.fichaEdicao.definirBase(ficha);
+        });
+        this.carregarInventario();
       });
   }
 

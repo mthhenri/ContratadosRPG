@@ -302,4 +302,19 @@ describe('FichaService', () => {
 
     expect(recebido).toEqual(removida);
   });
+  it('transfere itens entre a ficha e o inventário de esquadrão', () => {
+    const { servico, http } = criar();
+
+    servico.pegarItemInventario(3, 'item-base', 2).subscribe();
+    const pegar = http.expectOne((req) => req.url.endsWith('/ficha/3/inventario/item/pegar'));
+    expect(pegar.request.method).toBe('POST');
+    expect(pegar.request.body).toEqual({ campanhaItemId: 'item-base', quantidade: 2 });
+    pegar.flush(envelope({ id: 3 } as never));
+
+    servico.mandarItemInventarioParaBase(3, 1).subscribe();
+    const mandar = http.expectOne((req) => req.url.endsWith('/ficha/3/inventario/item/mandar-para-base'));
+    expect(mandar.request.method).toBe('POST');
+    expect(mandar.request.body).toEqual({ indice: 1 });
+    mandar.flush(envelope({ id: 3 } as never));
+  });
 });

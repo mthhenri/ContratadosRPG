@@ -46,6 +46,22 @@
       <div class="detalhe__cabecalho-titulo-linha">
         <span class="card__indice">//</span>
         <h1 class="detalhe__titulo">{{ campanhaAtual.nome }}</h1>
+        @if (exibirComoMestre()) {
+          <button class="detalhe__estado-operacional" type="button"
+            [class.detalhe__estado-operacional--base]="campanhaAtual.naBase"
+            [class.detalhe__estado-operacional--missao]="!campanhaAtual.naBase"
+            (click)="alterarEstadoCampanha()">
+            <app-icone [nome]="campanhaAtual.naBase ? 'guardada' : 'combate'" />
+            {{ campanhaAtual.naBase ? 'Na Base' : 'Em Missão' }}
+          </button>
+        } @else {
+          <span class="detalhe__estado-operacional detalhe__estado-operacional--leitura"
+            [class.detalhe__estado-operacional--base]="campanhaAtual.naBase"
+            [class.detalhe__estado-operacional--missao]="!campanhaAtual.naBase">
+            <app-icone [nome]="campanhaAtual.naBase ? 'guardada' : 'combate'" />
+            {{ campanhaAtual.naBase ? 'Na Base' : 'Em Missão' }}
+          </span>
+        }
         <span class="card__regua"></span>
       </div>
       <div class="detalhe__cabecalho-acoes">
@@ -65,6 +81,11 @@
           [carregando]="carregandoRolagens()"
           [acimaDaCalculadora]="true"
         />
+        @if (exibirComoMestre()) {
+          <app-inventario-esquadrao-sidebar
+            [campanhaId]="campanhaAtual.id" [itens]="inventarioEsquadrao()"
+            [fichas]="fichasDestinoInventario()" (atualizado)="inventarioEsquadrao.set($event)" />
+        }
         <app-calculadora-flutuante />
         @if (exibirComoMestre()) {
           <div class="detalhe__cabecalho-menu-envoltorio">
@@ -650,6 +671,12 @@
               <span class="card__indice"><app-icone nome="agente" /></span>
               <h2 class="card__titulo">{{ fichaExibida.nome }}</h2>
               <span class="card__regua"></span>
+              <button class="botao botao--secundario detalhe__alternar-inventario" type="button"
+                [attr.aria-pressed]="exibindoInventarioJogador()"
+                (click)="exibindoInventarioJogador.set(!exibindoInventarioJogador())">
+                <app-icone nome="inventario" />
+                {{ exibindoInventarioJogador() ? 'Voltar ao painel' : 'Inventário do esquadrão' }}
+              </button>
               <a
                 class="botao botao--secundario detalhe__abrir-completa"
                 [routerLink]="['/painel', campanhaAtual.id, 'ficha', fichaExibida.id]"
@@ -668,6 +695,7 @@
               [ajustavel]="podeAjustarFichaExibida()"
               [podeRolar]="podeAjustarFichaExibida()"
               [ehMestre]="false"
+              [podeMandarParaBase]="campanhaAtual.naBase && podeAjustarFichaExibida()"
               modo="compacto"
               (abaStatusMudou)="aoMudarDestinoFicha($event)"
               (ajusteVitalidade)="fichaEdicao.ajustarVitalidade($event)"
@@ -682,6 +710,7 @@
               (ajusteCondicoes)="fichaEdicao.ajustarCondicoes($event)"
               (ajusteHabilidades)="fichaEdicao.ajustarHabilidades($event)"
               (ajusteInventario)="fichaEdicao.ajustarInventario($event)"
+              (mandarParaBase)="mandarItemFichaParaBase(fichaExibida.id, $event)"
               (ajusteRolagens)="fichaEdicao.ajustarRolagens($event)"
               (ajusteCombos)="fichaEdicao.ajustarCombos($event)"
               (ajusteFragmentosConsumidos)="fichaEdicao.ajustarFragmentosConsumidos($event)"
@@ -722,6 +751,17 @@
       </div>
 
       <div class="detalhe__jogador-lateral">
+        @if (exibindoInventarioJogador()) {
+          <article class="card detalhe__inventario-jogador">
+            <header class="detalhe__secao">
+              <h2 class="detalhe__secao-titulo">Inventário de Esquadrão</h2>
+              <span class="detalhe__secao-regua"></span>
+            </header>
+            <app-inventario-esquadrao [campanhaId]="campanhaAtual.id" [itens]="inventarioEsquadrao()"
+              [fichas]="fichasDestinoInventario()" [somenteLeitura]="!campanhaAtual.naBase"
+              (atualizado)="inventarioEsquadrao.set($event)" />
+          </article>
+        } @else {
         <article class="card detalhe__equipe">
           <header class="detalhe__secao">
             <h2 class="detalhe__secao-titulo">Equipe</h2>
@@ -863,6 +903,7 @@
             </ul>
           }
         </article>
+        }
       </div>
     </div>
     }
