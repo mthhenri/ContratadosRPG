@@ -24,6 +24,11 @@ import type {
   FichaCampanhaAtribuirDto,
   FichaCriadaDto,
   FichaCriarDto,
+  FichaCriaturaAlteradaDto,
+  FichaCriaturaAlterarDto,
+  FichaCriaturaCriadaDto,
+  FichaCriaturaCriarDto,
+  FichaCriaturaRecuperadaDto,
   FichaImagemAlteradaDto,
   FichaInventarioItemMandarParaBaseDto,
   FichaInventarioItemPegarDto,
@@ -65,6 +70,39 @@ export class FichaController {
   @Get('minhas')
   minhas(@ActiveUser() usuarioAtivo: JwtPayload): Promise<FichaResumoDto[]> {
     return this.fichaService.listarAcervo({ usuarioId: usuarioAtivo.sub });
+  }
+
+  /**
+   * ── Ficha de criatura (M4, `m4-03`) ──────────────────────────────────────────────────────
+   * Segmento literal `criatura` — sem colisão com `:id` (número de segmentos diferente,
+   * `criatura/:id` tem dois; `:id` sozinho, um), então a ordem de declaração não importa aqui
+   * (diferente de `minhas` acima, que precisa vir antes de `:id` por serem o mesmo formato).
+   * Exclusão (`DELETE /ficha/:id`) e acesso (`/ficha/:id/acesso*`) são agnósticos de tipo — a
+   * criatura reusa essas rotas sem endpoint próprio (ver `FichaService`, seção "Ficha de criatura").
+   */
+  @Post('criatura')
+  criarCriatura(
+    @Body() dto: FichaCriaturaCriarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<FichaCriaturaCriadaDto> {
+    return this.fichaService.criarFichaCriatura(dto, usuarioAtivo);
+  }
+
+  @Get('criatura/:id')
+  recuperarCriatura(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<FichaCriaturaRecuperadaDto> {
+    return this.fichaService.recuperarFichaCriatura({ id }, usuarioAtivo);
+  }
+
+  @Put('criatura/:id')
+  alterarCriatura(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: FichaCriaturaAlterarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<FichaCriaturaAlteradaDto> {
+    return this.fichaService.alterarFichaCriatura({ ...dto, id }, usuarioAtivo);
   }
 
   @Get(':id')

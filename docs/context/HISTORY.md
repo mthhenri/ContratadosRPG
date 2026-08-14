@@ -1,5 +1,75 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-14 — `m4-03`: `backend/ficha` estendido para `CRIATURA`, com DTOs de operação próprios
+
+Extensão do módulo `ficha` (backend) para o tipo `CRIATURA` (a task deixava explicitamente em
+aberto uma decisão de desenho: DTOs de operação **próprios** para a criatura ou os genéricos de
+jogador (`FichaCriarDto`/`FichaResumoDto`…) virando união por tipo. Optou-se por **DTOs
+próprios** (`FichaCriaturaCriarDto`/`*CriadaDto`/`*RecuperarDto`/`*RecuperadaDto`/
+`*AlterarDto`/`*AlteradaDto`, novo arquivo `shared/src/dtos/ficha/
+ficha-criatura-operacao.dtos.ts`), pela mesma razão que já fechou "dois contratos, não um" para
+o documento de jogo em si na `m4-01`: a forma diverge o suficiente (sem `classe`/`nivel`/
+identidade de jogador; dono sempre o mestre, nunca delegável; sempre dentro de campanha) que uma
+união exigiria type-guards espalhados pela `FichaService` inteira, inclusive em código já
+testado e específico do formato de jogador (`aplicarSnapshotDeMaximos`,
+`validarImutabilidadeIdentidade`, `validarContratoSomenteMestre`), sem ganho real. Documentado no
+próprio arquivo de DTOs e em `CONTEXT.md` §6.
+
+**Camada de persistência é o único ponto de fronteira entre os dois contratos.** `FichaRepository`
+segue único e sem duplicação — `criarFicha`/`recuperarPorId`/`alterarFicha`/`excluirFicha` já são
+SQL agnóstico da forma do JSONB (só `colunasResumo()`, usada pelas listagens de jogador, é
+jogador-específica, e não foi tocada). A ponte entre `FichaCriatura*Dto` (contrato público desta
+task) e `Ficha*Dto`/`FichaInterno*Dto` (contrato interno do repositório, desenhado só para
+jogador) é feita inteiramente dentro de `FichaService`, com casts documentados
+(`dto.dados as unknown as FichaJogadorDadosDto` na entrada; `paraCriaturaCriada`/
+`paraCriaturaRecuperada`/`paraCriaturaAlterada` na saída) — o `dados` armazenado sempre foi
+JSONB, então o tipo do repositório sempre foi uma promessa de forma do lado do TypeScript, nunca
+uma garantia de runtime, mesmo para jogador.
+
+**Três métodos novos em `FichaService`** (`criarFichaCriatura`/`recuperarFichaCriatura`/
+`alterarFichaCriatura`) e três rotas novas no controller (`POST`/`GET`/`PUT
+/ficha/criatura/:id`), sem colidir com as rotas de jogador — o segmento literal `criatura` tem
+número de segmentos diferente de `:id` sozinho, então a ordem de declaração não importa (ao
+contrário de `minhas`, que precisa vir antes de `:id`). `criarFichaCriatura`: só o **mestre** da
+campanha cria (`UnauthorizedAccessException` para qualquer outro papel — sem delegação de dono
+como em jogador, dono é sempre o próprio mestre autenticado); sempre dentro de campanha (sem
+"avulsa" nesta task); valida contra `validarFichaCriatura` (`shared/regras/criatura`, `m4-02`) —
+única validação de domínio, nenhuma regra de criação duplicada no backend.
+`recuperarFichaCriatura`/`alterarFichaCriatura` **reusam sem alteração** os métodos privados de
+permissão já testados por jogador (`validarPermissaoVisualizacao`/`validarPermissaoEdicao` — só
+olham `usuarioId`/`campanhaId`, nunca a forma de `dados`) e `omitirCamposPrivados` (delete seguro
+de chave ausente — `historia` não existe em criatura, `anotacoes` existe nas duas formas).
+Exclusão (`DELETE /ficha/:id`) e acesso (`concederAcesso`/`revogarAcesso`/`listarAcessos`,
+`/ficha/:id/acesso*`) já eram 100% agnósticos de tipo — reusados tal como estão, sem endpoint
+próprio (confirmado por teste: um jogador sem concessão não vê a criatura recém-criada; passa a
+ver depois de `concederAcesso`, sem duplicar o mecanismo de `m3-04`).
+
+**Tempo real — `ficha:criada` deliberadamente não é emitido na criação de criatura.**
+`CampanhaGateway.emitirFichaCriada` monta o resumo direto de `ficha.dados.classe`/
+`.estado.vidaAtual` (forma de jogador) e transmite para a sala `campanha:<id>` **inteira**,
+qualquer membro, sem checar permissão de visualização (a sala é mais aberta que o documento,
+por design — §14). Chamá-lo para uma criatura vazaria nome/vida da ameaça a todo jogador da
+campanha antes de qualquer revelação deliberada, contradizendo a regra fundamental "invisíveis
+aos jogadores por padrão" (§14). `criarFichaCriatura` por isso **não** chama
+`emitirFichaCriada` — divergência deliberada da leitura mais literal da task ("reusar
+emitirFichaCriada/emitirFichaAlterada sem mudança de gateway"), motivada pela proteção de
+visibilidade, que é entregável explícito da própria task. `emitirFichaAlterada` já é seguro de
+reusar sem essa ressalva (chamado sem cast — `FichaRecuperadaDto`/`FichaAlteradaDto` têm forma
+idêntica): ele só atinge a sala `ficha:<id>`, cuja entrada (`CampanhaGateway.entrarSalaFicha`)
+já exige a mesma permissão de visualização via `recuperarFicha` — quem está na sala já podia ver
+a ficha. Zero linhas mudaram em `campanha.gateway.ts`.
+
+`m4-03` movida de `docs/specs/backlog/` para `docs/specs/done/`. Sem migration (tabela `ficha`
+já é agnóstica de tipo desde `m3-01`; `tipo_ficha` já tinha `CRIATURA` seedado desde `m3-02`).
+Frontend (`m4-04`) e listagem/revelação dedicada no painel do mestre (`m4-09`) ainda não
+consomem esta API. Verificado: `npm run build`/`test` do `shared` limpos (660/660, sem
+alteração de lógica, só novo arquivo de DTOs); `backend` — build (`nest build`), typecheck e
+lint limpos (os 2 erros de lint remanescentes em `campanha.service.spec.ts`/
+`ficha.service.spec.ts` são pré-existentes, confirmados via `git stash`, não relacionados a esta
+task) e 365/365 testes (12 novos, cobrindo criação restrita ao mestre, rejeição de dados
+incoerentes contra `shared/regras/criatura`, visibilidade oculta por padrão com revelação via
+concessão, e edição restrita ao dono).
+
 ## 2026-08-14 — `m4-02`: motor de regras da ficha de criatura, com duas divergências do guia documentadas
 
 `shared/src/regras/criatura/` — motor de regras puro do "Guia de Criação de Ameaças"
