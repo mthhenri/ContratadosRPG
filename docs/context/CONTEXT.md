@@ -1,7 +1,7 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-14 · **Última decisão registrada:** jogadores consultam o inventário
-> de esquadrão durante a missão, mas alterações continuam restritas à base
+> **Última revisão:** 2026-08-14 · **Última decisão registrada:** M4 (Ficha de Criatura/NPC)
+> aberto e dividido em `m4-01`…`m4-10`; frente de criatura vem antes da de NPC
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -14,7 +14,19 @@
 
 ## 1. Próxima Task
 
-O M6 está aberto. A próxima task encadeada é
+O M4 (Ficha de Criatura/NPC) foi **aberto** nesta sessão: `m4-ficha-criatura-npc.spec.md`
+(`docs/specs/backlog/`) foi dividido em **10 tasks numeradas** (`m4-01`…`m4-10`,
+`docs/specs/backlog/`), seguindo o design já fechado em `SCHEMA.md` a partir do capítulo
+"Guia de Criação de Ameaças"/"Guia de Criação de NPCs" (`docs/core/guia_de_mestre-v4.0.0.md`).
+A frente de **criatura** vem primeiro (`m4-01`…`m4-04`), depois **NPC** (`m4-05`…`m4-08`), e as
+duas últimas (`m4-09` listagem/revelação no painel do mestre, `m4-10` refinamento mobile) cobrem
+os dois tipos juntos. `m4-01` (contrato `FichaCriaturaDadosDto`,
+`shared/src/dtos/ficha/ficha-criatura.dtos.ts` + 11 enums novos de conteúdo de jogo)
+**concluída** — camada `shared/` pura, sem migration/service/frontend; `SCHEMA.md` atualizado de
+"design fechado" para "final". Próxima da fila M4: **`m4-02`** (`shared/regras/criatura`, motor
+de regras testado contra o exemplo "A Estátua" do guia).
+
+O M6 também está aberto, em paralelo. A próxima task encadeada nessa frente é
 `m6-08-impersonacao-administrativa.spec.md`, que adiciona impersonação administrativa auditável.
 O trio do guia de criação
 (`m3-57` base, `m3-58` melhorias de nível, `m3-59`
@@ -36,10 +48,10 @@ só adaptou o visual de desktop).
 | Spec | Frente | O que é |
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
+| `m4-02`…`m4-10` | criatura/NPC | 9 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
 | `m6-08` | usuários | impersonação administrativa auditável |
 
-`m3-53` é a única frente de M3 ainda sem spec `done/`. Milestones ainda não abertos:
-`m4-ficha-criatura-npc` e `m5-guia-missao`.
+`m3-53` é a única frente de M3 ainda sem spec `done/`. Milestone ainda não aberto: `m5-guia-missao`.
 
 ---
 
@@ -70,7 +82,7 @@ falhas isoladas/preexistentes.
 | M1 | Calculadora com paridade | **concluído no código** (`m1-01`…`m1-20`). Restam 2 passos **operacionais** de plataforma — ver `PROBLEMS.md` `P-006` |
 | M2 | Auth + Campanhas | **concluído**, incluindo o redesenho do painel (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`; `m2-18` lista, `m2-19` detalhe/mestre, `m2-20` detalhe/jogador, `m2-21` abas + Rolagens na lateral + menu de ficha do jogador) |
 | M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; guia de criação completo (`m3-57`/`m3-58`/`m3-59` — base, melhorias de nível, equipamento inicial); cor (`m3-61`) e avatar (`m3-62`) de identidade por ficha prontos; falta só `m3-53` |
-| M4 | Ficha de Criatura/NPC | não iniciado |
+| M4 | Ficha de Criatura/NPC | **iniciado** — dividido em `m4-01`…`m4-10` (`docs/specs/backlog/`); `m4-01` (contrato `FichaCriaturaDadosDto`) concluída. Próxima: `m4-02` |
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | **em andamento** — `m6-01`…`m6-07` concluídas; próxima `m6-08`, com impersonação administrativa auditável |
 

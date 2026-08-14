@@ -1,5 +1,45 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-14 — M4 (Ficha de Criatura/NPC) aberto; contrato da ficha de criatura fechado
+
+O milestone `m4-ficha-criatura-npc.spec.md` (`docs/specs/backlog/`) foi dividido em **10 tasks
+numeradas** (`m4-01`…`m4-10`), seguindo o mesmo padrão de quebra usado no M2/M3. A ordem segue o
+pedido do autor — criatura primeiro, NPC depois: `m4-01` contrato da criatura, `m4-02`
+`shared/regras/criatura`, `m4-03` backend, `m4-04` frontend (assistente); `m4-05` contrato do NPC,
+`m4-06` `shared/regras/npc`, `m4-07` backend, `m4-08` frontend; `m4-09` listagem/revelação no
+painel do mestre (cobre os dois tipos) e `m4-10` refinamento mobile (idem), como fechamento do
+milestone — espelhando `m3-09`. As 9 tasks restantes (`m4-02`…`m4-10`) ficaram em
+`docs/specs/backlog/`; só `m4-01` foi implementada nesta sessão e já está em `docs/specs/done/`.
+
+`m4-01` codificou o design que já estava **fechado** em `SCHEMA.md` desde antes desta sessão (seção
+"FichaCriaturaDadosDto", derivada do capítulo "Guia de Criação de Ameaças" de
+`docs/core/guia_de_mestre-v4.0.0.md`) — não houve decisão de forma nova, só a tradução para TS.
+Novo arquivo `shared/src/dtos/ficha/ficha-criatura.dtos.ts`: `FichaCriaturaDadosDto` + sub-DTOs
+(`FichaCriaturaIdentidadeDto`, `FichaCriaturaResistenciaDto` — reusado para resistências **e**
+fraquezas, mesma forma `{tipo, subtipo, valor}`, evitando um segundo tipo idêntico —,
+`FichaCriaturaRegeneracaoDto`, `FichaCriaturaDeslocamentoDto`, `FichaCriaturaAtaqueDto`,
+`FichaCriaturaHabilidadeDto`), exportado pelo subpath `./dtos/ficha` já existente (sem subpath
+novo). `atributos` **reusa** `FichaAtributosDto` do jogador (mesmos 10 campos) e `resistencias`/
+`ataques` reusam `TipoDanoEnum` (já tinha `GERAL`) — nenhum tipo duplicado (proibição #21). 11
+enums novos de conteúdo de jogo em `shared/src/enums/` (`SCREAMING_SNAKE_CASE`, sem tabela
+`tipo_*` — §10.3): `NivelAmeacaEnum`, `OrigemCriaturaEnum`, `ComportamentoCriaturaEnum`,
+`ModificadorCriaturaEnum`, `TenacidadeEnum`, `RegeneracaoModoEnum`, `RegeneracaoIntensidadeEnum`,
+`PorteCriaturaEnum`, `CadenciaEnum`, `CustoAcaoEnum` (nome genérico, não prefixado por
+"Criatura" — reutilizável por outro consumidor do mesmo conceito de ação) e
+`HabilidadeTipoCriaturaEnum`. Sem Maestria (decisão de abertura do milestone: exclusiva de
+jogador); `vidaMaxima`/`vidaAtual`/`defesa` seguem a mesma filosofia `m3-10` — snapshot na
+criação (calculado por `shared/regras/criatura`, ainda não implementado — `m4-02`) e editável
+depois, sem recálculo automático sobre a edição. DTOs `interface readonly` puros, sem
+class-validator, coerente com a decisão vigente do projeto (`CONTEXT.md` §5) — o texto antigo de
+`m3-01` que mencionava class-validator está desatualizado nesse ponto e não foi replicado aqui.
+
+`SCHEMA.md` atualizado: a seção `FichaCriaturaDadosDto` deixou de dizer "codificar no M4" e passou
+a apontar para o arquivo/subpath final, igual ao tratamento que `FichaJogadorDadosDto` recebeu na
+`m3-01`. Camada 100% `shared/` — sem migration (a tabela `tipo_ficha` já tem `CRIATURA` seedada
+desde `m3-02`), sem service, sem endpoint, sem frontend. Verificado: `npm run build`/`lint`/`test`
+do workspace `shared` limpos (603/603 testes, sem regressão — a suíte só ganhou os arquivos novos,
+nenhum teste de comportamento ainda, já que este contrato não tem lógica além dos tipos).
+
 ## 2026-08-14 — Ajuste rápido de vitalidade deixa de regravar a ficha
 
 O ajuste de Vida/Energia dos mini-cards da campanha usava o `PUT /ficha/:id` completo. Como esse
