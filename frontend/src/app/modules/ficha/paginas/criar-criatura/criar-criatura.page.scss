@@ -57,6 +57,10 @@
   &__protocolo-info { display: grid; grid-template-columns: 38px 1fr auto; align-items: center; gap: 12px; margin-top: 16px; padding: 13px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); > app-icone { display: grid; place-items: center; width: 38px; height: 38px; color: var(--accent); border: 1px solid var(--accent-border); border-radius: var(--radius-control); } div { display: grid; gap: 2px; span { font: 9px var(--font-mono); text-transform: uppercase; color: var(--text-mute); } strong { font: 700 12px var(--font-mono); text-transform: uppercase; } } small { max-width: 230px; color: var(--text-mute); } }
 
   &__orcamento { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; padding: 11px 13px; background: color-mix(in srgb, var(--positive) 8%, var(--surface-2)); border: 1px solid color-mix(in srgb, var(--positive) 35%, transparent); border-radius: var(--radius-control); div { display: flex; align-items: baseline; gap: 10px; span { font: 600 10px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; } strong { font: 700 22px var(--font-mono); color: var(--positive); } } small { color: var(--text-mute); } &--erro { background: var(--accent-dim); border-color: var(--accent-border); div strong { color: var(--accent); } } }
+  // Base / Limite / Pontos de Ajuste do passo // Atributos — 3 cards (`.stat`, mesmo bloco do
+  // resumo de Saúde/Defesa) em vez de um único quadro de texto corrido.
+  &__metricas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 8px; }
+  &__metricas-ajuda { display: block; margin: 0 0 14px; color: var(--text-mute); }
   &__atributos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   &__modo-livre { display: flex; align-items: center; gap: 10px; min-height: bp.$alvo-toque; margin: 14px 0; padding: 11px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); cursor: pointer; input { width: 18px; height: 18px; accent-color: var(--accent); } span { display: grid; gap: 2px; b { font: 600 10px var(--font-mono); text-transform: uppercase; } small { color: var(--text-mute); } } }
   &__subsecao { display: flex; align-items: center; gap: 10px; margin: 26px 0 14px; span { font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .12em; color: var(--text-mute); } i { flex: 1; height: 1px; background: var(--border); } }
@@ -195,7 +199,9 @@
   }
   &__rodape { position: fixed; z-index: 20; inset: auto 0 0; display: flex; justify-content: space-between; gap: 8px; margin: 0; padding: 9px 12px; background: var(--surface); border-top: 1px solid var(--border); } &__acao { min-width: 118px; min-height: bp.$alvo-toque; &:last-child { margin-left: auto; } } &__rodape-status { display: none; } }
   .campo__controle { min-height: bp.$alvo-toque; }
-  .atributo { min-height: bp.$alvo-toque; }
+  // Sem este `grid-template-columns`, a 2ª coluna herda o valor fixo de 116px do desktop — mais
+  // estreita que o stepper mobile (2×44px + 48px = 136px), que fica cortado (m4-04c).
+  .atributo { grid-template-columns: minmax(0, 1fr) 136px; min-height: bp.$alvo-toque; }
   .stepper { grid-template-columns: bp.$alvo-toque 48px bp.$alvo-toque; min-height: calc(bp.$alvo-toque + 2px); }
   .stepper__botao { min-height: bp.$alvo-toque; }
   .guia__vaga-escolher { min-height: bp.$alvo-toque; }

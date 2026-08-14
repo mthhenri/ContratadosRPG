@@ -1,9 +1,9 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-14 · **Última decisão registrada:** `m4-04b` (polimento de UI fora
-> da fila de specs, a pedido direto do autor) — upload de imagem na criatura, revisão de
-> espaçamento do guia, botões "Nova Criatura"/"Novo Agente" no painel, tira de estatísticas só com
-> "Convite" e a coluna Esquadrão dividida com a subseção "Criaturas" — ver seção 4
+> **Última revisão:** 2026-08-14 · **Última decisão registrada:** `m4-04c` (polimento de UI fora
+> da fila de specs, a pedido direto do autor) — passo // Atributos da criatura em 3 cards
+> (Base/Limite/Pontos de Ajuste), contador real de Pontos de Ajuste travando o avanço em saldo 0
+> (mesmo padrão do guia de jogador) e correção do corte do stepper no mobile — ver seção 4
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -41,13 +41,17 @@ em `m4-01` para o documento de jogo (ver seção 6). A `m4-04` verificou ao vivo
 ficha recém-criada em `/painel/:campanhaId/ficha/:id` (`FichaVisualizacao`, telas de jogador)
 quebra com `TypeError` — a tela ainda não sabe ler `dados` no formato de criatura; registrado
 como pendência para quem fechar a tela dedicada (§14 já bloqueia jogadores, então o erro só
-afeta o mestre navegando direto após criar — ver seção 7). Entre a `m4-04` e a `m4-05`, uma
-sessão de **polimento de UI** (`m4-04b`, fora da fila de specs — pedido direto do autor, não uma
-task numerada) revisou o assistente de criação de criatura (upload de imagem, espaçamento entre
-campos) e o painel do mestre (botões "Nova Criatura"/"Novo Agente", tira de estatísticas reduzida
-a "Convite", coluna Esquadrão dividida com a subseção "Criaturas" — exigiu expor `tipo`/`na` em
-`FichaResumoDto` e ajustar `FichaRepository.colunasResumo` para os dois formatos de `dados`, ver
-seção 4). Próxima da fila M4: **`m4-05`** (contrato `FichaNpcDadosDto`, início da frente de NPC).
+afeta o mestre navegando direto após criar — ver seção 7). Entre a `m4-04` e a `m4-05`, duas
+sessões de **polimento de UI** fora da fila de specs (pedido direto do autor, não tasks
+numeradas): `m4-04b` revisou o assistente de criação de criatura (upload de imagem, espaçamento
+entre campos) e o painel do mestre (botões "Nova Criatura"/"Novo Agente", tira de estatísticas
+reduzida a "Convite", coluna Esquadrão dividida com a subseção "Criaturas" — exigiu expor
+`tipo`/`na` em `FichaResumoDto` e ajustar `FichaRepository.colunasResumo` para os dois formatos de
+`dados`); `m4-04c` trocou o bloco único "Base do VD" do passo // Atributos por 3 cards
+(Base/Limite/Pontos de Ajuste), deu ao card de Pontos de Ajuste um contador real que trava o
+avanço em saldo 0 (mesmo padrão do guia de jogador) e corrigiu o corte do botão "+" do stepper no
+mobile (ver seção 4). Próxima da fila M4: **`m4-05`** (contrato `FichaNpcDadosDto`, início da
+frente de NPC).
 
 O M6 também está aberto, em paralelo. A próxima task encadeada nessa frente é
 `m6-08-impersonacao-administrativa.spec.md`, que adiciona impersonação administrativa auditável.
@@ -105,7 +109,7 @@ falhas isoladas/preexistentes.
 | M1 | Calculadora com paridade | **concluído no código** (`m1-01`…`m1-20`). Restam 2 passos **operacionais** de plataforma — ver `PROBLEMS.md` `P-006` |
 | M2 | Auth + Campanhas | **concluído**, incluindo o redesenho do painel (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`; `m2-18` lista, `m2-19` detalhe/mestre, `m2-20` detalhe/jogador, `m2-21` abas + Rolagens na lateral + menu de ficha do jogador) |
 | M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; guia de criação completo (`m3-57`/`m3-58`/`m3-59` — base, melhorias de nível, equipamento inicial); cor (`m3-61`) e avatar (`m3-62`) de identidade por ficha prontos; falta só `m3-53` |
-| M4 | Ficha de Criatura/NPC | **iniciado** — dividido em `m4-01`…`m4-10` (`docs/specs/backlog/`); `m4-01` (contrato), `m4-02` (`shared/regras/criatura`), `m4-03` (`backend/ficha` para `CRIATURA`) e `m4-04` (assistente de criação no frontend) concluídas; `m4-04b` (polimento de UI fora da fila) também concluída. Próxima: `m4-05` (NPC) |
+| M4 | Ficha de Criatura/NPC | **iniciado** — dividido em `m4-01`…`m4-10` (`docs/specs/backlog/`); `m4-01` (contrato), `m4-02` (`shared/regras/criatura`), `m4-03` (`backend/ficha` para `CRIATURA`) e `m4-04` (assistente de criação no frontend) concluídas; `m4-04b`/`m4-04c` (polimento de UI fora da fila) também concluídas. Próxima: `m4-05` (NPC) |
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | **em andamento** — `m6-01`…`m6-07` concluídas; próxima `m6-08`, com impersonação administrativa auditável |
 
@@ -408,6 +412,17 @@ após criar a ficha — layout `.guia__campos--base`, caixa à esquerda + Design
 direita); revisão de espaçamento entre campos consecutivos fora de um `.guia__campos` (regra
 `.campo + .campo` que faltava — campos ficavam colados sem gap) e entre um grid de cards
 (Resistências/Fraquezas/Ataques/Habilidades) e o botão "+ Adicionar" logo abaixo.
+
+**Polimento de UI — `m4-04c`:** passo // Atributos trocou o bloco único "Base do VD" (texto
+corrido, cortava o stepper no mobile por `.atributo` não ajustar `grid-template-columns` nesse
+breakpoint) por 3 cards `.stat` — Base e Limite estáticos, Pontos de Ajuste com um contador real
+`gasto/total` (`pontosAjuste()`, mesma fórmula soma-acima-da-Base de
+`validarDistribuicaoAtributos` do guia de agente) que trava `passoValido()` em saldo 0, mesmo
+padrão do "Saldo de distribuição" do guia de jogador. Dois ajustes decorrentes: os dez atributos
+agora nascem na Base ao definir o VD (`mudarVd()`, só na primeira visita ao passo — não apaga uma
+distribuição já feita ao voltar e reajustar o VD) em vez de ficarem fixos em `1`; e o piso da
+Realocação por atributo passou de `0` para `max(0, Base − 3)`, respeitando o teto de "até 3 pontos"
+do documento (sem efeito para VD ≤ 40, onde `Base − 3` já é negativo).
 
 ### Guia de criação de ficha — `frontend/src/app/modules/ficha/paginas/criar/`
 

@@ -316,6 +316,16 @@ export class CriaturaCriar {
   }
 
   protected readonly baseLimite = computed(() => obterBaseELimitePorVd({ vd: this.estado().vd }));
+  /** Contador "gasto/total" dos Pontos de Ajuste (mesmo padrão do "Saldo de distribuição" do
+   * guia de agente, `criar.page.ts`) — gasto é a soma de cada atributo acima da Base; um
+   * atributo realocado abaixo da Base libera pontos extras para os demais. */
+  protected readonly pontosAjuste = computed(() => {
+    const base = this.baseLimite().base;
+    const total = this.baseLimite().pontosAjuste;
+    const atributos = this.estado().atributos;
+    const gastos = this.campos.reduce((soma, campo) => soma + (atributos[campo.chave] - base), 0);
+    return { gastos, total, saldo: total - gastos };
+  });
   protected readonly vidaMaxima = computed(() => {
     const tenacidade = this.estado().tenacidade;
     return tenacidade ? calcularVidaMaxima({ vd: this.estado().vd, tenacidade }) : 0;
@@ -358,6 +368,16 @@ export class CriaturaCriar {
   protected mudarOrigem(evento: Event): void { this.atualizar({ origem: this.valor(evento) as OrigemCriaturaEnum }); }
   protected mudarComportamento(evento: Event): void { this.atualizar({ comportamento: this.valor(evento) as ComportamentoCriaturaEnum }); }
   protected mudarNa(evento: Event): void { this.atualizar({ na: this.valor(evento) as NivelAmeacaEnum }); }
+  /** Atributos começam na Base (doc: "Todo atributo começa no valor Base") — só reinicializa
+   * enquanto o passo // Atributos ainda não foi visitado, para nunca apagar uma distribuição já
+   * feita pelo mestre ao voltar e ajustar o VD. */
+  protected mudarVd(evento: Event): void {
+    const vd = this.numero(evento);
+    if (this.visitado() >= this.passos.indexOf('Atributos')) { this.atualizar({ vd }); return; }
+    const base = obterBaseELimitePorVd({ vd }).base;
+    const atributos = this.campos.reduce((acc, campo) => ({ ...acc, [campo.chave]: base }), {} as FichaAtributosDto);
+    this.atualizar({ vd, atributos });
+  }
   protected mudarTenacidade(evento: Event): void {
     const bruto = this.valor(evento);
     this.atualizar({ tenacidade: bruto ? (bruto as TenacidadeEnum) : null });
@@ -383,7 +403,9 @@ export class CriaturaCriar {
 
   protected passoAtributo(chave: ChaveAtributo, delta: number): void {
     const atual = this.estado();
-    const valor = Math.max(0, Math.min(this.baseLimite().limite, atual.atributos[chave] + delta));
+    // Realocação retira no máximo 3 pontos da Base (doc: "⬥ Realocação de Pontos"), sem nunca negativar.
+    const piso = Math.max(0, this.baseLimite().base - 3);
+    const valor = Math.max(piso, Math.min(this.baseLimite().limite, atual.atributos[chave] + delta));
     this.atualizar({ atributos: { ...atual.atributos, [chave]: valor } });
   }
   protected escolherModificador(chave: ChaveAtributo, evento: Event): void {
@@ -498,7 +520,8 @@ export class CriaturaCriar {
       case 'Ameaça':
         return e.vd > 0;
       case 'Atributos':
-        return validarRealocacaoAtributos({ atributosFinal: e.atributos, limite: this.baseLimite().limite }).length === 0;
+        return validarRealocacaoAtributos({ atributosFinal: e.atributos, limite: this.baseLimite().limite }).length === 0
+          && this.pontosAjuste().saldo === 0;
       case 'Modificadores':
         return this.distribuicaoModificadoresCompleta();
       case 'Saúde':

@@ -142,7 +142,7 @@
               </label>
               <label class="campo">
                 <span class="campo__rotulo">Valor de Desafio (VD)</span>
-                <input class="campo__controle campo__controle--numero" type="number" min="0" [value]="estado().vd" (input)="atualizar({ vd: numero($event) })" />
+                <input class="campo__controle campo__controle--numero" type="number" min="0" [value]="estado().vd" (input)="mudarVd($event)" />
                 <small class="campo__ajuda">Soma do nível do grupo alvo.</small>
               </label>
             </div>
@@ -155,10 +155,12 @@
             }
           }
           @case ('Atributos') {
-            <div class="guia__orcamento">
-              <div><span>Base do VD</span><strong>{{ baseLimite().base }}</strong></div>
-              <small>Limite {{ baseLimite().limite }} por atributo · {{ baseLimite().pontosAjuste }} Pontos de Ajuste distribuíveis · realocação de até 3 pontos permite cair abaixo da base, até 0.</small>
+            <div class="guia__metricas">
+              <div class="stat"><span class="stat__rotulo">Base</span><span class="stat__valor">{{ baseLimite().base }}</span></div>
+              <div class="stat"><span class="stat__rotulo">Limite</span><span class="stat__valor">{{ baseLimite().limite }}</span></div>
+              <div class="stat" [class.stat--alerta]="pontosAjuste().saldo !== 0"><span class="stat__rotulo">Pontos de Ajuste</span><span class="stat__valor">{{ pontosAjuste().gastos }}/{{ pontosAjuste().total }}</span></div>
             </div>
+            <small class="guia__metricas-ajuda">Realocação de até 3 pontos por atributo permite cair abaixo da base, até 0.</small>
             <div class="guia__atributos">
               @for (campo of campos; track campo.chave) {
                 <div class="atributo" [class.atributo--desvantagem]="estado().atributos[campo.chave] < baseLimite().base">
