@@ -1,5 +1,62 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-14 — `m4-02`: motor de regras da ficha de criatura, com duas divergências do guia documentadas
+
+`shared/src/regras/criatura/` — motor de regras puro do "Guia de Criação de Ameaças"
+(`docs/core/guia_de_mestre-v4.0.0.md`), espelhando a estrutura de `shared/regras/agente`: um
+módulo por bloco do roteiro, cada um com DTOs de entrada em `criatura.dtos.ts` (mesma convenção
+de `agente.dtos.ts`) e funções puras testadas isoladamente. Módulos: `atributos.ts`
+(`obterBaseELimitePorVd` — tabela de Base/Limite/Pontos de Ajuste por faixa de VD, com os dois
+casos especiais 80–100/100+ onde o Limite não é Base+3; `validarRealocacaoAtributos` — atributos
+finais dentro de `[0, limite]`), `modificadores.ts` (`calcularValorModificador`,
+`calcularAtributoEfetivo`), `saude.ts` (`calcularVidaMaxima` = VD × multiplicador de
+Tenacidade), `defesa.ts` (`calcularDefesaBase` = 15+VD÷2, `possuiContraAtaque`),
+`resistencia.ts` (`calcularLimiteResistencias`, `calcularCustoResistencia` — Geral em dobro,
+subtipo pela metade —, `validarFraqueza`, `calcularMultiplicadorCriticoFraqueza`),
+`regeneracao.ts` (`calcularValorRegeneracao`), `deslocamento.ts`
+(`sugerirDeslocamentoTerrestre` — retorna uma faixa `{minimo, maximo}`, nunca um valor único,
+porque o guia tabula faixas e escolher um ponto fixo seria decisão do motor que não é dele),
+`cadencia.ts` (`calcularBonusIniciativaSugerido` ≈ 10% do VD), `ataques.ts`
+(`obterDanoReferenciaPorVd` — tabela de dano de referência por VD/custo de ação; a coluna
+"Turno" da tabela do guia não corresponde a nenhum `CustoAcaoEnum`, então ganhou uma função
+separada, `obterDanoReferenciaTurnoPorVd`) e `validacao.ts` (`validarFichaCriatura` — soma de
+resistências dentro do limite, ao menos 1 fraqueza com valor mínimo respeitado, nenhum
+tipo/subtipo simultâneo em resistência e fraqueza, distribuição fixa 2/3/3/2 de Modificadores,
+ao menos um modo de Deslocamento preenchido; retorna `{ violacoes: string[] }`, mesmo padrão de
+`validarDistribuicaoAtributos` em `shared/regras/agente/criacao.ts`). Novo subpath de export
+`./regras/criatura` em `shared/package.json`, ao lado dos demais domínios de regra.
+
+Ao montar o caso de teste completo exigido pelo critério de aceite do milestone —
+`a-estatua.spec.ts`, reproduzindo "A Estátua" (`docs/core/guia_de_mestre-v4.0.0.md` — "Guia de
+Criação de Ameaças" > "Exemplo de Ficha Completa") — duas divergências **internas ao próprio
+documento**, entre a fórmula geral de uma seção e os números literais do exemplo, apareceram:
+(1) o modificador Fraco em VD 30 — a fórmula geral (base -2 em VD 5, +1,5 a cada +5 de VD,
+arredondado para baixo) dá 5,5→5, mas o exemplo mostra "+6" para os três atributos Fraco da
+Estátua, enquanto Forte/Médio/Frágil do mesmo exemplo batem exatamente com a fórmula; (2) o
+mínimo de Fraqueza — a fórmula (5 ou metade da soma de resistências, o que for maior) dá
+max(5, 52÷2)=26 para a soma de resistências da Estátua (Físico 36 + Balístico 16), mas o
+exemplo declara a Fraqueza de Explosão em 20, abaixo do próprio mínimo que a fórmula do mesmo
+documento exige. Perguntado, o autor decidiu que a **fórmula geral vence** nos dois casos — ela
+é a regra reutilizável, o exemplo é uma aplicação pontual mais sujeita a erro de transcrição.
+As duas divergências ficam documentadas em comentário no código (`modificadores.ts` e
+`a-estatua.spec.ts`) e em `CONTEXT.md` §6, com uma nota de atenção para `m4-06`
+(`shared/regras/npc`) caso a Biblioteca de Referência do NPC tenha o mesmo tipo de
+inconsistência. O caso de teste completo usa os valores derivados da fórmula (Fraqueza em 26)
+para fechar sem violações de `validarFichaCriatura`, e testes isolados documentam explicitamente
+os dois pontos onde o exemplo do guia diverge.
+
+Uma terceira aparente divergência — o Deslocamento Terrestre da Estátua (9m) cai fora da faixa
+sugerida para Destreza 4 (10–12m) — **não** foi tratada como inconsistência: `docs/core/
+guia_de_mestre-v4.0.0.md` já é explícito que Deslocamento é sempre declarado pelo Mestre, com o
+atributo apenas como referência sugerida, e o próprio conceito da Estátua (só se move quando não
+observada) já justifica um valor abaixo da tabela. `sugerirDeslocamentoTerrestre` documenta essa
+natureza de sugestão no código.
+
+`m4-02` movida de `docs/specs/backlog/` para `docs/specs/done/`. Camada 100% `shared/` — sem
+consumo no backend (`m4-03`) ou frontend (`m4-04`) ainda. Verificado: `npm run
+build`/`typecheck`/`lint`/`test` do workspace `shared` limpos, 660/660 testes (57 novos desde a
+`m4-01`, cobrindo os 10 módulos + validação de coerência + o caso de teste completo).
+
 ## 2026-08-14 — M4 (Ficha de Criatura/NPC) aberto; contrato da ficha de criatura fechado
 
 O milestone `m4-ficha-criatura-npc.spec.md` (`docs/specs/backlog/`) foi dividido em **10 tasks

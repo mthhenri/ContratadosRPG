@@ -1,7 +1,8 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-14 · **Última decisão registrada:** M4 (Ficha de Criatura/NPC)
-> aberto e dividido em `m4-01`…`m4-10`; frente de criatura vem antes da de NPC
+> **Última revisão:** 2026-08-14 · **Última decisão registrada:** `m4-02` concluída
+> (`shared/regras/criatura`); documento do "Guia de Criação de Ameaças" tem duas divergências
+> internas entre fórmula geral e exemplo "A Estátua" — fórmula geral vence, ver seção 6
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -14,17 +15,22 @@
 
 ## 1. Próxima Task
 
-O M4 (Ficha de Criatura/NPC) foi **aberto** nesta sessão: `m4-ficha-criatura-npc.spec.md`
+O M4 (Ficha de Criatura/NPC) foi **aberto** em sessão anterior: `m4-ficha-criatura-npc.spec.md`
 (`docs/specs/backlog/`) foi dividido em **10 tasks numeradas** (`m4-01`…`m4-10`,
 `docs/specs/backlog/`), seguindo o design já fechado em `SCHEMA.md` a partir do capítulo
 "Guia de Criação de Ameaças"/"Guia de Criação de NPCs" (`docs/core/guia_de_mestre-v4.0.0.md`).
 A frente de **criatura** vem primeiro (`m4-01`…`m4-04`), depois **NPC** (`m4-05`…`m4-08`), e as
 duas últimas (`m4-09` listagem/revelação no painel do mestre, `m4-10` refinamento mobile) cobrem
 os dois tipos juntos. `m4-01` (contrato `FichaCriaturaDadosDto`,
-`shared/src/dtos/ficha/ficha-criatura.dtos.ts` + 11 enums novos de conteúdo de jogo)
-**concluída** — camada `shared/` pura, sem migration/service/frontend; `SCHEMA.md` atualizado de
-"design fechado" para "final". Próxima da fila M4: **`m4-02`** (`shared/regras/criatura`, motor
-de regras testado contra o exemplo "A Estátua" do guia).
+`shared/src/dtos/ficha/ficha-criatura.dtos.ts` + 11 enums novos de conteúdo de jogo) e `m4-02`
+(`shared/regras/criatura` — motor de regras puro do roteiro de criação de Ameaças, 10 módulos
+de fórmula + `validarFichaCriatura` + caso de teste completo "A Estátua") **concluídas** —
+camada `shared/` pura, sem migration/service/frontend em nenhuma das duas. Ao montar "A
+Estátua" como caso de teste, duas divergências internas do próprio documento entre a fórmula
+geral e os números literais do exemplo foram identificadas (modificador Fraco em VD 30;
+mínimo de Fraqueza) — resolvidas com a fórmula geral vencendo, documentadas em
+`shared/src/regras/criatura/modificadores.ts` e `a-estatua.spec.ts` (ver seção 6). Próxima da
+fila M4: **`m4-03`** (`backend/ficha` estendido para `CRIATURA`).
 
 O M6 também está aberto, em paralelo. A próxima task encadeada nessa frente é
 `m6-08-impersonacao-administrativa.spec.md`, que adiciona impersonação administrativa auditável.
@@ -48,7 +54,7 @@ só adaptou o visual de desktop).
 | Spec | Frente | O que é |
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m4-02`…`m4-10` | criatura/NPC | 9 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
+| `m4-03`…`m4-10` | criatura/NPC | 8 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
 | `m6-08` | usuários | impersonação administrativa auditável |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/`. Milestone ainda não aberto: `m5-guia-missao`.
@@ -82,7 +88,7 @@ falhas isoladas/preexistentes.
 | M1 | Calculadora com paridade | **concluído no código** (`m1-01`…`m1-20`). Restam 2 passos **operacionais** de plataforma — ver `PROBLEMS.md` `P-006` |
 | M2 | Auth + Campanhas | **concluído**, incluindo o redesenho do painel (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`; `m2-18` lista, `m2-19` detalhe/mestre, `m2-20` detalhe/jogador, `m2-21` abas + Rolagens na lateral + menu de ficha do jogador) |
 | M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; guia de criação completo (`m3-57`/`m3-58`/`m3-59` — base, melhorias de nível, equipamento inicial); cor (`m3-61`) e avatar (`m3-62`) de identidade por ficha prontos; falta só `m3-53` |
-| M4 | Ficha de Criatura/NPC | **iniciado** — dividido em `m4-01`…`m4-10` (`docs/specs/backlog/`); `m4-01` (contrato `FichaCriaturaDadosDto`) concluída. Próxima: `m4-02` |
+| M4 | Ficha de Criatura/NPC | **iniciado** — dividido em `m4-01`…`m4-10` (`docs/specs/backlog/`); `m4-01` (contrato) e `m4-02` (`shared/regras/criatura`) concluídas. Próxima: `m4-03` |
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | **em andamento** — `m6-01`…`m6-07` concluídas; próxima `m6-08`, com impersonação administrativa auditável |
 
@@ -95,10 +101,14 @@ falhas isoladas/preexistentes.
 
 ### Motor de regras — `shared/regras/` (funções puras, zero dependências)
 
-Nove domínios implementados e testados contra `docs/core/sistema-v4.1.0.md`: `agente/` (15 fórmulas
-— vida, energia, defesa/esquiva/bloqueio, proficiência, deslocamento, dano de corpo/furtivo,
-inventário), `compras/` (catálogo, limites por patente, modificações, amplificadores, fragmentos,
-venda), `dados/`, `descanso/`, `dt/`, `identidade/`, `novo-agente/`, `patente/`, `rolagem/`.
+Dez domínios implementados e testados: `agente/` (15 fórmulas — vida, energia,
+defesa/esquiva/bloqueio, proficiência, deslocamento, dano de corpo/furtivo, inventário),
+`compras/` (catálogo, limites por patente, modificações, amplificadores, fragmentos, venda),
+`dados/`, `descanso/`, `dt/`, `identidade/`, `novo-agente/`, `patente/`, `rolagem/` — todos
+contra `docs/core/sistema-v4.1.0.md` — e `criatura/` (`m4-02`, 10 módulos de fórmula do "Guia
+de Criação de Ameaças" — atributos, modificadores, saúde, defesa, resistências/fraquezas,
+regeneração, deslocamento, cadência/iniciativa, ataques, `validarFichaCriatura` — contra
+`docs/core/guia_de_mestre-v4.0.0.md`, caso de teste completo "A Estátua").
 
 **Fonte única:** frontend e backend consomem o mesmo motor. Nenhuma regra de jogo é reimplementada
 em nenhum dos dois lados.
@@ -498,6 +508,14 @@ Armadilhas que já custaram retrabalho neste repositório. Cada uma tem um epis�
   (Flexível/Resistente/Potente/Conservador/Veloz) **não** dobra o bônus; a penalidade continua no
   bruto.
 - Se código e `docs/core/sistema-v4.1.0.md` divergirem, **o documento vence** (proibição #27).
+- **`docs/core/guia_de_mestre-v4.0.0.md` — "Guia de Criação de Ameaças" tem duas divergências
+  internas entre a fórmula geral e o exemplo "A Estátua"**: o modificador Fraco em VD 30 (fórmula
+  dá +5, o exemplo mostra "+6") e o mínimo de Fraqueza (fórmula exige 26 — metade da soma de
+  resistências 52 —, o exemplo declara 20). Quando o próprio documento se contradiz entre regra
+  geral e exemplo pontual, a **fórmula geral vence** (decisão de abertura da `m4-02`) — o exemplo é
+  mais sujeito a erro de transcrição. Ver `shared/src/regras/criatura/modificadores.ts` e
+  `a-estatua.spec.ts`. Relevante para `m4-06` (`shared/regras/npc`) se a Biblioteca de Referência
+  tiver o mesmo tipo de inconsistência.
 
 **Processo**
 
