@@ -272,6 +272,10 @@ export class CadernoFlutuante implements OnDestroy {
     this.store.salvarAgora();
   }
 
+  protected recarregarVersao(): void {
+    this.store.recarregarPaginaAtiva();
+  }
+
   protected pedirExclusao(): void {
     this.exclusaoPendente.set(true);
   }

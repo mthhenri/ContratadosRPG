@@ -59,6 +59,9 @@
             "
             aria-live="polite"
           >{{ rotuloSalvamento() }}</span>
+          @if (store.estadoSalvamento() === 'CONFLITO') {
+            <button class="caderno__recarregar" type="button" (click)="recarregarVersao()">Recarregar versão</button>
+          }
         }
         <span class="caderno__regua" aria-hidden="true"></span>
       </div>
@@ -218,7 +221,9 @@
           </button>
         }
 
-        @if (store.paginaAtiva() !== null || (modoCaderno() === 'MEU' && estado().vistaMobile === 'CONTEUDO')) {
+        @if (estado().carregando && store.paginaAtiva() === null) {
+          <p class="caderno__estado">Carregando página…</p>
+        } @else if (store.paginaAtiva() !== null || (modoCaderno() === 'MEU' && estado().vistaMobile === 'CONTEUDO')) {
           <div class="caderno__editor-cabecalho">
             <input
               class="caderno__titulo-input"
@@ -270,7 +275,13 @@
                   <app-icone nome="excluir" /> Excluir
                 </button>
               }
-              <span>Salvamento automático após uma pausa.</span>
+              <span>
+                @if (store.estadoSalvamento() === 'CONFLITO') {
+                  Conflito de versão · <button type="button" (click)="recarregarVersao()">Recarregar versão</button>
+                } @else {
+                  Salvamento automático após uma pausa.
+                }
+              </span>
               <button class="caderno__botao caderno__botao--primario" type="button" data-acao="salvar" (click)="salvar()">Salvar agora</button>
             </footer>
           }

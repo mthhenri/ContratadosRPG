@@ -85,6 +85,7 @@
     white-space: nowrap;
     &--erro { color: var(--vida); border-color: var(--vida-border); }
   }
+  &__recarregar { min-height: 28px; padding: 0 7px; color: var(--accent); background: transparent; border: 1px solid var(--accent-border); border-radius: var(--radius-control); font: 600 8px var(--font-mono); letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; }
 
   &__acoes-janela { display: flex; gap: 6px; }
   &__acoes-janela button,
@@ -234,7 +235,7 @@
   &__markdown :is(code, pre) { font-family: var(--font-mono); }
   &__markdown pre { padding: 12px; overflow-x: auto; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-control); }
   &__markdown a { color: var(--accent); }
-  &__editor-acoes { min-height: 48px; display: flex; align-items: center; gap: 10px; padding: 7px 12px; border-top: 1px solid var(--border); span { flex: 1; color: var(--text-mute); font: 10px var(--font-mono); } }
+  &__editor-acoes { min-height: 48px; display: flex; align-items: center; gap: 10px; padding: 7px 12px; border-top: 1px solid var(--border); span { flex: 1; color: var(--text-mute); font: 10px var(--font-mono); button { padding: 0; color: var(--accent); background: transparent; border: 0; font: inherit; text-decoration: underline; cursor: pointer; } } }
   &__botao { min-height: 34px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 10px; color: var(--text-dim); background: transparent; border: 1px solid var(--border-strong); border-radius: var(--radius-control); font: 700 9px var(--font-mono); letter-spacing: var(--tracking-label); text-transform: uppercase; cursor: pointer; &--primario { color: var(--bg); background: var(--accent); border-color: var(--accent); } &--perigo { color: var(--vida); border-color: var(--vida-border); } }
   &__confirmacao { position: absolute; inset: auto 12px 58px 12px; z-index: 2; display: grid; gap: 7px; padding: 14px; background: var(--surface-2); border: 1px solid var(--vida-border); border-radius: var(--radius-card); box-shadow: 0 14px 36px color-mix(in srgb, var(--bg) 72%, transparent); strong { color: var(--text); font: 700 12px var(--font-mono); } > span { color: var(--text-mute); font: 12px var(--font-sans); } > div { display: flex; gap: 8px; margin-top: 4px; } }
   &__voltar { display: none; }
@@ -245,7 +246,7 @@
   .caderno {
     &__cabecalho { min-height: 56px; padding-top: calc(8px + env(safe-area-inset-top)); cursor: default; }
     &__titulo-grupo h2 { max-width: 140px; }
-    &__regua, &__salvamento { display: none; }
+    &__regua, &__salvamento, &__recarregar { display: none; }
     &__acoes-janela button { width: bp.$alvo-toque; height: bp.$alvo-toque; }
     &__escopo { align-items: stretch; flex-direction: column; padding: 8px; }
     &__segmentado { width: 100%; button { min-height: bp.$alvo-toque; flex: 1; } }

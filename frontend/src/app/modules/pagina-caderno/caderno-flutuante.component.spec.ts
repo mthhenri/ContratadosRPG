@@ -1,10 +1,11 @@
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   BuscaCampanhaResultadoTipoEnum,
   TipoCampanhaMembroPapelEnum,
 } from '@contratados-rpg/shared/enums';
 import type { PaginaCadernoDto } from '@contratados-rpg/shared/dtos/pagina-caderno';
-import { Subject, of } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CadernoFlutuante } from './caderno-flutuante.component';
@@ -138,6 +139,27 @@ describe('CadernoFlutuante', () => {
     expect(raiz().textContent).toContain('Salvando…');
     resposta.next({ ...pagina, titulo: 'Título alterado' });
     resposta.complete();
+  });
+
+  it('oferece recarregar a versão do servidor após conflito', () => {
+    vi.useFakeTimers();
+    try {
+      api.alterarPagina.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 409 })),
+      );
+      abrirPagina();
+      const titulo = obter<HTMLInputElement>('input[formControlName="titulo"]');
+      titulo.value = 'Versão local';
+      titulo.dispatchEvent(new Event('input'));
+      vi.advanceTimersByTime(800);
+      fixture.detectChanges();
+
+      clicar('.caderno__recarregar');
+
+      expect(api.recuperarPagina).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('no mobile navega da lista ao conteúdo e não oferece redimensionamento', () => {

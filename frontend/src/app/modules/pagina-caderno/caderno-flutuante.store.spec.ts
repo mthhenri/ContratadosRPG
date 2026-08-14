@@ -166,6 +166,31 @@ describe('CadernoFlutuanteStore', () => {
     });
   });
 
+  it('marca falha comum sem descartar o rascunho', () => {
+    api.alterarPagina.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 500 })),
+    );
+    store.abrir(3);
+    store.selecionarPagina(pagina);
+    store.alterarRascunho({ titulo: 'Ainda aqui', conteudoMarkdown: 'texto local' });
+    vi.advanceTimersByTime(800);
+    expect(store.estadoSalvamento()).toBe('FALHA');
+    expect(store.rascunho().conteudoMarkdown).toBe('texto local');
+  });
+
+  it('recarrega a versão persistida somente quando o usuário pede', () => {
+    const versaoServidor = { ...pagina, titulo: 'Versão do servidor', updatedDate: 'v2' };
+    api.recuperarPagina.mockReturnValue(of(versaoServidor));
+    store.abrir(3);
+    store.selecionarPagina(pagina);
+    store.alterarRascunho({ titulo: 'Meu conflito', conteudoMarkdown: 'local' });
+
+    store.recarregarPaginaAtiva();
+
+    expect(api.recuperarPagina).toHaveBeenCalledWith(11);
+    expect(store.rascunho().titulo).toBe('Versão do servidor');
+  });
+
   it('não agenda escrita para página somente leitura', () => {
     store.abrir(3);
     store.selecionarPagina({ ...pagina, somenteLeitura: true });

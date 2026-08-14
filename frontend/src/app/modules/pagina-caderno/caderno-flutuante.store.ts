@@ -106,6 +106,7 @@ export class CadernoFlutuanteStore {
 
   recuperarPagina(id: number): void {
     const escopo = this.escopoCampanha;
+    this.definirVistaMobile('CONTEUDO');
     this.definirCarregando(true);
     this.api
       .recuperarPagina(id)
@@ -252,6 +253,12 @@ export class CadernoFlutuanteStore {
 
   limparResultados(): void {
     this.resultadosBuscaInternos.set(RESULTADOS_BUSCA_CADERNO_VAZIOS);
+  }
+
+  recarregarPaginaAtiva(): void {
+    const pagina = this.paginaAtivaInterna();
+    if (!pagina) return;
+    this.recuperarPagina(pagina.id);
   }
 
   excluirPaginaAtiva(): void {

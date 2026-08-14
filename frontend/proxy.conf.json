@@ -14,6 +14,11 @@
     "secure": false,
     "changeOrigin": true
   },
+  "/pagina-caderno": {
+    "target": "http://localhost:3100",
+    "secure": false,
+    "changeOrigin": true
+  },
   // Regex (não prefixo simples) — m3-28 criou a rota de app "/fichas" (plural), que um contexto
   // de string simples "/ficha" prefix-matcharia por engano (Vite: doesProxyContextMatchUrl faz
   // url.startsWith(context) para chaves sem "^"). O boundary [/?] cobre "/ficha/:id..." e
