@@ -18,12 +18,19 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
-import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import type { BuscaCampanhaResultadoDto } from '@contratados-rpg/shared/dtos/pagina-caderno';
+import {
+  BuscaCampanhaFonteEnum,
+  BuscaCampanhaResultadoTipoEnum,
+  TipoCampanhaMembroPapelEnum,
+} from '@contratados-rpg/shared/enums';
+import { Subject, catchError, debounceTime, distinctUntilChanged, of, switchMap, tap } from 'rxjs';
 
 import { Icone } from '../../shared/icone/icone.component';
 import { renderizarMarkdownSeguro } from './markdown-seguro';
 import type { CadernoGeometria } from './caderno-flutuante.model';
 import { CadernoFlutuanteStore } from './caderno-flutuante.store';
+import { PaginaCadernoService } from './pagina-caderno.service';
 
 const BREAKPOINT_MOBILE = 560;
 let proximoNivelJanela = 1210;
@@ -56,6 +63,7 @@ export class CadernoFlutuante implements OnDestroy {
 
   protected readonly store = inject(CadernoFlutuanteStore);
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly api = inject(PaginaCadernoService);
   private readonly documento = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly estado = this.store.estado;
@@ -63,10 +71,31 @@ export class CadernoFlutuante implements OnDestroy {
   protected readonly modoEditor = signal<ModoEditor>('EDITAR');
   protected readonly jogadorSelecionadoId = signal<number | null>(null);
   protected readonly exclusaoPendente = signal(false);
+  protected readonly fontesSelecionadas = signal<readonly BuscaCampanhaFonteEnum[]>([]);
+  protected readonly buscando = signal(false);
+  protected readonly erroBusca = signal(false);
+  private readonly termoBuscaAtual = signal('');
   protected readonly ehMobile = signal(this.verificarMobile());
   protected readonly nivelJanela = signal(proximoNivelJanela);
   protected readonly jogadores = computed(() =>
     this.membros().filter((membro) => membro.papel === TipoCampanhaMembroPapelEnum.JOGADOR),
+  );
+  protected readonly fontesPermitidas = computed<
+    readonly { readonly valor: BuscaCampanhaFonteEnum; readonly rotulo: string }[]
+  >(() =>
+    this.ehMestre()
+      ? [
+          { valor: BuscaCampanhaFonteEnum.MEU_CADERNO, rotulo: 'Meu caderno' },
+          {
+            valor: BuscaCampanhaFonteEnum.CADERNOS_JOGADORES,
+            rotulo: 'Cadernos dos jogadores',
+          },
+          { valor: BuscaCampanhaFonteEnum.FICHAS_CAMPANHA, rotulo: 'Fichas da campanha' },
+        ]
+      : [
+          { valor: BuscaCampanhaFonteEnum.MEU_CADERNO, rotulo: 'Meu caderno' },
+          { valor: BuscaCampanhaFonteEnum.MINHAS_FICHAS, rotulo: 'Minhas fichas' },
+        ],
   );
   protected readonly somenteLeitura = computed(
     () => this.store.paginaAtiva()?.somenteLeitura ?? this.modoCaderno() === 'JOGADORES',
@@ -88,6 +117,8 @@ export class CadernoFlutuante implements OnDestroy {
     titulo: new FormControl('', { nonNullable: true }),
     conteudoMarkdown: new FormControl('', { nonNullable: true }),
   });
+  protected readonly termoBusca = new FormControl('', { nonNullable: true });
+  protected readonly buscaAtiva = computed(() => this.termoBuscaAtual().trim().length > 0);
 
   private readonly janela = viewChild<ElementRef<HTMLElement>>('janela');
   private readonly cabecalho = viewChild<ElementRef<HTMLElement>>('cabecalho');
@@ -101,11 +132,20 @@ export class CadernoFlutuante implements OnDestroy {
     ponteiroY: 0,
     geometria: { x: 0, y: 0, largura: 960, altura: 680 } as CadernoGeometria,
   };
+  private readonly buscaSolicitada = new Subject<{
+    readonly termo: string;
+    readonly fontes: readonly BuscaCampanhaFonteEnum[];
+    readonly pagina: number;
+  }>();
 
   constructor() {
     effect(() => {
       const rascunho = this.store.rascunho();
       untracked(() => this.formulario.setValue(rascunho, { emitEvent: false }));
+    });
+    effect(() => {
+      const fontes = this.fontesPermitidas().map((fonte) => fonte.valor);
+      untracked(() => this.fontesSelecionadas.set(fontes));
     });
     effect(() => {
       const campanhaId = this.campanhaId();
@@ -125,6 +165,40 @@ export class CadernoFlutuante implements OnDestroy {
           conteudoMarkdown: rascunho.conteudoMarkdown ?? '',
         }),
       );
+    this.termoBusca.valueChanges
+      .pipe(
+        tap((termo) => this.termoBuscaAtual.set(termo)),
+        debounceTime(300),
+        distinctUntilChanged(),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => this.solicitarBusca(1));
+    this.buscaSolicitada
+      .pipe(
+        switchMap(({ termo, fontes, pagina }) => {
+          this.buscando.set(true);
+          this.erroBusca.set(false);
+          return this.api
+            .buscarCampanha({
+              campanhaId: this.campanhaId(),
+              termo,
+              fontes,
+              pagina,
+              limite: 20,
+            })
+            .pipe(
+              catchError(() => {
+                this.erroBusca.set(true);
+                return of({ itens: [], totalItens: 0, paginaAtual: 1, totalPaginas: 0 });
+              }),
+            );
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((resultado) => {
+        this.buscando.set(false);
+        this.store.definirResultados(resultado);
+      });
   }
 
   ngOnDestroy(): void {
@@ -213,6 +287,43 @@ export class CadernoFlutuante implements OnDestroy {
 
   protected voltarParaPaginas(): void {
     this.store.definirVistaMobile('LISTA');
+  }
+
+  protected fonteSelecionada(fonte: BuscaCampanhaFonteEnum): boolean {
+    return this.fontesSelecionadas().includes(fonte);
+  }
+
+  protected alterarFonte(fonte: BuscaCampanhaFonteEnum, evento: Event): void {
+    const selecionada = (evento.target as HTMLInputElement).checked;
+    this.fontesSelecionadas.update((fontes) =>
+      selecionada
+        ? [...new Set([...fontes, fonte])]
+        : fontes.filter((item) => item !== fonte),
+    );
+    this.solicitarBusca(1);
+  }
+
+  protected solicitarBusca(pagina: number): void {
+    const termo = this.termoBusca.value.trim();
+    const fontes = this.fontesSelecionadas();
+    if (!termo || fontes.length === 0) {
+      this.buscando.set(false);
+      this.erroBusca.set(false);
+      this.store.limparResultados();
+      return;
+    }
+    this.buscaSolicitada.next({ termo, fontes, pagina });
+  }
+
+  protected selecionarResultado(resultado: BuscaCampanhaResultadoDto): void {
+    if (resultado.tipo === BuscaCampanhaResultadoTipoEnum.ANOTACAO_FICHA) {
+      this.abrirFicha.emit(resultado.id);
+      return;
+    }
+    this.termoBusca.setValue('', { emitEvent: false });
+    this.termoBuscaAtual.set('');
+    this.store.limparResultados();
+    this.store.recuperarPagina(resultado.id);
   }
 
   protected trazerParaFrente(): void {

@@ -1,5 +1,8 @@
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
-import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import {
+  BuscaCampanhaResultadoTipoEnum,
+  TipoCampanhaMembroPapelEnum,
+} from '@contratados-rpg/shared/enums';
 import type { PaginaCadernoDto } from '@contratados-rpg/shared/dtos/pagina-caderno';
 import { Subject, of } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -41,7 +44,9 @@ describe('CadernoFlutuante', () => {
       criarPagina: vi.fn(() => of(pagina)),
       alterarPagina: vi.fn(() => of(pagina)),
       excluirPagina: vi.fn(() => of(undefined)),
-      buscarCampanha: vi.fn(),
+      buscarCampanha: vi.fn(() =>
+        of({ itens: [], totalItens: 0, paginaAtual: 1, totalPaginas: 0 }),
+      ),
     };
     await TestBed.configureTestingModule({
       imports: [CadernoFlutuante],
@@ -146,6 +151,103 @@ describe('CadernoFlutuante', () => {
     expect(obter('[aria-label="Voltar para páginas"]')).toBeTruthy();
   });
 
+  it('jogador combina busca no próprio caderno e nas próprias fichas', () => {
+    vi.useFakeTimers();
+    try {
+      api.buscarCampanha.mockReturnValue(
+        of({
+          itens: [
+            {
+              tipo: BuscaCampanhaResultadoTipoEnum.PAGINA_CADERNO,
+              id: 11,
+              titulo: 'Primeira sessão',
+              trecho: 'A pista estava no cais',
+              autorNome: 'Lia',
+              updatedDate: pagina.updatedDate,
+              relevancia: 0.8,
+            },
+          ],
+          totalItens: 1,
+          paginaAtual: 1,
+          totalPaginas: 1,
+        }),
+      );
+      clicar('[aria-label="Abrir caderno"]');
+      expect(rotulosFontes()).toEqual(['Meu caderno', 'Minhas fichas']);
+      const busca = obter<HTMLInputElement>('[aria-label="Buscar na campanha"]');
+      busca.value = 'pista';
+      busca.dispatchEvent(new Event('input'));
+      vi.advanceTimersByTime(300);
+      fixture.detectChanges();
+      expect(api.buscarCampanha).toHaveBeenCalledWith(
+        expect.objectContaining({ campanhaId: 3, termo: 'pista', pagina: 1, limite: 20 }),
+      );
+      expect(obter('[data-resultado-id="11"]').textContent).toContain('A pista estava no cais');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('mestre recebe os três filtros autorizados, sem Minhas fichas', () => {
+    fixture.componentRef.setInput('ehMestre', true);
+    fixture.detectChanges();
+    clicar('[aria-label="Abrir caderno"]');
+    expect(rotulosFontes()).toEqual([
+      'Meu caderno',
+      'Cadernos dos jogadores',
+      'Fichas da campanha',
+    ]);
+  });
+
+  it('abre resultado de página no caderno e emite resultado de ficha', () => {
+    vi.useFakeTimers();
+    try {
+      api.buscarCampanha.mockReturnValue(
+        of({
+          itens: [
+            {
+              tipo: BuscaCampanhaResultadoTipoEnum.PAGINA_CADERNO,
+              id: 31,
+              titulo: 'Relatório',
+              trecho: 'Página encontrada',
+              autorNome: 'Lia',
+              updatedDate: pagina.updatedDate,
+              relevancia: 1,
+            },
+            {
+              tipo: BuscaCampanhaResultadoTipoEnum.ANOTACAO_FICHA,
+              id: 44,
+              titulo: 'Agente Kane',
+              trecho: 'Ficha encontrada',
+              autorNome: 'Lia',
+              fichaNome: 'Kane',
+              updatedDate: pagina.updatedDate,
+              relevancia: 0.9,
+            },
+          ],
+          totalItens: 2,
+          paginaAtual: 1,
+          totalPaginas: 1,
+        }),
+      );
+      const abrirFicha = vi.fn();
+      fixture.componentInstance.abrirFicha.subscribe(abrirFicha);
+      clicar('[aria-label="Abrir caderno"]');
+      const busca = obter<HTMLInputElement>('[aria-label="Buscar na campanha"]');
+      busca.value = 'relatório';
+      busca.dispatchEvent(new Event('input'));
+      vi.advanceTimersByTime(300);
+      fixture.detectChanges();
+
+      clicar('[data-resultado-id="44"]');
+      expect(abrirFicha).toHaveBeenCalledWith(44);
+      clicar('[data-resultado-id="31"]');
+      expect(api.recuperarPagina).toHaveBeenCalledWith(31);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   function abrirPagina(): void {
     clicar('[aria-label="Abrir caderno"]');
     clicar('[data-pagina-id="11"]');
@@ -158,6 +260,12 @@ describe('CadernoFlutuante', () => {
 
   function raiz(): HTMLElement {
     return fixture.nativeElement as HTMLElement;
+  }
+
+  function rotulosFontes(): string[] {
+    return Array.from(raiz().querySelectorAll('.caderno__fontes span')).map(
+      (elemento) => elemento.textContent?.trim() ?? '',
+    );
   }
 
   function obter<T extends HTMLElement = HTMLElement>(seletor: string): T {

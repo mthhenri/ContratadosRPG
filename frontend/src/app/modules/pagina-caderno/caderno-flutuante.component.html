@@ -104,6 +104,67 @@
       </div>
     }
 
+    <div class="caderno__busca">
+      <label class="caderno__busca-campo">
+        <app-icone nome="busca" />
+        <input [formControl]="termoBusca" maxlength="200" aria-label="Buscar na campanha" placeholder="Buscar nas anotações…" />
+      </label>
+      <div class="caderno__fontes" role="group" aria-label="Onde buscar">
+        @for (fonte of fontesPermitidas(); track fonte.valor) {
+          <label>
+            <input type="checkbox" [checked]="fonteSelecionada(fonte.valor)" (change)="alterarFonte(fonte.valor, $event)" />
+            <span>{{ fonte.rotulo }}</span>
+          </label>
+        }
+      </div>
+    </div>
+
+    @if (buscaAtiva()) {
+      <section class="caderno__resultados" aria-label="Resultados da busca">
+        <header>
+          <div>
+            <span class="caderno__kicker">Busca unificada</span>
+            <strong>{{ store.resultadosBusca().totalItens }} resultado(s)</strong>
+          </div>
+          @if (buscando()) { <span aria-live="polite">Buscando…</span> }
+        </header>
+        @if (fontesSelecionadas().length === 0) {
+          <p class="caderno__estado">Selecione ao menos uma fonte.</p>
+        } @else if (erroBusca()) {
+          <div class="caderno__estado caderno__estado--erro">
+            Não foi possível buscar agora.
+            <button type="button" (click)="solicitarBusca(store.resultadosBusca().paginaAtual)">Tentar novamente</button>
+          </div>
+        } @else if (!buscando() && store.resultadosBusca().itens.length === 0) {
+          <div class="caderno__vazio">
+            <app-icone nome="busca" />
+            <strong>Nada encontrado</strong>
+            <span>Tente outros termos ou combine fontes diferentes.</span>
+          </div>
+        } @else {
+          <div class="caderno__resultados-lista">
+            @for (resultado of store.resultadosBusca().itens; track resultado.tipo + '-' + resultado.id) {
+              <button type="button" [attr.data-resultado-id]="resultado.id" (click)="selecionarResultado(resultado)">
+                <span class="caderno__resultado-tipo">{{ resultado.tipo === 'PAGINA_CADERNO' ? 'Página' : 'Ficha' }}</span>
+                <strong>{{ resultado.titulo }}</strong>
+                <span class="caderno__resultado-meta">
+                  {{ resultado.autorNome }}
+                  @if (resultado.fichaNome) { · {{ resultado.fichaNome }} }
+                </span>
+                <span class="caderno__resultado-trecho">{{ resultado.trecho }}</span>
+              </button>
+            }
+          </div>
+          @if (store.resultadosBusca().totalPaginas > 1) {
+            <nav class="caderno__paginacao" aria-label="Páginas dos resultados">
+              <button type="button" [disabled]="store.resultadosBusca().paginaAtual <= 1" (click)="solicitarBusca(store.resultadosBusca().paginaAtual - 1)">Anterior</button>
+              <span>{{ store.resultadosBusca().paginaAtual }} / {{ store.resultadosBusca().totalPaginas }}</span>
+              <button type="button" [disabled]="store.resultadosBusca().paginaAtual >= store.resultadosBusca().totalPaginas" (click)="solicitarBusca(store.resultadosBusca().paginaAtual + 1)">Próxima</button>
+            </nav>
+          }
+        }
+      </section>
+    } @else {
     <div
       class="caderno__corpo"
       [class.caderno__corpo--lista]="ehMobile() && estado().vistaMobile === 'LISTA'"
@@ -233,6 +294,7 @@
         }
       </main>
     </div>
+    }
 
     @if (!ehMobile()) {
       <span class="caderno__redimensionar" aria-hidden="true" (pointerdown)="iniciarRedimensionamento($event)"></span>

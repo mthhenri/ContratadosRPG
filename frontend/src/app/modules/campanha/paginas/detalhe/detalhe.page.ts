@@ -52,6 +52,7 @@ import { clamparVitalidade, type CampoVitalidadeAtual } from '../../../ficha/aju
 import { FichaVitalidadeRapidaService } from '../../../ficha/ficha-vitalidade-rapida.service';
 import { RolagemService } from '../../../ficha/rolagem.service';
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
+import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
 
 /** Janela da tira "Rolagens Recentes" (item 3) — só rolagens feitas na última hora. */
 const UMA_HORA_MS = 60 * 60 * 1000;
@@ -162,6 +163,7 @@ type EquipeFichaExibicao =
     HoldRepeat,
     BandejaDados,
     CalculadoraFlutuante,
+    CadernoFlutuante,
     FichaVisualizacao,
     FichaRolagensPainel,
     Tooltip,
@@ -1284,6 +1286,10 @@ export class CampanhaDetalhe {
   /** Rota da ficha — reusada pelo duplo clique (mesma aba) e pelo clique do meio (nova aba). */
   private caminhoFicha(campanhaId: number, fichaId: number): (string | number)[] {
     return ['/painel', campanhaId, 'ficha', fichaId];
+  }
+
+  protected abrirAnotacoesFicha(fichaId: number): void {
+    void this.router.navigate(this.caminhoFicha(this.id, fichaId), { fragment: 'anotacoes' });
   }
 
   /**

@@ -87,6 +87,16 @@
             [fichas]="fichasDestinoInventario()" (atualizado)="inventarioEsquadrao.set($event)" />
         }
         <app-calculadora-flutuante />
+        @if (usuarioAtivoId(); as usuarioId) {
+          <app-caderno-flutuante
+            [campanhaId]="campanhaAtual.id"
+            [campanhaNome]="campanhaAtual.nome"
+            [usuarioAtivoId]="usuarioId"
+            [ehMestre]="ehMestre()"
+            [membros]="membros()"
+            (abrirFicha)="abrirAnotacoesFicha($event)"
+          />
+        }
         @if (exibirComoMestre()) {
           <div class="detalhe__cabecalho-menu-envoltorio">
             <button
