@@ -13,6 +13,7 @@ import { AutorizacaoGuard } from './modules/usuario/autorizacao.guard';
 import { CampanhaModule } from './modules/campanha/campanha.module';
 import { FichaModule } from './modules/ficha/ficha.module';
 import { RolagemModule } from './modules/rolagem/rolagem.module';
+import { PaginaCadernoModule } from './modules/pagina-caderno/pagina-caderno.module';
 
 /**
  * Módulo raiz da aplicação. Registra a infraestrutura genérica (`core/`) global, o
@@ -32,6 +33,7 @@ import { RolagemModule } from './modules/rolagem/rolagem.module';
     CampanhaModule,
     FichaModule,
     RolagemModule,
+    PaginaCadernoModule,
     GatewayModule,
   ],
   controllers: [HealthController],
