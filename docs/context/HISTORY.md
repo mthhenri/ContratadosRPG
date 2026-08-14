@@ -20,6 +20,13 @@ com 59 arquivos e 949 testes no frontend e 22 arquivos e 310 testes no backend; 
 frontend também passaram.
 O build manteve apenas o aviso conhecido do budget inicial (638,35 kB para limite de 630 kB).
 
+Uma revisão visual posterior alinhou o gatilho do jogador exatamente ao botão `Abrir completa`
+(mesma caixa, tipografia e ícone nos dois viewports) e substituiu o seletor genérico do catálogo por
+categorias com os ícones canônicos. Os cards de aquisição agora repetem a hierarquia da ficha:
+nome, dado mecânico, descrição, custo/peso e ação compacta. No mobile, a grade acompanha a rolagem
+da página em vez de criar uma rolagem interna. A inspeção confirmou os dois botões com 141,5×44 px,
+texto de 10 px e ícones de 12×12 em 360×800, sem overflow; os 949 testes, lint e build passaram.
+
 ## 2026-08-13 — Resolução tardia de `CampanhaService` em `FichaService`
 
 O backend voltava a falhar ao iniciar com `UndefinedDependencyException` no terceiro argumento de

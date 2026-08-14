@@ -16,18 +16,39 @@
 
     @if (catalogoAberto()) {
       <div class="inventario-esquadrao__catalogo">
-        <label>Categoria
-          <select [formControl]="categoriaAtiva">
-            @for (categoria of categorias; track categoria.categoria) {
-              <option [ngValue]="categoria.categoria">{{ categoria.rotulo }}</option>
-            }
-          </select>
-        </label>
+        <nav class="inventario-esquadrao__categorias" aria-label="Categorias do catálogo">
+          @for (categoria of categorias; track categoria.categoria) {
+            <button type="button" class="inventario-esquadrao__categoria-opcao"
+              [class.inventario-esquadrao__categoria-opcao--ativa]="categoriaAtiva.value === categoria.categoria"
+              (click)="categoriaAtiva.setValue(categoria.categoria)">
+              <app-icone [nome]="iconesCategoria[categoria.categoria]" />
+              <span>{{ categoria.rotulo }}</span>
+            </button>
+          }
+        </nav>
         <div class="inventario-esquadrao__catalogo-lista">
           @for (item of itensCatalogo(); track item.nome) {
-            <button type="button" (click)="adicionar(item)" [disabled]="operando()">
-              <strong>{{ item.nome }}</strong><span>{{ item.peso }} peso · {{ item.custo }} custo</span>
-            </button>
+            <article class="inventario-esquadrao__catalogo-item">
+              <header class="inventario-esquadrao__catalogo-item-cabecalho">
+                <app-icone [nome]="iconesCategoria[categoriaAtiva.value]" />
+                <strong>{{ item.nome }}</strong>
+              </header>
+              @if (resumoMecanico(item); as resumo) {
+                <span class="inventario-esquadrao__catalogo-item-stat">{{ resumo }}</span>
+              }
+              @if (item.descricao) {
+                <p>{{ item.descricao }}</p>
+              }
+              <div class="inventario-esquadrao__catalogo-item-meta">
+                <span class="inventario-esquadrao__catalogo-item-custo">${{ item.custo }}</span>
+                <span>{{ item.peso }} {{ item.peso === 1 ? 'slot' : 'slots' }}</span>
+              </div>
+              <button class="inventario-esquadrao__catalogo-adicionar" type="button"
+                (click)="adicionar(item)" [disabled]="operando()">
+                <app-icone nome="mais" />
+                Adicionar
+              </button>
+            </article>
           }
         </div>
       </div>

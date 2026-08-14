@@ -570,14 +570,23 @@
     flex-direction: column;
   }
 
-  &__abrir-completa {
+  &__abrir-completa,
+  &__alternar-inventario {
     flex: none;
     display: inline-flex;
     align-items: center;
     gap: 6px;
     padding: 7px 12px;
     font-size: 10px;
+    line-height: 1;
     text-decoration: none;
+
+    app-icone {
+      display: inline-flex;
+      flex: none;
+      width: 12px;
+      height: 12px;
+    }
   }
 
   &__abrir-completa-rodape {

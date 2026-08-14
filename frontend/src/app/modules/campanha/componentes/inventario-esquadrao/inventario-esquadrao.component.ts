@@ -6,11 +6,26 @@ import type { CampanhaInventarioItemDto } from '@contratados-rpg/shared/dtos/cam
 import { ItemCategoriaEnum } from '@contratados-rpg/shared/enums';
 import { CATALOGO_CATEGORIAS, CATALOGO_ITENS, type ItemCatalogo } from '@contratados-rpg/shared/regras/compras';
 
-import { Icone } from '../../../../shared/icone/icone.component';
+import { Icone, type IconeNome } from '../../../../shared/icone/icone.component';
 import { CampanhaService } from '../../campanha.service';
 import { FichaService } from '../../../ficha/ficha.service';
 
 interface FichaDestinoInventario { readonly id: number; readonly nome: string; }
+
+const ICONES_CATEGORIA: Readonly<Record<ItemCategoriaEnum, IconeNome>> = {
+  [ItemCategoriaEnum.CORPO_A_CORPO]: 'corpo-a-corpo',
+  [ItemCategoriaEnum.EXPLOSIVOS]: 'explosivos',
+  [ItemCategoriaEnum.ARMAS_DE_FOGO]: 'armas-de-fogo',
+  [ItemCategoriaEnum.MUNICOES]: 'municoes',
+  [ItemCategoriaEnum.PROTECOES]: 'protecoes',
+  [ItemCategoriaEnum.EXOTICOS]: 'exoticos',
+  [ItemCategoriaEnum.ARMAZENAMENTO]: 'armazenamento',
+  [ItemCategoriaEnum.OPERACIONAL]: 'operacional',
+  [ItemCategoriaEnum.MEDICINAL]: 'medicinal',
+  [ItemCategoriaEnum.AMPLIFICADOR]: 'amplificador',
+  [ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR]: 'fragmento-construtor',
+  [ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR]: 'fragmento-potencializador',
+};
 
 @Component({
   selector: 'app-inventario-esquadrao',
@@ -37,6 +52,7 @@ export class InventarioEsquadrao {
     ![ItemCategoriaEnum.AMPLIFICADOR, ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
       ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR].includes(categoria),
   );
+  protected readonly iconesCategoria = ICONES_CATEGORIA;
   protected readonly operando = signal(false);
   protected readonly transferencia = signal<CampanhaInventarioItemDto | null>(null);
   protected readonly fichaDestino = new FormControl<number | null>(null);
@@ -45,6 +61,10 @@ export class InventarioEsquadrao {
 
   protected rotuloCategoria(categoria: ItemCategoriaEnum): string {
     return CATALOGO_CATEGORIAS.find((item) => item.categoria === categoria)?.rotulo ?? categoria;
+  }
+
+  protected resumoMecanico(item: ItemCatalogo): string | null {
+    return item.dano ?? item.resistencia ?? item.bonus ?? item.informacao ?? null;
   }
 
   protected adicionar(item: ItemCatalogo): void {
