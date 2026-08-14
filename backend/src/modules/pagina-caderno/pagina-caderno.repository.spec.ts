@@ -1,4 +1,5 @@
 import type { Knex } from 'knex';
+import { BuscaCampanhaFonteEnum } from '@contratados-rpg/shared/enums';
 import { describe, expect, it, vi } from 'vitest';
 
 import { PaginaCadernoRepository } from './pagina-caderno.repository';
@@ -123,5 +124,83 @@ describe('PaginaCadernoRepository', () => {
     expect(sql).toContain('SET is_deleted = true, deleted_date = NOW(), updated_date = NOW()');
     expect(sql).toContain('WHERE id = :id AND is_deleted = false');
     expect(parametros).toEqual({ id: 9 });
+  });
+
+  it('combina somente os ramos autorizados e pagina com ordem estável', async () => {
+    const raw = vi
+      .fn()
+      .mockResolvedValueOnce({ rows: [{ total: '1' }] })
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            tipo: 'PAGINA_CADERNO',
+            id: 9,
+            titulo: 'Relatório',
+            trecho: '⟦contenção⟧',
+            autorNome: 'Agente Alfa',
+            updatedDate: '2026-08-14T12:00:00.000Z',
+            relevancia: 0.8,
+          },
+        ],
+      });
+    const repositorio = new PaginaCadernoRepository({ raw } as unknown as Knex);
+
+    const resultado = await repositorio.buscarCampanha({
+      campanhaId: 3,
+      usuarioAtivoId: 7,
+      termo: 'contenção',
+      fontes: [BuscaCampanhaFonteEnum.MEU_CADERNO, BuscaCampanhaFonteEnum.MINHAS_FICHAS],
+      pagina: 2,
+      limite: 20,
+    });
+
+    const [sqlContagem, parametrosContagem] = raw.mock.calls[0] as [
+      string,
+      Record<string, unknown>,
+    ];
+    const [sqlItens, parametrosItens] = raw.mock.calls[1] as [string, Record<string, unknown>];
+    expect(sqlContagem).toContain("'PAGINA_CADERNO' AS tipo");
+    expect(sqlContagem).toContain("'ANOTACAO_FICHA' AS tipo");
+    expect(sqlContagem).toContain('pagina_caderno.usuario_autor_id = :usuarioAtivoId');
+    expect(sqlContagem).toContain('ficha.usuario_id = :usuarioAtivoId');
+    expect(sqlContagem).not.toContain('tipo_campanha_membro_papel.codigo = :papelJogador');
+    expect(sqlItens).toContain('UNION ALL');
+    expect(sqlItens).toContain('ORDER BY relevancia DESC, "updatedDate" DESC, id DESC');
+    expect(sqlItens).toContain('LIMIT :itensPorPagina OFFSET :deslocamento');
+    expect(parametrosContagem).toEqual({
+      campanhaId: 3,
+      usuarioAtivoId: 7,
+      termo: 'contenção',
+      papelJogador: 'JOGADOR',
+    });
+    expect(parametrosItens).toEqual({
+      ...parametrosContagem,
+      itensPorPagina: 20,
+      deslocamento: 20,
+    });
+    expect(resultado.totalItens).toBe(1);
+    expect(resultado.paginaAtual).toBe(2);
+  });
+
+  it('restringe o ramo de cadernos dos jogadores ao papel JOGADOR', async () => {
+    const raw = vi
+      .fn()
+      .mockResolvedValueOnce({ rows: [{ total: '0' }] })
+      .mockResolvedValueOnce({ rows: [] });
+    const repositorio = new PaginaCadernoRepository({ raw } as unknown as Knex);
+
+    await repositorio.buscarCampanha({
+      campanhaId: 3,
+      usuarioAtivoId: 11,
+      termo: 'laboratório',
+      fontes: [BuscaCampanhaFonteEnum.CADERNOS_JOGADORES],
+      pagina: 1,
+      limite: 20,
+    });
+
+    const [sql] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(sql).toContain('tipo_campanha_membro_papel.codigo = :papelJogador');
+    expect(sql).toContain('pagina_caderno.busca @@ consulta.valor');
+    expect(sql).not.toContain("'ANOTACAO_FICHA' AS tipo");
   });
 });

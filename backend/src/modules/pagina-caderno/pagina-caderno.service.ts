@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type {
+  BuscaCampanhaDto,
+  BuscaCampanhaResultadoDto,
   PaginaCadernoAlterarDto,
   PaginaCadernoCriarDto,
   PaginaCadernoDto,
@@ -10,8 +12,11 @@ import type {
   PaginaCadernoRecuperarDto,
   PaginaCadernoResumoDto,
 } from '@contratados-rpg/shared/dtos/pagina-caderno';
-import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { BuscaCampanhaFonteEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { PaginatedResult } from '@contratados-rpg/shared/interfaces';
 import {
+  BUSCA_CAMPANHA_LIMITE_MAXIMO,
+  BUSCA_CAMPANHA_TERMO_MAXIMO,
   PAGINA_CADERNO_CONTEUDO_MAXIMO,
   PAGINA_CADERNO_TITULO_MAXIMO,
 } from '@contratados-rpg/shared/validators';
@@ -134,6 +139,59 @@ export class PaginaCadernoService {
     await this.paginaCadernoRepositorio.excluirPagina(dto);
   }
 
+  async buscarCampanha(
+    dto: BuscaCampanhaDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<PaginatedResult<BuscaCampanhaResultadoDto>> {
+    const papelAtivo = await this.recuperarPapelMembro({
+      campanhaId: dto.campanhaId,
+      usuarioId: usuarioAtivo.sub,
+    });
+    const termo = typeof dto.termo === 'string' ? dto.termo.trim() : '';
+    if (termo.length > BUSCA_CAMPANHA_TERMO_MAXIMO) {
+      throw new BusinessException(
+        `Termo de busca deve ter no máximo ${BUSCA_CAMPANHA_TERMO_MAXIMO} caracteres`,
+      );
+    }
+    const pagina = dto.pagina ?? 1;
+    const limite = dto.limite ?? 20;
+    if (!Number.isInteger(pagina) || pagina < 1) {
+      throw new BusinessException('Página da busca deve ser um inteiro maior que zero');
+    }
+    if (!Number.isInteger(limite) || limite < 1 || limite > BUSCA_CAMPANHA_LIMITE_MAXIMO) {
+      throw new BusinessException(
+        `Limite da busca deve estar entre 1 e ${BUSCA_CAMPANHA_LIMITE_MAXIMO}`,
+      );
+    }
+
+    const fontesPermitidas = this.fontesPermitidas(papelAtivo);
+    const fontes = dto.fontes === undefined ? fontesPermitidas : [...dto.fontes];
+    const valoresConhecidos = Object.values(BuscaCampanhaFonteEnum) as string[];
+    if (fontes.some((fonte) => !valoresConhecidos.includes(fonte))) {
+      throw new BusinessException('Fonte de busca inválida');
+    }
+    if (fontes.some((fonte) => !fontesPermitidas.includes(fonte))) {
+      throw new UnauthorizedAccessException('Fonte de busca não permitida');
+    }
+    if (!termo || fontes.length === 0) {
+      return new PaginatedResult({
+        itens: [],
+        totalItens: 0,
+        paginaAtual: pagina,
+        totalPaginas: 0,
+      });
+    }
+
+    return this.paginaCadernoRepositorio.buscarCampanha({
+      campanhaId: dto.campanhaId,
+      usuarioAtivoId: usuarioAtivo.sub,
+      termo,
+      fontes,
+      pagina,
+      limite,
+    });
+  }
+
   private validarConteudo(
     titulo: string,
     conteudoMarkdown: string,
@@ -153,6 +211,18 @@ export class PaginaCadernoService {
       );
     }
     return { titulo: tituloNormalizado, conteudoMarkdown };
+  }
+
+  private fontesPermitidas(
+    papel: TipoCampanhaMembroPapelEnum,
+  ): readonly BuscaCampanhaFonteEnum[] {
+    return papel === TipoCampanhaMembroPapelEnum.MESTRE
+      ? [
+          BuscaCampanhaFonteEnum.MEU_CADERNO,
+          BuscaCampanhaFonteEnum.CADERNOS_JOGADORES,
+          BuscaCampanhaFonteEnum.FICHAS_CAMPANHA,
+        ]
+      : [BuscaCampanhaFonteEnum.MEU_CADERNO, BuscaCampanhaFonteEnum.MINHAS_FICHAS];
   }
 
   private async recuperarPapelMembro(dto: {

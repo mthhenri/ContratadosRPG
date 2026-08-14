@@ -1,4 +1,5 @@
 import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
+import { BuscaCampanhaFonteEnum } from '@contratados-rpg/shared/enums';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
@@ -37,6 +38,33 @@ describe('PaginaCadernoController', () => {
 
     expect(alterarPagina).toHaveBeenCalledWith(
       { id: 9, titulo: 'Página', conteudoMarkdown: 'Texto', updatedDate: '2026-08-14T12:00:00.000Z' },
+      usuario,
+    );
+  });
+
+  it('mescla campanha e paginação na busca', async () => {
+    const buscarCampanha = vi.fn().mockResolvedValue({ itens: [] });
+    const controller = new PaginaCadernoController({
+      buscarCampanha,
+    } as unknown as PaginaCadernoService);
+
+    await controller.buscar(
+      3,
+      'contenção',
+      [BuscaCampanhaFonteEnum.MEU_CADERNO, BuscaCampanhaFonteEnum.MINHAS_FICHAS],
+      2,
+      10,
+      usuario,
+    );
+
+    expect(buscarCampanha).toHaveBeenCalledWith(
+      {
+        campanhaId: 3,
+        termo: 'contenção',
+        fontes: [BuscaCampanhaFonteEnum.MEU_CADERNO, BuscaCampanhaFonteEnum.MINHAS_FICHAS],
+        pagina: 2,
+        limite: 10,
+      },
       usuario,
     );
   });

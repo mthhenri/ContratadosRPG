@@ -1,5 +1,10 @@
 import type { PaginaCadernoInternoRecuperadaDto } from '@contratados-rpg/shared/dtos/pagina-caderno';
-import { TipoCampanhaMembroPapelEnum, TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
+import {
+  BuscaCampanhaFonteEnum,
+  TipoCampanhaMembroPapelEnum,
+  TipoUsuarioEnum,
+} from '@contratados-rpg/shared/enums';
+import { PaginatedResult } from '@contratados-rpg/shared/interfaces';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -19,6 +24,7 @@ interface PaginaRepositorioDublado {
   recuperarPagina: ReturnType<typeof vi.fn>;
   alterarPagina: ReturnType<typeof vi.fn>;
   excluirPagina: ReturnType<typeof vi.fn>;
+  buscarCampanha: ReturnType<typeof vi.fn>;
 }
 
 interface CampanhaRepositorioDublado {
@@ -66,6 +72,7 @@ describe('PaginaCadernoService', () => {
       recuperarPagina: vi.fn(),
       alterarPagina: vi.fn(),
       excluirPagina: vi.fn(),
+      buscarCampanha: vi.fn(),
     };
     campanhaRepositorio = { recuperarMembro: vi.fn() };
     service = new PaginaCadernoService(
@@ -242,5 +249,94 @@ describe('PaginaCadernoService', () => {
       ResourceNotFoundException,
     );
     expect(campanhaRepositorio.recuperarMembro).not.toHaveBeenCalled();
+  });
+
+  it('jogador busca por padrão somente no próprio caderno e nas próprias fichas', async () => {
+    campanhaRepositorio.recuperarMembro.mockResolvedValue({
+      papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+    });
+    paginaRepositorio.buscarCampanha.mockResolvedValue(
+      new PaginatedResult({ itens: [], totalItens: 0, paginaAtual: 1, totalPaginas: 0 }),
+    );
+
+    await service.buscarCampanha({ campanhaId: 3, termo: 'contenção' }, usuarioAutor);
+
+    expect(paginaRepositorio.buscarCampanha).toHaveBeenCalledWith({
+      campanhaId: 3,
+      usuarioAtivoId: 7,
+      termo: 'contenção',
+      fontes: [BuscaCampanhaFonteEnum.MEU_CADERNO, BuscaCampanhaFonteEnum.MINHAS_FICHAS],
+      pagina: 1,
+      limite: 20,
+    });
+  });
+
+  it('mestre busca por padrão no próprio caderno, cadernos dos jogadores e fichas da campanha', async () => {
+    campanhaRepositorio.recuperarMembro.mockResolvedValue({
+      papel: TipoCampanhaMembroPapelEnum.MESTRE,
+    });
+    paginaRepositorio.buscarCampanha.mockResolvedValue(
+      new PaginatedResult({ itens: [], totalItens: 0, paginaAtual: 1, totalPaginas: 0 }),
+    );
+
+    await service.buscarCampanha({ campanhaId: 3, termo: 'contenção' }, usuarioMestre);
+
+    expect(paginaRepositorio.buscarCampanha).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fontes: [
+          BuscaCampanhaFonteEnum.MEU_CADERNO,
+          BuscaCampanhaFonteEnum.CADERNOS_JOGADORES,
+          BuscaCampanhaFonteEnum.FICHAS_CAMPANHA,
+        ],
+      }),
+    );
+  });
+
+  it('recusa fonte reservada ao mestre antes de consultar o repository', async () => {
+    campanhaRepositorio.recuperarMembro.mockResolvedValue({
+      papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+    });
+
+    await expect(
+      service.buscarCampanha(
+        {
+          campanhaId: 3,
+          termo: 'x',
+          fontes: [BuscaCampanhaFonteEnum.CADERNOS_JOGADORES],
+        },
+        usuarioAutor,
+      ),
+    ).rejects.toBeInstanceOf(UnauthorizedAccessException);
+    expect(paginaRepositorio.buscarCampanha).not.toHaveBeenCalled();
+  });
+
+  it('recusa código de fonte desconhecido como erro de negócio', async () => {
+    campanhaRepositorio.recuperarMembro.mockResolvedValue({
+      papel: TipoCampanhaMembroPapelEnum.MESTRE,
+    });
+
+    await expect(
+      service.buscarCampanha(
+        { campanhaId: 3, termo: 'x', fontes: ['DESCONHECIDA' as BuscaCampanhaFonteEnum] },
+        usuarioMestre,
+      ),
+    ).rejects.toBeInstanceOf(BusinessException);
+    expect(paginaRepositorio.buscarCampanha).not.toHaveBeenCalled();
+  });
+
+  it('termo vazio devolve página vazia sem executar busca', async () => {
+    campanhaRepositorio.recuperarMembro.mockResolvedValue({
+      papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+    });
+
+    const resultado = await service.buscarCampanha({ campanhaId: 3, termo: '   ' }, usuarioAutor);
+
+    expect(resultado).toEqual({
+      itens: [],
+      totalItens: 0,
+      paginaAtual: 1,
+      totalPaginas: 0,
+    });
+    expect(paginaRepositorio.buscarCampanha).not.toHaveBeenCalled();
   });
 });

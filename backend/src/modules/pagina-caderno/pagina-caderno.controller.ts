@@ -1,13 +1,28 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  DefaultValuePipe,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import type {
+  BuscaCampanhaResultadoDto,
   PaginaCadernoAlterarDto,
   PaginaCadernoCriarDto,
   PaginaCadernoDto,
   PaginaCadernoResumoDto,
 } from '@contratados-rpg/shared/dtos/pagina-caderno';
+import { BuscaCampanhaFonteEnum } from '@contratados-rpg/shared/enums';
+import type { PaginatedResult } from '@contratados-rpg/shared/interfaces';
 
 import { ActiveUser } from '../../core/decorators';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
+import { BuscaCampanhaFontesPipe } from './busca-campanha-fontes.pipe';
 import { PaginaCadernoService } from './pagina-caderno.service';
 
 /** Endpoints protegidos do caderno; ids de rota são apenas mesclados aos DTOs. */
@@ -64,5 +79,21 @@ export class PaginaCadernoController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<void> {
     return this.service.excluirPagina({ id }, usuarioAtivo);
+  }
+
+  @Get('campanha/:campanhaId/busca')
+  buscar(
+    @Param('campanhaId', ParseIntPipe) campanhaId: number,
+    @Query('termo') termo: string,
+    @Query('fontes', new BuscaCampanhaFontesPipe())
+    fontes: BuscaCampanhaFonteEnum[] | undefined,
+    @Query('pagina', new DefaultValuePipe(1), ParseIntPipe) pagina: number,
+    @Query('limite', new DefaultValuePipe(20), ParseIntPipe) limite: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<PaginatedResult<BuscaCampanhaResultadoDto>> {
+    return this.service.buscarCampanha(
+      { campanhaId, termo, fontes, pagina, limite },
+      usuarioAtivo,
+    );
   }
 }
