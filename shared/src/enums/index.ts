@@ -20,3 +20,5 @@ export * from './formacao-parametro.enum';
 export * from './rolagem-visibilidade.enum';
 export * from './tipo-usuario.enum';
 export * from './usuario-situacao.enum';
+export * from './busca-campanha-fonte.enum';
+export * from './busca-campanha-resultado-tipo.enum';
