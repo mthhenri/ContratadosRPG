@@ -1,4 +1,4 @@
-import type { ArquetipoEnum, ClasseEnum, TipoFichaEnum } from '../../enums';
+import type { ArquetipoEnum, ClasseEnum, NivelAmeacaEnum, TipoFichaEnum } from '../../enums';
 import type { AmplificadorAplicadoDto, CarrinhoItemDto } from '../../regras/compras';
 import type { FichaAtributosDto, FichaHabilidadeDto, FichaJogadorDadosDto } from './ficha.dtos';
 
@@ -101,6 +101,17 @@ export interface FichaResumoDto {
   readonly nome: string;
   /** Cor de identidade visual (m3-61) — ver {@link FichaCriarDto.cor}. Alimenta o avatar do mini-card. */
   readonly cor?: string | null;
+  /**
+   * Tipo da ficha (`m4-04`) — `JOGADOR`/`CRIATURA`/`NPC`. Alimenta a divisão da coluna
+   * "Esquadrão" (jogador) × "Criaturas" no painel da campanha; os campos abaixo (`classe`/
+   * `arquetipo`/`nivel`) só fazem sentido para `JOGADOR` — numa `CRIATURA` saem `null`/`0` e o
+   * mini-card usa `na` no lugar. Opcional (não `undefined` em produção — a query sempre resolve
+   * via `JOIN tipo_ficha`) só para não obrigar todo fixture de teste pré-m4-04 a declarar o campo;
+   * o front trata ausência como "não é criatura" (mesmo efeito de `JOGADOR`).
+   */
+  readonly tipo?: TipoFichaEnum;
+  /** Nível de Ameaça (`FichaCriaturaDadosDto.na`) — só presente numa ficha `CRIATURA`. */
+  readonly na?: NivelAmeacaEnum | null;
   readonly classe: ClasseEnum;
   readonly arquetipo: ArquetipoEnum | null;
   readonly nivel: number;

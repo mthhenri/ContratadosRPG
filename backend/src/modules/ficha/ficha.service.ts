@@ -14,6 +14,13 @@ import type {
   FichaCampanhaInternoAtribuirDto,
   FichaCriadaDto,
   FichaCriarDto,
+  FichaCriaturaAlteradaDto,
+  FichaCriaturaCriadaDto,
+  FichaCriaturaCriarDto,
+  FichaCriaturaDadosDto,
+  FichaCriaturaInternoAlterarDto,
+  FichaCriaturaRecuperadaDto,
+  FichaCriaturaRecuperarDto,
   FichaDerivadosDto,
   FichaDuplicarDto,
   FichaExcluirDto,
@@ -51,6 +58,7 @@ import {
   maestriaValida,
 } from '@contratados-rpg/shared/regras/agente';
 import { calcularResumoCompras, type CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
+import { validarFichaCriatura } from '@contratados-rpg/shared/regras/criatura';
 import {
   aplicarFormacaoAosDerivados,
   experimentoComPeculiaridade,
@@ -239,6 +247,8 @@ export class FichaService {
       nome: fichaInterna.nome,
       cor: fichaInterna.cor,
       imagemUrl: fichaInterna.imagemUrl,
+      tipo: fichaInterna.tipo,
+      na: fichaInterna.na,
       classe: fichaInterna.classe,
       arquetipo: fichaInterna.arquetipo,
       nivel: fichaInterna.nivel,
@@ -253,7 +263,13 @@ export class FichaService {
       defesa: fichaInterna.defesa,
       esquiva: fichaInterna.esquiva,
       bloqueio: fichaInterna.bloqueio,
-      contraAtaque: fichaInterna.contraAtaque ?? this.calcularContraAtaqueAoVivo(fichaInterna),
+      // O fallback "ao vivo" (`calcularDerivados`) assume a forma de ficha de JOGADOR (classe/
+      // nivel/atributos) — uma CRIATURA nunca persiste `contraAtaque` (é sempre derivado, nunca
+      // salvo — `FichaCriaturaDadosDto`), então cai aqui sempre `undefined` sem o guard de tipo,
+      // e sem sentido tentar recalcular com `classe`/`nivel` nulos.
+      contraAtaque:
+        fichaInterna.contraAtaque ??
+        (fichaInterna.tipo === TipoFichaEnum.JOGADOR ? this.calcularContraAtaqueAoVivo(fichaInterna) : undefined),
       personalidade: fichaInterna.personalidade,
       origemNome: fichaInterna.origemNome,
       sobrecarregado: this.calcularSobrecarregado(fichaInterna),
@@ -633,6 +649,158 @@ export class FichaService {
 
     await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
     await this.fichaRepositorio.excluirFicha(dto);
+  }
+
+  /**
+   * ── Ficha de criatura (M4, `m4-03`) ──────────────────────────────────────────────────────
+   * Ferramenta do mestre para ameaças (`docs/core/guia_de_mestre-v4.0.0.md` — "Guia de Criação
+   * de Ameaças"). Só o **mestre** cria (§14 — "criar criatura/NPC": mestre irrestrito, demais
+   * nunca; sem delegação de dono, diferente de jogador); dono é sempre o próprio mestre; sempre
+   * dentro de uma campanha (VD/NA são calibrados para o grupo — sem ficha "avulsa" nesta task).
+   *
+   * **Contratos de operação próprios** (`FichaCriatura*Dto`, decisão de abertura da task — ver
+   * `shared/src/dtos/ficha/ficha-criatura-operacao.dtos.ts`), não uma união em cima dos contratos
+   * de jogador. O `FichaRepository` continua único e sem duplicação (`criarFicha`/
+   * `recuperarPorId`/`alterarFicha` já são SQL agnóstico da forma do JSONB — só `colunasResumo()`,
+   * não usada aqui, é jogador-específica): a ponte entre os dois contratos de tipo acontece só
+   * aqui, num cast documentado — o `dados` armazenado sempre foi JSONB, o tipo do repositório
+   * sempre foi uma promessa de forma no lado do TypeScript, nunca uma garantia de runtime (mesmo
+   * para jogador).
+   *
+   * **Sem regra de negócio duplicada** (§16 proibição — "nenhuma regra de criação duplicada fora
+   * de `shared/regras/criatura`"): a única validação de domínio é `validarFichaCriatura`
+   * (`m4-02`) — mesmo padrão de `validarDadosContraRegras`, mas sem as camadas extras que só
+   * fazem sentido para o formato de jogador (Maestria, Identidade, Contrato, munição).
+   *
+   * **Visibilidade oculta por padrão, sem mudança de mecanismo** (§14 — "Regras fundamentais":
+   * "invisíveis aos jogadores por padrão; reveláveis via `usuario_ficha_acesso`. Sem caso
+   * especial."): dono = mestre e nenhum jogador ganha acesso automático — o mesmo
+   * `validarPermissaoVisualizacao`/`validarPermissaoEdicao` já usados por `recuperarFicha`/
+   * `alterarFicha` (só olham `usuarioId`/`campanhaId`, nunca a forma de `dados`) bastam, reusados
+   * tal como estão. Exclusão (`excluirFicha`) e acesso (`concederAcesso`/`revogarAcesso`/
+   * `listarAcessos`) já são 100% agnósticos de tipo — reusa as mesmas rotas, sem DTO próprio.
+   *
+   * **Tempo real — `ficha:criada` não é emitido na criação.** `CampanhaGateway.emitirFichaCriada`
+   * monta o resumo direto de `ficha.dados.classe`/`.estado.vidaAtual` (forma de jogador) e
+   * transmite pra sala `campanha:<id>` **inteira** — qualquer membro, sem checar permissão
+   * (§14: a visualização do documento é mais restrita que a sala). Chamá-lo aqui vazaria
+   * nome/vida da criatura recém-criada a todo jogador da campanha antes de qualquer revelação
+   * deliberada, contradizendo a regra de "invisível por padrão" acima — por isso a criação de
+   * criatura **não** transmite `ficha:criada` (mesma lógica do `if (campanhaId === null) return`
+   * já existente ali, aplicada por tipo em vez de por ausência de campanha). `emitirFichaAlterada`
+   * já é seguro de reusar sem essa ressalva: ele só atinge a sala `ficha:<id>`, cuja entrada
+   * (`CampanhaGateway.entrarSalaFicha`) já exige a mesma permissão de visualização via
+   * `recuperarFicha` — quem está na sala já podia ver a ficha.
+   */
+  async criarFichaCriatura(
+    dto: FichaCriaturaCriarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<FichaCriaturaCriadaDto> {
+    const membroAtivo = await this.campanhaRepositorio.recuperarMembro({
+      campanhaId: dto.campanhaId,
+      usuarioId: usuarioAtivo.sub,
+    });
+    if (!membroAtivo || membroAtivo.papel !== TipoCampanhaMembroPapelEnum.MESTRE) {
+      throw new UnauthorizedAccessException();
+    }
+
+    this.validarDadosCriaturaContraRegras(dto.dados);
+    this.validarCor(dto.cor);
+
+    const fichaCriada = await this.fichaRepositorio.criarFicha({
+      campanhaId: dto.campanhaId,
+      usuarioId: usuarioAtivo.sub,
+      tipo: TipoFichaEnum.CRIATURA,
+      nome: dto.nome,
+      cor: dto.cor ?? null,
+      dados: dto.dados as unknown as FichaJogadorDadosDto,
+    });
+
+    return this.paraCriaturaCriada(fichaCriada);
+  }
+
+  /** Recupera uma ficha de criatura pelo `id` — mesma permissão de visualização de `recuperarFicha` (§14). */
+  async recuperarFichaCriatura(
+    dto: FichaCriaturaRecuperarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<FichaCriaturaRecuperadaDto> {
+    const fichaEncontrada = await this.fichaRepositorio.recuperarPorId(dto);
+    if (!fichaEncontrada) {
+      throw new ResourceNotFoundException('Ficha');
+    }
+
+    const ehSoVisualizador = await this.validarPermissaoVisualizacao(fichaEncontrada, usuarioAtivo);
+    const dados = ehSoVisualizador
+      ? omitirCamposPrivados(fichaEncontrada.dados)
+      : fichaEncontrada.dados;
+    return this.paraCriaturaRecuperada({ ...fichaEncontrada, dados });
+  }
+
+  /**
+   * Altera `nome` e o documento de jogo de uma ficha de criatura — mesma permissão de edição de
+   * `alterarFicha` (§14: só o dono, que é sempre o mestre). O `id` vem no DTO (montado pela
+   * controller com o `@Param`).
+   */
+  async alterarFichaCriatura(
+    dto: FichaCriaturaInternoAlterarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<FichaCriaturaAlteradaDto> {
+    const fichaEncontrada = await this.fichaRepositorio.recuperarPorId({ id: dto.id });
+    if (!fichaEncontrada) {
+      throw new ResourceNotFoundException('Ficha');
+    }
+
+    await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
+    this.validarDadosCriaturaContraRegras(dto.dados);
+    this.validarCor(dto.cor);
+
+    const fichaAlterada = await this.fichaRepositorio.alterarFicha({
+      id: dto.id,
+      nome: dto.nome,
+      cor: dto.cor,
+      oculta: dto.oculta,
+      dados: dto.dados as unknown as FichaJogadorDadosDto,
+    });
+
+    // `FichaRecuperadaDto` (retorno de `alterarFicha`) e `FichaAlteradaDto` têm forma idêntica —
+    // sem cast necessário (a fronteira de tipos entre os dois contratos só existe para `dados`,
+    // já resolvida acima).
+    this.campanhaGateway.emitirFichaAlterada(fichaAlterada);
+    if (fichaEncontrada.oculta !== fichaAlterada.oculta) {
+      this.campanhaGateway.emitirFichaVisibilidadeAlterada({
+        fichaId: fichaAlterada.id,
+        // Criatura sempre pertence a uma campanha (sem "avulsa" — entregável 2); `campanhaId`
+        // chega `number | null` no tipo do repositório (agnóstico de tipo de ficha), mas nunca
+        // é `null` em runtime aqui.
+        campanhaId: fichaAlterada.campanhaId!,
+      });
+    }
+
+    return this.paraCriaturaAlterada(fichaAlterada);
+  }
+
+  /** Valida o documento de criatura contra `shared/regras/criatura` (`m4-02`) — o motor é o único árbitro. */
+  private validarDadosCriaturaContraRegras(dados: FichaCriaturaDadosDto): void {
+    const { violacoes } = validarFichaCriatura(dados);
+    if (violacoes.length > 0) {
+      throw new BusinessException(`Ficha de criatura inválida: ${violacoes.join('; ')}`);
+    }
+  }
+
+  /**
+   * Estreita o retorno agnóstico de `FichaRepository` (contrato interno, forma de jogador) para o
+   * contrato público de criatura — ver nota de "Contratos de operação próprios" acima.
+   */
+  private paraCriaturaCriada(fichaCriada: FichaCriadaDto): FichaCriaturaCriadaDto {
+    return fichaCriada as unknown as FichaCriaturaCriadaDto;
+  }
+
+  private paraCriaturaRecuperada(fichaRecuperada: FichaRecuperadaDto): FichaCriaturaRecuperadaDto {
+    return fichaRecuperada as unknown as FichaCriaturaRecuperadaDto;
+  }
+
+  private paraCriaturaAlterada(fichaAlterada: FichaAlteradaDto): FichaCriaturaAlteradaDto {
+    return fichaAlterada as unknown as FichaCriaturaAlteradaDto;
   }
 
   /**

@@ -11,6 +11,8 @@ import {
   FichaCampanhaAtribuidaDto,
   FichaCriadaDto,
   FichaCriarDto,
+  FichaCriaturaCriadaDto,
+  FichaCriaturaCriarDto,
   FichaImagemAlteradaDto,
   FichaRecuperadaDto,
   FichaResumoDto,
@@ -46,6 +48,18 @@ export class FichaService {
     return this.httpClient
       .post<StandardResponse<FichaCriadaDto>>(this.base, dto)
       .pipe(map((resposta) => resposta.dados as FichaCriadaDto));
+  }
+
+  /**
+   * Cria a ficha de criatura (Ameaça) — só o mestre da campanha (§14; barrado com 403 no
+   * backend, `m4-03`). Sempre dentro de campanha, sem "avulsa" — `campanhaId` é obrigatório no
+   * DTO. Contrato de operação próprio (`FichaCriaturaCriarDto`/`*CriadaDto`), não união com o
+   * de jogador (`m4-01`/`m4-03`: "dois contratos, não um").
+   */
+  criarFichaCriatura(dto: FichaCriaturaCriarDto): Observable<FichaCriaturaCriadaDto> {
+    return this.httpClient
+      .post<StandardResponse<FichaCriaturaCriadaDto>>(`${this.base}/criatura`, dto)
+      .pipe(map((resposta) => resposta.dados as FichaCriaturaCriadaDto));
   }
 
   /**

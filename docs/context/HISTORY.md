@@ -1,5 +1,354 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-14 — `m4-04b`: polimento de UI do assistente de criatura e do painel do mestre (fora da fila de specs)
+
+Pedido direto do autor, entre a `m4-04` e o início da `m4-05` — não uma task numerada da fila M4,
+mas registrado com o mesmo rigor por tocar código de produção (frontend + um ajuste real de
+backend). Cinco pedidos, todos entregues:
+
+**1. Revisão visual do assistente de criatura.** `.campo` consecutivos fora de um `.guia__campos`
+(ex.: "Linha de conceito" → "Natureza física" na Identidade, ou qualquer par de campos avulsos nos
+demais passos) encostavam um no outro — `.campo` tem `margin: 0` e só existiam regras de
+espaçamento para quando um `.guia__campos` entrava no meio (`&__campos + .campo`/`.campo +
+&__campos`, 16px). Faltava a regra simétrica `.campo + .campo`. Corrigido com uma única linha de
+CSS (`criar-criatura.page.scss`), reaproveitando o mesmo valor de 16px já usado nos vizinhos —
+verificado ao vivo (Playwright mediu 0px → 16px entre "Linha de conceito" e "Natureza física").
+Segundo achado: o botão "+ Adicionar X" (Resistências/Fraquezas/Ataques/Habilidades) encostava
+direto no grid de cards acima dele por falta de margem — `&__formacoes + &__vaga-escolher` (8px
+topo / 18px base) resolve, sem alterar o resto do framework `.guia__*` (compartilhado por
+precedente com o guia de jogador, sem partial comum — ver comentário no topo do `.scss`).
+
+**2. Upload de imagem na criatura.** O passo // Identidade não tinha nenhum campo de imagem — a
+`m4-04` original não trouxe (o guia de jogador tem avatar desde `m3-62`, mas os blocos foram
+removidos do `.scss`/`.html` da criatura "por precedente" ao adaptar o framework). Reintroduzido o
+mesmo padrão exato do guia de jogador: `imagemArquivo`/`imagemPreviewUrl`/`erroImagemGuia`
+(signals), validação client-side de tipo/tamanho (JPEG/PNG/WEBP, 2MB) espelhando os limites do
+backend, preview via `URL.createObjectURL` revogado no `DestroyRef.onDestroy`, e o upload real
+como **segundo request** (`FichaService.alterarImagem`, já existente e agnóstico de tipo de
+ficha — nenhuma rota nova) disparado por `criar()` só depois que o `id` da ficha existir; falha no
+upload não desfaz a criatura nem trava a navegação. Layout: nova modificador `&__campos--base`
+(mesmo grid `minmax(120px,200px) 1fr` do guia de jogador) com a caixa de imagem à esquerda e
+Designação+Origem empilhadas à direita, substituindo a antiga linha de duas colunas
+Designação/Origem. Verificado ao vivo: `setInputFiles` de um PNG 1×1 e o preview aparece na hora
+(`.guia__avatar-imagem`), tanto em 1920×1080 quanto em 360×800 (mobile empilha `--base` para
+`1fr`, mesma regra do jogador).
+
+**3. Botões "Nova Criatura"/"Novo Agente" no painel do mestre.** O cabeçalho da coluna
+"Esquadrão" (`CampanhaDetalhe`) tinha um único botão "Nova ficha" → `abrirCriarFicha()`. Renomeado
+para "Novo Agente" (ícone `novo-agente`, já existia — o nome do ícone antecipava essa renomeação)
+e adicionado "Nova Criatura" (secundário, ícone `alerta` — mesmo usado no avatar do resumo
+operacional do guia de criatura) → novo método `abrirCriarCriatura()`, navega para
+`/painel/:campanhaId/criatura/nova`. Escopo confirmado: este cabeçalho já só renderiza dentro de
+`@if (exibirComoMestre())` — nenhum guard novo necessário, o `mestreCampanhaGuard` da `m4-04` já
+protege a rota de destino contra acesso direto por URL.
+
+**4. Tira de estatísticas reduzida a "Convite".** Os tiles Membros/Fichas/Alertas saíram da tira
+`.detalhe__estatisticas` (ficava só o Convite, a pedido do autor) — a contagem de Membros/Fichas já
+aparece no cabeçalho de cada coluna (`&__secao-contagem`) e o alerta de ficha crítica já tem o
+banner condicional próprio acima (`fichaCritica`/`&__banner-alerta`); nada duplicava informação de
+graça. `alertasCount` (computed que só alimentava o tile removido) foi excluído por não ter mais
+consumidor — `fichasCriticas`/`fichaCritica`, usados pelo banner, ficaram. CSS: a tira virou
+`display: flex` com o tile de Convite em `flex: 0 1 340px` (era um grid fixo de 4 colunas) —
+`flex-basis: 100%` no mobile, mesmo comportamento de antes.
+
+**5. "Esquadrão" dividir a coluna com "Criaturas".** Pedido mais substancial: a coluna
+"Esquadrão" ganhou uma subseção própria "Criaturas" logo abaixo do grid de fichas de jogador —
+**mesma coluna**, não uma terceira (era literalmente o que o autor pediu: "dividir uma coluna",
+não adicionar uma). Isso expôs uma lacuna real: `FichaResumoDto` não carregava `tipo` nenhum —
+`FichaRepository.colunasResumo()` nunca selecionava a coluna `tipo_ficha_id` (nem seu `codigo`), e
+os campos de saúde/defesa da query assumiam sempre o formato de jogador (`dados->'estado'->>...`,
+`dados->'derivados'->>...`) — uma criatura guarda `vidaAtual`/`vidaMaxima`/`defesa` na **raiz** de
+`dados` (`FichaCriaturaDadosDto`), então essas três colunas sempre voltavam `NULL` para uma
+criatura (a mesma lacuna, num raio menor, por trás do `TypeError` do `FichaVisualizacao` já
+registrado como pendência na `m4-04`). Corrigido no `FichaRepository`: `JOIN tipo_ficha` novo
+(`juncaoTipoResumo()`, mesma tradução `codigo ↔ id` que o `criar` já fazia) e `COALESCE` entre os
+dois formatos de `dados` para `vidaAtual`/`vidaMaxima`/`defesa`, mais a coluna `na` (Nível de
+Ameaça, só existe numa criatura). `FichaResumoDto` ganhou `tipo?`/`na?` — **opcionais** de
+propósito (não obrigatórios): a query de produção sempre os preenche (FK `NOT NULL` + `JOIN`
+sem `LEFT`), mas exigir o campo quebraria um número grande de fixtures de teste pré-`m4-04` em
+`acervo`/`criar`/`detalhe`/`ficha.service` que nunca precisaram declará-lo — tratar ausência como
+"não é criatura" é o comportamento correto pra qualquer um desses fixtures legados. `FichaService.
+paraResumoPublico` ganhou um guard de tipo: o fallback "Contra-ataque ao vivo" (`calcularDerivados`,
+assume `classe`/`nivel`/`atributos` de jogador) só roda quando `tipo === JOGADOR` — antes disso ele
+rodaria também para uma criatura (com `classe`/`nivel` sempre `null`), sem sentido e arriscado.
+Frontend (`CampanhaDetalhe`): `fichasPorMembro` passou a pular fichas `CRIATURA` (elas nunca tinham
+`classe`/`energia`/condições de qualquer forma; filtrar cedo evita o item malformado, não só
+escondê-lo depois) e um novo computed `criaturasEsquadrao` monta os cards enxutos (nome, imagem,
+cor, "NA {rótulo}", Vida, Defesa) direto de `fichas()`, ordenados por nome. Os cards **não têm
+link de navegação** — decisão deliberada, não um esquecimento: `FichaVisualizacao` ainda não sabe
+renderizar dados de criatura (a mesma pendência da `m4-04`, ver `CONTEXT.md` seção 7); linkar pra
+lá reproduziria o `TypeError` já documentado, só que a partir de um ponto de entrada novo. Testes
+novos em `detalhe.page.spec.ts` provam a separação (jogador nunca aparece em Criaturas e
+vice-versa) e o estado vazio ("Nenhuma criatura registrada ainda.").
+
+Todos os três testes de workspace passam: shared (build limpo), backend (365/365, incluindo os
+fixtures ajustados para o novo campo `tipo`), frontend (1016/1016 — 2 testes novos líquidos:
+"Novo Agente"/"Nova Criatura" substituíram o antigo teste de "Nova ficha", e a subseção Criaturas
+ganhou 2 testes; a tira de estatísticas ganhou 1 teste substituto para os 2 removidos). Lint
+limpo nos três workspaces. Verificação ao vivo (Postgres nativo + backend + frontend reais, gate
+obrigatório) confirmou tudo: painel do mestre com só o tile Convite, os dois botões com os rótulos
+certos, a subseção Criaturas vazia e depois com "A Estátua"/"Debug*" aparecendo separada do
+Esquadrão, upload de imagem com preview funcionando, gap de 16px entre campos e 8px do botão
+"+ Adicionar" ao grid — em 1920×1080 e 360×800, sem erro de console novo. Painel do jogador
+verificado sem regressão (nenhuma criatura vaza pra "Equipe", que já excluía fichas do mestre) e o
+`mestreCampanhaGuard` da `m4-04` continua barrando acesso direto à rota de criação por um jogador.
+
+## 2026-08-14 — `m4-04`: assistente de criação de criatura (frontend), reproduz "A Estátua" ponta a ponta
+
+Frontend do `m4-03`: assistente de criação de criatura (Ameaça) para o mestre —
+`frontend/src/app/modules/ficha/paginas/criar-criatura/` (`CriaturaCriar`), rota
+`/painel/:campanhaId/criatura/nova`. Mesma filosofia visual de trilha vertical + resumo
+operacional progressivo do guia de jogador (`FichaCriar`, `m3-57`/`58`/`59`), mas componente,
+estado e roteiro **totalmente separados** — o roteiro do "Guia de Criação de Ameaças" não tem
+relação estrutural com o de agente (12 passos fixos, sem passo condicional, diferente do de
+jogador onde // Habilidades só existe com Nível > 0): Identidade → Ameaça (NA/VD) → Atributos →
+Modificadores → Saúde → Defesa → Resistências (e Fraquezas) → Regeneração → Porte e
+Deslocamento → Ataques → Habilidades → Revisão.
+
+**Nenhuma fórmula reimplementada** — todo número vem de `shared/regras/criatura` (`m4-02`) via
+`computed`: `obterBaseELimitePorVd`, `calcularAtributoEfetivo`, `calcularVidaMaxima`,
+`calcularDefesaBase`, `possuiContraAtaque`, `calcularLimiteResistencias`/
+`calcularCustoResistencia`/`validarFraqueza`, `calcularValorRegeneracao`,
+`sugerirDeslocamentoTerrestre`, `calcularBonusIniciativaSugerido`, `obterDanoReferenciaPorVd`.
+O passo // Revisão não reimplementa cada regra de coerência como trava de passo separada —
+chama `validarFichaCriatura` (a mesma função que `FichaService.criarFichaCriatura` chama no
+backend antes de persistir, `m4-03`) sobre os dados montados e usa a lista de violações tanto
+para exibir o que falta quanto para habilitar/desabilitar "Registrar criatura". Passos
+individuais (Atributos, Modificadores, Resistências, Regeneração, Porte e Deslocamento) ainda
+têm travas próprias e mais cedo — usando as mesmas funções do motor, nunca uma cópia da regra —
+para não deixar o mestre chegar à Revisão sem saber o que está incompleto.
+
+**Decisões de abertura desta task:**
+- **Sem rascunho persistido** — diferente do guia de jogador
+  (`GuiaCriacaoRascunhoService`/`localStorage`), este assistente não salva progresso local. A
+  task não pedia retomada nos entregáveis, e o risco de perda é menor que o do guia de jogador
+  (é o mestre criando uma ficha da própria campanha, não um jogador perdendo a ficha do próprio
+  agente).
+- **`nome` da ficha (DTO de nível superior) = `designacao`** da Ficha de Identidade — o roteiro
+  do documento não tem um segundo campo "nome de registro" distinto da Designação; um campo a
+  mais quase idêntico seria redundância sem ganho.
+- **Sem seletor de "operador responsável"** — `FichaCriaturaCriarDto` não tem `usuarioId` (dono
+  é sempre o mestre autenticado, fixado no backend desde a `m4-03`), então o guia não precisa
+  (nem pode) criar em nome de outra pessoa, ao contrário do guia de jogador.
+- **Realocação de atributos sem trava de "3 pontos"** — o motor (`validarRealocacaoAtributos`)
+  só valida limites `[0, limite]` por atributo, não um teto de pontos realocados por atributo de
+  origem; o assistente segue a mesma superfície de validação do motor (stepper livre dentro dos
+  limites) em vez de inventar uma regra adicional que não existe em `shared/regras/criatura`.
+
+**Rota guardada por `mestreCampanhaGuard`** (novo, `frontend/src/app/core/guards/
+mestre-campanha.guard.ts`) — `CanActivateFn` que consulta `CampanhaService.listarMembros` e
+redireciona a `/acesso-negado` quem não é mestre daquela campanha (ou quando a consulta falha).
+Não existia guard nenhum escopado a papel-de-campanha no projeto (`adminGuard`/`tipoGuard`
+checam só o tipo global do usuário); backend já barra com 403 desde a `m4-03`, este guard só
+evita a viagem até o formulário para quem nunca teria a criação aceita. Registrado em
+`app.routes.ts` sob `painel/:campanhaId/criatura`, ao lado (não dentro) de
+`painel/:campanhaId/ficha`, em módulo próprio (`frontend/src/app/modules/ficha/
+criatura.routes.ts`) — só a rota `nova` por enquanto (visualização/edição ficam fora do
+escopo, ver abaixo).
+
+**Verificação ao vivo** (stack real: Postgres 16 + backend NestJS + frontend Angular, dois
+navegadores — mestre e jogador — em 1920×1080 e 360×800; Docker/imagens públicas indisponíveis
+no ambiente de execução desta sessão, então o Postgres subiu via `apt`/`pg_ctl` local em vez de
+`docker compose`, mesmo schema e migrations): o mestre reproduziu "A Estátua" (docs/core/
+guia_de_mestre-v4.0.0.md — "Exemplo de Ficha Completa") passo a passo pelo assistente e os
+valores calculados bateram exatamente com o documento — Base 2/Limite 5/6 Pontos de Ajuste,
+Atributo Efetivo de cada linha (Força 12, Destreza 16, Luta 17, Pontaria 4...), Vida Máxima
+1.050, Defesa 30 com Contra-Ataque disponível, custo de Resistências 52/60, sugestão de
+Deslocamento Terrestre 10–12m (a Estátua usa 9m, sugestão não é trava). Zero violações na
+Revisão; `POST /ficha/criatura` persistiu e o `GET` seguinte devolveu os mesmos dados. Testado
+também que um jogador da mesma campanha, sem concessão, recebe lista vazia em `GET
+/ficha?campanhaId=` e 403 direto em `GET /ficha/criatura/:id` — a regra "invisível por padrão"
+do `m4-03` segura na prática, não só na leitura do código (o campo `oculta` nasce `false` e
+**não** é o mecanismo de proteção; quem protege é a exigência de posse/concessão em
+`listarVisiveisParaUsuario`/`recuperarFicha` — checado e documentado em `CONTEXT.md` para não
+confundir o próximo leitor). Mobile: trilha vira barra de progresso no topo, resumo abre como
+bottom sheet — mesmo padrão do guia de jogador, sem erro de console.
+
+**Achado registrado como pendência (não corrigido nesta task — fora de escopo declarado):**
+abrir a criatura recém-criada em `/painel/:campanhaId/ficha/:id` (`FichaVisualizacao`, a tela de
+visualização/edição de ficha de **jogador**) lança `TypeError: Cannot read properties of
+undefined (reading 'vidaBase')` em `calcularVida` — a tela assume campos de jogador
+(`classe`/`nivel`/`atributos` no formato de agente) que não existem no documento de criatura. A
+spec `m4-04` já previa esse caso ("Fora de Escopo": "a criatura segue a mesma convenção
+'snapshot editável no próprio lugar' da ficha de jogador — se precisar de tela dedicada além da
+reutilização de `FichaVisualizacao`/`modo`, registrar como pendência ao fechar esta task").
+§14 impede qualquer jogador de chegar lá sem concessão, então hoje só afeta o mestre navegando
+direto após criar. Decisão de rumo (tela dedicada vs. adaptar `FichaVisualizacao`) fica em
+aberto para quem fechar `m4-09` (listagem/revelação no painel do mestre) — registrado em
+`CONTEXT.md` §7.
+
+Testes: `frontend` ganhou `criar-criatura.page.spec.ts` (reproduz "A Estátua" via chamadas
+diretas aos métodos protegidos do componente — mesmo padrão de `criar.page.spec.ts` — e
+confere o DTO exato enviado ao `FichaService.criarFichaCriatura`) e
+`mestre-campanha.guard.spec.ts`. `m4-04` movida para `docs/specs/done/`.
+
+## 2026-08-14 — `m4-03`: `backend/ficha` estendido para `CRIATURA`, com DTOs de operação próprios
+
+Extensão do módulo `ficha` (backend) para o tipo `CRIATURA` (a task deixava explicitamente em
+aberto uma decisão de desenho: DTOs de operação **próprios** para a criatura ou os genéricos de
+jogador (`FichaCriarDto`/`FichaResumoDto`…) virando união por tipo. Optou-se por **DTOs
+próprios** (`FichaCriaturaCriarDto`/`*CriadaDto`/`*RecuperarDto`/`*RecuperadaDto`/
+`*AlterarDto`/`*AlteradaDto`, novo arquivo `shared/src/dtos/ficha/
+ficha-criatura-operacao.dtos.ts`), pela mesma razão que já fechou "dois contratos, não um" para
+o documento de jogo em si na `m4-01`: a forma diverge o suficiente (sem `classe`/`nivel`/
+identidade de jogador; dono sempre o mestre, nunca delegável; sempre dentro de campanha) que uma
+união exigiria type-guards espalhados pela `FichaService` inteira, inclusive em código já
+testado e específico do formato de jogador (`aplicarSnapshotDeMaximos`,
+`validarImutabilidadeIdentidade`, `validarContratoSomenteMestre`), sem ganho real. Documentado no
+próprio arquivo de DTOs e em `CONTEXT.md` §6.
+
+**Camada de persistência é o único ponto de fronteira entre os dois contratos.** `FichaRepository`
+segue único e sem duplicação — `criarFicha`/`recuperarPorId`/`alterarFicha`/`excluirFicha` já são
+SQL agnóstico da forma do JSONB (só `colunasResumo()`, usada pelas listagens de jogador, é
+jogador-específica, e não foi tocada). A ponte entre `FichaCriatura*Dto` (contrato público desta
+task) e `Ficha*Dto`/`FichaInterno*Dto` (contrato interno do repositório, desenhado só para
+jogador) é feita inteiramente dentro de `FichaService`, com casts documentados
+(`dto.dados as unknown as FichaJogadorDadosDto` na entrada; `paraCriaturaCriada`/
+`paraCriaturaRecuperada`/`paraCriaturaAlterada` na saída) — o `dados` armazenado sempre foi
+JSONB, então o tipo do repositório sempre foi uma promessa de forma do lado do TypeScript, nunca
+uma garantia de runtime, mesmo para jogador.
+
+**Três métodos novos em `FichaService`** (`criarFichaCriatura`/`recuperarFichaCriatura`/
+`alterarFichaCriatura`) e três rotas novas no controller (`POST`/`GET`/`PUT
+/ficha/criatura/:id`), sem colidir com as rotas de jogador — o segmento literal `criatura` tem
+número de segmentos diferente de `:id` sozinho, então a ordem de declaração não importa (ao
+contrário de `minhas`, que precisa vir antes de `:id`). `criarFichaCriatura`: só o **mestre** da
+campanha cria (`UnauthorizedAccessException` para qualquer outro papel — sem delegação de dono
+como em jogador, dono é sempre o próprio mestre autenticado); sempre dentro de campanha (sem
+"avulsa" nesta task); valida contra `validarFichaCriatura` (`shared/regras/criatura`, `m4-02`) —
+única validação de domínio, nenhuma regra de criação duplicada no backend.
+`recuperarFichaCriatura`/`alterarFichaCriatura` **reusam sem alteração** os métodos privados de
+permissão já testados por jogador (`validarPermissaoVisualizacao`/`validarPermissaoEdicao` — só
+olham `usuarioId`/`campanhaId`, nunca a forma de `dados`) e `omitirCamposPrivados` (delete seguro
+de chave ausente — `historia` não existe em criatura, `anotacoes` existe nas duas formas).
+Exclusão (`DELETE /ficha/:id`) e acesso (`concederAcesso`/`revogarAcesso`/`listarAcessos`,
+`/ficha/:id/acesso*`) já eram 100% agnósticos de tipo — reusados tal como estão, sem endpoint
+próprio (confirmado por teste: um jogador sem concessão não vê a criatura recém-criada; passa a
+ver depois de `concederAcesso`, sem duplicar o mecanismo de `m3-04`).
+
+**Tempo real — `ficha:criada` deliberadamente não é emitido na criação de criatura.**
+`CampanhaGateway.emitirFichaCriada` monta o resumo direto de `ficha.dados.classe`/
+`.estado.vidaAtual` (forma de jogador) e transmite para a sala `campanha:<id>` **inteira**,
+qualquer membro, sem checar permissão de visualização (a sala é mais aberta que o documento,
+por design — §14). Chamá-lo para uma criatura vazaria nome/vida da ameaça a todo jogador da
+campanha antes de qualquer revelação deliberada, contradizendo a regra fundamental "invisíveis
+aos jogadores por padrão" (§14). `criarFichaCriatura` por isso **não** chama
+`emitirFichaCriada` — divergência deliberada da leitura mais literal da task ("reusar
+emitirFichaCriada/emitirFichaAlterada sem mudança de gateway"), motivada pela proteção de
+visibilidade, que é entregável explícito da própria task. `emitirFichaAlterada` já é seguro de
+reusar sem essa ressalva (chamado sem cast — `FichaRecuperadaDto`/`FichaAlteradaDto` têm forma
+idêntica): ele só atinge a sala `ficha:<id>`, cuja entrada (`CampanhaGateway.entrarSalaFicha`)
+já exige a mesma permissão de visualização via `recuperarFicha` — quem está na sala já podia ver
+a ficha. Zero linhas mudaram em `campanha.gateway.ts`.
+
+`m4-03` movida de `docs/specs/backlog/` para `docs/specs/done/`. Sem migration (tabela `ficha`
+já é agnóstica de tipo desde `m3-01`; `tipo_ficha` já tinha `CRIATURA` seedado desde `m3-02`).
+Frontend (`m4-04`) e listagem/revelação dedicada no painel do mestre (`m4-09`) ainda não
+consomem esta API. Verificado: `npm run build`/`test` do `shared` limpos (660/660, sem
+alteração de lógica, só novo arquivo de DTOs); `backend` — build (`nest build`), typecheck e
+lint limpos (os 2 erros de lint remanescentes em `campanha.service.spec.ts`/
+`ficha.service.spec.ts` são pré-existentes, confirmados via `git stash`, não relacionados a esta
+task) e 365/365 testes (12 novos, cobrindo criação restrita ao mestre, rejeição de dados
+incoerentes contra `shared/regras/criatura`, visibilidade oculta por padrão com revelação via
+concessão, e edição restrita ao dono).
+
+## 2026-08-14 — `m4-02`: motor de regras da ficha de criatura, com duas divergências do guia documentadas
+
+`shared/src/regras/criatura/` — motor de regras puro do "Guia de Criação de Ameaças"
+(`docs/core/guia_de_mestre-v4.0.0.md`), espelhando a estrutura de `shared/regras/agente`: um
+módulo por bloco do roteiro, cada um com DTOs de entrada em `criatura.dtos.ts` (mesma convenção
+de `agente.dtos.ts`) e funções puras testadas isoladamente. Módulos: `atributos.ts`
+(`obterBaseELimitePorVd` — tabela de Base/Limite/Pontos de Ajuste por faixa de VD, com os dois
+casos especiais 80–100/100+ onde o Limite não é Base+3; `validarRealocacaoAtributos` — atributos
+finais dentro de `[0, limite]`), `modificadores.ts` (`calcularValorModificador`,
+`calcularAtributoEfetivo`), `saude.ts` (`calcularVidaMaxima` = VD × multiplicador de
+Tenacidade), `defesa.ts` (`calcularDefesaBase` = 15+VD÷2, `possuiContraAtaque`),
+`resistencia.ts` (`calcularLimiteResistencias`, `calcularCustoResistencia` — Geral em dobro,
+subtipo pela metade —, `validarFraqueza`, `calcularMultiplicadorCriticoFraqueza`),
+`regeneracao.ts` (`calcularValorRegeneracao`), `deslocamento.ts`
+(`sugerirDeslocamentoTerrestre` — retorna uma faixa `{minimo, maximo}`, nunca um valor único,
+porque o guia tabula faixas e escolher um ponto fixo seria decisão do motor que não é dele),
+`cadencia.ts` (`calcularBonusIniciativaSugerido` ≈ 10% do VD), `ataques.ts`
+(`obterDanoReferenciaPorVd` — tabela de dano de referência por VD/custo de ação; a coluna
+"Turno" da tabela do guia não corresponde a nenhum `CustoAcaoEnum`, então ganhou uma função
+separada, `obterDanoReferenciaTurnoPorVd`) e `validacao.ts` (`validarFichaCriatura` — soma de
+resistências dentro do limite, ao menos 1 fraqueza com valor mínimo respeitado, nenhum
+tipo/subtipo simultâneo em resistência e fraqueza, distribuição fixa 2/3/3/2 de Modificadores,
+ao menos um modo de Deslocamento preenchido; retorna `{ violacoes: string[] }`, mesmo padrão de
+`validarDistribuicaoAtributos` em `shared/regras/agente/criacao.ts`). Novo subpath de export
+`./regras/criatura` em `shared/package.json`, ao lado dos demais domínios de regra.
+
+Ao montar o caso de teste completo exigido pelo critério de aceite do milestone —
+`a-estatua.spec.ts`, reproduzindo "A Estátua" (`docs/core/guia_de_mestre-v4.0.0.md` — "Guia de
+Criação de Ameaças" > "Exemplo de Ficha Completa") — duas divergências **internas ao próprio
+documento**, entre a fórmula geral de uma seção e os números literais do exemplo, apareceram:
+(1) o modificador Fraco em VD 30 — a fórmula geral (base -2 em VD 5, +1,5 a cada +5 de VD,
+arredondado para baixo) dá 5,5→5, mas o exemplo mostra "+6" para os três atributos Fraco da
+Estátua, enquanto Forte/Médio/Frágil do mesmo exemplo batem exatamente com a fórmula; (2) o
+mínimo de Fraqueza — a fórmula (5 ou metade da soma de resistências, o que for maior) dá
+max(5, 52÷2)=26 para a soma de resistências da Estátua (Físico 36 + Balístico 16), mas o
+exemplo declara a Fraqueza de Explosão em 20, abaixo do próprio mínimo que a fórmula do mesmo
+documento exige. Perguntado, o autor decidiu que a **fórmula geral vence** nos dois casos — ela
+é a regra reutilizável, o exemplo é uma aplicação pontual mais sujeita a erro de transcrição.
+As duas divergências ficam documentadas em comentário no código (`modificadores.ts` e
+`a-estatua.spec.ts`) e em `CONTEXT.md` §6, com uma nota de atenção para `m4-06`
+(`shared/regras/npc`) caso a Biblioteca de Referência do NPC tenha o mesmo tipo de
+inconsistência. O caso de teste completo usa os valores derivados da fórmula (Fraqueza em 26)
+para fechar sem violações de `validarFichaCriatura`, e testes isolados documentam explicitamente
+os dois pontos onde o exemplo do guia diverge.
+
+Uma terceira aparente divergência — o Deslocamento Terrestre da Estátua (9m) cai fora da faixa
+sugerida para Destreza 4 (10–12m) — **não** foi tratada como inconsistência: `docs/core/
+guia_de_mestre-v4.0.0.md` já é explícito que Deslocamento é sempre declarado pelo Mestre, com o
+atributo apenas como referência sugerida, e o próprio conceito da Estátua (só se move quando não
+observada) já justifica um valor abaixo da tabela. `sugerirDeslocamentoTerrestre` documenta essa
+natureza de sugestão no código.
+
+`m4-02` movida de `docs/specs/backlog/` para `docs/specs/done/`. Camada 100% `shared/` — sem
+consumo no backend (`m4-03`) ou frontend (`m4-04`) ainda. Verificado: `npm run
+build`/`typecheck`/`lint`/`test` do workspace `shared` limpos, 660/660 testes (57 novos desde a
+`m4-01`, cobrindo os 10 módulos + validação de coerência + o caso de teste completo).
+
+## 2026-08-14 — M4 (Ficha de Criatura/NPC) aberto; contrato da ficha de criatura fechado
+
+O milestone `m4-ficha-criatura-npc.spec.md` (`docs/specs/backlog/`) foi dividido em **10 tasks
+numeradas** (`m4-01`…`m4-10`), seguindo o mesmo padrão de quebra usado no M2/M3. A ordem segue o
+pedido do autor — criatura primeiro, NPC depois: `m4-01` contrato da criatura, `m4-02`
+`shared/regras/criatura`, `m4-03` backend, `m4-04` frontend (assistente); `m4-05` contrato do NPC,
+`m4-06` `shared/regras/npc`, `m4-07` backend, `m4-08` frontend; `m4-09` listagem/revelação no
+painel do mestre (cobre os dois tipos) e `m4-10` refinamento mobile (idem), como fechamento do
+milestone — espelhando `m3-09`. As 9 tasks restantes (`m4-02`…`m4-10`) ficaram em
+`docs/specs/backlog/`; só `m4-01` foi implementada nesta sessão e já está em `docs/specs/done/`.
+
+`m4-01` codificou o design que já estava **fechado** em `SCHEMA.md` desde antes desta sessão (seção
+"FichaCriaturaDadosDto", derivada do capítulo "Guia de Criação de Ameaças" de
+`docs/core/guia_de_mestre-v4.0.0.md`) — não houve decisão de forma nova, só a tradução para TS.
+Novo arquivo `shared/src/dtos/ficha/ficha-criatura.dtos.ts`: `FichaCriaturaDadosDto` + sub-DTOs
+(`FichaCriaturaIdentidadeDto`, `FichaCriaturaResistenciaDto` — reusado para resistências **e**
+fraquezas, mesma forma `{tipo, subtipo, valor}`, evitando um segundo tipo idêntico —,
+`FichaCriaturaRegeneracaoDto`, `FichaCriaturaDeslocamentoDto`, `FichaCriaturaAtaqueDto`,
+`FichaCriaturaHabilidadeDto`), exportado pelo subpath `./dtos/ficha` já existente (sem subpath
+novo). `atributos` **reusa** `FichaAtributosDto` do jogador (mesmos 10 campos) e `resistencias`/
+`ataques` reusam `TipoDanoEnum` (já tinha `GERAL`) — nenhum tipo duplicado (proibição #21). 11
+enums novos de conteúdo de jogo em `shared/src/enums/` (`SCREAMING_SNAKE_CASE`, sem tabela
+`tipo_*` — §10.3): `NivelAmeacaEnum`, `OrigemCriaturaEnum`, `ComportamentoCriaturaEnum`,
+`ModificadorCriaturaEnum`, `TenacidadeEnum`, `RegeneracaoModoEnum`, `RegeneracaoIntensidadeEnum`,
+`PorteCriaturaEnum`, `CadenciaEnum`, `CustoAcaoEnum` (nome genérico, não prefixado por
+"Criatura" — reutilizável por outro consumidor do mesmo conceito de ação) e
+`HabilidadeTipoCriaturaEnum`. Sem Maestria (decisão de abertura do milestone: exclusiva de
+jogador); `vidaMaxima`/`vidaAtual`/`defesa` seguem a mesma filosofia `m3-10` — snapshot na
+criação (calculado por `shared/regras/criatura`, ainda não implementado — `m4-02`) e editável
+depois, sem recálculo automático sobre a edição. DTOs `interface readonly` puros, sem
+class-validator, coerente com a decisão vigente do projeto (`CONTEXT.md` §5) — o texto antigo de
+`m3-01` que mencionava class-validator está desatualizado nesse ponto e não foi replicado aqui.
+
+`SCHEMA.md` atualizado: a seção `FichaCriaturaDadosDto` deixou de dizer "codificar no M4" e passou
+a apontar para o arquivo/subpath final, igual ao tratamento que `FichaJogadorDadosDto` recebeu na
+`m3-01`. Camada 100% `shared/` — sem migration (a tabela `tipo_ficha` já tem `CRIATURA` seedada
+desde `m3-02`), sem service, sem endpoint, sem frontend. Verificado: `npm run build`/`lint`/`test`
+do workspace `shared` limpos (603/603 testes, sem regressão — a suíte só ganhou os arquivos novos,
+nenhum teste de comportamento ainda, já que este contrato não tem lógica além dos tipos).
+
 ## 2026-08-14 — Ajuste rápido de vitalidade deixa de regravar a ficha
 
 O ajuste de Vida/Energia dos mini-cards da campanha usava o `PUT /ficha/:id` completo. Como esse

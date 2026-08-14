@@ -1,0 +1,497 @@
+<main class="ficha-pagina guia">
+  <header class="guia__cabecalho">
+    <div class="guia__cabecalho-titulo">
+      <button class="guia__sair" type="button" aria-label="Sair do assistente" (click)="sair()">
+        <app-icone nome="voltar" />
+      </button>
+      <span class="guia__indice">//</span>
+      <div class="guia__titulo-grupo">
+        <span class="guia__kicker">Guia de criação de ameaças</span>
+        <h1>Nova criatura</h1>
+      </div>
+      <span class="guia__regua"></span>
+    </div>
+    <button class="guia__resumo-abrir" type="button" [class.guia__resumo-abrir--ativo]="resumoAberto()" [attr.aria-expanded]="resumoAberto()" aria-label="Abrir resumo operacional" (click)="resumoAberto.set(!resumoAberto())">
+      <app-icone nome="visao-geral" /> <span>Resumo</span>
+    </button>
+    <span class="guia__classificacao">CLASSE-E // CONFIDENCIAL</span>
+  </header>
+
+  <div class="guia__progresso-mobile">
+    <div class="guia__progresso-mobile-topo">
+      <span>AMEAÇA · {{ estado().passo + 1 | number: '2.0-0' }}/{{ passos.length | number: '2.0-0' }}</span>
+      <strong>{{ passos[estado().passo] }}</strong>
+    </div>
+    <div class="guia__progresso-trilho"><i [style.width.%]="((estado().passo + 1) / passos.length) * 100"></i></div>
+  </div>
+
+  <div class="guia__layout">
+    <nav class="guia__trilha" aria-label="Passos da criação">
+      <header class="guia__painel-cabecalho">
+        <span>Roteiro</span>
+        <b>{{ estado().passo + 1 | number: '2.0-0' }}/{{ passos.length | number: '2.0-0' }}</b>
+      </header>
+      <div class="guia__passos">
+        @for (titulo of passos; track $index) {
+          <button
+            class="guia__passo"
+            type="button"
+            [class.guia__passo--ativo]="$index === estado().passo"
+            [class.guia__passo--concluido]="$index < estado().passo || ($index < visitado() && $index !== estado().passo)"
+            [class.guia__passo--bloqueado]="$index > visitado()"
+            [disabled]="$index > visitado()"
+            [attr.aria-current]="$index === estado().passo ? 'step' : null"
+            (click)="ir($index)"
+          >
+            <span class="guia__passo-indice">{{ $index + 1 | number: '2.0-0' }}</span>
+            <span class="guia__passo-texto">
+              <b>{{ titulo }}</b>
+              <small>{{ $index === estado().passo ? 'Em preenchimento' : $index < visitado() ? 'Disponível' : 'Aguardando' }}</small>
+            </span>
+            @if ($index < visitado() && $index !== estado().passo) {
+              <app-icone nome="check" />
+            }
+          </button>
+        }
+      </div>
+    </nav>
+
+    <section class="guia__conteudo">
+      <header class="guia__secao">
+        <span class="guia__secao-indice">{{ estado().passo + 1 | number: '2.0-0' }}</span>
+        <div>
+          <span>Etapa atual</span>
+          <h2>{{ passos[estado().passo] }}</h2>
+        </div>
+        <span class="guia__secao-regua"></span>
+      </header>
+
+      <div class="guia__corpo">
+        @switch (passos[estado().passo]) {
+          @case ('Identidade') {
+            <div class="guia__introducao">
+              <span class="guia__introducao-codigo">FICHA DE IDENTIDADE // {{ estado().vd > 0 ? 'PRÉ-NÚMEROS' : 'ORIGEM' }}</span>
+              <p>Antes de qualquer número, a criatura precisa existir como um conceito coerente.</p>
+            </div>
+            <div class="guia__campos guia__campos--base">
+              <!-- Imagem de registro: arquivo só fica guardado localmente até o passo Revisão — a
+                   ficha só existe de fato após "Registrar criatura"; o upload real é um segundo
+                   request, em sequência, logo depois do POST. O `<label>` embrulha só a caixa da
+                   foto (não o rótulo/ajuda) para o alvo de clique ser exatamente o tamanho dela. -->
+              <div class="campo guia__avatar-campo">
+                <span class="campo__rotulo">Imagem de registro</span>
+                <label class="guia__avatar-caixa">
+                  @if (imagemPreviewUrl(); as previewUrl) {
+                    <img class="guia__avatar-imagem" [src]="previewUrl" alt="" />
+                  } @else {
+                    <app-icone nome="alerta" />
+                  }
+                  <input
+                    type="file"
+                    class="guia__avatar-entrada"
+                    accept="image/jpeg,image/png,image/webp"
+                    aria-label="Escolher imagem da criatura"
+                    (change)="aoSelecionarImagemGuia($event)"
+                  />
+                </label>
+                <small class="campo__ajuda">{{ erroImagemGuia() ?? 'Opcional. JPEG, PNG ou WEBP, até 2MB — sobe logo após registrar.' }}</small>
+              </div>
+              <div class="guia__base-direita">
+                <label class="campo campo--codinome">
+                  <span class="campo__rotulo">Designação</span>
+                  <span class="campo__codinome-linha">
+                    <input class="campo__controle campo__controle--codinome" [value]="estado().designacao" (input)="atualizar({ designacao: valor($event) })" placeholder="Ex.: A Estátua" />
+                    <input type="color" class="campo__cor-inline" aria-label="Cor de identidade da criatura" [value]="estado().cor ?? '#8a2be2'" (input)="atualizar({ cor: valor($event) })" />
+                  </span>
+                  <small class="campo__ajuda">Um nome lembrável, direto. Vira também o nome da ficha.</small>
+                </label>
+                <label class="campo">
+                  <span class="campo__rotulo">Origem</span>
+                  <select class="campo__controle" [value]="estado().origem" (change)="mudarOrigem($event)">
+                    @for (opcao of origens; track opcao) { <option [value]="opcao">{{ rotuloOrigemCriatura(opcao) }}</option> }
+                  </select>
+                </label>
+              </div>
+            </div>
+            <label class="campo"><span class="campo__rotulo">Linha de conceito</span><textarea class="campo__controle campo__controle--area" rows="2" [value]="estado().conceito" (input)="atualizar({ conceito: valor($event) })" placeholder='Ex.: "Uma névoa que dissolve qualquer material orgânico ao contato."'></textarea></label>
+            <label class="campo"><span class="campo__rotulo">Natureza física</span><textarea class="campo__controle campo__controle--area" rows="2" [value]="estado().naturezaFisica" (input)="atualizar({ naturezaFisica: valor($event) })" placeholder="Tamanho, forma, material..."></textarea></label>
+            <div class="guia__campos guia__campos--duas-colunas">
+              <label class="campo">
+                <span class="campo__rotulo">Comportamento</span>
+                <select class="campo__controle" [value]="estado().comportamento" (change)="mudarComportamento($event)">
+                  @for (opcao of comportamentos; track opcao) { <option [value]="opcao">{{ rotuloComportamento(opcao) }}</option> }
+                </select>
+              </label>
+              <label class="campo"><span class="campo__rotulo">Motivação</span><input class="campo__controle" [value]="estado().motivacao" (input)="atualizar({ motivacao: valor($event) })" placeholder="Por que ela existe? Por que mata?" /></label>
+            </div>
+            <label class="campo"><span class="campo__rotulo">Gancho único</span><textarea class="campo__controle campo__controle--area" rows="2" [value]="estado().ganchoUnico" (input)="atualizar({ ganchoUnico: valor($event) })" placeholder="O detalhe que nenhum monstro convencional tem."></textarea></label>
+            <label class="campo"><span class="campo__rotulo">Tema de horror (opcional)</span><input class="campo__controle" [value]="estado().temaHorror" (input)="atualizar({ temaHorror: valor($event) })" placeholder="Perda de controle? Corpo? Identidade?" /></label>
+          }
+          @case ('Ameaça') {
+            <div class="guia__introducao">
+              <span class="guia__introducao-codigo">IMPACTO // META DE DESIGN</span>
+              <p>NA não é dificuldade de combate — é o impacto real se a criatura agir livremente por 24h. O VD é a meta que orienta cada escolha seguinte.</p>
+            </div>
+            <div class="guia__campos guia__campos--duas-colunas">
+              <label class="campo">
+                <span class="campo__rotulo">Nível de Ameaça (NA)</span>
+                <select class="campo__controle" [value]="estado().na" (change)="mudarNa($event)">
+                  @for (opcao of niveisAmeaca; track opcao) { <option [value]="opcao">{{ rotuloNivelAmeaca(opcao) }}</option> }
+                </select>
+                <small class="campo__ajuda">VD típico para este NA: {{ vdTipico(estado().na) }} (referência, não trava).</small>
+              </label>
+              <label class="campo">
+                <span class="campo__rotulo">Valor de Desafio (VD)</span>
+                <input class="campo__controle campo__controle--numero" type="number" min="0" [value]="estado().vd" (input)="atualizar({ vd: numero($event) })" />
+                <small class="campo__ajuda">Soma do nível do grupo alvo.</small>
+              </label>
+            </div>
+            @if (estado().vd > 0) {
+              <div class="guia__protocolo-info">
+                <app-icone nome="dt" />
+                <div><span>Base / Limite / Pontos de Ajuste</span><strong>{{ baseLimite().base }} / {{ baseLimite().limite }} / {{ baseLimite().pontosAjuste }}</strong></div>
+                <small>Calculado a partir do VD — usado no passo Atributos.</small>
+              </div>
+            }
+          }
+          @case ('Atributos') {
+            <div class="guia__orcamento">
+              <div><span>Base do VD</span><strong>{{ baseLimite().base }}</strong></div>
+              <small>Limite {{ baseLimite().limite }} por atributo · {{ baseLimite().pontosAjuste }} Pontos de Ajuste distribuíveis · realocação de até 3 pontos permite cair abaixo da base, até 0.</small>
+            </div>
+            <div class="guia__atributos">
+              @for (campo of campos; track campo.chave) {
+                <div class="atributo" [class.atributo--desvantagem]="estado().atributos[campo.chave] < baseLimite().base">
+                  <div class="atributo__identidade">
+                    <span>{{ campo.nome }}</span>
+                    @if (estado().atributos[campo.chave] < baseLimite().base) { <small>Realocado abaixo da base</small> }
+                  </div>
+                  <div class="stepper">
+                    <button class="stepper__botao" type="button" [attr.aria-label]="'Diminuir ' + campo.nome" (click)="passoAtributo(campo.chave, -1)">−</button>
+                    <b class="stepper__valor">{{ estado().atributos[campo.chave] }}</b>
+                    <button class="stepper__botao" type="button" [attr.aria-label]="'Aumentar ' + campo.nome" [disabled]="estado().atributos[campo.chave] >= baseLimite().limite" (click)="passoAtributo(campo.chave, 1)">+</button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+          @case ('Modificadores') {
+            <div class="guia__introducao">
+              <span class="guia__introducao-codigo">DISTRIBUIÇÃO FIXA // 2 FORTE · 3 MÉDIO · 3 FRACO · 2 FRÁGIL</span>
+              <p>Onde a criatura se destaca e onde ela é vulnerável. Afeta só o Atributo Efetivo (testes), nunca o valor salvo em Atributos.</p>
+            </div>
+            <div class="guia__vagas">
+              @for (tipo of modificadoresDisponiveis; track tipo) {
+                <div class="guia__vaga" [class.guia__vaga--completa]="contagemModificador(tipo) === (tipo === 'FORTE' || tipo === 'FRAGIL' ? 2 : 3)">
+                  <div class="guia__vaga-cabecalho">
+                    <span>{{ rotuloModificadorCriatura(tipo) }}</span>
+                    <b>{{ contagemModificador(tipo) }}/{{ tipo === 'FORTE' || tipo === 'FRAGIL' ? 2 : 3 }}</b>
+                  </div>
+                </div>
+              }
+            </div>
+            <div class="guia__subsecao"><span>Atributo Efetivo</span><i></i></div>
+            <div class="guia__atributos">
+              @for (campo of campos; track campo.chave) {
+                <div class="atributo">
+                  <div class="atributo__identidade">
+                    <span>{{ campo.nome }} {{ estado().atributos[campo.chave] }}</span>
+                    @if (atributoEfetivo(campo.chave); as efetivo) { <small class="atributo__bonus">Efetivo {{ efetivo }}</small> }
+                  </div>
+                  <select class="campo__controle" [attr.aria-label]="'Modificador de ' + campo.nome" [value]="estado().modificadores[campo.chave] ?? ''" (change)="escolherModificador(campo.chave, $event)">
+                    <option value="">Selecione</option>
+                    @for (tipo of modificadoresDisponiveis; track tipo) { <option [value]="tipo">{{ rotuloModificadorCriatura(tipo) }}</option> }
+                  </select>
+                </div>
+              }
+            </div>
+          }
+          @case ('Saúde') {
+            <div class="guia__introducao">
+              <span class="guia__introducao-codigo">TENACIDADE // VIDA MÁXIMA = VD × MULTIPLICADOR</span>
+              <p>Escolha o perfil de resistência com base no conceito e na identidade já definidos.</p>
+            </div>
+            <label class="campo">
+              <span class="campo__rotulo">Tenacidade</span>
+              <select class="campo__controle" [value]="estado().tenacidade ?? ''" (change)="mudarTenacidade($event)">
+                <option value="">Selecione</option>
+                @for (opcao of tenacidades; track opcao) { <option [value]="opcao">{{ rotuloTenacidade(opcao) }}</option> }
+              </select>
+            </label>
+            @if (estado().tenacidade) {
+              <div class="guia__stats" style="margin-top: 16px">
+                <div class="stat stat--vida"><span class="stat__rotulo">Vida Máxima</span><span class="stat__valor">{{ vidaMaxima() }}</span></div>
+                <div class="stat">
+                  <span class="stat__rotulo">Vida atual</span>
+                  <input class="campo__controle campo__controle--numero" type="number" [value]="estado().vidaAtual ?? vidaMaxima()" (input)="atualizar({ vidaAtual: numero($event) })" />
+                </div>
+              </div>
+            }
+          }
+          @case ('Defesa') {
+            <div class="guia__introducao">
+              <span class="guia__introducao-codigo">DEFESA BASE = 15 + VD ÷ 2</span>
+              <p>Criatura nunca reage a ataques (sem Esquivar/Bloquear). Contra-Ataque exige Luta com modificador Forte.</p>
+            </div>
+            <div class="guia__stats">
+              <div class="stat"><span class="stat__rotulo">Defesa</span><span class="stat__valor">{{ defesaBase() }}</span></div>
+              <div class="stat" [class.stat--alerta]="contraAtaque()"><span class="stat__rotulo">Contra-Ataque</span><span class="stat__valor">{{ contraAtaque() ? 'Disponível' : 'Indisponível' }}</span></div>
+            </div>
+          }
+          @case ('Resistências') {
+            <div class="guia__introducao">
+              <span class="guia__introducao-codigo">LIMITE = 2 × VD // +25% POR FRAQUEZA EXTRA</span>
+              <p>Distribua a proteção dentro do limite e declare ao menos uma fraqueza — nenhuma criatura tem resistência sem abertura.</p>
+            </div>
+            <div class="guia__orcamento" [class.guia__orcamento--erro]="custoResistencias() > limiteResistencias()">
+              <div><span>Custo usado</span><strong>{{ custoResistencias() }} / {{ limiteResistencias() }}</strong></div>
+              <small>Dano Geral custa em dobro; subtipo custa metade. Fraqueza mínima: {{ fraquezaMinima() }}.</small>
+            </div>
+
+            <div class="guia__subsecao"><span>Resistências</span><i></i></div>
+            <div class="guia__formacoes">
+              @for (linha of estado().resistencias; track $index) {
+                <div class="guia__formacao">
+                  <label class="campo"><span class="campo__rotulo">Tipo</span>
+                    <select class="campo__controle" [value]="linha.tipo" (change)="atualizarResistencia($index, 'tipo', valor($event))">
+                      @for (tipo of tiposDano; track tipo) { <option [value]="tipo">{{ tipo }}</option> }
+                    </select>
+                  </label>
+                  <label class="campo"><span class="campo__rotulo">Subtipo (opcional)</span><input class="campo__controle" [value]="linha.subtipo" (input)="atualizarResistencia($index, 'subtipo', valor($event))" placeholder="Ex.: Cortante" /></label>
+                  <label class="campo"><span class="campo__rotulo">Valor</span><input class="campo__controle campo__controle--numero" type="number" min="0" [value]="linha.valor" (input)="atualizarResistencia($index, 'valor', numero($event))" /></label>
+                  <button class="botao botao--secundario guia__vaga-escolher" type="button" (click)="removerResistencia($index)">Remover</button>
+                </div>
+              }
+            </div>
+            <button class="botao botao--secundario guia__vaga-escolher" type="button" (click)="adicionarResistencia()">+ Adicionar resistência</button>
+
+            <div class="guia__subsecao"><span>Fraquezas</span><i></i></div>
+            <div class="guia__formacoes">
+              @for (linha of estado().fraquezas; track $index) {
+                <div class="guia__formacao">
+                  <label class="campo"><span class="campo__rotulo">Tipo</span>
+                    <select class="campo__controle" [value]="linha.tipo" (change)="atualizarFraqueza($index, 'tipo', valor($event))">
+                      @for (tipo of tiposDano; track tipo) { <option [value]="tipo">{{ tipo }}</option> }
+                    </select>
+                  </label>
+                  <label class="campo"><span class="campo__rotulo">Subtipo (opcional)</span><input class="campo__controle" [value]="linha.subtipo" (input)="atualizarFraqueza($index, 'subtipo', valor($event))" /></label>
+                  <label class="campo"><span class="campo__rotulo">Valor</span><input class="campo__controle campo__controle--numero" type="number" min="0" [value]="linha.valor" (input)="atualizarFraqueza($index, 'valor', numero($event))" /></label>
+                  @if (!fraquezaValida(linha)) { <small class="campo__ajuda">Abaixo do mínimo ({{ fraquezaMinima() }}).</small> }
+                  <button class="botao botao--secundario guia__vaga-escolher" type="button" (click)="removerFraqueza($index)">Remover</button>
+                </div>
+              }
+            </div>
+            <button class="botao botao--secundario guia__vaga-escolher" type="button" (click)="adicionarFraqueza()">+ Adicionar fraqueza</button>
+            @if (conflitoResistenciaFraqueza()) { <p class="guia__erro" role="alert"><app-icone nome="alerta" /> Um mesmo tipo/subtipo não pode ser resistência e fraqueza ao mesmo tempo.</p> }
+          }
+          @case ('Regeneração') {
+            <div class="guia__introducao">
+              <span class="guia__introducao-codigo">OPCIONAL // NÃO EXISTE POR PADRÃO</span>
+              <p>Algumas criaturas se reconstituem entre golpes. Declare explicitamente ou pule este passo.</p>
+            </div>
+            <label class="guia__modo-livre">
+              <input type="checkbox" [checked]="estado().regeneracao.ativa" (change)="atualizarRegeneracao({ ativa: !estado().regeneracao.ativa })" />
+              <span><b>Possui Regeneração Natural</b><small>Recuperada a cada turno (Passiva) ou sob condição (Condicional).</small></span>
+            </label>
+            @if (estado().regeneracao.ativa) {
+              <div class="guia__campos guia__campos--duas-colunas">
+                <label class="campo">
+                  <span class="campo__rotulo">Modo</span>
+                  <select class="campo__controle" [value]="estado().regeneracao.modo" (change)="mudarRegeneracaoModo($event)">
+                    @for (opcao of regeneracaoModos; track opcao) { <option [value]="opcao">{{ rotuloRegeneracaoModo(opcao) }}</option> }
+                  </select>
+                </label>
+                <label class="campo">
+                  <span class="campo__rotulo">Intensidade</span>
+                  <select class="campo__controle" [value]="estado().regeneracao.intensidade" (change)="mudarRegeneracaoIntensidade($event)">
+                    @for (opcao of regeneracaoIntensidades; track opcao) { <option [value]="opcao">{{ rotuloRegeneracaoIntensidade(opcao) }}</option> }
+                  </select>
+                </label>
+              </div>
+              @if (estado().regeneracao.modo === 'CONDICIONAL') {
+                <label class="campo"><span class="campo__rotulo">Condição</span><input class="campo__controle" [value]="estado().regeneracao.condicao" (input)="atualizarRegeneracao({ condicao: valor($event) })" placeholder="Ex.: Ao consumir um ser vivo inteiro no turno." /></label>
+              }
+              <div class="guia__protocolo-info">
+                <app-icone nome="atualizar" />
+                <div><span>Valor por turno</span><strong>{{ valorRegeneracao() }}</strong></div>
+                <small>% da Vida Máxima, calculado uma vez e fixado na ficha.</small>
+              </div>
+            }
+          }
+          @case ('Porte e Deslocamento') {
+            <label class="campo">
+              <span class="campo__rotulo">Porte</span>
+              <select class="campo__controle" [value]="estado().porte ?? ''" (change)="mudarPorte($event)">
+                <option value="">Selecione</option>
+                @for (opcao of portes; track opcao) { <option [value]="opcao">{{ rotuloPorte(opcao) }}</option> }
+              </select>
+            </label>
+            <div class="guia__subsecao"><span>Deslocamento (ao menos um modo)</span><i></i></div>
+            <p class="guia__subsecao-ajuda">Sugestão para Terrestre com base na Destreza ({{ estado().atributos.destreza }}): {{ deslocamentoSugerido().minimo }}–{{ deslocamentoSugerido().maximo }}m — o valor final é sempre declarado livremente.</p>
+            <div class="guia__campos guia__campos--duas-colunas">
+              <label class="campo"><span class="campo__rotulo">Terrestre (m)</span><input class="campo__controle campo__controle--numero" type="number" min="0" [value]="estado().deslocamento.terrestre ?? ''" (input)="atualizarDeslocamento('terrestre', valor($event) ? numero($event) : null)" /></label>
+              <label class="campo"><span class="campo__rotulo">Voador (m)</span><input class="campo__controle campo__controle--numero" type="number" min="0" [value]="estado().deslocamento.voador ?? ''" (input)="atualizarDeslocamento('voador', valor($event) ? numero($event) : null)" /></label>
+              <label class="campo"><span class="campo__rotulo">Aquático (m)</span><input class="campo__controle campo__controle--numero" type="number" min="0" [value]="estado().deslocamento.aquatico ?? ''" (input)="atualizarDeslocamento('aquatico', valor($event) ? numero($event) : null)" /></label>
+              <label class="campo"><span class="campo__rotulo">Sobrenatural (m)</span><input class="campo__controle campo__controle--numero" type="number" min="0" [value]="estado().deslocamento.sobrenatural ?? ''" (input)="atualizarDeslocamento('sobrenatural', valor($event) ? numero($event) : null)" /></label>
+            </div>
+          }
+          @case ('Ataques') {
+            <div class="guia__campos guia__campos--duas-colunas">
+              <label class="campo">
+                <span class="campo__rotulo">Cadência</span>
+                <select class="campo__controle" [value]="estado().cadencia" (change)="mudarCadencia($event)">
+                  @for (opcao of cadencias; track opcao) { <option [value]="opcao">{{ rotuloCadencia(opcao) }}</option> }
+                </select>
+              </label>
+              <label class="campo">
+                <span class="campo__rotulo">Bônus de Iniciativa (opcional)</span>
+                <input class="campo__controle campo__controle--numero" type="number" [value]="estado().iniciativaBonus ?? ''" (input)="atualizar({ iniciativaBonus: valor($event) ? numero($event) : null })" />
+                <small class="campo__ajuda">Sugestão: +{{ iniciativaSugerida() }} (≈10% do VD).</small>
+              </label>
+            </div>
+
+            <div class="guia__subsecao"><span>Ataques</span><i></i></div>
+            <div class="guia__formacoes">
+              @for (linha of estado().ataques; track $index) {
+                <div class="guia__formacao">
+                  <label class="campo"><span class="campo__rotulo">Nome</span><input class="campo__controle" [value]="linha.nome" (input)="atualizarAtaque($index, 'nome', valor($event))" placeholder="Ex.: Esmagamento" /></label>
+                  <label class="campo"><span class="campo__rotulo">Atributo</span>
+                    <select class="campo__controle" [value]="linha.atributo" (change)="atualizarAtaque($index, 'atributo', valor($event))">
+                      @for (campo of campos; track campo.chave) { <option [value]="campo.chave">{{ campo.nome }}</option> }
+                    </select>
+                  </label>
+                  <label class="campo"><span class="campo__rotulo">Custo de ação</span>
+                    <select class="campo__controle" [value]="linha.custoAcao" (change)="atualizarAtaque($index, 'custoAcao', valor($event))">
+                      @for (opcao of custosAcao; track opcao) { <option [value]="opcao">{{ rotuloCustoAcao(opcao) }}</option> }
+                    </select>
+                  </label>
+                  <label class="campo"><span class="campo__rotulo">Dano</span><input class="campo__controle" [value]="linha.dano" (input)="atualizarAtaque($index, 'dano', valor($event))" [placeholder]="'Referência: ' + danoReferencia(linha.custoAcao)" /></label>
+                  <label class="campo"><span class="campo__rotulo">Tipo de dano</span>
+                    <select class="campo__controle" [value]="linha.tipoDano" (change)="atualizarAtaque($index, 'tipoDano', valor($event))">
+                      @for (tipo of tiposDano; track tipo) { <option [value]="tipo">{{ tipo }}</option> }
+                    </select>
+                  </label>
+                  <label class="guia__modo-livre">
+                    <input type="checkbox" [checked]="linha.area" (change)="atualizarAtaque($index, 'area', !linha.area)" />
+                    <span><b>Ataque de área</b><small>Ação Completa por padrão; testa Destreza/Vigor do alvo.</small></span>
+                  </label>
+                  <label class="campo"><span class="campo__rotulo">Efeito adicional (opcional)</span><input class="campo__controle" [value]="linha.efeito" (input)="atualizarAtaque($index, 'efeito', valor($event))" /></label>
+                  <button class="botao botao--secundario guia__vaga-escolher" type="button" (click)="removerAtaque($index)">Remover ataque</button>
+                </div>
+              }
+            </div>
+            <button class="botao botao--secundario guia__vaga-escolher" type="button" (click)="adicionarAtaque()">+ Adicionar ataque</button>
+          }
+          @case ('Habilidades') {
+            <div class="guia__introducao">
+              <span class="guia__introducao-codigo">PASSIVA · ATIVA · DE GATILHO</span>
+              <p>Propriedades da própria criatura — não vêm de um catálogo. Zero é válido: números já sustentam um confronto tenso.</p>
+            </div>
+            <div class="guia__formacoes">
+              @for (linha of estado().habilidades; track $index) {
+                <div class="guia__formacao">
+                  <label class="campo"><span class="campo__rotulo">Nome</span><input class="campo__controle" [value]="linha.nome" (input)="atualizarHabilidade($index, 'nome', valor($event))" /></label>
+                  <label class="campo"><span class="campo__rotulo">Tipo</span>
+                    <select class="campo__controle" [value]="linha.tipo" (change)="atualizarHabilidade($index, 'tipo', valor($event))">
+                      @for (opcao of habilidadeTipos; track opcao) { <option [value]="opcao">{{ rotuloHabilidadeTipoCriatura(opcao) }}</option> }
+                    </select>
+                  </label>
+                  <label class="campo"><span class="campo__rotulo">Descrição</span><textarea class="campo__controle campo__controle--area" rows="2" [value]="linha.descricao" (input)="atualizarHabilidade($index, 'descricao', valor($event))"></textarea></label>
+                  <label class="campo"><span class="campo__rotulo">Restrição (opcional)</span><input class="campo__controle" [value]="linha.restricao" (input)="atualizarHabilidade($index, 'restricao', valor($event))" placeholder="Ex.: recarga de 3 turnos" /></label>
+                  <button class="botao botao--secundario guia__vaga-escolher" type="button" (click)="removerHabilidade($index)">Remover</button>
+                </div>
+              }
+            </div>
+            <button class="botao botao--secundario guia__vaga-escolher" type="button" (click)="adicionarHabilidade()">+ Adicionar habilidade</button>
+          }
+          @case ('Revisão') {
+            <div class="guia__revisao-cabecalho">
+              <app-icone [nome]="violacoesFinais().length ? 'alerta' : 'check'" />
+              <div><span>{{ violacoesFinais().length ? 'Ajustes pendentes' : 'Dossiê pronto para registro' }}</span><p>Confira se a criatura faz o que a Ficha de Identidade prometia antes de registrar.</p></div>
+            </div>
+            @if (violacoesFinais().length) {
+              <ul class="guia__vaga-lista guia__revisao-violacoes">
+                @for (violacao of violacoesFinais(); track violacao) { <li class="guia__vaga-item">{{ violacao }}</li> }
+              </ul>
+            }
+            <dl class="guia__revisao">
+              <div><dt>Designação</dt><dd>{{ estado().designacao }}</dd></div>
+              <div><dt>NA / VD</dt><dd>{{ rotuloNivelAmeaca(estado().na) }} / {{ estado().vd }}</dd></div>
+              <div><dt>Tenacidade / Vida Máxima</dt><dd>{{ estado().tenacidade ? rotuloTenacidade(estado().tenacidade!) : '—' }} / {{ vidaMaxima() }}</dd></div>
+              <div><dt>Defesa</dt><dd>{{ defesaBase() }}{{ contraAtaque() ? ' (Contra-Ataque)' : '' }}</dd></div>
+              <div><dt>Resistências / Fraquezas</dt><dd>{{ estado().resistencias.length }} / {{ estado().fraquezas.length }}</dd></div>
+              <div><dt>Porte</dt><dd>{{ estado().porte ? rotuloPorte(estado().porte!) : '—' }}</dd></div>
+              <div><dt>Cadência</dt><dd>{{ rotuloCadencia(estado().cadencia) }}</dd></div>
+              <div><dt>Ataques / Habilidades</dt><dd>{{ estado().ataques.length }} / {{ estado().habilidades.length }}</dd></div>
+            </dl>
+            <label class="campo"><span class="campo__rotulo">Anotações (opcional)</span><textarea class="campo__controle campo__controle--area" rows="3" [value]="estado().anotacoes" (input)="atualizar({ anotacoes: valor($event) })"></textarea></label>
+            @if (erro()) { <p class="guia__erro" role="alert"><app-icone nome="alerta" /> {{ erro() }}</p> }
+          }
+        }
+      </div>
+    </section>
+
+    <aside class="guia__resumo" [class.guia__resumo--aberto]="resumoAberto()">
+      <button class="guia__resumo-toggle" type="button" [attr.aria-expanded]="resumoAberto()" (click)="resumoAberto.set(!resumoAberto())">
+        <span>Resumo operacional</span><app-icone nome="chevron" />
+      </button>
+      <button class="guia__resumo-fundo" type="button" aria-label="Fechar resumo operacional" (click)="resumoAberto.set(false)"></button>
+      <div class="guia__resumo-corpo" role="dialog" aria-modal="true" aria-label="Resumo operacional">
+        <button class="guia__resumo-fechar" type="button" aria-label="Fechar resumo operacional" (click)="resumoAberto.set(false)">×</button>
+        <div class="guia__resumo-progresso">
+          <div class="guia__resumo-progresso-topo">
+            <span>Progresso</span>
+            <b>{{ estado().passo + 1 | number: '2.0-0' }}/{{ passos.length | number: '2.0-0' }} · {{ passos[estado().passo] }}</b>
+          </div>
+          <div class="guia__resumo-trilho"><i [style.width.%]="((estado().passo + 1) / passos.length) * 100"></i></div>
+        </div>
+        @if (!estado().designacao.trim()) {
+          <div class="guia__resumo-vazio">
+            <app-icone nome="alerta" />
+            <strong>Preencha a designação para iniciar</strong>
+            <span>O dossiê será montado aqui conforme cada etapa for definida.</span>
+          </div>
+        } @else {
+          <div class="guia__agente">
+            <span class="guia__agente-avatar"><app-icone nome="alerta" /></span>
+            <div><small>Ameaça em registro</small><strong>{{ estado().designacao }}</strong><span>{{ rotuloComportamento(estado().comportamento) }}</span></div>
+          </div>
+
+          @if (estado().vd > 0) {
+            <div class="guia__resumo-linha"><span>NA / VD</span><b>{{ rotuloNivelAmeaca(estado().na) }} / {{ estado().vd }}</b></div>
+          }
+          @if (estado().tenacidade) {
+            <div class="guia__stats">
+              <div class="stat stat--vida"><span class="stat__rotulo">Vida</span><span class="stat__valor">{{ vidaMaxima() }}</span></div>
+              <div class="stat"><span class="stat__rotulo">Defesa</span><span class="stat__valor">{{ defesaBase() }}</span></div>
+            </div>
+          }
+          @if (estado().resistencias.length || estado().fraquezas.length) {
+            <div class="guia__resumo-linha"><span>Resist. / Fraquezas</span><b>{{ estado().resistencias.length }} / {{ estado().fraquezas.length }}</b></div>
+          }
+          @if (estado().porte) {
+            <div class="guia__resumo-linha"><span>Porte</span><b>{{ rotuloPorte(estado().porte!) }}</b></div>
+          }
+          @if (estado().passo >= 9 || visitado() >= 9) {
+            <div class="guia__resumo-linha"><span>Ataques</span><b>{{ estado().ataques.length }}</b></div>
+          }
+          @if (estado().passo >= 10 || visitado() >= 10) {
+            <div class="guia__resumo-linha"><span>Habilidades</span><b>{{ estado().habilidades.length }}</b></div>
+          }
+        }
+      </div>
+    </aside>
+  </div>
+
+  <footer class="guia__rodape">
+    <button class="botao botao--secundario guia__acao" type="button" [disabled]="estado().passo === 0" (click)="voltar()">
+      <app-icone nome="voltar" /> Voltar
+    </button>
+    <span class="guia__rodape-status">ETAPA {{ estado().passo + 1 | number: '2.0-0' }} // {{ passos[estado().passo] | uppercase }}</span>
+    @if (estado().passo < passos.length - 1) {
+      <button class="botao botao--primario guia__acao" type="button" [disabled]="!passoValido()" (click)="avancar()">Avançar <app-icone nome="entrar" /></button>
+    } @else {
+      <button class="botao botao--primario guia__acao" type="button" [disabled]="criando() || violacoesFinais().length > 0" (click)="criar()"><app-icone nome="check" /> {{ criando() ? 'Registrando…' : 'Registrar criatura' }}</button>
+    }
+  </footer>
+</main>

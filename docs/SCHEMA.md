@@ -251,9 +251,9 @@ campanha (`campanha_id NULL`) não tem sala — o emit é guardado (no-op).
 > A forma final de cada documento é definida nas specs de M3 (jogador) e M4 (criatura/NPC),
 > derivada de `docs/core/sistema-v4.1.0.md` e `docs/core/guia_de_mestre-v4.0.0.md`. O
 > contrato tipado vive em `shared/src/dtos/ficha/` (`FichaJogadorDadosDto` — **final**,
-> m3-01; `FichaCriaturaDadosDto`/`FichaNpcDadosDto` — design fechado a partir dos capítulos
-> "Guia de Criação de Ameaças"/"Guia de Criação de NPCs" do guia de mestre, contrato TS a
-> codificar no M4) e o backend valida via `shared/regras` (coerência de domínio) + validação
+> m3-01; `FichaCriaturaDadosDto` — **final**, m4-01; `FichaNpcDadosDto` — design fechado a
+> partir do capítulo "Guia de Criação de NPCs" do guia de mestre, contrato TS a codificar em
+> `m4-05`) e o backend valida via `shared/regras` (coerência de domínio) + validação
 > estrutural quando o `ValidationPipe` for ligado (m3-02/03). Campos de jogo nunca viram
 > colunas — listagens usam `dados->>'campo'`.
 
@@ -372,7 +372,10 @@ validação nem trava de imutabilidade ainda (`m3-24`); sem UI ainda (`m3-25`).
 sub-coleções de jogo — **sequelas/traumas/lesões** (Sanidade), **habilidades**, **inventário** e
 **presets de rolagem** (`rolagens`) — moram no `dados` e ganham editores/abas nas tasks `m3-11`…`m3-15`.
 
-### FichaCriaturaDadosDto (design fechado — capítulo "Guia de Criação de Ameaças" — codificar no M4)
+### FichaCriaturaDadosDto (final — m4-01)
+
+Contrato: `shared/src/dtos/ficha/ficha-criatura.dtos.ts`, exportado pelo subpath `./dtos/ficha`
+(mesmo subpath de `FichaJogadorDadosDto`). Capítulo "Guia de Criação de Ameaças".
 
 Criatura e NPC **não compartilham forma** (M4 fecha dois DTOs, não um com variação — a mecânica
 divergiu). Segue a mesma filosofia de `FichaJogadorDadosDto`: tudo que aparece na ficha é

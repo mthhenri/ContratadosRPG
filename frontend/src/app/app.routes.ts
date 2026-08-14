@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 
 import { autenticacaoGuard } from './core/guards/autenticacao.guard';
 import { adminGuard } from './core/guards/admin.guard';
+import { mestreCampanhaGuard } from './core/guards/mestre-campanha.guard';
 
 export const routes: Routes = [
   {
@@ -38,6 +39,14 @@ export const routes: Routes = [
     path: 'painel/:campanhaId/ficha',
     canActivate: [autenticacaoGuard],
     loadChildren: () => import('./modules/ficha/ficha.routes').then((modulo) => modulo.fichaRoutes),
+  },
+  // Criação de ficha de criatura (Ameaça) — só o mestre da campanha (m4-04). Mesma convenção de
+  // `/painel/:campanhaId/ficha`, em módulo próprio (`criaturaRoutes`) — ver comentário lá.
+  {
+    path: 'painel/:campanhaId/criatura',
+    canActivate: [autenticacaoGuard, mestreCampanhaGuard],
+    loadChildren: () =>
+      import('./modules/ficha/criatura.routes').then((modulo) => modulo.criaturaRoutes),
   },
   // Área privada de campanhas (guardada) — destino padrão pós-login. Montada sob `/painel`
   // (listar/criar/entrar/detalhe), consumindo o backend fechado nas m2-04/m2-05 — m2-07.

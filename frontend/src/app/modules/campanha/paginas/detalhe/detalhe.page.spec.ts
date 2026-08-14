@@ -6,8 +6,10 @@ import { Observable, Subject, of } from 'rxjs';
 import {
   ArquetipoEnum,
   ClasseEnum,
+  NivelAmeacaEnum,
   RolagemVisibilidadeEnum,
   TipoCampanhaMembroPapelEnum,
+  TipoFichaEnum,
 } from '@contratados-rpg/shared/enums';
 import {
   CampanhaAlteradaDto,
@@ -34,9 +36,9 @@ import { PaginaCadernoService } from '../../../pagina-caderno/pagina-caderno.ser
 
 /**
  * Prova o redesenho m2-19 da visão do mestre em `/painel/:id`: banner de alerta condicional,
- * tira de estatísticas (Membros/Fichas/Convite/Alertas), tira de rolagens recentes com "Ver
- * tudo", coluna "Membros" simplificada (sem fichas) e coluna "Esquadrão" (grid achatado de todas
- * as fichas, com o nome do dono em cada card) — mais o menu kebab de ações da campanha no
+ * tira de estatísticas (só "Convite"), tira de rolagens recentes com "Ver tudo", coluna "Membros"
+ * simplificada (sem fichas) e coluna "Esquadrão" (grid achatado das fichas de jogador, com o nome
+ * do dono em cada card, mais a subseção "Criaturas") — mais o menu kebab de ações da campanha no
  * cabeçalho, que substitui o antigo card "Identidade". Toda a permissão continua arbitrada pelo
  * backend (§14); aqui é só a camada de apresentação.
  */
@@ -746,34 +748,13 @@ describe('CampanhaDetalhe', () => {
 
   // === Tira de estatísticas (item 2) ===
   describe('tira de estatísticas (item 2)', () => {
-    it('mostra Membros/Fichas corretos e marca Alertas quando há ficha crítica', () => {
+    it('só mostra o tile de Convite — Membros/Fichas/Alertas saíram da tira', () => {
       const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
 
       const stats = Array.from(raiz.querySelectorAll('.detalhe__estatisticas .stat'));
-      const valores = (rotulo: string) =>
-        stats
-          .find((stat) => stat.querySelector('.stat__rotulo')?.textContent?.trim() === rotulo)
-          ?.querySelector('.stat__valor')?.textContent?.trim();
+      const rotulos = stats.map((stat) => stat.querySelector('.stat__rotulo')?.textContent?.trim());
 
-      expect(valores('Membros')).toBe('2');
-      expect(valores('Fichas')).toBe('3');
-      expect(valores('Alertas')).toBe('1');
-
-      const statAlertas = stats.find((stat) => stat.querySelector('.stat__rotulo')?.textContent?.trim() === 'Alertas');
-      expect(statAlertas?.classList.contains('stat--alerta')).toBe(true);
-    });
-
-    it('Alertas fica em 0 e sem destaque quando não há ficha crítica', () => {
-      const { raiz } = montar({
-        usuarioId: 1,
-        membros: membrosDois(),
-        fichas: fichas.filter((ficha) => ficha.id !== 3),
-      });
-
-      const stats = Array.from(raiz.querySelectorAll('.detalhe__estatisticas .stat'));
-      const statAlertas = stats.find((stat) => stat.querySelector('.stat__rotulo')?.textContent?.trim() === 'Alertas');
-      expect(statAlertas?.querySelector('.stat__valor')?.textContent?.trim()).toBe('0');
-      expect(statAlertas?.classList.contains('stat--alerta')).toBe(false);
+      expect(rotulos).toEqual(['Convite']);
     });
 
     it('mostra o tile de Convite para o mestre', () => {
@@ -1209,14 +1190,93 @@ describe('CampanhaDetalhe', () => {
       expect(vera.querySelector('.detalhe__ficha-avatar-imagem')).toBeNull();
     });
 
-    it('"Nova ficha" abre o assistente de criação, sem criar de imediato', () => {
+    it('"Novo Agente" abre o assistente de criação, sem criar de imediato', () => {
       const { raiz, fichaService, navegar } = montar({ usuarioId: 1, membros: membrosDois() });
 
       expect(raiz.querySelector('app-ficha-criar-dialog')).toBeNull();
 
-      (raiz.querySelector('.detalhe__nova-ficha') as HTMLButtonElement).click();
+      const botoes = Array.from(raiz.querySelectorAll('.detalhe__nova-ficha'));
+      const botaoNovoAgente = botoes.find((botao) => botao.textContent?.includes('Novo Agente')) as HTMLButtonElement;
+      botaoNovoAgente.click();
       expect(fichaService.criarFicha).not.toHaveBeenCalled();
       expect(navegar).toHaveBeenCalledWith(['/painel', CAMPANHA_ID, 'ficha', 'nova']);
+    });
+
+    it('"Nova Criatura" navega para o assistente de criação de criatura', () => {
+      const { raiz, navegar } = montar({ usuarioId: 1, membros: membrosDois() });
+
+      const botoes = Array.from(raiz.querySelectorAll('.detalhe__nova-ficha'));
+      const botaoNovaCriatura = botoes.find((botao) => botao.textContent?.includes('Nova Criatura')) as HTMLButtonElement;
+      botaoNovaCriatura.click();
+      expect(navegar).toHaveBeenCalledWith(['/painel', CAMPANHA_ID, 'criatura', 'nova']);
+    });
+
+    // "Criaturas" divide a coluna "Esquadrão" com as fichas de jogador (m4-04+) — mesma fila de
+    // fichas visíveis (`fichas()`), separada por `tipo`.
+    describe('subseção "Criaturas" (m4-04+)', () => {
+      const fichasComCriatura: FichaResumoDto[] = [
+        {
+          id: 3,
+          campanhaId: CAMPANHA_ID,
+          campanhaNome: null,
+          imagemUrl: null,
+          usuarioId: 1,
+          nome: 'Kane',
+          tipo: TipoFichaEnum.JOGADOR,
+          classe: ClasseEnum.COMBATENTE,
+          arquetipo: ArquetipoEnum.LUTADOR,
+          nivel: 2,
+          vidaAtual: 40,
+          vidaMaxima: 49,
+          energiaAtual: 10,
+          energiaMaxima: 27,
+          morrendo: false,
+          machucado: false,
+          inconsciente: false,
+        },
+        {
+          id: 9,
+          campanhaId: CAMPANHA_ID,
+          campanhaNome: null,
+          imagemUrl: null,
+          usuarioId: 1,
+          nome: 'A Estátua',
+          tipo: TipoFichaEnum.CRIATURA,
+          na: NivelAmeacaEnum.MEDIA,
+          classe: null as unknown as ClasseEnum,
+          arquetipo: null,
+          nivel: 0,
+          vidaAtual: 1050,
+          vidaMaxima: 1050,
+          energiaAtual: 0,
+          energiaMaxima: 0,
+          morrendo: false,
+          machucado: false,
+          inconsciente: false,
+          defesa: 30,
+        },
+      ];
+
+      it('separa jogador (Esquadrão) e criatura (Criaturas) em listas próprias', () => {
+        const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas: fichasComCriatura });
+
+        const gridEsquadrao = raiz.querySelector('.detalhe__esquadrao-grid');
+        expect(gridEsquadrao?.textContent).toContain('Kane');
+        expect(gridEsquadrao?.textContent).not.toContain('A Estátua');
+
+        const listaCriaturas = raiz.querySelector('.detalhe__secao--criaturas')?.nextElementSibling;
+        expect(listaCriaturas?.textContent).toContain('A Estátua');
+        expect(listaCriaturas?.textContent).toContain('NA');
+        expect(listaCriaturas?.textContent).not.toContain('Kane');
+      });
+
+      it('mostra o estado vazio quando não há criatura na campanha', () => {
+        const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas: [fichasComCriatura[0]] });
+
+        expect(raiz.querySelector('.detalhe__secao--criaturas')?.nextElementSibling?.textContent).toContain(
+          'Nenhuma criatura registrada ainda.',
+        );
+      });
     });
 
     // Item 9 — "Atualizado há Xs", agora no cabeçalho da seção "Esquadrão".

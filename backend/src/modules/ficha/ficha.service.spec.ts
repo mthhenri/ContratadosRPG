@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import type {
+  FichaCriaturaDadosDto,
   FichaIdentidadeDto,
   FichaInternoCriarDto,
   FichaJogadorDadosDto,
@@ -8,9 +9,17 @@ import type {
   FichaVitalidadeAlterarDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
+  CadenciaEnum,
   ClasseEnum,
+  ComportamentoCriaturaEnum,
   FormacaoBonusEnum,
   HabilidadeCategoriaEnum,
+  ModificadorCriaturaEnum,
+  NivelAmeacaEnum,
+  OrigemCriaturaEnum,
+  PorteCriaturaEnum,
+  TenacidadeEnum,
+  TipoDanoEnum,
   TipoUsuarioEnum,
   ItemCategoriaEnum,
   TipoCampanhaMembroPapelEnum,
@@ -110,6 +119,61 @@ function criarDados(overrides: Partial<FichaJogadorDadosDto> = {}): FichaJogador
     habilidades: [],
     inventario: { itens: [], amplificadores: [] },
     anotacoes: '',
+    ...overrides,
+  };
+}
+
+/**
+ * Documento de ficha de criatura coerente com `shared/regras/criatura` (m4-02) — mesmos valores
+ * do caso de teste "A Estátua" (`shared/src/regras/criatura/a-estatua.spec.ts`), com a Fraqueza
+ * já ajustada ao mínimo real (26, divergência documentada em m4-02: o próprio exemplo do guia usa
+ * 20, abaixo do mínimo que a fórmula do mesmo documento exige). Ponto de partida dos testes desta
+ * task; cada caso sobrescreve o necessário.
+ */
+function criarDadosCriatura(overrides: Partial<FichaCriaturaDadosDto> = {}): FichaCriaturaDadosDto {
+  return {
+    identidade: {
+      designacao: 'A Estátua',
+      origem: OrigemCriaturaEnum.SCP_ADAPTADO,
+      conceito: 'Uma figura de pedra humanoide que só se move quando ninguém a observa diretamente.',
+      naturezaFisica: 'Humanoide, altura entre 1,8m e 2,1m, aparência de pedra calcária escura.',
+      comportamento: ComportamentoCriaturaEnum.CACADORA,
+      motivacao: 'Desconhecida.',
+      ganchoUnico: 'Imóvel enquanto observada. Letal em frações de segundo quando não é.',
+    },
+    na: NivelAmeacaEnum.MEDIA,
+    vd: 30,
+    atributos: {
+      forca: 3, destreza: 4, luta: 5, pontaria: 2,
+      vigor: 3, intelecto: 2, medicina: 2, sentidos: 3,
+      social: 0, vontade: 2,
+    },
+    modificadores: {
+      destreza: ModificadorCriaturaEnum.FORTE,
+      luta: ModificadorCriaturaEnum.FORTE,
+      forca: ModificadorCriaturaEnum.MEDIO,
+      vigor: ModificadorCriaturaEnum.MEDIO,
+      sentidos: ModificadorCriaturaEnum.MEDIO,
+      intelecto: ModificadorCriaturaEnum.FRACO,
+      medicina: ModificadorCriaturaEnum.FRACO,
+      vontade: ModificadorCriaturaEnum.FRACO,
+      pontaria: ModificadorCriaturaEnum.FRAGIL,
+      social: ModificadorCriaturaEnum.FRAGIL,
+    },
+    tenacidade: TenacidadeEnum.PADRAO,
+    vidaMaxima: 1050,
+    vidaAtual: 1050,
+    defesa: 30,
+    resistencias: [
+      { tipo: TipoDanoEnum.FISICO, subtipo: null, valor: 36 },
+      { tipo: TipoDanoEnum.BALISTICO, subtipo: null, valor: 16 },
+    ],
+    fraquezas: [{ tipo: TipoDanoEnum.EXPLOSAO, subtipo: null, valor: 26 }],
+    porte: PorteCriaturaEnum.MEDIO,
+    deslocamento: { terrestre: 9 },
+    cadencia: CadenciaEnum.SINGULAR,
+    ataques: [],
+    habilidades: [],
     ...overrides,
   };
 }
@@ -810,6 +874,7 @@ describe('FichaService', () => {
       usuarioId: usuarioDono.sub,
       nome: 'Kane',
       cor: null,
+      tipo: TipoFichaEnum.JOGADOR,
       classe: ClasseEnum.COMBATENTE,
       arquetipo: null,
       nivel: 1,
@@ -902,6 +967,7 @@ describe('FichaService', () => {
       usuarioId: usuarioDono.sub,
       nome: 'Kane',
       cor: null,
+      tipo: TipoFichaEnum.JOGADOR,
       classe: ClasseEnum.COMBATENTE,
       arquetipo: null,
       nivel: 3,
@@ -2216,6 +2282,200 @@ describe('FichaService', () => {
       await expect(
         service.mandarItemInventarioParaBase({ fichaId: 5, indice: 9 }, usuarioDono),
       ).rejects.toThrow(ResourceNotFoundException);
+    });
+  });
+
+  describe('ficha de criatura (m4-03)', () => {
+    const fichaCriaturaPersistida = {
+      id: 9,
+      campanhaId: 3,
+      usuarioId: usuarioMestre.sub,
+      nome: 'A Estátua',
+      cor: null,
+      imagemUrl: null,
+      oculta: false,
+      dados: criarDadosCriatura(),
+    } as unknown as FichaRecuperadaDto;
+
+    describe('criarFichaCriatura', () => {
+      it('mestre cria a ficha "A Estátua" — dono é o próprio mestre, sem broadcast de criação', async () => {
+        campanhaRepositorio.recuperarMembro.mockResolvedValue({
+          papel: TipoCampanhaMembroPapelEnum.MESTRE,
+        });
+        fichaRepositorio.criarFicha.mockResolvedValue(fichaCriaturaPersistida);
+
+        const resultado = await service.criarFichaCriatura(
+          { campanhaId: 3, nome: 'A Estátua', dados: criarDadosCriatura() },
+          usuarioMestre,
+        );
+
+        expect(fichaRepositorio.criarFicha).toHaveBeenCalledWith({
+          campanhaId: 3,
+          usuarioId: usuarioMestre.sub,
+          tipo: TipoFichaEnum.CRIATURA,
+          nome: 'A Estátua',
+          cor: null,
+          dados: criarDadosCriatura(),
+        });
+        expect(resultado).toEqual(fichaCriaturaPersistida);
+        // Criatura é invisível por padrão (§14) — anunciar a criação na sala campanha:<id>
+        // vazaria nome/vida a todo jogador antes de qualquer revelação deliberada.
+        expect(campanhaGateway.emitirFichaCriada).not.toHaveBeenCalled();
+      });
+
+      it('lança UnauthorizedAccessException quando o autor não é membro da campanha', async () => {
+        campanhaRepositorio.recuperarMembro.mockResolvedValue(null);
+
+        await expect(
+          service.criarFichaCriatura(
+            { campanhaId: 3, nome: 'A Estátua', dados: criarDadosCriatura() },
+            usuarioMembro,
+          ),
+        ).rejects.toThrow(UnauthorizedAccessException);
+        expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+      });
+
+      it('lança UnauthorizedAccessException quando o autor é membro comum (não-mestre)', async () => {
+        campanhaRepositorio.recuperarMembro.mockResolvedValue({
+          papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+        });
+
+        await expect(
+          service.criarFichaCriatura(
+            { campanhaId: 3, nome: 'A Estátua', dados: criarDadosCriatura() },
+            usuarioMembro,
+          ),
+        ).rejects.toThrow(UnauthorizedAccessException);
+        expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+      });
+
+      it('lança BusinessException quando a ficha viola shared/regras/criatura (distribuição de modificadores)', async () => {
+        campanhaRepositorio.recuperarMembro.mockResolvedValue({
+          papel: TipoCampanhaMembroPapelEnum.MESTRE,
+        });
+
+        await expect(
+          service.criarFichaCriatura(
+            {
+              campanhaId: 3,
+              nome: 'A Estátua',
+              dados: criarDadosCriatura({
+                modificadores: {
+                  ...criarDadosCriatura().modificadores,
+                  forca: ModificadorCriaturaEnum.FORTE, // 3 Fortes em vez de 2 — viola a distribuição fixa 2/3/3/2
+                },
+              }),
+            },
+            usuarioMestre,
+          ),
+        ).rejects.toThrow(BusinessException);
+        expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('recuperarFichaCriatura', () => {
+      it('devolve a ficha para o mestre (dono)', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaCriaturaPersistida);
+
+        const resultado = await service.recuperarFichaCriatura({ id: 9 }, usuarioMestre);
+
+        expect(resultado.dados).toEqual(criarDadosCriatura());
+        expect(campanhaRepositorio.recuperarMembro).not.toHaveBeenCalled();
+      });
+
+      it('lança UnauthorizedAccessException para um jogador sem concessão (invisível por padrão)', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaCriaturaPersistida);
+        campanhaRepositorio.recuperarMembro.mockResolvedValue({
+          papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+        });
+        fichaRepositorio.recuperarAcesso.mockResolvedValue(null);
+
+        await expect(service.recuperarFichaCriatura({ id: 9 }, usuarioMembro)).rejects.toThrow(
+          UnauthorizedAccessException,
+        );
+      });
+
+      it('devolve a ficha para um jogador após receber concessão (usuario_ficha_acesso, m3-04)', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaCriaturaPersistida);
+        campanhaRepositorio.recuperarMembro.mockResolvedValue({
+          papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+        });
+        fichaRepositorio.recuperarAcesso.mockResolvedValue({ id: 1 });
+
+        const resultado = await service.recuperarFichaCriatura({ id: 9 }, usuarioMembro);
+
+        expect(fichaRepositorio.recuperarAcesso).toHaveBeenCalledWith({ fichaId: 9, usuarioId: usuarioMembro.sub });
+        expect(resultado.dados.identidade.designacao).toBe('A Estátua');
+      });
+
+      it('lança ResourceNotFoundException quando a ficha não existe', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(null);
+
+        await expect(service.recuperarFichaCriatura({ id: 99 }, usuarioMestre)).rejects.toThrow(
+          ResourceNotFoundException,
+        );
+      });
+    });
+
+    describe('alterarFichaCriatura', () => {
+      it('altera a ficha quando o autor é o dono (mestre) e emite ficha:alterada', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaCriaturaPersistida);
+        const fichaAlterada = { ...fichaCriaturaPersistida, nome: 'A Estátua (Ferida)' };
+        fichaRepositorio.alterarFicha.mockResolvedValue(fichaAlterada);
+
+        const resultado = await service.alterarFichaCriatura(
+          { id: 9, nome: 'A Estátua (Ferida)', dados: criarDadosCriatura() },
+          usuarioMestre,
+        );
+
+        expect(fichaRepositorio.alterarFicha).toHaveBeenCalledWith({
+          id: 9,
+          nome: 'A Estátua (Ferida)',
+          cor: undefined,
+          oculta: undefined,
+          dados: criarDadosCriatura(),
+        });
+        expect(campanhaGateway.emitirFichaAlterada).toHaveBeenCalledWith(fichaAlterada);
+        expect(resultado).toEqual(fichaAlterada);
+      });
+
+      it('lança UnauthorizedAccessException quando o autor não é o dono nem o mestre', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaCriaturaPersistida);
+        campanhaRepositorio.recuperarMembro.mockResolvedValue({
+          papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+        });
+
+        await expect(
+          service.alterarFichaCriatura(
+            { id: 9, nome: 'A Estátua', dados: criarDadosCriatura() },
+            usuarioMembro,
+          ),
+        ).rejects.toThrow(UnauthorizedAccessException);
+        expect(fichaRepositorio.alterarFicha).not.toHaveBeenCalled();
+      });
+
+      it('lança BusinessException quando a ficha alterada viola shared/regras/criatura (fraqueza ausente)', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaCriaturaPersistida);
+
+        await expect(
+          service.alterarFichaCriatura(
+            { id: 9, nome: 'A Estátua', dados: criarDadosCriatura({ fraquezas: [] }) },
+            usuarioMestre,
+          ),
+        ).rejects.toThrow(BusinessException);
+        expect(fichaRepositorio.alterarFicha).not.toHaveBeenCalled();
+      });
+
+      it('lança ResourceNotFoundException quando a ficha não existe', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(null);
+
+        await expect(
+          service.alterarFichaCriatura(
+            { id: 99, nome: 'A Estátua', dados: criarDadosCriatura() },
+            usuarioMestre,
+          ),
+        ).rejects.toThrow(ResourceNotFoundException);
+      });
     });
   });
 });
