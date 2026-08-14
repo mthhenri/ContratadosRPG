@@ -191,7 +191,7 @@ CREATE TEXT SEARCH CONFIGURATION contratados_portugues (COPY = pg_catalog.portug
 ALTER TEXT SEARCH CONFIGURATION contratados_portugues
   ALTER MAPPING FOR hword, hword_part, word WITH unaccent, portuguese_stem;
 ALTER TEXT SEARCH CONFIGURATION contratados_portugues
-  ALTER MAPPING FOR asciihword, asciihword_part, asciiword WITH portuguese_stem;
+  ALTER MAPPING FOR hword_asciipart, asciihword, asciiword WITH portuguese_stem;
 
 CREATE TABLE pagina_caderno (
   id SERIAL,
