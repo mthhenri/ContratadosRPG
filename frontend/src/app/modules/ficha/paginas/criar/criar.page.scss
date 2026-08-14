@@ -53,7 +53,7 @@
   &__corpo { min-height: 440px; padding: 22px; }
   &__introducao { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); p { margin: 6px 0 0; max-width: 620px; font: 13px/1.55 var(--font-sans); color: var(--text-dim); } }
   &__introducao-codigo { font: 600 9px var(--font-mono); letter-spacing: .14em; color: var(--accent); }
-  &__campos { display: grid; gap: 18px; &--duas-colunas { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  &__campos { display: grid; gap: 18px; &--duas-colunas { grid-template-columns: repeat(2, minmax(0, 1fr)); } &--base { grid-template-columns: minmax(120px, 200px) minmax(0, 1fr); align-items: start; } }
   &__campos + .campo { margin-top: 16px; }
   .campo + &__campos { margin-top: 16px; }
 
@@ -193,14 +193,24 @@
   }
 }
 
-// Avatar do guia de criação (m3-62) — mesma caixa 42px de `.campo__controle`, com o fundo
-// tracejado do `app-icone` de placeholder até uma imagem ser escolhida (`imagemPreviewUrl`).
+// Bloco "Base" do guia de criação (m3-6x): foto de registro grande à esquerda, Operador
+// responsável (só para Mestre) e Codinome empilhados à direita — layout de ficha de registro.
+.guia__avatar-campo { min-width: 0; }
+
+.guia__base-direita { display: grid; gap: 18px; align-content: start; min-width: 0; }
+
+// Avatar do guia de criação (m3-62) — caixa quadrada que acompanha a largura da coluna, com o
+// fundo tracejado do `app-icone` de placeholder até uma imagem ser escolhida (`imagemPreviewUrl`).
+// O próprio `<label>` é a caixa (ver HTML): o alvo clicável é exatamente do tamanho dela, nunca
+// maior — clicar em qualquer ponto dela (inclusive fora da imagem, mas dentro da caixa) abre o
+// seletor de arquivo; clicar no rótulo ou no texto de ajuda ao lado, fora da caixa, não abre.
 .guia__avatar-caixa {
   position: relative;
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
+  width: 100%;
+  aspect-ratio: 1;
+  font-size: 26px;
   color: var(--text-mute);
   background: var(--surface-2);
   border: 1px solid var(--border-strong);
@@ -220,6 +230,8 @@
   object-fit: cover;
 }
 
+// Preenche exatamente a caixa (inset: 0 = mesmo tamanho de `.guia__avatar-caixa`, que tem
+// `position: relative`) — nunca extrapola para fora dela, mesmo invisível (opacity: 0).
 .guia__avatar-entrada {
   position: absolute;
   inset: 0;
@@ -228,6 +240,12 @@
   padding: 0;
   opacity: 0;
   cursor: pointer;
+}
+
+@include bp.mobile {
+  .guia__campos--base { grid-template-columns: 1fr; }
+  .guia__avatar-campo { justify-items: center; text-align: center; }
+  .guia__avatar-caixa { width: 128px; }
 }
 
 .atributo { display: grid; grid-template-columns: auto minmax(0, 1fr) 116px; align-items: center; gap: 10px; min-height: 56px; padding: 8px 9px 8px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); &__identidade { display: grid; gap: 3px; span { font: 600 10px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; } small { font-size: 9px; color: var(--warning); } small.atributo__bonus { color: var(--accent); } } &--desvantagem { border-color: color-mix(in srgb, var(--warning) 35%, transparent); } &__maestria { flex: none; padding: 2px 6px; font: 13px var(--font-mono); line-height: 1; color: var(--text-mute); background: transparent; border: 1px solid var(--border-strong); border-radius: var(--radius-control); cursor: pointer; transition: .15s ease; &:hover:not(:disabled) { color: var(--accent); border-color: var(--accent-border); } &--ativa { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); } &:disabled { opacity: .3; cursor: not-allowed; } } }
