@@ -10,7 +10,7 @@
 }
 
 .calc-flutuante {
-  // Gatilho (m3-61): no desktop é flutuante — círculo fixo no canto inferior direito, com o
+  // Gatilho (m3-61): no desktop é flutuante — círculo fixo no canto inferior esquerdo, com o
   // gatilho do histórico de rolagens (`HistoricoRolagensSidebar`) empilhado logo acima. No
   // mobile volta a ser um botão inline no cabeçalho da ficha, ao lado daquele (ver
   // `@include bp.mobile` abaixo). O empilhamento global não depende de os componentes serem irmãos.

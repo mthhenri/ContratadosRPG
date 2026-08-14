@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { CalculadoraFlutuante } from '../calculadora-flutuante/calculadora-flutuante.component';
 import { HistoricoRolagensSidebar } from '../historico-rolagens-sidebar/historico-rolagens-sidebar.component';
+import { InventarioEsquadraoSidebar } from '../inventario-esquadrao-sidebar/inventario-esquadrao-sidebar.component';
 import { LeitorDocumentos } from '../leitor-documentos/leitor-documentos.component';
 
 @Component({
@@ -23,7 +24,14 @@ describe('contrato CSS dos utilitários flutuantes', () => {
   const estilosGlobais = obterEstilosCompilados(EstilosGlobaisTeste);
   const estilosCalculadora = obterEstilosCompilados(CalculadoraFlutuante);
   const estilosHistorico = obterEstilosCompilados(HistoricoRolagensSidebar);
+  const estilosInventario = obterEstilosCompilados(InventarioEsquadraoSidebar);
   const estilosLeitor = obterEstilosCompilados(LeitorDocumentos);
+
+  it('ancora os gatilhos flutuantes da campanha e da ficha no canto inferior esquerdo', () => {
+    for (const estilos of [estilosCalculadora, estilosHistorico, estilosInventario]) {
+      expect(estilos).toContain('left: 24px');
+    }
+  });
 
   it('empilha 48px com vão de 12px e remove a vaga quando Documentos não está recolhido', () => {
     expect(estilosGlobais).toContain('--documentos-recolhidos: 0px');
@@ -52,7 +60,7 @@ describe('contrato CSS dos utilitários flutuantes', () => {
 
     for (const estilos of [estilosCalculadora, estilosHistorico]) {
       expect(estilos).toMatch(
-        /@media \(max-width:\s*560px\)[\s\S]*position:\s*static;[\s\S]*width:\s*44px;[\s\S]*height:\s*44px/,
+        /@media \(max-width:\s*560px\)[\s\S]*position:\s*static;[\s\S]*left:\s*auto;[\s\S]*width:\s*44px;[\s\S]*height:\s*44px/,
       );
     }
     expect(estilosLeitor).toContain(

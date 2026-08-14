@@ -23,17 +23,30 @@
   &__estado-operacional {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    min-height: 36px;
-    padding: 6px 10px;
-    border: 1px solid var(--accent-border);
+    gap: 5px;
+    min-height: 28px;
+    padding: 4px 8px;
+    border: 1px solid var(--border-strong);
     border-radius: var(--radius-control);
-    background: var(--accent-dim);
-    color: var(--accent);
-    font: 600 0.72rem var(--font-mono);
+    background: var(--surface-2);
+    color: var(--text);
+    font: 600 0.66rem var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     white-space: nowrap;
+  }
+
+  &__estado-operacional app-icone {
+    display: inline-flex;
+    width: 12px;
+    height: 12px;
+  }
+
+  &__estado-operacional--base { color: var(--text); }
+  &__estado-operacional--missao {
+    color: var(--vida);
+    border-color: var(--vida-border);
+    background: color-mix(in srgb, var(--vida) 12%, transparent);
   }
 
   &__estado-operacional--leitura { cursor: default; }

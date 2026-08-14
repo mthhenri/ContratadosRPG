@@ -3,7 +3,7 @@
 $tamanho-desktop: 48px;
 $tamanho-mobile: bp.$alvo-toque;
 $vao: 12px;
-$direita-desktop: 24px;
+$esquerda-desktop: 24px;
 $base-desktop: 24px;
 $base-mobile: 12px;
 $passo-desktop: $tamanho-desktop + $vao;
@@ -80,7 +80,7 @@ $passo-mobile: $tamanho-mobile + $vao;
 }
 
 @mixin posicionar-utilitario-flutuante($ordem: 0, $compactar-no-mobile: true) {
-  right: $direita-desktop;
+  left: $esquerda-desktop;
   bottom: calc(
     #{$base-desktop} + var(--piso-flutuante, 0px) + var(--documentos-recolhidos, 0px) +
       #{$ordem * $passo-desktop}
@@ -88,6 +88,7 @@ $passo-mobile: $tamanho-mobile + $vao;
 
   @if $compactar-no-mobile {
     @include bp.mobile {
+      left: auto;
       right: max(#{$base-mobile}, env(safe-area-inset-right));
       bottom: calc(
         #{$base-mobile} + env(safe-area-inset-bottom) + var(--piso-flutuante, 0px) +
@@ -100,7 +101,7 @@ $passo-mobile: $tamanho-mobile + $vao;
 @mixin utilitario-inline-mobile() {
   @include bp.mobile {
     position: static;
-    right: auto;
+    left: auto;
     bottom: auto;
     width: $tamanho-mobile;
     height: $tamanho-mobile;

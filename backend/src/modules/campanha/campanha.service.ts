@@ -1,6 +1,6 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { ItemCategoriaEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type {
   CampanhaAlteradaDto,
   CampanhaConviteRegeneradoDto,
@@ -45,6 +45,27 @@ const ALFABETO_CONVITE = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 /** Tamanho do código de convite gerado na criação da campanha. */
 const TAMANHO_CONVITE = 8;
+
+const CATEGORIAS_EMPILHAVEIS_INVENTARIO = new Set<ItemCategoriaEnum>([
+  ItemCategoriaEnum.OPERACIONAL,
+  ItemCategoriaEnum.MEDICINAL,
+]);
+
+/** Compara apenas a identidade descritiva; `id` e `quantidade` pertencem ao registro/stack. */
+function itensInventarioSaoIdenticos(
+  item: CampanhaInventarioItemDto,
+  dto: CampanhaInventarioItemAdicionarDto,
+): boolean {
+  return item.nome === dto.nome
+    && item.categoria === dto.categoria
+    && item.custo === dto.custo
+    && item.peso === dto.peso
+    && item.descricao === dto.descricao
+    && item.dano === dto.dano
+    && item.informacao === dto.informacao
+    && item.resistencia === dto.resistencia
+    && item.bonus === dto.bonus;
+}
 
 /**
  * Regras de campanha (SYSTEM.SPEC §13/§14): CRUD com o criador virando `MESTRE`, listagem
@@ -271,17 +292,30 @@ export class CampanhaService {
     return campanhaEncontrada;
   }
 
-  /** Lista os itens do inventário de esquadrão — respeita o gate Na Base/Em Missão. */
+  /** Valida somente a leitura do inventário de esquadrão: qualquer membro pode consultá-lo. */
+  async validarLeituraInventario(dto: CampanhaMembroInternoRecuperarDto): Promise<CampanhaRecuperadaDto> {
+    const campanhaEncontrada = await this.campanhaRepositorio.recuperarPorId({ id: dto.campanhaId });
+    if (!campanhaEncontrada) {
+      throw new ResourceNotFoundException('Campanha');
+    }
+    const membroEncontrado = await this.campanhaRepositorio.recuperarMembro(dto);
+    if (!membroEncontrado) {
+      throw new UnauthorizedAccessException();
+    }
+    return campanhaEncontrada;
+  }
+
+  /** Lista os itens do inventário de esquadrão para qualquer membro, inclusive Em Missão. */
   async listarInventario(
     dto: CampanhaInventarioRecuperarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<CampanhaInventarioDto> {
-    await this.validarAcessoInventario({ campanhaId: dto.campanhaId, usuarioId: usuarioAtivo.sub });
+    await this.validarLeituraInventario({ campanhaId: dto.campanhaId, usuarioId: usuarioAtivo.sub });
     const itens = await this.campanhaRepositorio.recuperarInventario({ campanhaId: dto.campanhaId });
     return { itens };
   }
 
-  /** Adiciona um item novo ao inventário de esquadrão (id gerado aqui) — respeita o gate. */
+  /** Adiciona item; Operacional/Medicinal idêntico incrementa o stack existente. */
   async adicionarItemInventario(
     dto: CampanhaInventarioItemAdicionarDto,
     usuarioAtivo: JwtPayload,
@@ -289,23 +323,29 @@ export class CampanhaService {
     await this.validarAcessoInventario({ campanhaId: dto.campanhaId, usuarioId: usuarioAtivo.sub });
     const itensAtuais = await this.campanhaRepositorio.recuperarInventario({ campanhaId: dto.campanhaId });
 
-    const itemNovo: CampanhaInventarioItemDto = {
-      id: randomUUID(),
-      nome: dto.nome,
-      categoria: dto.categoria,
-      custo: dto.custo,
-      peso: dto.peso,
-      quantidade: dto.quantidade,
-      descricao: dto.descricao,
-      dano: dto.dano,
-      informacao: dto.informacao,
-      resistencia: dto.resistencia,
-      bonus: dto.bonus,
-    };
-
+    const itemEmpilhavel = CATEGORIAS_EMPILHAVEIS_INVENTARIO.has(dto.categoria)
+      ? itensAtuais.find((item) => itensInventarioSaoIdenticos(item, dto))
+      : undefined;
+    const itensNovos = itemEmpilhavel
+      ? itensAtuais.map((item) => item.id === itemEmpilhavel.id
+        ? { ...item, quantidade: item.quantidade + dto.quantidade }
+        : item)
+      : [...itensAtuais, {
+          id: randomUUID(),
+          nome: dto.nome,
+          categoria: dto.categoria,
+          custo: dto.custo,
+          peso: dto.peso,
+          quantidade: dto.quantidade,
+          descricao: dto.descricao,
+          dano: dto.dano,
+          informacao: dto.informacao,
+          resistencia: dto.resistencia,
+          bonus: dto.bonus,
+        }];
     const inventarioAlterado = await this.campanhaRepositorio.alterarInventario({
       campanhaId: dto.campanhaId,
-      itens: [...itensAtuais, itemNovo],
+      itens: itensNovos,
     });
     this.campanhaGateway.emitirInventarioAlterado({ campanhaId: dto.campanhaId });
     return inventarioAlterado;

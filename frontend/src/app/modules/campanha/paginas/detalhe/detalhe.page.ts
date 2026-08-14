@@ -868,12 +868,7 @@ export class CampanhaDetalhe {
           this.fichas.set(fichas);
           this.sincronizarSalasFicha(fichas);
           this.ultimaAtualizacaoEm.set(Date.now());
-          if (campanha.naBase || this.ehMestre()) {
-            this.carregarInventario();
-          } else {
-            this.inventarioEsquadrao.set([]);
-            this.exibindoInventarioJogador.set(false);
-          }
+          this.carregarInventario();
           // Visão do jogador (m2-20, item 2): semeia `fichaExibidaId` com a própria ficha assim
           // que `fichas()` carrega pela 1ª vez — só quando ainda não há seleção (não sobrescreve
           // uma troca via "Ver ficha" numa ressincronização em tempo real posterior).
@@ -895,11 +890,7 @@ export class CampanhaDetalhe {
   private recarregarCampanhaEInventario(): void {
     this.campanhaService.recuperarCampanha(this.id).subscribe((campanha) => {
       this.campanha.set(campanha);
-      if (campanha.naBase || this.ehMestre()) this.carregarInventario();
-      else {
-        this.inventarioEsquadrao.set([]);
-        this.exibindoInventarioJogador.set(false);
-      }
+      this.carregarInventario();
     });
   }
 

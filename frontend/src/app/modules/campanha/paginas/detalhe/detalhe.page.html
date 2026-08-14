@@ -47,13 +47,18 @@
         <span class="card__indice">//</span>
         <h1 class="detalhe__titulo">{{ campanhaAtual.nome }}</h1>
         @if (exibirComoMestre()) {
-          <button class="detalhe__estado-operacional" type="button" (click)="alterarEstadoCampanha()">
-            <app-icone [nome]="campanhaAtual.naBase ? 'campanhas' : 'alerta'" />
+          <button class="detalhe__estado-operacional" type="button"
+            [class.detalhe__estado-operacional--base]="campanhaAtual.naBase"
+            [class.detalhe__estado-operacional--missao]="!campanhaAtual.naBase"
+            (click)="alterarEstadoCampanha()">
+            <app-icone [nome]="campanhaAtual.naBase ? 'guardada' : 'combate'" />
             {{ campanhaAtual.naBase ? 'Na Base' : 'Em Missão' }}
           </button>
         } @else {
-          <span class="detalhe__estado-operacional detalhe__estado-operacional--leitura">
-            <app-icone [nome]="campanhaAtual.naBase ? 'campanhas' : 'alerta'" />
+          <span class="detalhe__estado-operacional detalhe__estado-operacional--leitura"
+            [class.detalhe__estado-operacional--base]="campanhaAtual.naBase"
+            [class.detalhe__estado-operacional--missao]="!campanhaAtual.naBase">
+            <app-icone [nome]="campanhaAtual.naBase ? 'guardada' : 'combate'" />
             {{ campanhaAtual.naBase ? 'Na Base' : 'Em Missão' }}
           </span>
         }
@@ -667,11 +672,10 @@
               <h2 class="card__titulo">{{ fichaExibida.nome }}</h2>
               <span class="card__regua"></span>
               <button class="botao botao--secundario detalhe__alternar-inventario" type="button"
-                [disabled]="!campanhaAtual.naBase"
                 [attr.aria-pressed]="exibindoInventarioJogador()"
                 (click)="exibindoInventarioJogador.set(!exibindoInventarioJogador())">
                 <app-icone nome="inventario" />
-                {{ exibindoInventarioJogador() ? 'Voltar ao painel' : 'Inventário' }}
+                {{ exibindoInventarioJogador() ? 'Voltar ao painel' : 'Inventário do esquadrão' }}
               </button>
               <a
                 class="botao botao--secundario detalhe__abrir-completa"
@@ -754,7 +758,7 @@
               <span class="detalhe__secao-regua"></span>
             </header>
             <app-inventario-esquadrao [campanhaId]="campanhaAtual.id" [itens]="inventarioEsquadrao()"
-              [fichas]="fichasDestinoInventario()" [bloqueado]="!campanhaAtual.naBase"
+              [fichas]="fichasDestinoInventario()" [somenteLeitura]="!campanhaAtual.naBase"
               (atualizado)="inventarioEsquadrao.set($event)" />
           </article>
         } @else {

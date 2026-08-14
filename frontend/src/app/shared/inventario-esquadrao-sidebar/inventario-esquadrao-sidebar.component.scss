@@ -6,7 +6,7 @@
   &__gatilho { @include utilitario-flutuante.gatilho-utilitario-flutuante(); @include utilitario-flutuante.posicionar-utilitario-flutuante(2); @include utilitario-flutuante.utilitario-inline-mobile(); z-index: 55; color: var(--accent); background: var(--surface); border: 1px solid var(--border-strong); border-radius: 50%; box-shadow: 0 8px 20px rgb(0 0 0 / 40%); }
   &__gatilho:hover, &__gatilho--ativo { border-color: var(--accent-border); background: var(--accent-dim); }
   &__fundo { position: fixed; inset: 0; z-index: 64; border: 0; background: rgb(0 0 0 / 55%); }
-  &__painel { position: fixed; z-index: 65; inset: 0 0 0 auto; width: min(420px, 100vw); display: flex; flex-direction: column; border-left: 1px solid var(--border-strong); background: var(--surface); box-shadow: -16px 0 40px rgb(0 0 0 / 45%); outline: none; animation: inventario-sidebar-desliza .22s ease; }
+  &__painel { position: fixed; z-index: 65; inset: 0 0 0 auto; width: min(500px, 100vw); display: flex; flex-direction: column; border-left: 1px solid var(--border-strong); background: var(--surface); box-shadow: -16px 0 40px rgb(0 0 0 / 45%); outline: none; animation: inventario-sidebar-desliza .22s ease; }
   &__cabecalho { flex: none; display: flex; align-items: center; gap: 11px; padding: 16px 18px; border-bottom: 1px solid var(--border); }
   &__cabecalho > app-icone { flex: none; color: var(--accent); }
   &__titulo { margin: 0; color: var(--text); font: 600 13px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); white-space: nowrap; }

@@ -75,6 +75,7 @@ describe('CampanhaDetalhe', () => {
     fichas?: FichaResumoDto[];
     rolagens?: RolagemResumoDto[];
     alterarRetorno?: Observable<CampanhaAlteradaDto>;
+    campanha?: Partial<CampanhaRecuperadaDto>;
   }) {
     // m3-65: em produção, `membro.fichas` (listarMembros) e `fichas()` (listarFichas) vêm da
     // mesma visibilidade no backend — nunca inconsistentes. Aqui, quando o teste não declara
@@ -99,7 +100,7 @@ describe('CampanhaDetalhe', () => {
               })),
     }));
     const campanhaService = {
-      recuperarCampanha: vi.fn(() => of({ ...campanhaBase })),
+      recuperarCampanha: vi.fn(() => of({ ...campanhaBase, ...opts.campanha })),
       listarMembros: vi.fn(() => of(membrosComFichas)),
       alterarCampanha: vi.fn(() => opts.alterarRetorno ?? of({ ...campanhaBase } as CampanhaAlteradaDto)),
       excluirCampanha: vi.fn(() => of(undefined)),
@@ -1938,10 +1939,25 @@ describe('CampanhaDetalhe', () => {
       const { fixture, raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
       const botao = raiz.querySelector('.detalhe__alternar-inventario') as HTMLButtonElement;
       expect(botao.disabled).toBe(false);
+      expect(botao.textContent).toContain('Inventário do esquadrão');
       botao.click();
       fixture.detectChanges();
       expect(raiz.querySelector('.detalhe__inventario-jogador')).not.toBeNull();
       expect(raiz.querySelector('.detalhe__equipe')).toBeNull();
+    });
+
+    it('jogador em missão abre o inventário em modo de leitura', () => {
+      const { fixture, raiz, campanhaService } = montar({
+        usuarioId: 2, membros: membrosDois(), fichas, campanha: { naBase: false },
+      });
+      const botao = raiz.querySelector('.detalhe__alternar-inventario') as HTMLButtonElement;
+
+      expect(botao.disabled).toBe(false);
+      expect(campanhaService.recuperarInventario).toHaveBeenCalledWith(CAMPANHA_ID);
+      botao.click();
+      fixture.detectChanges();
+
+      expect(raiz.querySelector('.detalhe__inventario-jogador')).not.toBeNull();
     });
 
     it('jogador manda item da própria ficha para a base e relê os dois inventários', () => {
