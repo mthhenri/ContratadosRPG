@@ -201,6 +201,20 @@ histórico e calculadora, conforme a tela) fica a 24px do canto inferior esquerd
 quanto na ficha. Em viewports mobile, esses controles continuam inline no cabeçalho com alvos de 44px
 e as sidebars ocupam toda a largura disponível.
 
+O **Caderno** também integra os utilitários da campanha. Cada membro possui um caderno privado por
+campanha, formado por páginas com título e Markdown, sem imagens ou anexos. O autor administra suas
+páginas com salvamento automático e controle de versão; em conflito, o texto local permanece visível
+até o usuário recarregar a versão persistida. O mestre alterna entre o próprio caderno editável e os
+cadernos dos jogadores em modo estritamente somente leitura; jogadores não veem cadernos alheios.
+No desktop, a janela pode ser arrastada, redimensionada e minimizada e preserva sua geometria no
+navegador. No mobile, ocupa a área útil e alterna entre lista e editor.
+
+A mesma janela oferece busca textual unificada com fontes combináveis conforme o papel: caderno do
+mestre, cadernos dos jogadores e anotações das fichas. A autorização é aplicada no backend antes da
+consulta; um resultado de página abre o caderno correspondente e um resultado de ficha navega para
+a visualização completa em `#anotacoes`. A implementação usa full-text search português do
+PostgreSQL (`websearch_to_tsquery`, `tsvector` e índices GIN); o banco continua autoritativo.
+
 ### Ficha de jogador — `backend/ficha`, `frontend/ficha`
 
 CRUD completo com a matriz de permissões §14 arbitrada **só no service**, validação do documento
@@ -379,8 +393,8 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
 - **Cadernos de campanha são privados por autor** — cada membro tem conceitualmente um caderno por
   campanha, composto por páginas Markdown. O autor administra as próprias páginas; o mestre apenas
   lê e pesquisa páginas dos jogadores; jogadores nunca acessam cadernos entre si. A busca unifica
-  cadernos e anotações de ficha com fontes combináveis conforme o papel. O Caderno será um utilitário
-  flutuante junto de Calculadora e Documentos; design em
+  cadernos e anotações de ficha com fontes combináveis conforme o papel. O Caderno é um utilitário
+  flutuante junto de Calculadora e Documentos; contrato e decisões em
   `docs/superpowers/specs/2026-08-12-cadernos-campanha-busca-design.md`.
 - **Edição no próprio lugar** — toggle inline na mesma tela, nunca uma página de formulário
   separada. Vale para ficha, campanha e perfil.

@@ -1,5 +1,34 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-14 — Cadernos privados e busca textual por campanha
+
+Cada participante passou a ter um caderno privado por campanha, composto por várias páginas com
+título e conteúdo Markdown. O autor cria, edita, reordena e exclui as próprias páginas; o mestre
+pode abrir os cadernos dos jogadores somente para leitura e pesquisa, enquanto jogadores nunca
+acessam os cadernos uns dos outros. Salvamentos são serializados, usam controle otimista de versão e
+preservam o rascunho local quando outra sessão altera a mesma página.
+
+O caderno entrou na tela da campanha como utilitário flutuante análogo ao leitor de documentos e à
+calculadora: no desktop pode ser arrastado, redimensionado e minimizado, com geometria local por
+navegador; no mobile ocupa a área útil e alterna entre lista e editor. O editor oferece escrita e
+prévia de Markdown seguro, sem HTML, imagens ou anexos. A busca da campanha reúne páginas do mestre,
+páginas dos jogadores e anotações das fichas em uma consulta com fontes combináveis, sempre limitada
+pelo papel e pelos vínculos do usuário. Resultados de ficha abrem diretamente em `#anotacoes`.
+
+A busca foi implementada no PostgreSQL com configuração portuguesa, `websearch_to_tsquery`, vetores
+e índices GIN. O PostgreSQL permanece a fonte autoritativa; Elasticsearch ficou somente como opção
+futura para volume ou relevância que justifiquem uma projeção externa reconstruível. A migration
+`0018` também foi testada em rollback/reaplicação, e o plano de consulta confirmou os índices das
+páginas e das anotações de ficha.
+
+A aplicação real foi exercitada em 1920×1080 e 360×800, incluindo abertura, minimização, arraste,
+redimensionamento, persistência da geometria, Markdown, busca, leitura do mestre, conflito de edição
+e confirmação de exclusão. Não houve overflow, os alvos mobile mantiveram 44px e a janela preservou
+a linguagem visual dos utilitários existentes. Passaram 603 testes no `shared`, 349 no backend e
+990 no frontend, além dos três builds. O lint de `shared` e frontend passou; o lint raiz continua
+bloqueado apenas por duas asserções desnecessárias preexistentes em testes de campanha e ficha. O
+build do frontend manteve o aviso conhecido do budget inicial (639,41 kB para o limite de 630 kB).
+
 ## 2026-08-14 — Consulta do inventário de esquadrão durante missão
 
 O acesso ao inventário coletivo foi dividido entre leitura e alteração. Qualquer membro da campanha
