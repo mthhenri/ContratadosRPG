@@ -1,5 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { ActivatedRoute, Router, provideRouter } from '@angular/router';
 import { Observable, Subject, of } from 'rxjs';
 import {
@@ -28,6 +29,8 @@ import { SessaoService } from '../../../../core/services/sessao.service';
 import { FichaService } from '../../../ficha/ficha.service';
 import { RolagemService } from '../../../ficha/rolagem.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
+import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
+import { PaginaCadernoService } from '../../../pagina-caderno/pagina-caderno.service';
 
 /**
  * Prova o redesenho m2-19 da visão do mestre em `/painel/:id`: banner de alerta condicional,
@@ -182,6 +185,17 @@ describe('CampanhaDetalhe', () => {
       listarPorCampanha: vi.fn(() => of(opts.rolagens ?? [])),
     };
     const sessaoService = { usuario: () => ({ id: opts.usuarioId, login: 'x', nome: 'x' }) };
+    const paginaCadernoService = {
+      listarPaginas: vi.fn(() => of([])),
+      listarPaginasMembro: vi.fn(() => of([])),
+      recuperarPagina: vi.fn(),
+      criarPagina: vi.fn(),
+      alterarPagina: vi.fn(),
+      excluirPagina: vi.fn(),
+      buscarCampanha: vi.fn(() =>
+        of({ itens: [], totalItens: 0, paginaAtual: 1, totalPaginas: 0 }),
+      ),
+    };
 
     Object.defineProperty(navigator, 'clipboard', {
       value: { writeText: vi.fn(() => Promise.resolve()) },
@@ -225,6 +239,7 @@ describe('CampanhaDetalhe', () => {
         { provide: RolagemService, useValue: rolagemService },
         { provide: SessaoService, useValue: sessaoService },
         { provide: TempoRealService, useValue: tempoRealService },
+        { provide: PaginaCadernoService, useValue: paginaCadernoService },
       ],
     });
 
@@ -258,6 +273,18 @@ describe('CampanhaDetalhe', () => {
     { usuarioId: 1, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.MESTRE, fichas: [] },
     { usuarioId: 2, nome: 'Jogador', papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] },
   ];
+
+  it('monta o caderno e abre resultado de ficha diretamente nas anotações', () => {
+    const { fixture, navegar } = montar(mestre());
+    const caderno = fixture.debugElement.query(By.directive(CadernoFlutuante))
+      .componentInstance as CadernoFlutuante;
+
+    caderno.abrirFicha.emit(42);
+
+    expect(navegar).toHaveBeenCalledWith(['/painel', CAMPANHA_ID, 'ficha', 42], {
+      fragment: 'anotacoes',
+    });
+  });
 
   // Campanha com mestre + dois jogadores — base dos testes de "Acesso de visualização" (só o
   // 3º membro é elegível a receber acesso da ficha do jogador `usuarioId: 2`: o mestre já vê tudo,

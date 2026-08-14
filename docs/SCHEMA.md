@@ -181,6 +181,32 @@ CREATE TABLE usuario_ficha_acesso (
 -- uix_usuario_ficha_acesso_ficha_usuario_ativo: UNIQUE (ficha_id, usuario_id) WHERE is_deleted = false
 ```
 
+## pagina_caderno (cadernos de campanha)
+
+Uma linha representa uma página. O caderno não possui tabela própria: é o agrupamento lógico das
+páginas ativas por `(campanha_id, usuario_autor_id)`. O autor precisa ser membro ativo da campanha
+para a página aparecer; remover o membro preserva os dados, mas os exclui de listagens e buscas.
+
+```sql
+CREATE TABLE pagina_caderno (
+  -- BaseEntity...
+  campanha_id        INTEGER      NOT NULL, -- fk_pagina_caderno_campanha
+  usuario_autor_id   INTEGER      NOT NULL, -- fk_pagina_caderno_usuario_autor
+  titulo             VARCHAR(120) NOT NULL,
+  conteudo_markdown  TEXT         NOT NULL,
+  busca              TSVECTOR     NOT NULL
+);
+
+-- ix_pagina_caderno_campanha_autor: (campanha_id, usuario_autor_id)
+-- ix_pagina_caderno_busca: GIN (busca)
+```
+
+`fn_pagina_caderno_busca` mantém o vetor com `titulo` em peso A e `conteudo_markdown` em peso B.
+A configuração `contratados_portugues` encadeia `unaccent` e `portuguese_stem`, permitindo que uma
+consulta sem acento encontre texto acentuado. As anotações existentes em `ficha.dados.anotacoes`
+permanecem no JSONB e usam o índice parcial de expressão `ix_ficha_anotacoes_busca`, que combina o
+nome da ficha em peso A com as anotações em peso B.
+
 ## rolagem (M3 — m3-27)
 
 Persistência das rolagens disparadas a partir de uma ficha (teste de atributo, dano, fórmula

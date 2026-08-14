@@ -1,0 +1,305 @@
+@if (!estado().aberto) {
+  <button
+    #gatilho
+    class="caderno__gatilho utilitario-flutuante utilitario-flutuante--caderno utilitario-flutuante--inline-mobile"
+    [class.caderno__gatilho--sem-inventario]="!ehMestre()"
+    type="button"
+    aria-label="Abrir caderno"
+    aria-expanded="false"
+    (click)="abrir()"
+  >
+    <app-icone nome="anotacoes" />
+  </button>
+} @else if (estado().minimizado) {
+  <button
+    #gatilho
+    class="caderno__gatilho utilitario-flutuante utilitario-flutuante--caderno utilitario-flutuante--inline-mobile"
+    [class.caderno__gatilho--sem-inventario]="!ehMestre()"
+    type="button"
+    aria-label="Reabrir caderno"
+    aria-expanded="false"
+    (click)="restaurar()"
+  >
+    <app-icone nome="anotacoes" />
+  </button>
+}
+
+@if (estado().aberto && !estado().minimizado) {
+  <section
+    #janela
+    class="caderno__janela"
+    [class.caderno__janela--mobile]="ehMobile()"
+    [style.left.px]="ehMobile() ? null : estado().geometria.x"
+    [style.top.px]="ehMobile() ? null : estado().geometria.y"
+    [style.width.px]="ehMobile() ? null : estado().geometria.largura"
+    [style.height.px]="ehMobile() ? null : estado().geometria.altura"
+    [style.z-index]="nivelJanela()"
+    role="dialog"
+    aria-label="Caderno da campanha"
+    aria-modal="false"
+    (focusin)="trazerParaFrente()"
+    (pointerdown)="trazerParaFrente()"
+    (keydown)="aoTecladoJanela($event)"
+  >
+    <header
+      #cabecalho
+      class="caderno__cabecalho"
+      tabindex="-1"
+      (pointerdown)="iniciarArraste($event)"
+    >
+      <div class="caderno__identidade">
+        <span class="caderno__marca" aria-hidden="true">//</span>
+        <div class="caderno__titulo-grupo">
+          <span class="caderno__kicker">Registro operacional</span>
+          <h2>Caderno · {{ campanhaNome() }}</h2>
+        </div>
+        @if (rotuloSalvamento()) {
+          <span
+            class="caderno__salvamento"
+            [class.caderno__salvamento--erro]="
+              store.estadoSalvamento() === 'FALHA' || store.estadoSalvamento() === 'CONFLITO'
+            "
+            aria-live="polite"
+          >{{ rotuloSalvamento() }}</span>
+          @if (store.estadoSalvamento() === 'CONFLITO') {
+            <button class="caderno__recarregar" type="button" (click)="recarregarVersao()">Recarregar versão</button>
+          }
+        }
+        <span class="caderno__regua" aria-hidden="true"></span>
+      </div>
+      <div class="caderno__acoes-janela">
+        <button type="button" aria-label="Minimizar caderno" (click)="minimizar()">
+          <span aria-hidden="true">−</span>
+        </button>
+        <button type="button" aria-label="Fechar caderno" (click)="fechar()">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+    </header>
+
+    @if (ehMestre()) {
+      <div class="caderno__escopo">
+        <div class="caderno__segmentado" role="group" aria-label="Caderno consultado">
+          <button
+            type="button"
+            [class.caderno__segmentado-item--ativo]="modoCaderno() === 'MEU'"
+            [attr.aria-pressed]="modoCaderno() === 'MEU'"
+            aria-label="Selecionar meu caderno"
+            (click)="selecionarModo('MEU')"
+          >Meu caderno</button>
+          <button
+            type="button"
+            [class.caderno__segmentado-item--ativo]="modoCaderno() === 'JOGADORES'"
+            [attr.aria-pressed]="modoCaderno() === 'JOGADORES'"
+            aria-label="Selecionar cadernos dos jogadores"
+            (click)="selecionarModo('JOGADORES')"
+          >Cadernos dos jogadores</button>
+        </div>
+        @if (modoCaderno() === 'JOGADORES') {
+          <label class="caderno__jogador">
+            <span>Jogador</span>
+            <select aria-label="Escolher jogador" (change)="selecionarJogador($event)">
+              <option value="">Escolha um jogador</option>
+              @for (jogador of jogadores(); track jogador.usuarioId) {
+                <option [value]="jogador.usuarioId">{{ jogador.nome }}</option>
+              }
+            </select>
+          </label>
+        }
+      </div>
+    }
+
+    <div class="caderno__busca">
+      <label class="caderno__busca-campo">
+        <app-icone nome="busca" />
+        <input [formControl]="termoBusca" maxlength="200" aria-label="Buscar na campanha" placeholder="Buscar nas anotações…" />
+      </label>
+      <div class="caderno__fontes" role="group" aria-label="Onde buscar">
+        @for (fonte of fontesPermitidas(); track fonte.valor) {
+          <label>
+            <input type="checkbox" [checked]="fonteSelecionada(fonte.valor)" (change)="alterarFonte(fonte.valor, $event)" />
+            <span>{{ fonte.rotulo }}</span>
+          </label>
+        }
+      </div>
+    </div>
+
+    @if (buscaAtiva()) {
+      <section class="caderno__resultados" aria-label="Resultados da busca">
+        <header>
+          <div>
+            <span class="caderno__kicker">Busca unificada</span>
+            <strong>{{ store.resultadosBusca().totalItens }} resultado(s)</strong>
+          </div>
+          @if (buscando()) { <span aria-live="polite">Buscando…</span> }
+        </header>
+        @if (fontesSelecionadas().length === 0) {
+          <p class="caderno__estado">Selecione ao menos uma fonte.</p>
+        } @else if (erroBusca()) {
+          <div class="caderno__estado caderno__estado--erro">
+            Não foi possível buscar agora.
+            <button type="button" (click)="solicitarBusca(store.resultadosBusca().paginaAtual)">Tentar novamente</button>
+          </div>
+        } @else if (!buscando() && store.resultadosBusca().itens.length === 0) {
+          <div class="caderno__vazio">
+            <app-icone nome="busca" />
+            <strong>Nada encontrado</strong>
+            <span>Tente outros termos ou combine fontes diferentes.</span>
+          </div>
+        } @else {
+          <div class="caderno__resultados-lista">
+            @for (resultado of store.resultadosBusca().itens; track resultado.tipo + '-' + resultado.id) {
+              <button type="button" [attr.data-resultado-id]="resultado.id" (click)="selecionarResultado(resultado)">
+                <span class="caderno__resultado-tipo">{{ resultado.tipo === 'PAGINA_CADERNO' ? 'Página' : 'Ficha' }}</span>
+                <strong>{{ resultado.titulo }}</strong>
+                <span class="caderno__resultado-meta">
+                  {{ resultado.autorNome }}
+                  @if (resultado.fichaNome) { · {{ resultado.fichaNome }} }
+                </span>
+                <span class="caderno__resultado-trecho">{{ resultado.trecho }}</span>
+              </button>
+            }
+          </div>
+          @if (store.resultadosBusca().totalPaginas > 1) {
+            <nav class="caderno__paginacao" aria-label="Páginas dos resultados">
+              <button type="button" [disabled]="store.resultadosBusca().paginaAtual <= 1" (click)="solicitarBusca(store.resultadosBusca().paginaAtual - 1)">Anterior</button>
+              <span>{{ store.resultadosBusca().paginaAtual }} / {{ store.resultadosBusca().totalPaginas }}</span>
+              <button type="button" [disabled]="store.resultadosBusca().paginaAtual >= store.resultadosBusca().totalPaginas" (click)="solicitarBusca(store.resultadosBusca().paginaAtual + 1)">Próxima</button>
+            </nav>
+          }
+        }
+      </section>
+    } @else {
+    <div
+      class="caderno__corpo"
+      [class.caderno__corpo--lista]="ehMobile() && estado().vistaMobile === 'LISTA'"
+      [class.caderno__corpo--conteudo]="ehMobile() && estado().vistaMobile === 'CONTEUDO'"
+      [class.caderno__corpo--lista-recolhida]="!ehMobile() && listaRecolhida()"
+    >
+      <aside class="caderno__lista" aria-label="Páginas do caderno">
+        <div class="caderno__lista-cabecalho">
+          <div>
+            <span class="caderno__kicker">Páginas</span>
+            <strong>{{ store.paginas().length }}</strong>
+          </div>
+          <div class="caderno__lista-acoes">
+            @if (modoCaderno() === 'MEU') {
+              <button class="caderno__acao-icone" type="button" aria-label="Criar página" (click)="iniciarNovaPagina()">
+                <app-icone nome="mais" />
+              </button>
+            }
+            @if (!ehMobile()) {
+              <button class="caderno__acao-icone" type="button" aria-label="Recolher páginas" (click)="alternarLista()">
+                <app-icone nome="voltar" />
+              </button>
+            }
+          </div>
+        </div>
+
+        @if (estado().carregando) {
+          <p class="caderno__estado">Carregando páginas…</p>
+        } @else if (modoCaderno() === 'JOGADORES' && jogadorSelecionadoId() === null) {
+          <p class="caderno__estado">Escolha um jogador para consultar o caderno.</p>
+        } @else if (store.paginas().length === 0) {
+          <div class="caderno__vazio">
+            <app-icone nome="anotacoes" />
+            <strong>Nenhuma página ainda</strong>
+            <span>{{ modoCaderno() === 'MEU' ? 'Crie a primeira página do caderno.' : 'Este caderno está vazio.' }}</span>
+          </div>
+        } @else {
+          <nav class="caderno__paginas" aria-label="Páginas">
+            @for (pagina of store.paginas(); track pagina.id) {
+              <button
+                type="button"
+                [attr.data-pagina-id]="pagina.id"
+                [class.caderno__pagina--ativa]="store.paginaAtiva()?.id === pagina.id"
+                (click)="selecionarPagina(pagina.id)"
+              >
+                <strong>{{ pagina.titulo }}</strong>
+                <span>{{ pagina.autorNome }} · {{ pagina.updatedDate | date: 'dd/MM/yy HH:mm' }}</span>
+              </button>
+            }
+          </nav>
+        }
+      </aside>
+
+      <main class="caderno__editor" [formGroup]="formulario">
+        @if (!ehMobile() && listaRecolhida()) {
+          <button class="caderno__mostrar-lista caderno__acao-icone" type="button" aria-label="Mostrar páginas" (click)="alternarLista()">
+            <app-icone nome="voltar" />
+          </button>
+        }
+        @if (ehMobile()) {
+          <button class="caderno__voltar" type="button" aria-label="Voltar para páginas" (click)="voltarParaPaginas()">
+            <app-icone nome="voltar" />
+            Páginas
+          </button>
+        }
+
+        @if (estado().carregando && store.paginaAtiva() === null) {
+          <p class="caderno__estado">Carregando página…</p>
+        } @else if (store.paginaAtiva() !== null || (modoCaderno() === 'MEU' && estado().vistaMobile === 'CONTEUDO')) {
+          <div class="caderno__editor-cabecalho">
+            <input
+              class="caderno__titulo-input"
+              formControlName="titulo"
+              maxlength="120"
+              aria-label="Título da página"
+              placeholder="Título da página"
+              [readOnly]="somenteLeitura()"
+            />
+            @if (somenteLeitura()) {
+              <span class="caderno__somente-leitura">Somente leitura</span>
+            }
+          </div>
+
+          <app-editor-markdown
+            [valor]="store.rascunho().conteudoMarkdown"
+            [somenteLeitura]="somenteLeitura()"
+            (valorChange)="alterarConteudoMarkdown($event)"
+          />
+
+          @if (!somenteLeitura()) {
+            <footer class="caderno__editor-acoes">
+              @if (store.paginaAtiva()) {
+                <button class="caderno__botao caderno__botao--perigo" type="button" data-acao="excluir" (click)="pedirExclusao()">
+                  <app-icone nome="excluir" /> Excluir
+                </button>
+              }
+              <span>
+                @if (store.estadoSalvamento() === 'CONFLITO') {
+                  Conflito de versão · <button type="button" (click)="recarregarVersao()">Recarregar versão</button>
+                } @else {
+                  Salvamento automático após uma pausa.
+                }
+              </span>
+              <button class="caderno__botao caderno__botao--primario" type="button" data-acao="salvar" (click)="salvar()">Salvar agora</button>
+            </footer>
+          }
+
+          @if (exclusaoPendente() && store.paginaAtiva()) {
+            <div class="caderno__confirmacao" role="alertdialog" aria-label="Confirmar exclusão da página">
+              <strong>Excluir “{{ store.paginaAtiva()!.titulo }}”?</strong>
+              <span>A página será removida do caderno.</span>
+              <div>
+                <button class="caderno__botao caderno__botao--perigo" type="button" data-acao="confirmar-exclusao" (click)="confirmarExclusao()">Confirmar exclusão</button>
+                <button class="caderno__botao" type="button" (click)="cancelarExclusao()">Cancelar</button>
+              </div>
+            </div>
+          }
+        } @else {
+          <div class="caderno__vazio caderno__vazio--editor">
+            <app-icone nome="anotacoes" />
+            <strong>Selecione uma página</strong>
+            <span>Escolha uma página ao lado para ler ou continuar escrevendo.</span>
+          </div>
+        }
+      </main>
+    </div>
+    }
+
+    @if (!ehMobile()) {
+      <span class="caderno__redimensionar" aria-hidden="true" (pointerdown)="iniciarRedimensionamento($event)"></span>
+    }
+  </section>
+}

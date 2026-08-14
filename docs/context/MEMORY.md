@@ -45,6 +45,7 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 |---|---|
 | **Motor de regras do jogo** (funções puras) | `shared/src/regras/` — `agente/`, `compras/`, `dados/`, `descanso/`, `dt/`, `identidade/`, `novo-agente/`, `patente/`, `rolagem/` |
 | DTOs (contratos entre camadas) | `shared/src/dtos/` |
+| Contratos, fontes e limites de cadernos/busca | `shared/src/dtos/pagina-caderno/`, `shared/src/enums/busca-campanha-*.enum.ts`, `shared/src/validators/pagina-caderno.validators.ts` |
 | Enums (string, valor = nome, SCREAMING_SNAKE_CASE) | `shared/src/enums/` |
 | `StandardResponse`, `PaginatedResult` | `shared/src/interfaces/` |
 | Validadores (constantes puras) | `shared/src/validators/` |
@@ -56,7 +57,8 @@ consomem os dois o mesmo motor — nunca reimplemente uma fórmula de um lado s�
 
 | Quero mexer em | Fica em |
 |---|---|
-| Módulos de domínio | `backend/src/modules/` — `autenticacao/`, `campanha/`, `ficha/`, `rolagem/`, `usuario/` |
+| Módulos de domínio | `backend/src/modules/` — `autenticacao/`, `campanha/`, `ficha/`, `pagina-caderno/`, `rolagem/`, `usuario/` |
+| Cadernos privados e busca textual da campanha | `backend/src/modules/pagina-caderno/` + `backend/src/database/migrations/0018 - Caderno de campanha e busca textual.sql` |
 | `BaseEntity`, `BaseRepository` | `backend/src/core/base/` |
 | `@Public()`, `@ActiveUser()` | `backend/src/core/decorators/` |
 | Exceções de negócio | `backend/src/core/exceptions/` — `BusinessException`, `ResourceNotFoundException`, `UnauthorizedAccessException` |
@@ -65,7 +67,8 @@ consomem os dois o mesmo motor — nunca reimplemente uma fórmula de um lado s�
 | **Armazenamento de blob** (avatar da ficha, local/R2) | `backend/src/core/armazenamento/` — `ArmazenamentoProvedor`, `ArmazenamentoLocalProvedor`/`ArmazenamentoR2Provedor`, toggle via `ConfigService.obterConfiguracaoArmazenamento()` |
 | Conexão Knex em runtime | `backend/src/database/` |
 | Reset e seed de desenvolvimento | `backend/tools/database/` + [`docs/DEVELOPMENT.md`](../DEVELOPMENT.md) |
-| **Migrations** | `backend/src/database/migrations/` — `0001`…`0014`, nome numerado |
+| **Migrations** | `backend/src/database/migrations/` — `0001`…`0018`, nome numerado |
+| Benchmark da busca textual | `backend/tools/database/explain-busca-campanha.sql` |
 | Leitura de env (nunca `process.env` direto) | `backend/src/config/` — `ConfigService`; `.env` resolvido pelo diretório de execução para funcionar em `src` e `dist` |
 
 Fluxo obrigatório: **controller (burro) → service (regra) → repository (só SQL)**.
@@ -74,7 +77,8 @@ Fluxo obrigatório: **controller (burro) → service (regra) → repository (só
 
 | Quero mexer em | Fica em |
 |---|---|
-| Módulos de tela | `frontend/src/app/modules/` — `autenticacao/`, `calculadora/`, `campanha/`, `ficha/`, `usuario/` |
+| Módulos de tela | `frontend/src/app/modules/` — `autenticacao/`, `calculadora/`, `campanha/`, `ficha/`, `pagina-caderno/`, `usuario/` |
+| Janela, estado, Markdown seguro e transporte do caderno | `frontend/src/app/modules/pagina-caderno/` |
 | Componentes da ficha | `frontend/src/app/modules/ficha/componentes/` — `ficha-visualizacao/`, `ficha-inventario/`, `ficha-habilidades/`, `ficha-sanidade/`, `ficha-rolagens/`, `ficha-rolagens-painel/`, `ficha-combos/`, `ficha-habilidade-seletor/`, `guia-equipamento-loja/`, `guia-formula/` |
 | Composables de página da ficha (uma instância por página, `providers: []`) | `frontend/src/app/modules/ficha/` — `ficha-edicao.service.ts` (handlers `ajustar*`), `ficha-rolagem-registro.service.ts` (flag "Rolagem oculta" + registro do histórico) |
 | Componentes reutilizáveis | `frontend/src/app/shared/` — `layout/`, `icone/`, `bandeja-dados/`, `historico-rolagens-sidebar/`, `calculadora-flutuante/`, `tempo-real/`, `tooltip/`, `overflow-fade/`, `hold-repeat/`, `marca/`… |
@@ -111,6 +115,10 @@ docs/
     done/             tasks concluídas (histórico — não reescrever)
   superpowers/        specs e planos de brainstorming
 ```
+
+O contrato funcional do caderno está em
+`docs/superpowers/specs/2026-08-12-cadernos-campanha-busca-design.md`; o plano executado está em
+`docs/superpowers/plans/2026-08-14-cadernos-campanha-busca.md`.
 
 ---
 

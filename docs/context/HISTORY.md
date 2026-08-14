@@ -16,6 +16,74 @@ sobrescrever o valor mais recente. Cor, avatar, visibilidade, nome e todo o rest
 permanecem intocados. Os testes cobrem o cliente HTTP, o lote dos cards, o recorte SQL, a
 permissão/emissão e a integração do detalhe da campanha.
 
+## 2026-08-14 — Cadernos privados e busca textual por campanha
+
+Cada participante passou a ter um caderno privado por campanha, composto por várias páginas com
+título e conteúdo Markdown. O autor cria, edita, reordena e exclui as próprias páginas; o mestre
+pode abrir os cadernos dos jogadores somente para leitura e pesquisa, enquanto jogadores nunca
+acessam os cadernos uns dos outros. Salvamentos são serializados, usam controle otimista de versão e
+preservam o rascunho local quando outra sessão altera a mesma página.
+
+O caderno entrou na tela da campanha como utilitário flutuante análogo ao leitor de documentos e à
+calculadora: no desktop pode ser arrastado, redimensionado e minimizado, com geometria local por
+navegador; no mobile ocupa a área útil e alterna entre lista e editor. O editor oferece escrita e
+prévia de Markdown seguro, sem HTML, imagens ou anexos. A busca da campanha reúne páginas do mestre,
+páginas dos jogadores e anotações das fichas em uma consulta com fontes combináveis, sempre limitada
+pelo papel e pelos vínculos do usuário. Resultados de ficha abrem diretamente em `#anotacoes`.
+
+A busca foi implementada no PostgreSQL com configuração portuguesa, `websearch_to_tsquery`, vetores
+e índices GIN. O PostgreSQL permanece a fonte autoritativa; Elasticsearch ficou somente como opção
+futura para volume ou relevância que justifiquem uma projeção externa reconstruível. A migration
+`0018` também foi testada em rollback/reaplicação, e o plano de consulta confirmou os índices das
+páginas e das anotações de ficha.
+
+A aplicação real foi exercitada em 1920×1080 e 360×800, incluindo abertura, minimização, arraste,
+redimensionamento, persistência da geometria, Markdown, busca, leitura do mestre, conflito de edição
+e confirmação de exclusão. Não houve overflow, os alvos mobile mantiveram 44px e a janela preservou
+a linguagem visual dos utilitários existentes. Passaram 603 testes no `shared`, 349 no backend e
+990 no frontend, além dos três builds. O lint de `shared` e frontend passou; o lint raiz continua
+bloqueado apenas por duas asserções desnecessárias preexistentes em testes de campanha e ficha. O
+build do frontend manteve o aviso conhecido do budget inicial (639,41 kB para o limite de 630 kB).
+
+Após a revisão de uso, a pilha de atalhos do jogador passou a remover a vaga inexistente do
+inventário de esquadrão; no mobile, o Caderno entrou na mesma faixa de 44px de rolagens e
+calculadora. A lista de páginas do desktop pode ser recolhida e reaberta. A janela agora reduz até
+440px; abaixo de 640px, a lista aberta sobrepõe o editor em vez de comprimi-lo. Os 994 testes do
+frontend, lint e build foram repetidos; o build manteve somente o aviso conhecido de budget.
+
+Na revisão seguinte, os filtros do caderno passaram a refluir dentro da janela estreita — inclusive
+o seletor de jogador — e a criação de uma página recolhe a lista para mostrar o editor imediatamente.
+No card compacto de ficha, Dinheiro e Salário ocupam a primeira linha enquanto Patente e Limite de
+Crédito formam a segunda. O botão mobile do caderno passou a usar a mesma aparência dos controles do
+cabeçalho. Por fim, atalhos recolhidos de Caderno e Documentos voltaram à faixa de utilitários abaixo
+das janelas arrastáveis, para nunca sobrepor um diálogo aberto.
+Os 995 testes do frontend, lint e build passaram; o build preservou apenas o aviso conhecido do
+budget inicial (639,41 kB para o limite de 630 kB).
+
+O fluxo de escrita foi simplificado novamente após a validação do autor: a alternância entre
+`Editar` e `Visualizar` saiu, e a própria página formatada passou a ser editável com Milkdown. A
+integração usa o núcleo do editor, sem o pacote visual Crepe, para não carregar recursos fora do
+escopo como imagens, tabelas, matemática e as fontes do KaTeX. Uma barra compacta oferece texto,
+títulos, negrito, itálico, código, listas e citação; atalhos Markdown continuam funcionando e o
+PostgreSQL continua recebendo Markdown puro. A mesma superfície fica bloqueada e sem barra ao
+consultar o caderno de outro jogador. A aplicação real foi percorrida em 1920×1080 e 360×800:
+seleção, formatação direta, salvamento e reabertura do conteúdo formatado funcionaram sem overflow.
+Passaram 999 testes do frontend, além de lint e build; o build manteve apenas o aviso conhecido do
+budget inicial (639,63 kB para o limite de 630 kB).
+
+Uma correção posterior separou as alterações reais do usuário das notificações assíncronas emitidas
+pelo Milkdown ao receber outra página. Essas sincronizações internas deixaram de acionar o autosave
+com uma revisão antiga. A investigação na aplicação real também encontrou perda de microssegundos
+quando o PostgreSQL entregava `updated_date` como `Date` do JavaScript: o valor devolvido ao cliente
+já não correspondia exatamente ao armazenado. O repositório passou a serializar as datas das páginas
+em UTC com precisão de microssegundos. Juntas, as correções eliminaram conflitos falsos ao alternar,
+criar e salvar páginas sucessivamente, com regressões automatizadas específicas para os dois casos.
+
+Os controles de ação do editor receberam feedback tátil visual: `Salvar agora` eleva e ilumina com
+o accent, enquanto `Excluir` realça apenas sua área de risco. Ambos recuam brevemente ao clique e
+desativam a transição quando o sistema solicita redução de movimento. A aplicação real foi
+conferida em 1920×1080 e 360×800, sem overflow.
+
 ## 2026-08-14 — Consulta do inventário de esquadrão durante missão
 
 O acesso ao inventário coletivo foi dividido entre leitura e alteração. Qualquer membro da campanha

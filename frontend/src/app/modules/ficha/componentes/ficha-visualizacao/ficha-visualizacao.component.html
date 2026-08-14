@@ -642,6 +642,10 @@
               <span class="ficha-mini__valor ficha-mini__valor--warning">${{ salario().toLocaleString('pt-BR') }}</span>
             </div>
             @if (modo() === 'compacto') {
+              <div class="ficha-mini ficha-mini--fino">
+                <span class="ficha-mini__rotulo">Patente</span>
+                <span class="ficha-mini__valor ficha-mini__valor--accent">{{ patenteTexto() }}</span>
+              </div>
               <!-- Só no compacto (m3-6x): o card de equipe não tem aba Extras pra mostrar a seção
                    Patente inteira, então o Limite de Crédito ganha um lugar aqui — com o ízinho
                    pra descrição, já que o box "fino" não cabe a frase inteira. -->
@@ -661,10 +665,12 @@
               </div>
             }
           </div>
-          <div class="ficha-mini ficha-mini--fino ficha-mini--largo">
-            <span class="ficha-mini__rotulo">Patente</span>
-            <span class="ficha-mini__valor ficha-mini__valor--accent">{{ patenteTexto() }}</span>
-          </div>
+          @if (modo() !== 'compacto') {
+            <div class="ficha-mini ficha-mini--fino ficha-mini--largo">
+              <span class="ficha-mini__rotulo">Patente</span>
+              <span class="ficha-mini__valor ficha-mini__valor--accent">{{ patenteTexto() }}</span>
+            </div>
+          }
         </div>
 
         <div class="ficha-cartao__divisor"></div>

@@ -10,7 +10,8 @@
     @include utilitario-flutuante.gatilho-utilitario-flutuante();
     @include utilitario-flutuante.posicionar-utilitario-flutuante();
 
-    z-index: 1201;
+    // É um atalho recolhido, não uma janela: fica atrás dos diálogos arrastáveis.
+    z-index: 55;
     padding: 0;
     color: var(--accent);
     background: var(--surface);
