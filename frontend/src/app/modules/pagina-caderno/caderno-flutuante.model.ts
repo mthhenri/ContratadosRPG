@@ -56,4 +56,3 @@ export const RESULTADOS_BUSCA_CADERNO_VAZIOS: PaginatedResult<BuscaCampanhaResul
 };
 
 export type PaginaCadernoEditavel = PaginaCadernoDto | null;
-
