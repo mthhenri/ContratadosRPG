@@ -1,5 +1,94 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-14 — `m4-04`: assistente de criação de criatura (frontend), reproduz "A Estátua" ponta a ponta
+
+Frontend do `m4-03`: assistente de criação de criatura (Ameaça) para o mestre —
+`frontend/src/app/modules/ficha/paginas/criar-criatura/` (`CriaturaCriar`), rota
+`/painel/:campanhaId/criatura/nova`. Mesma filosofia visual de trilha vertical + resumo
+operacional progressivo do guia de jogador (`FichaCriar`, `m3-57`/`58`/`59`), mas componente,
+estado e roteiro **totalmente separados** — o roteiro do "Guia de Criação de Ameaças" não tem
+relação estrutural com o de agente (12 passos fixos, sem passo condicional, diferente do de
+jogador onde // Habilidades só existe com Nível > 0): Identidade → Ameaça (NA/VD) → Atributos →
+Modificadores → Saúde → Defesa → Resistências (e Fraquezas) → Regeneração → Porte e
+Deslocamento → Ataques → Habilidades → Revisão.
+
+**Nenhuma fórmula reimplementada** — todo número vem de `shared/regras/criatura` (`m4-02`) via
+`computed`: `obterBaseELimitePorVd`, `calcularAtributoEfetivo`, `calcularVidaMaxima`,
+`calcularDefesaBase`, `possuiContraAtaque`, `calcularLimiteResistencias`/
+`calcularCustoResistencia`/`validarFraqueza`, `calcularValorRegeneracao`,
+`sugerirDeslocamentoTerrestre`, `calcularBonusIniciativaSugerido`, `obterDanoReferenciaPorVd`.
+O passo // Revisão não reimplementa cada regra de coerência como trava de passo separada —
+chama `validarFichaCriatura` (a mesma função que `FichaService.criarFichaCriatura` chama no
+backend antes de persistir, `m4-03`) sobre os dados montados e usa a lista de violações tanto
+para exibir o que falta quanto para habilitar/desabilitar "Registrar criatura". Passos
+individuais (Atributos, Modificadores, Resistências, Regeneração, Porte e Deslocamento) ainda
+têm travas próprias e mais cedo — usando as mesmas funções do motor, nunca uma cópia da regra —
+para não deixar o mestre chegar à Revisão sem saber o que está incompleto.
+
+**Decisões de abertura desta task:**
+- **Sem rascunho persistido** — diferente do guia de jogador
+  (`GuiaCriacaoRascunhoService`/`localStorage`), este assistente não salva progresso local. A
+  task não pedia retomada nos entregáveis, e o risco de perda é menor que o do guia de jogador
+  (é o mestre criando uma ficha da própria campanha, não um jogador perdendo a ficha do próprio
+  agente).
+- **`nome` da ficha (DTO de nível superior) = `designacao`** da Ficha de Identidade — o roteiro
+  do documento não tem um segundo campo "nome de registro" distinto da Designação; um campo a
+  mais quase idêntico seria redundância sem ganho.
+- **Sem seletor de "operador responsável"** — `FichaCriaturaCriarDto` não tem `usuarioId` (dono
+  é sempre o mestre autenticado, fixado no backend desde a `m4-03`), então o guia não precisa
+  (nem pode) criar em nome de outra pessoa, ao contrário do guia de jogador.
+- **Realocação de atributos sem trava de "3 pontos"** — o motor (`validarRealocacaoAtributos`)
+  só valida limites `[0, limite]` por atributo, não um teto de pontos realocados por atributo de
+  origem; o assistente segue a mesma superfície de validação do motor (stepper livre dentro dos
+  limites) em vez de inventar uma regra adicional que não existe em `shared/regras/criatura`.
+
+**Rota guardada por `mestreCampanhaGuard`** (novo, `frontend/src/app/core/guards/
+mestre-campanha.guard.ts`) — `CanActivateFn` que consulta `CampanhaService.listarMembros` e
+redireciona a `/acesso-negado` quem não é mestre daquela campanha (ou quando a consulta falha).
+Não existia guard nenhum escopado a papel-de-campanha no projeto (`adminGuard`/`tipoGuard`
+checam só o tipo global do usuário); backend já barra com 403 desde a `m4-03`, este guard só
+evita a viagem até o formulário para quem nunca teria a criação aceita. Registrado em
+`app.routes.ts` sob `painel/:campanhaId/criatura`, ao lado (não dentro) de
+`painel/:campanhaId/ficha`, em módulo próprio (`frontend/src/app/modules/ficha/
+criatura.routes.ts`) — só a rota `nova` por enquanto (visualização/edição ficam fora do
+escopo, ver abaixo).
+
+**Verificação ao vivo** (stack real: Postgres 16 + backend NestJS + frontend Angular, dois
+navegadores — mestre e jogador — em 1920×1080 e 360×800; Docker/imagens públicas indisponíveis
+no ambiente de execução desta sessão, então o Postgres subiu via `apt`/`pg_ctl` local em vez de
+`docker compose`, mesmo schema e migrations): o mestre reproduziu "A Estátua" (docs/core/
+guia_de_mestre-v4.0.0.md — "Exemplo de Ficha Completa") passo a passo pelo assistente e os
+valores calculados bateram exatamente com o documento — Base 2/Limite 5/6 Pontos de Ajuste,
+Atributo Efetivo de cada linha (Força 12, Destreza 16, Luta 17, Pontaria 4...), Vida Máxima
+1.050, Defesa 30 com Contra-Ataque disponível, custo de Resistências 52/60, sugestão de
+Deslocamento Terrestre 10–12m (a Estátua usa 9m, sugestão não é trava). Zero violações na
+Revisão; `POST /ficha/criatura` persistiu e o `GET` seguinte devolveu os mesmos dados. Testado
+também que um jogador da mesma campanha, sem concessão, recebe lista vazia em `GET
+/ficha?campanhaId=` e 403 direto em `GET /ficha/criatura/:id` — a regra "invisível por padrão"
+do `m4-03` segura na prática, não só na leitura do código (o campo `oculta` nasce `false` e
+**não** é o mecanismo de proteção; quem protege é a exigência de posse/concessão em
+`listarVisiveisParaUsuario`/`recuperarFicha` — checado e documentado em `CONTEXT.md` para não
+confundir o próximo leitor). Mobile: trilha vira barra de progresso no topo, resumo abre como
+bottom sheet — mesmo padrão do guia de jogador, sem erro de console.
+
+**Achado registrado como pendência (não corrigido nesta task — fora de escopo declarado):**
+abrir a criatura recém-criada em `/painel/:campanhaId/ficha/:id` (`FichaVisualizacao`, a tela de
+visualização/edição de ficha de **jogador**) lança `TypeError: Cannot read properties of
+undefined (reading 'vidaBase')` em `calcularVida` — a tela assume campos de jogador
+(`classe`/`nivel`/`atributos` no formato de agente) que não existem no documento de criatura. A
+spec `m4-04` já previa esse caso ("Fora de Escopo": "a criatura segue a mesma convenção
+'snapshot editável no próprio lugar' da ficha de jogador — se precisar de tela dedicada além da
+reutilização de `FichaVisualizacao`/`modo`, registrar como pendência ao fechar esta task").
+§14 impede qualquer jogador de chegar lá sem concessão, então hoje só afeta o mestre navegando
+direto após criar. Decisão de rumo (tela dedicada vs. adaptar `FichaVisualizacao`) fica em
+aberto para quem fechar `m4-09` (listagem/revelação no painel do mestre) — registrado em
+`CONTEXT.md` §7.
+
+Testes: `frontend` ganhou `criar-criatura.page.spec.ts` (reproduz "A Estátua" via chamadas
+diretas aos métodos protegidos do componente — mesmo padrão de `criar.page.spec.ts` — e
+confere o DTO exato enviado ao `FichaService.criarFichaCriatura`) e
+`mestre-campanha.guard.spec.ts`. `m4-04` movida para `docs/specs/done/`.
+
 ## 2026-08-14 — `m4-03`: `backend/ficha` estendido para `CRIATURA`, com DTOs de operação próprios
 
 Extensão do módulo `ficha` (backend) para o tipo `CRIATURA` (a task deixava explicitamente em

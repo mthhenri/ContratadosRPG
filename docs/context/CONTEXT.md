@@ -1,8 +1,8 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-14 · **Última decisão registrada:** `m4-03` concluída
-> (`backend/ficha` estendido para `CRIATURA`); criatura ganhou DTOs de operação **próprios**
-> (`FichaCriatura*Dto`), não união com os DTOs de jogador — ver seção 6
+> **Última revisão:** 2026-08-14 · **Última decisão registrada:** `m4-04` concluída (assistente
+> de criação de criatura no frontend); reproduz "A Estátua" ponta a ponta com os mesmos valores
+> do documento — ver seção 4
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -24,19 +24,24 @@ duas últimas (`m4-09` listagem/revelação no painel do mestre, `m4-10` refinam
 os dois tipos juntos. `m4-01` (contrato `FichaCriaturaDadosDto`,
 `shared/src/dtos/ficha/ficha-criatura.dtos.ts` + 11 enums novos de conteúdo de jogo), `m4-02`
 (`shared/regras/criatura` — motor de regras puro do roteiro de criação de Ameaças, 10 módulos
-de fórmula + `validarFichaCriatura` + caso de teste completo "A Estátua") e `m4-03`
+de fórmula + `validarFichaCriatura` + caso de teste completo "A Estátua"), `m4-03`
 (`backend/ficha` estendido para `CRIATURA`: criação restrita ao mestre, dono sempre o mestre,
 sempre dentro de campanha, validação via `validarFichaCriatura`, mesmos mecanismos de
-permissão/visibilidade/tempo real do M3) **concluídas**. Ao montar "A Estátua" como caso de
-teste (`m4-02`), duas divergências internas do próprio documento entre a fórmula geral e os
+permissão/visibilidade/tempo real do M3) e `m4-04` (assistente de criação de criatura no
+frontend, `/painel/:campanhaId/criatura/nova`) **concluídas**. Ao montar "A Estátua" como caso
+de teste (`m4-02`), duas divergências internas do próprio documento entre a fórmula geral e os
 números literais do exemplo foram identificadas (modificador Fraco em VD 30; mínimo de
 Fraqueza) — resolvidas com a fórmula geral vencendo, documentadas em
 `shared/src/regras/criatura/modificadores.ts` e `a-estatua.spec.ts` (ver seção 6). A `m4-03`
 decidiu DTOs de operação **próprios** para criatura (`FichaCriaturaCriarDto`/`*CriadaDto`/
 `*RecuperadaDto`/`*AlteradaDto`, `shared/src/dtos/ficha/ficha-criatura-operacao.dtos.ts`) em
 vez de unir com os contratos de jogador — mesma lógica de "dois contratos, não um" já fechada
-em `m4-01` para o documento de jogo (ver seção 6). Próxima da fila M4: **`m4-04`** (frontend —
-assistente de criação de ameaça).
+em `m4-01` para o documento de jogo (ver seção 6). A `m4-04` verificou ao vivo que abrir a
+ficha recém-criada em `/painel/:campanhaId/ficha/:id` (`FichaVisualizacao`, telas de jogador)
+quebra com `TypeError` — a tela ainda não sabe ler `dados` no formato de criatura; registrado
+como pendência para quem fechar a tela dedicada (§14 já bloqueia jogadores, então o erro só
+afeta o mestre navegando direto após criar — ver seção 7). Próxima da fila M4: **`m4-05`**
+(contrato `FichaNpcDadosDto`, início da frente de NPC).
 
 O M6 também está aberto, em paralelo. A próxima task encadeada nessa frente é
 `m6-08-impersonacao-administrativa.spec.md`, que adiciona impersonação administrativa auditável.
@@ -60,7 +65,7 @@ só adaptou o visual de desktop).
 | Spec | Frente | O que é |
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m4-04`…`m4-10` | criatura/NPC | 7 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
+| `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
 | `m6-08` | usuários | impersonação administrativa auditável |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/`. Milestone ainda não aberto: `m5-guia-missao`.
@@ -94,7 +99,7 @@ falhas isoladas/preexistentes.
 | M1 | Calculadora com paridade | **concluído no código** (`m1-01`…`m1-20`). Restam 2 passos **operacionais** de plataforma — ver `PROBLEMS.md` `P-006` |
 | M2 | Auth + Campanhas | **concluído**, incluindo o redesenho do painel (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`; `m2-18` lista, `m2-19` detalhe/mestre, `m2-20` detalhe/jogador, `m2-21` abas + Rolagens na lateral + menu de ficha do jogador) |
 | M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; guia de criação completo (`m3-57`/`m3-58`/`m3-59` — base, melhorias de nível, equipamento inicial); cor (`m3-61`) e avatar (`m3-62`) de identidade por ficha prontos; falta só `m3-53` |
-| M4 | Ficha de Criatura/NPC | **iniciado** — dividido em `m4-01`…`m4-10` (`docs/specs/backlog/`); `m4-01` (contrato), `m4-02` (`shared/regras/criatura`) e `m4-03` (`backend/ficha` para `CRIATURA`) concluídas. Próxima: `m4-04` |
+| M4 | Ficha de Criatura/NPC | **iniciado** — dividido em `m4-01`…`m4-10` (`docs/specs/backlog/`); `m4-01` (contrato), `m4-02` (`shared/regras/criatura`), `m4-03` (`backend/ficha` para `CRIATURA`) e `m4-04` (assistente de criação no frontend) concluídas. Próxima: `m4-05` (NPC) |
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | **em andamento** — `m6-01`…`m6-07` concluídas; próxima `m6-08`, com impersonação administrativa auditável |
 
@@ -336,24 +341,48 @@ preview 200×200 sem recorte (`agendarPreviewAvatar`/`cancelarPreviewAvatar`) �
 `imagemUrl` mas nunca `cor` nem tinha o preview; corrigido para consumir o mesmo recorte que
 `FichaResumoDto` já expõe.
 
-### Ficha de criatura — `backend/ficha` (M4, `m4-03`)
+### Ficha de criatura — `backend/ficha` (`m4-03`) + assistente de criação (`m4-04`)
 
-Backend puro (sem frontend ainda — `m4-04`). `POST /ficha/criatura` cria uma ameaça: só o
-**mestre** da campanha pode (`UnauthorizedAccessException` para qualquer outro papel), dono é
-sempre o próprio mestre (sem delegação como em jogador), sempre dentro de uma campanha (sem
-ficha avulsa — VD/NA são calibrados para o grupo). `GET`/`PUT /ficha/criatura/:id` reusam as
-mesmas checagens de permissão de `recuperarFicha`/`alterarFicha` (dono/mestre/concessão, §14);
-exclusão (`DELETE /ficha/:id`) e concessão/revogação/listagem de acesso
-(`/ficha/:id/acesso*`) são 100% agnósticos de tipo e reusam as rotas de jogador sem endpoint
-próprio. Validação de domínio é só `validarFichaCriatura` (`shared/regras/criatura`, `m4-02`) —
-nenhuma regra de criação duplicada no backend. Invisível a jogadores por padrão (mesmo
-mecanismo de `usuario_ficha_acesso` de jogador); a criação **não** transmite `ficha:criada` na
-sala `campanha:<id>` (diferente de jogador) — esse evento vazaria nome/vida da criatura a todo
-membro antes de qualquer revelação deliberada, contradizendo a regra de invisibilidade; a
-edição segue transmitindo `ficha:alterada`, seguro porque a sala `ficha:<id>` já exige a mesma
-permissão de visualização para entrar. DTOs de operação próprios
+`POST /ficha/criatura` cria uma ameaça: só o **mestre** da campanha pode
+(`UnauthorizedAccessException` para qualquer outro papel), dono é sempre o próprio mestre (sem
+delegação como em jogador), sempre dentro de uma campanha (sem ficha avulsa — VD/NA são
+calibrados para o grupo). `GET`/`PUT /ficha/criatura/:id` reusam as mesmas checagens de
+permissão de `recuperarFicha`/`alterarFicha` (dono/mestre/concessão, §14); exclusão
+(`DELETE /ficha/:id`) e concessão/revogação/listagem de acesso (`/ficha/:id/acesso*`) são 100%
+agnósticos de tipo e reusam as rotas de jogador sem endpoint próprio. Validação de domínio é só
+`validarFichaCriatura` (`shared/regras/criatura`, `m4-02`) — nenhuma regra de criação duplicada
+no backend. Invisível a jogadores por padrão — **não** é o campo `oculta` (que aqui só nasce
+`false` e serve pra outra coisa, revelação manual futura de `m4-09`) quem garante isso, é a
+própria condição de acesso: `listarVisiveisParaUsuario`/`recuperarFicha` só liberam o dono
+(sempre o mestre) ou quem tem `usuario_ficha_acesso` — confirmado ao vivo na `m4-04` (jogador
+sem concessão recebe lista vazia e 403 direto na criatura). A criação **não** transmite
+`ficha:criada` na sala `campanha:<id>` (diferente de jogador) — esse evento vazaria nome/vida da
+criatura a todo membro antes de qualquer revelação deliberada, contradizendo a regra de
+invisibilidade; a edição segue transmitindo `ficha:alterada`, seguro porque a sala `ficha:<id>`
+já exige a mesma permissão de visualização para entrar. DTOs de operação próprios
 (`shared/src/dtos/ficha/ficha-criatura-operacao.dtos.ts`) — ver seção 6. Listagem de criaturas
 por campanha fica para quando `m4-09` precisar.
+
+**Assistente de criação** (`frontend/src/app/modules/ficha/paginas/criar-criatura/`,
+`CriaturaCriar`) — rota `/painel/:campanhaId/criatura/nova`, guardada por
+`mestreCampanhaGuard` (`frontend/core/guards/`, novo: consulta `CampanhaService.listarMembros`
+e redireciona a `/acesso-negado` quem não é mestre daquela campanha — mesmo espírito de UX do
+`adminGuard`, mas escopado à campanha em vez do tipo global). Trilha vertical + resumo
+operacional progressivo, mesma filosofia visual do guia de jogador (`FichaCriar`), mas
+componente e roteiro totalmente separados — 12 passos fixos (Identidade → Ameaça → Atributos →
+Modificadores → Saúde → Defesa → Resistências → Regeneração → Porte e Deslocamento → Ataques →
+Habilidades → Revisão), sem passos condicionais (o roteiro do "Guia de Criação de Ameaças" não
+varia por escolha, diferente do de agente). Todo cálculo vem de `shared/regras/criatura`
+(`m4-02`) via `computed`; nenhuma fórmula reimplementada. O passo // Revisão chama
+`validarFichaCriatura` (a mesma função que o backend chama antes de persistir) para decidir se
+o botão "Registrar criatura" habilita — em vez de replicar cada regra de coerência como trava de
+passo separada. Sem rascunho persistido (decisão de abertura: a task não pede retomada, e
+diferente da ficha de jogador o risco de perda é baixo — o mestre não perde a própria ficha).
+`nome` da ficha (nível DTO) é sempre a `designacao` da Ficha de Identidade — sem campo
+duplicado. Verificado ao vivo (Postgres+backend+frontend reais, dois usuários — mestre e
+jogador): reproduz "A Estátua" ponta a ponta com os mesmos valores do documento (Vida Máxima
+1.050, Defesa 30, custo de resistências 52/60, Atributo Efetivo de cada linha), persiste
+corretamente e o jogador sem concessão não a vê (§14). Pendência registrada — ver seção 7.
 
 ### Guia de criação de ficha — `frontend/src/app/modules/ficha/paginas/criar/`
 
@@ -565,6 +594,16 @@ Nenhuma decisão de rumo em aberto no momento.
 
 A única que existia — **identidade visual do site** — está **resolvida**: tema "Terminal de
 Contenção", handoff completo em `docs/design/`, com troca em runtime entregue na `m1-13`.
+
+**Pendência registrada na `m4-04`:** `FichaVisualizacao` (a tela de ficha de jogador,
+`/painel/:campanhaId/ficha/:id`) não sabe ler `ficha.dados` no formato de criatura — abrir uma
+criatura recém-criada por ali lança `TypeError` em `calcularVida` (assume campos de jogador que
+não existem no documento de criatura). §14 já impede qualquer jogador de chegar lá sem
+concessão, então hoje só afeta o mestre navegando direto após criar. A spec `m4-04` previu esse
+caso ("se precisar de tela dedicada além da reutilização de `FichaVisualizacao`/`modo`,
+registrar como pendência") — decisão de rumo (tela dedicada de criatura vs. adaptar
+`FichaVisualizacao` com um `modo`/tipo novo) fica para quem fechar `m4-09` (listagem/revelação
+no painel do mestre), quando a UI de leitura de criatura precisar existir de qualquer forma.
 
 Questões que precisam de resposta do autor mas não são decisões de rumo estão marcadas com **⚠** na
 seção 1 e em [`PROBLEMS.md`](PROBLEMS.md).
