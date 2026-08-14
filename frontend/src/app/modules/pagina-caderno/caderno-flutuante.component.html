@@ -1,0 +1,241 @@
+@if (!estado().aberto) {
+  <button
+    #gatilho
+    class="caderno__gatilho utilitario-flutuante utilitario-flutuante--caderno"
+    type="button"
+    aria-label="Abrir caderno"
+    aria-expanded="false"
+    (click)="abrir()"
+  >
+    <app-icone nome="anotacoes" />
+  </button>
+} @else if (estado().minimizado) {
+  <button
+    #gatilho
+    class="caderno__gatilho utilitario-flutuante utilitario-flutuante--caderno"
+    type="button"
+    aria-label="Reabrir caderno"
+    aria-expanded="false"
+    (click)="restaurar()"
+  >
+    <app-icone nome="anotacoes" />
+  </button>
+}
+
+@if (estado().aberto && !estado().minimizado) {
+  <section
+    #janela
+    class="caderno__janela"
+    [class.caderno__janela--mobile]="ehMobile()"
+    [style.left.px]="ehMobile() ? null : estado().geometria.x"
+    [style.top.px]="ehMobile() ? null : estado().geometria.y"
+    [style.width.px]="ehMobile() ? null : estado().geometria.largura"
+    [style.height.px]="ehMobile() ? null : estado().geometria.altura"
+    [style.z-index]="nivelJanela()"
+    role="dialog"
+    aria-label="Caderno da campanha"
+    aria-modal="false"
+    (focusin)="trazerParaFrente()"
+    (pointerdown)="trazerParaFrente()"
+    (keydown)="aoTecladoJanela($event)"
+  >
+    <header
+      #cabecalho
+      class="caderno__cabecalho"
+      tabindex="-1"
+      (pointerdown)="iniciarArraste($event)"
+    >
+      <div class="caderno__identidade">
+        <span class="caderno__marca" aria-hidden="true">//</span>
+        <div class="caderno__titulo-grupo">
+          <span class="caderno__kicker">Registro operacional</span>
+          <h2>Caderno · {{ campanhaNome() }}</h2>
+        </div>
+        @if (rotuloSalvamento()) {
+          <span
+            class="caderno__salvamento"
+            [class.caderno__salvamento--erro]="
+              store.estadoSalvamento() === 'FALHA' || store.estadoSalvamento() === 'CONFLITO'
+            "
+            aria-live="polite"
+          >{{ rotuloSalvamento() }}</span>
+        }
+        <span class="caderno__regua" aria-hidden="true"></span>
+      </div>
+      <div class="caderno__acoes-janela">
+        <button type="button" aria-label="Minimizar caderno" (click)="minimizar()">
+          <span aria-hidden="true">−</span>
+        </button>
+        <button type="button" aria-label="Fechar caderno" (click)="fechar()">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+    </header>
+
+    @if (ehMestre()) {
+      <div class="caderno__escopo">
+        <div class="caderno__segmentado" role="group" aria-label="Caderno consultado">
+          <button
+            type="button"
+            [class.caderno__segmentado-item--ativo]="modoCaderno() === 'MEU'"
+            [attr.aria-pressed]="modoCaderno() === 'MEU'"
+            aria-label="Selecionar meu caderno"
+            (click)="selecionarModo('MEU')"
+          >Meu caderno</button>
+          <button
+            type="button"
+            [class.caderno__segmentado-item--ativo]="modoCaderno() === 'JOGADORES'"
+            [attr.aria-pressed]="modoCaderno() === 'JOGADORES'"
+            aria-label="Selecionar cadernos dos jogadores"
+            (click)="selecionarModo('JOGADORES')"
+          >Cadernos dos jogadores</button>
+        </div>
+        @if (modoCaderno() === 'JOGADORES') {
+          <label class="caderno__jogador">
+            <span>Jogador</span>
+            <select aria-label="Escolher jogador" (change)="selecionarJogador($event)">
+              <option value="">Escolha um jogador</option>
+              @for (jogador of jogadores(); track jogador.usuarioId) {
+                <option [value]="jogador.usuarioId">{{ jogador.nome }}</option>
+              }
+            </select>
+          </label>
+        }
+      </div>
+    }
+
+    <div
+      class="caderno__corpo"
+      [class.caderno__corpo--lista]="ehMobile() && estado().vistaMobile === 'LISTA'"
+      [class.caderno__corpo--conteudo]="ehMobile() && estado().vistaMobile === 'CONTEUDO'"
+    >
+      <aside class="caderno__lista" aria-label="Páginas do caderno">
+        <div class="caderno__lista-cabecalho">
+          <div>
+            <span class="caderno__kicker">Páginas</span>
+            <strong>{{ store.paginas().length }}</strong>
+          </div>
+          @if (modoCaderno() === 'MEU') {
+            <button class="caderno__acao-icone" type="button" aria-label="Criar página" (click)="iniciarNovaPagina()">
+              <app-icone nome="mais" />
+            </button>
+          }
+        </div>
+
+        @if (estado().carregando) {
+          <p class="caderno__estado">Carregando páginas…</p>
+        } @else if (modoCaderno() === 'JOGADORES' && jogadorSelecionadoId() === null) {
+          <p class="caderno__estado">Escolha um jogador para consultar o caderno.</p>
+        } @else if (store.paginas().length === 0) {
+          <div class="caderno__vazio">
+            <app-icone nome="anotacoes" />
+            <strong>Nenhuma página ainda</strong>
+            <span>{{ modoCaderno() === 'MEU' ? 'Crie a primeira página do caderno.' : 'Este caderno está vazio.' }}</span>
+          </div>
+        } @else {
+          <nav class="caderno__paginas" aria-label="Páginas">
+            @for (pagina of store.paginas(); track pagina.id) {
+              <button
+                type="button"
+                [attr.data-pagina-id]="pagina.id"
+                [class.caderno__pagina--ativa]="store.paginaAtiva()?.id === pagina.id"
+                (click)="selecionarPagina(pagina.id)"
+              >
+                <strong>{{ pagina.titulo }}</strong>
+                <span>{{ pagina.autorNome }} · {{ pagina.updatedDate | date: 'dd/MM/yy HH:mm' }}</span>
+              </button>
+            }
+          </nav>
+        }
+      </aside>
+
+      <main class="caderno__editor" [formGroup]="formulario">
+        @if (ehMobile()) {
+          <button class="caderno__voltar" type="button" aria-label="Voltar para páginas" (click)="voltarParaPaginas()">
+            <app-icone nome="voltar" />
+            Páginas
+          </button>
+        }
+
+        @if (store.paginaAtiva() !== null || (modoCaderno() === 'MEU' && estado().vistaMobile === 'CONTEUDO')) {
+          <div class="caderno__editor-cabecalho">
+            <input
+              class="caderno__titulo-input"
+              formControlName="titulo"
+              maxlength="120"
+              aria-label="Título da página"
+              placeholder="Título da página"
+              [readOnly]="somenteLeitura()"
+            />
+            @if (somenteLeitura()) {
+              <span class="caderno__somente-leitura">Somente leitura</span>
+            }
+            <div class="caderno__segmentado caderno__segmentado--editor" role="group" aria-label="Modo da página">
+              @if (!somenteLeitura()) {
+                <button
+                  type="button"
+                  [class.caderno__segmentado-item--ativo]="modoEditor() === 'EDITAR'"
+                  [attr.aria-pressed]="modoEditor() === 'EDITAR'"
+                  aria-label="Editar Markdown"
+                  (click)="definirModoEditor('EDITAR')"
+                >Editar</button>
+              }
+              <button
+                type="button"
+                [class.caderno__segmentado-item--ativo]="modoEditor() === 'VISUALIZAR' || somenteLeitura()"
+                [attr.aria-pressed]="modoEditor() === 'VISUALIZAR' || somenteLeitura()"
+                aria-label="Visualizar Markdown"
+                (click)="definirModoEditor('VISUALIZAR')"
+              >Visualizar</button>
+            </div>
+          </div>
+
+          @if (modoEditor() === 'EDITAR' && !somenteLeitura()) {
+            <textarea
+              class="caderno__textarea"
+              formControlName="conteudoMarkdown"
+              maxlength="100000"
+              aria-label="Conteúdo Markdown"
+              placeholder="Escreva suas anotações em Markdown…"
+            ></textarea>
+          } @else {
+            <article class="caderno__markdown" [innerHTML]="markdownRenderizado()"></article>
+          }
+
+          @if (!somenteLeitura()) {
+            <footer class="caderno__editor-acoes">
+              @if (store.paginaAtiva()) {
+                <button class="caderno__botao caderno__botao--perigo" type="button" data-acao="excluir" (click)="pedirExclusao()">
+                  <app-icone nome="excluir" /> Excluir
+                </button>
+              }
+              <span>Salvamento automático após uma pausa.</span>
+              <button class="caderno__botao caderno__botao--primario" type="button" data-acao="salvar" (click)="salvar()">Salvar agora</button>
+            </footer>
+          }
+
+          @if (exclusaoPendente() && store.paginaAtiva()) {
+            <div class="caderno__confirmacao" role="alertdialog" aria-label="Confirmar exclusão da página">
+              <strong>Excluir “{{ store.paginaAtiva()!.titulo }}”?</strong>
+              <span>A página será removida do caderno.</span>
+              <div>
+                <button class="caderno__botao caderno__botao--perigo" type="button" data-acao="confirmar-exclusao" (click)="confirmarExclusao()">Confirmar exclusão</button>
+                <button class="caderno__botao" type="button" (click)="cancelarExclusao()">Cancelar</button>
+              </div>
+            </div>
+          }
+        } @else {
+          <div class="caderno__vazio caderno__vazio--editor">
+            <app-icone nome="anotacoes" />
+            <strong>Selecione uma página</strong>
+            <span>Escolha uma página ao lado para ler ou continuar escrevendo.</span>
+          </div>
+        }
+      </main>
+    </div>
+
+    @if (!ehMobile()) {
+      <span class="caderno__redimensionar" aria-hidden="true" (pointerdown)="iniciarRedimensionamento($event)"></span>
+    }
+  </section>
+}

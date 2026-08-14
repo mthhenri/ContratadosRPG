@@ -5,6 +5,7 @@ import { CalculadoraFlutuante } from '../calculadora-flutuante/calculadora-flutu
 import { HistoricoRolagensSidebar } from '../historico-rolagens-sidebar/historico-rolagens-sidebar.component';
 import { InventarioEsquadraoSidebar } from '../inventario-esquadrao-sidebar/inventario-esquadrao-sidebar.component';
 import { LeitorDocumentos } from '../leitor-documentos/leitor-documentos.component';
+import { CadernoFlutuante } from '../../modules/pagina-caderno/caderno-flutuante.component';
 
 @Component({
   standalone: true,
@@ -26,9 +27,10 @@ describe('contrato CSS dos utilitários flutuantes', () => {
   const estilosHistorico = obterEstilosCompilados(HistoricoRolagensSidebar);
   const estilosInventario = obterEstilosCompilados(InventarioEsquadraoSidebar);
   const estilosLeitor = obterEstilosCompilados(LeitorDocumentos);
+  const estilosCaderno = obterEstilosCompilados(CadernoFlutuante);
 
   it('ancora os gatilhos flutuantes da campanha e da ficha no canto inferior esquerdo', () => {
-    for (const estilos of [estilosCalculadora, estilosHistorico, estilosInventario]) {
+    for (const estilos of [estilosCalculadora, estilosHistorico, estilosInventario, estilosCaderno]) {
       expect(estilos).toContain('left: 24px');
     }
   });
@@ -47,6 +49,9 @@ describe('contrato CSS dos utilitários flutuantes', () => {
     );
     expect(estilosLeitor).toContain(
       'bottom: calc(24px + var(--piso-flutuante, 0px) + var(--documentos-recolhidos, 0px) + 0px)',
+    );
+    expect(estilosCaderno).toContain(
+      'bottom: calc(24px + var(--piso-flutuante, 0px) + var(--documentos-recolhidos, 0px) + 180px)',
     );
   });
 

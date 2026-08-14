@@ -254,6 +254,29 @@ export class CadernoFlutuanteStore {
     this.resultadosBuscaInternos.set(RESULTADOS_BUSCA_CADERNO_VAZIOS);
   }
 
+  excluirPaginaAtiva(): void {
+    const pagina = this.paginaAtivaInterna();
+    if (!pagina || pagina.somenteLeitura) return;
+    const escopo = this.escopoCampanha;
+    this.cancelarAgendamento();
+    this.api
+      .excluirPagina(pagina.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          if (escopo !== this.escopoCampanha) return;
+          this.paginasInternas.update((paginas) =>
+            paginas.filter((item) => item.id !== pagina.id),
+          );
+          this.limparPaginaSelecionada();
+          this.definirVistaMobile('LISTA');
+        },
+        error: () => {
+          if (escopo === this.escopoCampanha) this.estadoSalvamentoInterno.set('FALHA');
+        },
+      });
+  }
+
   definirVistaMobile(vistaMobile: VistaMobileCaderno): void {
     this.estadoInterno.update((estado) => ({ ...estado, vistaMobile }));
   }
