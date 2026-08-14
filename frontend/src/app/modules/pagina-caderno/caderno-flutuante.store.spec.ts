@@ -216,4 +216,13 @@ describe('CadernoFlutuanteStore', () => {
     expect(persistido).not.toContain('conteudoMarkdown');
     expect(persistido).not.toContain('segredo');
   });
+
+  it('permite reduzir a janela até pouco além da largura mobile', () => {
+    store.alterarGeometria(
+      { x: 0, y: 0, largura: 1, altura: 520 },
+      { largura: 1_200, altura: 800 },
+    );
+
+    expect(store.estado().geometria.largura).toBe(440);
+  });
 });

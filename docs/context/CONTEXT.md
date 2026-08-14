@@ -207,7 +207,9 @@ páginas com salvamento automático e controle de versão; em conflito, o texto 
 até o usuário recarregar a versão persistida. O mestre alterna entre o próprio caderno editável e os
 cadernos dos jogadores em modo estritamente somente leitura; jogadores não veem cadernos alheios.
 No desktop, a janela pode ser arrastada, redimensionada e minimizada e preserva sua geometria no
-navegador. No mobile, ocupa a área útil e alterna entre lista e editor.
+navegador. A lista de páginas pode ser recolhida; em janelas de 640px ou menos ela se sobrepõe ao
+editor para não estreitá-lo, e a largura mínima da janela é 440px. No mobile, o gatilho fica inline
+ao lado de histórico e calculadora, ocupa a área útil ao abrir e alterna entre lista e editor.
 
 A mesma janela oferece busca textual unificada com fontes combináveis conforme o papel: caderno do
 mestre, cadernos dos jogadores e anotações das fichas. A autorização é aplicada no backend antes da

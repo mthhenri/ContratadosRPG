@@ -29,6 +29,12 @@ a linguagem visual dos utilitários existentes. Passaram 603 testes no `shared`,
 bloqueado apenas por duas asserções desnecessárias preexistentes em testes de campanha e ficha. O
 build do frontend manteve o aviso conhecido do budget inicial (639,41 kB para o limite de 630 kB).
 
+Após a revisão de uso, a pilha de atalhos do jogador passou a remover a vaga inexistente do
+inventário de esquadrão; no mobile, o Caderno entrou na mesma faixa de 44px de rolagens e
+calculadora. A lista de páginas do desktop pode ser recolhida e reaberta. A janela agora reduz até
+440px; abaixo de 640px, a lista aberta sobrepõe o editor em vez de comprimi-lo. Os 994 testes do
+frontend, lint e build foram repetidos; o build manteve somente o aviso conhecido de budget.
+
 ## 2026-08-14 — Consulta do inventário de esquadrão durante missão
 
 O acesso ao inventário coletivo foi dividido entre leitura e alteração. Qualquer membro da campanha

@@ -1,12 +1,15 @@
 @use 'tema/breakpoints' as bp;
 @use '../../shared/utilitario-flutuante/utilitario-flutuante' as utilitario-flutuante;
 
+$largura-caderno-sobreposicao: 640px;
+
 :host { display: contents; }
 
 .caderno {
   &__gatilho {
     @include utilitario-flutuante.gatilho-utilitario-flutuante();
     @include utilitario-flutuante.posicionar-utilitario-flutuante(3);
+    @include utilitario-flutuante.utilitario-inline-mobile();
     z-index: 1209;
     padding: 0;
     color: var(--accent);
@@ -18,6 +21,12 @@
 
     &:hover { background: var(--surface-2); border-color: var(--accent-border); }
     app-icone { font-size: 17px; }
+
+    // Jogadores não têm o Inventário de Esquadrão. Remove a vaga reservada a ele, sem alterar
+    // a posição mobile nem a pilha completa que o mestre recebe.
+    &--sem-inventario {
+      @include utilitario-flutuante.posicionar-utilitario-flutuante(2, false);
+    }
   }
 
   &__janela {
@@ -33,6 +42,7 @@
     box-shadow: 0 22px 64px color-mix(in srgb, var(--bg) 78%, transparent);
     outline: none;
     overflow: hidden;
+    container-type: inline-size;
 
     &--mobile {
       inset: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
@@ -169,6 +179,7 @@
   &__estado--erro { color: var(--vida); button { margin-left: 8px; color: var(--accent); background: transparent; border: 0; font: inherit; text-decoration: underline; cursor: pointer; } }
 
   &__corpo { min-width: 0; min-height: 0; display: grid; grid-template-columns: minmax(220px, 28%) minmax(0, 1fr); flex: 1; }
+  &__corpo--lista-recolhida { grid-template-columns: minmax(0, 1fr); .caderno__lista { display: none; } .caderno__editor-cabecalho { padding-left: 54px; } }
   &__lista { min-width: 0; min-height: 0; display: flex; flex-direction: column; background: var(--surface-2); border-right: 1px solid var(--border); }
   &__lista-cabecalho {
     min-height: 54px;
@@ -181,6 +192,7 @@
     > div { display: flex; align-items: baseline; gap: 8px; }
     strong { color: var(--accent); font: 700 12px var(--font-mono); }
   }
+  &__lista-acoes { display: flex; gap: 6px; }
   &__paginas { min-height: 0; display: flex; flex-direction: column; gap: 5px; padding: 8px; overflow-y: auto; }
   &__paginas button {
     min-width: 0;
@@ -215,6 +227,7 @@
   }
 
   &__editor { position: relative; min-width: 0; min-height: 0; display: flex; flex-direction: column; background: var(--surface); }
+  &__mostrar-lista { position: absolute; top: 12px; left: 12px; z-index: 1; app-icone { display: inline-flex; transform: rotate(180deg); } }
   &__editor-cabecalho { min-height: 58px; display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--border); }
   &__titulo-input {
     min-width: 120px;
@@ -242,6 +255,27 @@
   &__redimensionar { position: absolute; right: 0; bottom: 0; width: 20px; height: 20px; cursor: nwse-resize; touch-action: none; &::after { content: ''; position: absolute; right: 4px; bottom: 4px; width: 8px; height: 8px; border-right: 1px solid var(--accent); border-bottom: 1px solid var(--accent); } }
 }
 
+// Entre celular e a largura confortável de duas colunas, a lista continua disponível, mas abre
+// sobre o editor. Assim a janela pode ficar compacta sem transformar a área de escrita em uma
+// faixa estreita; no mobile, a navegação própria lista↔conteúdo continua sendo a regra.
+@media (min-width: #{bp.$bp-mobile + 1px}) {
+  @container (max-width: #{$largura-caderno-sobreposicao}) {
+    .caderno__corpo:not(.caderno__corpo--lista-recolhida) {
+      position: relative;
+      grid-template-columns: minmax(0, 1fr);
+      overflow: hidden;
+    }
+
+    .caderno__corpo:not(.caderno__corpo--lista-recolhida) .caderno__lista {
+      position: absolute;
+      z-index: 2;
+      inset: 0 auto 0 0;
+      width: min(280px, calc(100% - 44px));
+      box-shadow: 12px 0 28px color-mix(in srgb, var(--bg) 62%, transparent);
+    }
+  }
+}
+
 @include bp.mobile {
   .caderno {
     &__cabecalho { min-height: 56px; padding-top: calc(8px + env(safe-area-inset-top)); cursor: default; }
@@ -256,6 +290,7 @@
     &__fontes { width: 100%; overflow-x: auto; label span { min-height: 36px; } }
     &__resultados-lista { display: flex; flex-direction: column; }
     &__corpo { display: block; overflow: hidden; }
+    &__corpo--lista-recolhida { .caderno__lista { display: flex; } .caderno__editor-cabecalho { padding-left: 8px; } }
     &__corpo--lista .caderno__editor, &__corpo--conteudo .caderno__lista { display: none; }
     &__lista, &__editor { width: 100%; height: 100%; border: 0; }
     &__lista-cabecalho { min-height: 58px; }

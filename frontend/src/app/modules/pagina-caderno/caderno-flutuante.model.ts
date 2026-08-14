@@ -6,7 +6,7 @@ import type { PaginatedResult } from '@contratados-rpg/shared/interfaces';
 
 export const CADERNO_GEOMETRIA_STORAGE_KEY = 'contratados-rpg:caderno-geometria:v1';
 export const CADERNO_AUTOSAVE_DELAY = 800;
-export const CADERNO_LARGURA_MINIMA = 720;
+export const CADERNO_LARGURA_MINIMA = 440;
 export const CADERNO_ALTURA_MINIMA = 520;
 
 export type EstadoSalvamentoCaderno =

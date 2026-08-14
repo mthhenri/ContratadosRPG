@@ -1,7 +1,8 @@
 @if (!estado().aberto) {
   <button
     #gatilho
-    class="caderno__gatilho utilitario-flutuante utilitario-flutuante--caderno"
+    class="caderno__gatilho utilitario-flutuante utilitario-flutuante--caderno utilitario-flutuante--inline-mobile"
+    [class.caderno__gatilho--sem-inventario]="!ehMestre()"
     type="button"
     aria-label="Abrir caderno"
     aria-expanded="false"
@@ -12,7 +13,8 @@
 } @else if (estado().minimizado) {
   <button
     #gatilho
-    class="caderno__gatilho utilitario-flutuante utilitario-flutuante--caderno"
+    class="caderno__gatilho utilitario-flutuante utilitario-flutuante--caderno utilitario-flutuante--inline-mobile"
+    [class.caderno__gatilho--sem-inventario]="!ehMestre()"
     type="button"
     aria-label="Reabrir caderno"
     aria-expanded="false"
@@ -172,6 +174,7 @@
       class="caderno__corpo"
       [class.caderno__corpo--lista]="ehMobile() && estado().vistaMobile === 'LISTA'"
       [class.caderno__corpo--conteudo]="ehMobile() && estado().vistaMobile === 'CONTEUDO'"
+      [class.caderno__corpo--lista-recolhida]="!ehMobile() && listaRecolhida()"
     >
       <aside class="caderno__lista" aria-label="Páginas do caderno">
         <div class="caderno__lista-cabecalho">
@@ -179,11 +182,18 @@
             <span class="caderno__kicker">Páginas</span>
             <strong>{{ store.paginas().length }}</strong>
           </div>
-          @if (modoCaderno() === 'MEU') {
-            <button class="caderno__acao-icone" type="button" aria-label="Criar página" (click)="iniciarNovaPagina()">
-              <app-icone nome="mais" />
-            </button>
-          }
+          <div class="caderno__lista-acoes">
+            @if (modoCaderno() === 'MEU') {
+              <button class="caderno__acao-icone" type="button" aria-label="Criar página" (click)="iniciarNovaPagina()">
+                <app-icone nome="mais" />
+              </button>
+            }
+            @if (!ehMobile()) {
+              <button class="caderno__acao-icone" type="button" aria-label="Recolher páginas" (click)="alternarLista()">
+                <app-icone nome="voltar" />
+              </button>
+            }
+          </div>
         </div>
 
         @if (estado().carregando) {
@@ -214,6 +224,11 @@
       </aside>
 
       <main class="caderno__editor" [formGroup]="formulario">
+        @if (!ehMobile() && listaRecolhida()) {
+          <button class="caderno__mostrar-lista caderno__acao-icone" type="button" aria-label="Mostrar páginas" (click)="alternarLista()">
+            <app-icone nome="voltar" />
+          </button>
+        }
         @if (ehMobile()) {
           <button class="caderno__voltar" type="button" aria-label="Voltar para páginas" (click)="voltarParaPaginas()">
             <app-icone nome="voltar" />

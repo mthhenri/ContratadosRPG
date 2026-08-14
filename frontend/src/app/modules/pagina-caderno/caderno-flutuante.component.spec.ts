@@ -71,6 +71,37 @@ describe('CadernoFlutuante', () => {
     expect(raiz().textContent).toContain('Operação Eclipse');
   });
 
+  it('ocupa a vaga do inventário ausente na pilha de utilitários do jogador', () => {
+    expect(obter('[aria-label="Abrir caderno"]').classList).toContain(
+      'caderno__gatilho--sem-inventario',
+    );
+
+    fixture.componentRef.setInput('ehMestre', true);
+    fixture.detectChanges();
+
+    expect(obter('[aria-label="Abrir caderno"]').classList).not.toContain(
+      'caderno__gatilho--sem-inventario',
+    );
+  });
+
+  it('entra na faixa de ações do cabeçalho no mobile', () => {
+    expect(obter('[aria-label="Abrir caderno"]').classList).toContain(
+      'utilitario-flutuante--inline-mobile',
+    );
+  });
+
+  it('recolhe a lista de páginas no desktop e a torna disponível para reabrir', () => {
+    clicar('[aria-label="Abrir caderno"]');
+    clicar('[aria-label="Recolher páginas"]');
+
+    expect(obter('.caderno__corpo').classList).toContain('caderno__corpo--lista-recolhida');
+    expect(raiz().querySelector('[aria-label="Mostrar páginas"]')).not.toBeNull();
+
+    clicar('[aria-label="Mostrar páginas"]');
+
+    expect(obter('.caderno__corpo').classList).not.toContain('caderno__corpo--lista-recolhida');
+  });
+
   it('minimiza e restaura sem desmontar o rascunho', () => {
     abrirPagina();
     const textarea = obter<HTMLTextAreaElement>('textarea[formControlName="conteudoMarkdown"]');

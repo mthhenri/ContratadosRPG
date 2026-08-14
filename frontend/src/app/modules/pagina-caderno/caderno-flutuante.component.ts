@@ -71,6 +71,7 @@ export class CadernoFlutuante implements OnDestroy {
   protected readonly modoEditor = signal<ModoEditor>('EDITAR');
   protected readonly jogadorSelecionadoId = signal<number | null>(null);
   protected readonly exclusaoPendente = signal(false);
+  protected readonly listaRecolhida = signal(false);
   protected readonly fontesSelecionadas = signal<readonly BuscaCampanhaFonteEnum[]>([]);
   protected readonly buscando = signal(false);
   protected readonly erroBusca = signal(false);
@@ -255,6 +256,10 @@ export class CadernoFlutuante implements OnDestroy {
     this.exclusaoPendente.set(false);
     this.modoEditor.set('EDITAR');
     this.store.recuperarPagina(id);
+  }
+
+  protected alternarLista(): void {
+    this.listaRecolhida.update((recolhida) => !recolhida);
   }
 
   protected iniciarNovaPagina(): void {
