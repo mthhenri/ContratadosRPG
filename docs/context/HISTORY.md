@@ -63,6 +63,11 @@ já não correspondia exatamente ao armazenado. O repositório passou a serializ
 em UTC com precisão de microssegundos. Juntas, as correções eliminaram conflitos falsos ao alternar,
 criar e salvar páginas sucessivamente, com regressões automatizadas específicas para os dois casos.
 
+Os controles de ação do editor receberam feedback tátil visual: `Salvar agora` eleva e ilumina com
+o accent, enquanto `Excluir` realça apenas sua área de risco. Ambos recuam brevemente ao clique e
+desativam a transição quando o sistema solicita redução de movimento. A aplicação real foi
+conferida em 1920×1080 e 360×800, sem overflow.
+
 ## 2026-08-14 — Consulta do inventário de esquadrão durante missão
 
 O acesso ao inventário coletivo foi dividido entre leitura e alteração. Qualquer membro da campanha
