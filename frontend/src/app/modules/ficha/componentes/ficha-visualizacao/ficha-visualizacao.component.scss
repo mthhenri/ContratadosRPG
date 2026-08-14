@@ -219,11 +219,10 @@
       min-width: 0;
     }
 
-    // Nível/Prestígio somem no compacto (ver HTML) — Dinheiro/Salário/Crédito sobram na linha; a
-    // grade de 4 colunas do `&__stats-linha` (mais estreita pro Nível) deixaria os três com espaço
-    // desigual. 3 colunas iguais ocupam o espaço todo (m3-6x: Crédito entrou como 3º item aqui).
+    // Nível/Prestígio somem no compacto. Dinheiro/Salário ficam na primeira linha e
+    // Patente/Crédito na segunda, preservando os rótulos em duas colunas equilibradas.
     .ficha-ident__stats-linha {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     // Atributos "resumida": antes ficava ao lado da Identidade (mesma altura, coluna própria);

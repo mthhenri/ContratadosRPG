@@ -102,6 +102,14 @@ describe('CadernoFlutuante', () => {
     expect(obter('.caderno__corpo').classList).not.toContain('caderno__corpo--lista-recolhida');
   });
 
+  it('recolhe a lista aberta ao criar uma página para revelar o editor', () => {
+    clicar('[aria-label="Abrir caderno"]');
+    clicar('[aria-label="Criar página"]');
+
+    expect(obter('.caderno__corpo').classList).toContain('caderno__corpo--lista-recolhida');
+    expect(obter<HTMLInputElement>('[aria-label="Título da página"]').value).toBe('');
+  });
+
   it('minimiza e restaura sem desmontar o rascunho', () => {
     abrirPagina();
     const textarea = obter<HTMLTextAreaElement>('textarea[formControlName="conteudoMarkdown"]');

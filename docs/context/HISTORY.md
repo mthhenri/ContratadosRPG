@@ -35,6 +35,15 @@ calculadora. A lista de páginas do desktop pode ser recolhida e reaberta. A jan
 440px; abaixo de 640px, a lista aberta sobrepõe o editor em vez de comprimi-lo. Os 994 testes do
 frontend, lint e build foram repetidos; o build manteve somente o aviso conhecido de budget.
 
+Na revisão seguinte, os filtros do caderno passaram a refluir dentro da janela estreita — inclusive
+o seletor de jogador — e a criação de uma página recolhe a lista para mostrar o editor imediatamente.
+No card compacto de ficha, Dinheiro e Salário ocupam a primeira linha enquanto Patente e Limite de
+Crédito formam a segunda. O botão mobile do caderno passou a usar a mesma aparência dos controles do
+cabeçalho. Por fim, atalhos recolhidos de Caderno e Documentos voltaram à faixa de utilitários abaixo
+das janelas arrastáveis, para nunca sobrepor um diálogo aberto.
+Os 995 testes do frontend, lint e build passaram; o build preservou apenas o aviso conhecido do
+budget inicial (639,41 kB para o limite de 630 kB).
+
 ## 2026-08-14 — Consulta do inventário de esquadrão durante missão
 
 O acesso ao inventário coletivo foi dividido entre leitura e alteração. Qualquer membro da campanha

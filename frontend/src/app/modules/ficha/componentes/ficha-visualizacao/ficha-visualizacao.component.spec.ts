@@ -218,12 +218,17 @@ describe('FichaVisualizacao', () => {
       expect(campos).toEqual([{ campo: 'dinheiro', valor: 4200 }]);
     });
 
-    it('modo compacto: mostra o Limite de Crédito ao lado de Dinheiro/Salário, com ízinho de descrição', () => {
-      // No `modo="compacto"` (card de equipe) não há aba Extras pra mostrar a seção Patente
-      // inteira — o Limite de Crédito precisa caber aqui, com a descrição no balão do ízinho.
+    it('modo compacto: organiza Dinheiro, Salário, Patente e Crédito em uma grade 2×2', () => {
+      // No card compacto, a Patente precisa acompanhar o Limite de Crédito sem reduzir a leitura
+      // de Dinheiro e Salário no mobile.
       const alvo = montar({ ...dados, prestigio: 12 });
       alvo.fixture.componentRef.setInput('modo', 'compacto');
       alvo.fixture.detectChanges();
+
+      const rotulos = Array.from(
+        alvo.raiz.querySelectorAll('.ficha-ident__stats-linha .ficha-mini__rotulo'),
+      ).map((rotulo) => rotulo.textContent?.trim());
+      expect(rotulos).toEqual(['Dinheiro', 'Salário', 'Patente', 'Crédito']);
 
       const boxCredito = boxDoRotulo(alvo.raiz, 'Crédito');
       expect(boxCredito?.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('Alto');

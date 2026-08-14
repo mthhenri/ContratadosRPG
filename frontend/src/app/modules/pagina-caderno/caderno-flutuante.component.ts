@@ -265,6 +265,7 @@ export class CadernoFlutuante implements OnDestroy {
   protected iniciarNovaPagina(): void {
     this.exclusaoPendente.set(false);
     this.modoEditor.set('EDITAR');
+    this.listaRecolhida.set(true);
     this.store.iniciarNovaPagina();
     setTimeout(() => this.documento.querySelector<HTMLInputElement>('.caderno__titulo-input')?.focus());
   }

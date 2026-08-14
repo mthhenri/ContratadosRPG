@@ -10,7 +10,8 @@ $largura-caderno-sobreposicao: 640px;
     @include utilitario-flutuante.gatilho-utilitario-flutuante();
     @include utilitario-flutuante.posicionar-utilitario-flutuante(3);
     @include utilitario-flutuante.utilitario-inline-mobile();
-    z-index: 1209;
+    // Atalhos ficam abaixo das janelas arrastáveis (faixa 1200+).
+    z-index: 55;
     padding: 0;
     color: var(--accent);
     background: var(--surface);
@@ -260,6 +261,33 @@ $largura-caderno-sobreposicao: 640px;
 // faixa estreita; no mobile, a navegação própria lista↔conteúdo continua sendo a regra.
 @media (min-width: #{bp.$bp-mobile + 1px}) {
   @container (max-width: #{$largura-caderno-sobreposicao}) {
+    .caderno__escopo,
+    .caderno__busca {
+      flex-wrap: wrap;
+    }
+
+    .caderno__escopo .caderno__segmentado,
+    .caderno__escopo .caderno__jogador,
+    .caderno__busca .caderno__busca-campo,
+    .caderno__busca .caderno__fontes {
+      flex-basis: 100%;
+    }
+
+    .caderno__escopo .caderno__jogador {
+      margin-left: 0;
+    }
+
+    .caderno__escopo .caderno__jogador select {
+      min-width: 0;
+      max-width: none;
+      flex: 1;
+    }
+
+    .caderno__busca .caderno__fontes {
+      overflow-x: auto;
+      padding-bottom: 1px;
+    }
+
     .caderno__corpo:not(.caderno__corpo--lista-recolhida) {
       position: relative;
       grid-template-columns: minmax(0, 1fr);
@@ -278,6 +306,22 @@ $largura-caderno-sobreposicao: 640px;
 
 @include bp.mobile {
   .caderno {
+    &__gatilho {
+      z-index: auto;
+      color: var(--text-dim);
+      background: transparent;
+      border-color: var(--border-strong);
+      border-radius: var(--radius-control);
+      box-shadow: none;
+
+      &:hover,
+      &:focus-visible {
+        color: var(--accent);
+        background: var(--accent-dim);
+        border-color: var(--accent-border);
+      }
+    }
+
     &__cabecalho { min-height: 56px; padding-top: calc(8px + env(safe-area-inset-top)); cursor: default; }
     &__titulo-grupo h2 { max-width: 140px; }
     &__regua, &__salvamento, &__recarregar { display: none; }
