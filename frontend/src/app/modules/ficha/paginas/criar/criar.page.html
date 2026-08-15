@@ -149,6 +149,7 @@
                         class="campo__controle campo__controle--codinome"
                         [value]="estado().nome"
                         (input)="atualizar({ nome: valor($event) })"
+                        required
                       />
                       <!-- Cor de identidade (m3-61): quadradinho no fim da caixa no desktop, barra
                            abaixo dela no mobile (ver SCSS) — nunca um campo separado. -->
@@ -372,7 +373,7 @@
                 </header>
                 <label class="campo">
                   <span class="campo__rotulo">Traço de personalidade</span>
-                  <input data-testid="personalidade" class="campo__controle" [value]="estado().personalidade" (input)="atualizar({ personalidade: valor($event) })" placeholder="Ex.: Atento" />
+                  <input data-testid="personalidade" class="campo__controle" [value]="estado().personalidade" (input)="atualizar({ personalidade: valor($event) })" placeholder="Ex.: Atento" required />
                   <small class="campo__ajuda">Use uma única palavra, no formato de adjetivo.</small>
                 </label>
               </section>
@@ -386,11 +387,11 @@
                   <div class="guia__campos guia__campos--duas-colunas">
                     <label class="campo">
                       <span class="campo__rotulo">Nome da origem</span>
-                      <input class="campo__controle" [value]="estado().origem.nome" (input)="atualizarOrigem('nome', valor($event))" placeholder="Ex.: Ex-militar" />
+                      <input class="campo__controle" [value]="estado().origem.nome" (input)="atualizarOrigem('nome', valor($event))" placeholder="Ex.: Ex-militar" required />
                     </label>
                     <label class="campo">
                       <span class="campo__rotulo">Descrição da origem</span>
-                      <textarea class="campo__controle campo__controle--area" rows="3" [value]="estado().origem.descricao" (input)="atualizarOrigem('descricao', valor($event))"></textarea>
+                      <textarea class="campo__controle campo__controle--area" rows="3" [value]="estado().origem.descricao" (input)="atualizarOrigem('descricao', valor($event))" required></textarea>
                     </label>
                   </div>
 
@@ -401,7 +402,7 @@
                       <div class="guia__formacao">
                         <label class="campo">
                           <span class="campo__rotulo">Formação {{ $index + 1 | number: '2.0-0' }}</span>
-                          <select class="campo__controle" [attr.aria-label]="'Formação ' + ($index + 1)" [value]="linha.bonus ?? (estado().formacoesCustomizadas[$index] ? '__OUTRA__' : '')" (change)="mudarBonusFormacao($index, $event)">
+                          <select class="campo__controle" [attr.aria-label]="'Formação ' + ($index + 1)" [value]="linha.bonus ?? (estado().formacoesCustomizadas[$index] ? '__OUTRA__' : '')" (change)="mudarBonusFormacao($index, $event)" required>
                             <option value="">Selecione uma formação</option>
                             @for (grupo of gruposFormacao; track grupo.rotulo) {
                               <optgroup [label]="grupo.rotulo">
@@ -417,7 +418,7 @@
                           @if (definicao.parametro === parametroEsquivaOuBloqueio) {
                             <label class="campo">
                               <span class="campo__rotulo">Escolha o benefício</span>
-                              <select class="campo__controle" [value]="linha.parametro ?? ''" (change)="atualizarParametroFormacao($index, valor($event))">
+                              <select class="campo__controle" [value]="linha.parametro ?? ''" (change)="atualizarParametroFormacao($index, valor($event))" required>
                                 <option value="">Selecione</option>
                                 <option value="Esquiva">Esquiva</option>
                                 <option value="Bloqueio">Bloqueio</option>
@@ -426,13 +427,13 @@
                           } @else if (definicao.parametro) {
                             <label class="campo">
                               <span class="campo__rotulo">{{ rotuloParametroFormacao(definicao.parametro) }}</span>
-                              <input class="campo__controle" [value]="linha.parametro ?? ''" (input)="atualizarParametroFormacao($index, valor($event))" />
+                              <input class="campo__controle" [value]="linha.parametro ?? ''" (input)="atualizarParametroFormacao($index, valor($event))" required />
                             </label>
                           }
                         }
                         <label class="campo">
                           <span class="campo__rotulo">Texto registrado</span>
-                          <input class="campo__controle" [value]="linha.texto" (input)="atualizarTextoFormacao($index, valor($event))" [placeholder]="estado().formacoesCustomizadas[$index] ? 'Descreva a formação autorizada' : 'Preenchido pela formação escolhida'" />
+                          <input class="campo__controle" [value]="linha.texto" (input)="atualizarTextoFormacao($index, valor($event))" [placeholder]="estado().formacoesCustomizadas[$index] ? 'Descreva a formação autorizada' : 'Preenchido pela formação escolhida'" required />
                         </label>
                       </div>
                     }
@@ -441,10 +442,10 @@
                   <div class="guia__subsecao"><span>Especialidade</span><i></i></div>
                   <p class="guia__subsecao-ajuda">A Especialidade é escrita livremente: defina quando ativa e qual efeito mecânico ela concede.</p>
                   <div class="guia__campos guia__campos--duas-colunas">
-                    <label class="campo"><span class="campo__rotulo">Gatilho</span><input class="campo__controle" [value]="estado().origem.especialidade.gatilho" (input)="atualizarEspecialidade('gatilho', valor($event))" placeholder="Ex.: Ao agir sob fogo direto" /></label>
-                    <label class="campo"><span class="campo__rotulo">Efeito</span><input class="campo__controle" [value]="estado().origem.especialidade.efeito" (input)="atualizarEspecialidade('efeito', valor($event))" placeholder="Ex.: +1 dado em um teste" /></label>
+                    <label class="campo"><span class="campo__rotulo">Gatilho</span><input class="campo__controle" [value]="estado().origem.especialidade.gatilho" (input)="atualizarEspecialidade('gatilho', valor($event))" placeholder="Ex.: Ao agir sob fogo direto" required /></label>
+                    <label class="campo"><span class="campo__rotulo">Efeito</span><input class="campo__controle" [value]="estado().origem.especialidade.efeito" (input)="atualizarEspecialidade('efeito', valor($event))" placeholder="Ex.: +1 dado em um teste" required /></label>
                   </div>
-                  <label class="campo"><span class="campo__rotulo">Saber de campo</span><textarea class="campo__controle campo__controle--area" rows="3" [value]="estado().origem.saberDeCampo" (input)="atualizarOrigem('saberDeCampo', valor($event))" placeholder="Conhecimento prático que o agente traz de sua vida anterior."></textarea></label>
+                  <label class="campo"><span class="campo__rotulo">Saber de campo</span><textarea class="campo__controle campo__controle--area" rows="3" [value]="estado().origem.saberDeCampo" (input)="atualizarOrigem('saberDeCampo', valor($event))" placeholder="Conhecimento prático que o agente traz de sua vida anterior." required></textarea></label>
                 </section>
               } @else {
                 <section class="guia__identidade-bloco guia__identidade-bloco--origem">

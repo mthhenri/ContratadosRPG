@@ -95,7 +95,7 @@
 
     <label class="ficha-combos__campo">
       <span class="ficha-combos__rotulo">Nome</span>
-      <input class="ficha-combos__entrada" type="text" formControlName="nome" placeholder="Ex.: Combo de abertura" />
+      <input class="ficha-combos__entrada" type="text" formControlName="nome" placeholder="Ex.: Combo de abertura" required />
     </label>
 
     <div class="ficha-combos__campo" formArrayName="passos">
@@ -105,8 +105,8 @@
       }
       @for (passoCtrl of passos.controls; track $index) {
         <div class="ficha-combos__passo-edit" [formGroupName]="$index">
-          <input class="ficha-combos__entrada ficha-combos__entrada--nome" type="text" formControlName="nome" placeholder="Nome do passo (ex.: Ataque)" />
-          <select class="ficha-combos__entrada" formControlName="rolagemNome">
+          <input class="ficha-combos__entrada ficha-combos__entrada--nome" type="text" formControlName="nome" placeholder="Nome do passo (ex.: Ataque)" required />
+          <select class="ficha-combos__entrada" formControlName="rolagemNome" required>
             <option value="">— Escolha o preset —</option>
             @for (rolagem of rolagens(); track rolagem.nome) {
               <option [value]="rolagem.nome">{{ rolagem.nome }}</option>

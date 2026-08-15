@@ -1,5 +1,68 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-14 — `m4-04c`: passo // Atributos da criatura em 3 cards, com contador real de Pontos de Ajuste
+
+Pedido direto do autor a partir de um screenshot no mobile: no passo // Atributos, o bloco único
+"Base do VD" quebrava visualmente (o botão "+" do stepper de cada atributo aparecia cortado) e
+misturava três números (Base, Limite, Pontos de Ajuste) numa única frase corrida. Pedido: 3 cards
+separados, Base e Limite estáticos, Pontos de Ajuste com "alguma forma de contador, igual dos
+agentes" (o guia de jogador tem um "Saldo de distribuição" que trava o avanço em 0).
+
+**Causa do corte no mobile.** `.atributo` (a linha de cada atributo) tem grid de 2 colunas —
+identidade + `.stepper` — com a 2ª coluna fixa em `116px`, valor correto só no desktop. No
+breakpoint mobile o `.stepper` cresce para `bp.$alvo-toque × 2 + 48px = 136px` (alvo de toque de
+44px por botão), mas a regra mobile de `.atributo` só ajustava `min-height`, nunca
+`grid-template-columns` — o guia de jogador já resolve isso (`auto minmax(0,1fr) 136px`, com uma
+coluna a mais pro botão de Maestria); a versão de criatura, sem esse 3º campo, nunca ganhou o
+ajuste equivalente. Corrigido: `.atributo { grid-template-columns: minmax(0, 1fr) 136px; }` dentro
+do `@include bp.mobile`, mesma largura final do jogador sem a coluna extra.
+
+**3 cards.** O bloco `.guia__orcamento` (fundo verde, texto corrido) virou `.guia__metricas`, um
+grid de 3 `.stat` — o mesmo componente já usado nos passos Saúde/Defesa (`.stat__rotulo` +
+`.stat__valor`, com `.stat--alerta` para o estado de erro), evitando inventar um bloco visual novo.
+A frase de ajuda ("Realocação de até 3 pontos...") ficou como `<small>` abaixo dos cards, sem mais
+repetir os três números que os cards já mostram.
+
+**Contador real, não só cosmético.** `obterBaseELimitePorVd` já calculava `pontosAjuste` (o total
+distribuível por VD, `docs/core/guia_de_mestre-v4.0.0.md` — "Base, Limite e Pontos de Ajuste"),
+mas nada na tela somava quanto já tinha sido investido — o texto antigo só citava o total, nunca o
+gasto. Novo computed `pontosAjuste()` em `criar-criatura.page.ts`: `gastos` é a soma de
+`atributo − Base` de cada um dos dez atributos (mesma fórmula de `validarDistribuicaoAtributos` do
+guia de agente, `shared/regras/agente/criacao.ts` — um atributo abaixo da Base contribui negativo,
+liberando orçamento pros demais, exatamente como a Realocação descrita no documento); `saldo =
+total − gastos`. O card de Pontos de Ajuste mostra `gastos/total` e ganha `.stat--alerta` quando
+`saldo !== 0`. `passoValido()` do passo // Atributos passou a exigir `saldo === 0` além da checagem
+de limite que já existia — mesmo padrão do passo // Atributos do guia de jogador (exige
+`distribuicao().saldo === 0`) e do próprio passo // Resistências da criatura (exige `custo <=
+limite`); antes disso o orçamento era só informativo, sem nenhuma trava real.
+
+**Dois efeitos colaterais corrigidos por serem expostos pelo contador novo, não pedidos à parte:**
+- *Atributos não nasciam na Base.* O estado inicial do assistente fixa todos os dez atributos em
+  `1` (correto só quando VD = 0, Base = 1). Ao escolher um VD que eleva a Base (ex.: VD 30 → Base
+  2), os atributos continuavam em `1` até o mestre tocar em algum stepper — o card novo mostraria
+  isso como "gastos negativos" logo de cara, uma leitura confusa. Novo método `mudarVd()`
+  (substituindo o `atualizar({ vd })` direto no `(input)` do campo VD): reinicializa os dez
+  atributos para a nova Base, mas **só enquanto o passo // Atributos ainda não foi visitado**
+  (`visitado() < passos.indexOf('Atributos')`) — se o mestre já distribuiu pontos e volta pra
+  Ameaça pra ajustar o VD, a distribuição feita não é apagada silenciosamente; ele reajusta lendo o
+  saldo, que passa a acusar o desbalanço.
+- *Realocação sem teto de 3 pontos.* O documento limita a Realocação a "até 3 pontos" retirados de
+  um atributo (pode zerar, nunca negativar); `passoAtributo()` só impedia negativar (piso 0), sem o
+  teto de 3 abaixo da Base — irrelevante para VD ≤ 40 (Base 1–2, o piso 0 já é mais apertado que
+  Base−3), mas permitia, por exemplo, zerar um atributo de Base 4 (uma queda de 4, não 3) em VDs
+  mais altos. Corrigido no mesmo método: piso agora é `max(0, Base − 3)`.
+
+Testes: `shared`/`backend` inalterados (mudança só em `frontend`); suíte completa do frontend
+1016/1016 (nenhum teste quebrou — os dois usos de `atributos` fixos em `criar-criatura.page.spec.ts`
+já reproduzem "A Estátua" com os valores exatos do documento, que somam 6/6 de Pontos de Ajuste,
+então a nova trava `saldo === 0` não afeta o fluxo gravado no teste). Lint e build limpos. Verificado
+ao vivo (Postgres + backend + frontend reais, Playwright): em 1920×1080 e 360×800 os 3 cards
+aparecem corretamente (`Base 2 · Limite 5 · Pontos de Ajuste 0/6` ao entrar, atributos já na Base);
+distribuir os mesmos ajustes da "A Estátua" (Destreza+2, Luta+3, Força+1, Vigor+1, Sentidos+1,
+Social−2) leva o card a `6/6` sem `.stat--alerta` e habilita "Avançar"; desfazer um ponto mostra
+`5/6` em vermelho e desabilita "Avançar"; no mobile, nenhum botão `+` do stepper ultrapassa a borda
+direita do card do atributo (medido via `getBoundingClientRect`, confirmando o fim do corte).
+
 ## 2026-08-14 — `m4-04b`: polimento de UI do assistente de criatura e do painel do mestre (fora da fila de specs)
 
 Pedido direto do autor, entre a `m4-04` e o início da `m4-05` — não uma task numerada da fila M4,

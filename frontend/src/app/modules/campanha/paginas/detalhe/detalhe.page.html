@@ -255,7 +255,7 @@
       <form class="detalhe__edicao" [formGroup]="formularioEdicao" (ngSubmit)="salvarEdicao()">
         <label class="detalhe__campo">
           <span class="detalhe__rotulo">Nome</span>
-          <input class="detalhe__entrada" type="text" formControlName="nome" />
+          <input class="detalhe__entrada" type="text" formControlName="nome" required />
         </label>
 
         <label class="detalhe__campo">
@@ -1006,6 +1006,7 @@
             class="detalhe__entrada"
             #seletorFicha
             [disabled]="vinculando()"
+            required
             (change)="escolherFichaParaVincular(seletorFicha.value)"
           >
             <option value="">Escolha uma ficha…</option>
