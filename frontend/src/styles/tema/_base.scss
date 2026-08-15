@@ -83,3 +83,31 @@ button:focus-visible {
   outline: 2px solid var(--accent-border);
   outline-offset: 2px;
 }
+
+// === Indicador de campo obrigatório (asterisco vermelho) ===
+// Global — nenhum componente repete a regra. Depende do controle ter o atributo HTML nativo
+// `required` espelhando o Validators.required do reactive form (só o validator do Angular não
+// aparece no DOM, então `:has(:required)` não o enxerga sozinho). Usa --vida (vermelho fixo da
+// identidade, não acompanha troca de --accent) para não sumir se o usuário trocar o tema de cor.
+//
+// Cobre os dois padrões de rótulo usados no projeto:
+// 1) <label><span>Rótulo</span><input required /></label> — span/small é o 1º filho do label.
+// 2) <label for="id">Rótulo</label><input id="id" required /> — controle é irmão adjacente.
+label:has(> input:required),
+label:has(> select:required),
+label:has(> textarea:required) {
+  > span:first-child::after,
+  > small:first-child::after {
+    content: ' *';
+    color: var(--vida);
+  }
+}
+
+label:has(+ input:required),
+label:has(+ select:required),
+label:has(+ textarea:required) {
+  &::after {
+    content: ' *';
+    color: var(--vida);
+  }
+}

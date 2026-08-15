@@ -258,7 +258,7 @@
         <div class="ficha-inv__form-linha">
           <label class="ficha-inv__campo">
             <span class="ficha-inv__campo-rotulo">Nome</span>
-            <input class="ficha-inv__entrada" type="text" formControlName="nome" placeholder="Nome do item" />
+            <input class="ficha-inv__entrada" type="text" formControlName="nome" placeholder="Nome do item" required />
           </label>
           <div class="ficha-inv__campo">
             <span class="ficha-inv__campo-rotulo">Categoria</span>
@@ -1025,7 +1025,7 @@
           <div class="ficha-inv__form-linha">
             <label class="ficha-inv__campo ficha-inv__campo--largo">
               <span class="ficha-inv__campo-rotulo">Aplicar em</span>
-              <select class="ficha-inv__entrada" (change)="escolherAlvoFragmento($event)">
+              <select class="ficha-inv__entrada" required (change)="escolherAlvoFragmento($event)">
                 <option value="">— Escolha o item-alvo —</option>
                 @for (alvo of alvosFragmentoDisponiveis(); track alvo.indice) {
                   <option [value]="alvo.indice">{{ alvo.rotulo }}</option>
@@ -1034,7 +1034,7 @@
             </label>
             <label class="ficha-inv__campo ficha-inv__campo--largo">
               <span class="ficha-inv__campo-rotulo">Bônus (escolha um)</span>
-              <select class="ficha-inv__entrada" (change)="escolherOpcaoBonusFragmento($event)">
+              <select class="ficha-inv__entrada" required (change)="escolherOpcaoBonusFragmento($event)">
                 <option value="">— Escolha o bônus —</option>
                 @for (opcao of opcoesBonusFragmento(); track opcao.rotulo; let i = $index) {
                   <option [value]="i">{{ opcao.rotulo }}</option>
@@ -1139,7 +1139,7 @@
           <div class="ficha-inv__form-linha">
             <label class="ficha-inv__campo ficha-inv__campo--largo">
               <span class="ficha-inv__campo-rotulo">Bônus "Consumido" (escolha um)</span>
-              <select class="ficha-inv__entrada" (change)="escolherOpcaoConsumoFragmento($event)">
+              <select class="ficha-inv__entrada" required (change)="escolherOpcaoConsumoFragmento($event)">
                 <option value="">— Escolha o bônus —</option>
                 @for (opcao of opcoesConsumoFragmento(); track opcao.tipo; let i = $index) {
                   <option [value]="i">{{ opcao.rotulo }}</option>
@@ -1149,7 +1149,7 @@
             @if (opcaoConsumoFragmentoEscolhida()?.tipo === 'TESTE') {
               <label class="ficha-inv__campo ficha-inv__campo--largo">
                 <span class="ficha-inv__campo-rotulo">Atributo</span>
-                <select class="ficha-inv__entrada" (change)="escolherAtributoConsumoFragmento($event)">
+                <select class="ficha-inv__entrada" required (change)="escolherAtributoConsumoFragmento($event)">
                   <option value="">— Escolha o atributo —</option>
                   @for (atributo of atributosSelecionaveis; track atributo) {
                     <option [value]="atributo">{{ rotulosAtributo[atributo] }}</option>
@@ -1217,7 +1217,7 @@
                   <div class="ficha-inv__form-linha">
                     <label class="ficha-inv__campo ficha-inv__campo--largo">
                       <span class="ficha-inv__campo-rotulo">Nome da modificação</span>
-                      <input class="ficha-inv__entrada" type="text" formControlName="nome" placeholder="Ex.: Encantada" />
+                      <input class="ficha-inv__entrada" type="text" formControlName="nome" placeholder="Ex.: Encantada" required />
                     </label>
                     <div class="ficha-inv__campo">
                       <span class="ficha-inv__campo-rotulo">Limite de empilhamentos</span>

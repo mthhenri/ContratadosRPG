@@ -100,7 +100,7 @@
                 <label class="campo campo--codinome">
                   <span class="campo__rotulo">Designação</span>
                   <span class="campo__codinome-linha">
-                    <input class="campo__controle campo__controle--codinome" [value]="estado().designacao" (input)="atualizar({ designacao: valor($event) })" placeholder="Ex.: A Estátua" />
+                    <input class="campo__controle campo__controle--codinome" [value]="estado().designacao" (input)="atualizar({ designacao: valor($event) })" placeholder="Ex.: A Estátua" required />
                     <input type="color" class="campo__cor-inline" aria-label="Cor de identidade da criatura" [value]="estado().cor ?? '#8a2be2'" (input)="atualizar({ cor: valor($event) })" />
                   </span>
                   <small class="campo__ajuda">Um nome lembrável, direto. Vira também o nome da ficha.</small>
@@ -113,8 +113,8 @@
                 </label>
               </div>
             </div>
-            <label class="campo"><span class="campo__rotulo">Linha de conceito</span><textarea class="campo__controle campo__controle--area" rows="2" [value]="estado().conceito" (input)="atualizar({ conceito: valor($event) })" placeholder='Ex.: "Uma névoa que dissolve qualquer material orgânico ao contato."'></textarea></label>
-            <label class="campo"><span class="campo__rotulo">Natureza física</span><textarea class="campo__controle campo__controle--area" rows="2" [value]="estado().naturezaFisica" (input)="atualizar({ naturezaFisica: valor($event) })" placeholder="Tamanho, forma, material..."></textarea></label>
+            <label class="campo"><span class="campo__rotulo">Linha de conceito</span><textarea class="campo__controle campo__controle--area" rows="2" [value]="estado().conceito" (input)="atualizar({ conceito: valor($event) })" placeholder='Ex.: "Uma névoa que dissolve qualquer material orgânico ao contato."' required></textarea></label>
+            <label class="campo"><span class="campo__rotulo">Natureza física</span><textarea class="campo__controle campo__controle--area" rows="2" [value]="estado().naturezaFisica" (input)="atualizar({ naturezaFisica: valor($event) })" placeholder="Tamanho, forma, material..." required></textarea></label>
             <div class="guia__campos guia__campos--duas-colunas">
               <label class="campo">
                 <span class="campo__rotulo">Comportamento</span>
@@ -122,9 +122,9 @@
                   @for (opcao of comportamentos; track opcao) { <option [value]="opcao">{{ rotuloComportamento(opcao) }}</option> }
                 </select>
               </label>
-              <label class="campo"><span class="campo__rotulo">Motivação</span><input class="campo__controle" [value]="estado().motivacao" (input)="atualizar({ motivacao: valor($event) })" placeholder="Por que ela existe? Por que mata?" /></label>
+              <label class="campo"><span class="campo__rotulo">Motivação</span><input class="campo__controle" [value]="estado().motivacao" (input)="atualizar({ motivacao: valor($event) })" placeholder="Por que ela existe? Por que mata?" required /></label>
             </div>
-            <label class="campo"><span class="campo__rotulo">Gancho único</span><textarea class="campo__controle campo__controle--area" rows="2" [value]="estado().ganchoUnico" (input)="atualizar({ ganchoUnico: valor($event) })" placeholder="O detalhe que nenhum monstro convencional tem."></textarea></label>
+            <label class="campo"><span class="campo__rotulo">Gancho único</span><textarea class="campo__controle campo__controle--area" rows="2" [value]="estado().ganchoUnico" (input)="atualizar({ ganchoUnico: valor($event) })" placeholder="O detalhe que nenhum monstro convencional tem." required></textarea></label>
             <label class="campo"><span class="campo__rotulo">Tema de horror (opcional)</span><input class="campo__controle" [value]="estado().temaHorror" (input)="atualizar({ temaHorror: valor($event) })" placeholder="Perda de controle? Corpo? Identidade?" /></label>
           }
           @case ('Ameaça') {
@@ -142,7 +142,7 @@
               </label>
               <label class="campo">
                 <span class="campo__rotulo">Valor de Desafio (VD)</span>
-                <input class="campo__controle campo__controle--numero" type="number" min="0" [value]="estado().vd" (input)="mudarVd($event)" />
+                <input class="campo__controle campo__controle--numero" type="number" min="0" [value]="estado().vd" (input)="mudarVd($event)" required />
                 <small class="campo__ajuda">Soma do nível do grupo alvo.</small>
               </label>
             </div>
@@ -200,10 +200,21 @@
                     <span>{{ campo.nome }} {{ estado().atributos[campo.chave] }}</span>
                     @if (atributoEfetivo(campo.chave); as efetivo) { <small class="atributo__bonus">Efetivo {{ efetivo }}</small> }
                   </div>
-                  <select class="campo__controle" [attr.aria-label]="'Modificador de ' + campo.nome" [value]="estado().modificadores[campo.chave] ?? ''" (change)="escolherModificador(campo.chave, $event)">
-                    <option value="">Selecione</option>
-                    @for (tipo of modificadoresDisponiveis; track tipo) { <option [value]="tipo">{{ rotuloModificadorCriatura(tipo) }}</option> }
-                  </select>
+                  <div class="atributo__modificadores" role="radiogroup" [attr.aria-label]="'Modificador de ' + campo.nome">
+                    @for (tipo of modificadoresPorNivel; track tipo; let i = $index) {
+                      <button
+                        type="button"
+                        class="atributo__modificador"
+                        [class.atributo__modificador--ativo]="estado().modificadores[campo.chave] === tipo"
+                        [attr.aria-pressed]="estado().modificadores[campo.chave] === tipo"
+                        [attr.data-nivel]="i + 1"
+                        [appTooltip]="rotuloModificadorCriatura(tipo)"
+                        (click)="definirModificador(campo.chave, tipo)"
+                      >
+                        <i></i><i></i><i></i><i></i>
+                      </button>
+                    }
+                  </div>
                 </div>
               }
             </div>
@@ -215,7 +226,7 @@
             </div>
             <label class="campo">
               <span class="campo__rotulo">Tenacidade</span>
-              <select class="campo__controle" [value]="estado().tenacidade ?? ''" (change)="mudarTenacidade($event)">
+              <select class="campo__controle" [value]="estado().tenacidade ?? ''" (change)="mudarTenacidade($event)" required>
                 <option value="">Selecione</option>
                 @for (opcao of tenacidades; track opcao) { <option [value]="opcao">{{ rotuloTenacidade(opcao) }}</option> }
               </select>
@@ -253,7 +264,13 @@
             <div class="guia__subsecao"><span>Resistências</span><i></i></div>
             <div class="guia__formacoes">
               @for (linha of estado().resistencias; track $index) {
-                <div class="guia__formacao">
+                <div class="guia__formacao guia__formacao--tres-colunas">
+                  <div class="guia__formacao-cabecalho">
+                    <span>Resistência {{ $index + 1 }}</span>
+                    <button class="guia__formacao-remover" type="button" [attr.aria-label]="'Remover resistência ' + ($index + 1)" [appTooltip]="'Remover resistência ' + ($index + 1)" (click)="removerResistencia($index)">
+                      <app-icone nome="excluir" />
+                    </button>
+                  </div>
                   <label class="campo"><span class="campo__rotulo">Tipo</span>
                     <select class="campo__controle" [value]="linha.tipo" (change)="atualizarResistencia($index, 'tipo', valor($event))">
                       @for (tipo of tiposDano; track tipo) { <option [value]="tipo">{{ tipo }}</option> }
@@ -261,7 +278,6 @@
                   </label>
                   <label class="campo"><span class="campo__rotulo">Subtipo (opcional)</span><input class="campo__controle" [value]="linha.subtipo" (input)="atualizarResistencia($index, 'subtipo', valor($event))" placeholder="Ex.: Cortante" /></label>
                   <label class="campo"><span class="campo__rotulo">Valor</span><input class="campo__controle campo__controle--numero" type="number" min="0" [value]="linha.valor" (input)="atualizarResistencia($index, 'valor', numero($event))" /></label>
-                  <button class="botao botao--secundario guia__vaga-escolher" type="button" (click)="removerResistencia($index)">Remover</button>
                 </div>
               }
             </div>
@@ -270,16 +286,21 @@
             <div class="guia__subsecao"><span>Fraquezas</span><i></i></div>
             <div class="guia__formacoes">
               @for (linha of estado().fraquezas; track $index) {
-                <div class="guia__formacao">
+                <div class="guia__formacao guia__formacao--tres-colunas">
+                  <div class="guia__formacao-cabecalho">
+                    <span>Fraqueza {{ $index + 1 }}</span>
+                    <button class="guia__formacao-remover" type="button" [attr.aria-label]="'Remover fraqueza ' + ($index + 1)" [appTooltip]="'Remover fraqueza ' + ($index + 1)" (click)="removerFraqueza($index)">
+                      <app-icone nome="excluir" />
+                    </button>
+                  </div>
                   <label class="campo"><span class="campo__rotulo">Tipo</span>
                     <select class="campo__controle" [value]="linha.tipo" (change)="atualizarFraqueza($index, 'tipo', valor($event))">
                       @for (tipo of tiposDano; track tipo) { <option [value]="tipo">{{ tipo }}</option> }
                     </select>
                   </label>
-                  <label class="campo"><span class="campo__rotulo">Subtipo (opcional)</span><input class="campo__controle" [value]="linha.subtipo" (input)="atualizarFraqueza($index, 'subtipo', valor($event))" /></label>
+                  <label class="campo"><span class="campo__rotulo">Subtipo (opcional)</span><input class="campo__controle" [value]="linha.subtipo" (input)="atualizarFraqueza($index, 'subtipo', valor($event))" placeholder="Ex.: Cortante" /></label>
                   <label class="campo"><span class="campo__rotulo">Valor</span><input class="campo__controle campo__controle--numero" type="number" min="0" [value]="linha.valor" (input)="atualizarFraqueza($index, 'valor', numero($event))" /></label>
-                  @if (!fraquezaValida(linha)) { <small class="campo__ajuda">Abaixo do mínimo ({{ fraquezaMinima() }}).</small> }
-                  <button class="botao botao--secundario guia__vaga-escolher" type="button" (click)="removerFraqueza($index)">Remover</button>
+                  @if (!fraquezaValida(linha)) { <small class="campo__ajuda campo--largo">Abaixo do mínimo ({{ fraquezaMinima() }}).</small> }
                 </div>
               }
             </div>
@@ -311,7 +332,7 @@
                 </label>
               </div>
               @if (estado().regeneracao.modo === 'CONDICIONAL') {
-                <label class="campo"><span class="campo__rotulo">Condição</span><input class="campo__controle" [value]="estado().regeneracao.condicao" (input)="atualizarRegeneracao({ condicao: valor($event) })" placeholder="Ex.: Ao consumir um ser vivo inteiro no turno." /></label>
+                <label class="campo"><span class="campo__rotulo">Condição</span><input class="campo__controle" [value]="estado().regeneracao.condicao" (input)="atualizarRegeneracao({ condicao: valor($event) })" placeholder="Ex.: Ao consumir um ser vivo inteiro no turno." required /></label>
               }
               <div class="guia__protocolo-info">
                 <app-icone nome="atualizar" />
@@ -323,14 +344,14 @@
           @case ('Porte e Deslocamento') {
             <label class="campo">
               <span class="campo__rotulo">Porte</span>
-              <select class="campo__controle" [value]="estado().porte ?? ''" (change)="mudarPorte($event)">
+              <select class="campo__controle" [value]="estado().porte ?? ''" (change)="mudarPorte($event)" required>
                 <option value="">Selecione</option>
                 @for (opcao of portes; track opcao) { <option [value]="opcao">{{ rotuloPorte(opcao) }}</option> }
               </select>
             </label>
             <div class="guia__subsecao"><span>Deslocamento (ao menos um modo)</span><i></i></div>
             <p class="guia__subsecao-ajuda">Sugestão para Terrestre com base na Destreza ({{ estado().atributos.destreza }}): {{ deslocamentoSugerido().minimo }}–{{ deslocamentoSugerido().maximo }}m — o valor final é sempre declarado livremente.</p>
-            <div class="guia__campos guia__campos--duas-colunas">
+            <div class="guia__campos guia__campos--quatro-colunas">
               <label class="campo"><span class="campo__rotulo">Terrestre (m)</span><input class="campo__controle campo__controle--numero" type="number" min="0" [value]="estado().deslocamento.terrestre ?? ''" (input)="atualizarDeslocamento('terrestre', valor($event) ? numero($event) : null)" /></label>
               <label class="campo"><span class="campo__rotulo">Voador (m)</span><input class="campo__controle campo__controle--numero" type="number" min="0" [value]="estado().deslocamento.voador ?? ''" (input)="atualizarDeslocamento('voador', valor($event) ? numero($event) : null)" /></label>
               <label class="campo"><span class="campo__rotulo">Aquático (m)</span><input class="campo__controle campo__controle--numero" type="number" min="0" [value]="estado().deslocamento.aquatico ?? ''" (input)="atualizarDeslocamento('aquatico', valor($event) ? numero($event) : null)" /></label>
@@ -356,6 +377,12 @@
             <div class="guia__formacoes">
               @for (linha of estado().ataques; track $index) {
                 <div class="guia__formacao">
+                  <div class="guia__formacao-cabecalho">
+                    <span>{{ linha.nome || ('Ataque ' + ($index + 1)) }}</span>
+                    <button class="guia__formacao-remover" type="button" [attr.aria-label]="'Remover ' + (linha.nome || 'ataque ' + ($index + 1))" [appTooltip]="'Remover ' + (linha.nome || 'ataque ' + ($index + 1))" (click)="removerAtaque($index)">
+                      <app-icone nome="excluir" />
+                    </button>
+                  </div>
                   <label class="campo"><span class="campo__rotulo">Nome</span><input class="campo__controle" [value]="linha.nome" (input)="atualizarAtaque($index, 'nome', valor($event))" placeholder="Ex.: Esmagamento" /></label>
                   <label class="campo"><span class="campo__rotulo">Atributo</span>
                     <select class="campo__controle" [value]="linha.atributo" (change)="atualizarAtaque($index, 'atributo', valor($event))">
@@ -373,12 +400,11 @@
                       @for (tipo of tiposDano; track tipo) { <option [value]="tipo">{{ tipo }}</option> }
                     </select>
                   </label>
+                  <label class="campo campo--largo"><span class="campo__rotulo">Efeito adicional (opcional)</span><input class="campo__controle" [value]="linha.efeito" (input)="atualizarAtaque($index, 'efeito', valor($event))" /></label>
                   <label class="guia__modo-livre">
                     <input type="checkbox" [checked]="linha.area" (change)="atualizarAtaque($index, 'area', !linha.area)" />
                     <span><b>Ataque de área</b><small>Ação Completa por padrão; testa Destreza/Vigor do alvo.</small></span>
                   </label>
-                  <label class="campo"><span class="campo__rotulo">Efeito adicional (opcional)</span><input class="campo__controle" [value]="linha.efeito" (input)="atualizarAtaque($index, 'efeito', valor($event))" /></label>
-                  <button class="botao botao--secundario guia__vaga-escolher" type="button" (click)="removerAtaque($index)">Remover ataque</button>
                 </div>
               }
             </div>
@@ -392,15 +418,20 @@
             <div class="guia__formacoes">
               @for (linha of estado().habilidades; track $index) {
                 <div class="guia__formacao">
+                  <div class="guia__formacao-cabecalho">
+                    <span>{{ linha.nome || ('Habilidade ' + ($index + 1)) }}</span>
+                    <button class="guia__formacao-remover" type="button" [attr.aria-label]="'Remover ' + (linha.nome || 'habilidade ' + ($index + 1))" [appTooltip]="'Remover ' + (linha.nome || 'habilidade ' + ($index + 1))" (click)="removerHabilidade($index)">
+                      <app-icone nome="excluir" />
+                    </button>
+                  </div>
                   <label class="campo"><span class="campo__rotulo">Nome</span><input class="campo__controle" [value]="linha.nome" (input)="atualizarHabilidade($index, 'nome', valor($event))" /></label>
                   <label class="campo"><span class="campo__rotulo">Tipo</span>
                     <select class="campo__controle" [value]="linha.tipo" (change)="atualizarHabilidade($index, 'tipo', valor($event))">
                       @for (opcao of habilidadeTipos; track opcao) { <option [value]="opcao">{{ rotuloHabilidadeTipoCriatura(opcao) }}</option> }
                     </select>
                   </label>
-                  <label class="campo"><span class="campo__rotulo">Descrição</span><textarea class="campo__controle campo__controle--area" rows="2" [value]="linha.descricao" (input)="atualizarHabilidade($index, 'descricao', valor($event))"></textarea></label>
-                  <label class="campo"><span class="campo__rotulo">Restrição (opcional)</span><input class="campo__controle" [value]="linha.restricao" (input)="atualizarHabilidade($index, 'restricao', valor($event))" placeholder="Ex.: recarga de 3 turnos" /></label>
-                  <button class="botao botao--secundario guia__vaga-escolher" type="button" (click)="removerHabilidade($index)">Remover</button>
+                  <label class="campo campo--largo"><span class="campo__rotulo">Descrição</span><textarea class="campo__controle campo__controle--area" rows="2" [value]="linha.descricao" (input)="atualizarHabilidade($index, 'descricao', valor($event))"></textarea></label>
+                  <label class="campo campo--largo"><span class="campo__rotulo">Restrição (opcional)</span><input class="campo__controle" [value]="linha.restricao" (input)="atualizarHabilidade($index, 'restricao', valor($event))" placeholder="Ex.: recarga de 3 turnos" /></label>
                 </div>
               }
             </div>

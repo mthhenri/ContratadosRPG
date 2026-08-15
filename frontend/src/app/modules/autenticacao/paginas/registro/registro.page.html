@@ -34,6 +34,7 @@
             type="text"
             formControlName="nome"
             autocomplete="name"
+            required
           />
         </label>
 
@@ -46,6 +47,7 @@
             autocomplete="username"
             autocapitalize="none"
             spellcheck="false"
+            required
           />
         </label>
 
@@ -57,6 +59,7 @@
               [type]="senhaVisivel() ? 'text' : 'password'"
               formControlName="senha"
               autocomplete="new-password"
+              required
             />
             <button
               class="autenticacao__olho"
@@ -81,6 +84,7 @@
               [type]="confirmacaoVisivel() ? 'text' : 'password'"
               formControlName="confirmacaoSenha"
               autocomplete="new-password"
+              required
             />
             <button
               class="autenticacao__olho"

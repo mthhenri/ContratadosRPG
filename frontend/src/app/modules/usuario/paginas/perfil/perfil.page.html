@@ -26,7 +26,7 @@
 
         <label class="perfil__campo">
           <span class="perfil__rotulo">Nome</span>
-          <input class="perfil__entrada" type="text" formControlName="nome" autocomplete="name" />
+          <input class="perfil__entrada" type="text" formControlName="nome" autocomplete="name" required />
         </label>
 
         <label class="perfil__campo">
@@ -38,6 +38,7 @@
             autocomplete="username"
             autocapitalize="none"
             spellcheck="false"
+            required
           />
         </label>
 
@@ -73,6 +74,7 @@
               [type]="senhaAtualVisivel() ? 'text' : 'password'"
               formControlName="senhaAtual"
               autocomplete="current-password"
+              required
             />
             <button
               class="perfil__olho"
@@ -94,6 +96,7 @@
               [type]="novaSenhaVisivel() ? 'text' : 'password'"
               formControlName="novaSenha"
               autocomplete="new-password"
+              required
             />
             <button
               class="perfil__olho"

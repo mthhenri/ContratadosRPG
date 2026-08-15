@@ -43,6 +43,7 @@ import {
 import { FichaService } from '../../ficha.service';
 import { lerParamRota } from '../../ler-param-rota';
 import { Icone } from '../../../../shared/icone/icone.component';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import {
   rotuloCadencia,
   rotuloComportamento,
@@ -229,7 +230,7 @@ const paraHabilidadeDto = (linha: LinhaHabilidade): FichaCriaturaHabilidadeDto =
  */
 @Component({
   selector: 'app-criatura-criar',
-  imports: [CommonModule, Icone],
+  imports: [CommonModule, Icone, Tooltip],
   templateUrl: './criar-criatura.page.html',
   styleUrl: './criar-criatura.page.scss',
 })
@@ -250,6 +251,9 @@ export class CriaturaCriar {
   protected readonly portes = Object.values(PorteCriaturaEnum);
   protected readonly cadencias = Object.values(CadenciaEnum);
   protected readonly modificadoresDisponiveis = Object.values(ModificadorCriaturaEnum);
+  /** Mesmos 4 tipos, do menor pro maior bônus (ordem inversa de `modificadoresDisponiveis`) —
+   * só para os chips de "Atributo Efetivo", que devem crescer da esquerda pra direita. */
+  protected readonly modificadoresPorNivel = [...this.modificadoresDisponiveis].reverse();
   protected readonly custosAcao = Object.values(CustoAcaoEnum);
   protected readonly habilidadeTipos = Object.values(HabilidadeTipoCriaturaEnum);
   protected readonly regeneracaoIntensidades = Object.values(RegeneracaoIntensidadeEnum);
@@ -408,9 +412,9 @@ export class CriaturaCriar {
     const valor = Math.max(piso, Math.min(this.baseLimite().limite, atual.atributos[chave] + delta));
     this.atualizar({ atributos: { ...atual.atributos, [chave]: valor } });
   }
-  protected escolherModificador(chave: ChaveAtributo, evento: Event): void {
-    const valor = this.valor(evento) as ModificadorCriaturaEnum | '';
-    this.atualizar({ modificadores: { ...this.estado().modificadores, [chave]: valor || null } });
+  protected definirModificador(chave: ChaveAtributo, tipo: ModificadorCriaturaEnum): void {
+    const atual = this.estado().modificadores[chave];
+    this.atualizar({ modificadores: { ...this.estado().modificadores, [chave]: atual === tipo ? null : tipo } });
   }
   protected contagemModificador(tipo: ModificadorCriaturaEnum): number {
     return CAMPOS.filter((campo) => this.estado().modificadores[campo.chave] === tipo).length;

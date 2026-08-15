@@ -199,7 +199,7 @@
     <div class="ficha-rol__form-linha">
       <label class="ficha-rol__campo ficha-rol__campo--nome">
         <span class="ficha-rol__rotulo">Nome</span>
-        <input class="ficha-rol__entrada" type="text" formControlName="nome" placeholder="Ex.: Ataque (Luta)" />
+        <input class="ficha-rol__entrada" type="text" formControlName="nome" placeholder="Ex.: Ataque (Luta)" required />
       </label>
       <label class="ficha-rol__critico-check" [appTooltip]="'Ganha o botão \'Rolar crítico\' — dobra o dano'">
         <input type="checkbox" formControlName="critico" />
@@ -245,7 +245,7 @@
       @for (passoCtrl of seguintes.controls; track $index) {
         <div class="ficha-rol__passo-edit" [formGroupName]="$index">
           <div class="ficha-rol__passo-edit-linha">
-            <input class="ficha-rol__entrada ficha-rol__entrada--nome" type="text" formControlName="nome" placeholder="Nome (ex.: Dano)" />
+            <input class="ficha-rol__entrada ficha-rol__entrada--nome" type="text" formControlName="nome" placeholder="Nome (ex.: Dano)" required />
             <label class="ficha-rol__critico-check ficha-rol__critico-check--mini" [appTooltip]="'Dobra o dano'">
               <input type="checkbox" formControlName="critico" />
               <span>Critável</span>

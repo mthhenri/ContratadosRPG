@@ -42,6 +42,7 @@
             autocomplete="username"
             autocapitalize="none"
             spellcheck="false"
+            required
           />
         </label>
 
@@ -53,6 +54,7 @@
               [type]="senhaVisivel() ? 'text' : 'password'"
               formControlName="senha"
               autocomplete="current-password"
+              required
             />
             <button
               class="autenticacao__olho"

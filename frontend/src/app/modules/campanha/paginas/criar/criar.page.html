@@ -11,7 +11,7 @@
     <form class="campanha-formulario__corpo" [formGroup]="formulario" (ngSubmit)="enviar()">
       <label class="campanha-formulario__campo">
         <span class="campanha-formulario__rotulo">Nome</span>
-        <input class="campanha-formulario__entrada" type="text" formControlName="nome" />
+        <input class="campanha-formulario__entrada" type="text" formControlName="nome" required />
       </label>
 
       <label class="campanha-formulario__campo">
