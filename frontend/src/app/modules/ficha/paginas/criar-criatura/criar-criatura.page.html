@@ -113,8 +113,8 @@
                 </label>
               </div>
             </div>
-            <label class="campo"><span class="campo__rotulo">Linha de conceito</span><textarea class="campo__controle campo__controle--area" rows="2" [value]="estado().conceito" (input)="atualizar({ conceito: valor($event) })" placeholder='Ex.: "Uma névoa que dissolve qualquer material orgânico ao contato."' required></textarea></label>
-            <label class="campo"><span class="campo__rotulo">Natureza física</span><textarea class="campo__controle campo__controle--area" rows="2" [value]="estado().naturezaFisica" (input)="atualizar({ naturezaFisica: valor($event) })" placeholder="Tamanho, forma, material..." required></textarea></label>
+            <div class="guia__campos"><label class="campo"><span class="campo__rotulo">Linha de conceito</span><textarea class="campo__controle campo__controle--area" rows="2" [value]="estado().conceito" (input)="atualizar({ conceito: valor($event) })" placeholder='Ex.: "Uma névoa que dissolve qualquer material orgânico ao contato."' required></textarea></label></div>
+            <div class="guia__campos"><label class="campo"><span class="campo__rotulo">Natureza física</span><textarea class="campo__controle campo__controle--area" rows="2" [value]="estado().naturezaFisica" (input)="atualizar({ naturezaFisica: valor($event) })" placeholder="Tamanho, forma, material..." required></textarea></label></div>
             <div class="guia__campos guia__campos--duas-colunas">
               <label class="campo">
                 <span class="campo__rotulo">Comportamento</span>
@@ -124,8 +124,8 @@
               </label>
               <label class="campo"><span class="campo__rotulo">Motivação</span><input class="campo__controle" [value]="estado().motivacao" (input)="atualizar({ motivacao: valor($event) })" placeholder="Por que ela existe? Por que mata?" required /></label>
             </div>
-            <label class="campo"><span class="campo__rotulo">Gancho único</span><textarea class="campo__controle campo__controle--area" rows="2" [value]="estado().ganchoUnico" (input)="atualizar({ ganchoUnico: valor($event) })" placeholder="O detalhe que nenhum monstro convencional tem." required></textarea></label>
-            <label class="campo"><span class="campo__rotulo">Tema de horror (opcional)</span><input class="campo__controle" [value]="estado().temaHorror" (input)="atualizar({ temaHorror: valor($event) })" placeholder="Perda de controle? Corpo? Identidade?" /></label>
+            <div class="guia__campos"><label class="campo"><span class="campo__rotulo">Gancho único</span><textarea class="campo__controle campo__controle--area" rows="2" [value]="estado().ganchoUnico" (input)="atualizar({ ganchoUnico: valor($event) })" placeholder="O detalhe que nenhum monstro convencional tem." required></textarea></label></div>
+            <div class="guia__campos"><label class="campo"><span class="campo__rotulo">Tema de horror (opcional)</span><input class="campo__controle" [value]="estado().temaHorror" (input)="atualizar({ temaHorror: valor($event) })" placeholder="Perda de controle? Corpo? Identidade?" /></label></div>
           }
           @case ('Ameaça') {
             <div class="guia__introducao">
