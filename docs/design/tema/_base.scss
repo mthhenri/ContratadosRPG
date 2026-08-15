@@ -14,6 +14,14 @@
 
 * { box-sizing: border-box; }
 
+// O tema é dark-only por enquanto (`<html class="dark">` fixo, sem toggle de tema claro em
+// runtime ainda — só o `--accent` é trocável, ver DESIGN.md). `color-scheme: dark` avisa o
+// navegador disso: controles nativos sem CSS próprio (popup de `<select>`, date/time picker,
+// autofill) passam a usar a variante escura do próprio SO em vez do branco padrão.
+:root {
+  color-scheme: dark;
+}
+
 body {
   margin: 0;
   background-color: var(--bg);

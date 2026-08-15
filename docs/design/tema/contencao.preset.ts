@@ -1,19 +1,21 @@
 // contencao.preset.ts
 // Preset de tema PrimeNG 21 — "Terminal de Contenção" (Contratados RPG).
-// Baseado em Aura. Mapeia as CSS custom properties do tema para os tokens do PrimeNG.
-// O accent é trocável em runtime (spec M1: presets + color picker); o dark base e a
-// família tipográfica IBM Plex são a IDENTIDADE e não devem ser trocados.
+// Espelha docs/design/tema/contencao.preset.ts; único ajuste ao repo real: os imports
+// apontam para `@primeuix/themes` (nome do pacote em PrimeNG 21) em vez do antigo
+// `@primeng/themes` usado no handoff.
 //
-// Uso (bootstrap standalone, Angular 21):
-//   import { providePrimeNG } from 'primeng/config';
-//   import { ContencaoPreset } from './styles/tema/contencao.preset';
+// Baseado em Aura. Mapeia as CSS custom properties do tema para os tokens do PrimeNG.
+// O accent é trocável em runtime (spec M1: presets + color picker); o dark base e a família
+// tipográfica IBM Plex são a IDENTIDADE e não devem ser trocados.
+//
+// Uso (bootstrap standalone, Angular 21 — ver app.config.ts):
 //   providePrimeNG({ theme: { preset: ContencaoPreset, options: { darkModeSelector: '.dark' } } })
 
-import { definePreset } from '@primeng/themes';
-import Aura from '@primeng/themes/aura';
+import { definePreset } from '@primeuix/themes';
+import Aura from '@primeuix/themes/aura';
 
-// Paleta accent gerada a partir de --accent (#d53030). Ao trocar o accent via color
-// picker, regenere estes tons (a spec M1 exige trava de contraste — validar 50/500/900).
+// Paleta accent gerada a partir de --accent (#d53030). Ao trocar o accent via color picker,
+// regenere estes tons (a spec M1 exige trava de contraste — validar 50/500/900).
 export const ContencaoPreset = definePreset(Aura, {
   primitive: {
     // Escala neutra fria do tema (dark base). Mesmos valores das CSS vars em _tokens.scss.
@@ -30,7 +32,7 @@ export const ContencaoPreset = definePreset(Aura, {
   },
   semantic: {
     // --- Tipografia (identidade) ---
-    // Registre as fontes globalmente (ver _base.scss). PrimeNG herda via CSS.
+    // Fontes registradas globalmente (ver index.html / _base.scss). PrimeNG herda via CSS.
     // Dados/títulos/rótulos/números: IBM Plex Mono · Corpo: IBM Plex Sans.
 
     // --- Forma (levemente arredondado) ---

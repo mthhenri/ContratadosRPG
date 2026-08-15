@@ -152,3 +152,141 @@
   border-color: var(--accent);
   background: var(--accent-dim);
 }
+
+// === Topbar (chrome de navegação — direção "Barra de Comando", ver examples/) ===
+// Destilado de `frontend/src/app/shared/layout/layout.component.scss`. No mobile os itens de
+// nav colapsam pra só-ícone (`span` some) e a identidade/nome saem da barra pro dropdown de
+// perfil — use `@include bp.mobile` (`tema/_breakpoints.scss`) pra reproduzir.
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 3.25rem;
+  padding: 0 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+
+  &__nav {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 11px;
+    border-radius: var(--radius-control);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: var(--text-dim);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+
+    &:hover { color: var(--text); }
+    &--ativo { color: var(--text); background: var(--surface-2); }
+  }
+
+  &__acoes {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-left: auto;
+  }
+
+  // Botão-gatilho do dropdown de perfil — mesmo padrão do "TEMA" no canto direito das capturas.
+  &__perfil-gatilho {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px 4px 10px;
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    color: var(--text-dim);
+    cursor: pointer;
+
+    &:hover { color: var(--text); border-color: var(--accent-border); }
+  }
+
+  &__perfil-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    width: 200px;
+    padding: 5px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+    box-shadow: 0 20px 50px -18px rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__perfil-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 4px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text);
+    background: transparent;
+    border: 0;
+    text-align: left;
+    width: 100%;
+
+    &:hover { background: var(--surface-2); }
+    &--sair { color: var(--accent); }
+  }
+}
+
+// === Abas (tabs) ===
+// Destilado de `ficha-visualizacao.component.scss` (`&__abas`/`&__aba`) — mesmo padrão usado
+// pela calculadora (AGENTE/CIVIL · DT · NOVO AGENTE · PATENTES · DESCANSO · COMPRAS · VENDAS,
+// ver `calculadora-de-atributos.html`) e pela ficha (INFORMAÇÕES · INVENTÁRIO · HABILIDADES ·
+// ROLAGENS · EXTRAS · HISTÓRIA, ver `ficha-de-jogador.html`). No mobile a barra pode colapsar
+// pra só-ícone (ver componente de origem) — trate como o exemplo mais simples, não o único.
+.abas {
+  display: flex;
+  gap: 5px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  overflow-x: auto;
+
+  &__item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    line-height: 1;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-dim);
+    background: transparent;
+    border: 0;
+    padding: 6px 10px;
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: color 0.12s ease, background 0.12s ease;
+
+    &--ativa {
+      font-weight: 700;
+      color: var(--bg);
+      background: var(--accent);
+    }
+  }
+}
