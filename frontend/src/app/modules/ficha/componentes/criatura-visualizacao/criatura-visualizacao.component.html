@@ -58,7 +58,11 @@
   </header>
 
   <section class="criatura__secao">
-    <h2 class="criatura__secao-titulo">Identidade</h2>
+    <header class="criatura__secao-cabecalho">
+      <span class="criatura__secao-indice">1</span>
+      <h2 class="criatura__secao-titulo">Identidade</h2>
+      <span class="criatura__secao-regua"></span>
+    </header>
     <dl class="criatura__campos">
       <div class="campo">
         <dt class="campo__rotulo">Origem</dt>
@@ -211,7 +215,11 @@
   </section>
 
   <section class="criatura__secao">
-    <h2 class="criatura__secao-titulo">Saúde</h2>
+    <header class="criatura__secao-cabecalho">
+      <span class="criatura__secao-indice">2</span>
+      <h2 class="criatura__secao-titulo">Saúde</h2>
+      <span class="criatura__secao-regua"></span>
+    </header>
     <dl class="criatura__campos">
       <div class="campo">
         <dt class="campo__rotulo">Tenacidade</dt>
@@ -275,7 +283,7 @@
           (blur)="confirmarVidaAtual(entradaVidaAtual.valueAsNumber); cancelarEdicao()"
         />
       } @else {
-        <button class="criatura__vitalidade-valor" type="button" [disabled]="!ajustavel()" (click)="editar('vidaAtual')">
+        <button class="criatura__vitalidade-valor criatura__vitalidade-valor--atual" type="button" [disabled]="!ajustavel()" (click)="editar('vidaAtual')">
           {{ dados().vidaAtual }}
         </button>
       }
@@ -292,7 +300,7 @@
           (blur)="ajustarVidaMaxima(entradaVidaMaxima.valueAsNumber); cancelarEdicao()"
         />
       } @else {
-        <button class="criatura__vitalidade-valor" type="button" [disabled]="!ajustavel()" (click)="editar('vidaMaxima')">
+        <button class="criatura__vitalidade-valor criatura__vitalidade-valor--maxima" type="button" [disabled]="!ajustavel()" (click)="editar('vidaMaxima')">
           {{ dados().vidaMaxima }}
         </button>
       }
@@ -302,7 +310,9 @@
 
   <section class="criatura__secao">
     <header class="criatura__secao-cabecalho">
+      <span class="criatura__secao-indice">3</span>
       <h2 class="criatura__secao-titulo">Atributos e Modificadores</h2>
+      <span class="criatura__secao-regua"></span>
       <span class="criatura__secao-legenda">Valor · Efetivo</span>
     </header>
     <div class="criatura__atributos-grade">
@@ -327,22 +337,22 @@
             </button>
           }
 
-          @if (editando('modificador.' + campo.chave)) {
-            <select
-              #entradaModificador
-              class="criatura__select criatura__select--atributo"
-              [attr.aria-label]="'Modificador — ' + campo.nome"
-              [value]="dados().modificadores[campo.chave]"
-              (change)="confirmarModificador(campo.chave, $any(entradaModificador.value)); cancelarEdicao()"
-              (blur)="cancelarEdicao()"
-            >
-              @for (m of modificadores; track m) { <option [value]="m">{{ rotuloModificadorCriatura(m) }}</option> }
-            </select>
-          } @else {
-            <button class="criatura__atributo-modificador" type="button" [disabled]="!ajustavel()" (click)="editar('modificador.' + campo.chave)">
-              {{ rotuloModificadorCriatura(dados().modificadores[campo.chave]) }}
-            </button>
-          }
+          <div class="criatura__atributo-modificadores" role="radiogroup" [attr.aria-label]="'Modificador — ' + campo.nome">
+            @for (m of modificadoresPorNivel; track m; let i = $index) {
+              <button
+                type="button"
+                class="criatura__atributo-modificador"
+                [class.criatura__atributo-modificador--ativo]="dados().modificadores[campo.chave] === m"
+                [attr.aria-pressed]="dados().modificadores[campo.chave] === m"
+                [attr.data-nivel]="i + 1"
+                [disabled]="!ajustavel()"
+                [appTooltip]="rotuloModificadorCriatura(m)"
+                (click)="confirmarModificador(campo.chave, m)"
+              >
+                <i></i><i></i><i></i><i></i>
+              </button>
+            }
+          </div>
 
           <div class="criatura__atributo-rodape">
             <span class="criatura__atributo-efetivo">+{{ atributoEfetivo(campo.chave) }}</span>
@@ -363,7 +373,9 @@
 
   <section class="criatura__secao">
     <header class="criatura__secao-cabecalho">
+      <span class="criatura__secao-indice">4</span>
       <h2 class="criatura__secao-titulo">Resistências e Fraquezas</h2>
+      <span class="criatura__secao-regua"></span>
       <span class="criatura__secao-legenda">Limite: {{ limiteResistencias() }} pontos</span>
     </header>
     <div class="criatura__resistencias-grade">
@@ -383,7 +395,11 @@
   </section>
 
   <section class="criatura__secao">
-    <h2 class="criatura__secao-titulo">Regeneração</h2>
+    <header class="criatura__secao-cabecalho">
+      <span class="criatura__secao-indice">5</span>
+      <h2 class="criatura__secao-titulo">Regeneração</h2>
+      <span class="criatura__secao-regua"></span>
+    </header>
     @if (!dados().regeneracao) {
       <p class="criatura__vazio">Sem regeneração.</p>
       @if (ajustavel()) {
@@ -486,7 +502,11 @@
   </section>
 
   <section class="criatura__secao">
-    <h2 class="criatura__secao-titulo">Porte, Deslocamento e Cadência</h2>
+    <header class="criatura__secao-cabecalho">
+      <span class="criatura__secao-indice">6</span>
+      <h2 class="criatura__secao-titulo">Porte, Deslocamento e Cadência</h2>
+      <span class="criatura__secao-regua"></span>
+    </header>
     <dl class="criatura__campos">
       <div class="campo">
         <dt class="campo__rotulo">Porte</dt>
@@ -662,7 +682,11 @@
   </section>
 
   <section class="criatura__secao">
-    <h2 class="criatura__secao-titulo">Anotações</h2>
+    <header class="criatura__secao-cabecalho">
+      <span class="criatura__secao-indice">9</span>
+      <h2 class="criatura__secao-titulo">Anotações</h2>
+      <span class="criatura__secao-regua"></span>
+    </header>
     <textarea
       class="criatura__anotacoes"
       [value]="dados().anotacoes ?? ''"

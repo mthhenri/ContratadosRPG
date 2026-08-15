@@ -41,10 +41,13 @@
   &__designacao-entrada { flex: 1; min-width: 220px; padding: 6px 10px; font: 700 18px var(--font-mono); color: var(--text); background: var(--surface); border: 1px solid var(--accent); border-radius: var(--radius-control); }
 
   &__ameaca { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+  // Mesmo "chip de classificação" canônico de `_componentes.scss` (`.chip-classificacao`) — usado
+  // aqui pra NA/VD em vez de um botão pill inventado.
   &__na, &__vd {
-    padding: 6px 10px; font: 700 11px var(--font-mono); letter-spacing: .08em; text-transform: uppercase;
-    color: var(--accent); background: transparent; border: 1px solid var(--accent-border); border-radius: var(--radius-control);
-    cursor: pointer; &:hover:not(:disabled) { background: var(--accent-dim); } &:disabled { cursor: default; opacity: .8; }
+    padding: 6px 10px; font: 600 11px var(--font-mono); letter-spacing: .14em; text-transform: uppercase;
+    color: var(--accent); background: transparent; border: 1px solid var(--accent); border-radius: 3px;
+    cursor: pointer; transition: .15s ease;
+    &:hover:not(:disabled) { background: var(--accent-dim); } &:disabled { cursor: default; opacity: .8; }
   }
 
   &__secao {
@@ -54,10 +57,18 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
   }
-  &__secao-cabecalho { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
-  &__secao-titulo { margin: 0 0 12px; font: 700 13px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--text); }
-  &__secao-cabecalho &__secao-titulo { margin-bottom: 0; }
-  &__secao-legenda { font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text-mute); white-space: nowrap; }
+  // Cabeçalho de seção canônico (índice em badge mono + título + régua fina), mesmo bloco de
+  // `.ficha-cartao__cabecalho`/`.card__cabecalho` (`_componentes.scss`) — replicado aqui pelo
+  // mesmo motivo do `.campo` acima (sem vazamento de estilo entre componentes standalone).
+  &__secao-cabecalho { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; }
+  &__secao-indice {
+    display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
+    width: 22px; height: 22px; font: 700 12px var(--font-mono); color: var(--accent);
+    border: 1px solid var(--accent); border-radius: 3px;
+  }
+  &__secao-titulo { margin: 0; font: 700 13px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--text); }
+  &__secao-regua { flex: 1; height: 1px; background: var(--border); }
+  &__secao-legenda { flex: 0 0 auto; font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text-mute); white-space: nowrap; }
 
   &__campos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px; }
 
@@ -70,20 +81,27 @@
   &__select--tabela { min-height: 32px; padding: 4px 8px; font-size: 12px; }
   &__entrada-textarea { min-height: 64px; resize: vertical; font-family: var(--font-sans); }
 
+  // Vida é vermelho FIXO da identidade (`--vida`, ver `_tokens.scss`) — não pode seguir `--accent`
+  // (a cor de tema, trocável por usuário), senão a barra muda de matiz junto com o tema.
   &__barra-vida { width: 100%; height: 8px; margin-top: 14px; background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 999px; overflow: hidden; }
-  &__barra-vida-preenchida { height: 100%; background: var(--accent); transition: width .2s ease; }
+  &__barra-vida-preenchida { height: 100%; background: var(--vida); transition: width .2s ease; }
 
   &__vitalidade { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  // Mesmo `.ficha-passo` canônico de `ficha-visualizacao.component.scss` (22px, opacidade .4).
   &__passo {
-    display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px;
-    font: 700 16px var(--font-mono); color: var(--text-dim); background: var(--surface-2);
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 22px; height: 22px;
+    font: 700 14px var(--font-mono); color: var(--text-dim); background: var(--surface-2);
     border: 1px solid var(--border-strong); border-radius: var(--radius-control); cursor: pointer;
     &:hover:not(:disabled) { color: var(--accent); border-color: var(--accent-border); }
-    &:disabled { cursor: not-allowed; opacity: .5; }
+    &:disabled { cursor: not-allowed; opacity: .4; }
+    @include bp.mobile { width: bp.$alvo-toque; height: bp.$alvo-toque; }
   }
   &__vitalidade-valor {
-    min-width: 48px; padding: 4px 8px; font: 700 18px var(--font-mono); text-align: center; color: var(--text);
+    min-width: 48px; padding: 4px 8px; font: 700 18px var(--font-mono); text-align: center; color: var(--text-mute);
     background: transparent; border: 0; cursor: pointer; &:hover:not(:disabled) { color: var(--accent); } &:disabled { cursor: default; }
+    // Só o valor atual (não o máximo) ganha a cor fixa de Vida — mesmo par "atual em --vida /
+    // máximo mudo" de `.ficha-barra__valor strong` + `.ficha-barra__max`.
+    &--atual { color: var(--vida); }
   }
   &__vitalidade-separador { font: 700 16px var(--font-mono); color: var(--text-mute); }
 
@@ -97,15 +115,32 @@
     padding: 0; font: 700 22px var(--font-mono); color: var(--text); background: transparent; border: 0; cursor: pointer;
     &:hover:not(:disabled) { color: var(--accent); } &:disabled { cursor: default; }
   }
+  // Barrinhas de sinal (4 níveis, do menor pro maior bônus) — mesmo widget de
+  // `.atributo__modificador` do assistente de criação (`criar-criatura.page.scss`, m4-05): cada
+  // botão é o próprio nível, mostrado como um mini gráfico de barras que acende da esquerda pra
+  // direita conforme `data-nivel`. Substituiu o botão de texto solo que reimplementava o mesmo
+  // conceito com um mecanismo (e visual) diferente do já estabelecido pra este campo.
+  &__atributo-modificadores { display: flex; justify-content: center; gap: 3px; margin-top: 2px; }
   &__atributo-modificador {
-    padding: 1px 6px; font: 600 10px var(--font-mono); text-transform: uppercase; color: var(--text-dim);
-    background: transparent; border: 0; cursor: pointer;
-    &:hover:not(:disabled) { color: var(--accent); } &:disabled { cursor: default; }
+    display: grid; grid-auto-flow: column; align-items: end; gap: 2px;
+    width: 26px; height: 24px; padding: 4px 3px;
+    background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: var(--radius-control);
+    cursor: pointer; transition: .15s ease;
+    i { display: block; width: 3px; background: var(--border-strong); border-radius: 1px; transition: .15s ease; }
+    i:nth-child(1) { height: 35%; background: var(--text-mute); }
+    i:nth-child(2) { height: 55%; }
+    i:nth-child(3) { height: 75%; }
+    i:nth-child(4) { height: 100%; }
+    &:hover:not(:disabled) { border-color: var(--accent-border); }
+    &:not([data-nivel='1']) i:nth-child(2) { background: var(--positive); }
+    &[data-nivel='3'] i:nth-child(3), &[data-nivel='4'] i:nth-child(3) { background: var(--warning); }
+    &[data-nivel='4'] i:nth-child(4) { background: var(--accent); }
+    &--ativo { border-color: var(--accent); background: var(--accent-dim); }
+    &:disabled { cursor: default; opacity: .6; }
   }
   &__atributo-rodape { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 2px; }
   &__atributo-efetivo { font: 700 11px var(--font-mono); color: var(--accent); }
   &__entrada-numero--atributo { width: 100%; text-align: center; }
-  &__select--atributo { width: 100%; font-size: 11px; }
 
   &__rolar-atributo {
     display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px;

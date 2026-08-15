@@ -25,6 +25,7 @@ import type {
 import { calcularAtributoEfetivo, calcularLimiteResistencias } from '@contratados-rpg/shared/regras/criatura';
 
 import { Icone } from '../../../../shared/icone/icone.component';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
@@ -64,7 +65,7 @@ const CAMPOS_ATRIBUTO: readonly { readonly chave: ChaveAtributo; readonly nome: 
  */
 @Component({
   selector: 'app-criatura-visualizacao',
-  imports: [Icone, BandejaDados, CriaturaResistenciaLista, CriaturaAtaqueLista, CriaturaHabilidadeLista],
+  imports: [Icone, Tooltip, BandejaDados, CriaturaResistenciaLista, CriaturaAtaqueLista, CriaturaHabilidadeLista],
   templateUrl: './criatura-visualizacao.component.html',
   styleUrl: './criatura-visualizacao.component.scss',
 })
@@ -109,7 +110,10 @@ export class CriaturaVisualizacao {
   protected readonly origens = Object.values(OrigemCriaturaEnum) as OrigemCriaturaEnum[];
   protected readonly comportamentos = Object.values(ComportamentoCriaturaEnum) as ComportamentoCriaturaEnum[];
   protected readonly niveisAmeaca = Object.values(NivelAmeacaEnum) as NivelAmeacaEnum[];
-  protected readonly modificadores = Object.values(ModificadorCriaturaEnum) as ModificadorCriaturaEnum[];
+  /** Mesmos 4 tipos, do menor pro maior bônus — mesma ordem/uso das barrinhas de sinal do
+   * assistente de criação (`criar-criatura.page.ts`), pra que o controle cresça da esquerda pra
+   * direita e a criatura mantenha os dois lugares onde o Modificador aparece visualmente iguais. */
+  protected readonly modificadoresPorNivel = [...(Object.values(ModificadorCriaturaEnum) as ModificadorCriaturaEnum[])].reverse();
   protected readonly tenacidades = Object.values(TenacidadeEnum) as TenacidadeEnum[];
   protected readonly portes = Object.values(PorteCriaturaEnum) as PorteCriaturaEnum[];
   protected readonly cadencias = Object.values(CadenciaEnum) as CadenciaEnum[];

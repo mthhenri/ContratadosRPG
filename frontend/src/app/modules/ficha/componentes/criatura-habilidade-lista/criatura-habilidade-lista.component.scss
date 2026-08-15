@@ -1,8 +1,17 @@
 :host { display: block; }
 
 .habilidade-lista {
-  &__cabecalho { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  // Cabeçalho de seção canônico (índice em badge mono + título + régua), mesmo bloco de
+  // `.criatura__secao-cabecalho`/`.ficha-cartao__cabecalho` — replicado aqui porque o
+  // encapsulamento de estilos do Angular não deixa a definição de outro componente vazar pra este.
+  &__cabecalho { display: flex; align-items: center; gap: 11px; margin-bottom: 8px; }
+  &__indice {
+    display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
+    width: 22px; height: 22px; font: 700 12px var(--font-mono); color: var(--accent);
+    border: 1px solid var(--accent); border-radius: 3px;
+  }
   &__titulo { margin: 0; font: 700 12px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--text); }
+  &__regua { flex: 1; height: 1px; background: var(--border); }
   &__vazio { font: 12px var(--font-sans); color: var(--text-mute); }
   &__itens { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
   &__item { display: flex; flex-direction: column; gap: 4px; padding: 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); }
@@ -13,7 +22,9 @@
   &__restricao { font: 10px var(--font-sans); font-style: italic; color: var(--text-mute); }
   &__acoes { display: flex; gap: 4px; margin-top: 4px; }
   &__acao { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; color: var(--text-dim); background: transparent; border: 1px solid var(--border-strong); border-radius: var(--radius-control); cursor: pointer; &:hover { color: var(--accent); border-color: var(--accent-border); } }
-  &__acao--confirmar { width: auto; padding: 0 8px; color: var(--negative); }
+  // `--negative` não existe no tema (`_tokens.scss`) — `--vida` é o vermelho fixo usado pra ações
+  // destrutivas em todo o resto do app (ex.: `.guia__formacao-remover:hover` no assistente).
+  &__acao--confirmar { width: auto; padding: 0 8px; color: var(--vida); }
   &__form { display: flex; flex-direction: column; gap: 6px; width: 100%; }
   &__form--novo { margin-top: 8px; padding: 10px; background: var(--surface-2); border: 1px dashed var(--border-strong); border-radius: var(--radius-control); }
   &__select, &__input, &__textarea { padding: 4px 8px; font: 12px var(--font-sans); color: var(--text); background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control); }
