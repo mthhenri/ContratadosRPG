@@ -1,1 +1,678 @@
-<div class="criatura"></div>
+<article class="criatura">
+  <header class="criatura__cabecalho">
+    @if (editando('identidade.designacao')) {
+      <input
+        #entradaDesignacao
+        class="criatura__designacao-entrada"
+        type="text"
+        [value]="dados().identidade.designacao"
+        aria-label="Designação"
+        [disabled]="!ajustavel()"
+        (keydown.enter)="confirmarCampoIdentidade('designacao', entradaDesignacao.value); cancelarEdicao()"
+        (keydown.escape)="cancelarEdicao()"
+        (blur)="confirmarCampoIdentidade('designacao', entradaDesignacao.value); cancelarEdicao()"
+      />
+    } @else if (ajustavel()) {
+      <button class="criatura__designacao criatura__designacao--editavel" type="button" (click)="editar('identidade.designacao')">
+        {{ dados().identidade.designacao }}
+      </button>
+    } @else {
+      <h1 class="criatura__designacao">{{ dados().identidade.designacao }}</h1>
+    }
+
+    <div class="criatura__ameaca">
+      @if (editando('na')) {
+        <select
+          #entradaNa
+          class="criatura__select"
+          aria-label="Nível de Ameaça"
+          [value]="dados().na"
+          (change)="confirmarNa($any(entradaNa.value)); cancelarEdicao()"
+          (blur)="cancelarEdicao()"
+        >
+          @for (na of niveisAmeaca; track na) { <option [value]="na">{{ rotuloNivelAmeaca(na) }}</option> }
+        </select>
+      } @else {
+        <button class="criatura__na" type="button" [disabled]="!ajustavel()" (click)="editar('na')">
+          NA: {{ rotuloNivelAmeaca(dados().na) }}
+        </button>
+      }
+
+      @if (editando('vd')) {
+        <input
+          #entradaVd
+          class="criatura__entrada-numero"
+          type="number"
+          [value]="dados().vd"
+          aria-label="Valor de Desafio"
+          (keydown.enter)="confirmarVd(entradaVd.valueAsNumber); cancelarEdicao()"
+          (keydown.escape)="cancelarEdicao()"
+          (blur)="confirmarVd(entradaVd.valueAsNumber); cancelarEdicao()"
+        />
+      } @else {
+        <button class="criatura__vd" type="button" [disabled]="!ajustavel()" (click)="editar('vd')">
+          VD: {{ dados().vd }}
+        </button>
+      }
+    </div>
+  </header>
+
+  <section class="criatura__secao">
+    <h2 class="criatura__secao-titulo">Identidade</h2>
+    <dl class="criatura__campos">
+      <div class="campo">
+        <dt class="campo__rotulo">Origem</dt>
+        <dd class="campo__controle">
+          @if (editando('identidade.origem')) {
+            <select
+              #entradaOrigem
+              class="criatura__select"
+              aria-label="Origem"
+              [value]="dados().identidade.origem"
+              (change)="confirmarCampoIdentidade('origem', $any(entradaOrigem.value)); cancelarEdicao()"
+              (blur)="cancelarEdicao()"
+            >
+              @for (o of origens; track o) { <option [value]="o">{{ rotuloOrigemCriatura(o) }}</option> }
+            </select>
+          } @else {
+            <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('identidade.origem')">
+              {{ rotuloOrigemCriatura(dados().identidade.origem) }}
+            </button>
+          }
+        </dd>
+      </div>
+
+      <div class="campo">
+        <dt class="campo__rotulo">Conceito</dt>
+        <dd class="campo__controle">
+          @if (editando('identidade.conceito')) {
+            <input
+              #entradaConceito
+              class="criatura__entrada-texto"
+              type="text"
+              [value]="dados().identidade.conceito"
+              aria-label="Conceito"
+              (keydown.enter)="confirmarCampoIdentidade('conceito', entradaConceito.value); cancelarEdicao()"
+              (keydown.escape)="cancelarEdicao()"
+              (blur)="confirmarCampoIdentidade('conceito', entradaConceito.value); cancelarEdicao()"
+            />
+          } @else {
+            <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('identidade.conceito')">
+              {{ dados().identidade.conceito }}
+            </button>
+          }
+        </dd>
+      </div>
+
+      <div class="campo">
+        <dt class="campo__rotulo">Natureza Física</dt>
+        <dd class="campo__controle">
+          @if (editando('identidade.naturezaFisica')) {
+            <textarea
+              #entradaNatureza
+              class="criatura__entrada-textarea"
+              aria-label="Natureza Física"
+              (keydown.escape)="cancelarEdicao()"
+              (blur)="confirmarCampoIdentidade('naturezaFisica', entradaNatureza.value); cancelarEdicao()"
+            >{{ dados().identidade.naturezaFisica }}</textarea>
+          } @else {
+            <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('identidade.naturezaFisica')">
+              {{ dados().identidade.naturezaFisica }}
+            </button>
+          }
+        </dd>
+      </div>
+
+      <div class="campo">
+        <dt class="campo__rotulo">Comportamento</dt>
+        <dd class="campo__controle">
+          @if (editando('identidade.comportamento')) {
+            <select
+              #entradaComportamento
+              class="criatura__select"
+              aria-label="Comportamento"
+              [value]="dados().identidade.comportamento"
+              (change)="confirmarCampoIdentidade('comportamento', $any(entradaComportamento.value)); cancelarEdicao()"
+              (blur)="cancelarEdicao()"
+            >
+              @for (c of comportamentos; track c) { <option [value]="c">{{ rotuloComportamento(c) }}</option> }
+            </select>
+          } @else {
+            <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('identidade.comportamento')">
+              {{ rotuloComportamento(dados().identidade.comportamento) }}
+            </button>
+          }
+        </dd>
+      </div>
+
+      <div class="campo">
+        <dt class="campo__rotulo">Motivação</dt>
+        <dd class="campo__controle">
+          @if (editando('identidade.motivacao')) {
+            <input
+              #entradaMotivacao
+              class="criatura__entrada-texto"
+              type="text"
+              [value]="dados().identidade.motivacao"
+              aria-label="Motivação"
+              (keydown.enter)="confirmarCampoIdentidade('motivacao', entradaMotivacao.value); cancelarEdicao()"
+              (keydown.escape)="cancelarEdicao()"
+              (blur)="confirmarCampoIdentidade('motivacao', entradaMotivacao.value); cancelarEdicao()"
+            />
+          } @else {
+            <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('identidade.motivacao')">
+              {{ dados().identidade.motivacao }}
+            </button>
+          }
+        </dd>
+      </div>
+
+      <div class="campo">
+        <dt class="campo__rotulo">Gancho Único</dt>
+        <dd class="campo__controle">
+          @if (editando('identidade.ganchoUnico')) {
+            <textarea
+              #entradaGancho
+              class="criatura__entrada-textarea"
+              aria-label="Gancho Único"
+              (keydown.escape)="cancelarEdicao()"
+              (blur)="confirmarCampoIdentidade('ganchoUnico', entradaGancho.value); cancelarEdicao()"
+            >{{ dados().identidade.ganchoUnico }}</textarea>
+          } @else {
+            <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('identidade.ganchoUnico')">
+              {{ dados().identidade.ganchoUnico }}
+            </button>
+          }
+        </dd>
+      </div>
+
+      <div class="campo">
+        <dt class="campo__rotulo">Tema de Horror</dt>
+        <dd class="campo__controle">
+          @if (editando('identidade.temaHorror')) {
+            <input
+              #entradaTema
+              class="criatura__entrada-texto"
+              type="text"
+              [value]="dados().identidade.temaHorror ?? ''"
+              aria-label="Tema de Horror"
+              (keydown.enter)="confirmarCampoIdentidade('temaHorror', entradaTema.value || undefined); cancelarEdicao()"
+              (keydown.escape)="cancelarEdicao()"
+              (blur)="confirmarCampoIdentidade('temaHorror', entradaTema.value || undefined); cancelarEdicao()"
+            />
+          } @else {
+            <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('identidade.temaHorror')">
+              {{ dados().identidade.temaHorror ?? '—' }}
+            </button>
+          }
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="criatura__secao">
+    <h2 class="criatura__secao-titulo">Saúde</h2>
+    <dl class="criatura__campos">
+      <div class="campo">
+        <dt class="campo__rotulo">Tenacidade</dt>
+        <dd class="campo__controle">
+          @if (editando('tenacidade')) {
+            <select
+              #entradaTenacidade
+              class="criatura__select"
+              aria-label="Tenacidade"
+              [value]="dados().tenacidade"
+              (change)="confirmarTenacidade($any(entradaTenacidade.value)); cancelarEdicao()"
+              (blur)="cancelarEdicao()"
+            >
+              @for (t of tenacidades; track t) { <option [value]="t">{{ rotuloTenacidade(t) }}</option> }
+            </select>
+          } @else {
+            <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('tenacidade')">
+              {{ rotuloTenacidade(dados().tenacidade) }}
+            </button>
+          }
+        </dd>
+      </div>
+
+      <div class="campo">
+        <dt class="campo__rotulo">Defesa</dt>
+        <dd class="campo__controle">
+          @if (editando('defesa')) {
+            <input
+              #entradaDefesa
+              class="criatura__entrada-numero"
+              type="number"
+              [value]="dados().defesa"
+              aria-label="Defesa"
+              (keydown.enter)="confirmarDefesa(entradaDefesa.valueAsNumber); cancelarEdicao()"
+              (keydown.escape)="cancelarEdicao()"
+              (blur)="confirmarDefesa(entradaDefesa.valueAsNumber); cancelarEdicao()"
+            />
+          } @else {
+            <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('defesa')">
+              {{ dados().defesa }}
+            </button>
+          }
+        </dd>
+      </div>
+    </dl>
+
+    <div class="criatura__vitalidade">
+      <button class="criatura__passo" type="button" [disabled]="!ajustavel()" (click)="ajustarVida(-1)" aria-label="Reduzir vida">−</button>
+      @if (editando('vidaAtual')) {
+        <input
+          #entradaVidaAtual
+          class="criatura__entrada-numero"
+          type="number"
+          [value]="dados().vidaAtual"
+          aria-label="Vida atual"
+          (keydown.enter)="confirmarVidaAtual(entradaVidaAtual.valueAsNumber); cancelarEdicao()"
+          (keydown.escape)="cancelarEdicao()"
+          (blur)="confirmarVidaAtual(entradaVidaAtual.valueAsNumber); cancelarEdicao()"
+        />
+      } @else {
+        <button class="criatura__vitalidade-valor" type="button" [disabled]="!ajustavel()" (click)="editar('vidaAtual')">
+          {{ dados().vidaAtual }}
+        </button>
+      }
+      <span class="criatura__vitalidade-separador">/</span>
+      @if (editando('vidaMaxima')) {
+        <input
+          #entradaVidaMaxima
+          class="criatura__entrada-numero"
+          type="number"
+          [value]="dados().vidaMaxima"
+          aria-label="Vida máxima"
+          (keydown.enter)="ajustarVidaMaxima(entradaVidaMaxima.valueAsNumber); cancelarEdicao()"
+          (keydown.escape)="cancelarEdicao()"
+          (blur)="ajustarVidaMaxima(entradaVidaMaxima.valueAsNumber); cancelarEdicao()"
+        />
+      } @else {
+        <button class="criatura__vitalidade-valor" type="button" [disabled]="!ajustavel()" (click)="editar('vidaMaxima')">
+          {{ dados().vidaMaxima }}
+        </button>
+      }
+      <button class="criatura__passo" type="button" [disabled]="!ajustavel()" (click)="ajustarVida(1)" aria-label="Aumentar vida">+</button>
+    </div>
+  </section>
+
+  <section class="criatura__secao">
+    <h2 class="criatura__secao-titulo">Atributos e Modificadores</h2>
+    <table class="criatura__tabela-atributos">
+      <thead>
+        <tr>
+          <th scope="col">Atributo</th>
+          <th scope="col">Final</th>
+          <th scope="col">Modificador</th>
+          <th scope="col">Efetivo</th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (campo of camposAtributo; track campo.chave) {
+          <tr>
+            <td class="criatura__tabela-rotulo">{{ campo.nome }}</td>
+            <td>
+              @if (editando('atributo.' + campo.chave)) {
+                <input
+                  #entradaAtributo
+                  class="criatura__entrada-numero criatura__entrada-numero--tabela"
+                  type="number"
+                  [value]="dados().atributos[campo.chave]"
+                  [attr.aria-label]="'Atributo Final — ' + campo.nome"
+                  (keydown.enter)="confirmarAtributoFinal(campo.chave, entradaAtributo.valueAsNumber); cancelarEdicao()"
+                  (keydown.escape)="cancelarEdicao()"
+                  (blur)="confirmarAtributoFinal(campo.chave, entradaAtributo.valueAsNumber); cancelarEdicao()"
+                />
+              } @else {
+                <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('atributo.' + campo.chave)">
+                  {{ dados().atributos[campo.chave] }}
+                </button>
+              }
+            </td>
+            <td>
+              @if (editando('modificador.' + campo.chave)) {
+                <select
+                  #entradaModificador
+                  class="criatura__select criatura__select--tabela"
+                  [attr.aria-label]="'Modificador — ' + campo.nome"
+                  [value]="dados().modificadores[campo.chave]"
+                  (change)="confirmarModificador(campo.chave, $any(entradaModificador.value)); cancelarEdicao()"
+                  (blur)="cancelarEdicao()"
+                >
+                  @for (m of modificadores; track m) { <option [value]="m">{{ rotuloModificadorCriatura(m) }}</option> }
+                </select>
+              } @else {
+                <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('modificador.' + campo.chave)">
+                  {{ rotuloModificadorCriatura(dados().modificadores[campo.chave]) }}
+                </button>
+              }
+            </td>
+            <td class="criatura__tabela-efetivo">{{ atributoEfetivo(campo.chave) }}</td>
+            <td>
+              <button
+                class="criatura__rolar-atributo"
+                type="button"
+                [attr.aria-label]="'Rolar teste de ' + campo.nome"
+                [disabled]="!ajustavel()"
+                (click)="rolarTesteAtributo(campo.chave)"
+              >
+                <app-icone nome="d20" />
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+
+  <section class="criatura__secao">
+    <h2 class="criatura__secao-titulo">Resistências</h2>
+    <p class="criatura__limite-resistencias">Limite: {{ limiteResistencias() }} pontos</p>
+    <app-criatura-resistencia-lista
+      titulo="Resistências"
+      [itens]="dados().resistencias"
+      [editavel]="ajustavel()"
+      (itensMudou)="aoResistenciasMudar($event)"
+    />
+  </section>
+
+  <section class="criatura__secao">
+    <app-criatura-resistencia-lista
+      titulo="Fraquezas"
+      [itens]="dados().fraquezas"
+      [editavel]="ajustavel()"
+      (itensMudou)="aoFraquezasMudar($event)"
+    />
+  </section>
+
+  <section class="criatura__secao">
+    <h2 class="criatura__secao-titulo">Regeneração</h2>
+    @if (!dados().regeneracao) {
+      <p class="criatura__vazio">Sem regeneração.</p>
+      @if (ajustavel()) {
+        <button class="botao botao--secundario" type="button" (click)="ativarRegeneracao()">Adicionar regeneração</button>
+      }
+    } @else {
+      <dl class="criatura__campos">
+        <div class="campo">
+          <dt class="campo__rotulo">Modo</dt>
+          <dd class="campo__controle">
+            @if (editando('regeneracao.modo')) {
+              <select
+                #entradaModoRegen
+                class="criatura__select"
+                aria-label="Modo de Regeneração"
+                [value]="dados().regeneracao!.modo"
+                (change)="confirmarCampoRegeneracao('modo', $any(entradaModoRegen.value)); cancelarEdicao()"
+                (blur)="cancelarEdicao()"
+              >
+                @for (m of modosRegeneracao; track m) { <option [value]="m">{{ rotuloRegeneracaoModo(m) }}</option> }
+              </select>
+            } @else {
+              <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('regeneracao.modo')">
+                {{ rotuloRegeneracaoModo(dados().regeneracao!.modo) }}
+              </button>
+            }
+          </dd>
+        </div>
+
+        <div class="campo">
+          <dt class="campo__rotulo">Intensidade</dt>
+          <dd class="campo__controle">
+            @if (editando('regeneracao.intensidade')) {
+              <select
+                #entradaIntensidadeRegen
+                class="criatura__select"
+                aria-label="Intensidade de Regeneração"
+                [value]="dados().regeneracao!.intensidade"
+                (change)="confirmarCampoRegeneracao('intensidade', $any(entradaIntensidadeRegen.value)); cancelarEdicao()"
+                (blur)="cancelarEdicao()"
+              >
+                @for (i of intensidadesRegeneracao; track i) { <option [value]="i">{{ rotuloRegeneracaoIntensidade(i) }}</option> }
+              </select>
+            } @else {
+              <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('regeneracao.intensidade')">
+                {{ rotuloRegeneracaoIntensidade(dados().regeneracao!.intensidade) }}
+              </button>
+            }
+          </dd>
+        </div>
+
+        <div class="campo">
+          <dt class="campo__rotulo">Valor</dt>
+          <dd class="campo__controle">
+            @if (editando('regeneracao.valor')) {
+              <input
+                #entradaValorRegen
+                class="criatura__entrada-numero"
+                type="number"
+                [value]="dados().regeneracao!.valor"
+                aria-label="Valor de Regeneração"
+                (keydown.enter)="confirmarCampoRegeneracao('valor', entradaValorRegen.valueAsNumber); cancelarEdicao()"
+                (keydown.escape)="cancelarEdicao()"
+                (blur)="confirmarCampoRegeneracao('valor', entradaValorRegen.valueAsNumber); cancelarEdicao()"
+              />
+            } @else {
+              <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('regeneracao.valor')">
+                {{ dados().regeneracao!.valor }}
+              </button>
+            }
+          </dd>
+        </div>
+
+        <div class="campo">
+          <dt class="campo__rotulo">Condição</dt>
+          <dd class="campo__controle">
+            @if (editando('regeneracao.condicao')) {
+              <input
+                #entradaCondicaoRegen
+                class="criatura__entrada-texto"
+                type="text"
+                [value]="dados().regeneracao!.condicao ?? ''"
+                aria-label="Condição de Regeneração"
+                (keydown.enter)="confirmarCampoRegeneracao('condicao', entradaCondicaoRegen.value || null); cancelarEdicao()"
+                (keydown.escape)="cancelarEdicao()"
+                (blur)="confirmarCampoRegeneracao('condicao', entradaCondicaoRegen.value || null); cancelarEdicao()"
+              />
+            } @else {
+              <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('regeneracao.condicao')">
+                {{ dados().regeneracao!.condicao ?? '—' }}
+              </button>
+            }
+          </dd>
+        </div>
+      </dl>
+      @if (ajustavel()) {
+        <button class="botao botao--secundario" type="button" (click)="removerRegeneracao()">Remover regeneração</button>
+      }
+    }
+  </section>
+
+  <section class="criatura__secao">
+    <h2 class="criatura__secao-titulo">Porte, Deslocamento e Cadência</h2>
+    <dl class="criatura__campos">
+      <div class="campo">
+        <dt class="campo__rotulo">Porte</dt>
+        <dd class="campo__controle">
+          @if (editando('porte')) {
+            <select
+              #entradaPorte
+              class="criatura__select"
+              aria-label="Porte"
+              [value]="dados().porte"
+              (change)="confirmarPorte($any(entradaPorte.value)); cancelarEdicao()"
+              (blur)="cancelarEdicao()"
+            >
+              @for (p of portes; track p) { <option [value]="p">{{ rotuloPorte(p) }}</option> }
+            </select>
+          } @else {
+            <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('porte')">
+              {{ rotuloPorte(dados().porte) }}
+            </button>
+          }
+        </dd>
+      </div>
+
+      <div class="campo">
+        <dt class="campo__rotulo">Deslocamento Terrestre</dt>
+        <dd class="campo__controle">
+          @if (editando('deslocamento.terrestre')) {
+            <input
+              #entradaDeslTerrestre
+              class="criatura__entrada-numero"
+              type="number"
+              [value]="dados().deslocamento.terrestre ?? 0"
+              aria-label="Deslocamento Terrestre"
+              (keydown.enter)="confirmarCampoDeslocamento('terrestre', entradaDeslTerrestre.valueAsNumber); cancelarEdicao()"
+              (keydown.escape)="cancelarEdicao()"
+              (blur)="confirmarCampoDeslocamento('terrestre', entradaDeslTerrestre.valueAsNumber); cancelarEdicao()"
+            />
+          } @else {
+            <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('deslocamento.terrestre')">
+              {{ dados().deslocamento.terrestre ?? '—' }}
+            </button>
+          }
+        </dd>
+      </div>
+
+      <div class="campo">
+        <dt class="campo__rotulo">Deslocamento Voador</dt>
+        <dd class="campo__controle">
+          @if (editando('deslocamento.voador')) {
+            <input
+              #entradaDeslVoador
+              class="criatura__entrada-numero"
+              type="number"
+              [value]="dados().deslocamento.voador ?? 0"
+              aria-label="Deslocamento Voador"
+              (keydown.enter)="confirmarCampoDeslocamento('voador', entradaDeslVoador.valueAsNumber || undefined); cancelarEdicao()"
+              (keydown.escape)="cancelarEdicao()"
+              (blur)="confirmarCampoDeslocamento('voador', entradaDeslVoador.valueAsNumber || undefined); cancelarEdicao()"
+            />
+          } @else {
+            <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('deslocamento.voador')">
+              {{ dados().deslocamento.voador ?? '—' }}
+            </button>
+          }
+        </dd>
+      </div>
+
+      <div class="campo">
+        <dt class="campo__rotulo">Deslocamento Aquático</dt>
+        <dd class="campo__controle">
+          @if (editando('deslocamento.aquatico')) {
+            <input
+              #entradaDeslAquatico
+              class="criatura__entrada-numero"
+              type="number"
+              [value]="dados().deslocamento.aquatico ?? 0"
+              aria-label="Deslocamento Aquático"
+              (keydown.enter)="confirmarCampoDeslocamento('aquatico', entradaDeslAquatico.valueAsNumber || undefined); cancelarEdicao()"
+              (keydown.escape)="cancelarEdicao()"
+              (blur)="confirmarCampoDeslocamento('aquatico', entradaDeslAquatico.valueAsNumber || undefined); cancelarEdicao()"
+            />
+          } @else {
+            <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('deslocamento.aquatico')">
+              {{ dados().deslocamento.aquatico ?? '—' }}
+            </button>
+          }
+        </dd>
+      </div>
+
+      <div class="campo">
+        <dt class="campo__rotulo">Deslocamento Sobrenatural</dt>
+        <dd class="campo__controle">
+          @if (editando('deslocamento.sobrenatural')) {
+            <input
+              #entradaDeslSobrenatural
+              class="criatura__entrada-numero"
+              type="number"
+              [value]="dados().deslocamento.sobrenatural ?? 0"
+              aria-label="Deslocamento Sobrenatural"
+              (keydown.enter)="confirmarCampoDeslocamento('sobrenatural', entradaDeslSobrenatural.valueAsNumber || undefined); cancelarEdicao()"
+              (keydown.escape)="cancelarEdicao()"
+              (blur)="confirmarCampoDeslocamento('sobrenatural', entradaDeslSobrenatural.valueAsNumber || undefined); cancelarEdicao()"
+            />
+          } @else {
+            <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('deslocamento.sobrenatural')">
+              {{ dados().deslocamento.sobrenatural ?? '—' }}
+            </button>
+          }
+        </dd>
+      </div>
+
+      <div class="campo">
+        <dt class="campo__rotulo">Cadência</dt>
+        <dd class="campo__controle">
+          @if (editando('cadencia')) {
+            <select
+              #entradaCadencia
+              class="criatura__select"
+              aria-label="Cadência"
+              [value]="dados().cadencia"
+              (change)="confirmarCadencia($any(entradaCadencia.value)); cancelarEdicao()"
+              (blur)="cancelarEdicao()"
+            >
+              @for (c of cadencias; track c) { <option [value]="c">{{ rotuloCadencia(c) }}</option> }
+            </select>
+          } @else {
+            <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('cadencia')">
+              {{ rotuloCadencia(dados().cadencia) }}
+            </button>
+          }
+        </dd>
+      </div>
+
+      <div class="campo">
+        <dt class="campo__rotulo">Bônus de Iniciativa</dt>
+        <dd class="campo__controle">
+          @if (editando('iniciativaBonus')) {
+            <input
+              #entradaIniciativa
+              class="criatura__entrada-numero"
+              type="number"
+              [value]="dados().iniciativaBonus ?? 0"
+              aria-label="Bônus de Iniciativa"
+              (keydown.enter)="confirmarIniciativaBonus(entradaIniciativa.valueAsNumber || undefined); cancelarEdicao()"
+              (keydown.escape)="cancelarEdicao()"
+              (blur)="confirmarIniciativaBonus(entradaIniciativa.valueAsNumber || undefined); cancelarEdicao()"
+            />
+          } @else {
+            <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('iniciativaBonus')">
+              {{ dados().iniciativaBonus ?? '—' }}
+            </button>
+          }
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="criatura__secao">
+    <app-criatura-ataque-lista
+      [itens]="dados().ataques"
+      [editavel]="ajustavel()"
+      (itensMudou)="aoAtaquesMudar($event)"
+      (rolarAtaque)="rolarAtaque($event)"
+    />
+  </section>
+
+  <section class="criatura__secao">
+    <app-criatura-habilidade-lista
+      [itens]="dados().habilidades"
+      [editavel]="ajustavel()"
+      (itensMudou)="aoHabilidadesMudar($event)"
+    />
+  </section>
+
+  <section class="criatura__secao">
+    <h2 class="criatura__secao-titulo">Anotações</h2>
+    <textarea
+      class="criatura__anotacoes"
+      [value]="dados().anotacoes ?? ''"
+      [disabled]="!ajustavel()"
+      (blur)="confirmarAnotacoes($any($event.target).value)"
+    ></textarea>
+  </section>
+</article>

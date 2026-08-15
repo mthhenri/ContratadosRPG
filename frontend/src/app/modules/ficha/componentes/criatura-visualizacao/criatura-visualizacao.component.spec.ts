@@ -93,4 +93,12 @@ describe('CriaturaVisualizacao', () => {
     fixture.componentInstance['aoAtaquesMudar'](novos);
     expect(eventos['ataquesMudou']).toEqual([novos]);
   });
+
+  it('renderiza a designação, o NA/VD e a lista de ataques vinda dos dados', () => {
+    const { fixture } = montar();
+    const raiz = fixture.nativeElement as HTMLElement;
+    expect(raiz.querySelector('.criatura__designacao')?.textContent?.trim()).toBe('A Estátua');
+    expect(raiz.querySelector('.criatura__vd')?.textContent).toContain('30');
+    expect(raiz.querySelectorAll('.ataque-lista__nome').length).toBe(1);
+  });
 });

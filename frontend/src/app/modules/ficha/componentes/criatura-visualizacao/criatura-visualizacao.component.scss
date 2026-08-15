@@ -1,1 +1,107 @@
+@use 'tema/breakpoints' as bp;
+
 :host { display: block; }
+
+// Campo genérico "rótulo + controle" (mesmo vocabulário de `criar-criatura.page.scss`) — replicado
+// aqui porque o encapsulamento de estilos do Angular não deixa a definição de outro componente
+// vazar pra este template, mesmo usando os mesmos nomes de classe.
+.campo {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  margin: 0;
+
+  &__rotulo { font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .11em; color: var(--text-dim); }
+  &__controle, &__botao {
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 11px;
+    font: 13px var(--font-sans);
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    outline: 0;
+    text-align: left;
+    transition: .15s ease;
+    &:hover:not(:disabled) { border-color: var(--accent-border); }
+    &:focus { border-color: var(--accent); background: var(--surface); }
+    &:disabled { color: var(--text-dim); cursor: default; }
+  }
+}
+
+.criatura {
+  max-width: 900px;
+  margin: 0 auto;
+  color: var(--text);
+
+  &__cabecalho { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding-bottom: 14px; margin-bottom: 18px; border-bottom: 1px solid var(--border); }
+  &__designacao { margin: 0; font: 700 20px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--text); }
+  &__designacao--editavel { background: transparent; border: 0; padding: 0; cursor: pointer; text-align: left; &:hover { color: var(--accent); } }
+  &__designacao-entrada { flex: 1; min-width: 220px; padding: 6px 10px; font: 700 18px var(--font-mono); color: var(--text); background: var(--surface); border: 1px solid var(--accent); border-radius: var(--radius-control); }
+
+  &__ameaca { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+  &__na, &__vd {
+    padding: 6px 10px; font: 700 11px var(--font-mono); letter-spacing: .08em; text-transform: uppercase;
+    color: var(--accent); background: transparent; border: 1px solid var(--accent-border); border-radius: var(--radius-control);
+    cursor: pointer; &:hover:not(:disabled) { background: var(--accent-dim); } &:disabled { cursor: default; opacity: .8; }
+  }
+
+  &__secao { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--border); &:last-child { border-bottom: 0; } }
+  &__secao-titulo { margin: 0 0 12px; font: 700 13px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--text); }
+
+  &__campos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px; }
+
+  &__select, &__entrada-texto, &__entrada-numero, &__entrada-textarea {
+    width: 100%; min-height: 38px; padding: 8px 11px; font: 13px var(--font-sans); color: var(--text);
+    background: var(--surface); border: 1px solid var(--accent); border-radius: var(--radius-control); outline: 0;
+  }
+  &__entrada-numero { width: 100px; font-family: var(--font-mono); font-weight: 700; }
+  &__entrada-numero--tabela { width: 64px; min-height: 32px; padding: 4px 8px; }
+  &__select--tabela { min-height: 32px; padding: 4px 8px; font-size: 12px; }
+  &__entrada-textarea { min-height: 64px; resize: vertical; font-family: var(--font-sans); }
+
+  &__vitalidade { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+  &__passo {
+    display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px;
+    font: 700 16px var(--font-mono); color: var(--text-dim); background: var(--surface-2);
+    border: 1px solid var(--border-strong); border-radius: var(--radius-control); cursor: pointer;
+    &:hover:not(:disabled) { color: var(--accent); border-color: var(--accent-border); }
+    &:disabled { cursor: not-allowed; opacity: .5; }
+  }
+  &__vitalidade-valor {
+    min-width: 48px; padding: 4px 8px; font: 700 18px var(--font-mono); text-align: center; color: var(--text);
+    background: transparent; border: 0; cursor: pointer; &:hover:not(:disabled) { color: var(--accent); } &:disabled { cursor: default; }
+  }
+  &__vitalidade-separador { font: 700 16px var(--font-mono); color: var(--text-mute); }
+
+  &__tabela-atributos {
+    width: 100%; border-collapse: collapse; font: 12px var(--font-sans);
+    th { padding: 6px 8px; font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text-mute); text-align: left; border-bottom: 1px solid var(--border); }
+    td { padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  }
+  &__tabela-rotulo { font: 700 11px var(--font-mono); color: var(--text); }
+  &__tabela-efetivo { font: 700 13px var(--font-mono); color: var(--accent); text-align: center; }
+  &__rolar-atributo {
+    display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px;
+    color: var(--accent); background: transparent; border: 1px solid var(--accent-border); border-radius: var(--radius-control);
+    cursor: pointer; &:hover:not(:disabled) { background: var(--accent-dim); } &:disabled { cursor: not-allowed; opacity: .5; }
+  }
+
+  &__limite-resistencias { margin: 0 0 8px; font: 11px var(--font-sans); color: var(--text-mute); }
+  &__vazio { margin: 0 0 8px; font: 12px var(--font-sans); color: var(--text-mute); }
+
+  &__anotacoes {
+    width: 100%; min-height: 120px; padding: 10px 12px; font: 13px/1.5 var(--font-sans); color: var(--text);
+    background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: var(--radius-control);
+    resize: vertical; outline: 0;
+    &:focus { border-color: var(--accent); background: var(--surface); }
+  }
+
+  @include bp.mobile {
+    &__campos { grid-template-columns: 1fr; }
+    &__cabecalho { flex-direction: column; align-items: flex-start; }
+    &__ameaca { margin-left: 0; }
+    &__tabela-atributos { display: block; overflow-x: auto; }
+  }
+}
