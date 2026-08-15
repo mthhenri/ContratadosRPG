@@ -11,8 +11,11 @@ import {
   FichaCampanhaAtribuidaDto,
   FichaCriadaDto,
   FichaCriarDto,
+  FichaCriaturaAlteradaDto,
+  FichaCriaturaAlterarDto,
   FichaCriaturaCriadaDto,
   FichaCriaturaCriarDto,
+  FichaCriaturaRecuperadaDto,
   FichaImagemAlteradaDto,
   FichaRecuperadaDto,
   FichaResumoDto,
@@ -60,6 +63,20 @@ export class FichaService {
     return this.httpClient
       .post<StandardResponse<FichaCriaturaCriadaDto>>(`${this.base}/criatura`, dto)
       .pipe(map((resposta) => resposta.dados as FichaCriaturaCriadaDto));
+  }
+
+  /** Recupera uma ficha de criatura pelo `id` (mesma permissão de visualização — §14, m4-03). */
+  recuperarFichaCriatura(id: number): Observable<FichaCriaturaRecuperadaDto> {
+    return this.httpClient
+      .get<StandardResponse<FichaCriaturaRecuperadaDto>>(`${this.base}/criatura/${id}`)
+      .pipe(map((resposta) => resposta.dados as FichaCriaturaRecuperadaDto));
+  }
+
+  /** Altera `nome` e o documento de jogo de uma ficha de criatura (só dono/mestre — §14, m4-03). */
+  alterarFichaCriatura(id: number, dto: FichaCriaturaAlterarDto): Observable<FichaCriaturaAlteradaDto> {
+    return this.httpClient
+      .put<StandardResponse<FichaCriaturaAlteradaDto>>(`${this.base}/criatura/${id}`, dto)
+      .pipe(map((resposta) => resposta.dados as FichaCriaturaAlteradaDto));
   }
 
   /**
