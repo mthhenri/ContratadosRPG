@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { FichaAlteradaDto, FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 import { ClasseEnum } from '@contratados-rpg/shared/enums';
 
-import { mesclarFicha } from './mesclar-ficha';
+import { mesclarDocumento, mesclarFicha } from './mesclar-ficha';
 
 /**
  * Prova o merge de três vias da m3-17: um `ficha:alterada` remoto que chega durante uma edição
@@ -195,5 +195,16 @@ describe('mesclarFicha', () => {
     expect(base.nome).toBe('Kane');
     expect(local.dados.estado.vidaAtual).toBe(21);
     expect(remoto.nome).toBe('Kane Ferido');
+  });
+});
+
+describe('mesclarDocumento (genérico, m4-04b)', () => {
+  it('mescla um documento arbitrário com a mesma regra de três vias de mesclarFicha', () => {
+    interface Exemplo { readonly a: number; readonly b: { readonly c: string } }
+    const base: Exemplo = { a: 1, b: { c: 'x' } };
+    const local: Exemplo = { a: 1, b: { c: 'y' } }; // usuário editou b.c
+    const remoto: Exemplo = { a: 2, b: { c: 'x' } }; // servidor mudou a
+
+    expect(mesclarDocumento(base, local, remoto)).toEqual({ a: 2, b: { c: 'y' } });
   });
 });
