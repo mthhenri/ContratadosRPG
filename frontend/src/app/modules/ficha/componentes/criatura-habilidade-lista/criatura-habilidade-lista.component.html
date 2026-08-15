@@ -1,0 +1,64 @@
+<section class="habilidade-lista">
+  <header class="habilidade-lista__cabecalho">
+    <h3 class="habilidade-lista__titulo">Habilidades Especiais</h3>
+    @if (editavel()) {
+      <button class="botao botao--secundario" type="button" (click)="adicionar()">
+        <app-icone nome="mais" /> Adicionar
+      </button>
+    }
+  </header>
+
+  @if (!itens().length) {
+    <p class="habilidade-lista__vazio">Nenhuma habilidade especial.</p>
+  }
+
+  <ul class="habilidade-lista__itens">
+    @for (item of itens(); track $index) {
+      <li class="habilidade-lista__item">
+        @if (editando($index)) {
+          <form class="habilidade-lista__form" [formGroup]="itemForm" (ngSubmit)="confirmar()">
+            <input class="habilidade-lista__input" formControlName="nome" placeholder="Nome" aria-label="Nome da habilidade" />
+            <select class="habilidade-lista__select" formControlName="tipo" aria-label="Tipo">
+              @for (t of tipos; track t) { <option [value]="t">{{ t }}</option> }
+            </select>
+            <textarea class="habilidade-lista__textarea" formControlName="descricao" placeholder="Descrição" aria-label="Descrição"></textarea>
+            <input class="habilidade-lista__input" formControlName="restricao" placeholder="Restrição (opcional)" aria-label="Restrição" />
+            <button class="botao botao--primario" type="submit" [disabled]="itemForm.invalid">Confirmar</button>
+            <button class="botao botao--secundario" type="button" (click)="cancelar()">Cancelar</button>
+          </form>
+        } @else {
+          <div class="habilidade-lista__cabecalho-item">
+            <span class="habilidade-lista__nome">{{ item.nome }}</span>
+            <span class="habilidade-lista__chip">{{ item.tipo }}</span>
+          </div>
+          <p class="habilidade-lista__descricao">{{ item.descricao }}</p>
+          @if (item.restricao) { <span class="habilidade-lista__restricao">{{ item.restricao }}</span> }
+          @if (editavel()) {
+            <div class="habilidade-lista__acoes">
+              <button class="habilidade-lista__acao" type="button" aria-label="Editar" (click)="editar($index)"><app-icone nome="editar" /></button>
+              @if (indiceRemovendo() === $index) {
+                <button class="habilidade-lista__acao habilidade-lista__acao--confirmar" type="button" (click)="remover($index)">Confirmar remoção</button>
+                <button class="habilidade-lista__acao" type="button" (click)="cancelarRemocao()">Cancelar</button>
+              } @else {
+                <button class="habilidade-lista__acao" type="button" aria-label="Remover" (click)="pedirRemocao($index)"><app-icone nome="excluir" /></button>
+              }
+            </div>
+          }
+        }
+      </li>
+    }
+  </ul>
+
+  @if (editando(-1)) {
+    <form class="habilidade-lista__form habilidade-lista__form--novo" [formGroup]="itemForm" (ngSubmit)="confirmar()">
+      <input class="habilidade-lista__input" formControlName="nome" placeholder="Nome" aria-label="Nome da habilidade" />
+      <select class="habilidade-lista__select" formControlName="tipo" aria-label="Tipo">
+        @for (t of tipos; track t) { <option [value]="t">{{ t }}</option> }
+      </select>
+      <textarea class="habilidade-lista__textarea" formControlName="descricao" placeholder="Descrição" aria-label="Descrição"></textarea>
+      <input class="habilidade-lista__input" formControlName="restricao" placeholder="Restrição (opcional)" aria-label="Restrição" />
+      <button class="botao botao--primario" type="submit" [disabled]="itemForm.invalid">Adicionar</button>
+      <button class="botao botao--secundario" type="button" (click)="cancelar()">Cancelar</button>
+    </form>
+  }
+</section>
