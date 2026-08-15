@@ -89,6 +89,13 @@ describe('CriaturaVisualizacao', () => {
     expect(bandeja.entradas()[0].formula).toBe('vontaded20kh1+5');
   });
 
+  it('botão Teste do ataque rola o Atributo Efetivo do atributo do ataque, não uma mecânica nova', () => {
+    const { fixture, bandeja } = montar();
+    fixture.componentInstance['rolarTesteAtaque'](dados.ataques[0]);
+    expect(bandeja.entradas()).toHaveLength(1);
+    expect(bandeja.entradas()[0].formula).toBe('lutad20kh1+12');
+  });
+
   it('repassa a lista de ataques editada para ataquesMudou', () => {
     const { fixture, eventos } = montar();
     const novos = [...dados.ataques, { nome: 'Segundo', atributo: 'forca' as const, custoAcao: CustoAcaoEnum.MOVIMENTO, dano: '2D10', tipoDano: TipoDanoEnum.FISICO, area: false }];
@@ -96,11 +103,18 @@ describe('CriaturaVisualizacao', () => {
     expect(eventos['ataquesMudou']).toEqual([novos]);
   });
 
-  it('renderiza a designação, o NA/VD e a lista de ataques vinda dos dados', () => {
+  it('renderiza a designação e o VD vindos dos dados', () => {
     const { fixture } = montar();
     const raiz = fixture.nativeElement as HTMLElement;
     expect(raiz.querySelector('.criatura__designacao')?.textContent?.trim()).toBe('A Estátua');
-    expect(raiz.querySelector('.criatura__vd')?.textContent).toContain('30');
+    expect(raiz.querySelector('.criatura__stat--vd')?.textContent).toContain('30');
+  });
+
+  it('renderiza a lista de ataques vinda dos dados na aba Ataques e Habilidades', () => {
+    const { fixture } = montar();
+    fixture.componentInstance['selecionarAba']('ataques');
+    fixture.detectChanges();
+    const raiz = fixture.nativeElement as HTMLElement;
     expect(raiz.querySelectorAll('.ataque-lista__nome').length).toBe(1);
   });
 });

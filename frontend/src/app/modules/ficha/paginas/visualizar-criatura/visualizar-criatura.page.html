@@ -9,6 +9,11 @@
       <app-icone nome="voltar" />
     </a>
 
+    <span class="ficha-pagina__rotulo-secao">Ficha de Criatura</span>
+    @if (ficha(); as fichaAtual) {
+      <span class="chip-classificacao">FICHA-CRT-{{ fichaAtual.id }}</span>
+    }
+
     <div class="ficha-pagina__acoes">
       @if (fichaEdicao.estadoPersistencia() !== 'ocioso') {
         <span

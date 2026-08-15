@@ -22,8 +22,21 @@ describe('CriaturaResistenciaLista', () => {
     return { fixture, raiz: fixture.nativeElement as HTMLElement, emitidos };
   }
 
-  it('lista os itens existentes com tipo e valor', () => {
+  it('lista os itens existentes com tipo e valor (variante grade, padrão de Resistências)', () => {
     const { raiz } = montar(false);
+    const tipos = Array.from(raiz.querySelectorAll('.resistencia-lista__grade-tipo')).map((n) => n.textContent?.trim());
+    expect(tipos).toEqual(['Balístico']);
+  });
+
+  it('lista os itens existentes com tipo e valor (variante lista, usada em Fraquezas)', () => {
+    TestBed.configureTestingModule({ imports: [CriaturaResistenciaLista] });
+    const fixture = TestBed.createComponent(CriaturaResistenciaLista);
+    fixture.componentRef.setInput('itens', itens);
+    fixture.componentRef.setInput('titulo', 'Fraquezas');
+    fixture.componentRef.setInput('editavel', false);
+    fixture.componentRef.setInput('variante', 'fraqueza');
+    fixture.detectChanges();
+    const raiz = fixture.nativeElement as HTMLElement;
     const tipos = Array.from(raiz.querySelectorAll('.resistencia-lista__tipo')).map((n) => n.textContent?.trim());
     expect(tipos).toEqual(['Balístico']);
   });

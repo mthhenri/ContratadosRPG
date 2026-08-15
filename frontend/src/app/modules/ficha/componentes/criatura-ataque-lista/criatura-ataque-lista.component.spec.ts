@@ -31,8 +31,16 @@ describe('CriaturaAtaqueLista', () => {
 
   it('emite rolarAtaque ao clicar no botão de dado', () => {
     const alvo = montar(false);
-    (alvo.raiz.querySelector('.ataque-lista__rolar') as HTMLButtonElement).click();
+    (alvo.raiz.querySelector('.ataque-lista__rolar--dano') as HTMLButtonElement).click();
     expect(alvo.rolados).toEqual([itens[0]]);
+  });
+
+  it('emite testarAtaque ao clicar no botão de teste', () => {
+    const alvo = montar(false);
+    const testados: FichaCriaturaAtaqueDto[] = [];
+    alvo.fixture.componentInstance.testarAtaque.subscribe((a) => testados.push(a));
+    (alvo.raiz.querySelector('.ataque-lista__rolar--teste') as HTMLButtonElement).click();
+    expect(testados).toEqual([itens[0]]);
   });
 
   it('adiciona um ataque e emite a lista inteira', () => {

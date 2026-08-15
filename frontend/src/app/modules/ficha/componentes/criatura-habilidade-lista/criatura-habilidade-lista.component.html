@@ -1,7 +1,7 @@
 <section class="habilidade-lista">
   <header class="habilidade-lista__cabecalho">
-    <span class="habilidade-lista__indice">8</span>
     <h3 class="habilidade-lista__titulo">Habilidades Especiais</h3>
+    <span class="habilidade-lista__contagem">{{ itens().length }}</span>
     <span class="habilidade-lista__regua"></span>
     @if (editavel()) {
       <button class="botao botao--secundario" type="button" (click)="adicionar()">
@@ -16,7 +16,7 @@
 
   <ul class="habilidade-lista__itens">
     @for (item of itens(); track $index) {
-      <li class="habilidade-lista__item">
+      <li class="habilidade-lista__item" [class.habilidade-lista__item--editando]="editando($index)">
         @if (editando($index)) {
           <form class="habilidade-lista__form" [formGroup]="itemForm" (ngSubmit)="confirmar()">
             <input class="habilidade-lista__input" formControlName="nome" placeholder="Nome" aria-label="Nome da habilidade" />

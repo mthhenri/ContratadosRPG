@@ -49,13 +49,20 @@ import { CriaturaHabilidadeLista } from '../criatura-habilidade-lista/criatura-h
 /** As dez chaves de `FichaAtributosDto`, mesmo apelido do análogo em `FichaVisualizacao`. */
 type ChaveAtributo = keyof FichaAtributosDto;
 
-/** Rótulo dos dez atributos (mesma grafia do assistente de criação, `criar-criatura.page.ts`). */
+/** Rótulo dos dez atributos (mesma grafia do assistente de criação, `criar-criatura.page.ts`). Os
+ * cinco primeiros são os "Atributos Físicos" e os cinco últimos os "Atributos Mentais"
+ * (`sistema-v4.1.0.md`) — a ordem já nasce agrupada, então a grade da coluna de Atributos só
+ * fatia o array em dois, sem tabela de grupo nova. */
 const CAMPOS_ATRIBUTO: readonly { readonly chave: ChaveAtributo; readonly nome: string }[] = [
   { chave: 'destreza', nome: 'Destreza' }, { chave: 'forca', nome: 'Força' }, { chave: 'luta', nome: 'Luta' },
   { chave: 'pontaria', nome: 'Pontaria' }, { chave: 'vigor', nome: 'Vigor' }, { chave: 'intelecto', nome: 'Intelecto' },
   { chave: 'medicina', nome: 'Medicina' }, { chave: 'sentidos', nome: 'Sentidos' }, { chave: 'social', nome: 'Social' },
   { chave: 'vontade', nome: 'Vontade' },
 ];
+
+/** Aba ativa da coluna de Status — mesmo par de nomes usado por `FichaVisualizacao.AbaStatus`,
+ * recortado às duas abas que o documento de criatura sustenta (sem inventário/sanidade/histórico). */
+type AbaCriatura = 'informacoes' | 'ataques';
 
 /**
  * A **ficha de criatura** numa tela só (m4-04b) — edição no próprio lugar, campo a campo,
@@ -129,6 +136,18 @@ export class CriaturaVisualizacao {
   protected readonly rotuloCadencia = rotuloCadencia;
   protected readonly rotuloRegeneracaoModo = rotuloRegeneracaoModo;
   protected readonly rotuloRegeneracaoIntensidade = rotuloRegeneracaoIntensidade;
+
+  /** Aba ativa da coluna de Status (Informações / Ataques e Habilidades) — mesmo padrão de
+   * `FichaVisualizacao.abaStatusEfetiva`, sem persistência (a criatura não tem HUD mobile próprio). */
+  private readonly abaSelecionada = signal<AbaCriatura>('informacoes');
+
+  protected abaAtiva(): AbaCriatura {
+    return this.abaSelecionada();
+  }
+
+  protected selecionarAba(aba: AbaCriatura): void {
+    this.abaSelecionada.set(aba);
+  }
 
   /** Chave (única, tipo `secao.campo`) do campo em edição no-próprio-lugar — `null` = nenhum. */
   private readonly campoEmEdicao = signal<string | null>(null);
@@ -317,6 +336,16 @@ export class CriaturaVisualizacao {
     this.imagemMudou.emit(arquivo);
   }
 
+  /** Handler de `(change)` do `<input type="file">` do avatar — mesmo padrão de
+   * `FichaVisualizacao.aoSelecionarImagem`, sem validação de tamanho/tipo aqui (o `accept` do
+   * input já filtra a escolha e `FichaService.alterarImagem` valida no envio). */
+  protected aoSelecionarImagem(evento: Event): void {
+    const arquivo = (evento.target as HTMLInputElement).files?.[0];
+    if (arquivo) {
+      this.aoTrocarImagem(arquivo);
+    }
+  }
+
   /** Rola o dano de um Ataque (`criatura-rolagem.ts`, motor puro) e mostra/registra o resultado. */
   protected rolarAtaque(ataque: FichaCriaturaAtaqueDto): void {
     if (!this.ajustavel()) {
@@ -341,5 +370,13 @@ export class CriaturaVisualizacao {
     }
     this.bandeja.mostrar({ rotulo: executada.rotulo, formula: executada.formula, resultado: executada.resultado, corFicha: this.cor() });
     this.rolagemRegistro.registrar(executada);
+  }
+
+  /** Botão "Teste" do card de Ataque — mesmo teste de Atributo Efetivo da coluna de Atributos,
+   * só exposto no contexto do ataque (`ataque.atributo` decide qual chave rolar). Não é mecânica
+   * nova: reusa `rolarTesteAtributo` acima, que já é o único lugar que chama
+   * `rolarTesteAtributoCriatura`. */
+  protected rolarTesteAtaque(ataque: FichaCriaturaAtaqueDto): void {
+    this.rolarTesteAtributo(ataque.atributo);
   }
 }

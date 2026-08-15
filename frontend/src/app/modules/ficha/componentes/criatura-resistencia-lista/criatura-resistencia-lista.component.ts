@@ -1,10 +1,12 @@
 import { Component, input, output, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { FormGroup, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { TipoDanoEnum } from '@contratados-rpg/shared/enums';
 import type { FichaCriaturaResistenciaDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { Icone } from '../../../../shared/icone/icone.component';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 
 const TIPOS: readonly TipoDanoEnum[] = Object.values(TipoDanoEnum) as TipoDanoEnum[];
 
@@ -16,7 +18,7 @@ const TIPOS: readonly TipoDanoEnum[] = Object.values(TipoDanoEnum) as TipoDanoEn
  */
 @Component({
   selector: 'app-criatura-resistencia-lista',
-  imports: [ReactiveFormsModule, Icone],
+  imports: [ReactiveFormsModule, Icone, Tooltip, NgTemplateOutlet],
   templateUrl: './criatura-resistencia-lista.component.html',
   styleUrl: './criatura-resistencia-lista.component.scss',
 })
@@ -24,6 +26,9 @@ export class CriaturaResistenciaLista {
   readonly itens = input.required<readonly FichaCriaturaResistenciaDto[]>();
   readonly titulo = input.required<string>();
   readonly editavel = input(false);
+  /** Só decide a pele do estado de leitura (`resistencia` = grade compacta neutra, `fraqueza` =
+   * lista com tom de aviso) — o formulário de edição é idêntico nos dois casos. */
+  readonly variante = input<'resistencia' | 'fraqueza'>('resistencia');
 
   readonly itensMudou = output<readonly FichaCriaturaResistenciaDto[]>();
 

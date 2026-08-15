@@ -1,32 +1,63 @@
+@use 'tema/breakpoints' as bp;
+
 :host { display: block; }
 
 .ataque-lista {
-  // Cabeçalho de seção canônico (índice em badge mono + título + régua), mesmo bloco de
-  // `.criatura__secao-cabecalho`/`.ficha-cartao__cabecalho` — replicado aqui porque o
-  // encapsulamento de estilos do Angular não deixa a definição de outro componente vazar pra este.
-  &__cabecalho { display: flex; align-items: center; gap: 11px; margin-bottom: 8px; }
-  &__indice {
-    display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
-    width: 22px; height: 22px; font: 700 12px var(--font-mono); color: var(--accent);
-    border: 1px solid var(--accent); border-radius: 3px;
-  }
-  &__titulo { margin: 0; font: 700 12px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--text); }
+  // Cabeçalho de seção canônico (título + contagem + régua), mesmo bloco de `.card__cabecalho`
+  // (`_componentes.scss`) — replicado aqui porque o encapsulamento de estilos do Angular não
+  // deixa a definição de outro componente vazar pra este.
+  &__cabecalho { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  &__titulo { margin: 0; font: 700 13px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--text); }
+  &__contagem { font: 700 11px var(--font-mono); color: var(--text-mute); }
   &__regua { flex: 1; height: 1px; background: var(--border); }
   &__vazio { font: 12px var(--font-sans); color: var(--text-mute); }
-  &__itens { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
-  &__item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); flex-wrap: wrap; }
-  &__nome { font: 700 12px var(--font-mono); color: var(--text); }
-  &__dano { font: 12px var(--font-mono); color: var(--accent); }
-  &__meta { font: 10px var(--font-sans); color: var(--text-mute); text-transform: uppercase; }
-  &__efeito { flex-basis: 100%; font: 11px var(--font-sans); color: var(--text-dim); }
-  &__rolar { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; margin-left: auto; color: var(--accent); background: transparent; border: 1px solid var(--accent-border); border-radius: var(--radius-control); cursor: pointer; &:hover { background: var(--accent-dim); } }
-  &__acoes { display: flex; gap: 4px; }
+
+  &__itens {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0 0 14px;
+    padding: 0;
+    list-style: none;
+    @include bp.tablet { grid-template-columns: 1fr; }
+  }
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    // O formulário de edição é bem mais largo que um card — abre mão da grade nesse item.
+    &--editando { grid-column: 1 / -1; }
+  }
+  &__cabecalho-item { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  &__nome { font: 700 13px var(--font-mono); color: var(--text); }
+  &__dano { font: 700 13px var(--font-mono); color: var(--accent); white-space: nowrap; }
+  &__meta { font: 10px var(--font-sans); color: var(--text-mute); text-transform: uppercase; letter-spacing: .04em; }
+  &__efeito { margin: 0; font: 12px var(--font-sans); color: var(--text-dim); }
+
+  &__rodape { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+  &__rolar {
+    display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px;
+    font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: .06em;
+    background: transparent; border: 1px solid var(--border-strong); border-radius: var(--radius-control);
+    color: var(--text-dim); cursor: pointer; transition: .15s ease;
+    &:hover:not(:disabled) { border-color: var(--accent-border); color: var(--text); }
+    &:disabled { cursor: not-allowed; opacity: .5; }
+    // Dano usa o vermelho fixo de Vida (mesmo racional de `criatura-visualizacao`: ação que reduz
+    // vida em jogo, não decoração de tema) — Teste fica no tom neutro/accent do resto dos controles.
+    &--dano { color: var(--vida); border-color: color-mix(in srgb, var(--vida) 40%, var(--border-strong)); &:hover:not(:disabled) { background: color-mix(in srgb, var(--vida) 10%, transparent); } }
+    &--teste:hover:not(:disabled) { background: var(--accent-dim); color: var(--accent); border-color: var(--accent-border); }
+  }
+  &__acoes { display: flex; gap: 4px; margin-left: auto; }
   &__acao { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; color: var(--text-dim); background: transparent; border: 1px solid var(--border-strong); border-radius: var(--radius-control); cursor: pointer; &:hover { color: var(--accent); border-color: var(--accent-border); } }
   // `--negative` não existe no tema (`_tokens.scss`) — `--vida` é o vermelho fixo usado pra ações
   // destrutivas em todo o resto do app (ex.: `.guia__formacao-remover:hover` no assistente).
   &__acao--confirmar { width: auto; padding: 0 8px; color: var(--vida); }
   &__form { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; width: 100%; }
-  &__form--novo { margin-top: 8px; padding: 8px 10px; background: var(--surface-2); border: 1px dashed var(--border-strong); border-radius: var(--radius-control); }
+  &__form--novo { margin-top: -8px; margin-bottom: 14px; padding: 8px 10px; background: var(--surface-2); border: 1px dashed var(--border-strong); border-radius: var(--radius-control); }
   &__select, &__input { padding: 4px 8px; font: 12px var(--font-sans); color: var(--text); background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control); }
   &__input--largo { flex: 1 1 100%; }
   &__checkbox { display: inline-flex; align-items: center; gap: 4px; font: 11px var(--font-sans); color: var(--text-dim); }

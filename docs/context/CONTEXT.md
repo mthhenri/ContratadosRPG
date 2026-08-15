@@ -1,9 +1,10 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-14 · **Última decisão registrada:** `m4-04c` (polimento de UI fora
-> da fila de specs, a pedido direto do autor) — passo // Atributos da criatura em 3 cards
-> (Base/Limite/Pontos de Ajuste), contador real de Pontos de Ajuste travando o avanço em saldo 0
-> (mesmo padrão do guia de jogador) e correção do corte do stepper no mobile — ver seção 4
+> **Última revisão:** 2026-08-15 · **Última decisão registrada:** `m4-04b` (realinhamento visual
+> da ficha de criatura, fora da fila de specs, a pedido direto do autor) — `CriaturaVisualizacao`
+> saiu do layout de coluna única e virou dashboard de 3 colunas com abas, alvo de fidelidade
+> `docs/design/examples/ficha-de-criatura.html` (reconstruído pelo autor nesta sessão); mobile
+> segue pendente de `m4-10` — ver seção 4
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -39,19 +40,20 @@ decidiu DTOs de operação **próprios** para criatura (`FichaCriaturaCriarDto`/
 vez de unir com os contratos de jogador — mesma lógica de "dois contratos, não um" já fechada
 em `m4-01` para o documento de jogo (ver seção 6). A `m4-04` verificou ao vivo que abrir a
 ficha recém-criada em `/painel/:campanhaId/ficha/:id` (`FichaVisualizacao`, telas de jogador)
-quebra com `TypeError` — a tela ainda não sabe ler `dados` no formato de criatura; registrado
-como pendência para quem fechar a tela dedicada (§14 já bloqueia jogadores, então o erro só
-afeta o mestre navegando direto após criar — ver seção 7). Entre a `m4-04` e a `m4-05`, duas
-sessões de **polimento de UI** fora da fila de specs (pedido direto do autor, não tasks
-numeradas): `m4-04b` revisou o assistente de criação de criatura (upload de imagem, espaçamento
-entre campos) e o painel do mestre (botões "Nova Criatura"/"Novo Agente", tira de estatísticas
-reduzida a "Convite", coluna Esquadrão dividida com a subseção "Criaturas" — exigiu expor
-`tipo`/`na` em `FichaResumoDto` e ajustar `FichaRepository.colunasResumo` para os dois formatos de
-`dados`); `m4-04c` trocou o bloco único "Base do VD" do passo // Atributos por 3 cards
-(Base/Limite/Pontos de Ajuste), deu ao card de Pontos de Ajuste um contador real que trava o
-avanço em saldo 0 (mesmo padrão do guia de jogador) e corrigiu o corte do botão "+" do stepper no
-mobile (ver seção 4). Próxima da fila M4: **`m4-05`** (contrato `FichaNpcDadosDto`, início da
-frente de NPC).
+quebrava com `TypeError` — resolvido com uma tela dedicada, `CriaturaVisualizacao` (ver seção 7).
+Entre a `m4-04` e a `m4-05`, várias sessões de **polimento de UI** fora da fila de specs (pedido
+direto do autor, não tasks numeradas): `m4-04b` revisou o assistente de criação de criatura
+(upload de imagem, espaçamento entre campos) e o painel do mestre (botões "Nova Criatura"/"Novo
+Agente", tira de estatísticas reduzida a "Convite", coluna Esquadrão dividida com a subseção
+"Criaturas" — exigiu expor `tipo`/`na` em `FichaResumoDto` e ajustar
+`FichaRepository.colunasResumo` para os dois formatos de `dados`), construiu a tela dedicada
+`CriaturaVisualizacao` citada acima e, em 2026-08-15, realinhou o layout dela a um mockup
+reconstruído pelo autor (`docs/design/examples/ficha-de-criatura.html`) — de coluna única
+numerada pra dashboard de 3 colunas com abas, mesmo shell de `FichaVisualizacao` (ver seção 4);
+`m4-04c` trocou o bloco único "Base do VD" do passo // Atributos por 3 cards (Base/Limite/Pontos
+de Ajuste), deu ao card de Pontos de Ajuste um contador real que trava o avanço em saldo 0 (mesmo
+padrão do guia de jogador) e corrigiu o corte do botão "+" do stepper no mobile (ver seção 4).
+Próxima da fila M4: **`m4-05`** (contrato `FichaNpcDadosDto`, início da frente de NPC).
 
 O M6 também está aberto, em paralelo. A próxima task encadeada nessa frente é
 `m6-08-impersonacao-administrativa.spec.md`, que adiciona impersonação administrativa auditável.
@@ -406,6 +408,23 @@ jogador): reproduz "A Estátua" ponta a ponta com os mesmos valores do documento
 1.050, Defesa 30, custo de resistências 52/60, Atributo Efetivo de cada linha), persiste
 corretamente e o jogador sem concessão não a vê (§14). Pendência registrada — ver seção 7.
 
+**Visualização/edição** (`frontend/src/app/modules/ficha/componentes/criatura-visualizacao/`,
+`CriaturaVisualizacao` + página `paginas/visualizar-criatura/`) — rota
+`/painel/:campanhaId/criatura/:id`, mesma guarda de mestre da rota `nova`; resolve a pendência da
+`m4-04` com tela dedicada (não um `modo` novo em `FichaVisualizacao`). Dashboard de 3 colunas —
+Identidade (avatar, designação, chips de classificação Origem/Porte/Comportamento, NA em destaque,
+VD/Tenacidade/Defesa, Vida, Resistências em grade compacta, Fraquezas em lista de aviso) ·
+Atributos (grade Físicos/Mentais, valor + seletor de Modificador de 4 barras + Atributo Efetivo +
+rolagem, tudo herdado sem mudança do assistente) · Status com abas Informações (Cadência/Bônus de
+Iniciativa, Deslocamento em tags, Regeneração opcional, Descrição/Gancho/Motivação, Natureza
+Física/Tema de Horror, Anotações) e Ataques e Habilidades (grades de cards, cada Ataque com botões
+Teste e Dano) — mesmo shell/padrões de `FichaVisualizacao` (jogador) e dos blocos canônicos de
+`docs/design/tema/_componentes.scss`, alvo de fidelidade
+`docs/design/examples/ficha-de-criatura.html`. Edição no próprio lugar campo a campo, igual
+liberdade da ficha de jogador; `FichaEdicaoCriaturaService` faz o mesmo papel de
+`FichaEdicaoService` (debounce + `PUT` em lote). Só desktop por ora — refinamento mobile é
+`m4-10`, ainda no backlog.
+
 **Polimento de UI — `m4-04b`:** passo // Identidade ganhou upload de imagem de registro (mesmo
 padrão de avatar do guia de jogador, `FichaService.alterarImagem`, segundo request em sequência
 após criar a ficha — layout `.guia__campos--base`, caixa à esquerda + Designação/Origem à
@@ -635,15 +654,13 @@ Nenhuma decisão de rumo em aberto no momento.
 A única que existia — **identidade visual do site** — está **resolvida**: tema "Terminal de
 Contenção", handoff completo em `docs/design/`, com troca em runtime entregue na `m1-13`.
 
-**Pendência registrada na `m4-04`:** `FichaVisualizacao` (a tela de ficha de jogador,
-`/painel/:campanhaId/ficha/:id`) não sabe ler `ficha.dados` no formato de criatura — abrir uma
-criatura recém-criada por ali lança `TypeError` em `calcularVida` (assume campos de jogador que
-não existem no documento de criatura). §14 já impede qualquer jogador de chegar lá sem
-concessão, então hoje só afeta o mestre navegando direto após criar. A spec `m4-04` previu esse
-caso ("se precisar de tela dedicada além da reutilização de `FichaVisualizacao`/`modo`,
-registrar como pendência") — decisão de rumo (tela dedicada de criatura vs. adaptar
-`FichaVisualizacao` com um `modo`/tipo novo) fica para quem fechar `m4-09` (listagem/revelação
-no painel do mestre), quando a UI de leitura de criatura precisar existir de qualquer forma.
+**Resolvida na `m4-04b`:** a pendência registrada na `m4-04` (`FichaVisualizacao`, a tela de ficha
+de jogador, não sabia ler `ficha.dados` no formato de criatura — abrir uma criatura recém-criada
+por `/painel/:campanhaId/ficha/:id` lançava `TypeError`) foi fechada com a opção prevista pela
+própria spec: **tela dedicada** (`CriaturaVisualizacao`, `/painel/:campanhaId/criatura/:id`), não
+um `modo`/tipo novo em `FichaVisualizacao` — ver seção 4, parágrafo "Visualização/edição".
+`FichaVisualizacao` continua sem entender o formato de criatura, mas não precisa mais: a navegação
+pós-criação e o card de criatura no painel do mestre (`m4-04b`) já levam à tela certa.
 
 Questões que precisam de resposta do autor mas não são decisões de rumo estão marcadas com **⚠** na
 seção 1 e em [`PROBLEMS.md`](PROBLEMS.md).

@@ -45,10 +45,16 @@ escolhida e implementada — está visível no topo de toda tela autenticada aci
 
 ## Excluído de propósito
 
-**`ficha-de-criatura.html` não foi tocado.** A ficha de criatura (m4-04b) está em refatoração
-manual fora deste ciclo de atualização — nem a rota `/painel/:campanhaId/criatura`, nem o
-arquivo, nem nenhuma menção a criatura em `../DESIGN.md` foram recapturados ou reescritos. Trate
-qualquer referência a criatura no handoff como desatualizada até esse trabalho fechar.
+**`ficha-de-criatura.html` não segue o pipeline de captura acima.** Ao contrário das demais telas
+desta pasta (onde o app implementado é a fonte e o arquivo só documenta o estado atual dele), esta
+é a exceção histórica: um mockup autocontido (bundle de Artifact, não uma captura Playwright)
+mantido manualmente pelo autor como **alvo de fidelidade visual** — a relação é invertida, o
+arquivo guia a implementação, não o contrário (ver `docs/specs/done/m4-04b-frontend-
+visualizacao-criatura.spec.md`). Em 2026-08-15 o autor reconstruiu este mockup (dashboard de 3
+colunas com abas) e `CriaturaVisualizacao` foi realinhada a ele na mesma sessão — ver
+`docs/context/HISTORY.md`. `../DESIGN.md` ainda não tem uma seção dedicada a criatura; a rota
+`/painel/:campanhaId/criatura/:id` segue fora do ciclo normal de recaptura enquanto este mockup
+continuar sendo mantido à mão em vez de gerado a partir do app real.
 
 ## Como usar
 

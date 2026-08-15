@@ -6,7 +6,10 @@
 @use 'tema/breakpoints' as bp;
 
 .ficha-pagina {
-  max-width: 900px;
+  // Mais largo que as telas de criação/edição (960): a visualização é um layout de três colunas
+  // (identidade | atributos | status com abas), mesmo racional de `visualizar.page.scss`
+  // (ficha de jogador) e alvo de fidelidade `docs/design/examples/ficha-de-criatura.html`.
+  max-width: 80vw;
   margin: 0 auto;
   padding: 12px 20px 40px;
   display: flex;
@@ -36,6 +39,18 @@
     gap: 12px;
 
     @include bp.mobile { flex-wrap: wrap; }
+  }
+
+  // Eyebrow "FICHA DE CRIATURA" ao lado do botão voltar — só rótulo de contexto da página, sem
+  // interação (a designação/imagem/registro de verdade moram no cabeçalho de
+  // `CriaturaVisualizacao`, dentro da coluna de Identidade).
+  &__rotulo-secao {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-mute);
   }
 
   &__acoes {
@@ -179,6 +194,20 @@
   &__acao { display: inline-flex; align-items: center; gap: 7px; padding: 11px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
 }
 
+// Badge "FICHA-CRT-{id}" no topo — copiado de `_componentes.scss` `.chip-classificacao`.
+.chip-classificacao {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  padding: 6px 10px;
+  margin-left: auto;
+}
+
 .botao {
   border-radius: var(--radius-control);
   font-family: var(--font-mono);
@@ -232,14 +261,16 @@
   }
 }
 
-// Esqueleto de carregamento — versão de coluna única (o layout real de `CriaturaVisualizacao`
-// não tem colunas, ver `criatura-visualizacao.component.scss`), mesmo bloco base `.esqueleto-bloco`.
+// Esqueleto de carregamento — versão simplificada de coluna única (não replica as 3 colunas reais
+// de `CriaturaVisualizacao`, só evita o salto de largura contra `.ficha-pagina` acima), mesmo
+// bloco base `.esqueleto-bloco`.
 .criatura-esqueleto {
   display: flex;
   flex-direction: column;
   gap: 18px;
   max-width: 900px;
   margin: 0 auto;
+  width: 100%;
 
   &__topo { display: flex; align-items: center; gap: 12px; }
   &__secao { display: flex; flex-direction: column; gap: 10px; padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); }

@@ -1,5 +1,73 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-15 — `m4-04b`: realinhamento visual da ficha de criatura ao mockup atualizado (dashboard de 3 colunas)
+
+Pedido direto do autor, fora da fila de specs: ele reconstruiu `docs/design/examples/ficha-de-
+criatura.html` (o antigo arquivo era um placeholder genérico não relacionado — thumbnail "SCP"/
+"FICHA DE AMEAÇA" — não uma captura real; ver `m4-04b` § "Antes de qualquer UI" e o spec
+`docs/specs/done/m4-04b-frontend-visualizacao-criatura.spec.md`, que já registrava o protótipo como
+alvo de fidelidade desktop) e pediu pra alinhar `CriaturaVisualizacao` a ele. Mobile explicitmente
+fora de escopo desta sessão — o autor é o único mestre da campanha e decidiu adiar; o backlog já
+reserva `m4-10-refinamento-mobile-criatura-npc.spec.md` pra isso.
+
+**Diagnóstico.** `CriaturaVisualizacao` (implementada nas sessões anteriores de `m4-04b`) saiu como
+uma pilha vertical de 9 seções numeradas ao estilo do assistente de criação (`max-width: 900px`).
+O novo mockup é um dashboard denso de 3 colunas com abas — estruturalmente muito mais próximo de
+`FichaVisualizacao` (ficha de jogador, já aprovada) do que do assistente. Capturado via Playwright
+(o mockup é um bundle de Artifact auto-contido, não HTML/CSS plano — precisou renderizar de
+verdade, não só ler o arquivo) e comparado lado a lado com o app real.
+
+**Checagem de fidelidade de conteúdo antes de tocar layout.** O mockup reaproveita visualmente
+blocos da ficha de jogador sem ajustar pras regras de criatura: mostra Esquiva/Bloqueio/Contra-
+ataque como estatística fixa (o guia diz explicitamente, linha 501, que "criaturas não podem
+reagir a ataques" — só Defesa é real pra Ameaça; Esquiva/Bloqueio só existem pra NPC, tipo ainda não
+implementado, com fórmula própria `Defesa Base + VIG`/`+DES`), uma caixa "DT = 10 + VD ÷ 2 + ATR"
+(fórmula que não existe pra Ameaça — a única fórmula de DT do documento, linha 287/976, é de
+agente/NPC e usa Nível, não VD) e "Teste Base 5D20" (sem campo/fórmula correspondente — cada
+atributo rola seu próprio pool). Os números do mockup também não batem com o que
+`calcularAtributoEfetivo` produz pros mesmos dados — confirma que o conteúdo numérico ali é
+ilustrativo, não normativo. Levada a decisão ao autor (`AskUserQuestion`): confirmado seguir as
+regras acima do mockup, sem adicionar nada novo (nem os três campos fabricados, nem "Percepção",
+que tem fórmula real reusável mas não estava no escopo) — realinhamento 100% visual sobre os campos
+que já existem em `FichaCriaturaDadosDto`.
+
+**O que mudou.** `criatura-visualizacao.component.{html,scss,ts}` reescritos: shell de 3 colunas
+(`--identidade`/`--atributos`/`--status`, mesmo padrão fixo/fixo/flexível de `ficha-visualizacao`,
+colapsando em `bp.tablet`); avatar com upload/remover (os inputs/outputs `imagemUrl`/`cor`/
+`imagemMudou`/`removerImagem` já existiam sem uso no template antigo); chips de classificação
+(Origem/Porte/Comportamento neutros, NA em destaque de perigo com `--vida`, não `--accent` —
+divergência deliberada do `.chip-classificacao` canônico, documentada no SCSS); VD/Tenacidade/
+Defesa como 3 `.stat` (Defesa saiu da extinta seção "Reações"); Atributos com grupos Físicos/
+Mentais (a ordem de `CAMPOS_ATRIBUTO` já nascia agrupada 5+5, terminologia real do
+`sistema-v4.1.0.md` — só fatiar o array, sem tabela nova), mantendo intacto o seletor de 4 barras
+de Modificador já existente; abas "Informações"/"Ataques e Habilidades" (`.criatura__abas`, cópia
+do `.abas` canônico); Deslocamento como tira de tags em vez de 4 campos empilhados; Descrição
+(Conceito) + callout "Gancho" + Motivação (preservada mesmo fora do mockup — é campo obrigatório
+do DTO, sem lugar nele); Natureza Física/Tema de Horror lado a lado; Anotações no fim da aba
+Informações. `criatura-ataque-lista`/`criatura-habilidade-lista` reestilizados de lista de linhas
+pra grade de cards (2-up/3-up); ataque ganhou botão **Teste** além do **Dano** existente — não é
+mecânica nova, só expõe `rolarTesteAtributoCriatura` (já usado pela grade de Atributos) no
+contexto do ataque, via `ataque.atributo`. `criatura-resistencia-lista` ganhou input `variante`
+(`'resistencia'` = grade compacta neutra nova; `'fraqueza'` = lista com tom de aviso, mesmo
+`--vida` de sempre) — formulário de edição idêntico nos dois casos. `visualizar-criatura.page`
+ganhou eyebrow "FICHA DE CRIATURA" + badge `FICHA-CRT-{id real da ficha}` no topo (o "0173" do
+mockup é só número de exemplo); `.ficha-pagina` passou de `max-width: 900px` fixo pra `80vw` (mesmo
+valor de `visualizar.page.scss`/jogador — o layout de 3 colunas não cabia no teto antigo).
+
+Testes: suíte completa do frontend 1052/1052 (+2 sobre a baseline: `testarAtaque` em
+`criatura-ataque-lista.component.spec.ts` e a variante `fraqueza` em
+`criatura-resistencia-lista.component.spec.ts`); 3 specs existentes ajustados por troca de seletor
+(`.ataque-lista__rolar` → `--dano`/`--teste`; `.resistencia-lista__tipo` → `__grade-tipo` no modo
+padrão; `.criatura__vd` → `.criatura__stat--vd`; aba padrão "Informações" faz `.ataque-lista__nome`
+só aparecer depois de `selecionarAba('ataques')`). Lint e build limpos. Verificado ao vivo
+(Postgres + backend + frontend reais, Playwright, sessão descartável semeada por REST com o mesmo
+`dados` de "A Estátua" — campanha 23, ficha 40022): 1920×1080 nas duas abas, comparação lado a lado
+com o mockup confirmando densidade/hierarquia/cores equivalentes; edição no próprio lugar (Defesa
+30→31, persistiu); os dois botões de rolagem do card de Ataque (Teste e Dano) abrem a bandeja de
+dados; adicionar uma Habilidade Especial pelo editor de lista reflete na tela. 360×800 checado só
+informativamente (colunas empilham via `bp.tablet`, nada quebra), sem ajuste fino — mobile
+permanece pendência de `m4-10`.
+
 ## 2026-08-14 — `m4-04c`: passo // Atributos da criatura em 3 cards, com contador real de Pontos de Ajuste
 
 Pedido direto do autor a partir de um screenshot no mobile: no passo // Atributos, o bloco único

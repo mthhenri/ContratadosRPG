@@ -27,6 +27,9 @@ export class CriaturaAtaqueLista {
   readonly itensMudou = output<readonly FichaCriaturaAtaqueDto[]>();
   /** Emite o ataque clicado — quem monta este componente (Task 9) executa a rolagem de verdade. */
   readonly rolarAtaque = output<FichaCriaturaAtaqueDto>();
+  /** Botão "Teste" do card — mesmo teste de Atributo Efetivo da coluna de Atributos
+   * (`ataque.atributo` decide a chave), só exposto no contexto do ataque. */
+  readonly testarAtaque = output<FichaCriaturaAtaqueDto>();
 
   protected readonly atributos = ATRIBUTOS;
   protected readonly custosAcao = CUSTOS_ACAO;
@@ -102,6 +105,10 @@ export class CriaturaAtaqueLista {
 
   protected rolar(item: FichaCriaturaAtaqueDto): void {
     this.rolarAtaque.emit(item);
+  }
+
+  protected testar(item: FichaCriaturaAtaqueDto): void {
+    this.testarAtaque.emit(item);
   }
 
   private substituir(

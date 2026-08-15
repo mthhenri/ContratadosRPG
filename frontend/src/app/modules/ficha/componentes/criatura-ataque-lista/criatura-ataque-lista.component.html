@@ -1,7 +1,7 @@
 <section class="ataque-lista">
   <header class="ataque-lista__cabecalho">
-    <span class="ataque-lista__indice">7</span>
     <h3 class="ataque-lista__titulo">Ataques</h3>
+    <span class="ataque-lista__contagem">{{ itens().length }}</span>
     <span class="ataque-lista__regua"></span>
     @if (editavel()) {
       <button class="botao botao--secundario" type="button" (click)="adicionar()">
@@ -16,7 +16,7 @@
 
   <ul class="ataque-lista__itens">
     @for (item of itens(); track $index) {
-      <li class="ataque-lista__item">
+      <li class="ataque-lista__item" [class.ataque-lista__item--editando]="editando($index)">
         @if (editando($index)) {
           <form class="ataque-lista__form" [formGroup]="itemForm" (ngSubmit)="confirmar()">
             <input class="ataque-lista__input" formControlName="nome" placeholder="Nome" aria-label="Nome do ataque" />
@@ -36,24 +36,32 @@
             <button class="botao botao--secundario" type="button" (click)="cancelar()">Cancelar</button>
           </form>
         } @else {
-          <span class="ataque-lista__nome">{{ item.nome }}</span>
-          <span class="ataque-lista__dano">{{ item.dano }}</span>
-          <span class="ataque-lista__meta">{{ item.tipoDano }} · {{ rotuloCustoAcao(item.custoAcao) }}</span>
-          @if (item.efeito) { <span class="ataque-lista__efeito">{{ item.efeito }}</span> }
-          <button class="ataque-lista__rolar" type="button" aria-label="Rolar dano" (click)="rolar(item)">
-            <app-icone nome="d20" />
-          </button>
-          @if (editavel()) {
-            <div class="ataque-lista__acoes">
-              <button class="ataque-lista__acao" type="button" aria-label="Editar" (click)="editar($index)"><app-icone nome="editar" /></button>
-              @if (indiceRemovendo() === $index) {
-                <button class="ataque-lista__acao ataque-lista__acao--confirmar" type="button" (click)="remover($index)">Confirmar remoção</button>
-                <button class="ataque-lista__acao" type="button" (click)="cancelarRemocao()">Cancelar</button>
-              } @else {
-                <button class="ataque-lista__acao" type="button" aria-label="Remover" (click)="pedirRemocao($index)"><app-icone nome="excluir" /></button>
-              }
-            </div>
-          }
+          <div class="ataque-lista__cabecalho-item">
+            <span class="ataque-lista__nome">{{ item.nome }}</span>
+            <span class="ataque-lista__dano">{{ item.dano }}</span>
+          </div>
+          <span class="ataque-lista__meta">{{ item.tipoDano }} · {{ rotuloCustoAcao(item.custoAcao) }}{{ item.area ? ' · Área' : '' }}</span>
+          @if (item.efeito) { <p class="ataque-lista__efeito">{{ item.efeito }}</p> }
+
+          <div class="ataque-lista__rodape">
+            <button class="ataque-lista__rolar ataque-lista__rolar--teste" type="button" (click)="testar(item)">
+              <app-icone nome="d20" /> Teste
+            </button>
+            <button class="ataque-lista__rolar ataque-lista__rolar--dano" type="button" (click)="rolar(item)">
+              <app-icone nome="d20" /> Dano
+            </button>
+            @if (editavel()) {
+              <div class="ataque-lista__acoes">
+                <button class="ataque-lista__acao" type="button" aria-label="Editar" (click)="editar($index)"><app-icone nome="editar" /></button>
+                @if (indiceRemovendo() === $index) {
+                  <button class="ataque-lista__acao ataque-lista__acao--confirmar" type="button" (click)="remover($index)">Confirmar remoção</button>
+                  <button class="ataque-lista__acao" type="button" (click)="cancelarRemocao()">Cancelar</button>
+                } @else {
+                  <button class="ataque-lista__acao" type="button" aria-label="Remover" (click)="pedirRemocao($index)"><app-icone nome="excluir" /></button>
+                }
+              </div>
+            }
+          </div>
         }
       </li>
     }

@@ -1,10 +1,18 @@
 @use 'tema/breakpoints' as bp;
 
+// Visualização/edição da ficha de criatura (m4-04b) — layout de 3 colunas com abas, alvo de
+// fidelidade docs/design/examples/ficha-de-criatura.html. Análogo aprovado: `FichaVisualizacao`
+// (ficha de jogador) — shell de colunas, cabeçalho com avatar, grade de reações e barra de abas
+// são blocos copiados e adaptados de lá (o encapsulamento de estilos do Angular não deixa a
+// definição de outro componente vazar pra este). Blocos genéricos (`.card`, `.stat`, `.abas`,
+// `.chip-classificacao`) copiados do canônico `docs/design/tema/_componentes.scss`, não da cópia
+// local já defasada de `ficha-visualizacao.component.scss`. Só tokens do tema "Terminal de
+// Contenção" — nenhum hex/fonte/raio solto (proibição #29).
+
 :host { display: block; }
 
-// Campo genérico "rótulo + controle" (mesmo vocabulário de `criar-criatura.page.scss`) — replicado
-// aqui porque o encapsulamento de estilos do Angular não deixa a definição de outro componente
-// vazar pra este template, mesmo usando os mesmos nomes de classe.
+// Campo genérico "rótulo + controle" (mesmo vocabulário de `criar-criatura.page.scss`), usado só
+// pelos blocos de Regeneração/Motivação que ainda são pares rótulo→controle simples.
 .campo {
   display: grid;
   gap: 7px;
@@ -30,100 +38,206 @@
   }
 }
 
+// === Card (copiado de `_componentes.scss` `.card`) ===
+.criatura__cartao {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--pad-card);
+  margin-bottom: 16px;
+  &:last-child { margin-bottom: 0; }
+}
+
+// === Chip de classificação (copiado de `_componentes.scss` `.chip-classificacao`) ===
+// A versão canônica (accent-colored) fica só pro destaque de Ameaça — Origem/Porte/Comportamento
+// usam a variante neutra abaixo (mesmo racional do mockup: só o nível de ameaça chama atenção).
+.chip-classificacao {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: .15s ease;
+  &:hover:not(:disabled) { color: var(--text); border-color: var(--accent-border); }
+  &:disabled { cursor: default; opacity: .85; }
+  // NA/Ameaça é o destaque de perigo da coluna — mesmo vermelho fixo de Vida (`--vida`) que o
+  // resto do app usa pra sinalizar risco, não o `--accent` de tema (que o autor pode trocar).
+  &--ameaca { color: var(--vida); border-color: var(--vida); &:hover:not(:disabled) { background: color-mix(in srgb, var(--vida) 12%, transparent); } }
+}
+
+// === Stat box (copiado de `_componentes.scss` `.stat`) ===
+.stat {
+  flex: 1 1 0;
+  min-width: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  padding: 10px 12px;
+
+  &__rotulo { display: block; font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: .1em; color: var(--text-mute); margin-bottom: 6px; }
+  &__valor { font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: var(--text); line-height: 1; }
+}
+
+// === Abas (copiado de `_componentes.scss` `.abas`) ===
+.criatura__abas {
+  display: flex;
+  gap: 5px;
+  padding: 4px;
+  margin-bottom: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  overflow-x: auto;
+}
+.criatura__aba {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--text-dim);
+  background: transparent;
+  border: 0;
+  padding: 9px 14px;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  transition: color .12s ease, background .12s ease;
+
+  &--ativa { font-weight: 700; color: var(--bg); background: var(--accent); }
+}
+
 .criatura {
-  max-width: 900px;
-  margin: 0 auto;
   color: var(--text);
 
-  &__cabecalho { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding-bottom: 14px; margin-bottom: 18px; border-bottom: 1px solid var(--border); }
-  &__designacao { margin: 0; font: 700 20px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--text); }
+  &__linha-colunas {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-grid, 16px);
+    @include bp.tablet { flex-direction: column; }
+  }
+
+  &__coluna {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    &--identidade { width: 380px; flex: 0 0 auto; @include bp.tablet { width: 100%; } }
+    &--atributos { width: 250px; flex: 0 0 auto; @include bp.tablet { width: 100%; } }
+    &--status { flex: 1 1 auto; min-width: 420px; @include bp.tablet { min-width: 0; width: 100%; } }
+  }
+
+  // --- Identidade: avatar + designação ---
+  &__ident { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+
+  &__avatar {
+    width: 64px;
+    height: 64px;
+    flex: none;
+    position: relative;
+    border-radius: var(--radius-control);
+    background-color: color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 14%, var(--surface-2));
+    background-image: repeating-linear-gradient(
+      135deg,
+      color-mix(in srgb, color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 60%, var(--border-strong)) 20%, transparent) 0 3px,
+      transparent 3px 9px
+    );
+    border: 2px solid var(--cor-ficha, var(--border-strong));
+    &--editavel { cursor: default; }
+  }
+  &__avatar-imagem { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: calc(var(--radius-control) - 2px); }
+  &__avatar-upload {
+    position: absolute; right: -4px; bottom: -4px; z-index: 1;
+    display: flex; align-items: center; justify-content: center; width: 22px; height: 22px;
+    border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border-strong);
+    color: var(--text-dim); font-size: 11px; cursor: pointer;
+    &:hover { color: var(--accent); border-color: var(--accent-border); }
+  }
+  &__avatar-upload-entrada { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; opacity: 0; cursor: pointer; }
+  &__avatar-remover {
+    position: absolute; right: -4px; top: -4px; z-index: 1;
+    display: flex; align-items: center; justify-content: center; width: 20px; height: 20px;
+    border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border-strong);
+    color: var(--text-dim); font-size: 10px; padding: 0; cursor: pointer;
+    &:hover { color: var(--vida); border-color: var(--vida); }
+  }
+
+  &__ident-texto { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  &__ident-rotulo { font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .12em; color: var(--text-mute); }
+  &__designacao { margin: 0; font: 700 18px var(--font-mono); letter-spacing: var(--tracking-label); color: var(--text); }
   &__designacao--editavel { background: transparent; border: 0; padding: 0; cursor: pointer; text-align: left; &:hover { color: var(--accent); } }
-  &__designacao-entrada { flex: 1; min-width: 220px; padding: 6px 10px; font: 700 18px var(--font-mono); color: var(--text); background: var(--surface); border: 1px solid var(--accent); border-radius: var(--radius-control); }
+  &__designacao-entrada { min-width: 0; padding: 5px 8px; font: 700 16px var(--font-mono); color: var(--text); background: var(--surface); border: 1px solid var(--accent); border-radius: var(--radius-control); }
+  &__registro { font: 10px var(--font-mono); letter-spacing: .04em; color: var(--text-mute); }
 
-  &__ameaca { display: flex; align-items: center; gap: 8px; margin-left: auto; }
-  // Mesmo "chip de classificação" canônico de `_componentes.scss` (`.chip-classificacao`) — usado
-  // aqui pra NA/VD em vez de um botão pill inventado.
-  &__na, &__vd {
-    padding: 6px 10px; font: 600 11px var(--font-mono); letter-spacing: .14em; text-transform: uppercase;
-    color: var(--accent); background: transparent; border: 1px solid var(--accent); border-radius: 3px;
-    cursor: pointer; transition: .15s ease;
-    &:hover:not(:disabled) { background: var(--accent-dim); } &:disabled { cursor: default; opacity: .8; }
+  &__chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+
+  &__stats { display: flex; gap: 8px; margin: 12px 0; }
+  &__stat { flex: 1 1 0; max-width: 220px; text-align: left; }
+  &__stat-botao {
+    display: block; width: 100%; padding: 0; text-align: left; font-family: var(--font-mono); font-size: 20px; font-weight: 700;
+    color: var(--text); background: transparent; border: 0; cursor: pointer;
+    &:hover:not(:disabled) { color: var(--accent); } &:disabled { cursor: default; }
+    &--texto { font-size: 13px; white-space: normal; line-height: 1.3; }
   }
 
-  &__secao {
-    margin-bottom: 16px;
-    padding: var(--pad-card);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-  }
-  // Cabeçalho de seção canônico (índice em badge mono + título + régua fina), mesmo bloco de
-  // `.ficha-cartao__cabecalho`/`.card__cabecalho` (`_componentes.scss`) — replicado aqui pelo
-  // mesmo motivo do `.campo` acima (sem vazamento de estilo entre componentes standalone).
-  &__secao-cabecalho { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; }
-  &__secao-indice {
-    display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
-    width: 22px; height: 22px; font: 700 12px var(--font-mono); color: var(--accent);
-    border: 1px solid var(--accent); border-radius: 3px;
-  }
-  &__secao-titulo { margin: 0; font: 700 13px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--text); }
-  &__secao-regua { flex: 1; height: 1px; background: var(--border); }
-  &__secao-legenda { flex: 0 0 auto; font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text-mute); white-space: nowrap; }
-
-  &__campos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px; }
-
-  &__select, &__entrada-texto, &__entrada-numero, &__entrada-textarea {
-    width: 100%; min-height: 38px; padding: 8px 11px; font: 13px var(--font-sans); color: var(--text);
-    background: var(--surface); border: 1px solid var(--accent); border-radius: var(--radius-control); outline: 0;
-  }
-  &__entrada-numero { width: 100px; font-family: var(--font-mono); font-weight: 700; }
-  &__entrada-numero--tabela { width: 64px; min-height: 32px; padding: 4px 8px; }
-  &__select--tabela { min-height: 32px; padding: 4px 8px; font-size: 12px; }
-  &__entrada-textarea { min-height: 64px; resize: vertical; font-family: var(--font-sans); }
-
-  // Vida é vermelho FIXO da identidade (`--vida`, ver `_tokens.scss`) — não pode seguir `--accent`
-  // (a cor de tema, trocável por usuário), senão a barra muda de matiz junto com o tema.
-  &__barra-vida { width: 100%; height: 8px; margin-top: 14px; background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 999px; overflow: hidden; }
-  &__barra-vida-preenchida { height: 100%; background: var(--vida); transition: width .2s ease; }
-
-  &__vitalidade { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
-  // Mesmo `.ficha-passo` canônico de `ficha-visualizacao.component.scss` (22px, opacidade .4).
+  // --- Vida ---
+  &__vida { margin-bottom: 14px; }
+  &__vida-rotulo { display: block; text-align: center; font: 600 10px var(--font-mono); text-transform: uppercase; letter-spacing: .12em; color: var(--text-mute); margin-bottom: 6px; }
+  &__vitalidade { display: flex; align-items: center; justify-content: center; gap: 10px; }
   &__passo {
     display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 22px; height: 22px;
     font: 700 14px var(--font-mono); color: var(--text-dim); background: var(--surface-2);
     border: 1px solid var(--border-strong); border-radius: var(--radius-control); cursor: pointer;
     &:hover:not(:disabled) { color: var(--accent); border-color: var(--accent-border); }
     &:disabled { cursor: not-allowed; opacity: .4; }
-    @include bp.mobile { width: bp.$alvo-toque; height: bp.$alvo-toque; }
   }
   &__vitalidade-valor {
-    min-width: 48px; padding: 4px 8px; font: 700 18px var(--font-mono); text-align: center; color: var(--text-mute);
+    min-width: 48px; padding: 4px 8px; font: 700 20px var(--font-mono); text-align: center; color: var(--text-mute);
     background: transparent; border: 0; cursor: pointer; &:hover:not(:disabled) { color: var(--accent); } &:disabled { cursor: default; }
-    // Só o valor atual (não o máximo) ganha a cor fixa de Vida — mesmo par "atual em --vida /
-    // máximo mudo" de `.ficha-barra__valor strong` + `.ficha-barra__max`.
     &--atual { color: var(--vida); }
   }
   &__vitalidade-separador { font: 700 16px var(--font-mono); color: var(--text-mute); }
+  &__barra-vida { width: 100%; height: 6px; margin-top: 10px; background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 999px; overflow: hidden; }
+  &__barra-vida-preenchida { height: 100%; background: var(--vida); transition: width .2s ease; }
 
-  &__atributos-grade { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+  // --- Resistências/Fraquezas ---
+  &__grupo { margin-bottom: 14px; &:last-child { margin-bottom: 0; } }
+  &__grupo-legenda { display: block; font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--text-mute); margin-bottom: 6px; }
+
+  // --- Atributos ---
+  &__cartao-cabecalho { display: flex; align-items: center; margin-bottom: 12px; }
+  &__cartao-titulo { margin: 0; font: 700 15px var(--font-sans); color: var(--text); }
+
+  &__atributos-grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  &__atributos-grupo-titulo {
+    grid-column: 1 / -1; font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text-mute);
+    margin-top: 6px; &:first-child { margin-top: 0; }
+  }
   &__atributo-card {
-    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 8px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px;
     background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); text-align: center;
+    &--sozinho { grid-column: 1 / -1; width: 50%; margin: 0 auto; }
   }
   &__atributo-nome { font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--text-mute); }
   &__atributo-valor {
     padding: 0; font: 700 22px var(--font-mono); color: var(--text); background: transparent; border: 0; cursor: pointer;
     &:hover:not(:disabled) { color: var(--accent); } &:disabled { cursor: default; }
   }
-  // Barrinhas de sinal (4 níveis, do menor pro maior bônus) — mesmo widget de
-  // `.atributo__modificador` do assistente de criação (`criar-criatura.page.scss`, m4-05): cada
-  // botão é o próprio nível, mostrado como um mini gráfico de barras que acende da esquerda pra
-  // direita conforme `data-nivel`. Substituiu o botão de texto solo que reimplementava o mesmo
-  // conceito com um mecanismo (e visual) diferente do já estabelecido pra este campo.
+  // Barrinhas de sinal (4 níveis) — mesmo widget de `.atributo__modificador` do assistente de
+  // criação (`criar-criatura.page.scss`, m4-05), preservado sem mudança de interação.
   &__atributo-modificadores { display: flex; justify-content: center; gap: 3px; margin-top: 2px; }
   &__atributo-modificador {
     display: grid; grid-auto-flow: column; align-items: end; gap: 2px;
-    width: 26px; height: 24px; padding: 4px 3px;
+    width: 24px; height: 22px; padding: 4px 3px;
     background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: var(--radius-control);
     cursor: pointer; transition: .15s ease;
     i { display: block; width: 3px; background: var(--border-strong); border-radius: 1px; transition: .15s ease; }
@@ -141,29 +255,70 @@
   &__atributo-rodape { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 2px; }
   &__atributo-efetivo { font: 700 11px var(--font-mono); color: var(--accent); }
   &__entrada-numero--atributo { width: 100%; text-align: center; }
-
   &__rolar-atributo {
     display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px;
     color: var(--accent); background: transparent; border: 1px solid var(--accent-border); border-radius: var(--radius-control);
     cursor: pointer; &:hover:not(:disabled) { background: var(--accent-dim); } &:disabled { cursor: not-allowed; opacity: .5; }
   }
 
-  &__resistencias-grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+  // --- Informações (cards da coluna de Status) ---
+  &__info-card { padding-top: 14px; margin-top: 14px; border-top: 1px solid var(--border); &:first-child { padding-top: 0; margin-top: 0; border-top: 0; } }
+  &__info-card-cabecalho { margin-bottom: 8px; }
+  &__info-card-titulo { margin: 0; font: 700 11px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--text); }
+  &__info-duas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; @include bp.mobile { grid-template-columns: 1fr; } }
+  &__info-texto {
+    display: block; width: 100%; margin: 0; padding: 0; text-align: left; font: 13px/1.5 var(--font-sans); color: var(--text-dim);
+    background: transparent; border: 0; cursor: pointer;
+    &:hover:not(:disabled) { color: var(--text); } &:disabled { cursor: default; }
+    &--info { min-height: 60px; }
+  }
+  &__info-campo { margin-top: 10px; }
 
-  &__vazio { margin: 0 0 8px; font: 12px var(--font-sans); color: var(--text-mute); }
+  &__gancho { margin-top: 8px; padding: 10px 12px; background: var(--surface-2); border-left: 2px solid var(--accent); border-radius: 0 var(--radius-control) var(--radius-control) 0; }
+  &__gancho-rotulo { display: block; font: 700 9px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--accent); margin-bottom: 3px; }
+  &__gancho-texto {
+    display: block; width: 100%; margin: 0; padding: 0; text-align: left; font: 12px/1.5 var(--font-sans); color: var(--text-dim);
+    background: transparent; border: 0; cursor: pointer;
+    &:hover:not(:disabled) { color: var(--text); } &:disabled { cursor: default; }
+  }
+
+  &__tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  &__tag {
+    display: flex; align-items: center; gap: 6px; padding: 6px 10px;
+    background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: var(--radius-control);
+  }
+  &__tag-rotulo { font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--text-mute); }
+  &__tag-valor {
+    padding: 0; font: 700 12px var(--font-mono); color: var(--text); background: transparent; border: 0; cursor: pointer;
+    &:hover:not(:disabled) { color: var(--accent); } &:disabled { cursor: default; }
+  }
+
+  // --- Controles genéricos (select/input/textarea) ---
+  &__select, &__entrada-texto, &__entrada-numero, &__entrada-textarea {
+    width: 100%; min-height: 38px; padding: 8px 11px; font: 13px var(--font-sans); color: var(--text);
+    background: var(--surface); border: 1px solid var(--accent); border-radius: var(--radius-control); outline: 0;
+  }
+  &__select--chip { width: auto; min-height: 0; padding: 6px 10px; font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; }
+  &__entrada-numero { width: 100px; font-family: var(--font-mono); font-weight: 700; }
+  &__entrada-numero--stat { width: 100%; min-height: 0; padding: 2px 6px; font-size: 18px; }
+  &__entrada-numero--tag { width: 60px; min-height: 0; padding: 2px 6px; font-size: 12px; }
+  &__entrada-textarea { min-height: 64px; resize: vertical; font-family: var(--font-sans); }
+  &__entrada-textarea--info { min-height: 60px; }
 
   &__anotacoes {
-    width: 100%; min-height: 120px; padding: 10px 12px; font: 13px/1.5 var(--font-sans); color: var(--text);
+    width: 100%; min-height: 100px; padding: 10px 12px; font: 13px/1.5 var(--font-sans); color: var(--text);
     background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: var(--radius-control);
     resize: vertical; outline: 0;
     &:focus { border-color: var(--accent); background: var(--surface); }
   }
 
+  &__campos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; }
+  &__vazio { margin: 0 0 8px; font: 12px var(--font-sans); color: var(--text-mute); }
+
   @include bp.mobile {
+    &__ident { flex-direction: column; align-items: flex-start; }
     &__campos { grid-template-columns: 1fr; }
-    &__cabecalho { flex-direction: column; align-items: flex-start; }
-    &__ameaca { margin-left: 0; }
     &__atributos-grade { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    &__resistencias-grade { grid-template-columns: 1fr; gap: 16px; }
+    &__stats { flex-wrap: wrap; }
   }
 }
