@@ -2,9 +2,22 @@
   <header class="resistencia-lista__cabecalho">
     <h3 class="resistencia-lista__titulo">{{ titulo() }}</h3>
     @if (editavel()) {
-      <button class="resistencia-lista__adicionar" type="button" aria-label="Adicionar" [appTooltip]="'Adicionar'" (click)="adicionar()">
-        <app-icone nome="mais" />
-      </button>
+      <div class="resistencia-lista__cabecalho-acoes">
+        <button
+          class="resistencia-lista__alternar-edicao"
+          type="button"
+          [class.resistencia-lista__alternar-edicao--ativo]="modoEdicao()"
+          [attr.aria-pressed]="modoEdicao()"
+          [attr.aria-label]="modoEdicao() ? 'Concluir edição' : 'Editar itens'"
+          [appTooltip]="modoEdicao() ? 'Concluir edição' : 'Editar itens'"
+          (click)="alternarModoEdicao()"
+        >
+          <app-icone [nome]="modoEdicao() ? 'check' : 'editar'" />
+        </button>
+        <button class="resistencia-lista__adicionar" type="button" aria-label="Adicionar" [appTooltip]="'Adicionar'" (click)="adicionar()">
+          <app-icone nome="mais" />
+        </button>
+      </div>
     }
   </header>
 
@@ -21,7 +34,7 @@
           } @else {
             <span class="resistencia-lista__grade-tipo">{{ item.tipo }}{{ item.subtipo ? ' · ' + item.subtipo : '' }}</span>
             <span class="resistencia-lista__grade-valor">{{ item.valor }}</span>
-            @if (editavel()) {
+            @if (editavel() && modoEdicao()) {
               <div class="resistencia-lista__grade-acoes">
                 <button class="resistencia-lista__acao" type="button" aria-label="Editar" (click)="editar($index)"><app-icone nome="editar" /></button>
                 @if (indiceRemovendo() === $index) {
@@ -48,7 +61,7 @@
               <span class="resistencia-lista__subtipo">{{ item.subtipo }}</span>
             }
             <span class="resistencia-lista__valor">+{{ item.valor }}</span>
-            @if (editavel()) {
+            @if (editavel() && modoEdicao()) {
               <div class="resistencia-lista__acoes">
                 <button class="resistencia-lista__acao" type="button" aria-label="Editar" (click)="editar($index)">
                   <app-icone nome="editar" />

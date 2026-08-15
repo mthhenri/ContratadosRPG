@@ -27,6 +27,9 @@ export class CriaturaHabilidadeLista {
 
   protected readonly indiceEmEdicao = signal<number | null>(null);
   protected readonly indiceRemovendo = signal<number | null>(null);
+  /** Editar/remover por item só aparece dentro deste modo — evita os ícones ficarem sempre
+   * visíveis; o autor entra e sai dele de propósito (botão "Editar"/"Concluir" no cabeçalho). */
+  protected readonly modoEdicao = signal(false);
 
   protected readonly itemForm = new FormGroup({
     nome: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -37,6 +40,14 @@ export class CriaturaHabilidadeLista {
 
   protected editando(indice: number): boolean {
     return this.indiceEmEdicao() === indice;
+  }
+
+  protected alternarModoEdicao(): void {
+    this.modoEdicao.update((valor) => !valor);
+    if (!this.modoEdicao()) {
+      this.cancelar();
+      this.cancelarRemocao();
+    }
   }
 
   protected adicionar(): void {

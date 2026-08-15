@@ -27,6 +27,19 @@ describe('CriaturaHabilidadeLista', () => {
     expect(nomes).toEqual(['Pele de Pedra']);
   });
 
+  it('só mostra editar/remover por item depois de ativar o modo de edição', () => {
+    const { fixture, raiz } = montar(true);
+    expect(raiz.querySelector('.habilidade-lista__acoes')).toBeNull();
+
+    fixture.componentInstance['alternarModoEdicao']();
+    fixture.detectChanges();
+    expect(raiz.querySelector('.habilidade-lista__acoes')).not.toBeNull();
+
+    fixture.componentInstance['alternarModoEdicao']();
+    fixture.detectChanges();
+    expect(raiz.querySelector('.habilidade-lista__acoes')).toBeNull();
+  });
+
   it('adiciona uma habilidade e emite a lista inteira', () => {
     const alvo = montar(true);
     alvo.fixture.componentInstance['adicionar']();

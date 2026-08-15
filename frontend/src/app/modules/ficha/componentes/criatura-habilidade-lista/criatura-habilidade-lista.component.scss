@@ -8,6 +8,9 @@
   &__contagem { font: 700 11px var(--font-mono); color: var(--text-mute); }
   &__regua { flex: 1; height: 1px; background: var(--border); }
   &__vazio { font: 12px var(--font-sans); color: var(--text-mute); }
+  // Gatilho do modo de edição — as ações por item (editar/remover) só existem enquanto ativo
+  // (`__acoes` abaixo), pra não deixar ícone de edição/remoção sempre visível na tela.
+  &__alternar-edicao--ativo { color: var(--accent); background: var(--accent-dim); border-color: var(--accent); }
 
   &__itens {
     display: grid;

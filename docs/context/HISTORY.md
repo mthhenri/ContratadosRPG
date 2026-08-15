@@ -1,5 +1,45 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-15 — `m4-04b`: acabamento visual da ficha de criatura — abas cheias e ações de lista sob demanda
+
+Segundo pedido do autor na mesma sessão do realinhamento de layout (entrada abaixo), depois de ver
+a tela nova rodando de verdade: (1) as abas "Informações"/"Ataques e Habilidades" deviam sempre
+ocupar o máximo da barra — mesmo com só 2 abas, cada uma metade — em vez do tamanho de conteúdo que
+o `.abas` canônico usa; (2) os botões de editar/remover por item (Ataques, Habilidades,
+Resistências, Fraquezas) não podiam ficar sempre visíveis — precisavam ser "triggerados", exigindo
+entrar num modo antes de aparecer.
+
+**Abas.** `.criatura__aba` ganhou `flex: 1 1 0` — divergência deliberada do `.abas` canônico
+(`docs/design/tema/_componentes.scss`, que deixa cada aba do tamanho do próprio conteúdo),
+documentada em comentário no SCSS. Only-2-tabs hoje já cresce pra 3+ sem ajuste, porque `flex: 1 1
+0` distribui o espaço igualmente entre quantas abas existirem.
+
+**Modo de edição por lista.** `criatura-ataque-lista`, `criatura-habilidade-lista` e
+`criatura-resistencia-lista` (reusada por Resistências e Fraquezas) ganharam um signal local
+`modoEdicao` + método `alternarModoEdicao()` (idêntico nos três — sem base compartilhada, mesma
+convenção de "copiar e adaptar" já usada no resto do módulo). O `<div class="…__acoes">`/`…
+__grade-acoes` com os ícones de editar/remover por item, que antes só dependia de `editavel()`
+(true sempre que o autor é o mestre da campanha), passou a exigir `editavel() && modoEdicao()`. Um
+botão novo no cabeçalho de cada lista ("Editar"/ícone lápis quando desligado, "Concluir"/ícone
+check quando ligado — `criatura-ataque-lista`/`criatura-habilidade-lista` com rótulo de texto,
+`criatura-resistencia-lista` só ícone, mesma densidade do `+` de Adicionar que já existia ali)
+alterna o modo; desligar cancela qualquer edição ou remoção pendente daquela lista
+(`cancelar()`/`cancelarRemocao()`), pra nunca deixar um formulário ou confirmação de remoção
+"órfã" quando o autor sai do modo. O botão "Adicionar"/`+` continua sempre visível quando
+`editavel()` — só as ações por item (editar/remover) exigem o modo, não a criação; mesmo padrão
+visual do mockup (`docs/design/examples/ficha-de-criatura.html`), que só mostra "+" nos cabeçalhos
+de seção e nenhum ícone de edição/remoção nos cards em estado de leitura.
+
+Testes: suíte completa do frontend 1056/1056 (+4 sobre a baseline anterior — um teste por lista,
+mais a variante grade/lista da `criatura-resistencia-lista`, confirmando que as ações ficam ocultas
+por padrão e aparecem/somem ao alternar o modo). Lint e build limpos. Verificado ao vivo (Postgres +
+backend + frontend reais, Playwright, nova sessão descartável semeada por REST reaproveitando o
+`dados` de "A Estátua" já persistido — campanha 26, ficha 40025): abas ocupando a barra inteira nas
+duas telas; Resistências/Fraquezas e Ataques/Habilidades sem nenhum ícone de editar/remover visível
+por padrão; clique no botão "Editar" do cabeçalho revela os ícones por item nas quatro listas;
+clique no lápis de um Ataque ainda abre o formulário de edição normalmente; "Concluir" esconde tudo
+de novo. 360×800 não verificado nesta rodada — mobile segue fora de escopo (`m4-10`).
+
 ## 2026-08-15 — `m4-04b`: realinhamento visual da ficha de criatura ao mockup atualizado (dashboard de 3 colunas)
 
 Pedido direto do autor, fora da fila de specs: ele reconstruiu `docs/design/examples/ficha-de-

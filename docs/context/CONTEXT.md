@@ -1,10 +1,11 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-15 · **Última decisão registrada:** `m4-04b` (realinhamento visual
-> da ficha de criatura, fora da fila de specs, a pedido direto do autor) — `CriaturaVisualizacao`
-> saiu do layout de coluna única e virou dashboard de 3 colunas com abas, alvo de fidelidade
-> `docs/design/examples/ficha-de-criatura.html` (reconstruído pelo autor nesta sessão); mobile
-> segue pendente de `m4-10` — ver seção 4
+> **Última revisão:** 2026-08-15 · **Última decisão registrada:** `m4-04b` (acabamento visual da
+> ficha de criatura, fora da fila de specs, a pedido direto do autor) — abas "Informações"/"Ataques
+> e Habilidades" passaram a ocupar sempre 100% da barra (divergência deliberada do `.abas`
+> canônico, que é do tamanho do conteúdo); editar/remover por item nas listas de Ataques,
+> Habilidades, Resistências e Fraquezas saíram de sempre visíveis pra um modo de edição por lista
+> (botão "Editar"/"Concluir" no cabeçalho) — mobile segue pendente de `m4-10` — ver seção 4
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -420,10 +421,15 @@ Iniciativa, Deslocamento em tags, Regeneração opcional, Descrição/Gancho/Mot
 Física/Tema de Horror, Anotações) e Ataques e Habilidades (grades de cards, cada Ataque com botões
 Teste e Dano) — mesmo shell/padrões de `FichaVisualizacao` (jogador) e dos blocos canônicos de
 `docs/design/tema/_componentes.scss`, alvo de fidelidade
-`docs/design/examples/ficha-de-criatura.html`. Edição no próprio lugar campo a campo, igual
-liberdade da ficha de jogador; `FichaEdicaoCriaturaService` faz o mesmo papel de
-`FichaEdicaoService` (debounce + `PUT` em lote). Só desktop por ora — refinamento mobile é
-`m4-10`, ainda no backlog.
+`docs/design/examples/ficha-de-criatura.html`. Abas sempre ocupam 100% da barra (`flex: 1 1 0` em
+cada `.criatura__aba` — divergência deliberada do `.abas` canônico, que é do tamanho do conteúdo).
+Edição no próprio lugar campo a campo, igual liberdade da ficha de jogador; `FichaEdicaoCriaturaService`
+faz o mesmo papel de `FichaEdicaoService` (debounce + `PUT` em lote). Nas listas de item
+(`criatura-ataque-lista`/`criatura-habilidade-lista`/`criatura-resistencia-lista`, esta última
+reusada por Resistências e Fraquezas) editar/remover por item só aparecem depois de um clique no
+botão "Editar"/"Concluir" do cabeçalho da lista (`modoEdicao`, local a cada lista) — "Adicionar"
+continua sempre visível, só as ações destrutivas/por-item exigem entrar no modo. Só desktop por
+ora — refinamento mobile é `m4-10`, ainda no backlog.
 
 **Polimento de UI — `m4-04b`:** passo // Identidade ganhou upload de imagem de registro (mesmo
 padrão de avatar do guia de jogador, `FichaService.alterarImagem`, segundo request em sequência

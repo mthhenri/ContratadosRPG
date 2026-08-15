@@ -85,6 +85,9 @@
 }
 
 // === Abas (copiado de `_componentes.scss` `.abas`) ===
+// Divergência deliberada do canônico: aqui cada `.criatura__aba` ganha `flex: 1 1 0` pra sempre
+// ocupar o máximo da barra (2 abas = metade cada), a pedido do autor — o `.abas` canônico deixa
+// os itens do tamanho do conteúdo.
 .criatura__abas {
   display: flex;
   gap: 5px;
@@ -97,6 +100,7 @@
 }
 .criatura__aba {
   display: inline-flex;
+  flex: 1 1 0;
   align-items: center;
   justify-content: center;
   gap: 6px;

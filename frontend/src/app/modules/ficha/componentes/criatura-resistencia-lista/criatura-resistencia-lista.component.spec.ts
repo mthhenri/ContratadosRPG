@@ -41,6 +41,35 @@ describe('CriaturaResistenciaLista', () => {
     expect(tipos).toEqual(['Balístico']);
   });
 
+  it('só mostra editar/remover por item depois de ativar o modo de edição (variante grade)', () => {
+    const { fixture, raiz } = montar(true);
+    expect(raiz.querySelector('.resistencia-lista__grade-acoes')).toBeNull();
+
+    fixture.componentInstance['alternarModoEdicao']();
+    fixture.detectChanges();
+    expect(raiz.querySelector('.resistencia-lista__grade-acoes')).not.toBeNull();
+
+    fixture.componentInstance['alternarModoEdicao']();
+    fixture.detectChanges();
+    expect(raiz.querySelector('.resistencia-lista__grade-acoes')).toBeNull();
+  });
+
+  it('só mostra editar/remover por item depois de ativar o modo de edição (variante lista)', () => {
+    TestBed.configureTestingModule({ imports: [CriaturaResistenciaLista] });
+    const fixture = TestBed.createComponent(CriaturaResistenciaLista);
+    fixture.componentRef.setInput('itens', itens);
+    fixture.componentRef.setInput('titulo', 'Fraquezas');
+    fixture.componentRef.setInput('editavel', true);
+    fixture.componentRef.setInput('variante', 'fraqueza');
+    fixture.detectChanges();
+    const raiz = fixture.nativeElement as HTMLElement;
+    expect(raiz.querySelector('.resistencia-lista__acoes')).toBeNull();
+
+    fixture.componentInstance['alternarModoEdicao']();
+    fixture.detectChanges();
+    expect(raiz.querySelector('.resistencia-lista__acoes')).not.toBeNull();
+  });
+
   it('adiciona um item e emite a lista inteira', () => {
     const alvo = montar(true);
     alvo.fixture.componentInstance['adicionar']();

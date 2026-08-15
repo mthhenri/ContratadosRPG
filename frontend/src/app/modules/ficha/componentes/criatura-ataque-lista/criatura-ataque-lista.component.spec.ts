@@ -43,6 +43,19 @@ describe('CriaturaAtaqueLista', () => {
     expect(testados).toEqual([itens[0]]);
   });
 
+  it('só mostra editar/remover por item depois de ativar o modo de edição', () => {
+    const { fixture, raiz } = montar(true);
+    expect(raiz.querySelector('.ataque-lista__acoes')).toBeNull();
+
+    fixture.componentInstance['alternarModoEdicao']();
+    fixture.detectChanges();
+    expect(raiz.querySelector('.ataque-lista__acoes')).not.toBeNull();
+
+    fixture.componentInstance['alternarModoEdicao']();
+    fixture.detectChanges();
+    expect(raiz.querySelector('.ataque-lista__acoes')).toBeNull();
+  });
+
   it('adiciona um ataque e emite a lista inteira', () => {
     const alvo = montar(true);
     alvo.fixture.componentInstance['adicionar']();

@@ -3,10 +3,19 @@
 .resistencia-lista {
   &__cabecalho { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
   &__titulo { margin: 0; font: 700 10px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--text-mute); }
+  &__cabecalho-acoes { display: flex; align-items: center; gap: 6px; }
   &__adicionar {
     display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px;
     color: var(--accent); background: transparent; border: 1px solid var(--accent-border); border-radius: var(--radius-control);
     cursor: pointer; &:hover { background: var(--accent-dim); }
+  }
+  // Gatilho do modo de edição — as ações por item (editar/remover) só existem enquanto ativo
+  // (`__grade-acoes`/`__acoes` abaixo), pra não deixar ícone de edição/remoção sempre visível.
+  &__alternar-edicao {
+    display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px;
+    color: var(--text-dim); background: transparent; border: 1px solid var(--border-strong); border-radius: var(--radius-control);
+    cursor: pointer; &:hover { color: var(--accent); border-color: var(--accent-border); }
+    &--ativo { color: var(--accent); background: var(--accent-dim); border-color: var(--accent); }
   }
   &__vazio { font: 12px var(--font-sans); color: var(--text-mute); }
 

@@ -4,6 +4,15 @@
     <span class="habilidade-lista__contagem">{{ itens().length }}</span>
     <span class="habilidade-lista__regua"></span>
     @if (editavel()) {
+      <button
+        class="botao botao--secundario habilidade-lista__alternar-edicao"
+        type="button"
+        [class.habilidade-lista__alternar-edicao--ativo]="modoEdicao()"
+        [attr.aria-pressed]="modoEdicao()"
+        (click)="alternarModoEdicao()"
+      >
+        <app-icone [nome]="modoEdicao() ? 'check' : 'editar'" /> {{ modoEdicao() ? 'Concluir' : 'Editar' }}
+      </button>
       <button class="botao botao--secundario" type="button" (click)="adicionar()">
         <app-icone nome="mais" /> Adicionar
       </button>
@@ -35,7 +44,7 @@
           </div>
           <p class="habilidade-lista__descricao">{{ item.descricao }}</p>
           @if (item.restricao) { <span class="habilidade-lista__restricao">{{ item.restricao }}</span> }
-          @if (editavel()) {
+          @if (editavel() && modoEdicao()) {
             <div class="habilidade-lista__acoes">
               <button class="habilidade-lista__acao" type="button" aria-label="Editar" (click)="editar($index)"><app-icone nome="editar" /></button>
               @if (indiceRemovendo() === $index) {

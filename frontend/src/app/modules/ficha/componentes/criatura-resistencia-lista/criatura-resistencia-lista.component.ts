@@ -36,6 +36,9 @@ export class CriaturaResistenciaLista {
 
   protected readonly indiceEmEdicao = signal<number | null>(null);
   protected readonly indiceRemovendo = signal<number | null>(null);
+  /** Editar/remover por item só aparece dentro deste modo — evita os ícones ficarem sempre
+   * visíveis; o autor entra e sai dele de propósito (botão no cabeçalho). */
+  protected readonly modoEdicao = signal(false);
 
   protected readonly itemForm = new FormGroup({
     tipo: new FormControl(TipoDanoEnum.FISICO, { nonNullable: true, validators: [Validators.required] }),
@@ -45,6 +48,14 @@ export class CriaturaResistenciaLista {
 
   protected editando(indice: number): boolean {
     return this.indiceEmEdicao() === indice;
+  }
+
+  protected alternarModoEdicao(): void {
+    this.modoEdicao.update((valor) => !valor);
+    if (!this.modoEdicao()) {
+      this.cancelar();
+      this.cancelarRemocao();
+    }
   }
 
   protected adicionar(): void {
