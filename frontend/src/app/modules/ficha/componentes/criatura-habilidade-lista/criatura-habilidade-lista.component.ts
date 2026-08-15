@@ -5,6 +5,7 @@ import { HabilidadeTipoCriaturaEnum } from '@contratados-rpg/shared/enums';
 import type { FichaCriaturaHabilidadeDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { Icone } from '../../../../shared/icone/icone.component';
+import { rotuloHabilidadeTipoCriatura } from '../../rotulos-criatura';
 
 const TIPOS: readonly HabilidadeTipoCriaturaEnum[] = Object.values(HabilidadeTipoCriaturaEnum) as HabilidadeTipoCriaturaEnum[];
 
@@ -22,6 +23,7 @@ export class CriaturaHabilidadeLista {
   readonly itensMudou = output<readonly FichaCriaturaHabilidadeDto[]>();
 
   protected readonly tipos = TIPOS;
+  protected readonly rotuloTipo = rotuloHabilidadeTipoCriatura;
 
   protected readonly indiceEmEdicao = signal<number | null>(null);
   protected readonly indiceRemovendo = signal<number | null>(null);

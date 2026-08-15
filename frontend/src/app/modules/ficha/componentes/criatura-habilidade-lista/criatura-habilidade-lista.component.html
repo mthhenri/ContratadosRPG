@@ -19,7 +19,7 @@
           <form class="habilidade-lista__form" [formGroup]="itemForm" (ngSubmit)="confirmar()">
             <input class="habilidade-lista__input" formControlName="nome" placeholder="Nome" aria-label="Nome da habilidade" />
             <select class="habilidade-lista__select" formControlName="tipo" aria-label="Tipo">
-              @for (t of tipos; track t) { <option [value]="t">{{ t }}</option> }
+              @for (t of tipos; track t) { <option [value]="t">{{ rotuloTipo(t) }}</option> }
             </select>
             <textarea class="habilidade-lista__textarea" formControlName="descricao" placeholder="Descrição" aria-label="Descrição"></textarea>
             <input class="habilidade-lista__input" formControlName="restricao" placeholder="Restrição (opcional)" aria-label="Restrição" />
@@ -29,7 +29,7 @@
         } @else {
           <div class="habilidade-lista__cabecalho-item">
             <span class="habilidade-lista__nome">{{ item.nome }}</span>
-            <span class="habilidade-lista__chip">{{ item.tipo }}</span>
+            <span class="habilidade-lista__chip">{{ rotuloTipo(item.tipo) }}</span>
           </div>
           <p class="habilidade-lista__descricao">{{ item.descricao }}</p>
           @if (item.restricao) { <span class="habilidade-lista__restricao">{{ item.restricao }}</span> }
@@ -53,7 +53,7 @@
     <form class="habilidade-lista__form habilidade-lista__form--novo" [formGroup]="itemForm" (ngSubmit)="confirmar()">
       <input class="habilidade-lista__input" formControlName="nome" placeholder="Nome" aria-label="Nome da habilidade" />
       <select class="habilidade-lista__select" formControlName="tipo" aria-label="Tipo">
-        @for (t of tipos; track t) { <option [value]="t">{{ t }}</option> }
+        @for (t of tipos; track t) { <option [value]="t">{{ rotuloTipo(t) }}</option> }
       </select>
       <textarea class="habilidade-lista__textarea" formControlName="descricao" placeholder="Descrição" aria-label="Descrição"></textarea>
       <input class="habilidade-lista__input" formControlName="restricao" placeholder="Restrição (opcional)" aria-label="Restrição" />

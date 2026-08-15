@@ -5,6 +5,7 @@ import { CustoAcaoEnum, TipoDanoEnum } from '@contratados-rpg/shared/enums';
 import type { FichaAtributosDto, FichaCriaturaAtaqueDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { Icone } from '../../../../shared/icone/icone.component';
+import { rotuloCustoAcao } from '../../rotulos-criatura';
 
 const ATRIBUTOS: readonly (keyof FichaAtributosDto)[] = [
   'destreza', 'forca', 'luta', 'pontaria', 'vigor', 'intelecto', 'medicina', 'sentidos', 'social', 'vontade',
@@ -30,6 +31,7 @@ export class CriaturaAtaqueLista {
   protected readonly atributos = ATRIBUTOS;
   protected readonly custosAcao = CUSTOS_ACAO;
   protected readonly tiposDano = TIPOS_DANO;
+  protected readonly rotuloCustoAcao = rotuloCustoAcao;
 
   protected readonly indiceEmEdicao = signal<number | null>(null);
   protected readonly indiceRemovendo = signal<number | null>(null);

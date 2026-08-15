@@ -22,7 +22,7 @@
               @for (a of atributos; track a) { <option [value]="a">{{ a }}</option> }
             </select>
             <select class="ataque-lista__select" formControlName="custoAcao" aria-label="Custo de ação">
-              @for (c of custosAcao; track c) { <option [value]="c">{{ c }}</option> }
+              @for (c of custosAcao; track c) { <option [value]="c">{{ rotuloCustoAcao(c) }}</option> }
             </select>
             <input class="ataque-lista__input" formControlName="dano" placeholder="Dano (ex.: 4D12+10)" aria-label="Fórmula de dano" />
             <select class="ataque-lista__select" formControlName="tipoDano" aria-label="Tipo de dano">
@@ -36,7 +36,7 @@
         } @else {
           <span class="ataque-lista__nome">{{ item.nome }}</span>
           <span class="ataque-lista__dano">{{ item.dano }}</span>
-          <span class="ataque-lista__meta">{{ item.tipoDano }} · {{ item.custoAcao }}</span>
+          <span class="ataque-lista__meta">{{ item.tipoDano }} · {{ rotuloCustoAcao(item.custoAcao) }}</span>
           @if (item.efeito) { <span class="ataque-lista__efeito">{{ item.efeito }}</span> }
           <button class="ataque-lista__rolar" type="button" aria-label="Rolar dano" (click)="rolar(item)">
             <app-icone nome="d20" />
