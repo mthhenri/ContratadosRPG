@@ -10,19 +10,34 @@ describe('rolarTesteAtributoCriatura', () => {
     intelecto: 1, medicina: 1, sentidos: 1, social: 1, vontade: 1,
   };
 
-  it('monta a fórmula `<atributo>d20kh1` e usa o Atributo Efetivo (atributo + modificador) como contagem de dados', () => {
+  it('monta a fórmula `<atributo>d20kh1+<modificador>` — a contagem de dados é só o Atributo Final, o Modificador soma como valor fixo (nunca aumenta o pool)', () => {
     const dados = {
       atributos,
       modificadores: { luta: ModificadorCriaturaEnum.FORTE } as never,
-      vd: 5, // VD 5: modificador FORTE = valor base 0, sem incremento por faixa
+      vd: 30, // VD 30: modificador FORTE = 12 (ver a-estatua.spec.ts)
     };
 
     const resultado = rolarTesteAtributoCriatura(dados, 'luta', 'Teste de Luta');
 
-    expect(resultado?.formula).toBe('lutad20kh1');
+    expect(resultado?.formula).toBe('lutad20kh1+12');
     expect(resultado?.rotulo).toBe('Teste de Luta');
-    // luta=5 (atributoFinal) + 0 (modificador FORTE em VD5) = 5 dados no pool.
+    // luta=5 (Atributo Final, sem o modificador) é a contagem de dados no pool.
     expect(resultado?.resultado.dados[0].valores).toHaveLength(5);
+    // +12 entra como valor fixo somado ao total — nunca como dado extra no pool.
+    expect(resultado?.resultado.constante).toBe(12);
+  });
+
+  it('usa sinal negativo quando o valor do Modificador é negativo (VD baixo, ex. FRÁGIL em VD 5)', () => {
+    const dados = {
+      atributos,
+      modificadores: { luta: ModificadorCriaturaEnum.FRAGIL } as never,
+      vd: 5, // VD 5: modificador FRÁGIL = -3 (valor base, sem incremento por faixa)
+    };
+
+    const resultado = rolarTesteAtributoCriatura(dados, 'luta', 'Teste de Luta');
+
+    expect(resultado?.formula).toBe('lutad20kh1-3');
+    expect(resultado?.resultado.constante).toBe(-3);
   });
 
   it('devolve null quando a fórmula é inválida (chave de atributo vazia não ocorre em uso normal, mas o motor pode recusar)', () => {

@@ -1,5 +1,5 @@
 import type { FichaAtributosDto, FichaCriaturaAtaqueDto, FichaCriaturaModificadoresDto } from '@contratados-rpg/shared/dtos/ficha';
-import { calcularAtributoEfetivo } from '@contratados-rpg/shared/regras/criatura';
+import { calcularValorModificador } from '@contratados-rpg/shared/regras/criatura';
 import { rolarFormula, type ResultadoRolagemDto } from '@contratados-rpg/shared/regras/rolagem';
 
 /** Resultado pronto pra `BandejaDadosService.mostrar`/`FichaRolagemRegistroService.registrar` (mesmo formato de `PassoExecutadoDto`/`RolagemRealizadaDto`). */
@@ -17,24 +17,21 @@ export interface DadosParaTesteAtributo {
 }
 
 /**
- * Rola um teste de Atributo da criatura: `<chave>d20kh1` (sem `+PROF` — criatura não tem
- * Proficiência), com a contagem de dados no pool ajustada para o **Atributo Efetivo**
- * (`calcularAtributoEfetivo`, `shared/regras/criatura`) só nesta rolagem — o mapa `atributos`
- * exibido na ficha nunca é mutado (mesmo padrão de `rolarTesteAtributo` em `FichaVisualizacao`).
+ * Rola um teste de Atributo da criatura: `<chave>d20kh1±<modificador>` (sem `+PROF` — criatura
+ * não tem Proficiência). O Modificador **nunca** entra na contagem de dados do pool — ele é um
+ * bônus plano somado ao resultado do teste, igual a "+N no resultado" (distinto de "+1 dado",
+ * as duas categorias de bônus do sistema, `sistema-v4.1.0.md` — "Regras Gerais"). A contagem de
+ * dados usa só o Atributo Final (`dados.atributos[chave]`, nunca mutado nem substituído).
  */
 export function rolarTesteAtributoCriatura(
   dados: DadosParaTesteAtributo,
   chave: keyof FichaAtributosDto,
   rotulo: string,
 ): RolagemCriaturaExecutadaDto | null {
-  const efetivo = calcularAtributoEfetivo({
-    atributoFinal: dados.atributos[chave],
-    modificador: dados.modificadores[chave],
-    vd: dados.vd,
-  });
-  const atributosParaRolagem: FichaAtributosDto = { ...dados.atributos, [chave]: efetivo };
-  const formula = `${chave}d20kh1`;
-  const resultado = rolarFormula({ formula, atributos: atributosParaRolagem });
+  const valorModificador = calcularValorModificador({ tipo: dados.modificadores[chave], vd: dados.vd });
+  const sinal = valorModificador < 0 ? '-' : '+';
+  const formula = `${chave}d20kh1${sinal}${Math.abs(valorModificador)}`;
+  const resultado = rolarFormula({ formula, atributos: dados.atributos });
   return resultado ? { rotulo, formula, resultado } : null;
 }
 

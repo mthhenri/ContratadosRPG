@@ -84,7 +84,9 @@ describe('CriaturaVisualizacao', () => {
     const { fixture, bandeja } = montar();
     fixture.componentInstance['rolarTesteAtributo']('vontade');
     expect(bandeja.entradas()).toHaveLength(1);
-    expect(bandeja.entradas()[0].formula).toBe('vontaded20kh1');
+    // vontade=4 (Atributo Final) é a contagem de dados; +5 é o modificador FRACO em VD30 (valor
+    // fixo somado ao resultado — nunca aumenta o pool, ver `criatura-rolagem.ts`).
+    expect(bandeja.entradas()[0].formula).toBe('vontaded20kh1+5');
   });
 
   it('repassa a lista de ataques editada para ataquesMudou', () => {
