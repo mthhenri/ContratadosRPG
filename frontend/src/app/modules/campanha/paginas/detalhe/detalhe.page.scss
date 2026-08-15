@@ -1140,17 +1140,6 @@
     margin-top: 18px;
   }
 
-  // Card de criatura — mesma receita visual de `&__ficha-card`, mas sem interação (sem link de
-  // navegação: `FichaVisualizacao` ainda não sabe renderizar dados de criatura, m4-09).
-  &__ficha-card--criatura {
-    cursor: default;
-
-    &:hover {
-      background: var(--surface);
-      border-color: var(--border);
-    }
-  }
-
   // Card de ficha do Esquadrão — mesma receita da m2-16b/m2-16g/m3-52 (agora fora do agrupamento
   // por dono, direto no grid): topo (dono+nome / condições), meta (classe/nível/patente),
   // identidade, vitais com passos −/+ e rodapé (reações + kebab).

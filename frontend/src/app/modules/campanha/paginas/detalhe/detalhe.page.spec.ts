@@ -1277,6 +1277,40 @@ describe('CampanhaDetalhe', () => {
           'Nenhuma criatura registrada ainda.',
         );
       });
+
+      it('a criatura liga à sua tela de visualização, mesmo padrão do card de ficha (m4-04b)', () => {
+        const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas: fichasComCriatura });
+
+        const listaCriaturas = raiz.querySelector('.detalhe__secao--criaturas')?.nextElementSibling as HTMLElement;
+        const link = listaCriaturas.querySelector('.detalhe__ficha-link') as HTMLAnchorElement;
+        expect(link.getAttribute('href')).toBe(`/painel/${CAMPANHA_ID}/criatura/9`);
+      });
+
+      it('duplo clique no cartão da criatura abre a ficha de criatura', () => {
+        const { raiz, navegar } = montar({ usuarioId: 1, membros: membrosDois(), fichas: fichasComCriatura });
+
+        const listaCriaturas = raiz.querySelector('.detalhe__secao--criaturas')?.nextElementSibling as HTMLElement;
+        const cartao = listaCriaturas.querySelector('.detalhe__ficha-card') as HTMLElement;
+        cartao.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+
+        expect(navegar).toHaveBeenCalledWith(['/painel', CAMPANHA_ID, 'criatura', 9]);
+      });
+
+      // `window.open` é global — restaura o spy no fim, senão o próximo teste que o usar herdaria
+      // a chamada já registrada neste (mesmo cuidado do card de ficha de jogador, acima).
+      it('clique do meio no cartão da criatura abre a ficha de criatura numa nova aba', () => {
+        const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas: fichasComCriatura });
+        const abrirNovaAba = vi.spyOn(window, 'open').mockReturnValue(null);
+        try {
+          const listaCriaturas = raiz.querySelector('.detalhe__secao--criaturas')?.nextElementSibling as HTMLElement;
+          const cartao = listaCriaturas.querySelector('.detalhe__ficha-card') as HTMLElement;
+          cartao.dispatchEvent(new MouseEvent('auxclick', { bubbles: true, button: 1 }));
+
+          expect(abrirNovaAba).toHaveBeenCalledWith(`/painel/${CAMPANHA_ID}/criatura/9`, '_blank', 'noopener');
+        } finally {
+          abrirNovaAba.mockRestore();
+        }
+      });
     });
 
     // Item 9 — "Atualizado há Xs", agora no cabeçalho da seção "Esquadrão".
