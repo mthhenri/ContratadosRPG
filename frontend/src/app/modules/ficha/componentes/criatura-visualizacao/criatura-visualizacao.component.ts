@@ -25,6 +25,7 @@ import type {
 import { calcularAtributoEfetivo, calcularLimiteResistencias } from '@contratados-rpg/shared/regras/criatura';
 
 import { Icone } from '../../../../shared/icone/icone.component';
+import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
 import { rolarAtaqueCriatura, rolarTesteAtributoCriatura } from '../../criatura-rolagem';
@@ -63,7 +64,7 @@ const CAMPOS_ATRIBUTO: readonly { readonly chave: ChaveAtributo; readonly nome: 
  */
 @Component({
   selector: 'app-criatura-visualizacao',
-  imports: [Icone, CriaturaResistenciaLista, CriaturaAtaqueLista, CriaturaHabilidadeLista],
+  imports: [Icone, BandejaDados, CriaturaResistenciaLista, CriaturaAtaqueLista, CriaturaHabilidadeLista],
   templateUrl: './criatura-visualizacao.component.html',
   styleUrl: './criatura-visualizacao.component.scss',
 })
