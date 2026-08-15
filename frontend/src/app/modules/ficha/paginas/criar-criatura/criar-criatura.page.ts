@@ -76,8 +76,8 @@ const CAMPOS: readonly { readonly chave: ChaveAtributo; readonly nome: string }[
  * para feedback de progresso do passo; a validação que persiste é sempre `validarFichaCriatura`
  * (`shared/regras/criatura`), chamada pelo backend antes de gravar (`m4-03`). */
 const QUANTIDADE_ESPERADA_MODIFICADOR: Readonly<Record<ModificadorCriaturaEnum, number>> = {
-  [ModificadorCriaturaEnum.FORTE]: 2, [ModificadorCriaturaEnum.MEDIO]: 3,
-  [ModificadorCriaturaEnum.FRACO]: 3, [ModificadorCriaturaEnum.FRAGIL]: 2,
+  [ModificadorCriaturaEnum.FRAGIL]: 2, [ModificadorCriaturaEnum.FRACO]: 3,
+  [ModificadorCriaturaEnum.MEDIO]: 3, [ModificadorCriaturaEnum.FORTE]: 2,
 };
 
 /** Faixa de VD típica por NA (doc — "Definindo o Valor de Desafio (VD)") — só texto de referência
@@ -573,7 +573,7 @@ export class CriaturaCriar {
       .pipe(finalize(() => this.criando.set(false)))
       .subscribe({
         next: (ficha) => {
-          const destino = ['/painel', this.campanhaId, 'ficha', ficha.id];
+          const destino = ['/painel', this.campanhaId, 'criatura', ficha.id];
           const arquivo = this.imagemArquivo();
           // Imagem (mesmo padrão do guia de jogador, m3-62): a ficha já existe — segundo request,
           // em sequência. Falha no upload não desfaz a criatura criada nem trava a navegação; só

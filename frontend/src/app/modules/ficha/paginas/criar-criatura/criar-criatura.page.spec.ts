@@ -240,7 +240,7 @@ describe('CriaturaCriar', () => {
       ],
     } satisfies FichaCriaturaDadosDto);
 
-    expect(router.navigate).toHaveBeenCalledWith(['/painel', CAMPANHA_ID, 'ficha', 99]);
+    expect(router.navigate).toHaveBeenCalledWith(['/painel', CAMPANHA_ID, 'criatura', 99]);
   });
 
   it('bloqueia o passo Resistências sem ao menos uma fraqueza', () => {
