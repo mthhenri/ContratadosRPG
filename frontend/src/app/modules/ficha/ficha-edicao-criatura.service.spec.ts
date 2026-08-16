@@ -69,7 +69,7 @@ describe('FichaEdicaoCriaturaService', () => {
 
   it('ajusta a lista de ataques inteira e persiste', async () => {
     const { servico, http, ficha } = montar();
-    const novosAtaques = [{ nome: 'Golpe', atributo: 'luta' as const, custoAcao: 'PADRAO' as never, dano: '4D12+10', tipoDano: TipoDanoEnum.FISICO, area: false }];
+    const novosAtaques = [{ nome: 'Golpe', teste: 'lutad20kh1+3', custoAcao: 'PADRAO' as never, dano: '4D12+10', danoCritico: '8D12+20', tipoDano: TipoDanoEnum.FISICO, area: false }];
 
     servico.ajustarAtaques(novosAtaques);
     expect(ficha()?.dados.ataques).toEqual(novosAtaques);

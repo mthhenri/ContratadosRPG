@@ -368,7 +368,7 @@ export class FichaCriar {
 
   constructor() {
     this.destroyRef.onDestroy(() => this.revogarPreviewImagem());
-    const existente = this.rascunhos.recuperar<EstadoGuiaCriacao>(this.campanhaId); this.temRascunho.set(existente !== null);
+    const existente = this.rascunhos.recuperar<EstadoGuiaCriacao>(this.campanhaId, 'agente'); this.temRascunho.set(existente !== null);
     const campanhaId = this.campanhaId;
     forkJoin({
       membros: campanhaId !== null ? this.campanhaService.listarMembros(campanhaId) : of([]),
@@ -379,7 +379,7 @@ export class FichaCriar {
     // ou "Começar do zero": sem essa trava, este efeito salvava o estado inicial (vazio) assim que
     // `carregando()` virava `false` — antes de qualquer clique — apagando o rascunho que o banner
     // "Rascunho encontrado" ainda estava oferecendo para retomar.
-    effect(() => { if (!this.carregando() && !this.temRascunho()) this.rascunhos.salvar(this.campanhaId, this.estado()); });
+    effect(() => { if (!this.carregando() && !this.temRascunho()) this.rascunhos.salvar(this.campanhaId, 'agente', this.estado()); });
     // A trilha ganha/perde o passo Melhorias conforme o Nível inicial muda (voltar ao passo 03 e
     // editar as médias) — mantém `passo`/`visitado` dentro dos limites da trilha atual.
     effect(() => { const max = this.passos().length - 1; if (this.estado().passo > max) this.atualizar({ passo: max }); if (this.visitado() > max) this.visitado.set(max); });
@@ -393,8 +393,8 @@ export class FichaCriar {
       if (this.confirmandoSaida()) { if (!dialog.open) dialog.showModal(); } else { dialog.close(); }
     });
   }
-  protected retomar(): void { const salvo = this.rascunhos.recuperar<EstadoGuiaCriacao>(this.campanhaId); if (salvo) { const normalizado = normalizarEstado(salvo); this.estado.set(normalizado); this.visitado.set(normalizado.passo); } this.temRascunho.set(false); }
-  protected recomecar(): void { this.rascunhos.limpar(this.campanhaId); this.temRascunho.set(false); }
+  protected retomar(): void { const salvo = this.rascunhos.recuperar<EstadoGuiaCriacao>(this.campanhaId, 'agente'); if (salvo) { const normalizado = normalizarEstado(salvo); this.estado.set(normalizado); this.visitado.set(normalizado.passo); } this.temRascunho.set(false); }
+  protected recomecar(): void { this.rascunhos.limpar(this.campanhaId, 'agente'); this.temRascunho.set(false); }
   protected atualizar(parcial: Partial<EstadoGuiaCriacao>): void { this.estado.update((atual) => ({ ...atual, ...parcial })); }
   protected valor(evento: Event): string { return (evento.target as HTMLInputElement).value; }
   protected numero(evento: Event): number { return Number(this.valor(evento)); }
@@ -593,7 +593,7 @@ export class FichaCriar {
       .pipe(finalize(() => this.criando.set(false)))
       .subscribe({
         next: (ficha) => {
-          this.rascunhos.limpar(campanhaId);
+          this.rascunhos.limpar(campanhaId, 'agente');
           const destino = campanhaId !== null ? ['/painel', campanhaId, 'ficha', ficha.id] : ['/fichas', ficha.id];
           const arquivo = this.imagemArquivo();
           // Avatar (m3-62): a ficha já existe — segundo request, em sequência. Falha no upload não

@@ -36,15 +36,32 @@ export function rolarTesteAtributoCriatura(
 }
 
 /**
- * Rola a fórmula de dano de um Ataque da criatura (`ataque.dano`, ex. `"4D12+10"`) — já é uma
- * fórmula pronta no documento (`m4-01`), sem ajuste de Atributo Efetivo (o dano da criatura é
- * declarado pelo Mestre, não escala automaticamente com o modificador do atributo de teste).
+ * Rola a fórmula de dano de um Ataque da criatura (`ataque.dano`/`ataque.danoCritico`, ex.
+ * `"4D12+10"`) — já é uma fórmula pronta no documento (`m4-01`), sem ajuste de Atributo Efetivo
+ * (o dano da criatura é declarado pelo Mestre, não escala automaticamente com o modificador do
+ * atributo de teste). `critico` (ajuste pós-mockup) troca pra `ataque.danoCritico` — uma
+ * fórmula independente, não o dobro automático de `dano`: o Mestre escreve o efeito exato do
+ * crítico, que pode não ser "o dobro" (ex.: muda o tipo de dano).
  */
 export function rolarAtaqueCriatura(
   dados: Pick<DadosParaTesteAtributo, 'atributos'>,
   ataque: FichaCriaturaAtaqueDto,
   critico = false,
 ): RolagemCriaturaExecutadaDto | null {
-  const resultado = rolarFormula({ formula: ataque.dano, atributos: dados.atributos, critico });
-  return resultado ? { rotulo: ataque.nome, formula: ataque.dano, resultado } : null;
+  const formula = critico ? ataque.danoCritico : ataque.dano;
+  const resultado = rolarFormula({ formula, atributos: dados.atributos });
+  return resultado ? { rotulo: critico ? `${ataque.nome} (Crítico)` : ataque.nome, formula, resultado } : null;
+}
+
+/**
+ * Rola a fórmula de teste de um Ataque (`ataque.teste`) — expressão livre (ajuste pós-mockup),
+ * não mais atrelada a um único `atributo` + modificador (`rolarTesteAtributoCriatura` acima): um
+ * ataque pode exigir mais dados/testes do que o convencional de um atributo isolado.
+ */
+export function rolarTesteAtaqueCriatura(
+  dados: Pick<DadosParaTesteAtributo, 'atributos'>,
+  ataque: FichaCriaturaAtaqueDto,
+): RolagemCriaturaExecutadaDto | null {
+  const resultado = rolarFormula({ formula: ataque.teste, atributos: dados.atributos });
+  return resultado ? { rotulo: `Teste — ${ataque.nome}`, formula: ataque.teste, resultado } : null;
 }

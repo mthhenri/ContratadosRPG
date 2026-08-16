@@ -17,6 +17,31 @@
     <span class="guia__classificacao">CLASSE-E // CONFIDENCIAL</span>
   </header>
 
+  <dialog #sairDialog class="guia__sair-dialog" aria-labelledby="guia-sair-titulo" tabindex="-1" (close)="cancelarSaida()" (click)="fecharAoClicarFora($event)" (keydown.escape)="cancelarSaida()">
+    <div class="guia__sair-dialog-conteudo">
+      <h2 id="guia-sair-titulo">Sair do guia de criação?</h2>
+      <p>Seu progresso foi salvo neste dispositivo. Você não vai perder nada — ao voltar para esta tela, pode continuar exatamente de onde parou.</p>
+      <div class="guia__sair-dialog-acoes">
+        <button class="botao botao--primario" type="button" (click)="confirmarSaida()">Sair</button>
+        <button class="botao botao--secundario" type="button" (click)="cancelarSaida()">Continuar aqui</button>
+      </div>
+    </div>
+  </dialog>
+
+  @if (temRascunho()) {
+    <section class="guia__retomar" role="dialog" aria-label="Rascunho encontrado">
+      <div class="guia__retomar-icone"><app-icone nome="atualizar" /></div>
+      <div class="guia__retomar-texto">
+        <h2>Rascunho de criação encontrado</h2>
+        <p>Continue da última criatura salva ou descarte os dados locais para começar outra.</p>
+      </div>
+      <div class="guia__retomar-acoes">
+        <button class="botao botao--primario" type="button" (click)="retomar()">Retomar</button>
+        <button class="botao botao--secundario" type="button" (click)="recomecar()">Começar do zero</button>
+      </div>
+    </section>
+  }
+
   <div class="guia__progresso-mobile">
     <div class="guia__progresso-mobile-topo">
       <span>AMEAÇA · {{ estado().passo + 1 | number: '2.0-0' }}/{{ passos.length | number: '2.0-0' }}</span>
@@ -198,7 +223,7 @@
                 <div class="atributo">
                   <div class="atributo__identidade">
                     <span>{{ campo.nome }} {{ estado().atributos[campo.chave] }}</span>
-                    @if (atributoEfetivo(campo.chave); as efetivo) { <small class="atributo__bonus">Efetivo {{ efetivo }}</small> }
+                    @if (testeAtributoFormula(campo.chave); as formula) { <small class="atributo__bonus">Teste real: {{ formula }}</small> }
                   </div>
                   <div class="atributo__modificadores" role="radiogroup" [attr.aria-label]="'Modificador de ' + campo.nome">
                     @for (tipo of modificadoresPorNivel; track tipo; let i = $index) {
@@ -384,17 +409,14 @@
                     </button>
                   </div>
                   <label class="campo"><span class="campo__rotulo">Nome</span><input class="campo__controle" [value]="linha.nome" (input)="atualizarAtaque($index, 'nome', valor($event))" placeholder="Ex.: Esmagamento" /></label>
-                  <label class="campo"><span class="campo__rotulo">Atributo</span>
-                    <select class="campo__controle" [value]="linha.atributo" (change)="atualizarAtaque($index, 'atributo', valor($event))">
-                      @for (campo of campos; track campo.chave) { <option [value]="campo.chave">{{ campo.nome }}</option> }
-                    </select>
-                  </label>
+                  <label class="campo"><span class="campo__rotulo">Teste (fórmula)</span><input class="campo__controle" [value]="linha.teste" (input)="atualizarAtaque($index, 'teste', valor($event))" placeholder="ex.: lutad20kh1+3" /></label>
                   <label class="campo"><span class="campo__rotulo">Custo de ação</span>
                     <select class="campo__controle" [value]="linha.custoAcao" (change)="atualizarAtaque($index, 'custoAcao', valor($event))">
                       @for (opcao of custosAcao; track opcao) { <option [value]="opcao">{{ rotuloCustoAcao(opcao) }}</option> }
                     </select>
                   </label>
                   <label class="campo"><span class="campo__rotulo">Dano</span><input class="campo__controle" [value]="linha.dano" (input)="atualizarAtaque($index, 'dano', valor($event))" [placeholder]="'Referência: ' + danoReferencia(linha.custoAcao)" /></label>
+                  <label class="campo"><span class="campo__rotulo">Dano crítico (fórmula)</span><input class="campo__controle" [value]="linha.danoCritico" (input)="atualizarAtaque($index, 'danoCritico', valor($event))" placeholder="ex.: 8D12+20" /></label>
                   <label class="campo"><span class="campo__rotulo">Tipo de dano</span>
                     <select class="campo__controle" [value]="linha.tipoDano" (change)="atualizarAtaque($index, 'tipoDano', valor($event))">
                       @for (tipo of tiposDano; track tipo) { <option [value]="tipo">{{ tipo }}</option> }

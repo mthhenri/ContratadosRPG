@@ -57,7 +57,7 @@
             <button class="ataque-lista__rolar ataque-lista__rolar--dano" type="button" (click)="rolar(item)">
               <app-icone nome="d20" /> Dano
             </button>
-            <button class="ataque-lista__rolar ataque-lista__rolar--critico" type="button" [appTooltip]="'Rolar crítico — dobra o dano'" (click)="criticar(item)">
+            <button class="ataque-lista__rolar ataque-lista__rolar--critico" type="button" [appTooltip]="'Rolar dano crítico'" (click)="criticar(item)">
               <app-icone nome="d20" /> Crítico
             </button>
             @if (editavel() && modoEdicao()) {
@@ -93,10 +93,8 @@
       <input class="ataque-lista__input" formControlName="nome" placeholder="Nome do ataque" aria-label="Nome do ataque" />
     </label>
     <label class="ataque-lista__campo">
-      <span class="ataque-lista__campo-rotulo">Atributo de teste</span>
-      <select class="ataque-lista__select" formControlName="atributo" aria-label="Atributo de teste">
-        @for (a of atributos; track a) { <option [value]="a">{{ a }}</option> }
-      </select>
+      <span class="ataque-lista__campo-rotulo">Teste (fórmula)</span>
+      <input class="ataque-lista__input" formControlName="teste" placeholder="ex.: lutad20kh1+3" aria-label="Fórmula de teste" />
     </label>
     <label class="ataque-lista__campo">
       <span class="ataque-lista__campo-rotulo">Custo de ação</span>
@@ -107,6 +105,10 @@
     <label class="ataque-lista__campo">
       <span class="ataque-lista__campo-rotulo">Dano</span>
       <input class="ataque-lista__input" formControlName="dano" placeholder="ex.: 4D12+10" aria-label="Fórmula de dano" />
+    </label>
+    <label class="ataque-lista__campo">
+      <span class="ataque-lista__campo-rotulo">Dano crítico (fórmula)</span>
+      <input class="ataque-lista__input" formControlName="danoCritico" placeholder="ex.: 8D12+20" aria-label="Fórmula de dano crítico" />
     </label>
     <label class="ataque-lista__campo">
       <span class="ataque-lista__campo-rotulo">Tipo de dano</span>

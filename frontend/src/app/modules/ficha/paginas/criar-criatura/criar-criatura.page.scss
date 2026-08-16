@@ -3,9 +3,9 @@
 // Framework `.guia__*` (trilha + resumo operacional progressivo) — mesmo vocabulário visual do
 // guia de jogador (`criar.page.scss`, m3-57), mas sem partial compartilhado entre os dois (não
 // existe hoje um `_guia.scss` comum no projeto — replicado aqui por precedente, com os blocos que
-// este assistente não usa (avatar, rascunho, memorial de novo agente, loja de equipamento...)
-// removidos e as seções específicas de criatura (resistências/fraquezas, ataques, habilidades)
-// adicionadas ao final.
+// este assistente não usa (avatar, memorial de novo agente, loja de equipamento...) removidos e
+// as seções específicas de criatura (resistências/fraquezas, ataques, habilidades) adicionadas ao
+// final. `__sair-dialog*`/`__retomar*` (rascunho, ajuste pós-mockup) foram copiados de volta.
 
 :host { display: block; }
 
@@ -23,6 +23,20 @@
   &__regua { flex: 1; height: 1px; background: var(--border); }
   &__classificacao { flex: none; padding: 6px 10px; font: 600 10px var(--font-mono); letter-spacing: .12em; color: var(--accent); border: 1px solid var(--accent-border); border-radius: var(--radius-control); }
   &__resumo-abrir { display: none; }
+
+  &__sair-dialog {
+    padding: 0; max-width: 400px; width: calc(100% - 32px); color: var(--text);
+    background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-card);
+    &::backdrop { background: color-mix(in srgb, black 65%, transparent); backdrop-filter: blur(2px); }
+    &:not([open]) { display: none; }
+  }
+  &__sair-dialog-conteudo { display: grid; gap: 14px; padding: 20px; h2 { margin: 0; font: 700 13px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; } p { margin: 0; font: 12px/1.5 var(--font-sans); color: var(--text-dim); } }
+  &__sair-dialog-acoes { display: flex; justify-content: flex-end; gap: 8px; .botao { min-height: 38px; padding: 0 16px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; } }
+
+  &__retomar { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; padding: 14px 16px; background: color-mix(in srgb, var(--warning) 8%, var(--surface)); border: 1px solid color-mix(in srgb, var(--warning) 35%, transparent); border-radius: var(--radius-control); }
+  &__retomar-icone { display: grid; place-items: center; width: 36px; height: 36px; flex: none; color: var(--warning); border: 1px solid color-mix(in srgb, var(--warning) 35%, transparent); border-radius: var(--radius-control); }
+  &__retomar-texto { flex: 1; min-width: 0; h2 { margin: 0 0 3px; font: 700 12px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; } p { margin: 0; font: 12px var(--font-sans); color: var(--text-dim); } }
+  &__retomar-acoes { display: flex; gap: 8px; .botao { min-height: 36px; padding: 0 13px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; } }
 
   &__layout { display: grid; grid-template-columns: 230px minmax(0, 1fr) 250px; align-items: start; gap: var(--gap-grid); }
   &__trilha, &__conteudo, &__resumo { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); }

@@ -36,7 +36,7 @@ import { AutoFocus } from '../../../../shared/auto-focus/auto-focus.directive';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
-import { rolarAtaqueCriatura, rolarTesteAtributoCriatura } from '../../criatura-rolagem';
+import { rolarAtaqueCriatura, rolarTesteAtaqueCriatura, rolarTesteAtributoCriatura } from '../../criatura-rolagem';
 import type { AjusteCriaturaVitalidade } from '../../ficha-edicao-criatura.service';
 import {
   dimensaoPorte,
@@ -556,8 +556,8 @@ export class CriaturaVisualizacao {
   }
 
   /** Rola o dano de um Ataque (`criatura-rolagem.ts`, motor puro) e mostra/registra o resultado.
-   * `critico` (m3-30, ajuste pós-mockup) dobra dados/fixos — mesmo botão "Rolar crítico" da ficha
-   * de jogador (`FichaRolagens`), só que aqui não é opt-in por preset: todo ataque ganha o botão. */
+   * `critico` (ajuste pós-mockup) troca pra `ataque.danoCritico` — fórmula independente escrita
+   * pelo Mestre, não o dobro automático de `dano` (todo ataque ganha o botão "Crítico"). */
   protected rolarAtaque(ataque: FichaCriaturaAtaqueDto, critico = false): void {
     if (!this.ajustavel()) {
       return;
@@ -583,11 +583,18 @@ export class CriaturaVisualizacao {
     this.rolagemRegistro.registrar(executada);
   }
 
-  /** Botão "Teste" do card de Ataque — mesmo teste de Atributo Efetivo da coluna de Atributos,
-   * só exposto no contexto do ataque (`ataque.atributo` decide qual chave rolar). Não é mecânica
-   * nova: reusa `rolarTesteAtributo` acima, que já é o único lugar que chama
-   * `rolarTesteAtributoCriatura`. */
+  /** Botão "Teste" do card de Ataque — fórmula própria do ataque (`ataque.teste`, ajuste
+   * pós-mockup), não mais atrelada a um único atributo da coluna de Atributos: um ataque pode
+   * exigir mais dados/testes do que o convencional. */
   protected rolarTesteAtaque(ataque: FichaCriaturaAtaqueDto): void {
-    this.rolarTesteAtributo(ataque.atributo);
+    if (!this.ajustavel()) {
+      return;
+    }
+    const executada = rolarTesteAtaqueCriatura({ atributos: this.dados().atributos }, ataque);
+    if (!executada) {
+      return;
+    }
+    this.bandeja.mostrar({ rotulo: executada.rotulo, formula: executada.formula, resultado: executada.resultado, corFicha: this.cor() });
+    this.rolagemRegistro.registrar(executada);
   }
 }

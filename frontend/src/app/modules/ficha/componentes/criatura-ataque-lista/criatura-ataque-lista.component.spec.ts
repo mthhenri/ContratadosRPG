@@ -7,7 +7,7 @@ import { CriaturaAtaqueLista } from './criatura-ataque-lista.component';
 
 describe('CriaturaAtaqueLista', () => {
   const itens: FichaCriaturaAtaqueDto[] = [
-    { nome: 'Golpe de Pedra', atributo: 'luta', custoAcao: CustoAcaoEnum.PADRAO, dano: '4D12+10', tipoDano: TipoDanoEnum.FISICO, area: false },
+    { nome: 'Golpe de Pedra', teste: 'lutad20kh1+3', custoAcao: CustoAcaoEnum.PADRAO, dano: '4D12+10', danoCritico: '8D12+20', tipoDano: TipoDanoEnum.FISICO, area: false },
   ];
 
   function montar(editavel = true) {
@@ -68,14 +68,14 @@ describe('CriaturaAtaqueLista', () => {
     const alvo = montar(true);
     alvo.fixture.componentInstance['adicionar']();
     alvo.fixture.componentInstance['itemForm'].setValue({
-      nome: 'Investida', atributo: 'forca', custoAcao: CustoAcaoEnum.COMPLETA,
-      dano: '6D12+16', tipoDano: TipoDanoEnum.FISICO, area: false, efeito: '',
+      nome: 'Investida', teste: 'forcad20kh1+2', custoAcao: CustoAcaoEnum.COMPLETA,
+      dano: '6D12+16', danoCritico: '12D12+32', tipoDano: TipoDanoEnum.FISICO, area: false, efeito: '',
     });
     alvo.fixture.componentInstance['confirmar']();
 
     expect(alvo.emitidos[0]).toEqual([
       ...itens,
-      { nome: 'Investida', atributo: 'forca', custoAcao: CustoAcaoEnum.COMPLETA, dano: '6D12+16', tipoDano: TipoDanoEnum.FISICO, area: false },
+      { nome: 'Investida', teste: 'forcad20kh1+2', custoAcao: CustoAcaoEnum.COMPLETA, dano: '6D12+16', danoCritico: '12D12+32', tipoDano: TipoDanoEnum.FISICO, area: false },
     ]);
   });
 });

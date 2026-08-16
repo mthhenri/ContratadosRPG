@@ -28,7 +28,7 @@ describe('CriaturaVisualizacao', () => {
     tenacidade: TenacidadeEnum.RESISTENTE, vidaMaxima: 100, vidaAtual: 100, defesa: 30,
     resistencias: [], fraquezas: [{ tipo: TipoDanoEnum.BALISTICO, subtipo: null, valor: 10 }],
     porte: PorteCriaturaEnum.GRANDE, deslocamento: { terrestre: 9 }, cadencia: CadenciaEnum.SINGULAR,
-    ataques: [{ nome: 'Golpe', atributo: 'luta', custoAcao: CustoAcaoEnum.PADRAO, dano: '4D12+10', tipoDano: TipoDanoEnum.FISICO, area: false }],
+    ataques: [{ nome: 'Golpe', teste: 'lutad20kh1+3', custoAcao: CustoAcaoEnum.PADRAO, dano: '4D12+10', danoCritico: '8D12+20', tipoDano: TipoDanoEnum.FISICO, area: false }],
     habilidades: [], anotacoes: '',
   };
 
@@ -82,11 +82,12 @@ describe('CriaturaVisualizacao', () => {
     expect(bandeja.entradas()[0].formula).toBe('4D12+10');
   });
 
-  it('rola o crítico de um ataque (dobra dados/fixos) e mostra o resultado na bandeja', () => {
+  it('rola o crítico de um ataque — fórmula independente de danoCritico, não o dobro de dano', () => {
     const { fixture, bandeja } = montar();
     fixture.componentInstance['rolarAtaque'](dados.ataques[0], true);
     expect(bandeja.entradas()).toHaveLength(1);
-    expect(bandeja.entradas()[0].resultado.critico).toBe(true);
+    expect(bandeja.entradas()[0].rotulo).toBe('Golpe (Crítico)');
+    expect(bandeja.entradas()[0].formula).toBe('8D12+20');
   });
 
   it('rola um teste de atributo e mostra o resultado na bandeja', () => {
@@ -98,16 +99,16 @@ describe('CriaturaVisualizacao', () => {
     expect(bandeja.entradas()[0].formula).toBe('vontaded20kh1+5');
   });
 
-  it('botão Teste do ataque rola o Atributo Efetivo do atributo do ataque, não uma mecânica nova', () => {
+  it('botão Teste do ataque rola a fórmula própria de ataque.teste, não mais um atributo isolado', () => {
     const { fixture, bandeja } = montar();
     fixture.componentInstance['rolarTesteAtaque'](dados.ataques[0]);
     expect(bandeja.entradas()).toHaveLength(1);
-    expect(bandeja.entradas()[0].formula).toBe('lutad20kh1+12');
+    expect(bandeja.entradas()[0].formula).toBe('lutad20kh1+3');
   });
 
   it('repassa a lista de ataques editada para ataquesMudou', () => {
     const { fixture, eventos } = montar();
-    const novos = [...dados.ataques, { nome: 'Segundo', atributo: 'forca' as const, custoAcao: CustoAcaoEnum.MOVIMENTO, dano: '2D10', tipoDano: TipoDanoEnum.FISICO, area: false }];
+    const novos = [...dados.ataques, { nome: 'Segundo', teste: 'forcad20kh1+1', custoAcao: CustoAcaoEnum.MOVIMENTO, dano: '2D10', danoCritico: '4D10', tipoDano: TipoDanoEnum.FISICO, area: false }];
     fixture.componentInstance['aoAtaquesMudar'](novos);
     expect(eventos['ataquesMudou']).toEqual([novos]);
   });

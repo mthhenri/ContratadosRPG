@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ModificadorCriaturaEnum, CustoAcaoEnum, TipoDanoEnum } from '@contratados-rpg/shared/enums';
 import type { FichaAtributosDto, FichaCriaturaAtaqueDto } from '@contratados-rpg/shared/dtos/ficha';
 
-import { rolarAtaqueCriatura, rolarTesteAtributoCriatura } from './criatura-rolagem';
+import { rolarAtaqueCriatura, rolarTesteAtaqueCriatura, rolarTesteAtributoCriatura } from './criatura-rolagem';
 
 describe('rolarTesteAtributoCriatura', () => {
   const atributos: FichaAtributosDto = {
@@ -59,8 +59,8 @@ describe('rolarAtaqueCriatura', () => {
 
   it('rola a fórmula de dano do ataque direto, sem ajuste de atributo', () => {
     const ataque: FichaCriaturaAtaqueDto = {
-      nome: 'Golpe de Pedra', atributo: 'luta', custoAcao: CustoAcaoEnum.PADRAO,
-      dano: '4D12+10', tipoDano: TipoDanoEnum.FISICO, area: false,
+      nome: 'Golpe de Pedra', teste: 'lutad20kh1+3', custoAcao: CustoAcaoEnum.PADRAO,
+      dano: '4D12+10', danoCritico: '8D12+20', tipoDano: TipoDanoEnum.FISICO, area: false,
     };
 
     const resultado = rolarAtaqueCriatura({ atributos }, ataque);
@@ -70,16 +70,39 @@ describe('rolarAtaqueCriatura', () => {
     expect(resultado?.resultado.dados[0]).toMatchObject({ faces: 12 });
   });
 
-  it('crítico (m3-30) dobra a quantidade de dados e a constante fixa', () => {
+  it('crítico rola danoCritico — fórmula independente do Mestre, não o dobro automático de dano', () => {
     const ataque: FichaCriaturaAtaqueDto = {
-      nome: 'Golpe de Pedra', atributo: 'luta', custoAcao: CustoAcaoEnum.PADRAO,
-      dano: '4D12+10', tipoDano: TipoDanoEnum.FISICO, area: false,
+      nome: 'Golpe de Pedra', teste: 'lutad20kh1+3', custoAcao: CustoAcaoEnum.PADRAO,
+      dano: '4D12+10', danoCritico: '8D12+20', tipoDano: TipoDanoEnum.FISICO, area: false,
     };
 
     const resultado = rolarAtaqueCriatura({ atributos }, ataque, true);
 
-    expect(resultado?.resultado.critico).toBe(true);
+    expect(resultado?.rotulo).toBe('Golpe de Pedra (Crítico)');
+    expect(resultado?.formula).toBe('8D12+20');
+    expect(resultado?.resultado.dados[0]).toMatchObject({ faces: 12 });
     expect(resultado?.resultado.dados[0].valores).toHaveLength(8);
     expect(resultado?.resultado.constante).toBe(20);
+  });
+});
+
+describe('rolarTesteAtaqueCriatura', () => {
+  const atributos: FichaAtributosDto = {
+    destreza: 1, forca: 1, luta: 5, pontaria: 1, vigor: 1,
+    intelecto: 1, medicina: 1, sentidos: 1, social: 1, vontade: 1,
+  };
+
+  it('rola a fórmula de teste própria do ataque, sem depender de um único atributo', () => {
+    const ataque: FichaCriaturaAtaqueDto = {
+      nome: 'Golpe de Pedra', teste: 'lutad20kh1+3', custoAcao: CustoAcaoEnum.PADRAO,
+      dano: '4D12+10', danoCritico: '8D12+20', tipoDano: TipoDanoEnum.FISICO, area: false,
+    };
+
+    const resultado = rolarTesteAtaqueCriatura({ atributos }, ataque);
+
+    expect(resultado?.formula).toBe('lutad20kh1+3');
+    expect(resultado?.rotulo).toBe('Teste — Golpe de Pedra');
+    expect(resultado?.resultado.dados[0].valores).toHaveLength(5);
+    expect(resultado?.resultado.constante).toBe(3);
   });
 });

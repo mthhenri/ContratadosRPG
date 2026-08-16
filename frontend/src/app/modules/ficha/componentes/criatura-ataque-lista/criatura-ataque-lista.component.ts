@@ -3,15 +3,12 @@ import { NgTemplateOutlet } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { CustoAcaoEnum, TipoDanoEnum } from '@contratados-rpg/shared/enums';
-import type { FichaAtributosDto, FichaCriaturaAtaqueDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { FichaCriaturaAtaqueDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { rotuloCustoAcao, rotuloCustoAcaoCurto } from '../../rotulos-criatura';
 
-const ATRIBUTOS: readonly (keyof FichaAtributosDto)[] = [
-  'destreza', 'forca', 'luta', 'pontaria', 'vigor', 'intelecto', 'medicina', 'sentidos', 'social', 'vontade',
-];
 const CUSTOS_ACAO: readonly CustoAcaoEnum[] = Object.values(CustoAcaoEnum) as CustoAcaoEnum[];
 const TIPOS_DANO: readonly TipoDanoEnum[] = Object.values(TipoDanoEnum) as TipoDanoEnum[];
 
@@ -29,15 +26,12 @@ export class CriaturaAtaqueLista {
   readonly itensMudou = output<readonly FichaCriaturaAtaqueDto[]>();
   /** Emite o ataque clicado — quem monta este componente (Task 9) executa a rolagem de verdade. */
   readonly rolarAtaque = output<FichaCriaturaAtaqueDto>();
-  /** Botão "Teste" do card — mesmo teste de Atributo Efetivo da coluna de Atributos
-   * (`ataque.atributo` decide a chave), só exposto no contexto do ataque. */
+  /** Botão "Teste" do card — rola `ataque.teste` (expressão livre, ajuste pós-mockup). */
   readonly testarAtaque = output<FichaCriaturaAtaqueDto>();
-  /** Botão "Crítico" do card — mesmo dano de `rolarAtaque`, com `critico: true` (dobra dados/fixos,
-   * m3-30) — análogo ao "Rolar crítico" de `FichaRolagens`, sempre disponível (não é opt-in por
-   * preset como lá: todo ataque de criatura ganha o botão). */
+  /** Botão "Crítico" do card — rola `ataque.danoCritico` (expressão livre e independente de
+   * `dano`, não o dobro automático) — sempre disponível, todo ataque de criatura ganha o botão. */
   readonly rolarAtaqueCritico = output<FichaCriaturaAtaqueDto>();
 
-  protected readonly atributos = ATRIBUTOS;
   protected readonly custosAcao = CUSTOS_ACAO;
   protected readonly tiposDano = TIPOS_DANO;
   protected readonly rotuloCustoAcao = rotuloCustoAcao;
@@ -51,9 +45,10 @@ export class CriaturaAtaqueLista {
 
   protected readonly itemForm = new FormGroup({
     nome: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    atributo: new FormControl<keyof FichaAtributosDto>('luta', { nonNullable: true }),
+    teste: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     custoAcao: new FormControl(CustoAcaoEnum.PADRAO, { nonNullable: true }),
     dano: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    danoCritico: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     tipoDano: new FormControl(TipoDanoEnum.FISICO, { nonNullable: true }),
     area: new FormControl(false, { nonNullable: true }),
     efeito: new FormControl('', { nonNullable: true }),
@@ -72,7 +67,7 @@ export class CriaturaAtaqueLista {
   }
 
   protected adicionar(): void {
-    this.itemForm.reset({ nome: '', atributo: 'luta', custoAcao: CustoAcaoEnum.PADRAO, dano: '', tipoDano: TipoDanoEnum.FISICO, area: false, efeito: '' });
+    this.itemForm.reset({ nome: '', teste: '', custoAcao: CustoAcaoEnum.PADRAO, dano: '', danoCritico: '', tipoDano: TipoDanoEnum.FISICO, area: false, efeito: '' });
     this.indiceEmEdicao.set(-1);
   }
 
@@ -102,9 +97,10 @@ export class CriaturaAtaqueLista {
     const bruto = this.itemForm.getRawValue();
     const item: FichaCriaturaAtaqueDto = {
       nome: bruto.nome.trim(),
-      atributo: bruto.atributo,
+      teste: bruto.teste.trim(),
       custoAcao: bruto.custoAcao,
       dano: bruto.dano.trim(),
+      danoCritico: bruto.danoCritico.trim(),
       tipoDano: bruto.tipoDano,
       area: bruto.area,
       ...(bruto.efeito.trim() ? { efeito: bruto.efeito.trim() } : {}),
