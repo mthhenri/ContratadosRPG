@@ -340,6 +340,21 @@
 - **Custo aparente:** médio — afeta `shared`, backend, os dois sentidos de transferência e a
   apresentação. Requer spec própria antes de ser implementado.
 
+### I-021 — Descrição textual das modificações no item do inventário · ficha/inventário
+
+- **Ideia:** dar a cada item modificável do inventário uma "descrição" — um texto curto, composto a
+  partir das modificações aplicadas, mostrado acima da contagem de cenas/munição do item. Ex.: uma
+  munição com a modificação "Calibre" mostraria algo como "Calibre: +1 dado de dano da arma".
+- **Origem:** pedido do autor em 2026-08-16, revisando o inventário.
+- **Por quê:** hoje as modificações aplicadas (`ModificacaoAplicadaDto`/`ModificacaoEfeitoDto`) ficam
+  expressas só como chip de nome + efeitos estruturados; não existe uma frase legível que resuma o
+  que elas fazem ao item, então entender o efeito exige abrir o painel de modificação.
+- **Custo aparente:** provavelmente só frontend — um formatador que converte `efeitos`/`descricao` de
+  cada `ModificacaoAplicadaDto` num texto composto (o mesmo papel que `bonusMunicaoTexto` já cumpre
+  hoje, mas só pra Munição Construtor, m3-65) e um trecho novo no template do item em
+  `ficha-inventario.component.html` pra exibi-lo. Falta decidir o formato de composição quando há
+  mais de uma modificação no mesmo item.
+
 ---
 
 ## Promovidas
