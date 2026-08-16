@@ -209,6 +209,12 @@ export interface ComprasModificacaoContarDto {
 export interface ModificacaoItemDto {
   readonly item: CarrinhoItemDto;
   readonly modificacao: string;
+  /**
+   * Presente quando a modificação foi gerada por um Fragmento acoplado (`ModificacaoAplicadaDto.origemFragmento`).
+   * Um Potencializador acoplado não pesa no item alvo — só o item avulso pesava, e ele deixa de
+   * existir avulso ao acoplar (doc — "⬥ Acoplamento").
+   */
+  readonly origemFragmento?: ModificacaoAplicadaDto['origemFragmento'];
 }
 
 /** Entrada de `verificarConflitoModificacao`: uma modificação candidata contra as já aplicadas num item. */
