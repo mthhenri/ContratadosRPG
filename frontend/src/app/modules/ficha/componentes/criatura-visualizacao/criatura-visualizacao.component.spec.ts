@@ -9,6 +9,7 @@ import type { FichaCriaturaDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 import { CriaturaVisualizacao } from './criatura-visualizacao.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
+import { TemaService } from '../../../../core/services/tema.service';
 
 describe('CriaturaVisualizacao', () => {
   const dados: FichaCriaturaDadosDto = {
@@ -66,6 +67,12 @@ describe('CriaturaVisualizacao', () => {
     const { fixture } = montar();
     // luta=6, modificador FORTE em VD30: base 0 + (30-5)/5*2.5 = 12.5 -> floor 12 => efetivo 18.
     expect(fixture.componentInstance['atributoEfetivo']('luta')).toBe(18);
+  });
+
+  it('o card de leitura mostra o Modificador puro, sem somar o Atributo Final', () => {
+    const { fixture } = montar();
+    // modificador FORTE em VD30 = 12 — não 18 (o Atributo Efetivo de luta, que soma luta=6).
+    expect(fixture.componentInstance['modificadorValor']('luta')).toBe(12);
   });
 
   it('emite vitalidadeMudou com o campo e valor clampados ao ajustar Vida atual', () => {
@@ -231,13 +238,35 @@ describe('CriaturaVisualizacao', () => {
     ]);
   });
 
-  it('o Atributo Efetivo só ganha destaque quando o modificador está acima do neutro', () => {
+  it('o nível do Modificador segue a mesma ordem crescente (Frágil=1 … Forte=4) das barrinhas de edição', () => {
     const { fixture } = montar();
-    // forca é FORTE e vigor é MEDIO (destacados); destreza é FRAGIL e vontade é FRACO (não).
-    expect(fixture.componentInstance['atributoDestacado']('forca')).toBe(true);
-    expect(fixture.componentInstance['atributoDestacado']('vigor')).toBe(true);
-    expect(fixture.componentInstance['atributoDestacado']('destreza')).toBe(false);
-    expect(fixture.componentInstance['atributoDestacado']('vontade')).toBe(false);
+    // forca é FORTE (4), vigor é MEDIO (3), intelecto é FRACO (2), destreza é FRAGIL (1).
+    expect(fixture.componentInstance['nivelModificador']('forca')).toBe(4);
+    expect(fixture.componentInstance['nivelModificador']('vigor')).toBe(3);
+    expect(fixture.componentInstance['nivelModificador']('intelecto')).toBe(2);
+    expect(fixture.componentInstance['nivelModificador']('destreza')).toBe(1);
+  });
+
+  it('a ponta fraca da progressão de cor fica nula (CSS usa o cinza do tema) quando o --accent do site é cromático', () => {
+    const { fixture } = montar();
+    // Accent padrão (vermelho) — cromático, a `cor` própria da criatura não entra nessa conta.
+    expect(fixture.componentInstance['modificadorCorFraca']()).toBeNull();
+  });
+
+  it('a ponta fraca da progressão de cor vira preto quando o --accent do site é o preset Cinza (claro)', () => {
+    const { fixture } = montar();
+    TestBed.inject(TemaService).selecionarPreset('cinza');
+    fixture.detectChanges();
+    expect(fixture.componentInstance['modificadorCorFraca']()).toBe('#000000');
+  });
+
+  it('a ponta fraca da progressão de cor vira branco quando o --accent do site é preto', () => {
+    const { fixture } = montar();
+    const tema = TestBed.inject(TemaService);
+    tema.definirBase('claro');
+    tema.selecionarPreset('preto');
+    fixture.detectChanges();
+    expect(fixture.componentInstance['modificadorCorFraca']()).toBe('#ffffff');
   });
 
   it('a barra superior mostra o rótulo e o badge FICHA-CRT com o id zero-padded', () => {

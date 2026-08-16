@@ -191,7 +191,7 @@ export function variantePorContraste(
 }
 
 /** Converte `#rrggbb` em HSL (`matiz` 0–360, `saturacao`/`luminosidade` 0–1). */
-function hexParaHsl(hex: string): [number, number, number] {
+export function hexParaHsl(hex: string): [number, number, number] {
   const [vermelho255, verde255, azul255] = hexParaRgb(hex);
   const vermelho = vermelho255 / 255;
   const verde = verde255 / 255;

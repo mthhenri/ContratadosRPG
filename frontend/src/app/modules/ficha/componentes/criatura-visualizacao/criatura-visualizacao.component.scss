@@ -356,10 +356,20 @@
   // Idêntico a `.ficha-atributos--2col .ficha-atributo__valor` (22px — a variante compacta, não os
   // 26px do card cheio, já que esta grade sempre foi de 2 colunas).
   &__atributo-valor { font-family: var(--font-mono); font-size: 22px; font-weight: 700; line-height: 1; color: var(--text); }
-  // Idêntico a `.ficha-atributos--2col .ficha-atributo__mod-valor`.
+  // Idêntico a `.ficha-atributos--2col .ficha-atributo__mod-valor`, mas com uma progressão de cor
+  // de 4 níveis em vez do binário anterior — Forte 100% `--accent` (cor do tema do **site**, não a
+  // `--cor-ficha` da criatura), Médio 75%/25%, Fraco 50%/50%, Frágil 100% cinza (regra do autor).
+  // O cinza é `--text-mute` (o cinza do tema) — ou, quando o próprio `--accent` selecionado nas
+  // configurações já é acromático (preset "Cinza"), a ponta preto/branco que `modificadorCorFraca()`
+  // calcula (`--cor-modificador-fraca`), porque misturar cinza com cinza não geraria gradiente nenhum.
   &__atributo-efetivo {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 700; line-height: 1; color: var(--text-mute);
-    &--destacado { color: var(--accent); }
+    --cor-modificador-forte: var(--accent);
+    --cor-modificador-fraca-efetiva: var(--cor-modificador-fraca, var(--text-mute));
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700; line-height: 1;
+    color: var(--cor-modificador-fraca-efetiva);
+    &[data-nivel='2'] { color: color-mix(in srgb, var(--cor-modificador-forte) 50%, var(--cor-modificador-fraca-efetiva)); }
+    &[data-nivel='3'] { color: color-mix(in srgb, var(--cor-modificador-forte) 75%, var(--cor-modificador-fraca-efetiva)); }
+    &[data-nivel='4'] { color: var(--cor-modificador-forte); }
   }
 
   // Salvar/Cancelar ocupam a largura toda, divididos igualmente (m4-04b, ajuste pós-mockup) — mais

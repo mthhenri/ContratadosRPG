@@ -27,9 +27,11 @@ import type {
 import {
   calcularAtributoEfetivo,
   calcularLimiteResistencias,
+  calcularValorModificador,
   validarFichaCriatura,
 } from '@contratados-rpg/shared/regras/criatura';
 
+import { TemaService, hexParaHsl } from '../../../../core/services/tema.service';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { AutoFocus } from '../../../../shared/auto-focus/auto-focus.directive';
@@ -85,14 +87,6 @@ const GRUPOS_ATRIBUTO = [
   { rotulo: 'Mentais', campos: CAMPOS_ATRIBUTO.slice(5) },
 ] as const;
 
-/** Modificadores que contam como "acima do neutro" — o card de leitura pinta o Atributo Efetivo no
- * accent só nesses dois, como o mockup faz em parte dos atributos. Mesmo corte que as barrinhas de
- * sinal já usam visualmente (níveis 3 e 4 acendem a barra de aviso/accent). */
-const MODIFICADORES_DESTACADOS: readonly ModificadorCriaturaEnum[] = [
-  ModificadorCriaturaEnum.MEDIO,
-  ModificadorCriaturaEnum.FORTE,
-];
-
 /** Aba ativa da coluna de Status. `'informacoes'` virou `'geral'` (Cadência/Bônus de
  * Iniciativa/Deslocamento na mesma linha + Regeneração) + `'descricao'` (Descrição/Gancho/
  * Motivação/Natureza Física/Tema de Horror/Anotações); `'ataques'` (era combinada com
@@ -132,6 +126,7 @@ const COR_FICHA_PADRAO = '#d53030';
 export class CriaturaVisualizacao {
   private readonly bandeja = inject(BandejaDadosService);
   private readonly rolagemRegistro = inject(FichaRolagemRegistroService);
+  private readonly tema = inject(TemaService);
 
   readonly fichaId = input.required<number>();
   readonly nome = input.required<string>();
@@ -373,11 +368,36 @@ export class CriaturaVisualizacao {
     });
   }
 
-  /** Atributo cujo Modificador está acima do neutro — o card pinta o Efetivo no accent (ver
-   * `MODIFICADORES_DESTACADOS`); os demais ficam no cinza de rótulo, como no mockup. */
-  protected atributoDestacado(chave: ChaveAtributo): boolean {
-    return MODIFICADORES_DESTACADOS.includes(this.dados().modificadores[chave]);
+  /** Valor puro do Modificador (sem somar o Atributo Final) — é este número, não o Atributo
+   * Efetivo, que o card de leitura exibe: somar o atributo ali duplicava a mesma informação já
+   * mostrada no valor grande e nunca corresponde ao bônus de fato aplicado num teste
+   * (`rolarTesteAtributoCriatura` soma só isto ao resultado, nunca o Atributo Efetivo). */
+  protected modificadorValor(chave: ChaveAtributo): number {
+    const dados = this.dados();
+    return calcularValorModificador({ tipo: dados.modificadores[chave], vd: dados.vd });
   }
+
+  /** Nível 1 (Frágil) a 4 (Forte) do Modificador — mesma ordem/uso de `modificadoresPorNivel`,
+   * dirige a progressão de cor do card de leitura (`data-nivel` no template). */
+  protected nivelModificador(chave: ChaveAtributo): number {
+    return this.modificadoresPorNivel.indexOf(this.dados().modificadores[chave]) + 1;
+  }
+
+  /**
+   * Ponta "fraca" da progressão de cor do Modificador (Forte = `--accent` do tema do site cheio →
+   * Frágil = este valor). Normalmente `null` — o CSS já mistura `--accent` até `--text-mute` (o
+   * cinza do tema). Só quando o `--accent` selecionado nas configurações é ele mesmo acromático
+   * (preset "Cinza" de `TemaService`) esta função devolve preto/branco puro: misturar cinza-com-
+   * cinza não produz gradiente visível, então a ponta se afasta para o extremo que mais contrasta
+   * com a cor de origem (a mais clara vai a preto, a mais escura vai a branco).
+   */
+  protected readonly modificadorCorFraca = computed<string | null>(() => {
+    const [, saturacao, luminosidade] = hexParaHsl(this.tema.accentAplicado());
+    if (saturacao >= 0.12) {
+      return null;
+    }
+    return luminosidade < 0.5 ? '#ffffff' : '#000000';
+  });
 
   protected ajustarVida(delta: number): void {
     const valor = Math.max(0, this.dados().vidaAtual + delta);

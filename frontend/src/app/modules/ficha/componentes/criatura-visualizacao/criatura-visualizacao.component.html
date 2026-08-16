@@ -1,4 +1,7 @@
-<article class="criatura">
+<article
+  class="criatura"
+  [style.--cor-modificador-fraca]="modificadorCorFraca()"
+>
   <!-- Barra superior: rótulo + chip de classificação — mesma estrutura de `ficha-visao__topo`
        (FichaVisualizacao), movida pra dentro do componente (era da página) pra bater exatamente
        com o padrão do jogador, inclusive o traço divisor. -->
@@ -444,10 +447,10 @@
                   <span class="criatura__atributo-valor">{{ dados().atributos[campo.chave] }}</span>
                   <span
                     class="criatura__atributo-efetivo"
-                    [class.criatura__atributo-efetivo--destacado]="atributoDestacado(campo.chave)"
-                    [appTooltip]="'Atributo Efetivo — modificador ' + rotuloModificadorCriatura(dados().modificadores[campo.chave])"
+                    [attr.data-nivel]="nivelModificador(campo.chave)"
+                    [appTooltip]="'Modificador — ' + rotuloModificadorCriatura(dados().modificadores[campo.chave])"
                   >
-                    +{{ atributoEfetivo(campo.chave) }}
+                    {{ modificadorValor(campo.chave) >= 0 ? '+' : '' }}{{ modificadorValor(campo.chave) }}
                   </span>
                 </div>
               }
