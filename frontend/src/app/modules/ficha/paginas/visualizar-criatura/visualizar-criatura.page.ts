@@ -150,7 +150,9 @@ export class CriaturaVisualizar {
 
     this.fichaEdicao.inicializar(this.ficha, () => this.fichaId);
 
-    this.fichaRolagemRegistro.inicializar(() => this.fichaId);
+    // `true` — rolagens de criatura nascem ocultas (privadas): os jogadores não podem ver os
+    // testes/danos da Ameaça, diferente da ficha de jogador (default público).
+    this.fichaRolagemRegistro.inicializar(() => this.fichaId, true);
     this.fichaRolagemRegistro.registrada$
       .pipe(takeUntilDestroyed())
       .subscribe({ next: (rolagem) => this.onRolagemRegistrada(rolagem) });

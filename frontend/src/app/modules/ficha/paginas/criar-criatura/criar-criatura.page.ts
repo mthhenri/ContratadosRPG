@@ -107,10 +107,10 @@ const linhaResistenciaVazia = (): LinhaResistencia => ({ tipo: TipoDanoEnum.FISI
 
 interface LinhaAtaque {
   readonly nome: string; readonly teste: string; readonly custoAcao: CustoAcaoEnum;
-  readonly dano: string; readonly danoCritico: string; readonly tipoDano: TipoDanoEnum; readonly area: boolean; readonly efeito: string;
+  readonly dano: string; readonly danoCritico: string; readonly area: boolean; readonly efeito: string;
 }
 const linhaAtaqueVazia = (): LinhaAtaque => ({
-  nome: '', teste: '', custoAcao: CustoAcaoEnum.PADRAO, dano: '', danoCritico: '', tipoDano: TipoDanoEnum.FISICO,
+  nome: '', teste: '', custoAcao: CustoAcaoEnum.PADRAO, dano: '', danoCritico: '',
   area: false, efeito: '',
 });
 
@@ -198,7 +198,7 @@ const paraResistenciaDto = (linha: LinhaResistencia): FichaCriaturaResistenciaDt
 });
 const paraAtaqueDto = (linha: LinhaAtaque): FichaCriaturaAtaqueDto => ({
   nome: linha.nome.trim(), teste: linha.teste.trim(), custoAcao: linha.custoAcao, dano: linha.dano.trim(),
-  danoCritico: linha.danoCritico.trim(), tipoDano: linha.tipoDano, area: linha.area,
+  danoCritico: linha.danoCritico.trim(), area: linha.area,
   ...(linha.efeito.trim() ? { efeito: linha.efeito.trim() } : {}),
 });
 const paraHabilidadeDto = (linha: LinhaHabilidade): FichaCriaturaHabilidadeDto => ({

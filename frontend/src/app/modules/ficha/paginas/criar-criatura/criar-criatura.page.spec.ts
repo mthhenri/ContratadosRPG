@@ -114,9 +114,9 @@ describe('CriaturaCriar', () => {
     atualizar({
       cadencia: CadenciaEnum.SINGULAR,
       ataques: [
-        { nome: 'Pancada', teste: 'lutad20kh1+5', custoAcao: CustoAcaoEnum.MOVIMENTO, dano: '3D12+4', danoCritico: '6D12+8', tipoDano: TipoDanoEnum.FISICO, area: false, efeito: '' },
+        { nome: 'Pancada', teste: 'lutad20kh1+5', custoAcao: CustoAcaoEnum.MOVIMENTO, dano: '3D12+4', danoCritico: '6D12+8', area: false, efeito: '' },
         {
-          nome: 'Esmagamento', teste: 'lutad20kh1+5', custoAcao: CustoAcaoEnum.PADRAO, dano: '4D12+10', danoCritico: '8D12+20', tipoDano: TipoDanoEnum.FISICO,
+          nome: 'Esmagamento', teste: 'lutad20kh1+5', custoAcao: CustoAcaoEnum.PADRAO, dano: '4D12+10', danoCritico: '8D12+20',
           area: false, efeito: 'O alvo realiza um teste de Vigor (DT 20) ou fica Imobilizado por 1 turno.',
         },
       ],
@@ -223,9 +223,9 @@ describe('CriaturaCriar', () => {
       deslocamento: { terrestre: 9, voador: null, aquatico: null, sobrenatural: null },
       cadencia: CadenciaEnum.SINGULAR,
       ataques: [
-        { nome: 'Pancada', teste: 'lutad20kh1+5', custoAcao: CustoAcaoEnum.MOVIMENTO, dano: '3D12+4', danoCritico: '6D12+8', tipoDano: TipoDanoEnum.FISICO, area: false },
+        { nome: 'Pancada', teste: 'lutad20kh1+5', custoAcao: CustoAcaoEnum.MOVIMENTO, dano: '3D12+4', danoCritico: '6D12+8', area: false },
         {
-          nome: 'Esmagamento', teste: 'lutad20kh1+5', custoAcao: CustoAcaoEnum.PADRAO, dano: '4D12+10', danoCritico: '8D12+20', tipoDano: TipoDanoEnum.FISICO,
+          nome: 'Esmagamento', teste: 'lutad20kh1+5', custoAcao: CustoAcaoEnum.PADRAO, dano: '4D12+10', danoCritico: '8D12+20',
           area: false, efeito: 'O alvo realiza um teste de Vigor (DT 20) ou fica Imobilizado por 1 turno.',
         },
       ],

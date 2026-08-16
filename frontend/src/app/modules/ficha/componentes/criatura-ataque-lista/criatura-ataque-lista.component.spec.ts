@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
-import { CustoAcaoEnum, TipoDanoEnum } from '@contratados-rpg/shared/enums';
+import { CustoAcaoEnum } from '@contratados-rpg/shared/enums';
 import type { FichaCriaturaAtaqueDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { CriaturaAtaqueLista } from './criatura-ataque-lista.component';
 
 describe('CriaturaAtaqueLista', () => {
   const itens: FichaCriaturaAtaqueDto[] = [
-    { nome: 'Golpe de Pedra', teste: 'lutad20kh1+3', custoAcao: CustoAcaoEnum.PADRAO, dano: '4D12+10', danoCritico: '8D12+20', tipoDano: TipoDanoEnum.FISICO, area: false },
+    { nome: 'Golpe de Pedra', teste: 'lutad20kh1+3', custoAcao: CustoAcaoEnum.PADRAO, dano: '4D12+10', danoCritico: '8D12+20', area: false },
   ];
 
   function montar(editavel = true) {
@@ -69,13 +69,13 @@ describe('CriaturaAtaqueLista', () => {
     alvo.fixture.componentInstance['adicionar']();
     alvo.fixture.componentInstance['itemForm'].setValue({
       nome: 'Investida', teste: 'forcad20kh1+2', custoAcao: CustoAcaoEnum.COMPLETA,
-      dano: '6D12+16', danoCritico: '12D12+32', tipoDano: TipoDanoEnum.FISICO, area: false, efeito: '',
+      dano: '6D12+16', danoCritico: '12D12+32', area: false, efeito: '',
     });
     alvo.fixture.componentInstance['confirmar']();
 
     expect(alvo.emitidos[0]).toEqual([
       ...itens,
-      { nome: 'Investida', teste: 'forcad20kh1+2', custoAcao: CustoAcaoEnum.COMPLETA, dano: '6D12+16', danoCritico: '12D12+32', tipoDano: TipoDanoEnum.FISICO, area: false },
+      { nome: 'Investida', teste: 'forcad20kh1+2', custoAcao: CustoAcaoEnum.COMPLETA, dano: '6D12+16', danoCritico: '12D12+32', area: false },
     ]);
   });
 });

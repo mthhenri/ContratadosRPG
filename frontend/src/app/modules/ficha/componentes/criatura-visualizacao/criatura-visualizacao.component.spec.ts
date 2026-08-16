@@ -28,7 +28,7 @@ describe('CriaturaVisualizacao', () => {
     tenacidade: TenacidadeEnum.RESISTENTE, vidaMaxima: 100, vidaAtual: 100, defesa: 30,
     resistencias: [], fraquezas: [{ tipo: TipoDanoEnum.BALISTICO, subtipo: null, valor: 10 }],
     porte: PorteCriaturaEnum.GRANDE, deslocamento: { terrestre: 9 }, cadencia: CadenciaEnum.SINGULAR,
-    ataques: [{ nome: 'Golpe', teste: 'lutad20kh1+3', custoAcao: CustoAcaoEnum.PADRAO, dano: '4D12+10', danoCritico: '8D12+20', tipoDano: TipoDanoEnum.FISICO, area: false }],
+    ataques: [{ nome: 'Golpe', teste: 'lutad20kh1+3', custoAcao: CustoAcaoEnum.PADRAO, dano: '4D12+10', danoCritico: '8D12+20', area: false }],
     habilidades: [], anotacoes: '',
   };
 
@@ -108,7 +108,7 @@ describe('CriaturaVisualizacao', () => {
 
   it('repassa a lista de ataques editada para ataquesMudou', () => {
     const { fixture, eventos } = montar();
-    const novos = [...dados.ataques, { nome: 'Segundo', teste: 'forcad20kh1+1', custoAcao: CustoAcaoEnum.MOVIMENTO, dano: '2D10', danoCritico: '4D10', tipoDano: TipoDanoEnum.FISICO, area: false }];
+    const novos = [...dados.ataques, { nome: 'Segundo', teste: 'forcad20kh1+1', custoAcao: CustoAcaoEnum.MOVIMENTO, dano: '2D10', danoCritico: '4D10', area: false }];
     fixture.componentInstance['aoAtaquesMudar'](novos);
     expect(eventos['ataquesMudou']).toEqual([novos]);
   });

@@ -180,10 +180,11 @@ export interface FichaCriaturaAtaqueDto {
   /** Fórmula de teste (ex. `"lutad20kh1+3"`) — livre, não fica preso a um único atributo. */
   readonly teste: string;
   readonly custoAcao: CustoAcaoEnum;
+  /** Fórmula de dano (ex. `"4D12+10[Físico]"`) — o tipo de dano vai na própria fórmula, não é
+   * mais um campo à parte (`rolarFormula` já extrai a tag de tipo direto da expressão). */
   readonly dano: string;
   /** Fórmula de dano crítico — independente de `dano`, o Mestre escreve o efeito exato. */
   readonly danoCritico: string;
-  readonly tipoDano: TipoDanoEnum;
   readonly area: boolean;
   /** Condição/teste/efeito adicional além do dano — opcional. */
   readonly efeito?: string;

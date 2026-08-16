@@ -516,6 +516,38 @@ export class CriaturaVisualizacao {
   }
 
   /**
+   * Visibilidade das próximas rolagens desta criatura (`FichaRolagemRegistroService`, distinto do
+   * `oculta`/`alternarOculta` acima, que é a visibilidade da **ficha inteira**). Nasce `true`
+   * (`visualizar-criatura.page.ts` chama `inicializar(..., true)`) — os jogadores não podem ver os
+   * testes/danos da Ameaça por padrão.
+   */
+  protected rolagemOculta(): boolean {
+    return this.rolagemRegistro.oculta();
+  }
+
+  /** Confirmação pendente pra tornar as rolagens públicas — só ocultar → revelar pede confirmação
+   * (revelar de propósito, ex.: "susto" de rolar publicamente pros jogadores verem, é uma decisão
+   * deliberada; voltar a ocultar não precisa de trava). */
+  protected readonly confirmandoRevelarRolagem = signal(false);
+
+  protected alternarRolagemOculta(): void {
+    if (this.rolagemRegistro.oculta()) {
+      this.confirmandoRevelarRolagem.set(true);
+      return;
+    }
+    this.rolagemRegistro.alternarOculta();
+  }
+
+  protected confirmarRevelarRolagem(): void {
+    this.rolagemRegistro.alternarOculta();
+    this.confirmandoRevelarRolagem.set(false);
+  }
+
+  protected cancelarRevelarRolagem(): void {
+    this.confirmandoRevelarRolagem.set(false);
+  }
+
+  /**
    * Handler de `(change)` do `<input type="file">` do avatar — sem validação de tamanho/tipo aqui
    * (o `accept` do input já filtra a escolha e `FichaService.alterarImagem` valida no envio). Não
    * emite ainda: abre o seletor de enquadramento (`arquivoPendente`) — mesmo fluxo de

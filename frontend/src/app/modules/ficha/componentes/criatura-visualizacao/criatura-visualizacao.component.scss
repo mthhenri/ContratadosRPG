@@ -474,3 +474,71 @@
     &__info-duas { grid-template-columns: 1fr; }
   }
 }
+
+// Toggle "Rolagem oculta" (mesma receita visual de `.ficha-rolagem-oculta`,
+// `ficha-rolagens-painel.component.scss`) — copiado pra cá pelo mesmo motivo do `.botao` acima:
+// encapsulamento de estilos não alcança o componente que hospeda o botão do card de criatura.
+.ficha-rolagem-oculta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+
+  app-icone { font-size: 13px; }
+
+  &:hover { border-color: var(--accent-border); color: var(--text); }
+
+  &--ativa { color: var(--accent); border-color: var(--accent-border); background: var(--accent-dim); }
+
+  @include bp.mobile { min-height: bp.$alvo-toque; }
+}
+
+// `.dialogo` canônico (copiado de `visualizar-criatura.page.scss` — mesmo motivo do `.botao`
+// acima) — hospeda a confirmação de "tornar rolagens públicas".
+.dialogo {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 60px 20px;
+  overflow-y: auto;
+
+  @include bp.mobile { padding: 24px 12px; align-items: center; }
+
+  &__fundo { position: fixed; inset: 0; background: rgb(0 0 0 / 55%); border: 0; cursor: default; }
+
+  &__painel {
+    position: relative; z-index: 1; width: 100%; max-width: 460px;
+    background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-card);
+    padding: var(--pad-card); box-shadow: 0 16px 48px rgb(0 0 0 / 45%);
+  }
+
+  &__titulo { font-family: var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); font-size: 13px; font-weight: 600; color: var(--text); margin: 0; }
+
+  &__fechar {
+    flex: 0 0 auto; width: 26px; height: 26px; font-size: 13px; color: var(--text-dim);
+    background: transparent; border: 1px solid var(--border-strong); border-radius: var(--radius-control);
+    cursor: pointer; transition: color .15s ease, border-color .15s ease, background-color .15s ease;
+    &:hover { color: var(--accent); border-color: var(--accent-border); background: var(--surface-2); }
+    @include bp.mobile { width: bp.$alvo-toque; height: bp.$alvo-toque; }
+  }
+}
+
+.revelar-rolagem {
+  &__aviso { margin: 0 0 16px; font: 13px/1.6 var(--font-sans); color: var(--text-dim); }
+  &__acoes { display: flex; gap: 10px; }
+  &__acao { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+}

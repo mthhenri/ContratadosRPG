@@ -2,7 +2,7 @@ import { Component, input, output, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { CustoAcaoEnum, TipoDanoEnum } from '@contratados-rpg/shared/enums';
+import { CustoAcaoEnum } from '@contratados-rpg/shared/enums';
 import type { FichaCriaturaAtaqueDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { Icone } from '../../../../shared/icone/icone.component';
@@ -10,7 +10,6 @@ import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { rotuloCustoAcao, rotuloCustoAcaoCurto } from '../../rotulos-criatura';
 
 const CUSTOS_ACAO: readonly CustoAcaoEnum[] = Object.values(CustoAcaoEnum) as CustoAcaoEnum[];
-const TIPOS_DANO: readonly TipoDanoEnum[] = Object.values(TipoDanoEnum) as TipoDanoEnum[];
 
 /** Editor no próprio lugar da lista `ataques` da ficha de criatura (m4-04b), com botão de rolagem por linha. */
 @Component({
@@ -33,7 +32,6 @@ export class CriaturaAtaqueLista {
   readonly rolarAtaqueCritico = output<FichaCriaturaAtaqueDto>();
 
   protected readonly custosAcao = CUSTOS_ACAO;
-  protected readonly tiposDano = TIPOS_DANO;
   protected readonly rotuloCustoAcao = rotuloCustoAcao;
   protected readonly rotuloCustoAcaoCurto = rotuloCustoAcaoCurto;
 
@@ -49,7 +47,6 @@ export class CriaturaAtaqueLista {
     custoAcao: new FormControl(CustoAcaoEnum.PADRAO, { nonNullable: true }),
     dano: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     danoCritico: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    tipoDano: new FormControl(TipoDanoEnum.FISICO, { nonNullable: true }),
     area: new FormControl(false, { nonNullable: true }),
     efeito: new FormControl('', { nonNullable: true }),
   });
@@ -67,7 +64,7 @@ export class CriaturaAtaqueLista {
   }
 
   protected adicionar(): void {
-    this.itemForm.reset({ nome: '', teste: '', custoAcao: CustoAcaoEnum.PADRAO, dano: '', danoCritico: '', tipoDano: TipoDanoEnum.FISICO, area: false, efeito: '' });
+    this.itemForm.reset({ nome: '', teste: '', custoAcao: CustoAcaoEnum.PADRAO, dano: '', danoCritico: '', area: false, efeito: '' });
     this.indiceEmEdicao.set(-1);
   }
 
@@ -101,7 +98,6 @@ export class CriaturaAtaqueLista {
       custoAcao: bruto.custoAcao,
       dano: bruto.dano.trim(),
       danoCritico: bruto.danoCritico.trim(),
-      tipoDano: bruto.tipoDano,
       area: bruto.area,
       ...(bruto.efeito.trim() ? { efeito: bruto.efeito.trim() } : {}),
     };

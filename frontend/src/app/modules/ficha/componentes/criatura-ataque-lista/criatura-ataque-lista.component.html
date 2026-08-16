@@ -44,7 +44,6 @@
 
           <div class="ataque-lista__marcas">
             <span class="ataque-lista__marca">{{ rotuloCustoAcaoCurto(item.custoAcao) }}</span>
-            <span class="ataque-lista__marca">{{ item.tipoDano }}</span>
             @if (item.area) { <span class="ataque-lista__marca">Área</span> }
           </div>
 
@@ -109,12 +108,6 @@
     <label class="ataque-lista__campo">
       <span class="ataque-lista__campo-rotulo">Dano crítico (fórmula)</span>
       <input class="ataque-lista__input" formControlName="danoCritico" placeholder="ex.: 8D12+20" aria-label="Fórmula de dano crítico" />
-    </label>
-    <label class="ataque-lista__campo">
-      <span class="ataque-lista__campo-rotulo">Tipo de dano</span>
-      <select class="ataque-lista__select" formControlName="tipoDano" aria-label="Tipo de dano">
-        @for (t of tiposDano; track t) { <option [value]="t">{{ t }}</option> }
-      </select>
     </label>
     <label class="ataque-lista__campo ataque-lista__campo--largo">
       <span class="ataque-lista__campo-rotulo">Efeito adicional</span>

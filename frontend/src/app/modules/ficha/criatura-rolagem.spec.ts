@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ModificadorCriaturaEnum, CustoAcaoEnum, TipoDanoEnum } from '@contratados-rpg/shared/enums';
+import { ModificadorCriaturaEnum, CustoAcaoEnum } from '@contratados-rpg/shared/enums';
 import type { FichaAtributosDto, FichaCriaturaAtaqueDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { rolarAtaqueCriatura, rolarTesteAtaqueCriatura, rolarTesteAtributoCriatura } from './criatura-rolagem';
@@ -60,7 +60,7 @@ describe('rolarAtaqueCriatura', () => {
   it('rola a fórmula de dano do ataque direto, sem ajuste de atributo', () => {
     const ataque: FichaCriaturaAtaqueDto = {
       nome: 'Golpe de Pedra', teste: 'lutad20kh1+3', custoAcao: CustoAcaoEnum.PADRAO,
-      dano: '4D12+10', danoCritico: '8D12+20', tipoDano: TipoDanoEnum.FISICO, area: false,
+      dano: '4D12+10', danoCritico: '8D12+20', area: false,
     };
 
     const resultado = rolarAtaqueCriatura({ atributos }, ataque);
@@ -73,7 +73,7 @@ describe('rolarAtaqueCriatura', () => {
   it('crítico rola danoCritico — fórmula independente do Mestre, não o dobro automático de dano', () => {
     const ataque: FichaCriaturaAtaqueDto = {
       nome: 'Golpe de Pedra', teste: 'lutad20kh1+3', custoAcao: CustoAcaoEnum.PADRAO,
-      dano: '4D12+10', danoCritico: '8D12+20', tipoDano: TipoDanoEnum.FISICO, area: false,
+      dano: '4D12+10', danoCritico: '8D12+20', area: false,
     };
 
     const resultado = rolarAtaqueCriatura({ atributos }, ataque, true);
@@ -95,7 +95,7 @@ describe('rolarTesteAtaqueCriatura', () => {
   it('rola a fórmula de teste própria do ataque, sem depender de um único atributo', () => {
     const ataque: FichaCriaturaAtaqueDto = {
       nome: 'Golpe de Pedra', teste: 'lutad20kh1+3', custoAcao: CustoAcaoEnum.PADRAO,
-      dano: '4D12+10', danoCritico: '8D12+20', tipoDano: TipoDanoEnum.FISICO, area: false,
+      dano: '4D12+10', danoCritico: '8D12+20', area: false,
     };
 
     const resultado = rolarTesteAtaqueCriatura({ atributos }, ataque);

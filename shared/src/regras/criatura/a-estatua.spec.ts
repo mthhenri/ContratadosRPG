@@ -136,7 +136,6 @@ describe('Caso de teste completo — "A Estátua"', () => {
           atributo: 'luta',
           custoAcao: CustoAcaoEnum.MOVIMENTO,
           dano: '3D12+4',
-          tipoDano: TipoDanoEnum.FISICO,
           area: false,
         },
         {
@@ -144,7 +143,6 @@ describe('Caso de teste completo — "A Estátua"', () => {
           atributo: 'luta',
           custoAcao: CustoAcaoEnum.PADRAO,
           dano: '4D12+10',
-          tipoDano: TipoDanoEnum.FISICO,
           area: false,
           efeito: 'O alvo realiza um teste de Vigor (DT 20) ou fica Imobilizado por 1 turno.',
         },

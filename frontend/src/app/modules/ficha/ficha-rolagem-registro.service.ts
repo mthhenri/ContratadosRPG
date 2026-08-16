@@ -41,15 +41,23 @@ export class FichaRolagemRegistroService {
    * Visibilidade das próximas rolagens (m3-27): `true` = `PRIVADA` (só o autor e o mestre veem — o
    * mesmo toggle serve ao mestre pra rolar "só para si", já que aí autor = mestre). Default `false`
    * (`PUBLICA`) — estado local, não persistido (reflete a decisão do momento em que se rola, não um
-   * ajuste da ficha).
+   * ajuste da ficha). `inicializar` pode sobrescrever esse default (ver `ocultaPadrao`).
    */
   private readonly ocultaSignal = signal(false);
   readonly oculta = this.ocultaSignal.asReadonly();
 
   private obterFichaId: (() => number | null) | null = null;
 
-  /** Liga o serviço à ficha aberta na página — chamado uma vez, no `constructor`. */
-  inicializar(fichaId: () => number | null): void {
+  /**
+   * Liga o serviço à ficha aberta na página — chamado uma vez, no `constructor`. `ocultaPadrao`
+   * fixa o valor inicial da visibilidade (default `false`/pública, o mesmo de sempre); a ficha de
+   * criatura passa `true` — as rolagens da Ameaça nascem `PRIVADA` (o mestre revela só quando
+   * decide, ex.: "susto" de rolar publicamente), diferente da ficha de jogador.
+   */
+  inicializar(fichaId: () => number | null, ocultaPadrao = false): void {
+    if (!this.obterFichaId) {
+      this.ocultaSignal.set(ocultaPadrao);
+    }
     this.obterFichaId ??= fichaId;
   }
 

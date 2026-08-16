@@ -5,6 +5,22 @@
   <header class="criatura__topo">
     <span class="criatura__rotulo-secao">Ficha de Criatura</span>
     <span class="criatura__regua"></span>
+    @if (ajustavel()) {
+      <!-- Visibilidade das rolagens desta criatura (Teste/Dano/Crítico) — distinto do toggle
+           "Ocultar ficha" do menu da página, que esconde a ficha inteira. Nasce oculta; revelar
+           pede confirmação (ver `alternarRolagemOculta`). -->
+      <button
+        type="button"
+        class="ficha-rolagem-oculta"
+        [class.ficha-rolagem-oculta--ativa]="rolagemOculta()"
+        [attr.aria-pressed]="rolagemOculta()"
+        [appTooltip]="rolagemOculta() ? 'Rolagens da criatura: privadas (só você vê)' : 'Rolagens da criatura: públicas'"
+        (click)="alternarRolagemOculta()"
+      >
+        <app-icone [nome]="rolagemOculta() ? 'olho-fechado' : 'olho'" />
+        <span>Rolagem oculta</span>
+      </button>
+    }
     <span class="chip-classificacao">{{ classificacao() }}</span>
   </header>
 
@@ -918,4 +934,32 @@
   </div>
 
   <app-bandeja-dados />
+
+  @if (confirmandoRevelarRolagem()) {
+    <div class="dialogo" role="dialog" aria-modal="true" aria-label="Tornar rolagens públicas">
+      <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="cancelarRevelarRolagem()"></button>
+      <div class="dialogo__painel revelar-rolagem">
+        <header class="criatura__cartao-cabecalho">
+          <app-icone nome="olho" />
+          <h2 class="dialogo__titulo criatura__cartao-titulo">Tornar Rolagens Públicas</h2>
+          <span class="criatura__cartao-regua"></span>
+          <button class="dialogo__fechar" type="button" aria-label="Fechar" (click)="cancelarRevelarRolagem()">✕</button>
+        </header>
+
+        <p class="revelar-rolagem__aviso">
+          A partir de agora, os testes e danos rolados desta criatura ficam visíveis pros jogadores.
+          Tem certeza?
+        </p>
+
+        <div class="revelar-rolagem__acoes">
+          <button class="botao botao--primario revelar-rolagem__acao" type="button" (click)="confirmarRevelarRolagem()">
+            <app-icone nome="olho" /> Tornar pública
+          </button>
+          <button class="botao botao--secundario revelar-rolagem__acao" type="button" (click)="cancelarRevelarRolagem()">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 </article>
