@@ -27,6 +27,7 @@ import type {
   FichaFragmentoConsumidoDto,
   FichaHabilidadeDto,
   FichaIdentidadeDto,
+  FichaImagemFocoDto,
   FichaInventarioDto,
   FichaJogadorDadosDto,
   FichaOrigemDto,
@@ -101,6 +102,7 @@ export class FichaEdicaoService {
             .alterarFicha(this.obterFichaId(), {
               nome: fichaAtual.nome,
               cor: fichaAtual.cor,
+              imagemFoco: fichaAtual.imagemFoco,
               oculta: fichaAtual.oculta,
               dados: fichaAtual.dados,
             })
@@ -380,6 +382,20 @@ export class FichaEdicaoService {
   }
 
   /**
+   * Enquadramento do avatar (ajuste pós-mockup, relacional — fora do `dados`) — mesmo padrão de
+   * {@link ajustarCor}. Chamado uma vez, ao confirmar no seletor de enquadramento (não a cada
+   * pixel de arrasto).
+   */
+  ajustarImagemFoco(imagemFoco: FichaImagemFocoDto | null): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) {
+      return;
+    }
+    this.ficha.set({ ...fichaAtual, imagemFoco });
+    this.agendarPersistencia();
+  }
+
+  /**
    * Avatar da ficha (m3-62) — **imediato**, não passa pelo `agendarPersistencia` debounced: o
    * upload em si já é a persistência (`FichaService.alterarImagem`, multipart), não uma edição de
    * campo em lote. Atualiza o signal local só com a `imagemUrl` devolvida pelo backend ao concluir.
@@ -408,7 +424,11 @@ export class FichaEdicaoService {
       });
   }
 
-  /** Remove o avatar da ficha (m3-62) — mesmo modelo imediato de {@link ajustarImagem}. */
+  /**
+   * Remove o avatar da ficha (m3-62) — mesmo modelo imediato de {@link ajustarImagem}. Zera
+   * também `imagemFoco` (sem imagem, o enquadramento não faz sentido — evita metadado órfão de
+   * uma imagem que não existe mais).
+   */
   removerImagem(): void {
     const fichaAtual = this.ficha();
     if (!fichaAtual) {
@@ -430,6 +450,7 @@ export class FichaEdicaoService {
           this.ficha.set({ ...fichaAgora, imagemUrl: resultado.imagemUrl });
         }
         this.marcarSalvo();
+        this.ajustarImagemFoco(null);
       });
   }
 

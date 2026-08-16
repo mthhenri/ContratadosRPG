@@ -9,11 +9,6 @@
       <app-icone nome="voltar" />
     </a>
 
-    <span class="ficha-pagina__rotulo-secao">Ficha de Criatura</span>
-    @if (ficha(); as fichaAtual) {
-      <span class="chip-classificacao">FICHA-CRT-{{ fichaAtual.id }}</span>
-    }
-
     <div class="ficha-pagina__acoes">
       @if (fichaEdicao.estadoPersistencia() !== 'ocioso') {
         <span
@@ -118,6 +113,7 @@
       [nome]="fichaAtual.nome"
       [cor]="fichaAtual.cor"
       [imagemUrl]="fichaAtual.imagemUrl"
+      [foco]="fichaAtual.imagemFoco"
       [oculta]="fichaAtual.oculta"
       [dados]="fichaAtual.dados"
       [ajustavel]="podeGerenciar()"
@@ -144,6 +140,7 @@
       (ocultaMudou)="fichaEdicao.ajustarOculta($event)"
       (imagemMudou)="fichaEdicao.ajustarImagem($event)"
       (removerImagem)="fichaEdicao.removerImagem()"
+      (focoMudou)="fichaEdicao.ajustarImagemFoco($event)"
     />
   } @else {
     <p class="ficha-pagina__carregando">Ficha não encontrada.</p>

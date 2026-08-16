@@ -13,6 +13,7 @@ import type {
   FichaCriaturaRecuperadaDto,
   FichaCriaturaRegeneracaoDto,
   FichaCriaturaResistenciaDto,
+  FichaImagemFocoDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import type { CadenciaEnum, NivelAmeacaEnum, PorteCriaturaEnum, TenacidadeEnum } from '@contratados-rpg/shared/enums';
 
@@ -64,6 +65,7 @@ export class FichaEdicaoCriaturaService {
             .alterarFichaCriatura(this.obterFichaId(), {
               nome: fichaAtual.nome,
               cor: fichaAtual.cor,
+              imagemFoco: fichaAtual.imagemFoco,
               oculta: fichaAtual.oculta,
               dados: fichaAtual.dados,
             })
@@ -205,6 +207,14 @@ export class FichaEdicaoCriaturaService {
     this.agendarPersistencia();
   }
 
+  /** Enquadramento do avatar (ajuste pós-mockup) — mesmo padrão de {@link ajustarCor}. */
+  ajustarImagemFoco(imagemFoco: FichaImagemFocoDto | null): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) return;
+    this.ficha.set({ ...fichaAtual, imagemFoco });
+    this.agendarPersistencia();
+  }
+
   /** Avatar (imediato, fora do debounce — mesmo modelo de `FichaEdicaoService.ajustarImagem`). */
   ajustarImagem(arquivo: File): void {
     const fichaAtual = this.ficha();
@@ -247,6 +257,7 @@ export class FichaEdicaoCriaturaService {
           this.ficha.set({ ...fichaAgora, imagemUrl: resultado.imagemUrl });
         }
         this.marcarSalvo();
+        this.ajustarImagemFoco(null);
       });
   }
 }

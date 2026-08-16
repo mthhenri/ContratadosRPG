@@ -62,7 +62,7 @@ describe('CriaturaVisualizar', () => {
 
   function montar(opcoes: { usuarioLogadoId: number; acessos?: FichaAcessoResumoDto[] }) {
     const fichaCriatura: FichaCriaturaRecuperadaDto = {
-      id: 4, campanhaId: 9, usuarioId: 7, nome: 'A Estátua', cor: null, imagemUrl: null, oculta: false, dados,
+      id: 4, campanhaId: 9, usuarioId: 7, nome: 'A Estátua', cor: null, imagemUrl: null, imagemFoco: null, oculta: false, dados,
     };
     const fichaService = {
       recuperarFichaCriatura: vi.fn(() => of(fichaCriatura)),

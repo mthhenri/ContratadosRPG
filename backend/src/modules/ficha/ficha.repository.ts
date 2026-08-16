@@ -74,7 +74,7 @@ export class FichaRepository extends BaseRepository {
   async recuperarPorId(dto: FichaRecuperarDto): Promise<FichaRecuperadaDto | null> {
     const [fichaEncontrada] = await this.executarConsulta<FichaRecuperadaDto>(
       `SELECT id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, imagem_url AS "imagemUrl",
-              COALESCE(oculta, false) AS oculta, dados
+              imagem_foco AS "imagemFoco", COALESCE(oculta, false) AS oculta, dados
        FROM ficha
        WHERE id = :id AND is_deleted = false`,
       { id: dto.id },
@@ -304,14 +304,15 @@ export class FichaRepository extends BaseRepository {
   async alterarFicha(dto: FichaInternoAlterarDto): Promise<FichaRecuperadaDto> {
     const [fichaAlterada] = await this.executarConsulta<FichaRecuperadaDto>(
       `UPDATE ficha
-       SET nome = :nome, cor = :cor, oculta = :oculta, dados = :dados::jsonb, updated_date = NOW()
+       SET nome = :nome, cor = :cor, imagem_foco = :imagemFoco::jsonb, oculta = :oculta, dados = :dados::jsonb, updated_date = NOW()
        WHERE id = :id AND is_deleted = false
        RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, imagem_url AS "imagemUrl",
-                 COALESCE(oculta, false) AS oculta, dados`,
+                 imagem_foco AS "imagemFoco", COALESCE(oculta, false) AS oculta, dados`,
       {
         id: dto.id,
         nome: dto.nome,
         cor: dto.cor ?? null,
+        imagemFoco: dto.imagemFoco ? JSON.stringify(dto.imagemFoco) : null,
         oculta: dto.oculta ?? false,
         dados: JSON.stringify(dto.dados),
       },
@@ -327,7 +328,7 @@ export class FichaRepository extends BaseRepository {
            updated_date = NOW()
        WHERE id = :id AND is_deleted = false
        RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, imagem_url AS "imagemUrl",
-                 COALESCE(oculta, false) AS oculta, dados`,
+                 imagem_foco AS "imagemFoco", COALESCE(oculta, false) AS oculta, dados`,
       { id: dto.id, estado: JSON.stringify(dto.estado) },
     );
     return fichaAlterada;
@@ -344,7 +345,7 @@ export class FichaRepository extends BaseRepository {
        SET dados = :dados::jsonb, updated_date = NOW()
        WHERE id = :id AND is_deleted = false
        RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, imagem_url AS "imagemUrl",
-                 COALESCE(oculta, false) AS oculta, dados`,
+                 imagem_foco AS "imagemFoco", COALESCE(oculta, false) AS oculta, dados`,
       { id: dto.id, dados: JSON.stringify(dto.dados) },
     );
     return fichaAlterada;

@@ -1,4 +1,13 @@
 <article class="criatura">
+  <!-- Barra superior: rótulo + chip de classificação — mesma estrutura de `ficha-visao__topo`
+       (FichaVisualizacao), movida pra dentro do componente (era da página) pra bater exatamente
+       com o padrão do jogador, inclusive o traço divisor. -->
+  <header class="criatura__topo">
+    <span class="criatura__rotulo-secao">Ficha de Criatura</span>
+    <span class="criatura__regua"></span>
+    <span class="chip-classificacao">{{ classificacao() }}</span>
+  </header>
+
   <div class="criatura__linha-colunas">
     <!-- Coluna 1 — Identidade: avatar/designação, classificação, VD/Tenacidade/Defesa, Vida,
          Resistências, Fraquezas. Alvo de fidelidade: docs/design/examples/ficha-de-criatura.html. -->
@@ -8,7 +17,22 @@
           @if (ajustavel()) {
             <div class="criatura__avatar criatura__avatar--editavel" [style.--cor-ficha]="cor()">
               @if (imagemUrl(); as urlImagem) {
-                <img class="criatura__avatar-imagem" [src]="urlImagem" alt="" />
+                <img
+                  class="criatura__avatar-imagem"
+                  [src]="urlImagem"
+                  alt=""
+                  [style.object-position]="estiloFocoPosicao()"
+                  [style.transform]="estiloFocoEscala()"
+                />
+                <button
+                  type="button"
+                  class="criatura__avatar-enquadrar"
+                  aria-label="Ajustar enquadramento"
+                  [appTooltip]="'Ajustar enquadramento'"
+                  (click)="abrirEnquadramentoExistente()"
+                >
+                  <app-icone nome="busca" />
+                </button>
                 <button
                   type="button"
                   class="criatura__avatar-remover"
@@ -19,6 +43,12 @@
                   <app-icone nome="excluir" />
                 </button>
               }
+              <input
+                type="color"
+                class="criatura__cor-entrada"
+                aria-label="Cor de identidade da ficha"
+                [formControl]="corCriaturaForm"
+              />
               <label class="criatura__avatar-upload" [appTooltip]="'Trocar imagem de registro'">
                 <input
                   type="file"
@@ -29,11 +59,27 @@
                 />
                 <app-icone nome="editar" />
               </label>
+
+              @if (enquadramentoOrigem(); as origemAtual) {
+                <app-ajuste-enquadramento-imagem
+                  [origem]="origemAtual"
+                  [proporcao]="{ largura: 100, altura: 100 }"
+                  [focoInicial]="arquivoPendente() ? null : foco()"
+                  (confirmar)="confirmarEnquadramento($event)"
+                  (cancelar)="fecharEnquadramento()"
+                />
+              }
             </div>
           } @else {
             <span class="criatura__avatar" aria-hidden="true" [style.--cor-ficha]="cor()">
               @if (imagemUrl(); as urlImagem) {
-                <img class="criatura__avatar-imagem" [src]="urlImagem" alt="" />
+                <img
+                  class="criatura__avatar-imagem"
+                  [src]="urlImagem"
+                  alt=""
+                  [style.object-position]="estiloFocoPosicao()"
+                  [style.transform]="estiloFocoEscala()"
+                />
               }
             </span>
           }
@@ -388,20 +434,31 @@
       </section>
     </div>
 
-    <!-- Coluna 3 — Status: abas Informações / Ataques e Habilidades, mesmo padrão de
-         `.ficha-status__abas` de `FichaVisualizacao`, recortado a duas abas. -->
+    <!-- Coluna 3 — Status: abas Geral / Descrição / Ataques / Habilidades, mesmo padrão de
+         `.ficha-status__abas` de `FichaVisualizacao`. -->
     <div class="criatura__coluna criatura__coluna--status">
       <div class="criatura__abas" role="tablist">
         <button
           type="button"
           class="criatura__aba"
           role="tab"
-          [class.criatura__aba--ativa]="abaAtiva() === 'informacoes'"
-          [attr.aria-selected]="abaAtiva() === 'informacoes'"
-          (click)="selecionarAba('informacoes')"
+          [class.criatura__aba--ativa]="abaAtiva() === 'geral'"
+          [attr.aria-selected]="abaAtiva() === 'geral'"
+          (click)="selecionarAba('geral')"
         >
           <app-icone nome="visao-geral" />
-          <span>Informações</span>
+          <span>Geral</span>
+        </button>
+        <button
+          type="button"
+          class="criatura__aba"
+          role="tab"
+          [class.criatura__aba--ativa]="abaAtiva() === 'descricao'"
+          [attr.aria-selected]="abaAtiva() === 'descricao'"
+          (click)="selecionarAba('descricao')"
+        >
+          <app-icone nome="anotacoes" />
+          <span>Descrição</span>
         </button>
         <button
           type="button"
@@ -412,11 +469,23 @@
           (click)="selecionarAba('ataques')"
         >
           <app-icone nome="d20" />
-          <span>Ataques e Habilidades</span>
+          <span>Ataques</span>
+        </button>
+        <button
+          type="button"
+          class="criatura__aba"
+          role="tab"
+          [class.criatura__aba--ativa]="abaAtiva() === 'habilidades'"
+          [attr.aria-selected]="abaAtiva() === 'habilidades'"
+          (click)="selecionarAba('habilidades')"
+        >
+          <app-icone nome="habilidades" />
+          <span>Habilidades</span>
         </button>
       </div>
 
-      @if (abaAtiva() === 'informacoes') {
+      @switch (abaAtiva()) {
+        @case ('geral') {
         <section class="criatura__cartao criatura__cartao--painel">
           <div class="criatura__stats criatura__stats--info">
             <div class="stat criatura__stat criatura__stat--info">
@@ -465,14 +534,12 @@
                 </button>
               }
             </div>
-          </div>
 
-          <div class="criatura__info-card">
-            <header class="criatura__info-cabecalho">
-              <h3 class="criatura__info-titulo">Deslocamento</h3>
-              <span class="criatura__info-regua"></span>
-            </header>
-            <div class="criatura__tags">
+            <!-- Deslocamento na mesma linha de Cadência/Bônus de Iniciativa (em vez de card cheio
+                 na linha de baixo) — mesma caixa `.stat` das duas, só com as tags dentro. -->
+            <div class="stat criatura__stat criatura__stat--deslocamento">
+              <span class="stat__rotulo">Deslocamento</span>
+              <div class="criatura__tags">
               <span class="criatura__tag" [class.criatura__tag--vazia]="!dados().deslocamento.terrestre">
                 <span class="criatura__tag-rotulo">Terrestre</span>
                 @if (editando('deslocamento.terrestre')) {
@@ -552,6 +619,7 @@
                   </button>
                 }
               </span>
+              </div>
             </div>
           </div>
 
@@ -662,6 +730,24 @@
 
           <div class="criatura__info-card">
             <header class="criatura__info-cabecalho">
+              <h3 class="criatura__info-titulo">Anotações</h3>
+              <span class="criatura__info-regua"></span>
+            </header>
+            <textarea
+              class="criatura__anotacoes"
+              aria-label="Anotações"
+              [value]="dados().anotacoes ?? ''"
+              [disabled]="!ajustavel()"
+              (blur)="confirmarAnotacoes($any($event.target).value)"
+            ></textarea>
+          </div>
+        </section>
+        }
+
+        @case ('descricao') {
+        <section class="criatura__cartao criatura__cartao--painel">
+          <div class="criatura__info-card">
+            <header class="criatura__info-cabecalho">
               <h3 class="criatura__info-titulo">Descrição</h3>
               <span class="criatura__info-regua"></span>
               @if (ajustavel() && !editando('identidade.conceito')) {
@@ -767,22 +853,10 @@
               }
             </div>
           </div>
-
-          <div class="criatura__info-card">
-            <header class="criatura__info-cabecalho">
-              <h3 class="criatura__info-titulo">Anotações</h3>
-              <span class="criatura__info-regua"></span>
-            </header>
-            <textarea
-              class="criatura__anotacoes"
-              aria-label="Anotações"
-              [value]="dados().anotacoes ?? ''"
-              [disabled]="!ajustavel()"
-              (blur)="confirmarAnotacoes($any($event.target).value)"
-            ></textarea>
-          </div>
         </section>
-      } @else {
+        }
+
+        @case ('ataques') {
         <section class="criatura__cartao criatura__cartao--painel">
           <app-criatura-ataque-lista
             [itens]="dados().ataques"
@@ -791,13 +865,18 @@
             (rolarAtaque)="rolarAtaque($event)"
             (testarAtaque)="rolarTesteAtaque($event)"
           />
+        </section>
+        }
 
+        @case ('habilidades') {
+        <section class="criatura__cartao criatura__cartao--painel">
           <app-criatura-habilidade-lista
             [itens]="dados().habilidades"
             [editavel]="ajustavel()"
             (itensMudou)="aoHabilidadesMudar($event)"
           />
         </section>
+        }
       }
     </div>
   </div>

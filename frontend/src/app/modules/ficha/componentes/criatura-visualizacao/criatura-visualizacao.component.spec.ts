@@ -53,6 +53,7 @@ describe('CriaturaVisualizacao', () => {
       'modificadoresMudou', 'tenacidadeMudou', 'resistenciasMudou', 'fraquezasMudou', 'regeneracaoMudou',
       'porteMudou', 'deslocamentoMudou', 'cadenciaMudou', 'iniciativaBonusMudou', 'ataquesMudou',
       'habilidadesMudou', 'anotacoesMudou', 'nomeMudou', 'corMudou', 'ocultaMudou',
+      'imagemMudou', 'removerImagem', 'focoMudou',
     ] as const) {
       eventos[nome] = [];
       (fixture.componentInstance as never as Record<string, { subscribe: (fn: (v: unknown) => void) => void }>)[nome]
@@ -111,12 +112,39 @@ describe('CriaturaVisualizacao', () => {
     expect(raiz.querySelector('.criatura__stat--vd')?.textContent).toContain('30');
   });
 
-  it('renderiza a lista de ataques vinda dos dados na aba Ataques e Habilidades', () => {
+  it('renderiza a lista de ataques vinda dos dados na aba Ataques', () => {
     const { fixture } = montar();
     fixture.componentInstance['selecionarAba']('ataques');
     fixture.detectChanges();
     const raiz = fixture.nativeElement as HTMLElement;
     expect(raiz.querySelectorAll('.ataque-lista__nome').length).toBe(1);
+  });
+
+  it('começa na aba Geral e tem as 4 abas (Geral/Descrição/Ataques/Habilidades)', () => {
+    const { fixture } = montar();
+    expect(fixture.componentInstance['abaAtiva']()).toBe('geral');
+    const rotulos = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('.criatura__aba span'),
+    ).map((el) => el.textContent?.trim());
+    expect(rotulos).toEqual(['Geral', 'Descrição', 'Ataques', 'Habilidades']);
+  });
+
+  it('a aba Habilidades renderiza só a lista de habilidades (separada de Ataques)', () => {
+    const { fixture } = montar();
+    fixture.componentInstance['selecionarAba']('habilidades');
+    fixture.detectChanges();
+    const raiz = fixture.nativeElement as HTMLElement;
+    expect(raiz.querySelector('.habilidade-lista')).not.toBeNull();
+    expect(raiz.querySelector('.ataque-lista__nome')).toBeNull();
+  });
+
+  it('a aba Geral mostra Cadência, Bônus de Iniciativa e Deslocamento na mesma linha', () => {
+    const { fixture } = montar();
+    const linha = (fixture.nativeElement as HTMLElement).querySelector('.criatura__stats--info')!;
+    expect(linha.querySelector('.criatura__stat--deslocamento')).not.toBeNull();
+    expect(linha.textContent).toContain('Cadência');
+    expect(linha.textContent).toContain('Bônus de Iniciativa');
+    expect(linha.textContent).toContain('Deslocamento');
   });
 
   it('a grade de Atributos só vira lista editável depois do lápis do cabeçalho', () => {
@@ -202,5 +230,84 @@ describe('CriaturaVisualizacao', () => {
     expect(fixture.componentInstance['atributoDestacado']('vigor')).toBe(true);
     expect(fixture.componentInstance['atributoDestacado']('destreza')).toBe(false);
     expect(fixture.componentInstance['atributoDestacado']('vontade')).toBe(false);
+  });
+
+  it('a barra superior mostra o rótulo e o badge FICHA-CRT com o id zero-padded', () => {
+    const { fixture } = montar();
+    const raiz = fixture.nativeElement as HTMLElement;
+    expect(raiz.querySelector('.criatura__rotulo-secao')?.textContent?.trim()).toBe('Ficha de Criatura');
+    expect(raiz.querySelector('.chip-classificacao')?.textContent?.trim()).toBe('FICHA-CRT-0004');
+  });
+
+  it('o <input type=color> emite corMudou quando a cor muda', () => {
+    const { fixture, eventos } = montar();
+    const componente = fixture.componentInstance;
+    componente['corCriaturaForm'].setValue('#336699');
+    expect(eventos['corMudou']).toEqual(['#336699']);
+  });
+
+  it('sem imagem, não mostra o selo de ajustar enquadramento', () => {
+    const { fixture } = montar();
+    const raiz = fixture.nativeElement as HTMLElement;
+    expect(raiz.querySelector('.criatura__avatar-enquadrar')).toBeNull();
+  });
+
+  describe('enquadramento do avatar (pan/zoom)', () => {
+    function montarComImagem() {
+      const resultado = montar();
+      resultado.fixture.componentRef.setInput('imagemUrl', 'https://exemplo.test/estatua.webp');
+      resultado.fixture.detectChanges();
+      return resultado;
+    }
+
+    it('o selo de enquadramento abre o seletor pra imagem existente, sem arquivo pendente', () => {
+      const { fixture } = montarComImagem();
+      const raiz = fixture.nativeElement as HTMLElement;
+      (raiz.querySelector('.criatura__avatar-enquadrar') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(raiz.querySelector('app-ajuste-enquadramento-imagem')).not.toBeNull();
+      expect(fixture.componentInstance['arquivoPendente']()).toBeNull();
+    });
+
+    it('confirmar o enquadramento de uma imagem existente só emite focoMudou (sem imagemMudou)', () => {
+      const { fixture, eventos } = montarComImagem();
+      fixture.componentInstance['abrirEnquadramentoExistente']();
+      fixture.componentInstance['confirmarEnquadramento']({ x: 30, y: 40, escala: 1.4 });
+      expect(eventos['focoMudou']).toEqual([{ x: 30, y: 40, escala: 1.4 }]);
+      expect(eventos['imagemMudou']).toEqual([]);
+      expect(fixture.componentInstance['enquadramentoOrigem']()).toBeNull();
+    });
+
+    it('selecionar um arquivo novo não emite imagemMudou direto — abre o enquadramento primeiro', () => {
+      const { fixture, eventos } = montar();
+      const arquivo = new File(['x'], 'nova.png', { type: 'image/png' });
+      fixture.componentInstance['aoSelecionarImagem']({
+        target: { files: [arquivo], value: '' },
+      } as unknown as Event);
+      expect(eventos['imagemMudou']).toEqual([]);
+      expect(fixture.componentInstance['enquadramentoOrigem']()).toBe(arquivo);
+      expect(fixture.componentInstance['arquivoPendente']()).toBe(arquivo);
+    });
+
+    it('confirmar o enquadramento de um arquivo novo emite imagemMudou e focoMudou juntos', () => {
+      const { fixture, eventos } = montar();
+      const arquivo = new File(['x'], 'nova.png', { type: 'image/png' });
+      fixture.componentInstance['aoSelecionarImagem']({
+        target: { files: [arquivo], value: '' },
+      } as unknown as Event);
+      fixture.componentInstance['confirmarEnquadramento']({ x: 10, y: 20, escala: 1 });
+      expect(eventos['imagemMudou']).toEqual([arquivo]);
+      expect(eventos['focoMudou']).toEqual([{ x: 10, y: 20, escala: 1 }]);
+      expect(fixture.componentInstance['arquivoPendente']()).toBeNull();
+    });
+
+    it('fecharEnquadramento (Cancelar) não emite nada', () => {
+      const { fixture, eventos } = montarComImagem();
+      fixture.componentInstance['abrirEnquadramentoExistente']();
+      fixture.componentInstance['fecharEnquadramento']();
+      expect(eventos['focoMudou']).toEqual([]);
+      expect(eventos['imagemMudou']).toEqual([]);
+      expect(fixture.componentInstance['enquadramentoOrigem']()).toBeNull();
+    });
   });
 });

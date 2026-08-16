@@ -102,12 +102,52 @@
   &--ativa { font-weight: 700; color: var(--bg); background: var(--accent); }
 }
 
+// Chip de classificação canônico (`docs/design/tema/_componentes.scss`) — copiado pra cá pelo
+// mesmo motivo do `.botao` acima (encapsulamento de estilo).
+.chip-classificacao {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--text-mute);
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  padding: 4px 9px;
+  flex: 0 0 auto;
+}
+
 .criatura {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-grid);
   color: var(--text);
+
+  // Barra superior — mesma estrutura de `.ficha-visao__topo` (FichaVisualizacao).
+  &__topo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__rotulo-secao {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-mute);
+    flex: 0 0 auto;
+  }
+
+  &__regua {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
 
   &__linha-colunas {
     display: grid;
-    grid-template-columns: 376px 236px minmax(0, 1fr);
+    grid-template-columns: 420px 260px minmax(0, 1fr);
     align-items: start;
     gap: 14px;
     @include bp.tablet { grid-template-columns: 1fr; }
@@ -124,19 +164,33 @@
   // --- Identidade: avatar + designação ---
   &__ident { display: flex; align-items: flex-start; gap: 16px; }
 
+  // Tamanho e moldura alinhados ao avatar da ficha de jogador (`FichaVisualizacao.__avatar`):
+  // 100×100, borda de 2px na cor da ficha, e a mesma hachura tingida por `color-mix` (antes era
+  // um cinza neutro fixo — agora acompanha `--cor-ficha` igual ao jogador).
   &__avatar {
-    width: 86px;
-    height: 96px;
+    width: 100px;
+    height: 100px;
     flex: none;
     position: relative;
     border-radius: var(--radius-control);
-    background-color: var(--surface-2);
-    // Listras discretas (mesma hachura do mockup) — a cor da ficha fica só na borda.
-    background-image: repeating-linear-gradient(45deg, var(--border) 0 7px, transparent 7px 14px);
-    border: 1px solid color-mix(in srgb, var(--cor-ficha, var(--accent)) 55%, transparent);
+    background-color: color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 14%, var(--surface-2));
+    background-image: repeating-linear-gradient(
+      135deg,
+      color-mix(
+          in srgb,
+          color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 60%, var(--border-strong)) 20%,
+          transparent
+        )
+        0 3px,
+      transparent 3px 9px
+    );
+    border: 2px solid var(--cor-ficha, var(--border-strong));
     &--editavel { cursor: default; }
   }
-  &__avatar-imagem { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: calc(var(--radius-control) - 1px); }
+  &__avatar-imagem { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: calc(var(--radius-control) - 2px); }
+  // Input nativo invisível cobrindo o avatar por inteiro — clicar em qualquer ponto abre o picker
+  // nativo, sem precisar de <label> (mesmo padrão de `FichaVisualizacao.__cor-entrada`).
+  &__cor-entrada { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; opacity: 0; cursor: pointer; }
   &__avatar-upload {
     position: absolute; right: -8px; bottom: -8px; z-index: 1;
     display: flex; align-items: center; justify-content: center; width: 20px; height: 20px;
@@ -151,6 +205,15 @@
     border-radius: 3px; background: color-mix(in srgb, var(--bg) 75%, transparent); border: 1px solid var(--border-strong);
     color: var(--text-dim); font-size: 9px; padding: 0; cursor: pointer;
     &:hover { color: var(--vida); border-color: var(--vida); }
+  }
+  // Selo de enquadramento (pan/zoom, ajuste pós-mockup) no canto superior esquerdo — único canto
+  // livre (upload no inferior direito, remover no superior direito).
+  &__avatar-enquadrar {
+    position: absolute; left: 5px; top: 5px; z-index: 1;
+    display: flex; align-items: center; justify-content: center; width: 16px; height: 16px;
+    border-radius: 3px; background: color-mix(in srgb, var(--bg) 75%, transparent); border: 1px solid var(--border-strong);
+    color: var(--text-dim); font-size: 9px; padding: 0; cursor: pointer;
+    &:hover { color: var(--accent); border-color: var(--accent-border); }
   }
 
   &__ident-texto { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
@@ -191,7 +254,15 @@
   // --- VD / Tenacidade / Defesa ---
   &__stats { display: grid; grid-template-columns: .8fr 1.4fr .8fr; gap: 9px; }
   &__stats--info { display: flex; flex-wrap: wrap; gap: 9px; }
-  &__stat { text-align: left; &--info { min-width: 120px; } &--flexivel { flex: 1 1 0; } }
+  &__stat {
+    text-align: left;
+    &--info { min-width: 120px; }
+    &--flexivel { flex: 1 1 0; }
+    // Deslocamento na mesma linha de Cadência/Bônus de Iniciativa (m4-04b, ajuste pós-mockup) —
+    // mais largo que os outros dois porque carrega até 4 tags; as tags quebram linha aqui dentro
+    // (não a fileira inteira) se a coluna ficar estreita.
+    &--deslocamento { flex: 2 1 260px; .criatura__tags { margin-top: 2px; } }
+  }
   &__stat-botao {
     display: block; width: 100%; padding: 0; text-align: left; font-family: var(--font-mono); font-size: 16px; font-weight: 700;
     color: var(--text); background: transparent; border: 0; cursor: pointer; line-height: 1.2;
@@ -242,12 +313,14 @@
     // O 5º do grupo não tem par: metade da largura, centralizado (como no mockup).
     &--sozinho { grid-column: 1 / -1; width: calc(50% - 4.5px); margin: 0 auto; }
   }
+  // Alinhado ao dadinho de rolar teste da ficha de jogador (`.ficha-atributo__rolar`) — mesmo
+  // tamanho/borda/hover, só a posição (5px em vez de 4px) segue o padding do card da criatura.
   &__atributo-rolar {
     position: absolute; top: 5px; right: 5px;
-    display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px;
-    font-size: 10px; color: var(--text-mute); background: transparent; border: 1px solid var(--border-strong); border-radius: 2px;
-    cursor: pointer; transition: .15s ease;
-    &:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
+    display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px;
+    padding: 0; font-size: 13px; color: var(--text-mute); background: transparent; border: 1px solid transparent; border-radius: var(--radius-control);
+    cursor: pointer; transition: color .12s ease, border-color .12s ease, background .12s ease;
+    &:hover:not(:disabled), &:focus-visible { color: var(--accent); border-color: var(--accent-border); background: var(--accent-dim); }
     &:disabled { cursor: not-allowed; opacity: .5; }
   }
   &__atributo-abrev {

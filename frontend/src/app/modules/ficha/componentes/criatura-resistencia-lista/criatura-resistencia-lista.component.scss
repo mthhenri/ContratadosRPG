@@ -64,15 +64,17 @@
   &__grade-valor { font: 700 16px var(--font-mono); color: var(--text); line-height: 1; }
   &__grade-acoes { display: flex; gap: 4px; }
 
-  // --- Variante "fraqueza": linhas com tom de aviso ---
-  &__itens { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  // --- Variante "fraqueza": linhas com tom de aviso, em grade de 2 colunas (divergência
+  // deliberada do mockup, que mostra uma coluna só — ver docs/context/CONTEXT.md) ---
+  &__itens { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
   &__item {
     display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
     padding: 9px 12px;
     background: var(--accent-dim);
     border: 1px solid var(--accent-border);
     border-radius: var(--radius-control);
-    &--editando { background: transparent; border-style: dashed; border-color: var(--border-strong); }
+    // Em edição o formulário (2 colunas próprias) não cabe numa célula: ocupa a linha inteira.
+    &--editando { grid-column: 1 / -1; background: transparent; border-style: dashed; border-color: var(--border-strong); }
   }
   &__item-texto { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
   &__tipo { font: 9px var(--font-mono); text-transform: uppercase; letter-spacing: .11em; color: var(--text-mute); }

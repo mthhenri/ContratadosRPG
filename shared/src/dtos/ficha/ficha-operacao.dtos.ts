@@ -217,6 +217,8 @@ export interface FichaRecuperadaDto {
   readonly cor: string | null;
   /** URL do avatar da ficha (m3-62) — ver {@link FichaCriadaDto.imagemUrl}. */
   readonly imagemUrl: string | null;
+  /** Enquadramento do avatar — ver {@link FichaImagemFocoDto}. `null` sem ajuste definido. */
+  readonly imagemFoco: FichaImagemFocoDto | null;
   /** Ficha oculta (m3-65) — `true` some completamente de qualquer jogador que não seja o dono ou o mestre. */
   readonly oculta: boolean;
   readonly dados: FichaJogadorDadosDto;
@@ -231,6 +233,8 @@ export interface FichaAlterarDto {
   readonly nome: string;
   /** Cor de identidade visual (m3-61) — ver {@link FichaCriarDto.cor}. Sem trava de imutabilidade. */
   readonly cor?: string | null;
+  /** Enquadramento do avatar — ver {@link FichaImagemFocoDto}. Ausente/`null` limpa o ajuste. */
+  readonly imagemFoco?: FichaImagemFocoDto | null;
   /** Ficha oculta (m3-65) — ver {@link FichaRecuperadaDto.oculta}. Ausente equivale a `false`. */
   readonly oculta?: boolean;
   readonly dados: FichaJogadorDadosDto;
@@ -246,6 +250,8 @@ export interface FichaAlteradaDto {
   readonly cor: string | null;
   /** URL do avatar da ficha (m3-62) — ver {@link FichaCriadaDto.imagemUrl}. Preservado — `alterarFicha` nunca o toca. */
   readonly imagemUrl: string | null;
+  /** Enquadramento do avatar — ver {@link FichaImagemFocoDto}. */
+  readonly imagemFoco: FichaImagemFocoDto | null;
   /** Ficha oculta (m3-65) — ver {@link FichaRecuperadaDto.oculta}. */
   readonly oculta: boolean;
   readonly dados: FichaJogadorDadosDto;
@@ -265,6 +271,23 @@ export interface FichaExcluirDto {
  * multipart — não cabe no `PUT /ficha/:id` genérico. Só o dono ou o mestre alteram/removem
  * (`validarPermissaoEdicao`, §14). Trocar a imagem exclui a anterior do armazenamento.
  */
+
+/**
+ * Enquadramento do avatar (pan/zoom, ajuste pós-mockup) — metadado puro, sem processamento de
+ * imagem no servidor (`m3-62` deixou "crop/editor de imagem no client" fora de escopo; isto é a
+ * retomada, sem `sharp`). `x`/`y` são percentuais (0–100, mesma semântica de `object-position`)
+ * e `escala` é o multiplicador de zoom (1–3) aplicado por cima via `transform: scale()` no
+ * client. `null`/ausente equivale ao comportamento de hoje (`object-position: 50% 50%`, sem
+ * zoom) — fichas existentes não mudam de aparência. Persistido junto de `imagemUrl` (coluna
+ * `imagem_foco`, JSONB) mas **não** pelo endpoint de upload (`POST /ficha/:id/imagem`, multipart):
+ * viaja pelo `PUT /ficha/:id` genérico, como `cor`, porque é só números — dá para reajustar sem
+ * reenviar o arquivo.
+ */
+export interface FichaImagemFocoDto {
+  readonly x: number;
+  readonly y: number;
+  readonly escala: number;
+}
 
 /**
  * Conteúdo bruto de um arquivo enviado por upload — value-object sem entidade nem verbo
@@ -372,6 +395,8 @@ export interface FichaInternoAlterarDto {
   readonly nome: string;
   /** Cor de identidade visual (m3-61) — ver {@link FichaCriarDto.cor}. Ausente equivale a `null`. */
   readonly cor?: string | null;
+  /** Enquadramento do avatar — ver {@link FichaImagemFocoDto}. Ausente/`null` limpa o ajuste. */
+  readonly imagemFoco?: FichaImagemFocoDto | null;
   /** Ficha oculta (m3-65) — ver {@link FichaRecuperadaDto.oculta}. Ausente equivale a `false`. */
   readonly oculta?: boolean;
   readonly dados: FichaJogadorDadosDto;

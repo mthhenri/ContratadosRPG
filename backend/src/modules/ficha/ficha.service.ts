@@ -27,6 +27,7 @@ import type {
   FichaHabilidadeDto,
   FichaIdentidadeDto,
   FichaImagemAlteradaDto,
+  FichaImagemFocoDto,
   FichaImagemAlterarDto,
   FichaImagemExcluirDto,
   FichaInternoAlterarDto,
@@ -365,6 +366,7 @@ export class FichaService {
     await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
     this.validarDadosContraRegras(dto.dados);
     this.validarCor(dto.cor);
+    this.validarImagemFoco(dto.imagemFoco);
     if (fichaEncontrada.usuarioId === usuarioAtivo.sub) {
       this.validarImutabilidadeIdentidade(fichaEncontrada.dados.identidade, dto.dados.identidade);
       this.validarContratoSomenteMestre(fichaEncontrada.dados.contrato, dto.dados.contrato);
@@ -753,11 +755,13 @@ export class FichaService {
     await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
     this.validarDadosCriaturaContraRegras(dto.dados);
     this.validarCor(dto.cor);
+    this.validarImagemFoco(dto.imagemFoco);
 
     const fichaAlterada = await this.fichaRepositorio.alterarFicha({
       id: dto.id,
       nome: dto.nome,
       cor: dto.cor,
+      imagemFoco: dto.imagemFoco,
       oculta: dto.oculta,
       dados: dto.dados as unknown as FichaJogadorDadosDto,
     });
@@ -1082,6 +1086,19 @@ export class FichaService {
     }
     if (!/^#[0-9A-Fa-f]{6}$/.test(cor)) {
       throw new BusinessException('Cor inválida: use o formato hexadecimal #RRGGBB');
+    }
+  }
+
+  /** Enquadramento do avatar (ajuste pós-mockup) — `x`/`y` percentuais, `escala` o zoom. */
+  private validarImagemFoco(foco: FichaImagemFocoDto | null | undefined): void {
+    if (foco == null) {
+      return;
+    }
+    if (foco.x < 0 || foco.x > 100 || foco.y < 0 || foco.y > 100) {
+      throw new BusinessException('Enquadramento inválido: x/y devem estar entre 0 e 100');
+    }
+    if (foco.escala < 1 || foco.escala > 3) {
+      throw new BusinessException('Enquadramento inválido: escala deve estar entre 1 e 3');
     }
   }
 

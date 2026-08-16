@@ -1,4 +1,5 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 import {
   CadenciaEnum,
@@ -21,6 +22,7 @@ import type {
   FichaCriaturaModificadoresDto,
   FichaCriaturaRegeneracaoDto,
   FichaCriaturaResistenciaDto,
+  FichaImagemFocoDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
   calcularAtributoEfetivo,
@@ -55,6 +57,7 @@ import {
 import { CriaturaResistenciaLista } from '../criatura-resistencia-lista/criatura-resistencia-lista.component';
 import { CriaturaAtaqueLista } from '../criatura-ataque-lista/criatura-ataque-lista.component';
 import { CriaturaHabilidadeLista } from '../criatura-habilidade-lista/criatura-habilidade-lista.component';
+import { AjusteEnquadramentoImagem } from '../ajuste-enquadramento-imagem/ajuste-enquadramento-imagem.component';
 
 /** As dez chaves de `FichaAtributosDto`, mesmo apelido do análogo em `FichaVisualizacao`. */
 type ChaveAtributo = keyof FichaAtributosDto;
@@ -89,9 +92,19 @@ const MODIFICADORES_DESTACADOS: readonly ModificadorCriaturaEnum[] = [
   ModificadorCriaturaEnum.FORTE,
 ];
 
-/** Aba ativa da coluna de Status — mesmo par de nomes usado por `FichaVisualizacao.AbaStatus`,
- * recortado às duas abas que o documento de criatura sustenta (sem inventário/sanidade/histórico). */
-type AbaCriatura = 'informacoes' | 'ataques';
+/** Aba ativa da coluna de Status. `'informacoes'` virou `'geral'` (Cadência/Bônus de
+ * Iniciativa/Deslocamento na mesma linha + Regeneração) + `'descricao'` (Descrição/Gancho/
+ * Motivação/Natureza Física/Tema de Horror/Anotações); `'ataques'` (era combinada com
+ * Habilidades) virou `'ataques'` + `'habilidades'`, um componente autocontido por aba. */
+type AbaCriatura = 'geral' | 'descricao' | 'ataques' | 'habilidades';
+
+/**
+ * Valor exibido no `<input type="color">` do avatar enquanto a ficha não tem `cor` definida —
+ * mesmo hex/racional de `FichaVisualizacao`'s `COR_FICHA_PADRAO` (não importado de lá de
+ * propósito: os dois componentes ficam desacoplados, mesma convenção já usada por
+ * `GRUPOS_ATRIBUTO` acima). Não persiste sozinho — a ficha só ganha cor quando o mestre escolhe.
+ */
+const COR_FICHA_PADRAO = '#d53030';
 
 /**
  * A **ficha de criatura** numa tela só (m4-04b) — edição no próprio lugar, campo a campo,
@@ -101,7 +114,16 @@ type AbaCriatura = 'informacoes' | 'ataques';
  */
 @Component({
   selector: 'app-criatura-visualizacao',
-  imports: [Icone, Tooltip, BandejaDados, CriaturaResistenciaLista, CriaturaAtaqueLista, CriaturaHabilidadeLista],
+  imports: [
+    Icone,
+    Tooltip,
+    ReactiveFormsModule,
+    BandejaDados,
+    CriaturaResistenciaLista,
+    CriaturaAtaqueLista,
+    CriaturaHabilidadeLista,
+    AjusteEnquadramentoImagem,
+  ],
   templateUrl: './criatura-visualizacao.component.html',
   styleUrl: './criatura-visualizacao.component.scss',
 })
@@ -113,10 +135,25 @@ export class CriaturaVisualizacao {
   readonly nome = input.required<string>();
   readonly cor = input<string | null>(null);
   readonly imagemUrl = input<string | null>(null);
+  /** Enquadramento do avatar (pan/zoom, ajuste pós-mockup) — ver {@link FichaImagemFocoDto}. */
+  readonly foco = input<FichaImagemFocoDto | null>(null);
   readonly oculta = input.required<boolean>();
   readonly dados = input.required<FichaCriaturaDadosDto>();
   /** Dono (mestre) edita; visualizador revelado é só-leitura — mesmo sinal de `FichaVisualizacao.ajustavel`. */
   readonly ajustavel = input.required<boolean>();
+
+  /**
+   * `object-position`/`transform: scale()` do avatar a partir de {@link foco} — mesmo padrão de
+   * `FichaVisualizacao.estiloFocoPosicao`/`estiloFocoEscala`. `null` não aplica nenhum dos dois.
+   */
+  protected readonly estiloFocoPosicao = computed(() => {
+    const focoAtual = this.foco();
+    return focoAtual ? `${focoAtual.x}% ${focoAtual.y}%` : null;
+  });
+  protected readonly estiloFocoEscala = computed(() => {
+    const focoAtual = this.foco();
+    return focoAtual?.escala ? `scale(${focoAtual.escala})` : null;
+  });
 
   readonly vitalidadeMudou = output<AjusteCriaturaVitalidade>();
   readonly defesaMudou = output<number>();
@@ -141,6 +178,25 @@ export class CriaturaVisualizacao {
   readonly ocultaMudou = output<boolean>();
   readonly imagemMudou = output<File>();
   readonly removerImagem = output<void>();
+  /** Novo enquadramento do avatar — a página persiste `ficha.imagemFoco`. */
+  readonly focoMudou = output<FichaImagemFocoDto | null>();
+
+  /** Cor de identidade visual do avatar — mesmo padrão de `FichaVisualizacao.corFichaForm`. */
+  protected readonly corCriaturaForm = new FormControl<string>(COR_FICHA_PADRAO, { nonNullable: true });
+
+  /** Badge do cabeçalho — mesmo formato de `FichaVisualizacao.classificacao` (zero-padded a 4). */
+  protected readonly classificacao = computed(() => `FICHA-CRT-${String(this.fichaId()).padStart(4, '0')}`);
+
+  constructor() {
+    // Sincroniza o picker com a cor persistida (troca de criatura exibida).
+    effect(() => {
+      const corAtual = this.cor() ?? COR_FICHA_PADRAO;
+      if (this.corCriaturaForm.value !== corAtual) {
+        this.corCriaturaForm.setValue(corAtual, { emitEvent: false });
+      }
+    });
+    this.corCriaturaForm.valueChanges.subscribe((cor) => this.confirmarCor(cor));
+  }
 
   protected readonly gruposAtributos = GRUPOS_ATRIBUTO;
   protected readonly origens = Object.values(OrigemCriaturaEnum) as OrigemCriaturaEnum[];
@@ -172,9 +228,9 @@ export class CriaturaVisualizacao {
   protected readonly nomeCadencia = nomeCadencia;
   protected readonly ritmoCadencia = ritmoCadencia;
 
-  /** Aba ativa da coluna de Status (Informações / Ataques e Habilidades) — mesmo padrão de
+  /** Aba ativa da coluna de Status (Geral / Descrição / Ataques / Habilidades) — mesmo padrão de
    * `FichaVisualizacao.abaStatusEfetiva`, sem persistência (a criatura não tem HUD mobile próprio). */
-  private readonly abaSelecionada = signal<AbaCriatura>('informacoes');
+  private readonly abaSelecionada = signal<AbaCriatura>('geral');
 
   protected abaAtiva(): AbaCriatura {
     return this.abaSelecionada();
@@ -457,18 +513,44 @@ export class CriaturaVisualizacao {
     this.ocultaMudou.emit(!this.oculta());
   }
 
-  protected aoTrocarImagem(arquivo: File): void {
-    this.imagemMudou.emit(arquivo);
-  }
-
-  /** Handler de `(change)` do `<input type="file">` do avatar — mesmo padrão de
-   * `FichaVisualizacao.aoSelecionarImagem`, sem validação de tamanho/tipo aqui (o `accept` do
-   * input já filtra a escolha e `FichaService.alterarImagem` valida no envio). */
+  /**
+   * Handler de `(change)` do `<input type="file">` do avatar — sem validação de tamanho/tipo aqui
+   * (o `accept` do input já filtra a escolha e `FichaService.alterarImagem` valida no envio). Não
+   * emite ainda: abre o seletor de enquadramento (`arquivoPendente`) — mesmo fluxo de
+   * `FichaVisualizacao.aoSelecionarImagem`, o upload só acontece ao confirmar o enquadramento.
+   */
   protected aoSelecionarImagem(evento: Event): void {
     const arquivo = (evento.target as HTMLInputElement).files?.[0];
+    (evento.target as HTMLInputElement).value = '';
     if (arquivo) {
-      this.aoTrocarImagem(arquivo);
+      this.arquivoPendente.set(arquivo);
+      this.enquadramentoOrigem.set(arquivo);
     }
+  }
+
+  /** Enquadramento do avatar (pan/zoom) — mesmo padrão de `FichaVisualizacao`. */
+  protected readonly arquivoPendente = signal<File | null>(null);
+  protected readonly enquadramentoOrigem = signal<File | string | null>(null);
+
+  protected abrirEnquadramentoExistente(): void {
+    const urlAtual = this.imagemUrl();
+    if (urlAtual) {
+      this.enquadramentoOrigem.set(urlAtual);
+    }
+  }
+
+  protected confirmarEnquadramento(foco: FichaImagemFocoDto): void {
+    const arquivo = this.arquivoPendente();
+    if (arquivo) {
+      this.imagemMudou.emit(arquivo);
+    }
+    this.focoMudou.emit(foco);
+    this.fecharEnquadramento();
+  }
+
+  protected fecharEnquadramento(): void {
+    this.enquadramentoOrigem.set(null);
+    this.arquivoPendente.set(null);
   }
 
   /** Rola o dano de um Ataque (`criatura-rolagem.ts`, motor puro) e mostra/registra o resultado. */

@@ -41,18 +41,6 @@
     @include bp.mobile { flex-wrap: wrap; }
   }
 
-  // Eyebrow "FICHA DE CRIATURA" ao lado do botão voltar — só rótulo de contexto da página, sem
-  // interação (a designação/imagem/registro de verdade moram no cabeçalho de
-  // `CriaturaVisualizacao`, dentro da coluna de Identidade).
-  &__rotulo-secao {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text-mute);
-  }
-
   &__acoes {
     display: flex;
     align-items: center;
@@ -192,20 +180,6 @@
   &__aviso { margin: 0 0 16px; font-family: var(--font-sans); font-size: 13px; color: var(--text); }
   &__acoes { display: flex; flex-wrap: wrap; gap: 10px; }
   &__acao { display: inline-flex; align-items: center; gap: 7px; padding: 11px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
-}
-
-// Badge "FICHA-CRT-{id}" no topo — copiado de `_componentes.scss` `.chip-classificacao`.
-.chip-classificacao {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  border-radius: 3px;
-  padding: 6px 10px;
-  margin-left: auto;
 }
 
 .botao {

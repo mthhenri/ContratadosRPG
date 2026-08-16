@@ -45,4 +45,50 @@ describe('FichaRepository', () => {
     expect(parametros).toEqual({ id: 5, dados: JSON.stringify(dados) });
     expect(resultado.id).toBe(5);
   });
+
+  it('alterarFicha grava e devolve o enquadramento do avatar (imagem_foco)', async () => {
+    const foco = { x: 30, y: 70, escala: 1.5 };
+    const raw = vi.fn().mockResolvedValue({
+      rows: [
+        {
+          id: 5,
+          campanhaId: 3,
+          usuarioId: 10,
+          nome: 'Agente Alfa',
+          cor: null,
+          imagemUrl: null,
+          imagemFoco: foco,
+          oculta: false,
+          dados: {},
+        },
+      ],
+    });
+    const repositorio = new FichaRepository({ raw } as unknown as Knex);
+    const dados = {} as never;
+
+    const resultado = await repositorio.alterarFicha({ id: 5, nome: 'Agente Alfa', imagemFoco: foco, dados });
+
+    const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(sql).toContain('imagem_foco = :imagemFoco::jsonb');
+    expect(sql).toContain('imagem_foco AS "imagemFoco"');
+    expect(parametros['imagemFoco']).toBe(JSON.stringify(foco));
+    expect(resultado.imagemFoco).toEqual(foco);
+  });
+
+  it('alterarFicha grava null quando imagemFoco não é informado', async () => {
+    const raw = vi.fn().mockResolvedValue({
+      rows: [
+        {
+          id: 5, campanhaId: 3, usuarioId: 10, nome: 'Agente Alfa',
+          cor: null, imagemUrl: null, imagemFoco: null, oculta: false, dados: {},
+        },
+      ],
+    });
+    const repositorio = new FichaRepository({ raw } as unknown as Knex);
+
+    await repositorio.alterarFicha({ id: 5, nome: 'Agente Alfa', dados: {} as never });
+
+    const [, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(parametros['imagemFoco']).toBeNull();
+  });
 });

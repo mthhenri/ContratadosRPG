@@ -1,5 +1,63 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-16 — Ajuste pós-mockup: cor/enquadramento de imagem, d20 unificado, abas e fraquezas
+
+Quarto pedido do autor na mesma sessão, testando a tela já realinhada ao mockup (`ac32c8f`): um
+lote de sete ajustes de paridade com a ficha de jogador e uma feature nova. Nenhum passou por
+`docs/specs/backlog/` — como no pedido anterior, um plano de sessão fez o papel de spec de
+trabalho.
+
+1. **Cor da criatura.** `CriaturaVisualizacao` já recebia `cor`/emitia `corMudou` (a página e
+   `ficha-edicao-criatura.service.ts` já persistiam) — só faltava o `<input type="color">` no
+   template. Copiado o bloco de `FichaVisualizacao` (input full-cover, `opacity:0`, atrás do lápis
+   de upload).
+2. **Ícone d20 em vez de d6 em toda a ficha de jogador.** O sistema só tem testes `Nd20kh1±mod` —
+   não existe d6 em lugar nenhum — então a troca de `nome="dado"` → `nome="d20"` (mesmo
+   `app-icone` compartilhado) foi total: atributos, Dano C.a.C./Furtivo, Iniciativa, os botões de
+   preset/crítico de `FichaRolagensPainel` e "Rolar dano" do inventário, inclusive os dois usos
+   antes "decorativos" (rótulo/contagem do stepper de Dados), pra não sobrar glifo de d6 ao lado
+   do d20 novo.
+3. **Fraquezas em grade de 2 colunas** (`criatura-resistencia-lista`, variante `fraqueza`) — o item
+   em edição ganhou `grid-column: 1 / -1` (só a variante resistência tinha essa regra antes).
+   Divergência deliberada do mockup, que mostra uma coluna só.
+4. **Barra superior da criatura igual à do jogador, de verdade.** Não só cor: a barra
+   (eyebrow + `chip-classificacao` com régua divisora) morava na **página**; no jogador ela é uma
+   barra própria dentro do componente (`ficha-visao__topo`). Movida pra dentro de
+   `CriaturaVisualizacao` (`criatura__topo`), com `classificacao` computado no mesmo formato
+   zero-padded (`FICHA-CRT-0004`, era id cru) — a página voltou a ter só voltar + ações, igual
+   `visualizar.page.html` já era.
+5. **Aba "Ataques e Habilidades" virou duas abas** — os dois componentes já eram autocontidos,
+   troca de `@if/@else` binário por `@switch` com 4 casos.
+6. **"Informações" virou "Geral" + "Descrição".** Geral: Cadência + Bônus de Iniciativa +
+   Deslocamento (que era um card cheio na linha de baixo) agora na mesma linha
+   (`.criatura__stats--info` ganhou um terceiro item, `--deslocamento`, com as tags dentro) +
+   Regeneração abaixo. Descrição: Conceito/Gancho/Motivação + Natureza Física/Tema de Horror +
+   Anotações. `AbaCriatura` virou `'geral' | 'descricao' | 'ataques' | 'habilidades'`.
+7. **Seletor de enquadramento de imagem (pan/zoom) — feature nova, jogador e criatura.** `m3-62`
+   tinha deixado "crop/editor de imagem no client" fora de escopo; retomado sem processamento de
+   imagem no servidor (sem `sharp`) — só um metadado (`FichaImagemFocoDto { x, y, escala }`,
+   percentual + zoom) persiste ao lado de `imagemUrl`, aplicado no avatar via
+   `object-position` + `transform: scale()`. Novo componente reusável
+   `AjusteEnquadramentoImagem` (drag nativo com `pointerdown/move/up` + slider de zoom, sem
+   biblioteca) renderiza como painel sobreposto abaixo do avatar. Gatilhos: selecionar um arquivo
+   novo abre o seletor automaticamente antes do upload (o pedido original: "quando eu selecionar a
+   imagem, poder escolher o quanto dela aparece"); um selo dedicado (canto livre do avatar, ícone
+   de busca/zoom) reabre o seletor pra reajustar uma imagem já salva, sem reenviar arquivo.
+   Persistência: `imagemFoco` viaja pelo `PUT /ficha/:id` genérico (como `cor`), não pelo endpoint
+   multipart de upload — são só números, dá pra reajustar sem reenviar o arquivo. Nova coluna
+   `imagem_foco JSONB` (migração `0019`), `validarImagemFoco` (x/y 0–100, escala 1–3) espelhando
+   `validarCor`. Remover a imagem também zera o enquadramento (sem metadado órfão).
+
+**Verificação ao vivo** (campanha/fichas seedadas via `db:seed:dev` + REST): os 7 itens exercitados
+nas duas fichas em 1920×1080 — cor mudando `--cor-ficha` ao vivo, ícones d20 confirmados por
+`viewBox`/`path` idênticos ao de referência da criatura, `grid-template-columns` das fraquezas
+literalmente `163px 163px`, barra superior com régua e badge zero-padded, as 4 abas, Cadência/
+Bônus de Iniciativa/Deslocamento na mesma linha, e o fluxo completo de enquadramento (upload →
+ajustar → confirmar → recarregar página → **persiste** → reabrir reflete o foco salvo → cancelar
+não muda nada) nos dois avatares. Sem erro de console/página, sem estouro de largura. `npm run
+test` 376/376 (backend, +11) e 1088/1088 (frontend, +26); lint e build limpos (backend tinha 2
+falhas de lint pré-existentes, não tocadas por esta task, confirmadas via `git stash`).
+
 ## 2026-08-15 — `m4-04b`: fidelidade visual ao mockup e conserto dos fluxos de edição da ficha de criatura
 
 Terceiro pedido do autor na mesma sessão: deixar a tela **visualmente igual ao mockup** naquilo que

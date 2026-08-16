@@ -1,13 +1,13 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-15 · **Última decisão registrada:** `m4-04b` (acabamento visual da
-> ficha de criatura, fora da fila de specs, a pedido direto do autor) — a tela desktop foi alinhada
-> ao mockup medindo o DOM dele (colunas 376/236/1fr, cards de raio 6, chips de 12px, Vida com barra
-> de 3px); o card de Atributo virou sigla + valor + Efetivo com o seletor de Modificador atrás do
-> lápis, e a edição de Atributos passou a ser rascunho com Salvar/Cancelar porque a cota fixa de
-> Modificadores (2/3/3/2) invalida qualquer troca isolada; dois defeitos de edição corrigidos
-> (`<select>` que abria na 1ª opção por usar `[value]` com `@for`, e `.botao` que não alcançava os
-> componentes filhos) — mobile segue pendente de `m4-10` — ver seção 4
+> **Última revisão:** 2026-08-16 · **Última decisão registrada:** ajuste pós-mockup na ficha de
+> criatura/jogador, fora da fila de specs, a pedido direto do autor — cor de identidade e seletor
+> de enquadramento de imagem (pan/zoom, novo `FichaImagemFocoDto`/coluna `imagem_foco`, sem
+> processamento de imagem no servidor) na criatura e reaproveitado no jogador; ícone de rolagem
+> unificado pra **d20** em toda a ficha de jogador (o sistema não tem d6); Fraquezas em 2 colunas;
+> barra superior da criatura movida pra dentro do componente (igual estrutura da de jogador); e a
+> antiga aba "Informações" da criatura virou 4 abas (Geral/Descrição/Ataques/Habilidades) — mobile
+> segue pendente de `m4-10` — ver seção 4
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -414,14 +414,21 @@ corretamente e o jogador sem concessão não a vê (§14). Pendência registrada
 **Visualização/edição** (`frontend/src/app/modules/ficha/componentes/criatura-visualizacao/`,
 `CriaturaVisualizacao` + página `paginas/visualizar-criatura/`) — rota
 `/painel/:campanhaId/criatura/:id`, mesma guarda de mestre da rota `nova`; resolve a pendência da
-`m4-04` com tela dedicada (não um `modo` novo em `FichaVisualizacao`). Dashboard de 3 colunas —
-Identidade (avatar, designação, chips de classificação Origem/Porte/Comportamento, NA em destaque,
-VD/Tenacidade/Defesa, Vida, Resistências em grade compacta, Fraquezas em lista de aviso) ·
-Atributos (grade Físicos/Mentais de cards "sigla + valor + Atributo Efetivo + rolar"; o seletor de
-Modificador de 4 barras não fica no card — só dentro do modo de edição) · Status com abas Informações (Cadência/Bônus de
-Iniciativa, Deslocamento em tags, Regeneração opcional, Descrição/Gancho/Motivação, Natureza
-Física/Tema de Horror, Anotações) e Ataques e Habilidades (grades de cards, cada Ataque com botões
-Teste e Dano) — mesmo shell/padrões de `FichaVisualizacao` (jogador) e dos blocos canônicos de
+`m4-04` com tela dedicada (não um `modo` novo em `FichaVisualizacao`). Barra superior própria do
+componente (`criatura__topo`, rótulo + régua + `chip-classificacao` `FICHA-CRT-{id zero-padded}`,
+igual estrutura de `ficha-visao__topo` do jogador — não fica na página) seguida de dashboard de 3
+colunas — Identidade (avatar com cor de identidade via `<input type="color">`, upload de imagem e
+seletor de enquadramento — ver adiante —, designação, chips de classificação Origem/Porte/
+Comportamento, NA em destaque, VD/Tenacidade/Defesa, Vida, Resistências em grade compacta,
+Fraquezas em grade de **2 colunas**, divergência deliberada do mockup — que mostra 1) · Atributos
+(grade Físicos/Mentais de cards "sigla + valor + Atributo Efetivo + rolar"; o seletor de Modificador
+de 4 barras não fica no card — só dentro do modo de edição) · Status com **4 abas** (`AbaCriatura =
+'geral' | 'descricao' | 'ataques' | 'habilidades'`, também divergência deliberada do mockup — que
+mostra 2): Geral (Cadência + Bônus de Iniciativa + Deslocamento na mesma linha — deslocamento é um
+terceiro item de `.criatura__stats--info`, não card próprio — e Regeneração opcional abaixo),
+Descrição (Conceito/Gancho/Motivação, Natureza Física/Tema de Horror, Anotações), Ataques e
+Habilidades (cada uma sua própria aba, grades de cards, Ataque com botões Teste e Dano) — mesmo
+shell/padrões de `FichaVisualizacao` (jogador) e dos blocos canônicos de
 `docs/design/tema/_componentes.scss`, alvo de fidelidade
 `docs/design/examples/ficha-de-criatura.html`. Abas sempre ocupam 100% da barra (`flex: 1 1 0` em
 cada `.criatura__aba` — divergência deliberada do `.abas` canônico, que é do tamanho do conteúdo).
@@ -441,6 +448,21 @@ Dois cuidados que valem pra qualquer tela: `<select>` de edição usa `[selected
 `[value]` no `<select>` as opções do `@for` ainda não existem e o controle abre na 1ª), e `.botao`
 precisa ser copiado pro SCSS de cada componente (a definição da página não atravessa o
 encapsulamento). Só desktop por ora — refinamento mobile é `m4-10`, ainda no backlog.
+
+**Enquadramento do avatar (pan/zoom) — jogador e criatura.** Retomada do que `m3-62` tinha deixado
+fora de escopo ("crop/editor de imagem no client"), sem processamento de imagem no servidor: só um
+metadado (`FichaImagemFocoDto { x, y, escala }`, percentual + zoom, coluna `imagem_foco` JSONB) se
+soma a `imagemUrl`, aplicado no avatar via `object-position` + `transform: scale()`. Componente
+reusável `AjusteEnquadramentoImagem` (`frontend/.../componentes/ajuste-enquadramento-imagem/`) —
+arraste nativo (`pointerdown/move/up`, sem lib) + slider de zoom — renderiza como painel sobreposto
+abaixo do avatar nos dois componentes (`FichaVisualizacao`/`CriaturaVisualizacao`). Selecionar um
+arquivo novo abre o seletor automaticamente antes do upload; um selo dedicado (canto livre do
+avatar) reabre o seletor pra reajustar uma imagem já salva, sem reenviar arquivo. `imagemFoco`
+viaja pelo `PUT /ficha/:id` genérico (como `cor`), não pelo endpoint multipart de imagem — são só
+números. Remover a imagem zera o enquadramento junto (sem metadado órfão). Ícone de rolagem
+**d20** (não d6) em todo gatilho da ficha de jogador — o sistema só tem testes `Nd20kh1±mod`, então
+a troca de `nome="dado"` → `nome="d20"` (`app-icone`) foi total, sem glifo de d6 sobrando em lugar
+nenhum.
 
 **Polimento de UI — `m4-04b`:** passo // Identidade ganhou upload de imagem de registro (mesmo
 padrão de avatar do guia de jogador, `FichaService.alterarImagem`, segundo request em sequência

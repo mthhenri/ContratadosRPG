@@ -106,7 +106,7 @@ describe('FichaService', () => {
 
   it('recupera uma ficha pelo id', () => {
     const { servico, http } = criar();
-    const recuperada: FichaRecuperadaDto = { id: 3, campanhaId: 9, usuarioId: 7, nome: 'Kane', cor: null, imagemUrl: null, oculta: false, dados };
+    const recuperada: FichaRecuperadaDto = { id: 3, campanhaId: 9, usuarioId: 7, nome: 'Kane', cor: null, imagemUrl: null, imagemFoco: null, oculta: false, dados };
 
     let recebido: FichaRecuperadaDto | undefined;
     servico.recuperarFicha(3).subscribe((r) => (recebido = r));
@@ -119,7 +119,7 @@ describe('FichaService', () => {
 
   it('altera nome/dados de uma ficha', () => {
     const { servico, http } = criar();
-    const alterada: FichaAlteradaDto = { id: 3, campanhaId: 9, usuarioId: 7, nome: 'Novo', cor: null, imagemUrl: null, oculta: false, dados };
+    const alterada: FichaAlteradaDto = { id: 3, campanhaId: 9, usuarioId: 7, nome: 'Novo', cor: null, imagemUrl: null, imagemFoco: null, oculta: false, dados };
 
     let recebido: FichaAlteradaDto | undefined;
     servico.alterarFicha(3, { nome: 'Novo', dados }).subscribe((r) => (recebido = r));
@@ -145,6 +145,7 @@ describe('FichaService', () => {
       nome: 'Kane',
       cor: '#2563EB',
       imagemUrl: 'https://exemplo.test/kane.webp',
+      imagemFoco: null,
       oculta: true,
       dados,
     } satisfies FichaAlteradaDto));
@@ -386,7 +387,7 @@ describe('FichaService', () => {
   it('recupera uma ficha de criatura pelo id', () => {
     const { servico, http } = criar();
     const recuperada: FichaCriaturaRecuperadaDto = {
-      id: 4, campanhaId: 9, usuarioId: 7, nome: 'A Estátua', cor: null, imagemUrl: null,
+      id: 4, campanhaId: 9, usuarioId: 7, nome: 'A Estátua', cor: null, imagemUrl: null, imagemFoco: null,
       oculta: false, dados: dadosCriatura,
     };
 
@@ -402,7 +403,7 @@ describe('FichaService', () => {
   it('altera nome/dados de uma ficha de criatura', () => {
     const { servico, http } = criar();
     const alterada: FichaCriaturaAlteradaDto = {
-      id: 4, campanhaId: 9, usuarioId: 7, nome: 'Novo Nome', cor: null, imagemUrl: null,
+      id: 4, campanhaId: 9, usuarioId: 7, nome: 'Novo Nome', cor: null, imagemUrl: null, imagemFoco: null,
       oculta: false, dados: dadosCriatura,
     };
 
