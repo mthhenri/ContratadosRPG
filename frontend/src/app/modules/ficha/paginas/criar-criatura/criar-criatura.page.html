@@ -233,6 +233,7 @@
                         [class.atributo__modificador--ativo]="estado().modificadores[campo.chave] === tipo"
                         [attr.aria-pressed]="estado().modificadores[campo.chave] === tipo"
                         [attr.data-nivel]="i + 1"
+                        [disabled]="modificadorDesabilitado(campo.chave, tipo)"
                         [appTooltip]="rotuloModificadorCriatura(tipo)"
                         (click)="definirModificador(campo.chave, tipo)"
                       >

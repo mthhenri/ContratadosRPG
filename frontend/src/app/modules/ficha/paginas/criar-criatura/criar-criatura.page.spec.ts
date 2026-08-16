@@ -279,6 +279,23 @@ describe('CriaturaCriar', () => {
     expect(componente['distribuicaoModificadoresCompleta']()).toBe(true);
   });
 
+  it('trava os botões de um tipo de modificador ao atingir a quota, exceto o já selecionado', () => {
+    const { componente } = montar();
+    componente['atualizar']({
+      modificadores: {
+        ...componente['estado']().modificadores,
+        destreza: ModificadorCriaturaEnum.FORTE, forca: ModificadorCriaturaEnum.FORTE,
+      },
+    });
+
+    // Quota de Forte (2) atingida: outro atributo não pode virar Forte...
+    expect(componente['modificadorDesabilitado']('luta', ModificadorCriaturaEnum.FORTE)).toBe(true);
+    // ...mas os já marcados como Forte continuam clicáveis (pra desmarcar/trocar).
+    expect(componente['modificadorDesabilitado']('destreza', ModificadorCriaturaEnum.FORTE)).toBe(false);
+    // Quota de Médio (3) ainda não atingida: nenhum botão de Médio trava.
+    expect(componente['modificadorDesabilitado']('luta', ModificadorCriaturaEnum.MEDIO)).toBe(false);
+  });
+
   it('não navega ao clicar em Sair sem confirmar, e não usa o confirm() nativo do navegador', () => {
     const { fixture, raiz, componente, router } = montar();
     (raiz.querySelector('.guia__sair') as HTMLButtonElement).click();

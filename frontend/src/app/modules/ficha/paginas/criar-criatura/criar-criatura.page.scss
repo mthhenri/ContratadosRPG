@@ -234,6 +234,7 @@
   &[data-nivel="3"] i:nth-child(3), &[data-nivel="4"] i:nth-child(3) { background: var(--warning); }
   &[data-nivel="4"] i:nth-child(4) { background: var(--accent); }
   &--ativo { border-color: var(--accent); background: var(--accent-dim); }
+  &:disabled { cursor: not-allowed; opacity: .4; &:hover { border-color: var(--border-strong); } }
 }
 .stepper { display: grid; grid-template-columns: 34px 48px 34px; min-height: 36px; overflow: hidden; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control); &__botao { padding: 0; font: 18px var(--font-mono); color: var(--text-dim); background: transparent; border: 0; cursor: pointer; &:hover { color: var(--text); background: var(--accent-dim); } &:disabled { opacity: .4; cursor: not-allowed; } } &__valor { display: grid; place-items: center; font: 700 17px var(--font-mono); color: var(--text); border-inline: 1px solid var(--border); } }
 .stat { min-width: 0; padding: 10px 11px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); &__rotulo { display: block; margin-bottom: 5px; font: 9px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text-mute); } &__valor { font: 700 19px/1 var(--font-mono); } &--vida { border-color: var(--vida-border); .stat__valor { color: var(--vida); } } &--alerta { border-color: var(--accent-border); .stat__valor { color: var(--accent); } } }

@@ -469,6 +469,13 @@ export class CriaturaCriar {
   protected contagemModificador(tipo: ModificadorCriaturaEnum): number {
     return CAMPOS.filter((campo) => this.estado().modificadores[campo.chave] === tipo).length;
   }
+  /** Trava o botão de um `tipo` já com a quota cheia (doc — "Distribuição": 2 Forte / 3 Médio / 3
+   * Fraco / 2 Frágil) para todo atributo que ainda não é desse tipo — quem já está marcado
+   * continua clicável, pra permitir desmarcar ou trocar de tipo sem precisar liberar vaga antes. */
+  protected modificadorDesabilitado(chave: ChaveAtributo, tipo: ModificadorCriaturaEnum): boolean {
+    if (this.estado().modificadores[chave] === tipo) return false;
+    return this.contagemModificador(tipo) >= QUANTIDADE_ESPERADA_MODIFICADOR[tipo];
+  }
   protected distribuicaoModificadoresCompleta(): boolean {
     const modificadores = this.estado().modificadores;
     if (CAMPOS.some((campo) => modificadores[campo.chave] === null)) return false;
