@@ -22,7 +22,11 @@ import type {
   FichaCriaturaRegeneracaoDto,
   FichaCriaturaResistenciaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
-import { calcularAtributoEfetivo, calcularLimiteResistencias } from '@contratados-rpg/shared/regras/criatura';
+import {
+  calcularAtributoEfetivo,
+  calcularLimiteResistencias,
+  validarFichaCriatura,
+} from '@contratados-rpg/shared/regras/criatura';
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
@@ -32,6 +36,12 @@ import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.servic
 import { rolarAtaqueCriatura, rolarTesteAtributoCriatura } from '../../criatura-rolagem';
 import type { AjusteCriaturaVitalidade } from '../../ficha-edicao-criatura.service';
 import {
+  dimensaoPorte,
+  multiplicadorTenacidade,
+  nomeCadencia,
+  nomePorte,
+  nomeTenacidade,
+  ritmoCadencia,
   rotuloCadencia,
   rotuloComportamento,
   rotuloModificadorCriatura,
@@ -52,12 +62,31 @@ type ChaveAtributo = keyof FichaAtributosDto;
 /** Rótulo dos dez atributos (mesma grafia do assistente de criação, `criar-criatura.page.ts`). Os
  * cinco primeiros são os "Atributos Físicos" e os cinco últimos os "Atributos Mentais"
  * (`sistema-v4.1.0.md`) — a ordem já nasce agrupada, então a grade da coluna de Atributos só
- * fatia o array em dois, sem tabela de grupo nova. */
-const CAMPOS_ATRIBUTO: readonly { readonly chave: ChaveAtributo; readonly nome: string }[] = [
-  { chave: 'destreza', nome: 'Destreza' }, { chave: 'forca', nome: 'Força' }, { chave: 'luta', nome: 'Luta' },
-  { chave: 'pontaria', nome: 'Pontaria' }, { chave: 'vigor', nome: 'Vigor' }, { chave: 'intelecto', nome: 'Intelecto' },
-  { chave: 'medicina', nome: 'Medicina' }, { chave: 'sentidos', nome: 'Sentidos' }, { chave: 'social', nome: 'Social' },
-  { chave: 'vontade', nome: 'Vontade' },
+ * fatia o array em dois, sem tabela de grupo nova. As abreviações são as mesmas três letras dos
+ * boxes de `FichaVisualizacao` (ficha de jogador) — o card do mockup mostra só a sigla, com o nome
+ * inteiro na dica. */
+const CAMPOS_ATRIBUTO: readonly { readonly chave: ChaveAtributo; readonly abrev: string; readonly nome: string }[] = [
+  { chave: 'destreza', abrev: 'DES', nome: 'Destreza' }, { chave: 'forca', abrev: 'FOR', nome: 'Força' },
+  { chave: 'luta', abrev: 'LUT', nome: 'Luta' }, { chave: 'pontaria', abrev: 'PON', nome: 'Pontaria' },
+  { chave: 'vigor', abrev: 'VIG', nome: 'Vigor' }, { chave: 'intelecto', abrev: 'INT', nome: 'Intelecto' },
+  { chave: 'medicina', abrev: 'MED', nome: 'Medicina' }, { chave: 'sentidos', abrev: 'SEN', nome: 'Sentidos' },
+  { chave: 'social', abrev: 'SOC', nome: 'Social' }, { chave: 'vontade', abrev: 'VON', nome: 'Vontade' },
+];
+
+/** Os dez atributos partidos nos dois grupos que a tela desenha (5 + 5) — mesmo formato de
+ * `FichaVisualizacao.gruposAtributos`, que o template usa pra emitir um rótulo de grupo e uma grade
+ * por vez (blocos `@if` não podem abrir/fechar `<div>` no meio de um `@for`). */
+const GRUPOS_ATRIBUTO = [
+  { rotulo: 'Físicos', campos: CAMPOS_ATRIBUTO.slice(0, 5) },
+  { rotulo: 'Mentais', campos: CAMPOS_ATRIBUTO.slice(5) },
+] as const;
+
+/** Modificadores que contam como "acima do neutro" — o card de leitura pinta o Atributo Efetivo no
+ * accent só nesses dois, como o mockup faz em parte dos atributos. Mesmo corte que as barrinhas de
+ * sinal já usam visualmente (níveis 3 e 4 acendem a barra de aviso/accent). */
+const MODIFICADORES_DESTACADOS: readonly ModificadorCriaturaEnum[] = [
+  ModificadorCriaturaEnum.MEDIO,
+  ModificadorCriaturaEnum.FORTE,
 ];
 
 /** Aba ativa da coluna de Status — mesmo par de nomes usado por `FichaVisualizacao.AbaStatus`,
@@ -113,7 +142,7 @@ export class CriaturaVisualizacao {
   readonly imagemMudou = output<File>();
   readonly removerImagem = output<void>();
 
-  protected readonly camposAtributo = CAMPOS_ATRIBUTO;
+  protected readonly gruposAtributos = GRUPOS_ATRIBUTO;
   protected readonly origens = Object.values(OrigemCriaturaEnum) as OrigemCriaturaEnum[];
   protected readonly comportamentos = Object.values(ComportamentoCriaturaEnum) as ComportamentoCriaturaEnum[];
   protected readonly niveisAmeaca = Object.values(NivelAmeacaEnum) as NivelAmeacaEnum[];
@@ -136,6 +165,12 @@ export class CriaturaVisualizacao {
   protected readonly rotuloCadencia = rotuloCadencia;
   protected readonly rotuloRegeneracaoModo = rotuloRegeneracaoModo;
   protected readonly rotuloRegeneracaoIntensidade = rotuloRegeneracaoIntensidade;
+  protected readonly nomeTenacidade = nomeTenacidade;
+  protected readonly multiplicadorTenacidade = multiplicadorTenacidade;
+  protected readonly nomePorte = nomePorte;
+  protected readonly dimensaoPorte = dimensaoPorte;
+  protected readonly nomeCadencia = nomeCadencia;
+  protected readonly ritmoCadencia = ritmoCadencia;
 
   /** Aba ativa da coluna de Status (Informações / Ataques e Habilidades) — mesmo padrão de
    * `FichaVisualizacao.abaStatusEfetiva`, sem persistência (a criatura não tem HUD mobile próprio). */
@@ -147,6 +182,100 @@ export class CriaturaVisualizacao {
 
   protected selecionarAba(aba: AbaCriatura): void {
     this.abaSelecionada.set(aba);
+  }
+
+  /**
+   * Rascunho da coluna de Atributos — mesmo gatilho/fluxo do lápis de `FichaVisualizacao` ("Editar
+   * atributos" → rascunho → Salvar/Cancelar). Em leitura, o card é a grade compacta do mockup
+   * (sigla + valor + efetivo); ligado, vira uma lista vertical com o valor digitável e as
+   * barrinhas de Modificador (controles bem mais largos que um card de ~100px — dentro da grade
+   * estouravam a coluna).
+   *
+   * Por que rascunho e não emitir a cada clique: a distribuição de Modificadores é uma **cota
+   * fixa** (2 Forte / 3 Médio / 3 Fraco / 2 Frágil, `shared/regras/criatura`), então qualquer
+   * troca isolada deixa a ficha inválida e o backend recusa a gravação inteira. Editando um
+   * rascunho, o mestre rearranja quantos quiser e só grava quando a distribuição fecha.
+   */
+  private readonly rascunhoAtributos = signal<FichaAtributosDto | null>(null);
+  private readonly rascunhoModificadores = signal<FichaCriaturaModificadoresDto | null>(null);
+
+  protected atributosEmEdicao(): boolean {
+    return this.rascunhoAtributos() !== null;
+  }
+
+  protected atributoRascunho(chave: ChaveAtributo): number {
+    return (this.rascunhoAtributos() ?? this.dados().atributos)[chave];
+  }
+
+  protected modificadorRascunho(chave: ChaveAtributo): ModificadorCriaturaEnum {
+    return (this.rascunhoModificadores() ?? this.dados().modificadores)[chave];
+  }
+
+  protected editarAtributos(): void {
+    this.rascunhoAtributos.set({ ...this.dados().atributos });
+    this.rascunhoModificadores.set({ ...this.dados().modificadores });
+    this.cancelarEdicao();
+  }
+
+  protected cancelarAtributos(): void {
+    this.rascunhoAtributos.set(null);
+    this.rascunhoModificadores.set(null);
+  }
+
+  protected definirAtributoRascunho(chave: ChaveAtributo, valor: number): void {
+    const atual = this.rascunhoAtributos();
+    if (atual && Number.isFinite(valor)) {
+      this.rascunhoAtributos.set({ ...atual, [chave]: Math.max(0, valor) });
+    }
+  }
+
+  protected definirModificadorRascunho(chave: ChaveAtributo, valor: ModificadorCriaturaEnum): void {
+    const atual = this.rascunhoModificadores();
+    if (atual) {
+      this.rascunhoModificadores.set({ ...atual, [chave]: valor });
+    }
+  }
+
+  /**
+   * Violações da distribuição de Modificadores no rascunho — reusa `validarFichaCriatura` (a mesma
+   * regra que o backend roda antes de gravar) em vez de copiar a tabela de quantidades pra cá, e
+   * filtra só as linhas de modificador pra não travar o salvamento por alguma incoerência
+   * pré-existente de outra seção da ficha.
+   */
+  protected readonly violacoesModificadores = computed<readonly string[]>(() => {
+    const modificadores = this.rascunhoModificadores();
+    if (!modificadores) {
+      return [];
+    }
+    return validarFichaCriatura({ ...this.dados(), modificadores }).violacoes.filter(
+      (violacao: string) => violacao.startsWith('modificadores:'),
+    );
+  });
+
+  protected salvarAtributos(): void {
+    const atributos = this.rascunhoAtributos();
+    const modificadores = this.rascunhoModificadores();
+    if (!atributos || !modificadores || this.violacoesModificadores().length) {
+      return;
+    }
+    this.confirmarAtributos(atributos);
+    this.confirmarModificadores(modificadores);
+    this.cancelarAtributos();
+  }
+
+  /**
+   * Modo de edição dos chips de classificação (Origem/Porte/Comportamento/NA) — mesmo racional:
+   * trocar um chip por um `<select>` de largura diferente fazia a linha inteira saltar. Ligado, os
+   * quatro viram selects de uma vez numa grade estável; desligado, voltam a ser chips de leitura.
+   */
+  private readonly editandoClassificacao = signal(false);
+
+  protected classificacaoEmEdicao(): boolean {
+    return this.editandoClassificacao();
+  }
+
+  protected alternarEdicaoClassificacao(): void {
+    this.editandoClassificacao.update((valor) => !valor);
   }
 
   /** Chave (única, tipo `secao.campo`) do campo em edição no-próprio-lugar — `null` = nenhum. */
@@ -184,6 +313,12 @@ export class CriaturaVisualizacao {
       modificador: dados.modificadores[chave],
       vd: dados.vd,
     });
+  }
+
+  /** Atributo cujo Modificador está acima do neutro — o card pinta o Efetivo no accent (ver
+   * `MODIFICADORES_DESTACADOS`); os demais ficam no cinza de rótulo, como no mockup. */
+  protected atributoDestacado(chave: ChaveAtributo): boolean {
+    return MODIFICADORES_DESTACADOS.includes(this.dados().modificadores[chave]);
   }
 
   protected ajustarVida(delta: number): void {
@@ -228,18 +363,8 @@ export class CriaturaVisualizacao {
     this.atributosMudou.emit(atributos);
   }
 
-  /** Confirma o Atributo Final de uma única chave — monta o mapa inteiro (`atributosMudou` é atômico). */
-  protected confirmarAtributoFinal(chave: ChaveAtributo, valor: number): void {
-    this.confirmarAtributos({ ...this.dados().atributos, [chave]: valor });
-  }
-
   protected confirmarModificadores(modificadores: FichaCriaturaModificadoresDto): void {
     this.modificadoresMudou.emit(modificadores);
-  }
-
-  /** Confirma o Modificador de uma única chave — monta o mapa inteiro (`modificadoresMudou` é atômico). */
-  protected confirmarModificador(chave: ChaveAtributo, valor: ModificadorCriaturaEnum): void {
-    this.confirmarModificadores({ ...this.dados().modificadores, [chave]: valor });
   }
 
   protected confirmarTenacidade(tenacidade: TenacidadeEnum): void {

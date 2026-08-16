@@ -1,87 +1,68 @@
 @use 'tema/breakpoints' as bp;
 
 // Visualização/edição da ficha de criatura (m4-04b) — layout de 3 colunas com abas, alvo de
-// fidelidade docs/design/examples/ficha-de-criatura.html. Análogo aprovado: `FichaVisualizacao`
-// (ficha de jogador) — shell de colunas, cabeçalho com avatar, grade de reações e barra de abas
-// são blocos copiados e adaptados de lá (o encapsulamento de estilos do Angular não deixa a
-// definição de outro componente vazar pra este). Blocos genéricos (`.card`, `.stat`, `.abas`,
-// `.chip-classificacao`) copiados do canônico `docs/design/tema/_componentes.scss`, não da cópia
-// local já defasada de `ficha-visualizacao.component.scss`. Só tokens do tema "Terminal de
-// Contenção" — nenhum hex/fonte/raio solto (proibição #29).
+// fidelidade docs/design/examples/ficha-de-criatura.html (medidas tiradas do DOM renderizado do
+// mockup: colunas 376/236/1fr, gap 14, cards de raio 6 e caixas internas de raio 4). Análogo
+// aprovado de UI/UX: `FichaVisualizacao` (ficha de jogador) — shell de colunas, cabeçalho com
+// avatar, barra de abas e o lápis que troca a grade de Atributos por uma lista em edição são
+// blocos copiados e adaptados de lá (o encapsulamento de estilos do Angular não deixa a definição
+// de outro componente vazar pra este). Blocos genéricos (`.card`, `.stat`, `.abas`) copiados do
+// canônico `docs/design/tema/_componentes.scss`. Só tokens do tema "Terminal de Contenção" —
+// nenhum hex/fonte/raio solto (proibição #29).
 
 :host { display: block; }
 
-// Campo genérico "rótulo + controle" (mesmo vocabulário de `criar-criatura.page.scss`), usado só
-// pelos blocos de Regeneração/Motivação que ainda são pares rótulo→controle simples.
+// `.botao` canônico (`_componentes.scss`) copiado pra cá: a definição que existe no SCSS da página
+// (`visualizar-criatura.page.scss`) fica presa ao encapsulamento dela e não alcança este componente.
+.botao {
+  padding: 7px 12px;
+  font: 600 11px var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  transition: filter .15s ease, background-color .15s ease, border-color .15s ease;
+
+  &:disabled { opacity: .55; cursor: default; }
+  &--primario { background: var(--accent); color: var(--bg); border: 0; &:hover:not(:disabled) { filter: brightness(1.08); } }
+  &--secundario { background: transparent; color: var(--text); border: 1px solid var(--border-strong); &:hover:not(:disabled) { background: var(--surface-2); border-color: var(--accent-border); } }
+}
+
+// Campo genérico "rótulo + controle" (mesmo vocabulário de `criar-criatura.page.scss`), usado pela
+// grade de edição da Classificação.
 .campo {
   display: grid;
-  gap: 7px;
+  gap: 5px;
   min-width: 0;
   margin: 0;
 
-  &__rotulo { font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .11em; color: var(--text-dim); }
-  &__controle, &__botao {
-    width: 100%;
-    min-height: 38px;
-    padding: 8px 11px;
-    font: 13px var(--font-sans);
-    color: var(--text);
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    outline: 0;
-    text-align: left;
-    transition: .15s ease;
-    &:hover:not(:disabled) { border-color: var(--accent-border); }
-    &:focus { border-color: var(--accent); background: var(--surface); }
-    &:disabled { color: var(--text-dim); cursor: default; }
-  }
+  &__rotulo { font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .11em; color: var(--text-mute); }
 }
 
 // === Card (copiado de `_componentes.scss` `.card`) ===
 .criatura__cartao {
+  display: flex;
+  flex-direction: column;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
   padding: var(--pad-card);
-  margin-bottom: 16px;
-  &:last-child { margin-bottom: 0; }
+
+  &--identidade { gap: 16px; }
+  &--atributos { gap: 10px; }
+  &--painel { gap: 14px; flex: 1 1 auto; }
 }
 
-// === Chip de classificação (copiado de `_componentes.scss` `.chip-classificacao`) ===
-// A versão canônica (accent-colored) fica só pro destaque de Ameaça — Origem/Porte/Comportamento
-// usam a variante neutra abaixo (mesmo racional do mockup: só o nível de ameaça chama atenção).
-.chip-classificacao {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  background: transparent;
-  border: 1px solid var(--border-strong);
-  border-radius: 3px;
-  padding: 6px 10px;
-  cursor: pointer;
-  transition: .15s ease;
-  &:hover:not(:disabled) { color: var(--text); border-color: var(--accent-border); }
-  &:disabled { cursor: default; opacity: .85; }
-  // NA/Ameaça é o destaque de perigo da coluna — mesmo vermelho fixo de Vida (`--vida`) que o
-  // resto do app usa pra sinalizar risco, não o `--accent` de tema (que o autor pode trocar).
-  &--ameaca { color: var(--vida); border-color: var(--vida); &:hover:not(:disabled) { background: color-mix(in srgb, var(--vida) 12%, transparent); } }
-}
-
-// === Stat box (copiado de `_componentes.scss` `.stat`) ===
+// === Stat box (copiado de `_componentes.scss` `.stat`, com o valor no corpo de 16px do mockup) ===
 .stat {
-  flex: 1 1 0;
   min-width: 0;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--radius-control);
-  padding: 10px 12px;
+  padding: 9px 12px;
 
-  &__rotulo { display: block; font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: .1em; color: var(--text-mute); margin-bottom: 6px; }
-  &__valor { font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: var(--text); line-height: 1; }
+  &__rotulo { display: block; font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: .11em; color: var(--text-mute); margin-bottom: 6px; }
+  &__valor { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: var(--text); line-height: 1.2; }
 }
 
 // === Abas (copiado de `_componentes.scss` `.abas`) ===
@@ -90,9 +71,8 @@
 // os itens do tamanho do conteúdo.
 .criatura__abas {
   display: flex;
-  gap: 5px;
-  padding: 4px;
-  margin-bottom: 16px;
+  gap: 4px;
+  padding: 6px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
@@ -103,17 +83,18 @@
   flex: 1 1 0;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   line-height: 1;
   font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
   text-transform: uppercase;
-  letter-spacing: var(--tracking-label);
+  letter-spacing: .1em;
+  white-space: nowrap;
   color: var(--text-dim);
   background: transparent;
   border: 0;
-  padding: 9px 14px;
+  padding: 8px 14px;
   border-radius: var(--radius-control);
   cursor: pointer;
   transition: color .12s ease, background .12s ease;
@@ -125,124 +106,179 @@
   color: var(--text);
 
   &__linha-colunas {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--gap-grid, 16px);
-    @include bp.tablet { flex-direction: column; }
+    display: grid;
+    grid-template-columns: 376px 236px minmax(0, 1fr);
+    align-items: start;
+    gap: 14px;
+    @include bp.tablet { grid-template-columns: 1fr; }
   }
 
   &__coluna {
     display: flex;
     flex-direction: column;
+    gap: 14px;
     min-width: 0;
-    &--identidade { width: 380px; flex: 0 0 auto; @include bp.tablet { width: 100%; } }
-    &--atributos { width: 250px; flex: 0 0 auto; @include bp.tablet { width: 100%; } }
-    &--status { flex: 1 1 auto; min-width: 420px; @include bp.tablet { min-width: 0; width: 100%; } }
+    &--status { align-self: stretch; }
   }
 
   // --- Identidade: avatar + designação ---
-  &__ident { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  &__ident { display: flex; align-items: flex-start; gap: 16px; }
 
   &__avatar {
-    width: 64px;
-    height: 64px;
+    width: 86px;
+    height: 96px;
     flex: none;
     position: relative;
     border-radius: var(--radius-control);
-    background-color: color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 14%, var(--surface-2));
-    background-image: repeating-linear-gradient(
-      135deg,
-      color-mix(in srgb, color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 60%, var(--border-strong)) 20%, transparent) 0 3px,
-      transparent 3px 9px
-    );
-    border: 2px solid var(--cor-ficha, var(--border-strong));
+    background-color: var(--surface-2);
+    // Listras discretas (mesma hachura do mockup) — a cor da ficha fica só na borda.
+    background-image: repeating-linear-gradient(45deg, var(--border) 0 7px, transparent 7px 14px);
+    border: 1px solid color-mix(in srgb, var(--cor-ficha, var(--accent)) 55%, transparent);
     &--editavel { cursor: default; }
   }
-  &__avatar-imagem { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: calc(var(--radius-control) - 2px); }
+  &__avatar-imagem { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: calc(var(--radius-control) - 1px); }
   &__avatar-upload {
-    position: absolute; right: -4px; bottom: -4px; z-index: 1;
-    display: flex; align-items: center; justify-content: center; width: 22px; height: 22px;
+    position: absolute; right: -8px; bottom: -8px; z-index: 1;
+    display: flex; align-items: center; justify-content: center; width: 20px; height: 20px;
     border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border-strong);
-    color: var(--text-dim); font-size: 11px; cursor: pointer;
+    color: var(--text-dim); font-size: 9px; cursor: pointer;
     &:hover { color: var(--accent); border-color: var(--accent-border); }
   }
   &__avatar-upload-entrada { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; opacity: 0; cursor: pointer; }
   &__avatar-remover {
-    position: absolute; right: -4px; top: -4px; z-index: 1;
-    display: flex; align-items: center; justify-content: center; width: 20px; height: 20px;
-    border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border-strong);
-    color: var(--text-dim); font-size: 10px; padding: 0; cursor: pointer;
+    position: absolute; right: 5px; top: 5px; z-index: 1;
+    display: flex; align-items: center; justify-content: center; width: 16px; height: 16px;
+    border-radius: 3px; background: color-mix(in srgb, var(--bg) 75%, transparent); border: 1px solid var(--border-strong);
+    color: var(--text-dim); font-size: 9px; padding: 0; cursor: pointer;
     &:hover { color: var(--vida); border-color: var(--vida); }
   }
 
-  &__ident-texto { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-  &__ident-rotulo { font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .12em; color: var(--text-mute); }
-  &__designacao { margin: 0; font: 700 18px var(--font-mono); letter-spacing: var(--tracking-label); color: var(--text); }
+  &__ident-texto { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  &__ident-rotulo { font: 9px var(--font-mono); text-transform: uppercase; letter-spacing: .14em; color: var(--text-mute); }
+  &__designacao { margin: 0; font: 700 21px/1.15 var(--font-mono); color: var(--text); }
   &__designacao--editavel { background: transparent; border: 0; padding: 0; cursor: pointer; text-align: left; &:hover { color: var(--accent); } }
-  &__designacao-entrada { min-width: 0; padding: 5px 8px; font: 700 16px var(--font-mono); color: var(--text); background: var(--surface); border: 1px solid var(--accent); border-radius: var(--radius-control); }
-  &__registro { font: 10px var(--font-mono); letter-spacing: .04em; color: var(--text-mute); }
+  &__designacao-entrada { min-width: 0; padding: 3px 8px; font: 700 19px var(--font-mono); color: var(--text); background: var(--surface); border: 1px solid var(--accent); border-radius: var(--radius-control); }
+  &__registro { font: 11px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--text-mute); }
 
-  &__chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  // --- Classificação (chips + lápis / grade de selects) ---
+  &__chips { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; }
+  &__chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    font: 600 12px var(--font-mono); color: var(--text);
+    background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: var(--radius-control);
+    padding: 6px 11px;
+    // Ameaça é o destaque da coluna — mesmo accent do mockup.
+    &--ameaca { color: var(--accent); background: var(--accent-dim); border-color: var(--accent-border); }
+  }
+  &__chip-info {
+    display: flex; align-items: center; justify-content: center; width: 13px; height: 13px;
+    font: 8px var(--font-mono); color: var(--text-dim);
+    border: 1px solid var(--border-strong); border-radius: 50%; cursor: help;
+  }
+  &__chips-rotulo { font: 10px var(--font-mono); text-transform: uppercase; letter-spacing: .14em; color: var(--text-dim); }
+  &__classificacao-grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: -6px; }
 
-  &__stats { display: flex; gap: 8px; margin: 12px 0; }
-  &__stat { flex: 1 1 0; max-width: 220px; text-align: left; }
-  &__stat-botao {
-    display: block; width: 100%; padding: 0; text-align: left; font-family: var(--font-mono); font-size: 20px; font-weight: 700;
-    color: var(--text); background: transparent; border: 0; cursor: pointer;
-    &:hover:not(:disabled) { color: var(--accent); } &:disabled { cursor: default; }
-    &--texto { font-size: 13px; white-space: normal; line-height: 1.3; }
+  // Lápis de seção (Classificação/Atributos) — mesmo gatilho do `.ficha-cartao__lapis` da ficha de
+  // jogador: liga o modo de edição do bloco inteiro em vez de deixar controle sempre visível.
+  &__lapis {
+    display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex: none;
+    color: var(--text-dim); background: transparent; border: 1px solid var(--border-strong); border-radius: 3px;
+    cursor: pointer; transition: .15s ease;
+    &:hover { color: var(--accent); border-color: var(--accent-border); }
+    &--ativo { color: var(--accent); background: var(--accent-dim); border-color: var(--accent); }
   }
 
+  // --- VD / Tenacidade / Defesa ---
+  &__stats { display: grid; grid-template-columns: .8fr 1.4fr .8fr; gap: 9px; }
+  &__stats--info { display: flex; flex-wrap: wrap; gap: 9px; }
+  &__stat { text-align: left; &--info { min-width: 120px; } &--flexivel { flex: 1 1 0; } }
+  &__stat-botao {
+    display: block; width: 100%; padding: 0; text-align: left; font-family: var(--font-mono); font-size: 16px; font-weight: 700;
+    color: var(--text); background: transparent; border: 0; cursor: pointer; line-height: 1.2;
+    &:hover:not(:disabled) { color: var(--accent); } &:disabled { cursor: default; }
+    &--texto { font-size: 14px; }
+    &--tenacidade { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  }
+  &__stat-sufixo { font: 12px var(--font-mono); font-weight: 400; color: var(--text-mute); }
+
   // --- Vida ---
-  &__vida { margin-bottom: 14px; }
-  &__vida-rotulo { display: block; text-align: center; font: 600 10px var(--font-mono); text-transform: uppercase; letter-spacing: .12em; color: var(--text-mute); margin-bottom: 6px; }
-  &__vitalidade { display: flex; align-items: center; justify-content: center; gap: 10px; }
+  &__vida { display: flex; flex-direction: column; align-items: center; gap: 11px; padding-top: 4px; }
+  &__vida-rotulo {
+    font: 11px var(--font-mono); text-transform: uppercase; letter-spacing: .16em; color: var(--text-dim);
+    border-bottom: 1px dotted var(--border-strong); padding-bottom: 2px;
+  }
+  &__vitalidade { display: flex; align-items: center; gap: 9px; }
   &__passo {
-    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 22px; height: 22px;
-    font: 700 14px var(--font-mono); color: var(--text-dim); background: var(--surface-2);
-    border: 1px solid var(--border-strong); border-radius: var(--radius-control); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 20px; height: 20px;
+    font: 12px var(--font-mono); color: var(--text-dim); background: transparent;
+    border: 1px solid var(--border-strong); border-radius: 3px; cursor: pointer;
     &:hover:not(:disabled) { color: var(--accent); border-color: var(--accent-border); }
     &:disabled { cursor: not-allowed; opacity: .4; }
   }
   &__vitalidade-valor {
-    min-width: 48px; padding: 4px 8px; font: 700 20px var(--font-mono); text-align: center; color: var(--text-mute);
+    padding: 0; font: 700 19px var(--font-mono); text-align: center; color: var(--vida);
     background: transparent; border: 0; cursor: pointer; &:hover:not(:disabled) { color: var(--accent); } &:disabled { cursor: default; }
-    &--atual { color: var(--vida); }
   }
-  &__vitalidade-separador { font: 700 16px var(--font-mono); color: var(--text-mute); }
-  &__barra-vida { width: 100%; height: 6px; margin-top: 10px; background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 999px; overflow: hidden; }
+  &__vitalidade-maxima {
+    padding: 0; font: 13px var(--font-mono); color: var(--text-mute);
+    background: transparent; border: 0; cursor: pointer; &:hover:not(:disabled) { color: var(--text-dim); } &:disabled { cursor: default; }
+  }
+  &__barra-vida { width: 100%; max-width: 240px; height: 3px; background: var(--bg); border-radius: 2px; overflow: hidden; }
   &__barra-vida-preenchida { height: 100%; background: var(--vida); transition: width .2s ease; }
 
-  // --- Resistências/Fraquezas ---
-  &__grupo { margin-bottom: 14px; &:last-child { margin-bottom: 0; } }
-  &__grupo-legenda { display: block; font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--text-mute); margin-bottom: 6px; }
-
   // --- Atributos ---
-  &__cartao-cabecalho { display: flex; align-items: center; margin-bottom: 12px; }
-  &__cartao-titulo { margin: 0; font: 700 15px var(--font-sans); color: var(--text); }
+  &__cartao-cabecalho { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  &__cartao-titulo { margin: 0; font: 600 16px var(--font-sans); color: var(--text); }
 
-  &__atributos-grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  &__atributos-grupo-titulo {
-    grid-column: 1 / -1; font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text-mute);
-    margin-top: 6px; &:first-child { margin-top: 0; }
+  &__atributos-grupo {
+    text-align: center; font: 9px var(--font-mono); text-transform: uppercase; letter-spacing: .16em;
+    color: var(--text-mute); margin-top: 2px;
   }
+  &__atributos-grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
   &__atributo-card {
-    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px;
+    position: relative;
+    padding: 9px 8px 8px;
     background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); text-align: center;
-    &--sozinho { grid-column: 1 / -1; width: 50%; margin: 0 auto; }
+    // O 5º do grupo não tem par: metade da largura, centralizado (como no mockup).
+    &--sozinho { grid-column: 1 / -1; width: calc(50% - 4.5px); margin: 0 auto; }
   }
-  &__atributo-nome { font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--text-mute); }
-  &__atributo-valor {
-    padding: 0; font: 700 22px var(--font-mono); color: var(--text); background: transparent; border: 0; cursor: pointer;
-    &:hover:not(:disabled) { color: var(--accent); } &:disabled { cursor: default; }
+  &__atributo-rolar {
+    position: absolute; top: 5px; right: 5px;
+    display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px;
+    font-size: 10px; color: var(--text-mute); background: transparent; border: 1px solid var(--border-strong); border-radius: 2px;
+    cursor: pointer; transition: .15s ease;
+    &:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
+    &:disabled { cursor: not-allowed; opacity: .5; }
   }
+  &__atributo-abrev {
+    display: inline-block; margin-bottom: 6px; padding-bottom: 1px;
+    font: 9px var(--font-mono); letter-spacing: .1em; color: var(--text-mute);
+    border-bottom: 1px dotted var(--border-strong); cursor: help;
+  }
+  &__atributo-valor { display: block; font: 700 20px/1 var(--font-mono); color: var(--text); }
+  &__atributo-efetivo {
+    display: block; margin-top: 6px; font: 600 10px var(--font-mono); color: var(--text-mute);
+    &--destacado { color: var(--accent); }
+  }
+
+  // Lista vertical do modo de edição — trocar a grade pela lista é o mesmo recurso da edição de
+  // atributos da ficha de jogador: os controles não cabem num card de ~100px.
+  &__atributos-acoes { display: flex; gap: 6px; }
+  &__atributos-aviso { margin: 0; font: 10px/1.4 var(--font-mono); color: var(--vida); }
+  &__atributos-lista { display: grid; gap: 8px; }
+  &__atributo-linha {
+    display: grid; gap: 6px; padding: 8px 10px;
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control);
+  }
+  &__atributo-linha-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  &__atributo-linha-nome { font: 600 10px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--text-dim); }
   // Barrinhas de sinal (4 níveis) — mesmo widget de `.atributo__modificador` do assistente de
   // criação (`criar-criatura.page.scss`, m4-05), preservado sem mudança de interação.
-  &__atributo-modificadores { display: flex; justify-content: center; gap: 3px; margin-top: 2px; }
+  &__atributo-modificadores { display: flex; justify-content: space-between; gap: 3px; }
   &__atributo-modificador {
     display: grid; grid-auto-flow: column; align-items: end; gap: 2px;
-    width: 24px; height: 22px; padding: 4px 3px;
-    background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: var(--radius-control);
+    width: 100%; height: 22px; padding: 4px 5px;
+    background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control);
     cursor: pointer; transition: .15s ease;
     i { display: block; width: 3px; background: var(--border-strong); border-radius: 1px; transition: .15s ease; }
     i:nth-child(1) { height: 35%; background: var(--text-mute); }
@@ -256,73 +292,83 @@
     &--ativo { border-color: var(--accent); background: var(--accent-dim); }
     &:disabled { cursor: default; opacity: .6; }
   }
-  &__atributo-rodape { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 2px; }
-  &__atributo-efetivo { font: 700 11px var(--font-mono); color: var(--accent); }
-  &__entrada-numero--atributo { width: 100%; text-align: center; }
-  &__rolar-atributo {
-    display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px;
-    color: var(--accent); background: transparent; border: 1px solid var(--accent-border); border-radius: var(--radius-control);
-    cursor: pointer; &:hover:not(:disabled) { background: var(--accent-dim); } &:disabled { cursor: not-allowed; opacity: .5; }
-  }
 
   // --- Informações (cards da coluna de Status) ---
-  &__info-card { padding-top: 14px; margin-top: 14px; border-top: 1px solid var(--border); &:first-child { padding-top: 0; margin-top: 0; border-top: 0; } }
-  &__info-card-cabecalho { margin-bottom: 8px; }
-  &__info-card-titulo { margin: 0; font: 700 11px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--text); }
-  &__info-duas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; @include bp.mobile { grid-template-columns: 1fr; } }
-  &__info-texto {
-    display: block; width: 100%; margin: 0; padding: 0; text-align: left; font: 13px/1.5 var(--font-sans); color: var(--text-dim);
-    background: transparent; border: 0; cursor: pointer;
-    &:hover:not(:disabled) { color: var(--text); } &:disabled { cursor: default; }
-    &--info { min-height: 60px; }
+  &__info-card {
+    padding: 14px 16px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
   }
-  &__info-campo { margin-top: 10px; }
+  &__info-cabecalho { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
+  &__info-titulo { margin: 0; font: 700 11px var(--font-mono); text-transform: uppercase; letter-spacing: .14em; color: var(--text); }
+  &__info-regua { flex: 1 1 0; height: 1px; background: var(--border); }
+  &__info-acao {
+    display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex: none;
+    color: var(--text-dim); background: transparent; border: 1px solid var(--border-strong); border-radius: 3px;
+    cursor: pointer; transition: .15s ease;
+    &:hover { color: var(--accent); border-color: var(--accent-border); }
+    &--remover:hover { color: var(--vida); border-color: var(--vida); }
+  }
+  &__info-duas { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  &__info-texto { margin: 0; font: 14px/1.6 var(--font-sans); color: var(--text-dim); max-width: 78ch; }
 
-  &__gancho { margin-top: 8px; padding: 10px 12px; background: var(--surface-2); border-left: 2px solid var(--accent); border-radius: 0 var(--radius-control) var(--radius-control) 0; }
-  &__gancho-rotulo { display: block; font: 700 9px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--accent); margin-bottom: 3px; }
-  &__gancho-texto {
-    display: block; width: 100%; margin: 0; padding: 0; text-align: left; font: 12px/1.5 var(--font-sans); color: var(--text-dim);
-    background: transparent; border: 0; cursor: pointer;
+  // Gancho/Motivação: linha própria abaixo da descrição, separada por um filete (como no mockup).
+  &__info-nota {
+    display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+    margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);
+  }
+  &__info-nota-rotulo {
+    flex: none; font: 9px var(--font-mono); text-transform: uppercase; letter-spacing: .14em; color: var(--text-mute);
+    &--destaque { color: var(--accent); }
+  }
+  &__info-nota-texto {
+    flex: 1 1 200px; min-width: 0; margin: 0; padding: 0; text-align: left;
+    font: 13px/1.5 var(--font-sans); color: var(--text-dim); background: transparent; border: 0; cursor: pointer;
     &:hover:not(:disabled) { color: var(--text); } &:disabled { cursor: default; }
   }
 
   &__tags { display: flex; flex-wrap: wrap; gap: 8px; }
   &__tag {
-    display: flex; align-items: center; gap: 6px; padding: 6px 10px;
-    background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: var(--radius-control);
+    display: inline-flex; align-items: baseline; gap: 8px; padding: 7px 11px;
+    background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control);
+    &--vazia { border-style: dashed; }
+    &--larga { flex: 1 1 100%; }
   }
-  &__tag-rotulo { font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--text-mute); }
+  &__tag-rotulo { font: 10px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text-mute); }
   &__tag-valor {
-    padding: 0; font: 700 12px var(--font-mono); color: var(--text); background: transparent; border: 0; cursor: pointer;
+    padding: 0; font: 700 13px var(--font-mono); color: var(--text); background: transparent; border: 0; cursor: pointer;
+    text-align: left;
     &:hover:not(:disabled) { color: var(--accent); } &:disabled { cursor: default; }
   }
 
   // --- Controles genéricos (select/input/textarea) ---
   &__select, &__entrada-texto, &__entrada-numero, &__entrada-textarea {
-    width: 100%; min-height: 38px; padding: 8px 11px; font: 13px var(--font-sans); color: var(--text);
+    width: 100%; min-height: 34px; padding: 7px 10px; font: 13px var(--font-sans); color: var(--text);
     background: var(--surface); border: 1px solid var(--accent); border-radius: var(--radius-control); outline: 0;
   }
-  &__select--chip { width: auto; min-height: 0; padding: 6px 10px; font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; }
+  &__select--stat, &__select--tag { min-height: 0; padding: 2px 6px; font-size: 12px; }
   &__entrada-numero { width: 100px; font-family: var(--font-mono); font-weight: 700; }
-  &__entrada-numero--stat { width: 100%; min-height: 0; padding: 2px 6px; font-size: 18px; }
-  &__entrada-numero--tag { width: 60px; min-height: 0; padding: 2px 6px; font-size: 12px; }
-  &__entrada-textarea { min-height: 64px; resize: vertical; font-family: var(--font-sans); }
-  &__entrada-textarea--info { min-height: 60px; }
+  &__entrada-numero--stat { width: 100%; min-height: 0; padding: 2px 6px; font-size: 16px; }
+  &__entrada-numero--vida { width: 84px; min-height: 0; padding: 2px 6px; font-size: 17px; text-align: center; }
+  &__entrada-numero--tag { width: 64px; min-height: 0; padding: 2px 6px; font-size: 12px; }
+  &__entrada-numero--linha { width: 64px; min-height: 0; padding: 2px 6px; font-size: 14px; text-align: center; }
+  &__entrada-texto--tag { min-height: 0; padding: 2px 6px; font-size: 12px; }
+  &__entrada-textarea { min-height: 76px; resize: vertical; font: 14px/1.6 var(--font-sans); }
 
   &__anotacoes {
-    width: 100%; min-height: 100px; padding: 10px 12px; font: 13px/1.5 var(--font-sans); color: var(--text);
-    background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: var(--radius-control);
+    width: 100%; min-height: 100px; padding: 10px 12px; font: 14px/1.6 var(--font-sans); color: var(--text);
+    background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control);
     resize: vertical; outline: 0;
-    &:focus { border-color: var(--accent); background: var(--surface); }
+    &:focus { border-color: var(--accent); }
   }
 
-  &__campos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; }
-  &__vazio { margin: 0 0 8px; font: 12px var(--font-sans); color: var(--text-mute); }
+  &__vazio { margin: 0; font: 12px var(--font-sans); color: var(--text-mute); }
 
   @include bp.mobile {
     &__ident { flex-direction: column; align-items: flex-start; }
-    &__campos { grid-template-columns: 1fr; }
-    &__atributos-grade { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    &__stats { flex-wrap: wrap; }
+    &__stats { grid-template-columns: 1fr; }
+    &__classificacao-grade { grid-template-columns: 1fr; }
+    &__info-duas { grid-template-columns: 1fr; }
   }
 }

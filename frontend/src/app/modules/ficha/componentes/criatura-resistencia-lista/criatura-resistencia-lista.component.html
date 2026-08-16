@@ -1,23 +1,25 @@
 <section class="resistencia-lista" [class.resistencia-lista--fraqueza]="variante() === 'fraqueza'">
   <header class="resistencia-lista__cabecalho">
     <h3 class="resistencia-lista__titulo">{{ titulo() }}</h3>
+    <span class="resistencia-lista__regua"></span>
+    @if (dica(); as texto) {
+      <span class="resistencia-lista__dica">{{ texto }}</span>
+    }
     @if (editavel()) {
-      <div class="resistencia-lista__cabecalho-acoes">
-        <button
-          class="resistencia-lista__alternar-edicao"
-          type="button"
-          [class.resistencia-lista__alternar-edicao--ativo]="modoEdicao()"
-          [attr.aria-pressed]="modoEdicao()"
-          [attr.aria-label]="modoEdicao() ? 'Concluir edição' : 'Editar itens'"
-          [appTooltip]="modoEdicao() ? 'Concluir edição' : 'Editar itens'"
-          (click)="alternarModoEdicao()"
-        >
-          <app-icone [nome]="modoEdicao() ? 'check' : 'editar'" />
-        </button>
-        <button class="resistencia-lista__adicionar" type="button" aria-label="Adicionar" [appTooltip]="'Adicionar'" (click)="adicionar()">
-          <app-icone nome="mais" />
-        </button>
-      </div>
+      <button
+        class="resistencia-lista__alternar-edicao"
+        type="button"
+        [class.resistencia-lista__alternar-edicao--ativo]="modoEdicao()"
+        [attr.aria-pressed]="modoEdicao()"
+        [attr.aria-label]="modoEdicao() ? 'Concluir edição' : 'Editar itens'"
+        [appTooltip]="modoEdicao() ? 'Concluir edição' : 'Editar itens'"
+        (click)="alternarModoEdicao()"
+      >
+        <app-icone [nome]="modoEdicao() ? 'check' : 'editar'" />
+      </button>
+      <button class="resistencia-lista__adicionar" type="button" aria-label="Adicionar" [appTooltip]="'Adicionar'" (click)="adicionar()">
+        <app-icone nome="mais" />
+      </button>
     }
   </header>
 
@@ -28,11 +30,20 @@
   @if (variante() === 'resistencia') {
     <ul class="resistencia-lista__grade">
       @for (item of itens(); track $index) {
-        <li class="resistencia-lista__grade-item">
+        <!-- O formulário é bem mais largo que um box de ~77px: em edição o item abandona a grade e
+             ocupa a linha inteira, em vez de estourar a coluna. -->
+        <li class="resistencia-lista__grade-item" [class.resistencia-lista__grade-item--editando]="editando($index)">
           @if (editando($index)) {
             <ng-container *ngTemplateOutlet="formulario" />
           } @else {
-            <span class="resistencia-lista__grade-tipo">{{ item.tipo }}{{ item.subtipo ? ' · ' + item.subtipo : '' }}</span>
+            <span
+              class="resistencia-lista__grade-tipo"
+              tabindex="0"
+              [appTooltip]="item.tipo + (item.subtipo ? ' · ' + item.subtipo : '')"
+              [attr.aria-label]="item.tipo + (item.subtipo ? ' · ' + item.subtipo : '')"
+            >
+              {{ abreviacao[item.tipo] }}
+            </span>
             <span class="resistencia-lista__grade-valor">{{ item.valor }}</span>
             @if (editavel() && modoEdicao()) {
               <div class="resistencia-lista__grade-acoes">
@@ -52,14 +63,18 @@
   } @else {
     <ul class="resistencia-lista__itens">
       @for (item of itens(); track $index) {
-        <li class="resistencia-lista__item">
+        <li class="resistencia-lista__item" [class.resistencia-lista__item--editando]="editando($index)">
           @if (editando($index)) {
             <ng-container *ngTemplateOutlet="formulario" />
           } @else {
-            <span class="resistencia-lista__tipo">{{ item.tipo }}</span>
-            @if (item.subtipo) {
-              <span class="resistencia-lista__subtipo">{{ item.subtipo }}</span>
-            }
+            <span class="resistencia-lista__item-texto">
+              @if (item.subtipo) {
+                <span class="resistencia-lista__tipo">{{ item.tipo }}</span>
+                <span class="resistencia-lista__subtipo">{{ item.subtipo }}</span>
+              } @else {
+                <span class="resistencia-lista__subtipo">{{ item.tipo }}</span>
+              }
+            </span>
             <span class="resistencia-lista__valor">+{{ item.valor }}</span>
             @if (editavel() && modoEdicao()) {
               <div class="resistencia-lista__acoes">
@@ -89,16 +104,29 @@
   }
 </section>
 
+<!-- Formulário em grade (tipo na linha inteira, subtipo + valor lado a lado, botões no fim): numa
+     coluna de ~340px uma linha de flex-wrap quebrava em pedaços desalinhados. -->
 <ng-template #formulario>
   <form class="resistencia-lista__form" [formGroup]="itemForm" (ngSubmit)="confirmar()">
-    <select class="resistencia-lista__select" formControlName="tipo" aria-label="Tipo de dano">
-      @for (tipo of tipos; track tipo) {
-        <option [value]="tipo">{{ tipo }}</option>
-      }
-    </select>
-    <input class="resistencia-lista__input" formControlName="subtipo" placeholder="Subtipo (opcional)" aria-label="Subtipo" />
-    <input class="resistencia-lista__input resistencia-lista__input--numero" type="number" formControlName="valor" aria-label="Valor" />
-    <button class="botao botao--primario" type="submit" [disabled]="itemForm.invalid">{{ indiceEmEdicao() === -1 ? 'Adicionar' : 'Confirmar' }}</button>
-    <button class="botao botao--secundario" type="button" (click)="cancelar()">Cancelar</button>
+    <label class="resistencia-lista__campo resistencia-lista__campo--largo">
+      <span class="resistencia-lista__campo-rotulo">Tipo</span>
+      <select class="resistencia-lista__select" formControlName="tipo" aria-label="Tipo de dano">
+        @for (tipo of tipos; track tipo) {
+          <option [value]="tipo">{{ tipo }}</option>
+        }
+      </select>
+    </label>
+    <label class="resistencia-lista__campo">
+      <span class="resistencia-lista__campo-rotulo">Subtipo</span>
+      <input class="resistencia-lista__input" formControlName="subtipo" placeholder="Opcional" aria-label="Subtipo" />
+    </label>
+    <label class="resistencia-lista__campo">
+      <span class="resistencia-lista__campo-rotulo">Valor</span>
+      <input class="resistencia-lista__input" type="number" formControlName="valor" aria-label="Valor" />
+    </label>
+    <div class="resistencia-lista__form-acoes">
+      <button class="botao botao--primario" type="submit" [disabled]="itemForm.invalid">{{ indiceEmEdicao() === -1 ? 'Adicionar' : 'Confirmar' }}</button>
+      <button class="botao botao--secundario" type="button" (click)="cancelar()">Cancelar</button>
+    </div>
   </form>
 </ng-template>

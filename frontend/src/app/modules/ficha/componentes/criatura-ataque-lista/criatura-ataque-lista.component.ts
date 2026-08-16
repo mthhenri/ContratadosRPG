@@ -1,11 +1,13 @@
 import { Component, input, output, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { CustoAcaoEnum, TipoDanoEnum } from '@contratados-rpg/shared/enums';
 import type { FichaAtributosDto, FichaCriaturaAtaqueDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { Icone } from '../../../../shared/icone/icone.component';
-import { rotuloCustoAcao } from '../../rotulos-criatura';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { rotuloCustoAcao, rotuloCustoAcaoCurto } from '../../rotulos-criatura';
 
 const ATRIBUTOS: readonly (keyof FichaAtributosDto)[] = [
   'destreza', 'forca', 'luta', 'pontaria', 'vigor', 'intelecto', 'medicina', 'sentidos', 'social', 'vontade',
@@ -16,7 +18,7 @@ const TIPOS_DANO: readonly TipoDanoEnum[] = Object.values(TipoDanoEnum) as TipoD
 /** Editor no próprio lugar da lista `ataques` da ficha de criatura (m4-04b), com botão de rolagem por linha. */
 @Component({
   selector: 'app-criatura-ataque-lista',
-  imports: [ReactiveFormsModule, Icone],
+  imports: [ReactiveFormsModule, Icone, Tooltip, NgTemplateOutlet],
   templateUrl: './criatura-ataque-lista.component.html',
   styleUrl: './criatura-ataque-lista.component.scss',
 })
@@ -35,6 +37,7 @@ export class CriaturaAtaqueLista {
   protected readonly custosAcao = CUSTOS_ACAO;
   protected readonly tiposDano = TIPOS_DANO;
   protected readonly rotuloCustoAcao = rotuloCustoAcao;
+  protected readonly rotuloCustoAcaoCurto = rotuloCustoAcaoCurto;
 
   protected readonly indiceEmEdicao = signal<number | null>(null);
   protected readonly indiceRemovendo = signal<number | null>(null);

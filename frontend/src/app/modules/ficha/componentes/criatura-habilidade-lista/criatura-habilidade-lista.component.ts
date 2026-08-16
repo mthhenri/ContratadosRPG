@@ -1,10 +1,12 @@
 import { Component, input, output, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { HabilidadeTipoCriaturaEnum } from '@contratados-rpg/shared/enums';
 import type { FichaCriaturaHabilidadeDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { Icone } from '../../../../shared/icone/icone.component';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { rotuloHabilidadeTipoCriatura } from '../../rotulos-criatura';
 
 const TIPOS: readonly HabilidadeTipoCriaturaEnum[] = Object.values(HabilidadeTipoCriaturaEnum) as HabilidadeTipoCriaturaEnum[];
@@ -12,7 +14,7 @@ const TIPOS: readonly HabilidadeTipoCriaturaEnum[] = Object.values(HabilidadeTip
 /** Editor no próprio lugar da lista `habilidades` (Habilidades Especiais) da ficha de criatura (m4-04b). */
 @Component({
   selector: 'app-criatura-habilidade-lista',
-  imports: [ReactiveFormsModule, Icone],
+  imports: [ReactiveFormsModule, Icone, Tooltip, NgTemplateOutlet],
   templateUrl: './criatura-habilidade-lista.component.html',
   styleUrl: './criatura-habilidade-lista.component.scss',
 })

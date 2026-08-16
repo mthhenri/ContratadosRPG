@@ -5,16 +5,24 @@
     <span class="ataque-lista__regua"></span>
     @if (editavel()) {
       <button
-        class="botao botao--secundario ataque-lista__alternar-edicao"
+        class="ataque-lista__cabecalho-acao"
         type="button"
-        [class.ataque-lista__alternar-edicao--ativo]="modoEdicao()"
+        [class.ataque-lista__cabecalho-acao--ativo]="modoEdicao()"
         [attr.aria-pressed]="modoEdicao()"
+        [attr.aria-label]="modoEdicao() ? 'Concluir edição' : 'Editar ataques'"
+        [appTooltip]="modoEdicao() ? 'Concluir edição' : 'Editar ataques'"
         (click)="alternarModoEdicao()"
       >
-        <app-icone [nome]="modoEdicao() ? 'check' : 'editar'" /> {{ modoEdicao() ? 'Concluir' : 'Editar' }}
+        <app-icone [nome]="modoEdicao() ? 'check' : 'editar'" />
       </button>
-      <button class="botao botao--secundario" type="button" (click)="adicionar()">
-        <app-icone nome="mais" /> Adicionar
+      <button
+        class="ataque-lista__cabecalho-acao ataque-lista__cabecalho-acao--adicionar"
+        type="button"
+        aria-label="Adicionar ataque"
+        [appTooltip]="'Adicionar ataque'"
+        (click)="adicionar()"
+      >
+        <app-icone nome="mais" />
       </button>
     }
   </header>
@@ -27,29 +35,19 @@
     @for (item of itens(); track $index) {
       <li class="ataque-lista__item" [class.ataque-lista__item--editando]="editando($index)">
         @if (editando($index)) {
-          <form class="ataque-lista__form" [formGroup]="itemForm" (ngSubmit)="confirmar()">
-            <input class="ataque-lista__input" formControlName="nome" placeholder="Nome" aria-label="Nome do ataque" />
-            <select class="ataque-lista__select" formControlName="atributo" aria-label="Atributo de teste">
-              @for (a of atributos; track a) { <option [value]="a">{{ a }}</option> }
-            </select>
-            <select class="ataque-lista__select" formControlName="custoAcao" aria-label="Custo de ação">
-              @for (c of custosAcao; track c) { <option [value]="c">{{ rotuloCustoAcao(c) }}</option> }
-            </select>
-            <input class="ataque-lista__input" formControlName="dano" placeholder="Dano (ex.: 4D12+10)" aria-label="Fórmula de dano" />
-            <select class="ataque-lista__select" formControlName="tipoDano" aria-label="Tipo de dano">
-              @for (t of tiposDano; track t) { <option [value]="t">{{ t }}</option> }
-            </select>
-            <label class="ataque-lista__checkbox"><input type="checkbox" formControlName="area" /> Área</label>
-            <input class="ataque-lista__input ataque-lista__input--largo" formControlName="efeito" placeholder="Efeito adicional (opcional)" aria-label="Efeito" />
-            <button class="botao botao--primario" type="submit" [disabled]="itemForm.invalid">Confirmar</button>
-            <button class="botao botao--secundario" type="button" (click)="cancelar()">Cancelar</button>
-          </form>
+          <ng-container *ngTemplateOutlet="formulario; context: { $implicit: 'Confirmar' }" />
         } @else {
           <div class="ataque-lista__cabecalho-item">
             <span class="ataque-lista__nome">{{ item.nome }}</span>
             <span class="ataque-lista__dano">{{ item.dano }}</span>
           </div>
-          <span class="ataque-lista__meta">{{ item.tipoDano }} · {{ rotuloCustoAcao(item.custoAcao) }}{{ item.area ? ' · Área' : '' }}</span>
+
+          <div class="ataque-lista__marcas">
+            <span class="ataque-lista__marca">{{ rotuloCustoAcaoCurto(item.custoAcao) }}</span>
+            <span class="ataque-lista__marca">{{ item.tipoDano }}</span>
+            @if (item.area) { <span class="ataque-lista__marca">Área</span> }
+          </div>
+
           @if (item.efeito) { <p class="ataque-lista__efeito">{{ item.efeito }}</p> }
 
           <div class="ataque-lista__rodape">
@@ -77,22 +75,52 @@
   </ul>
 
   @if (editando(-1)) {
-    <form class="ataque-lista__form ataque-lista__form--novo" [formGroup]="itemForm" (ngSubmit)="confirmar()">
-      <input class="ataque-lista__input" formControlName="nome" placeholder="Nome" aria-label="Nome do ataque" />
+    <div class="ataque-lista__form-novo">
+      <ng-container *ngTemplateOutlet="formulario; context: { $implicit: 'Adicionar' }" />
+    </div>
+  }
+</section>
+
+<!-- Formulário em grade rotulada: a linha de flex-wrap anterior deixava sete controles sem rótulo
+     em ordem imprevisível conforme a largura da coluna. -->
+<ng-template #formulario let-rotuloConfirmar>
+  <form class="ataque-lista__form" [formGroup]="itemForm" (ngSubmit)="confirmar()">
+    <label class="ataque-lista__campo ataque-lista__campo--largo">
+      <span class="ataque-lista__campo-rotulo">Nome</span>
+      <input class="ataque-lista__input" formControlName="nome" placeholder="Nome do ataque" aria-label="Nome do ataque" />
+    </label>
+    <label class="ataque-lista__campo">
+      <span class="ataque-lista__campo-rotulo">Atributo de teste</span>
       <select class="ataque-lista__select" formControlName="atributo" aria-label="Atributo de teste">
         @for (a of atributos; track a) { <option [value]="a">{{ a }}</option> }
       </select>
+    </label>
+    <label class="ataque-lista__campo">
+      <span class="ataque-lista__campo-rotulo">Custo de ação</span>
       <select class="ataque-lista__select" formControlName="custoAcao" aria-label="Custo de ação">
-        @for (c of custosAcao; track c) { <option [value]="c">{{ c }}</option> }
+        @for (c of custosAcao; track c) { <option [value]="c">{{ rotuloCustoAcao(c) }}</option> }
       </select>
-      <input class="ataque-lista__input" formControlName="dano" placeholder="Dano (ex.: 4D12+10)" aria-label="Fórmula de dano" />
+    </label>
+    <label class="ataque-lista__campo">
+      <span class="ataque-lista__campo-rotulo">Dano</span>
+      <input class="ataque-lista__input" formControlName="dano" placeholder="ex.: 4D12+10" aria-label="Fórmula de dano" />
+    </label>
+    <label class="ataque-lista__campo">
+      <span class="ataque-lista__campo-rotulo">Tipo de dano</span>
       <select class="ataque-lista__select" formControlName="tipoDano" aria-label="Tipo de dano">
         @for (t of tiposDano; track t) { <option [value]="t">{{ t }}</option> }
       </select>
-      <label class="ataque-lista__checkbox"><input type="checkbox" formControlName="area" /> Área</label>
-      <input class="ataque-lista__input ataque-lista__input--largo" formControlName="efeito" placeholder="Efeito adicional (opcional)" aria-label="Efeito" />
-      <button class="botao botao--primario" type="submit" [disabled]="itemForm.invalid">Adicionar</button>
+    </label>
+    <label class="ataque-lista__campo ataque-lista__campo--largo">
+      <span class="ataque-lista__campo-rotulo">Efeito adicional</span>
+      <input class="ataque-lista__input" formControlName="efeito" placeholder="Opcional" aria-label="Efeito" />
+    </label>
+    <label class="ataque-lista__checkbox">
+      <input type="checkbox" formControlName="area" /> Atinge área
+    </label>
+    <div class="ataque-lista__form-acoes">
+      <button class="botao botao--primario" type="submit" [disabled]="itemForm.invalid">{{ rotuloConfirmar }}</button>
       <button class="botao botao--secundario" type="button" (click)="cancelar()">Cancelar</button>
-    </form>
-  }
-</section>
+    </div>
+  </form>
+</ng-template>

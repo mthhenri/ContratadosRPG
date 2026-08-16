@@ -10,6 +10,17 @@ import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 
 const TIPOS: readonly TipoDanoEnum[] = Object.values(TipoDanoEnum) as TipoDanoEnum[];
 
+/** Abreviação de exibição de cada tipo na grade compacta — mesmas três formas encurtadas do grid de
+ * Resistências da ficha de jogador (`FichaVisualizacao.abreviacaoResistencia`), pra caber num box
+ * de ~77px sem cortar. O nome inteiro (com subtipo) fica na dica do próprio rótulo. */
+const ABREVIACAO: Record<TipoDanoEnum, string> = {
+  [TipoDanoEnum.FISICO]: 'Físico',
+  [TipoDanoEnum.BALISTICO]: 'Balíst.',
+  [TipoDanoEnum.EXPLOSAO]: 'Explos.',
+  [TipoDanoEnum.QUIMICO]: 'Químico',
+  [TipoDanoEnum.GERAL]: 'Geral',
+};
+
 /**
  * Editor no próprio lugar de uma lista `{tipo, subtipo, valor}` (m4-04b) — reusado tanto para
  * Resistências quanto para Fraquezas da ficha de criatura (`FichaCriaturaResistenciaDto` é a
@@ -29,10 +40,14 @@ export class CriaturaResistenciaLista {
   /** Só decide a pele do estado de leitura (`resistencia` = grade compacta neutra, `fraqueza` =
    * lista com tom de aviso) — o formulário de edição é idêntico nos dois casos. */
   readonly variante = input<'resistencia' | 'fraqueza'>('resistencia');
+  /** Texto curto à direita do título (ex.: o limite de pontos das Resistências) — mesmo lugar da
+   * dica do cabeçalho de Ataques no mockup, depois da régua e antes dos botões. */
+  readonly dica = input<string | null>(null);
 
   readonly itensMudou = output<readonly FichaCriaturaResistenciaDto[]>();
 
   protected readonly tipos = TIPOS;
+  protected readonly abreviacao = ABREVIACAO;
 
   protected readonly indiceEmEdicao = signal<number | null>(null);
   protected readonly indiceRemovendo = signal<number | null>(null);

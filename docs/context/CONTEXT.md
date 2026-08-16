@@ -1,11 +1,13 @@
 # CONTEXT.md — Painel do Projeto
 
 > **Última revisão:** 2026-08-15 · **Última decisão registrada:** `m4-04b` (acabamento visual da
-> ficha de criatura, fora da fila de specs, a pedido direto do autor) — abas "Informações"/"Ataques
-> e Habilidades" passaram a ocupar sempre 100% da barra (divergência deliberada do `.abas`
-> canônico, que é do tamanho do conteúdo); editar/remover por item nas listas de Ataques,
-> Habilidades, Resistências e Fraquezas saíram de sempre visíveis pra um modo de edição por lista
-> (botão "Editar"/"Concluir" no cabeçalho) — mobile segue pendente de `m4-10` — ver seção 4
+> ficha de criatura, fora da fila de specs, a pedido direto do autor) — a tela desktop foi alinhada
+> ao mockup medindo o DOM dele (colunas 376/236/1fr, cards de raio 6, chips de 12px, Vida com barra
+> de 3px); o card de Atributo virou sigla + valor + Efetivo com o seletor de Modificador atrás do
+> lápis, e a edição de Atributos passou a ser rascunho com Salvar/Cancelar porque a cota fixa de
+> Modificadores (2/3/3/2) invalida qualquer troca isolada; dois defeitos de edição corrigidos
+> (`<select>` que abria na 1ª opção por usar `[value]` com `@for`, e `.botao` que não alcançava os
+> componentes filhos) — mobile segue pendente de `m4-10` — ver seção 4
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -415,8 +417,8 @@ corretamente e o jogador sem concessão não a vê (§14). Pendência registrada
 `m4-04` com tela dedicada (não um `modo` novo em `FichaVisualizacao`). Dashboard de 3 colunas —
 Identidade (avatar, designação, chips de classificação Origem/Porte/Comportamento, NA em destaque,
 VD/Tenacidade/Defesa, Vida, Resistências em grade compacta, Fraquezas em lista de aviso) ·
-Atributos (grade Físicos/Mentais, valor + seletor de Modificador de 4 barras + Atributo Efetivo +
-rolagem, tudo herdado sem mudança do assistente) · Status com abas Informações (Cadência/Bônus de
+Atributos (grade Físicos/Mentais de cards "sigla + valor + Atributo Efetivo + rolar"; o seletor de
+Modificador de 4 barras não fica no card — só dentro do modo de edição) · Status com abas Informações (Cadência/Bônus de
 Iniciativa, Deslocamento em tags, Regeneração opcional, Descrição/Gancho/Motivação, Natureza
 Física/Tema de Horror, Anotações) e Ataques e Habilidades (grades de cards, cada Ataque com botões
 Teste e Dano) — mesmo shell/padrões de `FichaVisualizacao` (jogador) e dos blocos canônicos de
@@ -428,8 +430,17 @@ faz o mesmo papel de `FichaEdicaoService` (debounce + `PUT` em lote). Nas listas
 (`criatura-ataque-lista`/`criatura-habilidade-lista`/`criatura-resistencia-lista`, esta última
 reusada por Resistências e Fraquezas) editar/remover por item só aparecem depois de um clique no
 botão "Editar"/"Concluir" do cabeçalho da lista (`modoEdicao`, local a cada lista) — "Adicionar"
-continua sempre visível, só as ações destrutivas/por-item exigem entrar no modo. Só desktop por
-ora — refinamento mobile é `m4-10`, ainda no backlog.
+continua sempre visível, só as ações destrutivas/por-item exigem entrar no modo. Dois blocos fogem
+do "edita direto no valor" e usam lápis de seção, como o lápis de Atributos da ficha de jogador:
+**Classificação** (os quatro chips viram selects rotulados de uma vez, porque trocar um chip por um
+select fazia a linha saltar) e **Atributos**, este com **rascunho + Salvar/Cancelar** — a
+distribuição de Modificadores é cota fixa (2 Forte / 3 Médio / 3 Fraco / 2 Frágil,
+`shared/regras/criatura`), então emitir a cada clique deixava a ficha inválida e o backend recusava
+a gravação; o Salvar só libera quando `validarFichaCriatura` não acusa mais violação de modificador.
+Dois cuidados que valem pra qualquer tela: `<select>` de edição usa `[selected]` na `<option>` (com
+`[value]` no `<select>` as opções do `@for` ainda não existem e o controle abre na 1ª), e `.botao`
+precisa ser copiado pro SCSS de cada componente (a definição da página não atravessa o
+encapsulamento). Só desktop por ora — refinamento mobile é `m4-10`, ainda no backlog.
 
 **Polimento de UI — `m4-04b`:** passo // Identidade ganhou upload de imagem de registro (mesmo
 padrão de avatar do guia de jogador, `FichaService.alterarImagem`, segundo request em sequência

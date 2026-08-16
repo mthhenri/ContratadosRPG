@@ -22,13 +22,15 @@ describe('CriaturaResistenciaLista', () => {
     return { fixture, raiz: fixture.nativeElement as HTMLElement, emitidos };
   }
 
-  it('lista os itens existentes com tipo e valor (variante grade, padrão de Resistências)', () => {
+  it('mostra o tipo abreviado no box da grade, com o nome inteiro no rótulo acessível', () => {
     const { raiz } = montar(false);
-    const tipos = Array.from(raiz.querySelectorAll('.resistencia-lista__grade-tipo')).map((n) => n.textContent?.trim());
-    expect(tipos).toEqual(['Balístico']);
+    const box = raiz.querySelector('.resistencia-lista__grade-tipo')!;
+    expect(box.textContent?.trim()).toBe('Balíst.');
+    expect(box.getAttribute('aria-label')).toBe('Balístico');
+    expect(raiz.querySelector('.resistencia-lista__grade-valor')?.textContent?.trim()).toBe('10');
   });
 
-  it('lista os itens existentes com tipo e valor (variante lista, usada em Fraquezas)', () => {
+  it('na variante lista, o item sem subtipo mostra o próprio tipo como texto principal', () => {
     TestBed.configureTestingModule({ imports: [CriaturaResistenciaLista] });
     const fixture = TestBed.createComponent(CriaturaResistenciaLista);
     fixture.componentRef.setInput('itens', itens);
@@ -37,8 +39,22 @@ describe('CriaturaResistenciaLista', () => {
     fixture.componentRef.setInput('variante', 'fraqueza');
     fixture.detectChanges();
     const raiz = fixture.nativeElement as HTMLElement;
-    const tipos = Array.from(raiz.querySelectorAll('.resistencia-lista__tipo')).map((n) => n.textContent?.trim());
-    expect(tipos).toEqual(['Balístico']);
+    expect(raiz.querySelector('.resistencia-lista__tipo')).toBeNull();
+    expect(raiz.querySelector('.resistencia-lista__subtipo')?.textContent?.trim()).toBe('Balístico');
+    expect(raiz.querySelector('.resistencia-lista__valor')?.textContent?.trim()).toBe('+10');
+  });
+
+  it('na variante lista, o item com subtipo mostra tipo em cima e subtipo como texto principal', () => {
+    TestBed.configureTestingModule({ imports: [CriaturaResistenciaLista] });
+    const fixture = TestBed.createComponent(CriaturaResistenciaLista);
+    fixture.componentRef.setInput('itens', [{ tipo: TipoDanoEnum.EXPLOSAO, subtipo: 'Concussivo', valor: 20 }]);
+    fixture.componentRef.setInput('titulo', 'Fraquezas');
+    fixture.componentRef.setInput('editavel', false);
+    fixture.componentRef.setInput('variante', 'fraqueza');
+    fixture.detectChanges();
+    const raiz = fixture.nativeElement as HTMLElement;
+    expect(raiz.querySelector('.resistencia-lista__tipo')?.textContent?.trim()).toBe('Explosão');
+    expect(raiz.querySelector('.resistencia-lista__subtipo')?.textContent?.trim()).toBe('Concussivo');
   });
 
   it('só mostra editar/remover por item depois de ativar o modo de edição (variante grade)', () => {

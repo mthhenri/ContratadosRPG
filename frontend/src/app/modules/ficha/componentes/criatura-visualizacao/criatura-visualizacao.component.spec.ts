@@ -18,10 +18,11 @@ describe('CriaturaVisualizacao', () => {
     },
     na: NivelAmeacaEnum.ALTA, vd: 30,
     atributos: { destreza: 1, forca: 8, luta: 6, pontaria: 1, vigor: 8, intelecto: 1, medicina: 1, sentidos: 4, social: 1, vontade: 4 },
+    // Distribuição fixa da regra: 2 Forte / 3 Médio / 3 Fraco / 2 Frágil (`shared/regras/criatura`).
     modificadores: {
       destreza: ModificadorCriaturaEnum.FRAGIL, forca: ModificadorCriaturaEnum.FORTE, luta: ModificadorCriaturaEnum.FORTE,
       pontaria: ModificadorCriaturaEnum.FRAGIL, vigor: ModificadorCriaturaEnum.MEDIO, intelecto: ModificadorCriaturaEnum.FRACO,
-      medicina: ModificadorCriaturaEnum.FRACO, sentidos: ModificadorCriaturaEnum.MEDIO, social: ModificadorCriaturaEnum.FRACO,
+      medicina: ModificadorCriaturaEnum.FRACO, sentidos: ModificadorCriaturaEnum.MEDIO, social: ModificadorCriaturaEnum.MEDIO,
       vontade: ModificadorCriaturaEnum.FRACO,
     },
     tenacidade: TenacidadeEnum.RESISTENTE, vidaMaxima: 100, vidaAtual: 100, defesa: 30,
@@ -116,5 +117,90 @@ describe('CriaturaVisualizacao', () => {
     fixture.detectChanges();
     const raiz = fixture.nativeElement as HTMLElement;
     expect(raiz.querySelectorAll('.ataque-lista__nome').length).toBe(1);
+  });
+
+  it('a grade de Atributos só vira lista editável depois do lápis do cabeçalho', () => {
+    const { fixture } = montar();
+    const raiz = fixture.nativeElement as HTMLElement;
+    expect(raiz.querySelectorAll('.criatura__atributo-card').length).toBe(10);
+    expect(raiz.querySelector('.criatura__atributo-linha')).toBeNull();
+
+    fixture.componentInstance['editarAtributos']();
+    fixture.detectChanges();
+    expect(raiz.querySelectorAll('.criatura__atributo-linha').length).toBe(10);
+    expect(raiz.querySelector('.criatura__atributo-card')).toBeNull();
+
+    fixture.componentInstance['cancelarAtributos']();
+    fixture.detectChanges();
+    expect(raiz.querySelectorAll('.criatura__atributo-card').length).toBe(10);
+  });
+
+  it('a edição de Atributos é rascunho: Cancelar descarta e Salvar emite os dois mapas de uma vez', () => {
+    const { fixture, eventos } = montar();
+    fixture.componentInstance['editarAtributos']();
+    fixture.componentInstance['definirAtributoRascunho']('luta', 9);
+    fixture.detectChanges();
+    expect(eventos['atributosMudou']).toEqual([]);
+
+    fixture.componentInstance['cancelarAtributos']();
+    expect(eventos['atributosMudou']).toEqual([]);
+
+    fixture.componentInstance['editarAtributos']();
+    fixture.componentInstance['definirAtributoRascunho']('luta', 9);
+    fixture.componentInstance['salvarAtributos']();
+    expect(eventos['atributosMudou']).toEqual([{ ...dados.atributos, luta: 9 }]);
+    expect(eventos['modificadoresMudou']).toEqual([dados.modificadores]);
+    expect(fixture.componentInstance['atributosEmEdicao']()).toBe(false);
+  });
+
+  it('não salva enquanto a cota fixa de Modificadores (2/3/3/2) não fecha', () => {
+    const { fixture, eventos } = montar();
+    fixture.componentInstance['editarAtributos']();
+    // destreza era FRAGIL: virar FORTE deixa 3 Fortes e 1 Frágil — distribuição inválida.
+    fixture.componentInstance['definirModificadorRascunho']('destreza', ModificadorCriaturaEnum.FORTE);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance['violacoesModificadores']().length).toBeGreaterThan(0);
+    fixture.componentInstance['salvarAtributos']();
+    expect(eventos['modificadoresMudou']).toEqual([]);
+    expect(fixture.componentInstance['atributosEmEdicao']()).toBe(true);
+
+    // compensando (um Forte vira Frágil) a cota fecha e o salvamento passa.
+    fixture.componentInstance['definirModificadorRascunho']('forca', ModificadorCriaturaEnum.FRAGIL);
+    fixture.detectChanges();
+    expect(fixture.componentInstance['violacoesModificadores']()).toEqual([]);
+    fixture.componentInstance['salvarAtributos']();
+    expect(eventos['modificadoresMudou']).toEqual([
+      { ...dados.modificadores, destreza: ModificadorCriaturaEnum.FORTE, forca: ModificadorCriaturaEnum.FRAGIL },
+    ]);
+  });
+
+  it('os chips de classificação só viram selects depois do lápis, já com o valor atual selecionado', () => {
+    const { fixture } = montar();
+    const raiz = fixture.nativeElement as HTMLElement;
+    expect(raiz.querySelectorAll('.criatura__chip').length).toBe(4);
+    expect(raiz.querySelector('.criatura__classificacao-grade')).toBeNull();
+
+    fixture.componentInstance['alternarEdicaoClassificacao']();
+    fixture.detectChanges();
+
+    // Regressão: com `[value]` no <select> as opções ainda não existem quando o binding roda e o
+    // controle abria sempre na 1ª opção — o valor atual tem que vir de `[selected]` na opção.
+    const selects = Array.from(raiz.querySelectorAll<HTMLSelectElement>('.criatura__classificacao-grade select'));
+    expect(selects.map((s) => s.value)).toEqual([
+      OrigemCriaturaEnum.ORIGINAL,
+      PorteCriaturaEnum.GRANDE,
+      ComportamentoCriaturaEnum.CACADORA,
+      NivelAmeacaEnum.ALTA,
+    ]);
+  });
+
+  it('o Atributo Efetivo só ganha destaque quando o modificador está acima do neutro', () => {
+    const { fixture } = montar();
+    // forca é FORTE e vigor é MEDIO (destacados); destreza é FRAGIL e vontade é FRACO (não).
+    expect(fixture.componentInstance['atributoDestacado']('forca')).toBe(true);
+    expect(fixture.componentInstance['atributoDestacado']('vigor')).toBe(true);
+    expect(fixture.componentInstance['atributoDestacado']('destreza')).toBe(false);
+    expect(fixture.componentInstance['atributoDestacado']('vontade')).toBe(false);
   });
 });

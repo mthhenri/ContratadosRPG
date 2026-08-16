@@ -1,20 +1,28 @@
 <section class="habilidade-lista">
   <header class="habilidade-lista__cabecalho">
-    <h3 class="habilidade-lista__titulo">Habilidades Especiais</h3>
+    <h3 class="habilidade-lista__titulo">Habilidades</h3>
     <span class="habilidade-lista__contagem">{{ itens().length }}</span>
     <span class="habilidade-lista__regua"></span>
     @if (editavel()) {
       <button
-        class="botao botao--secundario habilidade-lista__alternar-edicao"
+        class="habilidade-lista__cabecalho-acao"
         type="button"
-        [class.habilidade-lista__alternar-edicao--ativo]="modoEdicao()"
+        [class.habilidade-lista__cabecalho-acao--ativo]="modoEdicao()"
         [attr.aria-pressed]="modoEdicao()"
+        [attr.aria-label]="modoEdicao() ? 'Concluir edição' : 'Editar habilidades'"
+        [appTooltip]="modoEdicao() ? 'Concluir edição' : 'Editar habilidades'"
         (click)="alternarModoEdicao()"
       >
-        <app-icone [nome]="modoEdicao() ? 'check' : 'editar'" /> {{ modoEdicao() ? 'Concluir' : 'Editar' }}
+        <app-icone [nome]="modoEdicao() ? 'check' : 'editar'" />
       </button>
-      <button class="botao botao--secundario" type="button" (click)="adicionar()">
-        <app-icone nome="mais" /> Adicionar
+      <button
+        class="habilidade-lista__cabecalho-acao habilidade-lista__cabecalho-acao--adicionar"
+        type="button"
+        aria-label="Adicionar habilidade"
+        [appTooltip]="'Adicionar habilidade'"
+        (click)="adicionar()"
+      >
+        <app-icone nome="mais" />
       </button>
     }
   </header>
@@ -27,16 +35,7 @@
     @for (item of itens(); track $index) {
       <li class="habilidade-lista__item" [class.habilidade-lista__item--editando]="editando($index)">
         @if (editando($index)) {
-          <form class="habilidade-lista__form" [formGroup]="itemForm" (ngSubmit)="confirmar()">
-            <input class="habilidade-lista__input" formControlName="nome" placeholder="Nome" aria-label="Nome da habilidade" />
-            <select class="habilidade-lista__select" formControlName="tipo" aria-label="Tipo">
-              @for (t of tipos; track t) { <option [value]="t">{{ rotuloTipo(t) }}</option> }
-            </select>
-            <textarea class="habilidade-lista__textarea" formControlName="descricao" placeholder="Descrição" aria-label="Descrição"></textarea>
-            <input class="habilidade-lista__input" formControlName="restricao" placeholder="Restrição (opcional)" aria-label="Restrição" />
-            <button class="botao botao--primario" type="submit" [disabled]="itemForm.invalid">Confirmar</button>
-            <button class="botao botao--secundario" type="button" (click)="cancelar()">Cancelar</button>
-          </form>
+          <ng-container *ngTemplateOutlet="formulario; context: { $implicit: 'Confirmar' }" />
         } @else {
           <div class="habilidade-lista__cabecalho-item">
             <span class="habilidade-lista__nome">{{ item.nome }}</span>
@@ -61,15 +60,36 @@
   </ul>
 
   @if (editando(-1)) {
-    <form class="habilidade-lista__form habilidade-lista__form--novo" [formGroup]="itemForm" (ngSubmit)="confirmar()">
-      <input class="habilidade-lista__input" formControlName="nome" placeholder="Nome" aria-label="Nome da habilidade" />
+    <div class="habilidade-lista__form-novo">
+      <ng-container *ngTemplateOutlet="formulario; context: { $implicit: 'Adicionar' }" />
+    </div>
+  }
+</section>
+
+<!-- Formulário em grade rotulada, no mesmo desenho do de Ataques. -->
+<ng-template #formulario let-rotuloConfirmar>
+  <form class="habilidade-lista__form" [formGroup]="itemForm" (ngSubmit)="confirmar()">
+    <label class="habilidade-lista__campo">
+      <span class="habilidade-lista__campo-rotulo">Nome</span>
+      <input class="habilidade-lista__input" formControlName="nome" placeholder="Nome da habilidade" aria-label="Nome da habilidade" />
+    </label>
+    <label class="habilidade-lista__campo">
+      <span class="habilidade-lista__campo-rotulo">Tipo</span>
       <select class="habilidade-lista__select" formControlName="tipo" aria-label="Tipo">
         @for (t of tipos; track t) { <option [value]="t">{{ rotuloTipo(t) }}</option> }
       </select>
-      <textarea class="habilidade-lista__textarea" formControlName="descricao" placeholder="Descrição" aria-label="Descrição"></textarea>
-      <input class="habilidade-lista__input" formControlName="restricao" placeholder="Restrição (opcional)" aria-label="Restrição" />
-      <button class="botao botao--primario" type="submit" [disabled]="itemForm.invalid">Adicionar</button>
+    </label>
+    <label class="habilidade-lista__campo habilidade-lista__campo--largo">
+      <span class="habilidade-lista__campo-rotulo">Descrição</span>
+      <textarea class="habilidade-lista__textarea" formControlName="descricao" placeholder="O que a habilidade faz" aria-label="Descrição"></textarea>
+    </label>
+    <label class="habilidade-lista__campo habilidade-lista__campo--largo">
+      <span class="habilidade-lista__campo-rotulo">Restrição</span>
+      <input class="habilidade-lista__input" formControlName="restricao" placeholder="Opcional" aria-label="Restrição" />
+    </label>
+    <div class="habilidade-lista__form-acoes">
+      <button class="botao botao--primario" type="submit" [disabled]="itemForm.invalid">{{ rotuloConfirmar }}</button>
       <button class="botao botao--secundario" type="button" (click)="cancelar()">Cancelar</button>
-    </form>
-  }
-</section>
+    </div>
+  </form>
+</ng-template>

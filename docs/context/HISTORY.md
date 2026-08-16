@@ -1,5 +1,75 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-15 — `m4-04b`: fidelidade visual ao mockup e conserto dos fluxos de edição da ficha de criatura
+
+Terceiro pedido do autor na mesma sessão: deixar a tela **visualmente igual ao mockup** naquilo que
+já existe (`docs/design/examples/ficha-de-criatura.html`), sem reintroduzir o que foi descartado por
+regra (Esquiva/Bloqueio/Contra-ataque, fórmula de DT, "Teste Base" — ver entrada de realinhamento
+mais abaixo), e **arrumar todos os fluxos de edição** pra priorizarem UI/UX e não quebrarem o
+layout. Queixa explícita: "os atributos estão completamente fora do padrão". Referência de UI/UX e
+de estilo: a ficha de jogador (`FichaVisualizacao`) junto do mockup.
+
+**Medidas tiradas do DOM do mockup**, não do olho: colunas `376px 236px minmax(0,1fr)` com gap 14,
+cards de raio 6 e caixas internas de raio 4, avatar 86×96, designação 21px, chips de 12px em caixa
+`surface-2` (não os `.chip-classificacao` maiúsculos de antes), stat boxes com valor 16px, Vida com
+barra de 3px e máximo de 240px, cards de Ataque/Habilidade em `auto-fit` de 300px.
+
+**Atributos (o ponto principal).** O card de leitura virou o do mockup: sigla de três letras
+(mesmas de `FichaVisualizacao`, com o nome inteiro na dica), valor 20px, Atributo Efetivo embaixo e
+o botão de rolar ocupando o quadradinho do canto. O seletor de Modificador (4 barrinhas) **saiu do
+card** — ele é mais largo que um card de ~100px e era o que mais destoava — e agora vive atrás do
+lápis do cabeçalho, que troca a grade por uma lista vertical, exatamente como o lápis de Atributos
+da ficha de jogador faz. O Efetivo só fica no accent quando o Modificador está acima do neutro
+(Médio/Forte), o que reproduz a variação de cor do mockup a partir de dado real, sem inventar regra.
+
+**Edição de Atributos virou rascunho + Salvar/Cancelar** (também o fluxo da ficha de jogador) por um
+motivo de regra: a distribuição de Modificadores é uma **cota fixa** (2 Forte / 3 Médio / 3 Fraco /
+2 Frágil, `shared/regras/criatura`), então cada clique isolado deixava a ficha inválida e o backend
+recusava a gravação inteira com um toast de erro — o controle era, na prática, inutilizável. Agora o
+mestre rearranja à vontade no rascunho, as violações aparecem listadas e "Salvar" só libera quando a
+cota fecha (reusando `validarFichaCriatura`, filtrando as linhas de modificador — nunca uma segunda
+cópia da tabela de quantidades).
+
+**Dois defeitos reais achados na verificação ao vivo:**
+
+1. **`<select>` abria sempre na 1ª opção.** Todos os selects de edição no-próprio-lugar usavam
+   `[value]` no `<select>` com as `<option>` vindo de um `@for` — quando o binding roda, as opções
+   ainda não existem, então o valor atual era ignorado. Abrir a edição de Classificação mostrava
+   "SCP Adaptado / Minúsculo / Nula" numa criatura "Criação Original / Médio / Média", e confirmar
+   gravaria o valor errado. Trocado por `[selected]` na `<option>` em todos eles (origem, porte,
+   comportamento, NA, tenacidade, cadência, modo/intensidade de regeneração), com teste de regressão.
+2. **Botões de formulário sem pele nenhuma.** `.botao` estava definido só no SCSS da *página*
+   (`visualizar-criatura.page.scss`), e o encapsulamento do Angular impede que ele alcance os
+   componentes filhos — "Confirmar/Cancelar/Adicionar" dos formulários de Ataque/Habilidade/
+   Resistência apareciam como texto cru. O bloco canônico foi copiado pra cada componente.
+
+**Fluxos de edição que deixaram de quebrar o layout.** Os formulários das três listas viraram grades
+rotuladas (antes: fileira de `flex-wrap` com sete controles sem rótulo, em ordem imprevisível
+conforme a largura); o item em edição passa a ocupar a linha inteira da grade (`grid-column: 1/-1`),
+inclusive na grade de Resistências, onde o formulário estourava um box de ~77px. A edição de
+Classificação também virou modo gatilhado: trocar um chip por um `<select>` de largura diferente
+fazia a linha inteira saltar; agora o lápis abre os quatro selects rotulados numa grade estável e o
+botão nunca sai do lugar.
+
+**Também alinhado ao mockup:** Tenacidade como "Padrão ×35" (nome + multiplicador em pesos
+diferentes, via helpers que fatiam o rótulo composto existente em vez de uma segunda tabela); Porte
+como chip + ⓘ com a dimensão na dica; Resistências em boxes compactos com o tipo abreviado (mesmas
+abreviações do grid da ficha de jogador) e o limite de pontos como dica do cabeçalho; Fraquezas em
+cards com tom de accent; Deslocamento/Regeneração como tiras de tags (as vazias tracejadas);
+Descrição com Gancho e Motivação em linhas separadas por filete; cabeçalhos de seção "rótulo +
+régua + ação" em toda a coluna de status.
+
+Testes: 1062/1062 (+6 sobre a baseline de 1056 — grade/lista de Resistências com tipo abreviado e
+subtipo, lápis de Atributos, rascunho Salvar/Cancelar, trava da cota de Modificadores, selects já
+selecionados e destaque do Efetivo). Lint e build limpos (o aviso de budget do bundle inicial é
+pré-existente). Verificado ao vivo em 1920×1080 (Playwright, campanhas/fichas descartáveis semeadas
+por REST com o `dados` de "A Estátua" — última: campanha 30, ficha 40029): as duas abas comparadas
+lado a lado com o mockup; todos os fluxos de edição exercitados (atributos, classificação,
+resistência, fraqueza nova, descrição, ataque, habilidade nova) sem nenhum estouro de largura
+(`scrollWidth === innerWidth`); quebrar a cota mostra as violações e desabilita "Salvar",
+compensar libera e o salvamento passa sem toast de erro. Mobile (360×800) segue fora desta rodada,
+como nas anteriores — continua em `m4-10`.
+
 ## 2026-08-15 — `m4-04b`: acabamento visual da ficha de criatura — abas cheias e ações de lista sob demanda
 
 Segundo pedido do autor na mesma sessão do realinhamento de layout (entrada abaixo), depois de ver

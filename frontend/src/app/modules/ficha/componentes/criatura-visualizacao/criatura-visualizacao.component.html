@@ -3,7 +3,7 @@
     <!-- Coluna 1 — Identidade: avatar/designação, classificação, VD/Tenacidade/Defesa, Vida,
          Resistências, Fraquezas. Alvo de fidelidade: docs/design/examples/ficha-de-criatura.html. -->
     <div class="criatura__coluna criatura__coluna--identidade">
-      <section class="criatura__cartao">
+      <section class="criatura__cartao criatura__cartao--identidade">
         <div class="criatura__ident">
           @if (ajustavel()) {
             <div class="criatura__avatar criatura__avatar--editavel" [style.--cor-ficha]="cor()">
@@ -63,77 +63,101 @@
           </div>
         </div>
 
+        <!-- Classificação: em leitura são só chips; o lápis liga o modo de edição e troca os quatro
+             de uma vez por selects rotulados logo abaixo (trocar um chip isolado por um select de
+             largura diferente fazia a linha inteira saltar). O botão fica sempre na mesma linha,
+             então ligar/desligar o modo não move nada acima dele. -->
         <div class="criatura__chips">
-          @if (editando('identidade.origem')) {
-            <select
-              #entradaOrigem
-              class="criatura__select criatura__select--chip"
-              aria-label="Origem"
-              [value]="dados().identidade.origem"
-              (change)="confirmarCampoIdentidade('origem', $any(entradaOrigem.value)); cancelarEdicao()"
-              (blur)="cancelarEdicao()"
-            >
-              @for (o of origens; track o) { <option [value]="o">{{ rotuloOrigemCriatura(o) }}</option> }
-            </select>
+          @if (classificacaoEmEdicao()) {
+            <span class="criatura__chips-rotulo">Classificação</span>
           } @else {
-            <button class="chip-classificacao" type="button" [disabled]="!ajustavel()" (click)="editar('identidade.origem')">
-              {{ rotuloOrigemCriatura(dados().identidade.origem) }}
-            </button>
+            <span class="criatura__chip">{{ rotuloOrigemCriatura(dados().identidade.origem) }}</span>
+
+            <span class="criatura__chip">
+              Porte {{ nomePorte(dados().porte) }}
+              @if (dimensaoPorte(dados().porte); as dimensao) {
+                <span class="criatura__chip-info" tabindex="0" [appTooltip]="'Ocupa ' + dimensao" [attr.aria-label]="'Ocupa ' + dimensao">i</span>
+              }
+            </span>
+
+            <span class="criatura__chip">{{ rotuloComportamento(dados().identidade.comportamento) }}</span>
+            <span class="criatura__chip criatura__chip--ameaca">Ameaça {{ rotuloNivelAmeaca(dados().na) }}</span>
           }
 
-          @if (editando('porte')) {
-            <select
-              #entradaPorte
-              class="criatura__select criatura__select--chip"
-              aria-label="Porte"
-              [value]="dados().porte"
-              (change)="confirmarPorte($any(entradaPorte.value)); cancelarEdicao()"
-              (blur)="cancelarEdicao()"
+          @if (ajustavel()) {
+            <button
+              class="criatura__lapis"
+              type="button"
+              [class.criatura__lapis--ativo]="classificacaoEmEdicao()"
+              [attr.aria-pressed]="classificacaoEmEdicao()"
+              [attr.aria-label]="classificacaoEmEdicao() ? 'Concluir edição da classificação' : 'Editar classificação'"
+              [appTooltip]="classificacaoEmEdicao() ? 'Concluir edição' : 'Editar classificação'"
+              (click)="alternarEdicaoClassificacao()"
             >
-              @for (p of portes; track p) { <option [value]="p">{{ rotuloPorte(p) }}</option> }
-            </select>
-          } @else {
-            <button class="chip-classificacao" type="button" [disabled]="!ajustavel()" (click)="editar('porte')">
-              Porte {{ rotuloPorte(dados().porte) }}
-            </button>
-          }
-
-          @if (editando('identidade.comportamento')) {
-            <select
-              #entradaComportamento
-              class="criatura__select criatura__select--chip"
-              aria-label="Comportamento"
-              [value]="dados().identidade.comportamento"
-              (change)="confirmarCampoIdentidade('comportamento', $any(entradaComportamento.value)); cancelarEdicao()"
-              (blur)="cancelarEdicao()"
-            >
-              @for (c of comportamentos; track c) { <option [value]="c">{{ rotuloComportamento(c) }}</option> }
-            </select>
-          } @else {
-            <button class="chip-classificacao" type="button" [disabled]="!ajustavel()" (click)="editar('identidade.comportamento')">
-              {{ rotuloComportamento(dados().identidade.comportamento) }}
+              <app-icone [nome]="classificacaoEmEdicao() ? 'check' : 'editar'" />
             </button>
           }
         </div>
 
-        <div class="criatura__chips">
-          @if (editando('na')) {
-            <select
-              #entradaNa
-              class="criatura__select criatura__select--chip"
-              aria-label="Nível de Ameaça"
-              [value]="dados().na"
-              (change)="confirmarNa($any(entradaNa.value)); cancelarEdicao()"
-              (blur)="cancelarEdicao()"
-            >
-              @for (na of niveisAmeaca; track na) { <option [value]="na">{{ rotuloNivelAmeaca(na) }}</option> }
-            </select>
-          } @else {
-            <button class="chip-classificacao chip-classificacao--ameaca" type="button" [disabled]="!ajustavel()" (click)="editar('na')">
-              Ameaça {{ rotuloNivelAmeaca(dados().na) }}
-            </button>
-          }
-        </div>
+        @if (classificacaoEmEdicao()) {
+          <div class="criatura__classificacao-grade">
+            <div class="campo">
+              <span class="campo__rotulo">Origem</span>
+              <select
+                #entradaOrigem
+                class="criatura__select"
+                aria-label="Origem"
+                (change)="confirmarCampoIdentidade('origem', $any(entradaOrigem.value))"
+              >
+                @for (o of origens; track o) {
+                  <option [value]="o" [selected]="o === dados().identidade.origem">{{ rotuloOrigemCriatura(o) }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="campo">
+              <span class="campo__rotulo">Porte</span>
+              <select
+                #entradaPorte
+                class="criatura__select"
+                aria-label="Porte"
+                (change)="confirmarPorte($any(entradaPorte.value))"
+              >
+                @for (p of portes; track p) {
+                  <option [value]="p" [selected]="p === dados().porte">{{ rotuloPorte(p) }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="campo">
+              <span class="campo__rotulo">Comportamento</span>
+              <select
+                #entradaComportamento
+                class="criatura__select"
+                aria-label="Comportamento"
+                (change)="confirmarCampoIdentidade('comportamento', $any(entradaComportamento.value))"
+              >
+                @for (c of comportamentos; track c) {
+                  <option [value]="c" [selected]="c === dados().identidade.comportamento">{{ rotuloComportamento(c) }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="campo">
+              <span class="campo__rotulo">Nível de Ameaça</span>
+              <select
+                #entradaNa
+                class="criatura__select"
+                aria-label="Nível de Ameaça"
+                (change)="confirmarNa($any(entradaNa.value))"
+              >
+                @for (na of niveisAmeaca; track na) {
+                  <option [value]="na" [selected]="na === dados().na">{{ rotuloNivelAmeaca(na) }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        }
 
         <div class="criatura__stats">
           <div class="stat criatura__stat criatura__stat--vd">
@@ -161,17 +185,21 @@
             @if (editando('tenacidade')) {
               <select
                 #entradaTenacidade
-                class="criatura__select"
+                class="criatura__select criatura__select--stat"
                 aria-label="Tenacidade"
-                [value]="dados().tenacidade"
                 (change)="confirmarTenacidade($any(entradaTenacidade.value)); cancelarEdicao()"
                 (blur)="cancelarEdicao()"
               >
-                @for (t of tenacidades; track t) { <option [value]="t">{{ rotuloTenacidade(t) }}</option> }
+                @for (t of tenacidades; track t) {
+                  <option [value]="t" [selected]="t === dados().tenacidade">{{ rotuloTenacidade(t) }}</option>
+                }
               </select>
             } @else {
-              <button class="stat__valor criatura__stat-botao criatura__stat-botao--texto" type="button" [disabled]="!ajustavel()" (click)="editar('tenacidade')">
-                {{ rotuloTenacidade(dados().tenacidade) }}
+              <button class="stat__valor criatura__stat-botao criatura__stat-botao--tenacidade" type="button" [disabled]="!ajustavel()" (click)="editar('tenacidade')">
+                {{ nomeTenacidade(dados().tenacidade) }}
+                @if (multiplicadorTenacidade(dados().tenacidade); as multiplicador) {
+                  <span class="criatura__stat-sufixo">{{ multiplicador }}</span>
+                }
               </button>
             }
           </div>
@@ -204,7 +232,7 @@
             @if (editando('vidaAtual')) {
               <input
                 #entradaVidaAtual
-                class="criatura__entrada-numero"
+                class="criatura__entrada-numero criatura__entrada-numero--vida"
                 type="number"
                 [value]="dados().vidaAtual"
                 aria-label="Vida atual"
@@ -213,15 +241,14 @@
                 (blur)="confirmarVidaAtual(entradaVidaAtual.valueAsNumber); cancelarEdicao()"
               />
             } @else {
-              <button class="criatura__vitalidade-valor criatura__vitalidade-valor--atual" type="button" [disabled]="!ajustavel()" (click)="editar('vidaAtual')">
+              <button class="criatura__vitalidade-valor" type="button" [disabled]="!ajustavel()" (click)="editar('vidaAtual')">
                 {{ dados().vidaAtual }}
               </button>
             }
-            <span class="criatura__vitalidade-separador">/</span>
             @if (editando('vidaMaxima')) {
               <input
                 #entradaVidaMaxima
-                class="criatura__entrada-numero"
+                class="criatura__entrada-numero criatura__entrada-numero--vida"
                 type="number"
                 [value]="dados().vidaMaxima"
                 aria-label="Vida máxima"
@@ -230,8 +257,8 @@
                 (blur)="ajustarVidaMaxima(entradaVidaMaxima.valueAsNumber); cancelarEdicao()"
               />
             } @else {
-              <button class="criatura__vitalidade-valor criatura__vitalidade-valor--maxima" type="button" [disabled]="!ajustavel()" (click)="editar('vidaMaxima')">
-                {{ dados().vidaMaxima }}
+              <button class="criatura__vitalidade-maxima" type="button" [disabled]="!ajustavel()" (click)="editar('vidaMaxima')">
+                / {{ dados().vidaMaxima }}
               </button>
             }
             <button class="criatura__passo" type="button" [disabled]="!ajustavel()" (click)="ajustarVida(1)" aria-label="Aumentar vida">+</button>
@@ -241,97 +268,123 @@
           </div>
         </div>
 
-        <div class="criatura__grupo">
-          <span class="criatura__grupo-legenda">Limite de Resistências: {{ limiteResistencias() }} pontos</span>
-          <app-criatura-resistencia-lista
-            titulo="Resistências"
-            variante="resistencia"
-            [itens]="dados().resistencias"
-            [editavel]="ajustavel()"
-            (itensMudou)="aoResistenciasMudar($event)"
-          />
-        </div>
+        <app-criatura-resistencia-lista
+          titulo="Resistências"
+          variante="resistencia"
+          [dica]="'Limite ' + limiteResistencias() + ' pts'"
+          [itens]="dados().resistencias"
+          [editavel]="ajustavel()"
+          (itensMudou)="aoResistenciasMudar($event)"
+        />
 
-        <div class="criatura__grupo">
-          <app-criatura-resistencia-lista
-            titulo="Fraquezas"
-            variante="fraqueza"
-            [itens]="dados().fraquezas"
-            [editavel]="ajustavel()"
-            (itensMudou)="aoFraquezasMudar($event)"
-          />
-        </div>
+        <app-criatura-resistencia-lista
+          titulo="Fraquezas"
+          variante="fraqueza"
+          [itens]="dados().fraquezas"
+          [editavel]="ajustavel()"
+          (itensMudou)="aoFraquezasMudar($event)"
+        />
       </section>
     </div>
 
-    <!-- Coluna 2 — Atributos: valor bruto, seletor de modificador (4 barras, já existente),
-         Atributo Efetivo e rolagem de teste — mesma interação de sempre, só grade mais densa,
-         agrupada em Físicos/Mentais (ordem já agrupada de `camposAtributo*`, sistema-v4.1.0.md). -->
+    <!-- Coluna 2 — Atributos: em leitura, a grade compacta do mockup (sigla, valor, efetivo, rolar);
+         atrás do lápis, a lista vertical com valor digitável e as barrinhas de Modificador (mesmo
+         gatilho do lápis de Atributos da ficha de jogador). Grupos Físicos/Mentais já vêm da ordem
+         de `camposAtributo` (`sistema-v4.1.0.md`). -->
     <div class="criatura__coluna criatura__coluna--atributos">
-      <section class="criatura__cartao">
+      <section class="criatura__cartao criatura__cartao--atributos">
         <header class="criatura__cartao-cabecalho">
           <h2 class="criatura__cartao-titulo">Atributos</h2>
+          @if (ajustavel() && !atributosEmEdicao()) {
+            <button
+              class="criatura__lapis"
+              type="button"
+              aria-label="Editar atributos"
+              [appTooltip]="'Editar atributos'"
+              (click)="editarAtributos()"
+            >
+              <app-icone nome="editar" />
+            </button>
+          }
         </header>
 
-        <div class="criatura__atributos-grade">
-          @for (campo of camposAtributo; track campo.chave; let i = $index) {
-            @if (i === 0) {
-              <span class="criatura__atributos-grupo-titulo">Físicos</span>
-            } @else if (i === 5) {
-              <span class="criatura__atributos-grupo-titulo">Mentais</span>
-            }
-            <div class="criatura__atributo-card" [class.criatura__atributo-card--sozinho]="i === 4 || i === 9">
-              <span class="criatura__atributo-nome">{{ campo.nome }}</span>
+        @if (atributosEmEdicao()) {
+          <div class="criatura__atributos-acoes">
+            <button class="botao botao--primario" type="button" [disabled]="violacoesModificadores().length > 0" (click)="salvarAtributos()">Salvar</button>
+            <button class="botao botao--secundario" type="button" (click)="cancelarAtributos()">Cancelar</button>
+          </div>
+          <!-- A distribuição de Modificadores é uma cota fixa da regra (2 Forte / 3 Médio /
+               3 Fraco / 2 Frágil): enquanto não fechar, o backend recusaria a ficha inteira. -->
+          @for (violacao of violacoesModificadores(); track violacao) {
+            <p class="criatura__atributos-aviso">{{ violacao }}</p>
+          }
+        }
 
-              @if (editando('atributo.' + campo.chave)) {
-                <input
-                  #entradaAtributo
-                  class="criatura__entrada-numero criatura__entrada-numero--atributo"
-                  type="number"
-                  [value]="dados().atributos[campo.chave]"
-                  [attr.aria-label]="'Atributo Final — ' + campo.nome"
-                  (keydown.enter)="confirmarAtributoFinal(campo.chave, entradaAtributo.valueAsNumber); cancelarEdicao()"
-                  (keydown.escape)="cancelarEdicao()"
-                  (blur)="confirmarAtributoFinal(campo.chave, entradaAtributo.valueAsNumber); cancelarEdicao()"
-                />
-              } @else {
-                <button class="criatura__atributo-valor" type="button" [disabled]="!ajustavel()" (click)="editar('atributo.' + campo.chave)">
-                  {{ dados().atributos[campo.chave] }}
-                </button>
+        @for (grupo of gruposAtributos; track grupo.rotulo) {
+          <span class="criatura__atributos-grupo">{{ grupo.rotulo }}</span>
+
+          @if (atributosEmEdicao()) {
+            <div class="criatura__atributos-lista">
+              @for (campo of grupo.campos; track campo.chave) {
+                <div class="criatura__atributo-linha">
+                  <div class="criatura__atributo-linha-topo">
+                    <span class="criatura__atributo-linha-nome">{{ campo.nome }}</span>
+                    <input
+                      class="criatura__entrada-numero criatura__entrada-numero--linha"
+                      type="number"
+                      [value]="atributoRascunho(campo.chave)"
+                      [attr.aria-label]="'Atributo Final — ' + campo.nome"
+                      (input)="definirAtributoRascunho(campo.chave, $any($event.target).valueAsNumber)"
+                    />
+                  </div>
+                  <div class="criatura__atributo-modificadores" role="radiogroup" [attr.aria-label]="'Modificador — ' + campo.nome">
+                    @for (m of modificadoresPorNivel; track m; let iModificador = $index) {
+                      <button
+                        type="button"
+                        class="criatura__atributo-modificador"
+                        [class.criatura__atributo-modificador--ativo]="modificadorRascunho(campo.chave) === m"
+                        [attr.aria-pressed]="modificadorRascunho(campo.chave) === m"
+                        [attr.data-nivel]="iModificador + 1"
+                        [appTooltip]="rotuloModificadorCriatura(m)"
+                        (click)="definirModificadorRascunho(campo.chave, m)"
+                      >
+                        <i></i><i></i><i></i><i></i>
+                      </button>
+                    }
+                  </div>
+                </div>
               }
-
-              <div class="criatura__atributo-modificadores" role="radiogroup" [attr.aria-label]="'Modificador — ' + campo.nome">
-                @for (m of modificadoresPorNivel; track m; let iModificador = $index) {
-                  <button
-                    type="button"
-                    class="criatura__atributo-modificador"
-                    [class.criatura__atributo-modificador--ativo]="dados().modificadores[campo.chave] === m"
-                    [attr.aria-pressed]="dados().modificadores[campo.chave] === m"
-                    [attr.data-nivel]="iModificador + 1"
-                    [disabled]="!ajustavel()"
-                    [appTooltip]="rotuloModificadorCriatura(m)"
-                    (click)="confirmarModificador(campo.chave, m)"
+            </div>
+          } @else {
+            <div class="criatura__atributos-grade">
+              @for (campo of grupo.campos; track campo.chave; let ultimo = $last) {
+                <!-- o 5º de cada grupo não tem par: fica sozinho e centralizado, como no mockup -->
+                <div class="criatura__atributo-card" [class.criatura__atributo-card--sozinho]="ultimo">
+                  @if (ajustavel()) {
+                    <button
+                      class="criatura__atributo-rolar"
+                      type="button"
+                      [attr.aria-label]="'Rolar teste de ' + campo.nome"
+                      [appTooltip]="'Rolar teste de ' + campo.nome"
+                      (click)="rolarTesteAtributo(campo.chave)"
+                    >
+                      <app-icone nome="d20" />
+                    </button>
+                  }
+                  <span class="criatura__atributo-abrev" tabindex="0" [appTooltip]="campo.nome" [attr.aria-label]="campo.nome">{{ campo.abrev }}</span>
+                  <span class="criatura__atributo-valor">{{ dados().atributos[campo.chave] }}</span>
+                  <span
+                    class="criatura__atributo-efetivo"
+                    [class.criatura__atributo-efetivo--destacado]="atributoDestacado(campo.chave)"
+                    [appTooltip]="'Atributo Efetivo — modificador ' + rotuloModificadorCriatura(dados().modificadores[campo.chave])"
                   >
-                    <i></i><i></i><i></i><i></i>
-                  </button>
-                }
-              </div>
-
-              <div class="criatura__atributo-rodape">
-                <span class="criatura__atributo-efetivo">+{{ atributoEfetivo(campo.chave) }}</span>
-                <button
-                  class="criatura__rolar-atributo"
-                  type="button"
-                  [attr.aria-label]="'Rolar teste de ' + campo.nome"
-                  [disabled]="!ajustavel()"
-                  (click)="rolarTesteAtributo(campo.chave)"
-                >
-                  <app-icone nome="d20" />
-                </button>
-              </div>
+                    +{{ atributoEfetivo(campo.chave) }}
+                  </span>
+                </div>
+              }
             </div>
           }
-        </div>
+        }
       </section>
     </div>
 
@@ -364,29 +417,36 @@
       </div>
 
       @if (abaAtiva() === 'informacoes') {
-        <section class="criatura__cartao">
-          <div class="criatura__stats">
-            <div class="stat criatura__stat">
+        <section class="criatura__cartao criatura__cartao--painel">
+          <div class="criatura__stats criatura__stats--info">
+            <div class="stat criatura__stat criatura__stat--info">
               <span class="stat__rotulo">Cadência</span>
               @if (editando('cadencia')) {
                 <select
                   #entradaCadencia
-                  class="criatura__select"
+                  class="criatura__select criatura__select--stat"
                   aria-label="Cadência"
-                  [value]="dados().cadencia"
                   (change)="confirmarCadencia($any(entradaCadencia.value)); cancelarEdicao()"
                   (blur)="cancelarEdicao()"
                 >
-                  @for (c of cadencias; track c) { <option [value]="c">{{ rotuloCadencia(c) }}</option> }
+                  @for (c of cadencias; track c) {
+                    <option [value]="c" [selected]="c === dados().cadencia">{{ rotuloCadencia(c) }}</option>
+                  }
                 </select>
               } @else {
-                <button class="stat__valor criatura__stat-botao criatura__stat-botao--texto" type="button" [disabled]="!ajustavel()" (click)="editar('cadencia')">
-                  {{ rotuloCadencia(dados().cadencia) }}
+                <button
+                  class="stat__valor criatura__stat-botao criatura__stat-botao--texto"
+                  type="button"
+                  [disabled]="!ajustavel()"
+                  [appTooltip]="ritmoCadencia(dados().cadencia) ?? 'Cadência'"
+                  (click)="editar('cadencia')"
+                >
+                  {{ nomeCadencia(dados().cadencia) }}
                 </button>
               }
             </div>
 
-            <div class="stat criatura__stat">
+            <div class="stat criatura__stat criatura__stat--info criatura__stat--flexivel">
               <span class="stat__rotulo">Bônus de Iniciativa</span>
               @if (editando('iniciativaBonus')) {
                 <input
@@ -400,19 +460,20 @@
                   (blur)="confirmarIniciativaBonus(entradaIniciativa.valueAsNumber || undefined); cancelarEdicao()"
                 />
               } @else {
-                <button class="stat__valor criatura__stat-botao" type="button" [disabled]="!ajustavel()" (click)="editar('iniciativaBonus')">
-                  {{ dados().iniciativaBonus ?? '—' }}
+                <button class="stat__valor criatura__stat-botao criatura__stat-botao--texto" type="button" [disabled]="!ajustavel()" (click)="editar('iniciativaBonus')">
+                  {{ dados().iniciativaBonus !== undefined && dados().iniciativaBonus !== null ? (dados().iniciativaBonus! >= 0 ? '+' : '') + dados().iniciativaBonus : '—' }}
                 </button>
               }
             </div>
           </div>
 
           <div class="criatura__info-card">
-            <div class="criatura__info-card-cabecalho">
-              <h3 class="criatura__info-card-titulo">Deslocamento</h3>
-            </div>
+            <header class="criatura__info-cabecalho">
+              <h3 class="criatura__info-titulo">Deslocamento</h3>
+              <span class="criatura__info-regua"></span>
+            </header>
             <div class="criatura__tags">
-              <span class="criatura__tag">
+              <span class="criatura__tag" [class.criatura__tag--vazia]="!dados().deslocamento.terrestre">
                 <span class="criatura__tag-rotulo">Terrestre</span>
                 @if (editando('deslocamento.terrestre')) {
                   <input
@@ -432,7 +493,7 @@
                 }
               </span>
 
-              <span class="criatura__tag">
+              <span class="criatura__tag" [class.criatura__tag--vazia]="!dados().deslocamento.voador">
                 <span class="criatura__tag-rotulo">Voador</span>
                 @if (editando('deslocamento.voador')) {
                   <input
@@ -452,7 +513,7 @@
                 }
               </span>
 
-              <span class="criatura__tag">
+              <span class="criatura__tag" [class.criatura__tag--vazia]="!dados().deslocamento.aquatico">
                 <span class="criatura__tag-rotulo">Aquático</span>
                 @if (editando('deslocamento.aquatico')) {
                   <input
@@ -472,7 +533,7 @@
                 }
               </span>
 
-              <span class="criatura__tag">
+              <span class="criatura__tag" [class.criatura__tag--vazia]="!dados().deslocamento.sobrenatural">
                 <span class="criatura__tag-rotulo">Sobrenatural</span>
                 @if (editando('deslocamento.sobrenatural')) {
                   <input
@@ -495,189 +556,201 @@
           </div>
 
           <div class="criatura__info-card">
-            <div class="criatura__info-card-cabecalho">
-              <h3 class="criatura__info-card-titulo">Regeneração</h3>
-            </div>
+            <header class="criatura__info-cabecalho">
+              <h3 class="criatura__info-titulo">Regeneração</h3>
+              <span class="criatura__info-regua"></span>
+              @if (ajustavel()) {
+                @if (!dados().regeneracao) {
+                  <button class="criatura__info-acao" type="button" aria-label="Adicionar regeneração" [appTooltip]="'Adicionar regeneração'" (click)="ativarRegeneracao()">
+                    <app-icone nome="mais" />
+                  </button>
+                } @else {
+                  <button class="criatura__info-acao criatura__info-acao--remover" type="button" aria-label="Remover regeneração" [appTooltip]="'Remover regeneração'" (click)="removerRegeneracao()">
+                    <app-icone nome="excluir" />
+                  </button>
+                }
+              }
+            </header>
             @if (!dados().regeneracao) {
               <p class="criatura__vazio">Sem regeneração.</p>
-              @if (ajustavel()) {
-                <button class="botao botao--secundario" type="button" (click)="ativarRegeneracao()">Adicionar regeneração</button>
-              }
             } @else {
-              <dl class="criatura__campos">
-                <div class="campo">
-                  <dt class="campo__rotulo">Modo</dt>
-                  <dd class="campo__controle">
-                    @if (editando('regeneracao.modo')) {
-                      <select
-                        #entradaModoRegen
-                        class="criatura__select"
-                        aria-label="Modo de Regeneração"
-                        [value]="dados().regeneracao!.modo"
-                        (change)="confirmarCampoRegeneracao('modo', $any(entradaModoRegen.value)); cancelarEdicao()"
-                        (blur)="cancelarEdicao()"
-                      >
-                        @for (m of modosRegeneracao; track m) { <option [value]="m">{{ rotuloRegeneracaoModo(m) }}</option> }
-                      </select>
-                    } @else {
-                      <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('regeneracao.modo')">
-                        {{ rotuloRegeneracaoModo(dados().regeneracao!.modo) }}
-                      </button>
-                    }
-                  </dd>
-                </div>
+              <div class="criatura__tags">
+                <span class="criatura__tag">
+                  <span class="criatura__tag-rotulo">Modo</span>
+                  @if (editando('regeneracao.modo')) {
+                    <select
+                      #entradaModoRegen
+                      class="criatura__select criatura__select--tag"
+                      aria-label="Modo de Regeneração"
+                      (change)="confirmarCampoRegeneracao('modo', $any(entradaModoRegen.value)); cancelarEdicao()"
+                      (blur)="cancelarEdicao()"
+                    >
+                      @for (m of modosRegeneracao; track m) {
+                        <option [value]="m" [selected]="m === dados().regeneracao!.modo">{{ rotuloRegeneracaoModo(m) }}</option>
+                      }
+                    </select>
+                  } @else {
+                    <button class="criatura__tag-valor" type="button" [disabled]="!ajustavel()" (click)="editar('regeneracao.modo')">
+                      {{ rotuloRegeneracaoModo(dados().regeneracao!.modo) }}
+                    </button>
+                  }
+                </span>
 
-                <div class="campo">
-                  <dt class="campo__rotulo">Intensidade</dt>
-                  <dd class="campo__controle">
-                    @if (editando('regeneracao.intensidade')) {
-                      <select
-                        #entradaIntensidadeRegen
-                        class="criatura__select"
-                        aria-label="Intensidade de Regeneração"
-                        [value]="dados().regeneracao!.intensidade"
-                        (change)="confirmarCampoRegeneracao('intensidade', $any(entradaIntensidadeRegen.value)); cancelarEdicao()"
-                        (blur)="cancelarEdicao()"
-                      >
-                        @for (i of intensidadesRegeneracao; track i) { <option [value]="i">{{ rotuloRegeneracaoIntensidade(i) }}</option> }
-                      </select>
-                    } @else {
-                      <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('regeneracao.intensidade')">
-                        {{ rotuloRegeneracaoIntensidade(dados().regeneracao!.intensidade) }}
-                      </button>
-                    }
-                  </dd>
-                </div>
+                <span class="criatura__tag">
+                  <span class="criatura__tag-rotulo">Intensidade</span>
+                  @if (editando('regeneracao.intensidade')) {
+                    <select
+                      #entradaIntensidadeRegen
+                      class="criatura__select criatura__select--tag"
+                      aria-label="Intensidade de Regeneração"
+                      (change)="confirmarCampoRegeneracao('intensidade', $any(entradaIntensidadeRegen.value)); cancelarEdicao()"
+                      (blur)="cancelarEdicao()"
+                    >
+                      @for (i of intensidadesRegeneracao; track i) {
+                        <option [value]="i" [selected]="i === dados().regeneracao!.intensidade">{{ rotuloRegeneracaoIntensidade(i) }}</option>
+                      }
+                    </select>
+                  } @else {
+                    <button class="criatura__tag-valor" type="button" [disabled]="!ajustavel()" (click)="editar('regeneracao.intensidade')">
+                      {{ rotuloRegeneracaoIntensidade(dados().regeneracao!.intensidade) }}
+                    </button>
+                  }
+                </span>
 
-                <div class="campo">
-                  <dt class="campo__rotulo">Valor</dt>
-                  <dd class="campo__controle">
-                    @if (editando('regeneracao.valor')) {
-                      <input
-                        #entradaValorRegen
-                        class="criatura__entrada-numero"
-                        type="number"
-                        [value]="dados().regeneracao!.valor"
-                        aria-label="Valor de Regeneração"
-                        (keydown.enter)="confirmarCampoRegeneracao('valor', entradaValorRegen.valueAsNumber); cancelarEdicao()"
-                        (keydown.escape)="cancelarEdicao()"
-                        (blur)="confirmarCampoRegeneracao('valor', entradaValorRegen.valueAsNumber); cancelarEdicao()"
-                      />
-                    } @else {
-                      <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('regeneracao.valor')">
-                        {{ dados().regeneracao!.valor }}
-                      </button>
-                    }
-                  </dd>
-                </div>
+                <span class="criatura__tag">
+                  <span class="criatura__tag-rotulo">Valor</span>
+                  @if (editando('regeneracao.valor')) {
+                    <input
+                      #entradaValorRegen
+                      class="criatura__entrada-numero criatura__entrada-numero--tag"
+                      type="number"
+                      [value]="dados().regeneracao!.valor"
+                      aria-label="Valor de Regeneração"
+                      (keydown.enter)="confirmarCampoRegeneracao('valor', entradaValorRegen.valueAsNumber); cancelarEdicao()"
+                      (keydown.escape)="cancelarEdicao()"
+                      (blur)="confirmarCampoRegeneracao('valor', entradaValorRegen.valueAsNumber); cancelarEdicao()"
+                    />
+                  } @else {
+                    <button class="criatura__tag-valor" type="button" [disabled]="!ajustavel()" (click)="editar('regeneracao.valor')">
+                      {{ dados().regeneracao!.valor }}
+                    </button>
+                  }
+                </span>
 
-                <div class="campo">
-                  <dt class="campo__rotulo">Condição</dt>
-                  <dd class="campo__controle">
-                    @if (editando('regeneracao.condicao')) {
-                      <input
-                        #entradaCondicaoRegen
-                        class="criatura__entrada-texto"
-                        type="text"
-                        [value]="dados().regeneracao!.condicao ?? ''"
-                        aria-label="Condição de Regeneração"
-                        (keydown.enter)="confirmarCampoRegeneracao('condicao', entradaCondicaoRegen.value || null); cancelarEdicao()"
-                        (keydown.escape)="cancelarEdicao()"
-                        (blur)="confirmarCampoRegeneracao('condicao', entradaCondicaoRegen.value || null); cancelarEdicao()"
-                      />
-                    } @else {
-                      <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('regeneracao.condicao')">
-                        {{ dados().regeneracao!.condicao ?? '—' }}
-                      </button>
-                    }
-                  </dd>
-                </div>
-              </dl>
-              @if (ajustavel()) {
-                <button class="botao botao--secundario" type="button" (click)="removerRegeneracao()">Remover regeneração</button>
-              }
+                <span class="criatura__tag criatura__tag--larga" [class.criatura__tag--vazia]="!dados().regeneracao!.condicao">
+                  <span class="criatura__tag-rotulo">Condição</span>
+                  @if (editando('regeneracao.condicao')) {
+                    <input
+                      #entradaCondicaoRegen
+                      class="criatura__entrada-texto criatura__entrada-texto--tag"
+                      type="text"
+                      [value]="dados().regeneracao!.condicao ?? ''"
+                      aria-label="Condição de Regeneração"
+                      (keydown.enter)="confirmarCampoRegeneracao('condicao', entradaCondicaoRegen.value || null); cancelarEdicao()"
+                      (keydown.escape)="cancelarEdicao()"
+                      (blur)="confirmarCampoRegeneracao('condicao', entradaCondicaoRegen.value || null); cancelarEdicao()"
+                    />
+                  } @else {
+                    <button class="criatura__tag-valor" type="button" [disabled]="!ajustavel()" (click)="editar('regeneracao.condicao')">
+                      {{ dados().regeneracao!.condicao ?? '—' }}
+                    </button>
+                  }
+                </span>
+              </div>
             }
           </div>
 
           <div class="criatura__info-card">
-            <div class="criatura__info-card-cabecalho">
-              <h3 class="criatura__info-card-titulo">Descrição</h3>
-            </div>
+            <header class="criatura__info-cabecalho">
+              <h3 class="criatura__info-titulo">Descrição</h3>
+              <span class="criatura__info-regua"></span>
+              @if (ajustavel() && !editando('identidade.conceito')) {
+                <button class="criatura__info-acao" type="button" aria-label="Editar descrição" [appTooltip]="'Editar descrição'" (click)="editar('identidade.conceito')">
+                  <app-icone nome="editar" />
+                </button>
+              }
+            </header>
             @if (editando('identidade.conceito')) {
               <textarea
                 #entradaConceito
-                class="criatura__entrada-textarea criatura__entrada-textarea--info"
+                class="criatura__entrada-textarea"
                 aria-label="Conceito"
                 (keydown.escape)="cancelarEdicao()"
                 (blur)="confirmarCampoIdentidade('conceito', entradaConceito.value); cancelarEdicao()"
               >{{ dados().identidade.conceito }}</textarea>
             } @else {
-              <button class="criatura__info-texto" type="button" [disabled]="!ajustavel()" (click)="editar('identidade.conceito')">
-                {{ dados().identidade.conceito }}
-              </button>
+              <p class="criatura__info-texto">{{ dados().identidade.conceito }}</p>
             }
 
-            <div class="criatura__gancho">
-              <span class="criatura__gancho-rotulo">Gancho</span>
+            <div class="criatura__info-nota">
+              <span class="criatura__info-nota-rotulo criatura__info-nota-rotulo--destaque">Gancho</span>
               @if (editando('identidade.ganchoUnico')) {
                 <textarea
                   #entradaGancho
-                  class="criatura__entrada-textarea criatura__entrada-textarea--info"
+                  class="criatura__entrada-textarea"
                   aria-label="Gancho Único"
                   (keydown.escape)="cancelarEdicao()"
                   (blur)="confirmarCampoIdentidade('ganchoUnico', entradaGancho.value); cancelarEdicao()"
                 >{{ dados().identidade.ganchoUnico }}</textarea>
               } @else {
-                <button class="criatura__gancho-texto" type="button" [disabled]="!ajustavel()" (click)="editar('identidade.ganchoUnico')">
+                <button class="criatura__info-nota-texto" type="button" [disabled]="!ajustavel()" (click)="editar('identidade.ganchoUnico')">
                   {{ dados().identidade.ganchoUnico }}
                 </button>
               }
             </div>
 
-            <div class="campo criatura__info-campo">
-              <dt class="campo__rotulo">Motivação</dt>
-              <dd class="campo__controle">
-                @if (editando('identidade.motivacao')) {
-                  <textarea
-                    #entradaMotivacao
-                    class="criatura__entrada-textarea"
-                    aria-label="Motivação"
-                    (keydown.escape)="cancelarEdicao()"
-                    (blur)="confirmarCampoIdentidade('motivacao', entradaMotivacao.value); cancelarEdicao()"
-                  >{{ dados().identidade.motivacao }}</textarea>
-                } @else {
-                  <button class="campo__botao" type="button" [disabled]="!ajustavel()" (click)="editar('identidade.motivacao')">
-                    {{ dados().identidade.motivacao }}
-                  </button>
-                }
-              </dd>
+            <div class="criatura__info-nota">
+              <span class="criatura__info-nota-rotulo">Motivação</span>
+              @if (editando('identidade.motivacao')) {
+                <textarea
+                  #entradaMotivacao
+                  class="criatura__entrada-textarea"
+                  aria-label="Motivação"
+                  (keydown.escape)="cancelarEdicao()"
+                  (blur)="confirmarCampoIdentidade('motivacao', entradaMotivacao.value); cancelarEdicao()"
+                >{{ dados().identidade.motivacao }}</textarea>
+              } @else {
+                <button class="criatura__info-nota-texto" type="button" [disabled]="!ajustavel()" (click)="editar('identidade.motivacao')">
+                  {{ dados().identidade.motivacao }}
+                </button>
+              }
             </div>
           </div>
 
           <div class="criatura__info-duas">
             <div class="criatura__info-card">
-              <div class="criatura__info-card-cabecalho">
-                <h3 class="criatura__info-card-titulo">Natureza Física</h3>
-              </div>
+              <header class="criatura__info-cabecalho">
+                <h3 class="criatura__info-titulo">Natureza</h3>
+                <span class="criatura__info-regua"></span>
+                @if (ajustavel() && !editando('identidade.naturezaFisica')) {
+                  <button class="criatura__info-acao" type="button" aria-label="Editar natureza física" [appTooltip]="'Editar natureza física'" (click)="editar('identidade.naturezaFisica')">
+                    <app-icone nome="editar" />
+                  </button>
+                }
+              </header>
               @if (editando('identidade.naturezaFisica')) {
                 <textarea
                   #entradaNatureza
-                  class="criatura__entrada-textarea criatura__entrada-textarea--info"
+                  class="criatura__entrada-textarea"
                   aria-label="Natureza Física"
                   (keydown.escape)="cancelarEdicao()"
                   (blur)="confirmarCampoIdentidade('naturezaFisica', entradaNatureza.value); cancelarEdicao()"
                 >{{ dados().identidade.naturezaFisica }}</textarea>
               } @else {
-                <button class="criatura__info-texto" type="button" [disabled]="!ajustavel()" (click)="editar('identidade.naturezaFisica')">
-                  {{ dados().identidade.naturezaFisica }}
-                </button>
+                <p class="criatura__info-texto">{{ dados().identidade.naturezaFisica }}</p>
               }
             </div>
 
             <div class="criatura__info-card">
-              <div class="criatura__info-card-cabecalho">
-                <h3 class="criatura__info-card-titulo">Tema de Horror</h3>
-              </div>
+              <header class="criatura__info-cabecalho">
+                <h3 class="criatura__info-titulo">Tema de Horror</h3>
+                <span class="criatura__info-regua"></span>
+                @if (ajustavel() && !editando('identidade.temaHorror')) {
+                  <button class="criatura__info-acao" type="button" aria-label="Editar tema de horror" [appTooltip]="'Editar tema de horror'" (click)="editar('identidade.temaHorror')">
+                    <app-icone nome="editar" />
+                  </button>
+                }
+              </header>
               @if (editando('identidade.temaHorror')) {
                 <input
                   #entradaTema
@@ -690,19 +763,19 @@
                   (blur)="confirmarCampoIdentidade('temaHorror', entradaTema.value || undefined); cancelarEdicao()"
                 />
               } @else {
-                <button class="criatura__info-texto" type="button" [disabled]="!ajustavel()" (click)="editar('identidade.temaHorror')">
-                  {{ dados().identidade.temaHorror ?? '—' }}
-                </button>
+                <p class="criatura__info-texto">{{ dados().identidade.temaHorror ?? '—' }}</p>
               }
             </div>
           </div>
 
           <div class="criatura__info-card">
-            <div class="criatura__info-card-cabecalho">
-              <h3 class="criatura__info-card-titulo">Anotações</h3>
-            </div>
+            <header class="criatura__info-cabecalho">
+              <h3 class="criatura__info-titulo">Anotações</h3>
+              <span class="criatura__info-regua"></span>
+            </header>
             <textarea
               class="criatura__anotacoes"
+              aria-label="Anotações"
               [value]="dados().anotacoes ?? ''"
               [disabled]="!ajustavel()"
               (blur)="confirmarAnotacoes($any($event.target).value)"
@@ -710,7 +783,7 @@
           </div>
         </section>
       } @else {
-        <section class="criatura__cartao">
+        <section class="criatura__cartao criatura__cartao--painel">
           <app-criatura-ataque-lista
             [itens]="dados().ataques"
             [editavel]="ajustavel()"
@@ -718,9 +791,7 @@
             (rolarAtaque)="rolarAtaque($event)"
             (testarAtaque)="rolarTesteAtaque($event)"
           />
-        </section>
 
-        <section class="criatura__cartao">
           <app-criatura-habilidade-lista
             [itens]="dados().habilidades"
             [editavel]="ajustavel()"
