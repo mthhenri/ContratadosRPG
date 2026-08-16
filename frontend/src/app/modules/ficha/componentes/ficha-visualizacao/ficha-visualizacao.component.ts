@@ -28,6 +28,7 @@ import type {
   FichaFragmentoConsumidoDto,
   FichaHabilidadeDto,
   FichaIdentidadeDto,
+  FichaImagemFocoDto,
   FichaInventarioDto,
   FichaJogadorDadosDto,
   FichaOrigemDto,
@@ -98,6 +99,7 @@ import {
   type CustoEnergiaFragmento,
 } from '../ficha-inventario/ficha-inventario.component';
 import { FichaRolagensPainel } from '../ficha-rolagens-painel/ficha-rolagens-painel.component';
+import { AjusteEnquadramentoImagem } from '../ajuste-enquadramento-imagem/ajuste-enquadramento-imagem.component';
 import { FichaSanidade, type EstadoSanidade } from '../ficha-sanidade/ficha-sanidade.component';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
 import { GRUPOS_FORMACAO, rotuloParametroFormacao } from '../../opcoes-formacao';
@@ -392,6 +394,7 @@ export interface AjusteClasse {
     OverflowFade,
     Tooltip,
     Dialog,
+    AjusteEnquadramentoImagem,
   ],
   templateUrl: './ficha-visualizacao.component.html',
   styleUrl: './ficha-visualizacao.component.scss',
@@ -417,6 +420,22 @@ export class FichaVisualizacao {
    * sem avatar definido, cai no placeholder decorativo (a borda continua colorida por {@link cor}).
    */
   readonly imagemUrl = input<string | null>(null);
+
+  /** Enquadramento do avatar (pan/zoom, ajuste pós-mockup) — ver {@link FichaImagemFocoDto}. */
+  readonly foco = input<FichaImagemFocoDto | null>(null);
+
+  /**
+   * `object-position`/`transform: scale()` do avatar a partir de {@link foco} — `null` (sem
+   * ajuste) não aplica nenhum dos dois, idêntico ao visual de hoje (`object-fit: cover` sozinho).
+   */
+  protected readonly estiloFocoPosicao = computed(() => {
+    const focoAtual = this.foco();
+    return focoAtual ? `${focoAtual.x}% ${focoAtual.y}%` : null;
+  });
+  protected readonly estiloFocoEscala = computed(() => {
+    const focoAtual = this.foco();
+    return focoAtual?.escala ? `scale(${focoAtual.escala})` : null;
+  });
 
   /** Ficha oculta (m3-65) — `true` esconde a ficha (nem carteirinha) de quem não é dono/mestre. */
   readonly oculta = input<boolean>(false);
@@ -517,6 +536,9 @@ export class FichaVisualizacao {
 
   /** Remove o avatar da ficha (m3-62) — mesmo modelo imediato de {@link ajusteImagem}. */
   readonly removerImagem = output<void>();
+
+  /** Novo enquadramento do avatar — a página persiste `ficha.imagemFoco`. */
+  readonly focoMudou = output<FichaImagemFocoDto | null>();
 
   /** Novo Nível/Prestígio — a página persiste (Nível também aplica o delta de progressão às máximas). */
   readonly ajusteCampoDados = output<AjusteCampoDados>();
@@ -1006,6 +1028,8 @@ export class FichaVisualizacao {
    * Valida o avatar escolhido **no client** (tipo/tamanho) antes de enviar — feedback imediato,
    * sem esperar o round-trip; a validação autoritativa continua no backend
    * (`FichaService.alterarImagem`). Mesmos limites de `FichaService` (backend): jpeg/png/webp, 2MB.
+   * Não emite ainda: abre o seletor de enquadramento (`arquivoPendente`) — o upload só acontece
+   * quando o enquadramento é confirmado (`confirmarEnquadramento`).
    */
   protected aoSelecionarImagem(evento: Event): void {
     const arquivo = (evento.target as HTMLInputElement).files?.[0] ?? null;
@@ -1022,7 +1046,37 @@ export class FichaVisualizacao {
       return;
     }
     this.erroImagem.set(null);
-    this.ajusteImagem.emit(arquivo);
+    this.arquivoPendente.set(arquivo);
+    this.enquadramentoOrigem.set(arquivo);
+  }
+
+  /**
+   * Enquadramento do avatar (pan/zoom) — o painel abre automaticamente ao trocar de imagem
+   * ({@link aoSelecionarImagem}) e também sob demanda, pelo selo dedicado, pra reajustar a imagem
+   * já salva sem reenviar o arquivo.
+   */
+  protected readonly arquivoPendente = signal<File | null>(null);
+  protected readonly enquadramentoOrigem = signal<File | string | null>(null);
+
+  protected abrirEnquadramentoExistente(): void {
+    const urlAtual = this.imagemUrl();
+    if (urlAtual) {
+      this.enquadramentoOrigem.set(urlAtual);
+    }
+  }
+
+  protected confirmarEnquadramento(foco: FichaImagemFocoDto): void {
+    const arquivo = this.arquivoPendente();
+    if (arquivo) {
+      this.ajusteImagem.emit(arquivo);
+    }
+    this.focoMudou.emit(foco);
+    this.fecharEnquadramento();
+  }
+
+  protected fecharEnquadramento(): void {
+    this.enquadramentoOrigem.set(null);
+    this.arquivoPendente.set(null);
   }
 
   constructor() {

@@ -121,7 +121,7 @@
                       [attr.aria-label]="'Rolar ' + (preset.encadeado ? passo.nome + ' — ' : '') + preset.nome"
                       (click)="rolarPassoDoPreset(preset, indicePasso)"
                     >
-                      <app-icone [nome]="'dado'" />
+                      <app-icone [nome]="'d20'" />
                     </button>
                     @if (passo.critico) {
                       <button
@@ -132,7 +132,7 @@
                         [attr.aria-label]="'Rolar crítico (dobra o dano) — ' + (preset.encadeado ? passo.nome + ' — ' : '') + preset.nome"
                         (click)="rolarPassoDoPreset(preset, indicePasso, true)"
                       >
-                        <app-icone [nome]="'dado'" />
+                        <app-icone [nome]="'d20'" />
                       </button>
                     }
                   }

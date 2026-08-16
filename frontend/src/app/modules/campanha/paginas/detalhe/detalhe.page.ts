@@ -120,9 +120,9 @@ interface ItemFicha {
 /**
  * Uma criatura na subseção "Criaturas" do Esquadrão (m4-04+) — recorte enxuto de `FichaResumoDto`
  * (`tipo === CRIATURA`), sem os campos jogador-específicos de {@link ItemFicha} (`classe`/
- * `arquetipo`/energia/condições/patente não existem numa criatura). Sem link de navegação de
- * propósito: `FichaVisualizacao` ainda não sabe renderizar dados de criatura (pendência registrada
- * no fechamento da m4-04, a resolver em m4-09) — abrir a ficha completa quebraria a tela.
+ * `arquetipo`/energia/condições/patente não existem numa criatura). Clicável desde a m4-04b —
+ * abre `/painel/:campanhaId/criatura/:id` (`CriaturaVisualizar`), mesmo padrão de navegação do
+ * card de ficha de jogador.
  */
 interface ItemCriatura {
   readonly id: number;
@@ -1340,6 +1340,11 @@ export class CampanhaDetalhe {
     return ['/painel', campanhaId, 'ficha', fichaId];
   }
 
+  /** Rota da ficha de criatura — mesmo papel de {@link caminhoFicha}, segmento `criatura`. */
+  private caminhoCriatura(campanhaId: number, criaturaId: number): (string | number)[] {
+    return ['/painel', campanhaId, 'criatura', criaturaId];
+  }
+
   protected abrirAnotacoesFicha(fichaId: number): void {
     void this.router.navigate(this.caminhoFicha(this.id, fichaId), { fragment: 'anotacoes' });
   }
@@ -1375,6 +1380,24 @@ export class CampanhaDetalhe {
     }
     evento.preventDefault();
     const url = this.router.serializeUrl(this.router.createUrlTree(this.caminhoFicha(campanhaId, fichaId)));
+    window.open(url, '_blank', 'noopener');
+  }
+
+  /** Mesmo par duplo-clique/clique-do-meio de {@link abrirFichaDuploClique}, pro card de criatura. */
+  protected abrirCriaturaDuploClique(campanhaId: number, criaturaId: number, evento: MouseEvent): void {
+    if (this.cliqueEmControlePropio(evento)) {
+      return;
+    }
+    void this.router.navigate(this.caminhoCriatura(campanhaId, criaturaId));
+  }
+
+  /** Mesmo par duplo-clique/clique-do-meio de {@link abrirFichaCliqueDoMeio}, pro card de criatura. */
+  protected abrirCriaturaCliqueDoMeio(campanhaId: number, criaturaId: number, evento: MouseEvent): void {
+    if (evento.button !== 1 || this.cliqueEmControlePropio(evento)) {
+      return;
+    }
+    evento.preventDefault();
+    const url = this.router.serializeUrl(this.router.createUrlTree(this.caminhoCriatura(campanhaId, criaturaId)));
     window.open(url, '_blank', 'noopener');
   }
 

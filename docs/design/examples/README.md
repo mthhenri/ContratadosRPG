@@ -1,47 +1,91 @@
-# examples/ — Referência visual (NÃO é código de produção)
+# examples/ — Referência visual (capturas do app real)
 
-Telas do tema **"Terminal de Contenção"**, exportadas como HTML único e offline
-(fontes embutidas). Servem **exclusivamente de referência VISUAL** — a linguagem de design
-(cor, tipografia, espaçamento, forma, padrões de componente) é o que será construído em
-Angular 21 + PrimeNG 21 + Tailwind + SCSS/BEM.
+Capturas do tema **"Terminal de Contenção"** rodando de verdade em `frontend/` — não são mockup
+nem protótipo. Cada tela é um **HTML único e offline** (mesmo formato do modelo antigo: CSS e
+imagens embutidos, sem dependência de servidor), em dois arquivos: `<tela>.html` (desktop,
+`1920×1080`) e `<tela>--mobile.html` (`360×800`), os mesmos dois viewports obrigatórios da skill
+`verify`. É a árvore DOM real do app, congelada num instante — não uma imagem: o CSS embutido
+inclui as media queries de verdade, então redimensionar a janela do navegador enquanto o arquivo
+está aberto já reproduz boa parte do comportamento responsivo real (não é garantia total — algum
+comportamento condicionado por JS, como o `BreakpointObserver`, não reage a resize num arquivo
+estático sem script).
 
-> ⚠️ **Referência visual, não de features.** As funcionalidades, campos, dados, regras e
-> comportamento destas telas **vão mudar** na implementação real — não os trate como
-> especificação de produto. O que vale aqui é **como as coisas se parecem**, não o que
-> elas fazem. A verdade de features está nas specs (`docs/specs/`) e nas regras
-> (`docs/core/`).
+> ⚠️ **Estático de propósito.** Cada arquivo teve `<script>` removido na captura — é uma foto da
+> árvore DOM+CSS, não o app rodando. Nada aqui é clicável/interativo; use a aplicação real
+> (`npm run frontend:dev`) para verificar comportamento, não estas capturas.
 
-> ⚠️ **Não é fonte.** Não importe, não sirva em produção e não copie o HTML: foram gerados
-> por uma ferramenta de prototipagem e usam estilo inline. O código real vive em
-> `apps/web/` e consome os tokens de `../tema/`.
+> ⚠️ **Estado real, não roteiro de captura.** Os dados visíveis (nome do agente, campanha,
+> inventário…) vêm de uma seed descartável só para preencher a tela — não são exemplo de
+> conteúdo "correto" nem specs de produto. O que vale aqui é **como as coisas se parecem hoje**:
+> cor, tipografia, espaçamento, forma, densidade e os padrões de componente já implementados.
+
+> ⚠️ **Isto substitui o modelo antigo.** Até esta atualização, `examples/` guardava HTML único
+> exportado de uma ferramenta de prototipagem externa — um alvo de fidelidade **anterior** à
+> implementação, que nunca foi regenerado depois que o app evoluiu. Hoje a relação é a
+> **inversa**: o app implementado é a fonte, e estas capturas documentam o estado atual dele.
+> Ficam desatualizadas com o tempo — se uma tela mudou visualmente de forma relevante, recapture-a
+> (ver "Como regenerar" abaixo) em vez de confiar num PNG antigo.
+
+## Telas
+
+| Arquivo | Tela | Rota | Padrões visuais a reaproveitar |
+|---|---|---|---|
+| `login.html` | Login | `/login` | Painel split marca+form, campos com rótulo mono |
+| `cadastro.html` | Cadastro de conta | `/registro` | Formulário em duas colunas, nota de contenção de dados |
+| `campanhas.html` | Painel — Campanhas | `/painel` | Topbar (Barra de Comando), cards de stat, card de campanha, chip de papel |
+| `lobby-de-campanha.html` | Detalhe de campanha | `/painel/:id` | Código de convite copiável, card de membro do esquadrão, barras Vida/Energia inline |
+| `ficha-de-jogador.html` | Ficha de jogador | `/painel/:campanhaId/ficha/:id` | Barras Vida/Energia, grid de atributos, resistências, abas (Informações/Inventário/Habilidades/Rolagens/Extras/História) |
+| `ficha-criacao-guia.html` | Guia de criação (passo 1/8) | `/painel/:campanhaId/ficha/nova` | Trilha de passos numerada, resumo operacional lateral, chip de classificação |
+| `acervo-de-fichas.html` | Acervo de fichas | `/fichas` | Card de ficha resumida fora do contexto de campanha |
+| `perfil.html` | Perfil | `/perfil` | Banner de tipo de conta, seções empilhadas (perfil/senha/exclusão) |
+| `calculadora-de-atributos.html` | Calculadora — Agente/Civil | `/calculadora/agente` | Abas de ferramenta, steppers, stat grid, cabeçalho de seção com índice + régua |
+
+`topbar.html` (exploração 1a/1b/1c) saiu do handoff: a direção **1a — Barra de Comando** já foi
+escolhida e implementada — está visível no topo de toda tela autenticada acima.
+
+## Excluído de propósito
+
+**`ficha-de-criatura.html` não segue o pipeline de captura acima.** Ao contrário das demais telas
+desta pasta (onde o app implementado é a fonte e o arquivo só documenta o estado atual dele), esta
+é a exceção histórica: um mockup autocontido (bundle de Artifact, não uma captura Playwright)
+mantido manualmente pelo autor como **alvo de fidelidade visual** — a relação é invertida, o
+arquivo guia a implementação, não o contrário (ver `docs/specs/done/m4-04b-frontend-
+visualizacao-criatura.spec.md`). Em 2026-08-15 o autor reconstruiu este mockup (dashboard de 3
+colunas com abas) e `CriaturaVisualizacao` foi realinhada a ele na mesma sessão — ver
+`docs/context/HISTORY.md`. `../DESIGN.md` ainda não tem uma seção dedicada a criatura; a rota
+`/painel/:campanhaId/criatura/:id` segue fora do ciclo normal de recaptura enquanto este mockup
+continuar sendo mantido à mão em vez de gerado a partir do app real.
 
 ## Como usar
 
-Abra qualquer arquivo direto no navegador (duplo clique). Ao construir a tela equivalente
-em Angular, use-a como **alvo de fidelidade visual** — replique o visual e puxe os valores
-de `../tema/_tokens.scss`. Deixe os dados e o comportamento seguirem as specs, não estas
-telas.
+Abra o arquivo (duplo clique — funciona offline, sem servidor). Ao construir ou revisar uma tela
+em Angular, compare com a captura equivalente — mesma densidade, hierarquia, controles e estados —
+e puxe cor/tipografia/forma de `../tema/_tokens.scss`, nunca do próprio HTML capturado (é
+referência visual congelada, não fonte).
 
-Foque nos **padrões visuais** listados — não nos campos/dados específicos, que são ilustrativos.
+## Como regenerar
 
-| Arquivo | Tela | Padrões visuais a reaproveitar |
-|---|---|---|
-| `calculadora-de-atributos.html` | Calculadora de agente | Steppers, stat grid, cabeçalho de seção com índice + régua |
-| `ficha-de-jogador.html` | Ficha de Jogador | Barras Vida/Energia, chips de habilidade, tabela de inventário |
-| `ficha-de-criatura.html` | Ficha de Ameaça (SCP) | Layout denso, atributos + modificadores, resistências/fraquezas |
-| `login.html` | Login / acesso | Painel split marca+form, campos com rótulo mono, entrada por código de convite |
-| `cadastro.html` | Cadastro de conta | Formulário em duas colunas, checkbox, nota de contenção de dados |
-| `campanhas.html` | Campanhas (adapta ao papel) | Cards de campanha, chips de status (ao vivo/agendada/pausada), painel "entrar por código", grid de mesas do mestre, menu de perfil |
-| `lobby-de-campanha.html` | Lobby / detalhe de campanha | Cabeçalho com classificação + código de convite copiável, briefing, lista de esquadrão, seletor de campanha ativa na topbar |
-| `topbar.html` | Topbar — 3 direções | Barra de comando (1a), rail lateral (1b), dossiê de duas linhas (1c); seletor de campanha, status ao vivo, dropdown de perfil |
+Sem script fixo no repo — a receita:
 
-> `topbar.html` é uma **exploração de opções** (1a/1b/1c lado a lado), não uma tela final —
-> serve para escolher a direção do chrome de navegação. As telas `campanhas` e
-> `lobby-de-campanha` já usam a direção **1a (Barra de Comando)**.
+1. Suba o stack (`npm run db:up`, `backend:dev`, `frontend:dev` — ver `.agents/skills/verify/`).
+2. Semeie uma sessão descartável por REST (`POST /autenticacao/registro` → `/login` → `/campanha`)
+   e uma ficha válida com `dados` construído a partir de `shared/regras` (mesma função que
+   `frontend/src/app/modules/ficha/ficha-padrao.ts#construirFichaInicial` usa) — o backend só
+   valida forma (maestria/identidade/munição), não o orçamento de atributos/habilidades, então um
+   payload gerado direto pelas regras `shared/` passa sem precisar automatizar o guia de criação
+   tela a tela.
+3. Injete a sessão (`localStorage.setItem('contratados-rpg.sessao', JSON.stringify(usuarioAutenticadoDto))`,
+   mesmo padrão da skill `verify`) e abra cada rota da tabela acima com Playwright (`npm root -g`,
+   Chromium já em cache) nos dois viewports. Pra exportar HTML único e offline em vez de screenshot:
+   dentro de `page.evaluate`, busque (`fetch`) o texto de todo `link[rel="stylesheet"]` e o
+   `textContent` de todo `<style>` e junte num `<style>` só; converta cada `<img>` pra data URI
+   (`fetch` + `FileReader.readAsDataURL`, senão o `src` relativo quebra fora do servidor de dev);
+   clone `document.documentElement`, remova `<script>`/`link[rel="stylesheet"]`/`<style>` do clone,
+   injete o `<style>` combinado e serialize (`clone.outerHTML`) prefixado por `<!doctype html>`.
+4. Nunca inclua uma rota `/criatura` nem sobrescreva `ficha-de-criatura.html` enquanto a m4-04b
+   estiver em aberto.
 
 ## Relação com o resto do handoff
 
 - `../DESIGN.md` — guia do tema e mapa de tokens
-- `../tema/` — tokens SCSS, base, preset PrimeNG, trecho Tailwind
-
-Ao mudar o tema, **regenere estes exemplos** a partir dos protótipos para não divergirem.
+- `../tema/` — tokens SCSS, base, breakpoints, componentes de referência, preset PrimeNG, trecho Tailwind

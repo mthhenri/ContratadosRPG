@@ -3,9 +3,9 @@
 // Framework `.guia__*` (trilha + resumo operacional progressivo) — mesmo vocabulário visual do
 // guia de jogador (`criar.page.scss`, m3-57), mas sem partial compartilhado entre os dois (não
 // existe hoje um `_guia.scss` comum no projeto — replicado aqui por precedente, com os blocos que
-// este assistente não usa (avatar, rascunho, memorial de novo agente, loja de equipamento...)
-// removidos e as seções específicas de criatura (resistências/fraquezas, ataques, habilidades)
-// adicionadas ao final.
+// este assistente não usa (avatar, memorial de novo agente, loja de equipamento...) removidos e
+// as seções específicas de criatura (resistências/fraquezas, ataques, habilidades) adicionadas ao
+// final. `__sair-dialog*`/`__retomar*` (rascunho, ajuste pós-mockup) foram copiados de volta.
 
 :host { display: block; }
 
@@ -23,6 +23,20 @@
   &__regua { flex: 1; height: 1px; background: var(--border); }
   &__classificacao { flex: none; padding: 6px 10px; font: 600 10px var(--font-mono); letter-spacing: .12em; color: var(--accent); border: 1px solid var(--accent-border); border-radius: var(--radius-control); }
   &__resumo-abrir { display: none; }
+
+  &__sair-dialog {
+    padding: 0; max-width: 400px; width: calc(100% - 32px); color: var(--text);
+    background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-card);
+    &::backdrop { background: color-mix(in srgb, black 65%, transparent); backdrop-filter: blur(2px); }
+    &:not([open]) { display: none; }
+  }
+  &__sair-dialog-conteudo { display: grid; gap: 14px; padding: 20px; h2 { margin: 0; font: 700 13px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; } p { margin: 0; font: 12px/1.5 var(--font-sans); color: var(--text-dim); } }
+  &__sair-dialog-acoes { display: flex; justify-content: flex-end; gap: 8px; .botao { min-height: 38px; padding: 0 16px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; } }
+
+  &__retomar { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; padding: 14px 16px; background: color-mix(in srgb, var(--warning) 8%, var(--surface)); border: 1px solid color-mix(in srgb, var(--warning) 35%, transparent); border-radius: var(--radius-control); }
+  &__retomar-icone { display: grid; place-items: center; width: 36px; height: 36px; flex: none; color: var(--warning); border: 1px solid color-mix(in srgb, var(--warning) 35%, transparent); border-radius: var(--radius-control); }
+  &__retomar-texto { flex: 1; min-width: 0; h2 { margin: 0 0 3px; font: 700 12px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; } p { margin: 0; font: 12px var(--font-sans); color: var(--text-dim); } }
+  &__retomar-acoes { display: flex; gap: 8px; .botao { min-height: 36px; padding: 0 13px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; } }
 
   &__layout { display: grid; grid-template-columns: 230px minmax(0, 1fr) 250px; align-items: start; gap: var(--gap-grid); }
   &__trilha, &__conteudo, &__resumo { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); }
@@ -43,13 +57,13 @@
   &__corpo { min-height: 440px; padding: 22px; }
   &__introducao { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); p { margin: 6px 0 0; max-width: 620px; font: 13px/1.55 var(--font-sans); color: var(--text-dim); } }
   &__introducao-codigo { font: 600 9px var(--font-mono); letter-spacing: .14em; color: var(--accent); }
-  &__campos { display: grid; gap: 18px; align-items: start; &--duas-colunas { grid-template-columns: repeat(2, minmax(0, 1fr)); } &--quatro-colunas { grid-template-columns: repeat(4, minmax(0, 1fr)); } &--base { grid-template-columns: minmax(120px, 200px) minmax(0, 1fr); } }
+  &__campos { display: grid; gap: 18px; align-items: start; margin-top: 16px; &--duas-colunas { grid-template-columns: repeat(2, minmax(0, 1fr)); } &--quatro-colunas { grid-template-columns: repeat(4, minmax(0, 1fr)); } &--base { grid-template-columns: minmax(120px, 200px) minmax(0, 1fr); } }
   &__campos + .campo { margin-top: 16px; }
   .campo + &__campos { margin-top: 16px; }
   // Espaçamento entre campos empilhados fora de um `&__campos` (ex.: Identidade, Ataques,
   // Habilidades) — sem esta regra, `<label class="campo">` consecutivos (sem wrapper com `gap`)
   // encostam um no outro (`margin: 0` do `.campo`, ver abaixo).
-  .campo + .campo { margin-top: 16px; }
+  
   // Botão "+ Adicionar X" logo após o grid de cards (Resistências/Fraquezas/Ataques/Habilidades)
   // — sem esta regra ele encostava direto no grid acima.
   &__formacoes + &__vaga-escolher { margin: 8px 0 18px; }
@@ -61,7 +75,11 @@
   // resumo de Saúde/Defesa) em vez de um único quadro de texto corrido.
   &__metricas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 8px; }
   &__metricas-ajuda { display: block; margin: 0 0 14px; color: var(--text-mute); }
-  &__atributos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  // `CAMPOS` (criar-criatura.page.ts) lista os 5 atributos Físicos e depois os 5 Mentais, nessa
+  // ordem — o grid preenche por coluna (não por linha) pra coluna esquerda ficar só com os
+  // Físicos e a direita só com os Mentais, em vez de intercalar (m3-01, "Atributo Físico"/"Atributo
+  // Mental").
+  &__atributos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(5, auto); grid-auto-flow: column; gap: 8px; }
   &__modo-livre { display: flex; align-items: center; gap: 10px; min-height: bp.$alvo-toque; margin: 14px 0; padding: 11px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); cursor: pointer; input { width: 18px; height: 18px; accent-color: var(--accent); } span { display: grid; gap: 2px; b { font: 600 10px var(--font-mono); text-transform: uppercase; } small { color: var(--text-mute); } } }
   &__subsecao { display: flex; align-items: center; gap: 10px; margin: 26px 0 14px; span { font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .12em; color: var(--text-mute); } i { flex: 1; height: 1px; background: var(--border); } }
   &__subsecao-ajuda { margin: -8px 0 14px; font: 11px/1.45 var(--font-sans); color: var(--text-mute); }
@@ -216,6 +234,7 @@
   &[data-nivel="3"] i:nth-child(3), &[data-nivel="4"] i:nth-child(3) { background: var(--warning); }
   &[data-nivel="4"] i:nth-child(4) { background: var(--accent); }
   &--ativo { border-color: var(--accent); background: var(--accent-dim); }
+  &:disabled { cursor: not-allowed; opacity: .4; &:hover { border-color: var(--border-strong); } }
 }
 .stepper { display: grid; grid-template-columns: 34px 48px 34px; min-height: 36px; overflow: hidden; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control); &__botao { padding: 0; font: 18px var(--font-mono); color: var(--text-dim); background: transparent; border: 0; cursor: pointer; &:hover { color: var(--text); background: var(--accent-dim); } &:disabled { opacity: .4; cursor: not-allowed; } } &__valor { display: grid; place-items: center; font: 700 17px var(--font-mono); color: var(--text); border-inline: 1px solid var(--border); } }
 .stat { min-width: 0; padding: 10px 11px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); &__rotulo { display: block; margin-bottom: 5px; font: 9px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text-mute); } &__valor { font: 700 19px/1 var(--font-mono); } &--vida { border-color: var(--vida-border); .stat__valor { color: var(--vida); } } &--alerta { border-color: var(--accent-border); .stat__valor { color: var(--accent); } } }
@@ -226,9 +245,13 @@
 }
 
 @include bp.mobile {
-  .guia { max-width: 100%; padding-bottom: 74px; &__cabecalho { align-items: center; margin-bottom: 12px; } &__cabecalho-titulo { gap: 8px; } &__sair { width: bp.$alvo-toque; height: bp.$alvo-toque; } &__indice, &__regua, &__classificacao, &__kicker { display: none; } &__titulo-grupo h1 { font-size: 14px; } &__resumo-abrir { display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: none; height: bp.$alvo-toque; padding: 0 14px; font: 700 10px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--text); background: transparent; border: 1px solid var(--border-strong); border-radius: var(--radius-control); cursor: pointer; transition: .15s ease; span { white-space: nowrap; } &:hover:not(:disabled) { background: var(--surface-2); border-color: var(--accent-border); } &--ativo { color: var(--accent); border-color: var(--accent-border); background: var(--accent-dim); } } &__progresso-mobile { display: block; margin-bottom: 10px; padding: 11px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-control); } &__progresso-mobile-topo { display: flex; justify-content: space-between; font: 600 9px var(--font-mono); letter-spacing: .1em; color: var(--text-mute); strong { color: var(--accent); } } &__progresso-trilho { height: 3px; margin-top: 8px; background: var(--border-strong); i { display: block; height: 100%; background: var(--accent); } } &__layout { display: block; } &__trilha { display: none; } &__conteudo { border-radius: var(--radius-control); } &__secao { padding: 13px 14px; } &__secao-indice { width: 27px; height: 27px; } &__corpo { min-height: 0; padding: 15px; } &__introducao { margin-bottom: 15px; } &__campos--duas-colunas, &__campos--quatro-colunas, &__campos--base, &__atributos, &__formacoes, &__formacao, &__revisao, &__vagas, &__stats { grid-template-columns: 1fr; } &__protocolo-info { grid-template-columns: 38px 1fr; small { grid-column: 1 / -1; } } &__orcamento { align-items: flex-start; flex-direction: column; } &__resumo { margin: 0; } &__resumo-linha { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 9px 1px; border-top: 1px solid var(--border); border-left: 0; }
+  .guia { max-width: 100%; padding-bottom: 74px; &__cabecalho { align-items: center; margin-bottom: 12px; } &__cabecalho-titulo { gap: 8px; } &__sair { width: bp.$alvo-toque; height: bp.$alvo-toque; } &__indice, &__regua, &__classificacao, &__kicker { display: none; } &__titulo-grupo h1 { font-size: 14px; } &__resumo-abrir { display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: none; height: bp.$alvo-toque; padding: 0 14px; font: 700 10px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--text); background: transparent; border: 1px solid var(--border-strong); border-radius: var(--radius-control); cursor: pointer; transition: .15s ease; span { white-space: nowrap; } &:hover:not(:disabled) { background: var(--surface-2); border-color: var(--accent-border); } &--ativo { color: var(--accent); border-color: var(--accent-border); background: var(--accent-dim); } } &__progresso-mobile { display: block; margin-bottom: 10px; padding: 11px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-control); } &__progresso-mobile-topo { display: flex; justify-content: space-between; font: 600 9px var(--font-mono); letter-spacing: .1em; color: var(--text-mute); strong { color: var(--accent); } } &__progresso-trilho { height: 3px; margin-top: 8px; background: var(--border-strong); i { display: block; height: 100%; background: var(--accent); } } &__layout { display: block; } &__trilha { display: none; } &__conteudo { border-radius: var(--radius-control); } &__secao { padding: 13px 14px; } &__secao-indice { width: 27px; height: 27px; } &__corpo { min-height: 0; padding: 15px; } &__introducao { margin-bottom: 15px; } &__campos--duas-colunas, &__campos--quatro-colunas, &__campos--base, &__metricas, &__atributos, &__formacoes, &__formacao, &__revisao, &__vagas, &__stats { grid-template-columns: 1fr; } &__protocolo-info { grid-template-columns: 38px 1fr; small { grid-column: 1 / -1; } } &__orcamento { align-items: flex-start; flex-direction: column; } &__resumo { margin: 0; } &__resumo-linha { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 9px 1px; border-top: 1px solid var(--border); border-left: 0; }
   .guia__avatar-campo { justify-items: center; text-align: center; }
   .guia__avatar-caixa { width: 128px; }
+  // Reseta o preenchimento por coluna do desktop (`&__atributos` acima) — colapsado a 1 coluna
+  // aqui em cima (`&__campos--duas-colunas, ..., &__atributos, ... { grid-template-columns: 1fr; }`),
+  // a ordem original de `CAMPOS` (Físicos, depois Mentais) já basta.
+  .guia__atributos { grid-auto-flow: row; grid-template-rows: none; }
   &__resumo-toggle { display: none; }
   &__resumo-corpo { display: none; }
   &__resumo--aberto {

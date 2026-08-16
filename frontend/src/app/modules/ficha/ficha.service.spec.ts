@@ -2,13 +2,27 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { StandardResponse } from '@contratados-rpg/shared/interfaces';
-import { ArquetipoEnum, ClasseEnum } from '@contratados-rpg/shared/enums';
+import {
+  ArquetipoEnum,
+  CadenciaEnum,
+  ClasseEnum,
+  ComportamentoCriaturaEnum,
+  ModificadorCriaturaEnum,
+  NivelAmeacaEnum,
+  OrigemCriaturaEnum,
+  PorteCriaturaEnum,
+  TenacidadeEnum,
+  TipoDanoEnum,
+} from '@contratados-rpg/shared/enums';
 import {
   FichaAcessoConcedidoDto,
   FichaAcessoResumoDto,
   FichaAcessoRevogadoDto,
   FichaAlteradaDto,
   FichaCriadaDto,
+  FichaCriaturaAlteradaDto,
+  FichaCriaturaDadosDto,
+  FichaCriaturaRecuperadaDto,
   FichaImagemAlteradaDto,
   FichaJogadorDadosDto,
   FichaRecuperadaDto,
@@ -92,7 +106,7 @@ describe('FichaService', () => {
 
   it('recupera uma ficha pelo id', () => {
     const { servico, http } = criar();
-    const recuperada: FichaRecuperadaDto = { id: 3, campanhaId: 9, usuarioId: 7, nome: 'Kane', cor: null, imagemUrl: null, oculta: false, dados };
+    const recuperada: FichaRecuperadaDto = { id: 3, campanhaId: 9, usuarioId: 7, nome: 'Kane', cor: null, imagemUrl: null, imagemFoco: null, oculta: false, dados };
 
     let recebido: FichaRecuperadaDto | undefined;
     servico.recuperarFicha(3).subscribe((r) => (recebido = r));
@@ -105,7 +119,7 @@ describe('FichaService', () => {
 
   it('altera nome/dados de uma ficha', () => {
     const { servico, http } = criar();
-    const alterada: FichaAlteradaDto = { id: 3, campanhaId: 9, usuarioId: 7, nome: 'Novo', cor: null, imagemUrl: null, oculta: false, dados };
+    const alterada: FichaAlteradaDto = { id: 3, campanhaId: 9, usuarioId: 7, nome: 'Novo', cor: null, imagemUrl: null, imagemFoco: null, oculta: false, dados };
 
     let recebido: FichaAlteradaDto | undefined;
     servico.alterarFicha(3, { nome: 'Novo', dados }).subscribe((r) => (recebido = r));
@@ -131,6 +145,7 @@ describe('FichaService', () => {
       nome: 'Kane',
       cor: '#2563EB',
       imagemUrl: 'https://exemplo.test/kane.webp',
+      imagemFoco: null,
       oculta: true,
       dados,
     } satisfies FichaAlteradaDto));
@@ -335,5 +350,70 @@ describe('FichaService', () => {
     expect(mandar.request.method).toBe('POST');
     expect(mandar.request.body).toEqual({ indice: 1 });
     mandar.flush(envelope({ id: 3 } as never));
+  });
+
+  const dadosCriatura: FichaCriaturaDadosDto = {
+    identidade: {
+      designacao: 'A Estátua',
+      origem: OrigemCriaturaEnum.ORIGINAL,
+      conceito: 'Uma estátua que se move quando ninguém olha.',
+      naturezaFisica: 'Pedra articulada.',
+      comportamento: ComportamentoCriaturaEnum.CACADORA,
+      motivacao: 'Caçar.',
+      ganchoUnico: 'Só se move fora do campo de visão.',
+    },
+    na: NivelAmeacaEnum.ALTA,
+    vd: 30,
+    atributos: {
+      destreza: 1, forca: 8, luta: 6, pontaria: 1, vigor: 8,
+      intelecto: 1, medicina: 1, sentidos: 4, social: 1, vontade: 4,
+    },
+    modificadores: {
+      destreza: ModificadorCriaturaEnum.FRAGIL, forca: ModificadorCriaturaEnum.FORTE,
+      luta: ModificadorCriaturaEnum.FORTE, pontaria: ModificadorCriaturaEnum.FRAGIL,
+      vigor: ModificadorCriaturaEnum.MEDIO, intelecto: ModificadorCriaturaEnum.FRACO,
+      medicina: ModificadorCriaturaEnum.FRACO, sentidos: ModificadorCriaturaEnum.MEDIO,
+      social: ModificadorCriaturaEnum.FRACO, vontade: ModificadorCriaturaEnum.FRACO,
+    },
+    tenacidade: TenacidadeEnum.RESISTENTE,
+    vidaMaxima: 100, vidaAtual: 100, defesa: 30,
+    resistencias: [], fraquezas: [{ tipo: TipoDanoEnum.BALISTICO, subtipo: null, valor: 10 }],
+    porte: PorteCriaturaEnum.GRANDE,
+    deslocamento: { terrestre: 9 },
+    cadencia: CadenciaEnum.SINGULAR,
+    ataques: [], habilidades: [], anotacoes: '',
+  };
+
+  it('recupera uma ficha de criatura pelo id', () => {
+    const { servico, http } = criar();
+    const recuperada: FichaCriaturaRecuperadaDto = {
+      id: 4, campanhaId: 9, usuarioId: 7, nome: 'A Estátua', cor: null, imagemUrl: null, imagemFoco: null,
+      oculta: false, dados: dadosCriatura,
+    };
+
+    let recebido: FichaCriaturaRecuperadaDto | undefined;
+    servico.recuperarFichaCriatura(4).subscribe((r) => (recebido = r));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/ficha/criatura/4'));
+    expect(requisicao.request.method).toBe('GET');
+    requisicao.flush(envelope(recuperada));
+
+    expect(recebido).toEqual(recuperada);
+  });
+
+  it('altera nome/dados de uma ficha de criatura', () => {
+    const { servico, http } = criar();
+    const alterada: FichaCriaturaAlteradaDto = {
+      id: 4, campanhaId: 9, usuarioId: 7, nome: 'Novo Nome', cor: null, imagemUrl: null, imagemFoco: null,
+      oculta: false, dados: dadosCriatura,
+    };
+
+    let recebido: FichaCriaturaAlteradaDto | undefined;
+    servico.alterarFichaCriatura(4, { nome: 'Novo Nome', dados: dadosCriatura }).subscribe((r) => (recebido = r));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/ficha/criatura/4'));
+    expect(requisicao.request.method).toBe('PUT');
+    expect(requisicao.request.body).toEqual({ nome: 'Novo Nome', dados: dadosCriatura });
+    requisicao.flush(envelope(alterada));
+
+    expect(recebido).toEqual(alterada);
   });
 });

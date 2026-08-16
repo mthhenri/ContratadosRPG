@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ItemCategoriaEnum, ModificacaoEfeitoTipoEnum, PatenteEnum } from '../../enums';
+import { FragmentoModuloEnum, FragmentoTipoEnum, ItemCategoriaEnum, ModificacaoEfeitoTipoEnum, PatenteEnum } from '../../enums';
 import { AMPLIFICADORES, CATALOGO_CATEGORIAS, MODIFICACOES } from './compras.dados';
 import { CATALOGO_ITENS } from './catalogo.dados';
 import { CarrinhoItemDto, ModificacaoAplicadaDto } from './compras.dtos';
@@ -198,6 +198,17 @@ describe('obterPesoModificacao', () => {
     expect(obterPesoModificacao({ item: montarItem({ nome: 'Mochila Mediana', categoria: ItemCategoriaEnum.ARMAZENAMENTO }), modificacao: 'Compartimentos Extras' })).toBe(0);
   });
 
+  it('Fragmento Potencializador acoplado (origemFragmento) nunca pesa no item alvo — regressão do bug que somava o peso padrão de mod (+0,2) ao acoplar num item', () => {
+    const arma = montarItem({ nome: 'Pistola', categoria: ItemCategoriaEnum.ARMAS_DE_FOGO });
+    expect(
+      obterPesoModificacao({
+        item: arma,
+        modificacao: 'Fragmento Potencializador — Módulo III',
+        origemFragmento: { tipo: FragmentoTipoEnum.POTENCIALIZADOR, modulo: FragmentoModuloEnum.III },
+      }),
+    ).toBe(0);
+  });
+
   it('Fragmento Construtor nunca pesa por modificação, mesmo "Pesada" (doc — "⬦ Construtor", m3-65)', () => {
     const espadaConstrutor = montarItem({
       nome: 'Espada de Ossos',
@@ -296,6 +307,10 @@ describe('calcularStatItem', () => {
   it('Armazenamento: bônus de inventário com Compartimentos Extras', () => {
     expect(calcularStatItem({ item: item('Mochila Mediana', ItemCategoriaEnum.ARMAZENAMENTO) })?.bonusArmazenamento).toBe(6);
     expect(calcularStatItem({ item: item('Mochila Mediana', ItemCategoriaEnum.ARMAZENAMENTO, [mod('Compartimentos Extras', 2)]) })?.bonusArmazenamento).toBe(8);
+  });
+
+  it('Armazenamento: "Camadas Extras" não soma inventário (doc: só resistência) — regressão do bug que somava 0,5/stack', () => {
+    expect(calcularStatItem({ item: item('Mochila Mediana', ItemCategoriaEnum.ARMAZENAMENTO, [mod('Camadas Extras', 3)]) })?.bonusArmazenamento).toBe(6);
   });
 
   it('devolve null para item fora do catálogo', () => {
@@ -434,6 +449,29 @@ describe('calcularTotaisCarrinho', () => {
     expect(totais.pesoUsado).toBe(3.5);
     expect(totais.empilhamentosAmplificador).toBe(2);
     expect(totais.bonusInventario).toBe(0);
+  });
+
+  it('Fragmento Potencializador acoplado a uma arma não soma peso ao total (regressão: só o peso base da arma conta)', () => {
+    const totais = calcularTotaisCarrinho({
+      itens: [
+        montarItem({
+          nome: 'Pistola',
+          categoria: ItemCategoriaEnum.ARMAS_DE_FOGO,
+          custo: 500,
+          peso: 1,
+          modificacoes: [
+            {
+              nome: 'Fragmento Potencializador — Módulo III',
+              empilhamentos: 1,
+              origemFragmento: { tipo: FragmentoTipoEnum.POTENCIALIZADOR, modulo: FragmentoModuloEnum.III },
+            },
+          ],
+        }),
+      ],
+      amplificadores: [],
+    });
+
+    expect(totais.pesoUsado).toBe(1);
   });
 
   it('armazenamento vestido amplia o inventário e não pesa', () => {

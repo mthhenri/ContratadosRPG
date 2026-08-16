@@ -1,4 +1,5 @@
 import type { FichaCriaturaDadosDto } from './ficha-criatura.dtos';
+import type { FichaImagemFocoDto } from './ficha-operacao.dtos';
 
 /**
  * DTOs de **operação** da ficha de criatura (`m4-03`) — o CRUD restrito ao mestre, sobre
@@ -79,6 +80,8 @@ export interface FichaCriaturaRecuperadaDto {
   readonly nome: string;
   readonly cor: string | null;
   readonly imagemUrl: string | null;
+  /** Enquadramento do avatar — mesmo campo de `FichaRecuperadaDto.imagemFoco`. */
+  readonly imagemFoco: FichaImagemFocoDto | null;
   /** Ficha oculta (m3-65) — mesmo campo de `FichaRecuperadaDto.oculta`. */
   readonly oculta: boolean;
   readonly dados: FichaCriaturaDadosDto;
@@ -91,6 +94,8 @@ export interface FichaCriaturaRecuperadaDto {
 export interface FichaCriaturaAlterarDto {
   readonly nome: string;
   readonly cor?: string | null;
+  /** Enquadramento do avatar — mesmo campo de `FichaAlterarDto.imagemFoco`. */
+  readonly imagemFoco?: FichaImagemFocoDto | null;
   readonly oculta?: boolean;
   readonly dados: FichaCriaturaDadosDto;
 }
@@ -108,6 +113,8 @@ export interface FichaCriaturaAlteradaDto {
   readonly nome: string;
   readonly cor: string | null;
   readonly imagemUrl: string | null;
+  /** Enquadramento do avatar — mesmo campo de `FichaAlteradaDto.imagemFoco`. */
+  readonly imagemFoco: FichaImagemFocoDto | null;
   readonly oculta: boolean;
   readonly dados: FichaCriaturaDadosDto;
 }

@@ -1,0 +1,263 @@
+<section class="ficha-pagina">
+  <header class="ficha-pagina__topo">
+    <a
+      class="ficha-pagina__voltar"
+      [routerLink]="['/painel', campanhaId]"
+      aria-label="Voltar à campanha"
+      [appTooltip]="'Voltar à campanha'"
+    >
+      <app-icone nome="voltar" />
+    </a>
+
+    <div class="ficha-pagina__acoes">
+      @if (fichaEdicao.estadoPersistencia() !== 'ocioso') {
+        <span
+          class="ficha-pagina__persistencia"
+          [class.ficha-pagina__persistencia--salvo]="fichaEdicao.estadoPersistencia() === 'salvo'"
+          role="status"
+        >
+          {{ fichaEdicao.estadoPersistencia() === 'salvando' ? 'Salvando…' : 'Salvo' }}
+        </span>
+      }
+
+      <app-indicador-tempo-real />
+
+      @if (ficha()) {
+        <app-historico-rolagens-sidebar
+          titulo="Histórico de Rolagens"
+          [itens]="historicoRolagens()"
+          [carregando]="historicoCarregando()"
+          [carregandoMais]="historicoCarregandoMais()"
+          [temMais]="historicoTemMais()"
+          [mostrarFicha]="false"
+          [acimaDaCalculadora]="true"
+          (carregarMais)="carregarMaisHistorico()"
+        />
+        <app-calculadora-flutuante />
+      }
+
+      @if (ficha() && podeGerenciar()) {
+        <div class="ficha-pagina__menu-container">
+          <button
+            class="ficha-pagina__menu-botao"
+            type="button"
+            aria-label="Ações da ficha"
+            aria-haspopup="menu"
+            [attr.aria-expanded]="menuAberto()"
+            (click)="alternarMenu()"
+          >
+            ⋯
+          </button>
+          @if (menuAberto()) {
+            <button
+              class="ficha-pagina__menu-fundo"
+              type="button"
+              aria-label="Fechar menu"
+              (click)="fecharMenu()"
+            ></button>
+            <div class="ficha-pagina__menu" role="menu">
+              <button
+                class="ficha-pagina__menu-item"
+                type="button"
+                role="menuitem"
+                (click)="abrirAcesso()"
+              >
+                <app-icone nome="olho" />
+                <span>Acesso de visualização</span>
+                @if (acessos().length) {
+                  <span class="ficha-pagina__menu-contagem">{{ acessos().length }}</span>
+                }
+              </button>
+              <button
+                class="ficha-pagina__menu-item"
+                type="button"
+                role="menuitem"
+                (click)="alternarOculta()"
+              >
+                <app-icone [nome]="ficha()?.oculta ? 'olho' : 'olho-fechado'" />
+                <span>{{ ficha()?.oculta ? 'Exibir ficha' : 'Ocultar ficha' }}</span>
+              </button>
+              <button
+                class="ficha-pagina__menu-item"
+                type="button"
+                role="menuitem"
+                (click)="abrirExclusao()"
+              >
+                <app-icone nome="excluir" />
+                <span>Excluir ficha</span>
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </header>
+
+  @if (carregando()) {
+    <div class="criatura-esqueleto" role="status" aria-label="Carregando ficha">
+      <div class="criatura-esqueleto__topo">
+        <span class="esqueleto-bloco esqueleto-bloco--rotulo"></span>
+        <span class="esqueleto-bloco esqueleto-bloco--chip"></span>
+      </div>
+      @for (indice of [0, 1, 2, 3, 4]; track indice) {
+        <div class="criatura-esqueleto__secao">
+          <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
+          <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+          <span class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"></span>
+        </div>
+      }
+    </div>
+  } @else if (ficha(); as fichaAtual) {
+    <app-criatura-visualizacao
+      [fichaId]="fichaAtual.id"
+      [nome]="fichaAtual.nome"
+      [cor]="fichaAtual.cor"
+      [imagemUrl]="fichaAtual.imagemUrl"
+      [foco]="fichaAtual.imagemFoco"
+      [oculta]="fichaAtual.oculta"
+      [dados]="fichaAtual.dados"
+      [ajustavel]="podeGerenciar()"
+      (vitalidadeMudou)="fichaEdicao.ajustarVitalidade($event)"
+      (defesaMudou)="fichaEdicao.ajustarDefesa($event)"
+      (identidadeMudou)="fichaEdicao.ajustarIdentidade($event)"
+      (naMudou)="fichaEdicao.ajustarNa($event)"
+      (vdMudou)="fichaEdicao.ajustarVd($event)"
+      (atributosMudou)="fichaEdicao.ajustarAtributos($event)"
+      (modificadoresMudou)="fichaEdicao.ajustarModificadores($event)"
+      (tenacidadeMudou)="fichaEdicao.ajustarTenacidade($event)"
+      (resistenciasMudou)="fichaEdicao.ajustarResistencias($event)"
+      (fraquezasMudou)="fichaEdicao.ajustarFraquezas($event)"
+      (regeneracaoMudou)="fichaEdicao.ajustarRegeneracao($event)"
+      (porteMudou)="fichaEdicao.ajustarPorte($event)"
+      (deslocamentoMudou)="fichaEdicao.ajustarDeslocamento($event)"
+      (cadenciaMudou)="fichaEdicao.ajustarCadencia($event)"
+      (iniciativaBonusMudou)="fichaEdicao.ajustarIniciativaBonus($event)"
+      (ataquesMudou)="fichaEdicao.ajustarAtaques($event)"
+      (habilidadesMudou)="fichaEdicao.ajustarHabilidades($event)"
+      (anotacoesMudou)="fichaEdicao.ajustarAnotacoes($event)"
+      (nomeMudou)="fichaEdicao.ajustarNome($event)"
+      (corMudou)="fichaEdicao.ajustarCor($event)"
+      (ocultaMudou)="fichaEdicao.ajustarOculta($event)"
+      (imagemMudou)="fichaEdicao.ajustarImagem($event)"
+      (removerImagem)="fichaEdicao.removerImagem()"
+      (focoMudou)="fichaEdicao.ajustarImagemFoco($event)"
+    />
+  } @else {
+    <p class="ficha-pagina__carregando">Ficha não encontrada.</p>
+  }
+</section>
+
+@if (dialogAcesso()) {
+  <div class="dialogo" role="dialog" aria-modal="true" aria-label="Acesso de visualização">
+    <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="fecharAcesso()"></button>
+    <div class="dialogo__painel acesso">
+      <header class="dialogo__cabecalho">
+        <span class="ficha-cartao__indice"><app-icone nome="olho" /></span>
+        <h2 class="dialogo__titulo">Acesso de Visualização</h2>
+        <span class="ficha-cartao__regua"></span>
+        <button class="dialogo__fechar" type="button" aria-label="Fechar" (click)="fecharAcesso()">
+          ✕
+        </button>
+      </header>
+
+      <p class="acesso__ajuda">
+        Conceda a visualização desta ficha a outros membros da campanha. Eles poderão vê-la, mas não
+        editá-la; você pode revogar a qualquer momento.
+      </p>
+
+      <div class="acesso__conceder">
+        <select
+          class="acesso__select"
+          aria-label="Membro para conceder acesso"
+          [formControl]="membroParaConceder"
+        >
+          <option [ngValue]="null" disabled>Selecione um membro…</option>
+          @for (membro of membrosElegiveis(); track membro.usuarioId) {
+            <option [ngValue]="membro.usuarioId">{{ membro.nome }}</option>
+          }
+        </select>
+        <button
+          class="botao botao--primario acesso__acao"
+          type="button"
+          [disabled]="membroParaConceder.value === null || concedendo()"
+          (click)="conceder()"
+        >
+          <app-icone nome="mais" />
+          {{ concedendo() ? 'Concedendo…' : 'Conceder' }}
+        </button>
+      </div>
+
+      @if (membrosElegiveis().length === 0) {
+        <p class="acesso__vazio-elegiveis">Nenhum outro membro disponível para conceder acesso.</p>
+      }
+
+      @if (acessos().length) {
+        <ul class="acesso__lista">
+          @for (acesso of acessos(); track acesso.usuarioId) {
+            <li class="acesso__item">
+              <span class="acesso__avatar" aria-hidden="true"></span>
+              <span class="acesso__nome">{{ acesso.nome }}</span>
+              <button
+                class="botao botao--secundario acesso__revogar"
+                type="button"
+                [disabled]="revogando() !== null"
+                (click)="revogar(acesso.usuarioId)"
+              >
+                <app-icone nome="excluir" />
+                {{ revogando() === acesso.usuarioId ? 'Revogando…' : 'Revogar' }}
+              </button>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="acesso__vazio">Nenhum acesso concedido ainda.</p>
+      }
+    </div>
+  </div>
+}
+
+@if (dialogExclusao()) {
+  <div class="dialogo" role="dialog" aria-modal="true" aria-label="Excluir ficha">
+    <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="fecharExclusao()"></button>
+    <div class="dialogo__painel exclusao">
+      <header class="dialogo__cabecalho">
+        <span class="ficha-cartao__indice"><app-icone nome="excluir" /></span>
+        <h2 class="dialogo__titulo">Excluir Ficha</h2>
+        <span class="ficha-cartao__regua"></span>
+        <button
+          class="dialogo__fechar"
+          type="button"
+          aria-label="Fechar"
+          [disabled]="excluindo()"
+          (click)="fecharExclusao()"
+        >
+          ✕
+        </button>
+      </header>
+
+      <p class="exclusao__aviso">
+        Excluir <strong>{{ ficha()?.nome }}</strong>? Esta ação não pode ser desfeita.
+      </p>
+
+      <div class="exclusao__acoes">
+        <button
+          class="botao botao--primario exclusao__acao"
+          type="button"
+          [disabled]="excluindo()"
+          (click)="confirmarExclusao()"
+        >
+          <app-icone nome="excluir" />
+          {{ excluindo() ? 'Excluindo…' : 'Confirmar exclusão' }}
+        </button>
+        <button
+          class="botao botao--secundario exclusao__acao"
+          type="button"
+          [disabled]="excluindo()"
+          (click)="fecharExclusao()"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+}

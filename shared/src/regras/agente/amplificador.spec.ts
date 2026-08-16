@@ -13,6 +13,7 @@ import {
   aplicarReducaoCustoEnergia,
   empilhamentosAmplificador,
   modificadoresTesteAmplificadores,
+  penalidadeVontadeAmplificadores,
 } from './amplificador';
 
 /**
@@ -74,35 +75,60 @@ describe('modificadoresTesteAmplificadores', () => {
     expect(modificadoresTesteAmplificadores([])).toEqual({});
   });
 
-  it('Interpessoal: +2 Social/Vontade por empilhamento; do 2º empilhamento, -1 Luta/Pontaria por empilhamento além do 1º', () => {
+  it('Interpessoal: +2 Social/Vontade por empilhamento; do 2º empilhamento, -1 Luta/Pontaria e -2 Vontade (penalidade de sanidade) por empilhamento além do 1º', () => {
     expect(modificadoresTesteAmplificadores(porta('Interpessoal', 1))).toEqual({
       social: 2,
       vontade: 2,
     });
     expect(modificadoresTesteAmplificadores(porta('Interpessoal', 3))).toEqual({
       social: 6,
-      vontade: 6,
+      vontade: 6 - 4, // +2/empilhamento (bônus Interpessoal) - 2/empilhamento além do 1º (sanidade)
       luta: -2,
       pontaria: -2,
     });
   });
 
-  it('Muscular: +2 Luta/Força por empilhamento; penaliza Intelecto do 2º empilhamento em diante', () => {
+  it('Muscular: +2 Luta/Força por empilhamento; penaliza Intelecto do 2º empilhamento em diante; penaliza Vontade (sanidade) do 2º empilhamento em diante mesmo sem bônus de Vontade próprio', () => {
     expect(modificadoresTesteAmplificadores(porta('Muscular', 2))).toEqual({
       luta: 4,
       forca: 4,
       intelecto: -1,
+      vontade: -2,
     });
   });
 
-  it('dois amplificadores no mesmo atributo somam (ex.: Muscular penaliza Intelecto, Sinapses bonifica Intelecto)', () => {
+  it('dois amplificadores no mesmo atributo somam (ex.: Muscular penaliza Intelecto, Sinapses bonifica Intelecto); a penalidade de sanidade soma entre todos os amplificadores portados', () => {
     const amplificadores = [...porta('Muscular', 2), ...porta('Sinapses', 1)];
     expect(modificadoresTesteAmplificadores(amplificadores)).toEqual({
       luta: 4,
       forca: 4,
       intelecto: -1 + 2,
       sentidos: 2,
+      vontade: -2, // só Muscular (2 stacks) penaliza; Sinapses em 1 stack ainda não
     });
+  });
+});
+
+describe('penalidadeVontadeAmplificadores', () => {
+  it('sem amplificadores, 0', () => {
+    expect(penalidadeVontadeAmplificadores([])).toBe(0);
+  });
+
+  it('1º empilhamento de cada amplificador não penaliza (doc: "não tem efeitos de sanidade")', () => {
+    expect(penalidadeVontadeAmplificadores(porta('Defesa', 1))).toBe(0);
+  });
+
+  it('cada empilhamento além do 1º penaliza -2, bruto, sem depender do próprio efeito do amplificador', () => {
+    expect(penalidadeVontadeAmplificadores(porta('Defesa', 3))).toBe(4); // (3-1) × 2
+  });
+
+  it('amplificador que já nasce em ■■ (Veloz) já aplica a penalidade na 1ª compra', () => {
+    expect(penalidadeVontadeAmplificadores(porta('Veloz', 2))).toBe(2); // (2-1) × 2
+  });
+
+  it('soma entre múltiplos amplificadores diferentes portados ao mesmo tempo', () => {
+    const amplificadores = [...porta('Defesa', 3), ...porta('Reflexos', 2)];
+    expect(penalidadeVontadeAmplificadores(amplificadores)).toBe(4 + 2); // (3-1)×2 + (2-1)×2
   });
 });
 

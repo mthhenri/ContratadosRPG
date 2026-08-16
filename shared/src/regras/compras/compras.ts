@@ -1,4 +1,4 @@
-import { ItemCategoriaEnum, ModificacaoEfeitoTipoEnum } from '../../enums';
+import { FragmentoTipoEnum, ItemCategoriaEnum, ModificacaoEfeitoTipoEnum } from '../../enums';
 import { elevarDado } from '../descanso';
 import { obterPatente } from '../patente';
 import { CATALOGO_ITENS, ItemCatalogo } from './catalogo.dados';
@@ -97,10 +97,13 @@ export function interpretarBonusArmazenamento(dto: BonusArmazenamentoInterpretar
 /**
  * Bônus de inventário concedido por **este** item de Armazenamento vestido: bônus base do
  * catálogo (ou do item custom, via `resolverDadosItem`) + "Compartimentos Extras" (+1/stack) +
- * "Camadas Extras" (+0,5/stack) + efeitos `INVENTARIO` das mods custom. Reusado por
- * `calcularTotaisCarrinho` (soma no total do inventário principal) e por `listarSubInventarios`
- * (m3-44 — a mesma conta vira a **capacidade** do sub-inventário próprio de Pochete/Bolso de
- * Corpo, em vez de somar no pool principal).
+ * efeitos `INVENTARIO` das mods custom. Reusado por `calcularTotaisCarrinho` (soma no total do
+ * inventário principal) e por `listarSubInventarios` (m3-44 — a mesma conta vira a **capacidade**
+ * do sub-inventário próprio de Pochete/Bolso de Corpo, em vez de somar no pool principal).
+ *
+ * "Camadas Extras" **não entra aqui** (doc — tabela de Armazenamento: "+1 de resistência à Físico
+ * e Balístico" por stack) — ela soma resistência (`resistencia.ts`), nunca inventário. Antes desta
+ * correção o motor somava `empilhamentos × 0,5` de inventário por engano.
  */
 export function calcularBonusArmazenamentoItem(item: CarrinhoItemDto): number {
   const itemCatalogo = resolverDadosItem(item);
@@ -108,8 +111,6 @@ export function calcularBonusArmazenamentoItem(item: CarrinhoItemDto): number {
   item.modificacoes.forEach((modificacao) => {
     if (modificacao.nome === 'Compartimentos Extras') {
       slots += modificacao.empilhamentos;
-    } else if (modificacao.nome === 'Camadas Extras') {
-      slots += modificacao.empilhamentos * 0.5;
     }
     (modificacao.efeitos ?? []).forEach((efeito) => {
       if (efeito.tipo === ModificacaoEfeitoTipoEnum.INVENTARIO) {
@@ -311,10 +312,16 @@ export function contarComprasModificacao(dto: ComprasModificacaoContarDto): numb
  * modificação quando definido, senão o `PESO_MODIFICACAO_PADRAO` (+0,2). Espelha
  * `getModPeso` do site antigo. Um Fragmento Construtor nunca pesa por modificação (doc — "⬦
  * Construtor": "podem receber modificações como sua arma base... sem acréscimo de peso padrão das
- * modificações", `m3-65`).
+ * modificações", `m3-65`). Uma modificação de origem Fragmento **Potencializador** acoplado também
+ * nunca pesa — o fragmento avulso pesava sozinho no inventário; ao acoplar (`origemFragmento`) ele
+ * deixa de existir como item próprio e vira só uma modificação no alvo, então cobrar o peso padrão
+ * de mod (+0,2) em cima disso duplicaria/inventaria um peso que a doc não prevê ("⬥ Acoplamento").
  */
 export function obterPesoModificacao(dto: ModificacaoItemDto): number {
   if (dto.item.categoria === ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR) {
+    return 0;
+  }
+  if (dto.origemFragmento?.tipo === FragmentoTipoEnum.POTENCIALIZADOR) {
     return 0;
   }
   const definicao = listarModificacoesDisponiveis(dto.item).find((modificacao) => modificacao.nome === dto.modificacao);
@@ -707,7 +714,10 @@ export function calcularTotaisCarrinho(dto: TotaisCarrinhoCalcularDto): TotaisCa
         obterCustoModificacao({ item, modificacao: modificacao.nome }) *
         quantidade;
       if (ocupaPeso) {
-        pesoUsado += modificacao.empilhamentos * obterPesoModificacao({ item, modificacao: modificacao.nome }) * quantidade;
+        pesoUsado +=
+          modificacao.empilhamentos *
+          obterPesoModificacao({ item, modificacao: modificacao.nome, origemFragmento: modificacao.origemFragmento }) *
+          quantidade;
       }
     });
   });
@@ -747,7 +757,10 @@ export function listarSubInventarios(itens: readonly CarrinhoItemDto[]): readonl
     const reducaoPeso = itemCatalogo.inventarioProprio.reducaoPeso ?? 0;
     const pesoUsado = itensContidos.reduce((total, item) => {
       const pesoMods = item.modificacoes.reduce(
-        (soma, modificacao) => soma + modificacao.empilhamentos * obterPesoModificacao({ item, modificacao: modificacao.nome }),
+        (soma, modificacao) =>
+          soma +
+          modificacao.empilhamentos *
+            obterPesoModificacao({ item, modificacao: modificacao.nome, origemFragmento: modificacao.origemFragmento }),
         0,
       );
       const pesoEfetivo = Math.max(0, item.peso - reducaoPeso) + pesoMods;

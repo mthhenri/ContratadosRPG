@@ -1,5 +1,5 @@
 import type { FichaAtributosDto } from '../../dtos/ficha';
-import { AMPLIFICADORES, type AmplificadorAplicadoDto } from '../compras';
+import { AMPLIFICADORES, PENALIDADE_VONTADE_POR_EMPILHAMENTO, type AmplificadorAplicadoDto } from '../compras';
 
 /**
  * Efeito mecânico dos Amplificadores (`docs/core/sistema-v4.1.0.md` — "⬡ Amplificadores"). Um
@@ -106,6 +106,22 @@ const EFEITOS_ATRIBUTO: readonly EfeitoAtributoAmplificador[] = [
 ];
 
 /**
+ * Penalidade de **sanidade** por portar amplificadores (doc — "⬡ Amplificadores": "O primeiro
+ * empilhamento de cada amplificador não tem efeitos de sanidade... mas, à partir dele, cada
+ * empilhamento aplica -2 em testes de Vontade do agente. [...] Amplificadores que iniciam em ■■ já
+ * aplicam a penalidade"). Soma bruta por amplificador (`empilhamentos − 1`, nunca `comprasAmplificador`
+ * — a mesma constante `PENALIDADE_VONTADE_POR_EMPILHAMENTO` já usada em `calcularResumoCompras`
+ * para o badge informativo da aba de compras/inventário; esta função é o que falta pra o valor
+ * **de fato** entrar no teste de Vontade rolado, em vez de só aparecer como aviso).
+ */
+export function penalidadeVontadeAmplificadores(amplificadores: readonly AmplificadorAplicadoDto[]): number {
+  return amplificadores.reduce(
+    (total, amplificador) => total + Math.max(0, amplificador.empilhamentos - 1) * PENALIDADE_VONTADE_POR_EMPILHAMENTO,
+    0,
+  );
+}
+
+/**
  * Modificadores de teste por atributo vindos dos amplificadores portados — mesma semântica de
  * `FichaJogadorDadosDto.modificadoresTeste` ("somam direto na fórmula rolada, sem alterar o
  * atributo base"). Quem consome soma isto **por cima** do modificador manual já persistido, nunca
@@ -128,6 +144,7 @@ export function modificadoresTesteAmplificadores(
     const penalidade = penalidadeEscalada(amplificadores, efeito.nome, efeito.valorPenalidadePorEmpilhamento);
     efeito.penalidade.forEach((atributo) => somar(atributo, -penalidade));
   });
+  somar('vontade', -penalidadeVontadeAmplificadores(amplificadores));
 
   return total;
 }

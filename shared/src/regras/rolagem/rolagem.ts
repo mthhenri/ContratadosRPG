@@ -657,7 +657,7 @@ export function rolarFormula(dto: RolagemDto, rolarDado: RolarDado = rolarDadoPa
   if (!interpretacao.valida || !interpretacao.formula) {
     return null;
   }
-  return rolarInterpretada(interpretacao.formula, dto.atributos, dto.proficiencia, dto.nivel, rolarDado);
+  return rolarInterpretada(interpretacao.formula, dto.atributos, dto.proficiencia, dto.nivel, rolarDado, dto.critico ?? false);
 }
 
 /**

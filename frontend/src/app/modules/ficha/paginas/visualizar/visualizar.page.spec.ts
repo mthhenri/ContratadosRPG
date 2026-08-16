@@ -92,6 +92,7 @@ describe('FichaVisualizar', () => {
       nome: 'Kane',
       cor: null,
       imagemUrl: null,
+      imagemFoco: null,
       oculta: false,
       dados,
     };
@@ -357,6 +358,7 @@ describe('FichaVisualizar', () => {
       expect(fichaService.alterarFicha).toHaveBeenCalledWith(42, {
         nome: 'Kane',
         cor: null,
+        imagemFoco: null,
         oculta: false,
         dados: { ...dados, estado: { ...dados.estado, vidaAtual: 2 } },
       });
@@ -386,6 +388,7 @@ describe('FichaVisualizar', () => {
       expect(fichaService.alterarFicha).toHaveBeenCalledWith(42, {
         nome: 'Kane',
         cor: null,
+        imagemFoco: null,
         oculta: false,
         dados: { ...dados, estado: { ...dados.estado, sequelas: novasSequelas } },
       });
@@ -411,6 +414,7 @@ describe('FichaVisualizar', () => {
       expect(fichaService.alterarFicha).toHaveBeenCalledWith(42, {
         nome: 'Kane',
         cor: null,
+        imagemFoco: null,
         oculta: false,
         dados: {
           ...dados,
@@ -441,6 +445,7 @@ describe('FichaVisualizar', () => {
       expect(fichaService.alterarFicha).toHaveBeenCalledWith(42, {
         nome: 'Kane',
         cor: null,
+        imagemFoco: null,
         oculta: false,
         dados: { ...dados, habilidades: novasHabilidades },
       });
@@ -461,6 +466,7 @@ describe('FichaVisualizar', () => {
       nome: 'Kane',
       cor: null,
       imagemUrl: null,
+      imagemFoco: null,
       oculta: false,
       dados: {
         ...dados,
@@ -945,6 +951,7 @@ describe('FichaVisualizar', () => {
       nome: 'Kane Ferido',
       cor: null,
       imagemUrl: null,
+      imagemFoco: null,
       oculta: false,
       dados: { ...dados, estado: { ...dados.estado, vidaAtual: 1 } },
     };

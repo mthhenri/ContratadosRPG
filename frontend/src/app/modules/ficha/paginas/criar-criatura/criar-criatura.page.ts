@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, finalize, of } from 'rxjs';
@@ -42,6 +42,7 @@ import {
 } from '@contratados-rpg/shared/regras/criatura';
 import { FichaService } from '../../ficha.service';
 import { lerParamRota } from '../../ler-param-rota';
+import { GuiaCriacaoRascunhoService } from '../../guia-criacao-rascunho.service';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import {
@@ -76,8 +77,8 @@ const CAMPOS: readonly { readonly chave: ChaveAtributo; readonly nome: string }[
  * para feedback de progresso do passo; a validação que persiste é sempre `validarFichaCriatura`
  * (`shared/regras/criatura`), chamada pelo backend antes de gravar (`m4-03`). */
 const QUANTIDADE_ESPERADA_MODIFICADOR: Readonly<Record<ModificadorCriaturaEnum, number>> = {
-  [ModificadorCriaturaEnum.FORTE]: 2, [ModificadorCriaturaEnum.MEDIO]: 3,
-  [ModificadorCriaturaEnum.FRACO]: 3, [ModificadorCriaturaEnum.FRAGIL]: 2,
+  [ModificadorCriaturaEnum.FRAGIL]: 2, [ModificadorCriaturaEnum.FRACO]: 3,
+  [ModificadorCriaturaEnum.MEDIO]: 3, [ModificadorCriaturaEnum.FORTE]: 2,
 };
 
 /** Faixa de VD típica por NA (doc — "Definindo o Valor de Desafio (VD)") — só texto de referência
@@ -105,11 +106,11 @@ interface LinhaResistencia { readonly tipo: TipoDanoEnum; readonly subtipo: stri
 const linhaResistenciaVazia = (): LinhaResistencia => ({ tipo: TipoDanoEnum.FISICO, subtipo: '', valor: 0 });
 
 interface LinhaAtaque {
-  readonly nome: string; readonly atributo: ChaveAtributo; readonly custoAcao: CustoAcaoEnum;
-  readonly dano: string; readonly tipoDano: TipoDanoEnum; readonly area: boolean; readonly efeito: string;
+  readonly nome: string; readonly teste: string; readonly custoAcao: CustoAcaoEnum;
+  readonly dano: string; readonly danoCritico: string; readonly area: boolean; readonly efeito: string;
 }
 const linhaAtaqueVazia = (): LinhaAtaque => ({
-  nome: '', atributo: 'luta', custoAcao: CustoAcaoEnum.PADRAO, dano: '', tipoDano: TipoDanoEnum.FISICO,
+  nome: '', teste: '', custoAcao: CustoAcaoEnum.PADRAO, dano: '', danoCritico: '',
   area: false, efeito: '',
 });
 
@@ -196,8 +197,9 @@ const paraResistenciaDto = (linha: LinhaResistencia): FichaCriaturaResistenciaDt
   tipo: linha.tipo, subtipo: linha.subtipo.trim() || null, valor: linha.valor,
 });
 const paraAtaqueDto = (linha: LinhaAtaque): FichaCriaturaAtaqueDto => ({
-  nome: linha.nome.trim(), atributo: linha.atributo, custoAcao: linha.custoAcao, dano: linha.dano.trim(),
-  tipoDano: linha.tipoDano, area: linha.area, ...(linha.efeito.trim() ? { efeito: linha.efeito.trim() } : {}),
+  nome: linha.nome.trim(), teste: linha.teste.trim(), custoAcao: linha.custoAcao, dano: linha.dano.trim(),
+  danoCritico: linha.danoCritico.trim(), area: linha.area,
+  ...(linha.efeito.trim() ? { efeito: linha.efeito.trim() } : {}),
 });
 const paraHabilidadeDto = (linha: LinhaHabilidade): FichaCriaturaHabilidadeDto => ({
   nome: linha.nome.trim(), tipo: linha.tipo, descricao: linha.descricao.trim(),
@@ -213,9 +215,9 @@ const paraHabilidadeDto = (linha: LinhaHabilidade): FichaCriaturaHabilidadeDto =
  * contratos, não um" da m4-01).
  *
  * ── Decisões de abertura desta task ─────────────────────────────────────────────
- * - **Sem rascunho persistido**: diferente do guia de jogador (`GuiaCriacaoRascunhoService`),
- *   este assistente não salva progresso local. Entregável da task não pede retomada, e o mestre
- *   nunca perde uma ficha de jogador alheia ao fechar por engano — o risco é menor.
+ * - **Rascunho persistido** (mesmo `GuiaCriacaoRascunhoService` do guia de jogador, ajuste
+ *   pós-mockup): a chave leva um `tipo` (`'agente' | 'criatura'`) desde essa mudança — os dois
+ *   guias podem ter rascunho pendente na mesma campanha, no mesmo navegador, sem se sobrescrever.
  * - **`nome` da ficha = `designacao`**: o DTO de nível de ficha (`FichaCriaturaCriarDto.nome`)
  *   não tem campo próprio no roteiro do guia — a Designação da Ficha de Identidade já cumpre
  *   esse papel, sem precisar de um segundo campo quase idêntico.
@@ -239,6 +241,7 @@ export class CriaturaCriar {
   private readonly router = inject(Router);
   private readonly fichaService = inject(FichaService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly rascunhos = inject(GuiaCriacaoRascunhoService);
 
   protected readonly campanhaId = Number(lerParamRota(this.rota, 'campanhaId'));
   protected readonly passos = PASSOS;
@@ -275,6 +278,11 @@ export class CriaturaCriar {
   protected readonly visitado = signal(0);
   protected readonly criando = signal(false);
   protected readonly erro = signal('');
+  /** Rascunho salvo neste dispositivo (mesmo padrão do guia de agente, `criar.page.ts`). */
+  protected readonly temRascunho = signal(false);
+  /** Confirmação de saída do guia — substitui o `confirm()` nativo por um `<dialog>`. */
+  protected readonly confirmandoSaida = signal(false);
+  private readonly sairDialog = viewChild<ElementRef<HTMLDialogElement>>('sairDialog');
 
   protected readonly estado = signal<EstadoGuiaCriatura>(ESTADO_INICIAL);
 
@@ -289,6 +297,31 @@ export class CriaturaCriar {
 
   constructor() {
     this.destroyRef.onDestroy(() => this.revogarPreviewImagem());
+    const existente = this.rascunhos.recuperar<EstadoGuiaCriatura>(this.campanhaId, 'criatura');
+    this.temRascunho.set(existente !== null);
+    // `!this.temRascunho()` evita sobrescrever o rascunho salvo antes do mestre decidir "Retomar"
+    // ou "Começar do zero" — mesma trava do guia de agente (`criar.page.ts`).
+    effect(() => { if (!this.temRascunho()) this.rascunhos.salvar(this.campanhaId, 'criatura', this.estado()); });
+    // Sincroniza o `<dialog>` nativo de saída com `confirmandoSaida()` — mesmo padrão do guia de
+    // agente; `typeof` guarda o ambiente de teste (jsdom não implementa `HTMLDialogElement`).
+    effect(() => {
+      const dialog = this.sairDialog()?.nativeElement;
+      if (!dialog || typeof dialog.showModal !== 'function' || typeof dialog.close !== 'function') return;
+      if (this.confirmandoSaida()) { if (!dialog.open) dialog.showModal(); } else { dialog.close(); }
+    });
+  }
+
+  protected retomar(): void {
+    const salvo = this.rascunhos.recuperar<EstadoGuiaCriatura>(this.campanhaId, 'criatura');
+    if (salvo) {
+      this.estado.set(salvo);
+      this.visitado.set(salvo.passo);
+    }
+    this.temRascunho.set(false);
+  }
+  protected recomecar(): void {
+    this.rascunhos.limpar(this.campanhaId, 'criatura');
+    this.temRascunho.set(false);
   }
 
   /** Valida a imagem escolhida no client (tipo/tamanho) — mesmos limites de `FichaService` (backend). */
@@ -405,6 +438,23 @@ export class CriaturaCriar {
       : null;
   }
 
+  /**
+   * Fórmula real do teste de atributo (`<valor>d20kh1±<modificador>`, mesma notação de
+   * `rolarTesteAtributoCriatura`) — "Atributo Efetivo" não é um número que a criatura carrega em
+   * lugar nenhum da ficha, é só um passo intermediário do cálculo; o guia mostra a fórmula que
+   * será de fato rolada, não esse intermediário.
+   */
+  protected testeAtributoFormula(chave: ChaveAtributo): string | null {
+    const efetivo = this.atributoEfetivo(chave);
+    if (efetivo === null) {
+      return null;
+    }
+    const atributoFinal = this.estado().atributos[chave];
+    const modificador = efetivo - atributoFinal;
+    const sinal = modificador < 0 ? '-' : '+';
+    return `${atributoFinal}d20kh1${sinal}${Math.abs(modificador)}`;
+  }
+
   protected passoAtributo(chave: ChaveAtributo, delta: number): void {
     const atual = this.estado();
     // Realocação retira no máximo 3 pontos da Base (doc: "⬥ Realocação de Pontos"), sem nunca negativar.
@@ -418,6 +468,13 @@ export class CriaturaCriar {
   }
   protected contagemModificador(tipo: ModificadorCriaturaEnum): number {
     return CAMPOS.filter((campo) => this.estado().modificadores[campo.chave] === tipo).length;
+  }
+  /** Trava o botão de um `tipo` já com a quota cheia (doc — "Distribuição": 2 Forte / 3 Médio / 3
+   * Fraco / 2 Frágil) para todo atributo que ainda não é desse tipo — quem já está marcado
+   * continua clicável, pra permitir desmarcar ou trocar de tipo sem precisar liberar vaga antes. */
+  protected modificadorDesabilitado(chave: ChaveAtributo, tipo: ModificadorCriaturaEnum): boolean {
+    if (this.estado().modificadores[chave] === tipo) return false;
+    return this.contagemModificador(tipo) >= QUANTIDADE_ESPERADA_MODIFICADOR[tipo];
   }
   protected distribuicaoModificadoresCompleta(): boolean {
     const modificadores = this.estado().modificadores;
@@ -559,9 +616,11 @@ export class CriaturaCriar {
     this.atualizar({ passo: proximo });
   }
   protected voltar(): void { this.atualizar({ passo: Math.max(0, this.estado().passo - 1) }); }
-  protected sair(): void {
-    void this.router.navigate(['/painel', this.campanhaId]);
-  }
+  protected sair(): void { this.confirmandoSaida.set(true); }
+  protected confirmarSaida(): void { this.confirmandoSaida.set(false); void this.router.navigate(['/painel', this.campanhaId]); }
+  protected cancelarSaida(): void { this.confirmandoSaida.set(false); }
+  /** Clique no `::backdrop` do `<dialog>` cai no próprio elemento (não num filho) — fecha como "Continuar aqui". */
+  protected fecharAoClicarFora(evento: MouseEvent): void { if (evento.target === evento.currentTarget) this.cancelarSaida(); }
 
   protected criar(): void {
     if (this.criando() || this.violacoesFinais().length > 0) return;
@@ -573,7 +632,8 @@ export class CriaturaCriar {
       .pipe(finalize(() => this.criando.set(false)))
       .subscribe({
         next: (ficha) => {
-          const destino = ['/painel', this.campanhaId, 'ficha', ficha.id];
+          this.rascunhos.limpar(this.campanhaId, 'criatura');
+          const destino = ['/painel', this.campanhaId, 'criatura', ficha.id];
           const arquivo = this.imagemArquivo();
           // Imagem (mesmo padrão do guia de jogador, m3-62): a ficha já existe — segundo request,
           // em sequência. Falha no upload não desfaz a criatura criada nem trava a navegação; só

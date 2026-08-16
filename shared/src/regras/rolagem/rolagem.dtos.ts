@@ -115,6 +115,8 @@ export interface RolagemDto {
   readonly proficiencia?: number | null;
   /** Nível do agente — resolvido pela fonte `NIV` nas fórmulas (m3-22). Ausente = 0. */
   readonly nivel?: number;
+  /** Rolagem de crítico (m3-30): dobra dados/fixos/atributos (exceto PROF/NIV). Ausente = `false`. */
+  readonly critico?: boolean;
 }
 
 /** Dados rolados de um termo (ex.: `2D6` → `[4, 1]`), já com o sinal aplicado no subtotal. */

@@ -1369,6 +1369,30 @@
     cursor: pointer;
   }
 
+  // Selo de enquadramento (pan/zoom, ajuste pós-mockup) no canto superior esquerdo — único canto
+  // livre (upload no inferior direito, remover no superior direito). Só existe junto do `<img>`
+  // (sem imagem, nada a enquadrar). Mesmo racional de tamanho/alvo-de-toque do `&__avatar-remover`.
+  &__avatar-enquadrar {
+    position: absolute;
+    left: -4px;
+    top: -4px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    color: var(--text-dim);
+    font-size: 12px;
+    cursor: pointer;
+
+    &:hover { color: var(--accent); border-color: var(--accent-border); }
+    @include alvo-de-toque($posicionar: false);
+  }
+
   // Selo de remover no canto superior direito — só existe junto do `<img>` (sem imagem, nada a
   // remover). 24px (era 18px), mesmo racional de tamanho/alvo-de-toque do `&__avatar-upload` acima.
   &__avatar-remover {

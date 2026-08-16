@@ -1,9 +1,13 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-14 · **Última decisão registrada:** `m4-04c` (polimento de UI fora
-> da fila de specs, a pedido direto do autor) — passo // Atributos da criatura em 3 cards
-> (Base/Limite/Pontos de Ajuste), contador real de Pontos de Ajuste travando o avanço em saldo 0
-> (mesmo padrão do guia de jogador) e correção do corte do stepper no mobile — ver seção 4
+> **Última revisão:** 2026-08-16 · **Última decisão registrada:** ajuste pós-mockup na ficha de
+> criatura/jogador, fora da fila de specs, a pedido direto do autor — cor de identidade e seletor
+> de enquadramento de imagem (pan/zoom, novo `FichaImagemFocoDto`/coluna `imagem_foco`, sem
+> processamento de imagem no servidor) na criatura e reaproveitado no jogador; ícone de rolagem
+> unificado pra **d20** em toda a ficha de jogador (o sistema não tem d6); Fraquezas em 2 colunas;
+> barra superior da criatura movida pra dentro do componente (igual estrutura da de jogador); e a
+> antiga aba "Informações" da criatura virou 4 abas (Geral/Descrição/Ataques/Habilidades) — mobile
+> segue pendente de `m4-10` — ver seção 4
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -39,19 +43,20 @@ decidiu DTOs de operação **próprios** para criatura (`FichaCriaturaCriarDto`/
 vez de unir com os contratos de jogador — mesma lógica de "dois contratos, não um" já fechada
 em `m4-01` para o documento de jogo (ver seção 6). A `m4-04` verificou ao vivo que abrir a
 ficha recém-criada em `/painel/:campanhaId/ficha/:id` (`FichaVisualizacao`, telas de jogador)
-quebra com `TypeError` — a tela ainda não sabe ler `dados` no formato de criatura; registrado
-como pendência para quem fechar a tela dedicada (§14 já bloqueia jogadores, então o erro só
-afeta o mestre navegando direto após criar — ver seção 7). Entre a `m4-04` e a `m4-05`, duas
-sessões de **polimento de UI** fora da fila de specs (pedido direto do autor, não tasks
-numeradas): `m4-04b` revisou o assistente de criação de criatura (upload de imagem, espaçamento
-entre campos) e o painel do mestre (botões "Nova Criatura"/"Novo Agente", tira de estatísticas
-reduzida a "Convite", coluna Esquadrão dividida com a subseção "Criaturas" — exigiu expor
-`tipo`/`na` em `FichaResumoDto` e ajustar `FichaRepository.colunasResumo` para os dois formatos de
-`dados`); `m4-04c` trocou o bloco único "Base do VD" do passo // Atributos por 3 cards
-(Base/Limite/Pontos de Ajuste), deu ao card de Pontos de Ajuste um contador real que trava o
-avanço em saldo 0 (mesmo padrão do guia de jogador) e corrigiu o corte do botão "+" do stepper no
-mobile (ver seção 4). Próxima da fila M4: **`m4-05`** (contrato `FichaNpcDadosDto`, início da
-frente de NPC).
+quebrava com `TypeError` — resolvido com uma tela dedicada, `CriaturaVisualizacao` (ver seção 7).
+Entre a `m4-04` e a `m4-05`, várias sessões de **polimento de UI** fora da fila de specs (pedido
+direto do autor, não tasks numeradas): `m4-04b` revisou o assistente de criação de criatura
+(upload de imagem, espaçamento entre campos) e o painel do mestre (botões "Nova Criatura"/"Novo
+Agente", tira de estatísticas reduzida a "Convite", coluna Esquadrão dividida com a subseção
+"Criaturas" — exigiu expor `tipo`/`na` em `FichaResumoDto` e ajustar
+`FichaRepository.colunasResumo` para os dois formatos de `dados`), construiu a tela dedicada
+`CriaturaVisualizacao` citada acima e, em 2026-08-15, realinhou o layout dela a um mockup
+reconstruído pelo autor (`docs/design/examples/ficha-de-criatura.html`) — de coluna única
+numerada pra dashboard de 3 colunas com abas, mesmo shell de `FichaVisualizacao` (ver seção 4);
+`m4-04c` trocou o bloco único "Base do VD" do passo // Atributos por 3 cards (Base/Limite/Pontos
+de Ajuste), deu ao card de Pontos de Ajuste um contador real que trava o avanço em saldo 0 (mesmo
+padrão do guia de jogador) e corrigiu o corte do botão "+" do stepper no mobile (ver seção 4).
+Próxima da fila M4: **`m4-05`** (contrato `FichaNpcDadosDto`, início da frente de NPC).
 
 O M6 também está aberto, em paralelo. A próxima task encadeada nessa frente é
 `m6-08-impersonacao-administrativa.spec.md`, que adiciona impersonação administrativa auditável.
@@ -406,6 +411,59 @@ jogador): reproduz "A Estátua" ponta a ponta com os mesmos valores do documento
 1.050, Defesa 30, custo de resistências 52/60, Atributo Efetivo de cada linha), persiste
 corretamente e o jogador sem concessão não a vê (§14). Pendência registrada — ver seção 7.
 
+**Visualização/edição** (`frontend/src/app/modules/ficha/componentes/criatura-visualizacao/`,
+`CriaturaVisualizacao` + página `paginas/visualizar-criatura/`) — rota
+`/painel/:campanhaId/criatura/:id`, mesma guarda de mestre da rota `nova`; resolve a pendência da
+`m4-04` com tela dedicada (não um `modo` novo em `FichaVisualizacao`). Barra superior própria do
+componente (`criatura__topo`, rótulo + régua + `chip-classificacao` `FICHA-CRT-{id zero-padded}`,
+igual estrutura de `ficha-visao__topo` do jogador — não fica na página) seguida de dashboard de 3
+colunas — Identidade (avatar com cor de identidade via `<input type="color">`, upload de imagem e
+seletor de enquadramento — ver adiante —, designação, chips de classificação Origem/Porte/
+Comportamento, NA em destaque, VD/Tenacidade/Defesa, Vida, Resistências em grade compacta,
+Fraquezas em grade de **2 colunas**, divergência deliberada do mockup — que mostra 1) · Atributos
+(grade Físicos/Mentais de cards "sigla + valor + Atributo Efetivo + rolar"; o seletor de Modificador
+de 4 barras não fica no card — só dentro do modo de edição) · Status com **4 abas** (`AbaCriatura =
+'geral' | 'descricao' | 'ataques' | 'habilidades'`, também divergência deliberada do mockup — que
+mostra 2): Geral (Cadência + Bônus de Iniciativa + Deslocamento na mesma linha — deslocamento é um
+terceiro item de `.criatura__stats--info`, não card próprio — e Regeneração opcional abaixo),
+Descrição (Conceito/Gancho/Motivação, Natureza Física/Tema de Horror, Anotações), Ataques e
+Habilidades (cada uma sua própria aba, grades de cards, Ataque com botões Teste e Dano) — mesmo
+shell/padrões de `FichaVisualizacao` (jogador) e dos blocos canônicos de
+`docs/design/tema/_componentes.scss`, alvo de fidelidade
+`docs/design/examples/ficha-de-criatura.html`. Abas sempre ocupam 100% da barra (`flex: 1 1 0` em
+cada `.criatura__aba` — divergência deliberada do `.abas` canônico, que é do tamanho do conteúdo).
+Edição no próprio lugar campo a campo, igual liberdade da ficha de jogador; `FichaEdicaoCriaturaService`
+faz o mesmo papel de `FichaEdicaoService` (debounce + `PUT` em lote). Nas listas de item
+(`criatura-ataque-lista`/`criatura-habilidade-lista`/`criatura-resistencia-lista`, esta última
+reusada por Resistências e Fraquezas) editar/remover por item só aparecem depois de um clique no
+botão "Editar"/"Concluir" do cabeçalho da lista (`modoEdicao`, local a cada lista) — "Adicionar"
+continua sempre visível, só as ações destrutivas/por-item exigem entrar no modo. Dois blocos fogem
+do "edita direto no valor" e usam lápis de seção, como o lápis de Atributos da ficha de jogador:
+**Classificação** (os quatro chips viram selects rotulados de uma vez, porque trocar um chip por um
+select fazia a linha saltar) e **Atributos**, este com **rascunho + Salvar/Cancelar** — a
+distribuição de Modificadores é cota fixa (2 Forte / 3 Médio / 3 Fraco / 2 Frágil,
+`shared/regras/criatura`), então emitir a cada clique deixava a ficha inválida e o backend recusava
+a gravação; o Salvar só libera quando `validarFichaCriatura` não acusa mais violação de modificador.
+Dois cuidados que valem pra qualquer tela: `<select>` de edição usa `[selected]` na `<option>` (com
+`[value]` no `<select>` as opções do `@for` ainda não existem e o controle abre na 1ª), e `.botao`
+precisa ser copiado pro SCSS de cada componente (a definição da página não atravessa o
+encapsulamento). Só desktop por ora — refinamento mobile é `m4-10`, ainda no backlog.
+
+**Enquadramento do avatar (pan/zoom) — jogador e criatura.** Retomada do que `m3-62` tinha deixado
+fora de escopo ("crop/editor de imagem no client"), sem processamento de imagem no servidor: só um
+metadado (`FichaImagemFocoDto { x, y, escala }`, percentual + zoom, coluna `imagem_foco` JSONB) se
+soma a `imagemUrl`, aplicado no avatar via `object-position` + `transform: scale()`. Componente
+reusável `AjusteEnquadramentoImagem` (`frontend/.../componentes/ajuste-enquadramento-imagem/`) —
+arraste nativo (`pointerdown/move/up`, sem lib) + slider de zoom — renderiza como painel sobreposto
+abaixo do avatar nos dois componentes (`FichaVisualizacao`/`CriaturaVisualizacao`). Selecionar um
+arquivo novo abre o seletor automaticamente antes do upload; um selo dedicado (canto livre do
+avatar) reabre o seletor pra reajustar uma imagem já salva, sem reenviar arquivo. `imagemFoco`
+viaja pelo `PUT /ficha/:id` genérico (como `cor`), não pelo endpoint multipart de imagem — são só
+números. Remover a imagem zera o enquadramento junto (sem metadado órfão). Ícone de rolagem
+**d20** (não d6) em todo gatilho da ficha de jogador — o sistema só tem testes `Nd20kh1±mod`, então
+a troca de `nome="dado"` → `nome="d20"` (`app-icone`) foi total, sem glifo de d6 sobrando em lugar
+nenhum.
+
 **Polimento de UI — `m4-04b`:** passo // Identidade ganhou upload de imagem de registro (mesmo
 padrão de avatar do guia de jogador, `FichaService.alterarImagem`, segundo request em sequência
 após criar a ficha — layout `.guia__campos--base`, caixa à esquerda + Designação/Origem à
@@ -635,15 +693,13 @@ Nenhuma decisão de rumo em aberto no momento.
 A única que existia — **identidade visual do site** — está **resolvida**: tema "Terminal de
 Contenção", handoff completo em `docs/design/`, com troca em runtime entregue na `m1-13`.
 
-**Pendência registrada na `m4-04`:** `FichaVisualizacao` (a tela de ficha de jogador,
-`/painel/:campanhaId/ficha/:id`) não sabe ler `ficha.dados` no formato de criatura — abrir uma
-criatura recém-criada por ali lança `TypeError` em `calcularVida` (assume campos de jogador que
-não existem no documento de criatura). §14 já impede qualquer jogador de chegar lá sem
-concessão, então hoje só afeta o mestre navegando direto após criar. A spec `m4-04` previu esse
-caso ("se precisar de tela dedicada além da reutilização de `FichaVisualizacao`/`modo`,
-registrar como pendência") — decisão de rumo (tela dedicada de criatura vs. adaptar
-`FichaVisualizacao` com um `modo`/tipo novo) fica para quem fechar `m4-09` (listagem/revelação
-no painel do mestre), quando a UI de leitura de criatura precisar existir de qualquer forma.
+**Resolvida na `m4-04b`:** a pendência registrada na `m4-04` (`FichaVisualizacao`, a tela de ficha
+de jogador, não sabia ler `ficha.dados` no formato de criatura — abrir uma criatura recém-criada
+por `/painel/:campanhaId/ficha/:id` lançava `TypeError`) foi fechada com a opção prevista pela
+própria spec: **tela dedicada** (`CriaturaVisualizacao`, `/painel/:campanhaId/criatura/:id`), não
+um `modo`/tipo novo em `FichaVisualizacao` — ver seção 4, parágrafo "Visualização/edição".
+`FichaVisualizacao` continua sem entender o formato de criatura, mas não precisa mais: a navegação
+pós-criação e o card de criatura no painel do mestre (`m4-04b`) já levam à tela certa.
 
 Questões que precisam de resposta do autor mas não são decisões de rumo estão marcadas com **⚠** na
 seção 1 e em [`PROBLEMS.md`](PROBLEMS.md).

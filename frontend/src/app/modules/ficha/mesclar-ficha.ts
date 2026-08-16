@@ -1,32 +1,38 @@
 import type { FichaAlteradaDto } from '@contratados-rpg/shared/dtos/ficha';
 
 /**
- * Merge de três vias entre o documento da ficha que veio do servidor (`base`), o que está na tela
- * com as edições do usuário (`local`) e o que acabou de chegar por `ficha:alterada` (`remoto`).
+ * Merge de três vias genérico (m4-04b) — mesmo algoritmo campo a campo de {@link mesclarFicha},
+ * reusável por qualquer documento de ficha (jogador ou criatura): a lógica é 100% estrutural
+ * (objetos/arrays), nunca lê nome de campo específico de um tipo.
  *
  * Para cada **folha**: se o `local` divergiu da `base`, o usuário editou aquele campo e ele
  * prevalece; senão, entra o valor do `remoto`. Assim um evento remoto atualiza tudo o que o usuário
  * **não** está editando, e o `PUT` seguinte — que serializa o documento inteiro — deixa de
  * sobrescrever a edição concorrente de outro usuário (m3-17).
  *
- * **Folhas** são primitivos e **arrays**: as sub-coleções (`sequelas`, `traumas`, `lesoes`,
- * `habilidades`, `inventario.*`) são atômicas, tudo ou nada. O contrato `m3-01` não dá `id` aos
- * itens, então não há identidade estável para mesclar item a item.
+ * **Folhas** são primitivos e **arrays**: as sub-coleções são atômicas, tudo ou nada — os
+ * contratos de ficha não dão `id` aos itens, então não há identidade estável para mesclar item a
+ * item.
  *
- * **Chaves ausentes** (`derivados`, `estado.vidaMaxima`… faltam em fichas anteriores à `m3-10`) são
- * tratadas pela mesma regra: a presença conta como valor. Chave que só o `remoto` tem entra; chave
- * que a `base` tinha e o `remoto` removeu sai; chave que só o `local` tem é edição local e fica.
+ * **Chaves ausentes** são tratadas pela mesma regra: a presença conta como valor. Chave que só o
+ * `remoto` tem entra; chave que a `base` tinha e o `remoto` removeu sai; chave que só o `local`
+ * tem é edição local e fica.
  *
  * Não muta os documentos recebidos.
  *
  * Não vive em `shared/` de propósito: é política de apresentação, não regra de jogo (§6.3).
  */
+export function mesclarDocumento<T>(base: T, local: T, remoto: T): T {
+  return mesclarValor(base, local, remoto) as T;
+}
+
+/** Mirror tipado de {@link mesclarDocumento} para o documento de ficha de jogador. */
 export function mesclarFicha(
   base: FichaAlteradaDto,
   local: FichaAlteradaDto,
   remoto: FichaAlteradaDto,
 ): FichaAlteradaDto {
-  return mesclarValor(base, local, remoto) as FichaAlteradaDto;
+  return mesclarDocumento(base, local, remoto);
 }
 
 /** Marcador de chave ausente — distinto de `undefined` como valor. */

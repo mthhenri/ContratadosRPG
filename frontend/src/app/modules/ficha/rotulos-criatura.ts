@@ -102,6 +102,18 @@ const ROTULO_REGENERACAO_MODO: Record<RegeneracaoModoEnum, string> = {
   [RegeneracaoModoEnum.CONDICIONAL]: 'Condicional',
 };
 
+/**
+ * Quebra um rótulo composto `"Nome (detalhe)"` em suas duas partes. Tenacidade, Porte e Cadência
+ * carregam o número/dimensão entre parênteses no próprio rótulo, mas o mockup
+ * (`docs/design/examples/ficha-de-criatura.html`) mostra as duas partes com pesos diferentes
+ * ("Resiliente" grande + "×35" apagado; "Porte Médio" no chip + "1×1m" na dica) — derivar do mapa
+ * existente evita uma segunda tabela que possa divergir da primeira.
+ */
+const separarRotulo = (rotulo: string): { readonly nome: string; readonly detalhe: string | null } => {
+  const partes = /^(.*?)\s*\(([^)]*)\)$/.exec(rotulo);
+  return partes ? { nome: partes[1], detalhe: partes[2] } : { nome: rotulo, detalhe: null };
+};
+
 export const rotuloOrigemCriatura = (valor: OrigemCriaturaEnum): string => ROTULO_ORIGEM[valor];
 export const rotuloComportamento = (valor: ComportamentoCriaturaEnum): string => ROTULO_COMPORTAMENTO[valor];
 export const rotuloNivelAmeaca = (valor: NivelAmeacaEnum): string => ROTULO_NA[valor];
@@ -110,8 +122,28 @@ export const rotuloPorte = (valor: PorteCriaturaEnum): string => ROTULO_PORTE[va
 export const rotuloCadencia = (valor: CadenciaEnum): string => ROTULO_CADENCIA[valor];
 export const rotuloModificadorCriatura = (valor: ModificadorCriaturaEnum): string => ROTULO_MODIFICADOR[valor];
 export const rotuloCustoAcao = (valor: CustoAcaoEnum): string => ROTULO_CUSTO_ACAO[valor];
+/** "Padrão" de `"Ação Padrão"` — forma curta usada nos selos do card de Ataque, onde o prefixo
+ * "Ação" se repetiria em todos e só ocuparia largura (o rótulo inteiro fica no formulário). */
+export const rotuloCustoAcaoCurto = (valor: CustoAcaoEnum): string =>
+  ROTULO_CUSTO_ACAO[valor].replace(/^Ação\s+/, '');
 export const rotuloHabilidadeTipoCriatura = (valor: HabilidadeTipoCriaturaEnum): string =>
   ROTULO_HABILIDADE_TIPO[valor];
 export const rotuloRegeneracaoIntensidade = (valor: RegeneracaoIntensidadeEnum): string =>
   ROTULO_REGENERACAO_INTENSIDADE[valor];
 export const rotuloRegeneracaoModo = (valor: RegeneracaoModoEnum): string => ROTULO_REGENERACAO_MODO[valor];
+
+/** "Padrão" de `"Padrão (×35)"` — o nome da Tenacidade sem o multiplicador. */
+export const nomeTenacidade = (valor: TenacidadeEnum): string => separarRotulo(ROTULO_TENACIDADE[valor]).nome;
+/** "×35" de `"Padrão (×35)"` — o multiplicador de Vida da Tenacidade. */
+export const multiplicadorTenacidade = (valor: TenacidadeEnum): string | null =>
+  separarRotulo(ROTULO_TENACIDADE[valor]).detalhe;
+/** "Médio" de `"Médio (1×1m)"` — o nome do Porte sem a dimensão. */
+export const nomePorte = (valor: PorteCriaturaEnum): string => separarRotulo(ROTULO_PORTE[valor]).nome;
+/** "1×1m" de `"Médio (1×1m)"` — a dimensão ocupada pelo Porte. */
+export const dimensaoPorte = (valor: PorteCriaturaEnum): string | null =>
+  separarRotulo(ROTULO_PORTE[valor]).detalhe;
+/** "Singular" de `"Singular (1 turno/rodada)"` — o nome da Cadência sem o ritmo. */
+export const nomeCadencia = (valor: CadenciaEnum): string => separarRotulo(ROTULO_CADENCIA[valor]).nome;
+/** "1 turno/rodada" de `"Singular (1 turno/rodada)"` — o ritmo de turnos da Cadência. */
+export const ritmoCadencia = (valor: CadenciaEnum): string | null =>
+  separarRotulo(ROTULO_CADENCIA[valor]).detalhe;

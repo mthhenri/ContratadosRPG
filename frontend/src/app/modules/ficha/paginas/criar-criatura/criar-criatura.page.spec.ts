@@ -16,18 +16,24 @@ import {
 import type { FichaCriaturaCriarDto, FichaCriaturaDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { FichaService } from '../../ficha.service';
+import { GuiaCriacaoRascunhoService } from '../../guia-criacao-rascunho.service';
 import { CriaturaCriar } from './criar-criatura.page';
 
 describe('CriaturaCriar', () => {
   const CAMPANHA_ID = 57;
 
-  function montar(campanhaId: number | null = CAMPANHA_ID) {
+  function montar(campanhaId: number | null = CAMPANHA_ID, rascunhoExistente: unknown = null) {
     const router = { navigate: vi.fn(() => Promise.resolve(true)) };
     const fichaService = {
       criarFichaCriatura: vi.fn(() => of({
         id: 99, campanhaId: CAMPANHA_ID, usuarioId: 1, nome: 'A Estátua', cor: null,
         imagemUrl: null, oculta: true, dados: {} as FichaCriaturaDadosDto,
       })),
+    };
+    const rascunhos = {
+      recuperar: vi.fn(() => rascunhoExistente),
+      salvar: vi.fn(),
+      limpar: vi.fn(),
     };
 
     TestBed.configureTestingModule({
@@ -36,12 +42,13 @@ describe('CriaturaCriar', () => {
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => campanhaId !== null ? String(campanhaId) : null } }, parent: null } },
         { provide: Router, useValue: router },
         { provide: FichaService, useValue: fichaService },
+        { provide: GuiaCriacaoRascunhoService, useValue: rascunhos },
       ],
     });
 
     const fixture = TestBed.createComponent(CriaturaCriar);
     fixture.detectChanges();
-    return { fixture, raiz: fixture.nativeElement as HTMLElement, componente: fixture.componentInstance, fichaService, router };
+    return { fixture, raiz: fixture.nativeElement as HTMLElement, componente: fixture.componentInstance, fichaService, router, rascunhos };
   }
 
   afterEach(() => TestBed.resetTestingModule());
@@ -107,9 +114,9 @@ describe('CriaturaCriar', () => {
     atualizar({
       cadencia: CadenciaEnum.SINGULAR,
       ataques: [
-        { nome: 'Pancada', atributo: 'luta', custoAcao: CustoAcaoEnum.MOVIMENTO, dano: '3D12+4', tipoDano: TipoDanoEnum.FISICO, area: false, efeito: '' },
+        { nome: 'Pancada', teste: 'lutad20kh1+5', custoAcao: CustoAcaoEnum.MOVIMENTO, dano: '3D12+4', danoCritico: '6D12+8', area: false, efeito: '' },
         {
-          nome: 'Esmagamento', atributo: 'luta', custoAcao: CustoAcaoEnum.PADRAO, dano: '4D12+10', tipoDano: TipoDanoEnum.FISICO,
+          nome: 'Esmagamento', teste: 'lutad20kh1+5', custoAcao: CustoAcaoEnum.PADRAO, dano: '4D12+10', danoCritico: '8D12+20',
           area: false, efeito: 'O alvo realiza um teste de Vigor (DT 20) ou fica Imobilizado por 1 turno.',
         },
       ],
@@ -216,9 +223,9 @@ describe('CriaturaCriar', () => {
       deslocamento: { terrestre: 9, voador: null, aquatico: null, sobrenatural: null },
       cadencia: CadenciaEnum.SINGULAR,
       ataques: [
-        { nome: 'Pancada', atributo: 'luta', custoAcao: CustoAcaoEnum.MOVIMENTO, dano: '3D12+4', tipoDano: TipoDanoEnum.FISICO, area: false },
+        { nome: 'Pancada', teste: 'lutad20kh1+5', custoAcao: CustoAcaoEnum.MOVIMENTO, dano: '3D12+4', danoCritico: '6D12+8', area: false },
         {
-          nome: 'Esmagamento', atributo: 'luta', custoAcao: CustoAcaoEnum.PADRAO, dano: '4D12+10', tipoDano: TipoDanoEnum.FISICO,
+          nome: 'Esmagamento', teste: 'lutad20kh1+5', custoAcao: CustoAcaoEnum.PADRAO, dano: '4D12+10', danoCritico: '8D12+20',
           area: false, efeito: 'O alvo realiza um teste de Vigor (DT 20) ou fica Imobilizado por 1 turno.',
         },
       ],
@@ -240,7 +247,7 @@ describe('CriaturaCriar', () => {
       ],
     } satisfies FichaCriaturaDadosDto);
 
-    expect(router.navigate).toHaveBeenCalledWith(['/painel', CAMPANHA_ID, 'ficha', 99]);
+    expect(router.navigate).toHaveBeenCalledWith(['/painel', CAMPANHA_ID, 'criatura', 99]);
   });
 
   it('bloqueia o passo Resistências sem ao menos uma fraqueza', () => {
@@ -270,5 +277,90 @@ describe('CriaturaCriar', () => {
 
     componente['atualizar']({ modificadores: { ...componente['estado']().modificadores, social: ModificadorCriaturaEnum.FRAGIL } });
     expect(componente['distribuicaoModificadoresCompleta']()).toBe(true);
+  });
+
+  it('trava os botões de um tipo de modificador ao atingir a quota, exceto o já selecionado', () => {
+    const { componente } = montar();
+    componente['atualizar']({
+      modificadores: {
+        ...componente['estado']().modificadores,
+        destreza: ModificadorCriaturaEnum.FORTE, forca: ModificadorCriaturaEnum.FORTE,
+      },
+    });
+
+    // Quota de Forte (2) atingida: outro atributo não pode virar Forte...
+    expect(componente['modificadorDesabilitado']('luta', ModificadorCriaturaEnum.FORTE)).toBe(true);
+    // ...mas os já marcados como Forte continuam clicáveis (pra desmarcar/trocar).
+    expect(componente['modificadorDesabilitado']('destreza', ModificadorCriaturaEnum.FORTE)).toBe(false);
+    // Quota de Médio (3) ainda não atingida: nenhum botão de Médio trava.
+    expect(componente['modificadorDesabilitado']('luta', ModificadorCriaturaEnum.MEDIO)).toBe(false);
+  });
+
+  it('não navega ao clicar em Sair sem confirmar, e não usa o confirm() nativo do navegador', () => {
+    const { fixture, raiz, componente, router } = montar();
+    (raiz.querySelector('.guia__sair') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(componente['confirmandoSaida']()).toBe(true);
+    expect(router.navigate).not.toHaveBeenCalled();
+    const dialogo = raiz.querySelector('.guia__sair-dialog') as HTMLDialogElement;
+    expect(dialogo).not.toBeNull();
+    expect(dialogo.tagName).toBe('DIALOG');
+  });
+
+  it('navega para o painel só depois de confirmar, e "Continuar aqui" cancela sem navegar', () => {
+    const { componente, router } = montar();
+
+    componente['sair']();
+    componente['cancelarSaida']();
+    expect(componente['confirmandoSaida']()).toBe(false);
+    expect(router.navigate).not.toHaveBeenCalled();
+
+    componente['sair']();
+    componente['confirmarSaida']();
+    expect(componente['confirmandoSaida']()).toBe(false);
+    expect(router.navigate).toHaveBeenCalledWith(['/painel', CAMPANHA_ID]);
+  });
+
+  describe('rascunho salvo neste dispositivo', () => {
+    it('não sobrescreve o rascunho salvo antes do mestre decidir "Retomar" ou "Começar do zero"', () => {
+      const { componente, rascunhos } = montar(CAMPANHA_ID, { designacao: 'Salva antes', passo: 2 });
+      expect(componente['temRascunho']()).toBe(true);
+      expect(rascunhos.salvar).not.toHaveBeenCalled();
+
+      componente['atualizar']({ designacao: 'Outra coisa' });
+      expect(rascunhos.salvar).not.toHaveBeenCalled();
+    });
+
+    it('sem rascunho existente, salva o estado normalmente a cada mudança', () => {
+      const { componente, rascunhos } = montar();
+      expect(componente['temRascunho']()).toBe(false);
+
+      componente['atualizar']({ designacao: 'Nova criatura' });
+      expect(rascunhos.salvar).toHaveBeenCalled();
+    });
+
+    it('"Retomar" carrega o estado salvo e mantém os passos já visitados', () => {
+      const { componente } = montar(CAMPANHA_ID, { designacao: 'Salva antes', passo: 3 });
+      componente['retomar']();
+      expect(componente['estado']().designacao).toBe('Salva antes');
+      expect(componente['visitado']()).toBe(3);
+      expect(componente['temRascunho']()).toBe(false);
+    });
+
+    it('"Começar do zero" descarta o rascunho salvo', () => {
+      const { componente, rascunhos } = montar(CAMPANHA_ID, { designacao: 'Salva antes', passo: 3 });
+      componente['recomecar']();
+      expect(rascunhos.limpar).toHaveBeenCalledWith(CAMPANHA_ID, 'criatura');
+      expect(componente['temRascunho']()).toBe(false);
+      expect(componente['estado']().designacao).toBe('');
+    });
+
+    it('limpa o rascunho ao criar a ficha com sucesso', () => {
+      const { componente, rascunhos } = montar();
+      preencherAEstatua(componente);
+      componente['criar']();
+      expect(rascunhos.limpar).toHaveBeenCalledWith(CAMPANHA_ID, 'criatura');
+    });
   });
 });

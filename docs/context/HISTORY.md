@@ -1,5 +1,241 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-16 — Ajuste pós-mockup: cor/enquadramento de imagem, d20 unificado, abas e fraquezas
+
+Quarto pedido do autor na mesma sessão, testando a tela já realinhada ao mockup (`ac32c8f`): um
+lote de sete ajustes de paridade com a ficha de jogador e uma feature nova. Nenhum passou por
+`docs/specs/backlog/` — como no pedido anterior, um plano de sessão fez o papel de spec de
+trabalho.
+
+1. **Cor da criatura.** `CriaturaVisualizacao` já recebia `cor`/emitia `corMudou` (a página e
+   `ficha-edicao-criatura.service.ts` já persistiam) — só faltava o `<input type="color">` no
+   template. Copiado o bloco de `FichaVisualizacao` (input full-cover, `opacity:0`, atrás do lápis
+   de upload).
+2. **Ícone d20 em vez de d6 em toda a ficha de jogador.** O sistema só tem testes `Nd20kh1±mod` —
+   não existe d6 em lugar nenhum — então a troca de `nome="dado"` → `nome="d20"` (mesmo
+   `app-icone` compartilhado) foi total: atributos, Dano C.a.C./Furtivo, Iniciativa, os botões de
+   preset/crítico de `FichaRolagensPainel` e "Rolar dano" do inventário, inclusive os dois usos
+   antes "decorativos" (rótulo/contagem do stepper de Dados), pra não sobrar glifo de d6 ao lado
+   do d20 novo.
+3. **Fraquezas em grade de 2 colunas** (`criatura-resistencia-lista`, variante `fraqueza`) — o item
+   em edição ganhou `grid-column: 1 / -1` (só a variante resistência tinha essa regra antes).
+   Divergência deliberada do mockup, que mostra uma coluna só.
+4. **Barra superior da criatura igual à do jogador, de verdade.** Não só cor: a barra
+   (eyebrow + `chip-classificacao` com régua divisora) morava na **página**; no jogador ela é uma
+   barra própria dentro do componente (`ficha-visao__topo`). Movida pra dentro de
+   `CriaturaVisualizacao` (`criatura__topo`), com `classificacao` computado no mesmo formato
+   zero-padded (`FICHA-CRT-0004`, era id cru) — a página voltou a ter só voltar + ações, igual
+   `visualizar.page.html` já era.
+5. **Aba "Ataques e Habilidades" virou duas abas** — os dois componentes já eram autocontidos,
+   troca de `@if/@else` binário por `@switch` com 4 casos.
+6. **"Informações" virou "Geral" + "Descrição".** Geral: Cadência + Bônus de Iniciativa +
+   Deslocamento (que era um card cheio na linha de baixo) agora na mesma linha
+   (`.criatura__stats--info` ganhou um terceiro item, `--deslocamento`, com as tags dentro) +
+   Regeneração abaixo. Descrição: Conceito/Gancho/Motivação + Natureza Física/Tema de Horror +
+   Anotações. `AbaCriatura` virou `'geral' | 'descricao' | 'ataques' | 'habilidades'`.
+7. **Seletor de enquadramento de imagem (pan/zoom) — feature nova, jogador e criatura.** `m3-62`
+   tinha deixado "crop/editor de imagem no client" fora de escopo; retomado sem processamento de
+   imagem no servidor (sem `sharp`) — só um metadado (`FichaImagemFocoDto { x, y, escala }`,
+   percentual + zoom) persiste ao lado de `imagemUrl`, aplicado no avatar via
+   `object-position` + `transform: scale()`. Novo componente reusável
+   `AjusteEnquadramentoImagem` (drag nativo com `pointerdown/move/up` + slider de zoom, sem
+   biblioteca) renderiza como painel sobreposto abaixo do avatar. Gatilhos: selecionar um arquivo
+   novo abre o seletor automaticamente antes do upload (o pedido original: "quando eu selecionar a
+   imagem, poder escolher o quanto dela aparece"); um selo dedicado (canto livre do avatar, ícone
+   de busca/zoom) reabre o seletor pra reajustar uma imagem já salva, sem reenviar arquivo.
+   Persistência: `imagemFoco` viaja pelo `PUT /ficha/:id` genérico (como `cor`), não pelo endpoint
+   multipart de upload — são só números, dá pra reajustar sem reenviar o arquivo. Nova coluna
+   `imagem_foco JSONB` (migração `0019`), `validarImagemFoco` (x/y 0–100, escala 1–3) espelhando
+   `validarCor`. Remover a imagem também zera o enquadramento (sem metadado órfão).
+
+**Verificação ao vivo** (campanha/fichas seedadas via `db:seed:dev` + REST): os 7 itens exercitados
+nas duas fichas em 1920×1080 — cor mudando `--cor-ficha` ao vivo, ícones d20 confirmados por
+`viewBox`/`path` idênticos ao de referência da criatura, `grid-template-columns` das fraquezas
+literalmente `163px 163px`, barra superior com régua e badge zero-padded, as 4 abas, Cadência/
+Bônus de Iniciativa/Deslocamento na mesma linha, e o fluxo completo de enquadramento (upload →
+ajustar → confirmar → recarregar página → **persiste** → reabrir reflete o foco salvo → cancelar
+não muda nada) nos dois avatares. Sem erro de console/página, sem estouro de largura. `npm run
+test` 376/376 (backend, +11) e 1088/1088 (frontend, +26); lint e build limpos (backend tinha 2
+falhas de lint pré-existentes, não tocadas por esta task, confirmadas via `git stash`).
+
+## 2026-08-15 — `m4-04b`: fidelidade visual ao mockup e conserto dos fluxos de edição da ficha de criatura
+
+Terceiro pedido do autor na mesma sessão: deixar a tela **visualmente igual ao mockup** naquilo que
+já existe (`docs/design/examples/ficha-de-criatura.html`), sem reintroduzir o que foi descartado por
+regra (Esquiva/Bloqueio/Contra-ataque, fórmula de DT, "Teste Base" — ver entrada de realinhamento
+mais abaixo), e **arrumar todos os fluxos de edição** pra priorizarem UI/UX e não quebrarem o
+layout. Queixa explícita: "os atributos estão completamente fora do padrão". Referência de UI/UX e
+de estilo: a ficha de jogador (`FichaVisualizacao`) junto do mockup.
+
+**Medidas tiradas do DOM do mockup**, não do olho: colunas `376px 236px minmax(0,1fr)` com gap 14,
+cards de raio 6 e caixas internas de raio 4, avatar 86×96, designação 21px, chips de 12px em caixa
+`surface-2` (não os `.chip-classificacao` maiúsculos de antes), stat boxes com valor 16px, Vida com
+barra de 3px e máximo de 240px, cards de Ataque/Habilidade em `auto-fit` de 300px.
+
+**Atributos (o ponto principal).** O card de leitura virou o do mockup: sigla de três letras
+(mesmas de `FichaVisualizacao`, com o nome inteiro na dica), valor 20px, Atributo Efetivo embaixo e
+o botão de rolar ocupando o quadradinho do canto. O seletor de Modificador (4 barrinhas) **saiu do
+card** — ele é mais largo que um card de ~100px e era o que mais destoava — e agora vive atrás do
+lápis do cabeçalho, que troca a grade por uma lista vertical, exatamente como o lápis de Atributos
+da ficha de jogador faz. O Efetivo só fica no accent quando o Modificador está acima do neutro
+(Médio/Forte), o que reproduz a variação de cor do mockup a partir de dado real, sem inventar regra.
+
+**Edição de Atributos virou rascunho + Salvar/Cancelar** (também o fluxo da ficha de jogador) por um
+motivo de regra: a distribuição de Modificadores é uma **cota fixa** (2 Forte / 3 Médio / 3 Fraco /
+2 Frágil, `shared/regras/criatura`), então cada clique isolado deixava a ficha inválida e o backend
+recusava a gravação inteira com um toast de erro — o controle era, na prática, inutilizável. Agora o
+mestre rearranja à vontade no rascunho, as violações aparecem listadas e "Salvar" só libera quando a
+cota fecha (reusando `validarFichaCriatura`, filtrando as linhas de modificador — nunca uma segunda
+cópia da tabela de quantidades).
+
+**Dois defeitos reais achados na verificação ao vivo:**
+
+1. **`<select>` abria sempre na 1ª opção.** Todos os selects de edição no-próprio-lugar usavam
+   `[value]` no `<select>` com as `<option>` vindo de um `@for` — quando o binding roda, as opções
+   ainda não existem, então o valor atual era ignorado. Abrir a edição de Classificação mostrava
+   "SCP Adaptado / Minúsculo / Nula" numa criatura "Criação Original / Médio / Média", e confirmar
+   gravaria o valor errado. Trocado por `[selected]` na `<option>` em todos eles (origem, porte,
+   comportamento, NA, tenacidade, cadência, modo/intensidade de regeneração), com teste de regressão.
+2. **Botões de formulário sem pele nenhuma.** `.botao` estava definido só no SCSS da *página*
+   (`visualizar-criatura.page.scss`), e o encapsulamento do Angular impede que ele alcance os
+   componentes filhos — "Confirmar/Cancelar/Adicionar" dos formulários de Ataque/Habilidade/
+   Resistência apareciam como texto cru. O bloco canônico foi copiado pra cada componente.
+
+**Fluxos de edição que deixaram de quebrar o layout.** Os formulários das três listas viraram grades
+rotuladas (antes: fileira de `flex-wrap` com sete controles sem rótulo, em ordem imprevisível
+conforme a largura); o item em edição passa a ocupar a linha inteira da grade (`grid-column: 1/-1`),
+inclusive na grade de Resistências, onde o formulário estourava um box de ~77px. A edição de
+Classificação também virou modo gatilhado: trocar um chip por um `<select>` de largura diferente
+fazia a linha inteira saltar; agora o lápis abre os quatro selects rotulados numa grade estável e o
+botão nunca sai do lugar.
+
+**Também alinhado ao mockup:** Tenacidade como "Padrão ×35" (nome + multiplicador em pesos
+diferentes, via helpers que fatiam o rótulo composto existente em vez de uma segunda tabela); Porte
+como chip + ⓘ com a dimensão na dica; Resistências em boxes compactos com o tipo abreviado (mesmas
+abreviações do grid da ficha de jogador) e o limite de pontos como dica do cabeçalho; Fraquezas em
+cards com tom de accent; Deslocamento/Regeneração como tiras de tags (as vazias tracejadas);
+Descrição com Gancho e Motivação em linhas separadas por filete; cabeçalhos de seção "rótulo +
+régua + ação" em toda a coluna de status.
+
+Testes: 1062/1062 (+6 sobre a baseline de 1056 — grade/lista de Resistências com tipo abreviado e
+subtipo, lápis de Atributos, rascunho Salvar/Cancelar, trava da cota de Modificadores, selects já
+selecionados e destaque do Efetivo). Lint e build limpos (o aviso de budget do bundle inicial é
+pré-existente). Verificado ao vivo em 1920×1080 (Playwright, campanhas/fichas descartáveis semeadas
+por REST com o `dados` de "A Estátua" — última: campanha 30, ficha 40029): as duas abas comparadas
+lado a lado com o mockup; todos os fluxos de edição exercitados (atributos, classificação,
+resistência, fraqueza nova, descrição, ataque, habilidade nova) sem nenhum estouro de largura
+(`scrollWidth === innerWidth`); quebrar a cota mostra as violações e desabilita "Salvar",
+compensar libera e o salvamento passa sem toast de erro. Mobile (360×800) segue fora desta rodada,
+como nas anteriores — continua em `m4-10`.
+
+## 2026-08-15 — `m4-04b`: acabamento visual da ficha de criatura — abas cheias e ações de lista sob demanda
+
+Segundo pedido do autor na mesma sessão do realinhamento de layout (entrada abaixo), depois de ver
+a tela nova rodando de verdade: (1) as abas "Informações"/"Ataques e Habilidades" deviam sempre
+ocupar o máximo da barra — mesmo com só 2 abas, cada uma metade — em vez do tamanho de conteúdo que
+o `.abas` canônico usa; (2) os botões de editar/remover por item (Ataques, Habilidades,
+Resistências, Fraquezas) não podiam ficar sempre visíveis — precisavam ser "triggerados", exigindo
+entrar num modo antes de aparecer.
+
+**Abas.** `.criatura__aba` ganhou `flex: 1 1 0` — divergência deliberada do `.abas` canônico
+(`docs/design/tema/_componentes.scss`, que deixa cada aba do tamanho do próprio conteúdo),
+documentada em comentário no SCSS. Only-2-tabs hoje já cresce pra 3+ sem ajuste, porque `flex: 1 1
+0` distribui o espaço igualmente entre quantas abas existirem.
+
+**Modo de edição por lista.** `criatura-ataque-lista`, `criatura-habilidade-lista` e
+`criatura-resistencia-lista` (reusada por Resistências e Fraquezas) ganharam um signal local
+`modoEdicao` + método `alternarModoEdicao()` (idêntico nos três — sem base compartilhada, mesma
+convenção de "copiar e adaptar" já usada no resto do módulo). O `<div class="…__acoes">`/`…
+__grade-acoes` com os ícones de editar/remover por item, que antes só dependia de `editavel()`
+(true sempre que o autor é o mestre da campanha), passou a exigir `editavel() && modoEdicao()`. Um
+botão novo no cabeçalho de cada lista ("Editar"/ícone lápis quando desligado, "Concluir"/ícone
+check quando ligado — `criatura-ataque-lista`/`criatura-habilidade-lista` com rótulo de texto,
+`criatura-resistencia-lista` só ícone, mesma densidade do `+` de Adicionar que já existia ali)
+alterna o modo; desligar cancela qualquer edição ou remoção pendente daquela lista
+(`cancelar()`/`cancelarRemocao()`), pra nunca deixar um formulário ou confirmação de remoção
+"órfã" quando o autor sai do modo. O botão "Adicionar"/`+` continua sempre visível quando
+`editavel()` — só as ações por item (editar/remover) exigem o modo, não a criação; mesmo padrão
+visual do mockup (`docs/design/examples/ficha-de-criatura.html`), que só mostra "+" nos cabeçalhos
+de seção e nenhum ícone de edição/remoção nos cards em estado de leitura.
+
+Testes: suíte completa do frontend 1056/1056 (+4 sobre a baseline anterior — um teste por lista,
+mais a variante grade/lista da `criatura-resistencia-lista`, confirmando que as ações ficam ocultas
+por padrão e aparecem/somem ao alternar o modo). Lint e build limpos. Verificado ao vivo (Postgres +
+backend + frontend reais, Playwright, nova sessão descartável semeada por REST reaproveitando o
+`dados` de "A Estátua" já persistido — campanha 26, ficha 40025): abas ocupando a barra inteira nas
+duas telas; Resistências/Fraquezas e Ataques/Habilidades sem nenhum ícone de editar/remover visível
+por padrão; clique no botão "Editar" do cabeçalho revela os ícones por item nas quatro listas;
+clique no lápis de um Ataque ainda abre o formulário de edição normalmente; "Concluir" esconde tudo
+de novo. 360×800 não verificado nesta rodada — mobile segue fora de escopo (`m4-10`).
+
+## 2026-08-15 — `m4-04b`: realinhamento visual da ficha de criatura ao mockup atualizado (dashboard de 3 colunas)
+
+Pedido direto do autor, fora da fila de specs: ele reconstruiu `docs/design/examples/ficha-de-
+criatura.html` (o antigo arquivo era um placeholder genérico não relacionado — thumbnail "SCP"/
+"FICHA DE AMEAÇA" — não uma captura real; ver `m4-04b` § "Antes de qualquer UI" e o spec
+`docs/specs/done/m4-04b-frontend-visualizacao-criatura.spec.md`, que já registrava o protótipo como
+alvo de fidelidade desktop) e pediu pra alinhar `CriaturaVisualizacao` a ele. Mobile explicitmente
+fora de escopo desta sessão — o autor é o único mestre da campanha e decidiu adiar; o backlog já
+reserva `m4-10-refinamento-mobile-criatura-npc.spec.md` pra isso.
+
+**Diagnóstico.** `CriaturaVisualizacao` (implementada nas sessões anteriores de `m4-04b`) saiu como
+uma pilha vertical de 9 seções numeradas ao estilo do assistente de criação (`max-width: 900px`).
+O novo mockup é um dashboard denso de 3 colunas com abas — estruturalmente muito mais próximo de
+`FichaVisualizacao` (ficha de jogador, já aprovada) do que do assistente. Capturado via Playwright
+(o mockup é um bundle de Artifact auto-contido, não HTML/CSS plano — precisou renderizar de
+verdade, não só ler o arquivo) e comparado lado a lado com o app real.
+
+**Checagem de fidelidade de conteúdo antes de tocar layout.** O mockup reaproveita visualmente
+blocos da ficha de jogador sem ajustar pras regras de criatura: mostra Esquiva/Bloqueio/Contra-
+ataque como estatística fixa (o guia diz explicitamente, linha 501, que "criaturas não podem
+reagir a ataques" — só Defesa é real pra Ameaça; Esquiva/Bloqueio só existem pra NPC, tipo ainda não
+implementado, com fórmula própria `Defesa Base + VIG`/`+DES`), uma caixa "DT = 10 + VD ÷ 2 + ATR"
+(fórmula que não existe pra Ameaça — a única fórmula de DT do documento, linha 287/976, é de
+agente/NPC e usa Nível, não VD) e "Teste Base 5D20" (sem campo/fórmula correspondente — cada
+atributo rola seu próprio pool). Os números do mockup também não batem com o que
+`calcularAtributoEfetivo` produz pros mesmos dados — confirma que o conteúdo numérico ali é
+ilustrativo, não normativo. Levada a decisão ao autor (`AskUserQuestion`): confirmado seguir as
+regras acima do mockup, sem adicionar nada novo (nem os três campos fabricados, nem "Percepção",
+que tem fórmula real reusável mas não estava no escopo) — realinhamento 100% visual sobre os campos
+que já existem em `FichaCriaturaDadosDto`.
+
+**O que mudou.** `criatura-visualizacao.component.{html,scss,ts}` reescritos: shell de 3 colunas
+(`--identidade`/`--atributos`/`--status`, mesmo padrão fixo/fixo/flexível de `ficha-visualizacao`,
+colapsando em `bp.tablet`); avatar com upload/remover (os inputs/outputs `imagemUrl`/`cor`/
+`imagemMudou`/`removerImagem` já existiam sem uso no template antigo); chips de classificação
+(Origem/Porte/Comportamento neutros, NA em destaque de perigo com `--vida`, não `--accent` —
+divergência deliberada do `.chip-classificacao` canônico, documentada no SCSS); VD/Tenacidade/
+Defesa como 3 `.stat` (Defesa saiu da extinta seção "Reações"); Atributos com grupos Físicos/
+Mentais (a ordem de `CAMPOS_ATRIBUTO` já nascia agrupada 5+5, terminologia real do
+`sistema-v4.1.0.md` — só fatiar o array, sem tabela nova), mantendo intacto o seletor de 4 barras
+de Modificador já existente; abas "Informações"/"Ataques e Habilidades" (`.criatura__abas`, cópia
+do `.abas` canônico); Deslocamento como tira de tags em vez de 4 campos empilhados; Descrição
+(Conceito) + callout "Gancho" + Motivação (preservada mesmo fora do mockup — é campo obrigatório
+do DTO, sem lugar nele); Natureza Física/Tema de Horror lado a lado; Anotações no fim da aba
+Informações. `criatura-ataque-lista`/`criatura-habilidade-lista` reestilizados de lista de linhas
+pra grade de cards (2-up/3-up); ataque ganhou botão **Teste** além do **Dano** existente — não é
+mecânica nova, só expõe `rolarTesteAtributoCriatura` (já usado pela grade de Atributos) no
+contexto do ataque, via `ataque.atributo`. `criatura-resistencia-lista` ganhou input `variante`
+(`'resistencia'` = grade compacta neutra nova; `'fraqueza'` = lista com tom de aviso, mesmo
+`--vida` de sempre) — formulário de edição idêntico nos dois casos. `visualizar-criatura.page`
+ganhou eyebrow "FICHA DE CRIATURA" + badge `FICHA-CRT-{id real da ficha}` no topo (o "0173" do
+mockup é só número de exemplo); `.ficha-pagina` passou de `max-width: 900px` fixo pra `80vw` (mesmo
+valor de `visualizar.page.scss`/jogador — o layout de 3 colunas não cabia no teto antigo).
+
+Testes: suíte completa do frontend 1052/1052 (+2 sobre a baseline: `testarAtaque` em
+`criatura-ataque-lista.component.spec.ts` e a variante `fraqueza` em
+`criatura-resistencia-lista.component.spec.ts`); 3 specs existentes ajustados por troca de seletor
+(`.ataque-lista__rolar` → `--dano`/`--teste`; `.resistencia-lista__tipo` → `__grade-tipo` no modo
+padrão; `.criatura__vd` → `.criatura__stat--vd`; aba padrão "Informações" faz `.ataque-lista__nome`
+só aparecer depois de `selecionarAba('ataques')`). Lint e build limpos. Verificado ao vivo
+(Postgres + backend + frontend reais, Playwright, sessão descartável semeada por REST com o mesmo
+`dados` de "A Estátua" — campanha 23, ficha 40022): 1920×1080 nas duas abas, comparação lado a lado
+com o mockup confirmando densidade/hierarquia/cores equivalentes; edição no próprio lugar (Defesa
+30→31, persistiu); os dois botões de rolagem do card de Ataque (Teste e Dano) abrem a bandeja de
+dados; adicionar uma Habilidade Especial pelo editor de lista reflete na tela. 360×800 checado só
+informativamente (colunas empilham via `bp.tablet`, nada quebra), sem ajuste fino — mobile
+permanece pendência de `m4-10`.
+
 ## 2026-08-14 — `m4-04c`: passo // Atributos da criatura em 3 cards, com contador real de Pontos de Ajuste
 
 Pedido direto do autor a partir de um screenshot no mobile: no passo // Atributos, o bloco único

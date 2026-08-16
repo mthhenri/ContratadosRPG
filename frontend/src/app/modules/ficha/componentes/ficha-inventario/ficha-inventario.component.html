@@ -901,7 +901,7 @@
               [appTooltip]="'Rolar dano'"
               (click)="rolarDanoItem(item)"
             >
-              <app-icone nome="dado" />
+              <app-icone nome="d20" />
               <span>Rolar dano</span>
             </button>
           }
@@ -1571,6 +1571,43 @@
               Remover
             </button>
             <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--flex" (click)="cancelarRemocao()">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  }
+
+  <!-- Dialog "quantas mover" ao escolher um destino diferente no menu "Mover para" para um stack
+       (quantidade > 1) — mover só parte das unidades entre inventário principal e container próprio
+       (Pochete/Bolso de Corpo), em vez de arrastar o stack inteiro de uma vez. -->
+  @if (moverQuantidadePendente(); as moverPendente) {
+    @let moverItem = itensInventario()[moverPendente.indice];
+    @if (moverItem) {
+      <div class="ficha-inv__modal-fundo">
+        <div class="ficha-inv__modal" role="dialog" aria-modal="true" aria-label="Mover quantidade">
+          <h4 class="ficha-inv__modal-titulo">Mover "{{ moverItem.nome }}"</h4>
+          <p class="ficha-inv__modal-texto">
+            Quantas unidades mover para {{ rotuloContainerAtual(moverPendente.containerId) }}? (1–{{ moverItem.quantidade }})
+          </p>
+          <div class="ficha-inv__stepper ficha-inv__stepper--modal">
+            <button type="button" class="ficha-inv__mini-btn" aria-label="Diminuir quantidade" (click)="ajustarQuantidadeMover(-1)">−</button>
+            <input
+              class="ficha-inv__entrada ficha-inv__entrada--num"
+              type="number"
+              aria-label="Quantidade a mover"
+              [min]="1"
+              [max]="moverItem.quantidade"
+              [formControl]="quantidadeMover"
+            />
+            <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar quantidade" (click)="ajustarQuantidadeMover(1)">+</button>
+          </div>
+          <div class="ficha-inv__modal-acoes">
+            <button type="button" class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--flex" (click)="confirmarMoverQuantidade()">
+              Mover
+            </button>
+            <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--flex" (click)="cancelarMoverQuantidade()">
               Cancelar
             </button>
           </div>

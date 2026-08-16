@@ -2360,4 +2360,59 @@ describe('FichaVisualizacao', () => {
       expect(spy).not.toHaveBeenCalled();
     });
   });
+
+  describe('enquadramento do avatar (pan/zoom)', () => {
+    function montarComImagem() {
+      const alvo = montar(dados, 'Corvo', 42, true);
+      alvo.fixture.componentRef.setInput('imagemUrl', 'https://exemplo.test/corvo.webp');
+      alvo.fixture.detectChanges();
+      const focoMudou: unknown[] = [];
+      const ajusteImagem: unknown[] = [];
+      alvo.fixture.componentInstance.focoMudou.subscribe((v) => focoMudou.push(v));
+      alvo.fixture.componentInstance.ajusteImagem.subscribe((v) => ajusteImagem.push(v));
+      return { ...alvo, focoMudou, ajusteImagem };
+    }
+
+    it('sem imagem, não mostra o selo de ajustar enquadramento', () => {
+      const alvo = montar(dados, 'Corvo', 42, true);
+      expect(alvo.raiz.querySelector('.ficha-ident__avatar-enquadrar')).toBeNull();
+    });
+
+    it('o selo de enquadramento abre o seletor pra imagem existente', () => {
+      const { fixture, raiz } = montarComImagem();
+      (raiz.querySelector('.ficha-ident__avatar-enquadrar') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(raiz.querySelector('app-ajuste-enquadramento-imagem')).not.toBeNull();
+      expect(fixture.componentInstance['arquivoPendente']()).toBeNull();
+    });
+
+    it('confirmar o enquadramento de uma imagem existente só emite focoMudou (sem ajusteImagem)', () => {
+      const { fixture, focoMudou, ajusteImagem } = montarComImagem();
+      fixture.componentInstance['abrirEnquadramentoExistente']();
+      fixture.componentInstance['confirmarEnquadramento']({ x: 33, y: 66, escala: 1.8 });
+      expect(focoMudou).toEqual([{ x: 33, y: 66, escala: 1.8 }]);
+      expect(ajusteImagem).toEqual([]);
+    });
+
+    it('selecionar um arquivo novo não emite ajusteImagem direto — abre o enquadramento primeiro', () => {
+      const alvo = montarComImagem();
+      const arquivo = new File(['x'], 'novo.webp', { type: 'image/webp' });
+      alvo.fixture.componentInstance['aoSelecionarImagem']({
+        target: { files: [arquivo], value: '' },
+      } as unknown as Event);
+      expect(alvo.ajusteImagem).toEqual([]);
+      expect(alvo.fixture.componentInstance['enquadramentoOrigem']()).toBe(arquivo);
+    });
+
+    it('confirmar o enquadramento de um arquivo novo emite ajusteImagem e focoMudou juntos', () => {
+      const alvo = montarComImagem();
+      const arquivo = new File(['x'], 'novo.webp', { type: 'image/webp' });
+      alvo.fixture.componentInstance['aoSelecionarImagem']({
+        target: { files: [arquivo], value: '' },
+      } as unknown as Event);
+      alvo.fixture.componentInstance['confirmarEnquadramento']({ x: 5, y: 15, escala: 1 });
+      expect(alvo.ajusteImagem).toEqual([arquivo]);
+      expect(alvo.focoMudou).toEqual([{ x: 5, y: 15, escala: 1 }]);
+    });
+  });
 });

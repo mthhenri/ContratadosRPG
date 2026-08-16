@@ -617,6 +617,14 @@ export class FichaInventario {
   /** Item empilhado aguardando a escolha de quantas unidades mandar para a base. */
   protected readonly indiceMandandoParaBase = signal<number | null>(null);
   protected readonly quantidadeMandarParaBase = new FormControl(1, { nonNullable: true });
+  /**
+   * Item empilhado (quantidade > 1) aguardando a escolha de quantas unidades mover pro `containerId`
+   * escolhido no menu "Mover para" (`null` = inventário principal) — mesma necessidade do dialog
+   * "quantos remover"/"quantos mandar pra base": mover um stack inteiro de uma vez só era a única
+   * opção, sem como deixar parte das unidades no container de origem.
+   */
+  protected readonly moverQuantidadePendente = signal<{ indice: number; containerId: string | null } | null>(null);
+  protected readonly quantidadeMover = new FormControl(1, { nonNullable: true });
   /** `true` quando a confirmação de "Esvaziar" está aberta. */
   protected readonly confirmandoEsvaziar = signal(false);
 
@@ -2077,10 +2085,68 @@ export class FichaInventario {
     this.moverAbertoIndice.update((atual) => (atual === indice ? null : indice));
   }
 
-  /** Escolhe um destino no menu "Mover para" (m3-44): move o item e fecha o menu. */
+  /**
+   * Escolhe um destino no menu "Mover para" (m3-44) e fecha o menu. Item unitário (ou já no mesmo
+   * destino) move direto, como antes; um **stack** (quantidade > 1) abre o dialog "quantas mover"
+   * em vez de arrastar o stack inteiro — só aí `moverItemParaContainer` roda, com a quantidade
+   * escolhida (`confirmarMoverQuantidade`).
+   */
   protected escolherContainer(indice: number, containerId: string | null): void {
-    this.moverItemParaContainer(indice, containerId);
     this.moverAbertoIndice.set(null);
+    const item = this.inventario().itens[indice];
+    if (!item || (item.containerId ?? null) === containerId) {
+      return;
+    }
+    if (item.quantidade > 1) {
+      this.quantidadeMover.setValue(item.quantidade);
+      this.moverQuantidadePendente.set({ indice, containerId });
+      return;
+    }
+    this.moverItemParaContainer(indice, containerId);
+  }
+
+  /** Passo −/+ na quantidade a mover no dialog de stack (limitado a 1..quantidade do item). */
+  protected ajustarQuantidadeMover(delta: number): void {
+    const pendente = this.moverQuantidadePendente();
+    if (!pendente) {
+      return;
+    }
+    const maximo = this.inventario().itens[pendente.indice]?.quantidade ?? 1;
+    const valor = Math.min(maximo, Math.max(1, this.quantidadeMover.value + delta));
+    this.quantidadeMover.setValue(valor);
+  }
+
+  /**
+   * Confirma o dialog de stack: move a quantidade escolhida (clampada a 1..quantidade) pro
+   * `containerId` pendente. Mover tudo move a entrada inteira (como `moverItemParaContainer`);
+   * mover uma parte **divide** o stack — decrementa a entrada de origem e adiciona uma nova entrada
+   * só com a quantidade movida, já no destino.
+   */
+  protected confirmarMoverQuantidade(): void {
+    const pendente = this.moverQuantidadePendente();
+    if (!pendente) {
+      return;
+    }
+    const itens = this.inventario().itens;
+    const item = itens[pendente.indice];
+    if (!item) {
+      this.moverQuantidadePendente.set(null);
+      return;
+    }
+    const quantidade = Math.min(item.quantidade, Math.max(1, this.quantidadeMover.value));
+    if (quantidade >= item.quantidade) {
+      this.moverItemParaContainer(pendente.indice, pendente.containerId);
+    } else {
+      const restante = { ...item, quantidade: item.quantidade - quantidade };
+      const movido = { ...item, quantidade, containerId: pendente.containerId ?? undefined };
+      this.emitirItens([...itens.slice(0, pendente.indice), restante, ...itens.slice(pendente.indice + 1), movido]);
+    }
+    this.moverQuantidadePendente.set(null);
+  }
+
+  /** Cancela o dialog "quantas mover" sem mexer no inventário. */
+  protected cancelarMoverQuantidade(): void {
+    this.moverQuantidadePendente.set(null);
   }
 
   /** Abre a edição inline do apelido (m3-33) — só para categorias não-empilháveis. */
@@ -2553,7 +2619,9 @@ export class FichaInventario {
 
     const pesoMods = item.modificacoes.reduce(
       (soma, modificacao) =>
-        soma + modificacao.empilhamentos * obterPesoModificacao({ item, modificacao: modificacao.nome }),
+        soma +
+        modificacao.empilhamentos *
+          obterPesoModificacao({ item, modificacao: modificacao.nome, origemFragmento: modificacao.origemFragmento }),
       0,
     );
     const pesoBruto = (item.peso + pesoMods) * item.quantidade;

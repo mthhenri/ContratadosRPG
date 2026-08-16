@@ -1,0 +1,77 @@
+// Seletor de enquadramento (pan/zoom) do avatar — painel sobreposto ancorado pelo host, nunca
+// empurra o resto da coluna. Só tokens do tema "Terminal de Contenção" (proibição #29).
+
+:host { display: block; }
+
+// `.botao` canônico (`docs/design/tema/_componentes.scss`) copiado pra cá — o encapsulamento de
+// estilos do Angular não deixa a definição de outro componente alcançar este.
+.botao {
+  padding: 7px 12px;
+  font: 600 11px var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  transition: filter .15s ease, background-color .15s ease, border-color .15s ease;
+
+  &:disabled { opacity: .55; cursor: default; }
+  &--primario { background: var(--accent); color: var(--bg); border: 0; &:hover:not(:disabled) { filter: brightness(1.08); } }
+  &--secundario { background: transparent; color: var(--text); border: 1px solid var(--border-strong); &:hover:not(:disabled) { background: var(--surface-2); border-color: var(--accent-border); } }
+}
+
+.enquadramento {
+  position: absolute;
+  z-index: 20;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: max-content;
+  padding: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--bg) 60%, transparent);
+
+  &__cabecalho { display: flex; align-items: center; }
+  &__titulo {
+    font: 600 11px var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--text-mute);
+  }
+
+  &__caixa {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-control);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    cursor: grab;
+    touch-action: none;
+    &:active { cursor: grabbing; }
+  }
+  &__imagem {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  &__zoom { display: flex; align-items: center; gap: 8px; }
+  &__zoom-rotulo {
+    flex: none;
+    font: 9px var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--text-mute);
+  }
+  &__zoom-entrada { flex: 1; accent-color: var(--accent); cursor: pointer; }
+
+  &__acoes { display: flex; gap: 8px; justify-content: flex-end; }
+}

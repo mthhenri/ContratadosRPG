@@ -669,8 +669,8 @@
 
         <!-- Criaturas (m4-04+) — mesma coluna do Esquadrão, seção própria abaixo (item pedido pelo
              autor: "o Esquadrão dividir uma coluna com as criaturas", não uma 3ª coluna). Card
-             sem link de navegação: `FichaVisualizacao` ainda não sabe renderizar dados de
-             criatura (pendência registrada no fechamento da m4-04, a resolver em m4-09). -->
+             clicável desde a m4-04b — abre `/painel/:campanhaId/criatura/:id`, mesmo padrão de
+             navegação (link no nome/meta + duplo clique + clique do meio) do card de ficha. -->
         <header class="detalhe__secao detalhe__secao--criaturas">
           <h2 class="detalhe__secao-titulo">Criaturas</h2>
           <span class="detalhe__secao-regua"></span>
@@ -683,7 +683,11 @@
           <ul class="detalhe__esquadrao-grid" appOverflowFade>
             @for (criatura of criaturasEsquadrao(); track criatura.id) {
               <li>
-                <div class="detalhe__ficha-card detalhe__ficha-card--criatura">
+                <div
+                  class="detalhe__ficha-card"
+                  (dblclick)="abrirCriaturaDuploClique(campanhaAtual.id, criatura.id, $event)"
+                  (auxclick)="abrirCriaturaCliqueDoMeio(campanhaAtual.id, criatura.id, $event)"
+                >
                   <span
                     class="detalhe__ficha-avatar"
                     aria-hidden="true"
@@ -696,13 +700,18 @@
                     }
                   </span>
                   <div class="detalhe__ficha-conteudo">
-                    <div class="detalhe__ficha-topo">
-                      <div class="detalhe__ficha-topo-texto">
-                        <span class="detalhe__ficha-dono">Ameaça</span>
-                        <span class="detalhe__ficha-nome">{{ criatura.nome }}</span>
+                    <a
+                      class="detalhe__ficha-link"
+                      [routerLink]="['/painel', campanhaAtual.id, 'criatura', criatura.id]"
+                    >
+                      <div class="detalhe__ficha-topo">
+                        <div class="detalhe__ficha-topo-texto">
+                          <span class="detalhe__ficha-dono">Ameaça</span>
+                          <span class="detalhe__ficha-nome">{{ criatura.nome }}</span>
+                        </div>
                       </div>
-                    </div>
-                    <span class="detalhe__ficha-meta">NA {{ criatura.naTexto }}</span>
+                      <span class="detalhe__ficha-meta">NA {{ criatura.naTexto }}</span>
+                    </a>
                     <div class="detalhe__ficha-vitais">
                       <span class="detalhe__ficha-vital detalhe__ficha-vital--vida">
                         Vida {{ criatura.vidaAtual }}/{{ criatura.vidaMaxima ?? '—' }}

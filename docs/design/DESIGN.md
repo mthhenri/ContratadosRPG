@@ -1,68 +1,137 @@
-# DESIGN.md — Tema "Terminal de Contenção" (handoff para o repo)
+# DESIGN.md — Tema "Terminal de Contenção"
 
-Este pacote traduz o tema de design dos protótipos para a stack real do
-`mthhenri/ContratadosRPG` (Angular 21 · PrimeNG 21 · Tailwind · SCSS + BEM em português).
-**Nenhum valor é inventado** — tudo espelha o bloco "TEMA VISUAL" do `CLAUDE.md` do design.
+Especificação do sistema visual do ContratadosRPG (Angular 21 · PrimeNG 21 · Tailwind ·
+SCSS + BEM em português), auditada contra o app real (`frontend/`) e as capturas de
+[`examples/`](examples/README.md). **Nenhum valor é inventado** — todo token e toda medida abaixo
+existe hoje em `docs/design/tema/` (espelhado 1:1 em `frontend/src/styles/tema/`) ou em um
+componente Angular já implementado.
+
+> Este documento descreve o estado **atual** do sistema, não um alvo pré-implementação. Ele fica
+> desatualizado com o tempo, do mesmo jeito que o código — se uma mudança de tema/componente não
+> se refletir aqui, o documento (e não o app) está errado; corrija-o na mesma tarefa.
+
+> **Fora de escopo desta revisão:** a ficha de criatura (m4-04b) está em refatoração manual —
+> nenhum token, componente ou captura relacionado a criatura foi revisado ou alterado aqui.
 
 ## Princípio
 
-`_tokens.scss` (CSS custom properties) é a **única fonte de verdade em runtime**.
-Tailwind e o preset PrimeNG apenas *apontam* para essas vars — nunca redeclaram hex.
-Trocar o `--accent` (spec M1: presets + color picker) muda tudo de uma vez.
+`tema/_tokens.scss` (CSS custom properties) é a **única fonte de verdade em runtime**. Tailwind e
+o preset PrimeNG apenas *apontam* para essas vars — nunca redeclaram hex. Trocar o `--accent`
+(seletor de tema, spec M1) muda tudo de uma vez.
 
-> **Identidade x trocável:** o *dark base* e a família *IBM Plex* são a identidade e não
-> mudam. Só o `--accent` é trocável (com trava de contraste, conforme M1).
+> **Identidade x trocável:** o *dark base* e a família *IBM Plex* são a identidade e não mudam. Só
+> o `--accent` é trocável (com trava de contraste, spec M1). **Não existe modo claro hoje** — o
+> app é dark-only (`color-scheme: dark` fixo); se isso mudar, esta seção precisa ser reescrita, não
+> só emendada.
 
-## O que vai em cada arquivo, e onde colocar
+## Paleta de cores oficial
 
-Assumindo o app Angular em `apps/web/` (ajuste ao seu layout de monorepo):
+| Token | Hex | RGB | Uso |
+|---|---|---|---|
+| `--bg` | `#0a0c0f` | `10, 12, 15` | Fundo da página |
+| `--surface` | `#13161b` | `19, 22, 27` | Cards, topbar, painéis |
+| `--surface-2` | `#1a1e24` | `26, 30, 36` | Caixas internas, inputs, stat boxes |
+| `--border` | `rgba(255,255,255,.07)` | `255, 255, 255` @ 7% | Borda hairline padrão |
+| `--border-strong` | `rgba(255,255,255,.12)` | `255, 255, 255` @ 12% | Borda de controle (input, stepper) |
+| `--text` | `#e6e8eb` | `230, 232, 235` | Texto principal |
+| `--text-dim` | `#969ba3` | `150, 155, 163` | Texto secundário, rótulo |
+| `--text-mute` | `#656a72` | `101, 106, 114` | Texto terciário, ícone inativo |
+| `--accent` | `#d53030` (padrão) | `213, 48, 48` | Cor de tema — **trocável por usuário** (seletor, spec M1) |
+| `--accent-dim` | `color-mix(accent 12%, transparent)` | — | Fundo de destaque suave |
+| `--accent-border` | `color-mix(accent 40%, transparent)` | — | Borda de destaque, hover, foco |
+| `--vida` | `#d53030` | `213, 48, 48` | Stat Vida — vermelho **fixo**, não acompanha `--accent` |
+| `--energy` | `#4c8dd0` | `76, 141, 208` | Stat Energia |
+| `--positive` | `#4a9d6b` | `74, 157, 107` | Ganho, dano furtivo |
+| `--warning` | `#d9a441` | `217, 164, 65` | Aviso, prestígio |
+| `--dano-fisico` | `#ef4444` | `239, 68, 68` | Chip de dano — Físico |
+| `--dano-balistico` | `#3b82f6` | `59, 130, 246` | Chip de dano — Balístico |
+| `--dano-explosao` | `#f97316` | `249, 115, 22` | Chip de dano — Explosão |
+| `--dano-quimico` | `#22c55e` | `34, 197, 94` | Chip de dano — Químico |
+| `--dano-geral` | `#e5e7eb` | `229, 231, 235` | Chip de dano — Geral (irredutível) |
 
-- **`tema/_tokens.scss`** → `apps/web/src/styles/tema/_tokens.scss`
-  As CSS custom properties. Importe PRIMEIRO no `styles.scss` global:
-  `@use 'tema/tokens';`
+Cada cor semântica (`--vida`, `--energy`, `--positive`, `--warning`, `--dano-*`) tem variantes
+`-dim` (12%) e `-border` (40%) via `color-mix()`, mesma receita do `--accent` — não recalcule a
+fórmula por componente. Ver `--cor-ficha` (identidade por personagem) na seção dedicada abaixo.
 
-- **`tema/_base.scss`** → `apps/web/src/styles/tema/_base.scss`
-  Reset de body, fontes IBM Plex, o grid de textura e a **scrollbar customizada global**
-  (ver "Scrollbar" abaixo). Importe DEPOIS dos tokens.
-  Instale as fontes: `npm i @fontsource/ibm-plex-mono @fontsource/ibm-plex-sans`
-  (ou use o `<link>` do Google Fonts — instruções no topo do arquivo).
+## Tipografia
 
-- **`tema/_componentes.scss`** → biblioteca de referência.
-  Copie o bloco BEM que precisar (`.card`, `.stat`, `.stepper`, `.chip-classificacao`…)
-  para o SCSS do componente standalone correspondente. Não precisa importar inteiro.
+Duas famílias, carregadas via `@fontsource` ou `<link>` do Google Fonts (ver `tema/_base.scss`):
 
-- **`tema/tailwind.config.ts`** → **mescle** o `theme.extend` no seu
-  `tailwind.config.ts` existente (cores, fontes, radius, tracking apontando p/ as vars).
+- **`--font-mono`** — `'IBM Plex Mono'`: dados, títulos, rótulos, números. É a família dominante
+  do sistema — a maior parte do que aparece na tela usa mono, não sans.
+- **`--font-sans`** — `'IBM Plex Sans'`: corpo de texto longo (descrições, parágrafos).
+- **`--tracking-label`** — `0.12em`, aplicado a todo rótulo UPPERCASE em mono.
 
-- **`tema/contencao.preset.ts`** → `apps/web/src/styles/tema/contencao.preset.ts`
-  Preset PrimeNG (base Aura). Registre no bootstrap:
-  ```ts
-  providePrimeNG({
-    theme: { preset: ContencaoPreset, options: { darkModeSelector: '.dark' } }
-  });
-  ```
-  E deixe `.dark` no `<html>` (dark-first).
+O sistema **não usa uma escala semântica H1–H6** — não há hierarquia de `<h1>`…`<h6>` aninhada;
+cada tela monta seu próprio título com `font-mono` + peso + cor, sem herdar de um nível acima.
+A tabela abaixo é a escala **real**, por papel, medida nos componentes (não um padrão H1–H6
+inventado):
 
-## Ordem de import no styles.scss global
+| Papel | Tamanho | Peso | Família | Exemplo |
+|---|---|---|---|---|
+| Título de página | `24px` | 700 | mono | "Entrar" (`login.page.scss__titulo`) |
+| Frase de destaque (marketing) | `22px` | 700 | mono | Slogan do painel de login |
+| Valor numérico grande (stat) | `22px` | 700 | mono | `.stat__valor`, cards de contagem do painel |
+| Marca da topbar | `15px` | 700 | mono, uppercase | "CONTRATADOS RPG" |
+| Título de card/seção | `13px` | 600 | mono, uppercase | `.card__titulo` |
+| Item de navegação | `11.5px` | 600 | mono | `.topbar__item` |
+| Corpo / texto longo | `14–16px` (herdado do navegador) | 400 | sans | Descrições, parágrafos |
+| Rótulo de campo / stat | `10px` | 500–600 | mono, uppercase | `.stat__rotulo`, `.abas__item` |
 
-```scss
-@use 'tema/tokens';       // 1. CSS custom properties (obrigatório primeiro)
-@use 'tema/base';         // 2. body, fontes, textura
-// componentes: cada componente importa/escreve seu próprio SCSS BEM
-```
+## Forma e espaço
 
-## Mapa de tokens (resumo)
+| Token | Valor | Uso |
+|---|---|---|
+| `--radius-card` | `6px` | Cards, painéis, dropdown |
+| `--radius-control` | `4px` | Botão, input, stepper, tab |
+| `--pad-card` | `20px` | Padding interno de card (densidade "confortável") |
+| `--gap-grid` | `16px` | Gap entre cards/colunas de grid |
+| `--grid-cell` / `--grid-line` | `32px` / `rgba(255,255,255,.02)` | Textura de grid de fundo, sutil |
 
-- Superfícies: `--bg` fundo · `--surface` cards · `--surface-2` caixas internas/inputs
-- Bordas hairline: `--border` · controle: `--border-strong`
-- Texto: `--text` · `--text-dim` · `--text-mute`
-- Accent (trocável por usuário): `--accent` + `--accent-dim` (12%) + `--accent-border` (40%)
-- Cor de ficha (por personagem, m3-61): `--cor-ficha` (só inline por instância) + `--cor-ficha-dim`
-  (12%) + `--cor-ficha-border` (40%) — ver seção dedicada abaixo
-- Semânticas: `--energy` #4c8dd0 · `--positive` #4a9d6b · `--warning` #d9a441
-- Tipografia: `--font-mono` (dados/títulos/rótulos) · `--font-sans` (corpo)
-- Forma: `--radius-card` 6px · `--radius-control` 4px
-- Densidade confortável: `--pad-card` 20px · `--gap-grid` 16px
+Sem raio maior que 6px em nenhum lugar do sistema (nada "pill"/arredondado demais) e sem sombra
+pesada — só bordas hairline (`--border`/`--border-strong`) e, no máximo, o `box-shadow` sutil do
+dropdown de perfil.
+
+### Breakpoints (`tema/_breakpoints.scss`)
+
+| Token | Valor | Uso |
+|---|---|---|
+| `$bp-mobile` | `560px` | 1 coluna, navegação colapsa pra ícone, mixin `bp.mobile` |
+| `$bp-tablet` | `1080px` | Segundo degrau — grades de 3 colunas viram 1 antes do mobile puro, mixin `bp.tablet` |
+| `$alvo-toque` | `44px` | Altura/largura mínima de alvo tocável (WCAG 2.5.5) abaixo de `$bp-mobile` |
+
+Media queries são avaliadas em tempo de compilação e não leem `var(--…)` — por isso o breakpoint é
+um token **Sass**, não uma CSS custom property (não viola a proibição de hex/raio hardcoded, que
+trata de valor visual, não de estrutura responsiva).
+
+Toda verificação visual do projeto usa dois viewports fixos — nunca a janela padrão do navegador:
+**mobile `360×800`** (Galaxy S20 FE) e **desktop `1920×1080`** (FullHD) — ver
+`.agents/skills/verify/`. As capturas de [`examples/`](examples/README.md) seguem os dois mesmos
+tamanhos.
+
+O shell de página (`app-layout`) usa `padding: 24px 20px` no desktop e `16px 12px` no mobile,
+sem largura máxima fixa — cada tela decide sua própria grade de colunas.
+
+## Componentes visuais base
+
+Blocos BEM canônicos, prontos pra copiar de `tema/_componentes.scss` para o SCSS scoped do
+componente que estiver construindo — não importe o arquivo inteiro.
+
+| Bloco | O que é | Variantes |
+|---|---|---|
+| `.card` | Container de seção — cabeçalho com índice numerado + título uppercase + régua fina | — |
+| `.stat` | Caixa de estatística (rótulo + valor grande) | `--vida` (borda/valor em `--accent`), `--energia` (em `--energy`) |
+| `.stepper` | Input numérico com botões `−`/`+` | — |
+| `.botao` | Botão de ação | `--primario` (fundo `--accent`), `--secundario` (borda, transparente) |
+| `.chip-classificacao` | Selo mono uppercase com borda (ex.: "CLASSE-E // CONFIDENCIAL") | — |
+| `.selecionavel--ativo` | Estado ativo de item selecionável/tab avulso | — |
+| `.topbar` | Barra de navegação superior (chrome "Barra de Comando") | `__item--ativo`, dropdown de perfil (`__perfil-*`) |
+| `.abas` | Barra de abas dentro de um card (ficha, calculadora) | `__item--ativa` |
+
+Os dois últimos (`.topbar`, `.abas`) foram extraídos direto de `layout.component.scss` e
+`ficha-visualizacao.component.scss` nesta atualização — existiam como padrão real no app, mas
+nunca tinham sido documentados aqui. Ver as telas em [`examples/`](examples/README.md) para o
+resultado renderizado de cada um.
 
 ## Cor de ficha (identidade por personagem, m3-61)
 
@@ -102,8 +171,9 @@ precisar ser repetido por componente.
   duas bases (clara/escura) do tema em runtime, que sobrescrevem esses tokens. Nenhum hex solto
   (proibição #29).
 
-Telas futuras (ficha de jogador/criatura, guia de missão) herdam esse padrão automaticamente —
-**não reintroduzir a scrollbar nativa** nem restilizá-la localmente por componente.
+`:root { color-scheme: dark; }`, também em `_base.scss`, avisa o navegador que o app é dark-only:
+controles nativos sem CSS próprio (popup de `<select>`, date/time picker, autofill) usam a
+variante escura do SO em vez do branco padrão.
 
 ## Foco de teclado (padrão global)
 
@@ -114,12 +184,43 @@ em vez do outline padrão (inconsistente) do navegador. Inputs/textarea ficam de
 global porque já têm o próprio tratamento de `:focus` (borda `--accent-border`) definido por
 página — um outline extra ali duplicaria o sinal.
 
-Telas futuras herdam esse padrão automaticamente — não reintroduzir `outline: none` sem repor um
-tratamento de foco equivalente.
+## Onde cada arquivo vive
+
+`docs/design/tema/` é espelhado 1:1 em `frontend/src/styles/tema/` — qualquer mudança de token,
+base ou preset precisa ser feita **nos dois lugares** (ou extraída pra um só, se um dia isso for
+automatizado). Hoje são arquivos irmãos mantidos manualmente em sincronia.
+
+- **`tema/_tokens.scss`** — as CSS custom properties. Importado primeiro em `styles.scss`.
+- **`tema/_base.scss`** — reset de body, fontes IBM Plex, textura de grid, `color-scheme: dark`,
+  scrollbar customizada global, foco de teclado, indicador de campo obrigatório.
+- **`tema/_breakpoints.scss`** — `$bp-mobile`/`$bp-tablet`/`$alvo-toque` + mixins `bp.mobile`/
+  `bp.tablet`, usados via `@use 'tema/breakpoints' as bp;`.
+- **`tema/_componentes.scss`** — biblioteca de referência. Copie o bloco BEM que precisar
+  (`.card`, `.stat`, `.stepper`, `.topbar`, `.abas`…) para o SCSS do componente standalone
+  correspondente.
+- **`tema/tailwind.config.ts`** — o `theme.extend` que o `tailwind.config.ts` real do frontend usa
+  (cores, fontes, radius, tracking apontando pras mesmas vars de `_tokens.scss`).
+- **`tema/contencao.preset.ts`** — preset PrimeNG (base Aura), registrado em `app.config.ts`:
+  ```ts
+  providePrimeNG({
+    theme: { preset: ContencaoPreset, options: { darkModeSelector: '.dark' } }
+  });
+  ```
+  Importa de `@primeuix/themes` (nome do pacote no PrimeNG 21) — não `@primeng/themes`, que não
+  está instalado.
 
 ## Referência visual
 
-Os protótipos aprovados (mesmos tokens) servem de referência 1:1 para o dev reproduzir:
-- `Calculadora de Atributos.dc.html` — steppers, stat grid, cabeçalho de seção
-- `Ficha de Jogador.dc.html` — barras Vida/Energia, inventário, chips
-- `Ficha de Criatura.dc.html` — layout denso, modificadores, resistências
+As capturas em [`examples/`](examples/README.md) são HTML único e offline exportado do app real
+(`1920×1080` + `360×800`, dados de uma seed descartável, CSS e imagens embutidos, sem script) —
+não mockups. Consulte a tabela completa lá; aqui vão as três mais representativas do padrão geral:
+
+- [`examples/campanhas.html`](examples/campanhas.html) — topbar, cards de stat, card de campanha
+- [`examples/ficha-de-jogador.html`](examples/ficha-de-jogador.html) — barras Vida/Energia, grid de
+  atributos, abas
+- [`examples/ficha-criacao-guia.html`](examples/ficha-criacao-guia.html) — trilha de passos, resumo
+  operacional lateral
+
+A ficha de criatura está **fora desta revisão** (m4-04b em refatoração manual) — não há captura
+nem entrada de referência para ela aqui; ver a nota de exclusão em
+[`examples/README.md`](examples/README.md#excluído-de-propósito).

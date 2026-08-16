@@ -253,6 +253,7 @@ describe('FichaService', () => {
     nome: 'Agente Alfa',
     cor: null,
     imagemUrl: null,
+    imagemFoco: null,
     oculta: false,
     dados: criarDados(),
   };
@@ -1302,6 +1303,40 @@ describe('FichaService', () => {
       expect(resultado).toBe(fichaAlterada);
     });
 
+    it('repassa imagemFoco ao repositório quando informado', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      const foco = { x: 30, y: 70, escala: 1.5 };
+      fichaRepositorio.alterarFicha.mockResolvedValue({ ...fichaPersistida, imagemFoco: foco });
+
+      await service.alterarFicha(
+        { id: 5, nome: 'Agente Alfa', imagemFoco: foco, dados: criarDados() },
+        usuarioDono,
+      );
+
+      expect(fichaRepositorio.alterarFicha).toHaveBeenCalledWith({
+        id: 5,
+        nome: 'Agente Alfa',
+        imagemFoco: foco,
+        dados: criarDados(),
+      });
+    });
+
+    it.each([
+      { x: -1, y: 50, escala: 1 },
+      { x: 101, y: 50, escala: 1 },
+      { x: 50, y: -1, escala: 1 },
+      { x: 50, y: 101, escala: 1 },
+      { x: 50, y: 50, escala: 0.9 },
+      { x: 50, y: 50, escala: 3.1 },
+    ])('lança BusinessException para enquadramento fora dos limites (%j)', async (foco) => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+
+      await expect(
+        service.alterarFicha({ id: 5, nome: 'Agente Alfa', imagemFoco: foco, dados: criarDados() }, usuarioDono),
+      ).rejects.toThrow(BusinessException);
+      expect(fichaRepositorio.alterarFicha).not.toHaveBeenCalled();
+    });
+
     it('repassa oculta ao repositório quando informado', async () => {
       fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
       const fichaAlterada = { ...fichaPersistida, oculta: true };
@@ -2293,6 +2328,7 @@ describe('FichaService', () => {
       nome: 'A Estátua',
       cor: null,
       imagemUrl: null,
+      imagemFoco: null,
       oculta: false,
       dados: criarDadosCriatura(),
     } as unknown as FichaRecuperadaDto;
@@ -2437,6 +2473,38 @@ describe('FichaService', () => {
         });
         expect(campanhaGateway.emitirFichaAlterada).toHaveBeenCalledWith(fichaAlterada);
         expect(resultado).toEqual(fichaAlterada);
+      });
+
+      it('repassa imagemFoco ao repositório quando informado', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaCriaturaPersistida);
+        const foco = { x: 20, y: 80, escala: 2 };
+        fichaRepositorio.alterarFicha.mockResolvedValue({ ...fichaCriaturaPersistida, imagemFoco: foco });
+
+        await service.alterarFichaCriatura(
+          { id: 9, nome: 'A Estátua', imagemFoco: foco, dados: criarDadosCriatura() },
+          usuarioMestre,
+        );
+
+        expect(fichaRepositorio.alterarFicha).toHaveBeenCalledWith({
+          id: 9,
+          nome: 'A Estátua',
+          cor: undefined,
+          imagemFoco: foco,
+          oculta: undefined,
+          dados: criarDadosCriatura(),
+        });
+      });
+
+      it('lança BusinessException para enquadramento fora dos limites', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue(fichaCriaturaPersistida);
+
+        await expect(
+          service.alterarFichaCriatura(
+            { id: 9, nome: 'A Estátua', imagemFoco: { x: 50, y: 50, escala: 4 }, dados: criarDadosCriatura() },
+            usuarioMestre,
+          ),
+        ).rejects.toThrow(BusinessException);
+        expect(fichaRepositorio.alterarFicha).not.toHaveBeenCalled();
       });
 
       it('lança UnauthorizedAccessException quando o autor não é o dono nem o mestre', async () => {

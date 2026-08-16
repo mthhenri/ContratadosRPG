@@ -2373,6 +2373,97 @@ describe('FichaInventario', () => {
       expect(alvo.emitidos[1].itens[1].containerId).toBeUndefined();
     });
 
+    /**
+     * Bug reportado: "tenho quatro itens na pochete, quero remover dois pro inventário principal" —
+     * o único caminho era `escolherContainer` movendo o item inteiro (stack completo) de uma vez,
+     * sem opção de mover só parte das unidades. Mesmo padrão do dialog "quantos remover" (stack de
+     * quantidade > 1), agora reusado pra "quantos mover".
+     */
+    it('escolher um destino diferente com item empilhado (quantidade > 1) abre o diálogo de quantidade em vez de mover tudo direto', () => {
+      const pochete: CarrinhoItemDto = {
+        nome: 'Pochete',
+        categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+        custo: 200,
+        peso: 0.2,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        id: 'poch-1',
+      };
+      const alvo = montar({ itens: [pochete, municao(4)], amplificadores: [] });
+
+      alvo.componentInstance['escolherContainer'](1, 'poch-1');
+
+      expect(alvo.emitidos).toEqual([]);
+      expect(alvo.componentInstance['moverQuantidadePendente']()).toEqual({ indice: 1, containerId: 'poch-1' });
+    });
+
+    it('confirmar o diálogo com uma quantidade parcial divide o stack: parte fica no container de origem, parte vai pro destino', () => {
+      const pochete: CarrinhoItemDto = {
+        nome: 'Pochete',
+        categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+        custo: 200,
+        peso: 0.2,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        id: 'poch-1',
+      };
+      const dentro: CarrinhoItemDto = { ...municao(4), containerId: 'poch-1' };
+      const alvo = montar({ itens: [pochete, dentro], amplificadores: [] });
+
+      alvo.componentInstance['escolherContainer'](1, null);
+      alvo.componentInstance['quantidadeMover'].setValue(2);
+      alvo.componentInstance['confirmarMoverQuantidade']();
+
+      const itens = alvo.emitidos[0].itens;
+      expect(itens).toHaveLength(3);
+      expect(itens[1]).toMatchObject({ nome: '9mm', quantidade: 2, containerId: 'poch-1' });
+      expect(itens[2]).toMatchObject({ nome: '9mm', quantidade: 2 });
+      expect(itens[2].containerId).toBeUndefined();
+      expect(alvo.componentInstance['moverQuantidadePendente']()).toBeNull();
+    });
+
+    it('confirmar o diálogo com a quantidade total move o stack inteiro (sem sobrar entrada vazia)', () => {
+      const pochete: CarrinhoItemDto = {
+        nome: 'Pochete',
+        categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+        custo: 200,
+        peso: 0.2,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        id: 'poch-1',
+      };
+      const alvo = montar({ itens: [pochete, municao(4)], amplificadores: [] });
+
+      alvo.componentInstance['escolherContainer'](1, 'poch-1');
+      alvo.componentInstance['confirmarMoverQuantidade']();
+
+      const itens = alvo.emitidos[0].itens;
+      expect(itens).toHaveLength(2);
+      expect(itens[1]).toMatchObject({ nome: '9mm', quantidade: 4, containerId: 'poch-1' });
+    });
+
+    it('escolher o mesmo destino atual (ou item de quantidade 1) move direto, sem abrir o diálogo', () => {
+      const pochete: CarrinhoItemDto = {
+        nome: 'Pochete',
+        categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+        custo: 200,
+        peso: 0.2,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        id: 'poch-1',
+      };
+      const alvo = montar({ itens: [pochete, municao()], amplificadores: [] });
+
+      alvo.componentInstance['escolherContainer'](1, 'poch-1');
+
+      expect(alvo.emitidos[0].itens[1].containerId).toBe('poch-1');
+      expect(alvo.componentInstance['moverQuantidadePendente']()).toBeNull();
+    });
+
     it('o menu "Mover para" (popover próprio, não `<select>` nativo) reflete o container atual e move ao clicar numa opção', () => {
       const pochete: CarrinhoItemDto = {
         nome: 'Pochete',

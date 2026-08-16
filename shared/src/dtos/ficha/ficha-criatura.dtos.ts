@@ -164,19 +164,27 @@ export interface FichaCriaturaDeslocamentoDto {
 }
 
 /**
- * Um ataque da criatura. `dano` é texto livre na notação de dados do sistema (ex.
- * `"4D12+10"`) — a tabela de dano de referência por VD/custo de ação
+ * Um ataque da criatura. `teste`, `dano` e `danoCritico` são texto livre na notação de dados
+ * do sistema (ex. `"4D12+10"`) — a tabela de dano de referência por VD/custo de ação
  * (`shared/regras/criatura`) é só **sugestão**, o Mestre pode divergir. `area: true` exige
  * Ação Completa por padrão e testa Destreza/Vigor do alvo contra a DT do teste de ataque da
  * criatura, em vez da Defesa individual (regra de uso, não de forma).
+ *
+ * `teste`/`danoCritico` viraram expressão livre (não mais `atributo: keyof FichaAtributosDto`
+ * + dobra automática) porque um ataque de criatura pode testar/rolar mais dados do que o
+ * convencional de um único atributo — o Mestre escreve a fórmula exata que quer, inclusive
+ * quando o "crítico" não é simplesmente o dobro do dano normal (ex.: muda o tipo de dano).
  */
 export interface FichaCriaturaAtaqueDto {
   readonly nome: string;
-  /** Atributo de teste — Luta é o padrão para corpo a corpo, mas qualquer atributo serve. */
-  readonly atributo: keyof FichaAtributosDto;
+  /** Fórmula de teste (ex. `"lutad20kh1+3"`) — livre, não fica preso a um único atributo. */
+  readonly teste: string;
   readonly custoAcao: CustoAcaoEnum;
+  /** Fórmula de dano (ex. `"4D12+10[Físico]"`) — o tipo de dano vai na própria fórmula, não é
+   * mais um campo à parte (`rolarFormula` já extrai a tag de tipo direto da expressão). */
   readonly dano: string;
-  readonly tipoDano: TipoDanoEnum;
+  /** Fórmula de dano crítico — independente de `dano`, o Mestre escreve o efeito exato. */
+  readonly danoCritico: string;
   readonly area: boolean;
   /** Condição/teste/efeito adicional além do dano — opcional. */
   readonly efeito?: string;

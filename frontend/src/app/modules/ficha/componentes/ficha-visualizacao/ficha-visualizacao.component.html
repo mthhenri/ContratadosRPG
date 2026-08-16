@@ -98,7 +98,22 @@
                 [appTooltip]="'Cor de identidade da ficha'"
               >
                 @if (imagemUrl(); as urlImagem) {
-                  <img class="ficha-ident__avatar-imagem" [src]="urlImagem" alt="" />
+                  <img
+                    class="ficha-ident__avatar-imagem"
+                    [src]="urlImagem"
+                    alt=""
+                    [style.object-position]="estiloFocoPosicao()"
+                    [style.transform]="estiloFocoEscala()"
+                  />
+                  <button
+                    type="button"
+                    class="ficha-ident__avatar-enquadrar"
+                    aria-label="Ajustar enquadramento"
+                    [appTooltip]="'Ajustar enquadramento'"
+                    (click)="abrirEnquadramentoExistente()"
+                  >
+                    <app-icone nome="busca" />
+                  </button>
                   <button
                     type="button"
                     class="ficha-ident__avatar-remover"
@@ -125,6 +140,16 @@
                   />
                   <app-icone nome="editar" />
                 </label>
+
+                @if (enquadramentoOrigem(); as origemAtual) {
+                  <app-ajuste-enquadramento-imagem
+                    [origem]="origemAtual"
+                    [proporcao]="{ largura: 100, altura: 100 }"
+                    [focoInicial]="arquivoPendente() ? null : foco()"
+                    (confirmar)="confirmarEnquadramento($event)"
+                    (cancelar)="fecharEnquadramento()"
+                  />
+                }
               </div>
               @if (erroImagem(); as mensagemErro) {
                 <span class="ficha-ident__aviso-obrigatorio">{{ mensagemErro }}</span>
@@ -147,7 +172,13 @@
           } @else {
             <span class="ficha-ident__avatar" aria-hidden="true" [style.--cor-ficha]="cor()">
               @if (imagemUrl(); as urlImagem) {
-                <img class="ficha-ident__avatar-imagem" [src]="urlImagem" alt="" />
+                <img
+                  class="ficha-ident__avatar-imagem"
+                  [src]="urlImagem"
+                  alt=""
+                  [style.object-position]="estiloFocoPosicao()"
+                  [style.transform]="estiloFocoEscala()"
+                />
               }
             </span>
           }
@@ -1163,7 +1194,7 @@
                              sem alterar o valor base (Energia/Deslocamento/Vida/Maestria intocados). -->
                         <div class="ficha-atributo-linha__mini">
                           <span class="ficha-atributo-linha__rotulo-mini">
-                            <app-icone [nome]="'dado'" class="ficha-atributo-linha__rotulo-icone" />
+                            <app-icone [nome]="'d20'" class="ficha-atributo-linha__rotulo-icone" />
                             Dados
                           </span>
                           <div class="ficha-atributo__dados">
@@ -1213,7 +1244,7 @@
                           [appTooltip]="'Rolar teste de ' + campo.nome"
                           (click)="rolarTesteAtributo(campo)"
                         >
-                          <app-icone [nome]="'dado'" />
+                          <app-icone [nome]="'d20'" />
                         </button>
                       }
                       <!-- Abreviação = o "rótulo" do atributo — hover/foco revela o nome + a DT dele
@@ -1282,7 +1313,7 @@
                             dadosTesteDe(campo.chave)
                           "
                         >
-                          <app-icone [nome]="'dado'" />
+                          <app-icone [nome]="'d20'" />
                           {{ dadosTesteDe(campo.chave) > 0 ? '+' : '' }}{{ dadosTesteDe(campo.chave) }}
                         </span>
                       }
@@ -1430,7 +1461,7 @@
                     [appTooltip]="'Rolar ' + linha.rotulo"
                     (click)="rolarDano(linha)"
                   >
-                    <app-icone [nome]="'dado'" />
+                    <app-icone [nome]="'d20'" />
                   </button>
                 }
                 <span class="ficha-mini__rotulo">{{ linha.rotulo }}</span>
@@ -1480,7 +1511,7 @@
                     [appTooltip]="'Rolar Iniciativa'"
                     (click)="rolarIniciativa()"
                   >
-                    <app-icone [nome]="'dado'" />
+                    <app-icone [nome]="'d20'" />
                   </button>
                 }
                 <span class="ficha-mini__rotulo">Iniciativa</span>
