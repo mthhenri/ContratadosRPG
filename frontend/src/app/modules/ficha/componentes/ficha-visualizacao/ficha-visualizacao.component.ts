@@ -86,6 +86,7 @@ import {
 
 import { Dialog } from 'primeng/dialog';
 
+import { FocoImagem } from '../../../../shared/foco-imagem.directive';
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
 import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
@@ -395,6 +396,7 @@ export interface AjusteClasse {
     Tooltip,
     Dialog,
     AjusteEnquadramentoImagem,
+    FocoImagem,
   ],
   templateUrl: './ficha-visualizacao.component.html',
   styleUrl: './ficha-visualizacao.component.scss',
@@ -421,21 +423,9 @@ export class FichaVisualizacao {
    */
   readonly imagemUrl = input<string | null>(null);
 
-  /** Enquadramento do avatar (pan/zoom, ajuste pós-mockup) — ver {@link FichaImagemFocoDto}. */
+  /** Enquadramento do avatar (crop-pan, ajuste pós-mockup) — ver {@link FichaImagemFocoDto}. Aplicado
+   * na `<img>` do avatar via a diretiva `FocoImagem` (ver template). */
   readonly foco = input<FichaImagemFocoDto | null>(null);
-
-  /**
-   * `object-position`/`transform: scale()` do avatar a partir de {@link foco} — `null` (sem
-   * ajuste) não aplica nenhum dos dois, idêntico ao visual de hoje (`object-fit: cover` sozinho).
-   */
-  protected readonly estiloFocoPosicao = computed(() => {
-    const focoAtual = this.foco();
-    return focoAtual ? `${focoAtual.x}% ${focoAtual.y}%` : null;
-  });
-  protected readonly estiloFocoEscala = computed(() => {
-    const focoAtual = this.foco();
-    return focoAtual?.escala ? `scale(${focoAtual.escala})` : null;
-  });
 
   /** Ficha oculta (m3-65) — `true` esconde a ficha (nem carteirinha) de quem não é dono/mestre. */
   readonly oculta = input<boolean>(false);

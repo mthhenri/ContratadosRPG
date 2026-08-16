@@ -98,13 +98,14 @@
                 [appTooltip]="'Cor de identidade da ficha'"
               >
                 @if (imagemUrl(); as urlImagem) {
-                  <img
-                    class="ficha-ident__avatar-imagem"
-                    [src]="urlImagem"
-                    alt=""
-                    [style.object-position]="estiloFocoPosicao()"
-                    [style.transform]="estiloFocoEscala()"
-                  />
+                  <div class="ficha-ident__avatar-moldura">
+                    <img
+                      class="ficha-ident__avatar-imagem"
+                      [src]="urlImagem"
+                      alt=""
+                      [appFocoImagem]="foco()"
+                    />
+                  </div>
                   <button
                     type="button"
                     class="ficha-ident__avatar-enquadrar"
@@ -172,13 +173,14 @@
           } @else {
             <span class="ficha-ident__avatar" aria-hidden="true" [style.--cor-ficha]="cor()">
               @if (imagemUrl(); as urlImagem) {
-                <img
-                  class="ficha-ident__avatar-imagem"
-                  [src]="urlImagem"
-                  alt=""
-                  [style.object-position]="estiloFocoPosicao()"
-                  [style.transform]="estiloFocoEscala()"
-                />
+                <div class="ficha-ident__avatar-moldura">
+                  <img
+                    class="ficha-ident__avatar-imagem"
+                    [src]="urlImagem"
+                    alt=""
+                    [appFocoImagem]="foco()"
+                  />
+                </div>
               }
             </span>
           }

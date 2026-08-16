@@ -67,7 +67,7 @@ describe('AjusteEnquadramentoImagem', () => {
     revogarEspiao.mockRestore();
   });
 
-  it('arrastar pra direita revela mais do lado esquerdo da imagem (x diminui)', () => {
+  it('sem zoom (escala 1), arrastar não move nada — precisa dar zoom antes de enquadrar', () => {
     const { fixture } = montar('https://exemplo.test/avatar.webp');
     const componente = fixture.componentInstance;
     const caixa = caixaDeMentira(200, 200);
@@ -75,12 +75,24 @@ describe('AjusteEnquadramentoImagem', () => {
     componente['aoIniciarArrasto']({ currentTarget: alvoDeMentira(), pointerId: 1, clientX: 0, clientY: 0 } as unknown as PointerEvent);
     componente['aoMoverArrasto']({ clientX: 40, clientY: 0 } as unknown as PointerEvent, caixa);
 
-    expect(componente['x']()).toBe(30); // 50 - (40/200*100)
+    expect(componente['x']()).toBe(50);
     expect(componente['y']()).toBe(50);
   });
 
-  it('arrastar pra baixo revela mais do topo da imagem (y diminui) e satura em 0/100', () => {
-    const { fixture } = montar('https://exemplo.test/avatar.webp');
+  it('com zoom, arrastar pra direita revela mais do lado esquerdo da imagem (x diminui)', () => {
+    const { fixture } = montar('https://exemplo.test/avatar.webp', { x: 50, y: 50, escala: 2 });
+    const componente = fixture.componentInstance;
+    const caixa = caixaDeMentira(200, 200);
+
+    componente['aoIniciarArrasto']({ currentTarget: alvoDeMentira(), pointerId: 1, clientX: 0, clientY: 0 } as unknown as PointerEvent);
+    componente['aoMoverArrasto']({ clientX: 40, clientY: 0 } as unknown as PointerEvent, caixa);
+
+    expect(componente['x']()).toBe(30); // 50 - (40/200*100)/(2-1)
+    expect(componente['y']()).toBe(50);
+  });
+
+  it('com zoom, arrastar pra baixo revela mais do topo da imagem (y diminui) e satura em 0/100', () => {
+    const { fixture } = montar('https://exemplo.test/avatar.webp', { x: 50, y: 50, escala: 2 });
     const componente = fixture.componentInstance;
     const caixa = caixaDeMentira(100, 100);
 
@@ -91,7 +103,7 @@ describe('AjusteEnquadramentoImagem', () => {
   });
 
   it('não move nada se aoMoverArrasto for chamado sem arrasto iniciado', () => {
-    const { fixture } = montar('https://exemplo.test/avatar.webp');
+    const { fixture } = montar('https://exemplo.test/avatar.webp', { x: 50, y: 50, escala: 2 });
     const componente = fixture.componentInstance;
     componente['aoMoverArrasto']({ clientX: 999, clientY: 999 } as unknown as PointerEvent, caixaDeMentira(100, 100));
     expect(componente['x']()).toBe(50);

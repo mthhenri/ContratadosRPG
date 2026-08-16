@@ -14,12 +14,13 @@
     (pointercancel)="aoSoltarArrasto($event)"
   >
     <img
+      #focoImg="appFocoImagem"
       class="enquadramento__imagem"
       [src]="previewUrl()"
       alt=""
       draggable="false"
-      [style.object-position]="x() + '% ' + y() + '%'"
-      [style.transform]="'scale(' + escala() + ')'"
+      [appFocoImagem]="{ x: x(), y: y(), escala: escala() }"
+      [appFocoImagemCaixa]="proporcao()"
     />
   </div>
 

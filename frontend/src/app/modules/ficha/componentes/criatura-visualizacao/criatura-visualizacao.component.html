@@ -36,13 +36,14 @@
           @if (ajustavel()) {
             <div class="criatura__avatar criatura__avatar--editavel" [style.--cor-ficha]="cor()">
               @if (imagemUrl(); as urlImagem) {
-                <img
-                  class="criatura__avatar-imagem"
-                  [src]="urlImagem"
-                  alt=""
-                  [style.object-position]="estiloFocoPosicao()"
-                  [style.transform]="estiloFocoEscala()"
-                />
+                <div class="criatura__avatar-moldura">
+                  <img
+                    class="criatura__avatar-imagem"
+                    [src]="urlImagem"
+                    alt=""
+                    [appFocoImagem]="foco()"
+                  />
+                </div>
                 <button
                   type="button"
                   class="criatura__avatar-enquadrar"
@@ -92,13 +93,14 @@
           } @else {
             <span class="criatura__avatar" aria-hidden="true" [style.--cor-ficha]="cor()">
               @if (imagemUrl(); as urlImagem) {
-                <img
-                  class="criatura__avatar-imagem"
-                  [src]="urlImagem"
-                  alt=""
-                  [style.object-position]="estiloFocoPosicao()"
-                  [style.transform]="estiloFocoEscala()"
-                />
+                <div class="criatura__avatar-moldura">
+                  <img
+                    class="criatura__avatar-imagem"
+                    [src]="urlImagem"
+                    alt=""
+                    [appFocoImagem]="foco()"
+                  />
+                </div>
               }
             </span>
           }

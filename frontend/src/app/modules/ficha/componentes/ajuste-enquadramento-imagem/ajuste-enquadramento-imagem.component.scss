@@ -59,6 +59,9 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    // Origem fixa no canto — mesmo referencial usado por `estiloTransformEnquadramento`
+    // (`translate()+scale()` únicos, sem o `object-position` antigo).
+    transform-origin: 0 0;
     pointer-events: none;
     user-select: none;
   }

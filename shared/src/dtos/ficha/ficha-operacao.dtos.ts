@@ -273,15 +273,17 @@ export interface FichaExcluirDto {
  */
 
 /**
- * Enquadramento do avatar (pan/zoom, ajuste pós-mockup) — metadado puro, sem processamento de
+ * Enquadramento do avatar (crop-pan, ajuste pós-mockup) — metadado puro, sem processamento de
  * imagem no servidor (`m3-62` deixou "crop/editor de imagem no client" fora de escopo; isto é a
- * retomada, sem `sharp`). `x`/`y` são percentuais (0–100, mesma semântica de `object-position`)
- * e `escala` é o multiplicador de zoom (1–3) aplicado por cima via `transform: scale()` no
- * client. `null`/ausente equivale ao comportamento de hoje (`object-position: 50% 50%`, sem
- * zoom) — fichas existentes não mudam de aparência. Persistido junto de `imagemUrl` (coluna
- * `imagem_foco`, JSONB) mas **não** pelo endpoint de upload (`POST /ficha/:id/imagem`, multipart):
- * viaja pelo `PUT /ficha/:id` genérico, como `cor`, porque é só números — dá para reajustar sem
- * reenviar o arquivo.
+ * retomada, sem `sharp`). `x`/`y` são percentuais (0–100) do ponto da imagem ampliada que fica
+ * centralizado na caixa, e `escala` é o multiplicador de zoom (1–3). No client os três viram um
+ * único `transform: translate()+scale()` (ver `estiloTransformEnquadramento`,
+ * `frontend/src/app/shared/enquadramento-imagem.util.ts`) — sem margem de arrasto até dar zoom.
+ * `null`/ausente equivale a `escala: 1` (sem zoom, avatar centralizado) — fichas existentes sem
+ * ajuste não mudam de aparência. Persistido junto de `imagemUrl` (coluna `imagem_foco`, JSONB)
+ * mas **não** pelo endpoint de upload (`POST /ficha/:id/imagem`, multipart): viaja pelo
+ * `PUT /ficha/:id` genérico, como `cor`, porque é só números — dá para reajustar sem reenviar o
+ * arquivo.
  */
 export interface FichaImagemFocoDto {
   readonly x: number;

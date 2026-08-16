@@ -32,6 +32,7 @@ import {
 } from '@contratados-rpg/shared/regras/criatura';
 
 import { TemaService, hexParaHsl } from '../../../../core/services/tema.service';
+import { FocoImagem } from '../../../../shared/foco-imagem.directive';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { AutoFocus } from '../../../../shared/auto-focus/auto-focus.directive';
@@ -119,6 +120,7 @@ const COR_FICHA_PADRAO = '#d53030';
     CriaturaAtaqueLista,
     CriaturaHabilidadeLista,
     AjusteEnquadramentoImagem,
+    FocoImagem,
   ],
   templateUrl: './criatura-visualizacao.component.html',
   styleUrl: './criatura-visualizacao.component.scss',
@@ -138,19 +140,6 @@ export class CriaturaVisualizacao {
   readonly dados = input.required<FichaCriaturaDadosDto>();
   /** Dono (mestre) edita; visualizador revelado é só-leitura — mesmo sinal de `FichaVisualizacao.ajustavel`. */
   readonly ajustavel = input.required<boolean>();
-
-  /**
-   * `object-position`/`transform: scale()` do avatar a partir de {@link foco} — mesmo padrão de
-   * `FichaVisualizacao.estiloFocoPosicao`/`estiloFocoEscala`. `null` não aplica nenhum dos dois.
-   */
-  protected readonly estiloFocoPosicao = computed(() => {
-    const focoAtual = this.foco();
-    return focoAtual ? `${focoAtual.x}% ${focoAtual.y}%` : null;
-  });
-  protected readonly estiloFocoEscala = computed(() => {
-    const focoAtual = this.foco();
-    return focoAtual?.escala ? `scale(${focoAtual.escala})` : null;
-  });
 
   readonly vitalidadeMudou = output<AjusteCriaturaVitalidade>();
   readonly defesaMudou = output<number>();

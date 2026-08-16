@@ -1322,15 +1322,27 @@
     }
   }
 
-  // A foto propriamente dita, por cima do fundo tracejado decorativo — mesmo raio da caixa
-  // (2px a menos por causa da borda de 2px do avatar) para não vazar quina quadrada.
+  // Moldura própria pro crop — o `overflow: hidden` não pode ficar direto em `&__avatar`, porque
+  // os selos (`&__avatar-upload`/`&__avatar-enquadrar`/`&__avatar-remover`, abaixo) usam offset
+  // negativo pra ficar meio pra fora da caixa de propósito. Sem essa moldura, a imagem com zoom
+  // (crop-pan) vazava por cima deles (o "zoom quebrado" reportado pelo autor).
+  &__avatar-moldura {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: calc(var(--radius-control) - 2px);
+  }
+
+  // A foto propriamente dita, por cima do fundo tracejado decorativo. `transform-origin: 0 0` —
+  // mesmo referencial de `estiloTransformEnquadramento` (crop-pan em `translate()+scale()` únicos,
+  // ver `shared/enquadramento-imagem.util.ts`).
   &__avatar-imagem {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: calc(var(--radius-control) - 2px);
+    transform-origin: 0 0;
   }
 
   // Selo de lápis no canto inferior direito — alvo de clique próprio para o `<input type="file">`,
