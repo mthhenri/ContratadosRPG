@@ -82,6 +82,13 @@ describe('CriaturaVisualizacao', () => {
     expect(bandeja.entradas()[0].formula).toBe('4D12+10');
   });
 
+  it('rola o crítico de um ataque (dobra dados/fixos) e mostra o resultado na bandeja', () => {
+    const { fixture, bandeja } = montar();
+    fixture.componentInstance['rolarAtaque'](dados.ataques[0], true);
+    expect(bandeja.entradas()).toHaveLength(1);
+    expect(bandeja.entradas()[0].resultado.critico).toBe(true);
+  });
+
   it('rola um teste de atributo e mostra o resultado na bandeja', () => {
     const { fixture, bandeja } = montar();
     fixture.componentInstance['rolarTesteAtributo']('vontade');

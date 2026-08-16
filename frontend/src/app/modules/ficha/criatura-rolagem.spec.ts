@@ -69,4 +69,17 @@ describe('rolarAtaqueCriatura', () => {
     expect(resultado?.rotulo).toBe('Golpe de Pedra');
     expect(resultado?.resultado.dados[0]).toMatchObject({ faces: 12 });
   });
+
+  it('crítico (m3-30) dobra a quantidade de dados e a constante fixa', () => {
+    const ataque: FichaCriaturaAtaqueDto = {
+      nome: 'Golpe de Pedra', atributo: 'luta', custoAcao: CustoAcaoEnum.PADRAO,
+      dano: '4D12+10', tipoDano: TipoDanoEnum.FISICO, area: false,
+    };
+
+    const resultado = rolarAtaqueCriatura({ atributos }, ataque, true);
+
+    expect(resultado?.resultado.critico).toBe(true);
+    expect(resultado?.resultado.dados[0].valores).toHaveLength(8);
+    expect(resultado?.resultado.constante).toBe(20);
+  });
 });

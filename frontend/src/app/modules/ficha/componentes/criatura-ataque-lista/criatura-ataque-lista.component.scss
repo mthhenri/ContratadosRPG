@@ -85,6 +85,13 @@
     // Teste fica no tom neutro e Dano no accent — mesma hierarquia dos dois botões do mockup.
     &--teste { color: var(--text-dim); }
     &--dano { color: var(--accent); background: var(--accent-dim); border-color: var(--accent-border); &:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); } }
+    // Rolar crítico (m3-30, ajuste pós-mockup) — mesmo tratamento de destaque do botão análogo em
+    // `FichaRolagens` (`.ficha-rol__btn--critico`): accent sólido + brilho.
+    &--critico {
+      color: var(--bg); background: var(--accent); border-color: var(--accent);
+      box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
+      &:hover:not(:disabled) { filter: brightness(1.08); }
+    }
   }
   &__acoes { display: flex; gap: 4px; margin-left: auto; }
   &__acao { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; color: var(--text-dim); background: transparent; border: 1px solid var(--border-strong); border-radius: var(--radius-control); cursor: pointer; &:hover { color: var(--accent); border-color: var(--accent-border); } }

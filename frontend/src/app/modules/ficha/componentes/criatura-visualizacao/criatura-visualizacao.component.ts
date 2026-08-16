@@ -32,6 +32,7 @@ import {
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { AutoFocus } from '../../../../shared/auto-focus/auto-focus.directive';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
@@ -117,6 +118,7 @@ const COR_FICHA_PADRAO = '#d53030';
   imports: [
     Icone,
     Tooltip,
+    AutoFocus,
     ReactiveFormsModule,
     BandejaDados,
     CriaturaResistenciaLista,
@@ -553,12 +555,14 @@ export class CriaturaVisualizacao {
     this.arquivoPendente.set(null);
   }
 
-  /** Rola o dano de um Ataque (`criatura-rolagem.ts`, motor puro) e mostra/registra o resultado. */
-  protected rolarAtaque(ataque: FichaCriaturaAtaqueDto): void {
+  /** Rola o dano de um Ataque (`criatura-rolagem.ts`, motor puro) e mostra/registra o resultado.
+   * `critico` (m3-30, ajuste pós-mockup) dobra dados/fixos — mesmo botão "Rolar crítico" da ficha
+   * de jogador (`FichaRolagens`), só que aqui não é opt-in por preset: todo ataque ganha o botão. */
+  protected rolarAtaque(ataque: FichaCriaturaAtaqueDto, critico = false): void {
     if (!this.ajustavel()) {
       return;
     }
-    const executada = rolarAtaqueCriatura({ atributos: this.dados().atributos }, ataque);
+    const executada = rolarAtaqueCriatura({ atributos: this.dados().atributos }, ataque, critico);
     if (!executada) {
       return;
     }

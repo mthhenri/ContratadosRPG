@@ -35,6 +35,14 @@ describe('CriaturaAtaqueLista', () => {
     expect(alvo.rolados).toEqual([itens[0]]);
   });
 
+  it('emite rolarAtaqueCritico ao clicar no botão de crítico', () => {
+    const alvo = montar(false);
+    const criticados: FichaCriaturaAtaqueDto[] = [];
+    alvo.fixture.componentInstance.rolarAtaqueCritico.subscribe((a) => criticados.push(a));
+    (alvo.raiz.querySelector('.ataque-lista__rolar--critico') as HTMLButtonElement).click();
+    expect(criticados).toEqual([itens[0]]);
+  });
+
   it('emite testarAtaque ao clicar no botão de teste', () => {
     const alvo = montar(false);
     const testados: FichaCriaturaAtaqueDto[] = [];

@@ -32,6 +32,10 @@ export class CriaturaAtaqueLista {
   /** Botão "Teste" do card — mesmo teste de Atributo Efetivo da coluna de Atributos
    * (`ataque.atributo` decide a chave), só exposto no contexto do ataque. */
   readonly testarAtaque = output<FichaCriaturaAtaqueDto>();
+  /** Botão "Crítico" do card — mesmo dano de `rolarAtaque`, com `critico: true` (dobra dados/fixos,
+   * m3-30) — análogo ao "Rolar crítico" de `FichaRolagens`, sempre disponível (não é opt-in por
+   * preset como lá: todo ataque de criatura ganha o botão). */
+  readonly rolarAtaqueCritico = output<FichaCriaturaAtaqueDto>();
 
   protected readonly atributos = ATRIBUTOS;
   protected readonly custosAcao = CUSTOS_ACAO;
@@ -123,6 +127,10 @@ export class CriaturaAtaqueLista {
 
   protected testar(item: FichaCriaturaAtaqueDto): void {
     this.testarAtaque.emit(item);
+  }
+
+  protected criticar(item: FichaCriaturaAtaqueDto): void {
+    this.rolarAtaqueCritico.emit(item);
   }
 
   private substituir(

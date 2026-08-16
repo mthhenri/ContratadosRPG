@@ -43,7 +43,8 @@ export function rolarTesteAtributoCriatura(
 export function rolarAtaqueCriatura(
   dados: Pick<DadosParaTesteAtributo, 'atributos'>,
   ataque: FichaCriaturaAtaqueDto,
+  critico = false,
 ): RolagemCriaturaExecutadaDto | null {
-  const resultado = rolarFormula({ formula: ataque.dano, atributos: dados.atributos });
+  const resultado = rolarFormula({ formula: ataque.dano, atributos: dados.atributos, critico });
   return resultado ? { rotulo: ataque.nome, formula: ataque.dano, resultado } : null;
 }

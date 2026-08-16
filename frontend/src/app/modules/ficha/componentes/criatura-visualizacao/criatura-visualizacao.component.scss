@@ -49,7 +49,10 @@
   padding: var(--pad-card);
 
   &--identidade { gap: 16px; }
-  &--atributos { gap: 10px; }
+  // `flex: 1` (mesmo mecanismo de `.ficha-cartao--atributos` na ficha de jogador) — com
+  // `&__linha-colunas{align-items:stretch}` acima, o card estica até a altura da Identidade em vez
+  // de parar no tamanho do próprio conteúdo, mantendo as duas colunas sempre alinhadas embaixo.
+  &--atributos { gap: 10px; flex: 1; justify-content: flex-start; }
   &--painel { gap: 14px; flex: 1 1 auto; }
 }
 
@@ -71,8 +74,8 @@
 // os itens do tamanho do conteúdo.
 .criatura__abas {
   display: flex;
-  gap: 4px;
-  padding: 6px;
+  gap: 5px;
+  padding: 4px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
@@ -83,18 +86,18 @@
   flex: 1 1 0;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   line-height: 1;
   font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 400;
+  font-size: 10px;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: .1em;
+  letter-spacing: var(--tracking-label);
   white-space: nowrap;
   color: var(--text-dim);
   background: transparent;
   border: 0;
-  padding: 8px 14px;
+  padding: 6px 10px;
   border-radius: var(--radius-control);
   cursor: pointer;
   transition: color .12s ease, background .12s ease;
@@ -145,10 +148,13 @@
     background: var(--border);
   }
 
+  // `align-items: stretch` (era `start`) faz a coluna de Atributos esticar até a mesma altura da
+  // de Identidade (que é sempre a mais alta) — mesmo mecanismo de `.ficha-visao__linha-colunas` na
+  // ficha de jogador, onde `.ficha-cartao--atributos` tem `flex: 1` pra aproveitar esse espaço.
   &__linha-colunas {
     display: grid;
     grid-template-columns: 420px 260px minmax(0, 1fr);
-    align-items: start;
+    align-items: stretch;
     gap: 14px;
     @include bp.tablet { grid-template-columns: 1fr; }
   }
@@ -241,14 +247,24 @@
   &__chips-rotulo { font: 10px var(--font-mono); text-transform: uppercase; letter-spacing: .14em; color: var(--text-dim); }
   &__classificacao-grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: -6px; }
 
-  // Lápis de seção (Classificação/Atributos) — mesmo gatilho do `.ficha-cartao__lapis` da ficha de
-  // jogador: liga o modo de edição do bloco inteiro em vez de deixar controle sempre visível.
+  // Lápis de seção — mesmo botão `.ficha-cartao__lapis` da ficha de jogador (padding em vez de
+  // caixa quadrada fixa), reusado em todo gatilho de "editar esta seção" da tela (Classificação,
+  // Atributos, Descrição/Natureza/Tema de Horror, Anotações).
   &__lapis {
-    display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex: none;
-    color: var(--text-dim); background: transparent; border: 1px solid var(--border-strong); border-radius: 3px;
-    cursor: pointer; transition: .15s ease;
-    &:hover { color: var(--accent); border-color: var(--accent-border); }
-    &--ativo { color: var(--accent); background: var(--accent-dim); border-color: var(--accent); }
+    flex: none;
+    font-size: 12px;
+    line-height: 1;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 4px 7px;
+    cursor: pointer;
+    transition: color .15s ease, border-color .15s ease, background-color .15s ease;
+    &:hover { color: var(--accent); border-color: var(--accent-border); background: var(--surface-2); }
+    // Estado ativo (m4-04b): só a Classificação usa — troca o ícone por "✕" pra cancelar a edição
+    // em vez de reabrir (mesmo idioma de "✕" já usado em Combos/Rolagens/Habilidades/Inventário).
+    &--ativo { color: var(--vida); border-color: var(--vida); }
   }
 
   // --- VD / Tenacidade / Defesa ---
@@ -298,45 +314,58 @@
   &__barra-vida-preenchida { height: 100%; background: var(--vida); transition: width .2s ease; }
 
   // --- Atributos ---
-  &__cartao-cabecalho { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  &__cartao-titulo { margin: 0; font: 600 16px var(--font-sans); color: var(--text); }
+  // Cabeçalho com régua entre título e lápis — mesma estrutura de `.ficha-cartao__cabecalho`
+  // (FichaVisualizacao); `justify-content: space-between` saiu porque a régua já ocupa o espaço
+  // sobrando entre título e lápis (mesmo racional de `&__topo`/`&__info-cabecalho`).
+  &__cartao-cabecalho { display: flex; align-items: center; gap: 11px; margin-bottom: 4px; }
+  // Fonte monoespaçada (era `--font-sans`) — igual ao título canônico `.ficha-cartao__titulo`.
+  &__cartao-titulo { margin: 0; font: 700 15px var(--font-mono); color: var(--text); flex: 0 0 auto; }
+  &__cartao-regua { flex: 1; height: 1px; background: var(--border); }
 
+  // Alinhado a `.ficha-atributos__rotulo-grupo` (mesmo tracking-label, cor `--text-dim`).
   &__atributos-grupo {
-    text-align: center; font: 9px var(--font-mono); text-transform: uppercase; letter-spacing: .16em;
-    color: var(--text-mute); margin-top: 2px;
+    text-align: center; font: 10px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label);
+    color: var(--text-dim); margin-top: 2px;
   }
-  &__atributos-grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+  // Grade + caixinha alinhadas a `.ficha-atributos--2col` da ficha de jogador (mesmo card de 2
+  // colunas — o 2col é a variante compacta que essa coluna sempre usou, só sem o nome).
+  &__atributos-grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
   &__atributo-card {
     position: relative;
-    padding: 9px 8px 8px;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 7px 6px;
     background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); text-align: center;
     // O 5º do grupo não tem par: metade da largura, centralizado (como no mockup).
-    &--sozinho { grid-column: 1 / -1; width: calc(50% - 4.5px); margin: 0 auto; }
+    &--sozinho { grid-column: 1 / -1; width: calc(50% - 4px); margin: 0 auto; }
   }
-  // Alinhado ao dadinho de rolar teste da ficha de jogador (`.ficha-atributo__rolar`) — mesmo
-  // tamanho/borda/hover, só a posição (5px em vez de 4px) segue o padding do card da criatura.
+  // Idêntico ao dadinho de rolar teste da ficha de jogador (`.ficha-atributo__rolar`).
   &__atributo-rolar {
-    position: absolute; top: 5px; right: 5px;
+    position: absolute; top: 4px; right: 4px;
     display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px;
     padding: 0; font-size: 13px; color: var(--text-mute); background: transparent; border: 1px solid transparent; border-radius: var(--radius-control);
     cursor: pointer; transition: color .12s ease, border-color .12s ease, background .12s ease;
     &:hover:not(:disabled), &:focus-visible { color: var(--accent); border-color: var(--accent-border); background: var(--accent-dim); }
     &:disabled { cursor: not-allowed; opacity: .5; }
   }
+  // Idêntico a `.ficha-atributo__abrev`.
   &__atributo-abrev {
-    display: inline-block; margin-bottom: 6px; padding-bottom: 1px;
-    font: 9px var(--font-mono); letter-spacing: .1em; color: var(--text-mute);
-    border-bottom: 1px dotted var(--border-strong); cursor: help;
+    display: inline-flex; align-items: center; gap: 4px;
+    font: 9px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text-mute);
+    border-bottom: 1px dotted var(--border-strong); padding-bottom: 1px; cursor: help;
   }
-  &__atributo-valor { display: block; font: 700 20px/1 var(--font-mono); color: var(--text); }
+  // Idêntico a `.ficha-atributos--2col .ficha-atributo__valor` (22px — a variante compacta, não os
+  // 26px do card cheio, já que esta grade sempre foi de 2 colunas).
+  &__atributo-valor { font-family: var(--font-mono); font-size: 22px; font-weight: 700; line-height: 1; color: var(--text); }
+  // Idêntico a `.ficha-atributos--2col .ficha-atributo__mod-valor`.
   &__atributo-efetivo {
-    display: block; margin-top: 6px; font: 600 10px var(--font-mono); color: var(--text-mute);
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700; line-height: 1; color: var(--text-mute);
     &--destacado { color: var(--accent); }
   }
 
-  // Lista vertical do modo de edição — trocar a grade pela lista é o mesmo recurso da edição de
-  // atributos da ficha de jogador: os controles não cabem num card de ~100px.
-  &__atributos-acoes { display: flex; gap: 6px; }
+  // Salvar/Cancelar ocupam a largura toda, divididos igualmente (m4-04b, ajuste pós-mockup) — mais
+  // fácil de acertar em mesa do que os botões compactos do cabeçalho (`.ficha-cartao__acao`, que a
+  // ficha de jogador usa porque o dela cabe no próprio cabeçalho, sem precisar de destaque).
+  &__atributos-acoes { display: flex; gap: 6px; > .botao { flex: 1 1 0; } }
   &__atributos-aviso { margin: 0; font: 10px/1.4 var(--font-mono); color: var(--vida); }
   &__atributos-lista { display: grid; gap: 8px; }
   &__atributo-linha {
@@ -378,7 +407,7 @@
   &__info-regua { flex: 1 1 0; height: 1px; background: var(--border); }
   &__info-acao {
     display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex: none;
-    color: var(--text-dim); background: transparent; border: 1px solid var(--border-strong); border-radius: 3px;
+    color: var(--text-dim); background: transparent; border: 1px solid var(--border-strong); border-radius: var(--radius-control);
     cursor: pointer; transition: .15s ease;
     &:hover { color: var(--accent); border-color: var(--accent-border); }
     &--remover:hover { color: var(--vida); border-color: var(--vida); }

@@ -89,6 +89,7 @@
             @if (editando('identidade.designacao')) {
               <input
                 #entradaDesignacao
+                appAutoFocus
                 class="criatura__designacao-entrada"
                 type="text"
                 [value]="dados().identidade.designacao"
@@ -136,11 +137,11 @@
               type="button"
               [class.criatura__lapis--ativo]="classificacaoEmEdicao()"
               [attr.aria-pressed]="classificacaoEmEdicao()"
-              [attr.aria-label]="classificacaoEmEdicao() ? 'Concluir edição da classificação' : 'Editar classificação'"
-              [appTooltip]="classificacaoEmEdicao() ? 'Concluir edição' : 'Editar classificação'"
+              [attr.aria-label]="classificacaoEmEdicao() ? 'Cancelar edição da classificação' : 'Editar classificação'"
+              [appTooltip]="classificacaoEmEdicao() ? 'Cancelar edição' : 'Editar classificação'"
               (click)="alternarEdicaoClassificacao()"
             >
-              <app-icone [nome]="classificacaoEmEdicao() ? 'check' : 'editar'" />
+              @if (classificacaoEmEdicao()) { ✕ } @else { <app-icone nome="editar" /> }
             </button>
           }
         </div>
@@ -211,6 +212,7 @@
             @if (editando('vd')) {
               <input
                 #entradaVd
+                appAutoFocus
                 class="criatura__entrada-numero criatura__entrada-numero--stat"
                 type="number"
                 [value]="dados().vd"
@@ -231,6 +233,7 @@
             @if (editando('tenacidade')) {
               <select
                 #entradaTenacidade
+                appAutoFocus
                 class="criatura__select criatura__select--stat"
                 aria-label="Tenacidade"
                 (change)="confirmarTenacidade($any(entradaTenacidade.value)); cancelarEdicao()"
@@ -255,6 +258,7 @@
             @if (editando('defesa')) {
               <input
                 #entradaDefesa
+                appAutoFocus
                 class="criatura__entrada-numero criatura__entrada-numero--stat"
                 type="number"
                 [value]="dados().defesa"
@@ -278,6 +282,7 @@
             @if (editando('vidaAtual')) {
               <input
                 #entradaVidaAtual
+                appAutoFocus
                 class="criatura__entrada-numero criatura__entrada-numero--vida"
                 type="number"
                 [value]="dados().vidaAtual"
@@ -294,6 +299,7 @@
             @if (editando('vidaMaxima')) {
               <input
                 #entradaVidaMaxima
+                appAutoFocus
                 class="criatura__entrada-numero criatura__entrada-numero--vida"
                 type="number"
                 [value]="dados().vidaMaxima"
@@ -341,6 +347,7 @@
       <section class="criatura__cartao criatura__cartao--atributos">
         <header class="criatura__cartao-cabecalho">
           <h2 class="criatura__cartao-titulo">Atributos</h2>
+          <span class="criatura__cartao-regua"></span>
           @if (ajustavel() && !atributosEmEdicao()) {
             <button
               class="criatura__lapis"
@@ -493,6 +500,7 @@
               @if (editando('cadencia')) {
                 <select
                   #entradaCadencia
+                  appAutoFocus
                   class="criatura__select criatura__select--stat"
                   aria-label="Cadência"
                   (change)="confirmarCadencia($any(entradaCadencia.value)); cancelarEdicao()"
@@ -520,6 +528,7 @@
               @if (editando('iniciativaBonus')) {
                 <input
                   #entradaIniciativa
+                  appAutoFocus
                   class="criatura__entrada-numero criatura__entrada-numero--stat"
                   type="number"
                   [value]="dados().iniciativaBonus ?? 0"
@@ -545,6 +554,7 @@
                 @if (editando('deslocamento.terrestre')) {
                   <input
                     #entradaDeslTerrestre
+                    appAutoFocus
                     class="criatura__entrada-numero criatura__entrada-numero--tag"
                     type="number"
                     [value]="dados().deslocamento.terrestre ?? 0"
@@ -565,6 +575,7 @@
                 @if (editando('deslocamento.voador')) {
                   <input
                     #entradaDeslVoador
+                    appAutoFocus
                     class="criatura__entrada-numero criatura__entrada-numero--tag"
                     type="number"
                     [value]="dados().deslocamento.voador ?? 0"
@@ -585,6 +596,7 @@
                 @if (editando('deslocamento.aquatico')) {
                   <input
                     #entradaDeslAquatico
+                    appAutoFocus
                     class="criatura__entrada-numero criatura__entrada-numero--tag"
                     type="number"
                     [value]="dados().deslocamento.aquatico ?? 0"
@@ -605,6 +617,7 @@
                 @if (editando('deslocamento.sobrenatural')) {
                   <input
                     #entradaDeslSobrenatural
+                    appAutoFocus
                     class="criatura__entrada-numero criatura__entrada-numero--tag"
                     type="number"
                     [value]="dados().deslocamento.sobrenatural ?? 0"
@@ -648,6 +661,7 @@
                   @if (editando('regeneracao.modo')) {
                     <select
                       #entradaModoRegen
+                      appAutoFocus
                       class="criatura__select criatura__select--tag"
                       aria-label="Modo de Regeneração"
                       (change)="confirmarCampoRegeneracao('modo', $any(entradaModoRegen.value)); cancelarEdicao()"
@@ -669,6 +683,7 @@
                   @if (editando('regeneracao.intensidade')) {
                     <select
                       #entradaIntensidadeRegen
+                      appAutoFocus
                       class="criatura__select criatura__select--tag"
                       aria-label="Intensidade de Regeneração"
                       (change)="confirmarCampoRegeneracao('intensidade', $any(entradaIntensidadeRegen.value)); cancelarEdicao()"
@@ -690,6 +705,7 @@
                   @if (editando('regeneracao.valor')) {
                     <input
                       #entradaValorRegen
+                      appAutoFocus
                       class="criatura__entrada-numero criatura__entrada-numero--tag"
                       type="number"
                       [value]="dados().regeneracao!.valor"
@@ -710,6 +726,7 @@
                   @if (editando('regeneracao.condicao')) {
                     <input
                       #entradaCondicaoRegen
+                      appAutoFocus
                       class="criatura__entrada-texto criatura__entrada-texto--tag"
                       type="text"
                       [value]="dados().regeneracao!.condicao ?? ''"
@@ -732,14 +749,27 @@
             <header class="criatura__info-cabecalho">
               <h3 class="criatura__info-titulo">Anotações</h3>
               <span class="criatura__info-regua"></span>
+              @if (ajustavel() && !editando('anotacoes')) {
+                <button class="criatura__lapis" type="button" aria-label="Editar anotações" [appTooltip]="'Editar anotações'" (click)="editar('anotacoes')">
+                  <app-icone nome="editar" />
+                </button>
+              }
             </header>
-            <textarea
-              class="criatura__anotacoes"
-              aria-label="Anotações"
-              [value]="dados().anotacoes ?? ''"
-              [disabled]="!ajustavel()"
-              (blur)="confirmarAnotacoes($any($event.target).value)"
-            ></textarea>
+            @if (editando('anotacoes')) {
+              <textarea
+                #entradaAnotacoes
+                appAutoFocus
+                class="criatura__anotacoes"
+                aria-label="Anotações"
+                [value]="dados().anotacoes ?? ''"
+                (keydown.escape)="cancelarEdicao()"
+                (blur)="confirmarAnotacoes(entradaAnotacoes.value); cancelarEdicao()"
+              ></textarea>
+            } @else if (dados().anotacoes) {
+              <p class="criatura__info-texto">{{ dados().anotacoes }}</p>
+            } @else {
+              <p class="criatura__vazio">Sem anotações.</p>
+            }
           </div>
         </section>
         }
@@ -751,7 +781,7 @@
               <h3 class="criatura__info-titulo">Descrição</h3>
               <span class="criatura__info-regua"></span>
               @if (ajustavel() && !editando('identidade.conceito')) {
-                <button class="criatura__info-acao" type="button" aria-label="Editar descrição" [appTooltip]="'Editar descrição'" (click)="editar('identidade.conceito')">
+                <button class="criatura__lapis" type="button" aria-label="Editar descrição" [appTooltip]="'Editar descrição'" (click)="editar('identidade.conceito')">
                   <app-icone nome="editar" />
                 </button>
               }
@@ -759,6 +789,7 @@
             @if (editando('identidade.conceito')) {
               <textarea
                 #entradaConceito
+                appAutoFocus
                 class="criatura__entrada-textarea"
                 aria-label="Conceito"
                 (keydown.escape)="cancelarEdicao()"
@@ -773,6 +804,7 @@
               @if (editando('identidade.ganchoUnico')) {
                 <textarea
                   #entradaGancho
+                  appAutoFocus
                   class="criatura__entrada-textarea"
                   aria-label="Gancho Único"
                   (keydown.escape)="cancelarEdicao()"
@@ -790,6 +822,7 @@
               @if (editando('identidade.motivacao')) {
                 <textarea
                   #entradaMotivacao
+                  appAutoFocus
                   class="criatura__entrada-textarea"
                   aria-label="Motivação"
                   (keydown.escape)="cancelarEdicao()"
@@ -809,7 +842,7 @@
                 <h3 class="criatura__info-titulo">Natureza</h3>
                 <span class="criatura__info-regua"></span>
                 @if (ajustavel() && !editando('identidade.naturezaFisica')) {
-                  <button class="criatura__info-acao" type="button" aria-label="Editar natureza física" [appTooltip]="'Editar natureza física'" (click)="editar('identidade.naturezaFisica')">
+                  <button class="criatura__lapis" type="button" aria-label="Editar natureza física" [appTooltip]="'Editar natureza física'" (click)="editar('identidade.naturezaFisica')">
                     <app-icone nome="editar" />
                   </button>
                 }
@@ -817,6 +850,7 @@
               @if (editando('identidade.naturezaFisica')) {
                 <textarea
                   #entradaNatureza
+                  appAutoFocus
                   class="criatura__entrada-textarea"
                   aria-label="Natureza Física"
                   (keydown.escape)="cancelarEdicao()"
@@ -832,7 +866,7 @@
                 <h3 class="criatura__info-titulo">Tema de Horror</h3>
                 <span class="criatura__info-regua"></span>
                 @if (ajustavel() && !editando('identidade.temaHorror')) {
-                  <button class="criatura__info-acao" type="button" aria-label="Editar tema de horror" [appTooltip]="'Editar tema de horror'" (click)="editar('identidade.temaHorror')">
+                  <button class="criatura__lapis" type="button" aria-label="Editar tema de horror" [appTooltip]="'Editar tema de horror'" (click)="editar('identidade.temaHorror')">
                     <app-icone nome="editar" />
                   </button>
                 }
@@ -840,6 +874,7 @@
               @if (editando('identidade.temaHorror')) {
                 <input
                   #entradaTema
+                  appAutoFocus
                   class="criatura__entrada-texto"
                   type="text"
                   [value]="dados().identidade.temaHorror ?? ''"
@@ -863,6 +898,7 @@
             [editavel]="ajustavel()"
             (itensMudou)="aoAtaquesMudar($event)"
             (rolarAtaque)="rolarAtaque($event)"
+            (rolarAtaqueCritico)="rolarAtaque($event, true)"
             (testarAtaque)="rolarTesteAtaque($event)"
           />
         </section>
