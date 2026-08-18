@@ -84,6 +84,10 @@
       "types": "./dist/regras/identidade/index.d.ts",
       "default": "./dist/regras/identidade/index.js"
     },
+    "./regras/encontro": {
+      "types": "./dist/regras/encontro/index.d.ts",
+      "default": "./dist/regras/encontro/index.js"
+    },
     "./regras/criatura": {
       "types": "./dist/regras/criatura/index.d.ts",
       "default": "./dist/regras/criatura/index.js"

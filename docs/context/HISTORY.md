@@ -33,6 +33,28 @@ montagem, `m7-04` backend de condução + tempo real, `m7-05` painel do mestre, 
 jogador, `m7-07` log e `m7-08` refinamento mobile. A numeração M7 é sugestão, não decisão de
 roadmap — M4 segue em andamento.
 
+### `m7-02` — motor puro do Encontro (concluída)
+
+`shared/regras/encontro/`, escrito por TDD com o **exemplo canônico do guia como primeiro teste**:
+Criatura Dupla [18] + Agente A [17] + Agente B [3] → `Criatura → A → Criatura (2º) → B`.
+
+A intercalação foi a decisão de projeto da task. A frase do guia — o turno extra "cai sempre no
+próximo slot **disponível** abaixo de sua posição" — é ambígua quando **duas** criaturas de cadência
+múltipla disputam os mesmos slots. Duas leituras eram defensáveis: (a) inserir o extra logo abaixo
+da ocorrência anterior, o que faz dois extras caírem colados; (b) tratar como "disponível" apenas o
+slot que nenhum outro extra tomou. Ficou a **(b)**, porque a mesma passagem justifica a regra
+dizendo que os extras "são distribuídos entre os turnos dos agentes" — deixar dois turnos de ameaça
+em sequência contraria o propósito declarado. O algoritmo virou uma fila: percorre os turnos-base na
+ordem de iniciativa e, depois de cada um, entrega no máximo **um** extra pendente. Quando os
+turnos-base acabam antes dos extras (Frenética com poucos combatentes), o excedente é drenado no fim
+— a adjacência aí é inevitável e o motor não inventa slots para escondê-la.
+
+Também nasceram `ordenarIniciativa` (decrescente, desempate por Destreza efetiva, estável no empate
+duplo), `calcularTurnosPorRodada` (Frenética "4+" do documento adotada como 4 concreto),
+`expirarCondicoes` (decrementa na virada, devolve as expiradas para o log, permanente nunca expira
+sozinha) e `combatentePerdeTurno`. Nenhuma regra de iniciativa foi reimplementada: o valor chega
+somado pelo motor de rolagem/ficha. Gate: build, lint e 688 testes do shared verdes (+20).
+
 ### `m7-01` — contrato do Encontro (concluída)
 
 Três enums novos (`EncontroStatusEnum`, que é enum de **coluna** com tabela de referência
