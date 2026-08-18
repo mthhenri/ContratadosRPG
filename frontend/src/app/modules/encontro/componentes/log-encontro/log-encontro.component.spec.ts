@@ -171,6 +171,26 @@ describe('LogEncontro', () => {
     expect(botao(fixture, 'Rodada atual')).toBeNull();
   });
 
+  it('nasce recolhido e conta as entradas no gatilho do mobile (m7-08)', () => {
+    const fixture = montar([evento({ id: 1 }), evento({ id: 2 })]);
+    const elementoAtual = elemento(fixture);
+    const gatilho = elementoAtual.querySelector<HTMLButtonElement>('.log__gatilho');
+
+    // O recolhimento é do CSS (jsdom não aplica media query); o que o teste prova é o estado que
+    // o CSS lê — a classe no painel e o rótulo do gatilho.
+    expect(gatilho?.getAttribute('aria-expanded')).toBe('false');
+    expect(gatilho?.textContent?.trim()).toBe('2 entradas');
+    expect(elementoAtual.querySelector('.log')?.classList).not.toContain('log--aberto');
+
+    gatilho?.click();
+    fixture.detectChanges();
+    expect(elementoAtual.querySelector('.log')?.classList).toContain('log--aberto');
+    expect(
+      elementoAtual.querySelector<HTMLButtonElement>('.log__gatilho')?.getAttribute('aria-expanded'),
+    ).toBe('true');
+    expect(elementoAtual.querySelector('.log__gatilho')?.textContent?.trim()).toBe('Fechar');
+  });
+
   it('avisa quando a rodada corrente ainda não registrou nada', () => {
     const fixture = montar([evento({ id: 1, rodada: 1, texto: 'começo' })], 3);
     expect(linhas(fixture)).toEqual([]);

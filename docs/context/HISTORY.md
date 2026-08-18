@@ -30,8 +30,8 @@ para preencher o desenho. O `EncontroCombatenteResumoDto` já nasce com
 
 O milestone foi quebrado em **8 tasks**: `m7-01` contrato, `m7-02` motor puro, `m7-03` backend de
 montagem, `m7-04` backend de condução + tempo real, `m7-05` painel do mestre, `m7-06` visão do
-jogador, `m7-07` log (concluída) e `m7-08` refinamento mobile. A numeração M7 é sugestão, não decisão de
-roadmap — M4 segue em andamento.
+jogador, `m7-07` log e `m7-08` refinamento mobile — as **8 concluídas**. A numeração M7 é sugestão,
+não decisão de roadmap — M4 segue em andamento.
 
 ### `m7-02` — motor puro do Encontro (concluída)
 
@@ -124,6 +124,52 @@ Gate: build e **414 testes** do backend verdes (20 novos, cobrindo intercalaçã
 de rodada com expiração, turno perdido, os três caminhos de vida e a recusa de Energia).
 `npm run lint -w backend` continua com os **2 erros preexistentes** do `P-022` e nada do módulo
 `encontro`.
+
+### `m7-08` — recorte mobile do Encontro, e o M7 fecha (concluída)
+
+Última task do milestone: a tela "Iniciativa" em 360px, fiel a
+`docs/design/examples/iniciativa-mobile.html`, nos dois papéis.
+
+**A decisão estrutural foi não perguntar a largura ao JavaScript.** Havia precedente para
+`matchMedia` no repositório (`leitor-documentos`, `caderno-flutuante`, cada um com sua constante
+`BREAKPOINT_MOBILE = 560` duplicada), e seguir por ali teria criado a terceira cópia do mesmo
+número — o breakpoint já é um token Sass (`m1-15`). O caminho foi outro: cada componente guarda um
+**sinal de intenção** (`ajustando` no cartão, `aberto` no log, `acoesAbertas` na página) e **só o
+CSS do breakpoint o consome**. No desktop as mesmas regras deixam tudo visível e o sinal fica
+inerte, então nada precisa saber onde está sendo desenhado. Onde o texto muda com a largura
+(`Energia`/`En`, `Defesa`/`Def`), os **dois** rótulos ficam no DOM e o `display: none` escolhe — o
+escondido sai também da árvore de acessibilidade, então o leitor de tela nunca ouve "Energia En".
+
+**O que engordava a tela não era o mockup, era o gesto.** O mockup mobile desenha o cartão sem
+steppers, e a leitura fácil seria removê-los. Mas removê-los tiraria do mestre a capacidade de
+aplicar dano no celular — que é justamente o que ele faz na mesa. Medindo o que custava altura, os
+culpados eram os `−`/`+` de 44px (dois por recurso, dobrando a altura de cada cartão) e a pilha de
+seis blocos de controle antes do primeiro combatente. Então: steppers atrás de um `Ajustar` **na
+linha do nome** (que tinha folga — abrir uma linha nova para o gatilho teria anulado o ganho),
+ações secundárias atrás de `Mais ações`, log atrás do próprio gatilho, e `Avançar turno` (ou
+`Iniciar combate`, em montagem) numa barra `position: fixed` no rodapé, com o `Voltar` reduzido ao
+ícone de 44px do mockup. Mesma receita do rodapé do guia de criação de ficha, `z-index: 20`
+inclusive; o piso extra do `padding-bottom` entra por `:has(.painel__bloco--conducao)`, para o
+jogador não pagar por uma barra que ele não tem.
+
+**Uma divergência com o mockup ficou explícita:** ele também descarta a linha de origem do cartão
+("Criatura da campanha · Cadência 2"). Ela **ficou**, porque é onde vive a Cadência — e saber que
+uma ameaça age duas vezes na rodada é leitura de combate, não enfeite. 9px de texto não eram o
+problema de altura; os 44px dos steppers eram.
+
+Efeito colateral bom no desktop: `Pedir iniciativa`, `Rolar tudo`, `Adicionar`, `Editar` e
+`Encerrar` estavam repartidos entre um bloco da faixa de condução e uma fileira solta logo abaixo;
+agrupá-los como "secundárias" deixou a faixa com **só** a ação primária e as demais numa linha só.
+
+Gate: `npm run test -w frontend` **1152 verdes** (+9); lint limpo; aviso de bundle inalterado em
+relação à `master`. Gate visual pela skill `verify` percorrendo **montagem, combate ativo e
+encerrado**, nos papéis mestre e jogador, em 360×800 e 1920×1080: `scrollWidth` 360 e 1920 (nenhum
+scroll horizontal em nenhum estado), **nenhum** controle da tela abaixo de 44px em nenhum viewport
+mobile, e o dano aplicado pelo stepper recolhido continuou funcionando (`Vida 31/52` → `30/52`) —
+o recorte escondeu o gesto, não o removeu. No desktop, contadores, steppers, log aberto e rótulos
+longos permanecem como na `m7-07`, e o bloco de condução volta a `position: static`.
+
+**Com ela o M7 fecha**: 8 de 8 tasks entregues.
 
 ### `m7-07` — o painel "Log da rodada" (concluída)
 

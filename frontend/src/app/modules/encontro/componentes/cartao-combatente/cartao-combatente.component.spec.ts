@@ -57,11 +57,20 @@ describe('CartaoCombatente', () => {
   const texto = (fixture: ReturnType<typeof montar>, seletor: string): string =>
     (fixture.nativeElement as HTMLElement).querySelector(seletor)?.textContent?.trim() ?? '';
 
-  /** Os itens da faixa de defesas, um por `<span>` (o texto concatenado não tem separador). */
+  /**
+   * Os itens da faixa de defesas na forma **longa** (desktop). Cada item carrega os dois rótulos
+   * no DOM — o longo e o curto do mobile (m7-08) —, e é o CSS que escolhe qual aparece; o teste lê
+   * o longo e o valor, ignorando o curto.
+   */
   const defesas = (fixture: ReturnType<typeof montar>): string[] =>
     Array.from(
-      (fixture.nativeElement as HTMLElement).querySelectorAll('.combatente__defesas span'),
-    ).map((item) => item.textContent?.trim() ?? '');
+      (fixture.nativeElement as HTMLElement).querySelectorAll('.combatente__defesa'),
+    ).map((item) => {
+      const longo = item.querySelector('.combatente__rotulo-longo')?.textContent?.trim() ?? '';
+      const curto = item.querySelector('.combatente__rotulo-curto')?.textContent?.trim() ?? '';
+      const valor = (item.textContent ?? '').replace(longo, '').replace(curto, '').trim();
+      return `${longo} ${valor}`;
+    });
 
   it('desenha as quatro defesas do agente', () => {
     const fixture = montar(base);
@@ -154,6 +163,33 @@ describe('CartaoCombatente', () => {
     // Vida (−/+) e Energia (−/+).
     expect((comAjuste.nativeElement as HTMLElement).querySelectorAll('.combatente__stepper').length)
       .toBe(4);
+  });
+
+  it('acompanha o gatilho de ajuste do mobile, que só existe quando há o que ajustar (m7-08)', () => {
+    const semAjuste = montar(base);
+    expect((semAjuste.nativeElement as HTMLElement).querySelector('.combatente__ajustar')).toBeNull();
+
+    const fixture = montar(base, { podeAjustar: true });
+    const elementoAtual = fixture.nativeElement as HTMLElement;
+    const gatilho = elementoAtual.querySelector<HTMLButtonElement>('.combatente__ajustar');
+    expect(gatilho?.getAttribute('aria-expanded')).toBe('false');
+    expect(elementoAtual.querySelector('.combatente--ajustando')).toBeNull();
+
+    gatilho?.click();
+    fixture.detectChanges();
+    expect(
+      elementoAtual.querySelector<HTMLButtonElement>('.combatente__ajustar')?.getAttribute('aria-expanded'),
+    ).toBe('true');
+    expect(elementoAtual.querySelector('.combatente')?.classList).toContain('combatente--ajustando');
+  });
+
+  it('carrega o rótulo curto de Energia ao lado do longo, para o CSS escolher (m7-08)', () => {
+    const fixture = montar(base);
+    const energia = (fixture.nativeElement as HTMLElement).querySelector(
+      '.combatente__recurso--energia',
+    );
+    expect(energia?.querySelector('.combatente__rotulo-longo')?.textContent?.trim()).toBe('Energia');
+    expect(energia?.querySelector('.combatente__rotulo-curto')?.textContent?.trim()).toBe('En');
   });
 
   it('só expõe o campo de iniciativa e o remover no modo de edição explícito', () => {

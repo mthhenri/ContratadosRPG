@@ -150,6 +150,13 @@ export class PainelEncontro {
   /** Painel de adicionar combatente aberto. */
   protected readonly adicionando = signal(false);
 
+  /**
+   * Ações secundárias do mestre abertas (m7-08). Só tem efeito **no mobile**: em 360px elas ficam
+   * atrás de um gatilho para não disputar espaço com a ação primária do rodapé, e no desktop o CSS
+   * as mantém sempre na tela. É a folha de estilo que conhece a largura; aqui só mora a intenção.
+   */
+  protected readonly acoesAbertas = signal(false);
+
   protected readonly EncontroStatusEnum = EncontroStatusEnum;
   protected readonly CadenciaEnum = CadenciaEnum;
   protected readonly rotuloStatusEncontro = rotuloStatusEncontro;
@@ -488,6 +495,11 @@ export class PainelEncontro {
   /** Abre/fecha o painel de adicionar combatente. */
   protected alternarAdicao(): void {
     this.adicionando.update((aberto) => !aberto);
+  }
+
+  /** Abre/fecha a gaveta de ações secundárias (só o mobile as esconde). */
+  protected alternarAcoes(): void {
+    this.acoesAbertas.update((aberto) => !aberto);
   }
 
   /** Liga/desliga o modo de edição dos cartões (iniciativa à mão + remover). */

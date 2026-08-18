@@ -70,11 +70,23 @@
         {{ combatentes().length }}
         {{ combatentes().length === 1 ? 'participante' : 'participantes' }}
       </span>
+      <!-- Contador condensado do mockup mobile (m7-08): `R3 · T3/6` no lugar do bloco de
+           contadores, que no desktop continua sendo o que a tela mostra. -->
+      @if (emCombate()) {
+        <span class="cartao__meta cartao__meta--compacta">
+          R{{ encontro()!.rodadaAtual }} · T{{ encontro()!.turnoIndice + 1 }}/{{ totalDeTurnos() }}
+        </span>
+      }
     </div>
 
     <!-- Faixa de condução: contadores à esquerda, controles do mestre à direita. -->
     <div class="painel">
-      <div class="painel__bloco painel__bloco--contadores">
+      <!-- Em combate, Rodada/Turno já estão no cabeçalho compacto do mobile: o bloco vira
+           redundante e sai da coluna, que é a altura mais cara da tela de 360px. -->
+      <div
+        class="painel__bloco painel__bloco--contadores"
+        [class.painel__bloco--redundante-mobile]="emCombate()"
+      >
         @if (emCombate()) {
           <div class="painel__contador">
             <span class="painel__rotulo">Rodada</span>
@@ -118,17 +130,21 @@
       </div>
       }
 
+      <!-- Condução: a **ação primária** do mestre. No mobile este bloco vira a barra fixa do rodapé
+           (mockup de 360px: `←` de 44px + `Avançar turno` ocupando o resto), para que a ação mais
+           repetida da mesa fique no polegar em vez de rolar para fora da tela. -->
       @if (emCombate() && ehMestre()) {
-        <div class="painel__bloco painel__bloco--controles">
+        <div class="painel__bloco painel__bloco--controles painel__bloco--conducao">
           <button
-            class="botao botao--secundario painel__acao"
+            class="botao botao--secundario painel__acao painel__acao--recuo"
             type="button"
             [disabled]="emOperacao()"
+            [attr.aria-label]="'Voltar ao turno anterior'"
             [appTooltip]="'Voltar ao turno anterior'"
             (click)="voltarTurno()"
           >
             <app-icone nome="voltar" />
-            Voltar
+            <span class="painel__acao-texto">Voltar</span>
           </button>
           <button
             class="botao botao--primario painel__acao"
@@ -137,20 +153,11 @@
             [appTooltip]="'Passar ao próximo turno'"
             (click)="avancarTurno()"
           >
-            Avançar
+            Avançar<span class="painel__acao-complemento"> turno</span>
           </button>
         </div>
       } @else if (emMontagem() && ehMestre()) {
-        <div class="painel__bloco painel__bloco--controles">
-          <button
-            class="botao botao--secundario painel__acao"
-            type="button"
-            [disabled]="emOperacao() || !combatentes().length"
-            [appTooltip]="'Chamar os jogadores a rolar a própria iniciativa'"
-            (click)="pedirIniciativa()"
-          >
-            Pedir iniciativa
-          </button>
+        <div class="painel__bloco painel__bloco--controles painel__bloco--conducao">
           <button
             class="botao botao--primario painel__acao"
             type="button"
@@ -194,10 +201,35 @@
         </div>
       }
 
-      @if (mutavel() && ehMestre()) {
-        <div class="painel__bloco painel__bloco--controles">
+    </div>
+
+    <!-- Ações secundárias do mestre (m7-08). No desktop são a fileira de sempre; no mobile ficam
+         atrás de um gatilho, para não competirem com a ação primária do rodapé. -->
+    @if (mutavel() && ehMestre()) {
+      <div class="secundarias" [class.secundarias--abertas]="acoesAbertas()">
+        <button
+          class="botao botao--secundario secundarias__gatilho"
+          type="button"
+          [attr.aria-expanded]="acoesAbertas()"
+          (click)="alternarAcoes()"
+        >
+          {{ acoesAbertas() ? 'Fechar ações' : 'Mais ações' }}
+        </button>
+
+        <div class="secundarias__grupo">
+          @if (emMontagem()) {
+            <button
+              class="botao botao--secundario secundarias__acao"
+              type="button"
+              [disabled]="emOperacao() || !combatentes().length"
+              [appTooltip]="'Chamar os jogadores a rolar a própria iniciativa'"
+              (click)="pedirIniciativa()"
+            >
+              Pedir iniciativa
+            </button>
+          }
           <button
-            class="botao botao--secundario painel__acao"
+            class="botao botao--secundario secundarias__acao"
             type="button"
             [disabled]="emOperacao() || !faltamIniciativas()"
             [appTooltip]="'Rolar a iniciativa de quem ainda não tem — nunca sobrescreve'"
@@ -206,9 +238,28 @@
             <app-icone nome="dado" />
             Rolar tudo
           </button>
+          <button
+            class="botao botao--secundario secundarias__acao"
+            type="button"
+            [disabled]="emOperacao()"
+            (click)="alternarAdicao()"
+          >
+            <app-icone nome="mais" />
+            {{ adicionando() ? 'Fechar' : 'Adicionar combatente' }}
+          </button>
+          <button
+            class="botao botao--secundario secundarias__acao"
+            type="button"
+            [disabled]="emOperacao() || !combatentes().length"
+            [appTooltip]="'Editar iniciativa e remover combatentes'"
+            (click)="alternarEdicao()"
+          >
+            <app-icone nome="editar" />
+            {{ modoEdicao() ? 'Concluir edição' : 'Editar combatentes' }}
+          </button>
           @if (emCombate()) {
             <button
-              class="botao botao--perigo painel__acao"
+              class="botao botao--perigo secundarias__acao"
               type="button"
               [disabled]="emOperacao()"
               [appTooltip]="'Encerrar o combate — depois disso ele fica só de leitura'"
@@ -218,30 +269,6 @@
             </button>
           }
         </div>
-      }
-    </div>
-
-    @if (mutavel() && ehMestre()) {
-      <div class="montagem">
-        <button
-          class="botao botao--secundario montagem__alternar"
-          type="button"
-          [disabled]="emOperacao()"
-          (click)="alternarAdicao()"
-        >
-          <app-icone nome="mais" />
-          {{ adicionando() ? 'Fechar' : 'Adicionar combatente' }}
-        </button>
-        <button
-          class="botao botao--secundario montagem__alternar"
-          type="button"
-          [disabled]="emOperacao() || !combatentes().length"
-          [appTooltip]="'Editar iniciativa e remover combatentes'"
-          (click)="alternarEdicao()"
-        >
-          <app-icone nome="editar" />
-          {{ modoEdicao() ? 'Concluir edição' : 'Editar combatentes' }}
-        </button>
       </div>
 
       @if (adicionando()) {

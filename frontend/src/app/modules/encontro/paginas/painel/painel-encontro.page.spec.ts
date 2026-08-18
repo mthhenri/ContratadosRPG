@@ -18,7 +18,7 @@ import {
 
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { FichaService } from '../../../ficha/ficha.service';
-import { SessaoService } from '../../../../core/services/sessao.service';
+import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { EncontroService } from '../../encontro.service';
 import { PainelEncontro } from './painel-encontro.page';
@@ -343,9 +343,11 @@ describe('PainelEncontro', () => {
       const { fixture } = montar(encontroAtivo, USUARIO_MESTRE);
       const textos = Array.from(
         (fixture.nativeElement as HTMLElement).querySelectorAll('button'),
-      ).map((botao) => botao.textContent?.replace(/s+/g, ' ').trim());
+      ).map((botao) => botao.textContent?.replace(/\s+/g, ' ').trim());
 
-      expect(textos).toContain('Avançar');
+      // "Avançar turno" no mobile, "Avançar" no desktop: os dois rótulos moram no DOM e é o CSS
+      // que escolhe (m7-08), então o teste afirma o prefixo, não a string inteira.
+      expect(textos.some((texto) => texto?.startsWith('Avançar'))).toBe(true);
       expect(textos).toContain('Encerrar');
       expect((fixture.nativeElement as HTMLElement).querySelector('.iniciativa__papel')).toBeNull();
     });
@@ -413,5 +415,89 @@ describe('PainelEncontro', () => {
     });
     fixture.detectChanges();
     expect(interno(fixture).encontro()?.rodadaAtual).toBe(2);
+  });
+
+  describe('recorte mobile (m7-08)', () => {
+    /**
+     * O que estes testes provam é a **estrutura** que o CSS usa para decidir o recorte: os dois
+     * rótulos no DOM, a classe do bloco redundante, a gaveta de ações. A largura em si é verificada
+     * na aplicação real (skill `verify`, 360×800) — jsdom não aplica media query.
+     */
+    const emMontagem: EncontroRecuperadoDto = {
+      ...encontroAtivo,
+      status: EncontroStatusEnum.MONTAGEM,
+      turnoIndice: 0,
+      ordemRodada: [],
+    };
+
+    it('carrega o contador condensado `R · T` ao lado da contagem de participantes', () => {
+      const { fixture } = montar();
+      const elemento = fixture.nativeElement as HTMLElement;
+      const compacta = (elemento.querySelector('.cartao__meta--compacta')?.textContent ?? '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      // Rodada 2, 3º dos 4 slots da ordem intercalada.
+      expect(compacta).toBe('R2 · T3/4');
+      expect(elemento.querySelector('.cartao__meta:not(.cartao__meta--compacta)')?.textContent)
+        .toContain('participantes');
+    });
+
+    it('marca como redundante no mobile o bloco de contadores durante o combate', () => {
+      const emCombate = montar().fixture.nativeElement as HTMLElement;
+      expect(
+        emCombate.querySelector('.painel__bloco--contadores')?.classList,
+      ).toContain('painel__bloco--redundante-mobile');
+    });
+
+    it('mantém o bloco de contadores no mobile em montagem, onde ele carrega a "Situação"', () => {
+      // O cabeçalho compacto só mostra `R · T`, que em montagem ainda não existe.
+      const elemento = montar(emMontagem).fixture.nativeElement as HTMLElement;
+      expect(elemento.querySelector('.cartao__meta--compacta')).toBeNull();
+      expect(
+        elemento.querySelector('.painel__bloco--contadores')?.classList,
+      ).not.toContain('painel__bloco--redundante-mobile');
+    });
+
+    it('deixa só a ação primária no bloco de condução e manda o resto para a gaveta', () => {
+      const { fixture } = montar();
+      const elemento = fixture.nativeElement as HTMLElement;
+      const conducao = Array.from(
+        elemento.querySelectorAll('.painel__bloco--conducao button'),
+      ).map((botao) => (botao.textContent ?? '').replace(/\s+/g, ' ').trim());
+      expect(conducao).toEqual(['Voltar', 'Avançar turno']);
+
+      const gaveta = Array.from(elemento.querySelectorAll('.secundarias__acao')).map((botao) =>
+        (botao.textContent ?? '').replace(/\s+/g, ' ').trim(),
+      );
+      expect(gaveta).toEqual([
+        'Rolar tudo',
+        'Adicionar combatente',
+        'Editar combatentes',
+        'Encerrar',
+      ]);
+    });
+
+    it('abre e fecha a gaveta de ações secundárias', () => {
+      const { fixture } = montar();
+      const elemento = fixture.nativeElement as HTMLElement;
+      const gatilho = elemento.querySelector<HTMLButtonElement>('.secundarias__gatilho');
+      expect(gatilho?.textContent?.trim()).toBe('Mais ações');
+      expect(elemento.querySelector('.secundarias')?.classList).not.toContain(
+        'secundarias--abertas',
+      );
+
+      gatilho?.click();
+      fixture.detectChanges();
+      expect(elemento.querySelector('.secundarias')?.classList).toContain('secundarias--abertas');
+      expect(
+        elemento.querySelector<HTMLButtonElement>('.secundarias__gatilho')?.textContent?.trim(),
+      ).toBe('Fechar ações');
+    });
+
+    it('não dá gaveta nem barra de condução ao jogador', () => {
+      const elemento = montar(encontroAtivo, USUARIO_JOGADOR).fixture.nativeElement as HTMLElement;
+      expect(elemento.querySelector('.secundarias')).toBeNull();
+      expect(elemento.querySelector('.painel__bloco--conducao')).toBeNull();
+    });
   });
 });

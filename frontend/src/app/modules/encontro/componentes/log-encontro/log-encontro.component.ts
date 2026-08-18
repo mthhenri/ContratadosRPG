@@ -66,6 +66,13 @@ export class LogEncontro {
   /** Quantas rodadas o painel está mostrando, contando da corrente para trás. */
   private readonly rodadasReveladas = signal(1);
 
+  /**
+   * Log aberto (m7-08). Só tem efeito **no mobile**, onde o painel nasce recolhido para não empurrar
+   * a lista de combatentes — no desktop o CSS mantém a lista sempre visível e este sinal é inerte.
+   * Quem sabe a largura da tela é a folha de estilo; o componente só guarda a intenção do gatilho.
+   */
+  protected readonly aberto = signal(false);
+
   /** A rodada mais antiga em exibição — abaixo dela, o log fica recolhido. */
   private readonly rodadaMinimaVisivel = computed(() =>
     Math.max(1, this.rodadaAtual() - this.rodadasReveladas() + 1),
@@ -106,6 +113,11 @@ export class LogEncontro {
   /** Volta o painel à rodada corrente. */
   protected recolher(): void {
     this.rodadasReveladas.set(1);
+  }
+
+  /** Abre/fecha o log no mobile. */
+  protected alternarAbertura(): void {
+    this.aberto.update((visivel) => !visivel);
   }
 
   /** Quebra a frase do evento em `antes + nome + depois`, quando o nome está mesmo nela. */

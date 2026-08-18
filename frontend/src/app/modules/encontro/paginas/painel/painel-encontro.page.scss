@@ -16,7 +16,14 @@
 
   @include bp.mobile {
     max-width: 100%;
+    // O rodapé fixo da condução (m7-08) cobre o fim da página; o piso extra devolve o espaço para
+    // que o último cartão e o log continuem alcançáveis. `has()` porque o rodapé só existe para o
+    // mestre com o encontro mutável — o jogador não paga por um piso que não tem barra em cima.
     padding: 10px 12px 28px;
+
+    &:has(.painel__bloco--conducao) {
+      padding-bottom: calc(72px + env(safe-area-inset-bottom));
+    }
   }
 
   &__topo {
@@ -114,6 +121,10 @@
     text-transform: uppercase;
     letter-spacing: var(--tracking-label);
     color: var(--text);
+
+    // 13px é o tamanho do mockup mobile — em 360px o nome do encontro cabe em menos linhas sem
+    // deixar de ser o título da tela.
+    @include bp.mobile { font-size: 13px; }
   }
 
   &__regua { flex: 1; height: 1px; background: var(--border); }
@@ -124,6 +135,16 @@
     font-size: 12px;
     font-weight: 600;
     color: var(--text-mute);
+
+    // `4 participantes` é a leitura de desktop; no mobile o cabeçalho vira o contador `R3 · T3/6`
+    // do mockup, que é o que a mesa consulta a cada turno.
+    @include bp.mobile { display: none; }
+
+    &--compacta {
+      display: none;
+
+      @include bp.mobile { display: inline; }
+    }
   }
 }
 
@@ -158,6 +179,27 @@
     &--acesa { border-color: var(--accent-border); }
 
     &--controles { flex-wrap: wrap; }
+
+    // Bloco cuja informação o cabeçalho compacto do mobile já entrega (Rodada/Turno).
+    &--redundante-mobile {
+      @include bp.mobile { display: none; }
+    }
+
+    // Ação primária do mestre. No mobile vira a barra fixa do rodapé do mockup de 360px — a
+    // mesma receita do rodapé do guia de criação de ficha, inclusive o `z-index`.
+    &--conducao {
+      @include bp.mobile {
+        position: fixed;
+        z-index: 20;
+        inset: auto 0 0;
+        gap: 8px;
+        padding: 9px 12px calc(9px + env(safe-area-inset-bottom));
+        background: var(--surface);
+        border: 0;
+        border-top: 1px solid var(--border);
+        border-radius: 0;
+      }
+    }
   }
 
   &__contador { flex: 1; min-width: 0; }
@@ -215,17 +257,67 @@
 
   // O rótulo do bloco "Age agora" não recebe a margem dos contadores (ali ele é a 1ª de duas linhas).
   &__bloco--vez &__rotulo { margin-bottom: 0; }
+
+  // Na barra do rodapé, o `Voltar` encolhe para o ícone de 44px do mockup e o `Avançar turno`
+  // fica com todo o resto da largura — a ação repetida é a que ganha o polegar.
+  &__acao--recuo {
+    @include bp.mobile {
+      flex: none;
+      width: bp.$alvo-toque;
+      padding: 0;
+    }
+  }
+
+  &__acao-texto {
+    @include bp.mobile { display: none; }
+  }
+
+  // "Avançar" no desktop (a faixa é estreita), "Avançar turno" no mobile (a barra é larga e o
+  // botão precisa dizer sozinho o que faz, longe do contador).
+  &__acao-complemento {
+    display: none;
+
+    @include bp.mobile { display: inline; }
+  }
 }
 
-// ── Montagem ────────────────────────────────────────────────────────────────
-.montagem {
+// ── Ações secundárias do mestre (m7-08) ─────────────────────────────────────
+.secundarias {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 
-  &__alternar {
+  &__grupo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    // Recolhidas por padrão no mobile; o gatilho as abre.
+    @include bp.mobile {
+      display: none;
+      width: 100%;
+      flex-direction: column;
+
+      .secundarias--abertas & { display: flex; }
+    }
+  }
+
+  // O gatilho não existe no desktop: lá as ações já estão todas na tela.
+  &__gatilho {
+    display: none;
+    padding: 10px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+
+    @include bp.mobile { display: inline-flex; width: 100%; justify-content: center; }
+  }
+
+  &__acao {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 7px;
     padding: 10px 14px;
     font-size: 11px;

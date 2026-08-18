@@ -3,6 +3,7 @@
   [class.combatente--ativo]="ehTurnoAtual()"
   [class.combatente--morrendo]="combatente().morrendo"
   [class.combatente--agiu]="jaAgiu() && !ehTurnoAtual()"
+  [class.combatente--ajustando]="ajustando()"
   [style.--cor-ficha]="combatente().corFicha"
 >
   <div class="combatente__retrato">
@@ -61,6 +62,23 @@
           <app-icone nome="excluir" />
         </button>
       }
+
+      <!-- Gatilho dos steppers — só existe no mobile (m7-08), onde o cartão nasce enxuto como no
+           mockup de 360px. Mora na linha do nome, que tem folga, em vez de abrir uma linha só
+           para ele: o ganho de altura é justamente o que a task persegue. -->
+      @if (podeAjustar() && revelado()) {
+        <button
+          class="combatente__ajustar"
+          type="button"
+          [attr.aria-expanded]="ajustando()"
+          [attr.aria-label]="
+            (ajustando() ? 'Fechar ajustes de ' : 'Ajustar Vida e Energia de ') + combatente().nome
+          "
+          (click)="alternarAjuste()"
+        >
+          {{ ajustando() ? 'Fechar' : 'Ajustar' }}
+        </button>
+      }
     </span>
 
     <span class="combatente__recursos">
@@ -106,7 +124,9 @@
               −
             </button>
           }
-          Energia {{ combatente().energiaAtual }}/{{ combatente().energiaMaxima }}
+          <span class="combatente__rotulo-longo">Energia</span>
+          <span class="combatente__rotulo-curto">En</span>
+          {{ combatente().energiaAtual }}/{{ combatente().energiaMaxima }}
           @if (podeAjustar()) {
             <button
               class="combatente__stepper"
@@ -120,13 +140,18 @@
           }
         </span>
       }
+
       }
     </span>
 
     @if (defesas().length) {
       <span class="combatente__defesas">
         @for (defesa of defesas(); track defesa.rotulo) {
-          <span>{{ defesa.rotulo }} {{ defesa.valor }}</span>
+          <span class="combatente__defesa">
+            <span class="combatente__rotulo-longo">{{ defesa.rotulo }}</span>
+            <span class="combatente__rotulo-curto">{{ defesa.rotuloCurto }}</span>
+            {{ defesa.valor }}
+          </span>
         }
       </span>
     }

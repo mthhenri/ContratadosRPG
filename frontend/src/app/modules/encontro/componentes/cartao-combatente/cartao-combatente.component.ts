@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, input, output, signal } from '@angular/core';
 
 import type { EncontroCombatenteResumoDto } from '@contratados-rpg/shared/dtos/encontro';
 import { CombatenteOrigemEnum, NivelAmeacaEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
@@ -8,9 +8,14 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { rotuloNivelAmeaca } from '../../../ficha/rotulos-criatura';
 
-/** Uma defesa exibida na faixa do cartão — só as que o combatente realmente possui. */
+/**
+ * Uma defesa exibida na faixa do cartão — só as que o combatente realmente possui. O `rotuloCurto`
+ * é a forma que o mockup mobile usa (`Def · Esq · Blo · Con`); os dois viajam juntos porque a
+ * troca é de **largura de tela**, decidida no CSS, e não de estado do componente.
+ */
 interface DefesaExibidaDto {
   readonly rotulo: string;
+  readonly rotuloCurto: string;
   readonly valor: number;
 }
 
@@ -79,6 +84,14 @@ export class CartaoCombatente {
   readonly iniciativaAtribuida = output<number>();
   /** Remoção do combatente pedida pelo botão de lixeira. */
   readonly removido = output<void>();
+
+  /**
+   * Steppers abertos (m7-08). Só tem efeito **no mobile**: o mockup de 360px desenha o cartão sem
+   * steppers, e um `−`/`+` de 44px em cada recurso dobraria a altura de cada cartão. No desktop os
+   * steppers ficam sempre visíveis e este sinal é ignorado pelo CSS — daí ele não ser um `input`
+   * nem consultar `matchMedia`: quem sabe a largura da tela é a folha de estilo.
+   */
+  protected readonly ajustando = signal(false);
 
   protected readonly TipoFichaEnum = TipoFichaEnum;
 
@@ -171,15 +184,15 @@ export class CartaoCombatente {
    */
   protected readonly defesas = computed<readonly DefesaExibidaDto[]>(() => {
     const combatenteAtual = this.combatente();
-    const candidatas: readonly (readonly [string, number | null])[] = [
-      ['Defesa', combatenteAtual.defesa],
-      ['Esquiva', combatenteAtual.esquiva],
-      ['Bloqueio', combatenteAtual.bloqueio],
-      ['Contra', combatenteAtual.contraAtaque],
+    const candidatas: readonly (readonly [string, string, number | null])[] = [
+      ['Defesa', 'Def', combatenteAtual.defesa],
+      ['Esquiva', 'Esq', combatenteAtual.esquiva],
+      ['Bloqueio', 'Blo', combatenteAtual.bloqueio],
+      ['Contra', 'Con', combatenteAtual.contraAtaque],
     ];
     return candidatas
-      .filter((par): par is readonly [string, number] => par[1] !== null)
-      .map(([rotulo, valor]) => ({ rotulo, valor }));
+      .filter((trio): trio is readonly [string, string, number] => trio[2] !== null)
+      .map(([rotulo, rotuloCurto, valor]) => ({ rotulo, rotuloCurto, valor }));
   });
 
   /** `true` quando o combatente tem Energia — agente e NPC têm; criatura e avulso, não. */
@@ -201,6 +214,11 @@ export class CartaoCombatente {
     }
     return marcas.length > 0 ? marcas.join(' · ') : null;
   });
+
+  /** Abre/fecha os steppers do cartão (só o mobile os esconde). */
+  protected alternarAjuste(): void {
+    this.ajustando.update((aberto) => !aberto);
+  }
 
   /** Repassa a iniciativa digitada, ignorando o campo vazio ou não-numérico. */
   protected confirmarIniciativa(valorBruto: string): void {

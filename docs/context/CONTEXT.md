@@ -1,11 +1,12 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-18 · **Última decisão registrada:** o painel "Log da rodada"
-> (`m7-07`) não ganhou canal nem endpoint próprios — o log viaja dentro do `EncontroRecuperadoDto`,
-> então o `encontro:alterado` que já existia entrega as entradas novas, e o alcance às rodadas
-> anteriores é **recorte de exibição** (uma rodada por vez) sobre o teto de 100 entradas que o
-> repositório já impunha, em vez de paginação; o destaque do nome dentro do texto do evento é
-> recorte por `indexOf`, nunca regex nem frase remontada no cliente — ver seção 1
+> **Última revisão:** 2026-08-18 · **Última decisão registrada:** o recorte mobile do Encontro
+> (`m7-08`, que fecha o M7) é feito **inteiramente pelo CSS do breakpoint** — os componentes só
+> guardam um sinal de intenção (`ajustando`/`aberto`/`acoesAbertas`) e ninguém consulta
+> `matchMedia`; onde o texto muda com a largura, os dois rótulos ficam no DOM e o `display: none`
+> escolhe. A ação primária do mestre virou barra `position: fixed` no rodapé, e o que competia com
+> ela (steppers, ações secundárias, log) ficou atrás de gatilho próprio — sem perder função — ver
+> seção 1
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -18,11 +19,11 @@
 
 ## 1. Próxima Task
 
-O **M7 — Encontro de Combate** está aberto e é a frente corrente. A próxima task é
-`m7-08-refinamento-mobile-encontro.spec.md`, a **última** do milestone. Tudo o mais já está
-pronto — `m7-01` (contrato), `m7-02` (motor puro), `m7-03` (backend de montagem), `m7-04`
-(backend de condução + tempo real), `m7-05` (painel do mestre), `m7-06` (visão do jogador) e
-`m7-07` (log da rodada) concluídas.
+O **M7 — Encontro de Combate** está **concluído**: as 8 tasks (`m7-01` contrato, `m7-02` motor
+puro, `m7-03` backend de montagem, `m7-04` backend de condução + tempo real, `m7-05` painel do
+mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) entregues. As
+frentes abertas voltam a ser o **M4** (Ficha de Criatura/NPC — restam `m4-05`…`m4-10`) e o **M6**
+(Gestão de Usuários — resta `m6-08`); a escolha da próxima é do autor.
 
 O módulo de frontend é `frontend/src/app/modules/encontro`. A tela "Iniciativa" é **uma só**
 (`PainelEncontro`, rota `/painel/:campanhaId/iniciativa`, com `:encontroId` opcional para o
@@ -36,13 +37,19 @@ Atenção ao emitir eventos novos do encontro: `CampanhaGateway.emitirEncontroAl
 **por socket**, não um `emit` de sala, porque o payload carrega o que o mestre ainda não revelou.
 Qualquer evento novo que carregue estado de combatente precisa do mesmo cuidado.
 
+**Como o recorte mobile do Encontro é feito (`m7-08`) — vale como padrão para telas novas.** Nenhum
+componente consulta `matchMedia`: o que existe é um **sinal de intenção** (`ajustando` no cartão,
+`aberto` no log, `acoesAbertas` na página) que **só o CSS do breakpoint mobile consome**. No
+desktop as mesmas regras deixam tudo visível e o sinal fica inerte. Onde o texto muda com a
+largura (`Energia`/`En`, `Defesa`/`Def`), **os dois rótulos ficam no DOM** e o `display: none`
+escolhe — o escondido também sai da árvore de acessibilidade, então nada é lido duas vezes. Em
+360px: cabeçalho condensado `R3 · T3/6`, cartão enxuto com os steppers atrás de `Ajustar`, ações
+secundárias atrás de `Mais ações`, log recolhido atrás do próprio gatilho, e `Avançar turno`
+(ou `Iniciar combate`) numa barra `position: fixed` no rodapé — mesma receita do rodapé do guia de
+criação de ficha, inclusive o `z-index: 20`.
+
 O gate visual obrigatório (skill `verify`, 1920×1080 e 360×800, **dois usuários simultâneos**) foi
-cumprido na `m7-05`, na `m7-06` e na `m7-07`, e vale para cada tela nova. O refino de **densidade
-mobile** do painel do mestre segue deliberadamente adiado para a `m7-08`: em 360×800 a tela
-funciona, não estoura e respeita os alvos de toque de 44px, mas os steppers empurram Vida/Energia
-para linhas separadas e o cartão fica mais alto do que precisa. (A visão do **jogador** em mobile já
-sai densa — ela não tem steppers.) O log entra nessa mesma conta: em 360px ele cai para coluna
-única e a régua do cabeçalho some no wrap — legível, mas é da `m7-08` fechar a densidade.
+cumprido em `m7-05`, `m7-06`, `m7-07` e `m7-08`, e vale para cada tela nova.
 
 **Ambiente sem Docker.** O `npm run db:up` depende do daemon do Docker; onde ele não existe, dá para
 subir o Postgres 16 local direto (`initdb`/`pg_ctl` como usuário `postgres`) e seguir com
@@ -147,7 +154,7 @@ falhas isoladas/preexistentes.
 | M4 | Ficha de Criatura/NPC | **iniciado** — dividido em `m4-01`…`m4-10` (`docs/specs/backlog/`); `m4-01` (contrato), `m4-02` (`shared/regras/criatura`), `m4-03` (`backend/ficha` para `CRIATURA`) e `m4-04` (assistente de criação no frontend) concluídas; `m4-04b`/`m4-04c` (polimento de UI fora da fila) também concluídas. Próxima: `m4-05` (NPC) |
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | **em andamento** — `m6-01`…`m6-07` concluídas; próxima `m6-08`, com impersonação administrativa auditável |
-| M7 | Encontro de Combate | **em andamento** — `m7-01` contrato, `m7-02` motor puro (ordem + intercalação de Cadência + condições), `m7-03` backend de montagem, `m7-04` backend de condução/tempo real e `m7-05` painel do mestre (tela "Iniciativa", `frontend/.../modules/encontro`) `m7-06` visão do jogador (mesma tela em modo espectador + recorte de revelação no backend, com broadcast por socket) e `m7-07` log da rodada (`componentes/log-encontro`) concluídas; falta só `m7-08` refinamento mobile. Numeração M7 é sugestão, não decisão de roadmap |
+| M7 | Encontro de Combate | **concluído** — 8 tasks: `m7-01` contrato, `m7-02` motor puro (ordem + intercalação de Cadência + condições), `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre (tela "Iniciativa", `frontend/.../modules/encontro`), `m7-06` visão do jogador (mesma tela em modo espectador + recorte de revelação, com broadcast por socket), `m7-07` log da rodada e `m7-08` refinamento mobile. Numeração M7 é sugestão, não decisão de roadmap |
 
 ---
 

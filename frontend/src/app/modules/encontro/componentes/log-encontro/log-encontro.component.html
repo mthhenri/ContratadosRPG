@@ -1,4 +1,4 @@
-<article class="log">
+<article class="log" [class.log--aberto]="aberto()">
   <header class="log__cabecalho">
     <h2 class="log__titulo">Log da rodada</h2>
     <span class="log__regua"></span>
@@ -22,25 +22,38 @@
         Rodada anterior
       </button>
     }
+
+    <!-- Gatilho do mobile (m7-08): no desktop o CSS o esconde e a lista fica sempre aberta. -->
+    <button
+      class="log__gatilho"
+      type="button"
+      [attr.aria-expanded]="aberto()"
+      [attr.aria-label]="(aberto() ? 'Recolher' : 'Abrir') + ' o log da rodada'"
+      (click)="alternarAbertura()"
+    >
+      {{ aberto() ? 'Fechar' : entradas().length + ' entradas' }}
+    </button>
   </header>
 
-  @if (entradas().length) {
-    <ul class="log__lista">
-      @for (entrada of entradas(); track entrada.id) {
-        <li class="log__item">
-          <span class="log__marcador">{{ entrada.marcador }}</span>
-          <span class="log__texto">
-            {{ entrada.antes
-            }}@if (entrada.nome) {
-              <span class="log__nome" [class.log__nome--alerta]="entrada.alerta">{{
-                entrada.nome
-              }}</span>
-            }{{ entrada.depois }}
-          </span>
-        </li>
-      }
-    </ul>
-  } @else {
-    <p class="log__vazio">Nada registrado nesta rodada ainda.</p>
-  }
+  <div class="log__corpo">
+    @if (entradas().length) {
+      <ul class="log__lista">
+        @for (entrada of entradas(); track entrada.id) {
+          <li class="log__item">
+            <span class="log__marcador">{{ entrada.marcador }}</span>
+            <span class="log__texto">
+              {{ entrada.antes
+              }}@if (entrada.nome) {
+                <span class="log__nome" [class.log__nome--alerta]="entrada.alerta">{{
+                  entrada.nome
+                }}</span>
+              }{{ entrada.depois }}
+            </span>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="log__vazio">Nada registrado nesta rodada ainda.</p>
+    }
+  </div>
 </article>
