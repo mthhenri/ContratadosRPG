@@ -454,6 +454,16 @@
     &:hover:not(:disabled) { filter: brightness(1.08); }
   }
 
+  // Chamado do mestre para os jogadores rolarem a própria iniciativa — verde por ser um convite,
+  // não uma ação de risco/conclusão (que já usam --primario/--perigo, ambos na cor de accent).
+  &--positivo {
+    background: var(--positive);
+    color: var(--bg);
+    border: 0;
+
+    &:hover:not(:disabled) { filter: brightness(1.08); }
+  }
+
   &--secundario {
     background: transparent;
     color: var(--text);

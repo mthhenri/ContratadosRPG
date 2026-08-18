@@ -301,7 +301,7 @@ describe('PainelEncontro', () => {
     expect(painel.nivelAmeaca(agente)).toBeNull();
   });
 
-  it('`Rolar tudo` só manda quem está sem iniciativa, somando o bônus da criatura', () => {
+  it('`Rolar iniciativas` só manda quem está sem iniciativa, somando o bônus da criatura', () => {
     const semIniciativa: EncontroRecuperadoDto = {
       ...encontroAtivo,
       status: EncontroStatusEnum.MONTAGEM,
@@ -353,7 +353,7 @@ describe('PainelEncontro', () => {
       expect(textos).not.toContain('Avançar');
       expect(textos).not.toContain('Voltar');
       expect(textos).not.toContain('Encerrar');
-      expect(textos).not.toContain('Rolar tudo');
+      expect(textos).not.toContain('Rolar iniciativas');
       expect(textos).not.toContain('Selecionar combatentes');
       expect(textos).not.toContain('Adicionar avulso');
       // E nenhum stepper de vida/energia chega aos cartões.
@@ -551,6 +551,97 @@ describe('PainelEncontro', () => {
       elemento.querySelector('form.adicionar')?.dispatchEvent(new Event('submit'));
       expect(encontroService.adicionarCombatente).not.toHaveBeenCalled();
     });
+
+    it('vira botão filled (não mais "Fechar") enquanto o seletor está aberto', () => {
+      const { fixture } = montar();
+      const elemento = fixture.nativeElement as HTMLElement;
+      const botao = Array.from(
+        elemento.querySelectorAll<HTMLButtonElement>('.secundarias__acao'),
+      ).find((item) => item.textContent?.includes('Selecionar combatentes'))!;
+
+      expect(botao.classList).toContain('botao--secundario');
+      expect(botao.getAttribute('aria-pressed')).toBe('false');
+
+      botao.click();
+      fixture.detectChanges();
+
+      expect(botao.textContent?.trim()).toContain('Selecionar combatentes');
+      expect(botao.classList).toContain('botao--primario');
+      expect(botao.classList).not.toContain('botao--secundario');
+      expect(botao.getAttribute('aria-pressed')).toBe('true');
+    });
+
+    it('vira botão filled enquanto o avulso está aberto, e "Cancelar" limpa e fecha o formulário', () => {
+      const { fixture, encontroService } = montar();
+      const elemento = fixture.nativeElement as HTMLElement;
+      const botaoAbrir = Array.from(
+        elemento.querySelectorAll<HTMLButtonElement>('.secundarias__acao'),
+      ).find((item) => item.textContent?.includes('Adicionar avulso'))!;
+
+      botaoAbrir.click();
+      fixture.detectChanges();
+
+      expect(botaoAbrir.classList).toContain('botao--primario');
+      expect(botaoAbrir.getAttribute('aria-pressed')).toBe('true');
+
+      const nome = elemento.querySelector<HTMLInputElement>('input[formControlName="nomeAvulso"]')!;
+      nome.value = 'Sujeito Contido';
+      nome.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+
+      const botaoCancelar = Array.from(
+        elemento.querySelectorAll<HTMLButtonElement>('form.adicionar .adicionar__acao'),
+      ).find((item) => item.textContent?.includes('Cancelar'))!;
+      botaoCancelar.click();
+      fixture.detectChanges();
+
+      expect(elemento.querySelector('form.adicionar')).toBeNull();
+      expect(botaoAbrir.classList).toContain('botao--secundario');
+      expect(encontroService.adicionarCombatente).not.toHaveBeenCalled();
+
+      // Reabrir prova que o formulário voltou limpo.
+      botaoAbrir.click();
+      fixture.detectChanges();
+      expect(
+        elemento.querySelector<HTMLInputElement>('input[formControlName="nomeAvulso"]')?.value,
+      ).toBe('');
+    });
+  });
+
+  describe('montagem: pedir iniciativa, rolar e iniciar combate (m7-08+)', () => {
+    const montagem: EncontroRecuperadoDto = {
+      ...encontroAtivo,
+      status: EncontroStatusEnum.MONTAGEM,
+      ordemRodada: [],
+    };
+
+    /** "Pedir iniciativa" e "Rolar iniciativas" ficam juntos numa caixinha; "Iniciar combate" mora
+     *  na sua própria, ao lado — ela é quem vira a barra fixa do rodapé no mobile (m7-08). */
+    it('agrupa "Pedir iniciativa" e "Rolar iniciativas" numa caixinha, separada da de "Iniciar combate"', () => {
+      const { fixture } = montar(montagem);
+      const elemento = fixture.nativeElement as HTMLElement;
+
+      const blocos = Array.from(elemento.querySelectorAll('.painel__bloco--controles'));
+      const blocoPedidos = blocos.find((bloco) =>
+        bloco.textContent?.includes('Pedir iniciativa'),
+      )!;
+      const blocoIniciar = blocos.find((bloco) => bloco.textContent?.includes('Iniciar combate'))!;
+
+      expect(blocoPedidos).not.toBe(blocoIniciar);
+      expect(blocoPedidos.textContent).toContain('Rolar iniciativas');
+      expect(blocoPedidos.classList).not.toContain('painel__bloco--conducao');
+      expect(blocoIniciar.classList).toContain('painel__bloco--conducao');
+
+      const botaoPedir = blocoPedidos.querySelector('button')!;
+      expect(botaoPedir.textContent?.trim()).toBe('Pedir iniciativa');
+      expect(botaoPedir.classList).toContain('botao--positivo');
+
+      // "Rolar iniciativas" some da gaveta de "mais ações": em montagem ela já está na caixinha.
+      const gaveta = Array.from(elemento.querySelectorAll('.secundarias__acao')).map((botao) =>
+        botao.textContent?.replace(/\s+/g, ' ').trim(),
+      );
+      expect(gaveta).not.toContain('Rolar iniciativas');
+    });
   });
 
   describe('recorte mobile (m7-08)', () => {
@@ -606,7 +697,7 @@ describe('PainelEncontro', () => {
         (botao.textContent ?? '').replace(/\s+/g, ' ').trim(),
       );
       expect(gaveta).toEqual([
-        'Rolar tudo',
+        'Rolar iniciativas',
         'Selecionar combatentes',
         'Adicionar avulso',
         'Editar combatentes',

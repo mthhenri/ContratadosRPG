@@ -157,6 +157,27 @@
           </button>
         </div>
       } @else if (emMontagem() && ehMestre()) {
+        <div class="painel__bloco painel__bloco--controles">
+          <button
+            class="botao botao--positivo painel__acao"
+            type="button"
+            [disabled]="emOperacao() || !combatentes().length"
+            [appTooltip]="'Chamar os jogadores a rolar a própria iniciativa'"
+            (click)="pedirIniciativa()"
+          >
+            Pedir iniciativa
+          </button>
+          <button
+            class="botao botao--secundario painel__acao"
+            type="button"
+            [disabled]="emOperacao() || !faltamIniciativas()"
+            [appTooltip]="'Rolar a iniciativa de quem ainda não tem — nunca sobrescreve'"
+            (click)="rolarTudo()"
+          >
+            <app-icone nome="dado" />
+            Rolar iniciativas
+          </button>
+        </div>
         <div class="painel__bloco painel__bloco--controles painel__bloco--conducao">
           <button
             class="botao botao--primario painel__acao"
@@ -217,51 +238,54 @@
         </button>
 
         <div class="secundarias__grupo">
-          @if (emMontagem()) {
+          @if (!emMontagem()) {
+            <!-- Em montagem, "Rolar iniciativas" já mora na caixinha do topo ao lado de "Pedir
+                 iniciativa"; aqui ela volta a aparecer só em combate, para pegar quem chegou
+                 atrasado à mesa. -->
             <button
               class="botao botao--secundario secundarias__acao"
               type="button"
-              [disabled]="emOperacao() || !combatentes().length"
-              [appTooltip]="'Chamar os jogadores a rolar a própria iniciativa'"
-              (click)="pedirIniciativa()"
+              [disabled]="emOperacao() || !faltamIniciativas()"
+              [appTooltip]="'Rolar a iniciativa de quem ainda não tem — nunca sobrescreve'"
+              (click)="rolarTudo()"
             >
-              Pedir iniciativa
+              <app-icone nome="dado" />
+              Rolar iniciativas
             </button>
           }
           <button
-            class="botao botao--secundario secundarias__acao"
-            type="button"
-            [disabled]="emOperacao() || !faltamIniciativas()"
-            [appTooltip]="'Rolar a iniciativa de quem ainda não tem — nunca sobrescreve'"
-            (click)="rolarTudo()"
-          >
-            <app-icone nome="dado" />
-            Rolar tudo
-          </button>
-          <button
-            class="botao botao--secundario secundarias__acao"
+            class="botao secundarias__acao"
+            [class.botao--secundario]="!selecionandoCombatentes()"
+            [class.botao--primario]="selecionandoCombatentes()"
             type="button"
             [disabled]="emOperacao()"
+            [attr.aria-pressed]="selecionandoCombatentes()"
             [appTooltip]="'Escolher fichas da campanha para o combate'"
             (click)="alternarSelecaoCombatentes()"
           >
             <app-icone nome="mais" />
-            {{ selecionandoCombatentes() ? 'Fechar' : 'Selecionar combatentes' }}
+            Selecionar combatentes
           </button>
           <button
-            class="botao botao--secundario secundarias__acao"
+            class="botao secundarias__acao"
+            [class.botao--secundario]="!adicionandoAvulso()"
+            [class.botao--primario]="adicionandoAvulso()"
             type="button"
             [disabled]="emOperacao()"
+            [attr.aria-pressed]="adicionandoAvulso()"
             [appTooltip]="'Adicionar um inimigo improvisado, sem ficha'"
             (click)="alternarAdicaoAvulso()"
           >
             <app-icone nome="mais" />
-            {{ adicionandoAvulso() ? 'Fechar' : 'Adicionar avulso' }}
+            Adicionar avulso
           </button>
           <button
-            class="botao botao--secundario secundarias__acao"
+            class="botao secundarias__acao"
+            [class.botao--secundario]="!modoEdicao()"
+            [class.botao--primario]="modoEdicao()"
             type="button"
             [disabled]="emOperacao() || !combatentes().length"
+            [attr.aria-pressed]="modoEdicao()"
             [appTooltip]="'Editar iniciativa e remover combatentes'"
             (click)="alternarEdicao()"
           >
@@ -326,6 +350,14 @@
             [disabled]="emOperacao() || formularioAvulso.invalid"
           >
             Adicionar
+          </button>
+          <button
+            class="botao botao--secundario adicionar__acao"
+            type="button"
+            [disabled]="emOperacao()"
+            (click)="cancelarAvulso()"
+          >
+            Cancelar
           </button>
         </form>
       }

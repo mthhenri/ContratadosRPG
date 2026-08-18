@@ -72,8 +72,8 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
  *
  * **Nenhuma regra vive aqui.** A ordem da rodada e a intercalação de Cadência chegam prontas do
  * backend (`ordemRodada`, calculada por `shared/regras/encontro`); o que a tela deriva é só
- * apresentação — de quem é a vez, quem já agiu, quantas ações restam. O `Rolar tudo` usa o motor de
- * rolagem do shared (`rolarFormula`), não um `Math.random` local.
+ * apresentação — de quem é a vez, quem já agiu, quantas ações restam. O `Rolar iniciativas` usa o
+ * motor de rolagem do shared (`rolarFormula`), não um `Math.random` local.
  *
  * **Tempo real (§9, broadcast-only):** toda escrita é REST; o estado volta pelo próprio retorno da
  * chamada e, para os demais participantes, pelo broadcast `encontro:alterado` na sala
@@ -502,6 +502,16 @@ export class PainelEncontro {
     this.adicionandoAvulso.update((aberto) => !aberto);
   }
 
+  /** Cancela o avulso em digitação: limpa o formulário e fecha o painel. */
+  protected cancelarAvulso(): void {
+    this.formularioAvulso.reset({
+      nomeAvulso: '',
+      vidaMaximaAvulso: 10,
+      cadencia: CadenciaEnum.SINGULAR,
+    });
+    this.adicionandoAvulso.set(false);
+  }
+
   /** Abre/fecha a gaveta de ações secundárias (só o mobile as esconde). */
   protected alternarAcoes(): void {
     this.acoesAbertas.update((aberto) => !aberto);
@@ -573,7 +583,7 @@ export class PainelEncontro {
   }
 
   /**
-   * `Rolar tudo` — rola `XD6 + bônus` para **cada combatente sem iniciativa**, onde `X` é a Destreza
+   * `Rolar iniciativas` — rola `XD6 + bônus` para **cada combatente sem iniciativa**, onde `X` é a Destreza
    * efetiva e o bônus é o fixo da criatura. O backend ignora quem já tem valor, então a iniciativa
    * que um jogador rolou nunca é sobrescrita.
    *
