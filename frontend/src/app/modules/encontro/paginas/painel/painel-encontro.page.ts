@@ -33,6 +33,7 @@ import { FichaService } from '../../../ficha/ficha.service';
 import { rolarIniciativaDaFicha } from '../../../ficha/rolar-iniciativa';
 import { nomeCadencia } from '../../../ficha/rotulos-criatura';
 import { CartaoCombatente } from '../../componentes/cartao-combatente/cartao-combatente.component';
+import { LogEncontro } from '../../componentes/log-encontro/log-encontro.component';
 import { EncontroService } from '../../encontro.service';
 import { rotuloStatusEncontro } from '../../rotulos-encontro';
 
@@ -79,7 +80,15 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
  */
 @Component({
   selector: 'app-painel-encontro',
-  imports: [RouterLink, ReactiveFormsModule, Icone, IndicadorTempoReal, Tooltip, CartaoCombatente],
+  imports: [
+    RouterLink,
+    ReactiveFormsModule,
+    Icone,
+    IndicadorTempoReal,
+    Tooltip,
+    CartaoCombatente,
+    LogEncontro,
+  ],
   templateUrl: './painel-encontro.page.html',
   styleUrl: './painel-encontro.page.scss',
   // O jogador rola a própria iniciativa **daqui**, e essa rolagem tem de entrar no feed da campanha

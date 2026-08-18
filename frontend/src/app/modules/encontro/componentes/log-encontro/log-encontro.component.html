@@ -1,0 +1,46 @@
+<article class="log">
+  <header class="log__cabecalho">
+    <h2 class="log__titulo">Log da rodada</h2>
+    <span class="log__regua"></span>
+    @if (expandido()) {
+      <button
+        class="log__acao"
+        type="button"
+        [appTooltip]="'Mostrar só a rodada em curso'"
+        (click)="recolher()"
+      >
+        Rodada atual
+      </button>
+    }
+    @if (temRodadasAnteriores()) {
+      <button
+        class="log__acao"
+        type="button"
+        [appTooltip]="'Abrir mais uma rodada para trás'"
+        (click)="revelarRodadaAnterior()"
+      >
+        Rodada anterior
+      </button>
+    }
+  </header>
+
+  @if (entradas().length) {
+    <ul class="log__lista">
+      @for (entrada of entradas(); track entrada.id) {
+        <li class="log__item">
+          <span class="log__marcador">{{ entrada.marcador }}</span>
+          <span class="log__texto">
+            {{ entrada.antes
+            }}@if (entrada.nome) {
+              <span class="log__nome" [class.log__nome--alerta]="entrada.alerta">{{
+                entrada.nome
+              }}</span>
+            }{{ entrada.depois }}
+          </span>
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="log__vazio">Nada registrado nesta rodada ainda.</p>
+  }
+</article>

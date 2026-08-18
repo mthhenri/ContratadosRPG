@@ -324,6 +324,16 @@
         }
       </p>
     }
+
+    <!-- Log da rodada (m7-07). Em montagem nada aconteceu ainda: um painel vazio ali seria só
+         ruído entre o mestre e a montagem da ordem. -->
+    @if (!emMontagem() || encontro()!.eventos.length) {
+      <app-log-encontro
+        [eventos]="encontro()!.eventos"
+        [combatentes]="encontro()!.combatentes"
+        [rodadaAtual]="encontro()!.rodadaAtual"
+      />
+    }
   }
 
   @if (historico().length || vendoHistorico()) {

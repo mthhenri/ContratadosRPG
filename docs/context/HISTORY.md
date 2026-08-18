@@ -30,7 +30,7 @@ para preencher o desenho. O `EncontroCombatenteResumoDto` já nasce com
 
 O milestone foi quebrado em **8 tasks**: `m7-01` contrato, `m7-02` motor puro, `m7-03` backend de
 montagem, `m7-04` backend de condução + tempo real, `m7-05` painel do mestre, `m7-06` visão do
-jogador, `m7-07` log e `m7-08` refinamento mobile. A numeração M7 é sugestão, não decisão de
+jogador, `m7-07` log (concluída) e `m7-08` refinamento mobile. A numeração M7 é sugestão, não decisão de
 roadmap — M4 segue em andamento.
 
 ### `m7-02` — motor puro do Encontro (concluída)
@@ -124,6 +124,48 @@ Gate: build e **414 testes** do backend verdes (20 novos, cobrindo intercalaçã
 de rodada com expiração, turno perdido, os três caminhos de vida e a recusa de Energia).
 `npm run lint -w backend` continua com os **2 erros preexistentes** do `P-022` e nada do módulo
 `encontro`.
+
+### `m7-07` — o painel "Log da rodada" (concluída)
+
+A trilha legível do combate, no lugar que o mockup reservou para ela. A task foi **só de
+frontend**: a `m7-04` já persistia `encontro_evento` com o texto redigido, e a `m7-06` já filtrava o
+log no recorte de revelação — o que faltava era desenhar. `componentes/log-encontro` é um
+componente **burro** que recebe `eventos`, `combatentes` e `rodadaAtual` e não decide nada de jogo.
+
+**O tempo real saiu de graça**, e essa foi a escolha de projeto: o log viaja **dentro** do
+`EncontroRecuperadoDto`, então cada `encontro:alterado` já traz as entradas novas. Nenhuma
+assinatura nova, nenhum endpoint novo, nenhum polling — a spec pedia "sem polling" e o caminho mais
+curto para isso era não criar um segundo canal para o mesmo estado.
+
+**O destaque do nome não podia ser regex.** O mockup pinta o nome do combatente dentro da frase, mas
+o texto vem pronto do backend e o nome cai em posições diferentes conforme o evento ("K. Amaral
+sofreu 11…" × "Sangramento aplicado em K. Amaral"). O componente resolve `combatenteId` → nome pelos
+próprios combatentes e recorta a frase por **`indexOf`**, em `antes + nome + depois`; quando o nome
+não está no texto (combatente já removido, evento de rodada), a frase sai inteira e apenas não ganha
+realce. Nenhuma frase é remontada no cliente.
+
+**Recorte por rodada em vez de paginação.** A spec pedia alcançar as rodadas anteriores "sem
+carregar o encontro inteiro de uma vez". O repositório já limita a consulta às 100 entradas mais
+recentes, então o teto de tráfego existia; o que faltava era o teto **visual**. O painel abre na
+rodada corrente e revela uma rodada por vez (`Rodada anterior` / `Rodada atual`), sem ida ao
+servidor — um endpoint paginado seria infraestrutura para um problema que o teto já resolvia.
+
+Marcador conforme o mockup: `R3` para a virada de rodada, `T3 · 2` para o que aconteceu dentro de um
+turno; nome no accent quando o evento é mudança de estado ("perdeu o turno"). O `balístico` colorido
+que o mockup exibe **não** foi reproduzido: o evento de dano não carrega tipo, e inventar o campo
+para preencher o desenho seria fabricar dado (§16 #27).
+
+Gate: `npm run test -w frontend` **1143 verdes** (+8); `npm run lint -w frontend` limpo. Gate visual
+pela skill `verify` com **dois usuários simultâneos**, sobre um encontro real de 3 rodadas e 14
+eventos montado pela API: em 1920×1080 o log reproduz o painel do mockup (duas colunas, calha de
+marcador, nome destacado) e em 360×800 cai para coluna única sem estourar (`scrollWidth` 360). O
+tempo real foi provado com `window.__sentinela` intacta — o dano aplicado pelo stepper do mestre
+apareceu no log **das duas telas sem recarregar** —, e no mesmo quadro o evento da criatura não
+revelada **não** chegou ao jogador, confirmando que o recorte da `m7-06` continua valendo com o log
+na tela.
+
+Achado de fora da task: `npm run db:seed:dev` está quebrado desde a coluna `tipo_usuario_id` do M6
+(registrado como `P-023`). O cenário de verificação foi montado pela API REST.
 
 ### `m7-06` — visão do jogador, revelação e a porta de entrada da tela (concluída)
 

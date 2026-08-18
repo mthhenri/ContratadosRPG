@@ -182,6 +182,21 @@
 - **Desde:** observado na `m7-03` (2026-08-17), com as mudanças da task em `git stash` — portanto
   **preexistente**, não introduzido pelo Encontro de Combate.
 
+### P-023 — `npm run db:seed:dev` quebrado desde a coluna `tipo_usuario_id` · `ABERTO` · backend/tooling
+
+- **Sintoma:** `npm run db:seed:dev` aborta na primeira fixture:
+  `null value in column "tipo_usuario_id" of relation "usuario" violates not-null constraint`.
+  Nenhum dado de desenvolvimento é criado.
+- **Causa:** o `INSERT INTO usuario` de `backend/tools/database/seed-dev.ts` não acompanhou a
+  coluna `tipo_usuario_id` introduzida pelo M6 (gestão de usuários/papéis) — a fixture continua
+  inserindo login/senha/nome só.
+- **Contorno:** montar o cenário pela **API REST** (`/autenticacao/registro` + `/login`,
+  `POST /campanha`, `POST /campanha/entrar`, `POST /ficha`), que passa pelas services e preenche o
+  tipo corretamente. Foi assim que a `m7-07` cumpriu o gate visual.
+- **Correção:** resolver o tipo padrão no seed do mesmo jeito que a `AutenticacaoService` resolve —
+  sem fixar o id numérico do seed da tabela de referência.
+- **Desde:** observado na `m7-07` (2026-08-18); introduzido junto da migration do M6.
+
 ## Resolvidos
 
 Itens resolvidos **saem daqui**. O relato da correção fica no [`HISTORY.md`](HISTORY.md), junto da
