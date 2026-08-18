@@ -9,12 +9,29 @@
       <app-icone nome="voltar" />
     </a>
     <div class="iniciativa__acoes">
+      @if (!carregando() && !ehMestre()) {
+        <span class="iniciativa__papel">
+          <app-icone nome="olho" />
+          Espectador
+        </span>
+      }
       <app-indicador-tempo-real />
     </div>
   </header>
 
   @if (carregando()) {
     <p class="iniciativa__carregando">Carregando o combate…</p>
+  } @else if (!encontro() && !ehMestre()) {
+    <div class="abertura">
+      <div class="cartao__cabecalho">
+        <span class="cartao__indice">//</span>
+        <h1 class="cartao__titulo">Iniciativa</h1>
+        <span class="cartao__regua"></span>
+      </div>
+      <p class="abertura__ajuda">
+        Nenhum combate em andamento. Quando o mestre abrir um, esta tela acende sozinha.
+      </p>
+    </div>
   } @else if (!encontro()) {
     <!-- Campanha sem encontro aberto: o mestre nomeia o combate e a montagem começa. -->
     <form class="abertura" [formGroup]="formularioCriacao" (ngSubmit)="criarEncontro()">
@@ -101,7 +118,7 @@
       </div>
       }
 
-      @if (emCombate()) {
+      @if (emCombate() && ehMestre()) {
         <div class="painel__bloco painel__bloco--controles">
           <button
             class="botao botao--secundario painel__acao"
@@ -123,7 +140,7 @@
             Avançar
           </button>
         </div>
-      } @else if (emMontagem()) {
+      } @else if (emMontagem() && ehMestre()) {
         <div class="painel__bloco painel__bloco--controles">
           <button
             class="botao botao--secundario painel__acao"
@@ -150,7 +167,34 @@
         </div>
       }
 
-      @if (mutavel()) {
+      @if (mutavel() && !ehMestre()) {
+        <!-- A contrapartida do jogador ao "Rolar tudo" do mestre: ele rola a **própria**, com o
+             preset e os dados extras da ficha dele (m7-06). -->
+        <div
+          class="painel__bloco painel__bloco--controles"
+          [class.painel__bloco--acesa]="iniciativaPedida()"
+        >
+          @if (possoRolarIniciativa()) {
+            <button
+              class="botao botao--primario painel__acao"
+              type="button"
+              [disabled]="emOperacao()"
+              [appTooltip]="'Rolar a Iniciativa da sua ficha e entrar na ordem'"
+              (click)="rolarMinhaIniciativa()"
+            >
+              <app-icone nome="dado" />
+              Rolar iniciativa
+            </button>
+          } @else if (meuCombatente(); as meu) {
+            <span class="painel__rotulo">Sua iniciativa</span>
+            <span class="painel__numero painel__numero--destaque">{{ meu.iniciativa ?? '—' }}</span>
+          } @else {
+            <span class="painel__vez painel__vez--vazia">Você está assistindo a este combate</span>
+          }
+        </div>
+      }
+
+      @if (mutavel() && ehMestre()) {
         <div class="painel__bloco painel__bloco--controles">
           <button
             class="botao botao--secundario painel__acao"
@@ -177,7 +221,7 @@
       }
     </div>
 
-    @if (mutavel()) {
+    @if (mutavel() && ehMestre()) {
       <div class="montagem">
         <button
           class="botao botao--secundario montagem__alternar"
@@ -261,8 +305,8 @@
             [emCombate]="emCombate()"
             [donoNome]="donoNome(combatente)"
             [nivelAmeaca]="nivelAmeaca(combatente)"
-            [podeAjustar]="mutavel() && !emOperacao()"
-            [emEdicao]="modoEdicao() && mutavel()"
+            [podeAjustar]="ehMestre() && mutavel() && !emOperacao()"
+            [emEdicao]="ehMestre() && modoEdicao() && mutavel()"
             (vidaAjustada)="ajustarVida(combatente, $event)"
             (energiaAjustada)="ajustarEnergia(combatente, $event)"
             (iniciativaAtribuida)="atribuirIniciativa(combatente, $event)"
@@ -272,9 +316,66 @@
       </div>
     } @else {
       <p class="iniciativa__vazio">
-        Nenhum combatente ainda. Adicione as fichas da campanha, as Ameaças e os avulsos que entram
-        neste combate.
+        @if (ehMestre()) {
+          Nenhum combatente ainda. Adicione as fichas da campanha, as Ameaças e os avulsos que
+          entram neste combate.
+        } @else {
+          O mestre ainda está montando a ordem de iniciativa.
+        }
       </p>
     }
+  }
+
+  @if (historico().length || vendoHistorico()) {
+    <section class="historico">
+      <div class="cartao__cabecalho">
+        <span class="cartao__indice">//</span>
+        <h2 class="cartao__titulo">Encontros anteriores</h2>
+        <span class="cartao__regua"></span>
+        @if (vendoHistorico()) {
+          <button
+            class="botao botao--secundario historico__acao"
+            type="button"
+            [appTooltip]="'Voltar ao combate em andamento'"
+            (click)="voltarAoCorrente()"
+          >
+            <app-icone nome="voltar" />
+            Combate atual
+          </button>
+        }
+        @if (historico().length) {
+          <button
+            class="botao botao--secundario historico__acao"
+            type="button"
+            (click)="alternarHistorico()"
+          >
+            {{ historicoAberto() ? 'Fechar' : historico().length + ' encerrados' }}
+          </button>
+        }
+      </div>
+
+      @if (historicoAberto()) {
+        <ul class="historico__lista">
+          @for (anterior of historico(); track anterior.id) {
+            <li class="historico__item">
+              <button
+                class="historico__botao"
+                type="button"
+                [appTooltip]="'Abrir o registro deste combate'"
+                (click)="abrirDoHistorico(anterior)"
+              >
+                <span class="historico__nome">{{ anterior.nome }}</span>
+                <span class="historico__meta">
+                  {{ anterior.rodadaAtual }}
+                  {{ anterior.rodadaAtual === 1 ? 'rodada' : 'rodadas' }}
+                  · {{ anterior.quantidadeCombatentes }}
+                  {{ anterior.quantidadeCombatentes === 1 ? 'combatente' : 'combatentes' }}
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </section>
   }
 </section>

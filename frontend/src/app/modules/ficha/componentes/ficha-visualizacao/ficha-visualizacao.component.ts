@@ -37,7 +37,6 @@ import type {
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
   MAESTRIA_PONTOS_MINIMO,
-  ajusteDadoIniciativaAmplificadores,
   ajusteEnergiaAmplificadores,
   ajusteVidaAmplificadores,
   aplicarBonusConsumoFragmento,
@@ -78,7 +77,6 @@ import {
   FORMACOES,
   listarEfeitosPendentes,
   obterBonusRolagemAtributoFormacao,
-  obterDadoExtraIniciativaFormacao,
   obterResistenciaFormacao,
   obterToleranciaSobrecargaFormacao,
   type FormacaoDefinicaoDto,
@@ -105,7 +103,8 @@ import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-fi
 import { GRUPOS_FORMACAO, rotuloParametroFormacao } from '../../opcoes-formacao';
 import { CONDICOES_FICHA, type CondicoesFicha } from '../../condicoes-ficha';
 import { clamparVitalidade, type CampoVitalidadeAtual } from '../../ajuste-vitalidade';
-import { executarPassoPreset, NOME_PRESET_INICIATIVA } from '../../executar-rolagem';
+import { NOME_PRESET_INICIATIVA } from '../../executar-rolagem';
+import { dadoExtraIniciativaDaFicha, rolarIniciativaDaFicha } from '../../rolar-iniciativa';
 import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
 import type { RolagemRealizadaDto } from '../../rolagem-realizada';
 import { perfilClasseRotulos } from '../../rotulos-ficha';
@@ -1502,34 +1501,22 @@ export class FichaVisualizacao {
    * Dado extra de Iniciativa: amplificador `Atento` + Formação da Origem `PERICIA_DADO_INICIATIVA`
    * — mesma soma de `FichaRolagensPainel.dadoExtraIniciativa` (fonte única, `shared/regras`).
    */
-  protected readonly dadoExtraIniciativa = computed(
-    () =>
-      ajusteDadoIniciativaAmplificadores(this.dados().inventario.amplificadores) +
-      obterDadoExtraIniciativaFormacao(this.formacaoOrigem()),
-  );
+  protected readonly dadoExtraIniciativa = computed(() => dadoExtraIniciativaDaFicha(this.dados()));
 
   /** Total de d6 rolados em Iniciativa (Destreza para dados + o dado extra acima) — só leitura no glance. */
   protected readonly dadosIniciativa = computed(() => this.atributosParaDados().destreza + this.dadoExtraIniciativa());
 
   /**
    * Rola Iniciativa direto do glance de Informações (redesenho — saiu da aba Rolagens, que agora
-   * some com ela na ficha completa): mesmo `executarPassoPreset` dos presets, com o dado extra de
-   * amplificador/Formação já embutido (mesma lógica de `FichaRolagensPainel`/`FichaRolagens`).
+   * some com ela na ficha completa). A composição (atributos para dados + Proficiência + dado
+   * extra de amplificador/Formação) mora em `rolarIniciativaDaFicha` desde a m7-06, porque a tela
+   * "Iniciativa" rola exatamente a mesma coisa a partir do mesmo documento.
    */
   protected rolarIniciativa(): void {
-    const preset = this.presetIniciativa();
-    if (!this.podeRolar() || !preset) {
+    if (!this.podeRolar() || !this.presetIniciativa()) {
       return;
     }
-    const executado = executarPassoPreset({
-      preset,
-      atributos: this.atributosParaDados(),
-      proficiencia: this.proficiencia(),
-      nivel: this.dados().nivel,
-      habilidadesDisponiveis: this.dados().habilidades,
-      indicePasso: 0,
-      dadoExtraIniciativa: this.dadoExtraIniciativa(),
-    });
+    const executado = rolarIniciativaDaFicha(this.dados());
     if (!executado) {
       return;
     }

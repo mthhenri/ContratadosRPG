@@ -53,6 +53,26 @@
     @include bp.mobile { width: bp.$alvo-toque; height: bp.$alvo-toque; }
   }
 
+  // Chip de espectador (m7-06) — o jogador precisa saber por que a barra de condução não existe
+  // para ele. Sem isso a tela parece quebrada, não restrita.
+  &__papel {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 9px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-mute);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+
+    app-icone { font-size: 12px; }
+  }
+
   &__carregando,
   &__vazio {
     margin: 0;
@@ -357,5 +377,72 @@
     border: 1px solid var(--accent-border);
 
     &:hover:not(:disabled) { background: var(--accent-dim); }
+  }
+}
+
+// ── Histórico de encontros (complemento da m7-06) ────────────────────────────
+.historico {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &__acao {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 12px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+
+    app-icone { font-size: 12px; }
+  }
+
+  &__lista {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    @include bp.tablet { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    @include bp.mobile { grid-template-columns: 1fr; }
+  }
+
+  &__botao {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: var(--pad-card);
+    text-align: left;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+
+    &:hover { border-color: var(--accent-border); background: var(--surface-2); }
+
+    @include bp.mobile { min-height: bp.$alvo-toque; }
+  }
+
+  &__nome {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    overflow-wrap: anywhere;
+  }
+
+  &__meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-mute);
   }
 }

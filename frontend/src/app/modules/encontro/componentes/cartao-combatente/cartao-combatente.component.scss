@@ -323,3 +323,10 @@
     color: var(--text-mute);
   }
 }
+
+// Combatente não revelado (m7-06): o traço no lugar da Vida. Não é um número escondido — é a
+// ausência do dado, e o cartão diz isso em vez de mostrar um "0/0" que pareceria uma criatura morta.
+.combatente__recurso--oculto {
+  color: var(--text-mute);
+  font-style: italic;
+}

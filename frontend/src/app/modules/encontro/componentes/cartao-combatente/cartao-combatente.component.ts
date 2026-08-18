@@ -25,6 +25,11 @@ interface DefesaExibidaDto {
  * backend manda os outros três nulos. O cartão desenha **o que existe**: `defesas()` monta a faixa
  * a partir dos campos não-nulos, então a criatura mostra só Defesa e o avulso, defesa nenhuma.
  *
+ * **Combatente não revelado (m7-06).** O backend já responde ao jogador com a Vida, as defesas e
+ * as condições zeradas de quem ele não pode ver — o cartão não "esconde" nada, ele desenha o que
+ * chegou. Só a linha `revelado: false` é lida diretamente, para trocar Vida por um traço em vez de
+ * exibir um honesto porém confuso "0/0".
+ *
  * O componente é **burro**: recebe o combatente já resolvido e emite intenções. Quem decide
  * permissão é a página (e, de verdade, o backend — §14).
  */
@@ -82,6 +87,12 @@ export class CartaoCombatente {
     calcularTurnosPorRodada(this.combatente().cadencia),
   );
 
+  /**
+   * `true` quando quem está olhando pode ver a ficha deste combatente. O mestre recebe sempre
+   * `true`; o jogador, só nas fichas que já podia abrir fora do combate.
+   */
+  protected readonly revelado = computed(() => this.combatente().revelado);
+
   /** `true` para a ficha de jogador — o único combatente com as três condições narrativas. */
   protected readonly ehAgente = computed(
     () => this.combatente().tipoFicha === TipoFichaEnum.JOGADOR,
@@ -96,6 +107,11 @@ export class CartaoCombatente {
     const sufixoCadencia =
       this.turnosPorRodada() > 1 ? ` · Cadência ${this.turnosPorRodada()}` : '';
     const combatenteAtual = this.combatente();
+    // A Cadência fica: ela é visível de qualquer forma — quem age duas vezes na rodada age duas
+    // vezes na frente de todo mundo.
+    if (!this.revelado()) {
+      return `Em campo${sufixoCadencia}`;
+    }
     if (combatenteAtual.origem === CombatenteOrigemEnum.AVULSO) {
       return `Digitado nesta sessão${sufixoCadencia}`;
     }
@@ -115,6 +131,12 @@ export class CartaoCombatente {
    */
   protected readonly etiqueta = computed<{ texto: string; variante: string } | null>(() => {
     const combatenteAtual = this.combatente();
+    // Precede tudo: sem revelação não há natureza **nem** estado a anunciar. Dizer "Ameaça · Alta"
+    // entregaria metade do que o mestre está guardando, e "Agente" já diria que aquele nome é uma
+    // ficha de jogador — o cartão assume o desconhecido como o que ele é.
+    if (!this.revelado()) {
+      return { texto: 'Não revelado', variante: 'neutro' };
+    }
     if (this.ehAgente()) {
       if (combatenteAtual.morrendo) {
         return { texto: 'Morrendo', variante: 'perigo' };

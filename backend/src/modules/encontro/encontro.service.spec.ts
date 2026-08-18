@@ -82,7 +82,10 @@ function criarCombatenteLinha(
 describe('EncontroService', () => {
   let encontroRepositorio: EncontroRepositorioDublado;
   let campanhaRepositorio: { recuperarMembro: ReturnType<typeof vi.fn> };
-  let fichaService: { recuperarFicha: ReturnType<typeof vi.fn> };
+  let fichaService: {
+    recuperarFicha: ReturnType<typeof vi.fn>;
+    listarFichas: ReturnType<typeof vi.fn>;
+  };
   let campanhaGateway: { emitirEncontroAlterado: ReturnType<typeof vi.fn> };
   let service: EncontroService;
 
@@ -103,7 +106,7 @@ describe('EncontroService', () => {
     campanhaRepositorio = {
       recuperarMembro: vi.fn().mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE }),
     };
-    fichaService = { recuperarFicha: vi.fn() };
+    fichaService = { recuperarFicha: vi.fn(), listarFichas: vi.fn().mockResolvedValue([]) };
     campanhaGateway = { emitirEncontroAlterado: vi.fn() };
     service = new EncontroService(
       encontroRepositorio as unknown as EncontroRepository,
@@ -391,6 +394,65 @@ describe('EncontroService', () => {
         contraAtaque: null,
         energiaAtual: null,
       });
+    });
+
+    it('jogador só lê por inteiro a ficha que ele já podia abrir fora do encontro', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      // O jogador enxerga a própria ficha (40); a criatura (30) o mestre ainda não revelou.
+      fichaService.listarFichas.mockResolvedValue([{ id: 40 }]);
+      encontroRepositorio.recuperarPorId.mockResolvedValue(criarEncontroLinha());
+      encontroRepositorio.listarCombatentes.mockResolvedValue([
+        criarCombatenteLinha({
+          id: 200,
+          iniciativa: 21,
+          fichaId: 30,
+          nomeAvulso: null,
+          vidaMaximaAvulso: null,
+          vidaAtualAvulso: null,
+          fichaNome: 'SCP-1471-A',
+          tipoFicha: TipoFichaEnum.CRIATURA,
+          fichaDados: {
+            vidaAtual: 40,
+            vidaMaxima: 52,
+            defesa: 17,
+            atributos: { destreza: 4 },
+          } as unknown as EncontroCombatenteLinhaDto['fichaDados'],
+        }),
+        criarCombatenteLinha({
+          id: 201,
+          iniciativa: 14,
+          fichaId: 40,
+          nomeAvulso: null,
+          vidaMaximaAvulso: null,
+          vidaAtualAvulso: null,
+          fichaNome: 'K. Amaral',
+          tipoFicha: TipoFichaEnum.CRIATURA,
+          fichaDados: {
+            vidaAtual: 31,
+            vidaMaxima: 31,
+            defesa: 14,
+            atributos: { destreza: 4 },
+          } as unknown as EncontroCombatenteLinhaDto['fichaDados'],
+        }),
+      ]);
+
+      const estado = await service.recuperarEncontro({ id: 50 }, jogador);
+
+      const [criatura, propria] = estado.combatentes;
+      expect(criatura).toMatchObject({
+        nome: 'SCP-1471-A',
+        iniciativa: 21,
+        revelado: false,
+        vidaAtual: 0,
+        vidaMaxima: 0,
+        defesa: null,
+      });
+      expect(propria).toMatchObject({ revelado: true, vidaAtual: 31, defesa: 14 });
+      // A ordem da rodada é calculada **antes** do recorte: esconder a Vida não pode mudar de
+      // quem é a vez.
+      expect(estado.ordemRodada.map((slot) => slot.combatenteId)).toEqual([200, 201]);
     });
 
     it('jogador não-membro não lê o encontro', async () => {

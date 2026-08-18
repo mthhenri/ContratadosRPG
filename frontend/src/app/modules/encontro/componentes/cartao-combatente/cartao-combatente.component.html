@@ -64,6 +64,9 @@
     </span>
 
     <span class="combatente__recursos">
+      @if (!revelado()) {
+        <span class="combatente__recurso combatente__recurso--oculto">Vida —</span>
+      } @else {
       <span class="combatente__recurso combatente__recurso--vida">
         @if (podeAjustar()) {
           <button
@@ -116,6 +119,7 @@
             </button>
           }
         </span>
+      }
       }
     </span>
 

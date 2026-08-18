@@ -21,20 +21,28 @@
 ## 1. Próxima Task
 
 O **M7 — Encontro de Combate** está aberto e é a frente corrente. A próxima task é
-`m7-06-frontend-visao-jogador.spec.md`: a visão do jogador (espectador ao vivo + o jogador rolando
-a própria iniciativa), fiel a `docs/design/examples/iniciativa-desktop.html` na variante
-`visaoJogador`. A base e a **primeira tela** já estão prontas — `m7-01` (contrato), `m7-02` (motor
-puro), `m7-03` (backend de montagem), `m7-04` (backend de condução + tempo real) e `m7-05`
-(painel do mestre) concluídas. Restam `m7-06` visão do jogador, `m7-07` log da rodada e `m7-08`
-refinamento mobile.
+`m7-07-frontend-log-encontro.spec.md`: o painel "Log da rodada". A base e as duas leituras da tela
+já estão prontas — `m7-01` (contrato), `m7-02` (motor puro), `m7-03` (backend de montagem),
+`m7-04` (backend de condução + tempo real), `m7-05` (painel do mestre) e `m7-06` (visão do jogador)
+concluídas. Restam `m7-07` log da rodada e `m7-08` refinamento mobile.
 
-O módulo de frontend a reusar é `frontend/src/app/modules/encontro`: `EncontroService` (HTTP) e
-`CartaoCombatente` já servem à `m7-06` sem mudança — o cartão é burro e recebe permissão por
-input (`podeAjustar`/`emEdicao`). O gate visual obrigatório (skill `verify`, 1920×1080 e 360×800)
-já foi cumprido na `m7-05` e vale para cada tela nova. O refino de **densidade mobile** do painel
-foi deliberadamente deixado para a `m7-08`: em 360×800 a tela funciona, não estoura e respeita os
-alvos de toque de 44px, mas os steppers empurram Vida/Energia para linhas separadas e o cartão fica
-mais alto do que precisa.
+O módulo de frontend é `frontend/src/app/modules/encontro`. A tela "Iniciativa" é **uma só**
+(`PainelEncontro`, rota `/painel/:campanhaId/iniciativa`, com `:encontroId` opcional para o
+histórico) e bifurca por `ehMestre()`; o jogador é espectador e só escreve a própria iniciativa.
+O `m7-07` deve respeitar a **revelação**: o log já chega recortado do backend
+(`encontro-revelacao.ts` descarta evento preso a combatente que o usuário não pode ver), então o
+painel de log **não** precisa — e não deve — filtrar de novo.
+
+Atenção ao emitir eventos novos do encontro: `CampanhaGateway.emitirEncontroAlterado` é
+**por socket**, não um `emit` de sala, porque o payload carrega o que o mestre ainda não revelou.
+Qualquer evento novo que carregue estado de combatente precisa do mesmo cuidado.
+
+O gate visual obrigatório (skill `verify`, 1920×1080 e 360×800, **dois usuários simultâneos**) foi
+cumprido na `m7-05` e na `m7-06` e vale para cada tela nova. O refino de **densidade mobile** do
+painel do mestre segue deliberadamente adiado para a `m7-08`: em 360×800 a tela funciona, não
+estoura e respeita os alvos de toque de 44px, mas os steppers empurram Vida/Energia para linhas
+separadas e o cartão fica mais alto do que precisa. (A visão do **jogador** em mobile já sai densa —
+ela não tem steppers.)
 
 O M4 (Ficha de Criatura/NPC) foi **aberto** em sessão anterior: `m4-ficha-criatura-npc.spec.md`
 (`docs/specs/backlog/`) foi dividido em **10 tasks numeradas** (`m4-01`…`m4-10`,
@@ -133,7 +141,7 @@ falhas isoladas/preexistentes.
 | M4 | Ficha de Criatura/NPC | **iniciado** — dividido em `m4-01`…`m4-10` (`docs/specs/backlog/`); `m4-01` (contrato), `m4-02` (`shared/regras/criatura`), `m4-03` (`backend/ficha` para `CRIATURA`) e `m4-04` (assistente de criação no frontend) concluídas; `m4-04b`/`m4-04c` (polimento de UI fora da fila) também concluídas. Próxima: `m4-05` (NPC) |
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | **em andamento** — `m6-01`…`m6-07` concluídas; próxima `m6-08`, com impersonação administrativa auditável |
-| M7 | Encontro de Combate | **em andamento** — `m7-01` contrato, `m7-02` motor puro (ordem + intercalação de Cadência + condições), `m7-03` backend de montagem, `m7-04` backend de condução/tempo real e `m7-05` painel do mestre (tela "Iniciativa", `frontend/.../modules/encontro`) concluídas; faltam `m7-06` visão do jogador, `m7-07` log e `m7-08` refinamento mobile. Numeração M7 é sugestão, não decisão de roadmap |
+| M7 | Encontro de Combate | **em andamento** — `m7-01` contrato, `m7-02` motor puro (ordem + intercalação de Cadência + condições), `m7-03` backend de montagem, `m7-04` backend de condução/tempo real e `m7-05` painel do mestre (tela "Iniciativa", `frontend/.../modules/encontro`) e `m7-06` visão do jogador (mesma tela em modo espectador + recorte de revelação no backend, com broadcast por socket) concluídas; faltam `m7-07` log e `m7-08` refinamento mobile. Numeração M7 é sugestão, não decisão de roadmap |
 
 ---
 

@@ -42,6 +42,7 @@ import { CampanhaRepository } from '../campanha/campanha.repository';
 import { FichaService } from '../ficha/ficha.service';
 import { EncontroRepository } from './encontro.repository';
 import { montarCombatenteResumo } from './encontro-combatente.mapper';
+import { ocultarNaoRevelados } from './encontro-revelacao';
 
 /**
  * Regras do módulo `encontro` (m7-03) — a **montagem** do Encontro de Combate: criar, reunir
@@ -94,7 +95,7 @@ export class EncontroService {
       status: EncontroStatusEnum.MONTAGEM,
     });
 
-    await this.emitirEstado(encontroCriado);
+    await this.emitirEstado(encontroCriado, usuarioAtivo);
     return {
       id: encontroCriado.id,
       campanhaId: encontroCriado.campanhaId,
@@ -110,7 +111,7 @@ export class EncontroService {
   ): Promise<EncontroRecuperadoDto> {
     const encontroEncontrado = await this.recuperarEncontroObrigatorio(dto.id);
     await this.validarMembro(encontroEncontrado.campanhaId, usuarioAtivo);
-    return this.montarEstado(encontroEncontrado);
+    return this.montarEstadoParaUsuario(await this.montarEstado(encontroEncontrado), usuarioAtivo);
   }
 
   /** Encontros da campanha (corrente + histórico). Exige ser **membro**. */
@@ -171,7 +172,7 @@ export class EncontroService {
       });
     }
 
-    return this.emitirEstado(encontroEncontrado);
+    return this.emitirEstado(encontroEncontrado, usuarioAtivo);
   }
 
   /** Remove um combatente do encontro (soft delete). Só o mestre, e não em encontro encerrado. */
@@ -185,7 +186,7 @@ export class EncontroService {
     this.validarEncontroMutavel(encontroEncontrado);
 
     await this.encontroRepositorio.removerCombatente({ id: dto.id });
-    return this.emitirEstado(encontroEncontrado);
+    return this.emitirEstado(encontroEncontrado, usuarioAtivo);
   }
 
   /**
@@ -210,7 +211,7 @@ export class EncontroService {
     }
 
     await this.encontroRepositorio.alterarIniciativa({ id: dto.id, iniciativa: dto.iniciativa });
-    return this.emitirEstado(encontroEncontrado);
+    return this.emitirEstado(encontroEncontrado, usuarioAtivo);
   }
 
   /**
@@ -239,7 +240,7 @@ export class EncontroService {
       }
     }
 
-    return this.emitirEstado(encontroEncontrado);
+    return this.emitirEstado(encontroEncontrado, usuarioAtivo);
   }
 
   // ── Condução (m7-04) ───────────────────────────────────────────────────────
@@ -284,7 +285,7 @@ export class EncontroService {
       texto: 'Rodada 1 iniciada',
     });
 
-    return this.emitirEstado(await this.pularTurnosPerdidos(encontroIniciado));
+    return this.emitirEstado(await this.pularTurnosPerdidos(encontroIniciado), usuarioAtivo);
   }
 
   /**
@@ -306,10 +307,10 @@ export class EncontroService {
         rodadaAtual: encontroEncontrado.rodadaAtual,
         turnoIndice: proximoIndice,
       });
-      return this.emitirEstado(await this.pularTurnosPerdidos(encontroAvancado));
+      return this.emitirEstado(await this.pularTurnosPerdidos(encontroAvancado), usuarioAtivo);
     }
 
-    return this.emitirEstado(await this.virarRodada(encontroEncontrado));
+    return this.emitirEstado(await this.virarRodada(encontroEncontrado), usuarioAtivo);
   }
 
   /**
@@ -329,7 +330,7 @@ export class EncontroService {
         rodadaAtual: encontroEncontrado.rodadaAtual,
         turnoIndice: encontroEncontrado.turnoIndice - 1,
       });
-      return this.emitirEstado(encontroVoltado);
+      return this.emitirEstado(encontroVoltado, usuarioAtivo);
     }
 
     if (encontroEncontrado.rodadaAtual <= 1) {
@@ -342,7 +343,7 @@ export class EncontroService {
       rodadaAtual: encontroEncontrado.rodadaAtual - 1,
       turnoIndice: Math.max(ordemRodada.length - 1, 0),
     });
-    return this.emitirEstado(encontroVoltado);
+    return this.emitirEstado(encontroVoltado, usuarioAtivo);
   }
 
   /**
@@ -363,7 +364,7 @@ export class EncontroService {
       rodadaAtual: encontroEncontrado.rodadaAtual,
       turnoIndice: encontroEncontrado.turnoIndice,
     });
-    return this.emitirEstado(encontroEncerrado);
+    return this.emitirEstado(encontroEncerrado, usuarioAtivo);
   }
 
   /**
@@ -412,7 +413,7 @@ export class EncontroService {
           : `${resumo.nome} recuperou ${dto.delta} de Vida${this.sufixoOrigem(dto.origemTexto)}`,
     });
 
-    return this.emitirEstado(encontro);
+    return this.emitirEstado(encontro, usuarioAtivo);
   }
 
   /**
@@ -447,7 +448,7 @@ export class EncontroService {
           : `${resumo.nome} recuperou ${dto.delta} de Energia${this.sufixoOrigem(dto.origemTexto)}`,
     });
 
-    return this.emitirEstado(encontro);
+    return this.emitirEstado(encontro, usuarioAtivo);
   }
 
   /**
@@ -481,7 +482,7 @@ export class EncontroService {
       texto: `${dto.nome} aplicado em ${resumo.nome}`,
     });
 
-    return this.emitirEstado(encontro);
+    return this.emitirEstado(encontro, usuarioAtivo);
   }
 
   /** Remove um marcador de condição antes de ele expirar sozinho. */
@@ -506,7 +507,7 @@ export class EncontroService {
       texto: `${dto.nome} removido de ${resumo.nome}`,
     });
 
-    return this.emitirEstado(encontro);
+    return this.emitirEstado(encontro, usuarioAtivo);
   }
 
   /**
@@ -804,13 +805,53 @@ export class EncontroService {
   }
 
   /**
+   * Aplica o recorte de revelação (m7-06) do ponto de vista de **um** usuário. O mestre recebe o
+   * estado intacto; qualquer outro membro recebe o estado filtrado pelas fichas que ele pode abrir
+   * na campanha.
+   *
+   * O conjunto de fichas visíveis vem de `FichaService.listarFichas` — a **service dona** da regra
+   * §14, que já distingue mestre de jogador e consulta `usuario_ficha_acesso`. Nada de uma segunda
+   * consulta de permissão aqui (proibição #28).
+   */
+  private async montarEstadoParaUsuario(
+    estado: EncontroRecuperadoDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<EncontroRecuperadoDto> {
+    const membro = await this.validarMembro(estado.campanhaId, usuarioAtivo);
+    if (membro.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
+      return estado;
+    }
+    const fichasVisiveis = await this.fichaService.listarFichas(
+      { campanhaId: estado.campanhaId },
+      usuarioAtivo,
+    );
+    return ocultarNaoRevelados(estado, new Set(fichasVisiveis.map((ficha) => ficha.id)));
+  }
+
+  /**
    * Monta o estado e o transmite na sala da campanha (§9, broadcast-only): a emissão acontece
    * **depois** da persistência, e nenhuma escrita entra pelo gateway.
+   *
+   * **Por que a emissão é por usuário (m7-06).** O payload do encontro carrega Vida e defesas de
+   * criatura, e a sala `campanha:<id>` mistura mestre e jogadores — um `emit` único entregaria a
+   * todos o que só o mestre pode ver. O precedente do `ficha:alterada` (omitir o campo privado
+   * para a sala inteira) não serve aqui: o que é segredo para o jogador é justamente o que o painel
+   * do mestre existe para mostrar. Então o gateway percorre os sockets da sala e esta service monta
+   * um recorte por **usuário distinto** — uma consulta de fichas visíveis por pessoa conectada, não
+   * por socket.
+   *
+   * O retorno é o recorte de **quem chamou**: um jogador que atribui a própria iniciativa não pode
+   * receber pela resposta REST o que o broadcast lhe esconderia.
    */
-  private async emitirEstado(encontro: EncontroLinhaDto): Promise<EncontroRecuperadoDto> {
+  private async emitirEstado(
+    encontro: EncontroLinhaDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<EncontroRecuperadoDto> {
     const estado = await this.montarEstado(encontro);
-    this.campanhaGateway.emitirEncontroAlterado({ encontro: estado });
-    return estado;
+    await this.campanhaGateway.emitirEncontroAlterado(estado.campanhaId, (usuarioDoSocket) =>
+      this.montarEstadoParaUsuario(estado, usuarioDoSocket),
+    );
+    return this.montarEstadoParaUsuario(estado, usuarioAtivo);
   }
 
 }

@@ -48,12 +48,13 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./modules/ficha/criatura.routes').then((modulo) => modulo.criaturaRoutes),
   },
-  // Painel de combate do mestre — a tela "Iniciativa" (m7-05). Mesma convenção das rotas de
+  // A tela "Iniciativa" (m7-05 mestre, m7-06 jogador). Mesma convenção das rotas de
   // ficha/criatura: precede a rota `painel` genérica para ser casada antes do prefixo mais curto.
-  // Sem `:id` de encontro — a campanha tem no máximo um aberto por vez (ver `encontro.routes.ts`).
+  // Só `autenticacaoGuard`: mestre e jogador entram pela mesma rota e a tela bifurca por papel —
+  // o recorte de verdade é do backend (ver `encontro.routes.ts`).
   {
     path: 'painel/:campanhaId/iniciativa',
-    canActivate: [autenticacaoGuard, mestreCampanhaGuard],
+    canActivate: [autenticacaoGuard],
     loadChildren: () =>
       import('./modules/encontro/encontro.routes').then((modulo) => modulo.encontroRoutes),
   },

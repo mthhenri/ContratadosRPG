@@ -255,20 +255,42 @@ export class CampanhaGateway implements OnGatewayConnection {
   }
 
   /**
-   * Emite `encontro:alterado` na sala `campanha:<id>` (m7-04). Chamado pela `EncontroService`
-   * **após** cada mutação ser persistida — montagem, iniciativa, turno, vida, condição, log. O
-   * payload é o estado completo do encontro, que é o que a tela "Iniciativa" desenha.
+   * Emite `encontro:alterado` na sala `campanha:<id>` (§9), **um payload por usuário** (m7-06).
    *
-   * O estado do encontro é **compartilhado por toda a campanha** (a ordem de turno não é segredo
-   * de ninguém), então, diferente de `ficha:criada`, não há recorte a fazer aqui: o combatente já
-   * chega com o resumo que qualquer membro pode ver, e o documento da ficha continua atrás do REST
-   * gateado pela §14 (o gateway não relaxa permissão — proibição #28).
-   */
-  emitirEncontroAlterado(evento: EncontroAlteradoDto): void {
-    this.servidor
-      .to(this.salaCampanha(evento.encontro.campanhaId))
-      .emit('encontro:alterado', evento);
-  }
+   * Diferente dos outros eventos, este não pode ser um `emit` único para a sala: o estado do
+   * encontro carrega Vida, defesas e log de criaturas que o mestre talvez ainda não tenha revelado,
+   * e a sala mistura mestre e jogadores. Então o gateway percorre os sockets, pergunta à
+   * `EncontroService` (a dona da regra §14) qual é o recorte daquele usuário e emite socket a
+   * socket. O resultado é memorizado por usuário — quem está com duas abas abertas custa uma
+   * montagem só.
+   *
+   * Continua **broadcast-only**: nada entra por aqui, a service chama depois de persistir.
+   */
+  async emitirEncontroAlterado(
+    campanhaId: number,
+    montarParaUsuario: (usuario: JwtPayload) => Promise<EncontroAlteradoDto['encontro']>,
+  ): Promise<void> {
+    const sockets = await this.servidor.in(this.salaCampanha(campanhaId)).fetchSockets();
+    const porUsuario = new Map<number, EncontroAlteradoDto['encontro']>();
+    for (const socket of sockets) {
+      const usuario = (socket.data as { usuario?: JwtPayload }).usuario;
+      if (!usuario) {
+        continue;
+      }
+      let encontro = porUsuario.get(usuario.sub);
+      if (!encontro) {
+        try {
+          encontro = await montarParaUsuario(usuario);
+        } catch {
+          // Socket de quem perdeu o vínculo com a campanha entre o `join` e a emissão: não recebe
+          // o evento, e o resto da sala não é penalizado por isso.
+          continue;
+        }
+        porUsuario.set(usuario.sub, encontro);
+      }
+      socket.emit('encontro:alterado', { encontro } satisfies EncontroAlteradoDto);
+    }
+  }
 
   /**
    * Emite `encontro:iniciativa-pedido` na sala `campanha:<id>` (m7-04) — o mestre chamando os

@@ -1,11 +1,11 @@
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { Subject, of } from 'rxjs';
 
 import type { EncontroAlteradoDto, EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
-import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { FichaRecuperadaDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import {
   CadenciaEnum,
   ClasseEnum,
@@ -18,6 +18,7 @@ import {
 
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { FichaService } from '../../../ficha/ficha.service';
+import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { EncontroService } from '../../encontro.service';
 import { PainelEncontro } from './painel-encontro.page';
@@ -60,6 +61,7 @@ describe('PainelEncontro', () => {
     destreza: 3,
     iniciativaBonus: 0,
     corFicha: null,
+    revelado: true,
     ...extras,
   });
 
@@ -94,12 +96,39 @@ describe('PainelEncontro', () => {
 
   const membros: CampanhaMembroResumoDto[] = [
     {
+      usuarioId: 1,
+      nome: 'Matheus',
+      papel: TipoCampanhaMembroPapelEnum.MESTRE,
+      fichas: [] as unknown as CampanhaMembroResumoDto['fichas'],
+    },
+    {
       usuarioId: 7,
       nome: 'Bia',
       papel: TipoCampanhaMembroPapelEnum.JOGADOR,
       fichas: [{ id: 200, nome: 'K. Amaral' }] as unknown as CampanhaMembroResumoDto['fichas'],
     },
   ];
+
+  /** Documento mínimo da ficha de quem joga — o bastante para o preset "Iniciativa" resolver. */
+  const fichaDoJogador = {
+    id: 200,
+    cor: '#4a9d6b',
+    dados: {
+      classe: ClasseEnum.COMBATENTE,
+      nivel: 2,
+      atributos: {
+        destreza: 4, forca: 2, luta: 2, pontaria: 2, vigor: 2,
+        intelecto: 2, medicina: 0, sentidos: 2, social: 0, vontade: 2,
+      },
+      estado: { vidaAtual: 20, energiaAtual: 10, lesoes: [] },
+      inventario: { itens: [], amplificadores: [] },
+      habilidades: [],
+      rolagens: [
+        { nome: 'Iniciativa', formula: 'DESd6', habilidadesVinculadas: [], passos: [] },
+      ],
+      identidade: { personalidade: null, origem: null },
+    },
+  } as unknown as FichaRecuperadaDto;
 
   const fichas = [
     {
@@ -121,8 +150,15 @@ describe('PainelEncontro', () => {
     },
   ] as unknown as FichaResumoDto[];
 
-  function montar(estado: EncontroRecuperadoDto = encontroAtivo) {
+  const USUARIO_MESTRE = 1;
+  const USUARIO_JOGADOR = 7;
+
+  function montar(
+    estado: EncontroRecuperadoDto = encontroAtivo,
+    usuarioId: number = USUARIO_MESTRE,
+  ) {
     const encontroAlterado$ = new Subject<EncontroAlteradoDto>();
+    const encontroIniciativaPedido$ = new Subject<{ id: number; campanhaId: number }>();
     const encontroService = {
       listarPorCampanha: vi.fn(() =>
         of([
@@ -139,6 +175,7 @@ describe('PainelEncontro', () => {
       ),
       recuperarEncontro: vi.fn(() => of(estado)),
       rolarIniciativasFaltantes: vi.fn(() => of(estado)),
+      atribuirIniciativa: vi.fn(() => of(estado)),
       avancarTurno: vi.fn(() => of(estado)),
       ajustarVida: vi.fn(() => of(estado)),
     };
@@ -148,7 +185,14 @@ describe('PainelEncontro', () => {
         provideRouter([]),
         MessageService,
         { provide: EncontroService, useValue: encontroService },
-        { provide: FichaService, useValue: { listarFichas: vi.fn(() => of(fichas)) } },
+        {
+          provide: FichaService,
+          useValue: {
+            listarFichas: vi.fn(() => of(fichas)),
+            recuperarFicha: vi.fn(() => of(fichaDoJogador)),
+          },
+        },
+        { provide: SessaoService, useValue: { usuario: () => ({ id: usuarioId }) } },
         { provide: CampanhaService, useValue: { listarMembros: vi.fn(() => of(membros)) } },
         {
           provide: TempoRealService,
@@ -159,18 +203,24 @@ describe('PainelEncontro', () => {
             conectado: () => true,
             reconexao: () => 0,
             encontroAlterado$,
+            encontroIniciativaPedido$,
           },
         },
         {
+          // `paramMap` como Observable: a página escuta a troca de `:encontroId` (histórico) em vez
+          // de ler o snapshot uma vez, porque o Angular reusa o componente entre esses dois estados.
           provide: ActivatedRoute,
-          useValue: { snapshot: { paramMap: new Map([['campanhaId', String(CAMPANHA_ID)]]) } },
+          useValue: {
+            snapshot: { paramMap: new Map([['campanhaId', String(CAMPANHA_ID)]]) },
+            paramMap: of(convertToParamMap({ campanhaId: String(CAMPANHA_ID) })),
+          },
         },
       ],
     });
 
     const fixture = TestBed.createComponent(PainelEncontro);
     fixture.detectChanges();
-    return { fixture, encontroService, encontroAlterado$ };
+    return { fixture, encontroService, encontroAlterado$, encontroIniciativaPedido$ };
   }
 
   /** Os membros `protected` que o template consome — o teste lê exatamente o que a tela lê. */
@@ -256,6 +306,95 @@ describe('PainelEncontro', () => {
     // 5D6 + 3 → mínimo 8, máximo 33 (o valor exato é aleatório; a faixa prova a fórmula).
     expect(mapa[1]).toBeGreaterThanOrEqual(8);
     expect(mapa[1]).toBeLessThanOrEqual(33);
+  });
+
+  describe('visão do jogador (m7-06)', () => {
+    const montagem: EncontroRecuperadoDto = {
+      ...encontroAtivo,
+      status: EncontroStatusEnum.MONTAGEM,
+      turnoIndice: 0,
+      ordemRodada: [],
+      combatentes: [
+        combatente(1, 'SCP-1471-A', { tipoFicha: TipoFichaEnum.CRIATURA, iniciativa: null }),
+        combatente(2, 'K. Amaral', { fichaId: 200, iniciativa: null }),
+      ],
+    };
+
+    it('não dá ao jogador nenhum controle de condução', () => {
+      const { fixture } = montar(encontroAtivo, USUARIO_JOGADOR);
+      const elemento = fixture.nativeElement as HTMLElement;
+      const textos = Array.from(elemento.querySelectorAll('button')).map((botao) =>
+        botao.textContent?.replace(/s+/g, ' ').trim(),
+      );
+
+      expect(textos).not.toContain('Avançar');
+      expect(textos).not.toContain('Voltar');
+      expect(textos).not.toContain('Encerrar');
+      expect(textos).not.toContain('Rolar tudo');
+      expect(textos).not.toContain('Adicionar combatente');
+      // E nenhum stepper de vida/energia chega aos cartões.
+      expect(elemento.querySelectorAll('.combatente__stepper').length).toBe(0);
+      expect(elemento.querySelector('.iniciativa__papel')?.textContent?.trim()).toContain(
+        'Espectador',
+      );
+    });
+
+    it('o mestre continua com a barra de condução inteira', () => {
+      const { fixture } = montar(encontroAtivo, USUARIO_MESTRE);
+      const textos = Array.from(
+        (fixture.nativeElement as HTMLElement).querySelectorAll('button'),
+      ).map((botao) => botao.textContent?.replace(/s+/g, ' ').trim());
+
+      expect(textos).toContain('Avançar');
+      expect(textos).toContain('Encerrar');
+      expect((fixture.nativeElement as HTMLElement).querySelector('.iniciativa__papel')).toBeNull();
+    });
+
+    it('o jogador rola a **própria** iniciativa pelo preset da ficha dele', () => {
+      const { fixture, encontroService } = montar(montagem, USUARIO_JOGADOR);
+      const painel = fixture.componentInstance as unknown as {
+        possoRolarIniciativa: () => boolean;
+        meuCombatente: () => { id: number } | null;
+        rolarMinhaIniciativa: () => void;
+      };
+
+      // A ficha 200 é da Bia (USUARIO_JOGADOR) — só o combatente dela entra em jogo.
+      expect(painel.meuCombatente()?.id).toBe(2);
+      expect(painel.possoRolarIniciativa()).toBe(true);
+
+      painel.rolarMinhaIniciativa();
+
+      expect(encontroService.atribuirIniciativa).toHaveBeenCalledTimes(1);
+      const [dto] = encontroService.atribuirIniciativa.mock.calls[0] as unknown as [
+        { id: number; iniciativa: number },
+      ];
+      expect(dto.id).toBe(2);
+      // Preset "Iniciativa" = DESd6 com Destreza 4 → 4d6, entre 4 e 24.
+      expect(dto.iniciativa).toBeGreaterThanOrEqual(4);
+      expect(dto.iniciativa).toBeLessThanOrEqual(24);
+    });
+
+    it('o mestre nunca entra no fluxo de "rolar a própria"', () => {
+      const { fixture } = montar(montagem, USUARIO_MESTRE);
+      const painel = fixture.componentInstance as unknown as {
+        possoRolarIniciativa: () => boolean;
+      };
+      expect(painel.possoRolarIniciativa()).toBe(false);
+    });
+
+    it('acende o chamado do mestre na tela do jogador', () => {
+      const { fixture, encontroIniciativaPedido$ } = montar(montagem, USUARIO_JOGADOR);
+      encontroIniciativaPedido$.next({ id: 1, campanhaId: CAMPANHA_ID });
+      const painel = fixture.componentInstance as unknown as { iniciativaPedida: () => boolean };
+      expect(painel.iniciativaPedida()).toBe(true);
+    });
+
+    it('o chamado não ricocheteia no próprio mestre que o disparou', () => {
+      const { fixture, encontroIniciativaPedido$ } = montar(montagem, USUARIO_MESTRE);
+      encontroIniciativaPedido$.next({ id: 1, campanhaId: CAMPANHA_ID });
+      const painel = fixture.componentInstance as unknown as { iniciativaPedida: () => boolean };
+      expect(painel.iniciativaPedida()).toBe(false);
+    });
   });
 
   it('absorve o broadcast `encontro:alterado` da própria campanha', () => {

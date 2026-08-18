@@ -30,7 +30,10 @@ import { CampanhaService } from '../../campanha.service';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { FichaService } from '../../../ficha/ficha.service';
 import { RolagemService } from '../../../ficha/rolagem.service';
-import { TempoRealService } from '../../../../core/services/tempo-real.service';
+import { TempoRealService } from '../../../../core/services/tempo-real.service';
+import { EncontroService } from '../../../encontro/encontro.service';
+import type { EncontroResumoDto } from '@contratados-rpg/shared/dtos/encontro';
+import { EncontroStatusEnum } from '@contratados-rpg/shared/enums';
 import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
 import { PaginaCadernoService } from '../../../pagina-caderno/pagina-caderno.service';
 
@@ -81,6 +84,8 @@ describe('CampanhaDetalhe', () => {
     rolagens?: RolagemResumoDto[];
     alterarRetorno?: Observable<CampanhaAlteradaDto>;
     campanha?: Partial<CampanhaRecuperadaDto>;
+    /** Encontros de combate da campanha — alimentam o tile "Combate" da tira (m7-06). */
+    encontros?: EncontroResumoDto[];
   }) {
     // m3-65: em produção, `membro.fichas` (listarMembros) e `fichas()` (listarFichas) vêm da
     // mesma visibilidade no backend — nunca inconsistentes. Aqui, quando o teste não declara
@@ -199,6 +204,10 @@ describe('CampanhaDetalhe', () => {
       ),
     };
 
+    // Tile "Combate" (m7-06): a listagem de encontros da campanha alimenta o atalho da tira de
+    // estatísticas. Vazia por padrão — os testes que precisam de um combate aberto sobrescrevem.
+    const encontroService = { listarPorCampanha: vi.fn(() => of(opts.encontros ?? [])) };
+
     Object.defineProperty(navigator, 'clipboard', {
       value: { writeText: vi.fn(() => Promise.resolve()) },
       configurable: true,
@@ -212,7 +221,8 @@ describe('CampanhaDetalhe', () => {
     const fichaVisibilidadeAlterada$ = new Subject<FichaVisibilidadeAlteradaDto>();
     const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
     const estadoAlterado$ = new Subject<{ id: number; naBase: boolean }>();
-    const inventarioAlterado$ = new Subject<{ campanhaId: number }>();
+    const inventarioAlterado$ = new Subject<{ campanhaId: number }>();
+    const encontroAlterado$ = new Subject<{ encontro: { campanhaId: number } }>();
     const reconexao = signal(0);
     const tempoRealService = {
       conectar: vi.fn(),
@@ -226,7 +236,8 @@ describe('CampanhaDetalhe', () => {
       fichaVisibilidadeAlterada$: fichaVisibilidadeAlterada$.asObservable(),
       rolagemRegistrada$: rolagemRegistrada$.asObservable(),
       estadoAlterado$: estadoAlterado$.asObservable(),
-      inventarioAlterado$: inventarioAlterado$.asObservable(),
+      inventarioAlterado$: inventarioAlterado$.asObservable(),
+      encontroAlterado$: encontroAlterado$.asObservable(),
       reconexao,
       conectado: signal(true),
     };
@@ -240,7 +251,8 @@ describe('CampanhaDetalhe', () => {
         { provide: FichaService, useValue: fichaService },
         { provide: RolagemService, useValue: rolagemService },
         { provide: SessaoService, useValue: sessaoService },
-        { provide: TempoRealService, useValue: tempoRealService },
+        { provide: TempoRealService, useValue: tempoRealService },
+        { provide: EncontroService, useValue: encontroService },
         { provide: PaginaCadernoService, useValue: paginaCadernoService },
       ],
     });
@@ -255,8 +267,9 @@ describe('CampanhaDetalhe', () => {
       raiz: fixture.nativeElement as HTMLElement,
       campanhaService,
       fichaService,
-      rolagemService,
-      tempoRealService,
+      rolagemService,
+      tempoRealService,
+      encontroService,
       fichaCriada$,
       membroEntrou$,
       fichaAlterada$,
@@ -355,6 +368,8 @@ describe('CampanhaDetalhe', () => {
       );
       expect(itens).toEqual([
         'Criar nova ficha',
+        // m7-06: o jogador entra na mesma tela "Iniciativa" do mestre, em modo espectador.
+        'Iniciativa',
         'Vincular ficha existente',
         'Acesso de visualização',
         'Remover da campanha',
@@ -749,13 +764,71 @@ describe('CampanhaDetalhe', () => {
 
   // === Tira de estatísticas (item 2) ===
   describe('tira de estatísticas (item 2)', () => {
-    it('só mostra o tile de Convite — Membros/Fichas/Alertas saíram da tira', () => {
+    it('mostra só Convite e Combate — Membros/Fichas/Alertas saíram da tira', () => {
       const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
 
       const stats = Array.from(raiz.querySelectorAll('.detalhe__estatisticas .stat'));
       const rotulos = stats.map((stat) => stat.querySelector('.stat__rotulo')?.textContent?.trim());
 
-      expect(rotulos).toEqual(['Convite']);
+      // "Combate" entrou na m7-06 como a porta de entrada da tela "Iniciativa" — até então o único
+      // caminho até ela era o menu "⋯" do cabeçalho.
+      expect(rotulos).toEqual(['Convite', 'Combate']);
+    });
+
+    it('o tile de Combate mostra o combate aberto e leva à tela "Iniciativa"', () => {
+      const { raiz } = montar({
+        usuarioId: 1,
+        membros: membrosDois(),
+        fichas,
+        encontros: [
+            {
+              id: 3,
+              campanhaId: CAMPANHA_ID,
+              nome: 'Contenção no Setor 12',
+              status: EncontroStatusEnum.ATIVO,
+              rodadaAtual: 4,
+              quantidadeCombatentes: 5,
+              createdDate: '2026-08-18T00:00:00.000Z',
+            },
+        ],
+      });
+
+      const tile = raiz.querySelector('.detalhe__stat-encontro');
+      expect(tile?.querySelector('.detalhe__encontro-nome')?.textContent?.trim()).toBe(
+        'Contenção no Setor 12',
+      );
+      expect(tile?.querySelector('.detalhe__encontro-meta')?.textContent?.replace(/\s+/g, ' ').trim())
+        .toBe('Em combate · Rodada 4');
+      expect(tile?.querySelector('.detalhe__encontro-acao')?.getAttribute('href')).toBe(
+        `/painel/${CAMPANHA_ID}/iniciativa`,
+      );
+    });
+
+    it('sem combate aberto, o tile conta os encerrados e convida a iniciar', () => {
+      const { raiz } = montar({
+        usuarioId: 1,
+        membros: membrosDois(),
+        fichas,
+        encontros: [
+            {
+              id: 1,
+              campanhaId: CAMPANHA_ID,
+              nome: 'Primeiro contato',
+              status: EncontroStatusEnum.ENCERRADO,
+              rodadaAtual: 6,
+              quantidadeCombatentes: 4,
+              createdDate: '2026-08-17T00:00:00.000Z',
+            },
+        ],
+      });
+
+      const tile = raiz.querySelector('.detalhe__stat-encontro');
+      expect(tile?.querySelector('.detalhe__encontro-nome')?.textContent?.trim()).toBe(
+        'Nenhum em andamento',
+      );
+      expect(tile?.querySelector('.detalhe__encontro-meta')?.textContent?.replace(/\s+/g, ' ').trim())
+        .toBe('1 encerrado');
+      expect(tile?.querySelector('.detalhe__encontro-acao')?.textContent?.trim()).toBe('Iniciar');
     });
 
     it('mostra o tile de Convite para o mestre', () => {

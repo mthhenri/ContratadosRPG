@@ -125,6 +125,75 @@ de rodada com expiração, turno perdido, os três caminhos de vida e a recusa d
 `npm run lint -w backend` continua com os **2 erros preexistentes** do `P-022` e nada do módulo
 `encontro`.
 
+### `m7-06` — visão do jogador, revelação e a porta de entrada da tela (concluída)
+
+A `m7-05` entregou a tela do mestre; esta abriu a **mesma** tela ao jogador, como o mockup previu
+no `visaoJogador`: uma rota (`/painel/:campanhaId/iniciativa`, agora só com `autenticacaoGuard`),
+um componente, duas leituras (`PainelEncontro.ehMestre`, resolvido dos membros que a página já
+carregava). Duas rotas para a mesma tela teriam duplicado a §14 no roteador sem ganhar nada.
+
+**O desenho do mockup não bastava.** Ele bifurca só os dois blocos de botões de condução. A spec
+pedia mais — sem steppers, sem edição de combatente — e foi a spec que valeu: o jogador é
+espectador, e a única coisa que ele **escreve** é a própria iniciativa. Um chip "Espectador" no topo
+diz por que a barra de condução não existe para ele; sem isso a tela parece quebrada, não restrita.
+
+**A rolagem do jogador reusou o caminho da ficha, não um paralelo.** A composição que
+`FichaVisualizacao.rolarIniciativa` fazia inline (atributos para dados + Proficiência + dado extra
+de `Atento`/Formação da Origem) foi extraída para `frontend/.../ficha/rolar-iniciativa.ts` e agora
+serve aos dois. É a razão de o jogador rolar em vez do mestre: o bônus de Iniciativa do agente são
+**dados**, não um número, e só o documento completo os resolve — o `Rolar tudo` do mestre, que só
+enxerga o resumo do combatente, continua sendo o fallback para jogador ausente. O resultado passa
+pela bandeja e entra no feed da campanha como qualquer outra rolagem (m3-27) antes de virar a
+iniciativa do combatente.
+
+**A revelação era a parte de verdade, e obrigou backend.** A spec (entregável 4) exige que o jogador
+não veja no encontro o que não veria fora dele. Isso não é fazível escondendo campo no frontend —
+o payload já teria vazado. Nasceu `backend/.../encontro/encontro-revelacao.ts`: um recorte **puro**
+que zera vida, energia, defesas, condições e Destreza de todo combatente cuja ficha o usuário não
+pode abrir, preservando nome, iniciativa, Cadência e posição — a identidade mínima **sem a qual não
+existe ordem de turno**, e que o mestre anuncia em voz alta na mesa de qualquer jeito. O conjunto de
+fichas visíveis vem de `FichaService.listarFichas`, a service dona da regra §14; nenhuma consulta de
+acesso foi reimplementada. `EncontroCombatenteResumoDto` ganhou `revelado`, e o cartão troca a Vida
+por um traço quando ele é `false` (um "0/0" honesto pareceria uma criatura morta). O **log**
+acompanha: evento preso a um combatente oculto é descartado, porque o texto ("sofreu 12 de dano")
+entregaria por escrito o número que o resumo escondeu. O **avulso conta como não revelado** — ele não
+tem ficha, logo não há o que revelar, e não existe mecanismo de concessão para ele; o padrão seguro
+é o segredo.
+
+**A consequência estrutural foi no gateway.** `encontro:alterado` era um `emit` único para a sala
+`campanha:<id>` — e o comentário do método afirmava que "não há recorte a fazer aqui", o que esta
+task provou falso: a sala mistura mestre e jogadores, e o payload carrega justamente o que o mestre
+guarda. O precedente do `ficha:alterada` (omitir o campo privado para a sala inteira) não servia,
+porque aqui o "campo privado" é o conteúdo que o painel do mestre existe para mostrar. A emissão
+passou a ser **por socket**, com a `EncontroService` montando um recorte por **usuário distinto**
+(memorizado no evento — duas abas custam uma montagem só) e o gateway percorrendo
+`fetchSockets()`. O retorno REST também virou o recorte de **quem chamou**: um jogador que atribui
+a própria iniciativa não pode receber pela resposta o que o broadcast lhe esconderia.
+
+**Complemento pedido pelo autor (fora da spec):** a tela só era alcançável pelo menu "⋯" do
+cabeçalho — invisível para quem não o abre. Entrou um tile **"Combate"** ao lado do "Convite" na
+tira de estatísticas do detalhe da campanha, mostrando o estado do combate corrente
+("Em combate · Rodada 4") ou a contagem de encerrados, com um botão `Abrir`/`Iniciar`; ele
+acompanha o `encontro:alterado` ao vivo. O jogador ganhou "Iniciativa" no kebab dele. E a tela
+passou a listar **encontros anteriores**: a rota aceita `:encontroId` opcional, porque um combate
+encerrado é um documento e um documento tem endereço — a rota sem id continua sendo a da mesa, com
+URL estável durante a sessão.
+
+**Um defeito apareceu só na inspeção visual**, não nos testes: o cartão de um **agente** não
+revelado (a ficha de outro jogador) caía no ramo do agente e estampava "Aguarda"/"Agente" — um
+estado de combate de uma ficha que aquele jogador nem pode abrir. A checagem de revelação subiu para
+o topo da precedência da etiqueta.
+
+Gate: `npm run test -w frontend` **1135 verdes** (+11), backend 419 (+5), shared 688; build dos três
+workspaces limpo; lint de shared e frontend limpo; backend segue com os **2 erros preexistentes** do
+`P-022` e o aviso de bundle **preexistente**. Gate visual pela skill `verify` com **dois usuários
+simultâneos** em 1920×1080 e 360×800 — montagem, chamado de iniciativa, rolagem do jogador, rodada
+1, avanço de turno, dano, encerramento e histórico; `overflow-x: 0` em todos, sem erro de console ou
+rede. O tempo real foi provado com `window.__sentinela` intacta: avançar o turno no mestre levou o
+jogador de `1/5` a `2/5` e o dano apareceu como `Vida 30/31` **sem recarregar** — e, no mesmo
+quadro, os combatentes não revelados continuaram em `Vida —`, provando que o recorte vale também no
+broadcast.
+
 ### `m7-05` — painel do mestre, a tela "Iniciativa" (concluída)
 
 Primeira tela do milestone: `frontend/src/app/modules/encontro` (rota

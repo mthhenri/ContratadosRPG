@@ -204,6 +204,16 @@
                   <app-icone nome="agente" />
                   <span>Criar nova ficha</span>
                 </button>
+                <!-- O jogador entra na mesma tela "Iniciativa" do mestre, em modo espectador
+                     (m7-06) — o tile "Combate" da tira de estatísticas é do mestre. -->
+                <a
+                  class="detalhe__cabecalho-menu-item"
+                  role="menuitem"
+                  [routerLink]="['/painel', campanhaAtual.id, 'iniciativa']"
+                >
+                  <app-icone nome="combate" />
+                  <span>Iniciativa</span>
+                </a>
                 <button
                   class="detalhe__cabecalho-menu-item"
                   type="button"
@@ -356,6 +366,45 @@
             >
               <app-icone [nome]="regenerado() ? 'check' : 'atualizar'" />
             </button>
+          </div>
+        </div>
+
+        <div class="stat detalhe__stat-encontro">
+          <span class="stat__rotulo">Combate</span>
+          <div class="detalhe__encontro-linha">
+            <span class="detalhe__encontro-estado">
+              @if (encontroAberto(); as aberto) {
+                <strong class="detalhe__encontro-nome">{{ aberto.nome }}</strong>
+                <span class="detalhe__encontro-meta">
+                  {{ rotuloStatusEncontro(aberto.status) }}
+                  @if (aberto.status === EncontroStatusEnum.ATIVO) {
+                    · Rodada {{ aberto.rodadaAtual }}
+                  }
+                </span>
+              } @else {
+                <strong class="detalhe__encontro-nome">Nenhum em andamento</strong>
+                <span class="detalhe__encontro-meta">
+                  @if (encontrosEncerrados()) {
+                    {{ encontrosEncerrados() }}
+                    {{ encontrosEncerrados() === 1 ? 'encerrado' : 'encerrados' }}
+                  } @else {
+                    Nenhum combate registrado
+                  }
+                </span>
+              }
+            </span>
+            <a
+              class="botao botao--primario detalhe__encontro-acao"
+              [routerLink]="['/painel', campanhaAtual.id, 'iniciativa']"
+              [appTooltip]="
+                encontroAberto()
+                  ? 'Abrir a tela de Iniciativa'
+                  : 'Iniciar um combate ou ver os anteriores'
+              "
+            >
+              <app-icone nome="combate" />
+              {{ encontroAberto() ? 'Abrir' : 'Iniciar' }}
+            </a>
           </div>
         </div>
       </div>

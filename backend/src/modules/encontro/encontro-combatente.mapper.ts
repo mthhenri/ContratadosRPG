@@ -183,5 +183,8 @@ export function montarCombatenteResumo(
     destreza: estado.destreza,
     iniciativaBonus: estado.iniciativaBonus,
     corFicha: linha.fichaCor,
+    // O mapper monta sempre a visão **completa** (a do mestre). O recorte por permissão é uma
+    // camada depois, em `encontro-revelacao.ts` — aqui não se decide quem vê o quê.
+    revelado: true,
   };
 }

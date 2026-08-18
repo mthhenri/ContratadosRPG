@@ -41,6 +41,7 @@ describe('CartaoCombatente', () => {
     destreza: 4,
     iniciativaBonus: 0,
     corFicha: '#4a9d6b',
+    revelado: true,
   };
 
   function montar(combatente: EncontroCombatenteResumoDto, entradas: Record<string, unknown> = {}) {
@@ -165,6 +166,56 @@ describe('CartaoCombatente', () => {
     const elementoEdicao = edicao.nativeElement as HTMLElement;
     expect(elementoEdicao.querySelector('.combatente__iniciativa-campo')).not.toBeNull();
     expect(elementoEdicao.querySelector('.combatente__remover')).not.toBeNull();
+  });
+
+  it('não desenha número nenhum do combatente não revelado (m7-06)', () => {
+    // É assim que o backend responde ao jogador: identidade da ordem de turno, tudo mais zerado.
+    const fixture = montar(
+      {
+        ...base,
+        tipoFicha: TipoFichaEnum.CRIATURA,
+        nome: 'SCP-1471-A',
+        iniciativa: 21,
+        cadencia: CadenciaEnum.DUPLA,
+        vidaAtual: 0,
+        vidaMaxima: 0,
+        energiaAtual: null,
+        energiaMaxima: null,
+        defesa: null,
+        esquiva: null,
+        bloqueio: null,
+        contraAtaque: null,
+        condicoes: [],
+        morrendo: null,
+        machucado: null,
+        inconsciente: null,
+        destreza: 0,
+        revelado: false,
+      },
+      { emCombate: true, nivelAmeaca: NivelAmeacaEnum.ALTA },
+    );
+    const elemento = fixture.nativeElement as HTMLElement;
+
+    // A Vida vira um traço — "0/0" pareceria uma criatura morta, não uma desconhecida.
+    expect(texto(fixture, '.combatente__recurso--oculto')).toBe('Vida —');
+    expect(elemento.querySelector('.combatente__recurso--vida')).toBeNull();
+    expect(elemento.querySelector('.combatente__defesas')).toBeNull();
+    // Nem o Nível de Ameaça vaza: dizer "Ameaça · Alta" já entregaria metade do segredo.
+    expect(texto(fixture, '.combatente__etiqueta')).toBe('Não revelado');
+    // A Cadência fica — quem age duas vezes na rodada age na frente de todo mundo.
+    expect(texto(fixture, '.combatente__origem')).toBe('Em campo · Cadência 2');
+    expect(texto(fixture, '.combatente__iniciativa-valor')).toBe('21');
+  });
+
+  it('o agente de outro jogador, não revelado, também não se anuncia', () => {
+    const fixture = montar(
+      { ...base, nome: 'V. Corvalho', revelado: false, vidaAtual: 0, vidaMaxima: 0, energiaMaxima: null, energiaAtual: null, defesa: null, esquiva: null, bloqueio: null, contraAtaque: null },
+      { emCombate: true },
+    );
+    // Antes da correção o cartão caía no ramo do agente e estampava 'Aguarda' — um estado de
+    // combate de uma ficha que este jogador nem pode abrir.
+    expect(texto(fixture, '.combatente__etiqueta')).toBe('Não revelado');
+    expect(texto(fixture, '.combatente__origem')).toBe('Em campo');
   });
 
   it('emite a iniciativa digitada e ignora o campo vazio', () => {

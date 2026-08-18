@@ -329,6 +329,8 @@
   // crítica já tem o banner próprio acima). Mesmo bloco `.stat` canônico (abaixo).
   &__estatisticas {
     display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
     margin-bottom: 16px;
   }
 
@@ -341,6 +343,67 @@
     @include bp.mobile {
       flex-basis: 100%;
     }
+  }
+
+  // Tile "Combate" (m7-06) — a porta de entrada da tela "Iniciativa", ao lado do Convite. Antes o
+  // único caminho até ela era o menu "⋯" do cabeçalho, invisível para quem não o abre.
+  &__stat-encontro {
+    min-width: 0;
+    flex: 0 1 340px;
+
+    @include bp.mobile {
+      flex-basis: 100%;
+    }
+  }
+
+  &__encontro-linha {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__encontro-estado {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  &__encontro-nome {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__encontro-meta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+  }
+
+  &__encontro-acao {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    text-decoration: none;
+
+    app-icone { font-size: 13px; }
+
+    @include bp.mobile { min-height: bp.$alvo-toque; }
   }
 
   &__convite-linha {
