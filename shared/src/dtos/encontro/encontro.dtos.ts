@@ -39,8 +39,9 @@ export interface OrdemTurnoDto {
  * condição que **consome** o próximo turno do combatente (ex.: `Inconsciente`, `Insolação` —
  * `sistema-v4.1.0.md`, "Condições").
  *
- * Distinto das três condições **derivadas** da ficha (`morrendo`/`machucado`/`inconsciente`), que
- * continuam vindo de `vidaAtual` (filosofia m3-10) e não são gravadas aqui.
+ * Distinto das três condições da ficha (`morrendo`/`machucado`/`inconsciente`, em
+ * `FichaEstadoDto`), que são **flags alternadas manualmente** por quem joga — o motor nunca as
+ * recalcula a partir de `vidaAtual` (m3-10). O encontro as **lê** da ficha; não as grava aqui.
  */
 export interface CondicaoCombatenteDto {
   readonly nome: string;
@@ -96,6 +97,14 @@ export interface EncontroCombatenteResumoDto {
   readonly bloqueio: number | null;
   readonly contraAtaque: number | null;
   readonly condicoes: readonly CondicaoCombatenteDto[];
+  /**
+   * As três condições da própria ficha (`FichaEstadoDto`), **lidas** e nunca gravadas pelo
+   * encontro: são alternadas à mão por quem joga (m3-10), não deduzidas de `vidaAtual`. Nulas
+   * para o combatente avulso, que não tem ficha.
+   */
+  readonly morrendo: boolean | null;
+  readonly machucado: boolean | null;
+  readonly inconsciente: boolean | null;
   /** Destreza efetiva — desempate da ordenação de iniciativa (`shared/regras/encontro`). */
   readonly destreza: number;
   /** Cor de identidade da ficha (m3-61); `null` cai no `--accent` de quem visualiza. */

@@ -1,0 +1,405 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type {
+  EncontroCombatenteLinhaDto,
+  EncontroLinhaDto,
+} from '@contratados-rpg/shared/dtos/encontro';
+import {
+  CadenciaEnum,
+  EncontroStatusEnum,
+  TipoCampanhaMembroPapelEnum,
+  TipoFichaEnum,
+  TipoUsuarioEnum,
+} from '@contratados-rpg/shared/enums';
+import { BusinessException, UnauthorizedAccessException } from '../../core/exceptions';
+import type { CampanhaGateway } from '../../core/gateway/campanha.gateway';
+import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
+import type { CampanhaRepository } from '../campanha/campanha.repository';
+import type { FichaService } from '../ficha/ficha.service';
+import type { EncontroRepository } from './encontro.repository';
+import { EncontroService } from './encontro.service';
+
+interface EncontroRepositorioDublado {
+  criarEncontro: ReturnType<typeof vi.fn>;
+  recuperarPorId: ReturnType<typeof vi.fn>;
+  recuperarAbertoPorCampanha: ReturnType<typeof vi.fn>;
+  listarPorCampanha: ReturnType<typeof vi.fn>;
+  listarCombatentes: ReturnType<typeof vi.fn>;
+  recuperarCombatentePorId: ReturnType<typeof vi.fn>;
+  recuperarMaiorOrdem: ReturnType<typeof vi.fn>;
+  adicionarCombatente: ReturnType<typeof vi.fn>;
+  removerCombatente: ReturnType<typeof vi.fn>;
+  alterarIniciativa: ReturnType<typeof vi.fn>;
+  listarEventos: ReturnType<typeof vi.fn>;
+}
+
+const mestre: JwtPayload = {
+  sub: 1,
+  login: 'mestre',
+  tipo: TipoUsuarioEnum.NORMAL,
+  tokenVersao: 1,
+};
+const jogador: JwtPayload = {
+  sub: 2,
+  login: 'jogador',
+  tipo: TipoUsuarioEnum.NORMAL,
+  tokenVersao: 1,
+};
+
+function criarEncontroLinha(overrides: Partial<EncontroLinhaDto> = {}): EncontroLinhaDto {
+  return {
+    id: 50,
+    campanhaId: 5,
+    nome: 'Operação Cinza-Pálido',
+    status: EncontroStatusEnum.MONTAGEM,
+    rodadaAtual: 0,
+    turnoIndice: 0,
+    ...overrides,
+  };
+}
+
+function criarCombatenteLinha(
+  overrides: Partial<EncontroCombatenteLinhaDto> = {},
+): EncontroCombatenteLinhaDto {
+  return {
+    id: 100,
+    encontroId: 50,
+    fichaId: null,
+    nomeAvulso: 'Sujeito Contido',
+    iniciativa: null,
+    cadencia: CadenciaEnum.SINGULAR,
+    ordem: 1,
+    vidaMaximaAvulso: 16,
+    vidaAtualAvulso: 9,
+    condicoes: [],
+    fichaNome: null,
+    fichaCor: null,
+    tipoFicha: null,
+    fichaDados: null,
+    ...overrides,
+  };
+}
+
+describe('EncontroService', () => {
+  let encontroRepositorio: EncontroRepositorioDublado;
+  let campanhaRepositorio: { recuperarMembro: ReturnType<typeof vi.fn> };
+  let fichaService: { recuperarFicha: ReturnType<typeof vi.fn> };
+  let campanhaGateway: { emitirEncontroAlterado: ReturnType<typeof vi.fn> };
+  let service: EncontroService;
+
+  beforeEach(() => {
+    encontroRepositorio = {
+      criarEncontro: vi.fn(),
+      recuperarPorId: vi.fn(),
+      recuperarAbertoPorCampanha: vi.fn().mockResolvedValue(null),
+      listarPorCampanha: vi.fn(),
+      listarCombatentes: vi.fn().mockResolvedValue([]),
+      recuperarCombatentePorId: vi.fn(),
+      recuperarMaiorOrdem: vi.fn().mockResolvedValue(0),
+      adicionarCombatente: vi.fn(),
+      removerCombatente: vi.fn(),
+      alterarIniciativa: vi.fn(),
+      listarEventos: vi.fn().mockResolvedValue([]),
+    };
+    campanhaRepositorio = {
+      recuperarMembro: vi.fn().mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE }),
+    };
+    fichaService = { recuperarFicha: vi.fn() };
+    campanhaGateway = { emitirEncontroAlterado: vi.fn() };
+    service = new EncontroService(
+      encontroRepositorio as unknown as EncontroRepository,
+      campanhaRepositorio as unknown as CampanhaRepository,
+      fichaService as unknown as FichaService,
+      campanhaGateway as unknown as CampanhaGateway,
+    );
+  });
+
+  describe('criarEncontro', () => {
+    it('cria em MONTAGEM e transmite o estado depois de persistir', async () => {
+      const encontroCriado = criarEncontroLinha();
+      encontroRepositorio.criarEncontro.mockResolvedValue(encontroCriado);
+
+      const resultado = await service.criarEncontro(
+        { campanhaId: 5, nome: 'Operação Cinza-Pálido' },
+        mestre,
+      );
+
+      expect(encontroRepositorio.criarEncontro).toHaveBeenCalledWith({
+        campanhaId: 5,
+        nome: 'Operação Cinza-Pálido',
+        status: EncontroStatusEnum.MONTAGEM,
+      });
+      expect(resultado.status).toBe(EncontroStatusEnum.MONTAGEM);
+      expect(campanhaGateway.emitirEncontroAlterado).toHaveBeenCalled();
+    });
+
+    it('recusa um segundo encontro enquanto houver um não-encerrado na campanha', async () => {
+      encontroRepositorio.recuperarAbertoPorCampanha.mockResolvedValue(criarEncontroLinha());
+
+      await expect(service.criarEncontro({ campanhaId: 5, nome: 'Outro' }, mestre)).rejects.toThrow(
+        BusinessException,
+      );
+      expect(encontroRepositorio.criarEncontro).not.toHaveBeenCalled();
+    });
+
+    it('jogador não cria encontro', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+
+      await expect(
+        service.criarEncontro({ campanhaId: 5, nome: 'Emboscada' }, jogador),
+      ).rejects.toThrow(UnauthorizedAccessException);
+    });
+
+    it('quem não é membro da campanha não cria encontro', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue(null);
+
+      await expect(
+        service.criarEncontro({ campanhaId: 5, nome: 'Emboscada' }, jogador),
+      ).rejects.toThrow(UnauthorizedAccessException);
+    });
+  });
+
+  describe('adicionarCombatente', () => {
+    beforeEach(() => {
+      encontroRepositorio.recuperarPorId.mockResolvedValue(criarEncontroLinha());
+    });
+
+    it('criatura entra com a Cadência do próprio documento', async () => {
+      fichaService.recuperarFicha.mockResolvedValue({
+        id: 10,
+        campanhaId: 5,
+        dados: { cadencia: CadenciaEnum.DUPLA },
+      });
+
+      await service.adicionarCombatente(
+        { encontroId: 50, fichaId: 10, nomeAvulso: null, vidaMaximaAvulso: null, cadencia: null },
+        mestre,
+      );
+
+      expect(encontroRepositorio.adicionarCombatente).toHaveBeenCalledWith(
+        expect.objectContaining({ fichaId: 10, cadencia: CadenciaEnum.DUPLA, ordem: 1 }),
+      );
+    });
+
+    it('agente entra como SINGULAR — Cadência é conceito de criatura', async () => {
+      fichaService.recuperarFicha.mockResolvedValue({
+        id: 11,
+        campanhaId: 5,
+        dados: { classe: 'COMBATENTE' },
+      });
+
+      await service.adicionarCombatente(
+        { encontroId: 50, fichaId: 11, nomeAvulso: null, vidaMaximaAvulso: null, cadencia: null },
+        mestre,
+      );
+
+      expect(encontroRepositorio.adicionarCombatente).toHaveBeenCalledWith(
+        expect.objectContaining({ fichaId: 11, cadencia: CadenciaEnum.SINGULAR }),
+      );
+    });
+
+    it('recusa ficha de outra campanha', async () => {
+      fichaService.recuperarFicha.mockResolvedValue({ id: 12, campanhaId: 99, dados: {} });
+
+      await expect(
+        service.adicionarCombatente(
+          { encontroId: 50, fichaId: 12, nomeAvulso: null, vidaMaximaAvulso: null, cadencia: null },
+          mestre,
+        ),
+      ).rejects.toThrow(BusinessException);
+      expect(encontroRepositorio.adicionarCombatente).not.toHaveBeenCalled();
+    });
+
+    it('avulso nasce com a vida cheia e sem ficha', async () => {
+      await service.adicionarCombatente(
+        {
+          encontroId: 50,
+          fichaId: null,
+          nomeAvulso: 'Sujeito Contido',
+          vidaMaximaAvulso: 16,
+          cadencia: CadenciaEnum.SINGULAR,
+        },
+        mestre,
+      );
+
+      expect(encontroRepositorio.adicionarCombatente).toHaveBeenCalledWith(
+        expect.objectContaining({
+          fichaId: null,
+          nomeAvulso: 'Sujeito Contido',
+          vidaMaximaAvulso: 16,
+          vidaAtualAvulso: 16,
+        }),
+      );
+    });
+
+    it('avulso sem nome ou sem vida é recusado', async () => {
+      await expect(
+        service.adicionarCombatente(
+          { encontroId: 50, fichaId: null, nomeAvulso: '', vidaMaximaAvulso: 10, cadencia: null },
+          mestre,
+        ),
+      ).rejects.toThrow(BusinessException);
+    });
+
+    it('encontro encerrado não aceita combatente novo', async () => {
+      encontroRepositorio.recuperarPorId.mockResolvedValue(
+        criarEncontroLinha({ status: EncontroStatusEnum.ENCERRADO }),
+      );
+
+      await expect(
+        service.adicionarCombatente(
+          { encontroId: 50, fichaId: null, nomeAvulso: 'X', vidaMaximaAvulso: 5, cadencia: null },
+          mestre,
+        ),
+      ).rejects.toThrow(BusinessException);
+    });
+  });
+
+  describe('atribuirIniciativa', () => {
+    beforeEach(() => {
+      encontroRepositorio.recuperarPorId.mockResolvedValue(criarEncontroLinha());
+    });
+
+    it('mestre atribui a iniciativa de qualquer combatente', async () => {
+      encontroRepositorio.recuperarCombatentePorId.mockResolvedValue(criarCombatenteLinha());
+
+      await service.atribuirIniciativa({ id: 100, iniciativa: 18 }, mestre);
+
+      expect(encontroRepositorio.alterarIniciativa).toHaveBeenCalledWith({
+        id: 100,
+        iniciativa: 18,
+      });
+    });
+
+    it('jogador atribui a do próprio combatente, validando pela permissão da ficha', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      encontroRepositorio.recuperarCombatentePorId.mockResolvedValue(
+        criarCombatenteLinha({ fichaId: 20, nomeAvulso: null, vidaMaximaAvulso: null, vidaAtualAvulso: null }),
+      );
+      fichaService.recuperarFicha.mockResolvedValue({ id: 20, campanhaId: 5, dados: {} });
+
+      await service.atribuirIniciativa({ id: 100, iniciativa: 15 }, jogador);
+
+      expect(fichaService.recuperarFicha).toHaveBeenCalledWith({ id: 20 }, jogador);
+      expect(encontroRepositorio.alterarIniciativa).toHaveBeenCalled();
+    });
+
+    it('jogador não atribui iniciativa de combatente avulso', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      encontroRepositorio.recuperarCombatentePorId.mockResolvedValue(criarCombatenteLinha());
+
+      await expect(service.atribuirIniciativa({ id: 100, iniciativa: 12 }, jogador)).rejects.toThrow(
+        UnauthorizedAccessException,
+      );
+      expect(encontroRepositorio.alterarIniciativa).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('rolarIniciativasFaltantes', () => {
+    it('preenche só quem está sem iniciativa, sem sobrescrever o que o jogador já rolou', async () => {
+      encontroRepositorio.recuperarPorId.mockResolvedValue(criarEncontroLinha());
+      encontroRepositorio.listarCombatentes.mockResolvedValue([
+        criarCombatenteLinha({ id: 100, iniciativa: null }),
+        criarCombatenteLinha({ id: 101, iniciativa: 24 }),
+      ]);
+
+      await service.rolarIniciativasFaltantes(
+        { encontroId: 50, iniciativaPorCombatente: { 100: 18, 101: 3 } },
+        mestre,
+      );
+
+      expect(encontroRepositorio.alterarIniciativa).toHaveBeenCalledTimes(1);
+      expect(encontroRepositorio.alterarIniciativa).toHaveBeenCalledWith({
+        id: 100,
+        iniciativa: 18,
+      });
+    });
+  });
+
+  describe('montagem do estado', () => {
+    it('ordena e intercala a Cadência pelo motor puro, ignorando quem ainda não rolou', async () => {
+      encontroRepositorio.recuperarPorId.mockResolvedValue(criarEncontroLinha());
+      encontroRepositorio.listarCombatentes.mockResolvedValue([
+        criarCombatenteLinha({ id: 1, iniciativa: 18, cadencia: CadenciaEnum.DUPLA }),
+        criarCombatenteLinha({ id: 2, iniciativa: 17 }),
+        criarCombatenteLinha({ id: 3, iniciativa: 3 }),
+        criarCombatenteLinha({ id: 4, iniciativa: null }),
+      ]);
+
+      const estado = await service.recuperarEncontro({ id: 50 }, mestre);
+
+      // Exemplo canônico do guia: Criatura [18] → Agente A [17] → Criatura (2º) → Agente B [3].
+      expect(estado.ordemRodada).toEqual([
+        { combatenteId: 1, ocorrencia: 1 },
+        { combatenteId: 2, ocorrencia: 1 },
+        { combatenteId: 1, ocorrencia: 2 },
+        { combatenteId: 3, ocorrencia: 1 },
+      ]);
+      expect(estado.combatentes).toHaveLength(4);
+    });
+
+    it('combatente avulso usa a vida do próprio encontro e não expõe defesas', async () => {
+      encontroRepositorio.recuperarPorId.mockResolvedValue(criarEncontroLinha());
+      encontroRepositorio.listarCombatentes.mockResolvedValue([criarCombatenteLinha()]);
+
+      const estado = await service.recuperarEncontro({ id: 50 }, mestre);
+
+      expect(estado.combatentes[0]).toMatchObject({
+        nome: 'Sujeito Contido',
+        vidaAtual: 9,
+        vidaMaxima: 16,
+        energiaAtual: null,
+        defesa: null,
+        esquiva: null,
+      });
+    });
+
+    it('criatura expõe só Defesa — sem Esquiva, Bloqueio ou Contra-Ataque', async () => {
+      encontroRepositorio.recuperarPorId.mockResolvedValue(criarEncontroLinha());
+      encontroRepositorio.listarCombatentes.mockResolvedValue([
+        criarCombatenteLinha({
+          id: 200,
+          fichaId: 30,
+          nomeAvulso: null,
+          vidaMaximaAvulso: null,
+          vidaAtualAvulso: null,
+          fichaNome: 'SCP-1471-A',
+          tipoFicha: TipoFichaEnum.CRIATURA,
+          fichaDados: {
+            vidaAtual: 40,
+            vidaMaxima: 52,
+            defesa: 17,
+            atributos: { destreza: 4 },
+          } as unknown as EncontroCombatenteLinhaDto['fichaDados'],
+        }),
+      ]);
+
+      const estado = await service.recuperarEncontro({ id: 50 }, mestre);
+
+      expect(estado.combatentes[0]).toMatchObject({
+        nome: 'SCP-1471-A',
+        vidaAtual: 40,
+        vidaMaxima: 52,
+        defesa: 17,
+        esquiva: null,
+        bloqueio: null,
+        contraAtaque: null,
+        energiaAtual: null,
+      });
+    });
+
+    it('jogador não-membro não lê o encontro', async () => {
+      encontroRepositorio.recuperarPorId.mockResolvedValue(criarEncontroLinha());
+      campanhaRepositorio.recuperarMembro.mockResolvedValue(null);
+
+      await expect(service.recuperarEncontro({ id: 50 }, jogador)).rejects.toThrow(
+        UnauthorizedAccessException,
+      );
+    });
+  });
+});

@@ -22,6 +22,10 @@ import type {
   FichaResumoDto,
   FichaVisibilidadeAlteradaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
+import type {
+  EncontroAlteradoDto,
+  EncontroIniciativaPedidoDto,
+} from '@contratados-rpg/shared/dtos/encontro';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import type { Server, Socket } from 'socket.io';
 import type { JwtPayload } from '../../modules/autenticacao/jwt-payload.interface';
@@ -248,6 +252,35 @@ export class CampanhaGateway implements OnGatewayConnection {
       return;
     }
     this.servidor.to(this.salaCampanha(rolagem.campanhaId)).emit('rolagem:registrada', rolagem);
+  }
+
+  /**
+   * Emite `encontro:alterado` na sala `campanha:<id>` (m7-04). Chamado pela `EncontroService`
+   * **após** cada mutação ser persistida — montagem, iniciativa, turno, vida, condição, log. O
+   * payload é o estado completo do encontro, que é o que a tela "Iniciativa" desenha.
+   *
+   * O estado do encontro é **compartilhado por toda a campanha** (a ordem de turno não é segredo
+   * de ninguém), então, diferente de `ficha:criada`, não há recorte a fazer aqui: o combatente já
+   * chega com o resumo que qualquer membro pode ver, e o documento da ficha continua atrás do REST
+   * gateado pela §14 (o gateway não relaxa permissão — proibição #28).
+   */
+  emitirEncontroAlterado(evento: EncontroAlteradoDto): void {
+    this.servidor
+      .to(this.salaCampanha(evento.encontro.campanhaId))
+      .emit('encontro:alterado', evento);
+  }
+
+  /**
+   * Emite `encontro:iniciativa-pedido` na sala `campanha:<id>` (m7-04) — o mestre chamando os
+   * jogadores a rolar a própria iniciativa. É só o **chamado**: a rolagem em si entra pelo fluxo
+   * REST de rolagem, como qualquer outra (§9, broadcast-only).
+   */
+  emitirEncontroIniciativaPedido(
+    evento: EncontroIniciativaPedidoDto & { campanhaId: number },
+  ): void {
+    this.servidor
+      .to(this.salaCampanha(evento.campanhaId))
+      .emit('encontro:iniciativa-pedido', evento);
   }
 
   /**

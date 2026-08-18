@@ -169,6 +169,19 @@
 - **Correção:** não determinada.
 - **Desde:** reportado pelo dono em 2026-08-12.
 
+### P-022 — `npm run lint -w backend` falha em dois specs preexistentes · `ABERTO` · backend/lint
+
+- **Sintoma:** `npm run lint -w backend` termina com 2 erros `@typescript-eslint/no-unnecessary-type-assertion`
+  — `campanha.service.spec.ts:685:25` e `ficha.service.spec.ts:2288:25`. Os testes passam
+  (394/394); só o lint quebra.
+- **Causa:** asserção de tipo que virou redundante depois de alguma melhoria de inferência
+  (tipagem do dublê ou versão do typescript-eslint) — não investigada a fundo.
+- **Contorno:** nenhum necessário para desenvolver; os dois arquivos não bloqueiam build nem teste.
+- **Correção:** `eslint --fix` resolve os dois (a regra é auto-corrigível). Não foi feito na
+  `m7-03` para não misturar correção alheia ao diff da task.
+- **Desde:** observado na `m7-03` (2026-08-17), com as mudanças da task em `git stash` — portanto
+  **preexistente**, não introduzido pelo Encontro de Combate.
+
 ## Resolvidos
 
 Itens resolvidos **saem daqui**. O relato da correção fica no [`HISTORY.md`](HISTORY.md), junto da

@@ -274,10 +274,13 @@ CREATE TABLE encontro (
   turno_indice             INTEGER NOT NULL   -- posição corrente em ordem_rodada (0-based)
 );
 -- ix_encontro_campanha: (campanha_id)
--- uix_encontro_campanha_aberto: UNIQUE (campanha_id)
---   WHERE is_deleted = false AND tipo_encontro_status_id <> (ENCERRADO)
---   → no máximo UM encontro não-encerrado por campanha
 ```
+
+A invariante **um encontro não-encerrado por campanha** não vira índice parcial único: o predicado
+precisaria resolver o id de `ENCERRADO` em `tipo_encontro_status`, e o PostgreSQL proíbe subquery
+no `WHERE` de um índice (fixar o id numérico do seed seria frágil a qualquer reordenação da tabela
+de referência). Quem arbitra é a `EncontroService`, que recusa criar um segundo encontro enquanto
+houver um não-encerrado na campanha.
 
 ## encontro_combatente (M7 — m7-01/m7-03)
 
@@ -307,8 +310,10 @@ CREATE TABLE encontro_combatente (
 
 `condicoes` guarda os **marcadores** do encontro (`Sangramento · 2 rodadas`, `Inconsciente · perde
 o turno`), com duração em rodadas e expiração automática na virada. Não confundir com as três
-condições **derivadas** da ficha (`morrendo`/`machucado`/`inconsciente`), que continuam calculadas
-a partir de `vidaAtual` (m3-10) e nunca são gravadas aqui.
+condições da ficha (`morrendo`/`machucado`/`inconsciente`, em `FichaEstadoDto`), que são **flags
+alternadas manualmente** por quem joga — o motor nunca as recalcula a partir de `vidaAtual`
+(m3-10: "o estado narrativo é refletido por quem joga, não travado pelo motor"). O encontro as
+**lê** da ficha e as exibe, mas não as grava nem as deduz.
 
 ## encontro_evento (M7 — m7-01/m7-03, alimentado na m7-04)
 

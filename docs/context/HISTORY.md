@@ -55,6 +55,42 @@ duplo), `calcularTurnosPorRodada` (Frenética "4+" do documento adotada como 4 c
 sozinha) e `combatentePerdeTurno`. Nenhuma regra de iniciativa foi reimplementada: o valor chega
 somado pelo motor de rolagem/ficha. Gate: build, lint e 688 testes do shared verdes (+20).
 
+### `m7-03` — backend da montagem (concluída)
+
+Migrations `0020` (referência `tipo_encontro_status`) e `0021` (`encontro`,
+`encontro_combatente`, `encontro_evento`), repositório, service, controller e módulo.
+
+**A invariante de "um encontro aberto por campanha" não virou índice.** O plano era um índice
+parcial único, mas o predicado precisaria resolver o id de `ENCERRADO` em `tipo_encontro_status` e
+o PostgreSQL **proíbe subquery no `WHERE` de um índice**; fixar o id numérico do seed seria frágil
+a qualquer reordenação da tabela de referência. A invariante passou para a service, que consulta
+`recuperarAbertoPorCampanha` antes de criar. `SCHEMA.md` e a migration registram o porquê, para
+ninguém "descobrir" de novo que o índice está faltando.
+
+**Correção de contrato herdada da `m7-01`:** aquela task descrevia `morrendo`/`machucado`/
+`inconsciente` como condições **derivadas** de `vidaAtual`. Errado — `FichaEstadoDto` diz o
+contrário em letras claras: são flags **alternadas à mão** por quem joga, e o motor nunca as
+recalcula ("o estado narrativo é refletido por quem joga, não travado pelo motor", m3-10). O
+contrato foi corrigido e as três entraram no `EncontroCombatenteResumoDto` como valores **lidos**
+da ficha (nulos para avulso, que não tem ficha). O encontro exibe; não deduz nem grava.
+
+O `encontro-combatente.mapper.ts` é onde a **fonte única** vira código: cada tipo de combatente
+resolve seu estado da própria origem — agente lê `estado`/`derivados` (com `calcularVida`/
+`calcularEnergia` de fallback quando o snapshot m3-10 não existe), criatura lê o documento de
+criatura e **só expõe Defesa** (sem Esquiva/Bloqueio/Contra — a regra vencendo o mockup), avulso lê
+as colunas do encontro. NPC ainda não tem contrato tipado (`m4-05` no backlog): entra por um ramo
+genérico que lê só o que é comum, sem inventar campo.
+
+Cadência do combatente com ficha é lida do **próprio documento** (só criatura tem `cadencia`), e
+não de um `tipoFicha` — `FichaRecuperadaDto` não carrega o tipo, e uma segunda consulta só para
+descobri-lo seria pior que perguntar ao dado em mãos. `Rolar tudo` preenche apenas quem está sem
+iniciativa, nunca sobrescrevendo o que um jogador já rolou.
+
+Gate: build e 394 testes do backend verdes (18 novos). `npm run lint -w backend` acusa **2 erros
+preexistentes** em `campanha.service.spec.ts` e `ficha.service.spec.ts`, confirmados com as
+mudanças da task em `git stash` — registrados como `P-022`, não corrigidos aqui para não misturar
+conserto alheio ao diff da task.
+
 ### `m7-01` — contrato do Encontro (concluída)
 
 Três enums novos (`EncontroStatusEnum`, que é enum de **coluna** com tabela de referência
