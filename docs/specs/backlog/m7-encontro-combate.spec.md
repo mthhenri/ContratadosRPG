@@ -54,6 +54,41 @@
   propagam pelo `ficha:alterada` existente.
 - **Um encontro ativo por campanha** por vez (montagem/ativo); encontros encerrados ficam no
   histórico. Soft delete em tudo.
+- **Log do encontro** (mockup) — trilha de eventos legível por rodada/turno: início de rodada, dano
+  sofrido, gasto de Energia, condição aplicada/expirada, mudança de estado ("ficou Morrendo").
+  Persistido e transmitido junto com o estado.
+- **Condições com duração em rodadas** (mockup) — um marcador pode durar N rodadas e **expira
+  sozinho** na virada; `Inconsciente · perde o turno` é o marcador que consome o próximo turno.
+- **`Rolar tudo`** (mockup) — atalho do mestre que preenche de uma vez a iniciativa de **todos os
+  combatentes ainda sem valor** (criaturas, NPCs, avulsos e jogadores ausentes), sem sobrescrever a
+  iniciativa que um jogador já rolou.
+
+## Contrato visual (mockups do autor)
+
+Fonte visual: `docs/design/examples/iniciativa-desktop.html` e
+`docs/design/examples/iniciativa-mobile.html` (tema "Terminal de Contenção", `docs/design/`).
+O rótulo da tela é **"Iniciativa"** (`Iniciativa · <nome do encontro>`); "Encontro" é o nome do
+**domínio** (módulo, tabela, DTO), não o texto de UI.
+
+**Shell (desktop).** Cabeçalho com `Rodada N`, `Turno N/total`, faixa "Age agora — <combatente>"
+e os controles do mestre: `Voltar`, `Avançar`, `Rolar tudo`, `Encerrar`. Corpo = lista de cartões
+de combatente. Painel lateral com o **Log da rodada**.
+
+**Cartão de combatente.** Valor de iniciativa em destaque + rótulo `inic`; etiqueta de estado
+(`Age agora`, `Já agiu`) ou de natureza (`Ameaça · NA <n>`, `Aliado NPC`, `Avulso`, `Morrendo`);
+linha de origem (`<jogador> · Agente · Cadência <n>`, `Criatura da campanha`, `Adicionado pelo
+mestre`, `Digitado nesta sessão`); nome do combatente; **steppers `−`/`+`** para Vida e (quando
+existe) Energia; faixa de defesas; e **chips de condição** com duração (`Sangramento · 2 rodadas`,
+`Inconsciente · perde o turno`, `Machucado`).
+
+**Mobile.** Mesma informação condensada: cabeçalho `R3 · T3/6`, cartões enxutos
+(`Vida x/y · En x/y`, `Def · Esq · Blo · Con` em linha) e uma ação primária `Avançar turno`.
+
+> **Divergência mockup × regras — a regra vence (§16 #27).** O cartão de Ameaça no mockup exibe
+> `Esquiva` e `Contra`, mas criatura **não tem** Esquiva/Bloqueio/Contra-Ataque:
+> `FichaCriaturaDadosDto` tem apenas `defesa`, e o guia trata a criatura como quem **não reage** a
+> ataques. A implementação mostra **só Defesa** para criatura (Esquiva/Bloqueio/Contra são de agente
+> e NPC). Nenhum campo ou fórmula é fabricado para preencher o mockup.
 
 ## Ciclo de vida do encontro
 
