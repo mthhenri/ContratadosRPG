@@ -7,6 +7,7 @@ import type { EncontroAlteradoDto, EncontroRecuperadoDto } from '@contratados-rp
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaRecuperadaDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import {
+  ArquetipoEnum,
   CadenciaEnum,
   ClasseEnum,
   CombatenteOrigemEnum,
@@ -139,11 +140,31 @@ describe('PainelEncontro', () => {
       nome: 'SCP-1471-A',
       tipo: TipoFichaEnum.CRIATURA,
       na: NivelAmeacaEnum.ALTA,
+      vd: 40,
       classe: ClasseEnum.COMBATENTE,
       arquetipo: null,
       nivel: 0,
       vidaAtual: 40,
       energiaAtual: 0,
+      morrendo: false,
+      machucado: false,
+      inconsciente: false,
+    },
+    // Fora do encontro em `encontroAtivo` — o cartão do seletor de combatentes (Agentes) que os
+    // testes de "selecionar/remover" usam para exercitar o caminho de **adicionar**.
+    {
+      id: 999,
+      campanhaId: CAMPANHA_ID,
+      campanhaNome: null,
+      usuarioId: 9,
+      nome: 'Novo Recruta',
+      tipo: TipoFichaEnum.JOGADOR,
+      na: null,
+      classe: ClasseEnum.COMBATENTE,
+      arquetipo: ArquetipoEnum.MERCENARIO,
+      nivel: 1,
+      vidaAtual: 15,
+      energiaAtual: 5,
       morrendo: false,
       machucado: false,
       inconsciente: false,
@@ -178,6 +199,8 @@ describe('PainelEncontro', () => {
       atribuirIniciativa: vi.fn(() => of(estado)),
       avancarTurno: vi.fn(() => of(estado)),
       ajustarVida: vi.fn(() => of(estado)),
+      adicionarCombatente: vi.fn(() => of(estado)),
+      removerCombatente: vi.fn(() => of(estado)),
     };
 
     TestBed.configureTestingModule({
@@ -331,7 +354,8 @@ describe('PainelEncontro', () => {
       expect(textos).not.toContain('Voltar');
       expect(textos).not.toContain('Encerrar');
       expect(textos).not.toContain('Rolar tudo');
-      expect(textos).not.toContain('Adicionar combatente');
+      expect(textos).not.toContain('Selecionar combatentes');
+      expect(textos).not.toContain('Adicionar avulso');
       // E nenhum stepper de vida/energia chega aos cartões.
       expect(elemento.querySelectorAll('.combatente__stepper').length).toBe(0);
       expect(elemento.querySelector('.iniciativa__papel')?.textContent?.trim()).toContain(
@@ -417,6 +441,118 @@ describe('PainelEncontro', () => {
     expect(interno(fixture).encontro()?.rodadaAtual).toBe(2);
   });
 
+  describe('seletor de combatentes e avulso', () => {
+    /**
+     * O seletor de combatentes (cartões sumarizados de agente/criatura) substituiu o antigo
+     * `<select>` de "Ficha da campanha": clicar num cartão alterna a presença da ficha no
+     * encontro, e o avulso ganhou o próprio botão/form, sem ficha nenhuma para escolher.
+     */
+    it('abre o seletor com as fichas da campanha e o avulso fica fechado', () => {
+      const { fixture } = montar();
+      const elemento = fixture.nativeElement as HTMLElement;
+      expect(elemento.querySelector('app-seletor-combatentes')).toBeNull();
+      expect(elemento.querySelector('.adicionar')).toBeNull();
+
+      elemento
+        .querySelectorAll<HTMLButtonElement>('.secundarias__acao')
+        .forEach((botao) => {
+          if (botao.textContent?.includes('Selecionar combatentes')) {
+            botao.click();
+          }
+        });
+      fixture.detectChanges();
+
+      expect(elemento.querySelector('app-seletor-combatentes')).not.toBeNull();
+      expect(elemento.querySelector('.adicionar')).toBeNull();
+      // "Agentes" vem antes de "Criaturas" (ordem das linhas do seletor): o primeiro cartão é o
+      // "Novo Recruta" fora do encontro, o segundo é SCP-1471-A (fichaId 100), já em campo.
+      const cartoes = elemento.querySelectorAll('.seletor__cartao');
+      expect(cartoes[0].classList).not.toContain('seletor__cartao--marcado');
+      expect(cartoes[1].classList).toContain('seletor__cartao--marcado');
+    });
+
+    it('clicar num cartão fora do encontro adiciona a ficha', () => {
+      const { fixture, encontroService } = montar();
+      const elemento = fixture.nativeElement as HTMLElement;
+      Array.from(elemento.querySelectorAll<HTMLButtonElement>('.secundarias__acao'))
+        .find((botao) => botao.textContent?.includes('Selecionar combatentes'))
+        ?.click();
+      fixture.detectChanges();
+
+      // "Novo Recruta" (fichaId 999) é o único ainda fora do encontro.
+      const naoMarcado = Array.from(
+        elemento.querySelectorAll<HTMLButtonElement>('.seletor__cartao'),
+      ).find((botao) => !botao.classList.contains('seletor__cartao--marcado'));
+      naoMarcado?.click();
+      fixture.detectChanges();
+
+      expect(encontroService.adicionarCombatente).toHaveBeenCalledWith(1, {
+        fichaId: 999,
+        nomeAvulso: null,
+        vidaMaximaAvulso: null,
+        cadencia: null,
+      });
+    });
+
+    it('clicar num cartão já marcado remove o combatente correspondente', () => {
+      const { fixture, encontroService } = montar();
+      const elemento = fixture.nativeElement as HTMLElement;
+      Array.from(elemento.querySelectorAll<HTMLButtonElement>('.secundarias__acao'))
+        .find((botao) => botao.textContent?.includes('Selecionar combatentes'))
+        ?.click();
+      fixture.detectChanges();
+
+      elemento.querySelector<HTMLButtonElement>('.seletor__cartao--marcado')?.click();
+      fixture.detectChanges();
+
+      // combatente(1, 'SCP-1471-A', ...) é quem carrega o `fichaId` 100 em `encontroAtivo`.
+      expect(encontroService.removerCombatente).toHaveBeenCalledWith(1);
+    });
+
+    it('abre o formulário de avulso separado do seletor, e adiciona o avulso digitado', () => {
+      const { fixture, encontroService } = montar();
+      const elemento = fixture.nativeElement as HTMLElement;
+      Array.from(elemento.querySelectorAll<HTMLButtonElement>('.secundarias__acao'))
+        .find((botao) => botao.textContent?.includes('Adicionar avulso'))
+        ?.click();
+      fixture.detectChanges();
+
+      expect(elemento.querySelector('app-seletor-combatentes')).toBeNull();
+      const form = elemento.querySelector('form.adicionar') as HTMLFormElement;
+      expect(form).not.toBeNull();
+
+      const nome = form.querySelector<HTMLInputElement>('input[formControlName="nomeAvulso"]')!;
+      nome.value = 'Sujeito Contido';
+      nome.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+
+      form.dispatchEvent(new Event('submit'));
+      fixture.detectChanges();
+
+      expect(encontroService.adicionarCombatente).toHaveBeenCalledWith(1, {
+        fichaId: null,
+        nomeAvulso: 'Sujeito Contido',
+        vidaMaximaAvulso: 10,
+        cadencia: CadenciaEnum.SINGULAR,
+      });
+    });
+
+    it('não envia o avulso sem nome', () => {
+      const { fixture, encontroService } = montar();
+      const elemento = fixture.nativeElement as HTMLElement;
+      Array.from(elemento.querySelectorAll<HTMLButtonElement>('.secundarias__acao'))
+        .find((botao) => botao.textContent?.includes('Adicionar avulso'))
+        ?.click();
+      fixture.detectChanges();
+
+      const botaoSubmeter = elemento.querySelector<HTMLButtonElement>('.adicionar__acao')!;
+      expect(botaoSubmeter.disabled).toBe(true);
+
+      elemento.querySelector('form.adicionar')?.dispatchEvent(new Event('submit'));
+      expect(encontroService.adicionarCombatente).not.toHaveBeenCalled();
+    });
+  });
+
   describe('recorte mobile (m7-08)', () => {
     /**
      * O que estes testes provam é a **estrutura** que o CSS usa para decidir o recorte: os dois
@@ -471,7 +607,8 @@ describe('PainelEncontro', () => {
       );
       expect(gaveta).toEqual([
         'Rolar tudo',
-        'Adicionar combatente',
+        'Selecionar combatentes',
+        'Adicionar avulso',
         'Editar combatentes',
         'Encerrar',
       ]);

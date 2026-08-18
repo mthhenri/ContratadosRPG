@@ -242,10 +242,21 @@
             class="botao botao--secundario secundarias__acao"
             type="button"
             [disabled]="emOperacao()"
-            (click)="alternarAdicao()"
+            [appTooltip]="'Escolher fichas da campanha para o combate'"
+            (click)="alternarSelecaoCombatentes()"
           >
             <app-icone nome="mais" />
-            {{ adicionando() ? 'Fechar' : 'Adicionar combatente' }}
+            {{ selecionandoCombatentes() ? 'Fechar' : 'Selecionar combatentes' }}
+          </button>
+          <button
+            class="botao botao--secundario secundarias__acao"
+            type="button"
+            [disabled]="emOperacao()"
+            [appTooltip]="'Adicionar um inimigo improvisado, sem ficha'"
+            (click)="alternarAdicaoAvulso()"
+          >
+            <app-icone nome="mais" />
+            {{ adicionandoAvulso() ? 'Fechar' : 'Adicionar avulso' }}
           </button>
           <button
             class="botao botao--secundario secundarias__acao"
@@ -271,22 +282,20 @@
         </div>
       </div>
 
-      @if (adicionando()) {
-        <form
-          class="adicionar"
-          [formGroup]="formularioCombatente"
-          (ngSubmit)="adicionarCombatente()"
-        >
-          <label class="adicionar__campo">
-            <span class="adicionar__rotulo">Ficha da campanha</span>
-            <select class="campo" formControlName="fichaId" aria-label="Ficha da campanha">
-              <option value="">— avulso (sem ficha) —</option>
-              @for (ficha of fichasDisponiveis(); track ficha.id) {
-                <option [value]="ficha.id">{{ ficha.nome }}</option>
-              }
-            </select>
-          </label>
+      @if (selecionandoCombatentes()) {
+        <!-- Cartões sumarizados de agente/criatura/NPC da campanha, um por linha de tipo. Clicar
+             alterna a presença no encontro; quem já está em campo chega marcado — reabrir o
+             seletor depois de montar não perde a leitura de quem foi adicionado. -->
+        <app-seletor-combatentes
+          [fichas]="fichasCampanha()"
+          [combatentes]="combatentes()"
+          [desabilitado]="emOperacao()"
+          (fichaAlternada)="alternarFichaNoEncontro($event)"
+        />
+      }
 
+      @if (adicionandoAvulso()) {
+        <form class="adicionar" [formGroup]="formularioAvulso" (ngSubmit)="adicionarAvulso()">
           <label class="adicionar__campo">
             <span class="adicionar__rotulo">Nome do avulso</span>
             <input
@@ -314,7 +323,7 @@
           <button
             class="botao botao--primario adicionar__acao"
             type="submit"
-            [disabled]="emOperacao()"
+            [disabled]="emOperacao() || formularioAvulso.invalid"
           >
             Adicionar
           </button>

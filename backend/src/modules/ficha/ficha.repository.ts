@@ -103,8 +103,8 @@ export class FichaRepository extends BaseRepository {
    *
    * `tipo` (m4-04): resolvido via `JOIN tipo_ficha` (mesma tradução `codigo ↔ id` do `criar`,
    * §10.2.12) — alimenta a divisão Esquadrão (`JOGADOR`) × Criaturas (`CRIATURA`) no painel da
-   * campanha. `na` só existe no JSONB de uma `CRIATURA` (`FichaCriaturaDadosDto.na`) — `NULL` numa
-   * ficha `JOGADOR`. `vidaAtual`/`vidaMaxima`/`defesa` usam `COALESCE` entre os dois formatos de
+   * campanha. `na`/`vd` só existem no JSONB de uma `CRIATURA` (`FichaCriaturaDadosDto.na`/`vd`) —
+   * `NULL` numa ficha `JOGADOR`. `vidaAtual`/`vidaMaxima`/`defesa` usam `COALESCE` entre os dois formatos de
    * `dados` (jogador aninha em `estado`/`derivados`; criatura guarda os três no nível raiz, ver
    * `FichaCriaturaDadosDto`) — sem isso, uma criatura sairia sempre com essas colunas `NULL`.
    *
@@ -138,6 +138,7 @@ export class FichaRepository extends BaseRepository {
               ficha.dados->>'arquetipo' AS arquetipo,
               (ficha.dados->>'nivel')::int AS nivel,
               ficha.dados->>'na' AS na,
+              (ficha.dados->>'vd')::int AS vd,
               COALESCE((ficha.dados->'estado'->>'vidaAtual')::int, (ficha.dados->>'vidaAtual')::int) AS "vidaAtual",
               COALESCE((ficha.dados->'estado'->>'vidaMaxima')::int, (ficha.dados->>'vidaMaxima')::int) AS "vidaMaxima",
               (ficha.dados->'estado'->>'energiaAtual')::int AS "energiaAtual",

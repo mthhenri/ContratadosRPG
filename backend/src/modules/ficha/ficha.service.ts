@@ -251,6 +251,7 @@ export class FichaService {
       imagemUrl: fichaInterna.imagemUrl,
       tipo: fichaInterna.tipo,
       na: fichaInterna.na,
+      vd: fichaInterna.vd,
       classe: fichaInterna.classe,
       arquetipo: fichaInterna.arquetipo,
       nivel: fichaInterna.nivel,

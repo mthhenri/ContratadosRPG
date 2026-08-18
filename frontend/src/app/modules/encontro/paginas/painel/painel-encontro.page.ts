@@ -34,6 +34,7 @@ import { rolarIniciativaDaFicha } from '../../../ficha/rolar-iniciativa';
 import { nomeCadencia } from '../../../ficha/rotulos-criatura';
 import { CartaoCombatente } from '../../componentes/cartao-combatente/cartao-combatente.component';
 import { LogEncontro } from '../../componentes/log-encontro/log-encontro.component';
+import { SeletorCombatentes } from '../../componentes/seletor-combatentes/seletor-combatentes.component';
 import { EncontroService } from '../../encontro.service';
 import { rotuloStatusEncontro } from '../../rotulos-encontro';
 
@@ -88,6 +89,7 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
     Tooltip,
     CartaoCombatente,
     LogEncontro,
+    SeletorCombatentes,
   ],
   templateUrl: './painel-encontro.page.html',
   styleUrl: './painel-encontro.page.scss',
@@ -147,8 +149,14 @@ export class PainelEncontro {
   /** Modo de edição explícito: só nele aparecem o campo de iniciativa e o remover de cada cartão. */
   protected readonly modoEdicao = signal(false);
 
-  /** Painel de adicionar combatente aberto. */
-  protected readonly adicionando = signal(false);
+  /**
+   * Seletor de combatentes aberto — os cartões sumarizados de agentes/criaturas/NPCs da campanha,
+   * clicáveis para entrar ou sair do encontro. Reabrir mostra marcado quem já está em campo.
+   */
+  protected readonly selecionandoCombatentes = signal(false);
+
+  /** Painel de adicionar avulso aberto — fluxo à parte, porque não há ficha nenhuma para escolher. */
+  protected readonly adicionandoAvulso = signal(false);
 
   /**
    * Ações secundárias do mestre abertas (m7-08). Só tem efeito **no mobile**: em 360px elas ficam
@@ -168,11 +176,13 @@ export class PainelEncontro {
     nome: ['', [Validators.required, Validators.maxLength(120)]],
   });
 
-  /** Formulário de adição de combatente — ou uma ficha da campanha, ou um avulso digitado. */
-  protected readonly formularioCombatente = this.formBuilder.nonNullable.group({
-    fichaId: [''],
-    nomeAvulso: [''],
-    vidaMaximaAvulso: [10],
+  /**
+   * Formulário do combatente avulso — a ficha da campanha entra pelo seletor de cartões
+   * (`SeletorCombatentes`), não por aqui; este formulário só existe para quem não tem ficha.
+   */
+  protected readonly formularioAvulso = this.formBuilder.nonNullable.group({
+    nomeAvulso: ['', [Validators.required, Validators.maxLength(120)]],
+    vidaMaximaAvulso: [10, [Validators.required, Validators.min(1)]],
     cadencia: [CadenciaEnum.SINGULAR],
   });
 
@@ -339,16 +349,6 @@ export class PainelEncontro {
     this.combatentes().some((combatente) => combatente.iniciativa === null),
   );
 
-  /** Fichas da campanha ainda fora do encontro — as opções do seletor de adição. */
-  protected readonly fichasDisponiveis = computed<readonly FichaResumoDto[]>(() => {
-    const jaNoEncontro = new Set(
-      this.combatentes()
-        .map((combatente) => combatente.fichaId)
-        .filter((fichaId): fichaId is number => fichaId !== null),
-    );
-    return this.fichasCampanha().filter((ficha) => !jaNoEncontro.has(ficha.id));
-  });
-
   constructor() {
     // `paramMap` (e não o `snapshot`) porque abrir um encontro do histórico troca só o parâmetro:
     // o Angular reusa o componente, e um `snapshot` lido no construtor ficaria congelado no
@@ -492,9 +492,14 @@ export class PainelEncontro {
     );
   }
 
-  /** Abre/fecha o painel de adicionar combatente. */
-  protected alternarAdicao(): void {
-    this.adicionando.update((aberto) => !aberto);
+  /** Abre/fecha o seletor de combatentes (cartões de agente/criatura/NPC). */
+  protected alternarSelecaoCombatentes(): void {
+    this.selecionandoCombatentes.update((aberto) => !aberto);
+  }
+
+  /** Abre/fecha o formulário do avulso. */
+  protected alternarAdicaoAvulso(): void {
+    this.adicionandoAvulso.update((aberto) => !aberto);
   }
 
   /** Abre/fecha a gaveta de ações secundárias (só o mobile as esconde). */
@@ -507,34 +512,47 @@ export class PainelEncontro {
     this.modoEdicao.update((ativo) => !ativo);
   }
 
-  /** Adiciona a ficha selecionada, ou o avulso digitado, ao encontro. */
-  protected adicionarCombatente(): void {
+  /**
+   * O clique num cartão do seletor: se a ficha já tem um combatente no encontro, remove; senão,
+   * adiciona. É o próprio `SeletorCombatentes` que já decide o "marcado" — aqui só se espelha essa
+   * mesma leitura para escolher a chamada certa.
+   */
+  protected alternarFichaNoEncontro(ficha: FichaResumoDto): void {
     const encontroAtual = this.encontro();
-    const valores = this.formularioCombatente.getRawValue();
-    const nomeAvulso = valores.nomeAvulso.trim();
-    // O `<select>` nativo entrega string; o DTO quer `number | null`.
-    const fichaId = valores.fichaId === '' ? null : Number(valores.fichaId);
     if (!encontroAtual || this.emOperacao()) {
       return;
     }
-    if (fichaId === null && nomeAvulso === '') {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Combatente incompleto',
-        detail: 'Escolha uma ficha da campanha ou dê um nome ao avulso.',
-      });
+    const jaNoEncontro = this.combatentes().find((combatente) => combatente.fichaId === ficha.id);
+    if (jaNoEncontro) {
+      this.executarNoEncontro(this.encontroService.removerCombatente(jaNoEncontro.id));
       return;
     }
     this.executarNoEncontro(
       this.encontroService.adicionarCombatente(encontroAtual.id, {
-        fichaId,
-        nomeAvulso: fichaId === null ? nomeAvulso : null,
-        vidaMaximaAvulso: fichaId === null ? valores.vidaMaximaAvulso : null,
-        cadencia: fichaId === null ? valores.cadencia : null,
+        fichaId: ficha.id,
+        nomeAvulso: null,
+        vidaMaximaAvulso: null,
+        cadencia: null,
+      }),
+    );
+  }
+
+  /** Adiciona o combatente avulso digitado no formulário. */
+  protected adicionarAvulso(): void {
+    const encontroAtual = this.encontro();
+    if (!encontroAtual || this.formularioAvulso.invalid || this.emOperacao()) {
+      return;
+    }
+    const valores = this.formularioAvulso.getRawValue();
+    this.executarNoEncontro(
+      this.encontroService.adicionarCombatente(encontroAtual.id, {
+        fichaId: null,
+        nomeAvulso: valores.nomeAvulso.trim(),
+        vidaMaximaAvulso: valores.vidaMaximaAvulso,
+        cadencia: valores.cadencia,
       }),
       () =>
-        this.formularioCombatente.reset({
-          fichaId: '',
+        this.formularioAvulso.reset({
           nomeAvulso: '',
           vidaMaximaAvulso: 10,
           cadencia: CadenciaEnum.SINGULAR,
@@ -619,7 +637,8 @@ export class PainelEncontro {
       return;
     }
     this.modoEdicao.set(false);
-    this.adicionando.set(false);
+    this.selecionandoCombatentes.set(false);
+    this.adicionandoAvulso.set(false);
     this.executarNoEncontro(this.encontroService.iniciarEncontro(encontroAtual.id));
   }
 
