@@ -91,6 +91,40 @@ preexistentes** em `campanha.service.spec.ts` e `ficha.service.spec.ts`, confirm
 mudanças da task em `git stash` — registrados como `P-022`, não corrigidos aqui para não misturar
 conserto alheio ao diff da task.
 
+### `m7-04` — backend da condução (concluída)
+
+Iniciar, avançar/voltar turno, virar rodada, dano/cura, Energia, condições, log e os dois eventos
+de tempo real (`encontro:alterado`, `encontro:iniciativa-pedido`).
+
+**A "fonte única" cobrou seu preço aqui, e valeu.** `FichaService.alterarVitalidade` escreve em
+`dados.estado` — a forma do documento de **agente**. O documento de **criatura** guarda `vidaAtual`
+no **topo**, então aquele método escreveria numa chave que a criatura não tem. Em vez de o encontro
+gravar a vida da criatura por conta própria (o que quebraria a decisão do milestone no primeiro
+caso real), o módulo de ficha ganhou o caminho que lhe faltava:
+`FichaService.alterarVitalidadeCriatura` + `FichaRepository.alterarVitalidadeCriatura`, com a
+permissão de edição (§14) e a emissão de `ficha:alterada` onde sempre estiveram. O encontro agora
+tem três caminhos explícitos — agente pela vitalidade de agente, criatura pela de criatura, avulso
+pelo próprio encontro — e **nenhum** deles duplica a regra.
+
+Decisões menores que ficam registradas:
+
+- **Voltar turno não ressuscita condição expirada.** A expiração já virou linha no log que a mesa
+  leu; desfazê-la em silêncio faria o estado divergir da trilha. `Voltar` reposiciona, só isso.
+- **`perdeTurno` consome o turno automaticamente**, com evento no log, e o laço é limitado ao
+  tamanho da ordem: se **todos** estiverem impedidos, o turno para onde está em vez de girar para
+  sempre — cabe ao mestre resolver a cena.
+- **Reaplicar a mesma condição substitui a duração** em vez de duplicar a linha; é o que a mesa
+  espera ao renovar um efeito.
+- **Energia é recusada para criatura e avulso** em vez de aceita e ignorada — nenhum campo é
+  inventado para caber no gesto da UI.
+- `pedirIniciativa` **não toca em iniciativa**: só transmite o chamado. A rolagem entra pelo fluxo
+  REST de rolagem, como qualquer outra, e volta por `atribuirIniciativa`.
+
+Gate: build e **414 testes** do backend verdes (20 novos, cobrindo intercalação no avanço, virada
+de rodada com expiração, turno perdido, os três caminhos de vida e a recusa de Energia).
+`npm run lint -w backend` continua com os **2 erros preexistentes** do `P-022` e nada do módulo
+`encontro`.
+
 ### `m7-01` — contrato do Encontro (concluída)
 
 Três enums novos (`EncontroStatusEnum`, que é enum de **coluna** com tabela de referência

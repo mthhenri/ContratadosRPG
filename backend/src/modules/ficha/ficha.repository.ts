@@ -11,6 +11,7 @@ import type {
   FichaAcessosListarDto,
   FichaCampanhaInternoAtribuirDto,
   FichaCriadaDto,
+  FichaCriaturaVitalidadeInternoAlterarDto,
   FichaExcluirDto,
   FichaImagemAlteradaDto,
   FichaImagemInternoAlterarDto,
@@ -330,6 +331,26 @@ export class FichaRepository extends BaseRepository {
        RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, imagem_url AS "imagemUrl",
                  imagem_foco AS "imagemFoco", COALESCE(oculta, false) AS oculta, dados`,
       { id: dto.id, estado: JSON.stringify(dto.estado) },
+    );
+    return fichaAlterada;
+  }
+
+  /**
+   * Altera só a Vida corrente de uma **criatura**. O documento de criatura guarda `vidaAtual` no
+   * **topo** (não em `dados.estado`, como o de agente), então precisa do seu próprio `jsonb_set` —
+   * o `alterarVitalidade` acima escreveria numa chave que a criatura não tem.
+   */
+  async alterarVitalidadeCriatura(
+    dto: FichaCriaturaVitalidadeInternoAlterarDto,
+  ): Promise<FichaRecuperadaDto> {
+    const [fichaAlterada] = await this.executarConsulta<FichaRecuperadaDto>(
+      `UPDATE ficha
+       SET dados = jsonb_set(dados, '{vidaAtual}', to_jsonb(:vidaAtual::int), true),
+           updated_date = NOW()
+       WHERE id = :id AND is_deleted = false
+       RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, imagem_url AS "imagemUrl",
+                 imagem_foco AS "imagemFoco", COALESCE(oculta, false) AS oculta, dados`,
+      { id: dto.id, vidaAtual: dto.vidaAtual },
     );
     return fichaAlterada;
   }

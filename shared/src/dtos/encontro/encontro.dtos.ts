@@ -259,3 +259,27 @@ export interface EncontroTurnoVoltarDto {
 export interface EncontroIniciativaPedidoDto {
   readonly id: number;
 }
+
+/**
+ * Entrada do ajuste de Vida de um combatente (m7-04) — os steppers `−`/`+` do cartão. `delta` é
+ * relativo (negativo = dano, positivo = cura), porque é assim que a mesa opera: "levou 11".
+ *
+ * Para combatente **com ficha** o ajuste é aplicado na própria ficha pelo módulo dono
+ * (`FichaService`); só o avulso muda no encontro. `origemTexto` é o complemento opcional que o log
+ * exibe ("de V. Corvalho").
+ */
+export interface EncontroCombatenteVidaAjustarDto {
+  readonly id: number;
+  readonly delta: number;
+  readonly origemTexto: string | null;
+}
+
+/**
+ * Entrada do ajuste de Energia de um combatente (m7-04). Só faz sentido para quem tem Energia —
+ * agente e NPC; criatura e avulso não têm, e o ajuste é recusado.
+ */
+export interface EncontroCombatenteEnergiaAjustarDto {
+  readonly id: number;
+  readonly delta: number;
+  readonly origemTexto: string | null;
+}

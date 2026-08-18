@@ -1,7 +1,11 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
 import type {
   EncontroCombatenteAdicionarDto,
+  EncontroCombatenteCondicaoAtribuirDto,
+  EncontroCombatenteCondicaoRemoverDto,
+  EncontroCombatenteEnergiaAjustarDto,
   EncontroCombatenteIniciativaAtribuirDto,
+  EncontroCombatenteVidaAjustarDto,
   EncontroCriadoDto,
   EncontroCriarDto,
   EncontroRecuperadoDto,
@@ -70,6 +74,82 @@ export class EncontroController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<EncontroRecuperadoDto> {
     return this.encontroService.atribuirIniciativa({ ...dto, id }, usuarioAtivo);
+  }
+
+  @Post('encontro/:id/iniciar')
+  iniciar(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<EncontroRecuperadoDto> {
+    return this.encontroService.iniciarEncontro({ id }, usuarioAtivo);
+  }
+
+  @Post('encontro/:id/encerrar')
+  encerrar(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<EncontroRecuperadoDto> {
+    return this.encontroService.encerrarEncontro({ id }, usuarioAtivo);
+  }
+
+  @Post('encontro/:id/turno/avancar')
+  avancarTurno(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<EncontroRecuperadoDto> {
+    return this.encontroService.avancarTurno({ id }, usuarioAtivo);
+  }
+
+  @Post('encontro/:id/turno/voltar')
+  voltarTurno(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<EncontroRecuperadoDto> {
+    return this.encontroService.voltarTurno({ id }, usuarioAtivo);
+  }
+
+  @Post('encontro/:id/iniciativa/pedido')
+  pedirIniciativa(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<EncontroRecuperadoDto> {
+    return this.encontroService.pedirIniciativa({ id }, usuarioAtivo);
+  }
+
+  @Put('encontro/combatente/:id/vida')
+  ajustarVida(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: EncontroCombatenteVidaAjustarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<EncontroRecuperadoDto> {
+    return this.encontroService.ajustarVida({ ...dto, id }, usuarioAtivo);
+  }
+
+  @Put('encontro/combatente/:id/energia')
+  ajustarEnergia(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: EncontroCombatenteEnergiaAjustarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<EncontroRecuperadoDto> {
+    return this.encontroService.ajustarEnergia({ ...dto, id }, usuarioAtivo);
+  }
+
+  @Post('encontro/combatente/:id/condicao')
+  aplicarCondicao(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: EncontroCombatenteCondicaoAtribuirDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<EncontroRecuperadoDto> {
+    return this.encontroService.aplicarCondicao({ ...dto, id }, usuarioAtivo);
+  }
+
+  @Delete('encontro/combatente/:id/condicao')
+  removerCondicao(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: EncontroCombatenteCondicaoRemoverDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<EncontroRecuperadoDto> {
+    return this.encontroService.removerCondicao({ ...dto, id }, usuarioAtivo);
   }
 
   @Put('encontro/:id/iniciativa')

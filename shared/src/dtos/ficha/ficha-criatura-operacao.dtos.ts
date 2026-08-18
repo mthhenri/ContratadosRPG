@@ -118,3 +118,20 @@ export interface FichaCriaturaAlteradaDto {
   readonly oculta: boolean;
   readonly dados: FichaCriaturaDadosDto;
 }
+
+/**
+ * Entrada da alteração pontual da Vida de uma criatura (m7-04) — o equivalente de
+ * `FichaVitalidadeAlterarDto` para o documento de criatura, onde `vidaAtual` mora no **topo** do
+ * documento e não em `dados.estado` (criatura não tem Energia). Existe para que o Encontro de
+ * Combate aplique dano/cura **na ficha**, fonte única do estado, sem regravar o documento inteiro
+ * nem reimplementar a regra fora do módulo dono.
+ */
+export interface FichaCriaturaVitalidadeAlterarDto {
+  readonly vidaAtual: number;
+}
+
+/** Entrada interna — `id` injetado pela controller/serviço chamador, nunca `alterar(id, dados)`. */
+export interface FichaCriaturaVitalidadeInternoAlterarDto {
+  readonly id: number;
+  readonly vidaAtual: number;
+}
