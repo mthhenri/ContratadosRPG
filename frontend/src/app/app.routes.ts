@@ -48,6 +48,15 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./modules/ficha/criatura.routes').then((modulo) => modulo.criaturaRoutes),
   },
+  // Painel de combate do mestre — a tela "Iniciativa" (m7-05). Mesma convenção das rotas de
+  // ficha/criatura: precede a rota `painel` genérica para ser casada antes do prefixo mais curto.
+  // Sem `:id` de encontro — a campanha tem no máximo um aberto por vez (ver `encontro.routes.ts`).
+  {
+    path: 'painel/:campanhaId/iniciativa',
+    canActivate: [autenticacaoGuard, mestreCampanhaGuard],
+    loadChildren: () =>
+      import('./modules/encontro/encontro.routes').then((modulo) => modulo.encontroRoutes),
+  },
   // Área privada de campanhas (guardada) — destino padrão pós-login. Montada sob `/painel`
   // (listar/criar/entrar/detalhe), consumindo o backend fechado nas m2-04/m2-05 — m2-07.
   {

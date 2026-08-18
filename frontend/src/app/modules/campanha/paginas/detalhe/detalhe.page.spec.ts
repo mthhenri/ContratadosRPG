@@ -362,14 +362,15 @@ describe('CampanhaDetalhe', () => {
       ]);
     });
 
-    it('abre o menu com Editar/Excluir e fecha ao clicar no fundo', () => {
+    it('abre o menu com Iniciativa/Editar/Excluir e fecha ao clicar no fundo', () => {
       const { fixture, raiz } = montar(mestre());
 
       abrirMenuCampanha(raiz, fixture);
       const itens = raiz.querySelectorAll('.detalhe__cabecalho-menu-item');
-      expect(itens).toHaveLength(2);
-      expect(itens[0].textContent).toContain('Editar');
-      expect(itens[1].textContent).toContain('Excluir');
+      expect(itens).toHaveLength(3);
+      expect(itens[0].textContent).toContain('Iniciativa');
+      expect(itens[1].textContent).toContain('Editar');
+      expect(itens[2].textContent).toContain('Excluir');
 
       (raiz.querySelector('.detalhe__cabecalho-menu-fundo') as HTMLButtonElement).click();
       fixture.detectChanges();
@@ -386,7 +387,7 @@ describe('CampanhaDetalhe', () => {
       const { fixture, raiz, campanhaService } = montar({ ...mestre(), alterarRetorno: of(alterada) });
 
       abrirMenuCampanha(raiz, fixture);
-      (raiz.querySelectorAll('.detalhe__cabecalho-menu-item')[0] as HTMLButtonElement).click();
+      (raiz.querySelectorAll('.detalhe__cabecalho-menu-item')[1] as HTMLButtonElement).click();
       fixture.detectChanges();
       expect(raiz.querySelector('.detalhe__cabecalho-menu')).toBeNull();
 
@@ -414,7 +415,7 @@ describe('CampanhaDetalhe', () => {
       const { fixture, raiz, campanhaService, navegar } = montar(mestre());
 
       abrirMenuCampanha(raiz, fixture);
-      (raiz.querySelectorAll('.detalhe__cabecalho-menu-item')[1] as HTMLButtonElement).click();
+      (raiz.querySelectorAll('.detalhe__cabecalho-menu-item')[2] as HTMLButtonElement).click();
       fixture.detectChanges();
       expect(raiz.querySelector('.detalhe__exclusao')).not.toBeNull();
       expect(campanhaService.excluirCampanha).not.toHaveBeenCalled();
@@ -430,7 +431,7 @@ describe('CampanhaDetalhe', () => {
       const { fixture, raiz, campanhaService } = montar(mestre());
 
       abrirMenuCampanha(raiz, fixture);
-      (raiz.querySelectorAll('.detalhe__cabecalho-menu-item')[1] as HTMLButtonElement).click();
+      (raiz.querySelectorAll('.detalhe__cabecalho-menu-item')[2] as HTMLButtonElement).click();
       fixture.detectChanges();
       (raiz.querySelector('.detalhe__exclusao .botao--secundario') as HTMLButtonElement).click();
       fixture.detectChanges();
@@ -611,7 +612,7 @@ describe('CampanhaDetalhe', () => {
       const { fixture, raiz } = montar(mestre());
 
       abrirMenuCampanha(raiz, fixture);
-      expect(raiz.querySelectorAll('.detalhe__cabecalho-menu-item')).toHaveLength(2);
+      expect(raiz.querySelectorAll('.detalhe__cabecalho-menu-item')).toHaveLength(3);
     });
 
     it('mostra "Ver como jogador" como 3º item quando há jogadores na campanha', () => {
@@ -646,7 +647,7 @@ describe('CampanhaDetalhe', () => {
       const itens = Array.from(raiz.querySelectorAll('.detalhe__cabecalho-menu-item')).map((item) =>
         item.textContent?.replace(/\s+/g, ' ').trim(),
       );
-      expect(itens).toEqual(['Editar', 'Excluir', 'Ver como jogador']);
+      expect(itens).toEqual(['Iniciativa', 'Editar', 'Excluir', 'Ver como jogador']);
     });
 
     it('escolher um jogador troca para o layout de jogador, mostrando a ficha própria dele', () => {

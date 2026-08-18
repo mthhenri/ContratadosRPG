@@ -1,0 +1,280 @@
+<section class="iniciativa">
+  <header class="iniciativa__topo">
+    <a
+      class="iniciativa__voltar"
+      [routerLink]="['/painel', campanhaId]"
+      aria-label="Voltar à campanha"
+      [appTooltip]="'Voltar à campanha'"
+    >
+      <app-icone nome="voltar" />
+    </a>
+    <div class="iniciativa__acoes">
+      <app-indicador-tempo-real />
+    </div>
+  </header>
+
+  @if (carregando()) {
+    <p class="iniciativa__carregando">Carregando o combate…</p>
+  } @else if (!encontro()) {
+    <!-- Campanha sem encontro aberto: o mestre nomeia o combate e a montagem começa. -->
+    <form class="abertura" [formGroup]="formularioCriacao" (ngSubmit)="criarEncontro()">
+      <div class="cartao__cabecalho">
+        <span class="cartao__indice">//</span>
+        <h1 class="cartao__titulo">Iniciativa</h1>
+        <span class="cartao__regua"></span>
+      </div>
+      <p class="abertura__ajuda">
+        Nenhum combate em andamento nesta campanha. Dê um nome ao encontro para montar a ordem de
+        iniciativa.
+      </p>
+      <div class="abertura__linha">
+        <input
+          class="campo"
+          type="text"
+          formControlName="nome"
+          placeholder="Ex.: Contenção no Setor 12"
+          aria-label="Nome do encontro"
+        />
+        <button
+          class="botao botao--primario abertura__acao"
+          type="submit"
+          [disabled]="formularioCriacao.invalid || emOperacao()"
+        >
+          Abrir combate
+        </button>
+      </div>
+    </form>
+  } @else {
+    <div class="cartao__cabecalho">
+      <span class="cartao__indice">//</span>
+      <h1 class="cartao__titulo">Iniciativa · {{ encontro()!.nome }}</h1>
+      <span class="cartao__regua"></span>
+      <span class="cartao__meta">
+        {{ combatentes().length }}
+        {{ combatentes().length === 1 ? 'participante' : 'participantes' }}
+      </span>
+    </div>
+
+    <!-- Faixa de condução: contadores à esquerda, controles do mestre à direita. -->
+    <div class="painel">
+      <div class="painel__bloco painel__bloco--contadores">
+        @if (emCombate()) {
+          <div class="painel__contador">
+            <span class="painel__rotulo">Rodada</span>
+            <span class="painel__numero">{{ encontro()!.rodadaAtual }}</span>
+          </div>
+          <div class="painel__contador">
+            <span class="painel__rotulo">Turno</span>
+            <span class="painel__numero painel__numero--destaque">
+              {{ encontro()!.turnoIndice + 1 }}<span class="painel__fracao"
+                >/{{ totalDeTurnos() }}</span
+              >
+            </span>
+          </div>
+        } @else {
+          <div class="painel__contador">
+            <span class="painel__rotulo">Situação</span>
+            <span class="painel__numero painel__numero--texto">
+              {{ rotuloStatusEncontro(encontro()!.status) }}
+            </span>
+          </div>
+        }
+      </div>
+
+      @if (mutavel()) {
+      <div
+        class="painel__bloco painel__bloco--vez"
+        [class.painel__bloco--acesa]="combatenteDaVez()"
+      >
+        <span class="painel__rotulo">{{ emCombate() ? 'Age agora' : 'Aguardando' }}</span>
+        @if (combatenteDaVez(); as daVez) {
+          <span class="painel__vez">
+            {{ daVez.nome }}
+            <span class="painel__vez-detalhe">
+              · {{ acoesRestantesDaVez() }}
+              {{ acoesRestantesDaVez() === 1 ? 'ação restante' : 'ações restantes' }}
+            </span>
+          </span>
+        } @else {
+          <span class="painel__vez painel__vez--vazia">Combate ainda não iniciado</span>
+        }
+      </div>
+      }
+
+      @if (emCombate()) {
+        <div class="painel__bloco painel__bloco--controles">
+          <button
+            class="botao botao--secundario painel__acao"
+            type="button"
+            [disabled]="emOperacao()"
+            [appTooltip]="'Voltar ao turno anterior'"
+            (click)="voltarTurno()"
+          >
+            <app-icone nome="voltar" />
+            Voltar
+          </button>
+          <button
+            class="botao botao--primario painel__acao"
+            type="button"
+            [disabled]="emOperacao()"
+            [appTooltip]="'Passar ao próximo turno'"
+            (click)="avancarTurno()"
+          >
+            Avançar
+          </button>
+        </div>
+      } @else if (emMontagem()) {
+        <div class="painel__bloco painel__bloco--controles">
+          <button
+            class="botao botao--secundario painel__acao"
+            type="button"
+            [disabled]="emOperacao() || !combatentes().length"
+            [appTooltip]="'Chamar os jogadores a rolar a própria iniciativa'"
+            (click)="pedirIniciativa()"
+          >
+            Pedir iniciativa
+          </button>
+          <button
+            class="botao botao--primario painel__acao"
+            type="button"
+            [disabled]="emOperacao() || !combatentes().length || faltamIniciativas()"
+            [appTooltip]="
+              faltamIniciativas()
+                ? 'Falta iniciativa para algum combatente'
+                : 'Começar o combate na rodada 1'
+            "
+            (click)="iniciarCombate()"
+          >
+            Iniciar combate
+          </button>
+        </div>
+      }
+
+      @if (mutavel()) {
+        <div class="painel__bloco painel__bloco--controles">
+          <button
+            class="botao botao--secundario painel__acao"
+            type="button"
+            [disabled]="emOperacao() || !faltamIniciativas()"
+            [appTooltip]="'Rolar a iniciativa de quem ainda não tem — nunca sobrescreve'"
+            (click)="rolarTudo()"
+          >
+            <app-icone nome="dado" />
+            Rolar tudo
+          </button>
+          @if (emCombate()) {
+            <button
+              class="botao botao--perigo painel__acao"
+              type="button"
+              [disabled]="emOperacao()"
+              [appTooltip]="'Encerrar o combate — depois disso ele fica só de leitura'"
+              (click)="encerrarCombate()"
+            >
+              Encerrar
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    @if (mutavel()) {
+      <div class="montagem">
+        <button
+          class="botao botao--secundario montagem__alternar"
+          type="button"
+          [disabled]="emOperacao()"
+          (click)="alternarAdicao()"
+        >
+          <app-icone nome="mais" />
+          {{ adicionando() ? 'Fechar' : 'Adicionar combatente' }}
+        </button>
+        <button
+          class="botao botao--secundario montagem__alternar"
+          type="button"
+          [disabled]="emOperacao() || !combatentes().length"
+          [appTooltip]="'Editar iniciativa e remover combatentes'"
+          (click)="alternarEdicao()"
+        >
+          <app-icone nome="editar" />
+          {{ modoEdicao() ? 'Concluir edição' : 'Editar combatentes' }}
+        </button>
+      </div>
+
+      @if (adicionando()) {
+        <form
+          class="adicionar"
+          [formGroup]="formularioCombatente"
+          (ngSubmit)="adicionarCombatente()"
+        >
+          <label class="adicionar__campo">
+            <span class="adicionar__rotulo">Ficha da campanha</span>
+            <select class="campo" formControlName="fichaId" aria-label="Ficha da campanha">
+              <option value="">— avulso (sem ficha) —</option>
+              @for (ficha of fichasDisponiveis(); track ficha.id) {
+                <option [value]="ficha.id">{{ ficha.nome }}</option>
+              }
+            </select>
+          </label>
+
+          <label class="adicionar__campo">
+            <span class="adicionar__rotulo">Nome do avulso</span>
+            <input
+              class="campo"
+              type="text"
+              formControlName="nomeAvulso"
+              placeholder="Ex.: Sujeito Contido"
+            />
+          </label>
+
+          <label class="adicionar__campo adicionar__campo--curto">
+            <span class="adicionar__rotulo">Vida do avulso</span>
+            <input class="campo" type="number" formControlName="vidaMaximaAvulso" min="1" />
+          </label>
+
+          <label class="adicionar__campo">
+            <span class="adicionar__rotulo">Cadência do avulso</span>
+            <select class="campo" formControlName="cadencia">
+              @for (opcao of cadencias; track opcao) {
+                <option [value]="opcao">{{ nomeCadencia(opcao) }}</option>
+              }
+            </select>
+          </label>
+
+          <button
+            class="botao botao--primario adicionar__acao"
+            type="submit"
+            [disabled]="emOperacao()"
+          >
+            Adicionar
+          </button>
+        </form>
+      }
+    }
+
+    @if (combatentes().length) {
+      <div class="grade">
+        @for (combatente of combatentes(); track combatente.id) {
+          <app-cartao-combatente
+            [combatente]="combatente"
+            [ehTurnoAtual]="ehDaVez(combatente)"
+            [jaAgiu]="jaAgiu(combatente)"
+            [emCombate]="emCombate()"
+            [donoNome]="donoNome(combatente)"
+            [nivelAmeaca]="nivelAmeaca(combatente)"
+            [podeAjustar]="mutavel() && !emOperacao()"
+            [emEdicao]="modoEdicao() && mutavel()"
+            (vidaAjustada)="ajustarVida(combatente, $event)"
+            (energiaAjustada)="ajustarEnergia(combatente, $event)"
+            (iniciativaAtribuida)="atribuirIniciativa(combatente, $event)"
+            (removido)="removerCombatente(combatente)"
+          />
+        }
+      </div>
+    } @else {
+      <p class="iniciativa__vazio">
+        Nenhum combatente ainda. Adicione as fichas da campanha, as Ameaças e os avulsos que entram
+        neste combate.
+      </p>
+    }
+  }
+</section>

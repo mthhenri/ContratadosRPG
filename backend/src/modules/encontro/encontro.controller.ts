@@ -8,6 +8,7 @@ import type {
   EncontroCombatenteVidaAjustarDto,
   EncontroCriadoDto,
   EncontroCriarDto,
+  EncontroIniciativaRolarDto,
   EncontroRecuperadoDto,
   EncontroResumoDto,
 } from '@contratados-rpg/shared/dtos/encontro';
@@ -155,7 +156,7 @@ export class EncontroController {
   @Put('encontro/:id/iniciativa')
   rolarIniciativasFaltantes(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: { iniciativaPorCombatente: Readonly<Record<number, number>> },
+    @Body() dto: EncontroIniciativaRolarDto,
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<EncontroRecuperadoDto> {
     return this.encontroService.rolarIniciativasFaltantes({ ...dto, encontroId: id }, usuarioAtivo);

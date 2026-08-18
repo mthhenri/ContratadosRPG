@@ -118,6 +118,14 @@
               ></button>
               <div class="detalhe__cabecalho-menu" role="menu">
                 @if (!escolhendoPreviewJogador()) {
+                  <a
+                    class="detalhe__cabecalho-menu-item"
+                    role="menuitem"
+                    [routerLink]="['/painel', campanhaAtual.id, 'iniciativa']"
+                  >
+                    <app-icone nome="combate" />
+                    <span>Iniciativa</span>
+                  </a>
                   <button class="detalhe__cabecalho-menu-item" type="button" role="menuitem" (click)="abrirEdicao()">
                     <app-icone nome="editar" />
                     <span>Editar</span>

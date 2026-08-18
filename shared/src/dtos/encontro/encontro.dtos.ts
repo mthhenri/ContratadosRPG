@@ -107,6 +107,15 @@ export interface EncontroCombatenteResumoDto {
   readonly inconsciente: boolean | null;
   /** Destreza efetiva — desempate da ordenação de iniciativa (`shared/regras/encontro`). */
   readonly destreza: number;
+  /**
+   * Bônus fixo de Iniciativa do combatente — hoje só a criatura o possui
+   * (`FichaCriaturaDadosDto.iniciativaBonus`, ≈ 10% do VD); agente e avulso saem `0`. Serve ao
+   * atalho **Rolar tudo** do mestre, que o soma à rolagem de Destreza. O bônus de Iniciativa do
+   * agente **não** é um número fixo: são **dados extras** (amplificador `Atento` + Formação da
+   * Origem) que só o documento completo da ficha resolve — por isso o jogador rola a própria
+   * iniciativa pelo fluxo normal (decisão do milestone) e o `Rolar tudo` é fallback.
+   */
+  readonly iniciativaBonus: number;
   /** Cor de identidade da ficha (m3-61); `null` cai no `--accent` de quem visualiza. */
   readonly corFicha: string | null;
 }
@@ -282,4 +291,14 @@ export interface EncontroCombatenteEnergiaAjustarDto {
   readonly id: number;
   readonly delta: number;
   readonly origemTexto: string | null;
+}
+
+/**
+ * Entrada do atalho **Rolar tudo** do mestre — preenche de uma vez a iniciativa de todos os
+ * combatentes que ainda não têm uma. O mapa é `combatenteId → iniciativa já somada`; quem já tem
+ * iniciativa (o jogador que rolou a sua) é ignorado pelo backend, nunca sobrescrito.
+ */
+export interface EncontroIniciativaRolarDto {
+  readonly encontroId: number;
+  readonly iniciativaPorCombatente: Readonly<Record<number, number>>;
 }

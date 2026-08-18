@@ -125,6 +125,69 @@ de rodada com expiração, turno perdido, os três caminhos de vida e a recusa d
 `npm run lint -w backend` continua com os **2 erros preexistentes** do `P-022` e nada do módulo
 `encontro`.
 
+### `m7-05` — painel do mestre, a tela "Iniciativa" (concluída)
+
+Primeira tela do milestone: `frontend/src/app/modules/encontro` (rota
+`/painel/:campanhaId/iniciativa`, guardada por `mestreCampanhaGuard`), com `EncontroService`
+(HTTP), `PainelEncontro` (página) e `CartaoCombatente` (o cartão, que a `m7-06` reusa). Entrada
+pelo menu do mestre no detalhe da campanha. Análogo aprovado: a **ficha de criatura da `m4-04b`**
+— dela vieram a casca (cabeçalho `//` + régua), o `.botao` encapsulado, os campos e os diálogos.
+
+**Nenhuma regra foi reimplementada no frontend.** A ordem da rodada e a intercalação de Cadência
+chegam prontas em `ordemRodada`; a tela só **lê** de quem é a vez, quem já agiu e quantas ações
+restam, contando slots. O `Rolar tudo` usa `rolarFormula` de `shared/regras/rolagem` — não um
+`Math.random` local.
+
+Três ajustes de contrato saíram daqui, porque a tela precisava de dados que o resumo não trazia:
+
+- **`iniciativaBonus` no `EncontroCombatenteResumoDto`** — só a criatura tem um bônus **fixo**
+  (≈10% do VD). O do agente são **dados extras** (amplificador `Atento`, Formação da Origem) que só
+  o documento completo da ficha resolve; por isso ele sai `0` e o `Rolar tudo` é assumidamente o
+  **fallback** do mestre para o jogador ausente, não o caminho principal (o principal é a `m7-06`).
+- **`EncontroIniciativaRolarDto`** — o corpo do `Rolar tudo` era um tipo **inline** no controller,
+  violando a regra de que todo DTO vive em `shared/src/dtos/`. Corrigido na origem.
+- **Dono e Nível de Ameaça vêm do contexto que a tela já carrega** (`listarMembros` e
+  `listarFichas` da campanha), não de campos novos no resumo — a alternativa exigiria um `JOIN` a
+  mais no backend para dado que já estava na mão.
+
+**Divergências do mockup, decididas e registradas:**
+
+- **Criatura mostra só Defesa** (§16 #27, como a spec do milestone já mandava): a faixa de defesas é
+  montada a partir dos campos não-nulos, então nada precisa ser "escondido" — o que não existe não é
+  desenhado. O avulso não tem faixa nenhuma.
+- **"Cadência N" só aparece quando N > 1.** O mockup escreve "Cadência 2" na linha do agente, mas
+  agente é sempre Singular — "Cadência 1" em todo cartão seria ruído.
+- **Quem já agiu recua (opacidade).** A etiqueta de estado (Age agora / Já agiu) é de **agente**, e a
+  de criatura/NPC/avulso é de **natureza**, como no mockup — sem o esmaecimento, não haveria como
+  saber se a Ameaça já agiu, que é metade da leitura de uma criatura com Cadência > 1.
+- **Fora do combate não há etiqueta de turno.** Em montagem e depois de encerrado, "Aguarda" e "Já
+  agiu" seriam informação morta; o cartão cai na natureza.
+
+Botões de editar/remover ficam **sob demanda** (o modo "Editar combatentes"), nunca sempre visíveis.
+Nenhum `title` nativo — só `appTooltip`.
+
+**Verificação ao vivo** (skill `verify`, aplicação real, backend/frontend isolados em 3101/4301 para
+não derrubar os do autor): oito estados percorridos em **1920×1080** e **360×800** — abertura sem
+encontro, montagem vazia, montagem completa, modo de edição, iniciativas roladas, rodada 1 ativa,
+turno 3 com dano aplicado, encerrado. `overflow-x: 0` em todos, sem erro de console ou de rede. O
+tempo real foi provado com **duas janelas**: avançar o turno numa mudou a outra (`1/3 → 2/3`) com a
+sentinela `window.__sentinela` intacta — foi broadcast, não recarga.
+
+Quatro defeitos foram achados **na inspeção visual**, não pelos testes, e corrigidos antes da
+entrega: (1) `/encontro` faltava no `proxy.conf.json` de dev, e toda mutação voltava 404 no
+browser enquanto o backend respondia certo; (2) os cartões não esticavam na célula da grade,
+deixando degraus no fim da linha; (3) o ícone de condição era empurrado para a borda oposta do nome
+pelo `flex: 1`; (4) o campo de iniciativa ficava **invisível** no modo de edição — transparente, sem
+borda e vazio, era um retângulo fantasma dentro do selo.
+
+As migrations `0020`/`0021` rodaram contra o **Postgres real** nesta task (batch 7), fechando a
+ressalva aberta na `m7-03` de que só tinham sido validadas por leitura.
+
+Gate: `npm run test -w frontend` **1125 verdes** (+19), shared 688, backend 414; build dos três
+workspaces limpo; lint de shared e frontend limpo; backend segue com os **2 erros preexistentes** do
+`P-022`. O aviso de `bundle initial exceeded maximum budget` também é **preexistente** (644,91 kB
+sem esta task, 645,22 kB com ela — a tela é lazy chunk).
+
 ### `m7-01` — contrato do Encontro (concluída)
 
 Três enums novos (`EncontroStatusEnum`, que é enum de **coluna** com tabela de referência
@@ -136,8 +199,8 @@ Duas escolhas de contrato merecem registro: (1) `EncontroCombatenteResumoDto` ca
 **lidas** da ficha, e só o avulso tem `vidaMaximaAvulso`/`vidaAtualAvulso` — o contrato torna a
 "fonte única" impossível de violar por acidente; (2) `CondicaoCombatenteDto` (marcador do encontro,
 com `rodadasRestantes` e `perdeTurno`) é deliberadamente **distinto** das três condições derivadas
-da ficha (`morrendo`/`machucado`/`inconsciente`), que continuam calculadas de `vidaAtual` (m3-10) e
-não são gravadas no encontro.
+da ficha (`morrendo`/`machucado`/`inconsciente`), que são **alternadas à mão** por quem joga
+(m3-10 — ver a correção registrada na `m7-03`) e não são gravadas no encontro.
 
 `SCHEMA.md` ganhou as seções `encontro`, `encontro_combatente` e `encontro_evento` mais a tabela de
 referência `tipo_encontro_status`, incluindo a invariante de **um encontro não-encerrado por

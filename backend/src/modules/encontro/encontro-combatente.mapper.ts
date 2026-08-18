@@ -40,6 +40,12 @@ interface EstadoDoCombatente {
   readonly bloqueio: number | null;
   readonly contraAtaque: number | null;
   readonly destreza: number;
+  /**
+   * Bônus fixo de Iniciativa — só a criatura tem um (`iniciativaBonus`, ≈ 10% do VD). O do
+   * agente são **dados extras**, não um número, e depende do documento inteiro: fica `0` aqui e
+   * é o jogador quem rola a própria iniciativa (decisão do milestone).
+   */
+  readonly iniciativaBonus: number;
   readonly morrendo: boolean | null;
   readonly machucado: boolean | null;
   readonly inconsciente: boolean | null;
@@ -58,6 +64,7 @@ function resolverEstadoDoAgente(dados: FichaJogadorDadosDto): EstadoDoCombatente
     bloqueio: dados.derivados?.bloqueio ?? null,
     contraAtaque: dados.derivados?.contraAtaque ?? null,
     destreza: dados.atributos.destreza,
+    iniciativaBonus: 0,
     // Flags alternadas à mão por quem joga (m3-10) — o encontro lê, nunca deduz de `vidaAtual`.
     morrendo: dados.estado.morrendo ?? false,
     machucado: dados.estado.machucado ?? false,
@@ -77,6 +84,7 @@ function resolverEstadoDaCriatura(dados: FichaCriaturaDadosDto): EstadoDoCombate
     bloqueio: null,
     contraAtaque: null,
     destreza: dados.atributos.destreza,
+    iniciativaBonus: dados.iniciativaBonus ?? 0,
     morrendo: null,
     machucado: null,
     inconsciente: null,
@@ -98,6 +106,7 @@ function resolverEstadoDoAvulso(linha: EncontroCombatenteLinhaDto): EstadoDoComb
     bloqueio: null,
     contraAtaque: null,
     destreza: 0,
+    iniciativaBonus: 0,
     morrendo: null,
     machucado: null,
     inconsciente: null,
@@ -123,6 +132,7 @@ function resolverEstadoGenerico(dados: Record<string, unknown>): EstadoDoCombate
     bloqueio: typeof dados.bloquear === 'number' ? dados.bloquear : null,
     contraAtaque: null,
     destreza: numeroOuZero(atributos.destreza),
+    iniciativaBonus: 0,
     morrendo: null,
     machucado: null,
     inconsciente: null,
@@ -171,6 +181,7 @@ export function montarCombatenteResumo(
     machucado: estado.machucado,
     inconsciente: estado.inconsciente,
     destreza: estado.destreza,
+    iniciativaBonus: estado.iniciativaBonus,
     corFicha: linha.fichaCor,
   };
 }

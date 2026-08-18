@@ -8,6 +8,10 @@ import type {
   CampanhaMembroEntradaDto,
 } from '@contratados-rpg/shared/dtos/campanha';
 import type {
+  EncontroAlteradoDto,
+  EncontroIniciativaPedidoDto,
+} from '@contratados-rpg/shared/dtos/encontro';
+import type {
   FichaAcessoRevogadoDto,
   FichaAlteradaDto,
   FichaResumoDto,
@@ -71,6 +75,10 @@ export class TempoRealService {
   private readonly rolagemRegistradaSubject = new Subject<RolagemResumoDto>();
   private readonly estadoAlteradoSubject = new Subject<CampanhaEstadoAlteradaDto>();
   private readonly inventarioAlteradoSubject = new Subject<CampanhaInventarioAlteradoDto>();
+  private readonly encontroAlteradoSubject = new Subject<EncontroAlteradoDto>();
+  private readonly encontroIniciativaPedidoSubject = new Subject<
+    EncontroIniciativaPedidoDto & { campanhaId: number }
+  >();
 
   /** Uma ficha da campanha foi alterada (na sala `ficha:<id>` em que o cliente está). */
   readonly fichaAlterada$: Observable<FichaAlteradaDto> = this.fichaAlteradaSubject.asObservable();
@@ -100,6 +108,20 @@ export class TempoRealService {
     this.estadoAlteradoSubject.asObservable();
   readonly inventarioAlterado$: Observable<CampanhaInventarioAlteradoDto> =
     this.inventarioAlteradoSubject.asObservable();
+  /**
+   * O Encontro de Combate da campanha mudou (m7) — o payload é o **estado completo** já
+   * persistido (sala `campanha:<id>`), então a tela substitui o que tem em vez de aplicar
+   * um delta. Emitido pela service depois de salvar (§9, broadcast-only).
+   */
+  readonly encontroAlterado$: Observable<EncontroAlteradoDto> =
+    this.encontroAlteradoSubject.asObservable();
+  /**
+   * O mestre pediu que os jogadores rolem a própria iniciativa (m7). Não carrega estado — é
+   * uma chamada; quem escuta decide o que fazer (o painel do mestre só confirma o envio).
+   */
+  readonly encontroIniciativaPedido$: Observable<
+    EncontroIniciativaPedidoDto & { campanhaId: number }
+  > = this.encontroIniciativaPedidoSubject.asObservable();
 
   /**
    * Abre a conexão Socket.IO com o JWT da sessão. **Idempotente** enquanto a sessão não muda (chamável
@@ -161,6 +183,14 @@ export class TempoRealService {
     );
     this.socket.on('campanha:inventario-alterado', (evento: CampanhaInventarioAlteradoDto) =>
       this.inventarioAlteradoSubject.next(evento),
+    );
+    this.socket.on('encontro:alterado', (evento: EncontroAlteradoDto) =>
+      this.encontroAlteradoSubject.next(evento),
+    );
+    this.socket.on(
+      'encontro:iniciativa-pedido',
+      (evento: EncontroIniciativaPedidoDto & { campanhaId: number }) =>
+        this.encontroIniciativaPedidoSubject.next(evento),
     );
   }
 

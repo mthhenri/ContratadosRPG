@@ -12,6 +12,7 @@ import type {
   EncontroEncerrarDto,
   EncontroIniciarDto,
   EncontroIniciativaPedidoDto,
+  EncontroIniciativaRolarDto,
   EncontroLinhaDto,
   EncontroRecuperadoDto,
   EncontroRecuperarDto,
@@ -218,7 +219,7 @@ export class EncontroService {
    * quem rola é o cliente, com o motor de rolagem; aqui só se persiste o que falta.
    */
   async rolarIniciativasFaltantes(
-    dto: { encontroId: number; iniciativaPorCombatente: Readonly<Record<number, number>> },
+    dto: EncontroIniciativaRolarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<EncontroRecuperadoDto> {
     const encontroEncontrado = await this.recuperarEncontroObrigatorio(dto.encontroId);
