@@ -1,0 +1,252 @@
+import type {
+  CadenciaEnum,
+  CombatenteOrigemEnum,
+  EncontroEventoTipoEnum,
+  EncontroStatusEnum,
+  TipoFichaEnum,
+} from '../../enums';
+
+/**
+ * DTOs do módulo `encontro` (m7) — o Encontro de Combate: ordem de iniciativa com a Cadência das
+ * criaturas intercalada, rodadas/turnos, vida e condições dos combatentes, espelhado em tempo real
+ * para a campanha. Seguem a fórmula `Entidade + Complemento? + Verbo + Dto` (CONVENTIONS):
+ * entrada no infinitivo, saída no particípio, `Interno` marca o que trafega só entre service e
+ * repository.
+ *
+ * **Fonte única (decisão do milestone).** Vida e condições de um combatente **com ficha** são as da
+ * própria ficha — o encontro **não** guarda uma segunda cópia. `EncontroCombatenteResumoDto` traz
+ * esses valores **lidos** da ficha no momento da consulta; só o combatente `AVULSO` (sem ficha)
+ * persiste `vidaMaxima`/`vidaAtual` próprios. "Encontro" é o nome do **domínio**; a tela se chama
+ * "Iniciativa".
+ */
+
+// ── Value objects ────────────────────────────────────────────────────────────
+
+/**
+ * Um slot da sequência de turnos de uma rodada. `ocorrencia` distingue os turnos múltiplos de um
+ * mesmo combatente com Cadência > Singular (1 = primeiro turno, 2 = segundo, …), já
+ * **intercalados** pela regra do guia — o turno extra cai no próximo slot abaixo, nunca em
+ * sequência (`docs/core/guia_de_mestre-v4.0.0.md` — "Intercalação na Iniciativa").
+ */
+export interface OrdemTurnoDto {
+  readonly combatenteId: number;
+  readonly ocorrencia: number;
+}
+
+/**
+ * Marcador de condição sobre um combatente, com duração em rodadas (mockup: `Sangramento ·
+ * 2 rodadas`). `rodadasRestantes: null` = permanente até remoção manual; `perdeTurno` marca a
+ * condição que **consome** o próximo turno do combatente (ex.: `Inconsciente`, `Insolação` —
+ * `sistema-v4.1.0.md`, "Condições").
+ *
+ * Distinto das três condições **derivadas** da ficha (`morrendo`/`machucado`/`inconsciente`), que
+ * continuam vindo de `vidaAtual` (filosofia m3-10) e não são gravadas aqui.
+ */
+export interface CondicaoCombatenteDto {
+  readonly nome: string;
+  readonly rodadasRestantes: number | null;
+  readonly perdeTurno: boolean;
+}
+
+/**
+ * Uma entrada do log do encontro — a trilha legível exibida no painel "Log da rodada". `texto` já
+ * chega pronto para leitura ("sofreu 11 de dano de V. Corvalho"); `rodada`/`turno` posicionam a
+ * entrada (`R3`, `T3 · 2`). `combatenteId` é nulo para eventos da rodada inteira.
+ */
+export interface EncontroEventoDto {
+  readonly id: number;
+  readonly tipo: EncontroEventoTipoEnum;
+  readonly rodada: number;
+  readonly turno: number;
+  readonly texto: string;
+  readonly combatenteId: number | null;
+  readonly createdDate: string;
+}
+
+// ── Combatente ───────────────────────────────────────────────────────────────
+
+/**
+ * Item da lista de combatentes do encontro. Um combatente é **ou** uma ficha (`origem: FICHA`,
+ * `fichaId` preenchido) **ou** um avulso (`origem: AVULSO`, `fichaId: null`).
+ *
+ * Vida/Energia: para `FICHA`, `vidaAtual`/`vidaMaxima`/`energiaAtual`/`energiaMaxima` são **lidos
+ * da ficha** (fonte única, nunca duplicados em `encontro_combatente`); para `AVULSO`, vêm das
+ * colunas próprias e a Energia é nula. `iniciativa` é nula enquanto não for rolada/atribuída.
+ *
+ * Defesas: `esquiva`/`bloqueio`/`contraAtaque` só existem para agente e NPC. **Criatura não reage
+ * a ataques** — `FichaCriaturaDadosDto` tem apenas `defesa`, então os três vêm nulos para
+ * `tipoFicha: CRIATURA` (a regra vence o mockup, §16 #27).
+ */
+export interface EncontroCombatenteResumoDto {
+  readonly id: number;
+  readonly encontroId: number;
+  readonly origem: CombatenteOrigemEnum;
+  readonly fichaId: number | null;
+  readonly tipoFicha: TipoFichaEnum | null;
+  readonly nome: string;
+  readonly iniciativa: number | null;
+  readonly cadencia: CadenciaEnum;
+  readonly ordem: number;
+  readonly vidaAtual: number;
+  readonly vidaMaxima: number;
+  readonly energiaAtual: number | null;
+  readonly energiaMaxima: number | null;
+  readonly defesa: number | null;
+  readonly esquiva: number | null;
+  readonly bloqueio: number | null;
+  readonly contraAtaque: number | null;
+  readonly condicoes: readonly CondicaoCombatenteDto[];
+  /** Destreza efetiva — desempate da ordenação de iniciativa (`shared/regras/encontro`). */
+  readonly destreza: number;
+  /** Cor de identidade da ficha (m3-61); `null` cai no `--accent` de quem visualiza. */
+  readonly corFicha: string | null;
+}
+
+/**
+ * Entrada da adição de um combatente — o `encontroId` vem da rota (`@Param`, injetado no DTO pela
+ * controller). Para `FICHA`, basta `fichaId` (nome, vida, defesas e cadência são resolvidos da
+ * ficha). Para `AVULSO`, o mestre informa `nomeAvulso`, `vidaMaximaAvulso` e a `cadencia`.
+ */
+export interface EncontroCombatenteAdicionarDto {
+  readonly fichaId: number | null;
+  readonly nomeAvulso: string | null;
+  readonly vidaMaximaAvulso: number | null;
+  readonly cadencia: CadenciaEnum | null;
+}
+
+/** Saída da adição — o combatente já resolvido, pronto para entrar na lista. */
+export interface EncontroCombatenteAdicionadoDto {
+  readonly combatente: EncontroCombatenteResumoDto;
+}
+
+/** Entrada da remoção de um combatente do encontro (soft delete). */
+export interface EncontroCombatenteRemoverDto {
+  readonly id: number;
+}
+
+/**
+ * Entrada da atribuição de iniciativa a um combatente — vale tanto para o **resultado da rolagem
+ * do jogador** quanto para o **override manual do mestre**. O valor final já vem somado (rolagem +
+ * bônus): o cálculo é do motor de rolagem/ficha, não deste módulo.
+ */
+export interface EncontroCombatenteIniciativaAtribuirDto {
+  readonly id: number;
+  readonly iniciativa: number;
+}
+
+/** Saída da atribuição de iniciativa. */
+export interface EncontroCombatenteIniciativaAtribuidaDto {
+  readonly combatente: EncontroCombatenteResumoDto;
+}
+
+/** Entrada da aplicação de uma condição a um combatente. `rodadasRestantes: null` = permanente. */
+export interface EncontroCombatenteCondicaoAtribuirDto {
+  readonly id: number;
+  readonly nome: string;
+  readonly rodadasRestantes: number | null;
+  readonly perdeTurno: boolean;
+}
+
+/** Entrada da remoção manual de uma condição (antes de expirar sozinha). */
+export interface EncontroCombatenteCondicaoRemoverDto {
+  readonly id: number;
+  readonly nome: string;
+}
+
+// ── Encontro ─────────────────────────────────────────────────────────────────
+
+/**
+ * Entrada da criação do encontro — o `campanhaId` vem da rota. Nasce em `MONTAGEM`, sem
+ * combatentes. Só o **mestre** da campanha cria, e a campanha aceita no máximo **um** encontro
+ * não-encerrado por vez.
+ */
+export interface EncontroCriarDto {
+  readonly nome: string;
+}
+
+/** Saída da criação — o encontro recém-criado, ainda vazio. */
+export interface EncontroCriadoDto {
+  readonly id: number;
+  readonly campanhaId: number;
+  readonly nome: string;
+  readonly status: EncontroStatusEnum;
+}
+
+/** Entrada da recuperação individual do encontro (recuperação individual sempre `{ id }`). */
+export interface EncontroRecuperarDto {
+  readonly id: number;
+}
+
+/**
+ * Estado completo do encontro — o que a tela "Iniciativa" precisa para desenhar tudo: cabeçalho
+ * (`rodadaAtual`, `turnoIndice`), lista de combatentes, a `ordemRodada` já intercalada por
+ * `shared/regras/encontro` e o log. `turnoIndice` aponta para uma posição de `ordemRodada`.
+ */
+export interface EncontroRecuperadoDto {
+  readonly id: number;
+  readonly campanhaId: number;
+  readonly nome: string;
+  readonly status: EncontroStatusEnum;
+  readonly rodadaAtual: number;
+  readonly turnoIndice: number;
+  readonly combatentes: readonly EncontroCombatenteResumoDto[];
+  readonly ordemRodada: readonly OrdemTurnoDto[];
+  readonly eventos: readonly EncontroEventoDto[];
+}
+
+/**
+ * Payload de broadcast (`encontro:alterado`) — o estado completo após uma mutação já persistida.
+ * Emitido pela service **depois** de salvar, na sala `campanha:<id>` (§9, broadcast-only): nenhuma
+ * escrita entra pelo gateway.
+ */
+export interface EncontroAlteradoDto {
+  readonly encontro: EncontroRecuperadoDto;
+}
+
+/** Item de listagem dos encontros de uma campanha (corrente + histórico). */
+export interface EncontroResumoDto {
+  readonly id: number;
+  readonly campanhaId: number;
+  readonly nome: string;
+  readonly status: EncontroStatusEnum;
+  readonly rodadaAtual: number;
+  readonly quantidadeCombatentes: number;
+  readonly createdDate: string;
+}
+
+/**
+ * Entrada do início do combate (`MONTAGEM` → `ATIVO`) — exige todos os combatentes com iniciativa
+ * definida. Calcula a ordem da rodada 1 e posiciona o turno no primeiro slot.
+ */
+export interface EncontroIniciarDto {
+  readonly id: number;
+}
+
+/** Entrada do encerramento (`ATIVO` → `ENCERRADO`) — depois disso o encontro é imutável. */
+export interface EncontroEncerrarDto {
+  readonly id: number;
+}
+
+/**
+ * Entrada do avanço de turno. Ao passar do último slot da rodada, a rodada **incrementa**, as
+ * condições expiram e a ordem é recalculada a partir do estado atual.
+ */
+export interface EncontroTurnoAvancarDto {
+  readonly id: number;
+}
+
+/**
+ * Entrada do retorno ao turno anterior — simétrico ao avanço; nunca antes do 1º turno da rodada 1.
+ */
+export interface EncontroTurnoVoltarDto {
+  readonly id: number;
+}
+
+/**
+ * Entrada do pedido de iniciativa do mestre — dispara o broadcast
+ * (`encontro:iniciativa-pedido`) chamando os jogadores a rolar a própria iniciativa pelo fluxo de
+ * rolagem já existente.
+ */
+export interface EncontroIniciativaPedidoDto {
+  readonly id: number;
+}

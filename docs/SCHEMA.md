@@ -73,9 +73,17 @@ CREATE TABLE tipo_rolagem_visibilidade (
   descricao VARCHAR NOT NULL
 );
 -- uix_tipo_rolagem_visibilidade_codigo_ativo: UNIQUE (codigo) WHERE is_deleted = false
+
+CREATE TABLE tipo_encontro_status (
+  -- BaseEntity...
+  codigo    VARCHAR NOT NULL,   -- MONTAGEM | ATIVO | ENCERRADO
+  descricao VARCHAR NOT NULL
+);
+-- uix_tipo_encontro_status_codigo_ativo: UNIQUE (codigo) WHERE is_deleted = false
 ```
 
-Enums TS espelhos: `TipoCampanhaMembroPapelEnum`, `TipoUsuarioEnum`, `TipoFichaEnum`, `RolagemVisibilidadeEnum`
+Enums TS espelhos: `TipoCampanhaMembroPapelEnum`, `TipoUsuarioEnum`, `TipoFichaEnum`, `RolagemVisibilidadeEnum`,
+`EncontroStatusEnum`
 (em `shared/src/enums/`). `RolagemVisibilidadeEnum` é coluna relacional de `rolagem` (não vive no
 JSONB) — a exceção do §10.3 abaixo não se aplica a ela, segue a regra geral §10.2.12.
 
@@ -243,6 +251,88 @@ própria ficha; nenhum feed de campanha a recebe.
 §9) vazaria o conteúdo a quem não deveria vê-la; o autor/mestre a recebe via REST no próximo
 carregamento/refresh do feed (decisão de design v1, `docs/specs/done/m3-27-*.spec.md`). Ficha sem
 campanha (`campanha_id NULL`) não tem sala — o emit é guardado (no-op).
+
+---
+
+## encontro (M7 — m7-01/m7-03)
+
+O **Encontro de Combate**: ordem de iniciativa com a Cadência das criaturas intercalada, rodadas e
+turnos, vida e condições dos combatentes, espelhado em tempo real na campanha. "Encontro" é o nome
+do domínio; a tela se chama **"Iniciativa"**.
+
+**Fonte única.** Vida/Energia e as condições derivadas de um combatente **com ficha** são as da
+própria `ficha` — o encontro **não** guarda segunda cópia. Só o combatente **avulso** (sem ficha)
+persiste vida no encontro (`vida_maxima_avulso`/`vida_atual_avulso`).
+
+```sql
+CREATE TABLE encontro (
+  -- BaseEntity...
+  campanha_id              INTEGER NOT NULL,  -- fk_encontro_campanha
+  tipo_encontro_status_id  INTEGER NOT NULL,  -- fk_encontro_tipo_encontro_status
+  nome                     VARCHAR NOT NULL,
+  rodada_atual             INTEGER NOT NULL,  -- 0 enquanto MONTAGEM; 1+ quando ATIVO
+  turno_indice             INTEGER NOT NULL   -- posição corrente em ordem_rodada (0-based)
+);
+-- ix_encontro_campanha: (campanha_id)
+-- uix_encontro_campanha_aberto: UNIQUE (campanha_id)
+--   WHERE is_deleted = false AND tipo_encontro_status_id <> (ENCERRADO)
+--   → no máximo UM encontro não-encerrado por campanha
+```
+
+## encontro_combatente (M7 — m7-01/m7-03)
+
+Um combatente é **ou** uma ficha (`ficha_id` preenchido — agente, criatura ou NPC) **ou** um avulso
+(`ficha_id NULL` — inimigo improvisado digitado na sessão). `iniciativa` fica `NULL` até ser rolada
+pelo jogador ou atribuída pelo mestre.
+
+```sql
+CREATE TABLE encontro_combatente (
+  -- BaseEntity...
+  encontro_id        INTEGER NOT NULL,  -- fk_encontro_combatente_encontro
+  ficha_id           INTEGER,           -- fk_encontro_combatente_ficha (NULL = avulso)
+  nome_avulso        VARCHAR,           -- obrigatório quando ficha_id IS NULL
+  iniciativa         INTEGER,           -- NULL enquanto não rolada/atribuída
+  cadencia           VARCHAR NOT NULL,  -- CadenciaEnum (SINGULAR quando não é criatura)
+  ordem              INTEGER NOT NULL,  -- desempate estável definido pelo mestre
+  vida_maxima_avulso INTEGER,           -- só avulso; ficha lê da própria ficha
+  vida_atual_avulso  INTEGER,           -- só avulso
+  condicoes          JSONB   NOT NULL   -- CondicaoCombatenteDto[] (nome, rodadasRestantes, perdeTurno)
+);
+-- ix_encontro_combatente_encontro: (encontro_id)
+-- ix_encontro_combatente_ficha: (ficha_id)
+-- uix_encontro_combatente_encontro_ficha_ativo:
+--   UNIQUE (encontro_id, ficha_id) WHERE is_deleted = false AND ficha_id IS NOT NULL
+--   → a mesma ficha não entra duas vezes no mesmo encontro
+```
+
+`condicoes` guarda os **marcadores** do encontro (`Sangramento · 2 rodadas`, `Inconsciente · perde
+o turno`), com duração em rodadas e expiração automática na virada. Não confundir com as três
+condições **derivadas** da ficha (`morrendo`/`machucado`/`inconsciente`), que continuam calculadas
+a partir de `vidaAtual` (m3-10) e nunca são gravadas aqui.
+
+## encontro_evento (M7 — m7-01/m7-03, alimentado na m7-04)
+
+Log do encontro — a trilha legível exibida no painel "Log da rodada" do mockup. `texto` já é a
+frase pronta ("sofreu 11 de dano de V. Corvalho"); `rodada`/`turno` posicionam a entrada
+(`R3`, `T3 · 2`).
+
+```sql
+CREATE TABLE encontro_evento (
+  -- BaseEntity...
+  encontro_id             INTEGER NOT NULL,  -- fk_encontro_evento_encontro
+  encontro_combatente_id  INTEGER,           -- fk_encontro_evento_encontro_combatente (NULL = evento da rodada)
+  tipo                    VARCHAR NOT NULL,  -- EncontroEventoTipoEnum
+  rodada                  INTEGER NOT NULL,
+  turno                   INTEGER NOT NULL,
+  texto                   VARCHAR NOT NULL
+);
+-- ix_encontro_evento_encontro_rodada: (encontro_id, rodada)
+```
+
+**Emissão em tempo real (eventos `encontro:alterado` e `encontro:iniciativa-pedido`, sala
+`campanha:<id>`).** Broadcast-only (§9): toda mutação entra por REST e a service emite **após**
+salvar. Mudanças de vida de combatente com ficha continuam propagando pelo `ficha:alterada` já
+existente. O contrato tipado vive em `shared/src/dtos/encontro/` (`m7-01`).
 
 ---
 

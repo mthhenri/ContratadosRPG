@@ -32,6 +32,10 @@
       "types": "./dist/dtos/ficha/index.d.ts",
       "default": "./dist/dtos/ficha/index.js"
     },
+    "./dtos/encontro": {
+      "types": "./dist/dtos/encontro/index.d.ts",
+      "default": "./dist/dtos/encontro/index.js"
+    },
     "./dtos/rolagem": {
       "types": "./dist/dtos/rolagem/index.d.ts",
       "default": "./dist/dtos/rolagem/index.js"

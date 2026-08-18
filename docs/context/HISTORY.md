@@ -1,5 +1,57 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-17 — M7 aberto: Encontro de Combate (escopo, quebra em tasks e contrato — `m7-01`)
+
+O autor pediu o "controle de iniciativa". A conversa de escopo mostrou que a ideia existia só como
+linha solta (`SYSTEM.SPEC.md` §15 "fora de escopo", `IDEAS.md` I-016) e que o que havia em código
+era apenas o **bônus** de Iniciativa da ficha (`m3-47`) — não um módulo de combate. A branch de
+trabalho estava desatualizada e foi realinhada com `master` antes de qualquer coisa (a M4 já tinha
+criatura implementada, com `CadenciaEnum` — a dependência que parecia bloquear o milestone não
+existia mais).
+
+**Escopo fechado com o autor** (spec `docs/specs/backlog/m7-encontro-combate.spec.md`): rastreador
+**completo** (ordem + rodadas + turnos + vida + condições), combatentes de três origens (ficha de
+jogador, criatura/NPC da M4 e avulso digitado na hora), **Cadência com intercalação** desde o MVP,
+jogadores vendo **ao vivo** e — a decisão mais estrutural — **fonte única na ficha**: dano/cura
+mutam a `ficha`, e o encontro nunca guarda um segundo `vidaAtual` para quem tem ficha. A iniciativa
+entra pela rolagem **do próprio jogador**, reusando o motor existente. O domínio se chama
+**Encontro**; a tela se chama **"Iniciativa"**.
+
+**Os mockups do autor** (`docs/design/examples/iniciativa-desktop.html` e `-mobile.html`) viraram
+contrato visual e **acrescentaram escopo** que a conversa não tinha previsto: o painel "Log da
+rodada", condições com **duração em rodadas** (`Sangramento · 2 rodadas`) e o atalho `Rolar tudo`.
+Tudo isso foi incorporado à spec do milestone antes da quebra.
+
+**Divergência mockup × regras, registrada e resolvida a favor da regra (§16 #27):** o cartão de
+Ameaça desenha `Esquiva` e `Contra`, mas criatura **não reage a ataques** — `FichaCriaturaDadosDto`
+tem só `defesa`. A implementação mostra apenas Defesa para criatura; nenhum campo foi fabricado
+para preencher o desenho. O `EncontroCombatenteResumoDto` já nasce com
+`esquiva`/`bloqueio`/`contraAtaque` nulos para `tipoFicha: CRIATURA`.
+
+O milestone foi quebrado em **8 tasks**: `m7-01` contrato, `m7-02` motor puro, `m7-03` backend de
+montagem, `m7-04` backend de condução + tempo real, `m7-05` painel do mestre, `m7-06` visão do
+jogador, `m7-07` log e `m7-08` refinamento mobile. A numeração M7 é sugestão, não decisão de
+roadmap — M4 segue em andamento.
+
+### `m7-01` — contrato do Encontro (concluída)
+
+Três enums novos (`EncontroStatusEnum`, que é enum de **coluna** com tabela de referência
+`tipo_encontro_status`; `CombatenteOrigemEnum` e `EncontroEventoTipoEnum`, de conteúdo, sem tabela
+`tipo_*`), `CadenciaEnum`/`TipoFichaEnum` **reusados** sem redefinir. Os DTOs nasceram em
+`shared/src/dtos/encontro/` com subpath `./dtos/encontro` novo no `package.json` do shared.
+
+Duas escolhas de contrato merecem registro: (1) `EncontroCombatenteResumoDto` carrega vida/energia
+**lidas** da ficha, e só o avulso tem `vidaMaximaAvulso`/`vidaAtualAvulso` — o contrato torna a
+"fonte única" impossível de violar por acidente; (2) `CondicaoCombatenteDto` (marcador do encontro,
+com `rodadasRestantes` e `perdeTurno`) é deliberadamente **distinto** das três condições derivadas
+da ficha (`morrendo`/`machucado`/`inconsciente`), que continuam calculadas de `vidaAtual` (m3-10) e
+não são gravadas no encontro.
+
+`SCHEMA.md` ganhou as seções `encontro`, `encontro_combatente` e `encontro_evento` mais a tabela de
+referência `tipo_encontro_status`, incluindo a invariante de **um encontro não-encerrado por
+campanha** (índice parcial único). O DDL executável é da `m7-03`. Gate: `build`, `lint` e os 668
+testes do shared verdes.
+
 ## 2026-08-16 — Ajuste pós-mockup: cor/enquadramento de imagem, d20 unificado, abas e fraquezas
 
 Quarto pedido do autor na mesma sessão, testando a tela já realinhada ao mockup (`ac32c8f`): um
