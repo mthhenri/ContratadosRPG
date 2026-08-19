@@ -33,7 +33,6 @@ import { FichaService } from '../../../ficha/ficha.service';
 import { rolarIniciativaDaFicha } from '../../../ficha/rolar-iniciativa';
 import { nomeCadencia } from '../../../ficha/rotulos-criatura';
 import { CartaoCombatente } from '../../componentes/cartao-combatente/cartao-combatente.component';
-import { LogEncontro } from '../../componentes/log-encontro/log-encontro.component';
 import { SeletorCombatentes } from '../../componentes/seletor-combatentes/seletor-combatentes.component';
 import { EncontroService } from '../../encontro.service';
 import { rotuloStatusEncontro } from '../../rotulos-encontro';
@@ -88,7 +87,6 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
     IndicadorTempoReal,
     Tooltip,
     CartaoCombatente,
-    LogEncontro,
     SeletorCombatentes,
   ],
   templateUrl: './painel-encontro.page.html',
@@ -404,7 +402,31 @@ export class PainelEncontro {
         untracked(() => this.carregar());
       }
     });
+
+    // Substitui a caixinha "Age agora" (só do mestre agora) para o jogador: um toast pontual
+    // quando o slot da vez passa a ser o do combatente dele, em vez de um indicador estático que
+    // ele precisaria ficar olhando.
+    effect(() => {
+      const daVezId = this.combatenteDaVezId();
+      const meuId = this.meuCombatente()?.id ?? null;
+      if (
+        !this.ehMestre() &&
+        daVezId !== null &&
+        daVezId === meuId &&
+        daVezId !== this.ultimoAvisoDeVezId
+      ) {
+        this.ultimoAvisoDeVezId = daVezId;
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Sua vez!',
+          detail: 'É a sua vez de agir no combate.',
+        });
+      }
+    });
   }
+
+  /** Último `combatenteDaVezId` já avisado ao jogador — evita repetir o toast a cada broadcast. */
+  private ultimoAvisoDeVezId: number | null = null;
 
   /**
    * Carrega o encontro da tela e o contexto de apresentação. Sem `:encontroId` na rota, o encontro

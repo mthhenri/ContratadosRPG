@@ -3,7 +3,11 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { MessageService } from 'primeng/api';
 import { Subject, of } from 'rxjs';
 
-import type { EncontroAlteradoDto, EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
+import type {
+  EncontroAlteradoDto,
+  EncontroRecuperadoDto,
+  EncontroResumoDto,
+} from '@contratados-rpg/shared/dtos/encontro';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaRecuperadaDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import {
@@ -177,6 +181,7 @@ describe('PainelEncontro', () => {
   function montar(
     estado: EncontroRecuperadoDto = encontroAtivo,
     usuarioId: number = USUARIO_MESTRE,
+    historicoExtra: readonly EncontroResumoDto[] = [],
   ) {
     const encontroAlterado$ = new Subject<EncontroAlteradoDto>();
     const encontroIniciativaPedido$ = new Subject<{ id: number; campanhaId: number }>();
@@ -192,6 +197,7 @@ describe('PainelEncontro', () => {
             quantidadeCombatentes: estado.combatentes.length,
             createdDate: '2026-08-17T00:00:00.000Z',
           },
+          ...historicoExtra,
         ]),
       ),
       recuperarEncontro: vi.fn(() => of(estado)),
@@ -421,6 +427,57 @@ describe('PainelEncontro', () => {
       const painel = fixture.componentInstance as unknown as { iniciativaPedida: () => boolean };
       expect(painel.iniciativaPedida()).toBe(false);
     });
+
+    it('esconde a caixinha "Age agora"/"Aguardando" do jogador', () => {
+      const doJogador = montar(encontroAtivo, USUARIO_JOGADOR).fixture.nativeElement as HTMLElement;
+      expect(doJogador.querySelector('.painel__bloco--vez')).toBeNull();
+    });
+
+    it('mantém a caixinha "Age agora"/"Aguardando" para o mestre', () => {
+      const doMestre = montar(encontroAtivo, USUARIO_MESTRE).fixture.nativeElement as HTMLElement;
+      expect(doMestre.querySelector('.painel__bloco--vez')).not.toBeNull();
+    });
+
+    it('avisa o jogador com um toast quando chega a vez do combatente dele', () => {
+      const { fixture, encontroAlterado$ } = montar(encontroAtivo, USUARIO_JOGADOR);
+      const addEspiao = vi.spyOn(TestBed.inject(MessageService), 'add').mockClear();
+
+      // Slot 1 da `ordemRodada` de `encontroAtivo` é o combatenteId 2 — K. Amaral, ficha da Bia.
+      encontroAlterado$.next({ encontro: { ...encontroAtivo, turnoIndice: 1 } });
+      fixture.detectChanges();
+
+      expect(addEspiao).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: 'info', summary: 'Sua vez!' }),
+      );
+    });
+
+    it('não repete o toast de "sua vez" a cada broadcast — só quando o slot muda de fato', () => {
+      const { fixture, encontroAlterado$ } = montar(encontroAtivo, USUARIO_JOGADOR);
+      const addEspiao = vi.spyOn(TestBed.inject(MessageService), 'add').mockClear();
+
+      encontroAlterado$.next({ encontro: { ...encontroAtivo, turnoIndice: 1 } });
+      fixture.detectChanges();
+      expect(addEspiao).toHaveBeenCalledTimes(1);
+
+      // Outro broadcast qualquer, mesmo slot (ex.: alguém tomou dano) — não deve reavisar.
+      encontroAlterado$.next({
+        encontro: { ...encontroAtivo, turnoIndice: 1, nome: 'Contenção no Setor 12 (dano)' },
+      });
+      fixture.detectChanges();
+      expect(addEspiao).toHaveBeenCalledTimes(1);
+    });
+
+    it('não avisa o mestre quando chega a vez de alguém', () => {
+      const { fixture, encontroAlterado$ } = montar(encontroAtivo, USUARIO_MESTRE);
+      const addEspiao = vi.spyOn(TestBed.inject(MessageService), 'add').mockClear();
+
+      encontroAlterado$.next({ encontro: { ...encontroAtivo, turnoIndice: 1 } });
+      fixture.detectChanges();
+
+      expect(addEspiao).not.toHaveBeenCalledWith(
+        expect.objectContaining({ summary: 'Sua vez!' }),
+      );
+    });
   });
 
   it('absorve o broadcast `encontro:alterado` da própria campanha', () => {
@@ -644,6 +701,69 @@ describe('PainelEncontro', () => {
     });
   });
 
+  describe('combate: "Encerrar" ao lado da condução, sem "Rolar iniciativas"', () => {
+    it('põe "Encerrar" na própria caixinha, ao lado de Voltar/Avançar — fora da gaveta', () => {
+      const { fixture } = montar(encontroAtivo);
+      const elemento = fixture.nativeElement as HTMLElement;
+
+      const blocos = Array.from(elemento.querySelectorAll('.painel__bloco--controles'));
+      const blocoConducao = blocos.find((bloco) => bloco.textContent?.includes('Avançar'))!;
+      const blocoEncerrar = blocos.find(
+        (bloco) => bloco.textContent?.replace(/\s+/g, ' ').trim() === 'Encerrar',
+      )!;
+
+      expect(blocoEncerrar).not.toBe(blocoConducao);
+      expect(blocoEncerrar.classList).not.toContain('painel__bloco--conducao');
+      expect(
+        Array.from(elemento.querySelectorAll('.secundarias__acao')).some(
+          (botao) => botao.textContent?.trim() === 'Encerrar',
+        ),
+      ).toBe(false);
+    });
+
+    it('nunca mostra "Rolar iniciativas" depois que o combate começou', () => {
+      const elemento = montar(encontroAtivo).fixture.nativeElement as HTMLElement;
+      const textos = Array.from(elemento.querySelectorAll('button')).map((botao) =>
+        botao.textContent?.replace(/\s+/g, ' ').trim(),
+      );
+      expect(textos).not.toContain('Rolar iniciativas');
+    });
+  });
+
+  it('esconde o log da rodada (por enquanto) para o mestre', () => {
+    const doMestre = montar(encontroAtivo, USUARIO_MESTRE).fixture.nativeElement as HTMLElement;
+    expect(doMestre.querySelector('app-log-encontro')).toBeNull();
+  });
+
+  it('esconde o log da rodada (por enquanto) para o jogador', () => {
+    const doJogador = montar(encontroAtivo, USUARIO_JOGADOR).fixture.nativeElement as HTMLElement;
+    expect(doJogador.querySelector('app-log-encontro')).toBeNull();
+  });
+
+  describe('histórico: só o mestre vê "Encontros anteriores"', () => {
+    const encerrado: EncontroResumoDto = {
+      id: 2,
+      campanhaId: CAMPANHA_ID,
+      nome: 'Emboscada no Setor 4',
+      status: EncontroStatusEnum.ENCERRADO,
+      rodadaAtual: 5,
+      quantidadeCombatentes: 3,
+      createdDate: '2026-08-10T00:00:00.000Z',
+    };
+
+    it('mostra "Encontros anteriores" para o mestre quando há histórico', () => {
+      const elemento = montar(encontroAtivo, USUARIO_MESTRE, [encerrado]).fixture
+        .nativeElement as HTMLElement;
+      expect(elemento.querySelector('.historico')).not.toBeNull();
+    });
+
+    it('nunca mostra "Encontros anteriores" para o jogador, mesmo havendo histórico', () => {
+      const elemento = montar(encontroAtivo, USUARIO_JOGADOR, [encerrado]).fixture
+        .nativeElement as HTMLElement;
+      expect(elemento.querySelector('.historico')).toBeNull();
+    });
+  });
+
   describe('recorte mobile (m7-08)', () => {
     /**
      * O que estes testes provam é a **estrutura** que o CSS usa para decidir o recorte: os dois
@@ -696,13 +816,7 @@ describe('PainelEncontro', () => {
       const gaveta = Array.from(elemento.querySelectorAll('.secundarias__acao')).map((botao) =>
         (botao.textContent ?? '').replace(/\s+/g, ' ').trim(),
       );
-      expect(gaveta).toEqual([
-        'Rolar iniciativas',
-        'Selecionar combatentes',
-        'Adicionar avulso',
-        'Editar combatentes',
-        'Encerrar',
-      ]);
+      expect(gaveta).toEqual(['Selecionar combatentes', 'Adicionar avulso', 'Editar combatentes']);
     });
 
     it('abre e fecha a gaveta de ações secundárias', () => {

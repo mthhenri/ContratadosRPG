@@ -110,7 +110,7 @@
         }
       </div>
 
-      @if (mutavel()) {
+      @if (mutavel() && ehMestre()) {
       <div
         class="painel__bloco painel__bloco--vez"
         [class.painel__bloco--acesa]="combatenteDaVez()"
@@ -154,6 +154,17 @@
             (click)="avancarTurno()"
           >
             Avançar<span class="painel__acao-complemento"> turno</span>
+          </button>
+        </div>
+        <div class="painel__bloco painel__bloco--controles">
+          <button
+            class="botao botao--perigo painel__acao"
+            type="button"
+            [disabled]="emOperacao()"
+            [appTooltip]="'Encerrar o combate — depois disso ele fica só de leitura'"
+            (click)="encerrarCombate()"
+          >
+            Encerrar
           </button>
         </div>
       } @else if (emMontagem() && ehMestre()) {
@@ -238,21 +249,6 @@
         </button>
 
         <div class="secundarias__grupo">
-          @if (!emMontagem()) {
-            <!-- Em montagem, "Rolar iniciativas" já mora na caixinha do topo ao lado de "Pedir
-                 iniciativa"; aqui ela volta a aparecer só em combate, para pegar quem chegou
-                 atrasado à mesa. -->
-            <button
-              class="botao botao--secundario secundarias__acao"
-              type="button"
-              [disabled]="emOperacao() || !faltamIniciativas()"
-              [appTooltip]="'Rolar a iniciativa de quem ainda não tem — nunca sobrescreve'"
-              (click)="rolarTudo()"
-            >
-              <app-icone nome="dado" />
-              Rolar iniciativas
-            </button>
-          }
           <button
             class="botao secundarias__acao"
             [class.botao--secundario]="!selecionandoCombatentes()"
@@ -292,17 +288,6 @@
             <app-icone nome="editar" />
             {{ modoEdicao() ? 'Concluir edição' : 'Editar combatentes' }}
           </button>
-          @if (emCombate()) {
-            <button
-              class="botao botao--perigo secundarias__acao"
-              type="button"
-              [disabled]="emOperacao()"
-              [appTooltip]="'Encerrar o combate — depois disso ele fica só de leitura'"
-              (click)="encerrarCombate()"
-            >
-              Encerrar
-            </button>
-          }
         </div>
       </div>
 
@@ -393,18 +378,11 @@
       </p>
     }
 
-    <!-- Log da rodada (m7-07). Em montagem nada aconteceu ainda: um painel vazio ali seria só
-         ruído entre o mestre e a montagem da ordem. -->
-    @if (!emMontagem() || encontro()!.eventos.length) {
-      <app-log-encontro
-        [eventos]="encontro()!.eventos"
-        [combatentes]="encontro()!.combatentes"
-        [rodadaAtual]="encontro()!.rodadaAtual"
-      />
-    }
+    <!-- Log da rodada (m7-07): oculto por enquanto, a pedido, tanto para o mestre quanto para o
+         jogador — volta quando o formato for revisto. -->
   }
 
-  @if (historico().length || vendoHistorico()) {
+  @if (ehMestre() && (historico().length || vendoHistorico())) {
     <section class="historico">
       <div class="cartao__cabecalho">
         <span class="cartao__indice">//</span>
