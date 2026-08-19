@@ -53,7 +53,7 @@
   &__inventario-jogador { min-height: 0; overflow: auto; }
   // m2-19: era 1160px fixo (m2-17) — mesmo padrão de `visualizar.page.scss`/`lista.page.scss`
   // (m2-18), que aproveita mais a tela que o teto fixo.
-  max-width: 80vw;
+  max-width: 85vw;
   margin: 0 auto;
 
   @include bp.mobile {
