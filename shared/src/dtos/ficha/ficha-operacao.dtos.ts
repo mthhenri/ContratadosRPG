@@ -112,6 +112,11 @@ export interface FichaResumoDto {
   readonly tipo?: TipoFichaEnum;
   /** Nível de Ameaça (`FichaCriaturaDadosDto.na`) — só presente numa ficha `CRIATURA`. */
   readonly na?: NivelAmeacaEnum | null;
+  /**
+   * Valor de Desafio (`FichaCriaturaDadosDto.vd`) — só presente numa ficha `CRIATURA`. Alimenta o
+   * seletor de combatentes do Encontro, que mostra NA + VD no lugar de classe/nível.
+   */
+  readonly vd?: number | null;
   readonly classe: ClasseEnum;
   readonly arquetipo: ArquetipoEnum | null;
   readonly nivel: number;

@@ -1,0 +1,167 @@
+@use 'tema/breakpoints' as bp;
+@use '../../../../shared/utilitario-flutuante/utilitario-flutuante' as utilitario-flutuante;
+
+:host {
+  display: contents;
+}
+
+.ficha-flutuante {
+  // `ordem` casa com o que `app-caderno-flutuante` de fato ocupa nesta tela (não temos o
+  // Inventário de Esquadrão aqui — só calculadora + caderno): mestre vê o caderno na vaga 3 (ele
+  // reserva a 2 pro Inventário mesmo sem ele existir nesta tela), jogador vê o caderno na vaga 2
+  // (`--sem-inventario`). Esta janela fica logo depois, em cada caso — sem vaga vazia no meio.
+  &__gatilho {
+    @include utilitario-flutuante.gatilho-utilitario-flutuante();
+    @include utilitario-flutuante.posicionar-utilitario-flutuante(4);
+
+    &--sem-inventario { @include utilitario-flutuante.posicionar-utilitario-flutuante(3); }
+
+    z-index: 55;
+    padding: 0;
+    color: var(--accent);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--bg) 72%, transparent);
+
+    app-icone { font-size: 16px; }
+  }
+
+  &__janela {
+    position: fixed;
+    z-index: 1200;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+    box-shadow: 0 22px 64px color-mix(in srgb, var(--bg) 78%, transparent);
+    overflow: hidden;
+
+    &[hidden] { display: none; }
+
+    &--mobile {
+      inset: 0;
+      width: auto;
+      height: auto;
+      border: 0;
+      border-radius: 0;
+    }
+
+    &--maximizada { border-radius: 0; }
+  }
+
+  &__cabecalho {
+    min-height: 54px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 9px 12px 9px 15px;
+    background: color-mix(in srgb, var(--surface-2) 52%, var(--surface));
+    border-bottom: 1px solid var(--border);
+    cursor: grab;
+    touch-action: none;
+
+    &:active { cursor: grabbing; }
+  }
+
+  &__identidade {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+  }
+
+  &__marca {
+    color: var(--accent);
+    font: 700 18px/1 var(--font-mono);
+  }
+
+  h2 {
+    margin: 0;
+    color: var(--text);
+    font: 700 13px/1.2 var(--font-mono);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  &__regua {
+    min-width: 24px;
+    height: 1px;
+    flex: 1;
+    background: var(--border-strong);
+  }
+
+  &__acoes-janela {
+    flex: none;
+    display: flex;
+    gap: 6px;
+
+    button {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      color: var(--text-dim);
+      background: transparent;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-control);
+      font: 600 17px/1 var(--font-mono);
+      cursor: pointer;
+
+      &:hover { color: var(--accent); background: var(--surface-2); border-color: var(--accent-border); }
+    }
+  }
+
+  &__corpo {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    overflow: auto;
+    background: var(--bg);
+  }
+
+  &__redimensionar {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 20px;
+    height: 20px;
+    cursor: nwse-resize;
+    touch-action: none;
+
+    &::after {
+      content: '';
+      position: absolute;
+      right: 4px;
+      bottom: 4px;
+      width: 8px;
+      height: 8px;
+      border-right: 1px solid var(--accent);
+      border-bottom: 1px solid var(--accent);
+    }
+  }
+}
+
+@media (max-width: 560px) {
+  .ficha-flutuante {
+    &__cabecalho {
+      min-height: 56px;
+      padding-top: calc(8px + env(safe-area-inset-top));
+      cursor: default;
+    }
+
+    &__acoes-janela button {
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
+    }
+  }
+}

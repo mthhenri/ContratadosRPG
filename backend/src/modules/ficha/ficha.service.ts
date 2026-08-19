@@ -19,6 +19,7 @@ import type {
   FichaCriaturaCriarDto,
   FichaCriaturaDadosDto,
   FichaCriaturaInternoAlterarDto,
+  FichaCriaturaVitalidadeInternoAlterarDto,
   FichaCriaturaRecuperadaDto,
   FichaCriaturaRecuperarDto,
   FichaDerivadosDto,
@@ -250,6 +251,7 @@ export class FichaService {
       imagemUrl: fichaInterna.imagemUrl,
       tipo: fichaInterna.tipo,
       na: fichaInterna.na,
+      vd: fichaInterna.vd,
       classe: fichaInterna.classe,
       arquetipo: fichaInterna.arquetipo,
       nivel: fichaInterna.nivel,
@@ -572,6 +574,31 @@ export class FichaService {
     const estado = this.extrairVitalidade(dto.estado);
     this.validarVitalidade(estado);
     const fichaAlterada = await this.fichaRepositorio.alterarVitalidade({ id: dto.id, estado });
+    this.campanhaGateway.emitirFichaAlterada(fichaAlterada);
+    return fichaAlterada;
+  }
+
+  /**
+   * Altera só a Vida corrente de uma **criatura** — o equivalente de `alterarVitalidade` para o
+   * documento de criatura, cujo `vidaAtual` mora no topo (criatura não tem Energia). Existe para o
+   * Encontro de Combate aplicar dano/cura **na ficha**, mantendo aqui — no módulo dono da regra —
+   * a permissão de edição (§14) e a emissão de `ficha:alterada`.
+   */
+  async alterarVitalidadeCriatura(
+    dto: FichaCriaturaVitalidadeInternoAlterarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<FichaAlteradaDto> {
+    const fichaEncontrada = await this.fichaRepositorio.recuperarPorId({ id: dto.id });
+    if (!fichaEncontrada) {
+      throw new ResourceNotFoundException('Ficha');
+    }
+
+    await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
+    if (!Number.isInteger(dto.vidaAtual)) {
+      throw new BusinessException('Vida atual deve ser um número inteiro');
+    }
+
+    const fichaAlterada = await this.fichaRepositorio.alterarVitalidadeCriatura(dto);
     this.campanhaGateway.emitirFichaAlterada(fichaAlterada);
     return fichaAlterada;
   }

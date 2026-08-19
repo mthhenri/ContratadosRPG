@@ -28,6 +28,11 @@
     "secure": false,
     "changeOrigin": true
   },
+  "/encontro": {
+    "target": "http://localhost:3100",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/usuario": {
     "target": "http://localhost:3100",
     "secure": false,

@@ -32,6 +32,10 @@
       "types": "./dist/dtos/ficha/index.d.ts",
       "default": "./dist/dtos/ficha/index.js"
     },
+    "./dtos/encontro": {
+      "types": "./dist/dtos/encontro/index.d.ts",
+      "default": "./dist/dtos/encontro/index.js"
+    },
     "./dtos/rolagem": {
       "types": "./dist/dtos/rolagem/index.d.ts",
       "default": "./dist/dtos/rolagem/index.js"
@@ -79,6 +83,10 @@
     "./regras/identidade": {
       "types": "./dist/regras/identidade/index.d.ts",
       "default": "./dist/regras/identidade/index.js"
+    },
+    "./regras/encontro": {
+      "types": "./dist/regras/encontro/index.d.ts",
+      "default": "./dist/regras/encontro/index.js"
     },
     "./regras/criatura": {
       "types": "./dist/regras/criatura/index.d.ts",

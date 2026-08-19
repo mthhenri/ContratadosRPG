@@ -1,0 +1,69 @@
+@if (aberto()) {
+  @if (recolhido()) {
+    <button
+      class="ficha-flutuante__gatilho"
+      [class.ficha-flutuante__gatilho--sem-inventario]="!ehMestre()"
+      type="button"
+      aria-label="Reabrir ficha"
+      aria-expanded="false"
+      (click)="reabrir()"
+    >
+      <app-icone nome="visao-geral" />
+    </button>
+  }
+
+  <section
+    #janela
+    class="ficha-flutuante__janela"
+    [class.ficha-flutuante__janela--mobile]="ehMobile()"
+    [class.ficha-flutuante__janela--maximizada]="maximizada()"
+    [hidden]="recolhido()"
+    [style.left.px]="ehMobile() ? null : geometria().x"
+    [style.top.px]="ehMobile() ? null : geometria().y"
+    [style.width.px]="ehMobile() ? null : geometria().largura"
+    [style.height.px]="ehMobile() ? null : geometria().altura"
+    role="dialog"
+    aria-label="Ficha do combatente"
+    (keydown)="aoTecladoJanela($event)"
+  >
+    <header class="ficha-flutuante__cabecalho" tabindex="-1" (pointerdown)="iniciarArraste($event)">
+      <div class="ficha-flutuante__identidade">
+        <span class="ficha-flutuante__marca" aria-hidden="true">//</span>
+        <h2>Ficha do combatente</h2>
+        <span class="ficha-flutuante__regua" aria-hidden="true"></span>
+      </div>
+      <div class="ficha-flutuante__acoes-janela">
+        <button type="button" aria-label="Minimizar ficha" [appTooltip]="'Minimizar'" (click)="recolher()">
+          <span aria-hidden="true">−</span>
+        </button>
+        @if (!ehMobile()) {
+          <button
+            type="button"
+            [attr.aria-label]="maximizada() ? 'Restaurar tamanho da ficha' : 'Maximizar ficha'"
+            [appTooltip]="maximizada() ? 'Restaurar tamanho' : 'Maximizar'"
+            (click)="alternarMaximizacao()"
+          >
+            <span aria-hidden="true">{{ maximizada() ? '❐' : '□' }}</span>
+          </button>
+        }
+        <button type="button" aria-label="Fechar ficha" [appTooltip]="'Fechar'" (click)="fechar()">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="ficha-flutuante__corpo">
+      @if (alvo(); as alvoAtual) {
+        <app-ficha-flutuante-conteudo [alvo]="alvoAtual" [ehMestre]="ehMestre()" />
+      }
+    </div>
+
+    @if (!ehMobile() && !maximizada()) {
+      <span
+        class="ficha-flutuante__redimensionar"
+        aria-hidden="true"
+        (pointerdown)="iniciarRedimensionamento($event)"
+      ></span>
+    }
+  </section>
+}
