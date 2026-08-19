@@ -1351,8 +1351,9 @@
       <!-- m2-21: a barra vale nos DOIS modos. A m2-20 a tinha desligado no compacto e empilhado
            Inventário/Habilidades/Rolagens de uma vez (uma coluna que rolava sem fim); agora o
            compacto tem o trio Informações · Inventário · Habilidades (`abasStatusVisiveis()`) e
-           Rolagens/Extras/História somem — a primeira porque foi pra coluna lateral da página, as
-           outras duas porque seguem exclusivas da ficha completa. -->
+           Rolagens/Extras/História somem — a primeira porque foi pra coluna lateral da página (quem
+           não tem essa lateral pode reabri-la com `mostrarRolagensCompacto`, ex.: a tela de
+           Iniciativa), as outras duas porque seguem exclusivas da ficha completa. -->
       <div class="ficha-status__abas" #abasStatusContainer appOverflowFade>
         <button
           type="button"

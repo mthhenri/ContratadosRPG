@@ -2,6 +2,7 @@
   @if (recolhido()) {
     <button
       class="ficha-flutuante__gatilho"
+      [class.ficha-flutuante__gatilho--sem-inventario]="!ehMestre()"
       type="button"
       aria-label="Reabrir ficha"
       aria-expanded="false"

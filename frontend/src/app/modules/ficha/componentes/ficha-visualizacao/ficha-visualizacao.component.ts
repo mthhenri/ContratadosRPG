@@ -479,6 +479,14 @@ export class FichaVisualizacao {
   readonly podeMandarParaBase = input(false);
 
   /**
+   * Reabre a aba **Rolagens** dentro do trio do `'compacto'` — só pra quem hospeda a ficha embutida
+   * **sem** uma coluna lateral própria de rolagens (a tela de Iniciativa, que a mostra flutuando ou
+   * na lateral de 70% do jogador, ao lado do combate). `CampanhaDetalhe` deixa `false` (padrão): lá
+   * o painel de rolagens já mora na `HistoricoRolagensSidebar`, e duplicá-lo seria ruído.
+   */
+  readonly mostrarRolagensCompacto = input(false);
+
+  /**
    * Gate da edição "completa" (identidade/classe/reações/contra-ataque/resistências/atributos em
    * grupo/derivados de Combate/história) — no modo `'compacto'` (m2-20, restrição pós-entrega)
    * essas ficam **só leitura** mesmo pro dono/mestre: o card de equipe edita Dinheiro, Vida/
@@ -807,23 +815,31 @@ export class FichaVisualizacao {
 
   /**
    * Aba efetivamente **renderizada** no card. Igual a `abaStatusAtiva` no `modo="padrao"`; no
-   * `'compacto'` (m2-21) o card só tem o trio de {@link ABAS_STATUS_COMPACTO}, então uma aba fora
-   * dele — `rolagens` (o painel foi pra lateral), `extras`/`historia` (só na ficha completa),
-   * chegando por um `#` de URL antigo ou manipulado à mão — cai em Informações em vez de deixar o
-   * card vazio.
+   * `'compacto'` (m2-21) o card só tem o trio de {@link ABAS_STATUS_COMPACTO} (mais `rolagens`
+   * quando `mostrarRolagensCompacto`), então uma aba fora do que está visível no momento —
+   * `extras`/`historia` (só na ficha completa), ou `rolagens` sem o input — chegando por um `#` de
+   * URL antigo ou manipulado à mão — cai em Informações em vez de deixar o card vazio.
    */
   protected readonly abaStatusEfetiva = computed<AbaStatus>(() => {
     const aba = this.abaStatusAtiva();
     if (this.modo() !== 'compacto') {
       return aba;
     }
-    return ABAS_STATUS_COMPACTO.includes(aba) ? aba : 'informacoes';
+    return this.abasStatusVisiveis().includes(aba) ? aba : 'informacoes';
   });
 
-  /** Abas exibidas na barra do card — o trio reduzido no compacto (m2-21), as seis no padrão. */
-  protected readonly abasStatusVisiveis = computed<readonly AbaStatus[]>(() =>
-    this.modo() === 'compacto' ? ABAS_STATUS_COMPACTO : ABAS_STATUS,
-  );
+  /**
+   * Abas exibidas na barra do card — o trio reduzido no compacto (m2-21), as seis no padrão.
+   * `mostrarRolagensCompacto` reabre a quarta (Rolagens) só no compacto — ver o comentário do input.
+   */
+  protected readonly abasStatusVisiveis = computed<readonly AbaStatus[]>(() => {
+    if (this.modo() !== 'compacto') {
+      return ABAS_STATUS;
+    }
+    return this.mostrarRolagensCompacto()
+      ? [...ABAS_STATUS_COMPACTO, 'rolagens']
+      : ABAS_STATUS_COMPACTO;
+  });
 
   /** `true` quando a aba `aba` deve aparecer na barra deste modo (atalho de template). */
   protected mostraAbaStatus(aba: AbaStatus): boolean {
