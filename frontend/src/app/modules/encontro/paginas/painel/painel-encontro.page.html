@@ -15,9 +15,59 @@
           Espectador
         </span>
       }
+      <!-- "Encontros anteriores" (m7-06): link discreto no cabeçalho, não mais uma seção lá
+           embaixo — só o mestre navega pelo histórico. -->
+      @if (!carregando() && ehMestre() && vendoHistorico()) {
+        <button
+          class="iniciativa__historico"
+          type="button"
+          [appTooltip]="'Voltar ao combate em andamento'"
+          (click)="voltarAoCorrente()"
+        >
+          <app-icone nome="voltar" />
+          Combate atual
+        </button>
+      }
+      @if (!carregando() && ehMestre() && historico().length) {
+        <button
+          class="iniciativa__historico"
+          type="button"
+          [attr.aria-expanded]="historicoAberto()"
+          [appTooltip]="'Encontros encerrados desta campanha'"
+          (click)="alternarHistorico()"
+        >
+          <app-icone nome="d20" />
+          {{ historico().length }} {{ historico().length === 1 ? 'encerrado' : 'encerrados' }}
+        </button>
+      }
       <app-indicador-tempo-real />
     </div>
   </header>
+
+  @if (ehMestre() && historicoAberto() && historico().length) {
+    <div class="historico__painel">
+      <ul class="historico__lista">
+        @for (anterior of historico(); track anterior.id) {
+          <li class="historico__item">
+            <button
+              class="historico__botao"
+              type="button"
+              [appTooltip]="'Abrir o registro deste combate'"
+              (click)="abrirDoHistorico(anterior)"
+            >
+              <span class="historico__nome">{{ anterior.nome }}</span>
+              <span class="historico__meta">
+                {{ anterior.rodadaAtual }}
+                {{ anterior.rodadaAtual === 1 ? 'rodada' : 'rodadas' }}
+                · {{ anterior.quantidadeCombatentes }}
+                {{ anterior.quantidadeCombatentes === 1 ? 'combatente' : 'combatentes' }}
+              </span>
+            </button>
+          </li>
+        }
+      </ul>
+    </div>
+  }
 
   @if (carregando()) {
     <p class="iniciativa__carregando">Carregando o combate…</p>
@@ -382,56 +432,4 @@
          jogador — volta quando o formato for revisto. -->
   }
 
-  @if (ehMestre() && (historico().length || vendoHistorico())) {
-    <section class="historico">
-      <div class="cartao__cabecalho">
-        <span class="cartao__indice">//</span>
-        <h2 class="cartao__titulo">Encontros anteriores</h2>
-        <span class="cartao__regua"></span>
-        @if (vendoHistorico()) {
-          <button
-            class="botao botao--secundario historico__acao"
-            type="button"
-            [appTooltip]="'Voltar ao combate em andamento'"
-            (click)="voltarAoCorrente()"
-          >
-            <app-icone nome="voltar" />
-            Combate atual
-          </button>
-        }
-        @if (historico().length) {
-          <button
-            class="botao botao--secundario historico__acao"
-            type="button"
-            (click)="alternarHistorico()"
-          >
-            {{ historicoAberto() ? 'Fechar' : historico().length + ' encerrados' }}
-          </button>
-        }
-      </div>
-
-      @if (historicoAberto()) {
-        <ul class="historico__lista">
-          @for (anterior of historico(); track anterior.id) {
-            <li class="historico__item">
-              <button
-                class="historico__botao"
-                type="button"
-                [appTooltip]="'Abrir o registro deste combate'"
-                (click)="abrirDoHistorico(anterior)"
-              >
-                <span class="historico__nome">{{ anterior.nome }}</span>
-                <span class="historico__meta">
-                  {{ anterior.rodadaAtual }}
-                  {{ anterior.rodadaAtual === 1 ? 'rodada' : 'rodadas' }}
-                  · {{ anterior.quantidadeCombatentes }}
-                  {{ anterior.quantidadeCombatentes === 1 ? 'combatente' : 'combatentes' }}
-                </span>
-              </button>
-            </li>
-          }
-        </ul>
-      }
-    </section>
-  }
 </section>

@@ -751,16 +751,29 @@ describe('PainelEncontro', () => {
       createdDate: '2026-08-10T00:00:00.000Z',
     };
 
-    it('mostra "Encontros anteriores" para o mestre quando há histórico', () => {
-      const elemento = montar(encontroAtivo, USUARIO_MESTRE, [encerrado]).fixture
-        .nativeElement as HTMLElement;
-      expect(elemento.querySelector('.historico')).not.toBeNull();
+    it('mostra o link "N encerrados" no cabeçalho pro mestre, e abre o painel do histórico', () => {
+      const { fixture } = montar(encontroAtivo, USUARIO_MESTRE, [encerrado]);
+      const elemento = fixture.nativeElement as HTMLElement;
+      const gatilho = Array.from(
+        elemento.querySelectorAll<HTMLButtonElement>('.iniciativa__historico'),
+      ).find((botao) => botao.textContent?.includes('encerrado'))!;
+      expect(gatilho).not.toBeUndefined();
+      expect(elemento.querySelector('.historico__painel')).toBeNull();
+
+      gatilho.click();
+      fixture.detectChanges();
+
+      expect(elemento.querySelector('.historico__painel')).not.toBeNull();
+      expect(elemento.querySelector('.historico__nome')?.textContent?.trim()).toBe(
+        'Emboscada no Setor 4',
+      );
     });
 
-    it('nunca mostra "Encontros anteriores" para o jogador, mesmo havendo histórico', () => {
+    it('nunca mostra o link de "Encontros anteriores" pro jogador, mesmo havendo histórico', () => {
       const elemento = montar(encontroAtivo, USUARIO_JOGADOR, [encerrado]).fixture
         .nativeElement as HTMLElement;
-      expect(elemento.querySelector('.historico')).toBeNull();
+      expect(elemento.querySelector('.iniciativa__historico')).toBeNull();
+      expect(elemento.querySelector('.historico__painel')).toBeNull();
     });
   });
 

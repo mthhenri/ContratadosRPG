@@ -37,6 +37,10 @@
     align-items: center;
     gap: 12px;
     margin-left: auto;
+
+    // Mestre vendo o histórico pode acumular "Combate atual" + "N encerrados" + o indicador de
+    // tempo real — em 360px isso não cabe numa linha só.
+    @include bp.mobile { flex-wrap: wrap; justify-content: flex-end; }
   }
 
   &__voltar {
@@ -78,6 +82,31 @@
     border-radius: var(--radius-control);
 
     app-icone { font-size: 12px; }
+  }
+
+  // Link discreto do histórico no cabeçalho ("Encontros anteriores" saiu do rodapé) — mesma
+  // receita de chip do `&__papel`, mas clicável: acende accent no hover, como `&__voltar`.
+  &__historico {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 9px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+    app-icone { font-size: 12px; }
+
+    &:hover { color: var(--accent); border-color: var(--accent-border); background: var(--surface-2); }
   }
 
   &__carregando,
@@ -482,24 +511,14 @@
   }
 }
 
-// ── Histórico de encontros (complemento da m7-06) ────────────────────────────
+// ── Histórico de encontros (complemento da m7-06; gatilho no cabeçalho) ──────
 .historico {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-
-  &__acao {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 7px 12px;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-
-    app-icone { font-size: 12px; }
+  // O painel que abre sob o cabeçalho quando `&historico` (no `.iniciativa__acoes`) é clicado.
+  &__painel {
+    padding: var(--pad-card);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
   }
 
   &__lista {
