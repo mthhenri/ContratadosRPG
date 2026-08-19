@@ -51,6 +51,17 @@
           <app-icone nome="inconsciente" />
         </span>
       }
+      @if (combatente().fichaId !== null && revelado()) {
+        <button
+          class="combatente__abrir-ficha"
+          type="button"
+          [attr.aria-label]="'Abrir ficha de ' + combatente().nome"
+          [appTooltip]="'Abrir ficha'"
+          (click)="abrirFicha.emit()"
+        >
+          <app-icone nome="visao-geral" />
+        </button>
+      }
       @if (emEdicao()) {
         <button
           class="combatente__remover"

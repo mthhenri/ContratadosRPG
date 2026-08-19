@@ -222,7 +222,13 @@ describe('PainelEncontro', () => {
           },
         },
         { provide: SessaoService, useValue: { usuario: () => ({ id: usuarioId }) } },
-        { provide: CampanhaService, useValue: { listarMembros: vi.fn(() => of(membros)) } },
+        {
+          provide: CampanhaService,
+          useValue: {
+            listarMembros: vi.fn(() => of(membros)),
+            recuperarCampanha: vi.fn(() => of({ id: CAMPANHA_ID, nome: 'Campanha de Teste' })),
+          },
+        },
         {
           provide: TempoRealService,
           useValue: {

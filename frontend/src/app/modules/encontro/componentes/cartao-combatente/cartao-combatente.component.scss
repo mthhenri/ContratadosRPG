@@ -224,6 +224,28 @@
     &--machucado { color: var(--warning); }
   }
 
+  // Abre a ficha completa numa janela flutuante — vive junto das marcas narrativas, antes do
+  // grupo "remover/ajustar" que se empurra pra direita.
+  &__abrir-ficha {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+    &:hover { color: var(--accent); border-color: var(--accent-border); background: var(--surface-2); }
+
+    @include bp.mobile { width: bp.$alvo-toque; height: bp.$alvo-toque; }
+  }
+
   &__remover {
     flex: none;
     margin-left: auto;

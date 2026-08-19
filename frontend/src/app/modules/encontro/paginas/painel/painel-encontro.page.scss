@@ -6,6 +6,57 @@
 
 @use 'tema/breakpoints' as bp;
 
+// ── Divisão do jogador: ficha à direita, Iniciativa à esquerda (item novo) ───
+// O jogador com combatente em campo vê a própria ficha sempre aberta, ocupando 70% da tela, para
+// acompanhar o combate sem largar a ficha de vista. `.iniciativa` não muda por dentro — só encolhe.
+.iniciativa-tela {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gap-grid);
+
+  &--dividida {
+    .iniciativa { flex: 0 0 30%; max-width: 30%; margin: 0; }
+  }
+
+  &__ficha {
+    flex: 1 1 70%;
+    min-width: 0;
+    align-self: stretch;
+  }
+
+  &__ficha-carregando {
+    margin: 0;
+    padding: var(--pad-card);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-style: italic;
+    color: var(--text-mute);
+  }
+
+  // A divisão encolhe `.iniciativa` sem encolher a **viewport** — os grids internos não cairiam
+  // sozinhos pro modo 1-coluna via media query (ela olha a tela inteira, não o container). Então
+  // a classe de estado força o mesmo `1fr` que `bp.mobile`/`bp.tablet` já usam, só que disparado
+  // pela divisão em vez da largura da tela — mesmo truque de `secundarias--abertas` neste arquivo.
+  &--dividida .iniciativa {
+    .painel,
+    .grade,
+    .historico__lista { grid-template-columns: 1fr; }
+  }
+
+  // No celular a divisão nunca se aplica — a tela volta a ser só a Iniciativa, como antes desta
+  // mudança (sem regressão do recorte mobile da m7-08).
+  @include bp.mobile {
+    display: block;
+
+    &--dividida .iniciativa {
+      flex: initial;
+      max-width: 100%;
+    }
+
+    &__ficha { display: none; }
+  }
+}
+
 .iniciativa {
   max-width: 1536px;
   margin: 0 auto;

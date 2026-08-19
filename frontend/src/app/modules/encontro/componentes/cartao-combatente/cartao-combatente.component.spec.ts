@@ -270,4 +270,28 @@ describe('CartaoCombatente', () => {
 
     expect(emitidos).toEqual([21]);
   });
+
+  it('oferece "abrir ficha" quando há fichaId e o combatente está revelado, e emite ao clicar', () => {
+    const fixture = montar(base);
+    const elemento = fixture.nativeElement as HTMLElement;
+    const gatilho = elemento.querySelector<HTMLButtonElement>('.combatente__abrir-ficha');
+    expect(gatilho).not.toBeNull();
+
+    let emitido = false;
+    fixture.componentInstance.abrirFicha.subscribe(() => (emitido = true));
+    gatilho?.click();
+    expect(emitido).toBe(true);
+  });
+
+  it('não oferece "abrir ficha" pro avulso (sem fichaId) nem pro não revelado', () => {
+    const avulso = montar({ ...base, origem: CombatenteOrigemEnum.AVULSO, fichaId: null });
+    expect(
+      (avulso.nativeElement as HTMLElement).querySelector('.combatente__abrir-ficha'),
+    ).toBeNull();
+
+    const naoRevelado = montar({ ...base, revelado: false });
+    expect(
+      (naoRevelado.nativeElement as HTMLElement).querySelector('.combatente__abrir-ficha'),
+    ).toBeNull();
+  });
 });

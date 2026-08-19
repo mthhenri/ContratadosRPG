@@ -1,4 +1,13 @@
-import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -11,7 +20,11 @@ import type {
   EncontroResumoDto,
 } from '@contratados-rpg/shared/dtos/encontro';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
-import type { FichaAtributosDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
+import type {
+  FichaAtributosDto,
+  FichaRecuperadaDto,
+  FichaResumoDto,
+} from '@contratados-rpg/shared/dtos/ficha';
 import {
   CadenciaEnum,
   EncontroStatusEnum,
@@ -22,17 +35,22 @@ import {
 import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
+import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
+import { FichaVisualizacao } from '../../../ficha/componentes/ficha-visualizacao/ficha-visualizacao.component';
+import { FichaEdicaoService } from '../../../ficha/ficha-edicao.service';
 import { FichaRolagemRegistroService } from '../../../ficha/ficha-rolagem-registro.service';
 import { FichaService } from '../../../ficha/ficha.service';
 import { rolarIniciativaDaFicha } from '../../../ficha/rolar-iniciativa';
 import { nomeCadencia } from '../../../ficha/rotulos-criatura';
 import { CartaoCombatente } from '../../componentes/cartao-combatente/cartao-combatente.component';
+import { FichaFlutuante } from '../../componentes/ficha-flutuante/ficha-flutuante.component';
 import { SeletorCombatentes } from '../../componentes/seletor-combatentes/seletor-combatentes.component';
 import { EncontroService } from '../../encontro.service';
 import { rotuloStatusEncontro } from '../../rotulos-encontro';
@@ -86,15 +104,23 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
     Icone,
     IndicadorTempoReal,
     Tooltip,
+    CalculadoraFlutuante,
+    CadernoFlutuante,
     CartaoCombatente,
+    FichaFlutuante,
+    FichaVisualizacao,
     SeletorCombatentes,
   ],
   templateUrl: './painel-encontro.page.html',
   styleUrl: './painel-encontro.page.scss',
   // O jogador rola a própria iniciativa **daqui**, e essa rolagem tem de entrar no feed da campanha
-  // como qualquer outra (m3-27). O serviço não é `providedIn: 'root'`: cada página que hospeda uma
+  // como qualquer outra (m3-27); e a própria ficha dele fica sempre aberta na coluna lateral
+  // (item novo). Nenhum dos dois serviços é `providedIn: 'root'`: cada página que hospeda uma
   // ficha declara a própria instância e a prende a uma ficha só (mesmo padrão de `CampanhaDetalhe`).
-  providers: [FichaRolagemRegistroService],
+  // A ficha de um combatente **clicado** (mestre olhando qualquer um, jogador olhando um colega
+  // revelado) é outra história: ela vive isolada dentro de `FichaFlutuante`, com a própria
+  // instância desses serviços — ver o comentário de `FichaFlutuanteConteudo`.
+  providers: [FichaRolagemRegistroService, FichaEdicaoService],
 })
 export class PainelEncontro {
   private readonly encontroService = inject(EncontroService);
@@ -108,7 +134,14 @@ export class PainelEncontro {
   private readonly sessaoService = inject(SessaoService);
   private readonly bandeja = inject(BandejaDadosService);
   private readonly rolagemRegistro = inject(FichaRolagemRegistroService);
+  /** Edição da ficha do próprio jogador, aberta na coluna lateral (item novo) — não a do combatente
+   *  clicado, que vive isolada dentro de `FichaFlutuante`. */
+  protected readonly fichaEdicao = inject(FichaEdicaoService);
   private readonly destroyRef = inject(DestroyRef);
+
+  /** Referência à janela flutuante de ficha (mestre olhando qualquer combatente; jogador, um colega
+   *  revelado) — aberta imperativamente por `abrirFichaFlutuante`. */
+  private readonly fichaFlutuanteRef = viewChild<FichaFlutuante>('fichaFlutuante');
 
   /** `campanhaId` da rota — sempre presente (a rota só existe sob `/painel/:campanhaId`). */
   protected readonly campanhaId = Number(this.rotaAtiva.snapshot.paramMap.get('campanhaId'));
@@ -126,6 +159,12 @@ export class PainelEncontro {
   protected readonly encontrosDaCampanha = signal<readonly EncontroResumoDto[]>([]);
   /** `null` enquanto os membros não chegaram: até lá não se sabe se quem abriu é mestre. */
   private readonly membros = signal<readonly CampanhaMembroResumoDto[] | null>(null);
+
+  /** Nome da campanha — só existe pro input `campanhaNome` do `app-caderno-flutuante`. */
+  protected readonly campanhaNome = signal('');
+
+  /** `membros()` sem o `null` do carregamento — só existe pro input `membros` das Anotações. */
+  protected readonly membrosDaCampanha = computed(() => this.membros() ?? []);
 
   /**
    * A tela só desenha quando sabe **quem** está olhando: renderizar antes dos membros mostraria a
@@ -197,6 +236,9 @@ export class PainelEncontro {
     );
   });
 
+  /** `id` de quem está com a tela aberta — só existe pro input `usuarioAtivoId` das Anotações. */
+  protected readonly usuarioAtivoId = computed(() => this.sessaoService.usuario()?.id ?? null);
+
   /** Ids das fichas que **este** usuário joga nesta campanha. */
   private readonly minhasFichaIds = computed<ReadonlySet<number>>(() => {
     const usuarioId = this.sessaoService.usuario()?.id;
@@ -216,6 +258,25 @@ export class PainelEncontro {
       ) ?? null
     );
   });
+
+  /** `fichaId` do próprio combatente — `null` pro mestre e para quem assiste sem ficha em campo. */
+  protected readonly meuFichaId = computed(() => this.meuCombatente()?.fichaId ?? null);
+
+  /**
+   * Documento completo da própria ficha — `fichasCampanha()`/`FichaResumoDto` não carrega `dados`,
+   * que é o que `<app-ficha-visualizacao>` da coluna lateral (item novo) precisa. Buscado pelo
+   * `effect` do construtor sempre que `meuFichaId` muda (o mesmo padrão de `CampanhaDetalhe`).
+   */
+  protected readonly meuFichaDados = signal<FichaRecuperadaDto | null>(null);
+
+  /**
+   * A ficha do jogador ocupa a coluna lateral de 70% (item novo) sempre que ele tem um combatente
+   * em campo — durante toda a montagem/combate, não só quando é a vez dele. Mestre nunca a vê (ele
+   * já tem a grade inteira); no mobile o CSS ignora esta classe e a coluna nunca aparece.
+   */
+  protected readonly mostrarFichaLateral = computed(
+    () => !this.ehMestre() && this.meuFichaId() !== null,
+  );
 
   /**
    * `true` quando o jogador tem o que rolar: seu combatente está em campo, ainda sem iniciativa, e
@@ -403,6 +464,35 @@ export class PainelEncontro {
       }
     });
 
+    // Nome da campanha — só precisa vir uma vez, não a cada `carregar()` (a rota troca de encontro,
+    // não de campanha).
+    this.campanhaService
+      .recuperarCampanha(this.campanhaId)
+      .subscribe({ next: (campanha) => this.campanhaNome.set(campanha.nome) });
+
+    // Liga a ficha do jogador (coluna lateral, item novo) desde já: `meuFichaId` ainda não tem
+    // valor no primeiro tick (falta carregar), mas `inicializar` só lê o getter depois, na hora de
+    // gravar — não precisa esperar.
+    this.fichaEdicao.inicializar(this.meuFichaDados, () => this.meuFichaId()!);
+    this.rolagemRegistro.inicializar(() => this.meuFichaId());
+
+    // Busca o documento completo sempre que `meuFichaId` muda (chegada em campo, ou o combatente
+    // sai e volta) — mesmo padrão de `CampanhaDetalhe` (`fichaExibidaId`/`fichaExibidaDados`).
+    effect(() => {
+      const fichaId = this.meuFichaId();
+      if (fichaId === null) {
+        untracked(() => this.meuFichaDados.set(null));
+        return;
+      }
+      this.fichaService.recuperarFicha(fichaId).subscribe({
+        next: (ficha) =>
+          untracked(() => {
+            this.meuFichaDados.set(ficha);
+            this.fichaEdicao.definirBase(ficha);
+          }),
+      });
+    });
+
     // Substitui a caixinha "Age agora" (só do mestre agora) para o jogador: um toast pontual
     // quando o slot da vez passa a ser o do combatente dele, em vez de um indicador estático que
     // ele precisaria ficar olhando.
@@ -492,6 +582,35 @@ export class PainelEncontro {
     }
     const ficha = this.fichasCampanha().find((item) => item.id === combatente.fichaId);
     return ficha?.na ?? null;
+  }
+
+  /** Abre a ficha do combatente clicado na janela flutuante (item novo). */
+  protected abrirFichaFlutuante(combatente: EncontroCombatenteResumoDto): void {
+    if (combatente.fichaId === null) {
+      return;
+    }
+    this.tentarAbrirFichaFlutuante(combatente.fichaId, combatente.tipoFicha);
+  }
+
+  /** "Ver ficha" disparado de dentro das Anotações (`app-caderno-flutuante`) — só o `fichaId`. */
+  protected abrirFichaFlutuanteDeAnotacoes(fichaId: number): void {
+    const tipo = this.fichasCampanha().find((ficha) => ficha.id === fichaId)?.tipo ?? null;
+    this.tentarAbrirFichaFlutuante(fichaId, tipo);
+  }
+
+  /**
+   * Avulso (`tipoFicha: null`) e NPC (sem ficha na campanha ainda) não têm o que abrir; o dono vem
+   * do resumo já carregado (`fichasCampanha()`), não de uma nova consulta.
+   */
+  private tentarAbrirFichaFlutuante(fichaId: number, tipo: TipoFichaEnum | null): void {
+    if (tipo !== TipoFichaEnum.JOGADOR && tipo !== TipoFichaEnum.CRIATURA) {
+      return;
+    }
+    const usuarioIdDono = this.fichasCampanha().find((ficha) => ficha.id === fichaId)?.usuarioId;
+    if (usuarioIdDono === undefined) {
+      return;
+    }
+    this.fichaFlutuanteRef()?.abrir({ fichaId, tipo, usuarioIdDono });
   }
 
   // ── Montagem ───────────────────────────────────────────────────────────────

@@ -1,3 +1,4 @@
+<div class="iniciativa-tela" [class.iniciativa-tela--dividida]="mostrarFichaLateral()">
 <section class="iniciativa">
   <header class="iniciativa__topo">
     <a
@@ -40,9 +41,22 @@
           {{ historico().length }} {{ historico().length === 1 ? 'encerrado' : 'encerrados' }}
         </button>
       }
+      <app-calculadora-flutuante />
+      @if (usuarioAtivoId(); as usuarioId) {
+        <app-caderno-flutuante
+          [campanhaId]="campanhaId"
+          [campanhaNome]="campanhaNome()"
+          [usuarioAtivoId]="usuarioId"
+          [ehMestre]="ehMestre()"
+          [membros]="membrosDaCampanha()"
+          (abrirFicha)="abrirFichaFlutuanteDeAnotacoes($event)"
+        />
+      }
       <app-indicador-tempo-real />
     </div>
   </header>
+
+  <app-ficha-flutuante #fichaFlutuante [ehMestre]="ehMestre()" />
 
   @if (ehMestre() && historicoAberto() && historico().length) {
     <div class="historico__painel">
@@ -414,6 +428,7 @@
             (energiaAjustada)="ajustarEnergia(combatente, $event)"
             (iniciativaAtribuida)="atribuirIniciativa(combatente, $event)"
             (removido)="removerCombatente(combatente)"
+            (abrirFicha)="abrirFichaFlutuante(combatente)"
           />
         }
       </div>
@@ -433,3 +448,47 @@
   }
 
 </section>
+
+@if (mostrarFichaLateral()) {
+  <!-- Coluna do jogador (item novo): a própria ficha, sempre aberta, pra acompanhar o combate sem
+       largar a tela de Iniciativa — 70% da largura em desktop; some no mobile (ver SCSS). -->
+  <aside class="iniciativa-tela__ficha">
+    @if (meuFichaDados(); as ficha) {
+      <app-ficha-visualizacao
+        [fichaId]="ficha.id"
+        [nome]="ficha.nome"
+        [cor]="ficha.cor"
+        [imagemUrl]="ficha.imagemUrl"
+        [dados]="ficha.dados"
+        [ajustavel]="true"
+        [podeRolar]="true"
+        [ehMestre]="false"
+        modo="compacto"
+        (ajusteVitalidade)="fichaEdicao.ajustarVitalidade($event)"
+        (ajusteDerivado)="fichaEdicao.ajustarDerivado($event)"
+        (ajusteResistencia)="fichaEdicao.ajustarResistencia($event)"
+        (ajusteAtributos)="fichaEdicao.ajustarAtributos($event)"
+        (ajusteNome)="fichaEdicao.ajustarNome($event)"
+        (ajusteCor)="fichaEdicao.ajustarCor($event)"
+        (ajusteCampoDados)="fichaEdicao.ajustarCampoDados($event)"
+        (ajusteClasse)="fichaEdicao.ajustarClasse($event)"
+        (ajusteSanidade)="fichaEdicao.ajustarSanidade($event)"
+        (ajusteCondicoes)="fichaEdicao.ajustarCondicoes($event)"
+        (ajusteHabilidades)="fichaEdicao.ajustarHabilidades($event)"
+        (ajusteInventario)="fichaEdicao.ajustarInventario($event)"
+        (ajusteRolagens)="fichaEdicao.ajustarRolagens($event)"
+        (ajusteCombos)="fichaEdicao.ajustarCombos($event)"
+        (ajusteFragmentosConsumidos)="fichaEdicao.ajustarFragmentosConsumidos($event)"
+        (ajusteAnotacoes)="fichaEdicao.ajustarAnotacoes($event)"
+        (ajusteHistoria)="fichaEdicao.ajustarHistoria($event)"
+        (ajustePersonalidade)="fichaEdicao.ajustarPersonalidade($event)"
+        (ajusteOrigem)="fichaEdicao.ajustarOrigem($event)"
+        (origemLimpa)="fichaEdicao.limparOrigem()"
+        (ajusteContrato)="fichaEdicao.ajustarContrato($event)"
+      />
+    } @else {
+      <p class="iniciativa-tela__ficha-carregando">Carregando sua ficha…</p>
+    }
+  </aside>
+}
+</div>

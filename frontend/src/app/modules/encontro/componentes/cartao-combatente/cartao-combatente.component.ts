@@ -84,6 +84,8 @@ export class CartaoCombatente {
   readonly iniciativaAtribuida = output<number>();
   /** Remoção do combatente pedida pelo botão de lixeira. */
   readonly removido = output<void>();
+  /** Pedido de abrir a ficha completa deste combatente (janela flutuante — quem hospeda decide). */
+  readonly abrirFicha = output<void>();
 
   /**
    * Steppers abertos (m7-08). Só tem efeito **no mobile**: o mockup de 360px desenha o cartão sem
