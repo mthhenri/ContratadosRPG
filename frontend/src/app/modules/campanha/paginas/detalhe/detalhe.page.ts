@@ -13,13 +13,18 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { filter, finalize, forkJoin, merge } from 'rxjs';
-import { TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
+import {
+  EncontroStatusEnum,
+  TipoCampanhaMembroPapelEnum,
+  TipoFichaEnum,
+} from '@contratados-rpg/shared/enums';
 import {
   CampanhaInventarioItemDto,
   CampanhaMembroResumoDto,
   CampanhaRecuperadaDto,
 } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaAcessoResumoDto, FichaRecuperadaDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { EncontroResumoDto } from '@contratados-rpg/shared/dtos/encontro';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
@@ -35,7 +40,9 @@ import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-temp
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
-import { CampanhaService } from '../../campanha.service';
+import { CampanhaService } from '../../campanha.service';
+import { EncontroService } from '../../../encontro/encontro.service';
+import { rotuloStatusEncontro } from '../../../encontro/rotulos-encontro';
 import { FichaService } from '../../../ficha/ficha.service';
 import { FichaEdicaoService } from '../../../ficha/ficha-edicao.service';
 import { FichaRolagemRegistroService } from '../../../ficha/ficha-rolagem-registro.service';
@@ -195,7 +202,8 @@ type EquipeFichaExibicao =
 })
 export class CampanhaDetalhe {
   private readonly bandejaDadosService = inject(BandejaDadosService);
-  private readonly campanhaService = inject(CampanhaService);
+  private readonly campanhaService = inject(CampanhaService);
+  private readonly encontroService = inject(EncontroService);
   private readonly fichaService = inject(FichaService);
   /** Handlers `ajustar*` (m2-20) da ficha embutida na visão do jogador — mesmo composable de `VisualizarPage`. */
   protected readonly fichaEdicao = inject(FichaEdicaoService);
@@ -224,6 +232,28 @@ export class CampanhaDetalhe {
   protected readonly inventarioEsquadrao = signal<readonly CampanhaInventarioItemDto[]>([]);
   protected readonly exibindoInventarioJogador = signal(false);
   protected readonly membros = signal<CampanhaMembroResumoDto[]>([]);
+
+  /**
+   * Encontros de combate da campanha (m7-06) — alimentam o tile "Combate" ao lado do Convite: qual
+   * é o estado do combate agora e quantos já foram travados. A tela "Iniciativa" é quem cria,
+   * conduz e mostra o histórico; aqui só existe a **porta de entrada**, que faltava (o menu "⋯" do
+   * cabeçalho escondia a única rota até ela).
+   */
+  protected readonly encontros = signal<readonly EncontroResumoDto[]>([]);
+
+  /** O combate em andamento (montagem ou ativo) — no máximo um por campanha, por invariante. */
+  protected readonly encontroAberto = computed<EncontroResumoDto | null>(
+    () =>
+      this.encontros().find((resumo) => resumo.status !== EncontroStatusEnum.ENCERRADO) ?? null,
+  );
+
+  /** Quantos combates já foram encerrados — o "e listar os que já ocorreram" do tile. */
+  protected readonly encontrosEncerrados = computed(
+    () => this.encontros().filter((resumo) => resumo.status === EncontroStatusEnum.ENCERRADO).length,
+  );
+
+  protected readonly rotuloStatusEncontro = rotuloStatusEncontro;
+  protected readonly EncontroStatusEnum = EncontroStatusEnum;
   protected readonly carregando = signal(true);
   protected readonly regenerando = signal(false);
   /** Confirmação efêmera pós-regeneração — o botão vira "Regenerado ✓" por ~1,5 s. */
@@ -744,6 +774,7 @@ export class CampanhaDetalhe {
   constructor() {
     this.carregar(true);
     this.carregarRolagens();
+    this.carregarEncontros();
 
     // Handlers `ajustar*` da ficha embutida (item 5) — mesmo composable de `VisualizarPage`
     // (`FichaEdicaoService`, m2-20). `fichaExibidaId` muda sem recriar o componente, daí a função
@@ -833,6 +864,16 @@ export class CampanhaDetalhe {
     this.tempoRealService.estadoAlterado$
       .pipe(filter((evento) => evento.id === this.id), takeUntilDestroyed())
       .subscribe({ next: () => this.recarregarCampanhaEInventario() });
+
+    // O tile "Combate" acompanha o encontro ao vivo: quem está no detalhe da campanha vê o mestre
+    // abrir e encerrar o combate sem recarregar. O evento traz o encontro inteiro, mas aqui só
+    // interessa o resumo — refazer a listagem é mais barato que espelhar o estado por conta.
+    this.tempoRealService.encontroAlterado$
+      .pipe(
+        filter((evento) => evento.encontro.campanhaId === this.id),
+        takeUntilDestroyed(),
+      )
+      .subscribe({ next: () => this.carregarEncontros() });
     this.tempoRealService.inventarioAlterado$
       .pipe(filter((evento) => evento.campanhaId === this.id), takeUntilDestroyed())
       .subscribe({ next: () => this.carregarInventario() });
@@ -1179,6 +1220,17 @@ export class CampanhaDetalhe {
       .listarPorCampanha(this.id)
       .pipe(finalize(() => this.carregandoRolagens.set(false)))
       .subscribe({ next: (itens) => this.rolagensFeed.set(itens), error: () => undefined });
+  }
+
+  /**
+   * Lista os encontros da campanha para o tile "Combate". Um erro aqui é silencioso de propósito:
+   * o tile é um atalho, e a campanha não deve deixar de carregar porque a listagem de combates
+   * falhou (mesmo tratamento de `carregarRolagens`).
+   */
+  private carregarEncontros(): void {
+    this.encontroService
+      .listarPorCampanha(this.id)
+      .subscribe({ next: (encontros) => this.encontros.set(encontros), error: () => undefined });
   }
 
   /** Copia o código de convite para a área de transferência — puramente apresentação. */

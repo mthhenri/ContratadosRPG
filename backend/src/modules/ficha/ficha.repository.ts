@@ -11,6 +11,7 @@ import type {
   FichaAcessosListarDto,
   FichaCampanhaInternoAtribuirDto,
   FichaCriadaDto,
+  FichaCriaturaVitalidadeInternoAlterarDto,
   FichaExcluirDto,
   FichaImagemAlteradaDto,
   FichaImagemInternoAlterarDto,
@@ -102,8 +103,8 @@ export class FichaRepository extends BaseRepository {
    *
    * `tipo` (m4-04): resolvido via `JOIN tipo_ficha` (mesma tradução `codigo ↔ id` do `criar`,
    * §10.2.12) — alimenta a divisão Esquadrão (`JOGADOR`) × Criaturas (`CRIATURA`) no painel da
-   * campanha. `na` só existe no JSONB de uma `CRIATURA` (`FichaCriaturaDadosDto.na`) — `NULL` numa
-   * ficha `JOGADOR`. `vidaAtual`/`vidaMaxima`/`defesa` usam `COALESCE` entre os dois formatos de
+   * campanha. `na`/`vd` só existem no JSONB de uma `CRIATURA` (`FichaCriaturaDadosDto.na`/`vd`) —
+   * `NULL` numa ficha `JOGADOR`. `vidaAtual`/`vidaMaxima`/`defesa` usam `COALESCE` entre os dois formatos de
    * `dados` (jogador aninha em `estado`/`derivados`; criatura guarda os três no nível raiz, ver
    * `FichaCriaturaDadosDto`) — sem isso, uma criatura sairia sempre com essas colunas `NULL`.
    *
@@ -137,6 +138,7 @@ export class FichaRepository extends BaseRepository {
               ficha.dados->>'arquetipo' AS arquetipo,
               (ficha.dados->>'nivel')::int AS nivel,
               ficha.dados->>'na' AS na,
+              (ficha.dados->>'vd')::int AS vd,
               COALESCE((ficha.dados->'estado'->>'vidaAtual')::int, (ficha.dados->>'vidaAtual')::int) AS "vidaAtual",
               COALESCE((ficha.dados->'estado'->>'vidaMaxima')::int, (ficha.dados->>'vidaMaxima')::int) AS "vidaMaxima",
               (ficha.dados->'estado'->>'energiaAtual')::int AS "energiaAtual",
@@ -330,6 +332,26 @@ export class FichaRepository extends BaseRepository {
        RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, imagem_url AS "imagemUrl",
                  imagem_foco AS "imagemFoco", COALESCE(oculta, false) AS oculta, dados`,
       { id: dto.id, estado: JSON.stringify(dto.estado) },
+    );
+    return fichaAlterada;
+  }
+
+  /**
+   * Altera só a Vida corrente de uma **criatura**. O documento de criatura guarda `vidaAtual` no
+   * **topo** (não em `dados.estado`, como o de agente), então precisa do seu próprio `jsonb_set` —
+   * o `alterarVitalidade` acima escreveria numa chave que a criatura não tem.
+   */
+  async alterarVitalidadeCriatura(
+    dto: FichaCriaturaVitalidadeInternoAlterarDto,
+  ): Promise<FichaRecuperadaDto> {
+    const [fichaAlterada] = await this.executarConsulta<FichaRecuperadaDto>(
+      `UPDATE ficha
+       SET dados = jsonb_set(dados, '{vidaAtual}', to_jsonb(:vidaAtual::int), true),
+           updated_date = NOW()
+       WHERE id = :id AND is_deleted = false
+       RETURNING id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, imagem_url AS "imagemUrl",
+                 imagem_foco AS "imagemFoco", COALESCE(oculta, false) AS oculta, dados`,
+      { id: dto.id, vidaAtual: dto.vidaAtual },
     );
     return fichaAlterada;
   }

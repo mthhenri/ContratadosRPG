@@ -246,6 +246,57 @@ describe('FichaVisualizacao', () => {
     });
   });
 
+  describe('aba Rolagens no compacto (`mostrarRolagensCompacto`)', () => {
+    /** Rótulos da barra de abas do card de Status, na ordem em que aparecem. */
+    function rotulosDasAbas(raiz: HTMLElement): (string | undefined)[] {
+      return Array.from(raiz.querySelectorAll('.ficha-status__aba')).map(
+        (aba) => aba.querySelector('.ficha-status__aba-texto')?.textContent?.trim(),
+      );
+    }
+
+    it('some por padrão no compacto — o trio de sempre (m2-21), sem regressão pra CampanhaDetalhe', () => {
+      const alvo = montar(dados);
+      alvo.fixture.componentRef.setInput('modo', 'compacto');
+      alvo.fixture.detectChanges();
+      expect(rotulosDasAbas(alvo.raiz)).toEqual(['Informações', 'Inventário', 'Habilidades']);
+    });
+
+    it('aparece como quarta aba quando `mostrarRolagensCompacto` está ligado', () => {
+      const alvo = montar(dados);
+      alvo.fixture.componentRef.setInput('modo', 'compacto');
+      alvo.fixture.componentRef.setInput('mostrarRolagensCompacto', true);
+      alvo.fixture.detectChanges();
+      expect(rotulosDasAbas(alvo.raiz)).toEqual([
+        'Informações', 'Inventário', 'Habilidades', 'Rolagens',
+      ]);
+    });
+
+    it('clicar em Rolagens troca a aba ativa e desenha o painel de rolagens', () => {
+      const alvo = montar(dados);
+      alvo.fixture.componentRef.setInput('modo', 'compacto');
+      alvo.fixture.componentRef.setInput('mostrarRolagensCompacto', true);
+      alvo.fixture.detectChanges();
+
+      alvo.raiz.querySelector<HTMLButtonElement>('[data-aba-status="rolagens"]')?.click();
+      alvo.fixture.detectChanges();
+
+      expect(
+        alvo.raiz.querySelector('[data-aba-status="rolagens"]')?.classList,
+      ).toContain('ficha-status__aba--ativa');
+      expect(alvo.raiz.querySelector('app-ficha-rolagens-painel')).not.toBeNull();
+    });
+
+    it('não muda nada no modo padrão — a aba já está sempre lá', () => {
+      // `ajustavel: true` só pra "História" entrar na conta (m3-50, condicional a dono/mestre) —
+      // o que este teste prova é que Rolagens não depende de `mostrarRolagensCompacto` fora do
+      // compacto, não a visibilidade de História em si.
+      const { raiz } = montar(dados, 'Corvo', 42, true);
+      expect(rotulosDasAbas(raiz)).toEqual([
+        'Informações', 'Inventário', 'Habilidades', 'Rolagens', 'Extras', 'História',
+      ]);
+    });
+  });
+
   describe('Defesa/Resistências em miniatura (glance, redesenho de comparação visual)', () => {
     it('mostra Defesa/Esquiva/Bloqueio e o placeholder de Contra-ataque, só leitura quando não ajustável', () => {
       const { raiz } = montar(dados, 'Corvo', 42, false);

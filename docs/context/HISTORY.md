@@ -1,5 +1,369 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-17 — M7 aberto: Encontro de Combate (escopo, quebra em tasks e contrato — `m7-01`)
+
+O autor pediu o "controle de iniciativa". A conversa de escopo mostrou que a ideia existia só como
+linha solta (`SYSTEM.SPEC.md` §15 "fora de escopo", `IDEAS.md` I-016) e que o que havia em código
+era apenas o **bônus** de Iniciativa da ficha (`m3-47`) — não um módulo de combate. A branch de
+trabalho estava desatualizada e foi realinhada com `master` antes de qualquer coisa (a M4 já tinha
+criatura implementada, com `CadenciaEnum` — a dependência que parecia bloquear o milestone não
+existia mais).
+
+**Escopo fechado com o autor** (spec `docs/specs/backlog/m7-encontro-combate.spec.md`): rastreador
+**completo** (ordem + rodadas + turnos + vida + condições), combatentes de três origens (ficha de
+jogador, criatura/NPC da M4 e avulso digitado na hora), **Cadência com intercalação** desde o MVP,
+jogadores vendo **ao vivo** e — a decisão mais estrutural — **fonte única na ficha**: dano/cura
+mutam a `ficha`, e o encontro nunca guarda um segundo `vidaAtual` para quem tem ficha. A iniciativa
+entra pela rolagem **do próprio jogador**, reusando o motor existente. O domínio se chama
+**Encontro**; a tela se chama **"Iniciativa"**.
+
+**Os mockups do autor** (`docs/design/examples/iniciativa-desktop.html` e `-mobile.html`) viraram
+contrato visual e **acrescentaram escopo** que a conversa não tinha previsto: o painel "Log da
+rodada", condições com **duração em rodadas** (`Sangramento · 2 rodadas`) e o atalho `Rolar tudo`.
+Tudo isso foi incorporado à spec do milestone antes da quebra.
+
+**Divergência mockup × regras, registrada e resolvida a favor da regra (§16 #27):** o cartão de
+Ameaça desenha `Esquiva` e `Contra`, mas criatura **não reage a ataques** — `FichaCriaturaDadosDto`
+tem só `defesa`. A implementação mostra apenas Defesa para criatura; nenhum campo foi fabricado
+para preencher o desenho. O `EncontroCombatenteResumoDto` já nasce com
+`esquiva`/`bloqueio`/`contraAtaque` nulos para `tipoFicha: CRIATURA`.
+
+O milestone foi quebrado em **8 tasks**: `m7-01` contrato, `m7-02` motor puro, `m7-03` backend de
+montagem, `m7-04` backend de condução + tempo real, `m7-05` painel do mestre, `m7-06` visão do
+jogador, `m7-07` log e `m7-08` refinamento mobile — as **8 concluídas**. A numeração M7 é sugestão,
+não decisão de roadmap — M4 segue em andamento.
+
+### `m7-02` — motor puro do Encontro (concluída)
+
+`shared/regras/encontro/`, escrito por TDD com o **exemplo canônico do guia como primeiro teste**:
+Criatura Dupla [18] + Agente A [17] + Agente B [3] → `Criatura → A → Criatura (2º) → B`.
+
+A intercalação foi a decisão de projeto da task. A frase do guia — o turno extra "cai sempre no
+próximo slot **disponível** abaixo de sua posição" — é ambígua quando **duas** criaturas de cadência
+múltipla disputam os mesmos slots. Duas leituras eram defensáveis: (a) inserir o extra logo abaixo
+da ocorrência anterior, o que faz dois extras caírem colados; (b) tratar como "disponível" apenas o
+slot que nenhum outro extra tomou. Ficou a **(b)**, porque a mesma passagem justifica a regra
+dizendo que os extras "são distribuídos entre os turnos dos agentes" — deixar dois turnos de ameaça
+em sequência contraria o propósito declarado. O algoritmo virou uma fila: percorre os turnos-base na
+ordem de iniciativa e, depois de cada um, entrega no máximo **um** extra pendente. Quando os
+turnos-base acabam antes dos extras (Frenética com poucos combatentes), o excedente é drenado no fim
+— a adjacência aí é inevitável e o motor não inventa slots para escondê-la.
+
+Também nasceram `ordenarIniciativa` (decrescente, desempate por Destreza efetiva, estável no empate
+duplo), `calcularTurnosPorRodada` (Frenética "4+" do documento adotada como 4 concreto),
+`expirarCondicoes` (decrementa na virada, devolve as expiradas para o log, permanente nunca expira
+sozinha) e `combatentePerdeTurno`. Nenhuma regra de iniciativa foi reimplementada: o valor chega
+somado pelo motor de rolagem/ficha. Gate: build, lint e 688 testes do shared verdes (+20).
+
+### `m7-03` — backend da montagem (concluída)
+
+Migrations `0020` (referência `tipo_encontro_status`) e `0021` (`encontro`,
+`encontro_combatente`, `encontro_evento`), repositório, service, controller e módulo.
+
+**A invariante de "um encontro aberto por campanha" não virou índice.** O plano era um índice
+parcial único, mas o predicado precisaria resolver o id de `ENCERRADO` em `tipo_encontro_status` e
+o PostgreSQL **proíbe subquery no `WHERE` de um índice**; fixar o id numérico do seed seria frágil
+a qualquer reordenação da tabela de referência. A invariante passou para a service, que consulta
+`recuperarAbertoPorCampanha` antes de criar. `SCHEMA.md` e a migration registram o porquê, para
+ninguém "descobrir" de novo que o índice está faltando.
+
+**Correção de contrato herdada da `m7-01`:** aquela task descrevia `morrendo`/`machucado`/
+`inconsciente` como condições **derivadas** de `vidaAtual`. Errado — `FichaEstadoDto` diz o
+contrário em letras claras: são flags **alternadas à mão** por quem joga, e o motor nunca as
+recalcula ("o estado narrativo é refletido por quem joga, não travado pelo motor", m3-10). O
+contrato foi corrigido e as três entraram no `EncontroCombatenteResumoDto` como valores **lidos**
+da ficha (nulos para avulso, que não tem ficha). O encontro exibe; não deduz nem grava.
+
+O `encontro-combatente.mapper.ts` é onde a **fonte única** vira código: cada tipo de combatente
+resolve seu estado da própria origem — agente lê `estado`/`derivados` (com `calcularVida`/
+`calcularEnergia` de fallback quando o snapshot m3-10 não existe), criatura lê o documento de
+criatura e **só expõe Defesa** (sem Esquiva/Bloqueio/Contra — a regra vencendo o mockup), avulso lê
+as colunas do encontro. NPC ainda não tem contrato tipado (`m4-05` no backlog): entra por um ramo
+genérico que lê só o que é comum, sem inventar campo.
+
+Cadência do combatente com ficha é lida do **próprio documento** (só criatura tem `cadencia`), e
+não de um `tipoFicha` — `FichaRecuperadaDto` não carrega o tipo, e uma segunda consulta só para
+descobri-lo seria pior que perguntar ao dado em mãos. `Rolar tudo` preenche apenas quem está sem
+iniciativa, nunca sobrescrevendo o que um jogador já rolou.
+
+Gate: build e 394 testes do backend verdes (18 novos). `npm run lint -w backend` acusa **2 erros
+preexistentes** em `campanha.service.spec.ts` e `ficha.service.spec.ts`, confirmados com as
+mudanças da task em `git stash` — registrados como `P-022`, não corrigidos aqui para não misturar
+conserto alheio ao diff da task.
+
+### `m7-04` — backend da condução (concluída)
+
+Iniciar, avançar/voltar turno, virar rodada, dano/cura, Energia, condições, log e os dois eventos
+de tempo real (`encontro:alterado`, `encontro:iniciativa-pedido`).
+
+**A "fonte única" cobrou seu preço aqui, e valeu.** `FichaService.alterarVitalidade` escreve em
+`dados.estado` — a forma do documento de **agente**. O documento de **criatura** guarda `vidaAtual`
+no **topo**, então aquele método escreveria numa chave que a criatura não tem. Em vez de o encontro
+gravar a vida da criatura por conta própria (o que quebraria a decisão do milestone no primeiro
+caso real), o módulo de ficha ganhou o caminho que lhe faltava:
+`FichaService.alterarVitalidadeCriatura` + `FichaRepository.alterarVitalidadeCriatura`, com a
+permissão de edição (§14) e a emissão de `ficha:alterada` onde sempre estiveram. O encontro agora
+tem três caminhos explícitos — agente pela vitalidade de agente, criatura pela de criatura, avulso
+pelo próprio encontro — e **nenhum** deles duplica a regra.
+
+Decisões menores que ficam registradas:
+
+- **Voltar turno não ressuscita condição expirada.** A expiração já virou linha no log que a mesa
+  leu; desfazê-la em silêncio faria o estado divergir da trilha. `Voltar` reposiciona, só isso.
+- **`perdeTurno` consome o turno automaticamente**, com evento no log, e o laço é limitado ao
+  tamanho da ordem: se **todos** estiverem impedidos, o turno para onde está em vez de girar para
+  sempre — cabe ao mestre resolver a cena.
+- **Reaplicar a mesma condição substitui a duração** em vez de duplicar a linha; é o que a mesa
+  espera ao renovar um efeito.
+- **Energia é recusada para criatura e avulso** em vez de aceita e ignorada — nenhum campo é
+  inventado para caber no gesto da UI.
+- `pedirIniciativa` **não toca em iniciativa**: só transmite o chamado. A rolagem entra pelo fluxo
+  REST de rolagem, como qualquer outra, e volta por `atribuirIniciativa`.
+
+Gate: build e **414 testes** do backend verdes (20 novos, cobrindo intercalação no avanço, virada
+de rodada com expiração, turno perdido, os três caminhos de vida e a recusa de Energia).
+`npm run lint -w backend` continua com os **2 erros preexistentes** do `P-022` e nada do módulo
+`encontro`.
+
+### `m7-08` — recorte mobile do Encontro, e o M7 fecha (concluída)
+
+Última task do milestone: a tela "Iniciativa" em 360px, fiel a
+`docs/design/examples/iniciativa-mobile.html`, nos dois papéis.
+
+**A decisão estrutural foi não perguntar a largura ao JavaScript.** Havia precedente para
+`matchMedia` no repositório (`leitor-documentos`, `caderno-flutuante`, cada um com sua constante
+`BREAKPOINT_MOBILE = 560` duplicada), e seguir por ali teria criado a terceira cópia do mesmo
+número — o breakpoint já é um token Sass (`m1-15`). O caminho foi outro: cada componente guarda um
+**sinal de intenção** (`ajustando` no cartão, `aberto` no log, `acoesAbertas` na página) e **só o
+CSS do breakpoint o consome**. No desktop as mesmas regras deixam tudo visível e o sinal fica
+inerte, então nada precisa saber onde está sendo desenhado. Onde o texto muda com a largura
+(`Energia`/`En`, `Defesa`/`Def`), os **dois** rótulos ficam no DOM e o `display: none` escolhe — o
+escondido sai também da árvore de acessibilidade, então o leitor de tela nunca ouve "Energia En".
+
+**O que engordava a tela não era o mockup, era o gesto.** O mockup mobile desenha o cartão sem
+steppers, e a leitura fácil seria removê-los. Mas removê-los tiraria do mestre a capacidade de
+aplicar dano no celular — que é justamente o que ele faz na mesa. Medindo o que custava altura, os
+culpados eram os `−`/`+` de 44px (dois por recurso, dobrando a altura de cada cartão) e a pilha de
+seis blocos de controle antes do primeiro combatente. Então: steppers atrás de um `Ajustar` **na
+linha do nome** (que tinha folga — abrir uma linha nova para o gatilho teria anulado o ganho),
+ações secundárias atrás de `Mais ações`, log atrás do próprio gatilho, e `Avançar turno` (ou
+`Iniciar combate`, em montagem) numa barra `position: fixed` no rodapé, com o `Voltar` reduzido ao
+ícone de 44px do mockup. Mesma receita do rodapé do guia de criação de ficha, `z-index: 20`
+inclusive; o piso extra do `padding-bottom` entra por `:has(.painel__bloco--conducao)`, para o
+jogador não pagar por uma barra que ele não tem.
+
+**Uma divergência com o mockup ficou explícita:** ele também descarta a linha de origem do cartão
+("Criatura da campanha · Cadência 2"). Ela **ficou**, porque é onde vive a Cadência — e saber que
+uma ameaça age duas vezes na rodada é leitura de combate, não enfeite. 9px de texto não eram o
+problema de altura; os 44px dos steppers eram.
+
+Efeito colateral bom no desktop: `Pedir iniciativa`, `Rolar tudo`, `Adicionar`, `Editar` e
+`Encerrar` estavam repartidos entre um bloco da faixa de condução e uma fileira solta logo abaixo;
+agrupá-los como "secundárias" deixou a faixa com **só** a ação primária e as demais numa linha só.
+
+Gate: `npm run test -w frontend` **1152 verdes** (+9); lint limpo; aviso de bundle inalterado em
+relação à `master`. Gate visual pela skill `verify` percorrendo **montagem, combate ativo e
+encerrado**, nos papéis mestre e jogador, em 360×800 e 1920×1080: `scrollWidth` 360 e 1920 (nenhum
+scroll horizontal em nenhum estado), **nenhum** controle da tela abaixo de 44px em nenhum viewport
+mobile, e o dano aplicado pelo stepper recolhido continuou funcionando (`Vida 31/52` → `30/52`) —
+o recorte escondeu o gesto, não o removeu. No desktop, contadores, steppers, log aberto e rótulos
+longos permanecem como na `m7-07`, e o bloco de condução volta a `position: static`.
+
+**Com ela o M7 fecha**: 8 de 8 tasks entregues.
+
+### `m7-07` — o painel "Log da rodada" (concluída)
+
+A trilha legível do combate, no lugar que o mockup reservou para ela. A task foi **só de
+frontend**: a `m7-04` já persistia `encontro_evento` com o texto redigido, e a `m7-06` já filtrava o
+log no recorte de revelação — o que faltava era desenhar. `componentes/log-encontro` é um
+componente **burro** que recebe `eventos`, `combatentes` e `rodadaAtual` e não decide nada de jogo.
+
+**O tempo real saiu de graça**, e essa foi a escolha de projeto: o log viaja **dentro** do
+`EncontroRecuperadoDto`, então cada `encontro:alterado` já traz as entradas novas. Nenhuma
+assinatura nova, nenhum endpoint novo, nenhum polling — a spec pedia "sem polling" e o caminho mais
+curto para isso era não criar um segundo canal para o mesmo estado.
+
+**O destaque do nome não podia ser regex.** O mockup pinta o nome do combatente dentro da frase, mas
+o texto vem pronto do backend e o nome cai em posições diferentes conforme o evento ("K. Amaral
+sofreu 11…" × "Sangramento aplicado em K. Amaral"). O componente resolve `combatenteId` → nome pelos
+próprios combatentes e recorta a frase por **`indexOf`**, em `antes + nome + depois`; quando o nome
+não está no texto (combatente já removido, evento de rodada), a frase sai inteira e apenas não ganha
+realce. Nenhuma frase é remontada no cliente.
+
+**Recorte por rodada em vez de paginação.** A spec pedia alcançar as rodadas anteriores "sem
+carregar o encontro inteiro de uma vez". O repositório já limita a consulta às 100 entradas mais
+recentes, então o teto de tráfego existia; o que faltava era o teto **visual**. O painel abre na
+rodada corrente e revela uma rodada por vez (`Rodada anterior` / `Rodada atual`), sem ida ao
+servidor — um endpoint paginado seria infraestrutura para um problema que o teto já resolvia.
+
+Marcador conforme o mockup: `R3` para a virada de rodada, `T3 · 2` para o que aconteceu dentro de um
+turno; nome no accent quando o evento é mudança de estado ("perdeu o turno"). O `balístico` colorido
+que o mockup exibe **não** foi reproduzido: o evento de dano não carrega tipo, e inventar o campo
+para preencher o desenho seria fabricar dado (§16 #27).
+
+Gate: `npm run test -w frontend` **1143 verdes** (+8); `npm run lint -w frontend` limpo. Gate visual
+pela skill `verify` com **dois usuários simultâneos**, sobre um encontro real de 3 rodadas e 14
+eventos montado pela API: em 1920×1080 o log reproduz o painel do mockup (duas colunas, calha de
+marcador, nome destacado) e em 360×800 cai para coluna única sem estourar (`scrollWidth` 360). O
+tempo real foi provado com `window.__sentinela` intacta — o dano aplicado pelo stepper do mestre
+apareceu no log **das duas telas sem recarregar** —, e no mesmo quadro o evento da criatura não
+revelada **não** chegou ao jogador, confirmando que o recorte da `m7-06` continua valendo com o log
+na tela.
+
+Achado de fora da task: `npm run db:seed:dev` está quebrado desde a coluna `tipo_usuario_id` do M6
+(registrado como `P-023`). O cenário de verificação foi montado pela API REST.
+
+### `m7-06` — visão do jogador, revelação e a porta de entrada da tela (concluída)
+
+A `m7-05` entregou a tela do mestre; esta abriu a **mesma** tela ao jogador, como o mockup previu
+no `visaoJogador`: uma rota (`/painel/:campanhaId/iniciativa`, agora só com `autenticacaoGuard`),
+um componente, duas leituras (`PainelEncontro.ehMestre`, resolvido dos membros que a página já
+carregava). Duas rotas para a mesma tela teriam duplicado a §14 no roteador sem ganhar nada.
+
+**O desenho do mockup não bastava.** Ele bifurca só os dois blocos de botões de condução. A spec
+pedia mais — sem steppers, sem edição de combatente — e foi a spec que valeu: o jogador é
+espectador, e a única coisa que ele **escreve** é a própria iniciativa. Um chip "Espectador" no topo
+diz por que a barra de condução não existe para ele; sem isso a tela parece quebrada, não restrita.
+
+**A rolagem do jogador reusou o caminho da ficha, não um paralelo.** A composição que
+`FichaVisualizacao.rolarIniciativa` fazia inline (atributos para dados + Proficiência + dado extra
+de `Atento`/Formação da Origem) foi extraída para `frontend/.../ficha/rolar-iniciativa.ts` e agora
+serve aos dois. É a razão de o jogador rolar em vez do mestre: o bônus de Iniciativa do agente são
+**dados**, não um número, e só o documento completo os resolve — o `Rolar tudo` do mestre, que só
+enxerga o resumo do combatente, continua sendo o fallback para jogador ausente. O resultado passa
+pela bandeja e entra no feed da campanha como qualquer outra rolagem (m3-27) antes de virar a
+iniciativa do combatente.
+
+**A revelação era a parte de verdade, e obrigou backend.** A spec (entregável 4) exige que o jogador
+não veja no encontro o que não veria fora dele. Isso não é fazível escondendo campo no frontend —
+o payload já teria vazado. Nasceu `backend/.../encontro/encontro-revelacao.ts`: um recorte **puro**
+que zera vida, energia, defesas, condições e Destreza de todo combatente cuja ficha o usuário não
+pode abrir, preservando nome, iniciativa, Cadência e posição — a identidade mínima **sem a qual não
+existe ordem de turno**, e que o mestre anuncia em voz alta na mesa de qualquer jeito. O conjunto de
+fichas visíveis vem de `FichaService.listarFichas`, a service dona da regra §14; nenhuma consulta de
+acesso foi reimplementada. `EncontroCombatenteResumoDto` ganhou `revelado`, e o cartão troca a Vida
+por um traço quando ele é `false` (um "0/0" honesto pareceria uma criatura morta). O **log**
+acompanha: evento preso a um combatente oculto é descartado, porque o texto ("sofreu 12 de dano")
+entregaria por escrito o número que o resumo escondeu. O **avulso conta como não revelado** — ele não
+tem ficha, logo não há o que revelar, e não existe mecanismo de concessão para ele; o padrão seguro
+é o segredo.
+
+**A consequência estrutural foi no gateway.** `encontro:alterado` era um `emit` único para a sala
+`campanha:<id>` — e o comentário do método afirmava que "não há recorte a fazer aqui", o que esta
+task provou falso: a sala mistura mestre e jogadores, e o payload carrega justamente o que o mestre
+guarda. O precedente do `ficha:alterada` (omitir o campo privado para a sala inteira) não servia,
+porque aqui o "campo privado" é o conteúdo que o painel do mestre existe para mostrar. A emissão
+passou a ser **por socket**, com a `EncontroService` montando um recorte por **usuário distinto**
+(memorizado no evento — duas abas custam uma montagem só) e o gateway percorrendo
+`fetchSockets()`. O retorno REST também virou o recorte de **quem chamou**: um jogador que atribui
+a própria iniciativa não pode receber pela resposta o que o broadcast lhe esconderia.
+
+**Complemento pedido pelo autor (fora da spec):** a tela só era alcançável pelo menu "⋯" do
+cabeçalho — invisível para quem não o abre. Entrou um tile **"Combate"** ao lado do "Convite" na
+tira de estatísticas do detalhe da campanha, mostrando o estado do combate corrente
+("Em combate · Rodada 4") ou a contagem de encerrados, com um botão `Abrir`/`Iniciar`; ele
+acompanha o `encontro:alterado` ao vivo. O jogador ganhou "Iniciativa" no kebab dele. E a tela
+passou a listar **encontros anteriores**: a rota aceita `:encontroId` opcional, porque um combate
+encerrado é um documento e um documento tem endereço — a rota sem id continua sendo a da mesa, com
+URL estável durante a sessão.
+
+**Um defeito apareceu só na inspeção visual**, não nos testes: o cartão de um **agente** não
+revelado (a ficha de outro jogador) caía no ramo do agente e estampava "Aguarda"/"Agente" — um
+estado de combate de uma ficha que aquele jogador nem pode abrir. A checagem de revelação subiu para
+o topo da precedência da etiqueta.
+
+Gate: `npm run test -w frontend` **1135 verdes** (+11), backend 419 (+5), shared 688; build dos três
+workspaces limpo; lint de shared e frontend limpo; backend segue com os **2 erros preexistentes** do
+`P-022` e o aviso de bundle **preexistente**. Gate visual pela skill `verify` com **dois usuários
+simultâneos** em 1920×1080 e 360×800 — montagem, chamado de iniciativa, rolagem do jogador, rodada
+1, avanço de turno, dano, encerramento e histórico; `overflow-x: 0` em todos, sem erro de console ou
+rede. O tempo real foi provado com `window.__sentinela` intacta: avançar o turno no mestre levou o
+jogador de `1/5` a `2/5` e o dano apareceu como `Vida 30/31` **sem recarregar** — e, no mesmo
+quadro, os combatentes não revelados continuaram em `Vida —`, provando que o recorte vale também no
+broadcast.
+
+### `m7-05` — painel do mestre, a tela "Iniciativa" (concluída)
+
+Primeira tela do milestone: `frontend/src/app/modules/encontro` (rota
+`/painel/:campanhaId/iniciativa`, guardada por `mestreCampanhaGuard`), com `EncontroService`
+(HTTP), `PainelEncontro` (página) e `CartaoCombatente` (o cartão, que a `m7-06` reusa). Entrada
+pelo menu do mestre no detalhe da campanha. Análogo aprovado: a **ficha de criatura da `m4-04b`**
+— dela vieram a casca (cabeçalho `//` + régua), o `.botao` encapsulado, os campos e os diálogos.
+
+**Nenhuma regra foi reimplementada no frontend.** A ordem da rodada e a intercalação de Cadência
+chegam prontas em `ordemRodada`; a tela só **lê** de quem é a vez, quem já agiu e quantas ações
+restam, contando slots. O `Rolar tudo` usa `rolarFormula` de `shared/regras/rolagem` — não um
+`Math.random` local.
+
+Três ajustes de contrato saíram daqui, porque a tela precisava de dados que o resumo não trazia:
+
+- **`iniciativaBonus` no `EncontroCombatenteResumoDto`** — só a criatura tem um bônus **fixo**
+  (≈10% do VD). O do agente são **dados extras** (amplificador `Atento`, Formação da Origem) que só
+  o documento completo da ficha resolve; por isso ele sai `0` e o `Rolar tudo` é assumidamente o
+  **fallback** do mestre para o jogador ausente, não o caminho principal (o principal é a `m7-06`).
+- **`EncontroIniciativaRolarDto`** — o corpo do `Rolar tudo` era um tipo **inline** no controller,
+  violando a regra de que todo DTO vive em `shared/src/dtos/`. Corrigido na origem.
+- **Dono e Nível de Ameaça vêm do contexto que a tela já carrega** (`listarMembros` e
+  `listarFichas` da campanha), não de campos novos no resumo — a alternativa exigiria um `JOIN` a
+  mais no backend para dado que já estava na mão.
+
+**Divergências do mockup, decididas e registradas:**
+
+- **Criatura mostra só Defesa** (§16 #27, como a spec do milestone já mandava): a faixa de defesas é
+  montada a partir dos campos não-nulos, então nada precisa ser "escondido" — o que não existe não é
+  desenhado. O avulso não tem faixa nenhuma.
+- **"Cadência N" só aparece quando N > 1.** O mockup escreve "Cadência 2" na linha do agente, mas
+  agente é sempre Singular — "Cadência 1" em todo cartão seria ruído.
+- **Quem já agiu recua (opacidade).** A etiqueta de estado (Age agora / Já agiu) é de **agente**, e a
+  de criatura/NPC/avulso é de **natureza**, como no mockup — sem o esmaecimento, não haveria como
+  saber se a Ameaça já agiu, que é metade da leitura de uma criatura com Cadência > 1.
+- **Fora do combate não há etiqueta de turno.** Em montagem e depois de encerrado, "Aguarda" e "Já
+  agiu" seriam informação morta; o cartão cai na natureza.
+
+Botões de editar/remover ficam **sob demanda** (o modo "Editar combatentes"), nunca sempre visíveis.
+Nenhum `title` nativo — só `appTooltip`.
+
+**Verificação ao vivo** (skill `verify`, aplicação real, backend/frontend isolados em 3101/4301 para
+não derrubar os do autor): oito estados percorridos em **1920×1080** e **360×800** — abertura sem
+encontro, montagem vazia, montagem completa, modo de edição, iniciativas roladas, rodada 1 ativa,
+turno 3 com dano aplicado, encerrado. `overflow-x: 0` em todos, sem erro de console ou de rede. O
+tempo real foi provado com **duas janelas**: avançar o turno numa mudou a outra (`1/3 → 2/3`) com a
+sentinela `window.__sentinela` intacta — foi broadcast, não recarga.
+
+Quatro defeitos foram achados **na inspeção visual**, não pelos testes, e corrigidos antes da
+entrega: (1) `/encontro` faltava no `proxy.conf.json` de dev, e toda mutação voltava 404 no
+browser enquanto o backend respondia certo; (2) os cartões não esticavam na célula da grade,
+deixando degraus no fim da linha; (3) o ícone de condição era empurrado para a borda oposta do nome
+pelo `flex: 1`; (4) o campo de iniciativa ficava **invisível** no modo de edição — transparente, sem
+borda e vazio, era um retângulo fantasma dentro do selo.
+
+As migrations `0020`/`0021` rodaram contra o **Postgres real** nesta task (batch 7), fechando a
+ressalva aberta na `m7-03` de que só tinham sido validadas por leitura.
+
+Gate: `npm run test -w frontend` **1125 verdes** (+19), shared 688, backend 414; build dos três
+workspaces limpo; lint de shared e frontend limpo; backend segue com os **2 erros preexistentes** do
+`P-022`. O aviso de `bundle initial exceeded maximum budget` também é **preexistente** (644,91 kB
+sem esta task, 645,22 kB com ela — a tela é lazy chunk).
+
+### `m7-01` — contrato do Encontro (concluída)
+
+Três enums novos (`EncontroStatusEnum`, que é enum de **coluna** com tabela de referência
+`tipo_encontro_status`; `CombatenteOrigemEnum` e `EncontroEventoTipoEnum`, de conteúdo, sem tabela
+`tipo_*`), `CadenciaEnum`/`TipoFichaEnum` **reusados** sem redefinir. Os DTOs nasceram em
+`shared/src/dtos/encontro/` com subpath `./dtos/encontro` novo no `package.json` do shared.
+
+Duas escolhas de contrato merecem registro: (1) `EncontroCombatenteResumoDto` carrega vida/energia
+**lidas** da ficha, e só o avulso tem `vidaMaximaAvulso`/`vidaAtualAvulso` — o contrato torna a
+"fonte única" impossível de violar por acidente; (2) `CondicaoCombatenteDto` (marcador do encontro,
+com `rodadasRestantes` e `perdeTurno`) é deliberadamente **distinto** das três condições derivadas
+da ficha (`morrendo`/`machucado`/`inconsciente`), que são **alternadas à mão** por quem joga
+(m3-10 — ver a correção registrada na `m7-03`) e não são gravadas no encontro.
+
+`SCHEMA.md` ganhou as seções `encontro`, `encontro_combatente` e `encontro_evento` mais a tabela de
+referência `tipo_encontro_status`, incluindo a invariante de **um encontro não-encerrado por
+campanha** (índice parcial único). O DDL executável é da `m7-03`. Gate: `build`, `lint` e os 668
+testes do shared verdes.
+
 ## 2026-08-16 — Ajuste pós-mockup: cor/enquadramento de imagem, d20 unificado, abas e fraquezas
 
 Quarto pedido do autor na mesma sessão, testando a tela já realinhada ao mockup (`ac32c8f`): um

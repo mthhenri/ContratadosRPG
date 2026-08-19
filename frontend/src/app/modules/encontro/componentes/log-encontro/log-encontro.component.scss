@@ -1,0 +1,168 @@
+// Painel "Log da rodada" (m7-07) — alvo de fidelidade `docs/design/examples/iniciativa-desktop.html`
+// (o painel homônimo, abaixo da lista de combatentes): cabeçalho com régua, lista em duas colunas,
+// marcador de rodada/turno numa calha fixa à esquerda e o nome do combatente em destaque.
+// Só tokens do tema "Terminal de Contenção" (proibição #29).
+
+@use 'tema/breakpoints' as bp;
+
+.log {
+  display: block;
+  padding: var(--pad-card);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+
+  @include bp.mobile { padding: 14px; }
+
+  &__cabecalho {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 12px;
+
+    // Recolhido no mobile, o cabeçalho é a linha inteira do painel — sem margem sobrando embaixo.
+    @include bp.mobile {
+      gap: 8px;
+      margin-bottom: 0;
+
+      .log--aberto & { margin-bottom: 12px; }
+    }
+  }
+
+  &__titulo {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-mute);
+  }
+
+  &__regua {
+    flex: 1;
+    min-width: 20px;
+    height: 1px;
+    background: var(--border);
+
+    // Aberto em 360px, o cabeçalho tem três controles e a régua os empurraria para linhas
+    // separadas. Ela é ornamento; os botões, não.
+    @include bp.mobile {
+      .log--aberto & { display: none; }
+    }
+  }
+
+  &__acao {
+    flex: none;
+    padding: 6px 10px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+
+    &:hover { background: var(--surface-2); border-color: var(--accent-border); }
+
+    // Os controles de rodada só fazem sentido com a lista à vista.
+    @include bp.mobile {
+      display: none;
+      min-height: bp.$alvo-toque;
+
+      .log--aberto & { display: inline-block; }
+    }
+  }
+
+  // Gatilho do mobile (m7-08) — o log nasce recolhido para não empurrar a lista de combatentes, e
+  // este botão é o "gatilho próprio" que a spec pede. Invisível no desktop, onde o painel é fixo.
+  &__gatilho {
+    display: none;
+    flex: none;
+    min-height: bp.$alvo-toque;
+    padding: 0 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+
+    @include bp.mobile { display: inline-block; }
+
+    .log--aberto & { color: var(--accent); border-color: var(--accent-border); }
+  }
+
+  // No desktop o corpo é o painel inteiro, sempre visível; no mobile ele obedece ao gatilho.
+  &__corpo {
+    @include bp.mobile {
+      display: none;
+
+      .log--aberto & { display: block; }
+    }
+  }
+
+  // Duas colunas no desktop, como no mockup — o log é denso de propósito, e a mesa lê a rodada
+  // inteira de relance. Abaixo do tablet vira coluna única (m7-08 refina o mobile).
+  &__lista {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px 32px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    @include bp.tablet { grid-template-columns: 1fr; }
+  }
+
+  &__item {
+    display: flex;
+    gap: 10px;
+  }
+
+  // Calha fixa: os marcadores (`R3`, `T3 · 2`) ficam alinhados entre si e o texto começa na mesma
+  // coluna em todas as linhas.
+  &__marcador {
+    flex: none;
+    width: 44px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-mute);
+  }
+
+  &__texto {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.45;
+    color: var(--text-dim);
+    overflow-wrap: anywhere;
+  }
+
+  &__nome {
+    color: var(--text);
+
+    // Mudança de estado ("ficou Morrendo", "perdeu o turno") — a linha que a mesa precisa enxergar
+    // primeiro sai no accent, como no mockup.
+    &--alerta { color: var(--accent); }
+  }
+
+  &__vazio {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-style: italic;
+    color: var(--text-mute);
+  }
+}

@@ -169,6 +169,34 @@
 - **Correção:** não determinada.
 - **Desde:** reportado pelo dono em 2026-08-12.
 
+### P-022 — `npm run lint -w backend` falha em dois specs preexistentes · `ABERTO` · backend/lint
+
+- **Sintoma:** `npm run lint -w backend` termina com 2 erros `@typescript-eslint/no-unnecessary-type-assertion`
+  — `campanha.service.spec.ts:685:25` e `ficha.service.spec.ts:2288:25`. Os testes passam
+  (394/394); só o lint quebra.
+- **Causa:** asserção de tipo que virou redundante depois de alguma melhoria de inferência
+  (tipagem do dublê ou versão do typescript-eslint) — não investigada a fundo.
+- **Contorno:** nenhum necessário para desenvolver; os dois arquivos não bloqueiam build nem teste.
+- **Correção:** `eslint --fix` resolve os dois (a regra é auto-corrigível). Não foi feito na
+  `m7-03` para não misturar correção alheia ao diff da task.
+- **Desde:** observado na `m7-03` (2026-08-17), com as mudanças da task em `git stash` — portanto
+  **preexistente**, não introduzido pelo Encontro de Combate.
+
+### P-023 — `npm run db:seed:dev` quebrado desde a coluna `tipo_usuario_id` · `ABERTO` · backend/tooling
+
+- **Sintoma:** `npm run db:seed:dev` aborta na primeira fixture:
+  `null value in column "tipo_usuario_id" of relation "usuario" violates not-null constraint`.
+  Nenhum dado de desenvolvimento é criado.
+- **Causa:** o `INSERT INTO usuario` de `backend/tools/database/seed-dev.ts` não acompanhou a
+  coluna `tipo_usuario_id` introduzida pelo M6 (gestão de usuários/papéis) — a fixture continua
+  inserindo login/senha/nome só.
+- **Contorno:** montar o cenário pela **API REST** (`/autenticacao/registro` + `/login`,
+  `POST /campanha`, `POST /campanha/entrar`, `POST /ficha`), que passa pelas services e preenche o
+  tipo corretamente. Foi assim que a `m7-07` cumpriu o gate visual.
+- **Correção:** resolver o tipo padrão no seed do mesmo jeito que a `AutenticacaoService` resolve —
+  sem fixar o id numérico do seed da tabela de referência.
+- **Desde:** observado na `m7-07` (2026-08-18); introduzido junto da migration do M6.
+
 ## Resolvidos
 
 Itens resolvidos **saem daqui**. O relato da correção fica no [`HISTORY.md`](HISTORY.md), junto da

@@ -33,3 +33,6 @@ export * from './porte-criatura.enum';
 export * from './cadencia.enum';
 export * from './custo-acao.enum';
 export * from './habilidade-tipo-criatura.enum';
+export * from './encontro-status.enum';
+export * from './combatente-origem.enum';
+export * from './encontro-evento-tipo.enum';

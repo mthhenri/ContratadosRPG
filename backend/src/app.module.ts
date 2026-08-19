@@ -12,6 +12,7 @@ import { UsuarioModule } from './modules/usuario/usuario.module';
 import { AutorizacaoGuard } from './modules/usuario/autorizacao.guard';
 import { CampanhaModule } from './modules/campanha/campanha.module';
 import { FichaModule } from './modules/ficha/ficha.module';
+import { EncontroModule } from './modules/encontro/encontro.module';
 import { RolagemModule } from './modules/rolagem/rolagem.module';
 import { PaginaCadernoModule } from './modules/pagina-caderno/pagina-caderno.module';
 
@@ -33,6 +34,7 @@ import { PaginaCadernoModule } from './modules/pagina-caderno/pagina-caderno.mod
     CampanhaModule,
     FichaModule,
     RolagemModule,
+    EncontroModule,
     PaginaCadernoModule,
     GatewayModule,
   ],

@@ -22,6 +22,10 @@ import type {
   FichaResumoDto,
   FichaVisibilidadeAlteradaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
+import type {
+  EncontroAlteradoDto,
+  EncontroIniciativaPedidoDto,
+} from '@contratados-rpg/shared/dtos/encontro';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import type { Server, Socket } from 'socket.io';
 import type { JwtPayload } from '../../modules/autenticacao/jwt-payload.interface';
@@ -248,6 +252,57 @@ export class CampanhaGateway implements OnGatewayConnection {
       return;
     }
     this.servidor.to(this.salaCampanha(rolagem.campanhaId)).emit('rolagem:registrada', rolagem);
+  }
+
+  /**
+   * Emite `encontro:alterado` na sala `campanha:<id>` (§9), **um payload por usuário** (m7-06).
+   *
+   * Diferente dos outros eventos, este não pode ser um `emit` único para a sala: o estado do
+   * encontro carrega Vida, defesas e log de criaturas que o mestre talvez ainda não tenha revelado,
+   * e a sala mistura mestre e jogadores. Então o gateway percorre os sockets, pergunta à
+   * `EncontroService` (a dona da regra §14) qual é o recorte daquele usuário e emite socket a
+   * socket. O resultado é memorizado por usuário — quem está com duas abas abertas custa uma
+   * montagem só.
+   *
+   * Continua **broadcast-only**: nada entra por aqui, a service chama depois de persistir.
+   */
+  async emitirEncontroAlterado(
+    campanhaId: number,
+    montarParaUsuario: (usuario: JwtPayload) => Promise<EncontroAlteradoDto['encontro']>,
+  ): Promise<void> {
+    const sockets = await this.servidor.in(this.salaCampanha(campanhaId)).fetchSockets();
+    const porUsuario = new Map<number, EncontroAlteradoDto['encontro']>();
+    for (const socket of sockets) {
+      const usuario = (socket.data as { usuario?: JwtPayload }).usuario;
+      if (!usuario) {
+        continue;
+      }
+      let encontro = porUsuario.get(usuario.sub);
+      if (!encontro) {
+        try {
+          encontro = await montarParaUsuario(usuario);
+        } catch {
+          // Socket de quem perdeu o vínculo com a campanha entre o `join` e a emissão: não recebe
+          // o evento, e o resto da sala não é penalizado por isso.
+          continue;
+        }
+        porUsuario.set(usuario.sub, encontro);
+      }
+      socket.emit('encontro:alterado', { encontro } satisfies EncontroAlteradoDto);
+    }
+  }
+
+  /**
+   * Emite `encontro:iniciativa-pedido` na sala `campanha:<id>` (m7-04) — o mestre chamando os
+   * jogadores a rolar a própria iniciativa. É só o **chamado**: a rolagem em si entra pelo fluxo
+   * REST de rolagem, como qualquer outra (§9, broadcast-only).
+   */
+  emitirEncontroIniciativaPedido(
+    evento: EncontroIniciativaPedidoDto & { campanhaId: number },
+  ): void {
+    this.servidor
+      .to(this.salaCampanha(evento.campanhaId))
+      .emit('encontro:iniciativa-pedido', evento);
   }
 
   /**
