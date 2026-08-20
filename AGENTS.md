@@ -4,6 +4,14 @@ Este arquivo é a orientação canônica para agentes de código que trabalham n
 repositório ContratadosRPG. As instruções valem para o Codex e para qualquer
 outro agente compatível com `AGENTS.md`.
 
+## Sincronização com CLAUDE.md
+
+`AGENTS.md` e `CLAUDE.md` são cópias integrais e devem permanecer idênticos.
+Ao alterar qualquer um desses arquivos, aplique exatamente a mesma alteração
+ao outro na mesma tarefa e confirme que não há diferença entre eles antes de
+concluir. Não use um arquivo como redirecionamento, resumo ou complemento do
+outro.
+
 ## Início obrigatório da sessão
 
 Antes de implementar qualquer mudança, leia nesta ordem:

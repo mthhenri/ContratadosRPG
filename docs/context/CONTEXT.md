@@ -646,7 +646,8 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
   é decisão expressa do autor: nenhuma pressa, delegação ou limite de execução autoriza atalhos. UI
   exige análogo aprovado e inspeção pessoal do agente principal em 1920×1080 e 360×800; build,
   testes, tokens e relato de subagente não substituem a comparação visual. O checklist canônico está
-  em `AGENTS.md` “Gate obrigatório de qualidade e conclusão”.
+  em `AGENTS.md` e `CLAUDE.md` “Gate obrigatório de qualidade e conclusão”; os
+  dois arquivos devem permanecer cópias integrais.
 
 ---
 

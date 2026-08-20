@@ -1,5 +1,13 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-20 — Diretrizes unificadas para Codex e Claude Code
+
+`CLAUDE.md` deixou de ser um redirecionamento e passou a ser uma cópia integral
+de `AGENTS.md`, levando ao Claude Code as mesmas regras, convenções, comandos,
+arquitetura e gates de qualidade usados pelo Codex. Ambos agora determinam que
+qualquer alteração em um deve ser aplicada igualmente ao outro na mesma tarefa,
+com confirmação de ausência de diferença antes da conclusão.
+
 ## 2026-08-17 — M7 aberto: Encontro de Combate (escopo, quebra em tasks e contrato — `m7-01`)
 
 O autor pediu o "controle de iniciativa". A conversa de escopo mostrou que a ideia existia só como
