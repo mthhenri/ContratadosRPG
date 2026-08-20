@@ -1,5 +1,15 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-20 — Ajustes pós-M7 de Iniciativa quebrados em specs atômicas
+
+Após a validação da feature de Iniciativa, o autor listou ajustes de fluxo, rolagens e acabamento
+visual. Para não misturá-los em uma implementação grande, eles foram convertidos em sete specs
+independentes no backlog: `m7-09` (indicação do turno na visão do jogador), `m7-10` (histórico de
+rolagens), `m7-11` (imagem e remoção da duplicidade "Sua Iniciativa"), `m7-12` (shell desktop),
+`m7-13` (posição do acesso à Iniciativa na campanha), `m7-14` (padding/scroll do dialog de ficha)
+e `m7-15` (ações mobile da ficha do jogador). Cada uma preserva a fonte única de estado, o recorte
+de permissão e o gate visual obrigatório; nenhuma foi iniciada nesta sessão.
+
 ## 2026-08-20 — Diretrizes unificadas para Codex e Claude Code
 
 `CLAUDE.md` deixou de ser um redirecionamento e passou a ser uma cópia integral

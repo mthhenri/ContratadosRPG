@@ -23,7 +23,11 @@ O **M7 — Encontro de Combate** está **concluído**: as 8 tasks (`m7-01` contr
 puro, `m7-03` backend de montagem, `m7-04` backend de condução + tempo real, `m7-05` painel do
 mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) entregues. As
 frentes abertas voltam a ser o **M4** (Ficha de Criatura/NPC — restam `m4-05`…`m4-10`) e o **M6**
-(Gestão de Usuários — resta `m6-08`); a escolha da próxima é do autor.
+(Gestão de Usuários — resta `m6-08`); a escolha da próxima é do autor. Os ajustes descobertos na
+validação da Iniciativa foram quebrados em sete specs atômicas de pós-milestone no backlog:
+`m7-09` (turno atual do jogador), `m7-10` (histórico de rolagens), `m7-11` (identidade dos cartões),
+`m7-12` (layout desktop), `m7-13` (acesso pela campanha), `m7-14` (dialog de ficha) e `m7-15`
+(ações mobile do jogador). Elas não reabrem o escopo concluído de M7; são escolhidas uma a uma.
 
 O módulo de frontend é `frontend/src/app/modules/encontro`. A tela "Iniciativa" é **uma só**
 (`PainelEncontro`, rota `/painel/:campanhaId/iniciativa`, com `:encontroId` opcional para o
