@@ -25,8 +25,9 @@ $largura-caderno-sobreposicao: 640px;
     &:hover { background: var(--surface-2); border-color: var(--accent-border); }
     app-icone { font-size: 17px; }
 
-    // Jogadores não têm o Inventário de Esquadrão. Remove a vaga reservada a ele, sem alterar
-    // a posição mobile nem a pilha completa que o mestre recebe.
+    // Quando não há vaga de Inventário de Esquadrão na pilha (jogador na campanha, ou qualquer
+    // papel na tela de Iniciativa — `temInventario=false`), remove o vão reservado a ele, sem
+    // alterar a posição mobile.
     &--sem-inventario {
       @include utilitario-flutuante.posicionar-utilitario-flutuante(2, false);
     }

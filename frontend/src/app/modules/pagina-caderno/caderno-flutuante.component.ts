@@ -57,6 +57,12 @@ export class CadernoFlutuante implements OnDestroy {
   readonly usuarioAtivoId = input.required<number>();
   readonly ehMestre = input.required<boolean>();
   readonly membros = input.required<readonly CampanhaMembroResumoDto[]>();
+  /**
+   * `false` nas telas sem `InventarioEsquadraoSidebar` (Iniciativa) — a vaga 2 da pilha de
+   * utilitários nunca existe ali, mestre ou jogador, então o caderno sempre a assume. Default
+   * `true` preserva o comportamento na campanha, onde o mestre vê o inventário e o jogador não.
+   */
+  readonly temInventario = input(true);
   readonly abrirFicha = output<number>();
 
   protected readonly store = inject(CadernoFlutuanteStore);
@@ -74,6 +80,7 @@ export class CadernoFlutuante implements OnDestroy {
   private readonly termoBuscaAtual = signal('');
   protected readonly ehMobile = signal(this.verificarMobile());
   protected readonly nivelJanela = signal(proximoNivelJanela);
+  protected readonly semVagaInventario = computed(() => !this.ehMestre() || !this.temInventario());
   protected readonly jogadores = computed(() =>
     this.membros().filter((membro) => membro.papel === TipoCampanhaMembroPapelEnum.JOGADOR),
   );

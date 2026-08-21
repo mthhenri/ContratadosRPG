@@ -2,7 +2,7 @@
   <button
     #gatilho
     class="caderno__gatilho utilitario-flutuante utilitario-flutuante--caderno utilitario-flutuante--inline-mobile"
-    [class.caderno__gatilho--sem-inventario]="!ehMestre()"
+    [class.caderno__gatilho--sem-inventario]="semVagaInventario()"
     type="button"
     aria-label="Abrir caderno"
     aria-expanded="false"
@@ -14,7 +14,7 @@
   <button
     #gatilho
     class="caderno__gatilho utilitario-flutuante utilitario-flutuante--caderno utilitario-flutuante--inline-mobile"
-    [class.caderno__gatilho--sem-inventario]="!ehMestre()"
+    [class.caderno__gatilho--sem-inventario]="semVagaInventario()"
     type="button"
     aria-label="Reabrir caderno"
     aria-expanded="false"

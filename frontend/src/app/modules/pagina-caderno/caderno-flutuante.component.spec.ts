@@ -100,6 +100,16 @@ describe('CadernoFlutuante', () => {
     );
   });
 
+  it('ocupa a vaga do inventário mesmo com mestre quando a tela não tem inventário', () => {
+    fixture.componentRef.setInput('ehMestre', true);
+    fixture.componentRef.setInput('temInventario', false);
+    fixture.detectChanges();
+
+    expect(obter('[aria-label="Abrir caderno"]').classList).toContain(
+      'caderno__gatilho--sem-inventario',
+    );
+  });
+
   it('entra na faixa de ações do cabeçalho no mobile', () => {
     expect(obter('[aria-label="Abrir caderno"]').classList).toContain(
       'utilitario-flutuante--inline-mobile',

@@ -6,15 +6,12 @@
 }
 
 .ficha-flutuante {
-  // `ordem` casa com o que `app-caderno-flutuante` de fato ocupa nesta tela (não temos o
-  // Inventário de Esquadrão aqui — só calculadora + caderno): mestre vê o caderno na vaga 3 (ele
-  // reserva a 2 pro Inventário mesmo sem ele existir nesta tela), jogador vê o caderno na vaga 2
-  // (`--sem-inventario`). Esta janela fica logo depois, em cada caso — sem vaga vazia no meio.
+  // Esta tela (Iniciativa) nunca tem Inventário de Esquadrão — só calculadora (0) + rolagens
+  // empilhado (1) + caderno, que aqui sempre roda `[temInventario]="false"` e por isso já ocupa
+  // a vaga 2 (`CadernoFlutuante`). Esta janela fica logo depois, na vaga 3, sem vão vazio no meio.
   &__gatilho {
     @include utilitario-flutuante.gatilho-utilitario-flutuante();
-    @include utilitario-flutuante.posicionar-utilitario-flutuante(4);
-
-    &--sem-inventario { @include utilitario-flutuante.posicionar-utilitario-flutuante(3); }
+    @include utilitario-flutuante.posicionar-utilitario-flutuante(3);
 
     z-index: 55;
     padding: 0;
