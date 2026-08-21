@@ -41,6 +41,8 @@ describe('CartaoCombatente', () => {
     destreza: 4,
     iniciativaBonus: 0,
     corFicha: '#4a9d6b',
+    imagemUrl: null,
+    imagemFoco: null,
     revelado: true,
   };
 
@@ -120,6 +122,28 @@ describe('CartaoCombatente', () => {
     expect(elemento.querySelector('.combatente__defesas')).toBeNull();
     expect(elemento.querySelector('.combatente__recurso--energia')).toBeNull();
     expect(texto(fixture, '.combatente__origem')).toBe('Digitado nesta sessão');
+  });
+
+  it('mostra a foto da ficha dentro do avatar e mantém o placeholder quando ela não existe', () => {
+    const comImagem = montar({
+      ...base,
+      imagemUrl: '/uploads/fichas/k-amaral.webp',
+      imagemFoco: { x: 35, y: 60, escala: 1.5 },
+    });
+    const imagem = (comImagem.nativeElement as HTMLElement).querySelector<HTMLImageElement>(
+      '.combatente__avatar-imagem',
+    );
+
+    expect(imagem?.src).toContain('/uploads/fichas/k-amaral.webp');
+    expect(imagem?.getAttribute('alt')).toBe('');
+
+    const semImagem = montar(base);
+    expect(
+      (semImagem.nativeElement as HTMLElement).querySelector('.combatente__avatar-imagem'),
+    ).toBeNull();
+    expect(
+      (semImagem.nativeElement as HTMLElement).querySelector('.combatente__avatar'),
+    ).not.toBeNull();
   });
 
   it('só cita a Cadência quando ela de fato multiplica os turnos', () => {

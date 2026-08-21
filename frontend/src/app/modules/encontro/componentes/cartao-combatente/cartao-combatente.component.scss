@@ -61,6 +61,7 @@
     display: block;
     width: 100%;
     height: 100%;
+    overflow: hidden;
     border-radius: var(--radius-control);
     border: 1px solid var(--cor-ficha, var(--border-strong));
     background-color: color-mix(in srgb, var(--cor-ficha, var(--surface-2)) 14%, var(--surface));
@@ -69,6 +70,14 @@
       color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 30%, transparent) 0 3px,
       transparent 3px 9px
     );
+  }
+
+  &__avatar-imagem {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform-origin: 0 0;
   }
 
   &__iniciativa {

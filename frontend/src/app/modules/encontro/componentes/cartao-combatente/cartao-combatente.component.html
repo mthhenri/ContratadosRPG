@@ -7,7 +7,16 @@
   [style.--cor-ficha]="combatente().corFicha"
 >
   <div class="combatente__retrato">
-    <span class="combatente__avatar" aria-hidden="true"></span>
+    <span class="combatente__avatar" aria-hidden="true">
+      @if (combatente().imagemUrl; as urlImagem) {
+        <img
+          class="combatente__avatar-imagem"
+          [src]="urlImagem"
+          alt=""
+          [appFocoImagem]="combatente().imagemFoco"
+        />
+      }
+    </span>
     <span class="combatente__iniciativa">
       @if (emEdicao()) {
         <input

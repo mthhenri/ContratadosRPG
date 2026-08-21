@@ -5,6 +5,7 @@ import type {
   EncontroStatusEnum,
   TipoFichaEnum,
 } from '../../enums';
+import type { FichaImagemFocoDto } from '../ficha';
 
 /**
  * DTOs do módulo `encontro` (m7) — o Encontro de Combate: ordem de iniciativa com a Cadência das
@@ -118,6 +119,9 @@ export interface EncontroCombatenteResumoDto {
   readonly iniciativaBonus: number;
   /** Cor de identidade da ficha (m3-61); `null` cai no `--accent` de quem visualiza. */
   readonly corFicha: string | null;
+  /** Avatar e enquadramento da ficha, quando ela é revelada para quem consulta. */
+  readonly imagemUrl: string | null;
+  readonly imagemFoco: FichaImagemFocoDto | null;
   /**
    * `false` quando quem consulta **não** tem direito de ver a ficha deste combatente fora do
    * encontro (m7-06): a criatura que o mestre ainda não revelou (`usuario_ficha_acesso`), a ficha

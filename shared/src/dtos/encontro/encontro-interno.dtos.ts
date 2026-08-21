@@ -1,5 +1,6 @@
 import type { FichaCriaturaDadosDto } from '../ficha/ficha-criatura.dtos';
 import type { FichaJogadorDadosDto } from '../ficha/ficha.dtos';
+import type { FichaImagemFocoDto } from '../ficha/ficha-operacao.dtos';
 import type { CadenciaEnum, EncontroEventoTipoEnum, EncontroStatusEnum, TipoFichaEnum } from '../../enums';
 import type { CondicaoCombatenteDto } from './encontro.dtos';
 
@@ -37,6 +38,8 @@ export interface EncontroCombatenteLinhaDto {
   readonly condicoes: readonly CondicaoCombatenteDto[];
   readonly fichaNome: string | null;
   readonly fichaCor: string | null;
+  readonly fichaImagemUrl: string | null;
+  readonly fichaImagemFoco: FichaImagemFocoDto | null;
   readonly tipoFicha: TipoFichaEnum | null;
   readonly fichaDados: FichaJogadorDadosDto | FichaCriaturaDadosDto | null;
 }

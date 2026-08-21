@@ -55,6 +55,9 @@ function ocultarCombatente(combatente: EncontroCombatenteResumoDto): EncontroCom
     iniciativaBonus: 0,
     // A cor é identidade visual, não informação de jogo: sobrevive junto com o nome.
     corFicha: combatente.corFicha,
+    // Avatar também identifica a ficha e só chega a quem já tinha permissão para abri-la.
+    imagemUrl: null,
+    imagemFoco: null,
     revelado: false,
   };
 }

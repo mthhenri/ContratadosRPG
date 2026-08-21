@@ -48,6 +48,8 @@ describe('ocultarNaoRevelados', () => {
     destreza: 4,
     iniciativaBonus: 3,
     corFicha: '#4a9d6b',
+    imagemUrl: null,
+    imagemFoco: null,
     revelado: true,
     ...extras,
   });
@@ -90,8 +92,13 @@ describe('ocultarNaoRevelados', () => {
     expect(recortado.combatentes[0]).toEqual(combatente(1));
   });
 
-  it('apaga os números do combatente não revelado e conserva a ordem de turno', () => {
-    const criatura = combatente(2, { tipoFicha: TipoFichaEnum.CRIATURA, nome: 'SCP-1471-A' });
+  it('apaga os números e a identidade visual do combatente não revelado, preservando a ordem', () => {
+    const criatura = combatente(2, {
+      tipoFicha: TipoFichaEnum.CRIATURA,
+      nome: 'SCP-1471-A',
+      imagemUrl: '/uploads/criaturas/1471.webp',
+      imagemFoco: { x: 40, y: 60, escala: 1.5 },
+    });
     const [oculto] = ocultarNaoRevelados(estado([criatura]), new Set<number>()).combatentes;
 
     // A identidade sem a qual não existe ordem de turno sobrevive…
@@ -108,6 +115,8 @@ describe('ocultarNaoRevelados', () => {
     expect(oculto.machucado).toBeNull();
     expect(oculto.destreza).toBe(0);
     expect(oculto.iniciativaBonus).toBe(0);
+    expect(oculto.imagemUrl).toBeNull();
+    expect(oculto.imagemFoco).toBeNull();
   });
 
   it('trata o avulso como não revelado — ele não tem ficha para revelar', () => {

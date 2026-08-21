@@ -5,6 +5,7 @@ import { CombatenteOrigemEnum, NivelAmeacaEnum, TipoFichaEnum } from '@contratad
 import { calcularTurnosPorRodada } from '@contratados-rpg/shared/regras/encontro';
 
 import { Icone } from '../../../../shared/icone/icone.component';
+import { FocoImagem } from '../../../../shared/foco-imagem.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { rotuloNivelAmeaca } from '../../../ficha/rotulos-criatura';
 
@@ -40,7 +41,7 @@ interface DefesaExibidaDto {
  */
 @Component({
   selector: 'app-cartao-combatente',
-  imports: [Icone, Tooltip],
+  imports: [Icone, Tooltip, FocoImagem],
   templateUrl: './cartao-combatente.component.html',
   styleUrl: './cartao-combatente.component.scss',
 })

@@ -1,6 +1,10 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-18 · **Última decisão registrada:** o recorte mobile do Encontro
+> **Última revisão:** 2026-08-20 · **Última decisão registrada:** a visão do jogador do Encontro
+> mostra persistentemente o combatente do turno atual; quando ele é dono da ficha, o rótulo vira
+> **"Sua vez"**. O toast permanece apenas como aviso pontual de chegada do turno — ver seção 1.
+>
+> **Decisão anterior:** o recorte mobile do Encontro
 > (`m7-08`, que fecha o M7) é feito **inteiramente pelo CSS do breakpoint** — os componentes só
 > guardam um sinal de intenção (`ajustando`/`aberto`/`acoesAbertas`) e ninguém consulta
 > `matchMedia`; onde o texto muda com a largura, os dois rótulos ficam no DOM e o `display: none`
@@ -25,9 +29,15 @@ mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mo
 frentes abertas voltam a ser o **M4** (Ficha de Criatura/NPC — restam `m4-05`…`m4-10`) e o **M6**
 (Gestão de Usuários — resta `m6-08`); a escolha da próxima é do autor. Os ajustes descobertos na
 validação da Iniciativa foram quebrados em sete specs atômicas de pós-milestone no backlog:
-`m7-09` (turno atual do jogador), `m7-10` (histórico de rolagens), `m7-11` (identidade dos cartões),
+`m7-09` (turno atual do jogador, **concluída**), `m7-10` (histórico de rolagens), `m7-11` (identidade dos cartões),
 `m7-12` (layout desktop), `m7-13` (acesso pela campanha), `m7-14` (dialog de ficha) e `m7-15`
 (ações mobile do jogador). Elas não reabrem o escopo concluído de M7; são escolhidas uma a uma.
+
+Na `m7-09`, `PainelEncontro` passou a derivar `ehMinhaVez` somente do estado de encontro já
+recebido e da ficha do usuário ativo. A mesma faixa que exibe "Age agora" para o mestre agora é
+visível ao jogador, muda para "Sua vez" quando o slot pertence à sua ficha e continua sem qualquer
+controle de condução. O broadcast `encontro:alterado` atualiza a leitura ao vivo; nenhum evento,
+endpoint ou regra de turno foi criado.
 
 O módulo de frontend é `frontend/src/app/modules/encontro`. A tela "Iniciativa" é **uma só**
 (`PainelEncontro`, rota `/painel/:campanhaId/iniciativa`, com `:encontroId` opcional para o

@@ -25,6 +25,7 @@ import type {
   FichaRecuperadaDto,
   FichaResumoDto,
 } from '@contratados-rpg/shared/dtos/ficha';
+import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import {
   CadenciaEnum,
   EncontroStatusEnum,
@@ -36,6 +37,7 @@ import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
+import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
@@ -46,6 +48,7 @@ import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.comp
 import { FichaVisualizacao } from '../../../ficha/componentes/ficha-visualizacao/ficha-visualizacao.component';
 import { FichaEdicaoService } from '../../../ficha/ficha-edicao.service';
 import { FichaRolagemRegistroService } from '../../../ficha/ficha-rolagem-registro.service';
+import { RolagemService } from '../../../ficha/rolagem.service';
 import { FichaService } from '../../../ficha/ficha.service';
 import { rolarIniciativaDaFicha } from '../../../ficha/rolar-iniciativa';
 import { nomeCadencia } from '../../../ficha/rotulos-criatura';
@@ -105,6 +108,7 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
     IndicadorTempoReal,
     Tooltip,
     CalculadoraFlutuante,
+    HistoricoRolagensSidebar,
     CadernoFlutuante,
     CartaoCombatente,
     FichaFlutuante,
@@ -134,6 +138,7 @@ export class PainelEncontro {
   private readonly sessaoService = inject(SessaoService);
   private readonly bandeja = inject(BandejaDadosService);
   private readonly rolagemRegistro = inject(FichaRolagemRegistroService);
+  private readonly rolagemService = inject(RolagemService);
   /** Edição da ficha do próprio jogador, aberta na coluna lateral (item novo) — não a do combatente
    *  clicado, que vive isolada dentro de `FichaFlutuante`. */
   protected readonly fichaEdicao = inject(FichaEdicaoService);
@@ -162,6 +167,10 @@ export class PainelEncontro {
 
   /** Nome da campanha — só existe pro input `campanhaNome` do `app-caderno-flutuante`. */
   protected readonly campanhaNome = signal('');
+
+  /** Feed da campanha, já recortado pelo backend conforme as permissões de cada participante. */
+  protected readonly rolagensFeed = signal<readonly RolagemResumoDto[]>([]);
+  protected readonly carregandoRolagens = signal(true);
 
   /** `membros()` sem o `null` do carregamento — só existe pro input `membros` das Anotações. */
   protected readonly membrosDaCampanha = computed(() => this.membros() ?? []);
@@ -337,6 +346,13 @@ export class PainelEncontro {
     return id === null ? null : (this.combatentes().find((c) => c.id === id) ?? null);
   });
 
+  /** O turno atual pertence ao combatente controlado pelo jogador que abriu a tela. */
+  protected readonly ehMinhaVez = computed(() =>
+    !this.ehMestre() &&
+    this.combatenteDaVezId() !== null &&
+    this.combatenteDaVezId() === this.meuCombatente()?.id,
+  );
+
   /**
    * Quantos turnos ainda restam **ao combatente da vez** nesta rodada, contando o atual — o
    * "· 1 ação restante" do mockup. Deriva de `ordemRodada`, não recalcula Cadência.
@@ -409,6 +425,8 @@ export class PainelEncontro {
   );
 
   constructor() {
+    this.carregarRolagens();
+
     // `paramMap` (e não o `snapshot`) porque abrir um encontro do histórico troca só o parâmetro:
     // o Angular reusa o componente, e um `snapshot` lido no construtor ficaria congelado no
     // primeiro valor. Emite de imediato, então também faz a carga inicial.
@@ -475,6 +493,15 @@ export class PainelEncontro {
     // gravar — não precisa esperar.
     this.fichaEdicao.inicializar(this.meuFichaDados, () => this.meuFichaId()!);
     this.rolagemRegistro.inicializar(() => this.meuFichaId());
+    this.rolagemRegistro.registrada$
+      .pipe(takeUntilDestroyed())
+      .subscribe({ next: (rolagem) => this.adicionarRolagemAoFeed(rolagem) });
+
+    // O gateway só envia rolagens públicas a quem pode vê-las; privadas entram localmente acima
+    // apenas para quem a fez (ou vêm do GET já recortado para o mestre).
+    this.tempoRealService.rolagemRegistrada$
+      .pipe(takeUntilDestroyed())
+      .subscribe({ next: (rolagem) => this.adicionarRolagemAoFeed(rolagem) });
 
     // Busca o documento completo sempre que `meuFichaId` muda (chegada em campo, ou o combatente
     // sai e volta) — mesmo padrão de `CampanhaDetalhe` (`fichaExibidaId`/`fichaExibidaDados`).
@@ -493,9 +520,7 @@ export class PainelEncontro {
       });
     });
 
-    // Substitui a caixinha "Age agora" (só do mestre agora) para o jogador: um toast pontual
-    // quando o slot da vez passa a ser o do combatente dele, em vez de um indicador estático que
-    // ele precisaria ficar olhando.
+    // O painel mostra persistentemente quem joga; este toast só chama atenção quando a vez chega.
     effect(() => {
       const daVezId = this.combatenteDaVezId();
       const meuId = this.meuCombatente()?.id ?? null;
@@ -552,6 +577,21 @@ export class PainelEncontro {
     this.campanhaService
       .listarMembros(this.campanhaId)
       .subscribe({ next: (membros) => this.membros.set(membros) });
+  }
+
+  /** Busca inicial do feed. A permissão e o recorte de privadas pertencem ao backend. */
+  private carregarRolagens(): void {
+    this.rolagemService
+      .listarPorCampanha(this.campanhaId)
+      .pipe(finalize(() => this.carregandoRolagens.set(false)))
+      .subscribe({ next: (itens) => this.rolagensFeed.set(itens), error: () => undefined });
+  }
+
+  /** Prepend único para a confirmação local e o broadcast público do mesmo registro. */
+  private adicionarRolagemAoFeed(rolagem: RolagemResumoDto): void {
+    this.rolagensFeed.update((atuais) =>
+      atuais.some((atual) => atual.id === rolagem.id) ? atuais : [rolagem, ...atuais],
+    );
   }
 
   /** `true` quando é a vez deste combatente. */

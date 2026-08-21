@@ -73,6 +73,8 @@ function criarCombatenteLinha(
     condicoes: [],
     fichaNome: null,
     fichaCor: null,
+    fichaImagemUrl: null,
+    fichaImagemFoco: null,
     tipoFicha: null,
     fichaDados: null,
     ...overrides,

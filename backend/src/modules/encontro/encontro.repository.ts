@@ -156,6 +156,7 @@ export class EncontroRepository extends BaseRepository {
             encontro_combatente.vida_atual_avulso AS "vidaAtualAvulso",
             encontro_combatente.condicoes,
             ficha.nome AS "fichaNome", ficha.cor AS "fichaCor",
+            ficha.imagem_url AS "fichaImagemUrl", ficha.imagem_foco AS "fichaImagemFoco",
             tipo_ficha.codigo AS "tipoFicha", ficha.dados AS "fichaDados"`;
   }
 

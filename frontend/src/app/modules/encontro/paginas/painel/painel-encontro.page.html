@@ -42,6 +42,12 @@
         </button>
       }
       <app-calculadora-flutuante />
+      <app-historico-rolagens-sidebar
+        titulo="Rolagens da Campanha"
+        [itens]="rolagensFeed()"
+        [carregando]="carregandoRolagens()"
+        [acimaDaCalculadora]="true"
+      />
       @if (usuarioAtivoId(); as usuarioId) {
         <app-caderno-flutuante
           [campanhaId]="campanhaId"
@@ -174,12 +180,14 @@
         }
       </div>
 
-      @if (mutavel() && ehMestre()) {
+      @if (mutavel()) {
       <div
         class="painel__bloco painel__bloco--vez"
         [class.painel__bloco--acesa]="combatenteDaVez()"
       >
-        <span class="painel__rotulo">{{ emCombate() ? 'Age agora' : 'Aguardando' }}</span>
+        <span class="painel__rotulo">
+          {{ ehMinhaVez() ? 'Sua vez' : emCombate() ? 'Age agora' : 'Aguardando' }}
+        </span>
         @if (combatenteDaVez(); as daVez) {
           <span class="painel__vez">
             {{ daVez.nome }}
@@ -288,10 +296,7 @@
               <app-icone nome="dado" />
               Rolar iniciativa
             </button>
-          } @else if (meuCombatente(); as meu) {
-            <span class="painel__rotulo">Sua iniciativa</span>
-            <span class="painel__numero painel__numero--destaque">{{ meu.iniciativa ?? '—' }}</span>
-          } @else {
+          } @else if (meuCombatente() === null) {
             <span class="painel__vez painel__vez--vazia">Você está assistindo a este combate</span>
           }
         </div>

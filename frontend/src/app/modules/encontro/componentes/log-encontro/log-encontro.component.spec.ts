@@ -46,6 +46,8 @@ describe('LogEncontro', () => {
       destreza: 4,
       iniciativaBonus: 0,
       corFicha: null,
+      imagemUrl: null,
+      imagemFoco: null,
       revelado: true,
     },
   ];

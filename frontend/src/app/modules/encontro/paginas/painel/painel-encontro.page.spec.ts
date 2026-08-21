@@ -10,6 +10,7 @@ import type {
 } from '@contratados-rpg/shared/dtos/encontro';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaRecuperadaDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import {
   ArquetipoEnum,
   CadenciaEnum,
@@ -19,10 +20,12 @@ import {
   NivelAmeacaEnum,
   TipoCampanhaMembroPapelEnum,
   TipoFichaEnum,
+  RolagemVisibilidadeEnum,
 } from '@contratados-rpg/shared/enums';
 
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { FichaService } from '../../../ficha/ficha.service';
+import { RolagemService } from '../../../ficha/rolagem.service';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { EncontroService } from '../../encontro.service';
@@ -66,6 +69,8 @@ describe('PainelEncontro', () => {
     destreza: 3,
     iniciativaBonus: 0,
     corFicha: null,
+    imagemUrl: null,
+    imagemFoco: null,
     revelado: true,
     ...extras,
   });
@@ -185,6 +190,7 @@ describe('PainelEncontro', () => {
   ) {
     const encontroAlterado$ = new Subject<EncontroAlteradoDto>();
     const encontroIniciativaPedido$ = new Subject<{ id: number; campanhaId: number }>();
+    const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
     const encontroService = {
       listarPorCampanha: vi.fn(() =>
         of([
@@ -215,6 +221,27 @@ describe('PainelEncontro', () => {
         MessageService,
         { provide: EncontroService, useValue: encontroService },
         {
+          provide: RolagemService,
+          useValue: {
+            listarPorCampanha: vi.fn(() => of([])),
+            registrar: vi.fn((fichaId: number, dto: { rotulo: string; resultado: unknown }) =>
+              of({
+                id: 1,
+                fichaId,
+                campanhaId: CAMPANHA_ID,
+                usuarioId,
+                nomeAutor: 'Bia',
+                nomeFicha: 'K. Amaral',
+                rotulo: dto.rotulo,
+                visibilidade: RolagemVisibilidadeEnum.PUBLICA,
+                resultado: dto.resultado,
+                createdDate: '2026-08-20T15:00:00.000Z',
+                corFicha: null,
+              }),
+            ),
+          },
+        },
+        {
           provide: FichaService,
           useValue: {
             listarFichas: vi.fn(() => of(fichas)),
@@ -239,6 +266,7 @@ describe('PainelEncontro', () => {
             reconexao: () => 0,
             encontroAlterado$,
             encontroIniciativaPedido$,
+            rolagemRegistrada$,
           },
         },
         {
@@ -255,7 +283,13 @@ describe('PainelEncontro', () => {
 
     const fixture = TestBed.createComponent(PainelEncontro);
     fixture.detectChanges();
-    return { fixture, encontroService, encontroAlterado$, encontroIniciativaPedido$ };
+    return {
+      fixture,
+      encontroService,
+      encontroAlterado$,
+      encontroIniciativaPedido$,
+      rolagemRegistrada$,
+    };
   }
 
   /** Os membros `protected` que o template consome — o teste lê exatamente o que a tela lê. */
@@ -269,6 +303,7 @@ describe('PainelEncontro', () => {
     readonly donoNome: (combatente: { fichaId: number | null }) => string | null;
     readonly nivelAmeaca: (combatente: unknown) => NivelAmeacaEnum | null;
     readonly rolarTudo: () => void;
+    readonly rolagensFeed: () => readonly RolagemResumoDto[];
   }
 
   const interno = (fixture: ReturnType<typeof montar>['fixture']): PainelInterno =>
@@ -311,6 +346,29 @@ describe('PainelEncontro', () => {
     expect(painel.donoNome(agente)).toBe('Bia');
     expect(painel.nivelAmeaca(criatura)).toBe(NivelAmeacaEnum.ALTA);
     expect(painel.nivelAmeaca(agente)).toBeNull();
+  });
+
+  it('mostra o histórico da campanha e acrescenta rolagens públicas recebidas ao vivo', () => {
+    const { fixture, rolagemRegistrada$ } = montar();
+    const elemento = fixture.nativeElement as HTMLElement;
+    const rolagem: RolagemResumoDto = {
+      id: 91,
+      fichaId: 200,
+      campanhaId: CAMPANHA_ID,
+      usuarioId: USUARIO_JOGADOR,
+      nomeAutor: 'Bia',
+      nomeFicha: 'K. Amaral',
+      rotulo: 'Iniciativa',
+      visibilidade: RolagemVisibilidadeEnum.PUBLICA,
+      resultado: { formula: '1D20', dados: [], total: 17 } as unknown as RolagemResumoDto['resultado'],
+      createdDate: '2026-08-20T15:00:00.000Z',
+      corFicha: null,
+    };
+
+    expect(elemento.querySelector('app-historico-rolagens-sidebar')).not.toBeNull();
+
+    rolagemRegistrada$.next(rolagem);
+    expect(interno(fixture).rolagensFeed()).toEqual([rolagem]);
   });
 
   it('`Rolar iniciativas` só manda quem está sem iniciativa, somando o bônus da criatura', () => {
@@ -375,6 +433,17 @@ describe('PainelEncontro', () => {
       );
     });
 
+    it('não duplica a própria iniciativa fora do cartão do combatente', () => {
+      const { fixture } = montar(encontroAtivo, USUARIO_JOGADOR);
+      const elemento = fixture.nativeElement as HTMLElement;
+
+      expect(elemento.textContent).not.toContain('Sua iniciativa');
+      const meuCartao = Array.from(elemento.querySelectorAll('.combatente')).find((cartao) =>
+        cartao.textContent?.includes('K. Amaral'),
+      );
+      expect(meuCartao?.querySelector('.combatente__iniciativa-valor')?.textContent?.trim()).toBe('18');
+    });
+
     it('o mestre continua com a barra de condução inteira', () => {
       const { fixture } = montar(encontroAtivo, USUARIO_MESTRE);
       const textos = Array.from(
@@ -434,9 +503,18 @@ describe('PainelEncontro', () => {
       expect(painel.iniciativaPedida()).toBe(false);
     });
 
-    it('esconde a caixinha "Age agora"/"Aguardando" do jogador', () => {
-      const doJogador = montar(encontroAtivo, USUARIO_JOGADOR).fixture.nativeElement as HTMLElement;
-      expect(doJogador.querySelector('.painel__bloco--vez')).toBeNull();
+    it('mantém para o jogador quem age agora, com destaque próprio quando chega a sua vez', () => {
+      const { fixture, encontroAlterado$ } = montar(encontroAtivo, USUARIO_JOGADOR);
+      const elemento = fixture.nativeElement as HTMLElement;
+
+      expect(elemento.querySelector('.painel__bloco--vez')?.textContent).toContain('Age agora');
+      expect(elemento.querySelector('.painel__bloco--vez')?.textContent).toContain('SCP-1471-A');
+
+      encontroAlterado$.next({ encontro: { ...encontroAtivo, turnoIndice: 1 } });
+      fixture.detectChanges();
+
+      expect(elemento.querySelector('.painel__bloco--vez')?.textContent).toContain('Sua vez');
+      expect(elemento.querySelector('.painel__bloco--vez')?.textContent).toContain('K. Amaral');
     });
 
     it('mantém a caixinha "Age agora"/"Aguardando" para o mestre', () => {

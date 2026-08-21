@@ -1,5 +1,21 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-20 — M7-09 concluída: indicação persistente do turno para o jogador
+
+A visão espectador já conhecia o slot atual, mas escondia a faixa "Age agora" do jogador e usava
+somente um toast quando chegava sua vez. A tela agora reaproveita a mesma faixa de turno do mestre:
+ela sempre mostra quem age e troca o rótulo para **"Sua vez"** quando o `combatenteDaVezId` coincide
+com o combatente da ficha do usuário. `ehMinhaVez` é um `computed` de apresentação que apenas lê o
+estado recebido; não há regra de combate, permissão ou WebSocket novo. O toast segue como alerta
+pontual, sem substituir a informação persistente.
+
+O teste de painel foi alterado primeiro e observado falhar pelo comportamento anterior, depois passou
+com o novo fluxo. O gate visual foi feito na aplicação real, com campanha/encontro descartáveis e
+dois usuários locais: em `1920×1080` e `360×800`, a faixa mostrou "Sua vez" para o jogador e, após
+o avanço REST feito como mestre, atualizou ao vivo para "Age agora" do próximo combatente. No mobile
+`scrollWidth === clientWidth === 360`; não houve overflow. Lint, suíte frontend e build passaram; o
+build mantém o aviso de orçamento inicial excedido em 15,21 kB.
+
 ## 2026-08-20 — Ajustes pós-M7 de Iniciativa quebrados em specs atômicas
 
 Após a validação da feature de Iniciativa, o autor listou ajustes de fluxo, rolagens e acabamento
