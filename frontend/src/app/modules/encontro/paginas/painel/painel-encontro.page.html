@@ -10,66 +10,76 @@
       <app-icone nome="voltar" />
     </a>
     <div class="iniciativa__acoes">
-      @if (!carregando() && !ehMestre()) {
-        <span class="iniciativa__papel">
-          <app-icone nome="olho" />
-          Espectador
-        </span>
-      }
-      @if (mostrarFichaLateral()) {
-        <button
-          class="iniciativa__minha-ficha"
-          type="button"
-          [appTooltip]="'Abrir sua ficha'"
-          (click)="abrirMinhaFicha()"
-        >
-          <app-icone nome="visao-geral" />
-          <span>Minha ficha</span>
-        </button>
-      }
-      <!-- "Encontros anteriores" (m7-06): link discreto no cabeçalho, não mais uma seção lá
-           embaixo — só o mestre navega pelo histórico. -->
-      @if (!carregando() && ehMestre() && vendoHistorico()) {
-        <button
-          class="iniciativa__historico"
-          type="button"
-          [appTooltip]="'Voltar ao combate em andamento'"
-          (click)="voltarAoCorrente()"
-        >
-          <app-icone nome="voltar" />
-          Combate atual
-        </button>
-      }
-      @if (!carregando() && ehMestre() && historico().length) {
-        <button
-          class="iniciativa__historico"
-          type="button"
-          [attr.aria-expanded]="historicoAberto()"
-          [appTooltip]="'Encontros encerrados desta campanha'"
-          (click)="alternarHistorico()"
-        >
-          <app-icone nome="d20" />
-          {{ historico().length }} {{ historico().length === 1 ? 'encerrado' : 'encerrados' }}
-        </button>
-      }
-      <app-calculadora-flutuante />
-      <app-historico-rolagens-sidebar
-        titulo="Rolagens da Campanha"
-        [itens]="rolagensFeed()"
-        [carregando]="carregandoRolagens()"
-        [acimaDaCalculadora]="true"
-      />
-      @if (usuarioAtivoId(); as usuarioId) {
-        <app-caderno-flutuante
-          [campanhaId]="campanhaId"
-          [campanhaNome]="campanhaNome()"
-          [usuarioAtivoId]="usuarioId"
-          [ehMestre]="ehMestre()"
-          [membros]="membrosDaCampanha()"
-          (abrirFicha)="abrirFichaFlutuanteDeAnotacoes($event)"
+      <!-- Contexto/navegação do encontro — o que muda conforme o estado do combate, não conforme
+           o usuário. No mobile forma a 1ª linha, sempre acima dos utilitários (item de UI m7-16). -->
+      <div class="iniciativa__acoes-grupo iniciativa__acoes-grupo--status">
+        @if (!carregando() && !ehMestre()) {
+          <span class="iniciativa__papel">
+            <app-icone nome="olho" />
+            Espectador
+          </span>
+        }
+        <!-- "Encontros anteriores" (m7-06): link discreto no cabeçalho, não mais uma seção lá
+             embaixo — só o mestre navega pelo histórico. -->
+        @if (!carregando() && ehMestre() && vendoHistorico()) {
+          <button
+            class="iniciativa__historico"
+            type="button"
+            [appTooltip]="'Voltar ao combate em andamento'"
+            (click)="voltarAoCorrente()"
+          >
+            <app-icone nome="voltar" />
+            Combate atual
+          </button>
+        }
+        @if (!carregando() && ehMestre() && historico().length) {
+          <button
+            class="iniciativa__historico"
+            type="button"
+            [attr.aria-expanded]="historicoAberto()"
+            [appTooltip]="'Encontros encerrados desta campanha'"
+            (click)="alternarHistorico()"
+          >
+            <app-icone nome="d20" />
+            {{ historico().length }} {{ historico().length === 1 ? 'encerrado' : 'encerrados' }}
+          </button>
+        }
+      </div>
+
+      <!-- Utilitários da sessão — mesmo grupo em qualquer tela do painel (ficha, campanha). No
+           mobile forma a 2ª linha, sempre na mesma ordem, para nunca disputar lugar com o status
+           acima nem saltar de posição conforme o que está visível. -->
+      <div class="iniciativa__acoes-grupo iniciativa__acoes-grupo--utilitarios">
+        @if (mostrarFichaLateral()) {
+          <button
+            class="iniciativa__minha-ficha"
+            type="button"
+            [appTooltip]="'Abrir sua ficha'"
+            (click)="abrirMinhaFicha()"
+          >
+            <app-icone nome="visao-geral" />
+            <span>Minha ficha</span>
+          </button>
+        }
+        <app-calculadora-flutuante />
+        <app-historico-rolagens-sidebar
+          titulo="Rolagens da Campanha"
+          [itens]="rolagensFeed()"
+          [carregando]="carregandoRolagens()"
+          [acimaDaCalculadora]="true"
         />
-      }
-      <app-indicador-tempo-real />
+        @if (usuarioAtivoId(); as usuarioId) {
+          <app-caderno-flutuante
+            [campanhaId]="campanhaId"
+            [campanhaNome]="campanhaNome()"
+            [usuarioAtivoId]="usuarioId"
+            [ehMestre]="ehMestre()"
+            [membros]="membrosDaCampanha()"
+            (abrirFicha)="abrirFichaFlutuanteDeAnotacoes($event)"
+          />
+        }
+        <app-indicador-tempo-real />
+      </div>
     </div>
   </header>
 
@@ -452,7 +462,6 @@
             [ehTurnoAtual]="ehDaVez(combatente)"
             [jaAgiu]="jaAgiu(combatente)"
             [emCombate]="emCombate()"
-            [donoNome]="donoNome(combatente)"
             [nivelAmeaca]="nivelAmeaca(combatente)"
             [podeAjustar]="ehMestre() && mutavel() && !emOperacao()"
             [emEdicao]="ehMestre() && modoEdicao() && mutavel()"

@@ -209,8 +209,14 @@
     gap: 8px;
     min-width: 0;
 
-    // O gatilho de ajuste (44px) vive aqui no mobile; a linha acompanha sem empurrar as demais.
-    @include bp.mobile { min-height: bp.$alvo-toque; }
+    // No mobile o nome vira uma linha só sua (`&__nome` abaixo, `flex-basis: 100%`) — marcas e
+    // botões (abrir ficha/remover/ajustar) quebram juntos para a linha de baixo, em vez de
+    // disputar largura com o nome e quebrá-lo palavra a palavra.
+    @include bp.mobile {
+      flex-wrap: wrap;
+      row-gap: 6px;
+      min-height: bp.$alvo-toque;
+    }
   }
 
   &__nome {
@@ -221,7 +227,7 @@
     color: var(--text);
     overflow-wrap: anywhere;
 
-    @include bp.mobile { font-size: 14px; }
+    @include bp.mobile { flex: 1 1 100%; font-size: 14px; }
   }
 
   &__marca {

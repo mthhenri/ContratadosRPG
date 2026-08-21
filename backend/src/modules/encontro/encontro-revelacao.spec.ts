@@ -6,6 +6,7 @@ import type {
 } from '@contratados-rpg/shared/dtos/encontro';
 import {
   CadenciaEnum,
+  ClasseEnum,
   CombatenteOrigemEnum,
   EncontroEventoTipoEnum,
   EncontroStatusEnum,
@@ -50,6 +51,9 @@ describe('ocultarNaoRevelados', () => {
     corFicha: '#4a9d6b',
     imagemUrl: null,
     imagemFoco: null,
+    donoNome: 'Bia',
+    classe: null,
+    nivel: null,
     revelado: true,
     ...extras,
   });
@@ -88,7 +92,7 @@ describe('ocultarNaoRevelados', () => {
   });
 
   it('mantém intacto o combatente cuja ficha o usuário pode abrir', () => {
-    const recortado = ocultarNaoRevelados(estado([combatente(1)]), new Set([10]));
+    const recortado = ocultarNaoRevelados(estado([combatente(1)]), new Set([10]), new Set([10]));
     expect(recortado.combatentes[0]).toEqual(combatente(1));
   });
 
@@ -98,14 +102,19 @@ describe('ocultarNaoRevelados', () => {
       nome: 'SCP-1471-A',
       imagemUrl: '/uploads/criaturas/1471.webp',
       imagemFoco: { x: 40, y: 60, escala: 1.5 },
+      donoNome: null,
     });
-    const [oculto] = ocultarNaoRevelados(estado([criatura]), new Set<number>()).combatentes;
+    const [oculto] = ocultarNaoRevelados(
+      estado([criatura]),
+      new Set<number>(),
+      new Set<number>(),
+    ).combatentes;
 
     // A identidade sem a qual não existe ordem de turno sobrevive…
     expect(oculto.nome).toBe('SCP-1471-A');
     expect(oculto.iniciativa).toBe(18);
     expect(oculto.cadencia).toBe(CadenciaEnum.SINGULAR);
-    // …e todo o resto vai embora.
+    // …e todo o resto vai embora — criatura não tem "carteirinha" (m7-16 só vale pra agente).
     expect(oculto.revelado).toBe(false);
     expect(oculto.vidaAtual).toBe(0);
     expect(oculto.vidaMaxima).toBe(0);
@@ -117,6 +126,7 @@ describe('ocultarNaoRevelados', () => {
     expect(oculto.iniciativaBonus).toBe(0);
     expect(oculto.imagemUrl).toBeNull();
     expect(oculto.imagemFoco).toBeNull();
+    expect(oculto.donoNome).toBeNull();
   });
 
   it('trata o avulso como não revelado — ele não tem ficha para revelar', () => {
@@ -126,7 +136,11 @@ describe('ocultarNaoRevelados', () => {
       tipoFicha: null,
       nome: 'Sujeito Contido',
     });
-    const [oculto] = ocultarNaoRevelados(estado([avulso]), new Set([10, 20, 30])).combatentes;
+    const [oculto] = ocultarNaoRevelados(
+      estado([avulso]),
+      new Set([10, 20, 30]),
+      new Set([10, 20, 30]),
+    ).combatentes;
 
     expect(oculto.revelado).toBe(false);
     expect(oculto.vidaMaxima).toBe(0);
@@ -137,9 +151,59 @@ describe('ocultarNaoRevelados', () => {
     const recortado = ocultarNaoRevelados(
       estado([combatente(1), combatente(2)]),
       new Set([10]),
+      new Set([10]),
     );
     // O dano da criatura sai (o texto entregaria o número que o resumo escondeu); a virada de
     // rodada fica — é a cronologia da cena, que o jogador viveu.
     expect(recortado.eventos.map((evento) => evento.id)).toEqual([1]);
+  });
+
+  it('m7-16: mantém a "carteirinha" do agente de ficha não oculta mesmo sem acesso aos números', () => {
+    const agente = combatente(2, {
+      nome: 'Max Star',
+      donoNome: 'Sirius',
+      classe: ClasseEnum.COMBATENTE,
+      nivel: 4,
+      imagemUrl: '/uploads/agentes/max-star.webp',
+      imagemFoco: { x: 40, y: 60, escala: 1.5 },
+    });
+    // Fora de `fichaIdsVisiveis` (sem `usuario_ficha_acesso`), mas dentro de
+    // `fichaIdsIdentidadeVisivel` (ficha não oculta) — o número some, a carteirinha fica.
+    const [oculto] = ocultarNaoRevelados(
+      estado([agente]),
+      new Set<number>(),
+      new Set([20]),
+    ).combatentes;
+
+    expect(oculto.revelado).toBe(false);
+    expect(oculto.vidaAtual).toBe(0);
+    expect(oculto.defesa).toBeNull();
+    expect(oculto.condicoes).toEqual([]);
+    expect(oculto.imagemUrl).toBe('/uploads/agentes/max-star.webp');
+    expect(oculto.imagemFoco).toEqual({ x: 40, y: 60, escala: 1.5 });
+    expect(oculto.donoNome).toBe('Sirius');
+    expect(oculto.classe).toBe(ClasseEnum.COMBATENTE);
+    expect(oculto.nivel).toBe(4);
+  });
+
+  it('m7-16: some com a "carteirinha" do agente cuja ficha está oculta, igual a uma criatura', () => {
+    const agente = combatente(2, {
+      nome: 'Max Star',
+      donoNome: 'Sirius',
+      classe: ClasseEnum.COMBATENTE,
+      nivel: 4,
+      imagemUrl: '/uploads/agentes/max-star.webp',
+    });
+    // Nem em `fichaIdsVisiveis` nem em `fichaIdsIdentidadeVisivel` (ficha oculta pelo dono).
+    const [oculto] = ocultarNaoRevelados(
+      estado([agente]),
+      new Set<number>(),
+      new Set<number>(),
+    ).combatentes;
+
+    expect(oculto.imagemUrl).toBeNull();
+    expect(oculto.donoNome).toBeNull();
+    expect(oculto.classe).toBeNull();
+    expect(oculto.nivel).toBeNull();
   });
 });

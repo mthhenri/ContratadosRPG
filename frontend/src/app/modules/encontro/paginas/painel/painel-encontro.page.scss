@@ -101,15 +101,31 @@
     gap: 12px;
   }
 
+  // Dois grupos — status/navegação do encontro e utilitários da sessão (item de UI m7-16). No
+  // desktop os dois ficam numa linha só, como sempre (o `gap` entre grupos iguala o `gap` interno,
+  // então a costura é invisível); no mobile cada grupo vira sua própria linha, na mesma ordem
+  // sempre — nada salta de posição conforme o que está visível naquele momento.
   &__acoes {
     display: flex;
     align-items: center;
     gap: 12px;
     margin-left: auto;
 
-    // Mestre vendo o histórico pode acumular "Combate atual" + "N encerrados" + o indicador de
-    // tempo real — em 360px isso não cabe numa linha só.
-    @include bp.mobile { flex-wrap: wrap; justify-content: flex-end; }
+    @include bp.mobile { flex-direction: column; align-items: flex-end; gap: 8px; }
+  }
+
+  &__acoes-grupo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    // Mestre vendo o histórico pode acumular "Combate atual" + "N encerrados" — em 360px isso não
+    // cabe numa linha só.
+    @include bp.mobile { flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+
+    // Sem filhos renderizados (ex.: mestre fora do histórico), o grupo não deve custar o `gap` da
+    // coluna — some do fluxo em vez de abrir uma linha vazia.
+    &:empty { display: none; }
   }
 
   &__voltar {

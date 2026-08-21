@@ -92,7 +92,16 @@ export class FichaFlutuante {
     setTimeout(() => this.alvo.set(novoAlvo));
   }
 
+  /**
+   * No mobile a ficha é tela cheia, sem janela para recolher a um canto — "minimizar" reabria por
+   * um selo `position: fixed` a meio da lista de combatentes, sobrepondo o card que estivesse ali
+   * embaixo. Em vez disso, minimizar e fechar viram a mesma ação: fecha de vez.
+   */
   protected recolher(): void {
+    if (this.ehMobile()) {
+      this.fechar();
+      return;
+    }
     this.recolhido.set(true);
   }
 

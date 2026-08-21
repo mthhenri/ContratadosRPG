@@ -8,6 +8,7 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { FocoImagem } from '../../../../shared/foco-imagem.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { rotuloNivelAmeaca } from '../../../ficha/rotulos-criatura';
+import { rotuloClasse } from '../../../ficha/rotulos-ficha';
 
 /**
  * Uma defesa exibida na faixa do cartão — só as que o combatente realmente possui. O `rotuloCurto`
@@ -61,13 +62,6 @@ export class CartaoCombatente {
    */
   readonly emCombate = input(false);
 
-  /**
-   * Nome de quem joga a ficha, para a linha de origem do agente ("Bia · Agente").
-   * Resolvido pela página a partir dos membros da campanha — o resumo do combatente não carrega
-   * dono, e uma segunda consulta ao backend só por isso seria desperdício.
-   */
-  readonly donoNome = input<string | null>(null);
-
   /** Nível de Ameaça da criatura, para a etiqueta "Ameaça · Alta". Nulo para os demais. */
   readonly nivelAmeaca = input<NivelAmeacaEnum | null>(null);
 
@@ -115,14 +109,31 @@ export class CartaoCombatente {
   );
 
   /**
-   * Linha de origem do cartão: o agente mostra quem o joga; os demais dizem de onde vieram. A
-   * Cadência só entra quando de fato multiplica os turnos — "Cadência 1" seria ruído em todo
-   * agente (Cadência é atributo de criatura; o agente é sempre Singular).
+   * `true` quando a "carteirinha" do agente (avatar, dono, classe, nível) chegou mesmo sem
+   * `revelado` (m7-16) — mesma identidade que `CampanhaRepository.listarMembros` já mostra fora do
+   * encontro pra qualquer ficha não oculta. O backend só popula `donoNome` nesse caso; a ausência
+   * já diz que a ficha está oculta ou que o combatente não é um agente.
+   */
+  protected readonly identidadeVisivel = computed(
+    () => this.ehAgente() && this.combatente().donoNome !== null,
+  );
+
+  /**
+   * Linha de origem do cartão: o agente mostra quem o joga, a classe e o nível; os demais dizem de
+   * onde vieram. A Cadência só entra quando de fato multiplica os turnos — "Cadência 1" seria
+   * ruído em todo agente (Cadência é atributo de criatura; o agente é sempre Singular).
    */
   protected readonly linhaOrigem = computed<string>(() => {
     const sufixoCadencia =
       this.turnosPorRodada() > 1 ? ` · Cadência ${this.turnosPorRodada()}` : '';
     const combatenteAtual = this.combatente();
+    // A carteirinha do agente vale tanto revelado quanto só-identidade — as duas populam
+    // `donoNome` do mesmo jeito (m7-16); só os números diferem, e esta linha não os usa.
+    if (this.identidadeVisivel()) {
+      const classeLabel = combatenteAtual.classe ? rotuloClasse(combatenteAtual.classe) : 'Agente';
+      const nivelSufixo = combatenteAtual.nivel !== null ? ` · Nível ${combatenteAtual.nivel}` : '';
+      return `${combatenteAtual.donoNome} · ${classeLabel}${nivelSufixo}${sufixoCadencia}`;
+    }
     // A Cadência fica: ela é visível de qualquer forma — quem age duas vezes na rodada age duas
     // vezes na frente de todo mundo.
     if (!this.revelado()) {
@@ -135,8 +146,7 @@ export class CartaoCombatente {
       return `Criatura da campanha${sufixoCadencia}`;
     }
     if (combatenteAtual.tipoFicha === TipoFichaEnum.JOGADOR) {
-      const dono = this.donoNome();
-      return dono ? `${dono} · Agente${sufixoCadencia}` : `Agente${sufixoCadencia}`;
+      return `Agente${sufixoCadencia}`;
     }
     return `Adicionado pelo mestre${sufixoCadencia}`;
   });
@@ -147,14 +157,15 @@ export class CartaoCombatente {
    */
   protected readonly etiqueta = computed<{ texto: string; variante: string } | null>(() => {
     const combatenteAtual = this.combatente();
-    // Precede tudo: sem revelação não há natureza **nem** estado a anunciar. Dizer "Ameaça · Alta"
-    // entregaria metade do que o mestre está guardando, e "Agente" já diria que aquele nome é uma
-    // ficha de jogador — o cartão assume o desconhecido como o que ele é.
-    if (!this.revelado()) {
+    // Sem revelação **nem** identidade visível não há natureza **nem** estado a anunciar. Dizer
+    // "Ameaça · Alta" entregaria metade do que o mestre está guardando; um agente de identidade
+    // visível (m7-16), porém, já mostra a carteirinha na linha de origem — a etiqueta segue pro
+    // estado de turno normalmente, que é público (ordem/iniciativa sempre foram).
+    if (!this.revelado() && !this.identidadeVisivel()) {
       return { texto: 'Não revelado', variante: 'neutro' };
     }
     if (this.ehAgente()) {
-      if (combatenteAtual.morrendo) {
+      if (this.revelado() && combatenteAtual.morrendo) {
         return { texto: 'Morrendo', variante: 'perigo' };
       }
       if (this.emCombate()) {

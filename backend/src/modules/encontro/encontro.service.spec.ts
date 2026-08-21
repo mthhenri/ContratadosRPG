@@ -77,6 +77,8 @@ function criarCombatenteLinha(
     fichaImagemFoco: null,
     tipoFicha: null,
     fichaDados: null,
+    fichaOculta: null,
+    fichaDonoNome: null,
     ...overrides,
   };
 }

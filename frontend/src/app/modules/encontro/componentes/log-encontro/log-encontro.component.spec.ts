@@ -48,6 +48,9 @@ describe('LogEncontro', () => {
       corFicha: null,
       imagemUrl: null,
       imagemFoco: null,
+      donoNome: null,
+      classe: null,
+      nivel: null,
       revelado: true,
     },
   ];

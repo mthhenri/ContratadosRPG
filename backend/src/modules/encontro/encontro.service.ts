@@ -111,7 +111,8 @@ export class EncontroService {
   ): Promise<EncontroRecuperadoDto> {
     const encontroEncontrado = await this.recuperarEncontroObrigatorio(dto.id);
     await this.validarMembro(encontroEncontrado.campanhaId, usuarioAtivo);
-    return this.montarEstadoParaUsuario(await this.montarEstado(encontroEncontrado), usuarioAtivo);
+    const { estado, fichaIdsIdentidadeVisivel } = await this.montarEstado(encontroEncontrado);
+    return this.montarEstadoParaUsuario(estado, fichaIdsIdentidadeVisivel, usuarioAtivo);
   }
 
   /** Encontros da campanha (corrente + histórico). Exige ser **membro**. */
@@ -530,7 +531,7 @@ export class EncontroService {
       id: encontroEncontrado.id,
       campanhaId: encontroEncontrado.campanhaId,
     });
-    return this.montarEstado(encontroEncontrado);
+    return (await this.montarEstado(encontroEncontrado)).estado;
   }
 
   // ── Apoio da condução ──────────────────────────────────────────────────────
@@ -800,8 +801,16 @@ export class EncontroService {
    * Monta o estado completo: combatentes resolvidos (ficha lida, nunca duplicada), a ordem da
    * rodada calculada pelo **motor puro** e o log. Combatente sem iniciativa fica fora da ordem —
    * ela só faz sentido quando todos rolaram (o início do combate exige isso, `m7-04`).
+   *
+   * Junto do estado, devolve `fichaIdsIdentidadeVisivel` (m7-16): os agentes cuja ficha **não**
+   * está oculta (`ficha.oculta`, já carregado na mesma linha do combatente — proibição #28 é sobre
+   * reimplementar a consulta de **permissão** dos números, não sobre reler uma coluna já em mãos).
+   * `montarEstadoParaUsuario` usa esse conjunto pra decidir quem mantém a "carteirinha" mesmo sem
+   * `usuario_ficha_acesso`.
    */
-  private async montarEstado(encontro: EncontroLinhaDto): Promise<EncontroRecuperadoDto> {
+  private async montarEstado(
+    encontro: EncontroLinhaDto,
+  ): Promise<{ estado: EncontroRecuperadoDto; fichaIdsIdentidadeVisivel: ReadonlySet<number> }> {
     const linhasCombatentes = await this.encontroRepositorio.listarCombatentes({
       encontroId: encontro.id,
     });
@@ -818,30 +827,40 @@ export class EncontroService {
       }));
     const ordemRodada = intercalarCadencia(ordenarIniciativa(ordenaveis));
 
+    const fichaIdsIdentidadeVisivel = new Set(
+      linhasCombatentes
+        .filter((linha) => linha.fichaId !== null && linha.fichaOculta !== true)
+        .map((linha) => linha.fichaId as number),
+    );
+
     return {
-      id: encontro.id,
-      campanhaId: encontro.campanhaId,
-      nome: encontro.nome,
-      status: encontro.status,
-      rodadaAtual: encontro.rodadaAtual,
-      turnoIndice: encontro.turnoIndice,
-      combatentes,
-      ordemRodada,
-      eventos,
+      estado: {
+        id: encontro.id,
+        campanhaId: encontro.campanhaId,
+        nome: encontro.nome,
+        status: encontro.status,
+        rodadaAtual: encontro.rodadaAtual,
+        turnoIndice: encontro.turnoIndice,
+        combatentes,
+        ordemRodada,
+        eventos,
+      },
+      fichaIdsIdentidadeVisivel,
     };
   }
 
   /**
    * Aplica o recorte de revelação (m7-06) do ponto de vista de **um** usuário. O mestre recebe o
    * estado intacto; qualquer outro membro recebe o estado filtrado pelas fichas que ele pode abrir
-   * na campanha.
+   * na campanha (números) — e pelas fichas de agente não oculto, pra "carteirinha" (m7-16).
    *
-   * O conjunto de fichas visíveis vem de `FichaService.listarFichas` — a **service dona** da regra
-   * §14, que já distingue mestre de jogador e consulta `usuario_ficha_acesso`. Nada de uma segunda
-   * consulta de permissão aqui (proibição #28).
+   * O conjunto de fichas com números visíveis vem de `FichaService.listarFichas` — a **service
+   * dona** da regra §14, que já distingue mestre de jogador e consulta `usuario_ficha_acesso`.
+   * Nada de uma segunda consulta de permissão aqui (proibição #28).
    */
   private async montarEstadoParaUsuario(
     estado: EncontroRecuperadoDto,
+    fichaIdsIdentidadeVisivel: ReadonlySet<number>,
     usuarioAtivo: JwtPayload,
   ): Promise<EncontroRecuperadoDto> {
     const membro = await this.validarMembro(estado.campanhaId, usuarioAtivo);
@@ -852,7 +871,11 @@ export class EncontroService {
       { campanhaId: estado.campanhaId },
       usuarioAtivo,
     );
-    return ocultarNaoRevelados(estado, new Set(fichasVisiveis.map((ficha) => ficha.id)));
+    return ocultarNaoRevelados(
+      estado,
+      new Set(fichasVisiveis.map((ficha) => ficha.id)),
+      fichaIdsIdentidadeVisivel,
+    );
   }
 
   /**
@@ -874,11 +897,11 @@ export class EncontroService {
     encontro: EncontroLinhaDto,
     usuarioAtivo: JwtPayload,
   ): Promise<EncontroRecuperadoDto> {
-    const estado = await this.montarEstado(encontro);
+    const { estado, fichaIdsIdentidadeVisivel } = await this.montarEstado(encontro);
     await this.campanhaGateway.emitirEncontroAlterado(estado.campanhaId, (usuarioDoSocket) =>
-      this.montarEstadoParaUsuario(estado, usuarioDoSocket),
+      this.montarEstadoParaUsuario(estado, fichaIdsIdentidadeVisivel, usuarioDoSocket),
     );
-    return this.montarEstadoParaUsuario(estado, usuarioAtivo);
+    return this.montarEstadoParaUsuario(estado, fichaIdsIdentidadeVisivel, usuarioAtivo);
   }
 
 }

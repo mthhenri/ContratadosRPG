@@ -185,6 +185,15 @@ export function montarCombatenteResumo(
     corFicha: linha.fichaCor,
     imagemUrl: linha.fichaImagemUrl,
     imagemFoco: linha.fichaImagemFoco,
+    donoNome: linha.tipoFicha === TipoFichaEnum.JOGADOR ? linha.fichaDonoNome : null,
+    classe:
+      linha.tipoFicha === TipoFichaEnum.JOGADOR
+        ? (linha.fichaDados as FichaJogadorDadosDto).classe
+        : null,
+    nivel:
+      linha.tipoFicha === TipoFichaEnum.JOGADOR
+        ? (linha.fichaDados as FichaJogadorDadosDto).nivel
+        : null,
     // O mapper monta sempre a visão **completa** (a do mestre). O recorte por permissão é uma
     // camada depois, em `encontro-revelacao.ts` — aqui não se decide quem vê o quê.
     revelado: true,
