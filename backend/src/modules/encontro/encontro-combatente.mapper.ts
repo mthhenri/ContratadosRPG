@@ -190,9 +190,9 @@ export function montarCombatenteResumo(
       linha.tipoFicha === TipoFichaEnum.JOGADOR
         ? (linha.fichaDados as FichaJogadorDadosDto).classe
         : null,
-    nivel:
+    arquetipo:
       linha.tipoFicha === TipoFichaEnum.JOGADOR
-        ? (linha.fichaDados as FichaJogadorDadosDto).nivel
+        ? (linha.fichaDados as FichaJogadorDadosDto).arquetipo
         : null,
     // O mapper monta sempre a visão **completa** (a do mestre). O recorte por permissão é uma
     // camada depois, em `encontro-revelacao.ts` — aqui não se decide quem vê o quê.

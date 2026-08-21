@@ -8,7 +8,7 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { FocoImagem } from '../../../../shared/foco-imagem.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { rotuloNivelAmeaca } from '../../../ficha/rotulos-criatura';
-import { rotuloClasse } from '../../../ficha/rotulos-ficha';
+import { rotuloClasseCompleto } from '../../../ficha/rotulos-ficha';
 
 /**
  * Uma defesa exibida na faixa do cartão — só as que o combatente realmente possui. O `rotuloCurto`
@@ -109,7 +109,7 @@ export class CartaoCombatente {
   );
 
   /**
-   * `true` quando a "carteirinha" do agente (avatar, dono, classe, nível) chegou mesmo sem
+   * `true` quando a "carteirinha" do agente (avatar, dono, classe/arquétipo) chegou mesmo sem
    * `revelado` (m7-16) — mesma identidade que `CampanhaRepository.listarMembros` já mostra fora do
    * encontro pra qualquer ficha não oculta. O backend só popula `donoNome` nesse caso; a ausência
    * já diz que a ficha está oculta ou que o combatente não é um agente.
@@ -119,9 +119,11 @@ export class CartaoCombatente {
   );
 
   /**
-   * Linha de origem do cartão: o agente mostra quem o joga, a classe e o nível; os demais dizem de
-   * onde vieram. A Cadência só entra quando de fato multiplica os turnos — "Cadência 1" seria
-   * ruído em todo agente (Cadência é atributo de criatura; o agente é sempre Singular).
+   * Linha de origem do cartão: o agente mostra quem o joga e a classe/arquétipo, em duas linhas
+   * (`\n` + `white-space: pre-line` no SCSS) — o nível fica de fora, a carteirinha identifica quem
+   * é o agente, não avalia sua força. Os demais dizem de onde vieram, numa linha só. A Cadência só
+   * entra quando de fato multiplica os turnos — "Cadência 1" seria ruído em todo agente (Cadência
+   * é atributo de criatura; o agente é sempre Singular).
    */
   protected readonly linhaOrigem = computed<string>(() => {
     const sufixoCadencia =
@@ -130,9 +132,10 @@ export class CartaoCombatente {
     // A carteirinha do agente vale tanto revelado quanto só-identidade — as duas populam
     // `donoNome` do mesmo jeito (m7-16); só os números diferem, e esta linha não os usa.
     if (this.identidadeVisivel()) {
-      const classeLabel = combatenteAtual.classe ? rotuloClasse(combatenteAtual.classe) : 'Agente';
-      const nivelSufixo = combatenteAtual.nivel !== null ? ` · Nível ${combatenteAtual.nivel}` : '';
-      return `${combatenteAtual.donoNome} · ${classeLabel}${nivelSufixo}${sufixoCadencia}`;
+      const classeLabel = combatenteAtual.classe
+        ? rotuloClasseCompleto(combatenteAtual.classe, combatenteAtual.arquetipo)
+        : 'Agente';
+      return `${combatenteAtual.donoNome}\n${classeLabel}${sufixoCadencia}`;
     }
     // A Cadência fica: ela é visível de qualquer forma — quem age duas vezes na rodada age duas
     // vezes na frente de todo mundo.

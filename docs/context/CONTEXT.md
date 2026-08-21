@@ -1,10 +1,11 @@
 # CONTEXT.md — Painel do Projeto
 
 > **Última revisão:** 2026-08-21 · **Última decisão registrada:** `m7-16` — na tela de Iniciativa,
-> um agente (`JOGADOR`) de ficha **não oculta** (m3-65) mostra avatar/dono/classe/nível pra
-> qualquer membro, mesmo sem `usuario_ficha_acesso` (só os números continuam atrás da concessão);
-> mais 4 ajustes de UI no mobile (nome dos cards, bug do minimizar, minimizar=fechar, cabeçalho
-> reorganizado em dois grupos) — ver seção 1.
+> um agente (`JOGADOR`) de ficha **não oculta** (m3-65) mostra avatar/dono/classe-arquétipo pra
+> qualquer membro, mesmo sem `usuario_ficha_acesso` (só os números continuam atrás da concessão;
+> nível fica de fora — a carteirinha identifica, não avalia a força — e sem ela não desenha "Vida
+> —"); mais 4 ajustes de UI no mobile (nome dos cards, bug do minimizar, minimizar=fechar,
+> cabeçalho reorganizado em dois grupos) — ver seção 1.
 >
 > **Decisão anterior:** o recorte mobile do Encontro
 > (`m7-08`, que fecha o M7) é feito **inteiramente pelo CSS do breakpoint** — os componentes só
@@ -55,17 +56,21 @@ código — o indicador de turno próprio já tinha sido resolvido por `m7-09` (
 A frase acima ("criatura não revelada nunca vaza a própria imagem") continua valendo à risca pra
 criatura/NPC e pra um agente cuja própria ficha está `oculta` (m3-65) — mas um agente de ficha
 **não oculta** deixou de ser tratado como segredo: a mesma identidade "de carteirinha" (avatar,
-dono, classe, nível) que `CampanhaRepository.listarMembros` já mostra fora do encontro pra
-qualquer ficha não oculta agora também chega na Iniciativa, mesmo sem `usuario_ficha_acesso` (que
-é sobre abrir a ficha **inteira**, não sobre saber quem está na mesa). Só os **números** (vida,
-defesas, condições, Destreza) continuam atrás da concessão de sempre. Mecanicamente: o repositório
-do encontro ganhou `ficha.oculta`/`usuario.nome` (`LEFT JOIN usuario`); `EncontroService` calcula
-um segundo conjunto, `fichaIdsIdentidadeVisivel` (ficha não oculta), ao lado do de sempre
-(`fichaIdsVisiveis`, de `FichaService.listarFichas` — a fonte da regra dos números, intocada,
-proibição #28); `encontro-revelacao.ts` usa os dois pra decidir o que cada combatente preserva.
-`CartaoCombatente.identidadeVisivel` (computed) e a linha de origem (`donoNome · classe · Nível N`)
-seguem esse recorte no front — a etiqueta do topo usa o estado de turno normalmente nesse caso
-(a ordem sempre foi pública), só a Vida vira um traço. Junto, três ajustes de UI mobile: nome do
+dono, classe-arquétipo — nível fica de fora, a carteirinha identifica quem é o agente, não avalia
+sua força) que `CampanhaRepository.listarMembros` já mostra fora do encontro pra qualquer ficha
+não oculta agora também chega na Iniciativa, mesmo sem `usuario_ficha_acesso` (que é sobre abrir a
+ficha **inteira**, não sobre saber quem está na mesa). Só os **números** (vida, defesas, condições,
+Destreza) continuam atrás da concessão de sempre — e sem eles o cartão não desenha mais nem um
+placeholder "Vida —" (a linha de recursos inteira só entra no DOM quando há número pra mostrar).
+Mecanicamente: o repositório do encontro ganhou `ficha.oculta`/`usuario.nome` (`LEFT JOIN
+usuario`); `EncontroService` calcula um segundo conjunto, `fichaIdsIdentidadeVisivel` (ficha não
+oculta), ao lado do de sempre (`fichaIdsVisiveis`, de `FichaService.listarFichas` — a fonte da
+regra dos números, intocada, proibição #28); `encontro-revelacao.ts` usa os dois pra decidir o que
+cada combatente preserva. `CartaoCombatente.identidadeVisivel` (computed) e a linha de origem
+(`donoNome` + `rotuloClasseCompleto(classe, arquetipo)` em duas linhas, `\n` + `white-space:
+pre-line`, mesmo rótulo "Combatente - Lutador" do mini-card do Esquadrão) seguem esse recorte no
+front — a etiqueta do topo usa o estado de turno normalmente nesse caso (a ordem sempre foi
+pública). Junto, três ajustes de UI mobile: nome do
 cartão parou de quebrar entre os botões (linha própria, `flex-basis: 100%`), minimizar a ficha
 flutuante parou de deixar um selo `position: fixed` preso sobre um cartão (no mobile
 `recolher()` chama `fechar()` — sem janela pra recolher a um canto lá, as duas ações viram uma só),

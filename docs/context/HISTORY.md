@@ -1,5 +1,27 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-21 — `m7-16`: dois retoques na carteirinha, direto do feedback ao vivo do autor
+
+Depois de ver a `m7-16` rodando, o autor pediu dois ajustes na própria carteirinha:
+
+1. **Sem "Vida —" pra quem não tem acesso.** A visão de player não desenha mais a linha de
+   recursos (nem o traço) quando `revelado()` é `false` — `.combatente__recursos` inteiro só
+   entra no DOM com o `@if` (antes só o conteúdo interno alternava, então o traço "Vida —" sempre
+   aparecia). A classe `.combatente__recurso--oculto` saiu do SCSS junto, sem uso.
+2. **Nível fora, classe/arquétipo em duas linhas.** A carteirinha (`donoNome`) trocou o formato
+   de uma linha (`Dono · Classe · Nível N`) por duas (`Dono` \ `Classe - Arquétipo`), via `\n` na
+   string + `white-space: pre-line` no CSS — a carteirinha identifica o agente, não avalia sua
+   força. `EncontroCombatenteResumoDto.nivel` saiu do contrato; entrou `arquetipo` (`ArquetipoEnum
+   | null`), reaproveitando `rotuloClasseCompleto` (já usado no mini-card do Esquadrão, mesmo
+   formato "Combatente - Lutador") em vez de montar o rótulo à mão.
+
+Mecânica igual à revelação em si: `EncontroCombatenteLinhaDto`/mapper já carregavam `fichaDados`
+inteiro, então só trocou qual campo o mapper lê (`classe`+`arquetipo` em vez de `classe`+`nivel`);
+nenhuma coluna nova no banco. Verificado ao vivo (`360×800`, jogador sem acesso à ficha de um
+colega): a origem mostra duas linhas ("Jogador Verify" / "Combatente"), sem nível, e o cartão
+termina depois do nome — nenhuma linha de Vida. Fecho: backend `423/423`, frontend `1234/1234`,
+lint limpo nos dois.
+
 ## 2026-08-21 — `m7-16`: identidade "de carteirinha" na Iniciativa, cabeçalho e bugs de mobile
 
 Feedback ao vivo do autor sobre a tela de Iniciativa, direto da mesa (celular real, produção),

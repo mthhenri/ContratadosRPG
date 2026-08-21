@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 
 import type { EncontroCombatenteResumoDto } from '@contratados-rpg/shared/dtos/encontro';
 import {
+  ArquetipoEnum,
   CadenciaEnum,
   ClasseEnum,
   CombatenteOrigemEnum,
@@ -46,7 +47,7 @@ describe('CartaoCombatente', () => {
     imagemFoco: null,
     donoNome: null,
     classe: null,
-    nivel: null,
+    arquetipo: null,
     revelado: true,
   };
 
@@ -152,7 +153,7 @@ describe('CartaoCombatente', () => {
 
   it('só cita a Cadência quando ela de fato multiplica os turnos', () => {
     const singular = montar({ ...base, donoNome: 'Bia' });
-    expect(texto(singular, '.combatente__origem')).toBe('Bia · Agente');
+    expect(texto(singular, '.combatente__origem')).toBe('Bia\nAgente');
 
     const dupla = montar(
       { ...base, tipoFicha: TipoFichaEnum.CRIATURA, cadencia: CadenciaEnum.DUPLA },
@@ -161,14 +162,14 @@ describe('CartaoCombatente', () => {
     expect(texto(dupla, '.combatente__origem')).toBe('Criatura da campanha · Cadência 2');
   });
 
-  it('mostra classe e nível na carteirinha do agente, quando o backend os manda', () => {
+  it('mostra classe e arquétipo na carteirinha do agente, sem nível (m7-16)', () => {
     const fixture = montar({
       ...base,
       donoNome: 'Bia',
       classe: ClasseEnum.COMBATENTE,
-      nivel: 4,
+      arquetipo: ArquetipoEnum.LUTADOR,
     });
-    expect(texto(fixture, '.combatente__origem')).toBe('Bia · Combatente · Nível 4');
+    expect(texto(fixture, '.combatente__origem')).toBe('Bia\nCombatente - Lutador');
   });
 
   it('dá precedência a "Morrendo" sobre a vez, e some com a etiqueta de turno fora do combate', () => {
@@ -270,8 +271,8 @@ describe('CartaoCombatente', () => {
     );
     const elemento = fixture.nativeElement as HTMLElement;
 
-    // A Vida vira um traço — "0/0" pareceria uma criatura morta, não uma desconhecida.
-    expect(texto(fixture, '.combatente__recurso--oculto')).toBe('Vida —');
+    // Sem acesso aos números, o cartão não desenha a linha de recursos — nem um "Vida —" (m7-16).
+    expect(elemento.querySelector('.combatente__recursos')).toBeNull();
     expect(elemento.querySelector('.combatente__recurso--vida')).toBeNull();
     expect(elemento.querySelector('.combatente__defesas')).toBeNull();
     // Nem o Nível de Ameaça vaza: dizer "Ameaça · Alta" já entregaria metade do segredo.
@@ -301,7 +302,7 @@ describe('CartaoCombatente', () => {
         nome: 'Max Star',
         donoNome: 'Sirius',
         classe: ClasseEnum.COMBATENTE,
-        nivel: 4,
+        arquetipo: ArquetipoEnum.LUTADOR,
         imagemUrl: '/uploads/agentes/max-star.webp',
         revelado: false,
         vidaAtual: 0,
@@ -317,11 +318,12 @@ describe('CartaoCombatente', () => {
     );
     const elemento = fixture.nativeElement as HTMLElement;
 
-    // A carteirinha aparece — dono, classe, nível e avatar — mesmo sem `revelado`.
-    expect(texto(fixture, '.combatente__origem')).toBe('Sirius · Combatente · Nível 4');
+    // A carteirinha aparece — dono e classe/arquétipo, em duas linhas — e avatar, mesmo sem
+    // `revelado`; o nível fica de fora (a carteirinha identifica, não avalia a força do agente).
+    expect(texto(fixture, '.combatente__origem')).toBe('Sirius\nCombatente - Lutador');
     expect(elemento.querySelector('.combatente__avatar-imagem')).not.toBeNull();
-    // Os números continuam escondidos — só a identidade "de carteirinha" mudou.
-    expect(texto(fixture, '.combatente__recurso--oculto')).toBe('Vida —');
+    // Os números continuam escondidos — nem a linha de recursos desenha (m7-16, sem "Vida —").
+    expect(elemento.querySelector('.combatente__recursos')).toBeNull();
     expect(elemento.querySelector('.combatente__defesas')).toBeNull();
     // A etiqueta segue pro estado de turno normalmente — ordem/iniciativa sempre foram públicas.
     expect(texto(fixture, '.combatente__etiqueta')).toBe('Já agiu');

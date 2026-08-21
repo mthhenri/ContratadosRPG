@@ -17,7 +17,7 @@ import { TipoFichaEnum } from '@contratados-rpg/shared/enums';
  * mesa, e sem elas o jogador não sabe de quem é a vez.
  *
  * **A identidade "de carteirinha" (m7-16).** Um agente (`JOGADOR`) cuja ficha não está `oculta`
- * (m3-65) não é segredo — a mesma "carteirinha" (avatar, dono, classe, nível) já aparece pra
+ * (m3-65) não é segredo — a mesma "carteirinha" (avatar, dono, classe) já aparece pra
  * qualquer membro fora do encontro, em `CampanhaRepository.listarMembros`. Escondê-la aqui só
  * porque o dono não concedeu `usuario_ficha_acesso` (que é sobre abrir a ficha **inteira**, não
  * sobre saber quem está na mesa) tratava um colega de squad como um segredo do mestre. Ela some
@@ -38,7 +38,7 @@ import { TipoFichaEnum } from '@contratados-rpg/shared/enums';
 
 /**
  * Zera os números e mantém a identidade da ordem de turno — mais a "carteirinha" do agente
- * (avatar, dono, classe, nível) quando `identidadeVisivel`.
+ * (avatar, dono, classe) quando `identidadeVisivel`.
  */
 function ocultarCombatente(
   combatente: EncontroCombatenteResumoDto,
@@ -79,7 +79,7 @@ function ocultarCombatente(
     imagemFoco: carteirinhaVisivel ? combatente.imagemFoco : null,
     donoNome: carteirinhaVisivel ? combatente.donoNome : null,
     classe: carteirinhaVisivel ? combatente.classe : null,
-    nivel: carteirinhaVisivel ? combatente.nivel : null,
+    arquetipo: carteirinhaVisivel ? combatente.arquetipo : null,
     revelado: false,
   };
 }

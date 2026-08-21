@@ -199,6 +199,9 @@
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--text-mute);
+    // A carteirinha do agente (m7-16) é duas linhas — dono e classe/arquétipo — separadas por
+    // `\n` no dado; os demais textos desta linha são de uma linha só e `pre-line` não os afeta.
+    white-space: pre-line;
 
     @include bp.mobile { font-size: 8.5px; }
   }
@@ -453,13 +456,6 @@
     font-size: 10px;
     color: var(--text-mute);
   }
-}
-
-// Combatente não revelado (m7-06): o traço no lugar da Vida. Não é um número escondido — é a
-// ausência do dado, e o cartão diz isso em vez de mostrar um "0/0" que pareceria uma criatura morta.
-.combatente__recurso--oculto {
-  color: var(--text-mute);
-  font-style: italic;
 }
 
 // Na visão desktop dividida do jogador, o cartão vira uma entrada compacta da fila. O contexto
