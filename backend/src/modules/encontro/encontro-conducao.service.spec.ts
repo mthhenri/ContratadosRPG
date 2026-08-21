@@ -26,6 +26,13 @@ const mestre: JwtPayload = {
   tokenVersao: 1,
 };
 
+const jogador: JwtPayload = {
+  sub: 7,
+  login: 'jogador',
+  tipo: TipoUsuarioEnum.NORMAL,
+  tokenVersao: 1,
+};
+
 function criarEncontroLinha(overrides: Partial<EncontroLinhaDto> = {}): EncontroLinhaDto {
   return {
     id: 50,
@@ -90,6 +97,7 @@ describe('EncontroService — condução (m7-04)', () => {
   let campanhaRepositorio: { recuperarMembro: ReturnType<typeof vi.fn> };
   let fichaService: {
     recuperarFicha: ReturnType<typeof vi.fn>;
+    listarFichas: ReturnType<typeof vi.fn>;
     alterarVitalidade: ReturnType<typeof vi.fn>;
     alterarVitalidadeCriatura: ReturnType<typeof vi.fn>;
   };
@@ -117,12 +125,14 @@ describe('EncontroService — condução (m7-04)', () => {
       alterarVidaAvulso: vi.fn(),
       registrarEvento: vi.fn(),
       listarEventos: vi.fn().mockResolvedValue([]),
+      combatentePertenceAoUsuario: vi.fn(),
     };
     campanhaRepositorio = {
       recuperarMembro: vi.fn().mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE }),
     };
     fichaService = {
       recuperarFicha: vi.fn(),
+      listarFichas: vi.fn().mockResolvedValue([{ id: 20 }]),
       alterarVitalidade: vi.fn(),
       alterarVitalidadeCriatura: vi.fn(),
     };
@@ -193,6 +203,42 @@ describe('EncontroService — condução (m7-04)', () => {
   });
 
   describe('avancarTurno', () => {
+    it('permite ao jogador encerrar o turno do combatente da própria ficha', async () => {
+      encontroRepositorio.listarCombatentes.mockResolvedValue([
+        criarAgenteLinha({ id: 1, iniciativa: 18 }),
+        criarCombatenteLinha({ id: 2, iniciativa: 10 }),
+      ]);
+      encontroRepositorio.combatentePertenceAoUsuario.mockResolvedValue(true);
+      encontroRepositorio.recuperarPorId.mockResolvedValue(criarEncontroLinha({ turnoIndice: 0 }));
+      encontroRepositorio.alterarTurno.mockResolvedValue(criarEncontroLinha({ turnoIndice: 1 }));
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+
+      await service.avancarTurno({ id: 50 }, jogador);
+
+      expect(encontroRepositorio.alterarTurno).toHaveBeenCalledWith({
+        id: 50,
+        rodadaAtual: 1,
+        turnoIndice: 1,
+      });
+    });
+
+    it('recusa avanço do jogador quando o turno atual pertence a outra ficha', async () => {
+      encontroRepositorio.listarCombatentes.mockResolvedValue([
+        criarAgenteLinha({ id: 1, iniciativa: 18 }),
+        criarAgenteLinha({ id: 2, iniciativa: 10 }),
+      ]);
+      encontroRepositorio.combatentePertenceAoUsuario.mockResolvedValue(false);
+      encontroRepositorio.recuperarPorId.mockResolvedValue(criarEncontroLinha({ turnoIndice: 0 }));
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+
+      await expect(service.avancarTurno({ id: 50 }, jogador)).rejects.toThrow();
+      expect(encontroRepositorio.alterarTurno).not.toHaveBeenCalled();
+    });
+
     it('percorre a sequência intercalada da Cadência antes de virar a rodada', async () => {
       // Criatura Dupla [18] + Agente A [17] + Agente B [3] → 4 slots na rodada.
       encontroRepositorio.listarCombatentes.mockResolvedValue([

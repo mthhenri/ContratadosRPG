@@ -953,6 +953,23 @@
     }
   }
 
+  &__sessao-iniciativa {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    text-decoration: none;
+
+    app-icone { font-size: 13px; }
+
+    @include bp.mobile { min-height: bp.$alvo-toque; }
+  }
+
   // Cabeçalho de seção — rótulo mono uppercase + régua fina + contagem, mesmo tratamento em
   // Membros/Esquadrão/Rolagens. Esquadrão ganha também "Nova ficha" (a régua flex:1 empurra
   // contagem+botão pra direita).

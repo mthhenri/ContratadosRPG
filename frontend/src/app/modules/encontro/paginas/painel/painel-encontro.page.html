@@ -278,11 +278,15 @@
         </div>
       }
 
-      @if (mutavel() && !ehMestre()) {
+      @if (
+        mutavel() &&
+        !ehMestre() &&
+        (possoRolarIniciativa() || meuCombatente() === null || ehMinhaVez())
+      ) {
         <!-- A contrapartida do jogador ao "Rolar tudo" do mestre: ele rola a **própria**, com o
              preset e os dados extras da ficha dele (m7-06). -->
         <div
-          class="painel__bloco painel__bloco--controles"
+          class="painel__bloco painel__bloco--controles painel__bloco--jogador"
           [class.painel__bloco--acesa]="iniciativaPedida()"
         >
           @if (possoRolarIniciativa()) {
@@ -295,6 +299,16 @@
             >
               <app-icone nome="dado" />
               Rolar iniciativa
+            </button>
+          } @else if (ehMinhaVez()) {
+            <button
+              class="botao botao--primario painel__acao"
+              type="button"
+              [disabled]="emOperacao()"
+              [appTooltip]="'Encerrar sua vez e passar ao próximo turno'"
+              (click)="avancarTurno()"
+            >
+              Avançar turno
             </button>
           } @else if (meuCombatente() === null) {
             <span class="painel__vez painel__vez--vazia">Você está assistindo a este combate</span>
@@ -418,7 +432,7 @@
     }
 
     @if (combatentes().length) {
-      <div class="grade">
+      <div class="grade" [class.grade--compacta]="mostrarFichaLateral()">
         @for (combatente of combatentes(); track combatente.id) {
           <app-cartao-combatente
             [combatente]="combatente"

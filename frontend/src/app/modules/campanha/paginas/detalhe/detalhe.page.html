@@ -204,16 +204,6 @@
                   <app-icone nome="agente" />
                   <span>Criar nova ficha</span>
                 </button>
-                <!-- O jogador entra na mesma tela "Iniciativa" do mestre, em modo espectador
-                     (m7-06) — o tile "Combate" da tira de estatísticas é do mestre. -->
-                <a
-                  class="detalhe__cabecalho-menu-item"
-                  role="menuitem"
-                  [routerLink]="['/painel', campanhaAtual.id, 'iniciativa']"
-                >
-                  <app-icone nome="combate" />
-                  <span>Iniciativa</span>
-                </a>
                 <button
                   class="detalhe__cabecalho-menu-item"
                   type="button"
@@ -999,6 +989,16 @@
           <header class="detalhe__secao">
             <h2 class="detalhe__secao-titulo">Sessão</h2>
             <span class="detalhe__secao-regua"></span>
+            <!-- m7-13: acesso de sessão do jogador. A rota e o estado vazio da tela de Iniciativa
+                 continuam os mesmos; saiu apenas do menu de manutenção da ficha. -->
+            <a
+              class="botao botao--secundario detalhe__sessao-iniciativa"
+              [routerLink]="['/painel', campanhaAtual.id, 'iniciativa']"
+              [appTooltip]="'Abrir a tela de Iniciativa'"
+            >
+              <app-icone nome="combate" />
+              Iniciativa
+            </a>
           </header>
           @if (rolagensRecentes().length === 0) {
             <p class="detalhe__estado">Nenhuma rolagem na última hora.</p>

@@ -368,13 +368,26 @@ describe('CampanhaDetalhe', () => {
       );
       expect(itens).toEqual([
         'Criar nova ficha',
-        // m7-06: o jogador entra na mesma tela "Iniciativa" do mestre, em modo espectador.
-        'Iniciativa',
         'Vincular ficha existente',
         'Acesso de visualização',
         'Remover da campanha',
         'Excluir ficha',
       ]);
+    });
+
+    it('posiciona Iniciativa no card Sessão do jogador, fora do menu de ações da ficha', () => {
+      const { fixture, raiz } = montar(jogador());
+
+      const acessoIniciativa = raiz.querySelector('.detalhe__sessao-iniciativa');
+      expect(acessoIniciativa?.closest('.detalhe__sessao')).not.toBeNull();
+      expect(acessoIniciativa?.textContent?.trim()).toBe('Iniciativa');
+      expect(acessoIniciativa?.getAttribute('href')).toBe(`/painel/${CAMPANHA_ID}/iniciativa`);
+
+      abrirMenuCampanha(raiz, fixture);
+      const iniciativaNoMenu = Array.from(
+        raiz.querySelectorAll('.detalhe__cabecalho-menu-item'),
+      ).some((item) => item.textContent?.includes('Iniciativa'));
+      expect(iniciativaNoMenu).toBe(false);
     });
 
     it('abre o menu com Iniciativa/Editar/Excluir e fecha ao clicar no fundo', () => {

@@ -41,8 +41,16 @@
   // pela divisão em vez da largura da tela — mesmo truque de `secundarias--abertas` neste arquivo.
   &--dividida .iniciativa {
     .painel,
-    .grade,
     .historico__lista { grid-template-columns: 1fr; }
+
+    .grade--compacta {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      max-height: 444px;
+      padding-right: 4px;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+    }
   }
 
   // No celular a divisão nunca se aplica — a tela volta a ser só a Iniciativa, como antes desta
@@ -53,6 +61,14 @@
     &--dividida .iniciativa {
       flex: initial;
       max-width: 100%;
+
+      .grade--compacta {
+        grid-template-columns: 1fr;
+        max-height: none;
+        padding-right: 0;
+        overflow-y: visible;
+        scrollbar-gutter: auto;
+      }
     }
 
     &__ficha { display: none; }
@@ -60,7 +76,7 @@
 }
 
 .iniciativa {
-  width: inherit;
+  width: 85vw;
   margin: 0 auto;
   padding: 12px 20px 40px;
   display: flex;
@@ -514,7 +530,13 @@
   gap: 12px;
 
   @include bp.tablet { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  @include bp.mobile { grid-template-columns: 1fr; }
+  @include bp.mobile {
+    grid-template-columns: 1fr;
+    max-height: none;
+    padding-right: 0;
+    overflow-y: visible;
+    scrollbar-gutter: auto;
+  }
 }
 
 // ── Botões (encapsulados por componente — ver comentário do topo) ────────────

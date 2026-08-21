@@ -190,6 +190,23 @@ export class EncontroRepository extends BaseRepository {
     return combatenteEncontrado ?? null;
   }
 
+  /** Confirma a posse da ficha ligada ao combatente sem ampliar o recorte público do encontro. */
+  async combatentePertenceAoUsuario(dto: { id: number; usuarioId: number }): Promise<boolean> {
+    const [resultado] = await this.executarConsulta<{ pertence: boolean }>(
+      `SELECT EXISTS (
+         SELECT 1
+         FROM encontro_combatente
+         INNER JOIN ficha ON ficha.id = encontro_combatente.ficha_id
+           AND ficha.is_deleted = false
+         WHERE encontro_combatente.id = :id
+           AND encontro_combatente.is_deleted = false
+           AND ficha.usuario_id = :usuarioId
+       ) AS pertence`,
+      dto,
+    );
+    return resultado?.pertence ?? false;
+  }
+
   /** Maior `ordem` já usada no encontro — a service posiciona o próximo combatente no fim. */
   async recuperarMaiorOrdem(dto: { encontroId: number }): Promise<number> {
     const [linhaMaiorOrdem] = await this.executarConsulta<{ maiorOrdem: number | null }>(

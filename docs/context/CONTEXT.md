@@ -1,8 +1,8 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-20 · **Última decisão registrada:** a visão do jogador do Encontro
-> mostra persistentemente o combatente do turno atual; quando ele é dono da ficha, o rótulo vira
-> **"Sua vez"**. O toast permanece apenas como aviso pontual de chegada do turno — ver seção 1.
+> **Última revisão:** 2026-08-20 · **Última decisão registrada:** na campanha do jogador, o acesso
+> à Iniciativa pertence ao card **Sessão**, não ao menu de manutenção da ficha; rota, guarda e
+> comportamento da tela de destino permanecem os mesmos — ver seção 1.
 >
 > **Decisão anterior:** o recorte mobile do Encontro
 > (`m7-08`, que fecha o M7) é feito **inteiramente pelo CSS do breakpoint** — os componentes só
@@ -30,18 +30,29 @@ frentes abertas voltam a ser o **M4** (Ficha de Criatura/NPC — restam `m4-05`�
 (Gestão de Usuários — resta `m6-08`); a escolha da próxima é do autor. Os ajustes descobertos na
 validação da Iniciativa foram quebrados em sete specs atômicas de pós-milestone no backlog:
 `m7-09` (turno atual do jogador, **concluída**), `m7-10` (histórico de rolagens), `m7-11` (identidade dos cartões),
-`m7-12` (layout desktop), `m7-13` (acesso pela campanha), `m7-14` (dialog de ficha) e `m7-15`
+`m7-12` (layout desktop, **concluída**), `m7-13` (acesso pela campanha, **concluída**), `m7-14` (dialog de ficha) e `m7-15`
 (ações mobile do jogador). Elas não reabrem o escopo concluído de M7; são escolhidas uma a uma.
 
 Na `m7-09`, `PainelEncontro` passou a derivar `ehMinhaVez` somente do estado de encontro já
-recebido e da ficha do usuário ativo. A mesma faixa que exibe "Age agora" para o mestre agora é
-visível ao jogador, muda para "Sua vez" quando o slot pertence à sua ficha e continua sem qualquer
-controle de condução. O broadcast `encontro:alterado` atualiza a leitura ao vivo; nenhum evento,
-endpoint ou regra de turno foi criado.
+recebido e da ficha do usuário ativo. A `m7-12` usa esse estado para exibir a única ação de condução
+do jogador: **Avançar turno**, apenas na própria vez. O backend confirma que o combatente do slot
+atual pertence à ficha do usuário; chamadas fora da própria vez são recusadas. O mestre preserva
+todos os controles existentes.
+
+Ainda na `m7-12`, o shell desktop permanece estritamente em `85vw`. Só a grade da visão dividida do
+jogador usa cartões compactos em duas colunas; três linhas ficam inteiras antes da rolagem interna.
+O bloco de controles não é renderizado quando não há ação disponível, eliminando a barra vazia. O
+botão de abrir ficha também some desses cartões no desktop, pois a ficha já está aberta ao lado. O
+breakpoint mobile restaura explicitamente a grade canônica de uma coluna e mantém esse acesso.
+
+Na `m7-13`, o link **Iniciativa** da visão do jogador saiu do menu `⋯` de ações da ficha e passou
+ao cabeçalho do card **Sessão**, junto do contexto em que é usado. O link mantém ícone, tooltip e
+rota; o mestre conserva seu menu e o tile Combate, e nenhuma regra de encontro foi alterada.
 
 O módulo de frontend é `frontend/src/app/modules/encontro`. A tela "Iniciativa" é **uma só**
 (`PainelEncontro`, rota `/painel/:campanhaId/iniciativa`, com `:encontroId` opcional para o
-histórico) e bifurca por `ehMestre()`; o jogador é espectador e só escreve a própria iniciativa.
+histórico) e bifurca por `ehMestre()`; o jogador é espectador, escreve a própria iniciativa e pode
+encerrar somente o turno da própria ficha.
 Quem desenha o log é `componentes/log-encontro` — componente **burro**, alimentado pelo
 `eventos` que já vem dentro do `EncontroRecuperadoDto`. Ele respeita a **revelação** por não fazer
 nada: o log chega recortado do backend (`encontro-revelacao.ts` descarta evento preso a combatente

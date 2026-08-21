@@ -1,5 +1,44 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-20 — M7-13 concluída: Iniciativa reposicionada nas ações de sessão
+
+Na visão do jogador da `CampanhaDetalhe`, o acesso à Iniciativa saiu do menu `⋯`, reservado às
+ações de manutenção da ficha, e passou ao cabeçalho do card **Sessão**. O mesmo link conserva
+rótulo, ícone, tooltip e rota `/painel/:campanhaId/iniciativa`; a tela de destino continua decidindo
+como apresentar encontro ativo ou a ausência dele. O menu e o tile **Combate** do mestre não foram
+alterados, assim como nenhuma guarda, permissão ou regra de encontro.
+
+O teste foi escrito primeiro e falhou pela ausência do novo acesso no card. Após a mudança mínima,
+o arquivo focado passou com `116/116`; o gate completo fechou com `1227/1227`, lint limpo e build
+verde, mantendo apenas o aviso preexistente do orçamento inicial excedido em 15,21 kB. Na aplicação
+real, o análogo aprovado foi o próprio card Sessão da `CampanhaDetalhe`: em `1920×1080` o botão
+ficou contido na lateral sem overflow; em `360×800` mediu 44 px de altura, permaneceu dentro do card
+e recebeu foco visível pelo teclado. O clique abriu a mesma tela de Iniciativa do jogador.
+
+## 2026-08-20 — M7-12 concluída: fila compacta e avanço da própria vez
+
+A revisão visual pedida pelo autor foi aplicada de forma pontual à visão desktop do jogador. O
+shell da Iniciativa permanece em `85vw`; somente sua grade dividida passou a duas colunas, com
+retratos e densidade reduzidos sem `scale()`. Três linhas ficam inteiramente visíveis e a quarta
+inicia a rolagem vertical da própria grade. O breakpoint mobile restaura a grade canônica de uma
+coluna, e os cartões/controles do mestre não foram alterados. O bloco vazio entre “Sua vez” e os
+cartões deixou de ser renderizado quando o jogador não tem ação disponível. Como a ficha do jogador
+já permanece aberta na coluna lateral, o atalho redundante de abrir ficha também foi removido dos
+cartões compactos no desktop; ele continua existindo no mobile, onde a coluna lateral fica oculta.
+
+“Avançar turno” agora aparece ao jogador somente quando o slot atual pertence ao combatente da sua
+ficha. O endpoint existente passou a aceitar essa exceção de permissão: mestre continua livre para
+conduzir; jogador membro precisa ser dono da ficha do combatente atual, comprovado por consulta de
+posse no repositório. Chamadas de outro jogador ou fora da própria vez são recusadas.
+
+Os testes foram escritos antes da implementação e falharam pelo comportamento antigo. Gates finais:
+backend `421/421`, frontend `1226/1226`, lint frontend e builds backend/frontend verdes. O lint
+backend permanece bloqueado por duas asserções preexistentes e fora do diff em
+`campanha.service.spec.ts:685` e `ficha.service.spec.ts:2288`. A aplicação real foi inspecionada em
+`1920×1080` e `360×800`: Full HD mediu exatamente `1632px` (`85vw`), sete combatentes comprovaram
+três linhas completas + scroll, o avanço do jogador funcionou e removeu o botão ao passar a vez;
+no mobile houve uma divergência inicial de especificidade, corrigida e revalidada sem overflow.
+
 ## 2026-08-20 — M7-09 concluída: indicação persistente do turno para o jogador
 
 A visão espectador já conhecia o slot atual, mas escondia a faixa "Age agora" do jogador e usava

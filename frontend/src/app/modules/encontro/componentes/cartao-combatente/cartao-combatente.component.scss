@@ -455,3 +455,39 @@
   color: var(--text-mute);
   font-style: italic;
 }
+
+// Na visão desktop dividida do jogador, o cartão vira uma entrada compacta da fila. O contexto
+// vem da grade da página para não alterar o cartão canônico do mestre nem o recorte mobile.
+@media (min-width: (bp.$bp-mobile + 1px)) {
+  :host-context(.grade--compacta) .combatente {
+    gap: 8px;
+    min-height: 132px;
+    padding: 8px;
+
+    &__retrato {
+      width: 58px;
+      height: 58px;
+    }
+
+    &__iniciativa {
+      bottom: -4px;
+      left: -4px;
+      width: 34px;
+      height: 34px;
+    }
+
+    &__iniciativa-valor { font-size: 15px; }
+    &__iniciativa-rotulo { font-size: 6px; }
+    &__corpo { gap: 3px; }
+    &__etiqueta { padding: 2px 5px; font-size: 8px; }
+    &__origem { font-size: 8px; }
+    &__nome-linha { gap: 5px; }
+    &__nome { font-size: 12px; }
+    &__abrir-ficha { display: none; }
+    &__recursos { gap: 2px 6px; }
+    &__recurso { gap: 3px; font-size: 9px; }
+    &__defesas { gap: 2px 5px; font-size: 8px; }
+    &__condicao { padding: 2px 5px; font-size: 8px; }
+    &__narrativo { font-size: 8px; }
+  }
+}

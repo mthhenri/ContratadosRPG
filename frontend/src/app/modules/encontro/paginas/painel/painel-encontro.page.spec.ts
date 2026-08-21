@@ -413,7 +413,7 @@ describe('PainelEncontro', () => {
       ],
     };
 
-    it('não dá ao jogador nenhum controle de condução', () => {
+    it('não dá controles do mestre nem avanço fora da própria vez', () => {
       const { fixture } = montar(encontroAtivo, USUARIO_JOGADOR);
       const elemento = fixture.nativeElement as HTMLElement;
       const textos = Array.from(elemento.querySelectorAll('button')).map((botao) =>
@@ -426,11 +426,41 @@ describe('PainelEncontro', () => {
       expect(textos).not.toContain('Rolar iniciativas');
       expect(textos).not.toContain('Selecionar combatentes');
       expect(textos).not.toContain('Adicionar avulso');
+      expect(elemento.querySelector('.painel__bloco--jogador')).toBeNull();
       // E nenhum stepper de vida/energia chega aos cartões.
       expect(elemento.querySelectorAll('.combatente__stepper').length).toBe(0);
       expect(elemento.querySelector('.iniciativa__papel')?.textContent?.trim()).toContain(
         'Espectador',
       );
+    });
+
+    it('mostra e executa o avanço somente quando chega a vez do próprio jogador', () => {
+      const { fixture, encontroAlterado$, encontroService } = montar(
+        encontroAtivo,
+        USUARIO_JOGADOR,
+      );
+      const elemento = fixture.nativeElement as HTMLElement;
+
+      expect(elemento.querySelector('.painel__bloco--jogador')).toBeNull();
+
+      encontroAlterado$.next({ encontro: { ...encontroAtivo, turnoIndice: 1 } });
+      fixture.detectChanges();
+
+      const botao = elemento.querySelector<HTMLButtonElement>('.painel__bloco--jogador button');
+      expect(botao?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Avançar turno');
+
+      botao?.click();
+      expect(encontroService.avancarTurno).toHaveBeenCalledWith(encontroAtivo.id);
+    });
+
+    it('compacta a grade desktop dividida do jogador', () => {
+      const jogador = montar(encontroAtivo, USUARIO_JOGADOR).fixture.nativeElement as HTMLElement;
+      expect(jogador.querySelector('.grade')?.classList).toContain('grade--compacta');
+    });
+
+    it('preserva a grade canônica do mestre', () => {
+      const mestre = montar(encontroAtivo, USUARIO_MESTRE).fixture.nativeElement as HTMLElement;
+      expect(mestre.querySelector('.grade')?.classList).not.toContain('grade--compacta');
     });
 
     it('não duplica a própria iniciativa fora do cartão do combatente', () => {

@@ -297,8 +297,12 @@ export class EncontroService {
     dto: EncontroTurnoAvancarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<EncontroRecuperadoDto> {
-    const encontroEncontrado = await this.recuperarEncontroAtivo(dto.id, usuarioAtivo);
+    const encontroEncontrado = await this.recuperarEncontroObrigatorio(dto.id);
+    if (encontroEncontrado.status !== EncontroStatusEnum.ATIVO) {
+      throw new BusinessException('O combate não está em andamento');
+    }
     const ordemRodada = await this.calcularOrdemRodada(encontroEncontrado.id);
+    await this.validarAvancoDeTurno(encontroEncontrado, ordemRodada, usuarioAtivo);
     const proximoIndice = encontroEncontrado.turnoIndice + 1;
 
     if (proximoIndice < ordemRodada.length) {
@@ -568,6 +572,29 @@ export class EncontroService {
         cadencia: linha.cadencia,
       }));
     return intercalarCadencia(ordenarIniciativa(ordenaveis));
+  }
+
+  /** Mestre conduz livremente; jogador só pode encerrar o turno da ficha que possui. */
+  private async validarAvancoDeTurno(
+    encontro: EncontroLinhaDto,
+    ordemRodada: readonly OrdemTurnoDto[],
+    usuarioAtivo: JwtPayload,
+  ): Promise<void> {
+    const membro = await this.validarMembro(encontro.campanhaId, usuarioAtivo);
+    if (membro.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
+      return;
+    }
+
+    const turnoAtual = ordemRodada[encontro.turnoIndice];
+    if (
+      !turnoAtual ||
+      !(await this.encontroRepositorio.combatentePertenceAoUsuario({
+        id: turnoAtual.combatenteId,
+        usuarioId: usuarioAtivo.sub,
+      }))
+    ) {
+      throw new UnauthorizedAccessException();
+    }
   }
 
   /**
