@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import type { EncontroCombatenteResumoDto } from '@contratados-rpg/shared/dtos/encontro';
 import {
   CadenciaEnum,
+  ClasseEnum,
   CombatenteOrigemEnum,
   NivelAmeacaEnum,
   TipoFichaEnum,
@@ -43,6 +44,9 @@ describe('CartaoCombatente', () => {
     corFicha: '#4a9d6b',
     imagemUrl: null,
     imagemFoco: null,
+    donoNome: null,
+    classe: null,
+    nivel: null,
     revelado: true,
   };
 
@@ -147,7 +151,7 @@ describe('CartaoCombatente', () => {
   });
 
   it('só cita a Cadência quando ela de fato multiplica os turnos', () => {
-    const singular = montar(base, { donoNome: 'Bia' });
+    const singular = montar({ ...base, donoNome: 'Bia' });
     expect(texto(singular, '.combatente__origem')).toBe('Bia · Agente');
 
     const dupla = montar(
@@ -155,6 +159,16 @@ describe('CartaoCombatente', () => {
       {},
     );
     expect(texto(dupla, '.combatente__origem')).toBe('Criatura da campanha · Cadência 2');
+  });
+
+  it('mostra classe e nível na carteirinha do agente, quando o backend os manda', () => {
+    const fixture = montar({
+      ...base,
+      donoNome: 'Bia',
+      classe: ClasseEnum.COMBATENTE,
+      nivel: 4,
+    });
+    expect(texto(fixture, '.combatente__origem')).toBe('Bia · Combatente · Nível 4');
   });
 
   it('dá precedência a "Morrendo" sobre a vez, e some com a etiqueta de turno fora do combate', () => {
@@ -267,15 +281,50 @@ describe('CartaoCombatente', () => {
     expect(texto(fixture, '.combatente__iniciativa-valor')).toBe('21');
   });
 
-  it('o agente de outro jogador, não revelado, também não se anuncia', () => {
+  it('o agente de ficha oculta, não revelado, também não se anuncia', () => {
+    // `donoNome: null` é como o backend representa "ficha oculta" (m7-16) — sem carteirinha,
+    // mesmo tratamento de uma criatura não revelada.
     const fixture = montar(
-      { ...base, nome: 'V. Corvalho', revelado: false, vidaAtual: 0, vidaMaxima: 0, energiaMaxima: null, energiaAtual: null, defesa: null, esquiva: null, bloqueio: null, contraAtaque: null },
+      { ...base, nome: 'V. Corvalho', donoNome: null, revelado: false, vidaAtual: 0, vidaMaxima: 0, energiaMaxima: null, energiaAtual: null, defesa: null, esquiva: null, bloqueio: null, contraAtaque: null },
       { emCombate: true },
     );
     // Antes da correção o cartão caía no ramo do agente e estampava 'Aguarda' — um estado de
     // combate de uma ficha que este jogador nem pode abrir.
     expect(texto(fixture, '.combatente__etiqueta')).toBe('Não revelado');
     expect(texto(fixture, '.combatente__origem')).toBe('Em campo');
+  });
+
+  it('m7-16: o agente de ficha não oculta mostra a carteirinha mesmo sem acesso aos números', () => {
+    const fixture = montar(
+      {
+        ...base,
+        nome: 'Max Star',
+        donoNome: 'Sirius',
+        classe: ClasseEnum.COMBATENTE,
+        nivel: 4,
+        imagemUrl: '/uploads/agentes/max-star.webp',
+        revelado: false,
+        vidaAtual: 0,
+        vidaMaxima: 0,
+        energiaMaxima: null,
+        energiaAtual: null,
+        defesa: null,
+        esquiva: null,
+        bloqueio: null,
+        contraAtaque: null,
+      },
+      { emCombate: true, jaAgiu: true },
+    );
+    const elemento = fixture.nativeElement as HTMLElement;
+
+    // A carteirinha aparece — dono, classe, nível e avatar — mesmo sem `revelado`.
+    expect(texto(fixture, '.combatente__origem')).toBe('Sirius · Combatente · Nível 4');
+    expect(elemento.querySelector('.combatente__avatar-imagem')).not.toBeNull();
+    // Os números continuam escondidos — só a identidade "de carteirinha" mudou.
+    expect(texto(fixture, '.combatente__recurso--oculto')).toBe('Vida —');
+    expect(elemento.querySelector('.combatente__defesas')).toBeNull();
+    // A etiqueta segue pro estado de turno normalmente — ordem/iniciativa sempre foram públicas.
+    expect(texto(fixture, '.combatente__etiqueta')).toBe('Já agiu');
   });
 
   it('emite a iniciativa digitada e ignora o campo vazio', () => {

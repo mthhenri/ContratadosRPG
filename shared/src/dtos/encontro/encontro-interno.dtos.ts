@@ -42,6 +42,14 @@ export interface EncontroCombatenteLinhaDto {
   readonly fichaImagemFoco: FichaImagemFocoDto | null;
   readonly tipoFicha: TipoFichaEnum | null;
   readonly fichaDados: FichaJogadorDadosDto | FichaCriaturaDadosDto | null;
+  /**
+   * Dado bruto pro recorte de identidade "de carteirinha" (m7-16) — se a ficha esconde a própria
+   * identidade de quem não tem concessão (`ficha.oculta`, m3-65) e o nome de quem a possui. Nunca
+   * serializado ao cliente: `EncontroService` os usa para decidir o conjunto de fichas com
+   * identidade visível antes de descartar as duas colunas.
+   */
+  readonly fichaOculta: boolean | null;
+  readonly fichaDonoNome: string | null;
 }
 
 /** Entrada interna da criação do encontro — nasce em `MONTAGEM`, rodada 0, turno 0. */

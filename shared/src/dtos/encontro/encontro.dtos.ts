@@ -1,5 +1,6 @@
 import type {
   CadenciaEnum,
+  ClasseEnum,
   CombatenteOrigemEnum,
   EncontroEventoTipoEnum,
   EncontroStatusEnum,
@@ -119,16 +120,30 @@ export interface EncontroCombatenteResumoDto {
   readonly iniciativaBonus: number;
   /** Cor de identidade da ficha (m3-61); `null` cai no `--accent` de quem visualiza. */
   readonly corFicha: string | null;
-  /** Avatar e enquadramento da ficha, quando ela é revelada para quem consulta. */
+  /**
+   * Avatar e enquadramento da ficha. Para um agente (`tipoFicha: JOGADOR`) cuja ficha não está
+   * `oculta` (m3-65), sobrevive mesmo sem `revelado` — mesmo recorte de identidade que
+   * `CampanhaRepository.listarMembros` já usa fora do encontro (m7-16); `null` quando a ficha
+   * está oculta ou é de uma criatura/NPC não revelado.
+   */
   readonly imagemUrl: string | null;
   readonly imagemFoco: FichaImagemFocoDto | null;
   /**
-   * `false` quando quem consulta **não** tem direito de ver a ficha deste combatente fora do
-   * encontro (m7-06): a criatura que o mestre ainda não revelou (`usuario_ficha_acesso`), a ficha
-   * de outro jogador sem concessão e o avulso, que não tem ficha para revelar. Nesse caso o
+   * Dono da ficha (`usuario.nome`) e classe/nível — só presentes num agente (`JOGADOR`) e sujeitos
+   * à mesma regra de `imagemUrl` acima: sobrevivem sem `revelado` quando a ficha não está oculta.
+   * `null` para criatura/NPC/avulso ou agente oculto/não revelado (m7-16).
+   */
+  readonly donoNome: string | null;
+  readonly classe: ClasseEnum | null;
+  readonly nivel: number | null;
+  /**
+   * `false` quando quem consulta **não** tem direito de ver os **números** deste combatente fora
+   * do encontro (m7-06): a criatura que o mestre ainda não revelou (`usuario_ficha_acesso`), a
+   * ficha de outro jogador sem concessão e o avulso, que não tem ficha para revelar. Nesse caso o
    * backend **já zera** vida, energia, defesas, condições e Destreza antes de responder — o resumo
-   * conserva só a identidade mínima da ordem de turno (nome, iniciativa, Cadência). O mestre
-   * recebe sempre `true`.
+   * conserva a identidade mínima da ordem de turno (nome, iniciativa, Cadência) e, para um agente
+   * de ficha não oculta, também a identidade "de carteirinha" acima (avatar, dono, classe, nível)
+   * — só os números ficam atrás da concessão. O mestre recebe sempre `true`.
    */
   readonly revelado: boolean;
 }

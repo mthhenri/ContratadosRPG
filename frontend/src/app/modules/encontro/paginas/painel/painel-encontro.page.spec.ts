@@ -71,6 +71,9 @@ describe('PainelEncontro', () => {
     corFicha: null,
     imagemUrl: null,
     imagemFoco: null,
+    donoNome: null,
+    classe: null,
+    nivel: null,
     revelado: true,
     ...extras,
   });
@@ -322,7 +325,6 @@ describe('PainelEncontro', () => {
     readonly acoesRestantesDaVez: () => number;
     readonly totalDeTurnos: () => number;
     readonly jaAgiu: (combatente: { id: number }) => boolean;
-    readonly donoNome: (combatente: { fichaId: number | null }) => string | null;
     readonly nivelAmeaca: (combatente: unknown) => NivelAmeacaEnum | null;
     readonly rolarTudo: () => void;
     readonly rolagensFeed: () => readonly RolagemResumoDto[];
@@ -358,14 +360,13 @@ describe('PainelEncontro', () => {
     expect(nomes).toEqual(['SCP-1471-A', 'K. Amaral', 'V. Corvalho']);
   });
 
-  it('resolve dono e Nível de Ameaça do contexto já carregado, sem consulta extra', () => {
+  it('resolve o Nível de Ameaça do contexto já carregado, sem consulta extra', () => {
     const { fixture } = montar();
     const painel = interno(fixture);
     const [criatura, agente] = painel.combatentes() as unknown as {
       fichaId: number | null;
     }[];
 
-    expect(painel.donoNome(agente)).toBe('Bia');
     expect(painel.nivelAmeaca(criatura)).toBe(NivelAmeacaEnum.ALTA);
     expect(painel.nivelAmeaca(agente)).toBeNull();
   });

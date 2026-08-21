@@ -604,17 +604,6 @@ export class PainelEncontro {
     return this.jaAgiram().has(combatente.id);
   }
 
-  /** Nome de quem joga a ficha do combatente — resolvido dos membros já carregados. */
-  protected donoNome(combatente: EncontroCombatenteResumoDto): string | null {
-    if (combatente.fichaId === null) {
-      return null;
-    }
-    const dono = (this.membros() ?? []).find((membro) =>
-      membro.fichas.some((ficha) => ficha.id === combatente.fichaId),
-    );
-    return dono?.nome ?? null;
-  }
-
   /** Nível de Ameaça da criatura — vem do resumo da ficha, que a listagem da campanha já traz. */
   protected nivelAmeaca(combatente: EncontroCombatenteResumoDto): NivelAmeacaEnum | null {
     if (combatente.tipoFicha !== TipoFichaEnum.CRIATURA || combatente.fichaId === null) {

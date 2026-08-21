@@ -157,13 +157,15 @@ export class EncontroRepository extends BaseRepository {
             encontro_combatente.condicoes,
             ficha.nome AS "fichaNome", ficha.cor AS "fichaCor",
             ficha.imagem_url AS "fichaImagemUrl", ficha.imagem_foco AS "fichaImagemFoco",
-            tipo_ficha.codigo AS "tipoFicha", ficha.dados AS "fichaDados"`;
+            tipo_ficha.codigo AS "tipoFicha", ficha.dados AS "fichaDados",
+            COALESCE(ficha.oculta, false) AS "fichaOculta", ficha_dono.nome AS "fichaDonoNome"`;
   }
 
   /** `JOIN`s de `colunasCombatente()` — `LEFT`, porque avulso não tem ficha. */
   private juncoesCombatente(): string {
     return `LEFT JOIN ficha ON ficha.id = encontro_combatente.ficha_id AND ficha.is_deleted = false
-            LEFT JOIN tipo_ficha ON tipo_ficha.id = ficha.tipo_ficha_id AND tipo_ficha.is_deleted = false`;
+            LEFT JOIN tipo_ficha ON tipo_ficha.id = ficha.tipo_ficha_id AND tipo_ficha.is_deleted = false
+            LEFT JOIN usuario AS ficha_dono ON ficha_dono.id = ficha.usuario_id AND ficha_dono.is_deleted = false`;
   }
 
   /** Combatentes ativos do encontro, na ordem de entrada (a ordem de turno é do motor puro). */

@@ -1,5 +1,55 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-21 — `m7-16`: identidade "de carteirinha" na Iniciativa, cabeçalho e bugs de mobile
+
+Feedback ao vivo do autor sobre a tela de Iniciativa, direto da mesa (celular real, produção),
+trouxe cinco pontos além do punch list já fechado hoje:
+
+1. **Cards quebrando o nome no mobile.** `.combatente__nome-linha` disputava largura entre o
+   nome e os botões (abrir ficha, ajustar, remover), quebrando um nome como "Arthur 'Strike'
+   Machado" em várias linhas curtas. O nome virou linha própria (`flex-basis: 100%` só no
+   mobile); os botões quebram juntos pra linha de baixo, agrupados. Zero mudança de HTML — só
+   `flex-wrap` no container e `flex-basis` no nome.
+2. **Identidade "de carteirinha" liberada pra quem não tem acesso.** Um agente (`JOGADOR`) cuja
+   ficha não está `oculta` (m3-65) não é segredo — a mesma identidade (avatar, dono, classe,
+   nível) já aparece pra qualquer membro fora do encontro em `CampanhaRepository.listarMembros`.
+   Escondê-la na Iniciativa só porque o dono não concedeu `usuario_ficha_acesso` (que é sobre
+   abrir a ficha **inteira**, não sobre saber quem está na mesa) tratava um colega de squad como
+   segredo do mestre. Agora só os **números** (vida, defesas, condições, Destreza) continuam
+   atrás da concessão de sempre; a "carteirinha" segue a mesma regra de `oculta` que já vale fora
+   do combate. Criatura/NPC e agente de ficha oculta continuam 100% escondidos, sem mudança.
+   - Backend: `EncontroCombatenteResumoDto` ganhou `donoNome`/`classe`/`nivel`; o repositório
+     ganhou `ficha.oculta`/`usuario.nome` (novo `LEFT JOIN usuario`); `encontro-revelacao.ts`
+     ganhou o segundo conjunto `fichaIdsIdentidadeVisivel` (calculado direto da linha do
+     combatente, sem segunda consulta de permissão — proibição #28 é sobre reimplementar a
+     regra dos **números**, que continua só em `FichaService.listarFichas`).
+   - Frontend: `CartaoCombatente` ganhou `identidadeVisivel` (computed) e passou a mostrar
+     `donoNome · classe · Nível N` na linha de origem sempre que o backend a populou — revelado
+     ou não; a etiqueta do topo passou a usar o estado de turno normalmente nesse caso (a ordem
+     sempre foi pública), só a caixa de Vida continua um traço. `donoNome` deixou de ser um
+     `input` resolvido pela página cruzando `membros()` — o dado já vem certo do combatente.
+3. **Bug do minimizar.** No mobile, minimizar a ficha flutuante abria um selo `position: fixed`
+   ("Reabrir ficha") a meio da lista, sobrepondo qualquer cartão que estivesse ali embaixo —
+   reproduzido ao vivo cobrindo o 3º cartão já na carga inicial, sem rolar nada.
+4. **Minimizar = Fechar no mobile.** Sem janela pra recolher a um canto (a ficha é tela cheia lá),
+   as duas ações agora fazem a mesma coisa — `recolher()` chama `fechar()` quando `ehMobile()`.
+   Resolve o item 3 de graça: o estado `recolhido` nunca ativa no mobile.
+5. **Cabeçalho reorganizado.** `.iniciativa__acoes` virou dois grupos — status/navegação do
+   encontro (Espectador, Combate atual, N encerrados) e utilitários da sessão (Minha ficha,
+   calculadora, histórico, caderno, tempo real). No desktop os dois seguem numa linha só,
+   idêntico a antes; no mobile cada grupo vira sua própria linha, sempre na mesma ordem — nada
+   mais salta de posição conforme o que está visível naquele momento.
+
+Verificação ao vivo (Playwright, `1920×1080` e `360×800`, mestre e dois jogadores — um dono da
+ficha, outro sem `usuario_ficha_acesso` a ela): o jogador sem acesso passou a ver
+"Jogador Verify · Combatente · Nível 1" + avatar no cartão de um colega, com "Vida —" preservado;
+um nome longo (`Arthur 'Strike' Machado Contido`) quebrou em 2 linhas próprias, com os botões
+agrupados numa linha à parte, sem overflow em nenhum viewport; minimizar no mobile fecha de vez,
+sem selo flutuante remanescente. Fecho: backend `423/423` (2 casos novos em
+`encontro-revelacao.spec.ts`), frontend `1234/1234` (2 casos novos em
+`cartao-combatente.component.spec.ts`), lint dos dois workspaces limpo (backend com os 2 erros
+preexistentes de `P-022`, não tocados).
+
 ## 2026-08-21 — Três ajustes de polimento da Iniciativa, achados numa auditoria do punch list
 
 O autor trouxe um punch list de 12 itens pós-M7 já vivido na mesa; a auditoria contra o código
