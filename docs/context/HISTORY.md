@@ -1,5 +1,23 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-20 — M7-14 concluída: ficha flutuante alcançável no mobile
+
+O corpo da ficha flutuante da Iniciativa passou a ter respiro interno pelo token
+`--pad-card`, sem rolagem horizontal e com espaço final para a navegação fixa da ficha. No mobile,
+ele é a superfície vertical única da janela. A ficha de jogador recebe explicitamente o contexto
+`rolagemExterna`, que remove o teto e a rolagem concorrente do painel de Extras quando este fizer
+parte do conteúdo exibido na janela; fora dela, o comportamento consolidado da ficha permanece
+inalterado.
+
+O teste de integração do conteúdo foi escrito primeiro e falhou pela ausência da marca de rolagem
+externa; depois passou. Na aplicação real, o análogo foi a própria ficha compacta já aprovada na
+Iniciativa, junto ao padrão global de scrollbar do tema. Em `360×800`, a ficha longa teve apenas
+`.ficha-flutuante__corpo` como contêiner vertical, chegou ao final (`scrollTop` 407 de 407) sem
+overflow horizontal; a aba Inventário vazia serviu como ficha curta e a navegação interna continuou
+operante. Em `1920×1080`, a janela preservou cabeçalho e controles, com 20px de padding lateral,
+520×620px e sem overflow horizontal. O gate final fechou com `1228/1228` testes, lint limpo e build
+verde; permanece somente o aviso preexistente de orçamento inicial excedido em 15,21 kB.
+
 ## 2026-08-20 — M7-13 concluída: Iniciativa reposicionada nas ações de sessão
 
 Na visão do jogador da `CampanhaDetalhe`, o acesso à Iniciativa saiu do menu `⋯`, reservado às

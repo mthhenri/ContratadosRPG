@@ -374,6 +374,20 @@
   }
 }
 
+// Dentro da ficha flutuante do Encontro, o corpo da janela é a única superfície que rola no
+// mobile. Extras normalmente ganha um painel interno limitado para coexistir com a coluna lateral;
+// nessa janela essa coluna não existe, portanto o limite só criaria uma segunda barra concorrente.
+.ficha-visao--rolagem-externa {
+  @include bp.mobile {
+    .ficha-extras__painel {
+      max-height: none;
+      overflow-y: visible;
+      overscroll-behavior: auto;
+      padding-inline-end: 0;
+    }
+  }
+}
+
 @keyframes ficha-painel-entra {
   from {
     opacity: 0;

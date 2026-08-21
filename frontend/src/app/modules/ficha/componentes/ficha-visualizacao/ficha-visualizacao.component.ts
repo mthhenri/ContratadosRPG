@@ -401,6 +401,9 @@ export interface AjusteClasse {
   styleUrl: './ficha-visualizacao.component.scss',
 })
 export class FichaVisualizacao {
+  /** A janela flutuante do Encontro é o único scroll vertical no mobile. */
+  readonly rolagemExterna = input(false);
+
   /** Identificador da ficha (compõe a classificação `FICHA-JGD-NNNN`). */
   readonly fichaId = input.required<number>();
   /** Nome/codinome do agente (exibido no card de identidade). */

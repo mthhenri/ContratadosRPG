@@ -1,4 +1,8 @@
-<div class="ficha-visao" [class.ficha-visao--compacto]="modo() === 'compacto'">
+<div
+  class="ficha-visao"
+  [class.ficha-visao--compacto]="modo() === 'compacto'"
+  [class.ficha-visao--rolagem-externa]="rolagemExterna()"
+>
   <!-- Barra superior: rótulo + chip de classificação -->
   <header class="ficha-visao__topo">
     <span class="ficha-visao__rotulo-secao">Ficha de Jogador</span>

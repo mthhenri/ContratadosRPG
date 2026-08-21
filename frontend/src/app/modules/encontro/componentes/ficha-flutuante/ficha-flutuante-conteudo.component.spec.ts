@@ -130,6 +130,17 @@ describe('FichaFlutuanteConteudo', () => {
     ).not.toBeNull();
   });
 
+  it('marca a ficha da janela flutuante para delegar a rolagem vertical à janela', () => {
+    const { fixture } = montar(
+      { fichaId: 10, tipo: TipoFichaEnum.JOGADOR, usuarioIdDono: 7 },
+      false,
+    );
+
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('.ficha-visao--rolagem-externa'),
+    ).not.toBeNull();
+  });
+
   it('busca `recuperarFichaCriatura` e desenha `app-criatura-visualizacao` pro alvo CRIATURA', () => {
     const { fixture, recuperarFicha, recuperarFichaCriatura } = montar(
       { fichaId: 20, tipo: TipoFichaEnum.CRIATURA, usuarioIdDono: 1 },

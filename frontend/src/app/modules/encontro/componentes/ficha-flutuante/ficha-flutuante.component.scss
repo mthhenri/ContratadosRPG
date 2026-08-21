@@ -125,8 +125,15 @@
     flex: 1;
     min-width: 0;
     min-height: 0;
-    overflow: auto;
+    padding: var(--pad-card);
+    overflow-x: clip;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     background: var(--bg);
+
+    @include bp.mobile {
+      padding-bottom: calc(var(--pad-card) + #{bp.$alvo-toque});
+    }
   }
 
   &__redimensionar {

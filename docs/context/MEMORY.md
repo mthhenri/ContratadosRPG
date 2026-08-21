@@ -80,6 +80,7 @@ Fluxo obrigatório: **controller (burro) → service (regra) → repository (só
 | Módulos de tela | `frontend/src/app/modules/` — `autenticacao/`, `calculadora/`, `campanha/`, `ficha/`, `pagina-caderno/`, `usuario/` |
 | Janela, estado, Markdown seguro e transporte do caderno | `frontend/src/app/modules/pagina-caderno/` |
 | Componentes da ficha | `frontend/src/app/modules/ficha/componentes/` — `ficha-visualizacao/`, `ficha-inventario/`, `ficha-habilidades/`, `ficha-sanidade/`, `ficha-rolagens/`, `ficha-rolagens-painel/`, `ficha-combos/`, `ficha-habilidade-seletor/`, `guia-equipamento-loja/`, `guia-formula/` |
+| Ficha flutuante da Iniciativa | `frontend/src/app/modules/encontro/componentes/ficha-flutuante/`; no mobile, `ficha-flutuante__corpo` é a rolagem vertical única e passa `rolagemExterna` à ficha de jogador |
 | Composables de página da ficha (uma instância por página, `providers: []`) | `frontend/src/app/modules/ficha/` — `ficha-edicao.service.ts` (handlers `ajustar*`), `ficha-rolagem-registro.service.ts` (flag "Rolagem oculta" + registro do histórico) |
 | Componentes reutilizáveis | `frontend/src/app/shared/` — `layout/`, `icone/`, `bandeja-dados/`, `historico-rolagens-sidebar/`, `calculadora-flutuante/`, `tempo-real/`, `tooltip/`, `overflow-fade/`, `hold-repeat/`, `marca/`… |
 | Services, guards, interceptors | `frontend/src/app/core/` |
