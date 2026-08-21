@@ -1,5 +1,33 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-21 — Três ajustes de polimento da Iniciativa, achados numa auditoria do punch list
+
+O autor trouxe um punch list de 12 itens pós-M7 já vivido na mesa; a auditoria contra o código
+(mesmo cenário Playwright das duas entradas acima) confirmou 8 já implementados e achou 3 gaps
+reais, corrigidos nesta sessão sem tocar em regra de negócio:
+
+1. **Ícone no botão "Avançar turno"** (mestre e jogador) — os dois só tinham texto, diferente dos
+   vizinhos "Voltar"/"Rolar iniciativa". Em vez de desenhar um SVG novo, o path de `voltar`
+   (seta horizontal) é reaproveitado espelhado (`transform: scaleX(-1)`, classe
+   `painel__acao-icone--avancar`) — evita duplicar um ícone quase idêntico só pela direção.
+2. **Botões flutuantes da esquerda inconsistentes** — `CadernoFlutuante` usava
+   `border-radius: var(--radius-card)` (quadrado arredondado) enquanto `CalculadoraFlutuante` e
+   `HistoricoRolagensSidebar`, empilhados no mesmo canto, usam `50%` (círculo). Corrigido para o
+   mesmo círculo + `box-shadow` dos outros dois; o tratamento mobile (já `var(--radius-control)`
+   nos três) não mudou.
+3. **"Minha ficha" sobrepondo cards no mobile** — o atalho era `position: fixed` a meio da tela;
+   como os cartões rolam por baixo dele, qualquer card podia acabar atrás do botão (capturado ao
+   vivo cobrindo o 3º cartão já na carga inicial, sem rolar nada). Motivo real: o
+   `padding-bottom` reservado só protegia o **fim** da lista, não o meio. Corrigido movendo o
+   botão para dentro do fluxo normal do cabeçalho (`.iniciativa__acoes`, ao lado do chip
+   "Espectador"), com o mesmo estilo/44px — `position: fixed` e o hack de padding saíram.
+
+Verificação ao vivo (Playwright, mestre e jogador, `1920×1080` e `360×800`): os três gatilhos
+flutuantes saem com `border-radius: 50%` computado; `.iniciativa__minha-ficha` mede
+`position: static` e não sobrepõe nenhum `.combatente` (`sobrepoeAlgumCard: false`); o clique
+nele ainda abre a ficha e nenhum viewport ganhou overflow horizontal. `npm run test -w frontend`
+(1232/1232) e `npm run lint -w frontend` (limpo) depois da mudança.
+
 ## 2026-08-21 — Fechamento de `m6-08`, `m7-10` e `m7-11`: gate visual e registro documental
 
 As três specs em `docs/specs/active/` já estavam **implementadas no código** — `m6-08` desde

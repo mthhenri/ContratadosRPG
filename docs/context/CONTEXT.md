@@ -1,10 +1,10 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-21 · **Última decisão registrada:** `m6-08` (impersonação
-> administrativa), `m7-10` (histórico de rolagens na Iniciativa) e `m7-11` (identidade dos
-> cartões de combatente) fecharam o gate visual completo (1920×1080 + 360×800, dois usuários) que
-> faltava — as três já estavam implementadas no código, só sem o registro/fechamento formal — ver
-> seção 1.
+> **Última revisão:** 2026-08-21 · **Última decisão registrada:** auditoria de um punch list de
+> 12 itens pós-M7 achou 3 gaps reais na tela de Iniciativa — ícone faltando no botão "Avançar
+> turno", os 3 gatilhos flutuantes da esquerda com formato inconsistente (`CadernoFlutuante`
+> quadrado vs. os outros dois circulares) e "Minha ficha" sobrepondo cartões no mobile por ser
+> `position: fixed` a meio da tela — corrigidos sem tocar regra de negócio; ver seção 1.
 >
 > **Decisão anterior:** o recorte mobile do Encontro
 > (`m7-08`, que fecha o M7) é feito **inteiramente pelo CSS do breakpoint** — os componentes só
