@@ -140,6 +140,25 @@ describe('PainelEncontro', () => {
     },
   } as unknown as FichaRecuperadaDto;
 
+  /** Resumo usado apenas quando o teste precisa exercitar a abertura da própria ficha. */
+  const fichaResumoDoJogador = {
+    id: 200,
+    campanhaId: CAMPANHA_ID,
+    campanhaNome: null,
+    usuarioId: 7,
+    nome: 'K. Amaral',
+    tipo: TipoFichaEnum.JOGADOR,
+    na: null,
+    classe: ClasseEnum.COMBATENTE,
+    arquetipo: ArquetipoEnum.MERCENARIO,
+    nivel: 2,
+    vidaAtual: 20,
+    energiaAtual: 10,
+    morrendo: false,
+    machucado: false,
+    inconsciente: false,
+  } as unknown as FichaResumoDto;
+
   const fichas = [
     {
       id: 100,
@@ -187,6 +206,7 @@ describe('PainelEncontro', () => {
     estado: EncontroRecuperadoDto = encontroAtivo,
     usuarioId: number = USUARIO_MESTRE,
     historicoExtra: readonly EncontroResumoDto[] = [],
+    incluirFichaDoJogador = false,
   ) {
     const encontroAlterado$ = new Subject<EncontroAlteradoDto>();
     const encontroIniciativaPedido$ = new Subject<{ id: number; campanhaId: number }>();
@@ -244,7 +264,9 @@ describe('PainelEncontro', () => {
         {
           provide: FichaService,
           useValue: {
-            listarFichas: vi.fn(() => of(fichas)),
+            listarFichas: vi.fn(() =>
+              of(incluirFichaDoJogador ? [...fichas, fichaResumoDoJogador] : fichas),
+            ),
             recuperarFicha: vi.fn(() => of(fichaDoJogador)),
           },
         },
@@ -456,6 +478,20 @@ describe('PainelEncontro', () => {
     it('compacta a grade desktop dividida do jogador', () => {
       const jogador = montar(encontroAtivo, USUARIO_JOGADOR).fixture.nativeElement as HTMLElement;
       expect(jogador.querySelector('.grade')?.classList).toContain('grade--compacta');
+    });
+
+    it('mantém um acesso persistente à própria ficha na visão do jogador', () => {
+      const { fixture } = montar(encontroAtivo, USUARIO_JOGADOR, [], true);
+      const elemento = fixture.nativeElement as HTMLElement;
+      const gatilho = elemento.querySelector<HTMLButtonElement>('.iniciativa__minha-ficha');
+
+      expect(gatilho?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Minha ficha');
+      expect(elemento.querySelector('[role="dialog"]')).toBeNull();
+
+      gatilho?.click();
+      fixture.detectChanges();
+
+      expect(elemento.querySelector('[role="dialog"]')).not.toBeNull();
     });
 
     it('preserva a grade canônica do mestre', () => {

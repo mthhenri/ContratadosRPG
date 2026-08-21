@@ -638,6 +638,16 @@ export class PainelEncontro {
     this.tentarAbrirFichaFlutuante(fichaId, tipo);
   }
 
+  /** Abre a própria ficha pelo atalho persistente do jogador no mobile. */
+  protected abrirMinhaFicha(): void {
+    const combatente = this.meuCombatente();
+    if (combatente === null) return;
+
+    // Mantém o mesmo caminho do botão do cartão: tipo e dono continuam
+    // resolvidos pela lista de fichas já usada pelas demais aberturas.
+    this.abrirFichaFlutuante(combatente);
+  }
+
   /**
    * Avulso (`tipoFicha: null`) e NPC (sem ficha na campanha ainda) não têm o que abrir; o dono vem
    * do resumo já carregado (`fichasCampanha()`), não de uma nova consulta.

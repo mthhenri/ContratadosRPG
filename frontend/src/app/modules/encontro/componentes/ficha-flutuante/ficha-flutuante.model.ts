@@ -28,6 +28,14 @@ export const GEOMETRIA_INICIAL_FICHA_FLUTUANTE: FichaFlutuanteGeometria = {
   altura: 620,
 };
 
+/** Mestre precisa de área ampla para consultar a ficha durante a condução do encontro. */
+export const GEOMETRIA_INICIAL_FICHA_FLUTUANTE_MESTRE: FichaFlutuanteGeometria = {
+  x: 64,
+  y: 52,
+  largura: 1100,
+  altura: 600,
+};
+
 const LARGURA_MINIMA = 380;
 const ALTURA_MINIMA = 420;
 

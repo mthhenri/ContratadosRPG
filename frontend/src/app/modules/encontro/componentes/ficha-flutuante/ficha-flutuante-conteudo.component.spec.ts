@@ -1,3 +1,4 @@
+import { By } from '@angular/platform-browser';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 
@@ -15,6 +16,7 @@ import {
 import type { FichaCriaturaRecuperadaDto, FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { SessaoService } from '../../../../core/services/sessao.service';
+import { FichaVisualizacao } from '../../../ficha/componentes/ficha-visualizacao/ficha-visualizacao.component';
 import { FichaService } from '../../../ficha/ficha.service';
 import { FichaFlutuanteConteudo } from './ficha-flutuante-conteudo.component';
 
@@ -180,5 +182,17 @@ describe('FichaFlutuanteConteudo', () => {
     expect(
       (outroJogador.fixture.componentInstance as unknown as { ajustavel: () => boolean }).ajustavel(),
     ).toBe(false);
+  });
+
+  it('não libera rolagens quando um jogador abre a ficha de outra pessoa', () => {
+    const { fixture } = montar(
+      { fichaId: 10, tipo: TipoFichaEnum.JOGADOR, usuarioIdDono: 7 },
+      false,
+      99,
+    );
+    const ficha = fixture.debugElement.query(By.directive(FichaVisualizacao))
+      .componentInstance as FichaVisualizacao;
+
+    expect(ficha.podeRolar()).toBe(false);
   });
 });

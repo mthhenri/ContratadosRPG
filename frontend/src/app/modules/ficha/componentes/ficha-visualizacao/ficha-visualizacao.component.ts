@@ -897,11 +897,10 @@ export class FichaVisualizacao {
       this.rolarParaTopoDoConteudo();
       return;
     }
-    // m2-21: no compacto, "Rolagens" é o único destino da barra que **não** é uma aba do card — o
-    // painel mora na coluna lateral da página. Marca o item como ativo e avisa `CampanhaDetalhe`
-    // (que rola até o card de lá), sem tocar em `abaStatusAtiva` nem no `#` da URL: trocar a aba
-    // aqui esconderia o Inventário/Habilidades por uma aba que não existe neste modo.
-    if (destino === 'rolagens' && this.modo() === 'compacto') {
+    // No compacto comum, "Rolagens" mora na coluna lateral da página. A Iniciativa, porém, liga
+    // `mostrarRolagensCompacto`: ali o painel é uma quarta aba real e a navegação mobile precisa
+    // selecioná-la, em vez de avisar um hospedeiro externo que não existe.
+    if (destino === 'rolagens' && this.modo() === 'compacto' && !this.mostrarRolagensCompacto()) {
       this.destinoMobile.set('rolagens');
       this.abaStatusMudou.emit('rolagens');
       return;

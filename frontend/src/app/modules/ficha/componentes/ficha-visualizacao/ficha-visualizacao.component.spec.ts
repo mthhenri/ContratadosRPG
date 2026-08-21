@@ -286,6 +286,21 @@ describe('FichaVisualizacao', () => {
       expect(alvo.raiz.querySelector('app-ficha-rolagens-painel')).not.toBeNull();
     });
 
+    it('abre Rolagens pela navegação mobile quando o compacto hospeda o painel', () => {
+      const alvo = montar(dados);
+      alvo.fixture.componentRef.setInput('modo', 'compacto');
+      alvo.fixture.componentRef.setInput('mostrarRolagensCompacto', true);
+      alvo.fixture.detectChanges();
+
+      alvo.raiz.querySelector<HTMLButtonElement>('[data-destino="rolagens"]')?.click();
+      alvo.fixture.detectChanges();
+
+      expect(
+        alvo.raiz.querySelector('[data-aba-status="rolagens"]')?.classList,
+      ).toContain('ficha-status__aba--ativa');
+      expect(alvo.raiz.querySelector('app-ficha-rolagens-painel')).not.toBeNull();
+    });
+
     it('não muda nada no modo padrão — a aba já está sempre lá', () => {
       // `ajustavel: true` só pra "História" entrar na conta (m3-50, condicional a dono/mestre) —
       // o que este teste prova é que Rolagens não depende de `mostrarRolagensCompacto` fora do

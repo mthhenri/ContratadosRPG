@@ -71,6 +71,28 @@ describe('FichaFlutuante', () => {
     expect(elemento.querySelector('app-ficha-flutuante-conteudo')).not.toBeNull();
   });
 
+  it('abre a ficha do mestre na geometria ampla do desktop', () => {
+    const larguraOriginal = window.innerWidth;
+    const alturaOriginal = window.innerHeight;
+    try {
+      Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1920 });
+      Object.defineProperty(window, 'innerHeight', { configurable: true, value: 1080 });
+      const { fixture } = montar();
+
+      fixture.componentInstance.abrir(alvoA);
+      fixture.detectChanges();
+
+      const janela = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>(
+        '.ficha-flutuante__janela',
+      );
+      expect(janela?.style.width).toBe('1100px');
+      expect(janela?.style.height).toBe('600px');
+    } finally {
+      Object.defineProperty(window, 'innerWidth', { configurable: true, value: larguraOriginal });
+      Object.defineProperty(window, 'innerHeight', { configurable: true, value: alturaOriginal });
+    }
+  });
+
   it('minimizar esconde a janela e mostra o gatilho; reabrir desfaz', () => {
     const { fixture } = montar();
     fixture.componentInstance.abrir(alvoA);

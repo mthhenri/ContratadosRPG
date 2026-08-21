@@ -64,6 +64,18 @@
 
   <app-ficha-flutuante #fichaFlutuante [ehMestre]="ehMestre()" />
 
+  @if (mostrarFichaLateral()) {
+    <button
+      class="iniciativa__minha-ficha"
+      type="button"
+      [appTooltip]="'Abrir sua ficha'"
+      (click)="abrirMinhaFicha()"
+    >
+      <app-icone nome="visao-geral" />
+      <span>Minha ficha</span>
+    </button>
+  }
+
   @if (ehMestre() && historicoAberto() && historico().length) {
     <div class="historico__painel">
       <ul class="historico__lista">

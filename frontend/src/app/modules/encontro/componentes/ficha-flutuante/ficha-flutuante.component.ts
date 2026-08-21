@@ -12,6 +12,7 @@ import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { FichaFlutuanteConteudo } from './ficha-flutuante-conteudo.component';
 import {
   GEOMETRIA_INICIAL_FICHA_FLUTUANTE,
+  GEOMETRIA_INICIAL_FICHA_FLUTUANTE_MESTRE,
   limitarGeometriaFichaFlutuante,
   type FichaFlutuanteAlvo,
   type FichaFlutuanteGeometria,
@@ -73,6 +74,11 @@ export class FichaFlutuante {
   abrir(novoAlvo: FichaFlutuanteAlvo): void {
     const atual = this.alvo();
     const mesmaFicha = atual?.fichaId === novoAlvo.fichaId && atual?.tipo === novoAlvo.tipo;
+    if (!this.aberto() && this.ehMestre() && !this.ehMobile()) {
+      this.geometria.set(
+        limitarGeometriaFichaFlutuante(GEOMETRIA_INICIAL_FICHA_FLUTUANTE_MESTRE, this.viewport()),
+      );
+    }
     this.aberto.set(true);
     this.recolhido.set(false);
     if (mesmaFicha) {

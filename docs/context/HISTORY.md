@@ -1,5 +1,33 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-21 — Ficha flutuante ampla para o mestre na Iniciativa
+
+Ao abrir uma ficha pela Iniciativa, o mestre agora recebe a janela flutuante em `1100×600` no
+desktop. A geometria ainda passa pelo limitador da viewport, portanto telas menores não sofrem
+overflow; jogador preserva a abertura compacta e o mobile segue usando a tela cheia existente. O
+teste foi escrito primeiro e falhou em `520px`; após a geometria específica do mestre, passou. A
+verificação real confirmou o desktop em `1920×1080` e o mobile em `360×800`. Fecho: frontend
+`1232/1232`, lint limpo e build verde, com o aviso preexistente de orçamento inicial excedido em
+15,21 kB (`P-004`).
+
+## 2026-08-21 — M7-15 concluída: ficha e rolagens alcançáveis no mobile do jogador
+
+Na Iniciativa mobile, o jogador com combatente próprio passou a ter o atalho persistente **Minha
+ficha**. Ele fica acima dos avisos/resultados transitórios, não aparece no desktop e delega para o
+mesmo caminho canônico de abertura do cartão. No `FichaVisualizacao` compacto, a navegação mobile
+de **Rolagens** agora preserva o painel interno quando a ficha flutuante o hospeda, voltando a usar
+`FichaRolagensPainel`, `executar-rolagem` e o registro existente sem novo cálculo ou handler.
+
+O teste foi escrito primeiro para o atalho, a aba e a permissão de visualização; ele falhou antes da
+implementação e passou depois. Um usuário apenas visualizador continua abrindo a ficha em leitura,
+sem rolagem rápida ou presets, porque o hospedeiro entrega `podeRolar` conforme a permissão já
+calculada. O gate real usou campanha/encontro local descartável em `360×800` e `1920×1080`: o dono
+abriu a ficha, rolou **Teste de Luta** e viu o resultado sem fechar o diálogo; o visualizador não
+recebeu avanço, atalho próprio nem controles de rolagem. A primeira inspeção expôs o atalho sob um
+toast; ele foi elevado para a faixa livre acima da bandeja e revalidado. Fecho automático: frontend
+`1231/1231`, lint limpo e build verde; permanece somente o aviso preexistente do orçamento inicial
+excedido em 15,21 kB (`P-004`).
+
 ## 2026-08-20 — M7-14 concluída: ficha flutuante alcançável no mobile
 
 O corpo da ficha flutuante da Iniciativa passou a ter respiro interno pelo token

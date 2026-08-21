@@ -1,8 +1,8 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-20 · **Última decisão registrada:** na ficha flutuante da Iniciativa,
-> o corpo da janela é a única rolagem vertical no mobile; o respiro usa `--pad-card` e a ficha só
-> libera painéis internos de rolagem nesse contexto — ver seção 1.
+> **Última revisão:** 2026-08-21 · **Última decisão registrada:** na Iniciativa desktop, a ficha
+> flutuante aberta pelo mestre parte de `1100×600`, sempre limitada à viewport; jogador preserva a
+> geometria compacta e mobile continua em tela cheia — ver seção 1.
 >
 > **Decisão anterior:** o recorte mobile do Encontro
 > (`m7-08`, que fecha o M7) é feito **inteiramente pelo CSS do breakpoint** — os componentes só
@@ -31,8 +31,9 @@ frentes abertas voltam a ser o **M4** (Ficha de Criatura/NPC — restam `m4-05`�
 validação da Iniciativa foram quebrados em sete specs atômicas de pós-milestone no backlog:
 `m7-09` (turno atual do jogador, **concluída**), `m7-10` (histórico de rolagens), `m7-11` (identidade dos cartões),
 `m7-12` (layout desktop, **concluída**), `m7-13` (acesso pela campanha, **concluída**), `m7-14` (dialog de ficha,
-**concluída**) e `m7-15`
-(ações mobile do jogador). Elas não reabrem o escopo concluído de M7; são escolhidas uma a uma.
+**concluída**) e `m7-15` (ações mobile do jogador, **concluída**). As únicas ainda ativas desse
+recorte são `m7-10` (histórico de rolagens) e `m7-11` (identidade dos cartões). Elas não reabrem o
+escopo concluído de M7; são escolhidas uma a uma.
 
 Na `m7-09`, `PainelEncontro` passou a derivar `ehMinhaVez` somente do estado de encontro já
 recebido e da ficha do usuário ativo. A `m7-12` usa esse estado para exibir a única ação de condução
@@ -55,6 +56,15 @@ Na `m7-14`, a ficha aberta pela Iniciativa ganhou o respiro lateral de `--pad-ca
 fixa da ficha. A ficha de jogador recebe `rolagemExterna` apenas nesse hospedeiro, removendo o teto
 do painel interno que de outro modo criaria uma segunda barra vertical. Cabeçalho, fechamento,
 foco e navegação interna permanecem no mesmo componente.
+
+Na `m7-15`, o jogador com combatente próprio ganhou o atalho mobile **Minha ficha**, fixo acima de
+avisos e resultados transitórios e ausente no desktop. Ele reaproveita a abertura da ficha do cartão.
+Dentro de `FichaFlutuante`, o destino mobile **Rolagens** mantém o painel interno quando esse
+hospedeiro o disponibiliza; a execução e o registro seguem em `FichaRolagensPainel` e nos serviços
+existentes. A ficha aberta por usuário apenas visualizador recebe `podeRolar = false`, portanto não
+exibe rolagem rápida nem presets; não foram adicionados controles de condução.
+Quando o mestre abre uma ficha a partir da Iniciativa no desktop, a mesma janela inicia limitada à
+viewport em `1100×600`; jogador conserva a geometria compacta e o mobile continua em tela cheia.
 
 O módulo de frontend é `frontend/src/app/modules/encontro`. A tela "Iniciativa" é **uma só**
 (`PainelEncontro`, rota `/painel/:campanhaId/iniciativa`, com `:encontroId` opcional para o

@@ -93,6 +93,10 @@
     &:has(.painel__bloco--conducao) {
       padding-bottom: calc(72px + env(safe-area-inset-bottom));
     }
+
+    &:has(.iniciativa__minha-ficha) {
+      padding-bottom: calc(84px + env(safe-area-inset-bottom));
+    }
   }
 
   &__topo {
@@ -176,6 +180,41 @@
     app-icone { font-size: 12px; }
 
     &:hover { color: var(--accent); border-color: var(--accent-border); background: var(--surface-2); }
+  }
+
+  // A ficha lateral só existe no desktop. No telefone este atalho fica no canto do polegar e
+  // preserva o espaço final do conteúdo para nunca encobrir os cartões do encontro.
+  &__minha-ficha {
+    display: none;
+
+    @include bp.mobile {
+      position: fixed;
+      z-index: 10;
+      right: 12px;
+      // A bandeja de resultado e os avisos transitórios ocupam o rodapé. Esta
+      // faixa deixa o acesso à ficha acima deles, sem competir por toque.
+      bottom: calc(136px + env(safe-area-inset-bottom));
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: bp.$alvo-toque;
+      padding: 0 14px;
+      border: 1px solid var(--accent-border);
+      border-radius: var(--radius-control);
+      background: var(--surface);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+      cursor: pointer;
+
+      app-icone { font-size: 14px; color: var(--accent); }
+
+      &:hover { border-color: var(--accent); background: var(--surface-2); }
+    }
   }
 
   &__carregando,
@@ -537,6 +576,7 @@
     overflow-y: visible;
     scrollbar-gutter: auto;
   }
+
 }
 
 // ── Botões (encapsulados por componente — ver comentário do topo) ────────────
