@@ -1,5 +1,43 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-21 — Fechamento de `m6-08`, `m7-10` e `m7-11`: gate visual e registro documental
+
+As três specs em `docs/specs/active/` já estavam **implementadas no código** — `m6-08` desde
+2026-08-12 (faltava só o viewport `1920×1080`) e `m7-10`/`m7-11` desde o commit `4ea026d`
+(`feat: refina tela de iniciativa`, 2026-08-20), que documentou apenas a conclusão de `m7-09` e
+deixou as outras duas sem registro em `HISTORY.md`/`CONTEXT.md` e sem o gate visual obrigatório do
+repositório. Esta sessão não alterou nenhum código de produto: rodou o stack real (Postgres 16
+local sem Docker — `pg_ctlcluster 16 main start`, já que o daemon Docker não existe neste ambiente
+—, backend e frontend), montou cenários via REST/Playwright e cumpriu o gate pendente de cada uma.
+
+**`m6-08` — impersonação administrativa.** Fluxo completo verificado ao vivo em `1920×1080`: login
+como `ADMIN`, "Logar como" numa conta `NORMAL` ativa e diferente da sessão, confirmação inline,
+substituição integral da sessão (`SessaoService`), navegação a `/painel` e `GET /usuario/admin`
+recusado (403) para a sessão impersonada — sem overflow horizontal. O `360×800` já tinha sido
+confirmado em 2026-08-12.
+
+**`m7-10` — histórico de rolagens na Iniciativa.** Cenário com campanha, mestre e dois jogadores:
+uma rolagem `PUBLICA` de um jogador chegou ao vivo (sem reload) tanto para o mestre quanto para um
+terceiro membro com o feed (`HistoricoRolagensSidebar`, gatilho D20 do cabeçalho) aberto; uma
+rolagem `PRIVADA` do mesmo jogador não vazou para esse terceiro membro nem por WebSocket nem por
+`GET /campanha/:id/rolagem`, e voltou a aparecer para o mestre após recarregar a tela (recorte já
+existente de `RolagemService.listarPorCampanha`, sem regra nova). Sem overflow em `1920×1080` nem
+`360×800`; no mobile o gatilho fica junto dos demais atalhos flutuantes do cabeçalho, sem disputar
+a barra de ação primária do rodapé.
+
+**`m7-11` — identidade dos cartões de combatente.** `CartaoCombatente` mostra a imagem real da
+ficha (com enquadramento) quando existe — verificado com uma ficha de jogador com avatar — e cai no
+mesmo padrão de hachura das demais fichas sem avatar (ficha sem imagem, combatente avulso), sem
+`<img>` quebrada nem espaço vazio. Uma criatura **não revelada** para um jogador sem acesso não
+vaza a própria imagem (mantém só nome/iniciativa, a identidade mínima da ordem de turno que
+`m7-06` já preserva) mesmo com o mestre enxergando a imagem normalmente. O card "Sua Iniciativa"
+citado na spec nunca chegou a existir no código — `m7-09` já tinha resolvido a mesma necessidade
+com a faixa "Sua vez" reaproveitada do mestre — então não havia o que remover.
+
+Fecho consolidado das três: backend `421/421`, frontend `1232/1232`, lint frontend limpo; lint
+backend fecha com os 2 erros preexistentes de `P-022` (`no-unnecessary-type-assertion` em specs de
+`2026-08-12`, não tocados por esta sessão). As três specs migraram para `docs/specs/done/`.
+
 ## 2026-08-21 — Ficha flutuante ampla para o mestre na Iniciativa
 
 Ao abrir uma ficha pela Iniciativa, o mestre agora recebe a janela flutuante em `1100×600` no
