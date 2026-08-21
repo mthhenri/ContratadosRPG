@@ -16,6 +16,17 @@
           Espectador
         </span>
       }
+      @if (mostrarFichaLateral()) {
+        <button
+          class="iniciativa__minha-ficha"
+          type="button"
+          [appTooltip]="'Abrir sua ficha'"
+          (click)="abrirMinhaFicha()"
+        >
+          <app-icone nome="visao-geral" />
+          <span>Minha ficha</span>
+        </button>
+      }
       <!-- "Encontros anteriores" (m7-06): link discreto no cabeçalho, não mais uma seção lá
            embaixo — só o mestre navega pelo histórico. -->
       @if (!carregando() && ehMestre() && vendoHistorico()) {
@@ -63,18 +74,6 @@
   </header>
 
   <app-ficha-flutuante #fichaFlutuante [ehMestre]="ehMestre()" />
-
-  @if (mostrarFichaLateral()) {
-    <button
-      class="iniciativa__minha-ficha"
-      type="button"
-      [appTooltip]="'Abrir sua ficha'"
-      (click)="abrirMinhaFicha()"
-    >
-      <app-icone nome="visao-geral" />
-      <span>Minha ficha</span>
-    </button>
-  }
 
   @if (ehMestre() && historicoAberto() && historico().length) {
     <div class="historico__painel">
@@ -237,6 +236,7 @@
             [appTooltip]="'Passar ao próximo turno'"
             (click)="avancarTurno()"
           >
+            <app-icone nome="voltar" class="painel__acao-icone--avancar" />
             Avançar<span class="painel__acao-complemento"> turno</span>
           </button>
         </div>
@@ -320,6 +320,7 @@
               [appTooltip]="'Encerrar sua vez e passar ao próximo turno'"
               (click)="avancarTurno()"
             >
+              <app-icone nome="voltar" class="painel__acao-icone--avancar" />
               Avançar turno
             </button>
           } @else if (meuCombatente() === null) {

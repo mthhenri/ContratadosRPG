@@ -16,8 +16,10 @@ $largura-caderno-sobreposicao: 640px;
     color: var(--accent);
     background: var(--surface);
     border: 1px solid var(--border-strong);
-    border-radius: var(--radius-card);
-    box-shadow: 0 8px 24px color-mix(in srgb, var(--bg) 72%, transparent);
+    // Mesmo círculo de `CalculadoraFlutuante`/`HistoricoRolagensSidebar` — os três empilham no
+    // mesmo canto e precisam ler como um conjunto único, não como formas diferentes.
+    border-radius: 50%;
+    box-shadow: 0 8px 20px rgb(0 0 0 / 40%);
     transition: background-color 0.15s ease, border-color 0.15s ease;
 
     &:hover { background: var(--surface-2); border-color: var(--accent-border); }

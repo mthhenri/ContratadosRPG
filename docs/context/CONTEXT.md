@@ -1,8 +1,10 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-21 · **Última decisão registrada:** na Iniciativa desktop, a ficha
-> flutuante aberta pelo mestre parte de `1100×600`, sempre limitada à viewport; jogador preserva a
-> geometria compacta e mobile continua em tela cheia — ver seção 1.
+> **Última revisão:** 2026-08-21 · **Última decisão registrada:** auditoria de um punch list de
+> 12 itens pós-M7 achou 3 gaps reais na tela de Iniciativa — ícone faltando no botão "Avançar
+> turno", os 3 gatilhos flutuantes da esquerda com formato inconsistente (`CadernoFlutuante`
+> quadrado vs. os outros dois circulares) e "Minha ficha" sobrepondo cartões no mobile por ser
+> `position: fixed` a meio da tela — corrigidos sem tocar regra de negócio; ver seção 1.
 >
 > **Decisão anterior:** o recorte mobile do Encontro
 > (`m7-08`, que fecha o M7) é feito **inteiramente pelo CSS do breakpoint** — os componentes só
@@ -23,17 +25,36 @@
 
 ## 1. Próxima Task
 
-O **M7 — Encontro de Combate** está **concluído**: as 8 tasks (`m7-01` contrato, `m7-02` motor
-puro, `m7-03` backend de montagem, `m7-04` backend de condução + tempo real, `m7-05` painel do
-mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) entregues. As
-frentes abertas voltam a ser o **M4** (Ficha de Criatura/NPC — restam `m4-05`…`m4-10`) e o **M6**
-(Gestão de Usuários — resta `m6-08`); a escolha da próxima é do autor. Os ajustes descobertos na
-validação da Iniciativa foram quebrados em sete specs atômicas de pós-milestone no backlog:
-`m7-09` (turno atual do jogador, **concluída**), `m7-10` (histórico de rolagens), `m7-11` (identidade dos cartões),
-`m7-12` (layout desktop, **concluída**), `m7-13` (acesso pela campanha, **concluída**), `m7-14` (dialog de ficha,
-**concluída**) e `m7-15` (ações mobile do jogador, **concluída**). As únicas ainda ativas desse
-recorte são `m7-10` (histórico de rolagens) e `m7-11` (identidade dos cartões). Elas não reabrem o
-escopo concluído de M7; são escolhidas uma a uma.
+O **M7 — Encontro de Combate** está **concluído**, incluindo os sete ajustes de pós-milestone: as 8
+tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend
+de condução + tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da
+rodada, `m7-08` refinamento mobile) mais `m7-09` (turno atual do jogador), `m7-10` (histórico de
+rolagens), `m7-11` (identidade dos cartões), `m7-12` (layout desktop), `m7-13` (acesso pela
+campanha), `m7-14` (dialog de ficha) e `m7-15` (ações mobile do jogador) — todas entregues. O
+**M6 — Gestão de Usuários** também está **concluído**: `m6-08` (impersonação administrativa) fechou
+a última extensão do milestone. A única frente aberta agora é o **M4** (Ficha de Criatura/NPC —
+restam `m4-05`…`m4-10`), ao lado de `m3-53` (M3).
+
+`m7-10` e `m7-11` já tinham sido implementadas de fato no commit `4ea026d` (`feat: refina tela de
+iniciativa`, que também fechou `m7-09`), mas o registro em `HISTORY.md`/`CONTEXT.md` e o gate visual
+obrigatório ficaram pendentes até esta sessão. `m7-10` reusa `HistoricoRolagensSidebar` no
+cabeçalho de `PainelEncontro` (`rolagensFeed()`, carga inicial via `RolagemService.listarPorCampanha`
++ atualização ao vivo por `FichaRolagemRegistroService.registrada$`/`TempoRealService.
+rolagemRegistrada$`), sem duplicar consulta ou regra de visibilidade — uma rolagem `PRIVADA` nunca
+chega a quem não tem acesso, nem por REST nem por socket, confirmado ao vivo (mestre, jogador dono
+da rolagem e um terceiro membro sem acesso). `m7-11` fez `CartaoCombatente` exibir `imagemUrl`/
+`imagemFoco` da ficha (com `FocoImagem`, mesmo padrão de enquadramento de `m3-62`) quando existem,
+sem espaço quebrado em combatente avulso ou sem imagem; o backend (`encontro-combatente.mapper.ts`,
+`encontro-revelacao.ts`) já propagava e ocultava a imagem junto com os demais números protegidos
+pela revelação (§14) — confirmado que uma criatura não revelada nunca vaza a própria imagem a um
+jogador sem acesso, mesmo quando o nome permanece visível (identidade mínima da ordem de turno,
+regra pré-existente de `m7-06`). O card "Sua Iniciativa" citado na spec nunca chegou a existir no
+código — o indicador de turno próprio já tinha sido resolvido por `m7-09` (faixa "Sua vez").
+
+`m6-08` também já estava implementada (ver a entrega completa na seção 4, "Autenticação e conta");
+só faltava a captura em `1920×1080` (o `360×800` já tinha sido confirmado em 2026-08-12) — feita
+nesta sessão, incluindo o fluxo completo (login → "Logar como" → confirmação → sessão trocada →
+`/painel` → rota exclusiva de `ADMIN` recusada para a sessão impersonada).
 
 Na `m7-09`, `PainelEncontro` passou a derivar `ehMinhaVez` somente do estado de encontro já
 recebido e da ficha do usuário ativo. A `m7-12` usa esse estado para exibir a única ação de condução
@@ -137,9 +158,7 @@ de Ajuste), deu ao card de Pontos de Ajuste um contador real que trava o avanço
 padrão do guia de jogador) e corrigiu o corte do botão "+" do stepper no mobile (ver seção 4).
 Próxima da fila M4: **`m4-05`** (contrato `FichaNpcDadosDto`, início da frente de NPC).
 
-O M6 também está aberto, em paralelo. A próxima task encadeada nessa frente é
-`m6-08-impersonacao-administrativa.spec.md`, que adiciona impersonação administrativa auditável.
-O trio do guia de criação
+O M6 **concluiu** com `m6-08` (ver seção 4, "Autenticação e conta"). O trio do guia de criação
 (`m3-57` base, `m3-58` melhorias de nível, `m3-59`
 equipamento inicial), o complemento `m3-64`, a `m3-61` (cor de ficha) e a `m3-62` (avatar de ficha)
 **concluíram** — as specs estão em `docs/specs/done/`; o que o guia faz hoje de ponta a ponta está
@@ -160,7 +179,6 @@ só adaptou o visual de desktop).
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
-| `m6-08` | usuários | impersonação administrativa auditável |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/`. Milestone ainda não aberto: `m5-guia-missao`.
 
@@ -195,8 +213,8 @@ falhas isoladas/preexistentes.
 | M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; guia de criação completo (`m3-57`/`m3-58`/`m3-59` — base, melhorias de nível, equipamento inicial); cor (`m3-61`) e avatar (`m3-62`) de identidade por ficha prontos; falta só `m3-53` |
 | M4 | Ficha de Criatura/NPC | **iniciado** — dividido em `m4-01`…`m4-10` (`docs/specs/backlog/`); `m4-01` (contrato), `m4-02` (`shared/regras/criatura`), `m4-03` (`backend/ficha` para `CRIATURA`) e `m4-04` (assistente de criação no frontend) concluídas; `m4-04b`/`m4-04c` (polimento de UI fora da fila) também concluídas. Próxima: `m4-05` (NPC) |
 | M5 | Guia de Missão | não iniciado |
-| M6 | Gestão de Usuários e Papéis | **em andamento** — `m6-01`…`m6-07` concluídas; próxima `m6-08`, com impersonação administrativa auditável |
-| M7 | Encontro de Combate | **concluído** — 8 tasks: `m7-01` contrato, `m7-02` motor puro (ordem + intercalação de Cadência + condições), `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre (tela "Iniciativa", `frontend/.../modules/encontro`), `m7-06` visão do jogador (mesma tela em modo espectador + recorte de revelação, com broadcast por socket), `m7-07` log da rodada e `m7-08` refinamento mobile. Numeração M7 é sugestão, não decisão de roadmap |
+| M6 | Gestão de Usuários e Papéis | **concluído** — `m6-01`…`m6-08` (`m6-08`: impersonação administrativa auditável) |
+| M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 7 ajustes de pós-milestone (`m7-09`…`m7-15`, ver seção 1). Numeração M7 é sugestão, não decisão de roadmap |
 
 ---
 
@@ -248,6 +266,15 @@ Desde a `m6-06`, módulos futuros podem restringir suas rotas com
 retorno no redirecionamento ao login; uma sessão sem tipo permitido segue para a página pública
 `/acesso-negado`. Ao abrir o módulo para todo usuário autenticado, substitua-o por
 `autenticacaoGuard`; nenhuma rota funcional existente foi restringida pela entrega.
+Desde a `m6-08`, a gestão administrativa ganhou **impersonação auditável**: o botão "Logar como",
+em cada conta ativa diferente do admin da sessão, abre uma confirmação inline (nome + login do
+alvo, aviso de que a sessão administrativa será encerrada); confirmar chama
+`POST /usuario/admin/impersonar` (`@TiposPermitidos(ADMIN)`, recusa conta excluída/inexistente e
+autoimpersonação) e o `SessaoTokenService` — o mesmo emissor do login — devolve um JWT com id,
+login, tipo e `tokenVersao` atuais do alvo, nunca senha/hash. O frontend **substitui** a sessão
+inteira (`SessaoService`, sem sessão dupla nem "voltar ao admin") e navega a `/painel`; recuperar o
+admin exige logar de novo. A migration `0016` grava `usuario_impersonacao` (origem, alvo, data) só
+após a validação bem-sucedida.
 
 ### Campanhas — `backend/campanha`, `frontend/campanha`
 

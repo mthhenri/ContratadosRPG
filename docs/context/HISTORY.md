@@ -1,5 +1,71 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-21 — Três ajustes de polimento da Iniciativa, achados numa auditoria do punch list
+
+O autor trouxe um punch list de 12 itens pós-M7 já vivido na mesa; a auditoria contra o código
+(mesmo cenário Playwright das duas entradas acima) confirmou 8 já implementados e achou 3 gaps
+reais, corrigidos nesta sessão sem tocar em regra de negócio:
+
+1. **Ícone no botão "Avançar turno"** (mestre e jogador) — os dois só tinham texto, diferente dos
+   vizinhos "Voltar"/"Rolar iniciativa". Em vez de desenhar um SVG novo, o path de `voltar`
+   (seta horizontal) é reaproveitado espelhado (`transform: scaleX(-1)`, classe
+   `painel__acao-icone--avancar`) — evita duplicar um ícone quase idêntico só pela direção.
+2. **Botões flutuantes da esquerda inconsistentes** — `CadernoFlutuante` usava
+   `border-radius: var(--radius-card)` (quadrado arredondado) enquanto `CalculadoraFlutuante` e
+   `HistoricoRolagensSidebar`, empilhados no mesmo canto, usam `50%` (círculo). Corrigido para o
+   mesmo círculo + `box-shadow` dos outros dois; o tratamento mobile (já `var(--radius-control)`
+   nos três) não mudou.
+3. **"Minha ficha" sobrepondo cards no mobile** — o atalho era `position: fixed` a meio da tela;
+   como os cartões rolam por baixo dele, qualquer card podia acabar atrás do botão (capturado ao
+   vivo cobrindo o 3º cartão já na carga inicial, sem rolar nada). Motivo real: o
+   `padding-bottom` reservado só protegia o **fim** da lista, não o meio. Corrigido movendo o
+   botão para dentro do fluxo normal do cabeçalho (`.iniciativa__acoes`, ao lado do chip
+   "Espectador"), com o mesmo estilo/44px — `position: fixed` e o hack de padding saíram.
+
+Verificação ao vivo (Playwright, mestre e jogador, `1920×1080` e `360×800`): os três gatilhos
+flutuantes saem com `border-radius: 50%` computado; `.iniciativa__minha-ficha` mede
+`position: static` e não sobrepõe nenhum `.combatente` (`sobrepoeAlgumCard: false`); o clique
+nele ainda abre a ficha e nenhum viewport ganhou overflow horizontal. `npm run test -w frontend`
+(1232/1232) e `npm run lint -w frontend` (limpo) depois da mudança.
+
+## 2026-08-21 — Fechamento de `m6-08`, `m7-10` e `m7-11`: gate visual e registro documental
+
+As três specs em `docs/specs/active/` já estavam **implementadas no código** — `m6-08` desde
+2026-08-12 (faltava só o viewport `1920×1080`) e `m7-10`/`m7-11` desde o commit `4ea026d`
+(`feat: refina tela de iniciativa`, 2026-08-20), que documentou apenas a conclusão de `m7-09` e
+deixou as outras duas sem registro em `HISTORY.md`/`CONTEXT.md` e sem o gate visual obrigatório do
+repositório. Esta sessão não alterou nenhum código de produto: rodou o stack real (Postgres 16
+local sem Docker — `pg_ctlcluster 16 main start`, já que o daemon Docker não existe neste ambiente
+—, backend e frontend), montou cenários via REST/Playwright e cumpriu o gate pendente de cada uma.
+
+**`m6-08` — impersonação administrativa.** Fluxo completo verificado ao vivo em `1920×1080`: login
+como `ADMIN`, "Logar como" numa conta `NORMAL` ativa e diferente da sessão, confirmação inline,
+substituição integral da sessão (`SessaoService`), navegação a `/painel` e `GET /usuario/admin`
+recusado (403) para a sessão impersonada — sem overflow horizontal. O `360×800` já tinha sido
+confirmado em 2026-08-12.
+
+**`m7-10` — histórico de rolagens na Iniciativa.** Cenário com campanha, mestre e dois jogadores:
+uma rolagem `PUBLICA` de um jogador chegou ao vivo (sem reload) tanto para o mestre quanto para um
+terceiro membro com o feed (`HistoricoRolagensSidebar`, gatilho D20 do cabeçalho) aberto; uma
+rolagem `PRIVADA` do mesmo jogador não vazou para esse terceiro membro nem por WebSocket nem por
+`GET /campanha/:id/rolagem`, e voltou a aparecer para o mestre após recarregar a tela (recorte já
+existente de `RolagemService.listarPorCampanha`, sem regra nova). Sem overflow em `1920×1080` nem
+`360×800`; no mobile o gatilho fica junto dos demais atalhos flutuantes do cabeçalho, sem disputar
+a barra de ação primária do rodapé.
+
+**`m7-11` — identidade dos cartões de combatente.** `CartaoCombatente` mostra a imagem real da
+ficha (com enquadramento) quando existe — verificado com uma ficha de jogador com avatar — e cai no
+mesmo padrão de hachura das demais fichas sem avatar (ficha sem imagem, combatente avulso), sem
+`<img>` quebrada nem espaço vazio. Uma criatura **não revelada** para um jogador sem acesso não
+vaza a própria imagem (mantém só nome/iniciativa, a identidade mínima da ordem de turno que
+`m7-06` já preserva) mesmo com o mestre enxergando a imagem normalmente. O card "Sua Iniciativa"
+citado na spec nunca chegou a existir no código — `m7-09` já tinha resolvido a mesma necessidade
+com a faixa "Sua vez" reaproveitada do mestre — então não havia o que remover.
+
+Fecho consolidado das três: backend `421/421`, frontend `1232/1232`, lint frontend limpo; lint
+backend fecha com os 2 erros preexistentes de `P-022` (`no-unnecessary-type-assertion` em specs de
+`2026-08-12`, não tocados por esta sessão). As três specs migraram para `docs/specs/done/`.
+
 ## 2026-08-21 — Ficha flutuante ampla para o mestre na Iniciativa
 
 Ao abrir uma ficha pela Iniciativa, o mestre agora recebe a janela flutuante em `1100×600` no
