@@ -73,7 +73,7 @@ describe('PainelEncontro', () => {
     imagemFoco: null,
     donoNome: null,
     classe: null,
-    nivel: null,
+    arquetipo: null,
     revelado: true,
     ...extras,
   });

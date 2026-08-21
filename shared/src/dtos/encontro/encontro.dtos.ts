@@ -1,4 +1,5 @@
 import type {
+  ArquetipoEnum,
   CadenciaEnum,
   ClasseEnum,
   CombatenteOrigemEnum,
@@ -129,13 +130,14 @@ export interface EncontroCombatenteResumoDto {
   readonly imagemUrl: string | null;
   readonly imagemFoco: FichaImagemFocoDto | null;
   /**
-   * Dono da ficha (`usuario.nome`) e classe/nível — só presentes num agente (`JOGADOR`) e sujeitos
-   * à mesma regra de `imagemUrl` acima: sobrevivem sem `revelado` quando a ficha não está oculta.
-   * `null` para criatura/NPC/avulso ou agente oculto/não revelado (m7-16).
+   * Dono da ficha (`usuario.nome`) e classe/arquétipo — só presentes num agente (`JOGADOR`) e
+   * sujeitos à mesma regra de `imagemUrl` acima: sobrevivem sem `revelado` quando a ficha não está
+   * oculta. `null` para criatura/NPC/avulso ou agente oculto/não revelado (m7-16). Nível fica de
+   * fora de propósito — a carteirinha identifica quem é o agente, não avalia sua força.
    */
   readonly donoNome: string | null;
   readonly classe: ClasseEnum | null;
-  readonly nivel: number | null;
+  readonly arquetipo: ArquetipoEnum | null;
   /**
    * `false` quando quem consulta **não** tem direito de ver os **números** deste combatente fora
    * do encontro (m7-06): a criatura que o mestre ainda não revelou (`usuario_ficha_acesso`), a

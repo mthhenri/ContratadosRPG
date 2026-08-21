@@ -5,6 +5,7 @@ import type {
   EncontroRecuperadoDto,
 } from '@contratados-rpg/shared/dtos/encontro';
 import {
+  ArquetipoEnum,
   CadenciaEnum,
   ClasseEnum,
   CombatenteOrigemEnum,
@@ -53,7 +54,7 @@ describe('ocultarNaoRevelados', () => {
     imagemFoco: null,
     donoNome: 'Bia',
     classe: null,
-    nivel: null,
+    arquetipo: null,
     revelado: true,
     ...extras,
   });
@@ -163,7 +164,7 @@ describe('ocultarNaoRevelados', () => {
       nome: 'Max Star',
       donoNome: 'Sirius',
       classe: ClasseEnum.COMBATENTE,
-      nivel: 4,
+      arquetipo: ArquetipoEnum.LUTADOR,
       imagemUrl: '/uploads/agentes/max-star.webp',
       imagemFoco: { x: 40, y: 60, escala: 1.5 },
     });
@@ -183,7 +184,7 @@ describe('ocultarNaoRevelados', () => {
     expect(oculto.imagemFoco).toEqual({ x: 40, y: 60, escala: 1.5 });
     expect(oculto.donoNome).toBe('Sirius');
     expect(oculto.classe).toBe(ClasseEnum.COMBATENTE);
-    expect(oculto.nivel).toBe(4);
+    expect(oculto.arquetipo).toBe(ArquetipoEnum.LUTADOR);
   });
 
   it('m7-16: some com a "carteirinha" do agente cuja ficha está oculta, igual a uma criatura', () => {
@@ -191,7 +192,7 @@ describe('ocultarNaoRevelados', () => {
       nome: 'Max Star',
       donoNome: 'Sirius',
       classe: ClasseEnum.COMBATENTE,
-      nivel: 4,
+      arquetipo: ArquetipoEnum.LUTADOR,
       imagemUrl: '/uploads/agentes/max-star.webp',
     });
     // Nem em `fichaIdsVisiveis` nem em `fichaIdsIdentidadeVisivel` (ficha oculta pelo dono).
@@ -204,6 +205,6 @@ describe('ocultarNaoRevelados', () => {
     expect(oculto.imagemUrl).toBeNull();
     expect(oculto.donoNome).toBeNull();
     expect(oculto.classe).toBeNull();
-    expect(oculto.nivel).toBeNull();
+    expect(oculto.arquetipo).toBeNull();
   });
 });

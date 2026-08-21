@@ -101,68 +101,65 @@
       }
     </span>
 
-    <span class="combatente__recursos">
-      @if (!revelado()) {
-        <span class="combatente__recurso combatente__recurso--oculto">Vida —</span>
-      } @else {
-      <span class="combatente__recurso combatente__recurso--vida">
-        @if (podeAjustar()) {
-          <button
-            class="combatente__stepper"
-            type="button"
-            [attr.aria-label]="'Tirar 1 de Vida de ' + combatente().nome"
-            [appTooltip]="'Dano de 1'"
-            (click)="vidaAjustada.emit(-1)"
-          >
-            −
-          </button>
-        }
-        Vida {{ combatente().vidaAtual }}/{{ combatente().vidaMaxima }}
-        @if (podeAjustar()) {
-          <button
-            class="combatente__stepper"
-            type="button"
-            [attr.aria-label]="'Curar 1 de Vida de ' + combatente().nome"
-            [appTooltip]="'Cura de 1'"
-            (click)="vidaAjustada.emit(1)"
-          >
-            +
-          </button>
-        }
-      </span>
-
-      @if (temEnergia()) {
-        <span class="combatente__recurso combatente__recurso--energia">
+    @if (revelado()) {
+      <span class="combatente__recursos">
+        <span class="combatente__recurso combatente__recurso--vida">
           @if (podeAjustar()) {
             <button
               class="combatente__stepper"
               type="button"
-              [attr.aria-label]="'Gastar 1 de Energia de ' + combatente().nome"
-              [appTooltip]="'Gasto de 1'"
-              (click)="energiaAjustada.emit(-1)"
+              [attr.aria-label]="'Tirar 1 de Vida de ' + combatente().nome"
+              [appTooltip]="'Dano de 1'"
+              (click)="vidaAjustada.emit(-1)"
             >
               −
             </button>
           }
-          <span class="combatente__rotulo-longo">Energia</span>
-          <span class="combatente__rotulo-curto">En</span>
-          {{ combatente().energiaAtual }}/{{ combatente().energiaMaxima }}
+          Vida {{ combatente().vidaAtual }}/{{ combatente().vidaMaxima }}
           @if (podeAjustar()) {
             <button
               class="combatente__stepper"
               type="button"
-              [attr.aria-label]="'Recuperar 1 de Energia de ' + combatente().nome"
-              [appTooltip]="'Recuperação de 1'"
-              (click)="energiaAjustada.emit(1)"
+              [attr.aria-label]="'Curar 1 de Vida de ' + combatente().nome"
+              [appTooltip]="'Cura de 1'"
+              (click)="vidaAjustada.emit(1)"
             >
               +
             </button>
           }
         </span>
-      }
 
-      }
-    </span>
+        @if (temEnergia()) {
+          <span class="combatente__recurso combatente__recurso--energia">
+            @if (podeAjustar()) {
+              <button
+                class="combatente__stepper"
+                type="button"
+                [attr.aria-label]="'Gastar 1 de Energia de ' + combatente().nome"
+                [appTooltip]="'Gasto de 1'"
+                (click)="energiaAjustada.emit(-1)"
+              >
+                −
+              </button>
+            }
+            <span class="combatente__rotulo-longo">Energia</span>
+            <span class="combatente__rotulo-curto">En</span>
+            {{ combatente().energiaAtual }}/{{ combatente().energiaMaxima }}
+            @if (podeAjustar()) {
+              <button
+                class="combatente__stepper"
+                type="button"
+                [attr.aria-label]="'Recuperar 1 de Energia de ' + combatente().nome"
+                [appTooltip]="'Recuperação de 1'"
+                (click)="energiaAjustada.emit(1)"
+              >
+                +
+              </button>
+            }
+          </span>
+        }
+      </span>
+    }
 
     @if (defesas().length) {
       <span class="combatente__defesas">
