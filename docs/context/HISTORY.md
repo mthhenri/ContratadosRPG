@@ -1,5 +1,35 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-22 — Cadência Frenética com quantidade declarada
+
+Pedido direto do autor: a Cadência Frenética estava fixada em 4 turnos, embora o Guia do Mestre
+a defina como **4 ou mais**. A ficha de criatura passou a persistir `turnosPorRodada`; o assistente
+solicita o número ao selecionar Frenética (mínimo 4), e a visualização permite alterá-lo inline.
+O motor do encontro usa o valor declarado ao montar a ordem e o cartão mostra a quantidade real.
+Fichas antigas, sem o novo campo, preservam o comportamento compatível de 4 turnos.
+
+O ajuste foi estendido aos **combatentes avulsos** da Iniciativa: selecionar Frenética revela o
+campo numérico, o backend exige inteiro >= 4 e a migration `0022` persiste `turnos_por_rodada` em
+`encontro_combatente` (combatentes existentes recebem 1/2/3/4 conforme a Cadência). Verificação
+real em 1920x1080 e 360x800 confirmou ausência de overflow, empilhamento mobile coerente e o cartão
+`Digitado nesta sessão · Cadência 6` após adicionar um avulso com 6 turnos.
+
+A lista da Iniciativa também deixou de condensar a Cadência em um único cartão: após calcular a
+rodada, cada slot de `ordemRodada` é uma ocorrência visual na posição exata em que age. Os cartões
+repetidos compartilham o mesmo estado, recebem o marcador `Turno N de T`, destacam somente o slot
+atual e deixam a iniciativa editável apenas na primeira ocorrência. Enquanto `ordemRodada` está
+vazia continua existindo um cartão por combatente, pois a ordem intercalada ainda não foi calculada.
+
+A verificação real usou três combatentes (um Frenético com 6 turnos e dois Singulares): a grade
+mostrou oito cartões na ordem recebida, manteve o cabeçalho em `3 participantes`, ofereceu somente
+três campos de iniciativa no modo de edição e moveu o destaque para `Turno 1 de 6` ao avançar.
+Em 1920x1080 e 360x800 não houve overflow horizontal; os marcadores preservaram a hierarquia do
+cartão canônico nos dois recortes.
+
+Cobertura: teste do motor com Frenética 6, formulário condicional do assistente, service do encontro
+e formulário do avulso; teste visual da repetição intercalada, iniciativa travada e destaque por
+slot.
+
 ## 2026-08-22 — `m7-17` (retoque): dialog menos poluído, mobile sem empilhar, resistência no cartão da Iniciativa
 
 Pedido direto do autor, no mesmo dia da entrega original: o dialog "Receber dano" estava poluído

@@ -32,6 +32,7 @@ export interface EncontroCombatenteLinhaDto {
   readonly nomeAvulso: string | null;
   readonly iniciativa: number | null;
   readonly cadencia: CadenciaEnum;
+  readonly turnosPorRodada?: number;
   readonly ordem: number;
   readonly vidaMaximaAvulso: number | null;
   readonly vidaAtualAvulso: number | null;
@@ -85,6 +86,7 @@ export interface EncontroCombatenteInternoAdicionarDto {
   readonly vidaMaximaAvulso: number | null;
   readonly vidaAtualAvulso: number | null;
   readonly cadencia: CadenciaEnum;
+  readonly turnosPorRodada: number;
   readonly ordem: number;
 }
 

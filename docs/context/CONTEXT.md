@@ -278,7 +278,9 @@ defesa/esquiva/bloqueio, proficiência, deslocamento, dano de corpo/furtivo, inv
 `dados/`, `descanso/`, `dt/`, `identidade/`, `novo-agente/`, `patente/`, `rolagem/` — todos
 contra `docs/core/sistema-v4.1.0.md` — e `criatura/` (`m4-02`, 10 módulos de fórmula do "Guia
 de Criação de Ameaças" — atributos, modificadores, saúde, defesa, resistências/fraquezas,
-regeneração, deslocamento, cadência/iniciativa, ataques, `validarFichaCriatura` — contra
+regeneração, deslocamento, cadência/iniciativa (Frenética declara `turnosPorRodada` >= 4, inclusive
+para combatentes avulsos; após o cálculo, a Iniciativa desenha um cartão por slot intercalado de
+`ordemRodada`, com iniciativa travada nas ocorrências adicionais), ataques, `validarFichaCriatura` — contra
 `docs/core/guia_de_mestre-v4.0.0.md`, caso de teste completo "A Estátua").
 
 **Fonte única:** frontend e backend consomem o mesmo motor. Nenhuma regra de jogo é reimplementada

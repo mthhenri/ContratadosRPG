@@ -392,6 +392,13 @@
                   @for (opcao of cadencias; track opcao) { <option [value]="opcao">{{ rotuloCadencia(opcao) }}</option> }
                 </select>
               </label>
+              @if (estado().cadencia === 'FRENETICA') {
+                <label class="campo">
+                  <span class="campo__rotulo">Turnos por rodada</span>
+                  <input class="campo__controle campo__controle--numero" type="number" min="4" step="1" [value]="estado().turnosPorRodada" (input)="atualizar({ turnosPorRodada: numero($event) })" />
+                  <small class="campo__ajuda">Cadência Frenética possui 4 ou mais turnos.</small>
+                </label>
+              }
               <label class="campo">
                 <span class="campo__rotulo">Bônus de Iniciativa (opcional)</span>
                 <input class="campo__controle campo__controle--numero" type="number" [value]="estado().iniciativaBonus ?? ''" (input)="atualizar({ iniciativaBonus: valor($event) ? numero($event) : null })" />

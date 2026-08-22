@@ -1,7 +1,7 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 
 import type { EncontroCombatenteResumoDto } from '@contratados-rpg/shared/dtos/encontro';
-import { CombatenteOrigemEnum, NivelAmeacaEnum, TipoDanoEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
+import { CadenciaEnum, CombatenteOrigemEnum, NivelAmeacaEnum, TipoDanoEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import { calcularTurnosPorRodada } from '@contratados-rpg/shared/regras/encontro';
 
 import { Icone } from '../../../../shared/icone/icone.component';
@@ -59,6 +59,12 @@ const ABREVIACAO_RESISTENCIA: Record<TipoDanoEnum, string> = {
 export class CartaoCombatente {
   readonly combatente = input.required<EncontroCombatenteResumoDto>();
 
+  /** Posição deste cartão entre os turnos do mesmo combatente. */
+  readonly ocorrencia = input(1);
+
+  /** Quantidade de cartões que representam este combatente na rodada. */
+  readonly totalOcorrencias = input(1);
+
   /** `true` quando é a vez deste combatente — pinta o cartão com o accent e a etiqueta "Age agora". */
   readonly ehTurnoAtual = input(false);
 
@@ -106,9 +112,12 @@ export class CartaoCombatente {
   protected readonly TipoFichaEnum = TipoFichaEnum;
 
   /** Quantos turnos ele tem na rodada — o motor puro decide, não este componente. */
-  protected readonly turnosPorRodada = computed(() =>
-    calcularTurnosPorRodada(this.combatente().cadencia),
-  );
+  protected readonly turnosPorRodada = computed(() => {
+    const combatente = this.combatente();
+    return combatente.cadencia === CadenciaEnum.FRENETICA
+      ? Math.max(4, combatente.turnosPorRodada ?? 4)
+      : calcularTurnosPorRodada(combatente.cadencia);
+  });
 
   /**
    * `true` quando quem está olhando pode ver a ficha deste combatente. O mestre recebe sempre

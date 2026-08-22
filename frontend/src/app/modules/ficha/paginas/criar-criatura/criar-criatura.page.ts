@@ -169,6 +169,7 @@ interface EstadoGuiaCriatura {
   readonly deslocamento: EstadoDeslocamento;
   // Ataques
   readonly cadencia: CadenciaEnum;
+  readonly turnosPorRodada: number;
   readonly iniciativaBonus: number | null;
   readonly ataques: readonly LinhaAtaque[];
   // Habilidades
@@ -188,7 +189,7 @@ const ESTADO_INICIAL: EstadoGuiaCriatura = {
   resistencias: [], fraquezas: [],
   regeneracao: regeneracaoVazia(),
   porte: null, deslocamento: deslocamentoVazio(),
-  cadencia: CadenciaEnum.SINGULAR, iniciativaBonus: null, ataques: [],
+  cadencia: CadenciaEnum.SINGULAR, turnosPorRodada: 1, iniciativaBonus: null, ataques: [],
   habilidades: [],
   anotacoes: '',
 };
@@ -423,7 +424,15 @@ export class CriaturaCriar {
     const bruto = this.valor(evento);
     this.atualizar({ porte: bruto ? (bruto as PorteCriaturaEnum) : null });
   }
-  protected mudarCadencia(evento: Event): void { this.atualizar({ cadencia: this.valor(evento) as CadenciaEnum }); }
+  protected mudarCadencia(evento: Event): void {
+    const cadencia = this.valor(evento) as CadenciaEnum;
+    const turnosFixos: Partial<Record<CadenciaEnum, number>> = {
+      [CadenciaEnum.SINGULAR]: 1,
+      [CadenciaEnum.DUPLA]: 2,
+      [CadenciaEnum.TRIPLICE]: 3,
+    };
+    this.atualizar({ cadencia, turnosPorRodada: turnosFixos[cadencia] ?? 4 });
+  }
   protected mudarRegeneracaoModo(evento: Event): void {
     this.atualizarRegeneracao({ modo: this.valor(evento) as RegeneracaoModoEnum });
   }
@@ -565,6 +574,10 @@ export class CriaturaCriar {
       porte: e.porte ?? PorteCriaturaEnum.MEDIO,
       deslocamento: e.deslocamento,
       cadencia: e.cadencia,
+      turnosPorRodada:
+        e.cadencia === CadenciaEnum.FRENETICA
+          ? Math.max(4, Math.trunc(e.turnosPorRodada))
+          : e.turnosPorRodada,
       ...(e.iniciativaBonus ? { iniciativaBonus: e.iniciativaBonus } : {}),
       ataques: e.ataques.map(paraAtaqueDto),
       habilidades: e.habilidades.map(paraHabilidadeDto),

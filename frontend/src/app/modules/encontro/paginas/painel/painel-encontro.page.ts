@@ -77,6 +77,14 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
   vontade: 0,
 };
 
+/** Uma posição visual da rodada, mantendo o estado no combatente original. */
+interface CombatenteVisualDto extends EncontroCombatenteResumoDto {
+  readonly ocorrencia: number;
+  readonly totalOcorrencias: number;
+  readonly indiceOrdem: number | null;
+  readonly chaveVisual: string;
+}
+
 /**
  * A tela **"Iniciativa"** (m7-05/m7-06), fiel a `docs/design/examples/iniciativa-desktop.html` —
  * **uma** tela com duas leituras, como o mockup previu no `visaoJogador`:
@@ -230,6 +238,7 @@ export class PainelEncontro {
     nomeAvulso: ['', [Validators.required, Validators.maxLength(120)]],
     vidaMaximaAvulso: [10, [Validators.required, Validators.min(1)]],
     cadencia: [CadenciaEnum.SINGULAR],
+    turnosPorRodada: [4, [Validators.required, Validators.min(4)]],
   });
 
   /**
@@ -369,33 +378,55 @@ export class PainelEncontro {
   });
 
   /**
-   * Combatentes na ordem em que agem. Em montagem ainda não há `ordemRodada`, então a lista sai por
-   * iniciativa decrescente (nula por último) só para dar uma leitura estável ao mestre.
+   * Posições visuais na ordem em que agem. Com a rodada calculada, cada slot vira um cartão: a
+   * repetição deixa a Cadência explícita sem duplicar o estado do combatente.
    */
-  protected readonly combatentes = computed<readonly EncontroCombatenteResumoDto[]>(() => {
+  protected readonly combatentes = computed<readonly CombatenteVisualDto[]>(() => {
     const encontroAtual = this.encontro();
     if (!encontroAtual) {
       return [];
     }
     if (encontroAtual.ordemRodada.length === 0) {
-      return [...encontroAtual.combatentes].sort(
-        (a, b) => (b.iniciativa ?? -Infinity) - (a.iniciativa ?? -Infinity),
-      );
+      return [...encontroAtual.combatentes]
+        .sort((a, b) => (b.iniciativa ?? -Infinity) - (a.iniciativa ?? -Infinity))
+        .map((combatente) => ({
+          ...combatente,
+          ocorrencia: 1,
+          totalOcorrencias: 1,
+          indiceOrdem: null,
+          chaveVisual: `${combatente.id}-montagem`,
+        }));
     }
     const porId = new Map(encontroAtual.combatentes.map((combatente) => [combatente.id, combatente]));
-    const ordenados: EncontroCombatenteResumoDto[] = [];
-    const jaIncluidos = new Set<number>();
+    const totais = new Map<number, number>();
     for (const slot of encontroAtual.ordemRodada) {
+      totais.set(slot.combatenteId, (totais.get(slot.combatenteId) ?? 0) + 1);
+    }
+    const ordenados: CombatenteVisualDto[] = [];
+    const jaIncluidos = new Set<number>();
+    for (const [indiceOrdem, slot] of encontroAtual.ordemRodada.entries()) {
       const combatente = porId.get(slot.combatenteId);
-      if (combatente && !jaIncluidos.has(combatente.id)) {
+      if (combatente) {
         jaIncluidos.add(combatente.id);
-        ordenados.push(combatente);
+        ordenados.push({
+          ...combatente,
+          ocorrencia: slot.ocorrencia,
+          totalOcorrencias: totais.get(combatente.id) ?? 1,
+          indiceOrdem,
+          chaveVisual: `${combatente.id}-${slot.ocorrencia}`,
+        });
       }
     }
     // Quem entrou depois do cálculo da ordem só age na próxima rodada — mas continua visível.
     for (const combatente of encontroAtual.combatentes) {
       if (!jaIncluidos.has(combatente.id)) {
-        ordenados.push(combatente);
+        ordenados.push({
+          ...combatente,
+          ocorrencia: 1,
+          totalOcorrencias: 1,
+          indiceOrdem: null,
+          chaveVisual: `${combatente.id}-pendente`,
+        });
       }
     }
     return ordenados;
@@ -595,12 +626,19 @@ export class PainelEncontro {
   }
 
   /** `true` quando é a vez deste combatente. */
-  protected ehDaVez(combatente: EncontroCombatenteResumoDto): boolean {
-    return combatente.id === this.combatenteDaVezId();
+  protected ehDaVez(combatente: CombatenteVisualDto): boolean {
+    const encontroAtual = this.encontro();
+    return encontroAtual?.status === EncontroStatusEnum.ATIVO
+      && combatente.indiceOrdem === encontroAtual.turnoIndice;
   }
 
-  /** `true` quando este combatente já gastou os turnos dele nesta rodada. */
-  protected jaAgiu(combatente: EncontroCombatenteResumoDto): boolean {
+  /** `true` quando esta ocorrência visual já passou na rodada. */
+  protected jaAgiu(combatente: EncontroCombatenteResumoDto & { indiceOrdem?: number | null }): boolean {
+    const encontroAtual = this.encontro();
+    if (combatente.indiceOrdem !== undefined && combatente.indiceOrdem !== null && encontroAtual) {
+      return encontroAtual.status === EncontroStatusEnum.ATIVO
+        && combatente.indiceOrdem < encontroAtual.turnoIndice;
+    }
     return this.jaAgiram().has(combatente.id);
   }
 
@@ -740,12 +778,16 @@ export class PainelEncontro {
         nomeAvulso: valores.nomeAvulso.trim(),
         vidaMaximaAvulso: valores.vidaMaximaAvulso,
         cadencia: valores.cadencia,
+        ...(valores.cadencia === CadenciaEnum.FRENETICA
+          ? { turnosPorRodada: valores.turnosPorRodada }
+          : {}),
       }),
       () =>
         this.formularioAvulso.reset({
           nomeAvulso: '',
           vidaMaximaAvulso: 10,
           cadencia: CadenciaEnum.SINGULAR,
+          turnosPorRodada: 4,
         }),
     );
   }

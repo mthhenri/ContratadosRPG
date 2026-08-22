@@ -4,8 +4,7 @@ import type { CombatenteOrdenavelDto } from './encontro.dtos';
 
 /**
  * Turnos por rodada de cada Cadência (`docs/core/guia_de_mestre-v4.0.0.md` — "Guia de Criação de
- * Ameaças" > "Cadência"). Frenética é "4+" no documento: o motor adota 4 como o valor concreto,
- * deixando qualquer excepcionalidade acima disso para decisão do Mestre na mesa.
+ * Ameaças" > "Cadência"). Frenética é "4+" no documento e recebe o valor declarado pelo Mestre.
  */
 const TURNOS_POR_CADENCIA: Record<CadenciaEnum, number> = {
   [CadenciaEnum.SINGULAR]: 1,
@@ -17,6 +16,15 @@ const TURNOS_POR_CADENCIA: Record<CadenciaEnum, number> = {
 /** Quantos turnos o combatente possui na rodada. Quem não é criatura é sempre Singular. */
 export function calcularTurnosPorRodada(cadencia: CadenciaEnum): number {
   return TURNOS_POR_CADENCIA[cadencia];
+}
+
+/** Resolve os turnos de um combatente, preservando 4 como fallback para fichas antigas. */
+function resolverTurnosPorRodada(combatente: CombatenteOrdenavelDto): number {
+  if (combatente.cadencia !== CadenciaEnum.FRENETICA) {
+    return TURNOS_POR_CADENCIA[combatente.cadencia];
+  }
+  const valorDeclarado = combatente.turnosPorRodada;
+  return Number.isFinite(valorDeclarado) ? Math.max(4, Math.trunc(valorDeclarado as number)) : 4;
 }
 
 /**
@@ -58,7 +66,7 @@ export function intercalarCadencia(
   ordenados: readonly CombatenteOrdenavelDto[],
 ): readonly OrdemTurnoDto[] {
   const totalDeTurnos = new Map<number, number>(
-    ordenados.map((combatente) => [combatente.id, calcularTurnosPorRodada(combatente.cadencia)]),
+    ordenados.map((combatente) => [combatente.id, resolverTurnosPorRodada(combatente)]),
   );
   const ordem: OrdemTurnoDto[] = [];
   const pendentes: OrdemTurnoDto[] = [];

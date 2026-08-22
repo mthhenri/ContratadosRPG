@@ -554,6 +554,31 @@
                 >
                   {{ nomeCadencia(dados().cadencia) }}
                 </button>
+                @if (dados().cadencia === 'FRENETICA') {
+                  <button
+                    class="stat__valor criatura__stat-botao criatura__stat-botao--texto"
+                    type="button"
+                    [disabled]="!ajustavel()"
+                    appTooltip="Turnos por rodada"
+                    (click)="editar('turnosPorRodada')"
+                  >
+                    {{ dados().turnosPorRodada ?? 4 }} turnos
+                  </button>
+                }
+              }
+              @if (editando('turnosPorRodada')) {
+                <input
+                  #entradaTurnos
+                  appAutoFocus
+                  class="criatura__entrada-numero criatura__entrada-numero--stat"
+                  type="number"
+                  min="4"
+                  step="1"
+                  [value]="dados().turnosPorRodada ?? 4"
+                  aria-label="Turnos por rodada da Cadência Frenética"
+                  (keydown.enter)="confirmarTurnosPorRodada(entradaTurnos.valueAsNumber); cancelarEdicao()"
+                  (blur)="confirmarTurnosPorRodada(entradaTurnos.valueAsNumber); cancelarEdicao()"
+                />
               }
             </div>
 

@@ -159,6 +159,7 @@ export class CriaturaVisualizacao {
   readonly porteMudou = output<PorteCriaturaEnum>();
   readonly deslocamentoMudou = output<FichaCriaturaDeslocamentoDto>();
   readonly cadenciaMudou = output<CadenciaEnum>();
+  readonly turnosPorRodadaMudou = output<number>();
   readonly iniciativaBonusMudou = output<number | undefined>();
   readonly ataquesMudou = output<readonly FichaCriaturaAtaqueDto[]>();
   readonly habilidadesMudou = output<readonly FichaCriaturaHabilidadeDto[]>();
@@ -516,6 +517,10 @@ export class CriaturaVisualizacao {
 
   protected confirmarCadencia(cadencia: CadenciaEnum): void {
     this.cadenciaMudou.emit(cadencia);
+  }
+
+  protected confirmarTurnosPorRodada(turnosPorRodada: number): void {
+    this.turnosPorRodadaMudou.emit(Math.max(4, Math.trunc(turnosPorRodada)));
   }
 
   protected confirmarIniciativaBonus(valor: number | undefined): void {

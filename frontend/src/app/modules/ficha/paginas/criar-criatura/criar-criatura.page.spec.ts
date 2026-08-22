@@ -113,6 +113,7 @@ describe('CriaturaCriar', () => {
 
     atualizar({
       cadencia: CadenciaEnum.SINGULAR,
+      turnosPorRodada: 1,
       ataques: [
         { nome: 'Pancada', teste: 'lutad20kh1+5', custoAcao: CustoAcaoEnum.MOVIMENTO, dano: '3D12+4', danoCritico: '6D12+8', area: false, efeito: '' },
         {
@@ -222,6 +223,7 @@ describe('CriaturaCriar', () => {
       porte: PorteCriaturaEnum.MEDIO,
       deslocamento: { terrestre: 9, voador: null, aquatico: null, sobrenatural: null },
       cadencia: CadenciaEnum.SINGULAR,
+      turnosPorRodada: 1,
       ataques: [
         { nome: 'Pancada', teste: 'lutad20kh1+5', custoAcao: CustoAcaoEnum.MOVIMENTO, dano: '3D12+4', danoCritico: '6D12+8', area: false },
         {
@@ -261,6 +263,16 @@ describe('CriaturaCriar', () => {
     const { componente } = montar();
     componente['atualizar']({ porte: PorteCriaturaEnum.MEDIO, passo: 8 });
     expect(componente['passoValido']()).toBe(false);
+  });
+
+  it('solicita a quantidade de turnos ao escolher Cadência Frenética', () => {
+    const { fixture, raiz, componente } = montar();
+    componente['atualizar']({ passo: 9, cadencia: CadenciaEnum.FRENETICA, turnosPorRodada: 6 });
+    fixture.detectChanges();
+
+    const entrada = raiz.querySelector<HTMLInputElement>('input[min="4"][step="1"]');
+    expect(entrada?.value).toBe('6');
+    expect(entrada?.closest('label')?.textContent).toContain('Turnos por rodada');
   });
 
   it('a distribuição de Modificadores só fica completa em 2 Forte / 3 Médio / 3 Fraco / 2 Frágil', () => {

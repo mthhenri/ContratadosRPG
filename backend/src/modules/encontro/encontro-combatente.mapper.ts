@@ -196,6 +196,10 @@ export function montarCombatenteResumo(
     nome: linha.fichaNome ?? linha.nomeAvulso ?? '',
     iniciativa: linha.iniciativa,
     cadencia: linha.cadencia,
+    turnosPorRodada:
+      linha.tipoFicha === TipoFichaEnum.CRIATURA
+        ? ((linha.fichaDados as FichaCriaturaDadosDto).turnosPorRodada ?? linha.turnosPorRodada)
+        : linha.turnosPorRodada,
     ordem: linha.ordem,
     vidaAtual: estado.vidaAtual,
     vidaMaxima: estado.vidaMaxima,

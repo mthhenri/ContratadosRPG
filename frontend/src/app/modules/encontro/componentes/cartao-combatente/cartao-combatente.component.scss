@@ -206,6 +206,25 @@
     @include bp.mobile { font-size: 8.5px; }
   }
 
+  &__turno {
+    width: fit-content;
+    padding: 2px 6px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-dim);
+    background: var(--surface-2);
+
+    .combatente--ativo & {
+      border-color: var(--accent-border);
+      color: var(--accent);
+    }
+  }
+
   &__nome-linha {
     display: flex;
     align-items: center;

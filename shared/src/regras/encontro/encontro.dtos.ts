@@ -16,4 +16,6 @@ export interface CombatenteOrdenavelDto {
   readonly iniciativa: number;
   readonly destreza: number;
   readonly cadencia: CadenciaEnum;
+  /** Valor declarado pelo Mestre; só varia livremente na Cadência Frenética (mínimo 4). */
+  readonly turnosPorRodada?: number;
 }

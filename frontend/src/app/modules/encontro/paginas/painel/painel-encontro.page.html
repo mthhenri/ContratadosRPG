@@ -159,8 +159,8 @@
       <h1 class="cartao__titulo">Iniciativa · {{ encontro()!.nome }}</h1>
       <span class="cartao__regua"></span>
       <span class="cartao__meta">
-        {{ combatentes().length }}
-        {{ combatentes().length === 1 ? 'participante' : 'participantes' }}
+        {{ encontro()!.combatentes.length }}
+        {{ encontro()!.combatentes.length === 1 ? 'participante' : 'participantes' }}
       </span>
       <!-- Contador condensado do mockup mobile (m7-08): `R3 · T3/6` no lugar do bloco de
            contadores, que no desktop continua sendo o que a tela mostra. -->
@@ -436,6 +436,13 @@
             </select>
           </label>
 
+          @if (formularioAvulso.controls.cadencia.value === CadenciaEnum.FRENETICA) {
+            <label class="adicionar__campo adicionar__campo--curto">
+              <span class="adicionar__rotulo">Turnos por rodada</span>
+              <input class="campo" type="number" formControlName="turnosPorRodada" min="4" step="1" />
+            </label>
+          }
+
           <button
             class="botao botao--primario adicionar__acao"
             type="submit"
@@ -457,15 +464,17 @@
 
     @if (combatentes().length) {
       <div class="grade" [class.grade--compacta]="mostrarFichaLateral()">
-        @for (combatente of combatentes(); track combatente.id) {
+        @for (combatente of combatentes(); track combatente.chaveVisual) {
           <app-cartao-combatente
             [combatente]="combatente"
+            [ocorrencia]="combatente.ocorrencia"
+            [totalOcorrencias]="combatente.totalOcorrencias"
             [ehTurnoAtual]="ehDaVez(combatente)"
             [jaAgiu]="jaAgiu(combatente)"
             [emCombate]="emCombate()"
             [nivelAmeaca]="nivelAmeaca(combatente)"
             [podeAjustar]="ehMestre() && mutavel() && !emOperacao()"
-            [emEdicao]="ehMestre() && modoEdicao() && mutavel()"
+            [emEdicao]="ehMestre() && modoEdicao() && mutavel() && combatente.ocorrencia === 1"
             (vidaAjustada)="ajustarVida(combatente, $event)"
             (energiaAjustada)="ajustarEnergia(combatente, $event)"
             (iniciativaAtribuida)="atribuirIniciativa(combatente, $event)"

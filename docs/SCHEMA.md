@@ -296,6 +296,7 @@ CREATE TABLE encontro_combatente (
   nome_avulso        VARCHAR,           -- obrigatório quando ficha_id IS NULL
   iniciativa         INTEGER,           -- NULL enquanto não rolada/atribuída
   cadencia           VARCHAR NOT NULL,  -- CadenciaEnum (SINGULAR quando não é criatura)
+  turnos_por_rodada  INTEGER NOT NULL,  -- 1/2/3 nas fixas; >= 4 na Frenética
   ordem              INTEGER NOT NULL,  -- desempate estável definido pelo mestre
   vida_maxima_avulso INTEGER,           -- só avulso; ficha lê da própria ficha
   vida_atual_avulso  INTEGER,           -- só avulso
@@ -515,7 +516,8 @@ não recalcula sobre a edição), sem Maestria (mecânica exclusiva de jogador).
   "deslocamento": {                     // ao menos um modo declarado; cada campo é opcional
     "terrestre": 9, "voador": null, "aquatico": null, "sobrenatural": null
   },
-  "cadencia": "SINGULAR",               // CadenciaEnum: SINGULAR|DUPLA|TRIPLICE|FRENETICA (turnos por rodada)
+  "cadencia": "SINGULAR",               // CadenciaEnum: SINGULAR|DUPLA|TRIPLICE|FRENETICA
+  "turnosPorRodada": 1,                  // 1/2/3 nas fixas; valor declarado >= 4 na Frenética
   "iniciativaBonus": 0,                 // opcional — Habilidade Especial Passiva de +X somado à Iniciativa (~10% da VD, sugestão)
   "ataques": [
     { "nome": "Esmagamento", "atributo": "luta", "custoAcao": "PADRAO", // MOVIMENTO|PADRAO|COMPLETA

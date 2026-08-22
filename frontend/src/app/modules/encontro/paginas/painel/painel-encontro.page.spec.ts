@@ -321,10 +321,17 @@ describe('PainelEncontro', () => {
   /** Os membros `protected` que o template consome — o teste lê exatamente o que a tela lê. */
   interface PainelInterno {
     readonly encontro: () => EncontroRecuperadoDto | null;
-    readonly combatentes: () => readonly { id: number; nome: string }[];
+    readonly combatentes: () => readonly {
+      id: number;
+      nome: string;
+      ocorrencia: number;
+      totalOcorrencias: number;
+      indiceOrdem: number | null;
+    }[];
     readonly combatenteDaVez: () => { nome: string } | null;
     readonly acoesRestantesDaVez: () => number;
     readonly totalDeTurnos: () => number;
+    readonly modoEdicao: { set(valor: boolean): void };
     readonly jaAgiu: (combatente: { id: number }) => boolean;
     readonly nivelAmeaca: (combatente: unknown) => NivelAmeacaEnum | null;
     readonly rolarTudo: () => void;
@@ -355,10 +362,39 @@ describe('PainelEncontro', () => {
     expect(painel.jaAgiu({ id: 3 })).toBe(false); // V. Corvalho ainda vai agir
   });
 
-  it('ordena os cartões pela ordem em que agem, cada combatente uma vez', () => {
+  it('repete os cartões na ordem exata dos turnos da rodada', () => {
     const { fixture } = montar();
-    const nomes = interno(fixture).combatentes().map((combatente) => combatente.nome);
-    expect(nomes).toEqual(['SCP-1471-A', 'K. Amaral', 'V. Corvalho']);
+    const itens = interno(fixture)
+      .combatentes()
+      .map(({ nome, ocorrencia, totalOcorrencias, indiceOrdem }) => ({
+        nome,
+        ocorrencia,
+        totalOcorrencias,
+        indiceOrdem,
+      }));
+    expect(itens).toEqual([
+      { nome: 'SCP-1471-A', ocorrencia: 1, totalOcorrencias: 2, indiceOrdem: 0 },
+      { nome: 'K. Amaral', ocorrencia: 1, totalOcorrencias: 1, indiceOrdem: 1 },
+      { nome: 'SCP-1471-A', ocorrencia: 2, totalOcorrencias: 2, indiceOrdem: 2 },
+      { nome: 'V. Corvalho', ocorrencia: 1, totalOcorrencias: 1, indiceOrdem: 3 },
+    ]);
+  });
+
+  it('trava a iniciativa das ocorrências adicionais e destaca somente o slot atual', () => {
+    const { fixture } = montar();
+    interno(fixture).modoEdicao.set(true);
+    fixture.detectChanges();
+    const elemento = fixture.nativeElement as HTMLElement;
+    const cartoes = elemento.querySelectorAll('app-cartao-combatente');
+
+    expect(cartoes).toHaveLength(4);
+    expect(cartoes[0].textContent).toContain('Turno 1 de 2');
+    expect(cartoes[2].textContent).toContain('Turno 2 de 2');
+    expect(cartoes[0].querySelector('.combatente--ativo')).toBeNull();
+    expect(cartoes[2].querySelector('.combatente--ativo')).not.toBeNull();
+    expect(cartoes[0].querySelector('.combatente__iniciativa-campo')).not.toBeNull();
+    expect(cartoes[2].querySelector('.combatente__iniciativa-campo')).toBeNull();
+    expect(elemento.querySelector('.cartao__meta')?.textContent).toContain('3 participantes');
   });
 
   it('resolve o Nível de Ameaça do contexto já carregado, sem consulta extra', () => {
@@ -743,6 +779,38 @@ describe('PainelEncontro', () => {
         nomeAvulso: 'Sujeito Contido',
         vidaMaximaAvulso: 10,
         cadencia: CadenciaEnum.SINGULAR,
+      });
+    });
+
+    it('solicita e envia os turnos do avulso com Cadência Frenética', () => {
+      const { fixture, encontroService } = montar();
+      const elemento = fixture.nativeElement as HTMLElement;
+      Array.from(elemento.querySelectorAll<HTMLButtonElement>('.secundarias__acao'))
+        .find((botao) => botao.textContent?.includes('Adicionar avulso'))
+        ?.click();
+      fixture.detectChanges();
+
+      const form = elemento.querySelector('form.adicionar') as HTMLFormElement;
+      const nome = form.querySelector<HTMLInputElement>('input[formControlName="nomeAvulso"]')!;
+      nome.value = 'Sujeito Frenético';
+      nome.dispatchEvent(new Event('input'));
+      const cadencia = form.querySelector<HTMLSelectElement>('select[formControlName="cadencia"]')!;
+      cadencia.value = CadenciaEnum.FRENETICA;
+      cadencia.dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+
+      const turnos = form.querySelector<HTMLInputElement>('input[formControlName="turnosPorRodada"]');
+      expect(turnos).not.toBeNull();
+      turnos!.value = '6';
+      turnos!.dispatchEvent(new Event('input'));
+      form.dispatchEvent(new Event('submit'));
+
+      expect(encontroService.adicionarCombatente).toHaveBeenCalledWith(1, {
+        fichaId: null,
+        nomeAvulso: 'Sujeito Frenético',
+        vidaMaximaAvulso: 10,
+        cadencia: CadenciaEnum.FRENETICA,
+        turnosPorRodada: 6,
       });
     });
 

@@ -149,26 +149,30 @@ export class EncontroService {
       if (fichaEncontrada.campanhaId !== encontroEncontrado.campanhaId) {
         throw new BusinessException('A ficha não pertence à campanha deste encontro');
       }
+      const cadencia = this.resolverCadenciaDaFicha(fichaEncontrada.dados);
       await this.encontroRepositorio.adicionarCombatente({
         encontroId: dto.encontroId,
         fichaId: dto.fichaId,
         nomeAvulso: null,
         vidaMaximaAvulso: null,
         vidaAtualAvulso: null,
-        cadencia: this.resolverCadenciaDaFicha(fichaEncontrada.dados),
+        cadencia,
+        turnosPorRodada: this.resolverTurnosPorRodada(cadencia, fichaEncontrada.dados),
         ordem: maiorOrdem + 1,
       });
     } else {
       if (!dto.nomeAvulso || dto.vidaMaximaAvulso === null || dto.vidaMaximaAvulso <= 0) {
         throw new BusinessException('Combatente avulso exige nome e vida máxima');
       }
+      const cadencia = dto.cadencia ?? CadenciaEnum.SINGULAR;
       await this.encontroRepositorio.adicionarCombatente({
         encontroId: dto.encontroId,
         fichaId: null,
         nomeAvulso: dto.nomeAvulso,
         vidaMaximaAvulso: dto.vidaMaximaAvulso,
         vidaAtualAvulso: dto.vidaMaximaAvulso,
-        cadencia: dto.cadencia ?? CadenciaEnum.SINGULAR,
+        cadencia,
+        turnosPorRodada: this.resolverTurnosPorRodada(cadencia, dto.turnosPorRodada),
         ordem: maiorOrdem + 1,
       });
     }
@@ -571,6 +575,10 @@ export class EncontroService {
         iniciativa: linha.iniciativa as number,
         destreza: montarCombatenteResumo(linha).destreza,
         cadencia: linha.cadencia,
+        turnosPorRodada:
+          linha.tipoFicha === TipoFichaEnum.CRIATURA
+            ? ((linha.fichaDados as FichaCriaturaDadosDto).turnosPorRodada ?? linha.turnosPorRodada)
+            : linha.turnosPorRodada,
       }));
     return intercalarCadencia(ordenarIniciativa(ordenaveis));
   }
@@ -797,6 +805,24 @@ export class EncontroService {
     return CadenciaEnum.SINGULAR;
   }
 
+  /** Resolve o número efetivo de turnos; Frenética exige valor declarado a partir de 4. */
+  private resolverTurnosPorRodada(cadencia: CadenciaEnum, origem: unknown): number {
+    if (cadencia !== CadenciaEnum.FRENETICA) {
+      return cadencia === CadenciaEnum.SINGULAR ? 1 : cadencia === CadenciaEnum.DUPLA ? 2 : 3;
+    }
+    const valor =
+      typeof origem === 'number'
+        ? origem
+        : (origem as Partial<FichaCriaturaDadosDto> | null)?.turnosPorRodada;
+    if (typeof origem === 'object' && origem !== null && valor === undefined) {
+      return 4;
+    }
+    if (!Number.isInteger(valor) || (valor as number) < 4) {
+      throw new BusinessException('Cadência Frenética exige ao menos 4 turnos por rodada');
+    }
+    return valor as number;
+  }
+
   /**
    * Monta o estado completo: combatentes resolvidos (ficha lida, nunca duplicada), a ordem da
    * rodada calculada pelo **motor puro** e o log. Combatente sem iniciativa fica fora da ordem —
@@ -824,6 +850,7 @@ export class EncontroService {
         iniciativa: combatente.iniciativa as number,
         destreza: combatente.destreza,
         cadencia: combatente.cadencia,
+        turnosPorRodada: combatente.turnosPorRodada,
       }));
     const ordemRodada = intercalarCadencia(ordenarIniciativa(ordenaveis));
 

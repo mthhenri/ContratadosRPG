@@ -15,7 +15,9 @@ import type {
   FichaCriaturaResistenciaDto,
   FichaImagemFocoDto,
 } from '@contratados-rpg/shared/dtos/ficha';
-import type { CadenciaEnum, NivelAmeacaEnum, PorteCriaturaEnum, TenacidadeEnum } from '@contratados-rpg/shared/enums';
+import { CadenciaEnum } from '@contratados-rpg/shared/enums';
+import type { NivelAmeacaEnum, PorteCriaturaEnum, TenacidadeEnum } from '@contratados-rpg/shared/enums';
+import { calcularTurnosPorRodada } from '@contratados-rpg/shared/regras/encontro';
 
 import { FichaService } from './ficha.service';
 
@@ -167,7 +169,19 @@ export class FichaEdicaoCriaturaService {
   }
 
   ajustarCadencia(cadencia: CadenciaEnum): void {
-    this.atualizarDados((dados) => ({ ...dados, cadencia }));
+    this.atualizarDados((dados) => ({
+      ...dados,
+      cadencia,
+      turnosPorRodada:
+        cadencia === CadenciaEnum.FRENETICA
+          ? Math.max(4, dados.turnosPorRodada ?? 4)
+          : calcularTurnosPorRodada(cadencia),
+    }));
+  }
+
+  ajustarTurnosPorRodada(turnosPorRodada: number): void {
+    const valorSeguro = Number.isFinite(turnosPorRodada) ? Math.max(4, Math.trunc(turnosPorRodada)) : 4;
+    this.atualizarDados((dados) => ({ ...dados, turnosPorRodada: valorSeguro }));
   }
 
   ajustarIniciativaBonus(iniciativaBonus: number | undefined): void {

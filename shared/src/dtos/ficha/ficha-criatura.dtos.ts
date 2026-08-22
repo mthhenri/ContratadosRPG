@@ -85,6 +85,8 @@ export interface FichaCriaturaDadosDto {
   /** Ao menos um modo preenchido; trocar de modo em combate é gratuito (regra de uso, não de forma). */
   readonly deslocamento: FichaCriaturaDeslocamentoDto;
   readonly cadencia: CadenciaEnum;
+  /** Quantidade efetiva de turnos; para Frenética é declarada pelo Mestre e deve ser ≥ 4. */
+  readonly turnosPorRodada?: number;
   /**
    * Bônus fixo somado à Iniciativa após a rolagem normal de XD6 de Destreza — Habilidade
    * Especial Passiva opcional (sugestão do guia: ~10% da VD). Ausente/`0` = sem bônus.

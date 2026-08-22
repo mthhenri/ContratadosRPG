@@ -54,6 +54,17 @@ describe('ordenarIniciativa', () => {
 });
 
 describe('intercalarCadencia', () => {
+  it('respeita o valor declarado para uma Cadência Frenética acima de 4', () => {
+    const criatura = {
+      ...combatente(1, 18, CadenciaEnum.FRENETICA),
+      turnosPorRodada: 6,
+    } as CombatenteOrdenavelDto;
+
+    const ordem = intercalarCadencia(ordenarIniciativa([criatura, combatente(2, 10)]));
+
+    expect(ordem.filter((turno) => turno.combatenteId === criatura.id)).toHaveLength(6);
+  });
+
   it('reproduz o exemplo canônico do guia: Criatura Dupla [18], Agente A [17], Agente B [3]', () => {
     // docs/core/guia_de_mestre-v4.0.0.md — "Intercalação na Iniciativa":
     // "A ordem fica: Criatura [18] → Agente A [17] → Criatura [segundo turno] → Agente B [3]."

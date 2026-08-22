@@ -48,6 +48,10 @@
 
     <span class="combatente__origem">{{ linhaOrigem() }}</span>
 
+    @if (totalOcorrencias() > 1) {
+      <span class="combatente__turno">Turno {{ ocorrencia() }} de {{ totalOcorrencias() }}</span>
+    }
+
     <span class="combatente__nome-linha">
       <span class="combatente__nome">{{ combatente().nome }}</span>
       @if (combatente().machucado) {

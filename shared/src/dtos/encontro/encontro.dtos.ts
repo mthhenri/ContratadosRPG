@@ -91,6 +91,8 @@ export interface EncontroCombatenteResumoDto {
   readonly nome: string;
   readonly iniciativa: number | null;
   readonly cadencia: CadenciaEnum;
+  /** Quantidade efetiva; em Cadência Frenética pode ser qualquer inteiro a partir de 4. */
+  readonly turnosPorRodada?: number;
   readonly ordem: number;
   readonly vidaAtual: number;
   readonly vidaMaxima: number;
@@ -169,6 +171,8 @@ export interface EncontroCombatenteAdicionarDto {
   readonly nomeAvulso: string | null;
   readonly vidaMaximaAvulso: number | null;
   readonly cadencia: CadenciaEnum | null;
+  /** Obrigatório e ≥ 4 quando o avulso usa Cadência Frenética; ignorado nas cadências fixas. */
+  readonly turnosPorRodada?: number | null;
 }
 
 /** Saída da adição — o combatente já resolvido, pronto para entrar na lista. */

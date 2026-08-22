@@ -151,7 +151,8 @@ export class EncontroRepository extends BaseRepository {
     return `encontro_combatente.id, encontro_combatente.encontro_id AS "encontroId",
             encontro_combatente.ficha_id AS "fichaId",
             encontro_combatente.nome_avulso AS "nomeAvulso",
-            encontro_combatente.iniciativa, encontro_combatente.cadencia, encontro_combatente.ordem,
+            encontro_combatente.iniciativa, encontro_combatente.cadencia,
+            encontro_combatente.turnos_por_rodada AS "turnosPorRodada", encontro_combatente.ordem,
             encontro_combatente.vida_maxima_avulso AS "vidaMaximaAvulso",
             encontro_combatente.vida_atual_avulso AS "vidaAtualAvulso",
             encontro_combatente.condicoes,
@@ -225,8 +226,8 @@ export class EncontroRepository extends BaseRepository {
     dto: EncontroCombatenteInternoAdicionarDto,
   ): Promise<EncontroCombatenteLinhaDto> {
     const [combatenteInserido] = await this.executarConsulta<{ id: number }>(
-      `INSERT INTO encontro_combatente (encontro_id, ficha_id, nome_avulso, iniciativa, cadencia, ordem, vida_maxima_avulso, vida_atual_avulso, condicoes, created_date, updated_date, is_deleted)
-       SELECT :encontroId, :fichaId, :nomeAvulso, NULL, :cadencia, :ordem,
+      `INSERT INTO encontro_combatente (encontro_id, ficha_id, nome_avulso, iniciativa, cadencia, turnos_por_rodada, ordem, vida_maxima_avulso, vida_atual_avulso, condicoes, created_date, updated_date, is_deleted)
+       SELECT :encontroId, :fichaId, :nomeAvulso, NULL, :cadencia, :turnosPorRodada, :ordem,
               :vidaMaximaAvulso, :vidaAtualAvulso, :condicoes::jsonb, NOW(), NOW(), false
        RETURNING id`,
       {
@@ -234,6 +235,7 @@ export class EncontroRepository extends BaseRepository {
         fichaId: dto.fichaId,
         nomeAvulso: dto.nomeAvulso,
         cadencia: dto.cadencia,
+        turnosPorRodada: dto.turnosPorRodada,
         ordem: dto.ordem,
         vidaMaximaAvulso: dto.vidaMaximaAvulso,
         vidaAtualAvulso: dto.vidaAtualAvulso,

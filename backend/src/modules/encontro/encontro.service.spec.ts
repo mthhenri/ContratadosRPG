@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
+  EncontroCombatenteAdicionarDto,
   EncontroCombatenteLinhaDto,
   EncontroLinhaDto,
 } from '@contratados-rpg/shared/dtos/encontro';
@@ -237,6 +238,24 @@ describe('EncontroService', () => {
           vidaMaximaAvulso: 16,
           vidaAtualAvulso: 16,
         }),
+      );
+    });
+
+    it('preserva a quantidade declarada de turnos do avulso Frenético', async () => {
+      await service.adicionarCombatente(
+        {
+          encontroId: 50,
+          fichaId: null,
+          nomeAvulso: 'Sujeito Frenético',
+          vidaMaximaAvulso: 20,
+          cadencia: CadenciaEnum.FRENETICA,
+          turnosPorRodada: 6,
+        } as EncontroCombatenteAdicionarDto & { encontroId: number; turnosPorRodada: number },
+        mestre,
+      );
+
+      expect(encontroRepositorio.adicionarCombatente).toHaveBeenCalledWith(
+        expect.objectContaining({ cadencia: CadenciaEnum.FRENETICA, turnosPorRodada: 6 }),
       );
     });
 
