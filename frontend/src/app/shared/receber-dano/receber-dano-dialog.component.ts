@@ -25,6 +25,16 @@ const SUFIXO_TIPO_DANO: Record<TipoDanoEnum, string> = {
   [TipoDanoEnum.GERAL]: 'geral',
 };
 
+/** Abreviação da coluna de tipo — "Balístico"/"Explosão" não cabem na coluna estreita da grade
+ * (o `appTooltip` do rótulo já carrega o nome completo, ver `DESCRICAO_TIPO`). */
+const ABREVIACAO_TIPO: Record<TipoDanoEnum, string> = {
+  [TipoDanoEnum.FISICO]: 'Físico',
+  [TipoDanoEnum.BALISTICO]: 'Balíst.',
+  [TipoDanoEnum.EXPLOSAO]: 'Explos.',
+  [TipoDanoEnum.QUIMICO]: 'Químico',
+  [TipoDanoEnum.GERAL]: 'Geral',
+};
+
 /** Um `FormControl` de número não-negativo, sempre com valor (nunca `null`). */
 function controleNumerico(): FormControl<number> {
   return new FormControl(0, { nonNullable: true });
@@ -65,6 +75,7 @@ export class ReceberDanoDialog {
 
   protected readonly TIPOS_DANO_BLOQUEAVEIS = TIPOS_DANO_BLOQUEAVEIS;
   protected readonly DESCRICAO_TIPO = DESCRICAO_TIPO;
+  protected readonly ABREVIACAO_TIPO = ABREVIACAO_TIPO;
   protected readonly TipoDanoEnum = TipoDanoEnum;
 
   protected readonly formulario = new FormGroup({

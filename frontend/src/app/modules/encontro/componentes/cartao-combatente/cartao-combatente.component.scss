@@ -428,6 +428,32 @@
     }
   }
 
+  // Resistência a dano por tipo (m7-17) — mesma faixa compacta das defesas, um degrau mais
+  // discreto (`--text-mute` fixo, sem realce no turno ativo): é contexto de apoio pro "Receber
+  // dano", não um número que o combate observa rodada a rodada como Vida ou Defesa.
+  &__resistencias {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 10px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-mute);
+
+    @include bp.mobile {
+      gap: 2px 5px;
+      font-size: 9px;
+    }
+  }
+
+  &__resistencia {
+    @include bp.mobile {
+      &:not(:last-child)::after {
+        content: '·';
+        margin-left: 2px;
+      }
+    }
+  }
+
   &__condicao {
     display: inline-flex;
     align-items: center;

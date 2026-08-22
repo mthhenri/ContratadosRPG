@@ -55,6 +55,7 @@ describe('ocultarNaoRevelados', () => {
     donoNome: 'Bia',
     classe: null,
     arquetipo: null,
+    resistencias: null,
     revelado: true,
     ...extras,
   });

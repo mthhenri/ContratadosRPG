@@ -69,6 +69,15 @@ describe('ReceberDanoDialog', () => {
     expect(totalEmitido).toBe(12);
   });
 
+  it('mostra a resistência Geral da ficha na coluna Ficha, não só o custom (regressão)', () => {
+    const fixture = montar({ [TipoDanoEnum.GERAL]: 3 });
+
+    const colunaFicha = fixture.debugElement.queryAll(By.css('.receber-dano__resistencia-ficha'));
+    const linhaGeral = colunaFicha[colunaFicha.length - 1];
+    expect(linhaGeral.nativeElement.textContent.trim()).toBe('3');
+    expect(linhaGeral.nativeElement.classList).not.toContain('receber-dano__resistencia-ficha--ausente');
+  });
+
   it('cancelar não emite dano', () => {
     const fixture = montar();
     preencher(fixture, TipoDanoEnum.FISICO, 'bruto', 40);
@@ -88,7 +97,7 @@ describe('ReceberDanoDialog', () => {
     const fixture = montar();
     preencher(fixture, TipoDanoEnum.FISICO, 'bruto', 10);
 
-    const linhas = fixture.debugElement.queryAll(By.css('.receber-dano__resumo-linha'));
+    const linhas = fixture.debugElement.queryAll(By.css('.receber-dano__resumo-linhas .receber-dano__tipo'));
     expect(linhas.length).toBe(1);
     expect(linhas[0].nativeElement.textContent).toContain('Físico');
   });

@@ -4,6 +4,7 @@ import {
   calcularCustoResistencia,
   calcularLimiteResistencias,
   calcularMultiplicadorCriticoFraqueza,
+  somarResistenciasCriaturaPorTipo,
   validarFraqueza,
 } from './resistencia';
 
@@ -50,5 +51,20 @@ describe('calcularMultiplicadorCriticoFraqueza', () => {
   it('3× tipo amplo, 4× subtipo', () => {
     expect(calcularMultiplicadorCriticoFraqueza(false)).toBe(3);
     expect(calcularMultiplicadorCriticoFraqueza(true)).toBe(4);
+  });
+});
+
+describe('somarResistenciasCriaturaPorTipo', () => {
+  it('soma linhas repetidas do mesmo tipo (m7-17)', () => {
+    const resultado = somarResistenciasCriaturaPorTipo([
+      { tipo: TipoDanoEnum.FISICO, subtipo: null, valor: 10 },
+      { tipo: TipoDanoEnum.FISICO, subtipo: 'Cortante', valor: 5 },
+      { tipo: TipoDanoEnum.GERAL, subtipo: null, valor: 3 },
+    ]);
+    expect(resultado).toEqual({ [TipoDanoEnum.FISICO]: 15, [TipoDanoEnum.GERAL]: 3 });
+  });
+
+  it('lista vazia devolve mapa vazio', () => {
+    expect(somarResistenciasCriaturaPorTipo([])).toEqual({});
   });
 });

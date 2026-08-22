@@ -6,32 +6,51 @@
 .receber-dano {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 
-  &__linhas {
+  &__grade {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 2px;
+  }
+
+  &__cabecalho,
+  &__linha {
+    display: grid;
+    grid-template-columns: 60px 1fr 40px 1fr;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__cabecalho {
+    padding: 0 0 2px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-mute);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+
+    span:nth-child(3) { text-align: center; }
   }
 
   &__linha {
-    display: grid;
-    grid-template-columns: 72px 1fr 44px 1fr;
-    align-items: end;
-    gap: 8px;
+    padding: 3px 0;
 
     &--geral {
-      grid-template-columns: 72px 1fr 1fr;
-      padding-top: 8px;
+      margin-top: 4px;
+      padding-top: 7px;
       border-top: 1px solid var(--border);
     }
   }
 
   &__tipo {
+    overflow: hidden;
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
-    padding: 4px 0;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 
     @each $tipo in fisico, balistico, explosao, quimico, geral {
       &--#{$tipo} {
@@ -40,29 +59,15 @@
     }
   }
 
-  &__campo {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-  }
-
-  &__rotulo-campo {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
   &__entrada {
     width: 100%;
     font-family: var(--font-mono);
-    font-size: 14px;
+    font-size: 13px;
     color: var(--text);
     background: var(--bg);
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-control);
-    padding: 6px 8px;
+    padding: 5px 7px;
 
     &:focus {
       outline: none;
@@ -72,46 +77,62 @@
 
   &__resistencia-ficha {
     font-family: var(--font-mono);
-    font-size: 14px;
+    font-size: 13px;
     color: var(--text-dim);
     text-align: center;
-    padding: 6px 0;
+
+    &--ausente {
+      color: var(--text-mute);
+    }
   }
 
   &__resumo {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 10px 12px;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 12px;
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-control);
   }
 
   &__resumo-vazio {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--text-mute);
   }
 
-  &__resumo-linha {
+  &__resumo-linhas {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
     font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--text);
+    font-size: 12px;
+
+    span {
+      white-space: nowrap;
+    }
   }
 
   &__resumo-total {
-    margin-top: 4px;
+    flex: none;
     font-family: var(--font-mono);
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--vida);
+    font-size: 12px;
+    color: var(--text-dim);
+    white-space: nowrap;
+
+    strong {
+      margin-left: 4px;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--vida);
+    }
   }
 
   &__acoes {
     display: flex;
+    justify-content: flex-end;
     gap: 8px;
   }
 
@@ -160,14 +181,36 @@
     }
   }
 
+  // Mobile: continua tabela, só mais estreita — nunca empilha (empilhar quebrava a relação
+  // coluna↔coluna e alongava o dialog demais pra caber na tela sem rolar).
   @include bp.mobile {
+    &__cabecalho,
     &__linha {
-      grid-template-columns: 1fr;
-      gap: 4px;
+      grid-template-columns: 46px 1fr 32px 1fr;
+      gap: 5px;
+    }
 
-      &--geral {
-        grid-template-columns: 1fr;
-      }
+    &__cabecalho {
+      font-size: 8px;
+    }
+
+    &__tipo {
+      font-size: 9px;
+    }
+
+    &__entrada {
+      font-size: 12px;
+      padding: 5px 4px;
+    }
+
+    &__resistencia-ficha {
+      font-size: 12px;
+    }
+
+    &__resumo {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
     }
   }
 }

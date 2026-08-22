@@ -184,6 +184,14 @@
       </span>
     }
 
+    @if (resistenciasExibidas().length) {
+      <span class="combatente__resistencias" [appTooltip]="'Resistência a dano'">
+        @for (resistencia of resistenciasExibidas(); track resistencia.rotulo) {
+          <span class="combatente__resistencia">{{ resistencia.rotulo }} {{ resistencia.valor }}</span>
+        }
+      </span>
+    }
+
     @for (condicao of combatente().condicoes; track condicao.nome) {
       <span
         class="combatente__condicao"
@@ -206,6 +214,7 @@
 @if (podeAjustar()) {
   <app-receber-dano-dialog
     [aberto]="receberDanoAberto()"
+    [resistenciasFicha]="combatente().resistencias"
     (danoConfirmado)="receberDano($event)"
     (fechado)="receberDanoAberto.set(false)"
   />

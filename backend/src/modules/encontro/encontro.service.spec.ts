@@ -363,7 +363,37 @@ describe('EncontroService', () => {
         energiaAtual: null,
         defesa: null,
         esquiva: null,
+        resistencias: null,
       });
+    });
+
+    it('resistência a dano por tipo (m7-17): soma as linhas da criatura, repetidas incluídas', async () => {
+      encontroRepositorio.recuperarPorId.mockResolvedValue(criarEncontroLinha());
+      encontroRepositorio.listarCombatentes.mockResolvedValue([
+        criarCombatenteLinha({
+          fichaId: 30,
+          nomeAvulso: null,
+          vidaMaximaAvulso: null,
+          vidaAtualAvulso: null,
+          fichaNome: 'SCP-1471-A',
+          tipoFicha: TipoFichaEnum.CRIATURA,
+          fichaDados: {
+            vidaAtual: 40,
+            vidaMaxima: 52,
+            defesa: 17,
+            atributos: { destreza: 4 },
+            resistencias: [
+              { tipo: 'FISICO', subtipo: null, valor: 10 },
+              { tipo: 'FISICO', subtipo: 'Cortante', valor: 5 },
+              { tipo: 'GERAL', subtipo: null, valor: 3 },
+            ],
+          } as unknown as EncontroCombatenteLinhaDto['fichaDados'],
+        }),
+      ]);
+
+      const estado = await service.recuperarEncontro({ id: 50 }, mestre);
+
+      expect(estado.combatentes[0].resistencias).toEqual({ FISICO: 15, GERAL: 3 });
     });
 
     it('criatura expõe só Defesa — sem Esquiva, Bloqueio ou Contra-Ataque', async () => {

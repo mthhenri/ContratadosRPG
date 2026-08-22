@@ -74,6 +74,7 @@ describe('PainelEncontro', () => {
     donoNome: null,
     classe: null,
     arquetipo: null,
+    resistencias: null,
     revelado: true,
     ...extras,
   });

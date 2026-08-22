@@ -3,8 +3,10 @@ import type {
   EncontroCombatenteResumoDto,
 } from '@contratados-rpg/shared/dtos/encontro';
 import type { FichaCriaturaDadosDto, FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
-import { CombatenteOrigemEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
-import { calcularEnergia, calcularVida } from '@contratados-rpg/shared/regras/agente';
+import { CombatenteOrigemEnum, TipoDanoEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
+import { calcularEnergia, calcularVida, montarResistencias } from '@contratados-rpg/shared/regras/agente';
+import { somarResistenciasCriaturaPorTipo } from '@contratados-rpg/shared/regras/criatura';
+import { obterResistenciaFormacao } from '@contratados-rpg/shared/regras/identidade';
 
 /**
  * Traduz a linha crua de `encontro_combatente` (já com a ficha resolvida pelo `JOIN`) no resumo
@@ -89,6 +91,33 @@ function resolverEstadoDaCriatura(dados: FichaCriaturaDadosDto): EstadoDoCombate
     machucado: null,
     inconsciente: null,
   };
+}
+
+/**
+ * Resistência a dano por tipo (m7-17) — só agente e criatura têm ficha tipada o bastante pra
+ * calcular. Agente reusa o mesmo motor da aba Combate da ficha (`montarResistencias`: manual +
+ * equipamento + Formação); criatura soma as linhas de `resistencias` (`subtipo` não distingue
+ * aqui). NPC (contrato ainda não tipado, m4-05) e avulso saem `null` — não é `0`, é "não existe".
+ */
+function resolverResistencias(linha: EncontroCombatenteLinhaDto): Partial<Record<TipoDanoEnum, number>> | null {
+  if (linha.fichaId === null || linha.fichaDados === null) {
+    return null;
+  }
+  if (linha.tipoFicha === TipoFichaEnum.JOGADOR) {
+    const dados = linha.fichaDados as FichaJogadorDadosDto;
+    const formacao = obterResistenciaFormacao(dados.identidade?.origem?.formacao ?? []);
+    const resistencias = montarResistencias({
+      itens: dados.inventario?.itens ?? [],
+      amplificadores: dados.inventario?.amplificadores ?? [],
+      manual: dados.derivados?.resistencias,
+      formacao,
+    });
+    return Object.fromEntries(resistencias.map((linhaResistencia) => [linhaResistencia.tipo, linhaResistencia.total]));
+  }
+  if (linha.tipoFicha === TipoFichaEnum.CRIATURA) {
+    return somarResistenciasCriaturaPorTipo((linha.fichaDados as FichaCriaturaDadosDto).resistencias ?? []);
+  }
+  return null;
 }
 
 /**
@@ -194,6 +223,7 @@ export function montarCombatenteResumo(
       linha.tipoFicha === TipoFichaEnum.JOGADOR
         ? (linha.fichaDados as FichaJogadorDadosDto).arquetipo
         : null,
+    resistencias: resolverResistencias(linha),
     // O mapper monta sempre a visão **completa** (a do mestre). O recorte por permissão é uma
     // camada depois, em `encontro-revelacao.ts` — aqui não se decide quem vê o quê.
     revelado: true,

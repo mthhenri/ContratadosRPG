@@ -1,13 +1,17 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-21 · **Última decisão registrada:** `m7-17` — "Receber dano": dialog
-> compartilhado (`ReceberDanoDialog`) que aplica resistência da ficha + custom por tipo e emite o
-> total já efetivo, clampado à Vida atual antes de sair do componente (achado em verificação ao
-> vivo: sem o clamp, o backend rejeita o ajuste inteiro por "Vida negativa"). Botão no cartão do
-> combatente (mestre, dentro do encontro, sem resistência automática — o resumo do encontro não
-> carrega a ficha completa) e ao lado do rótulo "Vida" na ficha de agente e de criatura (dono/mestre,
-> com resistência automática de `montarResistencias`/`dados().resistencias`). Resistência Geral
-> reduz qualquer tipo bloqueável uma única vez; dano Geral é irredutível — ver seção 1.
+> **Última revisão:** 2026-08-22 · **Última decisão registrada:** `m7-17` (retoque no mesmo dia) —
+> o dialog "Receber dano" ganhou uma grade com cabeçalho único (Dano/Ficha/Custom) em vez de rótulo
+> por campo em cada uma das cinco linhas, e o mobile deixou de empilhar cada célula (o que alongava
+> o dialog e quebrava a leitura coluna↔coluna) — continua tabela, só mais estreita. O cartão da
+> Iniciativa passou a mostrar a mesma faixa compacta de resistência a dano que a ficha mostra
+> (`EncontroCombatenteResumoDto.resistencias`, calculado no mapper do encontro a partir da ficha já
+> carregada — `montarResistencias` pro agente, soma de `resistencias` pra criatura — e ocultado pela
+> mesma regra de revelação das outras defesas), e o dialog aberto por esse cartão agora recebe essa
+> resistência automaticamente (antes só o campo custom existia ali). Achado em verificação ao vivo:
+> a linha "Geral" do dialog mostrava sempre `—` na coluna Ficha mesmo com resistência Geral
+> definida — o número era aplicado no cálculo (silenciosamente correto) mas nunca exibido; corrigido
+> e coberto por teste de regressão.
 >
 > **Decisão anterior:** `m7-16` — na tela de Iniciativa, um agente (`JOGADOR`) de ficha **não
 > oculta** (m3-65) mostra avatar/dono/classe-arquétipo pra qualquer membro, mesmo sem

@@ -1,7 +1,7 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 
 import type { EncontroCombatenteResumoDto } from '@contratados-rpg/shared/dtos/encontro';
-import { CombatenteOrigemEnum, NivelAmeacaEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
+import { CombatenteOrigemEnum, NivelAmeacaEnum, TipoDanoEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import { calcularTurnosPorRodada } from '@contratados-rpg/shared/regras/encontro';
 
 import { Icone } from '../../../../shared/icone/icone.component';
@@ -21,6 +21,15 @@ interface DefesaExibidaDto {
   readonly rotuloCurto: string;
   readonly valor: number;
 }
+
+/** Abreviação de cada `TipoDanoEnum` na faixa compacta de resistências do cartão (m7-17). */
+const ABREVIACAO_RESISTENCIA: Record<TipoDanoEnum, string> = {
+  [TipoDanoEnum.FISICO]: 'Fís',
+  [TipoDanoEnum.BALISTICO]: 'Bal',
+  [TipoDanoEnum.EXPLOSAO]: 'Exp',
+  [TipoDanoEnum.QUIMICO]: 'Quí',
+  [TipoDanoEnum.GERAL]: 'Ger',
+};
 
 /**
  * Cartão de um combatente na tela "Iniciativa" (m7-05) — fiel a
@@ -91,8 +100,7 @@ export class CartaoCombatente {
    */
   protected readonly ajustando = signal(false);
 
-  /** Estado do dialog "Receber dano" (m7-17) — sem resistência automática aqui: o cartão não
-   *  carrega a ficha completa, só o resumo do encontro (`EncontroCombatenteResumoDto`). */
+  /** Estado do dialog "Receber dano" (m7-17). */
   protected readonly receberDanoAberto = signal(false);
 
   protected readonly TipoFichaEnum = TipoFichaEnum;
@@ -215,6 +223,24 @@ export class CartaoCombatente {
     return candidatas
       .filter((trio): trio is readonly [string, string, number] => trio[2] !== null)
       .map(([rotulo, rotuloCurto, valor]) => ({ rotulo, rotuloCurto, valor }));
+  });
+
+  /**
+   * Resistência a dano por tipo (m7-17), mesmo total que a ficha mostra na aba Combate — o
+   * backend já resolve a soma (`EncontroCombatenteResumoDto.resistencias`). Só os tipos com
+   * resistência diferente de zero aparecem: a faixa é um relance de combate, não o editor
+   * completo da ficha, e cinco zeros não ajudam ninguém a decidir uma jogada.
+   */
+  protected readonly resistenciasExibidas = computed<
+    readonly { readonly rotulo: string; readonly valor: number }[]
+  >(() => {
+    const resistencias = this.combatente().resistencias;
+    if (!resistencias) {
+      return [];
+    }
+    return Object.entries(resistencias)
+      .filter((entrada): entrada is [TipoDanoEnum, number] => (entrada[1] ?? 0) !== 0)
+      .map(([tipo, valor]) => ({ rotulo: ABREVIACAO_RESISTENCIA[tipo], valor: valor! }));
   });
 
   /** `true` quando o combatente tem Energia — agente e NPC têm; criatura e avulso, não. */

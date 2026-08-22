@@ -29,6 +29,7 @@ import {
   calcularAtributoEfetivo,
   calcularLimiteResistencias,
   calcularValorModificador,
+  somarResistenciasCriaturaPorTipo,
   validarFichaCriatura,
 } from '@contratados-rpg/shared/regras/criatura';
 
@@ -332,16 +333,11 @@ export class CriaturaVisualizacao {
   /**
    * `dados().resistencias` remapeada para o `resistenciasFicha` do dialog "Receber dano" — a lista
    * da criatura carrega `subtipo` (não usado aqui) e pode ter mais de uma linha por tipo; soma as
-   * repetidas, mesmo comportamento de "resistência total daquele tipo" que o mestre já vê na lista.
+   * repetidas via `somarResistenciasCriaturaPorTipo` (mesma função que o mapper do encontro usa
+   * pro cartão da Iniciativa, m7-17).
    */
   protected readonly resistenciasParaReceberDano = computed<Partial<Record<TipoDanoEnum, number>>>(
-    () => {
-      const somaPorTipo: Partial<Record<TipoDanoEnum, number>> = {};
-      for (const linha of this.dados().resistencias) {
-        somaPorTipo[linha.tipo] = (somaPorTipo[linha.tipo] ?? 0) + linha.valor;
-      }
-      return somaPorTipo;
-    },
+    () => somarResistenciasCriaturaPorTipo(this.dados().resistencias),
   );
 
   /** Abate o total já efetivo do dialog "Receber dano" (m7-17) — mesmo canal de `ajustarVida`. */

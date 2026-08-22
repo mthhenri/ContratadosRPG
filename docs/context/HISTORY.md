@@ -1,5 +1,66 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-22 — `m7-17` (retoque): dialog menos poluído, mobile sem empilhar, resistência no cartão da Iniciativa
+
+Pedido direto do autor, no mesmo dia da entrega original: o dialog "Receber dano" estava poluído
+(um rótulo "Dano"/"Custom" repetido em cada uma das cinco linhas) e no mobile cada célula da grade
+empilhava verticalmente — cinco linhas de 3-4 itens empilhados cada, um dialog longo e confuso de
+ler. Pedido junto: o cartão da Iniciativa deveria trazer a resistência a dano por tipo, igual a
+ficha já mostra.
+
+**Dialog.** Trocado o rótulo por linha por um cabeçalho único da grade (Dano / Ficha / Custom);
+cada linha agora só tem o nome do tipo + os três valores, sem repetir "Dano"/"Custom" cinco vezes.
+O resumo ao vivo também ficou mais compacto (uma linha só, tipos lado a lado, ao invés de uma linha
+por tipo). No mobile a grade continua uma tabela — só mais estreita (`grid-template-columns` menor,
+fonte menor) — ao invés de empilhar: empilhar quebrava a relação coluna↔coluna (qual número é Dano,
+qual é Ficha, qual é Custom) e alongava o dialog o bastante para exigir rolagem numa tela de 800px
+de altura. Os nomes dos tipos bloqueáveis (Balístico, Explosão) foram abreviados (Balíst./Explos.)
+porque não cabiam na coluna estreita do rótulo sem encostar no campo de input ao lado — o nome
+completo sobrevive no `appTooltip`, mesmo padrão que a própria ficha já usa na aba Combate
+(`abreviacaoResistencia` em `ficha-visualizacao.component.ts`).
+
+**Resistência no cartão da Iniciativa.** `EncontroCombatenteResumoDto` ganhou o campo
+`resistencias: Partial<Record<TipoDanoEnum, number>> | null`. O mapper do encontro
+(`encontro-combatente.mapper.ts`) já carregava o documento completo da ficha (`linha.fichaDados`)
+para resolver vida/defesas — a resistência é só mais um derivado da mesma fonte: para o agente,
+`montarResistencias` (o mesmo motor da aba Combate da ficha: manual + equipamento + Formação); para
+a criatura, a soma das linhas de `resistencias` por tipo. Essa soma já existia, duplicada inline em
+`CriaturaVisualizacao.resistenciasParaReceberDano` — foi extraída para
+`somarResistenciasCriaturaPorTipo` em `shared/src/regras/criatura/resistencia.ts`, reusada nos dois
+lugares. NPC (contrato ainda não tipado, m4-05) e avulso saem `null` — a distinção de "não existe"
+vs. "existe e é zero" importava porque a ficha mostra as cinco linhas sempre, mas o cartão da
+Iniciativa é um relance de combate, não o editor completo: só os tipos com resistência diferente de
+zero aparecem (`Fís 15 · Quí 5`, no mesmo estilo compacto da faixa de defesas já existente,
+`Def 14 · Esq 15`). `encontro-revelacao.ts` zera (`null`) a resistência de quem não tem os números
+revelados, mesma regra que já zera defesa/esquiva/bloqueio/contra-ataque. O dialog aberto a partir
+desse cartão passou a receber `[resistenciasFicha]="combatente().resistencias"` — antes ficava sem
+nenhuma coluna Ficha porque o resumo do encontro não carregava esse dado (limitação real na hora do
+`m7-17` original, resolvida agora que o mapper calcula).
+
+**Achado em verificação ao vivo (o gate valeu a pena de novo).** Testes unitários passaram limpos
+na primeira tentativa da reescrita do dialog, mas a inspeção visual ao vivo (Playwright, sessão
+real com ficha de agente com resistência manual `{Físico: 15, Químico: 5}` e criatura com
+`resistencias: [{Físico, 10}, {Geral, 3}]`) pegou dois problemas que os testes não cobriam: (1) os
+rótulos "Balístico"/"Explosão" encostavam visualmente no campo de input ao lado — corrigido com as
+abreviações acima; (2) a linha "Geral" do dialog **sempre** mostrava `—` na coluna Ficha, mesmo com
+uma resistência Geral de verdade na ficha — a reescrita do template hardcodeou o traço ao invés de
+chamar `resistenciaFichaDe(TipoDanoEnum.GERAL)` como as outras quatro linhas já faziam. O número
+*entrava* no cálculo corretamente (`calcularDanoRecebido` soma `resistenciasFicha[GERAL]`
+independente do que a tela mostra) — só a exibição estava errada, um bug silencioso onde a Vida
+seria abatida corretamente mas ninguém veria o porquê do total antes de confirmar. Corrigido e
+coberto por um teste de regressão específico (`receber-dano-dialog.component.spec.ts`: "mostra a
+resistência Geral da ficha na coluna Ficha, não só o custom").
+
+**Verificação.** `npm run test --workspace=shared` (701, incluindo os 2 novos casos de
+`somarResistenciasCriaturaPorTipo`), `--workspace=backend` (424, incluindo um novo caso de
+`encontro.service.spec.ts` provando a soma das resistências da criatura, repetidas incluídas) e
+`--workspace=frontend` (1248) — todos verdes; `tsc --noEmit` no backend limpo (só o erro
+pré-existente e não relacionado de `rolagem.service.spec.ts`); lint limpo nos três workspaces (os
+2 erros do backend são em arquivos não tocados nesta sessão). Verificação visual ao vivo nos quatro
+pontos de entrada do dialog (cartão da criatura e do agente na Iniciativa; botão ao lado de "Vida"
+na ficha de agente e na de criatura) em 1920×1080 e 360×800, com dados reais via REST (não
+mockados) — os dois bugs acima só apareceram nessa inspeção, não nos testes unitários.
+
 ## 2026-08-22 — `m7-17`: "Receber dano" — tomador de dano facilitado para mestre e jogador
 
 Pedido direto do autor: um botão "Receber dano" que abre um dialog com os cinco tipos de dano do

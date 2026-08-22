@@ -1,4 +1,5 @@
 import { TipoDanoEnum } from '../../enums';
+import type { FichaCriaturaResistenciaDto } from '../../dtos/ficha';
 import type { CustoResistenciaCalcularDto, FraquezaValidarDto, LimiteResistenciasCalcularDto } from './criatura.dtos';
 
 /** Limite de Resistências = 2×VD, +25% por Fraqueza declarada além da 1ª
@@ -29,4 +30,16 @@ export function validarFraqueza(dto: FraquezaValidarDto): boolean {
  * subtipo (docs/... "Crítico em Fraquezas"). */
 export function calcularMultiplicadorCriticoFraqueza(ehSubtipo: boolean): number {
   return ehSubtipo ? 4 : 3;
+}
+
+/** Soma `resistencias` da criatura por `tipo` (`subtipo` não distingue aqui — é o mesmo total
+ * "quanto esse tipo reduz" que o mestre já vê na lista); tipo sem linha fica ausente do mapa. */
+export function somarResistenciasCriaturaPorTipo(
+  resistencias: readonly FichaCriaturaResistenciaDto[],
+): Partial<Record<TipoDanoEnum, number>> {
+  const somaPorTipo: Partial<Record<TipoDanoEnum, number>> = {};
+  for (const linha of resistencias) {
+    somaPorTipo[linha.tipo] = (somaPorTipo[linha.tipo] ?? 0) + linha.valor;
+  }
+  return somaPorTipo;
 }

@@ -5,6 +5,7 @@ import type {
   CombatenteOrigemEnum,
   EncontroEventoTipoEnum,
   EncontroStatusEnum,
+  TipoDanoEnum,
   TipoFichaEnum,
 } from '../../enums';
 import type { FichaImagemFocoDto } from '../ficha';
@@ -138,6 +139,14 @@ export interface EncontroCombatenteResumoDto {
   readonly donoNome: string | null;
   readonly classe: ClasseEnum | null;
   readonly arquetipo: ArquetipoEnum | null;
+  /**
+   * Resistência a dano por tipo (m7-17), mesmo total que a ficha mostra na aba Combate — soma de
+   * base manual + equipamento + Formação para o agente (`montarResistencias`), soma das linhas de
+   * `resistencias` para a criatura (`somarResistenciasCriaturaPorTipo`). Tipo ausente do mapa vale
+   * `0`. `null` para NPC (contrato ainda não tipado, m4-05) e avulso, que não têm ficha nenhuma —
+   * é um número como os outros, sujeito à mesma regra de `revelado` acima.
+   */
+  readonly resistencias: Partial<Record<TipoDanoEnum, number>> | null;
   /**
    * `false` quando quem consulta **não** tem direito de ver os **números** deste combatente fora
    * do encontro (m7-06): a criatura que o mestre ainda não revelou (`usuario_ficha_acesso`), a

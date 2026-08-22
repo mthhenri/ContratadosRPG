@@ -84,6 +84,7 @@ Fluxo obrigatório: **controller (burro) → service (regra) → repository (só
 | Composables de página da ficha (uma instância por página, `providers: []`) | `frontend/src/app/modules/ficha/` — `ficha-edicao.service.ts` (handlers `ajustar*`), `ficha-rolagem-registro.service.ts` (flag "Rolagem oculta" + registro do histórico) |
 | Componentes reutilizáveis | `frontend/src/app/shared/` — `layout/`, `icone/`, `bandeja-dados/`, `historico-rolagens-sidebar/`, `calculadora-flutuante/`, `tempo-real/`, `tooltip/`, `overflow-fade/`, `hold-repeat/`, `marca/`, `receber-dano/` (dialog "Receber dano", m7-17)… |
 | "Receber dano" — regra de resistência × dano por tipo (assimetria da camada Geral) | `shared/src/regras/encontro/receber-dano.ts` (`calcularDanoRecebido`) — consumida só por `frontend/src/app/shared/receber-dano/` |
+| Resistência a dano por tipo do cartão da Iniciativa (`EncontroCombatenteResumoDto.resistencias`) | calculada em `backend/src/modules/encontro/encontro-combatente.mapper.ts` (`resolverResistencias` — `montarResistencias` pro agente, `somarResistenciasCriaturaPorTipo` pra criatura, `shared/src/regras/criatura/resistencia.ts`), zerada em `encontro-revelacao.ts` junto das demais defesas |
 | Services, guards, interceptors | `frontend/src/app/core/` |
 | **Tokens e tema em runtime** | `frontend/src/styles/tema/` — `_tokens.scss`, `_base.scss`, `_breakpoints.scss`, `contencao.preset.ts` |
 | Rotas raiz | `frontend/src/app/app.routes.ts` · config em `app.config.ts` |

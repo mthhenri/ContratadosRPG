@@ -7,6 +7,7 @@ import {
   ClasseEnum,
   CombatenteOrigemEnum,
   NivelAmeacaEnum,
+  TipoDanoEnum,
   TipoFichaEnum,
 } from '@contratados-rpg/shared/enums';
 
@@ -48,6 +49,7 @@ describe('CartaoCombatente', () => {
     donoNome: null,
     classe: null,
     arquetipo: null,
+    resistencias: { [TipoDanoEnum.FISICO]: 15, [TipoDanoEnum.QUIMICO]: 5 },
     revelado: true,
   };
 

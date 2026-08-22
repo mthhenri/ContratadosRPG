@@ -63,6 +63,7 @@ function ocultarCombatente(
     esquiva: null,
     bloqueio: null,
     contraAtaque: null,
+    resistencias: null,
     condicoes: [],
     morrendo: null,
     machucado: null,
