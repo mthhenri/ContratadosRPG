@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import type {
   RolagemRegistrarDto,
+  RolagemAvulsoRegistrarDto,
   RolagemResumoDto,
 } from '@contratados-rpg/shared/dtos/rolagem';
 import type { PaginatedResult } from '@contratados-rpg/shared/interfaces';
@@ -34,6 +35,19 @@ export class RolagemController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<RolagemResumoDto> {
     return this.rolagemService.registrarRolagem({ ...dto, fichaId: id }, usuarioAtivo);
+  }
+
+  @Post('encontro/:encontroId/combatente/:combatenteId/rolagem')
+  registrarAvulso(
+    @Param('encontroId', ParseIntPipe) encontroId: number,
+    @Param('combatenteId', ParseIntPipe) combatenteId: number,
+    @Body() dto: RolagemRegistrarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<RolagemResumoDto> {
+    return this.rolagemService.registrarRolagemAvulso(
+      { ...dto, encontroId, combatenteId } satisfies RolagemAvulsoRegistrarDto,
+      usuarioAtivo,
+    );
   }
 
   @Get('ficha/:id/rolagem')

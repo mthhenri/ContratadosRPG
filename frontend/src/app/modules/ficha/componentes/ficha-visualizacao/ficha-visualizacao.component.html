@@ -1603,6 +1603,7 @@
         @if (abaStatusEfetiva() === 'inventario') {
         <div class="ficha-status__conteudo">
           <app-ficha-inventario
+            [rolagemOculta]="registro.oculta()"
             [inventario]="dados().inventario"
             [editavel]="ajustavel()"
             [podeRolar]="podeRolar()"

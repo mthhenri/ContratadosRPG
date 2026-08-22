@@ -8,6 +8,7 @@ import {
   OrigemCriaturaEnum,
   ComportamentoCriaturaEnum,
   PorteCriaturaEnum,
+  RolagemVisibilidadeEnum,
   RegeneracaoIntensidadeEnum,
   RegeneracaoModoEnum,
   TenacidadeEnum,
@@ -634,7 +635,7 @@ export class CriaturaVisualizacao {
     if (!executada) {
       return;
     }
-    this.bandeja.mostrar({ rotulo: executada.rotulo, formula: executada.formula, resultado: executada.resultado, corFicha: this.cor() });
+    this.bandeja.mostrar({ rotulo: executada.rotulo, formula: executada.formula, resultado: executada.resultado, corFicha: this.cor(), visibilidade: this.rolagemOculta() ? RolagemVisibilidadeEnum.PRIVADA : RolagemVisibilidadeEnum.PUBLICA });
     this.rolagemRegistro.registrar(executada);
   }
 
@@ -647,7 +648,7 @@ export class CriaturaVisualizacao {
     if (!executada) {
       return;
     }
-    this.bandeja.mostrar({ rotulo: executada.rotulo, formula: executada.formula, resultado: executada.resultado, corFicha: this.cor() });
+    this.bandeja.mostrar({ rotulo: executada.rotulo, formula: executada.formula, resultado: executada.resultado, corFicha: this.cor(), visibilidade: this.rolagemOculta() ? RolagemVisibilidadeEnum.PRIVADA : RolagemVisibilidadeEnum.PUBLICA });
     this.rolagemRegistro.registrar(executada);
   }
 
@@ -662,7 +663,7 @@ export class CriaturaVisualizacao {
     if (!executada) {
       return;
     }
-    this.bandeja.mostrar({ rotulo: executada.rotulo, formula: executada.formula, resultado: executada.resultado, corFicha: this.cor() });
+    this.bandeja.mostrar({ rotulo: executada.rotulo, formula: executada.formula, resultado: executada.resultado, corFicha: this.cor(), visibilidade: this.rolagemOculta() ? RolagemVisibilidadeEnum.PRIVADA : RolagemVisibilidadeEnum.PUBLICA });
     this.rolagemRegistro.registrar(executada);
   }
 }

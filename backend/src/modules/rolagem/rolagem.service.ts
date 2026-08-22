@@ -1,6 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import type {
   RolagemCampanhaListarDto,
+  RolagemAvulsoRegistrarDto,
   RolagemListarDto,
   RolagemRegistrarDto,
   RolagemResumoDto,
@@ -12,6 +13,7 @@ import { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { CampanhaRepository } from '../campanha/campanha.repository';
 import { FichaService } from '../ficha/ficha.service';
+import { EncontroRepository } from '../encontro/encontro.repository';
 import { RolagemRepository } from './rolagem.repository';
 
 /**
@@ -35,6 +37,7 @@ export class RolagemService {
     private readonly campanhaRepositorio: CampanhaRepository,
     @Inject(forwardRef(() => CampanhaGateway))
     private readonly campanhaGateway: CampanhaGateway,
+    private readonly encontroRepositorio: EncontroRepository,
   ) {}
 
   /**
@@ -54,6 +57,7 @@ export class RolagemService {
 
     const rolagemRegistrada = await this.rolagemRepositorio.registrarRolagem({
       fichaId: ficha.id,
+      encontroCombatenteId: null,
       campanhaId: ficha.campanhaId,
       usuarioId: usuarioAtivo.sub,
       rotulo: dto.rotulo,
@@ -65,6 +69,42 @@ export class RolagemService {
       this.campanhaGateway.emitirRolagemRegistrada(rolagemRegistrada);
     }
     return rolagemRegistrada;
+  }
+
+  /** Registra uma rolagem livre em nome de um avulso; somente o mestre da campanha pode fazê-la. */
+  async registrarRolagemAvulso(
+    dto: RolagemAvulsoRegistrarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<RolagemResumoDto> {
+    const combatente = await this.encontroRepositorio.recuperarCombatentePorId({ id: dto.combatenteId });
+    if (!combatente || combatente.encontroId !== dto.encontroId || combatente.fichaId !== null) {
+      throw new UnauthorizedAccessException();
+    }
+    const encontro = await this.encontroRepositorio.recuperarPorId({ id: dto.encontroId });
+    if (!encontro) {
+      throw new UnauthorizedAccessException();
+    }
+    const membro = await this.campanhaRepositorio.recuperarMembro({
+      campanhaId: encontro.campanhaId,
+      usuarioId: usuarioAtivo.sub,
+    });
+    if (membro?.papel !== TipoCampanhaMembroPapelEnum.MESTRE) {
+      throw new UnauthorizedAccessException();
+    }
+
+    const registrada = await this.rolagemRepositorio.registrarRolagem({
+      fichaId: null,
+      encontroCombatenteId: combatente.id,
+      campanhaId: encontro.campanhaId,
+      usuarioId: usuarioAtivo.sub,
+      rotulo: dto.rotulo,
+      visibilidade: dto.visibilidade,
+      resultado: dto.resultado,
+    });
+    if (registrada.visibilidade === RolagemVisibilidadeEnum.PUBLICA) {
+      this.campanhaGateway.emitirRolagemRegistrada(registrada);
+    }
+    return registrada;
   }
 
   /**

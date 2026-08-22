@@ -3,7 +3,7 @@ import { Component, computed, inject, input, output, signal, viewChild } from '@
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 
-import { RolagemPresetTipoEnum } from '@contratados-rpg/shared/enums';
+import { RolagemPresetTipoEnum, RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 import type {
   FichaAtributosDto,
   FichaHabilidadeDto,
@@ -85,6 +85,7 @@ interface RolagemVM {
   styleUrl: './ficha-rolagens.component.scss',
 })
 export class FichaRolagens {
+  readonly rolagemOculta = input(false);
   /** Presets atuais — a fonte da verdade é a página (componente controlado). */
   readonly rolagens = input<readonly FichaRolagemDto[]>([]);
   /** Atributos da ficha (já **efetivos**, pós-lesão) — alimentam a rolagem. */
@@ -431,7 +432,7 @@ export class FichaRolagens {
       nivel: this.nivel(),
     });
     if (resultado) {
-      this.bandeja.mostrar({ rotulo: 'Rolagem rápida', formula, resultado, corFicha: this.cor() });
+      this.bandeja.mostrar({ rotulo: 'Rolagem rápida', formula, resultado, corFicha: this.cor(), visibilidade: this.rolagemOculta() ? RolagemVisibilidadeEnum.PRIVADA : RolagemVisibilidadeEnum.PUBLICA });
       this.rolagemFeita.emit({ rotulo: 'Rolagem rápida', formula, resultado });
     }
   }
@@ -469,6 +470,9 @@ export class FichaRolagens {
       formula: executado.formula,
       resultado: executado.resultado,
       corFicha: this.cor(),
+      visibilidade: this.rolagemOculta()
+        ? RolagemVisibilidadeEnum.PRIVADA
+        : RolagemVisibilidadeEnum.PUBLICA,
     });
     this.rolagemFeita.emit({ rotulo: executado.rotulo, formula: executado.formula, resultado: executado.resultado });
     if (executado.energiaGasta > 0) {

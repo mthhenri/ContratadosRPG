@@ -506,6 +506,7 @@
             [jaAgiu]="jaAgiu(combatente)"
             [emCombate]="emCombate()"
             [nivelAmeaca]="nivelAmeaca(combatente)"
+            [ehMestre]="ehMestre()"
             [podeAjustar]="ehMestre() && mutavel() && !emOperacao()"
             [emEdicao]="ehMestre() && modoEdicao() && mutavel() && combatente.ocorrencia === 1"
             (vidaAjustada)="ajustarVida(combatente, $event)"
@@ -516,6 +517,7 @@
             (corAvulsoAlterada)="alterarCorAvulso(combatente, $event)"
             (imagemAvulsoAlterada)="alterarImagemAvulso(combatente, $event)"
             (imagemAvulsoRemovida)="removerImagemAvulso(combatente)"
+            (rolagemAvulsoAberta)="avulsoRolando.set(combatente)"
           />
         }
       </div>
@@ -535,6 +537,20 @@
   }
 
 </section>
+
+@if (avulsoRolando(); as avulso) {
+  <app-rolagem-avulso
+    [combatente]="avulso"
+    [ocultaInicial]="rolagemAvulsoOculta(avulso.id)"
+    (fechado)="avulsoRolando.set(null)"
+    (registrada)="adicionarRolagemAoFeed($event)"
+    (ocultaAlterada)="alterarVisibilidadeRolagemAvulso(avulso.id, $event)"
+  />
+}
+
+<!-- A rolagem do avulso usa a mesma carta central das fichas. O serviço sozinho mantém o estado;
+     esta instância é quem torna o resultado visível nesta tela, mesmo com o histórico recolhido. -->
+<app-bandeja-dados />
 
 @if (mostrarFichaLateral()) {
   <!-- Coluna do jogador (item novo): a própria ficha, sempre aberta, pra acompanhar o combate sem

@@ -18,6 +18,7 @@ export class RolagemService {
 
   private readonly baseFicha = `${environment.apiBase}/ficha`;
   private readonly baseCampanha = `${environment.apiBase}/campanha`;
+  private readonly baseEncontro = `${environment.apiBase}/encontro`;
 
   /**
    * Registra uma rolagem disparada a partir da ficha `fichaId`. Fire-and-forget do ponto de vista
@@ -27,6 +28,20 @@ export class RolagemService {
   registrar(fichaId: number, dto: RolagemRegistrarDto): Observable<RolagemResumoDto> {
     return this.httpClient
       .post<StandardResponse<RolagemResumoDto>>(`${this.baseFicha}/${fichaId}/rolagem`, dto)
+      .pipe(map((resposta) => resposta.dados as RolagemResumoDto));
+  }
+
+  /** Registra uma rolagem livre em nome de um combatente avulso do encontro. */
+  registrarAvulso(
+    encontroId: number,
+    combatenteId: number,
+    dto: RolagemRegistrarDto,
+  ): Observable<RolagemResumoDto> {
+    return this.httpClient
+      .post<StandardResponse<RolagemResumoDto>>(
+        `${this.baseEncontro}/${encontroId}/combatente/${combatenteId}/rolagem`,
+        dto,
+      )
       .pipe(map((resposta) => resposta.dados as RolagemResumoDto));
   }
 

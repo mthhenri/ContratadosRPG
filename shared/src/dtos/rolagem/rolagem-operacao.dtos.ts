@@ -24,13 +24,20 @@ export interface RolagemRegistrarDto {
   readonly resultado: ResultadoRolagemDto;
 }
 
+/** Entrada de uma rolagem livre atribuída a um combatente avulso do encontro. */
+export interface RolagemAvulsoRegistrarDto extends RolagemRegistrarDto {
+  readonly encontroId: number;
+  readonly combatenteId: number;
+}
+
 /**
  * Entrada interna do `RolagemRepository.registrarRolagem` — `campanhaId`/`usuarioId` já resolvidos
  * pela service a partir da ficha (dono da rolagem = quem a disparou, não necessariamente o dono da
  * ficha — um visualizador com acesso concedido também pode rolar). Só service ↔ repository.
  */
 export interface RolagemInternoRegistrarDto {
-  readonly fichaId: number;
+  readonly fichaId: number | null;
+  readonly encontroCombatenteId: number | null;
   readonly campanhaId: number | null;
   readonly usuarioId: number;
   readonly rotulo: string;
@@ -46,7 +53,8 @@ export interface RolagemInternoRegistrarDto {
  */
 export interface RolagemResumoDto {
   readonly id: number;
-  readonly fichaId: number;
+  readonly fichaId: number | null;
+  readonly encontroCombatenteId: number | null;
   readonly campanhaId: number | null;
   readonly usuarioId: number;
   readonly nomeAutor: string;

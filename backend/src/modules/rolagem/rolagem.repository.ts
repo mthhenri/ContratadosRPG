@@ -30,9 +30,11 @@ export class RolagemRepository extends BaseRepository {
    * duplicados como coluna própria de `rolagem`.
    */
   private colunasResumo(): string {
-    return `rolagem.id, rolagem.ficha_id AS "fichaId", rolagem.campanha_id AS "campanhaId",
-            rolagem.usuario_id AS "usuarioId", usuario.nome AS "nomeAutor", ficha.nome AS "nomeFicha",
-            ficha.cor AS "corFicha",
+    return `rolagem.id, rolagem.ficha_id AS "fichaId",
+            rolagem.encontro_combatente_id AS "encontroCombatenteId",
+            rolagem.campanha_id AS "campanhaId", rolagem.usuario_id AS "usuarioId",
+            usuario.nome AS "nomeAutor", COALESCE(ficha.nome, encontro_combatente.nome_avulso) AS "nomeFicha",
+            COALESCE(ficha.cor, encontro_combatente.cor_avulso) AS "corFicha",
             rolagem.rotulo, tipo_rolagem_visibilidade.codigo AS visibilidade,
             rolagem.resultado, rolagem.created_date AS "createdDate"`;
   }
@@ -40,7 +42,10 @@ export class RolagemRepository extends BaseRepository {
   /** `JOIN`s que resolvem `nomeAutor`/`nomeFicha`/`visibilidade` em `colunasResumo()`. */
   private juncoesResumo(): string {
     return `INNER JOIN usuario ON usuario.id = rolagem.usuario_id AND usuario.is_deleted = false
-            INNER JOIN ficha ON ficha.id = rolagem.ficha_id AND ficha.is_deleted = false
+            LEFT JOIN ficha ON ficha.id = rolagem.ficha_id AND ficha.is_deleted = false
+            LEFT JOIN encontro_combatente
+              ON encontro_combatente.id = rolagem.encontro_combatente_id
+             AND encontro_combatente.is_deleted = false
             INNER JOIN tipo_rolagem_visibilidade
               ON tipo_rolagem_visibilidade.id = rolagem.tipo_rolagem_visibilidade_id
              AND tipo_rolagem_visibilidade.is_deleted = false`;
@@ -53,13 +58,14 @@ export class RolagemRepository extends BaseRepository {
    */
   async registrarRolagem(dto: RolagemInternoRegistrarDto): Promise<RolagemResumoDto> {
     const [inserida] = await this.executarConsulta<{ id: number }>(
-      `INSERT INTO rolagem (ficha_id, campanha_id, usuario_id, rotulo, tipo_rolagem_visibilidade_id, resultado, created_date, updated_date, is_deleted)
-       SELECT :fichaId, :campanhaId, :usuarioId, :rotulo,
+      `INSERT INTO rolagem (ficha_id, encontro_combatente_id, campanha_id, usuario_id, rotulo, tipo_rolagem_visibilidade_id, resultado, created_date, updated_date, is_deleted)
+       SELECT :fichaId, :encontroCombatenteId, :campanhaId, :usuarioId, :rotulo,
               (SELECT id FROM tipo_rolagem_visibilidade WHERE codigo = :visibilidade AND is_deleted = false),
               :resultado::jsonb, NOW(), NOW(), false
        RETURNING id`,
       {
         fichaId: dto.fichaId,
+        encontroCombatenteId: dto.encontroCombatenteId,
         campanhaId: dto.campanhaId,
         usuarioId: dto.usuarioId,
         rotulo: dto.rotulo,

@@ -98,6 +98,22 @@ origem, e o cartão não duplica apresentação. Em `360×800`, os três control
 alvo de 44×44px. No cartão editável, eles ficam sob o retrato: troca/remoção de imagem na primeira
 linha e troca de cor centralizada na segunda, sem sobrepor a foto.
 
+Fora da edição, o mestre também vê um atalho de dados ao lado do nome do avulso. Ele abre um painel
+compacto de expressão livre, sempre iniciado como **Rolagem oculta**; revelar as próximas rolagens
+pede a mesma confirmação usada por criaturas, e voltar a ocultar é imediato. O resultado usa o
+motor compartilhado, a bandeja e o feed da campanha, identificado pelo nome/cor do avulso. Como não
+há ficha, atributos, `PROF` e `NIV` são rejeitados. Desde a migration 0024, `rolagem` referencia
+exatamente uma origem: `ficha_id` ou `encontro_combatente_id`; somente o mestre da campanha pode
+registrar a segunda forma. A própria Iniciativa renderiza a bandeja central mesmo com o histórico
+recolhido; o botão confirma cada execução com **Rolado** e um pulso curto. No mobile, o painel de
+expressão sobe enquanto a carta de resultado está presente, evitando sobreposição entre os dois.
+O painel pode ser arrastado pelo cabeçalho e permanece limitado à viewport; **Rolar** tem borda,
+hover e cursor de botão. Toda carta da bandeja identifica a execução como **Privada** ou **Pública**
+a partir do mesmo estado usado no registro. A confirmação pública do avulso segue o diálogo
+canônico da criatura. Na visão do mestre, todo combatente com `fichaId` oferece **Abrir ficha**
+mesmo quando está oculto, o encontro não permite ajustes ou a grade usa o recorte compacto de quatro
+ou mais colunas; somente avulsos, que não possuem ficha, omitem a ação.
+
 `m7-10` e `m7-11` já tinham sido implementadas de fato no commit `4ea026d` (`feat: refina tela de
 iniciativa`, que também fechou `m7-09`), mas o registro em `HISTORY.md`/`CONTEXT.md` e o gate visual
 obrigatório ficaram pendentes até esta sessão. `m7-10` reusa `HistoricoRolagensSidebar` no

@@ -130,8 +130,29 @@
   &__cabecalho {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: 16px;
+  }
+
+  &__visibilidade {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: auto;
+    padding: 3px 7px;
+    color: var(--text-dim);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    font: 700 9px var(--font-mono);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+
+    &--privada {
+      color: var(--danger);
+      border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+      background: color-mix(in srgb, var(--danger) 10%, transparent);
+    }
   }
 
   &__rotulo {

@@ -1,5 +1,7 @@
 import { Component, HostListener, computed, inject, signal } from '@angular/core';
+import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 
+import { Icone } from '../icone/icone.component';
 import { ResultadoRolagem } from '../resultado-rolagem/resultado-rolagem.component';
 import { BandejaDadosService } from './bandeja-dados.service';
 
@@ -17,11 +19,12 @@ const MARGEM_LATERAL_MINIMA = 32;
  */
 @Component({
   selector: 'app-bandeja-dados',
-  imports: [ResultadoRolagem],
+  imports: [Icone, ResultadoRolagem],
   templateUrl: './bandeja-dados.component.html',
   styleUrl: './bandeja-dados.component.scss',
 })
 export class BandejaDados {
+  protected readonly RolagemVisibilidadeEnum = RolagemVisibilidadeEnum;
   protected readonly bandeja = inject(BandejaDadosService);
 
   /** Largura da viewport (m3-56) — reativa via `window:resize`, usada para encolher a carta no mobile. */

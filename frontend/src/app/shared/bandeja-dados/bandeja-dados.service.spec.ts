@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 
 import type { ResultadoRolagemDto } from '@contratados-rpg/shared/regras/rolagem';
 
@@ -27,7 +28,7 @@ describe('BandejaDadosService', () => {
     vi.useFakeTimers();
     try {
       const bandeja = montar();
-      bandeja.mostrar({ rotulo: 'Teste', resultado });
+      bandeja.mostrar({ rotulo: 'Teste', resultado, visibilidade: RolagemVisibilidadeEnum.PUBLICA });
       const id = bandeja.entradas()[0].id;
 
       bandeja.fechar(id);
@@ -45,7 +46,7 @@ describe('BandejaDadosService', () => {
     vi.useFakeTimers();
     try {
       const bandeja = montar();
-      bandeja.mostrar({ rotulo: 'Teste', resultado });
+      bandeja.mostrar({ rotulo: 'Teste', resultado, visibilidade: RolagemVisibilidadeEnum.PUBLICA });
       const id = bandeja.entradas()[0].id;
 
       bandeja.fechar(id);
@@ -62,7 +63,7 @@ describe('BandejaDadosService', () => {
     vi.useFakeTimers();
     try {
       const bandeja = montar();
-      bandeja.mostrar({ rotulo: 'Teste', resultado });
+      bandeja.mostrar({ rotulo: 'Teste', resultado, visibilidade: RolagemVisibilidadeEnum.PUBLICA });
 
       vi.advanceTimersByTime(7000); // duracaoMs — dispara o auto-sumir
       expect(bandeja.entradas()).toHaveLength(1);
@@ -79,7 +80,7 @@ describe('BandejaDadosService', () => {
     vi.useFakeTimers();
     try {
       const bandeja = montar();
-      bandeja.mostrar({ rotulo: 'Teste', resultado });
+      bandeja.mostrar({ rotulo: 'Teste', resultado, visibilidade: RolagemVisibilidadeEnum.PUBLICA });
       const id = bandeja.entradas()[0].id;
 
       bandeja.fechar(id);
@@ -95,7 +96,7 @@ describe('BandejaDadosService', () => {
 
   it('limpar esvazia a bandeja sem transição', () => {
     const bandeja = montar();
-    bandeja.mostrar({ rotulo: 'Teste', resultado });
+    bandeja.mostrar({ rotulo: 'Teste', resultado, visibilidade: RolagemVisibilidadeEnum.PUBLICA });
     bandeja.limpar();
     expect(bandeja.entradas()).toHaveLength(0);
   });
@@ -110,7 +111,7 @@ describe('BandejaDadosService', () => {
       vi.useFakeTimers();
       try {
         const bandeja = montar();
-        bandeja.mostrar({ rotulo: 'Teste', resultado, semAutoSumir: true });
+        bandeja.mostrar({ rotulo: 'Teste', resultado, visibilidade: RolagemVisibilidadeEnum.PUBLICA, semAutoSumir: true });
 
         vi.advanceTimersByTime(bandeja.duracaoMs + 1000);
 
@@ -125,7 +126,7 @@ describe('BandejaDadosService', () => {
       vi.useFakeTimers();
       try {
         const bandeja = montar();
-        bandeja.mostrar({ rotulo: 'Teste', resultado, semAutoSumir: true });
+        bandeja.mostrar({ rotulo: 'Teste', resultado, visibilidade: RolagemVisibilidadeEnum.PUBLICA, semAutoSumir: true });
         const id = bandeja.entradas()[0].id;
 
         bandeja.pausar(id); // no-op — nunca houve timer
@@ -143,7 +144,7 @@ describe('BandejaDadosService', () => {
       vi.useFakeTimers();
       try {
         const bandeja = montar();
-        const id = bandeja.mostrar({ rotulo: 'Teste', resultado, semAutoSumir: true });
+        const id = bandeja.mostrar({ rotulo: 'Teste', resultado, visibilidade: RolagemVisibilidadeEnum.PUBLICA, semAutoSumir: true });
 
         bandeja.fechar(id);
         vi.advanceTimersByTime(280);

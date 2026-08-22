@@ -14,7 +14,8 @@ import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angu
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { filter, finalize, forkJoin, merge } from 'rxjs';
 import {
-  EncontroStatusEnum,
+  EncontroStatusEnum,
+
   TipoCampanhaMembroPapelEnum,
   TipoFichaEnum,
 } from '@contratados-rpg/shared/enums';
@@ -408,6 +409,7 @@ export class CampanhaDetalhe {
     this.previaRolagemId = this.bandejaDadosService.mostrar({
       rotulo: rolagem.rotulo,
       resultado: rolagem.resultado,
+      visibilidade: rolagem.visibilidade,
       corFicha: rolagem.corFicha,
       semAutoSumir: true,
     });

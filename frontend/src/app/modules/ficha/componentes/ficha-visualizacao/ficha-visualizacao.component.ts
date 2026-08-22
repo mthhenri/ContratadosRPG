@@ -21,6 +21,7 @@ import {
   FragmentoModuloEnum,
   HabilidadeCategoriaEnum,
   TipoDanoEnum,
+  RolagemVisibilidadeEnum,
 } from '@contratados-rpg/shared/enums';
 import type {
   FichaAtributosDto,
@@ -1474,7 +1475,7 @@ export class FichaVisualizacao {
       // mantém o **menor** — então a fórmula exibida troca `kh1`→`kl1` e mostra a contagem real, em vez de
       // exibir `kh1` (mantém o maior) numa rolagem que na verdade manteve o menor.
       const formulaExibida = atributo <= 0 ? `${2 - atributo}d20kl1cm1 + PROF${sufixo}` : formula;
-      this.bandeja.mostrar({ rotulo: campo.nome, formula: formulaExibida, resultado, corFicha: this.cor() });
+      this.bandeja.mostrar({ rotulo: campo.nome, formula: formulaExibida, resultado, corFicha: this.cor(), visibilidade: this.registro.oculta() ? RolagemVisibilidadeEnum.PRIVADA : RolagemVisibilidadeEnum.PUBLICA });
       this.registrarRolagem({ rotulo: campo.nome, formula: formulaExibida, resultado });
     }
   }
@@ -1495,7 +1496,7 @@ export class FichaVisualizacao {
       nivel: this.dados().nivel,
     });
     if (resultado) {
-      this.bandeja.mostrar({ rotulo: linha.rotulo, formula: linha.bruto, resultado, corFicha: this.cor() });
+      this.bandeja.mostrar({ rotulo: linha.rotulo, formula: linha.bruto, resultado, corFicha: this.cor(), visibilidade: this.registro.oculta() ? RolagemVisibilidadeEnum.PRIVADA : RolagemVisibilidadeEnum.PUBLICA });
       this.registrarRolagem({ rotulo: linha.rotulo, formula: linha.bruto, resultado });
     }
   }
@@ -1538,6 +1539,9 @@ export class FichaVisualizacao {
       formula: executado.formula,
       resultado: executado.resultado,
       corFicha: this.cor(),
+      visibilidade: this.registro.oculta()
+        ? RolagemVisibilidadeEnum.PRIVADA
+        : RolagemVisibilidadeEnum.PUBLICA,
     });
     this.registrarRolagem({ rotulo: executado.rotulo, formula: executado.formula, resultado: executado.resultado });
   }

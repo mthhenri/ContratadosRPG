@@ -9,6 +9,7 @@ import {
   FragmentoTipoEnum,
   ItemCategoriaEnum,
   ModificacaoEfeitoTipoEnum,
+  RolagemVisibilidadeEnum,
 } from '@contratados-rpg/shared/enums';
 import type {
   FichaAtributosDto,
@@ -443,6 +444,7 @@ interface AmpInventarioVM {
   styleUrl: './ficha-inventario.component.scss',
 })
 export class FichaInventario {
+  readonly rolagemOculta = input(false);
   /** Inventário atual (itens + amplificadores) — a fonte da verdade é a página (componente controlado). */
   readonly inventario = input.required<FichaInventarioDto>();
   /** Dono/mestre edita; para os demais é só leitura (a página liga por `podeGerenciar`). */
@@ -2061,6 +2063,9 @@ export class FichaInventario {
         formula: item.danoFormula,
         resultado,
         corFicha: this.cor(),
+        visibilidade: this.rolagemOculta()
+          ? RolagemVisibilidadeEnum.PRIVADA
+          : RolagemVisibilidadeEnum.PUBLICA,
       });
       this.rolagemFeita.emit({ rotulo: item.nomeExibido, formula: item.danoFormula, resultado });
     }

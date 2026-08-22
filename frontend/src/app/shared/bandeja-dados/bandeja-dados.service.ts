@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 
 import type { ResultadoRolagemDto } from '@contratados-rpg/shared/regras/rolagem';
+import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 
 /** Quantas rolagens recentes a bandeja mantém lado a lado (ex.: teste → dano → crítico de um preset). */
 const LIMITE_ENTRADAS = 5;
@@ -23,6 +24,8 @@ export interface EntradaBandeja {
   /** Fórmula executada (texto), exibida como legenda mono (m3-30). Ausente quando quem rola não a informa. */
   readonly formula?: string;
   readonly resultado: ResultadoRolagemDto;
+  /** Visibilidade efetiva no instante da execução/registro. */
+  readonly visibilidade: RolagemVisibilidadeEnum;
   /** Cor de identidade visual da ficha autora (m3-61) — repassada ao `ResultadoRolagem` aninhado. */
   readonly corFicha?: string | null;
   /** `true` durante a transição de saída (fade + colapso) — a entrada só sai do array ao fim dela. */
@@ -69,6 +72,7 @@ export class BandejaDadosService {
     readonly rotulo: string;
     readonly formula?: string;
     readonly resultado: ResultadoRolagemDto;
+    readonly visibilidade: RolagemVisibilidadeEnum;
     readonly corFicha?: string | null;
     readonly semAutoSumir?: boolean;
   }): number {

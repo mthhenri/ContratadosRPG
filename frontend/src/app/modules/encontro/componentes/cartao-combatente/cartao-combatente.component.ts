@@ -84,6 +84,9 @@ export class CartaoCombatente {
   /** Habilita os steppers de Vida/Energia — só o mestre, e só com o encontro mutável. */
   readonly podeAjustar = input(false);
 
+  /** Identifica a visão do mestre; consultas de ficha não dependem de o encontro estar mutável. */
+  readonly ehMestre = input(false);
+
   /** Modo de edição explícito: só então aparecem o campo de iniciativa e o botão de remover. */
   readonly emEdicao = input(false);
 
@@ -97,6 +100,8 @@ export class CartaoCombatente {
   readonly removido = output<void>();
   /** Pedido de abrir a ficha completa deste combatente (janela flutuante — quem hospeda decide). */
   readonly abrirFicha = output<void>();
+  /** Pedido de abrir a rolagem livre deste combatente avulso. */
+  readonly rolagemAvulsoAberta = output<void>();
   /** Nova cor escolhida para a identidade de um avulso. */
   readonly corAvulsoAlterada = output<string>();
   /** Novo arquivo escolhido para a imagem de um avulso. */

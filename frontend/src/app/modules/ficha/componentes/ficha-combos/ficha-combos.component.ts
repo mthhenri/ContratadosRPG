@@ -13,6 +13,7 @@ import type {
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { executarPassoPreset } from '../../executar-rolagem';
+import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 
 /** Grupo tipado de um passo do formulário de combo. */
 type PassoComboForm = FormGroup<{
@@ -50,6 +51,7 @@ interface ComboVM {
   styleUrl: './ficha-combos.component.scss',
 })
 export class FichaCombos {
+  readonly rolagemOculta = input(false);
   /** Combos atuais — a fonte da verdade é a página (componente controlado). */
   readonly combos = input<readonly FichaComboDto[]>([]);
   /** Presets de rolagem da ficha — o cardápio de referência de cada passo do combo. */
@@ -152,6 +154,9 @@ export class FichaCombos {
             formula: executado.formula,
             resultado: executado.resultado,
             corFicha: this.cor(),
+            visibilidade: this.rolagemOculta()
+              ? RolagemVisibilidadeEnum.PRIVADA
+              : RolagemVisibilidadeEnum.PUBLICA,
           });
           if (executado.energiaGasta > 0) {
             this.energiaGasta.emit(executado.energiaGasta);

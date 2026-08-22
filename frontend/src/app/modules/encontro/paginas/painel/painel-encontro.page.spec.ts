@@ -40,6 +40,11 @@ const CAMPANHA_ID = 9;
  * justamente isso: a ordem chega pronta e a tela só a lê.
  */
 describe('PainelEncontro', () => {
+  it('hospeda a bandeja central que apresenta o resultado das rolagens', () => {
+    const { fixture } = montar();
+    const elemento = fixture.nativeElement as HTMLElement;
+    expect(elemento.querySelector('app-bandeja-dados')).not.toBeNull();
+  });
   const combatente = (
     id: number,
     nome: string,
@@ -266,6 +271,7 @@ describe('PainelEncontro', () => {
                 corFicha: null,
               }),
             ),
+            registrarAvulso: vi.fn(),
           },
         },
         {
@@ -417,6 +423,7 @@ describe('PainelEncontro', () => {
     const rolagem: RolagemResumoDto = {
       id: 91,
       fichaId: 200,
+      encontroCombatenteId: null,
       campanhaId: CAMPANHA_ID,
       usuarioId: USUARIO_JOGADOR,
       nomeAutor: 'Bia',
@@ -432,6 +439,59 @@ describe('PainelEncontro', () => {
 
     rolagemRegistrada$.next(rolagem);
     expect(interno(fixture).rolagensFeed()).toEqual([rolagem]);
+  });
+
+  it('abre o painel de rolagem livre a partir do cartão de um avulso', () => {
+    const avulso = combatente(8, 'Capanga', {
+      origem: CombatenteOrigemEnum.AVULSO,
+      fichaId: null,
+      tipoFicha: null,
+      corFicha: '#d53030',
+      energiaAtual: null,
+      energiaMaxima: null,
+    });
+    const estado: EncontroRecuperadoDto = {
+      ...encontroAtivo,
+      combatentes: [avulso],
+      ordemRodada: [{ combatenteId: 8, ocorrencia: 1 }],
+    };
+    const { fixture } = montar(estado);
+    const elemento = fixture.nativeElement as HTMLElement;
+
+    elemento.querySelector<HTMLButtonElement>('.combatente__rolar-avulso')?.click();
+    fixture.detectChanges();
+
+    expect(elemento.querySelector('[aria-label="Rolagens de Capanga"]')).not.toBeNull();
+  });
+
+  it('preserva a visibilidade escolhida para cada avulso ao fechar e reabrir o painel', () => {
+    const avulso = combatente(8, 'Capanga', {
+      origem: CombatenteOrigemEnum.AVULSO,
+      fichaId: null,
+      tipoFicha: null,
+      energiaAtual: null,
+      energiaMaxima: null,
+    });
+    const { fixture } = montar({
+      ...encontroAtivo,
+      combatentes: [avulso],
+      ordemRodada: [{ combatenteId: 8, ocorrencia: 1 }],
+    });
+    const elemento = fixture.nativeElement as HTMLElement;
+    const abrir = () => elemento.querySelector<HTMLButtonElement>('.combatente__rolar-avulso')?.click();
+
+    abrir();
+    fixture.detectChanges();
+    elemento.querySelector<HTMLButtonElement>('.rolagem-avulso__visibilidade')?.click();
+    fixture.detectChanges();
+    elemento.querySelector<HTMLButtonElement>('.rolagem-avulso__confirmar-publica')?.click();
+    fixture.detectChanges();
+    elemento.querySelector<HTMLButtonElement>('[aria-label="Fechar rolagens"]')?.click();
+    fixture.detectChanges();
+    abrir();
+    fixture.detectChanges();
+
+    expect(elemento.querySelector('.rolagem-avulso__visibilidade')?.textContent).toContain('Rolagem pública');
   });
 
   it('`Rolar iniciativas` só manda quem está sem iniciativa, somando o bônus da criatura', () => {

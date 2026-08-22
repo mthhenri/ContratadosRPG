@@ -1,0 +1,214 @@
+@use 'tema/breakpoints' as bp;
+
+@keyframes rolagem-avulso-confirmada {
+  0% { transform: scale(1); }
+  35% { transform: scale(.94); }
+  70% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+// Botões canônicos copiados do tema para dentro do encapsulamento deste componente, como no
+// diálogo análogo de `CriaturaVisualizacao`.
+.botao {
+  padding: 7px 12px;
+  font: 600 11px var(--font-mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  transition: filter .15s ease, background-color .15s ease, border-color .15s ease;
+
+  &:disabled { cursor: default; opacity: .55; }
+  &--primario { color: var(--bg); background: var(--accent); border: 0; &:hover:not(:disabled) { filter: brightness(1.08); } }
+  &--secundario { color: var(--text); background: transparent; border: 1px solid var(--border-strong); &:hover:not(:disabled) { background: var(--surface-2); border-color: var(--accent-border); } }
+}
+
+.rolagem-avulso {
+  position: fixed;
+  z-index: 35;
+  right: 24px;
+  bottom: 88px;
+  width: min(360px, calc(100vw - 24px));
+  padding: var(--pad-card);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-card);
+  box-shadow: 0 16px 48px rgb(0 0 0 / 45%);
+  border-top: 2px solid var(--cor-avulso, var(--accent));
+
+  &--posicionada { right: auto; bottom: auto; }
+
+  &__cabecalho {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px;
+    cursor: grab; touch-action: none; user-select: none;
+    &:active { cursor: grabbing; }
+  }
+
+  &__identidade {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    color: var(--cor-avulso, var(--accent));
+
+    > app-icone { font-size: 20px; }
+    > span { display: grid; min-width: 0; }
+    small { font: 9px var(--font-mono); letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--text-mute); }
+    strong { overflow: hidden; color: var(--text); font: 700 14px var(--font-mono); text-overflow: ellipsis; white-space: nowrap; }
+  }
+
+  &__fechar {
+    flex: none;
+    width: 30px;
+    height: 30px;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+  }
+
+  &__formulario { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; }
+
+  &__campo {
+    display: grid;
+    grid-column: 1 / -1;
+    gap: 6px;
+    color: var(--text-dim);
+    font: 10px var(--font-mono);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+  }
+
+  &__expressao {
+    width: 100%;
+    min-height: 42px;
+    padding: 0 12px;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    font: 14px var(--font-mono);
+    outline: none;
+
+    &:focus { border-color: var(--accent-border); box-shadow: 0 0 0 2px var(--accent-dim); }
+  }
+
+  &__visibilidade {
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 10px;
+    color: var(--text-dim);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    font: 600 10px var(--font-mono);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    cursor: pointer;
+
+    &--ativa { color: var(--accent); border-color: var(--accent-border); background: var(--accent-dim); }
+  }
+
+  &__rolar {
+    min-width: 94px;
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding-inline: 16px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    cursor: pointer;
+    transition: color .15s ease, border-color .15s ease, background-color .15s ease, filter .15s ease;
+
+    &:hover:not(:disabled) {
+      color: var(--accent);
+      border-color: var(--accent-border);
+      background: var(--accent-dim);
+    }
+
+    &:disabled { cursor: not-allowed; opacity: .45; }
+
+    &--confirmada { animation: rolagem-avulso-confirmada .42s ease-out; }
+
+    @media (prefers-reduced-motion: reduce) {
+      &--confirmada { animation: none; }
+    }
+  }
+  &__ajuda { margin: 10px 0 0; color: var(--text-mute); font: 11px/1.4 var(--font-sans); }
+
+  @include bp.mobile {
+    right: 12px;
+    bottom: 76px;
+    left: 12px;
+    width: auto;
+    &__formulario { grid-template-columns: 1fr; }
+    &__fechar { width: bp.$alvo-toque; height: bp.$alvo-toque; }
+    &__expressao, &__visibilidade, &__rolar { min-height: bp.$alvo-toque; }
+    &--posicionada { right: auto; bottom: auto; width: min(360px, calc(100vw - 24px)); }
+  }
+}
+
+// No celular, a bandeja central ocupa a base da tela. Enquanto o resultado estiver presente, o
+// painel de expressão sobe para que os dois flutuantes continuem inteiros e acionáveis.
+:host-context(:root:has(.bandeja__carta)) .rolagem-avulso {
+  @include bp.mobile {
+    top: 68px;
+    bottom: auto;
+  }
+}
+
+.dialogo {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 60px 20px;
+  overflow-y: auto;
+
+  @include bp.mobile { padding: 24px 12px; align-items: center; }
+
+  &__fundo { position: fixed; inset: 0; background: rgb(0 0 0 / 55%); border: 0; }
+  &__painel {
+    position: relative;
+    z-index: 1;
+    width: min(460px, 100%);
+    padding: var(--pad-card);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+    box-shadow: 0 16px 48px rgb(0 0 0 / 45%);
+  }
+
+  &__titulo { margin: 0; color: var(--text); font: 600 13px var(--font-mono); letter-spacing: var(--tracking-label); text-transform: uppercase; }
+  &__fechar {
+    flex: none; width: 26px; height: 26px; color: var(--text-dim); background: transparent;
+    border: 1px solid var(--border-strong); border-radius: var(--radius-control); cursor: pointer;
+    &:hover { color: var(--accent); border-color: var(--accent-border); background: var(--surface-2); }
+    @include bp.mobile { width: bp.$alvo-toque; height: bp.$alvo-toque; }
+  }
+}
+
+.revelar-rolagem {
+  &__aviso { margin: 0 0 16px; color: var(--text-dim); font: 13px/1.6 var(--font-sans); }
+  &__acoes { display: flex; gap: 10px; > button { flex: 1; } }
+  &__acao { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+
+  @include bp.mobile { &__acoes { flex-direction: column; } }
+}
+
+.criatura__cartao-cabecalho { display: flex; align-items: center; gap: 11px; margin-bottom: 4px; color: var(--accent); }
+.criatura__cartao-titulo { flex: none; font-weight: 700; }
+.criatura__cartao-regua { flex: 1; height: 1px; background: var(--border); }

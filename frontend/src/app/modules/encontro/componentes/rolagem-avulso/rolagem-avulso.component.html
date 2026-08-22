@@ -1,0 +1,80 @@
+<section
+  #painel
+  class="rolagem-avulso"
+  role="dialog"
+  [class.rolagem-avulso--posicionada]="posicao() !== null"
+  [attr.aria-label]="'Rolagens de ' + combatente().nome"
+  [style.--cor-avulso]="combatente().corFicha"
+  [style.left.px]="posicao()?.x"
+  [style.top.px]="posicao()?.y"
+>
+  <header class="rolagem-avulso__cabecalho" (pointerdown)="iniciarArraste($event)">
+    <span class="rolagem-avulso__identidade">
+      <app-icone nome="dado" />
+      <span>
+        <small>Rolando como</small>
+        <strong>{{ combatente().nome }}</strong>
+      </span>
+    </span>
+    <button class="rolagem-avulso__fechar" type="button" aria-label="Fechar rolagens" (pointerdown)="$event.stopPropagation()" (click)="fechado.emit()">✕</button>
+  </header>
+
+  <form class="rolagem-avulso__formulario" (submit)="$event.preventDefault(); rolar()">
+    <label class="rolagem-avulso__campo">
+      <span>Expressão</span>
+      <input
+        class="rolagem-avulso__expressao"
+        type="text"
+        autocomplete="off"
+        placeholder="Ex.: 2d6+3"
+        [value]="expressao()"
+        (input)="alterarExpressao($any($event.target).value)"
+      />
+    </label>
+
+    <button
+      class="rolagem-avulso__visibilidade"
+      type="button"
+      [class.rolagem-avulso__visibilidade--ativa]="oculta()"
+      [attr.aria-pressed]="oculta()"
+      [appTooltip]="oculta() ? 'Próximas rolagens: só o mestre vê' : 'Próximas rolagens: públicas'"
+      (click)="alternarVisibilidade()"
+    >
+      <app-icone [nome]="oculta() ? 'olho-fechado' : 'olho'" />
+      {{ oculta() ? 'Rolagem oculta' : 'Rolagem pública' }}
+    </button>
+
+    <button
+      class="botao botao--primario rolagem-avulso__rolar"
+      type="submit"
+      [class.rolagem-avulso__rolar--confirmada]="rolagemConfirmada()"
+      [disabled]="!expressao().trim()"
+    >
+      <app-icone [nome]="rolagemConfirmada() ? 'check' : 'd20'" />
+      {{ rolagemConfirmada() ? 'Rolado' : 'Rolar' }}
+    </button>
+  </form>
+
+  <p class="rolagem-avulso__ajuda">Dados e operações livres, sem atributos de ficha.</p>
+</section>
+
+@if (confirmandoPublica()) {
+  <div class="dialogo" role="dialog" aria-modal="true" aria-label="Tornar rolagens públicas">
+    <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="confirmandoPublica.set(false)"></button>
+    <div class="dialogo__painel revelar-rolagem">
+      <header class="criatura__cartao-cabecalho">
+        <app-icone nome="olho" />
+        <h2 class="dialogo__titulo criatura__cartao-titulo">Tornar rolagens públicas</h2>
+        <span class="criatura__cartao-regua"></span>
+        <button class="dialogo__fechar" type="button" aria-label="Fechar" (click)="confirmandoPublica.set(false)">✕</button>
+      </header>
+      <p class="revelar-rolagem__aviso">A partir de agora, as rolagens de {{ combatente().nome }} ficam visíveis para os jogadores. Tem certeza?</p>
+      <div class="revelar-rolagem__acoes">
+        <button class="botao botao--primario revelar-rolagem__acao rolagem-avulso__confirmar-publica" type="button" (click)="confirmarPublica()">
+          <app-icone nome="olho" /> Tornar pública
+        </button>
+        <button class="botao botao--secundario revelar-rolagem__acao" type="button" (click)="confirmandoPublica.set(false)">Cancelar</button>
+      </div>
+    </div>
+  </div>
+}

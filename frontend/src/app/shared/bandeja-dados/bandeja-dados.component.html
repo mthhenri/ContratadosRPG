@@ -15,6 +15,14 @@
           >
             <header class="bandeja__cabecalho">
               <span class="bandeja__rotulo">{{ entrada.rotulo }}</span>
+              <span
+                class="bandeja__visibilidade"
+                [class.bandeja__visibilidade--privada]="entrada.visibilidade === RolagemVisibilidadeEnum.PRIVADA"
+                [attr.data-icone]="entrada.visibilidade === RolagemVisibilidadeEnum.PRIVADA ? 'olho-fechado' : 'olho'"
+              >
+                <app-icone [nome]="entrada.visibilidade === RolagemVisibilidadeEnum.PRIVADA ? 'olho-fechado' : 'olho'" />
+                {{ entrada.visibilidade === RolagemVisibilidadeEnum.PRIVADA ? 'Privada' : 'Pública' }}
+              </span>
               <button
                 class="bandeja__fechar"
                 type="button"

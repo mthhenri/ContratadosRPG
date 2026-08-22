@@ -30,12 +30,14 @@ import {
   CadenciaEnum,
   EncontroStatusEnum,
   NivelAmeacaEnum,
+  RolagemVisibilidadeEnum,
   TipoCampanhaMembroPapelEnum,
   TipoFichaEnum,
 } from '@contratados-rpg/shared/enums';
 import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
 import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component';
 import { Icone } from '../../../../shared/icone/icone.component';
@@ -55,6 +57,7 @@ import { nomeCadencia } from '../../../ficha/rotulos-criatura';
 import { CartaoCombatente } from '../../componentes/cartao-combatente/cartao-combatente.component';
 import { FichaFlutuante } from '../../componentes/ficha-flutuante/ficha-flutuante.component';
 import { SeletorCombatentes } from '../../componentes/seletor-combatentes/seletor-combatentes.component';
+import { RolagemAvulso } from '../../componentes/rolagem-avulso/rolagem-avulso.component';
 import { EncontroService } from '../../encontro.service';
 import { rotuloStatusEncontro } from '../../rotulos-encontro';
 
@@ -122,6 +125,8 @@ interface CombatenteVisualDto extends EncontroCombatenteResumoDto {
     FichaFlutuante,
     FichaVisualizacao,
     SeletorCombatentes,
+    RolagemAvulso,
+    BandejaDados,
   ],
   templateUrl: './painel-encontro.page.html',
   styleUrl: './painel-encontro.page.scss',
@@ -202,6 +207,8 @@ export class PainelEncontro {
 
   /** Modo de edição explícito: só nele aparecem o campo de iniciativa e o remover de cada cartão. */
   protected readonly modoEdicao = signal(false);
+  protected readonly avulsoRolando = signal<EncontroCombatenteResumoDto | null>(null);
+  private readonly rolagensOcultasAvulso = signal<Readonly<Record<number, boolean>>>({});
 
   /**
    * Seletor de combatentes aberto — os cartões sumarizados de agentes/criaturas/NPCs da campanha,
@@ -641,7 +648,7 @@ export class PainelEncontro {
   }
 
   /** Prepend único para a confirmação local e o broadcast público do mesmo registro. */
-  private adicionarRolagemAoFeed(rolagem: RolagemResumoDto): void {
+  protected adicionarRolagemAoFeed(rolagem: RolagemResumoDto): void {
     this.rolagensFeed.update((atuais) =>
       atuais.some((atual) => atual.id === rolagem.id) ? atuais : [rolagem, ...atuais],
     );
@@ -874,6 +881,15 @@ export class PainelEncontro {
     this.executarNoEncontro(this.encontroService.excluirImagemAvulso(combatente.id));
   }
 
+  /** Visibilidade das próximas rolagens, preservada por avulso durante esta sessão da página. */
+  protected rolagemAvulsoOculta(combatenteId: number): boolean {
+    return this.rolagensOcultasAvulso()[combatenteId] ?? true;
+  }
+
+  protected alterarVisibilidadeRolagemAvulso(combatenteId: number, oculta: boolean): void {
+    this.rolagensOcultasAvulso.update((atuais) => ({ ...atuais, [combatenteId]: oculta }));
+  }
+
   /** Remove um combatente do encontro. */
   protected removerCombatente(combatente: EncontroCombatenteResumoDto): void {
     this.executarNoEncontro(this.encontroService.removerCombatente(combatente.id));
@@ -1033,6 +1049,9 @@ export class PainelEncontro {
             formula: executado.formula,
             resultado: executado.resultado,
             corFicha: ficha.cor,
+            visibilidade: this.rolagemRegistro.oculta()
+              ? RolagemVisibilidadeEnum.PRIVADA
+              : RolagemVisibilidadeEnum.PUBLICA,
           });
           this.rolagemRegistro.inicializar(() => combatente.fichaId);
           this.rolagemRegistro.registrar({

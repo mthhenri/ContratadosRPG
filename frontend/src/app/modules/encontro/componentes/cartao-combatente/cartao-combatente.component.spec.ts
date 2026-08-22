@@ -425,15 +425,41 @@ describe('CartaoCombatente', () => {
     expect(emitido).toBe(true);
   });
 
-  it('não oferece "abrir ficha" pro avulso (sem fichaId) nem pro não revelado', () => {
+  it('não oferece "abrir ficha" pro avulso, mas mantém o atalho de fichas ocultas para o mestre', () => {
     const avulso = montar({ ...base, origem: CombatenteOrigemEnum.AVULSO, fichaId: null });
     expect(
       (avulso.nativeElement as HTMLElement).querySelector('.combatente__abrir-ficha'),
     ).toBeNull();
 
-    const naoRevelado = montar({ ...base, revelado: false });
+    const naoRevelado = montar(
+      { ...base, revelado: false },
+      { ehMestre: true, podeAjustar: false },
+    );
     expect(
       (naoRevelado.nativeElement as HTMLElement).querySelector('.combatente__abrir-ficha'),
+    ).not.toBeNull();
+
+    const jogadorNaoRevelado = montar({ ...base, revelado: false });
+    expect(
+      (jogadorNaoRevelado.nativeElement as HTMLElement).querySelector('.combatente__abrir-ficha'),
     ).toBeNull();
+  });
+
+  it('oferece o atalho de rolagem ao lado do nome somente para avulso fora da edição', () => {
+    const combatenteAvulso = { ...base, origem: CombatenteOrigemEnum.AVULSO, fichaId: null, tipoFicha: null };
+    const normal = montar(combatenteAvulso, { podeAjustar: true });
+    const botao = (normal.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
+      '.combatente__rolar-avulso',
+    );
+    expect(botao?.getAttribute('aria-label')).toBe('Rolar como K. Amaral');
+
+    let abriu = false;
+    normal.componentInstance.rolagemAvulsoAberta.subscribe(() => (abriu = true));
+    botao?.click();
+    expect(abriu).toBe(true);
+
+    expect((montar(base, { podeAjustar: true }).nativeElement as HTMLElement).querySelector('.combatente__rolar-avulso')).toBeNull();
+    expect((montar(combatenteAvulso).nativeElement as HTMLElement).querySelector('.combatente__rolar-avulso')).toBeNull();
+    expect((montar(combatenteAvulso, { emEdicao: true }).nativeElement as HTMLElement).querySelector('.combatente__rolar-avulso')).toBeNull();
   });
 });

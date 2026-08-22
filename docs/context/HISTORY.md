@@ -1,5 +1,69 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-22 — Visibilidade na bandeja e refinamentos do painel do avulso
+
+Toda entrada da bandeja de dados agora exige a visibilidade efetiva da rolagem e exibe no cabeçalho
+um selo **Privada** (olho fechado e tratamento de alerta) ou **Pública** (olho aberto). A informação
+vem do mesmo estado usado para persistir cada execução: ficha de jogador, criatura, iniciativa,
+inventário, presets, combos e avulso; prévias abertas pelo histórico usam a visibilidade já
+registrada. Tornar o campo obrigatório no contrato da bandeja impede novas chamadas ambíguas.
+
+O diálogo de revelar as rolagens do avulso foi alinhado ao análogo aprovado da criatura: cabeçalho
+com régua e fechar, ação principal na cor de destaque e cancelar contornado. O painel de expressão
+passou a ser arrastável pelo cabeçalho, limitado ao viewport e reposicionado quando a janela muda de
+tamanho. O botão **Rolar** ganhou superfície, borda, hover e cursor explícitos, preservando o pulso
+de confirmação. Na Iniciativa, o mestre voltou a ver **Abrir ficha** em todo combatente que possui
+ficha, inclusive quando ela está oculta ou o encontro não aceita ajustes; a consulta deixou de
+depender da permissão de mutação do card. O botão também permanece visível em grades compactas de
+quatro ou mais colunas, que antes o escondiam por CSS. Avulsos continuam sem o atalho porque não
+possuem ficha, e jogadores não ganham acesso a identidades ocultas.
+
+**Verificação visual.** Em `1920×1080`, o painel foi arrastado do canto direito para o centro e a
+carta mostrou os selos privado e público; o diálogo reproduziu as ações vermelha/contornada do
+análogo. Em `360×800`, painel e carta permaneceram inteiros, separados e sem overflow horizontal.
+Os 1.281 testes do frontend, lint e build passaram; o build manteve apenas o aviso preexistente de
+15,04kB acima do orçamento inicial.
+
+## 2026-08-22 — Resultado central e feedback da rolagem do avulso
+
+O painel de Iniciativa passou a hospedar a bandeja canônica de dados, que já recebia a rolagem do
+avulso pelo serviço compartilhado, mas ainda não possuía um componente renderizador nessa tela.
+Assim, clicar em **Rolar** agora apresenta imediatamente a carta flutuante central mesmo quando o
+histórico lateral está recolhido. O botão foi alinhado aos controles de rolagem das fichas, com
+ícone d20, tipografia mono em caixa alta e confirmação temporária **Rolado** acompanhada de um
+pulso curto; movimento reduzido desativa somente a animação, sem remover o feedback textual.
+
+Na inspeção em `360×800`, a carta inicialmente cobria parte do painel de expressão. O estado
+combinado foi corrigido: enquanto existe uma carta na bandeja, o painel sobe para logo abaixo da
+navegação, preservando os dois flutuantes completos, sem sobreposição e sem overflow. Em
+`1920×1080`, a carta permaneceu centralizada em 640px e o painel conservou sua posição lateral.
+Os 54 testes focados do painel e da rolagem avulsa e a suíte completa do frontend (1.278 testes)
+passaram, assim como lint e build; o build manteve apenas o aviso preexistente de 15,04kB acima do
+orçamento inicial.
+
+## 2026-08-22 — Rolagem livre atribuída ao combatente avulso
+
+Avulsos da Iniciativa ganharam um atalho de dados ao lado do nome, visível somente ao mestre fora
+do modo de edição e enquanto o encontro é mutável. O atalho abre um painel compacto que aceita a
+gramática oficial de dados e operações, mostra o resultado na bandeja e o registra no feed da
+campanha com o nome e a cor do avulso. Como não existe ficha, referências a atributos, `PROF` e
+`NIV` são recusadas com orientação explícita.
+
+As rolagens nascem privadas. Torná-las públicas reutiliza a confirmação canônica das criaturas e
+avisa que as próximas rolagens daquele avulso ficarão visíveis aos jogadores; voltar ao modo oculto
+é imediato. A migration 0024 tornou a origem de `rolagem` exclusiva entre `ficha_id` e
+`encontro_combatente_id`. O backend exige que a origem seja realmente um avulso do encontro e que
+o autor seja mestre da campanha; rolagens públicas continuam usando o broadcast existente e as
+privadas permanecem somente no retorno/feed autorizado do mestre.
+
+**Verificação.** Migration 0024 aplicada na base local; uma rolagem privada e uma pública foram
+executadas na aplicação real e reapareceram no feed como `Operador Azul`, com
+`encontroCombatenteId` e visibilidade corretos. O painel e a confirmação foram inspecionados em
+`1920×1080` e `360×800`, sem overflow; no mobile, fechar, expressão, visibilidade e rolar medem ao
+menos 44px. Suítes `shared` 702/702, `backend` 442/442 e `frontend` 1276/1276, builds dos três
+workspaces, lint do frontend e lint focado do backend aprovados. O lint completo do backend mantém
+as duas falhas preexistentes em testes de campanha/ficha já registradas no histórico anterior.
+
 ## 2026-08-22 — Controles de identidade reposicionados sob o retrato do avulso
 
 Após inspeção do modo "Editar combatentes", o autor apontou que trocar cor, trocar imagem e remover

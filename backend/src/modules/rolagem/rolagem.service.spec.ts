@@ -28,6 +28,11 @@ interface CampanhaGatewayDublado {
   emitirRolagemRegistrada: ReturnType<typeof vi.fn>;
 }
 
+interface EncontroRepositorioDublado {
+  recuperarCombatentePorId: ReturnType<typeof vi.fn>;
+  recuperarPorId: ReturnType<typeof vi.fn>;
+}
+
 const usuarioAtivo: JwtPayload = { sub: 7, login: 'agente.novato', tipo: TipoUsuarioEnum.NORMAL, tokenVersao: 1 };
 
 const resultado: ResultadoRolagemDto = {
@@ -41,6 +46,7 @@ function criarResumo(overrides: Partial<RolagemResumoDto> = {}): RolagemResumoDt
   return {
     id: 1,
     fichaId: 10,
+    encontroCombatenteId: null,
     campanhaId: 5,
     usuarioId: usuarioAtivo.sub,
     nomeAutor: 'Agente Novato',
@@ -58,6 +64,7 @@ describe('RolagemService', () => {
   let fichaService: FichaServiceDublado;
   let campanhaRepositorio: CampanhaRepositorioDublado;
   let campanhaGateway: CampanhaGatewayDublado;
+  let encontroRepositorio: EncontroRepositorioDublado;
   let service: RolagemService;
 
   beforeEach(() => {
@@ -69,12 +76,55 @@ describe('RolagemService', () => {
     fichaService = { recuperarFicha: vi.fn() };
     campanhaRepositorio = { recuperarMembro: vi.fn() };
     campanhaGateway = { emitirRolagemRegistrada: vi.fn() };
+    encontroRepositorio = {
+      recuperarCombatentePorId: vi.fn(),
+      recuperarPorId: vi.fn(),
+    };
     service = new RolagemService(
       rolagemRepositorio as unknown as RolagemRepository,
       fichaService as unknown as FichaService,
       campanhaRepositorio as unknown as CampanhaRepository,
       campanhaGateway as unknown as CampanhaGateway,
+      encontroRepositorio as never,
     );
+  });
+
+  describe('registrarRolagemAvulso', () => {
+    it('registra a rolagem em nome do avulso quando o autor é mestre da campanha', async () => {
+      encontroRepositorio.recuperarCombatentePorId.mockResolvedValue({
+        id: 31,
+        encontroId: 12,
+        fichaId: null,
+        nomeAvulso: 'Capanga',
+        corAvulso: '#d53030',
+      });
+      encontroRepositorio.recuperarPorId.mockResolvedValue({ id: 12, campanhaId: 5 });
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE });
+      const registrada = criarResumo({ fichaId: null, encontroCombatenteId: 31, nomeFicha: 'Capanga' });
+      rolagemRepositorio.registrarRolagem.mockResolvedValue(registrada);
+
+      const resposta = await service.registrarRolagemAvulso(
+        {
+          encontroId: 12,
+          combatenteId: 31,
+          rotulo: 'Rolagem livre',
+          visibilidade: RolagemVisibilidadeEnum.PRIVADA,
+          resultado,
+        },
+        usuarioAtivo,
+      );
+
+      expect(rolagemRepositorio.registrarRolagem).toHaveBeenCalledWith({
+        fichaId: null,
+        encontroCombatenteId: 31,
+        campanhaId: 5,
+        usuarioId: usuarioAtivo.sub,
+        rotulo: 'Rolagem livre',
+        visibilidade: RolagemVisibilidadeEnum.PRIVADA,
+        resultado,
+      });
+      expect(resposta).toEqual(registrada);
+    });
   });
 
   describe('registrarRolagem', () => {
@@ -91,6 +141,7 @@ describe('RolagemService', () => {
       expect(fichaService.recuperarFicha).toHaveBeenCalledWith({ id: 10 }, usuarioAtivo);
       expect(rolagemRepositorio.registrarRolagem).toHaveBeenCalledWith({
         fichaId: 10,
+        encontroCombatenteId: null,
         campanhaId: 5,
         usuarioId: usuarioAtivo.sub,
         rotulo: 'Luta',

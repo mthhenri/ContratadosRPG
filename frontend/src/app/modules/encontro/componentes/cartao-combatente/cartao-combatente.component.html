@@ -107,7 +107,7 @@
           <app-icone nome="inconsciente" />
         </span>
       }
-      @if (combatente().fichaId !== null && revelado()) {
+      @if (combatente().fichaId !== null && (revelado() || ehMestre())) {
         <button
           class="combatente__abrir-ficha"
           type="button"
@@ -116,6 +116,17 @@
           (click)="abrirFicha.emit()"
         >
           <app-icone nome="visao-geral" />
+        </button>
+      }
+      @if (combatente().origem === CombatenteOrigemEnum.AVULSO && podeAjustar() && !emEdicao()) {
+        <button
+          class="combatente__rolar-avulso"
+          type="button"
+          [attr.aria-label]="'Rolar como ' + combatente().nome"
+          [appTooltip]="'Rolar como avulso'"
+          (click)="rolagemAvulsoAberta.emit()"
+        >
+          <app-icone nome="dado" />
         </button>
       }
       @if (podeAjustar()) {

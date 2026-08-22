@@ -64,6 +64,7 @@ describe('CampanhaDetalhe', () => {
     return {
       id: 1,
       fichaId: 3,
+      encontroCombatenteId: null,
       campanhaId: CAMPANHA_ID,
       usuarioId: 1,
       nomeAutor: 'Mestre',

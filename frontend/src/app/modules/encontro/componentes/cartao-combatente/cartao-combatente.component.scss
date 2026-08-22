@@ -329,6 +329,7 @@
   // Abre a ficha completa numa janela flutuante — vive junto das marcas narrativas, antes do
   // grupo "remover/ajustar" que se empurra pra direita.
   &__abrir-ficha,
+  &__rolar-avulso,
   &__receber-dano {
     flex: none;
     display: inline-flex;
@@ -569,8 +570,9 @@
   }
 }
 
-// Na visão desktop dividida do jogador, o cartão vira uma entrada compacta da fila. O contexto
-// vem da grade da página para não alterar o cartão canônico do mestre nem o recorte mobile.
+// Na visão desktop dividida ou em grades densas, o cartão vira uma entrada compacta da fila. O
+// contexto vem da grade da página para não alterar o recorte mobile. As ações disponíveis continuam
+// visíveis: compactar a grade não pode remover funcionalidades do mestre ou do jogador.
 @media (min-width: (bp.$bp-mobile + 1px)) {
   :host-context(.grade--compacta) .combatente {
     gap: 8px;
@@ -597,7 +599,6 @@
     &__origem { font-size: 8px; }
     &__nome-linha { gap: 5px; }
     &__nome { font-size: 12px; }
-    &__abrir-ficha { display: none; }
     &__recursos { gap: 2px 6px; }
     &__recurso { gap: 3px; font-size: 9px; }
     &__defesas { gap: 2px 5px; font-size: 8px; }
