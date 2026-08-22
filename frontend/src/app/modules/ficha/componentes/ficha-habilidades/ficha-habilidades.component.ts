@@ -210,6 +210,8 @@ export class FichaHabilidades {
    * `contagemPorCategoria` e pelo filtro de `habilidadesFiltradas`. Subclasse (P-014) soma no mesmo
    * bucket de Arquétipo — é o mesmo conceito, só renomeado na exibição (`rotuloResumoArquetipo`);
    * subclasses nunca cruzam (doc), então não existe um caso "de outra subclasse" a separar aqui.
+   * Geral Melhorada (`GERAL_MELHORADA`) soma no mesmo bucket de Geral — mesmo conceito, variação
+   * buffada por arquétipo (doc).
    */
   private bucketResumo(habilidade: FichaHabilidadeDto): FiltroCategoriaResumo | null {
     if (
@@ -227,7 +229,10 @@ export class FichaHabilidades {
     if (habilidade.categoria === HabilidadeCategoriaEnum.CLASSE) {
       return 'classe';
     }
-    if (habilidade.categoria === HabilidadeCategoriaEnum.GERAL) {
+    if (
+      habilidade.categoria === HabilidadeCategoriaEnum.GERAL ||
+      habilidade.categoria === HabilidadeCategoriaEnum.GERAL_MELHORADA
+    ) {
       return 'geral';
     }
     return null;

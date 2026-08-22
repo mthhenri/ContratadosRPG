@@ -1,5 +1,36 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-22 — Corrigido: dialog "Receber dano" fechava ao clicar fora
+
+O dono reportou que o dialog "Receber dano" (`ReceberDanoDialog`, reaproveitado pelo cartão do
+combatente no Encontro e pelo bloco de vitalidade da ficha) fechava ao clicar fora — perdendo os
+valores digitados por acidente. Causa: `[dismissableMask]="true"` no `<p-dialog>`
+(`receber-dano-dialog.component.html`), herdado do padrão usado nos demais dialogs do projeto, mas
+inadequado aqui por ser um formulário com vários campos numéricos (o clique acidental na máscara é
+mais custoso que num dialog de confirmação simples). Fix: `dismissableMask` para `false` — o dialog
+só fecha pelo botão **Cancelar** (ou pelo X do cabeçalho/Esc, ações de fechar já intencionais, que
+chamam o mesmo `cancelar()`).
+
+Testado: novo teste unitário confere `dismissableMask === false` na instância do `Dialog`.
+Verificação ao vivo (Playwright, stack real) em `1920×1080` e `360×800`: abrir o dialog, clicar na
+máscara (fora do card) não fecha; clicar em Cancelar fecha. Suíte completa do frontend: 1283/1283.
+
+## 2026-08-22 — Corrigido: filtro "Geral" da aba Habilidades ignorava as Gerais Melhoradas
+
+O dono reportou que, na ficha de personagem, filtrar o resumo da aba Habilidades por **Geral**
+não trazia as habilidades `GERAL_MELHORADA` (a variação buffada de uma Geral, exclusiva de
+arquétipo — doc). Causa raiz: `bucketResumo()` em `ficha-habilidades.component.ts` só reconhecia
+`HabilidadeCategoriaEnum.GERAL`; uma habilidade `GERAL_MELHORADA` caía no `return null` do fim da
+função — ficava fora dos 4 buckets e, portanto, some tanto da contagem do resumo quanto de
+qualquer filtro ativo (mesma classe de bug já corrigida uma vez para `SUBCLASSE`, P-014, que nunca
+cobriu esse outro caso). Fix: `GERAL_MELHORADA` agora soma no mesmo bucket `'geral'` que `GERAL` —
+mesmo conceito, só variação por arquétipo (o chip do item já mostrava "Geral melhorada" à parte,
+isso não muda).
+
+Testado: novo teste em `ficha-habilidades.component.spec.ts` prova que uma `GERAL_MELHORADA` conta
+no contador "Geral" e aparece ao filtrar por ele junto de uma `GERAL` comum. Suíte completa do
+frontend: 1282/1282 (era 1281, +1).
+
 ## 2026-08-22 — Visibilidade na bandeja e refinamentos do painel do avulso
 
 Toda entrada da bandeja de dados agora exige a visibilidade efetiva da rolagem e exibe no cabeçalho

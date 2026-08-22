@@ -419,6 +419,27 @@ describe('FichaHabilidades', () => {
       expect(nomes(raiz)).toEqual(['Salto de Arquétipo']);
     });
 
+    it('clicar no contador de Geral filtra também as GERAL_MELHORADA (mesmo bucket)', () => {
+      TestBed.configureTestingModule({ imports: [FichaHabilidades] });
+      const fixture = TestBed.createComponent(FichaHabilidades);
+      fixture.componentRef.setInput('habilidades', [
+        ...habilidadesCompletas,
+        { nome: 'Luta (cheio)', categoria: HabilidadeCategoriaEnum.GERAL_MELHORADA, custoEnergia: 1, descricao: '', origem: ArquetipoEnum.LUTADOR },
+      ]);
+      fixture.componentRef.setInput('editavel', true);
+      fixture.componentRef.setInput('classe', ClasseEnum.COMBATENTE);
+      fixture.componentRef.setInput('arquetipo', ArquetipoEnum.LUTADOR);
+      fixture.componentRef.setInput('energiaAtual', 20);
+      fixture.detectChanges();
+      const raiz = fixture.nativeElement as HTMLElement;
+
+      expect(botaoResumo(raiz, 'Geral').querySelector('.habilidades__resumo-valor')?.textContent?.trim()).toBe('2');
+
+      botaoResumo(raiz, 'Geral').click();
+      fixture.detectChanges();
+      expect(nomes(raiz)).toEqual(['Primeiros Socorros', 'Luta (cheio)']);
+    });
+
     it('clicar em Classe depois de Arquétipo soma os dois tipos (cumulativo)', () => {
       const { raiz, fixture } = montarCompleta();
       botaoResumo(raiz, 'Arquétipo').click();

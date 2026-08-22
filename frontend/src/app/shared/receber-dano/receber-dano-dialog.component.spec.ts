@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { Dialog } from 'primeng/dialog';
 
 import { TipoDanoEnum } from '@contratados-rpg/shared/enums';
 
@@ -76,6 +77,12 @@ describe('ReceberDanoDialog', () => {
     const linhaGeral = colunaFicha[colunaFicha.length - 1];
     expect(linhaGeral.nativeElement.textContent.trim()).toBe('3');
     expect(linhaGeral.nativeElement.classList).not.toContain('receber-dano__resistencia-ficha--ausente');
+  });
+
+  it('não fecha ao clicar fora (máscara não dispensável) — só o Cancelar fecha', () => {
+    const fixture = montar();
+    const dialog = fixture.debugElement.query(By.directive(Dialog)).componentInstance as Dialog;
+    expect(dialog.dismissableMask).toBe(false);
   });
 
   it('cancelar não emite dano', () => {
