@@ -5,6 +5,7 @@ import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import { UnauthorizedAccessException } from '../exceptions';
 import type { JwtPayload } from '../../modules/autenticacao/jwt-payload.interface';
 import type { CampanhaService } from '../../modules/campanha/campanha.service';
+import type { EncontroService } from '../../modules/encontro/encontro.service';
 import type { FichaService } from '../../modules/ficha/ficha.service';
 import { CampanhaGateway } from './campanha.gateway';
 
@@ -18,6 +19,10 @@ interface FichaServiceDublado {
 
 interface CampanhaServiceDublado {
   recuperarCampanha: ReturnType<typeof vi.fn>;
+}
+
+interface EncontroServiceDublado {
+  sincronizarFichaAlterada: ReturnType<typeof vi.fn>;
 }
 
 interface SocketDublado {
@@ -48,6 +53,7 @@ describe('CampanhaGateway', () => {
   let jwtService: JwtServiceDublado;
   let fichaService: FichaServiceDublado;
   let campanhaService: CampanhaServiceDublado;
+  let encontroService: EncontroServiceDublado;
   let gateway: CampanhaGateway;
 
   const usuario: JwtPayload = { sub: 42, login: 'agente.novato', tipo: TipoUsuarioEnum.NORMAL, tokenVersao: 1 };
@@ -56,10 +62,12 @@ describe('CampanhaGateway', () => {
     jwtService = { verify: vi.fn() };
     fichaService = { recuperarFicha: vi.fn() };
     campanhaService = { recuperarCampanha: vi.fn() };
+    encontroService = { sincronizarFichaAlterada: vi.fn().mockResolvedValue(undefined) };
     gateway = new CampanhaGateway(
       jwtService as unknown as JwtService,
       fichaService as unknown as FichaService,
       campanhaService as unknown as CampanhaService,
+      encontroService as unknown as EncontroService,
     );
   });
 
@@ -171,6 +179,14 @@ describe('CampanhaGateway', () => {
 
       expect(paraSala).toHaveBeenCalledWith('ficha:5');
       expect(emitir).toHaveBeenCalledWith('ficha:alterada', ficha);
+    });
+
+    it('pede ao EncontroService para resincronizar a Iniciativa após ficha:alterada (m7-17, correção)', () => {
+      const ficha = { id: 5, campanhaId: 3, usuarioId: 10, nome: 'Agente Alfa', dados: {} };
+
+      gateway.emitirFichaAlterada(ficha as never);
+
+      expect(encontroService.sincronizarFichaAlterada).toHaveBeenCalledWith(5, 3);
     });
 
     it('emite ficha:visibilidade-alterada na sala da campanha com payload mínimo', () => {

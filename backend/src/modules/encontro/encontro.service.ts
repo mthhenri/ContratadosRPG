@@ -538,6 +538,40 @@ export class EncontroService {
     return (await this.montarEstado(encontroEncontrado)).estado;
   }
 
+  /**
+   * Resincroniza os cartões da Iniciativa depois que uma ficha muda **fora** deste service — a
+   * ficha flutuante do próprio Encontro (`FichaEdicaoService`, "Receber dano" m7-17) e qualquer
+   * outra tela que edite Vida/Energia/Condições continuam escrevendo pela `FichaService` (fonte
+   * única, sem duplicar regra aqui), mas esse caminho só emite `ficha:alterada` — evento que a sala
+   * `ficha:<id>` recebe, não a `campanha:<id>` que o painel de Iniciativa escuta.
+   *
+   * Chamado pelo `CampanhaGateway.emitirFichaAlterada` (que não decide nada sozinho — proibição
+   * #25, só encaminha) depois de todo `ficha:alterada`. No-op quando a ficha não pertence a uma
+   * campanha ou não é combatente de um encontro ainda aberto (`MONTAGEM`/`ATIVO`) — a maioria das
+   * chamadas cai aqui, então a consulta fica restrita a achar o encontro aberto antes de montar
+   * qualquer estado.
+   */
+  async sincronizarFichaAlterada(fichaId: number, campanhaId: number | null): Promise<void> {
+    if (campanhaId === null) {
+      return;
+    }
+    const encontroAberto = await this.encontroRepositorio.recuperarAbertoPorCampanha({ campanhaId });
+    if (!encontroAberto) {
+      return;
+    }
+    const combatentes = await this.encontroRepositorio.listarCombatentes({
+      encontroId: encontroAberto.id,
+    });
+    if (!combatentes.some((combatente) => combatente.fichaId === fichaId)) {
+      return;
+    }
+
+    const { estado, fichaIdsIdentidadeVisivel } = await this.montarEstado(encontroAberto);
+    await this.campanhaGateway.emitirEncontroAlterado(estado.campanhaId, (usuarioDoSocket) =>
+      this.montarEstadoParaUsuario(estado, fichaIdsIdentidadeVisivel, usuarioDoSocket),
+    );
+  }
+
   // ── Apoio da condução ──────────────────────────────────────────────────────
 
   /** Recupera o encontro exigindo mestre e situação `ATIVO`. */

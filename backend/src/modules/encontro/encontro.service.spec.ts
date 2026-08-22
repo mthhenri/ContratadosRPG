@@ -517,4 +517,47 @@ describe('EncontroService', () => {
       );
     });
   });
+
+  describe('sincronizarFichaAlterada', () => {
+    it('não faz nada quando a ficha não pertence a nenhuma campanha', async () => {
+      await service.sincronizarFichaAlterada(30, null);
+
+      expect(encontroRepositorio.recuperarAbertoPorCampanha).not.toHaveBeenCalled();
+      expect(campanhaGateway.emitirEncontroAlterado).not.toHaveBeenCalled();
+    });
+
+    it('não faz nada quando a campanha não tem encontro aberto', async () => {
+      encontroRepositorio.recuperarAbertoPorCampanha.mockResolvedValue(null);
+
+      await service.sincronizarFichaAlterada(30, 5);
+
+      expect(encontroRepositorio.recuperarAbertoPorCampanha).toHaveBeenCalledWith({ campanhaId: 5 });
+      expect(encontroRepositorio.listarCombatentes).not.toHaveBeenCalled();
+      expect(campanhaGateway.emitirEncontroAlterado).not.toHaveBeenCalled();
+    });
+
+    it('não faz nada quando a ficha não é combatente do encontro aberto', async () => {
+      encontroRepositorio.recuperarAbertoPorCampanha.mockResolvedValue(criarEncontroLinha());
+      encontroRepositorio.listarCombatentes.mockResolvedValue([
+        criarCombatenteLinha({ fichaId: 99 }),
+      ]);
+
+      await service.sincronizarFichaAlterada(30, 5);
+
+      expect(campanhaGateway.emitirEncontroAlterado).not.toHaveBeenCalled();
+    });
+
+    it('remonta e transmite o estado quando a ficha alterada é combatente do encontro aberto', async () => {
+      encontroRepositorio.recuperarAbertoPorCampanha.mockResolvedValue(criarEncontroLinha());
+      // `listarCombatentes` é consultado duas vezes: a checagem de pertencimento e a montagem do
+      // estado (`montarEstado`) — mesma linha respondendo às duas chamadas.
+      encontroRepositorio.listarCombatentes.mockResolvedValue([
+        criarCombatenteLinha({ fichaId: 30 }),
+      ]);
+
+      await service.sincronizarFichaAlterada(30, 5);
+
+      expect(campanhaGateway.emitirEncontroAlterado).toHaveBeenCalledWith(5, expect.any(Function));
+    });
+  });
 });

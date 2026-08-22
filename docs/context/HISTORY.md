@@ -1,5 +1,51 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-22 — Correção: ficha flutuante do Encontro não atualizava os cartões da Iniciativa
+
+Relato direto do autor: na visão de jogador da Iniciativa, ajustar Vida/Energia ou marcar uma
+Condição (Morrendo/Machucado/Inconsciente) pela **ficha flutuante** do Encontro (aberta ao clicar
+num cartão de combatente) não refletia nos cartões — nem no próprio painel do mestre. A suspeita
+inicial era de WebSocket mal conectado; a investigação sistemática (Fase 1–2:
+`docs/core`/código, sem alterar nada antes de entender) mostrou que não era de conexão.
+
+**Causa raiz.** O painel de Iniciativa (`painel-encontro.page.ts`) só se atualiza ao vivo ouvindo
+`encontro:alterado` na sala `campanha:<id>` — o que os botões `ajustarVida`/`ajustarEnergia` do
+próprio cartão disparam corretamente, via `EncontroService.ajustarVida`/`ajustarEnergia` (que
+grava o log de combate **e** chama `emitirEstado()` → `encontro:alterado`). A ficha flutuante
+(`FichaFlutuanteConteudo`, usada só dentro do Encontro) segue um caminho diferente:
+`ajusteVitalidade`/`ajusteCondicoes` da `FichaVisualizacao` vão para `FichaEdicaoService` (o mesmo
+canal genérico de qualquer tela de ficha), que persiste via `FichaService.alterarVitalidade`/
+`alterarFicha`. Esse caminho é correto quanto à fonte única (Vida/Energia/Condições continuam
+vivendo na ficha) e à permissão (dono **ou** mestre, ao contrário do `ajustarVida` do
+`EncontroService`, que é mestre-only — por isso não dava para simplesmente redirecionar a ficha
+flutuante para lá: quebraria o autoatendimento de dano do jogador que o próprio `m7-17` pediu). Só
+que `FichaService.alterarVitalidade`/`alterarFicha` emitem apenas `ficha:alterada` na sala
+`ficha:<id>` — sala que o painel de Iniciativa nunca ingressa (só entra em `campanha:<id>`). O
+dado ficava correto no banco; nenhum cliente conectado ao Encontro era avisado.
+
+**Correção.** `CampanhaGateway.emitirFichaAlterada` passou a, depois do broadcast de sempre, chamar
+um novo `EncontroService.sincronizarFichaAlterada(fichaId, campanhaId)`: localiza o encontro aberto
+(`MONTAGEM`/`ATIVO`) da campanha via `recuperarAbertoPorCampanha` (já existia, reusado de
+`criarEncontro`), confirma que a ficha é combatente dele e, só então, remonta o estado
+(`montarEstado`) e retransmite `encontro:alterado` por usuário (`montarEstadoParaUsuario`,
+mesmo recorte de revelação §14 de sempre) — nenhuma regra nova, só a reutilização do que
+`emitirEstado` já fazia. É *best-effort*: uma falha (`.catch`) não derruba o `ficha:alterada` que
+já foi emitido, mesmo espírito do `catch` por socket que `emitirEncontroAlterado` já tinha.
+
+Isso exigiu um novo `forwardRef` mútuo `GatewayModule` ↔ `EncontroModule` (`CampanhaGateway` passa
+a injetar `EncontroService`), no mesmo padrão já usado com `FichaModule`/`CampanhaModule`. A direção
+inversa continua proibida: `FichaModule`/`FichaService` seguem sem qualquer conhecimento de
+`encontro` — quem passou a saber da existência do Encontro foi só o gateway (que já orquestrava
+esse tipo de encaminhamento) e o próprio `EncontroService` (dono da regra de "isso é combatente de
+um encontro aberto?").
+
+Cobertura: `encontro.service.spec.ts` ganhou `describe('sincronizarFichaAlterada')` (no-op sem
+campanha, sem encontro aberto, e quando a ficha não é combatente; remonta e transmite quando é);
+`campanha.gateway.spec.ts` ganhou a asserção de que `emitirFichaAlterada` aciona
+`EncontroService.sincronizarFichaAlterada` com `(fichaId, campanhaId)`. Suíte completa do backend
+(430 testes) e `nest build` verificados depois da mudança — o boot real da aplicação confirmou que
+o novo grafo de DI circular (`Gateway` ↔ `Ficha`/`Campanha`/`Encontro`) resolve sem erro.
+
 ## 2026-08-22 — Cadência Frenética com quantidade declarada
 
 Pedido direto do autor: a Cadência Frenética estava fixada em 4 turnos, embora o Guia do Mestre

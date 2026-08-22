@@ -1,10 +1,28 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-22 · **Última decisão registrada:** `m7-17` (retoque no mesmo dia) —
-> o dialog "Receber dano" ganhou uma grade com cabeçalho único (Dano/Ficha/Custom) em vez de rótulo
-> por campo em cada uma das cinco linhas, e o mobile deixou de empilhar cada célula (o que alongava
-> o dialog e quebrava a leitura coluna↔coluna) — continua tabela, só mais estreita. O cartão da
-> Iniciativa passou a mostrar a mesma faixa compacta de resistência a dano que a ficha mostra
+> **Última revisão:** 2026-08-22 · **Última decisão registrada:** correção pós-`m7-17` — a ficha
+> flutuante do Encontro (`FichaFlutuanteConteudo`) ajusta Vida/Energia/Condições da ficha pela
+> `FichaEdicaoService` genérica (`FichaService.alterarVitalidade`/`alterarFicha`), que só emite
+> `ficha:alterada` na sala `ficha:<id>` — sala que o painel de Iniciativa nunca ouve (só escuta
+> `encontro:alterado` em `campanha:<id>`). Resultado reportado pelo autor: mudar Vida/Energia/
+> Condição pela ficha flutuante durante um combate não atualizava os cartões da Iniciativa em
+> **nenhum** cliente conectado (mestre ou jogador) até a próxima ação que passasse pelo
+> `EncontroService` (avançar turno, ajuste pelo próprio cartão). Corrigido sem tocar a fonte única
+> (Vida/Energia/Condições continuam vivendo na ficha, escritas pela `FichaService`):
+> `CampanhaGateway.emitirFichaAlterada` agora, depois do broadcast de sempre, chama
+> `EncontroService.sincronizarFichaAlterada(fichaId, campanhaId)` — novo método que localiza o
+> encontro aberto (`MONTAGEM`/`ATIVO`) da campanha, confirma que a ficha é combatente dele e, só
+> então, remonta e retransmite `encontro:alterado` (reaproveita `montarEstado`/
+> `montarEstadoParaUsuario`, sem duplicar a regra de revelação §14). O gateway não decide nada
+> sozinho (proibição #25) — só encaminha ao service dono da regra. Novo `forwardRef` mútuo
+> `GatewayModule` ↔ `EncontroModule` (mesmo padrão já usado com `FichaModule`/`CampanhaModule`);
+> `FichaModule` continua sem saber que `encontro` existe. Ver "Tempo real" (seção 4).
+>
+> **Decisão anterior:** `m7-17` (retoque no mesmo dia) — o dialog "Receber dano" ganhou uma grade
+> com cabeçalho único (Dano/Ficha/Custom) em vez de rótulo por campo em cada uma das cinco linhas,
+> e o mobile deixou de empilhar cada célula (o que alongava o dialog e quebrava a leitura
+> coluna↔coluna) — continua tabela, só mais estreita. O cartão da Iniciativa passou a mostrar a
+> mesma faixa compacta de resistência a dano que a ficha mostra
 > (`EncontroCombatenteResumoDto.resistencias`, calculado no mapper do encontro a partir da ficha já
 > carregada — `montarResistencias` pro agente, soma de `resistencias` pra criatura — e ocultado pela
 > mesma regra de revelação das outras defesas), e o dialog aberto por esse cartão agora recebe essa
@@ -13,7 +31,7 @@
 > definida — o número era aplicado no cálculo (silenciosamente correto) mas nunca exibido; corrigido
 > e coberto por teste de regressão.
 >
-> **Decisão anterior:** `m7-16` — na tela de Iniciativa, um agente (`JOGADOR`) de ficha **não
+> **Duas decisões atrás:** `m7-16` — na tela de Iniciativa, um agente (`JOGADOR`) de ficha **não
 > oculta** (m3-65) mostra avatar/dono/classe-arquétipo pra qualquer membro, mesmo sem
 > `usuario_ficha_acesso` (só os números continuam atrás da concessão; nível fica de fora — a
 > carteirinha identifica, não avalia a força — e sem ela não desenha "Vida —"); mais 4 ajustes de UI
@@ -683,8 +701,18 @@ progresso no topo, resumo operacional vira bottom sheet aberto por um botão ded
 Gateway Socket.IO **broadcast-only**: toda mutação passa por REST, o gateway nunca recebe escrita.
 Handshake autenticado pelo mesmo `JwtService` do Passport. Salas `ficha:<id>` e `campanha:<id>`,
 reusando a permissão §14 das services. Eventos: `ficha:criada`, `ficha:alterada`, `membro:entrou`,
-`rolagem:registrada`, `campanha:estado-alterado` e `campanha:inventario-alterado`. Os dois eventos de
+`rolagem:registrada`, `campanha:estado-alterado`, `campanha:inventario-alterado` e
+`encontro:alterado` (por usuário — ver "Encontro de Combate" abaixo). Os eventos de
 inventário/estado sinalizam o frontend para reler a fonte de verdade por REST.
+
+`CampanhaGateway.emitirFichaAlterada` também aciona `EncontroService.sincronizarFichaAlterada` após
+todo `ficha:alterada` (correção pós-`m7-17`, ver topo do arquivo): se a ficha alterada for
+combatente de um encontro aberto da mesma campanha, o encontro é remontado e `encontro:alterado` é
+retransmitido — sem isso, qualquer edição de Vida/Energia/Condição feita **fora** do
+`EncontroService` (ficha flutuante do próprio Encontro, ou a ficha "solta" de um combatente ativo)
+persistia corretamente mas nunca atualizava os cartões da Iniciativa em tempo real. `GatewayModule`
+importa `EncontroModule` (`forwardRef`, mesmo padrão de `FichaModule`/`CampanhaModule`); a direção
+inversa (`Ficha` → `Encontro`) continua proibida.
 
 ### Calculadoras públicas — `frontend/calculadora`
 

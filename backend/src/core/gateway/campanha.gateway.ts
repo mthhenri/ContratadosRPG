@@ -30,6 +30,7 @@ import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import type { Server, Socket } from 'socket.io';
 import type { JwtPayload } from '../../modules/autenticacao/jwt-payload.interface';
 import { CampanhaService } from '../../modules/campanha/campanha.service';
+import { EncontroService } from '../../modules/encontro/encontro.service';
 import { omitirCamposPrivados } from '../../modules/ficha/ficha-campos-privados.util';
 import { FichaService } from '../../modules/ficha/ficha.service';
 
@@ -66,6 +67,8 @@ export class CampanhaGateway implements OnGatewayConnection {
     private readonly fichaService: FichaService,
     @Inject(forwardRef(() => CampanhaService))
     private readonly campanhaService: CampanhaService,
+    @Inject(forwardRef(() => EncontroService))
+    private readonly encontroService: EncontroService,
   ) {}
 
   /**
@@ -139,6 +142,13 @@ export class CampanhaGateway implements OnGatewayConnection {
    * só exige visualização, não edição); por isso o broadcast sempre omite
    * `CAMPOS_PRIVADOS_FICHA` (m3-50 — `historia`), até para dono/mestre, que recuperam o valor
    * atualizado pelo REST (o mesmo tratamento do `dados` reduzido em `emitirFichaCriada` abaixo).
+   *
+   * Depois do broadcast, pede ao `EncontroService` para resincronizar a Iniciativa (m7-17,
+   * correção): quem edita Vida/Energia/Condições pela ficha flutuante do Encontro (ou por qualquer
+   * outra tela) grava pela `FichaService`, que só sabe emitir `ficha:alterada` — a sala
+   * `ficha:<id>`, não a `campanha:<id>` que o painel de Iniciativa escuta. O gateway não decide se
+   * há encontro aberto nem se esta ficha é combatente (proibição #25); só encaminha, e
+   * `sincronizarFichaAlterada` é no-op nos demais casos.
    */
   emitirFichaAlterada(ficha: FichaAlteradaDto): void {
     const fichaSemCamposPrivados: FichaAlteradaDto = {
@@ -146,6 +156,10 @@ export class CampanhaGateway implements OnGatewayConnection {
       dados: omitirCamposPrivados(ficha.dados),
     };
     this.servidor.to(this.salaFicha(ficha.id)).emit('ficha:alterada', fichaSemCamposPrivados);
+    // Best-effort: uma falha aqui (ex.: encontro apagado entre a alteração e este ponto) não pode
+    // derrubar o broadcast de `ficha:alterada` que já aconteceu — mesmo espírito do `catch` por
+    // socket em `emitirEncontroAlterado` logo abaixo.
+    void this.encontroService.sincronizarFichaAlterada(ficha.id, ficha.campanhaId).catch(() => undefined);
   }
 
   /**
@@ -265,7 +279,7 @@ export class CampanhaGateway implements OnGatewayConnection {
    * montagem só.
    *
    * Continua **broadcast-only**: nada entra por aqui, a service chama depois de persistir.
-   */
+   */
   async emitirEncontroAlterado(
     campanhaId: number,
     montarParaUsuario: (usuario: JwtPayload) => Promise<EncontroAlteradoDto['encontro']>,
@@ -290,7 +304,7 @@ export class CampanhaGateway implements OnGatewayConnection {
       }
       socket.emit('encontro:alterado', { encontro } satisfies EncontroAlteradoDto);
     }
-  }
+  }
 
   /**
    * Emite `encontro:iniciativa-pedido` na sala `campanha:<id>` (m7-04) — o mestre chamando os

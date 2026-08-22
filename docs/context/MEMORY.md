@@ -64,6 +64,7 @@ consomem os dois o mesmo motor — nunca reimplemente uma fórmula de um lado s�
 | Exceções de negócio | `backend/src/core/exceptions/` — `BusinessException`, `ResourceNotFoundException`, `UnauthorizedAccessException` |
 | Filtro global + interceptor de resposta | `backend/src/core/filters/`, `backend/src/core/interceptors/` |
 | **Gateway WebSocket** (broadcast-only) | `backend/src/core/gateway/` — `CampanhaGateway`, `WsIoAdapter` |
+| Resincronização da Iniciativa quando a ficha muda fora do `EncontroService` (ficha flutuante etc.) | `CampanhaGateway.emitirFichaAlterada` chama `EncontroService.sincronizarFichaAlterada` |
 | **Armazenamento de blob** (avatar da ficha, local/R2) | `backend/src/core/armazenamento/` — `ArmazenamentoProvedor`, `ArmazenamentoLocalProvedor`/`ArmazenamentoR2Provedor`, toggle via `ConfigService.obterConfiguracaoArmazenamento()` |
 | Conexão Knex em runtime | `backend/src/database/` |
 | Reset e seed de desenvolvimento | `backend/tools/database/` + [`docs/DEVELOPMENT.md`](../DEVELOPMENT.md) |
