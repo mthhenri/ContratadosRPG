@@ -432,6 +432,23 @@ export class PainelEncontro {
     return ordenados;
   });
 
+  /**
+   * Quantidade de colunas da grade de cartões no desktop — cresce com o número de combatentes para
+   * que uma Ameaça de Cadência alta ou um grupo grande não fiquem espremidos em 3 colunas fixas.
+   * Tablet/mobile ignoram este valor (media query própria continua fixando 2/1 coluna).
+   */
+  protected readonly colunasGrade = computed(() => {
+    const total = this.combatentes().length;
+    if (total >= 13) return 5;
+    if (total >= 9) return 4;
+    return 3;
+  });
+
+  /** `true` quando a grade deve usar o cartão compacto — divisão do jogador ou grade de 4+ colunas. */
+  protected readonly gradeCompacta = computed(
+    () => this.mostrarFichaLateral() || this.colunasGrade() > 3,
+  );
+
   /** Ids de quem já gastou todos os turnos desta rodada. */
   private readonly jaAgiram = computed<ReadonlySet<number>>(() => {
     const encontroAtual = this.encontro();

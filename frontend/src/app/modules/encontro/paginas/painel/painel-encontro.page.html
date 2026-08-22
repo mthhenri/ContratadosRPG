@@ -463,7 +463,11 @@
     }
 
     @if (combatentes().length) {
-      <div class="grade" [class.grade--compacta]="mostrarFichaLateral()">
+      <div
+        class="grade"
+        [class.grade--compacta]="gradeCompacta()"
+        [style.--grade-colunas]="colunasGrade()"
+      >
         @for (combatente of combatentes(); track combatente.chaveVisual) {
           <app-cartao-combatente
             [combatente]="combatente"

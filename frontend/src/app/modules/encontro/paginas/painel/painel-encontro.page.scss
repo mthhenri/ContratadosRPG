@@ -575,9 +575,12 @@
 }
 
 // ── Grade de cartões ────────────────────────────────────────────────────────
+// `--grade-colunas` (3/4/5) vem de `colunasGrade()` — cresce com o total de combatentes para que
+// grupos grandes não fiquem espremidos em 3 colunas fixas; o cartão compacto (m7-05) absorve a
+// coluna extra sem truncar. Tablet/mobile ignoram a variável e mantêm a contagem fixa de sempre.
 .grade {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--grade-colunas, 3), minmax(0, 1fr));
   gap: 12px;
 
   @include bp.tablet { grid-template-columns: repeat(2, minmax(0, 1fr)); }
