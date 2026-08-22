@@ -1,6 +1,29 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-22 · **Última decisão registrada:** correção pós-`m7-17` — a ficha
+> **Última revisão:** 2026-08-22 · **Última decisão registrada:** `m4-11` (task adicional do M4,
+> fora da fila `m4-05`…`m4-10`) — o acervo (`/fichas`) deixou de listar agentes e criaturas
+> misturados. A tela agora separa por tipo em blocos (`AGENTES`/`CRIATURAS`, NPC estruturalmente
+> pronto e desligado até `m4-07`/`m4-08`), com um `<select>` de visão (Todos/Agentes/Criaturas) —
+> em "Todos" cada bloco trava em ~2 linhas de card com scroll interno e fade (`appOverflowFade`);
+> num tipo filtrado, o bloco usa a altura toda. O card virou um componente único extraído
+> (`CartaoFichaAcervo`, `frontend/.../ficha/componentes/cartao-ficha-acervo/`) com recorte por
+> tipo — agente mostra classe/arquétipo/nível/**Patente** (que faltava antes); criatura mostra
+> Ameaça/NA/VD/Vida/Defesa. Destrava também **criar criatura fora de campanha**
+> (`FichaCriaturaCriarDto.campanhaId: number | null`, botão "Criar criatura" visível só a quem é
+> mestre de alguma campanha — backend exige o mesmo via
+> `CampanhaRepository.contarCampanhasComoMestre`); as rotas `/fichas/criatura/nova`/`:id` reusam
+> `CriaturaCriar`/`CriaturaVisualizar` com `campanhaId` opcional, mesmo padrão de
+> `FichaCriar`/`FichaVisualizar` (m3-28). Dois defeitos vivos alcançáveis pelos mesmos controles do
+> acervo foram corrigidos junto: `duplicarFicha` tipava sempre `JOGADOR` (uma criatura duplicada
+> nascia agente com `dados` de criatura); e `atribuirCampanha` emitia `ficha:criada` (forma de
+> jogador) pra criatura/NPC também, vazando nome/vida pela sala `campanha:<id>` antes de qualquer
+> revelação — agora atribuir criatura/NPC exige que o dono seja **mestre** da campanha-alvo (não só
+> membro) e nunca emite esse evento. Verificado ao vivo (Postgres+backend+frontend reais, dois
+> usuários): a sala não vaza a criatura atribuída (com sanity check confirmando que o listener
+> funciona — atribuir um agente emite normalmente); e o fluxo completo funciona ponta a ponta
+> (criar solta pela UI → aparece com chip "Sem campanha" → abre em `/fichas/criatura/:id`).
+>
+> **Duas decisões atrás:** correção pós-`m7-17` — a ficha
 > flutuante do Encontro (`FichaFlutuanteConteudo`) ajusta Vida/Energia/Condições da ficha pela
 > `FichaEdicaoService` genérica (`FichaService.alterarVitalidade`/`alterarFicha`), que só emite
 > `ficha:alterada` na sala `ficha:<id>` — sala que o painel de Iniciativa nunca ouve (só escuta
@@ -18,7 +41,7 @@
 > `GatewayModule` ↔ `EncontroModule` (mesmo padrão já usado com `FichaModule`/`CampanhaModule`);
 > `FichaModule` continua sem saber que `encontro` existe. Ver "Tempo real" (seção 4).
 >
-> **Decisão anterior:** `m7-17` (retoque no mesmo dia) — o dialog "Receber dano" ganhou uma grade
+> **Três decisões atrás:** `m7-17` (retoque no mesmo dia) — o dialog "Receber dano" ganhou uma grade
 > com cabeçalho único (Dano/Ficha/Custom) em vez de rótulo por campo em cada uma das cinco linhas,
 > e o mobile deixou de empilhar cada célula (o que alongava o dialog e quebrava a leitura
 > coluna↔coluna) — continua tabela, só mais estreita. O cartão da Iniciativa passou a mostrar a
@@ -31,7 +54,7 @@
 > definida — o número era aplicado no cálculo (silenciosamente correto) mas nunca exibido; corrigido
 > e coberto por teste de regressão.
 >
-> **Duas decisões atrás:** `m7-16` — na tela de Iniciativa, um agente (`JOGADOR`) de ficha **não
+> **Quatro decisões atrás:** `m7-16` — na tela de Iniciativa, um agente (`JOGADOR`) de ficha **não
 > oculta** (m3-65) mostra avatar/dono/classe-arquétipo pra qualquer membro, mesmo sem
 > `usuario_ficha_acesso` (só os números continuam atrás da concessão; nível fica de fora — a
 > carteirinha identifica, não avalia a força — e sem ela não desenha "Vida —"); mais 4 ajustes de UI
@@ -48,6 +71,11 @@
 ---
 
 ## 1. Próxima Task
+
+**`m4-11` (task adicional do M4, fora da fila `m4-05`…`m4-10`) concluída** — acervo separado por
+tipo, "Criar criatura" solta e os dois defeitos de `duplicarFicha`/`atribuirCampanha` corrigidos;
+ver o bloco no topo do arquivo e a seção 4 ("Ficha de jogador"/"Ficha de criatura"). Não avança a
+fila `m4-05`…`m4-10` — a próxima task numerada do M4 continua sendo `m4-05` (NPC).
 
 O **M7 — Encontro de Combate** está **concluído**, incluindo os oito ajustes de pós-milestone: as 8
 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend
@@ -532,20 +560,51 @@ placeholder decorativo no cabeçalho (com selos de trocar/remover, `ajustavelAmp
 acervo — upload/remoção via `POST`/`DELETE /ficha/:id/imagem` (multipart, endpoint dedicado fora do
 `PUT` genérico), persistidos **imediatamente** (sem o debounce dos demais campos), com o arquivo
 guardado em disco local (dev) ou Cloudflare R2 (produção) atrás de `ArmazenamentoProvedor`
-(`backend/src/core/armazenamento/`), escolhido por `ARMAZENAMENTO_PROVEDOR`. O card do acervo
-(`/fichas`, `FichaAcervo`) usa a mesma receita visual do card de ficha do Esquadrão
-(`CampanhaDetalhe`, `m3-52`): borda + listras diagonais do avatar seguem `--cor-ficha`
-(`color-mix` sobre `--border-strong` sem cor definida) e o hover sustentado sobre o avatar abre um
-preview 200×200 sem recorte (`agendarPreviewAvatar`/`cancelarPreviewAvatar`) — o acervo lia
-`imagemUrl` mas nunca `cor` nem tinha o preview; corrigido para consumir o mesmo recorte que
-`FichaResumoDto` já expõe.
+(`backend/src/core/armazenamento/`), escolhido por `ARMAZENAMENTO_PROVEDOR`. O card do acervo usa a
+mesma receita visual do card de ficha do Esquadrão (`CampanhaDetalhe`, `m3-52`): borda + listras
+diagonais do avatar seguem `--cor-ficha` (`color-mix` sobre `--border-strong` sem cor definida) e o
+hover sustentado sobre o avatar abre um preview 200×200 sem recorte
+(`agendarPreviewAvatar`/`cancelarPreviewAvatar`).
+
+**Acervo (`/fichas`, `FichaAcervo`) separado por tipo (`m4-11`).** A tela lista agentes e criaturas
+em blocos próprios (`AGENTES`/`CRIATURAS`; NPC estruturalmente pronto na mesma lista dirigida por
+`TipoFichaEnum`, mas desligado do filtro/botão até `m4-07`/`m4-08` existirem), cada um com
+cabeçalho (título + régua + contagem, padrão de `CampanhaDetalhe.__secao`) e um `<select>` de visão
+(Todos/Agentes/Criaturas) alinhado à direita da barra de ações. Em "Todos", cada bloco trava em
+~2 linhas de card e rola por dentro (`.acervo__lista--limitada`, `appOverflowFade`) — um bloco sem
+ficha nenhuma é omitido; com um tipo filtrado, o bloco solta a trava e usa a altura toda, com
+estado vazio próprio ("Nenhuma criatura ainda."). O card virou um componente único extraído
+(`CartaoFichaAcervo`, `frontend/.../ficha/componentes/cartao-ficha-acervo/`) com recorte por tipo —
+comum a todos (moldura, avatar, chip de campanha, kebab); agente mostra
+`rotuloClasseCompleto(classe, arquetipo)` · Nível · **Patente** (`rotuloPatente`, que faltava no
+card antes desta task) · Vida/Energia; criatura mostra Ameaça · NA · VD · Vida/Defesa. O menu (⋯) e
+o preview do avatar continuam na raiz da página (`position: fixed`, cortados pelo `appOverflowFade`
+do `<ul>` se vivessem dentro do card). Link do card por tipo: agente → `/fichas/:id`; criatura →
+`/fichas/criatura/:id`.
+
+**Criar criatura fora de campanha (`m4-11`).** `FichaCriaturaCriarDto.campanhaId` passou a aceitar
+`null` — botão "Criar criatura" no acervo, visível só a quem é mestre de **alguma** campanha
+(`CampanhaRepository.contarCampanhasComoMestre`, já existente, reusado sem SQL novo); o backend
+aplica a mesma trava (`FichaService.criarFichaCriatura`), recusando com 403 quem não é mestre de
+campanha nenhuma. As rotas `/fichas/criatura/nova`/`:id` (sem `mestreCampanhaGuard` — não há
+`:campanhaId` de campanha nenhuma pra guardar) reusam `CriaturaCriar`/`CriaturaVisualizar` com
+`campanhaId` opcional, mesmo padrão de `FichaCriar`/`FichaVisualizar` (m3-28): resolvido da rota
+quando presente, ou do próprio payload da ficha carregada quando não. Atribuir uma criatura/NPC
+solta a uma campanha agora exige que o dono seja **mestre** daquela campanha (não só membro) —
+coerente com quem pode criá-la — e **nunca** emite `ficha:criada` na sala (o evento monta o resumo
+na forma de jogador e vazaria nome/vida a todo membro antes de qualquer revelação deliberada,
+mesma razão já valendo para a criação). Dois defeitos vivos, alcançáveis pelos mesmos controles do
+acervo desde que criaturas passaram a listar lá, foram corrigidos junto: `duplicarFicha` fixava
+sempre `tipo: JOGADOR` (duplicar uma criatura pelo menu criava um agente com `dados` de criatura) —
+agora ramifica pelo `tipo` da ficha original (`FichaRepository.recuperarPorId` passou a devolver
+`tipo` via o mesmo `JOIN tipo_ficha` de `colunasResumo()`).
 
 ### Ficha de criatura — `backend/ficha` (`m4-03`) + assistente de criação (`m4-04`)
 
-`POST /ficha/criatura` cria uma ameaça: só o **mestre** da campanha pode
-(`UnauthorizedAccessException` para qualquer outro papel), dono é sempre o próprio mestre (sem
-delegação como em jogador), sempre dentro de uma campanha (sem ficha avulsa — VD/NA são
-calibrados para o grupo). `GET`/`PUT /ficha/criatura/:id` reusam as mesmas checagens de
+`POST /ficha/criatura` cria uma ameaça: dentro de uma campanha, só o **mestre** daquela campanha
+pode (`UnauthorizedAccessException` para qualquer outro papel); solta (`campanhaId: null`, `m4-11`
+— ver o bloco no topo do arquivo), exige ser mestre de **alguma** campanha. Dono é sempre o próprio
+mestre (sem delegação como em jogador). `GET`/`PUT /ficha/criatura/:id` reusam as mesmas checagens de
 permissão de `recuperarFicha`/`alterarFicha` (dono/mestre/concessão, §14); exclusão
 (`DELETE /ficha/:id`) e concessão/revogação/listagem de acesso (`/ficha/:id/acesso*`) são 100%
 agnósticos de tipo e reusam as rotas de jogador sem endpoint próprio. Validação de domínio é só

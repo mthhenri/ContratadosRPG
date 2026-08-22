@@ -1,5 +1,91 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-22 — `m4-11`: acervo separado por tipo, criatura solta, dois defeitos vivos corrigidos
+
+Pedido direto do autor: a tela de fichas (`/fichas`, `m3-28`) listava agentes, criaturas e NPCs
+misturados numa lista só, sem distinção. Task adicional do M4, fora da fila numerada
+`m4-05`…`m4-10` — decisões tomadas com o autor antes da escrita da spec
+(`docs/specs/done/m4-11-acervo-por-tipo.spec.md`): (1) só quem é mestre de **alguma** campanha cria
+criatura/NPC solto — sem virar "qualquer um cria, atribuição filtra"; (2) NPC entra estruturalmente
+pronto (dirigido por `TipoFichaEnum`, sem `if` hardcoded por tipo), mas o filtro/botão ficam
+desligados até `m4-07`/`m4-08` existirem; (3) em "Todos" cada bloco trava em ~2 linhas com scroll
+interno, um tipo filtrado solta a trava; (4) o card virou um componente único extraído com recorte
+por tipo, não três componentes nem `@if` acumulando dentro de `acervo.page.html` (que já tinha 11k).
+
+**`shared/`** — `FichaCriaturaCriarDto`/`FichaCriaturaCriadaDto`/`FichaCriaturaRecuperadaDto`/
+`FichaCriaturaAlteradaDto.campanhaId` passou de `number` para `number | null` (a doc do DTO que
+justificava obrigatoriedade com "VD/NA calibrados pra campanha, sem avulsa nesta task" foi
+reescrita para registrar a nova regra — mestre de alguma campanha). `FichaRecuperadaDto` ganhou
+`tipo?: TipoFichaEnum`, opcional pelo mesmo motivo de `FichaResumoDto.tipo` (nem toda query que
+devolve o formato tem o `JOIN`).
+
+**`backend/`** — `FichaRepository.recuperarPorId` passou a devolver `tipo` via o mesmo
+`JOIN tipo_ficha` de `colunasResumo()` (§10.2.12, sem SQL novo inventado); sem isso nenhuma das
+ramificações abaixo seria possível. `FichaService.criarFichaCriatura`: `campanhaId !== null` segue
+a regra de sempre (mestre daquela campanha); `campanhaId === null` exige
+`CampanhaRepository.contarCampanhasComoMestre({ id: usuarioAtivo.sub }) > 0` (método já existia,
+consumido só por `UsuarioService` — reusado sem duplicar consulta). `atribuirCampanha` ganhou
+`validarMestreAlvo` (novo helper) ao lado de `validarMembroAlvo`: criatura/NPC exige que o dono seja
+**mestre** da campanha-alvo, não só membro — e, criatura/NPC, **nunca** emite
+`campanhaGateway.emitirFichaCriada` (o evento monta o resumo na forma de jogador e transmite pra
+sala `campanha:<id>` inteira sem checar permissão — vazaria nome/vida antes de qualquer revelação
+deliberada, mesma razão que já impedia a emissão na criação). `duplicarFicha` ramifica pelo `tipo`
+da ficha original: `JOGADOR` segue o caminho de sempre (`criarFicha`, com snapshot/preset de
+Iniciativa/validação de agente); `CRIATURA`/`NPC` vão direto ao repositório com o tipo correto — a
+correção do primeiro defeito vivo (duplicar uma criatura pelo menu do acervo criava uma ficha
+**tipada como agente** com `dados` de criatura, achado ao mapear os controles que a listagem de
+criaturas no acervo já expunha).
+
+**`frontend/`** — `ficha-acervo.routes.ts` ganhou `criatura/nova`/`criatura/:id` (antes de `:id`,
+senão casam como id), reusando `CriaturaCriar`/`CriaturaVisualizar` sem duplicar página. Os dois
+componentes, até então só campanha-scoped, ganharam a mesma ramificação `campanhaId` opcional que
+`FichaCriar`/`FichaVisualizar` já tinham desde a `m3-28`: `CriaturaCriar` lê `null` da ausência de
+`:campanhaId` na rota e navega pro acervo (`/fichas`) em vez de `/painel/:campanhaId` ao
+sair/concluir; `CriaturaVisualizar` resolve `campanhaId` do parâmetro de rota quando presente, ou
+do próprio payload da criatura carregada quando não (mesmo padrão de `FichaVisualizar`), pulando
+`listarMembros` e caindo em "dono-apenas" sem campanha. A tela do acervo (`acervo.page.ts/html/scss`)
+reescreveu `.acervo__acoes` em dois grupos (criar à esquerda, `<select>` de visão à direita — mesmo
+padrão que a `m7-16` aplicou em `.iniciativa__acoes`) e passou a montar um bloco por tipo
+(`BLOCOS_ACERVO`, dirigido por `TipoFichaEnum` — NPC entra só como um novo item dessa lista quando
+existir), com cabeçalho no padrão de `CampanhaDetalhe.__secao` e `.acervo__lista--limitada`
+(`max-height` + `appOverflowFade`) só quando o filtro é "Todos".
+
+**`CartaoFichaAcervo`** — novo standalone em `ficha/componentes/cartao-ficha-acervo/`, consumido
+pelos blocos: moldura/avatar/chip/kebab comuns (movidos de `acervo.page.scss`, já que a
+encapsulação de componente do Angular não deixa CSS da página alcançar o template de um filho);
+meta/vitais por tipo — agente mostra `rotuloClasseCompleto(classe, arquetipo)` · Nível ·
+**Patente** (`rotuloPatente`, o campo que faltava no card antes desta task) · Vida/Energia; criatura
+mostra Ameaça · NA · VD · Vida/Defesa. Link por tipo (`JOGADOR` → `/fichas/:id`; `CRIATURA` →
+`/fichas/criatura/:id`) resolve o segundo defeito vivo (todo card do acervo apontava pra
+`/fichas/:id`, a tela de agente — clicar numa criatura levava pra tela errada). Menu (⋯) e preview
+do avatar continuam na raiz da página (`position: fixed`, cortados pelo `appOverflowFade` do `<ul>`
+se vivessem dentro do card).
+
+**Verificação.** `shared` (702/702), `backend` (441/441, com os novos casos de
+`criarFichaCriatura`/`atribuirCampanha`/`duplicarFicha` pro `campanhaId: null` e pra criatura/NPC),
+`frontend` (1270/1270, com `acervo.page.spec.ts` cobrindo filtro/blocos/contagens/omissão de bloco
+vazio/botões condicionais/link por tipo, `cartao-ficha-acervo.component.spec.ts` cobrindo o recorte
+por tipo, e os testes de `campanhaId` opcional de `criar-criatura`/`visualizar-criatura`); `nest
+build` e lint dos três workspaces limpos (achado durante a task, não desta task: `npm run
+typecheck -w shared` já falhava antes em `a-estatua.spec.ts` por um campo `atributo` inexistente em
+`FichaCriaturaAtaqueDto` — registrado como `PROBLEMS.md` `P-024`, não corrigido por ser fora do
+escopo). Gate visual (skill `verify`, Postgres+backend+frontend reais) em `1920×1080` e `360×800`:
+Todos com os dois blocos ativos, cada filtro isolado, bloco vazio com estado próprio (distinto do
+vazio geral), scroll interno de um bloco com 7 criaturas (confirmado via `scrollHeight`/
+`clientHeight`/classe `overflow-fade--base`, e revelando a 7ª ao rolar), menu (⋯) aberto num card
+perto da borda inferior, dialog "Atribuir a campanha" listando só a campanha onde o usuário
+autenticado é mestre (não a onde é só jogador) — comparado contra o análogo `CampanhaDetalhe`. Ao
+vivo com dois usuários via `socket.io-client` cru: mestre atribuiu uma criatura solta a uma
+campanha e o jogador conectado à sala não recebeu `ficha:criada` — com *sanity check* confirmando
+que a sala/listener funcionam de verdade (atribuir um agente à mesma campanha, no mesmo teste, **fez**
+o jogador receber o evento normalmente). O fluxo de criação ponta a ponta também rodou pelo
+navegador de verdade: `/fichas/criatura/nova` carrega limpo, um rascunho válido (mesmos valores do
+caso de teste "A Estátua") retomado leva a // Revisão sem violações, "Registrar criatura" navega
+para `/fichas/criatura/:id`, e a ficha aparece no acervo com o chip "Sem campanha". `POST
+/ficha/criatura` com `campanhaId: null` confirmado recusado com 403 para um usuário que não é
+mestre de campanha nenhuma; `POST /ficha/:id/duplicar` de uma criatura confirmado devolvendo
+`tipo: CRIATURA` na listagem do acervo (não `JOGADOR`).
+
 ## 2026-08-22 — Correção: ficha flutuante do Encontro não atualizava os cartões da Iniciativa
 
 Relato direto do autor: na visão de jogador da Iniciativa, ajustar Vida/Energia ou marcar uma

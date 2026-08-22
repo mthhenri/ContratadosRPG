@@ -3,6 +3,25 @@ import type { Knex } from 'knex';
 import { FichaRepository } from './ficha.repository';
 
 describe('FichaRepository', () => {
+  it('recuperarPorId devolve o tipo via JOIN tipo_ficha (m4-11)', async () => {
+    const raw = vi.fn().mockResolvedValue({
+      rows: [
+        {
+          id: 5, campanhaId: 3, usuarioId: 10, nome: 'A Estátua',
+          cor: null, imagemUrl: null, imagemFoco: null, oculta: false, tipo: 'CRIATURA', dados: {},
+        },
+      ],
+    });
+    const repositorio = new FichaRepository({ raw } as unknown as Knex);
+
+    const resultado = await repositorio.recuperarPorId({ id: 5 });
+
+    const [sql] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(sql).toContain('JOIN tipo_ficha ON tipo_ficha.id = ficha.tipo_ficha_id');
+    expect(sql).toContain('tipo_ficha.codigo AS tipo');
+    expect(resultado?.tipo).toBe('CRIATURA');
+  });
+
   it('exposes a dedicated vitalidade update that does not change relational fields', async () => {
   const raw = vi.fn().mockResolvedValue({ rows: [{ id: 5 }] });
   const repositorio = new FichaRepository({ raw } as unknown as Knex);

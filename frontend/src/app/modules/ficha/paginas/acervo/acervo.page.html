@@ -10,10 +10,24 @@
     </header>
 
     <div class="acervo__acoes">
-      <button class="botao botao--primario acervo__acao" type="button" (click)="abrirCriarFicha()">
-        <app-icone nome="novo-agente" />
-        Criar ficha
-      </button>
+      <div class="acervo__acoes-criar">
+        <button class="botao botao--primario acervo__acao" type="button" (click)="abrirCriarFicha()">
+          <app-icone nome="novo-agente" />
+          Criar ficha
+        </button>
+        @if (podeCriarCriatura()) {
+          <button class="botao botao--secundario acervo__acao" type="button" (click)="abrirCriarCriatura()">
+            <app-icone nome="alerta" />
+            Criar criatura
+          </button>
+        }
+      </div>
+      <select class="acervo__select-filtro" aria-label="Filtrar por tipo" (change)="mudarFiltro($event)">
+        <option [value]="FILTRO_TODOS" [selected]="filtro() === FILTRO_TODOS">Todos</option>
+        @for (bloco of blocos; track bloco.tipo) {
+          <option [value]="bloco.tipo" [selected]="filtro() === bloco.tipo">{{ bloco.titulo }}</option>
+        }
+      </select>
     </div>
 
     @if (carregando()) {
@@ -35,59 +49,33 @@
         Nenhuma ficha ainda. Crie uma — ela nasce solta, sem campanha, e você pode atribuí-la depois.
       </p>
     } @else {
-      <ul class="acervo__lista" appOverflowFade>
-        @for (item of itens(); track item.id) {
-          <li>
-            <div class="acervo__cartao">
-              <a class="acervo__cartao-link" [routerLink]="['/fichas', item.id]">
-                <!-- Avatar da ficha (m3-62) — placeholder listrado sem imagem definida; borda/listras
-                     seguem a cor de identidade (m3-61, `--cor-ficha`) e o hover sustentado abre o
-                     preview ampliado (mesmo padrão de `CampanhaDetalhe`). -->
-                <span
-                  class="acervo__cartao-avatar"
-                  aria-hidden="true"
-                  [style.--cor-ficha]="item.cor"
-                  (mouseenter)="agendarPreviewAvatar($event, item.imagemUrl)"
-                  (mouseleave)="cancelarPreviewAvatar()"
-                >
-                  @if (item.imagemUrl; as urlImagem) {
-                    <img class="acervo__cartao-avatar-imagem" [src]="urlImagem" alt="" />
-                  }
-                </span>
-                <span class="acervo__cartao-texto">
-                  <span class="acervo__cartao-nome">{{ item.nome }}</span>
-                  <span class="acervo__cartao-meta">{{ item.classeTexto }} · Nível {{ item.nivel }}</span>
-                  <span class="acervo__cartao-vitais">
-                    <span>Vida {{ item.vidaAtual }}/{{ item.vidaMaxima ?? '—' }}</span>
-                    <span>Energia {{ item.energiaAtual }}/{{ item.energiaMaxima ?? '—' }}</span>
-                  </span>
-                </span>
-              </a>
-              <div class="acervo__cartao-rodape">
-                @if (item.campanhaId !== null) {
-                  <span class="acervo__chip acervo__chip--campanha">
-                    <app-icone nome="campanhas" />
-                    {{ item.campanhaNome ?? 'Campanha' }}
-                  </span>
-                } @else {
-                  <span class="acervo__chip">Sem campanha</span>
-                }
-                <span class="acervo__cartao-regua"></span>
-                <button
-                  class="acervo__menu-botao"
-                  type="button"
-                  [attr.aria-label]="'Ações de ' + item.nome"
-                  aria-haspopup="menu"
-                  [attr.aria-expanded]="menuFichaAberto()?.id === item.id"
-                  (click)="alternarMenuFicha(item, $event)"
-                >
-                  ⋯
-                </button>
-              </div>
-            </div>
-          </li>
+      @for (bloco of blocos; track bloco.tipo) {
+        @if (mostrarBloco(bloco.tipo)) {
+          <header class="acervo__secao">
+            <h2 class="acervo__secao-titulo">{{ bloco.titulo }}</h2>
+            <span class="acervo__secao-regua"></span>
+            <span class="acervo__secao-contagem" aria-hidden="true">{{ itensDoTipo(bloco.tipo).length }}</span>
+          </header>
+
+          @if (itensDoTipo(bloco.tipo).length === 0) {
+            <p class="acervo__estado">{{ bloco.estadoVazio }}</p>
+          } @else {
+            <ul class="acervo__lista" [class.acervo__lista--limitada]="filtro() === FILTRO_TODOS" appOverflowFade>
+              @for (item of itensDoTipo(bloco.tipo); track item.id) {
+                <li>
+                  <app-cartao-ficha-acervo
+                    [item]="item"
+                    [menuAberto]="menuFichaAberto()?.id === item.id"
+                    (menu)="alternarMenuFicha(item, $event)"
+                    (avatarHover)="agendarPreviewAvatar($event, item.imagemUrl)"
+                    (avatarSaida)="cancelarPreviewAvatar()"
+                  />
+                </li>
+              }
+            </ul>
+          }
         }
-      </ul>
+      }
     }
   </article>
 </section>
@@ -106,12 +94,12 @@
     [style.bottom.px]="menuFichaPosicao()?.bottom"
     [style.right.px]="menuFichaPosicao()?.right"
   >
-    @if (campanhas().length > 0) {
+    @if (temCampanhaElegivelParaAtribuir(menuAberto.tipo)) {
       <button
         class="acervo__menu-item"
         type="button"
         role="menuitem"
-        (click)="pedirAtribuir(menuAberto.id, menuAberto.nome)"
+        (click)="pedirAtribuir(menuAberto.id, menuAberto.nome, menuAberto.tipo)"
       >
         <app-icone nome="campanhas" />
         <span>Atribuir a campanha</span>
@@ -287,7 +275,7 @@
         [value]="campanhaEscolhida()"
         (change)="mudarCampanhaEscolhida($event)"
       >
-        @for (campanha of campanhas(); track campanha.id) {
+        @for (campanha of campanhasElegiveis(); track campanha.id) {
           <option [value]="campanha.id">{{ campanha.nome }}</option>
         }
       </select>

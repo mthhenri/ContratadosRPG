@@ -12,6 +12,12 @@ import { Routes } from '@angular/router';
  * campanha-scoped: sem `:campanhaId` na rota-pai, o guia lê `campanhaId` como `null` e pula os
  * passos que dependem de esquadrão (dono, médias de Novo Agente — sempre "primeiro agente").
  * Precisa vir **antes** de `:id`, senão `nova` casa como id.
+ *
+ * `criatura/nova` e `criatura/:id` (m4-11) espelham o mesmo padrão para `CriaturaCriar`/
+ * `CriaturaVisualizar` (`criatura.routes.ts`, hoje só campanha-scoped) — sem `mestreCampanhaGuard`
+ * aqui: não há `:campanhaId` de campanha nenhuma para guardar, e a trava "mestre de alguma
+ * campanha" é do backend (`FichaService.criarFichaCriatura`). Precisam vir **antes** de `:id`
+ * pelo mesmo motivo de `nova`.
  */
 export const fichaAcervoRoutes: Routes = [
   {
@@ -21,6 +27,18 @@ export const fichaAcervoRoutes: Routes = [
   {
     path: 'nova',
     loadComponent: () => import('./paginas/criar/criar.page').then((modulo) => modulo.FichaCriar),
+  },
+  {
+    path: 'criatura/nova',
+    loadComponent: () =>
+      import('./paginas/criar-criatura/criar-criatura.page').then((modulo) => modulo.CriaturaCriar),
+  },
+  {
+    path: 'criatura/:id',
+    loadComponent: () =>
+      import('./paginas/visualizar-criatura/visualizar-criatura.page').then(
+        (modulo) => modulo.CriaturaVisualizar,
+      ),
   },
   {
     path: ':id',

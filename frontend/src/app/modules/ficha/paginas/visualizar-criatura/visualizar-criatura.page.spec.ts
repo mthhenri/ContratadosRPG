@@ -32,8 +32,9 @@ import { RolagemService } from '../../rolagem.service';
 
 /**
  * Prova a página que junta rota/WS/acesso/exclusão em torno de `CriaturaVisualizacao` (m4-04b) —
- * mesmo contrato de `FichaVisualizar` (m3-07), mas para o documento de criatura: sem abas, sem a
- * ramificação `campanhaId` opcional (a rota de criatura sempre está sob `/painel/:campanhaId/...`).
+ * mesmo contrato de `FichaVisualizar` (m3-07), incluindo a ramificação `campanhaId` opcional
+ * (m4-11): sob `/painel/:campanhaId/criatura/:id` vem da rota; sob `/fichas/criatura/:id`
+ * (acervo) se resolve do payload da criatura carregada.
  */
 describe('CriaturaVisualizar', () => {
   const dados: FichaCriaturaDadosDto = {
@@ -60,9 +61,18 @@ describe('CriaturaVisualizar', () => {
     { usuarioId: 11, nome: 'Vera', papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] },
   ];
 
-  function montar(opcoes: { usuarioLogadoId: number; acessos?: FichaAcessoResumoDto[] }) {
+  function montar(opcoes: {
+    usuarioLogadoId: number;
+    acessos?: FichaAcessoResumoDto[];
+    /** m4-11: sem `:campanhaId` na URL, simulando a rota `/fichas/criatura/:id` (acervo). */
+    semCampanhaNaRota?: boolean;
+    /** m4-11: `campanhaId` da criatura carregada — só relevante junto de `semCampanhaNaRota`. */
+    fichaCampanhaId?: number | null;
+  }) {
     const fichaCriatura: FichaCriaturaRecuperadaDto = {
-      id: 4, campanhaId: 9, usuarioId: 7, nome: 'A Estátua', cor: null, imagemUrl: null, imagemFoco: null, oculta: false, dados,
+      id: 4,
+      campanhaId: opcoes.semCampanhaNaRota ? (opcoes.fichaCampanhaId ?? null) : 9,
+      usuarioId: 7, nome: 'A Estátua', cor: null, imagemUrl: null, imagemFoco: null, oculta: false, dados,
     };
     const fichaService = {
       recuperarFichaCriatura: vi.fn(() => of(fichaCriatura)),
@@ -106,7 +116,14 @@ describe('CriaturaVisualizar', () => {
           provide: ActivatedRoute,
           useValue: {
             snapshot: {
-              paramMap: new Map<string, string | null>([['campanhaId', '9'], ['id', '4']]),
+              // `ParamMap.get` real devolve `null` (não `undefined`) para uma chave ausente — o
+              // `Map` do teste precisa da entrada explícita pra `lerParamRota` (`valor !== null`)
+              // simular a ausência de `:campanhaId` sob `/fichas/criatura/:id` corretamente.
+              paramMap: new Map<string, string | null>(
+                opcoes.semCampanhaNaRota
+                  ? [['campanhaId', null], ['id', '4']]
+                  : [['campanhaId', '9'], ['id', '4']],
+              ),
               queryParamMap: new Map<string, string>(),
             },
             parent: null,
@@ -123,6 +140,7 @@ describe('CriaturaVisualizar', () => {
       fixture,
       raiz: fixture.nativeElement as HTMLElement,
       fichaService,
+      campanhaService,
       tempoRealService,
       fichaAlterada$,
       acessoRevogado$,
@@ -172,5 +190,50 @@ describe('CriaturaVisualizar', () => {
     fixture.componentInstance['confirmarExclusao']();
     expect(fichaService.excluirFicha).toHaveBeenCalledWith(4);
     expect(navegarEspiao).toHaveBeenCalledWith(['/painel', 9]);
+  });
+
+  describe('criatura solta (m4-11)', () => {
+    it('não busca membros, ehMestre fica false, dono ainda gerencia', () => {
+      const { fixture, campanhaService } = montar({
+        usuarioLogadoId: 7,
+        semCampanhaNaRota: true,
+        fichaCampanhaId: null,
+      });
+
+      expect(campanhaService.listarMembros).not.toHaveBeenCalled();
+      expect(fixture.componentInstance['ehMestre']()).toBe(false);
+      expect(fixture.componentInstance['ehDono']()).toBe(true);
+      expect(fixture.componentInstance['podeGerenciar']()).toBe(true);
+    });
+
+    it('o link "Voltar" aponta pro acervo (/fichas) quando a criatura está solta', () => {
+      const { raiz } = montar({ usuarioLogadoId: 7, semCampanhaNaRota: true, fichaCampanhaId: null });
+
+      const voltar = raiz.querySelector('.ficha-pagina__voltar');
+      expect(voltar?.getAttribute('aria-label')).toBe('Voltar ao acervo');
+      expect(voltar?.getAttribute('href')).toBe('/fichas');
+    });
+
+    it('exclusão de uma criatura solta redireciona ao acervo (/fichas), não a /painel', () => {
+      const { fixture, navegarEspiao } = montar({
+        usuarioLogadoId: 7,
+        semCampanhaNaRota: true,
+        fichaCampanhaId: null,
+      });
+
+      fixture.componentInstance['confirmarExclusao']();
+
+      expect(navegarEspiao).toHaveBeenCalledWith(['/fichas']);
+    });
+
+    it('sob a rota do acervo, resolve campanhaId do payload quando a criatura já foi atribuída', () => {
+      const { campanhaService } = montar({
+        usuarioLogadoId: 7,
+        semCampanhaNaRota: true,
+        fichaCampanhaId: 9,
+      });
+
+      expect(campanhaService.listarMembros).toHaveBeenCalledWith(9);
+    });
   });
 });

@@ -38,24 +38,30 @@ import type { FichaImagemFocoDto } from './ficha-operacao.dtos';
  */
 
 /**
- * Entrada de criação — sempre dentro de uma campanha (`campanhaId` obrigatório: VD/NA são
- * calibrados para o grupo daquela campanha; sem "avulsa" nesta task). Sem `usuarioId`: o dono é
- * **sempre** o mestre autenticado (§14 — "criar criatura/NPC": mestre irrestrito, demais nunca;
- * diferente de jogador, aqui não existe delegação de dono). `dados` é validado contra
+ * Entrada de criação — dentro de uma campanha, ou **solta** no acervo do mestre (m4-11:
+ * `campanhaId: null`). Sem `usuarioId`: o dono é **sempre** o mestre autenticado (§14 — "criar
+ * criatura/NPC": mestre irrestrito, demais nunca; diferente de jogador, aqui não existe
+ * delegação de dono). Solta, a criação exige que o autenticado seja mestre de **alguma**
+ * campanha (`CampanhaRepository.contarCampanhasComoMestre`) — sem essa trava, qualquer usuário
+ * comum poderia criar uma Ameaça sem nunca ter uma campanha para atribuí-la. Dentro de uma
+ * campanha, a regra de sempre é mestre-daquela-campanha, intocada. `dados` é validado contra
  * `shared/regras/criatura` (`validarFichaCriatura`) antes de persistir.
  */
 export interface FichaCriaturaCriarDto {
-  readonly campanhaId: number;
+  readonly campanhaId: number | null;
   readonly nome: string;
   /** Cor de identidade visual (m3-61) — mesmo campo/formato de `FichaCriarDto.cor`. */
   readonly cor?: string | null;
   readonly dados: FichaCriaturaDadosDto;
 }
 
-/** Saída de criação — a ficha de criatura criada (identidade/posse + documento de jogo). */
+/**
+ * Saída de criação — a ficha de criatura criada (identidade/posse + documento de jogo).
+ * `campanhaId` `null` quando a criatura nasceu solta (m4-11), mesmo contrato de `FichaCriadaDto`.
+ */
 export interface FichaCriaturaCriadaDto {
   readonly id: number;
-  readonly campanhaId: number;
+  readonly campanhaId: number | null;
   readonly usuarioId: number;
   readonly nome: string;
   readonly cor: string | null;
@@ -72,10 +78,13 @@ export interface FichaCriaturaRecuperarDto {
   readonly id: number;
 }
 
-/** Saída da recuperação individual — a ficha de criatura completa. */
+/**
+ * Saída da recuperação individual — a ficha de criatura completa. `campanhaId` `null` para uma
+ * criatura solta (m4-11) — mesmo contrato de `FichaRecuperadaDto`.
+ */
 export interface FichaCriaturaRecuperadaDto {
   readonly id: number;
-  readonly campanhaId: number;
+  readonly campanhaId: number | null;
   readonly usuarioId: number;
   readonly nome: string;
   readonly cor: string | null;
@@ -105,10 +114,13 @@ export interface FichaCriaturaInternoAlterarDto extends FichaCriaturaAlterarDto 
   readonly id: number;
 }
 
-/** Saída da alteração — a ficha de criatura alterada. */
+/**
+ * Saída da alteração — a ficha de criatura alterada. `campanhaId` `null` para uma criatura solta
+ * (m4-11).
+ */
 export interface FichaCriaturaAlteradaDto {
   readonly id: number;
-  readonly campanhaId: number;
+  readonly campanhaId: number | null;
   readonly usuarioId: number;
   readonly nome: string;
   readonly cor: string | null;

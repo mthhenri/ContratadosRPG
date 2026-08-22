@@ -226,6 +226,16 @@ export interface FichaRecuperadaDto {
   readonly imagemFoco: FichaImagemFocoDto | null;
   /** Ficha oculta (m3-65) — `true` some completamente de qualquer jogador que não seja o dono ou o mestre. */
   readonly oculta: boolean;
+  /**
+   * Tipo da ficha (m4-11) — `JOGADOR`/`CRIATURA`/`NPC`, resolvido via `JOIN tipo_ficha` só em
+   * `FichaRepository.recuperarPorId` (mesma tradução `codigo ↔ id` de `colunasResumo()`,
+   * §10.2.12). Habilita `FichaService.atribuirCampanha`/`duplicarFicha` a ramificar por tipo sem
+   * reconsultar o banco. Opcional pelo mesmo motivo de `FichaResumoDto.tipo`: as demais queries
+   * que devolvem este formato (`alterarFicha`, `alterarVitalidade`…) não têm o `JOIN` e não
+   * precisam dele — ausência equivale a `JOGADOR`, nunca lido fora do par
+   * `atribuirCampanha`/`duplicarFicha`.
+   */
+  readonly tipo?: TipoFichaEnum;
   readonly dados: FichaJogadorDadosDto;
 }
 

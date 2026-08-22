@@ -684,8 +684,9 @@ export class FichaService {
    * ── Ficha de criatura (M4, `m4-03`) ──────────────────────────────────────────────────────
    * Ferramenta do mestre para ameaças (`docs/core/guia_de_mestre-v4.0.0.md` — "Guia de Criação
    * de Ameaças"). Só o **mestre** cria (§14 — "criar criatura/NPC": mestre irrestrito, demais
-   * nunca; sem delegação de dono, diferente de jogador); dono é sempre o próprio mestre; sempre
-   * dentro de uma campanha (VD/NA são calibrados para o grupo — sem ficha "avulsa" nesta task).
+   * nunca; sem delegação de dono, diferente de jogador); dono é sempre o próprio mestre — dentro
+   * de uma campanha (mestre daquela campanha) ou solto no acervo (m4-11: mestre de **alguma**
+   * campanha, já que VD/NA continuam calibrados a um grupo que só existe dentro de uma campanha).
    *
    * **Contratos de operação próprios** (`FichaCriatura*Dto`, decisão de abertura da task — ver
    * `shared/src/dtos/ficha/ficha-criatura-operacao.dtos.ts`), não uma união em cima dos contratos
@@ -725,12 +726,24 @@ export class FichaService {
     dto: FichaCriaturaCriarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<FichaCriaturaCriadaDto> {
-    const membroAtivo = await this.campanhaRepositorio.recuperarMembro({
-      campanhaId: dto.campanhaId,
-      usuarioId: usuarioAtivo.sub,
-    });
-    if (!membroAtivo || membroAtivo.papel !== TipoCampanhaMembroPapelEnum.MESTRE) {
-      throw new UnauthorizedAccessException();
+    if (dto.campanhaId !== null) {
+      const membroAtivo = await this.campanhaRepositorio.recuperarMembro({
+        campanhaId: dto.campanhaId,
+        usuarioId: usuarioAtivo.sub,
+      });
+      if (!membroAtivo || membroAtivo.papel !== TipoCampanhaMembroPapelEnum.MESTRE) {
+        throw new UnauthorizedAccessException();
+      }
+    } else {
+      // Criatura solta (m4-11): sem campanha para checar papel, a trava vira "mestre de alguma
+      // campanha" (reusa `CampanhaRepository.contarCampanhasComoMestre`, já usado por
+      // `UsuarioService` — proibição #28, nenhuma consulta nova).
+      const totalComoMestre = await this.campanhaRepositorio.contarCampanhasComoMestre({
+        id: usuarioAtivo.sub,
+      });
+      if (totalComoMestre === 0) {
+        throw new UnauthorizedAccessException();
+      }
     }
 
     this.validarDadosCriaturaContraRegras(dto.dados);
@@ -860,6 +873,22 @@ export class FichaService {
 
     await this.validarPermissaoEdicao(fichaOriginal, usuarioAtivo);
 
+    // O clone herda o `tipo` da original (m4-11) — `criarFicha` (abaixo) sempre fixa JOGADOR, o
+    // que tipava uma criatura duplicada como agente com `dados` de criatura (defeito já vivo,
+    // alcançável pelo menu do acervo desde que criaturas passaram a listar lá). CRIATURA/NPC vão
+    // direto ao repositório (mesma ponte de tipos documentada em `criarFichaCriatura` — sem a
+    // validação/snapshot/preset de Iniciativa, que só fazem sentido pro formato de jogador).
+    if (fichaOriginal.tipo !== undefined && fichaOriginal.tipo !== TipoFichaEnum.JOGADOR) {
+      return this.fichaRepositorio.criarFicha({
+        campanhaId: fichaOriginal.campanhaId,
+        usuarioId: usuarioAtivo.sub,
+        tipo: fichaOriginal.tipo,
+        nome: `${fichaOriginal.nome} (cópia)`,
+        cor: fichaOriginal.cor,
+        dados: fichaOriginal.dados,
+      });
+    }
+
     return this.criarFicha(
       {
         campanhaId: fichaOriginal.campanhaId ?? undefined,
@@ -882,7 +911,13 @@ export class FichaService {
    * campanha (desatribuir ou mover para outra), a sala anterior não recebe evento — fora de
    * escopo desta task (a spec marca como opcional). `ResourceNotFoundException` se a ficha não
    * existir; `UnauthorizedAccessException` se o autor não puder editá-la ou o dono não for membro
-   * da campanha-alvo.
+   * (JOGADOR) ou mestre (CRIATURA/NPC) da campanha-alvo.
+   *
+   * **CRIATURA/NPC — mestre, não só membro (m4-11).** Quem cria criatura/NPC é sempre mestre
+   * (§14); atribuí-la exige a mesma trava, senão um jogador membro-comum bastaria para "adotar"
+   * uma Ameaça alheia. **Sem emitir `ficha:criada`** para os dois tipos: o evento monta o resumo
+   * na forma de jogador e transmite para a sala `campanha:<id>` inteira sem checar permissão — a
+   * mesma razão já documentada em `criarFichaCriatura` (invisível por padrão, §14).
    */
   async atribuirCampanha(
     dto: FichaCampanhaInternoAtribuirDto,
@@ -894,16 +929,24 @@ export class FichaService {
     }
 
     await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
+    const ehJogador = (fichaEncontrada.tipo ?? TipoFichaEnum.JOGADOR) === TipoFichaEnum.JOGADOR;
 
     if (dto.campanhaId !== null) {
-      await this.validarMembroAlvo({
-        campanhaId: dto.campanhaId,
-        usuarioId: fichaEncontrada.usuarioId,
-      });
+      if (ehJogador) {
+        await this.validarMembroAlvo({
+          campanhaId: dto.campanhaId,
+          usuarioId: fichaEncontrada.usuarioId,
+        });
+      } else {
+        await this.validarMestreAlvo({
+          campanhaId: dto.campanhaId,
+          usuarioId: fichaEncontrada.usuarioId,
+        });
+      }
     }
 
     const fichaAtribuida = await this.fichaRepositorio.atribuirCampanha(dto);
-    if (dto.campanhaId !== null && dto.campanhaId !== fichaEncontrada.campanhaId) {
+    if (dto.campanhaId !== null && dto.campanhaId !== fichaEncontrada.campanhaId && ehJogador) {
       this.campanhaGateway.emitirFichaCriada(fichaAtribuida);
     }
 
@@ -1076,6 +1119,24 @@ export class FichaService {
     });
     if (!membroEncontrado) {
       throw new ResourceNotFoundException('Membro');
+    }
+  }
+
+  /**
+   * Garante que o **alvo** de uma atribuição de criatura/NPC é **mestre** da campanha-alvo, não
+   * só membro (m4-11 — quem cria criatura/NPC é sempre mestre, §14; atribuir exige a mesma
+   * trava). `UnauthorizedAccessException` para não-mestre (membro comum ou não-membro) — mesmo
+   * tratamento de permissão negada que `criarFichaCriatura` já usa, diferente do
+   * `ResourceNotFoundException('Membro')` de `validarMembroAlvo` (ali "não é membro" é o único
+   * jeito de recusar; aqui "é membro mas não mestre" também recusa).
+   */
+  private async validarMestreAlvo(dto: { campanhaId: number; usuarioId: number }): Promise<void> {
+    const membroEncontrado = await this.campanhaRepositorio.recuperarMembro({
+      campanhaId: dto.campanhaId,
+      usuarioId: dto.usuarioId,
+    });
+    if (membroEncontrado?.papel !== TipoCampanhaMembroPapelEnum.MESTRE) {
+      throw new UnauthorizedAccessException();
     }
   }
 

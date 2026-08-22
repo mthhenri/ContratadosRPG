@@ -4,9 +4,31 @@
   max-width: 80vw;
   margin: 0 auto;
 
+  // Dois grupos — criar (esquerda) e filtro por tipo (direita), mesmo padrão que a m7-16 aplicou
+  // em `.iniciativa__acoes`: no mobile cada grupo empilha na mesma ordem sempre, nada salta de
+  // posição conforme o que está visível (ex.: "Criar criatura" só aparece pra quem é mestre).
   &__acoes {
     display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
     margin-bottom: 20px;
+
+    @include bp.mobile {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  &__acoes-criar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    @include bp.mobile {
+      flex-direction: column;
+    }
   }
 
   &__acao {
@@ -24,6 +46,62 @@
       justify-content: center;
       min-height: bp.$alvo-toque;
     }
+  }
+
+  // Select de visão (Todos/Agentes/Criaturas…) — compacto, à direita da barra de ações; distinto
+  // de `&__select` (dialog "Atribuir a campanha", que ocupa a largura inteira do painel).
+  &__select-filtro {
+    flex: none;
+    padding: 9px 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+
+    @include bp.mobile {
+      width: 100%;
+    }
+  }
+
+  // Cabeçalho de bloco (Agentes/Criaturas…) — mesmo tratamento de `CampanhaDetalhe.__secao`
+  // (rótulo mono uppercase + régua fina + contagem).
+  &__secao {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin: 24px 0 12px;
+
+    &:first-of-type {
+      margin-top: 0;
+    }
+  }
+
+  &__secao-titulo {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-mute);
+  }
+
+  &__secao-regua {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  &__secao-contagem {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-mute);
   }
 
   &__estado {
@@ -70,7 +148,8 @@
     margin-top: auto;
   }
 
-  // Grade de cartões, rolável com fade topo/base — mesmo padrão de `CampanhaLista` (m2-17).
+  // Grade de cartões de um bloco (Agentes/Criaturas…) — sem trava de altura por padrão: com um
+  // tipo filtrado, o bloco usa a altura toda e quem rola é a página.
   &__lista {
     list-style: none;
     margin: 0;
@@ -79,8 +158,6 @@
     grid-template-columns: repeat(3, 1fr);
     gap: var(--gap-grid);
     align-items: start;
-    max-height: 640px;
-    overflow-y: auto;
 
     @include bp.tablet {
       grid-template-columns: repeat(2, 1fr);
@@ -90,88 +167,39 @@
       grid-template-columns: 1fr;
     }
 
-    --fade-topo: 0px;
-    --fade-base: 0px;
-    &.overflow-fade--topo,
-    &.overflow-fade--base {
-      -webkit-mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
-      mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
+    // "Todos" (m4-11, decisão de abertura): cada bloco trava em ~2 linhas de card e rola por
+    // dentro, com o mesmo fade topo/base de `CampanhaLista` (m2-17) — um tipo filtrado solta esta
+    // trava (`AcervoPage.filtro`).
+    &--limitada {
+      max-height: 300px;
+      overflow-y: auto;
+
+      --fade-topo: 0px;
+      --fade-base: 0px;
+      &.overflow-fade--topo,
+      &.overflow-fade--base {
+        -webkit-mask-image: linear-gradient(
+          to bottom,
+          transparent 0,
+          #000 var(--fade-topo),
+          #000 calc(100% - var(--fade-base)),
+          transparent 100%
+        );
+        mask-image: linear-gradient(
+          to bottom,
+          transparent 0,
+          #000 var(--fade-topo),
+          #000 calc(100% - var(--fade-base)),
+          transparent 100%
+        );
+      }
+      &.overflow-fade--topo {
+        --fade-topo: 22px;
+      }
+      &.overflow-fade--base {
+        --fade-base: 22px;
+      }
     }
-    &.overflow-fade--topo {
-      --fade-topo: 22px;
-    }
-    &.overflow-fade--base {
-      --fade-base: 22px;
-    }
-  }
-
-  &__cartao {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    height: 100%;
-    padding: 16px 18px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-  }
-
-  &__cartao-link {
-    display: flex;
-    align-items: stretch;
-    gap: 10px;
-    min-width: 0;
-    text-decoration: none;
-
-    &:hover .acervo__cartao-nome {
-      color: var(--accent);
-    }
-  }
-
-  // Avatar da ficha (m3-62) — placeholder listrado a 20% de opacidade quando não há imagem
-  // definida; borda/fundo seguem a cor de identidade (m3-61, `--cor-ficha` setada inline no
-  // template), mesmo `color-mix` de `ficha-ident__avatar`/`CampanhaDetalhe.__ficha-avatar`; sem cor
-  // definida, o fallback pra `--border-strong` mantém o visual neutro de sempre. Esticado
-  // (`align-self: stretch` do pai) pra acompanhar a altura do bloco nome+meta+vitais.
-  &__cartao-avatar {
-    position: relative;
-    width: 52px;
-    flex: none;
-    cursor: pointer;
-    border-radius: var(--radius-control);
-    background-color: color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 14%, var(--surface));
-    background-image: repeating-linear-gradient(
-      135deg,
-      color-mix(
-          in srgb,
-          color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 60%, var(--border-strong)) 20%,
-          transparent
-        )
-        0 3px,
-      transparent 3px 9px
-    );
-    border: 1px solid var(--cor-ficha, var(--border-strong));
-    overflow: hidden;
-  }
-
-  &__cartao-avatar-imagem {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
   }
 
   // Preview ampliado do avatar (hover sustentado, `agendarPreviewAvatar`) — `fixed` pela mesma

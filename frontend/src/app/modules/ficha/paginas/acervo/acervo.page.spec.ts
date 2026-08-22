@@ -2,7 +2,13 @@ import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 
-import { ArquetipoEnum, ClasseEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import {
+  ArquetipoEnum,
+  ClasseEnum,
+  NivelAmeacaEnum,
+  TipoCampanhaMembroPapelEnum,
+  TipoFichaEnum,
+} from '@contratados-rpg/shared/enums';
 import type { CampanhaResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaCriarDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 
@@ -31,6 +37,32 @@ describe('FichaAcervo', () => {
       vidaMaxima: 34,
       energiaAtual: 18,
       energiaMaxima: 18,
+      morrendo: false,
+      machucado: false,
+      inconsciente: false,
+      ...overrides,
+    };
+  }
+
+  function criaturaResumo(overrides: Partial<FichaResumoDto> = {}): FichaResumoDto {
+    return {
+      id: 2,
+      campanhaId: null,
+      campanhaNome: null,
+      usuarioId: 7,
+      nome: 'A Estátua',
+      imagemUrl: null,
+      tipo: TipoFichaEnum.CRIATURA,
+      na: NivelAmeacaEnum.MEDIA,
+      vd: 30,
+      classe: ClasseEnum.COMBATENTE,
+      arquetipo: null,
+      nivel: 0,
+      vidaAtual: 1050,
+      vidaMaxima: 1050,
+      energiaAtual: 0,
+      energiaMaxima: 0,
+      defesa: 30,
       morrendo: false,
       machucado: false,
       inconsciente: false,
@@ -271,6 +303,108 @@ describe('FichaAcervo', () => {
       expect(fichaService.listarMinhasFichas).toHaveBeenCalledTimes(1);
       expect(raiz.querySelector('.dialogo')).toBeNull();
       expect(raiz.textContent).not.toContain('Kane');
+    });
+  });
+
+  describe('separação por tipo (m4-11)', () => {
+    it('retrocompat: ficha sem `tipo` é listada no bloco Agentes, sem erro', () => {
+      const { raiz } = montar({ fichas: [fichaResumo({ tipo: undefined })] });
+
+      const titulos = Array.from(raiz.querySelectorAll('.acervo__secao-titulo')).map((el) => el.textContent);
+      expect(titulos).toEqual(['Agentes']);
+      expect(raiz.querySelector('.acervo__secao-contagem')?.textContent).toBe('1');
+    });
+
+    it('em "Todos", separa agentes e criaturas em blocos com cabeçalho e contagem próprios', () => {
+      const { raiz } = montar({ fichas: [fichaResumo(), criaturaResumo()] });
+
+      const titulos = Array.from(raiz.querySelectorAll('.acervo__secao-titulo')).map((el) => el.textContent);
+      expect(titulos).toEqual(['Agentes', 'Criaturas']);
+      const contagens = Array.from(raiz.querySelectorAll('.acervo__secao-contagem')).map((el) => el.textContent);
+      expect(contagens).toEqual(['1', '1']);
+    });
+
+    it('em "Todos", omite o bloco de um tipo sem ficha nenhuma', () => {
+      const { raiz } = montar({ fichas: [fichaResumo()] });
+
+      const titulos = Array.from(raiz.querySelectorAll('.acervo__secao-titulo')).map((el) => el.textContent);
+      expect(titulos).toEqual(['Agentes']);
+    });
+
+    it('filtrar por Criaturas mostra só aquele bloco, mesmo vazio (com estado vazio próprio)', () => {
+      const { fixture, raiz } = montar({ fichas: [fichaResumo()] });
+
+      const select = raiz.querySelector('.acervo__select-filtro') as HTMLSelectElement;
+      select.value = TipoFichaEnum.CRIATURA;
+      select.dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+
+      const titulos = Array.from(raiz.querySelectorAll('.acervo__secao-titulo')).map((el) => el.textContent);
+      expect(titulos).toEqual(['Criaturas']);
+      expect(raiz.textContent).toContain('Nenhuma criatura ainda.');
+      expect(raiz.querySelectorAll('.acervo__cartao')).toHaveLength(0);
+    });
+
+    it('card de criatura mostra Ameaça/NA/VD/Vida/Defesa e o link aponta pra /fichas/criatura/:id', () => {
+      const { raiz } = montar({ fichas: [criaturaResumo({ id: 2 })] });
+
+      const link = raiz.querySelector('.acervo__cartao-link') as HTMLAnchorElement;
+      expect(link.getAttribute('href')).toBe('/fichas/criatura/2');
+      expect(raiz.textContent).toContain('Ameaça');
+      expect(raiz.textContent).toContain('NA Média');
+      expect(raiz.textContent).toContain('VD 30');
+      expect(raiz.textContent).toContain('Vida 1050/1050');
+      expect(raiz.textContent).toContain('Defesa 30');
+      // Card de criatura não mostra meta de agente (classe/nível/patente/energia).
+      expect(raiz.textContent).not.toContain('Energia');
+    });
+
+    it('"Criar criatura" só aparece para quem é mestre de alguma campanha', () => {
+      const { raiz } = montar({ campanhas });
+      const botaoCriarCriatura = Array.from(raiz.querySelectorAll('button')).find((botao) =>
+        botao.textContent?.includes('Criar criatura'),
+      );
+      expect(botaoCriarCriatura).not.toBeUndefined();
+    });
+
+    it('"Criar criatura" não aparece para quem não é mestre de campanha nenhuma', () => {
+      const campanhasSoJogador: CampanhaResumoDto[] = [
+        { ...campanhas[0], papel: TipoCampanhaMembroPapelEnum.JOGADOR },
+      ];
+      const { raiz } = montar({ campanhas: campanhasSoJogador });
+
+      const botaoCriarCriatura = Array.from(raiz.querySelectorAll('button')).find((botao) =>
+        botao.textContent?.includes('Criar criatura'),
+      );
+      expect(botaoCriarCriatura).toBeUndefined();
+    });
+
+    it('"Criar criatura" navega pro guia de criação solta em /fichas/criatura/nova', () => {
+      const { raiz, navegar } = montar({ campanhas });
+      const botaoCriarCriatura = Array.from(raiz.querySelectorAll('button')).find((botao) =>
+        botao.textContent?.includes('Criar criatura'),
+      ) as HTMLButtonElement;
+
+      botaoCriarCriatura.click();
+
+      expect(navegar).toHaveBeenCalledWith(['/fichas', 'criatura', 'nova']);
+    });
+
+    it('atribuir uma criatura lista só campanhas onde o usuário é mestre', () => {
+      const campanhasMistas: CampanhaResumoDto[] = [
+        campanhas[0],
+        { ...campanhas[0], id: 10, nome: 'Operação Beta', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
+      ];
+      const { fixture, raiz } = montar({
+        fichas: [criaturaResumo({ id: 2, campanhaId: null })],
+        campanhas: campanhasMistas,
+      });
+
+      abrirMenuFicha(raiz, fixture);
+      clicarItemMenu(raiz, fixture, 'Atribuir a campanha');
+
+      const opcoes = Array.from(raiz.querySelectorAll('.dialogo select option')).map((el) => el.textContent);
+      expect(opcoes).toEqual(['Operação Alfa']);
     });
   });
 });

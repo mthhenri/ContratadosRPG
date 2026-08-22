@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { filter, finalize } from 'rxjs';
+import { filter, finalize, map, of, switchMap } from 'rxjs';
 
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
@@ -33,9 +33,14 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
 /**
  * A **ficha de criatura** numa tela só (m4-04b) — mirror de `FichaVisualizar` (m3-07), mas para
  * `FichaCriaturaRecuperadaDto`: edição no próprio lugar via `CriaturaVisualizacao`, sem abas (o
- * documento cabe numa coluna rolável) e sem a ramificação de `campanhaId` opcional do acervo —
- * a rota `/painel/:campanhaId/criatura/:id` sempre traz `campanhaId` (§ "Fora de Escopo" do spec:
- * só o mestre acessa por esta URL nesta task).
+ * documento cabe numa coluna rolável).
+ *
+ * **Duas rotas, um componente (m4-11).** Como `FichaVisualizar`: sob
+ * `/painel/:campanhaId/criatura/:id`, `campanhaId` vem do parâmetro de rota (síncrono); sob
+ * `/fichas/criatura/:id` (acervo, sem `:campanhaId` na URL) só se resolve **depois** da ficha
+ * carregar, lendo `ficha.campanhaId` do próprio payload (`null` para uma criatura solta). Sem
+ * campanha (solta, ou ainda carregando sob a rota do acervo) não há membros a buscar —
+ * `ehMestre()` cai em `false` naturalmente e a gestão de acesso vira dono-apenas.
  */
 @Component({
   selector: 'app-criatura-visualizar',
@@ -66,9 +71,18 @@ export class CriaturaVisualizar {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
-  /** `campanhaId` da rota-pai — sempre presente (rota guardada por `mestreCampanhaGuard`). */
-  protected readonly campanhaId = Number(lerParamRota(this.rotaAtiva, 'campanhaId'));
+  /** `campanhaId` da rota-pai (`/painel/:campanhaId/criatura/:id`), ou `null` sob `/fichas/criatura/:id`. */
+  private readonly campanhaIdRota = lerParamRota(this.rotaAtiva, 'campanhaId');
   protected readonly fichaId = Number(lerParamRota(this.rotaAtiva, 'id'));
+
+  /**
+   * `campanhaId` efetivo (m4-11): sob a rota campanha-scoped, conhecido de imediato; sob
+   * `/fichas/criatura/:id`, `null` até a ficha carregar — o `constructor` então o resolve do
+   * próprio payload (`ficha.campanhaId`).
+   */
+  protected readonly campanhaId = signal<number | null>(
+    this.campanhaIdRota !== null ? Number(this.campanhaIdRota) : null,
+  );
 
   protected readonly carregando = signal(true);
   protected readonly ficha = signal<FichaCriaturaRecuperadaDto | null>(null);
@@ -128,23 +142,29 @@ export class CriaturaVisualizar {
   constructor() {
     this.carregarHistoricoPagina(1);
 
+    // Sob `/fichas/criatura/:id` (sem `:campanhaId` na URL), o `campanhaId` só é conhecido depois
+    // da ficha carregar (m4-11) — daí a ficha vir primeiro e os membros serem buscados só quando
+    // há campanha (`switchMap` para `of([])` sem ela: criatura solta, ou ainda sem sala).
     this.fichaService
       .recuperarFichaCriatura(this.fichaId)
       .pipe(
+        switchMap((ficha) => {
+          const campanhaId = this.campanhaIdRota !== null ? Number(this.campanhaIdRota) : ficha.campanhaId;
+          this.campanhaId.set(campanhaId);
+          const membros$ =
+            campanhaId !== null ? this.campanhaService.listarMembros(campanhaId) : of([]);
+          return membros$.pipe(map((membros) => ({ ficha, membros })));
+        }),
         finalize(() => this.carregando.set(false)),
       )
       .subscribe({
-        next: (ficha) => {
+        next: ({ ficha, membros }) => {
           this.ficha.set(ficha);
           this.fichaEdicao.definirBase(ficha);
-          this.campanhaService.listarMembros(this.campanhaId).subscribe({
-            next: (membros) => {
-              this.membros.set(membros);
-              if (this.podeGerenciar()) {
-                this.carregarAcessos();
-              }
-            },
-          });
+          this.membros.set(membros);
+          if (this.podeGerenciar()) {
+            this.carregarAcessos();
+          }
         },
       });
 
@@ -221,7 +241,13 @@ export class CriaturaVisualizar {
       summary: 'Acesso revogado',
       detail: 'Seu acesso a esta ficha foi revogado.',
     });
-    void this.router.navigate(['/painel', this.campanhaId]);
+    void this.router.navigate(this.rotaDeSaida());
+  }
+
+  /** Rota de saída da tela (expulsão/exclusão, m4-11): a campanha atual, ou o acervo sem ela. */
+  private rotaDeSaida(): (string | number)[] {
+    const campanhaId = this.campanhaId();
+    return campanhaId !== null ? ['/painel', campanhaId] : ['/fichas'];
   }
 
   /** Abre/fecha o menu de ações do cabeçalho. */
@@ -278,7 +304,7 @@ export class CriaturaVisualizar {
       .pipe(finalize(() => this.excluindo.set(false)))
       .subscribe({
         next: () => {
-          void this.router.navigate(['/painel', this.campanhaId]);
+          void this.router.navigate(this.rotaDeSaida());
         },
       });
   }

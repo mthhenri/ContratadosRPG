@@ -71,6 +71,7 @@ interface CampanhaRepositorioDublado {
   recuperarMembro: Mock<CampanhaRepository['recuperarMembro']>;
   recuperarInventario: Mock<CampanhaRepository['recuperarInventario']>;
   alterarInventario: Mock<CampanhaRepository['alterarInventario']>;
+  contarCampanhasComoMestre: Mock<CampanhaRepository['contarCampanhasComoMestre']>;
 }
 
 interface CampanhaServiceDublado {
@@ -291,6 +292,7 @@ describe('FichaService', () => {
       recuperarMembro: vi.fn(),
       recuperarInventario: vi.fn(),
       alterarInventario: vi.fn(),
+      contarCampanhasComoMestre: vi.fn(),
     };
     campanhaServiceDublado = { validarAcessoInventario: vi.fn() };
     campanhaGateway = {
@@ -1736,6 +1738,57 @@ describe('FichaService', () => {
 
       expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
     });
+
+    it('duplica uma criatura preservando o tipo — o clone não nasce JOGADOR (m4-11)', async () => {
+      const criaturaOriginal = {
+        id: 9,
+        campanhaId: 3,
+        usuarioId: usuarioMestre.sub,
+        nome: 'A Estátua',
+        cor: null,
+        imagemUrl: null,
+        imagemFoco: null,
+        oculta: false,
+        tipo: TipoFichaEnum.CRIATURA,
+        dados: criarDadosCriatura(),
+      } as unknown as FichaRecuperadaDto;
+      fichaRepositorio.recuperarPorId.mockResolvedValue(criaturaOriginal);
+      fichaRepositorio.criarFicha.mockResolvedValue({ id: 10, campanhaId: 3 });
+
+      await service.duplicarFicha({ id: 9 }, usuarioMestre);
+
+      expect(fichaRepositorio.criarFicha).toHaveBeenCalledWith({
+        campanhaId: 3,
+        usuarioId: usuarioMestre.sub,
+        tipo: TipoFichaEnum.CRIATURA,
+        nome: 'A Estátua (cópia)',
+        cor: null,
+        dados: criarDadosCriatura(),
+      });
+    });
+
+    it('duplica uma criatura solta — o clone nasce solto também (m4-11)', async () => {
+      const criaturaSolta = {
+        id: 9,
+        campanhaId: null,
+        usuarioId: usuarioMestre.sub,
+        nome: 'A Estátua',
+        cor: null,
+        imagemUrl: null,
+        imagemFoco: null,
+        oculta: false,
+        tipo: TipoFichaEnum.CRIATURA,
+        dados: criarDadosCriatura(),
+      } as unknown as FichaRecuperadaDto;
+      fichaRepositorio.recuperarPorId.mockResolvedValue(criaturaSolta);
+      fichaRepositorio.criarFicha.mockResolvedValue({ id: 10, campanhaId: null });
+
+      await service.duplicarFicha({ id: 9 }, usuarioMestre);
+
+      expect(fichaRepositorio.criarFicha).toHaveBeenCalledWith(
+        expect.objectContaining({ campanhaId: null, tipo: TipoFichaEnum.CRIATURA }),
+      );
+    });
   });
 
   describe('atribuirCampanha', () => {
@@ -1836,6 +1889,38 @@ describe('FichaService', () => {
       await service.atribuirCampanha({ id: 5, campanhaId: fichaPersistida.campanhaId }, usuarioDono);
 
       expect(campanhaGateway.emitirFichaCriada).not.toHaveBeenCalled();
+    });
+
+    it('atribui uma criatura solta a uma campanha onde o dono é MESTRE — sem emitir ficha:criada (m4-11)', async () => {
+      const criaturaSolta = { ...fichaPersistida, campanhaId: null, tipo: TipoFichaEnum.CRIATURA };
+      fichaRepositorio.recuperarPorId.mockResolvedValue(criaturaSolta);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.MESTRE,
+      });
+      fichaRepositorio.atribuirCampanha.mockResolvedValue({ ...criaturaSolta, campanhaId: 3 });
+
+      const resultado = await service.atribuirCampanha({ id: 5, campanhaId: 3 }, usuarioDono);
+
+      expect(campanhaRepositorio.recuperarMembro).toHaveBeenCalledWith({
+        campanhaId: 3,
+        usuarioId: criaturaSolta.usuarioId,
+      });
+      expect(resultado).toEqual({ id: 5, campanhaId: 3 });
+      // Criatura é invisível por padrão (§14) — o mesmo motivo de `criarFichaCriatura`.
+      expect(campanhaGateway.emitirFichaCriada).not.toHaveBeenCalled();
+    });
+
+    it('lança UnauthorizedAccessException ao atribuir uma criatura a uma campanha onde o dono é só membro comum', async () => {
+      const criaturaSolta = { ...fichaPersistida, campanhaId: null, tipo: TipoFichaEnum.CRIATURA };
+      fichaRepositorio.recuperarPorId.mockResolvedValue(criaturaSolta);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+
+      await expect(service.atribuirCampanha({ id: 5, campanhaId: 3 }, usuarioDono)).rejects.toThrow(
+        UnauthorizedAccessException,
+      );
+      expect(fichaRepositorio.atribuirCampanha).not.toHaveBeenCalled();
     });
   });
 
@@ -2405,6 +2490,40 @@ describe('FichaService', () => {
             usuarioMestre,
           ),
         ).rejects.toThrow(BusinessException);
+        expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+      });
+
+      it('mestre de alguma campanha cria a criatura solta (m4-11) — sem campanhaId, dono é o autenticado', async () => {
+        campanhaRepositorio.contarCampanhasComoMestre.mockResolvedValue(2);
+        fichaRepositorio.criarFicha.mockResolvedValue({ ...fichaCriaturaPersistida, campanhaId: null });
+
+        const resultado = await service.criarFichaCriatura(
+          { campanhaId: null, nome: 'A Estátua', dados: criarDadosCriatura() },
+          usuarioMestre,
+        );
+
+        expect(campanhaRepositorio.contarCampanhasComoMestre).toHaveBeenCalledWith({ id: usuarioMestre.sub });
+        expect(campanhaRepositorio.recuperarMembro).not.toHaveBeenCalled();
+        expect(fichaRepositorio.criarFicha).toHaveBeenCalledWith({
+          campanhaId: null,
+          usuarioId: usuarioMestre.sub,
+          tipo: TipoFichaEnum.CRIATURA,
+          nome: 'A Estátua',
+          cor: null,
+          dados: criarDadosCriatura(),
+        });
+        expect(resultado.campanhaId).toBeNull();
+      });
+
+      it('lança UnauthorizedAccessException ao criar criatura solta quando o autor não é mestre de campanha nenhuma', async () => {
+        campanhaRepositorio.contarCampanhasComoMestre.mockResolvedValue(0);
+
+        await expect(
+          service.criarFichaCriatura(
+            { campanhaId: null, nome: 'A Estátua', dados: criarDadosCriatura() },
+            usuarioMembro,
+          ),
+        ).rejects.toThrow(UnauthorizedAccessException);
         expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
       });
     });

@@ -1,0 +1,59 @@
+<div class="acervo__cartao">
+  <a class="acervo__cartao-link" [routerLink]="rota()">
+    <!-- Avatar da ficha (m3-62) — placeholder listrado sem imagem definida; borda/listras seguem a
+         cor de identidade (m3-61, `--cor-ficha`) e o hover sustentado abre o preview ampliado
+         (mesmo padrão de `CampanhaDetalhe`, delegado ao pai via `avatarHover`/`avatarSaida`). -->
+    <span
+      class="acervo__cartao-avatar"
+      aria-hidden="true"
+      [style.--cor-ficha]="item().cor"
+      (mouseenter)="avatarHover.emit($event)"
+      (mouseleave)="avatarSaida.emit()"
+    >
+      @if (item().imagemUrl; as urlImagem) {
+        <img class="acervo__cartao-avatar-imagem" [src]="urlImagem" alt="" />
+      }
+    </span>
+    <span class="acervo__cartao-texto">
+      <span class="acervo__cartao-nome">{{ item().nome }}</span>
+      @if (item().tipo === TipoFichaEnum.CRIATURA) {
+        <span class="acervo__cartao-meta">
+          Ameaça · NA {{ item().naTexto ?? '—' }} · VD {{ item().vd ?? '—' }}
+        </span>
+        <span class="acervo__cartao-vitais">
+          <span>Vida {{ item().vidaAtual }}/{{ item().vidaMaxima ?? '—' }}</span>
+          <span>Defesa {{ item().defesa ?? '—' }}</span>
+        </span>
+      } @else {
+        <span class="acervo__cartao-meta">
+          {{ item().classeTexto }} · Nível {{ item().nivel }} · {{ item().patenteTexto }}
+        </span>
+        <span class="acervo__cartao-vitais">
+          <span>Vida {{ item().vidaAtual }}/{{ item().vidaMaxima ?? '—' }}</span>
+          <span>Energia {{ item().energiaAtual ?? '—' }}/{{ item().energiaMaxima ?? '—' }}</span>
+        </span>
+      }
+    </span>
+  </a>
+  <div class="acervo__cartao-rodape">
+    @if (item().campanhaId !== null) {
+      <span class="acervo__chip acervo__chip--campanha">
+        <app-icone nome="campanhas" />
+        {{ item().campanhaNome ?? 'Campanha' }}
+      </span>
+    } @else {
+      <span class="acervo__chip">Sem campanha</span>
+    }
+    <span class="acervo__cartao-regua"></span>
+    <button
+      class="acervo__menu-botao"
+      type="button"
+      [attr.aria-label]="'Ações de ' + item().nome"
+      aria-haspopup="menu"
+      [attr.aria-expanded]="menuAberto()"
+      (click)="menu.emit($event)"
+    >
+      ⋯
+    </button>
+  </div>
+</div>

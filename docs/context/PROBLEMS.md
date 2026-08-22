@@ -172,8 +172,8 @@
 ### P-022 — `npm run lint -w backend` falha em dois specs preexistentes · `ABERTO` · backend/lint
 
 - **Sintoma:** `npm run lint -w backend` termina com 2 erros `@typescript-eslint/no-unnecessary-type-assertion`
-  — `campanha.service.spec.ts:685:25` e `ficha.service.spec.ts:2288:25`. Os testes passam
-  (394/394); só o lint quebra.
+  — `campanha.service.spec.ts:685:25` e `ficha.service.spec.ts` (linha desloca a cada edição do
+  arquivo; era `:2288:25`, `:2373:25` após a `m4-11`). Os testes passam; só o lint quebra.
 - **Causa:** asserção de tipo que virou redundante depois de alguma melhoria de inferência
   (tipagem do dublê ou versão do typescript-eslint) — não investigada a fundo.
 - **Contorno:** nenhum necessário para desenvolver; os dois arquivos não bloqueiam build nem teste.
@@ -196,6 +196,23 @@
 - **Correção:** resolver o tipo padrão no seed do mesmo jeito que a `AutenticacaoService` resolve —
   sem fixar o id numérico do seed da tabela de referência.
 - **Desde:** observado na `m7-07` (2026-08-18); introduzido junto da migration do M6.
+
+### P-024 — `npm run typecheck -w shared` falha em `a-estatua.spec.ts` (campo `atributo` inexistente) · `ABERTO` · shared/tipos
+
+- **Sintoma:** `tsc --project tsconfig.json --noEmit` no workspace `shared` acusa dois erros
+  `TS2353` em `shared/src/regras/criatura/a-estatua.spec.ts:136` e `:143` — os fixtures de ataque
+  declaram um campo `atributo` que não existe em `FichaCriaturaAtaqueDto`
+  (`nome`/`teste`/`custoAcao`/`dano`/`danoCritico`/`area`/`efeito?`). Os testes passam
+  normalmente (`vitest run`, que usa `esbuild` e não bloqueia em erro de tipo); só o `tsc` estrito
+  quebra.
+- **Causa:** não investigada — o DTO provavelmente perdeu/nunca teve `atributo` desde que o
+  fixture foi escrito.
+- **Contorno:** nenhum necessário para desenvolver; `npm test -w shared` (a suíte real) continua
+  verde.
+- **Correção:** remover `atributo` dos dois objetos do fixture (ou adicionar o campo ao DTO, se a
+  intenção era outra — checar com o autor).
+- **Desde:** achado durante a `m4-11` (2026-08-22), rodando `npm run typecheck -w shared` como
+  parte da verificação da task; confirmado preexistente (arquivo não tocado pela `m4-11`).
 
 ## Resolvidos
 

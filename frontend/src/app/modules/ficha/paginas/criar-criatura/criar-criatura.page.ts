@@ -244,7 +244,15 @@ export class CriaturaCriar {
   private readonly destroyRef = inject(DestroyRef);
   private readonly rascunhos = inject(GuiaCriacaoRascunhoService);
 
-  protected readonly campanhaId = Number(lerParamRota(this.rota, 'campanhaId'));
+  private readonly campanhaIdRota = lerParamRota(this.rota, 'campanhaId');
+  /**
+   * `null` sob `/fichas/criatura/nova` (m4-11, criatura avulsa) — sob
+   * `/painel/:campanhaId/criatura/nova` vem do parâmetro de rota, como sempre. O backend decide
+   * quem pode criar sem campanha (mestre de alguma — `FichaService.criarFichaCriatura`); aqui só
+   * muda o destino de saída/pós-criação (mesmo padrão de `FichaCriar.campanhaId`, `criar.page.ts`).
+   */
+  protected readonly campanhaId: number | null =
+    this.campanhaIdRota !== null ? Number(this.campanhaIdRota) : null;
   protected readonly passos = PASSOS;
   protected readonly campos = CAMPOS;
   protected readonly tiposDano = Object.values(TipoDanoEnum);
@@ -630,7 +638,10 @@ export class CriaturaCriar {
   }
   protected voltar(): void { this.atualizar({ passo: Math.max(0, this.estado().passo - 1) }); }
   protected sair(): void { this.confirmandoSaida.set(true); }
-  protected confirmarSaida(): void { this.confirmandoSaida.set(false); void this.router.navigate(['/painel', this.campanhaId]); }
+  protected confirmarSaida(): void {
+    this.confirmandoSaida.set(false);
+    void this.router.navigate(this.campanhaId !== null ? ['/painel', this.campanhaId] : ['/fichas']);
+  }
   protected cancelarSaida(): void { this.confirmandoSaida.set(false); }
   /** Clique no `::backdrop` do `<dialog>` cai no próprio elemento (não num filho) — fecha como "Continuar aqui". */
   protected fecharAoClicarFora(evento: MouseEvent): void { if (evento.target === evento.currentTarget) this.cancelarSaida(); }
@@ -646,7 +657,10 @@ export class CriaturaCriar {
       .subscribe({
         next: (ficha) => {
           this.rascunhos.limpar(this.campanhaId, 'criatura');
-          const destino = ['/painel', this.campanhaId, 'criatura', ficha.id];
+          const destino =
+            this.campanhaId !== null
+              ? ['/painel', this.campanhaId, 'criatura', ficha.id]
+              : ['/fichas', 'criatura', ficha.id];
           const arquivo = this.imagemArquivo();
           // Imagem (mesmo padrão do guia de jogador, m3-62): a ficha já existe — segundo request,
           // em sequência. Falha no upload não desfaz a criatura criada nem trava a navegação; só

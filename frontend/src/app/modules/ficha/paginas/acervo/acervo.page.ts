@@ -1,15 +1,19 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
 
 import type { CampanhaResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
+import { TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { CampanhaService } from '../../../campanha/campanha.service';
+import { CartaoFichaAcervo, type ItemAcervo } from '../../componentes/cartao-ficha-acervo/cartao-ficha-acervo.component';
 import { FichaService } from '../../ficha.service';
+import { rotuloNivelAmeaca } from '../../rotulos-criatura';
 import { rotuloClasseCompleto } from '../../rotulos-ficha';
+import { rotuloPatente } from '../../status-derivado';
 
 /** Hover sustentado antes do preview ampliado do avatar abrir (mesmo tempo de `CampanhaDetalhe`). */
 const MS_PREVIEW_AVATAR = 600;
@@ -17,23 +21,25 @@ const MS_PREVIEW_AVATAR = 600;
 /** Tamanho do preview ampliado do avatar (px, quadrado) — `object-fit: contain`, sem recorte. */
 const PX_PREVIEW_AVATAR = 200;
 
-/** Ficha do acervo já enriquecida pro cartão — recorte de `FichaResumoDto` + o rótulo de classe. */
-interface ItemAcervo {
-  readonly id: number;
-  readonly nome: string;
-  /** Cor de identidade visual (m3-61) — alimenta borda/listras do avatar (`--cor-ficha`). */
-  readonly cor: string | null;
-  /** Avatar da ficha (m3-62) — `null` sem imagem definida (cai no placeholder decorativo do cartão). */
-  readonly imagemUrl: string | null;
-  readonly classeTexto: string;
-  readonly nivel: number;
-  readonly vidaAtual: number;
-  readonly vidaMaxima?: number;
-  readonly energiaAtual: number;
-  readonly energiaMaxima?: number;
-  readonly campanhaId: number | null;
-  readonly campanhaNome: string | null;
+/** Valor do `<select>` de visão quando nenhum tipo está filtrado — os blocos aparecem todos. */
+const FILTRO_TODOS = 'TODOS' as const;
+type FiltroAcervo = typeof FILTRO_TODOS | TipoFichaEnum;
+
+/**
+ * Um bloco do acervo por tipo (m4-11) — a tela é dirigida por esta lista, não por `@if` por tipo:
+ * acrescentar NPC (`m4-07`/`m4-08`) é só um novo item aqui (mais a opção do `<select>` e "Criar
+ * NPC", gated do mesmo jeito que "Criar criatura"), sem tocar o restante do template.
+ */
+interface DefinicaoBlocoAcervo {
+  readonly tipo: TipoFichaEnum;
+  readonly titulo: string;
+  readonly estadoVazio: string;
 }
+
+const BLOCOS_ACERVO: readonly DefinicaoBlocoAcervo[] = [
+  { tipo: TipoFichaEnum.JOGADOR, titulo: 'Agentes', estadoVazio: 'Nenhum agente ainda.' },
+  { tipo: TipoFichaEnum.CRIATURA, titulo: 'Criaturas', estadoVazio: 'Nenhuma criatura ainda.' },
+];
 
 /**
  * O **acervo** de fichas do usuário (`/fichas`, m3-28) — todas as fichas do autenticado, com e
@@ -46,13 +52,20 @@ interface ItemAcervo {
  * dropdown mora na raiz do template, fora da lista com `overflow-y`/`mask-image`
  * (`appOverflowFade`), que cortaria um `position: fixed` comum na pintura.
  *
- * A visualização (`/fichas/:id`) reusa o `FichaVisualizar` campanha-scoped — ver a nota na rota
- * (`ficha-acervo.routes.ts`) e no próprio componente sobre como ele resolve `campanhaId` sem o
- * parâmetro de rota.
+ * A visualização reusa `FichaVisualizar` (`/fichas/:id`) ou `CriaturaVisualizar`
+ * (`/fichas/criatura/:id`), campanha-scoped — ver a nota na rota (`ficha-acervo.routes.ts`) e no
+ * próprio componente sobre como cada um resolve `campanhaId` sem o parâmetro de rota.
+ *
+ * **Separação por tipo (m4-11).** O acervo lista agentes, criaturas e — estruturalmente, hoje sem
+ * dados — NPCs em blocos próprios (`BLOCOS_ACERVO`), com um `<select>` de visão (Todos/Agentes/
+ * Criaturas). Card único (`CartaoFichaAcervo`) com recorte por tipo. "Criar criatura" só aparece
+ * para quem é mestre de alguma campanha (`podeCriarCriatura`) — o backend (`FichaService.
+ * criarFichaCriatura`) continua sendo a autoridade; esta checagem só evita oferecer o que seria
+ * recusado.
  */
 @Component({
   selector: 'app-ficha-acervo',
-  imports: [RouterLink, Icone, OverflowFade],
+  imports: [Icone, OverflowFade, CartaoFichaAcervo],
   templateUrl: './acervo.page.html',
   styleUrl: './acervo.page.scss',
 })
@@ -62,14 +75,20 @@ export class FichaAcervo {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
+  protected readonly TipoFichaEnum = TipoFichaEnum;
+  protected readonly FILTRO_TODOS = FILTRO_TODOS;
+  protected readonly blocos = BLOCOS_ACERVO;
+
   protected readonly carregando = signal(true);
   private readonly fichas = signal<readonly FichaResumoDto[]>([]);
   protected readonly campanhas = signal<readonly CampanhaResumoDto[]>([]);
+  protected readonly filtro = signal<FiltroAcervo>(FILTRO_TODOS);
 
   /** Ficha cujo menu de ações (kebab) está aberto — mesmo padrão de `CampanhaDetalhe` (m3-52). */
   protected readonly menuFichaAberto = signal<{
     id: number;
     nome: string;
+    tipo: TipoFichaEnum;
     campanhaId: number | null;
   } | null>(null);
   /**
@@ -84,7 +103,9 @@ export class FichaAcervo {
   } | null>(null);
 
   /** Ficha pendente de escolher a campanha-alvo (dialog "Atribuir a campanha"). */
-  protected readonly confirmandoAtribuir = signal<{ id: number; nome: string } | null>(null);
+  protected readonly confirmandoAtribuir = signal<{ id: number; nome: string; tipo: TipoFichaEnum } | null>(
+    null,
+  );
   protected readonly campanhaEscolhida = signal<number | null>(null);
   protected readonly atribuindo = signal<number | null>(null);
   /** `id` da ficha sendo desatribuída (ação direta, sem dialog) — desabilita só aquele item. */
@@ -109,22 +130,96 @@ export class FichaAcervo {
   );
   private temporizadorPreviewAvatar: ReturnType<typeof setTimeout> | null = null;
 
+  /**
+   * Ficha sem `tipo` (retrocompat — o campo é opcional no `FichaResumoDto` por fixtures
+   * pré-`m4-04`) conta como `JOGADOR`, mesmo tratamento que o resto do front já dá.
+   */
   protected readonly itens = computed<readonly ItemAcervo[]>(() =>
-    this.fichas().map((ficha) => ({
-      id: ficha.id,
-      nome: ficha.nome,
-      cor: ficha.cor ?? null,
-      imagemUrl: ficha.imagemUrl,
-      classeTexto: rotuloClasseCompleto(ficha.classe, ficha.arquetipo),
-      nivel: ficha.nivel,
-      vidaAtual: ficha.vidaAtual,
-      vidaMaxima: ficha.vidaMaxima,
-      energiaAtual: ficha.energiaAtual,
-      energiaMaxima: ficha.energiaMaxima,
-      campanhaId: ficha.campanhaId,
-      campanhaNome: ficha.campanhaNome,
-    })),
+    this.fichas().map((ficha) => {
+      const tipo = ficha.tipo ?? TipoFichaEnum.JOGADOR;
+      const comum = {
+        id: ficha.id,
+        tipo,
+        nome: ficha.nome,
+        cor: ficha.cor ?? null,
+        imagemUrl: ficha.imagemUrl,
+        campanhaId: ficha.campanhaId,
+        campanhaNome: ficha.campanhaNome,
+        vidaAtual: ficha.vidaAtual,
+        vidaMaxima: ficha.vidaMaxima,
+      };
+      if (tipo === TipoFichaEnum.CRIATURA) {
+        return {
+          ...comum,
+          naTexto: ficha.na ? rotuloNivelAmeaca(ficha.na) : undefined,
+          vd: ficha.vd,
+          defesa: ficha.defesa,
+        };
+      }
+      return {
+        ...comum,
+        classeTexto: rotuloClasseCompleto(ficha.classe, ficha.arquetipo),
+        nivel: ficha.nivel,
+        patenteTexto: rotuloPatente(ficha.prestigio ?? 0),
+        energiaAtual: ficha.energiaAtual,
+        energiaMaxima: ficha.energiaMaxima,
+      };
+    }),
   );
+
+  /** Fichas agrupadas por tipo — base de `itensDoTipo`/`mostrarBloco`, um único `for` por render. */
+  private readonly itensPorTipo = computed<ReadonlyMap<TipoFichaEnum, readonly ItemAcervo[]>>(() => {
+    const mapa = new Map<TipoFichaEnum, ItemAcervo[]>();
+    for (const item of this.itens()) {
+      const lista = mapa.get(item.tipo);
+      if (lista) {
+        lista.push(item);
+      } else {
+        mapa.set(item.tipo, [item]);
+      }
+    }
+    return mapa;
+  });
+
+  protected itensDoTipo(tipo: TipoFichaEnum): readonly ItemAcervo[] {
+    return this.itensPorTipo().get(tipo) ?? [];
+  }
+
+  /**
+   * Em "Todos", um bloco só aparece se tiver ficha (o estado vazio geral cobre "nenhuma ficha
+   * nenhuma"); com um tipo filtrado, só o bloco daquele tipo aparece, mesmo vazio (estado vazio
+   * próprio).
+   */
+  protected mostrarBloco(tipo: TipoFichaEnum): boolean {
+    const filtroAtual = this.filtro();
+    return filtroAtual === FILTRO_TODOS ? this.itensDoTipo(tipo).length > 0 : filtroAtual === tipo;
+  }
+
+  /** `true` quando o usuário é mestre de alguma campanha — condição de "Criar criatura" (m4-11). */
+  protected readonly podeCriarCriatura = computed(() =>
+    this.campanhas().some((campanha) => campanha.papel === TipoCampanhaMembroPapelEnum.MESTRE),
+  );
+
+  /**
+   * Campanhas elegíveis para a dialog "Atribuir a campanha": todas, para agente; só onde o
+   * usuário é mestre, para criatura/NPC (§14 — coerente com quem pode criar/gerenciar o tipo).
+   */
+  protected readonly campanhasElegiveis = computed<readonly CampanhaResumoDto[]>(() => {
+    const pendente = this.confirmandoAtribuir();
+    if (!pendente) {
+      return [];
+    }
+    return pendente.tipo === TipoFichaEnum.JOGADOR
+      ? this.campanhas()
+      : this.campanhas().filter((campanha) => campanha.papel === TipoCampanhaMembroPapelEnum.MESTRE);
+  });
+
+  /** Se existe ao menos uma campanha elegível para atribuir aquele tipo — controla o item do menu (⋯). */
+  protected temCampanhaElegivelParaAtribuir(tipo: TipoFichaEnum): boolean {
+    return tipo === TipoFichaEnum.JOGADOR
+      ? this.campanhas().length > 0
+      : this.campanhas().some((campanha) => campanha.papel === TipoCampanhaMembroPapelEnum.MESTRE);
+  }
 
   constructor() {
     this.carregar();
@@ -163,6 +258,17 @@ export class FichaAcervo {
     void this.router.navigate(['/fichas', 'nova']);
   }
 
+  /** Navega pro guia de criação de criatura solta (`/fichas/criatura/nova`, m4-11). */
+  protected abrirCriarCriatura(): void {
+    void this.router.navigate(['/fichas', 'criatura', 'nova']);
+  }
+
+  /** Troca o filtro de visão do `<select>` — "Todos" ou um `TipoFichaEnum`. */
+  protected mudarFiltro(evento: Event): void {
+    const valor = (evento.target as HTMLSelectElement).value;
+    this.filtro.set(valor === FILTRO_TODOS ? FILTRO_TODOS : (valor as TipoFichaEnum));
+  }
+
   /**
    * Abre/fecha o menu de ações (kebab) de uma ficha — posição `fixed` calculada no clique. Abre
    * pra baixo por padrão; se não houver espaço suficiente até o fim da viewport (o menu tem até 4
@@ -183,7 +289,12 @@ export class FichaAcervo {
         ? { bottom: window.innerHeight - retangulo.top + 6, right }
         : { top: retangulo.bottom + 6, right },
     );
-    this.menuFichaAberto.set({ id: item.id, nome: item.nome, campanhaId: item.campanhaId });
+    this.menuFichaAberto.set({
+      id: item.id,
+      nome: item.nome,
+      tipo: item.tipo,
+      campanhaId: item.campanhaId,
+    });
   }
 
   protected fecharMenuFicha(): void {
@@ -228,11 +339,18 @@ export class FichaAcervo {
     this.previewAvatar.set(null);
   }
 
-  /** Abre a dialog de atribuição, pré-selecionando a primeira campanha do usuário. */
-  protected pedirAtribuir(fichaId: number, fichaNome: string): void {
+  /**
+   * Abre a dialog de atribuição, pré-selecionando a primeira campanha elegível — para criatura/
+   * NPC, só onde o usuário é mestre (`campanhasElegiveis`).
+   */
+  protected pedirAtribuir(fichaId: number, fichaNome: string, tipo: TipoFichaEnum): void {
     this.fecharMenuFicha();
-    this.campanhaEscolhida.set(this.campanhas()[0]?.id ?? null);
-    this.confirmandoAtribuir.set({ id: fichaId, nome: fichaNome });
+    this.confirmandoAtribuir.set({ id: fichaId, nome: fichaNome, tipo });
+    const elegiveis =
+      tipo === TipoFichaEnum.JOGADOR
+        ? this.campanhas()
+        : this.campanhas().filter((campanha) => campanha.papel === TipoCampanhaMembroPapelEnum.MESTRE);
+    this.campanhaEscolhida.set(elegiveis[0]?.id ?? null);
   }
 
   /** Cancela a atribuição pendente — inócuo enquanto ela está em voo. */

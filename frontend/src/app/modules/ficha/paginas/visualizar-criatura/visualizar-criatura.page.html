@@ -1,13 +1,24 @@
 <section class="ficha-pagina">
   <header class="ficha-pagina__topo">
-    <a
-      class="ficha-pagina__voltar"
-      [routerLink]="['/painel', campanhaId]"
-      aria-label="Voltar à campanha"
-      [appTooltip]="'Voltar à campanha'"
-    >
-      <app-icone nome="voltar" />
-    </a>
+    @if (campanhaId(); as campanhaAtualId) {
+      <a
+        class="ficha-pagina__voltar"
+        [routerLink]="['/painel', campanhaAtualId]"
+        aria-label="Voltar à campanha"
+        [appTooltip]="'Voltar à campanha'"
+      >
+        <app-icone nome="voltar" />
+      </a>
+    } @else {
+      <a
+        class="ficha-pagina__voltar"
+        routerLink="/fichas"
+        aria-label="Voltar ao acervo"
+        [appTooltip]="'Voltar ao acervo'"
+      >
+        <app-icone nome="voltar" />
+      </a>
+    }
 
     <div class="ficha-pagina__acoes">
       @if (fichaEdicao.estadoPersistencia() !== 'ocioso') {

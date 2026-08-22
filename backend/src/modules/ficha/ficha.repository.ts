@@ -71,13 +71,20 @@ export class FichaRepository extends BaseRepository {
     return fichaCriada;
   }
 
-  /** Recupera a ficha ativa pelo `id` (ou `null`) — inclui posse/campanha para a checagem de permissão. */
+  /**
+   * Recupera a ficha ativa pelo `id` (ou `null`) — inclui posse/campanha para a checagem de
+   * permissão e o `tipo` (m4-11, mesmo `JOIN tipo_ficha`/tradução `codigo ↔ id` de
+   * `colunasResumo()`, §10.2.12), que `FichaService.atribuirCampanha`/`duplicarFicha` usam para
+   * ramificar por tipo sem reconsultar o banco.
+   */
   async recuperarPorId(dto: FichaRecuperarDto): Promise<FichaRecuperadaDto | null> {
     const [fichaEncontrada] = await this.executarConsulta<FichaRecuperadaDto>(
-      `SELECT id, campanha_id AS "campanhaId", usuario_id AS "usuarioId", nome, cor, imagem_url AS "imagemUrl",
-              imagem_foco AS "imagemFoco", COALESCE(oculta, false) AS oculta, dados
+      `SELECT ficha.id, ficha.campanha_id AS "campanhaId", ficha.usuario_id AS "usuarioId", ficha.nome, ficha.cor,
+              ficha.imagem_url AS "imagemUrl", ficha.imagem_foco AS "imagemFoco",
+              COALESCE(ficha.oculta, false) AS oculta, tipo_ficha.codigo AS tipo, ficha.dados
        FROM ficha
-       WHERE id = :id AND is_deleted = false`,
+       ${this.juncaoTipoResumo()}
+       WHERE ficha.id = :id AND ficha.is_deleted = false`,
       { id: dto.id },
     );
     return fichaEncontrada ?? null;
