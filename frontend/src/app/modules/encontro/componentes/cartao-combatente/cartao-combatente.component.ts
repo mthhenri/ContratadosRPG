@@ -97,6 +97,12 @@ export class CartaoCombatente {
   readonly removido = output<void>();
   /** Pedido de abrir a ficha completa deste combatente (janela flutuante — quem hospeda decide). */
   readonly abrirFicha = output<void>();
+  /** Nova cor escolhida para a identidade de um avulso. */
+  readonly corAvulsoAlterada = output<string>();
+  /** Novo arquivo escolhido para a imagem de um avulso. */
+  readonly imagemAvulsoAlterada = output<File>();
+  /** Pedido para remover a imagem atual de um avulso. */
+  readonly imagemAvulsoRemovida = output<void>();
 
   /**
    * Steppers abertos (m7-08). Só tem efeito **no mobile**: o mockup de 360px desenha o cartão sem
@@ -110,6 +116,7 @@ export class CartaoCombatente {
   protected readonly receberDanoAberto = signal(false);
 
   protected readonly TipoFichaEnum = TipoFichaEnum;
+  protected readonly CombatenteOrigemEnum = CombatenteOrigemEnum;
 
   /** Quantos turnos ele tem na rodada — o motor puro decide, não este componente. */
   protected readonly turnosPorRodada = computed(() => {
@@ -293,6 +300,14 @@ export class CartaoCombatente {
     const valor = Number(valorBruto);
     if (valorBruto.trim() !== '' && Number.isFinite(valor)) {
       this.iniciativaAtribuida.emit(Math.trunc(valor));
+    }
+  }
+
+  /** Encaminha o primeiro arquivo selecionado; validação de formato/tamanho fica na página/API. */
+  protected selecionarImagemAvulso(evento: Event): void {
+    const arquivo = (evento.target as HTMLInputElement).files?.[0];
+    if (arquivo) {
+      this.imagemAvulsoAlterada.emit(arquivo);
     }
   }
 }

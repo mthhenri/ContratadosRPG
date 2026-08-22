@@ -51,6 +51,8 @@ export interface EncontroCombatenteLinhaDto {
    */
   readonly fichaOculta: boolean | null;
   readonly fichaDonoNome: string | null;
+  readonly corAvulso: string | null;
+  readonly imagemUrlAvulso: string | null;
 }
 
 /** Entrada interna da criação do encontro — nasce em `MONTAGEM`, rodada 0, turno 0. */
@@ -88,6 +90,14 @@ export interface EncontroCombatenteInternoAdicionarDto {
   readonly cadencia: CadenciaEnum;
   readonly turnosPorRodada: number;
   readonly ordem: number;
+  readonly corAvulso: string | null;
+}
+
+/** Entrada interna da troca de cor/imagem próprias do combatente avulso. */
+export interface EncontroCombatenteIdentidadeInternoAlterarDto {
+  readonly id: number;
+  readonly corAvulso: string;
+  readonly imagemUrlAvulso: string | null;
 }
 
 /** Entrada interna da atribuição de iniciativa a um combatente. */

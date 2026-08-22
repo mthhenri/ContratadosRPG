@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
-  EncontroCombatenteAdicionarDto,
   EncontroCombatenteLinhaDto,
   EncontroLinhaDto,
 } from '@contratados-rpg/shared/dtos/encontro';
@@ -12,6 +11,7 @@ import {
   TipoUsuarioEnum,
 } from '@contratados-rpg/shared/enums';
 import { BusinessException, UnauthorizedAccessException } from '../../core/exceptions';
+import type { ArmazenamentoProvedor } from '../../core/armazenamento';
 import type { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import type { CampanhaRepository } from '../campanha/campanha.repository';
@@ -30,6 +30,7 @@ interface EncontroRepositorioDublado {
   adicionarCombatente: ReturnType<typeof vi.fn>;
   removerCombatente: ReturnType<typeof vi.fn>;
   alterarIniciativa: ReturnType<typeof vi.fn>;
+  alterarIdentidadeAvulso: ReturnType<typeof vi.fn>;
   listarEventos: ReturnType<typeof vi.fn>;
 }
 
@@ -80,6 +81,8 @@ function criarCombatenteLinha(
     fichaDados: null,
     fichaOculta: null,
     fichaDonoNome: null,
+    corAvulso: '#4a9d6b',
+    imagemUrlAvulso: null,
     ...overrides,
   };
 }
@@ -92,6 +95,10 @@ describe('EncontroService', () => {
     listarFichas: ReturnType<typeof vi.fn>;
   };
   let campanhaGateway: { emitirEncontroAlterado: ReturnType<typeof vi.fn> };
+  let armazenamentoProvedor: {
+    salvarImagem: ReturnType<typeof vi.fn>;
+    excluirImagem: ReturnType<typeof vi.fn>;
+  };
   let service: EncontroService;
 
   beforeEach(() => {
@@ -106,6 +113,7 @@ describe('EncontroService', () => {
       adicionarCombatente: vi.fn(),
       removerCombatente: vi.fn(),
       alterarIniciativa: vi.fn(),
+      alterarIdentidadeAvulso: vi.fn(),
       listarEventos: vi.fn().mockResolvedValue([]),
     };
     campanhaRepositorio = {
@@ -113,11 +121,13 @@ describe('EncontroService', () => {
     };
     fichaService = { recuperarFicha: vi.fn(), listarFichas: vi.fn().mockResolvedValue([]) };
     campanhaGateway = { emitirEncontroAlterado: vi.fn() };
+    armazenamentoProvedor = { salvarImagem: vi.fn(), excluirImagem: vi.fn() };
     service = new EncontroService(
       encontroRepositorio as unknown as EncontroRepository,
       campanhaRepositorio as unknown as CampanhaRepository,
       fichaService as unknown as FichaService,
       campanhaGateway as unknown as CampanhaGateway,
+      armazenamentoProvedor as unknown as ArmazenamentoProvedor,
     );
   });
 
@@ -219,7 +229,7 @@ describe('EncontroService', () => {
       expect(encontroRepositorio.adicionarCombatente).not.toHaveBeenCalled();
     });
 
-    it('avulso nasce com a vida cheia e sem ficha', async () => {
+    it('avulso nasce com a vida cheia e a cor obrigatória escolhida', async () => {
       await service.adicionarCombatente(
         {
           encontroId: 50,
@@ -227,6 +237,7 @@ describe('EncontroService', () => {
           nomeAvulso: 'Sujeito Contido',
           vidaMaximaAvulso: 16,
           cadencia: CadenciaEnum.SINGULAR,
+          corAvulso: '#d9a441',
         },
         mestre,
       );
@@ -237,8 +248,26 @@ describe('EncontroService', () => {
           nomeAvulso: 'Sujeito Contido',
           vidaMaximaAvulso: 16,
           vidaAtualAvulso: 16,
+          corAvulso: '#d9a441',
         }),
       );
+    });
+
+    it('recusa avulso sem cor', async () => {
+      await expect(
+        service.adicionarCombatente(
+          {
+            encontroId: 50,
+            fichaId: null,
+            nomeAvulso: 'Sem identidade',
+            vidaMaximaAvulso: 10,
+            cadencia: CadenciaEnum.SINGULAR,
+            corAvulso: null,
+          },
+          mestre,
+        ),
+      ).rejects.toThrow(BusinessException);
+      expect(encontroRepositorio.adicionarCombatente).not.toHaveBeenCalled();
     });
 
     it('preserva a quantidade declarada de turnos do avulso Frenético', async () => {
@@ -250,7 +279,8 @@ describe('EncontroService', () => {
           vidaMaximaAvulso: 20,
           cadencia: CadenciaEnum.FRENETICA,
           turnosPorRodada: 6,
-        } as EncontroCombatenteAdicionarDto & { encontroId: number; turnosPorRodada: number },
+          corAvulso: '#d53030',
+        },
         mestre,
       );
 
@@ -279,6 +309,64 @@ describe('EncontroService', () => {
           mestre,
         ),
       ).rejects.toThrow(BusinessException);
+    });
+  });
+
+  describe('identidade do avulso', () => {
+    beforeEach(() => {
+      encontroRepositorio.recuperarPorId.mockResolvedValue(criarEncontroLinha());
+      encontroRepositorio.recuperarCombatentePorId.mockResolvedValue(criarCombatenteLinha());
+    });
+
+    it('altera a cor somente para combatente avulso', async () => {
+      await service.alterarIdentidadeAvulso({ id: 100, cor: '#4c8dd0' }, mestre);
+
+      expect(encontroRepositorio.alterarIdentidadeAvulso).toHaveBeenCalledWith({
+        id: 100,
+        corAvulso: '#4c8dd0',
+        imagemUrlAvulso: null,
+      });
+    });
+
+    it('substitui a imagem e exclui o arquivo anterior', async () => {
+      encontroRepositorio.recuperarCombatentePorId.mockResolvedValue(
+        criarCombatenteLinha({ imagemUrlAvulso: '/uploads/anterior.webp' }),
+      );
+      armazenamentoProvedor.salvarImagem.mockResolvedValue({ caminho: '/uploads/nova.png' });
+
+      await service.alterarImagemAvulso(
+        {
+          id: 100,
+          arquivo: { conteudo: new Uint8Array([1]), mimetype: 'image/png', tamanho: 1 },
+        },
+        mestre,
+      );
+
+      expect(armazenamentoProvedor.excluirImagem).toHaveBeenCalledWith({
+        caminho: '/uploads/anterior.webp',
+      });
+      expect(encontroRepositorio.alterarIdentidadeAvulso).toHaveBeenCalledWith({
+        id: 100,
+        corAvulso: '#4a9d6b',
+        imagemUrlAvulso: '/uploads/nova.png',
+      });
+    });
+
+    it('remove a imagem do avulso e limpa o armazenamento', async () => {
+      encontroRepositorio.recuperarCombatentePorId.mockResolvedValue(
+        criarCombatenteLinha({ imagemUrlAvulso: '/uploads/anterior.webp' }),
+      );
+
+      await service.excluirImagemAvulso({ id: 100 }, mestre);
+
+      expect(armazenamentoProvedor.excluirImagem).toHaveBeenCalledWith({
+        caminho: '/uploads/anterior.webp',
+      });
+      expect(encontroRepositorio.alterarIdentidadeAvulso).toHaveBeenCalledWith({
+        id: 100,
+        corAvulso: '#4a9d6b',
+        imagemUrlAvulso: null,
+      });
     });
   });
 

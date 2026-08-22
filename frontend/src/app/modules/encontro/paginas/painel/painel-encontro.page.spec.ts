@@ -237,6 +237,9 @@ describe('PainelEncontro', () => {
       ajustarVida: vi.fn(() => of(estado)),
       adicionarCombatente: vi.fn(() => of(estado)),
       removerCombatente: vi.fn(() => of(estado)),
+      alterarIdentidadeAvulso: vi.fn(() => of(estado)),
+      alterarImagemAvulso: vi.fn(() => of(estado)),
+      excluirImagemAvulso: vi.fn(() => of(estado)),
     };
 
     TestBed.configureTestingModule({
@@ -765,6 +768,10 @@ describe('PainelEncontro', () => {
       expect(elemento.querySelector('app-seletor-combatentes')).toBeNull();
       const form = elemento.querySelector('form.adicionar') as HTMLFormElement;
       expect(form).not.toBeNull();
+      expect(form.querySelector('input[formControlName="corAvulso"]')).not.toBeNull();
+      expect(form.querySelector('input[type="file"]')?.getAttribute('accept')).toBe(
+        'image/jpeg,image/png,image/webp',
+      );
 
       const nome = form.querySelector<HTMLInputElement>('input[formControlName="nomeAvulso"]')!;
       nome.value = 'Sujeito Contido';
@@ -779,6 +786,7 @@ describe('PainelEncontro', () => {
         nomeAvulso: 'Sujeito Contido',
         vidaMaximaAvulso: 10,
         cadencia: CadenciaEnum.SINGULAR,
+        corAvulso: '#d53030',
       });
     });
 
@@ -811,6 +819,7 @@ describe('PainelEncontro', () => {
         vidaMaximaAvulso: 10,
         cadencia: CadenciaEnum.FRENETICA,
         turnosPorRodada: 6,
+        corAvulso: '#d53030',
       });
     });
 

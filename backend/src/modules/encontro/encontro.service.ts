@@ -1,6 +1,9 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import type {
   EncontroCombatenteAdicionarDto,
+  EncontroCombatenteIdentidadeAlterarDto,
+  EncontroCombatenteImagemAlterarDto,
+  EncontroCombatenteImagemExcluirDto,
   EncontroCombatenteCondicaoAtribuirDto,
   EncontroCombatenteCondicaoRemoverDto,
   EncontroCombatenteEnergiaAjustarDto,
@@ -36,6 +39,7 @@ import {
   ordenarIniciativa,
 } from '@contratados-rpg/shared/regras/encontro';
 import { BusinessException, ResourceNotFoundException, UnauthorizedAccessException } from '../../core/exceptions';
+import { ARMAZENAMENTO_PROVEDOR, type ArmazenamentoProvedor } from '../../core/armazenamento';
 import { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { CampanhaRepository } from '../campanha/campanha.repository';
@@ -67,6 +71,8 @@ export class EncontroService {
     private readonly fichaService: FichaService,
     @Inject(forwardRef(() => CampanhaGateway))
     private readonly campanhaGateway: CampanhaGateway,
+    @Inject(ARMAZENAMENTO_PROVEDOR)
+    private readonly armazenamentoProvedor: ArmazenamentoProvedor,
   ) {}
 
   /**
@@ -159,11 +165,18 @@ export class EncontroService {
         cadencia,
         turnosPorRodada: this.resolverTurnosPorRodada(cadencia, fichaEncontrada.dados),
         ordem: maiorOrdem + 1,
+        corAvulso: null,
       });
     } else {
-      if (!dto.nomeAvulso || dto.vidaMaximaAvulso === null || dto.vidaMaximaAvulso <= 0) {
-        throw new BusinessException('Combatente avulso exige nome e vida máxima');
+      if (
+        !dto.nomeAvulso ||
+        dto.vidaMaximaAvulso === null ||
+        dto.vidaMaximaAvulso <= 0 ||
+        !dto.corAvulso
+      ) {
+        throw new BusinessException('Combatente avulso exige nome, vida máxima e cor');
       }
+      this.validarCorAvulso(dto.corAvulso);
       const cadencia = dto.cadencia ?? CadenciaEnum.SINGULAR;
       await this.encontroRepositorio.adicionarCombatente({
         encontroId: dto.encontroId,
@@ -174,6 +187,7 @@ export class EncontroService {
         cadencia,
         turnosPorRodada: this.resolverTurnosPorRodada(cadencia, dto.turnosPorRodada),
         ordem: maiorOrdem + 1,
+        corAvulso: dto.corAvulso,
       });
     }
 
@@ -190,8 +204,77 @@ export class EncontroService {
     await this.validarMestre(encontroEncontrado.campanhaId, usuarioAtivo);
     this.validarEncontroMutavel(encontroEncontrado);
 
+    if (combatenteEncontrado.imagemUrlAvulso) {
+      await this.armazenamentoProvedor.excluirImagem({ caminho: combatenteEncontrado.imagemUrlAvulso });
+    }
     await this.encontroRepositorio.removerCombatente({ id: dto.id });
     return this.emitirEstado(encontroEncontrado, usuarioAtivo);
+  }
+
+  /** Troca a cor de identidade de um avulso, preservando a imagem atual. */
+  async alterarIdentidadeAvulso(
+    dto: EncontroCombatenteIdentidadeAlterarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<EncontroRecuperadoDto> {
+    this.validarCorAvulso(dto.cor);
+    const { combatente, encontro } = await this.recuperarAvulsoMutavel(dto.id, usuarioAtivo);
+    await this.encontroRepositorio.alterarIdentidadeAvulso({
+      id: dto.id,
+      corAvulso: dto.cor,
+      imagemUrlAvulso: combatente.imagemUrlAvulso,
+    });
+    return this.emitirEstado(encontro, usuarioAtivo);
+  }
+
+  /** Envia ou substitui a imagem opcional de um avulso. */
+  async alterarImagemAvulso(
+    dto: EncontroCombatenteImagemAlterarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<EncontroRecuperadoDto> {
+    const { combatente, encontro } = await this.recuperarAvulsoMutavel(dto.id, usuarioAtivo);
+    const extensaoPorMime: Readonly<Record<string, string>> = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+    };
+    const extensao = extensaoPorMime[dto.arquivo.mimetype];
+    if (!extensao) {
+      throw new BusinessException('Formato de imagem inválido: use JPEG, PNG ou WEBP');
+    }
+    if (dto.arquivo.tamanho > 2 * 1024 * 1024) {
+      throw new BusinessException('Imagem maior que o limite permitido (2MB)');
+    }
+    const imagemSalva = await this.armazenamentoProvedor.salvarImagem({
+      conteudo: dto.arquivo.conteudo,
+      mimetype: dto.arquivo.mimetype,
+      extensao,
+    });
+    if (combatente.imagemUrlAvulso) {
+      await this.armazenamentoProvedor.excluirImagem({ caminho: combatente.imagemUrlAvulso });
+    }
+    await this.encontroRepositorio.alterarIdentidadeAvulso({
+      id: dto.id,
+      corAvulso: combatente.corAvulso!,
+      imagemUrlAvulso: imagemSalva.caminho,
+    });
+    return this.emitirEstado(encontro, usuarioAtivo);
+  }
+
+  /** Remove a imagem do avulso sem alterar sua cor. */
+  async excluirImagemAvulso(
+    dto: EncontroCombatenteImagemExcluirDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<EncontroRecuperadoDto> {
+    const { combatente, encontro } = await this.recuperarAvulsoMutavel(dto.id, usuarioAtivo);
+    if (combatente.imagemUrlAvulso) {
+      await this.armazenamentoProvedor.excluirImagem({ caminho: combatente.imagemUrlAvulso });
+    }
+    await this.encontroRepositorio.alterarIdentidadeAvulso({
+      id: dto.id,
+      corAvulso: combatente.corAvulso!,
+      imagemUrlAvulso: null,
+    });
+    return this.emitirEstado(encontro, usuarioAtivo);
   }
 
   /**
@@ -776,6 +859,28 @@ export class EncontroService {
       throw new ResourceNotFoundException('Combatente');
     }
     return combatenteEncontrado;
+  }
+
+  /** Recupera e autoriza a edição da identidade de um avulso em encontro mutável. */
+  private async recuperarAvulsoMutavel(
+    id: number,
+    usuarioAtivo: JwtPayload,
+  ): Promise<{ combatente: EncontroCombatenteLinhaDto; encontro: EncontroLinhaDto }> {
+    const combatente = await this.recuperarCombatenteObrigatorio(id);
+    if (combatente.fichaId !== null || !combatente.corAvulso) {
+      throw new BusinessException('A identidade visual só pode ser alterada em combatente avulso');
+    }
+    const encontro = await this.recuperarEncontroObrigatorio(combatente.encontroId);
+    await this.validarMestre(encontro.campanhaId, usuarioAtivo);
+    this.validarEncontroMutavel(encontro);
+    return { combatente, encontro };
+  }
+
+  /** Cor CSS hexadecimal completa usada como identidade visual do avulso. */
+  private validarCorAvulso(cor: string): void {
+    if (!/^#[0-9a-f]{6}$/i.test(cor)) {
+      throw new BusinessException('Cor do avulso inválida');
+    }
   }
 
   /** Exige ser membro da campanha; devolve o papel para quem precisa distinguir mestre. */

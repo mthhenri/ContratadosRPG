@@ -4,36 +4,79 @@
   [class.combatente--morrendo]="combatente().morrendo"
   [class.combatente--agiu]="jaAgiu() && !ehTurnoAtual()"
   [class.combatente--ajustando]="ajustando()"
+  [class.combatente--editando]="emEdicao()"
   [style.--cor-ficha]="combatente().corFicha"
 >
-  <div class="combatente__retrato">
-    <span class="combatente__avatar" aria-hidden="true">
-      @if (combatente().imagemUrl; as urlImagem) {
-        <img
-          class="combatente__avatar-imagem"
-          [src]="urlImagem"
-          alt=""
-          [appFocoImagem]="combatente().imagemFoco"
-        />
-      }
-    </span>
-    <span class="combatente__iniciativa">
-      @if (emEdicao()) {
-        <input
-          class="combatente__iniciativa-campo"
-          type="number"
-          inputmode="numeric"
-          placeholder="—"
-          [attr.aria-label]="'Iniciativa de ' + combatente().nome"
-          [appTooltip]="'Iniciativa de ' + combatente().nome"
-          [value]="combatente().iniciativa"
-          (change)="confirmarIniciativa($any($event.target).value)"
-        />
-      } @else {
-        <span class="combatente__iniciativa-valor">{{ combatente().iniciativa ?? '—' }}</span>
-      }
-      <span class="combatente__iniciativa-rotulo">inic</span>
-    </span>
+  <div class="combatente__identidade">
+    <div class="combatente__retrato">
+      <span class="combatente__avatar" aria-hidden="true">
+        @if (combatente().imagemUrl; as urlImagem) {
+          <img
+            class="combatente__avatar-imagem"
+            [src]="urlImagem"
+            alt=""
+            [appFocoImagem]="combatente().imagemFoco"
+          />
+        }
+      </span>
+      <span class="combatente__iniciativa">
+        @if (emEdicao()) {
+          <input
+            class="combatente__iniciativa-campo"
+            type="number"
+            inputmode="numeric"
+            placeholder="—"
+            [attr.aria-label]="'Iniciativa de ' + combatente().nome"
+            [appTooltip]="'Iniciativa de ' + combatente().nome"
+            [value]="combatente().iniciativa"
+            (change)="confirmarIniciativa($any($event.target).value)"
+          />
+        } @else {
+          <span class="combatente__iniciativa-valor">{{ combatente().iniciativa ?? '—' }}</span>
+        }
+        <span class="combatente__iniciativa-rotulo">inic</span>
+      </span>
+    </div>
+
+    @if (emEdicao() && combatente().origem === CombatenteOrigemEnum.AVULSO) {
+      <span class="combatente__identidade-edicao">
+        <span class="combatente__identidade-linha">
+          <label class="combatente__identidade-acao" [appTooltip]="'Trocar imagem'">
+            <input
+              class="combatente__arquivo-entrada"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              [attr.aria-label]="'Trocar imagem de ' + combatente().nome"
+              (change)="selecionarImagemAvulso($event)"
+            />
+            <app-icone nome="editar" />
+          </label>
+          @if (combatente().imagemUrl) {
+            <button
+              class="combatente__identidade-acao"
+              type="button"
+              [attr.aria-label]="'Remover imagem de ' + combatente().nome"
+              [appTooltip]="'Remover imagem'"
+              (click)="imagemAvulsoRemovida.emit()"
+            >
+              <app-icone nome="excluir" />
+            </button>
+          }
+        </span>
+        <span class="combatente__identidade-linha">
+          <label class="combatente__identidade-acao" [appTooltip]="'Trocar cor'">
+            <input
+              class="combatente__cor-entrada"
+              type="color"
+              [attr.aria-label]="'Cor de ' + combatente().nome"
+              [value]="combatente().corFicha"
+              (change)="corAvulsoAlterada.emit($any($event.target).value)"
+            />
+            <span aria-hidden="true">●</span>
+          </label>
+        </span>
+      </span>
+    }
   </div>
 
   <div class="combatente__corpo">

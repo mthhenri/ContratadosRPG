@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { Knex } from 'knex';
 import type {
   EncontroCombatenteInternoAdicionarDto,
+  EncontroCombatenteIdentidadeInternoAlterarDto,
   EncontroCombatenteInternoAlterarCondicoesDto,
   EncontroCombatenteInternoAlterarIniciativaDto,
   EncontroCombatenteInternoAlterarVidaAvulsoDto,
@@ -159,7 +160,9 @@ export class EncontroRepository extends BaseRepository {
             ficha.nome AS "fichaNome", ficha.cor AS "fichaCor",
             ficha.imagem_url AS "fichaImagemUrl", ficha.imagem_foco AS "fichaImagemFoco",
             tipo_ficha.codigo AS "tipoFicha", ficha.dados AS "fichaDados",
-            COALESCE(ficha.oculta, false) AS "fichaOculta", ficha_dono.nome AS "fichaDonoNome"`;
+            COALESCE(ficha.oculta, false) AS "fichaOculta", ficha_dono.nome AS "fichaDonoNome",
+            encontro_combatente.cor_avulso AS "corAvulso",
+            encontro_combatente.imagem_url_avulso AS "imagemUrlAvulso"`;
   }
 
   /** `JOIN`s de `colunasCombatente()` — `LEFT`, porque avulso não tem ficha. */
@@ -226,9 +229,9 @@ export class EncontroRepository extends BaseRepository {
     dto: EncontroCombatenteInternoAdicionarDto,
   ): Promise<EncontroCombatenteLinhaDto> {
     const [combatenteInserido] = await this.executarConsulta<{ id: number }>(
-      `INSERT INTO encontro_combatente (encontro_id, ficha_id, nome_avulso, iniciativa, cadencia, turnos_por_rodada, ordem, vida_maxima_avulso, vida_atual_avulso, condicoes, created_date, updated_date, is_deleted)
+      `INSERT INTO encontro_combatente (encontro_id, ficha_id, nome_avulso, iniciativa, cadencia, turnos_por_rodada, ordem, vida_maxima_avulso, vida_atual_avulso, cor_avulso, imagem_url_avulso, condicoes, created_date, updated_date, is_deleted)
        SELECT :encontroId, :fichaId, :nomeAvulso, NULL, :cadencia, :turnosPorRodada, :ordem,
-              :vidaMaximaAvulso, :vidaAtualAvulso, :condicoes::jsonb, NOW(), NOW(), false
+              :vidaMaximaAvulso, :vidaAtualAvulso, :corAvulso, NULL, :condicoes::jsonb, NOW(), NOW(), false
        RETURNING id`,
       {
         encontroId: dto.encontroId,
@@ -239,6 +242,7 @@ export class EncontroRepository extends BaseRepository {
         ordem: dto.ordem,
         vidaMaximaAvulso: dto.vidaMaximaAvulso,
         vidaAtualAvulso: dto.vidaAtualAvulso,
+        corAvulso: dto.corAvulso,
         condicoes: JSON.stringify([]),
       },
     );
@@ -246,6 +250,19 @@ export class EncontroRepository extends BaseRepository {
     return this.recuperarCombatentePorId({
       id: combatenteInserido.id,
     }) as Promise<EncontroCombatenteLinhaDto>;
+  }
+
+  /** Troca a identidade visual própria de um avulso. */
+  async alterarIdentidadeAvulso(
+    dto: EncontroCombatenteIdentidadeInternoAlterarDto,
+  ): Promise<EncontroCombatenteLinhaDto> {
+    await this.executarComando(
+      `UPDATE encontro_combatente
+       SET cor_avulso = :corAvulso, imagem_url_avulso = :imagemUrlAvulso
+       WHERE id = :id AND ficha_id IS NULL AND is_deleted = false`,
+      { id: dto.id, corAvulso: dto.corAvulso, imagemUrlAvulso: dto.imagemUrlAvulso },
+    );
+    return this.recuperarCombatentePorId({ id: dto.id }) as Promise<EncontroCombatenteLinhaDto>;
   }
 
   /** Soft delete de um combatente — a tabela não é a do `BaseRepository`, então o UPDATE é local. */

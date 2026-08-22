@@ -1,5 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { GatewayModule } from '../../core/gateway/gateway.module';
+import { ArmazenamentoModule } from '../../core/armazenamento';
 import { CampanhaModule } from '../campanha/campanha.module';
 import { FichaModule } from '../ficha/ficha.module';
 import { EncontroController } from './encontro.controller';
@@ -14,7 +15,7 @@ import { EncontroService } from './encontro.service';
  * dona dessa regra, em vez de serem reimplementadas aqui (proibição #28).
  */
 @Module({
-  imports: [CampanhaModule, FichaModule, forwardRef(() => GatewayModule)],
+  imports: [ArmazenamentoModule, CampanhaModule, FichaModule, forwardRef(() => GatewayModule)],
   controllers: [EncontroController],
   providers: [EncontroRepository, EncontroService],
   exports: [EncontroRepository, EncontroService],

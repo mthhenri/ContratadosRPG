@@ -75,6 +75,37 @@ export class EncontroService {
       .pipe(map((resposta) => resposta.dados as EncontroRecuperadoDto));
   }
 
+  /** Troca a cor de identidade de um avulso. */
+  alterarIdentidadeAvulso(combatenteId: number, cor: string): Observable<EncontroRecuperadoDto> {
+    return this.httpClient
+      .put<StandardResponse<EncontroRecuperadoDto>>(
+        `${this.base}/combatente/${combatenteId}/identidade`,
+        { cor },
+      )
+      .pipe(map((resposta) => resposta.dados as EncontroRecuperadoDto));
+  }
+
+  /** Envia ou substitui a imagem opcional de um avulso. */
+  alterarImagemAvulso(combatenteId: number, arquivo: File): Observable<EncontroRecuperadoDto> {
+    const formulario = new FormData();
+    formulario.append('arquivo', arquivo);
+    return this.httpClient
+      .post<StandardResponse<EncontroRecuperadoDto>>(
+        `${this.base}/combatente/${combatenteId}/imagem`,
+        formulario,
+      )
+      .pipe(map((resposta) => resposta.dados as EncontroRecuperadoDto));
+  }
+
+  /** Remove a imagem de um avulso, preservando sua cor. */
+  excluirImagemAvulso(combatenteId: number): Observable<EncontroRecuperadoDto> {
+    return this.httpClient
+      .delete<StandardResponse<EncontroRecuperadoDto>>(
+        `${this.base}/combatente/${combatenteId}/imagem`,
+      )
+      .pipe(map((resposta) => resposta.dados as EncontroRecuperadoDto));
+  }
+
   /** Atribui/corrige a iniciativa de um combatente (rolagem do jogador ou override do mestre). */
   atribuirIniciativa(
     dto: EncontroCombatenteIniciativaAtribuirDto,

@@ -215,8 +215,8 @@ export function montarCombatenteResumo(
     inconsciente: estado.inconsciente,
     destreza: estado.destreza,
     iniciativaBonus: estado.iniciativaBonus,
-    corFicha: linha.fichaCor,
-    imagemUrl: linha.fichaImagemUrl,
+    corFicha: linha.fichaId === null ? linha.corAvulso : linha.fichaCor,
+    imagemUrl: linha.fichaId === null ? linha.imagemUrlAvulso : linha.fichaImagemUrl,
     imagemFoco: linha.fichaImagemFoco,
     donoNome: linha.tipoFicha === TipoFichaEnum.JOGADOR ? linha.fichaDonoNome : null,
     classe:

@@ -1,10 +1,12 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import type {
   EncontroCombatenteAdicionarDto,
   EncontroCombatenteCondicaoAtribuirDto,
   EncontroCombatenteCondicaoRemoverDto,
   EncontroCombatenteEnergiaAjustarDto,
   EncontroCombatenteIniciativaAtribuirDto,
+  EncontroCombatenteIdentidadeAlterarDto,
   EncontroCombatenteVidaAjustarDto,
   EncontroCriadoDto,
   EncontroCriarDto,
@@ -66,6 +68,36 @@ export class EncontroController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<EncontroRecuperadoDto> {
     return this.encontroService.removerCombatente({ id }, usuarioAtivo);
+  }
+
+  @Put('encontro/combatente/:id/identidade')
+  alterarIdentidadeAvulso(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: EncontroCombatenteIdentidadeAlterarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<EncontroRecuperadoDto> {
+    return this.encontroService.alterarIdentidadeAvulso({ ...dto, id }, usuarioAtivo);
+  }
+
+  @Post('encontro/combatente/:id/imagem')
+  @UseInterceptors(FileInterceptor('arquivo'))
+  alterarImagemAvulso(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() arquivo: Express.Multer.File,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<EncontroRecuperadoDto> {
+    return this.encontroService.alterarImagemAvulso(
+      { id, arquivo: { conteudo: arquivo.buffer, mimetype: arquivo.mimetype, tamanho: arquivo.size } },
+      usuarioAtivo,
+    );
+  }
+
+  @Delete('encontro/combatente/:id/imagem')
+  excluirImagemAvulso(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<EncontroRecuperadoDto> {
+    return this.encontroService.excluirImagemAvulso({ id }, usuarioAtivo);
   }
 
   @Put('encontro/combatente/:id/iniciativa')

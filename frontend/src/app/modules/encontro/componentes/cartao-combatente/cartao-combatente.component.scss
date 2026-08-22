@@ -12,6 +12,7 @@
 }
 
 .combatente {
+  position: relative;
   height: 100%;
   display: flex;
   gap: 12px;
@@ -43,10 +44,22 @@
   }
 
   // ── Retrato + selo de iniciativa ──────────────────────────────────────────
-  &__retrato {
-    position: relative;
+  &__identidade {
     flex: none;
     width: 116px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+
+    // Dois alvos de 44px + gap de 6px precisam de 94px; a bandeja fica 5px além de cada lado da
+    // foto de 84px, ainda visualmente centralizada sob ela e sem comprimir os controles.
+    @include bp.mobile { width: 94px; }
+  }
+
+  &__retrato {
+    position: relative;
+    width: 100%;
     height: 116px;
 
     @include bp.mobile {
@@ -78,6 +91,58 @@
     height: 100%;
     object-fit: cover;
     transform-origin: 0 0;
+  }
+
+  &__identidade-edicao {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+
+    @include bp.mobile { gap: 6px; }
+  }
+
+  &__identidade-linha {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    width: 100%;
+
+    @include bp.mobile { gap: 6px; }
+  }
+
+  &__identidade-acao {
+    position: relative;
+    flex: none;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+
+    app-icone { font-size: 12px; }
+
+    @include bp.mobile {
+      width: bp.$alvo-toque;
+      height: bp.$alvo-toque;
+    }
+  }
+
+  &__cor-entrada,
+  &__arquivo-entrada {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
   }
 
   &__iniciativa {
@@ -513,9 +578,10 @@
     padding: 8px;
 
     &__retrato {
-      width: 58px;
       height: 58px;
     }
+
+    &__identidade { width: 58px; }
 
     &__iniciativa {
       bottom: -4px;

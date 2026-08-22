@@ -88,6 +88,16 @@ carteirinha") e `m7-17` ("Receber dano") — todas entregues. O
 a última extensão do milestone. A única frente aberta agora é o **M4** (Ficha de Criatura/NPC —
 restam `m4-05`…`m4-10`), ao lado de `m3-53` (M3).
 
+**Identidade do avulso (ajuste pós-M7, 2026-08-22).** Criar um avulso na Iniciativa exige uma cor
+e aceita imagem opcional; ambas persistem no próprio `encontro_combatente`
+(`cor_avulso`/`imagem_url_avulso`, migration 0023), porque o avulso não tem ficha. O modo "Editar
+combatentes" troca a cor, substitui a imagem e remove a imagem. Formatos/limite seguem os avatares
+de ficha (JPEG/PNG/WEBP, 2MB), inclusive limpeza do blob anterior. `EncontroCombatenteResumoDto`
+continua expondo a forma unificada `corFicha`/`imagemUrl`: o mapper escolhe ficha ou avulso pela
+origem, e o cartão não duplica apresentação. Em `360×800`, os três controles de identidade têm
+alvo de 44×44px. No cartão editável, eles ficam sob o retrato: troca/remoção de imagem na primeira
+linha e troca de cor centralizada na segunda, sem sobrepor a foto.
+
 `m7-10` e `m7-11` já tinham sido implementadas de fato no commit `4ea026d` (`feat: refina tela de
 iniciativa`, que também fechou `m7-09`), mas o registro em `HISTORY.md`/`CONTEXT.md` e o gate visual
 obrigatório ficaram pendentes até esta sessão. `m7-10` reusa `HistoricoRolagensSidebar` no

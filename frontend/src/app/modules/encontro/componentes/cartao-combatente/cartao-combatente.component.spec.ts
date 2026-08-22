@@ -153,6 +153,32 @@ describe('CartaoCombatente', () => {
     ).not.toBeNull();
   });
 
+  it('oferece troca de cor, upload e remoção de imagem ao editar um avulso', () => {
+    const fixture = montar(
+      {
+        ...base,
+        origem: CombatenteOrigemEnum.AVULSO,
+        fichaId: null,
+        tipoFicha: null,
+        nome: 'Sgto. Duarte',
+        imagemUrl: '/uploads/avulso.webp',
+      },
+      { emEdicao: true },
+    );
+    const elemento = fixture.nativeElement as HTMLElement;
+
+    expect(elemento.querySelector('input[aria-label="Cor de Sgto. Duarte"]')).not.toBeNull();
+    expect(elemento.querySelector('input[aria-label="Trocar imagem de Sgto. Duarte"]')).not.toBeNull();
+    expect(elemento.querySelector('button[aria-label="Remover imagem de Sgto. Duarte"]')).not.toBeNull();
+
+    const linhas = elemento.querySelectorAll('.combatente__identidade-linha');
+    expect(linhas).toHaveLength(2);
+    expect(linhas[0]?.querySelector('input[type="file"]')).not.toBeNull();
+    expect(linhas[0]?.querySelector('button[aria-label="Remover imagem de Sgto. Duarte"]')).not.toBeNull();
+    expect(linhas[0]?.querySelector('input[type="color"]')).toBeNull();
+    expect(linhas[1]?.querySelector('input[type="color"]')).not.toBeNull();
+  });
+
   it('só cita a Cadência quando ela de fato multiplica os turnos', () => {
     const singular = montar({ ...base, donoNome: 'Bia' });
     expect(texto(singular, '.combatente__origem')).toBe('Bia\nAgente');

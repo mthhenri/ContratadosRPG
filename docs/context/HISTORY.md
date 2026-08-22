@@ -1,5 +1,44 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-22 — Controles de identidade reposicionados sob o retrato do avulso
+
+Após inspeção do modo "Editar combatentes", o autor apontou que trocar cor, trocar imagem e remover
+imagem estavam encavalados sobre o retrato. O cartão passou a reservar uma coluna de identidade:
+retrato no topo, troca/remoção de imagem juntas logo abaixo e troca de cor centralizada numa segunda
+linha. O arranjo segue o desenho fornecido pelo autor, preserva os controles existentes e mantém os
+alvos de 44×44px no mobile.
+
+## 2026-08-22 — Identidade visual editável para avulso na Iniciativa
+
+Pedido direto do autor: combatentes avulsos agora exigem uma **cor de identidade** na criação e
+aceitam uma **imagem opcional**, que pode ser substituída ou removida depois no modo "Editar
+combatentes". O formulário reutiliza a linguagem do avatar de ficha (hachura colorida, prévia
+quadrada, JPEG/PNG/WEBP até 2MB); o cartão já consumia `--cor-ficha`/`imagemUrl`, portanto avulso e
+ficha continuam com uma única apresentação.
+
+`encontro_combatente` ganhou `cor_avulso`/`imagem_url_avulso` na migration 0023, com backfill da
+cor para avulsos existentes e `CHECK` que proíbe esses campos em combatente com ficha. Os DTOs
+separam criação (`corAvulso`) de edição (`EncontroCombatenteIdentidadeAlterarDto` e contratos de
+imagem); repository/mapper resolvem a identidade pela origem. `EncontroService` valida cor, MIME e
+2MB, exige mestre/encontro mutável, reutiliza o armazenamento de imagens e exclui o blob anterior
+ao substituir, remover a imagem ou remover o combatente. A API dedicada devolve o estado completo
+e emite o mesmo broadcast recortado do encontro.
+
+No frontend, a criação é atômica para quem usa a tela: cria o avulso, descobre o id no estado
+devolvido e então envia a imagem, mantendo os controles bloqueados até o fim. O modo de edição do
+cartão ganhou cor, troca e remoção; no mobile a faixa reserva espaço próprio e todos os três alvos
+medem 44×44px. O análogo visual foi o editor de avatar/cor das fichas, adaptado à densidade da
+Iniciativa.
+
+**Verificação.** Suítes `frontend` 1270/1270, `shared` 702/702 e `backend` 441/441;
+builds de shared/backend/frontend aprovados (frontend conserva o aviso preexistente de orçamento
+do bundle). Lint do frontend aprovado; lint completo do backend fica bloqueado por duas asserções
+desnecessárias em testes de campanha/ficha pertencentes às alterações concorrentes, fora deste
+recorte. Aplicação real + migration 0023 em `1920×1080` e `360×800`: criação com cor azul e upload
+real, imagem renderizada no cartão, troca para verde persistida, remoção real retornando
+`imagemUrl: null`, placeholder na cor preservada, sem overflow horizontal. A inspeção mobile achou
+os alvos de 28px na primeira passada; foram corrigidos para 44px e reinspecionados.
+
 ## 2026-08-22 — `m4-11`: acervo separado por tipo, criatura solta, dois defeitos vivos corrigidos
 
 Pedido direto do autor: a tela de fichas (`/fichas`, `m3-28`) listava agentes, criaturas e NPCs

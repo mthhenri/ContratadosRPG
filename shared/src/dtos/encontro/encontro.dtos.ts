@@ -8,7 +8,7 @@ import type {
   TipoDanoEnum,
   TipoFichaEnum,
 } from '../../enums';
-import type { FichaImagemFocoDto } from '../ficha';
+import type { FichaImagemArquivoDto, FichaImagemFocoDto } from '../ficha';
 
 /**
  * DTOs do módulo `encontro` (m7) — o Encontro de Combate: ordem de iniciativa com a Cadência das
@@ -173,6 +173,25 @@ export interface EncontroCombatenteAdicionarDto {
   readonly cadencia: CadenciaEnum | null;
   /** Obrigatório e ≥ 4 quando o avulso usa Cadência Frenética; ignorado nas cadências fixas. */
   readonly turnosPorRodada?: number | null;
+  /** Obrigatória para avulso; nula/ignorada quando a origem é uma ficha. */
+  readonly corAvulso?: string | null;
+}
+
+/** Entrada da troca da cor de identidade de um combatente avulso. */
+export interface EncontroCombatenteIdentidadeAlterarDto {
+  readonly id: number;
+  readonly cor: string;
+}
+
+/** Entrada multipart da troca de imagem de um combatente avulso. */
+export interface EncontroCombatenteImagemAlterarDto {
+  readonly id: number;
+  readonly arquivo: FichaImagemArquivoDto;
+}
+
+/** Entrada da remoção da imagem de um combatente avulso. */
+export interface EncontroCombatenteImagemExcluirDto {
+  readonly id: number;
 }
 
 /** Saída da adição — o combatente já resolvido, pronto para entrar na lista. */

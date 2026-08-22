@@ -496,6 +496,51 @@
     gap: 7px;
 
     &--curto { flex: 0 1 130px; }
+    &--identidade { flex: 0 1 118px; }
+    &--imagem { position: relative; flex: 1 1 190px; cursor: pointer; }
+  }
+
+  &__identidade {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__preview {
+    width: 44px;
+    height: 44px;
+    overflow: hidden;
+    flex: none;
+    background-color: color-mix(in srgb, var(--cor-avulso) 14%, var(--surface));
+    background-image: repeating-linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--cor-avulso) 30%, transparent) 0 3px,
+      transparent 3px 9px
+    );
+    border: 1px solid var(--cor-avulso);
+    border-radius: var(--radius-control);
+  }
+
+  &__preview-imagem { width: 100%; height: 100%; display: block; object-fit: cover; }
+
+  &__cor {
+    width: 44px;
+    height: 44px;
+    padding: 3px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+  }
+
+  &__arquivo { display: flex; align-items: center; min-height: 44px; color: var(--text-dim); }
+
+  &__arquivo-entrada {
+    position: absolute;
+    inset: 20px 0 0;
+    width: 100%;
+    opacity: 0;
+    cursor: pointer;
   }
 
   &__rotulo {

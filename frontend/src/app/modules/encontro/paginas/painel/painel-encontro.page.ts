@@ -12,7 +12,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { Observable, filter, finalize } from 'rxjs';
+import { Observable, filter, finalize, of, switchMap } from 'rxjs';
 
 import type {
   EncontroCombatenteResumoDto,
@@ -239,7 +239,12 @@ export class PainelEncontro {
     vidaMaximaAvulso: [10, [Validators.required, Validators.min(1)]],
     cadencia: [CadenciaEnum.SINGULAR],
     turnosPorRodada: [4, [Validators.required, Validators.min(4)]],
+    corAvulso: ['#d53030', [Validators.required, Validators.pattern(/^#[0-9a-f]{6}$/i)]],
   });
+
+  /** Arquivo e prévia locais; o upload só começa depois que o combatente recebe um id. */
+  protected readonly imagemAvulsoArquivo = signal<File | null>(null);
+  protected readonly imagemAvulsoPreview = signal<string | null>(null);
 
   /**
    * `true` quando quem abriu a tela é o mestre da campanha — a mesma leitura do
@@ -743,7 +748,11 @@ export class PainelEncontro {
       nomeAvulso: '',
       vidaMaximaAvulso: 10,
       cadencia: CadenciaEnum.SINGULAR,
+      turnosPorRodada: 4,
+      corAvulso: '#d53030',
     });
+    this.imagemAvulsoArquivo.set(null);
+    this.imagemAvulsoPreview.set(null);
     this.adicionandoAvulso.set(false);
   }
 
@@ -789,24 +798,80 @@ export class PainelEncontro {
       return;
     }
     const valores = this.formularioAvulso.getRawValue();
-    this.executarNoEncontro(
-      this.encontroService.adicionarCombatente(encontroAtual.id, {
+    const idsAnteriores = new Set(encontroAtual.combatentes.map((combatente) => combatente.id));
+    const arquivo = this.imagemAvulsoArquivo();
+    const adicao = this.encontroService.adicionarCombatente(encontroAtual.id, {
         fichaId: null,
         nomeAvulso: valores.nomeAvulso.trim(),
         vidaMaximaAvulso: valores.vidaMaximaAvulso,
         cadencia: valores.cadencia,
+        corAvulso: valores.corAvulso,
         ...(valores.cadencia === CadenciaEnum.FRENETICA
           ? { turnosPorRodada: valores.turnosPorRodada }
           : {}),
-      }),
-      () =>
-        this.formularioAvulso.reset({
-          nomeAvulso: '',
-          vidaMaximaAvulso: 10,
-          cadencia: CadenciaEnum.SINGULAR,
-          turnosPorRodada: 4,
+      });
+    this.emOperacao.set(true);
+    adicao
+      .pipe(
+        switchMap((estado) => {
+          const novoAvulso = estado.combatentes.find(
+            (combatente) => !idsAnteriores.has(combatente.id) && combatente.fichaId === null,
+          );
+          return arquivo && novoAvulso
+            ? this.encontroService.alterarImagemAvulso(novoAvulso.id, arquivo)
+            : of(estado);
         }),
-    );
+        finalize(() => this.emOperacao.set(false)),
+      )
+      .subscribe({
+        next: (estado) => {
+          this.encontro.set(estado);
+          this.formularioAvulso.reset({
+            nomeAvulso: '',
+            vidaMaximaAvulso: 10,
+            cadencia: CadenciaEnum.SINGULAR,
+            turnosPorRodada: 4,
+            corAvulso: '#d53030',
+          });
+          this.imagemAvulsoArquivo.set(null);
+          this.imagemAvulsoPreview.set(null);
+        },
+      });
+  }
+
+  /** Valida e prepara a prévia da imagem opcional do formulário. */
+  protected selecionarImagemAvulso(evento: Event): void {
+    const entrada = evento.target as HTMLInputElement;
+    const arquivo = entrada.files?.[0];
+    if (!arquivo) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(arquivo.type) || arquivo.size > 2 * 1024 * 1024) {
+      entrada.value = '';
+      this.messageService.add({ severity: 'warn', summary: 'Imagem inválida', detail: 'Use JPEG, PNG ou WEBP de até 2MB.' });
+      return;
+    }
+    this.imagemAvulsoArquivo.set(arquivo);
+    const leitor = new FileReader();
+    leitor.onload = () => this.imagemAvulsoPreview.set(String(leitor.result));
+    leitor.readAsDataURL(arquivo);
+  }
+
+  /** Persiste a cor escolhida no cartão editável do avulso. */
+  protected alterarCorAvulso(combatente: EncontroCombatenteResumoDto, cor: string): void {
+    this.executarNoEncontro(this.encontroService.alterarIdentidadeAvulso(combatente.id, cor));
+  }
+
+  /** Valida e substitui a imagem do cartão editável do avulso. */
+  protected alterarImagemAvulso(combatente: EncontroCombatenteResumoDto, arquivo: File): void {
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(arquivo.type) || arquivo.size > 2 * 1024 * 1024) {
+      this.messageService.add({ severity: 'warn', summary: 'Imagem inválida', detail: 'Use JPEG, PNG ou WEBP de até 2MB.' });
+      return;
+    }
+    this.executarNoEncontro(this.encontroService.alterarImagemAvulso(combatente.id, arquivo));
+  }
+
+  /** Remove a imagem do cartão editável do avulso. */
+  protected removerImagemAvulso(combatente: EncontroCombatenteResumoDto): void {
+    this.executarNoEncontro(this.encontroService.excluirImagemAvulso(combatente.id));
   }
 
   /** Remove um combatente do encontro. */

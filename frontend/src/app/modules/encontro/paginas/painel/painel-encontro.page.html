@@ -443,6 +443,35 @@
             </label>
           }
 
+          <label class="adicionar__campo adicionar__campo--identidade">
+            <span class="adicionar__rotulo">Cor do avulso</span>
+            <span class="adicionar__identidade" [style.--cor-avulso]="formularioAvulso.controls.corAvulso.value">
+              <span class="adicionar__preview" aria-hidden="true">
+                @if (imagemAvulsoPreview(); as preview) {
+                  <img class="adicionar__preview-imagem" [src]="preview" alt="" />
+                }
+              </span>
+              <input
+                class="adicionar__cor"
+                type="color"
+                formControlName="corAvulso"
+                aria-label="Cor do avulso"
+              />
+            </span>
+          </label>
+
+          <label class="adicionar__campo adicionar__campo--imagem">
+            <span class="adicionar__rotulo">Imagem opcional</span>
+            <span class="campo adicionar__arquivo">{{ imagemAvulsoArquivo()?.name ?? 'Escolher imagem' }}</span>
+            <input
+              class="adicionar__arquivo-entrada"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              aria-label="Imagem do avulso"
+              (change)="selecionarImagemAvulso($event)"
+            />
+          </label>
+
           <button
             class="botao botao--primario adicionar__acao"
             type="submit"
@@ -484,6 +513,9 @@
             (iniciativaAtribuida)="atribuirIniciativa(combatente, $event)"
             (removido)="removerCombatente(combatente)"
             (abrirFicha)="abrirFichaFlutuante(combatente)"
+            (corAvulsoAlterada)="alterarCorAvulso(combatente, $event)"
+            (imagemAvulsoAlterada)="alterarImagemAvulso(combatente, $event)"
+            (imagemAvulsoRemovida)="removerImagemAvulso(combatente)"
           />
         }
       </div>
