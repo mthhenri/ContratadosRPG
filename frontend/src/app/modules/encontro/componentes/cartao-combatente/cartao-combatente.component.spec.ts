@@ -204,6 +204,45 @@ describe('CartaoCombatente', () => {
       .toBe(4);
   });
 
+  it('só oferece o botão "Receber dano" quando o ajuste está liberado (m7-17)', () => {
+    const semAjuste = montar(base);
+    expect(
+      (semAjuste.nativeElement as HTMLElement).querySelector('.combatente__receber-dano'),
+    ).toBeNull();
+
+    const comAjuste = montar(base, { podeAjustar: true });
+    expect(
+      (comAjuste.nativeElement as HTMLElement).querySelector('.combatente__receber-dano'),
+    ).not.toBeNull();
+  });
+
+  it('confirmar o dano no dialog abate a Vida pelo mesmo canal dos steppers (m7-17)', () => {
+    const fixture = montar(base, { podeAjustar: true });
+
+    let deltaEmitido: number | undefined;
+    fixture.componentInstance.vidaAjustada.subscribe((delta) => (deltaEmitido = delta));
+
+    // O dialog é controlado pelo próprio cartão (`receberDanoAberto`); simula a confirmação
+    // emitindo diretamente o evento que `ReceberDanoDialog` dispararia ao clicar "Receber dano".
+    const dialogDebug = fixture.debugElement.query((de) => de.name === 'app-receber-dano-dialog');
+    dialogDebug.componentInstance.danoConfirmado.emit(25);
+
+    expect(deltaEmitido).toBe(-25);
+  });
+
+  it('clampa o dano do dialog à Vida atual, para o backend nunca rejeitar por Vida negativa (m7-17)', () => {
+    // base.vidaAtual = 31 — dano de 60 (maior que a Vida) precisa emitir só -31, nunca -60.
+    const fixture = montar(base, { podeAjustar: true });
+
+    let deltaEmitido: number | undefined;
+    fixture.componentInstance.vidaAjustada.subscribe((delta) => (deltaEmitido = delta));
+
+    const dialogDebug = fixture.debugElement.query((de) => de.name === 'app-receber-dano-dialog');
+    dialogDebug.componentInstance.danoConfirmado.emit(60);
+
+    expect(deltaEmitido).toBe(-31);
+  });
+
   it('acompanha o gatilho de ajuste do mobile, que só existe quando há o que ajustar (m7-08)', () => {
     const semAjuste = montar(base);
     expect((semAjuste.nativeElement as HTMLElement).querySelector('.combatente__ajustar')).toBeNull();

@@ -1,5 +1,77 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-22 — `m7-17`: "Receber dano" — tomador de dano facilitado para mestre e jogador
+
+Pedido direto do autor: um botão "Receber dano" que abre um dialog com os cinco tipos de dano do
+documento, aplica a resistência da ficha (mais um ajuste custom por tipo, para efeito de cena) e
+abate da Vida já o valor efetivo — sem que ninguém precise fazer a subtração na mão. Passou pelo
+fluxo completo de brainstorming arquitetural (spec `docs/specs/done/m7-17-receber-dano.spec.md`).
+
+A regra é assimétrica e a spec deixou isso explícito antes de qualquer código: o documento diz que
+**resistência Geral reduz qualquer tipo de dano**, enquanto **dano Geral é irredutível**. A regra
+pura `calcularDanoRecebido` (`shared/src/regras/encontro/receber-dano.ts`) trata os quatro tipos
+bloqueáveis (Físico/Balístico/Explosão/Químico) reduzindo cada um por `resistenciaFicha +
+resistenciaCustom` (piso 0, sem compensar entre tipos), soma os residuais, aplica a resistência
+Geral **uma única vez** sobre essa soma (não repetida por linha) e só então soma o dano Geral
+informado, que entra inteiro. 11 testes unitários cobrem cada combinação, incluindo os casos onde
+a resistência excede o bruto e onde nenhum tipo foi informado.
+
+`ReceberDanoDialog` (`frontend/src/app/shared/receber-dano/`) é o único componente da UI,
+reaproveitado em três pontos de entrada distintos — cada um alinhado à permissão que já existe hoje
+para mexer naquela Vida, sem abrir nenhuma permissão nova:
+
+1. **Cartão do combatente no encontro** (`CartaoCombatente`), visível só sob a mesma `podeAjustar`
+   que já rege os steppers hoje — descobri em brainstorming que o endpoint `PUT
+   /encontro/combatente/:id/vida` já é mestre-only mesmo para o dono da própria ficha, então o
+   jogador não ganhou esse botão ali. `EncontroCombatenteResumoDto` também não carrega resistências
+   (só Vida/Energia/defesas) — buscar a ficha completa só para isso seria uma chamada de rede nova,
+   fora de escopo; o dialog aqui não recebe `resistenciasFicha`, só o campo custom.
+2. **Ficha de agente** (`FichaVisualizacao`), ao lado do rótulo "Vida", com `resistenciasFicha` vindo
+   do `resistencias` já calculado por `montarResistencias` — é o caminho do jogador.
+3. **Ficha de criatura** (`CriaturaVisualizacao`, mestre-only), mesmo padrão, com
+   `resistenciasFicha` somando `dados().resistencias` por tipo (a lista da criatura tem `subtipo` e
+   pode repetir o mesmo tipo em mais de uma linha).
+
+Confirmar só emite o total já efetivo; quem hospeda decide como abater a Vida. No cartão do
+encontro isso reaproveita `vidaAjustada` → `ajustarVida()` → `EncontroService.ajustarVida()`, que já
+grava a entrada `DANO` no log (texto padrão, sem detalhamento por tipo — plugar `origemTexto` com o
+detalhamento foi avaliado e descartado por ampliar o contrato do output `vidaAjustada` além do
+escopo). Nas fichas, o abate usa `ajustar()`/`ajustarVida()` locais, sem log — mesma regra de
+qualquer edição de vitalidade fora do encontro.
+
+**Achado real durante a verificação ao vivo, não hipotético.** Com dano efetivo maior que a Vida
+atual, o delta enviado deixava a Vida resultante negativa, e o backend (`ajustarVida` no encontro,
+`alterarVitalidade`/`alterarVitalidadeCriatura` na ficha) rejeita isso inteiro — a Vida não mudava e
+um toast "Informe Vida atual (não negativa)..." aparecia para quem só queria aplicar um dano grande.
+Corrigido clampando o delta **no ponto de entrada** antes de emitir: `CartaoCombatente.receberDano`
+agora faz `Math.min(total, combatente().vidaAtual)`, mesmo piso que os steppers já respeitam via
+`[disabled]`. As duas fichas já estavam protegidas — `ajustar()` (agente) passa por
+`clamparVitalidade` e `ajustarVida()` (criatura) já fazia `Math.max(0, …)` — então só o cartão do
+encontro precisou do fix. Um teste específico (`clampa o dano do dialog à Vida atual...`) prova o
+caso limite.
+
+Verificação visual ao vivo, `1920×1080` e `360×800`, stack real (Postgres + Nest + Angular),
+cenário montado por REST: mestre aplicando dano a um combatente pelo cartão do encontro (com e sem
+estourar a Vida), jogador aplicando dano na própria ficha (incluindo um dano de 999 contra Vida
+baixa, para provar o clamp), e um membro sem `usuario_ficha_acesso` corretamente barrado antes de a
+ficha carregar (§14, comportamento pré-existente, não desta tarefa). Um falso alarme no caminho: a
+primeira captura do dialog no mobile pareceu "transparente" — era só a screenshot tirada durante a
+animação de entrada do PrimeNG, antes da máscara escurecer; com um `waitForTimeout` maior o dialog
+aparece opaco e legível, sem mudança de código necessária.
+
+**Colisão de numeração descoberta e corrigida nesta sessão.** A spec nasceu como `m7-16` (pedido
+pelo autor), mas esse número já tinha sido usado em `HISTORY.md`/`CONTEXT.md` para o ajuste de
+"identidade de carteirinha" do dia anterior — um trabalho que nunca passou por spec formal em
+`docs/specs/`, então não havia arquivo para colidir, só o rótulo textual nas duas entradas de
+histórico. Renomeado para `m7-17` antes do fecho: arquivo da spec, comentários e nomes de teste nos
+componentes tocados por esta tarefa. Cuidado ao renomear: um `sed` em massa por `m7-16` → `m7-17`
+inicialmente pegou comentários e nomes de teste que pertenciam ao trabalho de carteirinha (em
+`cartao-combatente.component.{ts,scss,spec.ts}`, que os dois trabalhos tocam) — revertidos
+manualmente linha a linha depois de conferir cada ocorrência contra o assunto real do comentário.
+
+Fecho: `npm run test -w shared` 699/699, `npm run test -w frontend` 1247/1247, lint limpo nos dois
+workspaces, `npx tsc --noEmit` limpo. Spec movida para `docs/specs/done/m7-17-receber-dano.spec.md`.
+
 ## 2026-08-21 — `m7-16`: dois retoques na carteirinha, direto do feedback ao vivo do autor
 
 Depois de ver a `m7-16` rodando, o autor pediu dois ajustes na própria carteirinha:

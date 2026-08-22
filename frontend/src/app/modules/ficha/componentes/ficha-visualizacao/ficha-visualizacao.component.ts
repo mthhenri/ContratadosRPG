@@ -88,6 +88,7 @@ import { FocoImagem } from '../../../../shared/foco-imagem.directive';
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
 import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
+import { ReceberDanoDialog } from '../../../../shared/receber-dano/receber-dano-dialog.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
@@ -396,6 +397,7 @@ export interface AjusteClasse {
     Dialog,
     AjusteEnquadramentoImagem,
     FocoImagem,
+    ReceberDanoDialog,
   ],
   templateUrl: './ficha-visualizacao.component.html',
   styleUrl: './ficha-visualizacao.component.scss',
@@ -981,6 +983,9 @@ export class FichaVisualizacao {
 
   /** Campo de vitalidade em digitação direta (clicou no valor), ou `null` fora de edição. */
   protected readonly editandoVitalidade = signal<CampoVitalidade | null>(null);
+
+  /** Estado do dialog "Receber dano" (m7-17) — aqui a resistência automática está disponível. */
+  protected readonly receberDanoAberto = signal(false);
   private readonly entradaVitalidade = viewChild<ElementRef<HTMLInputElement>>('entradaVitalidade');
 
   /** Derivado em digitação direta (clicou no valor da coluna), ou `null` fora de edição. */
@@ -1663,6 +1668,11 @@ export class FichaVisualizacao {
     }
   }
 
+  /** Abate o total já efetivo do dialog "Receber dano" (m7-17) — mesmo caminho de `ajustar`. */
+  protected receberDano(total: number): void {
+    this.ajustar('vidaAtual', -total);
+  }
+
   /** Valor exibido de cada campo de vitalidade (a máxima resolve stored ?? derivado). */
   private valorVitalidade(campo: CampoVitalidade): number {
     switch (campo) {
@@ -2337,6 +2347,11 @@ export class FichaVisualizacao {
       manual: this.dados().derivados?.resistencias,
       formacao: obterResistenciaFormacao(this.formacaoOrigem()),
     }),
+  );
+
+  /** `resistencias` remapeada para o input `resistenciasFicha` do dialog "Receber dano" (m7-17). */
+  protected readonly resistenciasParaReceberDano = computed<Partial<Record<TipoDanoEnum, number>>>(
+    () => Object.fromEntries(this.resistencias().map((linha) => [linha.tipo, linha.total])),
   );
 
   /**

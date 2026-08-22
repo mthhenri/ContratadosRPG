@@ -71,6 +71,17 @@
           <app-icone nome="visao-geral" />
         </button>
       }
+      @if (podeAjustar()) {
+        <button
+          class="combatente__receber-dano"
+          type="button"
+          [attr.aria-label]="'Receber dano — ' + combatente().nome"
+          [appTooltip]="'Receber dano'"
+          (click)="receberDanoAberto.set(true)"
+        >
+          <app-icone nome="combate" />
+        </button>
+      }
       @if (emEdicao()) {
         <button
           class="combatente__remover"
@@ -191,3 +202,11 @@
     }
   </div>
 </article>
+
+@if (podeAjustar()) {
+  <app-receber-dano-dialog
+    [aberto]="receberDanoAberto()"
+    (danoConfirmado)="receberDano($event)"
+    (fechado)="receberDanoAberto.set(false)"
+  />
+}

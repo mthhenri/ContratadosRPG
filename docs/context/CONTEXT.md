@@ -1,19 +1,20 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-21 · **Última decisão registrada:** `m7-16` — na tela de Iniciativa,
-> um agente (`JOGADOR`) de ficha **não oculta** (m3-65) mostra avatar/dono/classe-arquétipo pra
-> qualquer membro, mesmo sem `usuario_ficha_acesso` (só os números continuam atrás da concessão;
-> nível fica de fora — a carteirinha identifica, não avalia a força — e sem ela não desenha "Vida
-> —"); mais 4 ajustes de UI no mobile (nome dos cards, bug do minimizar, minimizar=fechar,
-> cabeçalho reorganizado em dois grupos) — ver seção 1.
+> **Última revisão:** 2026-08-21 · **Última decisão registrada:** `m7-17` — "Receber dano": dialog
+> compartilhado (`ReceberDanoDialog`) que aplica resistência da ficha + custom por tipo e emite o
+> total já efetivo, clampado à Vida atual antes de sair do componente (achado em verificação ao
+> vivo: sem o clamp, o backend rejeita o ajuste inteiro por "Vida negativa"). Botão no cartão do
+> combatente (mestre, dentro do encontro, sem resistência automática — o resumo do encontro não
+> carrega a ficha completa) e ao lado do rótulo "Vida" na ficha de agente e de criatura (dono/mestre,
+> com resistência automática de `montarResistencias`/`dados().resistencias`). Resistência Geral
+> reduz qualquer tipo bloqueável uma única vez; dano Geral é irredutível — ver seção 1.
 >
-> **Decisão anterior:** o recorte mobile do Encontro
-> (`m7-08`, que fecha o M7) é feito **inteiramente pelo CSS do breakpoint** — os componentes só
-> guardam um sinal de intenção (`ajustando`/`aberto`/`acoesAbertas`) e ninguém consulta
-> `matchMedia`; onde o texto muda com a largura, os dois rótulos ficam no DOM e o `display: none`
-> escolhe. A ação primária do mestre virou barra `position: fixed` no rodapé, e o que competia com
-> ela (steppers, ações secundárias, log) ficou atrás de gatilho próprio — sem perder função — ver
-> seção 1
+> **Decisão anterior:** `m7-16` — na tela de Iniciativa, um agente (`JOGADOR`) de ficha **não
+> oculta** (m3-65) mostra avatar/dono/classe-arquétipo pra qualquer membro, mesmo sem
+> `usuario_ficha_acesso` (só os números continuam atrás da concessão; nível fica de fora — a
+> carteirinha identifica, não avalia a força — e sem ela não desenha "Vida —"); mais 4 ajustes de UI
+> no mobile (nome dos cards, bug do minimizar, minimizar=fechar, cabeçalho reorganizado em dois
+> grupos) — ver seção 1.
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -26,12 +27,13 @@
 
 ## 1. Próxima Task
 
-O **M7 — Encontro de Combate** está **concluído**, incluindo os sete ajustes de pós-milestone: as 8
+O **M7 — Encontro de Combate** está **concluído**, incluindo os oito ajustes de pós-milestone: as 8
 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend
 de condução + tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da
 rodada, `m7-08` refinamento mobile) mais `m7-09` (turno atual do jogador), `m7-10` (histórico de
 rolagens), `m7-11` (identidade dos cartões), `m7-12` (layout desktop), `m7-13` (acesso pela
-campanha), `m7-14` (dialog de ficha) e `m7-15` (ações mobile do jogador) — todas entregues. O
+campanha), `m7-14` (dialog de ficha), `m7-15` (ações mobile do jogador), `m7-16` (identidade "de
+carteirinha") e `m7-17` ("Receber dano") — todas entregues. O
 **M6 — Gestão de Usuários** também está **concluído**: `m6-08` (impersonação administrativa) fechou
 a última extensão do milestone. A única frente aberta agora é o **M4** (Ficha de Criatura/NPC —
 restam `m4-05`…`m4-10`), ao lado de `m3-53` (M3).
@@ -76,6 +78,21 @@ flutuante parou de deixar um selo `position: fixed` preso sobre um cartão (no m
 `recolher()` chama `fechar()` — sem janela pra recolher a um canto lá, as duas ações viram uma só),
 e o cabeçalho da Iniciativa (`.iniciativa__acoes`) virou dois grupos — status/navegação do
 encontro e utilitários da sessão — que no mobile empilham em ordem fixa, sem saltar de posição.
+
+**`m7-17` — "Receber dano" (tomador de dano facilitado, pedido direto do autor).** Regra pura
+`calcularDanoRecebido` (`shared/regras/encontro/receber-dano.ts`): os quatro tipos bloqueáveis
+reduzem por `resistenciaFicha + resistenciaCustom` (piso 0), a resistência **Geral** reduz a soma
+dos residuais **uma única vez** (não por linha), e o dano **Geral** é irredutível. `ReceberDanoDialog`
+(`frontend/shared/receber-dano/`) é reaproveitado em três entradas: cartão do combatente
+(`CartaoCombatente`, mestre-only, mesma `podeAjustar` dos steppers; sem `resistenciasFicha` — o
+resumo do encontro não carrega a ficha completa), e o rótulo "Vida" da ficha de agente
+(`resistenciasFicha` de `montarResistencias`) e de criatura (soma de `dados().resistencias` por
+tipo). Confirmar só emite o total efetivo; quem hospeda abate a Vida — cartão via `vidaAjustada`
+(grava o log `DANO` já existente, sem detalhamento por tipo), fichas via `ajustar()`/`ajustarVida()`
+locais (sem log). **Achado na verificação ao vivo:** dano maior que a Vida atual gerava delta que o
+backend rejeita (`ajustarVida`/`alterarVitalidade` recusam Vida negativa) — corrigido clampando o
+delta no cartão do combatente (`Math.min(total, vidaAtual)`; as fichas já estavam protegidas por
+`clamparVitalidade`/`Math.max(0, …)`). Verificado em `1920×1080`/`360×800`.
 
 `m6-08` também já estava implementada (ver a entrega completa na seção 4, "Autenticação e conta");
 só faltava a captura em `1920×1080` (o `360×800` já tinha sido confirmado em 2026-08-12) — feita

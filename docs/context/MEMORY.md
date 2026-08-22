@@ -82,7 +82,8 @@ Fluxo obrigatório: **controller (burro) → service (regra) → repository (só
 | Componentes da ficha | `frontend/src/app/modules/ficha/componentes/` — `ficha-visualizacao/`, `ficha-inventario/`, `ficha-habilidades/`, `ficha-sanidade/`, `ficha-rolagens/`, `ficha-rolagens-painel/`, `ficha-combos/`, `ficha-habilidade-seletor/`, `guia-equipamento-loja/`, `guia-formula/` |
 | Ficha flutuante da Iniciativa e atalho mobile **Minha ficha** | `frontend/src/app/modules/encontro/componentes/ficha-flutuante/` e `frontend/src/app/modules/encontro/paginas/painel/`; no mobile, `ficha-flutuante__corpo` é a rolagem vertical única e passa `rolagemExterna` à ficha de jogador |
 | Composables de página da ficha (uma instância por página, `providers: []`) | `frontend/src/app/modules/ficha/` — `ficha-edicao.service.ts` (handlers `ajustar*`), `ficha-rolagem-registro.service.ts` (flag "Rolagem oculta" + registro do histórico) |
-| Componentes reutilizáveis | `frontend/src/app/shared/` — `layout/`, `icone/`, `bandeja-dados/`, `historico-rolagens-sidebar/`, `calculadora-flutuante/`, `tempo-real/`, `tooltip/`, `overflow-fade/`, `hold-repeat/`, `marca/`… |
+| Componentes reutilizáveis | `frontend/src/app/shared/` — `layout/`, `icone/`, `bandeja-dados/`, `historico-rolagens-sidebar/`, `calculadora-flutuante/`, `tempo-real/`, `tooltip/`, `overflow-fade/`, `hold-repeat/`, `marca/`, `receber-dano/` (dialog "Receber dano", m7-17)… |
+| "Receber dano" — regra de resistência × dano por tipo (assimetria da camada Geral) | `shared/src/regras/encontro/receber-dano.ts` (`calcularDanoRecebido`) — consumida só por `frontend/src/app/shared/receber-dano/` |
 | Services, guards, interceptors | `frontend/src/app/core/` |
 | **Tokens e tema em runtime** | `frontend/src/styles/tema/` — `_tokens.scss`, `_base.scss`, `_breakpoints.scss`, `contencao.preset.ts` |
 | Rotas raiz | `frontend/src/app/app.routes.ts` · config em `app.config.ts` |

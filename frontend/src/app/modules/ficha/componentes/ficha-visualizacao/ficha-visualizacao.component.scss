@@ -2168,6 +2168,32 @@
     gap: 6px;
   }
 
+  // Rótulo "Vida" + botão "Receber dano" (m7-17), lado a lado sobre o medidor.
+  &__rotulo-linha {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__receber-dano {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+    &:hover { color: var(--accent); border-color: var(--accent-border); background: var(--surface-2); }
+
+    @include bp.mobile { width: bp.$alvo-toque; height: bp.$alvo-toque; }
+  }
+
   // Valor + passos − / + (quando ajustável): agrupa à direita, alinhado à barra.
   &__medidor {
     display: flex;

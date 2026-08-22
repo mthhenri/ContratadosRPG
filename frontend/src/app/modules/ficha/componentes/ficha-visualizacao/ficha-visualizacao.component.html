@@ -715,8 +715,21 @@
         <div class="ficha-vitalidade" #blocoVitalidade>
           <div class="ficha-barra ficha-barra--vida">
             <div class="ficha-barra__topo">
-              <span class="ficha-barra__rotulo ficha-barra__rotulo--dica" [appTooltip]="progressaoVida()">
-                Vida
+              <span class="ficha-barra__rotulo-linha">
+                <span class="ficha-barra__rotulo ficha-barra__rotulo--dica" [appTooltip]="progressaoVida()">
+                  Vida
+                </span>
+                @if (ajustavel()) {
+                  <button
+                    class="ficha-barra__receber-dano"
+                    type="button"
+                    aria-label="Receber dano"
+                    [appTooltip]="'Receber dano'"
+                    (click)="receberDanoAberto.set(true)"
+                  >
+                    <app-icone nome="combate" />
+                  </button>
+                }
               </span>
               <div class="ficha-barra__medidor">
                 @if (ajustavel()) {
@@ -1976,3 +1989,12 @@
 
   <app-bandeja-dados />
 </div>
+
+@if (ajustavel()) {
+  <app-receber-dano-dialog
+    [aberto]="receberDanoAberto()"
+    [resistenciasFicha]="resistenciasParaReceberDano()"
+    (danoConfirmado)="receberDano($event)"
+    (fechado)="receberDanoAberto.set(false)"
+  />
+}

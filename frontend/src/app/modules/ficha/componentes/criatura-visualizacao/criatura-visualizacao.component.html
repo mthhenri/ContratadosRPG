@@ -297,7 +297,20 @@
         </div>
 
         <div class="criatura__vida">
-          <span class="criatura__vida-rotulo">Vida</span>
+          <span class="criatura__vida-rotulo-linha">
+            <span class="criatura__vida-rotulo">Vida</span>
+            @if (ajustavel()) {
+              <button
+                class="criatura__receber-dano"
+                type="button"
+                aria-label="Receber dano"
+                [appTooltip]="'Receber dano'"
+                (click)="receberDanoAberto.set(true)"
+              >
+                <app-icone nome="combate" />
+              </button>
+            }
+          </span>
           <div class="criatura__vitalidade">
             <button class="criatura__passo" type="button" [disabled]="!ajustavel()" (click)="ajustarVida(-1)" aria-label="Reduzir vida">−</button>
             @if (editando('vidaAtual')) {
@@ -968,3 +981,12 @@
     </div>
   }
 </article>
+
+@if (ajustavel()) {
+  <app-receber-dano-dialog
+    [aberto]="receberDanoAberto()"
+    [resistenciasFicha]="resistenciasParaReceberDano()"
+    (danoConfirmado)="receberDano($event)"
+    (fechado)="receberDanoAberto.set(false)"
+  />
+}

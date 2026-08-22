@@ -302,9 +302,21 @@
 
   // --- Vida ---
   &__vida { display: flex; flex-direction: column; align-items: center; gap: 11px; padding-top: 4px; }
+  &__vida-rotulo-linha { display: flex; align-items: center; gap: 6px; }
   &__vida-rotulo {
     font: 11px var(--font-mono); text-transform: uppercase; letter-spacing: .16em; color: var(--text-dim);
     border-bottom: 1px dotted var(--border-strong); padding-bottom: 2px;
+  }
+  // Botão "Receber dano" (m7-17), ao lado do rótulo "Vida".
+  &__receber-dano {
+    display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px;
+    font-size: 10px; color: var(--text-dim); background: transparent;
+    border: 1px solid var(--border-strong); border-radius: 3px; cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+    &:hover { color: var(--accent); border-color: var(--accent-border); background: var(--surface-2); }
+
+    @include bp.mobile { width: bp.$alvo-toque; height: bp.$alvo-toque; }
   }
   &__vitalidade { display: flex; align-items: center; gap: 9px; }
   &__passo {

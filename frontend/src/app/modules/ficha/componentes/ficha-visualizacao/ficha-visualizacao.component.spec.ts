@@ -128,6 +128,25 @@ describe('FichaVisualizacao', () => {
     expect(barra.replace(/\s+/g, '')).toBe(`5/${vidaEsperada}`);
   });
 
+  it('o botão "Receber dano" não existe read-only (m7-17)', () => {
+    const { raiz } = montar(dados);
+    expect(raiz.querySelector('.ficha-barra__receber-dano')).toBeNull();
+  });
+
+  it('confirmar o dialog "Receber dano" abate a Vida pelo mesmo canal do ajuste (m7-17)', () => {
+    const { raiz, fixture } = montar(dados, 'Corvo', 42, true);
+    expect(raiz.querySelector('.ficha-barra__receber-dano')).not.toBeNull();
+
+    const eventos: { campo: string; valor: number }[] = [];
+    fixture.componentInstance.ajusteVitalidade.subscribe((evento) => eventos.push(evento));
+
+    const dialogDebug = fixture.debugElement.query((de) => de.name === 'app-receber-dano-dialog');
+    dialogDebug.componentInstance.danoConfirmado.emit(3);
+
+    // Vida atual 5, dano efetivo 3 → 2.
+    expect(eventos).toEqual([{ campo: 'vidaAtual', valor: 2 }]);
+  });
+
   it('mostra a progressão da classe no hover (appTooltip) dos rótulos de Vida e Energia', () => {
     const { fixture } = montar(dados);
     const dicaVida = fixture.debugElement

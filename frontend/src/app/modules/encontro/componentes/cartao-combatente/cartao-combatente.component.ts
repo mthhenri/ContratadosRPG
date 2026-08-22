@@ -6,6 +6,7 @@ import { calcularTurnosPorRodada } from '@contratados-rpg/shared/regras/encontro
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { FocoImagem } from '../../../../shared/foco-imagem.directive';
+import { ReceberDanoDialog } from '../../../../shared/receber-dano/receber-dano-dialog.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { rotuloNivelAmeaca } from '../../../ficha/rotulos-criatura';
 import { rotuloClasseCompleto } from '../../../ficha/rotulos-ficha';
@@ -42,7 +43,7 @@ interface DefesaExibidaDto {
  */
 @Component({
   selector: 'app-cartao-combatente',
-  imports: [Icone, Tooltip, FocoImagem],
+  imports: [Icone, Tooltip, FocoImagem, ReceberDanoDialog],
   templateUrl: './cartao-combatente.component.html',
   styleUrl: './cartao-combatente.component.scss',
 })
@@ -89,6 +90,10 @@ export class CartaoCombatente {
    * nem consultar `matchMedia`: quem sabe a largura da tela é a folha de estilo.
    */
   protected readonly ajustando = signal(false);
+
+  /** Estado do dialog "Receber dano" (m7-17) — sem resistência automática aqui: o cartão não
+   *  carrega a ficha completa, só o resumo do encontro (`EncontroCombatenteResumoDto`). */
+  protected readonly receberDanoAberto = signal(false);
 
   protected readonly TipoFichaEnum = TipoFichaEnum;
 
@@ -235,6 +240,17 @@ export class CartaoCombatente {
   /** Abre/fecha os steppers do cartão (só o mobile os esconde). */
   protected alternarAjuste(): void {
     this.ajustando.update((aberto) => !aberto);
+  }
+
+  /**
+   * Abate o total já efetivo do dialog "Receber dano" (m7-17) — clampado à Vida atual do
+   * combatente, mesmo piso 0 que os steppers já respeitam via `[disabled]`. Sem o clamp, um dano
+   * maior que a Vida atual gera um delta que o backend rejeita inteiro (`vidaAtual` não pode ficar
+   * negativa), e a Vida não muda — o dono do dialog nunca vê o valor negativo, só o efeito.
+   */
+  protected receberDano(total: number): void {
+    const delta = -Math.min(total, this.combatente().vidaAtual);
+    this.vidaAjustada.emit(delta);
   }
 
   /** Repassa a iniciativa digitada, ignorando o campo vazio ou não-numérico. */

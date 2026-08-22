@@ -81,6 +81,32 @@ describe('CriaturaVisualizacao', () => {
     expect(eventos['vitalidadeMudou']).toEqual([{ campo: 'vidaAtual', valor: 95 }]);
   });
 
+  it('confirmar o dialog "Receber dano" abate a Vida pelo mesmo canal de ajustarVida (m7-17)', () => {
+    const { fixture, eventos } = montar();
+
+    const dialogDebug = fixture.debugElement.query((de) => de.name === 'app-receber-dano-dialog');
+    dialogDebug.componentInstance.danoConfirmado.emit(15);
+
+    // Vida atual 100, dano efetivo 15 → 85.
+    expect(eventos['vitalidadeMudou']).toEqual([{ campo: 'vidaAtual', valor: 85 }]);
+  });
+
+  it('soma linhas repetidas de resistências.tipo ao montar resistenciasFicha do dialog (m7-17)', () => {
+    const { fixture } = montar();
+    fixture.componentRef.setInput('dados', {
+      ...dados,
+      resistencias: [
+        { tipo: TipoDanoEnum.FISICO, subtipo: null, valor: 3 },
+        { tipo: TipoDanoEnum.FISICO, subtipo: 'Casco', valor: 2 },
+      ],
+    });
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance['resistenciasParaReceberDano']()).toEqual({
+      [TipoDanoEnum.FISICO]: 5,
+    });
+  });
+
   it('rola um ataque e mostra o resultado na bandeja', () => {
     const { fixture, bandeja } = montar();
     fixture.componentInstance['rolarAtaque'](dados.ataques[0]);

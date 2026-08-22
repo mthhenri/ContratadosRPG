@@ -4,3 +4,4 @@
 export * from './encontro.dtos';
 export * from './ordem';
 export * from './condicoes';
+export * from './receber-dano';

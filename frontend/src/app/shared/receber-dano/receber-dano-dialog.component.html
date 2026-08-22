@@ -1,0 +1,114 @@
+<p-dialog
+  [visible]="aberto()"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  [style]="{ width: '480px' }"
+  [breakpoints]="{ '520px': '95vw' }"
+  header="Receber dano"
+  styleClass="receber-dano__dialogo"
+  (onHide)="cancelar()"
+>
+  <form class="receber-dano" [formGroup]="formulario" (ngSubmit)="confirmar()">
+    <div class="receber-dano__linhas">
+      @for (tipo of TIPOS_DANO_BLOQUEAVEIS; track tipo) {
+        <div class="receber-dano__linha" [formGroupName]="tipo">
+          <span [class]="classeTipo(tipo)" [appTooltip]="DESCRICAO_TIPO[tipo]">{{ tipo }}</span>
+
+          <label class="receber-dano__campo">
+            <span class="receber-dano__rotulo-campo">Dano</span>
+            <input
+              class="receber-dano__entrada"
+              type="number"
+              inputmode="numeric"
+              min="0"
+              formControlName="bruto"
+              [attr.aria-label]="'Dano ' + tipo + ' bruto'"
+            />
+          </label>
+
+          @if (resistenciaFichaDe(tipo); as resistenciaFicha) {
+            <span class="receber-dano__resistencia-ficha" [appTooltip]="'Resistência da ficha'">
+              {{ resistenciaFicha.valor }}
+            </span>
+          }
+
+          <label class="receber-dano__campo">
+            <span class="receber-dano__rotulo-campo">Custom</span>
+            <input
+              class="receber-dano__entrada"
+              type="number"
+              inputmode="numeric"
+              formControlName="custom"
+              [attr.aria-label]="'Resistência customizada de ' + tipo"
+            />
+          </label>
+        </div>
+      }
+
+      <div class="receber-dano__linha receber-dano__linha--geral" formGroupName="geral">
+        <span
+          class="receber-dano__tipo receber-dano__tipo--geral"
+          [appTooltip]="DESCRICAO_TIPO[TipoDanoEnum.GERAL]"
+        >
+          Geral
+        </span>
+
+        <label class="receber-dano__campo">
+          <span class="receber-dano__rotulo-campo">Dano (irredutível)</span>
+          <input
+            class="receber-dano__entrada"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            formControlName="bruto"
+            aria-label="Dano Geral bruto, irredutível"
+          />
+        </label>
+
+        <label class="receber-dano__campo" [appTooltip]="'Reduz o total de todos os outros tipos'">
+          <span class="receber-dano__rotulo-campo">Resist. Geral</span>
+          <input
+            class="receber-dano__entrada"
+            type="number"
+            inputmode="numeric"
+            formControlName="custom"
+            aria-label="Resistência Geral customizada"
+          />
+        </label>
+      </div>
+    </div>
+
+    <div class="receber-dano__resumo">
+      @if (linhasResumo().length === 0 && !danoGeralInformado()) {
+        <p class="receber-dano__resumo-vazio">Informe ao menos um tipo de dano.</p>
+      } @else {
+        @for (linha of linhasResumo(); track linha.tipo) {
+          <p class="receber-dano__resumo-linha">
+            <span [class]="classeTipo(linha.tipo)">{{ linha.tipo }}</span>
+            {{ linha.bruto }} → {{ linha.efetivo }}
+          </p>
+        }
+        @if (danoGeralInformado()) {
+          <p class="receber-dano__resumo-linha">
+            <span class="receber-dano__tipo receber-dano__tipo--geral">Geral</span>
+            {{ resultado().danoGeral }} → {{ resultado().danoGeral }} (irredutível)
+          </p>
+        }
+        <p class="receber-dano__resumo-total">Total: {{ resultado().total }}</p>
+      }
+    </div>
+
+    <div class="receber-dano__acoes">
+      <button
+        class="receber-dano__confirmar"
+        type="submit"
+        [disabled]="resultado().total <= 0 && linhasResumo().length === 0 && !danoGeralInformado()"
+      >
+        Receber dano
+      </button>
+      <button class="receber-dano__cancelar" type="button" (click)="cancelar()">Cancelar</button>
+    </div>
+  </form>
+</p-dialog>

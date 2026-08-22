@@ -11,6 +11,7 @@ import {
   RegeneracaoIntensidadeEnum,
   RegeneracaoModoEnum,
   TenacidadeEnum,
+  TipoDanoEnum,
 } from '@contratados-rpg/shared/enums';
 import type {
   FichaAtributosDto,
@@ -34,6 +35,7 @@ import {
 import { TemaService, hexParaHsl } from '../../../../core/services/tema.service';
 import { FocoImagem } from '../../../../shared/foco-imagem.directive';
 import { Icone } from '../../../../shared/icone/icone.component';
+import { ReceberDanoDialog } from '../../../../shared/receber-dano/receber-dano-dialog.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { AutoFocus } from '../../../../shared/auto-focus/auto-focus.directive';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
@@ -121,6 +123,7 @@ const COR_FICHA_PADRAO = '#d53030';
     CriaturaHabilidadeLista,
     AjusteEnquadramentoImagem,
     FocoImagem,
+    ReceberDanoDialog,
   ],
   templateUrl: './criatura-visualizacao.component.html',
   styleUrl: './criatura-visualizacao.component.scss',
@@ -322,6 +325,29 @@ export class CriaturaVisualizacao {
 
   /** Chave (única, tipo `secao.campo`) do campo em edição no-próprio-lugar — `null` = nenhum. */
   private readonly campoEmEdicao = signal<string | null>(null);
+
+  /** Estado do dialog "Receber dano" (m7-17). */
+  protected readonly receberDanoAberto = signal(false);
+
+  /**
+   * `dados().resistencias` remapeada para o `resistenciasFicha` do dialog "Receber dano" — a lista
+   * da criatura carrega `subtipo` (não usado aqui) e pode ter mais de uma linha por tipo; soma as
+   * repetidas, mesmo comportamento de "resistência total daquele tipo" que o mestre já vê na lista.
+   */
+  protected readonly resistenciasParaReceberDano = computed<Partial<Record<TipoDanoEnum, number>>>(
+    () => {
+      const somaPorTipo: Partial<Record<TipoDanoEnum, number>> = {};
+      for (const linha of this.dados().resistencias) {
+        somaPorTipo[linha.tipo] = (somaPorTipo[linha.tipo] ?? 0) + linha.valor;
+      }
+      return somaPorTipo;
+    },
+  );
+
+  /** Abate o total já efetivo do dialog "Receber dano" (m7-17) — mesmo canal de `ajustarVida`. */
+  protected receberDano(total: number): void {
+    this.ajustarVida(-total);
+  }
 
   protected editando(chave: string): boolean {
     return this.campoEmEdicao() === chave;

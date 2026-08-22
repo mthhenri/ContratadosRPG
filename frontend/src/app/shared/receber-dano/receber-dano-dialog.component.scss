@@ -1,0 +1,173 @@
+// Dialog "Receber dano" (m7-17) — só tokens do tema "Terminal de Contenção", nenhum hex/fonte/raio
+// solto (proibição #29). Cor por tipo é a mesma paleta `--dano-*` do chip de `resultado-rolagem`.
+
+@use 'tema/breakpoints' as bp;
+
+.receber-dano {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  &__linhas {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__linha {
+    display: grid;
+    grid-template-columns: 72px 1fr 44px 1fr;
+    align-items: end;
+    gap: 8px;
+
+    &--geral {
+      grid-template-columns: 72px 1fr 1fr;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+  }
+
+  &__tipo {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 0;
+
+    @each $tipo in fisico, balistico, explosao, quimico, geral {
+      &--#{$tipo} {
+        color: var(--dano-#{$tipo});
+      }
+    }
+  }
+
+  &__campo {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  &__rotulo-campo {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__entrada {
+    width: 100%;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 6px 8px;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent-border);
+    }
+  }
+
+  &__resistencia-ficha {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text-dim);
+    text-align: center;
+    padding: 6px 0;
+  }
+
+  &__resumo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+  }
+
+  &__resumo-vazio {
+    font-size: 13px;
+    color: var(--text-mute);
+  }
+
+  &__resumo-linha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  &__resumo-total {
+    margin-top: 4px;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--vida);
+  }
+
+  &__acoes {
+    display: flex;
+    gap: 8px;
+  }
+
+  &__confirmar {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--bg);
+    background: var(--accent);
+    border: 0;
+    border-radius: var(--radius-control);
+    padding: 7px 14px;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
+    }
+  }
+
+  &__cancelar {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    padding: 7px 14px;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--text);
+    }
+
+    @include bp.mobile {
+      min-height: bp.$alvo-toque;
+    }
+  }
+
+  @include bp.mobile {
+    &__linha {
+      grid-template-columns: 1fr;
+      gap: 4px;
+
+      &--geral {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+}

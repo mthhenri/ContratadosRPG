@@ -244,7 +244,8 @@
 
   // Abre a ficha completa numa janela flutuante — vive junto das marcas narrativas, antes do
   // grupo "remover/ajustar" que se empurra pra direita.
-  &__abrir-ficha {
+  &__abrir-ficha,
+  &__receber-dano {
     flex: none;
     display: inline-flex;
     align-items: center;
