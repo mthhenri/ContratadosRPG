@@ -5,7 +5,7 @@ import { catchError, finalize, forkJoin, of, timer } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ArquetipoEnum, ClasseEnum, FormacaoBonusEnum, FormacaoParametroEnum, MotivoEntradaAgenteEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
-import type { FichaAtributosDto, FichaFortificacaoPersonalidadeDto, FichaHabilidadeDto, FichaOrigemDto, FichaPersonalidadeEstagioDto, FichaPersonalidadeHabilidadeDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { FichaAtributosDto, FichaHabilidadeDto, FichaOrigemDto, FichaPersonalidadeEstagioDto, FichaPersonalidadeHabilidadeDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import { calcularDerivados, calcularEnergia, calcularOrcamentoAtributos, calcularProgressaoAcumulada, calcularVida, catalogoHabilidades, habilidadesIniciais, listarPacotesHabilidadesIniciais, MAESTRIA_PONTOS_MINIMO, maestriaAtingivel, obterBonusAtributosComEscolha, obterSaudeClasse, obterSlotsEscolhaBonus, validarDistribuicaoAtributos } from '@contratados-rpg/shared/regras/agente';
 import type { GrupoHabilidades, HabilidadeCatalogoItemDto, HabilidadesPacoteInicialId, SlotEscolhaAtributo, TipoVagaHabilidade } from '@contratados-rpg/shared/regras/agente';
 import { calcularBonusMonetario, calcularDinheiroInicial, calcularNovoAgente } from '@contratados-rpg/shared/regras/novo-agente';
@@ -39,8 +39,8 @@ interface MelhoriaEscolhida { readonly vaga: TipoVagaMelhoria; readonly habilida
  */
 interface PersonalidadeHabilidadeRascunho {
   readonly base: FichaPersonalidadeEstagioDto;
-  readonly fortificacao1: FichaFortificacaoPersonalidadeDto;
-  readonly fortificacao2: FichaFortificacaoPersonalidadeDto;
+  readonly fortificacao1: FichaPersonalidadeEstagioDto;
+  readonly fortificacao2: FichaPersonalidadeEstagioDto;
 }
 
 type ChaveAtributo = keyof FichaAtributosDto;
@@ -83,8 +83,8 @@ const dinheiroVazio = (): DinheiroRolado => ({ dados: [], inicial: 0, rolado: fa
  */
 const personalidadeHabilidadeVaziaGuia = (): PersonalidadeHabilidadeRascunho => ({
   base: { descricao: '', custoEnergia: null },
-  fortificacao1: { nome: '', descricao: '', custoEnergia: null },
-  fortificacao2: { nome: '', descricao: '', custoEnergia: null },
+  fortificacao1: { descricao: '', custoEnergia: null },
+  fortificacao2: { descricao: '', custoEnergia: null },
 });
 const rolarDinheiro = (): DinheiroRolado => { const dados = rolarDados({ quantidade: 4, faces: 4 }); const rolagem = calcularDinheiroInicial({ somaDados: dados.reduce((soma, dado) => soma + dado, 0) }); return { dados, inicial: rolagem.dinheiro, rolado: true }; };
 /** Teto de atributo no guia (doc — "⬡ Atributos": 6 pontos fora da criação; acima disso só via Fragmento de Módulo I, fora do escopo deste guia). */
@@ -382,16 +382,22 @@ export class FichaCriar {
   }
   private personalidadeFortificacaoCompleta(estagio: 'fortificacao1' | 'fortificacao2'): boolean {
     const fortificacao = this.estado().personalidadeHabilidade[estagio];
-    return fortificacao.nome.trim().length > 0 && fortificacao.descricao.trim().length > 0 && fortificacao.custoEnergia !== null;
+    return fortificacao.descricao.trim().length > 0 && fortificacao.custoEnergia !== null;
   }
-  /** `true` quando todas as vagas (catálogo + Habilidade de Personalidade) do passo estão preenchidas — trava dura da m3-58/m3-78. */
-  protected readonly melhoriasCompletas = computed(() => {
+  /** `true` quando as vagas do catálogo do passo // Habilidades estão preenchidas — trava dura da m3-58. */
+  protected readonly vagasCatalogoCompletas = computed(() => {
     const vagasOk = this.vagasMelhoria().every((v) => this.preenchidasNaVaga(v.tipo) >= v.alvo);
+    return this.pacoteHabilidadesSelecionado() !== null && vagasOk;
+  });
+  /** Base sempre exigida; a Fortificação `n` só quando `alvoFortificacoes() >= n` — trava dura da m3-78, junto do resto de Identidade. */
+  protected readonly personalidadeEstagiosCompletos = computed(() => {
     const baseOk = this.personalidadeBaseCompleta();
     const fort1Ok = this.alvoFortificacoes() < 1 || this.personalidadeFortificacaoCompleta('fortificacao1');
     const fort2Ok = this.alvoFortificacoes() < 2 || this.personalidadeFortificacaoCompleta('fortificacao2');
-    return this.pacoteHabilidadesSelecionado() !== null && vagasOk && baseOk && fort1Ok && fort2Ok;
+    return baseOk && fort1Ok && fort2Ok;
   });
+  /** `true` quando todas as vagas (catálogo + Habilidade de Personalidade) estão preenchidas — usado só no resumo/testes agregados. */
+  protected readonly melhoriasCompletas = computed(() => this.vagasCatalogoCompletas() && this.personalidadeEstagiosCompletos());
   /** Total de vagas (catálogo + Habilidade de Personalidade) e quantas já foram preenchidas — só para o resumo lateral. */
   protected readonly melhoriasAlvoTotal = computed(() => this.vagasMelhoria().reduce((soma, v) => soma + v.alvo, 0) + 1 + this.alvoFortificacoes());
   protected readonly melhoriasPreenchidasTotal = computed(() => {
@@ -597,9 +603,9 @@ export class FichaCriar {
     this.atualizar({ personalidadeHabilidade: { ...atual, base } });
   }
   /** Atualiza a 1ª ou 2ª Fortificação da Habilidade de Personalidade (m3-78). */
-  protected atualizarFortificacao(estagio: 'fortificacao1' | 'fortificacao2', campo: 'nome' | 'descricao' | 'custoEnergia', valor: string): void {
+  protected atualizarFortificacao(estagio: 'fortificacao1' | 'fortificacao2', campo: 'descricao' | 'custoEnergia', valor: string): void {
     const atual = this.estado().personalidadeHabilidade;
-    const parcial = campo === 'custoEnergia' ? { custoEnergia: this.parseCustoEnergiaPersonalidade(valor) } : campo === 'nome' ? { nome: valor } : { descricao: valor };
+    const parcial = campo === 'custoEnergia' ? { custoEnergia: this.parseCustoEnergiaPersonalidade(valor) } : { descricao: valor };
     this.atualizar({ personalidadeHabilidade: { ...atual, [estagio]: { ...atual[estagio], ...parcial } } });
   }
   protected mudarKit(itens: readonly CarrinhoItemDto[]): void { this.atualizar({ kit: itens }); }
@@ -612,6 +618,7 @@ export class FichaCriar {
       case 'Atributos': return e.modoLivre || (this.distribuicao().saldo === 0 && this.distribuicao().violacoes.length === 0);
       case 'Identidade': return e.personalidade.trim().length > 0
         && !/\s/.test(e.personalidade.trim())
+        && this.personalidadeEstagiosCompletos()
         && (this.temPeculiaridade() || (
           e.origem.nome.trim().length > 0
           && e.origem.descricao.trim().length > 0
@@ -622,7 +629,7 @@ export class FichaCriar {
           && e.origem.especialidade.efeito.trim().length > 0
           && e.origem.saberDeCampo.trim().length > 0
         ));
-      case 'Habilidades': return e.modoLivre || this.melhoriasCompletas();
+      case 'Habilidades': return e.modoLivre || this.vagasCatalogoCompletas();
       case 'Recursos': return e.dinheiro.rolado && !this.rolandoRecursos();
       case 'Equipamento inicial': return e.modoLivre || this.kitValido();
       default: return true;
@@ -661,8 +668,8 @@ export class FichaCriar {
     return {
       ativa: this.personalidadeEstagioAtivo(),
       base: { descricao: rascunho.base.descricao.trim(), custoEnergia: rascunho.base.custoEnergia },
-      fortificacao1: { nome: rascunho.fortificacao1.nome.trim(), descricao: rascunho.fortificacao1.descricao.trim(), custoEnergia: rascunho.fortificacao1.custoEnergia },
-      fortificacao2: { nome: rascunho.fortificacao2.nome.trim(), descricao: rascunho.fortificacao2.descricao.trim(), custoEnergia: rascunho.fortificacao2.custoEnergia },
+      fortificacao1: { descricao: rascunho.fortificacao1.descricao.trim(), custoEnergia: rascunho.fortificacao1.custoEnergia },
+      fortificacao2: { descricao: rascunho.fortificacao2.descricao.trim(), custoEnergia: rascunho.fortificacao2.custoEnergia },
     };
   }
   private origemTrimada(origem: FichaOrigemDto): FichaOrigemDto {

@@ -43,15 +43,15 @@ describe('materializarHabilidadePersonalidade', () => {
     expect(materializarHabilidadePersonalidade(identidadeBase(habilidade))).toBeNull();
   });
 
-  it('materializa a 1ª Fortificação com nome próprio', () => {
+  it('materializa a 1ª Fortificação com o nome = personalidade + rótulo do estágio (nunca livre)', () => {
     const habilidade: FichaPersonalidadeHabilidadeDto = {
       ativa: PersonalidadeEstagioEnum.FORTIFICACAO_1,
       base: { descricao: 'Base combinada.', custoEnergia: 1 },
-      fortificacao1: { nome: 'Atento+', descricao: 'Mais um dado.', custoEnergia: 3 },
+      fortificacao1: { descricao: 'Mais um dado.', custoEnergia: 3 },
       fortificacao2: null,
     };
     expect(materializarHabilidadePersonalidade(identidadeBase(habilidade))).toEqual({
-      nome: 'Atento+',
+      nome: 'Atento — 1ª Fortificação',
       categoria: HabilidadeCategoriaEnum.PERSONALIDADE,
       custoEnergia: 3,
       descricao: 'Mais um dado.',
@@ -63,10 +63,10 @@ describe('materializarHabilidadePersonalidade', () => {
       ativa: PersonalidadeEstagioEnum.FORTIFICACAO_2,
       base: null,
       fortificacao1: null,
-      fortificacao2: { nome: 'Atento++', descricao: 'Efeito maior.', custoEnergia: null },
+      fortificacao2: { descricao: 'Efeito maior.', custoEnergia: null },
     };
     expect(materializarHabilidadePersonalidade(identidadeBase(habilidade))).toEqual({
-      nome: 'Atento++',
+      nome: 'Atento — 2ª Fortificação',
       categoria: HabilidadeCategoriaEnum.PERSONALIDADE,
       custoEnergia: null,
       descricao: 'Efeito maior.',
@@ -81,6 +81,16 @@ describe('materializarHabilidadePersonalidade', () => {
       fortificacao2: null,
     };
     expect(materializarHabilidadePersonalidade(identidadeBase(habilidade))).toBeNull();
+  });
+
+  it('null quando a palavra de Personalidade ainda não foi definida, mesmo com a Fortificação preenchida', () => {
+    const habilidade: FichaPersonalidadeHabilidadeDto = {
+      ativa: PersonalidadeEstagioEnum.FORTIFICACAO_1,
+      base: { descricao: 'Base combinada.', custoEnergia: 1 },
+      fortificacao1: { descricao: 'Mais um dado.', custoEnergia: 3 },
+      fortificacao2: null,
+    };
+    expect(materializarHabilidadePersonalidade({ personalidade: null, habilidade })).toBeNull();
   });
 
   it('personalidadeHabilidadeVazia começa sem nenhum estágio preenchido', () => {

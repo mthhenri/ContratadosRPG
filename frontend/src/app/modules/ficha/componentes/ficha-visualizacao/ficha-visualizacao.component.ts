@@ -2499,7 +2499,7 @@ export class FichaVisualizacao {
       return { ativa, base: null, fortificacao1: null, fortificacao2: null };
     }
     const base = ativa === PersonalidadeEstagioEnum.BASE ? { descricao: legado.descricao, custoEnergia: legado.custoEnergia } : null;
-    const fortificacaoLegada = { nome: legado.nome, descricao: legado.descricao, custoEnergia: legado.custoEnergia };
+    const fortificacaoLegada = { descricao: legado.descricao, custoEnergia: legado.custoEnergia };
     return {
       ativa,
       base,
@@ -2569,14 +2569,14 @@ export class FichaVisualizacao {
     this.rascunhoPersonalidadeHabilidade.set({ ...rascunho, base: atualizado });
   }
 
-  /** Atualiza a 1ª ou 2ª Fortificação do rascunho aberto. */
-  protected mudarFortificacaoRascunhoPersonalidade(estagio: 'fortificacao1' | 'fortificacao2', campo: 'nome' | 'descricao' | 'custoEnergia', valor: string): void {
+  /** Atualiza a 1ª ou 2ª Fortificação do rascunho aberto — sem campo de nome (sempre a palavra de Identidade + estágio, `materializarHabilidadePersonalidade`). */
+  protected mudarFortificacaoRascunhoPersonalidade(estagio: 'fortificacao1' | 'fortificacao2', campo: 'descricao' | 'custoEnergia', valor: string): void {
     const rascunho = this.rascunhoPersonalidadeHabilidade();
     if (!rascunho) {
       return;
     }
-    const atual = rascunho[estagio] ?? { nome: '', descricao: '', custoEnergia: null };
-    const parcial = campo === 'custoEnergia' ? { custoEnergia: this.parseCustoEnergiaPersonalidade(valor) } : campo === 'nome' ? { nome: valor } : { descricao: valor };
+    const atual = rascunho[estagio] ?? { descricao: '', custoEnergia: null };
+    const parcial = campo === 'custoEnergia' ? { custoEnergia: this.parseCustoEnergiaPersonalidade(valor) } : { descricao: valor };
     this.rascunhoPersonalidadeHabilidade.set({ ...rascunho, [estagio]: { ...atual, ...parcial } });
   }
 

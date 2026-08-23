@@ -513,7 +513,7 @@ describe('FichaCriar', () => {
       expect(habilidades.some((h) => h.nome === 'Atento' && h.categoria === 'PERSONALIDADE' && h.custoEnergia === 2)).toBe(true);
     });
 
-    it('exige nome, efeito e custo da 1ª Fortificação a partir do Nível 7 (mesmo com Base e vagas do catálogo preenchidas) — e ela vira o estágio ativo', () => {
+    it('exige efeito e custo da 1ª Fortificação a partir do Nível 7 (mesmo com Base e vagas do catálogo preenchidas) — e ela vira o estágio ativo, com nome = personalidade + estágio', () => {
       const { fixture, componente } = montar([fichaExistente]);
       componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR, mediaNivel: 8, personalidade: 'Atento' });
       fixture.detectChanges();
@@ -527,7 +527,6 @@ describe('FichaCriar', () => {
       fixture.detectChanges();
       expect(componente['melhoriasCompletas']()).toBe(false);
 
-      componente['atualizarFortificacao']('fortificacao1', 'nome', 'Determinado+');
       componente['atualizarFortificacao']('fortificacao1', 'descricao', 'Mais um dado ao forçar o teste.');
       fixture.detectChanges();
       expect(componente['melhoriasCompletas']()).toBe(false);
@@ -537,7 +536,7 @@ describe('FichaCriar', () => {
       expect(componente['melhoriasCompletas']()).toBe(true);
 
       const habilidades = componente['habilidadesDoNivel']();
-      expect(habilidades.some((h) => h.nome === 'Determinado+' && h.categoria === 'PERSONALIDADE' && h.custoEnergia === 3)).toBe(true);
+      expect(habilidades.some((h) => h.nome === 'Atento — 1ª Fortificação' && h.categoria === 'PERSONALIDADE' && h.custoEnergia === 3)).toBe(true);
       expect(habilidades.some((h) => h.nome === 'Atento')).toBe(false);
     });
 
@@ -551,16 +550,15 @@ describe('FichaCriar', () => {
       preencherVagasDeMelhoria(componente);
       componente['atualizarPersonalidadeBase']('descricao', 'Efeito base.');
       componente['atualizarPersonalidadeBase']('custoEnergia', '1');
-      componente['atualizarFortificacao']('fortificacao1', 'nome', 'Determinado+');
       componente['atualizarFortificacao']('fortificacao1', 'descricao', 'Mais um dado.');
       componente['atualizarFortificacao']('fortificacao1', 'custoEnergia', '3');
       fixture.detectChanges();
       expect(componente['melhoriasCompletas']()).toBe(true);
 
-      componente['atualizarFortificacao']('fortificacao2', 'nome', 'Determinado++');
+      componente['atualizarFortificacao']('fortificacao2', 'descricao', 'Efeito maior, ainda em combinação com o Mestre.');
       fixture.detectChanges();
       expect(componente['melhoriasCompletas']()).toBe(true);
-      expect(componente['estado']().personalidadeHabilidade.fortificacao2.nome).toBe('Determinado++');
+      expect(componente['estado']().personalidadeHabilidade.fortificacao2.descricao).toBe('Efeito maior, ainda em combinação com o Mestre.');
     });
   });
 
@@ -942,6 +940,8 @@ describe('FichaCriar', () => {
       componente['fecharSeletorMelhoria']();
 
       componente['atualizar']({ passo: componente['passos']().indexOf('Identidade'), personalidade: 'Instável' });
+      componente['atualizarPersonalidadeBase']('descricao', 'Efeito combinado com o Mestre.');
+      componente['atualizarPersonalidadeBase']('custoEnergia', '1');
 
       expect(componente['temPeculiaridade']()).toBe(true);
       expect(componente['passoValido']()).toBe(true); // sem nenhum campo de Origem preenchido

@@ -375,8 +375,49 @@
                   <span class="campo__rotulo">Traço de personalidade</span>
                   <input data-testid="personalidade" class="campo__controle" [value]="estado().personalidade" (input)="atualizar({ personalidade: valor($event) })" placeholder="Ex.: Atento" required />
                   <small class="campo__ajuda">Use uma única palavra, no formato de adjetivo.</small>
-                  <small class="campo__ajuda">A descrição e o custo em Energia da Habilidade de Personalidade são combinados com o Mestre — o passo Habilidades já deixa um rascunho para preencher com antecedência.</small>
                 </label>
+
+                <div class="guia__subsecao"><span>Habilidade de Personalidade</span><i></i></div>
+                <p class="guia__subsecao-ajuda">
+                  Base, 1ª e 2ª Fortificação — o Mestre define a descrição e o custo em Energia de cada uma em
+                  conjunto com você. Pode preencher um estágio antes de o Nível chegar lá; ele só passa a valer
+                  quando desbloqueado.
+                </p>
+                <div class="guia__formacoes">
+                  <div class="guia__formacao">
+                    <span class="campo__rotulo">Base — {{ estado().personalidade || 'sua Personalidade' }}</span>
+                    <label class="campo">
+                      <span class="campo__rotulo">Efeito</span>
+                      <textarea class="campo__controle campo__controle--area" rows="2" [value]="estado().personalidadeHabilidade.base.descricao" (input)="atualizarPersonalidadeBase('descricao', valor($event))" placeholder="Descreva a Habilidade de Personalidade combinada com o Mestre"></textarea>
+                    </label>
+                    <label class="campo">
+                      <span class="campo__rotulo">Custo em Energia</span>
+                      <input class="campo__controle campo__controle--numero" type="number" min="0" [value]="estado().personalidadeHabilidade.base.custoEnergia ?? ''" (input)="atualizarPersonalidadeBase('custoEnergia', valor($event))" />
+                    </label>
+                  </div>
+                  <div class="guia__formacao">
+                    <span class="campo__rotulo">1ª Fortificação — {{ estado().personalidade || 'sua Personalidade' }}</span>
+                    <label class="campo">
+                      <span class="campo__rotulo">Efeito</span>
+                      <textarea class="campo__controle campo__controle--area" rows="2" [value]="estado().personalidadeHabilidade.fortificacao1.descricao" (input)="atualizarFortificacao('fortificacao1', 'descricao', valor($event))" placeholder="Descreva a melhoria combinada com o Mestre"></textarea>
+                    </label>
+                    <label class="campo">
+                      <span class="campo__rotulo">Custo em Energia</span>
+                      <input class="campo__controle campo__controle--numero" type="number" min="0" [value]="estado().personalidadeHabilidade.fortificacao1.custoEnergia ?? ''" (input)="atualizarFortificacao('fortificacao1', 'custoEnergia', valor($event))" />
+                    </label>
+                  </div>
+                  <div class="guia__formacao">
+                    <span class="campo__rotulo">2ª Fortificação — {{ estado().personalidade || 'sua Personalidade' }}</span>
+                    <label class="campo">
+                      <span class="campo__rotulo">Efeito</span>
+                      <textarea class="campo__controle campo__controle--area" rows="2" [value]="estado().personalidadeHabilidade.fortificacao2.descricao" (input)="atualizarFortificacao('fortificacao2', 'descricao', valor($event))" placeholder="Descreva a melhoria combinada com o Mestre"></textarea>
+                    </label>
+                    <label class="campo">
+                      <span class="campo__rotulo">Custo em Energia</span>
+                      <input class="campo__controle campo__controle--numero" type="number" min="0" [value]="estado().personalidadeHabilidade.fortificacao2.custoEnergia ?? ''" (input)="atualizarFortificacao('fortificacao2', 'custoEnergia', valor($event))" />
+                    </label>
+                  </div>
+                </div>
               </section>
 
               @if (!temPeculiaridade()) {
@@ -525,54 +566,6 @@
                     }
                   </div>
                 }
-              </div>
-
-              <div class="guia__subsecao"><span>Habilidade de Personalidade</span><i></i></div>
-              <p class="guia__subsecao-ajuda">
-                Base, 1ª e 2ª Fortificação — o Mestre define a descrição e o custo em Energia de cada uma em
-                conjunto com você. Pode preencher um estágio antes de o Nível chegar lá; ele só passa a valer
-                quando desbloqueado.
-              </p>
-              <div class="guia__formacoes">
-                <div class="guia__formacao">
-                  <span class="campo__rotulo">Base — {{ estado().personalidade || 'sua Personalidade' }}</span>
-                  <label class="campo">
-                    <span class="campo__rotulo">Efeito</span>
-                    <textarea class="campo__controle campo__controle--area" rows="2" [value]="estado().personalidadeHabilidade.base.descricao" (input)="atualizarPersonalidadeBase('descricao', valor($event))" placeholder="Descreva a Habilidade de Personalidade combinada com o Mestre"></textarea>
-                  </label>
-                  <label class="campo">
-                    <span class="campo__rotulo">Custo em Energia</span>
-                    <input class="campo__controle campo__controle--numero" type="number" min="0" [value]="estado().personalidadeHabilidade.base.custoEnergia ?? ''" (input)="atualizarPersonalidadeBase('custoEnergia', valor($event))" />
-                  </label>
-                </div>
-                <div class="guia__formacao">
-                  <label class="campo">
-                    <span class="campo__rotulo">1ª Fortificação — nome</span>
-                    <input class="campo__controle" [value]="estado().personalidadeHabilidade.fortificacao1.nome" (input)="atualizarFortificacao('fortificacao1', 'nome', valor($event))" placeholder="Nome da melhoria" />
-                  </label>
-                  <label class="campo">
-                    <span class="campo__rotulo">Efeito</span>
-                    <textarea class="campo__controle campo__controle--area" rows="2" [value]="estado().personalidadeHabilidade.fortificacao1.descricao" (input)="atualizarFortificacao('fortificacao1', 'descricao', valor($event))" placeholder="Descreva a melhoria combinada com o Mestre"></textarea>
-                  </label>
-                  <label class="campo">
-                    <span class="campo__rotulo">Custo em Energia</span>
-                    <input class="campo__controle campo__controle--numero" type="number" min="0" [value]="estado().personalidadeHabilidade.fortificacao1.custoEnergia ?? ''" (input)="atualizarFortificacao('fortificacao1', 'custoEnergia', valor($event))" />
-                  </label>
-                </div>
-                <div class="guia__formacao">
-                  <label class="campo">
-                    <span class="campo__rotulo">2ª Fortificação — nome</span>
-                    <input class="campo__controle" [value]="estado().personalidadeHabilidade.fortificacao2.nome" (input)="atualizarFortificacao('fortificacao2', 'nome', valor($event))" placeholder="Nome da melhoria" />
-                  </label>
-                  <label class="campo">
-                    <span class="campo__rotulo">Efeito</span>
-                    <textarea class="campo__controle campo__controle--area" rows="2" [value]="estado().personalidadeHabilidade.fortificacao2.descricao" (input)="atualizarFortificacao('fortificacao2', 'descricao', valor($event))" placeholder="Descreva a melhoria combinada com o Mestre"></textarea>
-                  </label>
-                  <label class="campo">
-                    <span class="campo__rotulo">Custo em Energia</span>
-                    <input class="campo__controle campo__controle--numero" type="number" min="0" [value]="estado().personalidadeHabilidade.fortificacao2.custoEnergia ?? ''" (input)="atualizarFortificacao('fortificacao2', 'custoEnergia', valor($event))" />
-                  </label>
-                </div>
               </div>
 
               <label class="guia__modo-livre">

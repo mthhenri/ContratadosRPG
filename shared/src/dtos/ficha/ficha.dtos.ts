@@ -361,22 +361,14 @@ export interface FichaOrigemDto {
 }
 
 /**
- * Texto/custo do estágio **Base** da Habilidade de Personalidade (`docs/core/sistema-v4.1.0.md` —
- * "Identidade" e "Fortificação de Traços"; m3-78). Sem campo de nome: o nome do estágio Base é
- * sempre a palavra de personalidade (`FichaIdentidadeDto.personalidade`), definida à parte.
+ * Texto/custo de um estágio da Habilidade de Personalidade — Base ou uma Fortificação (1ª/2ª,
+ * obtidas nos níveis 7 e 14; `docs/core/sistema-v4.1.0.md` — "Identidade" e "Fortificação de
+ * Traços"; m3-78). Sem campo de nome: o nome de qualquer estágio é sempre a palavra de
+ * personalidade (`FichaIdentidadeDto.personalidade`), sufixada pelo rótulo do estágio nas
+ * Fortificações (`materializarHabilidadePersonalidade`, `shared/regras/identidade`) — nunca um
+ * texto livre à parte.
  */
 export interface FichaPersonalidadeEstagioDto {
-  readonly descricao: string;
-  readonly custoEnergia: number | null;
-}
-
-/**
- * Texto/custo/nome de uma Fortificação (1ª ou 2ª) da Habilidade de Personalidade — obtida nos
- * níveis 7 e 14 (`docs/core/sistema-v4.1.0.md` — "Fortificação de Traços"; m3-78). Nome livre,
- * combinado com o Mestre — diferente da Base, cujo nome é fixo.
- */
-export interface FichaFortificacaoPersonalidadeDto {
-  readonly nome: string;
   readonly descricao: string;
   readonly custoEnergia: number | null;
 }
@@ -390,8 +382,8 @@ export interface FichaFortificacaoPersonalidadeDto {
 export interface FichaPersonalidadeHabilidadeDto {
   readonly ativa: PersonalidadeEstagioEnum;
   readonly base: FichaPersonalidadeEstagioDto | null;
-  readonly fortificacao1: FichaFortificacaoPersonalidadeDto | null;
-  readonly fortificacao2: FichaFortificacaoPersonalidadeDto | null;
+  readonly fortificacao1: FichaPersonalidadeEstagioDto | null;
+  readonly fortificacao2: FichaPersonalidadeEstagioDto | null;
 }
 
 /**

@@ -1,4 +1,4 @@
-import { HabilidadeCategoriaEnum, PersonalidadeEstagioEnum } from '../../enums';
+import { HabilidadeCategoriaEnum, PersonalidadeEstagioEnum, ROTULOS_PERSONALIDADE_ESTAGIO } from '../../enums';
 import type { FichaHabilidadeDto, FichaIdentidadeDto, FichaPersonalidadeHabilidadeDto } from '../../dtos/ficha';
 
 /**
@@ -13,9 +13,12 @@ import type { FichaHabilidadeDto, FichaIdentidadeDto, FichaPersonalidadeHabilida
 
 /**
  * Materializa o estágio **ativo** da Habilidade de Personalidade como o item `categoria:
- * PERSONALIDADE` de `dados.habilidades`. `null` quando não há `identidade.habilidade`, ou quando o
- * estágio marcado como `ativa` ainda não tem descrição preenchida (nome, no caso das Fortificações)
- * — a ferramenta não inventa um valor que Mestre e Jogador ainda não combinaram.
+ * PERSONALIDADE` de `dados.habilidades`. `null` quando não há `identidade.habilidade`, quando a
+ * palavra de Personalidade ainda não foi definida (o nome de todo estágio depende dela) ou quando o
+ * estágio marcado como `ativa` ainda não tem descrição preenchida — a ferramenta não inventa um
+ * valor que Mestre e Jogador ainda não combinaram. O nome de uma Fortificação nunca é livre: é
+ * sempre a palavra de Personalidade seguida do rótulo do estágio (`docs/core/sistema-v4.1.0.md` —
+ * exemplo "⬦ Determinado" mantido em toda Fortificação, só descrição/custo mudam).
  */
 export function materializarHabilidadePersonalidade(
   identidade: Pick<FichaIdentidadeDto, 'personalidade' | 'habilidade'> | undefined,
@@ -25,14 +28,18 @@ export function materializarHabilidadePersonalidade(
     return null;
   }
 
+  const nomePersonalidade = identidade?.personalidade?.trim() ?? '';
+  if (!nomePersonalidade) {
+    return null;
+  }
+
   if (habilidade.ativa === PersonalidadeEstagioEnum.BASE) {
     const base = habilidade.base;
-    const nome = identidade?.personalidade?.trim() ?? '';
-    if (!base || !base.descricao.trim() || !nome) {
+    if (!base || !base.descricao.trim()) {
       return null;
     }
     return {
-      nome,
+      nome: nomePersonalidade,
       categoria: HabilidadeCategoriaEnum.PERSONALIDADE,
       custoEnergia: base.custoEnergia,
       descricao: base.descricao,
@@ -43,11 +50,11 @@ export function materializarHabilidadePersonalidade(
     habilidade.ativa === PersonalidadeEstagioEnum.FORTIFICACAO_1
       ? habilidade.fortificacao1
       : habilidade.fortificacao2;
-  if (!fortificacao || !fortificacao.nome.trim() || !fortificacao.descricao.trim()) {
+  if (!fortificacao || !fortificacao.descricao.trim()) {
     return null;
   }
   return {
-    nome: fortificacao.nome,
+    nome: `${nomePersonalidade} — ${ROTULOS_PERSONALIDADE_ESTAGIO[habilidade.ativa]}`,
     categoria: HabilidadeCategoriaEnum.PERSONALIDADE,
     custoEnergia: fortificacao.custoEnergia,
     descricao: fortificacao.descricao,

@@ -530,14 +530,7 @@
                 />
               </div>
               <div class="ficha-ident__caixa">
-                <span class="ficha-ident__meta-rotulo">1ª Fortificação</span>
-                <input
-                  class="ficha-ident__select"
-                  type="text"
-                  placeholder="Nome"
-                  [value]="rascunho.fortificacao1?.nome ?? ''"
-                  (input)="mudarFortificacaoRascunhoPersonalidade('fortificacao1', 'nome', $any($event.target).value)"
-                />
+                <span class="ficha-ident__meta-rotulo">1ª Fortificação — {{ identidade().personalidade }}</span>
                 <textarea
                   class="ficha-ident__select"
                   rows="2"
@@ -555,14 +548,7 @@
                 />
               </div>
               <div class="ficha-ident__caixa">
-                <span class="ficha-ident__meta-rotulo">2ª Fortificação</span>
-                <input
-                  class="ficha-ident__select"
-                  type="text"
-                  placeholder="Nome"
-                  [value]="rascunho.fortificacao2?.nome ?? ''"
-                  (input)="mudarFortificacaoRascunhoPersonalidade('fortificacao2', 'nome', $any($event.target).value)"
-                />
+                <span class="ficha-ident__meta-rotulo">2ª Fortificação — {{ identidade().personalidade }}</span>
                 <textarea
                   class="ficha-ident__select"
                   rows="2"

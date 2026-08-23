@@ -3,9 +3,16 @@
 > **Última revisão:** 2026-08-23 · **Última decisão registrada:** `m3-78` (ajuste avulso pós-M3, a
 > Habilidade de Personalidade ganha 3 estágios com custo em Energia) — deixou de ser um único texto
 > definido a qualquer momento pelo editor completo e passou a ter 3 estágios nomeados (Base, 1ª e 2ª
-> Fortificação — níveis 7/14), cada um com descrição e custo em Energia próprios, preenchíveis desde
-> o guia de criação (`criar.page.ts`, passo Habilidades — sempre visível, sem gate por nível; só a
-> Base é exigida para avançar, cada Fortificação só quando o Nível de criação já a desbloqueou).
+> Fortificação — níveis 7/14), cada um com descrição e custo em Energia próprios (nunca um nome
+> próprio: o nome de qualquer estágio é sempre a palavra de Personalidade, sufixada pelo rótulo do
+> estágio numa Fortificação — "Atento — 1ª Fortificação" —, nunca texto livre; corrigido no mesmo dia,
+> ver abaixo), preenchíveis desde
+> o guia de criação (`criar.page.ts`, passo **Identidade** — logo abaixo do campo "Traço de
+> personalidade"; implementada primeiro no passo Habilidades e movida para Identidade por pedido do
+> autor logo depois, ver abaixo — sempre visível, sem gate por nível; só a Base é exigida para
+> avançar do passo Identidade, cada Fortificação só quando o Nível de criação já a desbloqueou, sem
+> bypass de `modoLivre`; o passo Habilidades manteve seu próprio gate só do catálogo,
+> `vagasCatalogoCompletas`, com bypass de `modoLivre` como antes).
 > `identidade.habilidade` (`FichaPersonalidadeHabilidadeDto`, `shared/dtos/ficha`) guarda os 3
 > rascunhos + qual está `ativa`; só o ativo é materializado como o item `categoria: PERSONALIDADE`
 > de `dados.habilidades` (`materializarHabilidadePersonalidade`, `shared/regras/identidade`) — fonte
@@ -29,7 +36,20 @@
 > guia completo até Habilidades/Identidade + ficha REST-seed em Nível 14): os 3 blocos sempre
 > visíveis no guia, texto do papel do Mestre na Identidade, seletor da aba Extras restrito às
 > Fortificações desbloqueadas, troca de estágio espelhando a aba Habilidades, editor funcionando nos
-> dois viewports depois do fix.
+> dois viewports depois do fix. **Correção pós-implementação, mesmo dia:** o autor pediu que a
+> seção saísse do passo Habilidades e fosse para o passo Identidade do guia — movida para o fim do
+> bloco visual da Personalidade, antes da Origem, no mesmo passo do campo "Traço de personalidade".
+> Verificado ao vivo de novo nos dois viewports: 0 ocorrências no passo Habilidades, blocos presentes
+> e sem sobreposição no passo Identidade, gate de Avançar reagindo à Base preenchida. Frontend
+> 734/734 (módulo `ficha`), lint e build limpos. **2ª correção, mesmo dia:** removido o campo de nome
+> livre da Fortificação (`FichaFortificacaoPersonalidadeDto` eliminado — a Fortificação reusa
+> `FichaPersonalidadeEstagioDto`, mesma forma `{descricao, custoEnergia}` da Base); o nome agora é
+> sempre derivado em `materializarHabilidadePersonalidade` (`personalidade` + rótulo do estágio via
+> `ROTULOS_PERSONALIDADE_ESTAGIO`), inclusive retornando `null` sem a palavra de Personalidade
+> definida. Os inputs "Nome"/"Nome da melhoria" saíram do guia e do editor da aba Extras; o cabeçalho
+> estático de cada bloco (já usado só pela Base) passou a valer também para as Fortificações. Testado:
+> shared 723/723, frontend 735/735 (módulo `ficha`), lint e build limpos; verificado ao vivo nos dois
+> viewports, no guia e no editor de uma ficha real.
 >
 > **Uma decisão atrás:** `m7-20` (regressão do botão
 > "abrir ficha" na grade compacta do jogador, corrigida) — no desktop, com a ficha lateral do
@@ -913,19 +933,23 @@ atributos, Habilidade Inicial, Saúde base sem Nível/atributos ainda) · **03 N
 de entrada + médias de Nível/Prestígio pré-calculadas da campanha, `calcularNovoAgente`, memorial
 de cálculo e sobrescrita exata; sem campanha, valores exatos informados diretamente)
 · **04 Atributos** (orçamento de 4 pontos de criação,
-`calcularOrcamentoAtributos`/`validarDistribuicaoAtributos`) · **05 Identidade** (Personalidade +
-Origem com catálogo de Formações e `Outra`, imutáveis para o dono após a criação; desde `m3-75`,
-`criar()` trima as pontas de todo campo de texto livre — `personalidade`, `origem.nome/.descricao/
-.saberDeCampo`, cada `formacao[].texto/.parametro` e `especialidade.gatilho/.efeito` — só na
-montagem persistida, nunca durante a digitação) · **06
-Habilidades** (sempre presente: pacote inicial obrigatório de 4 Gerais, 2 Gerais + 1 de
-Classe/Arquétipo ou 2 de Classe/Arquétipo; Civil escolhe 3 Civis; compõe ainda as vagas de
-`calcularProgressaoAcumulada`, sem duplicatas — Experimento não ganha vaga extra, escolhe
-Peculiaridade pelo mesmo pacote de qualquer outra classe; desde `m3-78`, a Habilidade de
-Personalidade também vive aqui, sempre visível — 3 blocos, Base/1ª/2ª Fortificação (níveis 7/14),
-cada um com descrição e custo em Energia próprios; só a Base é exigida para avançar, cada
-Fortificação só quando o Nível de criação já a desbloqueou; `identidade.habilidade` guarda os 3, só
-o estágio mais alto desbloqueado é materializado em `dados.habilidades`) · **07 Recursos** (rolagem única e definitiva de `1000 + 4D4×250` +
+`calcularOrcamentoAtributos`/`validarDistribuicaoAtributos`) · **05 Habilidades** (só existe com
+classe escolhida; vem **antes** de Identidade na trilha — só depois de escolher habilidades o guia
+sabe se um Experimento vai ter Peculiaridade, e portanto não vai ter Origem; sempre presente: pacote
+inicial obrigatório de 4 Gerais, 2 Gerais + 1 de Classe/Arquétipo ou 2 de Classe/Arquétipo; Civil
+escolhe 3 Civis; compõe ainda as vagas de `calcularProgressaoAcumulada`, sem duplicatas —
+Experimento não ganha vaga extra, escolhe Peculiaridade pelo mesmo pacote de qualquer outra classe)
+· **06 Identidade** (Personalidade + Origem com catálogo de Formações e `Outra`, imutáveis para o
+dono após a criação; desde `m3-75`, `criar()` trima as pontas de todo campo de texto livre —
+`personalidade`, `origem.nome/.descricao/.saberDeCampo`, cada `formacao[].texto/.parametro` e
+`especialidade.gatilho/.efeito` — só na montagem persistida, nunca durante a digitação; desde
+`m3-78`, a Habilidade de Personalidade também vive aqui, logo abaixo do campo "Traço de
+personalidade" — 3 blocos sempre visíveis, Base/1ª/2ª Fortificação (níveis 7/14), cada um com
+descrição e custo em Energia próprios; a Base é sempre exigida para avançar deste passo, cada
+Fortificação só quando o Nível de criação já a desbloqueou, sem bypass de "modo livre" — mesmo
+padrão sem-bypass da palavra de Personalidade e da Origem; implementada primeiro no passo
+Habilidades, movida para cá no mesmo dia por pedido do autor; `identidade.habilidade` guarda os 3,
+só o estágio mais alto desbloqueado é materializado em `dados.habilidades`) · **07 Recursos** (rolagem única e definitiva de `1000 + 4D4×250` +
 Bônus Monetário — ou, desde `m3-74`, ignorar a rolagem por um botão dedicado ao lado de "Rolar
 dados": ficha final com `$0` de dinheiro base, mesma trava de escolha única, sem gerar entrada de
 rolagem) · **08 Equipamento inicial** (kit da loja, orçamento **à parte** do dinheiro —
@@ -935,8 +959,10 @@ nunca descontado —, teto $2500/peso 5 do documento — mesma regra para toda c
 abas de categoria com `app-icone`/`ICONES_CATEGORIA` local — mesmo padrão de `FichaInventario` —,
 busca acima das abas e cruzando todas as categorias, não só a ativa) ·
 **09 Revisão** (resumo completo + `POST /ficha`, erro do backend não perde o estado do guia). Os
-passos 04/06/08 têm **trava dura** por padrão (não avança com saldo/vaga/orçamento em aberto) com
+passos 04/05/08 têm **trava dura** por padrão (não avança com saldo/vaga/orçamento em aberto) com
 um "modo livre" que ignora as travas (sempre disponível ao mestre) — regra só do guia, client-side;
+o passo 06 (Identidade) também tem trava dura própria (personalidade, Habilidade de Personalidade,
+Origem), mas sem bypass de "modo livre" — mesmo padrão de todo campo de identidade obrigatório;
 o backend segue com a liberdade de edição da `m3-10`. Rascunho (`GuiaCriacaoRascunhoService`)
 serializa o estado em `localStorage` por campanha, oferece "retomar"/"começar do zero" ao reabrir e
 some ao concluir; sair do guia usa um `<dialog>` nativo (não `confirm()` nem `beforeunload`, que não

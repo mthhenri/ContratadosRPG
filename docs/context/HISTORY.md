@@ -1,5 +1,82 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-23 — `m3-78` (2ª correção): nome de uma Fortificação nunca é livre — é sempre a palavra de Personalidade + rótulo do estágio
+
+Pedido do autor: "O nome da melhoria sempre é o nome da personalidade + xª fortificação". A
+implementação original da `m3-78` deu à 1ª/2ª Fortificação um campo de "nome" livre, combinado com o
+Mestre (`FichaFortificacaoPersonalidadeDto.nome`) — mas `docs/core/sistema-v4.1.0.md`, seção
+"Fortificação de Traços", mostra no próprio exemplo do documento que o nome da habilidade
+(`⬦ Determinado`) se mantém **idêntico** em toda Fortificação; só descrição e custo mudam
+("Uma fortificação não necessariamente irá aumentar o custo e seus efeitos"). O campo de nome livre
+contradizia a fonte de verdade.
+
+Removido o campo `nome` de toda Fortificação em todas as camadas: `FichaFortificacaoPersonalidadeDto`
+foi eliminado de `shared/src/dtos/ficha/ficha.dtos.ts` (a Fortificação passou a reusar
+`FichaPersonalidadeEstagioDto`, a mesma forma `{ descricao, custoEnergia }` que a Base já usava, sem
+duplicar um tipo agora idêntico). `materializarHabilidadePersonalidade` (`shared/regras/identidade/
+personalidade.ts`) passou a derivar o `nome` do item materializado: para a Base, a palavra de
+Personalidade sozinha (sem mudança); para uma Fortificação, `${personalidade} — ${rótulo do
+estágio}` (ex.: "Atento — 1ª Fortificação"), usando o mapa `ROTULOS_PERSONALIDADE_ESTAGIO` já
+existente — nenhum texto novo inventado, reaproveita o rótulo do próprio seletor de estágio. Como o
+nome de qualquer estágio agora depende da palavra de Personalidade, a função passou a retornar `null`
+também quando essa palavra ainda não foi definida (antes, só a Base checava isso).
+
+Nos dois lugares que editam os estágios — o guia de criação (`criar.page.ts`/`.html`) e o editor da
+aba Extras da ficha (`ficha-visualizacao.component.ts`/`.html`) — o campo de texto "Nome da
+melhoria"/"Nome" de cada Fortificação foi removido, e o cabeçalho estático de cada bloco (que já
+existia só para a Base, ex. "Base — Atento") ganhou o mesmo tratamento para as Fortificações ("1ª
+Fortificação — Atento", "2ª Fortificação — Atento") — mesmo padrão visual, sem inventar um layout
+novo. `atualizarFortificacao`/`mudarFortificacaoRascunhoPersonalidade` perderam o parâmetro `'nome'`
+(só `'descricao' | 'custoEnergia'` continuam existindo). A checagem de completude
+(`personalidadeFortificacaoCompleta`) não checa mais um `nome` preenchido.
+
+Testes: `shared/regras/identidade/personalidade.spec.ts` ganhou um caso novo (Fortificação sem a
+palavra de Personalidade materializa `null`) e os dois casos de Fortificação passaram a esperar o
+nome derivado; `criar.page.spec.ts` e `ficha-visualizacao.component.spec.ts` tiveram as chamadas/
+expectativas de `nome` trocadas por `descricao`/`custoEnergia`. Nenhum teste teve que ser removido —
+a mudança é uma redução de superfície (um campo a menos), não uma reestruturação de comportamento.
+Testado: shared 723/723, frontend (módulo `ficha`) 735/735, lint e build limpos nos três workspaces.
+Verificado ao vivo (Playwright, `1920×1080`/`360×800`): o guia (Nível 14, os 3 blocos) e o editor da
+aba Extras de uma ficha real criada pelo próprio guia mostram só Efeito/Custo por estágio, com o
+cabeçalho "1ª/2ª Fortificação — Atento" no lugar do antigo campo de nome, em ambos os viewports.
+
+## 2026-08-23 — `m3-78` (correção): Habilidade de Personalidade sai do passo Habilidades e vai para o passo Identidade do guia
+
+Pedido do autor logo após a implementação da `m3-78`: "mude para não ser na tab de habilidades e
+sim na tab de identidade" — a seção "Habilidade de Personalidade" (Base + 1ª/2ª Fortificação) foi
+implementada dentro do passo **Habilidades** do guia de criação (`criar.page.html`), mas o campo da
+palavra de Personalidade (e a Origem) já vivem no passo **Identidade**; o autor considerou o passo
+Habilidades o lugar errado — o traço e sua habilidade combinada com o Mestre pertencem juntos à
+Identidade do agente.
+
+Movida a seção inteira (subseção "Habilidade de Personalidade" + os 3 `guia__formacao` — Base/1ª/2ª
+Fortificação) de dentro do `@case ('Habilidades')` para o fim do `<section
+class="guia__identidade-bloco guia__identidade-bloco--personalidade">`, logo abaixo do campo "Traço
+de personalidade", no `@case ('Identidade')` — mesmo bloco visual da Personalidade, antes da seção
+de Origem. O texto de ajuda do campo de personalidade que apontava para frente ("o passo Habilidades
+já deixa um rascunho...") foi removido, já que os 3 estágios agora aparecem imediatamente abaixo, no
+mesmo passo.
+
+A trava de conclusão de passo (`passoValido()`) acompanhou a mudança: `melhoriasCompletas()` (que
+misturava vagas do catálogo + Base/Fortificação) foi separada em duas computeds independentes —
+`vagasCatalogoCompletas` (só o catálogo, ainda gate do passo // Habilidades, com o mesmo bypass de
+`modoLivre` de antes) e `personalidadeEstagiosCompletos` (Base sempre exigida; Fortificação `n` só
+quando `alvoFortificacoes() >= n`, sem bypass de `modoLivre` — mesmo padrão sem-bypass que já valia
+para a palavra de Personalidade e a Origem no passo Identidade). `melhoriasCompletas()` continua
+existindo como a combinação das duas (usada só no resumo/testes agregados). Dois testes de
+`criar.page.spec.ts` que navegavam direto para o passo Identidade sem preencher a Base (escritos
+antes desta correção, quando a trava ainda vivia só no passo Habilidades) precisaram passar a
+preencher a Base para continuar batendo com o novo gate; o restante da suíte (inclusive os 3 testes
+de Base/Fortificação obrigatória escritos na `m3-78` original) não precisou de nenhuma mudança, pois
+testam a computed combinada diretamente, não a etapa.
+
+Verificado ao vivo (Playwright, registro + login reais, `1920×1080` e `360×800`): 0 ocorrências do
+texto "Habilidade de Personalidade" no passo Habilidades; os 3 blocos (com `textarea`/`input number`)
+presentes no passo Identidade, logo abaixo do campo de personalidade, sem sobreposição visual com a
+seção de Origem abaixo; o botão Avançar continua bloqueado com a Base vazia e libera ao preenchê-la
+(nível 8, só a Base é exigida — Fortificação 1 opcional até ser preenchida). Testado: frontend 734/734
+(módulo `ficha`), lint e build limpos.
+
 ## 2026-08-23 — `m3-78`: Habilidade de Personalidade ganha 3 estágios com custo em Energia
 
 Pedido original do autor: "revisar como funciona as fortificações da personalidade e também

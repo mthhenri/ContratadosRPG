@@ -1899,7 +1899,7 @@ describe('FichaVisualizacao', () => {
             habilidade: {
               ativa: PersonalidadeEstagioEnum.BASE,
               base: { descricao: 'Efeito base.', custoEnergia: 1 },
-              fortificacao1: { nome: 'Destemido+', descricao: 'Mais um dado.', custoEnergia: 3 },
+              fortificacao1: { descricao: 'Mais um dado.', custoEnergia: 3 },
               fortificacao2: null,
             },
           },
@@ -1911,7 +1911,7 @@ describe('FichaVisualizacao', () => {
 
         expect(emitidos).toHaveLength(1);
         expect(emitidos[0].ativa).toBe(PersonalidadeEstagioEnum.FORTIFICACAO_1);
-        expect(emitidos[0].fortificacao1).toEqual({ nome: 'Destemido+', descricao: 'Mais um dado.', custoEnergia: 3 });
+        expect(emitidos[0].fortificacao1).toEqual({ descricao: 'Mais um dado.', custoEnergia: 3 });
       });
 
       it('editar os 3 blocos no editor e confirmar emite o rascunho inteiro', () => {
@@ -1923,16 +1923,15 @@ describe('FichaVisualizacao', () => {
         componente['editarPersonalidadeHabilidade']();
         componente['mudarBaseRascunhoPersonalidade']('descricao', 'Ignora a primeira fonte de Medo.');
         componente['mudarBaseRascunhoPersonalidade']('custoEnergia', '2');
-        componente['mudarFortificacaoRascunhoPersonalidade']('fortificacao1', 'nome', 'Destemido+');
         componente['mudarFortificacaoRascunhoPersonalidade']('fortificacao1', 'descricao', 'Mais um dado.');
         componente['mudarFortificacaoRascunhoPersonalidade']('fortificacao1', 'custoEnergia', '3');
-        componente['mudarFortificacaoRascunhoPersonalidade']('fortificacao2', 'nome', 'Destemido++');
+        componente['mudarFortificacaoRascunhoPersonalidade']('fortificacao2', 'descricao', 'Efeito maior.');
         componente['confirmarPersonalidadeHabilidade']();
 
         expect(emitidos).toHaveLength(1);
         expect(emitidos[0].base).toEqual({ descricao: 'Ignora a primeira fonte de Medo.', custoEnergia: 2 });
-        expect(emitidos[0].fortificacao1).toEqual({ nome: 'Destemido+', descricao: 'Mais um dado.', custoEnergia: 3 });
-        expect(emitidos[0].fortificacao2).toEqual({ nome: 'Destemido++', descricao: '', custoEnergia: null });
+        expect(emitidos[0].fortificacao1).toEqual({ descricao: 'Mais um dado.', custoEnergia: 3 });
+        expect(emitidos[0].fortificacao2).toEqual({ descricao: 'Efeito maior.', custoEnergia: null });
         expect(componente['editandoPersonalidadeHabilidade']()).toBe(false);
       });
 
@@ -1969,7 +1968,7 @@ describe('FichaVisualizacao', () => {
         const efetiva = componente['personalidadeHabilidadeEfetiva']();
         expect(efetiva.ativa).toBe(PersonalidadeEstagioEnum.FORTIFICACAO_1);
         expect(efetiva.base).toBeNull();
-        expect(efetiva.fortificacao1).toEqual({ nome: 'Destemido+', descricao: 'Mais um dado ao forçar o teste.', custoEnergia: 3 });
+        expect(efetiva.fortificacao1).toEqual({ descricao: 'Mais um dado ao forçar o teste.', custoEnergia: 3 });
         expect(efetiva.fortificacao2).toBeNull();
       });
     });
