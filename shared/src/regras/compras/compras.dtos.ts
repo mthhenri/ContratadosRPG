@@ -89,6 +89,14 @@ export interface ModificacaoAplicadaDto {
     readonly tipo: FragmentoTipoEnum;
     readonly modulo: FragmentoModuloEnum;
   };
+  /**
+   * Peso próprio da modificação, **só relevante para mods custom** (sem correspondência no
+   * catálogo, que não têm uma "descrição" oficial de peso). Espelha a exceção da regra ("salvo
+   * indicação contrária em sua descrição", `docs/core/sistema-v4.1.0.md:958`) — ausente = usa o
+   * padrão de `PESO_MODIFICACAO_PADRAO` (+0,2) por empilhamento. Uma mod do catálogo real ignora
+   * este campo mesmo se vier preenchido; o peso do catálogo é sempre a fonte de verdade (m3-76).
+   */
+  readonly pesoCustom?: number;
 }
 
 /** Um amplificador acoplado ao agente, com sua quantidade de empilhamentos. */
@@ -215,6 +223,8 @@ export interface ModificacaoItemDto {
    * existir avulso ao acoplar (doc — "⬥ Acoplamento").
    */
   readonly origemFragmento?: ModificacaoAplicadaDto['origemFragmento'];
+  /** Peso custom da mod aplicada (`ModificacaoAplicadaDto.pesoCustom`), quando ela é custom. */
+  readonly pesoCustom?: ModificacaoAplicadaDto['pesoCustom'];
 }
 
 /** Entrada de `verificarConflitoModificacao`: uma modificação candidata contra as já aplicadas num item. */

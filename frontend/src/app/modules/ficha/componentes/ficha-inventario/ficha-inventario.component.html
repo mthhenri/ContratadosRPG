@@ -1214,8 +1214,8 @@
             <div class="ficha-inv__mod-custom">
               @if (criandoModIndice() === item.indice) {
                 <form class="ficha-inv__form" [formGroup]="modCustomForm" (ngSubmit)="confirmarCriarMod(item.indice)">
-                  <div class="ficha-inv__form-linha">
-                    <label class="ficha-inv__campo ficha-inv__campo--largo">
+                  <div class="ficha-inv__form-linha ficha-inv__form-linha--mod-cabecalho">
+                    <label class="ficha-inv__campo">
                       <span class="ficha-inv__campo-rotulo">Nome da modificação</span>
                       <input class="ficha-inv__entrada" type="text" formControlName="nome" placeholder="Ex.: Encantada" required />
                     </label>
@@ -1227,7 +1227,22 @@
                         <button type="button" class="ficha-inv__mini-btn" aria-label="Aumentar limite" (click)="ajustarLimiteMod(1)">+</button>
                       </div>
                     </div>
+                    <label class="ficha-inv__campo">
+                      <span class="ficha-inv__campo-rotulo">Peso da modificação (opcional)</span>
+                      <input
+                        class="ficha-inv__entrada ficha-inv__entrada--num"
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        formControlName="pesoCustom"
+                        placeholder="0,2 (padrão)"
+                      />
+                    </label>
                   </div>
+                  <p class="ficha-inv__campo-dica">
+                    O sistema cobra +0,2 de peso por modificação, salvo indicação contrária. Deixe em branco para
+                    usar o padrão, ou informe o peso da exceção descrita.
+                  </p>
                   <div class="ficha-inv__form-linha">
                     <label class="ficha-inv__check">
                       <input type="checkbox" formControlName="ignoraLimiteTotal" />

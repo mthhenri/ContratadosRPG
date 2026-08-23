@@ -861,6 +861,11 @@ export class FichaInventario {
     ignoraLimiteTotal: new FormControl(false, { nonNullable: true }),
     /** Pode passar do próprio teto de empilhamentos. */
     ignoraLimiteProprio: new FormControl(false, { nonNullable: true }),
+    /**
+     * Peso próprio da mod, por empilhamento — vazio (`null`) usa o padrão de 0,2 do sistema
+     * (`docs/core/sistema-v4.1.0.md:958`, "salvo indicação contrária em sua descrição", m3-76).
+     */
+    pesoCustom: new FormControl<number | null>(null, { validators: [Validators.min(0)] }),
     descricao: new FormControl('', { nonNullable: true }),
     /** Lista de efeitos **mecânicos** (por empilhamento) — faz a mod custom "funcionar de verdade". */
     efeitos: new FormArray<ReturnType<FichaInventario['criarEfeitoGrupo']>>([]),
@@ -2326,6 +2331,7 @@ export class FichaInventario {
       empilhamentoMaximo: 1,
       ignoraLimiteTotal: false,
       ignoraLimiteProprio: false,
+      pesoCustom: null,
       descricao: '',
     });
     this.efeitosMod.clear();
@@ -2392,8 +2398,9 @@ export class FichaInventario {
 
   /**
    * Confirma a modificação custom (nome obrigatório): acrescenta `{ nome, empilhamentos }` ao item.
-   * Sem definição de catálogo, o motor cobra o custo/peso padrão da categoria — o motor segue a fonte
-   * única (proibição #26); aqui só se acopla a mod livre que o jogador descreveu.
+   * Sem definição de catálogo, o motor cobra o custo padrão da categoria; o peso usa `pesoCustom`
+   * quando declarado (m3-76), senão cai no padrão de 0,2 — o motor segue a fonte única
+   * (proibição #26); aqui só se acopla a mod livre que o jogador descreveu.
    */
   protected confirmarCriarMod(indice: number): void {
     if (this.modCustomForm.invalid) {
@@ -2417,6 +2424,7 @@ export class FichaInventario {
       ...(efeitos.length > 0 ? { efeitos } : {}),
       ...(bruto.ignoraLimiteTotal ? { ignoraLimiteTotal: true } : {}),
       ...(bruto.ignoraLimiteProprio ? { ignoraLimiteProprio: true } : {}),
+      ...(bruto.pesoCustom !== null ? { pesoCustom: bruto.pesoCustom } : {}),
     };
     const semMod = item.modificacoes.filter((atual) => atual.nome !== nome);
     this.emitirItens(
@@ -2626,7 +2634,12 @@ export class FichaInventario {
       (soma, modificacao) =>
         soma +
         modificacao.empilhamentos *
-          obterPesoModificacao({ item, modificacao: modificacao.nome, origemFragmento: modificacao.origemFragmento }),
+          obterPesoModificacao({
+            item,
+            modificacao: modificacao.nome,
+            origemFragmento: modificacao.origemFragmento,
+            pesoCustom: modificacao.pesoCustom,
+          }),
       0,
     );
     const pesoBruto = (item.peso + pesoMods) * item.quantidade;

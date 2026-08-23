@@ -420,6 +420,52 @@ describe('FichaInventario', () => {
     ]);
   });
 
+  it('mod custom sem peso informado não grava pesoCustom (motor usa o padrão de 0,2)', () => {
+    const alvo = montar({ itens: [itemLeve], amplificadores: [] });
+    alvo.componentInstance['alternarCriarMod'](0);
+    alvo.componentInstance['modCustomForm'].patchValue({ nome: 'Afiada' });
+    alvo.componentInstance['confirmarCriarMod'](0);
+    expect(alvo.emitidos[0].itens[0].modificacoes[0].pesoCustom).toBeUndefined();
+  });
+
+  it('mod custom com peso informado grava pesoCustom (m3-76)', () => {
+    const alvo = montar({ itens: [itemLeve], amplificadores: [] });
+    alvo.componentInstance['alternarCriarMod'](0);
+    alvo.componentInstance['modCustomForm'].patchValue({ nome: 'Encantada', pesoCustom: 0.5 });
+    alvo.componentInstance['confirmarCriarMod'](0);
+    expect(alvo.emitidos[0].itens[0].modificacoes[0]).toMatchObject({ nome: 'Encantada', pesoCustom: 0.5 });
+  });
+
+  it('mod custom com peso digitado como 0 (zero) no próprio input do DOM grava pesoCustom: 0, não o padrão (m3-76)', () => {
+    const alvo = montar({ itens: [itemLeve], amplificadores: [] });
+    alvo.componentInstance['alternarPainel'](0);
+    alvo.componentInstance['alternarCriarMod'](0);
+    alvo.fixture.detectChanges();
+    alvo.componentInstance['modCustomForm'].controls.nome.setValue('Leve como pluma');
+    const entradaPeso = alvo.raiz.querySelector<HTMLInputElement>('input[formcontrolname="pesoCustom"]');
+    expect(entradaPeso).toBeTruthy();
+    entradaPeso!.value = '0';
+    entradaPeso!.dispatchEvent(new Event('input'));
+    alvo.fixture.detectChanges();
+    expect(alvo.componentInstance['modCustomForm'].controls.pesoCustom.value).toBe(0);
+    alvo.componentInstance['confirmarCriarMod'](0);
+    expect(alvo.emitidos[0].itens[0].modificacoes[0]).toMatchObject({ nome: 'Leve como pluma', pesoCustom: 0 });
+  });
+
+  it('o peso exibido no card do item reflete pesoCustom da mod (m3-76) — não só o total do inventário', () => {
+    // Regressão: `montarItemInventario` tinha sua própria conta de peso por mod (pro badge do
+    // próprio card), separada da do motor usada pelo resumo geral — só essa segunda esquecia de
+    // repassar `pesoCustom`, então o total geral batia mas o card do item ainda somava o padrão de
+    // 0,2 (`docs/core/sistema-v4.1.0.md:958`) por cima de uma mod com peso zero declarado.
+    const comModPesoZero: CarrinhoItemDto = {
+      ...itemLeve,
+      modificacoes: [{ nome: 'Leve como pluma', empilhamentos: 1, pesoCustom: 0 }],
+    };
+    const alvo = montar({ itens: [comModPesoZero], amplificadores: [] });
+    const pesoCard = alvo.raiz.querySelector('.ficha-inv__peso')?.textContent?.trim();
+    expect(pesoCard).toBe('1 slots');
+  });
+
   it('aumentar os empilhamentos de uma mod custom preserva seus efeitos', () => {
     const alvo = montar({ itens: [itemLeve], amplificadores: [] });
     alvo.componentInstance['alternarCriarMod'](0);

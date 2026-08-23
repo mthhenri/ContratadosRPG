@@ -217,6 +217,28 @@ describe('obterPesoModificacao', () => {
     });
     expect(obterPesoModificacao({ item: espadaConstrutor, modificacao: 'Pesada' })).toBe(0);
   });
+
+  describe('pesoCustom (m3-76)', () => {
+    it('mod custom sem pesoCustom cai no padrão de +0,2 (regra: "salvo indicação contrária")', () => {
+      const item = montarItem({ nome: 'Mediana', categoria: ItemCategoriaEnum.CORPO_A_CORPO });
+      expect(obterPesoModificacao({ item, modificacao: 'Encantada' })).toBe(0.2);
+    });
+
+    it('mod custom com pesoCustom usa o valor declarado em vez do padrão', () => {
+      const item = montarItem({ nome: 'Mediana', categoria: ItemCategoriaEnum.CORPO_A_CORPO });
+      expect(obterPesoModificacao({ item, modificacao: 'Encantada', pesoCustom: 0.5 })).toBe(0.5);
+    });
+
+    it('mod custom com pesoCustom 0 (zero) pesa 0, não cai no padrão de 0,2 — 0 é um valor declarado, não "ausente"', () => {
+      const item = montarItem({ nome: 'Mediana', categoria: ItemCategoriaEnum.CORPO_A_CORPO });
+      expect(obterPesoModificacao({ item, modificacao: 'Leve como pluma', pesoCustom: 0 })).toBe(0);
+    });
+
+    it('mod do catálogo real ignora pesoCustom mesmo se vier preenchido — o catálogo é a fonte de verdade', () => {
+      const item = montarItem({ nome: 'Mediana', categoria: ItemCategoriaEnum.CORPO_A_CORPO });
+      expect(obterPesoModificacao({ item, modificacao: 'Pesada', pesoCustom: 9 })).toBe(0.5);
+    });
+  });
 });
 
 describe('contarComprasModificacao', () => {
@@ -474,6 +496,24 @@ describe('calcularTotaisCarrinho', () => {
     expect(totais.pesoUsado).toBe(1);
   });
 
+  it('mod custom com pesoCustom pesa o valor declarado, não o padrão de +0,2 (m3-76)', () => {
+    const totais = calcularTotaisCarrinho({
+      itens: [
+        montarItem({
+          nome: 'Mediana',
+          categoria: ItemCategoriaEnum.CORPO_A_CORPO,
+          custo: 1000,
+          peso: 2,
+          modificacoes: [{ nome: 'Encantada', empilhamentos: 1, pesoCustom: 0.5 }],
+        }),
+      ],
+      amplificadores: [],
+    });
+
+    // Peso 2 (base) + 1 empilhamento × 0,5 (pesoCustom) = 2,5
+    expect(totais.pesoUsado).toBe(2.5);
+  });
+
   it('armazenamento vestido amplia o inventário e não pesa', () => {
     const totais = calcularTotaisCarrinho({
       itens: [
@@ -624,6 +664,20 @@ describe('listarSubInventarios (m3-44)', () => {
     const subInventarios = listarSubInventarios([pochete, municao, deOutraPochete]);
     expect(subInventarios[0].pesoUsado).toBe(1.5);
     expect(subInventarios[0].itens).toEqual([municao]);
+  });
+
+  it('soma o pesoCustom de uma mod custom aplicada a um item dentro do sub-inventário (m3-76)', () => {
+    const pochete = montarItem({ nome: 'Pochete', categoria: ItemCategoriaEnum.ARMAZENAMENTO, id: 'poch-1' });
+    const item = montarItem({
+      nome: '9mm',
+      categoria: ItemCategoriaEnum.MUNICOES,
+      peso: 0.5,
+      containerId: 'poch-1',
+      modificacoes: [{ nome: 'Encantada', empilhamentos: 1, pesoCustom: 0.5 }],
+    });
+    const subInventarios = listarSubInventarios([pochete, item]);
+    // 0,5 (base) + 0,5 (pesoCustom) = 1
+    expect(subInventarios[0].pesoUsado).toBe(1);
   });
 
   it('Mochila Médica: abre sub-inventário só p/ Medicinal, capacidade 5, e reduz 0,5 de peso por item (piso 0)', () => {

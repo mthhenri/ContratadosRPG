@@ -1,5 +1,52 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-23 — m3-76: mod custom ganha peso próprio (exceção ao padrão de 0,2)
+
+Spec `docs/specs/backlog/m3-76-mod-custom-peso.spec.md`: a regra ("Cada modificação acrescenta +0,2
+de peso, salvo indicação contrária em sua descrição", `docs/core/sistema-v4.1.0.md:958`) prevê uma
+exceção que o motor não expunha — uma mod custom (sem correspondência no catálogo) sempre pesava o
+padrão fixo, sem como o jogador declarar "essa aqui pesa outra coisa (ou nada)".
+
+`ModificacaoAplicadaDto`/`ModificacaoItemDto` (`shared/src/regras/compras/compras.dtos.ts`) ganharam
+`pesoCustom?: number`. `obterPesoModificacao` (`compras.ts`) passou a devolver `dto.pesoCustom` quando
+a mod não tem definição de catálogo (`!definicao`) e `pesoCustom !== undefined` — uma mod do catálogo
+real sempre ignora o campo, mesmo se vier preenchido (só a exceção descritiva de uma mod inventada faz
+sentido ter peso próprio). `calcularTotaisCarrinho` e `listarSubInventarios` repassam
+`pesoCustom: modificacao.pesoCustom` na chamada. No frontend, `modCustomForm` (`ficha-inventario`)
+ganhou o campo `pesoCustom: FormControl<number | null>` (vazio = usa o padrão), um input "Peso da
+modificação (opcional)" no formulário, e `confirmarCriarMod` grava `pesoCustom` só quando
+`!== null` (`0` é um valor declarado, não "ausente").
+
+**Bug pego só na verificação ao vivo, não pelos testes**: depois de todo o motor e os testes
+unitários (shared + componente) passarem, o autor testou peso zero manualmente e reportou "não tá
+funcional". Reproduzindo via Playwright contra o stack real (usuário/ficha via REST, guia real no
+browser), o total geral do inventário (`resumo().pesoUsado`, via `calcularTotaisCarrinho`) já refletia
+`pesoCustom` corretamente, mas o **peso exibido no próprio card do item** (`item.pesoTexto`) não —
+`montarItemInventario` (`ficha-inventario.component.ts`) tinha sua própria soma local de peso por mod
+(pro badge do card), uma terceira chamada a `obterPesoModificacao` que nunca recebeu `pesoCustom`, então
+sempre caía no padrão de 0,2 mesmo com peso zero declarado. Nenhum teste unitário cobria essa função —
+os testes anteriores checavam o payload emitido e o total do motor, não o `pesoTexto` renderizado no
+card. Corrigido (uma linha: repassar `pesoCustom: modificacao.pesoCustom`) e coberto por um novo teste
+de regressão que lê `.ficha-inv__peso` do DOM.
+
+Também nesta tarefa: ajuste de layout pedido pelo autor ao testar ao vivo — no formulário de mod
+custom, "Nome da modificação" ocupava a linha inteira (`ficha-inv__campo--largo`), empurrando "Limite
+de empilhamentos" e "Peso da modificação" pra uma segunda linha. Trocado por um modificador dedicado
+(`ficha-inv__form-linha--mod-cabecalho`, grid de 3 colunas com o nome mais estreito) que junta os três
+numa linha só no desktop; no mobile (`bp.mobile`) continua empilhado, um por linha, como já era.
+
+Verificação ao vivo (skill `verify`, 1920×1080 e 360×800): usuário de teste + ficha JOGADOR válida
+criados via REST direto (`POST /autenticacao/registro` → `/login` → `POST /ficha` com um `dados`
+completo clonado de uma ficha real), guia real do browser dirigido via Playwright — adicionar Mediana
+do catálogo, abrir "Modificar", criar mod custom com peso 0, aplicar. Confirmado no desktop: o card
+mostra "2 slots" (base 2 + 0 do mod), não "2,2"; o layout do formulário junta nome/limite/peso numa
+linha. Confirmado no mobile: os três campos empilham um por linha, sem quebrar a tela. Ficha de teste
+removida (soft delete) ao final.
+
+Testado: shared 163/163 (3 novos casos, incluindo `pesoCustom: 0`), frontend 1297/1297 (era 1293; +1
+teste de regressão do `pesoTexto` do card + os já existentes de `confirmarCriarMod`/DOM). Lint limpo
+em `shared` e `frontend`.
+
 ## 2026-08-23 — m3-75: guia trima todos os campos de texto livre na persistência
 
 Spec pós-milestone (pedido direto do autor: "na criação de ficha de agente, fazer trim em todos os

@@ -398,11 +398,28 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 12px;
+
+    // Nome + limite de empilhamentos + peso na mesma linha no desktop (nome mais estreito que o
+    // padrão `auto-fit`, sobrando espaço pros dois campos numéricos ao lado); empilha no mobile,
+    // um campo por linha, mesma receita do resto do formulário (m3-76).
+    &--mod-cabecalho {
+      grid-template-columns: minmax(200px, 2fr) minmax(110px, 1fr) minmax(130px, 1fr);
+
+      @include bp.mobile {
+        grid-template-columns: 1fr;
+      }
+    }
   }
   &__form-acoes {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+  }
+  &__campo-dica {
+    margin: -4px 0 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-dim);
   }
   &__efeito {
     display: flex;

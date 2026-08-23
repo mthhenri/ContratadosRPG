@@ -316,6 +316,9 @@ export function contarComprasModificacao(dto: ComprasModificacaoContarDto): numb
  * nunca pesa — o fragmento avulso pesava sozinho no inventário; ao acoplar (`origemFragmento`) ele
  * deixa de existir como item próprio e vira só uma modificação no alvo, então cobrar o peso padrão
  * de mod (+0,2) em cima disso duplicaria/inventaria um peso que a doc não prevê ("⬥ Acoplamento").
+ * Uma mod sem correspondência no catálogo (custom) usa `pesoCustom` quando declarado — a exceção
+ * "salvo indicação contrária em sua descrição" da regra (m3-76); uma mod do catálogo real sempre usa
+ * o peso do catálogo, ignorando `pesoCustom` mesmo se vier preenchido.
  */
 export function obterPesoModificacao(dto: ModificacaoItemDto): number {
   if (dto.item.categoria === ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR) {
@@ -325,6 +328,9 @@ export function obterPesoModificacao(dto: ModificacaoItemDto): number {
     return 0;
   }
   const definicao = listarModificacoesDisponiveis(dto.item).find((modificacao) => modificacao.nome === dto.modificacao);
+  if (!definicao && dto.pesoCustom !== undefined) {
+    return dto.pesoCustom;
+  }
   return definicao && definicao.peso !== undefined ? definicao.peso : PESO_MODIFICACAO_PADRAO;
 }
 
@@ -716,7 +722,12 @@ export function calcularTotaisCarrinho(dto: TotaisCarrinhoCalcularDto): TotaisCa
       if (ocupaPeso) {
         pesoUsado +=
           modificacao.empilhamentos *
-          obterPesoModificacao({ item, modificacao: modificacao.nome, origemFragmento: modificacao.origemFragmento }) *
+          obterPesoModificacao({
+            item,
+            modificacao: modificacao.nome,
+            origemFragmento: modificacao.origemFragmento,
+            pesoCustom: modificacao.pesoCustom,
+          }) *
           quantidade;
       }
     });
@@ -760,7 +771,12 @@ export function listarSubInventarios(itens: readonly CarrinhoItemDto[]): readonl
         (soma, modificacao) =>
           soma +
           modificacao.empilhamentos *
-            obterPesoModificacao({ item, modificacao: modificacao.nome, origemFragmento: modificacao.origemFragmento }),
+            obterPesoModificacao({
+              item,
+              modificacao: modificacao.nome,
+              origemFragmento: modificacao.origemFragmento,
+              pesoCustom: modificacao.pesoCustom,
+            }),
         0,
       );
       const pesoEfetivo = Math.max(0, item.peso - reducaoPeso) + pesoMods;

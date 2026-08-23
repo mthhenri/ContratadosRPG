@@ -1,6 +1,29 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-23 · **Última decisão registrada:** `m3-75` (spec pós-milestone, pedido
+> **Última revisão:** 2026-08-23 · **Última decisão registrada:** `m3-76` (mod custom ganha peso
+> próprio, exceção ao padrão de +0,2 do sistema — `docs/core/sistema-v4.1.0.md:958`) —
+> `ModificacaoAplicadaDto`/`ModificacaoItemDto` (`shared/regras/compras`) ganharam `pesoCustom?:
+> number`; `obterPesoModificacao` devolve esse valor quando a mod não tem correspondência no catálogo
+> (uma mod real do catálogo sempre ignora o campo). Frontend: `ficha-inventario` ganhou o campo "Peso
+> da modificação (opcional)" no form de mod custom, gravado só quando `!== null` (`0` é um valor
+> declarado, não "ausente"). **Bug pego só na verificação ao vivo**: depois do motor e dos testes
+> unitários passarem, o autor testou peso zero manualmente e reportou não funcionar — reproduzindo via
+> Playwright contra o stack real, o total geral do inventário já refletia `pesoCustom` certo, mas o
+> peso **exibido no próprio card do item** não: `montarItemInventario` tinha uma terceira chamada a
+> `obterPesoModificacao` (pro badge do card) que nunca recebeu `pesoCustom`, caindo sempre no padrão de
+> 0,2. Nenhum teste unitário cobria essa função específica. Corrigido (repassar `pesoCustom` nessa
+> chamada) e coberto por um novo teste de regressão que lê `.ficha-inv__peso` do DOM — esse tipo de
+> bug (motor certo, view-model duplicado no componente errado) só a verificação ao vivo pega; testes
+> unitários anteriores cobriam o payload emitido e o total do motor, não o texto renderizado no card
+> (ver `[[verificacao-visual-pega-bug-silencioso-de-exibicao]]` na memória do agente). Também ajustado,
+> a pedido do autor ao testar ao vivo: layout do form de mod custom — nome/limite/peso numa linha só
+> no desktop (antes o nome forçava linha cheia, empurrando os outros dois pra uma segunda linha);
+> mobile continua empilhado. Verificado ao vivo (`1920×1080`/`360×800`, ficha de teste via REST +
+> Playwright): card mostra peso correto (2 slots, não 2,2) com mod de peso zero aplicada; layout junta
+> os três campos no desktop e empilha no mobile. Testado: shared 163/163, frontend 1297/1297 (era
+> 1293, +4); lint limpo.
+>
+> **Duas decisões atrás:** `m3-75` (spec pós-milestone, pedido
 > direto do autor: "na criação de ficha de agente, fazer trim em todos os campos de texto") — todo
 > campo de texto livre do passo "Identidade" (`personalidade`, `origem.nome/.descricao/
 > .saberDeCampo`, cada `formacao[].texto/.parametro`, `especialidade.gatilho/.efeito`) só usava
@@ -17,7 +40,7 @@
 > 1292, +1); lint limpo. Sem impacto visual — mudança pura de montagem de payload, nenhum
 > template/estilo tocado.
 >
-> **Duas decisões atrás:** ajuste avulso no catálogo do passo
+> **Três decisões atrás:** ajuste avulso no catálogo do passo
 > "Equipamento inicial" do guia (`GuiaEquipamentoLoja`, pedido direto do autor, mesmo dia de
 > `m3-73`/`m3-74`) — as abas de categoria (Corpo a Corpo/Explosivos/Armas de Fogo/…) usavam os
 > emojis crus de `CATALOGO_CATEGORIAS` (`shared/regras/compras`), o único ponto do catálogo de
@@ -36,7 +59,7 @@
 > "Pistola" (Armas de Fogo) enquanto a aba ativa era Corpo a Corpo encontrou o item e adicionou com a
 > categoria certa.
 >
-> **Três decisões atrás:** `m3-73`/`m3-74` (dois ajustes
+> **Quatro decisões atrás:** `m3-73`/`m3-74` (dois ajustes
 > avulsos do guia de criação, mesmo dia) — `m3-73` corrigiu o seletor de habilidades do passo
 > "Habilidades": a aba ativa (Gerais/Classe/Subclasse/Arquétipo) voltava sozinha pro primeiro grupo
 > a cada "+" clicado, porque `abaAtiva`/`subgrupoAtivo` eram `linkedSignal`s na forma básica,
@@ -349,7 +372,6 @@ só adaptou o visual de desktop).
 | Spec | Frente | O que é |
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m3-76` | inventário | mod custom ganha campo de peso próprio (regra já prevê exceção ao padrão 0,2) |
 | `m3-77` | ficha/tempo real | ficha aberta reage por socket a rolagem feita em outro caminho (histórico + bandeja) |
 | `m3-78` | guia | fortificação de personalidade ganha campo de custo em Energia; guia explica papel do Mestre |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
@@ -358,9 +380,9 @@ só adaptou o visual de desktop).
 | `m7-20` | encontro | regressão: botão "abrir ficha" voltou a aparecer na grade compacta do jogador no desktop |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/` vinda da fila original; `m3-73`…`m3-78` eram
-ajustes avulsos (pedido direto do autor, 2026-08-22) — `m3-73`, `m3-74` e `m3-75` já **concluídos**
-(specs em `docs/specs/done/`, ver bloco no topo do arquivo); `m3-76`…`m3-78` seguem registrados, não
-implementados. `m7-18`…`m7-20` são o mesmo tipo de ajuste avulso, pós-M7 (já concluído).
+ajustes avulsos (pedido direto do autor, 2026-08-22) — `m3-73`, `m3-74`, `m3-75` e `m3-76` já
+**concluídos** (specs em `docs/specs/done/`, ver bloco no topo do arquivo); `m3-77`/`m3-78` seguem
+registrados, não implementados. `m7-18`…`m7-20` são o mesmo tipo de ajuste avulso, pós-M7 (já concluído).
 Milestone ainda não aberto: `m5-guia-missao`.
 
 ---
