@@ -34,6 +34,7 @@ describe('RolagemAvulso', () => {
     inconsciente: null,
     destreza: 0,
     iniciativaBonus: 0,
+    dadoExtraIniciativa: 0,
     corFicha: '#d53030',
     imagemUrl: null,
     imagemFoco: null,

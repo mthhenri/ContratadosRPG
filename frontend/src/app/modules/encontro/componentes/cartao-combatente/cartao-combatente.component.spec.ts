@@ -43,6 +43,7 @@ describe('CartaoCombatente', () => {
     inconsciente: false,
     destreza: 4,
     iniciativaBonus: 0,
+    dadoExtraIniciativa: 0,
     corFicha: '#4a9d6b',
     imagemUrl: null,
     imagemFoco: null,

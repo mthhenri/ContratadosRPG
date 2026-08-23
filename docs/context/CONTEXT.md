@@ -1,6 +1,30 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-23 · **Última decisão registrada:** `m3-78` (ajuste avulso pós-M3, a
+> **Última revisão:** 2026-08-23 · **Última decisão registrada:** `m7-18` (ajuste avulso pós-M7,
+> "Rolar tudo" do mestre passa a somar o dado extra de Iniciativa de Formação da Origem) — certas
+> Formações da Origem concedem dado extra de Iniciativa (`PERICIA_DADO_INICIATIVA`,
+> `obterDadoExtraIniciativaFormacao`, `shared/regras/identidade/formacoes.ts`), já aplicado
+> corretamente quando o próprio jogador rola a própria iniciativa, mas ignorado pelo atalho **Rolar
+> tudo** do mestre — um agente com essa Formação, rolado pelo mestre, saía sistematicamente com
+> menos dados do que a própria ficha produziria. Corrigido no mesmo padrão de campo calculado que
+> `m7-17` já usa para resistência a dano: `EncontroCombatenteResumoDto` ganhou
+> `dadoExtraIniciativa: number` (default `0` para criatura/NPC/avulso, que não têm Formação de
+> Origem); o mapper do Encontro (`encontro-combatente.mapper.ts`) ganhou
+> `resolverDadoExtraIniciativa`, reaproveitando a função pura do shared sem duplicar a soma no
+> backend; `encontro-revelacao.ts` zera o campo junto de `destreza`/`iniciativaBonus` para quem não
+> tem os números liberados. `rolarTudo()` (`painel-encontro.page.ts`) passou a montar
+> `dados = Math.max(1, destreza) + dadoExtraIniciativa`; o caminho do jogador (`rolar-iniciativa.ts`)
+> não foi tocado — já estava correto. O amplificador `Atento`, que também soma dado extra mas
+> depende do documento inteiro da ficha, ficou fora de escopo por decisão explícita da spec —
+> registrado em `PROBLEMS.md` (`P-026`). Testado: shared 723/723 (sem mudança), backend 446/446
+> (+1), frontend 1321/1321 (+1); lint limpo nos três (os 2 erros de `npm run lint -w backend` são o
+> `P-022` preexistente, fora do diff desta task). Verificado ao vivo (Postgres+backend+frontend
+> reais, `1920×1080`): ficha REST-seed com Destreza 1 e 2 entradas de `PERICIA_DADO_INICIATIVA`
+> confirmou `dadoExtraIniciativa: 2` via `GET /encontro/:id`; "Rolar iniciativas" pelo mestre no
+> painel real produziu iniciativa **8** — impossível sob `1D6` (teto 6), consistente com `3D6`
+> (Destreza 1 + dado extra 2), provando a correção end-to-end.
+>
+> **Uma decisão atrás:** `m3-78` (ajuste avulso pós-M3, a
 > Habilidade de Personalidade ganha 3 estágios com custo em Energia) — deixou de ser um único texto
 > definido a qualquer momento pelo editor completo e passou a ter 3 estágios nomeados (Base, 1ª e 2ª
 > Fortificação — níveis 7/14), cada um com descrição e custo em Energia próprios (nunca um nome
@@ -51,7 +75,7 @@
 > shared 723/723, frontend 735/735 (módulo `ficha`), lint e build limpos; verificado ao vivo nos dois
 > viewports, no guia e no editor de uma ficha real.
 >
-> **Uma decisão atrás:** `m7-20` (regressão do botão
+> **Duas decisões atrás:** `m7-20` (regressão do botão
 > "abrir ficha" na grade compacta do jogador, corrigida) — no desktop, com a ficha lateral do
 > jogador aberta, o botão "abrir ficha" de cada cartão da Iniciativa tinha voltado a aparecer:
 > `m7-12` escondia esse botão em `:host-context(.grade--compacta) .combatente { &__abrir-ficha:
@@ -69,7 +93,7 @@
 > cartão que tem ficha. Sanidade em `360×800` confirmou que o mobile (fora do escopo da regra, que
 > vive só no breakpoint desktop) não mudou.
 >
-> **Duas decisões atrás:** `m3-77` (ficha aberta reage por
+> **Três decisões atrás:** `m3-77` (ficha aberta reage por
 > socket a rolagem feita em outro caminho — histórico + `BandejaDados`) — quem está com
 > `visualizar.page.ts`/`visualizar-criatura.page.ts` aberta passa a ver, sem F5, uma rolagem
 > `PUBLICA` feita por outra aba do dono, pelo mestre ou pelo Encontro. Backend:
@@ -94,7 +118,7 @@
 > verdade). Ver `[[m3-31-sem-fusao-automatica-de-efeitos-na-rolagem]]` (irmã de tema, não de causa) na
 > memória do agente.
 >
-> **Uma decisão atrás:** `m3-76` (mod custom ganha peso próprio, exceção ao padrão de +0,2 do
+> **Quatro decisões atrás:** `m3-76` (mod custom ganha peso próprio, exceção ao padrão de +0,2 do
 > sistema) — `pesoCustom?: number` em `ModificacaoAplicadaDto`/`ModificacaoItemDto`
 > (`shared/regras/compras`), devolvido por `obterPesoModificacao` só quando a mod não tem
 > correspondência no catálogo; form de mod custom (`ficha-inventario`) ganhou o campo opcional.
@@ -106,7 +130,7 @@
 > Testado: shared 163/163, frontend 1297/1297 (+4); lint limpo. Ver
 > `[[verificacao-visual-pega-bug-silencioso-de-exibicao]]` na memória do agente.
 >
-> **Três decisões atrás:** `m3-75` (spec pós-milestone, pedido
+> **Cinco decisões atrás:** `m3-75` (spec pós-milestone, pedido
 > direto do autor: "na criação de ficha de agente, fazer trim em todos os campos de texto") — todo
 > campo de texto livre do passo "Identidade" (`personalidade`, `origem.nome/.descricao/
 > .saberDeCampo`, cada `formacao[].texto/.parametro`, `especialidade.gatilho/.efeito`) só usava
@@ -123,7 +147,7 @@
 > 1292, +1); lint limpo. Sem impacto visual — mudança pura de montagem de payload, nenhum
 > template/estilo tocado.
 >
-> **Quatro decisões atrás:** ajuste avulso no catálogo do passo
+> **Seis decisões atrás:** ajuste avulso no catálogo do passo
 > "Equipamento inicial" do guia (`GuiaEquipamentoLoja`, pedido direto do autor, mesmo dia de
 > `m3-73`/`m3-74`) — as abas de categoria (Corpo a Corpo/Explosivos/Armas de Fogo/…) usavam os
 > emojis crus de `CATALOGO_CATEGORIAS` (`shared/regras/compras`), o único ponto do catálogo de
@@ -142,7 +166,7 @@
 > "Pistola" (Armas de Fogo) enquanto a aba ativa era Corpo a Corpo encontrou o item e adicionou com a
 > categoria certa.
 >
-> **Cinco decisões atrás (mesmo dia):** `m3-73`/`m3-74` (dois ajustes
+> **Sete decisões atrás (mesmo dia):** `m3-73`/`m3-74` (dois ajustes
 > avulsos do guia de criação, mesmo dia) — `m3-73` corrigiu o seletor de habilidades do passo
 > "Habilidades": a aba ativa (Gerais/Classe/Subclasse/Arquétipo) voltava sozinha pro primeiro grupo
 > a cada "+" clicado, porque `abaAtiva`/`subgrupoAtivo` eram `linkedSignal`s na forma básica,
@@ -158,7 +182,7 @@
 > dinheiro em `1920×1080`/`360×800`, e a aba do seletor permanecendo em Arquétipo por duas adições
 > seguidas. Ver `HISTORY.md` para o detalhe de causa raiz dos dois.
 >
-> **Cinco decisões atrás:** `m4-11` (task adicional do M4, fora da fila `m4-05`…`m4-10`) — o acervo
+> **Oito decisões atrás:** `m4-11` (task adicional do M4, fora da fila `m4-05`…`m4-10`) — o acervo
 > (`/fichas`) deixou de listar agentes e criaturas
 > misturados. A tela agora separa por tipo em blocos (`AGENTES`/`CRIATURAS`, NPC estruturalmente
 > pronto e desligado até `m4-07`/`m4-08`), com um `<select>` de visão (Todos/Agentes/Criaturas) —
@@ -181,7 +205,7 @@
 > funciona — atribuir um agente emite normalmente); e o fluxo completo funciona ponta a ponta
 > (criar solta pela UI → aparece com chip "Sem campanha" → abre em `/fichas/criatura/:id`).
 >
-> **Seis decisões atrás:** correção pós-`m7-17` — a ficha
+> **Nove decisões atrás:** correção pós-`m7-17` — a ficha
 > flutuante do Encontro (`FichaFlutuanteConteudo`) ajusta Vida/Energia/Condições da ficha pela
 > `FichaEdicaoService` genérica (`FichaService.alterarVitalidade`/`alterarFicha`), que só emite
 > `ficha:alterada` na sala `ficha:<id>` — sala que o painel de Iniciativa nunca ouve (só escuta
@@ -199,7 +223,7 @@
 > `GatewayModule` ↔ `EncontroModule` (mesmo padrão já usado com `FichaModule`/`CampanhaModule`);
 > `FichaModule` continua sem saber que `encontro` existe. Ver "Tempo real" (seção 4).
 >
-> **Sete decisões atrás:** `m7-17` (retoque no mesmo dia) — o dialog "Receber dano" ganhou uma grade
+> **Dez decisões atrás:** `m7-17` (retoque no mesmo dia) — o dialog "Receber dano" ganhou uma grade
 > com cabeçalho único (Dano/Ficha/Custom) em vez de rótulo por campo em cada uma das cinco linhas,
 > e o mobile deixou de empilhar cada célula (o que alongava o dialog e quebrava a leitura
 > coluna↔coluna) — continua tabela, só mais estreita. O cartão da Iniciativa passou a mostrar a
@@ -212,7 +236,7 @@
 > definida — o número era aplicado no cálculo (silenciosamente correto) mas nunca exibido; corrigido
 > e coberto por teste de regressão.
 >
-> **Oito decisões atrás:** `m7-16` — na tela de Iniciativa, um agente (`JOGADOR`) de ficha **não
+> **Onze decisões atrás:** `m7-16` — na tela de Iniciativa, um agente (`JOGADOR`) de ficha **não
 > oculta** (m3-65) mostra avatar/dono/classe-arquétipo pra qualquer membro, mesmo sem
 > `usuario_ficha_acesso` (só os números continuam atrás da concessão; nível fica de fora — a
 > carteirinha identifica, não avalia a força — e sem ela não desenha "Vida —"); mais 4 ajustes de UI
@@ -230,13 +254,16 @@
 
 ## 1. Próxima Task
 
+**`m7-18` (ajuste avulso pós-M7, "Rolar tudo" do mestre passa a somar o dado extra de Iniciativa de
+Formação da Origem) concluída** — ver o bloco no topo do arquivo. Resta só `m7-19` na fila de
+ajustes avulsos do M7 (ver seção "Fila do backlog" abaixo).
+
 **`m3-78` (ajuste avulso pós-M3, Habilidade de Personalidade ganha 3 estágios com custo em Energia)
-concluída** — ver o bloco no topo do arquivo e "Guia de criação de ficha" (seção 4). Fecha a fila de
+concluída** — ver "Guia de criação de ficha" (seção 4). Fecha a fila de
 ajustes avulsos do M3 (`m3-73`…`m3-78`, todos concluídos); resta só `m3-53` na fila normal do M3.
 
 **`m7-20` (ajuste avulso pós-M7, regressão do botão "abrir ficha" na grade compacta do jogador)
-concluída** — ver o bloco no topo do arquivo. `m7-18`/`m7-19` seguem na fila de ajustes avulsos do
-M7 (ver seção "Fila do backlog" abaixo).
+concluída.**
 
 **`m4-11` (task adicional do M4, fora da fila `m4-05`…`m4-10`) concluída** — acervo separado por
 tipo, "Criar criatura" solta e os dois defeitos de `duplicarFicha`/`atribuirCampanha` corrigidos;
@@ -464,14 +491,14 @@ só adaptou o visual de desktop).
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
-| `m7-18` | encontro | "Rolar tudo" do mestre ignora dado extra de Iniciativa de Formação (só o jogador tem hoje) |
 | `m7-19` | encontro | mestre pode sobrescrever a expressão de dados de Iniciativa por combatente/encontro |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/` vinda da fila original; `m3-73`…`m3-78` eram
 ajustes avulsos (pedido direto do autor, 2026-08-22) — todos **concluídos** (specs em
 `docs/specs/done/`, `m3-78` fechou a fila no bloco do topo do arquivo). `m7-18`…`m7-20` são o mesmo
-tipo de ajuste avulso, pós-M7 (milestone já concluído); `m7-20` também já está **concluído** (ver
-bloco no topo do arquivo), restam `m7-18`/`m7-19`. Milestone ainda não aberto: `m5-guia-missao`.
+tipo de ajuste avulso, pós-M7 (milestone já concluído); `m7-18`/`m7-20` já estão **concluídos** (ver
+bloco no topo do arquivo e "Próxima Task"), resta só `m7-19`. Milestone ainda não aberto:
+`m5-guia-missao`.
 
 ---
 

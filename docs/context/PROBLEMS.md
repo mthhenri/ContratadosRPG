@@ -239,6 +239,28 @@
   editor de Origem, código pré-existente e não tocado pela task, reproduziu o mesmo defeito quando
   testado isoladamente para descartar regressão. Não corrigido nesta task (fora do escopo da spec).
 
+### P-026 — Fallback do mestre na Iniciativa ainda ignora o amplificador Atento · `ACEITO` · encontro
+
+- **Sintoma:** o atalho **Rolar tudo** do mestre (`rolarTudo()`, `painel-encontro.page.ts`) soma
+  Destreza e, desde a `m7-18`, o dado extra de Formação da Origem (`dadoExtraIniciativa`), mas
+  continua sem o dado extra do amplificador `Atento`
+  (`ajusteDadoIniciativaAmplificadores`, `shared/regras/agente/amplificador`) — um agente com
+  Atento aplicado, rolado pelo mestre via "Rolar tudo", recebe menos dados do que receberia
+  rolando pela própria ficha.
+- **Causa:** `ajusteDadoIniciativaAmplificadores` lê `inventario.amplificadores` da ficha inteira;
+  `EncontroCombatenteResumoDto` não expõe esse cálculo como campo plano (diferente da Formação,
+  que já tinha `obterDadoExtraIniciativaFormacao` puro e sem dependência de estado de aplicação de
+  amplificador).
+- **Contorno:** o jogador rolar a própria iniciativa pelo fluxo normal da ficha (decisão do
+  milestone) sempre produz o valor correto; o fallback do mestre só fica abaixo do correto para
+  quem tem Atento aplicado e está ausente da sessão.
+- **Correção:** expor um campo calculado equivalente (`shared/regras/agente/amplificador` já tem a
+  função pura) no mapper do encontro, mesmo padrão de `dadoExtraIniciativa` (`m7-18`), e somá-lo em
+  `rolarTudo()`.
+- **Desde:** explicitamente registrado como fora de escopo pela spec `m7-18`
+  (`iniciativa-bonus-formacao-fallback-mestre.spec.md`, 2026-08-23) — a task corrigiu só o dado
+  que faltava por Formação; o de Atento fica como dívida separada.
+
 ## Resolvidos
 
 Itens resolvidos **saem daqui**. O relato da correção fica no [`HISTORY.md`](HISTORY.md), junto da

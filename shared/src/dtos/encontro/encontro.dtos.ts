@@ -122,6 +122,13 @@ export interface EncontroCombatenteResumoDto {
    * iniciativa pelo fluxo normal (decisão do milestone) e o `Rolar tudo` é fallback.
    */
   readonly iniciativaBonus: number;
+  /**
+   * Dado extra de Iniciativa vindo de Formação da Origem (`PERICIA_DADO_INICIATIVA`,
+   * `obterDadoExtraIniciativaFormacao`) — soma à quantidade de D6 do atalho **Rolar tudo** do
+   * mestre, ao lado da Destreza. Só o agente pode ter Formação; criatura, NPC e avulso saem
+   * sempre `0`. Não inclui o amplificador `Atento`, mesma ressalva de `iniciativaBonus` acima.
+   */
+  readonly dadoExtraIniciativa: number;
   /** Cor de identidade da ficha (m3-61); `null` cai no `--accent` de quem visualiza. */
   readonly corFicha: string | null;
   /**

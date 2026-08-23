@@ -72,6 +72,7 @@ function ocultarCombatente(
     // mestre — o jogador não precisa dela, e ela é um dado de ficha como qualquer outro.
     destreza: 0,
     iniciativaBonus: 0,
+    dadoExtraIniciativa: 0,
     // A cor é identidade visual, não informação de jogo: sobrevive junto com o nome.
     corFicha: combatente.corFicha,
     // Avatar e "carteirinha": só sobrevivem pro agente de ficha não oculta (m7-16) — criatura/NPC

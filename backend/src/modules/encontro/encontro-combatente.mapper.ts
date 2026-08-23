@@ -6,7 +6,10 @@ import type { FichaCriaturaDadosDto, FichaJogadorDadosDto } from '@contratados-r
 import { CombatenteOrigemEnum, TipoDanoEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import { calcularEnergia, calcularVida, montarResistencias } from '@contratados-rpg/shared/regras/agente';
 import { somarResistenciasCriaturaPorTipo } from '@contratados-rpg/shared/regras/criatura';
-import { obterResistenciaFormacao } from '@contratados-rpg/shared/regras/identidade';
+import {
+  obterDadoExtraIniciativaFormacao,
+  obterResistenciaFormacao,
+} from '@contratados-rpg/shared/regras/identidade';
 
 /**
  * Traduz a linha crua de `encontro_combatente` (já com a ficha resolvida pelo `JOIN`) no resumo
@@ -121,6 +124,19 @@ function resolverResistencias(linha: EncontroCombatenteLinhaDto): Partial<Record
 }
 
 /**
+ * Dado extra de Iniciativa vindo de Formação da Origem (m7-18) — só o agente tem Formação;
+ * criatura/NPC/avulso saem `0`. Mesmo reaproveitamento do motor puro que `resolverResistencias`
+ * já faz para a resistência a dano.
+ */
+function resolverDadoExtraIniciativa(linha: EncontroCombatenteLinhaDto): number {
+  if (linha.fichaId === null || linha.fichaDados === null || linha.tipoFicha !== TipoFichaEnum.JOGADOR) {
+    return 0;
+  }
+  const dados = linha.fichaDados as FichaJogadorDadosDto;
+  return obterDadoExtraIniciativaFormacao(dados.identidade?.origem?.formacao ?? []);
+}
+
+/**
  * Avulso: sem ficha, o estado é o do próprio encontro — só vida. É o **único** combatente cuja
  * vida mora em `encontro_combatente`.
  */
@@ -215,6 +231,7 @@ export function montarCombatenteResumo(
     inconsciente: estado.inconsciente,
     destreza: estado.destreza,
     iniciativaBonus: estado.iniciativaBonus,
+    dadoExtraIniciativa: resolverDadoExtraIniciativa(linha),
     corFicha: linha.fichaId === null ? linha.corAvulso : linha.fichaCor,
     imagemUrl: linha.fichaId === null ? linha.imagemUrlAvulso : linha.fichaImagemUrl,
     imagemFoco: linha.fichaImagemFoco,

@@ -6,6 +6,7 @@ import type {
 import {
   CadenciaEnum,
   EncontroStatusEnum,
+  FormacaoBonusEnum,
   TipoCampanhaMembroPapelEnum,
   TipoFichaEnum,
   TipoUsuarioEnum,
@@ -501,6 +502,43 @@ describe('EncontroService', () => {
       const estado = await service.recuperarEncontro({ id: 50 }, mestre);
 
       expect(estado.combatentes[0].resistencias).toEqual({ FISICO: 15, GERAL: 3 });
+    });
+
+    it('m7-18: dado extra de Iniciativa por Formação da Origem soma pro agente, 0 pra quem não tem', async () => {
+      encontroRepositorio.recuperarPorId.mockResolvedValue(criarEncontroLinha());
+      encontroRepositorio.listarCombatentes.mockResolvedValue([
+        criarCombatenteLinha({
+          id: 1,
+          fichaId: 40,
+          nomeAvulso: null,
+          vidaMaximaAvulso: null,
+          vidaAtualAvulso: null,
+          fichaNome: 'K. Amaral',
+          tipoFicha: TipoFichaEnum.JOGADOR,
+          fichaDados: {
+            estado: { vidaAtual: 20, vidaMaxima: 20, energiaAtual: 10, energiaMaxima: 10 },
+            atributos: { destreza: 4 },
+            inventario: { itens: [], amplificadores: [] },
+            identidade: {
+              origem: {
+                formacao: [
+                  {
+                    bonus: FormacaoBonusEnum.PERICIA_DADO_INICIATIVA,
+                    parametro: null,
+                    texto: 'Reflexos treinados',
+                  },
+                ],
+              },
+            },
+          } as unknown as EncontroCombatenteLinhaDto['fichaDados'],
+        }),
+        criarCombatenteLinha({ id: 2 }),
+      ]);
+
+      const estado = await service.recuperarEncontro({ id: 50 }, mestre);
+
+      expect(estado.combatentes.find((combatente) => combatente.id === 1)?.dadoExtraIniciativa).toBe(1);
+      expect(estado.combatentes.find((combatente) => combatente.id === 2)?.dadoExtraIniciativa).toBe(0);
     });
 
     it('criatura expõe só Defesa — sem Esquiva, Bloqueio ou Contra-Ataque', async () => {

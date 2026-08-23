@@ -73,6 +73,7 @@ describe('PainelEncontro', () => {
     inconsciente: false,
     destreza: 3,
     iniciativaBonus: 0,
+    dadoExtraIniciativa: 0,
     corFicha: null,
     imagemUrl: null,
     imagemFoco: null,
@@ -522,6 +523,32 @@ describe('PainelEncontro', () => {
     // 5D6 + 3 → mínimo 8, máximo 33 (o valor exato é aleatório; a faixa prova a fórmula).
     expect(mapa[1]).toBeGreaterThanOrEqual(8);
     expect(mapa[1]).toBeLessThanOrEqual(33);
+  });
+
+  it('m7-18: `Rolar tudo` soma o dado extra de Formação da Origem à Destreza do agente', () => {
+    const semIniciativa: EncontroRecuperadoDto = {
+      ...encontroAtivo,
+      status: EncontroStatusEnum.MONTAGEM,
+      ordemRodada: [],
+      combatentes: [
+        combatente(2, 'K. Amaral', {
+          iniciativa: null,
+          destreza: 4,
+          dadoExtraIniciativa: 2,
+          iniciativaBonus: 0,
+        }),
+      ],
+    };
+    const { fixture, encontroService } = montar(semIniciativa);
+    interno(fixture).rolarTudo();
+
+    const [, mapa] = encontroService.rolarIniciativasFaltantes.mock.calls[0] as unknown as [
+      number,
+      Record<number, number>,
+    ];
+    // (4 Destreza + 2 dado extra de Formação) 6D6 + 0 → mínimo 6, máximo 36.
+    expect(mapa[2]).toBeGreaterThanOrEqual(6);
+    expect(mapa[2]).toBeLessThanOrEqual(36);
   });
 
   describe('visão do jogador (m7-06)', () => {

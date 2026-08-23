@@ -49,6 +49,7 @@ describe('ocultarNaoRevelados', () => {
     inconsciente: false,
     destreza: 4,
     iniciativaBonus: 3,
+    dadoExtraIniciativa: 0,
     corFicha: '#4a9d6b',
     imagemUrl: null,
     imagemFoco: null,
@@ -126,6 +127,7 @@ describe('ocultarNaoRevelados', () => {
     expect(oculto.machucado).toBeNull();
     expect(oculto.destreza).toBe(0);
     expect(oculto.iniciativaBonus).toBe(0);
+    expect(oculto.dadoExtraIniciativa).toBe(0);
     expect(oculto.imagemUrl).toBeNull();
     expect(oculto.imagemFoco).toBeNull();
     expect(oculto.donoNome).toBeNull();

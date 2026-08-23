@@ -1,5 +1,44 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-23 — `m7-18`: "Rolar tudo" do mestre passa a somar o dado extra de Formação da Origem
+
+Ajuste avulso pós-M7 (`docs/specs/backlog/m7-18-iniciativa-bonus-formacao-fallback-mestre.spec.md`),
+pedido direto do autor: "na origem, não está aplicando os dados da iniciativa a mais". Certas
+Formações da Origem concedem dado extra de Iniciativa (`PERICIA_DADO_INICIATIVA`,
+`obterDadoExtraIniciativaFormacao`, `shared/regras/identidade/formacoes.ts`) — já aplicado
+corretamente quando o próprio jogador rola a própria iniciativa (`rolar-iniciativa.ts`), mas
+ignorado pelo atalho **Rolar tudo** do mestre (`painel-encontro.page.ts`), que montava a fórmula só
+com Destreza + o bônus fixo (`iniciativaBonus`, que só a criatura tem) — um agente com essa
+Formação, rolado pelo mestre, saía sistematicamente com menos dados do que a própria ficha
+produziria.
+
+Corrigido no mesmo padrão de campo calculado que `m7-17` (resistência a dano) já usa:
+`EncontroCombatenteResumoDto` ganhou `dadoExtraIniciativa: number` (default `0` para
+criatura/NPC/avulso, que não têm Formação de Origem); o mapper do Encontro
+(`encontro-combatente.mapper.ts`) ganhou `resolverDadoExtraIniciativa`, reaproveitando
+`obterDadoExtraIniciativaFormacao` sem duplicar a soma no backend — só o agente (`tipoFicha:
+JOGADOR`) o calcula, a partir de `identidade.origem.formacao` já carregado. `encontro-revelacao.ts`
+zera o campo junto de `destreza`/`iniciativaBonus` para quem não tem os números liberados.
+`rolarTudo()` passou a montar `dados = Math.max(1, combatente.destreza) +
+combatente.dadoExtraIniciativa`; `rolar-iniciativa.ts` (caminho do jogador) não foi tocado — já
+estava correto.
+
+O amplificador `Atento`, que também soma dado extra de Iniciativa mas depende do documento inteiro
+da ficha (não só da Formação, que é um dado puro), ficou **fora de escopo** por decisão explícita
+da spec — registrado como dívida separada em `PROBLEMS.md` (`P-026`), não bloqueando esta task.
+
+Testado: shared 723/723 (sem mudança — nenhuma função nova, só reaproveito), backend 446/446 (+1,
+novo caso em `encontro.service.spec.ts` provando `dadoExtraIniciativa: 1` para um agente com
+Formação e `0` para quem não tem, mais o zeramento em `encontro-revelacao.spec.ts`), frontend
+1321/1321 (+1, `painel-encontro.page.spec.ts` provando que `rolarTudo()` soma o dado extra à
+Destreza antes de rolar); lint limpo nos três (os 2 erros de `npm run lint -w backend` são o
+`P-022` preexistente, em arquivos não tocados por esta task). Verificado ao vivo (Postgres+backend+
+frontend reais, `1920×1080`): ficha de agente criada via REST com Destreza 1 e 2 entradas de
+`PERICIA_DADO_INICIATIVA` (dado extra = 2, validado direto no `GET /encontro/:id` —
+`dadoExtraIniciativa: 2`); "Rolar iniciativas" pelo mestre no painel real produziu iniciativa **8**
+— impossível sob o código antigo (`1D6`, teto 6), consistente com o novo `3D6` (Destreza 1 + dado
+extra 2), provando a correção end-to-end.
+
 ## 2026-08-23 — `m3-78` (2ª correção): nome de uma Fortificação nunca é livre — é sempre a palavra de Personalidade + rótulo do estágio
 
 Pedido do autor: "O nome da melhoria sempre é o nome da personalidade + xª fortificação". A

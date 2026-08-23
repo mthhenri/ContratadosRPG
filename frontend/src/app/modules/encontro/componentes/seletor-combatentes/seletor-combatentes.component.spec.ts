@@ -95,6 +95,7 @@ describe('SeletorCombatentes', () => {
       inconsciente: null,
       destreza: 0,
       iniciativaBonus: 0,
+      dadoExtraIniciativa: 0,
     corFicha: null,
     imagemUrl: null,
     imagemFoco: null,

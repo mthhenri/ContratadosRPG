@@ -45,6 +45,7 @@ describe('LogEncontro', () => {
       inconsciente: false,
       destreza: 4,
       iniciativaBonus: 0,
+      dadoExtraIniciativa: 0,
       corFicha: null,
       imagemUrl: null,
       imagemFoco: null,
