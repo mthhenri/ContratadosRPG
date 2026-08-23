@@ -1,5 +1,42 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-23 — m7-20: regressão do botão "abrir ficha" na grade compacta do jogador
+
+Spec `docs/specs/backlog/m7-20-regressao-botao-abrir-ficha-grade-compacta.spec.md` (pedido direto do
+autor): no desktop, com a ficha lateral do jogador aberta (grade compacta por
+`mostrarFichaLateral()`), o botão "abrir ficha" de cada cartão da Iniciativa voltou a aparecer —
+abri-la de novo como janela flutuante (`FichaFlutuante`) só duplica a mesma informação já visível ao
+lado. A spec já trazia a causa raiz identificada: `m7-12` tinha implementado exatamente esse
+esconder (commit `4f8ecd6`, `:host-context(.grade--compacta) .combatente { &__abrir-ficha: display:
+none; }`), e o commit `139d221` ("feat(encontro): adiciona rolagens aos avulsos", 2026-08-22) trocou
+o bloco pra dar suporte a `&__rolar-avulso` e removeu, sem intenção, a regra específica do botão de
+abrir ficha.
+
+A correção não podia simplesmente reintroduzir a regra antiga porque `.grade--compacta` cobre **dois**
+cenários distintos (`gradeCompacta = mostrarFichaLateral() || colunasGrade() > 3`): o do jogador com
+ficha lateral (onde o botão deve mesmo sumir) e o do mestre numa grade de 4+ colunas por quantidade
+de combatentes (onde o mestre não tem substituto lateral nenhum e o botão precisa continuar). Em vez
+de reintroduzir a regra dentro de `:host-context(.grade--compacta) .combatente`, a regra nova usa
+`:host-context(.iniciativa-tela--dividida) .combatente__abrir-ficha { display: none; }` —
+`.iniciativa-tela--dividida` (`painel-encontro.page.html`) é aplicada exatamente quando
+`mostrarFichaLateral()` é verdadeiro, e essa classe nunca existe pro mestre (`mostrarFichaLateral`
+começa com `!this.ehMestre()`). A regra continua só no breakpoint desktop já existente e não toca
+`&__rolar-avulso`/`&__receber-dano` nem qualquer outra ação adicionada depois de `m7-12`.
+
+Sem teste unitário novo: o comportamento é puramente CSS (`display: none` por media query +
+`:host-context`), o mesmo motivo por que `m7-12` também não tinha teste pra essa regra — JSDOM não
+avalia media queries. Lint limpo (frontend).
+
+Verificação ao vivo (skill `verify`, `1920×1080`, dois usuários reais via REST — `dados` de ficha
+clonados de uma ficha de verificação já existente no banco de dev pra passar a validação de domínio):
+campanha com 1 ficha de jogador + 8 avulsos (9 combatentes, o suficiente pra `colunasGrade() > 3`
+ativar a grade compacta também pro mestre). Como jogador com a ficha lateral aberta: `grade--compacta`
+ativa, 1 botão "abrir ficha" no DOM (o próprio cartão) e **0 visíveis** — confirmado por screenshot.
+Como mestre com a mesma grade compacta (por quantidade, sem ficha lateral): `grade--compacta` ativa,
+1 botão no DOM e **1 visível** — o mestre preserva o acesso. Sanidade extra em `360×800` (mobile,
+fora do escopo da regra): o botão permanece visível, confirmando que o breakpoint mobile não foi
+afetado.
+
 ## 2026-08-23 — m3-77: ficha aberta reage por socket a rolagem feita em outro caminho
 
 Spec `docs/specs/backlog/m3-77-tempo-real-rolagem-ficha-aberta.spec.md` (pedido direto do autor):

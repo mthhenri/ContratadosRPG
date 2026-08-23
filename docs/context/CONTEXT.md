@@ -1,6 +1,24 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-23 · **Última decisão registrada:** `m3-77` (ficha aberta reage por
+> **Última revisão:** 2026-08-23 · **Última decisão registrada:** `m7-20` (regressão do botão
+> "abrir ficha" na grade compacta do jogador, corrigida) — no desktop, com a ficha lateral do
+> jogador aberta, o botão "abrir ficha" de cada cartão da Iniciativa tinha voltado a aparecer:
+> `m7-12` escondia esse botão em `:host-context(.grade--compacta) .combatente { &__abrir-ficha:
+> display: none; }`, e o commit `139d221` ("feat(encontro): adiciona rolagens aos avulsos",
+> 2026-08-22) removeu essa regra sem intenção ao dar suporte a `&__rolar-avulso`. A correção **não**
+> reintroduz a regra dentro de `.grade--compacta` (essa classe também cobre a grade do mestre
+> compactada por quantidade — `colunasGrade() > 3` —, cenário em que o mestre não tem substituto
+> lateral e o botão precisa continuar); em vez disso usa
+> `:host-context(.iniciativa-tela--dividida) .combatente__abrir-ficha { display: none; }`, já que
+> `.iniciativa-tela--dividida` só existe quando `mostrarFichaLateral()` é verdadeiro (nunca pro
+> mestre). Puramente CSS, sem teste unitário (JSDOM não avalia media query), lint limpo. Verificado
+> ao vivo (`1920×1080`, dois usuários reais via REST, encontro com 9 combatentes pra também acionar
+> a grade compacta do mestre por quantidade): jogador com ficha lateral não vê nenhum botão "abrir
+> ficha" na grade; mestre, na mesma grade compacta mas por quantidade, continua vendo o botão no
+> cartão que tem ficha. Sanidade em `360×800` confirmou que o mobile (fora do escopo da regra, que
+> vive só no breakpoint desktop) não mudou.
+>
+> **Uma decisão atrás:** `m3-77` (ficha aberta reage por
 > socket a rolagem feita em outro caminho — histórico + `BandejaDados`) — quem está com
 > `visualizar.page.ts`/`visualizar-criatura.page.ts` aberta passa a ver, sem F5, uma rolagem
 > `PUBLICA` feita por outra aba do dono, pelo mestre ou pelo Encontro. Backend:
@@ -161,9 +179,12 @@
 
 ## 1. Próxima Task
 
+**`m7-20` (ajuste avulso pós-M7, regressão do botão "abrir ficha" na grade compacta do jogador)
+concluída** — ver o bloco no topo do arquivo. `m7-18`/`m7-19` seguem na fila de ajustes avulsos do
+M7 (ver seção "Fila do backlog" abaixo).
+
 **`m3-77` (ajuste avulso pós-M3, ficha aberta reage por socket a rolagem feita em outro caminho)
-concluída** — ver o bloco no topo do arquivo e "Tempo real" (seção 4). Resta só `m3-78` na fila de
-ajustes avulsos do M3.
+concluída** — ver "Tempo real" (seção 4). Resta só `m3-78` na fila de ajustes avulsos do M3.
 
 **`m4-11` (task adicional do M4, fora da fila `m4-05`…`m4-10`) concluída** — acervo separado por
 tipo, "Criar criatura" solta e os dois defeitos de `duplicarFicha`/`atribuirCampanha` corrigidos;
@@ -394,13 +415,13 @@ só adaptou o visual de desktop).
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
 | `m7-18` | encontro | "Rolar tudo" do mestre ignora dado extra de Iniciativa de Formação (só o jogador tem hoje) |
 | `m7-19` | encontro | mestre pode sobrescrever a expressão de dados de Iniciativa por combatente/encontro |
-| `m7-20` | encontro | regressão: botão "abrir ficha" voltou a aparecer na grade compacta do jogador no desktop |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/` vinda da fila original; `m3-73`…`m3-78` eram
 ajustes avulsos (pedido direto do autor, 2026-08-22) — `m3-73`, `m3-74`, `m3-75`, `m3-76` e `m3-77`
 já **concluídos** (specs em `docs/specs/done/`, ver bloco no topo do arquivo); só `m3-78` segue
-registrado, não implementado. `m7-18`…`m7-20` são o mesmo tipo de ajuste avulso, pós-M7 (já concluído).
-Milestone ainda não aberto: `m5-guia-missao`.
+registrado, não implementado. `m7-18`…`m7-20` são o mesmo tipo de ajuste avulso, pós-M7 (milestone já
+concluído); `m7-20` também já está **concluído** (ver bloco no topo do arquivo), restam `m7-18`/
+`m7-19`. Milestone ainda não aberto: `m5-guia-missao`.
 
 ---
 

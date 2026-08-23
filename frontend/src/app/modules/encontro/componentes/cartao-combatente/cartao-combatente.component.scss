@@ -605,4 +605,14 @@
     &__condicao { padding: 2px 5px; font-size: 8px; }
     &__narrativo { font-size: 8px; }
   }
+
+  // A ficha lateral (jogador com combatente próprio, `mostrarFichaLateral`) já mostra a ficha ao
+  // lado — abrir de novo como janela flutuante (`FichaFlutuante`) só duplicaria a mesma
+  // informação. `.iniciativa-tela--dividida` só existe nesse caso (nunca pro mestre, que não tem
+  // substituto lateral mesmo quando `.grade--compacta` ativa por `colunasGrade() > 3`) — restaura
+  // a regra de `m7-12` (revertida sem intenção em `139d221`) sem esconder o botão do mestre nesse
+  // outro cenário, nem `&__rolar-avulso`/`&__receber-dano`.
+  :host-context(.iniciativa-tela--dividida) .combatente__abrir-ficha {
+    display: none;
+  }
 }
