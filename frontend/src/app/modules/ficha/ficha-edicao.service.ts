@@ -293,8 +293,43 @@ export class FichaEdicaoService {
     if (!fichaAtual) {
       return;
     }
-    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, habilidades } });
+    const dadosAtuais = fichaAtual.dados;
+    const entrada = normalizarEntrada(dadosAtuais.classe, dadosAtuais.nivel, dadosAtuais.atributos);
+    const derivados = this.progredirInventarioPorHabilidades(
+      dadosAtuais.derivados,
+      entrada,
+      dadosAtuais.habilidades,
+      habilidades,
+    );
+    this.ficha.set({ ...fichaAtual, dados: { ...dadosAtuais, habilidades, derivados } });
     this.agendarPersistencia();
+  }
+
+  /**
+   * Ganhar/perder "Mochileiro" (Geral ou Geral Melhorada) troca o atributo-base do cálculo de
+   * Inventário Máximo (Força → Intelecto − 1/Intelecto, `inventario.ts`) — diferente da maioria das
+   * habilidades, que só somam bônus por cima na leitura (m3-10). Como `derivados.inventarioMaximo`
+   * sempre chega aqui com um número concreto (nunca `undefined`, `calcularInventario` não tem
+   * "ausente"), o mecanismo "stored > calculado" (`status-derivado.ts`) nunca deixaria o ganho da
+   * habilidade aparecer sozinho — precisa do mesmo tratamento de delta que `progredirDerivados` já
+   * aplica a uma mudança de atributo/nível, mas disparado pela troca da lista de habilidades.
+   */
+  private progredirInventarioPorHabilidades(
+    derivados: FichaDerivadosDto | undefined,
+    entrada: EntradaAgente,
+    habilidadesAntes: readonly FichaHabilidadeDto[],
+    habilidadesDepois: readonly FichaHabilidadeDto[],
+  ): FichaDerivadosDto | undefined {
+    if (!derivados || derivados.inventarioMaximo === undefined) {
+      return derivados;
+    }
+    const delta =
+      calcularInventario({ ...entrada, habilidades: habilidadesDepois }) -
+      calcularInventario({ ...entrada, habilidades: habilidadesAntes });
+    if (delta === 0) {
+      return derivados;
+    }
+    return { ...derivados, inventarioMaximo: derivados.inventarioMaximo + delta };
   }
 
   ajustarInventario(inventario: FichaInventarioDto): void {

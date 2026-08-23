@@ -1,5 +1,36 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-23 — fix: "Mochileiro" (Geral/Geral Melhorada) não atualizava o Inventário Máximo
+
+Bug relatado direto pelo autor: a habilidade "Mochileiro" (troca o atributo de cálculo do
+Inventário de Força para Intelecto − 1, ou Intelecto cheio na variante Geral Melhorada do
+Engenheiro) não tinha efeito visível na ficha, em nenhuma das duas categorias.
+
+Root cause **não** era `shared/regras/agente/inventario.ts` (`calcularInventario` já lia
+`categoria === GERAL_MELHORADA` corretamente, com testes cobrindo as duas variantes) e sim a
+orquestração do frontend: `ajustarHabilidades` (`ficha-edicao.service.ts`), chamada pelo seletor de
+habilidades sempre que o jogador ganha/perde uma habilidade fora da criação (m3-13), só gravava a
+nova lista em `dados.habilidades` — nunca recalculava `derivados.inventarioMaximo`. Isso é o mesmo
+mecanismo "sem cascata" que `contraAtaque` também usa, mas com uma diferença crítica: `calcularContraAtaque`
+devolve `null`/`undefined` quando a ficha não tem a habilidade "Contra-Ataque", então o fallback
+"stored > calculado" (`montarInformacoesExtras`, m3-10) sempre recalcula ao vivo enquanto o campo
+seguir ausente. Já `calcularInventario` **sempre** devolve um número concreto (o cálculo por Força é
+o próprio padrão, nunca "ausente") — `derivados.inventarioMaximo` fica populado desde a criação da
+ficha e o stored vence para sempre, então ganhar "Mochileiro" depois da criação nunca tinha como
+aparecer sozinho no valor exibido.
+
+Fix em `ajustarHabilidades`: mesmo padrão de delta que `progredirDerivados` já aplica a uma mudança
+de atributo/nível, mas disparado pela troca da lista de habilidades — soma
+`calcularInventario(depois) − calcularInventario(antes)` (mesma entrada de atributos, só a lista de
+habilidades muda) ao `inventarioMaximo` armazenado, preservando qualquer valor editado manualmente
+por cima (m3-10). Sem mudança em `shared/regras` (nenhuma fórmula nova, só orquestração).
+
+Teste novo em `visualizar.page.spec.ts` reproduzindo o ganho de "Mochileiro" (Geral) com Força/
+Intelecto divergentes — falhava (Inventário intacto) antes do fix. Suíte completa do frontend
+(1307/1307) e do shared (709/709, sem alteração) verdes; `tsc --noEmit` e `eslint` limpos nos dois
+arquivos tocados. Mudança é de lógica de orquestração, não de UI/layout/estilo — fora do escopo do
+gate de verificação visual obrigatório (nenhum template/estilo alterado).
+
 ## 2026-08-23 — fix: resistência de Escudos não somava no equipamento (Combate)
 
 Bug relatado direto pelo autor: escudos equipados não contavam pra resistência da aba Combate.

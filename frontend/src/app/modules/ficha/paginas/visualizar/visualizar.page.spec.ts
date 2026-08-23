@@ -462,6 +462,41 @@ describe('FichaVisualizar', () => {
     }
   });
 
+  it('ganhar "Mochileiro" ajusta o Inventário Máximo stored (Força → Intelecto − 1)', () => {
+    const { fixture } = montar({ usuarioLogadoId: 7 });
+    const componente = fixture.componentInstance;
+    const carregada = componente['ficha']()!;
+    const classe = carregada.dados.classe;
+    const atributos = { ...carregada.dados.atributos, forca: 1, intelecto: 4 };
+
+    componente['ficha'].set({
+      ...carregada,
+      dados: {
+        ...carregada.dados,
+        atributos,
+        derivados: { inventarioMaximo: calcularInventario({ classe, forca: atributos.forca }) },
+      },
+    });
+
+    const mochileiro = [
+      { nome: 'Mochileiro', categoria: HabilidadeCategoriaEnum.GERAL, custoEnergia: 0, descricao: '' },
+    ];
+    componente['fichaEdicao'].ajustarHabilidades(mochileiro);
+
+    const d = componente['ficha']()!.dados;
+    expect(d.habilidades).toEqual(mochileiro);
+    // Sem a habilidade o cálculo usa Força; com ela, Intelecto − 1 — o stored acompanha via delta,
+    // sem esperar uma mudança de atributo/nível para "empurrar" a progressão (bug reportado).
+    expect(d.derivados!.inventarioMaximo).toBe(
+      calcularInventario({
+        classe,
+        forca: atributos.forca,
+        intelecto: atributos.intelecto,
+        habilidades: mochileiro,
+      }),
+    );
+  });
+
   it('lesão PERMANENTE cascateia às máximas/derivados; temporária não; base e Maestria intactos', () => {
     const classe = ClasseEnum.COMBATENTE;
     const nivel = 2;
