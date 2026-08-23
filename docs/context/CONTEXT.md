@@ -297,9 +297,21 @@ só adaptou o visual de desktop).
 | Spec | Frente | O que é |
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
+| `m3-73` | guia | bug: selecionar habilidade de Arquétipo reseta a aba pra Classe (`linkedSignal`) |
+| `m3-74` | guia | opção de ignorar a rolagem de dinheiro inicial (kit de equipamento já é opcional) |
+| `m3-75` | guia | trim em todos os campos de texto livre antes de persistir a ficha |
+| `m3-76` | inventário | mod custom ganha campo de peso próprio (regra já prevê exceção ao padrão 0,2) |
+| `m3-77` | ficha/tempo real | ficha aberta reage por socket a rolagem feita em outro caminho (histórico + bandeja) |
+| `m3-78` | guia | fortificação de personalidade ganha campo de custo em Energia; guia explica papel do Mestre |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
+| `m7-18` | encontro | "Rolar tudo" do mestre ignora dado extra de Iniciativa de Formação (só o jogador tem hoje) |
+| `m7-19` | encontro | mestre pode sobrescrever a expressão de dados de Iniciativa por combatente/encontro |
+| `m7-20` | encontro | regressão: botão "abrir ficha" voltou a aparecer na grade compacta do jogador no desktop |
 
-`m3-53` é a única frente de M3 ainda sem spec `done/`. Milestone ainda não aberto: `m5-guia-missao`.
+`m3-53` é a única frente de M3 ainda sem spec `done/` vinda da fila original; `m3-73`…`m3-78` são
+ajustes avulsos (pedido direto do autor, 2026-08-22), sem tocar código ainda — specs registradas,
+não implementadas. `m7-18`…`m7-20` são o mesmo tipo de ajuste avulso, pós-M7 (já concluído).
+Milestone ainda não aberto: `m5-guia-missao`.
 
 ---
 
