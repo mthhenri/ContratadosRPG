@@ -546,6 +546,17 @@ describe('FichaVisualizacao', () => {
       expect(ajustes).toEqual([]);
     });
 
+    it('Defesa (amplificador) cascateia para Esquiva e Bloqueio (doc — "Defesa": reações somam sobre a Defesa Final)', () => {
+      const documento: FichaJogadorDadosDto = {
+        ...dados,
+        inventario: { itens: [], amplificadores: [{ nome: 'Defesa', empilhamentos: 1 }] },
+      };
+      // esquiva base 15 (13 + destreza 2) e bloqueio base 17 (13 + vigor 4); +1 do amplificador Defesa em ambos.
+      const { raiz } = montar(documento);
+      expect(boxDefesa(raiz, 'Esquiva')?.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('16');
+      expect(boxDefesa(raiz, 'Bloqueio')?.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('18');
+    });
+
     it('Resistente penaliza -1 de Defesa por empilhamento além do 1º (débuff cruzado, doc — "Amplificadores")', () => {
       const documento: FichaJogadorDadosDto = {
         ...dados,

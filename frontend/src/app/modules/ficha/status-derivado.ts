@@ -126,6 +126,12 @@ export function normalizarEntrada(
  * **Equipamento** (`itens`, m3-43): Esquiva/Bloqueio/Defesa somam também o bônus de itens de
  * Proteções **equipados** (`calcularBonusDefesaEquipamento` — mods "Flexível"/"Resistente" e
  * efeito custom `DEFESA`), mesma filosofia "por cima, nunca persistido" do amplificador.
+ *
+ * **Bônus de Defesa cascateia nas reações**: doc (`docs/core/sistema-v4.1.0.md` — "Defesa") define
+ * Esquiva/Bloqueio/Contra-Ataque como a "Defesa Final" (Defesa Base + Habilidades/Fragmentos) somada
+ * ao bônus de cada reação. Todo bônus que mexe na Defesa (amplificador "Defesa", "Resistente", ou o
+ * bônus de equipamento) entra também em `bonusDefesa` e soma nas três reações, além do próprio bônus
+ * específico de cada uma (Reflexos/Resiliência, Flexível/Resistente).
  */
 export function montarInformacoesExtras(
   entrada: EntradaAgente,
@@ -137,6 +143,10 @@ export function montarInformacoesExtras(
   const defesaCalc = calcularDefesa(entrada);
   const proficienciaCalc = calcularProficiencia(entrada);
   const bonusEquipamento = calcularBonusDefesaEquipamento(itens);
+  // doc — "Defesa": a Defesa Base complementada por Habilidades/Fragmentos vira a "Defesa Final", e é
+  // sobre ela que Esquiva/Bloqueio/Contra-Ataque somam seus próprios bônus de reação. Todo bônus de
+  // Defesa (amplificador "Defesa", equipamento) precisa então valer também para as três reações.
+  const bonusDefesa = ajusteDefesaAmplificadores(amplificadores) + bonusEquipamento.defesa;
 
   const linhaNumero = (
     chave: ChaveInfoExtra,
@@ -173,26 +183,20 @@ export function montarInformacoesExtras(
   };
 
   return [
-    linhaNumero(
-      'defesa',
-      'Defesa',
-      defesaCalc?.defesa ?? null,
-      (valor) => String(valor),
-      ajusteDefesaAmplificadores(amplificadores) + bonusEquipamento.defesa,
-    ),
+    linhaNumero('defesa', 'Defesa', defesaCalc?.defesa ?? null, (valor) => String(valor), bonusDefesa),
     linhaNumero(
       'esquiva',
       'Esquiva',
       defesaCalc?.esquiva ?? null,
       (valor) => String(valor),
-      ajusteEsquivaAmplificadores(amplificadores) + bonusEquipamento.esquiva,
+      bonusDefesa + ajusteEsquivaAmplificadores(amplificadores) + bonusEquipamento.esquiva,
     ),
     linhaNumero(
       'bloqueio',
       'Bloqueio',
       defesaCalc?.bloqueio ?? null,
       (valor) => String(valor),
-      ajusteBloqueioAmplificadores(amplificadores) + bonusEquipamento.bloqueio,
+      bonusDefesa + ajusteBloqueioAmplificadores(amplificadores) + bonusEquipamento.bloqueio,
     ),
     linhaNumero(
       'contraAtaque',
@@ -204,6 +208,7 @@ export function montarInformacoesExtras(
         habilidades,
       }),
       (valor) => String(valor),
+      bonusDefesa,
     ),
     linhaNumero(
       'deslocamento',
