@@ -3,14 +3,14 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, finalize, forkJoin, of, timer } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ArquetipoEnum, ClasseEnum, FormacaoBonusEnum, FormacaoParametroEnum, HabilidadeCategoriaEnum, MotivoEntradaAgenteEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { ArquetipoEnum, ClasseEnum, FormacaoBonusEnum, FormacaoParametroEnum, MotivoEntradaAgenteEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
-import type { FichaAtributosDto, FichaHabilidadeDto, FichaOrigemDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { FichaAtributosDto, FichaFortificacaoPersonalidadeDto, FichaHabilidadeDto, FichaOrigemDto, FichaPersonalidadeEstagioDto, FichaPersonalidadeHabilidadeDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import { calcularDerivados, calcularEnergia, calcularOrcamentoAtributos, calcularProgressaoAcumulada, calcularVida, catalogoHabilidades, habilidadesIniciais, listarPacotesHabilidadesIniciais, MAESTRIA_PONTOS_MINIMO, maestriaAtingivel, obterBonusAtributosComEscolha, obterSaudeClasse, obterSlotsEscolhaBonus, validarDistribuicaoAtributos } from '@contratados-rpg/shared/regras/agente';
 import type { GrupoHabilidades, HabilidadeCatalogoItemDto, HabilidadesPacoteInicialId, SlotEscolhaAtributo, TipoVagaHabilidade } from '@contratados-rpg/shared/regras/agente';
 import { calcularBonusMonetario, calcularDinheiroInicial, calcularNovoAgente } from '@contratados-rpg/shared/regras/novo-agente';
 import { rolarDados } from '@contratados-rpg/shared/regras/descanso';
-import { FORMACOES, experimentoComPeculiaridade } from '@contratados-rpg/shared/regras/identidade';
+import { estagioMaisAltoDesbloqueado, FORMACOES, experimentoComPeculiaridade, materializarHabilidadePersonalidade } from '@contratados-rpg/shared/regras/identidade';
 import type { FormacaoDefinicaoDto } from '@contratados-rpg/shared/regras/identidade';
 import { calcularTotaisCarrinho, KIT_INICIAL_ORCAMENTO_MAXIMO, KIT_INICIAL_PESO_MAXIMO, type CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 import { CampanhaService } from '../../../campanha/campanha.service';
@@ -32,8 +32,16 @@ import { GuiaEquipamentoLoja } from '../../componentes/guia-equipamento-loja/gui
 type TipoVagaMelhoria = TipoVagaHabilidade;
 interface VagaMelhoria { readonly tipo: TipoVagaMelhoria; readonly rotulo: string; readonly alvo: number; }
 interface MelhoriaEscolhida { readonly vaga: TipoVagaMelhoria; readonly habilidade: FichaHabilidadeDto; }
-/** Rascunho de uma Fortificação de Personalidade (níveis 7/14) — vira `FichaHabilidadeDto` na criação. */
-interface FortificacaoRascunho { readonly nome: string; readonly descricao: string; }
+/**
+ * Rascunho dos 3 estágios da Habilidade de Personalidade (m3-78) — sempre preenchíveis, mesmo antes
+ * de o Nível de criação desbloquear a Fortificação correspondente. Sem `ativa`: o estágio ativo não
+ * é uma escolha do guia, é calculado (`personalidadeEstagioAtivo`) a partir do Nível de criação.
+ */
+interface PersonalidadeHabilidadeRascunho {
+  readonly base: FichaPersonalidadeEstagioDto;
+  readonly fortificacao1: FichaFortificacaoPersonalidadeDto;
+  readonly fortificacao2: FichaFortificacaoPersonalidadeDto;
+}
 
 type ChaveAtributo = keyof FichaAtributosDto;
 interface DinheiroRolado { readonly dados: readonly number[]; readonly inicial: number; readonly rolado: boolean; }
@@ -59,15 +67,25 @@ interface EstadoGuiaCriacao {
   readonly dinheiro: DinheiroRolado;
   /** Habilidades de nível escolhidas no passo // HABILIDADES (m3-58) — vazio até o passo existir. */
   readonly melhorias: readonly MelhoriaEscolhida[];
-  /** Sempre 2 posições (mesmo padrão de `origem.formacao`); só as `alvoFortificacoes()` primeiras contam. */
-  readonly fortificacoes: readonly FortificacaoRascunho[];
+  /** Os 3 estágios da Habilidade de Personalidade (m3-78) — ver `PersonalidadeHabilidadeRascunho`. */
+  readonly personalidadeHabilidade: PersonalidadeHabilidadeRascunho;
   /** Itens do passo // EQUIPAMENTO INICIAL (m3-59) — orçamento à parte do dinheiro, nunca descontado dele. */
   readonly kit: readonly CarrinhoItemDto[];
 }
 
 const origemVazia = (): FichaOrigemDto => ({ nome: '', descricao: '', formacao: [{ bonus: null, parametro: null, texto: '' }, { bonus: null, parametro: null, texto: '' }], especialidade: { gatilho: '', efeito: '' }, saberDeCampo: '' });
 const dinheiroVazio = (): DinheiroRolado => ({ dados: [], inicial: 0, rolado: false });
-const fortificacoesVazias = (): FortificacaoRascunho[] => [{ nome: '', descricao: '' }, { nome: '', descricao: '' }];
+/**
+ * Rascunho vazio dos 3 estágios da Habilidade de Personalidade (m3-78) — diferente do vazio de
+ * `shared/regras/identidade` (que usa `null` por estágio para "nunca preenchido" na ficha), o guia
+ * sempre grava os 3 como objetos com campos em branco, pra poder vinculá-los direto ao template sem
+ * guarda de nulidade.
+ */
+const personalidadeHabilidadeVaziaGuia = (): PersonalidadeHabilidadeRascunho => ({
+  base: { descricao: '', custoEnergia: null },
+  fortificacao1: { nome: '', descricao: '', custoEnergia: null },
+  fortificacao2: { nome: '', descricao: '', custoEnergia: null },
+});
 const rolarDinheiro = (): DinheiroRolado => { const dados = rolarDados({ quantidade: 4, faces: 4 }); const rolagem = calcularDinheiroInicial({ somaDados: dados.reduce((soma, dado) => soma + dado, 0) }); return { dados, inicial: rolagem.dinheiro, rolado: true }; };
 /** Teto de atributo no guia (doc — "⬡ Atributos": 6 pontos fora da criação; acima disso só via Fragmento de Módulo I, fora do escopo deste guia). */
 const ATRIBUTO_MAXIMO_GUIA = 6;
@@ -93,7 +111,7 @@ function normalizarEstado(estado: EstadoGuiaCriacao): EstadoGuiaCriacao {
     nivelManual: estado.nivelManual ?? 0,
     prestigioManual: estado.prestigioManual ?? 0,
     pacoteHabilidadesId: estado.pacoteHabilidadesId ?? null,
-    fortificacoes: estado.fortificacoes ?? fortificacoesVazias(),
+    personalidadeHabilidade: estado.personalidadeHabilidade ?? personalidadeHabilidadeVaziaGuia(),
     kit: estado.kit ?? [],
   };
 }
@@ -191,7 +209,7 @@ export class FichaCriar {
     sobrescreverProgressao: this.campanhaId === null, nivelManual: 0, prestigioManual: 0,
     pacoteHabilidadesId: null,
     atributos: { ...ATRIBUTOS_BASE_PADRAO }, maestria: null, modoLivre: false, personalidade: '', origem: origemVazia(),
-    formacoesCustomizadas: [false, false], dinheiro: dinheiroVazio(), melhorias: [], fortificacoes: fortificacoesVazias(), kit: [] });
+    formacoesCustomizadas: [false, false], dinheiro: dinheiroVazio(), melhorias: [], personalidadeHabilidade: personalidadeHabilidadeVaziaGuia(), kit: [] });
   protected readonly ehMestre = computed(() => this.membros().find((m) => m.usuarioId === this.sessaoService.usuario()?.id)?.papel === TipoCampanhaMembroPapelEnum.MESTRE);
   /** Classe-base "efetiva" do seletor de dois passos (P-019): a `classeBase` já escolhida na
    * primeira etapa, ou — enquanto ela ainda não existir (rascunho antigo, ou estado montado direto
@@ -317,6 +335,18 @@ export class FichaCriar {
   });
   /** Vagas de Fortificação de Personalidade (níveis 7/14) — 0, 1 ou 2. */
   protected readonly alvoFortificacoes = computed(() => this.progressaoAcumulada().fortificacoes);
+  /** Estágio ativo da Habilidade de Personalidade no Nível de criação (m3-78) — o mais alto desbloqueado. */
+  protected readonly personalidadeEstagioAtivo = computed(() => estagioMaisAltoDesbloqueado(this.alvoFortificacoes()));
+  /** Os 3 estágios do rascunho + o estágio ativo calculado — o que vai para `identidade.habilidade`. */
+  protected readonly personalidadeHabilidadeCompleta = computed<FichaPersonalidadeHabilidadeDto>(() => {
+    const rascunho = this.estado().personalidadeHabilidade;
+    return {
+      ativa: this.personalidadeEstagioAtivo(),
+      base: { ...rascunho.base },
+      fortificacao1: { ...rascunho.fortificacao1 },
+      fortificacao2: { ...rascunho.fortificacao2 },
+    };
+  });
   /** Ganhos automáticos do nível (sem escolha) — reusa `calcularDerivados`, nenhuma fórmula nova aqui. */
   protected readonly derivadosNivel = computed(() => calcularDerivados(this.classeCalculada(), this.nivelInicial(), this.atributosFinais(), this.habilidadesDoNivel()));
   /** Nomes já indisponíveis para escolha: a Habilidade Inicial (não consome vaga) + o que já foi escolhido no passo. */
@@ -330,30 +360,47 @@ export class FichaCriar {
     const vaga = this.vagaAberta();
     return vaga ? this.gruposParaVaga(vaga) : [];
   });
-  /** Habilidades do catálogo + Fortificações preenchidas — o que vai para `dados.habilidades` além da Inicial. */
+  /** Habilidades do catálogo + o estágio ativo da Habilidade de Personalidade — o que vai para `dados.habilidades` além da Inicial. */
   protected readonly habilidadesDoNivel = computed<readonly FichaHabilidadeDto[]>(() => {
     if (!this.comHabilidades()) return [];
     const daCatalogo = this.estado().melhorias.map((m) => m.habilidade);
-    const fortificacoes: FichaHabilidadeDto[] = this.estado().fortificacoes
-      .slice(0, this.alvoFortificacoes())
-      .filter((f) => f.nome.trim().length > 0)
-      .map((f) => ({ nome: f.nome.trim(), categoria: HabilidadeCategoriaEnum.PERSONALIDADE, custoEnergia: 0, descricao: f.descricao.trim() }));
-    return [...daCatalogo, ...fortificacoes];
+    const personalidade = materializarHabilidadePersonalidade({
+      personalidade: this.estado().personalidade,
+      habilidade: this.personalidadeHabilidadeCompleta(),
+    });
+    return personalidade ? [...daCatalogo, personalidade] : daCatalogo;
   });
   /** `true` quando a Peculiaridade já foi escolhida no passo // Habilidades — Experimento com ela não tem Origem (m3-41). */
   protected readonly temPeculiaridade = computed(() => {
     const classe = this.estado().classe;
     return classe !== null && experimentoComPeculiaridade(classe, this.habilidadesDoNivel());
   });
-  /** `true` quando todas as vagas (catálogo + Fortificações) do passo estão preenchidas — trava dura da m3-58. */
+  /** Base sempre exigida (descrição + custo); a Fortificação `n` só quando `alvoFortificacoes() >= n` — preencher uma ainda não desbloqueada é permitido, nunca exigido (uma Fortificação "não necessariamente" muda custo/efeito, doc). */
+  private personalidadeBaseCompleta(): boolean {
+    const base = this.estado().personalidadeHabilidade.base;
+    return base.descricao.trim().length > 0 && base.custoEnergia !== null;
+  }
+  private personalidadeFortificacaoCompleta(estagio: 'fortificacao1' | 'fortificacao2'): boolean {
+    const fortificacao = this.estado().personalidadeHabilidade[estagio];
+    return fortificacao.nome.trim().length > 0 && fortificacao.descricao.trim().length > 0 && fortificacao.custoEnergia !== null;
+  }
+  /** `true` quando todas as vagas (catálogo + Habilidade de Personalidade) do passo estão preenchidas — trava dura da m3-58/m3-78. */
   protected readonly melhoriasCompletas = computed(() => {
     const vagasOk = this.vagasMelhoria().every((v) => this.preenchidasNaVaga(v.tipo) >= v.alvo);
-    const fortOk = this.estado().fortificacoes.slice(0, this.alvoFortificacoes()).every((f) => f.nome.trim().length > 0 && f.descricao.trim().length > 0);
-    return this.pacoteHabilidadesSelecionado() !== null && vagasOk && fortOk;
+    const baseOk = this.personalidadeBaseCompleta();
+    const fort1Ok = this.alvoFortificacoes() < 1 || this.personalidadeFortificacaoCompleta('fortificacao1');
+    const fort2Ok = this.alvoFortificacoes() < 2 || this.personalidadeFortificacaoCompleta('fortificacao2');
+    return this.pacoteHabilidadesSelecionado() !== null && vagasOk && baseOk && fort1Ok && fort2Ok;
   });
-  /** Total de vagas (catálogo + Fortificações) e quantas já foram preenchidas — só para o resumo lateral. */
-  protected readonly melhoriasAlvoTotal = computed(() => this.vagasMelhoria().reduce((soma, v) => soma + v.alvo, 0) + this.alvoFortificacoes());
-  protected readonly melhoriasPreenchidasTotal = computed(() => this.estado().melhorias.length + this.estado().fortificacoes.slice(0, this.alvoFortificacoes()).filter((f) => f.nome.trim() && f.descricao.trim()).length);
+  /** Total de vagas (catálogo + Habilidade de Personalidade) e quantas já foram preenchidas — só para o resumo lateral. */
+  protected readonly melhoriasAlvoTotal = computed(() => this.vagasMelhoria().reduce((soma, v) => soma + v.alvo, 0) + 1 + this.alvoFortificacoes());
+  protected readonly melhoriasPreenchidasTotal = computed(() => {
+    let total = this.estado().melhorias.length;
+    if (this.personalidadeBaseCompleta()) total += 1;
+    if (this.alvoFortificacoes() >= 1 && this.personalidadeFortificacaoCompleta('fortificacao1')) total += 1;
+    if (this.alvoFortificacoes() >= 2 && this.personalidadeFortificacaoCompleta('fortificacao2')) total += 1;
+    return total;
+  });
 
   /** Tetos do Equipamento Inicial (m3-59) — `shared/regras`, doc: soma ≤ $2500 e peso ≤ 5. */
   protected readonly kitOrcamentoMaximo = KIT_INICIAL_ORCAMENTO_MAXIMO;
@@ -536,9 +583,24 @@ export class FichaCriar {
     this.atualizar({ melhorias: [...this.estado().melhorias, { vaga, habilidade }] });
   }
   protected removerMelhoria(nome: string): void { this.atualizar({ melhorias: this.estado().melhorias.filter((m) => m.habilidade.nome !== nome) }); }
-  protected atualizarFortificacao(indice: number, campo: 'nome' | 'descricao', valor: string): void {
-    const fortificacoes = this.estado().fortificacoes.map((f, i) => i === indice ? { ...f, [campo]: valor } : f);
-    this.atualizar({ fortificacoes });
+  /** Custo em Energia digitado: em branco vira `null` (custo ainda não combinado); negativo é clampado a 0. */
+  private parseCustoEnergiaPersonalidade(valor: string): number | null {
+    const texto = valor.trim();
+    if (!texto) return null;
+    const numero = Number(texto);
+    return Number.isFinite(numero) ? Math.max(0, numero) : null;
+  }
+  /** Atualiza a Base da Habilidade de Personalidade (m3-78) — sem campo de nome (usa a palavra de Identidade). */
+  protected atualizarPersonalidadeBase(campo: 'descricao' | 'custoEnergia', valor: string): void {
+    const atual = this.estado().personalidadeHabilidade;
+    const base = { ...atual.base, ...(campo === 'custoEnergia' ? { custoEnergia: this.parseCustoEnergiaPersonalidade(valor) } : { descricao: valor }) };
+    this.atualizar({ personalidadeHabilidade: { ...atual, base } });
+  }
+  /** Atualiza a 1ª ou 2ª Fortificação da Habilidade de Personalidade (m3-78). */
+  protected atualizarFortificacao(estagio: 'fortificacao1' | 'fortificacao2', campo: 'nome' | 'descricao' | 'custoEnergia', valor: string): void {
+    const atual = this.estado().personalidadeHabilidade;
+    const parcial = campo === 'custoEnergia' ? { custoEnergia: this.parseCustoEnergiaPersonalidade(valor) } : campo === 'nome' ? { nome: valor } : { descricao: valor };
+    this.atualizar({ personalidadeHabilidade: { ...atual, [estagio]: { ...atual[estagio], ...parcial } } });
   }
   protected mudarKit(itens: readonly CarrinhoItemDto[]): void { this.atualizar({ kit: itens }); }
   protected passoValido(): boolean {
@@ -593,6 +655,16 @@ export class FichaCriar {
   /** Trim das pontas só na montagem persistida (m3-75) — nunca durante a digitação, senão o usuário
    *  perde o espaço que ainda está no meio de escrever. Espaço interno de `personalidade` continua
    *  vetado por `passoValido` (`!/\s/.test(...)`), que roda sobre o valor já trimado das pontas. */
+  /** Trim das pontas do rascunho de Habilidade de Personalidade — mesmo momento/motivo de `origemTrimada`. */
+  private personalidadeHabilidadeTrimada(): FichaPersonalidadeHabilidadeDto {
+    const rascunho = this.estado().personalidadeHabilidade;
+    return {
+      ativa: this.personalidadeEstagioAtivo(),
+      base: { descricao: rascunho.base.descricao.trim(), custoEnergia: rascunho.base.custoEnergia },
+      fortificacao1: { nome: rascunho.fortificacao1.nome.trim(), descricao: rascunho.fortificacao1.descricao.trim(), custoEnergia: rascunho.fortificacao1.custoEnergia },
+      fortificacao2: { nome: rascunho.fortificacao2.nome.trim(), descricao: rascunho.fortificacao2.descricao.trim(), custoEnergia: rascunho.fortificacao2.custoEnergia },
+    };
+  }
   private origemTrimada(origem: FichaOrigemDto): FichaOrigemDto {
     return {
       ...origem,
@@ -608,7 +680,7 @@ export class FichaCriar {
     if (this.criando() || !e.classe || !e.dinheiro.rolado) return;
     this.criando.set(true);
     this.erro.set('');
-    const resultado = construirFichaInicial({ nome: e.nome, cor: e.cor, classe: e.classe, arquetipo: e.arquetipo, bonusEscolhido: e.bonusEscolhido, nivel: this.nivelInicial(), prestigio: this.prestigioInicial(), atributos: e.atributos, maestria: e.maestria, identidade: { personalidade: e.personalidade.trim(), origem: this.temPeculiaridade() ? null : this.origemTrimada(e.origem) }, dinheiro: this.totalDinheiro(), anotacoes: this.novoAgente().recebeAmaldicoadoPeloPassado ? 'Amaldiçoado pelo Passado' : '', habilidadesExtras: this.habilidadesDoNivel(), equipamentoInicial: e.kit });
+    const resultado = construirFichaInicial({ nome: e.nome, cor: e.cor, classe: e.classe, arquetipo: e.arquetipo, bonusEscolhido: e.bonusEscolhido, nivel: this.nivelInicial(), prestigio: this.prestigioInicial(), atributos: e.atributos, maestria: e.maestria, identidade: { personalidade: e.personalidade.trim(), origem: this.temPeculiaridade() ? null : this.origemTrimada(e.origem), habilidade: this.personalidadeHabilidadeTrimada() }, dinheiro: this.totalDinheiro(), anotacoes: this.novoAgente().recebeAmaldicoadoPeloPassado ? 'Amaldiçoado pelo Passado' : '', habilidadesExtras: this.habilidadesDoNivel(), equipamentoInicial: e.kit });
     const campanhaId = this.campanhaId;
     this.fichaService.criarFicha({ ...(campanhaId !== null ? { campanhaId } : {}), usuarioId: this.ehMestre() ? (e.usuarioId ?? undefined) : undefined, ...resultado })
       .pipe(finalize(() => this.criando.set(false)))

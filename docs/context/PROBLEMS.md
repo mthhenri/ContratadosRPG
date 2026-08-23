@@ -214,6 +214,31 @@
 - **Desde:** achado durante a `m4-11` (2026-08-22), rodando `npm run typecheck -w shared` como
   parte da verificação da task; confirmado preexistente (arquivo não tocado pela `m4-11`).
 
+### P-025 — Editor de Origem (`p-dialog` sem `appendTo="body"`) não abre no mobile · `ABERTO` · frontend/CSS
+
+- **Sintoma:** no viewport `360×800`, clicar no lápis "Editar origem" (aba Extras, `identidade`)
+  não mostra nenhum diálogo — o `<p-dialog>` existe no DOM (`display`/`visibility`/`opacity`
+  computados como "visível"), mas com `position: static` e sem bounding box (altura/largura reais
+  zero), portanto inacessível/inutilizável. No desktop (`1920×1080`) o mesmo diálogo funciona
+  normalmente.
+- **Causa:** o `<p-dialog>` do editor de Origem (`ficha-visualizacao.component.html`) não declara
+  `[appendTo]="'body'"` — diferente de outros diálogos do mesmo arquivo
+  (`confirmandoVisibilidade`, `habilidadesPendentesPeculiaridade`), que declaram e funcionam nos
+  dois viewports. Sem `appendTo="body"`, o CDK overlay do PrimeNG renderiza o diálogo preso à
+  árvore do próprio componente em vez de movê-lo para `document.body`; em algum contexto de
+  empilhamento do card de Status no mobile (não isolado a fundo — não é `transform`/`contain`/
+  `filter` em nenhum ancestral, confirmado via `getComputedStyle`), o `position: fixed` que o
+  PrimeNG tentaria aplicar não "pega", e o diálogo cai para `static`.
+- **Contorno:** nenhum para quem usa a ficha — o dono/mestre não consegue editar Origem pelo
+  celular hoje (só pelo desktop).
+- **Correção:** adicionar `[appendTo]="'body'"` ao `<p-dialog>` do editor de Origem — mesmo fix já
+  aplicado ao novo editor da Habilidade de Personalidade (`m3-78`), confirmado ao vivo que resolve
+  (bounding box real, 348×699 em 360px, depois do fix). Vale auditar os demais `<p-dialog>` do
+  arquivo sem `appendTo` pelo mesmo padrão, caso existam.
+- **Desde:** achado na verificação ao vivo da `m3-78` (2026-08-23) ao testar o editor novo — o
+  editor de Origem, código pré-existente e não tocado pela task, reproduziu o mesmo defeito quando
+  testado isoladamente para descartar regressão. Não corrigido nesta task (fora do escopo da spec).
+
 ## Resolvidos
 
 Itens resolvidos **saem daqui**. O relato da correção fica no [`HISTORY.md`](HISTORY.md), junto da

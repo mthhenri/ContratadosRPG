@@ -414,6 +414,8 @@ describe('FichaCriar', () => {
 
       componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
       preencherVagasDeMelhoria(componente);
+      componente['atualizarPersonalidadeBase']('descricao', 'Efeito combinado com o Mestre.');
+      componente['atualizarPersonalidadeBase']('custoEnergia', '1');
       expect(componente['passoValido']()).toBe(true);
     });
 
@@ -479,6 +481,8 @@ describe('FichaCriar', () => {
 
       componente['selecionarPacoteHabilidades']('QUATRO_GERAIS');
       preencherVagasDeMelhoria(componente);
+      componente['atualizarPersonalidadeBase']('descricao', 'Efeito combinado com o Mestre.');
+      componente['atualizarPersonalidadeBase']('custoEnergia', '1');
       fixture.detectChanges();
       for (const vaga of componente['vagasMelhoria']()) {
         expect(componente['preenchidasNaVaga'](vaga.tipo)).toBe(vaga.alvo);
@@ -489,25 +493,74 @@ describe('FichaCriar', () => {
       expect(componente['melhoriasCompletas']()).toBe(true);
     });
 
-    it('exige nome e efeito da Fortificação de Personalidade a partir do Nível 7 (mesmo com as vagas do catálogo preenchidas)', () => {
+    it('a Base da Habilidade de Personalidade é sempre exigida, mesmo sem Fortificação desbloqueada', () => {
       const { fixture, componente } = montar([fichaExistente]);
-      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR, mediaNivel: 8 });
+      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR, mediaNivel: 2, personalidade: 'Atento' });
       fixture.detectChanges();
-      expect(componente['novoAgente']().nivelInicial).toBe(7);
-      expect(componente['alvoFortificacoes']()).toBe(1);
+      expect(componente['alvoFortificacoes']()).toBe(0);
 
       componente['selecionarPacoteHabilidades']('QUATRO_GERAIS');
       preencherVagasDeMelhoria(componente);
       fixture.detectChanges();
       expect(componente['melhoriasCompletas']()).toBe(false);
 
-      componente['atualizarFortificacao'](0, 'nome', 'Determinado+');
-      componente['atualizarFortificacao'](0, 'descricao', 'Mais um dado ao forçar o teste.');
+      componente['atualizarPersonalidadeBase']('descricao', 'Ganha +1 dado ao agir sob pressão.');
+      componente['atualizarPersonalidadeBase']('custoEnergia', '2');
       fixture.detectChanges();
       expect(componente['melhoriasCompletas']()).toBe(true);
 
       const habilidades = componente['habilidadesDoNivel']();
-      expect(habilidades.some((h) => h.nome === 'Determinado+' && h.categoria === 'PERSONALIDADE')).toBe(true);
+      expect(habilidades.some((h) => h.nome === 'Atento' && h.categoria === 'PERSONALIDADE' && h.custoEnergia === 2)).toBe(true);
+    });
+
+    it('exige nome, efeito e custo da 1ª Fortificação a partir do Nível 7 (mesmo com Base e vagas do catálogo preenchidas) — e ela vira o estágio ativo', () => {
+      const { fixture, componente } = montar([fichaExistente]);
+      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR, mediaNivel: 8, personalidade: 'Atento' });
+      fixture.detectChanges();
+      expect(componente['novoAgente']().nivelInicial).toBe(7);
+      expect(componente['alvoFortificacoes']()).toBe(1);
+
+      componente['selecionarPacoteHabilidades']('QUATRO_GERAIS');
+      preencherVagasDeMelhoria(componente);
+      componente['atualizarPersonalidadeBase']('descricao', 'Efeito base.');
+      componente['atualizarPersonalidadeBase']('custoEnergia', '1');
+      fixture.detectChanges();
+      expect(componente['melhoriasCompletas']()).toBe(false);
+
+      componente['atualizarFortificacao']('fortificacao1', 'nome', 'Determinado+');
+      componente['atualizarFortificacao']('fortificacao1', 'descricao', 'Mais um dado ao forçar o teste.');
+      fixture.detectChanges();
+      expect(componente['melhoriasCompletas']()).toBe(false);
+
+      componente['atualizarFortificacao']('fortificacao1', 'custoEnergia', '3');
+      fixture.detectChanges();
+      expect(componente['melhoriasCompletas']()).toBe(true);
+
+      const habilidades = componente['habilidadesDoNivel']();
+      expect(habilidades.some((h) => h.nome === 'Determinado+' && h.categoria === 'PERSONALIDADE' && h.custoEnergia === 3)).toBe(true);
+      expect(habilidades.some((h) => h.nome === 'Atento')).toBe(false);
+    });
+
+    it('permite preencher a 2ª Fortificação antes do Nível 14 desbloqueá-la, sem exigi-la para avançar', () => {
+      const { fixture, componente } = montar([fichaExistente]);
+      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR, mediaNivel: 8, personalidade: 'Atento' });
+      fixture.detectChanges();
+      expect(componente['alvoFortificacoes']()).toBe(1);
+
+      componente['selecionarPacoteHabilidades']('QUATRO_GERAIS');
+      preencherVagasDeMelhoria(componente);
+      componente['atualizarPersonalidadeBase']('descricao', 'Efeito base.');
+      componente['atualizarPersonalidadeBase']('custoEnergia', '1');
+      componente['atualizarFortificacao']('fortificacao1', 'nome', 'Determinado+');
+      componente['atualizarFortificacao']('fortificacao1', 'descricao', 'Mais um dado.');
+      componente['atualizarFortificacao']('fortificacao1', 'custoEnergia', '3');
+      fixture.detectChanges();
+      expect(componente['melhoriasCompletas']()).toBe(true);
+
+      componente['atualizarFortificacao']('fortificacao2', 'nome', 'Determinado++');
+      fixture.detectChanges();
+      expect(componente['melhoriasCompletas']()).toBe(true);
+      expect(componente['estado']().personalidadeHabilidade.fortificacao2.nome).toBe('Determinado++');
     });
   });
 
@@ -619,18 +672,21 @@ describe('FichaCriar', () => {
         },
         formacoesCustomizadas: [true, false],
       });
+      componente['atualizarPersonalidadeBase']('descricao', '  Efeito com espaço  ');
       componente['escolherBonusAtributo'](0, { target: { value: 'forca' } } as unknown as Event);
       fixture.detectChanges();
 
       // não trima durante a digitação — só na montagem persistida.
       expect(componente['estado']().origem.nome).toBe('  Ex-militar  ');
       expect(componente['estado']().origem.formacao[0].texto).toBe('  +1 dado em Vigor  ');
+      expect(componente['estado']().personalidadeHabilidade.base.descricao).toBe('  Efeito com espaço  ');
 
       componente['criar']();
 
       const fichaService = TestBed.inject(FichaService) as unknown as { criarFicha: ReturnType<typeof vi.fn> };
       const payload = fichaService.criarFicha.mock.calls[0][0];
       expect(payload.dados.identidade.personalidade).toBe('Firme');
+      expect(payload.dados.identidade.habilidade.base.descricao).toBe('Efeito com espaço');
       expect(payload.dados.identidade.origem.nome).toBe('Ex-militar');
       expect(payload.dados.identidade.origem.descricao).toBe('Serviu na linha de frente.');
       expect(payload.dados.identidade.origem.formacao[0].texto).toBe('+1 dado em Vigor');
@@ -861,6 +917,8 @@ describe('FichaCriar', () => {
       componente['adicionarMelhoria'](peculiaridade!);
       componente['fecharSeletorMelhoria']();
       preencherVagasDeMelhoria(componente);
+      componente['atualizarPersonalidadeBase']('descricao', 'Efeito combinado com o Mestre.');
+      componente['atualizarPersonalidadeBase']('custoEnergia', '1');
 
       expect(componente['melhoriasCompletas']()).toBe(true);
       expect(componente['habilidadesDoNivel']().some((h) => h.nome === 'Peculiaridade')).toBe(true);

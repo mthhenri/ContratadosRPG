@@ -1,6 +1,37 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-23 · **Última decisão registrada:** `m7-20` (regressão do botão
+> **Última revisão:** 2026-08-23 · **Última decisão registrada:** `m3-78` (ajuste avulso pós-M3, a
+> Habilidade de Personalidade ganha 3 estágios com custo em Energia) — deixou de ser um único texto
+> definido a qualquer momento pelo editor completo e passou a ter 3 estágios nomeados (Base, 1ª e 2ª
+> Fortificação — níveis 7/14), cada um com descrição e custo em Energia próprios, preenchíveis desde
+> o guia de criação (`criar.page.ts`, passo Habilidades — sempre visível, sem gate por nível; só a
+> Base é exigida para avançar, cada Fortificação só quando o Nível de criação já a desbloqueou).
+> `identidade.habilidade` (`FichaPersonalidadeHabilidadeDto`, `shared/dtos/ficha`) guarda os 3
+> rascunhos + qual está `ativa`; só o ativo é materializado como o item `categoria: PERSONALIDADE`
+> de `dados.habilidades` (`materializarHabilidadePersonalidade`, `shared/regras/identidade`) — fonte
+> única usada pelo guia e pela ficha, preservando sem mudança nenhum consumidor existente de
+> `dados.habilidades` (rolagem/Energia vinculada, `m3-77`; lista da aba Habilidades). Na ficha, a
+> aba Extras ganhou um seletor do estágio ativo (restrito ao que o Nível **atual** já desbloqueia,
+> mesma `calcularProgressaoAcumulada` do guia) e um editor (`p-dialog`, mesmo mini-editor da Origem)
+> com os 3 blocos sempre preenchíveis, mesmo os ainda não desbloqueados. Retrocompatibilidade
+> tolerante: uma ficha sem `identidade.habilidade` mas com um item `PERSONALIDADE` legado solto em
+> `dados.habilidades` o lê como o estágio correspondente ao Nível atual, sem migração de banco.
+> **Achado só na verificação ao vivo:** o editor da Habilidade de Personalidade (novo `p-dialog`,
+> sem `[appendTo]="'body'"` — mesmo padrão do editor de Origem) não abria de verdade no mobile
+> (360px): `.p-dialog` ficava com `position: static` e altura zero, "visível" no DOM mas sem
+> bounding box — o editor de Origem tem o mesmo defeito latente (fora de escopo desta task, não
+> corrigido). Fix local só no diálogo novo: `[appendTo]="'body'"`. Também achado: reusar
+> `.guia__subsecao-ajuda` (margem superior negativa, pensada para colar num `.guia__subsecao`) fora
+> desse contexto sobrepunha o texto de ajuda já existente do campo de Personalidade no passo
+> Identidade — trocado por um segundo `<small class="campo__ajuda">` dentro do mesmo `<label>`.
+> Testado: shared 722/722 (+13), frontend 1315/1315 (+15), backend 445/445 (sem mudança); lint
+> limpo nos três. Verificado ao vivo (Playwright, `1920×1080`/`360×800`, agente Nível 14 real via
+> guia completo até Habilidades/Identidade + ficha REST-seed em Nível 14): os 3 blocos sempre
+> visíveis no guia, texto do papel do Mestre na Identidade, seletor da aba Extras restrito às
+> Fortificações desbloqueadas, troca de estágio espelhando a aba Habilidades, editor funcionando nos
+> dois viewports depois do fix.
+>
+> **Uma decisão atrás:** `m7-20` (regressão do botão
 > "abrir ficha" na grade compacta do jogador, corrigida) — no desktop, com a ficha lateral do
 > jogador aberta, o botão "abrir ficha" de cada cartão da Iniciativa tinha voltado a aparecer:
 > `m7-12` escondia esse botão em `:host-context(.grade--compacta) .combatente { &__abrir-ficha:
@@ -18,7 +49,7 @@
 > cartão que tem ficha. Sanidade em `360×800` confirmou que o mobile (fora do escopo da regra, que
 > vive só no breakpoint desktop) não mudou.
 >
-> **Uma decisão atrás:** `m3-77` (ficha aberta reage por
+> **Duas decisões atrás:** `m3-77` (ficha aberta reage por
 > socket a rolagem feita em outro caminho — histórico + `BandejaDados`) — quem está com
 > `visualizar.page.ts`/`visualizar-criatura.page.ts` aberta passa a ver, sem F5, uma rolagem
 > `PUBLICA` feita por outra aba do dono, pelo mestre ou pelo Encontro. Backend:
@@ -179,12 +210,13 @@
 
 ## 1. Próxima Task
 
+**`m3-78` (ajuste avulso pós-M3, Habilidade de Personalidade ganha 3 estágios com custo em Energia)
+concluída** — ver o bloco no topo do arquivo e "Guia de criação de ficha" (seção 4). Fecha a fila de
+ajustes avulsos do M3 (`m3-73`…`m3-78`, todos concluídos); resta só `m3-53` na fila normal do M3.
+
 **`m7-20` (ajuste avulso pós-M7, regressão do botão "abrir ficha" na grade compacta do jogador)
 concluída** — ver o bloco no topo do arquivo. `m7-18`/`m7-19` seguem na fila de ajustes avulsos do
 M7 (ver seção "Fila do backlog" abaixo).
-
-**`m3-77` (ajuste avulso pós-M3, ficha aberta reage por socket a rolagem feita em outro caminho)
-concluída** — ver "Tempo real" (seção 4). Resta só `m3-78` na fila de ajustes avulsos do M3.
 
 **`m4-11` (task adicional do M4, fora da fila `m4-05`…`m4-10`) concluída** — acervo separado por
 tipo, "Criar criatura" solta e os dois defeitos de `duplicarFicha`/`atribuirCampanha` corrigidos;
@@ -411,17 +443,15 @@ só adaptou o visual de desktop).
 | Spec | Frente | O que é |
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m3-78` | guia | fortificação de personalidade ganha campo de custo em Energia; guia explica papel do Mestre |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
 | `m7-18` | encontro | "Rolar tudo" do mestre ignora dado extra de Iniciativa de Formação (só o jogador tem hoje) |
 | `m7-19` | encontro | mestre pode sobrescrever a expressão de dados de Iniciativa por combatente/encontro |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/` vinda da fila original; `m3-73`…`m3-78` eram
-ajustes avulsos (pedido direto do autor, 2026-08-22) — `m3-73`, `m3-74`, `m3-75`, `m3-76` e `m3-77`
-já **concluídos** (specs em `docs/specs/done/`, ver bloco no topo do arquivo); só `m3-78` segue
-registrado, não implementado. `m7-18`…`m7-20` são o mesmo tipo de ajuste avulso, pós-M7 (milestone já
-concluído); `m7-20` também já está **concluído** (ver bloco no topo do arquivo), restam `m7-18`/
-`m7-19`. Milestone ainda não aberto: `m5-guia-missao`.
+ajustes avulsos (pedido direto do autor, 2026-08-22) — todos **concluídos** (specs em
+`docs/specs/done/`, `m3-78` fechou a fila no bloco do topo do arquivo). `m7-18`…`m7-20` são o mesmo
+tipo de ajuste avulso, pós-M7 (milestone já concluído); `m7-20` também já está **concluído** (ver
+bloco no topo do arquivo), restam `m7-18`/`m7-19`. Milestone ainda não aberto: `m5-guia-missao`.
 
 ---
 
@@ -891,8 +921,11 @@ montagem persistida, nunca durante a digitação) · **06
 Habilidades** (sempre presente: pacote inicial obrigatório de 4 Gerais, 2 Gerais + 1 de
 Classe/Arquétipo ou 2 de Classe/Arquétipo; Civil escolhe 3 Civis; compõe ainda as vagas de
 `calcularProgressaoAcumulada`, sem duplicatas — Experimento não ganha vaga extra, escolhe
-Peculiaridade pelo mesmo pacote de qualquer outra classe; Fortificações de
-Personalidade nos níveis 7/14) · **07 Recursos** (rolagem única e definitiva de `1000 + 4D4×250` +
+Peculiaridade pelo mesmo pacote de qualquer outra classe; desde `m3-78`, a Habilidade de
+Personalidade também vive aqui, sempre visível — 3 blocos, Base/1ª/2ª Fortificação (níveis 7/14),
+cada um com descrição e custo em Energia próprios; só a Base é exigida para avançar, cada
+Fortificação só quando o Nível de criação já a desbloqueou; `identidade.habilidade` guarda os 3, só
+o estágio mais alto desbloqueado é materializado em `dados.habilidades`) · **07 Recursos** (rolagem única e definitiva de `1000 + 4D4×250` +
 Bônus Monetário — ou, desde `m3-74`, ignorar a rolagem por um botão dedicado ao lado de "Rolar
 dados": ficha final com `$0` de dinheiro base, mesma trava de escolha única, sem gerar entrada de
 rolagem) · **08 Equipamento inicial** (kit da loja, orçamento **à parte** do dinheiro —

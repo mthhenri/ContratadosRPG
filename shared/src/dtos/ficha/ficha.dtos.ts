@@ -4,6 +4,7 @@ import type {
   FormacaoBonusEnum,
   FragmentoModuloEnum,
   HabilidadeCategoriaEnum,
+  PersonalidadeEstagioEnum,
   RolagemPresetTipoEnum,
   SeveridadeLesaoEnum,
   TipoDanoEnum,
@@ -360,6 +361,40 @@ export interface FichaOrigemDto {
 }
 
 /**
+ * Texto/custo do estágio **Base** da Habilidade de Personalidade (`docs/core/sistema-v4.1.0.md` —
+ * "Identidade" e "Fortificação de Traços"; m3-78). Sem campo de nome: o nome do estágio Base é
+ * sempre a palavra de personalidade (`FichaIdentidadeDto.personalidade`), definida à parte.
+ */
+export interface FichaPersonalidadeEstagioDto {
+  readonly descricao: string;
+  readonly custoEnergia: number | null;
+}
+
+/**
+ * Texto/custo/nome de uma Fortificação (1ª ou 2ª) da Habilidade de Personalidade — obtida nos
+ * níveis 7 e 14 (`docs/core/sistema-v4.1.0.md` — "Fortificação de Traços"; m3-78). Nome livre,
+ * combinado com o Mestre — diferente da Base, cujo nome é fixo.
+ */
+export interface FichaFortificacaoPersonalidadeDto {
+  readonly nome: string;
+  readonly descricao: string;
+  readonly custoEnergia: number | null;
+}
+
+/**
+ * Os 3 estágios da Habilidade de Personalidade (Base, 1ª e 2ª Fortificação; m3-78) e qual deles
+ * está **ativo** — o único materializado em `dados.habilidades` (`materializarHabilidadePersonalidade`,
+ * `shared/regras/identidade`). Um estágio `null` significa que ele nunca foi preenchido, nem pelo
+ * guia de criação nem pela ficha.
+ */
+export interface FichaPersonalidadeHabilidadeDto {
+  readonly ativa: PersonalidadeEstagioEnum;
+  readonly base: FichaPersonalidadeEstagioDto | null;
+  readonly fortificacao1: FichaFortificacaoPersonalidadeDto | null;
+  readonly fortificacao2: FichaFortificacaoPersonalidadeDto | null;
+}
+
+/**
  * A **Identidade** de um agente (`docs/core/sistema-v4.1.0.md` — "⬡ Identidade"): Personalidade
  * (uma única palavra, um adjetivo — a habilidade correspondente vive em `habilidades[]` com
  * `categoria: HabilidadeCategoriaEnum.PERSONALIDADE`) e Origem. **Imutável após definida** (regra do
@@ -368,6 +403,13 @@ export interface FichaOrigemDto {
 export interface FichaIdentidadeDto {
   readonly personalidade: string | null;
   readonly origem: FichaOrigemDto | null;
+  /**
+   * Os 3 estágios da Habilidade de Personalidade e qual está ativo (m3-78) — ver
+   * `FichaPersonalidadeHabilidadeDto`. Opcional: ausente em fichas anteriores a esta task; nesse
+   * caso a ficha trata como sem nenhum estágio preenchido (retrocompatibilidade tolerante no
+   * frontend a partir de um item legado solto em `habilidades[]`, se existir).
+   */
+  readonly habilidade?: FichaPersonalidadeHabilidadeDto;
 }
 
 /**

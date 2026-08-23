@@ -19,7 +19,8 @@ import {
   obterBonusAtributos,
   type BonusAtributos,
 } from '@contratados-rpg/shared/regras/agente';
-import { aplicarFormacaoAosDerivados, removerFormacaoDosDerivados } from '@contratados-rpg/shared/regras/identidade';
+import { aplicarFormacaoAosDerivados, materializarHabilidadePersonalidade, removerFormacaoDosDerivados } from '@contratados-rpg/shared/regras/identidade';
+import { HabilidadeCategoriaEnum } from '@contratados-rpg/shared/enums';
 import type {
   FichaAtributosDto,
   FichaComboDto,
@@ -31,6 +32,7 @@ import type {
   FichaInventarioDto,
   FichaJogadorDadosDto,
   FichaOrigemDto,
+  FichaPersonalidadeHabilidadeDto,
   FichaRecuperadaDto,
   FichaRolagemDto,
 } from '@contratados-rpg/shared/dtos/ficha';
@@ -496,6 +498,27 @@ export class FichaEdicaoService {
     }
     const identidade: FichaIdentidadeDto = { ...this.identidadeAtual(fichaAtual), personalidade };
     this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, identidade } });
+    this.agendarPersistencia();
+  }
+
+  /**
+   * Grava os 3 estágios da Habilidade de Personalidade + qual está `ativa` (m3-78) e resincroniza o
+   * item `categoria: PERSONALIDADE` em `dados.habilidades` — a materialização do estágio ativo é a
+   * única fonte usada pela rolagem (`custoEnergia` vinculado a um teste, m3-77), então qualquer troca
+   * de estágio ou edição de bloco precisa recalculá-la (`materializarHabilidadePersonalidade`).
+   */
+  ajustarHabilidadePersonalidade(habilidade: FichaPersonalidadeHabilidadeDto): void {
+    const fichaAtual = this.ficha();
+    if (!fichaAtual) {
+      return;
+    }
+    const identidade: FichaIdentidadeDto = { ...this.identidadeAtual(fichaAtual), habilidade };
+    const materializada = materializarHabilidadePersonalidade(identidade);
+    const habilidadesSemPersonalidade = fichaAtual.dados.habilidades.filter(
+      (item) => item.categoria !== HabilidadeCategoriaEnum.PERSONALIDADE,
+    );
+    const habilidades = materializada ? [...habilidadesSemPersonalidade, materializada] : habilidadesSemPersonalidade;
+    this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, identidade, habilidades } });
     this.agendarPersistencia();
   }
 

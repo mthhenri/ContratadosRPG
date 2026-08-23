@@ -36,3 +36,4 @@ export * from './habilidade-tipo-criatura.enum';
 export * from './encontro-status.enum';
 export * from './combatente-origem.enum';
 export * from './encontro-evento-tipo.enum';
+export * from './personalidade-estagio.enum';

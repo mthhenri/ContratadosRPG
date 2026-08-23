@@ -4,3 +4,4 @@ export * from './identidade.dtos';
 export * from './formacoes.dados';
 export * from './formacoes';
 export * from './experimento';
+export * from './personalidade';

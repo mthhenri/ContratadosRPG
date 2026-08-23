@@ -20,6 +20,8 @@ import {
   FormacaoParametroEnum,
   FragmentoModuloEnum,
   HabilidadeCategoriaEnum,
+  PersonalidadeEstagioEnum,
+  ROTULOS_PERSONALIDADE_ESTAGIO,
   TipoDanoEnum,
   RolagemVisibilidadeEnum,
 } from '@contratados-rpg/shared/enums';
@@ -33,6 +35,7 @@ import type {
   FichaInventarioDto,
   FichaJogadorDadosDto,
   FichaOrigemDto,
+  FichaPersonalidadeHabilidadeDto,
   FichaRolagemDto,
   FichaSequelaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
@@ -47,6 +50,7 @@ import {
   calcularEnergia,
   calcularInventario,
   calcularProficiencia,
+  calcularProgressaoAcumulada,
   emAnomaliaBiologica,
   limiteMinimoEnergiaMaximaFragmentos,
   modificadoresTesteAmplificadores,
@@ -73,10 +77,13 @@ import {
 import { calcularDtAtributo } from '@contratados-rpg/shared/regras/dt';
 import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
 import {
+  estagioMaisAltoDesbloqueado,
+  estagiosDisponiveis,
   experimentoComAnomalia,
   experimentoComPeculiaridade,
   FORMACOES,
   listarEfeitosPendentes,
+  materializarHabilidadePersonalidade,
   obterBonusRolagemAtributoFormacao,
   obterResistenciaFormacao,
   obterToleranciaSobrecargaFormacao,
@@ -589,6 +596,14 @@ export class FichaVisualizacao {
 
   /** Nova Personalidade (m3-25) — a página persiste em `dados.identidade.personalidade`. */
   readonly ajustePersonalidade = output<string>();
+
+  /**
+   * Os 3 estágios da Habilidade de Personalidade + qual está ativo, alterados na aba Extras (m3-78)
+   * — tanto a troca do estágio ativo quanto a edição de um bloco (Base/1ª/2ª Fortificação) emitem
+   * aqui. A página resincroniza o item `categoria: PERSONALIDADE` de `dados.habilidades`
+   * (`ajustarHabilidadePersonalidade`, `ficha-edicao.service.ts`).
+   */
+  readonly ajusteHabilidadePersonalidade = output<FichaPersonalidadeHabilidadeDto>();
 
   /**
    * Novo Contrato (m3-40) — a página persiste em `dados.contrato`. Só emitido quando
@@ -2452,13 +2467,118 @@ export class FichaVisualizacao {
 
   // === Extras (m3-49): Origem/Personalidade/afinidade de fragmentos, aba "Extras" do Status ===
 
-  /** Habilidade de Personalidade (m3-25) — a que carrega `categoria: PERSONALIDADE`, se existir. */
-  protected readonly habilidadePersonalidade = computed(
-    () =>
-      this.dados().habilidades.find(
-        (habilidade) => habilidade.categoria === HabilidadeCategoriaEnum.PERSONALIDADE,
-      ) ?? null,
+  /**
+   * Fortificações de Personalidade já desbloqueadas no **Nível atual** da ficha (m3-78) —
+   * `calcularProgressaoAcumulada` reusado sem lógica nova (mesma função do guia de criação, que usa
+   * o nível de criação em vez do atual).
+   */
+  protected readonly fortificacoesAtuais = computed(
+    () => calcularProgressaoAcumulada({ classe: this.dados().classe, nivel: this.dados().nivel }).fortificacoes,
   );
+  /** Estágios oferecidos pelo seletor de estágio ativo — restrito ao que o Nível atual desbloqueia. */
+  protected readonly estagiosDisponiveisAtuais = computed(() => estagiosDisponiveis(this.fortificacoesAtuais()));
+  protected readonly rotulosPersonalidadeEstagio = ROTULOS_PERSONALIDADE_ESTAGIO;
+
+  /**
+   * Os 3 estágios da Habilidade de Personalidade + qual está ativo — `identidade().habilidade`
+   * quando já existe; senão, retrocompatibilidade tolerante (m3-78, entregável 9): se houver um item
+   * `PERSONALIDADE` legado solto em `dados.habilidades` (criado pelo editor completo antes desta
+   * task), ele é lido como o conteúdo do estágio correspondente ao Nível atual, os demais em branco.
+   * Sem migração de banco — leitura só, nada é persistido até o jogador editar algo.
+   */
+  protected readonly personalidadeHabilidadeEfetiva = computed<FichaPersonalidadeHabilidadeDto>(() => {
+    const existente = this.identidade().habilidade;
+    if (existente) {
+      return existente;
+    }
+    const ativa = estagioMaisAltoDesbloqueado(this.fortificacoesAtuais());
+    const legado = this.dados().habilidades.find(
+      (habilidade) => habilidade.categoria === HabilidadeCategoriaEnum.PERSONALIDADE,
+    );
+    if (!legado) {
+      return { ativa, base: null, fortificacao1: null, fortificacao2: null };
+    }
+    const base = ativa === PersonalidadeEstagioEnum.BASE ? { descricao: legado.descricao, custoEnergia: legado.custoEnergia } : null;
+    const fortificacaoLegada = { nome: legado.nome, descricao: legado.descricao, custoEnergia: legado.custoEnergia };
+    return {
+      ativa,
+      base,
+      fortificacao1: ativa === PersonalidadeEstagioEnum.FORTIFICACAO_1 ? fortificacaoLegada : null,
+      fortificacao2: ativa === PersonalidadeEstagioEnum.FORTIFICACAO_2 ? fortificacaoLegada : null,
+    };
+  });
+
+  /** O item materializado do estágio ativo — mesma função usada pelo guia de criação, `null` sem descrição preenchida. */
+  protected readonly habilidadePersonalidadeMaterializada = computed(() =>
+    materializarHabilidadePersonalidade({ personalidade: this.identidade().personalidade, habilidade: this.personalidadeHabilidadeEfetiva() }),
+  );
+
+  /** Troca só o estágio ativo — não abre o editor, emite direto (mesmo padrão leve de um seletor). */
+  protected mudarEstagioAtivoPersonalidade(valor: string): void {
+    const atual = this.personalidadeHabilidadeEfetiva();
+    this.ajusteHabilidadePersonalidade.emit({ ...atual, ativa: valor as PersonalidadeEstagioEnum });
+  }
+
+  /** Editor da Habilidade de Personalidade aberto (os 3 blocos lado a lado) — mesmo padrão do editor de Origem. */
+  protected readonly editandoPersonalidadeHabilidade = signal(false);
+  protected readonly rascunhoPersonalidadeHabilidade = signal<FichaPersonalidadeHabilidadeDto | null>(null);
+
+  protected editarPersonalidadeHabilidade(): void {
+    const atual = this.personalidadeHabilidadeEfetiva();
+    this.rascunhoPersonalidadeHabilidade.set({
+      ativa: atual.ativa,
+      base: atual.base ? { ...atual.base } : null,
+      fortificacao1: atual.fortificacao1 ? { ...atual.fortificacao1 } : null,
+      fortificacao2: atual.fortificacao2 ? { ...atual.fortificacao2 } : null,
+    });
+    this.editandoPersonalidadeHabilidade.set(true);
+  }
+
+  protected cancelarPersonalidadeHabilidade(): void {
+    this.editandoPersonalidadeHabilidade.set(false);
+    this.rascunhoPersonalidadeHabilidade.set(null);
+  }
+
+  protected confirmarPersonalidadeHabilidade(): void {
+    const rascunho = this.rascunhoPersonalidadeHabilidade();
+    if (!rascunho) {
+      return;
+    }
+    this.editandoPersonalidadeHabilidade.set(false);
+    this.rascunhoPersonalidadeHabilidade.set(null);
+    this.ajusteHabilidadePersonalidade.emit(rascunho);
+  }
+
+  private parseCustoEnergiaPersonalidade(valor: string): number | null {
+    const texto = valor.trim();
+    if (!texto) {
+      return null;
+    }
+    const numero = Number(texto);
+    return Number.isFinite(numero) ? Math.max(0, numero) : null;
+  }
+
+  /** Atualiza a Base do rascunho aberto — sem campo de nome (usa a palavra de Identidade). */
+  protected mudarBaseRascunhoPersonalidade(campo: 'descricao' | 'custoEnergia', valor: string): void {
+    const rascunho = this.rascunhoPersonalidadeHabilidade();
+    if (!rascunho) {
+      return;
+    }
+    const base = rascunho.base ?? { descricao: '', custoEnergia: null };
+    const atualizado = campo === 'custoEnergia' ? { ...base, custoEnergia: this.parseCustoEnergiaPersonalidade(valor) } : { ...base, descricao: valor };
+    this.rascunhoPersonalidadeHabilidade.set({ ...rascunho, base: atualizado });
+  }
+
+  /** Atualiza a 1ª ou 2ª Fortificação do rascunho aberto. */
+  protected mudarFortificacaoRascunhoPersonalidade(estagio: 'fortificacao1' | 'fortificacao2', campo: 'nome' | 'descricao' | 'custoEnergia', valor: string): void {
+    const rascunho = this.rascunhoPersonalidadeHabilidade();
+    if (!rascunho) {
+      return;
+    }
+    const atual = rascunho[estagio] ?? { nome: '', descricao: '', custoEnergia: null };
+    const parcial = campo === 'custoEnergia' ? { custoEnergia: this.parseCustoEnergiaPersonalidade(valor) } : campo === 'nome' ? { nome: valor } : { descricao: valor };
+    this.rascunhoPersonalidadeHabilidade.set({ ...rascunho, [estagio]: { ...atual, ...parcial } });
+  }
 
   /**
    * Módulos de todos os fragmentos portados pelo agente — `shared/regras/compras/fragmento`

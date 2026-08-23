@@ -1,5 +1,108 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-23 — `m3-78`: Habilidade de Personalidade ganha 3 estágios com custo em Energia
+
+Pedido original do autor: "revisar como funciona as fortificações da personalidade e também
+adicionar a descrição da habilidade de personalidade e seu custo dentro do guia de criação de
+agentes". Em conversa de brainstorming (skill `superpowers:brainstorming`, caminho arquitetural), o
+escopo foi ampliado: a Habilidade de Personalidade passa a ter **3 estágios nomeados** — Base (a
+que o Mestre define logo após a criação, `docs/core/sistema-v4.1.0.md` "Identidade") e 1ª/2ª
+Fortificação (níveis 7/14, "Fortificação de Traços") — cada um com descrição e custo em Energia
+próprios, preenchíveis desde o início (mesmo antes do estágio estar desbloqueado pelo Nível), com
+uma forma de marcar qual estágio está "ativo" (o que aparece na aba Habilidades da ficha). Spec
+escrita em `docs/specs/backlog/m3-78-guia-personalidade-fortificacao-custo.spec.md`, aprovada seção
+a seção, movida para `active/` e implementada nesta sessão.
+
+**Modelo de dados.** Fonte única de verdade: no máximo 1 item `categoria: PERSONALIDADE` em
+`dados.habilidades` a qualquer momento — o estágio **ativo** materializado — preservando sem
+nenhuma mudança todo consumidor existente que itera `dados.habilidades` (a soma de `custoEnergia`
+vinculado a uma rolagem, `shared/regras/rolagem/rolagem.ts:786`, base da Energia gasta desde
+`m3-77`; a lista da aba Habilidades; o resumo da aba Extras). Os 3 rascunhos completos vivem à
+parte, em `identidade.habilidade` (`FichaPersonalidadeHabilidadeDto`, novo em
+`shared/src/dtos/ficha/ficha.dtos.ts`: `{ ativa: PersonalidadeEstagioEnum, base:
+FichaPersonalidadeEstagioDto | null, fortificacao1/2: FichaFortificacaoPersonalidadeDto | null }` —
+a Base não tem campo de nome próprio, porque o nome do estágio Base é sempre a palavra de
+personalidade de `identidade.personalidade`; as Fortificações têm nome livre, combinado com o
+Mestre). Novo enum `PersonalidadeEstagioEnum` (`BASE`/`FORTIFICACAO_1`/`FORTIFICACAO_2`,
+`shared/src/enums/`). Nova função pura `materializarHabilidadePersonalidade` (`shared/regras/
+identidade/personalidade.ts`) resolve nome/categoria/descrição/custo do estágio marcado `ativa`, ou
+`null` se ele ainda não tiver sido preenchido — a ferramenta nunca inventa um valor que Mestre e
+Jogador ainda não combinaram (a regra do documento diz explicitamente que uma Fortificação "não
+necessariamente" muda custo/efeito). Duas funções auxiliares no mesmo módulo,
+`estagioMaisAltoDesbloqueado`/`estagiosDisponiveis`, resolvem qual(is) estágio(s) uma contagem de
+Fortificações acumuladas (`calcularProgressaoAcumulada(...).fortificacoes`) libera — reusadas tanto
+pelo guia (nível de criação) quanto pela ficha (nível atual), evitando duplicar a mesma regra de
+domínio nos dois lugares (proibição do projeto). Cobertura nova: `shared/regras/identidade/
+personalidade.spec.ts`, 13 casos.
+
+**Guia de criação (`criar.page.ts`/`.html`).** O passo Identidade ganhou um segundo texto de ajuda
+junto do campo de personalidade, explicando que descrição/custo da Habilidade de Personalidade são
+combinados com o Mestre depois. O passo Habilidades trocou a antiga subseção "Fortificações de
+Personalidade" (só existia com `alvoFortificacoes() > 0`, só nome+efeito, `custoEnergia: 0` fixo)
+por "Habilidade de Personalidade", **sempre visível**, com 3 blocos (Base: descrição+custo; 1ª/2ª
+Fortificação: nome+descrição+custo). `melhoriasCompletas()` agora exige a Base sempre (descrição +
+custo preenchidos) e cada Fortificação só quando `alvoFortificacoes()` já a exige no nível de
+criação — preencher um estágio ainda não desbloqueado é permitido, nunca obrigatório.
+`habilidadesDoNivel()` materializa só o estágio ativo (via `materializarHabilidadePersonalidade`),
+substituindo o mapeamento antigo que gerava um item por Fortificação preenchida. `criar()` grava os
+3 estágios trimados em `identidade.habilidade`, com `ativa` calculado automaticamente
+(`estagioMaisAltoDesbloqueado`) a partir do Nível de criação.
+
+**Ficha — aba Extras.** O card único que antes mostrava só a primeira habilidade `PERSONALIDADE`
+(bug latente: `.find()` em `ficha-visualizacao.component.ts` — se existisse mais de uma, as demais
+ficavam invisíveis ali, embora soltas na lista geral da aba Habilidades) virou uma seção "Habilidade
+de Personalidade" com um seletor do estágio ativo (restrito ao que o **Nível atual** da ficha já
+desbloqueia — mesma `calcularProgressaoAcumulada` do guia, só trocando nível de criação por nível
+atual) e um editor em `p-dialog` (mesmo mini-editor do editor de Origem, reaproveitando
+`.ficha-ident__caixa`/`.ficha-ident__classe-editor`/`.ficha-ident__classe-acoes`) com os 3 blocos
+sempre preenchíveis, mesmo os ainda não desbloqueados pelo nível atual. Trocar o seletor emite
+direto (sem abrir o editor); editar um bloco no editor emite o rascunho inteiro ao confirmar — os
+dois caminhos chamam o mesmo `FichaEdicaoService.ajustarHabilidadePersonalidade`, que grava
+`identidade.habilidade` e resincroniza o item espelhado em `dados.habilidades` via
+`materializarHabilidadePersonalidade` (substitui o item `PERSONALIDADE` existente, ou remove do
+array se o estágio ativo ficar vazio). Retrocompatibilidade tolerante (sem migração de banco): uma
+ficha sem `identidade.habilidade` mas com um item `PERSONALIDADE` legado solto em `dados.habilidades`
+(criado pelo editor completo antes desta task) é lida, só em memória, como o conteúdo do estágio
+correspondente ao Nível atual da ficha, com os demais em branco — vira persistido só quando o
+jogador edita algo.
+
+**Dois defeitos achados só na verificação ao vivo (nenhum pego pelos testes unitários):**
+
+1. O novo editor (`<p-dialog>`, sem `[appendTo]="'body'"`, mesmo padrão do editor de Origem
+   pré-existente) não abria de verdade no viewport mobile (`360×800`): `.p-dialog` ficava com
+   `position: static` e altura zero — presente no DOM, tecnicamente "visível" pelas flags CSS
+   (`display`/`visibility`/`opacity`), mas sem bounding box, portanto inacessível. Reproduzido
+   isoladamente também no editor de Origem pré-existente (mesmo padrão, mesmo defeito) — **não**
+   corrigido ali (fora do escopo desta task; vale registrar como pendência). Fix local, só no
+   diálogo novo: `[appendTo]="'body'"` (move o `<p-dialog>` para `document.body` via CDK overlay,
+   escapando do contexto de empilhamento problemático). Confirmado ao vivo: bounding box real
+   (348×699 em 360px) depois do fix, editor plenamente utilizável nos dois viewports.
+2. O texto de ajuda novo do passo Identidade foi escrito reaproveitando a classe
+   `.guia__subsecao-ajuda` — que carrega `margin-top: -8px` (pensada para colar imediatamente
+   abaixo de um `.guia__subsecao`, puxando pra cima o espaço do divisor). Fora desse contexto (o
+   texto ficou como irmão de um `<label class="campo">`, não de um `.guia__subsecao`), a margem
+   negativa fez o novo parágrafo se sobrepor visualmente ao texto de ajuda já existente do campo de
+   personalidade — achado só na captura em `1920×1080`, nunca teria aparecido num teste unitário
+   (JSDOM não faz layout). Fix: trocado por um segundo `<small class="campo__ajuda">` dentro do
+   mesmo `<label>`, participando do `display: grid` do `.campo` como mais uma linha, sem margem
+   negativa.
+
+Testado: `npm run test -w shared` 722/722 (+13, `personalidade.spec.ts`); `npm run test -w frontend`
+1315/1315 (+15 — 3 casos em `criar.page.spec.ts` reescritos/adicionados para a nova API dos 3
+estágios, mais ~12 novos em `ficha-visualizacao.component.spec.ts` cobrindo seletor restrito por
+nível, edição/confirmação/cancelamento do editor e retrocompatibilidade do item legado);
+`npm run test -w backend` 445/445 (sem mudança — nenhum código de backend tocado, `identidade.habilidade`
+passa pela API como qualquer campo opcional de `FichaJogadorDadosDto`, DTOs são interfaces sem
+class-validator). Lint limpo nos três workspaces. Verificação ao vivo via Playwright (skill
+`verify`), `1920×1080` e `360×800`, com um agente Nível 14 real: percorrido o guia completo (Base →
+Classe/Combatente-Lutador → Novo agente com Nível 14 exato → Atributos em modo livre → Habilidades,
+preenchendo os 3 estágios da Habilidade de Personalidade → Identidade, conferindo o texto do papel
+do Mestre); e, numa ficha Nível 14 semeada via REST com os 3 estágios preenchidos, a aba Extras:
+seletor restrito às Fortificações desbloqueadas, troca de estágio ativo espelhada de imediato na
+aba Habilidades (o nome/custo exibido muda, o estágio anterior some do array), estágio sem
+descrição mostrando o aviso correto, e o editor completo (preencher a 2ª Fortificação e salvar)
+passando a materializar a habilidade — confirmado nos dois viewports depois do fix de `appendTo`.
+
 ## 2026-08-23 — fix: "Mochileiro" (Geral/Geral Melhorada) não atualizava o Inventário Máximo
 
 Bug relatado direto pelo autor: a habilidade "Mochileiro" (troca o atributo de cálculo do

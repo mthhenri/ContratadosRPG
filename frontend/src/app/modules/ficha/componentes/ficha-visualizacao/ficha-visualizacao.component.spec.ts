@@ -8,6 +8,7 @@ import {
   FragmentoTipoEnum,
   HabilidadeCategoriaEnum,
   ItemCategoriaEnum,
+  PersonalidadeEstagioEnum,
   SeveridadeLesaoEnum,
   TipoDanoEnum,
 } from '@contratados-rpg/shared/enums';
@@ -16,6 +17,7 @@ import type {
   FichaHabilidadeDto,
   FichaJogadorDadosDto,
   FichaOrigemDto,
+  FichaPersonalidadeHabilidadeDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import { calcularVida } from '@contratados-rpg/shared/regras/agente';
 import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
@@ -1860,9 +1862,105 @@ describe('FichaVisualizacao', () => {
       expect(secaoPersonalidade?.textContent).toContain('2 E');
     });
 
-    it('Personalidade definida sem habilidade cadastrada avisa "sem habilidade registrada"', () => {
+    it('Personalidade definida sem nenhum estágio preenchido avisa "sem descrição definida" (m3-78)', () => {
       const { raiz } = montarExtras({ ...dados, identidade: { personalidade: 'Destemido', origem: null } });
-      expect(raiz.textContent).toContain('Sem habilidade de Personalidade registrada.');
+      expect(raiz.textContent).toContain('Estágio ativo ainda sem descrição definida.');
+    });
+
+    describe('Habilidade de Personalidade — 3 estágios (m3-78)', () => {
+      it('seletor de estágio ativo restrito ao que o Nível atual da ficha desbloqueia — Nível 3 só oferece Base', () => {
+        const componente = montarExtras({ ...dados, nivel: 3, identidade: { personalidade: 'Destemido', origem: null } }, true).fixture.componentInstance;
+        expect(componente['estagiosDisponiveisAtuais']()).toEqual([PersonalidadeEstagioEnum.BASE]);
+      });
+
+      it('seletor de estágio ativo restrito ao que o Nível atual da ficha desbloqueia — Nível 7 já oferece a 1ª Fortificação', () => {
+        const componente = montarExtras({ ...dados, nivel: 7, identidade: { personalidade: 'Destemido', origem: null } }, true).fixture.componentInstance;
+        expect(componente['estagiosDisponiveisAtuais']()).toEqual([PersonalidadeEstagioEnum.BASE, PersonalidadeEstagioEnum.FORTIFICACAO_1]);
+      });
+
+      it('trocar o seletor emite o mesmo rascunho só com `ativa` alterado', () => {
+        const alvo = montarExtras({
+          ...dados,
+          nivel: 7,
+          identidade: {
+            personalidade: 'Destemido',
+            origem: null,
+            habilidade: {
+              ativa: PersonalidadeEstagioEnum.BASE,
+              base: { descricao: 'Efeito base.', custoEnergia: 1 },
+              fortificacao1: { nome: 'Destemido+', descricao: 'Mais um dado.', custoEnergia: 3 },
+              fortificacao2: null,
+            },
+          },
+        }, true);
+        const emitidos: FichaPersonalidadeHabilidadeDto[] = [];
+        alvo.fixture.componentInstance.ajusteHabilidadePersonalidade.subscribe((h) => emitidos.push(h));
+
+        alvo.fixture.componentInstance['mudarEstagioAtivoPersonalidade'](PersonalidadeEstagioEnum.FORTIFICACAO_1);
+
+        expect(emitidos).toHaveLength(1);
+        expect(emitidos[0].ativa).toBe(PersonalidadeEstagioEnum.FORTIFICACAO_1);
+        expect(emitidos[0].fortificacao1).toEqual({ nome: 'Destemido+', descricao: 'Mais um dado.', custoEnergia: 3 });
+      });
+
+      it('editar os 3 blocos no editor e confirmar emite o rascunho inteiro', () => {
+        const alvo = montarExtras({ ...dados, nivel: 14, identidade: { personalidade: 'Destemido', origem: null } }, true);
+        const emitidos: FichaPersonalidadeHabilidadeDto[] = [];
+        alvo.fixture.componentInstance.ajusteHabilidadePersonalidade.subscribe((h) => emitidos.push(h));
+
+        const componente = alvo.fixture.componentInstance;
+        componente['editarPersonalidadeHabilidade']();
+        componente['mudarBaseRascunhoPersonalidade']('descricao', 'Ignora a primeira fonte de Medo.');
+        componente['mudarBaseRascunhoPersonalidade']('custoEnergia', '2');
+        componente['mudarFortificacaoRascunhoPersonalidade']('fortificacao1', 'nome', 'Destemido+');
+        componente['mudarFortificacaoRascunhoPersonalidade']('fortificacao1', 'descricao', 'Mais um dado.');
+        componente['mudarFortificacaoRascunhoPersonalidade']('fortificacao1', 'custoEnergia', '3');
+        componente['mudarFortificacaoRascunhoPersonalidade']('fortificacao2', 'nome', 'Destemido++');
+        componente['confirmarPersonalidadeHabilidade']();
+
+        expect(emitidos).toHaveLength(1);
+        expect(emitidos[0].base).toEqual({ descricao: 'Ignora a primeira fonte de Medo.', custoEnergia: 2 });
+        expect(emitidos[0].fortificacao1).toEqual({ nome: 'Destemido+', descricao: 'Mais um dado.', custoEnergia: 3 });
+        expect(emitidos[0].fortificacao2).toEqual({ nome: 'Destemido++', descricao: '', custoEnergia: null });
+        expect(componente['editandoPersonalidadeHabilidade']()).toBe(false);
+      });
+
+      it('cancelar o editor descarta o rascunho sem emitir nada', () => {
+        const alvo = montarExtras({ ...dados, identidade: { personalidade: 'Destemido', origem: null } }, true);
+        const emitidos: FichaPersonalidadeHabilidadeDto[] = [];
+        alvo.fixture.componentInstance.ajusteHabilidadePersonalidade.subscribe((h) => emitidos.push(h));
+
+        const componente = alvo.fixture.componentInstance;
+        componente['editarPersonalidadeHabilidade']();
+        componente['mudarBaseRascunhoPersonalidade']('descricao', 'Rascunho descartado');
+        componente['cancelarPersonalidadeHabilidade']();
+
+        expect(emitidos).toHaveLength(0);
+        expect(componente['editandoPersonalidadeHabilidade']()).toBe(false);
+        expect(componente['rascunhoPersonalidadeHabilidade']()).toBeNull();
+      });
+
+      it('retrocompatibilidade: item PERSONALIDADE legado (sem identidade.habilidade) vira o estágio correspondente ao Nível atual', () => {
+        const componente = montarExtras({
+          ...dados,
+          nivel: 8,
+          identidade: { personalidade: 'Destemido', origem: null },
+          habilidades: [
+            {
+              nome: 'Destemido+',
+              categoria: HabilidadeCategoriaEnum.PERSONALIDADE,
+              custoEnergia: 3,
+              descricao: 'Mais um dado ao forçar o teste.',
+            },
+          ],
+        }, true).fixture.componentInstance;
+
+        const efetiva = componente['personalidadeHabilidadeEfetiva']();
+        expect(efetiva.ativa).toBe(PersonalidadeEstagioEnum.FORTIFICACAO_1);
+        expect(efetiva.base).toBeNull();
+        expect(efetiva.fortificacao1).toEqual({ nome: 'Destemido+', descricao: 'Mais um dado ao forçar o teste.', custoEnergia: 3 });
+        expect(efetiva.fortificacao2).toBeNull();
+      });
     });
 
     it('afinidade soma fragmentos soltos (por unidade do stack) + fragmentos já acoplados como Modificação', () => {
