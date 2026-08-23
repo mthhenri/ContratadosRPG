@@ -88,7 +88,12 @@ function calcularResistenciaEquipamento(itens: readonly CarrinhoItemDto[]): Map<
       if (!stat?.resistencia) {
         return;
       }
-      interpretarNotacaoResistencia(stat.resistencia).forEach((entrada) => somar(entrada.tipos, entrada.valor));
+      // Escudos usam notação composta "[Tipo/Tipo]" (catalogo.dados.ts) pra dizer que o valor cheio
+      // vale pros dois tipos — cada lado do "/" precisa virar sua própria entrada em `totais`, senão
+      // a chave composta nunca bate com nenhum `TipoDanoEnum` de `ORDEM_TIPOS`.
+      interpretarNotacaoResistencia(stat.resistencia).forEach((entrada) =>
+        entrada.tipos.split('/').forEach((tipo) => somar(tipo.trim(), entrada.valor)),
+      );
     });
 
   return totais;

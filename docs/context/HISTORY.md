@@ -1,5 +1,30 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-23 — fix: resistência de Escudos não somava no equipamento (Combate)
+
+Bug relatado direto pelo autor: escudos equipados não contavam pra resistência da aba Combate.
+Root cause em `shared/regras/agente/resistencia.ts` (`calcularResistenciaEquipamento`): o catálogo
+(`catalogo.dados.ts`) descreve a resistência dos quatro escudos com a notação composta
+`"N [Físico/Balístico]"` (doc — "Resistência: N [Físico] e [Balístico]", valor cheio nos dois
+tipos, sem divisão 50/50 como um dano Composto). `interpretarNotacaoResistencia` devolve essa
+notação como uma única entrada com `tipos: "Físico/Balístico"`, e o código somava direto nessa
+chave composta (`somar(entrada.tipos, entrada.valor)`) — uma string que nunca bate com nenhum
+`TipoDanoEnum` de `ORDEM_TIPOS` (`"Físico"`, `"Balístico"`, ...), então o valor ficava órfão no
+Map e nunca aparecia no total. Proteções com resistência de tipo único (Colete de Kevlar,
+Armadura Pesada) não sofriam o bug — só a notação composta dos escudos usa `/` dentro do mesmo
+colchete.
+
+Fix: `entrada.tipos.split('/').forEach((tipo) => somar(tipo.trim(), entrada.valor))` — cada lado
+do `/` vira sua própria entrada, com o valor cheio (não dividido) em cada tipo, batendo com a
+semântica do doc. `montarResistencias` é o motor único da resistência de Combate (ficha e
+combatente de encontro, via `backend/encontro-combatente.mapper.ts`), então o fix cobre os dois
+caminhos sem duplicar lógica.
+
+Teste novo em `resistencia.spec.ts` reproduzindo um Escudo Leve equipado (`"1 [Físico/Balístico]"`)
+e confirmando `equipamento` de Físico e Balístico ambos em 1 — falhava (ambos em 0) antes do fix,
+confirmando a causa raiz. `npm test` em `shared` (709/709) e `backend` (445/445) verdes; sem
+mudança em frontend, então sem verificação visual necessária.
+
 ## 2026-08-23 — m7-20: regressão do botão "abrir ficha" na grade compacta do jogador
 
 Spec `docs/specs/backlog/m7-20-regressao-botao-abrir-ficha-grade-compacta.spec.md` (pedido direto do

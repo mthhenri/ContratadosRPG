@@ -157,6 +157,13 @@ describe('montarResistencias', () => {
     });
   });
 
+  it('soma a resistência de um Escudo equipado nos dois tipos da notação composta "[Tipo/Tipo]" (m3-129)', () => {
+    const item = protecao({ nome: 'Escudo Leve', resistencia: '1 [Físico/Balístico]' });
+    const resultado = montarResistencias({ itens: [item], amplificadores: [] });
+    expect(resultado.find((l) => l.tipo === TipoDanoEnum.FISICO)?.equipamento).toBe(1);
+    expect(resultado.find((l) => l.tipo === TipoDanoEnum.BALISTICO)?.equipamento).toBe(1);
+  });
+
   describe('amplificador Resistente — +1 de resistência a Dano Geral por empilhamento (escala)', () => {
     it('1 empilhamento concede +1 Geral', () => {
       const amplificadores: AmplificadorAplicadoDto[] = [{ nome: 'Resistente', empilhamentos: 1 }];
