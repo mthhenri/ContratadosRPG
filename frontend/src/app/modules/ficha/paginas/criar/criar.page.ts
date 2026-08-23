@@ -577,17 +577,38 @@ export class FichaCriar {
       this.rolandoRecursos.set(false);
     });
   }
+  /** Ignora a rolagem de dinheiro inicial (m3-74) — mesma trava de "única vez" da rolagem normal;
+   *  ficha segue com $0 de dinheiro inicial (`bonusMonetario` de Prestígio continua se aplicando). */
+  protected ignorarRecursos(): void {
+    if (this.estado().dinheiro.rolado || this.rolandoRecursos()) return;
+    this.atualizar({ dinheiro: { dados: [], inicial: 0, rolado: true } });
+  }
+  /** `true` quando o dinheiro inicial foi resolvido por "ignorar" em vez de rolagem (`dados` vazio). */
+  protected readonly recursosIgnorados = computed(() => this.estado().dinheiro.rolado && this.estado().dinheiro.dados.length === 0);
   protected sair(): void { this.confirmandoSaida.set(true); }
   protected confirmarSaida(): void { this.confirmandoSaida.set(false); void this.router.navigate(this.campanhaId !== null ? ['/painel', this.campanhaId] : ['/fichas']); }
   protected cancelarSaida(): void { this.confirmandoSaida.set(false); }
   /** Clique no `::backdrop` do `<dialog>` cai no próprio elemento (não num filho) — fecha como "Continuar aqui". */
   protected fecharAoClicarFora(evento: MouseEvent): void { if (evento.target === evento.currentTarget) this.cancelarSaida(); }
+  /** Trim das pontas só na montagem persistida (m3-75) — nunca durante a digitação, senão o usuário
+   *  perde o espaço que ainda está no meio de escrever. Espaço interno de `personalidade` continua
+   *  vetado por `passoValido` (`!/\s/.test(...)`), que roda sobre o valor já trimado das pontas. */
+  private origemTrimada(origem: FichaOrigemDto): FichaOrigemDto {
+    return {
+      ...origem,
+      nome: origem.nome.trim(),
+      descricao: origem.descricao.trim(),
+      formacao: origem.formacao.map((item) => ({ ...item, texto: item.texto.trim(), parametro: item.parametro === null ? null : item.parametro.trim() })),
+      especialidade: { gatilho: origem.especialidade.gatilho.trim(), efeito: origem.especialidade.efeito.trim() },
+      saberDeCampo: origem.saberDeCampo.trim(),
+    };
+  }
   protected criar(): void {
     const e = this.estado();
     if (this.criando() || !e.classe || !e.dinheiro.rolado) return;
     this.criando.set(true);
     this.erro.set('');
-    const resultado = construirFichaInicial({ nome: e.nome, cor: e.cor, classe: e.classe, arquetipo: e.arquetipo, bonusEscolhido: e.bonusEscolhido, nivel: this.nivelInicial(), prestigio: this.prestigioInicial(), atributos: e.atributos, maestria: e.maestria, identidade: { personalidade: e.personalidade, origem: this.temPeculiaridade() ? null : e.origem }, dinheiro: this.totalDinheiro(), anotacoes: this.novoAgente().recebeAmaldicoadoPeloPassado ? 'Amaldiçoado pelo Passado' : '', habilidadesExtras: this.habilidadesDoNivel(), equipamentoInicial: e.kit });
+    const resultado = construirFichaInicial({ nome: e.nome, cor: e.cor, classe: e.classe, arquetipo: e.arquetipo, bonusEscolhido: e.bonusEscolhido, nivel: this.nivelInicial(), prestigio: this.prestigioInicial(), atributos: e.atributos, maestria: e.maestria, identidade: { personalidade: e.personalidade.trim(), origem: this.temPeculiaridade() ? null : this.origemTrimada(e.origem) }, dinheiro: this.totalDinheiro(), anotacoes: this.novoAgente().recebeAmaldicoadoPeloPassado ? 'Amaldiçoado pelo Passado' : '', habilidadesExtras: this.habilidadesDoNivel(), equipamentoInicial: e.kit });
     const campanhaId = this.campanhaId;
     this.fichaService.criarFicha({ ...(campanhaId !== null ? { campanhaId } : {}), usuarioId: this.ehMestre() ? (e.usuarioId ?? undefined) : undefined, ...resultado })
       .pipe(finalize(() => this.criando.set(false)))

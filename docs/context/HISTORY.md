@@ -1,5 +1,124 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-23 — m3-75: guia trima todos os campos de texto livre na persistência
+
+Spec pós-milestone (pedido direto do autor: "na criação de ficha de agente, fazer trim em todos os
+campos de texto"). Levantamento prévio (feito ao escrever a spec) achou só `nome` e
+`fortificacao[].nome/.descricao` já trimados antes de persistir — todo o resto da Identidade
+(`personalidade`, `origem.nome`, `origem.descricao`, `origem.formacao[].texto/.parametro`,
+`origem.especialidade.gatilho/.efeito`, `origem.saberDeCampo`) usava `.trim()` só pra **validar**
+`passoValido` (`criar.page.ts`), nunca pra persistir — um valor como `" Firme "` passava intacto pro
+backend.
+
+Fix: `criar.page.ts` ganhou `origemTrimada()` (método privado, mapeia `FichaOrigemDto` trimando
+`nome`/`descricao`/`saberDeCampo`, cada item de `formacao[]` — `texto` e `parametro` quando não
+`null` — e `especialidade.gatilho/.efeito`), chamado só no ponto único de montagem em `criar()`
+junto com `e.personalidade.trim()`. Nenhum `.trim()` foi movido pros setters de digitação
+(`atualizarOrigem`, `atualizarEspecialidade`, etc.) — o estado em edição continua cru, preservando
+espaço temporário no fim de uma frase ainda sendo digitada. Seguindo a spec, não foi criado
+utilitário compartilhado de trim; a lógica ficou local a `criar.page.ts`, no mesmo espírito do
+`.trim()` que `fortificacao[].nome/.descricao` já fazia.
+
+`passoValido()` não mudou — seu próprio `.trim()` pra validar `personalidade` (incluindo o veto a
+espaço interno, `!/\s/.test(...)`) já rodava sobre uma cópia trimada das pontas, então o novo trim
+na persistência não interfere na regra de "uma palavra só" da Personalidade.
+
+Testado: 1 novo caso em `criar.page.spec.ts` cobrindo string simples (`personalidade`, `origem.nome`
+etc.) e item de array (`formacao[].texto`/`.parametro`) — confirma que o estado em edição continua
+cru (`componente['estado']().origem.nome` ainda com espaços após `atualizar()`) e que o payload
+enviado a `criarFicha()` chega trimado em todos os campos listados na spec. Suíte completa do
+frontend: 1293/1293 (era 1292, +1). Lint limpo. Sem impacto visual/UI (nenhum template ou estilo
+tocado) — o passo "Equipamento inicial" não tem campo de texto, e nenhum outro gate visual se aplica
+a uma mudança puramente de montagem de payload.
+
+## 2026-08-22 — Ícones corretos e busca reformulada no catálogo de Equipamento inicial
+
+Pedido direto do autor: os ícones das abas de categoria (Corpo a Corpo, Explosivos, Armas de Fogo…)
+no passo "Equipamento inicial" do guia estavam errados. Causa: `GuiaEquipamentoLoja`
+(`frontend/.../ficha/componentes/guia-equipamento-loja/`) renderizava `categoria.icone` — o emoji
+cru de `CATALOGO_CATEGORIAS` (`shared/regras/compras`, fonte do jogo) — num `<span aria-hidden>`,
+em vez do componente `Icone` com um `ICONES_CATEGORIA` (`Record<ItemCategoriaEnum, IconeNome>`) que
+traduz cada categoria pro glifo monocromático do tema. Esse mapeamento já existia — três vezes,
+cada uma localmente definida "pra manter o módulo desacoplado": `calculadora/rotulos.ts`
+(`ComprasPage`), `ficha-inventario.component.ts` e `inventario-esquadrao.component.ts`. O guia era
+o único consumidor do catálogo que nunca migrou do emoji pro `Icone` — proibição #29 (emoji cru
+proibido pelo tema "Terminal de Contenção"). Fix: quarta cópia local de `ICONES_CATEGORIA` em
+`guia-equipamento-loja.component.ts` (mesmo padrão), template trocado pra
+`<app-icone [nome]="iconesCategoria[categoria.categoria]" />`.
+
+Aproveitando o pedido do autor pra alinhar o resto do catálogo ao mesmo análogo
+(`FichaInventario`): a busca de item subiu **acima** das abas de categoria no HTML (estava abaixo)
+e passou a **cruzar todas as categorias** com o catálogo do kit quando há termo digitado — antes
+filtrava só dentro da aba ativa, ficando "cega" pra qualquer item de outra categoria. Com a busca
+preenchida, as abas de categoria ficam desabilitadas e nenhuma aparece ativa (mesmo comportamento
+de `ficha-inv__categoria[disabled]`). Isso exigiu que `CartaoItemVM` passasse a carregar a própria
+`categoria` do item (não dá mais pra assumir `categoriaAtiva()`) e que `adicionar()` recebesse essa
+categoria explicitamente — um resultado de busca cruzada agora entra no carrinho com a categoria
+correta, não a da aba que estava aberta antes de buscar.
+
+Testado: novo `guia-equipamento-loja.component.spec.ts` (4 casos — busca antes das categorias no
+DOM, `app-icone` presente em toda aba sem nenhum `span[aria-hidden]` remanescente, busca cruzando
+categoria com as abas desabilitadas, e o item adicionado por busca cruzada grava a categoria real
+do resultado). Suíte completa do frontend: 1292/1292 (era 1288, +4). Verificação ao vivo
+(Playwright, stack real) em `1920×1080` e `360×800`: ícones corretos nas abas Corpo a Corpo/
+Explosivos/Armas de Fogo, busca por "Pistola" (categoria Armas de Fogo) com a aba Corpo a Corpo
+ativa encontrou o item e adicionou ao kit com a categoria certa, sem overflow em nenhum viewport.
+
+## 2026-08-22 — m3-74: guia ganha a opção de ignorar o dinheiro inicial
+
+Pedido direto do autor: dar ao passo "Recursos" do guia de criação de agente uma saída além de
+"Rolar dados" — hoje a rolagem de 4D4 era obrigatória para avançar. O kit de "Equipamento inicial"
+já era opcional (`m3-59`, carrinho vazio válido); só o dinheiro faltava esse caminho. Fix: botão
+secundário **"Não rolar dinheiro inicial"** ao lado de "Rolar dados"
+(`ignorarRecursos()` em `criar.page.ts`) grava `dinheiro: { dados: [], inicial: 0, rolado: true }` —
+satisfaz `passoValido()` sem chamar `rolarDinheiro()`, sem gerar nenhuma entrada de rolagem. A UI
+distingue os dois desfechos por `recursosIgnorados` (`dados.length === 0`, já que uma rolagem real
+sempre tem 4 dados): mostra "Dinheiro inicial ignorado" no lugar da grade de dados. A mesma trava de
+"escolha única" da rolagem normal (`if (dinheiro.rolado) return`) vale para ignorar — uma vez
+resolvido (rolado ou ignorado), nem os botões voltam nem a escolha pode ser refeita. Não tocou
+`shared/regras` — dinheiro $0 já era um valor de domínio válido; a mudança é só de fluxo do guia.
+`totalDinheiro()` continua somando `bonusMonetario()` (de Prestígio) por cima, como sempre — "$0" é
+o caso comum (Prestígio inicial 0), não uma trava nova.
+
+Testado: `criar.page.spec.ts` cobre o fluxo completo (botão aparece, estado grava
+`{dados:[],inicial:0,rolado:true}`, `totalDinheiro()===0`, trava contra reignorar/rerolar depois).
+Suíte completa do frontend: 1288/1288. Verificação ao vivo (Playwright, stack real) em `1920×1080` e
+`360×800`: guia de ponta a ponta (Base → Classe → Novo agente → Atributos [modo livre] → Habilidades
+[modo livre] → Identidade → **Recursos: ignorar** → Equipamento inicial → Revisão → Criar ficha) —
+resumo mostra "Recursos R$0", ficha criada mostra "Dinheiro $0" nos dois viewports, sem overflow.
+
+## 2026-08-22 — m3-73: aba do seletor de habilidades não reseta mais sozinha
+
+Bug reportado pelo autor: no passo "Habilidades" do guia, adicionar duas habilidades seguidas da
+aba **Arquétipo** fazia a UI voltar sozinha pra aba **Classe** depois da primeira. Causa raiz:
+`abaAtiva`/`subgrupoAtivo` em `FichaHabilidadeSeletorComponent` eram `linkedSignal`s na forma básica
+(`linkedSignal(() => this.grupos()[0]?.id ?? 'gerais')`), que recomputam sempre que **qualquer**
+signal lido dentro reexecuta — inclusive quando só a *referência* de `grupos` muda, não o conteúdo.
+`grupos` vem de um `computed` (`gruposVagaAberta`, em `criar.page.ts`) que devolve array novo a cada
+`adicionarMelhoria`/`removerMelhoria` mesmo quando os grupos disponíveis (Gerais/Classe/Subclasse/
+Arquétipo) não mudaram de fato — resetando a aba pro primeiro grupo (`'classe'`, ordem fixa do
+catálogo) a cada clique em "+".
+
+Fix: as duas passaram para a forma avançada de `linkedSignal({source, computation})`. `source` é uma
+chave estável derivada dos `grupos()`/subgrupos (só os `id`s/`chave`s, unidos em string) — só essa
+chave dispara recomputação, não o array por referência. Dentro de `computation`, a leitura de
+`this.grupos()`/`this.abaAtiva()` vai dentro de `untracked()` (Angular rastreia leituras feitas
+durante `computation`, não só `source` — confirmado no código-fonte de `@angular/core`, então sem
+`untracked` o array voltaria a vazar como dependência). A lógica preserva o valor corrente enquanto
+ele ainda existir no `grupos()`/subgrupos atuais; senão cai pro primeiro — o que naturalmente cobre
+a troca real de vaga/classe/arquétipo (o `@if (vagaAberta(); as vaga)` de `criar.page.html` destrói
+e recria o componente sempre que a classe muda de verdade, já que "Habilidades" e "Classe" são
+`@case` mutuamente exclusivos do mesmo `@switch`; só uma troca de vaga *sem* fechar o diálogo, com
+grupos genuinamente diferentes, passa pela lógica de preservação).
+
+Testado: novo spec dedicado (`ficha-habilidade-seletor.component.spec.ts`, 4 casos) — aba/subgrupo
+permanecem em Arquétipo por duas adições seguidas e por uma remoção, e resetam pro primeiro grupo
+quando o conjunto de grupos muda de fato. Suíte completa do frontend: 1288/1288 (era 1282, +6: 4 do
+seletor + 1 de m3-73 em si + 1 de m3-74, ver acima). Verificação ao vivo (Playwright, stack real,
+`1920×1080`): abriu o seletor na aba Arquétipo de um Combatente-Lutador, adicionou duas habilidades
+seguidas — a aba permaneceu em Arquétipo nas duas, confirmado pelo screenshot (chips "NA FICHA" nos
+dois itens, aba ainda destacada).
+
 ## 2026-08-22 — Corrigido: dialog "Receber dano" fechava ao clicar fora
 
 O dono reportou que o dialog "Receber dano" (`ReceberDanoDialog`, reaproveitado pelo cartão do

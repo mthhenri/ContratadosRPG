@@ -570,11 +570,23 @@
                   <div class="guia__recursos-vazio">
                     <app-icone nome="dado" />
                     <strong>{{ rolandoRecursos() ? 'Rolando fundos operacionais…' : 'Nenhuma rolagem realizada' }}</strong>
-                    <span>{{ rolandoRecursos() ? 'Os quatro dados estão em movimento.' : 'Esta rolagem é definitiva e poderá ser feita uma única vez.' }}</span>
+                    <span>{{ rolandoRecursos() ? 'Os quatro dados estão em movimento.' : 'Rolar ou ignorar o dinheiro inicial é definitivo e só pode ser feito uma única vez.' }}</span>
                   </div>
-                  <button data-testid="rolar-recursos" class="botao botao--primario guia__rolar" type="button" [disabled]="rolandoRecursos()" (click)="iniciarRolagemRecursos()">
-                    <app-icone nome="dado" /> {{ rolandoRecursos() ? 'Rolando…' : 'Rolar dados' }}
-                  </button>
+                  <div class="guia__recursos-acoes">
+                    <button data-testid="rolar-recursos" class="botao botao--primario guia__rolar" type="button" [disabled]="rolandoRecursos()" (click)="iniciarRolagemRecursos()">
+                      <app-icone nome="dado" /> {{ rolandoRecursos() ? 'Rolando…' : 'Rolar dados' }}
+                    </button>
+                    <button data-testid="ignorar-recursos" class="botao botao--secundario guia__ignorar-recursos" type="button" [disabled]="rolandoRecursos()" (click)="ignorarRecursos()">
+                      Não rolar dinheiro inicial
+                    </button>
+                  </div>
+                } @else if (recursosIgnorados()) {
+                  <div class="guia__recursos-vazio">
+                    <app-icone nome="check" />
+                    <strong>Dinheiro inicial ignorado</strong>
+                    <span>Este agente começa com $0 de dinheiro inicial — a escolha é definitiva e não pode ser refeita.</span>
+                  </div>
+                  <p class="guia__rolagem-fechada"><app-icone nome="check" /> Resultado definitivo salvo no rascunho.</p>
                 } @else {
                   <div class="guia__dados-lista" aria-label="Resultado dos quatro dados">
                     @for (dado of estado().dinheiro.dados; track $index) {

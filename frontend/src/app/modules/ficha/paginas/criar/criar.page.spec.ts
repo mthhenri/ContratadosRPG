@@ -141,6 +141,34 @@ describe('FichaCriar', () => {
     }
   });
 
+  it('permite ignorar a rolagem de dinheiro inicial no passo Recursos (m3-74)', () => {
+    const { fixture, raiz, componente } = montar();
+    componente['atualizar']({ passo: 5 });
+    fixture.detectChanges();
+
+    expect(componente['passoValido']()).toBe(false);
+    const ignorar = raiz.querySelector('[data-testid="ignorar-recursos"]') as HTMLButtonElement;
+    expect(ignorar.textContent).toContain('Não rolar dinheiro inicial');
+
+    ignorar.click();
+    fixture.detectChanges();
+
+    expect(componente['estado']().dinheiro).toEqual({ dados: [], inicial: 0, rolado: true });
+    expect(componente['passoValido']()).toBe(true);
+    expect(componente['totalDinheiro']()).toBe(0);
+    expect(raiz.querySelectorAll('.guia__dado')).toHaveLength(0);
+    expect(raiz.querySelector('[data-testid="rolar-recursos"]')).toBeNull();
+    expect(raiz.querySelector('[data-testid="ignorar-recursos"]')).toBeNull();
+    expect(raiz.textContent).toContain('Dinheiro inicial ignorado');
+
+    // Trava de escolha única: ignorar de novo (ou rolar) depois de já resolvido não faz nada.
+    const dinheiroIgnorado = componente['estado']().dinheiro;
+    componente['ignorarRecursos']();
+    expect(componente['estado']().dinheiro).toBe(dinheiroIgnorado);
+    componente['iniciarRolagemRecursos']();
+    expect(componente['estado']().dinheiro).toBe(dinheiroIgnorado);
+  });
+
   describe('confirmação de saída do guia', () => {
     it('não navega ao clicar em Sair sem confirmar, e não usa o confirm() nativo do navegador', () => {
       const { fixture, raiz, componente } = montar();
@@ -570,6 +598,47 @@ describe('FichaCriar', () => {
       // base 1 + fixo (intelecto 1) / base 1 + fixo (0) + escolha (1) em força
       expect(payload.dados.atributos.intelecto).toBe(2);
       expect(payload.dados.atributos.forca).toBe(2);
+    });
+
+    it('m3-75: ficha final (criar()) trima os campos de texto da Identidade, mas a digitação preserva os espaços', () => {
+      const { fixture, componente } = montar();
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      componente['atualizar']({
+        nome: 'Agente-9', classe: ClasseEnum.ESPECIALISTA, arquetipo: ArquetipoEnum.ENGENHEIRO,
+        dinheiro: { dados: [1, 1, 1, 1], inicial: 1000, rolado: true },
+        personalidade: '  Firme  ',
+        origem: {
+          nome: '  Ex-militar  ',
+          descricao: '  Serviu na linha de frente.  ',
+          formacao: [
+            { bonus: null, parametro: null, texto: '  +1 dado em Vigor  ' },
+            { bonus: FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO, parametro: '  Furtividade  ', texto: `  ${FORMACOES[FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO].rotulo}  ` },
+          ],
+          especialidade: { gatilho: '  Sob fogo  ', efeito: '  +1 dado em Reflexos  ' },
+          saberDeCampo: '  Balística  ',
+        },
+        formacoesCustomizadas: [true, false],
+      });
+      componente['escolherBonusAtributo'](0, { target: { value: 'forca' } } as unknown as Event);
+      fixture.detectChanges();
+
+      // não trima durante a digitação — só na montagem persistida.
+      expect(componente['estado']().origem.nome).toBe('  Ex-militar  ');
+      expect(componente['estado']().origem.formacao[0].texto).toBe('  +1 dado em Vigor  ');
+
+      componente['criar']();
+
+      const fichaService = TestBed.inject(FichaService) as unknown as { criarFicha: ReturnType<typeof vi.fn> };
+      const payload = fichaService.criarFicha.mock.calls[0][0];
+      expect(payload.dados.identidade.personalidade).toBe('Firme');
+      expect(payload.dados.identidade.origem.nome).toBe('Ex-militar');
+      expect(payload.dados.identidade.origem.descricao).toBe('Serviu na linha de frente.');
+      expect(payload.dados.identidade.origem.formacao[0].texto).toBe('+1 dado em Vigor');
+      expect(payload.dados.identidade.origem.formacao[1].texto).toBe(FORMACOES[FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO].rotulo);
+      expect(payload.dados.identidade.origem.formacao[1].parametro).toBe('Furtividade');
+      expect(payload.dados.identidade.origem.especialidade.gatilho).toBe('Sob fogo');
+      expect(payload.dados.identidade.origem.especialidade.efeito).toBe('+1 dado em Reflexos');
+      expect(payload.dados.identidade.origem.saberDeCampo).toBe('Balística');
     });
 
     it('DOM: Engenheiro mostra um select "Bônus à escolha" com só Força/Destreza', () => {

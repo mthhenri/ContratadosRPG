@@ -1,27 +1,28 @@
 <div class="loja">
   <section class="loja__catalogo">
+    <div class="loja__busca">
+      <span class="loja__busca-icone" aria-hidden="true">⌕</span>
+      <input class="loja__busca-campo" type="text" [formControl]="busca" placeholder="Buscar item…" aria-label="Buscar item" />
+    </div>
+
     <nav class="loja__categorias" role="tablist" aria-label="Categorias do catálogo">
       @for (categoria of categorias(); track categoria.categoria) {
         <button
           class="loja__categoria"
           type="button"
           role="tab"
-          [class.loja__categoria--ativa]="categoriaAtiva() === categoria.categoria"
-          [attr.aria-selected]="categoriaAtiva() === categoria.categoria"
+          [class.loja__categoria--ativa]="!busca.value && categoriaAtiva() === categoria.categoria"
+          [attr.aria-selected]="!busca.value && categoriaAtiva() === categoria.categoria"
+          [disabled]="!!busca.value"
           (click)="selecionarCategoria(categoria.categoria)"
         >
-          <span aria-hidden="true">{{ categoria.icone }}</span> {{ categoria.rotulo }}
+          <app-icone [nome]="iconesCategoria[categoria.categoria]" /> {{ categoria.rotulo }}
         </button>
       }
     </nav>
 
-    <div class="loja__busca">
-      <span class="loja__busca-icone" aria-hidden="true">⌕</span>
-      <input class="loja__busca-campo" type="text" [formControl]="busca" placeholder="Buscar item…" aria-label="Buscar item" />
-    </div>
-
     <ul class="loja__grade" appOverflowFade>
-      @for (cartao of cartoesCatalogo(); track cartao.item.nome) {
+      @for (cartao of cartoesCatalogo(); track cartao.categoria + '/' + cartao.item.nome) {
         <li class="loja__item">
           <div class="loja__item-corpo">
             <span class="loja__item-nome">{{ cartao.item.nome }}</span>
@@ -33,7 +34,7 @@
               <span>{{ cartao.pesoTexto }}</span>
             </div>
           </div>
-          <button class="loja__item-add" type="button" [attr.aria-label]="'Adicionar ' + cartao.item.nome + ' ao kit'" (click)="adicionar(cartao.item)">＋</button>
+          <button class="loja__item-add" type="button" [attr.aria-label]="'Adicionar ' + cartao.item.nome + ' ao kit'" (click)="adicionar(cartao.item, cartao.categoria)">＋</button>
         </li>
       } @empty {
         <li class="loja__vazio">Nenhum item encontrado.</li>

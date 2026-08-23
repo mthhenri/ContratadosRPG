@@ -51,7 +51,7 @@
   &__secao > div { display: grid; gap: 2px; span { font: 600 8px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--text-mute); } h2 { margin: 0; font: 700 13px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); } }
   &__secao-regua { flex: 1; height: 1px; background: var(--border-strong); }
   &__corpo { min-height: 440px; padding: 22px; }
-  &__introducao { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); p { margin: 6px 0 0; max-width: 620px; font: 13px/1.55 var(--font-sans); color: var(--text-dim); } }
+  &__introducao { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); p { margin: 6px 0 0; font: 13px/1.55 var(--font-sans); color: var(--text-dim); } }
   &__introducao-codigo { font: 600 9px var(--font-mono); letter-spacing: .14em; color: var(--accent); }
   &__campos { display: grid; gap: 18px; &--duas-colunas { grid-template-columns: repeat(2, minmax(0, 1fr)); } &--base { grid-template-columns: minmax(120px, 200px) minmax(0, 1fr); align-items: start; } }
   &__campos + .campo { margin-top: 16px; }
@@ -109,7 +109,9 @@
   &__dados-cabecalho { display: flex; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid var(--border); span { font: 700 11px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; } small { font: 10px var(--font-mono); color: var(--text-mute); } }
   &__recursos-vazio { display: grid; justify-items: center; gap: 7px; padding: 30px 16px 22px; text-align: center; color: var(--text-mute); app-icone { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 4px; font-size: 22px; color: var(--accent); background: var(--accent-dim); border: 1px solid var(--accent-border); border-radius: var(--radius-control); } strong { font: 700 11px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--text); } span { max-width: 330px; font: 11px/1.45 var(--font-sans); } }
   &__recursos--rolando { border-color: var(--accent-border); .guia__recursos-vazio app-icone { animation: sacudir-dado .12s steps(2, end) infinite; } }
-  &__rolar { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 48px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; }
+  &__recursos-acoes { display: flex; gap: 10px; }
+  &__rolar { display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex: 2; min-height: 48px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; }
+  &__ignorar-recursos { flex: 1; min-height: 48px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
   &__dados-lista { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; margin: 16px 0; > span { display: grid; place-items: center; gap: 5px; min-height: 76px; background: var(--surface); border: 1px solid var(--accent-border); border-radius: var(--radius-control); animation: revelar-dado .25s ease both; small { font: 8px var(--font-mono); color: var(--text-mute); } b { font: 700 28px var(--font-mono); color: var(--accent); } @for $indice from 2 through 4 { &:nth-child(#{$indice}) { animation-delay: ($indice - 1) * .06s; } } } }
   &__dinheiro-inicial { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-top: 1px solid var(--border); span { font: 10px var(--font-mono); text-transform: uppercase; color: var(--text-mute); } strong { font: 700 22px var(--font-mono); color: var(--positive); } }
   &__rolagem-fechada { display: flex; align-items: center; gap: 7px; margin: 0; padding-top: 10px; border-top: 1px solid var(--border); font: 9px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--positive); }
@@ -283,6 +285,8 @@
   .stepper__botao { min-height: bp.$alvo-toque; }
   .guia__vaga-escolher { min-height: bp.$alvo-toque; }
   .guia__vaga-item { min-height: bp.$alvo-toque; button { min-width: bp.$alvo-toque; min-height: bp.$alvo-toque; } }
+  .guia__recursos-acoes { flex-direction: column; }
+  .guia__rolar, .guia__ignorar-recursos { flex: none; width: 100%; min-height: bp.$alvo-toque; }
 }
 
 @keyframes girar { to { transform: rotate(360deg); } }

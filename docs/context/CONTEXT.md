@@ -1,7 +1,59 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-22 · **Última decisão registrada:** `m4-11` (task adicional do M4,
-> fora da fila `m4-05`…`m4-10`) — o acervo (`/fichas`) deixou de listar agentes e criaturas
+> **Última revisão:** 2026-08-23 · **Última decisão registrada:** `m3-75` (spec pós-milestone, pedido
+> direto do autor: "na criação de ficha de agente, fazer trim em todos os campos de texto") — todo
+> campo de texto livre do passo "Identidade" (`personalidade`, `origem.nome/.descricao/
+> .saberDeCampo`, cada `formacao[].texto/.parametro`, `especialidade.gatilho/.efeito`) só usava
+> `.trim()` para **validar** `passoValido()`, nunca para persistir; um valor como `" Firme "` chegava
+> intacto na ficha final (só `nome` e `fortificacao[].nome/.descricao` já eram trimados antes desta
+> task). Fix: `criar.page.ts` ganhou `origemTrimada()` (mapeia `FichaOrigemDto` trimando cada campo,
+> item a item no array de `formacao`), chamado só no ponto único de montagem em `criar()` —
+> nenhum `.trim()` foi movido pros setters de digitação, preservando espaço temporário enquanto o
+> usuário ainda escreve. Sem utilitário compartilhado novo (a spec pediu explicitamente para não
+> antecipar essa extração). `passoValido()` não mudou — seu próprio trim de validação (incluindo o
+> veto a espaço interno de `personalidade`) já rodava sobre uma cópia separada. Testado: 1 novo caso
+> em `criar.page.spec.ts` (string simples + item de array, confere que o estado em edição continua
+> cru e que o payload de `criarFicha()` chega trimado); suíte completa do frontend 1293/1293 (era
+> 1292, +1); lint limpo. Sem impacto visual — mudança pura de montagem de payload, nenhum
+> template/estilo tocado.
+>
+> **Duas decisões atrás:** ajuste avulso no catálogo do passo
+> "Equipamento inicial" do guia (`GuiaEquipamentoLoja`, pedido direto do autor, mesmo dia de
+> `m3-73`/`m3-74`) — as abas de categoria (Corpo a Corpo/Explosivos/Armas de Fogo/…) usavam os
+> emojis crus de `CATALOGO_CATEGORIAS` (`shared/regras/compras`), o único ponto do catálogo de
+> compras que ainda fazia isso: `ComprasPage`, `FichaInventario` e `InventarioEsquadrao` já usam
+> `app-icone` com um `ICONES_CATEGORIA` local (mesmo padrão "definido localmente pra manter o módulo
+> desacoplado" da `ficha-inventario`) — proibição #29 (emoji cru é proibido pelo tema "Terminal de
+> Contenção"). Fix: `GuiaEquipamentoLoja` ganhou o mesmo `ICONES_CATEGORIA` local + `app-icone`.
+> Aproveitado o pedido pra alinhar mais dois pontos ao mesmo análogo (`FichaInventario`): a busca de
+> item subiu pra **antes** das abas de categoria (não mais depois), e passou a cruzar **todas** as
+> categorias quando tem termo digitado — antes só filtrava dentro da aba ativa; agora, igual ao
+> catálogo do Inventário, a busca independe de categoria selecionada e as abas ficam desabilitadas
+> enquanto ela está preenchida (`cartoesCatalogo` virou `{item, categoria}[]` — `adicionar()` passou
+> a receber a categoria do próprio resultado, não mais `categoriaAtiva()`, que ficaria errada num
+> resultado de outra aba). Novo spec (`guia-equipamento-loja.component.spec.ts`, 4 casos). Verificado
+> ao vivo (Playwright) em `1920×1080`/`360×800`: ícones corretos em todas as abas, busca por
+> "Pistola" (Armas de Fogo) enquanto a aba ativa era Corpo a Corpo encontrou o item e adicionou com a
+> categoria certa.
+>
+> **Três decisões atrás:** `m3-73`/`m3-74` (dois ajustes
+> avulsos do guia de criação, mesmo dia) — `m3-73` corrigiu o seletor de habilidades do passo
+> "Habilidades": a aba ativa (Gerais/Classe/Subclasse/Arquétipo) voltava sozinha pro primeiro grupo
+> a cada "+" clicado, porque `abaAtiva`/`subgrupoAtivo` eram `linkedSignal`s na forma básica,
+> sensíveis à *referência* de `grupos` (recriada a cada `adicionarMelhoria`), não só ao conteúdo.
+> Fix: forma avançada `linkedSignal({source, computation})` com `source` = chave estável dos
+> ids/chaves de grupo, preservando a aba/subgrupo corrente enquanto ainda existir no `grupos()`
+> atual — reset só quando o conjunto muda de fato (troca de vaga/classe/arquétipo). `m3-74` deu ao
+> passo "Recursos" um botão **"Não rolar dinheiro inicial"** ao lado de "Rolar dados"
+> (`ignorarRecursos()`, `criar.page.ts`) — grava `{dados:[],inicial:0,rolado:true}`, mesma trava de
+> escolha única da rolagem normal, ficha final com $0 (mais `bonusMonetario()` de Prestígio, se
+> houver). O kit de "Equipamento inicial" já era opcional (`m3-59`); só faltava esse caminho pro
+> dinheiro. Verificado ao vivo (Playwright): guia completo Base→Revisão→Criar ficha ignorando o
+> dinheiro em `1920×1080`/`360×800`, e a aba do seletor permanecendo em Arquétipo por duas adições
+> seguidas. Ver `HISTORY.md` para o detalhe de causa raiz dos dois.
+>
+> **Quatro decisões atrás:** `m4-11` (task adicional do M4, fora da fila `m4-05`…`m4-10`) — o acervo
+> (`/fichas`) deixou de listar agentes e criaturas
 > misturados. A tela agora separa por tipo em blocos (`AGENTES`/`CRIATURAS`, NPC estruturalmente
 > pronto e desligado até `m4-07`/`m4-08`), com um `<select>` de visão (Todos/Agentes/Criaturas) —
 > em "Todos" cada bloco trava em ~2 linhas de card com scroll interno e fade (`appOverflowFade`);
@@ -23,7 +75,7 @@
 > funciona — atribuir um agente emite normalmente); e o fluxo completo funciona ponta a ponta
 > (criar solta pela UI → aparece com chip "Sem campanha" → abre em `/fichas/criatura/:id`).
 >
-> **Duas decisões atrás:** correção pós-`m7-17` — a ficha
+> **Cinco decisões atrás:** correção pós-`m7-17` — a ficha
 > flutuante do Encontro (`FichaFlutuanteConteudo`) ajusta Vida/Energia/Condições da ficha pela
 > `FichaEdicaoService` genérica (`FichaService.alterarVitalidade`/`alterarFicha`), que só emite
 > `ficha:alterada` na sala `ficha:<id>` — sala que o painel de Iniciativa nunca ouve (só escuta
@@ -41,7 +93,7 @@
 > `GatewayModule` ↔ `EncontroModule` (mesmo padrão já usado com `FichaModule`/`CampanhaModule`);
 > `FichaModule` continua sem saber que `encontro` existe. Ver "Tempo real" (seção 4).
 >
-> **Três decisões atrás:** `m7-17` (retoque no mesmo dia) — o dialog "Receber dano" ganhou uma grade
+> **Seis decisões atrás:** `m7-17` (retoque no mesmo dia) — o dialog "Receber dano" ganhou uma grade
 > com cabeçalho único (Dano/Ficha/Custom) em vez de rótulo por campo em cada uma das cinco linhas,
 > e o mobile deixou de empilhar cada célula (o que alongava o dialog e quebrava a leitura
 > coluna↔coluna) — continua tabela, só mais estreita. O cartão da Iniciativa passou a mostrar a
@@ -54,7 +106,7 @@
 > definida — o número era aplicado no cálculo (silenciosamente correto) mas nunca exibido; corrigido
 > e coberto por teste de regressão.
 >
-> **Quatro decisões atrás:** `m7-16` — na tela de Iniciativa, um agente (`JOGADOR`) de ficha **não
+> **Sete decisões atrás:** `m7-16` — na tela de Iniciativa, um agente (`JOGADOR`) de ficha **não
 > oculta** (m3-65) mostra avatar/dono/classe-arquétipo pra qualquer membro, mesmo sem
 > `usuario_ficha_acesso` (só os números continuam atrás da concessão; nível fica de fora — a
 > carteirinha identifica, não avalia a força — e sem ela não desenha "Vida —"); mais 4 ajustes de UI
@@ -297,9 +349,6 @@ só adaptou o visual de desktop).
 | Spec | Frente | O que é |
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m3-73` | guia | bug: selecionar habilidade de Arquétipo reseta a aba pra Classe (`linkedSignal`) |
-| `m3-74` | guia | opção de ignorar a rolagem de dinheiro inicial (kit de equipamento já é opcional) |
-| `m3-75` | guia | trim em todos os campos de texto livre antes de persistir a ficha |
 | `m3-76` | inventário | mod custom ganha campo de peso próprio (regra já prevê exceção ao padrão 0,2) |
 | `m3-77` | ficha/tempo real | ficha aberta reage por socket a rolagem feita em outro caminho (histórico + bandeja) |
 | `m3-78` | guia | fortificação de personalidade ganha campo de custo em Energia; guia explica papel do Mestre |
@@ -308,9 +357,10 @@ só adaptou o visual de desktop).
 | `m7-19` | encontro | mestre pode sobrescrever a expressão de dados de Iniciativa por combatente/encontro |
 | `m7-20` | encontro | regressão: botão "abrir ficha" voltou a aparecer na grade compacta do jogador no desktop |
 
-`m3-53` é a única frente de M3 ainda sem spec `done/` vinda da fila original; `m3-73`…`m3-78` são
-ajustes avulsos (pedido direto do autor, 2026-08-22), sem tocar código ainda — specs registradas,
-não implementadas. `m7-18`…`m7-20` são o mesmo tipo de ajuste avulso, pós-M7 (já concluído).
+`m3-53` é a única frente de M3 ainda sem spec `done/` vinda da fila original; `m3-73`…`m3-78` eram
+ajustes avulsos (pedido direto do autor, 2026-08-22) — `m3-73`, `m3-74` e `m3-75` já **concluídos**
+(specs em `docs/specs/done/`, ver bloco no topo do arquivo); `m3-76`…`m3-78` seguem registrados, não
+implementados. `m7-18`…`m7-20` são o mesmo tipo de ajuste avulso, pós-M7 (já concluído).
 Milestone ainda não aberto: `m5-guia-missao`.
 
 ---
@@ -774,16 +824,23 @@ de entrada + médias de Nível/Prestígio pré-calculadas da campanha, `calcular
 de cálculo e sobrescrita exata; sem campanha, valores exatos informados diretamente)
 · **04 Atributos** (orçamento de 4 pontos de criação,
 `calcularOrcamentoAtributos`/`validarDistribuicaoAtributos`) · **05 Identidade** (Personalidade +
-Origem com catálogo de Formações e `Outra`, imutáveis para o dono após a criação) · **06
+Origem com catálogo de Formações e `Outra`, imutáveis para o dono após a criação; desde `m3-75`,
+`criar()` trima as pontas de todo campo de texto livre — `personalidade`, `origem.nome/.descricao/
+.saberDeCampo`, cada `formacao[].texto/.parametro` e `especialidade.gatilho/.efeito` — só na
+montagem persistida, nunca durante a digitação) · **06
 Habilidades** (sempre presente: pacote inicial obrigatório de 4 Gerais, 2 Gerais + 1 de
 Classe/Arquétipo ou 2 de Classe/Arquétipo; Civil escolhe 3 Civis; compõe ainda as vagas de
 `calcularProgressaoAcumulada`, sem duplicatas — Experimento não ganha vaga extra, escolhe
 Peculiaridade pelo mesmo pacote de qualquer outra classe; Fortificações de
 Personalidade nos níveis 7/14) · **07 Recursos** (rolagem única e definitiva de `1000 + 4D4×250` +
-Bônus Monetário) · **08 Equipamento inicial** (kit da loja, orçamento **à parte** do dinheiro —
+Bônus Monetário — ou, desde `m3-74`, ignorar a rolagem por um botão dedicado ao lado de "Rolar
+dados": ficha final com `$0` de dinheiro base, mesma trava de escolha única, sem gerar entrada de
+rolagem) · **08 Equipamento inicial** (kit da loja, orçamento **à parte** do dinheiro —
 nunca descontado —, teto $2500/peso 5 do documento — mesma regra para toda classe, inclusive Civil
 —, sem modificação; componente próprio `GuiaEquipamentoLoja`, catálogo + carrinho sobre
-`CATALOGO_ITENS`/`calcularTotaisCarrinho` de `shared/regras/compras`; pulável, kit vazio é válido) ·
+`CATALOGO_ITENS`/`calcularTotaisCarrinho` de `shared/regras/compras`; pulável, kit vazio é válido;
+abas de categoria com `app-icone`/`ICONES_CATEGORIA` local — mesmo padrão de `FichaInventario` —,
+busca acima das abas e cruzando todas as categorias, não só a ativa) ·
 **09 Revisão** (resumo completo + `POST /ficha`, erro do backend não perde o estado do guia). Os
 passos 04/06/08 têm **trava dura** por padrão (não avança com saldo/vaga/orçamento em aberto) com
 um "modo livre" que ignora as travas (sempre disponível ao mestre) — regra só do guia, client-side;

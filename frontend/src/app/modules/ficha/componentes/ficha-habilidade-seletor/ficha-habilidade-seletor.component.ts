@@ -1,4 +1,4 @@
-import { Component, computed, input, linkedSignal, output, signal } from '@angular/core';
+import { Component, computed, input, linkedSignal, output, signal, untracked } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 import { ArquetipoEnum, ClasseEnum, HabilidadeCategoriaEnum } from '@contratados-rpg/shared/enums';
@@ -58,19 +58,50 @@ export class FichaHabilidadeSeletor {
   /** Fecha o seletor. */
   readonly fechar = output<void>();
 
-  /** Aba (grupo) ativa — re-deriva para a primeira aba disponível, gravável no clique. */
-  protected readonly abaAtiva = linkedSignal<GrupoHabilidades['id']>(
-    () => this.grupos()[0]?.id ?? 'gerais',
-  );
+  /**
+   * Identidade semântica de `grupos()` — os ids das abas disponíveis, na ordem em que vêm. Uma
+   * seleção/remoção de habilidade recria o array de `grupos` (nova referência, mesmo conteúdo); só
+   * uma troca real de vaga/classe/arquétipo muda essa chave. `abaAtiva`/`subgrupoAtivo` reagem a ela
+   * em vez do array em si, para não resetar a cada adição (bug reportado — a aba voltava sozinha
+   * para Classe ao adicionar duas habilidades seguidas de Arquétipo).
+   */
+  private readonly gruposChave = computed(() => this.grupos().map((grupo) => grupo.id).join('|'));
+
+  /** Aba (grupo) ativa — preserva a corrente enquanto ela existir no `grupos` atual; senão, primeira. */
+  protected readonly abaAtiva = linkedSignal<string, GrupoHabilidades['id']>({
+    source: this.gruposChave,
+    computation: (_chave, previous) => {
+      const grupos = untracked(() => this.grupos());
+      if (previous && grupos.some((grupo) => grupo.id === previous.value)) {
+        return previous.value;
+      }
+      return grupos[0]?.id ?? 'gerais';
+    },
+  });
+
+  /** Chave estável dos subgrupos da aba ativa — mesmo raciocínio de `gruposChave`, por aba. */
+  private readonly subgruposChave = computed(() => {
+    const subgrupos = this.grupos().find((grupo) => grupo.id === this.abaAtiva())?.subgrupos ?? [];
+    return subgrupos.map((subgrupo) => String(subgrupo.chave)).join('|');
+  });
 
   /**
-   * Chave do subgrupo ativo (sub-filtro inline). Re-deriva para o subgrupo da ficha (ou o primeiro)
-   * sempre que a aba muda; permanece gravável quando o usuário escolhe outro chip.
+   * Chave do subgrupo ativo (sub-filtro inline). Preserva o corrente enquanto ele existir no
+   * subgrupo da aba ativa; re-deriva para o subgrupo da ficha (ou o primeiro) quando a aba muda de
+   * verdade (subgrupos diferentes) — nunca só por uma adição/remoção de habilidade.
    */
-  protected readonly subgrupoAtivo = linkedSignal<ClasseEnum | ArquetipoEnum | null>(() => {
-    const subgrupos = this.grupos().find((grupo) => grupo.id === this.abaAtiva())?.subgrupos ?? [];
-    const alvo = subgrupos.find((subgrupo) => subgrupo.ehDaFicha) ?? subgrupos[0];
-    return alvo ? alvo.chave : null;
+  protected readonly subgrupoAtivo = linkedSignal<string, ClasseEnum | ArquetipoEnum | null>({
+    source: this.subgruposChave,
+    computation: (_chave, previous) => {
+      const subgrupos = untracked(
+        () => this.grupos().find((grupo) => grupo.id === this.abaAtiva())?.subgrupos ?? [],
+      );
+      if (previous && subgrupos.some((subgrupo) => subgrupo.chave === previous.value)) {
+        return previous.value;
+      }
+      const alvo = subgrupos.find((subgrupo) => subgrupo.ehDaFicha) ?? subgrupos[0];
+      return alvo ? alvo.chave : null;
+    },
   });
 
   /** Texto de busca (filtra por nome no escopo ativo). */

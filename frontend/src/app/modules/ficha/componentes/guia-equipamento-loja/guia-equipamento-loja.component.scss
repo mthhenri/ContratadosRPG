@@ -18,11 +18,14 @@
 
 .loja__categorias { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
 .loja__categoria {
+  display: inline-flex; align-items: center; gap: 6px;
   font: 600 10px var(--font-mono); text-transform: uppercase; letter-spacing: .04em;
   color: var(--text-dim); background: var(--surface-2); border: 1px solid var(--border-strong);
   border-radius: var(--radius-control); padding: 7px 10px; cursor: pointer; transition: .15s ease;
-  &:hover { color: var(--text); border-color: var(--accent-border); }
+  app-icone { font-size: 12px; }
+  &:hover:not(:disabled) { color: var(--text); border-color: var(--accent-border); }
   &--ativa { color: var(--accent); background: var(--accent-dim); border-color: var(--accent); }
+  &:disabled { opacity: .4; cursor: not-allowed; }
 }
 
 .loja__busca {
