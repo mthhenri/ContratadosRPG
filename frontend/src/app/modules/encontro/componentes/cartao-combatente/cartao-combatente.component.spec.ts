@@ -44,6 +44,7 @@ describe('CartaoCombatente', () => {
     destreza: 4,
     iniciativaBonus: 0,
     dadoExtraIniciativa: 0,
+    iniciativaFormulaCustom: null,
     corFicha: '#4a9d6b',
     imagemUrl: null,
     imagemFoco: null,

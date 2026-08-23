@@ -241,6 +241,7 @@ export function montarCombatenteResumo(
     destreza: estado.destreza,
     iniciativaBonus: estado.iniciativaBonus,
     dadoExtraIniciativa: resolverDadoExtraIniciativa(linha),
+    iniciativaFormulaCustom: linha.iniciativaFormulaCustom,
     corFicha: linha.fichaId === null ? linha.corAvulso : linha.fichaCor,
     imagemUrl: linha.fichaId === null ? linha.imagemUrlAvulso : linha.fichaImagemUrl,
     imagemFoco: linha.fichaImagemFoco,

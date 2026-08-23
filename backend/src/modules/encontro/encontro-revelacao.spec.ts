@@ -50,6 +50,7 @@ describe('ocultarNaoRevelados', () => {
     destreza: 4,
     iniciativaBonus: 3,
     dadoExtraIniciativa: 0,
+    iniciativaFormulaCustom: null,
     corFicha: '#4a9d6b',
     imagemUrl: null,
     imagemFoco: null,
@@ -106,6 +107,7 @@ describe('ocultarNaoRevelados', () => {
       imagemUrl: '/uploads/criaturas/1471.webp',
       imagemFoco: { x: 40, y: 60, escala: 1.5 },
       donoNome: null,
+      iniciativaFormulaCustom: '3D6+2',
     });
     const [oculto] = ocultarNaoRevelados(
       estado([criatura]),
@@ -128,6 +130,7 @@ describe('ocultarNaoRevelados', () => {
     expect(oculto.destreza).toBe(0);
     expect(oculto.iniciativaBonus).toBe(0);
     expect(oculto.dadoExtraIniciativa).toBe(0);
+    expect(oculto.iniciativaFormulaCustom).toBeNull();
     expect(oculto.imagemUrl).toBeNull();
     expect(oculto.imagemFoco).toBeNull();
     expect(oculto.donoNome).toBeNull();

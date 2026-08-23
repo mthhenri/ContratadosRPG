@@ -31,6 +31,7 @@ interface EncontroRepositorioDublado {
   adicionarCombatente: ReturnType<typeof vi.fn>;
   removerCombatente: ReturnType<typeof vi.fn>;
   alterarIniciativa: ReturnType<typeof vi.fn>;
+  alterarFormulaIniciativa: ReturnType<typeof vi.fn>;
   alterarIdentidadeAvulso: ReturnType<typeof vi.fn>;
   listarEventos: ReturnType<typeof vi.fn>;
 }
@@ -74,6 +75,7 @@ function criarCombatenteLinha(
     vidaMaximaAvulso: 16,
     vidaAtualAvulso: 9,
     condicoes: [],
+    iniciativaFormulaCustom: null,
     fichaNome: null,
     fichaCor: null,
     fichaImagemUrl: null,
@@ -114,6 +116,7 @@ describe('EncontroService', () => {
       adicionarCombatente: vi.fn(),
       removerCombatente: vi.fn(),
       alterarIniciativa: vi.fn(),
+      alterarFormulaIniciativa: vi.fn(),
       alterarIdentidadeAvulso: vi.fn(),
       listarEventos: vi.fn().mockResolvedValue([]),
     };
@@ -415,6 +418,72 @@ describe('EncontroService', () => {
     });
   });
 
+  describe('alterarFormulaIniciativa', () => {
+    beforeEach(() => {
+      encontroRepositorio.recuperarPorId.mockResolvedValue(criarEncontroLinha());
+      encontroRepositorio.recuperarCombatentePorId.mockResolvedValue(criarCombatenteLinha());
+    });
+
+    it('mestre grava a expressão customizada de um combatente qualquer', async () => {
+      await service.alterarFormulaIniciativa({ id: 100, formula: '3D6+2' }, mestre);
+
+      expect(encontroRepositorio.alterarFormulaIniciativa).toHaveBeenCalledWith({
+        id: 100,
+        formula: '3D6+2',
+      });
+    });
+
+    it('formula null remove a customização', async () => {
+      await service.alterarFormulaIniciativa({ id: 100, formula: null }, mestre);
+
+      expect(encontroRepositorio.alterarFormulaIniciativa).toHaveBeenCalledWith({
+        id: 100,
+        formula: null,
+      });
+    });
+
+    it('texto em branco é tratado como remoção', async () => {
+      await service.alterarFormulaIniciativa({ id: 100, formula: '   ' }, mestre);
+
+      expect(encontroRepositorio.alterarFormulaIniciativa).toHaveBeenCalledWith({
+        id: 100,
+        formula: null,
+      });
+    });
+
+    it('recusa uma expressão sintaticamente inválida, sem persistir', async () => {
+      await expect(
+        service.alterarFormulaIniciativa({ id: 100, formula: '3D' }, mestre),
+      ).rejects.toThrow(BusinessException);
+      expect(encontroRepositorio.alterarFormulaIniciativa).not.toHaveBeenCalled();
+    });
+
+    it('jogador não altera a fórmula de iniciativa — nem a do próprio combatente', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      encontroRepositorio.recuperarCombatentePorId.mockResolvedValue(
+        criarCombatenteLinha({ fichaId: 20, nomeAvulso: null, vidaMaximaAvulso: null, vidaAtualAvulso: null }),
+      );
+
+      await expect(
+        service.alterarFormulaIniciativa({ id: 100, formula: '3D6+2' }, jogador),
+      ).rejects.toThrow(UnauthorizedAccessException);
+      expect(encontroRepositorio.alterarFormulaIniciativa).not.toHaveBeenCalled();
+    });
+
+    it('encontro encerrado não aceita a customização', async () => {
+      encontroRepositorio.recuperarPorId.mockResolvedValue(
+        criarEncontroLinha({ status: EncontroStatusEnum.ENCERRADO }),
+      );
+
+      await expect(
+        service.alterarFormulaIniciativa({ id: 100, formula: '3D6+2' }, mestre),
+      ).rejects.toThrow(BusinessException);
+      expect(encontroRepositorio.alterarFormulaIniciativa).not.toHaveBeenCalled();
+    });
+  });
+
   describe('rolarIniciativasFaltantes', () => {
     it('preenche só quem está sem iniciativa, sem sobrescrever o que o jogador já rolou', async () => {
       encontroRepositorio.recuperarPorId.mockResolvedValue(criarEncontroLinha());
@@ -540,6 +609,23 @@ describe('EncontroService', () => {
       // Atento (2 empilhamentos = 2 compras = +2) + Formação (1 entrada = +1) = 3.
       expect(estado.combatentes.find((combatente) => combatente.id === 1)?.dadoExtraIniciativa).toBe(3);
       expect(estado.combatentes.find((combatente) => combatente.id === 2)?.dadoExtraIniciativa).toBe(0);
+    });
+
+    it('m7-19: a expressão customizada de Iniciativa chega intacta no resumo do combatente', async () => {
+      encontroRepositorio.recuperarPorId.mockResolvedValue(criarEncontroLinha());
+      encontroRepositorio.listarCombatentes.mockResolvedValue([
+        criarCombatenteLinha({ id: 1, iniciativaFormulaCustom: '3D6+2' }),
+        criarCombatenteLinha({ id: 2 }),
+      ]);
+
+      const estado = await service.recuperarEncontro({ id: 50 }, mestre);
+
+      expect(
+        estado.combatentes.find((combatente) => combatente.id === 1)?.iniciativaFormulaCustom,
+      ).toBe('3D6+2');
+      expect(
+        estado.combatentes.find((combatente) => combatente.id === 2)?.iniciativaFormulaCustom,
+      ).toBeNull();
     });
 
     it('criatura expõe só Defesa — sem Esquiva, Bloqueio ou Contra-Ataque', async () => {

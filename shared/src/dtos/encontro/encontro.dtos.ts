@@ -130,6 +130,15 @@ export interface EncontroCombatenteResumoDto {
    * amplificador/Formação; criatura, NPC e avulso saem sempre `0`.
    */
   readonly dadoExtraIniciativa: number;
+  /**
+   * Expressão de dados que **sobrescreve** o cálculo padrão de Iniciativa deste combatente **neste
+   * encontro** (m7-19) — cobre efeito temporário de cena, condição homebrew ou ajuste pontual sem
+   * precisar de sequela/Formação permanente na ficha. `null` usa o cálculo padrão (Destreza em D6 +
+   * `dadoExtraIniciativa` + `iniciativaBonus`). Quando presente, tem prioridade **total** sobre esse
+   * cálculo — o mestre sobrescreve a fórmula inteira, não soma a ela. Mestre-only para editar;
+   * sujeita à mesma regra de `revelado` acima (zerada junto dos demais números).
+   */
+  readonly iniciativaFormulaCustom: string | null;
   /** Cor de identidade da ficha (m3-61); `null` cai no `--accent` de quem visualiza. */
   readonly corFicha: string | null;
   /**
@@ -225,6 +234,15 @@ export interface EncontroCombatenteIniciativaAtribuirDto {
 /** Saída da atribuição de iniciativa. */
 export interface EncontroCombatenteIniciativaAtribuidaDto {
   readonly combatente: EncontroCombatenteResumoDto;
+}
+
+/**
+ * Entrada da sobrescrita da expressão de dados de Iniciativa de um combatente (m7-19) —
+ * mestre-only. `formula: null` remove a customização e volta ao cálculo padrão do sistema.
+ */
+export interface EncontroCombatenteIniciativaFormulaAlterarDto {
+  readonly id: number;
+  readonly formula: string | null;
 }
 
 /** Entrada da aplicação de uma condição a um combatente. `rodadasRestantes: null` = permanente. */

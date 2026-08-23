@@ -6,6 +6,7 @@ import type {
   EncontroCombatenteCondicaoRemoverDto,
   EncontroCombatenteEnergiaAjustarDto,
   EncontroCombatenteIniciativaAtribuirDto,
+  EncontroCombatenteIniciativaFormulaAlterarDto,
   EncontroCombatenteIdentidadeAlterarDto,
   EncontroCombatenteVidaAjustarDto,
   EncontroCriadoDto,
@@ -107,6 +108,15 @@ export class EncontroController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<EncontroRecuperadoDto> {
     return this.encontroService.atribuirIniciativa({ ...dto, id }, usuarioAtivo);
+  }
+
+  @Put('encontro/combatente/:id/iniciativa/formula')
+  alterarFormulaIniciativa(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: EncontroCombatenteIniciativaFormulaAlterarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<EncontroRecuperadoDto> {
+    return this.encontroService.alterarFormulaIniciativa({ ...dto, id }, usuarioAtivo);
   }
 
   @Post('encontro/:id/iniciar')

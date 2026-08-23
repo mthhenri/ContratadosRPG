@@ -96,6 +96,7 @@ describe('SeletorCombatentes', () => {
       destreza: 0,
       iniciativaBonus: 0,
       dadoExtraIniciativa: 0,
+      iniciativaFormulaCustom: null,
     corFicha: null,
     imagemUrl: null,
     imagemFoco: null,

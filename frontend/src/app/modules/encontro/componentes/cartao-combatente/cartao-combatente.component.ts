@@ -96,6 +96,11 @@ export class CartaoCombatente {
   readonly energiaAjustada = output<number>();
   /** Iniciativa digitada à mão pelo mestre (override / jogador ausente). */
   readonly iniciativaAtribuida = output<number>();
+  /**
+   * Expressão de dados que sobrescreve o cálculo padrão de Iniciativa deste combatente neste
+   * encontro (m7-19) — `null` quando o campo foi esvaziado, removendo a customização.
+   */
+  readonly formulaIniciativaAlterada = output<string | null>();
   /** Remoção do combatente pedida pelo botão de lixeira. */
   readonly removido = output<void>();
   /** Pedido de abrir a ficha completa deste combatente (janela flutuante — quem hospeda decide). */
@@ -306,6 +311,12 @@ export class CartaoCombatente {
     if (valorBruto.trim() !== '' && Number.isFinite(valor)) {
       this.iniciativaAtribuida.emit(Math.trunc(valor));
     }
+  }
+
+  /** Repassa a fórmula digitada; texto em branco volta ao cálculo padrão (`null`). */
+  protected confirmarFormulaIniciativa(valorBruto: string): void {
+    const texto = valorBruto.trim();
+    this.formulaIniciativaAlterada.emit(texto === '' ? null : texto);
   }
 
   /** Encaminha o primeiro arquivo selecionado; validação de formato/tamanho fica na página/API. */

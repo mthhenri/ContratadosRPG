@@ -170,6 +170,21 @@
       }
     </span>
 
+    @if (emEdicao()) {
+      <label class="combatente__formula">
+        <span class="combatente__formula-rotulo">Fórmula de Iniciativa</span>
+        <input
+          class="combatente__formula-campo"
+          type="text"
+          placeholder="Padrão do sistema"
+          [attr.aria-label]="'Fórmula customizada de Iniciativa de ' + combatente().nome"
+          [appTooltip]="'Sobrescreve a expressão de dados de Iniciativa deste combatente neste encontro — em branco volta ao cálculo padrão'"
+          [value]="combatente().iniciativaFormulaCustom ?? ''"
+          (change)="confirmarFormulaIniciativa($any($event.target).value)"
+        />
+      </label>
+    }
+
     @if (revelado()) {
       <span class="combatente__recursos">
         <span class="combatente__recurso combatente__recurso--vida">

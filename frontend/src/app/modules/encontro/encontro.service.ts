@@ -8,6 +8,7 @@ import type {
   EncontroCombatenteCondicaoRemoverDto,
   EncontroCombatenteEnergiaAjustarDto,
   EncontroCombatenteIniciativaAtribuirDto,
+  EncontroCombatenteIniciativaFormulaAlterarDto,
   EncontroCombatenteVidaAjustarDto,
   EncontroCriadoDto,
   EncontroCriarDto,
@@ -114,6 +115,18 @@ export class EncontroService {
       .put<StandardResponse<EncontroRecuperadoDto>>(
         `${this.base}/combatente/${dto.id}/iniciativa`,
         { iniciativa: dto.iniciativa },
+      )
+      .pipe(map((resposta) => resposta.dados as EncontroRecuperadoDto));
+  }
+
+  /** Sobrescreve (ou remove, com `formula: null`) a expressão de dados de Iniciativa de um combatente. */
+  alterarFormulaIniciativa(
+    dto: EncontroCombatenteIniciativaFormulaAlterarDto,
+  ): Observable<EncontroRecuperadoDto> {
+    return this.httpClient
+      .put<StandardResponse<EncontroRecuperadoDto>>(
+        `${this.base}/combatente/${dto.id}/iniciativa/formula`,
+        { formula: dto.formula },
       )
       .pipe(map((resposta) => resposta.dados as EncontroRecuperadoDto));
   }

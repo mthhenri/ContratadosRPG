@@ -74,6 +74,7 @@ describe('PainelEncontro', () => {
     destreza: 3,
     iniciativaBonus: 0,
     dadoExtraIniciativa: 0,
+    iniciativaFormulaCustom: null,
     corFicha: null,
     imagemUrl: null,
     imagemFoco: null,
@@ -239,6 +240,7 @@ describe('PainelEncontro', () => {
       recuperarEncontro: vi.fn(() => of(estado)),
       rolarIniciativasFaltantes: vi.fn(() => of(estado)),
       atribuirIniciativa: vi.fn(() => of(estado)),
+      alterarFormulaIniciativa: vi.fn(() => of(estado)),
       avancarTurno: vi.fn(() => of(estado)),
       ajustarVida: vi.fn(() => of(estado)),
       adicionarCombatente: vi.fn(() => of(estado)),
@@ -246,6 +248,12 @@ describe('PainelEncontro', () => {
       alterarIdentidadeAvulso: vi.fn(() => of(estado)),
       alterarImagemAvulso: vi.fn(() => of(estado)),
       excluirImagemAvulso: vi.fn(() => of(estado)),
+    };
+    const fichaService = {
+      listarFichas: vi.fn(() =>
+        of(incluirFichaDoJogador ? [...fichas, fichaResumoDoJogador] : fichas),
+      ),
+      recuperarFicha: vi.fn(() => of(fichaDoJogador)),
     };
 
     TestBed.configureTestingModule({
@@ -275,15 +283,7 @@ describe('PainelEncontro', () => {
             registrarAvulso: vi.fn(),
           },
         },
-        {
-          provide: FichaService,
-          useValue: {
-            listarFichas: vi.fn(() =>
-              of(incluirFichaDoJogador ? [...fichas, fichaResumoDoJogador] : fichas),
-            ),
-            recuperarFicha: vi.fn(() => of(fichaDoJogador)),
-          },
-        },
+        { provide: FichaService, useValue: fichaService },
         { provide: SessaoService, useValue: { usuario: () => ({ id: usuarioId }) } },
         {
           provide: CampanhaService,
@@ -322,6 +322,7 @@ describe('PainelEncontro', () => {
     return {
       fixture,
       encontroService,
+      fichaService,
       encontroAlterado$,
       encontroIniciativaPedido$,
       rolagemRegistrada$,
@@ -551,6 +552,33 @@ describe('PainelEncontro', () => {
     expect(mapa[2]).toBeLessThanOrEqual(36);
   });
 
+  it('m7-19: `Rolar tudo` usa a expressão customizada em vez da fórmula padrão, sem somar Formação', () => {
+    const semIniciativa: EncontroRecuperadoDto = {
+      ...encontroAtivo,
+      status: EncontroStatusEnum.MONTAGEM,
+      ordemRodada: [],
+      combatentes: [
+        combatente(1, 'SCP-1471-A', {
+          iniciativa: null,
+          destreza: 4,
+          dadoExtraIniciativa: 2,
+          iniciativaBonus: 3,
+          iniciativaFormulaCustom: '1',
+        }),
+      ],
+    };
+    const { fixture, encontroService } = montar(semIniciativa);
+    interno(fixture).rolarTudo();
+
+    const [, mapa] = encontroService.rolarIniciativasFaltantes.mock.calls[0] as unknown as [
+      number,
+      Record<number, number>,
+    ];
+    // Fórmula fixa "1" — impossível pela fórmula padrão (6D6+3, mínimo 9) — prova que a
+    // sobrescrita venceu e que o dado extra de Formação não entrou na conta.
+    expect(mapa[1]).toBe(1);
+  });
+
   describe('visão do jogador (m7-06)', () => {
     const montagem: EncontroRecuperadoDto = {
       ...encontroAtivo,
@@ -673,6 +701,29 @@ describe('PainelEncontro', () => {
       // Preset "Iniciativa" = DESd6 com Destreza 4 → 4d6, entre 4 e 24.
       expect(dto.iniciativa).toBeGreaterThanOrEqual(4);
       expect(dto.iniciativa).toBeLessThanOrEqual(24);
+    });
+
+    it('m7-19: a expressão customizada do próprio combatente sobrescreve o preset da ficha', () => {
+      const comFormulaCustom: EncontroRecuperadoDto = {
+        ...montagem,
+        combatentes: [
+          montagem.combatentes[0],
+          { ...montagem.combatentes[1], iniciativaFormulaCustom: '1' },
+        ],
+      };
+      const { fixture, encontroService, fichaService } = montar(comFormulaCustom, USUARIO_JOGADOR);
+      const painel = fixture.componentInstance as unknown as { rolarMinhaIniciativa: () => void };
+      // A ficha lateral do jogador (m3-77) já busca a própria ficha ao montar a tela — a chamada
+      // que importa aqui é a que `rolarMinhaIniciativa` faria por conta própria, então a prova é
+      // "não ganhou uma chamada a mais", não "nunca foi chamada".
+      const chamadasAntes = fichaService.recuperarFicha.mock.calls.length;
+
+      painel.rolarMinhaIniciativa();
+
+      // Fórmula fixa "1" — impossível pelo preset padrão (DESd6 com Destreza 4, mínimo 4) —, prova
+      // que a sobrescrita venceu sem buscar a ficha de novo.
+      expect(fichaService.recuperarFicha.mock.calls.length).toBe(chamadasAntes);
+      expect(encontroService.atribuirIniciativa).toHaveBeenCalledWith({ id: 2, iniciativa: 1 });
     });
 
     it('o mestre nunca entra no fluxo de "rolar a própria"', () => {

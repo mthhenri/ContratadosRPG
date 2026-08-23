@@ -9,6 +9,7 @@ import type {
   EncontroCombatenteEnergiaAjustarDto,
   EncontroCombatenteVidaAjustarDto,
   EncontroCombatenteIniciativaAtribuirDto,
+  EncontroCombatenteIniciativaFormulaAlterarDto,
   EncontroCombatenteLinhaDto,
   EncontroCriarDto,
   EncontroCriadoDto,
@@ -38,6 +39,7 @@ import {
   intercalarCadencia,
   ordenarIniciativa,
 } from '@contratados-rpg/shared/regras/encontro';
+import { validarFormula } from '@contratados-rpg/shared/regras/rolagem';
 import { BusinessException, ResourceNotFoundException, UnauthorizedAccessException } from '../../core/exceptions';
 import { ARMAZENAMENTO_PROVEDOR, type ArmazenamentoProvedor } from '../../core/armazenamento';
 import { CampanhaGateway } from '../../core/gateway/campanha.gateway';
@@ -299,6 +301,32 @@ export class EncontroService {
     }
 
     await this.encontroRepositorio.alterarIniciativa({ id: dto.id, iniciativa: dto.iniciativa });
+    return this.emitirEstado(encontroEncontrado, usuarioAtivo);
+  }
+
+  /**
+   * Sobrescreve (ou remove) a expressão de dados usada para rolar a Iniciativa de um combatente
+   * **neste encontro** (m7-19) — mestre-only, cobre casos que a fórmula padrão do sistema não prevê
+   * (efeito temporário de cena, condição homebrew, ajuste pontual) sem precisar de sequela ou
+   * Formação permanente na ficha. `formula: null` remove a customização e volta ao cálculo padrão.
+   * Validada contra a mesma gramática de `shared/regras/rolagem` que os presets de rolagem da ficha
+   * já usam — não duplicada aqui.
+   */
+  async alterarFormulaIniciativa(
+    dto: EncontroCombatenteIniciativaFormulaAlterarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<EncontroRecuperadoDto> {
+    const combatenteEncontrado = await this.recuperarCombatenteObrigatorio(dto.id);
+    const encontroEncontrado = await this.recuperarEncontroObrigatorio(combatenteEncontrado.encontroId);
+    await this.validarMestre(encontroEncontrado.campanhaId, usuarioAtivo);
+    this.validarEncontroMutavel(encontroEncontrado);
+
+    const formula = dto.formula?.trim() || null;
+    if (formula !== null && !validarFormula(formula)) {
+      throw new BusinessException('Expressão de Iniciativa inválida');
+    }
+
+    await this.encontroRepositorio.alterarFormulaIniciativa({ id: dto.id, formula });
     return this.emitirEstado(encontroEncontrado, usuarioAtivo);
   }
 

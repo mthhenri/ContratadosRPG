@@ -59,6 +59,7 @@ function criarCombatenteLinha(
     vidaMaximaAvulso: 16,
     vidaAtualAvulso: 9,
     condicoes: [],
+    iniciativaFormulaCustom: null,
     fichaNome: null,
     fichaCor: null,
     fichaImagemUrl: null,

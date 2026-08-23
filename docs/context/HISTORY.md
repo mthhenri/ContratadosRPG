@@ -1,5 +1,90 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-23 — `m7-19`: mestre pode sobrescrever a expressão de dados de Iniciativa por combatente/encontro
+
+Ajuste avulso pós-M7 (`docs/specs/backlog/m7-19-editar-formula-iniciativa-mestre.spec.md`), pedido
+direto do autor: "permitir alterar a expressão da iniciativa (apenas mestre)". Fecha a fila de
+ajustes avulsos pós-M7 (`m7-18`…`m7-19`).
+
+**Objetivo.** Dar ao mestre um jeito de sobrescrever, por combatente e por encontro, a expressão de
+dados usada para rolar a Iniciativa daquele combatente — cobre casos que a fórmula padrão do sistema
+não prevê (efeito temporário de cena, condição homebrew, ajuste pontual pedido pela mesa) sem
+precisar de uma sequela ou Formação permanente na ficha.
+
+**Contrato.** Novo campo persistido `encontro_combatente.iniciativa_formula_custom VARCHAR` (migration
+`0025`, nulo por padrão — nulo usa a fórmula padrão). `EncontroCombatenteResumoDto` ganhou
+`iniciativaFormulaCustom: string | null`; o DTO interno `EncontroCombatenteLinhaDto` ganhou o mesmo
+campo cru. Novo DTO público `EncontroCombatenteIniciativaFormulaAlterarDto { id, formula: string |
+null }` (nome definido pela própria spec) e o interno espelhado `EncontroCombatenteInternoAlterar
+FormulaIniciativaDto`, seguindo o mesmo par que `EncontroCombatenteIniciativaAtribuirDto` já usa para
+o override manual do valor numérico.
+
+**Backend.** Novo endpoint `PUT encontro/combatente/:id/iniciativa/formula` →
+`EncontroService.alterarFormulaIniciativa`, mestre-only (`validarMestre`, mesmo guard dos demais
+endpoints de edição pontual do combatente — `alterarIdentidadeAvulso` como referência), recusado em
+encontro encerrado (`validarEncontroMutavel`). Ao contrário de `alterarIdentidadeAvulso` (que só
+aceita avulso), este endpoint aceita **qualquer** combatente — agente, criatura, avulso — porque a
+spec pede a customização "em qualquer combatente". `formula` vazio ou só espaço é tratado como
+remoção (`null`); uma expressão não vazia é validada com `validarFormula` (`shared/regras/rolagem`,
+a mesma gramática que os presets de rolagem da ficha já usam) **antes** de persistir — inválida
+estoura `BusinessException` (400) sem gravar nada. `EncontroRepository.alterarFormulaIniciativa` é
+um `UPDATE` de uma coluna só, mesmo padrão de `alterarIniciativa`. `encontro-revelacao.ts` zera o
+campo (`iniciativaFormulaCustom: null`) junto dos demais números de quem não tem revelação — mesma
+regra §14 que `destreza`/`iniciativaBonus`/`dadoExtraIniciativa` já seguem.
+
+**Onde a customização entra no cálculo.** A spec cita "individual e via 'Rolar tudo'" como os dois
+pontos que precisam respeitar a sobrescrita. Não existe um botão de "rolar iniciativa" avulso por
+combatente para o mestre (ele só digita o número direto, `atribuirIniciativa`) — os dois pontos que
+de fato produzem um resultado de dado são `rolarTudo()` (fallback do mestre, `painel-encontro.
+page.ts`) e `rolarMinhaIniciativa()` (o jogador rolando o próprio combatente, no mesmo arquivo,
+porque tem acesso direto ao `EncontroCombatenteResumoDto`). Os dois passaram a preferir
+`combatente.iniciativaFormulaCustom` quando presente, ignorando totalmente `destreza`/
+`dadoExtraIniciativa`/`iniciativaBonus` nesse caso — a spec é explícita que a sobrescrita substitui a
+fórmula inteira, não soma a ela ("Fora de Escopo": aplicar o dado extra de Formação dentro da
+expressão customizada). Em `rolarMinhaIniciativa()`, ter uma fórmula customizada pula por completo a
+busca da ficha (`fichaService.recuperarFicha`) — não precisa do documento pra saber Destreza/
+amplificador quando o mestre já escreveu a fórmula inteira; a cor usada na bandeja vem de
+`combatente.corFicha` em vez de `ficha.cor`. As duas rolagens (fórmula padrão ou customizada) convergem
+num helper novo, `concluirRolagemDeIniciativa` (mostra a bandeja, registra no feed, atribui o total),
+extraído do corpo antigo de `rolarMinhaIniciativa()` sem mudar seu comportamento no caminho padrão.
+
+**Frontend — ponto de entrada.** `CartaoCombatente` ganhou um campo de texto "Fórmula de Iniciativa"
+(`.combatente__formula-campo`, output `formulaIniciativaAlterada`) dentro do mesmo `emEdicao()` que já
+mostra o campo de iniciativa numérica e — só para avulso — os controles de cor/imagem; ao contrário
+daquele bloco de identidade, o campo de fórmula aparece para **qualquer** tipo de combatente. Como
+`emEdicao` já é `ehMestre() && modoEdicao() && mutavel() && ocorrencia === 1` (`painel-encontro.
+page.html`), o campo herda de graça a regra "mestre-only, sem duplicar checagem de papel no
+componente burro". Texto em branco no `change` emite `null` (remove a customização); o SCSS novo
+(`&__formula`, `&__formula-rotulo`, `&__formula-campo`) segue a mesma receita de
+`&__iniciativa-campo` (tokens do tema, `--surface-2`/`--font-mono`), só com largura livre em vez do
+selo de 36px — uma fórmula como `3D6+2` não cabe ali.
+
+**Testes.** shared 723/723 (sem mudança — só DTOs, nenhuma função nova). backend 453/453 (+7): seis
+casos novos em `encontro.service.spec.ts` (`alterarFormulaIniciativa` — mestre grava em qualquer
+combatente, `null` remove, texto em branco é tratado como remoção, expressão inválida recusada sem
+persistir, jogador recusado mesmo no próprio combatente, encontro encerrado recusa) mais um caso
+provando que `iniciativaFormulaCustom` atravessa o mapper intacto; fixtures de combatente nos três
+specs do módulo ganharam o campo. frontend 1323/1323 (+8, entre eles dois específicos desta task: o
+`Rolar tudo` do mestre usando a fórmula customizada em vez da padrão sem somar o dado extra de
+Formação, e `rolarMinhaIniciativa()` do jogador usando a fórmula do próprio combatente sem buscar a
+ficha de novo — os dois com uma fórmula constante fora do alcance de qualquer resultado possível pela
+fórmula padrão, prova determinística). Lint limpo nos três (os 2 erros de `npm run lint -w backend`
+são o `P-022` preexistente — só apareceram como falsos "tipo não resolvido" antes de `npm run build
+--workspace=shared` recompilar o `dist/` com os DTOs novos, já que `backend`/`frontend` consomem
+`@contratados-rpg/shared` pelo pacote publicado, não por `src/`). Build limpo nos três workspaces.
+
+**Verificado ao vivo** (Postgres+backend+frontend reais, dois usuários via REST + Playwright,
+`1920×1080` e `360×800`): mestre cria campanha/encontro, adiciona um avulso, entra em "Editar
+combatentes", define a fórmula `50` (constante, fora do alcance de `1D6+0` — a fórmula padrão do
+avulso, que tem Destreza 0) e roda "Rolar iniciativas" — o cartão mostra **50**, prova end-to-end de
+que a sobrescrita venceu, do clique até a coluna nova no Postgres; remover a fórmula (campo em
+branco) confirma que o input volta a ficar vazio. Em `360×800` o mesmo fluxo funciona sem overflow —
+o card compacto do modo de edição desenha o campo de fórmula abaixo do nome, texto legível, alvo de
+toque normal. Jogador: `0` ocorrências do botão "Editar combatentes" e do campo de fórmula em
+qualquer viewport — a UI nunca chega a existir para ele, não é só escondida por CSS. Backend:
+`PUT .../iniciativa/formula` com `formula: "3D"` (inválida) devolve 400 sem persistir; a mesma
+chamada feita pelo jogador devolve 403.
+
 ## 2026-08-23 — `m7-18` (correção, mesmo dia): "Rolar tudo" também soma o amplificador Atento
 
 Pedido direto do autor logo após a `m7-18`: "tem que ajustar o amplificador do Atento". A task

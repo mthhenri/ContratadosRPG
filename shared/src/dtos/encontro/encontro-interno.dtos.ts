@@ -37,6 +37,8 @@ export interface EncontroCombatenteLinhaDto {
   readonly vidaMaximaAvulso: number | null;
   readonly vidaAtualAvulso: number | null;
   readonly condicoes: readonly CondicaoCombatenteDto[];
+  /** Expressão de dados que sobrescreve o cálculo padrão de Iniciativa deste combatente (m7-19). */
+  readonly iniciativaFormulaCustom: string | null;
   readonly fichaNome: string | null;
   readonly fichaCor: string | null;
   readonly fichaImagemUrl: string | null;
@@ -104,6 +106,12 @@ export interface EncontroCombatenteIdentidadeInternoAlterarDto {
 export interface EncontroCombatenteInternoAlterarIniciativaDto {
   readonly id: number;
   readonly iniciativa: number;
+}
+
+/** Entrada interna da sobrescrita da expressão de dados de Iniciativa de um combatente (m7-19). */
+export interface EncontroCombatenteInternoAlterarFormulaIniciativaDto {
+  readonly id: number;
+  readonly formula: string | null;
 }
 
 /** Entrada interna da troca das condições de um combatente (o JSONB inteiro é reescrito). */

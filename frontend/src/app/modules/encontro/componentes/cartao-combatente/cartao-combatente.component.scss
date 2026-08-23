@@ -371,6 +371,42 @@
     @include bp.mobile { width: bp.$alvo-toque; height: bp.$alvo-toque; }
   }
 
+  // Sobrescrita de Iniciativa (m7-19) — mestre-only, só no modo de edição. Mesma receita do campo
+  // de iniciativa (`--surface-2` + `--font-mono`), mas de largura livre: uma fórmula como
+  // `3D6+2` não cabe no selo de 36px do valor numérico.
+  &__formula {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  &__formula-rotulo {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-mute);
+  }
+
+  &__formula-campo {
+    width: 100%;
+    height: 26px;
+    padding: 0 8px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    outline: none;
+
+    &::placeholder { color: var(--text-mute); }
+
+    &:focus { color: var(--accent); border-color: var(--accent-border); }
+  }
+
   // ── Recursos (Vida / Energia) ─────────────────────────────────────────────
   &__recursos {
     display: flex;

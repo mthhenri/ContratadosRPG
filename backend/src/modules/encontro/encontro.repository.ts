@@ -4,6 +4,7 @@ import type {
   EncontroCombatenteInternoAdicionarDto,
   EncontroCombatenteIdentidadeInternoAlterarDto,
   EncontroCombatenteInternoAlterarCondicoesDto,
+  EncontroCombatenteInternoAlterarFormulaIniciativaDto,
   EncontroCombatenteInternoAlterarIniciativaDto,
   EncontroCombatenteInternoAlterarVidaAvulsoDto,
   EncontroCombatenteLinhaDto,
@@ -157,6 +158,7 @@ export class EncontroRepository extends BaseRepository {
             encontro_combatente.vida_maxima_avulso AS "vidaMaximaAvulso",
             encontro_combatente.vida_atual_avulso AS "vidaAtualAvulso",
             encontro_combatente.condicoes,
+            encontro_combatente.iniciativa_formula_custom AS "iniciativaFormulaCustom",
             ficha.nome AS "fichaNome", ficha.cor AS "fichaCor",
             ficha.imagem_url AS "fichaImagemUrl", ficha.imagem_foco AS "fichaImagemFoco",
             tipo_ficha.codigo AS "tipoFicha", ficha.dados AS "fichaDados",
@@ -229,9 +231,9 @@ export class EncontroRepository extends BaseRepository {
     dto: EncontroCombatenteInternoAdicionarDto,
   ): Promise<EncontroCombatenteLinhaDto> {
     const [combatenteInserido] = await this.executarConsulta<{ id: number }>(
-      `INSERT INTO encontro_combatente (encontro_id, ficha_id, nome_avulso, iniciativa, cadencia, turnos_por_rodada, ordem, vida_maxima_avulso, vida_atual_avulso, cor_avulso, imagem_url_avulso, condicoes, created_date, updated_date, is_deleted)
+      `INSERT INTO encontro_combatente (encontro_id, ficha_id, nome_avulso, iniciativa, cadencia, turnos_por_rodada, ordem, vida_maxima_avulso, vida_atual_avulso, cor_avulso, imagem_url_avulso, condicoes, iniciativa_formula_custom, created_date, updated_date, is_deleted)
        SELECT :encontroId, :fichaId, :nomeAvulso, NULL, :cadencia, :turnosPorRodada, :ordem,
-              :vidaMaximaAvulso, :vidaAtualAvulso, :corAvulso, NULL, :condicoes::jsonb, NOW(), NOW(), false
+              :vidaMaximaAvulso, :vidaAtualAvulso, :corAvulso, NULL, :condicoes::jsonb, NULL, NOW(), NOW(), false
        RETURNING id`,
       {
         encontroId: dto.encontroId,
@@ -284,6 +286,19 @@ export class EncontroRepository extends BaseRepository {
        SET iniciativa = :iniciativa
        WHERE id = :id AND is_deleted = false`,
       { id: dto.id, iniciativa: dto.iniciativa },
+    );
+    return this.recuperarCombatentePorId({ id: dto.id }) as Promise<EncontroCombatenteLinhaDto>;
+  }
+
+  /** Grava (ou remove, com `formula: null`) a expressão customizada de Iniciativa (m7-19). */
+  async alterarFormulaIniciativa(
+    dto: EncontroCombatenteInternoAlterarFormulaIniciativaDto,
+  ): Promise<EncontroCombatenteLinhaDto> {
+    await this.executarComando(
+      `UPDATE encontro_combatente
+       SET iniciativa_formula_custom = :formula
+       WHERE id = :id AND is_deleted = false`,
+      { id: dto.id, formula: dto.formula },
     );
     return this.recuperarCombatentePorId({ id: dto.id }) as Promise<EncontroCombatenteLinhaDto>;
   }

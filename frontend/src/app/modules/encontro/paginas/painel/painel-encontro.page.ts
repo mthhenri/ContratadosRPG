@@ -34,6 +34,7 @@ import {
   TipoCampanhaMembroPapelEnum,
   TipoFichaEnum,
 } from '@contratados-rpg/shared/enums';
+import type { ResultadoRolagemDto } from '@contratados-rpg/shared/regras/rolagem';
 import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
@@ -903,10 +904,27 @@ export class PainelEncontro {
   }
 
   /**
+   * Sobrescreve (ou remove, com `formula: null`) a expressão de dados de Iniciativa de um
+   * combatente **neste encontro** (m7-19) — mestre-only, validada pelo backend.
+   */
+  protected alterarFormulaIniciativa(
+    combatente: EncontroCombatenteResumoDto,
+    formula: string | null,
+  ): void {
+    this.executarNoEncontro(
+      this.encontroService.alterarFormulaIniciativa({ id: combatente.id, formula }),
+    );
+  }
+
+  /**
    * `Rolar iniciativas` — rola `XD6 + bônus` para **cada combatente sem iniciativa**, onde `X` é a
    * Destreza efetiva mais o dado extra de Iniciativa (m7-18, `dadoExtraIniciativa` — amplificador
    * `Atento` + Formação da Origem, já somados pelo backend) e o bônus é o fixo da criatura. O
    * backend ignora quem já tem valor, então a iniciativa que um jogador rolou nunca é sobrescrita.
+   *
+   * Um combatente com `iniciativaFormulaCustom` (m7-19) usa exatamente essa expressão em vez da
+   * fórmula padrão — o mestre sobrescreveu a fórmula inteira, então o dado extra de Formação não
+   * entra na conta.
    *
    * É o **fallback do mestre** (jogador ausente), não o caminho principal — a decisão do milestone
    * continua sendo o jogador rolar a própria iniciativa pelo fluxo normal da ficha (m7-06).
@@ -921,11 +939,10 @@ export class PainelEncontro {
       if (combatente.iniciativa !== null) {
         continue;
       }
-      const dados = Math.max(1, combatente.destreza) + combatente.dadoExtraIniciativa;
-      const resultado = rolarFormula({
-        formula: `${dados}D6+${combatente.iniciativaBonus}`,
-        atributos: ATRIBUTOS_NEUTROS,
-      });
+      const formula =
+        combatente.iniciativaFormulaCustom ??
+        `${Math.max(1, combatente.destreza) + combatente.dadoExtraIniciativa}D6+${combatente.iniciativaBonus}`;
+      const resultado = rolarFormula({ formula, atributos: ATRIBUTOS_NEUTROS });
       if (resultado) {
         iniciativaPorCombatente[combatente.id] = resultado.total;
       }
@@ -1021,12 +1038,29 @@ export class PainelEncontro {
    * bônus dele são **dados**, e só o documento completo os resolve (o `Rolar tudo` do mestre, que
    * enxerga só o resumo do combatente, é fallback para jogador ausente).
    *
+   * Com `iniciativaFormulaCustom` (m7-19), o mestre sobrescreveu a fórmula inteira do combatente —
+   * ela vale mesmo aqui, sem buscar a ficha nem somar o dado extra de Formação.
+   *
    * O resultado aparece na bandeja e entra no feed da campanha como qualquer outra rolagem (m3-27),
    * antes de virar a iniciativa do combatente.
    */
   protected rolarMinhaIniciativa(): void {
     const combatente = this.meuCombatente();
     if (!combatente || combatente.fichaId === null || this.emOperacao()) {
+      return;
+    }
+    if (combatente.iniciativaFormulaCustom) {
+      const resultado = rolarFormula({
+        formula: combatente.iniciativaFormulaCustom,
+        atributos: ATRIBUTOS_NEUTROS,
+      });
+      if (resultado) {
+        this.concluirRolagemDeIniciativa(
+          combatente,
+          { rotulo: 'Iniciativa', formula: combatente.iniciativaFormulaCustom, resultado },
+          combatente.corFicha,
+        );
+      }
       return;
     }
     this.emOperacao.set(true);
@@ -1044,30 +1078,39 @@ export class PainelEncontro {
             });
             return;
           }
-          this.bandeja.mostrar({
-            rotulo: executado.rotulo,
-            formula: executado.formula,
-            resultado: executado.resultado,
-            corFicha: ficha.cor,
-            visibilidade: this.rolagemRegistro.oculta()
-              ? RolagemVisibilidadeEnum.PRIVADA
-              : RolagemVisibilidadeEnum.PUBLICA,
-          });
-          this.rolagemRegistro.inicializar(() => combatente.fichaId);
-          this.rolagemRegistro.registrar({
-            rotulo: executado.rotulo,
-            formula: executado.formula,
-            resultado: executado.resultado,
-          });
-          this.iniciativaPedida.set(false);
-          this.executarNoEncontro(
-            this.encontroService.atribuirIniciativa({
-              id: combatente.id,
-              iniciativa: executado.resultado.total,
-            }),
-          );
+          this.concluirRolagemDeIniciativa(combatente, executado, ficha.cor);
         },
       });
+  }
+
+  /** Mostra a bandeja, registra a rolagem no feed e atribui o total como iniciativa do combatente. */
+  private concluirRolagemDeIniciativa(
+    combatente: EncontroCombatenteResumoDto,
+    passo: { readonly rotulo: string; readonly formula: string; readonly resultado: ResultadoRolagemDto },
+    corFicha: string | null,
+  ): void {
+    this.bandeja.mostrar({
+      rotulo: passo.rotulo,
+      formula: passo.formula,
+      resultado: passo.resultado,
+      corFicha,
+      visibilidade: this.rolagemRegistro.oculta()
+        ? RolagemVisibilidadeEnum.PRIVADA
+        : RolagemVisibilidadeEnum.PUBLICA,
+    });
+    this.rolagemRegistro.inicializar(() => combatente.fichaId);
+    this.rolagemRegistro.registrar({
+      rotulo: passo.rotulo,
+      formula: passo.formula,
+      resultado: passo.resultado,
+    });
+    this.iniciativaPedida.set(false);
+    this.executarNoEncontro(
+      this.encontroService.atribuirIniciativa({
+        id: combatente.id,
+        iniciativa: passo.resultado.total,
+      }),
+    );
   }
 
   // ── Histórico ──────────────────────────────────────────────────────────────
