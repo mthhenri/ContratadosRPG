@@ -4,7 +4,12 @@ import type {
 } from '@contratados-rpg/shared/dtos/encontro';
 import type { FichaCriaturaDadosDto, FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 import { CombatenteOrigemEnum, TipoDanoEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
-import { calcularEnergia, calcularVida, montarResistencias } from '@contratados-rpg/shared/regras/agente';
+import {
+  ajusteDadoIniciativaAmplificadores,
+  calcularEnergia,
+  calcularVida,
+  montarResistencias,
+} from '@contratados-rpg/shared/regras/agente';
 import { somarResistenciasCriaturaPorTipo } from '@contratados-rpg/shared/regras/criatura';
 import {
   obterDadoExtraIniciativaFormacao,
@@ -124,16 +129,20 @@ function resolverResistencias(linha: EncontroCombatenteLinhaDto): Partial<Record
 }
 
 /**
- * Dado extra de Iniciativa vindo de Formação da Origem (m7-18) — só o agente tem Formação;
- * criatura/NPC/avulso saem `0`. Mesmo reaproveitamento do motor puro que `resolverResistencias`
- * já faz para a resistência a dano.
+ * Dado extra de Iniciativa: amplificador `Atento` + Formação da Origem (`PERICIA_DADO_INICIATIVA`,
+ * m7-18) — mesma soma que `dadoExtraIniciativaDaFicha` (`frontend/.../rolar-iniciativa.ts`) já faz
+ * para o caminho do jogador. Só o agente tem amplificador/Formação; criatura/NPC/avulso saem `0`.
+ * Mesmo reaproveitamento do motor puro que `resolverResistencias` já faz para a resistência a dano.
  */
 function resolverDadoExtraIniciativa(linha: EncontroCombatenteLinhaDto): number {
   if (linha.fichaId === null || linha.fichaDados === null || linha.tipoFicha !== TipoFichaEnum.JOGADOR) {
     return 0;
   }
   const dados = linha.fichaDados as FichaJogadorDadosDto;
-  return obterDadoExtraIniciativaFormacao(dados.identidade?.origem?.formacao ?? []);
+  return (
+    ajusteDadoIniciativaAmplificadores(dados.inventario?.amplificadores ?? []) +
+    obterDadoExtraIniciativaFormacao(dados.identidade?.origem?.formacao ?? [])
+  );
 }
 
 /**

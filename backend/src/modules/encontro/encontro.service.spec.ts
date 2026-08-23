@@ -504,7 +504,7 @@ describe('EncontroService', () => {
       expect(estado.combatentes[0].resistencias).toEqual({ FISICO: 15, GERAL: 3 });
     });
 
-    it('m7-18: dado extra de Iniciativa por Formação da Origem soma pro agente, 0 pra quem não tem', async () => {
+    it('m7-18: dado extra de Iniciativa soma amplificador Atento + Formação da Origem pro agente, 0 pra quem não tem', async () => {
       encontroRepositorio.recuperarPorId.mockResolvedValue(criarEncontroLinha());
       encontroRepositorio.listarCombatentes.mockResolvedValue([
         criarCombatenteLinha({
@@ -518,7 +518,7 @@ describe('EncontroService', () => {
           fichaDados: {
             estado: { vidaAtual: 20, vidaMaxima: 20, energiaAtual: 10, energiaMaxima: 10 },
             atributos: { destreza: 4 },
-            inventario: { itens: [], amplificadores: [] },
+            inventario: { itens: [], amplificadores: [{ nome: 'Atento', empilhamentos: 2 }] },
             identidade: {
               origem: {
                 formacao: [
@@ -537,7 +537,8 @@ describe('EncontroService', () => {
 
       const estado = await service.recuperarEncontro({ id: 50 }, mestre);
 
-      expect(estado.combatentes.find((combatente) => combatente.id === 1)?.dadoExtraIniciativa).toBe(1);
+      // Atento (2 empilhamentos = 2 compras = +2) + Formação (1 entrada = +1) = 3.
+      expect(estado.combatentes.find((combatente) => combatente.id === 1)?.dadoExtraIniciativa).toBe(3);
       expect(estado.combatentes.find((combatente) => combatente.id === 2)?.dadoExtraIniciativa).toBe(0);
     });
 

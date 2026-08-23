@@ -904,13 +904,12 @@ export class PainelEncontro {
 
   /**
    * `Rolar iniciativas` — rola `XD6 + bônus` para **cada combatente sem iniciativa**, onde `X` é a
-   * Destreza efetiva mais o dado extra de Formação da Origem (m7-18, `dadoExtraIniciativa`) e o
-   * bônus é o fixo da criatura. O backend ignora quem já tem valor, então a iniciativa que um
-   * jogador rolou nunca é sobrescrita.
+   * Destreza efetiva mais o dado extra de Iniciativa (m7-18, `dadoExtraIniciativa` — amplificador
+   * `Atento` + Formação da Origem, já somados pelo backend) e o bônus é o fixo da criatura. O
+   * backend ignora quem já tem valor, então a iniciativa que um jogador rolou nunca é sobrescrita.
    *
-   * É o **fallback do mestre** (jogador ausente), não o caminho principal: o amplificador `Atento`
-   * são dados extras que só o documento completo da ficha resolve — por isso a decisão do
-   * milestone é o jogador rolar a própria (m7-06).
+   * É o **fallback do mestre** (jogador ausente), não o caminho principal — a decisão do milestone
+   * continua sendo o jogador rolar a própria iniciativa pelo fluxo normal da ficha (m7-06).
    */
   protected rolarTudo(): void {
     const encontroAtual = this.encontro();

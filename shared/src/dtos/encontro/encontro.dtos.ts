@@ -123,10 +123,11 @@ export interface EncontroCombatenteResumoDto {
    */
   readonly iniciativaBonus: number;
   /**
-   * Dado extra de Iniciativa vindo de Formação da Origem (`PERICIA_DADO_INICIATIVA`,
-   * `obterDadoExtraIniciativaFormacao`) — soma à quantidade de D6 do atalho **Rolar tudo** do
-   * mestre, ao lado da Destreza. Só o agente pode ter Formação; criatura, NPC e avulso saem
-   * sempre `0`. Não inclui o amplificador `Atento`, mesma ressalva de `iniciativaBonus` acima.
+   * Dado extra de Iniciativa: amplificador `Atento` (`ajusteDadoIniciativaAmplificadores`) +
+   * Formação da Origem (`PERICIA_DADO_INICIATIVA`, `obterDadoExtraIniciativaFormacao`) — soma à
+   * quantidade de D6 do atalho **Rolar tudo** do mestre, ao lado da Destreza; mesma soma que
+   * `dadoExtraIniciativaDaFicha` já faz para o caminho do jogador. Só o agente pode ter
+   * amplificador/Formação; criatura, NPC e avulso saem sempre `0`.
    */
   readonly dadoExtraIniciativa: number;
   /** Cor de identidade da ficha (m3-61); `null` cai no `--accent` de quem visualiza. */

@@ -14,15 +14,20 @@
 > backend; `encontro-revelacao.ts` zera o campo junto de `destreza`/`iniciativaBonus` para quem não
 > tem os números liberados. `rolarTudo()` (`painel-encontro.page.ts`) passou a montar
 > `dados = Math.max(1, destreza) + dadoExtraIniciativa`; o caminho do jogador (`rolar-iniciativa.ts`)
-> não foi tocado — já estava correto. O amplificador `Atento`, que também soma dado extra mas
-> depende do documento inteiro da ficha, ficou fora de escopo por decisão explícita da spec —
-> registrado em `PROBLEMS.md` (`P-026`). Testado: shared 723/723 (sem mudança), backend 446/446
-> (+1), frontend 1321/1321 (+1); lint limpo nos três (os 2 erros de `npm run lint -w backend` são o
+> não foi tocado — já estava correto. Testado: shared 723/723 (sem mudança), backend 446/446 (+1),
+> frontend 1321/1321 (+1); lint limpo nos três (os 2 erros de `npm run lint -w backend` são o
 > `P-022` preexistente, fora do diff desta task). Verificado ao vivo (Postgres+backend+frontend
 > reais, `1920×1080`): ficha REST-seed com Destreza 1 e 2 entradas de `PERICIA_DADO_INICIATIVA`
 > confirmou `dadoExtraIniciativa: 2` via `GET /encontro/:id`; "Rolar iniciativas" pelo mestre no
 > painel real produziu iniciativa **8** — impossível sob `1D6` (teto 6), consistente com `3D6`
-> (Destreza 1 + dado extra 2), provando a correção end-to-end.
+> (Destreza 1 + dado extra 2), provando a correção end-to-end. **Correção, mesmo dia:** o
+> amplificador `Atento` (`ajusteDadoIniciativaAmplificadores`), inicialmente deixado fora de escopo
+> por depender supostamente do "documento inteiro da ficha" (registrado como `PROBLEMS.md` `P-026`),
+> na prática é função pura sobre `inventario.amplificadores` — mesmo padrão de `obterDadoExtra
+> IniciativaFormacao`. `resolverDadoExtraIniciativa` passou a somar os dois; `P-026` fechado. Testado
+> de novo (mesmos números, backend 446/446 com o caso combinado). Verificado ao vivo: ficha com **só**
+> Atento (3 empilhamentos, sem Formação) confirmou `dadoExtraIniciativa: 3` via REST; "Rolar
+> iniciativas" real produziu **12**, consistente com `4D6` (Destreza 1 + Atento 3).
 >
 > **Uma decisão atrás:** `m3-78` (ajuste avulso pós-M3, a
 > Habilidade de Personalidade ganha 3 estágios com custo em Energia) — deixou de ser um único texto

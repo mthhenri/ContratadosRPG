@@ -1,5 +1,32 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-23 — `m7-18` (correção, mesmo dia): "Rolar tudo" também soma o amplificador Atento
+
+Pedido direto do autor logo após a `m7-18`: "tem que ajustar o amplificador do Atento". A task
+original corrigiu só o dado extra de Formação da Origem no fallback do mestre e deixou o
+amplificador `Atento` (`ajusteDadoIniciativaAmplificadores`, `shared/regras/agente/amplificador`)
+registrado como dívida separada (`PROBLEMS.md` `P-026`) — a spec especulava que ele "depende de
+estado de aplicação que hoje só é lido no contexto completo da ficha", mas na prática é uma função
+pura sobre `inventario.amplificadores`, exatamente como `obterDadoExtraIniciativaFormacao` é sobre
+`identidade.origem.formacao` — ambos já vinham carregados junto com a ficha no mapper do encontro.
+
+`resolverDadoExtraIniciativa` (`encontro-combatente.mapper.ts`) passou a somar
+`ajusteDadoIniciativaAmplificadores(dados.inventario?.amplificadores ?? [])` ao dado de Formação —
+mesma combinação que `dadoExtraIniciativaDaFicha` (`frontend/.../rolar-iniciativa.ts`) já fazia
+para o caminho do jogador, agora espelhada no fallback do mestre. Nenhum campo novo no DTO — o
+`dadoExtraIniciativa` de `m7-18` passou a carregar a soma completa. `P-026` fechado (saiu de
+`PROBLEMS.md`, foi para "Resolvidos").
+
+Testado: shared 723/723 (sem mudança), backend 446/446 (o teste de `m7-18` foi estendido para
+combinar Atento + Formação: 2 empilhamentos de Atento + 1 entrada de Formação = `dadoExtraIniciativa:
+3`), frontend 1321/1321 (sem teste novo — só comentários atualizados, nenhum quebrou); build e lint
+limpos nos três (mesmos 2 erros preexistentes do `P-022`, fora do diff). Verificado ao vivo
+(Postgres+backend+frontend reais, `1920×1080`): ficha REST-seed com Destreza 1, **só** o
+amplificador Atento em 3 empilhamentos (sem Formação de Iniciativa) confirmou
+`dadoExtraIniciativa: 3` via `GET /encontro/:id`; "Rolar iniciativas" pelo mestre no painel real
+produziu iniciativa **12** — consistente com `4D6` (Destreza 1 + Atento 3), impossível sob o
+`1D6` antigo.
+
 ## 2026-08-23 — `m7-18`: "Rolar tudo" do mestre passa a somar o dado extra de Formação da Origem
 
 Ajuste avulso pós-M7 (`docs/specs/backlog/m7-18-iniciativa-bonus-formacao-fallback-mestre.spec.md`),
