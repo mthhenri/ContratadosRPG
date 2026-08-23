@@ -252,17 +252,26 @@ export class CampanhaGateway implements OnGatewayConnection {
   }
 
   /**
-   * Emite `rolagem:registrada` na sala `campanha:<id>` (m3-27). Chamado por
-   * `RolagemService.registrarRolagem` após a rolagem ser persistida. **Só rolagens `PUBLICA`
-   * chegam aqui** — o `emit()` é único pra sala inteira, sem emissão direcionada por permissão
-   * (§9); broadcastar uma `PRIVADA` vazaria o conteúdo a quem não deveria vê-la. O autor/mestre de
-   * uma rolagem privada a recebe via REST no próximo carregamento do feed (decisão de design v1).
+   * Emite `rolagem:registrada` (m3-27). Chamado por `RolagemService.registrarRolagem` após a
+   * rolagem ser persistida. **Só rolagens `PUBLICA` chegam aqui** — o `emit()` é único pra sala
+   * inteira, sem emissão direcionada por permissão (§9); broadcastar uma `PRIVADA` vazaria o
+   * conteúdo a quem não deveria vê-la. O autor/mestre de uma rolagem privada a recebe via REST no
+   * próximo carregamento do feed (decisão de design v1).
    *
-   * **Ficha solta (m3-28)**: `campanhaId === null` não tem sala — no-op, mesmo tratamento de
-   * `emitirFichaCriada`.
+   * **Duas salas, mutuamente exclusivas (m3-77)**: com campanha, emite só em `campanha:<id>` (como
+   * sempre) — quem tem a ficha aberta por lá entra também nessa sala (`entrarSalaCampanha`,
+   * `visualizar.page.ts`/`visualizar-criatura.page.ts`), então emitir de novo em `ficha:<id>`
+   * entregaria o mesmo evento duas vezes a quem está nas duas salas ao mesmo tempo (ex.:
+   * `campanha/detalhe`, que já assina ambas por ficha visível). **Ficha solta (m3-28)**:
+   * `campanhaId === null` não tem sala de campanha — a ficha aberta em `/fichas/:id` só está em
+   * `ficha:<id>` (`entrarSalaFicha`, sempre ingressada), então é essa sala que recebe o evento;
+   * sem `fichaId` (rolagem de combatente avulso), não há sala nenhuma — no-op.
    */
   emitirRolagemRegistrada(rolagem: RolagemResumoDto): void {
     if (rolagem.campanhaId === null) {
+      if (rolagem.fichaId !== null) {
+        this.servidor.to(this.salaFicha(rolagem.fichaId)).emit('rolagem:registrada', rolagem);
+      }
       return;
     }
     this.servidor.to(this.salaCampanha(rolagem.campanhaId)).emit('rolagem:registrada', rolagem);

@@ -1,5 +1,67 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-23 — m3-77: ficha aberta reage por socket a rolagem feita em outro caminho
+
+Spec `docs/specs/backlog/m3-77-tempo-real-rolagem-ficha-aberta.spec.md` (pedido direto do autor):
+quem está com a tela de visualização de uma ficha aberta deve ver, em tempo real, uma rolagem feita
+por **qualquer outro caminho** — outra aba do mesmo dono, o mestre rolando pela ficha, o Encontro —
+tanto no histórico da barra lateral quanto na `BandejaDados`. O levantamento da spec confirmou que
+isso não acontecia em lugar nenhum: nem `visualizar.page.ts` nem `visualizar-criatura.page.ts`
+assinavam `TempoRealService.rolagemRegistrada$`, e o gateway só emitia `rolagem:registrada` na sala
+`campanha:<id>` — uma ficha solta (`campanhaId === null`, m3-28) não tinha sala nenhuma pra receber o
+evento.
+
+**Backend** (`CampanhaGateway.emitirRolagemRegistrada`) — duas salas **mutuamente exclusivas**, não
+cumulativas: com campanha, emite só em `campanha:<id>` (como sempre); sem campanha, emite em
+`ficha:<id>` (a única sala que uma ficha solta tem). A alternativa óbvia — emitir sempre nas duas —
+foi descartada porque `campanha/detalhe` (`sincronizarSalasFicha`) já ingressa o mesmo socket em
+`campanha:<id>` **e** em `ficha:<id>` de cada ficha visível simultaneamente; emitir em ambas
+entregaria o mesmo evento duas vezes a esse socket. Coberto por 3 casos novos em
+`campanha.gateway.spec.ts` (campanha emite só lá, ficha solta emite só em `ficha:<id>`, rolagem sem
+ficha nem campanha não emite em lugar nenhum).
+
+**Frontend** — `visualizar.page.ts`/`visualizar-criatura.page.ts` passaram a: (1) entrar também em
+`campanha:<id>` quando a ficha pertence a uma (reaproveitando `entrarSalaCampanha`, já usado por
+`campanha/detalhe`) — a sala `ficha:<id>` de sempre já cobre o caso solto; (2) assinar
+`rolagemRegistrada$` filtrando por `fichaId`; (3) num evento remoto, prepend no histórico (reusa
+`onRolagemRegistrada`, mesmo dedupe pelo topo do array já usado pelo caminho local) e chamar
+`BandejaDadosService.mostrar()`.
+
+**Bug pego só na verificação ao vivo com clique real (não pelos testes unitários nem pelo REST
+isolado)**: a dedução óbvia — "só abre a bandeja se a rolagem ainda não está no histórico local" —
+reproduziu **2 cartas na bandeja** pra quem acabou de rolar, ao clicar de verdade em "Rolar
+Iniciativa" contra o stack real. Causa: o eco do broadcast (via socket, já conectado) pode chegar
+**antes** da resposta HTTP do próprio POST que disparou a rolagem — nesse instante o histórico local
+ainda não tem o `id` real (só existe depois do REST resolver), então a checagem "já conhecida" falha
+e a bandeja abre pelo caminho remoto, além da abertura instantânea e síncrona que
+`FichaVisualizacao`/`CriaturaVisualizacao` já fazem no clique (antes mesmo do REST terminar). Um
+teste isolado via REST (POST direto, sem clique real na UI) não pega esse timing — só apareceu ao
+clicar de verdade e aguardar o ciclo completo. Fix: `FichaRolagemRegistroService` ganhou dois
+`Subject`s novos, `enviando$` (emitido **antes** do REST, no início de `registrar()`) e `finalizada$`
+(via `finalize()`, sucesso ou erro) — as páginas contam rolagens "em voo" (`rolagensLocaisEmVoo`) e o
+handler do evento remoto trata qualquer chegada enquanto o contador > 0 como "provavelmente minha",
+pulando a bandeja (o histórico já é resolvido pelo dedupe de sempre, id-based, em qualquer ordem).
+Não depende de correlacionar por `id` (impossível antes do REST resolver) nem de authorship
+(`usuarioId`, que quebraria o caso "mesmo dono, outra aba" — ali o `usuarioId` bate mas a bandeja
+**deve** abrir na aba que só observa).
+
+Testado: backend 445/445 (+3 novos em `campanha.gateway.spec.ts`); frontend 1306/1306 (era 1297; +9,
+cobrindo entrada/saída de sala, prepend+bandeja remotos, filtro por ficha e o próprio caso de dedupe
+via chamada direta aos handlers). Lint limpo nos dois workspaces.
+
+Verificação ao vivo (skill `verify`, dois usuários reais + REST, `1920×1080` e `360×800`): usuários e
+campanha criados via REST, `dados` de ficha/criatura clonados de fichas reais existentes no banco de
+dev (`ficha1`/`ficha40011`) pra passar a validação de domínio sem reconstruir manualmente um payload
+válido. Seis cenários confirmados contra o stack real (Postgres + backend + frontend, Playwright): (1)
+ficha de agente em campanha, mestre rola por REST enquanto o dono observa — histórico e bandeja
+atualizam sem F5 (`window.__sentinela` sobreviveu); (2) clique real em "Rolar Iniciativa" na própria
+tela — exatamente 1 carta na bandeja e 1 item no histórico, sem duplicidade (o bug acima, corrigido);
+(3) ficha de criatura, mesmo padrão; (4) ficha solta (`/fichas/:id`, sem campanha, mobile 360×800) —
+o fallback pela sala `ficha:<id>` funciona; (5) rolagem `PRIVADA` de outro usuário não chega a um
+terceiro membro sem acesso (a regra de visibilidade §14 do backend, intocada, continua valendo); (6)
+duas abas reais do mesmo dono simultaneamente abertas na mesma ficha — a aba que só observa recebe a
+rolagem feita de verdade na outra aba, que por sua vez não duplica a própria bandeja.
+
 ## 2026-08-23 — m3-76: mod custom ganha peso próprio (exceção ao padrão de 0,2)
 
 Spec `docs/specs/backlog/m3-76-mod-custom-peso.spec.md`: a regra ("Cada modificação acrescenta +0,2

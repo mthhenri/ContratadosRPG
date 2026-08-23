@@ -1,29 +1,43 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-23 · **Última decisão registrada:** `m3-76` (mod custom ganha peso
-> próprio, exceção ao padrão de +0,2 do sistema — `docs/core/sistema-v4.1.0.md:958`) —
-> `ModificacaoAplicadaDto`/`ModificacaoItemDto` (`shared/regras/compras`) ganharam `pesoCustom?:
-> number`; `obterPesoModificacao` devolve esse valor quando a mod não tem correspondência no catálogo
-> (uma mod real do catálogo sempre ignora o campo). Frontend: `ficha-inventario` ganhou o campo "Peso
-> da modificação (opcional)" no form de mod custom, gravado só quando `!== null` (`0` é um valor
-> declarado, não "ausente"). **Bug pego só na verificação ao vivo**: depois do motor e dos testes
-> unitários passarem, o autor testou peso zero manualmente e reportou não funcionar — reproduzindo via
-> Playwright contra o stack real, o total geral do inventário já refletia `pesoCustom` certo, mas o
-> peso **exibido no próprio card do item** não: `montarItemInventario` tinha uma terceira chamada a
-> `obterPesoModificacao` (pro badge do card) que nunca recebeu `pesoCustom`, caindo sempre no padrão de
-> 0,2. Nenhum teste unitário cobria essa função específica. Corrigido (repassar `pesoCustom` nessa
-> chamada) e coberto por um novo teste de regressão que lê `.ficha-inv__peso` do DOM — esse tipo de
-> bug (motor certo, view-model duplicado no componente errado) só a verificação ao vivo pega; testes
-> unitários anteriores cobriam o payload emitido e o total do motor, não o texto renderizado no card
-> (ver `[[verificacao-visual-pega-bug-silencioso-de-exibicao]]` na memória do agente). Também ajustado,
-> a pedido do autor ao testar ao vivo: layout do form de mod custom — nome/limite/peso numa linha só
-> no desktop (antes o nome forçava linha cheia, empurrando os outros dois pra uma segunda linha);
-> mobile continua empilhado. Verificado ao vivo (`1920×1080`/`360×800`, ficha de teste via REST +
-> Playwright): card mostra peso correto (2 slots, não 2,2) com mod de peso zero aplicada; layout junta
-> os três campos no desktop e empilha no mobile. Testado: shared 163/163, frontend 1297/1297 (era
-> 1293, +4); lint limpo.
+> **Última revisão:** 2026-08-23 · **Última decisão registrada:** `m3-77` (ficha aberta reage por
+> socket a rolagem feita em outro caminho — histórico + `BandejaDados`) — quem está com
+> `visualizar.page.ts`/`visualizar-criatura.page.ts` aberta passa a ver, sem F5, uma rolagem
+> `PUBLICA` feita por outra aba do dono, pelo mestre ou pelo Encontro. Backend:
+> `CampanhaGateway.emitirRolagemRegistrada` ganhou duas salas **mutuamente exclusivas** — com
+> campanha, só `campanha:<id>` (como sempre); ficha solta (m3-28, sem campanha), só `ficha:<id>`, a
+> única sala que ela tem (antes era no-op). Emitir nas duas ao mesmo tempo duplicaria o evento pra
+> quem está nas duas salas simultaneamente (`campanha/detalhe`, que já ingressa o mesmo socket nas
+> duas por ficha visível). Frontend: as duas páginas entram também em `campanha:<id>` quando a ficha
+> pertence a uma (reaproveita `entrarSalaCampanha`) e assinam `rolagemRegistrada$` filtrado por
+> `fichaId`. **Bug pego só ao clicar de verdade contra o stack real, não pelos testes nem por um POST
+> isolado via REST**: a bandeja abria **duas vezes** pra quem acabou de rolar — o eco do broadcast
+> podia chegar **antes** da resposta HTTP do próprio POST, quando o histórico local ainda não tinha o
+> `id` real pra deduplicar. Fix: `FichaRolagemRegistroService` ganhou `enviando$`/`finalizada$`
+> (antes/depois do REST); as páginas contam rolagens "em voo" por ficha e o handler remoto pula a
+> bandeja enquanto o contador > 0 (não dá pra usar `usuarioId` pra isso — quebraria o caso "mesmo
+> dono, outra aba", onde a aba que só observa **deve** abrir a bandeja mesmo sendo o mesmo usuário).
+> Testado: backend 445/445 (+3), frontend 1306/1306 (era 1297, +9); lint limpo nos dois. Verificado
+> ao vivo (`1920×1080`/`360×800`, dois usuários reais + REST, `dados` de ficha/criatura clonados de
+> fichas reais do banco de dev pra passar a validação de domínio): 6 cenários — campanha (mestre rola
+> por fora), clique real na própria tela sem duplicar, criatura, ficha solta no mobile, `PRIVADA` não
+> vaza a terceiro sem acesso, e duas abas reais do mesmo dono (uma só observa, outra rola de
+> verdade). Ver `[[m3-31-sem-fusao-automatica-de-efeitos-na-rolagem]]` (irmã de tema, não de causa) na
+> memória do agente.
 >
-> **Duas decisões atrás:** `m3-75` (spec pós-milestone, pedido
+> **Uma decisão atrás:** `m3-76` (mod custom ganha peso próprio, exceção ao padrão de +0,2 do
+> sistema) — `pesoCustom?: number` em `ModificacaoAplicadaDto`/`ModificacaoItemDto`
+> (`shared/regras/compras`), devolvido por `obterPesoModificacao` só quando a mod não tem
+> correspondência no catálogo; form de mod custom (`ficha-inventario`) ganhou o campo opcional.
+> **Bug pego só na verificação ao vivo**: `montarItemInventario` tinha uma terceira chamada a
+> `obterPesoModificacao` (badge do card) que nunca recebia `pesoCustom`, caindo sempre no padrão —
+> nenhum teste unitário cobria essa função específica (motor e total do carrinho já estavam certos).
+> Corrigido + teste de regressão no `.ficha-inv__peso` do DOM. Também ajustado ao testar ao vivo:
+> layout do form de mod custom junta nome/limite/peso numa linha no desktop, empilha no mobile.
+> Testado: shared 163/163, frontend 1297/1297 (+4); lint limpo. Ver
+> `[[verificacao-visual-pega-bug-silencioso-de-exibicao]]` na memória do agente.
+>
+> **Três decisões atrás:** `m3-75` (spec pós-milestone, pedido
 > direto do autor: "na criação de ficha de agente, fazer trim em todos os campos de texto") — todo
 > campo de texto livre do passo "Identidade" (`personalidade`, `origem.nome/.descricao/
 > .saberDeCampo`, cada `formacao[].texto/.parametro`, `especialidade.gatilho/.efeito`) só usava
@@ -40,7 +54,7 @@
 > 1292, +1); lint limpo. Sem impacto visual — mudança pura de montagem de payload, nenhum
 > template/estilo tocado.
 >
-> **Três decisões atrás:** ajuste avulso no catálogo do passo
+> **Quatro decisões atrás:** ajuste avulso no catálogo do passo
 > "Equipamento inicial" do guia (`GuiaEquipamentoLoja`, pedido direto do autor, mesmo dia de
 > `m3-73`/`m3-74`) — as abas de categoria (Corpo a Corpo/Explosivos/Armas de Fogo/…) usavam os
 > emojis crus de `CATALOGO_CATEGORIAS` (`shared/regras/compras`), o único ponto do catálogo de
@@ -59,7 +73,7 @@
 > "Pistola" (Armas de Fogo) enquanto a aba ativa era Corpo a Corpo encontrou o item e adicionou com a
 > categoria certa.
 >
-> **Quatro decisões atrás:** `m3-73`/`m3-74` (dois ajustes
+> **Cinco decisões atrás (mesmo dia):** `m3-73`/`m3-74` (dois ajustes
 > avulsos do guia de criação, mesmo dia) — `m3-73` corrigiu o seletor de habilidades do passo
 > "Habilidades": a aba ativa (Gerais/Classe/Subclasse/Arquétipo) voltava sozinha pro primeiro grupo
 > a cada "+" clicado, porque `abaAtiva`/`subgrupoAtivo` eram `linkedSignal`s na forma básica,
@@ -75,7 +89,7 @@
 > dinheiro em `1920×1080`/`360×800`, e a aba do seletor permanecendo em Arquétipo por duas adições
 > seguidas. Ver `HISTORY.md` para o detalhe de causa raiz dos dois.
 >
-> **Quatro decisões atrás:** `m4-11` (task adicional do M4, fora da fila `m4-05`…`m4-10`) — o acervo
+> **Cinco decisões atrás:** `m4-11` (task adicional do M4, fora da fila `m4-05`…`m4-10`) — o acervo
 > (`/fichas`) deixou de listar agentes e criaturas
 > misturados. A tela agora separa por tipo em blocos (`AGENTES`/`CRIATURAS`, NPC estruturalmente
 > pronto e desligado até `m4-07`/`m4-08`), com um `<select>` de visão (Todos/Agentes/Criaturas) —
@@ -98,7 +112,7 @@
 > funciona — atribuir um agente emite normalmente); e o fluxo completo funciona ponta a ponta
 > (criar solta pela UI → aparece com chip "Sem campanha" → abre em `/fichas/criatura/:id`).
 >
-> **Cinco decisões atrás:** correção pós-`m7-17` — a ficha
+> **Seis decisões atrás:** correção pós-`m7-17` — a ficha
 > flutuante do Encontro (`FichaFlutuanteConteudo`) ajusta Vida/Energia/Condições da ficha pela
 > `FichaEdicaoService` genérica (`FichaService.alterarVitalidade`/`alterarFicha`), que só emite
 > `ficha:alterada` na sala `ficha:<id>` — sala que o painel de Iniciativa nunca ouve (só escuta
@@ -116,7 +130,7 @@
 > `GatewayModule` ↔ `EncontroModule` (mesmo padrão já usado com `FichaModule`/`CampanhaModule`);
 > `FichaModule` continua sem saber que `encontro` existe. Ver "Tempo real" (seção 4).
 >
-> **Seis decisões atrás:** `m7-17` (retoque no mesmo dia) — o dialog "Receber dano" ganhou uma grade
+> **Sete decisões atrás:** `m7-17` (retoque no mesmo dia) — o dialog "Receber dano" ganhou uma grade
 > com cabeçalho único (Dano/Ficha/Custom) em vez de rótulo por campo em cada uma das cinco linhas,
 > e o mobile deixou de empilhar cada célula (o que alongava o dialog e quebrava a leitura
 > coluna↔coluna) — continua tabela, só mais estreita. O cartão da Iniciativa passou a mostrar a
@@ -129,7 +143,7 @@
 > definida — o número era aplicado no cálculo (silenciosamente correto) mas nunca exibido; corrigido
 > e coberto por teste de regressão.
 >
-> **Sete decisões atrás:** `m7-16` — na tela de Iniciativa, um agente (`JOGADOR`) de ficha **não
+> **Oito decisões atrás:** `m7-16` — na tela de Iniciativa, um agente (`JOGADOR`) de ficha **não
 > oculta** (m3-65) mostra avatar/dono/classe-arquétipo pra qualquer membro, mesmo sem
 > `usuario_ficha_acesso` (só os números continuam atrás da concessão; nível fica de fora — a
 > carteirinha identifica, não avalia a força — e sem ela não desenha "Vida —"); mais 4 ajustes de UI
@@ -146,6 +160,10 @@
 ---
 
 ## 1. Próxima Task
+
+**`m3-77` (ajuste avulso pós-M3, ficha aberta reage por socket a rolagem feita em outro caminho)
+concluída** — ver o bloco no topo do arquivo e "Tempo real" (seção 4). Resta só `m3-78` na fila de
+ajustes avulsos do M3.
 
 **`m4-11` (task adicional do M4, fora da fila `m4-05`…`m4-10`) concluída** — acervo separado por
 tipo, "Criar criatura" solta e os dois defeitos de `duplicarFicha`/`atribuirCampanha` corrigidos;
@@ -372,7 +390,6 @@ só adaptou o visual de desktop).
 | Spec | Frente | O que é |
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m3-77` | ficha/tempo real | ficha aberta reage por socket a rolagem feita em outro caminho (histórico + bandeja) |
 | `m3-78` | guia | fortificação de personalidade ganha campo de custo em Energia; guia explica papel do Mestre |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
 | `m7-18` | encontro | "Rolar tudo" do mestre ignora dado extra de Iniciativa de Formação (só o jogador tem hoje) |
@@ -380,9 +397,9 @@ só adaptou o visual de desktop).
 | `m7-20` | encontro | regressão: botão "abrir ficha" voltou a aparecer na grade compacta do jogador no desktop |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/` vinda da fila original; `m3-73`…`m3-78` eram
-ajustes avulsos (pedido direto do autor, 2026-08-22) — `m3-73`, `m3-74`, `m3-75` e `m3-76` já
-**concluídos** (specs em `docs/specs/done/`, ver bloco no topo do arquivo); `m3-77`/`m3-78` seguem
-registrados, não implementados. `m7-18`…`m7-20` são o mesmo tipo de ajuste avulso, pós-M7 (já concluído).
+ajustes avulsos (pedido direto do autor, 2026-08-22) — `m3-73`, `m3-74`, `m3-75`, `m3-76` e `m3-77`
+já **concluídos** (specs em `docs/specs/done/`, ver bloco no topo do arquivo); só `m3-78` segue
+registrado, não implementado. `m7-18`…`m7-20` são o mesmo tipo de ajuste avulso, pós-M7 (já concluído).
 Milestone ainda não aberto: `m5-guia-missao`.
 
 ---
@@ -889,6 +906,21 @@ retransmitido — sem isso, qualquer edição de Vida/Energia/Condição feita *
 persistia corretamente mas nunca atualizava os cartões da Iniciativa em tempo real. `GatewayModule`
 importa `EncontroModule` (`forwardRef`, mesmo padrão de `FichaModule`/`CampanhaModule`); a direção
 inversa (`Ficha` → `Encontro`) continua proibida.
+
+`emitirRolagemRegistrada` (m3-27/`m3-77`) usa **duas salas mutuamente exclusivas**, nunca as duas:
+com campanha, só `campanha:<id>` (como sempre); ficha solta (`campanhaId === null`, m3-28), só
+`ficha:<id>` — a única sala que ela tem. Emitir nas duas ao mesmo tempo duplicaria o evento pra quem
+está nas duas salas simultaneamente (`campanha/detalhe`, que ingressa o mesmo socket em
+`campanha:<id>` e em `ficha:<id>` de cada ficha visível). `visualizar.page.ts`/
+`visualizar-criatura.page.ts` (a ficha numa tela só) assinam `rolagemRegistrada$` desde a `m3-77`:
+entram também em `campanha:<id>` quando a ficha pertence a uma, prependam o histórico local e chamam
+`BandejaDadosService.mostrar()` — uma rolagem feita por outro caminho (outra aba do dono, o mestre
+rolando pela ficha, o Encontro) aparece sem F5. Dedupe contra o eco do broadcast pra quem acabou de
+rolar tem duas camadas: histórico por `id` (topo do array, qualquer ordem de chegada) e bandeja por
+"rolagem local em voo" (`FichaRolagemRegistroService.enviando$`/`finalizada$`, um contador na página)
+— **não** dá pra deduplicar a bandeja só por `id` porque o eco do socket pode chegar **antes** da
+resposta HTTP do próprio POST (confirmado ao vivo com clique real), quando o `id` real ainda não
+existe no histórico local.
 
 ### Calculadoras públicas — `frontend/calculadora`
 

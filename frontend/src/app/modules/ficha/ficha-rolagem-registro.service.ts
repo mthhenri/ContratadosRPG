@@ -1,5 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, finalize } from 'rxjs';
 
 import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
@@ -36,6 +36,22 @@ export class FichaRolagemRegistroService {
    * pelo card chegam aqui pelo mesmo canal.
    */
   readonly registrada$: Observable<RolagemResumoDto> = this.registradaSubject.asObservable();
+
+  private readonly enviandoSubject = new Subject<void>();
+  private readonly finalizadaSubject = new Subject<void>();
+
+  /**
+   * Emitido no instante em que uma rolagem local começa a ser persistida (**antes** do REST
+   * resolver, m3-77) — quem hospeda a página ainda não tem o `id` real da rolagem pra deduplicar
+   * o eco do broadcast (`TempoRealService.rolagemRegistrada$`), então usa isto como sinal
+   * "uma rolagem minha está em voo" enquanto {@link finalizada$} não chega. Sem isso, o eco podia
+   * chegar pela sala **antes** da resposta HTTP e abrir a bandeja de novo (a mesma rolagem já
+   * apareceu pelo caminho síncrono, pré-persistência).
+   */
+  readonly enviando$: Observable<void> = this.enviandoSubject.asObservable();
+
+  /** Emitido quando o REST da rolagem em voo termina — sucesso ou erro (m3-77, par de `enviando$`). */
+  readonly finalizada$: Observable<void> = this.finalizadaSubject.asObservable();
 
   /**
    * Visibilidade das próximas rolagens (m3-27): `true` = `PRIVADA` (só o autor e o mestre veem — o
@@ -76,6 +92,7 @@ export class FichaRolagemRegistroService {
     if (fichaId === null) {
       return;
     }
+    this.enviandoSubject.next();
     this.rolagemService
       .registrar(fichaId, {
         rotulo: entrada.rotulo,
@@ -84,6 +101,7 @@ export class FichaRolagemRegistroService {
           : RolagemVisibilidadeEnum.PUBLICA,
         resultado: entrada.resultado,
       })
+      .pipe(finalize(() => this.finalizadaSubject.next()))
       .subscribe({
         next: (rolagemRegistrada) => this.registradaSubject.next(rolagemRegistrada),
         error: () => undefined,

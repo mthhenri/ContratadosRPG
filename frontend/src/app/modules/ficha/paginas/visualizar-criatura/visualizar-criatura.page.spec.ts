@@ -10,6 +10,7 @@ import {
   NivelAmeacaEnum,
   OrigemCriaturaEnum,
   PorteCriaturaEnum,
+  RolagemVisibilidadeEnum,
   TenacidadeEnum,
   TipoCampanhaMembroPapelEnum,
   TipoDanoEnum,
@@ -22,8 +23,10 @@ import type {
   FichaCriaturaRecuperadaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
+import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { CriaturaVisualizar } from './visualizar-criatura.page';
+import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { FichaService } from '../../ficha.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { SessaoService } from '../../../../core/services/sessao.service';
@@ -89,13 +92,17 @@ describe('CriaturaVisualizar', () => {
 
     const fichaAlterada$ = new Subject<FichaCriaturaAlteradaDto>();
     const acessoRevogado$ = new Subject<FichaAcessoRevogadoDto>();
+    const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
     const reconexao = signal(0);
     const tempoRealService = {
       conectar: vi.fn(),
       entrarSalaFicha: vi.fn(),
       sairSalaFicha: vi.fn(),
+      entrarSalaCampanha: vi.fn(),
+      sairSalaCampanha: vi.fn(),
       fichaAlterada$: fichaAlterada$.asObservable(),
       acessoRevogado$: acessoRevogado$.asObservable(),
+      rolagemRegistrada$: rolagemRegistrada$.asObservable(),
       reconexao,
       conectado: signal(true),
     };
@@ -144,6 +151,7 @@ describe('CriaturaVisualizar', () => {
       tempoRealService,
       fichaAlterada$,
       acessoRevogado$,
+      rolagemRegistrada$,
       reconexao,
       messageService,
       navegarEspiao,
@@ -183,6 +191,73 @@ describe('CriaturaVisualizar', () => {
     fixture.detectChanges();
 
     expect(fixture.componentInstance['ficha']()?.nome).toBe('Renomeada Remotamente');
+  });
+
+  describe('tempo real de rolagem (m3-77)', () => {
+    function rolagemRemota(sobrescrever: Partial<RolagemResumoDto> = {}): RolagemResumoDto {
+      return {
+        id: 501,
+        fichaId: 4,
+        encontroCombatenteId: null,
+        campanhaId: 9,
+        usuarioId: 7,
+        nomeAutor: 'Mestre',
+        nomeFicha: 'A Estátua',
+        rotulo: 'Luta',
+        visibilidade: RolagemVisibilidadeEnum.PRIVADA,
+        resultado: { dados: [], atributos: [], constante: 0, total: 12 },
+        createdDate: '2026-08-23T12:00:00.000Z',
+        corFicha: null,
+        ...sobrescrever,
+      };
+    }
+
+    it('entra na sala da campanha (criatura vinculada) e a esquece ao destruir', () => {
+      const { fixture, tempoRealService } = montar({ usuarioLogadoId: 7 });
+      expect(tempoRealService.entrarSalaCampanha).toHaveBeenCalledWith(9);
+      fixture.destroy();
+      expect(tempoRealService.sairSalaCampanha).toHaveBeenCalledWith(9);
+    });
+
+    it('não entra em sala de campanha para uma criatura solta (m4-11)', () => {
+      const { tempoRealService } = montar({
+        usuarioLogadoId: 7,
+        semCampanhaNaRota: true,
+        fichaCampanhaId: null,
+      });
+      expect(tempoRealService.entrarSalaCampanha).not.toHaveBeenCalled();
+    });
+
+    it('rolagem de outro caminho: entra no histórico e abre a bandeja', () => {
+      const { fixture, rolagemRegistrada$ } = montar({ usuarioLogadoId: 7 });
+      const componente = fixture.componentInstance;
+      const bandeja = TestBed.inject(BandejaDadosService);
+
+      rolagemRegistrada$.next(rolagemRemota());
+
+      expect(componente['historicoRolagens']()[0]?.id).toBe(501);
+      expect(bandeja.entradas()[0]).toMatchObject({ rotulo: 'Luta' });
+    });
+
+    it('não duplica histórico nem reabre a bandeja quando a rolagem já chegou pelo caminho local', () => {
+      const { fixture, rolagemRegistrada$ } = montar({ usuarioLogadoId: 7 });
+      const componente = fixture.componentInstance;
+      const bandeja = TestBed.inject(BandejaDadosService);
+      const propria = rolagemRemota();
+
+      componente['onRolagemRegistrada'](propria);
+      bandeja.mostrar({
+        rotulo: propria.rotulo,
+        resultado: propria.resultado,
+        corFicha: propria.corFicha,
+        visibilidade: propria.visibilidade,
+      });
+
+      rolagemRegistrada$.next(propria);
+
+      expect(componente['historicoRolagens']().length).toBe(1);
+      expect(bandeja.entradas().length).toBe(1);
+    });
   });
 
   it('exclui a criatura e navega de volta à campanha', () => {

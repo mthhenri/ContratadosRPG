@@ -297,5 +297,38 @@ describe('CampanhaGateway', () => {
       expect(paraSala).toHaveBeenCalledWith('ficha:5');
       expect(emitir).toHaveBeenCalledWith('ficha:acesso-revogado', { fichaId: 5, usuarioId: 42 });
     });
+
+    describe('emitirRolagemRegistrada (m3-27/m3-77)', () => {
+      it('com campanha, emite só na sala campanha:<id> — nunca também em ficha:<id>', () => {
+        const rolagem = { id: 9, fichaId: 5, campanhaId: 3 };
+
+        gateway.emitirRolagemRegistrada(rolagem as never);
+
+        expect(paraSala).toHaveBeenCalledTimes(1);
+        expect(paraSala).toHaveBeenCalledWith('campanha:3');
+        expect(emitir).toHaveBeenCalledTimes(1);
+        expect(emitir).toHaveBeenCalledWith('rolagem:registrada', rolagem);
+      });
+
+      it('ficha solta (m3-28, campanhaId null) emite na sala ficha:<id> — só sala que existe pra ela', () => {
+        const rolagem = { id: 9, fichaId: 5, campanhaId: null };
+
+        gateway.emitirRolagemRegistrada(rolagem as never);
+
+        expect(paraSala).toHaveBeenCalledTimes(1);
+        expect(paraSala).toHaveBeenCalledWith('ficha:5');
+        expect(emitir).toHaveBeenCalledTimes(1);
+        expect(emitir).toHaveBeenCalledWith('rolagem:registrada', rolagem);
+      });
+
+      it('rolagem de avulso sem ficha nem campanha (registrarRolagemAvulso solto) não emite em lugar nenhum', () => {
+        const rolagem = { id: 9, fichaId: null, campanhaId: null };
+
+        gateway.emitirRolagemRegistrada(rolagem as never);
+
+        expect(paraSala).not.toHaveBeenCalled();
+        expect(emitir).not.toHaveBeenCalled();
+      });
+    });
   });
 });

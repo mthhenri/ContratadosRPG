@@ -10,6 +10,7 @@ import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campa
 import type { FichaAcessoResumoDto, FichaCriaturaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
+import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
 import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component';
 import { Icone } from '../../../../shared/icone/icone.component';
@@ -66,6 +67,7 @@ export class CriaturaVisualizar {
   private readonly rolagemService = inject(RolagemService);
   private readonly sessaoService = inject(SessaoService);
   private readonly tempoRealService = inject(TempoRealService);
+  private readonly bandejaDados = inject(BandejaDadosService);
   private readonly messageService = inject(MessageService);
   private readonly rotaAtiva = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -95,6 +97,9 @@ export class CriaturaVisualizar {
   protected readonly historicoCarregandoMais = signal(false);
   protected readonly historicoTemMais = signal(false);
   private readonly historicoPagina = signal(0);
+
+  /** Rolagens desta tela ainda em voo no REST (m3-77) — ver `onRolagemRemota`. */
+  private rolagensLocaisEmVoo = 0;
 
   /** Menu de ações no cabeçalho (kebab) aberto. */
   protected readonly menuAberto = signal(false);
@@ -165,6 +170,15 @@ export class CriaturaVisualizar {
           if (this.podeGerenciar()) {
             this.carregarAcessos();
           }
+
+          // Tempo real de rolagem (m3-77): ver o mesmo bloco em `FichaVisualizar` — rolagem de
+          // ficha com campanha só chega em `campanha:<id>`, então entra nela também; ficha solta
+          // já basta a sala `ficha:<id>` de sempre.
+          const campanhaId = this.campanhaId();
+          if (campanhaId !== null) {
+            this.tempoRealService.entrarSalaCampanha(campanhaId);
+            this.destroyRef.onDestroy(() => this.tempoRealService.sairSalaCampanha(campanhaId));
+          }
         },
       });
 
@@ -176,6 +190,14 @@ export class CriaturaVisualizar {
     this.fichaRolagemRegistro.registrada$
       .pipe(takeUntilDestroyed())
       .subscribe({ next: (rolagem) => this.onRolagemRegistrada(rolagem) });
+
+    // Contagem de rolagens locais em voo (m3-77) — ver `onRolagemRemota` em `FichaVisualizar`.
+    this.fichaRolagemRegistro.enviando$
+      .pipe(takeUntilDestroyed())
+      .subscribe({ next: () => this.rolagensLocaisEmVoo++ });
+    this.fichaRolagemRegistro.finalizada$
+      .pipe(takeUntilDestroyed())
+      .subscribe({ next: () => (this.rolagensLocaisEmVoo = Math.max(0, this.rolagensLocaisEmVoo - 1)) });
 
     this.tempoRealService.conectar();
     this.tempoRealService.entrarSalaFicha(this.fichaId);
@@ -207,6 +229,14 @@ export class CriaturaVisualizar {
         takeUntilDestroyed(),
       )
       .subscribe({ next: () => this.expulsar() });
+
+    // Rolagem feita por outro caminho (m3-77) — mesmo racional de `FichaVisualizar`.
+    this.tempoRealService.rolagemRegistrada$
+      .pipe(
+        filter((rolagem) => rolagem.fichaId === this.fichaId),
+        takeUntilDestroyed(),
+      )
+      .subscribe({ next: (rolagem) => this.onRolagemRemota(rolagem) });
 
     effect(() => {
       if (this.tempoRealService.reconexao() > 0) {
@@ -341,6 +371,28 @@ export class CriaturaVisualizar {
     this.historicoRolagens.update((atuais) =>
       atuais[0]?.id === rolagem.id ? atuais : [rolagem, ...atuais],
     );
+  }
+
+  /**
+   * Rolagem chegada por `rolagemRegistrada$` (m3-77) — mesmo racional de `FichaVisualizar.
+   * onRolagemRemota`: reusa `onRolagemRegistrada` pro prepend (dedupe pelo topo do array) e só
+   * abre a bandeja quando a rolagem não é provavelmente a própria (já no histórico, ou uma
+   * rolagem desta tela ainda em voo no REST — o eco do broadcast pode chegar antes da resposta
+   * HTTP, confirmado ao vivo).
+   */
+  private onRolagemRemota(rolagem: RolagemResumoDto): void {
+    const jaConhecida = this.historicoRolagens().some((existente) => existente.id === rolagem.id);
+    const provavelmenteMinha = this.rolagensLocaisEmVoo > 0;
+    this.onRolagemRegistrada(rolagem);
+    if (jaConhecida || provavelmenteMinha) {
+      return;
+    }
+    this.bandejaDados.mostrar({
+      rotulo: rolagem.rotulo,
+      resultado: rolagem.resultado,
+      corFicha: rolagem.corFicha,
+      visibilidade: rolagem.visibilidade,
+    });
   }
 
   /** (Re)carrega as concessões ativas da ficha — usado no boot e após conceder/revogar. */

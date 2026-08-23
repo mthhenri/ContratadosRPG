@@ -20,6 +20,7 @@ import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campa
 import type { FichaAcessoResumoDto, FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
+import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
 import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component';
 import { Icone } from '../../../../shared/icone/icone.component';
@@ -98,6 +99,7 @@ export class FichaVisualizar {
   private readonly rolagemService = inject(RolagemService);
   private readonly sessaoService = inject(SessaoService);
   private readonly tempoRealService = inject(TempoRealService);
+  private readonly bandejaDados = inject(BandejaDadosService);
   private readonly messageService = inject(MessageService);
   private readonly rotaAtiva = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -169,6 +171,9 @@ export class FichaVisualizar {
   protected readonly historicoCarregandoMais = signal(false);
   protected readonly historicoTemMais = signal(false);
   private readonly historicoPagina = signal(0);
+
+  /** Rolagens desta tela ainda em voo no REST (m3-77) — ver `onRolagemRemota`. */
+  private rolagensLocaisEmVoo = 0;
 
   /** Menu de ações no cabeçalho (kebab) aberto. */
   protected readonly menuAberto = signal(false);
@@ -247,6 +252,19 @@ export class FichaVisualizar {
           if (this.podeGerenciar()) {
             this.carregarAcessos();
           }
+
+          // Tempo real de rolagem (m3-77): `rolagem:registrada` de uma ficha com campanha só
+          // chega na sala `campanha:<id>` (o gateway não duplica em `ficha:<id>` — ver
+          // `CampanhaGateway.emitirRolagemRegistrada`), então esta tela precisa entrar nela
+          // também para ver rolar quem não está com a ficha aberta (outra aba do dono, o mestre
+          // rolando por ela, o Encontro). Ficha solta (`campanhaId === null`) não precisa disso:
+          // o gateway emite direto em `ficha:<id>`, sala em que a tela já está (`entrarSalaFicha`
+          // acima) — daí este `if` só entrar quando há campanha de fato.
+          const campanhaId = this.campanhaId();
+          if (campanhaId !== null) {
+            this.tempoRealService.entrarSalaCampanha(campanhaId);
+            this.destroyRef.onDestroy(() => this.tempoRealService.sairSalaCampanha(campanhaId));
+          }
         },
       });
 
@@ -264,6 +282,17 @@ export class FichaVisualizar {
     this.fichaRolagemRegistro.registrada$
       .pipe(takeUntilDestroyed())
       .subscribe({ next: (rolagem) => this.onRolagemRegistrada(rolagem) });
+
+    // Contagem de rolagens locais em voo (m3-77) — ver `onRolagemRemota`: enquanto uma rolagem
+    // desta própria tela ainda não voltou do REST, um eco do broadcast que chegue antes (a sala é
+    // mais rápida que a resposta HTTP em alguns casos, confirmado ao vivo) não deve abrir a
+    // bandeja de novo.
+    this.fichaRolagemRegistro.enviando$
+      .pipe(takeUntilDestroyed())
+      .subscribe({ next: () => this.rolagensLocaisEmVoo++ });
+    this.fichaRolagemRegistro.finalizada$
+      .pipe(takeUntilDestroyed())
+      .subscribe({ next: () => (this.rolagensLocaisEmVoo = Math.max(0, this.rolagensLocaisEmVoo - 1)) });
 
     // Tempo real (m3-08): entra na sala `ficha:<id>` e reage a `ficha:alterada`. O mestre com a ficha
     // aberta vê a edição do jogador **sem recarregar** (critério de aceite). A permissão da sala é
@@ -293,6 +322,16 @@ export class FichaVisualizar {
         takeUntilDestroyed(),
       )
       .subscribe({ next: () => this.expulsar() });
+
+    // Rolagem feita por outro caminho (m3-77): ficha solta chega por `ficha:<id>` (sempre
+    // ingressada), ficha de campanha chega por `campanha:<id>` (ingressada acima) — os dois casos
+    // convergem no mesmo `Observable`, então basta filtrar pela ficha desta tela.
+    this.tempoRealService.rolagemRegistrada$
+      .pipe(
+        filter((rolagem) => rolagem.fichaId === this.fichaId),
+        takeUntilDestroyed(),
+      )
+      .subscribe({ next: (rolagem) => this.onRolagemRemota(rolagem) });
 
     // Ressincronização ao reconectar (§9 — o Render dorme e derruba a conexão): refaz o fetch da
     // ficha aberta. O documento buscado entra pelo mesmo merge, então uma edição local pendente
@@ -506,6 +545,32 @@ export class FichaVisualizar {
     this.historicoRolagens.update((atuais) =>
       atuais[0]?.id === rolagem.id ? atuais : [rolagem, ...atuais],
     );
+  }
+
+  /**
+   * Rolagem chegada por `rolagemRegistrada$` (m3-77) — feita por outro caminho enquanto esta tela
+   * está aberta (outra aba do dono, o mestre rolando por ela, o Encontro). Reusa
+   * `onRolagemRegistrada` pro prepend (mesmo dedupe pelo topo do array). A bandeja só abre quando
+   * a rolagem **não** é provavelmente a própria: (a) já está no histórico local — o caminho
+   * síncrono já mostrou a bandeja e já prependou antes deste evento chegar; (b) há uma rolagem
+   * desta tela em voo no REST (`rolagensLocaisEmVoo`) — confirmado ao vivo que o eco do broadcast
+   * pode chegar **antes** da resposta HTTP voltar, e nesse caso (a) ainda não é verdade (o id real
+   * só existe depois do REST resolver) — sem (b), a bandeja abriria duas vezes pra quem acabou de
+   * rolar.
+   */
+  private onRolagemRemota(rolagem: RolagemResumoDto): void {
+    const jaConhecida = this.historicoRolagens().some((existente) => existente.id === rolagem.id);
+    const provavelmenteMinha = this.rolagensLocaisEmVoo > 0;
+    this.onRolagemRegistrada(rolagem);
+    if (jaConhecida || provavelmenteMinha) {
+      return;
+    }
+    this.bandejaDados.mostrar({
+      rotulo: rolagem.rotulo,
+      resultado: rolagem.resultado,
+      corFicha: rolagem.corFicha,
+      visibilidade: rolagem.visibilidade,
+    });
   }
 
   /** (Re)carrega as concessões ativas da ficha — usado no boot e após conceder/revogar. */

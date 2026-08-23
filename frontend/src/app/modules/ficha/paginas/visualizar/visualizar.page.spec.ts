@@ -8,6 +8,7 @@ import {
   ClasseEnum,
   FormacaoBonusEnum,
   HabilidadeCategoriaEnum,
+  RolagemVisibilidadeEnum,
   SeveridadeLesaoEnum,
   TipoCampanhaMembroPapelEnum,
 } from '@contratados-rpg/shared/enums';
@@ -31,8 +32,10 @@ import type {
   FichaOrigemDto,
   FichaRecuperadaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
+import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { FichaVisualizar } from './visualizar.page';
+import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import type { AjusteAtributos } from '../../componentes/ficha-visualizacao/ficha-visualizacao.component';
 import { FichaService } from '../../ficha.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
@@ -116,13 +119,17 @@ describe('FichaVisualizar', () => {
     // Signal de reconexão.
     const fichaAlterada$ = new Subject<FichaAlteradaDto>();
     const acessoRevogado$ = new Subject<FichaAcessoRevogadoDto>();
+    const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
     const reconexao = signal(0);
     const tempoRealService = {
       conectar: vi.fn(),
       entrarSalaFicha: vi.fn(),
       sairSalaFicha: vi.fn(),
+      entrarSalaCampanha: vi.fn(),
+      sairSalaCampanha: vi.fn(),
       fichaAlterada$: fichaAlterada$.asObservable(),
       acessoRevogado$: acessoRevogado$.asObservable(),
+      rolagemRegistrada$: rolagemRegistrada$.asObservable(),
       reconexao,
       conectado: signal(true),
     };
@@ -171,6 +178,7 @@ describe('FichaVisualizar', () => {
       tempoRealService,
       fichaAlterada$,
       acessoRevogado$,
+      rolagemRegistrada$,
       reconexao,
       messageService,
       navegarEspiao,
@@ -936,6 +944,87 @@ describe('FichaVisualizar', () => {
     expect(tempoRealService.sairSalaFicha).not.toHaveBeenCalled();
     fixture.destroy();
     expect(tempoRealService.sairSalaFicha).toHaveBeenCalledWith(42);
+  });
+
+  describe('tempo real de rolagem (m3-77)', () => {
+    function rolagemRemota(sobrescrever: Partial<RolagemResumoDto> = {}): RolagemResumoDto {
+      return {
+        id: 501,
+        fichaId: 42,
+        encontroCombatenteId: null,
+        campanhaId: 9,
+        usuarioId: 99,
+        nomeAutor: 'Mestre',
+        nomeFicha: 'Kane',
+        rotulo: 'Luta',
+        visibilidade: RolagemVisibilidadeEnum.PUBLICA,
+        resultado: { dados: [], atributos: [], constante: 0, total: 12 },
+        createdDate: '2026-08-23T12:00:00.000Z',
+        corFicha: '#ff0000',
+        ...sobrescrever,
+      };
+    }
+
+    it('entra na sala da campanha (ficha vinculada) e a esquece ao destruir', () => {
+      const { fixture, tempoRealService } = montar({ usuarioLogadoId: 7 });
+      expect(tempoRealService.entrarSalaCampanha).toHaveBeenCalledWith(9);
+      expect(tempoRealService.sairSalaCampanha).not.toHaveBeenCalled();
+      fixture.destroy();
+      expect(tempoRealService.sairSalaCampanha).toHaveBeenCalledWith(9);
+    });
+
+    it('não entra em sala de campanha para uma ficha solta (m3-28) — só a sala ficha:<id> já basta', () => {
+      const { tempoRealService } = montar({
+        usuarioLogadoId: 7,
+        semCampanhaNaRota: true,
+        fichaCampanhaId: null,
+      });
+      expect(tempoRealService.entrarSalaCampanha).not.toHaveBeenCalled();
+    });
+
+    it('rolagem de outro caminho: entra no histórico e abre a bandeja', () => {
+      const { fixture, rolagemRegistrada$ } = montar({ usuarioLogadoId: 7 });
+      const componente = fixture.componentInstance;
+      const bandeja = TestBed.inject(BandejaDadosService);
+      expect(componente['historicoRolagens']()).toEqual([]);
+
+      rolagemRegistrada$.next(rolagemRemota());
+
+      expect(componente['historicoRolagens']()[0]?.id).toBe(501);
+      expect(bandeja.entradas()[0]).toMatchObject({ rotulo: 'Luta', corFicha: '#ff0000' });
+    });
+
+    it('ignora rolagem de outra ficha (sala compartilhada da campanha)', () => {
+      const { fixture, rolagemRegistrada$ } = montar({ usuarioLogadoId: 7 });
+      const componente = fixture.componentInstance;
+
+      rolagemRegistrada$.next(rolagemRemota({ fichaId: 999 }));
+
+      expect(componente['historicoRolagens']()).toEqual([]);
+    });
+
+    it('não duplica histórico nem reabre a bandeja quando a rolagem já chegou pelo caminho local (eco do próprio autor)', () => {
+      const { fixture, rolagemRegistrada$ } = montar({ usuarioLogadoId: 7 });
+      const componente = fixture.componentInstance;
+      const bandeja = TestBed.inject(BandejaDadosService);
+      const propria = rolagemRemota({ usuarioId: 7 });
+
+      // Caminho síncrono local (FichaRolagemRegistroService.registrada$) já prependou e mostrou.
+      componente['onRolagemRegistrada'](propria);
+      bandeja.mostrar({
+        rotulo: propria.rotulo,
+        resultado: propria.resultado,
+        corFicha: propria.corFicha,
+        visibilidade: propria.visibilidade,
+      });
+      expect(bandeja.entradas().length).toBe(1);
+
+      // Eco do broadcast pro mesmo cliente.
+      rolagemRegistrada$.next(propria);
+
+      expect(componente['historicoRolagens']().length).toBe(1);
+      expect(bandeja.entradas().length).toBe(1);
+    });
   });
 
   it('aplica o ficha:alterada recebido por WebSocket sem recarregar (critério de aceite)', () => {
