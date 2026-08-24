@@ -157,18 +157,6 @@
 - **Desde:** reportado pelo dono em 2026-08-12, após revisão manual da gestão administrativa de
   usuários (`m6-05`).
 
-### P-021 — Calculadora e histórico não abrem juntos no mobile da ficha · `ABERTO` · frontend/mobile
-
-- **Sintoma:** dentro da ficha no mobile, se a calculadora não estiver aberta antes de abrir o
-  histórico, não há como abrir a calculadora com o histórico já aberto — nem para abrir, nem para
-  fechar. É preciso abrir a calculadora antes de abrir o histórico; e para fechar, é preciso fechar
-  o histórico primeiro.
-- **Causa:** não investigada.
-- **Contorno:** abrir a calculadora antes do histórico; fechar o histórico antes de mexer na
-  calculadora.
-- **Correção:** não determinada.
-- **Desde:** reportado pelo dono em 2026-08-12.
-
 ### P-022 — `npm run lint -w backend` falha em dois specs preexistentes · `ABERTO` · backend/lint
 
 - **Sintoma:** `npm run lint -w backend` termina com 2 erros `@typescript-eslint/no-unnecessary-type-assertion`
@@ -215,6 +203,9 @@
   parte da verificação da task; confirmado preexistente (arquivo não tocado pela `m4-11`).
 
 ## Resolvidos
+
+- **P-021** — calculadora e histórico não abriam juntos no mobile da ficha (um bloqueava o
+  clique no gatilho do outro). Resolvido em 2026-08-24, ver `HISTORY.md`.
 
 - **P-025** — editor de Origem (`p-dialog` sem `appendTo="body"`) não abria no mobile. Auditados
   e corrigidos todos os 6 `p-dialog` do frontend (mais 2 achados sem o atributo:

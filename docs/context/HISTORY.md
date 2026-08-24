@@ -1,5 +1,44 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-24 — Ajuste avulso: gatilhos mobile de Calculadora/Histórico ficavam atrás do overlay do outro (fecha `P-021`)
+
+Ajuste avulso, pedido direto do autor a partir de `PROBLEMS.md` `P-021` — no mobile (`360×800`),
+dentro da ficha, se a calculadora não estivesse aberta **antes** de abrir o histórico de rolagens,
+não dava pra abrir a calculadora com o histórico já aberto; e não dava pra fechar um sem fechar o
+outro primeiro.
+
+**Causa raiz (confirmada ao vivo, Playwright + `elementFromPoint`).** No mobile os dois gatilhos
+(`CalculadoraFlutuante`/`HistoricoRolagensSidebar`) deixam de ser círculos `position: fixed` e
+viram botões inline no cabeçalho da ficha (`utilitario-inline-mobile()`, `position: static`), com
+`z-index: auto` explícito nas duas folhas de estilo. O painel do histórico é `position: fixed`,
+`width: 100vw` no mobile — cobre a tela inteira, inclusive a faixa do cabeçalho onde os dois
+gatilhos moram. Um elemento `position: static` com `z-index: auto` nunca cria stacking context
+próprio e sempre pinta **abaixo** de qualquer elemento posicionado (mesmo que o posicionado tenha
+`z-index` "menor" em valor absoluto) — então, com o histórico aberto, seu painel `fixed` cobria o
+botão da calculadora por cima, mesmo o botão continuando visível a olho nu (o clique ia parar no
+painel, não no botão). Confirmado com `document.elementFromPoint` no ponto exato do botão: o
+elemento retornado era conteúdo do painel do histórico, não o botão.
+
+**Correção.** `z-index: auto` → `z-index: 70` nos dois gatilhos, só dentro do
+`@include bp.mobile`. Suficiente porque os dois são itens flex de `.ficha-pagina__acoes`
+(`display: flex`) — pela CSS Flexbox Level 1 §4, um item flex com `z-index` numérico cria stacking
+context próprio **mesmo em `position: static`** (carve-out específico do Flexbox; não vale para
+elementos normais fora de um container flex). `70` supera os dois overlays existentes (histórico:
+backdrop 64, painel 65; calculadora: popup 66) nos dois sentidos, sem precisar dar `position` a
+nada. Desktop não tocado — lá os gatilhos já são `position: fixed` com `z-index` próprio
+(55/66) e nunca tiveram o problema.
+
+**Verificado ao vivo** (Postgres local sem Docker, backend+frontend reais, Playwright, `360×800` e
+`1920×1080`, ficha REST-seed real): confirmados os 4 caminhos — abrir histórico → clicar
+calculadora abre por cima; abrir calculadora → clicar histórico abre por cima (já funcionava);
+com os dois abertos, fechar só a calculadora mantém o histórico aberto; fechar só o histórico
+mantém a calculadora aberta. Desktop com os dois abertos ao mesmo tempo, sem sobreposição
+incorreta, confirmado em captura.
+
+Testado: frontend 1323/1323 (sem mudança de contagem — mudança pura de `z-index` em CSS, sem
+comportamento novo em TypeScript; JSDOM não reproduz stacking/pintura real do navegador), lint
+limpo (0 erros). `PROBLEMS.md` `P-021` fechado.
+
 ## 2026-08-24 — Ajuste avulso: `[appendTo]="'body'"` em todos os `p-dialog` do frontend (fecha `P-025`)
 
 Ajuste avulso, pedido direto do autor a partir de `PROBLEMS.md` `P-025` — o editor de Origem

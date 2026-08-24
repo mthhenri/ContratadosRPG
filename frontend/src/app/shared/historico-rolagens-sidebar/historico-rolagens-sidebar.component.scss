@@ -47,8 +47,15 @@
     // Mobile: inline no cabeçalho (mesma receita de `.detalhe__membro-acao`/
     // `.ficha-pagina__menu-botao`) — flutuante nessa faixa colidiria com a barra de navegação
     // inferior da ficha (m3-60) e com a bandeja de dados.
+    //
+    // P-021: `z-index: auto` fazia este gatilho (item flex `position: static`) ficar por trás
+    // do painel `position: fixed` do *outro* utilitário (histórico cobre 100vw, calculadora tem
+    // z-index 66) quando o outro já estava aberto — não dava pra abrir/fechar o segundo sem
+    // fechar o primeiro primeiro. Item flex cria stacking context próprio com qualquer z-index
+    // numérico mesmo em `position: static` (CSS Flexbox §4); 70 supera os dois overlays (64/65
+    // do histórico, 66 da calculadora) nos dois sentidos.
     @include bp.mobile {
-      z-index: auto;
+      z-index: 70;
       flex: none;
       font-size: 15px;
       color: var(--text-dim);
