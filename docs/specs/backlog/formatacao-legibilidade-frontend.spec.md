@@ -75,13 +75,14 @@ só do pragma).
   "printWidth": 100,
   "tabWidth": 4,
   "useTabs": false,
-  "singleQuote": true,
   "htmlWhitespaceSensitivity": "css",
   "overrides": [
     { "files": ["*.ts", "*.tsx"], "options": { "requirePragma": true } }
   ]
 }
 ```
+
+Sem `singleQuote` — o default do Prettier já é aspas duplas, que é a preferência do autor (o mesmo vale para `.ts` via ESLint, ver abaixo).
 
 `tabWidth: 4` — o autor prefere indentação de 4 espaços a 2 (fora do padrão default do
 Prettier); vale conferir visualmente que blocos aninhados de HTML/SCSS (Angular tende a
@@ -117,6 +118,17 @@ node_modules/
 Sem hook de pre-commit novo, sem gate de CI novo — a task só formata o que existe hoje;
 manter formatado no futuro é decisão separada, fora desta spec (registrar como ideia em
 `IDEAS.md` se o autor quiser depois).
+
+### Nota: estilo de `.ts` (fora desta spec, já aplicado)
+
+Como o Prettier não toca `.ts`/`.tsx` (decisão acima), o padrão do autor para TypeScript
+(aspas duplas, `;` obrigatório, linha ≤100 chars) foi registrado como regras `warn` do
+ESLint nos três workspaces (`quotes`, `semi`, `max-len` em `shared/eslint.config.mjs`,
+`backend/eslint.config.mjs`, `frontend/eslint.config.mjs`) — aplicado fora desta task, por
+ser mudança pequena e independente do inventário de HTML/SCSS. Ficam como `warn` (não
+`error`) porque o código `.ts` existente ainda não segue o padrão; convertê-lo em massa
+(`eslint --fix` + revisão do diff) é tarefa futura separada, não coberta aqui. Ver
+`docs/CONVENTIONS.md` para o registro da convenção.
 
 ## Entregáveis
 

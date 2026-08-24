@@ -335,6 +335,28 @@ DTOs e enums **nunca** são redefinidos dentro de `backend/` ou `frontend/`.
 
 ---
 
+## Formatação
+
+**TypeScript (`.ts`/`.tsx`):** sem formatador automático — Prettier é deliberadamente
+**não** aplicado a `.ts` no projeto (config em `frontend/.prettierrc.json` usa
+`requirePragma: true` para esse tipo de arquivo, ver `frontend/.prettierignore`). O estilo
+é convenção, reforçada por regras `warn` do ESLint (`shared`/`backend`/`frontend`
+`eslint.config.mjs`) — ainda `warn`, não `error`, porque o código existente não segue tudo
+isso ainda; convertê-lo em massa é tarefa futura separada:
+
+- Aspas **duplas** (`quotes: ['warn', 'double']`).
+- Ponto e vírgula **sempre** (`semi: ['warn', 'always']`).
+- Linha até **100 caracteres** (`max-len`, `code: 100`).
+- Indentação de **4 espaços**.
+
+**HTML/SCSS do frontend:** formatados por Prettier (`frontend/.prettierrc.json`,
+`printWidth: 100`, `tabWidth: 4`), rodável via `npm run format:html-scss -w frontend`.
+Corrige `PROBLEMS.md` `P-020` (linhas compactadas em bloco único, difícil de revisar) —
+ver `docs/specs/backlog/formatacao-legibilidade-frontend.spec.md` (ou `done/` quando a task
+fechar) para o histórico da decisão.
+
+---
+
 ## Estilos
 
 **Extensão:** sempre `.scss`, nunca `.css`

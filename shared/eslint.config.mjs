@@ -21,4 +21,11 @@ export default tseslint.config(
       },
     },
   },
+  {
+    rules: {
+      quotes: ['warn', 'double', { avoidEscape: true }],
+      semi: ['warn', 'always'],
+      'max-len': ['warn', { code: 100, ignoreUrls: true, ignoreStrings: true, ignoreTemplateLiterals: true }],
+    },
+  },
 );
