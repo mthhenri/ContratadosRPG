@@ -1,5 +1,61 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-24 — Três ajustes avulsos de tooling/qualidade (fecha `P-022`, `P-023`, `P-024`)
+
+Três problemas independentes de `PROBLEMS.md`, resolvidos na mesma sessão a pedido direto do autor
+("resolve a P-022, P-023 e P-024"). Nenhum toca comportamento de runtime da aplicação — todos são
+correções de ferramenta/teste/fixture.
+
+**`P-022` — lint do backend falhava em 2 specs preexistentes.** `campanha.service.spec.ts:685` e
+`ficha.service.spec.ts:2373` tinham `@typescript-eslint/no-unnecessary-type-assertion` acusando a
+asserção `as {...}`/`as unknown as {...}` como redundante. Investigação: rodar `eslint --fix` no
+arquivo inteiro (validado numa cópia antes de aplicar) mostrou que a asserção de **shape** não era o
+alvo real da regra — o alvo era o `!` (non-null assertion) logo antes, em
+`mock.calls[0]!` → `mock.calls[0]`, porque o tipo do array de chamadas do mock já não é opcional
+nessa posição. Remover só o `!` (não o `as {...}`, que continua necessário — `mock.calls[0][0]` seria
+`any` sem ele, o que geraria `no-unsafe-*` novos) resolve os dois com um diff de 1 linha por arquivo.
+Confirmado por tentativa e erro: remover o `as {...}` em vez do `!` reintroduz o problema como 3 erros
+novos (`no-unsafe-assignment`/`no-unsafe-member-access`) — descartado.
+
+**`P-023` — `npm run db:seed:dev` quebrado desde a coluna `tipo_usuario_id`.** O `INSERT INTO usuario`
+de `backend/tools/database/seed-dev.ts` (`garantirUsuario`) nunca foi atualizado depois da migration
+`0015` (M6): não preenchia `tipo_usuario_id` nem `token_versao`, as duas colunas `NOT NULL` sem
+`DEFAULT` que essa migration introduziu. Corrigido replicando exatamente o padrão de
+`UsuarioRepository.criarUsuario` (`backend/src/modules/usuario/usuario.repository.ts:101-110`):
+`INSERT ... SELECT :login, :senha, :nome, tipo_usuario.id, 1, NOW(), NOW(), false FROM tipo_usuario
+WHERE tipo_usuario.codigo = :tipo AND tipo_usuario.is_deleted = false AND NOT EXISTS (...)`, com
+`tipo: TipoUsuarioEnum.NORMAL` fixo — mesma regra do registro público
+(`UsuarioService.criar`: "Cria uma conta NORMAL, compartilhando a mesma regra com o registro
+público"), sem fixar o id numérico da tabela de referência. Verificado ao vivo: subi o Postgres local
+(`sudo -u postgres pg_ctlcluster 16 main start`), rodei `npm run db:migrate` e depois
+`npm run db:seed:dev` duas vezes seguidas — `4 usuários, 2 campanhas, 8 membros, 8 fichas` nas duas
+rodadas (idempotente), e `SELECT login, tipo_usuario_id, token_versao FROM usuario` confirmou os 4
+logins do cenário com `tipo_usuario_id`/`token_versao` preenchidos, e `senhor.contratados`
+preservando `tipo_usuario_id = 2` (ADMIN, da migration `0015`) porque `alterarSenha: false` faz o
+`UPDATE` de reforço pular o tipo — só a criação (`INSERT`) resolve o tipo, como deveria.
+
+**`P-024` — `typecheck -w shared` falhava em `a-estatua.spec.ts` por um campo `atributo` inexistente.**
+O fixture de `ataques` (linhas 133-149) ainda usava o formato antigo do DTO
+(`atributo: 'luta'`) — `FichaCriaturaAtaqueDto` migrou faz tempo para `teste`/`danoCritico` como
+expressão livre de dados (comentário do próprio DTO, `ficha-criatura.dtos.ts:169-179`: "não mais
+`atributo: keyof FichaAtributosDto` + dobra automática... o Mestre escreve a fórmula exata"), e o
+fixture nunca acompanhou. `tsc` só apontava a propriedade excedente (`TS2353`) nas duas asserções de
+objeto — não as duas propriedades **faltando** (`teste`/`danoCritico`, ambas obrigatórias); checagem
+de excesso e de ausência não coexistem no mesmo diagnóstico quando as duas falham ao mesmo tempo no
+mesmo literal, então a ausência só ficou visível depois de tirar `atributo`. Preenchidos com valores
+extraídos do próprio exemplo do sistema (`docs/core/guia_de_mestre-v4.0.0.md` — "Pancada"/
+"Esmagamento" da Estátua, coluna de teste "Luta 5D20+12" → `teste: '5d20kh1+12'`, mesma notação de
+pool com contagem de dados explícita usada em `regras/rolagem/rolagem.ts`) e a regra de crítico do
+sistema (`sistema-v4.1.0.md` § Crítico e Margem de Crítico: "Dobrar... todos os dados e valores fixos"
+→ `danoCritico` dobra dados e fixo de `dano`: `3D12+4` → `6D12+8`, `4D12+10` → `8D12+20`). Nenhuma das
+duas asserções (`obterDanoReferenciaPorVd`) depende desses campos, e `validarFichaCriatura` não lê
+`teste`/`danoCritico` — os valores só precisavam ser estruturalmente válidos, não teve risco de
+quebrar uma asserção existente.
+
+**Verificação.** `npm run typecheck -w shared` limpo; `npm run lint -w backend`/`-w shared` sem
+erros (só os `warn` já esperados de quotes/semi/max-len); `npm test -w backend` (453/453) e
+`npm test -w shared` (723/723) verdes.
+
 ## 2026-08-24 — Ajuste avulso: botão "Abrir calculadora" dentro do painel do histórico no mobile (fecha `P-021`)
 
 Ajuste avulso, pedido direto do autor a partir de `PROBLEMS.md` `P-021` — no mobile (`360×800`),

@@ -157,52 +157,19 @@
 - **Desde:** reportado pelo dono em 2026-08-12, após revisão manual da gestão administrativa de
   usuários (`m6-05`).
 
-### P-022 — `npm run lint -w backend` falha em dois specs preexistentes · `ABERTO` · backend/lint
-
-- **Sintoma:** `npm run lint -w backend` termina com 2 erros `@typescript-eslint/no-unnecessary-type-assertion`
-  — `campanha.service.spec.ts:685:25` e `ficha.service.spec.ts` (linha desloca a cada edição do
-  arquivo; era `:2288:25`, `:2373:25` após a `m4-11`). Os testes passam; só o lint quebra.
-- **Causa:** asserção de tipo que virou redundante depois de alguma melhoria de inferência
-  (tipagem do dublê ou versão do typescript-eslint) — não investigada a fundo.
-- **Contorno:** nenhum necessário para desenvolver; os dois arquivos não bloqueiam build nem teste.
-- **Correção:** `eslint --fix` resolve os dois (a regra é auto-corrigível). Não foi feito na
-  `m7-03` para não misturar correção alheia ao diff da task.
-- **Desde:** observado na `m7-03` (2026-08-17), com as mudanças da task em `git stash` — portanto
-  **preexistente**, não introduzido pelo Encontro de Combate.
-
-### P-023 — `npm run db:seed:dev` quebrado desde a coluna `tipo_usuario_id` · `ABERTO` · backend/tooling
-
-- **Sintoma:** `npm run db:seed:dev` aborta na primeira fixture:
-  `null value in column "tipo_usuario_id" of relation "usuario" violates not-null constraint`.
-  Nenhum dado de desenvolvimento é criado.
-- **Causa:** o `INSERT INTO usuario` de `backend/tools/database/seed-dev.ts` não acompanhou a
-  coluna `tipo_usuario_id` introduzida pelo M6 (gestão de usuários/papéis) — a fixture continua
-  inserindo login/senha/nome só.
-- **Contorno:** montar o cenário pela **API REST** (`/autenticacao/registro` + `/login`,
-  `POST /campanha`, `POST /campanha/entrar`, `POST /ficha`), que passa pelas services e preenche o
-  tipo corretamente. Foi assim que a `m7-07` cumpriu o gate visual.
-- **Correção:** resolver o tipo padrão no seed do mesmo jeito que a `AutenticacaoService` resolve —
-  sem fixar o id numérico do seed da tabela de referência.
-- **Desde:** observado na `m7-07` (2026-08-18); introduzido junto da migration do M6.
-
-### P-024 — `npm run typecheck -w shared` falha em `a-estatua.spec.ts` (campo `atributo` inexistente) · `ABERTO` · shared/tipos
-
-- **Sintoma:** `tsc --project tsconfig.json --noEmit` no workspace `shared` acusa dois erros
-  `TS2353` em `shared/src/regras/criatura/a-estatua.spec.ts:136` e `:143` — os fixtures de ataque
-  declaram um campo `atributo` que não existe em `FichaCriaturaAtaqueDto`
-  (`nome`/`teste`/`custoAcao`/`dano`/`danoCritico`/`area`/`efeito?`). Os testes passam
-  normalmente (`vitest run`, que usa `esbuild` e não bloqueia em erro de tipo); só o `tsc` estrito
-  quebra.
-- **Causa:** não investigada — o DTO provavelmente perdeu/nunca teve `atributo` desde que o
-  fixture foi escrito.
-- **Contorno:** nenhum necessário para desenvolver; `npm test -w shared` (a suíte real) continua
-  verde.
-- **Correção:** remover `atributo` dos dois objetos do fixture (ou adicionar o campo ao DTO, se a
-  intenção era outra — checar com o autor).
-- **Desde:** achado durante a `m4-11` (2026-08-22), rodando `npm run typecheck -w shared` como
-  parte da verificação da task; confirmado preexistente (arquivo não tocado pela `m4-11`).
-
 ## Resolvidos
+
+- **P-022** — lint do backend falhava em 2 specs preexistentes (`no-unnecessary-type-assertion` em
+  `campanha.service.spec.ts`/`ficha.service.spec.ts`). O alvo real era o `!` (non-null assertion),
+  não o `as {...}` de shape. Resolvido em 2026-08-24, ver `HISTORY.md`.
+
+- **P-023** — `npm run db:seed:dev` quebrado desde a coluna `tipo_usuario_id` (M6). O `INSERT` de
+  `seed-dev.ts` passou a resolver `tipo_usuario_id`/`token_versao` do mesmo jeito que
+  `UsuarioRepository.criarUsuario`. Resolvido em 2026-08-24, ver `HISTORY.md`.
+
+- **P-024** — `typecheck -w shared` falhava em `a-estatua.spec.ts` (campo `atributo` obsoleto no
+  fixture de ataques da criatura). Migrado para `teste`/`danoCritico`. Resolvido em 2026-08-24, ver
+  `HISTORY.md`.
 
 - **P-021** — calculadora e histórico não abriam juntos no mobile da ficha (um bloqueava o
   clique no gatilho do outro). Resolvido em 2026-08-24, ver `HISTORY.md`.
