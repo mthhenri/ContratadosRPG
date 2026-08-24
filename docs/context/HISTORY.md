@@ -1,5 +1,38 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-24 — Auditoria das habilidades de 0 E (abre `P-027`)
+
+Pedido do autor: conferir se as habilidades `[0 E]` estão "aplicando corretamente" nas fichas de
+agente — depois esclarecido como "seus efeitos estão sendo aplicados dentro da ficha", citando
+Mochileiro (troca o atributo do cálculo de Inventário) como exemplo do que ele esperava ver
+acontecer automaticamente, não só o gasto de Energia.
+
+Duas camadas verificadas: (1) transcrição — as 36 habilidades `[0 E]` de
+`docs/core/sistema-v4.1.0.md` batem 1:1 com `custoEnergia: 0` em
+`shared/src/regras/agente/habilidades-catalogo.dados.ts`, sem nenhuma trocada por `null`/valor
+errado; (2) gasto de Energia — `ficha-habilidades.component.ts` já trata `custoEnergia === 0`
+explicitamente (botão desabilitado, sem dedução), e `aplicarReducaoCustoEnergia`
+(`shared/regras/agente/amplificador.ts:224-230`) tem guarda e teste dedicados pra custo 0 nunca
+subir pro mínimo de 1 do desconto de amplificador.
+
+A camada que o autor realmente perguntava — efeito **mecânico automático** na fórmula da ficha —
+tem cobertura desigual. `Mochileiro` (Inventário, `inventario.ts`) e `Peculiaridade`
+(Origem/bônus de Experimento, `identidade/experimento.ts`) são automatizadas de fato. Mas
+`Tanque` (+1 Vida/progressão, Habilidades Gerais Melhoradas) e `Segundo Fôlego`/`Metabolismo
+Acelerado` (dados extras de recuperação no descanso) — mesmo tipo de efeito, modificador
+permanente e incondicional de fórmula — não são: `VidaCalcularDto` e `DescansoCalcularDto` nem
+têm campo `habilidades` hoje, então é arquiteturalmente impossível esses três serem aplicados sem
+mudança de contrato. O comentário de topo do catálogo documenta que "a aplicação automática de
+efeitos na fórmula foi aposentada" (m3-31, jogador aplica na mão), mas Mochileiro/Peculiaridade
+contradizem essa alegação como precedente — não é decisão de design consistente, é cobertura
+incompleta.
+
+Registrado como `P-027` em `PROBLEMS.md` (Ativos) com o levantamento completo — inclusive a
+decisão em aberto (automatizar os 3 restantes, ou formalizar "aplica na mão" pra eles também,
+documentando a inconsistência com Mochileiro/Peculiaridade). Auditoria cobriu só as 36 habilidades
+de `[0 E]`, a pedido do dono — as de custo > 0 do catálogo (~150) não foram revisadas por essa
+mesma lente e ficam fora desta rodada. Nenhum código foi alterado nesta investigação.
+
 ## 2026-08-24 — `P-018`: as 4 decisões da spec de Civil respondidas pelo autor
 
 Ao revisar `docs/specs/backlog/civil-guia-criacao.spec.md` (ver entrada abaixo), o autor respondeu
