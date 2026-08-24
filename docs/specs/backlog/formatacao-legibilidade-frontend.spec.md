@@ -73,6 +73,8 @@ só do pragma).
 ```json
 {
   "printWidth": 100,
+  "tabWidth": 4,
+  "useTabs": false,
   "singleQuote": true,
   "htmlWhitespaceSensitivity": "css",
   "overrides": [
@@ -80,6 +82,14 @@ só do pragma).
   ]
 }
 ```
+
+`tabWidth: 4` — o autor prefere indentação de 4 espaços a 2 (fora do padrão default do
+Prettier); vale conferir visualmente que blocos aninhados de HTML/SCSS (Angular tende a
+aninhar bastante: `@if`/`@for`, diálogos, cards dentro de cards) não ficam raso demais de
+espaço horizontal com 4 espaços por nível antes de fechar a task — se um arquivo muito
+aninhado (ex. `criar.page.html`, vários passos do guia) estourar `printWidth` só por causa
+da indentação acumulada, decidir com o autor entre aceitar a quebra de linha resultante ou
+revisar `printWidth` para cima.
 
 `printWidth: 100` casa com o padrão de linha do resto do código TypeScript do projeto
 (quebra próxima de 100–120 chars nos arquivos bem formatados já existentes) — confirmar
