@@ -1,5 +1,48 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-24 — Sessão de planejamento: 3 specs novas no backlog e limpeza de `IDEAS.md`
+
+Pedido direto do autor, revisando `docs/context/IDEAS.md`: promover `I-020`/`I-021` a spec, e
+fechar `I-013`/`I-018` por já estarem cobertas pelo código existente. Nenhuma implementação nesta
+sessão — só planejamento e documentação.
+
+**Specs novas em `docs/specs/backlog/`** (todas task avulsa, sem número de milestone — a critério
+do autor na revisão de backlog):
+
+- `preservar-modificacoes-inventario-esquadrao.spec.md` (`I-020`) — estende
+  `CampanhaInventarioItemDto`/`CampanhaInventarioItemAdicionarDto` (`shared/dtos/campanha`) com
+  `modificacoes?: ModificacaoAplicadaDto[]`, reaproveitando o tipo de `shared/regras/compras`; faz
+  `FichaService.mandarItemInventarioParaBase`/`pegarItemInventario` (backend) copiar o campo nos
+  dois sentidos da transferência ficha ↔ base; ajusta `itensInventarioSaoIdenticos`
+  (`CampanhaService`) para não empilhar itens com modificações diferentes; e dá ao card do
+  `InventarioEsquadrao` (frontend) o mesmo chip de modificação, somente leitura, que a ficha já usa.
+  `campanha.inventario` já é JSONB — sem migration.
+- `descricao-modificacoes-item-inventario.spec.md` (`I-021`) — acrescenta a `ItemInventarioVM`
+  (`ficha-inventario.component.ts`) um texto agregado das modificações ativas do item (reusando
+  `descreverEfeitosModificacao`, já existente e testado em `shared/regras/compras`), exibido acima
+  da contagem de munição/cenas no template. Puramente frontend, sem mudança de contrato.
+- `topbar-renomear-painel-icone-fichas.spec.md` (`I-019`) — renomeia o item de nav `/painel` de
+  "Painel" para "Campanhas", dá a **Fichas** um ícone `IconeNome` próprio (hoje reusa `agente`, o
+  mesmo do item Perfil do dropdown) e remove o link "Campanhas" duplicado de dentro do dropdown de
+  perfil.
+
+**`IDEAS.md` — duas ideias fechadas sem virar spec nova, por já estarem cobertas:**
+
+- `I-013` (M7 sugerido: cenas e controle de combate) — o milestone **M7 — Encontro de Combate**
+  (`m7-01`…`m7-20`, todas em `docs/specs/done/`) já entrega o controle de combate/iniciativa que a
+  ideia pedia (participantes, ordem, turnos, condições, log) e está **concluído** desde antes desta
+  sessão (ver `CONTEXT.md` §1/§3). A ideia nasceu de uma conversa mais ampla sobre módulos futuros
+  (2026-08-11) e não tinha spec própria vinculada — removida de "Abertas", registrada em
+  "Promovidas" apontando para `docs/specs/backlog/m7-encontro-combate.spec.md` (spec-mãe, ainda em
+  `backlog/` embora as 20 tasks derivadas já tenham concluído).
+- `I-018` (inventário de esquadrão sem esperar Base) — já implementado: componentes
+  `InventarioEsquadrao`/`InventarioEsquadraoSidebar` (frontend), `CampanhaInventarioItemDto` e as
+  rotas de mandar/pegar item (backend), a partir de
+  `docs/superpowers/specs/2026-08-12-inventario-de-esquadrao-design.md`. Movido para "Promovidas".
+
+Confirmado por busca no código (`InventarioEsquadrao`, `CampanhaInventarioItemDto`) antes de fechar
+as duas — nenhuma das duas foi removida "de cabeça".
+
 ## 2026-08-24 — Auditoria das habilidades de 0 E (abre `P-027`)
 
 Pedido do autor: conferir se as habilidades `[0 E]` estão "aplicando corretamente" nas fichas de

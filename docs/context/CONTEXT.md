@@ -534,13 +534,17 @@ só adaptou o visual de desktop).
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
+| `preservar-modificacoes-inventario-esquadrao` | campanha/inventário | preservar `modificacoes` do item ao transferir ficha ↔ base (`IDEAS.md` `I-020`) |
+| `descricao-modificacoes-item-inventario` | ficha/inventário | resumo textual das modificações ativas, acima da contagem de munição/cenas (`IDEAS.md` `I-021`) |
+| `topbar-renomear-painel-icone-fichas` | layout/navegação | renomear "Painel"→"Campanhas", ícone próprio de Fichas, limpar menu de perfil (`IDEAS.md` `I-019`) |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/` vinda da fila original; `m3-73`…`m3-78` eram
 ajustes avulsos (pedido direto do autor, 2026-08-22) — todos **concluídos** (specs em
 `docs/specs/done/`, `m3-78` fechou a fila no bloco do topo do arquivo). `m7-18`…`m7-20` eram o mesmo
 tipo de ajuste avulso, pós-M7 (milestone já concluído) — todos **concluídos** (specs em
-`docs/specs/done/`, `m7-19` fechou a fila; ver bloco no topo do arquivo e "Próxima Task"). Milestone
-ainda não aberto: `m5-guia-missao`.
+`docs/specs/done/`, `m7-19` fechou a fila; ver bloco no topo do arquivo e "Próxima Task"). As três
+specs avulsas acima (2026-08-24) nasceram de `IDEAS.md` `I-019`/`I-020`/`I-021` — sem número de
+milestone, a critério do autor na revisão de backlog. Milestone ainda não aberto: `m5-guia-missao`.
 
 ---
 

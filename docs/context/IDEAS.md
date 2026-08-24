@@ -170,26 +170,6 @@
   (distinta de `validarPermissaoEdicao`, que hoje deixa dono e mestre editarem igual) e decidir onde
   ela aparece na UI (cabeçalho? aba própria?) — ainda não especificado.
 
-### I-013 — M7 sugerido: cenas e controle de combate · campanha/sessão
-
-- **Ideia:** ampliar o módulo de campanhas — possivelmente como um novo M7 — com a criação e o
-  controle de cenas. Uma cena poderia organizar os participantes e o estado corrente da sessão;
-  quando fosse uma cena de combate, incluiria a gestão completa da iniciativa: participantes,
-  ordem e rodada atual, turnos, condições aplicadas, duração das condições e eventos ocorridos
-  durante a iniciativa.
-- **Origem:** conversa com o autor em 2026-08-11, ao levantar módulos futuros para a plataforma.
-- **Por quê:** hoje a campanha organiza membros e fichas, mas não oferece ao mestre um espaço para
-  conduzir o que está acontecendo durante a sessão. Cenas dariam contexto à sessão e iniciativas
-  cobririam o fluxo operacional do combate sem depender de uma ferramenta externa.
-- **Custo aparente:** alto — novas entidades e estados de sessão, permissões do mestre, associação
-  de fichas/personagens a cenas, atualização em tempo real e UI própria de condução. A gestão de
-  iniciativa também precisaria modelar condições e seus ciclos de duração, entrada/saída e
-  reordenação de participantes, avanço e retorno de turnos, eventos automáticos e manuais e um
-  histórico auditável do que ocorreu. Ainda precisa decidir se “cena” é a abstração principal, com
-  combate como um tipo/estado, ou se cenas e combates serão recursos separados; e quais condições
-  serão regras estruturadas do sistema ou registros livres controlados pelo mestre. A numeração M7
-  é sugestão, não decisão de roadmap.
-
 ### I-014 — M8 sugerido: documentos e anotações de campanha · campanha/documentos
 
 - **Ideia:** criar um módulo de documentos da campanha — possivelmente M8 — no qual o mestre possa
@@ -281,80 +261,6 @@
   M7–M11 podem ser executadas em outra ordem — por exemplo, IA não depende obrigatoriamente de
   documentos.
 
-### I-018 — Inventário de esquadrão sem esperar o módulo de Base · campanha/inventário
-
-- **Ideia:** dar um inventário compartilhado ao grupo de agentes de uma campanha (itens de equipe,
-  recursos partilhados, achados de missão) sem depender da modelagem institucional completa de Base
-  + Esquadrão da **I-017**/M11. Caminho mais provável: tratar a própria `campanha` como o container
-  do inventário coletivo — uma lista de itens ligada à campanha, reusando o padrão de componente que
-  `ficha-inventario.component.ts` já usa por ficha — em vez de esperar as entidades de Base,
-  histórico entre campanhas e hierarquia institucional.
-- **Origem:** pergunta do autor em 2026-08-12, ao levantar inventário de esquadrão e questionar se
-  precisa do módulo de Base para viabilizá-lo.
-- **Por quê:** hoje inventário só existe por ficha individual; item que pertence ao grupo (não a um
-  agente específico) não tem onde morar sem forçar posse artificial numa ficha ou esperar o M11
-  inteiro, que é bem mais amplo (identidade institucional, histórico entre operações, serviços de
-  base).
-- **Custo aparente:** baixo-médio se escopado à campanha atual — schema novo (tabela de item de
-  campanha, dono = campanha em vez de ficha) + UI reusando o padrão de painel de item já existente.
-  Fica mais barato que a I-017 porque abre mão da persistência entre campanhas e da identidade de
-  esquadrão como entidade própria; se esse abandono for aceitável é a decisão central antes de virar
-  spec.
-
-### I-019 — Topbar: renomear "Painel" para "Campanhas", ícone próprio de Fichas e limpar o menu de perfil · layout/navegação
-
-- **Ideia:** três ajustes na `layout.component.html` (topbar):
-  1. Renomear o item de nav `/painel` (hoje rotulado **"Painel"**, ícone `campanhas`) para
-     **"Campanhas"** — o rótulo atual não deixa claro o que a tela é.
-  2. Dar a **Fichas** (`/fichas`) um ícone próprio: hoje reusa o glifo `agente`, o **mesmo** usado
-     pelo item **Perfil** dentro do menu de usuário — os dois "parecem a mesma coisa" na UI. Um
-     ícone de "cardzinho de ficha" resolveria a ambiguidade. Como o sistema de ícones do projeto é
-     todo SVG inline desenhado à mão (`icone.component.ts`/`.html`, sem lib externa — ver o
-     comentário de topo do componente), não existe glifo pronto pra puxar: seria um traço novo no
-     mesmo estilo monocromático `stroke: currentColor` dos demais.
-  3. Remover o item **"Campanhas"** de dentro do menu de perfil (dropdown com Perfil/Campanhas/
-     Encerrar sessão) — ele é um link duplicado pra `/painel`, que já está na nav principal da
-     topbar; não ficou claro por que foi posto ali também.
-- **Origem:** observação do autor usando a topbar, 2026-08-12.
-- **Por quê:** "Painel" é um rótulo genérico pra uma tela que é especificamente sobre campanhas;
-  o ícone repetido entre Fichas e Perfil quebra a leitura rápida da nav; e o link duplicado no menu
-  de perfil não agrega nada que a nav principal já não ofereça.
-- **Custo aparente:** baixo — troca de texto/rótulo e remoção de um `<a>` são triviais; o ícone
-  novo é a única peça com trabalho de design (desenhar o SVG no estilo existente e decidir se
-  `campanhas` continua servindo pro nav renomeado ou se merece um glifo próprio também).
-
-### I-020 — Preservar itens modificados no inventário de esquadrão · campanha/inventário
-
-- **Ideia:** ampliar o inventário de esquadrão para receber e preservar itens modificados da ficha,
-  mantendo as modificações estruturadas quando um item for enviado para a base, exibido no acervo
-  coletivo ou retirado por outra ficha.
-- **Origem:** decisão do autor em 2026-08-13, durante o ajuste de empilhamento automático de itens
-  Operacionais e Medicinais.
-- **Por quê:** o contrato atual de `CampanhaInventarioItemDto` guarda apenas os campos descritivos
-  do catálogo e descarta `modificacoes`. Isso impede que uma arma, proteção ou outro equipamento
-  personalizado mantenha sua identidade mecânica durante a passagem pela base.
-- **Escopo esperado:** ampliar o DTO compartilhado e a validação do backend; preservar o dado nas
-  transferências ficha ↔ base; representar as modificações na interface; e definir a identidade de
-  stacks sem fundir itens com modificações diferentes. A implementação deve reutilizar o contrato
-  canônico de `CarrinhoItemDto`, sem criar um segundo formato de modificação.
-- **Custo aparente:** médio — afeta `shared`, backend, os dois sentidos de transferência e a
-  apresentação. Requer spec própria antes de ser implementado.
-
-### I-021 — Descrição textual das modificações no item do inventário · ficha/inventário
-
-- **Ideia:** dar a cada item modificável do inventário uma "descrição" — um texto curto, composto a
-  partir das modificações aplicadas, mostrado acima da contagem de cenas/munição do item. Ex.: uma
-  munição com a modificação "Calibre" mostraria algo como "Calibre: +1 dado de dano da arma".
-- **Origem:** pedido do autor em 2026-08-16, revisando o inventário.
-- **Por quê:** hoje as modificações aplicadas (`ModificacaoAplicadaDto`/`ModificacaoEfeitoDto`) ficam
-  expressas só como chip de nome + efeitos estruturados; não existe uma frase legível que resuma o
-  que elas fazem ao item, então entender o efeito exige abrir o painel de modificação.
-- **Custo aparente:** provavelmente só frontend — um formatador que converte `efeitos`/`descricao` de
-  cada `ModificacaoAplicadaDto` num texto composto (o mesmo papel que `bonusMunicaoTexto` já cumpre
-  hoje, mas só pra Munição Construtor, m3-65) e um trecho novo no template do item em
-  `ficha-inventario.component.html` pra exibi-lo. Falta decidir o formato de composição quando há
-  mais de uma modificação no mesmo item.
-
 ---
 
 ## Promovidas
@@ -364,6 +270,11 @@ Ideias que viraram spec. Ficam aqui só para não serem reinventadas.
 | Ideia | Virou | Quando |
 |---|---|---|
 | I-011 — Colorir os dadinhos do pool por tipo de dano | implementado direto (pedido pequeno o bastante pra pular a spec formal) — ver `HISTORY.md` | 2026-08-11 |
+| I-013 — M7 sugerido: cenas e controle de combate | milestone **M7 — Encontro de Combate**, concluído (`m7-01`…`m7-20`, `docs/specs/done/`; `docs/specs/backlog/m7-encontro-combate.spec.md`) | 2026-08-24 |
+| I-018 — Inventário de esquadrão sem esperar o módulo de Base | implementado (`docs/superpowers/specs/2026-08-12-inventario-de-esquadrao-design.md`; componentes `inventario-esquadrao`/`inventario-esquadrao-sidebar`) | 2026-08-24 |
+| I-019 — Topbar: renomear "Painel", ícone próprio de Fichas, limpar menu de perfil | `docs/specs/backlog/topbar-renomear-painel-icone-fichas.spec.md` | 2026-08-24 |
+| I-020 — Preservar itens modificados no inventário de esquadrão | `docs/specs/backlog/preservar-modificacoes-inventario-esquadrao.spec.md` | 2026-08-24 |
+| I-021 — Descrição textual das modificações no item do inventário | `docs/specs/backlog/descricao-modificacoes-item-inventario.spec.md` | 2026-08-24 |
 
 ---
 
