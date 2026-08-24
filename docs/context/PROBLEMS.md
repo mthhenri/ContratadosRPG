@@ -130,9 +130,12 @@
   Civil; trata todas as classes com a mesma fórmula/teto/rótulo. Pode haver mais pontos do guia com
   o mesmo problema (o dono não detalhou todos) — escopo completo a confirmar com ele.
 - **Contorno:** nenhum.
-- **Correção:** não determinada — depende de mapear com o dono todas as regras de Civil que o guia
-  hoje ignora (a começar pelo Treinamento 0–5 no lugar de Nível/Prestígio) antes de desenhar a
-  correção.
+- **Correção:** escopo mapeado e specado em `docs/specs/backlog/civil-guia-criacao.spec.md`
+  (2026-08-24) — cobre // Novo agente (Nível/Prestígio → Treinamento), // Atributos (base e
+  orçamento de criação do Civil) e // Equipamento inicial (orçamento fixo, categorias vetadas).
+  A spec depende de 4 decisões do dono antes de virar código; ver o arquivo. Outras divergências
+  de Civil levantadas na mesma investigação (passo // Recursos, progressão pós-criação) ficaram
+  fora do escopo escolhido pelo dono, registradas em "Fora de Escopo" da spec.
 - **Desde:** reportado pelo dono em 2026-08-11.
 
 ### P-020 — Código-fonte do sistema não é legível para revisão humana · `ABERTO` · **CRÍTICO** · qualidade/manutenibilidade

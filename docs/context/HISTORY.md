@@ -1,5 +1,37 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-24 — Spec de escopo do `P-018` (guia de criação vs. mecânica de Civil)
+
+Pedido do autor: "vamos resolver a p-018". Investigação (não implementação) mostrou que o sintoma
+original de `P-018` (Nível/Prestígio calculados e rotulados igual a um agente no passo // Novo
+agente) era só a ponta visível — o guia de criação (`criar.page.ts`/`.html`) trata Civil como
+qualquer outra classe em vários pontos, apesar de boa parte do motor de regras
+(`shared/src/regras/agente`: `saude.ts`, `defesa.ts`, `dano.ts`, `movimento.ts`, `inventario.ts`,
+`sanidade.ts`, `habilidades*.ts`, `limites.ts`, `progressao.ts`) já ter ramificação de Civil
+correta e testada.
+
+Três divergências adicionais confirmadas nesta sessão, com fonte em
+`docs/core/sistema-v4.1.0.md` § "Jogando como um Civil": (1) o campo manual de Nível aceita 0–20
+(devia ser 0–5, `limites.ts` já expõe `nivelMaximo` por classe) e o resumo lateral mostra um stat
+de "Defesa" (`nivelInicial() + 10`) que Civil não possui; (2) `ATRIBUTOS_BASE_PADRAO`
+(`ficha-padrao.ts`) e `calcularOrcamentoAtributos`/`validarDistribuicaoAtributos`
+(`shared/src/regras/agente/criacao.ts`) usam a base/orçamento de agente (todos os atributos em 1,
+4 pontos de criação) pra qualquer classe — Civil deveria começar com Luta/Pontaria em 0 e ter só 2
+pontos de criação, sem a exceção de "um atributo até 3"; (3) o passo // Equipamento inicial aplica
+o teto genérico ($2500/5 de peso) e o catálogo completo pra Civil, que deveria ter orçamento fixo
+de $1000 e as categorias Proteções/Explosivos vetadas.
+
+Apresentado ao autor com `AskUserQuestion` (achado + os 3 escopos possíveis); ele confirmou os
+três, mas pediu explicitamente para **não implementar ainda** — só produzir a spec, seguindo o
+fluxo orientado por especificação de `AGENTS.md`. Spec criada em
+`docs/specs/backlog/civil-guia-criacao.spec.md`, com o levantamento completo (código + citação de
+doc por linha), 4 decisões de regra que só o dono pode responder antes de codar (o que "zerar mais
+dois atributos" concede em pontos; se Civil tem override manual de Treinamento ou é sempre 0; se o
+passo // Recursos também precisa de tratamento; se o teto de peso do kit se aplica a Civil),
+entregáveis numerados por passo e critérios de aceite (incluindo o gate visual obrigatório da
+implementação futura). `PROBLEMS.md` `P-018` **continua em Ativos** (não é um fechamento, é
+escopo) — só a "Correção" ganhou o ponteiro pra spec.
+
 ## 2026-08-24 — Três ajustes avulsos de tooling/qualidade (fecha `P-022`, `P-023`, `P-024`)
 
 Três problemas independentes de `PROBLEMS.md`, resolvidos na mesma sessão a pedido direto do autor
